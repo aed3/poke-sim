@@ -1,0 +1,29 @@
+name: clang-format
+
+on:
+  workflow_dispatch:
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out Git repository
+      uses: actions/checkout@v3
+
+    - uses: DoozyX/clang-format-lint-action@v0.15
+      with:
+        source: 'src tests'
+        exclude: 'tests/Catch2 src/Dex/Names.hpp'
+        extensions: 'hpp,cpp'
+        clangFormatVersion: 15
+        inplace: True
+
+    - name: Commit include/PokeSim.hpp
+      uses: EndBug/add-and-commit@v4
+      with:
+        author_name: Milo[bot]
+        message: Committing clang-format changes
+        author_email: 41898282+github-actions[bot]@users.noreply.github.com
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

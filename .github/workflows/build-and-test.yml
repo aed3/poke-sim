@@ -1,0 +1,175 @@
+name: Build & Test
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: 
+      - main
+    paths: 
+      - 'src/**'
+      - 'include/**'
+  push:
+    branches: 
+      - main
+    paths: 
+      - 'src/**'
+      - 'include/**'
+
+jobs:
+  linux:
+    name: 'Linux: ${{matrix.cxx}}, SHF ${{matrix.use_single_header}}, ${{matrix.build_type}}'
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        cxx:
+          - g++-7
+          - g++-8
+          - g++-9
+          - g++-10
+          - g++-11
+          - clang++-7
+          - clang++-8
+          - clang++-9
+          - clang++-10
+        build_type: [Debug, Release]
+        use_single_header: [ON, OFF]
+        include:
+          - cxx: g++-7
+            other_pkgs: g++-7
+          - cxx: g++-8
+            other_pkgs: g++-8
+          - cxx: g++-9
+            other_pkgs: g++-9
+          - cxx: g++-10
+            other_pkgs: g++-10
+          - cxx: g++-11
+            other_pkgs: g++-11
+          - cxx: clang++-7
+            other_pkgs: clang-7
+          - cxx: clang++-8
+            other_pkgs: clang-8
+          - cxx: clang++-9
+            other_pkgs: clang-9
+          - cxx: clang++-10
+            other_pkgs: clang-10
+          - cxx: clang++-10
+            build_type: Debug
+            other_pkgs: clang-10
+          - cxx: clang++-10
+            build_type: Release
+            other_pkgs: clang-10
+          - cxx: clang++-10
+            build_type: Debug
+            other_pkgs: clang-10
+          - cxx: clang++-10
+            build_type: Release
+            other_pkgs: clang-10
+          - cxx: g++-10
+            build_type: Debug
+            other_pkgs: g++-10
+          - cxx: g++-10
+            build_type: Release
+            other_pkgs: g++-10
+        exclude:
+          - cxx: clang++-7
+            build_type: Release
+          - cxx: clang++-8
+            build_type: Release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Prepare environment
+        run: sudo apt-get install -y ninja-build ${{matrix.other_pkgs}}
+
+      - name: Create Single Header File
+        uses: ./.github/actions/single-header-file
+
+      - name: Configure build
+        working-directory: ${{runner.workspace}}
+        env:
+          CXX: ${{matrix.cxx}}
+        run: |
+          cmake -Bbuild -H$GITHUB_WORKSPACE \
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
+                -G Ninja
+
+      - name: Build tests + lib
+        working-directory: ${{runner.workspace}}/build
+        run: ninja
+
+      - name: Run tests
+        working-directory: ${{runner.workspace}}/build
+        run: bin/PokeSimTests
+  windows:
+    name: '${{matrix.os}}: SHF ${{matrix.use_single_header}}, ${{matrix.platform}} ${{matrix.build_type}}'
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019, windows-2022]
+        platform: [Win32, x64]
+        build_type: [Debug, Release]
+        use_single_header: [ON, OFF]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Create Single Header File
+        uses: ./.github/actions/single-header-file
+      
+      - name: Configure build
+        working-directory: ${{runner.workspace}}
+        run: |
+          cmake -S $Env:GITHUB_WORKSPACE                               `
+                -B ${{runner.workspace}}\build                         `
+                -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} `
+                -A ${{matrix.platform}}
+      
+      - name: Build tests
+        working-directory: ${{runner.workspace}}
+        run: |
+          $jobs = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
+          cmake --build build --config ${{matrix.build_type}} --parallel $jobs
+
+      - name: Run tests
+        working-directory: ${{runner.workspace}}/build
+        run: bin\${{matrix.build_type}}\PokeSimTests.exe
+  mac:
+    name: 'Mac OS: ${{matrix.cxx}}, SHF ${{matrix.use_single_header}}, ${{matrix.build_type}}'
+    runs-on: macos-11
+    strategy:
+      fail-fast: false
+      matrix:
+        cxx:
+          - g++-11
+          - clang++
+        build_type: [Debug, Release]
+        use_single_header: [ON, OFF]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Create Single Header File
+        uses: ./.github/actions/single-header-file
+
+      - name: Configure build
+        working-directory: ${{runner.workspace}}
+        env:
+          CXX: ${{matrix.cxx}}
+        run: |
+          cmake -Bbuild -H$GITHUB_WORKSPACE \
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
+
+      - name: Build tests
+        working-directory: ${{runner.workspace}}/build
+        run: make -j 2
+
+      - name: Run tests
+        working-directory: ${{runner.workspace}}/build
+        run: bin/PokeSimTests

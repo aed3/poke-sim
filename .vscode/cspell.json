@@ -1,0 +1,23 @@
+{
+  "version": "0.2",
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "useGitignore": true,
+  "ignorePaths": [
+      ".git",
+      ".vscode",
+      ".*"
+  ],
+  "dictionaryDefinitions": [
+    {
+        "name": "pokemon",
+        "path": ".vscode/pokemonDictonary.txt"
+    }
+  ],
+  "dictionaries": ["pokemon"],
+  "patterns": [
+      {
+          "name": "Email",
+          "pattern": "/<?\\b[\\w.\\-+]{1,64}@\\w{1,63}(\\.\\w{1,63}){1,3}\\b>?/gi"
+      }
+  ]
+}

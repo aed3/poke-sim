@@ -1,0 +1,46 @@
+name: Pull Request Review Bot
+
+on:
+  pull_request:
+    branches: 
+      - main
+    paths: 
+      - 'src/**'
+      - 'include/**'
+
+jobs:
+  one-review-bot:
+    name: 'One Review Bot'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cache LLVM and Clang
+        id: cache-llvm
+        uses: actions/cache@v3
+        with:
+          path: ./llvm
+          key: llvm-15.0.6
+      - name: Install clang-tidy and clang-format
+        uses: KyleMayes/install-llvm-action@v1.6.1
+        with:
+          version: "15.0.6"
+          directory: ./llvm
+          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+      - name: Configure build
+        working-directory: ${{runner.workspace}}
+        run: |
+          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE \
+          -H$GITHUB_WORKSPACE \
+          -Bbuild \
+          -G "Unix Makefiles"
+      - name: Run One Review Bot
+        uses: aed3/one-review-bot@v1.1
+        with:
+          cspell_config: .vscode/cspell.json
+          files_config: .bot-include
+          max_duplicate_problems: 100
+          incremental_files_only: true
+          root: .
+          build_path: build
