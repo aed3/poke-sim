@@ -33,6 +33,7 @@ List of [scenarios](#battle-scenario) that can happen after the turn ends with t
   - Only min damage for one or both sides
 - Percent chance to consider an event always occurring (default: 90%)
 - Percent chance to consider an event never occurring (default: 10%)
+- Lower limit on returned branches' percent chance of occuring (default: 0%)
 - Whether to return one [scenario](#battle-scenario), chosen at random
 #### Pseudo Code
 ```
