@@ -8,13 +8,13 @@ Because data will not be stored in an object-oriented way and much of this data 
 | **Name**             | **Type**                  | **Bits** | **Nearest Byte** | **Amount** | **Min Bits** | **Nearest Byte Total** |
 |----------------------|---------------------------|----------|------------------|------------|--------------|------------------------|
 | **Turn**             | [Turn](#BasicTypes)       | 10       | 16               | 1          | 10           | 16                     |
-| **Side**             | [Side](#Side)             | 2561     | 2568             | 2          | 5122         | 5136                   |
+| **Side**             | [Side](#Side)             | 2592     | 2592             | 2          | 2592         | 2592                   |
 | **Field**            | [Field](#Field)           | 29       | 32               | 1          | 29           | 32                     |
 | **Last Move**        | [Move Name](#BasicTypes)  | 10       | 16               | 1          | 10           | 16                     |
 | **Last Switched In** | [Target](#BasicTypes)     | 2        | 8                | 1          | 2            | 8                      |
 | **Action Queue**     |                           | ?        | ?                | Variable   | 0            | 0                      |
-| **Total**            |                           |          |                  |            | 5173         | 5208                   |
-| **Total Bytes**      |                           |          |                  |            | 647          | 651                    |
+| **Total**            |                           |          |                  |            | 5235         | 5256                   |
+| **Total Bytes**      |                           |          |                  |            | 655          | 657                    |
 
 
 ### Notes
@@ -42,18 +42,18 @@ Because data will not be stored in an object-oriented way and much of this data 
 | **Total**       |                                 |          |                  |            | 15           | 48                     |
 
 ### Notes
-- `Ion Deluge`: Not supported in Scarlet & Violet yet, but if/when Zeraora gets, added it will be needed
+- `Ion Deluge`: Not supported in Scarlet & Violet yet, but if/when Zeraora gets added, it will be needed
 
 ## Side
 | **Name**                | **Type**                            | **Bits** | **Nearest Byte** | **Amount** | **Min Bits** | **Nearest Byte Total** |
 |-------------------------|-------------------------------------|----------|------------------|------------|--------------|------------------------|
-| **Active Pokemon**      | [Active Pokemon](#ActivePokemon)    | 444      | 448              | 2          | 888          | 896                    |
+| **Active Pokemon**      | [Active Pokemon](#ActivePokemon)    | 452      | 456              | 2          | 904          | 912                    |
 | **Pokemon**             | [Pokemon](#Pokemon)                 | 273      | 280              | 6          | 1638         | 1680                   |
-| **Team Order**          | [Team Order](#BasicTypes)           | 3        | 8                | 1          | 3            | 8                      |
+| **Team Order**          | [Team Order](#BasicTypes)           | 3        | 8                | 6          | 18           | 24                     |
 | **Is Turn After Faint** | [Is Turn After Faint](#BasicTypes)  | 1        | 8                | 1          | 1            | 8                      |
 | **Side Conditions**     | [Side Conditions](#SideConditions)  | 31       | 32               | 1          | 31           | 32                     |
 | **Bag**                 | [Bag Item Capacity](#BasicTypes)    | 10       | 16               | Variable   | 0            | 0                      |
-| **Total**               |                                     |          |                  |            | 2561         | 2624                   |
+| **Total**               |                                     |          |                  |            | 2592         | 2656                   |
 
 ### Notes
 - `Active Pokemon`: Amount is 1 for single battles
@@ -93,12 +93,12 @@ Because data will not be stored in an object-oriented way and much of this data 
 | **Is Trapped**                   | [Boolean](#BasicTypes)                       | 1        | 8                | 1          | 1            | 8                      |
 | **Is Switch Queued**             | [Boolean](#BasicTypes)                       | 1        | 8                | 1          | 1            | 8                      |
 | **Last Move**                    | [Move Name](#BasicTypes)                     | 10       | 16               | 1          | 10           | 16                     |
-| **Last Move's Target**           | [Target](#BasicTypes)                        | 2        | 8                | 1          | 2            | 8                      |
+| **Last Move's Target**           | [Pokemon Index](#BasicTypes)                 | 4        | 8                | 1          | 4            | 8                      |
 | **Were Stats Raised**            | [Boolean](#BasicTypes)                       | 1        | 8                | 1          | 1            | 8                      |
 | **Were Stats Lowered**           | [Boolean](#BasicTypes)                       | 1        | 8                | 1          | 1            | 8                      |
 | **Did Last Turn's Move Fail**    | [Boolean](#BasicTypes)                       | 1        | 8                | 1          | 1            | 8                      |
 | **Was Hurt This Turn**           | [Boolean](#BasicTypes)                       | 1        | 8                | 1          | 1            | 8                      |
-| **Attacked By**                  | [Target](#BasicTypes)                        | 2        | 8                | 3          | 6            | 24                     |
+| **Attacked By**                  | [Pokemon Index](#BasicTypes)                 | 4        | 8                | 3          | 12           | 16                     |
 | **Turns Active**                 | [Turns Active](#BasicTypes)                  | 4        | 8                | 1          | 4            | 8                      |
 | **Has Started**                  | [Boolean](#BasicTypes)                       | 1        | 8                | 1          | 1            | 8                      |
 |                                  |                                              |          |                  |            |              |                        |
@@ -107,7 +107,7 @@ Because data will not be stored in an object-oriented way and much of this data 
 | **Lunar Dance**                  | [Boolean](#BasicTypes)                       | 1        | 8                | 1          | 1            | 8                      |
 | **Healing Wish**                 | [Boolean](#BasicTypes)                       | 1        | 8                | 1          | 1            | 8                      |
 | **Wish**                         | [Boolean](#BasicTypes)                       | 1        | 8                | 1          | 1            | 8                      |
-| **Total**                        |                                              |          |                  |            | 444          | 608                    |
+| **Total**                        |                                              |          |                  |            | 452          | 600                    |
 
 ## Pokemon
 | **Name**             | **Type**                              | **Bits** | **Nearest Byte** | **Amount** | **Min Bits** | **Nearest Byte Total** |
@@ -397,7 +397,7 @@ Because data will not be stored in an object-oriented way and much of this data 
 | **Boost**                 | Active Pokemon | -6      | 6       | 13                | 4        | 8                |
 | **Modified Stat**         | Active Pokemon | 1       | 10000   | 10000             | 14       | 16               |
 | **Turns Active**          | Active Pokemon | 0       | 15      | 16                | 4        | 8                |
-| **Wish**                  | Active Pokemon | 0       | 499.5   | 500.5             | 9        | 16               |
+| **Wish**                  | Active Pokemon | 0       | 357     | 358               | 9        | 16               |
 | **Bag Item Capacity**     | Bag            | 0       | 999     | 1000              | 10       | 16               |
 | **Pokemon Index**         | Battle         | 0       | 12      | 13                | 4        | 8                |
 | **Target**                | Battle         | 0       | 3       | 4                 | 2        | 8                |
