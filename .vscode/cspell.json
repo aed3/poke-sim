@@ -13,11 +13,14 @@
         "path": ".vscode/pokemonDictonary.txt"
     }
   ],
-  "dictionaries": ["pokemon"],
+  "dictionaries": ["pokemon", "cpp"],
   "patterns": [
       {
           "name": "Email",
           "pattern": "/<?\\b[\\w.\\-+]{1,64}@\\w{1,63}(\\.\\w{1,63}){1,3}\\b>?/gi"
       }
+  ],
+  "words": [
+    "entt"
   ]
 }

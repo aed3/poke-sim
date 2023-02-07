@@ -18,11 +18,11 @@ This project will be based on the great work done by the Pokemon Showdown team b
   - Sword & Shield
 
 ## Main Function Definitions
-These are the minimum requirements for the functions I want the API to supply and are here to highlight main ideas. More functions, properties, options, and other details can be added later.
+These are the minimum requirements for the functions I want the API to supply and are here to highlight the main ideas. More functions, properties, options, and other details can be added later.
 ### Simulate Turn
 #### Inputs:
 - [Battle Scenario](#battle-scenario)
-- [Decision](#decision) for both players
+- A [Decision](#decision) for both players
 #### Output:
 List of [scenarios](#battle-scenario) that can happen after the turn ends with the percent chance of each happening
 #### Options (Either set globally  or for each simulation):
@@ -33,7 +33,7 @@ List of [scenarios](#battle-scenario) that can happen after the turn ends with t
   - Only min damage for one or both sides
 - Percent chance to consider an event always occurring (default: 90%)
 - Percent chance to consider an event never occurring (default: 10%)
-- Lower limit on returned branches' percent chance of occuring (default: 0%)
+- A lower limit on returned branches' percent chance of occurring (default: 0%)
 - Whether to return one [scenario](#battle-scenario), chosen at random
 #### Pseudo Code
 ```
@@ -53,7 +53,7 @@ Simulate_Turn(Battle, Player_1_Decision, Player_2_Decision, Options)
 - Two opposing [Pokemon](#pokemon)
 - The [moves](#move) of the Pokemon to calculate
 #### Output:
-- List of [calculate damage results](#calculate-damage-result) for each move
+- List of [Calculate Damage Results](#calculate-damage-result) for each move
 #### Pseudo Code
 ```
 Player_1 = GARDEVOIR, CHOICE_SCARF, [PSYCHIC, MOONBLAST]
@@ -77,7 +77,7 @@ Calculate_Damage(Battle, Player_1, Player_2)
 - A list of [moves](#move) for that [Pokemon](#pokemon)
 - A list of foes to that [Pokemon](#pokemon)
 #### Output:
-- List of [analyze effect results](#analyze-effect-result) for each move containing the multiplier the effect will have on that move when used on each of the foes
+- List of [Analyze Effect Results](#analyze-effect-result) for each move containing the multiplier the effect will have on that move when used on each of the foes
 #### Options (Either set globally or for each simulation):
 - Whether to consider the multiplier even if the effect is already active (i.e. Rain will return a 1x multiplier instead of 1.5x multiplier for Surf if this option is true and it's already raining)
 #### Pseudo Code
@@ -98,7 +98,7 @@ Analyze_Effect(Battle, Pokemon, Effect, Foes)
 ## Main Type Descriptions
 Same as the function, this is the minimum requirement for certain types
 ### Battle Scenario
-Information about the entire battle state that can change within one turn
+The information about the entire battle state that can change within one turn:
 - Current field and side effect
 - Current teams of both opponents
 - Whether it represents the beginning or middle of a turn
@@ -110,12 +110,12 @@ Information about the entire battle state that can change within one turn
 The move, switch, or item action a player will make. Move actions can contain any pre-move action also taken (terastallize, dynamax, etc). All actions will contain extra information for double battles.
 
 ### Pokemon
-Information about a Pokemon that can change within one turn. (Note: these are minimum requirements and how the rest of the information about a Pokemon is kept will be considered.)
+The information about a Pokemon that can change within one turn. (Note: these are minimum requirements and how the rest of the information about a Pokemon is kept will be considered.)
 
 ### Move
 #### Member functions
 - Retrieve a list of all effects the move can generate along with the percent chance of that happening
-  - If a [Pokemon](#pokemon) and [battle scenario](#battle-scenario) are provided, it can return values specific to the situation (i.e., Rain Dance having no effect if it's already raining, Growl having no effect if the Pokemon had been Taunted, or Growth resulting +2 attack and special attack if it's sunny).
+  - If a [Pokemon](#pokemon) and [battle scenario](#battle-scenario) are provided, it can return values specific to the situation (i.e., Rain Dance has no effect if it's already raining, Growl has no effect if the Pokemon had been Taunted, or Growth resulting +2 attack and special attack if it's sunny).
 
 ### Calculate Damage Result
 - Max damage
