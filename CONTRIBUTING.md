@@ -1,6 +1,6 @@
 Yes, participation 🎉! Contributions from people who are also interested in exploring the programming potential of Pokemon are greatly welcomed and appreciated.
 
-The project is currently in the planning stage. Planning involves deciding the best algorithms to handle most used functions of the program ([listed here](DESIGN_SPEC.md#critical-places-for-high-performance)), determining how much of Pokemon Showdown design can be reused in this new system, and figuring out the design of the parts we will not reuse.
+The project is currently in the planning stage. Planning involves deciding the best algorithms to handle the most used functions of the program ([listed here](DESIGN_SPEC.md#critical-places-for-high-performance)), determining how much of Pokemon Showdown design can be reused in this new system, and figuring out the design of the parts we will not reuse.
 
 # How to Get Started
 1. Go to the issues tab and look for issues labeled [planning](https://github.com/aed3/poke-sim/labels/planning)
@@ -18,7 +18,7 @@ Each major part of the code will be planned out ahead of time to find an impleme
   - It can include a walk-through of the code path, pseudo code, links to other code that it's based on, or anything to best describe your idea
 - How this improves on the current implementation, whether that be in Pokemon Showdown or this repository
 
-An example doc will be linked here soon
+This is an example of an implementation document: [designs/Features/EventHandling.md](https://github.com/aed3/poke-sim/blob/945900d6ff8f9637909ea6161f8b155ba7c34ea1/designs/Features/EventHandling.md).
 
 # Suggesting a New Feature
 If there's a feature missing from the [design spec](DESIGN_SPEC.md) that you want to see added, create an issue and tag it "new feature" to talk about it. Most feature suggestions will be added once version 1 is done, but it's good to bring them up early so that adding support can be considered when writing code now.
