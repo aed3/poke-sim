@@ -29,7 +29,7 @@ for (auto [entity, active, pokemon, activeFoes] : registry.view<Active, Pokemon,
 
 // Priority -10 handlers
 for (auto [entity, active, pokemon] : registry.view<Active, Pokemon, ShedShell>().each()) {
-  ShedShell::OnTrapPokemon(entity, registry);
+  ShedShell::OnTrapPokemon(pokemon, registry);
 }
 ```
 > `activeFoes.each` is just for the example and probably won't exist
@@ -51,7 +51,7 @@ A handler has a dynamic priority if any call to it might affect multiple Pokemon
 - The exact implementation of this will be determined later. The only guaranteed working idea right now is to write out the 2-4 duplicates of the handler code, but if there is a way to automatically convert a handler to an order-based one through template functions without any runtime performance loss, that is the way to go to prevent tons of code duplication.
 
 ## Improvement
-The largest benefit to this approach is removing the need to search, collect, and sort handlers every time they're used. That alone makes this worth it, but the added benefit of using views/groups to determine what handlers to run allows for running events across multiple scenarios at once. The alternative of approaches of using a large switch statement or virtual functions would also work, but the code jumps would lead to this being less performant. 
+The largest benefit to this approach is removing the need to search, collect, and sort handlers every time they're used. That alone makes this worth it, but the added benefit of using views/groups to determine what handlers to run allows for running events across multiple scenarios at once. The alternative approaches of using a large switch statement or virtual functions would also work, but the code jumps would lead to this being less performant. 
 
 [^1]: Maybe rules to ignore the fastest getting faster and the slowest getting slower
 [^2]: Most of the time for the new generations

@@ -1,6 +1,6 @@
 Yes, participation 🎉! Contributions from people who are also interested in exploring the programming potential of Pokemon are greatly welcomed and appreciated.
 
-The project is currently in the planning stage. Planning involves deciding the best algorithms to handle the most used functions of the program ([listed here](DESIGN_SPEC.md#critical-places-for-high-performance)), determining how much of Pokemon Showdown design can be reused in this new system, and figuring out the design of the parts we will not reuse.
+The project is currently in the planning stage. Planning involves deciding the best algorithms to handle the most used functions of the program ([listed here](DESIGN_SPEC.md#critical-places-for-high-performance)), determining how much of Pokemon Showdown's design can be reused in this new system, and figuring out the design of the parts we will not reuse.
 
 # How to Get Started
 1. Go to the issues tab and look for issues labeled [planning](https://github.com/aed3/poke-sim/labels/planning)
