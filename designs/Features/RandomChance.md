@@ -91,7 +91,7 @@ A list of all current event handlers and battle functions which use randomness i
   - Static
     - Random Function: `randomChance`
 #### onStart
-- Parameters: `pokemon`
+- Parameters: `target`, `source`, `sourceEffect`
 - Users:
   - Forewarn
     - Random Function: `sample`
@@ -129,7 +129,7 @@ A list of all current event handlers and battle functions which use randomness i
   - Trace
     - Random Function: `sample`
 #### onBeforeMove
-- Parameters: `pokemon`
+- Parameters: `pokemon`, `target`, `move`
 - Users:
   - par
     - Random Function: `randomChance`
@@ -160,7 +160,7 @@ A list of all current event handlers and battle functions which use randomness i
   - Starf Berry
     - Random Function: `sample`
 #### onHit
-- Parameters: `target`
+- Parameters: `target`, `source`, `sourceEffect`
 - Users:
   - Acupressure
     - Random Function: `sample`
@@ -185,7 +185,7 @@ A list of all current event handlers and battle functions which use randomness i
   - G-Max Snooze
     - Random Function: `random`
 #### onModifyMove
-- Parameters: `move`, `pokemon`
+- Parameters: `move`, `pokemon`, `target`
 - Users:
   - Magnitude
     - Random Function: `random`
