@@ -1,7 +1,7 @@
 # Random Chance
 
 ## Problem
-How random chance works must change. Instead of picking one outcome, this project requires creating multiple battles based on all outcomes and seeing them all through.This means efficiently making copies of the current battle is important as the current solution of creating and parsing JSON is slow; after the event handler, that task takes up the most time for FSAI. Showdown is also not built to pick up a simulation from any point a random event may occur, so the code to save and load previous random results for correct branching during re-simulation is messy. To this day, I'm not sure if that code fully works.
+How random chance works must change. Instead of picking one outcome, this project requires creating multiple battles based on all outcomes and seeing them all through. This means efficiently making copies of the current battle is important as the current solution of creating and parsing JSON is slow; after the event handler, that task takes up the most time for FSAI. Showdown is also not built to pick up a simulation from any point a random event may occur, so the code to save and load previous random results for correct branching during re-simulation is messy. To this day, I'm not sure if that code fully works.
 
 ## Solution Description
 > This is by no means an amazing or permanent solution. The goal here is to make a passible attempt that can be substituted with better solutions without changing the entire code base.
@@ -78,125 +78,125 @@ A list of all current event handlers and battle functions which use randomness i
 #### onDamagingHit
 - Parameters: `damage`, `target`, `source`, `move`
 - Users:
-  - Cursed Body (condition)
+  - Cursed Body
     - Random Function: `randomChance`
-  - Cute Charm (condition)
+  - Cute Charm
     - Random Function: `randomChance`
-  - Effect Spore (condition)
+  - Effect Spore
     - Random Function: `random`
-  - Flame Body (condition)
+  - Flame Body
     - Random Function: `randomChance`
-  - Poison Point (condition)
+  - Poison Point
     - Random Function: `randomChance`
-  - Static (condition)
+  - Static
     - Random Function: `randomChance`
 #### onStart
 - Parameters: `pokemon`
 - Users:
-  - Forewarn (condition)
+  - Forewarn
     - Random Function: `sample`
-  - slp (condition)
+  - slp
     - Random Function: `random`
-  - confusion (condition)
+  - confusion
     - Random Function: `random`
-  - lockedmove (condition)
+  - lockedmove
     - Random Function: `random`
-  - twoturnmove (condition)
+  - twoturnmove
     - Random Function: `sample`
 #### onResidual
 - Parameters: `pokemon`
 - Users:
-  - Harvest (condition)
+  - Harvest
     - Random Function: `randomChance`
-  - Healer (condition)
+  - Healer
     - Random Function: `randomChance`
-  - Moody (condition)
+  - Moody
     - Random Function: `sample`
-  - Pickup (condition)
+  - Pickup
     - Random Function: `sample`
-  - Shed Skin (condition)
+  - Shed Skin
     - Random Function: `randomChance`
 #### onFractionalPriority
 - Parameters: `priority`, `pokemon`, `target`, `move`
 - Users:
-  - Quick Draw (condition)
+  - Quick Draw
     - Random Function: `randomChance`
-  - Quick Claw (condition)
+  - Quick Claw
     - Random Function: `randomChance`
 #### onUpdate
 - Parameters: `pokemon`
 - Users:
-  - Trace (condition)
+  - Trace
     - Random Function: `sample`
 #### onBeforeMove
 - Parameters: `pokemon`
 - Users:
-  - par (condition)
+  - par
     - Random Function: `randomChance`
-  - frz (condition)
+  - frz
     - Random Function: `randomChance`
-  - confusion (condition)
+  - confusion
     - Random Function: `randomChance`
   - Attract (condition)
     - Random Function: `randomChance`
 #### durationCallback
 - Parameters: `target`, `source`
 - Users:
-  - partiallytrapped (condition)
+  - partiallytrapped
     - Random Function: `random`
 #### onStallMove
 - Parameters: `pokemon`
 - Users:
-  - stall (condition)
+  - stall
     - Random Function: `randomChance`
 #### onDamage
 - Parameters: `damage`, `target`, `source`, `effect`
 - Users:
-  - Focus Band (condition)
+  - Focus Band
     - Random Function: `randomChance`
 #### onEat
 - Parameters: `pokemon`
 - Users:
-  - Starf Berry (condition)
+  - Starf Berry
     - Random Function: `sample`
 #### onHit
 - Parameters: `target`
 - Users:
-  - Acupressure (condition)
+  - Acupressure
     - Random Function: `sample`
-  - Assist (condition)
+  - Assist
     - Random Function: `sample`
-  - Conversion 2 (condition)
+  - Conversion 2
     - Random Function: `sample`
-  - G-Max Snooze (condition)
+  - G-Max Snooze
     - Random Function: `random`
-  - Metronome (condition)
+  - Metronome
     - Random Function: `sample`
-  - Sleep Talk (condition)
+  - Sleep Talk
     - Random Function: `sample`
 #### onHitField
 - Parameters: `target`, `source`
 - Users:
-  - Court Change (condition)
+  - Court Change
     - Random Function: `random`
 #### onAfterSubDamage
 - Parameters: `damage`, `target`
 - Users:
-  - G-Max Snooze (condition)
+  - G-Max Snooze
     - Random Function: `random`
 #### onModifyMove
 - Parameters: `move`, `pokemon`
 - Users:
-  - Magnitude (condition)
+  - Magnitude
     - Random Function: `random`
-  - Present (condition)
+  - Present
     - Random Function: `random`
-  - Shell Side Arm (condition)
+  - Shell Side Arm
     - Random Function: `random`
 #### damageCallback
 - Parameters: `pokemon`
 - Users:
-  - Psywave (condition)
+  - Psywave
     - Random Function: `random`
 ### Battle Functions
 #### speedSort
