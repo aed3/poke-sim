@@ -6,6 +6,10 @@ The main issue with how move effects are applied is how layered the process is. 
 ## Solution Description
 - All move effects, whether they be primary or secondary, will be stored the same way within a move's data along with whether it's primary or secondary. ([More details below](#overview-of-move-data-representation))
 - Because move effects may have a random chance of occurring, creating the various battle states for the occurrences will happen before any effect is processed. A strategy for only making branches for one move effect per battle state at a time must be used.
+  - Effects that will be processed during a battle state can be added to an array in a `QueuedEffect` component within the active move entity
+  - Before calls to functions such as [`runMoveEffect`](#example-implementation-of-runmoveeffect-for-status-conditions), the next effect in the queue will be added to the registry with the active move's data
+    - The registry the effect & active move data gets added to could be the main battle state registry or a registry just for effect processing. If the later, all components that have entity properties must have those properties only store entities from the main registry.
+  - After the effect is done being processed, remove its data from the registry and delete the `QueuedEffect` if its array is empty
 - What Showdown calls `selfDrops` will be handled alongside secondary effects. Right now, I do not see this causing any out-of-order issues that change the end result of the turn, but if there are any, separating the two concepts may have to happen.
 - Primary and secondary effects will be processed together. As with above, if it is an issue, they will be handled one after the other as Showdown currently does.
 
