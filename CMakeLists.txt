@@ -40,7 +40,7 @@ endif()
 
 add_executable(PokeSimTests
   tests/Tests.cpp
-  tests/Catch2/catch_amalgamated.cpp
+  external/Catch2/catch_amalgamated.cpp
 )
 
 option(USE_SINGLE_HEADER_FILE "Use the Single Header File version of the library when running tests." OFF)
