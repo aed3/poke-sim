@@ -7,6 +7,7 @@ on:
     paths: 
       - 'src/**'
       - 'include/**'
+      - 'tests/**'
 
 jobs:
   one-review-bot:

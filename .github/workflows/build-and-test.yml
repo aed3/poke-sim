@@ -8,12 +8,14 @@ on:
     paths: 
       - 'src/**'
       - 'include/**'
+      - 'tests/**'
   push:
     branches: 
       - main
     paths: 
       - 'src/**'
       - 'include/**'
+      - 'tests/**'
 
 jobs:
   linux:

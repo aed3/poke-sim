@@ -1,4 +1,3 @@
-src/
+src
 !src/Dex/Names.hpp
 tests
-!tests/Catch2
