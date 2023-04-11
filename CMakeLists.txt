@@ -15,6 +15,7 @@ add_library(${PROJECT_NAME} STATIC
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${PROJECT_SOURCE_DIR}/src
+  ${PROJECT_SOURCE_DIR}/external
 )
 
 if (MSVC)
