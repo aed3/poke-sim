@@ -2800,8 +2800,8 @@ struct uses_allocator<entt::internal::dense_map_node<Key, Value>, Allocator>
 
 
 #include <array>
-#include <string>
 #include <cstdint>
+#include <string>
 
 namespace pokesim {
 class Dex {
