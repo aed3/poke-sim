@@ -97,6 +97,7 @@ jobs:
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
                 -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
+                -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
                 -G Ninja
 
       - name: Build tests + lib
@@ -167,6 +168,7 @@ jobs:
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
                 -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
+                -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
 
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
