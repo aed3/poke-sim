@@ -6,16 +6,24 @@ on:
     branches:
       - main
     paths:
-      - 'src/**'
+      - '.github/workflows/build-and-test.yml'
+      - 'external/**'
       - 'include/**'
+      - 'src/**'
       - 'tests/**'
+      - 'tools/createSingleHeaderFile.js'
+      - 'CMakeLists.txt'
   push:
     branches:
       - main
     paths:
-      - 'src/**'
+      - '.github/workflows/build-and-test.yml'
+      - 'external/**'
       - 'include/**'
+      - 'src/**'
       - 'tests/**'
+      - 'tools/createSingleHeaderFile.js'
+      - 'CMakeLists.txt'
 
 jobs:
   linux:
