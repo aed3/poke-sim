@@ -13,7 +13,7 @@ class Dex {
   /**
    * @brief Pokemon and Pokemon form name
    *
-   * @details Pokemon that have multiple forms will have their base form and alternate formes listed here.
+   * @details Pokemon that have multiple forms will have their base form and alternate forms listed here.
    * However, if none of a Pokemon's forms are cosmetic (i.e. change nothing expect appearance), the forms cannot be
    * changed during battle, and no true base form exists, then the Pokemon's species name without a form specifier is
    * omitted. For example:
