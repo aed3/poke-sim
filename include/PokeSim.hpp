@@ -2812,7 +2812,7 @@ class Dex {
   /**
    * @brief Pokemon and Pokemon form name
    *
-   * @details Pokemon that have multiple forms will have their base form and alternate formes listed here.
+   * @details Pokemon that have multiple forms will have their base form and alternate forms listed here.
    * However, if none of a Pokemon's forms are cosmetic (i.e. change nothing expect appearance), the forms cannot be
    * changed during battle, and no true base form exists, then the Pokemon's species name without a form specifier is
    * omitted. For example:
@@ -3097,24 +3097,25 @@ class Dex {
 /////////////////////////// START OF src/Dex/Dex.cpp ///////////////////////////
 
 
+
 namespace pokesim {
 namespace internal {
-  template <typename NameEnum, typename StringArray>
-  entt::dense_map<std::string, NameEnum> static createNameToEnumMap(const StringArray& array) {
-    entt::dense_map<std::string, NameEnum> map;
-    for (uint i = 0; i < array.size(); i++) {
-      map[array[i]] = static_cast<NameEnum>(i);
-    }
-    return map;
+template <typename NameEnum, typename StringArray>
+entt::dense_map<std::string, NameEnum> static createNameToEnumMap(const StringArray& array) {
+  entt::dense_map<std::string, NameEnum> map;
+  for (std::size_t i = 0; i < array.size(); i++) {
+    map[array[i]] = static_cast<NameEnum>(i);
   }
-
-  template <typename NameEnum>
-  NameEnum static fromStringToEnum(const entt::dense_map<std::string, NameEnum>& nameToEnum, const std::string& name) {
-    auto foundPair = nameToEnum.find(name);
-    if (foundPair == nameToEnum.end()) return static_cast<NameEnum>(0);
-    return foundPair->second;
-  }
+  return map;
 }
+
+template <typename NameEnum>
+NameEnum static fromStringToEnum(const entt::dense_map<std::string, NameEnum>& nameToEnum, const std::string& name) {
+  auto foundPair = nameToEnum.find(name);
+  if (foundPair == nameToEnum.end()) return static_cast<NameEnum>(0);
+  return foundPair->second;
+}
+}  // namespace internal
 
 Dex::Species Dex::fromNameToSpeciesEnum(const std::string& name) {
   static const entt::dense_map<std::string, Species> map = internal::createNameToEnumMap<Species>(SpeciesNames);
