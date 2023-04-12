@@ -5,7 +5,7 @@ process.chdir(path.join(__dirname, '..'));
 
 const srcFolder = 'src';
 const externalFolder = 'external';
-const testLibraryFolder = `${externalFolder}/Catch2`;
+const testLibraryFolder = path.join(externalFolder, 'Catch2');
 const mainHeader = path.join('src', 'PokeSim.hpp');
 
 const includeRegex = /^\s*#include\s+["<]([^"<>]+)([">])/;

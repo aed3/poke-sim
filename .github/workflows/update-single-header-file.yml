@@ -7,13 +7,15 @@ on:
       - main
     paths: 
       - 'src/**'
+      - 'external/**'
       - 'tools/createSingleHeaderFile.js'
   pull_request:
     branches:
       - main
     paths: 
       - 'src/**'
-      - 'tests/**'
+      - 'external/**'
+      - 'tools/createSingleHeaderFile.js'
 
 jobs:
   create-workflow:
