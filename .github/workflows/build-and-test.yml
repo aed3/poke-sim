@@ -3,16 +3,16 @@ name: Build & Test
 on:
   workflow_dispatch:
   pull_request:
-    branches: 
+    branches:
       - main
-    paths: 
+    paths:
       - 'src/**'
       - 'include/**'
       - 'tests/**'
   push:
-    branches: 
+    branches:
       - main
-    paths: 
+    paths:
       - 'src/**'
       - 'include/**'
       - 'tests/**'

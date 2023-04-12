@@ -8,6 +8,12 @@ on:
     paths: 
       - 'src/**'
       - 'tools/createSingleHeaderFile.js'
+  pull_request:
+    branches:
+      - main
+    paths: 
+      - 'src/**'
+      - 'tests/**'
 
 jobs:
   create-workflow:
