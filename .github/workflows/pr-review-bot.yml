@@ -2,9 +2,9 @@ name: Pull Request Review Bot
 
 on:
   pull_request:
-    branches: 
+    branches:
       - main
-    paths: 
+    paths:
       - 'src/**'
       - 'include/**'
       - 'tests/**'

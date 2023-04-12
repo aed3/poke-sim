@@ -8,10 +8,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 project(PokeSim)
 
-add_library(${PROJECT_NAME} STATIC
+set (SOURCES
   src/Dex/Dex.cpp
-  src/Dex/Names.cpp
 )
+
+add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${PROJECT_SOURCE_DIR}/src
