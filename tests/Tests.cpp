@@ -8,13 +8,8 @@
 
 namespace pokesim {
 TEST_CASE("Example", "") {
-  Pokemon eevee{};
-  eevee.species = Dex::Names::EEVEE;
-  REQUIRE(eevee.isSpecies(Dex::Names::EEVEE));
-  REQUIRE_FALSE(eevee.isSpecies(Dex::Names::VAPOREON, Dex::Names::JOLTEON, Dex::Names::FLAREON));
-
-  REQUIRE(Dex::Names::toString(eevee.species) == "Eevee");
-  REQUIRE(Dex::Names::fromNameToSpeciesEnum("Eevee") == eevee.species);
+  REQUIRE(Dex::toString(Dex::EEVEE) == "Eevee");
+  REQUIRE(Dex::fromNameToSpeciesEnum("Eevee") == Dex::EEVEE);
 }
 };  // namespace pokesim
 

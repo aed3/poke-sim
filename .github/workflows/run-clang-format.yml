@@ -14,7 +14,6 @@ jobs:
     - uses: DoozyX/clang-format-lint-action@v0.15
       with:
         source: 'src tests'
-        exclude: 'src/Dex/Names.hpp'
         extensions: 'hpp,cpp'
         clangFormatVersion: 15
         inplace: True
