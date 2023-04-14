@@ -8,8 +8,8 @@
 
 namespace pokesim {
 TEST_CASE("Example", "") {
-  REQUIRE(Dex::toString(Dex::EEVEE) == "Eevee");
-  REQUIRE(Dex::fromNameToSpeciesEnum("Eevee") == Dex::EEVEE);
+  REQUIRE(dex::toString(dex::EEVEE) == "Eevee");
+  REQUIRE(dex::fromNameToSpeciesEnum("Eevee") == dex::EEVEE);
 }
 };  // namespace pokesim
 
