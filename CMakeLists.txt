@@ -1,8 +1,10 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.9)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+include(CheckIPOSupported)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message("Setting build type to 'Debug' as none was specified.")
@@ -34,6 +36,8 @@ endif()
 
 project(PokeSim)
 
+check_ipo_supported(RESULT supported OUTPUT error)
+
 set (SOURCES
   src/Dex/Dex.cpp
 )
@@ -61,6 +65,16 @@ add_executable(PokeSimTests
   tests/Tests.cpp
   external/Catch2/catch_amalgamated.cpp
 )
+
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+  if (supported)
+      message(STATUS "IPO / LTO enabled")
+      set_property(TARGET ${PROJECT_NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+      set_property(TARGET PokeSimTests PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+  else()
+      message(STATUS "IPO / LTO not supported: <${error}>")
+  endif()
+endif()
 
 option(USE_SINGLE_HEADER_FILE "Use the Single Header File version of the library when running tests." OFF)
 
