@@ -22,6 +22,12 @@
  * src/Components/Names/Status.hpp
  * src/Components/Names/Type.hpp
  * src/Components/Names.hpp
+ * src/Components/Tags/Ability.hpp
+ * src/Components/Tags/Item.hpp
+ * src/Components/Tags/Move.hpp
+ * src/Components/Tags/Status.hpp
+ * src/Components/Tags/Type.hpp
+ * src/Components/Tags.hpp
  * src/Dex/Dex.hpp
  * src/Dex/Dex.cpp
  * src/PokeSim.hpp
@@ -3031,6 +3037,104 @@ struct TypeName {
 
 
 /////////////////////// END OF src/Components/Names.hpp ////////////////////////
+
+
+/////////////////// START OF src/Components/Tags/Ability.hpp ///////////////////
+
+
+namespace pokesim::ability {
+struct Defiant {};
+struct Infiltrator {};
+struct IronFist {};
+struct Static {};
+struct SweetVeil {};
+struct Trace {};
+}  // namespace pokesim::ability
+
+//////////////////// END OF src/Components/Tags/Ability.hpp ////////////////////
+
+
+//////////////////// START OF src/Components/Tags/Item.hpp /////////////////////
+
+
+namespace pokesim::item {
+struct AssaultVest {};
+struct BrightPowder {};
+struct ChoiceScarf {};
+struct ChoiceSpecs {};
+struct FocusSash {};
+struct LifeOrb {};
+}  // namespace pokesim::item
+
+///////////////////// END OF src/Components/Tags/Item.hpp //////////////////////
+
+
+//////////////////// START OF src/Components/Tags/Move.hpp /////////////////////
+
+
+namespace pokesim::move {
+// Move
+
+struct Physical {};
+struct Special {};
+struct Status {};
+
+// Properties
+
+struct Contact {};
+struct BypassSubstitute {};
+struct Punch {};
+}  // namespace pokesim::move
+
+///////////////////// END OF src/Components/Tags/Move.hpp //////////////////////
+
+
+/////////////////// START OF src/Components/Tags/Status.hpp ////////////////////
+
+
+namespace pokesim::status {
+struct Burn {};
+struct Freeze {};
+struct Paralysis {};
+struct Poison {};
+struct Sleep {};
+struct Toxic {};
+}  // namespace pokesim::status
+
+//////////////////// END OF src/Components/Tags/Status.hpp /////////////////////
+
+
+//////////////////// START OF src/Components/Tags/Type.hpp /////////////////////
+
+
+namespace pokesim::type {
+struct Normal {};
+struct Fighting {};
+struct Flying {};
+struct Poison {};
+struct Ground {};
+struct Rock {};
+struct Bug {};
+struct Ghost {};
+struct Steel {};
+struct Fire {};
+struct Water {};
+struct Grass {};
+struct Electric {};
+struct Psychic {};
+struct Ice {};
+struct Dragon {};
+struct Dark {};
+struct Fairy {};
+}  // namespace pokesim::type
+
+///////////////////// END OF src/Components/Tags/Type.hpp //////////////////////
+
+
+/////////////////////// START OF src/Components/Tags.hpp ///////////////////////
+
+
+//////////////////////// END OF src/Components/Tags.hpp ////////////////////////
 
 
 /////////////////////////// START OF src/Dex/Dex.hpp ///////////////////////////
