@@ -3073,7 +3073,7 @@ struct LifeOrb {};
 
 
 namespace pokesim::move {
-// Move
+// Categories
 
 struct Physical {};
 struct Special {};
