@@ -8,7 +8,7 @@
   "C_Cpp.files.exclude": {
     "**/.vscode": true,
     "**/.vs": true,
-    "tests/Catch2": true,
+    "external/**": true,
   },
   "files.associations": {
     "cctype": "cpp",
