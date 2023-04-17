@@ -12,4 +12,9 @@ struct Status {};
 struct Contact {};
 struct BypassSubstitute {};
 struct Punch {};
+
+// Targets
+
+struct AnySingleTarget {};
+struct Self {};
 }  // namespace pokesim::move
