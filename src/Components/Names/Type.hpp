@@ -16,5 +16,4 @@ enum Type : std::uint8_t {
 struct TypeName {
   dex::Type name = dex::NO_TYPE;
 };
-
 }  // namespace pokesim

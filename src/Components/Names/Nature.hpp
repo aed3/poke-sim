@@ -16,5 +16,4 @@ enum Nature : std::uint8_t {
 struct NatureName {
   dex::Nature name = dex::NO_NATURE;
 };
-
 }  // namespace pokesim

@@ -16,5 +16,4 @@ enum Ability : std::uint16_t {
 struct AbilityName {
   dex::Ability name = dex::NO_ABILITY;
 };
-
 }  // namespace pokesim

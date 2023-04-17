@@ -19,5 +19,4 @@ enum Stat : std::uint8_t {
 struct StatName {
   dex::Stat name;
 };
-
 }  // namespace pokesim

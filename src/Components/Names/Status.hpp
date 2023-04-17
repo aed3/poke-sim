@@ -10,5 +10,4 @@ enum Status : std::uint8_t { NO_STATUS = 0, BRN, FRZ, PAR, PSN, SLP, TOX, /*, FR
 struct StatusName {
   dex::Status name = dex::NO_STATUS;
 };
-
 }  // namespace pokesim
