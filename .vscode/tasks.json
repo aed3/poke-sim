@@ -32,6 +32,12 @@
 			"label": "Create Single Header File",
 			"command": "node ${workspaceFolder}/tools/createSingleHeaderFile.js",
 			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"label": "clang-format",
+			"command": "find src -iname *.hpp -o -iname *.cpp | xargs clang-format --style=file -i",
+			"problemMatcher": []
 		}
 	]
 }
