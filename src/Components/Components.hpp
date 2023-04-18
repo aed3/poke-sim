@@ -1,0 +1,18 @@
+#pragma once
+
+#include "Accuracy.hpp"
+#include "BasePower.hpp"
+#include "Boosts.hpp"
+#include "Chance.hpp"
+#include "DexData/DexData.hpp"
+#include "EntityHolders/EntityHolders.hpp"
+#include "EVsIVs.hpp"
+#include "ID.hpp"
+#include "Level.hpp"
+#include "MultiHit.hpp"
+#include "Names/Names.hpp"
+#include "Position.hpp"
+#include "PP.hpp"
+#include "Priority.hpp"
+#include "Stats.hpp"
+#include "Tags/Tags.hpp"
