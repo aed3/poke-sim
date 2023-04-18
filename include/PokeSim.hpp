@@ -22,11 +22,13 @@
  * src/Components/DexData/DexData.hpp
  * src/Components/EVsIVs.hpp
  * external/entt/entity/fwd.hpp
+ * src/Components/EntityHolders/ActionQueue.hpp
  * src/Components/EntityHolders/Battle.hpp
  * src/Components/EntityHolders/FoeSide.hpp
  * src/Components/EntityHolders/MoveSlots.hpp
  * src/Components/EntityHolders/Secondaries.hpp
  * src/Components/EntityHolders/Side.hpp
+ * src/Components/EntityHolders/Sides.hpp
  * src/Components/EntityHolders/Team.hpp
  * src/Components/EntityHolders/EntityHolders.hpp
  * src/Components/ID.hpp
@@ -44,14 +46,18 @@
  * src/Components/PP.hpp
  * src/Components/Position.hpp
  * src/Components/Priority.hpp
+ * src/Components/Probability.hpp
+ * src/Components/RNGSeed.hpp
  * src/Components/Stats.hpp
  * src/Components/Tags/Ability.hpp
- * src/Components/Tags/Active.hpp
+ * src/Components/Tags/Battle.hpp
  * src/Components/Tags/Item.hpp
  * src/Components/Tags/Move.hpp
+ * src/Components/Tags/Pokemon.hpp
  * src/Components/Tags/Status.hpp
  * src/Components/Tags/Type.hpp
  * src/Components/Tags/Tags.hpp
+ * src/Components/Turn.hpp
  * src/Components/Components.hpp
  * src/Dex/Dex.hpp
  * src/Dex/Dex.cpp
@@ -3212,6 +3218,19 @@ using group = basic_group<type_list_transform_t<Owned, storage_for>, type_list_t
 ///////////////////// END OF external/entt/entity/fwd.hpp //////////////////////
 
 
+//////////// START OF src/Components/EntityHolders/ActionQueue.hpp /////////////
+
+
+#include <vector>
+
+namespace pokesim {
+struct ActionQueue {
+  std::vector<entt::entity> actionQueue;
+};
+}  // namespace pokesim
+///////////// END OF src/Components/EntityHolders/ActionQueue.hpp //////////////
+
+
 /////////////// START OF src/Components/EntityHolders/Battle.hpp ///////////////
 
 
@@ -3272,6 +3291,19 @@ struct Side {
 };
 }  // namespace pokesim
 ///////////////// END OF src/Components/EntityHolders/Side.hpp /////////////////
+
+
+/////////////// START OF src/Components/EntityHolders/Sides.hpp ////////////////
+
+
+
+namespace pokesim {
+struct Sides {
+  entt::entity p1;
+  entt::entity p2;
+};
+}  // namespace pokesim
+//////////////// END OF src/Components/EntityHolders/Sides.hpp /////////////////
 
 
 //////////////// START OF src/Components/EntityHolders/Team.hpp ////////////////
@@ -3571,6 +3603,30 @@ struct Priority {
 ////////////////////// END OF src/Components/Priority.hpp //////////////////////
 
 
+/////////////////// START OF src/Components/Probability.hpp ////////////////////
+
+
+namespace pokesim {
+struct Probability {
+  float probability;
+};
+}  // namespace pokesim
+//////////////////// END OF src/Components/Probability.hpp /////////////////////
+
+
+///////////////////// START OF src/Components/RNGSeed.hpp //////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct RNGSeed {
+  std::uint32_t seed;
+};
+}  // namespace pokesim
+////////////////////// END OF src/Components/RNGSeed.hpp ///////////////////////
+
+
 ////////////////////// START OF src/Components/Stats.hpp ///////////////////////
 
 
@@ -3605,14 +3661,25 @@ struct Trace {};
 //////////////////// END OF src/Components/Tags/Ability.hpp ////////////////////
 
 
-/////////////////// START OF src/Components/Tags/Active.hpp ////////////////////
+/////////////////// START OF src/Components/Tags/Battle.hpp ////////////////////
 
 
 namespace pokesim {
-struct Active {};
+
+// Current Action Tags
+
+struct ActiveMove {};
+struct ActiveMoveTarget {};
+struct ActiveMoveSource {};
+
+// Turn State
+
+struct MidTurn {};
+struct Started {};
+struct Ended {};
 }  // namespace pokesim
 
-//////////////////// END OF src/Components/Tags/Active.hpp /////////////////////
+//////////////////// END OF src/Components/Tags/Battle.hpp /////////////////////
 
 
 //////////////////// START OF src/Components/Tags/Item.hpp /////////////////////
@@ -3653,6 +3720,16 @@ struct Self {};
 }  // namespace pokesim::move
 
 ///////////////////// END OF src/Components/Tags/Move.hpp //////////////////////
+
+
+/////////////////// START OF src/Components/Tags/Pokemon.hpp ///////////////////
+
+
+namespace pokesim {
+struct Active {};
+}  // namespace pokesim
+
+//////////////////// END OF src/Components/Tags/Pokemon.hpp ////////////////////
 
 
 /////////////////// START OF src/Components/Tags/Status.hpp ////////////////////
@@ -3701,6 +3778,19 @@ struct Fairy {};
 
 
 ///////////////////// END OF src/Components/Tags/Tags.hpp //////////////////////
+
+
+/////////////////////// START OF src/Components/Turn.hpp ///////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct Turn {
+  std::uint16_t turn;
+};
+}  // namespace pokesim
+//////////////////////// END OF src/Components/Turn.hpp ////////////////////////
 
 
 //////////////////// START OF src/Components/Components.hpp ////////////////////

@@ -14,5 +14,8 @@
 #include "PP.hpp"
 #include "Position.hpp"
 #include "Priority.hpp"
+#include "Probability.hpp"
+#include "RNGSeed.hpp"
 #include "Stats.hpp"
 #include "Tags/Tags.hpp"
+#include "Turn.hpp"
