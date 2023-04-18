@@ -3,11 +3,7 @@
 #include <cstdint>
 
 namespace pokesim {
-struct PP {
-  std::uint8_t pp;
-};
-
-struct MaxPP {
-  std::uint8_t maxPP;
+struct RNGSeed {
+  std::uint32_t seed;
 };
 }  // namespace pokesim

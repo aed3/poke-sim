@@ -1,7 +1,6 @@
 #pragma once
 
-#include <Components/Names/Names.hpp>
-#include <Components/Tags/Tags.hpp>
+#include <Components/Components.hpp>
 #include <array>
 #include <cstdint>
 #include <string>

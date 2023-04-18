@@ -12,7 +12,28 @@
  * external/entt/core/iterator.hpp
  * external/entt/core/memory.hpp
  * external/entt/container/dense_map.hpp
+ * src/Components/Accuracy.hpp
+ * src/Components/BasePower.hpp
+ * src/Components/Boosts.hpp
+ * src/Components/Chance.hpp
  * src/Components/Names/Ability.hpp
+ * src/Components/DexData/Abilities.hpp
+ * src/Components/DexData/BaseStats.hpp
+ * src/Components/DexData/DexData.hpp
+ * src/Components/EVsIVs.hpp
+ * external/entt/entity/fwd.hpp
+ * src/Components/EntityHolders/ActionQueue.hpp
+ * src/Components/EntityHolders/Battle.hpp
+ * src/Components/EntityHolders/FoeSide.hpp
+ * src/Components/EntityHolders/MoveSlots.hpp
+ * src/Components/EntityHolders/Secondaries.hpp
+ * src/Components/EntityHolders/Side.hpp
+ * src/Components/EntityHolders/Sides.hpp
+ * src/Components/EntityHolders/Team.hpp
+ * src/Components/EntityHolders/EntityHolders.hpp
+ * src/Components/ID.hpp
+ * src/Components/Level.hpp
+ * src/Components/MultiHit.hpp
  * src/Components/Names/Gender.hpp
  * src/Components/Names/Item.hpp
  * src/Components/Names/Move.hpp
@@ -22,12 +43,22 @@
  * src/Components/Names/Status.hpp
  * src/Components/Names/Type.hpp
  * src/Components/Names/Names.hpp
+ * src/Components/PP.hpp
+ * src/Components/Position.hpp
+ * src/Components/Priority.hpp
+ * src/Components/Probability.hpp
+ * src/Components/RNGSeed.hpp
+ * src/Components/Stats.hpp
  * src/Components/Tags/Ability.hpp
+ * src/Components/Tags/Battle.hpp
  * src/Components/Tags/Item.hpp
  * src/Components/Tags/Move.hpp
+ * src/Components/Tags/Pokemon.hpp
  * src/Components/Tags/Status.hpp
  * src/Components/Tags/Type.hpp
  * src/Components/Tags/Tags.hpp
+ * src/Components/Turn.hpp
+ * src/Components/Components.hpp
  * src/Dex/Dex.hpp
  * src/Dex/Dex.cpp
  * src/PokeSim.hpp
@@ -2812,6 +2843,74 @@ struct uses_allocator<entt::internal::dense_map_node<Key, Value>, Allocator>
 ///////////////// END OF external/entt/container/dense_map.hpp /////////////////
 
 
+///////////////////// START OF src/Components/Accuracy.hpp /////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct Accuracy {
+  std::uint8_t accuracy;
+};
+}  // namespace pokesim
+////////////////////// END OF src/Components/Accuracy.hpp //////////////////////
+
+
+//////////////////// START OF src/Components/BasePower.hpp /////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct BasePower {
+  std::uint8_t basePower;
+};
+}  // namespace pokesim
+///////////////////// END OF src/Components/BasePower.hpp //////////////////////
+
+
+////////////////////// START OF src/Components/Boosts.hpp //////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct AtkBoost {
+  std::int8_t boost;
+};
+
+struct DefBoost {
+  std::int8_t boost;
+};
+
+struct SpaBoost {
+  std::int8_t boost;
+};
+
+struct SpdBoost {
+  std::int8_t boost;
+};
+
+struct SpeBoost {
+  std::int8_t boost;
+};
+}  // namespace pokesim
+/////////////////////// END OF src/Components/Boosts.hpp ///////////////////////
+
+
+////////////////////// START OF src/Components/Chance.hpp //////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct Chance {
+  std::uint8_t chance;
+};
+}  // namespace pokesim
+/////////////////////// END OF src/Components/Chance.hpp ///////////////////////
+
+
 ////////////////// START OF src/Components/Names/Ability.hpp ///////////////////
 
 #include <cstdint>
@@ -2833,6 +2932,437 @@ struct AbilityName {
 };
 }  // namespace pokesim
 /////////////////// END OF src/Components/Names/Ability.hpp ////////////////////
+
+
+//////////////// START OF src/Components/DexData/Abilities.hpp /////////////////
+
+
+
+namespace pokesim {
+struct PrimaryAbility {
+  dex::Ability ability = dex::NO_ABILITY;
+};
+
+struct SecondaryAbility {
+  dex::Ability ability = dex::NO_ABILITY;
+};
+
+struct HiddenAbility {
+  dex::Ability ability = dex::NO_ABILITY;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/DexData/Abilities.hpp //////////////////
+
+
+//////////////// START OF src/Components/DexData/BaseStats.hpp /////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct BaseStats {
+  std::uint8_t hp;
+  std::uint8_t atk;
+  std::uint8_t def;
+  std::uint8_t spa;
+  std::uint8_t spd;
+  std::uint8_t spe;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/DexData/BaseStats.hpp //////////////////
+
+
+///////////////// START OF src/Components/DexData/DexData.hpp //////////////////
+
+
+////////////////// END OF src/Components/DexData/DexData.hpp ///////////////////
+
+
+////////////////////// START OF src/Components/EVsIVs.hpp //////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct EVs {
+  std::uint8_t hp;
+  std::uint8_t atk;
+  std::uint8_t def;
+  std::uint8_t spa;
+  std::uint8_t spd;
+  std::uint8_t spe;
+};
+
+struct IVs {
+  std::uint8_t hp;
+  std::uint8_t atk;
+  std::uint8_t def;
+  std::uint8_t spa;
+  std::uint8_t spd;
+  std::uint8_t spe;
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Components/EVsIVs.hpp ///////////////////////
+
+
+//////////////////// START OF external/entt/entity/fwd.hpp /////////////////////
+
+#ifndef ENTT_ENTITY_FWD_HPP
+#define ENTT_ENTITY_FWD_HPP
+
+#include <memory>
+#include <type_traits>
+
+namespace entt {
+
+/*! @brief Default entity identifier. */
+enum class entity : id_type {};
+
+template<typename Entity = entity, typename = std::allocator<Entity>>
+class basic_sparse_set;
+
+template<typename Type, typename = entity, typename = std::allocator<Type>, typename = void>
+class basic_storage;
+
+template<typename Type>
+class sigh_storage_mixin;
+
+/**
+ * @brief Provides a common way to define storage types.
+ * @tparam Type Storage value type.
+ * @tparam Entity A valid entity type (see entt_traits for more details).
+ * @tparam Allocator Type of allocator used to manage memory and elements.
+ */
+template<typename Type, typename Entity = entity, typename Allocator = std::allocator<Type>, typename = void>
+struct storage_type {
+    /*! @brief Type-to-storage conversion result. */
+    using type = sigh_storage_mixin<basic_storage<Type, Entity, Allocator>>;
+};
+
+/**
+ * @brief Helper type.
+ * @tparam Args Arguments to forward.
+ */
+template<typename... Args>
+using storage_type_t = typename storage_type<Args...>::type;
+
+/**
+ * Type-to-storage conversion utility that preserves constness.
+ * @tparam Type Storage value type, eventually const.
+ * @tparam Entity A valid entity type (see entt_traits for more details).
+ * @tparam Allocator Type of allocator used to manage memory and elements.
+ */
+template<typename Type, typename Entity = entity, typename Allocator = std::allocator<std::remove_const_t<Type>>>
+struct storage_for {
+    /*! @brief Type-to-storage conversion result. */
+    using type = constness_as_t<storage_type_t<std::remove_const_t<Type>, Entity, Allocator>, Type>;
+};
+
+/**
+ * @brief Helper type.
+ * @tparam Args Arguments to forward.
+ */
+template<typename... Args>
+using storage_for_t = typename storage_for<Args...>::type;
+
+template<typename Entity = entity, typename = std::allocator<Entity>>
+class basic_registry;
+
+template<typename, typename, typename = void>
+class basic_view;
+
+template<typename Type, typename = std::allocator<Type *>>
+class basic_runtime_view;
+
+template<typename, typename, typename>
+class basic_group;
+
+template<typename>
+class basic_observer;
+
+template<typename>
+class basic_organizer;
+
+template<typename, typename...>
+struct basic_handle;
+
+template<typename>
+class basic_snapshot;
+
+template<typename>
+class basic_snapshot_loader;
+
+template<typename>
+class basic_continuous_loader;
+
+/**
+ * @brief Alias for exclusion lists.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+using exclude_t = type_list<Type...>;
+
+/**
+ * @brief Variable template for exclusion lists.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+inline constexpr exclude_t<Type...> exclude{};
+
+/**
+ * @brief Alias for lists of observed components.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+using get_t = type_list<Type...>;
+
+/**
+ * @brief Variable template for lists of observed components.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+inline constexpr get_t<Type...> get{};
+
+/**
+ * @brief Alias for lists of owned components.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+using owned_t = type_list<Type...>;
+
+/**
+ * @brief Variable template for lists of owned components.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+inline constexpr owned_t<Type...> owned{};
+
+/*! @brief Alias declaration for the most common use case. */
+using sparse_set = basic_sparse_set<>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Type Type of objects assigned to the entities.
+ */
+template<typename Type>
+using storage = basic_storage<Type>;
+
+/*! @brief Alias declaration for the most common use case. */
+using registry = basic_registry<>;
+
+/*! @brief Alias declaration for the most common use case. */
+using observer = basic_observer<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using organizer = basic_organizer<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using handle = basic_handle<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using const_handle = basic_handle<const registry>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Args Other template parameters.
+ */
+template<typename... Args>
+using handle_view = basic_handle<registry, Args...>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Args Other template parameters.
+ */
+template<typename... Args>
+using const_handle_view = basic_handle<const registry, Args...>;
+
+/*! @brief Alias declaration for the most common use case. */
+using snapshot = basic_snapshot<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using snapshot_loader = basic_snapshot_loader<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using continuous_loader = basic_continuous_loader<registry>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Get Types of storage iterated by the view.
+ * @tparam Exclude Types of storage used to filter the view.
+ */
+template<typename Get, typename Exclude = exclude_t<>>
+using view = basic_view<type_list_transform_t<Get, storage_for>, type_list_transform_t<Exclude, storage_for>>;
+
+/*! @brief Alias declaration for the most common use case. */
+using runtime_view = basic_runtime_view<sparse_set>;
+
+/*! @brief Alias declaration for the most common use case. */
+using const_runtime_view = basic_runtime_view<const sparse_set>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Owned Types of storage _owned_ by the group.
+ * @tparam Get Types of storage _observed_ by the group.
+ * @tparam Exclude Types of storage used to filter the group.
+ */
+template<typename Owned, typename Get, typename Exclude>
+using group = basic_group<type_list_transform_t<Owned, storage_for>, type_list_transform_t<Get, storage_for>, type_list_transform_t<Exclude, storage_for>>;
+
+} // namespace entt
+
+#endif
+
+///////////////////// END OF external/entt/entity/fwd.hpp //////////////////////
+
+
+//////////// START OF src/Components/EntityHolders/ActionQueue.hpp /////////////
+
+
+#include <vector>
+
+namespace pokesim {
+struct ActionQueue {
+  std::vector<entt::entity> actionQueue;
+};
+}  // namespace pokesim
+///////////// END OF src/Components/EntityHolders/ActionQueue.hpp //////////////
+
+
+/////////////// START OF src/Components/EntityHolders/Battle.hpp ///////////////
+
+
+
+namespace pokesim {
+struct Battle {
+  entt::entity battle;
+};
+}  // namespace pokesim
+//////////////// END OF src/Components/EntityHolders/Battle.hpp ////////////////
+
+
+////////////// START OF src/Components/EntityHolders/FoeSide.hpp ///////////////
+
+
+
+namespace pokesim {
+struct FoeSide {
+  entt::entity foeSide;
+};
+}  // namespace pokesim
+/////////////// END OF src/Components/EntityHolders/FoeSide.hpp ////////////////
+
+
+///////////// START OF src/Components/EntityHolders/MoveSlots.hpp //////////////
+
+
+#include <vector>
+
+namespace pokesim {
+struct MoveSlots {
+  std::vector<entt::entity> moveSlots;
+};
+}  // namespace pokesim
+////////////// END OF src/Components/EntityHolders/MoveSlots.hpp ///////////////
+
+
+//////////// START OF src/Components/EntityHolders/Secondaries.hpp /////////////
+
+
+#include <vector>
+
+namespace pokesim {
+struct Secondaries {
+  std::vector<entt::entity> secondaries;
+};
+}  // namespace pokesim
+///////////// END OF src/Components/EntityHolders/Secondaries.hpp //////////////
+
+
+//////////////// START OF src/Components/EntityHolders/Side.hpp ////////////////
+
+
+
+namespace pokesim {
+struct Side {
+  entt::entity side;
+};
+}  // namespace pokesim
+///////////////// END OF src/Components/EntityHolders/Side.hpp /////////////////
+
+
+/////////////// START OF src/Components/EntityHolders/Sides.hpp ////////////////
+
+
+
+namespace pokesim {
+struct Sides {
+  entt::entity p1;
+  entt::entity p2;
+};
+}  // namespace pokesim
+//////////////// END OF src/Components/EntityHolders/Sides.hpp /////////////////
+
+
+//////////////// START OF src/Components/EntityHolders/Team.hpp ////////////////
+
+
+#include <vector>
+
+namespace pokesim {
+struct Team {
+  std::vector<entt::entity> team;
+};
+}  // namespace pokesim
+///////////////// END OF src/Components/EntityHolders/Team.hpp /////////////////
+
+
+/////////// START OF src/Components/EntityHolders/EntityHolders.hpp ////////////
+
+
+//////////// END OF src/Components/EntityHolders/EntityHolders.hpp /////////////
+
+
+//////////////////////// START OF src/Components/ID.hpp ////////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct ID {
+  std::uint16_t id;
+};
+}  // namespace pokesim
+///////////////////////// END OF src/Components/ID.hpp /////////////////////////
+
+
+////////////////////// START OF src/Components/Level.hpp ///////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct Level {
+  std::uint8_t level;
+};
+}  // namespace pokesim
+/////////////////////// END OF src/Components/Level.hpp ////////////////////////
+
+
+///////////////////// START OF src/Components/MultiHit.hpp /////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct MultiHit {
+  std::uint8_t minHits;
+  std::uint8_t maxHits;
+};
+}  // namespace pokesim
+////////////////////// END OF src/Components/MultiHit.hpp //////////////////////
 
 
 /////////////////// START OF src/Components/Names/Gender.hpp ///////////////////
@@ -3030,6 +3560,92 @@ struct TypeName {
 //////////////////// END OF src/Components/Names/Names.hpp /////////////////////
 
 
+//////////////////////// START OF src/Components/PP.hpp ////////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct PP {
+  std::uint8_t pp;
+};
+
+struct MaxPP {
+  std::uint8_t maxPP;
+};
+}  // namespace pokesim
+///////////////////////// END OF src/Components/PP.hpp /////////////////////////
+
+
+///////////////////// START OF src/Components/Position.hpp /////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct Position {
+  std::uint8_t position;
+};
+}  // namespace pokesim
+////////////////////// END OF src/Components/Position.hpp //////////////////////
+
+
+///////////////////// START OF src/Components/Priority.hpp /////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct Priority {
+  std::uint8_t priority;
+};
+}  // namespace pokesim
+////////////////////// END OF src/Components/Priority.hpp //////////////////////
+
+
+/////////////////// START OF src/Components/Probability.hpp ////////////////////
+
+
+namespace pokesim {
+struct Probability {
+  float probability;
+};
+}  // namespace pokesim
+//////////////////// END OF src/Components/Probability.hpp /////////////////////
+
+
+///////////////////// START OF src/Components/RNGSeed.hpp //////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct RNGSeed {
+  std::uint32_t seed;
+};
+}  // namespace pokesim
+////////////////////// END OF src/Components/RNGSeed.hpp ///////////////////////
+
+
+////////////////////// START OF src/Components/Stats.hpp ///////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct Stats {
+  std::uint16_t hp;
+  std::uint16_t atk;
+  std::uint16_t def;
+  std::uint16_t spa;
+  std::uint16_t spd;
+  std::uint16_t spe;
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Components/Stats.hpp ////////////////////////
+
+
 /////////////////// START OF src/Components/Tags/Ability.hpp ///////////////////
 
 
@@ -3043,6 +3659,27 @@ struct Trace {};
 }  // namespace pokesim::ability
 
 //////////////////// END OF src/Components/Tags/Ability.hpp ////////////////////
+
+
+/////////////////// START OF src/Components/Tags/Battle.hpp ////////////////////
+
+
+namespace pokesim {
+
+// Current Action Tags
+
+struct ActiveMove {};
+struct ActiveMoveTarget {};
+struct ActiveMoveSource {};
+
+// Turn State
+
+struct MidTurn {};
+struct Started {};
+struct Ended {};
+}  // namespace pokesim
+
+//////////////////// END OF src/Components/Tags/Battle.hpp /////////////////////
 
 
 //////////////////// START OF src/Components/Tags/Item.hpp /////////////////////
@@ -3083,6 +3720,16 @@ struct Self {};
 }  // namespace pokesim::move
 
 ///////////////////// END OF src/Components/Tags/Move.hpp //////////////////////
+
+
+/////////////////// START OF src/Components/Tags/Pokemon.hpp ///////////////////
+
+
+namespace pokesim {
+struct Active {};
+}  // namespace pokesim
+
+//////////////////// END OF src/Components/Tags/Pokemon.hpp ////////////////////
 
 
 /////////////////// START OF src/Components/Tags/Status.hpp ////////////////////
@@ -3131,6 +3778,25 @@ struct Fairy {};
 
 
 ///////////////////// END OF src/Components/Tags/Tags.hpp //////////////////////
+
+
+/////////////////////// START OF src/Components/Turn.hpp ///////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct Turn {
+  std::uint16_t turn;
+};
+}  // namespace pokesim
+//////////////////////// END OF src/Components/Turn.hpp ////////////////////////
+
+
+//////////////////// START OF src/Components/Components.hpp ////////////////////
+
+
+///////////////////// END OF src/Components/Components.hpp /////////////////////
 
 
 /////////////////////////// START OF src/Dex/Dex.hpp ///////////////////////////
