@@ -23,9 +23,11 @@
  * src/Components/EVsIVs.hpp
  * external/entt/entity/fwd.hpp
  * src/Components/EntityHolders/Battle.hpp
+ * src/Components/EntityHolders/FoeSide.hpp
  * src/Components/EntityHolders/MoveSlots.hpp
  * src/Components/EntityHolders/Secondaries.hpp
  * src/Components/EntityHolders/Side.hpp
+ * src/Components/EntityHolders/Team.hpp
  * src/Components/EntityHolders/EntityHolders.hpp
  * src/Components/ID.hpp
  * src/Components/Level.hpp
@@ -3222,6 +3224,18 @@ struct Battle {
 //////////////// END OF src/Components/EntityHolders/Battle.hpp ////////////////
 
 
+////////////// START OF src/Components/EntityHolders/FoeSide.hpp ///////////////
+
+
+
+namespace pokesim {
+struct FoeSide {
+  entt::entity foeSide;
+};
+}  // namespace pokesim
+/////////////// END OF src/Components/EntityHolders/FoeSide.hpp ////////////////
+
+
 ///////////// START OF src/Components/EntityHolders/MoveSlots.hpp //////////////
 
 
@@ -3258,6 +3272,19 @@ struct Side {
 };
 }  // namespace pokesim
 ///////////////// END OF src/Components/EntityHolders/Side.hpp /////////////////
+
+
+//////////////// START OF src/Components/EntityHolders/Team.hpp ////////////////
+
+
+#include <vector>
+
+namespace pokesim {
+struct Team {
+  std::vector<entt::entity> team;
+};
+}  // namespace pokesim
+///////////////// END OF src/Components/EntityHolders/Team.hpp /////////////////
 
 
 /////////// START OF src/Components/EntityHolders/EntityHolders.hpp ////////////
