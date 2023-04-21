@@ -16,6 +16,8 @@
 #include "Priority.hpp"
 #include "Probability.hpp"
 #include "RNGSeed.hpp"
+#include "SpeedSort.hpp"
 #include "Stats.hpp"
 #include "Tags/Tags.hpp"
+#include "TargetSlot.hpp"
 #include "Turn.hpp"

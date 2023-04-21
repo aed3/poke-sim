@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Ability.hpp"
+#include "Actions.hpp"
 #include "Battle.hpp"
 #include "Item.hpp"
 #include "Move.hpp"
