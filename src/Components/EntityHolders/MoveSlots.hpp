@@ -5,6 +5,6 @@
 
 namespace pokesim {
 struct MoveSlots {
-  std::vector<entt::entity> moveSlots;
+  std::vector<entt::entity> moveSlots{};
 };
 }  // namespace pokesim

@@ -5,6 +5,6 @@
 
 namespace pokesim {
 struct Secondaries {
-  std::vector<entt::entity> secondaries;
+  std::vector<entt::entity> secondaries{};
 };
 }  // namespace pokesim

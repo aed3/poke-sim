@@ -5,6 +5,6 @@
 
 namespace pokesim {
 struct Team {
-  std::vector<entt::entity> team;
+  std::vector<entt::entity> team{};
 };
 }  // namespace pokesim
