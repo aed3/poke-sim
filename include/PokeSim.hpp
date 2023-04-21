@@ -25,7 +25,9 @@
  * src/Components/EntityHolders/ActionQueue.hpp
  * src/Components/EntityHolders/Battle.hpp
  * src/Components/EntityHolders/FoeSide.hpp
+ * src/Components/EntityHolders/Move.hpp
  * src/Components/EntityHolders/MoveSlots.hpp
+ * src/Components/EntityHolders/Pokemon.hpp
  * src/Components/EntityHolders/Secondaries.hpp
  * src/Components/EntityHolders/Side.hpp
  * src/Components/EntityHolders/Sides.hpp
@@ -48,8 +50,10 @@
  * src/Components/Priority.hpp
  * src/Components/Probability.hpp
  * src/Components/RNGSeed.hpp
+ * src/Components/SpeedSort.hpp
  * src/Components/Stats.hpp
  * src/Components/Tags/Ability.hpp
+ * src/Components/Tags/Actions.hpp
  * src/Components/Tags/Battle.hpp
  * src/Components/Tags/Item.hpp
  * src/Components/Tags/Move.hpp
@@ -57,6 +61,7 @@
  * src/Components/Tags/Status.hpp
  * src/Components/Tags/Type.hpp
  * src/Components/Tags/Tags.hpp
+ * src/Components/TargetSlot.hpp
  * src/Components/Turn.hpp
  * src/Components/Components.hpp
  * src/Dex/Dex.hpp
@@ -3225,7 +3230,7 @@ using group = basic_group<type_list_transform_t<Owned, storage_for>, type_list_t
 
 namespace pokesim {
 struct ActionQueue {
-  std::vector<entt::entity> actionQueue;
+  std::vector<entt::entity> actionQueue{};
 };
 }  // namespace pokesim
 ///////////// END OF src/Components/EntityHolders/ActionQueue.hpp //////////////
@@ -3255,6 +3260,18 @@ struct FoeSide {
 /////////////// END OF src/Components/EntityHolders/FoeSide.hpp ////////////////
 
 
+//////////////// START OF src/Components/EntityHolders/Move.hpp ////////////////
+
+
+
+namespace pokesim {
+struct Move {
+  entt::entity move;
+};
+}  // namespace pokesim
+///////////////// END OF src/Components/EntityHolders/Move.hpp /////////////////
+
+
 ///////////// START OF src/Components/EntityHolders/MoveSlots.hpp //////////////
 
 
@@ -3262,10 +3279,22 @@ struct FoeSide {
 
 namespace pokesim {
 struct MoveSlots {
-  std::vector<entt::entity> moveSlots;
+  std::vector<entt::entity> moveSlots{};
 };
 }  // namespace pokesim
 ////////////// END OF src/Components/EntityHolders/MoveSlots.hpp ///////////////
+
+
+////////////// START OF src/Components/EntityHolders/Pokemon.hpp ///////////////
+
+
+
+namespace pokesim {
+struct Pokemon {
+  entt::entity pokemon;
+};
+}  // namespace pokesim
+/////////////// END OF src/Components/EntityHolders/Pokemon.hpp ////////////////
 
 
 //////////// START OF src/Components/EntityHolders/Secondaries.hpp /////////////
@@ -3275,7 +3304,7 @@ struct MoveSlots {
 
 namespace pokesim {
 struct Secondaries {
-  std::vector<entt::entity> secondaries;
+  std::vector<entt::entity> secondaries{};
 };
 }  // namespace pokesim
 ///////////// END OF src/Components/EntityHolders/Secondaries.hpp //////////////
@@ -3313,7 +3342,7 @@ struct Sides {
 
 namespace pokesim {
 struct Team {
-  std::vector<entt::entity> team;
+  std::vector<entt::entity> team{};
 };
 }  // namespace pokesim
 ///////////////// END OF src/Components/EntityHolders/Team.hpp /////////////////
@@ -3627,6 +3656,22 @@ struct RNGSeed {
 ////////////////////// END OF src/Components/RNGSeed.hpp ///////////////////////
 
 
+//////////////////// START OF src/Components/SpeedSort.hpp /////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct SpeedSort {
+  std::uint8_t order;
+  std::int8_t priority;
+  std::int8_t fractionalPriority;
+  std::uint16_t speed;
+};
+}  // namespace pokesim
+///////////////////// END OF src/Components/SpeedSort.hpp //////////////////////
+
+
 ////////////////////// START OF src/Components/Stats.hpp ///////////////////////
 
 
@@ -3659,6 +3704,31 @@ struct Trace {};
 }  // namespace pokesim::ability
 
 //////////////////// END OF src/Components/Tags/Ability.hpp ////////////////////
+
+
+/////////////////// START OF src/Components/Tags/Actions.hpp ///////////////////
+
+
+namespace pokesim::action {
+struct Move {};
+
+struct SwitchOut {};
+struct PreTurn {};
+struct MidTurn {};
+struct PostFoeFaint {};
+
+struct Item {};
+struct Team {};
+struct RevivalBlessing {};
+struct SwitchIn {};
+struct PreSwitch {};
+struct MegaEvolve {};
+struct Primal {};
+struct Dynamax {};
+struct Terastallize {};
+}  // namespace pokesim::action
+
+//////////////////// END OF src/Components/Tags/Actions.hpp ////////////////////
 
 
 /////////////////// START OF src/Components/Tags/Battle.hpp ////////////////////
@@ -3778,6 +3848,24 @@ struct Fairy {};
 
 
 ///////////////////// END OF src/Components/Tags/Tags.hpp //////////////////////
+
+
+//////////////////// START OF src/Components/TargetSlot.hpp ////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct TargetSlot {
+  enum : uint8_t {
+    P1A,
+    P1B,
+    P2A,
+    P2B,
+  } targetSlot;
+};
+}  // namespace pokesim
+///////////////////// END OF src/Components/TargetSlot.hpp /////////////////////
 
 
 /////////////////////// START OF src/Components/Turn.hpp ///////////////////////
