@@ -37,7 +37,7 @@ jobs:
           -Bbuild \
           -G "Unix Makefiles"
       - name: Run One Review Bot
-        uses: aed3/one-review-bot@v1.1
+        uses: aed3/one-review-bot@v1.2
         with:
           cspell_config: .vscode/cspell.json
           files_config: .bot-include
