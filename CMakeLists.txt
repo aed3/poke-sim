@@ -39,7 +39,8 @@ project(PokeSim)
 check_ipo_supported(RESULT supported OUTPUT error)
 
 set (SOURCES
-  src/Dex/Dex.cpp
+  src/Dex/Moves/MoveSetup.cpp
+  src/Dex/Names.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})

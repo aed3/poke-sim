@@ -17,4 +17,11 @@ struct Punch {};
 
 struct AnySingleTarget {};
 struct Self {};
+
+namespace effect {
+// Targets
+
+struct MoveTarget {};
+struct MoveSource {};
+}  // namespace effect
 }  // namespace pokesim::move

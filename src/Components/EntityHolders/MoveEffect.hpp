@@ -1,10 +1,10 @@
 #pragma once
 
 #include <entt/entity/fwd.hpp>
-#include <vector>
 
 namespace pokesim {
-struct Secondaries {
-  std::vector<entt::entity> secondaries{};
+struct MoveEffect {
+  bool primary = true;
+  entt::entity moveEffect{};
 };
 }  // namespace pokesim

@@ -3,3 +3,5 @@ Checks: 'bugprone-assignment-in-if-condition,bugprone-bool-pointer-implicit-conv
 CheckOptions:
   readability-implicit-bool-conversion.AllowIntegerConditions: 'true'
   readability-implicit-bool-conversion.AllowPointerConditions: 'true'
+  readability-identifier-length.IgnoredVariableNames: 'pp'
+  readability-identifier-length.IgnoredParameterNames: 'pp'
