@@ -46,10 +46,9 @@
  * src/Components/Names/Status.hpp
  * src/Components/Names/Names.hpp
  * src/Dex/Dex.hpp
- * src/Dex/Species/SpeciesSetup.hpp
- * src/Dex/Species/SpeciesSetup.cpp
- * src/Dex/Names.hpp
- * src/Dex/Names.cpp
+ * src/Dex/SetupClasses/Setup.hpp
+ * src/Dex/SetupClasses/SpeciesSetup.hpp
+ * src/Dex/SetupClasses/SpeciesSetup.cpp
  * src/Components/Accuracy.hpp
  * src/Components/BasePower.hpp
  * src/Components/Boosts.hpp
@@ -59,8 +58,12 @@
  * src/Components/PP.hpp
  * src/Components/Priority.hpp
  * src/Components/Tags/Move.hpp
- * src/Dex/Moves/MoveSetup.hpp
- * src/Dex/Moves/MoveSetup.cpp
+ * src/Dex/SetupClasses/MoveSetup.hpp
+ * src/Dex/SetupClasses/MoveSetup.cpp
+ * src/Dex/SetupClasses/ItemSetup.hpp
+ * src/Dex/SetupClasses/ItemSetup.cpp
+ * src/Dex/Names.hpp
+ * src/Dex/Names.cpp
  * src/Components/EVsIVs.hpp
  * src/Components/EntityHolders/ActionQueue.hpp
  * src/Components/EntityHolders/Battle.hpp
@@ -11868,30 +11871,46 @@ class Dex {
 //////////////////////////// END OF src/Dex/Dex.hpp ////////////////////////////
 
 
-////////////////// START OF src/Dex/Species/SpeciesSetup.hpp ///////////////////
+/////////////////// START OF src/Dex/SetupClasses/Setup.hpp ////////////////////
 
 
 
 namespace pokesim::dex::internal {
-class SpeciesSetup {
+struct DexDataSetup {
+ protected:
   entt::handle handle;
 
  public:
-  SpeciesSetup(Dex& pokedex) : handle(pokedex.createEntry()) {}
+  DexDataSetup(Dex& pokedex) : handle(pokedex.createEntry()) {}
+
+  template <typename Tag>
+  void setProperty() {
+    handle.emplace<Tag>();
+  }
+};
+}  // namespace pokesim::dex::internal
+//////////////////// END OF src/Dex/SetupClasses/Setup.hpp /////////////////////
+
+
+//////////////// START OF src/Dex/SetupClasses/SpeciesSetup.hpp ////////////////
+
+
+
+
+namespace pokesim::dex::internal {
+struct SpeciesSetup : DexDataSetup {
+  SpeciesSetup(Dex& pokedex) : DexDataSetup(pokedex) {}
 
   void setName(Species species);
   void setType(Type type1, Type type2 = NO_TYPE);
   void setBaseStats(
     std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe);
-
-  template <typename Tag>
-  void setProperty();
 };
 }  // namespace pokesim::dex::internal
-/////////////////// END OF src/Dex/Species/SpeciesSetup.hpp ////////////////////
+///////////////// END OF src/Dex/SetupClasses/SpeciesSetup.hpp /////////////////
 
 
-////////////////// START OF src/Dex/Species/SpeciesSetup.cpp ///////////////////
+//////////////// START OF src/Dex/SetupClasses/SpeciesSetup.cpp ////////////////
 
 
 
@@ -11907,13 +11926,311 @@ void SpeciesSetup::setType(Type type1, Type type2) {
 void SpeciesSetup::setBaseStats(std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe) {
   handle.emplace<BaseStats>(hp, atk, def, spa, spd, spe);
 }
+}  // namespace pokesim::dex::internal
+///////////////// END OF src/Dex/SetupClasses/SpeciesSetup.cpp /////////////////
 
-template <typename Tag>
-void SpeciesSetup::setProperty() {
-  handle.emplace<Tag>();
+
+///////////////////// START OF src/Components/Accuracy.hpp /////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct Accuracy {
+  std::uint8_t accuracy;
+};
+}  // namespace pokesim
+////////////////////// END OF src/Components/Accuracy.hpp //////////////////////
+
+
+//////////////////// START OF src/Components/BasePower.hpp /////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct BasePower {
+  std::uint8_t basePower;
+};
+}  // namespace pokesim
+///////////////////// END OF src/Components/BasePower.hpp //////////////////////
+
+
+////////////////////// START OF src/Components/Boosts.hpp //////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct AtkBoost {
+  std::int8_t boost;
+};
+
+struct DefBoost {
+  std::int8_t boost;
+};
+
+struct SpaBoost {
+  std::int8_t boost;
+};
+
+struct SpdBoost {
+  std::int8_t boost;
+};
+
+struct SpeBoost {
+  std::int8_t boost;
+};
+}  // namespace pokesim
+/////////////////////// END OF src/Components/Boosts.hpp ///////////////////////
+
+
+////////////////////// START OF src/Components/Chance.hpp //////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct Chance {
+  std::uint8_t chance;
+};
+}  // namespace pokesim
+/////////////////////// END OF src/Components/Chance.hpp ///////////////////////
+
+
+///////////// START OF src/Components/EntityHolders/MoveEffect.hpp /////////////
+
+
+
+namespace pokesim {
+struct MoveEffect {
+  bool primary = true;
+  entt::entity moveEffect{};
+};
+}  // namespace pokesim
+////////////// END OF src/Components/EntityHolders/MoveEffect.hpp //////////////
+
+
+///////////////////// START OF src/Components/MultiHit.hpp /////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct MultiHit {
+  std::uint8_t minHits;
+  std::uint8_t maxHits;
+};
+}  // namespace pokesim
+////////////////////// END OF src/Components/MultiHit.hpp //////////////////////
+
+
+//////////////////////// START OF src/Components/PP.hpp ////////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct PP {
+  std::uint8_t pp;
+};
+
+struct MaxPP {
+  std::uint8_t maxPP;
+};
+}  // namespace pokesim
+///////////////////////// END OF src/Components/PP.hpp /////////////////////////
+
+
+///////////////////// START OF src/Components/Priority.hpp /////////////////////
+
+
+#include <cstdint>
+
+namespace pokesim {
+struct Priority {
+  std::uint8_t priority;
+};
+}  // namespace pokesim
+////////////////////// END OF src/Components/Priority.hpp //////////////////////
+
+
+//////////////////// START OF src/Components/Tags/Move.hpp /////////////////////
+
+
+namespace pokesim::move {
+// Categories
+
+struct Physical {};
+struct Special {};
+struct Status {};
+
+// Properties
+
+struct Contact {};
+struct BypassSubstitute {};
+struct Punch {};
+
+// Targets
+
+struct AnySingleTarget {};
+struct Self {};
+
+namespace effect {
+// Targets
+
+struct MoveTarget {};
+struct MoveSource {};
+}  // namespace effect
+}  // namespace pokesim::move
+
+///////////////////// END OF src/Components/Tags/Move.hpp //////////////////////
+
+
+///////////////// START OF src/Dex/SetupClasses/MoveSetup.hpp //////////////////
+
+
+
+
+namespace pokesim::dex::internal {
+struct MoveSetup : DexDataSetup {
+  MoveSetup(Dex& pokedex) : DexDataSetup(pokedex) {}
+
+  void setName(Move move);
+  void setType(Type type);
+  void setAccuracy(std::uint8_t accuracy);
+  void setBasePower(std::uint8_t basePower);
+
+  void setCategoryPhysical();
+  void setCategorySpecial();
+  void setCategoryStatus();
+
+  void setBasePP(std::uint8_t pp);
+  void setPriority(std::uint8_t priority);
+  void setMultiHit(std::uint8_t minHits, std::uint8_t maxHits);
+
+  void setPrimaryEffect(entt::entity entity);
+  void setSecondaryEffect(entt::entity entity);
+};
+
+struct MoveEffectSetup : DexDataSetup {
+  MoveEffectSetup(Dex& pokedex) : DexDataSetup(pokedex) {}
+  entt::entity entity() const { return handle; }
+
+  void setChance(std::uint8_t chance);
+  void setEffectsSelf();
+  void setEffectsTarget();
+
+  template <typename BoostType>
+  void setBoost(std::int8_t boost);
+};
+}  // namespace pokesim::dex::internal
+////////////////// END OF src/Dex/SetupClasses/MoveSetup.hpp ///////////////////
+
+
+///////////////// START OF src/Dex/SetupClasses/MoveSetup.cpp //////////////////
+
+
+
+namespace pokesim::dex::internal {
+void MoveSetup::setName(Move move) {
+  handle.emplace<MoveName>(move);
+}
+
+void MoveSetup::setType(Type type) {
+  handle.emplace<TypeName>(type);
+}
+
+void MoveSetup::setAccuracy(std::uint8_t accuracy) {
+  handle.emplace<Accuracy>(accuracy);
+}
+
+void MoveSetup::setBasePower(std::uint8_t basePower) {
+  handle.emplace<BasePower>(basePower);
+}
+
+void MoveSetup::setCategoryPhysical() {
+  ENTT_ASSERT(!(handle.any_of<move::Special, move::Status>()), "A move can only have one category");
+  handle.emplace<move::Physical>();
+}
+
+void MoveSetup::setCategorySpecial() {
+  ENTT_ASSERT(!(handle.any_of<move::Physical, move::Status>()), "A move can only have one category");
+  handle.emplace<move::Special>();
+}
+
+void MoveSetup::setCategoryStatus() {
+  ENTT_ASSERT(!(handle.any_of<move::Physical, move::Special>()), "A move can only have one category");
+  handle.emplace<move::Status>();
+}
+
+void MoveSetup::setBasePP(std::uint8_t pp) {
+  handle.emplace<PP>(pp);
+}
+
+void MoveSetup::setPriority(std::uint8_t priority) {
+  handle.emplace<Priority>(priority);
+}
+
+void MoveSetup::setMultiHit(std::uint8_t minHits, std::uint8_t maxHits) {
+  handle.emplace<MultiHit>(minHits, maxHits);
+}
+
+void MoveSetup::setPrimaryEffect(entt::entity entity) {
+  handle.emplace<MoveEffect>(true, entity);
+}
+
+void MoveSetup::setSecondaryEffect(entt::entity entity) {
+  handle.emplace<MoveEffect>(false, entity);
+}
+
+void MoveEffectSetup::setChance(std::uint8_t chance) {
+  handle.emplace<Chance>(chance);
+}
+
+void MoveEffectSetup::setEffectsSelf() {
+  handle.emplace<move::effect::MoveSource>();
+}
+
+void MoveEffectSetup::setEffectsTarget() {
+  handle.emplace<move::effect::MoveTarget>();
+}
+
+template <typename BoostType>
+void MoveEffectSetup::setBoost(std::int8_t boost) {
+  static_assert(
+    std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() || std::is_same<SpaBoost, BoostType>() ||
+    std::is_same<SpdBoost, BoostType>() || std::is_same<SpeBoost, BoostType>());
+  handle.emplace<BoostType>(boost);
 }
 }  // namespace pokesim::dex::internal
-/////////////////// END OF src/Dex/Species/SpeciesSetup.cpp ////////////////////
+////////////////// END OF src/Dex/SetupClasses/MoveSetup.cpp ///////////////////
+
+
+///////////////// START OF src/Dex/SetupClasses/ItemSetup.hpp //////////////////
+
+
+
+
+namespace pokesim::dex::internal {
+struct ItemSetup : DexDataSetup {
+  ItemSetup(Dex& pokedex) : DexDataSetup(pokedex) {}
+
+  void setName(Item item);
+};
+}  // namespace pokesim::dex::internal
+////////////////// END OF src/Dex/SetupClasses/ItemSetup.hpp ///////////////////
+
+
+///////////////// START OF src/Dex/SetupClasses/ItemSetup.cpp //////////////////
+
+
+namespace pokesim::dex::internal {
+void ItemSetup::setName(Item item) {
+  handle.emplace<ItemName>(item);
+}
+}  // namespace pokesim::dex::internal
+////////////////// END OF src/Dex/SetupClasses/ItemSetup.cpp ///////////////////
 
 
 ////////////////////////// START OF src/Dex/Names.hpp //////////////////////////
@@ -12345,304 +12662,6 @@ std::string toID(const std::string& name) {
 }  // namespace pokesim::dex
 
 /////////////////////////// END OF src/Dex/Names.cpp ///////////////////////////
-
-
-///////////////////// START OF src/Components/Accuracy.hpp /////////////////////
-
-
-#include <cstdint>
-
-namespace pokesim {
-struct Accuracy {
-  std::uint8_t accuracy;
-};
-}  // namespace pokesim
-////////////////////// END OF src/Components/Accuracy.hpp //////////////////////
-
-
-//////////////////// START OF src/Components/BasePower.hpp /////////////////////
-
-
-#include <cstdint>
-
-namespace pokesim {
-struct BasePower {
-  std::uint8_t basePower;
-};
-}  // namespace pokesim
-///////////////////// END OF src/Components/BasePower.hpp //////////////////////
-
-
-////////////////////// START OF src/Components/Boosts.hpp //////////////////////
-
-
-#include <cstdint>
-
-namespace pokesim {
-struct AtkBoost {
-  std::int8_t boost;
-};
-
-struct DefBoost {
-  std::int8_t boost;
-};
-
-struct SpaBoost {
-  std::int8_t boost;
-};
-
-struct SpdBoost {
-  std::int8_t boost;
-};
-
-struct SpeBoost {
-  std::int8_t boost;
-};
-}  // namespace pokesim
-/////////////////////// END OF src/Components/Boosts.hpp ///////////////////////
-
-
-////////////////////// START OF src/Components/Chance.hpp //////////////////////
-
-
-#include <cstdint>
-
-namespace pokesim {
-struct Chance {
-  std::uint8_t chance;
-};
-}  // namespace pokesim
-/////////////////////// END OF src/Components/Chance.hpp ///////////////////////
-
-
-///////////// START OF src/Components/EntityHolders/MoveEffect.hpp /////////////
-
-
-
-namespace pokesim {
-struct MoveEffect {
-  bool primary = true;
-  entt::entity moveEffect{};
-};
-}  // namespace pokesim
-////////////// END OF src/Components/EntityHolders/MoveEffect.hpp //////////////
-
-
-///////////////////// START OF src/Components/MultiHit.hpp /////////////////////
-
-
-#include <cstdint>
-
-namespace pokesim {
-struct MultiHit {
-  std::uint8_t minHits;
-  std::uint8_t maxHits;
-};
-}  // namespace pokesim
-////////////////////// END OF src/Components/MultiHit.hpp //////////////////////
-
-
-//////////////////////// START OF src/Components/PP.hpp ////////////////////////
-
-
-#include <cstdint>
-
-namespace pokesim {
-struct PP {
-  std::uint8_t pp;
-};
-
-struct MaxPP {
-  std::uint8_t maxPP;
-};
-}  // namespace pokesim
-///////////////////////// END OF src/Components/PP.hpp /////////////////////////
-
-
-///////////////////// START OF src/Components/Priority.hpp /////////////////////
-
-
-#include <cstdint>
-
-namespace pokesim {
-struct Priority {
-  std::uint8_t priority;
-};
-}  // namespace pokesim
-////////////////////// END OF src/Components/Priority.hpp //////////////////////
-
-
-//////////////////// START OF src/Components/Tags/Move.hpp /////////////////////
-
-
-namespace pokesim::move {
-// Categories
-
-struct Physical {};
-struct Special {};
-struct Status {};
-
-// Properties
-
-struct Contact {};
-struct BypassSubstitute {};
-struct Punch {};
-
-// Targets
-
-struct AnySingleTarget {};
-struct Self {};
-
-namespace effect {
-// Targets
-
-struct MoveTarget {};
-struct MoveSource {};
-}  // namespace effect
-}  // namespace pokesim::move
-
-///////////////////// END OF src/Components/Tags/Move.hpp //////////////////////
-
-
-///////////////////// START OF src/Dex/Moves/MoveSetup.hpp /////////////////////
-
-
-
-namespace pokesim::dex::internal {
-class MoveSetup {
-  entt::handle handle;
-
- public:
-  MoveSetup(Dex& pokedex) : handle(pokedex.createEntry()) {}
-
-  void setName(Move move);
-  void setType(Type type);
-  void setAccuracy(std::uint8_t accuracy);
-  void setBasePower(std::uint8_t basePower);
-
-  void setCategoryPhysical();
-  void setCategorySpecial();
-  void setCategoryStatus();
-
-  void setBasePP(std::uint8_t pp);
-  void setPriority(std::uint8_t priority);
-  void setMultiHit(std::uint8_t minHits, std::uint8_t maxHits);
-
-  void setPrimaryEffect(entt::entity entity);
-  void setSecondaryEffect(entt::entity entity);
-
-  template <typename Tag>
-  void setProperty();
-};
-
-class MoveEffectSetup {
-  entt::handle handle;
-
- public:
-  MoveEffectSetup(Dex& pokedex) : handle(pokedex.createEntry()) {}
-  entt::entity entity() const { return handle; }
-
-  void setChance(std::uint8_t chance);
-  void setEffectsSelf();
-  void setEffectsTarget();
-
-  template <typename BoostType>
-  void setBoost(std::int8_t boost);
-
-  template <typename Tag>
-  void setProperty();
-};
-}  // namespace pokesim::dex::internal
-////////////////////// END OF src/Dex/Moves/MoveSetup.hpp //////////////////////
-
-
-///////////////////// START OF src/Dex/Moves/MoveSetup.cpp /////////////////////
-
-
-
-namespace pokesim::dex::internal {
-void MoveSetup::setName(Move move) {
-  handle.emplace<MoveName>(move);
-}
-
-void MoveSetup::setType(Type type) {
-  handle.emplace<TypeName>(type);
-}
-
-void MoveSetup::setAccuracy(std::uint8_t accuracy) {
-  handle.emplace<Accuracy>(accuracy);
-}
-
-void MoveSetup::setBasePower(std::uint8_t basePower) {
-  handle.emplace<BasePower>(basePower);
-}
-
-void MoveSetup::setCategoryPhysical() {
-  ENTT_ASSERT(!(handle.any_of<move::Special, move::Status>()), "A move can only have one category");
-  handle.emplace<move::Physical>();
-}
-
-void MoveSetup::setCategorySpecial() {
-  ENTT_ASSERT(!(handle.any_of<move::Physical, move::Status>()), "A move can only have one category");
-  handle.emplace<move::Special>();
-}
-
-void MoveSetup::setCategoryStatus() {
-  ENTT_ASSERT(!(handle.any_of<move::Physical, move::Special>()), "A move can only have one category");
-  handle.emplace<move::Status>();
-}
-
-void MoveSetup::setBasePP(std::uint8_t pp) {
-  handle.emplace<PP>(pp);
-}
-
-void MoveSetup::setPriority(std::uint8_t priority) {
-  handle.emplace<Priority>(priority);
-}
-
-void MoveSetup::setMultiHit(std::uint8_t minHits, std::uint8_t maxHits) {
-  handle.emplace<MultiHit>(minHits, maxHits);
-}
-
-void MoveSetup::setPrimaryEffect(entt::entity entity) {
-  handle.emplace<MoveEffect>(true, entity);
-}
-
-void MoveSetup::setSecondaryEffect(entt::entity entity) {
-  handle.emplace<MoveEffect>(false, entity);
-}
-
-template <typename Tag>
-void MoveSetup::setProperty() {
-  handle.emplace<Tag>();
-}
-
-void MoveEffectSetup::setChance(std::uint8_t chance) {
-  handle.emplace<Chance>(chance);
-}
-
-void MoveEffectSetup::setEffectsSelf() {
-  handle.emplace<move::effect::MoveSource>();
-}
-
-void MoveEffectSetup::setEffectsTarget() {
-  handle.emplace<move::effect::MoveTarget>();
-}
-
-template <typename BoostType>
-void MoveEffectSetup::setBoost(std::int8_t boost) {
-  static_assert(
-    std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() || std::is_same<SpaBoost, BoostType>() ||
-    std::is_same<SpdBoost, BoostType>() || std::is_same<SpeBoost, BoostType>());
-  handle.emplace<BoostType>(boost);
-}
-
-template <typename Tag>
-void MoveEffectSetup::setProperty() {
-  handle.emplace<Tag>();
-}
-}  // namespace pokesim::dex::internal
-////////////////////// END OF src/Dex/Moves/MoveSetup.cpp //////////////////////
 
 
 ////////////////////// START OF src/Components/EVsIVs.hpp //////////////////////

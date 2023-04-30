@@ -1,14 +1,12 @@
 #pragma once
 
 #include <Components/Names/Move.hpp>
-#include <Dex/Dex.hpp>
+
+#include "Setup.hpp"
 
 namespace pokesim::dex::internal {
-class MoveSetup {
-  entt::handle handle;
-
- public:
-  MoveSetup(Dex& pokedex) : handle(pokedex.createEntry()) {}
+struct MoveSetup : DexDataSetup {
+  MoveSetup(Dex& pokedex) : DexDataSetup(pokedex) {}
 
   void setName(Move move);
   void setType(Type type);
@@ -25,16 +23,10 @@ class MoveSetup {
 
   void setPrimaryEffect(entt::entity entity);
   void setSecondaryEffect(entt::entity entity);
-
-  template <typename Tag>
-  void setProperty();
 };
 
-class MoveEffectSetup {
-  entt::handle handle;
-
- public:
-  MoveEffectSetup(Dex& pokedex) : handle(pokedex.createEntry()) {}
+struct MoveEffectSetup : DexDataSetup {
+  MoveEffectSetup(Dex& pokedex) : DexDataSetup(pokedex) {}
   entt::entity entity() const { return handle; }
 
   void setChance(std::uint8_t chance);
@@ -43,8 +35,5 @@ class MoveEffectSetup {
 
   template <typename BoostType>
   void setBoost(std::int8_t boost);
-
-  template <typename Tag>
-  void setProperty();
 };
 }  // namespace pokesim::dex::internal
