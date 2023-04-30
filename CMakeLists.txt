@@ -53,6 +53,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 if (MSVC)
   set(compiler_warning_options /W4 /WX)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 else()
   set(compiler_warning_options -Wshadow -Wall)
 endif()
