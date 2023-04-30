@@ -11,6 +11,7 @@ class MoveSetup {
   MoveSetup(Dex& pokedex) : handle(pokedex.createEntry()) {}
 
   void setName(Move move);
+  void setType(Type type);
   void setAccuracy(std::uint8_t accuracy);
   void setBasePower(std::uint8_t basePower);
 

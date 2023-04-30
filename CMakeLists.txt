@@ -40,6 +40,7 @@ check_ipo_supported(RESULT supported OUTPUT error)
 
 set (SOURCES
   src/Dex/Moves/MoveSetup.cpp
+  src/Dex/Species/SpeciesSetup.cpp
   src/Dex/Names.cpp
 )
 

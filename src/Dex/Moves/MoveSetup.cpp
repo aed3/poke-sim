@@ -15,6 +15,10 @@ void MoveSetup::setName(Move move) {
   handle.emplace<MoveName>(move);
 }
 
+void MoveSetup::setType(Type type) {
+  handle.emplace<TypeName>(type);
+}
+
 void MoveSetup::setAccuracy(std::uint8_t accuracy) {
   handle.emplace<Accuracy>(accuracy);
 }
