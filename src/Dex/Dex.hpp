@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Components/Names/Names.hpp>
+#include <Types/Types.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>

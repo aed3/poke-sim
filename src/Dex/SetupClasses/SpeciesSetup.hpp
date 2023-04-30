@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Components/Names/Species.hpp>
-#include <Components/Names/Type.hpp>
+#include <Types/Species.hpp>
+#include <Types/Type.hpp>
 
 #include "Setup.hpp"
 

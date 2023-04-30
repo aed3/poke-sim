@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Components/Names/Move.hpp>
+#include <Types/Move.hpp>
 
 #include "Setup.hpp"
 

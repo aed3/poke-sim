@@ -1,6 +1,7 @@
 #include "SpeciesSetup.hpp"
 
 #include <Components/DexData/DexData.hpp>
+#include <Components/Names/Species.hpp>
 
 namespace pokesim::dex::internal {
 void SpeciesSetup::setName(Species species) {

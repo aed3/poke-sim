@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Components/Names/Item.hpp>
+#include <Types/Item.hpp>
 
 #include "Setup.hpp"
 
