@@ -126,13 +126,17 @@ const pad = (str) => {
 };
 
 const addToOneFileHeader = (files) => {
+  files = files.filter(file => path.basename(file) !== 'headers.hpp');
+
   singleFileHeader.push('', '/**', ' * FILE ORDER');
   for (const file of files) {
-    singleFileHeader.push(' * ' + file);
+    singleFileHeader.push(' * ' + file.split(path.sep).join('/'));
   }
   singleFileHeader.push(' */', '');
+
   for (const file of files) {
-    singleFileHeader.push('', pad(`START OF ${file}`), '');
+    const normalizedFile = file.split(path.sep).join('/');
+    singleFileHeader.push('', pad(`START OF ${normalizedFile}`), '');
     const lines = fileText[file];
     const fileDependencyLines = dependencyLines[file];
 
@@ -144,7 +148,7 @@ const addToOneFileHeader = (files) => {
       singleFileHeader.push(line.replace(inlineRegex, 'inline'));
     }
 
-    singleFileHeader.push('', pad(`END OF ${file}`));
+    singleFileHeader.push('', pad(`END OF ${normalizedFile}`));
   }
 };
 

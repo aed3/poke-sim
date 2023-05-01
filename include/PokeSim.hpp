@@ -9,7 +9,6 @@
  * src/Types/Type.hpp
  * src/Components/Names/Type.hpp
  * src/Components/DexData/Types.hpp
- * src/Components/DexData/headers.hpp
  * src/Types/Species.hpp
  * src/Components/Names/Species.hpp
  * external/entt/config/macro.h
@@ -48,7 +47,6 @@
  * src/Types/Nature.hpp
  * src/Types/Stat.hpp
  * src/Types/Status.hpp
- * src/Types/headers.hpp
  * src/Dex/Dex.hpp
  * src/Dex/Setup/Setup.hpp
  * src/Dex/Setup/SpeciesSetup.hpp
@@ -81,14 +79,12 @@
  * src/Components/EntityHolders/Side.hpp
  * src/Components/EntityHolders/Sides.hpp
  * src/Components/EntityHolders/Team.hpp
- * src/Components/EntityHolders/headers.hpp
  * src/Components/ID.hpp
  * src/Components/Level.hpp
  * src/Components/Names/Gender.hpp
  * src/Components/Names/Nature.hpp
  * src/Components/Names/Stat.hpp
  * src/Components/Names/Status.hpp
- * src/Components/Names/headers.hpp
  * src/Components/Position.hpp
  * src/Components/Probability.hpp
  * src/Components/RNGSeed.hpp
@@ -101,11 +97,8 @@
  * src/Components/Tags/Pokemon.hpp
  * src/Components/Tags/Status.hpp
  * src/Components/Tags/Type.hpp
- * src/Components/Tags/headers.hpp
  * src/Components/TargetSlot.hpp
  * src/Components/Turn.hpp
- * src/Components/headers.hpp
- * src/Dex/headers.hpp
  * src/PokeSim.hpp
  */
 
@@ -205,11 +198,6 @@ struct Types {
 }  // namespace pokesim
 
 /////////////////// END OF src/Components/DexData/Types.hpp ////////////////////
-
-///////////////// START OF src/Components/DexData/headers.hpp //////////////////
-
-
-////////////////// END OF src/Components/DexData/headers.hpp ///////////////////
 
 //////////////////////// START OF src/Types/Species.hpp ////////////////////////
 
@@ -11800,11 +11788,6 @@ enum Status : std::uint8_t { NO_STATUS = 0, BRN, FRZ, PAR, PSN, SLP, TOX, /*, FR
 
 ///////////////////////// END OF src/Types/Status.hpp //////////////////////////
 
-//////////////////////// START OF src/Types/headers.hpp ////////////////////////
-
-
-///////////////////////// END OF src/Types/headers.hpp /////////////////////////
-
 /////////////////////////// START OF src/Dex/Dex.hpp ///////////////////////////
 
 namespace pokesim {
@@ -12771,11 +12754,6 @@ struct Team {
 
 ///////////////// END OF src/Components/EntityHolders/Team.hpp /////////////////
 
-////////////// START OF src/Components/EntityHolders/headers.hpp ///////////////
-
-
-/////////////// END OF src/Components/EntityHolders/headers.hpp ////////////////
-
 //////////////////////// START OF src/Components/ID.hpp ////////////////////////
 
 #include <cstdint>
@@ -12839,11 +12817,6 @@ struct StatusName {
 }  // namespace pokesim
 
 //////////////////// END OF src/Components/Names/Status.hpp ////////////////////
-
-////////////////// START OF src/Components/Names/headers.hpp ///////////////////
-
-
-/////////////////// END OF src/Components/Names/headers.hpp ////////////////////
 
 ///////////////////// START OF src/Components/Position.hpp /////////////////////
 
@@ -13040,11 +13013,6 @@ struct Fairy {};
 
 ///////////////////// END OF src/Components/Tags/Type.hpp //////////////////////
 
-/////////////////// START OF src/Components/Tags/headers.hpp ///////////////////
-
-
-//////////////////// END OF src/Components/Tags/headers.hpp ////////////////////
-
 //////////////////// START OF src/Components/TargetSlot.hpp ////////////////////
 
 #include <cstdint>
@@ -13073,16 +13041,6 @@ struct Turn {
 }  // namespace pokesim
 
 //////////////////////// END OF src/Components/Turn.hpp ////////////////////////
-
-///////////////////// START OF src/Components/headers.hpp //////////////////////
-
-
-////////////////////// END OF src/Components/headers.hpp ///////////////////////
-
-///////////////////////// START OF src/Dex/headers.hpp /////////////////////////
-
-
-////////////////////////// END OF src/Dex/headers.hpp //////////////////////////
 
 /////////////////////////// START OF src/PokeSim.hpp ///////////////////////////
 
