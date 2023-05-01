@@ -110,7 +110,6 @@
 
 //////////////////////// START OF src/Types/Ability.hpp ////////////////////////
 
-
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -121,24 +120,20 @@ enum Ability : std::uint16_t {
   // clang-format on
 };
 }  // namespace pokesim::dex
+
 ///////////////////////// END OF src/Types/Ability.hpp /////////////////////////
 
-
 ////////////////// START OF src/Components/Names/Ability.hpp ///////////////////
-
-
 
 namespace pokesim {
 struct AbilityName {
   dex::Ability name = dex::NO_ABILITY;
 };
 }  // namespace pokesim
+
 /////////////////// END OF src/Components/Names/Ability.hpp ////////////////////
 
-
 //////////////// START OF src/Components/DexData/Abilities.hpp /////////////////
-
-
 
 namespace pokesim {
 struct PrimaryAbility {
@@ -156,9 +151,7 @@ struct HiddenAbility {
 
 ///////////////// END OF src/Components/DexData/Abilities.hpp //////////////////
 
-
 //////////////// START OF src/Components/DexData/BaseStats.hpp /////////////////
-
 
 #include <cstdint>
 
@@ -175,9 +168,7 @@ struct BaseStats {
 
 ///////////////// END OF src/Components/DexData/BaseStats.hpp //////////////////
 
-
 ///////////////////////// START OF src/Types/Type.hpp //////////////////////////
-
 
 #include <cstdint>
 
@@ -192,22 +183,17 @@ enum Type : std::uint8_t {
 
 ////////////////////////// END OF src/Types/Type.hpp ///////////////////////////
 
-
 //////////////////// START OF src/Components/Names/Type.hpp ////////////////////
-
-
 
 namespace pokesim {
 struct TypeName {
   dex::Type name = dex::NO_TYPE;
 };
 }  // namespace pokesim
+
 ///////////////////// END OF src/Components/Names/Type.hpp /////////////////////
 
-
 ////////////////// START OF src/Components/DexData/Types.hpp ///////////////////
-
-
 
 namespace pokesim {
 struct Types {
@@ -215,17 +201,15 @@ struct Types {
   dex::Type t2 = dex::NO_TYPE;
 };
 }  // namespace pokesim
-/////////////////// END OF src/Components/DexData/Types.hpp ////////////////////
 
+/////////////////// END OF src/Components/DexData/Types.hpp ////////////////////
 
 ///////////////// START OF src/Components/DexData/DexData.hpp //////////////////
 
 
 ////////////////// END OF src/Components/DexData/DexData.hpp ///////////////////
 
-
 //////////////////////// START OF src/Types/Species.hpp ////////////////////////
-
 
 #include <cstdint>
 
@@ -255,18 +239,15 @@ enum Species : std::uint16_t {
 
 ///////////////////////// END OF src/Types/Species.hpp /////////////////////////
 
-
 ////////////////// START OF src/Components/Names/Species.hpp ///////////////////
-
-
 
 namespace pokesim {
 struct SpeciesName {
   dex::Species name = dex::MISSING_NO;
 };
 }  // namespace pokesim
-/////////////////// END OF src/Components/Names/Species.hpp ////////////////////
 
+/////////////////// END OF src/Components/Names/Species.hpp ////////////////////
 
 //////////////////// START OF external/entt/config/macro.h /////////////////////
 
@@ -279,7 +260,6 @@ struct SpeciesName {
 #endif
 
 ///////////////////// END OF external/entt/config/macro.h //////////////////////
-
 
 /////////////////// START OF external/entt/config/version.h ////////////////////
 
@@ -298,7 +278,6 @@ struct SpeciesName {
 #endif
 
 //////////////////// END OF external/entt/config/version.h /////////////////////
-
 
 //////////////////// START OF external/entt/config/config.h ////////////////////
 
@@ -385,7 +364,6 @@ struct SpeciesName {
 
 ///////////////////// END OF external/entt/config/config.h /////////////////////
 
-
 /////////////////// START OF external/entt/container/fwd.hpp ///////////////////
 
 #ifndef ENTT_CONTAINER_FWD_HPP
@@ -417,7 +395,6 @@ class dense_set;
 
 //////////////////// END OF external/entt/container/fwd.hpp ////////////////////
 
-
 ///////////////////// START OF external/entt/core/fwd.hpp //////////////////////
 
 #ifndef ENTT_CORE_FWD_HPP
@@ -441,7 +418,6 @@ using any = basic_any<>;
 #endif
 
 ////////////////////// END OF external/entt/core/fwd.hpp ///////////////////////
-
 
 ///////////////// START OF external/entt/core/type_traits.hpp //////////////////
 
@@ -1204,7 +1180,6 @@ using nth_argument_t = typename nth_argument<Index, Candidate>::type;
 
 ////////////////// END OF external/entt/core/type_traits.hpp ///////////////////
 
-
 /////////////// START OF external/entt/core/compressed_pair.hpp ////////////////
 
 #ifndef ENTT_CORE_COMPRESSED_PAIR_HPP
@@ -1488,7 +1463,6 @@ struct tuple_element<Index, entt::compressed_pair<First, Second>>: conditional<I
 
 //////////////// END OF external/entt/core/compressed_pair.hpp /////////////////
 
-
 /////////////////// START OF external/entt/core/iterator.hpp ///////////////////
 
 #ifndef ENTT_CORE_ITERATOR_HPP
@@ -1690,7 +1664,6 @@ private:
 #endif
 
 //////////////////// END OF external/entt/core/iterator.hpp ////////////////////
-
 
 //////////////////// START OF external/entt/core/memory.hpp ////////////////////
 
@@ -1984,7 +1957,6 @@ constexpr Type *uninitialized_construct_using_allocator(Type *value, const Alloc
 #endif
 
 ///////////////////// END OF external/entt/core/memory.hpp /////////////////////
-
 
 //////////////// START OF external/entt/container/dense_map.hpp ////////////////
 
@@ -3045,7 +3017,6 @@ struct uses_allocator<entt::internal::dense_map_node<Key, Value>, Allocator>
 
 ///////////////// END OF external/entt/container/dense_map.hpp /////////////////
 
-
 //////////////////// START OF external/entt/entity/fwd.hpp /////////////////////
 
 #ifndef ENTT_ENTITY_FWD_HPP
@@ -3254,7 +3225,6 @@ using group = basic_group<type_list_transform_t<Owned, storage_for>, type_list_t
 #endif
 
 ///////////////////// END OF external/entt/entity/fwd.hpp //////////////////////
-
 
 /////////////////// START OF external/entt/entity/entity.hpp ///////////////////
 
@@ -3597,7 +3567,6 @@ inline constexpr tombstone_t tombstone{};
 #endif
 
 //////////////////// END OF external/entt/entity/entity.hpp ////////////////////
-
 
 /////////////////// START OF external/entt/entity/handle.hpp ///////////////////
 
@@ -3982,7 +3951,6 @@ template<typename... Args, typename... Other>
 
 //////////////////// END OF external/entt/entity/handle.hpp ////////////////////
 
-
 /////////////////// START OF external/entt/core/utility.hpp ////////////////////
 
 #ifndef ENTT_CORE_UTILITY_HPP
@@ -4088,7 +4056,6 @@ private:
 #endif
 
 //////////////////// END OF external/entt/core/utility.hpp /////////////////////
-
 
 ////////////////// START OF external/entt/core/algorithm.hpp ///////////////////
 
@@ -4231,7 +4198,6 @@ struct radix_sort {
 
 /////////////////// END OF external/entt/core/algorithm.hpp ////////////////////
 
-
 /////////////////// START OF external/entt/core/attribute.h ////////////////////
 
 #ifndef ENTT_CORE_ATTRIBUTE_H
@@ -4266,7 +4232,6 @@ struct radix_sort {
 #endif
 
 //////////////////// END OF external/entt/core/attribute.h /////////////////////
-
 
 //////////////// START OF external/entt/core/hashed_string.hpp /////////////////
 
@@ -4606,7 +4571,6 @@ inline namespace literals {
 
 ///////////////// END OF external/entt/core/hashed_string.hpp //////////////////
 
-
 ////////////////// START OF external/entt/core/type_info.hpp ///////////////////
 
 #ifndef ENTT_CORE_TYPE_INFO_HPP
@@ -4881,7 +4845,6 @@ template<typename Type>
 #endif
 
 /////////////////// END OF external/entt/core/type_info.hpp ////////////////////
-
 
 ///////////////////// START OF external/entt/core/any.hpp //////////////////////
 
@@ -5393,7 +5356,6 @@ basic_any<Len, Align> forward_as_any(Type &&value) {
 
 ////////////////////// END OF external/entt/core/any.hpp ///////////////////////
 
-
 ///////////////// START OF external/entt/entity/component.hpp //////////////////
 
 #ifndef ENTT_ENTITY_COMPONENT_HPP
@@ -5461,7 +5423,6 @@ inline constexpr bool ignore_as_empty_v = (std::is_void_v<Type> || component_tra
 #endif
 
 ////////////////// END OF external/entt/entity/component.hpp ///////////////////
-
 
 ///////////////// START OF external/entt/entity/sparse_set.hpp /////////////////
 
@@ -6437,7 +6398,6 @@ private:
 
 ////////////////// END OF external/entt/entity/sparse_set.hpp //////////////////
 
-
 //////////////////// START OF external/entt/signal/fwd.hpp /////////////////////
 
 #ifndef ENTT_SIGNAL_FWD_HPP
@@ -6488,7 +6448,6 @@ inline constexpr connect_arg_t<Candidate> connect_arg{};
 #endif
 
 ///////////////////// END OF external/entt/signal/fwd.hpp //////////////////////
-
 
 ////////////////// START OF external/entt/signal/delegate.hpp //////////////////
 
@@ -6813,7 +6772,6 @@ delegate(Ret (*)(const void *, Args...), const void * = nullptr) -> delegate<Ret
 #endif
 
 /////////////////// END OF external/entt/signal/delegate.hpp ///////////////////
-
 
 //////////////////// START OF external/entt/signal/sigh.hpp ////////////////////
 
@@ -7382,7 +7340,6 @@ sink(sigh<Ret(Args...), Allocator> &) -> sink<sigh<Ret(Args...), Allocator>>;
 
 ///////////////////// END OF external/entt/signal/sigh.hpp /////////////////////
 
-
 /////////////// START OF external/entt/entity/storage_mixin.hpp ////////////////
 
 #ifndef ENTT_ENTITY_SIGH_STORAGE_MIXIN_HPP
@@ -7619,7 +7576,6 @@ private:
 #endif
 
 //////////////// END OF external/entt/entity/storage_mixin.hpp /////////////////
-
 
 ////////////////// START OF external/entt/entity/storage.hpp ///////////////////
 
@@ -8519,7 +8475,6 @@ public:
 
 /////////////////// END OF external/entt/entity/storage.hpp ////////////////////
 
-
 /////////////////// START OF external/entt/entity/group.hpp ////////////////////
 
 #ifndef ENTT_ENTITY_GROUP_HPP
@@ -9368,7 +9323,6 @@ private:
 #endif
 
 //////////////////// END OF external/entt/entity/group.hpp /////////////////////
-
 
 //////////////////// START OF external/entt/entity/view.hpp ////////////////////
 
@@ -10227,7 +10181,6 @@ basic_view(std::tuple<Get &...>, std::tuple<Exclude &...> = {}) -> basic_view<ge
 #endif
 
 ///////////////////// END OF external/entt/entity/view.hpp /////////////////////
-
 
 ////////////////// START OF external/entt/entity/registry.hpp //////////////////
 
@@ -11746,7 +11699,6 @@ private:
 
 /////////////////// END OF external/entt/entity/registry.hpp ///////////////////
 
-
 //////////////////////// START OF src/Types/Gender.hpp /////////////////////////
 
 #include <cstdint>
@@ -11758,9 +11710,7 @@ enum Gender : std::uint8_t { NO_GENDER = 0, FEMALE, MALE, GENDER_TOTAL };
 
 ///////////////////////// END OF src/Types/Gender.hpp //////////////////////////
 
-
 ///////////////////////// START OF src/Types/Item.hpp //////////////////////////
-
 
 #include <cstdint>
 
@@ -11775,9 +11725,7 @@ enum Item : std::uint16_t {
 
 ////////////////////////// END OF src/Types/Item.hpp ///////////////////////////
 
-
 /////////////////////// START OF src/Types/Mechanics.hpp ///////////////////////
-
 
 #include <cstdint>
 
@@ -11786,8 +11734,8 @@ enum Mechanics : std::uint32_t {
   SCARLET_VIOLET,
 };
 }
-//////////////////////// END OF src/Types/Mechanics.hpp ////////////////////////
 
+//////////////////////// END OF src/Types/Mechanics.hpp ////////////////////////
 
 ///////////////////////// START OF src/Types/Move.hpp //////////////////////////
 
@@ -11804,7 +11752,6 @@ enum Move : std::uint16_t {
 
 ////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
 
-
 //////////////////////// START OF src/Types/Nature.hpp /////////////////////////
 
 #include <cstdint>
@@ -11820,9 +11767,7 @@ enum Nature : std::uint8_t {
 
 ///////////////////////// END OF src/Types/Nature.hpp //////////////////////////
 
-
 ///////////////////////// START OF src/Types/Stat.hpp //////////////////////////
-
 
 #include <cstdint>
 
@@ -11842,7 +11787,6 @@ enum Stat : std::uint8_t {
 
 ////////////////////////// END OF src/Types/Stat.hpp ///////////////////////////
 
-
 //////////////////////// START OF src/Types/Status.hpp /////////////////////////
 
 #include <cstdint>
@@ -11854,16 +11798,12 @@ enum Status : std::uint8_t { NO_STATUS = 0, BRN, FRZ, PAR, PSN, SLP, TOX, /*, FR
 
 ///////////////////////// END OF src/Types/Status.hpp //////////////////////////
 
-
 ///////////////////////// START OF src/Types/Types.hpp /////////////////////////
 
 
 ////////////////////////// END OF src/Types/Types.hpp //////////////////////////
 
-
 /////////////////////////// START OF src/Dex/Dex.hpp ///////////////////////////
-
-
 
 namespace pokesim {
 class Dex {
@@ -11878,12 +11818,10 @@ class Dex {
   entt::handle createEntry() { return {registry, registry.create()}; }
 };
 }  // namespace pokesim
+
 //////////////////////////// END OF src/Dex/Dex.hpp ////////////////////////////
 
-
 /////////////////// START OF src/Dex/SetupClasses/Setup.hpp ////////////////////
-
-
 
 namespace pokesim::dex::internal {
 struct DexDataSetup {
@@ -11899,13 +11837,10 @@ struct DexDataSetup {
   }
 };
 }  // namespace pokesim::dex::internal
+
 //////////////////// END OF src/Dex/SetupClasses/Setup.hpp /////////////////////
 
-
 //////////////// START OF src/Dex/SetupClasses/SpeciesSetup.hpp ////////////////
-
-
-
 
 namespace pokesim::dex::internal {
 struct SpeciesSetup : DexDataSetup {
@@ -11917,12 +11852,10 @@ struct SpeciesSetup : DexDataSetup {
     std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe);
 };
 }  // namespace pokesim::dex::internal
+
 ///////////////// END OF src/Dex/SetupClasses/SpeciesSetup.hpp /////////////////
 
-
 //////////////// START OF src/Dex/SetupClasses/SpeciesSetup.cpp ////////////////
-
-
 
 namespace pokesim::dex::internal {
 void SpeciesSetup::setName(Species species) {
@@ -11938,11 +11871,10 @@ void SpeciesSetup::setBaseStats(
   handle.emplace<BaseStats>(hp, atk, def, spa, spd, spe);
 }
 }  // namespace pokesim::dex::internal
+
 ///////////////// END OF src/Dex/SetupClasses/SpeciesSetup.cpp /////////////////
 
-
 ///////////////////// START OF src/Components/Accuracy.hpp /////////////////////
-
 
 #include <cstdint>
 
@@ -11951,11 +11883,10 @@ struct Accuracy {
   std::uint8_t accuracy;
 };
 }  // namespace pokesim
+
 ////////////////////// END OF src/Components/Accuracy.hpp //////////////////////
 
-
 //////////////////// START OF src/Components/BasePower.hpp /////////////////////
-
 
 #include <cstdint>
 
@@ -11964,11 +11895,10 @@ struct BasePower {
   std::uint8_t basePower;
 };
 }  // namespace pokesim
+
 ///////////////////// END OF src/Components/BasePower.hpp //////////////////////
 
-
 ////////////////////// START OF src/Components/Boosts.hpp //////////////////////
-
 
 #include <cstdint>
 
@@ -11993,11 +11923,10 @@ struct SpeBoost {
   std::int8_t boost;
 };
 }  // namespace pokesim
+
 /////////////////////// END OF src/Components/Boosts.hpp ///////////////////////
 
-
 ////////////////////// START OF src/Components/Chance.hpp //////////////////////
-
 
 #include <cstdint>
 
@@ -12006,12 +11935,10 @@ struct Chance {
   std::uint8_t chance;
 };
 }  // namespace pokesim
+
 /////////////////////// END OF src/Components/Chance.hpp ///////////////////////
 
-
 ///////////// START OF src/Components/EntityHolders/MoveEffect.hpp /////////////
-
-
 
 namespace pokesim {
 struct MoveEffect {
@@ -12019,11 +11946,10 @@ struct MoveEffect {
   entt::entity moveEffect{};
 };
 }  // namespace pokesim
+
 ////////////// END OF src/Components/EntityHolders/MoveEffect.hpp //////////////
 
-
 ///////////////////// START OF src/Components/MultiHit.hpp /////////////////////
-
 
 #include <cstdint>
 
@@ -12033,23 +11959,20 @@ struct MultiHit {
   std::uint8_t maxHits;
 };
 }  // namespace pokesim
+
 ////////////////////// END OF src/Components/MultiHit.hpp //////////////////////
 
-
 //////////////////// START OF src/Components/Names/Move.hpp ////////////////////
-
-
 
 namespace pokesim {
 struct MoveName {
   dex::Move name = dex::NO_MOVE;
 };
 }  // namespace pokesim
+
 ///////////////////// END OF src/Components/Names/Move.hpp /////////////////////
 
-
 //////////////////////// START OF src/Components/PP.hpp ////////////////////////
-
 
 #include <cstdint>
 
@@ -12062,11 +11985,10 @@ struct MaxPP {
   std::uint8_t maxPP;
 };
 }  // namespace pokesim
+
 ///////////////////////// END OF src/Components/PP.hpp /////////////////////////
 
-
 ///////////////////// START OF src/Components/Priority.hpp /////////////////////
-
 
 #include <cstdint>
 
@@ -12075,11 +11997,10 @@ struct Priority {
   std::uint8_t priority;
 };
 }  // namespace pokesim
+
 ////////////////////// END OF src/Components/Priority.hpp //////////////////////
 
-
 //////////////////// START OF src/Components/Tags/Move.hpp /////////////////////
-
 
 namespace pokesim::move {
 // Categories
@@ -12109,11 +12030,7 @@ struct MoveSource {};
 
 ///////////////////// END OF src/Components/Tags/Move.hpp //////////////////////
 
-
 ///////////////// START OF src/Dex/SetupClasses/MoveSetup.hpp //////////////////
-
-
-
 
 namespace pokesim::dex::internal {
 struct MoveSetup : DexDataSetup {
@@ -12148,12 +12065,10 @@ struct MoveEffectSetup : DexDataSetup {
   void setBoost(std::int8_t boost);
 };
 }  // namespace pokesim::dex::internal
+
 ////////////////// END OF src/Dex/SetupClasses/MoveSetup.hpp ///////////////////
 
-
 ///////////////// START OF src/Dex/SetupClasses/MoveSetup.cpp //////////////////
-
-
 
 namespace pokesim::dex::internal {
 void MoveSetup::setName(Move move) {
@@ -12227,25 +12142,20 @@ void MoveEffectSetup::setBoost(std::int8_t boost) {
   handle.emplace<BoostType>(boost);
 }
 }  // namespace pokesim::dex::internal
+
 ////////////////// END OF src/Dex/SetupClasses/MoveSetup.cpp ///////////////////
 
-
 //////////////////// START OF src/Components/Names/Item.hpp ////////////////////
-
-
 
 namespace pokesim {
 struct ItemName {
   dex::Item name = dex::NO_ITEM;
 };
 }  // namespace pokesim
+
 ///////////////////// END OF src/Components/Names/Item.hpp /////////////////////
 
-
 ///////////////// START OF src/Dex/SetupClasses/ItemSetup.hpp //////////////////
-
-
-
 
 namespace pokesim::dex::internal {
 struct ItemSetup : DexDataSetup {
@@ -12254,77 +12164,65 @@ struct ItemSetup : DexDataSetup {
   void setName(Item item);
 };
 }  // namespace pokesim::dex::internal
+
 ////////////////// END OF src/Dex/SetupClasses/ItemSetup.hpp ///////////////////
 
-
 ///////////////// START OF src/Dex/SetupClasses/ItemSetup.cpp //////////////////
-
-
 
 namespace pokesim::dex::internal {
 void ItemSetup::setName(Item item) {
   handle.emplace<ItemName>(item);
 }
 }  // namespace pokesim::dex::internal
+
 ////////////////// END OF src/Dex/SetupClasses/ItemSetup.cpp ///////////////////
 
-
 /////////////////// START OF src/Components/Names/Gender.hpp ///////////////////
-
-
 
 namespace pokesim {
 struct GenderName {
   dex::Gender name = dex::NO_GENDER;
 };
 }  // namespace pokesim
+
 //////////////////// END OF src/Components/Names/Gender.hpp ////////////////////
 
-
 /////////////////// START OF src/Components/Names/Nature.hpp ///////////////////
-
-
 
 namespace pokesim {
 struct NatureName {
   dex::Nature name = dex::NO_NATURE;
 };
 }  // namespace pokesim
+
 //////////////////// END OF src/Components/Names/Nature.hpp ////////////////////
 
-
 //////////////////// START OF src/Components/Names/Stat.hpp ////////////////////
-
-
 
 namespace pokesim {
 struct StatName {
   dex::Stat name;
 };
 }  // namespace pokesim
+
 ///////////////////// END OF src/Components/Names/Stat.hpp /////////////////////
 
-
 /////////////////// START OF src/Components/Names/Status.hpp ///////////////////
-
-
 
 namespace pokesim {
 struct StatusName {
   dex::Status name = dex::NO_STATUS;
 };
 }  // namespace pokesim
-//////////////////// END OF src/Components/Names/Status.hpp ////////////////////
 
+//////////////////// END OF src/Components/Names/Status.hpp ////////////////////
 
 /////////////////// START OF src/Components/Names/Names.hpp ////////////////////
 
 
 //////////////////// END OF src/Components/Names/Names.hpp /////////////////////
 
-
 ////////////////////////// START OF src/Dex/Names.hpp //////////////////////////
-
 
 #include <array>
 #include <cstdint>
@@ -12489,10 +12387,7 @@ inline std::string toID(const std::string& name);
 
 /////////////////////////// END OF src/Dex/Names.hpp ///////////////////////////
 
-
 ////////////////////////// START OF src/Dex/Names.cpp //////////////////////////
-
-
 
 namespace pokesim::dex {
 namespace internal {
@@ -12753,9 +12648,7 @@ std::string toID(const std::string& name) {
 
 /////////////////////////// END OF src/Dex/Names.cpp ///////////////////////////
 
-
 ////////////////////// START OF src/Components/EVsIVs.hpp //////////////////////
-
 
 #include <cstdint>
 
@@ -12781,9 +12674,7 @@ struct IVs {
 
 /////////////////////// END OF src/Components/EVsIVs.hpp ///////////////////////
 
-
 //////////// START OF src/Components/EntityHolders/ActionQueue.hpp /////////////
-
 
 #include <vector>
 
@@ -12792,47 +12683,40 @@ struct ActionQueue {
   std::vector<entt::entity> actionQueue{};
 };
 }  // namespace pokesim
+
 ///////////// END OF src/Components/EntityHolders/ActionQueue.hpp //////////////
 
-
 /////////////// START OF src/Components/EntityHolders/Battle.hpp ///////////////
-
-
 
 namespace pokesim {
 struct Battle {
   entt::entity battle;
 };
 }  // namespace pokesim
+
 //////////////// END OF src/Components/EntityHolders/Battle.hpp ////////////////
 
-
 ////////////// START OF src/Components/EntityHolders/FoeSide.hpp ///////////////
-
-
 
 namespace pokesim {
 struct FoeSide {
   entt::entity foeSide;
 };
 }  // namespace pokesim
+
 /////////////// END OF src/Components/EntityHolders/FoeSide.hpp ////////////////
 
-
 //////////////// START OF src/Components/EntityHolders/Move.hpp ////////////////
-
-
 
 namespace pokesim {
 struct Move {
   entt::entity move;
 };
 }  // namespace pokesim
+
 ///////////////// END OF src/Components/EntityHolders/Move.hpp /////////////////
 
-
 ///////////// START OF src/Components/EntityHolders/MoveSlots.hpp //////////////
-
 
 #include <vector>
 
@@ -12841,36 +12725,30 @@ struct MoveSlots {
   std::vector<entt::entity> moveSlots{};
 };
 }  // namespace pokesim
+
 ////////////// END OF src/Components/EntityHolders/MoveSlots.hpp ///////////////
 
-
 ////////////// START OF src/Components/EntityHolders/Pokemon.hpp ///////////////
-
-
 
 namespace pokesim {
 struct Pokemon {
   entt::entity pokemon;
 };
 }  // namespace pokesim
+
 /////////////// END OF src/Components/EntityHolders/Pokemon.hpp ////////////////
 
-
 //////////////// START OF src/Components/EntityHolders/Side.hpp ////////////////
-
-
 
 namespace pokesim {
 struct Side {
   entt::entity side;
 };
 }  // namespace pokesim
+
 ///////////////// END OF src/Components/EntityHolders/Side.hpp /////////////////
 
-
 /////////////// START OF src/Components/EntityHolders/Sides.hpp ////////////////
-
-
 
 namespace pokesim {
 struct Sides {
@@ -12878,11 +12756,10 @@ struct Sides {
   entt::entity p2;
 };
 }  // namespace pokesim
+
 //////////////// END OF src/Components/EntityHolders/Sides.hpp /////////////////
 
-
 //////////////// START OF src/Components/EntityHolders/Team.hpp ////////////////
-
 
 #include <vector>
 
@@ -12891,17 +12768,15 @@ struct Team {
   std::vector<entt::entity> team{};
 };
 }  // namespace pokesim
-///////////////// END OF src/Components/EntityHolders/Team.hpp /////////////////
 
+///////////////// END OF src/Components/EntityHolders/Team.hpp /////////////////
 
 /////////// START OF src/Components/EntityHolders/EntityHolders.hpp ////////////
 
 
 //////////// END OF src/Components/EntityHolders/EntityHolders.hpp /////////////
 
-
 //////////////////////// START OF src/Components/ID.hpp ////////////////////////
-
 
 #include <cstdint>
 
@@ -12910,11 +12785,10 @@ struct ID {
   std::uint16_t id;
 };
 }  // namespace pokesim
+
 ///////////////////////// END OF src/Components/ID.hpp /////////////////////////
 
-
 ////////////////////// START OF src/Components/Level.hpp ///////////////////////
-
 
 #include <cstdint>
 
@@ -12923,11 +12797,10 @@ struct Level {
   std::uint8_t level;
 };
 }  // namespace pokesim
+
 /////////////////////// END OF src/Components/Level.hpp ////////////////////////
 
-
 ///////////////////// START OF src/Components/Position.hpp /////////////////////
-
 
 #include <cstdint>
 
@@ -12936,22 +12809,20 @@ struct Position {
   std::uint8_t position;
 };
 }  // namespace pokesim
+
 ////////////////////// END OF src/Components/Position.hpp //////////////////////
 
-
 /////////////////// START OF src/Components/Probability.hpp ////////////////////
-
 
 namespace pokesim {
 struct Probability {
   float probability;
 };
 }  // namespace pokesim
+
 //////////////////// END OF src/Components/Probability.hpp /////////////////////
 
-
 ///////////////////// START OF src/Components/RNGSeed.hpp //////////////////////
-
 
 #include <cstdint>
 
@@ -12960,11 +12831,10 @@ struct RNGSeed {
   std::uint32_t seed;
 };
 }  // namespace pokesim
+
 ////////////////////// END OF src/Components/RNGSeed.hpp ///////////////////////
 
-
 //////////////////// START OF src/Components/SpeedSort.hpp /////////////////////
-
 
 #include <cstdint>
 
@@ -12976,11 +12846,10 @@ struct SpeedSort {
   std::uint16_t speed;
 };
 }  // namespace pokesim
+
 ///////////////////// END OF src/Components/SpeedSort.hpp //////////////////////
 
-
 ////////////////////// START OF src/Components/Stats.hpp ///////////////////////
-
 
 #include <cstdint>
 
@@ -13012,9 +12881,7 @@ struct Spe {
 
 /////////////////////// END OF src/Components/Stats.hpp ////////////////////////
 
-
 /////////////////// START OF src/Components/Tags/Ability.hpp ///////////////////
-
 
 namespace pokesim::ability {
 struct Defiant {};
@@ -13027,9 +12894,7 @@ struct Trace {};
 
 //////////////////// END OF src/Components/Tags/Ability.hpp ////////////////////
 
-
 /////////////////// START OF src/Components/Tags/Actions.hpp ///////////////////
-
 
 namespace pokesim::action {
 struct Move {};
@@ -13052,9 +12917,7 @@ struct Terastallize {};
 
 //////////////////// END OF src/Components/Tags/Actions.hpp ////////////////////
 
-
 /////////////////// START OF src/Components/Tags/Battle.hpp ////////////////////
-
 
 namespace pokesim {
 
@@ -13073,9 +12936,7 @@ struct Ended {};
 
 //////////////////// END OF src/Components/Tags/Battle.hpp /////////////////////
 
-
 //////////////////// START OF src/Components/Tags/Item.hpp /////////////////////
-
 
 namespace pokesim::item {
 struct AssaultVest {};
@@ -13088,9 +12949,7 @@ struct LifeOrb {};
 
 ///////////////////// END OF src/Components/Tags/Item.hpp //////////////////////
 
-
 /////////////////// START OF src/Components/Tags/Pokemon.hpp ///////////////////
-
 
 namespace pokesim {
 struct Active {};
@@ -13098,9 +12957,7 @@ struct Active {};
 
 //////////////////// END OF src/Components/Tags/Pokemon.hpp ////////////////////
 
-
 /////////////////// START OF src/Components/Tags/Status.hpp ////////////////////
-
 
 namespace pokesim::status {
 struct Burn {};
@@ -13113,9 +12970,7 @@ struct Toxic {};
 
 //////////////////// END OF src/Components/Tags/Status.hpp /////////////////////
 
-
 //////////////////// START OF src/Components/Tags/Type.hpp /////////////////////
-
 
 namespace pokesim::type {
 struct Normal {};
@@ -13140,15 +12995,12 @@ struct Fairy {};
 
 ///////////////////// END OF src/Components/Tags/Type.hpp //////////////////////
 
-
 //////////////////// START OF src/Components/Tags/Tags.hpp /////////////////////
 
 
 ///////////////////// END OF src/Components/Tags/Tags.hpp //////////////////////
 
-
 //////////////////// START OF src/Components/TargetSlot.hpp ////////////////////
-
 
 #include <cstdint>
 
@@ -13162,11 +13014,10 @@ struct TargetSlot {
   } targetSlot;
 };
 }  // namespace pokesim
+
 ///////////////////// END OF src/Components/TargetSlot.hpp /////////////////////
 
-
 /////////////////////// START OF src/Components/Turn.hpp ///////////////////////
-
 
 #include <cstdint>
 
@@ -13175,17 +13026,15 @@ struct Turn {
   std::uint16_t turn;
 };
 }  // namespace pokesim
-//////////////////////// END OF src/Components/Turn.hpp ////////////////////////
 
+//////////////////////// END OF src/Components/Turn.hpp ////////////////////////
 
 //////////////////// START OF src/Components/Components.hpp ////////////////////
 
 
 ///////////////////// END OF src/Components/Components.hpp /////////////////////
 
-
 /////////////////////////// START OF src/PokeSim.hpp ///////////////////////////
-
 
 
 //////////////////////////// END OF src/PokeSim.hpp ////////////////////////////
