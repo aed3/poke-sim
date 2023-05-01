@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Ability.hpp"
+#include "GameMechanic.hpp"
 #include "Gender.hpp"
 #include "Item.hpp"
-#include "Mechanics.hpp"
 #include "Move.hpp"
 #include "Nature.hpp"
 #include "Species.hpp"

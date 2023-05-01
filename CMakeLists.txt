@@ -39,9 +39,9 @@ project(PokeSim)
 check_ipo_supported(RESULT supported OUTPUT error)
 
 set (SOURCES
-  src/Dex/SetupClasses/ItemSetup.cpp
-  src/Dex/SetupClasses/MoveSetup.cpp
-  src/Dex/SetupClasses/SpeciesSetup.cpp
+  src/Dex/Setup/ItemSetup.cpp
+  src/Dex/Setup/MoveSetup.cpp
+  src/Dex/Setup/SpeciesSetup.cpp
   src/Dex/Names.cpp
 )
 

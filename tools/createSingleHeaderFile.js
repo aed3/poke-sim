@@ -148,6 +148,8 @@ const addToOneFileHeader = (files) => {
   }
 };
 
+require('child_process').execFileSync('node', [path.join('tools', 'createFolderHeaderFiles')]);
+
 readSrcFiles();
 findDependencies();
 checkDependencyCycles();

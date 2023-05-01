@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Components/Components.hpp>
-#include <Dex/Dex.hpp>
-#include <Dex/Names.hpp>
-#include <Types/Types.hpp>
+#include <Components/headers.hpp>
+#include <Dex/headers.hpp>
+#include <Types/headers.hpp>

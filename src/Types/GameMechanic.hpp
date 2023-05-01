@@ -3,7 +3,7 @@
 #include <cstdint>
 
 namespace pokesim {
-enum Mechanics : std::uint32_t {
+enum GameMechanic : std::uint8_t {
   SCARLET_VIOLET,
 };
 }
