@@ -2,6 +2,7 @@
 
 #include <Components/DexData/headers.hpp>
 #include <Components/Names/Species.hpp>
+#include <entt/entity/handle.hpp>
 
 namespace pokesim::dex::internal {
 void SpeciesSetup::setName(Species species) {
@@ -9,7 +10,7 @@ void SpeciesSetup::setName(Species species) {
 }
 
 void SpeciesSetup::setType(Type type1, Type type2) {
-  handle.emplace<Types>(type1, type2);
+  handle.emplace<SpeciesTypes>(type1, type2);
 }
 
 void SpeciesSetup::setBaseStats(

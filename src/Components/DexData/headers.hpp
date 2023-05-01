@@ -2,4 +2,4 @@
 
 #include "Abilities.hpp"
 #include "BaseStats.hpp"
-#include "Types.hpp"
+#include "SpeciesTypes.hpp"

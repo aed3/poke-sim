@@ -8,32 +8,32 @@ namespace pokesim::dex::internal {
 struct MoveSetup : DexDataSetup {
   MoveSetup(Dex& pokedex) : DexDataSetup(pokedex) {}
 
-  void setName(Move move);
-  void setType(Type type);
-  void setAccuracy(std::uint8_t accuracy);
-  void setBasePower(std::uint8_t basePower);
+  /*__inline__*/ void setName(Move move);
+  /*__inline__*/ void setType(Type type);
+  /*__inline__*/ void setAccuracy(std::uint8_t accuracy);
+  /*__inline__*/ void setBasePower(std::uint8_t basePower);
 
-  void setCategoryPhysical();
-  void setCategorySpecial();
-  void setCategoryStatus();
+  /*__inline__*/ void setCategoryPhysical();
+  /*__inline__*/ void setCategorySpecial();
+  /*__inline__*/ void setCategoryStatus();
 
-  void setBasePP(std::uint8_t pp);
-  void setPriority(std::uint8_t priority);
-  void setMultiHit(std::uint8_t minHits, std::uint8_t maxHits);
+  /*__inline__*/ void setBasePP(std::uint8_t pp);
+  /*__inline__*/ void setPriority(std::uint8_t priority);
+  /*__inline__*/ void setMultiHit(std::uint8_t minHits, std::uint8_t maxHits);
 
-  void setPrimaryEffect(entt::entity entity);
-  void setSecondaryEffect(entt::entity entity);
+  /*__inline__*/ void setPrimaryEffect(entt::entity entity);
+  /*__inline__*/ void setSecondaryEffect(entt::entity entity);
 };
 
 struct MoveEffectSetup : DexDataSetup {
   MoveEffectSetup(Dex& pokedex) : DexDataSetup(pokedex) {}
   entt::entity entity() const { return handle; }
 
-  void setChance(std::uint8_t chance);
-  void setEffectsSelf();
-  void setEffectsTarget();
+  /*__inline__*/ void setChance(std::uint8_t chance);
+  /*__inline__*/ void setEffectsSelf();
+  /*__inline__*/ void setEffectsTarget();
 
   template <typename BoostType>
-  void setBoost(std::int8_t boost);
+  /*__inline__*/ void setBoost(std::int8_t boost);
 };
 }  // namespace pokesim::dex::internal

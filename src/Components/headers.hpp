@@ -2,7 +2,6 @@
 
 #include "Accuracy.hpp"
 #include "BasePower.hpp"
-#include "BaseStats.hpp"
 #include "Boosts.hpp"
 #include "Chance.hpp"
 #include "DexData/headers.hpp"

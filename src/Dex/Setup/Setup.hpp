@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Dex/Dex.hpp>
+#include <entt/entity/handle.hpp>
 
 namespace pokesim::dex::internal {
 struct DexDataSetup {
@@ -14,5 +15,7 @@ struct DexDataSetup {
   void setProperty() {
     handle.emplace<Tag>();
   }
+
+  entt::entity entity() { return handle; }
 };
 }  // namespace pokesim::dex::internal
