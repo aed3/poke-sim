@@ -73,6 +73,13 @@
  * src/Dex/Species/Pangoro.hpp
  * src/Dex/Species/Ribombee.hpp
  * src/Dex/Setup/GetSpeciesBuild.cpp
+ * src/Dex/Items/AssaultVest.hpp
+ * src/Dex/Items/BrightPowder.hpp
+ * src/Dex/Items/ChoiceScarf.hpp
+ * src/Dex/Items/ChoiceSpecs.hpp
+ * src/Dex/Items/FocusSash.hpp
+ * src/Dex/Items/LifeOrb.hpp
+ * src/Dex/Setup/GetItemBuild.cpp
  * src/Dex/Names.hpp
  * src/Dex/Names.cpp
  * external/entt/container/dense_set.hpp
@@ -12313,13 +12320,16 @@ struct Ribombee {
 
 namespace pokesim {
 entt::entity (*Dex::getSpeciesBuild(dex::Species species))(Dex&) {
+  // Tidy check ignored because "using namespace" is in function
+  using namespace dex::build;  // NOLINT(google-build-using-namespace)
+
   switch (species) {
-    case dex::AMPHAROS: return dex::build::Ampharos::build;
-    case dex::GARDEVOIR: return dex::build::Gardevoir::build;
-    case dex::EMPOLEON: return dex::build::Empoleon::build;
-    case dex::PANGORO: return dex::build::Pangoro::build;
-    case dex::RIBOMBEE: return dex::build::Ribombee::build;
-    case dex::DRAGAPULT: return dex::build::Dragapult::build;
+    case Ampharos::name: return Ampharos::build;
+    case Gardevoir::name: return Gardevoir::build;
+    case Empoleon::name: return Empoleon::build;
+    case Pangoro::name: return Pangoro::build;
+    case Ribombee::name: return Ribombee::build;
+    case Dragapult::name: return Dragapult::build;
     default: {
       ENTT_ASSERT(false, "Building a species that does not exist");
       return nullptr;
@@ -12329,6 +12339,134 @@ entt::entity (*Dex::getSpeciesBuild(dex::Species species))(Dex&) {
 };  // namespace pokesim
 
 /////////////////// END OF src/Dex/Setup/GetSpeciesBuild.cpp ///////////////////
+
+//////////////////// START OF src/Dex/Items/AssaultVest.hpp ////////////////////
+
+namespace pokesim::dex::build {
+struct AssaultVest {
+  static const dex::Item name = dex::ASSAULT_VEST;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::ItemSetup species(pokedex);
+    species.setName(name);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+///////////////////// END OF src/Dex/Items/AssaultVest.hpp /////////////////////
+
+/////////////////// START OF src/Dex/Items/BrightPowder.hpp ////////////////////
+
+namespace pokesim::dex::build {
+struct BrightPowder {
+  static const dex::Item name = dex::BRIGHT_POWDER;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::ItemSetup species(pokedex);
+    species.setName(name);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+//////////////////// END OF src/Dex/Items/BrightPowder.hpp /////////////////////
+
+//////////////////// START OF src/Dex/Items/ChoiceScarf.hpp ////////////////////
+
+namespace pokesim::dex::build {
+struct ChoiceScarf {
+  static const dex::Item name = dex::CHOICE_SCARF;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::ItemSetup species(pokedex);
+    species.setName(name);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+///////////////////// END OF src/Dex/Items/ChoiceScarf.hpp /////////////////////
+
+//////////////////// START OF src/Dex/Items/ChoiceSpecs.hpp ////////////////////
+
+namespace pokesim::dex::build {
+struct ChoiceSpecs {
+  static const dex::Item name = dex::CHOICE_SPECS;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::ItemSetup species(pokedex);
+    species.setName(name);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+///////////////////// END OF src/Dex/Items/ChoiceSpecs.hpp /////////////////////
+
+///////////////////// START OF src/Dex/Items/FocusSash.hpp /////////////////////
+
+namespace pokesim::dex::build {
+struct FocusSash {
+  static const dex::Item name = dex::FOCUS_SASH;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::ItemSetup species(pokedex);
+    species.setName(name);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+////////////////////// END OF src/Dex/Items/FocusSash.hpp //////////////////////
+
+////////////////////// START OF src/Dex/Items/LifeOrb.hpp //////////////////////
+
+namespace pokesim::dex::build {
+struct LifeOrb {
+  static const dex::Item name = dex::LIFE_ORB;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::ItemSetup species(pokedex);
+    species.setName(name);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+/////////////////////// END OF src/Dex/Items/LifeOrb.hpp ///////////////////////
+
+/////////////////// START OF src/Dex/Setup/GetItemBuild.cpp ////////////////////
+
+// TODO(aed3): Make this and the individual species files auto generated
+
+namespace pokesim {
+entt::entity (*Dex::getItemBuild(dex::Item item))(Dex&) {
+  // Tidy check ignored because "using namespace" is in function
+  using namespace dex::build;  // NOLINT(google-build-using-namespace)
+
+  switch (item) {
+    case BrightPowder::name: return BrightPowder::build;
+    case LifeOrb::name: return LifeOrb::build;
+    case FocusSash::name: return FocusSash::build;
+    case ChoiceScarf::name: return ChoiceScarf::build;
+    case ChoiceSpecs::name: return ChoiceSpecs::build;
+    case AssaultVest::name: return AssaultVest::build;
+    default: {
+      ENTT_ASSERT(false, "Building a item that does not exist");
+      return nullptr;
+    }
+  }
+}
+};  // namespace pokesim
+
+//////////////////// END OF src/Dex/Setup/GetItemBuild.cpp /////////////////////
 
 ////////////////////////// START OF src/Dex/Names.hpp //////////////////////////
 
