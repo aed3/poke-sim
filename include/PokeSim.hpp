@@ -66,7 +66,12 @@
  * src/Components/Names/Item.hpp
  * src/Dex/Setup/ItemSetup.hpp
  * src/Dex/Setup/ItemSetup.cpp
+ * src/Dex/Species/Ampharos.hpp
+ * src/Dex/Species/Dragapult.hpp
  * src/Dex/Species/Empoleon.hpp
+ * src/Dex/Species/Gardevoir.hpp
+ * src/Dex/Species/Pangoro.hpp
+ * src/Dex/Species/Ribombee.hpp
  * src/Dex/Setup/GetSpeciesBuild.cpp
  * src/Dex/Names.hpp
  * src/Dex/Names.cpp
@@ -11816,7 +11821,7 @@ class Dex {
   inline void loadSpecies(const entt::dense_set<dex::Species>& speciesList);
 
   template <typename... T>
-  const auto getSpeciesData(dex::Species species) const {
+  auto getSpeciesData(dex::Species species) const {
     return registry.get<T...>(speciesMap.at(species));
   }
 };
@@ -12182,6 +12187,46 @@ void ItemSetup::setName(Item item) {
 
 ////////////////////// END OF src/Dex/Setup/ItemSetup.cpp //////////////////////
 
+//////////////////// START OF src/Dex/Species/Ampharos.hpp /////////////////////
+
+namespace pokesim::dex::build {
+struct Ampharos {
+  static const dex::Species name = dex::AMPHAROS;
+  static const std::uint8_t hp = 90, atk = 75, def = 85, spa = 115, spd = 90, spe = 55;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::SpeciesSetup species(pokedex);
+    species.setName(name);
+    species.setType(dex::ELECTRIC_TYPE);
+    species.setBaseStats(hp, atk, def, spa, spd, spe);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+///////////////////// END OF src/Dex/Species/Ampharos.hpp //////////////////////
+
+//////////////////// START OF src/Dex/Species/Dragapult.hpp ////////////////////
+
+namespace pokesim::dex::build {
+struct Dragapult {
+  static const dex::Species name = dex::DRAGAPULT;
+  static const std::uint8_t hp = 88, atk = 120, def = 75, spa = 100, spd = 75, spe = 142;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::SpeciesSetup species(pokedex);
+    species.setName(name);
+    species.setType(dex::DRAGON_TYPE, dex::GHOST_TYPE);
+    species.setBaseStats(hp, atk, def, spa, spd, spe);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+///////////////////// END OF src/Dex/Species/Dragapult.hpp /////////////////////
+
 //////////////////// START OF src/Dex/Species/Empoleon.hpp /////////////////////
 
 namespace pokesim::dex::build {
@@ -12202,14 +12247,79 @@ struct Empoleon {
 
 ///////////////////// END OF src/Dex/Species/Empoleon.hpp //////////////////////
 
+//////////////////// START OF src/Dex/Species/Gardevoir.hpp ////////////////////
+
+namespace pokesim::dex::build {
+struct Gardevoir {
+  static const dex::Species name = dex::GARDEVOIR;
+  static const std::uint8_t hp = 68, atk = 65, def = 65, spa = 125, spd = 115, spe = 80;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::SpeciesSetup species(pokedex);
+    species.setName(name);
+    species.setType(dex::PSYCHIC_TYPE, dex::FAIRY_TYPE);
+    species.setBaseStats(hp, atk, def, spa, spd, spe);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+///////////////////// END OF src/Dex/Species/Gardevoir.hpp /////////////////////
+
+///////////////////// START OF src/Dex/Species/Pangoro.hpp /////////////////////
+
+namespace pokesim::dex::build {
+struct Pangoro {
+  static const dex::Species name = dex::PANGORO;
+  static const std::uint8_t hp = 95, atk = 124, def = 78, spa = 69, spd = 71, spe = 58;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::SpeciesSetup species(pokedex);
+    species.setName(name);
+    species.setType(dex::FIGHTING_TYPE, dex::DARK_TYPE);
+    species.setBaseStats(hp, atk, def, spa, spd, spe);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+////////////////////// END OF src/Dex/Species/Pangoro.hpp //////////////////////
+
+//////////////////// START OF src/Dex/Species/Ribombee.hpp /////////////////////
+
+namespace pokesim::dex::build {
+struct Ribombee {
+  static const dex::Species name = dex::RIBOMBEE;
+  static const std::uint8_t hp = 60, atk = 55, def = 60, spa = 95, spd = 70, spe = 124;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::SpeciesSetup species(pokedex);
+    species.setName(name);
+    species.setType(dex::BUG_TYPE, dex::FAIRY_TYPE);
+    species.setBaseStats(hp, atk, def, spa, spd, spe);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+///////////////////// END OF src/Dex/Species/Ribombee.hpp //////////////////////
+
 ////////////////// START OF src/Dex/Setup/GetSpeciesBuild.cpp //////////////////
 
-// TODO: Make this and the individual species files auto generated
+// TODO(aed3): Make this and the individual species files auto generated
 
 namespace pokesim {
 entt::entity (*Dex::getSpeciesBuild(dex::Species species))(Dex&) {
   switch (species) {
+    case dex::AMPHAROS: return dex::build::Ampharos::build;
+    case dex::GARDEVOIR: return dex::build::Gardevoir::build;
     case dex::EMPOLEON: return dex::build::Empoleon::build;
+    case dex::PANGORO: return dex::build::Pangoro::build;
+    case dex::RIBOMBEE: return dex::build::Ribombee::build;
+    case dex::DRAGAPULT: return dex::build::Dragapult::build;
     default: {
       ENTT_ASSERT(false, "Building a species that does not exist");
       return nullptr;
@@ -13549,6 +13659,7 @@ entt::handle Dex::createEntry() {
 }
 
 void Dex::loadSpecies(const entt::dense_set<dex::Species>& speciesList) {
+  speciesMap.reserve(speciesList.size());
   for (dex::Species species : speciesList) {
     ENTT_ASSERT(!speciesMap.contains(species), "Shouldn't build data entries twice");
     speciesMap[species] = getSpeciesBuild(species)(*this);
