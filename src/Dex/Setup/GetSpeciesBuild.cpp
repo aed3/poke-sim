@@ -4,8 +4,11 @@
 
 // TODO(aed3): Make this and the individual species files auto generated
 
-namespace pokesim::dex::build {
+namespace pokesim {
 entt::entity (*Dex::getSpeciesBuild(dex::Species species))(Dex&) {
+  // Tidy check ignored because "using namespace" is in function
+  using namespace dex::build;  // NOLINT(google-build-using-namespace)
+
   switch (species) {
     case Ampharos::name: return Ampharos::build;
     case Gardevoir::name: return Gardevoir::build;
