@@ -4,15 +4,15 @@
 
 // TODO(aed3): Make this and the individual species files auto generated
 
-namespace pokesim {
+namespace pokesim::dex::build {
 entt::entity (*Dex::getSpeciesBuild(dex::Species species))(Dex&) {
   switch (species) {
-    case dex::AMPHAROS: return dex::build::Ampharos::build;
-    case dex::GARDEVOIR: return dex::build::Gardevoir::build;
-    case dex::EMPOLEON: return dex::build::Empoleon::build;
-    case dex::PANGORO: return dex::build::Pangoro::build;
-    case dex::RIBOMBEE: return dex::build::Ribombee::build;
-    case dex::DRAGAPULT: return dex::build::Dragapult::build;
+    case Ampharos::name: return Ampharos::build;
+    case Gardevoir::name: return Gardevoir::build;
+    case Empoleon::name: return Empoleon::build;
+    case Pangoro::name: return Pangoro::build;
+    case Ribombee::name: return Ribombee::build;
+    case Dragapult::name: return Dragapult::build;
     default: {
       ENTT_ASSERT(false, "Building a species that does not exist");
       return nullptr;
