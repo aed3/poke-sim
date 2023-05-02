@@ -8,10 +8,10 @@ struct FocusSash {
   static const dex::Item name = dex::FOCUS_SASH;
 
   static entt::entity build(Dex& pokedex) {
-    internal::ItemSetup species(pokedex);
-    species.setName(name);
+    internal::ItemSetup item(pokedex);
+    item.setName(name);
 
-    return species.entity();
+    return item.entity();
   }
 };
 }  // namespace pokesim::dex::build

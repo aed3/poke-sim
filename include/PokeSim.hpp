@@ -12347,10 +12347,10 @@ struct AssaultVest {
   static const dex::Item name = dex::ASSAULT_VEST;
 
   static entt::entity build(Dex& pokedex) {
-    internal::ItemSetup species(pokedex);
-    species.setName(name);
+    internal::ItemSetup item(pokedex);
+    item.setName(name);
 
-    return species.entity();
+    return item.entity();
   }
 };
 }  // namespace pokesim::dex::build
@@ -12364,10 +12364,10 @@ struct BrightPowder {
   static const dex::Item name = dex::BRIGHT_POWDER;
 
   static entt::entity build(Dex& pokedex) {
-    internal::ItemSetup species(pokedex);
-    species.setName(name);
+    internal::ItemSetup item(pokedex);
+    item.setName(name);
 
-    return species.entity();
+    return item.entity();
   }
 };
 }  // namespace pokesim::dex::build
@@ -12381,10 +12381,10 @@ struct ChoiceScarf {
   static const dex::Item name = dex::CHOICE_SCARF;
 
   static entt::entity build(Dex& pokedex) {
-    internal::ItemSetup species(pokedex);
-    species.setName(name);
+    internal::ItemSetup item(pokedex);
+    item.setName(name);
 
-    return species.entity();
+    return item.entity();
   }
 };
 }  // namespace pokesim::dex::build
@@ -12398,10 +12398,10 @@ struct ChoiceSpecs {
   static const dex::Item name = dex::CHOICE_SPECS;
 
   static entt::entity build(Dex& pokedex) {
-    internal::ItemSetup species(pokedex);
-    species.setName(name);
+    internal::ItemSetup item(pokedex);
+    item.setName(name);
 
-    return species.entity();
+    return item.entity();
   }
 };
 }  // namespace pokesim::dex::build
@@ -12415,10 +12415,10 @@ struct FocusSash {
   static const dex::Item name = dex::FOCUS_SASH;
 
   static entt::entity build(Dex& pokedex) {
-    internal::ItemSetup species(pokedex);
-    species.setName(name);
+    internal::ItemSetup item(pokedex);
+    item.setName(name);
 
-    return species.entity();
+    return item.entity();
   }
 };
 }  // namespace pokesim::dex::build
@@ -12432,10 +12432,10 @@ struct LifeOrb {
   static const dex::Item name = dex::LIFE_ORB;
 
   static entt::entity build(Dex& pokedex) {
-    internal::ItemSetup species(pokedex);
-    species.setName(name);
+    internal::ItemSetup item(pokedex);
+    item.setName(name);
 
-    return species.entity();
+    return item.entity();
   }
 };
 }  // namespace pokesim::dex::build
