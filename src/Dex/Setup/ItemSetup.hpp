@@ -8,6 +8,6 @@ namespace pokesim::dex::internal {
 struct ItemSetup : DexDataSetup {
   ItemSetup(Dex& pokedex) : DexDataSetup(pokedex) {}
 
-  /*__inline__*/ void setName(Item item);
+  /*_inline_*/ void setName(Item item);
 };
 }  // namespace pokesim::dex::internal

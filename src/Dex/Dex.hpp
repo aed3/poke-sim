@@ -14,22 +14,22 @@ class Dex {
   entt::dense_map<dex::Move, entt::entity> movesMap{};
 
   template <typename GetBuild, typename T>
-  /*__inline__*/ void load(entt::dense_map<T, entt::entity>& map, const entt::dense_set<T>& list, GetBuild getBuild);
+  /*_inline_*/ void load(entt::dense_map<T, entt::entity>& map, const entt::dense_set<T>& list, GetBuild getBuild);
 
-  /*__inline__*/ static entt::entity (*getSpeciesBuild(dex::Species species))(Dex&);
-  /*__inline__*/ static entt::entity (*getMoveBuild(dex::Move move))(Dex&);
-  /*__inline__*/ static entt::entity (*getItemBuild(dex::Item item))(Dex&);
+  /*_inline_*/ static entt::entity (*getSpeciesBuild(dex::Species species))(Dex&);
+  /*_inline_*/ static entt::entity (*getMoveBuild(dex::Move move))(Dex&);
+  /*_inline_*/ static entt::entity (*getItemBuild(dex::Item item))(Dex&);
 
  public:
   const GameMechanic mechanics;
 
   Dex(GameMechanic mechanics_ = SCARLET_VIOLET) : mechanics(mechanics_) {}
 
-  /*__inline__*/ entt::handle createEntry();
+  /*_inline_*/ entt::handle createEntry();
 
-  /*__inline__*/ void loadSpecies(const entt::dense_set<dex::Species>& speciesList);
-  /*__inline__*/ void loadItems(const entt::dense_set<dex::Item>& itemList);
-  /*__inline__*/ void loadMoves(const entt::dense_set<dex::Move>& moveList);
+  /*_inline_*/ void loadSpecies(const entt::dense_set<dex::Species>& speciesList);
+  /*_inline_*/ void loadItems(const entt::dense_set<dex::Item>& itemList);
+  /*_inline_*/ void loadMoves(const entt::dense_set<dex::Move>& moveList);
 
   template <typename... T>
   auto getSpeciesData(dex::Species species) const {

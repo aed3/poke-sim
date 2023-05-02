@@ -10,7 +10,7 @@ const mainHeader = path.join('src', 'PokeSim.hpp');
 
 const includeRegex = /^\s*#include\s+["<]([^"<>]+)([">])/;
 const pragmaOnceRegex = /^\s*#pragma\s+once/;
-const inlineRegex = /\/\*\s*__inline__\s*\*\//g;
+const inlineRegex = /\/\*\s*_inline_\s*\*\//g;
 
 const fileText = {};
 const dependencies = {};
