@@ -1,4 +1,5 @@
 #pragma once
 
-#include <Components/Components.hpp>
-#include <Dex/Dex.hpp>
+#include <Components/headers.hpp>
+#include <Dex/headers.hpp>
+#include <Types/headers.hpp>

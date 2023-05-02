@@ -39,7 +39,14 @@ project(PokeSim)
 check_ipo_supported(RESULT supported OUTPUT error)
 
 set (SOURCES
+  src/Dex/Setup/GetItemBuild.cpp
+  src/Dex/Setup/GetMoveBuild.cpp
+  src/Dex/Setup/GetSpeciesBuild.cpp
+  src/Dex/Setup/ItemSetup.cpp
+  src/Dex/Setup/MoveSetup.cpp
+  src/Dex/Setup/SpeciesSetup.cpp
   src/Dex/Dex.cpp
+  src/Dex/Names.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
@@ -51,6 +58,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 if (MSVC)
   set(compiler_warning_options /W4 /WX)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 else()
   set(compiler_warning_options -Wshadow -Wall)
 endif()
@@ -62,6 +70,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE ${compiler_warning_options})
 ############################################################
 
 add_executable(PokeSimTests
+  tests/Dex.cpp
   tests/Tests.cpp
   external/Catch2/catch_amalgamated.cpp
 )

@@ -30,7 +30,9 @@ const readSrcFiles = () => {
     else {
       const ext = path.extname(file);
       if (['.cpp', '.hpp', '.h'].includes(ext)) {
-        fileText[file] = fs.readFileSync(file, 'utf8').split('\n');
+        const lines = fileText[file] = fs.readFileSync(file, 'utf8').split('\n');
+
+        while (!lines[lines.length - 1]) lines.pop();
       }
     }
   }
@@ -124,23 +126,33 @@ const pad = (str) => {
 };
 
 const addToOneFileHeader = (files) => {
+  files = files.filter(file => path.basename(file) !== 'headers.hpp');
+
   singleFileHeader.push('', '/**', ' * FILE ORDER');
   for (const file of files) {
-    singleFileHeader.push(' * ' + file);
+    singleFileHeader.push(' * ' + file.split(path.sep).join('/'));
   }
   singleFileHeader.push(' */', '');
+
   for (const file of files) {
-    singleFileHeader.push('', pad(`START OF ${file}`), '');
+    const normalizedFile = file.split(path.sep).join('/');
+    singleFileHeader.push('', pad(`START OF ${normalizedFile}`), '');
     const lines = fileText[file];
     const fileDependencyLines = dependencyLines[file];
 
+    let startOfFile = true;
     for (let i = 0; i < lines.length; i++) {
-      if (fileDependencyLines.has(i) || pragmaOnceRegex.test(lines[i])) continue;
-      singleFileHeader.push(lines[i].replace(inlineRegex, 'inline'));
+      const line = lines[i];
+      if ((!line && startOfFile) || fileDependencyLines.has(i) || pragmaOnceRegex.test(line)) continue;
+      startOfFile = false;
+      singleFileHeader.push(line.replace(inlineRegex, 'inline'));
     }
-    singleFileHeader.push(pad(`END OF ${file}`), '');
+
+    singleFileHeader.push('', pad(`END OF ${normalizedFile}`));
   }
 };
+
+require('child_process').execFileSync('node', [path.join('tools', 'createFolderHeaderFiles')]);
 
 readSrcFiles();
 findDependencies();
