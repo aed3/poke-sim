@@ -75,12 +75,4 @@ void MoveEffectSetup::setEffectsSelf() {
 void MoveEffectSetup::setEffectsTarget() {
   handle.emplace<move::effect::MoveTarget>();
 }
-
-template <typename BoostType>
-void MoveEffectSetup::setBoost(std::int8_t boost) {
-  static_assert(
-    std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() || std::is_same<SpaBoost, BoostType>() ||
-    std::is_same<SpdBoost, BoostType>() || std::is_same<SpeBoost, BoostType>());
-  handle.emplace<BoostType>(boost);
-}
 }  // namespace pokesim::dex::internal

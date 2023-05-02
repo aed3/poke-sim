@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Components/Boosts.hpp>
+#include <Components/Tags/Move.hpp>
 #include <Types/Move.hpp>
 
 #include "Setup.hpp"
@@ -34,6 +36,12 @@ struct MoveEffectSetup : DexDataSetup {
   /*__inline__*/ void setEffectsTarget();
 
   template <typename BoostType>
-  /*__inline__*/ void setBoost(std::int8_t boost);
+  /*__inline__*/ void setBoost(std::int8_t boost) {
+    static_assert(
+      std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() ||
+      std::is_same<SpaBoost, BoostType>() || std::is_same<SpdBoost, BoostType>() ||
+      std::is_same<SpeBoost, BoostType>());
+    handle.emplace<SpdBoost>(boost);
+  }
 };
 }  // namespace pokesim::dex::internal

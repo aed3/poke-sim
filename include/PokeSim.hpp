@@ -73,6 +73,14 @@
  * src/Dex/Species/Pangoro.hpp
  * src/Dex/Species/Ribombee.hpp
  * src/Dex/Setup/GetSpeciesBuild.cpp
+ * src/Dex/Moves/FuryAttack.hpp
+ * src/Dex/Moves/KnockOff.hpp
+ * src/Dex/Moves/Moonblast.hpp
+ * src/Dex/Moves/QuiverDance.hpp
+ * src/Components/Tags/Status.hpp
+ * src/Dex/Moves/Thunderbolt.hpp
+ * src/Dex/Moves/WillOWisp.hpp
+ * src/Dex/Setup/GetMoveBuild.cpp
  * src/Dex/Items/AssaultVest.hpp
  * src/Dex/Items/BrightPowder.hpp
  * src/Dex/Items/ChoiceScarf.hpp
@@ -110,7 +118,6 @@
  * src/Components/Tags/Battle.hpp
  * src/Components/Tags/Item.hpp
  * src/Components/Tags/Pokemon.hpp
- * src/Components/Tags/Status.hpp
  * src/Components/Tags/Type.hpp
  * src/Components/TargetSlot.hpp
  * src/Components/Turn.hpp
@@ -11814,6 +11821,9 @@ class Dex {
   entt::dense_map<dex::Item, entt::entity> itemsMap{};
   entt::dense_map<dex::Move, entt::entity> movesMap{};
 
+  template <typename GetBuild, typename T>
+  inline void load(entt::dense_map<T, entt::entity>& map, const entt::dense_set<T>& list, GetBuild getBuild);
+
   inline static entt::entity (*getSpeciesBuild(dex::Species species))(Dex&);
   inline static entt::entity (*getMoveBuild(dex::Move move))(Dex&);
   inline static entt::entity (*getItemBuild(dex::Item item))(Dex&);
@@ -11826,10 +11836,22 @@ class Dex {
   inline entt::handle createEntry();
 
   inline void loadSpecies(const entt::dense_set<dex::Species>& speciesList);
+  inline void loadItems(const entt::dense_set<dex::Item>& itemList);
+  inline void loadMoves(const entt::dense_set<dex::Move>& moveList);
 
   template <typename... T>
   auto getSpeciesData(dex::Species species) const {
     return registry.get<T...>(speciesMap.at(species));
+  }
+
+  template <typename... T>
+  auto getItemData(dex::Item item) const {
+    return registry.get<T...>(itemsMap.at(item));
+  }
+
+  template <typename... T>
+  auto getMoveData(dex::Move move) const {
+    return registry.get<T...>(movesMap.at(move));
   }
 };
 }  // namespace pokesim
@@ -12079,7 +12101,13 @@ struct MoveEffectSetup : DexDataSetup {
   inline void setEffectsTarget();
 
   template <typename BoostType>
-  inline void setBoost(std::int8_t boost);
+  inline void setBoost(std::int8_t boost) {
+    static_assert(
+      std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() ||
+      std::is_same<SpaBoost, BoostType>() || std::is_same<SpdBoost, BoostType>() ||
+      std::is_same<SpeBoost, BoostType>());
+    handle.emplace<SpdBoost>(boost);
+  }
 };
 }  // namespace pokesim::dex::internal
 
@@ -12149,14 +12177,6 @@ void MoveEffectSetup::setEffectsSelf() {
 
 void MoveEffectSetup::setEffectsTarget() {
   handle.emplace<move::effect::MoveTarget>();
-}
-
-template <typename BoostType>
-void MoveEffectSetup::setBoost(std::int8_t boost) {
-  static_assert(
-    std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() || std::is_same<SpaBoost, BoostType>() ||
-    std::is_same<SpdBoost, BoostType>() || std::is_same<SpeBoost, BoostType>());
-  handle.emplace<BoostType>(boost);
 }
 }  // namespace pokesim::dex::internal
 
@@ -12339,6 +12359,233 @@ entt::entity (*Dex::getSpeciesBuild(dex::Species species))(Dex&) {
 };  // namespace pokesim
 
 /////////////////// END OF src/Dex/Setup/GetSpeciesBuild.cpp ///////////////////
+
+//////////////////// START OF src/Dex/Moves/FuryAttack.hpp /////////////////////
+
+namespace pokesim::dex::build {
+struct FuryAttack {
+  static const dex::Move name = dex::FURY_ATTACK;
+  static const std::uint8_t accuracy = 85, basePower = 15, basePP = 20, minHits = 2, maxHits = 5;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::MoveSetup move(pokedex);
+    move.setName(name);
+    move.setType(dex::NORMAL_TYPE);
+    move.setAccuracy(accuracy);
+    move.setBasePower(basePower);
+
+    move.setCategoryPhysical();
+    move.setBasePP(basePP);
+    move.setMultiHit(minHits, maxHits);
+
+    move.setProperty<pokesim::move::AnySingleTarget>();
+    move.setProperty<pokesim::move::Contact>();
+
+    return move.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+///////////////////// END OF src/Dex/Moves/FuryAttack.hpp //////////////////////
+
+///////////////////// START OF src/Dex/Moves/KnockOff.hpp //////////////////////
+
+namespace pokesim::dex::build {
+struct KnockOff {
+  static const dex::Move name = dex::KNOCK_OFF;
+  static const std::uint8_t accuracy = 100, basePower = 65, basePP = 20;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::MoveSetup move(pokedex);
+    move.setName(name);
+    move.setType(dex::DARK_TYPE);
+    move.setAccuracy(accuracy);
+    move.setBasePower(basePower);
+
+    move.setCategoryPhysical();
+    move.setBasePP(basePP);
+
+    move.setProperty<pokesim::move::AnySingleTarget>();
+    move.setProperty<pokesim::move::Contact>();
+
+    return move.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+////////////////////// END OF src/Dex/Moves/KnockOff.hpp ///////////////////////
+
+///////////////////// START OF src/Dex/Moves/Moonblast.hpp /////////////////////
+
+namespace pokesim::dex::build {
+struct Moonblast {
+  static const dex::Move name = dex::MOONBLAST;
+  static const std::uint8_t accuracy = 100, basePower = 95, basePP = 15;
+  static const std::uint8_t secondaryEffectChance = 30;
+  static const std::int8_t spaBoost = -1;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::MoveSetup move(pokedex);
+    move.setName(name);
+    move.setType(dex::FAIRY_TYPE);
+    move.setAccuracy(accuracy);
+    move.setBasePower(basePower);
+
+    move.setCategorySpecial();
+    move.setBasePP(basePP);
+
+    move.setProperty<pokesim::move::AnySingleTarget>();
+
+    internal::MoveEffectSetup effect(pokedex);
+    effect.setChance(secondaryEffectChance);
+    effect.setEffectsTarget();
+    effect.setBoost<SpaBoost>(spaBoost);
+
+    move.setSecondaryEffect(effect.entity());
+
+    return move.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+////////////////////// END OF src/Dex/Moves/Moonblast.hpp //////////////////////
+
+//////////////////// START OF src/Dex/Moves/QuiverDance.hpp ////////////////////
+
+namespace pokesim::dex::build {
+struct QuiverDance {
+  static const dex::Move name = dex::QUIVER_DANCE;
+  static const std::uint8_t basePP = 20;
+  static const std::int8_t spaBoost = 1, spdBoost = 1, speBoost = 1;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::MoveSetup move(pokedex);
+    move.setName(name);
+    move.setType(dex::BUG_TYPE);
+
+    move.setCategoryStatus();
+    move.setBasePP(basePP);
+
+    move.setProperty<pokesim::move::Self>();
+
+    internal::MoveEffectSetup effect(pokedex);
+    effect.setEffectsSelf();
+    effect.setBoost<SpaBoost>(spaBoost);
+    effect.setBoost<SpdBoost>(spdBoost);
+    effect.setBoost<SpeBoost>(speBoost);
+
+    move.setPrimaryEffect(effect.entity());
+
+    return move.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+///////////////////// END OF src/Dex/Moves/QuiverDance.hpp /////////////////////
+
+/////////////////// START OF src/Components/Tags/Status.hpp ////////////////////
+
+namespace pokesim::status {
+struct Burn {};
+struct Freeze {};
+struct Paralysis {};
+struct Poison {};
+struct Sleep {};
+struct Toxic {};
+}  // namespace pokesim::status
+
+//////////////////// END OF src/Components/Tags/Status.hpp /////////////////////
+
+//////////////////// START OF src/Dex/Moves/Thunderbolt.hpp ////////////////////
+
+namespace pokesim::dex::build {
+struct Thunderbolt {
+  static const dex::Move name = dex::THUNDERBOLT;
+  static const std::uint8_t accuracy = 100, basePower = 90, basePP = 15;
+  static const std::uint8_t secondaryEffectChance = 10;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::MoveSetup move(pokedex);
+    move.setName(name);
+    move.setType(dex::ELECTRIC_TYPE);
+    move.setAccuracy(accuracy);
+    move.setBasePower(basePower);
+
+    move.setCategoryPhysical();
+    move.setBasePP(basePP);
+
+    move.setProperty<pokesim::move::AnySingleTarget>();
+
+    internal::MoveEffectSetup effect(pokedex);
+    effect.setChance(secondaryEffectChance);
+    effect.setEffectsTarget();
+    effect.setProperty<pokesim::status::Paralysis>();
+
+    move.setSecondaryEffect(effect.entity());
+
+    return move.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+///////////////////// END OF src/Dex/Moves/Thunderbolt.hpp /////////////////////
+
+///////////////////// START OF src/Dex/Moves/WillOWisp.hpp /////////////////////
+
+namespace pokesim::dex::build {
+struct WillOWisp {
+  static const dex::Move name = dex::WILL_O_WISP;
+  static const std::uint8_t accuracy = 85, basePP = 15;
+
+  static entt::entity build(Dex& pokedex) {
+    internal::MoveSetup move(pokedex);
+    move.setName(name);
+    move.setType(dex::FIRE_TYPE);
+    move.setAccuracy(accuracy);
+
+    move.setCategoryStatus();
+    move.setBasePP(basePP);
+
+    move.setProperty<pokesim::move::AnySingleTarget>();
+
+    internal::MoveEffectSetup effect(pokedex);
+    effect.setEffectsTarget();
+    effect.setProperty<pokesim::status::Burn>();
+
+    move.setPrimaryEffect(effect.entity());
+
+    return move.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+////////////////////// END OF src/Dex/Moves/WillOWisp.hpp //////////////////////
+
+/////////////////// START OF src/Dex/Setup/GetMoveBuild.cpp ////////////////////
+
+// TODO(aed3): Make this and the individual species files auto generated
+
+namespace pokesim {
+entt::entity (*Dex::getMoveBuild(dex::Move move))(Dex&) {
+  // Tidy check ignored because "using namespace" is in function
+  using namespace dex::build;  // NOLINT(google-build-using-namespace)
+
+  switch (move) {
+    case FuryAttack::name: return FuryAttack::build;
+    case Thunderbolt::name: return Thunderbolt::build;
+    case WillOWisp::name: return WillOWisp::build;
+    case KnockOff::name: return KnockOff::build;
+    case QuiverDance::name: return QuiverDance::build;
+    case Moonblast::name: return Moonblast::build;
+    default: {
+      ENTT_ASSERT(false, "Building a move that does not exist");
+      return nullptr;
+    }
+  }
+}
+};  // namespace pokesim
+
+//////////////////// END OF src/Dex/Setup/GetMoveBuild.cpp /////////////////////
 
 //////////////////// START OF src/Dex/Items/AssaultVest.hpp ////////////////////
 
@@ -13796,13 +14043,27 @@ entt::handle Dex::createEntry() {
   return {registry, registry.create()};
 }
 
-void Dex::loadSpecies(const entt::dense_set<dex::Species>& speciesList) {
-  speciesMap.reserve(speciesList.size());
-  for (dex::Species species : speciesList) {
-    ENTT_ASSERT(!speciesMap.contains(species), "Shouldn't build data entries twice");
-    speciesMap[species] = getSpeciesBuild(species)(*this);
+template <typename GetBuild, typename T>
+void Dex::load(entt::dense_map<T, entt::entity>& map, const entt::dense_set<T>& list, GetBuild getBuild) {
+  map.reserve(list.size());
+  for (T listItem : list) {
+    ENTT_ASSERT(!map.contains(listItem), "Shouldn't build data entries twice");
+    map[listItem] = getBuild(listItem)(*this);
   }
 }
+
+void Dex::loadSpecies(const entt::dense_set<dex::Species>& speciesList) {
+  load(speciesMap, speciesList, getSpeciesBuild);
+}
+
+void Dex::loadItems(const entt::dense_set<dex::Item>& itemsList) {
+  load(itemsMap, itemsList, getItemBuild);
+}
+
+void Dex::loadMoves(const entt::dense_set<dex::Move>& moveList) {
+  load(movesMap, moveList, getMoveBuild);
+}
+
 }  // namespace pokesim
 
 //////////////////////////// END OF src/Dex/Dex.cpp ////////////////////////////
@@ -14150,19 +14411,6 @@ struct Active {};
 }  // namespace pokesim
 
 //////////////////// END OF src/Components/Tags/Pokemon.hpp ////////////////////
-
-/////////////////// START OF src/Components/Tags/Status.hpp ////////////////////
-
-namespace pokesim::status {
-struct Burn {};
-struct Freeze {};
-struct Paralysis {};
-struct Poison {};
-struct Sleep {};
-struct Toxic {};
-}  // namespace pokesim::status
-
-//////////////////// END OF src/Components/Tags/Status.hpp /////////////////////
 
 //////////////////// START OF src/Components/Tags/Type.hpp /////////////////////
 

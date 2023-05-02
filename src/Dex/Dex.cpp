@@ -8,11 +8,25 @@ entt::handle Dex::createEntry() {
   return {registry, registry.create()};
 }
 
-void Dex::loadSpecies(const entt::dense_set<dex::Species>& speciesList) {
-  speciesMap.reserve(speciesList.size());
-  for (dex::Species species : speciesList) {
-    ENTT_ASSERT(!speciesMap.contains(species), "Shouldn't build data entries twice");
-    speciesMap[species] = getSpeciesBuild(species)(*this);
+template <typename GetBuild, typename T>
+void Dex::load(entt::dense_map<T, entt::entity>& map, const entt::dense_set<T>& list, GetBuild getBuild) {
+  map.reserve(list.size());
+  for (T listItem : list) {
+    ENTT_ASSERT(!map.contains(listItem), "Shouldn't build data entries twice");
+    map[listItem] = getBuild(listItem)(*this);
   }
 }
+
+void Dex::loadSpecies(const entt::dense_set<dex::Species>& speciesList) {
+  load(speciesMap, speciesList, getSpeciesBuild);
+}
+
+void Dex::loadItems(const entt::dense_set<dex::Item>& itemsList) {
+  load(itemsMap, itemsList, getItemBuild);
+}
+
+void Dex::loadMoves(const entt::dense_set<dex::Move>& moveList) {
+  load(movesMap, moveList, getMoveBuild);
+}
+
 }  // namespace pokesim

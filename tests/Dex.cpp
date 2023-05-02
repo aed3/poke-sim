@@ -8,7 +8,7 @@
 #include <entt/entt.hpp>
 
 namespace pokesim {
-TEST_CASE("Species", "") {
+TEST_CASE("Dex Data Building: Species", "[Dex]") {
   Dex pokedex;
 
   entt::dense_set<dex::Species> speciesList{};
@@ -23,5 +23,33 @@ TEST_CASE("Species", "") {
   REQUIRE(baseStats.hp == 84);
   REQUIRE(baseStats.atk == 86);
   REQUIRE(baseStats.spd == 101);
+}
+
+TEST_CASE("Dex Data Building: Item", "[Dex]") {
+  Dex pokedex;
+
+  entt::dense_set<dex::Item> itemList{};
+  itemList.insert(dex::CHOICE_SPECS);
+  pokedex.loadItems(itemList);
+
+  auto item = pokedex.getItemData<ItemName>(dex::CHOICE_SPECS);
+
+  REQUIRE(item.name == dex::CHOICE_SPECS);
+}
+
+TEST_CASE("Dex Data Building: Move", "[Dex]") {
+  Dex pokedex;
+
+  entt::dense_set<dex::Move> moveList{};
+  moveList.insert(dex::MOONBLAST);
+  pokedex.loadMoves(moveList);
+
+  auto [move, type, power, secondaryEffect] =
+    pokedex.getMoveData<MoveName, TypeName, BasePower, MoveEffect>(dex::MOONBLAST);
+
+  REQUIRE(move.name == dex::MOONBLAST);
+  REQUIRE(type.name == dex::FAIRY_TYPE);
+  REQUIRE(power.basePower == 95);
+  REQUIRE_FALSE(secondaryEffect.primary);
 }
 }  // namespace pokesim
