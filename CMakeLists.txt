@@ -39,14 +39,14 @@ project(PokeSim)
 check_ipo_supported(RESULT supported OUTPUT error)
 
 set (SOURCES
-  src/Dex/Setup/GetItemBuild.cpp
-  src/Dex/Setup/GetMoveBuild.cpp
-  src/Dex/Setup/GetSpeciesBuild.cpp
-  src/Dex/Setup/ItemSetup.cpp
-  src/Dex/Setup/MoveSetup.cpp
-  src/Dex/Setup/SpeciesSetup.cpp
-  src/Dex/Dex.cpp
-  src/Dex/Names.cpp
+  src/Pokedex/Setup/GetItemBuild.cpp
+  src/Pokedex/Setup/GetMoveBuild.cpp
+  src/Pokedex/Setup/GetSpeciesBuild.cpp
+  src/Pokedex/Setup/ItemSetup.cpp
+  src/Pokedex/Setup/MoveSetup.cpp
+  src/Pokedex/Setup/SpeciesSetup.cpp
+  src/Pokedex/Pokedex.cpp
+  src/Pokedex/Names.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
@@ -70,7 +70,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE ${compiler_warning_options})
 ############################################################
 
 add_executable(PokeSimTests
-  tests/Dex.cpp
+  tests/Pokedex.cpp
   tests/Tests.cpp
   external/Catch2/catch_amalgamated.cpp
 )
