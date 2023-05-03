@@ -1,11 +1,4 @@
-#ifdef USE_SINGLE_HEADER
-#include "../include/PokeSim.hpp"
-#else
-#include <PokeSim.hpp>
-#endif
-
-#include <Catch2/catch_amalgamated.hpp>
-#include <entt/entt.hpp>
+#include "Tests.hpp"
 
 namespace pokesim {
 TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
