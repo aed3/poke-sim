@@ -21,8 +21,8 @@ void Dex::loadSpecies(const entt::dense_set<dex::Species>& speciesList) {
   load(speciesMap, speciesList, getSpeciesBuild);
 }
 
-void Dex::loadItems(const entt::dense_set<dex::Item>& itemsList) {
-  load(itemsMap, itemsList, getItemBuild);
+void Dex::loadItems(const entt::dense_set<dex::Item>& itemList) {
+  load(itemsMap, itemList, getItemBuild);
 }
 
 void Dex::loadMoves(const entt::dense_set<dex::Move>& moveList) {
