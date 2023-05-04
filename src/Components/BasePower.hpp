@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct BasePower {
-  std::uint8_t basePower;
+  std::uint8_t basePower = 1;
 };
 }  // namespace pokesim

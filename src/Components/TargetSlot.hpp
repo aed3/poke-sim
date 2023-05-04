@@ -9,6 +9,6 @@ struct TargetSlot {
     P1B,
     P2A,
     P2B,
-  } targetSlot;
+  } targetSlot = P1A;
 };
 }  // namespace pokesim

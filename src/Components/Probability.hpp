@@ -2,6 +2,6 @@
 
 namespace pokesim {
 struct Probability {
-  float probability;
+  float probability = 1;
 };
 }  // namespace pokesim

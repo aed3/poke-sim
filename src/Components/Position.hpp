@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct Position {
-  std::uint8_t position;
+  std::uint8_t position = 1;
 };
 }  // namespace pokesim

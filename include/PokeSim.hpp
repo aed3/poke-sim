@@ -2210,12 +2210,12 @@ struct HiddenAbility {
 
 namespace pokesim {
 struct BaseStats {
-  std::uint8_t hp;
-  std::uint8_t atk;
-  std::uint8_t def;
-  std::uint8_t spa;
-  std::uint8_t spd;
-  std::uint8_t spe;
+  std::uint8_t hp = 1;
+  std::uint8_t atk = 1;
+  std::uint8_t def = 1;
+  std::uint8_t spa = 1;
+  std::uint8_t spd = 1;
+  std::uint8_t spe = 1;
 };
 }  // namespace pokesim
 
@@ -11919,7 +11919,7 @@ void SpeciesSetup::setBaseStats(
 
 namespace pokesim {
 struct Accuracy {
-  std::uint8_t accuracy;
+  std::uint8_t accuracy = 100;
 };
 }  // namespace pokesim
 
@@ -11931,7 +11931,7 @@ struct Accuracy {
 
 namespace pokesim {
 struct BasePower {
-  std::uint8_t basePower;
+  std::uint8_t basePower = 1;
 };
 }  // namespace pokesim
 
@@ -11943,23 +11943,23 @@ struct BasePower {
 
 namespace pokesim {
 struct AtkBoost {
-  std::int8_t boost;
+  std::int8_t boost = 0;
 };
 
 struct DefBoost {
-  std::int8_t boost;
+  std::int8_t boost = 0;
 };
 
 struct SpaBoost {
-  std::int8_t boost;
+  std::int8_t boost = 0;
 };
 
 struct SpdBoost {
-  std::int8_t boost;
+  std::int8_t boost = 0;
 };
 
 struct SpeBoost {
-  std::int8_t boost;
+  std::int8_t boost = 0;
 };
 }  // namespace pokesim
 
@@ -11971,7 +11971,7 @@ struct SpeBoost {
 
 namespace pokesim {
 struct Chance {
-  std::uint8_t chance;
+  std::uint8_t chance = 100;
 };
 }  // namespace pokesim
 
@@ -11994,8 +11994,8 @@ struct MoveEffect {
 
 namespace pokesim {
 struct MultiHit {
-  std::uint8_t minHits;
-  std::uint8_t maxHits;
+  std::uint8_t minHits = 2;
+  std::uint8_t maxHits = 5;
 };
 }  // namespace pokesim
 
@@ -12017,11 +12017,11 @@ struct MoveName {
 
 namespace pokesim {
 struct PP {
-  std::uint8_t pp;
+  std::uint8_t pp = 0;
 };
 
 struct MaxPP {
-  std::uint8_t maxPP;
+  std::uint8_t maxPP = 5;
 };
 }  // namespace pokesim
 
@@ -12033,7 +12033,7 @@ struct MaxPP {
 
 namespace pokesim {
 struct Priority {
-  std::uint8_t priority;
+  std::uint8_t priority = 0;
 };
 }  // namespace pokesim
 
@@ -14074,21 +14074,21 @@ std::string toID(const std::string& name) {
 
 namespace pokesim {
 struct EVs {
-  std::uint8_t hp;
-  std::uint8_t atk;
-  std::uint8_t def;
-  std::uint8_t spa;
-  std::uint8_t spd;
-  std::uint8_t spe;
+  std::uint8_t hp = 0;
+  std::uint8_t atk = 0;
+  std::uint8_t def = 0;
+  std::uint8_t spa = 0;
+  std::uint8_t spd = 0;
+  std::uint8_t spe = 0;
 };
 
 struct IVs {
-  std::uint8_t hp;
-  std::uint8_t atk;
-  std::uint8_t def;
-  std::uint8_t spa;
-  std::uint8_t spd;
-  std::uint8_t spe;
+  std::uint8_t hp = 0;
+  std::uint8_t atk = 0;
+  std::uint8_t def = 0;
+  std::uint8_t spa = 0;
+  std::uint8_t spd = 0;
+  std::uint8_t spe = 0;
 };
 }  // namespace pokesim
 
@@ -14197,7 +14197,7 @@ struct Team {
 
 namespace pokesim {
 struct ID {
-  std::uint16_t id;
+  std::uint16_t id = 1;
 };
 }  // namespace pokesim
 
@@ -14209,7 +14209,7 @@ struct ID {
 
 namespace pokesim {
 struct Level {
-  std::uint8_t level;
+  std::uint8_t level = 1;
 };
 }  // namespace pokesim
 
@@ -14261,7 +14261,7 @@ struct StatusName {
 
 namespace pokesim {
 struct Position {
-  std::uint8_t position;
+  std::uint8_t position = 1;
 };
 }  // namespace pokesim
 
@@ -14271,7 +14271,7 @@ struct Position {
 
 namespace pokesim {
 struct Probability {
-  float probability;
+  float probability = 1;
 };
 }  // namespace pokesim
 
@@ -14283,7 +14283,7 @@ struct Probability {
 
 namespace pokesim {
 struct RNGSeed {
-  std::uint32_t seed;
+  std::uint32_t seed = 0;
 };
 }  // namespace pokesim
 
@@ -14295,10 +14295,10 @@ struct RNGSeed {
 
 namespace pokesim {
 struct SpeedSort {
-  std::uint8_t order;
-  std::int8_t priority;
-  std::int8_t fractionalPriority;
-  std::uint16_t speed;
+  std::uint8_t order = 0;
+  std::int8_t priority = 0;
+  std::int8_t fractionalPriority = 0;
+  std::uint16_t speed = 1;
 };
 }  // namespace pokesim
 
@@ -14310,27 +14310,27 @@ struct SpeedSort {
 
 namespace pokesim::stat {
 struct HP {
-  std::uint16_t hp;
+  std::uint16_t hp = 1;
 };
 
 struct Atk {
-  std::uint16_t atk;
+  std::uint16_t atk = 1;
 };
 
 struct Def {
-  std::uint16_t def;
+  std::uint16_t def = 1;
 };
 
 struct Spa {
-  std::uint16_t spa;
+  std::uint16_t spa = 1;
 };
 
 struct Spd {
-  std::uint16_t spd;
+  std::uint16_t spd = 1;
 };
 
 struct Spe {
-  std::uint16_t spe;
+  std::uint16_t spe = 1;
 };
 }  // namespace pokesim::stat
 
@@ -14448,7 +14448,7 @@ struct TargetSlot {
     P1B,
     P2A,
     P2B,
-  } targetSlot;
+  } targetSlot = P1A;
 };
 }  // namespace pokesim
 
@@ -14460,7 +14460,7 @@ struct TargetSlot {
 
 namespace pokesim {
 struct Turn {
-  std::uint16_t turn;
+  std::uint16_t turn = 1;
 };
 }  // namespace pokesim
 

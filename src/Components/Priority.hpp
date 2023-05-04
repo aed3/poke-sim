@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct Priority {
-  std::uint8_t priority;
+  std::uint8_t priority = 0;
 };
 }  // namespace pokesim
