@@ -1,5 +1,0 @@
-on: [workflow_call]
-
-runs:
-  using: 'node16'
-  main: ../../../tools/createSingleHeaderFile.js

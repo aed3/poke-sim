@@ -1,12 +1,11 @@
 const fs = require('fs');
 const path = require('path');
+const {fullPath, toRelative} = require('../utils')
 
-process.chdir(path.join(__dirname, '..'));
-
-const srcFolder = 'src';
-const externalFolder = 'external';
+const srcFolder = fullPath('src');
+const externalFolder = fullPath('external');
 const testLibraryFolder = path.join(externalFolder, 'Catch2');
-const mainHeader = path.join('src', 'PokeSim.hpp');
+const mainHeader = path.join(srcFolder, 'PokeSim.hpp');
 
 const includeRegex = /^\s*#include\s+["<]([^"<>]+)([">])/;
 const pragmaOnceRegex = /^\s*#pragma\s+once/;
@@ -130,12 +129,12 @@ const addToOneFileHeader = (files) => {
 
   singleFileHeader.push('', '/**', ' * FILE ORDER');
   for (const file of files) {
-    singleFileHeader.push(' * ' + file.split(path.sep).join('/'));
+    singleFileHeader.push(' * ' + toRelative(file));
   }
   singleFileHeader.push(' */', '');
 
   for (const file of files) {
-    const normalizedFile = file.split(path.sep).join('/');
+    const normalizedFile = toRelative(file);
     singleFileHeader.push('', pad(`START OF ${normalizedFile}`), '');
     const lines = fileText[file];
     const fileDependencyLines = dependencyLines[file];
@@ -152,15 +151,11 @@ const addToOneFileHeader = (files) => {
   }
 };
 
-require('child_process').execFileSync('node', [path.join('tools', 'createFolderHeaderFiles')]);
-
 readSrcFiles();
 findDependencies();
 checkDependencyCycles();
 findDependencyOrder();
 
 addToOneFileHeader(dependencyOrder);
-// addToOneFileHeader(
-//   Object.keys(fileText).filter(file => !dependencyOrder.includes(file) && !file.startsWith(externalFolder)));
 
-fs.writeFileSync('include/PokeSim.hpp', singleFileHeader.join('\n'));
+fs.writeFileSync(fullPath('include', 'PokeSim.hpp'), singleFileHeader.join('\n'));

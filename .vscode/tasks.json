@@ -29,8 +29,8 @@
 		},
 		{
 			"type": "shell",
-			"label": "Create Single Header File",
-			"command": "node ${workspaceFolder}/tools/createSingleHeaderFile.js",
+			"label": "Create Header Files",
+			"command": "node ${workspaceFolder}/tools/createHeaders",
 			"problemMatcher": []
 		},
 		{

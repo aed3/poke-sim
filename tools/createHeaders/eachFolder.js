@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-
-process.chdir(path.join(__dirname, '..', 'src'));
+const {fullPath, toRelative} = require('../utils');
 
 const headerFileName = 'headers.hpp';
 
@@ -26,11 +25,11 @@ const createHeadersFile = (folder) => {
     headerFiles.sort();
     fs.writeFileSync(folderHeadersFileName, '#pragma once\n\n');
     fs.appendFileSync(folderHeadersFileName,
-      headerFiles.map(file => `#include "${path.relative(folder, file).split(path.sep).join('/')}"`).join('\n'));
+      headerFiles.map(file => `#include "${toRelative(file, folder)}"`).join('\n'));
     return folderHeadersFileName;
   }
 
   return null;
 };
 
-createHeadersFile('.');
+createHeadersFile(fullPath('src'));
