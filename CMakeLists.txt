@@ -39,6 +39,7 @@ project(PokeSim)
 check_ipo_supported(RESULT supported OUTPUT error)
 
 set (SOURCES
+  src/Battle/Setup/BattleSetup.cpp
   src/Pokedex/Setup/GetItemBuild.cpp
   src/Pokedex/Setup/GetMoveBuild.cpp
   src/Pokedex/Setup/GetSpeciesBuild.cpp

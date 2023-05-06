@@ -1,5 +1,5 @@
 #pragma once
 
 namespace pokesim {
-struct Active {};
+struct ActivePokemon {};
 }  // namespace pokesim

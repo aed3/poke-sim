@@ -92,35 +92,38 @@
  * src/Pokedex/Pokedex.cpp
  * src/Pokedex/Names.hpp
  * src/Pokedex/Names.cpp
- * src/Components/EVsIVs.hpp
+ * src/Battle/Setup/Setup.hpp
+ * src/Components/EntityHolders/Side.hpp
+ * src/Battle/Setup/BattleSetup.hpp
  * src/Components/EntityHolders/ActionQueue.hpp
+ * src/Components/EntityHolders/Sides.hpp
+ * src/Components/ID.hpp
+ * src/Components/Probability.hpp
+ * src/Components/RNGSeed.hpp
+ * src/Components/Tags/Battle.hpp
+ * src/Components/Tags/Pokemon.hpp
+ * src/Components/Turn.hpp
+ * src/Battle/Setup/BattleSetup.cpp
+ * src/Components/EVsIVs.hpp
  * src/Components/EntityHolders/Battle.hpp
  * src/Components/EntityHolders/FoeSide.hpp
  * src/Components/EntityHolders/Move.hpp
  * src/Components/EntityHolders/MoveSlots.hpp
  * src/Components/EntityHolders/Pokemon.hpp
- * src/Components/EntityHolders/Side.hpp
- * src/Components/EntityHolders/Sides.hpp
  * src/Components/EntityHolders/Team.hpp
- * src/Components/ID.hpp
  * src/Components/Level.hpp
  * src/Components/Names/Gender.hpp
  * src/Components/Names/Nature.hpp
  * src/Components/Names/Stat.hpp
  * src/Components/Names/Status.hpp
  * src/Components/Position.hpp
- * src/Components/Probability.hpp
- * src/Components/RNGSeed.hpp
  * src/Components/SpeedSort.hpp
  * src/Components/Stats.hpp
  * src/Components/Tags/Ability.hpp
  * src/Components/Tags/Actions.hpp
- * src/Components/Tags/Battle.hpp
  * src/Components/Tags/Item.hpp
- * src/Components/Tags/Pokemon.hpp
  * src/Components/Tags/Type.hpp
  * src/Components/TargetSlot.hpp
- * src/Components/Turn.hpp
  * src/PokeSim.hpp
  */
 
@@ -14068,6 +14071,221 @@ std::string toID(const std::string& name) {
 
 ///////////////////////// END OF src/Pokedex/Names.cpp /////////////////////////
 
+///////////////////// START OF src/Battle/Setup/Setup.hpp //////////////////////
+
+namespace pokesim::internal {
+struct BattleStateSetup {
+ protected:
+  entt::handle handle;
+
+ public:
+  BattleStateSetup(entt::registry& registry, entt::entity entity) : handle(registry, entity) {}
+
+  template <typename Tag>
+  void setProperty() {
+    handle.emplace<Tag>();
+  }
+
+  entt::entity entity() { return handle; }
+};
+
+}  // namespace pokesim::internal
+
+////////////////////// END OF src/Battle/Setup/Setup.hpp ///////////////////////
+
+//////////////// START OF src/Components/EntityHolders/Side.hpp ////////////////
+
+namespace pokesim {
+struct Side {
+  enum PlayerSideID : uint8_t {
+    P1 = 0,
+    P2 = 1,
+  };
+
+  entt::entity side;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/EntityHolders/Side.hpp /////////////////
+
+////////////////// START OF src/Battle/Setup/BattleSetup.hpp ///////////////////
+
+namespace pokesim {
+struct BattleSetup : internal::BattleStateSetup {
+  BattleSetup(entt::registry& registry) : BattleStateSetup(registry, registry.create()) {}
+  BattleSetup(entt::registry& registry, entt::entity entity) : BattleStateSetup(registry, entity) {}
+
+  inline void initBlank();
+
+  /*_inline*/ void setID(std::uint16_t id);
+  /*_inline*/ void setSide(Side::PlayerSideID sideID, entt::entity sideEntity);
+  /*_inline*/ void setRNGSeed(std::uint32_t seed);
+  /*_inline*/ void setActionQueue(const std::vector<entt::entity>& queue);
+  /*_inline*/ void setTurn(std::uint16_t turn);
+  /*_inline*/ void setActiveMove(entt::entity activeMove);
+  /*_inline*/ void setActivePokemon(entt::entity activePokemon);
+  /*_inline*/ void setActiveTarget(entt::entity activeTarget);
+  /*_inline*/ void setActiveSource(entt::entity activeSource);
+  /*_inline*/ void setProbability(float probability);
+};
+}  // namespace pokesim
+
+/////////////////// END OF src/Battle/Setup/BattleSetup.hpp ////////////////////
+
+//////////// START OF src/Components/EntityHolders/ActionQueue.hpp /////////////
+
+#include <vector>
+
+namespace pokesim {
+struct ActionQueue {
+  std::vector<entt::entity> actionQueue{};
+};
+}  // namespace pokesim
+
+///////////// END OF src/Components/EntityHolders/ActionQueue.hpp //////////////
+
+/////////////// START OF src/Components/EntityHolders/Sides.hpp ////////////////
+
+namespace pokesim {
+struct Sides {
+  entt::entity p1;
+  entt::entity p2;
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/EntityHolders/Sides.hpp /////////////////
+
+//////////////////////// START OF src/Components/ID.hpp ////////////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+struct ID {
+  std::uint16_t id = 1;
+};
+}  // namespace pokesim
+
+///////////////////////// END OF src/Components/ID.hpp /////////////////////////
+
+/////////////////// START OF src/Components/Probability.hpp ////////////////////
+
+namespace pokesim {
+struct Probability {
+  float probability = 1;
+};
+}  // namespace pokesim
+
+//////////////////// END OF src/Components/Probability.hpp /////////////////////
+
+///////////////////// START OF src/Components/RNGSeed.hpp //////////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+struct RNGSeed {
+  std::uint32_t seed = 0;
+};
+}  // namespace pokesim
+
+////////////////////// END OF src/Components/RNGSeed.hpp ///////////////////////
+
+/////////////////// START OF src/Components/Tags/Battle.hpp ////////////////////
+
+namespace pokesim {
+
+// Current Action Tags
+
+struct ActiveMove {};
+struct ActiveMoveTarget {};
+struct ActiveMoveSource {};
+
+// Turn State
+
+struct MidTurn {};
+struct Started {};
+struct Ended {};
+}  // namespace pokesim
+
+//////////////////// END OF src/Components/Tags/Battle.hpp /////////////////////
+
+/////////////////// START OF src/Components/Tags/Pokemon.hpp ///////////////////
+
+namespace pokesim {
+struct ActivePokemon {};
+}  // namespace pokesim
+
+//////////////////// END OF src/Components/Tags/Pokemon.hpp ////////////////////
+
+/////////////////////// START OF src/Components/Turn.hpp ///////////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+struct Turn {
+  std::uint16_t turn = 0;
+};
+}  // namespace pokesim
+
+//////////////////////// END OF src/Components/Turn.hpp ////////////////////////
+
+////////////////// START OF src/Battle/Setup/BattleSetup.cpp ///////////////////
+
+namespace pokesim {
+void BattleSetup::initBlank() {
+  setID(handle.registry()->view<Sides>().size());
+  handle.emplace<Sides>();
+  handle.emplace<ActionQueue>();
+  setTurn(0);
+  setProbability(1);
+}
+
+void BattleSetup::setID(std::uint16_t id) {
+  handle.emplace<ID>(id);
+}
+
+void BattleSetup::setSide(Side::PlayerSideID sideID, entt::entity sideEntity) {
+  auto& sides = handle.get_or_emplace<Sides>();
+  switch (sideID) {
+    case Side::P1: sides.p1 = sideEntity; break;
+    case Side::P2: sides.p2 = sideEntity; break;
+  }
+}
+
+void BattleSetup::setRNGSeed(std::uint32_t seed) {
+  handle.emplace<RNGSeed>(seed);
+}
+
+void BattleSetup::setActionQueue(const std::vector<entt::entity>& queue) {
+  handle.emplace<ActionQueue>(queue);
+}
+
+void BattleSetup::setTurn(std::uint16_t turn) {
+  handle.emplace<Turn>(turn);
+}
+
+void BattleSetup::setActiveMove(entt::entity activeMove) {
+  handle.registry()->emplace<ActiveMove>(activeMove);
+}
+
+void BattleSetup::setActivePokemon(entt::entity activePokemon) {
+  handle.registry()->emplace<ActivePokemon>(activePokemon);
+}
+
+void BattleSetup::setActiveTarget(entt::entity activeTarget) {
+  handle.registry()->emplace<ActiveMoveTarget>(activeTarget);
+}
+
+void BattleSetup::setActiveSource(entt::entity activeSource) {
+  handle.registry()->emplace<ActiveMoveSource>(activeSource);
+}
+
+void BattleSetup::setProbability(float probability) {
+  handle.emplace<Probability>(probability);
+}
+}  // namespace pokesim
+
+/////////////////// END OF src/Battle/Setup/BattleSetup.cpp ////////////////////
+
 ////////////////////// START OF src/Components/EVsIVs.hpp //////////////////////
 
 #include <cstdint>
@@ -14093,18 +14311,6 @@ struct IVs {
 }  // namespace pokesim
 
 /////////////////////// END OF src/Components/EVsIVs.hpp ///////////////////////
-
-//////////// START OF src/Components/EntityHolders/ActionQueue.hpp /////////////
-
-#include <vector>
-
-namespace pokesim {
-struct ActionQueue {
-  std::vector<entt::entity> actionQueue{};
-};
-}  // namespace pokesim
-
-///////////// END OF src/Components/EntityHolders/ActionQueue.hpp //////////////
 
 /////////////// START OF src/Components/EntityHolders/Battle.hpp ///////////////
 
@@ -14158,27 +14364,6 @@ struct Pokemon {
 
 /////////////// END OF src/Components/EntityHolders/Pokemon.hpp ////////////////
 
-//////////////// START OF src/Components/EntityHolders/Side.hpp ////////////////
-
-namespace pokesim {
-struct Side {
-  entt::entity side;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/EntityHolders/Side.hpp /////////////////
-
-/////////////// START OF src/Components/EntityHolders/Sides.hpp ////////////////
-
-namespace pokesim {
-struct Sides {
-  entt::entity p1;
-  entt::entity p2;
-};
-}  // namespace pokesim
-
-//////////////// END OF src/Components/EntityHolders/Sides.hpp /////////////////
-
 //////////////// START OF src/Components/EntityHolders/Team.hpp ////////////////
 
 #include <vector>
@@ -14190,18 +14375,6 @@ struct Team {
 }  // namespace pokesim
 
 ///////////////// END OF src/Components/EntityHolders/Team.hpp /////////////////
-
-//////////////////////// START OF src/Components/ID.hpp ////////////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-struct ID {
-  std::uint16_t id = 1;
-};
-}  // namespace pokesim
-
-///////////////////////// END OF src/Components/ID.hpp /////////////////////////
 
 ////////////////////// START OF src/Components/Level.hpp ///////////////////////
 
@@ -14266,28 +14439,6 @@ struct Position {
 }  // namespace pokesim
 
 ////////////////////// END OF src/Components/Position.hpp //////////////////////
-
-/////////////////// START OF src/Components/Probability.hpp ////////////////////
-
-namespace pokesim {
-struct Probability {
-  float probability = 1;
-};
-}  // namespace pokesim
-
-//////////////////// END OF src/Components/Probability.hpp /////////////////////
-
-///////////////////// START OF src/Components/RNGSeed.hpp //////////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-struct RNGSeed {
-  std::uint32_t seed = 0;
-};
-}  // namespace pokesim
-
-////////////////////// END OF src/Components/RNGSeed.hpp ///////////////////////
 
 //////////////////// START OF src/Components/SpeedSort.hpp /////////////////////
 
@@ -14372,25 +14523,6 @@ struct Terastallize {};
 
 //////////////////// END OF src/Components/Tags/Actions.hpp ////////////////////
 
-/////////////////// START OF src/Components/Tags/Battle.hpp ////////////////////
-
-namespace pokesim {
-
-// Current Action Tags
-
-struct ActiveMove {};
-struct ActiveMoveTarget {};
-struct ActiveMoveSource {};
-
-// Turn State
-
-struct MidTurn {};
-struct Started {};
-struct Ended {};
-}  // namespace pokesim
-
-//////////////////// END OF src/Components/Tags/Battle.hpp /////////////////////
-
 //////////////////// START OF src/Components/Tags/Item.hpp /////////////////////
 
 namespace pokesim::item {
@@ -14403,14 +14535,6 @@ struct LifeOrb {};
 }  // namespace pokesim::item
 
 ///////////////////// END OF src/Components/Tags/Item.hpp //////////////////////
-
-/////////////////// START OF src/Components/Tags/Pokemon.hpp ///////////////////
-
-namespace pokesim {
-struct Active {};
-}  // namespace pokesim
-
-//////////////////// END OF src/Components/Tags/Pokemon.hpp ////////////////////
 
 //////////////////// START OF src/Components/Tags/Type.hpp /////////////////////
 
@@ -14453,18 +14577,6 @@ struct TargetSlot {
 }  // namespace pokesim
 
 ///////////////////// END OF src/Components/TargetSlot.hpp /////////////////////
-
-/////////////////////// START OF src/Components/Turn.hpp ///////////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-struct Turn {
-  std::uint16_t turn = 1;
-};
-}  // namespace pokesim
-
-//////////////////////// END OF src/Components/Turn.hpp ////////////////////////
 
 /////////////////////////// START OF src/PokeSim.hpp ///////////////////////////
 
