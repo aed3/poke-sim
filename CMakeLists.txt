@@ -42,6 +42,7 @@ set (SOURCES
   src/Battle/Setup/BattleSetup.cpp
   src/Battle/Setup/SideSetup.cpp
   src/Battle/Setup/MoveSetup.cpp
+  src/Battle/Setup/PokemonSetup.cpp
   src/Pokedex/Setup/GetItemBuild.cpp
   src/Pokedex/Setup/GetMoveBuild.cpp
   src/Pokedex/Setup/GetSpeciesBuild.cpp

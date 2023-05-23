@@ -3,6 +3,7 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/Team.hpp>
+#include <Components/Position.hpp>
 
 namespace pokesim {
 void SideSetup::initBlank() {
@@ -26,5 +27,6 @@ void SideSetup::setBattle(entt::entity entity) {
 void SideSetup::addTeamMember(entt::entity entity) {
   Team& team = handle.get_or_emplace<Team>();
   team.team.push_back(entity);
+  handle.registry()->emplace<Position>(entity, (std::uint8_t)team.team.size());
 }
 }  // namespace pokesim

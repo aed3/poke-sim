@@ -11,8 +11,8 @@ struct MoveSetup : internal::BattleStateSetup {
 
   /*_inline_*/ void initBlank();
 
-  /*_inline*/ void setName(dex::Move moveName);
-  /*_inline*/ void setPP(std::uint8_t pp);
-  /*_inline*/ void setMaxPP(std::uint8_t maxPP);
+  /*_inline_*/ void setName(dex::Move moveName);
+  /*_inline_*/ void setPP(std::uint8_t pp);
+  /*_inline_*/ void setMaxPP(std::uint8_t maxPP);
 };
 }  // namespace pokesim

@@ -9,10 +9,10 @@ struct SideSetup : internal::BattleStateSetup {
 
   /*_inline_*/ void initBlank();
 
-  /*_inline*/ void setTeam(const std::vector<entt::entity>& team);
-  /*_inline*/ void setOpponent(entt::entity entity);
-  /*_inline*/ void setBattle(entt::entity entity);
+  /*_inline_*/ void setTeam(const std::vector<entt::entity>& team);
+  /*_inline_*/ void setOpponent(entt::entity entity);
+  /*_inline_*/ void setBattle(entt::entity entity);
 
-  /*_inline*/ void addTeamMember(entt::entity entity);
+  /*_inline_*/ void addTeamMember(entt::entity entity);
 };
 }  // namespace pokesim
