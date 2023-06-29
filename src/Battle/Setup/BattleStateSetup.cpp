@@ -1,4 +1,4 @@
-#include "BattleSetup.hpp"
+#include "BattleStateSetup.hpp"
 
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Sides.hpp>
@@ -10,7 +10,7 @@
 #include <Components/Turn.hpp>
 
 namespace pokesim {
-void BattleSetup::initBlank() {
+void BattleStateSetup::initBlank() {
   setID(handle.registry()->view<Sides>().size());
   handle.emplace<Sides>();
   handle.emplace<ActionQueue>();
@@ -18,11 +18,11 @@ void BattleSetup::initBlank() {
   setProbability(1);
 }
 
-void BattleSetup::setID(std::uint16_t id) {
+void BattleStateSetup::setID(std::uint16_t id) {
   handle.emplace<ID>(id);
 }
 
-void BattleSetup::setSide(Side::PlayerSideID sideID, entt::entity sideEntity) {
+void BattleStateSetup::setSide(Side::PlayerSideID sideID, entt::entity sideEntity) {
   auto& sides = handle.get_or_emplace<Sides>();
   switch (sideID) {
     case Side::P1: sides.p1 = sideEntity; break;
@@ -30,35 +30,35 @@ void BattleSetup::setSide(Side::PlayerSideID sideID, entt::entity sideEntity) {
   }
 }
 
-void BattleSetup::setRNGSeed(std::uint32_t seed) {
+void BattleStateSetup::setRNGSeed(std::uint32_t seed) {
   handle.emplace<RNGSeed>(seed);
 }
 
-void BattleSetup::setActionQueue(const std::vector<entt::entity>& queue) {
+void BattleStateSetup::setActionQueue(const std::vector<entt::entity>& queue) {
   handle.emplace<ActionQueue>(queue);
 }
 
-void BattleSetup::setTurn(std::uint16_t turn) {
+void BattleStateSetup::setTurn(std::uint16_t turn) {
   handle.emplace<Turn>(turn);
 }
 
-void BattleSetup::setActiveMove(entt::entity activeMove) {
+void BattleStateSetup::setActiveMove(entt::entity activeMove) {
   handle.registry()->emplace<ActiveMove>(activeMove);
 }
 
-void BattleSetup::setActivePokemon(entt::entity activePokemon) {
+void BattleStateSetup::setActivePokemon(entt::entity activePokemon) {
   handle.registry()->emplace<ActivePokemon>(activePokemon);
 }
 
-void BattleSetup::setActiveTarget(entt::entity activeTarget) {
+void BattleStateSetup::setActiveTarget(entt::entity activeTarget) {
   handle.registry()->emplace<ActiveMoveTarget>(activeTarget);
 }
 
-void BattleSetup::setActiveSource(entt::entity activeSource) {
+void BattleStateSetup::setActiveSource(entt::entity activeSource) {
   handle.registry()->emplace<ActiveMoveSource>(activeSource);
 }
 
-void BattleSetup::setProbability(float probability) {
+void BattleStateSetup::setProbability(float probability) {
   handle.emplace<Probability>(probability);
 }
 }  // namespace pokesim

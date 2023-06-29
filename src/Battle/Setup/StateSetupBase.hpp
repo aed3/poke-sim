@@ -4,12 +4,12 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim::internal {
-struct BattleStateSetup {
+struct StateSetupBase {
  protected:
   entt::handle handle;
 
  public:
-  BattleStateSetup(entt::registry& registry, entt::entity entity) : handle(registry, entity) {}
+  StateSetupBase(entt::registry& registry, entt::entity entity) : handle(registry, entity) {}
 
   template <typename Tag>
   void setProperty() {

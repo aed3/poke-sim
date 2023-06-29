@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Setup.hpp"
+#include "StateSetupBase.hpp"
 
 namespace pokesim {
-struct SideSetup : internal::BattleStateSetup {
-  SideSetup(entt::registry& registry) : BattleStateSetup(registry, registry.create()) {}
-  SideSetup(entt::registry& registry, entt::entity entity) : BattleStateSetup(registry, entity) {}
+struct SideStateSetup : internal::StateSetupBase {
+  SideStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}
+  SideStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {}
 
   /*_inline_*/ void initBlank();
 

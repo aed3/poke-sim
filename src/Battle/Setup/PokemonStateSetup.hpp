@@ -9,12 +9,12 @@
 #include <Types/Species.hpp>
 #include <Types/Status.hpp>
 
-#include "Setup.hpp"
+#include "StateSetupBase.hpp"
 
 namespace pokesim {
-struct PokemonSetup : internal::BattleStateSetup {
-  PokemonSetup(entt::registry& registry) : BattleStateSetup(registry, registry.create()) {}
-  PokemonSetup(entt::registry& registry, entt::entity entity) : BattleStateSetup(registry, entity) {}
+struct PokemonStateSetup : internal::StateSetupBase {
+  PokemonStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}
+  PokemonStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {}
 
   /*_inline_*/ void initBlank();
 
@@ -51,8 +51,9 @@ struct PokemonSetup : internal::BattleStateSetup {
   template <typename StatType>
   /*_inline_*/ void setStat(std::int16_t stat) {
     static_assert(
-      std::is_same<stat::HP, StatType>() || std::is_same<stat::Atk, StatType>() || std::is_same<stat::Def, StatType>() ||
-      std::is_same<stat::Spa, StatType>() || std::is_same<stat::Spd, StatType>() || std::is_same<stat::Spe, StatType>());
+      std::is_same<stat::HP, StatType>() || std::is_same<stat::Atk, StatType>() ||
+      std::is_same<stat::Def, StatType>() || std::is_same<stat::Spa, StatType>() ||
+      std::is_same<stat::Spd, StatType>() || std::is_same<stat::Spe, StatType>());
     handle.emplace<StatType>(stat);
   };
 };

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "BattleSetup.hpp"
-#include "MoveSetup.hpp"
-#include "PokemonSetup.hpp"
-#include "Setup.hpp"
-#include "SideSetup.hpp"
+#include "BattleStateSetup.hpp"
+#include "MoveStateSetup.hpp"
+#include "PokemonStateSetup.hpp"
+#include "SideStateSetup.hpp"
+#include "StateSetupBase.hpp"

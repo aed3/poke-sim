@@ -2,12 +2,12 @@
 
 #include <Components/EntityHolders/Side.hpp>
 
-#include "Setup.hpp"
+#include "StateSetupBase.hpp"
 
 namespace pokesim {
-struct BattleSetup : internal::BattleStateSetup {
-  BattleSetup(entt::registry& registry) : BattleStateSetup(registry, registry.create()) {}
-  BattleSetup(entt::registry& registry, entt::entity entity) : BattleStateSetup(registry, entity) {}
+struct BattleStateSetup : internal::StateSetupBase {
+  BattleStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}
+  BattleStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {}
 
   /*_inline_*/ void initBlank();
 
