@@ -12055,8 +12055,6 @@ struct Priority {
 
 ////////////////// START OF src/Components/Tags/MoveTags.hpp ///////////////////
 
-// TODO(aed3): Make this auto generated
-
 namespace pokesim::tags::move {
 // Categories
 
@@ -12122,7 +12120,7 @@ struct MoveEffectSetup : DexDataSetup {
       std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() ||
       std::is_same<SpaBoost, BoostType>() || std::is_same<SpdBoost, BoostType>() ||
       std::is_same<SpeBoost, BoostType>());
-    handle.emplace<SpdBoost>(boost);
+    handle.emplace<BoostType>(boost);
   }
 };
 }  // namespace pokesim::dex::internal
@@ -14779,7 +14777,7 @@ struct Ended {};
 
 namespace pokesim::tags {
 struct ActivePokemon {};
-}  // namespace pokesim
+}  // namespace pokesim::tags
 
 ////////////////// END OF src/Components/Tags/PokemonTags.hpp //////////////////
 
