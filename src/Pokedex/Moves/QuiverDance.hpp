@@ -18,7 +18,7 @@ struct QuiverDance {
     move.setCategoryStatus();
     move.setBasePP(basePP);
 
-    move.setProperty<pokesim::move::Self>();
+    move.setProperty<pokesim::tags::move::Self>();
 
     internal::MoveEffectSetup effect(pokedex);
     effect.setEffectsSelf();

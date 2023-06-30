@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Components/Tags/Status.hpp>
+#include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Setup/MoveSetup.hpp>
 
@@ -20,12 +20,12 @@ struct Thunderbolt {
     move.setCategoryPhysical();
     move.setBasePP(basePP);
 
-    move.setProperty<pokesim::move::AnySingleTarget>();
+    move.setProperty<pokesim::tags::move::AnySingleTarget>();
 
     internal::MoveEffectSetup effect(pokedex);
     effect.setChance(secondaryEffectChance);
     effect.setEffectsTarget();
-    effect.setProperty<pokesim::status::Paralysis>();
+    effect.setProperty<pokesim::tags::status::Paralysis>();
 
     move.setSecondaryEffect(effect.entity());
 

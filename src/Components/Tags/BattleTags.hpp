@@ -1,6 +1,6 @@
 #pragma once
 
-namespace pokesim {
+namespace pokesim::tags {
 
 // Current Action Tags
 
@@ -13,4 +13,4 @@ struct ActiveMoveSource {};
 struct MidTurn {};
 struct Started {};
 struct Ended {};
-}  // namespace pokesim
+}  // namespace pokesim::tags

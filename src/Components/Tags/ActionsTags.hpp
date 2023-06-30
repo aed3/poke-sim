@@ -1,6 +1,6 @@
 #pragma once
 
-namespace pokesim::action {
+namespace pokesim::tags::action {
 struct Move {};
 
 struct SwitchOut {};
@@ -17,4 +17,4 @@ struct MegaEvolve {};
 struct Primal {};
 struct Dynamax {};
 struct Terastallize {};
-}  // namespace pokesim::action
+}  // namespace pokesim::tags::action

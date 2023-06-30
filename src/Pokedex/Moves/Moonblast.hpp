@@ -21,7 +21,7 @@ struct Moonblast {
     move.setCategorySpecial();
     move.setBasePP(basePP);
 
-    move.setProperty<pokesim::move::AnySingleTarget>();
+    move.setProperty<pokesim::tags::move::AnySingleTarget>();
 
     internal::MoveEffectSetup effect(pokedex);
     effect.setChance(secondaryEffectChance);

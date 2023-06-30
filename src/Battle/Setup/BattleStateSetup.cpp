@@ -5,8 +5,8 @@
 #include <Components/ID.hpp>
 #include <Components/Probability.hpp>
 #include <Components/RNGSeed.hpp>
-#include <Components/Tags/Battle.hpp>
-#include <Components/Tags/Pokemon.hpp>
+#include <Components/Tags/BattleTags.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Components/Turn.hpp>
 
 namespace pokesim {
@@ -43,19 +43,19 @@ void BattleStateSetup::setTurn(std::uint16_t turn) {
 }
 
 void BattleStateSetup::setActiveMove(entt::entity activeMove) {
-  handle.registry()->emplace<ActiveMove>(activeMove);
+  handle.registry()->emplace<tags::ActiveMove>(activeMove);
 }
 
 void BattleStateSetup::setActivePokemon(entt::entity activePokemon) {
-  handle.registry()->emplace<ActivePokemon>(activePokemon);
+  handle.registry()->emplace<tags::ActivePokemon>(activePokemon);
 }
 
 void BattleStateSetup::setActiveTarget(entt::entity activeTarget) {
-  handle.registry()->emplace<ActiveMoveTarget>(activeTarget);
+  handle.registry()->emplace<tags::ActiveMoveTarget>(activeTarget);
 }
 
 void BattleStateSetup::setActiveSource(entt::entity activeSource) {
-  handle.registry()->emplace<ActiveMoveSource>(activeSource);
+  handle.registry()->emplace<tags::ActiveMoveSource>(activeSource);
 }
 
 void BattleStateSetup::setProbability(float probability) {

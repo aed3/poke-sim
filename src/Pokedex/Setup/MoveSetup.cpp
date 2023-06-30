@@ -10,7 +10,7 @@
 #include <Components/Names/Type.hpp>
 #include <Components/PP.hpp>
 #include <Components/Priority.hpp>
-#include <Components/Tags/Move.hpp>
+#include <Components/Tags/MoveTags.hpp>
 
 namespace pokesim::dex::internal {
 void MoveSetup::setName(Move move) {
@@ -30,18 +30,18 @@ void MoveSetup::setBasePower(std::uint8_t basePower) {
 }
 
 void MoveSetup::setCategoryPhysical() {
-  ENTT_ASSERT(!(handle.any_of<move::Special, move::Status>()), "A move can only have one category");
-  handle.emplace<move::Physical>();
+  ENTT_ASSERT(!(handle.any_of<tags::move::Special, tags::move::Status>()), "A move can only have one category");
+  handle.emplace<tags::move::Physical>();
 }
 
 void MoveSetup::setCategorySpecial() {
-  ENTT_ASSERT(!(handle.any_of<move::Physical, move::Status>()), "A move can only have one category");
-  handle.emplace<move::Special>();
+  ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Status>()), "A move can only have one category");
+  handle.emplace<tags::move::Special>();
 }
 
 void MoveSetup::setCategoryStatus() {
-  ENTT_ASSERT(!(handle.any_of<move::Physical, move::Special>()), "A move can only have one category");
-  handle.emplace<move::Status>();
+  ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Special>()), "A move can only have one category");
+  handle.emplace<tags::move::Status>();
 }
 
 void MoveSetup::setBasePP(std::uint8_t pp) {
@@ -69,10 +69,10 @@ void MoveEffectSetup::setChance(std::uint8_t chance) {
 }
 
 void MoveEffectSetup::setEffectsSelf() {
-  handle.emplace<move::effect::MoveSource>();
+  handle.emplace<tags::move::effect::MoveSource>();
 }
 
 void MoveEffectSetup::setEffectsTarget() {
-  handle.emplace<move::effect::MoveTarget>();
+  handle.emplace<tags::move::effect::MoveTarget>();
 }
 }  // namespace pokesim::dex::internal

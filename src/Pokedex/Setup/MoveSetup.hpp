@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Components/Boosts.hpp>
-#include <Components/Tags/Move.hpp>
+#include <Components/Tags/MoveTags.hpp>
 #include <Types/Move.hpp>
 
 #include "Setup.hpp"

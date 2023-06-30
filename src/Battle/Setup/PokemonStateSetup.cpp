@@ -13,6 +13,10 @@
 #include <Components/Names/Species.hpp>
 #include <Components/Names/Status.hpp>
 #include <Components/Position.hpp>
+#include <Components/Tags/AbilityTags.hpp>
+#include <Components/Tags/ItemTags.hpp>
+#include <Components/Tags/NatureTags.hpp>
+#include <Components/Tags/StatusTags.hpp>
 
 namespace pokesim {
 void PokemonStateSetup::initBlank() {
@@ -43,17 +47,16 @@ void PokemonStateSetup::setLevel(std::uint8_t level) {
 
 void PokemonStateSetup::setGender(dex::Gender gender) {
   handle.emplace<GenderName>(gender);
-  // TODO(aed3): Add Gender Tag as well
 }
 
 void PokemonStateSetup::setAbility(dex::Ability ability) {
   handle.emplace<AbilityName>(ability);
-  // TODO(aed3): Add Ability Tag as well
+  tags::ability::enumToTag(ability, handle);
 }
 
 void PokemonStateSetup::setItem(dex::Item item) {
   handle.emplace<ItemName>(item);
-  // TODO(aed3): Add Item Tag as well
+  tags::item::enumToTag(item, handle);
 }
 
 void PokemonStateSetup::addMove(entt::entity entity) {
@@ -67,12 +70,12 @@ void PokemonStateSetup::setPostion(std::uint8_t position) {
 
 void PokemonStateSetup::setStatus(dex::Status status) {
   handle.emplace<StatusName>(status);
-  // TODO(aed3): Add Status Tag as well
+  tags::status::enumToTag(status, handle);
 }
 
 void PokemonStateSetup::setNature(dex::Nature nature) {
   handle.emplace<NatureName>(nature);
-  // TODO(aed3): Add Nature Tag
+  tags::nature::enumToTag(nature, handle);
 }
 
 void PokemonStateSetup::setEVs(

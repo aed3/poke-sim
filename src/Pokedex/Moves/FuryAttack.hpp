@@ -19,8 +19,8 @@ struct FuryAttack {
     move.setBasePP(basePP);
     move.setMultiHit(minHits, maxHits);
 
-    move.setProperty<pokesim::move::AnySingleTarget>();
-    move.setProperty<pokesim::move::Contact>();
+    move.setProperty<pokesim::tags::move::AnySingleTarget>();
+    move.setProperty<pokesim::tags::move::Contact>();
 
     return move.entity();
   }
