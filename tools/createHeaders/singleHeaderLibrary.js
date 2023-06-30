@@ -78,6 +78,10 @@ const checkDependencyCycles = () => {
     while (nextFiles.length) {
       const {dependency, list} = nextFiles.pop();
 
+      if (!dependencies[dependency]) {
+        throw new Error(`Dependencies for ${dependency} not found`);
+      }
+
       for (const subDependency of dependencies[dependency]) {
         if (!allDependencies[subDependency]) {
           allDependencies[subDependency] = list;
