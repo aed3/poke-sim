@@ -39,22 +39,22 @@ project(PokeSim)
 check_ipo_supported(RESULT supported OUTPUT error)
 
 set (SOURCES
-  src/Components/Tags/AbilityTags.cpp
-  src/Components/Tags/ItemTags.cpp
-  src/Components/Tags/StatusTags.cpp
-  src/Components/Tags/NatureTags.cpp
   src/Battle/Setup/BattleStateSetup.cpp
-  src/Battle/Setup/SideStateSetup.cpp
   src/Battle/Setup/MoveStateSetup.cpp
   src/Battle/Setup/PokemonStateSetup.cpp
+  src/Battle/Setup/SideStateSetup.cpp
+  src/Components/Tags/AbilityTags.cpp
+  src/Components/Tags/ItemTags.cpp
+  src/Components/Tags/NatureTags.cpp
+  src/Components/Tags/StatusTags.cpp
+  src/Pokedex/Names.cpp
+  src/Pokedex/Pokedex.cpp
+  src/Pokedex/Setup/DexDataItemSetup.cpp
+  src/Pokedex/Setup/DexDataMoveSetup.cpp
+  src/Pokedex/Setup/DexDataSpeciesSetup.cpp
   src/Pokedex/Setup/GetItemBuild.cpp
   src/Pokedex/Setup/GetMoveBuild.cpp
   src/Pokedex/Setup/GetSpeciesBuild.cpp
-  src/Pokedex/Setup/ItemSetup.cpp
-  src/Pokedex/Setup/MoveSetup.cpp
-  src/Pokedex/Setup/SpeciesSetup.cpp
-  src/Pokedex/Pokedex.cpp
-  src/Pokedex/Names.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})

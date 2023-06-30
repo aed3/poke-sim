@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Components/Names/Type.hpp>
+#include <Components/Names/TypeNames.hpp>
 
 namespace pokesim {
 struct SpeciesTypes {

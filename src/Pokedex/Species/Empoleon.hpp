@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/SpeciesSetup.hpp>
+#include <Pokedex/Setup/DexDataSpeciesSetup.hpp>
 
 namespace pokesim::dex::build {
 struct Empoleon {

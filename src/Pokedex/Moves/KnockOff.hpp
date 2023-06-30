@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/MoveSetup.hpp>
+#include <Pokedex/Setup/DexDataMoveSetup.hpp>
 
 namespace pokesim::dex::build {
 struct KnockOff {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/ItemSetup.hpp>
+#include <Pokedex/Setup/DexDataItemSetup.hpp>
 
 namespace pokesim::dex::build {
 struct BrightPowder {

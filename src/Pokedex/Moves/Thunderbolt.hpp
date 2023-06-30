@@ -2,7 +2,7 @@
 
 #include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/MoveSetup.hpp>
+#include <Pokedex/Setup/DexDataMoveSetup.hpp>
 
 namespace pokesim::dex::build {
 struct Thunderbolt {

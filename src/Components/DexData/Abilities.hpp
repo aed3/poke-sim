@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Components/Names/Ability.hpp>
+#include <Components/Names/AbilityNames.hpp>
 
 namespace pokesim {
 struct PrimaryAbility {

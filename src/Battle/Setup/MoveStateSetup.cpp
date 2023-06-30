@@ -1,6 +1,6 @@
 #include "MoveStateSetup.hpp"
 
-#include <Components/Names/Move.hpp>
+#include <Components/Names/MoveNames.hpp>
 #include <Components/PP.hpp>
 
 namespace pokesim {

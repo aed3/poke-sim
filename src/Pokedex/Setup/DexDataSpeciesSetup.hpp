@@ -3,7 +3,7 @@
 #include <Types/Species.hpp>
 #include <Types/Type.hpp>
 
-#include "Setup.hpp"
+#include "DexDataSetup.hpp"
 
 namespace pokesim::dex::internal {
 struct SpeciesSetup : DexDataSetup {

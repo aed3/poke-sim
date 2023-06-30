@@ -1,4 +1,4 @@
-#include "MoveSetup.hpp"
+#include "DexDataMoveSetup.hpp"
 
 #include <Components/Accuracy.hpp>
 #include <Components/BasePower.hpp>
@@ -6,8 +6,8 @@
 #include <Components/Chance.hpp>
 #include <Components/EntityHolders/MoveEffect.hpp>
 #include <Components/MultiHit.hpp>
-#include <Components/Names/Move.hpp>
-#include <Components/Names/Type.hpp>
+#include <Components/Names/MoveNames.hpp>
+#include <Components/Names/TypeNames.hpp>
 #include <Components/PP.hpp>
 #include <Components/Priority.hpp>
 #include <Components/Tags/MoveTags.hpp>

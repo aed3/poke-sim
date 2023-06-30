@@ -4,7 +4,7 @@
 #include <Components/Tags/MoveTags.hpp>
 #include <Types/Move.hpp>
 
-#include "Setup.hpp"
+#include "DexDataSetup.hpp"
 
 namespace pokesim::dex::internal {
 struct MoveSetup : DexDataSetup {

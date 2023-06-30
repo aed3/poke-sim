@@ -1,7 +1,7 @@
-#include "SpeciesSetup.hpp"
+#include "DexDataSpeciesSetup.hpp"
 
 #include <Components/DexData/headers.hpp>
-#include <Components/Names/Species.hpp>
+#include <Components/Names/SpeciesNames.hpp>
 #include <entt/entity/handle.hpp>
 
 namespace pokesim::dex::internal {

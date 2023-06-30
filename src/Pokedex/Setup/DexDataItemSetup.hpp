@@ -2,7 +2,7 @@
 
 #include <Types/Item.hpp>
 
-#include "Setup.hpp"
+#include "DexDataSetup.hpp"
 
 namespace pokesim::dex::internal {
 struct ItemSetup : DexDataSetup {
