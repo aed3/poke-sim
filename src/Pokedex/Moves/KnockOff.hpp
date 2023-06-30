@@ -18,8 +18,8 @@ struct KnockOff {
     move.setCategoryPhysical();
     move.setBasePP(basePP);
 
-    move.setProperty<pokesim::move::AnySingleTarget>();
-    move.setProperty<pokesim::move::Contact>();
+    move.setProperty<pokesim::tags::move::AnySingleTarget>();
+    move.setProperty<pokesim::tags::move::Contact>();
 
     return move.entity();
   }

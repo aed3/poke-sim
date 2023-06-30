@@ -1,6 +1,6 @@
 #pragma once
 
-namespace pokesim::move {
+namespace pokesim::tags::move {
 // Categories
 
 struct Physical {};
@@ -24,4 +24,4 @@ namespace effect {
 struct MoveTarget {};
 struct MoveSource {};
 }  // namespace effect
-}  // namespace pokesim::move
+}  // namespace pokesim::tags::move

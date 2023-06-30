@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Components/Tags/Status.hpp>
+#include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Setup/MoveSetup.hpp>
 
@@ -18,11 +18,11 @@ struct WillOWisp {
     move.setCategoryStatus();
     move.setBasePP(basePP);
 
-    move.setProperty<pokesim::move::AnySingleTarget>();
+    move.setProperty<pokesim::tags::move::AnySingleTarget>();
 
     internal::MoveEffectSetup effect(pokedex);
     effect.setEffectsTarget();
-    effect.setProperty<pokesim::status::Burn>();
+    effect.setProperty<pokesim::tags::status::Burn>();
 
     move.setPrimaryEffect(effect.entity());
 

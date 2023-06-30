@@ -1,0 +1,15 @@
+#pragma once
+#include <Types/Item.hpp>
+#include <entt/entity/fwd.hpp>
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::tags::item {
+struct AssaultVest {};
+struct BrightPowder {};
+struct ChoiceScarf {};
+struct ChoiceSpecs {};
+struct FocusSash {};
+struct LifeOrb {};
+
+/*_inline_*/ void enumToTag(dex::Item item, entt::handle handle);
+}  // namespace pokesim::tags::item

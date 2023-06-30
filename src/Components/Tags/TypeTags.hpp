@@ -1,6 +1,7 @@
 #pragma once
+// TODO(aed3): Make this auto generated
 
-namespace pokesim::type {
+namespace pokesim::tags::type {
 struct Normal {};
 struct Fighting {};
 struct Flying {};
@@ -19,4 +20,4 @@ struct Ice {};
 struct Dragon {};
 struct Dark {};
 struct Fairy {};
-}  // namespace pokesim::type
+}  // namespace pokesim::tags::type
