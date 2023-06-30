@@ -11,7 +11,7 @@
 
 namespace pokesim {
 void BattleStateSetup::initBlank() {
-  setID(handle.registry()->view<Sides>().size());
+  setID((uint16_t)handle.registry()->view<Sides>().size());
   handle.emplace<Sides>();
   handle.emplace<ActionQueue>();
   setTurn(0);

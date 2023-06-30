@@ -12120,7 +12120,7 @@ struct MoveEffectSetup : DexDataSetup {
       std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() ||
       std::is_same<SpaBoost, BoostType>() || std::is_same<SpdBoost, BoostType>() ||
       std::is_same<SpeBoost, BoostType>());
-    handle.emplace<BoostType>(boost);
+    handle.emplace<SpdBoost>(boost);
   }
 };
 }  // namespace pokesim::dex::internal
@@ -14797,7 +14797,7 @@ struct Turn {
 
 namespace pokesim {
 void BattleStateSetup::initBlank() {
-  setID(handle.registry()->view<Sides>().size());
+  setID((uint16_t)handle.registry()->view<Sides>().size());
   handle.emplace<Sides>();
   handle.emplace<ActionQueue>();
   setTurn(0);
