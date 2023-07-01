@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/DexDataSpeciesSetup.hpp>
+#include <Pokedex/Setup/SpeciesDexDataSetup.hpp>
 
 namespace pokesim::dex::build {
 struct Ampharos {
@@ -9,7 +9,7 @@ struct Ampharos {
   static const std::uint8_t hp = 90, atk = 75, def = 85, spa = 115, spd = 90, spe = 55;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::SpeciesSetup species(pokedex);
+    internal::SpeciesDexDataSetup species(pokedex);
     species.setName(name);
     species.setType(dex::ELECTRIC_TYPE);
     species.setBaseStats(hp, atk, def, spa, spd, spe);

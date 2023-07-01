@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/DexDataSpeciesSetup.hpp>
+#include <Pokedex/Setup/SpeciesDexDataSetup.hpp>
 
 namespace pokesim::dex::build {
 struct Gardevoir {
@@ -9,7 +9,7 @@ struct Gardevoir {
   static const std::uint8_t hp = 68, atk = 65, def = 65, spa = 125, spd = 115, spe = 80;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::SpeciesSetup species(pokedex);
+    internal::SpeciesDexDataSetup species(pokedex);
     species.setName(name);
     species.setType(dex::PSYCHIC_TYPE, dex::FAIRY_TYPE);
     species.setBaseStats(hp, atk, def, spa, spd, spe);

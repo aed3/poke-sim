@@ -7,8 +7,8 @@
 #include "DexDataSetup.hpp"
 
 namespace pokesim::dex::internal {
-struct MoveSetup : DexDataSetup {
-  MoveSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
+struct MoveDexDataSetup : DexDataSetup {
+  MoveDexDataSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
 
   /*_inline_*/ void setName(Move move);
   /*_inline_*/ void setType(Type type);

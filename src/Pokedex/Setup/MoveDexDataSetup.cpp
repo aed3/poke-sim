@@ -1,4 +1,4 @@
-#include "DexDataMoveSetup.hpp"
+#include "MoveDexDataSetup.hpp"
 
 #include <Components/Accuracy.hpp>
 #include <Components/BasePower.hpp>
@@ -13,54 +13,54 @@
 #include <Components/Tags/MoveTags.hpp>
 
 namespace pokesim::dex::internal {
-void MoveSetup::setName(Move move) {
+void MoveDexDataSetup::setName(Move move) {
   handle.emplace<MoveName>(move);
 }
 
-void MoveSetup::setType(Type type) {
+void MoveDexDataSetup::setType(Type type) {
   handle.emplace<TypeName>(type);
 }
 
-void MoveSetup::setAccuracy(std::uint8_t accuracy) {
+void MoveDexDataSetup::setAccuracy(std::uint8_t accuracy) {
   handle.emplace<Accuracy>(accuracy);
 }
 
-void MoveSetup::setBasePower(std::uint8_t basePower) {
+void MoveDexDataSetup::setBasePower(std::uint8_t basePower) {
   handle.emplace<BasePower>(basePower);
 }
 
-void MoveSetup::setCategoryPhysical() {
+void MoveDexDataSetup::setCategoryPhysical() {
   ENTT_ASSERT(!(handle.any_of<tags::move::Special, tags::move::Status>()), "A move can only have one category");
   handle.emplace<tags::move::Physical>();
 }
 
-void MoveSetup::setCategorySpecial() {
+void MoveDexDataSetup::setCategorySpecial() {
   ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Status>()), "A move can only have one category");
   handle.emplace<tags::move::Special>();
 }
 
-void MoveSetup::setCategoryStatus() {
+void MoveDexDataSetup::setCategoryStatus() {
   ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Special>()), "A move can only have one category");
   handle.emplace<tags::move::Status>();
 }
 
-void MoveSetup::setBasePP(std::uint8_t pp) {
+void MoveDexDataSetup::setBasePP(std::uint8_t pp) {
   handle.emplace<PP>(pp);
 }
 
-void MoveSetup::setPriority(std::uint8_t priority) {
+void MoveDexDataSetup::setPriority(std::uint8_t priority) {
   handle.emplace<Priority>(priority);
 }
 
-void MoveSetup::setMultiHit(std::uint8_t minHits, std::uint8_t maxHits) {
+void MoveDexDataSetup::setMultiHit(std::uint8_t minHits, std::uint8_t maxHits) {
   handle.emplace<MultiHit>(minHits, maxHits);
 }
 
-void MoveSetup::setPrimaryEffect(entt::entity entity) {
+void MoveDexDataSetup::setPrimaryEffect(entt::entity entity) {
   handle.emplace<MoveEffect>(true, entity);
 }
 
-void MoveSetup::setSecondaryEffect(entt::entity entity) {
+void MoveDexDataSetup::setSecondaryEffect(entt::entity entity) {
   handle.emplace<MoveEffect>(false, entity);
 }
 

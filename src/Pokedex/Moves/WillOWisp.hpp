@@ -2,7 +2,7 @@
 
 #include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/DexDataMoveSetup.hpp>
+#include <Pokedex/Setup/MoveDexDataSetup.hpp>
 
 namespace pokesim::dex::build {
 struct WillOWisp {
@@ -10,7 +10,7 @@ struct WillOWisp {
   static const std::uint8_t accuracy = 85, basePP = 15;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::MoveSetup move(pokedex);
+    internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
     move.setType(dex::FIRE_TYPE);
     move.setAccuracy(accuracy);

@@ -2,7 +2,7 @@
 
 #include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/DexDataMoveSetup.hpp>
+#include <Pokedex/Setup/MoveDexDataSetup.hpp>
 
 namespace pokesim::dex::build {
 struct Thunderbolt {
@@ -11,7 +11,7 @@ struct Thunderbolt {
   static const std::uint8_t secondaryEffectChance = 10;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::MoveSetup move(pokedex);
+    internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
     move.setType(dex::ELECTRIC_TYPE);
     move.setAccuracy(accuracy);

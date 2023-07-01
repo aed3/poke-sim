@@ -5,8 +5,8 @@
 #include "DexDataSetup.hpp"
 
 namespace pokesim::dex::internal {
-struct ItemSetup : DexDataSetup {
-  ItemSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
+struct ItemDexDataSetup : DexDataSetup {
+  ItemDexDataSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
 
   /*_inline_*/ void setName(Item item);
 };

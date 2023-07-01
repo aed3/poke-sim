@@ -49,9 +49,9 @@ set (SOURCES
   src/Components/Tags/StatusTags.cpp
   src/Pokedex/Names.cpp
   src/Pokedex/Pokedex.cpp
-  src/Pokedex/Setup/DexDataItemSetup.cpp
-  src/Pokedex/Setup/DexDataMoveSetup.cpp
-  src/Pokedex/Setup/DexDataSpeciesSetup.cpp
+  src/Pokedex/Setup/ItemDexDataSetup.cpp
+  src/Pokedex/Setup/MoveDexDataSetup.cpp
+  src/Pokedex/Setup/SpeciesDexDataSetup.cpp
   src/Pokedex/Setup/GetItemBuild.cpp
   src/Pokedex/Setup/GetMoveBuild.cpp
   src/Pokedex/Setup/GetSpeciesBuild.cpp

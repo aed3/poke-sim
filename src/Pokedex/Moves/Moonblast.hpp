@@ -2,7 +2,7 @@
 
 #include <Components/Boosts.hpp>
 #include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/DexDataMoveSetup.hpp>
+#include <Pokedex/Setup/MoveDexDataSetup.hpp>
 
 namespace pokesim::dex::build {
 struct Moonblast {
@@ -12,7 +12,7 @@ struct Moonblast {
   static const std::int8_t spaBoost = -1;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::MoveSetup move(pokedex);
+    internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
     move.setType(dex::FAIRY_TYPE);
     move.setAccuracy(accuracy);

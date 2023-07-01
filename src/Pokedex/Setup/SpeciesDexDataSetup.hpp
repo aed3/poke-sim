@@ -6,8 +6,8 @@
 #include "DexDataSetup.hpp"
 
 namespace pokesim::dex::internal {
-struct SpeciesSetup : DexDataSetup {
-  SpeciesSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
+struct SpeciesDexDataSetup : DexDataSetup {
+  SpeciesDexDataSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
 
   /*_inline_*/ void setName(Species species);
   /*_inline_*/ void setType(Type type1, Type type2 = NO_TYPE);

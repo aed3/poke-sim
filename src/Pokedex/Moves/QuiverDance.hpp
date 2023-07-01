@@ -2,7 +2,7 @@
 
 #include <Components/Boosts.hpp>
 #include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/DexDataMoveSetup.hpp>
+#include <Pokedex/Setup/MoveDexDataSetup.hpp>
 
 namespace pokesim::dex::build {
 struct QuiverDance {
@@ -11,7 +11,7 @@ struct QuiverDance {
   static const std::int8_t spaBoost = 1, spdBoost = 1, speBoost = 1;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::MoveSetup move(pokedex);
+    internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
     move.setType(dex::BUG_TYPE);
 
