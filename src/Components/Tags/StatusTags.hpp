@@ -11,5 +11,6 @@ struct Poison {};
 struct Sleep {};
 struct Toxic {};
 
+// Assigns a status' tag to a handle
 /*_inline_*/ void enumToTag(dex::Status status, entt::handle& handle);
 }  // namespace pokesim::tags::status

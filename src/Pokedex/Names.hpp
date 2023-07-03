@@ -6,55 +6,55 @@
 #include <string>
 
 namespace pokesim::dex {
-/** @brief Returns the name of a species represented by its enum as a string. */
+// Returns the name of a species represented by its enum as a string.
 /*_inline_*/ std::string toString(Species speciesEnum);
 
-/** @brief Returns the name of a move represented by its enum as a string. */
+// Returns the name of a move represented by its enum as a string.
 /*_inline_*/ std::string toString(Move moveEnum);
 
-/** @brief Returns the name of an ability represented by its enum as a string. */
+// Returns the name of an ability represented by its enum as a string.
 /*_inline_*/ std::string toString(Ability abilityEnum);
 
-/** @brief Returns the name of an item represented by its enum as a string. */
+// Returns the name of an item represented by its enum as a string.
 /*_inline_*/ std::string toString(Item itemEnum);
 
-/** @brief Returns the name of a nature represented by its enum as a string. */
+// Returns the name of a nature represented by its enum as a string.
 /*_inline_*/ std::string toString(Nature natureEnum);
 
-/** @brief Returns the name of a status condition represented by its enum as a string. */
+// Returns the name of a status condition represented by its enum as a string.
 /*_inline_*/ std::string toString(Status statusEnum);
 
-/** @brief Returns the name of a gender represented by its enum as a string. */
+// Returns the name of a gender represented by its enum as a string.
 /*_inline_*/ std::string toString(Gender genderEnum);
 
-/** @brief Returns the name of a type represented by its enum as a string. */
+// Returns the name of a type represented by its enum as a string.
 /*_inline_*/ std::string toString(Type typeEnum);
 
-/** @brief Returns the name of a stat represented by its enum as a string. */
+// Returns the name of a stat represented by its enum as a string.
 /*_inline_*/ std::string toString(Stat statEnum);
 
-/** @brief Returns the Smogon name of a species represented by its enum as a string. */
+// Returns the Smogon name of a species represented by its enum as a string.
 /*_inline_*/ std::string toSmogonString(Species speciesEnum);
 
-/** @brief Returns the Smogon name of a move represented by its enum as a string. */
+// Returns the Smogon name of a move represented by its enum as a string.
 /*_inline_*/ std::string toSmogonString(Move moveEnum);
 
-/** @brief Returns the Smogon name of an ability represented by its enum as a string. */
+// Returns the Smogon name of an ability represented by its enum as a string.
 /*_inline_*/ std::string toSmogonString(Ability abilityEnum);
 
-/** @brief Returns the Smogon name of an item represented by its enum as a string. */
+// Returns the Smogon name of an item represented by its enum as a string.
 /*_inline_*/ std::string toSmogonString(Item itemEnum);
 
-/** @brief Returns the Smogon ID of a species represented by its enum as a string. */
+// Returns the Smogon ID of a species represented by its enum as a string.
 /*_inline_*/ std::string toSmogonIdString(Species speciesEnum);
 
-/** @brief Returns the Smogon ID of a move represented by its enum as a string. */
+// Returns the Smogon ID of a move represented by its enum as a string.
 /*_inline_*/ std::string toSmogonIdString(Move moveEnum);
 
-/** @brief Returns the Smogon ID of an ability represented by its enum as a string. */
+// Returns the Smogon ID of an ability represented by its enum as a string.
 /*_inline_*/ std::string toSmogonIdString(Ability abilityEnum);
 
-/** @brief Returns the Smogon ID of an item represented by its enum as a string. */
+// Returns the Smogon ID of an item represented by its enum as a string.
 /*_inline_*/ std::string toSmogonIdString(Item itemEnum);
 
 /**
@@ -88,7 +88,7 @@ namespace pokesim::dex {
 /*_inline_*/ Nature fromNameToNatureEnum(const std::string& name);
 
 /**
- * @brief Returns the enum of the status condition name a string.
+ * @brief Returns the enum of the status condition name string.
  * Returns `NO_STATUS` if the string does not represent a status condition.
  */
 /*_inline_*/ Status fromNameToStatusEnum(const std::string& name);
@@ -158,6 +158,6 @@ namespace pokesim::dex {
  */
 /*_inline_*/ Item fromSmogonIDToItemEnum(const std::string& name);
 
-/** @brief Converts a string to only have lowercase alphanumeric characters */
+// Converts a string to only have lowercase alphanumeric characters
 /*_inline_*/ std::string toID(const std::string& name);
 }  // namespace pokesim::dex

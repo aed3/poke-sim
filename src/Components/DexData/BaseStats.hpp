@@ -3,6 +3,7 @@
 #include <cstdint>
 
 namespace pokesim {
+// Contains all of the base stats of a species
 struct BaseStats {
   std::uint8_t hp = 1;
   std::uint8_t atk = 1;

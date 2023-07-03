@@ -3,7 +3,7 @@
 #include <cstdint>
 
 namespace pokesim {
-struct Priority {
+struct MovePriority {
   std::uint8_t priority = 0;
 };
 }  // namespace pokesim

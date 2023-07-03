@@ -49,7 +49,7 @@ void MoveDexDataSetup::setBasePP(std::uint8_t pp) {
 }
 
 void MoveDexDataSetup::setPriority(std::uint8_t priority) {
-  handle.emplace<Priority>(priority);
+  handle.emplace<MovePriority>(priority);
 }
 
 void MoveDexDataSetup::setMultiHit(std::uint8_t minHits, std::uint8_t maxHits) {

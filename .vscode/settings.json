@@ -82,4 +82,7 @@
     "iostream": "cpp",
     "mutex": "cpp"
   },
+  "cSpell.words": [
+    "tparam"
+  ],
 }

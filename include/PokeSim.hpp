@@ -2,14 +2,26 @@
 
 /**
  * FILE ORDER
+ * external/entt/core/iterator.hpp
  * external/entt/config/macro.h
  * external/entt/config/version.h
  * external/entt/config/config.h
- * external/entt/container/fwd.hpp
  * external/entt/core/fwd.hpp
  * external/entt/core/type_traits.hpp
+ * external/entt/entity/fwd.hpp
+ * external/entt/entity/entity.hpp
+ * external/entt/entity/handle.hpp
+ * src/Types/Ability.hpp
+ * src/Components/Names/AbilityNames.hpp
+ * src/Components/DexData/Abilities.hpp
+ * src/Components/DexData/BaseStats.hpp
+ * src/Types/Type.hpp
+ * src/Components/Names/TypeNames.hpp
+ * src/Components/DexData/SpeciesTypes.hpp
+ * src/Types/Species.hpp
+ * src/Components/Names/SpeciesNames.hpp
+ * external/entt/container/fwd.hpp
  * external/entt/core/compressed_pair.hpp
- * external/entt/core/iterator.hpp
  * external/entt/core/memory.hpp
  * external/entt/container/dense_map.hpp
  * external/entt/core/utility.hpp
@@ -19,8 +31,6 @@
  * external/entt/core/type_info.hpp
  * external/entt/core/any.hpp
  * external/entt/entity/component.hpp
- * external/entt/entity/fwd.hpp
- * external/entt/entity/entity.hpp
  * external/entt/entity/sparse_set.hpp
  * external/entt/signal/fwd.hpp
  * external/entt/signal/delegate.hpp
@@ -30,20 +40,32 @@
  * external/entt/entity/group.hpp
  * external/entt/entity/view.hpp
  * external/entt/entity/registry.hpp
- * src/Types/Ability.hpp
  * src/Types/GameMechanic.hpp
  * src/Types/Gender.hpp
  * src/Types/Item.hpp
  * src/Types/Move.hpp
  * src/Types/Nature.hpp
- * src/Types/Species.hpp
  * src/Types/Stat.hpp
  * src/Types/Status.hpp
- * src/Types/Type.hpp
  * src/Pokedex/Pokedex.hpp
- * external/entt/entity/handle.hpp
  * src/Pokedex/Setup/DexDataSetup.hpp
- * src/Pokedex/Setup/DexDataSpeciesSetup.hpp
+ * src/Pokedex/Setup/SpeciesDexDataSetup.hpp
+ * src/Pokedex/Setup/SpeciesDexDataSetup.cpp
+ * src/Components/Accuracy.hpp
+ * src/Components/BasePower.hpp
+ * src/Components/Boosts.hpp
+ * src/Components/Chance.hpp
+ * src/Components/EntityHolders/MoveEffect.hpp
+ * src/Components/MultiHit.hpp
+ * src/Components/Names/MoveNames.hpp
+ * src/Components/PP.hpp
+ * src/Components/Priority.hpp
+ * src/Components/Tags/MoveTags.hpp
+ * src/Pokedex/Setup/MoveDexDataSetup.hpp
+ * src/Pokedex/Setup/MoveDexDataSetup.cpp
+ * src/Components/Names/ItemNames.hpp
+ * src/Pokedex/Setup/ItemDexDataSetup.hpp
+ * src/Pokedex/Setup/ItemDexDataSetup.cpp
  * src/Pokedex/Species/Ampharos.hpp
  * src/Pokedex/Species/Dragapult.hpp
  * src/Pokedex/Species/Empoleon.hpp
@@ -51,9 +73,6 @@
  * src/Pokedex/Species/Pangoro.hpp
  * src/Pokedex/Species/Ribombee.hpp
  * src/Pokedex/Setup/GetSpeciesBuild.cpp
- * src/Components/Boosts.hpp
- * src/Components/Tags/MoveTags.hpp
- * src/Pokedex/Setup/DexDataMoveSetup.hpp
  * src/Pokedex/Moves/FuryAttack.hpp
  * src/Pokedex/Moves/KnockOff.hpp
  * src/Pokedex/Moves/Moonblast.hpp
@@ -62,7 +81,6 @@
  * src/Pokedex/Moves/Thunderbolt.hpp
  * src/Pokedex/Moves/WillOWisp.hpp
  * src/Pokedex/Setup/GetMoveBuild.cpp
- * src/Pokedex/Setup/DexDataItemSetup.hpp
  * src/Pokedex/Items/AssaultVest.hpp
  * src/Pokedex/Items/BrightPowder.hpp
  * src/Pokedex/Items/ChoiceScarf.hpp
@@ -70,24 +88,6 @@
  * src/Pokedex/Items/FocusSash.hpp
  * src/Pokedex/Items/LifeOrb.hpp
  * src/Pokedex/Setup/GetItemBuild.cpp
- * src/Components/Names/AbilityNames.hpp
- * src/Components/DexData/Abilities.hpp
- * src/Components/DexData/BaseStats.hpp
- * src/Components/Names/TypeNames.hpp
- * src/Components/DexData/SpeciesTypes.hpp
- * src/Components/Names/SpeciesNames.hpp
- * src/Pokedex/Setup/DexDataSpeciesSetup.cpp
- * src/Components/Accuracy.hpp
- * src/Components/BasePower.hpp
- * src/Components/Chance.hpp
- * src/Components/EntityHolders/MoveEffect.hpp
- * src/Components/MultiHit.hpp
- * src/Components/Names/MoveNames.hpp
- * src/Components/PP.hpp
- * src/Components/Priority.hpp
- * src/Pokedex/Setup/DexDataMoveSetup.cpp
- * src/Components/Names/ItemNames.hpp
- * src/Pokedex/Setup/DexDataItemSetup.cpp
  * external/entt/container/dense_set.hpp
  * src/Pokedex/Pokedex.cpp
  * src/Pokedex/Names.hpp
@@ -138,6 +138,208 @@
  * src/PokeSim.hpp
  */
 
+
+/////////////////// START OF external/entt/core/iterator.hpp ///////////////////
+
+#ifndef ENTT_CORE_ITERATOR_HPP
+#define ENTT_CORE_ITERATOR_HPP
+
+#include <iterator>
+#include <memory>
+#include <type_traits>
+#include <utility>
+
+namespace entt {
+
+/**
+ * @brief Helper type to use as pointer with input iterators.
+ * @tparam Type of wrapped value.
+ */
+template<typename Type>
+struct input_iterator_pointer final {
+    /*! @brief Value type. */
+    using value_type = Type;
+    /*! @brief Pointer type. */
+    using pointer = Type *;
+    /*! @brief Reference type. */
+    using reference = Type &;
+
+    /**
+     * @brief Constructs a proxy object by move.
+     * @param val Value to use to initialize the proxy object.
+     */
+    constexpr input_iterator_pointer(value_type &&val) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+        : value{std::move(val)} {}
+
+    /**
+     * @brief Access operator for accessing wrapped values.
+     * @return A pointer to the wrapped value.
+     */
+    [[nodiscard]] constexpr pointer operator->() noexcept {
+        return std::addressof(value);
+    }
+
+    /**
+     * @brief Dereference operator for accessing wrapped values.
+     * @return A reference to the wrapped value.
+     */
+    [[nodiscard]] constexpr reference operator*() noexcept {
+        return value;
+    }
+
+private:
+    Type value;
+};
+
+/**
+ * @brief Plain iota iterator (waiting for C++20).
+ * @tparam Type Value type.
+ */
+template<typename Type>
+class iota_iterator final {
+    static_assert(std::is_integral_v<Type>, "Not an integral type");
+
+public:
+    /*! @brief Value type, likely an integral one. */
+    using value_type = Type;
+    /*! @brief Invalid pointer type. */
+    using pointer = void;
+    /*! @brief Non-reference type, same as value type. */
+    using reference = value_type;
+    /*! @brief Difference type. */
+    using difference_type = std::ptrdiff_t;
+    /*! @brief Iterator category. */
+    using iterator_category = std::input_iterator_tag;
+
+    /*! @brief Default constructor. */
+    constexpr iota_iterator() noexcept
+        : current{} {}
+
+    /**
+     * @brief Constructs an iota iterator from a given value.
+     * @param init The initial value assigned to the iota iterator.
+     */
+    constexpr iota_iterator(const value_type init) noexcept
+        : current{init} {}
+
+    /**
+     * @brief Pre-increment operator.
+     * @return This iota iterator.
+     */
+    constexpr iota_iterator &operator++() noexcept {
+        return ++current, *this;
+    }
+
+    /**
+     * @brief Post-increment operator.
+     * @return This iota iterator.
+     */
+    constexpr iota_iterator operator++(int) noexcept {
+        iota_iterator orig = *this;
+        return ++(*this), orig;
+    }
+
+    /**
+     * @brief Dereference operator.
+     * @return The underlying value.
+     */
+    [[nodiscard]] constexpr reference operator*() const noexcept {
+        return current;
+    }
+
+private:
+    value_type current;
+};
+
+/**
+ * @brief Comparison operator.
+ * @tparam Type Value type of the iota iterator.
+ * @param lhs A properly initialized iota iterator.
+ * @param rhs A properly initialized iota iterator.
+ * @return True if the two iterators are identical, false otherwise.
+ */
+template<typename Type>
+[[nodiscard]] constexpr bool operator==(const iota_iterator<Type> &lhs, const iota_iterator<Type> &rhs) noexcept {
+    return *lhs == *rhs;
+}
+
+/**
+ * @brief Comparison operator.
+ * @tparam Type Value type of the iota iterator.
+ * @param lhs A properly initialized iota iterator.
+ * @param rhs A properly initialized iota iterator.
+ * @return True if the two iterators differ, false otherwise.
+ */
+template<typename Type>
+[[nodiscard]] constexpr bool operator!=(const iota_iterator<Type> &lhs, const iota_iterator<Type> &rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+/**
+ * @brief Utility class to create an iterable object from a pair of iterators.
+ * @tparam It Type of iterator.
+ * @tparam Sentinel Type of sentinel.
+ */
+template<typename It, typename Sentinel = It>
+struct iterable_adaptor final {
+    /*! @brief Value type. */
+    using value_type = typename std::iterator_traits<It>::value_type;
+    /*! @brief Iterator type. */
+    using iterator = It;
+    /*! @brief Sentinel type. */
+    using sentinel = Sentinel;
+
+    /*! @brief Default constructor. */
+    constexpr iterable_adaptor() noexcept(std::is_nothrow_default_constructible_v<iterator> &&std::is_nothrow_default_constructible_v<sentinel>)
+        : first{},
+          last{} {}
+
+    /**
+     * @brief Creates an iterable object from a pair of iterators.
+     * @param from Begin iterator.
+     * @param to End iterator.
+     */
+    constexpr iterable_adaptor(iterator from, sentinel to) noexcept(std::is_nothrow_move_constructible_v<iterator> &&std::is_nothrow_move_constructible_v<sentinel>)
+        : first{std::move(from)},
+          last{std::move(to)} {}
+
+    /**
+     * @brief Returns an iterator to the beginning.
+     * @return An iterator to the first element of the range.
+     */
+    [[nodiscard]] constexpr iterator begin() const noexcept {
+        return first;
+    }
+
+    /**
+     * @brief Returns an iterator to the end.
+     * @return An iterator to the element following the last element of the
+     * range.
+     */
+    [[nodiscard]] constexpr sentinel end() const noexcept {
+        return last;
+    }
+
+    /*! @copydoc begin */
+    [[nodiscard]] constexpr iterator cbegin() const noexcept {
+        return begin();
+    }
+
+    /*! @copydoc end */
+    [[nodiscard]] constexpr sentinel cend() const noexcept {
+        return end();
+    }
+
+private:
+    It first;
+    Sentinel last;
+};
+
+} // namespace entt
+
+#endif
+
+//////////////////// END OF external/entt/core/iterator.hpp ////////////////////
 
 //////////////////// START OF external/entt/config/macro.h /////////////////////
 
@@ -253,37 +455,6 @@
 #endif
 
 ///////////////////// END OF external/entt/config/config.h /////////////////////
-
-/////////////////// START OF external/entt/container/fwd.hpp ///////////////////
-
-#ifndef ENTT_CONTAINER_FWD_HPP
-#define ENTT_CONTAINER_FWD_HPP
-
-#include <functional>
-#include <memory>
-
-namespace entt {
-
-template<
-    typename Key,
-    typename Type,
-    typename = std::hash<Key>,
-    typename = std::equal_to<Key>,
-    typename = std::allocator<std::pair<const Key, Type>>>
-class dense_map;
-
-template<
-    typename Type,
-    typename = std::hash<Type>,
-    typename = std::equal_to<Type>,
-    typename = std::allocator<Type>>
-class dense_set;
-
-} // namespace entt
-
-#endif
-
-//////////////////// END OF external/entt/container/fwd.hpp ////////////////////
 
 ///////////////////// START OF external/entt/core/fwd.hpp //////////////////////
 
@@ -1070,6 +1241,1112 @@ using nth_argument_t = typename nth_argument<Index, Candidate>::type;
 
 ////////////////// END OF external/entt/core/type_traits.hpp ///////////////////
 
+//////////////////// START OF external/entt/entity/fwd.hpp /////////////////////
+
+#ifndef ENTT_ENTITY_FWD_HPP
+#define ENTT_ENTITY_FWD_HPP
+
+#include <memory>
+#include <type_traits>
+
+namespace entt {
+
+/*! @brief Default entity identifier. */
+enum class entity : id_type {};
+
+template<typename Entity = entity, typename = std::allocator<Entity>>
+class basic_sparse_set;
+
+template<typename Type, typename = entity, typename = std::allocator<Type>, typename = void>
+class basic_storage;
+
+template<typename Type>
+class sigh_storage_mixin;
+
+/**
+ * @brief Provides a common way to define storage types.
+ * @tparam Type Storage value type.
+ * @tparam Entity A valid entity type (see entt_traits for more details).
+ * @tparam Allocator Type of allocator used to manage memory and elements.
+ */
+template<typename Type, typename Entity = entity, typename Allocator = std::allocator<Type>, typename = void>
+struct storage_type {
+    /*! @brief Type-to-storage conversion result. */
+    using type = sigh_storage_mixin<basic_storage<Type, Entity, Allocator>>;
+};
+
+/**
+ * @brief Helper type.
+ * @tparam Args Arguments to forward.
+ */
+template<typename... Args>
+using storage_type_t = typename storage_type<Args...>::type;
+
+/**
+ * Type-to-storage conversion utility that preserves constness.
+ * @tparam Type Storage value type, eventually const.
+ * @tparam Entity A valid entity type (see entt_traits for more details).
+ * @tparam Allocator Type of allocator used to manage memory and elements.
+ */
+template<typename Type, typename Entity = entity, typename Allocator = std::allocator<std::remove_const_t<Type>>>
+struct storage_for {
+    /*! @brief Type-to-storage conversion result. */
+    using type = constness_as_t<storage_type_t<std::remove_const_t<Type>, Entity, Allocator>, Type>;
+};
+
+/**
+ * @brief Helper type.
+ * @tparam Args Arguments to forward.
+ */
+template<typename... Args>
+using storage_for_t = typename storage_for<Args...>::type;
+
+template<typename Entity = entity, typename = std::allocator<Entity>>
+class basic_registry;
+
+template<typename, typename, typename = void>
+class basic_view;
+
+template<typename Type, typename = std::allocator<Type *>>
+class basic_runtime_view;
+
+template<typename, typename, typename>
+class basic_group;
+
+template<typename>
+class basic_observer;
+
+template<typename>
+class basic_organizer;
+
+template<typename, typename...>
+struct basic_handle;
+
+template<typename>
+class basic_snapshot;
+
+template<typename>
+class basic_snapshot_loader;
+
+template<typename>
+class basic_continuous_loader;
+
+/**
+ * @brief Alias for exclusion lists.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+using exclude_t = type_list<Type...>;
+
+/**
+ * @brief Variable template for exclusion lists.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+inline constexpr exclude_t<Type...> exclude{};
+
+/**
+ * @brief Alias for lists of observed components.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+using get_t = type_list<Type...>;
+
+/**
+ * @brief Variable template for lists of observed components.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+inline constexpr get_t<Type...> get{};
+
+/**
+ * @brief Alias for lists of owned components.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+using owned_t = type_list<Type...>;
+
+/**
+ * @brief Variable template for lists of owned components.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+inline constexpr owned_t<Type...> owned{};
+
+/*! @brief Alias declaration for the most common use case. */
+using sparse_set = basic_sparse_set<>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Type Type of objects assigned to the entities.
+ */
+template<typename Type>
+using storage = basic_storage<Type>;
+
+/*! @brief Alias declaration for the most common use case. */
+using registry = basic_registry<>;
+
+/*! @brief Alias declaration for the most common use case. */
+using observer = basic_observer<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using organizer = basic_organizer<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using handle = basic_handle<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using const_handle = basic_handle<const registry>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Args Other template parameters.
+ */
+template<typename... Args>
+using handle_view = basic_handle<registry, Args...>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Args Other template parameters.
+ */
+template<typename... Args>
+using const_handle_view = basic_handle<const registry, Args...>;
+
+/*! @brief Alias declaration for the most common use case. */
+using snapshot = basic_snapshot<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using snapshot_loader = basic_snapshot_loader<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using continuous_loader = basic_continuous_loader<registry>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Get Types of storage iterated by the view.
+ * @tparam Exclude Types of storage used to filter the view.
+ */
+template<typename Get, typename Exclude = exclude_t<>>
+using view = basic_view<type_list_transform_t<Get, storage_for>, type_list_transform_t<Exclude, storage_for>>;
+
+/*! @brief Alias declaration for the most common use case. */
+using runtime_view = basic_runtime_view<sparse_set>;
+
+/*! @brief Alias declaration for the most common use case. */
+using const_runtime_view = basic_runtime_view<const sparse_set>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Owned Types of storage _owned_ by the group.
+ * @tparam Get Types of storage _observed_ by the group.
+ * @tparam Exclude Types of storage used to filter the group.
+ */
+template<typename Owned, typename Get, typename Exclude>
+using group = basic_group<type_list_transform_t<Owned, storage_for>, type_list_transform_t<Get, storage_for>, type_list_transform_t<Exclude, storage_for>>;
+
+} // namespace entt
+
+#endif
+
+///////////////////// END OF external/entt/entity/fwd.hpp //////////////////////
+
+/////////////////// START OF external/entt/entity/entity.hpp ///////////////////
+
+#ifndef ENTT_ENTITY_ENTITY_HPP
+#define ENTT_ENTITY_ENTITY_HPP
+
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
+
+namespace entt {
+
+/**
+ * @cond TURN_OFF_DOXYGEN
+ * Internal details not to be documented.
+ */
+
+namespace internal {
+
+template<typename, typename = void>
+struct entt_traits;
+
+template<typename Type>
+struct entt_traits<Type, std::enable_if_t<std::is_enum_v<Type>>>
+    : entt_traits<std::underlying_type_t<Type>> {};
+
+template<typename Type>
+struct entt_traits<Type, std::enable_if_t<std::is_class_v<Type>>>
+    : entt_traits<typename Type::entity_type> {};
+
+template<>
+struct entt_traits<std::uint32_t> {
+    using entity_type = std::uint32_t;
+    using version_type = std::uint16_t;
+
+    static constexpr entity_type entity_mask = 0xFFFFF;
+    static constexpr entity_type version_mask = 0xFFF;
+    static constexpr std::size_t entity_shift = 20u;
+};
+
+template<>
+struct entt_traits<std::uint64_t> {
+    using entity_type = std::uint64_t;
+    using version_type = std::uint32_t;
+
+    static constexpr entity_type entity_mask = 0xFFFFFFFF;
+    static constexpr entity_type version_mask = 0xFFFFFFFF;
+    static constexpr std::size_t entity_shift = 32u;
+};
+
+} // namespace internal
+
+/**
+ * Internal details not to be documented.
+ * @endcond
+ */
+
+/**
+ * @brief Entity traits.
+ * @tparam Type Type of identifier.
+ */
+template<typename Type>
+class entt_traits: internal::entt_traits<Type> {
+    using base_type = internal::entt_traits<Type>;
+
+public:
+    /*! @brief Value type. */
+    using value_type = Type;
+    /*! @brief Underlying entity type. */
+    using entity_type = typename base_type::entity_type;
+    /*! @brief Underlying version type. */
+    using version_type = typename base_type::version_type;
+    /*! @brief Reserved identifier. */
+    static constexpr entity_type reserved = base_type::entity_mask | (base_type::version_mask << base_type::entity_shift);
+    /*! @brief Page size, default is `ENTT_SPARSE_PAGE`. */
+    static constexpr auto page_size = ENTT_SPARSE_PAGE;
+
+    /**
+     * @brief Converts an entity to its underlying type.
+     * @param value The value to convert.
+     * @return The integral representation of the given value.
+     */
+    [[nodiscard]] static constexpr entity_type to_integral(const value_type value) noexcept {
+        return static_cast<entity_type>(value);
+    }
+
+    /**
+     * @brief Returns the entity part once converted to the underlying type.
+     * @param value The value to convert.
+     * @return The integral representation of the entity part.
+     */
+    [[nodiscard]] static constexpr entity_type to_entity(const value_type value) noexcept {
+        return (to_integral(value) & base_type::entity_mask);
+    }
+
+    /**
+     * @brief Returns the version part once converted to the underlying type.
+     * @param value The value to convert.
+     * @return The integral representation of the version part.
+     */
+    [[nodiscard]] static constexpr version_type to_version(const value_type value) noexcept {
+        return (to_integral(value) >> base_type::entity_shift);
+    }
+
+    /**
+     * @brief Constructs an identifier from its parts.
+     *
+     * If the version part is not provided, a tombstone is returned.<br/>
+     * If the entity part is not provided, a null identifier is returned.
+     *
+     * @param entity The entity part of the identifier.
+     * @param version The version part of the identifier.
+     * @return A properly constructed identifier.
+     */
+    [[nodiscard]] static constexpr value_type construct(const entity_type entity, const version_type version) noexcept {
+        return value_type{(entity & base_type::entity_mask) | (static_cast<entity_type>(version) << base_type::entity_shift)};
+    }
+
+    /**
+     * @brief Combines two identifiers in a single one.
+     *
+     * The returned identifier is a copy of the first element except for its
+     * version, which is taken from the second element.
+     *
+     * @param lhs The identifier from which to take the entity part.
+     * @param rhs The identifier from which to take the version part.
+     * @return A properly constructed identifier.
+     */
+    [[nodiscard]] static constexpr value_type combine(const entity_type lhs, const entity_type rhs) noexcept {
+        constexpr auto mask = (base_type::version_mask << base_type::entity_shift);
+        return value_type{(lhs & base_type::entity_mask) | (rhs & mask)};
+    }
+};
+
+/**
+ * @copydoc entt_traits<Entity>::to_integral
+ * @tparam Entity The value type.
+ */
+template<typename Entity>
+[[nodiscard]] constexpr typename entt_traits<Entity>::entity_type to_integral(const Entity value) noexcept {
+    return entt_traits<Entity>::to_integral(value);
+}
+
+/**
+ * @copydoc entt_traits<Entity>::to_entity
+ * @tparam Entity The value type.
+ */
+template<typename Entity>
+[[nodiscard]] constexpr typename entt_traits<Entity>::entity_type to_entity(const Entity value) noexcept {
+    return entt_traits<Entity>::to_entity(value);
+}
+
+/**
+ * @copydoc entt_traits<Entity>::to_version
+ * @tparam Entity The value type.
+ */
+template<typename Entity>
+[[nodiscard]] constexpr typename entt_traits<Entity>::version_type to_version(const Entity value) noexcept {
+    return entt_traits<Entity>::to_version(value);
+}
+
+/*! @brief Null object for all identifiers.  */
+struct null_t {
+    /**
+     * @brief Converts the null object to identifiers of any type.
+     * @tparam Entity Type of identifier.
+     * @return The null representation for the given type.
+     */
+    template<typename Entity>
+    [[nodiscard]] constexpr operator Entity() const noexcept {
+        using entity_traits = entt_traits<Entity>;
+        return entity_traits::combine(entity_traits::reserved, entity_traits::reserved);
+    }
+
+    /**
+     * @brief Compares two null objects.
+     * @param other A null object.
+     * @return True in all cases.
+     */
+    [[nodiscard]] constexpr bool operator==([[maybe_unused]] const null_t other) const noexcept {
+        return true;
+    }
+
+    /**
+     * @brief Compares two null objects.
+     * @param other A null object.
+     * @return False in all cases.
+     */
+    [[nodiscard]] constexpr bool operator!=([[maybe_unused]] const null_t other) const noexcept {
+        return false;
+    }
+
+    /**
+     * @brief Compares a null object and an identifier of any type.
+     * @tparam Entity Type of identifier.
+     * @param entity Identifier with which to compare.
+     * @return False if the two elements differ, true otherwise.
+     */
+    template<typename Entity>
+    [[nodiscard]] constexpr bool operator==(const Entity entity) const noexcept {
+        using entity_traits = entt_traits<Entity>;
+        return entity_traits::to_entity(entity) == entity_traits::to_entity(*this);
+    }
+
+    /**
+     * @brief Compares a null object and an identifier of any type.
+     * @tparam Entity Type of identifier.
+     * @param entity Identifier with which to compare.
+     * @return True if the two elements differ, false otherwise.
+     */
+    template<typename Entity>
+    [[nodiscard]] constexpr bool operator!=(const Entity entity) const noexcept {
+        return !(entity == *this);
+    }
+};
+
+/**
+ * @brief Compares a null object and an identifier of any type.
+ * @tparam Entity Type of identifier.
+ * @param entity Identifier with which to compare.
+ * @param other A null object yet to be converted.
+ * @return False if the two elements differ, true otherwise.
+ */
+template<typename Entity>
+[[nodiscard]] constexpr bool operator==(const Entity entity, const null_t other) noexcept {
+    return other.operator==(entity);
+}
+
+/**
+ * @brief Compares a null object and an identifier of any type.
+ * @tparam Entity Type of identifier.
+ * @param entity Identifier with which to compare.
+ * @param other A null object yet to be converted.
+ * @return True if the two elements differ, false otherwise.
+ */
+template<typename Entity>
+[[nodiscard]] constexpr bool operator!=(const Entity entity, const null_t other) noexcept {
+    return !(other == entity);
+}
+
+/*! @brief Tombstone object for all identifiers.  */
+struct tombstone_t {
+    /**
+     * @brief Converts the tombstone object to identifiers of any type.
+     * @tparam Entity Type of identifier.
+     * @return The tombstone representation for the given type.
+     */
+    template<typename Entity>
+    [[nodiscard]] constexpr operator Entity() const noexcept {
+        using entity_traits = entt_traits<Entity>;
+        return entity_traits::combine(entity_traits::reserved, entity_traits::reserved);
+    }
+
+    /**
+     * @brief Compares two tombstone objects.
+     * @param other A tombstone object.
+     * @return True in all cases.
+     */
+    [[nodiscard]] constexpr bool operator==([[maybe_unused]] const tombstone_t other) const noexcept {
+        return true;
+    }
+
+    /**
+     * @brief Compares two tombstone objects.
+     * @param other A tombstone object.
+     * @return False in all cases.
+     */
+    [[nodiscard]] constexpr bool operator!=([[maybe_unused]] const tombstone_t other) const noexcept {
+        return false;
+    }
+
+    /**
+     * @brief Compares a tombstone object and an identifier of any type.
+     * @tparam Entity Type of identifier.
+     * @param entity Identifier with which to compare.
+     * @return False if the two elements differ, true otherwise.
+     */
+    template<typename Entity>
+    [[nodiscard]] constexpr bool operator==(const Entity entity) const noexcept {
+        using entity_traits = entt_traits<Entity>;
+        return entity_traits::to_version(entity) == entity_traits::to_version(*this);
+    }
+
+    /**
+     * @brief Compares a tombstone object and an identifier of any type.
+     * @tparam Entity Type of identifier.
+     * @param entity Identifier with which to compare.
+     * @return True if the two elements differ, false otherwise.
+     */
+    template<typename Entity>
+    [[nodiscard]] constexpr bool operator!=(const Entity entity) const noexcept {
+        return !(entity == *this);
+    }
+};
+
+/**
+ * @brief Compares a tombstone object and an identifier of any type.
+ * @tparam Entity Type of identifier.
+ * @param entity Identifier with which to compare.
+ * @param other A tombstone object yet to be converted.
+ * @return False if the two elements differ, true otherwise.
+ */
+template<typename Entity>
+[[nodiscard]] constexpr bool operator==(const Entity entity, const tombstone_t other) noexcept {
+    return other.operator==(entity);
+}
+
+/**
+ * @brief Compares a tombstone object and an identifier of any type.
+ * @tparam Entity Type of identifier.
+ * @param entity Identifier with which to compare.
+ * @param other A tombstone object yet to be converted.
+ * @return True if the two elements differ, false otherwise.
+ */
+template<typename Entity>
+[[nodiscard]] constexpr bool operator!=(const Entity entity, const tombstone_t other) noexcept {
+    return !(other == entity);
+}
+
+/**
+ * @brief Compile-time constant for null entities.
+ *
+ * There exist implicit conversions from this variable to identifiers of any
+ * allowed type. Similarly, there exist comparison operators between the null
+ * entity and any other identifier.
+ */
+inline constexpr null_t null{};
+
+/**
+ * @brief Compile-time constant for tombstone entities.
+ *
+ * There exist implicit conversions from this variable to identifiers of any
+ * allowed type. Similarly, there exist comparison operators between the
+ * tombstone entity and any other identifier.
+ */
+inline constexpr tombstone_t tombstone{};
+
+} // namespace entt
+
+#endif
+
+//////////////////// END OF external/entt/entity/entity.hpp ////////////////////
+
+/////////////////// START OF external/entt/entity/handle.hpp ///////////////////
+
+#ifndef ENTT_ENTITY_HANDLE_HPP
+#define ENTT_ENTITY_HANDLE_HPP
+
+#include <iterator>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+namespace entt {
+
+/**
+ * @cond TURN_OFF_DOXYGEN
+ * Internal details not to be documented.
+ */
+
+namespace internal {
+
+template<typename It>
+class handle_storage_iterator final {
+    template<typename Other>
+    friend class handle_storage_iterator;
+
+    using underlying_type = std::remove_reference_t<typename It::value_type::second_type>;
+    using entity_type = typename underlying_type::entity_type;
+
+public:
+    using value_type = typename std::iterator_traits<It>::value_type;
+    using pointer = input_iterator_pointer<value_type>;
+    using reference = value_type;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::input_iterator_tag;
+
+    constexpr handle_storage_iterator() noexcept
+        : entt{null},
+          it{},
+          last{} {}
+
+    constexpr handle_storage_iterator(entity_type value, It from, It to) noexcept
+        : entt{value},
+          it{from},
+          last{to} {
+        while(it != last && !it->second.contains(entt)) { ++it; }
+    }
+
+    constexpr handle_storage_iterator &operator++() noexcept {
+        while(++it != last && !it->second.contains(entt)) {}
+        return *this;
+    }
+
+    constexpr handle_storage_iterator operator++(int) noexcept {
+        handle_storage_iterator orig = *this;
+        return ++(*this), orig;
+    }
+
+    [[nodiscard]] constexpr reference operator*() const noexcept {
+        return *it;
+    }
+
+    [[nodiscard]] constexpr pointer operator->() const noexcept {
+        return operator*();
+    }
+
+    template<typename ILhs, typename IRhs>
+    friend constexpr bool operator==(const handle_storage_iterator<ILhs> &, const handle_storage_iterator<IRhs> &) noexcept;
+
+private:
+    entity_type entt;
+    It it;
+    It last;
+};
+
+template<typename ILhs, typename IRhs>
+[[nodiscard]] constexpr bool operator==(const handle_storage_iterator<ILhs> &lhs, const handle_storage_iterator<IRhs> &rhs) noexcept {
+    return lhs.it == rhs.it;
+}
+
+template<typename ILhs, typename IRhs>
+[[nodiscard]] constexpr bool operator!=(const handle_storage_iterator<ILhs> &lhs, const handle_storage_iterator<IRhs> &rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+} // namespace internal
+
+/**
+ * Internal details not to be documented.
+ * @endcond
+ */
+
+/**
+ * @brief Non-owning handle to an entity.
+ *
+ * Tiny wrapper around a registry and an entity.
+ *
+ * @tparam Registry Basic registry type.
+ * @tparam Scope Types to which to restrict the scope of a handle.
+ */
+template<typename Registry, typename... Scope>
+struct basic_handle {
+    /*! @brief Type of registry accepted by the handle. */
+    using registry_type = Registry;
+    /*! @brief Underlying entity identifier. */
+    using entity_type = typename registry_type::entity_type;
+    /*! @brief Underlying version type. */
+    using version_type = typename registry_type::version_type;
+    /*! @brief Unsigned integer type. */
+    using size_type = typename registry_type::size_type;
+
+    /*! @brief Constructs an invalid handle. */
+    basic_handle() noexcept
+        : reg{},
+          entt{null} {}
+
+    /**
+     * @brief Constructs a handle from a given registry and entity.
+     * @param ref An instance of the registry class.
+     * @param value A valid identifier.
+     */
+    basic_handle(registry_type &ref, entity_type value) noexcept
+        : reg{&ref},
+          entt{value} {}
+
+    /**
+     * @brief Returns an iterable object to use to _visit_ a handle.
+     *
+     * The iterable object returns a pair that contains the name and a reference
+     * to the current storage.<br/>
+     * Returned storage are those that contain the entity associated with the
+     * handle.
+     *
+     * @return An iterable object to use to _visit_ the handle.
+     */
+    [[nodiscard]] auto storage() const noexcept {
+        auto iterable = reg->storage();
+        using iterator_type = internal::handle_storage_iterator<typename decltype(iterable)::iterator>;
+        return iterable_adaptor{iterator_type{entt, iterable.begin(), iterable.end()}, iterator_type{entt, iterable.end(), iterable.end()}};
+    }
+
+    /**
+     * @brief Constructs a const handle from a non-const one.
+     * @tparam Other A valid entity type (see entt_traits for more details).
+     * @tparam Args Scope of the handle to construct.
+     * @return A const handle referring to the same registry and the same
+     * entity.
+     */
+    template<typename Other, typename... Args>
+    operator basic_handle<Other, Args...>() const noexcept {
+        static_assert(std::is_same_v<Other, Registry> || std::is_same_v<std::remove_const_t<Other>, Registry>, "Invalid conversion between different handles");
+        static_assert((sizeof...(Scope) == 0 || ((sizeof...(Args) != 0 && sizeof...(Args) <= sizeof...(Scope)) && ... && (type_list_contains_v<type_list<Scope...>, Args>))), "Invalid conversion between different handles");
+
+        return reg ? basic_handle<Other, Args...>{*reg, entt} : basic_handle<Other, Args...>{};
+    }
+
+    /**
+     * @brief Converts a handle to its underlying entity.
+     * @return The contained identifier.
+     */
+    [[nodiscard]] operator entity_type() const noexcept {
+        return entity();
+    }
+
+    /**
+     * @brief Checks if a handle refers to non-null registry pointer and entity.
+     * @return True if the handle refers to non-null registry and entity, false otherwise.
+     */
+    [[nodiscard]] explicit operator bool() const noexcept {
+        return reg && reg->valid(entt);
+    }
+
+    /**
+     * @brief Checks if a handle refers to a valid entity or not.
+     * @return True if the handle refers to a valid entity, false otherwise.
+     */
+    [[nodiscard]] bool valid() const {
+        return reg->valid(entt);
+    }
+
+    /**
+     * @brief Returns a pointer to the underlying registry, if any.
+     * @return A pointer to the underlying registry, if any.
+     */
+    [[nodiscard]] registry_type *registry() const noexcept {
+        return reg;
+    }
+
+    /**
+     * @brief Returns the entity associated with a handle.
+     * @return The entity associated with the handle.
+     */
+    [[nodiscard]] entity_type entity() const noexcept {
+        return entt;
+    }
+
+    /*! @brief Destroys the entity associated with a handle. */
+    void destroy() {
+        reg->destroy(entt);
+    }
+
+    /**
+     * @brief Destroys the entity associated with a handle.
+     * @param version A desired version upon destruction.
+     */
+    void destroy(const version_type version) {
+        reg->destroy(entt, version);
+    }
+
+    /**
+     * @brief Assigns the given component to a handle.
+     * @tparam Component Type of component to create.
+     * @tparam Args Types of arguments to use to construct the component.
+     * @param args Parameters to use to initialize the component.
+     * @return A reference to the newly created component.
+     */
+    template<typename Component, typename... Args>
+    decltype(auto) emplace(Args &&...args) const {
+        static_assert(((sizeof...(Scope) == 0) || ... || std::is_same_v<Component, Scope>), "Invalid type");
+        return reg->template emplace<Component>(entt, std::forward<Args>(args)...);
+    }
+
+    /**
+     * @brief Assigns or replaces the given component for a handle.
+     * @tparam Component Type of component to assign or replace.
+     * @tparam Args Types of arguments to use to construct the component.
+     * @param args Parameters to use to initialize the component.
+     * @return A reference to the newly created component.
+     */
+    template<typename Component, typename... Args>
+    decltype(auto) emplace_or_replace(Args &&...args) const {
+        static_assert(((sizeof...(Scope) == 0) || ... || std::is_same_v<Component, Scope>), "Invalid type");
+        return reg->template emplace_or_replace<Component>(entt, std::forward<Args>(args)...);
+    }
+
+    /**
+     * @brief Patches the given component for a handle.
+     * @tparam Component Type of component to patch.
+     * @tparam Func Types of the function objects to invoke.
+     * @param func Valid function objects.
+     * @return A reference to the patched component.
+     */
+    template<typename Component, typename... Func>
+    decltype(auto) patch(Func &&...func) const {
+        static_assert(((sizeof...(Scope) == 0) || ... || std::is_same_v<Component, Scope>), "Invalid type");
+        return reg->template patch<Component>(entt, std::forward<Func>(func)...);
+    }
+
+    /**
+     * @brief Replaces the given component for a handle.
+     * @tparam Component Type of component to replace.
+     * @tparam Args Types of arguments to use to construct the component.
+     * @param args Parameters to use to initialize the component.
+     * @return A reference to the component being replaced.
+     */
+    template<typename Component, typename... Args>
+    decltype(auto) replace(Args &&...args) const {
+        static_assert(((sizeof...(Scope) == 0) || ... || std::is_same_v<Component, Scope>), "Invalid type");
+        return reg->template replace<Component>(entt, std::forward<Args>(args)...);
+    }
+
+    /**
+     * @brief Removes the given components from a handle.
+     * @tparam Component Types of components to remove.
+     * @return The number of components actually removed.
+     */
+    template<typename... Component>
+    size_type remove() const {
+        static_assert(sizeof...(Scope) == 0 || (type_list_contains_v<type_list<Scope...>, Component> && ...), "Invalid type");
+        return reg->template remove<Component...>(entt);
+    }
+
+    /**
+     * @brief Erases the given components from a handle.
+     * @tparam Component Types of components to erase.
+     */
+    template<typename... Component>
+    void erase() const {
+        static_assert(sizeof...(Scope) == 0 || (type_list_contains_v<type_list<Scope...>, Component> && ...), "Invalid type");
+        reg->template erase<Component...>(entt);
+    }
+
+    /**
+     * @brief Checks if a handle has all the given components.
+     * @tparam Component Components for which to perform the check.
+     * @return True if the handle has all the components, false otherwise.
+     */
+    template<typename... Component>
+    [[nodiscard]] decltype(auto) all_of() const {
+        return reg->template all_of<Component...>(entt);
+    }
+
+    /**
+     * @brief Checks if a handle has at least one of the given components.
+     * @tparam Component Components for which to perform the check.
+     * @return True if the handle has at least one of the given components,
+     * false otherwise.
+     */
+    template<typename... Component>
+    [[nodiscard]] decltype(auto) any_of() const {
+        return reg->template any_of<Component...>(entt);
+    }
+
+    /**
+     * @brief Returns references to the given components for a handle.
+     * @tparam Component Types of components to get.
+     * @return References to the components owned by the handle.
+     */
+    template<typename... Component>
+    [[nodiscard]] decltype(auto) get() const {
+        static_assert(sizeof...(Scope) == 0 || (type_list_contains_v<type_list<Scope...>, Component> && ...), "Invalid type");
+        return reg->template get<Component...>(entt);
+    }
+
+    /**
+     * @brief Returns a reference to the given component for a handle.
+     * @tparam Component Type of component to get.
+     * @tparam Args Types of arguments to use to construct the component.
+     * @param args Parameters to use to initialize the component.
+     * @return Reference to the component owned by the handle.
+     */
+    template<typename Component, typename... Args>
+    [[nodiscard]] decltype(auto) get_or_emplace(Args &&...args) const {
+        static_assert(((sizeof...(Scope) == 0) || ... || std::is_same_v<Component, Scope>), "Invalid type");
+        return reg->template get_or_emplace<Component>(entt, std::forward<Args>(args)...);
+    }
+
+    /**
+     * @brief Returns pointers to the given components for a handle.
+     * @tparam Component Types of components to get.
+     * @return Pointers to the components owned by the handle.
+     */
+    template<typename... Component>
+    [[nodiscard]] auto try_get() const {
+        static_assert(sizeof...(Scope) == 0 || (type_list_contains_v<type_list<Scope...>, Component> && ...), "Invalid type");
+        return reg->template try_get<Component...>(entt);
+    }
+
+    /**
+     * @brief Checks if a handle has components assigned.
+     * @return True if the handle has no components assigned, false otherwise.
+     */
+    [[nodiscard]] bool orphan() const {
+        return reg->orphan(entt);
+    }
+
+private:
+    registry_type *reg;
+    entity_type entt;
+};
+
+/**
+ * @brief Compares two handles.
+ * @tparam Args Scope of the first handle.
+ * @tparam Other Scope of the second handle.
+ * @param lhs A valid handle.
+ * @param rhs A valid handle.
+ * @return True if both handles refer to the same registry and the same
+ * entity, false otherwise.
+ */
+template<typename... Args, typename... Other>
+[[nodiscard]] bool operator==(const basic_handle<Args...> &lhs, const basic_handle<Other...> &rhs) noexcept {
+    return lhs.registry() == rhs.registry() && lhs.entity() == rhs.entity();
+}
+
+/**
+ * @brief Compares two handles.
+ * @tparam Args Scope of the first handle.
+ * @tparam Other Scope of the second handle.
+ * @param lhs A valid handle.
+ * @param rhs A valid handle.
+ * @return False if both handles refer to the same registry and the same
+ * entity, true otherwise.
+ */
+template<typename... Args, typename... Other>
+[[nodiscard]] bool operator!=(const basic_handle<Args...> &lhs, const basic_handle<Other...> &rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+} // namespace entt
+
+#endif
+
+//////////////////// END OF external/entt/entity/handle.hpp ////////////////////
+
+//////////////////////// START OF src/Types/Ability.hpp ////////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+/** @brief Pokemon ability name */
+enum Ability : std::uint16_t {
+  // clang-format off
+  NO_ABILITY = 0, ADAPTABILITY, AERILATE, AFTERMATH, AIR_LOCK, ANALYTIC, ANGER_POINT, ANGER_SHELL, ANTICIPATION, ARENA_TRAP, ARMOR_TAIL, AROMA_VEIL, AS_ONE, AURA_BREAK, BAD_DREAMS, BALL_FETCH, BATTERY, BATTLE_ARMOR, BATTLE_BOND, BEADS_OF_RUIN, BEAST_BOOST, BERSERK, BIG_PECKS, BLAZE, BULLETPROOF, CHEEK_POUCH, CHILLING_NEIGH, CHLOROPHYLL, CLEAR_BODY, CLOUD_NINE, COLOR_CHANGE, COMATOSE, COMMANDER, COMPETITIVE, COMPOUND_EYES, CONTRARY, CORROSION, COSTAR, COTTON_DOWN, CUD_CHEW, CURIOUS_MEDICINE, CURSED_BODY, CUTE_CHARM, DAMP, DANCER, DARK_AURA, DAUNTLESS_SHIELD, DAZZLING, DEFEATIST, DEFIANT, DELTA_STREAM, DESOLATE_LAND, DISGUISE, DOWNLOAD, DRAGONS_MAW, DRIZZLE, DROUGHT, DRY_SKIN, EARTH_EATER, EARLY_BIRD, EFFECT_SPORE, ELECTRIC_SURGE, ELECTROMORPHOSIS, EMERGENCY_EXIT, FAIRY_AURA, FILTER, FLAME_BODY, FLARE_BOOST, FLASH_FIRE, FLOWER_GIFT, FLOWER_VEIL, FLUFFY, FORECAST, FOREWARN, FRIEND_GUARD, FRISK, FULL_METAL_BODY, FUR_COAT, GALE_WINGS, GALVANIZE, GLUTTONY, GOOD_AS_GOLD, GOOEY, GORILLA_TACTICS, GRASS_PELT, GRASSY_SURGE, GRIM_NEIGH, GUARD_DOG, GULP_MISSILE, GUTS, HADRON_ENGINE, HARVEST, HEALER, HEATPROOF, HEAVY_METAL, HONEY_GATHER, HUGE_POWER, HUNGER_SWITCH, HUSTLE, HYDRATION, HYPER_CUTTER, ICE_BODY, ICE_FACE, ICE_SCALES, ILLUMINATE, ILLUSION, IMMUNITY, IMPOSTER, INFILTRATOR, INNARDS_OUT, INNER_FOCUS, INSOMNIA, INTIMIDATE, INTREPID_SWORD, IRON_BARBS, IRON_FIST, JUSTIFIED, KEEN_EYE, KLUTZ, LEAF_GUARD, LEVITATE, LIBERO, LIGHT_METAL, LIGHTNING_ROD, LINGERING_AROMA, LIMBER, LIQUID_OOZE, LIQUID_VOICE, LONG_REACH, MAGIC_BOUNCE, MAGIC_GUARD, MAGICIAN, MAGMA_ARMOR, MAGNET_PULL, MARVEL_SCALE, MEGA_LAUNCHER, MERCILESS, MIMICRY, MINUS, MIRROR_ARMOR, MISTY_SURGE, MOLD_BREAKER, MOODY, MOTOR_DRIVE, MOXIE, MULTISCALE, MULTITYPE, MUMMY, MYCELIUM_MIGHT, NATURAL_CURE, NEUROFORCE, NEUTRALIZING_GAS, NO_GUARD, NORMALIZE, OBLIVIOUS, OPPORTUNIST, ORICHALCUM_PULSE, OVERCOAT, OVERGROW, OWN_TEMPO, PARENTAL_BOND, PASTEL_VEIL, PERISH_BODY, PICKPOCKET, PICKUP, PIXILATE, PLUS, POISON_HEAL, POISON_POINT, POISON_TOUCH, POWER_CONSTRUCT, POWER_OF_ALCHEMY, POWER_SPOT, PRANKSTER, PRESSURE, PRIMORDIAL_SEA, PRISM_ARMOR, PROPELLER_TAIL, PROTEAN, PROTOSYNTHESIS, PSYCHIC_SURGE, PUNK_ROCK, PURE_POWER, PURIFYING_SALT, QUARK_DRIVE, QUEENLY_MAJESTY, QUICK_DRAW, QUICK_FEET, RAIN_DISH, RATTLED, RECEIVER, RECKLESS, REFRIGERATE, REGENERATOR, RIPEN, RIVALRY, RKS_SYSTEM, ROCK_HEAD, ROCKY_PAYLOAD, ROUGH_SKIN, RUN_AWAY, SAND_FORCE, SAND_RUSH, SAND_SPIT, SAND_STREAM, SAND_VEIL, SAP_SIPPER, SCHOOLING, SCRAPPY, SCREEN_CLEANER, SEED_SOWER, SERENE_GRACE, SHADOW_SHIELD, SHADOW_TAG, SHARPNESS, SHED_SKIN, SHEER_FORCE, SHELL_ARMOR, SHIELD_DUST, SHIELDS_DOWN, SIMPLE, SKILL_LINK, SLOW_START, SLUSH_RUSH, SNIPER, SNOW_CLOAK, SNOW_WARNING, SOLAR_POWER, SOLID_ROCK, SOUL_HEART, SOUNDPROOF, SPEED_BOOST, STAKEOUT, STALL, STALWART, STAMINA, STANCE_CHANGE, STATIC, STEADFAST, STEAM_ENGINE, STEELWORKER, STEELY_SPIRIT, STENCH, STICKY_HOLD, STORM_DRAIN, STRONG_JAW, STURDY, SUCTION_CUPS, SUPER_LUCK, SUPREME_OVERLORD, SURGE_SURFER, SWARM, SWEET_VEIL, SWIFT_SWIM, SYMBIOSIS, SYNCHRONIZE, SWORD_OF_RUIN, TABLETS_OF_RUIN, TANGLED_FEET, TANGLING_HAIR, TECHNICIAN, TELEPATHY, TERAVOLT, THERMAL_EXCHANGE, THICK_FAT, TINTED_LENS, TORRENT, TOUGH_CLAWS, TOXIC_BOOST, TOXIC_DEBRIS, TRACE, TRANSISTOR, TRIAGE, TRUANT, TURBOBLAZE, UNAWARE, UNBURDEN, UNNERVE, UNSEEN_FIST, VESSEL_OF_RUIN, VICTORY_STAR, VITAL_SPIRIT, VOLT_ABSORB, WANDERING_SPIRIT, WATER_ABSORB, WATER_BUBBLE, WATER_COMPACTION, WATER_VEIL, WEAK_ARMOR, WELL_BAKED_BODY, WHITE_SMOKE, WIMP_OUT, WIND_POWER, WIND_RIDER, WONDER_GUARD, WONDER_SKIN, ZEN_MODE, ZERO_TO_HERO, ABILITY_TOTAL,
+  // clang-format on
+};
+}  // namespace pokesim::dex
+
+///////////////////////// END OF src/Types/Ability.hpp /////////////////////////
+
+//////////////// START OF src/Components/Names/AbilityNames.hpp ////////////////
+
+namespace pokesim {
+struct AbilityName {
+  dex::Ability name = dex::NO_ABILITY;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/AbilityNames.hpp /////////////////
+
+//////////////// START OF src/Components/DexData/Abilities.hpp /////////////////
+
+namespace pokesim {
+// Contains one of the standard abilities a species can have
+struct PrimaryAbility {
+  dex::Ability ability = dex::NO_ABILITY;
+};
+
+// Contains one of the standard abilities a species can have if the species can have two standard abilities
+struct SecondaryAbility {
+  dex::Ability ability = dex::NO_ABILITY;
+};
+
+// Contains The hidden ability a species has
+struct HiddenAbility {
+  dex::Ability ability = dex::NO_ABILITY;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/DexData/Abilities.hpp //////////////////
+
+//////////////// START OF src/Components/DexData/BaseStats.hpp /////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+// Contains all of the base stats of a species
+struct BaseStats {
+  std::uint8_t hp = 1;
+  std::uint8_t atk = 1;
+  std::uint8_t def = 1;
+  std::uint8_t spa = 1;
+  std::uint8_t spd = 1;
+  std::uint8_t spe = 1;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/DexData/BaseStats.hpp //////////////////
+
+///////////////////////// START OF src/Types/Type.hpp //////////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+/** @brief Pokemon type name */
+enum Type : std::uint8_t {
+  // clang-format off
+  NO_TYPE = 0, NORMAL_TYPE, FIGHTING_TYPE, FLYING_TYPE, POISON_TYPE, GROUND_TYPE, ROCK_TYPE, BUG_TYPE, GHOST_TYPE, STEEL_TYPE, FIRE_TYPE, WATER_TYPE, GRASS_TYPE, ELECTRIC_TYPE, PSYCHIC_TYPE, ICE_TYPE, DRAGON_TYPE, DARK_TYPE, FAIRY_TYPE, TYPE_TOTAL
+  // clang-format on
+};
+}  // namespace pokesim::dex
+
+////////////////////////// END OF src/Types/Type.hpp ///////////////////////////
+
+///////////////// START OF src/Components/Names/TypeNames.hpp //////////////////
+
+namespace pokesim {
+struct TypeName {
+  dex::Type name = dex::NO_TYPE;
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/Names/TypeNames.hpp ///////////////////
+
+/////////////// START OF src/Components/DexData/SpeciesTypes.hpp ///////////////
+
+namespace pokesim {
+// Contains the types a species has
+struct SpeciesTypes {
+  dex::Type t1 = dex::NO_TYPE;
+  dex::Type t2 = dex::NO_TYPE;
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/DexData/SpeciesTypes.hpp ////////////////
+
+//////////////////////// START OF src/Types/Species.hpp ////////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+
+/**
+ * @brief Pokemon and Pokemon form name
+ *
+ * @details Pokemon that have multiple forms will have their base form and alternate forms listed here.
+ * However, if none of a Pokemon's forms are cosmetic (i.e. change nothing expect appearance), the forms cannot be
+ * changed during battle, and no true base form exists, then the Pokemon's species name without a form specifier is
+ * omitted. For example:
+ *  - `VENUSAUR`, `MEGA_VENUSAUR`, and `GIGANTAMAX_VENUSAUR` are all listed because Venusaur changes into the other
+ * forms mid-battle
+ *  - `GASTRODON`, `WEST_SEA_GASTRODON`, and `EAST_SEA_GASTRODON` are all listed because although Gastrodon's forms
+ * are permanent, their only difference is how they look
+ *  - `PLANT_CLOAK_WORMADAM`, `SANDY_CLOAK_WORMADAM`, and `TRASH_CLOAK_WORMADAM` listed while `WORMADAM` is not
+ * because the Wormadam forms have different types, stats, and moves; their forms are permanent; and there is no base
+ * Wormadam
+ */
+enum Species : std::uint16_t {
+  // clang-format off
+  MISSING_NO = 0, BULBASAUR, IVYSAUR, VENUSAUR, MEGA_VENUSAUR, GIGANTAMAX_VENUSAUR, CHARMANDER, CHARMELEON, CHARIZARD, MEGA_CHARIZARD_X, MEGA_CHARIZARD_Y, GIGANTAMAX_CHARIZARD, SQUIRTLE, WARTORTLE, BLASTOISE, MEGA_BLASTOISE, GIGANTAMAX_BLASTOISE, CATERPIE, METAPOD, BUTTERFREE, GIGANTAMAX_BUTTERFREE, WEEDLE, KAKUNA, BEEDRILL, MEGA_BEEDRILL, PIDGEY, PIDGEOTTO, PIDGEOT, MEGA_PIDGEOT, RATTATA, ALOLAN_RATTATA, RATICATE, ALOLAN_RATICATE, TOTEM_ALOLAN_RATICATE, SPEAROW, FEAROW, EKANS, ARBOK, PIKACHU, COSPLAY_PIKACHU, PIKACHU_ROCK_STAR, PIKACHU_BELLE, PIKACHU_POP_STAR, PIKACHU_PHD, PIKACHU_LIBRE, ORIGINAL_CAP_PIKACHU, HOENN_CAP_PIKACHU, SINNOH_CAP_PIKACHU, UNOVA_CAP_PIKACHU, KALOS_CAP_PIKACHU, ALOLA_CAP_PIKACHU, PARTNER_CAP_PIKACHU, STARTER_PIKACHU, GIGANTAMAX_PIKACHU, WORLD_CAP_PIKACHU, RAICHU, ALOLAN_RAICHU, SANDSHREW, ALOLAN_SANDSHREW, SANDSLASH, ALOLAN_SANDSLASH, NIDORAN_FEMALE, NIDORINA, NIDOQUEEN, NIDORAN_MALE, NIDORINO, NIDOKING, CLEFAIRY, CLEFABLE, VULPIX, ALOLAN_VULPIX, NINETALES, ALOLAN_NINETALES, JIGGLYPUFF, WIGGLYTUFF, ZUBAT, GOLBAT, ODDISH, GLOOM, VILEPLUME, PARAS, PARASECT, VENONAT, VENOMOTH, DIGLETT, ALOLAN_DIGLETT, DUGTRIO, ALOLAN_DUGTRIO, MEOWTH, ALOLAN_MEOWTH, GALARIAN_MEOWTH, GIGANTAMAX_MEOWTH, PERSIAN, ALOLAN_PERSIAN, PSYDUCK, GOLDUCK, MANKEY, PRIMEAPE, HISUIAN_GROWLITHE, GROWLITHE, HISUIAN_ARCANINE, ARCANINE, POLIWAG, POLIWHIRL, POLIWRATH, ABRA, KADABRA, ALAKAZAM, MEGA_ALAKAZAM, MACHOP, MACHOKE, MACHAMP, GIGANTAMAX_MACHAMP, BELLSPROUT, WEEPINBELL, VICTREEBEL, TENTACOOL, TENTACRUEL, GEODUDE, ALOLAN_GEODUDE, GRAVELER, ALOLAN_GRAVELER, GOLEM, ALOLAN_GOLEM, PONYTA, GALARIAN_PONYTA, RAPIDASH, GALARIAN_RAPIDASH, SLOWPOKE, GALARIAN_SLOWPOKE, SLOWBRO, MEGA_SLOWBRO, GALARIAN_SLOWBRO, MAGNEMITE, MAGNETON, FARFETCH_D, GALARIAN_FARFETCH_D, DODUO, DODRIO, SEEL, DEWGONG, GRIMER, ALOLAN_GRIMER, MUK, ALOLAN_MUK, SHELLDER, CLOYSTER, GASTLY, HAUNTER, GENGAR, MEGA_GENGAR, GIGANTAMAX_GENGAR, ONIX, DROWZEE, HYPNO, KRABBY, KINGLER, GIGANTAMAX_KINGLER, VOLTORB, HISUIAN_VOLTORB, ELECTRODE, HISUIAN_ELECTRODE, EXEGGCUTE, EXEGGUTOR, ALOLAN_EXEGGUTOR, CUBONE, MAROWAK, ALOLAN_MAROWAK, TOTEM_ALOLAN_MAROWAK, HITMONLEE, HITMONCHAN, LICKITUNG, KOFFING, WEEZING, GALARIAN_WEEZING, RHYHORN, RHYDON, CHANSEY, TANGELA, KANGASKHAN, MEGA_KANGASKHAN, HORSEA, SEADRA, GOLDEEN, SEAKING, STARYU, STARMIE, MR_MIME, GALARIAN_MR_MIME, SCYTHER, JYNX, ELECTABUZZ, MAGMAR, PINSIR, MEGA_PINSIR, TAUROS, PALDEAN_TAUROS_COMBAT_BREAD, PALDEAN_TAUROS_BLAZE_BREAD, PALDEAN_TAUROS_AQUA_BREAD, MAGIKARP, GYARADOS, MEGA_GYARADOS, LAPRAS, GIGANTAMAX_LAPRAS, DITTO, EEVEE, STARTER_EEVEE, GIGANTAMAX_EEVEE, VAPOREON, JOLTEON, FLAREON, PORYGON, OMANYTE, OMASTAR, KABUTO, KABUTOPS, AERODACTYL, MEGA_AERODACTYL, SNORLAX, GIGANTAMAX_SNORLAX, ARTICUNO, GALARIAN_ARTICUNO, ZAPDOS, GALARIAN_ZAPDOS, MOLTRES, GALARIAN_MOLTRES, DRATINI, DRAGONAIR, DRAGONITE, MEWTWO, MEGA_MEWTWO_X, MEGA_MEWTWO_Y, MEW, CHIKORITA, BAYLEEF, MEGANIUM, CYNDAQUIL, QUILAVA, HISUIAN_TYPHLOSION, TYPHLOSION, TOTODILE, CROCONAW, FERALIGATR, SENTRET, FURRET, HOOTHOOT, NOCTOWL, LEDYBA, LEDIAN, SPINARAK, ARIADOS, CROBAT, CHINCHOU, LANTURN, PICHU, SPIKY_EARED_PICHU, CLEFFA, IGGLYBUFF, TOGEPI, TOGETIC, NATU, XATU, MAREEP, FLAAFFY, AMPHAROS, MEGA_AMPHAROS, BELLOSSOM, MARILL, AZUMARILL, SUDOWOODO, POLITOED, HOPPIP, SKIPLOOM, JUMPLUFF, AIPOM, SUNKERN, SUNFLORA, YANMA, WOOPER, PALDEAN_WOOPER, QUAGSIRE, ESPEON, UMBREON, MURKROW, SLOWKING, GALARIAN_SLOWKING, MISDREAVUS, UNOWN, UNOWN_A, UNOWN_B, UNOWN_C, UNOWN_D, UNOWN_E, UNOWN_F, UNOWN_G, UNOWN_H, UNOWN_I, UNOWN_J, UNOWN_K, UNOWN_L, UNOWN_M, UNOWN_N, UNOWN_O, UNOWN_P, UNOWN_Q, UNOWN_R, UNOWN_S, UNOWN_T, UNOWN_U, UNOWN_V, UNOWN_W, UNOWN_X, UNOWN_Y, UNOWN_Z, UNOWN_EXCLAMATION, UNOWN_QUESTION, WOBBUFFET, GIRAFARIG, PINECO, FORRETRESS, DUNSPARCE, GLIGAR, STEELIX, MEGA_STEELIX, SNUBBULL, GRANBULL, QWILFISH, HISUIAN_QWILFISH, SCIZOR, MEGA_SCIZOR, SHUCKLE, HERACROSS, MEGA_HERACROSS, HISUIAN_SNEASEL, SNEASEL, TEDDIURSA, URSARING, SLUGMA, MAGCARGO, SWINUB, PILOSWINE, CORSOLA, GALARIAN_CORSOLA, REMORAID, OCTILLERY, DELIBIRD, MANTINE, SKARMORY, HOUNDOUR, HOUNDOOM, MEGA_HOUNDOOM, KINGDRA, PHANPY, DONPHAN, PORYGON2, STANTLER, SMEARGLE, TYROGUE, HITMONTOP, SMOOCHUM, ELEKID, MAGBY, MILTANK, BLISSEY, RAIKOU, ENTEI, SUICUNE, LARVITAR, PUPITAR, TYRANITAR, MEGA_TYRANITAR, LUGIA, HO_OH, CELEBI, TREECKO, GROVYLE, SCEPTILE, MEGA_SCEPTILE, TORCHIC, COMBUSKEN, BLAZIKEN, MEGA_BLAZIKEN, MUDKIP, MARSHTOMP, SWAMPERT, MEGA_SWAMPERT, POOCHYENA, MIGHTYENA, ZIGZAGOON, GALARIAN_ZIGZAGOON, LINOONE, GALARIAN_LINOONE, WURMPLE, SILCOON, BEAUTIFLY, CASCOON, DUSTOX, LOTAD, LOMBRE, LUDICOLO, SEEDOT, NUZLEAF, SHIFTRY, TAILLOW, SWELLOW, WINGULL, PELIPPER, RALTS, KIRLIA, GARDEVOIR, MEGA_GARDEVOIR, SURSKIT, MASQUERAIN, SHROOMISH, BRELOOM, SLAKOTH, VIGOROTH, SLAKING, NINCADA, NINJASK, SHEDINJA, WHISMUR, LOUDRED, EXPLOUD, MAKUHITA, HARIYAMA, AZURILL, NOSEPASS, SKITTY, DELCATTY, SABLEYE, MEGA_SABLEYE, MAWILE, MEGA_MAWILE, ARON, LAIRON, AGGRON, MEGA_AGGRON, MEDITITE, MEDICHAM, MEGA_MEDICHAM, ELECTRIKE, MANECTRIC, MEGA_MANECTRIC, PLUSLE, MINUN, VOLBEAT, ILLUMISE, ROSELIA, GULPIN, SWALOT, CARVANHA, SHARPEDO, MEGA_SHARPEDO, WAILMER, WAILORD, NUMEL, CAMERUPT, MEGA_CAMERUPT, TORKOAL, SPOINK, GRUMPIG, SPINDA, TRAPINCH, VIBRAVA, FLYGON, CACNEA, CACTURNE, SWABLU, ALTARIA, MEGA_ALTARIA, ZANGOOSE, SEVIPER, LUNATONE, SOLROCK, BARBOACH, WHISCASH, CORPHISH, CRAWDAUNT, BALTOY, CLAYDOL, LILEEP, CRADILY, ANORITH, ARMALDO, FEEBAS, MILOTIC, CASTFORM, SUNNY_CASTFORM, RAINY_CASTFORM, SNOWY_CASTFORM, KECLEON, SHUPPET, BANETTE, MEGA_BANETTE, DUSKULL, DUSCLOPS, TROPIUS, CHIMECHO, ABSOL, MEGA_ABSOL, WYNAUT, SNORUNT, GLALIE, MEGA_GLALIE, SPHEAL, SEALEO, WALREIN, CLAMPERL, HUNTAIL, GOREBYSS, RELICANTH, LUVDISC, BAGON, SHELGON, SALAMENCE, MEGA_SALAMENCE, BELDUM, METANG, METAGROSS, MEGA_METAGROSS, REGIROCK, REGICE, REGISTEEL, LATIAS, MEGA_LATIAS, LATIOS, MEGA_LATIOS, KYOGRE, PRIMAL_KYOGRE, GROUDON, PRIMAL_GROUDON, RAYQUAZA, MEGA_RAYQUAZA, JIRACHI, DEOXYS, ATTACK_DEOXYS, DEFENSE_DEOXYS, SPEED_DEOXYS, TURTWIG, GROTLE, TORTERRA, CHIMCHAR, MONFERNO, INFERNAPE, PIPLUP, PRINPLUP, EMPOLEON, STARLY, STARAVIA, STARAPTOR, BIDOOF, BIBAREL, KRICKETOT, KRICKETUNE, SHINX, LUXIO, LUXRAY, BUDEW, ROSERADE, CRANIDOS, RAMPARDOS, SHIELDON, BASTIODON, BURMY, PLANT_CLOAK_BURMY, SANDY_CLOAK_BURMY, TRASH_CLOAK_BURMY, PLANT_CLOAK_WORMADAM, SANDY_CLOAK_WORMADAM, TRASH_CLOAK_WORMADAM, MOTHIM, COMBEE, VESPIQUEN, PACHIRISU, BUIZEL, FLOATZEL, CHERUBI, CHERRIM, CHERRIM_OVERCAST, CHERRIM_SUNSHINE, SHELLOS, WEST_SEA_SHELLOS, EAST_SEA_SHELLOS, GASTRODON, WEST_SEA_GASTRODON, EAST_SEA_GASTRODON, AMBIPOM, DRIFLOON, DRIFBLIM, BUNEARY, LOPUNNY, MEGA_LOPUNNY, MISMAGIUS, HONCHKROW, GLAMEOW, PURUGLY, CHINGLING, STUNKY, SKUNTANK, BRONZOR, BRONZONG, BONSLY, MIME_JR, HAPPINY, CHATOT, SPIRITOMB, GIBLE, GABITE, GARCHOMP, MEGA_GARCHOMP, MUNCHLAX, RIOLU, LUCARIO, MEGA_LUCARIO, HIPPOPOTAS, HIPPOWDON, SKORUPI, DRAPION, CROAGUNK, TOXICROAK, CARNIVINE, FINNEON, LUMINEON, MANTYKE, SNOVER, ABOMASNOW, MEGA_ABOMASNOW, WEAVILE, MAGNEZONE, LICKILICKY, RHYPERIOR, TANGROWTH, ELECTIVIRE, MAGMORTAR, TOGEKISS, YANMEGA, LEAFEON, GLACEON, GLISCOR, MAMOSWINE, PORYGON_Z, GALLADE, MEGA_GALLADE, PROBOPASS, DUSKNOIR, FROSLASS, ROTOM, HEAT_ROTOM, WASH_ROTOM, FROST_ROTOM, FAN_ROTOM, MOW_ROTOM, UXIE, MESPRIT, AZELF, DIALGA, DIALGA_ORIGIN, PALKIA, PALKIA_ORIGIN, HEATRAN, REGIGIGAS, GIRATINA_ALTERED, GIRATINA_ORIGIN, CRESSELIA, PHIONE, MANAPHY, DARKRAI, SHAYMIN, SHAYMIN_LAND, SHAYMIN_SKY, ARCEUS, ARCEUS_BUG, ARCEUS_DARK, ARCEUS_DRAGON, ARCEUS_ELECTRIC, ARCEUS_FAIRY, ARCEUS_FIGHTING, ARCEUS_FIRE, ARCEUS_FLYING, ARCEUS_GHOST, ARCEUS_GRASS, ARCEUS_GROUND, ARCEUS_ICE, ARCEUS_POISON, ARCEUS_PSYCHIC, ARCEUS_ROCK, ARCEUS_STEEL, ARCEUS_WATER, VICTINI, SNIVY, SERVINE, SERPERIOR, TEPIG, PIGNITE, EMBOAR, OSHAWOTT, DEWOTT, HISUIAN_SAMUROTT, SAMUROTT, PATRAT, WATCHOG, LILLIPUP, HERDIER, STOUTLAND, PURRLOIN, LIEPARD, PANSAGE, SIMISAGE, PANSEAR, SIMISEAR, PANPOUR, SIMIPOUR, MUNNA, MUSHARNA, PIDOVE, TRANQUILL, UNFEZANT, BLITZLE, ZEBSTRIKA, ROGGENROLA, BOLDORE, GIGALITH, WOOBAT, SWOOBAT, DRILBUR, EXCADRILL, AUDINO, MEGA_AUDINO, TIMBURR, GURDURR, CONKELDURR, TYMPOLE, PALPITOAD, SEISMITOAD, THROH, SAWK, SEWADDLE, SWADLOON, LEAVANNY, VENIPEDE, WHIRLIPEDE, SCOLIPEDE, COTTONEE, WHIMSICOTT, PETILIL, LILLIGANT, HISUIAN_LILLIGANT, RED_STRIPED_BASCULIN, BLUE_STRIPED_BASCULIN, WHITE_STRIPED_BASCULIN, SANDILE, KROKOROK, KROOKODILE, DARUMAKA, GALARIAN_DARUMAKA, DARMANITAN, ZEN_MODE_DARMANITAN, GALARIAN_DARMANITAN, GALARIAN_ZEN_MODE_DARMANITAN, MARACTUS, DWEBBLE, CRUSTLE, SCRAGGY, SCRAFTY, SIGILYPH, YAMASK, GALARIAN_YAMASK, COFAGRIGUS, TIRTOUGA, CARRACOSTA, ARCHEN, ARCHEOPS, TRUBBISH, GARBODOR, GIGANTAMAX_GARBODOR, ZORUA, HISUIAN_ZORUA, HISUIAN_ZOROARK, ZOROARK, MINCCINO, CINCCINO, GOTHITA, GOTHORITA, GOTHITELLE, SOLOSIS, DUOSION, REUNICLUS, DUCKLETT, SWANNA, VANILLITE, VANILLISH, VANILLUXE, DEERLING, DEERLING_SPRING, DEERLING_SUMMER, DEERLING_AUTUMN, DEERLING_WINTER, SAWSBUCK, SAWSBUCK_SPRING, SAWSBUCK_SUMMER, SAWSBUCK_AUTUMN, SAWSBUCK_WINTER, EMOLGA, KARRABLAST, ESCAVALIER, FOONGUS, AMOONGUSS, FRILLISH, JELLICENT, ALOMOMOLA, JOLTIK, GALVANTULA, FERROSEED, FERROTHORN, KLINK, KLANG, KLINKLANG, TYNAMO, EELEKTRIK, EELEKTROSS, ELGYEM, BEHEEYEM, LITWICK, LAMPENT, CHANDELURE, AXEW, FRAXURE, HAXORUS, CUBCHOO, BEARTIC, CRYOGONAL, SHELMET, ACCELGOR, STUNFISK, GALARIAN_STUNFISK, MIENFOO, MIENSHAO, DRUDDIGON, GOLETT, GOLURK, PAWNIARD, BISHARP, BOUFFALANT, RUFFLET, HISUIAN_BRAVIARY, BRAVIARY, VULLABY, MANDIBUZZ, HEATMOR, DURANT, DEINO, ZWEILOUS, HYDREIGON, LARVESTA, VOLCARONA, COBALION, TERRAKION, VIRIZION, INCARNATE_TORNADUS, TORNADUS_THERIAN, INCARNATE_THUNDURUS, THUNDURUS_THERIAN, RESHIRAM, ZEKROM, INCARNATE_LANDORUS, LANDORUS_THERIAN, KYUREM, BLACK_KYUREM, WHITE_KYUREM, KELDEO, RESOLUTE_KELDEO, ARIA_MELOETTA, PIROUETTE_MELOETTA, GENESECT, DOUSE_DRIVE_GENESECT, SHOCK_DRIVE_GENESECT, BURN_DRIVE_GENESECT, CHILL_DRIVE_GENESECT, CHESPIN, QUILLADIN, CHESNAUGHT, FENNEKIN, BRAIXEN, DELPHOX, FROAKIE, FROGADIER, GRENINJA, ASH_GRENINJA, BUNNELBY, DIGGERSBY, FLETCHLING, FLETCHINDER, TALONFLAME, SCATTERBUG, SPEWPA, VIVILLON, MEADOW_PATTERN_VIVILLON, ARCHIPELAGO_PATTERN_VIVILLON, CONTINENTAL_PATTERN_VIVILLON, ELEGANT_PATTERN_VIVILLON, GARDEN_PATTERN_VIVILLON, HIGH_PLAINS_PATTERN_VIVILLON, ICY_SNOW_PATTERN_VIVILLON, JUNGLE_PATTERN_VIVILLON, MARINE_PATTERN_VIVILLON, MODERN_PATTERN_VIVILLON, MONSOON_PATTERN_VIVILLON, OCEAN_PATTERN_VIVILLON, POLAR_PATTERN_VIVILLON, RIVER_PATTERN_VIVILLON, SANDSTORM_PATTERN_VIVILLON, SAVANNA_PATTERN_VIVILLON, SUN_PATTERN_VIVILLON, TUNDRA_PATTERN_VIVILLON, FANCY_PATTERN_VIVILLON, POKEBALL_PATTERN_VIVILLON, LITLEO, PYROAR, FLABEBE, RED_FLOWER_FLABEBE, BLUE_FLOWER_FLABEBE, ORANGE_FLOWER_FLABEBE, WHITE_FLOWER_FLABEBE, YELLOW_FLOWER_FLABEBE, FLOETTE, RED_FLOWER_FLOETTE, BLUE_FLOWER_FLOETTE, ORANGE_FLOWER_FLOETTE, WHITE_FLOWER_FLOETTE, YELLOW_FLOWER_FLOETTE, ETERNAL_FLOWER_FLOETTE, FLORGES, RED_FLOWER_FLORGES, BLUE_FLOWER_FLORGES, ORANGE_FLOWER_FLORGES, WHITE_FLOWER_FLORGES, YELLOW_FLOWER_FLORGES, SKIDDO, GOGOAT, PANCHAM, PANGORO, FURFROU, NATURAL_FURFROU, DANDY_TRIM_FURFROU, DEBUTANTE_TRIM_FURFROU, DIAMOND_TRIM_FURFROU, HEART_TRIM_FURFROU, KABUKI_TRIM_FURFROU, LA_REINE_TRIM_FURFROU, MATRON_TRIM_FURFROU, PHARAOH_TRIM_FURFROU, STAR_TRIM_FURFROU, ESPURR, MALE_MEOWSTIC, FEMALE_MEOWSTIC, HONEDGE, DOUBLADE, AEGISLASH, SHIELD_AEGISLASH, BLADE_AEGISLASH, SPRITZEE, AROMATISSE, SWIRLIX, SLURPUFF, INKAY, MALAMAR, BINACLE, BARBARACLE, SKRELP, DRAGALGE, CLAUNCHER, CLAWITZER, HELIOPTILE, HELIOLISK, TYRUNT, TYRANTRUM, AMAURA, AURORUS, SYLVEON, HAWLUCHA, DEDENNE, CARBINK, GOOMY, HISUIAN_SLIGGOO, SLIGGOO, HISUIAN_GOODRA, GOODRA, KLEFKI, PHANTUMP, TREVENANT, AVERAGE_SIZE_PUMPKABOO, SMALL_SIZE_PUMPKABOO, LARGE_SIZE_PUMPKABOO, SUPER_SIZE_PUMPKABOO, AVERAGE_SIZE_GOURGEIST, SMALL_SIZE_GOURGEIST, LARGE_SIZE_GOURGEIST, SUPER_SIZE_GOURGEIST, BERGMITE, AVALUGG, HISUIAN_AVALUGG, NOIBAT, NOIVERN, XERNEAS, YVELTAL, ZYGARDE_50, ZYGARDE_10, ZYGARDE_COMPLETE, DIANCIE, MEGA_DIANCIE, HOOPA_CONFINED, HOOPA_UNBOUND, VOLCANION, ROWLET, DARTRIX, HISUIAN_DECIDUEYE, DECIDUEYE, LITTEN, TORRACAT, INCINEROAR, POPPLIO, BRIONNE, PRIMARINA, PIKIPEK, TRUMBEAK, TOUCANNON, YUNGOOS, GUMSHOOS, TOTEM_GUMSHOOS, GRUBBIN, CHARJABUG, VIKAVOLT, TOTEM_VIKAVOLT, CRABRAWLER, CRABOMINABLE, BAILE_STYLE_ORICORIO, POM_POM_STYLE_ORICORIO, PA_U_STYLE_ORICORIO, SENSU_STYLE_ORICORIO, CUTIEFLY, RIBOMBEE, TOTEM_RIBOMBEE, ROCKRUFF, MIDDAY_ROCKRUFF, MIDDAY_LYCANROC, MIDNIGHT_LYCANROC, DUSK_LYCANROC, WISHIWASHI, SOLO_WISHIWASHI, SCHOOL_WISHIWASHI, MAREANIE, TOXAPEX, MUDBRAY, MUDSDALE, DEWPIDER, ARAQUANID, TOTEM_ARAQUANID, FOMANTIS, LURANTIS, TOTEM_LURANTIS, MORELULL, SHIINOTIC, SALANDIT, SALAZZLE, TOTEM_SALAZZLE, STUFFUL, BEWEAR, BOUNSWEET, STEENEE, TSAREENA, COMFEY, ORANGURU, PASSIMIAN, WIMPOD, GOLISOPOD, SANDYGAST, PALOSSAND, PYUKUMUKU, TYPE_NULL, SILVALLY, SILVALLY_BUG, SILVALLY_DARK, SILVALLY_DRAGON, SILVALLY_ELECTRIC, SILVALLY_FAIRY, SILVALLY_FIGHTING, SILVALLY_FIRE, SILVALLY_FLYING, SILVALLY_GHOST, SILVALLY_GRASS, SILVALLY_GROUND, SILVALLY_ICE, SILVALLY_POISON, SILVALLY_PSYCHIC, SILVALLY_ROCK, SILVALLY_STEEL, SILVALLY_WATER, MINIOR, CORE_MINIOR, RED_CORE_MINIOR, ORANGE_CORE_MINIOR, YELLOW_CORE_MINIOR, GREEN_CORE_MINIOR, BLUE_CORE_MINIOR, INDIGO_CORE_MINIOR, VIOLET_CORE_MINIOR, METEOR_MINIOR, KOMALA, TURTONATOR, TOGEDEMARU, TOTEM_TOGEDEMARU, MIMIKYU, MIMIKYU_BUSTED, TOTEM_MIMIKYU, BUSTED_TOTEM_MIMIKYU, BRUXISH, DRAMPA, DHELMISE, JANGMO_O, HAKAMO_O, KOMMO_O, TOTEM_KOMMO_O, TAPU_KOKO, TAPU_LELE, TAPU_BULU, TAPU_FINI, COSMOG, COSMOEM, SOLGALEO, LUNALA, NIHILEGO, BUZZWOLE, PHEROMOSA, XURKITREE, CELESTEELA, KARTANA, GUZZLORD, NECROZMA, DUSK_MANE_NECROZMA, DAWN_WINGS_NECROZMA, ULTRA_NECROZMA, MAGEARNA, ORIGINAL_COLOR_MAGEARNA, MARSHADOW, POIPOLE, NAGANADEL, STAKATAKA, BLACEPHALON, ZERAORA, MELTAN, MELMETAL, GIGANTAMAX_MELMETAL, GROOKEY, THWACKEY, RILLABOOM, GIGANTAMAX_RILLABOOM, SCORBUNNY, RABOOT, CINDERACE, GIGANTAMAX_CINDERACE, SOBBLE, DRIZZILE, INTELEON, GIGANTAMAX_INTELEON, SKWOVET, GREEDENT, ROOKIDEE, CORVISQUIRE, CORVIKNIGHT, GIGANTAMAX_CORVIKNIGHT, BLIPBUG, DOTTLER, ORBEETLE, GIGANTAMAX_ORBEETLE, NICKIT, THIEVUL, GOSSIFLEUR, ELDEGOSS, WOOLOO, DUBWOOL, CHEWTLE, DREDNAW, GIGANTAMAX_DREDNAW, YAMPER, BOLTUND, ROLYCOLY, CARKOL, COALOSSAL, GIGANTAMAX_COALOSSAL, APPLIN, FLAPPLE, GIGANTAMAX_FLAPPLE, APPLETUN, GIGANTAMAX_APPLETUN, SILICOBRA, SANDACONDA, GIGANTAMAX_SANDACONDA, CRAMORANT, CRAMORANT_GULPING, CRAMORANT_GORGING, ARROKUDA, BARRASKEWDA, TOXEL, TOXTRICITY_AMPED, TOXTRICITY_LOW_KEY, GIGANTAMAX_TOXTRICITY_AMPED, GIGANTAMAX_TOXTRICITY_LOW_KEY, SIZZLIPEDE, CENTISKORCH, GIGANTAMAX_CENTISKORCH, CLOBBOPUS, GRAPPLOCT, SINISTEA, ANTIQUE_SINISTEA, POLTEAGEIST, ANTIQUE_POLTEAGEIST, HATENNA, HATTREM, HATTERENE, GIGANTAMAX_HATTERENE, IMPIDIMP, MORGREM, GRIMMSNARL, GIGANTAMAX_GRIMMSNARL, OBSTAGOON, PERRSERKER, CURSOLA, SIRFETCH_D, MR_RIME, RUNERIGUS, MILCERY, ALCREMIE, VANILLA_CREAM_ALCREMIE, RUBY_CREAM_ALCREMIE, MATCHA_CREAM_ALCREMIE, MINT_CREAM_ALCREMIE, LEMON_CREAM_ALCREMIE, SALTED_CREAM_ALCREMIE, RUBY_SWIRL_ALCREMIE, CARAMEL_SWIRL_ALCREMIE, RAINBOW_SWIRL_ALCREMIE, GIGANTAMAX_ALCREMIE, FALINKS, PINCURCHIN, SNOM, FROSMOTH, STONJOURNER, EISCUE, ICE_FACE_EISCUE, NOICE_FACE_EISCUE, MALE_INDEEDEE, FEMALE_INDEEDEE, MORPEKO, FULL_BELLY_MODE_MORPEKO, HANGRY_MODE_MORPEKO, CUFANT, COPPERAJAH, GIGANTAMAX_COPPERAJAH, DRACOZOLT, ARCTOZOLT, DRACOVISH, ARCTOVISH, DURALUDON, GIGANTAMAX_DURALUDON, DREEPY, DRAKLOAK, DRAGAPULT, HERO_OF_MANY_BATTLES_ZACIAN, CROWNED_SWORD_ZACIAN, HERO_OF_MANY_BATTLES_ZAMAZENTA, CROWNED_SHIELD_ZAMAZENTA, ETERNATUS, ETERNAMAX_ETERNATUS, KUBFU, SINGLE_STRIKE_STYLE_URSHIFU, RAPID_STRIKE_STYLE_URSHIFU, GIGANTAMAX_SINGLE_STRIKE_STYLE_URSHIFU, GIGANTAMAX_RAPID_STRIKE_STYLE_URSHIFU, ZARUDE, DADA_ZARUDE, REGIELEKI, REGIDRAGO, GLASTRIER, SPECTRIER, CALYREX, ICE_RIDER_CALYREX, SHADOW_RIDER_CALYREX, WYRDEER, KLEAVOR, URSALUNA, MALE_BASCULEGION, FEMALE_BASCULEGION, SNEASLER, OVERQWIL, INCARNATE_ENAMORUS, ENAMORUS_THERIAN, SPRIGATITO, FLORAGATO, MEOWSCARADA, FUECOCO, CROCALOR, SKELEDIRGE, QUAXLY, QUAXWELL, QUAQUAVAL, LECHONK, MALE_OINKOLOGNE, FEMALE_OINKOLOGNE, TAROUNTULA, SPIDOPS, NYMBLE, LOKIX, PAWMI, PAWMO, PAWMOT, TANDEMAUS, MAUSHOLD, FAMILY_OF_THREE_MAUSHOLD, FAMILY_OF_FOUR_MAUSHOLD, FIDOUGH, DACHSBUN, SMOLIV, DOLLIV, ARBOLIVA, GREEN_PLUMAGE_SQUAWKABILLY, BLUE_PLUMAGE_SQUAWKABILLY, YELLOW_PLUMAGE_SQUAWKABILLY, WHITE_PLUMAGE_SQUAWKABILLY, NACLI, NACLSTACK, GARGANACL, CHARCADET, ARMAROUGE, CERULEDGE, TADBULB, BELLIBOLT, WATTREL, KILOWATTREL, MASCHIFF, MABOSSTIFF, SHROODLE, GRAFAIAI, BRAMBLIN, BRAMBLEGHAST, TOEDSCOOL, TOEDSCRUEL, KLAWF, CAPSAKID, SCOVILLAIN, RELLOR, RABSCA, FLITTLE, ESPATHRA, TINKATINK, TINKATUFF, TINKATON, WIGLETT, WUGTRIO, BOMBIRDIER, FINIZEN, ZERO_PALAFIN, HERO_PALAFIN, VAROOM, REVAVROOM, CYCLIZAR, ORTHWORM, GLIMMET, GLIMMORA, GREAVARD, HOUNDSTONE, FLAMIGO, CETODDLE, CETITAN, VELUZA, DONDOZO, TATSUGIRI, CURLY_TATSUGIRI, DROOPY_TATSUGIRI, STRETCHY_TATSUGIRI, ANNIHILAPE, CLODSIRE, FARIGIRAF, DUDUNSPARCE, TWO_SEGMENT_DUDUNSPARCE, THREE_SEGMENT_DUDUNSPARCE, KINGAMBIT, GREAT_TUSK, SCREAM_TAIL, BRUTE_BONNET, FLUTTER_MANE, SLITHER_WING, SANDY_SHOCKS, IRON_TREADS, IRON_BUNDLE, IRON_HANDS, IRON_JUGULIS, IRON_MOTH, IRON_THORNS, FRIGIBAX, ARCTIBAX, BAXCALIBUR, CHEST_GIMMIGHOUL, ROAMING_GIMMIGHOUL, GHOLDENGO, WO_CHIEN, CHIEN_PAO, TING_LU, CHI_YU, ROARING_MOON, IRON_VALIANT, KORAIDON, MIRAIDON, WALKING_WAKE, IRON_LEAVES, SPECIES_TOTAL
+  // clang-format on
+};
+}  // namespace pokesim::dex
+
+///////////////////////// END OF src/Types/Species.hpp /////////////////////////
+
+//////////////// START OF src/Components/Names/SpeciesNames.hpp ////////////////
+
+namespace pokesim {
+struct SpeciesName {
+  dex::Species name = dex::MISSING_NO;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/SpeciesNames.hpp /////////////////
+
+/////////////////// START OF external/entt/container/fwd.hpp ///////////////////
+
+#ifndef ENTT_CONTAINER_FWD_HPP
+#define ENTT_CONTAINER_FWD_HPP
+
+#include <functional>
+#include <memory>
+
+namespace entt {
+
+template<
+    typename Key,
+    typename Type,
+    typename = std::hash<Key>,
+    typename = std::equal_to<Key>,
+    typename = std::allocator<std::pair<const Key, Type>>>
+class dense_map;
+
+template<
+    typename Type,
+    typename = std::hash<Type>,
+    typename = std::equal_to<Type>,
+    typename = std::allocator<Type>>
+class dense_set;
+
+} // namespace entt
+
+#endif
+
+//////////////////// END OF external/entt/container/fwd.hpp ////////////////////
+
 /////////////// START OF external/entt/core/compressed_pair.hpp ////////////////
 
 #ifndef ENTT_CORE_COMPRESSED_PAIR_HPP
@@ -1352,208 +2629,6 @@ struct tuple_element<Index, entt::compressed_pair<First, Second>>: conditional<I
 #endif
 
 //////////////// END OF external/entt/core/compressed_pair.hpp /////////////////
-
-/////////////////// START OF external/entt/core/iterator.hpp ///////////////////
-
-#ifndef ENTT_CORE_ITERATOR_HPP
-#define ENTT_CORE_ITERATOR_HPP
-
-#include <iterator>
-#include <memory>
-#include <type_traits>
-#include <utility>
-
-namespace entt {
-
-/**
- * @brief Helper type to use as pointer with input iterators.
- * @tparam Type of wrapped value.
- */
-template<typename Type>
-struct input_iterator_pointer final {
-    /*! @brief Value type. */
-    using value_type = Type;
-    /*! @brief Pointer type. */
-    using pointer = Type *;
-    /*! @brief Reference type. */
-    using reference = Type &;
-
-    /**
-     * @brief Constructs a proxy object by move.
-     * @param val Value to use to initialize the proxy object.
-     */
-    constexpr input_iterator_pointer(value_type &&val) noexcept(std::is_nothrow_move_constructible_v<value_type>)
-        : value{std::move(val)} {}
-
-    /**
-     * @brief Access operator for accessing wrapped values.
-     * @return A pointer to the wrapped value.
-     */
-    [[nodiscard]] constexpr pointer operator->() noexcept {
-        return std::addressof(value);
-    }
-
-    /**
-     * @brief Dereference operator for accessing wrapped values.
-     * @return A reference to the wrapped value.
-     */
-    [[nodiscard]] constexpr reference operator*() noexcept {
-        return value;
-    }
-
-private:
-    Type value;
-};
-
-/**
- * @brief Plain iota iterator (waiting for C++20).
- * @tparam Type Value type.
- */
-template<typename Type>
-class iota_iterator final {
-    static_assert(std::is_integral_v<Type>, "Not an integral type");
-
-public:
-    /*! @brief Value type, likely an integral one. */
-    using value_type = Type;
-    /*! @brief Invalid pointer type. */
-    using pointer = void;
-    /*! @brief Non-reference type, same as value type. */
-    using reference = value_type;
-    /*! @brief Difference type. */
-    using difference_type = std::ptrdiff_t;
-    /*! @brief Iterator category. */
-    using iterator_category = std::input_iterator_tag;
-
-    /*! @brief Default constructor. */
-    constexpr iota_iterator() noexcept
-        : current{} {}
-
-    /**
-     * @brief Constructs an iota iterator from a given value.
-     * @param init The initial value assigned to the iota iterator.
-     */
-    constexpr iota_iterator(const value_type init) noexcept
-        : current{init} {}
-
-    /**
-     * @brief Pre-increment operator.
-     * @return This iota iterator.
-     */
-    constexpr iota_iterator &operator++() noexcept {
-        return ++current, *this;
-    }
-
-    /**
-     * @brief Post-increment operator.
-     * @return This iota iterator.
-     */
-    constexpr iota_iterator operator++(int) noexcept {
-        iota_iterator orig = *this;
-        return ++(*this), orig;
-    }
-
-    /**
-     * @brief Dereference operator.
-     * @return The underlying value.
-     */
-    [[nodiscard]] constexpr reference operator*() const noexcept {
-        return current;
-    }
-
-private:
-    value_type current;
-};
-
-/**
- * @brief Comparison operator.
- * @tparam Type Value type of the iota iterator.
- * @param lhs A properly initialized iota iterator.
- * @param rhs A properly initialized iota iterator.
- * @return True if the two iterators are identical, false otherwise.
- */
-template<typename Type>
-[[nodiscard]] constexpr bool operator==(const iota_iterator<Type> &lhs, const iota_iterator<Type> &rhs) noexcept {
-    return *lhs == *rhs;
-}
-
-/**
- * @brief Comparison operator.
- * @tparam Type Value type of the iota iterator.
- * @param lhs A properly initialized iota iterator.
- * @param rhs A properly initialized iota iterator.
- * @return True if the two iterators differ, false otherwise.
- */
-template<typename Type>
-[[nodiscard]] constexpr bool operator!=(const iota_iterator<Type> &lhs, const iota_iterator<Type> &rhs) noexcept {
-    return !(lhs == rhs);
-}
-
-/**
- * @brief Utility class to create an iterable object from a pair of iterators.
- * @tparam It Type of iterator.
- * @tparam Sentinel Type of sentinel.
- */
-template<typename It, typename Sentinel = It>
-struct iterable_adaptor final {
-    /*! @brief Value type. */
-    using value_type = typename std::iterator_traits<It>::value_type;
-    /*! @brief Iterator type. */
-    using iterator = It;
-    /*! @brief Sentinel type. */
-    using sentinel = Sentinel;
-
-    /*! @brief Default constructor. */
-    constexpr iterable_adaptor() noexcept(std::is_nothrow_default_constructible_v<iterator> &&std::is_nothrow_default_constructible_v<sentinel>)
-        : first{},
-          last{} {}
-
-    /**
-     * @brief Creates an iterable object from a pair of iterators.
-     * @param from Begin iterator.
-     * @param to End iterator.
-     */
-    constexpr iterable_adaptor(iterator from, sentinel to) noexcept(std::is_nothrow_move_constructible_v<iterator> &&std::is_nothrow_move_constructible_v<sentinel>)
-        : first{std::move(from)},
-          last{std::move(to)} {}
-
-    /**
-     * @brief Returns an iterator to the beginning.
-     * @return An iterator to the first element of the range.
-     */
-    [[nodiscard]] constexpr iterator begin() const noexcept {
-        return first;
-    }
-
-    /**
-     * @brief Returns an iterator to the end.
-     * @return An iterator to the element following the last element of the
-     * range.
-     */
-    [[nodiscard]] constexpr sentinel end() const noexcept {
-        return last;
-    }
-
-    /*! @copydoc begin */
-    [[nodiscard]] constexpr iterator cbegin() const noexcept {
-        return begin();
-    }
-
-    /*! @copydoc end */
-    [[nodiscard]] constexpr sentinel cend() const noexcept {
-        return end();
-    }
-
-private:
-    It first;
-    Sentinel last;
-};
-
-} // namespace entt
-
-#endif
-
-//////////////////// END OF external/entt/core/iterator.hpp ////////////////////
 
 //////////////////// START OF external/entt/core/memory.hpp ////////////////////
 
@@ -4379,557 +5454,6 @@ inline constexpr bool ignore_as_empty_v = (std::is_void_v<Type> || component_tra
 #endif
 
 ////////////////// END OF external/entt/entity/component.hpp ///////////////////
-
-//////////////////// START OF external/entt/entity/fwd.hpp /////////////////////
-
-#ifndef ENTT_ENTITY_FWD_HPP
-#define ENTT_ENTITY_FWD_HPP
-
-#include <memory>
-#include <type_traits>
-
-namespace entt {
-
-/*! @brief Default entity identifier. */
-enum class entity : id_type {};
-
-template<typename Entity = entity, typename = std::allocator<Entity>>
-class basic_sparse_set;
-
-template<typename Type, typename = entity, typename = std::allocator<Type>, typename = void>
-class basic_storage;
-
-template<typename Type>
-class sigh_storage_mixin;
-
-/**
- * @brief Provides a common way to define storage types.
- * @tparam Type Storage value type.
- * @tparam Entity A valid entity type (see entt_traits for more details).
- * @tparam Allocator Type of allocator used to manage memory and elements.
- */
-template<typename Type, typename Entity = entity, typename Allocator = std::allocator<Type>, typename = void>
-struct storage_type {
-    /*! @brief Type-to-storage conversion result. */
-    using type = sigh_storage_mixin<basic_storage<Type, Entity, Allocator>>;
-};
-
-/**
- * @brief Helper type.
- * @tparam Args Arguments to forward.
- */
-template<typename... Args>
-using storage_type_t = typename storage_type<Args...>::type;
-
-/**
- * Type-to-storage conversion utility that preserves constness.
- * @tparam Type Storage value type, eventually const.
- * @tparam Entity A valid entity type (see entt_traits for more details).
- * @tparam Allocator Type of allocator used to manage memory and elements.
- */
-template<typename Type, typename Entity = entity, typename Allocator = std::allocator<std::remove_const_t<Type>>>
-struct storage_for {
-    /*! @brief Type-to-storage conversion result. */
-    using type = constness_as_t<storage_type_t<std::remove_const_t<Type>, Entity, Allocator>, Type>;
-};
-
-/**
- * @brief Helper type.
- * @tparam Args Arguments to forward.
- */
-template<typename... Args>
-using storage_for_t = typename storage_for<Args...>::type;
-
-template<typename Entity = entity, typename = std::allocator<Entity>>
-class basic_registry;
-
-template<typename, typename, typename = void>
-class basic_view;
-
-template<typename Type, typename = std::allocator<Type *>>
-class basic_runtime_view;
-
-template<typename, typename, typename>
-class basic_group;
-
-template<typename>
-class basic_observer;
-
-template<typename>
-class basic_organizer;
-
-template<typename, typename...>
-struct basic_handle;
-
-template<typename>
-class basic_snapshot;
-
-template<typename>
-class basic_snapshot_loader;
-
-template<typename>
-class basic_continuous_loader;
-
-/**
- * @brief Alias for exclusion lists.
- * @tparam Type List of types.
- */
-template<typename... Type>
-using exclude_t = type_list<Type...>;
-
-/**
- * @brief Variable template for exclusion lists.
- * @tparam Type List of types.
- */
-template<typename... Type>
-inline constexpr exclude_t<Type...> exclude{};
-
-/**
- * @brief Alias for lists of observed components.
- * @tparam Type List of types.
- */
-template<typename... Type>
-using get_t = type_list<Type...>;
-
-/**
- * @brief Variable template for lists of observed components.
- * @tparam Type List of types.
- */
-template<typename... Type>
-inline constexpr get_t<Type...> get{};
-
-/**
- * @brief Alias for lists of owned components.
- * @tparam Type List of types.
- */
-template<typename... Type>
-using owned_t = type_list<Type...>;
-
-/**
- * @brief Variable template for lists of owned components.
- * @tparam Type List of types.
- */
-template<typename... Type>
-inline constexpr owned_t<Type...> owned{};
-
-/*! @brief Alias declaration for the most common use case. */
-using sparse_set = basic_sparse_set<>;
-
-/**
- * @brief Alias declaration for the most common use case.
- * @tparam Type Type of objects assigned to the entities.
- */
-template<typename Type>
-using storage = basic_storage<Type>;
-
-/*! @brief Alias declaration for the most common use case. */
-using registry = basic_registry<>;
-
-/*! @brief Alias declaration for the most common use case. */
-using observer = basic_observer<registry>;
-
-/*! @brief Alias declaration for the most common use case. */
-using organizer = basic_organizer<registry>;
-
-/*! @brief Alias declaration for the most common use case. */
-using handle = basic_handle<registry>;
-
-/*! @brief Alias declaration for the most common use case. */
-using const_handle = basic_handle<const registry>;
-
-/**
- * @brief Alias declaration for the most common use case.
- * @tparam Args Other template parameters.
- */
-template<typename... Args>
-using handle_view = basic_handle<registry, Args...>;
-
-/**
- * @brief Alias declaration for the most common use case.
- * @tparam Args Other template parameters.
- */
-template<typename... Args>
-using const_handle_view = basic_handle<const registry, Args...>;
-
-/*! @brief Alias declaration for the most common use case. */
-using snapshot = basic_snapshot<registry>;
-
-/*! @brief Alias declaration for the most common use case. */
-using snapshot_loader = basic_snapshot_loader<registry>;
-
-/*! @brief Alias declaration for the most common use case. */
-using continuous_loader = basic_continuous_loader<registry>;
-
-/**
- * @brief Alias declaration for the most common use case.
- * @tparam Get Types of storage iterated by the view.
- * @tparam Exclude Types of storage used to filter the view.
- */
-template<typename Get, typename Exclude = exclude_t<>>
-using view = basic_view<type_list_transform_t<Get, storage_for>, type_list_transform_t<Exclude, storage_for>>;
-
-/*! @brief Alias declaration for the most common use case. */
-using runtime_view = basic_runtime_view<sparse_set>;
-
-/*! @brief Alias declaration for the most common use case. */
-using const_runtime_view = basic_runtime_view<const sparse_set>;
-
-/**
- * @brief Alias declaration for the most common use case.
- * @tparam Owned Types of storage _owned_ by the group.
- * @tparam Get Types of storage _observed_ by the group.
- * @tparam Exclude Types of storage used to filter the group.
- */
-template<typename Owned, typename Get, typename Exclude>
-using group = basic_group<type_list_transform_t<Owned, storage_for>, type_list_transform_t<Get, storage_for>, type_list_transform_t<Exclude, storage_for>>;
-
-} // namespace entt
-
-#endif
-
-///////////////////// END OF external/entt/entity/fwd.hpp //////////////////////
-
-/////////////////// START OF external/entt/entity/entity.hpp ///////////////////
-
-#ifndef ENTT_ENTITY_ENTITY_HPP
-#define ENTT_ENTITY_ENTITY_HPP
-
-#include <cstddef>
-#include <cstdint>
-#include <type_traits>
-
-namespace entt {
-
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
-namespace internal {
-
-template<typename, typename = void>
-struct entt_traits;
-
-template<typename Type>
-struct entt_traits<Type, std::enable_if_t<std::is_enum_v<Type>>>
-    : entt_traits<std::underlying_type_t<Type>> {};
-
-template<typename Type>
-struct entt_traits<Type, std::enable_if_t<std::is_class_v<Type>>>
-    : entt_traits<typename Type::entity_type> {};
-
-template<>
-struct entt_traits<std::uint32_t> {
-    using entity_type = std::uint32_t;
-    using version_type = std::uint16_t;
-
-    static constexpr entity_type entity_mask = 0xFFFFF;
-    static constexpr entity_type version_mask = 0xFFF;
-    static constexpr std::size_t entity_shift = 20u;
-};
-
-template<>
-struct entt_traits<std::uint64_t> {
-    using entity_type = std::uint64_t;
-    using version_type = std::uint32_t;
-
-    static constexpr entity_type entity_mask = 0xFFFFFFFF;
-    static constexpr entity_type version_mask = 0xFFFFFFFF;
-    static constexpr std::size_t entity_shift = 32u;
-};
-
-} // namespace internal
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
-
-/**
- * @brief Entity traits.
- * @tparam Type Type of identifier.
- */
-template<typename Type>
-class entt_traits: internal::entt_traits<Type> {
-    using base_type = internal::entt_traits<Type>;
-
-public:
-    /*! @brief Value type. */
-    using value_type = Type;
-    /*! @brief Underlying entity type. */
-    using entity_type = typename base_type::entity_type;
-    /*! @brief Underlying version type. */
-    using version_type = typename base_type::version_type;
-    /*! @brief Reserved identifier. */
-    static constexpr entity_type reserved = base_type::entity_mask | (base_type::version_mask << base_type::entity_shift);
-    /*! @brief Page size, default is `ENTT_SPARSE_PAGE`. */
-    static constexpr auto page_size = ENTT_SPARSE_PAGE;
-
-    /**
-     * @brief Converts an entity to its underlying type.
-     * @param value The value to convert.
-     * @return The integral representation of the given value.
-     */
-    [[nodiscard]] static constexpr entity_type to_integral(const value_type value) noexcept {
-        return static_cast<entity_type>(value);
-    }
-
-    /**
-     * @brief Returns the entity part once converted to the underlying type.
-     * @param value The value to convert.
-     * @return The integral representation of the entity part.
-     */
-    [[nodiscard]] static constexpr entity_type to_entity(const value_type value) noexcept {
-        return (to_integral(value) & base_type::entity_mask);
-    }
-
-    /**
-     * @brief Returns the version part once converted to the underlying type.
-     * @param value The value to convert.
-     * @return The integral representation of the version part.
-     */
-    [[nodiscard]] static constexpr version_type to_version(const value_type value) noexcept {
-        return (to_integral(value) >> base_type::entity_shift);
-    }
-
-    /**
-     * @brief Constructs an identifier from its parts.
-     *
-     * If the version part is not provided, a tombstone is returned.<br/>
-     * If the entity part is not provided, a null identifier is returned.
-     *
-     * @param entity The entity part of the identifier.
-     * @param version The version part of the identifier.
-     * @return A properly constructed identifier.
-     */
-    [[nodiscard]] static constexpr value_type construct(const entity_type entity, const version_type version) noexcept {
-        return value_type{(entity & base_type::entity_mask) | (static_cast<entity_type>(version) << base_type::entity_shift)};
-    }
-
-    /**
-     * @brief Combines two identifiers in a single one.
-     *
-     * The returned identifier is a copy of the first element except for its
-     * version, which is taken from the second element.
-     *
-     * @param lhs The identifier from which to take the entity part.
-     * @param rhs The identifier from which to take the version part.
-     * @return A properly constructed identifier.
-     */
-    [[nodiscard]] static constexpr value_type combine(const entity_type lhs, const entity_type rhs) noexcept {
-        constexpr auto mask = (base_type::version_mask << base_type::entity_shift);
-        return value_type{(lhs & base_type::entity_mask) | (rhs & mask)};
-    }
-};
-
-/**
- * @copydoc entt_traits<Entity>::to_integral
- * @tparam Entity The value type.
- */
-template<typename Entity>
-[[nodiscard]] constexpr typename entt_traits<Entity>::entity_type to_integral(const Entity value) noexcept {
-    return entt_traits<Entity>::to_integral(value);
-}
-
-/**
- * @copydoc entt_traits<Entity>::to_entity
- * @tparam Entity The value type.
- */
-template<typename Entity>
-[[nodiscard]] constexpr typename entt_traits<Entity>::entity_type to_entity(const Entity value) noexcept {
-    return entt_traits<Entity>::to_entity(value);
-}
-
-/**
- * @copydoc entt_traits<Entity>::to_version
- * @tparam Entity The value type.
- */
-template<typename Entity>
-[[nodiscard]] constexpr typename entt_traits<Entity>::version_type to_version(const Entity value) noexcept {
-    return entt_traits<Entity>::to_version(value);
-}
-
-/*! @brief Null object for all identifiers.  */
-struct null_t {
-    /**
-     * @brief Converts the null object to identifiers of any type.
-     * @tparam Entity Type of identifier.
-     * @return The null representation for the given type.
-     */
-    template<typename Entity>
-    [[nodiscard]] constexpr operator Entity() const noexcept {
-        using entity_traits = entt_traits<Entity>;
-        return entity_traits::combine(entity_traits::reserved, entity_traits::reserved);
-    }
-
-    /**
-     * @brief Compares two null objects.
-     * @param other A null object.
-     * @return True in all cases.
-     */
-    [[nodiscard]] constexpr bool operator==([[maybe_unused]] const null_t other) const noexcept {
-        return true;
-    }
-
-    /**
-     * @brief Compares two null objects.
-     * @param other A null object.
-     * @return False in all cases.
-     */
-    [[nodiscard]] constexpr bool operator!=([[maybe_unused]] const null_t other) const noexcept {
-        return false;
-    }
-
-    /**
-     * @brief Compares a null object and an identifier of any type.
-     * @tparam Entity Type of identifier.
-     * @param entity Identifier with which to compare.
-     * @return False if the two elements differ, true otherwise.
-     */
-    template<typename Entity>
-    [[nodiscard]] constexpr bool operator==(const Entity entity) const noexcept {
-        using entity_traits = entt_traits<Entity>;
-        return entity_traits::to_entity(entity) == entity_traits::to_entity(*this);
-    }
-
-    /**
-     * @brief Compares a null object and an identifier of any type.
-     * @tparam Entity Type of identifier.
-     * @param entity Identifier with which to compare.
-     * @return True if the two elements differ, false otherwise.
-     */
-    template<typename Entity>
-    [[nodiscard]] constexpr bool operator!=(const Entity entity) const noexcept {
-        return !(entity == *this);
-    }
-};
-
-/**
- * @brief Compares a null object and an identifier of any type.
- * @tparam Entity Type of identifier.
- * @param entity Identifier with which to compare.
- * @param other A null object yet to be converted.
- * @return False if the two elements differ, true otherwise.
- */
-template<typename Entity>
-[[nodiscard]] constexpr bool operator==(const Entity entity, const null_t other) noexcept {
-    return other.operator==(entity);
-}
-
-/**
- * @brief Compares a null object and an identifier of any type.
- * @tparam Entity Type of identifier.
- * @param entity Identifier with which to compare.
- * @param other A null object yet to be converted.
- * @return True if the two elements differ, false otherwise.
- */
-template<typename Entity>
-[[nodiscard]] constexpr bool operator!=(const Entity entity, const null_t other) noexcept {
-    return !(other == entity);
-}
-
-/*! @brief Tombstone object for all identifiers.  */
-struct tombstone_t {
-    /**
-     * @brief Converts the tombstone object to identifiers of any type.
-     * @tparam Entity Type of identifier.
-     * @return The tombstone representation for the given type.
-     */
-    template<typename Entity>
-    [[nodiscard]] constexpr operator Entity() const noexcept {
-        using entity_traits = entt_traits<Entity>;
-        return entity_traits::combine(entity_traits::reserved, entity_traits::reserved);
-    }
-
-    /**
-     * @brief Compares two tombstone objects.
-     * @param other A tombstone object.
-     * @return True in all cases.
-     */
-    [[nodiscard]] constexpr bool operator==([[maybe_unused]] const tombstone_t other) const noexcept {
-        return true;
-    }
-
-    /**
-     * @brief Compares two tombstone objects.
-     * @param other A tombstone object.
-     * @return False in all cases.
-     */
-    [[nodiscard]] constexpr bool operator!=([[maybe_unused]] const tombstone_t other) const noexcept {
-        return false;
-    }
-
-    /**
-     * @brief Compares a tombstone object and an identifier of any type.
-     * @tparam Entity Type of identifier.
-     * @param entity Identifier with which to compare.
-     * @return False if the two elements differ, true otherwise.
-     */
-    template<typename Entity>
-    [[nodiscard]] constexpr bool operator==(const Entity entity) const noexcept {
-        using entity_traits = entt_traits<Entity>;
-        return entity_traits::to_version(entity) == entity_traits::to_version(*this);
-    }
-
-    /**
-     * @brief Compares a tombstone object and an identifier of any type.
-     * @tparam Entity Type of identifier.
-     * @param entity Identifier with which to compare.
-     * @return True if the two elements differ, false otherwise.
-     */
-    template<typename Entity>
-    [[nodiscard]] constexpr bool operator!=(const Entity entity) const noexcept {
-        return !(entity == *this);
-    }
-};
-
-/**
- * @brief Compares a tombstone object and an identifier of any type.
- * @tparam Entity Type of identifier.
- * @param entity Identifier with which to compare.
- * @param other A tombstone object yet to be converted.
- * @return False if the two elements differ, true otherwise.
- */
-template<typename Entity>
-[[nodiscard]] constexpr bool operator==(const Entity entity, const tombstone_t other) noexcept {
-    return other.operator==(entity);
-}
-
-/**
- * @brief Compares a tombstone object and an identifier of any type.
- * @tparam Entity Type of identifier.
- * @param entity Identifier with which to compare.
- * @param other A tombstone object yet to be converted.
- * @return True if the two elements differ, false otherwise.
- */
-template<typename Entity>
-[[nodiscard]] constexpr bool operator!=(const Entity entity, const tombstone_t other) noexcept {
-    return !(other == entity);
-}
-
-/**
- * @brief Compile-time constant for null entities.
- *
- * There exist implicit conversions from this variable to identifiers of any
- * allowed type. Similarly, there exist comparison operators between the null
- * entity and any other identifier.
- */
-inline constexpr null_t null{};
-
-/**
- * @brief Compile-time constant for tombstone entities.
- *
- * There exist implicit conversions from this variable to identifiers of any
- * allowed type. Similarly, there exist comparison operators between the
- * tombstone entity and any other identifier.
- */
-inline constexpr tombstone_t tombstone{};
-
-} // namespace entt
-
-#endif
-
-//////////////////// END OF external/entt/entity/entity.hpp ////////////////////
 
 ///////////////// START OF external/entt/entity/sparse_set.hpp /////////////////
 
@@ -11206,30 +11730,16 @@ private:
 
 /////////////////// END OF external/entt/entity/registry.hpp ///////////////////
 
-//////////////////////// START OF src/Types/Ability.hpp ////////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-/** @brief Pokemon ability name */
-enum Ability : std::uint16_t {
-  // clang-format off
-  NO_ABILITY = 0, ADAPTABILITY, AERILATE, AFTERMATH, AIR_LOCK, ANALYTIC, ANGER_POINT, ANGER_SHELL, ANTICIPATION, ARENA_TRAP, ARMOR_TAIL, AROMA_VEIL, AS_ONE, AURA_BREAK, BAD_DREAMS, BALL_FETCH, BATTERY, BATTLE_ARMOR, BATTLE_BOND, BEADS_OF_RUIN, BEAST_BOOST, BERSERK, BIG_PECKS, BLAZE, BULLETPROOF, CHEEK_POUCH, CHILLING_NEIGH, CHLOROPHYLL, CLEAR_BODY, CLOUD_NINE, COLOR_CHANGE, COMATOSE, COMMANDER, COMPETITIVE, COMPOUND_EYES, CONTRARY, CORROSION, COSTAR, COTTON_DOWN, CUD_CHEW, CURIOUS_MEDICINE, CURSED_BODY, CUTE_CHARM, DAMP, DANCER, DARK_AURA, DAUNTLESS_SHIELD, DAZZLING, DEFEATIST, DEFIANT, DELTA_STREAM, DESOLATE_LAND, DISGUISE, DOWNLOAD, DRAGONS_MAW, DRIZZLE, DROUGHT, DRY_SKIN, EARTH_EATER, EARLY_BIRD, EFFECT_SPORE, ELECTRIC_SURGE, ELECTROMORPHOSIS, EMERGENCY_EXIT, FAIRY_AURA, FILTER, FLAME_BODY, FLARE_BOOST, FLASH_FIRE, FLOWER_GIFT, FLOWER_VEIL, FLUFFY, FORECAST, FOREWARN, FRIEND_GUARD, FRISK, FULL_METAL_BODY, FUR_COAT, GALE_WINGS, GALVANIZE, GLUTTONY, GOOD_AS_GOLD, GOOEY, GORILLA_TACTICS, GRASS_PELT, GRASSY_SURGE, GRIM_NEIGH, GUARD_DOG, GULP_MISSILE, GUTS, HADRON_ENGINE, HARVEST, HEALER, HEATPROOF, HEAVY_METAL, HONEY_GATHER, HUGE_POWER, HUNGER_SWITCH, HUSTLE, HYDRATION, HYPER_CUTTER, ICE_BODY, ICE_FACE, ICE_SCALES, ILLUMINATE, ILLUSION, IMMUNITY, IMPOSTER, INFILTRATOR, INNARDS_OUT, INNER_FOCUS, INSOMNIA, INTIMIDATE, INTREPID_SWORD, IRON_BARBS, IRON_FIST, JUSTIFIED, KEEN_EYE, KLUTZ, LEAF_GUARD, LEVITATE, LIBERO, LIGHT_METAL, LIGHTNING_ROD, LINGERING_AROMA, LIMBER, LIQUID_OOZE, LIQUID_VOICE, LONG_REACH, MAGIC_BOUNCE, MAGIC_GUARD, MAGICIAN, MAGMA_ARMOR, MAGNET_PULL, MARVEL_SCALE, MEGA_LAUNCHER, MERCILESS, MIMICRY, MINUS, MIRROR_ARMOR, MISTY_SURGE, MOLD_BREAKER, MOODY, MOTOR_DRIVE, MOXIE, MULTISCALE, MULTITYPE, MUMMY, MYCELIUM_MIGHT, NATURAL_CURE, NEUROFORCE, NEUTRALIZING_GAS, NO_GUARD, NORMALIZE, OBLIVIOUS, OPPORTUNIST, ORICHALCUM_PULSE, OVERCOAT, OVERGROW, OWN_TEMPO, PARENTAL_BOND, PASTEL_VEIL, PERISH_BODY, PICKPOCKET, PICKUP, PIXILATE, PLUS, POISON_HEAL, POISON_POINT, POISON_TOUCH, POWER_CONSTRUCT, POWER_OF_ALCHEMY, POWER_SPOT, PRANKSTER, PRESSURE, PRIMORDIAL_SEA, PRISM_ARMOR, PROPELLER_TAIL, PROTEAN, PROTOSYNTHESIS, PSYCHIC_SURGE, PUNK_ROCK, PURE_POWER, PURIFYING_SALT, QUARK_DRIVE, QUEENLY_MAJESTY, QUICK_DRAW, QUICK_FEET, RAIN_DISH, RATTLED, RECEIVER, RECKLESS, REFRIGERATE, REGENERATOR, RIPEN, RIVALRY, RKS_SYSTEM, ROCK_HEAD, ROCKY_PAYLOAD, ROUGH_SKIN, RUN_AWAY, SAND_FORCE, SAND_RUSH, SAND_SPIT, SAND_STREAM, SAND_VEIL, SAP_SIPPER, SCHOOLING, SCRAPPY, SCREEN_CLEANER, SEED_SOWER, SERENE_GRACE, SHADOW_SHIELD, SHADOW_TAG, SHARPNESS, SHED_SKIN, SHEER_FORCE, SHELL_ARMOR, SHIELD_DUST, SHIELDS_DOWN, SIMPLE, SKILL_LINK, SLOW_START, SLUSH_RUSH, SNIPER, SNOW_CLOAK, SNOW_WARNING, SOLAR_POWER, SOLID_ROCK, SOUL_HEART, SOUNDPROOF, SPEED_BOOST, STAKEOUT, STALL, STALWART, STAMINA, STANCE_CHANGE, STATIC, STEADFAST, STEAM_ENGINE, STEELWORKER, STEELY_SPIRIT, STENCH, STICKY_HOLD, STORM_DRAIN, STRONG_JAW, STURDY, SUCTION_CUPS, SUPER_LUCK, SUPREME_OVERLORD, SURGE_SURFER, SWARM, SWEET_VEIL, SWIFT_SWIM, SYMBIOSIS, SYNCHRONIZE, SWORD_OF_RUIN, TABLETS_OF_RUIN, TANGLED_FEET, TANGLING_HAIR, TECHNICIAN, TELEPATHY, TERAVOLT, THERMAL_EXCHANGE, THICK_FAT, TINTED_LENS, TORRENT, TOUGH_CLAWS, TOXIC_BOOST, TOXIC_DEBRIS, TRACE, TRANSISTOR, TRIAGE, TRUANT, TURBOBLAZE, UNAWARE, UNBURDEN, UNNERVE, UNSEEN_FIST, VESSEL_OF_RUIN, VICTORY_STAR, VITAL_SPIRIT, VOLT_ABSORB, WANDERING_SPIRIT, WATER_ABSORB, WATER_BUBBLE, WATER_COMPACTION, WATER_VEIL, WEAK_ARMOR, WELL_BAKED_BODY, WHITE_SMOKE, WIMP_OUT, WIND_POWER, WIND_RIDER, WONDER_GUARD, WONDER_SKIN, ZEN_MODE, ZERO_TO_HERO, ABILITY_TOTAL,
-  // clang-format on
-};
-}  // namespace pokesim::dex
-
-///////////////////////// END OF src/Types/Ability.hpp /////////////////////////
-
 ///////////////////// START OF src/Types/GameMechanic.hpp //////////////////////
 
 #include <cstdint>
 
 namespace pokesim {
+/** @brief Game the simulator is imitating the mechanics of */
 enum GameMechanic : std::uint8_t {
   SCARLET_VIOLET,
 };
-}
+}  // namespace pokesim
 
 ////////////////////// END OF src/Types/GameMechanic.hpp ///////////////////////
 
@@ -11289,36 +11799,6 @@ enum Nature : std::uint8_t {
 
 ///////////////////////// END OF src/Types/Nature.hpp //////////////////////////
 
-//////////////////////// START OF src/Types/Species.hpp ////////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-
-/**
- * @brief Pokemon and Pokemon form name
- *
- * @details Pokemon that have multiple forms will have their base form and alternate forms listed here.
- * However, if none of a Pokemon's forms are cosmetic (i.e. change nothing expect appearance), the forms cannot be
- * changed during battle, and no true base form exists, then the Pokemon's species name without a form specifier is
- * omitted. For example:
- *  - `VENUSAUR`, `MEGA_VENUSAUR`, and `GIGANTAMAX_VENUSAUR` are all listed because Venusaur changes into the other
- * forms mid battle
- *  - `GASTRODON`, `WEST_SEA_GASTRODON`, and `EAST_SEA_GASTRODON` are all listed because although Gastrodon's forms
- * are permanent, their only difference is how they look
- *  - `PLANT_CLOAK_WORMADAM`, `SANDY_CLOAK_WORMADAM`, and `TRASH_CLOAK_WORMADAM` listed while `WORMADAM` is not
- * because the Wormadam forms have different types, stats, and moves; their forms are permanent; and there is no base
- * Wormadam
- */
-enum Species : std::uint16_t {
-  // clang-format off
-  MISSING_NO = 0, BULBASAUR, IVYSAUR, VENUSAUR, MEGA_VENUSAUR, GIGANTAMAX_VENUSAUR, CHARMANDER, CHARMELEON, CHARIZARD, MEGA_CHARIZARD_X, MEGA_CHARIZARD_Y, GIGANTAMAX_CHARIZARD, SQUIRTLE, WARTORTLE, BLASTOISE, MEGA_BLASTOISE, GIGANTAMAX_BLASTOISE, CATERPIE, METAPOD, BUTTERFREE, GIGANTAMAX_BUTTERFREE, WEEDLE, KAKUNA, BEEDRILL, MEGA_BEEDRILL, PIDGEY, PIDGEOTTO, PIDGEOT, MEGA_PIDGEOT, RATTATA, ALOLAN_RATTATA, RATICATE, ALOLAN_RATICATE, TOTEM_ALOLAN_RATICATE, SPEAROW, FEAROW, EKANS, ARBOK, PIKACHU, COSPLAY_PIKACHU, PIKACHU_ROCK_STAR, PIKACHU_BELLE, PIKACHU_POP_STAR, PIKACHU_PHD, PIKACHU_LIBRE, ORIGINAL_CAP_PIKACHU, HOENN_CAP_PIKACHU, SINNOH_CAP_PIKACHU, UNOVA_CAP_PIKACHU, KALOS_CAP_PIKACHU, ALOLA_CAP_PIKACHU, PARTNER_CAP_PIKACHU, STARTER_PIKACHU, GIGANTAMAX_PIKACHU, WORLD_CAP_PIKACHU, RAICHU, ALOLAN_RAICHU, SANDSHREW, ALOLAN_SANDSHREW, SANDSLASH, ALOLAN_SANDSLASH, NIDORAN_FEMALE, NIDORINA, NIDOQUEEN, NIDORAN_MALE, NIDORINO, NIDOKING, CLEFAIRY, CLEFABLE, VULPIX, ALOLAN_VULPIX, NINETALES, ALOLAN_NINETALES, JIGGLYPUFF, WIGGLYTUFF, ZUBAT, GOLBAT, ODDISH, GLOOM, VILEPLUME, PARAS, PARASECT, VENONAT, VENOMOTH, DIGLETT, ALOLAN_DIGLETT, DUGTRIO, ALOLAN_DUGTRIO, MEOWTH, ALOLAN_MEOWTH, GALARIAN_MEOWTH, GIGANTAMAX_MEOWTH, PERSIAN, ALOLAN_PERSIAN, PSYDUCK, GOLDUCK, MANKEY, PRIMEAPE, HISUIAN_GROWLITHE, GROWLITHE, HISUIAN_ARCANINE, ARCANINE, POLIWAG, POLIWHIRL, POLIWRATH, ABRA, KADABRA, ALAKAZAM, MEGA_ALAKAZAM, MACHOP, MACHOKE, MACHAMP, GIGANTAMAX_MACHAMP, BELLSPROUT, WEEPINBELL, VICTREEBEL, TENTACOOL, TENTACRUEL, GEODUDE, ALOLAN_GEODUDE, GRAVELER, ALOLAN_GRAVELER, GOLEM, ALOLAN_GOLEM, PONYTA, GALARIAN_PONYTA, RAPIDASH, GALARIAN_RAPIDASH, SLOWPOKE, GALARIAN_SLOWPOKE, SLOWBRO, MEGA_SLOWBRO, GALARIAN_SLOWBRO, MAGNEMITE, MAGNETON, FARFETCH_D, GALARIAN_FARFETCH_D, DODUO, DODRIO, SEEL, DEWGONG, GRIMER, ALOLAN_GRIMER, MUK, ALOLAN_MUK, SHELLDER, CLOYSTER, GASTLY, HAUNTER, GENGAR, MEGA_GENGAR, GIGANTAMAX_GENGAR, ONIX, DROWZEE, HYPNO, KRABBY, KINGLER, GIGANTAMAX_KINGLER, VOLTORB, HISUIAN_VOLTORB, ELECTRODE, HISUIAN_ELECTRODE, EXEGGCUTE, EXEGGUTOR, ALOLAN_EXEGGUTOR, CUBONE, MAROWAK, ALOLAN_MAROWAK, TOTEM_ALOLAN_MAROWAK, HITMONLEE, HITMONCHAN, LICKITUNG, KOFFING, WEEZING, GALARIAN_WEEZING, RHYHORN, RHYDON, CHANSEY, TANGELA, KANGASKHAN, MEGA_KANGASKHAN, HORSEA, SEADRA, GOLDEEN, SEAKING, STARYU, STARMIE, MR_MIME, GALARIAN_MR_MIME, SCYTHER, JYNX, ELECTABUZZ, MAGMAR, PINSIR, MEGA_PINSIR, TAUROS, PALDEAN_TAUROS_COMBAT_BREAD, PALDEAN_TAUROS_BLAZE_BREAD, PALDEAN_TAUROS_AQUA_BREAD, MAGIKARP, GYARADOS, MEGA_GYARADOS, LAPRAS, GIGANTAMAX_LAPRAS, DITTO, EEVEE, STARTER_EEVEE, GIGANTAMAX_EEVEE, VAPOREON, JOLTEON, FLAREON, PORYGON, OMANYTE, OMASTAR, KABUTO, KABUTOPS, AERODACTYL, MEGA_AERODACTYL, SNORLAX, GIGANTAMAX_SNORLAX, ARTICUNO, GALARIAN_ARTICUNO, ZAPDOS, GALARIAN_ZAPDOS, MOLTRES, GALARIAN_MOLTRES, DRATINI, DRAGONAIR, DRAGONITE, MEWTWO, MEGA_MEWTWO_X, MEGA_MEWTWO_Y, MEW, CHIKORITA, BAYLEEF, MEGANIUM, CYNDAQUIL, QUILAVA, HISUIAN_TYPHLOSION, TYPHLOSION, TOTODILE, CROCONAW, FERALIGATR, SENTRET, FURRET, HOOTHOOT, NOCTOWL, LEDYBA, LEDIAN, SPINARAK, ARIADOS, CROBAT, CHINCHOU, LANTURN, PICHU, SPIKY_EARED_PICHU, CLEFFA, IGGLYBUFF, TOGEPI, TOGETIC, NATU, XATU, MAREEP, FLAAFFY, AMPHAROS, MEGA_AMPHAROS, BELLOSSOM, MARILL, AZUMARILL, SUDOWOODO, POLITOED, HOPPIP, SKIPLOOM, JUMPLUFF, AIPOM, SUNKERN, SUNFLORA, YANMA, WOOPER, PALDEAN_WOOPER, QUAGSIRE, ESPEON, UMBREON, MURKROW, SLOWKING, GALARIAN_SLOWKING, MISDREAVUS, UNOWN, UNOWN_A, UNOWN_B, UNOWN_C, UNOWN_D, UNOWN_E, UNOWN_F, UNOWN_G, UNOWN_H, UNOWN_I, UNOWN_J, UNOWN_K, UNOWN_L, UNOWN_M, UNOWN_N, UNOWN_O, UNOWN_P, UNOWN_Q, UNOWN_R, UNOWN_S, UNOWN_T, UNOWN_U, UNOWN_V, UNOWN_W, UNOWN_X, UNOWN_Y, UNOWN_Z, UNOWN_EXCLAMATION, UNOWN_QUESTION, WOBBUFFET, GIRAFARIG, PINECO, FORRETRESS, DUNSPARCE, GLIGAR, STEELIX, MEGA_STEELIX, SNUBBULL, GRANBULL, QWILFISH, HISUIAN_QWILFISH, SCIZOR, MEGA_SCIZOR, SHUCKLE, HERACROSS, MEGA_HERACROSS, HISUIAN_SNEASEL, SNEASEL, TEDDIURSA, URSARING, SLUGMA, MAGCARGO, SWINUB, PILOSWINE, CORSOLA, GALARIAN_CORSOLA, REMORAID, OCTILLERY, DELIBIRD, MANTINE, SKARMORY, HOUNDOUR, HOUNDOOM, MEGA_HOUNDOOM, KINGDRA, PHANPY, DONPHAN, PORYGON2, STANTLER, SMEARGLE, TYROGUE, HITMONTOP, SMOOCHUM, ELEKID, MAGBY, MILTANK, BLISSEY, RAIKOU, ENTEI, SUICUNE, LARVITAR, PUPITAR, TYRANITAR, MEGA_TYRANITAR, LUGIA, HO_OH, CELEBI, TREECKO, GROVYLE, SCEPTILE, MEGA_SCEPTILE, TORCHIC, COMBUSKEN, BLAZIKEN, MEGA_BLAZIKEN, MUDKIP, MARSHTOMP, SWAMPERT, MEGA_SWAMPERT, POOCHYENA, MIGHTYENA, ZIGZAGOON, GALARIAN_ZIGZAGOON, LINOONE, GALARIAN_LINOONE, WURMPLE, SILCOON, BEAUTIFLY, CASCOON, DUSTOX, LOTAD, LOMBRE, LUDICOLO, SEEDOT, NUZLEAF, SHIFTRY, TAILLOW, SWELLOW, WINGULL, PELIPPER, RALTS, KIRLIA, GARDEVOIR, MEGA_GARDEVOIR, SURSKIT, MASQUERAIN, SHROOMISH, BRELOOM, SLAKOTH, VIGOROTH, SLAKING, NINCADA, NINJASK, SHEDINJA, WHISMUR, LOUDRED, EXPLOUD, MAKUHITA, HARIYAMA, AZURILL, NOSEPASS, SKITTY, DELCATTY, SABLEYE, MEGA_SABLEYE, MAWILE, MEGA_MAWILE, ARON, LAIRON, AGGRON, MEGA_AGGRON, MEDITITE, MEDICHAM, MEGA_MEDICHAM, ELECTRIKE, MANECTRIC, MEGA_MANECTRIC, PLUSLE, MINUN, VOLBEAT, ILLUMISE, ROSELIA, GULPIN, SWALOT, CARVANHA, SHARPEDO, MEGA_SHARPEDO, WAILMER, WAILORD, NUMEL, CAMERUPT, MEGA_CAMERUPT, TORKOAL, SPOINK, GRUMPIG, SPINDA, TRAPINCH, VIBRAVA, FLYGON, CACNEA, CACTURNE, SWABLU, ALTARIA, MEGA_ALTARIA, ZANGOOSE, SEVIPER, LUNATONE, SOLROCK, BARBOACH, WHISCASH, CORPHISH, CRAWDAUNT, BALTOY, CLAYDOL, LILEEP, CRADILY, ANORITH, ARMALDO, FEEBAS, MILOTIC, CASTFORM, SUNNY_CASTFORM, RAINY_CASTFORM, SNOWY_CASTFORM, KECLEON, SHUPPET, BANETTE, MEGA_BANETTE, DUSKULL, DUSCLOPS, TROPIUS, CHIMECHO, ABSOL, MEGA_ABSOL, WYNAUT, SNORUNT, GLALIE, MEGA_GLALIE, SPHEAL, SEALEO, WALREIN, CLAMPERL, HUNTAIL, GOREBYSS, RELICANTH, LUVDISC, BAGON, SHELGON, SALAMENCE, MEGA_SALAMENCE, BELDUM, METANG, METAGROSS, MEGA_METAGROSS, REGIROCK, REGICE, REGISTEEL, LATIAS, MEGA_LATIAS, LATIOS, MEGA_LATIOS, KYOGRE, PRIMAL_KYOGRE, GROUDON, PRIMAL_GROUDON, RAYQUAZA, MEGA_RAYQUAZA, JIRACHI, DEOXYS, ATTACK_DEOXYS, DEFENSE_DEOXYS, SPEED_DEOXYS, TURTWIG, GROTLE, TORTERRA, CHIMCHAR, MONFERNO, INFERNAPE, PIPLUP, PRINPLUP, EMPOLEON, STARLY, STARAVIA, STARAPTOR, BIDOOF, BIBAREL, KRICKETOT, KRICKETUNE, SHINX, LUXIO, LUXRAY, BUDEW, ROSERADE, CRANIDOS, RAMPARDOS, SHIELDON, BASTIODON, BURMY, PLANT_CLOAK_BURMY, SANDY_CLOAK_BURMY, TRASH_CLOAK_BURMY, PLANT_CLOAK_WORMADAM, SANDY_CLOAK_WORMADAM, TRASH_CLOAK_WORMADAM, MOTHIM, COMBEE, VESPIQUEN, PACHIRISU, BUIZEL, FLOATZEL, CHERUBI, CHERRIM, CHERRIM_OVERCAST, CHERRIM_SUNSHINE, SHELLOS, WEST_SEA_SHELLOS, EAST_SEA_SHELLOS, GASTRODON, WEST_SEA_GASTRODON, EAST_SEA_GASTRODON, AMBIPOM, DRIFLOON, DRIFBLIM, BUNEARY, LOPUNNY, MEGA_LOPUNNY, MISMAGIUS, HONCHKROW, GLAMEOW, PURUGLY, CHINGLING, STUNKY, SKUNTANK, BRONZOR, BRONZONG, BONSLY, MIME_JR, HAPPINY, CHATOT, SPIRITOMB, GIBLE, GABITE, GARCHOMP, MEGA_GARCHOMP, MUNCHLAX, RIOLU, LUCARIO, MEGA_LUCARIO, HIPPOPOTAS, HIPPOWDON, SKORUPI, DRAPION, CROAGUNK, TOXICROAK, CARNIVINE, FINNEON, LUMINEON, MANTYKE, SNOVER, ABOMASNOW, MEGA_ABOMASNOW, WEAVILE, MAGNEZONE, LICKILICKY, RHYPERIOR, TANGROWTH, ELECTIVIRE, MAGMORTAR, TOGEKISS, YANMEGA, LEAFEON, GLACEON, GLISCOR, MAMOSWINE, PORYGON_Z, GALLADE, MEGA_GALLADE, PROBOPASS, DUSKNOIR, FROSLASS, ROTOM, HEAT_ROTOM, WASH_ROTOM, FROST_ROTOM, FAN_ROTOM, MOW_ROTOM, UXIE, MESPRIT, AZELF, DIALGA, DIALGA_ORIGIN, PALKIA, PALKIA_ORIGIN, HEATRAN, REGIGIGAS, GIRATINA_ALTERED, GIRATINA_ORIGIN, CRESSELIA, PHIONE, MANAPHY, DARKRAI, SHAYMIN, SHAYMIN_LAND, SHAYMIN_SKY, ARCEUS, ARCEUS_BUG, ARCEUS_DARK, ARCEUS_DRAGON, ARCEUS_ELECTRIC, ARCEUS_FAIRY, ARCEUS_FIGHTING, ARCEUS_FIRE, ARCEUS_FLYING, ARCEUS_GHOST, ARCEUS_GRASS, ARCEUS_GROUND, ARCEUS_ICE, ARCEUS_POISON, ARCEUS_PSYCHIC, ARCEUS_ROCK, ARCEUS_STEEL, ARCEUS_WATER, VICTINI, SNIVY, SERVINE, SERPERIOR, TEPIG, PIGNITE, EMBOAR, OSHAWOTT, DEWOTT, HISUIAN_SAMUROTT, SAMUROTT, PATRAT, WATCHOG, LILLIPUP, HERDIER, STOUTLAND, PURRLOIN, LIEPARD, PANSAGE, SIMISAGE, PANSEAR, SIMISEAR, PANPOUR, SIMIPOUR, MUNNA, MUSHARNA, PIDOVE, TRANQUILL, UNFEZANT, BLITZLE, ZEBSTRIKA, ROGGENROLA, BOLDORE, GIGALITH, WOOBAT, SWOOBAT, DRILBUR, EXCADRILL, AUDINO, MEGA_AUDINO, TIMBURR, GURDURR, CONKELDURR, TYMPOLE, PALPITOAD, SEISMITOAD, THROH, SAWK, SEWADDLE, SWADLOON, LEAVANNY, VENIPEDE, WHIRLIPEDE, SCOLIPEDE, COTTONEE, WHIMSICOTT, PETILIL, LILLIGANT, HISUIAN_LILLIGANT, RED_STRIPED_BASCULIN, BLUE_STRIPED_BASCULIN, WHITE_STRIPED_BASCULIN, SANDILE, KROKOROK, KROOKODILE, DARUMAKA, GALARIAN_DARUMAKA, DARMANITAN, ZEN_MODE_DARMANITAN, GALARIAN_DARMANITAN, GALARIAN_ZEN_MODE_DARMANITAN, MARACTUS, DWEBBLE, CRUSTLE, SCRAGGY, SCRAFTY, SIGILYPH, YAMASK, GALARIAN_YAMASK, COFAGRIGUS, TIRTOUGA, CARRACOSTA, ARCHEN, ARCHEOPS, TRUBBISH, GARBODOR, GIGANTAMAX_GARBODOR, ZORUA, HISUIAN_ZORUA, HISUIAN_ZOROARK, ZOROARK, MINCCINO, CINCCINO, GOTHITA, GOTHORITA, GOTHITELLE, SOLOSIS, DUOSION, REUNICLUS, DUCKLETT, SWANNA, VANILLITE, VANILLISH, VANILLUXE, DEERLING, DEERLING_SPRING, DEERLING_SUMMER, DEERLING_AUTUMN, DEERLING_WINTER, SAWSBUCK, SAWSBUCK_SPRING, SAWSBUCK_SUMMER, SAWSBUCK_AUTUMN, SAWSBUCK_WINTER, EMOLGA, KARRABLAST, ESCAVALIER, FOONGUS, AMOONGUSS, FRILLISH, JELLICENT, ALOMOMOLA, JOLTIK, GALVANTULA, FERROSEED, FERROTHORN, KLINK, KLANG, KLINKLANG, TYNAMO, EELEKTRIK, EELEKTROSS, ELGYEM, BEHEEYEM, LITWICK, LAMPENT, CHANDELURE, AXEW, FRAXURE, HAXORUS, CUBCHOO, BEARTIC, CRYOGONAL, SHELMET, ACCELGOR, STUNFISK, GALARIAN_STUNFISK, MIENFOO, MIENSHAO, DRUDDIGON, GOLETT, GOLURK, PAWNIARD, BISHARP, BOUFFALANT, RUFFLET, HISUIAN_BRAVIARY, BRAVIARY, VULLABY, MANDIBUZZ, HEATMOR, DURANT, DEINO, ZWEILOUS, HYDREIGON, LARVESTA, VOLCARONA, COBALION, TERRAKION, VIRIZION, INCARNATE_TORNADUS, TORNADUS_THERIAN, INCARNATE_THUNDURUS, THUNDURUS_THERIAN, RESHIRAM, ZEKROM, INCARNATE_LANDORUS, LANDORUS_THERIAN, KYUREM, BLACK_KYUREM, WHITE_KYUREM, KELDEO, RESOLUTE_KELDEO, ARIA_MELOETTA, PIROUETTE_MELOETTA, GENESECT, DOUSE_DRIVE_GENESECT, SHOCK_DRIVE_GENESECT, BURN_DRIVE_GENESECT, CHILL_DRIVE_GENESECT, CHESPIN, QUILLADIN, CHESNAUGHT, FENNEKIN, BRAIXEN, DELPHOX, FROAKIE, FROGADIER, GRENINJA, ASH_GRENINJA, BUNNELBY, DIGGERSBY, FLETCHLING, FLETCHINDER, TALONFLAME, SCATTERBUG, SPEWPA, VIVILLON, MEADOW_PATTERN_VIVILLON, ARCHIPELAGO_PATTERN_VIVILLON, CONTINENTAL_PATTERN_VIVILLON, ELEGANT_PATTERN_VIVILLON, GARDEN_PATTERN_VIVILLON, HIGH_PLAINS_PATTERN_VIVILLON, ICY_SNOW_PATTERN_VIVILLON, JUNGLE_PATTERN_VIVILLON, MARINE_PATTERN_VIVILLON, MODERN_PATTERN_VIVILLON, MONSOON_PATTERN_VIVILLON, OCEAN_PATTERN_VIVILLON, POLAR_PATTERN_VIVILLON, RIVER_PATTERN_VIVILLON, SANDSTORM_PATTERN_VIVILLON, SAVANNA_PATTERN_VIVILLON, SUN_PATTERN_VIVILLON, TUNDRA_PATTERN_VIVILLON, FANCY_PATTERN_VIVILLON, POKEBALL_PATTERN_VIVILLON, LITLEO, PYROAR, FLABEBE, RED_FLOWER_FLABEBE, BLUE_FLOWER_FLABEBE, ORANGE_FLOWER_FLABEBE, WHITE_FLOWER_FLABEBE, YELLOW_FLOWER_FLABEBE, FLOETTE, RED_FLOWER_FLOETTE, BLUE_FLOWER_FLOETTE, ORANGE_FLOWER_FLOETTE, WHITE_FLOWER_FLOETTE, YELLOW_FLOWER_FLOETTE, ETERNAL_FLOWER_FLOETTE, FLORGES, RED_FLOWER_FLORGES, BLUE_FLOWER_FLORGES, ORANGE_FLOWER_FLORGES, WHITE_FLOWER_FLORGES, YELLOW_FLOWER_FLORGES, SKIDDO, GOGOAT, PANCHAM, PANGORO, FURFROU, NATURAL_FURFROU, DANDY_TRIM_FURFROU, DEBUTANTE_TRIM_FURFROU, DIAMOND_TRIM_FURFROU, HEART_TRIM_FURFROU, KABUKI_TRIM_FURFROU, LA_REINE_TRIM_FURFROU, MATRON_TRIM_FURFROU, PHARAOH_TRIM_FURFROU, STAR_TRIM_FURFROU, ESPURR, MALE_MEOWSTIC, FEMALE_MEOWSTIC, HONEDGE, DOUBLADE, AEGISLASH, SHIELD_AEGISLASH, BLADE_AEGISLASH, SPRITZEE, AROMATISSE, SWIRLIX, SLURPUFF, INKAY, MALAMAR, BINACLE, BARBARACLE, SKRELP, DRAGALGE, CLAUNCHER, CLAWITZER, HELIOPTILE, HELIOLISK, TYRUNT, TYRANTRUM, AMAURA, AURORUS, SYLVEON, HAWLUCHA, DEDENNE, CARBINK, GOOMY, HISUIAN_SLIGGOO, SLIGGOO, HISUIAN_GOODRA, GOODRA, KLEFKI, PHANTUMP, TREVENANT, AVERAGE_SIZE_PUMPKABOO, SMALL_SIZE_PUMPKABOO, LARGE_SIZE_PUMPKABOO, SUPER_SIZE_PUMPKABOO, AVERAGE_SIZE_GOURGEIST, SMALL_SIZE_GOURGEIST, LARGE_SIZE_GOURGEIST, SUPER_SIZE_GOURGEIST, BERGMITE, AVALUGG, HISUIAN_AVALUGG, NOIBAT, NOIVERN, XERNEAS, YVELTAL, ZYGARDE_50, ZYGARDE_10, ZYGARDE_COMPLETE, DIANCIE, MEGA_DIANCIE, HOOPA_CONFINED, HOOPA_UNBOUND, VOLCANION, ROWLET, DARTRIX, HISUIAN_DECIDUEYE, DECIDUEYE, LITTEN, TORRACAT, INCINEROAR, POPPLIO, BRIONNE, PRIMARINA, PIKIPEK, TRUMBEAK, TOUCANNON, YUNGOOS, GUMSHOOS, TOTEM_GUMSHOOS, GRUBBIN, CHARJABUG, VIKAVOLT, TOTEM_VIKAVOLT, CRABRAWLER, CRABOMINABLE, BAILE_STYLE_ORICORIO, POM_POM_STYLE_ORICORIO, PA_U_STYLE_ORICORIO, SENSU_STYLE_ORICORIO, CUTIEFLY, RIBOMBEE, TOTEM_RIBOMBEE, ROCKRUFF, MIDDAY_ROCKRUFF, MIDDAY_LYCANROC, MIDNIGHT_LYCANROC, DUSK_LYCANROC, WISHIWASHI, SOLO_WISHIWASHI, SCHOOL_WISHIWASHI, MAREANIE, TOXAPEX, MUDBRAY, MUDSDALE, DEWPIDER, ARAQUANID, TOTEM_ARAQUANID, FOMANTIS, LURANTIS, TOTEM_LURANTIS, MORELULL, SHIINOTIC, SALANDIT, SALAZZLE, TOTEM_SALAZZLE, STUFFUL, BEWEAR, BOUNSWEET, STEENEE, TSAREENA, COMFEY, ORANGURU, PASSIMIAN, WIMPOD, GOLISOPOD, SANDYGAST, PALOSSAND, PYUKUMUKU, TYPE_NULL, SILVALLY, SILVALLY_BUG, SILVALLY_DARK, SILVALLY_DRAGON, SILVALLY_ELECTRIC, SILVALLY_FAIRY, SILVALLY_FIGHTING, SILVALLY_FIRE, SILVALLY_FLYING, SILVALLY_GHOST, SILVALLY_GRASS, SILVALLY_GROUND, SILVALLY_ICE, SILVALLY_POISON, SILVALLY_PSYCHIC, SILVALLY_ROCK, SILVALLY_STEEL, SILVALLY_WATER, MINIOR, CORE_MINIOR, RED_CORE_MINIOR, ORANGE_CORE_MINIOR, YELLOW_CORE_MINIOR, GREEN_CORE_MINIOR, BLUE_CORE_MINIOR, INDIGO_CORE_MINIOR, VIOLET_CORE_MINIOR, METEOR_MINIOR, KOMALA, TURTONATOR, TOGEDEMARU, TOTEM_TOGEDEMARU, MIMIKYU, MIMIKYU_BUSTED, TOTEM_MIMIKYU, BUSTED_TOTEM_MIMIKYU, BRUXISH, DRAMPA, DHELMISE, JANGMO_O, HAKAMO_O, KOMMO_O, TOTEM_KOMMO_O, TAPU_KOKO, TAPU_LELE, TAPU_BULU, TAPU_FINI, COSMOG, COSMOEM, SOLGALEO, LUNALA, NIHILEGO, BUZZWOLE, PHEROMOSA, XURKITREE, CELESTEELA, KARTANA, GUZZLORD, NECROZMA, DUSK_MANE_NECROZMA, DAWN_WINGS_NECROZMA, ULTRA_NECROZMA, MAGEARNA, ORIGINAL_COLOR_MAGEARNA, MARSHADOW, POIPOLE, NAGANADEL, STAKATAKA, BLACEPHALON, ZERAORA, MELTAN, MELMETAL, GIGANTAMAX_MELMETAL, GROOKEY, THWACKEY, RILLABOOM, GIGANTAMAX_RILLABOOM, SCORBUNNY, RABOOT, CINDERACE, GIGANTAMAX_CINDERACE, SOBBLE, DRIZZILE, INTELEON, GIGANTAMAX_INTELEON, SKWOVET, GREEDENT, ROOKIDEE, CORVISQUIRE, CORVIKNIGHT, GIGANTAMAX_CORVIKNIGHT, BLIPBUG, DOTTLER, ORBEETLE, GIGANTAMAX_ORBEETLE, NICKIT, THIEVUL, GOSSIFLEUR, ELDEGOSS, WOOLOO, DUBWOOL, CHEWTLE, DREDNAW, GIGANTAMAX_DREDNAW, YAMPER, BOLTUND, ROLYCOLY, CARKOL, COALOSSAL, GIGANTAMAX_COALOSSAL, APPLIN, FLAPPLE, GIGANTAMAX_FLAPPLE, APPLETUN, GIGANTAMAX_APPLETUN, SILICOBRA, SANDACONDA, GIGANTAMAX_SANDACONDA, CRAMORANT, CRAMORANT_GULPING, CRAMORANT_GORGING, ARROKUDA, BARRASKEWDA, TOXEL, TOXTRICITY_AMPED, TOXTRICITY_LOW_KEY, GIGANTAMAX_TOXTRICITY_AMPED, GIGANTAMAX_TOXTRICITY_LOW_KEY, SIZZLIPEDE, CENTISKORCH, GIGANTAMAX_CENTISKORCH, CLOBBOPUS, GRAPPLOCT, SINISTEA, ANTIQUE_SINISTEA, POLTEAGEIST, ANTIQUE_POLTEAGEIST, HATENNA, HATTREM, HATTERENE, GIGANTAMAX_HATTERENE, IMPIDIMP, MORGREM, GRIMMSNARL, GIGANTAMAX_GRIMMSNARL, OBSTAGOON, PERRSERKER, CURSOLA, SIRFETCH_D, MR_RIME, RUNERIGUS, MILCERY, ALCREMIE, VANILLA_CREAM_ALCREMIE, RUBY_CREAM_ALCREMIE, MATCHA_CREAM_ALCREMIE, MINT_CREAM_ALCREMIE, LEMON_CREAM_ALCREMIE, SALTED_CREAM_ALCREMIE, RUBY_SWIRL_ALCREMIE, CARAMEL_SWIRL_ALCREMIE, RAINBOW_SWIRL_ALCREMIE, GIGANTAMAX_ALCREMIE, FALINKS, PINCURCHIN, SNOM, FROSMOTH, STONJOURNER, EISCUE, ICE_FACE_EISCUE, NOICE_FACE_EISCUE, MALE_INDEEDEE, FEMALE_INDEEDEE, MORPEKO, FULL_BELLY_MODE_MORPEKO, HANGRY_MODE_MORPEKO, CUFANT, COPPERAJAH, GIGANTAMAX_COPPERAJAH, DRACOZOLT, ARCTOZOLT, DRACOVISH, ARCTOVISH, DURALUDON, GIGANTAMAX_DURALUDON, DREEPY, DRAKLOAK, DRAGAPULT, HERO_OF_MANY_BATTLES_ZACIAN, CROWNED_SWORD_ZACIAN, HERO_OF_MANY_BATTLES_ZAMAZENTA, CROWNED_SHIELD_ZAMAZENTA, ETERNATUS, ETERNAMAX_ETERNATUS, KUBFU, SINGLE_STRIKE_STYLE_URSHIFU, RAPID_STRIKE_STYLE_URSHIFU, GIGANTAMAX_SINGLE_STRIKE_STYLE_URSHIFU, GIGANTAMAX_RAPID_STRIKE_STYLE_URSHIFU, ZARUDE, DADA_ZARUDE, REGIELEKI, REGIDRAGO, GLASTRIER, SPECTRIER, CALYREX, ICE_RIDER_CALYREX, SHADOW_RIDER_CALYREX, WYRDEER, KLEAVOR, URSALUNA, MALE_BASCULEGION, FEMALE_BASCULEGION, SNEASLER, OVERQWIL, INCARNATE_ENAMORUS, ENAMORUS_THERIAN, SPRIGATITO, FLORAGATO, MEOWSCARADA, FUECOCO, CROCALOR, SKELEDIRGE, QUAXLY, QUAXWELL, QUAQUAVAL, LECHONK, MALE_OINKOLOGNE, FEMALE_OINKOLOGNE, TAROUNTULA, SPIDOPS, NYMBLE, LOKIX, PAWMI, PAWMO, PAWMOT, TANDEMAUS, MAUSHOLD, FAMILY_OF_THREE_MAUSHOLD, FAMILY_OF_FOUR_MAUSHOLD, FIDOUGH, DACHSBUN, SMOLIV, DOLLIV, ARBOLIVA, GREEN_PLUMAGE_SQUAWKABILLY, BLUE_PLUMAGE_SQUAWKABILLY, YELLOW_PLUMAGE_SQUAWKABILLY, WHITE_PLUMAGE_SQUAWKABILLY, NACLI, NACLSTACK, GARGANACL, CHARCADET, ARMAROUGE, CERULEDGE, TADBULB, BELLIBOLT, WATTREL, KILOWATTREL, MASCHIFF, MABOSSTIFF, SHROODLE, GRAFAIAI, BRAMBLIN, BRAMBLEGHAST, TOEDSCOOL, TOEDSCRUEL, KLAWF, CAPSAKID, SCOVILLAIN, RELLOR, RABSCA, FLITTLE, ESPATHRA, TINKATINK, TINKATUFF, TINKATON, WIGLETT, WUGTRIO, BOMBIRDIER, FINIZEN, ZERO_PALAFIN, HERO_PALAFIN, VAROOM, REVAVROOM, CYCLIZAR, ORTHWORM, GLIMMET, GLIMMORA, GREAVARD, HOUNDSTONE, FLAMIGO, CETODDLE, CETITAN, VELUZA, DONDOZO, TATSUGIRI, CURLY_TATSUGIRI, DROOPY_TATSUGIRI, STRETCHY_TATSUGIRI, ANNIHILAPE, CLODSIRE, FARIGIRAF, DUDUNSPARCE, TWO_SEGMENT_DUDUNSPARCE, THREE_SEGMENT_DUDUNSPARCE, KINGAMBIT, GREAT_TUSK, SCREAM_TAIL, BRUTE_BONNET, FLUTTER_MANE, SLITHER_WING, SANDY_SHOCKS, IRON_TREADS, IRON_BUNDLE, IRON_HANDS, IRON_JUGULIS, IRON_MOTH, IRON_THORNS, FRIGIBAX, ARCTIBAX, BAXCALIBUR, CHEST_GIMMIGHOUL, ROAMING_GIMMIGHOUL, GHOLDENGO, WO_CHIEN, CHIEN_PAO, TING_LU, CHI_YU, ROARING_MOON, IRON_VALIANT, KORAIDON, MIRAIDON, WALKING_WAKE, IRON_LEAVES, SPECIES_TOTAL
-  // clang-format on
-};
-}  // namespace pokesim::dex
-
-///////////////////////// END OF src/Types/Species.hpp /////////////////////////
-
 ///////////////////////// START OF src/Types/Stat.hpp //////////////////////////
 
 #include <cstdint>
@@ -11350,21 +11830,6 @@ enum Status : std::uint8_t { NO_STATUS = 0, BRN, FRZ, PAR, PSN, SLP, TOX, /*, FR
 
 ///////////////////////// END OF src/Types/Status.hpp //////////////////////////
 
-///////////////////////// START OF src/Types/Type.hpp //////////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-/** @brief Pokemon type name */
-enum Type : std::uint8_t {
-  // clang-format off
-  NO_TYPE = 0, NORMAL_TYPE, FIGHTING_TYPE, FLYING_TYPE, POISON_TYPE, GROUND_TYPE, ROCK_TYPE, BUG_TYPE, GHOST_TYPE, STEEL_TYPE, FIRE_TYPE, WATER_TYPE, GRASS_TYPE, ELECTRIC_TYPE, PSYCHIC_TYPE, ICE_TYPE, DRAGON_TYPE, DARK_TYPE, FAIRY_TYPE, TYPE_TOTAL
-  // clang-format on
-};
-}  // namespace pokesim::dex
-
-////////////////////////// END OF src/Types/Type.hpp ///////////////////////////
-
 /////////////////////// START OF src/Pokedex/Pokedex.hpp ///////////////////////
 
 namespace pokesim {
@@ -11384,26 +11849,86 @@ class Pokedex {
   inline static entt::entity (*getItemBuild(dex::Item item))(Pokedex&);
 
  public:
+  /**
+   * @brief The data for the Pokedex will be based the this game's data.
+   * For example, if this is set to DIAMOND_PEARL, Clefable's data will list it as a Normal type, but if it's set to
+   * BRILLIANT_DIAMOND_SHINING_PEARL, Clefable will be listed as a Fairy type.
+   */
   const GameMechanic mechanics;
 
   Pokedex(GameMechanic mechanics_ = SCARLET_VIOLET) : mechanics(mechanics_) {}
 
+  // Creates an entity to store a new Pokedex entry of any species, item, or move.
   inline entt::handle createEntry();
 
+  /**
+   * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.
+   *
+   * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
+   * instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function
+   * should only be called with a set of those 12 Pokemon's species.
+   *
+   * @note Only call this once per species per Pokedex instance.
+   */
   inline void loadSpecies(const entt::dense_set<dex::Species>& speciesList);
+
+  /**
+   * @brief Calls the load functions for a set of items to add their data to a Pokedex's storage.
+   *
+   * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
+   * instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function
+   * should only be called with a set of those 12 Pokemon's items.
+   *
+   * @note Only call this once per item per Pokedex instance.
+   */
   inline void loadItems(const entt::dense_set<dex::Item>& itemList);
+
+  /**
+   * @brief Calls the load functions for a set of moves to add their data to a Pokedex's storage.
+   *
+   * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
+   * instance is assigned to, so if one turn of a single battle is being simulated and both opposing Pokemon have 4
+   * moves, then this function should only be called with a set of those 8 moves.
+   *
+   * @note Only call this once per move per Pokedex instance.
+   */
   inline void loadMoves(const entt::dense_set<dex::Move>& moveList);
 
+  /**
+   * @brief Returns references to the given dex data components for a species
+   *
+   * @warning
+   * Attempting to get a component from a species that doesn't own it or an unloaded species results in undefined
+   * behavior.
+   *
+   * @tparam T Type of data to retrieve. Valid types: TODO(aed3): Add in list
+   */
   template <typename... T>
   auto getSpeciesData(dex::Species species) const {
     return registry.get<T...>(speciesMap.at(species));
   }
 
+  /**
+   * @brief Returns references to the given dex data components for an item
+   *
+   * @warning
+   * Attempting to get a component from an item that doesn't own it or an unloaded item results in undefined behavior.
+   *
+   * @tparam T Type of data to retrieve. Valid types: TODO(aed3): Add in list
+   */
   template <typename... T>
   auto getItemData(dex::Item item) const {
     return registry.get<T...>(itemsMap.at(item));
   }
 
+  /**
+   * @brief Returns references to the given dex data components for a move
+   *
+   * @warning
+   * Attempting to get a component from a move that doesn't own it or an unloaded item results in undefined behavior.
+   *
+   * @tparam T Type of data to retrieve. Valid types: TODO(aed3): Add in list
+   */
   template <typename... T>
   auto getMoveData(dex::Move move) const {
     return registry.get<T...>(movesMap.at(move));
@@ -11412,389 +11937,6 @@ class Pokedex {
 }  // namespace pokesim
 
 //////////////////////// END OF src/Pokedex/Pokedex.hpp ////////////////////////
-
-/////////////////// START OF external/entt/entity/handle.hpp ///////////////////
-
-#ifndef ENTT_ENTITY_HANDLE_HPP
-#define ENTT_ENTITY_HANDLE_HPP
-
-#include <iterator>
-#include <tuple>
-#include <type_traits>
-#include <utility>
-
-namespace entt {
-
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
-namespace internal {
-
-template<typename It>
-class handle_storage_iterator final {
-    template<typename Other>
-    friend class handle_storage_iterator;
-
-    using underlying_type = std::remove_reference_t<typename It::value_type::second_type>;
-    using entity_type = typename underlying_type::entity_type;
-
-public:
-    using value_type = typename std::iterator_traits<It>::value_type;
-    using pointer = input_iterator_pointer<value_type>;
-    using reference = value_type;
-    using difference_type = std::ptrdiff_t;
-    using iterator_category = std::input_iterator_tag;
-
-    constexpr handle_storage_iterator() noexcept
-        : entt{null},
-          it{},
-          last{} {}
-
-    constexpr handle_storage_iterator(entity_type value, It from, It to) noexcept
-        : entt{value},
-          it{from},
-          last{to} {
-        while(it != last && !it->second.contains(entt)) { ++it; }
-    }
-
-    constexpr handle_storage_iterator &operator++() noexcept {
-        while(++it != last && !it->second.contains(entt)) {}
-        return *this;
-    }
-
-    constexpr handle_storage_iterator operator++(int) noexcept {
-        handle_storage_iterator orig = *this;
-        return ++(*this), orig;
-    }
-
-    [[nodiscard]] constexpr reference operator*() const noexcept {
-        return *it;
-    }
-
-    [[nodiscard]] constexpr pointer operator->() const noexcept {
-        return operator*();
-    }
-
-    template<typename ILhs, typename IRhs>
-    friend constexpr bool operator==(const handle_storage_iterator<ILhs> &, const handle_storage_iterator<IRhs> &) noexcept;
-
-private:
-    entity_type entt;
-    It it;
-    It last;
-};
-
-template<typename ILhs, typename IRhs>
-[[nodiscard]] constexpr bool operator==(const handle_storage_iterator<ILhs> &lhs, const handle_storage_iterator<IRhs> &rhs) noexcept {
-    return lhs.it == rhs.it;
-}
-
-template<typename ILhs, typename IRhs>
-[[nodiscard]] constexpr bool operator!=(const handle_storage_iterator<ILhs> &lhs, const handle_storage_iterator<IRhs> &rhs) noexcept {
-    return !(lhs == rhs);
-}
-
-} // namespace internal
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
-
-/**
- * @brief Non-owning handle to an entity.
- *
- * Tiny wrapper around a registry and an entity.
- *
- * @tparam Registry Basic registry type.
- * @tparam Scope Types to which to restrict the scope of a handle.
- */
-template<typename Registry, typename... Scope>
-struct basic_handle {
-    /*! @brief Type of registry accepted by the handle. */
-    using registry_type = Registry;
-    /*! @brief Underlying entity identifier. */
-    using entity_type = typename registry_type::entity_type;
-    /*! @brief Underlying version type. */
-    using version_type = typename registry_type::version_type;
-    /*! @brief Unsigned integer type. */
-    using size_type = typename registry_type::size_type;
-
-    /*! @brief Constructs an invalid handle. */
-    basic_handle() noexcept
-        : reg{},
-          entt{null} {}
-
-    /**
-     * @brief Constructs a handle from a given registry and entity.
-     * @param ref An instance of the registry class.
-     * @param value A valid identifier.
-     */
-    basic_handle(registry_type &ref, entity_type value) noexcept
-        : reg{&ref},
-          entt{value} {}
-
-    /**
-     * @brief Returns an iterable object to use to _visit_ a handle.
-     *
-     * The iterable object returns a pair that contains the name and a reference
-     * to the current storage.<br/>
-     * Returned storage are those that contain the entity associated with the
-     * handle.
-     *
-     * @return An iterable object to use to _visit_ the handle.
-     */
-    [[nodiscard]] auto storage() const noexcept {
-        auto iterable = reg->storage();
-        using iterator_type = internal::handle_storage_iterator<typename decltype(iterable)::iterator>;
-        return iterable_adaptor{iterator_type{entt, iterable.begin(), iterable.end()}, iterator_type{entt, iterable.end(), iterable.end()}};
-    }
-
-    /**
-     * @brief Constructs a const handle from a non-const one.
-     * @tparam Other A valid entity type (see entt_traits for more details).
-     * @tparam Args Scope of the handle to construct.
-     * @return A const handle referring to the same registry and the same
-     * entity.
-     */
-    template<typename Other, typename... Args>
-    operator basic_handle<Other, Args...>() const noexcept {
-        static_assert(std::is_same_v<Other, Registry> || std::is_same_v<std::remove_const_t<Other>, Registry>, "Invalid conversion between different handles");
-        static_assert((sizeof...(Scope) == 0 || ((sizeof...(Args) != 0 && sizeof...(Args) <= sizeof...(Scope)) && ... && (type_list_contains_v<type_list<Scope...>, Args>))), "Invalid conversion between different handles");
-
-        return reg ? basic_handle<Other, Args...>{*reg, entt} : basic_handle<Other, Args...>{};
-    }
-
-    /**
-     * @brief Converts a handle to its underlying entity.
-     * @return The contained identifier.
-     */
-    [[nodiscard]] operator entity_type() const noexcept {
-        return entity();
-    }
-
-    /**
-     * @brief Checks if a handle refers to non-null registry pointer and entity.
-     * @return True if the handle refers to non-null registry and entity, false otherwise.
-     */
-    [[nodiscard]] explicit operator bool() const noexcept {
-        return reg && reg->valid(entt);
-    }
-
-    /**
-     * @brief Checks if a handle refers to a valid entity or not.
-     * @return True if the handle refers to a valid entity, false otherwise.
-     */
-    [[nodiscard]] bool valid() const {
-        return reg->valid(entt);
-    }
-
-    /**
-     * @brief Returns a pointer to the underlying registry, if any.
-     * @return A pointer to the underlying registry, if any.
-     */
-    [[nodiscard]] registry_type *registry() const noexcept {
-        return reg;
-    }
-
-    /**
-     * @brief Returns the entity associated with a handle.
-     * @return The entity associated with the handle.
-     */
-    [[nodiscard]] entity_type entity() const noexcept {
-        return entt;
-    }
-
-    /*! @brief Destroys the entity associated with a handle. */
-    void destroy() {
-        reg->destroy(entt);
-    }
-
-    /**
-     * @brief Destroys the entity associated with a handle.
-     * @param version A desired version upon destruction.
-     */
-    void destroy(const version_type version) {
-        reg->destroy(entt, version);
-    }
-
-    /**
-     * @brief Assigns the given component to a handle.
-     * @tparam Component Type of component to create.
-     * @tparam Args Types of arguments to use to construct the component.
-     * @param args Parameters to use to initialize the component.
-     * @return A reference to the newly created component.
-     */
-    template<typename Component, typename... Args>
-    decltype(auto) emplace(Args &&...args) const {
-        static_assert(((sizeof...(Scope) == 0) || ... || std::is_same_v<Component, Scope>), "Invalid type");
-        return reg->template emplace<Component>(entt, std::forward<Args>(args)...);
-    }
-
-    /**
-     * @brief Assigns or replaces the given component for a handle.
-     * @tparam Component Type of component to assign or replace.
-     * @tparam Args Types of arguments to use to construct the component.
-     * @param args Parameters to use to initialize the component.
-     * @return A reference to the newly created component.
-     */
-    template<typename Component, typename... Args>
-    decltype(auto) emplace_or_replace(Args &&...args) const {
-        static_assert(((sizeof...(Scope) == 0) || ... || std::is_same_v<Component, Scope>), "Invalid type");
-        return reg->template emplace_or_replace<Component>(entt, std::forward<Args>(args)...);
-    }
-
-    /**
-     * @brief Patches the given component for a handle.
-     * @tparam Component Type of component to patch.
-     * @tparam Func Types of the function objects to invoke.
-     * @param func Valid function objects.
-     * @return A reference to the patched component.
-     */
-    template<typename Component, typename... Func>
-    decltype(auto) patch(Func &&...func) const {
-        static_assert(((sizeof...(Scope) == 0) || ... || std::is_same_v<Component, Scope>), "Invalid type");
-        return reg->template patch<Component>(entt, std::forward<Func>(func)...);
-    }
-
-    /**
-     * @brief Replaces the given component for a handle.
-     * @tparam Component Type of component to replace.
-     * @tparam Args Types of arguments to use to construct the component.
-     * @param args Parameters to use to initialize the component.
-     * @return A reference to the component being replaced.
-     */
-    template<typename Component, typename... Args>
-    decltype(auto) replace(Args &&...args) const {
-        static_assert(((sizeof...(Scope) == 0) || ... || std::is_same_v<Component, Scope>), "Invalid type");
-        return reg->template replace<Component>(entt, std::forward<Args>(args)...);
-    }
-
-    /**
-     * @brief Removes the given components from a handle.
-     * @tparam Component Types of components to remove.
-     * @return The number of components actually removed.
-     */
-    template<typename... Component>
-    size_type remove() const {
-        static_assert(sizeof...(Scope) == 0 || (type_list_contains_v<type_list<Scope...>, Component> && ...), "Invalid type");
-        return reg->template remove<Component...>(entt);
-    }
-
-    /**
-     * @brief Erases the given components from a handle.
-     * @tparam Component Types of components to erase.
-     */
-    template<typename... Component>
-    void erase() const {
-        static_assert(sizeof...(Scope) == 0 || (type_list_contains_v<type_list<Scope...>, Component> && ...), "Invalid type");
-        reg->template erase<Component...>(entt);
-    }
-
-    /**
-     * @brief Checks if a handle has all the given components.
-     * @tparam Component Components for which to perform the check.
-     * @return True if the handle has all the components, false otherwise.
-     */
-    template<typename... Component>
-    [[nodiscard]] decltype(auto) all_of() const {
-        return reg->template all_of<Component...>(entt);
-    }
-
-    /**
-     * @brief Checks if a handle has at least one of the given components.
-     * @tparam Component Components for which to perform the check.
-     * @return True if the handle has at least one of the given components,
-     * false otherwise.
-     */
-    template<typename... Component>
-    [[nodiscard]] decltype(auto) any_of() const {
-        return reg->template any_of<Component...>(entt);
-    }
-
-    /**
-     * @brief Returns references to the given components for a handle.
-     * @tparam Component Types of components to get.
-     * @return References to the components owned by the handle.
-     */
-    template<typename... Component>
-    [[nodiscard]] decltype(auto) get() const {
-        static_assert(sizeof...(Scope) == 0 || (type_list_contains_v<type_list<Scope...>, Component> && ...), "Invalid type");
-        return reg->template get<Component...>(entt);
-    }
-
-    /**
-     * @brief Returns a reference to the given component for a handle.
-     * @tparam Component Type of component to get.
-     * @tparam Args Types of arguments to use to construct the component.
-     * @param args Parameters to use to initialize the component.
-     * @return Reference to the component owned by the handle.
-     */
-    template<typename Component, typename... Args>
-    [[nodiscard]] decltype(auto) get_or_emplace(Args &&...args) const {
-        static_assert(((sizeof...(Scope) == 0) || ... || std::is_same_v<Component, Scope>), "Invalid type");
-        return reg->template get_or_emplace<Component>(entt, std::forward<Args>(args)...);
-    }
-
-    /**
-     * @brief Returns pointers to the given components for a handle.
-     * @tparam Component Types of components to get.
-     * @return Pointers to the components owned by the handle.
-     */
-    template<typename... Component>
-    [[nodiscard]] auto try_get() const {
-        static_assert(sizeof...(Scope) == 0 || (type_list_contains_v<type_list<Scope...>, Component> && ...), "Invalid type");
-        return reg->template try_get<Component...>(entt);
-    }
-
-    /**
-     * @brief Checks if a handle has components assigned.
-     * @return True if the handle has no components assigned, false otherwise.
-     */
-    [[nodiscard]] bool orphan() const {
-        return reg->orphan(entt);
-    }
-
-private:
-    registry_type *reg;
-    entity_type entt;
-};
-
-/**
- * @brief Compares two handles.
- * @tparam Args Scope of the first handle.
- * @tparam Other Scope of the second handle.
- * @param lhs A valid handle.
- * @param rhs A valid handle.
- * @return True if both handles refer to the same registry and the same
- * entity, false otherwise.
- */
-template<typename... Args, typename... Other>
-[[nodiscard]] bool operator==(const basic_handle<Args...> &lhs, const basic_handle<Other...> &rhs) noexcept {
-    return lhs.registry() == rhs.registry() && lhs.entity() == rhs.entity();
-}
-
-/**
- * @brief Compares two handles.
- * @tparam Args Scope of the first handle.
- * @tparam Other Scope of the second handle.
- * @param lhs A valid handle.
- * @param rhs A valid handle.
- * @return False if both handles refer to the same registry and the same
- * entity, true otherwise.
- */
-template<typename... Args, typename... Other>
-[[nodiscard]] bool operator!=(const basic_handle<Args...> &lhs, const basic_handle<Other...> &rhs) noexcept {
-    return !(lhs == rhs);
-}
-
-} // namespace entt
-
-#endif
-
-//////////////////// END OF external/entt/entity/handle.hpp ////////////////////
 
 ///////////////// START OF src/Pokedex/Setup/DexDataSetup.hpp //////////////////
 
@@ -11817,11 +11959,11 @@ struct DexDataSetup {
 
 ////////////////// END OF src/Pokedex/Setup/DexDataSetup.hpp ///////////////////
 
-////////////// START OF src/Pokedex/Setup/DexDataSpeciesSetup.hpp //////////////
+////////////// START OF src/Pokedex/Setup/SpeciesDexDataSetup.hpp //////////////
 
 namespace pokesim::dex::internal {
-struct SpeciesSetup : DexDataSetup {
-  SpeciesSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
+struct SpeciesDexDataSetup : DexDataSetup {
+  SpeciesDexDataSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
 
   inline void setName(Species species);
   inline void setType(Type type1, Type type2 = NO_TYPE);
@@ -11830,153 +11972,50 @@ struct SpeciesSetup : DexDataSetup {
 };
 }  // namespace pokesim::dex::internal
 
-/////////////// END OF src/Pokedex/Setup/DexDataSpeciesSetup.hpp ///////////////
+/////////////// END OF src/Pokedex/Setup/SpeciesDexDataSetup.hpp ///////////////
 
-////////////////// START OF src/Pokedex/Species/Ampharos.hpp ///////////////////
+////////////// START OF src/Pokedex/Setup/SpeciesDexDataSetup.cpp //////////////
 
-namespace pokesim::dex::build {
-struct Ampharos {
-  static const dex::Species name = dex::AMPHAROS;
-  static const std::uint8_t hp = 90, atk = 75, def = 85, spa = 115, spd = 90, spe = 55;
+namespace pokesim::dex::internal {
+void SpeciesDexDataSetup::setName(Species species) {
+  handle.emplace<SpeciesName>(species);
+}
 
-  static entt::entity build(Pokedex& pokedex) {
-    internal::SpeciesSetup species(pokedex);
-    species.setName(name);
-    species.setType(dex::ELECTRIC_TYPE);
-    species.setBaseStats(hp, atk, def, spa, spd, spe);
+void SpeciesDexDataSetup::setType(Type type1, Type type2) {
+  handle.emplace<SpeciesTypes>(type1, type2);
+}
 
-    return species.entity();
-  }
-};
-}  // namespace pokesim::dex::build
+void SpeciesDexDataSetup::setBaseStats(
+  std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe) {
+  handle.emplace<BaseStats>(hp, atk, def, spa, spd, spe);
+}
+}  // namespace pokesim::dex::internal
 
-/////////////////// END OF src/Pokedex/Species/Ampharos.hpp ////////////////////
+/////////////// END OF src/Pokedex/Setup/SpeciesDexDataSetup.cpp ///////////////
 
-////////////////// START OF src/Pokedex/Species/Dragapult.hpp //////////////////
+///////////////////// START OF src/Components/Accuracy.hpp /////////////////////
 
-namespace pokesim::dex::build {
-struct Dragapult {
-  static const dex::Species name = dex::DRAGAPULT;
-  static const std::uint8_t hp = 88, atk = 120, def = 75, spa = 100, spd = 75, spe = 142;
-
-  static entt::entity build(Pokedex& pokedex) {
-    internal::SpeciesSetup species(pokedex);
-    species.setName(name);
-    species.setType(dex::DRAGON_TYPE, dex::GHOST_TYPE);
-    species.setBaseStats(hp, atk, def, spa, spd, spe);
-
-    return species.entity();
-  }
-};
-}  // namespace pokesim::dex::build
-
-/////////////////// END OF src/Pokedex/Species/Dragapult.hpp ///////////////////
-
-////////////////// START OF src/Pokedex/Species/Empoleon.hpp ///////////////////
-
-namespace pokesim::dex::build {
-struct Empoleon {
-  static const dex::Species name = dex::EMPOLEON;
-  static const std::uint8_t hp = 84, atk = 86, def = 88, spa = 111, spd = 101, spe = 60;
-
-  static entt::entity build(Pokedex& pokedex) {
-    internal::SpeciesSetup species(pokedex);
-    species.setName(name);
-    species.setType(dex::WATER_TYPE, dex::STEEL_TYPE);
-    species.setBaseStats(hp, atk, def, spa, spd, spe);
-
-    return species.entity();
-  }
-};
-}  // namespace pokesim::dex::build
-
-/////////////////// END OF src/Pokedex/Species/Empoleon.hpp ////////////////////
-
-////////////////// START OF src/Pokedex/Species/Gardevoir.hpp //////////////////
-
-namespace pokesim::dex::build {
-struct Gardevoir {
-  static const dex::Species name = dex::GARDEVOIR;
-  static const std::uint8_t hp = 68, atk = 65, def = 65, spa = 125, spd = 115, spe = 80;
-
-  static entt::entity build(Pokedex& pokedex) {
-    internal::SpeciesSetup species(pokedex);
-    species.setName(name);
-    species.setType(dex::PSYCHIC_TYPE, dex::FAIRY_TYPE);
-    species.setBaseStats(hp, atk, def, spa, spd, spe);
-
-    return species.entity();
-  }
-};
-}  // namespace pokesim::dex::build
-
-/////////////////// END OF src/Pokedex/Species/Gardevoir.hpp ///////////////////
-
-/////////////////// START OF src/Pokedex/Species/Pangoro.hpp ///////////////////
-
-namespace pokesim::dex::build {
-struct Pangoro {
-  static const dex::Species name = dex::PANGORO;
-  static const std::uint8_t hp = 95, atk = 124, def = 78, spa = 69, spd = 71, spe = 58;
-
-  static entt::entity build(Pokedex& pokedex) {
-    internal::SpeciesSetup species(pokedex);
-    species.setName(name);
-    species.setType(dex::FIGHTING_TYPE, dex::DARK_TYPE);
-    species.setBaseStats(hp, atk, def, spa, spd, spe);
-
-    return species.entity();
-  }
-};
-}  // namespace pokesim::dex::build
-
-//////////////////// END OF src/Pokedex/Species/Pangoro.hpp ////////////////////
-
-////////////////// START OF src/Pokedex/Species/Ribombee.hpp ///////////////////
-
-namespace pokesim::dex::build {
-struct Ribombee {
-  static const dex::Species name = dex::RIBOMBEE;
-  static const std::uint8_t hp = 60, atk = 55, def = 60, spa = 95, spd = 70, spe = 124;
-
-  static entt::entity build(Pokedex& pokedex) {
-    internal::SpeciesSetup species(pokedex);
-    species.setName(name);
-    species.setType(dex::BUG_TYPE, dex::FAIRY_TYPE);
-    species.setBaseStats(hp, atk, def, spa, spd, spe);
-
-    return species.entity();
-  }
-};
-}  // namespace pokesim::dex::build
-
-/////////////////// END OF src/Pokedex/Species/Ribombee.hpp ////////////////////
-
-//////////////// START OF src/Pokedex/Setup/GetSpeciesBuild.cpp ////////////////
-
-// TODO(aed3): Make this and the individual species files auto generated
+#include <cstdint>
 
 namespace pokesim {
-entt::entity (*Pokedex::getSpeciesBuild(dex::Species species))(Pokedex&) {
-  // Tidy check ignored because "using namespace" is in function
-  using namespace dex::build;  // NOLINT(google-build-using-namespace)
+struct Accuracy {
+  std::uint8_t accuracy = 100;
+};
+}  // namespace pokesim
 
-  switch (species) {
-    case Ampharos::name: return Ampharos::build;
-    case Gardevoir::name: return Gardevoir::build;
-    case Empoleon::name: return Empoleon::build;
-    case Pangoro::name: return Pangoro::build;
-    case Ribombee::name: return Ribombee::build;
-    case Dragapult::name: return Dragapult::build;
-    default: {
-      ENTT_ASSERT(false, "Building a species that does not exist");
-      return nullptr;
-    }
-  }
-}
-};  // namespace pokesim
+////////////////////// END OF src/Components/Accuracy.hpp //////////////////////
 
-///////////////// END OF src/Pokedex/Setup/GetSpeciesBuild.cpp /////////////////
+//////////////////// START OF src/Components/BasePower.hpp /////////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+struct BasePower {
+  std::uint8_t basePower = 1;
+};
+}  // namespace pokesim
+
+///////////////////// END OF src/Components/BasePower.hpp //////////////////////
 
 ////////////////////// START OF src/Components/Boosts.hpp //////////////////////
 
@@ -12006,41 +12045,121 @@ struct SpeBoost {
 
 /////////////////////// END OF src/Components/Boosts.hpp ///////////////////////
 
+////////////////////// START OF src/Components/Chance.hpp //////////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+// Chance of an effect occurring
+// Examples: Air Slash has a 60% chance to flinch, Harvest has a 50% chance to restore a used berry
+struct Chance {
+  std::uint8_t chance = 100;
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Components/Chance.hpp ///////////////////////
+
+///////////// START OF src/Components/EntityHolders/MoveEffect.hpp /////////////
+
+namespace pokesim {
+// Contains the entity of what the primary or secondary effect of a move does
+struct MoveEffect {
+  bool primary = true;
+  entt::entity moveEffect{};
+};
+}  // namespace pokesim
+
+////////////// END OF src/Components/EntityHolders/MoveEffect.hpp //////////////
+
+///////////////////// START OF src/Components/MultiHit.hpp /////////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+// The minimum and maximum number of hits a multi-hit move can cause
+struct MultiHit {
+  std::uint8_t minHits = 2;
+  std::uint8_t maxHits = 5;
+};
+}  // namespace pokesim
+
+////////////////////// END OF src/Components/MultiHit.hpp //////////////////////
+
+///////////////// START OF src/Components/Names/MoveNames.hpp //////////////////
+
+namespace pokesim {
+struct MoveName {
+  dex::Move name = dex::NO_MOVE;
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/Names/MoveNames.hpp ///////////////////
+
+//////////////////////// START OF src/Components/PP.hpp ////////////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+struct PP {
+  std::uint8_t pp = 0;
+};
+
+struct MaxPP {
+  std::uint8_t maxPP = 5;
+};
+}  // namespace pokesim
+
+///////////////////////// END OF src/Components/PP.hpp /////////////////////////
+
+///////////////////// START OF src/Components/Priority.hpp /////////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+struct MovePriority {
+  std::uint8_t priority = 0;
+};
+}  // namespace pokesim
+
+////////////////////// END OF src/Components/Priority.hpp //////////////////////
+
 ////////////////// START OF src/Components/Tags/MoveTags.hpp ///////////////////
 
 namespace pokesim::tags::move {
-// Categories
-
+// Move Category Tag
 struct Physical {};
+// Move Category Tag
 struct Special {};
+// Move Category Tag
 struct Status {};
 
-// Properties
-
+// Move Property Tag: Makes contact
 struct Contact {};
+// Move Property Tag: Ignores a target's substitute
 struct BypassSubstitute {};
+// Move Property Tag: Power is multiplied by 1.2 when used by a Pokemon with the Ability Iron Fist.
 struct Punch {};
 
-// Targets
-
+// Move Target Tag: The move can hit one Pokemon of your choice
 struct AnySingleTarget {};
+// Move Target Tag: The move affects the user of the move
 struct Self {};
 
 namespace effect {
-// Targets
-
+// Move Effect Participant Tag: Who the effect will affect
 struct MoveTarget {};
+// Move Effect Participant Tag: Who created the effect
 struct MoveSource {};
 }  // namespace effect
 }  // namespace pokesim::tags::move
 
 /////////////////// END OF src/Components/Tags/MoveTags.hpp ////////////////////
 
-/////////////// START OF src/Pokedex/Setup/DexDataMoveSetup.hpp ////////////////
+/////////////// START OF src/Pokedex/Setup/MoveDexDataSetup.hpp ////////////////
 
 namespace pokesim::dex::internal {
-struct MoveSetup : DexDataSetup {
-  MoveSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
+struct MoveDexDataSetup : DexDataSetup {
+  MoveDexDataSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
 
   inline void setName(Move move);
   inline void setType(Type type);
@@ -12078,7 +12197,254 @@ struct MoveEffectSetup : DexDataSetup {
 };
 }  // namespace pokesim::dex::internal
 
-//////////////// END OF src/Pokedex/Setup/DexDataMoveSetup.hpp /////////////////
+//////////////// END OF src/Pokedex/Setup/MoveDexDataSetup.hpp /////////////////
+
+/////////////// START OF src/Pokedex/Setup/MoveDexDataSetup.cpp ////////////////
+
+namespace pokesim::dex::internal {
+void MoveDexDataSetup::setName(Move move) {
+  handle.emplace<MoveName>(move);
+}
+
+void MoveDexDataSetup::setType(Type type) {
+  handle.emplace<TypeName>(type);
+}
+
+void MoveDexDataSetup::setAccuracy(std::uint8_t accuracy) {
+  handle.emplace<Accuracy>(accuracy);
+}
+
+void MoveDexDataSetup::setBasePower(std::uint8_t basePower) {
+  handle.emplace<BasePower>(basePower);
+}
+
+void MoveDexDataSetup::setCategoryPhysical() {
+  ENTT_ASSERT(!(handle.any_of<tags::move::Special, tags::move::Status>()), "A move can only have one category");
+  handle.emplace<tags::move::Physical>();
+}
+
+void MoveDexDataSetup::setCategorySpecial() {
+  ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Status>()), "A move can only have one category");
+  handle.emplace<tags::move::Special>();
+}
+
+void MoveDexDataSetup::setCategoryStatus() {
+  ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Special>()), "A move can only have one category");
+  handle.emplace<tags::move::Status>();
+}
+
+void MoveDexDataSetup::setBasePP(std::uint8_t pp) {
+  handle.emplace<PP>(pp);
+}
+
+void MoveDexDataSetup::setPriority(std::uint8_t priority) {
+  handle.emplace<MovePriority>(priority);
+}
+
+void MoveDexDataSetup::setMultiHit(std::uint8_t minHits, std::uint8_t maxHits) {
+  handle.emplace<MultiHit>(minHits, maxHits);
+}
+
+void MoveDexDataSetup::setPrimaryEffect(entt::entity entity) {
+  handle.emplace<MoveEffect>(true, entity);
+}
+
+void MoveDexDataSetup::setSecondaryEffect(entt::entity entity) {
+  handle.emplace<MoveEffect>(false, entity);
+}
+
+void MoveEffectSetup::setChance(std::uint8_t chance) {
+  handle.emplace<Chance>(chance);
+}
+
+void MoveEffectSetup::setEffectsSelf() {
+  handle.emplace<tags::move::effect::MoveSource>();
+}
+
+void MoveEffectSetup::setEffectsTarget() {
+  handle.emplace<tags::move::effect::MoveTarget>();
+}
+}  // namespace pokesim::dex::internal
+
+//////////////// END OF src/Pokedex/Setup/MoveDexDataSetup.cpp /////////////////
+
+///////////////// START OF src/Components/Names/ItemNames.hpp //////////////////
+
+namespace pokesim {
+struct ItemName {
+  dex::Item name = dex::NO_ITEM;
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/Names/ItemNames.hpp ///////////////////
+
+/////////////// START OF src/Pokedex/Setup/ItemDexDataSetup.hpp ////////////////
+
+namespace pokesim::dex::internal {
+struct ItemDexDataSetup : DexDataSetup {
+  ItemDexDataSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
+
+  inline void setName(Item item);
+};
+}  // namespace pokesim::dex::internal
+
+//////////////// END OF src/Pokedex/Setup/ItemDexDataSetup.hpp /////////////////
+
+/////////////// START OF src/Pokedex/Setup/ItemDexDataSetup.cpp ////////////////
+
+namespace pokesim::dex::internal {
+void ItemDexDataSetup::setName(Item item) {
+  handle.emplace<ItemName>(item);
+}
+}  // namespace pokesim::dex::internal
+
+//////////////// END OF src/Pokedex/Setup/ItemDexDataSetup.cpp /////////////////
+
+////////////////// START OF src/Pokedex/Species/Ampharos.hpp ///////////////////
+
+namespace pokesim::dex::build {
+struct Ampharos {
+  static const dex::Species name = dex::AMPHAROS;
+  static const std::uint8_t hp = 90, atk = 75, def = 85, spa = 115, spd = 90, spe = 55;
+
+  static entt::entity build(Pokedex& pokedex) {
+    internal::SpeciesDexDataSetup species(pokedex);
+    species.setName(name);
+    species.setType(dex::ELECTRIC_TYPE);
+    species.setBaseStats(hp, atk, def, spa, spd, spe);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+/////////////////// END OF src/Pokedex/Species/Ampharos.hpp ////////////////////
+
+////////////////// START OF src/Pokedex/Species/Dragapult.hpp //////////////////
+
+namespace pokesim::dex::build {
+struct Dragapult {
+  static const dex::Species name = dex::DRAGAPULT;
+  static const std::uint8_t hp = 88, atk = 120, def = 75, spa = 100, spd = 75, spe = 142;
+
+  static entt::entity build(Pokedex& pokedex) {
+    internal::SpeciesDexDataSetup species(pokedex);
+    species.setName(name);
+    species.setType(dex::DRAGON_TYPE, dex::GHOST_TYPE);
+    species.setBaseStats(hp, atk, def, spa, spd, spe);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+/////////////////// END OF src/Pokedex/Species/Dragapult.hpp ///////////////////
+
+////////////////// START OF src/Pokedex/Species/Empoleon.hpp ///////////////////
+
+namespace pokesim::dex::build {
+struct Empoleon {
+  static const dex::Species name = dex::EMPOLEON;
+  static const std::uint8_t hp = 84, atk = 86, def = 88, spa = 111, spd = 101, spe = 60;
+
+  static entt::entity build(Pokedex& pokedex) {
+    internal::SpeciesDexDataSetup species(pokedex);
+    species.setName(name);
+    species.setType(dex::WATER_TYPE, dex::STEEL_TYPE);
+    species.setBaseStats(hp, atk, def, spa, spd, spe);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+/////////////////// END OF src/Pokedex/Species/Empoleon.hpp ////////////////////
+
+////////////////// START OF src/Pokedex/Species/Gardevoir.hpp //////////////////
+
+namespace pokesim::dex::build {
+struct Gardevoir {
+  static const dex::Species name = dex::GARDEVOIR;
+  static const std::uint8_t hp = 68, atk = 65, def = 65, spa = 125, spd = 115, spe = 80;
+
+  static entt::entity build(Pokedex& pokedex) {
+    internal::SpeciesDexDataSetup species(pokedex);
+    species.setName(name);
+    species.setType(dex::PSYCHIC_TYPE, dex::FAIRY_TYPE);
+    species.setBaseStats(hp, atk, def, spa, spd, spe);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+/////////////////// END OF src/Pokedex/Species/Gardevoir.hpp ///////////////////
+
+/////////////////// START OF src/Pokedex/Species/Pangoro.hpp ///////////////////
+
+namespace pokesim::dex::build {
+struct Pangoro {
+  static const dex::Species name = dex::PANGORO;
+  static const std::uint8_t hp = 95, atk = 124, def = 78, spa = 69, spd = 71, spe = 58;
+
+  static entt::entity build(Pokedex& pokedex) {
+    internal::SpeciesDexDataSetup species(pokedex);
+    species.setName(name);
+    species.setType(dex::FIGHTING_TYPE, dex::DARK_TYPE);
+    species.setBaseStats(hp, atk, def, spa, spd, spe);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+//////////////////// END OF src/Pokedex/Species/Pangoro.hpp ////////////////////
+
+////////////////// START OF src/Pokedex/Species/Ribombee.hpp ///////////////////
+
+namespace pokesim::dex::build {
+struct Ribombee {
+  static const dex::Species name = dex::RIBOMBEE;
+  static const std::uint8_t hp = 60, atk = 55, def = 60, spa = 95, spd = 70, spe = 124;
+
+  static entt::entity build(Pokedex& pokedex) {
+    internal::SpeciesDexDataSetup species(pokedex);
+    species.setName(name);
+    species.setType(dex::BUG_TYPE, dex::FAIRY_TYPE);
+    species.setBaseStats(hp, atk, def, spa, spd, spe);
+
+    return species.entity();
+  }
+};
+}  // namespace pokesim::dex::build
+
+/////////////////// END OF src/Pokedex/Species/Ribombee.hpp ////////////////////
+
+//////////////// START OF src/Pokedex/Setup/GetSpeciesBuild.cpp ////////////////
+
+// TODO(aed3): Make this and the individual species files auto generated
+
+namespace pokesim {
+entt::entity (*Pokedex::getSpeciesBuild(dex::Species species))(Pokedex&) {
+  // Tidy check ignored because "using namespace" is in function
+  using namespace dex::build;  // NOLINT(google-build-using-namespace)
+
+  switch (species) {
+    case Ampharos::name: return Ampharos::build;
+    case Gardevoir::name: return Gardevoir::build;
+    case Empoleon::name: return Empoleon::build;
+    case Pangoro::name: return Pangoro::build;
+    case Ribombee::name: return Ribombee::build;
+    case Dragapult::name: return Dragapult::build;
+    default: {
+      ENTT_ASSERT(false, "Building a species that does not exist");
+      return nullptr;
+    }
+  }
+}
+};  // namespace pokesim
+
+///////////////// END OF src/Pokedex/Setup/GetSpeciesBuild.cpp /////////////////
 
 ////////////////// START OF src/Pokedex/Moves/FuryAttack.hpp ///////////////////
 
@@ -12088,7 +12454,7 @@ struct FuryAttack {
   static const std::uint8_t accuracy = 85, basePower = 15, basePP = 20, minHits = 2, maxHits = 5;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::MoveSetup move(pokedex);
+    internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
     move.setType(dex::NORMAL_TYPE);
     move.setAccuracy(accuracy);
@@ -12116,7 +12482,7 @@ struct KnockOff {
   static const std::uint8_t accuracy = 100, basePower = 65, basePP = 20;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::MoveSetup move(pokedex);
+    internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
     move.setType(dex::DARK_TYPE);
     move.setAccuracy(accuracy);
@@ -12145,7 +12511,7 @@ struct Moonblast {
   static const std::int8_t spaBoost = -1;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::MoveSetup move(pokedex);
+    internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
     move.setType(dex::FAIRY_TYPE);
     move.setAccuracy(accuracy);
@@ -12179,7 +12545,7 @@ struct QuiverDance {
   static const std::int8_t spaBoost = 1, spdBoost = 1, speBoost = 1;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::MoveSetup move(pokedex);
+    internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
     move.setType(dex::BUG_TYPE);
 
@@ -12215,6 +12581,7 @@ struct Poison {};
 struct Sleep {};
 struct Toxic {};
 
+// Assigns a status' tag to a handle
 inline void enumToTag(dex::Status status, entt::handle& handle);
 }  // namespace pokesim::tags::status
 
@@ -12229,7 +12596,7 @@ struct Thunderbolt {
   static const std::uint8_t secondaryEffectChance = 10;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::MoveSetup move(pokedex);
+    internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
     move.setType(dex::ELECTRIC_TYPE);
     move.setAccuracy(accuracy);
@@ -12262,7 +12629,7 @@ struct WillOWisp {
   static const std::uint8_t accuracy = 85, basePP = 15;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::MoveSetup move(pokedex);
+    internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
     move.setType(dex::FIRE_TYPE);
     move.setAccuracy(accuracy);
@@ -12311,18 +12678,6 @@ entt::entity (*Pokedex::getMoveBuild(dex::Move move))(Pokedex&) {
 
 ////////////////// END OF src/Pokedex/Setup/GetMoveBuild.cpp ///////////////////
 
-/////////////// START OF src/Pokedex/Setup/DexDataItemSetup.hpp ////////////////
-
-namespace pokesim::dex::internal {
-struct ItemSetup : DexDataSetup {
-  ItemSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
-
-  inline void setName(Item item);
-};
-}  // namespace pokesim::dex::internal
-
-//////////////// END OF src/Pokedex/Setup/DexDataItemSetup.hpp /////////////////
-
 ////////////////// START OF src/Pokedex/Items/AssaultVest.hpp //////////////////
 
 namespace pokesim::dex::build {
@@ -12330,7 +12685,7 @@ struct AssaultVest {
   static const dex::Item name = dex::ASSAULT_VEST;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::ItemSetup item(pokedex);
+    internal::ItemDexDataSetup item(pokedex);
     item.setName(name);
 
     return item.entity();
@@ -12347,7 +12702,7 @@ struct BrightPowder {
   static const dex::Item name = dex::BRIGHT_POWDER;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::ItemSetup item(pokedex);
+    internal::ItemDexDataSetup item(pokedex);
     item.setName(name);
 
     return item.entity();
@@ -12364,7 +12719,7 @@ struct ChoiceScarf {
   static const dex::Item name = dex::CHOICE_SCARF;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::ItemSetup item(pokedex);
+    internal::ItemDexDataSetup item(pokedex);
     item.setName(name);
 
     return item.entity();
@@ -12381,7 +12736,7 @@ struct ChoiceSpecs {
   static const dex::Item name = dex::CHOICE_SPECS;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::ItemSetup item(pokedex);
+    internal::ItemDexDataSetup item(pokedex);
     item.setName(name);
 
     return item.entity();
@@ -12398,7 +12753,7 @@ struct FocusSash {
   static const dex::Item name = dex::FOCUS_SASH;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::ItemSetup item(pokedex);
+    internal::ItemDexDataSetup item(pokedex);
     item.setName(name);
 
     return item.entity();
@@ -12415,7 +12770,7 @@ struct LifeOrb {
   static const dex::Item name = dex::LIFE_ORB;
 
   static entt::entity build(Pokedex& pokedex) {
-    internal::ItemSetup item(pokedex);
+    internal::ItemDexDataSetup item(pokedex);
     item.setName(name);
 
     return item.entity();
@@ -12450,288 +12805,6 @@ entt::entity (*Pokedex::getItemBuild(dex::Item item))(Pokedex&) {
 };  // namespace pokesim
 
 ////////////////// END OF src/Pokedex/Setup/GetItemBuild.cpp ///////////////////
-
-//////////////// START OF src/Components/Names/AbilityNames.hpp ////////////////
-
-namespace pokesim {
-struct AbilityName {
-  dex::Ability name = dex::NO_ABILITY;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/AbilityNames.hpp /////////////////
-
-//////////////// START OF src/Components/DexData/Abilities.hpp /////////////////
-
-namespace pokesim {
-struct PrimaryAbility {
-  dex::Ability ability = dex::NO_ABILITY;
-};
-
-struct SecondaryAbility {
-  dex::Ability ability = dex::NO_ABILITY;
-};
-
-struct HiddenAbility {
-  dex::Ability ability = dex::NO_ABILITY;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/DexData/Abilities.hpp //////////////////
-
-//////////////// START OF src/Components/DexData/BaseStats.hpp /////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-struct BaseStats {
-  std::uint8_t hp = 1;
-  std::uint8_t atk = 1;
-  std::uint8_t def = 1;
-  std::uint8_t spa = 1;
-  std::uint8_t spd = 1;
-  std::uint8_t spe = 1;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/DexData/BaseStats.hpp //////////////////
-
-///////////////// START OF src/Components/Names/TypeNames.hpp //////////////////
-
-namespace pokesim {
-struct TypeName {
-  dex::Type name = dex::NO_TYPE;
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Components/Names/TypeNames.hpp ///////////////////
-
-/////////////// START OF src/Components/DexData/SpeciesTypes.hpp ///////////////
-
-namespace pokesim {
-struct SpeciesTypes {
-  dex::Type t1 = dex::NO_TYPE;
-  dex::Type t2 = dex::NO_TYPE;
-};
-}  // namespace pokesim
-
-//////////////// END OF src/Components/DexData/SpeciesTypes.hpp ////////////////
-
-//////////////// START OF src/Components/Names/SpeciesNames.hpp ////////////////
-
-namespace pokesim {
-struct SpeciesName {
-  dex::Species name = dex::MISSING_NO;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/SpeciesNames.hpp /////////////////
-
-////////////// START OF src/Pokedex/Setup/DexDataSpeciesSetup.cpp //////////////
-
-namespace pokesim::dex::internal {
-void SpeciesSetup::setName(Species species) {
-  handle.emplace<SpeciesName>(species);
-}
-
-void SpeciesSetup::setType(Type type1, Type type2) {
-  handle.emplace<SpeciesTypes>(type1, type2);
-}
-
-void SpeciesSetup::setBaseStats(
-  std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe) {
-  handle.emplace<BaseStats>(hp, atk, def, spa, spd, spe);
-}
-}  // namespace pokesim::dex::internal
-
-/////////////// END OF src/Pokedex/Setup/DexDataSpeciesSetup.cpp ///////////////
-
-///////////////////// START OF src/Components/Accuracy.hpp /////////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-struct Accuracy {
-  std::uint8_t accuracy = 100;
-};
-}  // namespace pokesim
-
-////////////////////// END OF src/Components/Accuracy.hpp //////////////////////
-
-//////////////////// START OF src/Components/BasePower.hpp /////////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-struct BasePower {
-  std::uint8_t basePower = 1;
-};
-}  // namespace pokesim
-
-///////////////////// END OF src/Components/BasePower.hpp //////////////////////
-
-////////////////////// START OF src/Components/Chance.hpp //////////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-struct Chance {
-  std::uint8_t chance = 100;
-};
-}  // namespace pokesim
-
-/////////////////////// END OF src/Components/Chance.hpp ///////////////////////
-
-///////////// START OF src/Components/EntityHolders/MoveEffect.hpp /////////////
-
-namespace pokesim {
-struct MoveEffect {
-  bool primary = true;
-  entt::entity moveEffect{};
-};
-}  // namespace pokesim
-
-////////////// END OF src/Components/EntityHolders/MoveEffect.hpp //////////////
-
-///////////////////// START OF src/Components/MultiHit.hpp /////////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-struct MultiHit {
-  std::uint8_t minHits = 2;
-  std::uint8_t maxHits = 5;
-};
-}  // namespace pokesim
-
-////////////////////// END OF src/Components/MultiHit.hpp //////////////////////
-
-///////////////// START OF src/Components/Names/MoveNames.hpp //////////////////
-
-namespace pokesim {
-struct MoveName {
-  dex::Move name = dex::NO_MOVE;
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Components/Names/MoveNames.hpp ///////////////////
-
-//////////////////////// START OF src/Components/PP.hpp ////////////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-struct PP {
-  std::uint8_t pp = 0;
-};
-
-struct MaxPP {
-  std::uint8_t maxPP = 5;
-};
-}  // namespace pokesim
-
-///////////////////////// END OF src/Components/PP.hpp /////////////////////////
-
-///////////////////// START OF src/Components/Priority.hpp /////////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-struct Priority {
-  std::uint8_t priority = 0;
-};
-}  // namespace pokesim
-
-////////////////////// END OF src/Components/Priority.hpp //////////////////////
-
-/////////////// START OF src/Pokedex/Setup/DexDataMoveSetup.cpp ////////////////
-
-namespace pokesim::dex::internal {
-void MoveSetup::setName(Move move) {
-  handle.emplace<MoveName>(move);
-}
-
-void MoveSetup::setType(Type type) {
-  handle.emplace<TypeName>(type);
-}
-
-void MoveSetup::setAccuracy(std::uint8_t accuracy) {
-  handle.emplace<Accuracy>(accuracy);
-}
-
-void MoveSetup::setBasePower(std::uint8_t basePower) {
-  handle.emplace<BasePower>(basePower);
-}
-
-void MoveSetup::setCategoryPhysical() {
-  ENTT_ASSERT(!(handle.any_of<tags::move::Special, tags::move::Status>()), "A move can only have one category");
-  handle.emplace<tags::move::Physical>();
-}
-
-void MoveSetup::setCategorySpecial() {
-  ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Status>()), "A move can only have one category");
-  handle.emplace<tags::move::Special>();
-}
-
-void MoveSetup::setCategoryStatus() {
-  ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Special>()), "A move can only have one category");
-  handle.emplace<tags::move::Status>();
-}
-
-void MoveSetup::setBasePP(std::uint8_t pp) {
-  handle.emplace<PP>(pp);
-}
-
-void MoveSetup::setPriority(std::uint8_t priority) {
-  handle.emplace<Priority>(priority);
-}
-
-void MoveSetup::setMultiHit(std::uint8_t minHits, std::uint8_t maxHits) {
-  handle.emplace<MultiHit>(minHits, maxHits);
-}
-
-void MoveSetup::setPrimaryEffect(entt::entity entity) {
-  handle.emplace<MoveEffect>(true, entity);
-}
-
-void MoveSetup::setSecondaryEffect(entt::entity entity) {
-  handle.emplace<MoveEffect>(false, entity);
-}
-
-void MoveEffectSetup::setChance(std::uint8_t chance) {
-  handle.emplace<Chance>(chance);
-}
-
-void MoveEffectSetup::setEffectsSelf() {
-  handle.emplace<tags::move::effect::MoveSource>();
-}
-
-void MoveEffectSetup::setEffectsTarget() {
-  handle.emplace<tags::move::effect::MoveTarget>();
-}
-}  // namespace pokesim::dex::internal
-
-//////////////// END OF src/Pokedex/Setup/DexDataMoveSetup.cpp /////////////////
-
-///////////////// START OF src/Components/Names/ItemNames.hpp //////////////////
-
-namespace pokesim {
-struct ItemName {
-  dex::Item name = dex::NO_ITEM;
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Components/Names/ItemNames.hpp ///////////////////
-
-/////////////// START OF src/Pokedex/Setup/DexDataItemSetup.cpp ////////////////
-
-namespace pokesim::dex::internal {
-void ItemSetup::setName(Item item) {
-  handle.emplace<ItemName>(item);
-}
-}  // namespace pokesim::dex::internal
-
-//////////////// END OF src/Pokedex/Setup/DexDataItemSetup.cpp /////////////////
 
 //////////////// START OF external/entt/container/dense_set.hpp ////////////////
 
@@ -13667,55 +13740,55 @@ void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveList) {
 #include <string>
 
 namespace pokesim::dex {
-/** @brief Returns the name of a species represented by its enum as a string. */
+// Returns the name of a species represented by its enum as a string.
 inline std::string toString(Species speciesEnum);
 
-/** @brief Returns the name of a move represented by its enum as a string. */
+// Returns the name of a move represented by its enum as a string.
 inline std::string toString(Move moveEnum);
 
-/** @brief Returns the name of an ability represented by its enum as a string. */
+// Returns the name of an ability represented by its enum as a string.
 inline std::string toString(Ability abilityEnum);
 
-/** @brief Returns the name of an item represented by its enum as a string. */
+// Returns the name of an item represented by its enum as a string.
 inline std::string toString(Item itemEnum);
 
-/** @brief Returns the name of a nature represented by its enum as a string. */
+// Returns the name of a nature represented by its enum as a string.
 inline std::string toString(Nature natureEnum);
 
-/** @brief Returns the name of a status condition represented by its enum as a string. */
+// Returns the name of a status condition represented by its enum as a string.
 inline std::string toString(Status statusEnum);
 
-/** @brief Returns the name of a gender represented by its enum as a string. */
+// Returns the name of a gender represented by its enum as a string.
 inline std::string toString(Gender genderEnum);
 
-/** @brief Returns the name of a type represented by its enum as a string. */
+// Returns the name of a type represented by its enum as a string.
 inline std::string toString(Type typeEnum);
 
-/** @brief Returns the name of a stat represented by its enum as a string. */
+// Returns the name of a stat represented by its enum as a string.
 inline std::string toString(Stat statEnum);
 
-/** @brief Returns the Smogon name of a species represented by its enum as a string. */
+// Returns the Smogon name of a species represented by its enum as a string.
 inline std::string toSmogonString(Species speciesEnum);
 
-/** @brief Returns the Smogon name of a move represented by its enum as a string. */
+// Returns the Smogon name of a move represented by its enum as a string.
 inline std::string toSmogonString(Move moveEnum);
 
-/** @brief Returns the Smogon name of an ability represented by its enum as a string. */
+// Returns the Smogon name of an ability represented by its enum as a string.
 inline std::string toSmogonString(Ability abilityEnum);
 
-/** @brief Returns the Smogon name of an item represented by its enum as a string. */
+// Returns the Smogon name of an item represented by its enum as a string.
 inline std::string toSmogonString(Item itemEnum);
 
-/** @brief Returns the Smogon ID of a species represented by its enum as a string. */
+// Returns the Smogon ID of a species represented by its enum as a string.
 inline std::string toSmogonIdString(Species speciesEnum);
 
-/** @brief Returns the Smogon ID of a move represented by its enum as a string. */
+// Returns the Smogon ID of a move represented by its enum as a string.
 inline std::string toSmogonIdString(Move moveEnum);
 
-/** @brief Returns the Smogon ID of an ability represented by its enum as a string. */
+// Returns the Smogon ID of an ability represented by its enum as a string.
 inline std::string toSmogonIdString(Ability abilityEnum);
 
-/** @brief Returns the Smogon ID of an item represented by its enum as a string. */
+// Returns the Smogon ID of an item represented by its enum as a string.
 inline std::string toSmogonIdString(Item itemEnum);
 
 /**
@@ -13749,7 +13822,7 @@ inline Item fromNameToItemEnum(const std::string& name);
 inline Nature fromNameToNatureEnum(const std::string& name);
 
 /**
- * @brief Returns the enum of the status condition name a string.
+ * @brief Returns the enum of the status condition name string.
  * Returns `NO_STATUS` if the string does not represent a status condition.
  */
 inline Status fromNameToStatusEnum(const std::string& name);
@@ -13819,7 +13892,7 @@ inline Ability fromSmogonIDToAbilityEnum(const std::string& name);
  */
 inline Item fromSmogonIDToItemEnum(const std::string& name);
 
-/** @brief Converts a string to only have lowercase alphanumeric characters */
+// Converts a string to only have lowercase alphanumeric characters
 inline std::string toID(const std::string& name);
 }  // namespace pokesim::dex
 
@@ -14139,6 +14212,7 @@ struct Sassy {};
 struct Serious {};
 struct Timid {};
 
+// Assigns a nature's tag to a handle
 inline void enumToTag(dex::Nature nature, entt::handle handle);
 }  // namespace pokesim::tags::nature
 
@@ -14197,6 +14271,7 @@ struct ChoiceSpecs {};
 struct FocusSash {};
 struct LifeOrb {};
 
+// Assigns an item's tag to a handle
 inline void enumToTag(dex::Item item, entt::handle handle);
 }  // namespace pokesim::tags::item
 
@@ -14236,6 +14311,7 @@ struct Static {};
 struct SweetVeil {};
 struct Trace {};
 
+// Assigns an ability's tag to a handle
 inline void enumToTag(dex::Ability ability, entt::handle handle);
 }  // namespace pokesim::tags::ability
 
@@ -14307,6 +14383,7 @@ struct SideStateSetup : internal::StateSetupBase {
 /////////////// START OF src/Components/EntityHolders/Battle.hpp ///////////////
 
 namespace pokesim {
+// Contains the entity of a simulation's battle
 struct Battle {
   entt::entity battle;
 };
@@ -14317,6 +14394,7 @@ struct Battle {
 ////////////// START OF src/Components/EntityHolders/FoeSide.hpp ///////////////
 
 namespace pokesim {
+// Contains the entity of a side's opponent
 struct FoeSide {
   entt::entity foeSide;
 };
@@ -14329,6 +14407,7 @@ struct FoeSide {
 #include <vector>
 
 namespace pokesim {
+// Contains a list of entities pointing to the Pokemon on a team
 struct Team {
   std::vector<entt::entity> team{};
 };
@@ -14341,6 +14420,7 @@ struct Team {
 #include <cstdint>
 
 namespace pokesim {
+// The position of a Pokemon in its team's order (starts at 1)
 struct Position {
   std::uint8_t position = 1;
 };
@@ -14493,6 +14573,7 @@ struct IVs {
 #include <vector>
 
 namespace pokesim {
+// Contains a list of entities of the moves a Pokemon known
 struct MoveSlots {
   std::vector<entt::entity> moveSlots{};
 };
@@ -14503,6 +14584,7 @@ struct MoveSlots {
 //////////////// START OF src/Components/EntityHolders/Side.hpp ////////////////
 
 namespace pokesim {
+// Contains the entity pointing to the player 1 or player 2 side of a battle
 struct Side {
   enum PlayerSideID : uint8_t {
     P1 = 0,
@@ -14532,6 +14614,7 @@ struct ID {
 #include <cstdint>
 
 namespace pokesim {
+// A Pokemon's level
 struct Level {
   std::uint8_t level = 1;
 };
@@ -14714,6 +14797,7 @@ struct BattleStateSetup : internal::StateSetupBase {
 #include <vector>
 
 namespace pokesim {
+// Contains the list of action entities queued up to be simulated for a battle's current turn
 struct ActionQueue {
   std::vector<entt::entity> actionQueue{};
 };
@@ -14724,6 +14808,7 @@ struct ActionQueue {
 /////////////// START OF src/Components/EntityHolders/Sides.hpp ////////////////
 
 namespace pokesim {
+// Contains the entities pointing to the two sides of a battle
 struct Sides {
   entt::entity p1;
   entt::entity p2;
@@ -14735,6 +14820,8 @@ struct Sides {
 /////////////////// START OF src/Components/Probability.hpp ////////////////////
 
 namespace pokesim {
+// The probability of all the previous actions in a battle's simulation occurring
+// Calculated by multiplying the various Accuracy and Chance numbers of a battle state's events
 struct Probability {
   float probability = 1;
 };
@@ -14758,17 +14845,17 @@ struct RNGSeed {
 
 namespace pokesim::tags {
 
-// Current Action Tags
-
+// Current Action Tag: The move that is being processed by the simulator
 struct ActiveMove {};
+// Current Action Tag: The target of the active move
 struct ActiveMoveTarget {};
-struct ActiveMoveSource {};
+// Current Action Tag: The user of the active move
+struct ActiveMoveUser {};
 
-// Turn State
-
-struct MidTurn {};
-struct Started {};
-struct Ended {};
+// Battle Turn State Tag: When a battle is in the middle of a turn
+struct BattleMidTurn {};
+// Battle Turn State Tag: When a battle has ended
+struct BattleEnded {};
 }  // namespace pokesim::tags
 
 ////////////////// END OF src/Components/Tags/BattleTags.hpp ///////////////////
@@ -14776,6 +14863,7 @@ struct Ended {};
 ///////////////// START OF src/Components/Tags/PokemonTags.hpp /////////////////
 
 namespace pokesim::tags {
+// Indicates the Pokemon is currently in a battle
 struct ActivePokemon {};
 }  // namespace pokesim::tags
 
@@ -14786,6 +14874,7 @@ struct ActivePokemon {};
 #include <cstdint>
 
 namespace pokesim {
+// The current turn of a battle
 struct Turn {
   std::uint16_t turn = 0;
 };
@@ -14854,6 +14943,7 @@ void BattleStateSetup::setProbability(float probability) {
 //////////////// START OF src/Components/EntityHolders/Move.hpp ////////////////
 
 namespace pokesim {
+// Contains the entity of a move's current state
 struct Move {
   entt::entity move;
 };
@@ -14864,6 +14954,7 @@ struct Move {
 ////////////// START OF src/Components/EntityHolders/Pokemon.hpp ///////////////
 
 namespace pokesim {
+// Contains the entity pointing to a Pokemon
 struct Pokemon {
   entt::entity pokemon;
 };
@@ -14899,21 +14990,38 @@ struct SpeedSort {
 ///////////////// START OF src/Components/Tags/ActionsTags.hpp /////////////////
 
 namespace pokesim::tags::action {
+// Action Tag for Moves: When a Pokemon uses a move
 struct Move {};
 
+// Action Tag for Switching: When a Pokemon is about to be switched out
+// Example: Pursuit activating
+struct PreSwitchOut {};
+// Action Tag for Switching: When a Pokemon is being switched out
 struct SwitchOut {};
-struct PreTurn {};
-struct MidTurn {};
-struct PostFoeFaint {};
+/**
+ * @brief Action Tag for Switching: When a Pokemon is being switched in because a player chose to directly switch the
+ * Pokemon in as their turn action
+ */
+struct PreTurnSwitchIn {};
+// Action Tag for Switching: When a Pokemon is being switched in because a team member switches out mid-turn
+// Examples: U-Turn, Baton Pash, Emergency Exit
+struct MidTurnSwitchIn {};
+// Action Tag for Switching: When a Pokemon is being switched in to replace a fainted team member
+struct PostFoeFaintSwitchIn {};
 
+// Action Tag: When an item is being used because a player chose to use the item as their turn action
 struct Item {};
+// Action Tag: When team member order has been picked as part of team preview
 struct Team {};
+// Action Tag: When Revival Blessing is being used on a fainted party member
 struct RevivalBlessing {};
-struct SwitchIn {};
-struct PreSwitch {};
+// Action Tag: When a mega evolution is activating
 struct MegaEvolve {};
-struct Primal {};
+// Action Tag: When a primal reversion is activating
+struct PrimalRevert {};
+// Action Tag: When a Pokemon dynamaxing
 struct Dynamax {};
+// Action Tag: When a Pokemon is terastallizing
 struct Terastallize {};
 }  // namespace pokesim::tags::action
 
