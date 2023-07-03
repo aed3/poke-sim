@@ -19,7 +19,7 @@ struct BattleStateSetup : internal::StateSetupBase {
   /*_inline_*/ void setActiveMove(entt::entity activeMove);
   /*_inline_*/ void setActivePokemon(entt::entity activePokemon);
   /*_inline_*/ void setActiveTarget(entt::entity activeTarget);
-  /*_inline_*/ void setActiveSource(entt::entity activeSource);
+  /*_inline_*/ void setActiveUser(entt::entity activeSource);
   /*_inline_*/ void setProbability(float probability);
 };
 }  // namespace pokesim

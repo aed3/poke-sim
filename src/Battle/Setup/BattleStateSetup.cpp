@@ -54,8 +54,8 @@ void BattleStateSetup::setActiveTarget(entt::entity activeTarget) {
   handle.registry()->emplace<tags::ActiveMoveTarget>(activeTarget);
 }
 
-void BattleStateSetup::setActiveSource(entt::entity activeSource) {
-  handle.registry()->emplace<tags::ActiveMoveSource>(activeSource);
+void BattleStateSetup::setActiveUser(entt::entity activeSource) {
+  handle.registry()->emplace<tags::ActiveMoveUser>(activeSource);
 }
 
 void BattleStateSetup::setProbability(float probability) {

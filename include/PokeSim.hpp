@@ -14785,7 +14785,7 @@ struct BattleStateSetup : internal::StateSetupBase {
   inline void setActiveMove(entt::entity activeMove);
   inline void setActivePokemon(entt::entity activePokemon);
   inline void setActiveTarget(entt::entity activeTarget);
-  inline void setActiveSource(entt::entity activeSource);
+  inline void setActiveUser(entt::entity activeSource);
   inline void setProbability(float probability);
 };
 }  // namespace pokesim
@@ -14929,8 +14929,8 @@ void BattleStateSetup::setActiveTarget(entt::entity activeTarget) {
   handle.registry()->emplace<tags::ActiveMoveTarget>(activeTarget);
 }
 
-void BattleStateSetup::setActiveSource(entt::entity activeSource) {
-  handle.registry()->emplace<tags::ActiveMoveSource>(activeSource);
+void BattleStateSetup::setActiveUser(entt::entity activeSource) {
+  handle.registry()->emplace<tags::ActiveMoveUser>(activeSource);
 }
 
 void BattleStateSetup::setProbability(float probability) {
