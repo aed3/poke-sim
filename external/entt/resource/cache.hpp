@@ -95,51 +95,51 @@ public:
         return operator*();
     }
 
-    template<typename TLhs, typename ILhs, typename TRhs, typename IRhs>
-    friend constexpr std::ptrdiff_t operator-(const resource_cache_iterator<TLhs, ILhs> &, const resource_cache_iterator<TRhs, IRhs> &) noexcept;
+    template<typename... Lhs, typename... Rhs>
+    friend constexpr std::ptrdiff_t operator-(const resource_cache_iterator<Lhs...> &, const resource_cache_iterator<Rhs...> &) noexcept;
 
-    template<typename TLhs, typename ILhs, typename TRhs, typename IRhs>
-    friend constexpr bool operator==(const resource_cache_iterator<TLhs, ILhs> &, const resource_cache_iterator<TRhs, IRhs> &) noexcept;
+    template<typename... Lhs, typename... Rhs>
+    friend constexpr bool operator==(const resource_cache_iterator<Lhs...> &, const resource_cache_iterator<Rhs...> &) noexcept;
 
-    template<typename TLhs, typename ILhs, typename TRhs, typename IRhs>
-    friend constexpr bool operator<(const resource_cache_iterator<TLhs, ILhs> &, const resource_cache_iterator<TRhs, IRhs> &) noexcept;
+    template<typename... Lhs, typename... Rhs>
+    friend constexpr bool operator<(const resource_cache_iterator<Lhs...> &, const resource_cache_iterator<Rhs...> &) noexcept;
 
 private:
     It it;
 };
 
-template<typename TLhs, typename ILhs, typename TRhs, typename IRhs>
-[[nodiscard]] constexpr std::ptrdiff_t operator-(const resource_cache_iterator<TLhs, ILhs> &lhs, const resource_cache_iterator<TRhs, IRhs> &rhs) noexcept {
+template<typename... Lhs, typename... Rhs>
+[[nodiscard]] constexpr std::ptrdiff_t operator-(const resource_cache_iterator<Lhs...> &lhs, const resource_cache_iterator<Rhs...> &rhs) noexcept {
     return lhs.it - rhs.it;
 }
 
-template<typename TLhs, typename ILhs, typename TRhs, typename IRhs>
-[[nodiscard]] constexpr bool operator==(const resource_cache_iterator<TLhs, ILhs> &lhs, const resource_cache_iterator<TRhs, IRhs> &rhs) noexcept {
+template<typename... Lhs, typename... Rhs>
+[[nodiscard]] constexpr bool operator==(const resource_cache_iterator<Lhs...> &lhs, const resource_cache_iterator<Rhs...> &rhs) noexcept {
     return lhs.it == rhs.it;
 }
 
-template<typename TLhs, typename ILhs, typename TRhs, typename IRhs>
-[[nodiscard]] constexpr bool operator!=(const resource_cache_iterator<TLhs, ILhs> &lhs, const resource_cache_iterator<TRhs, IRhs> &rhs) noexcept {
+template<typename... Lhs, typename... Rhs>
+[[nodiscard]] constexpr bool operator!=(const resource_cache_iterator<Lhs...> &lhs, const resource_cache_iterator<Rhs...> &rhs) noexcept {
     return !(lhs == rhs);
 }
 
-template<typename TLhs, typename ILhs, typename TRhs, typename IRhs>
-[[nodiscard]] constexpr bool operator<(const resource_cache_iterator<TLhs, ILhs> &lhs, const resource_cache_iterator<TRhs, IRhs> &rhs) noexcept {
+template<typename... Lhs, typename... Rhs>
+[[nodiscard]] constexpr bool operator<(const resource_cache_iterator<Lhs...> &lhs, const resource_cache_iterator<Rhs...> &rhs) noexcept {
     return lhs.it < rhs.it;
 }
 
-template<typename TLhs, typename ILhs, typename TRhs, typename IRhs>
-[[nodiscard]] constexpr bool operator>(const resource_cache_iterator<TLhs, ILhs> &lhs, const resource_cache_iterator<TRhs, IRhs> &rhs) noexcept {
+template<typename... Lhs, typename... Rhs>
+[[nodiscard]] constexpr bool operator>(const resource_cache_iterator<Lhs...> &lhs, const resource_cache_iterator<Rhs...> &rhs) noexcept {
     return rhs < lhs;
 }
 
-template<typename TLhs, typename ILhs, typename TRhs, typename IRhs>
-[[nodiscard]] constexpr bool operator<=(const resource_cache_iterator<TLhs, ILhs> &lhs, const resource_cache_iterator<TRhs, IRhs> &rhs) noexcept {
+template<typename... Lhs, typename... Rhs>
+[[nodiscard]] constexpr bool operator<=(const resource_cache_iterator<Lhs...> &lhs, const resource_cache_iterator<Rhs...> &rhs) noexcept {
     return !(lhs > rhs);
 }
 
-template<typename TLhs, typename ILhs, typename TRhs, typename IRhs>
-[[nodiscard]] constexpr bool operator>=(const resource_cache_iterator<TLhs, ILhs> &lhs, const resource_cache_iterator<TRhs, IRhs> &rhs) noexcept {
+template<typename... Lhs, typename... Rhs>
+[[nodiscard]] constexpr bool operator>=(const resource_cache_iterator<Lhs...> &lhs, const resource_cache_iterator<Rhs...> &rhs) noexcept {
     return !(lhs < rhs);
 }
 
@@ -158,7 +158,7 @@ template<typename TLhs, typename ILhs, typename TRhs, typename IRhs>
  */
 template<typename Type, typename Loader, typename Allocator>
 class resource_cache {
-    using alloc_traits = typename std::allocator_traits<Allocator>;
+    using alloc_traits = std::allocator_traits<Allocator>;
     static_assert(std::is_same_v<typename alloc_traits::value_type, Type>, "Invalid value type");
     using container_allocator = typename alloc_traits::template rebind_alloc<std::pair<const id_type, typename Loader::result_type>>;
     using container_type = dense_map<id_type, typename Loader::result_type, identity, std::equal_to<id_type>, container_allocator>;
@@ -241,8 +241,7 @@ public:
     /**
      * @brief Returns an iterator to the beginning.
      *
-     * The returned iterator points to the first instance of the cache. If the
-     * cache is empty, the returned iterator will be equal to `end()`.
+     * If the cache is empty, the returned iterator will be equal to `end()`.
      *
      * @return An iterator to the first instance of the internal cache.
      */
@@ -262,11 +261,6 @@ public:
 
     /**
      * @brief Returns an iterator to the end.
-     *
-     * The returned iterator points to the element following the last instance
-     * of the cache. Attempting to dereference the returned iterator results in
-     * undefined behavior.
-     *
      * @return An iterator to the element following the last instance of the
      * internal cache.
      */

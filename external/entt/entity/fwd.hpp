@@ -1,6 +1,7 @@
 #ifndef ENTT_ENTITY_FWD_HPP
 #define ENTT_ENTITY_FWD_HPP
 
+#include <cstdint>
 #include <memory>
 #include <type_traits>
 #include "../core/fwd.hpp"
@@ -11,6 +12,14 @@ namespace entt {
 /*! @brief Default entity identifier. */
 enum class entity : id_type {};
 
+/*! @brief Storage deletion policy. */
+enum class deletion_policy : std::uint8_t {
+    /*! @brief Swap-and-pop deletion policy. */
+    swap_and_pop = 0u,
+    /*! @brief In-place deletion policy. */
+    in_place = 1u
+};
+
 template<typename Entity = entity, typename = std::allocator<Entity>>
 class basic_sparse_set;
 
@@ -18,18 +27,18 @@ template<typename Type, typename = entity, typename = std::allocator<Type>, type
 class basic_storage;
 
 template<typename Type>
-class sigh_storage_mixin;
+class sigh_mixin;
 
 /**
  * @brief Provides a common way to define storage types.
  * @tparam Type Storage value type.
- * @tparam Entity A valid entity type (see entt_traits for more details).
+ * @tparam Entity A valid entity type.
  * @tparam Allocator Type of allocator used to manage memory and elements.
  */
 template<typename Type, typename Entity = entity, typename Allocator = std::allocator<Type>, typename = void>
 struct storage_type {
     /*! @brief Type-to-storage conversion result. */
-    using type = sigh_storage_mixin<basic_storage<Type, Entity, Allocator>>;
+    using type = sigh_mixin<basic_storage<Type, Entity, Allocator>>;
 };
 
 /**
@@ -42,7 +51,7 @@ using storage_type_t = typename storage_type<Args...>::type;
 /**
  * Type-to-storage conversion utility that preserves constness.
  * @tparam Type Storage value type, eventually const.
- * @tparam Entity A valid entity type (see entt_traits for more details).
+ * @tparam Entity A valid entity type.
  * @tparam Allocator Type of allocator used to manage memory and elements.
  */
 template<typename Type, typename Entity = entity, typename Allocator = std::allocator<std::remove_const_t<Type>>>
@@ -70,7 +79,7 @@ class basic_runtime_view;
 template<typename, typename, typename>
 class basic_group;
 
-template<typename>
+template<typename, typename Mask = std::uint32_t, typename = std::allocator<Mask>>
 class basic_observer;
 
 template<typename>
@@ -93,7 +102,10 @@ class basic_continuous_loader;
  * @tparam Type List of types.
  */
 template<typename... Type>
-using exclude_t = type_list<Type...>;
+struct exclude_t final: type_list<Type...> {
+    /*! @brief Default constructor. */
+    explicit constexpr exclude_t() {}
+};
 
 /**
  * @brief Variable template for exclusion lists.
@@ -107,7 +119,10 @@ inline constexpr exclude_t<Type...> exclude{};
  * @tparam Type List of types.
  */
 template<typename... Type>
-using get_t = type_list<Type...>;
+struct get_t final: type_list<Type...> {
+    /*! @brief Default constructor. */
+    explicit constexpr get_t() {}
+};
 
 /**
  * @brief Variable template for lists of observed components.
@@ -121,7 +136,10 @@ inline constexpr get_t<Type...> get{};
  * @tparam Type List of types.
  */
 template<typename... Type>
-using owned_t = type_list<Type...>;
+struct owned_t final: type_list<Type...> {
+    /*! @brief Default constructor. */
+    explicit constexpr owned_t() {}
+};
 
 /**
  * @brief Variable template for lists of owned components.
@@ -129,6 +147,39 @@ using owned_t = type_list<Type...>;
  */
 template<typename... Type>
 inline constexpr owned_t<Type...> owned{};
+
+/**
+ * @brief Applies a given _function_ to a get list and generate a new list.
+ * @tparam Type Types provided by the get list.
+ * @tparam Op Unary operation as template class with a type member named `type`.
+ */
+template<typename... Type, template<typename...> class Op>
+struct type_list_transform<get_t<Type...>, Op> {
+    /*! @brief Resulting get list after applying the transform function. */
+    using type = get_t<typename Op<Type>::type...>;
+};
+
+/**
+ * @brief Applies a given _function_ to an exclude list and generate a new list.
+ * @tparam Type Types provided by the exclude list.
+ * @tparam Op Unary operation as template class with a type member named `type`.
+ */
+template<typename... Type, template<typename...> class Op>
+struct type_list_transform<exclude_t<Type...>, Op> {
+    /*! @brief Resulting exclude list after applying the transform function. */
+    using type = exclude_t<typename Op<Type>::type...>;
+};
+
+/**
+ * @brief Applies a given _function_ to an owned list and generate a new list.
+ * @tparam Type Types provided by the owned list.
+ * @tparam Op Unary operation as template class with a type member named `type`.
+ */
+template<typename... Type, template<typename...> class Op>
+struct type_list_transform<owned_t<Type...>, Op> {
+    /*! @brief Resulting owned list after applying the transform function. */
+    using type = owned_t<typename Op<Type>::type...>;
+};
 
 /*! @brief Alias declaration for the most common use case. */
 using sparse_set = basic_sparse_set<>;

@@ -613,7 +613,7 @@ private:
  * @return A properly initialized and not necessarily owning wrapper.
  */
 template<typename Type>
-meta_any forward_as_meta(const meta_ctx &ctx, Type &&value) {
+[[nodiscard]] meta_any forward_as_meta(const meta_ctx &ctx, Type &&value) {
     return meta_any{ctx, std::in_place_type<Type &&>, std::forward<Type>(value)};
 }
 
@@ -624,7 +624,7 @@ meta_any forward_as_meta(const meta_ctx &ctx, Type &&value) {
  * @return A properly initialized and not necessarily owning wrapper.
  */
 template<typename Type>
-meta_any forward_as_meta(Type &&value) {
+[[nodiscard]] meta_any forward_as_meta(Type &&value) {
     return forward_as_meta(locator<meta_ctx>::value_or(), std::forward<Type>(value));
 }
 
@@ -722,6 +722,16 @@ struct meta_handle {
         return static_cast<bool>(any);
     }
 
+    /*! @copydoc meta_any::operator== */
+    [[nodiscard]] bool operator==(const meta_handle &other) const noexcept {
+        return (any == other.any);
+    }
+
+    /*! @copydoc meta_any::operator!= */
+    [[nodiscard]] bool operator!=(const meta_handle &other) const noexcept {
+        return !(*this == other);
+    }
+
     /**
      * @brief Access operator for accessing the contained opaque object.
      * @return A wrapper that shares a reference to an unmanaged object.
@@ -756,11 +766,19 @@ struct meta_prop {
           ctx{&area} {}
 
     /**
-     * @brief Returns the stored value by copy.
+     * @brief Returns the stored value by const reference.
      * @return A wrapper containing the value stored with the property.
      */
     [[nodiscard]] meta_any value() const {
         return node->value ? node->type(internal::meta_context::from(*ctx)).from_void(*ctx, nullptr, node->value.get()) : meta_any{meta_ctx_arg, *ctx};
+    }
+
+    /**
+     * @brief Returns the stored value by reference.
+     * @return A wrapper containing the value stored with the property.
+     */
+    [[nodiscard]] meta_any value() {
+        return node->value ? node->type(internal::meta_context::from(*ctx)).from_void(*ctx, node->value.get(), nullptr) : meta_any{meta_ctx_arg, *ctx};
     }
 
     /**
@@ -771,10 +789,29 @@ struct meta_prop {
         return (node != nullptr);
     }
 
+    /**
+     * @brief Checks if two objects refer to the same type.
+     * @param other The object with which to compare.
+     * @return True if the objects refer to the same type, false otherwise.
+     */
+    [[nodiscard]] bool operator==(const meta_prop &other) const noexcept {
+        return (ctx == other.ctx && node == other.node);
+    }
+
 private:
     const internal::meta_prop_node *node;
     const meta_ctx *ctx;
 };
+
+/**
+ * @brief Checks if two objects refer to the same type.
+ * @param lhs An object, either valid or not.
+ * @param rhs An object, either valid or not.
+ * @return False if the objects refer to the same node, true otherwise.
+ */
+[[nodiscard]] inline bool operator!=(const meta_prop &lhs, const meta_prop &rhs) noexcept {
+    return !(lhs == rhs);
+}
 
 /*! @brief Opaque wrapper for data members. */
 struct meta_data {
@@ -876,10 +913,25 @@ struct meta_data {
         return (node != nullptr);
     }
 
+    /*! @copydoc meta_prop::operator== */
+    [[nodiscard]] bool operator==(const meta_data &other) const noexcept {
+        return (ctx == other.ctx && node == other.node);
+    }
+
 private:
     const internal::meta_data_node *node;
     const meta_ctx *ctx;
 };
+
+/**
+ * @brief Checks if two objects refer to the same type.
+ * @param lhs An object, either valid or not.
+ * @param rhs An object, either valid or not.
+ * @return False if the objects refer to the same node, true otherwise.
+ */
+[[nodiscard]] inline bool operator!=(const meta_data &lhs, const meta_data &rhs) noexcept {
+    return !(lhs == rhs);
+}
 
 /*! @brief Opaque wrapper for member functions. */
 struct meta_func {
@@ -962,8 +1014,12 @@ struct meta_func {
      */
     template<typename... Args>
     meta_any invoke(meta_handle instance, Args &&...args) const {
-        meta_any arguments[sizeof...(Args) + 1u]{{*ctx, std::forward<Args>(args)}...};
-        return invoke(meta_handle{*ctx, std::move(instance)}, arguments, sizeof...(Args));
+        if constexpr(sizeof...(Args) == 0u) {
+            return invoke(std::move(instance), static_cast<meta_any *>(nullptr), size_type{});
+        } else {
+            meta_any arguments[sizeof...(Args)]{{*ctx, std::forward<Args>(args)}...};
+            return invoke(std::move(instance), arguments, sizeof...(Args));
+        }
     }
 
     /*! @copydoc meta_data::prop */
@@ -997,10 +1053,25 @@ struct meta_func {
         return (node != nullptr);
     }
 
+    /*! @copydoc meta_prop::operator== */
+    [[nodiscard]] bool operator==(const meta_func &other) const noexcept {
+        return (ctx == other.ctx && node == other.node);
+    }
+
 private:
     const internal::meta_func_node *node;
     const meta_ctx *ctx;
 };
+
+/**
+ * @brief Checks if two objects refer to the same type.
+ * @param lhs An object, either valid or not.
+ * @param rhs An object, either valid or not.
+ * @return False if the objects refer to the same node, true otherwise.
+ */
+[[nodiscard]] inline bool operator!=(const meta_func &lhs, const meta_func &rhs) noexcept {
+    return !(lhs == rhs);
+}
 
 /*! @brief Opaque wrapper for types. */
 class meta_type {
@@ -1339,8 +1410,12 @@ public:
      */
     template<typename... Args>
     [[nodiscard]] meta_any construct(Args &&...args) const {
-        meta_any arguments[sizeof...(Args) + 1u]{{*ctx, std::forward<Args>(args)}...};
-        return construct(arguments, sizeof...(Args));
+        if constexpr(sizeof...(Args) == 0u) {
+            return construct(static_cast<meta_any *>(nullptr), size_type{});
+        } else {
+            meta_any arguments[sizeof...(Args)]{{*ctx, std::forward<Args>(args)}...};
+            return construct(arguments, sizeof...(Args));
+        }
     }
 
     /**
@@ -1348,12 +1423,12 @@ public:
      * @param element A valid pointer to an element of the underlying type.
      * @return A wrapper that references the given instance.
      */
-    meta_any from_void(void *element) const {
+    [[nodiscard]] meta_any from_void(void *element) const {
         return (element && node.from_void) ? node.from_void(*ctx, element, nullptr) : meta_any{meta_ctx_arg, *ctx};
     }
 
     /*! @copydoc from_void */
-    meta_any from_void(const void *element) const {
+    [[nodiscard]] meta_any from_void(const void *element) const {
         return (element && node.from_void) ? node.from_void(*ctx, nullptr, element) : meta_any{meta_ctx_arg, *ctx};
     }
 
@@ -1373,7 +1448,7 @@ public:
     meta_any invoke(const id_type id, meta_handle instance, meta_any *const args, const size_type sz) const {
         if(node.details) {
             if(auto it = node.details->func.find(id); it != node.details->func.cend()) {
-                if(const auto *candidate = lookup(args, sz, (instance->data() == nullptr), [curr = &it->second]() mutable { return curr ? std::exchange(curr, curr->next.get()) : nullptr; }); candidate) {
+                if(const auto *candidate = lookup(args, sz, instance && (instance->data() == nullptr), [curr = &it->second]() mutable { return curr ? std::exchange(curr, curr->next.get()) : nullptr; }); candidate) {
                     return candidate->invoke(*ctx, meta_handle{*ctx, std::move(instance)}, args);
                 }
             }
@@ -1399,8 +1474,12 @@ public:
      */
     template<typename... Args>
     meta_any invoke(const id_type id, meta_handle instance, Args &&...args) const {
-        meta_any arguments[sizeof...(Args) + 1u]{{*ctx, std::forward<Args>(args)}...};
-        return invoke(id, meta_handle{*ctx, std::move(instance)}, arguments, sizeof...(Args));
+        if constexpr(sizeof...(Args) == 0u) {
+            return invoke(id, std::move(instance), static_cast<meta_any *>(nullptr), size_type{});
+        } else {
+            meta_any arguments[sizeof...(Args)]{{*ctx, std::forward<Args>(args)}...};
+            return invoke(id, std::move(instance), arguments, sizeof...(Args));
+        }
     }
 
     /**
@@ -1466,11 +1545,7 @@ public:
         return !(ctx == nullptr);
     }
 
-    /**
-     * @brief Checks if two objects refer to the same type.
-     * @param other The object with which to compare.
-     * @return True if the objects refer to the same type, false otherwise.
-     */
+    /*! @copydoc meta_prop::operator== */
     [[nodiscard]] bool operator==(const meta_type &other) const noexcept {
         return (ctx == other.ctx) && ((!node.info && !other.node.info) || (node.info && other.node.info && *node.info == *other.node.info));
     }
@@ -1622,7 +1697,7 @@ public:
     explicit meta_iterator(const meta_ctx &area, It iter) noexcept
         : ctx{&area},
           vtable{&basic_vtable<It>},
-          handle{std::move(iter)} {}
+          handle{iter} {}
 
     meta_iterator &operator++() noexcept {
         vtable(operation::incr, handle, 1, nullptr);
@@ -1716,7 +1791,7 @@ public:
     meta_iterator(const meta_ctx &area, std::integral_constant<bool, KeyOnly>, It iter) noexcept
         : ctx{&area},
           vtable{&basic_vtable<KeyOnly, It>},
-          handle{std::move(iter)} {}
+          handle{iter} {}
 
     meta_iterator &operator++() noexcept {
         vtable(operation::incr, handle, nullptr);
@@ -1826,7 +1901,7 @@ inline meta_sequence_container::iterator meta_sequence_container::insert(iterato
  * @return A possibly invalid iterator following the last removed element.
  */
 inline meta_sequence_container::iterator meta_sequence_container::erase(iterator it) {
-    return insert(std::move(it), {});
+    return insert(it, {});
 }
 
 /**

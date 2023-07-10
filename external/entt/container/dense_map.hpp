@@ -128,51 +128,51 @@ public:
         return {it->element.first, it->element.second};
     }
 
-    template<typename ILhs, typename IRhs>
-    friend constexpr std::ptrdiff_t operator-(const dense_map_iterator<ILhs> &, const dense_map_iterator<IRhs> &) noexcept;
+    template<typename Lhs, typename Rhs>
+    friend constexpr std::ptrdiff_t operator-(const dense_map_iterator<Lhs> &, const dense_map_iterator<Rhs> &) noexcept;
 
-    template<typename ILhs, typename IRhs>
-    friend constexpr bool operator==(const dense_map_iterator<ILhs> &, const dense_map_iterator<IRhs> &) noexcept;
+    template<typename Lhs, typename Rhs>
+    friend constexpr bool operator==(const dense_map_iterator<Lhs> &, const dense_map_iterator<Rhs> &) noexcept;
 
-    template<typename ILhs, typename IRhs>
-    friend constexpr bool operator<(const dense_map_iterator<ILhs> &, const dense_map_iterator<IRhs> &) noexcept;
+    template<typename Lhs, typename Rhs>
+    friend constexpr bool operator<(const dense_map_iterator<Lhs> &, const dense_map_iterator<Rhs> &) noexcept;
 
 private:
     It it;
 };
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] constexpr std::ptrdiff_t operator-(const dense_map_iterator<ILhs> &lhs, const dense_map_iterator<IRhs> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr std::ptrdiff_t operator-(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return lhs.it - rhs.it;
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] constexpr bool operator==(const dense_map_iterator<ILhs> &lhs, const dense_map_iterator<IRhs> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator==(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return lhs.it == rhs.it;
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] constexpr bool operator!=(const dense_map_iterator<ILhs> &lhs, const dense_map_iterator<IRhs> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator!=(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return !(lhs == rhs);
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] constexpr bool operator<(const dense_map_iterator<ILhs> &lhs, const dense_map_iterator<IRhs> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator<(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return lhs.it < rhs.it;
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] constexpr bool operator>(const dense_map_iterator<ILhs> &lhs, const dense_map_iterator<IRhs> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator>(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return rhs < lhs;
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] constexpr bool operator<=(const dense_map_iterator<ILhs> &lhs, const dense_map_iterator<IRhs> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator<=(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return !(lhs > rhs);
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] constexpr bool operator>=(const dense_map_iterator<ILhs> &lhs, const dense_map_iterator<IRhs> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator>=(const dense_map_iterator<Lhs> &lhs, const dense_map_iterator<Rhs> &rhs) noexcept {
     return !(lhs < rhs);
 }
 
@@ -230,13 +230,13 @@ private:
     std::size_t offset;
 };
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] constexpr bool operator==(const dense_map_local_iterator<ILhs> &lhs, const dense_map_local_iterator<IRhs> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator==(const dense_map_local_iterator<Lhs> &lhs, const dense_map_local_iterator<Rhs> &rhs) noexcept {
     return lhs.index() == rhs.index();
 }
 
-template<typename ILhs, typename IRhs>
-[[nodiscard]] constexpr bool operator!=(const dense_map_local_iterator<ILhs> &lhs, const dense_map_local_iterator<IRhs> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator!=(const dense_map_local_iterator<Lhs> &lhs, const dense_map_local_iterator<Rhs> &rhs) noexcept {
     return !(lhs == rhs);
 }
 
@@ -266,7 +266,7 @@ class dense_map {
     static constexpr std::size_t minimum_capacity = 8u;
 
     using node_type = internal::dense_map_node<Key, Type>;
-    using alloc_traits = typename std::allocator_traits<Allocator>;
+    using alloc_traits = std::allocator_traits<Allocator>;
     static_assert(std::is_same_v<typename alloc_traits::value_type, std::pair<const Key, Type>>, "Invalid value type");
     using sparse_container_type = std::vector<std::size_t, typename alloc_traits::template rebind_alloc<std::size_t>>;
     using packed_container_type = std::vector<node_type, typename alloc_traits::template rebind_alloc<node_type>>;
@@ -464,7 +464,6 @@ public:
     /**
      * @brief Returns an iterator to the beginning.
      *
-     * The returned iterator points to the first instance of the internal array.
      * If the array is empty, the returned iterator will be equal to `end()`.
      *
      * @return An iterator to the first instance of the internal array.
@@ -485,11 +484,6 @@ public:
 
     /**
      * @brief Returns an iterator to the end.
-     *
-     * The returned iterator points to the element following the last instance
-     * of the internal array. Attempting to dereference the returned iterator
-     * results in undefined behavior.
-     *
      * @return An iterator to the element following the last instance of the
      * internal array.
      */
@@ -838,7 +832,7 @@ public:
     }
 
     /*! @copydoc equal_range */
-    template<class Other>
+    template<typename Other>
     [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, std::pair<const_iterator, const_iterator>>>
     equal_range(const Other &key) const {
         const auto it = find(key);

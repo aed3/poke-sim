@@ -92,9 +92,12 @@ template<typename Type, typename Ret, typename MaybeType, typename... Args>
 struct meta_function_descriptor<Type, Ret (*)(MaybeType, Args...)>
     : meta_function_descriptor_traits<
           Ret,
-          std::conditional_t<std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type>, type_list<Args...>, type_list<MaybeType, Args...>>,
-          !std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type>,
-          std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type> && std::is_const_v<std::remove_reference_t<MaybeType>>> {};
+          std::conditional_t<
+              std::is_same_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type> || std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type>,
+              type_list<Args...>,
+              type_list<MaybeType, Args...>>,
+          !(std::is_same_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type> || std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type>),
+          std::is_const_v<std::remove_reference_t<MaybeType>> && (std::is_same_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type> || std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type>)> {};
 
 /**
  * @brief Meta function descriptor.
@@ -162,7 +165,7 @@ using meta_function_helper_t = typename meta_function_helper<Type, Candidate>::t
  * @return A meta any containing the returned value, if any.
  */
 template<typename Policy = as_is_t, typename Type>
-std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_dispatch(const meta_ctx &ctx, [[maybe_unused]] Type &&value) {
+[[nodiscard]] std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_dispatch(const meta_ctx &ctx, [[maybe_unused]] Type &&value) {
     if constexpr(std::is_same_v<Policy, as_void_t>) {
         return meta_any{ctx, std::in_place_type<void>};
     } else if constexpr(std::is_same_v<Policy, as_ref_t>) {
@@ -183,7 +186,7 @@ std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_dispatch(const meta_ct
  * @return A meta any containing the returned value, if any.
  */
 template<typename Policy = as_is_t, typename Type>
-std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_dispatch(Type &&value) {
+[[nodiscard]] std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_dispatch(Type &&value) {
     return meta_dispatch<Policy, Type>(locator<meta_ctx>::value_or(), std::forward<Type>(value));
 }
 
