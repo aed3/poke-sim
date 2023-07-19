@@ -64,25 +64,25 @@ jobs:
             other_pkgs: clang-9
             clang_version: 9
           - cxx: clang++-10
-            other_pkgs: libffi6 libllvm10 libclang-common-10-dev clang-10
+            other_pkgs: clang-10
             clang_version: 10
           - cxx: clang++-11
-            other_pkgs: libffi6 libllvm11 libclang-cpp11 libclang-common-11-dev clang-11
+            other_pkgs: clang-11
             clang_version: 11
           - cxx: clang++-12
-            other_pkgs: libffi6 libllvm12 libclang-cpp12 libclang-common-12-dev clang-12
+            other_pkgs: clang-12
             clang_version: 12
           - cxx: clang++-13
-            other_pkgs: libffi6 libclang-cpp13 libllvm13 libclang-common-13-dev llvm-13-linker-tools libclang1-13 clang-13
+            other_pkgs: clang-13
             clang_version: 13
           - cxx: clang++-14
-            other_pkgs: libffi6 libclang-cpp14 libllvm14 libclang-common-14-dev llvm-14-linker-tools libclang1-14 clang-14
+            other_pkgs: clang-14
             clang_version: 14
           - cxx: clang++-15
-            other_pkgs: libffi6 libclang-cpp15 libllvm15 libclang-common-15-dev llvm-15-linker-tools libclang1-15 clang-15
+            other_pkgs: clang-15
             clang_version: 15
           - cxx: clang++-16
-            other_pkgs: libffi6 libclang-cpp16 libllvm16 libclang-common-16-dev llvm-16-linker-tools libclang1-16 clang-16
+            other_pkgs: clang-16
             clang_version: 16
 
     steps:
@@ -96,7 +96,10 @@ jobs:
           sudo apt-add-repository --yes --update "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${{matrix.clang_version}} main"
 
       - name: Prepare environment
-        run: sudo apt update; sudo apt install -yf --no-install-recommends ninja-build ${{matrix.other_pkgs}}
+        run: |
+          sudo apt update
+          sudo apt install -yf --no-install-recommends ninja-build ${{matrix.other_pkgs}} || true
+          sudo apt install -yf --no-install-recommends
 
       - name: Create Single Header File
         uses: ./.github/actions/create-headers
