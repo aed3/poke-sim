@@ -32,7 +32,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
         cxx:
           - g++-9
           - g++-10
@@ -51,26 +50,31 @@ jobs:
         include:
           - cxx: g++-9
             other_pkgs: g++-9
+            os: ubuntu-20.04
           - cxx: g++-10
             other_pkgs: g++-10
+            os: ubuntu-20.04
           - cxx: g++-11
             other_pkgs: g++-11
+            os: ubuntu-20.04
           - cxx: g++-12
             other_pkgs: g++-12
-        exlude:
-          - cxx: g++-9
             os: ubuntu-22.04
-          - cxx: g++-10
-            os: ubuntu-22.04
-          - cxx: g++-12
-            os: ubuntu-20.04
           - cxx: clang++-9
-            os: ubuntu-22.04
+            os: ubuntu-20.04
           - cxx: clang++-10
-            os: ubuntu-22.04
+            os: ubuntu-20.04
           - cxx: clang++-11
-            os: ubuntu-22.04
+            os: ubuntu-20.04
           - cxx: clang++-12
+            os: ubuntu-20.04
+          - cxx: clang++-13
+            os: ubuntu-22.04
+          - cxx: clang++-14
+            os: ubuntu-22.04
+          - cxx: clang++-15
+            os: ubuntu-22.04
+          - cxx: clang++-16
             os: ubuntu-22.04
 
     steps:
