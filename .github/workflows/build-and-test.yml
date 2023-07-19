@@ -93,12 +93,10 @@ jobs:
         if: ${{matrix.clang_version}}
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${{matrix.clang_version}} main"
-          sudo apt update
-          sudo apt install llvm-${{matrix.clang_version}} llvm-${{matrix.clang_version}}-dev llvm-${{matrix.clang_version}}-tools
+          sudo apt-add-repository --yes --update "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${{matrix.clang_version}} main"
 
       - name: Prepare environment
-        run: sudo apt install -y ninja-build ${{matrix.other_pkgs}}
+        run: sudo apt update; sudo apt install -yf --no-install-recommends ninja-build ${{matrix.other_pkgs}}
 
       - name: Create Single Header File
         uses: ./.github/actions/create-headers
