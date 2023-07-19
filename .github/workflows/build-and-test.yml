@@ -93,7 +93,7 @@ jobs:
         if: ${{matrix.clang_version}}
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${{matrix.clang-version}} main"
+          sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${{matrix.clang_version}} main"
 
       - name: Prepare environment
         run: sudo apt update; sudo apt install -y ninja-build ${{matrix.other_pkgs}}
