@@ -58,31 +58,31 @@ jobs:
           - cxx: g++-12
             other_pkgs: g++-12
           - cxx: clang++-8
-            other_pkgs: clang-8
+            other_pkgs: clang-8 -f
             clang_version: 8
           - cxx: clang++-9
-            other_pkgs: clang-9
+            other_pkgs: clang-9 -f
             clang_version: 9
           - cxx: clang++-10
-            other_pkgs: clang-10
+            other_pkgs: clang-10 -f
             clang_version: 10
           - cxx: clang++-11
-            other_pkgs: clang-11
+            other_pkgs: clang-11 -f
             clang_version: 11
           - cxx: clang++-12
-            other_pkgs: clang-12
+            other_pkgs: clang-12 -f
             clang_version: 12
           - cxx: clang++-13
-            other_pkgs: clang-13
+            other_pkgs: clang-13 -f
             clang_version: 13
           - cxx: clang++-14
-            other_pkgs: clang-14
+            other_pkgs: clang-14 -f
             clang_version: 14
           - cxx: clang++-15
-            other_pkgs: clang-15
+            other_pkgs: clang-15 -f
             clang_version: 15
           - cxx: clang++-16
-            other_pkgs: clang-16
+            other_pkgs: clang-16 -f
             clang_version: 16
 
     steps:
