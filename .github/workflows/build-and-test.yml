@@ -48,6 +48,33 @@ jobs:
           - clang++-16
         build_type: [Debug, Release]
         use_single_header: [ON, OFF]
+        include:
+          - cxx: g++-9
+            other_pkgs: g++-9
+          - cxx: g++-10
+            other_pkgs: g++-10
+          - cxx: g++-11
+            other_pkgs: g++-11
+          - cxx: g++-11
+            other_pkgs: g++-12
+          - cxx: clang++-8
+            other_pkgs: clang-8
+          - cxx: clang++-9
+            other_pkgs: clang-9
+          - cxx: clang++-10
+            other_pkgs: clang-10
+          - cxx: clang++-11
+            other_pkgs: clang-11
+          - cxx: clang++-12
+            other_pkgs: clang-12
+          - cxx: clang++-13
+            other_pkgs: clang-13
+          - cxx: clang++-14
+            other_pkgs: clang-14
+          - cxx: clang++-15
+            other_pkgs: clang-15
+          - cxx: clang++-16
+            other_pkgs: clang-16
 
     steps:
       - name: Checkout
@@ -113,12 +140,13 @@ jobs:
         run: bin\${{matrix.build_type}}\PokeSimTests.exe
   mac:
     name: 'Mac OS: ${{matrix.cxx}}, SHF ${{matrix.use_single_header}}, ${{matrix.build_type}}'
-    runs-on: macos-11
+    runs-on: macos-12
     strategy:
       fail-fast: false
       matrix:
         cxx:
           - g++-11
+          - g++-12
           - clang++
         build_type: [Debug, Release]
         use_single_header: [ON, OFF]
