@@ -98,6 +98,7 @@ option(USE_SINGLE_HEADER_FILE "Use the Single Header File version of the library
 target_compile_options(PokeSimTests PRIVATE ${compiler_warning_options})
 
 if (USE_SINGLE_HEADER_FILE)
+  message(STATUS "Using single header file instead of library")
   target_include_directories(PokeSimTests PUBLIC ${PROJECT_SOURCE_DIR}/external)
   target_compile_definitions(PokeSimTests PRIVATE USE_SINGLE_HEADER)
 else()

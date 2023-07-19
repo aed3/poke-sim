@@ -46,7 +46,7 @@ jobs:
           - clang++-15
           - clang++-16
         build_type: [Debug, Release]
-        use_single_header: [ON, OFF]
+        use_single_header: [TRUE, FALSE]
         include:
           - cxx: g++-9
             other_pkgs: g++-9
@@ -98,7 +98,7 @@ jobs:
           sudo apt install -y --no-install-recommends ninja-build ${{matrix.other_pkgs}}
 
       - name: Create Single Header File
-        if: matrix.use_single_header == 'ON'
+        if: matrix.use_single_header == 'TRUE'
         uses: ./.github/actions/create-headers
 
       - name: Configure build
@@ -128,13 +128,13 @@ jobs:
         os: [windows-2019, windows-2022]
         platform: [Win32, x64]
         build_type: [Debug, Release]
-        use_single_header: [ON, OFF]
+        use_single_header: [TRUE, FALSE]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Create Single Header File
-        if: matrix.use_single_header == 'ON'
+        if: matrix.use_single_header == 'TRUE'
         uses: ./.github/actions/create-headers
       
       - name: Configure build
@@ -165,14 +165,14 @@ jobs:
           - g++-12
           - clang++
         build_type: [Debug, Release]
-        use_single_header: [ON, OFF]
+        use_single_header: [TRUE, FALSE]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Create Single Header File
-        if: matrix.use_single_header == 'ON'
+        if: matrix.use_single_header == 'TRUE'
         uses: ./.github/actions/create-headers
 
       - name: Configure build
