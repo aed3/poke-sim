@@ -58,31 +58,31 @@ jobs:
           - cxx: g++-12
             other_pkgs: g++-12
           - cxx: clang++-8
-            other_pkgs: clang-8 -f
+            other_pkgs: clang-8
             clang_version: 8
           - cxx: clang++-9
-            other_pkgs: clang-9 -f
+            other_pkgs: clang-9
             clang_version: 9
           - cxx: clang++-10
-            other_pkgs: clang-10 -f
+            other_pkgs: clang-10
             clang_version: 10
           - cxx: clang++-11
-            other_pkgs: clang-11 -f
+            other_pkgs: clang-11
             clang_version: 11
           - cxx: clang++-12
-            other_pkgs: clang-12 -f
+            other_pkgs: clang-12
             clang_version: 12
           - cxx: clang++-13
-            other_pkgs: clang-13 -f
+            other_pkgs: clang-13
             clang_version: 13
           - cxx: clang++-14
-            other_pkgs: clang-14 -f
+            other_pkgs: clang-14
             clang_version: 14
           - cxx: clang++-15
-            other_pkgs: clang-15 -f
+            other_pkgs: clang-15
             clang_version: 15
           - cxx: clang++-16
-            other_pkgs: clang-16 -f
+            other_pkgs: clang-16
             clang_version: 16
 
     steps:
@@ -94,9 +94,11 @@ jobs:
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${{matrix.clang_version}} main"
+          sudo apt update
+          sudo apt install llvm-${{matrix.clang_version}} llvm-${{matrix.clang_version}}-dev llvm-${{matrix.clang_version}}-tools
 
       - name: Prepare environment
-        run: sudo apt update; sudo apt install -y ninja-build ${{matrix.other_pkgs}}
+        run: sudo apt install -y ninja-build ${{matrix.other_pkgs}}
 
       - name: Create Single Header File
         uses: ./.github/actions/create-headers
