@@ -28,73 +28,78 @@ on:
 jobs:
   linux:
     name: 'Linux: ${{matrix.cxx}}, SHF ${{matrix.use_single_header}}, ${{matrix.build_type}}'
-    runs-on: ubuntu-20.04
+    runs-on: ${{matrix.os}}
     strategy:
       fail-fast: false
       matrix:
         cxx:
-          - g++-7
-          - g++-8
           - g++-9
           - g++-10
           - g++-11
-          - clang++-7
-          - clang++-8
+          - g++-12
           - clang++-9
           - clang++-10
+          - clang++-11
+          - clang++-12
+          - clang++-13
+          - clang++-14
+          - clang++-15
+          - clang++-16
         build_type: [Debug, Release]
-        use_single_header: [ON, OFF]
+        use_single_header: ['TRUE', 'FALSE']
         include:
-          - cxx: g++-7
-            other_pkgs: g++-7
-          - cxx: g++-8
-            other_pkgs: g++-8
           - cxx: g++-9
             other_pkgs: g++-9
+            os: ubuntu-20.04
           - cxx: g++-10
             other_pkgs: g++-10
+            os: ubuntu-20.04
           - cxx: g++-11
             other_pkgs: g++-11
-          - cxx: clang++-7
-            other_pkgs: clang-7
-          - cxx: clang++-8
-            other_pkgs: clang-8
+            os: ubuntu-20.04
+          - cxx: g++-12
+            other_pkgs: g++-12
+            os: ubuntu-22.04
           - cxx: clang++-9
-            other_pkgs: clang-9
+            os: ubuntu-20.04
           - cxx: clang++-10
-            other_pkgs: clang-10
-          - cxx: clang++-10
-            build_type: Debug
-            other_pkgs: clang-10
-          - cxx: clang++-10
-            build_type: Release
-            other_pkgs: clang-10
-          - cxx: clang++-10
-            build_type: Debug
-            other_pkgs: clang-10
-          - cxx: clang++-10
-            build_type: Release
-            other_pkgs: clang-10
-          - cxx: g++-10
-            build_type: Debug
-            other_pkgs: g++-10
-          - cxx: g++-10
-            build_type: Release
-            other_pkgs: g++-10
-        exclude:
-          - cxx: clang++-7
-            build_type: Release
-          - cxx: clang++-8
-            build_type: Release
+            os: ubuntu-20.04
+          - cxx: clang++-11
+            os: ubuntu-20.04
+          - cxx: clang++-12
+            os: ubuntu-20.04
+          - cxx: clang++-13
+            os: ubuntu-22.04
+          - cxx: clang++-14
+            os: ubuntu-22.04
+          - cxx: clang++-15
+            os: ubuntu-22.04
+          - cxx: clang++-16
+            os: ubuntu-22.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Add Clang Upstream
+        if: startsWith(matrix.cxx, 'clang')
+        run: |
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          clang_version="${{matrix.cxx}}"
+          version_number=${clang_version#*-}
+          codename=`lsb_release -sc`
+
+          sudo apt-add-repository --yes --update "deb http://apt.llvm.org/$codename/ llvm-toolchain-$codename-$version_number main"
+          sudo apt install -yq --no-install-recommends clang-$version_number
+
       - name: Prepare environment
-        run: sudo apt-get install -y ninja-build ${{matrix.other_pkgs}}
+        if: matrix.other_pkgs
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends ${{matrix.other_pkgs}}
 
       - name: Create Single Header File
+        if: matrix.use_single_header == 'TRUE'
         uses: ./.github/actions/create-headers
 
       - name: Configure build
@@ -106,11 +111,11 @@ jobs:
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
                 -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
-                -G Ninja
+                -G "Unix Makefiles"
 
-      - name: Build tests + lib
+      - name: Build tests
         working-directory: ${{runner.workspace}}/build
-        run: ninja
+        run: cmake --build . --config ${{matrix.build_type}} --target PokeSimTests
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
@@ -124,12 +129,13 @@ jobs:
         os: [windows-2019, windows-2022]
         platform: [Win32, x64]
         build_type: [Debug, Release]
-        use_single_header: [ON, OFF]
+        use_single_header: ['TRUE', 'FALSE']
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Create Single Header File
+        if: matrix.use_single_header == 'TRUE'
         uses: ./.github/actions/create-headers
       
       - name: Configure build
@@ -141,31 +147,31 @@ jobs:
                 -A ${{matrix.platform}}
       
       - name: Build tests
-        working-directory: ${{runner.workspace}}
-        run: |
-          $jobs = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
-          cmake --build build --config ${{matrix.build_type}} --parallel $jobs
+        working-directory: ${{runner.workspace}}/build
+        run: cmake --build . --config ${{matrix.build_type}} --target PokeSimTests
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
         run: bin\${{matrix.build_type}}\PokeSimTests.exe
   mac:
     name: 'Mac OS: ${{matrix.cxx}}, SHF ${{matrix.use_single_header}}, ${{matrix.build_type}}'
-    runs-on: macos-11
+    runs-on: macos-12
     strategy:
       fail-fast: false
       matrix:
         cxx:
           - g++-11
+          - g++-12
           - clang++
         build_type: [Debug, Release]
-        use_single_header: [ON, OFF]
+        use_single_header: ['TRUE', 'FALSE']
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Create Single Header File
+        if: matrix.use_single_header == 'TRUE'
         uses: ./.github/actions/create-headers
 
       - name: Configure build
@@ -180,7 +186,7 @@ jobs:
 
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
-        run: make -j 2
+        run: cmake --build . --config ${{matrix.build_type}} --target PokeSimTests
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
