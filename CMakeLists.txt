@@ -86,7 +86,7 @@ add_executable(PokeSimTests
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
   if (IpoSupported)
     cmake_host_system_information(RESULT SystemMemory QUERY TOTAL_PHYSICAL_MEMORY)
-    if (SystemMemory GREATER 8000)
+    if (SystemMemory GREATER 4000)
       message(STATUS "IPO / LTO enabled")
       set_property(TARGET PokeSim PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
       set_property(TARGET PokeSimTests PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
