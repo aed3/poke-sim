@@ -77,17 +77,17 @@ jobs:
           - cxx: clang++-16
             os: ubuntu-22.04
         exclude:
-          - g++-10
-          - g++-11
-          - g++-12
-          - clang++-9
-          - clang++-10
-          - clang++-11
-          - clang++-12
-          - clang++-13
-          - clang++-14
-          - clang++-15
-          - clang++-16
+          - cxx: g++-10
+          - cxx: g++-11
+          - cxx: g++-12
+          - cxx: clang++-9
+          - cxx: clang++-10
+          - cxx: clang++-11
+          - cxx: clang++-12
+          - cxx: clang++-13
+          - cxx: clang++-14
+          - cxx: clang++-15
+          - cxx: clang++-16
     steps:
       - name: Checkout
         uses: actions/checkout@v3
