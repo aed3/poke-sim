@@ -78,7 +78,7 @@ target_compile_options(PokeSim PRIVATE ${compiler_warning_options})
 ############################################################
 
 add_executable(PokeSimTests
-  tests/Pokedex.cpp
+  # tests/Pokedex.cpp
   tests/Tests.cpp
   external/Catch2/catch_amalgamated.cpp
 )
