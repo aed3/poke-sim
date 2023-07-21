@@ -111,7 +111,7 @@ jobs:
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
                 -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
-                -G Ninja
+                -G "Unix Makefiles"
 
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
