@@ -93,9 +93,10 @@ jobs:
           sudo apt install -yq --no-install-recommends clang-$version_number
 
       - name: Prepare environment
+        if: matrix.other_pkgs
         run: |
           sudo apt update
-          sudo apt install -y --no-install-recommends ninja-build ${{matrix.other_pkgs}}
+          sudo apt install -y --no-install-recommends ${{matrix.other_pkgs}}
 
       - name: Create Single Header File
         if: matrix.use_single_header == 'TRUE'
@@ -112,9 +113,9 @@ jobs:
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
                 -G Ninja
 
-      - name: Build tests + lib
+      - name: Build tests
         working-directory: ${{runner.workspace}}/build
-        run: ninja PokeSimTests
+        run: cmake --config ${{matrix.build_type}} --target PokeSimTests -j 2
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
@@ -146,10 +147,8 @@ jobs:
                 -A ${{matrix.platform}}
       
       - name: Build tests
-        working-directory: ${{runner.workspace}}
-        run: |
-          $jobs = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
-          cmake --build build --config ${{matrix.build_type}} --target PokeSimTests --parallel $jobs
+        working-directory: ${{runner.workspace}}/build
+        run: cmake --config ${{matrix.build_type}} --target PokeSimTests -j 2
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
@@ -187,7 +186,7 @@ jobs:
 
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
-        run: make PokeSimTests -j 2
+        run: cmake --config ${{matrix.build_type}} --target PokeSimTests -j 2
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
