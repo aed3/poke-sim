@@ -36,7 +36,7 @@ endif()
 
 project(PokeSim)
 
-check_ipo_supported(RESULT supported OUTPUT error)
+check_ipo_supported(RESULT IpoSupported OUTPUT error)
 
 set (SOURCES
   src/Battle/Setup/BattleStateSetup.cpp
@@ -84,12 +84,17 @@ add_executable(PokeSimTests
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
-  if (supported)
+  if (IpoSupported)
+    cmake_host_system_information(RESULT SystemMemory QUERY TOTAL_PHYSICAL_MEMORY)
+    if (SystemMemory GREATER 8000)
       message(STATUS "IPO / LTO enabled")
       set_property(TARGET PokeSim PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
       set_property(TARGET PokeSimTests PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    else()
+      message(STATUS "System memory of ${SystemMemory} is too low for LTO")
+    endif()
   else()
-      message(STATUS "IPO / LTO not supported: <${error}>")
+    message(STATUS "IPO / LTO not supported: <${error}>")
   endif()
 endif()
 
