@@ -76,7 +76,18 @@ jobs:
             os: ubuntu-22.04
           - cxx: clang++-16
             os: ubuntu-22.04
-
+        exlude:
+          - g++-10
+          - g++-11
+          - g++-12
+          - clang++-9
+          - clang++-10
+          - clang++-11
+          - clang++-12
+          - clang++-13
+          - clang++-14
+          - clang++-15
+          - clang++-16
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -130,6 +141,9 @@ jobs:
         platform: [Win32, x64]
         build_type: [Debug, Release]
         use_single_header: ['TRUE', 'FALSE']
+        exclude:
+          buid_type: Debug
+          buid_type: Release
     steps:
       - name: Checkout
         uses: actions/checkout@v3
