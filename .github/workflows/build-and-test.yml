@@ -76,7 +76,7 @@ jobs:
             os: ubuntu-22.04
           - cxx: clang++-16
             os: ubuntu-22.04
-        exlude:
+        exclude:
           - g++-10
           - g++-11
           - g++-12
@@ -179,6 +179,9 @@ jobs:
           - clang++
         build_type: [Debug, Release]
         use_single_header: ['TRUE', 'FALSE']
+        exclude:
+          buid_type: Debug
+          buid_type: Release
 
     steps:
       - name: Checkout
