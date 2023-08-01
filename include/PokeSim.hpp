@@ -15848,7 +15848,7 @@ void BattleStateSetup::setSide(Side::PlayerSideID sideID, entt::entity sideEntit
 
 void BattleStateSetup::setRNGSeed(std::uint32_t seed) {
   if (seed == 0) {
-    seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    seed = (std::uint32_t)std::chrono::high_resolution_clock::now().time_since_epoch().count();
   }
 
   handle.emplace<RNGSeed>(seed);
