@@ -4,7 +4,7 @@
 
 namespace pokesim {
 /** @brief Game the simulator is imitating the mechanics of */
-enum GameMechanic : std::uint8_t {
-  SCARLET_VIOLET,
+enum GameMechanics : std::uint8_t {
+  SCARLET_VIOLET_GAME_MECHANICS,
 };
 }  // namespace pokesim

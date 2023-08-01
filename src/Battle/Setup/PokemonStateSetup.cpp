@@ -23,6 +23,11 @@ void PokemonStateSetup::initBlank() {
   handle.emplace<SpeciesName>();
   handle.emplace<Side>();
   handle.emplace<Battle>();
+  setAutoID();
+}
+
+void PokemonStateSetup::setAutoID() {
+  setID((uint16_t)handle.registry()->view<SpeciesName>().size());
 }
 
 void PokemonStateSetup::setID(std::uint16_t id) {
@@ -59,9 +64,8 @@ void PokemonStateSetup::setItem(dex::Item item) {
   tags::item::enumToTag(item, handle);
 }
 
-void PokemonStateSetup::addMove(entt::entity entity) {
-  MoveSlots& moveSlots = handle.get_or_emplace<MoveSlots>();
-  moveSlots.moveSlots.push_back(entity);
+void PokemonStateSetup::setMoves(const std::vector<entt::entity>& moveSlots) {
+  handle.emplace<MoveSlots>(moveSlots);
 }
 
 void PokemonStateSetup::setPostion(std::uint8_t position) {
@@ -83,8 +87,16 @@ void PokemonStateSetup::setEVs(
   handle.emplace<EVs>(hp, atk, def, spa, spd, spe);
 }
 
+void PokemonStateSetup::setEVs(const EVs& evs) {
+  handle.emplace<EVs>(evs);
+}
+
 void PokemonStateSetup::setIVs(
   std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe) {
   handle.emplace<IVs>(hp, atk, def, spa, spd, spe);
+}
+
+void PokemonStateSetup::setIVs(const IVs& ivs) {
+  handle.emplace<IVs>(ivs);
 }
 }  // namespace pokesim

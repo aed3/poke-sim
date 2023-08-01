@@ -11,6 +11,7 @@ struct BattleStateSetup : internal::StateSetupBase {
 
   /*_inline_*/ void initBlank();
 
+  /*_inline_*/ void setAutoID();
   /*_inline_*/ void setID(std::uint16_t id);
   /*_inline_*/ void setSide(Side::PlayerSideID sideID, entt::entity sideEntity);
   /*_inline_*/ void setRNGSeed(std::uint32_t seed);
