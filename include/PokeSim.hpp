@@ -12920,9 +12920,9 @@ class Simulation {
  private:
   using SideTeamSetupData = std::tuple<SideStateSetup, const InputSide*, std::vector<PokemonStateSetup>>;
 
-  std::vector<entt::entity> createInitialMoves(const std::vector<InputMove>& moveDataList);
-  PokemonStateSetup createInitialPokemon(const InputPokemon& pokemonData);
-  std::pair<SideStateSetup, SideStateSetup> createInitialBattle(const InputBattle& battleData);
+  inline std::vector<entt::entity> createInitialMoves(const std::vector<InputMove>& moveDataList);
+  inline PokemonStateSetup createInitialPokemon(const InputPokemon& pokemonData);
+  inline std::pair<SideStateSetup, SideStateSetup> createInitialBattle(const InputBattle& battleData);
 
  public:
   entt::registry registry{};
@@ -12931,7 +12931,7 @@ class Simulation {
 
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : pokedex(&pokedex_), battleFormat(battleFormat_) {}
 
-  void createInitialStates(std::initializer_list<InputBattle> battleDataList);
+ inline void createInitialStates(std::initializer_list<InputBattle> battleDataList);
 };
 }  // namespace pokesim
 
