@@ -7,14 +7,14 @@
 
 namespace pokesim {
 class Simulation {
- private:
-  struct InputMove {
+ public:
+  struct MoveCreationInfo {
     dex::Move name = dex::NO_MOVE;
     std::uint8_t pp = 1;
     std::uint8_t maxPP = 1;
   };
 
-  struct InputPokemon {
+  struct PokemonCreationInfo {
     std::uint16_t id = 0;
     dex::Species species = dex::MISSING_NO;
     dex::Item item = dex::NO_ITEM;
@@ -35,27 +35,27 @@ class Simulation {
       std::uint16_t spe = 1;
     } stats;
 
-    std::vector<InputMove> moves{};
+    std::vector<MoveCreationInfo> moves{};
   };
 
-  struct InputSide {
-    std::vector<InputPokemon> team;
+  struct SideCreationInfo {
+    std::vector<PokemonCreationInfo> team;
   };
 
-  struct InputBattle {
+  struct BattleCreationInfo {
     std::uint16_t turn = 0;
     std::uint32_t rngSeed = 0;
     float probability = 1;
-    InputSide P1;
-    InputSide P2;
+    SideCreationInfo P1;
+    SideCreationInfo P2;
   };
 
  private:
-  using SideTeamSetupData = std::tuple<SideStateSetup, const InputSide*, std::vector<PokemonStateSetup>>;
+  using SideTeamSetupData = std::tuple<SideStateSetup, const SideCreationInfo*, std::vector<PokemonStateSetup>>;
 
-  /*_inline_*/ std::vector<entt::entity> createInitialMoves(const std::vector<InputMove>& moveDataList);
-  /*_inline_*/ PokemonStateSetup createInitialPokemon(const InputPokemon& pokemonData);
-  /*_inline_*/ std::pair<SideStateSetup, SideStateSetup> createInitialBattle(const InputBattle& battleData);
+  /*_inline_*/ std::vector<entt::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
+  /*_inline_*/ PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
+  /*_inline_*/ std::pair<SideStateSetup, SideStateSetup> createInitialBattle(const BattleCreationInfo& battleData);
 
  public:
   entt::registry registry{};
@@ -64,6 +64,6 @@ class Simulation {
 
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : pokedex(&pokedex_), battleFormat(battleFormat_) {}
 
- /*_inline_*/ void createInitialStates(std::initializer_list<InputBattle> battleDataList);
+ /*_inline_*/ void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
 };
 }  // namespace pokesim

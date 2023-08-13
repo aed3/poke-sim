@@ -6,11 +6,11 @@
 #include <Components/PP.hpp>
 
 namespace pokesim {
-std::vector<entt::entity> Simulation::createInitialMoves(const std::vector<InputMove>& moveDataList) {
+std::vector<entt::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList) {
   std::vector<entt::entity> moveEntities{};
   moveEntities.reserve(moveDataList.size());
 
-  for (const InputMove& moveData : moveDataList) {
+  for (const MoveCreationInfo& moveData : moveDataList) {
     MoveStateSetup moveSetup(registry);
     moveSetup.setName(moveData.name);
     moveSetup.setPP(moveData.pp);
@@ -21,7 +21,7 @@ std::vector<entt::entity> Simulation::createInitialMoves(const std::vector<Input
   return moveEntities;
 }
 
-PokemonStateSetup Simulation::createInitialPokemon(const InputPokemon& pokemonData) {
+PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& pokemonData) {
   PokemonStateSetup pokemonSetup(registry);
   if (pokemonData.id == 0) {
     pokemonSetup.setAutoID();
@@ -50,7 +50,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const InputPokemon& pokemonDa
   return pokemonSetup;
 }
 
-std::pair<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(const InputBattle& battleData) {
+std::pair<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(const BattleCreationInfo& battleData) {
   BattleStateSetup battleStateSetup(registry);
   battleStateSetup.setAutoID();
   battleStateSetup.setTurn(battleData.turn);
@@ -76,11 +76,11 @@ std::pair<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(const 
   return {p1SideSetup, p2SideSetup};
 }
 
-void Simulation::createInitialStates(std::initializer_list<InputBattle> battleDataList) {
+void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList) {
   std::vector<SideTeamSetupData> sideTeamSetupData{};
   sideTeamSetupData.reserve(battleDataList.size() * 2);
 
-  for (const InputBattle& battleData : battleDataList) {
+  for (const BattleCreationInfo& battleData : battleDataList) {
     auto [p1SideSetup, p2SideSetup] = createInitialBattle(battleData);
 
     sideTeamSetupData.push_back({p1SideSetup, &battleData.P1, {}});
@@ -89,7 +89,7 @@ void Simulation::createInitialStates(std::initializer_list<InputBattle> battleDa
 
   for (auto& [sideSetup, sideData, pokemonSetupList] : sideTeamSetupData) {
     pokemonSetupList.reserve(sideData->team.size());
-    for (const InputPokemon& pokemonData : sideData->team) {
+    for (const PokemonCreationInfo& pokemonData : sideData->team) {
       pokemonSetupList.push_back(createInitialPokemon(pokemonData));
     }
   }

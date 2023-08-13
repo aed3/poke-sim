@@ -17,32 +17,44 @@ TEST_CASE("Single Battle", "[BattleState]") {
   EVs idealP1Evs = {0, 50, 100, 150, 200, 255};
   IVs idealP2Ivs = {5, 10, 15, 20, 25, 30};
 
-  simulation.createInitialStates({{
-    .turn = 0,
-    .P1 =
-      {.team = {{
-         .species = dex::EMPOLEON,
-         .ability = dex::DEFIANT,
-         .gender = dex::MALE,
-         .status = dex::PAR,
-         .level = 99,
-         .evs = idealP1Evs,
-         .stats = {309, 208, 212, 258, 238, 156},
-         .moves = {{.name = dex::FURY_ATTACK, .pp = idealP1MovePP, .maxPP = idealP1MoveMaxPP}},
-       }}},
-    .P2 =
-      {.team = {{
-         .species = dex::AMPHAROS,
-         .item = dex::CHOICE_SPECS,
-         .ability = dex::STATIC,
-         .gender = dex::FEMALE,
-         .level = 100,
-         .nature = dex::MODEST,
-         .ivs = idealP2Ivs,
-         .stats = {321, 186, 206, 266, 216, 146},
-         .moves = {{.name = dex::THUNDERBOLT, .pp = idealP2MovePP, .maxPP = idealP2MoveMaxPP}},
-       }}},
-  }});
+  Simulation::BattleCreationInfo battleCreationInfo{};
+  {
+    Simulation::PokemonCreationInfo p1PokemonInfo{};
+    p1PokemonInfo.species = dex::EMPOLEON;
+    p1PokemonInfo.ability = dex::DEFIANT;
+    p1PokemonInfo.gender = dex::MALE;
+    p1PokemonInfo.status = dex::PAR;
+    p1PokemonInfo.level = 99;
+    p1PokemonInfo.evs = idealP1Evs;
+    p1PokemonInfo.stats = {309, 208, 212, 258, 238, 156};
+
+    Simulation::MoveCreationInfo p1MoveInfo{};
+    p1MoveInfo.name = dex::FURY_ATTACK;
+    p1MoveInfo.pp = idealP1MovePP;
+    p1MoveInfo.maxPP = idealP1MoveMaxPP;
+    p1PokemonInfo.moves.push_back(std::move(p1MoveInfo));
+
+    Simulation::PokemonCreationInfo p2PokemonInfo{};
+    p2PokemonInfo.species = dex::AMPHAROS;
+    p2PokemonInfo.item = dex::CHOICE_SPECS;
+    p2PokemonInfo.ability = dex::STATIC;
+    p2PokemonInfo.gender = dex::FEMALE;
+    p2PokemonInfo.level = 100;
+    p2PokemonInfo.nature = dex::MODEST;
+    p2PokemonInfo.ivs = idealP2Ivs;
+    p2PokemonInfo.stats = {321, 186, 206, 266, 216, 146};
+
+    Simulation::MoveCreationInfo p2MoveInfo{};
+    p2MoveInfo.name = dex::THUNDERBOLT;
+    p2MoveInfo.pp = idealP2MovePP;
+    p2MoveInfo.maxPP = idealP2MoveMaxPP;
+    p2PokemonInfo.moves.push_back(std::move(p2MoveInfo));
+
+    battleCreationInfo.P1 = {{std::move(p1PokemonInfo)}};
+    battleCreationInfo.P2 = {{std::move(p2PokemonInfo)}};
+  }
+
+  simulation.createInitialStates({std::move(battleCreationInfo)});
 
   const entt::registry& registry = simulation.registry;
   auto battles = registry.view<Sides>();
