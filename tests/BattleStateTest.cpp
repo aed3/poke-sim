@@ -247,7 +247,7 @@ TEST_CASE("Double Battle", "[BattleState]") {
   }
 
   battleCreationInfo.turn = 2;
-  battleCreationInfo.probability = 0.9;
+  battleCreationInfo.probability = 0.9F;
   battleCreationInfo.rngSeed = 0x12345678;
   simulation.createInitialStates({battleCreationInfo});
 
