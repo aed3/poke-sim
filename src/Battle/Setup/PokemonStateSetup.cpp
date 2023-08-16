@@ -27,7 +27,7 @@ void PokemonStateSetup::initBlank() {
 }
 
 void PokemonStateSetup::setAutoID() {
-  setID((uint16_t)handle.registry()->view<SpeciesName>().size());
+  setID((uint16_t)handle.registry()->view<SpeciesName>().size() + 1);
 }
 
 void PokemonStateSetup::setID(std::uint16_t id) {
