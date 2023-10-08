@@ -1,9 +1,9 @@
 #include "Simulation.hpp"
 
 #include <Battle/Setup/headers.hpp>
-#include <entt/container/dense_map.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/PP.hpp>
+#include <entt/container/dense_map.hpp>
 
 namespace pokesim {
 std::vector<entt::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList) {

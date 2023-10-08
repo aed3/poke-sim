@@ -1,9 +1,9 @@
 #pragma once
 
+#include <Battle/Setup/SideStateSetup.hpp>
 #include <Components/EVsIVs.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <entt/entity/registry.hpp>
-#include <Battle/Setup/SideStateSetup.hpp>
 
 namespace pokesim {
 class Simulation {
@@ -64,6 +64,6 @@ class Simulation {
 
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : pokedex(&pokedex_), battleFormat(battleFormat_) {}
 
- /*_inline_*/ void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
+  /*_inline_*/ void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
 };
 }  // namespace pokesim

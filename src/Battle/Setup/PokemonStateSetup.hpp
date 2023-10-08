@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Components/Boosts.hpp>
+#include <Components/EVsIVs.hpp>
 #include <Components/Stats.hpp>
 #include <Types/Ability.hpp>
 #include <Types/Gender.hpp>
@@ -8,7 +9,6 @@
 #include <Types/Nature.hpp>
 #include <Types/Species.hpp>
 #include <Types/Status.hpp>
-#include <Components/EVsIVs.hpp>
 
 #include "StateSetupBase.hpp"
 
