@@ -1,5 +1,6 @@
 #pragma once
 
+#include "PokemonStateSetup.hpp"
 #include "StateSetupBase.hpp"
 
 namespace pokesim {
@@ -9,10 +10,8 @@ struct SideStateSetup : internal::StateSetupBase {
 
   /*_inline_*/ void initBlank();
 
-  /*_inline_*/ void setTeam(const std::vector<entt::entity>& team);
+  /*_inline_*/ void setTeam(std::vector<PokemonStateSetup>& team);
   /*_inline_*/ void setOpponent(entt::entity entity);
   /*_inline_*/ void setBattle(entt::entity entity);
-
-  /*_inline_*/ void addTeamMember(entt::entity entity);
 };
 }  // namespace pokesim

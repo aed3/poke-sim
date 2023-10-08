@@ -3,7 +3,6 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/Team.hpp>
-#include <Components/Position.hpp>
 
 namespace pokesim {
 void SideStateSetup::initBlank() {
@@ -12,8 +11,17 @@ void SideStateSetup::initBlank() {
   handle.emplace<FoeSide>();
 }
 
-void SideStateSetup::setTeam(const std::vector<entt::entity>& team) {
-  handle.emplace<Team>(team);
+void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
+  Team& teamEntities = handle.emplace<Team>();
+  teamEntities.team.reserve(team.size());
+  Battle battle = handle.get<Battle>();
+
+  for (std::size_t i = 0; i < team.size(); i++) {
+    teamEntities.team.push_back(team[i].entity());
+    team[i].setPostion((std::uint8_t)(i + 1));
+    team[i].setSide(entity());
+    team[i].setBattle(battle.battle);
+  }
 }
 
 void SideStateSetup::setOpponent(entt::entity entity) {
@@ -22,11 +30,5 @@ void SideStateSetup::setOpponent(entt::entity entity) {
 
 void SideStateSetup::setBattle(entt::entity entity) {
   handle.emplace<Battle>(entity);
-}
-
-void SideStateSetup::addTeamMember(entt::entity entity) {
-  Team& team = handle.get_or_emplace<Team>();
-  team.team.push_back(entity);
-  handle.registry()->emplace<Position>(entity, (std::uint8_t)team.team.size());
 }
 }  // namespace pokesim

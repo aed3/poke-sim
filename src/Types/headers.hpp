@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Ability.hpp"
-#include "GameMechanic.hpp"
+#include "BattleFormat.hpp"
+#include "GameMechanics.hpp"
 #include "Gender.hpp"
 #include "Item.hpp"
 #include "Move.hpp"

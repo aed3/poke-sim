@@ -36,13 +36,13 @@
 		{
 			"type": "shell",
 			"label": "clang-format",
-			"command": "find src -iname *.hpp -o -iname *.cpp | xargs clang-format --style=file -i",
+			"command": "find src tests -iname *.hpp -o -iname *.cpp | xargs clang-format --style=file -i",
 			"problemMatcher": []
 		},
 		{
 			"type": "shell",
 			"label": "clang-tidy",
-			"command": "find src -iname *.hpp -o -iname *.cpp | xargs clang-tidy --config-file .clang-tidy -p build",
+			"command": "find src tests -iname *.hpp -o -iname *.cpp | xargs clang-tidy --config-file .clang-tidy -p build",
 			"problemMatcher": []
 		}
 	]

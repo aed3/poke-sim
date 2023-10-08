@@ -49,12 +49,13 @@ set (SOURCES
   src/Components/Tags/StatusTags.cpp
   src/Pokedex/Names.cpp
   src/Pokedex/Pokedex.cpp
-  src/Pokedex/Setup/ItemDexDataSetup.cpp
-  src/Pokedex/Setup/MoveDexDataSetup.cpp
-  src/Pokedex/Setup/SpeciesDexDataSetup.cpp
   src/Pokedex/Setup/GetItemBuild.cpp
   src/Pokedex/Setup/GetMoveBuild.cpp
   src/Pokedex/Setup/GetSpeciesBuild.cpp
+  src/Pokedex/Setup/ItemDexDataSetup.cpp
+  src/Pokedex/Setup/MoveDexDataSetup.cpp
+  src/Pokedex/Setup/SpeciesDexDataSetup.cpp
+  src/Simulation/Simulation.cpp
 )
 
 add_library(PokeSim STATIC ${SOURCES})
@@ -78,7 +79,8 @@ target_compile_options(PokeSim PRIVATE ${compiler_warning_options})
 ############################################################
 
 add_executable(PokeSimTests
-  tests/Pokedex.cpp
+  tests/BattleStateTest.cpp
+  tests/PokedexTest.cpp
   tests/Tests.cpp
   external/Catch2/catch_amalgamated.cpp
 )

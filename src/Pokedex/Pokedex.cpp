@@ -10,23 +10,23 @@ entt::handle Pokedex::createEntry() {
 
 template <typename GetBuild, typename T>
 void Pokedex::load(entt::dense_map<T, entt::entity>& map, const entt::dense_set<T>& list, GetBuild getBuild) {
-  map.reserve(list.size());
+  map.reserve(map.size() + list.size());
   for (T listItem : list) {
     ENTT_ASSERT(!map.contains(listItem), "Shouldn't build data entries twice");
     map[listItem] = getBuild(listItem)(*this);
   }
 }
 
-void Pokedex::loadSpecies(const entt::dense_set<dex::Species>& speciesList) {
-  load(speciesMap, speciesList, getSpeciesBuild);
+void Pokedex::loadSpecies(const entt::dense_set<dex::Species>& speciesSet) {
+  load(speciesMap, speciesSet, getSpeciesBuild);
 }
 
-void Pokedex::loadItems(const entt::dense_set<dex::Item>& itemList) {
-  load(itemsMap, itemList, getItemBuild);
+void Pokedex::loadItems(const entt::dense_set<dex::Item>& itemSet) {
+  load(itemsMap, itemSet, getItemBuild);
 }
 
-void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveList) {
-  load(movesMap, moveList, getMoveBuild);
+void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
+  load(movesMap, moveSet, getMoveBuild);
 }
 
 }  // namespace pokesim

@@ -23,12 +23,12 @@ class Pokedex {
  public:
   /**
    * @brief The data for the Pokedex will be based the this game's data.
-   * For example, if this is set to DIAMOND_PEARL, Clefable's data will list it as a Normal type, but if it's set to
-   * BRILLIANT_DIAMOND_SHINING_PEARL, Clefable will be listed as a Fairy type.
+   * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but if
+   * it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
    */
-  const GameMechanic mechanics;
+  const GameMechanics mechanics;
 
-  Pokedex(GameMechanic mechanics_ = SCARLET_VIOLET) : mechanics(mechanics_) {}
+  Pokedex(GameMechanics mechanics_) : mechanics(mechanics_) {}
 
   // Creates an entity to store a new Pokedex entry of any species, item, or move.
   /*_inline_*/ entt::handle createEntry();
@@ -42,7 +42,7 @@ class Pokedex {
    *
    * @note Only call this once per species per Pokedex instance.
    */
-  /*_inline_*/ void loadSpecies(const entt::dense_set<dex::Species>& speciesList);
+  /*_inline_*/ void loadSpecies(const entt::dense_set<dex::Species>& speciesSet);
 
   /**
    * @brief Calls the load functions for a set of items to add their data to a Pokedex's storage.
@@ -53,7 +53,7 @@ class Pokedex {
    *
    * @note Only call this once per item per Pokedex instance.
    */
-  /*_inline_*/ void loadItems(const entt::dense_set<dex::Item>& itemList);
+  /*_inline_*/ void loadItems(const entt::dense_set<dex::Item>& itemSet);
 
   /**
    * @brief Calls the load functions for a set of moves to add their data to a Pokedex's storage.
@@ -64,7 +64,7 @@ class Pokedex {
    *
    * @note Only call this once per move per Pokedex instance.
    */
-  /*_inline_*/ void loadMoves(const entt::dense_set<dex::Move>& moveList);
+  /*_inline_*/ void loadMoves(const entt::dense_set<dex::Move>& moveSet);
 
   /**
    * @brief Returns references to the given dex data components for a species

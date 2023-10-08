@@ -8,14 +8,19 @@
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Turn.hpp>
+#include <chrono>
 
 namespace pokesim {
 void BattleStateSetup::initBlank() {
-  setID((uint16_t)handle.registry()->view<Sides>().size());
   handle.emplace<Sides>();
   handle.emplace<ActionQueue>();
+  setAutoID();
   setTurn(0);
   setProbability(1);
+}
+
+void BattleStateSetup::setAutoID() {
+  setID((uint16_t)handle.registry()->view<Sides>().size());
 }
 
 void BattleStateSetup::setID(std::uint16_t id) {
@@ -31,6 +36,10 @@ void BattleStateSetup::setSide(Side::PlayerSideID sideID, entt::entity sideEntit
 }
 
 void BattleStateSetup::setRNGSeed(std::uint32_t seed) {
+  if (seed == 0) {
+    seed = (std::uint32_t)std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  }
+
   handle.emplace<RNGSeed>(seed);
 }
 
