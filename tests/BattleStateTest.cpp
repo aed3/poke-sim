@@ -276,4 +276,77 @@ TEST_CASE("Double Battle", "[BattleState]") {
   REQUIRE(registry.all_of<tags::ability::SweetVeil>(p2bEntity));
   REQUIRE(registry.all_of<tags::item::BrightPowder>(p2bEntity));
 }
+
+TEST_CASE("Multiple Battles", "[BattleState]") {
+  Pokedex pokedex(SCARLET_VIOLET_GAME_MECHANICS);
+  entt::dense_set<dex::Move> moveSet{};
+  for (dex::Move move : {dex::FURY_ATTACK, dex::THUNDERBOLT}) moveSet.insert(move);
+
+  pokedex.loadMoves(moveSet);
+
+  Simulation simulation(pokedex, SINGLES_BATTLE_FORMAT);
+
+  Simulation::BattleCreationInfo battle1CreationInfo{};
+  Simulation::BattleCreationInfo battle2CreationInfo{};
+    {
+    Simulation::PokemonCreationInfo battle1PokemonInfo{};
+    battle1PokemonInfo.species = dex::EMPOLEON;
+    battle1PokemonInfo.ability = dex::DEFIANT;
+    battle1PokemonInfo.gender = dex::MALE;
+    battle1PokemonInfo.status = dex::PAR;
+    battle1PokemonInfo.level = 99;
+    battle1PokemonInfo.evs = {0, 50, 100, 150, 200, 255};
+    battle1PokemonInfo.stats = {309, 208, 212, 258, 238, 156};
+
+    Simulation::MoveCreationInfo battle1MoveInfo{};
+    battle1MoveInfo.name = dex::FURY_ATTACK;
+    battle1MoveInfo.maxPP = pokedex.getMoveData<PP>(dex::FURY_ATTACK).pp;
+    battle1MoveInfo.pp =  battle1MoveInfo.maxPP - 1;
+    battle1PokemonInfo.moves.push_back(std::move(battle1MoveInfo));
+
+    Simulation::PokemonCreationInfo battle2PokemonInfo{};
+    battle2PokemonInfo.species = dex::AMPHAROS;
+    battle2PokemonInfo.item = dex::CHOICE_SPECS;
+    battle2PokemonInfo.ability = dex::STATIC;
+    battle2PokemonInfo.gender = dex::FEMALE;
+    battle2PokemonInfo.level = 100;
+    battle2PokemonInfo.nature = dex::MODEST;
+    battle2PokemonInfo.ivs = {5, 10, 15, 20, 25, 30};
+    battle2PokemonInfo.stats = {321, 186, 206, 266, 216, 146};
+
+    Simulation::MoveCreationInfo battle2MoveInfo{};
+    battle2MoveInfo.name = dex::THUNDERBOLT;
+    battle2MoveInfo.maxPP = pokedex.getMoveData<PP>(dex::THUNDERBOLT).pp;
+    battle2MoveInfo.pp = battle2MoveInfo.maxPP - 2;
+    battle2PokemonInfo.moves.push_back(std::move(battle2MoveInfo));
+
+    battle1CreationInfo.P1 = battle1CreationInfo.P2 = {{std::move(battle1PokemonInfo)}};
+    battle2CreationInfo.P1 = battle2CreationInfo.P2 = {{std::move(battle2PokemonInfo)}};
+  }
+
+  battle1CreationInfo.turn = 12;
+  battle1CreationInfo.probability = 0.1F;
+  battle1CreationInfo.rngSeed = 0xFFFFFFFF;
+
+  battle2CreationInfo.turn = 7;
+  battle2CreationInfo.probability = 1.0F;
+  battle2CreationInfo.rngSeed = 9826;
+  simulation.createInitialStates({battle1CreationInfo, battle2CreationInfo});
+
+  entt::registry& registry = simulation.registry;
+  auto battles = registry.view<Sides>();
+  REQUIRE(battles.size() == 2);
+
+  entt::handle battleA = entt::handle(registry, battles[0]);
+  entt::handle battleB = entt::handle(registry, battles[1]);
+
+  if (battleA.get<Turn>().turn == battle1CreationInfo.turn) {
+    checkCreatedBattle(battleA, battle1CreationInfo);
+    checkCreatedBattle(battleB, battle2CreationInfo);
+  }
+  else {
+    checkCreatedBattle(battleA, battle2CreationInfo);
+    checkCreatedBattle(battleB, battle1CreationInfo);
+  }
+}
 }  // namespace pokesim
