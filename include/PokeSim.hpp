@@ -12761,10 +12761,6 @@ enum Type : std::uint8_t {
 /////////////////////// START OF src/Pokedex/Pokedex.hpp ///////////////////////
 
 namespace pokesim {
-/**
- * @todo Needs comment
- *
- */
 class Pokedex {
  private:
   entt::registry registry{};
@@ -12931,7 +12927,7 @@ class Simulation {
 
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : pokedex(&pokedex_), battleFormat(battleFormat_) {}
 
- inline void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
+  inline void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
 };
 }  // namespace pokesim
 
@@ -14864,8 +14860,6 @@ void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
 #include <array>
 #include <cstdint>
 #include <string>
-
-// TODO(aed3): Change the move names to be part of the build functions so they aren't all loaded all the time
 
 namespace pokesim::dex {
 // Returns the name of a species represented by its enum as a string.
