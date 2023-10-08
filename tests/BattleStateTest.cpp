@@ -126,7 +126,7 @@ TEST_CASE("Single Battle", "[BattleState]") {
     Simulation::MoveCreationInfo p1MoveInfo{};
     p1MoveInfo.name = dex::FURY_ATTACK;
     p1MoveInfo.maxPP = pokedex.getMoveData<PP>(dex::FURY_ATTACK).pp;
-    p1MoveInfo.pp =  p1MoveInfo.maxPP - 1;
+    p1MoveInfo.pp = p1MoveInfo.maxPP - 1;
     p1PokemonInfo.moves.push_back(std::move(p1MoveInfo));
 
     Simulation::PokemonCreationInfo p2PokemonInfo{};
@@ -162,7 +162,7 @@ TEST_CASE("Single Battle", "[BattleState]") {
 
   entt::entity p1Entity = registry.get<Team>(p1SideEntity).team[0];
   REQUIRE(registry.all_of<tags::ability::Defiant>(p1Entity));
-  REQUIRE(registry.all_of< tags::status::Paralysis>(p1Entity));
+  REQUIRE(registry.all_of<tags::status::Paralysis>(p1Entity));
   entt::entity p2Entity = registry.get<Team>(p2SideEntity).team[0];
   REQUIRE(registry.all_of<tags::ability::Static>(p2Entity));
   REQUIRE(registry.all_of<tags::nature::Modest>(p2Entity));
@@ -193,7 +193,7 @@ TEST_CASE("Double Battle", "[BattleState]") {
     Simulation::MoveCreationInfo p1aMoveInfo{};
     p1aMoveInfo.name = dex::MOONBLAST;
     p1aMoveInfo.maxPP = pokedex.getMoveData<PP>(dex::MOONBLAST).pp;
-    p1aMoveInfo.pp =  p1aMoveInfo.maxPP - 4;
+    p1aMoveInfo.pp = p1aMoveInfo.maxPP - 4;
     p1aPokemonInfo.moves.push_back(std::move(p1aMoveInfo));
 
     Simulation::PokemonCreationInfo p1bPokemonInfo{};
@@ -208,7 +208,7 @@ TEST_CASE("Double Battle", "[BattleState]") {
     Simulation::MoveCreationInfo p1bMoveInfo{};
     p1bMoveInfo.name = dex::KNOCK_OFF;
     p1bMoveInfo.maxPP = pokedex.getMoveData<PP>(dex::KNOCK_OFF).pp;
-    p1bMoveInfo.pp =  p1bMoveInfo.maxPP - 3;
+    p1bMoveInfo.pp = p1bMoveInfo.maxPP - 3;
     p1bPokemonInfo.moves.push_back(std::move(p1bMoveInfo));
 
     Simulation::PokemonCreationInfo p2aPokemonInfo{};
@@ -224,7 +224,7 @@ TEST_CASE("Double Battle", "[BattleState]") {
     Simulation::MoveCreationInfo p2aMoveInfo{};
     p2aMoveInfo.name = dex::WILL_O_WISP;
     p2aMoveInfo.maxPP = pokedex.getMoveData<PP>(dex::WILL_O_WISP).pp;
-    p2aMoveInfo.pp =  p2aMoveInfo.maxPP - 2;
+    p2aMoveInfo.pp = p2aMoveInfo.maxPP - 2;
     p2aPokemonInfo.moves.push_back(std::move(p2aMoveInfo));
 
     Simulation::PokemonCreationInfo p2bPokemonInfo{};
@@ -239,7 +239,7 @@ TEST_CASE("Double Battle", "[BattleState]") {
     Simulation::MoveCreationInfo p2bMoveInfo{};
     p2bMoveInfo.name = dex::QUIVER_DANCE;
     p2bMoveInfo.maxPP = pokedex.getMoveData<PP>(dex::QUIVER_DANCE).pp;
-    p2bMoveInfo.pp =  p2bMoveInfo.maxPP - 1;
+    p2bMoveInfo.pp = p2bMoveInfo.maxPP - 1;
     p2bPokemonInfo.moves.push_back(std::move(p2bMoveInfo));
 
     battleCreationInfo.P1 = {{std::move(p1aPokemonInfo), std::move(p1bPokemonInfo)}};
@@ -288,7 +288,7 @@ TEST_CASE("Multiple Battles", "[BattleState]") {
 
   Simulation::BattleCreationInfo battle1CreationInfo{};
   Simulation::BattleCreationInfo battle2CreationInfo{};
-    {
+  {
     Simulation::PokemonCreationInfo battle1PokemonInfo{};
     battle1PokemonInfo.species = dex::EMPOLEON;
     battle1PokemonInfo.ability = dex::DEFIANT;
@@ -301,7 +301,7 @@ TEST_CASE("Multiple Battles", "[BattleState]") {
     Simulation::MoveCreationInfo battle1MoveInfo{};
     battle1MoveInfo.name = dex::FURY_ATTACK;
     battle1MoveInfo.maxPP = pokedex.getMoveData<PP>(dex::FURY_ATTACK).pp;
-    battle1MoveInfo.pp =  battle1MoveInfo.maxPP - 1;
+    battle1MoveInfo.pp = battle1MoveInfo.maxPP - 1;
     battle1PokemonInfo.moves.push_back(std::move(battle1MoveInfo));
 
     Simulation::PokemonCreationInfo battle2PokemonInfo{};
