@@ -67,7 +67,7 @@ class Simulation {
 
  public:
   entt::registry registry{};
-  const Pokedex const* pokedex = nullptr;
+  const Pokedex* pokedex = nullptr;
   const BattleFormat battleFormat = SINGLES_BATTLE_FORMAT;
 
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : pokedex(&pokedex_), battleFormat(battleFormat_) {}
