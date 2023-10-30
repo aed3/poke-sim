@@ -23,11 +23,11 @@ std::vector<entt::entity> Simulation::createInitialMoves(const std::vector<MoveC
 
 PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& pokemonData) {
   PokemonStateSetup pokemonSetup(registry);
-  if (pokemonData.id == 0) {
-    pokemonSetup.setAutoID();
+  if (pokemonData.id.has_value()) {
+    pokemonSetup.setID(pokemonData.id.value());
   }
   else {
-    pokemonSetup.setID(pokemonData.id);
+    pokemonSetup.setAutoID();
   }
 
   pokemonSetup.setSpecies(pokemonData.species);

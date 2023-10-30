@@ -3,17 +3,17 @@
 #include <Components/Names/AbilityNames.hpp>
 
 namespace pokesim {
-// Contains one of the standard abilities a species can have
+// Contains one of the standard abilities a species can have.
 struct PrimaryAbility {
   dex::Ability ability = dex::NO_ABILITY;
 };
 
-// Contains one of the standard abilities a species can have if the species can have two standard abilities
+// Contains one of the standard abilities a species can have if the species can have two standard abilities.
 struct SecondaryAbility {
   dex::Ability ability = dex::NO_ABILITY;
 };
 
-// Contains The hidden ability a species has
+// Contains The hidden ability a species has.
 struct HiddenAbility {
   dex::Ability ability = dex::NO_ABILITY;
 };

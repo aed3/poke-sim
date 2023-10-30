@@ -35,12 +35,9 @@ void BattleStateSetup::setSide(Side::PlayerSideID sideID, entt::entity sideEntit
   }
 }
 
-void BattleStateSetup::setRNGSeed(std::uint32_t seed) {
-  if (seed == 0) {
-    seed = (std::uint32_t)std::chrono::high_resolution_clock::now().time_since_epoch().count();
-  }
-
-  handle.emplace<RNGSeed>(seed);
+void BattleStateSetup::setRNGSeed(std::optional<std::uint32_t> seed) {
+  handle.emplace<RNGSeed>(
+    seed.value_or((std::uint32_t)std::chrono::high_resolution_clock::now().time_since_epoch().count()));
 }
 
 void BattleStateSetup::setActionQueue(const std::vector<entt::entity>& queue) {

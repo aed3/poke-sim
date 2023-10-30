@@ -3,7 +3,7 @@
 #include <cstdint>
 
 namespace pokesim::dex {
-/** @brief Pokemon stat abbreviated name */
+// Pokemon stat abbreviated name
 enum Stat : std::uint8_t {
   HP = 0b000001,
   ATK = 0b000010,

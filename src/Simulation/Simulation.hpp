@@ -4,8 +4,16 @@
 #include <Components/EVsIVs.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <entt/entity/registry.hpp>
+#include <optional>
 
 namespace pokesim {
+
+/**
+ * @brief The entry point for creating and running simulations.
+ *
+ * @details Each `Simulation` instance will only simulate for either single or double battles. This class is optimized
+ * for running multiple simulations of the same battle, where each battle state has completed the same number of turns.
+ */
 class Simulation {
  public:
   struct MoveCreationInfo {
@@ -15,7 +23,7 @@ class Simulation {
   };
 
   struct PokemonCreationInfo {
-    std::uint16_t id = 0;
+    std::optional<std::uint16_t> id = std::nullopt;
     dex::Species species = dex::MISSING_NO;
     dex::Item item = dex::NO_ITEM;
     dex::Ability ability = dex::NO_ABILITY;
@@ -44,7 +52,7 @@ class Simulation {
 
   struct BattleCreationInfo {
     std::uint16_t turn = 0;
-    std::uint32_t rngSeed = 0;
+    std::optional<std::uint32_t> rngSeed = std::nullopt;
     float probability = 1;
     SideCreationInfo P1;
     SideCreationInfo P2;
@@ -59,11 +67,12 @@ class Simulation {
 
  public:
   entt::registry registry{};
-  const Pokedex* pokedex = nullptr;
+  const Pokedex const* pokedex = nullptr;
   const BattleFormat battleFormat = SINGLES_BATTLE_FORMAT;
 
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : pokedex(&pokedex_), battleFormat(battleFormat_) {}
 
+  // Load information about any number of battle states into the simulation's registry.
   /*_inline_*/ void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
 };
 }  // namespace pokesim

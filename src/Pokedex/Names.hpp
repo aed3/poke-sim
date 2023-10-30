@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <string>
 
+// TODO(aed3): Change the move names to be part of the build functions so they aren't all loaded all the time
+
 namespace pokesim::dex {
 // Returns the name of a species represented by its enum as a string.
 /*_inline_*/ std::string toString(Species speciesEnum);

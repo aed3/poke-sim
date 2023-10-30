@@ -4,10 +4,16 @@
 #include "StateSetupBase.hpp"
 
 namespace pokesim {
+// Tool to set properties of a player's side state to an entity.
 struct SideStateSetup : internal::StateSetupBase {
   SideStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}
   SideStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {}
 
+  /**
+   * @brief Applies the defaults to the required properties for a player side's state.
+   *
+   * Some of the required properties are a blank `Battle`, `Side`, and `FoeSide` component.
+   */
   /*_inline_*/ void initBlank();
 
   /*_inline_*/ void setTeam(std::vector<PokemonStateSetup>& team);

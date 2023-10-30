@@ -5,7 +5,7 @@
 namespace pokesim::dex {
 
 /**
- * @brief Pokemon and Pokemon form name
+ * @brief Pokemon and Pokemon form name.
  *
  * @details Pokemon that have multiple forms will have their base form and alternate forms listed here.
  * However, if none of a Pokemon's forms are cosmetic (i.e. change nothing expect appearance), the forms cannot be
@@ -17,7 +17,7 @@ namespace pokesim::dex {
  * are permanent, their only difference is how they look
  *  - `PLANT_CLOAK_WORMADAM`, `SANDY_CLOAK_WORMADAM`, and `TRASH_CLOAK_WORMADAM` listed while `WORMADAM` is not
  * because the Wormadam forms have different types, stats, and moves; their forms are permanent; and there is no base
- * Wormadam
+ * Wormadam.
  */
 enum Species : std::uint16_t {
   // clang-format off

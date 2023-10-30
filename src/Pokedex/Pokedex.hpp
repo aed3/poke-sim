@@ -5,6 +5,16 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
+
+/**
+ * @brief Holds the data of each species, item, and move in a simulation.
+ *
+ * @details It is designed so only one instance of this class is needed while simulating a particular battle as the
+ * entirety of all the move, item, and species, information that might be needed for a battle is known when it starts.
+ * In theory, all the information within the game mechanics chosen or information for multiple battles could be loaded
+ * into one Pokedex instance and used repeatedly, but that is not recommended as this class is optimized for instances
+ * holding a small amount of data.
+ */
 class Pokedex {
  private:
   entt::registry registry{};
@@ -59,7 +69,7 @@ class Pokedex {
    * @brief Calls the load functions for a set of moves to add their data to a Pokedex's storage.
    *
    * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
-   * instance is assigned to, so if one turn of a single battle is being simulated and both opposing Pokemon have 4
+   * instance is assigned to, so if one turn of a single battle is being simulated and the opposing Pokemon have 4
    * moves, then this function should only be called with a set of those 8 moves.
    *
    * @note Only call this once per move per Pokedex instance.

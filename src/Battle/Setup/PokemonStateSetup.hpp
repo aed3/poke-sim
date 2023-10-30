@@ -13,10 +13,17 @@
 #include "StateSetupBase.hpp"
 
 namespace pokesim {
+// Tool to set properties of a Pokemon's state to an entity.
 struct PokemonStateSetup : internal::StateSetupBase {
   PokemonStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}
   PokemonStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {}
 
+  /**
+   * @brief Applies the defaults to the required properties for a Pokemon state.
+   *
+   * Some of the required properties are a blank `SpeciesName`, `Side`, and `Battle` component along with an
+   * automatically set ID.
+   */
   /*_inline_*/ void initBlank();
 
   /*_inline_*/ void setAutoID();

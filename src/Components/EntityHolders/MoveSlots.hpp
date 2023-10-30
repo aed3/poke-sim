@@ -4,7 +4,7 @@
 #include <vector>
 
 namespace pokesim {
-// Contains a list of entities of the moves a Pokemon known
+// Contains a list of entities of the moves a Pokemon known.
 struct MoveSlots {
   std::vector<entt::entity> moveSlots{};
 };
