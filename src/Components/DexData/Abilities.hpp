@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Components/Names/AbilityNames.hpp>
+#include <Types/Ability.hpp>
 
 namespace pokesim {
 // Contains one of the standard abilities a species can have.

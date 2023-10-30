@@ -1,7 +1,9 @@
 #pragma once
 
+#include <Pokedex/Pokedex.hpp>
 #include <Types/Species.hpp>
 #include <Types/Type.hpp>
+#include <cstdint>
 
 #include "DexDataSetup.hpp"
 

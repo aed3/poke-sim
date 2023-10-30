@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Pokedex/Pokedex.hpp>
+#include <entt/entity/entity.hpp>
 #include <entt/entity/handle.hpp>
 
 namespace pokesim::dex::internal {

@@ -3,8 +3,11 @@
 #include <Battle/Setup/SideStateSetup.hpp>
 #include <Components/EVsIVs.hpp>
 #include <Pokedex/Pokedex.hpp>
+#include <Types/headers.hpp>
+#include <cstdint>
 #include <entt/entity/registry.hpp>
 #include <optional>
+#include <vector>
 
 namespace pokesim {
 

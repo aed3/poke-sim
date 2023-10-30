@@ -1,5 +1,9 @@
 #pragma once
 
+#include <entt/entity/entity.hpp>
+#include <entt/entity/handle.hpp>
+#include <entt/entity/registry.hpp>
+
 #include "PokemonStateSetup.hpp"
 #include "StateSetupBase.hpp"
 

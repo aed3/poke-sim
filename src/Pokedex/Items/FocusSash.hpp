@@ -2,6 +2,7 @@
 
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Setup/ItemDexDataSetup.hpp>
+#include <Types/Item.hpp>
 
 namespace pokesim::dex::build {
 struct FocusSash {

@@ -1,8 +1,12 @@
 #pragma once
 
+#include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Setup/MoveDexDataSetup.hpp>
+#include <Types/Move.hpp>
+#include <Types/Type.hpp>
+#include <cstdint>
 
 namespace pokesim::dex::build {
 struct WillOWisp {

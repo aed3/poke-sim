@@ -2,6 +2,9 @@
 
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Setup/SpeciesDexDataSetup.hpp>
+#include <Types/Species.hpp>
+#include <Types/Type.hpp>
+#include <cstdint>
 
 namespace pokesim::dex::build {
 struct Ribombee {

@@ -1,8 +1,12 @@
 #pragma once
 
 #include <Components/Boosts.hpp>
+#include <Components/Tags/MoveTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Setup/MoveDexDataSetup.hpp>
+#include <Types/Move.hpp>
+#include <Types/Type.hpp>
+#include <cstdint>
 
 namespace pokesim::dex::build {
 struct Moonblast {

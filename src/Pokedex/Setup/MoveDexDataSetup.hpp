@@ -2,7 +2,12 @@
 
 #include <Components/Boosts.hpp>
 #include <Components/Tags/MoveTags.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <Types/Move.hpp>
+#include <Types/Type.hpp>
+#include <cstdint>
+#include <entt/entity/entity.hpp>
+#include <entt/entity/handle.hpp>
 
 #include "DexDataSetup.hpp"
 

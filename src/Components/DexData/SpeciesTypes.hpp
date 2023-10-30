@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Components/Names/TypeNames.hpp>
+#include <Types/Type.hpp>
 
 namespace pokesim {
 // Contains the types a species has

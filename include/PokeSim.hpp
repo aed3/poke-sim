@@ -12370,6 +12370,7 @@ struct Side {
 
 //////////////// START OF src/Battle/Setup/BattleStateSetup.hpp ////////////////
 
+#include <cstdint>
 #include <optional>
 
 
@@ -12425,6 +12426,9 @@ enum Move : std::uint16_t {
 ////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
 
 ///////////////// START OF src/Battle/Setup/MoveStateSetup.hpp /////////////////
+
+#include <cstdint>
+
 
 namespace pokesim {
 // Tool to set properties of a move's state to an entity.
@@ -12631,6 +12635,9 @@ enum Status : std::uint8_t { NO_STATUS = 0, BRN, FRZ, PAR, PSN, SLP, TOX, /*, FR
 ///////////////////////// END OF src/Types/Status.hpp //////////////////////////
 
 /////////////// START OF src/Battle/Setup/PokemonStateSetup.hpp ////////////////
+
+#include <cstdint>
+
 
 namespace pokesim {
 // Tool to set properties of a Pokemon's state to an entity.
@@ -12923,7 +12930,9 @@ class Pokedex {
 
 //////////////////// START OF src/Simulation/Simulation.hpp ////////////////////
 
+#include <cstdint>
 #include <optional>
+#include <vector>
 
 namespace pokesim {
 
@@ -12986,7 +12995,7 @@ class Simulation {
 
  public:
   entt::registry registry{};
-  const Pokedex const* pokedex = nullptr;
+  const Pokedex* pokedex = nullptr;
   const BattleFormat battleFormat = SINGLES_BATTLE_FORMAT;
 
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : pokedex(&pokedex_), battleFormat(battleFormat_) {}
@@ -13208,6 +13217,9 @@ struct DexDataSetup {
 
 ////////////// START OF src/Pokedex/Setup/SpeciesDexDataSetup.hpp //////////////
 
+#include <cstdint>
+
+
 namespace pokesim::dex::internal {
 struct SpeciesDexDataSetup : DexDataSetup {
   SpeciesDexDataSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
@@ -13352,6 +13364,9 @@ struct MoveSource {};
 /////////////////// END OF src/Components/Tags/MoveTags.hpp ////////////////////
 
 /////////////// START OF src/Pokedex/Setup/MoveDexDataSetup.hpp ////////////////
+
+#include <cstdint>
+
 
 namespace pokesim::dex::internal {
 struct MoveDexDataSetup : DexDataSetup {
@@ -13498,6 +13513,8 @@ void ItemDexDataSetup::setName(Item item) {
 
 ////////////////// START OF src/Pokedex/Species/Ampharos.hpp ///////////////////
 
+#include <cstdint>
+
 namespace pokesim::dex::build {
 struct Ampharos {
   static const dex::Species name = dex::AMPHAROS;
@@ -13517,6 +13534,8 @@ struct Ampharos {
 /////////////////// END OF src/Pokedex/Species/Ampharos.hpp ////////////////////
 
 ////////////////// START OF src/Pokedex/Species/Dragapult.hpp //////////////////
+
+#include <cstdint>
 
 namespace pokesim::dex::build {
 struct Dragapult {
@@ -13538,6 +13557,8 @@ struct Dragapult {
 
 ////////////////// START OF src/Pokedex/Species/Empoleon.hpp ///////////////////
 
+#include <cstdint>
+
 namespace pokesim::dex::build {
 struct Empoleon {
   static const dex::Species name = dex::EMPOLEON;
@@ -13557,6 +13578,8 @@ struct Empoleon {
 /////////////////// END OF src/Pokedex/Species/Empoleon.hpp ////////////////////
 
 ////////////////// START OF src/Pokedex/Species/Gardevoir.hpp //////////////////
+
+#include <cstdint>
 
 namespace pokesim::dex::build {
 struct Gardevoir {
@@ -13578,6 +13601,8 @@ struct Gardevoir {
 
 /////////////////// START OF src/Pokedex/Species/Pangoro.hpp ///////////////////
 
+#include <cstdint>
+
 namespace pokesim::dex::build {
 struct Pangoro {
   static const dex::Species name = dex::PANGORO;
@@ -13597,6 +13622,8 @@ struct Pangoro {
 //////////////////// END OF src/Pokedex/Species/Pangoro.hpp ////////////////////
 
 ////////////////// START OF src/Pokedex/Species/Ribombee.hpp ///////////////////
+
+#include <cstdint>
 
 namespace pokesim::dex::build {
 struct Ribombee {
@@ -13644,6 +13671,8 @@ entt::entity (*Pokedex::getSpeciesBuild(dex::Species species))(Pokedex&) {
 
 ////////////////// START OF src/Pokedex/Moves/FuryAttack.hpp ///////////////////
 
+#include <cstdint>
+
 namespace pokesim::dex::build {
 struct FuryAttack {
   static const dex::Move name = dex::FURY_ATTACK;
@@ -13672,6 +13701,8 @@ struct FuryAttack {
 
 /////////////////// START OF src/Pokedex/Moves/KnockOff.hpp ////////////////////
 
+#include <cstdint>
+
 namespace pokesim::dex::build {
 struct KnockOff {
   static const dex::Move name = dex::KNOCK_OFF;
@@ -13698,6 +13729,8 @@ struct KnockOff {
 //////////////////// END OF src/Pokedex/Moves/KnockOff.hpp /////////////////////
 
 /////////////////// START OF src/Pokedex/Moves/Moonblast.hpp ///////////////////
+
+#include <cstdint>
 
 namespace pokesim::dex::build {
 struct Moonblast {
@@ -13733,6 +13766,8 @@ struct Moonblast {
 //////////////////// END OF src/Pokedex/Moves/Moonblast.hpp ////////////////////
 
 ////////////////// START OF src/Pokedex/Moves/QuiverDance.hpp //////////////////
+
+#include <cstdint>
 
 namespace pokesim::dex::build {
 struct QuiverDance {
@@ -13785,6 +13820,8 @@ inline void enumToTag(dex::Status status, entt::handle& handle);
 
 ////////////////// START OF src/Pokedex/Moves/Thunderbolt.hpp //////////////////
 
+#include <cstdint>
+
 namespace pokesim::dex::build {
 struct Thunderbolt {
   static const dex::Move name = dex::THUNDERBOLT;
@@ -13818,6 +13855,8 @@ struct Thunderbolt {
 /////////////////// END OF src/Pokedex/Moves/Thunderbolt.hpp ///////////////////
 
 /////////////////// START OF src/Pokedex/Moves/WillOWisp.hpp ///////////////////
+
+#include <cstdint>
 
 namespace pokesim::dex::build {
 struct WillOWisp {
