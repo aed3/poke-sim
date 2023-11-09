@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <entt/entity/fwd.hpp>
 
 namespace pokesim {

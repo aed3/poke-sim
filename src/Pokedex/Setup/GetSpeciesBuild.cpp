@@ -1,4 +1,6 @@
 #include <Pokedex/Pokedex.hpp>
+#include <Types/Species.hpp>
+#include <entt/entity/fwd.hpp>
 
 #include "../Species/headers.hpp"
 

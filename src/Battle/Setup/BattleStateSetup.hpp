@@ -2,10 +2,10 @@
 
 #include <Components/EntityHolders/Side.hpp>
 #include <cstdint>
-#include <entt/entity/entity.hpp>
-#include <entt/entity/handle.hpp>
+#include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
 #include <optional>
+#include <vector>
 
 #include "StateSetupBase.hpp"
 

@@ -11,6 +11,7 @@
 #include <Components/PP.hpp>
 #include <Components/Priority.hpp>
 #include <Components/Tags/MoveTags.hpp>
+#include <entt/entity/handle.hpp>
 
 namespace pokesim::dex::internal {
 void MoveDexDataSetup::setName(Move move) {

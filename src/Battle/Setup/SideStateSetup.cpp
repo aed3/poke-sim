@@ -3,6 +3,10 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/Team.hpp>
+#include <cstdint>
+#include <entt/entity/handle.hpp>
+
+#include "PokemonStateSetup.hpp"
 
 namespace pokesim {
 void SideStateSetup::initBlank() {

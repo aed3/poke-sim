@@ -1,6 +1,7 @@
 #include "ItemDexDataSetup.hpp"
 
 #include <Components/Names/ItemNames.hpp>
+#include <entt/entity/handle.hpp>
 
 namespace pokesim::dex::internal {
 void ItemDexDataSetup::setName(Item item) {

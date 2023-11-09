@@ -10,9 +10,10 @@
 #include <Types/Species.hpp>
 #include <Types/Status.hpp>
 #include <cstdint>
-#include <entt/entity/entity.hpp>
-#include <entt/entity/handle.hpp>
+#include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
+#include <type_traits>
+#include <vector>
 
 #include "StateSetupBase.hpp"
 

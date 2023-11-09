@@ -1,13 +1,14 @@
 #pragma once
 
-#include <entt/entity/entity.hpp>
-#include <entt/entity/handle.hpp>
+#include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
+#include <vector>
 
-#include "PokemonStateSetup.hpp"
 #include "StateSetupBase.hpp"
 
 namespace pokesim {
+struct PokemonStateSetup;
+
 // Tool to set properties of a player's side state to an entity.
 struct SideStateSetup : internal::StateSetupBase {
   SideStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}

@@ -1,15 +1,20 @@
 #pragma once
 
-#include <Battle/Setup/SideStateSetup.hpp>
+#include <Battle/Setup/PokemonStateSetup.hpp>
 #include <Components/EVsIVs.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/headers.hpp>
 #include <cstdint>
+#include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
+#include <initializer_list>
 #include <optional>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace pokesim {
+struct SideStateSetup;
 
 /**
  * @brief The entry point for creating and running simulations.

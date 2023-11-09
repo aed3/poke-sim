@@ -17,6 +17,15 @@
 #include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/NatureTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
+#include <Types/Ability.hpp>
+#include <Types/Gender.hpp>
+#include <Types/Item.hpp>
+#include <Types/Nature.hpp>
+#include <Types/Species.hpp>
+#include <Types/Status.hpp>
+#include <entt/entity/handle.hpp>
+#include <entt/entity/registry.hpp>
+#include <entt/entity/view.hpp>
 
 namespace pokesim {
 void PokemonStateSetup::initBlank() {

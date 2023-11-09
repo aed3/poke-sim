@@ -6,8 +6,9 @@
 #include <Types/Move.hpp>
 #include <Types/Type.hpp>
 #include <cstdint>
-#include <entt/entity/entity.hpp>
+#include <entt/entity/fwd.hpp>
 #include <entt/entity/handle.hpp>
+#include <type_traits>
 
 #include "DexDataSetup.hpp"
 

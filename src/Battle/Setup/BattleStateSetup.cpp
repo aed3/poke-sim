@@ -9,6 +9,9 @@
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Turn.hpp>
 #include <chrono>
+#include <entt/entity/handle.hpp>
+#include <entt/entity/registry.hpp>
+#include <entt/entity/view.hpp>
 
 namespace pokesim {
 void BattleStateSetup::initBlank() {

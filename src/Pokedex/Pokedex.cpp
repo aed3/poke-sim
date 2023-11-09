@@ -1,7 +1,9 @@
 #include "Pokedex.hpp"
 
+#include <entt/container/dense_map.hpp>
 #include <entt/container/dense_set.hpp>
 #include <entt/entity/handle.hpp>
+#include <entt/entity/registry.hpp>
 
 namespace pokesim {
 entt::handle Pokedex::createEntry() {

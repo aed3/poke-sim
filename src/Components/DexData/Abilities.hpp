@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Components/Names/AbilityNames.hpp>
 #include <Types/Ability.hpp>
 
 namespace pokesim {

@@ -1,5 +1,6 @@
 #include "AbilityTags.hpp"
 
+#include <Types/Ability.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 // TODO(aed3): Make this auto generated

@@ -2,7 +2,8 @@
 
 #include <Types/headers.hpp>
 #include <entt/container/dense_map.hpp>
-#include <entt/entity/entity.hpp>
+#include <entt/container/fwd.hpp>
+#include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
