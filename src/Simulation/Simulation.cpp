@@ -57,6 +57,17 @@ std::pair<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(const 
   battleStateSetup.setTurn(battleData.turn);
   battleStateSetup.setRNGSeed(battleData.rngSeed);
   battleStateSetup.setProbability(battleData.probability);
+  /*
+  if (battleData.simulateTurnOptions.has_value()) {
+    battleStateSetup.setSimulateTurnOptions(battleData.simulateTurnOptions.value());
+  }
+  if (battleData.calculateDamageOptions.has_value()) {
+    battleStateSetup.setCalculateDamageOptions(battleData.calculateDamageOptions.value());
+  }
+  if (battleData.analyzeEffectOptions.has_value()) {
+    battleStateSetup.setAnalyzeEffectOptions(battleData.analyzeEffectOptions.value());
+  }
+  */
 
   SideStateSetup p1SideSetup(registry);
   SideStateSetup p2SideSetup(registry);

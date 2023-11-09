@@ -10,6 +10,10 @@
 #include "StateSetupBase.hpp"
 
 namespace pokesim {
+struct SimulateTurnOptions;
+struct CalculateDamageOptions;
+struct AnalyzeEffectOptions;
+
 // Tool to set properties of a battle's state to an entity.
 struct BattleStateSetup : internal::StateSetupBase {
   BattleStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}
@@ -32,7 +36,7 @@ struct BattleStateSetup : internal::StateSetupBase {
   /*_inline_*/ void setSide(Side::PlayerSideID sideID, entt::entity sideEntity);
 
   // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
-  /*_inline_*/ void setRNGSeed(std::optional<std::uint32_t> seed);
+  /*_inline_*/ void setRNGSeed(std::optional<std::uint32_t> seed = std::nullopt);
   /*_inline_*/ void setActionQueue(const std::vector<entt::entity>& queue);
   /*_inline_*/ void setTurn(std::uint16_t turn);
   /*_inline_*/ void setActiveMove(entt::entity activeMove);
@@ -40,5 +44,9 @@ struct BattleStateSetup : internal::StateSetupBase {
   /*_inline_*/ void setActiveTarget(entt::entity activeTarget);
   /*_inline_*/ void setActiveUser(entt::entity activeSource);
   /*_inline_*/ void setProbability(float probability);
+
+  /*_inline_*/ void setSimulateTurnOptions(SimulateTurnOptions option);
+  /*_inline_*/ void setCalculateDamageOptions(CalculateDamageOptions option);
+  /*_inline_*/ void setAnalyzeEffectOptions(AnalyzeEffectOptions option);
 };
 }  // namespace pokesim

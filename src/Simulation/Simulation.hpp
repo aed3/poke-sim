@@ -15,6 +15,12 @@
 
 namespace pokesim {
 struct SideStateSetup;
+struct SimulateTurnOptions {};
+struct CalculateDamageOptions {};
+struct AnalyzeEffectOptions {};
+struct SimulateTurnResults {};
+struct CalculateDamageResults {};
+struct AnalyzeEffectResults {};
 
 /**
  * @brief The entry point for creating and running simulations.
@@ -64,6 +70,9 @@ class Simulation {
     float probability = 1;
     SideCreationInfo P1;
     SideCreationInfo P2;
+    std::optional<SimulateTurnOptions> simulateTurnOptions = std::nullopt;
+    std::optional<CalculateDamageOptions> calculateDamageOptions = std::nullopt;
+    std::optional<AnalyzeEffectOptions> analyzeEffectOptions = std::nullopt;
   };
 
  private:
@@ -82,5 +91,35 @@ class Simulation {
 
   // Load information about any number of battle states into the simulation's registry.
   /*_inline_*/ void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
+  template <auto CallbackFunction>
+  /*_inline_*/ void setDecisionCallback();
+
+  /*_inline_*/ void run();
+
+  /*_inline_*/ SimulateTurnResults simulateTurn(std::optional<SimulateTurnOptions> options = std::nullopt);
+  /*_inline_*/ CalculateDamageResults calculateDamage(std::optional<CalculateDamageOptions> options = std::nullopt);
+  /*_inline_*/ AnalyzeEffectResults analyzeEffect(std::optional<AnalyzeEffectOptions> options = std::nullopt);
+
+  /*_inline_*/ SimulateTurnOptions simulateTurn(
+    std::initializer_list<BattleCreationInfo> battleDataList, std::optional<SimulateTurnOptions> options = std::nullopt) {
+    createInitialStates(battleDataList);
+    // remove other options and set these if there are none
+    // simulateTurn(options);
+    return {};
+  }
+  /*_inline_*/ CalculateDamageOptions calculateDamage(
+    std::initializer_list<BattleCreationInfo> battleDataList, std::optional<CalculateDamageOptions> options = std::nullopt) {
+    createInitialStates(battleDataList);
+    // remove other options and set these if there are none
+    // calculateDamage(options);
+    return {};
+  }
+  /*_inline_*/ AnalyzeEffectOptions analyzeEffect(
+    std::initializer_list<BattleCreationInfo> battleDataList, std::optional<AnalyzeEffectOptions> options = std::nullopt) {
+    createInitialStates(battleDataList);
+    // remove other options and set these if there are none
+    // analyzeEffect(options);
+    return {};
+  }
 };
 }  // namespace pokesim
