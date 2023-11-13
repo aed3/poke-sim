@@ -44,9 +44,5 @@ struct BattleStateSetup : internal::StateSetupBase {
   /*_inline_*/ void setActiveTarget(entt::entity activeTarget);
   /*_inline_*/ void setActiveUser(entt::entity activeSource);
   /*_inline_*/ void setProbability(float probability);
-
-  /*_inline_*/ void setSimulateTurnOptions(SimulateTurnOptions option);
-  /*_inline_*/ void setCalculateDamageOptions(CalculateDamageOptions option);
-  /*_inline_*/ void setAnalyzeEffectOptions(AnalyzeEffectOptions option);
 };
 }  // namespace pokesim

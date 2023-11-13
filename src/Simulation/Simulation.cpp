@@ -3,8 +3,11 @@
 #include <Battle/Setup/headers.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/Stats.hpp>
+#include <Components/Tags/SimulationTags.hpp>
 #include <algorithm>
 #include <cstddef>
+
+#include "SimulationOptions.hpp"
 
 namespace pokesim {
 std::vector<entt::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList) {
@@ -57,17 +60,16 @@ std::pair<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(const 
   battleStateSetup.setTurn(battleData.turn);
   battleStateSetup.setRNGSeed(battleData.rngSeed);
   battleStateSetup.setProbability(battleData.probability);
-  /*
-  if (battleData.simulateTurnOptions.has_value()) {
-    battleStateSetup.setSimulateTurnOptions(battleData.simulateTurnOptions.value());
+
+  if (battleData.runWithSimulateTurn) {
+    battleStateSetup.setProperty<tags::SimulateTurn>();
   }
-  if (battleData.calculateDamageOptions.has_value()) {
-    battleStateSetup.setCalculateDamageOptions(battleData.calculateDamageOptions.value());
+  if (battleData.runWithCalculateDamage) {
+    battleStateSetup.setProperty<tags::CalculateDamage>();
   }
-  if (battleData.analyzeEffectOptions.has_value()) {
-    battleStateSetup.setAnalyzeEffectOptions(battleData.analyzeEffectOptions.value());
+  if (battleData.runWithAnalyzeEffect) {
+    battleStateSetup.setProperty<tags::AnalyzeEffect>();
   }
-  */
 
   SideStateSetup p1SideSetup(registry);
   SideStateSetup p2SideSetup(registry);

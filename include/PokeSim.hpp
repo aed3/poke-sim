@@ -47,11 +47,13 @@
  * src/Types/Status.hpp
  * src/Battle/Setup/PokemonStateSetup.hpp
  * src/Battle/Setup/SideStateSetup.hpp
+ * src/Components/Tags/SimulationTags.hpp
  * src/Types/BattleFormat.hpp
  * src/Types/GameMechanics.hpp
  * src/Types/Stat.hpp
  * src/Types/Type.hpp
  * src/Pokedex/Pokedex.hpp
+ * src/Simulation/SimulationOptions.hpp
  * src/Simulation/Simulation.hpp
  * src/Simulation/Simulation.cpp
  * src/Components/DexData/Abilities.hpp
@@ -12378,6 +12380,10 @@ struct Side {
 
 
 namespace pokesim {
+struct SimulateTurnOptions;
+struct CalculateDamageOptions;
+struct AnalyzeEffectOptions;
+
 // Tool to set properties of a battle's state to an entity.
 struct BattleStateSetup : internal::StateSetupBase {
   BattleStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}
@@ -12400,7 +12406,7 @@ struct BattleStateSetup : internal::StateSetupBase {
   inline void setSide(Side::PlayerSideID sideID, entt::entity sideEntity);
 
   // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
-  inline void setRNGSeed(std::optional<std::uint32_t> seed);
+  inline void setRNGSeed(std::optional<std::uint32_t> seed = std::nullopt);
   inline void setActionQueue(const std::vector<entt::entity>& queue);
   inline void setTurn(std::uint16_t turn);
   inline void setActiveMove(entt::entity activeMove);
@@ -12732,6 +12738,16 @@ struct SideStateSetup : internal::StateSetupBase {
 
 ////////////////// END OF src/Battle/Setup/SideStateSetup.hpp //////////////////
 
+/////////////// START OF src/Components/Tags/SimulationTags.hpp ////////////////
+
+namespace pokesim::tags {
+struct SimulateTurn {};
+struct CalculateDamage {};
+struct AnalyzeEffect {};
+}  // namespace pokesim::tags
+
+//////////////// END OF src/Components/Tags/SimulationTags.hpp /////////////////
+
 ///////////////////// START OF src/Types/BattleFormat.hpp //////////////////////
 
 #include <cstdint>
@@ -12912,6 +12928,59 @@ class Pokedex {
 
 //////////////////////// END OF src/Pokedex/Pokedex.hpp ////////////////////////
 
+//////////////// START OF src/Simulation/SimulationOptions.hpp /////////////////
+
+#include <cstdint>
+#include <optional>
+
+namespace pokesim {
+class Simulation;
+
+enum DamageRollLimit : std::uint8_t {
+  AVERAGE_DAMAGE = 0b00000000,
+  ALL_DAMAGE_ROLES = 0b00000001,
+  P1_MAX_DAMAGE = 0b00000010,
+  P2_MAX_DAMAGE = 0b00000100,
+  P1_MIN_DAMAGE = 0b00001000,
+  P2_MIN_DAMAGE = 0b00010000,
+
+  MAX_DAMAGE = P1_MAX_DAMAGE | P2_MAX_DAMAGE,
+  MIN_DAMAGE = P1_MIN_DAMAGE | P2_MIN_DAMAGE,
+};
+
+struct SimulateTurnOptions {
+  DamageRollLimit damageRollsConsidered = AVERAGE_DAMAGE;
+  float randomChanceUpperLimit = 0.9F;
+  float randomChanceLowerLimit = 0.1F;
+  float branchProbabilityLowerLimit = 0.0F;
+
+  // For Monte Carlo method. If no number is given, the number of branches
+  // is determined by the number of random chance events that happen in the turn.
+  // To get just one random outcome (aka using the simulator to just run a game),
+  // set the value to 1
+  std::optional<std::uint32_t> numberOfSamples = std::nullopt;
+
+  entt::delegate<void(Simulation&)> decisionCallback{};
+  entt::delegate<void(Simulation&)> faintCallback{};
+};
+
+struct CalculateDamageOptions {
+  DamageRollLimit damageRollsReturned = ALL_DAMAGE_ROLES;
+};
+
+struct AnalyzeEffectOptions {
+  // Whether to consider the multiplier even if the effect is already active (i.e. Rain will return a 1x multiplier
+  // instead of 1.5x multiplier for Surf if this option is true and it's already raining)
+  bool considerActiveEffects = false;
+};
+
+struct SimulateTurnResults {};
+struct CalculateDamageResults {};
+struct AnalyzeEffectResults {};
+}  // namespace pokesim
+
+///////////////// END OF src/Simulation/SimulationOptions.hpp //////////////////
+
 //////////////////// START OF src/Simulation/Simulation.hpp ////////////////////
 
 #include <cstdint>
@@ -12920,6 +12989,7 @@ class Pokedex {
 #include <tuple>
 #include <utility>
 #include <vector>
+
 
 namespace pokesim {
 struct SideStateSetup;
@@ -12967,6 +13037,9 @@ class Simulation {
   };
 
   struct BattleCreationInfo {
+    bool runWithSimulateTurn = false;
+    bool runWithCalculateDamage = false;
+    bool runWithAnalyzeEffect = false;
     std::uint16_t turn = 0;
     std::optional<std::uint32_t> rngSeed = std::nullopt;
     float probability = 1;
@@ -12982,14 +13055,36 @@ class Simulation {
   inline std::pair<SideStateSetup, SideStateSetup> createInitialBattle(const BattleCreationInfo& battleData);
 
  public:
-  entt::registry registry{};
-  const Pokedex* pokedex = nullptr;
   const BattleFormat battleFormat = SINGLES_BATTLE_FORMAT;
+  const Pokedex* pokedex = nullptr;
+  entt::registry registry{};
 
-  Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : pokedex(&pokedex_), battleFormat(battleFormat_) {}
+  SimulateTurnOptions simulateTurnOptions;
+  CalculateDamageOptions calculateDamageOptions;
+  AnalyzeEffectOptions analyzeEffectOptions;
+
+  Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : battleFormat(battleFormat_), pokedex(&pokedex_) {}
 
   // Load information about any number of battle states into the simulation's registry.
   inline void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
+
+  inline void run();
+
+  inline SimulateTurnResults simulateTurn(std::optional<SimulateTurnOptions> options = std::nullopt);
+  inline CalculateDamageResults calculateDamage(std::optional<CalculateDamageOptions> options = std::nullopt);
+  inline AnalyzeEffectResults analyzeEffect(std::optional<AnalyzeEffectOptions> options = std::nullopt);
+
+  inline std::vector<SimulateTurnResults> simulateTurn(
+    std::initializer_list<BattleCreationInfo> battleDataList,
+    std::optional<SimulateTurnOptions> options = std::nullopt);
+
+  inline std::vector<CalculateDamageResults> calculateDamage(
+    std::initializer_list<BattleCreationInfo> battleDataList,
+    std::optional<CalculateDamageOptions> options = std::nullopt);
+
+  inline std::vector<AnalyzeEffectResults> analyzeEffect(
+    std::initializer_list<BattleCreationInfo> battleDataList,
+    std::optional<AnalyzeEffectOptions> options = std::nullopt);
 };
 }  // namespace pokesim
 
@@ -12999,6 +13094,7 @@ class Simulation {
 
 #include <algorithm>
 #include <cstddef>
+
 
 namespace pokesim {
 std::vector<entt::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList) {
@@ -13051,6 +13147,16 @@ std::pair<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(const 
   battleStateSetup.setTurn(battleData.turn);
   battleStateSetup.setRNGSeed(battleData.rngSeed);
   battleStateSetup.setProbability(battleData.probability);
+
+  if (battleData.runWithSimulateTurn) {
+    battleStateSetup.setProperty<tags::SimulateTurn>();
+  }
+  if (battleData.runWithCalculateDamage) {
+    battleStateSetup.setProperty<tags::CalculateDamage>();
+  }
+  if (battleData.runWithAnalyzeEffect) {
+    battleStateSetup.setProperty<tags::AnalyzeEffect>();
+  }
 
   SideStateSetup p1SideSetup(registry);
   SideStateSetup p2SideSetup(registry);

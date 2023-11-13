@@ -7,5 +7,6 @@
 #include "MoveTags.hpp"
 #include "NatureTags.hpp"
 #include "PokemonTags.hpp"
+#include "SimulationTags.hpp"
 #include "StatusTags.hpp"
 #include "TypeTags.hpp"
