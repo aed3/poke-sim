@@ -102,7 +102,7 @@ The information about the entire battle state that can change within one turn:
 - Current field and side effect
 - Current teams of both opponents
 - Whether it represents the beginning or middle of a turn
-#### Member Functions
+#### Helper Functions
 - Create a branch of itself to allow multiple outcomes of a random chance event to be explored
 - Convert to and from the JSON interpretation of a Showdown battle
 
@@ -113,7 +113,7 @@ The move, switch, or item action a player will make. Move actions can contain an
 The information about a Pokemon that can change within one turn. (Note: these are minimum requirements and how the rest of the information about a Pokemon is kept will be considered.)
 
 ### Move
-#### Member functions
+#### Helper functions
 - Retrieve a list of all effects the move can generate along with the percent chance of that happening
   - If a [Pokemon](#pokemon) and [battle scenario](#battle-scenario) are provided, it can return values specific to the situation (i.e., Rain Dance has no effect if it's already raining, Growl has no effect if the Pokemon had been Taunted, or Growth resulting +2 attack and special attack if it's sunny).
 
@@ -123,7 +123,7 @@ The information about a Pokemon that can change within one turn. (Note: these ar
 - HP recovered from landing the hit
 - HP lost (recoil) from landing the hit
 - Number of hits
-#### Member functions
+#### Helper functions
 - For a given move, user, and target:
   - Calc all damage roles
   - Calc percent chance of a KO after each amount of uses
@@ -134,7 +134,7 @@ The information about a Pokemon that can change within one turn. (Note: these ar
 Any status condition, volatile, stat boost, side condition, pseudo weather, terrain, or weather
 
 ### Analyze Effect Result
-#### Member Functions
+#### Helper Functions
 - For a given move, user, and target:
   - Calc max damage with multipliers applied
   - Calc all damage roles with multipliers applied

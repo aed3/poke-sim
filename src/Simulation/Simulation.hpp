@@ -17,6 +17,9 @@
 
 namespace pokesim {
 struct SideStateSetup;
+struct SimulateTurnResults;
+struct CalculateDamageResults;
+struct AnalyzeEffectResults;
 
 /**
  * @brief The entry point for creating and running simulations.
@@ -80,14 +83,14 @@ class Simulation {
 
  public:
   const BattleFormat battleFormat = SINGLES_BATTLE_FORMAT;
-  const Pokedex* pokedex = nullptr;
+  const Pokedex& pokedex;
   entt::registry registry{};
 
   SimulateTurnOptions simulateTurnOptions;
   CalculateDamageOptions calculateDamageOptions;
   AnalyzeEffectOptions analyzeEffectOptions;
 
-  Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : battleFormat(battleFormat_), pokedex(&pokedex_) {}
+  Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : battleFormat(battleFormat_), pokedex(pokedex_) {}
 
   // Load information about any number of battle states into the simulation's registry.
   /*_inline_*/ void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
@@ -98,16 +101,21 @@ class Simulation {
   /*_inline_*/ CalculateDamageResults calculateDamage(std::optional<CalculateDamageOptions> options = std::nullopt);
   /*_inline_*/ AnalyzeEffectResults analyzeEffect(std::optional<AnalyzeEffectOptions> options = std::nullopt);
 
-  /*_inline_*/ std::vector<SimulateTurnResults> simulateTurn(
+  /*_inline_*/ SimulateTurnResults simulateTurn(
     std::initializer_list<BattleCreationInfo> battleDataList,
     std::optional<SimulateTurnOptions> options = std::nullopt);
 
-  /*_inline_*/ std::vector<CalculateDamageResults> calculateDamage(
+  /*_inline_*/ CalculateDamageResults calculateDamage(
     std::initializer_list<BattleCreationInfo> battleDataList,
     std::optional<CalculateDamageOptions> options = std::nullopt);
 
-  /*_inline_*/ std::vector<AnalyzeEffectResults> analyzeEffect(
+  /*_inline_*/ AnalyzeEffectResults analyzeEffect(
     std::initializer_list<BattleCreationInfo> battleDataList,
     std::optional<AnalyzeEffectOptions> options = std::nullopt);
+
+    /*_inline_*/ void clearAllResults();
+    /*_inline_*/ void clearSimulateTurnResults();
+    /*_inline_*/ void clearCalculateDamageResults();
+    /*_inline_*/ void clearAnalyzeEffectResults();
 };
 }  // namespace pokesim

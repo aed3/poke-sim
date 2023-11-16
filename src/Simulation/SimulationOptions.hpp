@@ -7,22 +7,23 @@
 namespace pokesim {
 class Simulation;
 
-enum DamageRollLimit : std::uint8_t {
-  AVERAGE_DAMAGE = 0b00000000,
-  ALL_DAMAGE_ROLES = 0b00000001,
-  P1_MAX_DAMAGE = 0b00000010,
-  P2_MAX_DAMAGE = 0b00000100,
-  P1_MIN_DAMAGE = 0b00001000,
-  P2_MIN_DAMAGE = 0b00010000,
+enum DamageRollKind : std::uint8_t {
+  NONE = 0b00000000,
+  AVERAGE_DAMAGE = 0b00000001,
+  ALL_DAMAGE_ROLES = 0b00000010,
+  P1_MAX_DAMAGE = 0b00000100,
+  P2_MAX_DAMAGE = 0b00001000,
+  P1_MIN_DAMAGE = 0b00010000,
+  P2_MIN_DAMAGE = 0b00100000,
 
   MAX_DAMAGE = P1_MAX_DAMAGE | P2_MAX_DAMAGE,
   MIN_DAMAGE = P1_MIN_DAMAGE | P2_MIN_DAMAGE,
 };
 
 struct SimulateTurnOptions {
-  DamageRollLimit damageRollsConsidered = AVERAGE_DAMAGE;
-  float randomChanceUpperLimit = 0.9F;
-  float randomChanceLowerLimit = 0.1F;
+  DamageRollKind damageRollsConsidered = AVERAGE_DAMAGE;
+  float randomChanceUpperLimit = 0.9F; // NOLINT(readability-magic-numbers)
+  float randomChanceLowerLimit = 0.1F; // NOLINT(readability-magic-numbers)
   float branchProbabilityLowerLimit = 0.0F;
 
   // For Monte Carlo method. If no number is given, the number of branches
@@ -36,16 +37,15 @@ struct SimulateTurnOptions {
 };
 
 struct CalculateDamageOptions {
-  DamageRollLimit damageRollsReturned = ALL_DAMAGE_ROLES;
+  DamageRollKind damageRollsReturned = ALL_DAMAGE_ROLES;
 };
 
 struct AnalyzeEffectOptions {
   // Whether to consider the multiplier even if the effect is already active (i.e. Rain will return a 1x multiplier
   // instead of 1.5x multiplier for Surf if this option is true and it's already raining)
-  bool considerActiveEffects = false;
-};
+  bool reconsiderActiveEffects = false;
+  bool returnMultipliedKoChance = false;
 
-struct SimulateTurnResults {};
-struct CalculateDamageResults {};
-struct AnalyzeEffectResults {};
+  DamageRollKind damageRollsReturned = DamageRollKind::NONE;
+};
 }  // namespace pokesim
