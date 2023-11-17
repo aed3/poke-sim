@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/Move.hpp>
 
 namespace pokesim {
 struct MovePriority {
-  std::uint8_t priority = 0;
+  types::Priority priority = 0;
 };
 }  // namespace pokesim

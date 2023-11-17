@@ -1,23 +1,23 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/Stats.hpp>
 
 namespace pokesim {
-struct EVs {
-  std::uint8_t hp = 0;
-  std::uint8_t atk = 0;
-  std::uint8_t def = 0;
-  std::uint8_t spa = 0;
-  std::uint8_t spd = 0;
-  std::uint8_t spe = 0;
+struct Evs {
+  types::Ev hp = 0;
+  types::Ev atk = 0;
+  types::Ev def = 0;
+  types::Ev spa = 0;
+  types::Ev spd = 0;
+  types::Ev spe = 0;
 };
 
-struct IVs {
-  std::uint8_t hp = 0;
-  std::uint8_t atk = 0;
-  std::uint8_t def = 0;
-  std::uint8_t spa = 0;
-  std::uint8_t spd = 0;
-  std::uint8_t spe = 0;
+struct Ivs {
+  types::Iv hp = 0;
+  types::Iv atk = 0;
+  types::Iv def = 0;
+  types::Iv spa = 0;
+  types::Iv spd = 0;
+  types::Iv spe = 0;
 };
 }  // namespace pokesim

@@ -4,15 +4,16 @@
 #include <Components/Tags/MoveTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Setup/MoveDexDataSetup.hpp>
+#include <Types/Enums/Move.hpp>
+#include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
-#include <Types/Type.hpp>
-#include <cstdint>
+#include <Types/Stats.hpp>
 
 namespace pokesim::dex::build {
 struct QuiverDance {
   static const dex::Move name = dex::QUIVER_DANCE;
-  static const std::uint8_t basePP = 20;
-  static const std::int8_t spaBoost = 1, spdBoost = 1, speBoost = 1;
+  static const types::Pp basePp = 20;
+  static const types::Boost spaBoost = 1, spdBoost = 1, speBoost = 1;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
@@ -20,7 +21,7 @@ struct QuiverDance {
     move.setType(dex::BUG_TYPE);
 
     move.setCategoryStatus();
-    move.setBasePP(basePP);
+    move.setBasePP(basePp);
 
     move.setProperty<pokesim::tags::move::Self>();
 

@@ -8,6 +8,7 @@
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Turn.hpp>
+#include <Types/State.hpp>
 #include <chrono>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
@@ -23,11 +24,11 @@ void BattleStateSetup::initBlank() {
 }
 
 void BattleStateSetup::setAutoID() {
-  setID((uint16_t)handle.registry()->view<Sides>().size());
+  setID((types::StateId)handle.registry()->view<Sides>().size());
 }
 
-void BattleStateSetup::setID(std::uint16_t id) {
-  handle.emplace<ID>(id);
+void BattleStateSetup::setID(types::StateId id) {
+  handle.emplace<Id>(id);
 }
 
 void BattleStateSetup::setSide(Side::PlayerSideID sideID, entt::entity sideEntity) {
@@ -38,16 +39,16 @@ void BattleStateSetup::setSide(Side::PlayerSideID sideID, entt::entity sideEntit
   }
 }
 
-void BattleStateSetup::setRNGSeed(std::optional<std::uint32_t> seed) {
-  handle.emplace<RNGSeed>(
-    seed.value_or((std::uint32_t)std::chrono::high_resolution_clock::now().time_since_epoch().count()));
+void BattleStateSetup::setRNGSeed(std::optional<types::StateRngSeed> seed) {
+  handle.emplace<RngSeed>(
+    seed.value_or((types::StateRngSeed)std::chrono::high_resolution_clock::now().time_since_epoch().count()));
 }
 
 void BattleStateSetup::setActionQueue(const std::vector<entt::entity>& queue) {
   handle.emplace<ActionQueue>(queue);
 }
 
-void BattleStateSetup::setTurn(std::uint16_t turn) {
+void BattleStateSetup::setTurn(types::BattleTurn turn) {
   handle.emplace<Turn>(turn);
 }
 
@@ -67,7 +68,7 @@ void BattleStateSetup::setActiveUser(entt::entity activeSource) {
   handle.registry()->emplace<tags::ActiveMoveUser>(activeSource);
 }
 
-void BattleStateSetup::setProbability(float probability) {
+void BattleStateSetup::setProbability(types::StateProbability probability) {
   handle.emplace<Probability>(probability);
 }
 }  // namespace pokesim

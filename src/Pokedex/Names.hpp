@@ -1,8 +1,6 @@
 #pragma once
 
-#include <Types/headers.hpp>
-#include <array>
-#include <cstdint>
+#include <Types/Enums/headers.hpp>
 #include <string>
 
 // TODO(aed3): Change the move names to be part of the build functions so they aren't all loaded all the time

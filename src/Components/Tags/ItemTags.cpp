@@ -1,6 +1,6 @@
 #include "ItemTags.hpp"
 
-#include <Types/Item.hpp>
+#include <Types/Enums/Item.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 // TODO(aed3): Make this auto generated

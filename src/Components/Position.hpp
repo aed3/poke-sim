@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/State.hpp>
 
 namespace pokesim {
 // The position of a Pokemon in its team's order (starts at 1)
 struct Position {
-  std::uint8_t position = 1;
+  types::TeamSlotPosition position = 1;
 };
 }  // namespace pokesim

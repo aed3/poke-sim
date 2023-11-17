@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Types/Status.hpp>
+#include <Types/Enums/Status.hpp>
 
 namespace pokesim {
 struct StatusName {

@@ -9,7 +9,7 @@ namespace pokesim {
  * In a single battle, only P1A and P1B are valid targets. In a double battle, all four are valid.
  */
 struct TargetSlot {
-  enum : uint8_t {
+  enum : std::uint8_t {
     P1A,
     P1B,
     P2A,

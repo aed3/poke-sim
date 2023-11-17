@@ -1,17 +1,19 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/Move.hpp>
+#include <Types/State.hpp>
+#include <Types/Stats.hpp>
 
 namespace pokesim {
 // Data that determines the order actions take place
 struct SpeedSort {
   // Order of the types of actions (lower first)
-  std::uint8_t order = 0;
+  types::ActionOrder order = 0;
   // Priority of the action (lower first)
-  std::int8_t priority = 0;
+  types::Priority priority = 0;
   // Fractional priority of the action (lower first)
-  std::int8_t fractionalPriority = 0;
+  types::FractionalPriority fractionalPriority = 0;
   // Speed of Pokemon using move (higher first if priority tie)
-  std::uint16_t speed = 1;
+  types::Stat speed = 1;
 };
 }  // namespace pokesim

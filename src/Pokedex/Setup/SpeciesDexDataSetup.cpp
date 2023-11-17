@@ -2,6 +2,7 @@
 
 #include <Components/DexData/headers.hpp>
 #include <Components/Names/SpeciesNames.hpp>
+#include <Types/Stats.hpp>
 #include <entt/entity/handle.hpp>
 
 namespace pokesim::dex::internal {
@@ -14,7 +15,8 @@ void SpeciesDexDataSetup::setType(Type type1, Type type2) {
 }
 
 void SpeciesDexDataSetup::setBaseStats(
-  std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe) {
+  types::BaseStat hp, types::BaseStat atk, types::BaseStat def, types::BaseStat spa, types::BaseStat spd,
+  types::BaseStat spe) {
   handle.emplace<BaseStats>(hp, atk, def, spa, spd, spe);
 }
 }  // namespace pokesim::dex::internal

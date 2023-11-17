@@ -33,27 +33,31 @@
  * external/entt/entity/handle.hpp
  * src/Battle/Setup/StateSetupBase.hpp
  * src/Components/EntityHolders/Side.hpp
+ * src/Types/State.hpp
  * src/Battle/Setup/BattleStateSetup.hpp
+ * src/Types/Enums/Move.hpp
  * src/Types/Move.hpp
  * src/Battle/Setup/MoveStateSetup.hpp
+ * src/Types/Stats.hpp
  * src/Components/Boosts.hpp
  * src/Components/EVsIVs.hpp
  * src/Components/Stats.hpp
- * src/Types/Ability.hpp
- * src/Types/Gender.hpp
- * src/Types/Item.hpp
- * src/Types/Nature.hpp
- * src/Types/Species.hpp
- * src/Types/Status.hpp
+ * src/Types/Enums/Ability.hpp
+ * src/Types/Enums/Gender.hpp
+ * src/Types/Enums/Item.hpp
+ * src/Types/Enums/Nature.hpp
+ * src/Types/Enums/Species.hpp
+ * src/Types/Enums/Status.hpp
  * src/Battle/Setup/PokemonStateSetup.hpp
  * src/Battle/Setup/SideStateSetup.hpp
  * src/Components/Tags/SimulationTags.hpp
- * src/Types/BattleFormat.hpp
- * src/Types/GameMechanics.hpp
- * src/Types/Stat.hpp
- * src/Types/Type.hpp
+ * src/Types/Enums/BattleFormat.hpp
+ * src/Types/Enums/GameMechanics.hpp
+ * src/Types/Enums/Stat.hpp
+ * src/Types/Enums/Type.hpp
  * src/Pokedex/Pokedex.hpp
  * src/Simulation/SimulationOptions.hpp
+ * src/Types/Damage.hpp
  * src/Simulation/Simulation.hpp
  * src/Simulation/SimulationSetup.cpp
  * src/Components/DexData/Abilities.hpp
@@ -12373,9 +12377,26 @@ struct Side {
 
 ///////////////// END OF src/Components/EntityHolders/Side.hpp /////////////////
 
-//////////////// START OF src/Battle/Setup/BattleStateSetup.hpp ////////////////
+///////////////////////// START OF src/Types/State.hpp /////////////////////////
 
 #include <cstdint>
+
+namespace pokesim::types {
+using StateId = std::uint16_t;
+using StateProbability = float;
+using StateRngSeed = std::uint32_t;
+
+using BattleTurn = std::uint16_t;
+
+using ActionOrder = std::uint8_t;
+
+using TeamSlotPosition = std::uint8_t;
+}  // namespace pokesim::types
+
+////////////////////////// END OF src/Types/State.hpp //////////////////////////
+
+//////////////// START OF src/Battle/Setup/BattleStateSetup.hpp ////////////////
+
 #include <optional>
 #include <vector>
 
@@ -12396,31 +12417,31 @@ struct BattleStateSetup : internal::StateSetupBase {
    * @details Some of the required properties and their defaults:
    * - Turn: 0
    * - Probability: 1
-   * - ID: The number of existing battle states
+   * - Id: The number of existing battle states
    * - Sides: Unassigned entities for P1 and P2
    * - ActionQueue: An empty queue
    */
   inline void initBlank();
 
   inline void setAutoID();
-  inline void setID(std::uint16_t id);
+  inline void setID(types::StateId id);
   inline void setSide(Side::PlayerSideID sideID, entt::entity sideEntity);
 
   // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
-  inline void setRNGSeed(std::optional<std::uint32_t> seed = std::nullopt);
+  inline void setRNGSeed(std::optional<types::StateRngSeed> seed = std::nullopt);
   inline void setActionQueue(const std::vector<entt::entity>& queue);
-  inline void setTurn(std::uint16_t turn);
+  inline void setTurn(types::BattleTurn turn);
   inline void setActiveMove(entt::entity activeMove);
   inline void setActivePokemon(entt::entity activePokemon);
   inline void setActiveTarget(entt::entity activeTarget);
   inline void setActiveUser(entt::entity activeSource);
-  inline void setProbability(float probability);
+  inline void setProbability(types::StateProbability probability);
 };
 }  // namespace pokesim
 
 ///////////////// END OF src/Battle/Setup/BattleStateSetup.hpp /////////////////
 
-///////////////////////// START OF src/Types/Move.hpp //////////////////////////
+////////////////////// START OF src/Types/Enums/Move.hpp ///////////////////////
 
 #include <cstdint>
 
@@ -12433,12 +12454,26 @@ enum Move : std::uint16_t {
 };
 }  // namespace pokesim::dex
 
-////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
+/////////////////////// END OF src/Types/Enums/Move.hpp ////////////////////////
 
-///////////////// START OF src/Battle/Setup/MoveStateSetup.hpp /////////////////
+///////////////////////// START OF src/Types/Move.hpp //////////////////////////
 
 #include <cstdint>
 
+namespace pokesim::types {
+using Pp = std::uint8_t;
+using BasePower = std::uint8_t;
+using BaseAccuracy = std::uint8_t;
+using MoveHits = std::uint8_t;
+using BaseEffectChance = std::uint8_t;
+
+using Priority = std::int8_t;
+using FractionalPriority = std::int8_t;
+}  // namespace pokesim::types
+
+////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
+
+///////////////// START OF src/Battle/Setup/MoveStateSetup.hpp /////////////////
 
 namespace pokesim {
 // Tool to set properties of a move's state to an entity.
@@ -12449,41 +12484,57 @@ struct MoveStateSetup : internal::StateSetupBase {
   /**
    * @brief Applies the defaults to the required properties for a move state.
    *
-   * Some of the required properties are a blank `MoveName`, `PP`, and `MaxPP` component.
+   * Some of the required properties are a blank `MoveName`, `Pp`, and `MaxPp` component.
    */
   inline void initBlank();
 
   inline void setName(dex::Move moveName);
-  inline void setPP(std::uint8_t pp);
-  inline void setMaxPP(std::uint8_t maxPP);
+  inline void setPP(types::Pp pp);
+  inline void setMaxPP(types::Pp maxPp);
 };
 }  // namespace pokesim
 
 ////////////////// END OF src/Battle/Setup/MoveStateSetup.hpp //////////////////
 
-////////////////////// START OF src/Components/Boosts.hpp //////////////////////
+///////////////////////// START OF src/Types/Stats.hpp /////////////////////////
 
 #include <cstdint>
 
+namespace pokesim::types {
+using Level = std::uint8_t;
+
+using Stat = std::uint16_t;
+using BaseStat = std::uint8_t;
+
+using Ev = std::uint8_t;
+using Iv = std::uint8_t;
+
+using Boost = std::int8_t;
+}  // namespace pokesim::types
+
+////////////////////////// END OF src/Types/Stats.hpp //////////////////////////
+
+////////////////////// START OF src/Components/Boosts.hpp //////////////////////
+
 namespace pokesim {
 struct AtkBoost {
-  std::int8_t boost = 0;
+  types::Boost boost = 0;
 };
 
 struct DefBoost {
-  std::int8_t boost = 0;
+  types::Boost boost = 0;
 };
 
 struct SpaBoost {
-  std::int8_t boost = 0;
+  types::Boost boost = 0;
 };
 
 struct SpdBoost {
-  std::int8_t boost = 0;
+  types::Boost boost = 0;
 };
 
 struct SpeBoost {
-  std::int8_t boost = 0;
+  types::Boost boost = 0;
 };
 }  // namespace pokesim
 
@@ -12491,25 +12542,23 @@ struct SpeBoost {
 
 ////////////////////// START OF src/Components/EVsIVs.hpp //////////////////////
 
-#include <cstdint>
-
 namespace pokesim {
-struct EVs {
-  std::uint8_t hp = 0;
-  std::uint8_t atk = 0;
-  std::uint8_t def = 0;
-  std::uint8_t spa = 0;
-  std::uint8_t spd = 0;
-  std::uint8_t spe = 0;
+struct Evs {
+  types::Ev hp = 0;
+  types::Ev atk = 0;
+  types::Ev def = 0;
+  types::Ev spa = 0;
+  types::Ev spd = 0;
+  types::Ev spe = 0;
 };
 
-struct IVs {
-  std::uint8_t hp = 0;
-  std::uint8_t atk = 0;
-  std::uint8_t def = 0;
-  std::uint8_t spa = 0;
-  std::uint8_t spd = 0;
-  std::uint8_t spe = 0;
+struct Ivs {
+  types::Iv hp = 0;
+  types::Iv atk = 0;
+  types::Iv def = 0;
+  types::Iv spa = 0;
+  types::Iv spd = 0;
+  types::Iv spe = 0;
 };
 }  // namespace pokesim
 
@@ -12517,37 +12566,35 @@ struct IVs {
 
 ////////////////////// START OF src/Components/Stats.hpp ///////////////////////
 
-#include <cstdint>
-
 namespace pokesim::stat {
-struct HP {
-  std::uint16_t stat = 1;
+struct Hp {
+  types::Stat stat = 1;
 };
 
 struct Atk {
-  std::uint16_t stat = 1;
+  types::Stat stat = 1;
 };
 
 struct Def {
-  std::uint16_t stat = 1;
+  types::Stat stat = 1;
 };
 
 struct Spa {
-  std::uint16_t stat = 1;
+  types::Stat stat = 1;
 };
 
 struct Spd {
-  std::uint16_t stat = 1;
+  types::Stat stat = 1;
 };
 
 struct Spe {
-  std::uint16_t stat = 1;
+  types::Stat stat = 1;
 };
 }  // namespace pokesim::stat
 
 /////////////////////// END OF src/Components/Stats.hpp ////////////////////////
 
-//////////////////////// START OF src/Types/Ability.hpp ////////////////////////
+///////////////////// START OF src/Types/Enums/Ability.hpp /////////////////////
 
 #include <cstdint>
 
@@ -12560,9 +12607,9 @@ enum Ability : std::uint16_t {
 };
 }  // namespace pokesim::dex
 
-///////////////////////// END OF src/Types/Ability.hpp /////////////////////////
+////////////////////// END OF src/Types/Enums/Ability.hpp //////////////////////
 
-//////////////////////// START OF src/Types/Gender.hpp /////////////////////////
+///////////////////// START OF src/Types/Enums/Gender.hpp //////////////////////
 
 #include <cstdint>
 
@@ -12571,9 +12618,9 @@ namespace pokesim::dex {
 enum Gender : std::uint8_t { NO_GENDER = 0, FEMALE, MALE, GENDER_TOTAL };
 }  // namespace pokesim::dex
 
-///////////////////////// END OF src/Types/Gender.hpp //////////////////////////
+////////////////////// END OF src/Types/Enums/Gender.hpp ///////////////////////
 
-///////////////////////// START OF src/Types/Item.hpp //////////////////////////
+////////////////////// START OF src/Types/Enums/Item.hpp ///////////////////////
 
 #include <cstdint>
 
@@ -12586,9 +12633,9 @@ enum Item : std::uint16_t {
 };
 }  // namespace pokesim::dex
 
-////////////////////////// END OF src/Types/Item.hpp ///////////////////////////
+/////////////////////// END OF src/Types/Enums/Item.hpp ////////////////////////
 
-//////////////////////// START OF src/Types/Nature.hpp /////////////////////////
+///////////////////// START OF src/Types/Enums/Nature.hpp //////////////////////
 
 #include <cstdint>
 
@@ -12601,9 +12648,9 @@ enum Nature : std::uint8_t {
 };
 }  // namespace pokesim::dex
 
-///////////////////////// END OF src/Types/Nature.hpp //////////////////////////
+////////////////////// END OF src/Types/Enums/Nature.hpp ///////////////////////
 
-//////////////////////// START OF src/Types/Species.hpp ////////////////////////
+///////////////////// START OF src/Types/Enums/Species.hpp /////////////////////
 
 #include <cstdint>
 
@@ -12631,9 +12678,9 @@ enum Species : std::uint16_t {
 };
 }  // namespace pokesim::dex
 
-///////////////////////// END OF src/Types/Species.hpp /////////////////////////
+////////////////////// END OF src/Types/Enums/Species.hpp //////////////////////
 
-//////////////////////// START OF src/Types/Status.hpp /////////////////////////
+///////////////////// START OF src/Types/Enums/Status.hpp //////////////////////
 
 #include <cstdint>
 
@@ -12642,11 +12689,10 @@ namespace pokesim::dex {
 enum Status : std::uint8_t { NO_STATUS = 0, BRN, FRZ, PAR, PSN, SLP, TOX, /*, FRB, DRO, */ STATUS_TOTAL };
 }  // namespace pokesim::dex
 
-///////////////////////// END OF src/Types/Status.hpp //////////////////////////
+////////////////////// END OF src/Types/Enums/Status.hpp ///////////////////////
 
 /////////////// START OF src/Battle/Setup/PokemonStateSetup.hpp ////////////////
 
-#include <cstdint>
 #include <type_traits>
 #include <vector>
 
@@ -12661,36 +12707,34 @@ struct PokemonStateSetup : internal::StateSetupBase {
    * @brief Applies the defaults to the required properties for a Pokemon state.
    *
    * Some of the required properties are a blank `SpeciesName`, `Side`, and `Battle` component along with an
-   * automatically set ID.
+   * automatically set Id.
    */
   inline void initBlank();
 
   inline void setAutoID();
-  inline void setID(std::uint16_t id);
+  inline void setID(types::StateId id);
   inline void setSpecies(dex::Species speciesName);
 
   inline void setSide(entt::entity entity);
   inline void setBattle(entt::entity entity);
 
-  inline void setLevel(std::uint8_t level);
+  inline void setLevel(types::Level level);
   inline void setGender(dex::Gender gender);
   inline void setAbility(dex::Ability ability);
   inline void setItem(dex::Item item);
   inline void setMoves(const std::vector<entt::entity>& moveSlots);
 
-  inline void setPostion(std::uint8_t position);
+  inline void setPostion(types::TeamSlotPosition position);
   inline void setStatus(dex::Status status);
 
   inline void setNature(dex::Nature nature);
-  inline void setEVs(
-    std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe);
-  inline void setEVs(const EVs& evs);
-  inline void setIVs(
-    std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe);
-  inline void setIVs(const IVs& ivs);
+  inline void setEVs(types::Ev hp, types::Ev atk, types::Ev def, types::Ev spa, types::Ev spd, types::Ev spe);
+  inline void setEVs(const Evs& evs);
+  inline void setIVs(types::Iv hp, types::Iv atk, types::Iv def, types::Iv spa, types::Iv spd, types::Iv spe);
+  inline void setIVs(const Ivs& ivs);
 
   template <typename BoostType>
-  inline void setBoost(std::int8_t boost) {
+  inline void setBoost(types::Boost boost) {
     static_assert(
       std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() ||
       std::is_same<SpaBoost, BoostType>() || std::is_same<SpdBoost, BoostType>() ||
@@ -12699,9 +12743,9 @@ struct PokemonStateSetup : internal::StateSetupBase {
   };
 
   template <typename StatType>
-  inline void setStat(std::uint16_t stat) {
+  inline void setStat(types::Stat stat) {
     static_assert(
-      std::is_same<stat::HP, StatType>() || std::is_same<stat::Atk, StatType>() ||
+      std::is_same<stat::Hp, StatType>() || std::is_same<stat::Atk, StatType>() ||
       std::is_same<stat::Def, StatType>() || std::is_same<stat::Spa, StatType>() ||
       std::is_same<stat::Spd, StatType>() || std::is_same<stat::Spe, StatType>());
     handle.emplace<StatType>(stat);
@@ -12749,7 +12793,7 @@ struct AnalyzeEffect {};
 
 //////////////// END OF src/Components/Tags/SimulationTags.hpp /////////////////
 
-///////////////////// START OF src/Types/BattleFormat.hpp //////////////////////
+////////////////// START OF src/Types/Enums/BattleFormat.hpp ///////////////////
 
 #include <cstdint>
 
@@ -12761,9 +12805,9 @@ enum BattleFormat : std::uint8_t {
 };
 }  // namespace pokesim
 
-////////////////////// END OF src/Types/BattleFormat.hpp ///////////////////////
+/////////////////// END OF src/Types/Enums/BattleFormat.hpp ////////////////////
 
-///////////////////// START OF src/Types/GameMechanics.hpp /////////////////////
+////////////////// START OF src/Types/Enums/GameMechanics.hpp //////////////////
 
 #include <cstdint>
 
@@ -12774,9 +12818,9 @@ enum GameMechanics : std::uint8_t {
 };
 }  // namespace pokesim
 
-////////////////////// END OF src/Types/GameMechanics.hpp //////////////////////
+/////////////////// END OF src/Types/Enums/GameMechanics.hpp ///////////////////
 
-///////////////////////// START OF src/Types/Stat.hpp //////////////////////////
+////////////////////// START OF src/Types/Enums/Stat.hpp ///////////////////////
 
 #include <cstdint>
 
@@ -12794,9 +12838,9 @@ enum Stat : std::uint8_t {
 };
 }  // namespace pokesim::dex
 
-////////////////////////// END OF src/Types/Stat.hpp ///////////////////////////
+/////////////////////// END OF src/Types/Enums/Stat.hpp ////////////////////////
 
-///////////////////////// START OF src/Types/Type.hpp //////////////////////////
+////////////////////// START OF src/Types/Enums/Type.hpp ///////////////////////
 
 #include <cstdint>
 
@@ -12809,7 +12853,7 @@ enum Type : std::uint8_t {
 };
 }  // namespace pokesim::dex
 
-////////////////////////// END OF src/Types/Type.hpp ///////////////////////////
+/////////////////////// END OF src/Types/Enums/Type.hpp ////////////////////////
 
 /////////////////////// START OF src/Pokedex/Pokedex.hpp ///////////////////////
 
@@ -12988,9 +13032,24 @@ struct Options {
 
 ///////////////// END OF src/Simulation/SimulationOptions.hpp //////////////////
 
+//////////////////////// START OF src/Types/Damage.hpp /////////////////////////
+
+#include <array>
+#include <cstdint>
+
+namespace pokesim::types {
+namespace internal {
+const std::uint8_t MAX_DAMAGE_ROLL_COUNT = 16U;
+}
+
+using Damage = std::uint16_t;
+using DamageRolls = std::array<Damage, internal::MAX_DAMAGE_ROLL_COUNT>;
+}  // namespace pokesim::types
+
+///////////////////////// END OF src/Types/Damage.hpp //////////////////////////
+
 //////////////////// START OF src/Simulation/Simulation.hpp ////////////////////
 
-#include <cstdint>
 #include <initializer_list>
 #include <optional>
 #include <tuple>
@@ -13020,29 +13079,29 @@ class Simulation {
  public:
   struct MoveCreationInfo {
     dex::Move name = dex::NO_MOVE;
-    std::uint8_t pp = 1;
-    std::uint8_t maxPP = 1;
+    types::Pp pp = 1;
+    types::Pp maxPp = 1;
   };
 
   struct PokemonCreationInfo {
-    std::optional<std::uint16_t> id = std::nullopt;
+    std::optional<types::StateId> id = std::nullopt;
     dex::Species species = dex::MISSING_NO;
     dex::Item item = dex::NO_ITEM;
     dex::Ability ability = dex::NO_ABILITY;
     dex::Gender gender = dex::NO_GENDER;
     dex::Status status = dex::NO_STATUS;
-    std::uint8_t level = 1;
+    types::Level level = 1;
 
     dex::Nature nature = dex::NO_NATURE;
-    EVs evs;
-    IVs ivs;
+    Evs evs;
+    Ivs ivs;
     struct {
-      std::uint16_t hp = 1;
-      std::uint16_t atk = 1;
-      std::uint16_t def = 1;
-      std::uint16_t spa = 1;
-      std::uint16_t spd = 1;
-      std::uint16_t spe = 1;
+      types::Stat hp = 1;
+      types::Stat atk = 1;
+      types::Stat def = 1;
+      types::Stat spa = 1;
+      types::Stat spd = 1;
+      types::Stat spe = 1;
     } stats;
 
     std::vector<MoveCreationInfo> moves{};
@@ -13056,9 +13115,9 @@ class Simulation {
     bool runWithSimulateTurn = false;
     bool runWithCalculateDamage = false;
     bool runWithAnalyzeEffect = false;
-    std::uint16_t turn = 0;
-    std::optional<std::uint32_t> rngSeed = std::nullopt;
-    float probability = 1;
+    types::BattleTurn turn = 0;
+    std::optional<types::StateRngSeed> rngSeed = std::nullopt;
+    types::StateProbability probability = 1;
     SideCreationInfo P1;
     SideCreationInfo P2;
   };
@@ -13126,7 +13185,7 @@ std::vector<entt::entity> Simulation::createInitialMoves(const std::vector<MoveC
     MoveStateSetup moveSetup(registry);
     moveSetup.setName(moveData.name);
     moveSetup.setPP(moveData.pp);
-    moveSetup.setMaxPP(moveData.maxPP);
+    moveSetup.setMaxPP(moveData.maxPp);
     moveEntities.push_back(moveSetup.entity());
   }
 
@@ -13152,7 +13211,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
 
   pokemonSetup.setEVs(pokemonData.evs);
   pokemonSetup.setIVs(pokemonData.ivs);
-  pokemonSetup.setStat<stat::HP>(pokemonData.stats.hp);
+  pokemonSetup.setStat<stat::Hp>(pokemonData.stats.hp);
   pokemonSetup.setStat<stat::Atk>(pokemonData.stats.atk);
   pokemonSetup.setStat<stat::Def>(pokemonData.stats.def);
   pokemonSetup.setStat<stat::Spa>(pokemonData.stats.spa);
@@ -13254,17 +13313,15 @@ struct HiddenAbility {
 
 //////////////// START OF src/Components/DexData/BaseStats.hpp /////////////////
 
-#include <cstdint>
-
 namespace pokesim {
 // Contains all of the base stats of a species
 struct BaseStats {
-  std::uint8_t hp = 1;
-  std::uint8_t atk = 1;
-  std::uint8_t def = 1;
-  std::uint8_t spa = 1;
-  std::uint8_t spd = 1;
-  std::uint8_t spe = 1;
+  types::BaseStat hp = 1;
+  types::BaseStat atk = 1;
+  types::BaseStat def = 1;
+  types::BaseStat spa = 1;
+  types::BaseStat spd = 1;
+  types::BaseStat spe = 1;
 };
 }  // namespace pokesim
 
@@ -13315,9 +13372,6 @@ struct DexDataSetup {
 
 ////////////// START OF src/Pokedex/Setup/SpeciesDexDataSetup.hpp //////////////
 
-#include <cstdint>
-
-
 namespace pokesim::dex::internal {
 struct SpeciesDexDataSetup : DexDataSetup {
   SpeciesDexDataSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
@@ -13325,7 +13379,8 @@ struct SpeciesDexDataSetup : DexDataSetup {
   inline void setName(Species species);
   inline void setType(Type type1, Type type2 = NO_TYPE);
   inline void setBaseStats(
-    std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe);
+    types::BaseStat hp, types::BaseStat atk, types::BaseStat def, types::BaseStat spa, types::BaseStat spd,
+    types::BaseStat spe);
 };
 }  // namespace pokesim::dex::internal
 
@@ -13343,7 +13398,8 @@ void SpeciesDexDataSetup::setType(Type type1, Type type2) {
 }
 
 void SpeciesDexDataSetup::setBaseStats(
-  std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe) {
+  types::BaseStat hp, types::BaseStat atk, types::BaseStat def, types::BaseStat spa, types::BaseStat spd,
+  types::BaseStat spe) {
   handle.emplace<BaseStats>(hp, atk, def, spa, spd, spe);
 }
 }  // namespace pokesim::dex::internal
@@ -13352,11 +13408,9 @@ void SpeciesDexDataSetup::setBaseStats(
 
 ///////////////////// START OF src/Components/Accuracy.hpp /////////////////////
 
-#include <cstdint>
-
 namespace pokesim {
 struct Accuracy {
-  std::uint8_t accuracy = 100;
+  types::BaseAccuracy accuracy = 100;
 };
 }  // namespace pokesim
 
@@ -13364,19 +13418,15 @@ struct Accuracy {
 
 //////////////////// START OF src/Components/BasePower.hpp /////////////////////
 
-#include <cstdint>
-
 namespace pokesim {
 struct BasePower {
-  std::uint8_t basePower = 1;
+  types::BasePower basePower = 1;
 };
 }  // namespace pokesim
 
 ///////////////////// END OF src/Components/BasePower.hpp //////////////////////
 
 ////////////////////// START OF src/Components/Chance.hpp //////////////////////
-
-#include <cstdint>
 
 namespace pokesim {
 /**
@@ -13385,7 +13435,7 @@ namespace pokesim {
  * Examples: Air Slash has a 60% chance to flinch, Harvest has a 50% chance to restore a used berry.
  */
 struct Chance {
-  std::uint8_t chance = 100;
+  types::BaseEffectChance chance = 100;
 };
 }  // namespace pokesim
 
@@ -13405,13 +13455,11 @@ struct MoveEffect {
 
 ///////////////////// START OF src/Components/MultiHit.hpp /////////////////////
 
-#include <cstdint>
-
 namespace pokesim {
 // The minimum and maximum number of hits a multi-hit move can cause
 struct MultiHit {
-  std::uint8_t minHits = 2;
-  std::uint8_t maxHits = 5;
+  types::MoveHits minHits = 2;
+  types::MoveHits maxHits = 5;
 };
 }  // namespace pokesim
 
@@ -13439,15 +13487,13 @@ struct TypeName {
 
 //////////////////////// START OF src/Components/PP.hpp ////////////////////////
 
-#include <cstdint>
-
 namespace pokesim {
-struct PP {
-  std::uint8_t pp = 0;
+struct Pp {
+  types::Pp pp = 0;
 };
 
-struct MaxPP {
-  std::uint8_t maxPP = 5;
+struct MaxPp {
+  types::Pp maxPp = 5;
 };
 }  // namespace pokesim
 
@@ -13455,11 +13501,9 @@ struct MaxPP {
 
 ///////////////////// START OF src/Components/Priority.hpp /////////////////////
 
-#include <cstdint>
-
 namespace pokesim {
 struct MovePriority {
-  std::uint8_t priority = 0;
+  types::Priority priority = 0;
 };
 }  // namespace pokesim
 
@@ -13499,7 +13543,6 @@ struct MoveSource {};
 
 /////////////// START OF src/Pokedex/Setup/MoveDexDataSetup.hpp ////////////////
 
-#include <cstdint>
 #include <type_traits>
 
 
@@ -13509,16 +13552,16 @@ struct MoveDexDataSetup : DexDataSetup {
 
   inline void setName(Move move);
   inline void setType(Type type);
-  inline void setAccuracy(std::uint8_t accuracy);
-  inline void setBasePower(std::uint8_t basePower);
+  inline void setAccuracy(types::BaseAccuracy accuracy);
+  inline void setBasePower(types::BasePower basePower);
 
   inline void setCategoryPhysical();
   inline void setCategorySpecial();
   inline void setCategoryStatus();
 
-  inline void setBasePP(std::uint8_t pp);
-  inline void setPriority(std::uint8_t priority);
-  inline void setMultiHit(std::uint8_t minHits, std::uint8_t maxHits);
+  inline void setBasePP(types::Pp pp);
+  inline void setPriority(types::Priority priority);
+  inline void setMultiHit(types::MoveHits minHits, types::MoveHits maxHits);
 
   inline void setPrimaryEffect(entt::entity entity);
   inline void setSecondaryEffect(entt::entity entity);
@@ -13528,12 +13571,12 @@ struct MoveEffectSetup : DexDataSetup {
   MoveEffectSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
   entt::entity entity() const { return handle; }
 
-  inline void setChance(std::uint8_t chance);
+  inline void setChance(types::BaseEffectChance chance);
   inline void setEffectsSelf();
   inline void setEffectsTarget();
 
   template <typename BoostType>
-  inline void setBoost(std::int8_t boost) {
+  inline void setBoost(types::Boost boost) {
     static_assert(
       std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() ||
       std::is_same<SpaBoost, BoostType>() || std::is_same<SpdBoost, BoostType>() ||
@@ -13556,11 +13599,11 @@ void MoveDexDataSetup::setType(Type type) {
   handle.emplace<TypeName>(type);
 }
 
-void MoveDexDataSetup::setAccuracy(std::uint8_t accuracy) {
+void MoveDexDataSetup::setAccuracy(types::BaseAccuracy accuracy) {
   handle.emplace<Accuracy>(accuracy);
 }
 
-void MoveDexDataSetup::setBasePower(std::uint8_t basePower) {
+void MoveDexDataSetup::setBasePower(types::BasePower basePower) {
   handle.emplace<BasePower>(basePower);
 }
 
@@ -13579,15 +13622,15 @@ void MoveDexDataSetup::setCategoryStatus() {
   handle.emplace<tags::move::Status>();
 }
 
-void MoveDexDataSetup::setBasePP(std::uint8_t pp) {
-  handle.emplace<PP>(pp);
+void MoveDexDataSetup::setBasePP(types::Pp pp) {
+  handle.emplace<Pp>(pp);
 }
 
-void MoveDexDataSetup::setPriority(std::uint8_t priority) {
+void MoveDexDataSetup::setPriority(types::Priority priority) {
   handle.emplace<MovePriority>(priority);
 }
 
-void MoveDexDataSetup::setMultiHit(std::uint8_t minHits, std::uint8_t maxHits) {
+void MoveDexDataSetup::setMultiHit(types::MoveHits minHits, types::MoveHits maxHits) {
   handle.emplace<MultiHit>(minHits, maxHits);
 }
 
@@ -13599,7 +13642,7 @@ void MoveDexDataSetup::setSecondaryEffect(entt::entity entity) {
   handle.emplace<MoveEffect>(false, entity);
 }
 
-void MoveEffectSetup::setChance(std::uint8_t chance) {
+void MoveEffectSetup::setChance(types::BaseEffectChance chance) {
   handle.emplace<Chance>(chance);
 }
 
@@ -13648,12 +13691,10 @@ void ItemDexDataSetup::setName(Item item) {
 
 ////////////////// START OF src/Pokedex/Species/Ampharos.hpp ///////////////////
 
-#include <cstdint>
-
 namespace pokesim::dex::build {
 struct Ampharos {
   static const dex::Species name = dex::AMPHAROS;
-  static const std::uint8_t hp = 90, atk = 75, def = 85, spa = 115, spd = 90, spe = 55;
+  static const types::BaseStat hp = 90, atk = 75, def = 85, spa = 115, spd = 90, spe = 55;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::SpeciesDexDataSetup species(pokedex);
@@ -13670,12 +13711,10 @@ struct Ampharos {
 
 ////////////////// START OF src/Pokedex/Species/Dragapult.hpp //////////////////
 
-#include <cstdint>
-
 namespace pokesim::dex::build {
 struct Dragapult {
   static const dex::Species name = dex::DRAGAPULT;
-  static const std::uint8_t hp = 88, atk = 120, def = 75, spa = 100, spd = 75, spe = 142;
+  static const types::BaseStat hp = 88, atk = 120, def = 75, spa = 100, spd = 75, spe = 142;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::SpeciesDexDataSetup species(pokedex);
@@ -13692,12 +13731,10 @@ struct Dragapult {
 
 ////////////////// START OF src/Pokedex/Species/Empoleon.hpp ///////////////////
 
-#include <cstdint>
-
 namespace pokesim::dex::build {
 struct Empoleon {
   static const dex::Species name = dex::EMPOLEON;
-  static const std::uint8_t hp = 84, atk = 86, def = 88, spa = 111, spd = 101, spe = 60;
+  static const types::BaseStat hp = 84, atk = 86, def = 88, spa = 111, spd = 101, spe = 60;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::SpeciesDexDataSetup species(pokedex);
@@ -13714,12 +13751,10 @@ struct Empoleon {
 
 ////////////////// START OF src/Pokedex/Species/Gardevoir.hpp //////////////////
 
-#include <cstdint>
-
 namespace pokesim::dex::build {
 struct Gardevoir {
   static const dex::Species name = dex::GARDEVOIR;
-  static const std::uint8_t hp = 68, atk = 65, def = 65, spa = 125, spd = 115, spe = 80;
+  static const types::BaseStat hp = 68, atk = 65, def = 65, spa = 125, spd = 115, spe = 80;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::SpeciesDexDataSetup species(pokedex);
@@ -13736,12 +13771,10 @@ struct Gardevoir {
 
 /////////////////// START OF src/Pokedex/Species/Pangoro.hpp ///////////////////
 
-#include <cstdint>
-
 namespace pokesim::dex::build {
 struct Pangoro {
   static const dex::Species name = dex::PANGORO;
-  static const std::uint8_t hp = 95, atk = 124, def = 78, spa = 69, spd = 71, spe = 58;
+  static const types::BaseStat hp = 95, atk = 124, def = 78, spa = 69, spd = 71, spe = 58;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::SpeciesDexDataSetup species(pokedex);
@@ -13758,12 +13791,10 @@ struct Pangoro {
 
 ////////////////// START OF src/Pokedex/Species/Ribombee.hpp ///////////////////
 
-#include <cstdint>
-
 namespace pokesim::dex::build {
 struct Ribombee {
   static const dex::Species name = dex::RIBOMBEE;
-  static const std::uint8_t hp = 60, atk = 55, def = 60, spa = 95, spd = 70, spe = 124;
+  static const types::BaseStat hp = 60, atk = 55, def = 60, spa = 95, spd = 70, spe = 124;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::SpeciesDexDataSetup species(pokedex);
@@ -13806,12 +13837,13 @@ entt::entity (*Pokedex::getSpeciesBuild(dex::Species species))(Pokedex&) {
 
 ////////////////// START OF src/Pokedex/Moves/FuryAttack.hpp ///////////////////
 
-#include <cstdint>
-
 namespace pokesim::dex::build {
 struct FuryAttack {
   static const dex::Move name = dex::FURY_ATTACK;
-  static const std::uint8_t accuracy = 85, basePower = 15, basePP = 20, minHits = 2, maxHits = 5;
+  static const types::BaseAccuracy accuracy = 85;
+  static const types::BasePower basePower = 15;
+  static const types::Pp basePp = 20;
+  static const types::MoveHits minHits = 2, maxHits = 5;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
@@ -13821,7 +13853,7 @@ struct FuryAttack {
     move.setBasePower(basePower);
 
     move.setCategoryPhysical();
-    move.setBasePP(basePP);
+    move.setBasePP(basePp);
     move.setMultiHit(minHits, maxHits);
 
     move.setProperty<pokesim::tags::move::AnySingleTarget>();
@@ -13836,12 +13868,12 @@ struct FuryAttack {
 
 /////////////////// START OF src/Pokedex/Moves/KnockOff.hpp ////////////////////
 
-#include <cstdint>
-
 namespace pokesim::dex::build {
 struct KnockOff {
   static const dex::Move name = dex::KNOCK_OFF;
-  static const std::uint8_t accuracy = 100, basePower = 65, basePP = 20;
+  static const types::BaseAccuracy accuracy = 100;
+  static const types::BasePower basePower = 65;
+  static const types::Pp basePp = 20;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
@@ -13851,7 +13883,7 @@ struct KnockOff {
     move.setBasePower(basePower);
 
     move.setCategoryPhysical();
-    move.setBasePP(basePP);
+    move.setBasePP(basePp);
 
     move.setProperty<pokesim::tags::move::AnySingleTarget>();
     move.setProperty<pokesim::tags::move::Contact>();
@@ -13865,14 +13897,14 @@ struct KnockOff {
 
 /////////////////// START OF src/Pokedex/Moves/Moonblast.hpp ///////////////////
 
-#include <cstdint>
-
 namespace pokesim::dex::build {
 struct Moonblast {
   static const dex::Move name = dex::MOONBLAST;
-  static const std::uint8_t accuracy = 100, basePower = 95, basePP = 15;
-  static const std::uint8_t secondaryEffectChance = 30;
-  static const std::int8_t spaBoost = -1;
+  static const types::BaseAccuracy accuracy = 100;
+  static const types::BasePower basePower = 95;
+  static const types::Pp basePp = 15;
+  static const types::BaseEffectChance secondaryEffectChance = 30;
+  static const types::Boost spaBoost = -1;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
@@ -13882,7 +13914,7 @@ struct Moonblast {
     move.setBasePower(basePower);
 
     move.setCategorySpecial();
-    move.setBasePP(basePP);
+    move.setBasePP(basePp);
 
     move.setProperty<pokesim::tags::move::AnySingleTarget>();
 
@@ -13902,13 +13934,11 @@ struct Moonblast {
 
 ////////////////// START OF src/Pokedex/Moves/QuiverDance.hpp //////////////////
 
-#include <cstdint>
-
 namespace pokesim::dex::build {
 struct QuiverDance {
   static const dex::Move name = dex::QUIVER_DANCE;
-  static const std::uint8_t basePP = 20;
-  static const std::int8_t spaBoost = 1, spdBoost = 1, speBoost = 1;
+  static const types::Pp basePp = 20;
+  static const types::Boost spaBoost = 1, spdBoost = 1, speBoost = 1;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
@@ -13916,7 +13946,7 @@ struct QuiverDance {
     move.setType(dex::BUG_TYPE);
 
     move.setCategoryStatus();
-    move.setBasePP(basePP);
+    move.setBasePP(basePp);
 
     move.setProperty<pokesim::tags::move::Self>();
 
@@ -13955,13 +13985,13 @@ inline void enumToTag(dex::Status status, entt::handle& handle);
 
 ////////////////// START OF src/Pokedex/Moves/Thunderbolt.hpp //////////////////
 
-#include <cstdint>
-
 namespace pokesim::dex::build {
 struct Thunderbolt {
   static const dex::Move name = dex::THUNDERBOLT;
-  static const std::uint8_t accuracy = 100, basePower = 90, basePP = 15;
-  static const std::uint8_t secondaryEffectChance = 10;
+  static const types::BaseAccuracy accuracy = 100;
+  static const types::BasePower basePower = 90;
+  static const types::Pp basePp = 15;
+  static const types::BaseEffectChance secondaryEffectChance = 10;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
@@ -13971,7 +14001,7 @@ struct Thunderbolt {
     move.setBasePower(basePower);
 
     move.setCategoryPhysical();
-    move.setBasePP(basePP);
+    move.setBasePP(basePp);
 
     move.setProperty<pokesim::tags::move::AnySingleTarget>();
 
@@ -13991,12 +14021,11 @@ struct Thunderbolt {
 
 /////////////////// START OF src/Pokedex/Moves/WillOWisp.hpp ///////////////////
 
-#include <cstdint>
-
 namespace pokesim::dex::build {
 struct WillOWisp {
   static const dex::Move name = dex::WILL_O_WISP;
-  static const std::uint8_t accuracy = 85, basePP = 15;
+  static const types::BaseAccuracy accuracy = 85;
+  static const types::Pp basePp = 15;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
@@ -14005,7 +14034,7 @@ struct WillOWisp {
     move.setAccuracy(accuracy);
 
     move.setCategoryStatus();
-    move.setBasePP(basePP);
+    move.setBasePP(basePp);
 
     move.setProperty<pokesim::tags::move::AnySingleTarget>();
 
@@ -15099,8 +15128,6 @@ void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
 
 //////////////////////// START OF src/Pokedex/Names.hpp ////////////////////////
 
-#include <array>
-#include <cstdint>
 #include <string>
 
 // TODO(aed3): Change the move names to be part of the build functions so they aren't all loaded all the time
@@ -15742,9 +15769,6 @@ struct Team {
 
 ///////////////// START OF src/Battle/Setup/SideStateSetup.cpp /////////////////
 
-#include <cstdint>
-
-
 namespace pokesim {
 void SideStateSetup::initBlank() {
   handle.emplace<Battle>();
@@ -15759,7 +15783,7 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
 
   for (std::size_t i = 0; i < team.size(); i++) {
     teamEntities.team.push_back(team[i].entity());
-    team[i].setPostion((std::uint8_t)(i + 1));
+    team[i].setPostion((types::TeamSlotPosition)(i + 1));
     team[i].setSide(entity());
     team[i].setBattle(battle.battle);
   }
@@ -15791,11 +15815,9 @@ struct MoveSlots {
 
 //////////////////////// START OF src/Components/ID.hpp ////////////////////////
 
-#include <cstdint>
-
 namespace pokesim {
-struct ID {
-  std::uint16_t id = 1;
+struct Id {
+  types::StateId id = 1;
 };
 }  // namespace pokesim
 
@@ -15803,12 +15825,10 @@ struct ID {
 
 ////////////////////// START OF src/Components/Level.hpp ///////////////////////
 
-#include <cstdint>
-
 namespace pokesim {
 // A Pokemon's level
 struct Level {
-  std::uint8_t level = 1;
+  types::Level level = 1;
 };
 }  // namespace pokesim
 
@@ -15856,12 +15876,10 @@ struct StatusName {
 
 ///////////////////// START OF src/Components/Position.hpp /////////////////////
 
-#include <cstdint>
-
 namespace pokesim {
 // The position of a Pokemon in its team's order (starts at 1)
 struct Position {
-  std::uint8_t position = 1;
+  types::TeamSlotPosition position = 1;
 };
 }  // namespace pokesim
 
@@ -15881,8 +15899,8 @@ void PokemonStateSetup::setAutoID() {
   setID((uint16_t)handle.registry()->view<SpeciesName>().size() + 1);
 }
 
-void PokemonStateSetup::setID(std::uint16_t id) {
-  handle.emplace<ID>(id);
+void PokemonStateSetup::setID(types::StateId id) {
+  handle.emplace<Id>(id);
 }
 
 void PokemonStateSetup::setSpecies(dex::Species speciesName) {
@@ -15897,7 +15915,7 @@ void PokemonStateSetup::setBattle(entt::entity entity) {
   handle.emplace<Battle>(entity);
 }
 
-void PokemonStateSetup::setLevel(std::uint8_t level) {
+void PokemonStateSetup::setLevel(types::Level level) {
   handle.emplace<Level>(level);
 }
 
@@ -15919,7 +15937,7 @@ void PokemonStateSetup::setMoves(const std::vector<entt::entity>& moveSlots) {
   handle.emplace<MoveSlots>(moveSlots);
 }
 
-void PokemonStateSetup::setPostion(std::uint8_t position) {
+void PokemonStateSetup::setPostion(types::TeamSlotPosition position) {
   handle.emplace<Position>(position);
 }
 
@@ -15934,21 +15952,21 @@ void PokemonStateSetup::setNature(dex::Nature nature) {
 }
 
 void PokemonStateSetup::setEVs(
-  std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe) {
-  handle.emplace<EVs>(hp, atk, def, spa, spd, spe);
+  types::Ev hp, types::Ev atk, types::Ev def, types::Ev spa, types::Ev spd, types::Ev spe) {
+  handle.emplace<Evs>(hp, atk, def, spa, spd, spe);
 }
 
-void PokemonStateSetup::setEVs(const EVs& evs) {
-  handle.emplace<EVs>(evs);
+void PokemonStateSetup::setEVs(const Evs& evs) {
+  handle.emplace<Evs>(evs);
 }
 
 void PokemonStateSetup::setIVs(
-  std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe) {
-  handle.emplace<IVs>(hp, atk, def, spa, spd, spe);
+  types::Iv hp, types::Iv atk, types::Iv def, types::Iv spa, types::Iv spd, types::Iv spe) {
+  handle.emplace<Ivs>(hp, atk, def, spa, spd, spe);
 }
 
-void PokemonStateSetup::setIVs(const IVs& ivs) {
-  handle.emplace<IVs>(ivs);
+void PokemonStateSetup::setIVs(const Ivs& ivs) {
+  handle.emplace<Ivs>(ivs);
 }
 }  // namespace pokesim
 
@@ -15959,20 +15977,20 @@ void PokemonStateSetup::setIVs(const IVs& ivs) {
 namespace pokesim {
 void MoveStateSetup::initBlank() {
   handle.emplace<MoveName>();
-  handle.emplace<PP>();
-  handle.emplace<MaxPP>();
+  handle.emplace<Pp>();
+  handle.emplace<MaxPp>();
 }
 
 void MoveStateSetup::setName(dex::Move moveName) {
   handle.emplace<MoveName>(moveName);
 }
 
-void MoveStateSetup::setPP(std::uint8_t pp) {
-  handle.emplace<PP>(pp);
+void MoveStateSetup::setPP(types::Pp pp) {
+  handle.emplace<Pp>(pp);
 }
 
-void MoveStateSetup::setMaxPP(std::uint8_t maxPP) {
-  handle.emplace<MaxPP>(maxPP);
+void MoveStateSetup::setMaxPP(types::Pp maxPp) {
+  handle.emplace<MaxPp>(maxPp);
 }
 }  // namespace pokesim
 
@@ -16012,7 +16030,7 @@ namespace pokesim {
  * Calculated by multiplying the various Accuracy and Chance numbers of a battle state's events.
  */
 struct Probability {
-  float probability = 1;
+  types::StateProbability probability = 1;
 };
 }  // namespace pokesim
 
@@ -16020,11 +16038,9 @@ struct Probability {
 
 ///////////////////// START OF src/Components/RNGSeed.hpp //////////////////////
 
-#include <cstdint>
-
 namespace pokesim {
-struct RNGSeed {
-  std::uint32_t seed = 0;
+struct RngSeed {
+  types::StateRngSeed seed = 0;
 };
 }  // namespace pokesim
 
@@ -16060,12 +16076,10 @@ struct ActivePokemon {};
 
 /////////////////////// START OF src/Components/Turn.hpp ///////////////////////
 
-#include <cstdint>
-
 namespace pokesim {
 // The current turn of a battle
 struct Turn {
-  std::uint16_t turn = 0;
+  types::BattleTurn turn = 0;
 };
 }  // namespace pokesim
 
@@ -16085,11 +16099,11 @@ void BattleStateSetup::initBlank() {
 }
 
 void BattleStateSetup::setAutoID() {
-  setID((uint16_t)handle.registry()->view<Sides>().size());
+  setID((types::StateId)handle.registry()->view<Sides>().size());
 }
 
-void BattleStateSetup::setID(std::uint16_t id) {
-  handle.emplace<ID>(id);
+void BattleStateSetup::setID(types::StateId id) {
+  handle.emplace<Id>(id);
 }
 
 void BattleStateSetup::setSide(Side::PlayerSideID sideID, entt::entity sideEntity) {
@@ -16100,16 +16114,16 @@ void BattleStateSetup::setSide(Side::PlayerSideID sideID, entt::entity sideEntit
   }
 }
 
-void BattleStateSetup::setRNGSeed(std::optional<std::uint32_t> seed) {
-  handle.emplace<RNGSeed>(
-    seed.value_or((std::uint32_t)std::chrono::high_resolution_clock::now().time_since_epoch().count()));
+void BattleStateSetup::setRNGSeed(std::optional<types::StateRngSeed> seed) {
+  handle.emplace<RngSeed>(
+    seed.value_or((types::StateRngSeed)std::chrono::high_resolution_clock::now().time_since_epoch().count()));
 }
 
 void BattleStateSetup::setActionQueue(const std::vector<entt::entity>& queue) {
   handle.emplace<ActionQueue>(queue);
 }
 
-void BattleStateSetup::setTurn(std::uint16_t turn) {
+void BattleStateSetup::setTurn(types::BattleTurn turn) {
   handle.emplace<Turn>(turn);
 }
 
@@ -16129,7 +16143,7 @@ void BattleStateSetup::setActiveUser(entt::entity activeSource) {
   handle.registry()->emplace<tags::ActiveMoveUser>(activeSource);
 }
 
-void BattleStateSetup::setProbability(float probability) {
+void BattleStateSetup::setProbability(types::StateProbability probability) {
   handle.emplace<Probability>(probability);
 }
 }  // namespace pokesim
@@ -16170,19 +16184,17 @@ struct StatName {
 
 //////////////////// START OF src/Components/SpeedSort.hpp /////////////////////
 
-#include <cstdint>
-
 namespace pokesim {
 // Data that determines the order actions take place
 struct SpeedSort {
   // Order of the types of actions (lower first)
-  std::uint8_t order = 0;
+  types::ActionOrder order = 0;
   // Priority of the action (lower first)
-  std::int8_t priority = 0;
+  types::Priority priority = 0;
   // Fractional priority of the action (lower first)
-  std::int8_t fractionalPriority = 0;
+  types::FractionalPriority fractionalPriority = 0;
   // Speed of Pokemon using move (higher first if priority tie)
-  std::uint16_t speed = 1;
+  types::Stat speed = 1;
 };
 }  // namespace pokesim
 
@@ -16266,7 +16278,7 @@ namespace pokesim {
  * In a single battle, only P1A and P1B are valid targets. In a double battle, all four are valid.
  */
 struct TargetSlot {
-  enum : uint8_t {
+  enum : std::uint8_t {
     P1A,
     P1B,
     P2A,
@@ -16280,7 +16292,6 @@ struct TargetSlot {
 //////////////// START OF src/Simulation/SimulationResults.hpp /////////////////
 
 #include <array>
-#include <cstdint>
 #include <vector>
 
 namespace pokesim {
@@ -16296,23 +16307,23 @@ struct Results {
 
 namespace calc_damage {
 struct MaxDamage {
-  std::uint16_t maxDamage;
+  types::Damage maxDamage = 0;
 };
 
 struct MinUsesUntilKo {
-  std::uint16_t minUsesUntilKo;
+  types::Damage minUsesUntilKo = 0;
 };
 
 struct HpRecovered {
-  std::uint16_t hpRecovered;
+  types::Damage hpRecovered = 0;
 };
 
 struct HpLost {
-  std::uint16_t hpLost;
+  types::Damage hpLost = 0;
 };
 
 struct HitCount {
-  std::uint8_t hitCount;
+  types::MoveHits hitCount = 1;
 };
 
 struct Results {
@@ -16330,11 +16341,11 @@ struct EffectMultiplier {
 };
 
 struct MultipliedMaxDamage {
-  std::uint16_t multipliedMaxDamage;
+  types::Damage multipliedMaxDamage;
 };
 
 struct MultipliedDamageRolls {
-  std::array<std::uint16_t, 16> multipliedDamageRolls;
+  types::DamageRolls multipliedDamageRolls;
 };
 
 struct MultipliedKoChance {

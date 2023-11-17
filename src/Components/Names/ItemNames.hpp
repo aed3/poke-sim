@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Types/Item.hpp>
+#include <Types/Enums/Item.hpp>
 
 namespace pokesim {
 struct ItemName {

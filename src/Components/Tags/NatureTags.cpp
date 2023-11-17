@@ -1,6 +1,6 @@
 #include "NatureTags.hpp"
 
-#include <Types/Nature.hpp>
+#include <Types/Enums/Nature.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 // TODO(aed3): Make this auto generated

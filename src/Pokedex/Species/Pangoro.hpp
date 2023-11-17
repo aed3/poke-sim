@@ -2,14 +2,14 @@
 
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Setup/SpeciesDexDataSetup.hpp>
-#include <Types/Species.hpp>
-#include <Types/Type.hpp>
-#include <cstdint>
+#include <Types/Enums/Species.hpp>
+#include <Types/Enums/Type.hpp>
+#include <Types/Stats.hpp>
 
 namespace pokesim::dex::build {
 struct Pangoro {
   static const dex::Species name = dex::PANGORO;
-  static const std::uint8_t hp = 95, atk = 124, def = 78, spa = 69, spd = 71, spe = 58;
+  static const types::BaseStat hp = 95, atk = 124, def = 78, spa = 69, spd = 71, spe = 58;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::SpeciesDexDataSetup species(pokedex);

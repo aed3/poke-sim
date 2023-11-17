@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/Move.hpp>
 
 namespace pokesim {
 struct Accuracy {
-  std::uint8_t accuracy = 100;
+  types::BaseAccuracy accuracy = 100;
 };
 }  // namespace pokesim

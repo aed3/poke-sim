@@ -4,7 +4,6 @@
 #include <Components/EVsIVs.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/headers.hpp>
-#include <cstdint>
 #include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
 #include <initializer_list>
@@ -37,29 +36,29 @@ class Simulation {
  public:
   struct MoveCreationInfo {
     dex::Move name = dex::NO_MOVE;
-    std::uint8_t pp = 1;
-    std::uint8_t maxPP = 1;
+    types::Pp pp = 1;
+    types::Pp maxPp = 1;
   };
 
   struct PokemonCreationInfo {
-    std::optional<std::uint16_t> id = std::nullopt;
+    std::optional<types::StateId> id = std::nullopt;
     dex::Species species = dex::MISSING_NO;
     dex::Item item = dex::NO_ITEM;
     dex::Ability ability = dex::NO_ABILITY;
     dex::Gender gender = dex::NO_GENDER;
     dex::Status status = dex::NO_STATUS;
-    std::uint8_t level = 1;
+    types::Level level = 1;
 
     dex::Nature nature = dex::NO_NATURE;
-    EVs evs;
-    IVs ivs;
+    Evs evs;
+    Ivs ivs;
     struct {
-      std::uint16_t hp = 1;
-      std::uint16_t atk = 1;
-      std::uint16_t def = 1;
-      std::uint16_t spa = 1;
-      std::uint16_t spd = 1;
-      std::uint16_t spe = 1;
+      types::Stat hp = 1;
+      types::Stat atk = 1;
+      types::Stat def = 1;
+      types::Stat spa = 1;
+      types::Stat spd = 1;
+      types::Stat spe = 1;
     } stats;
 
     std::vector<MoveCreationInfo> moves{};
@@ -73,9 +72,9 @@ class Simulation {
     bool runWithSimulateTurn = false;
     bool runWithCalculateDamage = false;
     bool runWithAnalyzeEffect = false;
-    std::uint16_t turn = 0;
-    std::optional<std::uint32_t> rngSeed = std::nullopt;
-    float probability = 1;
+    types::BattleTurn turn = 0;
+    std::optional<types::StateRngSeed> rngSeed = std::nullopt;
+    types::StateProbability probability = 1;
     SideCreationInfo P1;
     SideCreationInfo P2;
   };

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/State.hpp>
 
 namespace pokesim {
-struct ID {
-  std::uint16_t id = 1;
+struct Id {
+  types::StateId id = 1;
 };
 }  // namespace pokesim

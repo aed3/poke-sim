@@ -11,6 +11,8 @@
 #include <Components/PP.hpp>
 #include <Components/Priority.hpp>
 #include <Components/Tags/MoveTags.hpp>
+#include <Types/Move.hpp>
+#include <Types/Stats.hpp>
 #include <entt/entity/handle.hpp>
 
 namespace pokesim::dex::internal {
@@ -22,11 +24,11 @@ void MoveDexDataSetup::setType(Type type) {
   handle.emplace<TypeName>(type);
 }
 
-void MoveDexDataSetup::setAccuracy(std::uint8_t accuracy) {
+void MoveDexDataSetup::setAccuracy(types::BaseAccuracy accuracy) {
   handle.emplace<Accuracy>(accuracy);
 }
 
-void MoveDexDataSetup::setBasePower(std::uint8_t basePower) {
+void MoveDexDataSetup::setBasePower(types::BasePower basePower) {
   handle.emplace<BasePower>(basePower);
 }
 
@@ -45,15 +47,15 @@ void MoveDexDataSetup::setCategoryStatus() {
   handle.emplace<tags::move::Status>();
 }
 
-void MoveDexDataSetup::setBasePP(std::uint8_t pp) {
-  handle.emplace<PP>(pp);
+void MoveDexDataSetup::setBasePP(types::Pp pp) {
+  handle.emplace<Pp>(pp);
 }
 
-void MoveDexDataSetup::setPriority(std::uint8_t priority) {
+void MoveDexDataSetup::setPriority(types::Priority priority) {
   handle.emplace<MovePriority>(priority);
 }
 
-void MoveDexDataSetup::setMultiHit(std::uint8_t minHits, std::uint8_t maxHits) {
+void MoveDexDataSetup::setMultiHit(types::MoveHits minHits, types::MoveHits maxHits) {
   handle.emplace<MultiHit>(minHits, maxHits);
 }
 
@@ -65,7 +67,7 @@ void MoveDexDataSetup::setSecondaryEffect(entt::entity entity) {
   handle.emplace<MoveEffect>(false, entity);
 }
 
-void MoveEffectSetup::setChance(std::uint8_t chance) {
+void MoveEffectSetup::setChance(types::BaseEffectChance chance) {
   handle.emplace<Chance>(chance);
 }
 

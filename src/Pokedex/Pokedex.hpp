@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Types/headers.hpp>
+#include <Types/Enums/headers.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/container/fwd.hpp>
 #include <entt/entity/fwd.hpp>

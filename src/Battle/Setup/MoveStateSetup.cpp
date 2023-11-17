@@ -2,24 +2,25 @@
 
 #include <Components/Names/MoveNames.hpp>
 #include <Components/PP.hpp>
+#include <Types/Move.hpp>
 #include <entt/entity/entity.hpp>
 
 namespace pokesim {
 void MoveStateSetup::initBlank() {
   handle.emplace<MoveName>();
-  handle.emplace<PP>();
-  handle.emplace<MaxPP>();
+  handle.emplace<Pp>();
+  handle.emplace<MaxPp>();
 }
 
 void MoveStateSetup::setName(dex::Move moveName) {
   handle.emplace<MoveName>(moveName);
 }
 
-void MoveStateSetup::setPP(std::uint8_t pp) {
-  handle.emplace<PP>(pp);
+void MoveStateSetup::setPP(types::Pp pp) {
+  handle.emplace<Pp>(pp);
 }
 
-void MoveStateSetup::setMaxPP(std::uint8_t maxPP) {
-  handle.emplace<MaxPP>(maxPP);
+void MoveStateSetup::setMaxPP(types::Pp maxPp) {
+  handle.emplace<MaxPp>(maxPp);
 }
 }  // namespace pokesim

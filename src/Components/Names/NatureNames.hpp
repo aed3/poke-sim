@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Types/Nature.hpp>
+#include <Types/Enums/Nature.hpp>
 
 namespace pokesim {
 struct NatureName {

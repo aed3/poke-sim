@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Types/Move.hpp>
+#include <Types/Enums/Move.hpp>
 
 namespace pokesim {
 struct MoveName {

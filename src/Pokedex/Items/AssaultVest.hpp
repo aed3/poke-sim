@@ -2,7 +2,7 @@
 
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Setup/ItemDexDataSetup.hpp>
-#include <Types/Item.hpp>
+#include <Types/Enums/Item.hpp>
 
 namespace pokesim::dex::build {
 struct AssaultVest {

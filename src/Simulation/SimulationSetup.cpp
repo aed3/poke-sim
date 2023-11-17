@@ -17,7 +17,7 @@ std::vector<entt::entity> Simulation::createInitialMoves(const std::vector<MoveC
     MoveStateSetup moveSetup(registry);
     moveSetup.setName(moveData.name);
     moveSetup.setPP(moveData.pp);
-    moveSetup.setMaxPP(moveData.maxPP);
+    moveSetup.setMaxPP(moveData.maxPp);
     moveEntities.push_back(moveSetup.entity());
   }
 
@@ -43,7 +43,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
 
   pokemonSetup.setEVs(pokemonData.evs);
   pokemonSetup.setIVs(pokemonData.ivs);
-  pokemonSetup.setStat<stat::HP>(pokemonData.stats.hp);
+  pokemonSetup.setStat<stat::Hp>(pokemonData.stats.hp);
   pokemonSetup.setStat<stat::Atk>(pokemonData.stats.atk);
   pokemonSetup.setStat<stat::Def>(pokemonData.stats.def);
   pokemonSetup.setStat<stat::Spa>(pokemonData.stats.spa);

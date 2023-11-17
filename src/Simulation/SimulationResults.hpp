@@ -1,7 +1,8 @@
 #pragma once
 
+#include <Types/Damage.hpp>
+#include <Types/Move.hpp>
 #include <array>
-#include <cstdint>
 #include <entt/container/dense_map.hpp>
 #include <entt/entity/entity.hpp>
 #include <entt/entity/view.hpp>
@@ -20,23 +21,23 @@ struct Results {
 
 namespace calc_damage {
 struct MaxDamage {
-  std::uint16_t maxDamage;
+  types::Damage maxDamage = 0;
 };
 
 struct MinUsesUntilKo {
-  std::uint16_t minUsesUntilKo;
+  types::Damage minUsesUntilKo = 0;
 };
 
 struct HpRecovered {
-  std::uint16_t hpRecovered;
+  types::Damage hpRecovered = 0;
 };
 
 struct HpLost {
-  std::uint16_t hpLost;
+  types::Damage hpLost = 0;
 };
 
 struct HitCount {
-  std::uint8_t hitCount;
+  types::MoveHits hitCount = 1;
 };
 
 struct Results {
@@ -54,11 +55,11 @@ struct EffectMultiplier {
 };
 
 struct MultipliedMaxDamage {
-  std::uint16_t multipliedMaxDamage;
+  types::Damage multipliedMaxDamage;
 };
 
 struct MultipliedDamageRolls {
-  std::array<std::uint16_t, 16> multipliedDamageRolls;
+  types::DamageRolls multipliedDamageRolls;
 };
 
 struct MultipliedKoChance {

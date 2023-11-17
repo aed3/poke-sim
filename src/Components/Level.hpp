@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/Stats.hpp>
 
 namespace pokesim {
 // A Pokemon's level
 struct Level {
-  std::uint8_t level = 1;
+  types::Level level = 1;
 };
 }  // namespace pokesim

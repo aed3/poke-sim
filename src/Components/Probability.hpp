@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Types/State.hpp>
+
 namespace pokesim {
 /**
  * @brief The probability of all the previous actions in a battle's simulation occurring.
@@ -7,6 +9,6 @@ namespace pokesim {
  * Calculated by multiplying the various Accuracy and Chance numbers of a battle state's events.
  */
 struct Probability {
-  float probability = 1;
+  types::StateProbability probability = 1;
 };
 }  // namespace pokesim
