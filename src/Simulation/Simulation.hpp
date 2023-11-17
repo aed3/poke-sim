@@ -17,9 +17,15 @@
 
 namespace pokesim {
 struct SideStateSetup;
-struct SimulateTurnResults;
-struct CalculateDamageResults;
-struct AnalyzeEffectResults;
+namespace simulate_turn {
+struct Results;
+}
+namespace calc_damage {
+struct Results;
+}
+namespace analyze_effect {
+struct Results;
+}
 
 /**
  * @brief The entry point for creating and running simulations.
@@ -86,9 +92,9 @@ class Simulation {
   const Pokedex& pokedex;
   entt::registry registry{};
 
-  SimulateTurnOptions simulateTurnOptions;
-  CalculateDamageOptions calculateDamageOptions;
-  AnalyzeEffectOptions analyzeEffectOptions;
+  simulate_turn::Options simulateTurnOptions;
+  calc_damage::Options calculateDamageOptions;
+  analyze_effect::Options analyzeEffectOptions;
 
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : battleFormat(battleFormat_), pokedex(pokedex_) {}
 
@@ -97,25 +103,25 @@ class Simulation {
 
   /*_inline_*/ void run();
 
-  /*_inline_*/ SimulateTurnResults simulateTurn(std::optional<SimulateTurnOptions> options = std::nullopt);
-  /*_inline_*/ CalculateDamageResults calculateDamage(std::optional<CalculateDamageOptions> options = std::nullopt);
-  /*_inline_*/ AnalyzeEffectResults analyzeEffect(std::optional<AnalyzeEffectOptions> options = std::nullopt);
+  /*_inline_*/ simulate_turn::Results simulateTurn(std::optional<simulate_turn::Options> options = std::nullopt);
+  /*_inline_*/ calc_damage::Results calculateDamage(std::optional<calc_damage::Options> options = std::nullopt);
+  /*_inline_*/ analyze_effect::Results analyzeEffect(std::optional<analyze_effect::Options> options = std::nullopt);
 
-  /*_inline_*/ SimulateTurnResults simulateTurn(
+  /*_inline_*/ simulate_turn::Results simulateTurn(
     std::initializer_list<BattleCreationInfo> battleDataList,
-    std::optional<SimulateTurnOptions> options = std::nullopt);
+    std::optional<simulate_turn::Options> options = std::nullopt);
 
-  /*_inline_*/ CalculateDamageResults calculateDamage(
+  /*_inline_*/ calc_damage::Results calculateDamage(
     std::initializer_list<BattleCreationInfo> battleDataList,
-    std::optional<CalculateDamageOptions> options = std::nullopt);
+    std::optional<calc_damage::Options> options = std::nullopt);
 
-  /*_inline_*/ AnalyzeEffectResults analyzeEffect(
+  /*_inline_*/ analyze_effect::Results analyzeEffect(
     std::initializer_list<BattleCreationInfo> battleDataList,
-    std::optional<AnalyzeEffectOptions> options = std::nullopt);
+    std::optional<analyze_effect::Options> options = std::nullopt);
 
-    /*_inline_*/ void clearAllResults();
-    /*_inline_*/ void clearSimulateTurnResults();
-    /*_inline_*/ void clearCalculateDamageResults();
-    /*_inline_*/ void clearAnalyzeEffectResults();
+  /*_inline_*/ void clearAllResults();
+  /*_inline_*/ void clearSimulateTurnResults();
+  /*_inline_*/ void clearCalculateDamageResults();
+  /*_inline_*/ void clearAnalyzeEffectResults();
 };
 }  // namespace pokesim

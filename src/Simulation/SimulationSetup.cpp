@@ -1,5 +1,3 @@
-#include "Simulation.hpp"
-
 #include <Battle/Setup/headers.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/Stats.hpp>
@@ -7,6 +5,7 @@
 #include <algorithm>
 #include <cstddef>
 
+#include "Simulation.hpp"
 #include "SimulationOptions.hpp"
 
 namespace pokesim {

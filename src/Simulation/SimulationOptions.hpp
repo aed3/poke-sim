@@ -20,10 +20,11 @@ enum DamageRollKind : std::uint8_t {
   MIN_DAMAGE = P1_MIN_DAMAGE | P2_MIN_DAMAGE,
 };
 
-struct SimulateTurnOptions {
+namespace simulate_turn {
+struct Options {
   DamageRollKind damageRollsConsidered = AVERAGE_DAMAGE;
-  float randomChanceUpperLimit = 0.9F; // NOLINT(readability-magic-numbers)
-  float randomChanceLowerLimit = 0.1F; // NOLINT(readability-magic-numbers)
+  float randomChanceUpperLimit = 0.9F;  // NOLINT(readability-magic-numbers)
+  float randomChanceLowerLimit = 0.1F;  // NOLINT(readability-magic-numbers)
   float branchProbabilityLowerLimit = 0.0F;
 
   // For Monte Carlo method. If no number is given, the number of branches
@@ -35,12 +36,16 @@ struct SimulateTurnOptions {
   entt::delegate<void(Simulation&)> decisionCallback{};
   entt::delegate<void(Simulation&)> faintCallback{};
 };
+}  // namespace simulate_turn
 
-struct CalculateDamageOptions {
+namespace calc_damage {
+struct Options {
   DamageRollKind damageRollsReturned = ALL_DAMAGE_ROLES;
 };
+}  // namespace calc_damage
 
-struct AnalyzeEffectOptions {
+namespace analyze_effect {
+struct Options {
   // Whether to consider the multiplier even if the effect is already active (i.e. Rain will return a 1x multiplier
   // instead of 1.5x multiplier for Surf if this option is true and it's already raining)
   bool reconsiderActiveEffects = false;
@@ -48,4 +53,5 @@ struct AnalyzeEffectOptions {
 
   DamageRollKind damageRollsReturned = DamageRollKind::NONE;
 };
+}  // namespace analyze_effect
 }  // namespace pokesim

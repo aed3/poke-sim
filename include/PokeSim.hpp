@@ -12950,10 +12950,11 @@ enum DamageRollKind : std::uint8_t {
   MIN_DAMAGE = P1_MIN_DAMAGE | P2_MIN_DAMAGE,
 };
 
-struct SimulateTurnOptions {
+namespace simulate_turn {
+struct Options {
   DamageRollKind damageRollsConsidered = AVERAGE_DAMAGE;
-  float randomChanceUpperLimit = 0.9F; // NOLINT(readability-magic-numbers)
-  float randomChanceLowerLimit = 0.1F; // NOLINT(readability-magic-numbers)
+  float randomChanceUpperLimit = 0.9F;  // NOLINT(readability-magic-numbers)
+  float randomChanceLowerLimit = 0.1F;  // NOLINT(readability-magic-numbers)
   float branchProbabilityLowerLimit = 0.0F;
 
   // For Monte Carlo method. If no number is given, the number of branches
@@ -12965,12 +12966,16 @@ struct SimulateTurnOptions {
   entt::delegate<void(Simulation&)> decisionCallback{};
   entt::delegate<void(Simulation&)> faintCallback{};
 };
+}  // namespace simulate_turn
 
-struct CalculateDamageOptions {
+namespace calc_damage {
+struct Options {
   DamageRollKind damageRollsReturned = ALL_DAMAGE_ROLES;
 };
+}  // namespace calc_damage
 
-struct AnalyzeEffectOptions {
+namespace analyze_effect {
+struct Options {
   // Whether to consider the multiplier even if the effect is already active (i.e. Rain will return a 1x multiplier
   // instead of 1.5x multiplier for Surf if this option is true and it's already raining)
   bool reconsiderActiveEffects = false;
@@ -12978,6 +12983,7 @@ struct AnalyzeEffectOptions {
 
   DamageRollKind damageRollsReturned = DamageRollKind::NONE;
 };
+}  // namespace analyze_effect
 }  // namespace pokesim
 
 ///////////////// END OF src/Simulation/SimulationOptions.hpp //////////////////
@@ -12994,9 +13000,15 @@ struct AnalyzeEffectOptions {
 
 namespace pokesim {
 struct SideStateSetup;
-struct SimulateTurnResults;
-struct CalculateDamageResults;
-struct AnalyzeEffectResults;
+namespace simulate_turn {
+struct Results;
+}
+namespace calc_damage {
+struct Results;
+}
+namespace analyze_effect {
+struct Results;
+}
 
 /**
  * @brief The entry point for creating and running simulations.
@@ -13063,9 +13075,9 @@ class Simulation {
   const Pokedex& pokedex;
   entt::registry registry{};
 
-  SimulateTurnOptions simulateTurnOptions;
-  CalculateDamageOptions calculateDamageOptions;
-  AnalyzeEffectOptions analyzeEffectOptions;
+  simulate_turn::Options simulateTurnOptions;
+  calc_damage::Options calculateDamageOptions;
+  analyze_effect::Options analyzeEffectOptions;
 
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : battleFormat(battleFormat_), pokedex(pokedex_) {}
 
@@ -13074,26 +13086,26 @@ class Simulation {
 
   inline void run();
 
-  inline SimulateTurnResults simulateTurn(std::optional<SimulateTurnOptions> options = std::nullopt);
-  inline CalculateDamageResults calculateDamage(std::optional<CalculateDamageOptions> options = std::nullopt);
-  inline AnalyzeEffectResults analyzeEffect(std::optional<AnalyzeEffectOptions> options = std::nullopt);
+  inline simulate_turn::Results simulateTurn(std::optional<simulate_turn::Options> options = std::nullopt);
+  inline calc_damage::Results calculateDamage(std::optional<calc_damage::Options> options = std::nullopt);
+  inline analyze_effect::Results analyzeEffect(std::optional<analyze_effect::Options> options = std::nullopt);
 
-  inline SimulateTurnResults simulateTurn(
+  inline simulate_turn::Results simulateTurn(
     std::initializer_list<BattleCreationInfo> battleDataList,
-    std::optional<SimulateTurnOptions> options = std::nullopt);
+    std::optional<simulate_turn::Options> options = std::nullopt);
 
-  inline CalculateDamageResults calculateDamage(
+  inline calc_damage::Results calculateDamage(
     std::initializer_list<BattleCreationInfo> battleDataList,
-    std::optional<CalculateDamageOptions> options = std::nullopt);
+    std::optional<calc_damage::Options> options = std::nullopt);
 
-  inline AnalyzeEffectResults analyzeEffect(
+  inline analyze_effect::Results analyzeEffect(
     std::initializer_list<BattleCreationInfo> battleDataList,
-    std::optional<AnalyzeEffectOptions> options = std::nullopt);
+    std::optional<analyze_effect::Options> options = std::nullopt);
 
-    inline void clearAllResults();
-    inline void clearSimulateTurnResults();
-    inline void clearCalculateDamageResults();
-    inline void clearAnalyzeEffectResults();
+  inline void clearAllResults();
+  inline void clearSimulateTurnResults();
+  inline void clearCalculateDamageResults();
+  inline void clearAnalyzeEffectResults();
 };
 }  // namespace pokesim
 
@@ -16276,11 +16288,11 @@ namespace simulate_turn {
 struct TurnOutcomeBattles {
   std::vector<entt::entity> turnOutcomeBattles;
 };
-}  // namespace simulate_turn
 
-struct SimulateTurnResults {
-  std::vector<simulate_turn::TurnOutcomeBattles> turnOutcomeBattlesResults() const;
+struct Results {
+  std::vector<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
 };
+}  // namespace simulate_turn
 
 namespace calc_damage {
 struct MaxDamage {
@@ -16302,15 +16314,15 @@ struct HpLost {
 struct HitCount {
   std::uint8_t hitCount;
 };
-}  // namespace calc_damage
 
-struct CalculateDamageResults {
-  std::vector<calc_damage::MaxDamage> maxDamageResults() const;
-  std::vector<calc_damage::MinUsesUntilKo> minUsesUntilKoResults() const;
-  std::vector<calc_damage::HpRecovered> hpRecoveredResults() const;
-  std::vector<calc_damage::HpLost> hpLostResults() const;
-  std::vector<calc_damage::HitCount> hitCountResults() const;
+struct Results {
+  std::vector<MaxDamage> maxDamageResults() const;
+  std::vector<MinUsesUntilKo> minUsesUntilKoResults() const;
+  std::vector<HpRecovered> hpRecoveredResults() const;
+  std::vector<HpLost> hpLostResults() const;
+  std::vector<HitCount> hitCountResults() const;
 };
+}  // namespace calc_damage
 
 namespace analyze_effect {
 struct EffectMultiplier {
@@ -16328,14 +16340,14 @@ struct MultipliedDamageRolls {
 struct MultipliedKoChance {
   float multipliedKoChance = 1.0F;
 };
-}  // namespace analyze_effect
 
-struct AnalyzeEffectResults {
-  std::vector<analyze_effect::EffectMultiplier> effectMultiplierResults() const;
-  std::vector<analyze_effect::MultipliedMaxDamage> multipliedMaxDamageResults() const;
-  std::vector<analyze_effect::MultipliedDamageRolls> multipliedDamageRollsResults() const;
-  std::vector<analyze_effect::MultipliedKoChance> multipliedKoChanceResults() const;
+struct Results {
+  std::vector<EffectMultiplier> effectMultiplierResults() const;
+  std::vector<MultipliedMaxDamage> multipliedMaxDamageResults() const;
+  std::vector<MultipliedDamageRolls> multipliedDamageRollsResults() const;
+  std::vector<MultipliedKoChance> multipliedKoChanceResults() const;
 };
+}  // namespace analyze_effect
 }  // namespace pokesim
 
 ///////////////// END OF src/Simulation/SimulationResults.hpp //////////////////
