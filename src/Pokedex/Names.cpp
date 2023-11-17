@@ -1,5 +1,6 @@
 #include "Names.hpp"
 
+#include <array>
 #include <entt/container/dense_map.hpp>
 
 namespace pokesim::dex {

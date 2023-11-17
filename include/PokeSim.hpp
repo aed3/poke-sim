@@ -15293,6 +15293,8 @@ inline std::string toID(const std::string& name);
 
 //////////////////////// START OF src/Pokedex/Names.cpp ////////////////////////
 
+#include <array>
+
 namespace pokesim::dex {
 namespace internal {
 template <typename NameEnum, typename StringArray>
