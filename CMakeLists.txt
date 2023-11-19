@@ -56,6 +56,7 @@ set (SOURCES
   src/Pokedex/Setup/MoveDexDataSetup.cpp
   src/Pokedex/Setup/SpeciesDexDataSetup.cpp
   src/Simulation/SimulationSetup.cpp
+  src/Simulation/SimulationResults.cpp
 )
 
 add_library(PokeSim STATIC ${SOURCES})

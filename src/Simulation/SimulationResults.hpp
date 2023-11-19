@@ -1,7 +1,9 @@
 #pragma once
 
 #include <Types/Damage.hpp>
+#include <Types/Entity.hpp>
 #include <Types/Move.hpp>
+#include <Types/Stats.hpp>
 #include <array>
 #include <entt/container/dense_map.hpp>
 #include <entt/entity/entity.hpp>
@@ -9,13 +11,20 @@
 #include <vector>
 
 namespace pokesim {
+class Simulation;
+
 namespace simulate_turn {
 struct TurnOutcomeBattles {
   std::vector<entt::entity> turnOutcomeBattles;
 };
 
 struct Results {
-  std::vector<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
+  /*_inline_*/ types::view<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
+
+  /*_inline_*/ Results(const Simulation& simulation_);
+
+ private:
+  const Simulation& simulation;
 };
 }  // namespace simulate_turn
 
@@ -28,12 +37,12 @@ struct MinUsesUntilKo {
   types::Damage minUsesUntilKo = 0;
 };
 
-struct HpRecovered {
-  types::Damage hpRecovered = 0;
+struct AttackerHpRecovered {
+  types::Stat hpRecovered = 0;
 };
 
-struct HpLost {
-  types::Damage hpLost = 0;
+struct AttackerHpLost {
+  types::Stat hpLost = 0;
 };
 
 struct HitCount {
@@ -41,11 +50,16 @@ struct HitCount {
 };
 
 struct Results {
-  std::vector<MaxDamage> maxDamageResults() const;
-  std::vector<MinUsesUntilKo> minUsesUntilKoResults() const;
-  std::vector<HpRecovered> hpRecoveredResults() const;
-  std::vector<HpLost> hpLostResults() const;
-  std::vector<HitCount> hitCountResults() const;
+  /*_inline_*/ types::view<MaxDamage> maxDamageResults() const;
+  /*_inline_*/ types::view<MinUsesUntilKo> minUsesUntilKoResults() const;
+  /*_inline_*/ types::view<AttackerHpRecovered> hpRecoveredResults() const;
+  /*_inline_*/ types::view<AttackerHpLost> hpLostResults() const;
+  /*_inline_*/ types::view<HitCount> hitCountResults() const;
+
+  /*_inline_*/ Results(const Simulation& simulation_);
+
+ private:
+  const Simulation& simulation;
 };
 }  // namespace calc_damage
 
@@ -67,10 +81,15 @@ struct MultipliedKoChance {
 };
 
 struct Results {
-  std::vector<EffectMultiplier> effectMultiplierResults() const;
-  std::vector<MultipliedMaxDamage> multipliedMaxDamageResults() const;
-  std::vector<MultipliedDamageRolls> multipliedDamageRollsResults() const;
-  std::vector<MultipliedKoChance> multipliedKoChanceResults() const;
+  /*_inline_*/ types::view<EffectMultiplier> effectMultiplierResults() const;
+  /*_inline_*/ types::view<MultipliedMaxDamage> multipliedMaxDamageResults() const;
+  /*_inline_*/ types::view<MultipliedDamageRolls> multipliedDamageRollsResults() const;
+  /*_inline_*/ types::view<MultipliedKoChance> multipliedKoChanceResults() const;
+
+  /*_inline_*/ Results(const Simulation& simulation_);
+
+ private:
+  const Simulation& simulation;
 };
 }  // namespace analyze_effect
 }  // namespace pokesim

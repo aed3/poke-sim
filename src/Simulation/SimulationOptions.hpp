@@ -23,6 +23,7 @@ enum DamageRollKind : std::uint8_t {
 namespace simulate_turn {
 struct Options {
   DamageRollKind damageRollsConsidered = AVERAGE_DAMAGE;
+  bool applyChangesToInputBattle = true;
   float randomChanceUpperLimit = 0.9F;  // NOLINT(readability-magic-numbers)
   float randomChanceLowerLimit = 0.1F;  // NOLINT(readability-magic-numbers)
   float branchProbabilityLowerLimit = 0.0F;

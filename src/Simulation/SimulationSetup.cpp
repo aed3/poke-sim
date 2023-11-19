@@ -1,14 +1,21 @@
+#include <Battle/Setup/PokemonStateSetup.hpp>
 #include <Battle/Setup/headers.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/SimulationTags.hpp>
-#include <algorithm>
+#include <Pokedex/Pokedex.hpp>
 #include <cstddef>
+#include <entt/entity/registry.hpp>
+#include <initializer_list>
+#include <utility>
+#include <vector>
 
 #include "Simulation.hpp"
-#include "SimulationOptions.hpp"
 
 namespace pokesim {
+Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
+    : battleFormat(battleFormat_), pokedex(pokedex_) {}
+
 std::vector<entt::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList) {
   std::vector<entt::entity> moveEntities{};
   moveEntities.reserve(moveDataList.size());

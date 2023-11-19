@@ -1,8 +1,6 @@
 #pragma once
 
-#include <Battle/Setup/PokemonStateSetup.hpp>
 #include <Components/EVsIVs.hpp>
-#include <Pokedex/Pokedex.hpp>
 #include <Types/headers.hpp>
 #include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
@@ -16,6 +14,9 @@
 
 namespace pokesim {
 struct SideStateSetup;
+struct PokemonStateSetup;
+class Pokedex;
+
 namespace simulate_turn {
 struct Results;
 }
@@ -95,7 +96,7 @@ class Simulation {
   calc_damage::Options calculateDamageOptions;
   analyze_effect::Options analyzeEffectOptions;
 
-  Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : battleFormat(battleFormat_), pokedex(pokedex_) {}
+  /*_inline_*/ Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
 
   // Load information about any number of battle states into the simulation's registry.
   /*_inline_*/ void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);

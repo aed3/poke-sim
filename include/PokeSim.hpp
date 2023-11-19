@@ -5,10 +5,9 @@
  * external/entt/config/macro.h
  * external/entt/config/version.h
  * external/entt/config/config.h
+ * external/entt/container/fwd.hpp
  * external/entt/core/fwd.hpp
  * external/entt/core/type_traits.hpp
- * external/entt/entity/fwd.hpp
- * external/entt/container/fwd.hpp
  * external/entt/core/compressed_pair.hpp
  * external/entt/core/iterator.hpp
  * external/entt/core/memory.hpp
@@ -19,6 +18,7 @@
  * external/entt/core/hashed_string.hpp
  * external/entt/core/type_info.hpp
  * external/entt/core/any.hpp
+ * external/entt/entity/fwd.hpp
  * external/entt/entity/entity.hpp
  * external/entt/entity/sparse_set.hpp
  * external/entt/entity/component.hpp
@@ -32,12 +32,6 @@
  * external/entt/entity/registry.hpp
  * external/entt/entity/handle.hpp
  * src/Battle/Setup/StateSetupBase.hpp
- * src/Components/EntityHolders/Side.hpp
- * src/Types/State.hpp
- * src/Battle/Setup/BattleStateSetup.hpp
- * src/Types/Enums/Move.hpp
- * src/Types/Move.hpp
- * src/Battle/Setup/MoveStateSetup.hpp
  * src/Types/Stats.hpp
  * src/Components/Boosts.hpp
  * src/Components/EVsIVs.hpp
@@ -48,7 +42,13 @@
  * src/Types/Enums/Nature.hpp
  * src/Types/Enums/Species.hpp
  * src/Types/Enums/Status.hpp
+ * src/Types/State.hpp
  * src/Battle/Setup/PokemonStateSetup.hpp
+ * src/Components/EntityHolders/Side.hpp
+ * src/Battle/Setup/BattleStateSetup.hpp
+ * src/Types/Enums/Move.hpp
+ * src/Types/Move.hpp
+ * src/Battle/Setup/MoveStateSetup.hpp
  * src/Battle/Setup/SideStateSetup.hpp
  * src/Components/Tags/SimulationTags.hpp
  * src/Types/Enums/BattleFormat.hpp
@@ -58,8 +58,11 @@
  * src/Pokedex/Pokedex.hpp
  * src/Simulation/SimulationOptions.hpp
  * src/Types/Damage.hpp
+ * src/Types/Entity.hpp
  * src/Simulation/Simulation.hpp
  * src/Simulation/SimulationSetup.cpp
+ * src/Simulation/SimulationResults.hpp
+ * src/Simulation/SimulationResults.cpp
  * src/Components/DexData/Abilities.hpp
  * src/Components/DexData/BaseStats.hpp
  * src/Components/DexData/SpeciesTypes.hpp
@@ -144,7 +147,6 @@
  * src/Components/Tags/ActionsTags.hpp
  * src/Components/Tags/TypeTags.hpp
  * src/Components/TargetSlot.hpp
- * src/Simulation/SimulationResults.hpp
  * src/PokeSim.hpp
  */
 
@@ -265,6 +267,37 @@
 #endif
 
 ///////////////////// END OF external/entt/config/config.h /////////////////////
+
+/////////////////// START OF external/entt/container/fwd.hpp ///////////////////
+
+#ifndef ENTT_CONTAINER_FWD_HPP
+#define ENTT_CONTAINER_FWD_HPP
+
+#include <functional>
+#include <memory>
+
+namespace entt {
+
+template<
+    typename Key,
+    typename Type,
+    typename = std::hash<Key>,
+    typename = std::equal_to<Key>,
+    typename = std::allocator<std::pair<const Key, Type>>>
+class dense_map;
+
+template<
+    typename Type,
+    typename = std::hash<Type>,
+    typename = std::equal_to<Type>,
+    typename = std::allocator<Type>>
+class dense_set;
+
+} // namespace entt
+
+#endif
+
+//////////////////// END OF external/entt/container/fwd.hpp ////////////////////
 
 ///////////////////// START OF external/entt/core/fwd.hpp //////////////////////
 
@@ -1212,297 +1245,6 @@ struct std::tuple_element<Index, entt::value_list<Value...>>: entt::value_list_e
 #endif
 
 ////////////////// END OF external/entt/core/type_traits.hpp ///////////////////
-
-//////////////////// START OF external/entt/entity/fwd.hpp /////////////////////
-
-#ifndef ENTT_ENTITY_FWD_HPP
-#define ENTT_ENTITY_FWD_HPP
-
-#include <cstdint>
-#include <memory>
-#include <type_traits>
-
-namespace entt {
-
-/*! @brief Default entity identifier. */
-enum class entity : id_type {};
-
-/*! @brief Storage deletion policy. */
-enum class deletion_policy : std::uint8_t {
-    /*! @brief Swap-and-pop deletion policy. */
-    swap_and_pop = 0u,
-    /*! @brief In-place deletion policy. */
-    in_place = 1u
-};
-
-template<typename Entity = entity, typename = std::allocator<Entity>>
-class basic_sparse_set;
-
-template<typename Type, typename = entity, typename = std::allocator<Type>, typename = void>
-class basic_storage;
-
-template<typename Type>
-class sigh_mixin;
-
-/**
- * @brief Provides a common way to define storage types.
- * @tparam Type Storage value type.
- * @tparam Entity A valid entity type.
- * @tparam Allocator Type of allocator used to manage memory and elements.
- */
-template<typename Type, typename Entity = entity, typename Allocator = std::allocator<Type>, typename = void>
-struct storage_type {
-    /*! @brief Type-to-storage conversion result. */
-    using type = sigh_mixin<basic_storage<Type, Entity, Allocator>>;
-};
-
-/**
- * @brief Helper type.
- * @tparam Args Arguments to forward.
- */
-template<typename... Args>
-using storage_type_t = typename storage_type<Args...>::type;
-
-/**
- * Type-to-storage conversion utility that preserves constness.
- * @tparam Type Storage value type, eventually const.
- * @tparam Entity A valid entity type.
- * @tparam Allocator Type of allocator used to manage memory and elements.
- */
-template<typename Type, typename Entity = entity, typename Allocator = std::allocator<std::remove_const_t<Type>>>
-struct storage_for {
-    /*! @brief Type-to-storage conversion result. */
-    using type = constness_as_t<storage_type_t<std::remove_const_t<Type>, Entity, Allocator>, Type>;
-};
-
-/**
- * @brief Helper type.
- * @tparam Args Arguments to forward.
- */
-template<typename... Args>
-using storage_for_t = typename storage_for<Args...>::type;
-
-template<typename Entity = entity, typename = std::allocator<Entity>>
-class basic_registry;
-
-template<typename, typename, typename = void>
-class basic_view;
-
-template<typename Type, typename = std::allocator<Type *>>
-class basic_runtime_view;
-
-template<typename, typename, typename>
-class basic_group;
-
-template<typename, typename Mask = std::uint32_t, typename = std::allocator<Mask>>
-class basic_observer;
-
-template<typename>
-class basic_organizer;
-
-template<typename, typename...>
-struct basic_handle;
-
-template<typename>
-class basic_snapshot;
-
-template<typename>
-class basic_snapshot_loader;
-
-template<typename>
-class basic_continuous_loader;
-
-/**
- * @brief Alias for exclusion lists.
- * @tparam Type List of types.
- */
-template<typename... Type>
-struct exclude_t final: type_list<Type...> {
-    /*! @brief Default constructor. */
-    explicit constexpr exclude_t() {}
-};
-
-/**
- * @brief Variable template for exclusion lists.
- * @tparam Type List of types.
- */
-template<typename... Type>
-inline constexpr exclude_t<Type...> exclude{};
-
-/**
- * @brief Alias for lists of observed components.
- * @tparam Type List of types.
- */
-template<typename... Type>
-struct get_t final: type_list<Type...> {
-    /*! @brief Default constructor. */
-    explicit constexpr get_t() {}
-};
-
-/**
- * @brief Variable template for lists of observed components.
- * @tparam Type List of types.
- */
-template<typename... Type>
-inline constexpr get_t<Type...> get{};
-
-/**
- * @brief Alias for lists of owned components.
- * @tparam Type List of types.
- */
-template<typename... Type>
-struct owned_t final: type_list<Type...> {
-    /*! @brief Default constructor. */
-    explicit constexpr owned_t() {}
-};
-
-/**
- * @brief Variable template for lists of owned components.
- * @tparam Type List of types.
- */
-template<typename... Type>
-inline constexpr owned_t<Type...> owned{};
-
-/**
- * @brief Applies a given _function_ to a get list and generate a new list.
- * @tparam Type Types provided by the get list.
- * @tparam Op Unary operation as template class with a type member named `type`.
- */
-template<typename... Type, template<typename...> class Op>
-struct type_list_transform<get_t<Type...>, Op> {
-    /*! @brief Resulting get list after applying the transform function. */
-    using type = get_t<typename Op<Type>::type...>;
-};
-
-/**
- * @brief Applies a given _function_ to an exclude list and generate a new list.
- * @tparam Type Types provided by the exclude list.
- * @tparam Op Unary operation as template class with a type member named `type`.
- */
-template<typename... Type, template<typename...> class Op>
-struct type_list_transform<exclude_t<Type...>, Op> {
-    /*! @brief Resulting exclude list after applying the transform function. */
-    using type = exclude_t<typename Op<Type>::type...>;
-};
-
-/**
- * @brief Applies a given _function_ to an owned list and generate a new list.
- * @tparam Type Types provided by the owned list.
- * @tparam Op Unary operation as template class with a type member named `type`.
- */
-template<typename... Type, template<typename...> class Op>
-struct type_list_transform<owned_t<Type...>, Op> {
-    /*! @brief Resulting owned list after applying the transform function. */
-    using type = owned_t<typename Op<Type>::type...>;
-};
-
-/*! @brief Alias declaration for the most common use case. */
-using sparse_set = basic_sparse_set<>;
-
-/**
- * @brief Alias declaration for the most common use case.
- * @tparam Type Type of objects assigned to the entities.
- */
-template<typename Type>
-using storage = basic_storage<Type>;
-
-/*! @brief Alias declaration for the most common use case. */
-using registry = basic_registry<>;
-
-/*! @brief Alias declaration for the most common use case. */
-using observer = basic_observer<registry>;
-
-/*! @brief Alias declaration for the most common use case. */
-using organizer = basic_organizer<registry>;
-
-/*! @brief Alias declaration for the most common use case. */
-using handle = basic_handle<registry>;
-
-/*! @brief Alias declaration for the most common use case. */
-using const_handle = basic_handle<const registry>;
-
-/**
- * @brief Alias declaration for the most common use case.
- * @tparam Args Other template parameters.
- */
-template<typename... Args>
-using handle_view = basic_handle<registry, Args...>;
-
-/**
- * @brief Alias declaration for the most common use case.
- * @tparam Args Other template parameters.
- */
-template<typename... Args>
-using const_handle_view = basic_handle<const registry, Args...>;
-
-/*! @brief Alias declaration for the most common use case. */
-using snapshot = basic_snapshot<registry>;
-
-/*! @brief Alias declaration for the most common use case. */
-using snapshot_loader = basic_snapshot_loader<registry>;
-
-/*! @brief Alias declaration for the most common use case. */
-using continuous_loader = basic_continuous_loader<registry>;
-
-/**
- * @brief Alias declaration for the most common use case.
- * @tparam Get Types of storage iterated by the view.
- * @tparam Exclude Types of storage used to filter the view.
- */
-template<typename Get, typename Exclude = exclude_t<>>
-using view = basic_view<type_list_transform_t<Get, storage_for>, type_list_transform_t<Exclude, storage_for>>;
-
-/*! @brief Alias declaration for the most common use case. */
-using runtime_view = basic_runtime_view<sparse_set>;
-
-/*! @brief Alias declaration for the most common use case. */
-using const_runtime_view = basic_runtime_view<const sparse_set>;
-
-/**
- * @brief Alias declaration for the most common use case.
- * @tparam Owned Types of storage _owned_ by the group.
- * @tparam Get Types of storage _observed_ by the group.
- * @tparam Exclude Types of storage used to filter the group.
- */
-template<typename Owned, typename Get, typename Exclude>
-using group = basic_group<type_list_transform_t<Owned, storage_for>, type_list_transform_t<Get, storage_for>, type_list_transform_t<Exclude, storage_for>>;
-
-} // namespace entt
-
-#endif
-
-///////////////////// END OF external/entt/entity/fwd.hpp //////////////////////
-
-/////////////////// START OF external/entt/container/fwd.hpp ///////////////////
-
-#ifndef ENTT_CONTAINER_FWD_HPP
-#define ENTT_CONTAINER_FWD_HPP
-
-#include <functional>
-#include <memory>
-
-namespace entt {
-
-template<
-    typename Key,
-    typename Type,
-    typename = std::hash<Key>,
-    typename = std::equal_to<Key>,
-    typename = std::allocator<std::pair<const Key, Type>>>
-class dense_map;
-
-template<
-    typename Type,
-    typename = std::hash<Type>,
-    typename = std::equal_to<Type>,
-    typename = std::allocator<Type>>
-class dense_set;
-
-} // namespace entt
-
-#endif
-
-//////////////////// END OF external/entt/container/fwd.hpp ////////////////////
 
 /////////////// START OF external/entt/core/compressed_pair.hpp ////////////////
 
@@ -4740,6 +4482,266 @@ template<std::size_t Len = basic_any<>::length, std::size_t Align = basic_any<Le
 #endif
 
 ////////////////////// END OF external/entt/core/any.hpp ///////////////////////
+
+//////////////////// START OF external/entt/entity/fwd.hpp /////////////////////
+
+#ifndef ENTT_ENTITY_FWD_HPP
+#define ENTT_ENTITY_FWD_HPP
+
+#include <cstdint>
+#include <memory>
+#include <type_traits>
+
+namespace entt {
+
+/*! @brief Default entity identifier. */
+enum class entity : id_type {};
+
+/*! @brief Storage deletion policy. */
+enum class deletion_policy : std::uint8_t {
+    /*! @brief Swap-and-pop deletion policy. */
+    swap_and_pop = 0u,
+    /*! @brief In-place deletion policy. */
+    in_place = 1u
+};
+
+template<typename Entity = entity, typename = std::allocator<Entity>>
+class basic_sparse_set;
+
+template<typename Type, typename = entity, typename = std::allocator<Type>, typename = void>
+class basic_storage;
+
+template<typename Type>
+class sigh_mixin;
+
+/**
+ * @brief Provides a common way to define storage types.
+ * @tparam Type Storage value type.
+ * @tparam Entity A valid entity type.
+ * @tparam Allocator Type of allocator used to manage memory and elements.
+ */
+template<typename Type, typename Entity = entity, typename Allocator = std::allocator<Type>, typename = void>
+struct storage_type {
+    /*! @brief Type-to-storage conversion result. */
+    using type = sigh_mixin<basic_storage<Type, Entity, Allocator>>;
+};
+
+/**
+ * @brief Helper type.
+ * @tparam Args Arguments to forward.
+ */
+template<typename... Args>
+using storage_type_t = typename storage_type<Args...>::type;
+
+/**
+ * Type-to-storage conversion utility that preserves constness.
+ * @tparam Type Storage value type, eventually const.
+ * @tparam Entity A valid entity type.
+ * @tparam Allocator Type of allocator used to manage memory and elements.
+ */
+template<typename Type, typename Entity = entity, typename Allocator = std::allocator<std::remove_const_t<Type>>>
+struct storage_for {
+    /*! @brief Type-to-storage conversion result. */
+    using type = constness_as_t<storage_type_t<std::remove_const_t<Type>, Entity, Allocator>, Type>;
+};
+
+/**
+ * @brief Helper type.
+ * @tparam Args Arguments to forward.
+ */
+template<typename... Args>
+using storage_for_t = typename storage_for<Args...>::type;
+
+template<typename Entity = entity, typename = std::allocator<Entity>>
+class basic_registry;
+
+template<typename, typename, typename = void>
+class basic_view;
+
+template<typename Type, typename = std::allocator<Type *>>
+class basic_runtime_view;
+
+template<typename, typename, typename>
+class basic_group;
+
+template<typename, typename Mask = std::uint32_t, typename = std::allocator<Mask>>
+class basic_observer;
+
+template<typename>
+class basic_organizer;
+
+template<typename, typename...>
+struct basic_handle;
+
+template<typename>
+class basic_snapshot;
+
+template<typename>
+class basic_snapshot_loader;
+
+template<typename>
+class basic_continuous_loader;
+
+/**
+ * @brief Alias for exclusion lists.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+struct exclude_t final: type_list<Type...> {
+    /*! @brief Default constructor. */
+    explicit constexpr exclude_t() {}
+};
+
+/**
+ * @brief Variable template for exclusion lists.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+inline constexpr exclude_t<Type...> exclude{};
+
+/**
+ * @brief Alias for lists of observed components.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+struct get_t final: type_list<Type...> {
+    /*! @brief Default constructor. */
+    explicit constexpr get_t() {}
+};
+
+/**
+ * @brief Variable template for lists of observed components.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+inline constexpr get_t<Type...> get{};
+
+/**
+ * @brief Alias for lists of owned components.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+struct owned_t final: type_list<Type...> {
+    /*! @brief Default constructor. */
+    explicit constexpr owned_t() {}
+};
+
+/**
+ * @brief Variable template for lists of owned components.
+ * @tparam Type List of types.
+ */
+template<typename... Type>
+inline constexpr owned_t<Type...> owned{};
+
+/**
+ * @brief Applies a given _function_ to a get list and generate a new list.
+ * @tparam Type Types provided by the get list.
+ * @tparam Op Unary operation as template class with a type member named `type`.
+ */
+template<typename... Type, template<typename...> class Op>
+struct type_list_transform<get_t<Type...>, Op> {
+    /*! @brief Resulting get list after applying the transform function. */
+    using type = get_t<typename Op<Type>::type...>;
+};
+
+/**
+ * @brief Applies a given _function_ to an exclude list and generate a new list.
+ * @tparam Type Types provided by the exclude list.
+ * @tparam Op Unary operation as template class with a type member named `type`.
+ */
+template<typename... Type, template<typename...> class Op>
+struct type_list_transform<exclude_t<Type...>, Op> {
+    /*! @brief Resulting exclude list after applying the transform function. */
+    using type = exclude_t<typename Op<Type>::type...>;
+};
+
+/**
+ * @brief Applies a given _function_ to an owned list and generate a new list.
+ * @tparam Type Types provided by the owned list.
+ * @tparam Op Unary operation as template class with a type member named `type`.
+ */
+template<typename... Type, template<typename...> class Op>
+struct type_list_transform<owned_t<Type...>, Op> {
+    /*! @brief Resulting owned list after applying the transform function. */
+    using type = owned_t<typename Op<Type>::type...>;
+};
+
+/*! @brief Alias declaration for the most common use case. */
+using sparse_set = basic_sparse_set<>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Type Type of objects assigned to the entities.
+ */
+template<typename Type>
+using storage = basic_storage<Type>;
+
+/*! @brief Alias declaration for the most common use case. */
+using registry = basic_registry<>;
+
+/*! @brief Alias declaration for the most common use case. */
+using observer = basic_observer<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using organizer = basic_organizer<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using handle = basic_handle<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using const_handle = basic_handle<const registry>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Args Other template parameters.
+ */
+template<typename... Args>
+using handle_view = basic_handle<registry, Args...>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Args Other template parameters.
+ */
+template<typename... Args>
+using const_handle_view = basic_handle<const registry, Args...>;
+
+/*! @brief Alias declaration for the most common use case. */
+using snapshot = basic_snapshot<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using snapshot_loader = basic_snapshot_loader<registry>;
+
+/*! @brief Alias declaration for the most common use case. */
+using continuous_loader = basic_continuous_loader<registry>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Get Types of storage iterated by the view.
+ * @tparam Exclude Types of storage used to filter the view.
+ */
+template<typename Get, typename Exclude = exclude_t<>>
+using view = basic_view<type_list_transform_t<Get, storage_for>, type_list_transform_t<Exclude, storage_for>>;
+
+/*! @brief Alias declaration for the most common use case. */
+using runtime_view = basic_runtime_view<sparse_set>;
+
+/*! @brief Alias declaration for the most common use case. */
+using const_runtime_view = basic_runtime_view<const sparse_set>;
+
+/**
+ * @brief Alias declaration for the most common use case.
+ * @tparam Owned Types of storage _owned_ by the group.
+ * @tparam Get Types of storage _observed_ by the group.
+ * @tparam Exclude Types of storage used to filter the group.
+ */
+template<typename Owned, typename Get, typename Exclude>
+using group = basic_group<type_list_transform_t<Owned, storage_for>, type_list_transform_t<Get, storage_for>, type_list_transform_t<Exclude, storage_for>>;
+
+} // namespace entt
+
+#endif
+
+///////////////////// END OF external/entt/entity/fwd.hpp //////////////////////
 
 /////////////////// START OF external/entt/entity/entity.hpp ///////////////////
 
@@ -12359,143 +12361,6 @@ struct StateSetupBase {
 
 ////////////////// END OF src/Battle/Setup/StateSetupBase.hpp //////////////////
 
-//////////////// START OF src/Components/EntityHolders/Side.hpp ////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-// Contains the entity pointing to the player 1 or player 2 side of a battle.
-struct Side {
-  enum PlayerSideID : uint8_t {
-    P1 = 0,
-    P2 = 1,
-  };
-
-  entt::entity side;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/EntityHolders/Side.hpp /////////////////
-
-///////////////////////// START OF src/Types/State.hpp /////////////////////////
-
-#include <cstdint>
-
-namespace pokesim::types {
-using StateId = std::uint16_t;
-using StateProbability = float;
-using StateRngSeed = std::uint32_t;
-
-using BattleTurn = std::uint16_t;
-
-using ActionOrder = std::uint8_t;
-
-using TeamSlotPosition = std::uint8_t;
-}  // namespace pokesim::types
-
-////////////////////////// END OF src/Types/State.hpp //////////////////////////
-
-//////////////// START OF src/Battle/Setup/BattleStateSetup.hpp ////////////////
-
-#include <optional>
-#include <vector>
-
-
-namespace pokesim {
-struct SimulateTurnOptions;
-struct CalculateDamageOptions;
-struct AnalyzeEffectOptions;
-
-// Tool to set properties of a battle's state to an entity.
-struct BattleStateSetup : internal::StateSetupBase {
-  BattleStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}
-  BattleStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {}
-
-  /**
-   * @brief Applies the defaults to the required properties for a battle state.
-   *
-   * @details Some of the required properties and their defaults:
-   * - Turn: 0
-   * - Probability: 1
-   * - Id: The number of existing battle states
-   * - Sides: Unassigned entities for P1 and P2
-   * - ActionQueue: An empty queue
-   */
-  inline void initBlank();
-
-  inline void setAutoID();
-  inline void setID(types::StateId id);
-  inline void setSide(Side::PlayerSideID sideID, entt::entity sideEntity);
-
-  // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
-  inline void setRNGSeed(std::optional<types::StateRngSeed> seed = std::nullopt);
-  inline void setActionQueue(const std::vector<entt::entity>& queue);
-  inline void setTurn(types::BattleTurn turn);
-  inline void setActiveMove(entt::entity activeMove);
-  inline void setActivePokemon(entt::entity activePokemon);
-  inline void setActiveTarget(entt::entity activeTarget);
-  inline void setActiveUser(entt::entity activeSource);
-  inline void setProbability(types::StateProbability probability);
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Battle/Setup/BattleStateSetup.hpp /////////////////
-
-////////////////////// START OF src/Types/Enums/Move.hpp ///////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon move name
-enum Move : std::uint16_t {
-  // clang-format off
-  NO_MOVE = 0, ONE_MILLION_VOLT_THUNDERBOLT, ABSORB, ACCELEROCK, ACID, ACID_ARMOR, ACID_DOWNPOUR, ACID_SPRAY, ACROBATICS, ACUPRESSURE, AERIAL_ACE, AEROBLAST, AFTER_YOU, AGILITY, AIR_CUTTER, AIR_SLASH, ALL_OUT_PUMMELING, ALLY_SWITCH, AMNESIA, ANCHOR_SHOT, ANCIENT_POWER, APPLE_ACID, AQUA_CUTTER, AQUA_JET, AQUA_RING, AQUA_STEP, AQUA_TAIL, ARMOR_CANNON, ARM_THRUST, AROMATHERAPY, AROMATIC_MIST, ASSIST, ASSURANCE, ASTONISH, ASTRAL_BARRAGE, ATTACK_ORDER, ATTRACT, AURA_SPHERE, AURA_WHEEL, AURORA_BEAM, AURORA_VEIL, AUTOTOMIZE, AVALANCHE, AXE_KICK, BABY_DOLL_EYES, BADDY_BAD, BANEFUL_BUNKER, BARB_BARRAGE, BARRAGE, BARRIER, BATON_PASS, BEAK_BLAST, BEAT_UP, BEHEMOTH_BASH, BEHEMOTH_BLADE, BELCH, BELLY_DRUM, BESTOW, BIDE, BIND, BITE, BITTER_BLADE, BITTER_MALICE, BLACK_HOLE_ECLIPSE, BLAST_BURN, BLAZE_KICK, BLAZING_TORQUE, BLEAKWIND_STORM, BLIZZARD, BLOCK, BLOOM_DOOM, BLUE_FLARE, BODY_PRESS, BODY_SLAM, BOLT_BEAK, BOLT_STRIKE, BONE_CLUB, BONEMERANG, BONE_RUSH, BOOMBURST, BOUNCE, BOUNCY_BUBBLE, BRANCH_POKE, BRAVE_BIRD, BREAKING_SWIPE, BREAKNECK_BLITZ, BRICK_BREAK, BRINE, BRUTAL_SWING, BUBBLE, BUBBLE_BEAM, BUG_BITE, BUG_BUZZ, BULK_UP, BULLDOZE, BULLET_PUNCH, BULLET_SEED, BURNING_JEALOUSY, BURN_UP, BUZZY_BUZZ, CALM_MIND, CAMOUFLAGE, CAPTIVATE, CATASTROPIKA, CEASELESS_EDGE, CELEBRATE, CHARGE, CHARGE_BEAM, CHARM, CHATTER, CHILLING_WATER, CHILLY_RECEPTION, CHIP_AWAY, CHLOROBLAST, CIRCLE_THROW, CLAMP, CLANGING_SCALES, CLANGOROUS_SOUL, CLANGOROUS_SOULBLAZE, CLEAR_SMOG, CLOSE_COMBAT, COACHING, COIL, COLLISION_COURSE, COMBAT_TORQUE, COMET_PUNCH, COMEUPPANCE, CONFIDE, CONFUSE_RAY, CONFUSION, CONSTRICT, CONTINENTAL_CRUSH, CONVERSION, CONVERSION_2, COPYCAT, CORE_ENFORCER, CORKSCREW_CRASH, CORROSIVE_GAS, COSMIC_POWER, COTTON_GUARD, COTTON_SPORE, COUNTER, COURT_CHANGE, COVET, CRABHAMMER, CRAFTY_SHIELD, CROSS_CHOP, CROSS_POISON, CRUNCH, CRUSH_CLAW, CRUSH_GRIP, CURSE, CUT, DARKEST_LARIAT, DARK_PULSE, DARK_VOID, DAZZLING_GLEAM, DECORATE, DEFEND_ORDER, DEFENSE_CURL, DEFOG, DESTINY_BOND, DETECT, DEVASTATING_DRAKE, DIAMOND_STORM, DIG, DISABLE, DISARMING_VOICE, DISCHARGE, DIRE_CLAW, DIVE, DIZZY_PUNCH, DOODLE, DOOM_DESIRE, DOUBLE_EDGE, DOUBLE_HIT, DOUBLE_IRON_BASH, DOUBLE_KICK, DOUBLE_SHOCK, DOUBLE_SLAP, DOUBLE_TEAM, DRACO_METEOR, DRAGON_ASCENT, DRAGON_BREATH, DRAGON_CLAW, DRAGON_DANCE, DRAGON_DARTS, DRAGON_ENERGY, DRAGON_HAMMER, DRAGON_PULSE, DRAGON_RAGE, DRAGON_RUSH, DRAGON_TAIL, DRAINING_KISS, DRAIN_PUNCH, DREAM_EATER, DRILL_PECK, DRILL_RUN, DRUM_BEATING, DUAL_CHOP, DUAL_WINGBEAT, DYNAMAX_CANNON, DYNAMIC_PUNCH, EARTH_POWER, EARTHQUAKE, ECHOED_VOICE, EERIE_IMPULSE, EERIE_SPELL, EGG_BOMB, ELECTRIC_TERRAIN, ELECTRIFY, ELECTRO_BALL, ELECTRO_DRIFT, ELECTROWEB, EMBARGO, EMBER, ENCORE, ENDEAVOR, ENDURE, ENERGY_BALL, ENTRAINMENT, ERUPTION, ESPER_WING, ETERNABEAM, EXPANDING_FORCE, EXPLOSION, EXTRASENSORY, EXTREME_EVOBOOST, EXTREME_SPEED, FACADE, FAIRY_LOCK, FAIRY_WIND, FAKE_OUT, FAKE_TEARS, FALSE_SURRENDER, FALSE_SWIPE, FEATHER_DANCE, FEINT, FEINT_ATTACK, FELL_STINGER, FIERY_DANCE, FIERY_WRATH, FILLET_AWAY, FINAL_GAMBIT, FIRE_BLAST, FIRE_FANG, FIRE_LASH, FIRE_PLEDGE, FIRE_PUNCH, FIRE_SPIN, FIRST_IMPRESSION, FISHIOUS_REND, FISSURE, FLAIL, FLAME_BURST, FLAME_CHARGE, FLAME_WHEEL, FLAMETHROWER, FLARE_BLITZ, FLASH, FLASH_CANNON, FLATTER, FLEUR_CANNON, FLING, FLIP_TURN, FLOATY_FALL, FLORAL_HEALING, FLOWER_SHIELD, FLOWER_TRICK, FLY, FLYING_PRESS, FOCUS_BLAST, FOCUS_ENERGY, FOCUS_PUNCH, FOLLOW_ME, FORCE_PALM, FORESIGHT, FORESTS_CURSE, FOUL_PLAY, FREEZE_DRY, FREEZE_SHOCK, FREEZING_GLARE, FREEZY_FROST, FRENZY_PLANT, FROST_BREATH, FRUSTRATION, FURY_ATTACK, FURY_CUTTER, FURY_SWIPES, FUSION_BOLT, FUSION_FLARE, FUTURE_SIGHT, GASTRO_ACID, GEAR_GRIND, GEAR_UP, GENESIS_SUPERNOVA, GEOMANCY, GIGA_DRAIN, GIGA_IMPACT, GIGATON_HAMMER, GIGAVOLT_HAVOC, GLACIAL_LANCE, GLACIATE, GLAIVE_RUSH, GLARE, GLITZY_GLOW, G_MAX_BEFUDDLE, G_MAX_CANNONADE, G_MAX_CENTIFERNO, G_MAX_CHI_STRIKE, G_MAX_CUDDLE, G_MAX_DEPLETION, G_MAX_DRUM_SOLO, G_MAX_FINALE, G_MAX_FIREBALL, G_MAX_FOAM_BURST, G_MAX_GOLD_RUSH, G_MAX_GRAVITAS, G_MAX_HYDROSNIPE, G_MAX_MALODOR, G_MAX_MELTDOWN, G_MAX_ONE_BLOW, G_MAX_RAPID_FLOW, G_MAX_REPLENISH, G_MAX_RESONANCE, G_MAX_SANDBLAST, G_MAX_SMITE, G_MAX_SNOOZE, G_MAX_STEELSURGE, G_MAX_STONESURGE, G_MAX_STUN_SHOCK, G_MAX_SWEETNESS, G_MAX_TARTNESS, G_MAX_TERROR, G_MAX_VINE_LASH, G_MAX_VOLCALITH, G_MAX_VOLT_CRASH, G_MAX_WILDFIRE, G_MAX_WIND_RAGE, GRASS_KNOT, GRASS_PLEDGE, GRASS_WHISTLE, GRASSY_GLIDE, GRASSY_TERRAIN, GRAV_APPLE, GRAVITY, GROWL, GROWTH, GRUDGE, GUARDIAN_OF_ALOLA, GUARD_SPLIT, GUARD_SWAP, GUILLOTINE, GUNK_SHOT, GUST, GYRO_BALL, HAIL, HAMMER_ARM, HAPPY_HOUR, HARDEN, HAZE, HEADBUTT, HEAD_CHARGE, HEADLONG_RUSH, HEAD_SMASH, HEAL_BELL, HEAL_BLOCK, HEALING_WISH, HEAL_ORDER, HEAL_PULSE, HEART_STAMP, HEART_SWAP, HEAT_CRASH, HEAT_WAVE, HEAVY_SLAM, HELPING_HAND, HEX, HIDDEN_POWER, HIDDEN_POWER_BUG, HIDDEN_POWER_DARK, HIDDEN_POWER_DRAGON, HIDDEN_POWER_ELECTRIC, HIDDEN_POWER_FIGHTING, HIDDEN_POWER_FIRE, HIDDEN_POWER_FLYING, HIDDEN_POWER_GHOST, HIDDEN_POWER_GRASS, HIDDEN_POWER_GROUND, HIDDEN_POWER_ICE, HIDDEN_POWER_POISON, HIDDEN_POWER_PSYCHIC, HIDDEN_POWER_ROCK, HIDDEN_POWER_STEEL, HIDDEN_POWER_WATER, HIGH_HORSEPOWER, HIGH_JUMP_KICK, HOLD_BACK, HOLD_HANDS, HONE_CLAWS, HORN_ATTACK, HORN_DRILL, HORN_LEECH, HOWL, HURRICANE, HYDRO_CANNON, HYDRO_PUMP, HYDRO_STEAM, HYDRO_VORTEX, HYPER_BEAM, HYPER_DRILL, HYPER_FANG, HYPERSPACE_FURY, HYPERSPACE_HOLE, HYPER_VOICE, HYPNOSIS, ICE_BALL, ICE_BEAM, ICE_BURN, ICE_FANG, ICE_HAMMER, ICE_PUNCH, ICE_SHARD, ICE_SPINNER, ICICLE_CRASH, ICICLE_SPEAR, ICY_WIND, IMPRISON, INCINERATE, INFERNAL_PARADE, INFERNO, INFERNO_OVERDRIVE, INFESTATION, INGRAIN, INSTRUCT, ION_DELUGE, IRON_DEFENSE, IRON_HEAD, IRON_TAIL, JAW_LOCK, JET_PUNCH, JUDGMENT, JUMP_KICK, JUNGLE_HEALING, KARATE_CHOP, KINESIS, KINGS_SHIELD, KNOCK_OFF, KOWTOW_CLEAVE, LANDS_WRATH, LASER_FOCUS, LASH_OUT, LAST_RESORT, LAST_RESPECTS, LAVA_PLUME, LEAFAGE, LEAF_BLADE, LEAF_STORM, LEAF_TORNADO, LEECH_LIFE, LEECH_SEED, LEER, LETS_SNUGGLE_FOREVER, LICK, LIFE_DEW, LIGHT_OF_RUIN, LIGHT_SCREEN, LIGHT_THAT_BURNS_THE_SKY, LIQUIDATION, LOCK_ON, LOVELY_KISS, LOW_KICK, LOW_SWEEP, LUCKY_CHANT, LUMINA_CRASH, LUNAR_BLESSING, LUNAR_DANCE, LUNGE, LUSTER_PURGE, MACH_PUNCH, MAGICAL_LEAF, MAGICAL_TORQUE, MAGIC_COAT, MAGIC_POWDER, MAGIC_ROOM, MAGMA_STORM, MAGNET_BOMB, MAGNETIC_FLUX, MAGNET_RISE, MAGNITUDE, MAKE_IT_RAIN, MALICIOUS_MOONSAULT, MAT_BLOCK, MAX_AIRSTREAM, MAX_DARKNESS, MAX_FLARE, MAX_FLUTTERBY, MAX_GEYSER, MAX_GUARD, MAX_HAILSTORM, MAX_KNUCKLE, MAX_LIGHTNING, MAX_MINDSTORM, MAX_OOZE, MAX_OVERGROWTH, MAX_PHANTASM, MAX_QUAKE, MAX_ROCKFALL, MAX_STARFALL, MAX_STEELSPIKE, MAX_STRIKE, MAX_WYRMWIND, MEAN_LOOK, MEDITATE, ME_FIRST, MEGA_DRAIN, MEGAHORN, MEGA_KICK, MEGA_PUNCH, MEMENTO, MENACING_MOONRAZE_MAELSTROM, METAL_BURST, METAL_CLAW, METAL_SOUND, METEOR_ASSAULT, METEOR_BEAM, METEOR_MASH, METRONOME, MILK_DRINK, MIMIC, MIND_BLOWN, MIND_READER, MINIMIZE, MIRACLE_EYE, MIRROR_COAT, MIRROR_MOVE, MIRROR_SHOT, MIST, MIST_BALL, MISTY_EXPLOSION, MISTY_TERRAIN, MOONBLAST, MOONGEIST_BEAM, MOONLIGHT, MORNING_SUN, MORTAL_SPIN, MOUNTAIN_GALE, MUD_BOMB, MUD_SHOT, MUD_SLAP, MUD_SPORT, MUDDY_WATER, MULTI_ATTACK, MYSTICAL_FIRE, MYSTICAL_POWER, NASTY_PLOT, NATURAL_GIFT, NATURE_POWER, NATURES_MADNESS, NEEDLE_ARM, NEVER_ENDING_NIGHTMARE, NIGHT_DAZE, NIGHTMARE, NIGHT_SHADE, NIGHT_SLASH, NOBLE_ROAR, NO_RETREAT, NOXIOUS_TORQUE, NUZZLE, OBLIVION_WING, OBSTRUCT, OCEANIC_OPERETTA, OCTAZOOKA, OCTOLOCK, ODOR_SLEUTH, OMINOUS_WIND, ORDER_UP, ORIGIN_PULSE, OUTRAGE, OVERDRIVE, OVERHEAT, PAIN_SPLIT, PARABOLIC_CHARGE, PARTING_SHOT, PAYBACK, PAY_DAY, PECK, PERISH_SONG, PETAL_BLIZZARD, PETAL_DANCE, PHANTOM_FORCE, PHOTON_GEYSER, PIKA_PAPOW, PIN_MISSILE, PLASMA_FISTS, PLAY_NICE, PLAY_ROUGH, PLUCK, POISON_FANG, POISON_GAS, POISON_JAB, POISON_POWDER, POISON_STING, POISON_TAIL, POLLEN_PUFF, POLTERGEIST, POPULATION_BOMB, POUNCE, POUND, POWDER, POWDER_SNOW, POWER_GEM, POWER_SHIFT, POWER_SPLIT, POWER_SWAP, POWER_TRICK, POWER_TRIP, POWER_UP_PUNCH, POWER_WHIP, PRECIPICE_BLADES, PRESENT, PRISMATIC_LASER, PROTECT, PSYBEAM, PSYBLADE, PSYCH_UP, PSYCHIC, PSYCHIC_FANGS, PSYCHIC_TERRAIN, PSYCHO_BOOST, PSYCHO_CUT, PSYCHO_SHIFT, PSYSHIELD_BASH, PSYSHOCK, PSYSTRIKE, PSYWAVE, PULVERIZING_PANCAKE, PUNISHMENT, PURIFY, PURSUIT, PYRO_BALL, QUASH, QUICK_ATTACK, QUICK_GUARD, QUIVER_DANCE, RAGE, RAGE_FIST, RAGE_POWDER, RAGING_BULL, RAGING_FURY, RAIN_DANCE, RAPID_SPIN, RAZOR_LEAF, RAZOR_SHELL, RAZOR_WIND, RECOVER, RECYCLE, REFLECT, REFLECT_TYPE, REFRESH, RELIC_SONG, REST, RETALIATE, RETURN, REVELATION_DANCE, REVENGE, REVERSAL, REVIVAL_BLESSING, RISING_VOLTAGE, ROAR, ROAR_OF_TIME, ROCK_BLAST, ROCK_CLIMB, ROCK_POLISH, ROCK_SLIDE, ROCK_SMASH, ROCK_THROW, ROCK_TOMB, ROCK_WRECKER, ROLE_PLAY, ROLLING_KICK, ROLLOUT, ROOST, ROTOTILLER, ROUND, RUINATION, SACRED_FIRE, SACRED_SWORD, SAFEGUARD, SALT_CURE, SAND_ATTACK, SANDSEAR_STORM, SANDSTORM, SAND_TOMB, SAPPY_SEED, SAVAGE_SPIN_OUT, SCALD, SCALE_SHOT, SCARY_FACE, SCORCHING_SANDS, SCRATCH, SCREECH, SEARING_SHOT, SEARING_SUNRAZE_SMASH, SECRET_POWER, SECRET_SWORD, SEED_BOMB, SEED_FLARE, SEISMIC_TOSS, SELF_DESTRUCT, SHADOW_BALL, SHADOW_BONE, SHADOW_CLAW, SHADOW_FORCE, SHADOW_PUNCH, SHADOW_SNEAK, SHARPEN, SHATTERED_PSYCHE, SHED_TAIL, SHEER_COLD, SHELL_SIDE_ARM, SHELL_SMASH, SHELL_TRAP, SHELTER, SHIFT_GEAR, SHOCK_WAVE, SHORE_UP, SIGNAL_BEAM, SILK_TRAP, SILVER_WIND, SIMPLE_BEAM, SING_MOVE /*Many math libraries define SING as a macro*/, SINISTER_ARROW_RAID, SIZZLY_SLIDE, SKETCH, SKILL_SWAP, SKITTER_SMACK, SKULL_BASH, SKY_ATTACK, SKY_DROP, SKY_UPPERCUT, SLACK_OFF, SLAM, SLASH, SLEEP_POWDER, SLEEP_TALK, SLUDGE, SLUDGE_BOMB, SLUDGE_WAVE, SMACK_DOWN, SMART_STRIKE, SMELLING_SALTS, SMOG, SMOKESCREEN, SNAP_TRAP, SNARL, SNATCH, SNIPE_SHOT, SNORE, SNOWSCAPE, SOAK, SOFT_BOILED, SOLAR_BEAM, SOLAR_BLADE, SONIC_BOOM, SOUL_STEALING_7_STAR_STRIKE, SPACIAL_REND, SPARK, SPARKLING_ARIA, SPARKLY_SWIRL, SPECTRAL_THIEF, SPEED_SWAP, SPICY_EXTRACT, SPIDER_WEB, SPIKE_CANNON, SPIKES, SPIKY_SHIELD, SPIN_OUT, SPIRIT_BREAK, SPIRIT_SHACKLE, SPIT_UP, SPITE, SPLASH, SPLINTERED_STORMSHARDS, SPLISHY_SPLASH, SPORE, SPOTLIGHT, SPRINGTIDE_STORM, STEALTH_ROCK, STEAM_ERUPTION, STEAMROLLER, STEEL_BEAM, STEEL_ROLLER, STEEL_WING, STICKY_WEB, STOCKPILE, STOKED_SPARKSURFER, STOMP, STOMPING_TANTRUM, STONE_AXE, STONE_EDGE, STORED_POWER, STORM_THROW, STRANGE_STEAM, STRENGTH, STRENGTH_SAP, STRING_SHOT, STRUGGLE, STRUGGLE_BUG, STUFF_CHEEKS, STUN_SPORE, SUBMISSION, SUBSTITUTE, SUBZERO_SLAMMER, SUCKER_PUNCH, SUNNY_DAY, SUNSTEEL_STRIKE, SUPER_FANG, SUPERPOWER, SUPERSONIC, SUPERSONIC_SKYSTRIKE, SURF, SURGING_STRIKES, SWAGGER, SWALLOW, SWEET_KISS, SWEET_SCENT, SWIFT, SWITCHEROO, SWORDS_DANCE, SYNCHRONOISE, SYNTHESIS, TACKLE, TAIL_GLOW, TAIL_SLAP, TAIL_WHIP, TAILWIND, TAKE_DOWN, TAKE_HEART, TAR_SHOT, TAUNT, TEARFUL_LOOK, TEATIME, TECHNO_BLAST, TECTONIC_RAGE, TEETER_DANCE, TELEKINESIS, TELEPORT, TERA_BLAST, TERRAIN_PULSE, THIEF, THOUSAND_ARROWS, THOUSAND_WAVES, THRASH, THROAT_CHOP, THUNDER, THUNDERBOLT, THUNDER_CAGE, THUNDER_FANG, THUNDEROUS_KICK, THUNDER_PUNCH, THUNDER_SHOCK, THUNDER_WAVE, TICKLE, TIDY_UP, TOPSY_TURVY, TORCH_SONG, TORMENT, TOXIC, TOXIC_SPIKES, TOXIC_THREAD, TRAILBLAZE, TRANSFORM, TRI_ATTACK, TRICK, TRICK_OR_TREAT, TRICK_ROOM, TRIPLE_ARROWS, TRIPLE_AXEL, TRIPLE_DIVE, TRIPLE_KICK, TROP_KICK, TRUMP_CARD, TWIN_BEAM, TWINEEDLE, TWINKLE_TACKLE, TWISTER, U_TURN, UPROAR, VACUUM_WAVE, V_CREATE, VEEVEE_VOLLEY, VENOM_DRENCH, VENOSHOCK, VICTORY_DANCE, VINE_WHIP, VISE_GRIP, VITAL_THROW, VOLT_SWITCH, VOLT_TACKLE, WAKE_UP_SLAP, WATERFALL, WATER_GUN, WATER_PLEDGE, WATER_PULSE, WATER_SHURIKEN, WATER_SPORT, WATER_SPOUT, WAVE_CRASH, WEATHER_BALL, WHIRLPOOL, WHIRLWIND, WICKED_BLOW, WICKED_TORQUE, WIDE_GUARD, WILDBOLT_STORM, WILD_CHARGE, WILL_O_WISP, WING_ATTACK, WISH, WITHDRAW, WONDER_ROOM, WOOD_HAMMER, WORK_UP, WORRY_SEED, WRAP, WRING_OUT, X_SCISSOR, YAWN, ZAP_CANNON, ZEN_HEADBUTT, ZING_ZAP, ZIPPY_ZAP, MOVE_TOTAL,
-  // clang-format on
-};
-}  // namespace pokesim::dex
-
-/////////////////////// END OF src/Types/Enums/Move.hpp ////////////////////////
-
-///////////////////////// START OF src/Types/Move.hpp //////////////////////////
-
-#include <cstdint>
-
-namespace pokesim::types {
-using Pp = std::uint8_t;
-using BasePower = std::uint8_t;
-using BaseAccuracy = std::uint8_t;
-using MoveHits = std::uint8_t;
-using BaseEffectChance = std::uint8_t;
-
-using Priority = std::int8_t;
-using FractionalPriority = std::int8_t;
-}  // namespace pokesim::types
-
-////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
-
-///////////////// START OF src/Battle/Setup/MoveStateSetup.hpp /////////////////
-
-namespace pokesim {
-// Tool to set properties of a move's state to an entity.
-struct MoveStateSetup : internal::StateSetupBase {
-  MoveStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}
-  MoveStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {}
-
-  /**
-   * @brief Applies the defaults to the required properties for a move state.
-   *
-   * Some of the required properties are a blank `MoveName`, `Pp`, and `MaxPp` component.
-   */
-  inline void initBlank();
-
-  inline void setName(dex::Move moveName);
-  inline void setPP(types::Pp pp);
-  inline void setMaxPP(types::Pp maxPp);
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Battle/Setup/MoveStateSetup.hpp //////////////////
-
 ///////////////////////// START OF src/Types/Stats.hpp /////////////////////////
 
 #include <cstdint>
@@ -12691,6 +12556,24 @@ enum Status : std::uint8_t { NO_STATUS = 0, BRN, FRZ, PAR, PSN, SLP, TOX, /*, FR
 
 ////////////////////// END OF src/Types/Enums/Status.hpp ///////////////////////
 
+///////////////////////// START OF src/Types/State.hpp /////////////////////////
+
+#include <cstdint>
+
+namespace pokesim::types {
+using StateId = std::uint16_t;
+using StateProbability = float;
+using StateRngSeed = std::uint32_t;
+
+using BattleTurn = std::uint16_t;
+
+using ActionOrder = std::uint8_t;
+
+using TeamSlotPosition = std::uint8_t;
+}  // namespace pokesim::types
+
+////////////////////////// END OF src/Types/State.hpp //////////////////////////
+
 /////////////// START OF src/Battle/Setup/PokemonStateSetup.hpp ////////////////
 
 #include <type_traits>
@@ -12754,6 +12637,125 @@ struct PokemonStateSetup : internal::StateSetupBase {
 }  // namespace pokesim
 
 //////////////// END OF src/Battle/Setup/PokemonStateSetup.hpp /////////////////
+
+//////////////// START OF src/Components/EntityHolders/Side.hpp ////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+// Contains the entity pointing to the player 1 or player 2 side of a battle.
+struct Side {
+  enum PlayerSideID : uint8_t {
+    P1 = 0,
+    P2 = 1,
+  };
+
+  entt::entity side;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/EntityHolders/Side.hpp /////////////////
+
+//////////////// START OF src/Battle/Setup/BattleStateSetup.hpp ////////////////
+
+#include <optional>
+#include <vector>
+
+
+namespace pokesim {
+struct SimulateTurnOptions;
+struct CalculateDamageOptions;
+struct AnalyzeEffectOptions;
+
+// Tool to set properties of a battle's state to an entity.
+struct BattleStateSetup : internal::StateSetupBase {
+  BattleStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}
+  BattleStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {}
+
+  /**
+   * @brief Applies the defaults to the required properties for a battle state.
+   *
+   * @details Some of the required properties and their defaults:
+   * - Turn: 0
+   * - Probability: 1
+   * - Id: The number of existing battle states
+   * - Sides: Unassigned entities for P1 and P2
+   * - ActionQueue: An empty queue
+   */
+  inline void initBlank();
+
+  inline void setAutoID();
+  inline void setID(types::StateId id);
+  inline void setSide(Side::PlayerSideID sideID, entt::entity sideEntity);
+
+  // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
+  inline void setRNGSeed(std::optional<types::StateRngSeed> seed = std::nullopt);
+  inline void setActionQueue(const std::vector<entt::entity>& queue);
+  inline void setTurn(types::BattleTurn turn);
+  inline void setActiveMove(entt::entity activeMove);
+  inline void setActivePokemon(entt::entity activePokemon);
+  inline void setActiveTarget(entt::entity activeTarget);
+  inline void setActiveUser(entt::entity activeSource);
+  inline void setProbability(types::StateProbability probability);
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Battle/Setup/BattleStateSetup.hpp /////////////////
+
+////////////////////// START OF src/Types/Enums/Move.hpp ///////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon move name
+enum Move : std::uint16_t {
+  // clang-format off
+  NO_MOVE = 0, ONE_MILLION_VOLT_THUNDERBOLT, ABSORB, ACCELEROCK, ACID, ACID_ARMOR, ACID_DOWNPOUR, ACID_SPRAY, ACROBATICS, ACUPRESSURE, AERIAL_ACE, AEROBLAST, AFTER_YOU, AGILITY, AIR_CUTTER, AIR_SLASH, ALL_OUT_PUMMELING, ALLY_SWITCH, AMNESIA, ANCHOR_SHOT, ANCIENT_POWER, APPLE_ACID, AQUA_CUTTER, AQUA_JET, AQUA_RING, AQUA_STEP, AQUA_TAIL, ARMOR_CANNON, ARM_THRUST, AROMATHERAPY, AROMATIC_MIST, ASSIST, ASSURANCE, ASTONISH, ASTRAL_BARRAGE, ATTACK_ORDER, ATTRACT, AURA_SPHERE, AURA_WHEEL, AURORA_BEAM, AURORA_VEIL, AUTOTOMIZE, AVALANCHE, AXE_KICK, BABY_DOLL_EYES, BADDY_BAD, BANEFUL_BUNKER, BARB_BARRAGE, BARRAGE, BARRIER, BATON_PASS, BEAK_BLAST, BEAT_UP, BEHEMOTH_BASH, BEHEMOTH_BLADE, BELCH, BELLY_DRUM, BESTOW, BIDE, BIND, BITE, BITTER_BLADE, BITTER_MALICE, BLACK_HOLE_ECLIPSE, BLAST_BURN, BLAZE_KICK, BLAZING_TORQUE, BLEAKWIND_STORM, BLIZZARD, BLOCK, BLOOM_DOOM, BLUE_FLARE, BODY_PRESS, BODY_SLAM, BOLT_BEAK, BOLT_STRIKE, BONE_CLUB, BONEMERANG, BONE_RUSH, BOOMBURST, BOUNCE, BOUNCY_BUBBLE, BRANCH_POKE, BRAVE_BIRD, BREAKING_SWIPE, BREAKNECK_BLITZ, BRICK_BREAK, BRINE, BRUTAL_SWING, BUBBLE, BUBBLE_BEAM, BUG_BITE, BUG_BUZZ, BULK_UP, BULLDOZE, BULLET_PUNCH, BULLET_SEED, BURNING_JEALOUSY, BURN_UP, BUZZY_BUZZ, CALM_MIND, CAMOUFLAGE, CAPTIVATE, CATASTROPIKA, CEASELESS_EDGE, CELEBRATE, CHARGE, CHARGE_BEAM, CHARM, CHATTER, CHILLING_WATER, CHILLY_RECEPTION, CHIP_AWAY, CHLOROBLAST, CIRCLE_THROW, CLAMP, CLANGING_SCALES, CLANGOROUS_SOUL, CLANGOROUS_SOULBLAZE, CLEAR_SMOG, CLOSE_COMBAT, COACHING, COIL, COLLISION_COURSE, COMBAT_TORQUE, COMET_PUNCH, COMEUPPANCE, CONFIDE, CONFUSE_RAY, CONFUSION, CONSTRICT, CONTINENTAL_CRUSH, CONVERSION, CONVERSION_2, COPYCAT, CORE_ENFORCER, CORKSCREW_CRASH, CORROSIVE_GAS, COSMIC_POWER, COTTON_GUARD, COTTON_SPORE, COUNTER, COURT_CHANGE, COVET, CRABHAMMER, CRAFTY_SHIELD, CROSS_CHOP, CROSS_POISON, CRUNCH, CRUSH_CLAW, CRUSH_GRIP, CURSE, CUT, DARKEST_LARIAT, DARK_PULSE, DARK_VOID, DAZZLING_GLEAM, DECORATE, DEFEND_ORDER, DEFENSE_CURL, DEFOG, DESTINY_BOND, DETECT, DEVASTATING_DRAKE, DIAMOND_STORM, DIG, DISABLE, DISARMING_VOICE, DISCHARGE, DIRE_CLAW, DIVE, DIZZY_PUNCH, DOODLE, DOOM_DESIRE, DOUBLE_EDGE, DOUBLE_HIT, DOUBLE_IRON_BASH, DOUBLE_KICK, DOUBLE_SHOCK, DOUBLE_SLAP, DOUBLE_TEAM, DRACO_METEOR, DRAGON_ASCENT, DRAGON_BREATH, DRAGON_CLAW, DRAGON_DANCE, DRAGON_DARTS, DRAGON_ENERGY, DRAGON_HAMMER, DRAGON_PULSE, DRAGON_RAGE, DRAGON_RUSH, DRAGON_TAIL, DRAINING_KISS, DRAIN_PUNCH, DREAM_EATER, DRILL_PECK, DRILL_RUN, DRUM_BEATING, DUAL_CHOP, DUAL_WINGBEAT, DYNAMAX_CANNON, DYNAMIC_PUNCH, EARTH_POWER, EARTHQUAKE, ECHOED_VOICE, EERIE_IMPULSE, EERIE_SPELL, EGG_BOMB, ELECTRIC_TERRAIN, ELECTRIFY, ELECTRO_BALL, ELECTRO_DRIFT, ELECTROWEB, EMBARGO, EMBER, ENCORE, ENDEAVOR, ENDURE, ENERGY_BALL, ENTRAINMENT, ERUPTION, ESPER_WING, ETERNABEAM, EXPANDING_FORCE, EXPLOSION, EXTRASENSORY, EXTREME_EVOBOOST, EXTREME_SPEED, FACADE, FAIRY_LOCK, FAIRY_WIND, FAKE_OUT, FAKE_TEARS, FALSE_SURRENDER, FALSE_SWIPE, FEATHER_DANCE, FEINT, FEINT_ATTACK, FELL_STINGER, FIERY_DANCE, FIERY_WRATH, FILLET_AWAY, FINAL_GAMBIT, FIRE_BLAST, FIRE_FANG, FIRE_LASH, FIRE_PLEDGE, FIRE_PUNCH, FIRE_SPIN, FIRST_IMPRESSION, FISHIOUS_REND, FISSURE, FLAIL, FLAME_BURST, FLAME_CHARGE, FLAME_WHEEL, FLAMETHROWER, FLARE_BLITZ, FLASH, FLASH_CANNON, FLATTER, FLEUR_CANNON, FLING, FLIP_TURN, FLOATY_FALL, FLORAL_HEALING, FLOWER_SHIELD, FLOWER_TRICK, FLY, FLYING_PRESS, FOCUS_BLAST, FOCUS_ENERGY, FOCUS_PUNCH, FOLLOW_ME, FORCE_PALM, FORESIGHT, FORESTS_CURSE, FOUL_PLAY, FREEZE_DRY, FREEZE_SHOCK, FREEZING_GLARE, FREEZY_FROST, FRENZY_PLANT, FROST_BREATH, FRUSTRATION, FURY_ATTACK, FURY_CUTTER, FURY_SWIPES, FUSION_BOLT, FUSION_FLARE, FUTURE_SIGHT, GASTRO_ACID, GEAR_GRIND, GEAR_UP, GENESIS_SUPERNOVA, GEOMANCY, GIGA_DRAIN, GIGA_IMPACT, GIGATON_HAMMER, GIGAVOLT_HAVOC, GLACIAL_LANCE, GLACIATE, GLAIVE_RUSH, GLARE, GLITZY_GLOW, G_MAX_BEFUDDLE, G_MAX_CANNONADE, G_MAX_CENTIFERNO, G_MAX_CHI_STRIKE, G_MAX_CUDDLE, G_MAX_DEPLETION, G_MAX_DRUM_SOLO, G_MAX_FINALE, G_MAX_FIREBALL, G_MAX_FOAM_BURST, G_MAX_GOLD_RUSH, G_MAX_GRAVITAS, G_MAX_HYDROSNIPE, G_MAX_MALODOR, G_MAX_MELTDOWN, G_MAX_ONE_BLOW, G_MAX_RAPID_FLOW, G_MAX_REPLENISH, G_MAX_RESONANCE, G_MAX_SANDBLAST, G_MAX_SMITE, G_MAX_SNOOZE, G_MAX_STEELSURGE, G_MAX_STONESURGE, G_MAX_STUN_SHOCK, G_MAX_SWEETNESS, G_MAX_TARTNESS, G_MAX_TERROR, G_MAX_VINE_LASH, G_MAX_VOLCALITH, G_MAX_VOLT_CRASH, G_MAX_WILDFIRE, G_MAX_WIND_RAGE, GRASS_KNOT, GRASS_PLEDGE, GRASS_WHISTLE, GRASSY_GLIDE, GRASSY_TERRAIN, GRAV_APPLE, GRAVITY, GROWL, GROWTH, GRUDGE, GUARDIAN_OF_ALOLA, GUARD_SPLIT, GUARD_SWAP, GUILLOTINE, GUNK_SHOT, GUST, GYRO_BALL, HAIL, HAMMER_ARM, HAPPY_HOUR, HARDEN, HAZE, HEADBUTT, HEAD_CHARGE, HEADLONG_RUSH, HEAD_SMASH, HEAL_BELL, HEAL_BLOCK, HEALING_WISH, HEAL_ORDER, HEAL_PULSE, HEART_STAMP, HEART_SWAP, HEAT_CRASH, HEAT_WAVE, HEAVY_SLAM, HELPING_HAND, HEX, HIDDEN_POWER, HIDDEN_POWER_BUG, HIDDEN_POWER_DARK, HIDDEN_POWER_DRAGON, HIDDEN_POWER_ELECTRIC, HIDDEN_POWER_FIGHTING, HIDDEN_POWER_FIRE, HIDDEN_POWER_FLYING, HIDDEN_POWER_GHOST, HIDDEN_POWER_GRASS, HIDDEN_POWER_GROUND, HIDDEN_POWER_ICE, HIDDEN_POWER_POISON, HIDDEN_POWER_PSYCHIC, HIDDEN_POWER_ROCK, HIDDEN_POWER_STEEL, HIDDEN_POWER_WATER, HIGH_HORSEPOWER, HIGH_JUMP_KICK, HOLD_BACK, HOLD_HANDS, HONE_CLAWS, HORN_ATTACK, HORN_DRILL, HORN_LEECH, HOWL, HURRICANE, HYDRO_CANNON, HYDRO_PUMP, HYDRO_STEAM, HYDRO_VORTEX, HYPER_BEAM, HYPER_DRILL, HYPER_FANG, HYPERSPACE_FURY, HYPERSPACE_HOLE, HYPER_VOICE, HYPNOSIS, ICE_BALL, ICE_BEAM, ICE_BURN, ICE_FANG, ICE_HAMMER, ICE_PUNCH, ICE_SHARD, ICE_SPINNER, ICICLE_CRASH, ICICLE_SPEAR, ICY_WIND, IMPRISON, INCINERATE, INFERNAL_PARADE, INFERNO, INFERNO_OVERDRIVE, INFESTATION, INGRAIN, INSTRUCT, ION_DELUGE, IRON_DEFENSE, IRON_HEAD, IRON_TAIL, JAW_LOCK, JET_PUNCH, JUDGMENT, JUMP_KICK, JUNGLE_HEALING, KARATE_CHOP, KINESIS, KINGS_SHIELD, KNOCK_OFF, KOWTOW_CLEAVE, LANDS_WRATH, LASER_FOCUS, LASH_OUT, LAST_RESORT, LAST_RESPECTS, LAVA_PLUME, LEAFAGE, LEAF_BLADE, LEAF_STORM, LEAF_TORNADO, LEECH_LIFE, LEECH_SEED, LEER, LETS_SNUGGLE_FOREVER, LICK, LIFE_DEW, LIGHT_OF_RUIN, LIGHT_SCREEN, LIGHT_THAT_BURNS_THE_SKY, LIQUIDATION, LOCK_ON, LOVELY_KISS, LOW_KICK, LOW_SWEEP, LUCKY_CHANT, LUMINA_CRASH, LUNAR_BLESSING, LUNAR_DANCE, LUNGE, LUSTER_PURGE, MACH_PUNCH, MAGICAL_LEAF, MAGICAL_TORQUE, MAGIC_COAT, MAGIC_POWDER, MAGIC_ROOM, MAGMA_STORM, MAGNET_BOMB, MAGNETIC_FLUX, MAGNET_RISE, MAGNITUDE, MAKE_IT_RAIN, MALICIOUS_MOONSAULT, MAT_BLOCK, MAX_AIRSTREAM, MAX_DARKNESS, MAX_FLARE, MAX_FLUTTERBY, MAX_GEYSER, MAX_GUARD, MAX_HAILSTORM, MAX_KNUCKLE, MAX_LIGHTNING, MAX_MINDSTORM, MAX_OOZE, MAX_OVERGROWTH, MAX_PHANTASM, MAX_QUAKE, MAX_ROCKFALL, MAX_STARFALL, MAX_STEELSPIKE, MAX_STRIKE, MAX_WYRMWIND, MEAN_LOOK, MEDITATE, ME_FIRST, MEGA_DRAIN, MEGAHORN, MEGA_KICK, MEGA_PUNCH, MEMENTO, MENACING_MOONRAZE_MAELSTROM, METAL_BURST, METAL_CLAW, METAL_SOUND, METEOR_ASSAULT, METEOR_BEAM, METEOR_MASH, METRONOME, MILK_DRINK, MIMIC, MIND_BLOWN, MIND_READER, MINIMIZE, MIRACLE_EYE, MIRROR_COAT, MIRROR_MOVE, MIRROR_SHOT, MIST, MIST_BALL, MISTY_EXPLOSION, MISTY_TERRAIN, MOONBLAST, MOONGEIST_BEAM, MOONLIGHT, MORNING_SUN, MORTAL_SPIN, MOUNTAIN_GALE, MUD_BOMB, MUD_SHOT, MUD_SLAP, MUD_SPORT, MUDDY_WATER, MULTI_ATTACK, MYSTICAL_FIRE, MYSTICAL_POWER, NASTY_PLOT, NATURAL_GIFT, NATURE_POWER, NATURES_MADNESS, NEEDLE_ARM, NEVER_ENDING_NIGHTMARE, NIGHT_DAZE, NIGHTMARE, NIGHT_SHADE, NIGHT_SLASH, NOBLE_ROAR, NO_RETREAT, NOXIOUS_TORQUE, NUZZLE, OBLIVION_WING, OBSTRUCT, OCEANIC_OPERETTA, OCTAZOOKA, OCTOLOCK, ODOR_SLEUTH, OMINOUS_WIND, ORDER_UP, ORIGIN_PULSE, OUTRAGE, OVERDRIVE, OVERHEAT, PAIN_SPLIT, PARABOLIC_CHARGE, PARTING_SHOT, PAYBACK, PAY_DAY, PECK, PERISH_SONG, PETAL_BLIZZARD, PETAL_DANCE, PHANTOM_FORCE, PHOTON_GEYSER, PIKA_PAPOW, PIN_MISSILE, PLASMA_FISTS, PLAY_NICE, PLAY_ROUGH, PLUCK, POISON_FANG, POISON_GAS, POISON_JAB, POISON_POWDER, POISON_STING, POISON_TAIL, POLLEN_PUFF, POLTERGEIST, POPULATION_BOMB, POUNCE, POUND, POWDER, POWDER_SNOW, POWER_GEM, POWER_SHIFT, POWER_SPLIT, POWER_SWAP, POWER_TRICK, POWER_TRIP, POWER_UP_PUNCH, POWER_WHIP, PRECIPICE_BLADES, PRESENT, PRISMATIC_LASER, PROTECT, PSYBEAM, PSYBLADE, PSYCH_UP, PSYCHIC, PSYCHIC_FANGS, PSYCHIC_TERRAIN, PSYCHO_BOOST, PSYCHO_CUT, PSYCHO_SHIFT, PSYSHIELD_BASH, PSYSHOCK, PSYSTRIKE, PSYWAVE, PULVERIZING_PANCAKE, PUNISHMENT, PURIFY, PURSUIT, PYRO_BALL, QUASH, QUICK_ATTACK, QUICK_GUARD, QUIVER_DANCE, RAGE, RAGE_FIST, RAGE_POWDER, RAGING_BULL, RAGING_FURY, RAIN_DANCE, RAPID_SPIN, RAZOR_LEAF, RAZOR_SHELL, RAZOR_WIND, RECOVER, RECYCLE, REFLECT, REFLECT_TYPE, REFRESH, RELIC_SONG, REST, RETALIATE, RETURN, REVELATION_DANCE, REVENGE, REVERSAL, REVIVAL_BLESSING, RISING_VOLTAGE, ROAR, ROAR_OF_TIME, ROCK_BLAST, ROCK_CLIMB, ROCK_POLISH, ROCK_SLIDE, ROCK_SMASH, ROCK_THROW, ROCK_TOMB, ROCK_WRECKER, ROLE_PLAY, ROLLING_KICK, ROLLOUT, ROOST, ROTOTILLER, ROUND, RUINATION, SACRED_FIRE, SACRED_SWORD, SAFEGUARD, SALT_CURE, SAND_ATTACK, SANDSEAR_STORM, SANDSTORM, SAND_TOMB, SAPPY_SEED, SAVAGE_SPIN_OUT, SCALD, SCALE_SHOT, SCARY_FACE, SCORCHING_SANDS, SCRATCH, SCREECH, SEARING_SHOT, SEARING_SUNRAZE_SMASH, SECRET_POWER, SECRET_SWORD, SEED_BOMB, SEED_FLARE, SEISMIC_TOSS, SELF_DESTRUCT, SHADOW_BALL, SHADOW_BONE, SHADOW_CLAW, SHADOW_FORCE, SHADOW_PUNCH, SHADOW_SNEAK, SHARPEN, SHATTERED_PSYCHE, SHED_TAIL, SHEER_COLD, SHELL_SIDE_ARM, SHELL_SMASH, SHELL_TRAP, SHELTER, SHIFT_GEAR, SHOCK_WAVE, SHORE_UP, SIGNAL_BEAM, SILK_TRAP, SILVER_WIND, SIMPLE_BEAM, SING_MOVE /*Many math libraries define SING as a macro*/, SINISTER_ARROW_RAID, SIZZLY_SLIDE, SKETCH, SKILL_SWAP, SKITTER_SMACK, SKULL_BASH, SKY_ATTACK, SKY_DROP, SKY_UPPERCUT, SLACK_OFF, SLAM, SLASH, SLEEP_POWDER, SLEEP_TALK, SLUDGE, SLUDGE_BOMB, SLUDGE_WAVE, SMACK_DOWN, SMART_STRIKE, SMELLING_SALTS, SMOG, SMOKESCREEN, SNAP_TRAP, SNARL, SNATCH, SNIPE_SHOT, SNORE, SNOWSCAPE, SOAK, SOFT_BOILED, SOLAR_BEAM, SOLAR_BLADE, SONIC_BOOM, SOUL_STEALING_7_STAR_STRIKE, SPACIAL_REND, SPARK, SPARKLING_ARIA, SPARKLY_SWIRL, SPECTRAL_THIEF, SPEED_SWAP, SPICY_EXTRACT, SPIDER_WEB, SPIKE_CANNON, SPIKES, SPIKY_SHIELD, SPIN_OUT, SPIRIT_BREAK, SPIRIT_SHACKLE, SPIT_UP, SPITE, SPLASH, SPLINTERED_STORMSHARDS, SPLISHY_SPLASH, SPORE, SPOTLIGHT, SPRINGTIDE_STORM, STEALTH_ROCK, STEAM_ERUPTION, STEAMROLLER, STEEL_BEAM, STEEL_ROLLER, STEEL_WING, STICKY_WEB, STOCKPILE, STOKED_SPARKSURFER, STOMP, STOMPING_TANTRUM, STONE_AXE, STONE_EDGE, STORED_POWER, STORM_THROW, STRANGE_STEAM, STRENGTH, STRENGTH_SAP, STRING_SHOT, STRUGGLE, STRUGGLE_BUG, STUFF_CHEEKS, STUN_SPORE, SUBMISSION, SUBSTITUTE, SUBZERO_SLAMMER, SUCKER_PUNCH, SUNNY_DAY, SUNSTEEL_STRIKE, SUPER_FANG, SUPERPOWER, SUPERSONIC, SUPERSONIC_SKYSTRIKE, SURF, SURGING_STRIKES, SWAGGER, SWALLOW, SWEET_KISS, SWEET_SCENT, SWIFT, SWITCHEROO, SWORDS_DANCE, SYNCHRONOISE, SYNTHESIS, TACKLE, TAIL_GLOW, TAIL_SLAP, TAIL_WHIP, TAILWIND, TAKE_DOWN, TAKE_HEART, TAR_SHOT, TAUNT, TEARFUL_LOOK, TEATIME, TECHNO_BLAST, TECTONIC_RAGE, TEETER_DANCE, TELEKINESIS, TELEPORT, TERA_BLAST, TERRAIN_PULSE, THIEF, THOUSAND_ARROWS, THOUSAND_WAVES, THRASH, THROAT_CHOP, THUNDER, THUNDERBOLT, THUNDER_CAGE, THUNDER_FANG, THUNDEROUS_KICK, THUNDER_PUNCH, THUNDER_SHOCK, THUNDER_WAVE, TICKLE, TIDY_UP, TOPSY_TURVY, TORCH_SONG, TORMENT, TOXIC, TOXIC_SPIKES, TOXIC_THREAD, TRAILBLAZE, TRANSFORM, TRI_ATTACK, TRICK, TRICK_OR_TREAT, TRICK_ROOM, TRIPLE_ARROWS, TRIPLE_AXEL, TRIPLE_DIVE, TRIPLE_KICK, TROP_KICK, TRUMP_CARD, TWIN_BEAM, TWINEEDLE, TWINKLE_TACKLE, TWISTER, U_TURN, UPROAR, VACUUM_WAVE, V_CREATE, VEEVEE_VOLLEY, VENOM_DRENCH, VENOSHOCK, VICTORY_DANCE, VINE_WHIP, VISE_GRIP, VITAL_THROW, VOLT_SWITCH, VOLT_TACKLE, WAKE_UP_SLAP, WATERFALL, WATER_GUN, WATER_PLEDGE, WATER_PULSE, WATER_SHURIKEN, WATER_SPORT, WATER_SPOUT, WAVE_CRASH, WEATHER_BALL, WHIRLPOOL, WHIRLWIND, WICKED_BLOW, WICKED_TORQUE, WIDE_GUARD, WILDBOLT_STORM, WILD_CHARGE, WILL_O_WISP, WING_ATTACK, WISH, WITHDRAW, WONDER_ROOM, WOOD_HAMMER, WORK_UP, WORRY_SEED, WRAP, WRING_OUT, X_SCISSOR, YAWN, ZAP_CANNON, ZEN_HEADBUTT, ZING_ZAP, ZIPPY_ZAP, MOVE_TOTAL,
+  // clang-format on
+};
+}  // namespace pokesim::dex
+
+/////////////////////// END OF src/Types/Enums/Move.hpp ////////////////////////
+
+///////////////////////// START OF src/Types/Move.hpp //////////////////////////
+
+#include <cstdint>
+
+namespace pokesim::types {
+using Pp = std::uint8_t;
+using BasePower = std::uint8_t;
+using BaseAccuracy = std::uint8_t;
+using MoveHits = std::uint8_t;
+using BaseEffectChance = std::uint8_t;
+
+using Priority = std::int8_t;
+using FractionalPriority = std::int8_t;
+}  // namespace pokesim::types
+
+////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
+
+///////////////// START OF src/Battle/Setup/MoveStateSetup.hpp /////////////////
+
+namespace pokesim {
+// Tool to set properties of a move's state to an entity.
+struct MoveStateSetup : internal::StateSetupBase {
+  MoveStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}
+  MoveStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {}
+
+  /**
+   * @brief Applies the defaults to the required properties for a move state.
+   *
+   * Some of the required properties are a blank `MoveName`, `Pp`, and `MaxPp` component.
+   */
+  inline void initBlank();
+
+  inline void setName(dex::Move moveName);
+  inline void setPP(types::Pp pp);
+  inline void setMaxPP(types::Pp maxPp);
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Battle/Setup/MoveStateSetup.hpp //////////////////
 
 ///////////////// START OF src/Battle/Setup/SideStateSetup.hpp /////////////////
 
@@ -12997,6 +12999,7 @@ enum DamageRollKind : std::uint8_t {
 namespace simulate_turn {
 struct Options {
   DamageRollKind damageRollsConsidered = AVERAGE_DAMAGE;
+  bool applyChangesToInputBattle = true;
   float randomChanceUpperLimit = 0.9F;  // NOLINT(readability-magic-numbers)
   float randomChanceLowerLimit = 0.1F;  // NOLINT(readability-magic-numbers)
   float branchProbabilityLowerLimit = 0.0F;
@@ -13048,6 +13051,15 @@ using DamageRolls = std::array<Damage, internal::MAX_DAMAGE_ROLL_COUNT>;
 
 ///////////////////////// END OF src/Types/Damage.hpp //////////////////////////
 
+//////////////////////// START OF src/Types/Entity.hpp /////////////////////////
+
+namespace pokesim::types {
+template <typename T, typename... Other>
+using view = entt::view<entt::get_t<const T, const Other...>>;
+}  // namespace pokesim::types
+
+///////////////////////// END OF src/Types/Entity.hpp //////////////////////////
+
 //////////////////// START OF src/Simulation/Simulation.hpp ////////////////////
 
 #include <initializer_list>
@@ -13059,6 +13071,9 @@ using DamageRolls = std::array<Damage, internal::MAX_DAMAGE_ROLL_COUNT>;
 
 namespace pokesim {
 struct SideStateSetup;
+struct PokemonStateSetup;
+class Pokedex;
+
 namespace simulate_turn {
 struct Results;
 }
@@ -13138,7 +13153,7 @@ class Simulation {
   calc_damage::Options calculateDamageOptions;
   analyze_effect::Options analyzeEffectOptions;
 
-  Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_) : battleFormat(battleFormat_), pokedex(pokedex_) {}
+  inline Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
 
   // Load information about any number of battle states into the simulation's registry.
   inline void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
@@ -13172,11 +13187,16 @@ class Simulation {
 
 ///////////////// START OF src/Simulation/SimulationSetup.cpp //////////////////
 
-#include <algorithm>
 #include <cstddef>
+#include <initializer_list>
+#include <utility>
+#include <vector>
 
 
 namespace pokesim {
+Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
+    : battleFormat(battleFormat_), pokedex(pokedex_) {}
+
 std::vector<entt::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList) {
   std::vector<entt::entity> moveEntities{};
   moveEntities.reserve(moveDataList.size());
@@ -13289,6 +13309,158 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
 }  // namespace pokesim
 
 ////////////////// END OF src/Simulation/SimulationSetup.cpp ///////////////////
+
+//////////////// START OF src/Simulation/SimulationResults.hpp /////////////////
+
+#include <array>
+#include <vector>
+
+namespace pokesim {
+class Simulation;
+
+namespace simulate_turn {
+struct TurnOutcomeBattles {
+  std::vector<entt::entity> turnOutcomeBattles;
+};
+
+struct Results {
+  inline types::view<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
+
+  inline Results(const Simulation& simulation_);
+
+ private:
+  const Simulation& simulation;
+};
+}  // namespace simulate_turn
+
+namespace calc_damage {
+struct MaxDamage {
+  types::Damage maxDamage = 0;
+};
+
+struct MinUsesUntilKo {
+  types::Damage minUsesUntilKo = 0;
+};
+
+struct AttackerHpRecovered {
+  types::Stat hpRecovered = 0;
+};
+
+struct AttackerHpLost {
+  types::Stat hpLost = 0;
+};
+
+struct HitCount {
+  types::MoveHits hitCount = 1;
+};
+
+struct Results {
+  inline types::view<MaxDamage> maxDamageResults() const;
+  inline types::view<MinUsesUntilKo> minUsesUntilKoResults() const;
+  inline types::view<AttackerHpRecovered> hpRecoveredResults() const;
+  inline types::view<AttackerHpLost> hpLostResults() const;
+  inline types::view<HitCount> hitCountResults() const;
+
+  inline Results(const Simulation& simulation_);
+
+ private:
+  const Simulation& simulation;
+};
+}  // namespace calc_damage
+
+namespace analyze_effect {
+struct EffectMultiplier {
+  float effectMultiplier = 1.0F;
+};
+
+struct MultipliedMaxDamage {
+  types::Damage multipliedMaxDamage;
+};
+
+struct MultipliedDamageRolls {
+  types::DamageRolls multipliedDamageRolls;
+};
+
+struct MultipliedKoChance {
+  float multipliedKoChance = 1.0F;
+};
+
+struct Results {
+  inline types::view<EffectMultiplier> effectMultiplierResults() const;
+  inline types::view<MultipliedMaxDamage> multipliedMaxDamageResults() const;
+  inline types::view<MultipliedDamageRolls> multipliedDamageRollsResults() const;
+  inline types::view<MultipliedKoChance> multipliedKoChanceResults() const;
+
+  inline Results(const Simulation& simulation_);
+
+ private:
+  const Simulation& simulation;
+};
+}  // namespace analyze_effect
+}  // namespace pokesim
+
+///////////////// END OF src/Simulation/SimulationResults.hpp //////////////////
+
+//////////////// START OF src/Simulation/SimulationResults.cpp /////////////////
+
+#include <vector>
+
+
+namespace pokesim {
+namespace simulate_turn {
+Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
+
+types::view<TurnOutcomeBattles> Results::turnOutcomeBattlesResults() const {
+  return simulation.registry.view<TurnOutcomeBattles>();
+}
+}  // namespace simulate_turn
+
+namespace calc_damage {
+Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
+
+types::view<MaxDamage> Results::maxDamageResults() const {
+  return simulation.registry.view<MaxDamage>();
+}
+
+types::view<MinUsesUntilKo> Results::minUsesUntilKoResults() const {
+  return simulation.registry.view<MinUsesUntilKo>();
+}
+
+types::view<AttackerHpRecovered> Results::hpRecoveredResults() const {
+  return simulation.registry.view<AttackerHpRecovered>();
+}
+
+types::view<AttackerHpLost> Results::hpLostResults() const {
+  return simulation.registry.view<AttackerHpLost>();
+}
+
+types::view<HitCount> Results::hitCountResults() const {
+  return simulation.registry.view<HitCount>();
+}
+}  // namespace calc_damage
+
+namespace analyze_effect {
+Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
+
+types::view<EffectMultiplier> Results::effectMultiplierResults() const {
+  return simulation.registry.view<EffectMultiplier>();
+}
+
+types::view<MultipliedMaxDamage> Results::multipliedMaxDamageResults() const {
+  return simulation.registry.view<MultipliedMaxDamage>();
+}
+
+types::view<MultipliedDamageRolls> Results::multipliedDamageRollsResults() const {
+  return simulation.registry.view<MultipliedDamageRolls>();
+}
+
+types::view<MultipliedKoChance> Results::multipliedKoChanceResults() const {
+  return simulation.registry.view<MultipliedKoChance>();
+}
+}  // namespace analyze_effect
+}  // namespace pokesim
+
+///////////////// END OF src/Simulation/SimulationResults.cpp //////////////////
 
 //////////////// START OF src/Components/DexData/Abilities.hpp /////////////////
 
@@ -16290,80 +16462,6 @@ struct TargetSlot {
 }  // namespace pokesim
 
 ///////////////////// END OF src/Components/TargetSlot.hpp /////////////////////
-
-//////////////// START OF src/Simulation/SimulationResults.hpp /////////////////
-
-#include <array>
-#include <vector>
-
-namespace pokesim {
-namespace simulate_turn {
-struct TurnOutcomeBattles {
-  std::vector<entt::entity> turnOutcomeBattles;
-};
-
-struct Results {
-  std::vector<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
-};
-}  // namespace simulate_turn
-
-namespace calc_damage {
-struct MaxDamage {
-  types::Damage maxDamage = 0;
-};
-
-struct MinUsesUntilKo {
-  types::Damage minUsesUntilKo = 0;
-};
-
-struct HpRecovered {
-  types::Damage hpRecovered = 0;
-};
-
-struct HpLost {
-  types::Damage hpLost = 0;
-};
-
-struct HitCount {
-  types::MoveHits hitCount = 1;
-};
-
-struct Results {
-  std::vector<MaxDamage> maxDamageResults() const;
-  std::vector<MinUsesUntilKo> minUsesUntilKoResults() const;
-  std::vector<HpRecovered> hpRecoveredResults() const;
-  std::vector<HpLost> hpLostResults() const;
-  std::vector<HitCount> hitCountResults() const;
-};
-}  // namespace calc_damage
-
-namespace analyze_effect {
-struct EffectMultiplier {
-  float effectMultiplier = 1.0F;
-};
-
-struct MultipliedMaxDamage {
-  types::Damage multipliedMaxDamage;
-};
-
-struct MultipliedDamageRolls {
-  types::DamageRolls multipliedDamageRolls;
-};
-
-struct MultipliedKoChance {
-  float multipliedKoChance = 1.0F;
-};
-
-struct Results {
-  std::vector<EffectMultiplier> effectMultiplierResults() const;
-  std::vector<MultipliedMaxDamage> multipliedMaxDamageResults() const;
-  std::vector<MultipliedDamageRolls> multipliedDamageRollsResults() const;
-  std::vector<MultipliedKoChance> multipliedKoChanceResults() const;
-};
-}  // namespace analyze_effect
-}  // namespace pokesim
-
-///////////////// END OF src/Simulation/SimulationResults.hpp //////////////////
 
 /////////////////////////// START OF src/PokeSim.hpp ///////////////////////////
 
