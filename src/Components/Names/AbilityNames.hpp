@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct AbilityName {
-  dex::Ability name = dex::NO_ABILITY;
+  dex::Ability name = dex::Ability::NO_ABILITY;
 };
 }  // namespace pokesim

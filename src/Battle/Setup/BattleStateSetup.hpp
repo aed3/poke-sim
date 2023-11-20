@@ -33,7 +33,7 @@ struct BattleStateSetup : internal::StateSetupBase {
 
   /*_inline_*/ void setAutoID();
   /*_inline_*/ void setID(types::StateId id);
-  /*_inline_*/ void setSide(Side::PlayerSideID sideID, entt::entity sideEntity);
+  /*_inline_*/ void setSide(Side::PlayerSideId sideID, entt::entity sideEntity);
 
   // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
   /*_inline_*/ void setRNGSeed(std::optional<types::StateRngSeed> seed = std::nullopt);

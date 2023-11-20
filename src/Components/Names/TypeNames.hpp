@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct TypeName {
-  dex::Type name = dex::NO_TYPE;
+  dex::Type name = dex::Type::NO_TYPE;
 };
 }  // namespace pokesim

@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct ItemName {
-  dex::Item name = dex::NO_ITEM;
+  dex::Item name = dex::Item::NO_ITEM;
 };
 }  // namespace pokesim

@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct GenderName {
-  dex::Gender name = dex::NO_GENDER;
+  dex::Gender name = dex::Gender::NO_GENDER;
 };
 }  // namespace pokesim

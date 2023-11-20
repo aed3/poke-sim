@@ -10,14 +10,14 @@
 
 namespace pokesim::dex::build {
 struct WillOWisp {
-  static const dex::Move name = dex::WILL_O_WISP;
+  static const dex::Move name = dex::Move::WILL_O_WISP;
   static const types::BaseAccuracy accuracy = 85;
   static const types::Pp basePp = 15;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
-    move.setType(dex::FIRE_TYPE);
+    move.setType(dex::Type::FIRE_TYPE);
     move.setAccuracy(accuracy);
 
     move.setCategoryStatus();

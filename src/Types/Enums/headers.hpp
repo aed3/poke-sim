@@ -2,6 +2,7 @@
 
 #include "Ability.hpp"
 #include "BattleFormat.hpp"
+#include "DamageRollKind.hpp"
 #include "GameMechanics.hpp"
 #include "Gender.hpp"
 #include "Item.hpp"

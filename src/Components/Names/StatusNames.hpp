@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct StatusName {
-  dex::Status name = dex::NO_STATUS;
+  dex::Status name = dex::Status::NO_STATUS;
 };
 }  // namespace pokesim

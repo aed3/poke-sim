@@ -11,14 +11,14 @@
 
 namespace pokesim::dex::build {
 struct QuiverDance {
-  static const dex::Move name = dex::QUIVER_DANCE;
+  static const dex::Move name = dex::Move::QUIVER_DANCE;
   static const types::Pp basePp = 20;
   static const types::Boost spaBoost = 1, spdBoost = 1, speBoost = 1;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
-    move.setType(dex::BUG_TYPE);
+    move.setType(dex::Type::BUG_TYPE);
 
     move.setCategoryStatus();
     move.setBasePP(basePp);

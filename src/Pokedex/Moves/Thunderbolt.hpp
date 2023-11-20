@@ -10,7 +10,7 @@
 
 namespace pokesim::dex::build {
 struct Thunderbolt {
-  static const dex::Move name = dex::THUNDERBOLT;
+  static const dex::Move name = dex::Move::THUNDERBOLT;
   static const types::BaseAccuracy accuracy = 100;
   static const types::BasePower basePower = 90;
   static const types::Pp basePp = 15;
@@ -19,7 +19,7 @@ struct Thunderbolt {
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
-    move.setType(dex::ELECTRIC_TYPE);
+    move.setType(dex::Type::ELECTRIC_TYPE);
     move.setAccuracy(accuracy);
     move.setBasePower(basePower);
 

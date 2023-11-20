@@ -36,21 +36,21 @@ struct Results;
 class Simulation {
  public:
   struct MoveCreationInfo {
-    dex::Move name = dex::NO_MOVE;
+    dex::Move name = dex::Move::NO_MOVE;
     types::Pp pp = 1;
     types::Pp maxPp = 1;
   };
 
   struct PokemonCreationInfo {
     std::optional<types::StateId> id = std::nullopt;
-    dex::Species species = dex::MISSING_NO;
-    dex::Item item = dex::NO_ITEM;
-    dex::Ability ability = dex::NO_ABILITY;
-    dex::Gender gender = dex::NO_GENDER;
-    dex::Status status = dex::NO_STATUS;
+    dex::Species species = dex::Species::MISSING_NO;
+    dex::Item item = dex::Item::NO_ITEM;
+    dex::Ability ability = dex::Ability::NO_ABILITY;
+    dex::Gender gender = dex::Gender::NO_GENDER;
+    dex::Status status = dex::Status::NO_STATUS;
     types::Level level = 1;
 
-    dex::Nature nature = dex::NO_NATURE;
+    dex::Nature nature = dex::Nature::NO_NATURE;
     Evs evs;
     Ivs ivs;
     struct {
@@ -88,7 +88,7 @@ class Simulation {
   /*_inline_*/ std::pair<SideStateSetup, SideStateSetup> createInitialBattle(const BattleCreationInfo& battleData);
 
  public:
-  const BattleFormat battleFormat = SINGLES_BATTLE_FORMAT;
+  const BattleFormat battleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
   const Pokedex& pokedex;
   entt::registry registry{};
 

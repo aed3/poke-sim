@@ -42,11 +42,11 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
 
   pokemonSetup.setSpecies(pokemonData.species);
   pokemonSetup.setLevel(pokemonData.level);
-  if (pokemonData.gender) pokemonSetup.setGender(pokemonData.gender);
-  if (pokemonData.ability) pokemonSetup.setAbility(pokemonData.ability);
-  if (pokemonData.item) pokemonSetup.setItem(pokemonData.item);
-  if (pokemonData.nature) pokemonSetup.setNature(pokemonData.nature);
-  if (pokemonData.status) pokemonSetup.setStatus(pokemonData.status);
+  if (pokemonData.gender != dex::Gender::NO_GENDER) pokemonSetup.setGender(pokemonData.gender);
+  if (pokemonData.ability != dex::Ability::NO_ABILITY) pokemonSetup.setAbility(pokemonData.ability);
+  if (pokemonData.item != dex::Item::NO_ITEM) pokemonSetup.setItem(pokemonData.item);
+  if (pokemonData.nature != dex::Nature::NO_NATURE) pokemonSetup.setNature(pokemonData.nature);
+  if (pokemonData.status != dex::Status::NO_STATUS) pokemonSetup.setStatus(pokemonData.status);
 
   pokemonSetup.setEVs(pokemonData.evs);
   pokemonSetup.setIVs(pokemonData.ivs);
@@ -84,8 +84,8 @@ std::pair<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(const 
   entt::entity p1Entity = p1SideSetup.entity();
   entt::entity p2Entity = p2SideSetup.entity();
 
-  battleStateSetup.setSide(Side::P1, p1Entity);
-  battleStateSetup.setSide(Side::P2, p2Entity);
+  battleStateSetup.setSide(Side::PlayerSideId::P1, p1Entity);
+  battleStateSetup.setSide(Side::PlayerSideId::P2, p2Entity);
 
   p1SideSetup.setOpponent(p2Entity);
   p2SideSetup.setOpponent(p1Entity);

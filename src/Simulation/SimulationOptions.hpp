@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Types/Enums/DamageRollKind.hpp>
 #include <cstdint>
 #include <entt/signal/delegate.hpp>
 #include <optional>
@@ -7,22 +8,9 @@
 namespace pokesim {
 class Simulation;
 
-enum DamageRollKind : std::uint8_t {
-  NONE = 0b00000000,
-  AVERAGE_DAMAGE = 0b00000001,
-  ALL_DAMAGE_ROLES = 0b00000010,
-  P1_MAX_DAMAGE = 0b00000100,
-  P2_MAX_DAMAGE = 0b00001000,
-  P1_MIN_DAMAGE = 0b00010000,
-  P2_MIN_DAMAGE = 0b00100000,
-
-  MAX_DAMAGE = P1_MAX_DAMAGE | P2_MAX_DAMAGE,
-  MIN_DAMAGE = P1_MIN_DAMAGE | P2_MIN_DAMAGE,
-};
-
 namespace simulate_turn {
 struct Options {
-  DamageRollKind damageRollsConsidered = AVERAGE_DAMAGE;
+  types::DamageRollKind damageRollsConsidered = types::DamageRollKind::AVERAGE_DAMAGE;
   bool applyChangesToInputBattle = true;
   float randomChanceUpperLimit = 0.9F;  // NOLINT(readability-magic-numbers)
   float randomChanceLowerLimit = 0.1F;  // NOLINT(readability-magic-numbers)
@@ -41,7 +29,7 @@ struct Options {
 
 namespace calc_damage {
 struct Options {
-  DamageRollKind damageRollsReturned = ALL_DAMAGE_ROLES;
+  types::DamageRollKind damageRollsReturned = types::DamageRollKind::ALL_DAMAGE_ROLES;
 };
 }  // namespace calc_damage
 
@@ -52,7 +40,7 @@ struct Options {
   bool reconsiderActiveEffects = false;
   bool returnMultipliedKoChance = false;
 
-  DamageRollKind damageRollsReturned = DamageRollKind::NONE;
+  types::DamageRollKind damageRollsReturned = types::DamageRollKind::NONE;
 };
 }  // namespace analyze_effect
 }  // namespace pokesim

@@ -8,12 +8,12 @@
 namespace pokesim::tags::status {
 void enumToTag(dex::Status status, entt::handle& handle) {
   switch (status) {
-    case dex::BRN: handle.emplace<Burn>(); return;
-    case dex::FRZ: handle.emplace<Freeze>(); return;
-    case dex::PAR: handle.emplace<Paralysis>(); return;
-    case dex::PSN: handle.emplace<Poison>(); return;
-    case dex::SLP: handle.emplace<Sleep>(); return;
-    case dex::TOX: handle.emplace<Toxic>(); return;
+    case dex::Status::BRN: handle.emplace<Burn>(); return;
+    case dex::Status::FRZ: handle.emplace<Freeze>(); return;
+    case dex::Status::PAR: handle.emplace<Paralysis>(); return;
+    case dex::Status::PSN: handle.emplace<Poison>(); return;
+    case dex::Status::SLP: handle.emplace<Sleep>(); return;
+    case dex::Status::TOX: handle.emplace<Toxic>(); return;
     default: {
       ENTT_ASSERT(false, "Adding tag for status that does not exist");
     }

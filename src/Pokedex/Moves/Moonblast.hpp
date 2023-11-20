@@ -11,7 +11,7 @@
 
 namespace pokesim::dex::build {
 struct Moonblast {
-  static const dex::Move name = dex::MOONBLAST;
+  static const dex::Move name = dex::Move::MOONBLAST;
   static const types::BaseAccuracy accuracy = 100;
   static const types::BasePower basePower = 95;
   static const types::Pp basePp = 15;
@@ -21,7 +21,7 @@ struct Moonblast {
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
-    move.setType(dex::FAIRY_TYPE);
+    move.setType(dex::Type::FAIRY_TYPE);
     move.setAccuracy(accuracy);
     move.setBasePower(basePower);
 

@@ -31,11 +31,11 @@ void BattleStateSetup::setID(types::StateId id) {
   handle.emplace<Id>(id);
 }
 
-void BattleStateSetup::setSide(Side::PlayerSideID sideID, entt::entity sideEntity) {
+void BattleStateSetup::setSide(Side::PlayerSideId sideID, entt::entity sideEntity) {
   auto& sides = handle.get_or_emplace<Sides>();
   switch (sideID) {
-    case Side::P1: sides.p1 = sideEntity; break;
-    case Side::P2: sides.p2 = sideEntity; break;
+    case Side::PlayerSideId::P1: sides.p1 = sideEntity; break;
+    case Side::PlayerSideId::P2: sides.p2 = sideEntity; break;
   }
 }
 

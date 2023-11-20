@@ -9,7 +9,7 @@
 
 namespace pokesim::dex::build {
 struct KnockOff {
-  static const dex::Move name = dex::KNOCK_OFF;
+  static const dex::Move name = dex::Move::KNOCK_OFF;
   static const types::BaseAccuracy accuracy = 100;
   static const types::BasePower basePower = 65;
   static const types::Pp basePp = 20;
@@ -17,7 +17,7 @@ struct KnockOff {
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
-    move.setType(dex::DARK_TYPE);
+    move.setType(dex::Type::DARK_TYPE);
     move.setAccuracy(accuracy);
     move.setBasePower(basePower);
 

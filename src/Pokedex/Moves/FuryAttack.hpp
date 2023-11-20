@@ -9,7 +9,7 @@
 
 namespace pokesim::dex::build {
 struct FuryAttack {
-  static const dex::Move name = dex::FURY_ATTACK;
+  static const dex::Move name = dex::Move::FURY_ATTACK;
   static const types::BaseAccuracy accuracy = 85;
   static const types::BasePower basePower = 15;
   static const types::Pp basePp = 20;
@@ -18,7 +18,7 @@ struct FuryAttack {
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
-    move.setType(dex::NORMAL_TYPE);
+    move.setType(dex::Type::NORMAL_TYPE);
     move.setAccuracy(accuracy);
     move.setBasePower(basePower);
 
