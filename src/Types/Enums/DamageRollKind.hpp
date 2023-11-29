@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace pokesim::types {
+namespace pokesim {
 enum class DamageRollKind : std::uint8_t {
   NONE = 0b00000000,
   AVERAGE_DAMAGE = 0b00000001,
@@ -15,4 +15,4 @@ enum class DamageRollKind : std::uint8_t {
   MAX_DAMAGE = P1_MAX_DAMAGE | P2_MAX_DAMAGE,
   MIN_DAMAGE = P1_MIN_DAMAGE | P2_MIN_DAMAGE,
 };
-}
+}  // namespace pokesim

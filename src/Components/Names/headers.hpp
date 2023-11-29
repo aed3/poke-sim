@@ -8,4 +8,5 @@
 #include "SpeciesNames.hpp"
 #include "StatNames.hpp"
 #include "StatusNames.hpp"
+#include "TargetSlotName.hpp"
 #include "TypeNames.hpp"

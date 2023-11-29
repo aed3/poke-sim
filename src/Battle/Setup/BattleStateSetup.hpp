@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Components/EntityHolders/Side.hpp>
+#include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
 #include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
@@ -16,8 +16,8 @@ struct AnalyzeEffectOptions;
 
 // Tool to set properties of a battle's state to an entity.
 struct BattleStateSetup : internal::StateSetupBase {
-  BattleStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}
-  BattleStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {}
+  BattleStateSetup(entt::registry& registry) : BattleStateSetup(registry, registry.create()) {}
+  BattleStateSetup(entt::registry& registry, entt::entity entity);
 
   /**
    * @brief Applies the defaults to the required properties for a battle state.
@@ -33,7 +33,7 @@ struct BattleStateSetup : internal::StateSetupBase {
 
   /*_inline_*/ void setAutoID();
   /*_inline_*/ void setID(types::StateId id);
-  /*_inline_*/ void setSide(Side::PlayerSideId sideID, entt::entity sideEntity);
+  /*_inline_*/ void setSide(PlayerSideId sideID, entt::entity sideEntity);
 
   // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
   /*_inline_*/ void setRNGSeed(std::optional<types::StateRngSeed> seed = std::nullopt);
@@ -44,5 +44,7 @@ struct BattleStateSetup : internal::StateSetupBase {
   /*_inline_*/ void setActiveTarget(entt::entity activeTarget);
   /*_inline_*/ void setActiveUser(entt::entity activeSource);
   /*_inline_*/ void setProbability(types::StateProbability probability);
+
+  /*_inline_*/ BattleStateSetup clone();
 };
 }  // namespace pokesim

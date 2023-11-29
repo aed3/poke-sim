@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/Enums/TargetSlot.hpp>
 
 namespace pokesim {
 /**
@@ -8,12 +8,7 @@ namespace pokesim {
  *
  * In a single battle, only P1A and P1B are valid targets. In a double battle, all four are valid.
  */
-struct TargetSlot {
-  enum : std::uint8_t {
-    P1A,
-    P1B,
-    P2A,
-    P2B,
-  } targetSlot = P1A;
+struct TargetSlotName {
+  TargetSlot targetSlot = TargetSlot::P1A;
 };
 }  // namespace pokesim

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Battle/Actions/Decisions.hpp>
 #include <Components/EVsIVs.hpp>
 #include <Types/headers.hpp>
 #include <entt/entity/fwd.hpp>
@@ -15,6 +16,7 @@
 namespace pokesim {
 struct SideStateSetup;
 struct PokemonStateSetup;
+struct BattleStateSetup;
 class Pokedex;
 
 namespace simulate_turn {
@@ -69,6 +71,11 @@ class Simulation {
     std::vector<PokemonCreationInfo> team;
   };
 
+  struct TurnDecisionInfo {
+    SideDecision p1;
+    SideDecision p2;
+  };
+
   struct BattleCreationInfo {
     bool runWithSimulateTurn = false;
     bool runWithCalculateDamage = false;
@@ -76,16 +83,21 @@ class Simulation {
     types::BattleTurn turn = 0;
     std::optional<types::StateRngSeed> rngSeed = std::nullopt;
     types::StateProbability probability = 1;
-    SideCreationInfo P1;
-    SideCreationInfo P2;
+
+    SideCreationInfo p1;
+    SideCreationInfo p2;
+
+    std::vector<TurnDecisionInfo> decisionsToSimulate;
   };
 
  private:
-  using SideTeamSetupData = std::tuple<SideStateSetup, const SideCreationInfo*, std::vector<PokemonStateSetup>>;
-
   /*_inline_*/ std::vector<entt::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
   /*_inline_*/ PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
-  /*_inline_*/ std::pair<SideStateSetup, SideStateSetup> createInitialBattle(const BattleCreationInfo& battleData);
+  /*_inline_*/ void createInitialSide(SideStateSetup sideSetup, const SideCreationInfo& sideData);
+  /*_inline_*/ void createInitialTurnDecision(
+    BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData);
+  /*_inline_*/ std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
+    BattleStateSetup battleStateSetup, const BattleCreationInfo& battleData);
 
  public:
   const BattleFormat battleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;

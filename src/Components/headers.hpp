@@ -19,5 +19,4 @@
 #include "SpeedSort.hpp"
 #include "Stats.hpp"
 #include "Tags/headers.hpp"
-#include "TargetSlot.hpp"
 #include "Turn.hpp"

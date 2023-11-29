@@ -21,7 +21,7 @@
 namespace pokesim {
 // Tool to set properties of a Pokemon's state to an entity.
 struct PokemonStateSetup : internal::StateSetupBase {
-  PokemonStateSetup(entt::registry& registry) : StateSetupBase(registry, registry.create()) {}
+  PokemonStateSetup(entt::registry& registry) : PokemonStateSetup(registry, registry.create()) {}
   PokemonStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {}
 
   /**
@@ -45,7 +45,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   /*_inline_*/ void setItem(dex::Item item);
   /*_inline_*/ void setMoves(const std::vector<entt::entity>& moveSlots);
 
-  /*_inline_*/ void setPostion(types::TeamSlotPosition position);
+  /*_inline_*/ void setPostion(types::TeamPositionIndex position);
   /*_inline_*/ void setStatus(dex::Status status);
 
   /*_inline_*/ void setNature(dex::Nature nature);

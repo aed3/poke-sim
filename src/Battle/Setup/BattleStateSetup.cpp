@@ -8,6 +8,7 @@
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Turn.hpp>
+#include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
 #include <chrono>
 #include <entt/entity/handle.hpp>
@@ -15,6 +16,10 @@
 #include <entt/entity/view.hpp>
 
 namespace pokesim {
+BattleStateSetup::BattleStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {
+  handle.emplace<ActionQueue>();
+}
+
 void BattleStateSetup::initBlank() {
   handle.emplace<Sides>();
   handle.emplace<ActionQueue>();
@@ -31,11 +36,11 @@ void BattleStateSetup::setID(types::StateId id) {
   handle.emplace<Id>(id);
 }
 
-void BattleStateSetup::setSide(Side::PlayerSideId sideID, entt::entity sideEntity) {
+void BattleStateSetup::setSide(PlayerSideId sideID, entt::entity sideEntity) {
   auto& sides = handle.get_or_emplace<Sides>();
   switch (sideID) {
-    case Side::PlayerSideId::P1: sides.p1 = sideEntity; break;
-    case Side::PlayerSideId::P2: sides.p2 = sideEntity; break;
+    case PlayerSideId::P1: sides.p1 = sideEntity; break;
+    case PlayerSideId::P2: sides.p2 = sideEntity; break;
   }
 }
 
@@ -70,5 +75,10 @@ void BattleStateSetup::setActiveUser(entt::entity activeSource) {
 
 void BattleStateSetup::setProbability(types::StateProbability probability) {
   handle.emplace<Probability>(probability);
+}
+
+BattleStateSetup BattleStateSetup::clone() {
+  // TODO(aed3): Add proper battle entity cloning here
+  return *this;
 }
 }  // namespace pokesim

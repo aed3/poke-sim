@@ -79,7 +79,7 @@ void PokemonStateSetup::setMoves(const std::vector<entt::entity>& moveSlots) {
   handle.emplace<MoveSlots>(moveSlots);
 }
 
-void PokemonStateSetup::setPostion(types::TeamSlotPosition position) {
+void PokemonStateSetup::setPostion(types::TeamPositionIndex position) {
   handle.emplace<Position>(position);
 }
 

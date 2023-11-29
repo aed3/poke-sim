@@ -94,8 +94,8 @@ void checkCreatedBattle(const entt::handle truth, const Simulation::BattleCreati
   entt::handle p1SideTruth(*truth.registry(), p1SideEntity);
   entt::handle p2SideTruth(*truth.registry(), p2SideEntity);
 
-  checkCreatedSide(p1SideTruth, ideal.P1);
-  checkCreatedSide(p2SideTruth, ideal.P2);
+  checkCreatedSide(p1SideTruth, ideal.p1);
+  checkCreatedSide(p2SideTruth, ideal.p2);
 
   REQUIRE(p1SideTruth.get<Battle>().battle == truth.entity());
   REQUIRE(p2SideTruth.get<Battle>().battle == truth.entity());
@@ -145,8 +145,8 @@ TEST_CASE("Single Battle", "[BattleState]") {
     p2MoveInfo.pp = p2MoveInfo.maxPp - 2;
     p2PokemonInfo.moves.push_back(std::move(p2MoveInfo));
 
-    battleCreationInfo.P1 = {{std::move(p1PokemonInfo)}};
-    battleCreationInfo.P2 = {{std::move(p2PokemonInfo)}};
+    battleCreationInfo.p1 = {{std::move(p1PokemonInfo)}};
+    battleCreationInfo.p2 = {{std::move(p2PokemonInfo)}};
   }
 
   simulation.createInitialStates({battleCreationInfo});
@@ -244,8 +244,8 @@ TEST_CASE("Double Battle", "[BattleState]") {
     p2bMoveInfo.pp = p2bMoveInfo.maxPp - 1;
     p2bPokemonInfo.moves.push_back(std::move(p2bMoveInfo));
 
-    battleCreationInfo.P1 = {{std::move(p1aPokemonInfo), std::move(p1bPokemonInfo)}};
-    battleCreationInfo.P2 = {{std::move(p2aPokemonInfo), std::move(p2bPokemonInfo)}};
+    battleCreationInfo.p1 = {{std::move(p1aPokemonInfo), std::move(p1bPokemonInfo)}};
+    battleCreationInfo.p2 = {{std::move(p2aPokemonInfo), std::move(p2bPokemonInfo)}};
   }
 
   battleCreationInfo.turn = 2;
@@ -322,8 +322,8 @@ TEST_CASE("Multiple Battles", "[BattleState]") {
     battle2MoveInfo.pp = battle2MoveInfo.maxPp - 2;
     battle2PokemonInfo.moves.push_back(std::move(battle2MoveInfo));
 
-    battle1CreationInfo.P1 = battle1CreationInfo.P2 = {{std::move(battle1PokemonInfo)}};
-    battle2CreationInfo.P1 = battle2CreationInfo.P2 = {{std::move(battle2PokemonInfo)}};
+    battle1CreationInfo.p1 = battle1CreationInfo.p2 = {{std::move(battle1PokemonInfo)}};
+    battle2CreationInfo.p1 = battle2CreationInfo.p2 = {{std::move(battle2PokemonInfo)}};
   }
 
   battle1CreationInfo.turn = 12;

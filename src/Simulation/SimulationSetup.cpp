@@ -1,9 +1,15 @@
+#include <Battle/Actions/Action.hpp>
+#include <Battle/Actions/Decisions.hpp>
 #include <Battle/Setup/PokemonStateSetup.hpp>
 #include <Battle/Setup/headers.hpp>
+#include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Side.hpp>
+#include <Components/EntityHolders/Sides.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Pokedex/Pokedex.hpp>
+#include <Types/Enums/PlayerSideId.hpp>
+#include <Types/State.hpp>
 #include <cstddef>
 #include <entt/entity/registry.hpp>
 #include <initializer_list>
@@ -60,8 +66,23 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
   return pokemonSetup;
 }
 
-std::pair<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(const BattleCreationInfo& battleData) {
-  BattleStateSetup battleStateSetup(registry);
+void Simulation::createInitialSide(SideStateSetup sideSetup, const SideCreationInfo& sideData) {
+  std::vector<PokemonStateSetup> pokemonSetupList;
+  pokemonSetupList.reserve(sideData.team.size());
+
+  for (const PokemonCreationInfo& pokemonData : sideData.team) {
+    PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonData);
+    std::vector<entt::entity> moveEntities = createInitialMoves(pokemonData.moves);
+    pokemonSetup.setMoves(moveEntities);
+
+    pokemonSetupList.push_back(pokemonSetup);
+  }
+
+  sideSetup.setTeam(pokemonSetupList);
+}
+
+std::tuple<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(
+  BattleStateSetup battleStateSetup, const BattleCreationInfo& battleData) {
   battleStateSetup.setAutoID();
   battleStateSetup.setTurn(battleData.turn);
   battleStateSetup.setRNGSeed(battleData.rngSeed);
@@ -84,8 +105,8 @@ std::pair<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(const 
   entt::entity p1Entity = p1SideSetup.entity();
   entt::entity p2Entity = p2SideSetup.entity();
 
-  battleStateSetup.setSide(Side::PlayerSideId::P1, p1Entity);
-  battleStateSetup.setSide(Side::PlayerSideId::P2, p2Entity);
+  battleStateSetup.setSide(PlayerSideId::P1, p1Entity);
+  battleStateSetup.setSide(PlayerSideId::P2, p2Entity);
 
   p1SideSetup.setOpponent(p2Entity);
   p2SideSetup.setOpponent(p1Entity);
@@ -96,32 +117,31 @@ std::pair<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(const 
   return {p1SideSetup, p2SideSetup};
 }
 
+void Simulation::createInitialTurnDecision(
+  BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData) {
+  entt::handle battleHandle{registry, battleStateSetup.entity()};
+  const Sides& sides = battleHandle.get<Sides>();
+
+  resolveDecision({registry, sides.p1}, turnDecisionData.p1, registry.get<ActionQueue>(sides.p1));
+  resolveDecision({registry, sides.p2}, turnDecisionData.p2, registry.get<ActionQueue>(sides.p2));
+
+  moveSideActionsToBattleActions(battleHandle, sides, battleHandle.get<ActionQueue>());
+}
+
 void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList) {
-  std::vector<SideTeamSetupData> sideTeamSetupData{};
-  sideTeamSetupData.reserve(battleDataList.size() * 2);
-
   for (const BattleCreationInfo& battleData : battleDataList) {
-    auto [p1SideSetup, p2SideSetup] = createInitialBattle(battleData);
+    BattleStateSetup battleStateSetup(registry);
+    auto [p1SideSetup, p2SideSetup] = createInitialBattle(battleStateSetup, battleData);
 
-    sideTeamSetupData.push_back({p1SideSetup, &battleData.P1, {}});
-    sideTeamSetupData.push_back({p2SideSetup, &battleData.P2, {}});
-  }
+    createInitialSide(p1SideSetup, battleData.p1);
+    createInitialSide(p2SideSetup, battleData.p2);
 
-  for (auto& [sideSetup, sideData, pokemonSetupList] : sideTeamSetupData) {
-    pokemonSetupList.reserve(sideData->team.size());
-    for (const PokemonCreationInfo& pokemonData : sideData->team) {
-      pokemonSetupList.push_back(createInitialPokemon(pokemonData));
-    }
-  }
+    if (!battleData.decisionsToSimulate.empty()) {
+      createInitialTurnDecision(battleStateSetup, battleData.decisionsToSimulate[0]);
 
-  for (auto& [sideSetup, sideData, pokemonSetupList] : sideTeamSetupData) {
-    sideSetup.setTeam(pokemonSetupList);
-  }
-
-  for (auto& [sideSetup, sideData, pokemonSetupList] : sideTeamSetupData) {
-    for (std::size_t i = 0; i < pokemonSetupList.size(); i++) {
-      std::vector<entt::entity> moveEntities = createInitialMoves(sideData->team[i].moves);
-      pokemonSetupList[i].setMoves(moveEntities);
+      for (std::size_t i = 1; i < battleData.decisionsToSimulate.size(); i++) {
+        createInitialTurnDecision(battleStateSetup.clone(), battleData.decisionsToSimulate[i]);
+      }
     }
   }
 }

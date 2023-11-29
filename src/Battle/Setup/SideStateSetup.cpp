@@ -1,5 +1,6 @@
 #include "SideStateSetup.hpp"
 
+#include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/Team.hpp>
@@ -9,6 +10,10 @@
 #include "PokemonStateSetup.hpp"
 
 namespace pokesim {
+SideStateSetup::SideStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {
+  handle.emplace<ActionQueue>();
+}
+
 void SideStateSetup::initBlank() {
   handle.emplace<Battle>();
   handle.emplace<Team>();
@@ -22,7 +27,7 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
 
   for (std::size_t i = 0; i < team.size(); i++) {
     teamEntities.team.push_back(team[i].entity());
-    team[i].setPostion((types::TeamSlotPosition)(i + 1));
+    team[i].setPostion((types::TeamPositionIndex)(i + 1));
     team[i].setSide(entity());
     team[i].setBattle(battle.battle);
   }

@@ -10,7 +10,7 @@ class Simulation;
 
 namespace simulate_turn {
 struct Options {
-  types::DamageRollKind damageRollsConsidered = types::DamageRollKind::AVERAGE_DAMAGE;
+  DamageRollKind damageRollsConsidered = DamageRollKind::AVERAGE_DAMAGE;
   bool applyChangesToInputBattle = true;
   float randomChanceUpperLimit = 0.9F;  // NOLINT(readability-magic-numbers)
   float randomChanceLowerLimit = 0.1F;  // NOLINT(readability-magic-numbers)
@@ -29,7 +29,7 @@ struct Options {
 
 namespace calc_damage {
 struct Options {
-  types::DamageRollKind damageRollsReturned = types::DamageRollKind::ALL_DAMAGE_ROLES;
+  DamageRollKind damageRollsReturned = DamageRollKind::ALL_DAMAGE_ROLES;
 };
 }  // namespace calc_damage
 
@@ -40,7 +40,7 @@ struct Options {
   bool reconsiderActiveEffects = false;
   bool returnMultipliedKoChance = false;
 
-  types::DamageRollKind damageRollsReturned = types::DamageRollKind::NONE;
+  DamageRollKind damageRollsReturned = DamageRollKind::NONE;
 };
 }  // namespace analyze_effect
 }  // namespace pokesim
