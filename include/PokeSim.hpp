@@ -11957,9 +11957,9 @@ struct SideDecision;
 struct ActionQueue;
 struct Sides;
 
-void resolveDecision(entt::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue);
+inline void resolveDecision(entt::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue);
 
-void moveSideActionsToBattleActions(entt::handle battleHandle, const Sides& sides, ActionQueue& battleActionQueue);
+inline void moveSideActionsToBattleActions(entt::handle battleHandle, const Sides& sides, ActionQueue& battleActionQueue);
 }  // namespace pokesim
 
 ///////////////////// END OF src/Battle/Actions/Action.hpp /////////////////////
@@ -12734,7 +12734,7 @@ struct AnalyzeEffectOptions;
 // Tool to set properties of a battle's state to an entity.
 struct BattleStateSetup : internal::StateSetupBase {
   BattleStateSetup(entt::registry& registry) : BattleStateSetup(registry, registry.create()) {}
-  BattleStateSetup(entt::registry& registry, entt::entity entity);
+  inline BattleStateSetup(entt::registry& registry, entt::entity entity);
 
   /**
    * @brief Applies the defaults to the required properties for a battle state.
@@ -12834,7 +12834,7 @@ struct PokemonStateSetup;
 // Tool to set properties of a player's side state to an entity.
 struct SideStateSetup : internal::StateSetupBase {
   SideStateSetup(entt::registry& registry) : SideStateSetup(registry, registry.create()) {}
-  SideStateSetup(entt::registry& registry, entt::entity entity);
+  inline SideStateSetup(entt::registry& registry, entt::entity entity);
 
   /**
    * @brief Applies the defaults to the required properties for a player side's state.
