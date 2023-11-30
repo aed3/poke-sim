@@ -1,8 +1,11 @@
 #include <Battle/Actions/Action.hpp>
 #include <Battle/Actions/Decisions.hpp>
+#include <Battle/Helpers/Helpers.hpp>
 #include <Battle/Setup/PokemonStateSetup.hpp>
 #include <Battle/Setup/headers.hpp>
+#include <Components/DamageCalc/AttackerDefender.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
+#include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/Stats.hpp>
@@ -128,6 +131,24 @@ void Simulation::createInitialTurnDecision(
   moveSideActionsToBattleActions(battleHandle, sides, battleHandle.get<ActionQueue>());
 }
 
+void Simulation::createDamageCalcInput(
+  BattleStateSetup battleStateSetup, const DamageCalcInputInfo& damageCalcInputData) {
+  ENTT_ASSERT(damageCalcInputData.attackerSlot != TargetSlot::NONE, "A damage calculation must have a attacker");
+  ENTT_ASSERT(damageCalcInputData.defenderSlot != TargetSlot::NONE, "A damage calculation must have a defender");
+  ENTT_ASSERT(damageCalcInputData.move != dex::Move::NO_MOVE, "A damage calculation must have a move");
+
+  const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
+  entt::entity attackerEntity = targetSlotEntity(registry, sides, damageCalcInputData.attackerSlot);
+  entt::entity defenderEntity = targetSlotEntity(registry, sides, damageCalcInputData.defenderSlot);
+
+  // Make a setup helper for this
+  entt::entity inputEntity = registry.create();
+  registry.emplace<damage_calc::Attacker>(inputEntity, attackerEntity);
+  registry.emplace<damage_calc::Defender>(inputEntity, defenderEntity);
+  registry.emplace<dex::Move>(inputEntity, damageCalcInputData.move);
+  registry.emplace<Battle>(inputEntity, battleStateSetup.entity());
+}
+
 void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList) {
   for (const BattleCreationInfo& battleData : battleDataList) {
     BattleStateSetup battleStateSetup(registry);
@@ -142,6 +163,10 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
       for (std::size_t i = 1; i < battleData.decisionsToSimulate.size(); i++) {
         createInitialTurnDecision(battleStateSetup.clone(), battleData.decisionsToSimulate[i]);
       }
+    }
+
+    for (const DamageCalcInputInfo& damageCalcInputData : battleData.damageCalculations) {
+      createDamageCalcInput(battleStateSetup, damageCalcInputData);
     }
   }
 }

@@ -40,6 +40,7 @@ check_ipo_supported(RESULT IpoSupported OUTPUT error)
 
 set (SOURCES
   src/Battle/Actions/ResolveDecision.cpp
+  src/Battle/Helpers/Helpers.cpp
   src/Battle/Setup/BattleStateSetup.cpp
   src/Battle/Setup/MoveStateSetup.cpp
   src/Battle/Setup/PokemonStateSetup.cpp

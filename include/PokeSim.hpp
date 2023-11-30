@@ -36,6 +36,7 @@
  * src/Types/Enums/TargetSlot.hpp
  * src/Types/State.hpp
  * src/Battle/Actions/Decisions.hpp
+ * src/Battle/Helpers/Helpers.hpp
  * external/entt/entity/handle.hpp
  * src/Battle/Setup/StateSetupBase.hpp
  * src/Types/Stats.hpp
@@ -53,7 +54,9 @@
  * src/Types/Move.hpp
  * src/Battle/Setup/MoveStateSetup.hpp
  * src/Battle/Setup/SideStateSetup.hpp
+ * src/Components/DamageCalc/AttackerDefender.hpp
  * src/Components/EntityHolders/ActionQueue.hpp
+ * src/Components/EntityHolders/Battle.hpp
  * src/Components/EntityHolders/Side.hpp
  * src/Components/EntityHolders/Sides.hpp
  * src/Components/Tags/SimulationTags.hpp
@@ -125,7 +128,6 @@
  * src/Components/Tags/ItemTags.cpp
  * src/Components/Tags/AbilityTags.hpp
  * src/Components/Tags/AbilityTags.cpp
- * src/Components/EntityHolders/Battle.hpp
  * src/Components/EntityHolders/FoeSide.hpp
  * src/Components/EntityHolders/Team.hpp
  * src/Battle/Setup/SideStateSetup.cpp
@@ -145,6 +147,7 @@
  * src/Components/Tags/PokemonTags.hpp
  * src/Components/Turn.hpp
  * src/Battle/Setup/BattleStateSetup.cpp
+ * src/Battle/Helpers/Helpers.cpp
  * src/Battle/Actions/ResolveDecision.cpp
  * src/Components/EntityHolders/Move.hpp
  * src/Components/EntityHolders/Pokemon.hpp
@@ -11957,9 +11960,11 @@ struct SideDecision;
 struct ActionQueue;
 struct Sides;
 
-inline void resolveDecision(entt::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue);
+inline void resolveDecision(
+  entt::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue);
 
-inline void moveSideActionsToBattleActions(entt::handle battleHandle, const Sides& sides, ActionQueue& battleActionQueue);
+inline void moveSideActionsToBattleActions(
+  entt::handle battleHandle, const Sides& sides, ActionQueue& battleActionQueue);
 }  // namespace pokesim
 
 ///////////////////// END OF src/Battle/Actions/Action.hpp /////////////////////
@@ -11998,10 +12003,20 @@ enum class PlayerSideId : std::uint8_t {
 
 namespace pokesim {
 enum class TargetSlot : std::uint8_t {
+  NONE,
   P1A,
-  P1B,
   P2A,
+  P1B,
   P2B,
+
+  P1C,
+  P2C,
+  P1D,
+  P2D,
+  P1E,
+  P2E,
+  P1F,
+  P2F,
 };
 }
 
@@ -12039,7 +12054,7 @@ using SideSlots = std::vector<T>;
 
 namespace pokesim {
 struct SlotDecision {
-  TargetSlot targetSlot = TargetSlot::P1A;
+  TargetSlot targetSlot = TargetSlot::NONE;
   bool megaEvolve = false;
   bool primalRevert = false;
   bool dynamax = false;
@@ -12058,6 +12073,16 @@ struct SideDecision {
 }  // namespace pokesim
 
 /////////////////// END OF src/Battle/Actions/Decisions.hpp ////////////////////
+
+/////////////////// START OF src/Battle/Helpers/Helpers.hpp ////////////////////
+
+namespace pokesim {
+struct Sides;
+
+inline entt::entity targetSlotEntity(const entt::registry& registry, const Sides& sides, TargetSlot targetSlot);
+}  // namespace pokesim
+
+//////////////////// END OF src/Battle/Helpers/Helpers.hpp /////////////////////
 
 /////////////////// START OF external/entt/entity/handle.hpp ///////////////////
 
@@ -12851,6 +12876,20 @@ struct SideStateSetup : internal::StateSetupBase {
 
 ////////////////// END OF src/Battle/Setup/SideStateSetup.hpp //////////////////
 
+/////////// START OF src/Components/DamageCalc/AttackerDefender.hpp ////////////
+
+namespace pokesim::damage_calc {
+struct Attacker {
+  entt::entity attacker;
+};
+
+struct Defender {
+  entt::entity defender;
+};
+}  // namespace pokesim::damage_calc
+
+//////////// END OF src/Components/DamageCalc/AttackerDefender.hpp /////////////
+
 //////////// START OF src/Components/EntityHolders/ActionQueue.hpp /////////////
 
 #include <vector>
@@ -12863,6 +12902,17 @@ struct ActionQueue {
 }  // namespace pokesim
 
 ///////////// END OF src/Components/EntityHolders/ActionQueue.hpp //////////////
+
+/////////////// START OF src/Components/EntityHolders/Battle.hpp ///////////////
+
+namespace pokesim {
+// Contains the entity of a simulation's battle.
+struct Battle {
+  entt::entity battle;
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/EntityHolders/Battle.hpp ////////////////
 
 //////////////// START OF src/Components/EntityHolders/Side.hpp ////////////////
 
@@ -13242,6 +13292,12 @@ class Simulation {
     SideDecision p2;
   };
 
+  struct DamageCalcInputInfo {
+    TargetSlot attackerSlot = TargetSlot::NONE;
+    TargetSlot defenderSlot = TargetSlot::NONE;
+    dex::Move move = dex::Move::NO_MOVE;
+  };
+
   struct BattleCreationInfo {
     bool runWithSimulateTurn = false;
     bool runWithCalculateDamage = false;
@@ -13254,6 +13310,7 @@ class Simulation {
     SideCreationInfo p2;
 
     std::vector<TurnDecisionInfo> decisionsToSimulate;
+    std::vector<DamageCalcInputInfo> damageCalculations;
   };
 
  private:
@@ -13262,6 +13319,8 @@ class Simulation {
   inline void createInitialSide(SideStateSetup sideSetup, const SideCreationInfo& sideData);
   inline void createInitialTurnDecision(
     BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData);
+  inline void createDamageCalcInput(
+    BattleStateSetup battleStateSetup, const DamageCalcInputInfo& damageCalcInputData);
   inline std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleData);
 
@@ -13424,6 +13483,24 @@ void Simulation::createInitialTurnDecision(
   moveSideActionsToBattleActions(battleHandle, sides, battleHandle.get<ActionQueue>());
 }
 
+void Simulation::createDamageCalcInput(
+  BattleStateSetup battleStateSetup, const DamageCalcInputInfo& damageCalcInputData) {
+  ENTT_ASSERT(damageCalcInputData.attackerSlot != TargetSlot::NONE, "A damage calculation must have a attacker");
+  ENTT_ASSERT(damageCalcInputData.defenderSlot != TargetSlot::NONE, "A damage calculation must have a defender");
+  ENTT_ASSERT(damageCalcInputData.move != dex::Move::NO_MOVE, "A damage calculation must have a move");
+
+  const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
+  entt::entity attackerEntity = targetSlotEntity(registry, sides, damageCalcInputData.attackerSlot);
+  entt::entity defenderEntity = targetSlotEntity(registry, sides, damageCalcInputData.defenderSlot);
+
+  // Make a setup helper for this
+  entt::entity inputEntity = registry.create();
+  registry.emplace<damage_calc::Attacker>(inputEntity, attackerEntity);
+  registry.emplace<damage_calc::Defender>(inputEntity, defenderEntity);
+  registry.emplace<dex::Move>(inputEntity, damageCalcInputData.move);
+  registry.emplace<Battle>(inputEntity, battleStateSetup.entity());
+}
+
 void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList) {
   for (const BattleCreationInfo& battleData : battleDataList) {
     BattleStateSetup battleStateSetup(registry);
@@ -13438,6 +13515,10 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
       for (std::size_t i = 1; i < battleData.decisionsToSimulate.size(); i++) {
         createInitialTurnDecision(battleStateSetup.clone(), battleData.decisionsToSimulate[i]);
       }
+    }
+
+    for (const DamageCalcInputInfo& damageCalcInputData : battleData.damageCalculations) {
+      createDamageCalcInput(battleStateSetup, damageCalcInputData);
     }
   }
 }
@@ -16041,17 +16122,6 @@ void enumToTag(dex::Ability ability, entt::handle handle) {
 
 ////////////////// END OF src/Components/Tags/AbilityTags.cpp //////////////////
 
-/////////////// START OF src/Components/EntityHolders/Battle.hpp ///////////////
-
-namespace pokesim {
-// Contains the entity of a simulation's battle.
-struct Battle {
-  entt::entity battle;
-};
-}  // namespace pokesim
-
-//////////////// END OF src/Components/EntityHolders/Battle.hpp ////////////////
-
 ////////////// START OF src/Components/EntityHolders/FoeSide.hpp ///////////////
 
 namespace pokesim {
@@ -16445,10 +16515,29 @@ BattleStateSetup BattleStateSetup::clone() {
 
 ///////////////// END OF src/Battle/Setup/BattleStateSetup.cpp /////////////////
 
+/////////////////// START OF src/Battle/Helpers/Helpers.cpp ////////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+entt::entity targetSlotEntity(const entt::registry& registry, const Sides& sides, TargetSlot targetSlot) {
+  ENTT_ASSERT(targetSlot != TargetSlot::NONE, "Can only get entity from valid target slot");
+  entt::entity sideEntity = (std::uint8_t)targetSlot % 2 ? sides.p1 : sides.p2;
+  types::TeamPositionIndex index = ((std::uint8_t)targetSlot - 1) / 2;
+
+  const Team& team = registry.get<Team>(sideEntity);
+  ENTT_ASSERT(team.team.size() >= index, "Choosing a target slot for team member that does not exist");
+  return team.team[index];
+}
+}  // namespace pokesim
+
+//////////////////// END OF src/Battle/Helpers/Helpers.cpp /////////////////////
+
 /////////////// START OF src/Battle/Actions/ResolveDecision.cpp ////////////////
 
 namespace pokesim {
-void resolveDecision(entt::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue) {
+void resolveDecision(
+  entt::handle /*sideHandle*/, const SideDecision& /*sideDecision*/, ActionQueue& /*sideActionQueue*/) {
   // TODO(aed3): Turn the sideDecision into a set of components that will be assigned to a new entity that's added to
   // the sideActionQueue
 }

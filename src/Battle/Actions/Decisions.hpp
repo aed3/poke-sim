@@ -8,7 +8,7 @@
 
 namespace pokesim {
 struct SlotDecision {
-  TargetSlot targetSlot = TargetSlot::P1A;
+  TargetSlot targetSlot = TargetSlot::NONE;
   bool megaEvolve = false;
   bool primalRevert = false;
   bool dynamax = false;

@@ -7,7 +7,8 @@
 #include "Decisions.hpp"
 
 namespace pokesim {
-void resolveDecision(entt::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue) {
+void resolveDecision(
+  entt::handle /*sideHandle*/, const SideDecision& /*sideDecision*/, ActionQueue& /*sideActionQueue*/) {
   // TODO(aed3): Turn the sideDecision into a set of components that will be assigned to a new entity that's added to
   // the sideActionQueue
 }
