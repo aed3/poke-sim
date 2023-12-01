@@ -10,6 +10,7 @@
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <DamageCalc/Setup/DamageCalcInputSetup.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
@@ -141,12 +142,11 @@ void Simulation::createDamageCalcInput(
   entt::entity attackerEntity = targetSlotEntity(registry, sides, damageCalcInputData.attackerSlot);
   entt::entity defenderEntity = targetSlotEntity(registry, sides, damageCalcInputData.defenderSlot);
 
-  // Make a setup helper for this
-  entt::entity inputEntity = registry.create();
-  registry.emplace<damage_calc::Attacker>(inputEntity, attackerEntity);
-  registry.emplace<damage_calc::Defender>(inputEntity, defenderEntity);
-  registry.emplace<dex::Move>(inputEntity, damageCalcInputData.move);
-  registry.emplace<Battle>(inputEntity, battleStateSetup.entity());
+  damage_calc::InputSetup inputSetup(registry);
+  inputSetup.setAttacker(attackerEntity);
+  inputSetup.setAttacker(defenderEntity);
+  inputSetup.setMove(damageCalcInputData.move);
+  inputSetup.setBattle(battleStateSetup.entity());
 }
 
 void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList) {

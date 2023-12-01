@@ -45,6 +45,7 @@ set (SOURCES
   src/Battle/Setup/MoveStateSetup.cpp
   src/Battle/Setup/PokemonStateSetup.cpp
   src/Battle/Setup/SideStateSetup.cpp
+  src/DamageCalc/Setup/DamageCalcInputSetup.cpp
   src/Components/Tags/AbilityTags.cpp
   src/Components/Tags/ItemTags.cpp
   src/Components/Tags/NatureTags.cpp

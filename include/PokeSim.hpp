@@ -60,6 +60,7 @@
  * src/Components/EntityHolders/Side.hpp
  * src/Components/EntityHolders/Sides.hpp
  * src/Components/Tags/SimulationTags.hpp
+ * src/DamageCalc/Setup/DamageCalcInputSetup.hpp
  * src/Types/Enums/BattleFormat.hpp
  * src/Types/Enums/DamageRollKind.hpp
  * src/Types/Enums/GameMechanics.hpp
@@ -121,6 +122,7 @@
  * src/Pokedex/Pokedex.cpp
  * src/Pokedex/Names.hpp
  * src/Pokedex/Names.cpp
+ * src/DamageCalc/Setup/DamageCalcInputSetup.cpp
  * src/Components/Tags/StatusTags.cpp
  * src/Components/Tags/NatureTags.hpp
  * src/Components/Tags/NatureTags.cpp
@@ -12947,6 +12949,29 @@ struct AnalyzeEffect {};
 
 //////////////// END OF src/Components/Tags/SimulationTags.hpp /////////////////
 
+//////////// START OF src/DamageCalc/Setup/DamageCalcInputSetup.hpp ////////////
+
+namespace pokesim::damage_calc {
+struct InputSetup {
+ protected:
+  entt::handle handle;
+
+ public:
+  InputSetup(entt::registry& registry, entt::entity entity) : handle(registry, entity) {}
+  InputSetup(entt::registry& registry) : InputSetup(registry, registry.create()) {}
+
+  inline void setAttacker(entt::entity entity);
+  inline void setDefender(entt::entity entity);
+  inline void setMove(dex::Move move);
+  inline void setBattle(entt::entity entity);
+
+  entt::entity entity() { return handle.entity(); }
+};
+
+}  // namespace pokesim::damage_calc
+
+///////////// END OF src/DamageCalc/Setup/DamageCalcInputSetup.hpp /////////////
+
 ////////////////// START OF src/Types/Enums/BattleFormat.hpp ///////////////////
 
 #include <cstdint>
@@ -13493,12 +13518,11 @@ void Simulation::createDamageCalcInput(
   entt::entity attackerEntity = targetSlotEntity(registry, sides, damageCalcInputData.attackerSlot);
   entt::entity defenderEntity = targetSlotEntity(registry, sides, damageCalcInputData.defenderSlot);
 
-  // Make a setup helper for this
-  entt::entity inputEntity = registry.create();
-  registry.emplace<damage_calc::Attacker>(inputEntity, attackerEntity);
-  registry.emplace<damage_calc::Defender>(inputEntity, defenderEntity);
-  registry.emplace<dex::Move>(inputEntity, damageCalcInputData.move);
-  registry.emplace<Battle>(inputEntity, battleStateSetup.entity());
+  damage_calc::InputSetup inputSetup(registry);
+  inputSetup.setAttacker(attackerEntity);
+  inputSetup.setAttacker(defenderEntity);
+  inputSetup.setMove(damageCalcInputData.move);
+  inputSetup.setBattle(battleStateSetup.entity());
 }
 
 void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList) {
@@ -15941,6 +15965,28 @@ std::string toID(const std::string& name) {
 }  // namespace pokesim::dex
 
 ///////////////////////// END OF src/Pokedex/Names.cpp /////////////////////////
+
+//////////// START OF src/DamageCalc/Setup/DamageCalcInputSetup.cpp ////////////
+
+namespace pokesim::damage_calc {
+void InputSetup::setAttacker(entt::entity entity) {
+  handle.emplace<Attacker>(entity);
+}
+
+void InputSetup::setDefender(entt::entity entity) {
+  handle.emplace<Defender>(entity);
+}
+
+void InputSetup::setMove(dex::Move move) {
+  handle.emplace<MoveName>(move);
+}
+
+void InputSetup::setBattle(entt::entity entity) {
+  handle.emplace<Battle>(entity);
+}
+}  // namespace pokesim::damage_calc
+
+///////////// END OF src/DamageCalc/Setup/DamageCalcInputSetup.cpp /////////////
 
 ///////////////// START OF src/Components/Tags/StatusTags.cpp //////////////////
 
