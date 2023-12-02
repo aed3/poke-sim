@@ -1,3 +1,4 @@
+#include <AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp>
 #include <Battle/Actions/Action.hpp>
 #include <Battle/Actions/Decisions.hpp>
 #include <Battle/Helpers/Helpers.hpp>
@@ -18,6 +19,7 @@
 #include <entt/entity/registry.hpp>
 #include <initializer_list>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "Simulation.hpp"
@@ -149,6 +151,23 @@ void Simulation::createDamageCalcInput(
   inputSetup.setBattle(battleStateSetup.entity());
 }
 
+void Simulation::createAnalyzeEffectInput(
+  BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& analyzeEffectInputData) {
+  ENTT_ASSERT(analyzeEffectInputData.attackerSlot != TargetSlot::NONE, "An effect analysis must have a attacker");
+  ENTT_ASSERT(analyzeEffectInputData.defenderSlot != TargetSlot::NONE, "An effect analysis must have a defender");
+  ENTT_ASSERT(analyzeEffectInputData.effect.index() != 0, "An effect analysis must have an effect");
+
+  const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
+  entt::entity attackerEntity = targetSlotEntity(registry, sides, analyzeEffectInputData.attackerSlot);
+  entt::entity defenderEntity = targetSlotEntity(registry, sides, analyzeEffectInputData.defenderSlot);
+
+  analyze_effect::InputSetup inputSetup(registry);
+  inputSetup.setAttacker(attackerEntity);
+  inputSetup.setAttacker(defenderEntity);
+  inputSetup.setEffect(analyzeEffectInputData.effect);
+  inputSetup.setBattle(battleStateSetup.entity());
+}
+
 void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList) {
   for (const BattleCreationInfo& battleData : battleDataList) {
     BattleStateSetup battleStateSetup(registry);
@@ -167,6 +186,10 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
 
     for (const DamageCalcInputInfo& damageCalcInputData : battleData.damageCalculations) {
       createDamageCalcInput(battleStateSetup, damageCalcInputData);
+    }
+
+    for (const AnalyzeEffectInputInfo& analyzeEffectInputData : battleData.effectsToAnalyze) {
+      createAnalyzeEffectInput(battleStateSetup, analyzeEffectInputData);
     }
   }
 }

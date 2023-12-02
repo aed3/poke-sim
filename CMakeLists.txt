@@ -39,17 +39,18 @@ project(PokeSim)
 check_ipo_supported(RESULT IpoSupported OUTPUT error)
 
 set (SOURCES
+  src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp
   src/Battle/Actions/ResolveDecision.cpp
   src/Battle/Helpers/Helpers.cpp
   src/Battle/Setup/BattleStateSetup.cpp
   src/Battle/Setup/MoveStateSetup.cpp
   src/Battle/Setup/PokemonStateSetup.cpp
   src/Battle/Setup/SideStateSetup.cpp
-  src/DamageCalc/Setup/DamageCalcInputSetup.cpp
   src/Components/Tags/AbilityTags.cpp
   src/Components/Tags/ItemTags.cpp
   src/Components/Tags/NatureTags.cpp
   src/Components/Tags/StatusTags.cpp
+  src/DamageCalc/Setup/DamageCalcInputSetup.cpp
   src/Pokedex/Names.cpp
   src/Pokedex/Pokedex.cpp
   src/Pokedex/Setup/GetItemBuild.cpp
@@ -58,8 +59,8 @@ set (SOURCES
   src/Pokedex/Setup/ItemDexDataSetup.cpp
   src/Pokedex/Setup/MoveDexDataSetup.cpp
   src/Pokedex/Setup/SpeciesDexDataSetup.cpp
-  src/Simulation/SimulationSetup.cpp
   src/Simulation/SimulationResults.cpp
+  src/Simulation/SimulationSetup.cpp
 )
 
 add_library(PokeSim STATIC ${SOURCES})

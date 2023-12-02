@@ -82,6 +82,12 @@ class Simulation {
     dex::Move move = dex::Move::NO_MOVE;
   };
 
+  struct AnalyzeEffectInputInfo {
+    TargetSlot attackerSlot = TargetSlot::NONE;
+    TargetSlot defenderSlot = TargetSlot::NONE;
+    types::EffectEnum effect;
+  };
+
   struct BattleCreationInfo {
     bool runWithSimulateTurn = false;
     bool runWithCalculateDamage = false;
@@ -95,16 +101,21 @@ class Simulation {
 
     std::vector<TurnDecisionInfo> decisionsToSimulate;
     std::vector<DamageCalcInputInfo> damageCalculations;
+    std::vector<AnalyzeEffectInputInfo> effectsToAnalyze;
   };
 
  private:
   /*_inline_*/ std::vector<entt::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
   /*_inline_*/ PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
   /*_inline_*/ void createInitialSide(SideStateSetup sideSetup, const SideCreationInfo& sideData);
+
   /*_inline_*/ void createInitialTurnDecision(
     BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData);
   /*_inline_*/ void createDamageCalcInput(
     BattleStateSetup battleStateSetup, const DamageCalcInputInfo& damageCalcInputData);
+  /*_inline_*/ void createAnalyzeEffectInput(
+    BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& analyzeEffectInputData);
+
   /*_inline_*/ std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleData);
 
