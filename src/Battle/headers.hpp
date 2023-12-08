@@ -1,4 +1,9 @@
 #pragma once
 
-#include "Actions/headers.hpp"
-#include "Setup/headers.hpp"
+#include "Actions/Action.hpp"
+#include "Actions/Decisions.hpp"
+#include "Setup/BattleStateSetup.hpp"
+#include "Setup/MoveStateSetup.hpp"
+#include "Setup/PokemonStateSetup.hpp"
+#include "Setup/SideStateSetup.hpp"
+#include "Setup/StateSetupBase.hpp"
