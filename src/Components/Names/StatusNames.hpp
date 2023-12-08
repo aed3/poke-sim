@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Types/Status.hpp>
+#include <Types/Enums/Status.hpp>
 
 namespace pokesim {
 struct StatusName {
-  dex::Status name = dex::NO_STATUS;
+  dex::Status name = dex::Status::NO_STATUS;
 };
 }  // namespace pokesim

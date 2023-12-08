@@ -1,13 +1,13 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/Move.hpp>
 
 namespace pokesim {
-struct PP {
-  std::uint8_t pp = 0;
+struct Pp {
+  types::Pp pp = 0;
 };
 
-struct MaxPP {
-  std::uint8_t maxPP = 5;
+struct MaxPp {
+  types::Pp maxPp = 5;
 };
 }  // namespace pokesim

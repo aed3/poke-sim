@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Types/Ability.hpp>
+#include <Types/Enums/Ability.hpp>
 
 namespace pokesim {
 struct AbilityName {
-  dex::Ability name = dex::NO_ABILITY;
+  dex::Ability name = dex::Ability::NO_ABILITY;
 };
 }  // namespace pokesim

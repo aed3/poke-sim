@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/Move.hpp>
 
 namespace pokesim {
 struct BasePower {
-  std::uint8_t basePower = 1;
+  types::BasePower basePower = 1;
 };
 }  // namespace pokesim

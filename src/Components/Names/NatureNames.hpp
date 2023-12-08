@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Types/Nature.hpp>
+#include <Types/Enums/Nature.hpp>
 
 namespace pokesim {
 struct NatureName {
-  dex::Nature name = dex::NO_NATURE;
+  dex::Nature name = dex::Nature::NO_NATURE;
 };
 }  // namespace pokesim

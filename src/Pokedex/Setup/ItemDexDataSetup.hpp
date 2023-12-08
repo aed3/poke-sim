@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Pokedex/Pokedex.hpp>
-#include <Types/Item.hpp>
+#include <Types/Enums/Item.hpp>
 
 #include "DexDataSetup.hpp"
 

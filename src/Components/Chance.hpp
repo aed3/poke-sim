@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/Move.hpp>
 
 namespace pokesim {
 /**
@@ -9,6 +9,6 @@ namespace pokesim {
  * Examples: Air Slash has a 60% chance to flinch, Harvest has a 50% chance to restore a used berry.
  */
 struct Chance {
-  std::uint8_t chance = 100;
+  types::BaseEffectChance chance = 100;
 };
 }  // namespace pokesim

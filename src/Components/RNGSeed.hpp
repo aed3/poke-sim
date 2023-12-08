@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/State.hpp>
 
 namespace pokesim {
-struct RNGSeed {
-  std::uint32_t seed = 0;
+struct RngSeed {
+  types::StateRngSeed seed = 0;
 };
 }  // namespace pokesim

@@ -1,5 +1,5 @@
 #include <Pokedex/Pokedex.hpp>
-#include <Types/Move.hpp>
+#include <Types/Enums/Move.hpp>
 #include <entt/entity/fwd.hpp>
 
 #include "../Moves/headers.hpp"

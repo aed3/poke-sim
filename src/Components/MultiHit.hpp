@@ -1,11 +1,11 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/Move.hpp>
 
 namespace pokesim {
 // The minimum and maximum number of hits a multi-hit move can cause
 struct MultiHit {
-  std::uint8_t minHits = 2;
-  std::uint8_t maxHits = 5;
+  types::MoveHits minHits = 2;
+  types::MoveHits maxHits = 5;
 };
 }  // namespace pokesim

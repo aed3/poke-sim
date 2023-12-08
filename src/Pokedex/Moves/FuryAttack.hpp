@@ -3,24 +3,27 @@
 #include <Components/Tags/MoveTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Setup/MoveDexDataSetup.hpp>
+#include <Types/Enums/Move.hpp>
+#include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
-#include <Types/Type.hpp>
-#include <cstdint>
 
 namespace pokesim::dex::build {
 struct FuryAttack {
-  static const dex::Move name = dex::FURY_ATTACK;
-  static const std::uint8_t accuracy = 85, basePower = 15, basePP = 20, minHits = 2, maxHits = 5;
+  static const dex::Move name = dex::Move::FURY_ATTACK;
+  static const types::BaseAccuracy accuracy = 85;
+  static const types::BasePower basePower = 15;
+  static const types::Pp basePp = 20;
+  static const types::MoveHits minHits = 2, maxHits = 5;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
-    move.setType(dex::NORMAL_TYPE);
+    move.setType(dex::Type::NORMAL_TYPE);
     move.setAccuracy(accuracy);
     move.setBasePower(basePower);
 
     move.setCategoryPhysical();
-    move.setBasePP(basePP);
+    move.setBasePP(basePp);
     move.setMultiHit(minHits, maxHits);
 
     move.setProperty<pokesim::tags::move::AnySingleTarget>();

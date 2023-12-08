@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Pokedex/Pokedex.hpp>
-#include <Types/Species.hpp>
-#include <Types/Type.hpp>
-#include <cstdint>
+#include <Types/Enums/Species.hpp>
+#include <Types/Enums/Type.hpp>
+#include <Types/Stats.hpp>
 
 #include "DexDataSetup.hpp"
 
@@ -12,8 +12,9 @@ struct SpeciesDexDataSetup : DexDataSetup {
   SpeciesDexDataSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
 
   /*_inline_*/ void setName(Species species);
-  /*_inline_*/ void setType(Type type1, Type type2 = NO_TYPE);
+  /*_inline_*/ void setType(Type type1, Type type2 = Type::NO_TYPE);
   /*_inline_*/ void setBaseStats(
-    std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe);
+    types::BaseStat hp, types::BaseStat atk, types::BaseStat def, types::BaseStat spa, types::BaseStat spd,
+    types::BaseStat spe);
 };
 }  // namespace pokesim::dex::internal

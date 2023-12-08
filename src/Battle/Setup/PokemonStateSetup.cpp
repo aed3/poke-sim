@@ -17,12 +17,14 @@
 #include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/NatureTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
-#include <Types/Ability.hpp>
-#include <Types/Gender.hpp>
-#include <Types/Item.hpp>
-#include <Types/Nature.hpp>
-#include <Types/Species.hpp>
-#include <Types/Status.hpp>
+#include <Types/Enums/Ability.hpp>
+#include <Types/Enums/Gender.hpp>
+#include <Types/Enums/Item.hpp>
+#include <Types/Enums/Nature.hpp>
+#include <Types/Enums/Species.hpp>
+#include <Types/Enums/Status.hpp>
+#include <Types/State.hpp>
+#include <Types/Stats.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/entity/view.hpp>
@@ -39,8 +41,8 @@ void PokemonStateSetup::setAutoID() {
   setID((uint16_t)handle.registry()->view<SpeciesName>().size() + 1);
 }
 
-void PokemonStateSetup::setID(std::uint16_t id) {
-  handle.emplace<ID>(id);
+void PokemonStateSetup::setID(types::StateId id) {
+  handle.emplace<Id>(id);
 }
 
 void PokemonStateSetup::setSpecies(dex::Species speciesName) {
@@ -55,7 +57,7 @@ void PokemonStateSetup::setBattle(entt::entity entity) {
   handle.emplace<Battle>(entity);
 }
 
-void PokemonStateSetup::setLevel(std::uint8_t level) {
+void PokemonStateSetup::setLevel(types::Level level) {
   handle.emplace<Level>(level);
 }
 
@@ -77,7 +79,7 @@ void PokemonStateSetup::setMoves(const std::vector<entt::entity>& moveSlots) {
   handle.emplace<MoveSlots>(moveSlots);
 }
 
-void PokemonStateSetup::setPostion(std::uint8_t position) {
+void PokemonStateSetup::setPostion(types::TeamPositionIndex position) {
   handle.emplace<Position>(position);
 }
 
@@ -92,20 +94,20 @@ void PokemonStateSetup::setNature(dex::Nature nature) {
 }
 
 void PokemonStateSetup::setEVs(
-  std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe) {
-  handle.emplace<EVs>(hp, atk, def, spa, spd, spe);
+  types::Ev hp, types::Ev atk, types::Ev def, types::Ev spa, types::Ev spd, types::Ev spe) {
+  handle.emplace<Evs>(hp, atk, def, spa, spd, spe);
 }
 
-void PokemonStateSetup::setEVs(const EVs& evs) {
-  handle.emplace<EVs>(evs);
+void PokemonStateSetup::setEVs(const Evs& evs) {
+  handle.emplace<Evs>(evs);
 }
 
 void PokemonStateSetup::setIVs(
-  std::uint8_t hp, std::uint8_t atk, std::uint8_t def, std::uint8_t spa, std::uint8_t spd, std::uint8_t spe) {
-  handle.emplace<IVs>(hp, atk, def, spa, spd, spe);
+  types::Iv hp, types::Iv atk, types::Iv def, types::Iv spa, types::Iv spd, types::Iv spe) {
+  handle.emplace<Ivs>(hp, atk, def, spa, spd, spe);
 }
 
-void PokemonStateSetup::setIVs(const IVs& ivs) {
-  handle.emplace<IVs>(ivs);
+void PokemonStateSetup::setIVs(const Ivs& ivs) {
+  handle.emplace<Ivs>(ivs);
 }
 }  // namespace pokesim

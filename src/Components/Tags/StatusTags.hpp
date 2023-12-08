@@ -1,5 +1,5 @@
 #pragma once
-#include <Types/Status.hpp>
+#include <Types/Enums/Status.hpp>
 #include <entt/entity/fwd.hpp>
 // TODO(aed3): Make this auto generated
 

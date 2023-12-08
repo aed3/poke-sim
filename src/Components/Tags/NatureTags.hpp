@@ -1,5 +1,5 @@
 #pragma once
-#include <Types/Nature.hpp>
+#include <Types/Enums/Nature.hpp>
 #include <entt/entity/fwd.hpp>
 // TODO(aed3): Make this auto generated
 

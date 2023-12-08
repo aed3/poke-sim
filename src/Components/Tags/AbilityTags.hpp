@@ -1,5 +1,5 @@
 #pragma once
-#include <Types/Ability.hpp>
+#include <Types/Enums/Ability.hpp>
 #include <entt/entity/fwd.hpp>
 // TODO(aed3): Make this auto generated
 

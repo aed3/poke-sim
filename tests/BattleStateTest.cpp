@@ -2,53 +2,53 @@
 
 namespace pokesim {
 struct IdealPP_MaxPP {
-  std::uint8_t pp;
-  std::uint8_t maxPP;
+  types::Pp pp;
+  types::Pp maxPp;
 };
 
 void checkCreatedPokemon(const entt::handle& truth, const Simulation::PokemonCreationInfo& ideal) {
-  REQUIRE(truth.all_of<ID, Side, Battle, SpeciesName, AbilityName, Level, MoveSlots, EVs, IVs>());
-  REQUIRE(truth.all_of<stat::HP, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>());
+  REQUIRE(truth.all_of<Id, Side, Battle, SpeciesName, AbilityName, Level, MoveSlots, Evs, Ivs>());
+  REQUIRE(truth.all_of<stat::Hp, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>());
 
-  if (ideal.id) REQUIRE(truth.get<ID>().id == ideal.id);
-  else REQUIRE(truth.get<ID>().id != 0);
+  if (ideal.id) REQUIRE(truth.get<Id>().id == ideal.id);
+  else REQUIRE(truth.get<Id>().id != 0);
 
   REQUIRE(truth.get<SpeciesName>().name == ideal.species);
   REQUIRE(truth.get<AbilityName>().name == ideal.ability);
   REQUIRE(truth.get<Level>().level == ideal.level);
 
-  if (ideal.item == dex::NO_ITEM) REQUIRE_FALSE(truth.any_of<ItemName>());
+  if (ideal.item == dex::Item::NO_ITEM) REQUIRE_FALSE(truth.any_of<ItemName>());
   else REQUIRE(truth.get<ItemName>().name == ideal.item);
 
-  if (ideal.gender == dex::NO_GENDER) REQUIRE_FALSE(truth.any_of<GenderName>());
+  if (ideal.gender == dex::Gender::NO_GENDER) REQUIRE_FALSE(truth.any_of<GenderName>());
   else REQUIRE(truth.get<GenderName>().name == ideal.gender);
 
-  if (ideal.status == dex::NO_STATUS) REQUIRE_FALSE(truth.any_of<StatusName>());
+  if (ideal.status == dex::Status::NO_STATUS) REQUIRE_FALSE(truth.any_of<StatusName>());
   else REQUIRE(truth.get<StatusName>().name == ideal.status);
 
-  if (ideal.nature == dex::NO_NATURE) REQUIRE_FALSE(truth.any_of<NatureName>());
+  if (ideal.nature == dex::Nature::NO_NATURE) REQUIRE_FALSE(truth.any_of<NatureName>());
   else REQUIRE(truth.get<NatureName>().name == ideal.nature);
 
-  REQUIRE(truth.get<stat::HP>().stat == ideal.stats.hp);
+  REQUIRE(truth.get<stat::Hp>().stat == ideal.stats.hp);
   REQUIRE(truth.get<stat::Atk>().stat == ideal.stats.atk);
   REQUIRE(truth.get<stat::Def>().stat == ideal.stats.def);
   REQUIRE(truth.get<stat::Spa>().stat == ideal.stats.spa);
   REQUIRE(truth.get<stat::Spd>().stat == ideal.stats.spd);
   REQUIRE(truth.get<stat::Spe>().stat == ideal.stats.spe);
 
-  REQUIRE(truth.get<EVs>().hp == ideal.evs.hp);
-  REQUIRE(truth.get<EVs>().atk == ideal.evs.atk);
-  REQUIRE(truth.get<EVs>().def == ideal.evs.def);
-  REQUIRE(truth.get<EVs>().spa == ideal.evs.spa);
-  REQUIRE(truth.get<EVs>().spd == ideal.evs.spd);
-  REQUIRE(truth.get<EVs>().spe == ideal.evs.spe);
+  REQUIRE(truth.get<Evs>().hp == ideal.evs.hp);
+  REQUIRE(truth.get<Evs>().atk == ideal.evs.atk);
+  REQUIRE(truth.get<Evs>().def == ideal.evs.def);
+  REQUIRE(truth.get<Evs>().spa == ideal.evs.spa);
+  REQUIRE(truth.get<Evs>().spd == ideal.evs.spd);
+  REQUIRE(truth.get<Evs>().spe == ideal.evs.spe);
 
-  REQUIRE(truth.get<IVs>().hp == ideal.ivs.hp);
-  REQUIRE(truth.get<IVs>().atk == ideal.ivs.atk);
-  REQUIRE(truth.get<IVs>().def == ideal.ivs.def);
-  REQUIRE(truth.get<IVs>().spa == ideal.ivs.spa);
-  REQUIRE(truth.get<IVs>().spd == ideal.ivs.spd);
-  REQUIRE(truth.get<IVs>().spe == ideal.ivs.spe);
+  REQUIRE(truth.get<Ivs>().hp == ideal.ivs.hp);
+  REQUIRE(truth.get<Ivs>().atk == ideal.ivs.atk);
+  REQUIRE(truth.get<Ivs>().def == ideal.ivs.def);
+  REQUIRE(truth.get<Ivs>().spa == ideal.ivs.spa);
+  REQUIRE(truth.get<Ivs>().spd == ideal.ivs.spd);
+  REQUIRE(truth.get<Ivs>().spe == ideal.ivs.spe);
 
   const std::vector<entt::entity>& moveSlotsTruth = truth.get<MoveSlots>().moveSlots;
   REQUIRE(moveSlotsTruth.size() == ideal.moves.size());
@@ -56,10 +56,10 @@ void checkCreatedPokemon(const entt::handle& truth, const Simulation::PokemonCre
   for (std::size_t i = 0; i < ideal.moves.size(); i++) {
     const Simulation::MoveCreationInfo& moveIdeal = ideal.moves[i];
     entt::entity moveTruth = moveSlotsTruth[i];
-    REQUIRE(truth.registry()->all_of<MoveName, PP, MaxPP>(moveTruth));
+    REQUIRE(truth.registry()->all_of<MoveName, Pp, MaxPp>(moveTruth));
     REQUIRE(truth.registry()->get<MoveName>(moveTruth).name == moveIdeal.name);
-    REQUIRE(truth.registry()->get<PP>(moveTruth).pp == moveIdeal.pp);
-    REQUIRE(truth.registry()->get<MaxPP>(moveTruth).maxPP == moveIdeal.maxPP);
+    REQUIRE(truth.registry()->get<Pp>(moveTruth).pp == moveIdeal.pp);
+    REQUIRE(truth.registry()->get<MaxPp>(moveTruth).maxPp == moveIdeal.maxPp);
   }
 }
 
@@ -80,22 +80,22 @@ void checkCreatedSide(const entt::handle& truth, const Simulation::SideCreationI
 }
 
 void checkCreatedBattle(const entt::handle truth, const Simulation::BattleCreationInfo& ideal) {
-  REQUIRE(truth.any_of<Sides, ActionQueue, Turn, Probability, RNGSeed>());
+  REQUIRE(truth.any_of<Sides, ActionQueue, Turn, Probability, RngSeed>());
   if (ideal.turn) REQUIRE(truth.get<Turn>().turn == ideal.turn);
   else REQUIRE(truth.get<Turn>().turn == 0);
 
   if (ideal.probability) REQUIRE(truth.get<Probability>().probability == ideal.probability);
   else REQUIRE(truth.get<Probability>().probability == 1);
 
-  if (ideal.rngSeed) REQUIRE(truth.get<RNGSeed>().seed == ideal.rngSeed);
-  else REQUIRE(truth.get<RNGSeed>().seed != 0);
+  if (ideal.rngSeed) REQUIRE(truth.get<RngSeed>().seed == ideal.rngSeed);
+  else REQUIRE(truth.get<RngSeed>().seed != 0);
 
   auto [p1SideEntity, p2SideEntity] = truth.get<Sides>();
   entt::handle p1SideTruth(*truth.registry(), p1SideEntity);
   entt::handle p2SideTruth(*truth.registry(), p2SideEntity);
 
-  checkCreatedSide(p1SideTruth, ideal.P1);
-  checkCreatedSide(p2SideTruth, ideal.P2);
+  checkCreatedSide(p1SideTruth, ideal.p1);
+  checkCreatedSide(p2SideTruth, ideal.p2);
 
   REQUIRE(p1SideTruth.get<Battle>().battle == truth.entity());
   REQUIRE(p2SideTruth.get<Battle>().battle == truth.entity());
@@ -103,50 +103,50 @@ void checkCreatedBattle(const entt::handle truth, const Simulation::BattleCreati
   REQUIRE(p2SideTruth.get<FoeSide>().foeSide == p1SideEntity);
 }
 
-TEST_CASE("Single Battle", "[BattleState]") {
-  Pokedex pokedex(SCARLET_VIOLET_GAME_MECHANICS);
+TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
+  Pokedex pokedex(GameMechanics::SCARLET_VIOLET_GAME_MECHANICS);
   entt::dense_set<dex::Move> moveSet{};
-  for (dex::Move move : {dex::FURY_ATTACK, dex::THUNDERBOLT}) moveSet.insert(move);
+  for (dex::Move move : {dex::Move::FURY_ATTACK, dex::Move::THUNDERBOLT}) moveSet.insert(move);
 
   pokedex.loadMoves(moveSet);
 
-  Simulation simulation(pokedex, SINGLES_BATTLE_FORMAT);
+  Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
 
   Simulation::BattleCreationInfo battleCreationInfo{};
   {
     Simulation::PokemonCreationInfo p1PokemonInfo{};
-    p1PokemonInfo.species = dex::EMPOLEON;
-    p1PokemonInfo.ability = dex::DEFIANT;
-    p1PokemonInfo.gender = dex::MALE;
-    p1PokemonInfo.status = dex::PAR;
+    p1PokemonInfo.species = dex::Species::EMPOLEON;
+    p1PokemonInfo.ability = dex::Ability::DEFIANT;
+    p1PokemonInfo.gender = dex::Gender::MALE;
+    p1PokemonInfo.status = dex::Status::PAR;
     p1PokemonInfo.level = 99;
     p1PokemonInfo.evs = {0, 50, 100, 150, 200, 255};
     p1PokemonInfo.stats = {309, 208, 212, 258, 238, 156};
 
     Simulation::MoveCreationInfo p1MoveInfo{};
-    p1MoveInfo.name = dex::FURY_ATTACK;
-    p1MoveInfo.maxPP = pokedex.getMoveData<PP>(dex::FURY_ATTACK).pp;
-    p1MoveInfo.pp = p1MoveInfo.maxPP - 1;
-    p1PokemonInfo.moves.push_back(std::move(p1MoveInfo));
+    p1MoveInfo.name = dex::Move::FURY_ATTACK;
+    p1MoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::FURY_ATTACK).pp;
+    p1MoveInfo.pp = p1MoveInfo.maxPp - 1;
+    p1PokemonInfo.moves.push_back(p1MoveInfo);
 
     Simulation::PokemonCreationInfo p2PokemonInfo{};
-    p2PokemonInfo.species = dex::AMPHAROS;
-    p2PokemonInfo.item = dex::CHOICE_SPECS;
-    p2PokemonInfo.ability = dex::STATIC;
-    p2PokemonInfo.gender = dex::FEMALE;
+    p2PokemonInfo.species = dex::Species::AMPHAROS;
+    p2PokemonInfo.item = dex::Item::CHOICE_SPECS;
+    p2PokemonInfo.ability = dex::Ability::STATIC;
+    p2PokemonInfo.gender = dex::Gender::FEMALE;
     p2PokemonInfo.level = 100;
-    p2PokemonInfo.nature = dex::MODEST;
+    p2PokemonInfo.nature = dex::Nature::MODEST;
     p2PokemonInfo.ivs = {5, 10, 15, 20, 25, 30};
     p2PokemonInfo.stats = {321, 186, 206, 266, 216, 146};
 
     Simulation::MoveCreationInfo p2MoveInfo{};
-    p2MoveInfo.name = dex::THUNDERBOLT;
-    p2MoveInfo.maxPP = pokedex.getMoveData<PP>(dex::THUNDERBOLT).pp;
-    p2MoveInfo.pp = p2MoveInfo.maxPP - 2;
-    p2PokemonInfo.moves.push_back(std::move(p2MoveInfo));
+    p2MoveInfo.name = dex::Move::THUNDERBOLT;
+    p2MoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::THUNDERBOLT).pp;
+    p2MoveInfo.pp = p2MoveInfo.maxPp - 2;
+    p2PokemonInfo.moves.push_back(p2MoveInfo);
 
-    battleCreationInfo.P1 = {{std::move(p1PokemonInfo)}};
-    battleCreationInfo.P2 = {{std::move(p2PokemonInfo)}};
+    battleCreationInfo.p1 = {{p1PokemonInfo}};
+    battleCreationInfo.p2 = {{p2PokemonInfo}};
   }
 
   simulation.createInitialStates({battleCreationInfo});
@@ -169,81 +169,83 @@ TEST_CASE("Single Battle", "[BattleState]") {
   REQUIRE(registry.all_of<tags::item::ChoiceSpecs>(p2Entity));
 }
 
-TEST_CASE("Double Battle", "[BattleState]") {
-  Pokedex pokedex(SCARLET_VIOLET_GAME_MECHANICS);
+TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
+  Pokedex pokedex(GameMechanics::SCARLET_VIOLET_GAME_MECHANICS);
   entt::dense_set<dex::Move> moveSet{};
-  for (dex::Move move : {dex::MOONBLAST, dex::KNOCK_OFF, dex::WILL_O_WISP, dex::QUIVER_DANCE}) moveSet.insert(move);
+  for (dex::Move move : {dex::Move::MOONBLAST, dex::Move::KNOCK_OFF, dex::Move::WILL_O_WISP, dex::Move::QUIVER_DANCE}) {
+    moveSet.insert(move);
+  }
 
   pokedex.loadMoves(moveSet);
 
-  Simulation simulation(pokedex, DOUBLES_BATTLE_FORMAT);
+  Simulation simulation(pokedex, BattleFormat::DOUBLES_BATTLE_FORMAT);
 
   Simulation::BattleCreationInfo battleCreationInfo{};
   {
     Simulation::PokemonCreationInfo p1aPokemonInfo{};
-    p1aPokemonInfo.species = dex::GARDEVOIR;
-    p1aPokemonInfo.ability = dex::TRACE;
-    p1aPokemonInfo.gender = dex::FEMALE;
-    p1aPokemonInfo.item = dex::CHOICE_SCARF;
-    p1aPokemonInfo.status = dex::BRN;
+    p1aPokemonInfo.species = dex::Species::GARDEVOIR;
+    p1aPokemonInfo.ability = dex::Ability::TRACE;
+    p1aPokemonInfo.gender = dex::Gender::FEMALE;
+    p1aPokemonInfo.item = dex::Item::CHOICE_SCARF;
+    p1aPokemonInfo.status = dex::Status::BRN;
     p1aPokemonInfo.level = 90;
     p1aPokemonInfo.stats = {277, 166, 166, 286, 266, 196};
     p1aPokemonInfo.evs = {0, 50, 100, 150, 200, 255};
 
     Simulation::MoveCreationInfo p1aMoveInfo{};
-    p1aMoveInfo.name = dex::MOONBLAST;
-    p1aMoveInfo.maxPP = pokedex.getMoveData<PP>(dex::MOONBLAST).pp;
-    p1aMoveInfo.pp = p1aMoveInfo.maxPP - 4;
-    p1aPokemonInfo.moves.push_back(std::move(p1aMoveInfo));
+    p1aMoveInfo.name = dex::Move::MOONBLAST;
+    p1aMoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::MOONBLAST).pp;
+    p1aMoveInfo.pp = p1aMoveInfo.maxPp - 4;
+    p1aPokemonInfo.moves.push_back(p1aMoveInfo);
 
     Simulation::PokemonCreationInfo p1bPokemonInfo{};
-    p1bPokemonInfo.species = dex::PANGORO;
-    p1bPokemonInfo.ability = dex::IRON_FIST;
-    p1bPokemonInfo.gender = dex::MALE;
-    p1bPokemonInfo.item = dex::LIFE_ORB;
+    p1bPokemonInfo.species = dex::Species::PANGORO;
+    p1bPokemonInfo.ability = dex::Ability::IRON_FIST;
+    p1bPokemonInfo.gender = dex::Gender::MALE;
+    p1bPokemonInfo.item = dex::Item::LIFE_ORB;
     p1bPokemonInfo.level = 95;
     p1bPokemonInfo.stats = {331, 284, 192, 174, 178, 152};
     p1bPokemonInfo.evs = {255, 200, 150, 100, 50, 0};
 
     Simulation::MoveCreationInfo p1bMoveInfo{};
-    p1bMoveInfo.name = dex::KNOCK_OFF;
-    p1bMoveInfo.maxPP = pokedex.getMoveData<PP>(dex::KNOCK_OFF).pp;
-    p1bMoveInfo.pp = p1bMoveInfo.maxPP - 3;
-    p1bPokemonInfo.moves.push_back(std::move(p1bMoveInfo));
+    p1bMoveInfo.name = dex::Move::KNOCK_OFF;
+    p1bMoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::KNOCK_OFF).pp;
+    p1bMoveInfo.pp = p1bMoveInfo.maxPp - 3;
+    p1bPokemonInfo.moves.push_back(p1bMoveInfo);
 
     Simulation::PokemonCreationInfo p2aPokemonInfo{};
-    p2aPokemonInfo.species = dex::DRAGAPULT;
-    p2aPokemonInfo.ability = dex::INFILTRATOR;
-    p2aPokemonInfo.gender = dex::FEMALE;
-    p2aPokemonInfo.item = dex::FOCUS_SASH;
+    p2aPokemonInfo.species = dex::Species::DRAGAPULT;
+    p2aPokemonInfo.ability = dex::Ability::INFILTRATOR;
+    p2aPokemonInfo.gender = dex::Gender::FEMALE;
+    p2aPokemonInfo.item = dex::Item::FOCUS_SASH;
     p2aPokemonInfo.level = 100;
-    p2aPokemonInfo.nature = dex::HASTY;
+    p2aPokemonInfo.nature = dex::Nature::HASTY;
     p2aPokemonInfo.stats = {217, 276, 186, 236, 186, 320};
     p2aPokemonInfo.ivs = {5, 10, 15, 20, 25, 30};
 
     Simulation::MoveCreationInfo p2aMoveInfo{};
-    p2aMoveInfo.name = dex::WILL_O_WISP;
-    p2aMoveInfo.maxPP = pokedex.getMoveData<PP>(dex::WILL_O_WISP).pp;
-    p2aMoveInfo.pp = p2aMoveInfo.maxPP - 2;
-    p2aPokemonInfo.moves.push_back(std::move(p2aMoveInfo));
+    p2aMoveInfo.name = dex::Move::WILL_O_WISP;
+    p2aMoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::WILL_O_WISP).pp;
+    p2aMoveInfo.pp = p2aMoveInfo.maxPp - 2;
+    p2aPokemonInfo.moves.push_back(p2aMoveInfo);
 
     Simulation::PokemonCreationInfo p2bPokemonInfo{};
-    p2bPokemonInfo.species = dex::RIBOMBEE;
-    p2bPokemonInfo.ability = dex::SWEET_VEIL;
-    p2bPokemonInfo.gender = dex::MALE;
-    p2bPokemonInfo.item = dex::BRIGHT_POWDER;
+    p2bPokemonInfo.species = dex::Species::RIBOMBEE;
+    p2bPokemonInfo.ability = dex::Ability::SWEET_VEIL;
+    p2bPokemonInfo.gender = dex::Gender::MALE;
+    p2bPokemonInfo.item = dex::Item::BRIGHT_POWDER;
     p2aPokemonInfo.level = 91;
     p2bPokemonInfo.stats = {261, 146, 156, 226, 176, 284};
     p2bPokemonInfo.ivs = {30, 25, 20, 15, 10, 5};
 
     Simulation::MoveCreationInfo p2bMoveInfo{};
-    p2bMoveInfo.name = dex::QUIVER_DANCE;
-    p2bMoveInfo.maxPP = pokedex.getMoveData<PP>(dex::QUIVER_DANCE).pp;
-    p2bMoveInfo.pp = p2bMoveInfo.maxPP - 1;
-    p2bPokemonInfo.moves.push_back(std::move(p2bMoveInfo));
+    p2bMoveInfo.name = dex::Move::QUIVER_DANCE;
+    p2bMoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::QUIVER_DANCE).pp;
+    p2bMoveInfo.pp = p2bMoveInfo.maxPp - 1;
+    p2bPokemonInfo.moves.push_back(p2bMoveInfo);
 
-    battleCreationInfo.P1 = {{std::move(p1aPokemonInfo), std::move(p1bPokemonInfo)}};
-    battleCreationInfo.P2 = {{std::move(p2aPokemonInfo), std::move(p2bPokemonInfo)}};
+    battleCreationInfo.p1 = {{p1aPokemonInfo, p1bPokemonInfo}};
+    battleCreationInfo.p2 = {{p2aPokemonInfo, p2bPokemonInfo}};
   }
 
   battleCreationInfo.turn = 2;
@@ -277,51 +279,51 @@ TEST_CASE("Double Battle", "[BattleState]") {
   REQUIRE(registry.all_of<tags::item::BrightPowder>(p2bEntity));
 }
 
-TEST_CASE("Multiple Battles", "[BattleState]") {
-  Pokedex pokedex(SCARLET_VIOLET_GAME_MECHANICS);
+TEST_CASE("Battle State: Multiple Battles", "[BattleState][Setup]") {
+  Pokedex pokedex(GameMechanics::SCARLET_VIOLET_GAME_MECHANICS);
   entt::dense_set<dex::Move> moveSet{};
-  for (dex::Move move : {dex::FURY_ATTACK, dex::THUNDERBOLT}) moveSet.insert(move);
+  for (dex::Move move : {dex::Move::FURY_ATTACK, dex::Move::THUNDERBOLT}) moveSet.insert(move);
 
   pokedex.loadMoves(moveSet);
 
-  Simulation simulation(pokedex, SINGLES_BATTLE_FORMAT);
+  Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
 
   Simulation::BattleCreationInfo battle1CreationInfo{};
   Simulation::BattleCreationInfo battle2CreationInfo{};
   {
     Simulation::PokemonCreationInfo battle1PokemonInfo{};
-    battle1PokemonInfo.species = dex::EMPOLEON;
-    battle1PokemonInfo.ability = dex::DEFIANT;
-    battle1PokemonInfo.gender = dex::MALE;
-    battle1PokemonInfo.status = dex::PAR;
+    battle1PokemonInfo.species = dex::Species::EMPOLEON;
+    battle1PokemonInfo.ability = dex::Ability::DEFIANT;
+    battle1PokemonInfo.gender = dex::Gender::MALE;
+    battle1PokemonInfo.status = dex::Status::PAR;
     battle1PokemonInfo.level = 99;
     battle1PokemonInfo.evs = {0, 50, 100, 150, 200, 255};
     battle1PokemonInfo.stats = {309, 208, 212, 258, 238, 156};
 
     Simulation::MoveCreationInfo battle1MoveInfo{};
-    battle1MoveInfo.name = dex::FURY_ATTACK;
-    battle1MoveInfo.maxPP = pokedex.getMoveData<PP>(dex::FURY_ATTACK).pp;
-    battle1MoveInfo.pp = battle1MoveInfo.maxPP - 1;
-    battle1PokemonInfo.moves.push_back(std::move(battle1MoveInfo));
+    battle1MoveInfo.name = dex::Move::FURY_ATTACK;
+    battle1MoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::FURY_ATTACK).pp;
+    battle1MoveInfo.pp = battle1MoveInfo.maxPp - 1;
+    battle1PokemonInfo.moves.push_back(battle1MoveInfo);
 
     Simulation::PokemonCreationInfo battle2PokemonInfo{};
-    battle2PokemonInfo.species = dex::AMPHAROS;
-    battle2PokemonInfo.item = dex::CHOICE_SPECS;
-    battle2PokemonInfo.ability = dex::STATIC;
-    battle2PokemonInfo.gender = dex::FEMALE;
+    battle2PokemonInfo.species = dex::Species::AMPHAROS;
+    battle2PokemonInfo.item = dex::Item::CHOICE_SPECS;
+    battle2PokemonInfo.ability = dex::Ability::STATIC;
+    battle2PokemonInfo.gender = dex::Gender::FEMALE;
     battle2PokemonInfo.level = 100;
-    battle2PokemonInfo.nature = dex::MODEST;
+    battle2PokemonInfo.nature = dex::Nature::MODEST;
     battle2PokemonInfo.ivs = {5, 10, 15, 20, 25, 30};
     battle2PokemonInfo.stats = {321, 186, 206, 266, 216, 146};
 
     Simulation::MoveCreationInfo battle2MoveInfo{};
-    battle2MoveInfo.name = dex::THUNDERBOLT;
-    battle2MoveInfo.maxPP = pokedex.getMoveData<PP>(dex::THUNDERBOLT).pp;
-    battle2MoveInfo.pp = battle2MoveInfo.maxPP - 2;
-    battle2PokemonInfo.moves.push_back(std::move(battle2MoveInfo));
+    battle2MoveInfo.name = dex::Move::THUNDERBOLT;
+    battle2MoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::THUNDERBOLT).pp;
+    battle2MoveInfo.pp = battle2MoveInfo.maxPp - 2;
+    battle2PokemonInfo.moves.push_back(battle2MoveInfo);
 
-    battle1CreationInfo.P1 = battle1CreationInfo.P2 = {{std::move(battle1PokemonInfo)}};
-    battle2CreationInfo.P1 = battle2CreationInfo.P2 = {{std::move(battle2PokemonInfo)}};
+    battle1CreationInfo.p1 = battle1CreationInfo.p2 = {{battle1PokemonInfo}};
+    battle2CreationInfo.p1 = battle2CreationInfo.p2 = {{battle2PokemonInfo}};
   }
 
   battle1CreationInfo.turn = 12;

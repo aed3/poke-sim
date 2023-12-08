@@ -4,26 +4,29 @@
 #include <Components/Tags/MoveTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Setup/MoveDexDataSetup.hpp>
+#include <Types/Enums/Move.hpp>
+#include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
-#include <Types/Type.hpp>
-#include <cstdint>
+#include <Types/Stats.hpp>
 
 namespace pokesim::dex::build {
 struct Moonblast {
-  static const dex::Move name = dex::MOONBLAST;
-  static const std::uint8_t accuracy = 100, basePower = 95, basePP = 15;
-  static const std::uint8_t secondaryEffectChance = 30;
-  static const std::int8_t spaBoost = -1;
+  static const dex::Move name = dex::Move::MOONBLAST;
+  static const types::BaseAccuracy accuracy = 100;
+  static const types::BasePower basePower = 95;
+  static const types::Pp basePp = 15;
+  static const types::BaseEffectChance secondaryEffectChance = 30;
+  static const types::Boost spaBoost = -1;
 
   static entt::entity build(Pokedex& pokedex) {
     internal::MoveDexDataSetup move(pokedex);
     move.setName(name);
-    move.setType(dex::FAIRY_TYPE);
+    move.setType(dex::Type::FAIRY_TYPE);
     move.setAccuracy(accuracy);
     move.setBasePower(basePower);
 
     move.setCategorySpecial();
-    move.setBasePP(basePP);
+    move.setBasePP(basePp);
 
     move.setProperty<pokesim::tags::move::AnySingleTarget>();
 

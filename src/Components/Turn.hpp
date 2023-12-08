@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cstdint>
+#include <Types/State.hpp>
 
 namespace pokesim {
 // The current turn of a battle
 struct Turn {
-  std::uint16_t turn = 0;
+  types::BattleTurn turn = 0;
 };
 }  // namespace pokesim

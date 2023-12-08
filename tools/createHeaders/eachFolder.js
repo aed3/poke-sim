@@ -13,8 +13,10 @@ const createHeadersFile = (folder) => {
 
   for (const file of files) {
     if (fs.statSync(file).isDirectory()) {
-      const subFolderHeaderFile = createHeadersFile(file);
-      if (subFolderHeaderFile) headerFiles.push(subFolderHeaderFile);
+      const subFolderHeaderFiles = createHeadersFile(file);
+      if (subFolderHeaderFiles) {
+        headerFiles.push(...subFolderHeaderFiles);
+      }
     }
     else if (path.extname(file) === '.hpp' && file !== folderHeadersFileName) {
       headerFiles.push(file);
@@ -26,7 +28,7 @@ const createHeadersFile = (folder) => {
     fs.writeFileSync(folderHeadersFileName, '#pragma once\n\n');
     fs.appendFileSync(folderHeadersFileName,
       headerFiles.map(file => `#include "${toRelative(file, folder)}"`).join('\n'));
-    return folderHeadersFileName;
+    return headerFiles;
   }
 
   return null;
