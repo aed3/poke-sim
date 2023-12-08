@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Accuracy.hpp"
+#include "AnalyzeEffect/headers.hpp"
 #include "BasePower.hpp"
 #include "Boosts.hpp"
+#include "CalcDamage/headers.hpp"
 #include "Chance.hpp"
 #include "DexData/headers.hpp"
 #include "EVsIVs.hpp"

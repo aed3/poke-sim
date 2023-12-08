@@ -4,14 +4,14 @@
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/Setup/PokemonStateSetup.hpp>
 #include <Battle/Setup/headers.hpp>
-#include <Components/DamageCalc/AttackerDefender.hpp>
+#include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
+#include <Components/CalcDamage/AttackerDefender.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/SimulationTags.hpp>
-#include <DamageCalc/Setup/DamageCalcInputSetup.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
@@ -134,8 +134,8 @@ void Simulation::createInitialTurnDecision(
   moveSideActionsToBattleActions(battleHandle, sides, battleHandle.get<ActionQueue>());
 }
 
-void Simulation::createDamageCalcInput(
-  BattleStateSetup battleStateSetup, const DamageCalcInputInfo& damageCalcInputData) {
+void Simulation::createCalcDamageInput(
+  BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData) {
   ENTT_ASSERT(damageCalcInputData.attackerSlot != TargetSlot::NONE, "A damage calculation must have a attacker");
   ENTT_ASSERT(damageCalcInputData.defenderSlot != TargetSlot::NONE, "A damage calculation must have a defender");
   ENTT_ASSERT(damageCalcInputData.move != dex::Move::NO_MOVE, "A damage calculation must have a move");
@@ -144,9 +144,9 @@ void Simulation::createDamageCalcInput(
   entt::entity attackerEntity = targetSlotEntity(registry, sides, damageCalcInputData.attackerSlot);
   entt::entity defenderEntity = targetSlotEntity(registry, sides, damageCalcInputData.defenderSlot);
 
-  damage_calc::InputSetup inputSetup(registry);
+  calc_damage::InputSetup inputSetup(registry);
   inputSetup.setAttacker(attackerEntity);
-  inputSetup.setAttacker(defenderEntity);
+  inputSetup.setDefender(defenderEntity);
   inputSetup.setMove(damageCalcInputData.move);
   inputSetup.setBattle(battleStateSetup.entity());
 }
@@ -163,7 +163,7 @@ void Simulation::createAnalyzeEffectInput(
 
   analyze_effect::InputSetup inputSetup(registry);
   inputSetup.setAttacker(attackerEntity);
-  inputSetup.setAttacker(defenderEntity);
+  inputSetup.setDefender(defenderEntity);
   inputSetup.setEffect(analyzeEffectInputData.effect);
   inputSetup.setBattle(battleStateSetup.entity());
 }
@@ -184,8 +184,8 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
       }
     }
 
-    for (const DamageCalcInputInfo& damageCalcInputData : battleData.damageCalculations) {
-      createDamageCalcInput(battleStateSetup, damageCalcInputData);
+    for (const CalcDamageInputInfo& damageCalcInputData : battleData.damageCalculations) {
+      createCalcDamageInput(battleStateSetup, damageCalcInputData);
     }
 
     for (const AnalyzeEffectInputInfo& analyzeEffectInputData : battleData.effectsToAnalyze) {

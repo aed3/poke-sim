@@ -103,7 +103,7 @@ void checkCreatedBattle(const entt::handle truth, const Simulation::BattleCreati
   REQUIRE(p2SideTruth.get<FoeSide>().foeSide == p1SideEntity);
 }
 
-TEST_CASE("Single Battle", "[BattleState]") {
+TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
   Pokedex pokedex(GameMechanics::SCARLET_VIOLET_GAME_MECHANICS);
   entt::dense_set<dex::Move> moveSet{};
   for (dex::Move move : {dex::Move::FURY_ATTACK, dex::Move::THUNDERBOLT}) moveSet.insert(move);
@@ -127,7 +127,7 @@ TEST_CASE("Single Battle", "[BattleState]") {
     p1MoveInfo.name = dex::Move::FURY_ATTACK;
     p1MoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::FURY_ATTACK).pp;
     p1MoveInfo.pp = p1MoveInfo.maxPp - 1;
-    p1PokemonInfo.moves.push_back(std::move(p1MoveInfo));
+    p1PokemonInfo.moves.push_back(p1MoveInfo);
 
     Simulation::PokemonCreationInfo p2PokemonInfo{};
     p2PokemonInfo.species = dex::Species::AMPHAROS;
@@ -143,10 +143,10 @@ TEST_CASE("Single Battle", "[BattleState]") {
     p2MoveInfo.name = dex::Move::THUNDERBOLT;
     p2MoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::THUNDERBOLT).pp;
     p2MoveInfo.pp = p2MoveInfo.maxPp - 2;
-    p2PokemonInfo.moves.push_back(std::move(p2MoveInfo));
+    p2PokemonInfo.moves.push_back(p2MoveInfo);
 
-    battleCreationInfo.p1 = {{std::move(p1PokemonInfo)}};
-    battleCreationInfo.p2 = {{std::move(p2PokemonInfo)}};
+    battleCreationInfo.p1 = {{p1PokemonInfo}};
+    battleCreationInfo.p2 = {{p2PokemonInfo}};
   }
 
   simulation.createInitialStates({battleCreationInfo});
@@ -169,7 +169,7 @@ TEST_CASE("Single Battle", "[BattleState]") {
   REQUIRE(registry.all_of<tags::item::ChoiceSpecs>(p2Entity));
 }
 
-TEST_CASE("Double Battle", "[BattleState]") {
+TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
   Pokedex pokedex(GameMechanics::SCARLET_VIOLET_GAME_MECHANICS);
   entt::dense_set<dex::Move> moveSet{};
   for (dex::Move move : {dex::Move::MOONBLAST, dex::Move::KNOCK_OFF, dex::Move::WILL_O_WISP, dex::Move::QUIVER_DANCE}) {
@@ -196,7 +196,7 @@ TEST_CASE("Double Battle", "[BattleState]") {
     p1aMoveInfo.name = dex::Move::MOONBLAST;
     p1aMoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::MOONBLAST).pp;
     p1aMoveInfo.pp = p1aMoveInfo.maxPp - 4;
-    p1aPokemonInfo.moves.push_back(std::move(p1aMoveInfo));
+    p1aPokemonInfo.moves.push_back(p1aMoveInfo);
 
     Simulation::PokemonCreationInfo p1bPokemonInfo{};
     p1bPokemonInfo.species = dex::Species::PANGORO;
@@ -211,7 +211,7 @@ TEST_CASE("Double Battle", "[BattleState]") {
     p1bMoveInfo.name = dex::Move::KNOCK_OFF;
     p1bMoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::KNOCK_OFF).pp;
     p1bMoveInfo.pp = p1bMoveInfo.maxPp - 3;
-    p1bPokemonInfo.moves.push_back(std::move(p1bMoveInfo));
+    p1bPokemonInfo.moves.push_back(p1bMoveInfo);
 
     Simulation::PokemonCreationInfo p2aPokemonInfo{};
     p2aPokemonInfo.species = dex::Species::DRAGAPULT;
@@ -227,7 +227,7 @@ TEST_CASE("Double Battle", "[BattleState]") {
     p2aMoveInfo.name = dex::Move::WILL_O_WISP;
     p2aMoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::WILL_O_WISP).pp;
     p2aMoveInfo.pp = p2aMoveInfo.maxPp - 2;
-    p2aPokemonInfo.moves.push_back(std::move(p2aMoveInfo));
+    p2aPokemonInfo.moves.push_back(p2aMoveInfo);
 
     Simulation::PokemonCreationInfo p2bPokemonInfo{};
     p2bPokemonInfo.species = dex::Species::RIBOMBEE;
@@ -242,10 +242,10 @@ TEST_CASE("Double Battle", "[BattleState]") {
     p2bMoveInfo.name = dex::Move::QUIVER_DANCE;
     p2bMoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::QUIVER_DANCE).pp;
     p2bMoveInfo.pp = p2bMoveInfo.maxPp - 1;
-    p2bPokemonInfo.moves.push_back(std::move(p2bMoveInfo));
+    p2bPokemonInfo.moves.push_back(p2bMoveInfo);
 
-    battleCreationInfo.p1 = {{std::move(p1aPokemonInfo), std::move(p1bPokemonInfo)}};
-    battleCreationInfo.p2 = {{std::move(p2aPokemonInfo), std::move(p2bPokemonInfo)}};
+    battleCreationInfo.p1 = {{p1aPokemonInfo, p1bPokemonInfo}};
+    battleCreationInfo.p2 = {{p2aPokemonInfo, p2bPokemonInfo}};
   }
 
   battleCreationInfo.turn = 2;
@@ -279,7 +279,7 @@ TEST_CASE("Double Battle", "[BattleState]") {
   REQUIRE(registry.all_of<tags::item::BrightPowder>(p2bEntity));
 }
 
-TEST_CASE("Multiple Battles", "[BattleState]") {
+TEST_CASE("Battle State: Multiple Battles", "[BattleState][Setup]") {
   Pokedex pokedex(GameMechanics::SCARLET_VIOLET_GAME_MECHANICS);
   entt::dense_set<dex::Move> moveSet{};
   for (dex::Move move : {dex::Move::FURY_ATTACK, dex::Move::THUNDERBOLT}) moveSet.insert(move);
@@ -304,7 +304,7 @@ TEST_CASE("Multiple Battles", "[BattleState]") {
     battle1MoveInfo.name = dex::Move::FURY_ATTACK;
     battle1MoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::FURY_ATTACK).pp;
     battle1MoveInfo.pp = battle1MoveInfo.maxPp - 1;
-    battle1PokemonInfo.moves.push_back(std::move(battle1MoveInfo));
+    battle1PokemonInfo.moves.push_back(battle1MoveInfo);
 
     Simulation::PokemonCreationInfo battle2PokemonInfo{};
     battle2PokemonInfo.species = dex::Species::AMPHAROS;
@@ -320,10 +320,10 @@ TEST_CASE("Multiple Battles", "[BattleState]") {
     battle2MoveInfo.name = dex::Move::THUNDERBOLT;
     battle2MoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::THUNDERBOLT).pp;
     battle2MoveInfo.pp = battle2MoveInfo.maxPp - 2;
-    battle2PokemonInfo.moves.push_back(std::move(battle2MoveInfo));
+    battle2PokemonInfo.moves.push_back(battle2MoveInfo);
 
-    battle1CreationInfo.p1 = battle1CreationInfo.p2 = {{std::move(battle1PokemonInfo)}};
-    battle2CreationInfo.p1 = battle2CreationInfo.p2 = {{std::move(battle2PokemonInfo)}};
+    battle1CreationInfo.p1 = battle1CreationInfo.p2 = {{battle1PokemonInfo}};
+    battle2CreationInfo.p1 = battle2CreationInfo.p2 = {{battle2PokemonInfo}};
   }
 
   battle1CreationInfo.turn = 12;

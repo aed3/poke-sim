@@ -76,7 +76,7 @@ class Simulation {
     SideDecision p2;
   };
 
-  struct DamageCalcInputInfo {
+  struct CalcDamageInputInfo {
     TargetSlot attackerSlot = TargetSlot::NONE;
     TargetSlot defenderSlot = TargetSlot::NONE;
     dex::Move move = dex::Move::NO_MOVE;
@@ -100,7 +100,7 @@ class Simulation {
     SideCreationInfo p2;
 
     std::vector<TurnDecisionInfo> decisionsToSimulate;
-    std::vector<DamageCalcInputInfo> damageCalculations;
+    std::vector<CalcDamageInputInfo> damageCalculations;
     std::vector<AnalyzeEffectInputInfo> effectsToAnalyze;
   };
 
@@ -111,8 +111,8 @@ class Simulation {
 
   /*_inline_*/ void createInitialTurnDecision(
     BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData);
-  /*_inline_*/ void createDamageCalcInput(
-    BattleStateSetup battleStateSetup, const DamageCalcInputInfo& damageCalcInputData);
+  /*_inline_*/ void createCalcDamageInput(
+    BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData);
   /*_inline_*/ void createAnalyzeEffectInput(
     BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& analyzeEffectInputData);
 

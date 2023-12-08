@@ -2,7 +2,7 @@
 
 #include <entt/entity/entity.hpp>
 
-namespace pokesim::damage_calc {
+namespace pokesim::calc_damage {
 struct Attacker {
   entt::entity attacker;
 };
@@ -10,4 +10,4 @@ struct Attacker {
 struct Defender {
   entt::entity defender;
 };
-}  // namespace pokesim::damage_calc
+}  // namespace pokesim::calc_damage

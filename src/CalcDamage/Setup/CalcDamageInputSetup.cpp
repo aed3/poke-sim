@@ -1,6 +1,6 @@
-#include "DamageCalcInputSetup.hpp"
+#include "CalcDamageInputSetup.hpp"
 
-#include <Components/DamageCalc/AttackerDefender.hpp>
+#include <Components/CalcDamage/AttackerDefender.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Types/Enums/Move.hpp>
@@ -8,7 +8,7 @@
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
-namespace pokesim::damage_calc {
+namespace pokesim::calc_damage {
 void InputSetup::setAttacker(entt::entity entity) {
   handle.emplace<Attacker>(entity);
 }
@@ -24,4 +24,4 @@ void InputSetup::setMove(dex::Move move) {
 void InputSetup::setBattle(entt::entity entity) {
   handle.emplace<Battle>(entity);
 }
-}  // namespace pokesim::damage_calc
+}  // namespace pokesim::calc_damage

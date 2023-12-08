@@ -5,7 +5,7 @@
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
-namespace pokesim::damage_calc {
+namespace pokesim::calc_damage {
 struct InputSetup {
  protected:
   entt::handle handle;
@@ -21,4 +21,4 @@ struct InputSetup {
 
   entt::entity entity() { return handle.entity(); }
 };
-}  // namespace pokesim::damage_calc
+}  // namespace pokesim::calc_damage

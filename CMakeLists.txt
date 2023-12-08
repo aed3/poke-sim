@@ -50,7 +50,7 @@ set (SOURCES
   src/Components/Tags/ItemTags.cpp
   src/Components/Tags/NatureTags.cpp
   src/Components/Tags/StatusTags.cpp
-  src/DamageCalc/Setup/DamageCalcInputSetup.cpp
+  src/CalcDamage/Setup/CalcDamageInputSetup.cpp
   src/Pokedex/Names.cpp
   src/Pokedex/Pokedex.cpp
   src/Pokedex/Setup/GetItemBuild.cpp
@@ -87,6 +87,7 @@ target_compile_options(PokeSim PRIVATE ${compiler_warning_options})
 add_executable(PokeSimTests
   tests/BattleStateTest.cpp
   tests/PokedexTest.cpp
+  tests/SimulationTest.cpp
   tests/Tests.cpp
   external/Catch2/catch_amalgamated.cpp
 )
