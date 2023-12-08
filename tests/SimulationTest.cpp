@@ -179,7 +179,7 @@ TEST_CASE("Simulation: Calc Damage", "[Simulation][CalcDamage][Setup]") {
       std::to_string((std::uint8_t)calcDamageInfo.defenderSlot) + "," +
       std::to_string((std::uint16_t)calcDamageInfo.move));
 
-    int count =
+    std::size_t count =
       std::count_if(calculationsEntities.each().begin(), calculationsEntities.each().end(), [&](const auto& tuple) {
         const auto& [entity, attacker, defender, moveName, battle] = tuple;
         if (battle.battle != battleEntity) return false;
