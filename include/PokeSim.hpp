@@ -14097,7 +14097,7 @@ struct DexDataSetup {
   }
 
   template <typename... T>
-  void setProperties(Tags<T...> dataTags) {
+  void setProperties(Tags<T...>) {
     (handle.emplace<T>(), ...);
   }
 
