@@ -55,7 +55,7 @@ struct BuildSpecies {
 
 template <template <GameMechanics> class T>
 auto buildSpeciesSV(Pokedex* pokedex) {
-  return internal::BuildSpecies<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
+  return BuildSpecies<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
 }
 };  // namespace internal
 

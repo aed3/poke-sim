@@ -174,7 +174,7 @@ struct BuildMove {
 
 template <template <GameMechanics> class T>
 auto buildMoveSV(Pokedex* pokedex) {
-  return internal::BuildMove<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
+  return BuildMove<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
 }
 };  // namespace internal
 

@@ -143,7 +143,8 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE(multiHit.minHits == FuryAttack::minHits);
     REQUIRE(multiHit.maxHits == FuryAttack::maxHits);
 
-    REQUIRE(pokedex.moveHas<tags::move::AnySingleTarget, tags::move::Contact>(moveEnum));
+    REQUIRE(pokedex.moveHas<tags::move::AnySingleTarget>(moveEnum));
+    REQUIRE(pokedex.moveHas<tags::move::Contact>(moveEnum));
   }
 
   {
@@ -167,7 +168,8 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     auto chance = pokedex.getEffectData<Chance>(secondaryEffect);
     REQUIRE(chance.chance == Thunderbolt::targetSecondaryEffect::chance);
-    REQUIRE(pokedex.effectHas<tags::move::effect::MoveTarget, tags::status::Paralysis>(secondaryEffect));
+    REQUIRE(pokedex.effectHas<tags::move::effect::MoveTarget>(secondaryEffect));
+    REQUIRE(pokedex.effectHas<tags::status::Paralysis>(secondaryEffect));
     REQUIRE_FALSE(pokedex.effectHas<tags::move::effect::MoveSource>(secondaryEffect));
 
     REQUIRE(pokedex.moveHas<tags::move::AnySingleTarget>(moveEnum));
@@ -221,7 +223,8 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     REQUIRE(primaryEffect.primary);
 
-    REQUIRE(pokedex.effectHas<tags::move::effect::MoveTarget, tags::status::Burn>(primaryEffect));
+    REQUIRE(pokedex.effectHas<tags::move::effect::MoveTarget>(primaryEffect));
+    REQUIRE(pokedex.effectHas<tags::status::Burn>(primaryEffect));
     REQUIRE_FALSE(pokedex.effectHas<tags::move::effect::MoveSource>(primaryEffect));
 
     REQUIRE(pokedex.moveHas<tags::move::AnySingleTarget>(moveEnum));

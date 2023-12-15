@@ -14669,7 +14669,7 @@ struct BuildSpecies {
 
 template <template <GameMechanics> class T>
 auto buildSpeciesSV(Pokedex* pokedex) {
-  return internal::BuildSpecies<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
+  return BuildSpecies<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
 }
 };  // namespace internal
 
@@ -15092,7 +15092,7 @@ struct BuildMove {
 
 template <template <GameMechanics> class T>
 auto buildMoveSV(Pokedex* pokedex) {
-  return internal::BuildMove<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
+  return BuildMove<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
 }
 };  // namespace internal
 
@@ -15256,7 +15256,7 @@ struct BuildItem {
 
 template <template <GameMechanics> class T>
 auto buildItemSV(Pokedex* pokedex) {
-  return internal::BuildItem<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
+  return BuildItem<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
 }
 };  // namespace internal
 

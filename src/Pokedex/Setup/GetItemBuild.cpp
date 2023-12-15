@@ -25,7 +25,7 @@ struct BuildItem {
 
 template <template <GameMechanics> class T>
 auto buildItemSV(Pokedex* pokedex) {
-  return internal::BuildItem<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
+  return BuildItem<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
 }
 };  // namespace internal
 
