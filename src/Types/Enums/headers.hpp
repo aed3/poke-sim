@@ -7,6 +7,7 @@
 #include "Gender.hpp"
 #include "Item.hpp"
 #include "Move.hpp"
+#include "MoveCategory.hpp"
 #include "Nature.hpp"
 #include "PlayerSideId.hpp"
 #include "PseudoWeather.hpp"

@@ -10,6 +10,7 @@
 #include "Enums/Gender.hpp"
 #include "Enums/Item.hpp"
 #include "Enums/Move.hpp"
+#include "Enums/MoveCategory.hpp"
 #include "Enums/Nature.hpp"
 #include "Enums/PlayerSideId.hpp"
 #include "Enums/PseudoWeather.hpp"

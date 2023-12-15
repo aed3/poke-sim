@@ -47,7 +47,7 @@ void MoveDexDataSetup::setCategoryStatus() {
   handle.emplace<tags::move::Status>();
 }
 
-void MoveDexDataSetup::setBasePP(types::Pp pp) {
+void MoveDexDataSetup::setBasePp(types::Pp pp) {
   handle.emplace<Pp>(pp);
 }
 

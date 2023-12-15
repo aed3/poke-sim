@@ -1,23 +1,33 @@
 #pragma once
 
-#include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/SpeciesDexDataSetup.hpp>
+#include <Components/DexData/SpeciesTypes.hpp>
+#include <Types/Enums/Ability.hpp>
+#include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Species.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Stats.hpp>
+#include <string_view>
 
-namespace pokesim::dex::build {
+namespace pokesim::dex {
+template <GameMechanics>
 struct Ribombee {
-  static const dex::Species name = dex::Species::RIBOMBEE;
-  static const types::BaseStat hp = 60, atk = 55, def = 60, spa = 95, spd = 70, spe = 124;
+  static constexpr Species name = Species::RIBOMBEE;
+  static constexpr types::BaseStat hp = 60, atk = 55, def = 60, spa = 95, spd = 70, spe = 124;
 
-  static entt::entity build(Pokedex& pokedex) {
-    internal::SpeciesDexDataSetup species(pokedex);
-    species.setName(name);
-    species.setType(dex::Type::BUG_TYPE, dex::Type::FAIRY_TYPE);
-    species.setBaseStats(hp, atk, def, spa, spd, spe);
+  static constexpr SpeciesTypes type = {Type::BUG_TYPE, Type::FAIRY_TYPE};
 
-    return species.entity();
-  }
+  static constexpr Ability primaryAbility = Ability::HONEY_GATHER;
+  static constexpr Ability secondaryAbility = Ability::SHIELD_DUST;
+  static constexpr Ability hiddenAbility = Ability::SWEET_VEIL;
+
+  struct Strings {
+    static constexpr std::string_view name = "Ribombee";
+    static constexpr std::string_view smogonName = "Ribombee";
+    static constexpr std::string_view smogonId = "Ribombee";
+  };
 };
-}  // namespace pokesim::dex::build
+
+namespace latest {
+using Ribombee = dex::Ribombee<GameMechanics::SCARLET_VIOLET>;
+}
+}  // namespace pokesim::dex

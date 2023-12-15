@@ -1,35 +1,36 @@
 #pragma once
 
 #include <Components/Tags/MoveTags.hpp>
-#include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/MoveDexDataSetup.hpp>
+#include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
+#include <Types/Enums/MoveCategory.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
+#include <string_view>
 
-namespace pokesim::dex::build {
+#include "../Setup/DexDataTags.hpp"
+
+namespace pokesim::dex {
+template <GameMechanics>
 struct FuryAttack {
-  static const dex::Move name = dex::Move::FURY_ATTACK;
-  static const types::BaseAccuracy accuracy = 85;
-  static const types::BasePower basePower = 15;
-  static const types::Pp basePp = 20;
-  static const types::MoveHits minHits = 2, maxHits = 5;
+  static constexpr Move name = Move::FURY_ATTACK;
+  static constexpr Type type = Type::NORMAL_TYPE;
+  static constexpr MoveCategory category = MoveCategory::PHYSICAL;
 
-  static entt::entity build(Pokedex& pokedex) {
-    internal::MoveDexDataSetup move(pokedex);
-    move.setName(name);
-    move.setType(dex::Type::NORMAL_TYPE);
-    move.setAccuracy(accuracy);
-    move.setBasePower(basePower);
+  static constexpr types::BaseAccuracy accuracy = 85;
+  static constexpr types::BasePower basePower = 15;
+  static constexpr types::Pp basePp = 20;
+  static constexpr types::MoveHits minHits = 2, maxHits = 5;
 
-    move.setCategoryPhysical();
-    move.setBasePP(basePp);
-    move.setMultiHit(minHits, maxHits);
+  static constexpr internal::Tags<tags::move::AnySingleTarget, tags::move::Contact> moveTags{};
 
-    move.setProperty<pokesim::tags::move::AnySingleTarget>();
-    move.setProperty<pokesim::tags::move::Contact>();
-
-    return move.entity();
-  }
+  struct Strings {
+    static constexpr std::string_view name = "Fury Attack";
+    static constexpr std::string_view smogonId = "furyattack";
+  };
 };
-}  // namespace pokesim::dex::build
+
+namespace latest {
+using FuryAttack = dex::FuryAttack<GameMechanics::SCARLET_VIOLET>;
+}
+}  // namespace pokesim::dex

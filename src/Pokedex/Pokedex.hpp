@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Components/EntityHolders/MoveEffect.hpp>
 #include <Types/Enums/headers.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/container/fwd.hpp>
@@ -25,12 +26,16 @@ class Pokedex {
   entt::dense_map<dex::Item, entt::entity> itemsMap{};
   entt::dense_map<dex::Move, entt::entity> movesMap{};
 
-  template <typename GetBuild, typename T>
-  /*_inline_*/ void load(entt::dense_map<T, entt::entity>& map, const entt::dense_set<T>& list, GetBuild getBuild);
+  template <typename Build, typename T>
+  /*_inline_*/ void load(entt::dense_map<T, entt::entity>& map, const entt::dense_set<T>& list, Build build);
 
   /*_inline_*/ static entt::entity (*getSpeciesBuild(dex::Species species))(Pokedex&);
   /*_inline_*/ static entt::entity (*getMoveBuild(dex::Move move))(Pokedex&);
   /*_inline_*/ static entt::entity (*getItemBuild(dex::Item item))(Pokedex&);
+
+  /*_inline_*/ entt::entity buildSpecies(dex::Species species);
+  /*_inline_*/ entt::entity buildMove(dex::Move move);
+  /*_inline_*/ entt::entity buildItem(dex::Item item);
 
  public:
   /**
@@ -89,6 +94,8 @@ class Pokedex {
    */
   template <typename... T>
   auto getSpeciesData(dex::Species species) const {
+    // ENTT_ASSERT(registry.all_of<T...>(speciesMap.at(species)), "Species does not contain at least one of the
+    // component types");
     return registry.get<T...>(speciesMap.at(species));
   }
 
@@ -116,6 +123,31 @@ class Pokedex {
   template <typename... T>
   auto getMoveData(dex::Move move) const {
     return registry.get<T...>(movesMap.at(move));
+  }
+
+  template <typename... T>
+  auto getEffectData(MoveEffect effect) const {
+    return registry.get<T...>(effect.moveEffect);
+  }
+
+  template <typename... T>
+  bool speciesHas(dex::Species species) const {
+    return registry.all_of<T...>(speciesMap.at(species));
+  }
+
+  template <typename... T>
+  bool itemHas(dex::Item item) const {
+    return registry.all_of<T...>(itemsMap.at(item));
+  }
+
+  template <typename... T>
+  bool moveHas(dex::Move move) const {
+    return registry.all_of<T...>(movesMap.at(move));
+  }
+
+  template <typename... T>
+  bool effectHas(MoveEffect effect) const {
+    return registry.all_of<T...>(effect.moveEffect);
   }
 };
 }  // namespace pokesim

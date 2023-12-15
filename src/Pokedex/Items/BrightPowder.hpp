@@ -1,18 +1,17 @@
 #pragma once
 
-#include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/ItemDexDataSetup.hpp>
+#include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Item.hpp>
+#include <string_view>
 
-namespace pokesim::dex::build {
+namespace pokesim::dex {
+template <GameMechanics>
 struct BrightPowder {
-  static const dex::Item name = dex::Item::BRIGHT_POWDER;
+  static constexpr dex::Item name = dex::Item::BRIGHT_POWDER;
 
-  static entt::entity build(Pokedex& pokedex) {
-    internal::ItemDexDataSetup item(pokedex);
-    item.setName(name);
-
-    return item.entity();
-  }
+  struct Strings {
+    static constexpr std::string_view name = "Bright Powder";
+    static constexpr std::string_view smogonId = "brightpowder";
+  };
 };
-}  // namespace pokesim::dex::build
+}  // namespace pokesim::dex

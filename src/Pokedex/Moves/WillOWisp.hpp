@@ -2,36 +2,38 @@
 
 #include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
-#include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/MoveDexDataSetup.hpp>
+#include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
+#include <Types/Enums/MoveCategory.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
+#include <string_view>
 
-namespace pokesim::dex::build {
+#include "../Setup/DexDataTags.hpp"
+
+namespace pokesim::dex {
+template <GameMechanics>
 struct WillOWisp {
-  static const dex::Move name = dex::Move::WILL_O_WISP;
-  static const types::BaseAccuracy accuracy = 85;
-  static const types::Pp basePp = 15;
+  static constexpr Move name = Move::WILL_O_WISP;
+  static constexpr Type type = Type::FIRE_TYPE;
+  static constexpr MoveCategory category = MoveCategory::STATUS;
 
-  static entt::entity build(Pokedex& pokedex) {
-    internal::MoveDexDataSetup move(pokedex);
-    move.setName(name);
-    move.setType(dex::Type::FIRE_TYPE);
-    move.setAccuracy(accuracy);
+  static constexpr types::BaseAccuracy accuracy = 85;
+  static constexpr types::Pp basePp = 15;
 
-    move.setCategoryStatus();
-    move.setBasePP(basePp);
+  struct targetPrimaryEffect {
+    static constexpr internal::Tags<tags::status::Burn> effectTags{};
+  };
 
-    move.setProperty<pokesim::tags::move::AnySingleTarget>();
+  static constexpr internal::Tags<tags::move::AnySingleTarget> moveTags{};
 
-    internal::MoveEffectSetup effect(pokedex);
-    effect.setEffectsTarget();
-    effect.setProperty<pokesim::tags::status::Burn>();
-
-    move.setPrimaryEffect(effect.entity());
-
-    return move.entity();
-  }
+  struct Strings {
+    static constexpr std::string_view name = "Will-O-Wisp";
+    static constexpr std::string_view smogonId = "willowisp";
+  };
 };
-}  // namespace pokesim::dex::build
+
+namespace latest {
+using WillOWisp = dex::WillOWisp<GameMechanics::SCARLET_VIOLET>;
+}
+}  // namespace pokesim::dex

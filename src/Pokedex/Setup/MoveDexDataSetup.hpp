@@ -15,7 +15,7 @@
 
 namespace pokesim::dex::internal {
 struct MoveDexDataSetup : DexDataSetup {
-  MoveDexDataSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
+  MoveDexDataSetup(Pokedex* pokedex) : DexDataSetup(pokedex) {}
 
   /*_inline_*/ void setName(Move move);
   /*_inline_*/ void setType(Type type);
@@ -26,7 +26,7 @@ struct MoveDexDataSetup : DexDataSetup {
   /*_inline_*/ void setCategorySpecial();
   /*_inline_*/ void setCategoryStatus();
 
-  /*_inline_*/ void setBasePP(types::Pp pp);
+  /*_inline_*/ void setBasePp(types::Pp pp);
   /*_inline_*/ void setPriority(types::Priority priority);
   /*_inline_*/ void setMultiHit(types::MoveHits minHits, types::MoveHits maxHits);
 
@@ -35,7 +35,7 @@ struct MoveDexDataSetup : DexDataSetup {
 };
 
 struct MoveEffectSetup : DexDataSetup {
-  MoveEffectSetup(Pokedex& pokedex) : DexDataSetup(pokedex) {}
+  MoveEffectSetup(Pokedex* pokedex) : DexDataSetup(pokedex) {}
   entt::entity entity() const { return handle; }
 
   /*_inline_*/ void setChance(types::BaseEffectChance chance);

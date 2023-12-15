@@ -104,7 +104,7 @@ void checkCreatedBattle(const entt::handle truth, const Simulation::BattleCreati
 }
 
 TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
-  Pokedex pokedex(GameMechanics::SCARLET_VIOLET_GAME_MECHANICS);
+  Pokedex pokedex(GameMechanics::SCARLET_VIOLET);
   entt::dense_set<dex::Move> moveSet{};
   for (dex::Move move : {dex::Move::FURY_ATTACK, dex::Move::THUNDERBOLT}) moveSet.insert(move);
 
@@ -170,7 +170,7 @@ TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
 }
 
 TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
-  Pokedex pokedex(GameMechanics::SCARLET_VIOLET_GAME_MECHANICS);
+  Pokedex pokedex(GameMechanics::SCARLET_VIOLET);
   entt::dense_set<dex::Move> moveSet{};
   for (dex::Move move : {dex::Move::MOONBLAST, dex::Move::KNOCK_OFF, dex::Move::WILL_O_WISP, dex::Move::QUIVER_DANCE}) {
     moveSet.insert(move);
@@ -280,7 +280,7 @@ TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
 }
 
 TEST_CASE("Battle State: Multiple Battles", "[BattleState][Setup]") {
-  Pokedex pokedex(GameMechanics::SCARLET_VIOLET_GAME_MECHANICS);
+  Pokedex pokedex(GameMechanics::SCARLET_VIOLET);
   entt::dense_set<dex::Move> moveSet{};
   for (dex::Move move : {dex::Move::FURY_ATTACK, dex::Move::THUNDERBOLT}) moveSet.insert(move);
 

@@ -117,7 +117,7 @@ TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
 }
 
 TEST_CASE("Simulation: Calc Damage", "[Simulation][CalcDamage][Setup]") {
-  Pokedex pokedex{GameMechanics::SCARLET_VIOLET_GAME_MECHANICS};
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   entt::dense_set<dex::Move> moveSet{};
   for (dex::Move move :
        {dex::Move::FURY_ATTACK,

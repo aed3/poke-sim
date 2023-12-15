@@ -1,33 +1,35 @@
 #pragma once
 
 #include <Components/Tags/MoveTags.hpp>
-#include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/MoveDexDataSetup.hpp>
+#include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
+#include <Types/Enums/MoveCategory.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
+#include <string_view>
 
-namespace pokesim::dex::build {
+#include "../Setup/DexDataTags.hpp"
+
+namespace pokesim::dex {
+template <GameMechanics>
 struct KnockOff {
-  static const dex::Move name = dex::Move::KNOCK_OFF;
-  static const types::BaseAccuracy accuracy = 100;
-  static const types::BasePower basePower = 65;
-  static const types::Pp basePp = 20;
+  static constexpr Move name = Move::KNOCK_OFF;
+  static constexpr Type type = Type::DARK_TYPE;
+  static constexpr MoveCategory category = MoveCategory::PHYSICAL;
 
-  static entt::entity build(Pokedex& pokedex) {
-    internal::MoveDexDataSetup move(pokedex);
-    move.setName(name);
-    move.setType(dex::Type::DARK_TYPE);
-    move.setAccuracy(accuracy);
-    move.setBasePower(basePower);
+  static constexpr types::BaseAccuracy accuracy = 100;
+  static constexpr types::BasePower basePower = 65;
+  static constexpr types::Pp basePp = 20;
 
-    move.setCategoryPhysical();
-    move.setBasePP(basePp);
+  static constexpr internal::Tags<tags::move::AnySingleTarget, tags::move::Contact> moveTags{};
 
-    move.setProperty<pokesim::tags::move::AnySingleTarget>();
-    move.setProperty<pokesim::tags::move::Contact>();
-
-    return move.entity();
-  }
+  struct Strings {
+    static constexpr std::string_view name = "Knock Off";
+    static constexpr std::string_view smogonId = "knockoff";
+  };
 };
-}  // namespace pokesim::dex::build
+
+namespace latest {
+using KnockOff = dex::KnockOff<GameMechanics::SCARLET_VIOLET>;
+}
+}  // namespace pokesim::dex

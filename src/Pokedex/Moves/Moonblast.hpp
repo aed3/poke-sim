@@ -1,43 +1,41 @@
 #pragma once
 
-#include <Components/Boosts.hpp>
 #include <Components/Tags/MoveTags.hpp>
-#include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/MoveDexDataSetup.hpp>
+#include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
+#include <Types/Enums/MoveCategory.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
 #include <Types/Stats.hpp>
+#include <string_view>
 
-namespace pokesim::dex::build {
+#include "../Setup/DexDataTags.hpp"
+
+namespace pokesim::dex {
+template <GameMechanics>
 struct Moonblast {
-  static const dex::Move name = dex::Move::MOONBLAST;
-  static const types::BaseAccuracy accuracy = 100;
-  static const types::BasePower basePower = 95;
-  static const types::Pp basePp = 15;
-  static const types::BaseEffectChance secondaryEffectChance = 30;
-  static const types::Boost spaBoost = -1;
+  static constexpr Move name = Move::MOONBLAST;
+  static constexpr Type type = Type::FAIRY_TYPE;
+  static constexpr MoveCategory category = MoveCategory::SPECIAL;
 
-  static entt::entity build(Pokedex& pokedex) {
-    internal::MoveDexDataSetup move(pokedex);
-    move.setName(name);
-    move.setType(dex::Type::FAIRY_TYPE);
-    move.setAccuracy(accuracy);
-    move.setBasePower(basePower);
+  static constexpr types::BaseAccuracy accuracy = 100;
+  static constexpr types::BasePower basePower = 95;
+  static constexpr types::Pp basePp = 15;
 
-    move.setCategorySpecial();
-    move.setBasePP(basePp);
+  struct targetSecondaryEffect {
+    static constexpr types::BaseEffectChance chance = 30;
+    static constexpr types::Boost spaBoost = -1;
+  };
 
-    move.setProperty<pokesim::tags::move::AnySingleTarget>();
+  static constexpr internal::Tags<tags::move::AnySingleTarget> moveTags{};
 
-    internal::MoveEffectSetup effect(pokedex);
-    effect.setChance(secondaryEffectChance);
-    effect.setEffectsTarget();
-    effect.setBoost<SpaBoost>(spaBoost);
-
-    move.setSecondaryEffect(effect.entity());
-
-    return move.entity();
-  }
+  struct Strings {
+    static constexpr std::string_view name = "Moonblast";
+    static constexpr std::string_view smogonId = "moonblast";
+  };
 };
-}  // namespace pokesim::dex::build
+
+namespace latest {
+using Moonblast = dex::Moonblast<GameMechanics::SCARLET_VIOLET>;
+}
+}  // namespace pokesim::dex

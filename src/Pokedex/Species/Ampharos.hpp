@@ -1,23 +1,32 @@
 #pragma once
 
-#include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/SpeciesDexDataSetup.hpp>
+#include <Components/DexData/SpeciesTypes.hpp>
+#include <Types/Enums/Ability.hpp>
+#include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Species.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Stats.hpp>
+#include <string_view>
 
-namespace pokesim::dex::build {
+namespace pokesim::dex {
+template <GameMechanics>
 struct Ampharos {
-  static const dex::Species name = dex::Species::AMPHAROS;
-  static const types::BaseStat hp = 90, atk = 75, def = 85, spa = 115, spd = 90, spe = 55;
+  static constexpr Species name = Species::AMPHAROS;
+  static constexpr types::BaseStat hp = 90, atk = 75, def = 85, spa = 115, spd = 90, spe = 55;
 
-  static entt::entity build(Pokedex& pokedex) {
-    internal::SpeciesDexDataSetup species(pokedex);
-    species.setName(name);
-    species.setType(dex::Type::ELECTRIC_TYPE);
-    species.setBaseStats(hp, atk, def, spa, spd, spe);
+  static constexpr SpeciesTypes type = {Type::ELECTRIC_TYPE};
 
-    return species.entity();
-  }
+  static constexpr Ability primaryAbility = Ability::STATIC;
+  static constexpr Ability hiddenAbility = Ability::PLUS;
+
+  struct Strings {
+    static constexpr std::string_view name = "Ampharos";
+    static constexpr std::string_view smogonName = "Ampharos";
+    static constexpr std::string_view smogonId = "ampharos";
+  };
 };
-}  // namespace pokesim::dex::build
+
+namespace latest {
+using Ampharos = dex::Ampharos<GameMechanics::SCARLET_VIOLET>;
+}
+}  // namespace pokesim::dex

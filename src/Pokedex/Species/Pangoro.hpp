@@ -1,23 +1,33 @@
 #pragma once
 
-#include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/SpeciesDexDataSetup.hpp>
+#include <Components/DexData/SpeciesTypes.hpp>
+#include <Types/Enums/Ability.hpp>
+#include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Species.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Stats.hpp>
+#include <string_view>
 
-namespace pokesim::dex::build {
+namespace pokesim::dex {
+template <GameMechanics>
 struct Pangoro {
-  static const dex::Species name = dex::Species::PANGORO;
-  static const types::BaseStat hp = 95, atk = 124, def = 78, spa = 69, spd = 71, spe = 58;
+  static constexpr Species name = Species::PANGORO;
+  static constexpr types::BaseStat hp = 95, atk = 124, def = 78, spa = 69, spd = 71, spe = 58;
 
-  static entt::entity build(Pokedex& pokedex) {
-    internal::SpeciesDexDataSetup species(pokedex);
-    species.setName(name);
-    species.setType(dex::Type::FIGHTING_TYPE, dex::Type::DARK_TYPE);
-    species.setBaseStats(hp, atk, def, spa, spd, spe);
+  static constexpr SpeciesTypes type = {Type::FIGHTING_TYPE, Type::DARK_TYPE};
 
-    return species.entity();
-  }
+  static constexpr Ability primaryAbility = Ability::IRON_FIST;
+  static constexpr Ability secondaryAbility = Ability::MOLD_BREAKER;
+  static constexpr Ability hiddenAbility = Ability::SCRAPPY;
+
+  struct Strings {
+    static constexpr std::string_view name = "Pangoro";
+    static constexpr std::string_view smogonName = "Pangoro";
+    static constexpr std::string_view smogonId = "pangoro";
+  };
 };
-}  // namespace pokesim::dex::build
+
+namespace latest {
+using Pangoro = dex::Pangoro<GameMechanics::SCARLET_VIOLET>;
+}
+}  // namespace pokesim::dex

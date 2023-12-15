@@ -2,40 +2,40 @@
 
 #include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
-#include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Setup/MoveDexDataSetup.hpp>
+#include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
+#include <Types/Enums/MoveCategory.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
+#include <string_view>
 
-namespace pokesim::dex::build {
+#include "../Setup/DexDataTags.hpp"
+
+namespace pokesim::dex {
+template <GameMechanics>
 struct Thunderbolt {
-  static const dex::Move name = dex::Move::THUNDERBOLT;
-  static const types::BaseAccuracy accuracy = 100;
-  static const types::BasePower basePower = 90;
-  static const types::Pp basePp = 15;
-  static const types::BaseEffectChance secondaryEffectChance = 10;
+  static constexpr Move name = Move::THUNDERBOLT;
+  static constexpr Type type = Type::ELECTRIC_TYPE;
+  static constexpr MoveCategory category = MoveCategory::SPECIAL;
 
-  static entt::entity build(Pokedex& pokedex) {
-    internal::MoveDexDataSetup move(pokedex);
-    move.setName(name);
-    move.setType(dex::Type::ELECTRIC_TYPE);
-    move.setAccuracy(accuracy);
-    move.setBasePower(basePower);
+  static constexpr types::BaseAccuracy accuracy = 100;
+  static constexpr types::BasePower basePower = 90;
+  static constexpr types::Pp basePp = 15;
 
-    move.setCategoryPhysical();
-    move.setBasePP(basePp);
+  struct targetSecondaryEffect {
+    static constexpr types::BaseEffectChance chance = 10;
+    static constexpr internal::Tags<tags::status::Paralysis> effectTags{};
+  };
 
-    move.setProperty<pokesim::tags::move::AnySingleTarget>();
+  static constexpr internal::Tags<tags::move::AnySingleTarget> moveTags{};
 
-    internal::MoveEffectSetup effect(pokedex);
-    effect.setChance(secondaryEffectChance);
-    effect.setEffectsTarget();
-    effect.setProperty<pokesim::tags::status::Paralysis>();
-
-    move.setSecondaryEffect(effect.entity());
-
-    return move.entity();
-  }
+  struct Strings {
+    static constexpr std::string_view name = "Thunderbolt";
+    static constexpr std::string_view smogonId = "thunderbolt";
+  };
 };
-}  // namespace pokesim::dex::build
+
+namespace latest {
+using Thunderbolt = dex::Thunderbolt<GameMechanics::SCARLET_VIOLET>;
+}
+}  // namespace pokesim::dex
