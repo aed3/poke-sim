@@ -25,6 +25,8 @@ struct Moonblast {
   struct targetSecondaryEffect {
     static constexpr types::BaseEffectChance chance = 30;
     static constexpr types::Boost spaBoost = -1;
+
+    static constexpr internal::Tags<> effectTags{};
   };
 
   static constexpr internal::Tags<tags::move::AnySingleTarget> moveTags{};

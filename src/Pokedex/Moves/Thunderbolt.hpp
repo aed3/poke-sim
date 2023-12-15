@@ -24,6 +24,7 @@ struct Thunderbolt {
 
   struct targetSecondaryEffect {
     static constexpr types::BaseEffectChance chance = 10;
+
     static constexpr internal::Tags<tags::status::Paralysis> effectTags{};
   };
 

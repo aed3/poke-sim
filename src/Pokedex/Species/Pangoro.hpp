@@ -28,6 +28,6 @@ struct Pangoro {
 };
 
 namespace latest {
-using Pangoro = dex::Pangoro<GameMechanics::SCARLET_VIOLET>;
+using Pangoro = dex::Pangoro<GameMechanics::SWORD_SHIELD>;
 }
 }  // namespace pokesim::dex

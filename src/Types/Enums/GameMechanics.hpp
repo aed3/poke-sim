@@ -6,7 +6,8 @@ namespace pokesim {
 // Game the simulator is imitating the mechanics of
 enum class GameMechanics : std::uint8_t {
   NONE = 0,
-  SCARLET_VIOLET,
+  SWORD_SHIELD,
   BRILLIANT_DIAMOND_SHINING_PEARL,
+  SCARLET_VIOLET,
 };
 }  // namespace pokesim

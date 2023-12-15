@@ -22,6 +22,8 @@ struct QuiverDance {
 
   struct sourcePrimaryEffect {
     static constexpr types::Boost spaBoost = 1, spdBoost = 1, speBoost = 1;
+
+    static constexpr internal::Tags<> effectTags{};
   };
 
   static constexpr internal::Tags<tags::move::Self> moveTags{};

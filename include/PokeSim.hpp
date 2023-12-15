@@ -13155,8 +13155,9 @@ namespace pokesim {
 // Game the simulator is imitating the mechanics of
 enum class GameMechanics : std::uint8_t {
   NONE = 0,
-  SCARLET_VIOLET,
+  SWORD_SHIELD,
   BRILLIANT_DIAMOND_SHINING_PEARL,
+  SCARLET_VIOLET,
 };
 }  // namespace pokesim
 
@@ -14579,7 +14580,7 @@ struct Pangoro {
 };
 
 namespace latest {
-using Pangoro = dex::Pangoro<GameMechanics::SCARLET_VIOLET>;
+using Pangoro = dex::Pangoro<GameMechanics::SWORD_SHIELD>;
 }
 }  // namespace pokesim::dex
 
@@ -14783,6 +14784,8 @@ struct Moonblast {
   struct targetSecondaryEffect {
     static constexpr types::BaseEffectChance chance = 30;
     static constexpr types::Boost spaBoost = -1;
+
+    static constexpr internal::Tags<> effectTags{};
   };
 
   static constexpr internal::Tags<tags::move::AnySingleTarget> moveTags{};
@@ -14816,6 +14819,8 @@ struct QuiverDance {
 
   struct sourcePrimaryEffect {
     static constexpr types::Boost spaBoost = 1, spdBoost = 1, speBoost = 1;
+
+    static constexpr internal::Tags<> effectTags{};
   };
 
   static constexpr internal::Tags<tags::move::Self> moveTags{};
@@ -14869,6 +14874,7 @@ struct Thunderbolt {
 
   struct targetSecondaryEffect {
     static constexpr types::BaseEffectChance chance = 10;
+
     static constexpr internal::Tags<tags::status::Paralysis> effectTags{};
   };
 
@@ -14938,7 +14944,6 @@ struct BuildMove {
     basePower,
     minHits,
     maxHits,
-    moveTags,
     targetPrimaryEffect,
     targetSecondaryEffect,
     sourcePrimaryEffect,
@@ -14949,7 +14954,6 @@ struct BuildMove {
     spaBoost,
     spdBoost,
     speBoost,
-    effectTags,
   };
 
   template <auto Member>
@@ -14965,8 +14969,6 @@ struct BuildMove {
   struct has<Optional::minHits, Type, void_t<Type::minHits>> : std::true_type {};
   template <typename Type>
   struct has<Optional::maxHits, Type, void_t<Type::maxHits>> : std::true_type {};
-  template <typename Type>
-  struct has<Optional::moveTags, Type, void_t<Type::moveTags>> : std::true_type {};
   template <typename Type>
   struct has<Optional::targetPrimaryEffect, Type, std::void_t<typename Type::targetPrimaryEffect>> : std::true_type {};
   template <typename Type>
@@ -14989,8 +14991,6 @@ struct BuildMove {
   struct has<Optional::spdBoost, Type, void_t<Type::spdBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
-  template <typename Type>
-  struct has<Optional::effectTags, Type, void_t<Type::effectTags>> : std::true_type {};
 
   template <typename EffectData>
   static entt::entity buildEffect(Pokedex* pokedex, bool effectsTarget) {
@@ -15027,9 +15027,7 @@ struct BuildMove {
       effect.setBoost<SpeBoost>(EffectData::speBoost);
     }
 
-    if constexpr (has<Optional::effectTags, EffectData>::value) {
-      effect.setProperties(EffectData::effectTags);
-    }
+    effect.setProperties(EffectData::effectTags);
 
     return effect.entity();
   }
@@ -15082,9 +15080,7 @@ struct BuildMove {
       move.setSecondaryEffect(buildEffect<typename T::targetSecondaryEffect>(pokedex, true));
     }
 
-    if constexpr (has<Optional::moveTags, T>::value) {
-      move.setProperties(T::moveTags);
-    }
+    move.setProperties(T::moveTags);
 
     return move.entity();
   }

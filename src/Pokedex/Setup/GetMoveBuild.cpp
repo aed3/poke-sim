@@ -20,7 +20,6 @@ struct BuildMove {
     basePower,
     minHits,
     maxHits,
-    moveTags,
     targetPrimaryEffect,
     targetSecondaryEffect,
     sourcePrimaryEffect,
@@ -31,7 +30,6 @@ struct BuildMove {
     spaBoost,
     spdBoost,
     speBoost,
-    effectTags,
   };
 
   template <auto Member>
@@ -47,8 +45,6 @@ struct BuildMove {
   struct has<Optional::minHits, Type, void_t<Type::minHits>> : std::true_type {};
   template <typename Type>
   struct has<Optional::maxHits, Type, void_t<Type::maxHits>> : std::true_type {};
-  template <typename Type>
-  struct has<Optional::moveTags, Type, void_t<Type::moveTags>> : std::true_type {};
   template <typename Type>
   struct has<Optional::targetPrimaryEffect, Type, std::void_t<typename Type::targetPrimaryEffect>> : std::true_type {};
   template <typename Type>
@@ -71,8 +67,6 @@ struct BuildMove {
   struct has<Optional::spdBoost, Type, void_t<Type::spdBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
-  template <typename Type>
-  struct has<Optional::effectTags, Type, void_t<Type::effectTags>> : std::true_type {};
 
   template <typename EffectData>
   static entt::entity buildEffect(Pokedex* pokedex, bool effectsTarget) {
@@ -109,9 +103,7 @@ struct BuildMove {
       effect.setBoost<SpeBoost>(EffectData::speBoost);
     }
 
-    if constexpr (has<Optional::effectTags, EffectData>::value) {
-      effect.setProperties(EffectData::effectTags);
-    }
+    effect.setProperties(EffectData::effectTags);
 
     return effect.entity();
   }
@@ -164,9 +156,7 @@ struct BuildMove {
       move.setSecondaryEffect(buildEffect<typename T::targetSecondaryEffect>(pokedex, true));
     }
 
-    if constexpr (has<Optional::moveTags, T>::value) {
-      move.setProperties(T::moveTags);
-    }
+    move.setProperties(T::moveTags);
 
     return move.entity();
   }
