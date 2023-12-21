@@ -1,13 +1,13 @@
 #pragma once
 
-#include <entt/entity/entity.hpp>
+#include <Types/Entity.hpp>
 
 namespace pokesim::analyze_effect {
 struct Attacker {
-  entt::entity attacker;
+  types::entity attacker;
 };
 
 struct Defender {
-  entt::entity defender;
+  types::entity defender;
 };
 }  // namespace pokesim::analyze_effect

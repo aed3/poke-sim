@@ -1,12 +1,13 @@
 #include "AbilityTags.hpp"
 
+#include <Types/Entity.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 // TODO(aed3): Make this auto generated
 
 namespace pokesim::tags::ability {
-void enumToTag(dex::Ability ability, entt::handle handle) {
+void enumToTag(dex::Ability ability, types::handle handle) {
   switch (ability) {
     case dex::Ability::DEFIANT: handle.emplace<Defiant>(); return;
     case dex::Ability::INFILTRATOR: handle.emplace<Infiltrator>(); return;

@@ -2,8 +2,8 @@
 
 #include <Battle/Actions/Decisions.hpp>
 #include <Components/EVsIVs.hpp>
+#include <Types/Entity.hpp>
 #include <Types/headers.hpp>
-#include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
 #include <initializer_list>
 #include <optional>
@@ -105,7 +105,7 @@ class Simulation {
   };
 
  private:
-  /*_inline_*/ std::vector<entt::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
+  /*_inline_*/ std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
   /*_inline_*/ PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
   /*_inline_*/ void createInitialSide(SideStateSetup sideSetup, const SideCreationInfo& sideData);
 
@@ -122,7 +122,7 @@ class Simulation {
  public:
   const BattleFormat battleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
   const Pokedex& pokedex;
-  entt::registry registry{};
+  types::registry registry{};
 
   simulate_turn::Options simulateTurnOptions;
   calc_damage::Options calculateDamageOptions;

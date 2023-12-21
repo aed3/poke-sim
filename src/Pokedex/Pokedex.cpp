@@ -1,5 +1,6 @@
 #include "Pokedex.hpp"
 
+#include <Types/Entity.hpp>
 #include <Types/Enums/headers.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/container/dense_set.hpp>
@@ -7,12 +8,12 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
-entt::handle Pokedex::createEntry() {
+types::handle Pokedex::createEntry() {
   return {registry, registry.create()};
 }
 
 template <typename Build, typename T>
-void Pokedex::load(entt::dense_map<T, entt::entity>& map, const entt::dense_set<T>& list, Build build) {
+void Pokedex::load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build) {
   map.reserve(map.size() + list.size());
   for (T listItem : list) {
     ENTT_ASSERT(!map.contains(listItem), "Shouldn't build data entries twice");

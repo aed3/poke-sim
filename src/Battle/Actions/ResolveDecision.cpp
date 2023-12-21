@@ -1,5 +1,6 @@
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Sides.hpp>
+#include <Types/Entity.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
@@ -8,13 +9,13 @@
 
 namespace pokesim {
 void resolveDecision(
-  entt::handle /*sideHandle*/, const SideDecision& /*sideDecision*/, ActionQueue& /*sideActionQueue*/) {
+  types::handle /*sideHandle*/, const SideDecision& /*sideDecision*/, ActionQueue& /*sideActionQueue*/) {
   // TODO(aed3): Turn the sideDecision into a set of components that will be assigned to a new entity that's added to
   // the sideActionQueue
 }
 
-void moveSideActionsToBattleActions(entt::handle battleHandle, const Sides& sides, ActionQueue& battleActionQueue) {
-  entt::registry* registry = battleHandle.registry();
+void moveSideActionsToBattleActions(types::handle battleHandle, const Sides& sides, ActionQueue& battleActionQueue) {
+  types::registry* registry = battleHandle.registry();
   ActionQueue& p1Actions = registry->get<ActionQueue>(sides.p1);
   ActionQueue& p2Actions = registry->get<ActionQueue>(sides.p2);
 

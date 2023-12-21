@@ -1,12 +1,13 @@
 #include "NatureTags.hpp"
 
+#include <Types/Entity.hpp>
 #include <Types/Enums/Nature.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 // TODO(aed3): Make this auto generated
 
 namespace pokesim::tags::nature {
-void enumToTag(dex::Nature nature, entt::handle handle) {
+void enumToTag(dex::Nature nature, types::handle handle) {
   switch (nature) {
     case dex::Nature::ADAMANT: handle.emplace<Adamant>(); return;
     case dex::Nature::BASHFUL: handle.emplace<Bashful>(); return;

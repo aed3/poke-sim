@@ -1,6 +1,6 @@
 #pragma once
+#include <Types/Entity.hpp>
 #include <Types/Enums/Nature.hpp>
-#include <entt/entity/fwd.hpp>
 // TODO(aed3): Make this auto generated
 
 namespace pokesim::tags::nature {
@@ -31,5 +31,5 @@ struct Serious {};
 struct Timid {};
 
 // Assigns a nature's tag to a handle
-/*_inline_*/ void enumToTag(dex::Nature nature, entt::handle handle);
+/*_inline_*/ void enumToTag(dex::Nature nature, types::handle handle);
 }  // namespace pokesim::tags::nature

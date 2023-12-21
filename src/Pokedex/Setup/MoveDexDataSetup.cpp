@@ -59,11 +59,11 @@ void MoveDexDataSetup::setMultiHit(types::MoveHits minHits, types::MoveHits maxH
   handle.emplace<MultiHit>(minHits, maxHits);
 }
 
-void MoveDexDataSetup::setPrimaryEffect(entt::entity entity) {
+void MoveDexDataSetup::setPrimaryEffect(types::entity entity) {
   handle.emplace<MoveEffect>(true, entity);
 }
 
-void MoveDexDataSetup::setSecondaryEffect(entt::entity entity) {
+void MoveDexDataSetup::setSecondaryEffect(types::entity entity) {
   handle.emplace<MoveEffect>(false, entity);
 }
 

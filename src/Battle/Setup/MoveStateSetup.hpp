@@ -1,8 +1,8 @@
 #pragma once
 
+#include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Move.hpp>
-#include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
 
 #include "StateSetupBase.hpp"
@@ -10,8 +10,8 @@
 namespace pokesim {
 // Tool to set properties of a move's state to an entity.
 struct MoveStateSetup : internal::StateSetupBase {
-  MoveStateSetup(entt::registry& registry) : MoveStateSetup(registry, registry.create()) {}
-  MoveStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {}
+  MoveStateSetup(types::registry& registry) : MoveStateSetup(registry, registry.create()) {}
+  MoveStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {}
 
   /**
    * @brief Applies the defaults to the required properties for a move state.

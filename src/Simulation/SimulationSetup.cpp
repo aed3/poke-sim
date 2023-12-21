@@ -28,8 +28,8 @@ namespace pokesim {
 Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
     : battleFormat(battleFormat_), pokedex(pokedex_) {}
 
-std::vector<entt::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList) {
-  std::vector<entt::entity> moveEntities{};
+std::vector<types::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList) {
+  std::vector<types::entity> moveEntities{};
   moveEntities.reserve(moveDataList.size());
 
   for (const MoveCreationInfo& moveData : moveDataList) {
@@ -78,7 +78,7 @@ void Simulation::createInitialSide(SideStateSetup sideSetup, const SideCreationI
 
   for (const PokemonCreationInfo& pokemonData : sideData.team) {
     PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonData);
-    std::vector<entt::entity> moveEntities = createInitialMoves(pokemonData.moves);
+    std::vector<types::entity> moveEntities = createInitialMoves(pokemonData.moves);
     pokemonSetup.setMoves(moveEntities);
 
     pokemonSetupList.push_back(pokemonSetup);
@@ -107,9 +107,9 @@ std::tuple<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(
   SideStateSetup p1SideSetup(registry);
   SideStateSetup p2SideSetup(registry);
 
-  entt::entity battleEntity = battleStateSetup.entity();
-  entt::entity p1Entity = p1SideSetup.entity();
-  entt::entity p2Entity = p2SideSetup.entity();
+  types::entity battleEntity = battleStateSetup.entity();
+  types::entity p1Entity = p1SideSetup.entity();
+  types::entity p2Entity = p2SideSetup.entity();
 
   battleStateSetup.setSide(PlayerSideId::P1, p1Entity);
   battleStateSetup.setSide(PlayerSideId::P2, p2Entity);
@@ -125,7 +125,7 @@ std::tuple<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(
 
 void Simulation::createInitialTurnDecision(
   BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData) {
-  entt::handle battleHandle{registry, battleStateSetup.entity()};
+  types::handle battleHandle{registry, battleStateSetup.entity()};
   const Sides& sides = battleHandle.get<Sides>();
 
   resolveDecision({registry, sides.p1}, turnDecisionData.p1, registry.get<ActionQueue>(sides.p1));
@@ -141,8 +141,8 @@ void Simulation::createCalcDamageInput(
   ENTT_ASSERT(damageCalcInputData.move != dex::Move::NO_MOVE, "A damage calculation must have a move");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
-  entt::entity attackerEntity = targetSlotEntity(registry, sides, damageCalcInputData.attackerSlot);
-  entt::entity defenderEntity = targetSlotEntity(registry, sides, damageCalcInputData.defenderSlot);
+  types::entity attackerEntity = targetSlotEntity(registry, sides, damageCalcInputData.attackerSlot);
+  types::entity defenderEntity = targetSlotEntity(registry, sides, damageCalcInputData.defenderSlot);
 
   calc_damage::InputSetup inputSetup(registry);
   inputSetup.setAttacker(attackerEntity);
@@ -158,8 +158,8 @@ void Simulation::createAnalyzeEffectInput(
   ENTT_ASSERT(analyzeEffectInputData.effect.index() != 0, "An effect analysis must have an effect");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
-  entt::entity attackerEntity = targetSlotEntity(registry, sides, analyzeEffectInputData.attackerSlot);
-  entt::entity defenderEntity = targetSlotEntity(registry, sides, analyzeEffectInputData.defenderSlot);
+  types::entity attackerEntity = targetSlotEntity(registry, sides, analyzeEffectInputData.attackerSlot);
+  types::entity defenderEntity = targetSlotEntity(registry, sides, analyzeEffectInputData.defenderSlot);
 
   analyze_effect::InputSetup inputSetup(registry);
   inputSetup.setAttacker(attackerEntity);

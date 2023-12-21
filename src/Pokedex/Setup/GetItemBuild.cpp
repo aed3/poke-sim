@@ -1,6 +1,6 @@
 #include <Pokedex/Pokedex.hpp>
+#include <Types/Entity.hpp>
 #include <Types/Enums/Item.hpp>
-#include <entt/entity/fwd.hpp>
 #include <type_traits>
 
 #include "../Items/headers.hpp"
@@ -14,7 +14,7 @@ template <typename T>
 struct BuildItem {
  private:
  public:
-  static entt::entity build(Pokedex* pokedex) {
+  static types::entity build(Pokedex* pokedex) {
     dex::internal::ItemDexDataSetup item(pokedex);
 
     item.setName(T::name);
@@ -29,7 +29,7 @@ auto buildItemSV(Pokedex* pokedex) {
 }
 };  // namespace internal
 
-entt::entity Pokedex::buildItem(dex::Item item) {
+types::entity Pokedex::buildItem(dex::Item item) {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
@@ -51,6 +51,6 @@ entt::entity Pokedex::buildItem(dex::Item item) {
   }
 
   ENTT_FAIL("Building an item that does not exist");
-  return entt::entity{};
+  return types::entity{};
 }
 };  // namespace pokesim

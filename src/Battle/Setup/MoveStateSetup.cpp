@@ -3,7 +3,6 @@
 #include <Components/Names/MoveNames.hpp>
 #include <Components/PP.hpp>
 #include <Types/Move.hpp>
-#include <entt/entity/entity.hpp>
 
 namespace pokesim {
 void MoveStateSetup::initBlank() {

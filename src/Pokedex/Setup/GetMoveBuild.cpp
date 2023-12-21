@@ -1,8 +1,8 @@
 #include <Components/Boosts.hpp>
 #include <Pokedex/Pokedex.hpp>
+#include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
-#include <entt/entity/fwd.hpp>
 #include <type_traits>
 
 #include "../Moves/headers.hpp"
@@ -69,7 +69,7 @@ struct BuildMove {
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
 
   template <typename EffectData>
-  static entt::entity buildEffect(Pokedex* pokedex, bool effectsTarget) {
+  static types::entity buildEffect(Pokedex* pokedex, bool effectsTarget) {
     dex::internal::MoveEffectSetup effect(pokedex);
 
     if constexpr (has<Optional::chance, EffectData>::value) {
@@ -109,7 +109,7 @@ struct BuildMove {
   }
 
  public:
-  static entt::entity build(Pokedex* pokedex) {
+  static types::entity build(Pokedex* pokedex) {
     dex::internal::MoveDexDataSetup move(pokedex);
 
     move.setName(T::name);
@@ -168,7 +168,7 @@ auto buildMoveSV(Pokedex* pokedex) {
 }
 };  // namespace internal
 
-entt::entity Pokedex::buildMove(dex::Move move) {
+types::entity Pokedex::buildMove(dex::Move move) {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
@@ -190,6 +190,6 @@ entt::entity Pokedex::buildMove(dex::Move move) {
   }
 
   ENTT_FAIL("Building a move that does not exist");
-  return entt::entity{};
+  return types::entity{};
 }
 };  // namespace pokesim

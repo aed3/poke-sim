@@ -4,13 +4,14 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/Team.hpp>
+#include <Types/Entity.hpp>
 #include <Types/State.hpp>
 #include <entt/entity/handle.hpp>
 
 #include "PokemonStateSetup.hpp"
 
 namespace pokesim {
-SideStateSetup::SideStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {
+SideStateSetup::SideStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {
   handle.emplace<ActionQueue>();
 }
 
@@ -33,11 +34,11 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
   }
 }
 
-void SideStateSetup::setOpponent(entt::entity entity) {
+void SideStateSetup::setOpponent(types::entity entity) {
   handle.emplace<FoeSide>(entity);
 }
 
-void SideStateSetup::setBattle(entt::entity entity) {
+void SideStateSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
 }
 }  // namespace pokesim

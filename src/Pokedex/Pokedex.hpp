@@ -1,10 +1,10 @@
 #pragma once
 
 #include <Components/EntityHolders/MoveEffect.hpp>
+#include <Types/Entity.hpp>
 #include <Types/Enums/headers.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/container/fwd.hpp>
-#include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
@@ -20,22 +20,18 @@ namespace pokesim {
  */
 class Pokedex {
  private:
-  entt::registry registry{};
+  types::registry registry{};
 
-  entt::dense_map<dex::Species, entt::entity> speciesMap{};
-  entt::dense_map<dex::Item, entt::entity> itemsMap{};
-  entt::dense_map<dex::Move, entt::entity> movesMap{};
+  entt::dense_map<dex::Species, types::entity> speciesMap{};
+  entt::dense_map<dex::Item, types::entity> itemsMap{};
+  entt::dense_map<dex::Move, types::entity> movesMap{};
 
   template <typename Build, typename T>
-  /*_inline_*/ void load(entt::dense_map<T, entt::entity>& map, const entt::dense_set<T>& list, Build build);
+  /*_inline_*/ void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
 
-  /*_inline_*/ static entt::entity (*getSpeciesBuild(dex::Species species))(Pokedex&);
-  /*_inline_*/ static entt::entity (*getMoveBuild(dex::Move move))(Pokedex&);
-  /*_inline_*/ static entt::entity (*getItemBuild(dex::Item item))(Pokedex&);
-
-  /*_inline_*/ entt::entity buildSpecies(dex::Species species);
-  /*_inline_*/ entt::entity buildMove(dex::Move move);
-  /*_inline_*/ entt::entity buildItem(dex::Item item);
+  /*_inline_*/ types::entity buildSpecies(dex::Species species);
+  /*_inline_*/ types::entity buildMove(dex::Move move);
+  /*_inline_*/ types::entity buildItem(dex::Item item);
 
  public:
   /**
@@ -48,7 +44,7 @@ class Pokedex {
   Pokedex(GameMechanics mechanics_) : mechanics(mechanics_) {}
 
   // Creates an entity to store a new Pokedex entry of any species, item, or move.
-  /*_inline_*/ entt::handle createEntry();
+  /*_inline_*/ types::handle createEntry();
 
   /**
    * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.

@@ -1,6 +1,6 @@
 #pragma once
+#include <Types/Entity.hpp>
 #include <Types/Enums/Status.hpp>
-#include <entt/entity/fwd.hpp>
 // TODO(aed3): Make this auto generated
 
 namespace pokesim::tags::status {
@@ -12,5 +12,5 @@ struct Sleep {};
 struct Toxic {};
 
 // Assigns a status' tag to a handle
-/*_inline_*/ void enumToTag(dex::Status status, entt::handle& handle);
+/*_inline_*/ void enumToTag(dex::Status status, types::handle& handle);
 }  // namespace pokesim::tags::status

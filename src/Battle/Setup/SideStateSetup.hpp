@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entt/entity/fwd.hpp>
+#include <Types/Entity.hpp>
 #include <entt/entity/registry.hpp>
 #include <vector>
 
@@ -11,8 +11,8 @@ struct PokemonStateSetup;
 
 // Tool to set properties of a player's side state to an entity.
 struct SideStateSetup : internal::StateSetupBase {
-  SideStateSetup(entt::registry& registry) : SideStateSetup(registry, registry.create()) {}
-  /*_inline_*/ SideStateSetup(entt::registry& registry, entt::entity entity);
+  SideStateSetup(types::registry& registry) : SideStateSetup(registry, registry.create()) {}
+  /*_inline_*/ SideStateSetup(types::registry& registry, types::entity entity);
 
   /**
    * @brief Applies the defaults to the required properties for a player side's state.
@@ -22,7 +22,7 @@ struct SideStateSetup : internal::StateSetupBase {
   /*_inline_*/ void initBlank();
 
   /*_inline_*/ void setTeam(std::vector<PokemonStateSetup>& team);
-  /*_inline_*/ void setOpponent(entt::entity entity);
-  /*_inline_*/ void setBattle(entt::entity entity);
+  /*_inline_*/ void setOpponent(types::entity entity);
+  /*_inline_*/ void setBattle(types::entity entity);
 };
 }  // namespace pokesim

@@ -64,9 +64,9 @@ Simulation::BattleCreationInfo createBaseBattleInfo(const Pokedex& pokedex) {
   return battleCreationInfo;
 }
 
-entt::entity targetSlotToEntity(
-  TargetSlot targetSlot, const types::TeamPositions<entt::entity>& p1Team,
-  const types::TeamPositions<entt::entity>& p2Team) {
+types::entity targetSlotToEntity(
+  TargetSlot targetSlot, const types::TeamPositions<types::entity>& p1Team,
+  const types::TeamPositions<types::entity>& p2Team) {
   switch (targetSlot) {
     case TargetSlot::P1A: {
       return p1Team[0];
@@ -109,7 +109,7 @@ entt::entity targetSlotToEntity(
     }
   }
 
-  return entt::entity{};
+  return types::entity{};
 }
 
 TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
@@ -163,10 +163,10 @@ TEST_CASE("Simulation: Calc Damage", "[Simulation][CalcDamage][Setup]") {
   Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
   simulation.createInitialStates({battleInfo});
 
-  entt::registry& registry = simulation.registry;
+  types::registry& registry = simulation.registry;
   auto battles = registry.view<Sides>();
   REQUIRE(battles.size() == 1);
-  entt::entity battleEntity = battles[0];
+  types::entity battleEntity = battles[0];
   const auto& p1Team = registry.get<Team>(registry.get<Sides>(battleEntity).p1).team;
   const auto& p2Team = registry.get<Team>(registry.get<Sides>(battleEntity).p2).team;
 

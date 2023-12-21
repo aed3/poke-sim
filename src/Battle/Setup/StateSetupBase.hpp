@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entt/entity/fwd.hpp>
+#include <Types/Entity.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
@@ -12,10 +12,10 @@ namespace pokesim::internal {
  */
 struct StateSetupBase {
  protected:
-  entt::handle handle;
+  types::handle handle;
 
  public:
-  StateSetupBase(entt::registry& registry, entt::entity entity) : handle(registry, entity) {}
+  StateSetupBase(types::registry& registry, types::entity entity) : handle(registry, entity) {}
 
   /**
    * @brief Sets a property on the entity.
@@ -27,7 +27,7 @@ struct StateSetupBase {
     handle.emplace<Tag>();
   }
 
-  entt::entity entity() { return handle.entity(); }
+  types::entity entity() { return handle.entity(); }
 };
 
 }  // namespace pokesim::internal

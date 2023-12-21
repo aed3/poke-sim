@@ -3,11 +3,11 @@
 #include <Components/Boosts.hpp>
 #include <Components/Tags/MoveTags.hpp>
 #include <Pokedex/Pokedex.hpp>
+#include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
 #include <Types/Stats.hpp>
-#include <entt/entity/fwd.hpp>
 #include <entt/entity/handle.hpp>
 #include <type_traits>
 
@@ -30,13 +30,13 @@ struct MoveDexDataSetup : DexDataSetup {
   /*_inline_*/ void setPriority(types::Priority priority);
   /*_inline_*/ void setMultiHit(types::MoveHits minHits, types::MoveHits maxHits);
 
-  /*_inline_*/ void setPrimaryEffect(entt::entity entity);
-  /*_inline_*/ void setSecondaryEffect(entt::entity entity);
+  /*_inline_*/ void setPrimaryEffect(types::entity entity);
+  /*_inline_*/ void setSecondaryEffect(types::entity entity);
 };
 
 struct MoveEffectSetup : DexDataSetup {
   MoveEffectSetup(Pokedex* pokedex) : DexDataSetup(pokedex) {}
-  entt::entity entity() const { return handle; }
+  types::entity entity() const { return handle; }
 
   /*_inline_*/ void setChance(types::BaseEffectChance chance);
   /*_inline_*/ void setEffectsSelf();

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <entt/entity/fwd.hpp>
+#include <Types/Entity.hpp>
 
 namespace pokesim {
 // Contains the entity of a move's current state.
 struct Move {
-  entt::entity move;
+  types::entity move;
 };
 }  // namespace pokesim

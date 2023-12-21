@@ -1,6 +1,6 @@
 #include <Pokedex/Pokedex.hpp>
+#include <Types/Entity.hpp>
 #include <Types/Enums/Species.hpp>
-#include <entt/entity/fwd.hpp>
 #include <type_traits>
 
 #include "../Species/headers.hpp"
@@ -32,7 +32,7 @@ struct BuildSpecies {
   struct has<Optional::hiddenAbility, Type, void_t<Type::hiddenAbility>> : std::true_type {};
 
  public:
-  static entt::entity build(Pokedex* pokedex) {
+  static types::entity build(Pokedex* pokedex) {
     dex::internal::SpeciesDexDataSetup species(pokedex);
 
     species.setName(T::name);
@@ -59,7 +59,7 @@ auto buildSpeciesSV(Pokedex* pokedex) {
 }
 };  // namespace internal
 
-entt::entity Pokedex::buildSpecies(dex::Species species) {
+types::entity Pokedex::buildSpecies(dex::Species species) {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
@@ -81,6 +81,6 @@ entt::entity Pokedex::buildSpecies(dex::Species species) {
   }
 
   ENTT_FAIL("Building a species that does not exist");
-  return entt::entity{};
+  return types::entity{};
 }
 };  // namespace pokesim

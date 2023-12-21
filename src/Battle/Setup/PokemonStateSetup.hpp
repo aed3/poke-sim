@@ -3,6 +3,7 @@
 #include <Components/Boosts.hpp>
 #include <Components/EVsIVs.hpp>
 #include <Components/Stats.hpp>
+#include <Types/Entity.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Gender.hpp>
 #include <Types/Enums/Item.hpp>
@@ -11,7 +12,6 @@
 #include <Types/Enums/Status.hpp>
 #include <Types/State.hpp>
 #include <Types/Stats.hpp>
-#include <entt/entity/fwd.hpp>
 #include <entt/entity/registry.hpp>
 #include <type_traits>
 #include <vector>
@@ -21,8 +21,8 @@
 namespace pokesim {
 // Tool to set properties of a Pokemon's state to an entity.
 struct PokemonStateSetup : internal::StateSetupBase {
-  PokemonStateSetup(entt::registry& registry) : PokemonStateSetup(registry, registry.create()) {}
-  PokemonStateSetup(entt::registry& registry, entt::entity entity) : StateSetupBase(registry, entity) {}
+  PokemonStateSetup(types::registry& registry) : PokemonStateSetup(registry, registry.create()) {}
+  PokemonStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {}
 
   /**
    * @brief Applies the defaults to the required properties for a Pokemon state.
@@ -36,14 +36,14 @@ struct PokemonStateSetup : internal::StateSetupBase {
   /*_inline_*/ void setID(types::StateId id);
   /*_inline_*/ void setSpecies(dex::Species speciesName);
 
-  /*_inline_*/ void setSide(entt::entity entity);
-  /*_inline_*/ void setBattle(entt::entity entity);
+  /*_inline_*/ void setSide(types::entity entity);
+  /*_inline_*/ void setBattle(types::entity entity);
 
   /*_inline_*/ void setLevel(types::Level level);
   /*_inline_*/ void setGender(dex::Gender gender);
   /*_inline_*/ void setAbility(dex::Ability ability);
   /*_inline_*/ void setItem(dex::Item item);
-  /*_inline_*/ void setMoves(const std::vector<entt::entity>& moveSlots);
+  /*_inline_*/ void setMoves(const std::vector<types::entity>& moveSlots);
 
   /*_inline_*/ void setPostion(types::TeamPositionIndex position);
   /*_inline_*/ void setStatus(dex::Status status);

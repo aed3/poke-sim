@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Pokedex/Pokedex.hpp>
-#include <entt/entity/fwd.hpp>
+#include <Types/Entity.hpp>
 #include <entt/entity/handle.hpp>
 
 #include "DexDataTags.hpp"
@@ -9,7 +9,7 @@
 namespace pokesim::dex::internal {
 struct DexDataSetup {
  protected:
-  entt::handle handle;
+  types::handle handle;
 
  public:
   DexDataSetup(Pokedex* pokedex) : handle(pokedex->createEntry()) {}
@@ -24,6 +24,6 @@ struct DexDataSetup {
     (handle.emplace<T>(), ...);
   }
 
-  entt::entity entity() { return handle.entity(); }
+  types::entity entity() { return handle.entity(); }
 };
 }  // namespace pokesim::dex::internal

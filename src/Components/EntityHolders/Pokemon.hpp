@@ -1,10 +1,10 @@
 #pragma once
 
-#include <entt/entity/fwd.hpp>
+#include <Types/Entity.hpp>
 
 namespace pokesim {
 // Contains the entity pointing to a Pokemon.
 struct Pokemon {
-  entt::entity pokemon;
+  types::entity pokemon;
 };
 }  // namespace pokesim

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <entt/entity/fwd.hpp>
+#include <Types/Entity.hpp>
 
 namespace pokesim {
 // Contains the entity of a side's opponent.
 struct FoeSide {
-  entt::entity foeSide;
+  types::entity foeSide;
 };
 }  // namespace pokesim

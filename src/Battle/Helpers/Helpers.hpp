@@ -1,9 +1,9 @@
 #pragma once
+#include <Types/Entity.hpp>
 #include <Types/Enums/TargetSlot.hpp>
-#include <entt/entity/fwd.hpp>
 
 namespace pokesim {
 struct Sides;
 
-/*_inline_*/ entt::entity targetSlotEntity(const entt::registry& registry, const Sides& sides, TargetSlot targetSlot);
+/*_inline_*/ types::entity targetSlotEntity(const types::registry& registry, const Sides& sides, TargetSlot targetSlot);
 }  // namespace pokesim

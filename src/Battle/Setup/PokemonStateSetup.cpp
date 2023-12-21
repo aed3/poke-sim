@@ -49,11 +49,11 @@ void PokemonStateSetup::setSpecies(dex::Species speciesName) {
   handle.emplace<SpeciesName>(speciesName);
 }
 
-void PokemonStateSetup::setSide(entt::entity entity) {
+void PokemonStateSetup::setSide(types::entity entity) {
   handle.emplace<Side>(entity);
 }
 
-void PokemonStateSetup::setBattle(entt::entity entity) {
+void PokemonStateSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
 }
 
@@ -75,7 +75,7 @@ void PokemonStateSetup::setItem(dex::Item item) {
   tags::item::enumToTag(item, handle);
 }
 
-void PokemonStateSetup::setMoves(const std::vector<entt::entity>& moveSlots) {
+void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
   handle.emplace<MoveSlots>(moveSlots);
 }
 

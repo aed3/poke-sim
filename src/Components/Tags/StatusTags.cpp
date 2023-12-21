@@ -1,12 +1,13 @@
 #include "StatusTags.hpp"
 
+#include <Types/Entity.hpp>
 #include <Types/Enums/Status.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 // TODO(aed3): Make this auto generated
 
 namespace pokesim::tags::status {
-void enumToTag(dex::Status status, entt::handle& handle) {
+void enumToTag(dex::Status status, types::handle& handle) {
   switch (status) {
     case dex::Status::BRN: handle.emplace<Burn>(); return;
     case dex::Status::FRZ: handle.emplace<Freeze>(); return;

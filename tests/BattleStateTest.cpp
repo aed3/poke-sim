@@ -6,7 +6,7 @@ struct IdealPP_MaxPP {
   types::Pp maxPp;
 };
 
-void checkCreatedPokemon(const entt::handle& truth, const Simulation::PokemonCreationInfo& ideal) {
+void checkCreatedPokemon(const types::handle& truth, const Simulation::PokemonCreationInfo& ideal) {
   REQUIRE(truth.all_of<Id, Side, Battle, SpeciesName, AbilityName, Level, MoveSlots, Evs, Ivs>());
   REQUIRE(truth.all_of<stat::Hp, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>());
 
@@ -50,12 +50,12 @@ void checkCreatedPokemon(const entt::handle& truth, const Simulation::PokemonCre
   REQUIRE(truth.get<Ivs>().spd == ideal.ivs.spd);
   REQUIRE(truth.get<Ivs>().spe == ideal.ivs.spe);
 
-  const std::vector<entt::entity>& moveSlotsTruth = truth.get<MoveSlots>().moveSlots;
+  const std::vector<types::entity>& moveSlotsTruth = truth.get<MoveSlots>().moveSlots;
   REQUIRE(moveSlotsTruth.size() == ideal.moves.size());
 
   for (std::size_t i = 0; i < ideal.moves.size(); i++) {
     const Simulation::MoveCreationInfo& moveIdeal = ideal.moves[i];
-    entt::entity moveTruth = moveSlotsTruth[i];
+    types::entity moveTruth = moveSlotsTruth[i];
     REQUIRE(truth.registry()->all_of<MoveName, Pp, MaxPp>(moveTruth));
     REQUIRE(truth.registry()->get<MoveName>(moveTruth).name == moveIdeal.name);
     REQUIRE(truth.registry()->get<Pp>(moveTruth).pp == moveIdeal.pp);
@@ -63,15 +63,15 @@ void checkCreatedPokemon(const entt::handle& truth, const Simulation::PokemonCre
   }
 }
 
-void checkCreatedSide(const entt::handle& truth, const Simulation::SideCreationInfo& ideal) {
+void checkCreatedSide(const types::handle& truth, const Simulation::SideCreationInfo& ideal) {
   REQUIRE(truth.all_of<Team, FoeSide, Battle>());
 
-  const std::vector<entt::entity>& teamTruth = truth.get<Team>().team;
+  const std::vector<types::entity>& teamTruth = truth.get<Team>().team;
   REQUIRE(teamTruth.size() == ideal.team.size());
 
   for (std::size_t i = 0; i < ideal.team.size(); i++) {
-    entt::entity pokemonTruth = teamTruth[i];
-    entt::handle pokemonIdeal(*truth.registry(), pokemonTruth);
+    types::entity pokemonTruth = teamTruth[i];
+    types::handle pokemonIdeal(*truth.registry(), pokemonTruth);
     checkCreatedPokemon(pokemonIdeal, ideal.team[i]);
 
     REQUIRE(pokemonIdeal.get<Side>().side == truth.entity());
@@ -79,7 +79,7 @@ void checkCreatedSide(const entt::handle& truth, const Simulation::SideCreationI
   }
 }
 
-void checkCreatedBattle(const entt::handle truth, const Simulation::BattleCreationInfo& ideal) {
+void checkCreatedBattle(const types::handle truth, const Simulation::BattleCreationInfo& ideal) {
   REQUIRE(truth.any_of<Sides, ActionQueue, Turn, Probability, RngSeed>());
   if (ideal.turn) REQUIRE(truth.get<Turn>().turn == ideal.turn);
   else REQUIRE(truth.get<Turn>().turn == 0);
@@ -91,8 +91,8 @@ void checkCreatedBattle(const entt::handle truth, const Simulation::BattleCreati
   else REQUIRE(truth.get<RngSeed>().seed != 0);
 
   auto [p1SideEntity, p2SideEntity] = truth.get<Sides>();
-  entt::handle p1SideTruth(*truth.registry(), p1SideEntity);
-  entt::handle p2SideTruth(*truth.registry(), p2SideEntity);
+  types::handle p1SideTruth(*truth.registry(), p1SideEntity);
+  types::handle p2SideTruth(*truth.registry(), p2SideEntity);
 
   checkCreatedSide(p1SideTruth, ideal.p1);
   checkCreatedSide(p2SideTruth, ideal.p2);
@@ -151,19 +151,19 @@ TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
 
   simulation.createInitialStates({battleCreationInfo});
 
-  entt::registry& registry = simulation.registry;
+  types::registry& registry = simulation.registry;
   auto battles = registry.view<Sides>();
   REQUIRE(battles.size() == 1);
-  entt::entity battleEntity = battles[0];
+  types::entity battleEntity = battles[0];
 
-  checkCreatedBattle(entt::handle(registry, battleEntity), battleCreationInfo);
+  checkCreatedBattle(types::handle(registry, battleEntity), battleCreationInfo);
 
   auto [p1SideEntity, p2SideEntity] = registry.get<Sides>(battleEntity);
 
-  entt::entity p1Entity = registry.get<Team>(p1SideEntity).team[0];
+  types::entity p1Entity = registry.get<Team>(p1SideEntity).team[0];
   REQUIRE(registry.all_of<tags::ability::Defiant>(p1Entity));
   REQUIRE(registry.all_of<tags::status::Paralysis>(p1Entity));
-  entt::entity p2Entity = registry.get<Team>(p2SideEntity).team[0];
+  types::entity p2Entity = registry.get<Team>(p2SideEntity).team[0];
   REQUIRE(registry.all_of<tags::ability::Static>(p2Entity));
   REQUIRE(registry.all_of<tags::nature::Modest>(p2Entity));
   REQUIRE(registry.all_of<tags::item::ChoiceSpecs>(p2Entity));
@@ -253,28 +253,28 @@ TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
   battleCreationInfo.rngSeed = 0x12345678;
   simulation.createInitialStates({battleCreationInfo});
 
-  entt::registry& registry = simulation.registry;
+  types::registry& registry = simulation.registry;
   auto battles = registry.view<Sides>();
   REQUIRE(battles.size() == 1);
-  entt::entity battleEntity = battles[0];
+  types::entity battleEntity = battles[0];
 
-  checkCreatedBattle(entt::handle(registry, battleEntity), battleCreationInfo);
+  checkCreatedBattle(types::handle(registry, battleEntity), battleCreationInfo);
 
   auto [p1SideEntity, p2SideEntity] = registry.get<Sides>(battleEntity);
 
-  entt::entity p1aEntity = registry.get<Team>(p1SideEntity).team[0];
+  types::entity p1aEntity = registry.get<Team>(p1SideEntity).team[0];
   REQUIRE(registry.all_of<tags::ability::Trace>(p1aEntity));
   REQUIRE(registry.all_of<tags::status::Burn>(p1aEntity));
   REQUIRE(registry.all_of<tags::item::ChoiceScarf>(p1aEntity));
-  entt::entity p1bEntity = registry.get<Team>(p1SideEntity).team[1];
+  types::entity p1bEntity = registry.get<Team>(p1SideEntity).team[1];
   REQUIRE(registry.all_of<tags::ability::IronFist>(p1bEntity));
   REQUIRE(registry.all_of<tags::item::LifeOrb>(p1bEntity));
 
-  entt::entity p2aEntity = registry.get<Team>(p2SideEntity).team[0];
+  types::entity p2aEntity = registry.get<Team>(p2SideEntity).team[0];
   REQUIRE(registry.all_of<tags::ability::Infiltrator>(p2aEntity));
   REQUIRE(registry.all_of<tags::nature::Hasty>(p2aEntity));
   REQUIRE(registry.all_of<tags::item::FocusSash>(p2aEntity));
-  entt::entity p2bEntity = registry.get<Team>(p2SideEntity).team[1];
+  types::entity p2bEntity = registry.get<Team>(p2SideEntity).team[1];
   REQUIRE(registry.all_of<tags::ability::SweetVeil>(p2bEntity));
   REQUIRE(registry.all_of<tags::item::BrightPowder>(p2bEntity));
 }
@@ -335,12 +335,12 @@ TEST_CASE("Battle State: Multiple Battles", "[BattleState][Setup]") {
   battle2CreationInfo.rngSeed = 9826;
   simulation.createInitialStates({battle1CreationInfo, battle2CreationInfo});
 
-  entt::registry& registry = simulation.registry;
+  types::registry& registry = simulation.registry;
   auto battles = registry.view<Sides>();
   REQUIRE(battles.size() == 2);
 
-  entt::handle battleA = entt::handle(registry, battles[0]);
-  entt::handle battleB = entt::handle(registry, battles[1]);
+  types::handle battleA = types::handle(registry, battles[0]);
+  types::handle battleB = types::handle(registry, battles[1]);
 
   if (battleA.get<Turn>().turn == battle1CreationInfo.turn) {
     checkCreatedBattle(battleA, battle1CreationInfo);

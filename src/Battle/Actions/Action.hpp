@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entt/entity/fwd.hpp>
+#include <Types/Entity.hpp>
 
 namespace pokesim {
 struct SideDecision;
@@ -8,8 +8,8 @@ struct ActionQueue;
 struct Sides;
 
 /*_inline_*/ void resolveDecision(
-  entt::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue);
+  types::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue);
 
 /*_inline_*/ void moveSideActionsToBattleActions(
-  entt::handle battleHandle, const Sides& sides, ActionQueue& battleActionQueue);
+  types::handle battleHandle, const Sides& sides, ActionQueue& battleActionQueue);
 }  // namespace pokesim

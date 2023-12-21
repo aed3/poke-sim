@@ -10,23 +10,23 @@
 #include <Components/Names/VolatileNames.hpp>
 #include <Components/Names/WeatherNames.hpp>
 #include <Types/Effect.hpp>
+#include <Types/Entity.hpp>
 #include <Types/Enums/PseudoWeather.hpp>
 #include <Types/Enums/SideCondition.hpp>
 #include <Types/Enums/Status.hpp>
 #include <Types/Enums/Terrain.hpp>
 #include <Types/Enums/Volatile.hpp>
 #include <Types/Enums/Weather.hpp>
-#include <entt/entity/entity.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <variant>
 
 namespace pokesim::analyze_effect {
-void InputSetup::setAttacker(entt::entity entity) {
+void InputSetup::setAttacker(types::entity entity) {
   handle.emplace<Attacker>(entity);
 }
 
-void InputSetup::setDefender(entt::entity entity) {
+void InputSetup::setDefender(types::entity entity) {
   handle.emplace<Defender>(entity);
 }
 
@@ -54,7 +54,7 @@ void InputSetup::setEffect(types::EffectEnum effect) {
   }
 }
 
-void InputSetup::setBattle(entt::entity entity) {
+void InputSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
 }
 }  // namespace pokesim::analyze_effect

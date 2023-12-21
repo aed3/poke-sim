@@ -1,12 +1,13 @@
 #include "ItemTags.hpp"
 
+#include <Types/Entity.hpp>
 #include <Types/Enums/Item.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 // TODO(aed3): Make this auto generated
 
 namespace pokesim::tags::item {
-void enumToTag(dex::Item item, entt::handle handle) {
+void enumToTag(dex::Item item, types::handle handle) {
   switch (item) {
     case dex::Item::ASSAULT_VEST: handle.emplace<AssaultVest>(); return;
     case dex::Item::BRIGHT_POWDER: handle.emplace<BrightPowder>(); return;

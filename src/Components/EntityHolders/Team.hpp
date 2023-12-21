@@ -1,11 +1,11 @@
 #pragma once
 
+#include <Types/Entity.hpp>
 #include <Types/State.hpp>
-#include <entt/entity/fwd.hpp>
 
 namespace pokesim {
 // Contains a list of entities pointing to the Pokemon on a team.
 struct Team {
-  types::TeamPositions<entt::entity> team{};
+  types::TeamPositions<types::entity> team{};
 };
 }  // namespace pokesim

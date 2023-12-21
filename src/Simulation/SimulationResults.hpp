@@ -6,7 +6,6 @@
 #include <Types/Stats.hpp>
 #include <array>
 #include <entt/container/dense_map.hpp>
-#include <entt/entity/entity.hpp>
 #include <entt/entity/view.hpp>
 #include <vector>
 
@@ -15,7 +14,7 @@ class Simulation;
 
 namespace simulate_turn {
 struct TurnOutcomeBattles {
-  std::vector<entt::entity> turnOutcomeBattles;
+  std::vector<types::entity> turnOutcomeBattles;
 };
 
 struct Results {
