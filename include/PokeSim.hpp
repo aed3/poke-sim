@@ -12594,7 +12594,7 @@ using SideSlots = std::vector<T>;
 
 ////////////////// START OF src/Battle/Actions/Decisions.hpp ///////////////////
 
-#include <optional>
+#include <variant>
 
 namespace pokesim {
 struct SlotDecision {
@@ -12604,15 +12604,12 @@ struct SlotDecision {
   bool dynamax = false;
   bool terastallize = false;
 
-  std::optional<types::MoveSlotPosition> moveSlotUsed = std::nullopt;
-  std::optional<types::TeamPositionIndex> teamSlotSwitchingIn = std::nullopt;
-  std::optional<dex::Item> itemUsed = std::nullopt;
+  std::variant<types::MoveSlotPosition, types::TeamPositionIndex, dex::Item> used;
 };
 
 struct SideDecision {
   PlayerSideId sideId = PlayerSideId::P1;
-  std::optional<types::SideSlots<SlotDecision>> slotDecisions = std::nullopt;
-  std::optional<types::TeamPositions<types::TeamPositionIndex>> teamPreviewSelection = std::nullopt;
+  std::variant<types::SideSlots<SlotDecision>, types::TeamPositions<types::TeamPositionIndex>> decision;
 };
 }  // namespace pokesim
 
