@@ -26,7 +26,7 @@ struct QuiverDance {
     static constexpr internal::Tags<> effectTags{};
   };
 
-  static constexpr internal::Tags<tags::move::Self> moveTags{};
+  static constexpr internal::Tags<move::tags::Self> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Quiver Dance";

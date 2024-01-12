@@ -25,10 +25,10 @@ struct Thunderbolt {
   struct targetSecondaryEffect {
     static constexpr types::BaseEffectChance chance = 10;
 
-    static constexpr internal::Tags<tags::status::Paralysis> effectTags{};
+    static constexpr internal::Tags<status::tags::Paralysis> effectTags{};
   };
 
-  static constexpr internal::Tags<tags::move::AnySingleTarget> moveTags{};
+  static constexpr internal::Tags<move::tags::AnySingleTarget> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Thunderbolt";

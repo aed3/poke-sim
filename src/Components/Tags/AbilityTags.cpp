@@ -6,7 +6,7 @@
 #include <entt/entity/registry.hpp>
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::ability {
+namespace pokesim::ability::tags {
 void enumToTag(dex::Ability ability, types::handle handle) {
   switch (ability) {
     case dex::Ability::DEFIANT: handle.emplace<Defiant>(); return;
@@ -20,4 +20,4 @@ void enumToTag(dex::Ability ability, types::handle handle) {
     }
   }
 }
-}  // namespace pokesim::tags::ability
+}  // namespace pokesim::ability::tags

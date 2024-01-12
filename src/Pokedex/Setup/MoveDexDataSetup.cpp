@@ -33,18 +33,18 @@ void MoveDexDataSetup::setBasePower(types::BasePower basePower) {
 }
 
 void MoveDexDataSetup::setCategoryPhysical() {
-  ENTT_ASSERT(!(handle.any_of<tags::move::Special, tags::move::Status>()), "A move can only have one category");
-  handle.emplace<tags::move::Physical>();
+  ENTT_ASSERT(!(handle.any_of<move::tags::Special, move::tags::Status>()), "A move can only have one category");
+  handle.emplace<move::tags::Physical>();
 }
 
 void MoveDexDataSetup::setCategorySpecial() {
-  ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Status>()), "A move can only have one category");
-  handle.emplace<tags::move::Special>();
+  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Status>()), "A move can only have one category");
+  handle.emplace<move::tags::Special>();
 }
 
 void MoveDexDataSetup::setCategoryStatus() {
-  ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Special>()), "A move can only have one category");
-  handle.emplace<tags::move::Status>();
+  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Special>()), "A move can only have one category");
+  handle.emplace<move::tags::Status>();
 }
 
 void MoveDexDataSetup::setBasePp(types::Pp pp) {
@@ -72,10 +72,10 @@ void MoveEffectSetup::setChance(types::BaseEffectChance chance) {
 }
 
 void MoveEffectSetup::setEffectsSelf() {
-  handle.emplace<tags::move::effect::MoveSource>();
+  handle.emplace<move::tags::effect::MoveSource>();
 }
 
 void MoveEffectSetup::setEffectsTarget() {
-  handle.emplace<tags::move::effect::MoveTarget>();
+  handle.emplace<move::tags::effect::MoveTarget>();
 }
 }  // namespace pokesim::dex::internal

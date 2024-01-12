@@ -22,7 +22,7 @@ struct FuryAttack {
   static constexpr types::Pp basePp = 20;
   static constexpr types::MoveHits minHits = 2, maxHits = 5;
 
-  static constexpr internal::Tags<tags::move::AnySingleTarget, tags::move::Contact> moveTags{};
+  static constexpr internal::Tags<move::tags::AnySingleTarget, move::tags::Contact> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Fury Attack";

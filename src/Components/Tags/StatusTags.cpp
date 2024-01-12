@@ -6,7 +6,7 @@
 #include <entt/entity/registry.hpp>
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::status {
+namespace pokesim::status::tags {
 void enumToTag(dex::Status status, types::handle& handle) {
   switch (status) {
     case dex::Status::BRN: handle.emplace<Burn>(); return;
@@ -20,4 +20,4 @@ void enumToTag(dex::Status status, types::handle& handle) {
     }
   }
 }
-}  // namespace pokesim::tags::status
+}  // namespace pokesim::status::tags

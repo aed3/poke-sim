@@ -3,7 +3,7 @@
 #include <Types/Enums/Nature.hpp>
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::nature {
+namespace pokesim::nature::tags {
 struct Adamant {};
 struct Bashful {};
 struct Bold {};
@@ -32,4 +32,4 @@ struct Timid {};
 
 // Assigns a nature's tag to a handle
 /*_inline_*/ void enumToTag(dex::Nature nature, types::handle handle);
-}  // namespace pokesim::tags::nature
+}  // namespace pokesim::nature::tags

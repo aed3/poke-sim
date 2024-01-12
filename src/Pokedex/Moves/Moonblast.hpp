@@ -29,7 +29,7 @@ struct Moonblast {
     static constexpr internal::Tags<> effectTags{};
   };
 
-  static constexpr internal::Tags<tags::move::AnySingleTarget> moveTags{};
+  static constexpr internal::Tags<move::tags::AnySingleTarget> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Moonblast";
