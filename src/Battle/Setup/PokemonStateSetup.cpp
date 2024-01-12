@@ -67,12 +67,12 @@ void PokemonStateSetup::setGender(dex::Gender gender) {
 
 void PokemonStateSetup::setAbility(dex::Ability ability) {
   handle.emplace<AbilityName>(ability);
-  tags::ability::enumToTag(ability, handle);
+  ability::tags::enumToTag(ability, handle);
 }
 
 void PokemonStateSetup::setItem(dex::Item item) {
   handle.emplace<ItemName>(item);
-  tags::item::enumToTag(item, handle);
+  item::tags::enumToTag(item, handle);
 }
 
 void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
@@ -85,12 +85,12 @@ void PokemonStateSetup::setPostion(types::TeamPositionIndex position) {
 
 void PokemonStateSetup::setStatus(dex::Status status) {
   handle.emplace<StatusName>(status);
-  tags::status::enumToTag(status, handle);
+  status::tags::enumToTag(status, handle);
 }
 
 void PokemonStateSetup::setNature(dex::Nature nature) {
   handle.emplace<NatureName>(nature);
-  tags::nature::enumToTag(nature, handle);
+  nature::tags::enumToTag(nature, handle);
 }
 
 void PokemonStateSetup::setEVs(

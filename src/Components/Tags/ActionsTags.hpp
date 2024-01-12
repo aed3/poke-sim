@@ -1,6 +1,6 @@
 #pragma once
 
-namespace pokesim::tags::action {
+namespace pokesim::action::tags {
 // Action Tag for Moves: When a Pokemon uses a move
 struct Move {};
 
@@ -34,4 +34,4 @@ struct PrimalRevert {};
 struct Dynamax {};
 // Action Tag: When a Pokemon is terastallizing
 struct Terastallize {};
-}  // namespace pokesim::tags::action
+}  // namespace pokesim::action::tags

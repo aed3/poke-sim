@@ -21,7 +21,7 @@ struct KnockOff {
   static constexpr types::BasePower basePower = 65;
   static constexpr types::Pp basePp = 20;
 
-  static constexpr internal::Tags<tags::move::AnySingleTarget, tags::move::Contact> moveTags{};
+  static constexpr internal::Tags<move::tags::AnySingleTarget, move::tags::Contact> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Knock Off";

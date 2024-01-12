@@ -6,7 +6,7 @@
 #include <entt/entity/registry.hpp>
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::item {
+namespace pokesim::item::tags {
 void enumToTag(dex::Item item, types::handle handle) {
   switch (item) {
     case dex::Item::ASSAULT_VEST: handle.emplace<AssaultVest>(); return;
@@ -20,4 +20,4 @@ void enumToTag(dex::Item item, types::handle handle) {
     }
   }
 }
-}  // namespace pokesim::tags::item
+}  // namespace pokesim::item::tags

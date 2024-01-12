@@ -22,10 +22,10 @@ struct WillOWisp {
   static constexpr types::Pp basePp = 15;
 
   struct targetPrimaryEffect {
-    static constexpr internal::Tags<tags::status::Burn> effectTags{};
+    static constexpr internal::Tags<status::tags::Burn> effectTags{};
   };
 
-  static constexpr internal::Tags<tags::move::AnySingleTarget> moveTags{};
+  static constexpr internal::Tags<move::tags::AnySingleTarget> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Will-O-Wisp";

@@ -14259,7 +14259,7 @@ struct MovePriority {
 
 ////////////////// START OF src/Components/Tags/MoveTags.hpp ///////////////////
 
-namespace pokesim::tags::move {
+namespace pokesim::move::tags {
 // Move Category Tag
 struct Physical {};
 // Move Category Tag
@@ -14285,7 +14285,7 @@ struct MoveTarget {};
 // Move Effect Participant Tag: Who created the effect
 struct MoveSource {};
 }  // namespace effect
-}  // namespace pokesim::tags::move
+}  // namespace pokesim::move::tags
 
 /////////////////// END OF src/Components/Tags/MoveTags.hpp ////////////////////
 
@@ -14356,18 +14356,18 @@ void MoveDexDataSetup::setBasePower(types::BasePower basePower) {
 }
 
 void MoveDexDataSetup::setCategoryPhysical() {
-  ENTT_ASSERT(!(handle.any_of<tags::move::Special, tags::move::Status>()), "A move can only have one category");
-  handle.emplace<tags::move::Physical>();
+  ENTT_ASSERT(!(handle.any_of<move::tags::Special, move::tags::Status>()), "A move can only have one category");
+  handle.emplace<move::tags::Physical>();
 }
 
 void MoveDexDataSetup::setCategorySpecial() {
-  ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Status>()), "A move can only have one category");
-  handle.emplace<tags::move::Special>();
+  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Status>()), "A move can only have one category");
+  handle.emplace<move::tags::Special>();
 }
 
 void MoveDexDataSetup::setCategoryStatus() {
-  ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Special>()), "A move can only have one category");
-  handle.emplace<tags::move::Status>();
+  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Special>()), "A move can only have one category");
+  handle.emplace<move::tags::Status>();
 }
 
 void MoveDexDataSetup::setBasePp(types::Pp pp) {
@@ -14395,11 +14395,11 @@ void MoveEffectSetup::setChance(types::BaseEffectChance chance) {
 }
 
 void MoveEffectSetup::setEffectsSelf() {
-  handle.emplace<tags::move::effect::MoveSource>();
+  handle.emplace<move::tags::effect::MoveSource>();
 }
 
 void MoveEffectSetup::setEffectsTarget() {
-  handle.emplace<tags::move::effect::MoveTarget>();
+  handle.emplace<move::tags::effect::MoveTarget>();
 }
 }  // namespace pokesim::dex::internal
 
@@ -14723,7 +14723,7 @@ struct FuryAttack {
   static constexpr types::Pp basePp = 20;
   static constexpr types::MoveHits minHits = 2, maxHits = 5;
 
-  static constexpr internal::Tags<tags::move::AnySingleTarget, tags::move::Contact> moveTags{};
+  static constexpr internal::Tags<move::tags::AnySingleTarget, move::tags::Contact> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Fury Attack";
@@ -14754,7 +14754,7 @@ struct KnockOff {
   static constexpr types::BasePower basePower = 65;
   static constexpr types::Pp basePp = 20;
 
-  static constexpr internal::Tags<tags::move::AnySingleTarget, tags::move::Contact> moveTags{};
+  static constexpr internal::Tags<move::tags::AnySingleTarget, move::tags::Contact> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Knock Off";
@@ -14792,7 +14792,7 @@ struct Moonblast {
     static constexpr internal::Tags<> effectTags{};
   };
 
-  static constexpr internal::Tags<tags::move::AnySingleTarget> moveTags{};
+  static constexpr internal::Tags<move::tags::AnySingleTarget> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Moonblast";
@@ -14827,7 +14827,7 @@ struct QuiverDance {
     static constexpr internal::Tags<> effectTags{};
   };
 
-  static constexpr internal::Tags<tags::move::Self> moveTags{};
+  static constexpr internal::Tags<move::tags::Self> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Quiver Dance";
@@ -14846,7 +14846,7 @@ using QuiverDance = dex::QuiverDance<GameMechanics::SCARLET_VIOLET>;
 
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::status {
+namespace pokesim::status::tags {
 struct Burn {};
 struct Freeze {};
 struct Paralysis {};
@@ -14856,7 +14856,7 @@ struct Toxic {};
 
 // Assigns a status' tag to a handle
 inline void enumToTag(dex::Status status, types::handle& handle);
-}  // namespace pokesim::tags::status
+}  // namespace pokesim::status::tags
 
 ////////////////// END OF src/Components/Tags/StatusTags.hpp ///////////////////
 
@@ -14879,10 +14879,10 @@ struct Thunderbolt {
   struct targetSecondaryEffect {
     static constexpr types::BaseEffectChance chance = 10;
 
-    static constexpr internal::Tags<tags::status::Paralysis> effectTags{};
+    static constexpr internal::Tags<status::tags::Paralysis> effectTags{};
   };
 
-  static constexpr internal::Tags<tags::move::AnySingleTarget> moveTags{};
+  static constexpr internal::Tags<move::tags::AnySingleTarget> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Thunderbolt";
@@ -14913,10 +14913,10 @@ struct WillOWisp {
   static constexpr types::Pp basePp = 15;
 
   struct targetPrimaryEffect {
-    static constexpr internal::Tags<tags::status::Burn> effectTags{};
+    static constexpr internal::Tags<status::tags::Burn> effectTags{};
   };
 
-  static constexpr internal::Tags<tags::move::AnySingleTarget> moveTags{};
+  static constexpr internal::Tags<move::tags::AnySingleTarget> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Will-O-Wisp";
@@ -16213,7 +16213,7 @@ void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
 
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::status {
+namespace pokesim::status::tags {
 void enumToTag(dex::Status status, types::handle& handle) {
   switch (status) {
     case dex::Status::BRN: handle.emplace<Burn>(); return;
@@ -16227,7 +16227,7 @@ void enumToTag(dex::Status status, types::handle& handle) {
     }
   }
 }
-}  // namespace pokesim::tags::status
+}  // namespace pokesim::status::tags
 
 ////////////////// END OF src/Components/Tags/StatusTags.cpp ///////////////////
 
@@ -16235,7 +16235,7 @@ void enumToTag(dex::Status status, types::handle& handle) {
 
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::nature {
+namespace pokesim::nature::tags {
 struct Adamant {};
 struct Bashful {};
 struct Bold {};
@@ -16264,7 +16264,7 @@ struct Timid {};
 
 // Assigns a nature's tag to a handle
 inline void enumToTag(dex::Nature nature, types::handle handle);
-}  // namespace pokesim::tags::nature
+}  // namespace pokesim::nature::tags
 
 ////////////////// END OF src/Components/Tags/NatureTags.hpp ///////////////////
 
@@ -16272,7 +16272,7 @@ inline void enumToTag(dex::Nature nature, types::handle handle);
 
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::nature {
+namespace pokesim::nature::tags {
 void enumToTag(dex::Nature nature, types::handle handle) {
   switch (nature) {
     case dex::Nature::ADAMANT: handle.emplace<Adamant>(); return;
@@ -16305,7 +16305,7 @@ void enumToTag(dex::Nature nature, types::handle handle) {
     }
   }
 }
-}  // namespace pokesim::tags::nature
+}  // namespace pokesim::nature::tags
 
 ////////////////// END OF src/Components/Tags/NatureTags.cpp ///////////////////
 
@@ -16313,7 +16313,7 @@ void enumToTag(dex::Nature nature, types::handle handle) {
 
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::item {
+namespace pokesim::item::tags {
 struct AssaultVest {};
 struct BrightPowder {};
 struct ChoiceScarf {};
@@ -16323,7 +16323,7 @@ struct LifeOrb {};
 
 // Assigns an item's tag to a handle
 inline void enumToTag(dex::Item item, types::handle handle);
-}  // namespace pokesim::tags::item
+}  // namespace pokesim::item::tags
 
 /////////////////// END OF src/Components/Tags/ItemTags.hpp ////////////////////
 
@@ -16331,7 +16331,7 @@ inline void enumToTag(dex::Item item, types::handle handle);
 
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::item {
+namespace pokesim::item::tags {
 void enumToTag(dex::Item item, types::handle handle) {
   switch (item) {
     case dex::Item::ASSAULT_VEST: handle.emplace<AssaultVest>(); return;
@@ -16345,7 +16345,7 @@ void enumToTag(dex::Item item, types::handle handle) {
     }
   }
 }
-}  // namespace pokesim::tags::item
+}  // namespace pokesim::item::tags
 
 /////////////////// END OF src/Components/Tags/ItemTags.cpp ////////////////////
 
@@ -16353,7 +16353,7 @@ void enumToTag(dex::Item item, types::handle handle) {
 
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::ability {
+namespace pokesim::ability::tags {
 struct Defiant {};
 struct Infiltrator {};
 struct IronFist {};
@@ -16363,7 +16363,7 @@ struct Trace {};
 
 // Assigns an ability's tag to a handle
 inline void enumToTag(dex::Ability ability, types::handle handle);
-}  // namespace pokesim::tags::ability
+}  // namespace pokesim::ability::tags
 
 ////////////////// END OF src/Components/Tags/AbilityTags.hpp //////////////////
 
@@ -16371,7 +16371,7 @@ inline void enumToTag(dex::Ability ability, types::handle handle);
 
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::ability {
+namespace pokesim::ability::tags {
 void enumToTag(dex::Ability ability, types::handle handle) {
   switch (ability) {
     case dex::Ability::DEFIANT: handle.emplace<Defiant>(); return;
@@ -16385,7 +16385,7 @@ void enumToTag(dex::Ability ability, types::handle handle) {
     }
   }
 }
-}  // namespace pokesim::tags::ability
+}  // namespace pokesim::ability::tags
 
 ////////////////// END OF src/Components/Tags/AbilityTags.cpp //////////////////
 
@@ -16595,12 +16595,12 @@ void PokemonStateSetup::setGender(dex::Gender gender) {
 
 void PokemonStateSetup::setAbility(dex::Ability ability) {
   handle.emplace<AbilityName>(ability);
-  tags::ability::enumToTag(ability, handle);
+  ability::tags::enumToTag(ability, handle);
 }
 
 void PokemonStateSetup::setItem(dex::Item item) {
   handle.emplace<ItemName>(item);
-  tags::item::enumToTag(item, handle);
+  item::tags::enumToTag(item, handle);
 }
 
 void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
@@ -16613,12 +16613,12 @@ void PokemonStateSetup::setPostion(types::TeamPositionIndex position) {
 
 void PokemonStateSetup::setStatus(dex::Status status) {
   handle.emplace<StatusName>(status);
-  tags::status::enumToTag(status, handle);
+  status::tags::enumToTag(status, handle);
 }
 
 void PokemonStateSetup::setNature(dex::Nature nature) {
   handle.emplace<NatureName>(nature);
-  tags::nature::enumToTag(nature, handle);
+  nature::tags::enumToTag(nature, handle);
 }
 
 void PokemonStateSetup::setEVs(
@@ -17029,7 +17029,7 @@ struct SpeedSort {
 
 ///////////////// START OF src/Components/Tags/ActionsTags.hpp /////////////////
 
-namespace pokesim::tags::action {
+namespace pokesim::action::tags {
 // Action Tag for Moves: When a Pokemon uses a move
 struct Move {};
 
@@ -17063,7 +17063,7 @@ struct PrimalRevert {};
 struct Dynamax {};
 // Action Tag: When a Pokemon is terastallizing
 struct Terastallize {};
-}  // namespace pokesim::tags::action
+}  // namespace pokesim::action::tags
 
 ////////////////// END OF src/Components/Tags/ActionsTags.hpp //////////////////
 
@@ -17071,7 +17071,7 @@ struct Terastallize {};
 
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::type {
+namespace pokesim::type::tags {
 struct Normal {};
 struct Fighting {};
 struct Flying {};
@@ -17090,7 +17090,7 @@ struct Ice {};
 struct Dragon {};
 struct Dark {};
 struct Fairy {};
-}  // namespace pokesim::tags::type
+}  // namespace pokesim::type::tags
 
 /////////////////// END OF src/Components/Tags/TypeTags.hpp ////////////////////
 

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace pokesim::tags::move {
+namespace pokesim::move::tags {
 // Move Category Tag
 struct Physical {};
 // Move Category Tag
@@ -26,4 +26,4 @@ struct MoveTarget {};
 // Move Effect Participant Tag: Who created the effect
 struct MoveSource {};
 }  // namespace effect
-}  // namespace pokesim::tags::move
+}  // namespace pokesim::move::tags
