@@ -1,0 +1,10 @@
+#pragma once
+
+#include <Types/State.hpp>
+
+namespace pokesim::action {
+// Action Tag: When team member order has been picked as part of team preview
+struct Team {
+  types::TeamPositions<types::TeamPositionIndex> teamOrder;
+};
+}  // namespace pokesim::action

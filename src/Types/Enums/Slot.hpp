@@ -3,7 +3,7 @@
 #include <cstdint>
 
 namespace pokesim {
-enum class TargetSlot : std::uint8_t {
+enum class Slot : std::uint8_t {
   NONE,
   P1A,
   P2A,

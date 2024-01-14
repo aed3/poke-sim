@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Battle/Actions/Decisions.hpp>
 #include <Components/EVsIVs.hpp>
+#include <SimulateTurn/Actions/Decisions.hpp>
 #include <Types/Entity.hpp>
 #include <Types/headers.hpp>
 #include <entt/entity/registry.hpp>
@@ -77,14 +77,14 @@ class Simulation {
   };
 
   struct CalcDamageInputInfo {
-    TargetSlot attackerSlot = TargetSlot::NONE;
-    TargetSlot defenderSlot = TargetSlot::NONE;
+    Slot attackerSlot = Slot::NONE;
+    Slot defenderSlot = Slot::NONE;
     dex::Move move = dex::Move::NO_MOVE;
   };
 
   struct AnalyzeEffectInputInfo {
-    TargetSlot attackerSlot = TargetSlot::NONE;
-    TargetSlot defenderSlot = TargetSlot::NONE;
+    Slot attackerSlot = Slot::NONE;
+    Slot defenderSlot = Slot::NONE;
     types::EffectEnum effect;
   };
 

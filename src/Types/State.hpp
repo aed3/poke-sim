@@ -10,8 +10,6 @@ using StateRngSeed = std::uint32_t;
 
 using BattleTurn = std::uint16_t;
 
-using ActionOrder = std::uint8_t;
-
 using TeamPositionIndex = std::uint8_t;
 using MoveSlotPosition = std::uint8_t;
 

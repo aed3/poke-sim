@@ -65,43 +65,43 @@ Simulation::BattleCreationInfo createBaseBattleInfo(const Pokedex& pokedex) {
 }
 
 types::entity targetSlotToEntity(
-  TargetSlot targetSlot, const types::TeamPositions<types::entity>& p1Team,
+  Slot targetSlot, const types::TeamPositions<types::entity>& p1Team,
   const types::TeamPositions<types::entity>& p2Team) {
   switch (targetSlot) {
-    case TargetSlot::P1A: {
+    case Slot::P1A: {
       return p1Team[0];
     }
-    case TargetSlot::P1B: {
+    case Slot::P1B: {
       return p1Team[1];
     }
-    case TargetSlot::P1C: {
+    case Slot::P1C: {
       return p1Team[2];
     }
-    case TargetSlot::P1D: {
+    case Slot::P1D: {
       return p1Team[3];
     }
-    case TargetSlot::P1E: {
+    case Slot::P1E: {
       return p1Team[4];
     }
-    case TargetSlot::P1F: {
+    case Slot::P1F: {
       return p1Team[5];
     }
-    case TargetSlot::P2A: {
+    case Slot::P2A: {
       return p2Team[0];
     }
-    case TargetSlot::P2B: {
+    case Slot::P2B: {
       return p2Team[1];
     }
-    case TargetSlot::P2C: {
+    case Slot::P2C: {
       return p2Team[2];
     }
-    case TargetSlot::P2D: {
+    case Slot::P2D: {
       return p2Team[3];
     }
-    case TargetSlot::P2E: {
+    case Slot::P2E: {
       return p2Team[4];
     }
-    case TargetSlot::P2F: {
+    case Slot::P2F: {
       return p2Team[5];
     }
     default: {
@@ -134,28 +134,28 @@ TEST_CASE("Simulation: Calc Damage", "[Simulation][CalcDamage][Setup]") {
   Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
   battleInfo.damageCalculations = {
     {
-      TargetSlot::P1A,
-      TargetSlot::P1B,
+      Slot::P1A,
+      Slot::P1B,
       dex::Move::FURY_ATTACK,
     },
     {
-      TargetSlot::P1B,
-      TargetSlot::P1A,
+      Slot::P1B,
+      Slot::P1A,
       dex::Move::FURY_ATTACK,
     },
     {
-      TargetSlot::P1B,
-      TargetSlot::P1A,
+      Slot::P1B,
+      Slot::P1A,
       dex::Move::THUNDERBOLT,
     },
     {
-      TargetSlot::P2B,
-      TargetSlot::P2C,
+      Slot::P2B,
+      Slot::P2C,
       dex::Move::KNOCK_OFF,
     },
     {
-      TargetSlot::P1B,
-      TargetSlot::P2B,
+      Slot::P1B,
+      Slot::P2B,
       dex::Move::MOONBLAST,
     },
   };
