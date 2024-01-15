@@ -42,6 +42,7 @@ void BattleStateSetup::setSide(PlayerSideId sideID, types::entity sideEntity) {
   switch (sideID) {
     case PlayerSideId::P1: sides.p1 = sideEntity; break;
     case PlayerSideId::P2: sides.p2 = sideEntity; break;
+    default: ENTT_FAIL("sideID must be assigned P1 or P2"); break;
   }
 }
 
