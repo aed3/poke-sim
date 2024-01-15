@@ -90,24 +90,4 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision,
     sideActionQueue.actionQueue.push_back(actionHandle.entity());
   }
 }
-
-void moveSideActionsToBattleActions(types::handle battleHandle, const Sides& sides, ActionQueue& battleActionQueue) {
-  types::registry* registry = battleHandle.registry();
-  ActionQueue& p1Actions = registry->get<ActionQueue>(sides.p1);
-  ActionQueue& p2Actions = registry->get<ActionQueue>(sides.p2);
-
-  battleActionQueue.actionQueue.insert(
-    battleActionQueue.actionQueue.end(),
-    std::make_move_iterator(p1Actions.actionQueue.begin()),
-    std::make_move_iterator(p1Actions.actionQueue.end()));
-
-  p1Actions.actionQueue.clear();
-
-  battleActionQueue.actionQueue.insert(
-    battleActionQueue.actionQueue.end(),
-    std::make_move_iterator(p2Actions.actionQueue.begin()),
-    std::make_move_iterator(p2Actions.actionQueue.end()));
-
-  p2Actions.actionQueue.clear();
-}
 }  // namespace pokesim

@@ -128,10 +128,8 @@ void Simulation::createInitialTurnDecision(
   types::handle battleHandle{registry, battleStateSetup.entity()};
   const Sides& sides = battleHandle.get<Sides>();
 
-  resolveDecision({registry, sides.p1}, turnDecisionData.p1, registry.get<ActionQueue>(sides.p1));
-  resolveDecision({registry, sides.p2}, turnDecisionData.p2, registry.get<ActionQueue>(sides.p2));
-
-  moveSideActionsToBattleActions(battleHandle, sides, battleHandle.get<ActionQueue>());
+  resolveDecision({registry, sides.p1}, turnDecisionData.p1, battleHandle.get<ActionQueue>());
+  resolveDecision({registry, sides.p2}, turnDecisionData.p2, battleHandle.get<ActionQueue>());
 }
 
 void Simulation::createCalcDamageInput(

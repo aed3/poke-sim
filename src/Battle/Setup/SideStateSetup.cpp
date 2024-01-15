@@ -11,10 +11,6 @@
 #include "PokemonStateSetup.hpp"
 
 namespace pokesim {
-SideStateSetup::SideStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {
-  handle.emplace<ActionQueue>();
-}
-
 void SideStateSetup::initBlank() {
   handle.emplace<Battle>();
   handle.emplace<Team>();

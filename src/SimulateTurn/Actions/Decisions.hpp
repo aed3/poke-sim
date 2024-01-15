@@ -18,8 +18,8 @@ struct SlotDecision {
   bool dynamax = false;
   bool terastallize = false;
 
-  std::optional<dex::Move> moveChoice;
-  std::optional<dex::Item> itemChoice;
+  std::optional<dex::Move> moveChoice = std::nullopt;
+  std::optional<dex::Item> itemChoice = std::nullopt;
 };
 
 struct SideDecision {

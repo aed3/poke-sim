@@ -12459,6 +12459,19 @@ namespace pokesim::types::internal {
 template <typename... Types>
 class variant : public std::variant<Types...> {
  public:
+  variant() = default;
+  variant(const variant& rhs) = default;
+  variant(variant&&) noexcept = default;
+  variant& operator=(const variant&) noexcept = default;
+  variant& operator=(variant&&) noexcept = default;
+  ~variant() = default;
+
+  template <typename T>
+  variant& operator=(T&& rhs) {
+    std::variant<Types...>::operator=(rhs);
+    return *this;
+  }
+
   bool empty() const { return holds<std::monostate>(); }
 
   template <typename Type>
@@ -12991,8 +13004,7 @@ struct PokemonStateSetup;
 // Tool to set properties of a player's side state to an entity.
 struct SideStateSetup : internal::StateSetupBase {
   SideStateSetup(types::registry& registry) : SideStateSetup(registry, registry.create()) {}
-  inline SideStateSetup(types::registry& registry, types::entity entity);
-
+  SideStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {}
   /**
    * @brief Applies the defaults to the required properties for a player side's state.
    *
@@ -13393,8 +13405,8 @@ struct SlotDecision {
   bool dynamax = false;
   bool terastallize = false;
 
-  std::optional<dex::Move> moveChoice;
-  std::optional<dex::Item> itemChoice;
+  std::optional<dex::Move> moveChoice = std::nullopt;
+  std::optional<dex::Item> itemChoice = std::nullopt;
 };
 
 struct SideDecision {
@@ -13410,13 +13422,9 @@ struct SideDecision {
 namespace pokesim {
 struct SideDecision;
 struct ActionQueue;
-struct Sides;
 
 inline void resolveDecision(
   types::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue);
-
-inline void moveSideActionsToBattleActions(
-  types::handle battleHandle, const Sides& sides, ActionQueue& battleActionQueue);
 }  // namespace pokesim
 
 ///////////// END OF src/SimulateTurn/Actions/ResolveDecision.hpp //////////////
@@ -13752,10 +13760,8 @@ void Simulation::createInitialTurnDecision(
   types::handle battleHandle{registry, battleStateSetup.entity()};
   const Sides& sides = battleHandle.get<Sides>();
 
-  resolveDecision({registry, sides.p1}, turnDecisionData.p1, registry.get<ActionQueue>(sides.p1));
-  resolveDecision({registry, sides.p2}, turnDecisionData.p2, registry.get<ActionQueue>(sides.p2));
-
-  moveSideActionsToBattleActions(battleHandle, sides, battleHandle.get<ActionQueue>());
+  resolveDecision({registry, sides.p1}, turnDecisionData.p1, battleHandle.get<ActionQueue>());
+  resolveDecision({registry, sides.p2}, turnDecisionData.p2, battleHandle.get<ActionQueue>());
 }
 
 void Simulation::createCalcDamageInput(
@@ -14265,26 +14271,6 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision,
 
     sideActionQueue.actionQueue.push_back(actionHandle.entity());
   }
-}
-
-void moveSideActionsToBattleActions(types::handle battleHandle, const Sides& sides, ActionQueue& battleActionQueue) {
-  types::registry* registry = battleHandle.registry();
-  ActionQueue& p1Actions = registry->get<ActionQueue>(sides.p1);
-  ActionQueue& p2Actions = registry->get<ActionQueue>(sides.p2);
-
-  battleActionQueue.actionQueue.insert(
-    battleActionQueue.actionQueue.end(),
-    std::make_move_iterator(p1Actions.actionQueue.begin()),
-    std::make_move_iterator(p1Actions.actionQueue.end()));
-
-  p1Actions.actionQueue.clear();
-
-  battleActionQueue.actionQueue.insert(
-    battleActionQueue.actionQueue.end(),
-    std::make_move_iterator(p2Actions.actionQueue.begin()),
-    std::make_move_iterator(p2Actions.actionQueue.end()));
-
-  p2Actions.actionQueue.clear();
 }
 }  // namespace pokesim
 
@@ -16680,10 +16666,6 @@ struct FoeSide {
 ///////////////// START OF src/Battle/Setup/SideStateSetup.cpp /////////////////
 
 namespace pokesim {
-SideStateSetup::SideStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {
-  handle.emplace<ActionQueue>();
-}
-
 void SideStateSetup::initBlank() {
   handle.emplace<Battle>();
   handle.emplace<Team>();

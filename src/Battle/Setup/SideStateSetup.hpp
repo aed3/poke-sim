@@ -12,8 +12,7 @@ struct PokemonStateSetup;
 // Tool to set properties of a player's side state to an entity.
 struct SideStateSetup : internal::StateSetupBase {
   SideStateSetup(types::registry& registry) : SideStateSetup(registry, registry.create()) {}
-  /*_inline_*/ SideStateSetup(types::registry& registry, types::entity entity);
-
+  SideStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {}
   /**
    * @brief Applies the defaults to the required properties for a player side's state.
    *
