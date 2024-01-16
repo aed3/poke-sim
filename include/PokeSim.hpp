@@ -86,6 +86,10 @@
  * src/Simulation/SimulationResults.hpp
  * src/Simulation/SimulationResults.cpp
  * src/Simulation/Simulation.cpp
+ * src/Components/SimulateTurn/SpeedTieIndexes.hpp
+ * src/Components/SpeedSort.hpp
+ * src/SimulateTurn/Actions/SpeedSort.hpp
+ * src/SimulateTurn/Actions/SpeedSort.cpp
  * src/Components/EntityHolders/Team.hpp
  * src/Components/Names/SourceSlotName.hpp
  * src/Components/Names/TargetSlotName.hpp
@@ -94,7 +98,6 @@
  * src/Components/SimulateTurn/ActionNames.hpp
  * src/Components/SimulateTurn/ActionTags.hpp
  * src/Components/SimulateTurn/TeamAction.hpp
- * src/Components/SpeedSort.hpp
  * src/SimulateTurn/Actions/ResolveDecision.cpp
  * src/Components/DexData/Abilities.hpp
  * src/Components/DexData/BaseStats.hpp
@@ -12462,7 +12465,7 @@ class variant : public std::variant<Types...> {
   variant() = default;
   variant(const variant& rhs) = default;
   variant(variant&&) noexcept = default;
-  variant& operator=(const variant&) noexcept = default;
+  variant& operator=(const variant&) = default;
   variant& operator=(variant&&) noexcept = default;
   ~variant() = default;
 
@@ -12491,7 +12494,7 @@ class variant : public std::variant<Types...> {
 //////////////////////// START OF src/Types/Effect.hpp /////////////////////////
 
 namespace pokesim::types {
-using EffectEnum = internal::variant<
+using effectEnum = internal::variant<
   std::monostate, dex::PseudoWeather, dex::SideCondition, dex::Status, dex::Terrain, dex::Volatile, dex::Weather>;
 }  // namespace pokesim::types
 
@@ -12527,7 +12530,7 @@ struct InputSetup {
 
   inline void setAttacker(types::entity entity);
   inline void setDefender(types::entity entity);
-  inline void setEffect(types::EffectEnum effect);
+  inline void setEffect(types::effectEnum effect);
   inline void setBattle(types::entity entity);
 
   types::entity entity() { return handle.entity(); }
@@ -12609,15 +12612,15 @@ struct StateSetupBase {
 #include <cstdint>
 
 namespace pokesim::types {
-using Level = std::uint8_t;
+using level = std::uint8_t;
 
-using Stat = std::uint16_t;
-using BaseStat = std::uint8_t;
+using stat = std::uint16_t;
+using baseStat = std::uint8_t;
 
-using Ev = std::uint8_t;
-using Iv = std::uint8_t;
+using ev = std::uint8_t;
+using iv = std::uint8_t;
 
-using Boost = std::int8_t;
+using boost = std::int8_t;
 }  // namespace pokesim::types
 
 ////////////////////////// END OF src/Types/Stats.hpp //////////////////////////
@@ -12626,23 +12629,23 @@ using Boost = std::int8_t;
 
 namespace pokesim {
 struct AtkBoost {
-  types::Boost boost = 0;
+  types::boost boost = 0;
 };
 
 struct DefBoost {
-  types::Boost boost = 0;
+  types::boost boost = 0;
 };
 
 struct SpaBoost {
-  types::Boost boost = 0;
+  types::boost boost = 0;
 };
 
 struct SpdBoost {
-  types::Boost boost = 0;
+  types::boost boost = 0;
 };
 
 struct SpeBoost {
-  types::Boost boost = 0;
+  types::boost boost = 0;
 };
 }  // namespace pokesim
 
@@ -12652,21 +12655,21 @@ struct SpeBoost {
 
 namespace pokesim {
 struct Evs {
-  types::Ev hp = 0;
-  types::Ev atk = 0;
-  types::Ev def = 0;
-  types::Ev spa = 0;
-  types::Ev spd = 0;
-  types::Ev spe = 0;
+  types::ev hp = 0;
+  types::ev atk = 0;
+  types::ev def = 0;
+  types::ev spa = 0;
+  types::ev spd = 0;
+  types::ev spe = 0;
 };
 
 struct Ivs {
-  types::Iv hp = 0;
-  types::Iv atk = 0;
-  types::Iv def = 0;
-  types::Iv spa = 0;
-  types::Iv spd = 0;
-  types::Iv spe = 0;
+  types::iv hp = 0;
+  types::iv atk = 0;
+  types::iv def = 0;
+  types::iv spa = 0;
+  types::iv spd = 0;
+  types::iv spe = 0;
 };
 }  // namespace pokesim
 
@@ -12676,27 +12679,27 @@ struct Ivs {
 
 namespace pokesim::stat {
 struct Hp {
-  types::Stat stat = 1;
+  types::stat stat = 1;
 };
 
 struct Atk {
-  types::Stat stat = 1;
+  types::stat stat = 1;
 };
 
 struct Def {
-  types::Stat stat = 1;
+  types::stat stat = 1;
 };
 
 struct Spa {
-  types::Stat stat = 1;
+  types::stat stat = 1;
 };
 
 struct Spd {
-  types::Stat stat = 1;
+  types::stat stat = 1;
 };
 
 struct Spe {
-  types::Stat stat = 1;
+  types::stat stat = 1;
 };
 }  // namespace pokesim::stat
 
@@ -12794,20 +12797,20 @@ enum class Species : std::uint16_t {
 #include <vector>
 
 namespace pokesim::types {
-using StateId = std::uint16_t;
-using StateProbability = float;
-using StateRngSeed = std::uint32_t;
+using stateId = std::uint16_t;
+using stateProbability = float;
+using stateRngSeed = std::uint32_t;
 
-using BattleTurn = std::uint16_t;
+using battleTurn = std::uint16_t;
 
-using TeamPositionIndex = std::uint8_t;
-using MoveSlotPosition = std::uint8_t;
-
-template <typename T>
-using TeamPositions = std::vector<T>;
+using teamPositionIndex = std::uint8_t;
+using moveSlotPosition = std::uint8_t;
 
 template <typename T>
-using SideSlots = std::vector<T>;
+using teamPositions = std::vector<T>;
+
+template <typename T>
+using sideSlots = std::vector<T>;
 }  // namespace pokesim::types
 
 ////////////////////////// END OF src/Types/State.hpp //////////////////////////
@@ -12833,29 +12836,29 @@ struct PokemonStateSetup : internal::StateSetupBase {
   inline void initBlank();
 
   inline void setAutoID();
-  inline void setID(types::StateId id);
+  inline void setID(types::stateId id);
   inline void setSpecies(dex::Species speciesName);
 
   inline void setSide(types::entity entity);
   inline void setBattle(types::entity entity);
 
-  inline void setLevel(types::Level level);
+  inline void setLevel(types::level level);
   inline void setGender(dex::Gender gender);
   inline void setAbility(dex::Ability ability);
   inline void setItem(dex::Item item);
   inline void setMoves(const std::vector<types::entity>& moveSlots);
 
-  inline void setPostion(types::TeamPositionIndex position);
+  inline void setPostion(types::teamPositionIndex position);
   inline void setStatus(dex::Status status);
 
   inline void setNature(dex::Nature nature);
-  inline void setEVs(types::Ev hp, types::Ev atk, types::Ev def, types::Ev spa, types::Ev spd, types::Ev spe);
+  inline void setEVs(types::ev hp, types::ev atk, types::ev def, types::ev spa, types::ev spd, types::ev spe);
   inline void setEVs(const Evs& evs);
-  inline void setIVs(types::Iv hp, types::Iv atk, types::Iv def, types::Iv spa, types::Iv spd, types::Iv spe);
+  inline void setIVs(types::iv hp, types::iv atk, types::iv def, types::iv spa, types::iv spd, types::iv spe);
   inline void setIVs(const Ivs& ivs);
 
   template <typename BoostType>
-  inline void setBoost(types::Boost boost) {
+  inline void setBoost(types::boost boost) {
     static_assert(
       std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() ||
       std::is_same<SpaBoost, BoostType>() || std::is_same<SpdBoost, BoostType>() ||
@@ -12864,7 +12867,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   };
 
   template <typename StatType>
-  inline void setStat(types::Stat stat) {
+  inline void setStat(types::stat stat) {
     static_assert(
       std::is_same<stat::Hp, StatType>() || std::is_same<stat::Atk, StatType>() ||
       std::is_same<stat::Def, StatType>() || std::is_same<stat::Spa, StatType>() ||
@@ -12919,18 +12922,18 @@ struct BattleStateSetup : internal::StateSetupBase {
   inline void initBlank();
 
   inline void setAutoID();
-  inline void setID(types::StateId id);
+  inline void setID(types::stateId id);
   inline void setSide(PlayerSideId sideID, types::entity sideEntity);
 
   // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
-  inline void setRNGSeed(std::optional<types::StateRngSeed> seed = std::nullopt);
+  inline void setRNGSeed(std::optional<types::stateRngSeed> seed = std::nullopt);
   inline void setActionQueue(const std::vector<types::entity>& queue);
-  inline void setTurn(types::BattleTurn turn);
+  inline void setTurn(types::battleTurn turn);
   inline void setActiveMove(types::entity activeMove);
   inline void setActivePokemon(types::entity activePokemon);
   inline void setActiveTarget(types::entity activeTarget);
   inline void setActiveUser(types::entity activeSource);
-  inline void setProbability(types::StateProbability probability);
+  inline void setProbability(types::stateProbability probability);
 
   inline BattleStateSetup clone();
 };
@@ -12958,14 +12961,14 @@ enum class Move : std::uint16_t {
 #include <cstdint>
 
 namespace pokesim::types {
-using Pp = std::uint8_t;
-using BasePower = std::uint8_t;
-using BaseAccuracy = std::uint8_t;
-using MoveHits = std::uint8_t;
-using BaseEffectChance = std::uint8_t;
+using pp = std::uint8_t;
+using basePower = std::uint8_t;
+using baseAccuracy = std::uint8_t;
+using moveHits = std::uint8_t;
+using baseEffectChance = std::uint8_t;
 
-using Priority = std::int8_t;
-using FractionalPriority = std::int8_t;
+using priority = std::int8_t;
+using fractionalPriority = std::int8_t;
 }  // namespace pokesim::types
 
 ////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
@@ -12986,8 +12989,8 @@ struct MoveStateSetup : internal::StateSetupBase {
   inline void initBlank();
 
   inline void setName(dex::Move moveName);
-  inline void setPP(types::Pp pp);
-  inline void setMaxPP(types::Pp maxPp);
+  inline void setPP(types::pp pp);
+  inline void setMaxPP(types::pp maxPp);
 };
 }  // namespace pokesim
 
@@ -13128,10 +13131,12 @@ struct MoveEffect {
 /////////////////// START OF src/Types/Enums/ActionOrder.hpp ///////////////////
 
 #include <cstdint>
+#include <limits>
+#include <type_traits>
 
 namespace pokesim {
 enum class ActionOrder : std::uint8_t {
-  NONE = 0,
+  NONE = std::numeric_limits<std::underlying_type_t<ActionOrder>>::max(),
   TEAM = 1,
   START = 2,
   BEFORE_TURN = 4,
@@ -13411,7 +13416,7 @@ struct SlotDecision {
 
 struct SideDecision {
   PlayerSideId sideId = PlayerSideId::NONE;
-  types::internal::variant<types::SideSlots<SlotDecision>, types::TeamPositions<types::TeamPositionIndex>> decisions;
+  types::internal::variant<types::sideSlots<SlotDecision>, types::teamPositions<types::teamPositionIndex>> decisions;
 };
 }  // namespace pokesim
 
@@ -13486,8 +13491,8 @@ namespace internal {
 const std::uint8_t MAX_DAMAGE_ROLL_COUNT = 16U;
 }
 
-using Damage = std::uint16_t;
-using DamageRolls = std::array<Damage, internal::MAX_DAMAGE_ROLL_COUNT>;
+using damage = std::uint16_t;
+using damageRolls = std::array<damage, internal::MAX_DAMAGE_ROLL_COUNT>;
 }  // namespace pokesim::types
 
 ///////////////////////// END OF src/Types/Damage.hpp //////////////////////////
@@ -13527,29 +13532,29 @@ class Simulation {
  public:
   struct MoveCreationInfo {
     dex::Move name = dex::Move::NO_MOVE;
-    types::Pp pp = 1;
-    types::Pp maxPp = 1;
+    types::pp pp = 1;
+    types::pp maxPp = 1;
   };
 
   struct PokemonCreationInfo {
-    std::optional<types::StateId> id = std::nullopt;
+    std::optional<types::stateId> id = std::nullopt;
     dex::Species species = dex::Species::MISSING_NO;
     dex::Item item = dex::Item::NO_ITEM;
     dex::Ability ability = dex::Ability::NO_ABILITY;
     dex::Gender gender = dex::Gender::NO_GENDER;
     dex::Status status = dex::Status::NO_STATUS;
-    types::Level level = 1;
+    types::level level = 1;
 
     dex::Nature nature = dex::Nature::NO_NATURE;
     Evs evs;
     Ivs ivs;
     struct {
-      types::Stat hp = 1;
-      types::Stat atk = 1;
-      types::Stat def = 1;
-      types::Stat spa = 1;
-      types::Stat spd = 1;
-      types::Stat spe = 1;
+      types::stat hp = 1;
+      types::stat atk = 1;
+      types::stat def = 1;
+      types::stat spa = 1;
+      types::stat spd = 1;
+      types::stat spe = 1;
     } stats;
 
     std::vector<MoveCreationInfo> moves{};
@@ -13573,16 +13578,16 @@ class Simulation {
   struct AnalyzeEffectInputInfo {
     Slot attackerSlot = Slot::NONE;
     Slot defenderSlot = Slot::NONE;
-    types::EffectEnum effect;
+    types::effectEnum effect;
   };
 
   struct BattleCreationInfo {
     bool runWithSimulateTurn = false;
     bool runWithCalculateDamage = false;
     bool runWithAnalyzeEffect = false;
-    types::BattleTurn turn = 0;
-    std::optional<types::StateRngSeed> rngSeed = std::nullopt;
-    types::StateProbability probability = 1;
+    types::battleTurn turn = 0;
+    std::optional<types::stateRngSeed> rngSeed = std::nullopt;
+    types::stateProbability probability = 1;
 
     SideCreationInfo p1;
     SideCreationInfo p2;
@@ -13852,23 +13857,23 @@ struct Results {
 
 namespace calc_damage {
 struct MaxDamage {
-  types::Damage maxDamage = 0;
+  types::damage maxDamage = 0;
 };
 
 struct MinUsesUntilKo {
-  types::Damage minUsesUntilKo = 0;
+  types::damage minUsesUntilKo = 0;
 };
 
 struct AttackerHpRecovered {
-  types::Stat hpRecovered = 0;
+  types::stat hpRecovered = 0;
 };
 
 struct AttackerHpLost {
-  types::Stat hpLost = 0;
+  types::stat hpLost = 0;
 };
 
 struct HitCount {
-  types::MoveHits hitCount = 1;
+  types::moveHits hitCount = 1;
 };
 
 struct Results {
@@ -13891,11 +13896,11 @@ struct EffectMultiplier {
 };
 
 struct MultipliedMaxDamage {
-  types::Damage multipliedMaxDamage;
+  types::damage multipliedMaxDamage;
 };
 
 struct MultipliedDamageRolls {
-  types::DamageRolls multipliedDamageRolls;
+  types::damageRolls multipliedDamageRolls;
 };
 
 struct MultipliedKoChance {
@@ -14066,12 +14071,128 @@ void Simulation::run() {
 
 ///////////////////// END OF src/Simulation/Simulation.cpp /////////////////////
 
+/////////// START OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ///////////
+
+#include <cstdint>
+#include <vector>
+
+namespace pokesim {
+struct SpeedTieIndexes {
+  struct Span {
+    std::size_t start;
+    std::size_t length;
+  };
+
+  std::vector<Span> spans;
+};
+}  // namespace pokesim
+
+//////////// END OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ////////////
+
+//////////////////// START OF src/Components/SpeedSort.hpp /////////////////////
+
+namespace pokesim {
+// Data that determines the order actions take place
+struct SpeedSort {
+  // Order of the types of actions (lower first)
+  ActionOrder order = ActionOrder::NONE;
+  // Priority of the action (higher first)
+  types::priority priority = 0;
+  // Fractional priority of the action (higher first)
+  types::fractionalPriority fractionalPriority = 0;
+  // Speed of Pokemon using move (higher first if priority tie)
+  types::stat speed = 1;
+};
+}  // namespace pokesim
+
+///////////////////// END OF src/Components/SpeedSort.hpp //////////////////////
+
+/////////////// START OF src/SimulateTurn/Actions/SpeedSort.hpp ////////////////
+
+namespace pokesim {
+struct ActionQueue;
+inline void speedSort(types::handle handle, ActionQueue& actionQueue);
+}  // namespace pokesim
+
+//////////////// END OF src/SimulateTurn/Actions/SpeedSort.hpp /////////////////
+
+/////////////// START OF src/SimulateTurn/Actions/SpeedSort.cpp ////////////////
+
+#include <algorithm>
+#include <vector>
+
+namespace pokesim {
+void speedSort(types::handle handle, ActionQueue& actionQueue) {
+  std::vector<types::entity>& entityList = actionQueue.actionQueue;
+
+  if (entityList.size() == 1) return;
+  const types::registry* registry = handle.registry();
+
+  std::vector<std::pair<SpeedSort, types::entity>> speedSortList{entityList.size()};
+  for (types::entity entity : entityList) {
+    speedSortList.push_back({registry->get<SpeedSort>(entity), entity});
+  }
+
+  // TODO (aed3): Test how different sorting algorithms effect speed
+  std::sort(speedSortList.begin(), speedSortList.end(), [](const auto& pairA, const auto& pairB) {
+    if (pairA.first.order != pairB.first.order) {
+      return pairA.first.order < pairB.first.order;
+    }
+
+    types::priority aPriority = pairA.first.priority + pairA.first.fractionalPriority;
+    types::priority bPriority = pairB.first.priority + pairB.first.fractionalPriority;
+    if (aPriority != bPriority) {
+      return bPriority < aPriority;
+    }
+
+    if (pairA.first.speed != pairB.first.speed) {
+      return pairB.first.speed < pairA.first.speed;
+    }
+
+    return true;
+  });
+
+  SpeedTieIndexes speedTies;
+  std::size_t lastEqual = 0, tieCount = 1;
+
+  auto speedSortEqual = [](const SpeedSort& speedSortA, const SpeedSort& speedSortB) {
+    return speedSortA.order == speedSortB.order && speedSortA.priority == speedSortB.priority &&
+           speedSortA.speed == speedSortB.speed && speedSortA.fractionalPriority == speedSortB.fractionalPriority;
+  };
+
+  for (std::size_t i = 0; i < speedSortList.size(); i++) {
+    entityList[i] = speedSortList[i].second;
+
+    if (i > 0 && speedSortEqual(speedSortList[i].first, speedSortList[i - 1].first)) {
+      tieCount++;
+    }
+    else {
+      if (tieCount > 1) {
+        speedTies.spans.push_back({lastEqual, tieCount});
+      }
+      lastEqual = i;
+      tieCount = 1;
+    }
+  }
+
+  if (tieCount > 1) {
+    speedTies.spans.push_back({lastEqual, tieCount});
+  }
+
+  if (speedTies.spans.size() > 1) {
+    handle.emplace<SpeedTieIndexes>(speedTies);
+  }
+}
+}  // namespace pokesim
+
+//////////////// END OF src/SimulateTurn/Actions/SpeedSort.cpp /////////////////
+
 //////////////// START OF src/Components/EntityHolders/Team.hpp ////////////////
 
 namespace pokesim {
 // Contains a list of entities pointing to the Pokemon on a team.
 struct Team {
-  types::TeamPositions<types::entity> team{};
+  types::teamPositions<types::entity> team{};
 };
 }  // namespace pokesim
 
@@ -14176,29 +14297,11 @@ struct Terastallize {};
 namespace pokesim::action {
 // Action Tag: When team member order has been picked as part of team preview
 struct Team {
-  types::TeamPositions<types::TeamPositionIndex> teamOrder;
+  types::teamPositions<types::teamPositionIndex> teamOrder;
 };
 }  // namespace pokesim::action
 
 ////////////// END OF src/Components/SimulateTurn/TeamAction.hpp ///////////////
-
-//////////////////// START OF src/Components/SpeedSort.hpp /////////////////////
-
-namespace pokesim {
-// Data that determines the order actions take place
-struct SpeedSort {
-  // Order of the types of actions (lower first)
-  ActionOrder order = ActionOrder::NONE;
-  // Priority of the action (lower first)
-  types::Priority priority = 0;
-  // Fractional priority of the action (lower first)
-  types::FractionalPriority fractionalPriority = 0;
-  // Speed of Pokemon using move (higher first if priority tie)
-  types::Stat speed = 1;
-};
-}  // namespace pokesim
-
-///////////////////// END OF src/Components/SpeedSort.hpp //////////////////////
 
 //////////// START OF src/SimulateTurn/Actions/ResolveDecision.cpp /////////////
 
@@ -14208,8 +14311,8 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision,
   ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty");
   types::registry& registry = *sideHandle.registry();
 
-  if (sideDecision.decisions.holds<types::SideSlots<SlotDecision>>()) {
-    const auto& decisions = sideDecision.decisions.get<types::SideSlots<SlotDecision>>();
+  if (sideDecision.decisions.holds<types::sideSlots<SlotDecision>>()) {
+    const auto& decisions = sideDecision.decisions.get<types::sideSlots<SlotDecision>>();
 
     for (const SlotDecision& decision : decisions) {
       ENTT_ASSERT(decision.sourceSlot != Slot::NONE, "Source slot must be assigned");
@@ -14259,8 +14362,8 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision,
       sideActionQueue.actionQueue.push_back(actionHandle.entity());
     }
   }
-  else if (sideDecision.decisions.holds<types::TeamPositions<types::TeamPositionIndex>>()) {
-    const auto& teamOrder = sideDecision.decisions.get<types::TeamPositions<types::TeamPositionIndex>>();
+  else if (sideDecision.decisions.holds<types::teamPositions<types::teamPositionIndex>>()) {
+    const auto& teamOrder = sideDecision.decisions.get<types::teamPositions<types::teamPositionIndex>>();
 
     ENTT_ASSERT(
       sideHandle.get<Team>().team.size() == teamOrder.size(),
@@ -14302,12 +14405,12 @@ struct HiddenAbility {
 namespace pokesim {
 // Contains all of the base stats of a species
 struct BaseStats {
-  types::BaseStat hp = 1;
-  types::BaseStat atk = 1;
-  types::BaseStat def = 1;
-  types::BaseStat spa = 1;
-  types::BaseStat spd = 1;
-  types::BaseStat spe = 1;
+  types::baseStat hp = 1;
+  types::baseStat atk = 1;
+  types::baseStat def = 1;
+  types::baseStat spa = 1;
+  types::baseStat spd = 1;
+  types::baseStat spe = 1;
 };
 }  // namespace pokesim
 
@@ -14385,8 +14488,8 @@ struct SpeciesDexDataSetup : DexDataSetup {
   inline void setName(Species species);
   inline void setType(Type type1, Type type2 = Type::NO_TYPE);
   inline void setBaseStats(
-    types::BaseStat hp, types::BaseStat atk, types::BaseStat def, types::BaseStat spa, types::BaseStat spd,
-    types::BaseStat spe);
+    types::baseStat hp, types::baseStat atk, types::baseStat def, types::baseStat spa, types::baseStat spd,
+    types::baseStat spe);
   inline void setPrimaryAbility(Ability ability);
   inline void setSecondaryAbility(Ability ability);
   inline void setHiddenAbility(Ability ability);
@@ -14407,8 +14510,8 @@ void SpeciesDexDataSetup::setType(Type type1, Type type2) {
 }
 
 void SpeciesDexDataSetup::setBaseStats(
-  types::BaseStat hp, types::BaseStat atk, types::BaseStat def, types::BaseStat spa, types::BaseStat spd,
-  types::BaseStat spe) {
+  types::baseStat hp, types::baseStat atk, types::baseStat def, types::baseStat spa, types::baseStat spd,
+  types::baseStat spe) {
   handle.emplace<BaseStats>(hp, atk, def, spa, spd, spe);
 }
 
@@ -14431,7 +14534,7 @@ void SpeciesDexDataSetup::setHiddenAbility(Ability ability) {
 
 namespace pokesim {
 struct Accuracy {
-  types::BaseAccuracy accuracy = 100;
+  types::baseAccuracy accuracy = 100;
 };
 }  // namespace pokesim
 
@@ -14441,7 +14544,7 @@ struct Accuracy {
 
 namespace pokesim {
 struct BasePower {
-  types::BasePower basePower = 1;
+  types::basePower basePower = 1;
 };
 }  // namespace pokesim
 
@@ -14456,7 +14559,7 @@ namespace pokesim {
  * Examples: Air Slash has a 60% chance to flinch, Harvest has a 50% chance to restore a used berry.
  */
 struct Chance {
-  types::BaseEffectChance chance = 100;
+  types::baseEffectChance chance = 100;
 };
 }  // namespace pokesim
 
@@ -14467,8 +14570,8 @@ struct Chance {
 namespace pokesim {
 // The minimum and maximum number of hits a multi-hit move can cause
 struct MultiHit {
-  types::MoveHits minHits = 2;
-  types::MoveHits maxHits = 5;
+  types::moveHits minHits = 2;
+  types::moveHits maxHits = 5;
 };
 }  // namespace pokesim
 
@@ -14488,11 +14591,11 @@ struct TypeName {
 
 namespace pokesim {
 struct Pp {
-  types::Pp pp = 0;
+  types::pp pp = 0;
 };
 
 struct MaxPp {
-  types::Pp maxPp = 5;
+  types::pp maxPp = 5;
 };
 }  // namespace pokesim
 
@@ -14502,7 +14605,7 @@ struct MaxPp {
 
 namespace pokesim {
 struct MovePriority {
-  types::Priority priority = 0;
+  types::priority priority = 0;
 };
 }  // namespace pokesim
 
@@ -14551,16 +14654,16 @@ struct MoveDexDataSetup : DexDataSetup {
 
   inline void setName(Move move);
   inline void setType(Type type);
-  inline void setAccuracy(types::BaseAccuracy accuracy);
-  inline void setBasePower(types::BasePower basePower);
+  inline void setAccuracy(types::baseAccuracy accuracy);
+  inline void setBasePower(types::basePower basePower);
 
   inline void setCategoryPhysical();
   inline void setCategorySpecial();
   inline void setCategoryStatus();
 
-  inline void setBasePp(types::Pp pp);
-  inline void setPriority(types::Priority priority);
-  inline void setMultiHit(types::MoveHits minHits, types::MoveHits maxHits);
+  inline void setBasePp(types::pp pp);
+  inline void setPriority(types::priority priority);
+  inline void setMultiHit(types::moveHits minHits, types::moveHits maxHits);
 
   inline void setPrimaryEffect(types::entity entity);
   inline void setSecondaryEffect(types::entity entity);
@@ -14570,12 +14673,12 @@ struct MoveEffectSetup : DexDataSetup {
   MoveEffectSetup(Pokedex* pokedex) : DexDataSetup(pokedex) {}
   types::entity entity() const { return handle; }
 
-  inline void setChance(types::BaseEffectChance chance);
+  inline void setChance(types::baseEffectChance chance);
   inline void setEffectsSelf();
   inline void setEffectsTarget();
 
   template <typename BoostType>
-  inline void setBoost(types::Boost boost) {
+  inline void setBoost(types::boost boost) {
     static_assert(
       std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() ||
       std::is_same<SpaBoost, BoostType>() || std::is_same<SpdBoost, BoostType>() ||
@@ -14598,11 +14701,11 @@ void MoveDexDataSetup::setType(Type type) {
   handle.emplace<TypeName>(type);
 }
 
-void MoveDexDataSetup::setAccuracy(types::BaseAccuracy accuracy) {
+void MoveDexDataSetup::setAccuracy(types::baseAccuracy accuracy) {
   handle.emplace<Accuracy>(accuracy);
 }
 
-void MoveDexDataSetup::setBasePower(types::BasePower basePower) {
+void MoveDexDataSetup::setBasePower(types::basePower basePower) {
   handle.emplace<BasePower>(basePower);
 }
 
@@ -14621,15 +14724,15 @@ void MoveDexDataSetup::setCategoryStatus() {
   handle.emplace<move::tags::Status>();
 }
 
-void MoveDexDataSetup::setBasePp(types::Pp pp) {
+void MoveDexDataSetup::setBasePp(types::pp pp) {
   handle.emplace<Pp>(pp);
 }
 
-void MoveDexDataSetup::setPriority(types::Priority priority) {
+void MoveDexDataSetup::setPriority(types::priority priority) {
   handle.emplace<MovePriority>(priority);
 }
 
-void MoveDexDataSetup::setMultiHit(types::MoveHits minHits, types::MoveHits maxHits) {
+void MoveDexDataSetup::setMultiHit(types::moveHits minHits, types::moveHits maxHits) {
   handle.emplace<MultiHit>(minHits, maxHits);
 }
 
@@ -14641,7 +14744,7 @@ void MoveDexDataSetup::setSecondaryEffect(types::entity entity) {
   handle.emplace<MoveEffect>(false, entity);
 }
 
-void MoveEffectSetup::setChance(types::BaseEffectChance chance) {
+void MoveEffectSetup::setChance(types::baseEffectChance chance) {
   handle.emplace<Chance>(chance);
 }
 
@@ -14686,7 +14789,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct Ampharos {
   static constexpr Species name = Species::AMPHAROS;
-  static constexpr types::BaseStat hp = 90, atk = 75, def = 85, spa = 115, spd = 90, spe = 55;
+  static constexpr types::baseStat hp = 90, atk = 75, def = 85, spa = 115, spd = 90, spe = 55;
 
   static constexpr SpeciesTypes type = {Type::ELECTRIC_TYPE};
 
@@ -14715,7 +14818,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct Dragapult {
   static constexpr Species name = Species::DRAGAPULT;
-  static constexpr types::BaseStat hp = 88, atk = 120, def = 75, spa = 100, spd = 75, spe = 142;
+  static constexpr types::baseStat hp = 88, atk = 120, def = 75, spa = 100, spd = 75, spe = 142;
 
   static constexpr SpeciesTypes type = {Type::DRAGON_TYPE, Type::GHOST_TYPE};
 
@@ -14745,7 +14848,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct Empoleon {
   static constexpr Species name = Species::EMPOLEON;
-  static constexpr types::BaseStat hp = 84, atk = 86, def = 88, spa = 111, spd = 101, spe = 60;
+  static constexpr types::baseStat hp = 84, atk = 86, def = 88, spa = 111, spd = 101, spe = 60;
 
   static constexpr SpeciesTypes type = {Type::WATER_TYPE, Type::STEEL_TYPE};
 
@@ -14779,7 +14882,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct Gardevoir {
   static constexpr Species name = Species::GARDEVOIR;
-  static constexpr types::BaseStat hp = 68, atk = 65, def = 65, spa = 125, spd = 115, spe = 80;
+  static constexpr types::baseStat hp = 68, atk = 65, def = 65, spa = 125, spd = 115, spe = 80;
 
   static constexpr SpeciesTypes type = {Type::PSYCHIC_TYPE, Type::FAIRY_TYPE};
 
@@ -14809,7 +14912,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct Pangoro {
   static constexpr Species name = Species::PANGORO;
-  static constexpr types::BaseStat hp = 95, atk = 124, def = 78, spa = 69, spd = 71, spe = 58;
+  static constexpr types::baseStat hp = 95, atk = 124, def = 78, spa = 69, spd = 71, spe = 58;
 
   static constexpr SpeciesTypes type = {Type::FIGHTING_TYPE, Type::DARK_TYPE};
 
@@ -14839,7 +14942,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct Ribombee {
   static constexpr Species name = Species::RIBOMBEE;
-  static constexpr types::BaseStat hp = 60, atk = 55, def = 60, spa = 95, spd = 70, spe = 124;
+  static constexpr types::baseStat hp = 60, atk = 55, def = 60, spa = 95, spd = 70, spe = 124;
 
   static constexpr SpeciesTypes type = {Type::BUG_TYPE, Type::FAIRY_TYPE};
 
@@ -14959,10 +15062,10 @@ struct FuryAttack {
   static constexpr Type type = Type::NORMAL_TYPE;
   static constexpr MoveCategory category = MoveCategory::PHYSICAL;
 
-  static constexpr types::BaseAccuracy accuracy = 85;
-  static constexpr types::BasePower basePower = 15;
-  static constexpr types::Pp basePp = 20;
-  static constexpr types::MoveHits minHits = 2, maxHits = 5;
+  static constexpr types::baseAccuracy accuracy = 85;
+  static constexpr types::basePower basePower = 15;
+  static constexpr types::pp basePp = 20;
+  static constexpr types::moveHits minHits = 2, maxHits = 5;
 
   static constexpr internal::Tags<move::tags::AnySingleTarget, move::tags::Contact> moveTags{};
 
@@ -14991,9 +15094,9 @@ struct KnockOff {
   static constexpr Type type = Type::DARK_TYPE;
   static constexpr MoveCategory category = MoveCategory::PHYSICAL;
 
-  static constexpr types::BaseAccuracy accuracy = 100;
-  static constexpr types::BasePower basePower = 65;
-  static constexpr types::Pp basePp = 20;
+  static constexpr types::baseAccuracy accuracy = 100;
+  static constexpr types::basePower basePower = 65;
+  static constexpr types::pp basePp = 20;
 
   static constexpr internal::Tags<move::tags::AnySingleTarget, move::tags::Contact> moveTags{};
 
@@ -15022,13 +15125,13 @@ struct Moonblast {
   static constexpr Type type = Type::FAIRY_TYPE;
   static constexpr MoveCategory category = MoveCategory::SPECIAL;
 
-  static constexpr types::BaseAccuracy accuracy = 100;
-  static constexpr types::BasePower basePower = 95;
-  static constexpr types::Pp basePp = 15;
+  static constexpr types::baseAccuracy accuracy = 100;
+  static constexpr types::basePower basePower = 95;
+  static constexpr types::pp basePp = 15;
 
   struct targetSecondaryEffect {
-    static constexpr types::BaseEffectChance chance = 30;
-    static constexpr types::Boost spaBoost = -1;
+    static constexpr types::baseEffectChance chance = 30;
+    static constexpr types::boost spaBoost = -1;
 
     static constexpr internal::Tags<> effectTags{};
   };
@@ -15060,10 +15163,10 @@ struct QuiverDance {
   static constexpr Type type = Type::BUG_TYPE;
   static constexpr MoveCategory category = MoveCategory::STATUS;
 
-  static constexpr types::Pp basePp = 20;
+  static constexpr types::pp basePp = 20;
 
   struct sourcePrimaryEffect {
-    static constexpr types::Boost spaBoost = 1, spdBoost = 1, speBoost = 1;
+    static constexpr types::boost spaBoost = 1, spdBoost = 1, speBoost = 1;
 
     static constexpr internal::Tags<> effectTags{};
   };
@@ -15113,12 +15216,12 @@ struct Thunderbolt {
   static constexpr Type type = Type::ELECTRIC_TYPE;
   static constexpr MoveCategory category = MoveCategory::SPECIAL;
 
-  static constexpr types::BaseAccuracy accuracy = 100;
-  static constexpr types::BasePower basePower = 90;
-  static constexpr types::Pp basePp = 15;
+  static constexpr types::baseAccuracy accuracy = 100;
+  static constexpr types::basePower basePower = 90;
+  static constexpr types::pp basePp = 15;
 
   struct targetSecondaryEffect {
-    static constexpr types::BaseEffectChance chance = 10;
+    static constexpr types::baseEffectChance chance = 10;
 
     static constexpr internal::Tags<status::tags::Paralysis> effectTags{};
   };
@@ -15150,8 +15253,8 @@ struct WillOWisp {
   static constexpr Type type = Type::FIRE_TYPE;
   static constexpr MoveCategory category = MoveCategory::STATUS;
 
-  static constexpr types::BaseAccuracy accuracy = 85;
-  static constexpr types::Pp basePp = 15;
+  static constexpr types::baseAccuracy accuracy = 85;
+  static constexpr types::pp basePp = 15;
 
   struct targetPrimaryEffect {
     static constexpr internal::Tags<status::tags::Burn> effectTags{};
@@ -16679,7 +16782,7 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
 
   for (std::size_t i = 0; i < team.size(); i++) {
     teamEntities.team.push_back(team[i].entity());
-    team[i].setPostion((types::TeamPositionIndex)(i + 1));
+    team[i].setPostion((types::teamPositionIndex)(i + 1));
     team[i].setSide(entity());
     team[i].setBattle(battle.battle);
   }
@@ -16713,7 +16816,7 @@ struct MoveSlots {
 
 namespace pokesim {
 struct Id {
-  types::StateId id = 1;
+  types::stateId id = 1;
 };
 }  // namespace pokesim
 
@@ -16724,7 +16827,7 @@ struct Id {
 namespace pokesim {
 // A Pokemon's level
 struct Level {
-  types::Level level = 1;
+  types::level level = 1;
 };
 }  // namespace pokesim
 
@@ -16775,7 +16878,7 @@ struct StatusName {
 namespace pokesim {
 // The position of a Pokemon in its team's order (starts at 1)
 struct Position {
-  types::TeamPositionIndex position = 1;
+  types::teamPositionIndex position = 1;
 };
 }  // namespace pokesim
 
@@ -16795,7 +16898,7 @@ void PokemonStateSetup::setAutoID() {
   setID((uint16_t)handle.registry()->view<SpeciesName>().size() + 1);
 }
 
-void PokemonStateSetup::setID(types::StateId id) {
+void PokemonStateSetup::setID(types::stateId id) {
   handle.emplace<Id>(id);
 }
 
@@ -16811,7 +16914,7 @@ void PokemonStateSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
 }
 
-void PokemonStateSetup::setLevel(types::Level level) {
+void PokemonStateSetup::setLevel(types::level level) {
   handle.emplace<Level>(level);
 }
 
@@ -16833,7 +16936,7 @@ void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
   handle.emplace<MoveSlots>(moveSlots);
 }
 
-void PokemonStateSetup::setPostion(types::TeamPositionIndex position) {
+void PokemonStateSetup::setPostion(types::teamPositionIndex position) {
   handle.emplace<Position>(position);
 }
 
@@ -16848,7 +16951,7 @@ void PokemonStateSetup::setNature(dex::Nature nature) {
 }
 
 void PokemonStateSetup::setEVs(
-  types::Ev hp, types::Ev atk, types::Ev def, types::Ev spa, types::Ev spd, types::Ev spe) {
+  types::ev hp, types::ev atk, types::ev def, types::ev spa, types::ev spd, types::ev spe) {
   handle.emplace<Evs>(hp, atk, def, spa, spd, spe);
 }
 
@@ -16857,7 +16960,7 @@ void PokemonStateSetup::setEVs(const Evs& evs) {
 }
 
 void PokemonStateSetup::setIVs(
-  types::Iv hp, types::Iv atk, types::Iv def, types::Iv spa, types::Iv spd, types::Iv spe) {
+  types::iv hp, types::iv atk, types::iv def, types::iv spa, types::iv spd, types::iv spe) {
   handle.emplace<Ivs>(hp, atk, def, spa, spd, spe);
 }
 
@@ -16881,11 +16984,11 @@ void MoveStateSetup::setName(dex::Move moveName) {
   handle.emplace<MoveName>(moveName);
 }
 
-void MoveStateSetup::setPP(types::Pp pp) {
+void MoveStateSetup::setPP(types::pp pp) {
   handle.emplace<Pp>(pp);
 }
 
-void MoveStateSetup::setMaxPP(types::Pp maxPp) {
+void MoveStateSetup::setMaxPP(types::pp maxPp) {
   handle.emplace<MaxPp>(maxPp);
 }
 }  // namespace pokesim
@@ -16901,7 +17004,7 @@ namespace pokesim {
  * Calculated by multiplying the various Accuracy and Chance numbers of a battle state's events.
  */
 struct Probability {
-  types::StateProbability probability = 1;
+  types::stateProbability probability = 1;
 };
 }  // namespace pokesim
 
@@ -16911,7 +17014,7 @@ struct Probability {
 
 namespace pokesim {
 struct RngSeed {
-  types::StateRngSeed seed = 0;
+  types::stateRngSeed seed = 0;
 };
 }  // namespace pokesim
 
@@ -16950,7 +17053,7 @@ struct ActivePokemon {};
 namespace pokesim {
 // The current turn of a battle
 struct Turn {
-  types::BattleTurn turn = 0;
+  types::battleTurn turn = 0;
 };
 }  // namespace pokesim
 
@@ -16974,10 +17077,10 @@ void BattleStateSetup::initBlank() {
 }
 
 void BattleStateSetup::setAutoID() {
-  setID((types::StateId)handle.registry()->view<Sides>().size());
+  setID((types::stateId)handle.registry()->view<Sides>().size());
 }
 
-void BattleStateSetup::setID(types::StateId id) {
+void BattleStateSetup::setID(types::stateId id) {
   handle.emplace<Id>(id);
 }
 
@@ -16986,19 +17089,20 @@ void BattleStateSetup::setSide(PlayerSideId sideID, types::entity sideEntity) {
   switch (sideID) {
     case PlayerSideId::P1: sides.p1 = sideEntity; break;
     case PlayerSideId::P2: sides.p2 = sideEntity; break;
+    default: ENTT_FAIL("sideID must be assigned P1 or P2"); break;
   }
 }
 
-void BattleStateSetup::setRNGSeed(std::optional<types::StateRngSeed> seed) {
+void BattleStateSetup::setRNGSeed(std::optional<types::stateRngSeed> seed) {
   handle.emplace<RngSeed>(
-    seed.value_or((types::StateRngSeed)std::chrono::high_resolution_clock::now().time_since_epoch().count()));
+    seed.value_or((types::stateRngSeed)std::chrono::high_resolution_clock::now().time_since_epoch().count()));
 }
 
 void BattleStateSetup::setActionQueue(const std::vector<types::entity>& queue) {
   handle.emplace<ActionQueue>(queue);
 }
 
-void BattleStateSetup::setTurn(types::BattleTurn turn) {
+void BattleStateSetup::setTurn(types::battleTurn turn) {
   handle.emplace<Turn>(turn);
 }
 
@@ -17018,7 +17122,7 @@ void BattleStateSetup::setActiveUser(types::entity activeSource) {
   handle.registry()->emplace<tags::ActiveMoveUser>(activeSource);
 }
 
-void BattleStateSetup::setProbability(types::StateProbability probability) {
+void BattleStateSetup::setProbability(types::stateProbability probability) {
   handle.emplace<Probability>(probability);
 }
 
@@ -17036,7 +17140,7 @@ BattleStateSetup BattleStateSetup::clone() {
 
 namespace pokesim {
 types::entity slotToEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot) {
-  types::TeamPositionIndex index = ((std::uint8_t)targetSlot - 1) / 2;
+  types::teamPositionIndex index = ((std::uint8_t)targetSlot - 1) / 2;
 
   const Team& team = registry.get<Team>(sideEntity);
   ENTT_ASSERT(team.team.size() >= index, "Choosing a target slot for team member that does not exist");
@@ -17127,7 +17231,7 @@ void InputSetup::setDefender(types::entity entity) {
   handle.emplace<Defender>(entity);
 }
 
-void InputSetup::setEffect(types::EffectEnum effect) {
+void InputSetup::setEffect(types::effectEnum effect) {
   if (effect.holds<dex::PseudoWeather>()) {
     handle.emplace<PseudoWeatherName>(effect.get<dex::PseudoWeather>());
   }
