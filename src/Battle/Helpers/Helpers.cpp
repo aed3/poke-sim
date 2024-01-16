@@ -10,7 +10,7 @@
 
 namespace pokesim {
 types::entity slotToEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot) {
-  types::TeamPositionIndex index = ((std::uint8_t)targetSlot - 1) / 2;
+  types::teamPositionIndex index = ((std::uint8_t)targetSlot - 1) / 2;
 
   const Team& team = registry.get<Team>(sideEntity);
   ENTT_ASSERT(team.team.size() >= index, "Choosing a target slot for team member that does not exist");

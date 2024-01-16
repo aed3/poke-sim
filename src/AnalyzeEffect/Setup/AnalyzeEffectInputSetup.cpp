@@ -30,7 +30,7 @@ void InputSetup::setDefender(types::entity entity) {
   handle.emplace<Defender>(entity);
 }
 
-void InputSetup::setEffect(types::EffectEnum effect) {
+void InputSetup::setEffect(types::effectEnum effect) {
   if (effect.holds<dex::PseudoWeather>()) {
     handle.emplace<PseudoWeatherName>(effect.get<dex::PseudoWeather>());
   }

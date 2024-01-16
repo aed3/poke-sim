@@ -4,18 +4,18 @@
 #include <vector>
 
 namespace pokesim::types {
-using StateId = std::uint16_t;
-using StateProbability = float;
-using StateRngSeed = std::uint32_t;
+using stateId = std::uint16_t;
+using stateProbability = float;
+using stateRngSeed = std::uint32_t;
 
-using BattleTurn = std::uint16_t;
+using battleTurn = std::uint16_t;
 
-using TeamPositionIndex = std::uint8_t;
-using MoveSlotPosition = std::uint8_t;
-
-template <typename T>
-using TeamPositions = std::vector<T>;
+using teamPositionIndex = std::uint8_t;
+using moveSlotPosition = std::uint8_t;
 
 template <typename T>
-using SideSlots = std::vector<T>;
+using teamPositions = std::vector<T>;
+
+template <typename T>
+using sideSlots = std::vector<T>;
 }  // namespace pokesim::types

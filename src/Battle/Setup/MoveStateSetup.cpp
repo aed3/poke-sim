@@ -15,11 +15,11 @@ void MoveStateSetup::setName(dex::Move moveName) {
   handle.emplace<MoveName>(moveName);
 }
 
-void MoveStateSetup::setPP(types::Pp pp) {
+void MoveStateSetup::setPP(types::pp pp) {
   handle.emplace<Pp>(pp);
 }
 
-void MoveStateSetup::setMaxPP(types::Pp maxPp) {
+void MoveStateSetup::setMaxPP(types::pp maxPp) {
   handle.emplace<MaxPp>(maxPp);
 }
 }  // namespace pokesim

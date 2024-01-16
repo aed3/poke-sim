@@ -24,11 +24,11 @@ void MoveDexDataSetup::setType(Type type) {
   handle.emplace<TypeName>(type);
 }
 
-void MoveDexDataSetup::setAccuracy(types::BaseAccuracy accuracy) {
+void MoveDexDataSetup::setAccuracy(types::baseAccuracy accuracy) {
   handle.emplace<Accuracy>(accuracy);
 }
 
-void MoveDexDataSetup::setBasePower(types::BasePower basePower) {
+void MoveDexDataSetup::setBasePower(types::basePower basePower) {
   handle.emplace<BasePower>(basePower);
 }
 
@@ -47,15 +47,15 @@ void MoveDexDataSetup::setCategoryStatus() {
   handle.emplace<move::tags::Status>();
 }
 
-void MoveDexDataSetup::setBasePp(types::Pp pp) {
+void MoveDexDataSetup::setBasePp(types::pp pp) {
   handle.emplace<Pp>(pp);
 }
 
-void MoveDexDataSetup::setPriority(types::Priority priority) {
+void MoveDexDataSetup::setPriority(types::priority priority) {
   handle.emplace<MovePriority>(priority);
 }
 
-void MoveDexDataSetup::setMultiHit(types::MoveHits minHits, types::MoveHits maxHits) {
+void MoveDexDataSetup::setMultiHit(types::moveHits minHits, types::moveHits maxHits) {
   handle.emplace<MultiHit>(minHits, maxHits);
 }
 
@@ -67,7 +67,7 @@ void MoveDexDataSetup::setSecondaryEffect(types::entity entity) {
   handle.emplace<MoveEffect>(false, entity);
 }
 
-void MoveEffectSetup::setChance(types::BaseEffectChance chance) {
+void MoveEffectSetup::setChance(types::baseEffectChance chance) {
   handle.emplace<Chance>(chance);
 }
 

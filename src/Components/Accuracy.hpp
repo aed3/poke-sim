@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct Accuracy {
-  types::BaseAccuracy accuracy = 100;
+  types::baseAccuracy accuracy = 100;
 };
 }  // namespace pokesim

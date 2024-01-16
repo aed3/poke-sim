@@ -9,6 +9,6 @@
 #include "Utilities/variant.hpp"
 
 namespace pokesim::types {
-using EffectEnum = internal::variant<
+using effectEnum = internal::variant<
   std::monostate, dex::PseudoWeather, dex::SideCondition, dex::Status, dex::Terrain, dex::Volatile, dex::Weather>;
 }  // namespace pokesim::types

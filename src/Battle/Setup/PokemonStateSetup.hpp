@@ -33,29 +33,29 @@ struct PokemonStateSetup : internal::StateSetupBase {
   /*_inline_*/ void initBlank();
 
   /*_inline_*/ void setAutoID();
-  /*_inline_*/ void setID(types::StateId id);
+  /*_inline_*/ void setID(types::stateId id);
   /*_inline_*/ void setSpecies(dex::Species speciesName);
 
   /*_inline_*/ void setSide(types::entity entity);
   /*_inline_*/ void setBattle(types::entity entity);
 
-  /*_inline_*/ void setLevel(types::Level level);
+  /*_inline_*/ void setLevel(types::level level);
   /*_inline_*/ void setGender(dex::Gender gender);
   /*_inline_*/ void setAbility(dex::Ability ability);
   /*_inline_*/ void setItem(dex::Item item);
   /*_inline_*/ void setMoves(const std::vector<types::entity>& moveSlots);
 
-  /*_inline_*/ void setPostion(types::TeamPositionIndex position);
+  /*_inline_*/ void setPostion(types::teamPositionIndex position);
   /*_inline_*/ void setStatus(dex::Status status);
 
   /*_inline_*/ void setNature(dex::Nature nature);
-  /*_inline_*/ void setEVs(types::Ev hp, types::Ev atk, types::Ev def, types::Ev spa, types::Ev spd, types::Ev spe);
+  /*_inline_*/ void setEVs(types::ev hp, types::ev atk, types::ev def, types::ev spa, types::ev spd, types::ev spe);
   /*_inline_*/ void setEVs(const Evs& evs);
-  /*_inline_*/ void setIVs(types::Iv hp, types::Iv atk, types::Iv def, types::Iv spa, types::Iv spd, types::Iv spe);
+  /*_inline_*/ void setIVs(types::iv hp, types::iv atk, types::iv def, types::iv spa, types::iv spd, types::iv spe);
   /*_inline_*/ void setIVs(const Ivs& ivs);
 
   template <typename BoostType>
-  /*_inline_*/ void setBoost(types::Boost boost) {
+  /*_inline_*/ void setBoost(types::boost boost) {
     static_assert(
       std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() ||
       std::is_same<SpaBoost, BoostType>() || std::is_same<SpdBoost, BoostType>() ||
@@ -64,7 +64,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   };
 
   template <typename StatType>
-  /*_inline_*/ void setStat(types::Stat stat) {
+  /*_inline_*/ void setStat(types::stat stat) {
     static_assert(
       std::is_same<stat::Hp, StatType>() || std::is_same<stat::Atk, StatType>() ||
       std::is_same<stat::Def, StatType>() || std::is_same<stat::Spa, StatType>() ||

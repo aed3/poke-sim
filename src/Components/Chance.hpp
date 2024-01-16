@@ -9,6 +9,6 @@ namespace pokesim {
  * Examples: Air Slash has a 60% chance to flinch, Harvest has a 50% chance to restore a used berry.
  */
 struct Chance {
-  types::BaseEffectChance chance = 100;
+  types::baseEffectChance chance = 100;
 };
 }  // namespace pokesim

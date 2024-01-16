@@ -18,8 +18,8 @@ void SpeciesDexDataSetup::setType(Type type1, Type type2) {
 }
 
 void SpeciesDexDataSetup::setBaseStats(
-  types::BaseStat hp, types::BaseStat atk, types::BaseStat def, types::BaseStat spa, types::BaseStat spd,
-  types::BaseStat spe) {
+  types::baseStat hp, types::baseStat atk, types::baseStat def, types::baseStat spa, types::baseStat spd,
+  types::baseStat spe) {
   handle.emplace<BaseStats>(hp, atk, def, spa, spd, spe);
 }
 

@@ -12,7 +12,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct Ampharos {
   static constexpr Species name = Species::AMPHAROS;
-  static constexpr types::BaseStat hp = 90, atk = 75, def = 85, spa = 115, spd = 90, spe = 55;
+  static constexpr types::baseStat hp = 90, atk = 75, def = 85, spa = 115, spd = 90, spe = 55;
 
   static constexpr SpeciesTypes type = {Type::ELECTRIC_TYPE};
 

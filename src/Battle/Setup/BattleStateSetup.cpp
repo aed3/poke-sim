@@ -30,10 +30,10 @@ void BattleStateSetup::initBlank() {
 }
 
 void BattleStateSetup::setAutoID() {
-  setID((types::StateId)handle.registry()->view<Sides>().size());
+  setID((types::stateId)handle.registry()->view<Sides>().size());
 }
 
-void BattleStateSetup::setID(types::StateId id) {
+void BattleStateSetup::setID(types::stateId id) {
   handle.emplace<Id>(id);
 }
 
@@ -46,16 +46,16 @@ void BattleStateSetup::setSide(PlayerSideId sideID, types::entity sideEntity) {
   }
 }
 
-void BattleStateSetup::setRNGSeed(std::optional<types::StateRngSeed> seed) {
+void BattleStateSetup::setRNGSeed(std::optional<types::stateRngSeed> seed) {
   handle.emplace<RngSeed>(
-    seed.value_or((types::StateRngSeed)std::chrono::high_resolution_clock::now().time_since_epoch().count()));
+    seed.value_or((types::stateRngSeed)std::chrono::high_resolution_clock::now().time_since_epoch().count()));
 }
 
 void BattleStateSetup::setActionQueue(const std::vector<types::entity>& queue) {
   handle.emplace<ActionQueue>(queue);
 }
 
-void BattleStateSetup::setTurn(types::BattleTurn turn) {
+void BattleStateSetup::setTurn(types::battleTurn turn) {
   handle.emplace<Turn>(turn);
 }
 
@@ -75,7 +75,7 @@ void BattleStateSetup::setActiveUser(types::entity activeSource) {
   handle.registry()->emplace<tags::ActiveMoveUser>(activeSource);
 }
 
-void BattleStateSetup::setProbability(types::StateProbability probability) {
+void BattleStateSetup::setProbability(types::stateProbability probability) {
   handle.emplace<Probability>(probability);
 }
 

@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct RngSeed {
-  types::StateRngSeed seed = 0;
+  types::stateRngSeed seed = 0;
 };
 }  // namespace pokesim

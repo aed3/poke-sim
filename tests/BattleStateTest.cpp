@@ -2,8 +2,8 @@
 
 namespace pokesim {
 struct IdealPP_MaxPP {
-  types::Pp pp;
-  types::Pp maxPp;
+  types::pp pp;
+  types::pp maxPp;
 };
 
 void checkCreatedPokemon(const types::handle& truth, const Simulation::PokemonCreationInfo& ideal) {

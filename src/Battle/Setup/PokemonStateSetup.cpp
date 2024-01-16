@@ -41,7 +41,7 @@ void PokemonStateSetup::setAutoID() {
   setID((uint16_t)handle.registry()->view<SpeciesName>().size() + 1);
 }
 
-void PokemonStateSetup::setID(types::StateId id) {
+void PokemonStateSetup::setID(types::stateId id) {
   handle.emplace<Id>(id);
 }
 
@@ -57,7 +57,7 @@ void PokemonStateSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
 }
 
-void PokemonStateSetup::setLevel(types::Level level) {
+void PokemonStateSetup::setLevel(types::level level) {
   handle.emplace<Level>(level);
 }
 
@@ -79,7 +79,7 @@ void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
   handle.emplace<MoveSlots>(moveSlots);
 }
 
-void PokemonStateSetup::setPostion(types::TeamPositionIndex position) {
+void PokemonStateSetup::setPostion(types::teamPositionIndex position) {
   handle.emplace<Position>(position);
 }
 
@@ -94,7 +94,7 @@ void PokemonStateSetup::setNature(dex::Nature nature) {
 }
 
 void PokemonStateSetup::setEVs(
-  types::Ev hp, types::Ev atk, types::Ev def, types::Ev spa, types::Ev spd, types::Ev spe) {
+  types::ev hp, types::ev atk, types::ev def, types::ev spa, types::ev spd, types::ev spe) {
   handle.emplace<Evs>(hp, atk, def, spa, spd, spe);
 }
 
@@ -103,7 +103,7 @@ void PokemonStateSetup::setEVs(const Evs& evs) {
 }
 
 void PokemonStateSetup::setIVs(
-  types::Iv hp, types::Iv atk, types::Iv def, types::Iv spa, types::Iv spd, types::Iv spe) {
+  types::iv hp, types::iv atk, types::iv def, types::iv spa, types::iv spd, types::iv spe) {
   handle.emplace<Ivs>(hp, atk, def, spa, spd, spe);
 }
 

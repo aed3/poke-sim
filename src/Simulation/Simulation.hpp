@@ -39,29 +39,29 @@ class Simulation {
  public:
   struct MoveCreationInfo {
     dex::Move name = dex::Move::NO_MOVE;
-    types::Pp pp = 1;
-    types::Pp maxPp = 1;
+    types::pp pp = 1;
+    types::pp maxPp = 1;
   };
 
   struct PokemonCreationInfo {
-    std::optional<types::StateId> id = std::nullopt;
+    std::optional<types::stateId> id = std::nullopt;
     dex::Species species = dex::Species::MISSING_NO;
     dex::Item item = dex::Item::NO_ITEM;
     dex::Ability ability = dex::Ability::NO_ABILITY;
     dex::Gender gender = dex::Gender::NO_GENDER;
     dex::Status status = dex::Status::NO_STATUS;
-    types::Level level = 1;
+    types::level level = 1;
 
     dex::Nature nature = dex::Nature::NO_NATURE;
     Evs evs;
     Ivs ivs;
     struct {
-      types::Stat hp = 1;
-      types::Stat atk = 1;
-      types::Stat def = 1;
-      types::Stat spa = 1;
-      types::Stat spd = 1;
-      types::Stat spe = 1;
+      types::stat hp = 1;
+      types::stat atk = 1;
+      types::stat def = 1;
+      types::stat spa = 1;
+      types::stat spd = 1;
+      types::stat spe = 1;
     } stats;
 
     std::vector<MoveCreationInfo> moves{};
@@ -85,16 +85,16 @@ class Simulation {
   struct AnalyzeEffectInputInfo {
     Slot attackerSlot = Slot::NONE;
     Slot defenderSlot = Slot::NONE;
-    types::EffectEnum effect;
+    types::effectEnum effect;
   };
 
   struct BattleCreationInfo {
     bool runWithSimulateTurn = false;
     bool runWithCalculateDamage = false;
     bool runWithAnalyzeEffect = false;
-    types::BattleTurn turn = 0;
-    std::optional<types::StateRngSeed> rngSeed = std::nullopt;
-    types::StateProbability probability = 1;
+    types::battleTurn turn = 0;
+    std::optional<types::stateRngSeed> rngSeed = std::nullopt;
+    types::stateProbability probability = 1;
 
     SideCreationInfo p1;
     SideCreationInfo p2;

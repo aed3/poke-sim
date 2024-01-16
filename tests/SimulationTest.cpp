@@ -19,7 +19,7 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
 
   // TODO(aed3): Make this function generally available
   auto createMove = [&pokedex](dex::Move move) {
-    types::Pp pp = pokedex.getMoveData<Pp>(move).pp;
+    types::pp pp = pokedex.getMoveData<Pp>(move).pp;
     return Simulation::MoveCreationInfo{move, pp, pp};
   };
 
@@ -78,8 +78,8 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
 }
 
 types::entity targetSlotToEntity(
-  Slot targetSlot, const types::TeamPositions<types::entity>& p1Team,
-  const types::TeamPositions<types::entity>& p2Team) {
+  Slot targetSlot, const types::teamPositions<types::entity>& p1Team,
+  const types::teamPositions<types::entity>& p2Team) {
   switch (targetSlot) {
     case Slot::P1A: {
       return p1Team[0];
@@ -136,9 +136,9 @@ TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
 
   SECTION("One Decision") {
     p1SlotDecision.moveChoice = dex::Move::FURY_ATTACK;
-    p1Decision.decisions = types::SideSlots<SlotDecision>{p1SlotDecision};
+    p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
     p2SlotDecision.moveChoice = dex::Move::THUNDERBOLT;
-    p2Decision.decisions = types::SideSlots<SlotDecision>{p2SlotDecision};
+    p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
 
     battleInfo.decisionsToSimulate = {{
       p1Decision,
@@ -184,6 +184,10 @@ TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
       REQUIRE(speedSort.priority == 0);
       REQUIRE(speedSort.fractionalPriority == 0);
     }
+  }
+
+  SECTION("Multiple Decisions") {
+    // TODO (aed3): Add when battle state cloning is implemented
   }
 }
 

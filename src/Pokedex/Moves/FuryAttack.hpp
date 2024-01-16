@@ -17,10 +17,10 @@ struct FuryAttack {
   static constexpr Type type = Type::NORMAL_TYPE;
   static constexpr MoveCategory category = MoveCategory::PHYSICAL;
 
-  static constexpr types::BaseAccuracy accuracy = 85;
-  static constexpr types::BasePower basePower = 15;
-  static constexpr types::Pp basePp = 20;
-  static constexpr types::MoveHits minHits = 2, maxHits = 5;
+  static constexpr types::baseAccuracy accuracy = 85;
+  static constexpr types::basePower basePower = 15;
+  static constexpr types::pp basePp = 20;
+  static constexpr types::moveHits minHits = 2, maxHits = 5;
 
   static constexpr internal::Tags<move::tags::AnySingleTarget, move::tags::Contact> moveTags{};
 

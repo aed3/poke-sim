@@ -24,7 +24,7 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
 
   for (std::size_t i = 0; i < team.size(); i++) {
     teamEntities.team.push_back(team[i].entity());
-    team[i].setPostion((types::TeamPositionIndex)(i + 1));
+    team[i].setPostion((types::teamPositionIndex)(i + 1));
     team[i].setSide(entity());
     team[i].setBattle(battle.battle);
   }

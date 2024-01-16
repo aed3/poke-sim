@@ -18,8 +18,8 @@ struct SpeciesDexDataSetup : DexDataSetup {
   /*_inline_*/ void setName(Species species);
   /*_inline_*/ void setType(Type type1, Type type2 = Type::NO_TYPE);
   /*_inline_*/ void setBaseStats(
-    types::BaseStat hp, types::BaseStat atk, types::BaseStat def, types::BaseStat spa, types::BaseStat spd,
-    types::BaseStat spe);
+    types::baseStat hp, types::baseStat atk, types::baseStat def, types::baseStat spa, types::baseStat spd,
+    types::baseStat spe);
   /*_inline_*/ void setPrimaryAbility(Ability ability);
   /*_inline_*/ void setSecondaryAbility(Ability ability);
   /*_inline_*/ void setHiddenAbility(Ability ability);

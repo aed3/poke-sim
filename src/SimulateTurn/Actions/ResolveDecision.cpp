@@ -26,8 +26,8 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision,
   ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty");
   types::registry& registry = *sideHandle.registry();
 
-  if (sideDecision.decisions.holds<types::SideSlots<SlotDecision>>()) {
-    const auto& decisions = sideDecision.decisions.get<types::SideSlots<SlotDecision>>();
+  if (sideDecision.decisions.holds<types::sideSlots<SlotDecision>>()) {
+    const auto& decisions = sideDecision.decisions.get<types::sideSlots<SlotDecision>>();
 
     for (const SlotDecision& decision : decisions) {
       ENTT_ASSERT(decision.sourceSlot != Slot::NONE, "Source slot must be assigned");
@@ -77,8 +77,8 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision,
       sideActionQueue.actionQueue.push_back(actionHandle.entity());
     }
   }
-  else if (sideDecision.decisions.holds<types::TeamPositions<types::TeamPositionIndex>>()) {
-    const auto& teamOrder = sideDecision.decisions.get<types::TeamPositions<types::TeamPositionIndex>>();
+  else if (sideDecision.decisions.holds<types::teamPositions<types::teamPositionIndex>>()) {
+    const auto& teamOrder = sideDecision.decisions.get<types::teamPositions<types::teamPositionIndex>>();
 
     ENTT_ASSERT(
       sideHandle.get<Team>().team.size() == teamOrder.size(),
