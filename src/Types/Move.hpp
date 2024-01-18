@@ -10,5 +10,5 @@ using moveHits = std::uint8_t;
 using baseEffectChance = std::uint8_t;
 
 using priority = std::int8_t;
-using fractionalPriority = std::int8_t;
+using fractionalPriority = bool;
 }  // namespace pokesim::types

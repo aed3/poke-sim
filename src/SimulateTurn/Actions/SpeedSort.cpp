@@ -17,7 +17,9 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   if (entityList.size() == 1) return;
   const types::registry* registry = handle.registry();
 
-  std::vector<std::pair<SpeedSort, types::entity>> speedSortList{entityList.size()};
+  std::vector<std::pair<SpeedSort, types::entity>> speedSortList;
+  speedSortList.reserve(entityList.size());
+
   for (types::entity entity : entityList) {
     speedSortList.push_back({registry->get<SpeedSort>(entity), entity});
   }
@@ -28,10 +30,12 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
       return pairA.first.order < pairB.first.order;
     }
 
-    types::priority aPriority = pairA.first.priority + pairA.first.fractionalPriority;
-    types::priority bPriority = pairB.first.priority + pairB.first.fractionalPriority;
-    if (aPriority != bPriority) {
-      return bPriority < aPriority;
+    if (pairA.first.priority != pairB.first.priority) {
+      return pairB.first.priority < pairA.first.priority;
+    }
+
+    if (pairA.first.fractionalPriority != pairB.first.fractionalPriority) {
+      return pairB.first.fractionalPriority;
     }
 
     if (pairA.first.speed != pairB.first.speed) {
@@ -68,7 +72,7 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
     speedTies.spans.push_back({lastEqual, tieCount});
   }
 
-  if (speedTies.spans.size() > 1) {
+  if (!speedTies.spans.empty()) {
     handle.emplace<SpeedTieIndexes>(speedTies);
   }
 }

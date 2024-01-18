@@ -60,8 +60,8 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision,
         actionHandle.emplace<action::Move>(decision.moveChoice.value());
 
         speedSort.order = ActionOrder::MOVE;
-        speedSort.priority = 0;            // TODO (aed3): Move priority + modify priority
-        speedSort.fractionalPriority = 0;  // TODO (aed3): get fractionalPriority
+        speedSort.priority = 0;                // TODO (aed3): Move priority + modify priority
+        speedSort.fractionalPriority = false;  // TODO (aed3): get fractionalPriority
       }
       else if (decision.itemChoice.has_value()) {
         actionHandle.emplace<action::Item>(decision.itemChoice.value());

@@ -243,7 +243,7 @@ TEST_CASE("Simulation: Calc Damage", "[Simulation][CalcDamage][Setup]") {
       std::to_string((std::uint8_t)calcDamageInfo.defenderSlot) + "," +
       std::to_string((std::uint16_t)calcDamageInfo.move));
 
-    auto found = std::find_if(calculationsEntities.begin(), calculationsEntities.end(), [&](const auto& tuple) {
+    bool found = std::any_of(calculationsEntities.begin(), calculationsEntities.end(), [&](const auto& tuple) {
       const auto& [entity, attacker, defender, moveName, battle] = tuple;
       if (battle.battle != battleEntity) return false;
       if (moveName.name != calcDamageInfo.move) return false;
@@ -252,7 +252,7 @@ TEST_CASE("Simulation: Calc Damage", "[Simulation][CalcDamage][Setup]") {
       return true;
     });
 
-    REQUIRE(found != calculationsEntities.end());
+    REQUIRE(found);
   }
 }
 
