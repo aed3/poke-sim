@@ -171,7 +171,7 @@ TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
       REQUIRE(speedSort.speed == battleInfo.p1.team[0].stats.spe);
       REQUIRE(speedSort.order == ActionOrder::MOVE);
       REQUIRE(speedSort.priority == 0);
-      REQUIRE(speedSort.fractionalPriority == 0);
+      REQUIRE(speedSort.fractionalPriority == false);
     }
 
     {
@@ -182,7 +182,7 @@ TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
       REQUIRE(speedSort.speed == battleInfo.p2.team[0].stats.spe);
       REQUIRE(speedSort.order == ActionOrder::MOVE);
       REQUIRE(speedSort.priority == 0);
-      REQUIRE(speedSort.fractionalPriority == 0);
+      REQUIRE(speedSort.fractionalPriority == false);
     }
   }
 
