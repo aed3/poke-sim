@@ -40,17 +40,16 @@ check_ipo_supported(RESULT IpoSupported OUTPUT error)
 
 set (SOURCES
   src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp
-  src/Battle/Actions/ResolveDecision.cpp
   src/Battle/Helpers/Helpers.cpp
   src/Battle/Setup/BattleStateSetup.cpp
   src/Battle/Setup/MoveStateSetup.cpp
   src/Battle/Setup/PokemonStateSetup.cpp
   src/Battle/Setup/SideStateSetup.cpp
+  src/CalcDamage/Setup/CalcDamageInputSetup.cpp
   src/Components/Tags/AbilityTags.cpp
   src/Components/Tags/ItemTags.cpp
   src/Components/Tags/NatureTags.cpp
   src/Components/Tags/StatusTags.cpp
-  src/CalcDamage/Setup/CalcDamageInputSetup.cpp
   src/Pokedex/Pokedex.cpp
   src/Pokedex/Setup/GetItemBuild.cpp
   src/Pokedex/Setup/GetMoveBuild.cpp
@@ -58,6 +57,8 @@ set (SOURCES
   src/Pokedex/Setup/ItemDexDataSetup.cpp
   src/Pokedex/Setup/MoveDexDataSetup.cpp
   src/Pokedex/Setup/SpeciesDexDataSetup.cpp
+  src/SimulateTurn/Actions/ResolveDecision.cpp
+  src/SimulateTurn/Actions/SpeedSort.cpp
   src/Simulation/Simulation.cpp
   src/Simulation/SimulationResults.cpp
   src/Simulation/SimulationSetup.cpp
@@ -87,6 +88,7 @@ add_executable(PokeSimTests
   tests/BattleStateTest.cpp
   tests/PokedexTest.cpp
   tests/SimulationTest.cpp
+  tests/SimulateTurnsTest.cpp
   tests/Tests.cpp
   external/Catch2/catch_amalgamated.cpp
 )

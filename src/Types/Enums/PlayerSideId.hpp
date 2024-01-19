@@ -3,7 +3,8 @@
 
 namespace pokesim {
 enum class PlayerSideId : std::uint8_t {
-  P1 = 0,
-  P2 = 1,
+  NONE = 0,
+  P1 = 1,
+  P2 = 2,
 };
 }

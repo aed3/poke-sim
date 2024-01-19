@@ -1,12 +1,25 @@
 #include "Tests.hpp"
 
 namespace pokesim {
-Simulation::BattleCreationInfo createBaseBattleInfo(const Pokedex& pokedex) {
+Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   Simulation::BattleCreationInfo battleCreationInfo{};
+
+  entt::dense_set<dex::Move> moveSet{};
+  for (dex::Move move :
+       {dex::Move::FURY_ATTACK,
+        dex::Move::THUNDERBOLT,
+        dex::Move::MOONBLAST,
+        dex::Move::KNOCK_OFF,
+        dex::Move::WILL_O_WISP,
+        dex::Move::QUIVER_DANCE}) {
+    moveSet.insert(move);
+  }
+
+  pokedex.loadMoves(moveSet);
 
   // TODO(aed3): Make this function generally available
   auto createMove = [&pokedex](dex::Move move) {
-    types::Pp pp = pokedex.getMoveData<Pp>(move).pp;
+    types::pp pp = pokedex.getMoveData<Pp>(move).pp;
     return Simulation::MoveCreationInfo{move, pp, pp};
   };
 
@@ -65,43 +78,43 @@ Simulation::BattleCreationInfo createBaseBattleInfo(const Pokedex& pokedex) {
 }
 
 types::entity targetSlotToEntity(
-  TargetSlot targetSlot, const types::TeamPositions<types::entity>& p1Team,
-  const types::TeamPositions<types::entity>& p2Team) {
+  Slot targetSlot, const types::teamPositions<types::entity>& p1Team,
+  const types::teamPositions<types::entity>& p2Team) {
   switch (targetSlot) {
-    case TargetSlot::P1A: {
+    case Slot::P1A: {
       return p1Team[0];
     }
-    case TargetSlot::P1B: {
+    case Slot::P1B: {
       return p1Team[1];
     }
-    case TargetSlot::P1C: {
+    case Slot::P1C: {
       return p1Team[2];
     }
-    case TargetSlot::P1D: {
+    case Slot::P1D: {
       return p1Team[3];
     }
-    case TargetSlot::P1E: {
+    case Slot::P1E: {
       return p1Team[4];
     }
-    case TargetSlot::P1F: {
+    case Slot::P1F: {
       return p1Team[5];
     }
-    case TargetSlot::P2A: {
+    case Slot::P2A: {
       return p2Team[0];
     }
-    case TargetSlot::P2B: {
+    case Slot::P2B: {
       return p2Team[1];
     }
-    case TargetSlot::P2C: {
+    case Slot::P2C: {
       return p2Team[2];
     }
-    case TargetSlot::P2D: {
+    case Slot::P2D: {
       return p2Team[3];
     }
-    case TargetSlot::P2E: {
+    case Slot::P2E: {
       return p2Team[4];
     }
-    case TargetSlot::P2F: {
+    case Slot::P2F: {
       return p2Team[5];
     }
     default: {
@@ -113,49 +126,99 @@ types::entity targetSlotToEntity(
 }
 
 TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
-  // TODO(aed3): Add in when action queue creation exists
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
+  Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
+
+  SideDecision p1Decision{PlayerSideId::P1};
+  SideDecision p2Decision{PlayerSideId::P2};
+  SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
+  SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
+
+  SECTION("One Decision") {
+    p1SlotDecision.moveChoice = dex::Move::FURY_ATTACK;
+    p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
+    p2SlotDecision.moveChoice = dex::Move::THUNDERBOLT;
+    p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
+
+    battleInfo.decisionsToSimulate = {{
+      p1Decision,
+      p2Decision,
+    }};
+
+    Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
+    simulation.createInitialStates({battleInfo});
+
+    types::registry& registry = simulation.registry;
+    auto queues = registry.group<ActionQueue>();
+    REQUIRE(queues.size() == 1);
+
+    const auto& actionQueue = registry.get<ActionQueue>(queues[0]).actionQueue;
+    REQUIRE(actionQueue.size() == 2);
+
+    auto p1DecisionEntity = *std::find_if(actionQueue.begin(), actionQueue.end(), [&](types::entity entity) {
+      return registry.get<SourceSlotName>(entity).sourceSlot == Slot::P1A;
+    });
+
+    auto p2DecisionEntity = *std::find_if(actionQueue.begin(), actionQueue.end(), [&](types::entity entity) {
+      return registry.get<SourceSlotName>(entity).sourceSlot == Slot::P2A;
+    });
+
+    {
+      INFO("P1 Action");
+      const auto [target, move, speedSort] = registry.get<TargetSlotName, action::Move, SpeedSort>(p1DecisionEntity);
+      REQUIRE(target.targetSlot == Slot::P2A);
+      REQUIRE(move.name == p1SlotDecision.moveChoice);
+      REQUIRE(speedSort.speed == battleInfo.p1.team[0].stats.spe);
+      REQUIRE(speedSort.order == ActionOrder::MOVE);
+      REQUIRE(speedSort.priority == 0);
+      REQUIRE(speedSort.fractionalPriority == false);
+    }
+
+    {
+      INFO("P2 Action");
+      const auto [target, move, speedSort] = registry.get<TargetSlotName, action::Move, SpeedSort>(p2DecisionEntity);
+      REQUIRE(target.targetSlot == Slot::P1A);
+      REQUIRE(move.name == p2SlotDecision.moveChoice);
+      REQUIRE(speedSort.speed == battleInfo.p2.team[0].stats.spe);
+      REQUIRE(speedSort.order == ActionOrder::MOVE);
+      REQUIRE(speedSort.priority == 0);
+      REQUIRE(speedSort.fractionalPriority == false);
+    }
+  }
+
+  SECTION("Multiple Decisions") {
+    // TODO (aed3): Add when battle state cloning is implemented
+  }
 }
 
 TEST_CASE("Simulation: Calc Damage", "[Simulation][CalcDamage][Setup]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  entt::dense_set<dex::Move> moveSet{};
-  for (dex::Move move :
-       {dex::Move::FURY_ATTACK,
-        dex::Move::THUNDERBOLT,
-        dex::Move::MOONBLAST,
-        dex::Move::KNOCK_OFF,
-        dex::Move::WILL_O_WISP,
-        dex::Move::QUIVER_DANCE}) {
-    moveSet.insert(move);
-  }
-
-  pokedex.loadMoves(moveSet);
-
   Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
+
   battleInfo.damageCalculations = {
     {
-      TargetSlot::P1A,
-      TargetSlot::P1B,
+      Slot::P1A,
+      Slot::P1B,
       dex::Move::FURY_ATTACK,
     },
     {
-      TargetSlot::P1B,
-      TargetSlot::P1A,
+      Slot::P1B,
+      Slot::P1A,
       dex::Move::FURY_ATTACK,
     },
     {
-      TargetSlot::P1B,
-      TargetSlot::P1A,
+      Slot::P1B,
+      Slot::P1A,
       dex::Move::THUNDERBOLT,
     },
     {
-      TargetSlot::P2B,
-      TargetSlot::P2C,
+      Slot::P2B,
+      Slot::P2C,
       dex::Move::KNOCK_OFF,
     },
     {
-      TargetSlot::P1B,
-      TargetSlot::P2B,
+      Slot::P1B,
+      Slot::P2B,
       dex::Move::MOONBLAST,
     },
   };
@@ -170,26 +233,26 @@ TEST_CASE("Simulation: Calc Damage", "[Simulation][CalcDamage][Setup]") {
   const auto& p1Team = registry.get<Team>(registry.get<Sides>(battleEntity).p1).team;
   const auto& p2Team = registry.get<Team>(registry.get<Sides>(battleEntity).p2).team;
 
-  auto calculationsEntities = registry.group<calc_damage::Attacker, calc_damage::Defender, MoveName, Battle>();
-  REQUIRE(calculationsEntities.size() == 5);
+  auto calculationsEntitiesGroup = registry.group<calc_damage::Attacker, calc_damage::Defender, MoveName, Battle>();
+  REQUIRE(calculationsEntitiesGroup.size() == 5);
 
+  const auto calculationsEntities = calculationsEntitiesGroup.each();
   for (const auto& calcDamageInfo : battleInfo.damageCalculations) {
     INFO(
       std::to_string((std::uint8_t)calcDamageInfo.attackerSlot) + "," +
       std::to_string((std::uint8_t)calcDamageInfo.defenderSlot) + "," +
       std::to_string((std::uint16_t)calcDamageInfo.move));
 
-    std::size_t count =
-      std::count_if(calculationsEntities.each().begin(), calculationsEntities.each().end(), [&](const auto& tuple) {
-        const auto& [entity, attacker, defender, moveName, battle] = tuple;
-        if (battle.battle != battleEntity) return false;
-        if (moveName.name != calcDamageInfo.move) return false;
-        if (attacker.attacker != targetSlotToEntity(calcDamageInfo.attackerSlot, p1Team, p2Team)) return false;
-        if (defender.defender != targetSlotToEntity(calcDamageInfo.defenderSlot, p1Team, p2Team)) return false;
-        return true;
-      });
+    bool found = std::any_of(calculationsEntities.begin(), calculationsEntities.end(), [&](const auto& tuple) {
+      const auto& [entity, attacker, defender, moveName, battle] = tuple;
+      if (battle.battle != battleEntity) return false;
+      if (moveName.name != calcDamageInfo.move) return false;
+      if (attacker.attacker != targetSlotToEntity(calcDamageInfo.attackerSlot, p1Team, p2Team)) return false;
+      if (defender.defender != targetSlotToEntity(calcDamageInfo.defenderSlot, p1Team, p2Team)) return false;
+      return true;
+    });
 
-    REQUIRE(count == 1);
+    REQUIRE(found);
   }
 }
 

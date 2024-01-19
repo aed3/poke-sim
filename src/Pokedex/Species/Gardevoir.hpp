@@ -12,7 +12,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct Gardevoir {
   static constexpr Species name = Species::GARDEVOIR;
-  static constexpr types::BaseStat hp = 68, atk = 65, def = 65, spa = 125, spd = 115, spe = 80;
+  static constexpr types::baseStat hp = 68, atk = 65, def = 65, spa = 125, spd = 115, spe = 80;
 
   static constexpr SpeciesTypes type = {Type::PSYCHIC_TYPE, Type::FAIRY_TYPE};
 

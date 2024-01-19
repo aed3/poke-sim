@@ -9,6 +9,6 @@ namespace pokesim {
  * Calculated by multiplying the various Accuracy and Chance numbers of a battle state's events.
  */
 struct Probability {
-  types::StateProbability probability = 1;
+  types::stateProbability probability = 1;
 };
 }  // namespace pokesim

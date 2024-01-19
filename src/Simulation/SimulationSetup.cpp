@@ -1,6 +1,4 @@
 #include <AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp>
-#include <Battle/Actions/Action.hpp>
-#include <Battle/Actions/Decisions.hpp>
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/Setup/PokemonStateSetup.hpp>
 #include <Battle/Setup/headers.hpp>
@@ -13,13 +11,15 @@
 #include <Components/Stats.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Pokedex/Pokedex.hpp>
+#include <SimulateTurn/Actions/Decisions.hpp>
+#include <SimulateTurn/Actions/ResolveDecision.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
+#include <Types/Utilities/variant.hpp>
 #include <cstddef>
 #include <entt/entity/registry.hpp>
 #include <initializer_list>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "Simulation.hpp"
@@ -128,21 +128,19 @@ void Simulation::createInitialTurnDecision(
   types::handle battleHandle{registry, battleStateSetup.entity()};
   const Sides& sides = battleHandle.get<Sides>();
 
-  resolveDecision({registry, sides.p1}, turnDecisionData.p1, registry.get<ActionQueue>(sides.p1));
-  resolveDecision({registry, sides.p2}, turnDecisionData.p2, registry.get<ActionQueue>(sides.p2));
-
-  moveSideActionsToBattleActions(battleHandle, sides, battleHandle.get<ActionQueue>());
+  resolveDecision({registry, sides.p1}, turnDecisionData.p1, battleHandle.get<ActionQueue>());
+  resolveDecision({registry, sides.p2}, turnDecisionData.p2, battleHandle.get<ActionQueue>());
 }
 
 void Simulation::createCalcDamageInput(
   BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData) {
-  ENTT_ASSERT(damageCalcInputData.attackerSlot != TargetSlot::NONE, "A damage calculation must have a attacker");
-  ENTT_ASSERT(damageCalcInputData.defenderSlot != TargetSlot::NONE, "A damage calculation must have a defender");
+  ENTT_ASSERT(damageCalcInputData.attackerSlot != Slot::NONE, "A damage calculation must have a attacker");
+  ENTT_ASSERT(damageCalcInputData.defenderSlot != Slot::NONE, "A damage calculation must have a defender");
   ENTT_ASSERT(damageCalcInputData.move != dex::Move::NO_MOVE, "A damage calculation must have a move");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
-  types::entity attackerEntity = targetSlotEntity(registry, sides, damageCalcInputData.attackerSlot);
-  types::entity defenderEntity = targetSlotEntity(registry, sides, damageCalcInputData.defenderSlot);
+  types::entity attackerEntity = slotToEntity(registry, sides, damageCalcInputData.attackerSlot);
+  types::entity defenderEntity = slotToEntity(registry, sides, damageCalcInputData.defenderSlot);
 
   calc_damage::InputSetup inputSetup(registry);
   inputSetup.setAttacker(attackerEntity);
@@ -153,13 +151,13 @@ void Simulation::createCalcDamageInput(
 
 void Simulation::createAnalyzeEffectInput(
   BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& analyzeEffectInputData) {
-  ENTT_ASSERT(analyzeEffectInputData.attackerSlot != TargetSlot::NONE, "An effect analysis must have a attacker");
-  ENTT_ASSERT(analyzeEffectInputData.defenderSlot != TargetSlot::NONE, "An effect analysis must have a defender");
-  ENTT_ASSERT(analyzeEffectInputData.effect.index() != 0, "An effect analysis must have an effect");
+  ENTT_ASSERT(analyzeEffectInputData.attackerSlot != Slot::NONE, "An effect analysis must have a attacker");
+  ENTT_ASSERT(analyzeEffectInputData.defenderSlot != Slot::NONE, "An effect analysis must have a defender");
+  ENTT_ASSERT(!analyzeEffectInputData.effect.empty(), "An effect analysis must have an effect");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
-  types::entity attackerEntity = targetSlotEntity(registry, sides, analyzeEffectInputData.attackerSlot);
-  types::entity defenderEntity = targetSlotEntity(registry, sides, analyzeEffectInputData.defenderSlot);
+  types::entity attackerEntity = slotToEntity(registry, sides, analyzeEffectInputData.attackerSlot);
+  types::entity defenderEntity = slotToEntity(registry, sides, analyzeEffectInputData.defenderSlot);
 
   analyze_effect::InputSetup inputSetup(registry);
   inputSetup.setAttacker(attackerEntity);

@@ -3,7 +3,7 @@
 #include <Types/Enums/Ability.hpp>
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::ability {
+namespace pokesim::ability::tags {
 struct Defiant {};
 struct Infiltrator {};
 struct IronFist {};
@@ -13,4 +13,4 @@ struct Trace {};
 
 // Assigns an ability's tag to a handle
 /*_inline_*/ void enumToTag(dex::Ability ability, types::handle handle);
-}  // namespace pokesim::tags::ability
+}  // namespace pokesim::ability::tags

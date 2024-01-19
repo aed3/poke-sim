@@ -16,7 +16,7 @@ struct InputSetup {
 
   /*_inline_*/ void setAttacker(types::entity entity);
   /*_inline_*/ void setDefender(types::entity entity);
-  /*_inline_*/ void setEffect(types::EffectEnum effect);
+  /*_inline_*/ void setEffect(types::effectEnum effect);
   /*_inline_*/ void setBattle(types::entity entity);
 
   types::entity entity() { return handle.entity(); }

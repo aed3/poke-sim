@@ -6,7 +6,7 @@
 #include <entt/entity/registry.hpp>
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::nature {
+namespace pokesim::nature::tags {
 void enumToTag(dex::Nature nature, types::handle handle) {
   switch (nature) {
     case dex::Nature::ADAMANT: handle.emplace<Adamant>(); return;
@@ -39,4 +39,4 @@ void enumToTag(dex::Nature nature, types::handle handle) {
     }
   }
 }
-}  // namespace pokesim::tags::nature
+}  // namespace pokesim::nature::tags

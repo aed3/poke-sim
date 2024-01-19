@@ -21,7 +21,7 @@ struct MoveStateSetup : internal::StateSetupBase {
   /*_inline_*/ void initBlank();
 
   /*_inline_*/ void setName(dex::Move moveName);
-  /*_inline_*/ void setPP(types::Pp pp);
-  /*_inline_*/ void setMaxPP(types::Pp maxPp);
+  /*_inline_*/ void setPP(types::pp pp);
+  /*_inline_*/ void setMaxPP(types::pp maxPp);
 };
 }  // namespace pokesim

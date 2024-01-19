@@ -3,7 +3,7 @@
 #include <Types/Enums/Status.hpp>
 // TODO(aed3): Make this auto generated
 
-namespace pokesim::tags::status {
+namespace pokesim::status::tags {
 struct Burn {};
 struct Freeze {};
 struct Paralysis {};
@@ -13,4 +13,4 @@ struct Toxic {};
 
 // Assigns a status' tag to a handle
 /*_inline_*/ void enumToTag(dex::Status status, types::handle& handle);
-}  // namespace pokesim::tags::status
+}  // namespace pokesim::status::tags

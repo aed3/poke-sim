@@ -17,9 +17,9 @@
 #include <Types/Enums/Terrain.hpp>
 #include <Types/Enums/Volatile.hpp>
 #include <Types/Enums/Weather.hpp>
+#include <Types/Utilities/variant.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
-#include <variant>
 
 namespace pokesim::analyze_effect {
 void InputSetup::setAttacker(types::entity entity) {
@@ -30,24 +30,24 @@ void InputSetup::setDefender(types::entity entity) {
   handle.emplace<Defender>(entity);
 }
 
-void InputSetup::setEffect(types::EffectEnum effect) {
-  if (std::holds_alternative<dex::PseudoWeather>(effect)) {
-    handle.emplace<PseudoWeatherName>(std::get<dex::PseudoWeather>(effect));
+void InputSetup::setEffect(types::effectEnum effect) {
+  if (effect.holds<dex::PseudoWeather>()) {
+    handle.emplace<PseudoWeatherName>(effect.get<dex::PseudoWeather>());
   }
-  else if (std::holds_alternative<dex::SideCondition>(effect)) {
-    handle.emplace<SideConditionName>(std::get<dex::SideCondition>(effect));
+  else if (effect.holds<dex::SideCondition>()) {
+    handle.emplace<SideConditionName>(effect.get<dex::SideCondition>());
   }
-  else if (std::holds_alternative<dex::Status>(effect)) {
-    handle.emplace<StatusName>(std::get<dex::Status>(effect));
+  else if (effect.holds<dex::Status>()) {
+    handle.emplace<StatusName>(effect.get<dex::Status>());
   }
-  else if (std::holds_alternative<dex::Terrain>(effect)) {
-    handle.emplace<TerrainName>(std::get<dex::Terrain>(effect));
+  else if (effect.holds<dex::Terrain>()) {
+    handle.emplace<TerrainName>(effect.get<dex::Terrain>());
   }
-  else if (std::holds_alternative<dex::Volatile>(effect)) {
-    handle.emplace<VolatileName>(std::get<dex::Volatile>(effect));
+  else if (effect.holds<dex::Volatile>()) {
+    handle.emplace<VolatileName>(effect.get<dex::Volatile>());
   }
-  else if (std::holds_alternative<dex::Weather>(effect)) {
-    handle.emplace<WeatherName>(std::get<dex::Weather>(effect));
+  else if (effect.holds<dex::Weather>()) {
+    handle.emplace<WeatherName>(effect.get<dex::Weather>());
   }
   else {
     ENTT_FAIL("Effect does not contain a valid enum");

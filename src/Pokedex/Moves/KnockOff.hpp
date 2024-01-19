@@ -17,11 +17,11 @@ struct KnockOff {
   static constexpr Type type = Type::DARK_TYPE;
   static constexpr MoveCategory category = MoveCategory::PHYSICAL;
 
-  static constexpr types::BaseAccuracy accuracy = 100;
-  static constexpr types::BasePower basePower = 65;
-  static constexpr types::Pp basePp = 20;
+  static constexpr types::baseAccuracy accuracy = 100;
+  static constexpr types::basePower basePower = 65;
+  static constexpr types::pp basePp = 20;
 
-  static constexpr internal::Tags<tags::move::AnySingleTarget, tags::move::Contact> moveTags{};
+  static constexpr internal::Tags<move::tags::AnySingleTarget, move::tags::Contact> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Knock Off";

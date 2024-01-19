@@ -24,38 +24,38 @@ void MoveDexDataSetup::setType(Type type) {
   handle.emplace<TypeName>(type);
 }
 
-void MoveDexDataSetup::setAccuracy(types::BaseAccuracy accuracy) {
+void MoveDexDataSetup::setAccuracy(types::baseAccuracy accuracy) {
   handle.emplace<Accuracy>(accuracy);
 }
 
-void MoveDexDataSetup::setBasePower(types::BasePower basePower) {
+void MoveDexDataSetup::setBasePower(types::basePower basePower) {
   handle.emplace<BasePower>(basePower);
 }
 
 void MoveDexDataSetup::setCategoryPhysical() {
-  ENTT_ASSERT(!(handle.any_of<tags::move::Special, tags::move::Status>()), "A move can only have one category");
-  handle.emplace<tags::move::Physical>();
+  ENTT_ASSERT(!(handle.any_of<move::tags::Special, move::tags::Status>()), "A move can only have one category");
+  handle.emplace<move::tags::Physical>();
 }
 
 void MoveDexDataSetup::setCategorySpecial() {
-  ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Status>()), "A move can only have one category");
-  handle.emplace<tags::move::Special>();
+  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Status>()), "A move can only have one category");
+  handle.emplace<move::tags::Special>();
 }
 
 void MoveDexDataSetup::setCategoryStatus() {
-  ENTT_ASSERT(!(handle.any_of<tags::move::Physical, tags::move::Special>()), "A move can only have one category");
-  handle.emplace<tags::move::Status>();
+  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Special>()), "A move can only have one category");
+  handle.emplace<move::tags::Status>();
 }
 
-void MoveDexDataSetup::setBasePp(types::Pp pp) {
+void MoveDexDataSetup::setBasePp(types::pp pp) {
   handle.emplace<Pp>(pp);
 }
 
-void MoveDexDataSetup::setPriority(types::Priority priority) {
+void MoveDexDataSetup::setPriority(types::priority priority) {
   handle.emplace<MovePriority>(priority);
 }
 
-void MoveDexDataSetup::setMultiHit(types::MoveHits minHits, types::MoveHits maxHits) {
+void MoveDexDataSetup::setMultiHit(types::moveHits minHits, types::moveHits maxHits) {
   handle.emplace<MultiHit>(minHits, maxHits);
 }
 
@@ -67,15 +67,15 @@ void MoveDexDataSetup::setSecondaryEffect(types::entity entity) {
   handle.emplace<MoveEffect>(false, entity);
 }
 
-void MoveEffectSetup::setChance(types::BaseEffectChance chance) {
+void MoveEffectSetup::setChance(types::baseEffectChance chance) {
   handle.emplace<Chance>(chance);
 }
 
 void MoveEffectSetup::setEffectsSelf() {
-  handle.emplace<tags::move::effect::MoveSource>();
+  handle.emplace<move::tags::effect::MoveSource>();
 }
 
 void MoveEffectSetup::setEffectsTarget() {
-  handle.emplace<tags::move::effect::MoveTarget>();
+  handle.emplace<move::tags::effect::MoveTarget>();
 }
 }  // namespace pokesim::dex::internal

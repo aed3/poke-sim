@@ -93,7 +93,7 @@ CheckOptions:
   readability-else-after-return.WarnOnConditionVariables: 'true'
   readability-else-after-return.WarnOnUnfixable: 'true'
   readability-function-cognitive-complexity.DescribeBasicIncrements: 'true'
-  readability-function-cognitive-complexity.IgnoreMacros: 'false'
+  readability-function-cognitive-complexity.IgnoreMacros: 'true'
   readability-function-cognitive-complexity.Threshold: '25'
   readability-identifier-length.IgnoredExceptionVariableNames: '^[e]$'
   readability-identifier-length.IgnoredLoopCounterNames: '^[ijk_]$'

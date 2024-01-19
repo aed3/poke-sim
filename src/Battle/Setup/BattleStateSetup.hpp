@@ -32,18 +32,18 @@ struct BattleStateSetup : internal::StateSetupBase {
   /*_inline_*/ void initBlank();
 
   /*_inline_*/ void setAutoID();
-  /*_inline_*/ void setID(types::StateId id);
+  /*_inline_*/ void setID(types::stateId id);
   /*_inline_*/ void setSide(PlayerSideId sideID, types::entity sideEntity);
 
   // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
-  /*_inline_*/ void setRNGSeed(std::optional<types::StateRngSeed> seed = std::nullopt);
+  /*_inline_*/ void setRNGSeed(std::optional<types::stateRngSeed> seed = std::nullopt);
   /*_inline_*/ void setActionQueue(const std::vector<types::entity>& queue);
-  /*_inline_*/ void setTurn(types::BattleTurn turn);
+  /*_inline_*/ void setTurn(types::battleTurn turn);
   /*_inline_*/ void setActiveMove(types::entity activeMove);
   /*_inline_*/ void setActivePokemon(types::entity activePokemon);
   /*_inline_*/ void setActiveTarget(types::entity activeTarget);
   /*_inline_*/ void setActiveUser(types::entity activeSource);
-  /*_inline_*/ void setProbability(types::StateProbability probability);
+  /*_inline_*/ void setProbability(types::stateProbability probability);
 
   /*_inline_*/ BattleStateSetup clone();
 };

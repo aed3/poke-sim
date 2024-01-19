@@ -4,20 +4,20 @@
 
 namespace pokesim {
 struct Evs {
-  types::Ev hp = 0;
-  types::Ev atk = 0;
-  types::Ev def = 0;
-  types::Ev spa = 0;
-  types::Ev spd = 0;
-  types::Ev spe = 0;
+  types::ev hp = 0;
+  types::ev atk = 0;
+  types::ev def = 0;
+  types::ev spa = 0;
+  types::ev spd = 0;
+  types::ev spe = 0;
 };
 
 struct Ivs {
-  types::Iv hp = 0;
-  types::Iv atk = 0;
-  types::Iv def = 0;
-  types::Iv spa = 0;
-  types::Iv spd = 0;
-  types::Iv spe = 0;
+  types::iv hp = 0;
+  types::iv atk = 0;
+  types::iv def = 0;
+  types::iv spa = 0;
+  types::iv spd = 0;
+  types::iv spe = 0;
 };
 }  // namespace pokesim

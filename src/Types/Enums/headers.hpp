@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Ability.hpp"
+#include "ActionOrder.hpp"
 #include "BattleFormat.hpp"
 #include "DamageRollKind.hpp"
 #include "GameMechanics.hpp"
@@ -12,10 +13,10 @@
 #include "PlayerSideId.hpp"
 #include "PseudoWeather.hpp"
 #include "SideCondition.hpp"
+#include "Slot.hpp"
 #include "Species.hpp"
 #include "Stat.hpp"
 #include "Status.hpp"
-#include "TargetSlot.hpp"
 #include "Terrain.hpp"
 #include "Type.hpp"
 #include "Volatile.hpp"

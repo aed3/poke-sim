@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct MovePriority {
-  types::Priority priority = 0;
+  types::priority priority = 0;
 };
 }  // namespace pokesim

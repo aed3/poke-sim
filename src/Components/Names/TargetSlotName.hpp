@@ -1,14 +1,14 @@
 #pragma once
 
-#include <Types/Enums/TargetSlot.hpp>
+#include <Types/Enums/Slot.hpp>
 
 namespace pokesim {
 /**
  * @brief Represents the target slot for a move in a Pokemon battle.
  *
- * In a single battle, only P1A and P1B are valid targets. In a double battle, all four are valid.
+ * In a single battle, only P1A and P2A are valid targets. In a double battle, P1B and P2B are also valid.
  */
 struct TargetSlotName {
-  TargetSlot targetSlot = TargetSlot::P1A;
+  Slot targetSlot = Slot::NONE;
 };
 }  // namespace pokesim

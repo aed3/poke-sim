@@ -18,15 +18,15 @@ struct QuiverDance {
   static constexpr Type type = Type::BUG_TYPE;
   static constexpr MoveCategory category = MoveCategory::STATUS;
 
-  static constexpr types::Pp basePp = 20;
+  static constexpr types::pp basePp = 20;
 
   struct sourcePrimaryEffect {
-    static constexpr types::Boost spaBoost = 1, spdBoost = 1, speBoost = 1;
+    static constexpr types::boost spaBoost = 1, spdBoost = 1, speBoost = 1;
 
     static constexpr internal::Tags<> effectTags{};
   };
 
-  static constexpr internal::Tags<tags::move::Self> moveTags{};
+  static constexpr internal::Tags<move::tags::Self> moveTags{};
 
   struct Strings {
     static constexpr std::string_view name = "Quiver Dance";

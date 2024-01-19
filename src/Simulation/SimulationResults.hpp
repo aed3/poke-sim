@@ -29,23 +29,23 @@ struct Results {
 
 namespace calc_damage {
 struct MaxDamage {
-  types::Damage maxDamage = 0;
+  types::damage maxDamage = 0;
 };
 
 struct MinUsesUntilKo {
-  types::Damage minUsesUntilKo = 0;
+  types::damage minUsesUntilKo = 0;
 };
 
 struct AttackerHpRecovered {
-  types::Stat hpRecovered = 0;
+  types::stat hpRecovered = 0;
 };
 
 struct AttackerHpLost {
-  types::Stat hpLost = 0;
+  types::stat hpLost = 0;
 };
 
 struct HitCount {
-  types::MoveHits hitCount = 1;
+  types::moveHits hitCount = 1;
 };
 
 struct Results {
@@ -68,11 +68,11 @@ struct EffectMultiplier {
 };
 
 struct MultipliedMaxDamage {
-  types::Damage multipliedMaxDamage;
+  types::damage multipliedMaxDamage;
 };
 
 struct MultipliedDamageRolls {
-  types::DamageRolls multipliedDamageRolls;
+  types::damageRolls multipliedDamageRolls;
 };
 
 struct MultipliedKoChance {
