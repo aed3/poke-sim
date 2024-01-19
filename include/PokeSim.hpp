@@ -14153,7 +14153,7 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
       return pairB.first.speed < pairA.first.speed;
     }
 
-    return true;
+    return false;
   });
 
   SpeedTieIndexes speedTies;
