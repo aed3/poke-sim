@@ -17172,6 +17172,8 @@ types::entity slotToEntity(const types::registry& registry, const Sides& sides, 
 ///////////////////// START OF src/Battle/Clone/Clone.hpp //////////////////////
 
 namespace pokesim {
+struct CloneTo;
+
 inline void cloneEntity(
   types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
 

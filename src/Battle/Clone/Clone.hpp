@@ -4,6 +4,8 @@
 #include <Types/State.hpp>
 
 namespace pokesim {
+struct CloneTo;
+
 /*_inline_*/ void cloneEntity(
   types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
 
