@@ -170,6 +170,11 @@
  * src/Components/Turn.hpp
  * src/Battle/Setup/BattleStateSetup.cpp
  * src/Battle/Helpers/Helpers.cpp
+ * src/Battle/Clone/Clone.hpp
+ * src/Components/CloneFromCloneTo.hpp
+ * src/Components/EntityHolders/Move.hpp
+ * src/Components/EntityHolders/Pokemon.hpp
+ * src/Battle/Clone/Clone.cpp
  * src/Components/AnalyzeEffect/AttackerDefender.hpp
  * src/Components/Names/PseudoWeatherNames.hpp
  * src/Components/Names/SideConditionNames.hpp
@@ -177,8 +182,6 @@
  * src/Components/Names/VolatileNames.hpp
  * src/Components/Names/WeatherNames.hpp
  * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp
- * src/Components/EntityHolders/Move.hpp
- * src/Components/EntityHolders/Pokemon.hpp
  * src/Components/Names/StatNames.hpp
  * src/Components/Tags/TypeTags.hpp
  * src/Pokedex/Names.hpp
@@ -12508,11 +12511,13 @@ using registry = entt::registry;
 
 namespace pokesim::types {
 template <typename T, typename... Other>
-using view = entt::view<entt::get_t<const T, const Other...> >;
+using view = entt::view<entt::get_t<const T, const Other...>>;
 
 using handle = entt::basic_handle<registry>;
 
 using entity = entt::entity;
+
+using ClonedEntityMap = entt::dense_map<entity, std::vector<entity>>;
 }  // namespace pokesim::types
 
 ///////////////////////// END OF src/Types/Entity.hpp //////////////////////////
@@ -12794,7 +12799,9 @@ enum class Species : std::uint16_t {
 ///////////////////////// START OF src/Types/State.hpp /////////////////////////
 
 #include <cstdint>
+#include <type_traits>
 #include <vector>
+
 
 namespace pokesim::types {
 using stateId = std::uint16_t;
@@ -12802,6 +12809,8 @@ using stateProbability = float;
 using stateRngSeed = std::uint32_t;
 
 using battleTurn = std::uint16_t;
+
+using cloneIndex = std::underlying_type_t<entity>;
 
 using teamPositionIndex = std::uint8_t;
 using moveSlotPosition = std::uint8_t;
@@ -17160,6 +17169,152 @@ types::entity slotToEntity(const types::registry& registry, const Sides& sides, 
 
 //////////////////// END OF src/Battle/Helpers/Helpers.cpp /////////////////////
 
+///////////////////// START OF src/Battle/Clone/Clone.hpp //////////////////////
+
+namespace pokesim {
+inline void cloneEntity(
+  types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
+
+inline void cloneBattle(
+  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
+inline void cloneSide(
+  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
+inline void cloneActionQueue(
+  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
+inline void clonePokemon(
+  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
+inline void cloneMove(
+  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
+
+inline void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap);
+template <typename Component, typename GetEntity>
+inline void remapEntityMembers(
+  types::registry& registry, const types::ClonedEntityMap& entityMap, GetEntity getEntity);
+template <typename Component, typename GetEntityList>
+inline void remapEntityListMembers(
+  types::registry& registry, const types::ClonedEntityMap& entityMap, GetEntityList getEntityList);
+
+inline void remapActionQueueEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+inline void remapBattleEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+inline void remapFoeSideEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+inline void remapMoveEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+inline void remapMoveEffectEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+inline void remapMoveSlotsEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+inline void remapPokemonEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+inline void remapSideEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+inline void remapSidesEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+inline void remapTeamEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+}  // namespace pokesim
+
+////////////////////// END OF src/Battle/Clone/Clone.hpp ///////////////////////
+
+///////////////// START OF src/Components/CloneFromCloneTo.hpp /////////////////
+
+namespace pokesim {
+namespace tags {
+struct CloneFrom {};
+}  // namespace tags
+
+struct CloneTo {
+  types::cloneIndex index;
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/CloneFromCloneTo.hpp //////////////////
+
+//////////////// START OF src/Components/EntityHolders/Move.hpp ////////////////
+
+namespace pokesim {
+// Contains the entity of a move's current state.
+struct Move {
+  types::entity move;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/EntityHolders/Move.hpp /////////////////
+
+////////////// START OF src/Components/EntityHolders/Pokemon.hpp ///////////////
+
+namespace pokesim {
+// Contains the entity pointing to a Pokemon.
+struct Pokemon {
+  types::entity pokemon;
+};
+}  // namespace pokesim
+
+/////////////// END OF src/Components/EntityHolders/Pokemon.hpp ////////////////
+
+///////////////////// START OF src/Battle/Clone/Clone.cpp //////////////////////
+
+namespace pokesim {
+void cloneEntity(
+  types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount) {
+  auto& list = entityMap[src] = std::vector<types::entity>{duplicateCount};
+  for (types::cloneIndex i = 0; i < duplicateCount; i++) {
+    types::entity dest = list[i] = registry.create();
+    registry.emplace<CloneTo>(dest, i);
+    for (auto [id, storage] : registry.storage()) {
+      if (storage.contains(src)) {
+        storage.push(dest, storage.value(src));
+      }
+    }
+  }
+}
+
+void cloneBattle(types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount) {
+  for (const auto [entity, sides, actionQueue] : registry.view<tags::CloneFrom, Sides, ActionQueue>().each()) {
+    registry.emplace<tags::CloneFrom>(sides.p1);
+    registry.emplace<tags::CloneFrom>(sides.p2);
+    for (auto queueItem : actionQueue.actionQueue) {
+      registry.emplace<tags::CloneFrom>(queueItem);
+    }
+
+    cloneEntity(entity, registry, entityMap, duplicateCount);
+  }
+}
+
+void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
+  ENTT_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map");
+  ENTT_ASSERT(entityMap.at(entity).size() > cloneTo.index, "More entities are trying to be copied to than were copied");
+  entity = entityMap.at(entity)[cloneTo.index];
+}
+
+template <typename Component, typename GetEntity>
+void remapEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap, GetEntity getEntity) {
+  for (auto [clonedEntity, cloneTo, component] : registry.view<CloneTo, Component>().each()) {
+    types::entity& entity = getEntity(component);
+    remapEntity(entity, cloneTo, entityMap);
+  }
+}
+
+template <typename Component, typename GetEntityList>
+void remapEntityListMembers(
+  types::registry& registry, const types::ClonedEntityMap& entityMap, GetEntityList getEntityList) {
+  for (auto [clonedEntity, cloneTo, component] : registry.view<CloneTo, Component>().each()) {
+    auto& entities = getEntityList(component);
+    for (types::entity& entity : entities) {
+      remapEntity(entity, cloneTo, entityMap);
+    }
+  }
+}
+
+void remapActionQueueEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
+  remapEntityListMembers<ActionQueue>(
+    registry,
+    entityMap,
+    [](ActionQueue & queue) -> auto& { return queue.actionQueue; });
+}
+
+void remapBattleEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
+  remapEntityMembers<Battle>(
+    registry,
+    entityMap,
+    [](Battle & battle) -> auto& { return battle.battle; });
+}
+}  // namespace pokesim
+
+////////////////////// END OF src/Battle/Clone/Clone.cpp ///////////////////////
+
 ////////// START OF src/Components/AnalyzeEffect/AttackerDefender.hpp //////////
 
 namespace pokesim::analyze_effect {
@@ -17265,28 +17420,6 @@ void InputSetup::setBattle(types::entity entity) {
 }  // namespace pokesim::analyze_effect
 
 ////////// END OF src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp //////////
-
-//////////////// START OF src/Components/EntityHolders/Move.hpp ////////////////
-
-namespace pokesim {
-// Contains the entity of a move's current state.
-struct Move {
-  types::entity move;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/EntityHolders/Move.hpp /////////////////
-
-////////////// START OF src/Components/EntityHolders/Pokemon.hpp ///////////////
-
-namespace pokesim {
-// Contains the entity pointing to a Pokemon.
-struct Pokemon {
-  types::entity pokemon;
-};
-}  // namespace pokesim
-
-/////////////// END OF src/Components/EntityHolders/Pokemon.hpp ////////////////
 
 ///////////////// START OF src/Components/Names/StatNames.hpp //////////////////
 
