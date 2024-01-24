@@ -176,9 +176,10 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
 
     if (!battleData.decisionsToSimulate.empty()) {
       createInitialTurnDecision(battleStateSetup, battleData.decisionsToSimulate[0]);
+      std::vector<BattleStateSetup> clones = battleStateSetup.clone(battleData.decisionsToSimulate.size() - 1);
 
-      for (std::size_t i = 1; i < battleData.decisionsToSimulate.size(); i++) {
-        createInitialTurnDecision(battleStateSetup.clone(), battleData.decisionsToSimulate[i]);
+      for (std::size_t i = 0; i < clones.size(); i++) {
+        createInitialTurnDecision(clones[i], battleData.decisionsToSimulate[i + 1]);
       }
     }
 

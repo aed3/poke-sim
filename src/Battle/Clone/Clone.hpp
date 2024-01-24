@@ -2,23 +2,25 @@
 
 #include <Types/Entity.hpp>
 #include <Types/State.hpp>
+#include <optional>
 
 namespace pokesim {
 struct CloneTo;
 
+/*_inline_*/ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount);
+
+namespace internal {
 /*_inline_*/ void cloneEntity(
-  types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
+  types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex cloneCount);
 
 /*_inline_*/ void cloneBattle(
-  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
-/*_inline_*/ void cloneSide(
-  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
+  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex cloneCount);
+/*_inline_*/ void cloneSide(types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex cloneCount);
 /*_inline_*/ void cloneActionQueue(
-  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
+  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex cloneCount);
 /*_inline_*/ void clonePokemon(
-  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
-/*_inline_*/ void cloneMove(
-  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex duplicateCount);
+  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex cloneCount);
+/*_inline_*/ void cloneMove(types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex cloneCount);
 
 /*_inline_*/ void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap);
 template <typename Component, typename GetEntity>
@@ -38,4 +40,5 @@ template <typename Component, typename GetEntityList>
 /*_inline_*/ void remapSideEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
 /*_inline_*/ void remapSidesEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
 /*_inline_*/ void remapTeamEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+}  // namespace internal
 }  // namespace pokesim

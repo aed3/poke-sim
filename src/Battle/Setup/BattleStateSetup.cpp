@@ -1,5 +1,7 @@
 #include "BattleStateSetup.hpp"
 
+#include <Battle/Clone/Clone.hpp>
+#include <Components/CloneFromCloneTo.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/ID.hpp>
@@ -79,8 +81,20 @@ void BattleStateSetup::setProbability(types::stateProbability probability) {
   handle.emplace<Probability>(probability);
 }
 
-BattleStateSetup BattleStateSetup::clone() {
-  // TODO(aed3): Add proper battle entity cloning here
-  return *this;
+std::vector<BattleStateSetup> BattleStateSetup::clone(std::optional<types::cloneIndex> cloneCount) {
+  types::registry& registry = *handle.registry();
+
+  handle.emplace<tags::CloneFrom>();
+  const types::ClonedEntityMap entityMap = pokesim::clone(registry, cloneCount);
+
+  const auto& clonedBattles = entityMap.at(handle.entity());
+  std::vector<BattleStateSetup> clonedSetups;
+  clonedSetups.reserve(clonedBattles.size());
+
+  for (types::entity entity : clonedBattles) {
+    clonedSetups.emplace_back(registry, entity);
+  }
+
+  return clonedSetups;
 }
 }  // namespace pokesim
