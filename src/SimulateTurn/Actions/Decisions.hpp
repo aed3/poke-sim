@@ -5,7 +5,7 @@
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/Enums/Slot.hpp>
 #include <Types/State.hpp>
-#include <Types/Utilities/variant.hpp>
+#include <Types/Utilities/Variant.hpp>
 #include <optional>
 
 namespace pokesim {
