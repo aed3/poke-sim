@@ -15,7 +15,7 @@
 #include <SimulateTurn/Actions/ResolveDecision.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
-#include <Types/Utilities/variant.hpp>
+#include <Types/Utilities/Variant.hpp>
 #include <cstddef>
 #include <entt/entity/registry.hpp>
 #include <initializer_list>
