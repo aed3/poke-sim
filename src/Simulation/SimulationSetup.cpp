@@ -175,12 +175,16 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
     createInitialSide(p2SideSetup, battleData.p2);
 
     if (!battleData.decisionsToSimulate.empty()) {
-      createInitialTurnDecision(battleStateSetup, battleData.decisionsToSimulate[0]);
-      std::vector<BattleStateSetup> clones = battleStateSetup.clone(battleData.decisionsToSimulate.size() - 1);
+      if (battleData.decisionsToSimulate.size() > 1) {
+        types::cloneIndex cloneCount = battleData.decisionsToSimulate.size() - 1;
+        std::vector<BattleStateSetup> clones = battleStateSetup.clone(cloneCount);
 
-      for (std::size_t i = 0; i < clones.size(); i++) {
-        createInitialTurnDecision(clones[i], battleData.decisionsToSimulate[i + 1]);
+        for (std::size_t i = 0; i < cloneCount; i++) {
+          createInitialTurnDecision(clones[i], battleData.decisionsToSimulate[i + 1]);
+        }
       }
+
+      createInitialTurnDecision(battleStateSetup, battleData.decisionsToSimulate[0]);
     }
 
     for (const CalcDamageInputInfo& damageCalcInputData : battleData.damageCalculations) {

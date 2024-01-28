@@ -20,7 +20,9 @@
 
 namespace pokesim {
 BattleStateSetup::BattleStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {
-  handle.emplace<ActionQueue>();
+  if (!handle.any_of<ActionQueue>()) {
+    handle.emplace<ActionQueue>();
+  }
 }
 
 void BattleStateSetup::initBlank() {

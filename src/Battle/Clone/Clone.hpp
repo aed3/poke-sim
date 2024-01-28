@@ -11,16 +11,24 @@ struct CloneTo;
 
 namespace internal {
 /*_inline_*/ void cloneEntity(
-  types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex cloneCount);
+  types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount);
 
 /*_inline_*/ void cloneBattle(
-  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex cloneCount);
-/*_inline_*/ void cloneSide(types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex cloneCount);
+  types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount);
+/*_inline_*/ void cloneSide(
+  types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount);
 /*_inline_*/ void cloneActionQueue(
-  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex cloneCount);
+  types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount);
 /*_inline_*/ void clonePokemon(
-  types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex cloneCount);
-/*_inline_*/ void cloneMove(types::registry& registry, types::ClonedEntityMap& entityMap, types::cloneIndex cloneCount);
+  types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount);
+/*_inline_*/ void cloneMove(
+  types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount);
 
 /*_inline_*/ void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap);
 template <typename Component, typename GetEntity>
