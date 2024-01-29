@@ -12486,7 +12486,12 @@ class variant : public std::variant<Types...> {
   }
 
   template <typename Type>
-  auto get() const {
+  auto& get() const {
+    return std::get<Type>(*this);
+  }
+
+  template <typename Type>
+  auto& get() {
     return std::get<Type>(*this);
   }
 };
@@ -13410,6 +13415,11 @@ class Pokedex {
 #include <optional>
 
 namespace pokesim {
+struct SlotDecision;
+namespace types {
+using slotDecisions = types::sideSlots<SlotDecision>;
+}
+
 struct SlotDecision {
   Slot sourceSlot = Slot::NONE;
   Slot targetSlot = Slot::NONE;
@@ -13425,7 +13435,7 @@ struct SlotDecision {
 
 struct SideDecision {
   PlayerSideId sideId = PlayerSideId::NONE;
-  types::internal::variant<types::sideSlots<SlotDecision>, types::teamPositions<types::teamPositionIndex>> decisions;
+  types::internal::variant<types::slotDecisions, types::teamPositions<types::teamPositionIndex>> decisions;
 };
 }  // namespace pokesim
 
@@ -13821,16 +13831,18 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
     createInitialSide(p2SideSetup, battleData.p2);
 
     if (!battleData.decisionsToSimulate.empty()) {
-      if (battleData.decisionsToSimulate.size() > 1) {
-        types::cloneIndex cloneCount = battleData.decisionsToSimulate.size() - 1;
+      types::cloneIndex cloneCount = battleData.decisionsToSimulate.size() - 1;
+      if (cloneCount) {
         std::vector<BattleStateSetup> clones = battleStateSetup.clone(cloneCount);
 
         for (std::size_t i = 0; i < cloneCount; i++) {
-          createInitialTurnDecision(clones[i], battleData.decisionsToSimulate[i + 1]);
+          createInitialTurnDecision(clones[i], battleData.decisionsToSimulate[i]);
+          clones[i].setID(i);
         }
       }
 
-      createInitialTurnDecision(battleStateSetup, battleData.decisionsToSimulate[0]);
+      createInitialTurnDecision(battleStateSetup, *battleData.decisionsToSimulate.rbegin());
+      battleStateSetup.setID(cloneCount);
     }
 
     for (const CalcDamageInputInfo& damageCalcInputData : battleData.damageCalculations) {
@@ -17168,7 +17180,7 @@ void BattleStateSetup::setAutoID() {
 }
 
 void BattleStateSetup::setID(types::stateId id) {
-  handle.emplace<Id>(id);
+  handle.emplace_or_replace<Id>(id);
 }
 
 void BattleStateSetup::setSide(PlayerSideId sideID, types::entity sideEntity) {
