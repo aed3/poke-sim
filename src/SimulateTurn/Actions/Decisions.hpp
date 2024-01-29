@@ -9,6 +9,11 @@
 #include <optional>
 
 namespace pokesim {
+struct SlotDecision;
+namespace types {
+using slotDecisions = types::sideSlots<SlotDecision>;
+}
+
 struct SlotDecision {
   Slot sourceSlot = Slot::NONE;
   Slot targetSlot = Slot::NONE;
@@ -24,6 +29,6 @@ struct SlotDecision {
 
 struct SideDecision {
   PlayerSideId sideId = PlayerSideId::NONE;
-  types::internal::variant<types::sideSlots<SlotDecision>, types::teamPositions<types::teamPositionIndex>> decisions;
+  types::internal::variant<types::slotDecisions, types::teamPositions<types::teamPositionIndex>> decisions;
 };
 }  // namespace pokesim

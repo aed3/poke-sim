@@ -38,7 +38,7 @@ void BattleStateSetup::setAutoID() {
 }
 
 void BattleStateSetup::setID(types::stateId id) {
-  handle.emplace<Id>(id);
+  handle.emplace_or_replace<Id>(id);
 }
 
 void BattleStateSetup::setSide(PlayerSideId sideID, types::entity sideEntity) {
