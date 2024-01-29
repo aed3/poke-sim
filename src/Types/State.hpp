@@ -7,7 +7,7 @@
 #include "Entity.hpp"
 
 namespace pokesim::types {
-using stateId = std::uint16_t;
+using stateId = std::underlying_type_t<entity>;
 using stateProbability = float;
 using stateRngSeed = std::uint32_t;
 
