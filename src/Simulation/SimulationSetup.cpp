@@ -175,7 +175,11 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
     createInitialSide(p2SideSetup, battleData.p2);
 
     if (!battleData.decisionsToSimulate.empty()) {
-      types::cloneIndex cloneCount = battleData.decisionsToSimulate.size() - 1;
+      ENTT_ASSERT(
+        battleData.decisionsToSimulate.size() < std::numeric_limits<types::cloneIndex>::max(),
+        "Cannot make more clones than their are entities");
+
+      types::cloneIndex cloneCount = (types::cloneIndex)(battleData.decisionsToSimulate.size() - 1);
       if (cloneCount) {
         std::vector<BattleStateSetup> clones = battleStateSetup.clone(cloneCount);
 
