@@ -45,6 +45,6 @@ struct BattleStateSetup : internal::StateSetupBase {
   /*_inline_*/ void setActiveUser(types::entity activeSource);
   /*_inline_*/ void setProbability(types::stateProbability probability);
 
-  /*_inline_*/ BattleStateSetup clone();
+  /*_inline_*/ std::vector<BattleStateSetup> clone(std::optional<types::cloneIndex> cloneCount = std::nullopt);
 };
 }  // namespace pokesim

@@ -27,7 +27,12 @@ class variant : public std::variant<Types...> {
   }
 
   template <typename Type>
-  auto get() const {
+  auto& get() const {
+    return std::get<Type>(*this);
+  }
+
+  template <typename Type>
+  auto& get() {
     return std::get<Type>(*this);
   }
 };

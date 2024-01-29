@@ -15,7 +15,7 @@
 #include <SimulateTurn/Actions/ResolveDecision.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
-#include <Types/Utilities/variant.hpp>
+#include <Types/Utilities/Variant.hpp>
 #include <cstddef>
 #include <entt/entity/registry.hpp>
 #include <initializer_list>
@@ -175,11 +175,22 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
     createInitialSide(p2SideSetup, battleData.p2);
 
     if (!battleData.decisionsToSimulate.empty()) {
-      createInitialTurnDecision(battleStateSetup, battleData.decisionsToSimulate[0]);
+      ENTT_ASSERT(
+        battleData.decisionsToSimulate.size() < std::numeric_limits<types::cloneIndex>::max(),
+        "Cannot make more clones than their are entities");
 
-      for (std::size_t i = 1; i < battleData.decisionsToSimulate.size(); i++) {
-        createInitialTurnDecision(battleStateSetup.clone(), battleData.decisionsToSimulate[i]);
+      types::cloneIndex cloneCount = (types::cloneIndex)(battleData.decisionsToSimulate.size() - 1);
+      if (cloneCount) {
+        std::vector<BattleStateSetup> clones = battleStateSetup.clone(cloneCount);
+
+        for (types::cloneIndex i = 0; i < cloneCount; i++) {
+          createInitialTurnDecision(clones[i], battleData.decisionsToSimulate[i]);
+          clones[i].setID(i);
+        }
       }
+
+      createInitialTurnDecision(battleStateSetup, *battleData.decisionsToSimulate.rbegin());
+      battleStateSetup.setID(cloneCount);
     }
 
     for (const CalcDamageInputInfo& damageCalcInputData : battleData.damageCalculations) {

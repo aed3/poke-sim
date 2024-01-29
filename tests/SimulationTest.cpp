@@ -37,7 +37,7 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   p2aPokemonInfo.gender = dex::Gender::FEMALE;
   p2aPokemonInfo.level = 100;
   p2aPokemonInfo.stats = {321, 186, 206, 266, 216, 146};
-  p1aPokemonInfo.moves.push_back(createMove(dex::Move::THUNDERBOLT));
+  p2aPokemonInfo.moves.push_back(createMove(dex::Move::THUNDERBOLT));
 
   Simulation::PokemonCreationInfo p1bPokemonInfo{};
   p1bPokemonInfo.species = dex::Species::GARDEVOIR;
@@ -134,60 +134,133 @@ TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
   SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
   SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
 
-  SECTION("One Decision") {
-    p1SlotDecision.moveChoice = dex::Move::FURY_ATTACK;
-    p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-    p2SlotDecision.moveChoice = dex::Move::THUNDERBOLT;
-    p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
+  p1SlotDecision.moveChoice = dex::Move::FURY_ATTACK;
+  p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
+  p2SlotDecision.moveChoice = dex::Move::THUNDERBOLT;
+  p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
 
-    battleInfo.decisionsToSimulate = {{
-      p1Decision,
-      p2Decision,
-    }};
-
+  auto check = [&]() {
     Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
     simulation.createInitialStates({battleInfo});
 
     types::registry& registry = simulation.registry;
-    auto queues = registry.group<ActionQueue>();
-    REQUIRE(queues.size() == 1);
+    auto group = registry.group<ActionQueue, Id>();
+    REQUIRE(group.size() == battleInfo.decisionsToSimulate.size());
 
-    const auto& actionQueue = registry.get<ActionQueue>(queues[0]).actionQueue;
-    REQUIRE(actionQueue.size() == 2);
+    for (std::size_t i = 0; i < battleInfo.decisionsToSimulate.size(); i++) {
+      const auto id = registry.get<Id>(group[i]).id;
+      const auto& queue = registry.get<ActionQueue>(group[i]).actionQueue;
+      REQUIRE(queue.size() == 2);
 
-    auto p1DecisionEntity = *std::find_if(actionQueue.begin(), actionQueue.end(), [&](types::entity entity) {
-      return registry.get<SourceSlotName>(entity).sourceSlot == Slot::P1A;
-    });
+      auto p1DecisionEntity = *std::find_if(queue.begin(), queue.end(), [&](types::entity entity) {
+        return registry.get<SourceSlotName>(entity).sourceSlot == Slot::P1A;
+      });
 
-    auto p2DecisionEntity = *std::find_if(actionQueue.begin(), actionQueue.end(), [&](types::entity entity) {
-      return registry.get<SourceSlotName>(entity).sourceSlot == Slot::P2A;
-    });
+      auto p2DecisionEntity = *std::find_if(queue.begin(), queue.end(), [&](types::entity entity) {
+        return registry.get<SourceSlotName>(entity).sourceSlot == Slot::P2A;
+      });
 
-    {
-      INFO("P1 Action");
-      const auto [target, move, speedSort] = registry.get<TargetSlotName, action::Move, SpeedSort>(p1DecisionEntity);
-      REQUIRE(target.targetSlot == Slot::P2A);
-      REQUIRE(move.name == p1SlotDecision.moveChoice);
-      REQUIRE(speedSort.speed == battleInfo.p1.team[0].stats.spe);
-      REQUIRE(speedSort.order == ActionOrder::MOVE);
-      REQUIRE(speedSort.priority == 0);
-      REQUIRE(speedSort.fractionalPriority == false);
+      auto checkDecision = [&](
+                             types::entity decisionEntity,
+                             const pokesim::SlotDecision& decision,
+                             const Simulation::PokemonCreationInfo& pokemon) {
+        if (decision.moveChoice) {
+          const auto [target, move, speedSort] = registry.get<TargetSlotName, action::Move, SpeedSort>(decisionEntity);
+
+          REQUIRE(target.targetSlot == decision.targetSlot);
+          REQUIRE(move.name == decision.moveChoice);
+          REQUIRE(speedSort.speed == pokemon.stats.spe);
+          REQUIRE(speedSort.order == ActionOrder::MOVE);
+          REQUIRE(speedSort.priority == 0);
+          REQUIRE(speedSort.fractionalPriority == false);
+        }
+        else {
+          REQUIRE(registry.all_of<action::tags::Switch, TargetSlotName, SpeedSort>(decisionEntity));
+          const auto [target, speedSort] = registry.get<TargetSlotName, SpeedSort>(decisionEntity);
+
+          REQUIRE(target.targetSlot == decision.targetSlot);
+          REQUIRE(speedSort.speed == pokemon.stats.spe);
+          REQUIRE(speedSort.order == ActionOrder::SWITCH);
+          REQUIRE(speedSort.priority == 0);
+          REQUIRE(speedSort.fractionalPriority == false);
+        }
+      };
+
+      {
+        INFO("P1 Action");
+        const auto& decision = battleInfo.decisionsToSimulate[id].p1.decisions.get<types::slotDecisions>()[0];
+        checkDecision(p1DecisionEntity, decision, battleInfo.p1.team[0]);
+      }
+
+      {
+        INFO("P2 Action");
+        const auto& decision = battleInfo.decisionsToSimulate[id].p2.decisions.get<types::slotDecisions>()[0];
+        checkDecision(p2DecisionEntity, decision, battleInfo.p2.team[0]);
+      }
     }
+  };
 
-    {
-      INFO("P2 Action");
-      const auto [target, move, speedSort] = registry.get<TargetSlotName, action::Move, SpeedSort>(p2DecisionEntity);
-      REQUIRE(target.targetSlot == Slot::P1A);
-      REQUIRE(move.name == p2SlotDecision.moveChoice);
-      REQUIRE(speedSort.speed == battleInfo.p2.team[0].stats.spe);
-      REQUIRE(speedSort.order == ActionOrder::MOVE);
-      REQUIRE(speedSort.priority == 0);
-      REQUIRE(speedSort.fractionalPriority == false);
-    }
+  SECTION("One Decision") {
+    battleInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
+
+    check();
   }
 
   SECTION("Multiple Decisions") {
-    // TODO (aed3): Add when battle state cloning is implemented
+    battleInfo.decisionsToSimulate = {{p1Decision, p2Decision}, {p1Decision, p2Decision}};
+
+    check();
+  }
+
+  SECTION("Multiple Different Decisions") {
+    for (std::uint8_t i = 0; i < 3; i++) {
+      for (std::uint8_t j = 0; j < 3; j++) {
+        auto newP1Decision = p1Decision;
+        auto newP2Decision = p2Decision;
+        auto& newP1SlotDecision = newP1Decision.decisions.get<types::slotDecisions>()[0];
+        auto& newP2SlotDecision = newP2Decision.decisions.get<types::slotDecisions>()[0];
+
+        switch (i) {
+          case 0: {
+            newP1SlotDecision.moveChoice = p1SlotDecision.moveChoice;
+            newP1SlotDecision.targetSlot = Slot::P2A;
+            break;
+          }
+          case 1: {
+            newP1SlotDecision.moveChoice = std::nullopt;
+            newP1SlotDecision.targetSlot = Slot::P1B;
+            break;
+          }
+          case 2: {
+            newP1SlotDecision.moveChoice = std::nullopt;
+            newP1SlotDecision.targetSlot = Slot::P1C;
+            break;
+          }
+        }
+
+        switch (j) {
+          case 0: {
+            newP2SlotDecision.moveChoice = p2SlotDecision.moveChoice;
+            newP2SlotDecision.targetSlot = Slot::P1A;
+            break;
+          }
+          case 1: {
+            newP2SlotDecision.moveChoice = std::nullopt;
+            newP2SlotDecision.targetSlot = Slot::P2B;
+            break;
+          }
+          case 2: {
+            newP2SlotDecision.moveChoice = std::nullopt;
+            newP2SlotDecision.targetSlot = Slot::P2C;
+            break;
+          }
+        }
+
+        battleInfo.decisionsToSimulate.push_back({newP1Decision, newP2Decision});
+      }
+    }
+
+    check();
   }
 }
 

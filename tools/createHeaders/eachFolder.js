@@ -17,6 +17,12 @@ const createHeadersFile = (folder) => {
       if (subFolderHeaderFiles) {
         headerFiles.push(...subFolderHeaderFiles);
       }
+      else {
+        const sudFolderFiles = fs.readdirSync(file)
+                                 .filter(sudFile => path.extname(sudFile) === '.hpp')
+                                 .map(sudFile => path.join(file, sudFile));
+        headerFiles.push(...sudFolderFiles);
+      }
     }
     else if (path.extname(file) === '.hpp' && file !== folderHeadersFileName) {
       headerFiles.push(file);
@@ -26,8 +32,8 @@ const createHeadersFile = (folder) => {
   if (headersFileExists) {
     headerFiles.sort();
     fs.writeFileSync(folderHeadersFileName, '#pragma once\n\n');
-    fs.appendFileSync(folderHeadersFileName,
-      headerFiles.map(file => `#include "${toRelative(file, folder)}"`).join('\n'));
+    fs.appendFileSync(
+      folderHeadersFileName, headerFiles.map(file => `#include "${toRelative(file, folder)}"`).join('\n'));
     return headerFiles;
   }
 

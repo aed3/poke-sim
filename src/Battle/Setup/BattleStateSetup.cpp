@@ -1,5 +1,7 @@
 #include "BattleStateSetup.hpp"
 
+#include <Battle/Clone/Clone.hpp>
+#include <Components/CloneFromCloneTo.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/ID.hpp>
@@ -18,7 +20,9 @@
 
 namespace pokesim {
 BattleStateSetup::BattleStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {
-  handle.emplace<ActionQueue>();
+  if (!handle.any_of<ActionQueue>()) {
+    handle.emplace<ActionQueue>();
+  }
 }
 
 void BattleStateSetup::initBlank() {
@@ -34,7 +38,7 @@ void BattleStateSetup::setAutoID() {
 }
 
 void BattleStateSetup::setID(types::stateId id) {
-  handle.emplace<Id>(id);
+  handle.emplace_or_replace<Id>(id);
 }
 
 void BattleStateSetup::setSide(PlayerSideId sideID, types::entity sideEntity) {
@@ -79,8 +83,20 @@ void BattleStateSetup::setProbability(types::stateProbability probability) {
   handle.emplace<Probability>(probability);
 }
 
-BattleStateSetup BattleStateSetup::clone() {
-  // TODO(aed3): Add proper battle entity cloning here
-  return *this;
+std::vector<BattleStateSetup> BattleStateSetup::clone(std::optional<types::cloneIndex> cloneCount) {
+  types::registry& registry = *handle.registry();
+
+  handle.emplace<tags::CloneFrom>();
+  const types::ClonedEntityMap entityMap = pokesim::clone(registry, cloneCount);
+
+  const auto& clonedBattles = entityMap.at(handle.entity());
+  std::vector<BattleStateSetup> clonedSetups;
+  clonedSetups.reserve(clonedBattles.size());
+
+  for (types::entity entity : clonedBattles) {
+    clonedSetups.emplace_back(registry, entity);
+  }
+
+  return clonedSetups;
 }
 }  // namespace pokesim

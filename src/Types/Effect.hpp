@@ -6,7 +6,7 @@
 #include "Enums/Terrain.hpp"
 #include "Enums/Volatile.hpp"
 #include "Enums/Weather.hpp"
-#include "Utilities/variant.hpp"
+#include "Utilities/Variant.hpp"
 
 namespace pokesim::types {
 using effectEnum = internal::variant<
