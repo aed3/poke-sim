@@ -187,7 +187,7 @@ void checkCreatedPokemon(const types::handle& truth, const Simulation::PokemonCr
 
   for (std::size_t i = 0; i < ideal.moves.size(); i++) {
     const Simulation::MoveCreationInfo& moveIdeal = ideal.moves[i];
-    types::entity moveTruth = moveSlotsTruth[i];
+    types::entity moveTruth = moveSlotsTruth[(std::uint8_t)i];
     REQUIRE(truth.registry()->all_of<MoveName, Pp, MaxPp>(moveTruth));
     REQUIRE(truth.registry()->get<MoveName>(moveTruth).name == moveIdeal.name);
     REQUIRE(truth.registry()->get<Pp>(moveTruth).pp == moveIdeal.pp);
@@ -202,7 +202,7 @@ void checkCreatedSide(const types::handle& truth, const Simulation::SideCreation
   REQUIRE(teamTruth.size() == ideal.team.size());
 
   for (std::size_t i = 0; i < ideal.team.size(); i++) {
-    types::entity pokemonTruth = teamTruth[i];
+    types::entity pokemonTruth = teamTruth[(std::uint8_t)i];
     types::handle pokemonIdeal(*truth.registry(), pokemonTruth);
     checkCreatedPokemon(pokemonIdeal, ideal.team[i]);
 
@@ -360,7 +360,7 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
         REQUIRE(baseFoeSide.foeSide != cloneFoeSide.foeSide);
         REQUIRE(baseSideBattle.battle != cloneSideBattle.battle);
 
-        for (std::size_t i = 0; i < baseTeam.team.size(); i++) {
+        for (std::uint8_t i = 0; i < baseTeam.team.size(); i++) {
           REQUIRE(baseTeam.team[i] != cloneTeam.team[i]);
           const auto& [baseMoveSlots, basePokemonSide, basePokemonBattle] =
             registry.get<MoveSlots, Side, Battle>(baseTeam.team[i]);
@@ -370,7 +370,7 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
           REQUIRE(basePokemonSide.side != clonePokemonSide.side);
           REQUIRE(basePokemonBattle.battle != clonePokemonBattle.battle);
 
-          for (std::size_t j = 0; j < baseMoveSlots.moveSlots.size(); j++) {
+          for (std::uint8_t j = 0; j < baseMoveSlots.moveSlots.size(); j++) {
             REQUIRE(baseMoveSlots.moveSlots[j] != cloneMoveSlots.moveSlots[j]);
           }
         }
