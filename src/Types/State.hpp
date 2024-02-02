@@ -2,11 +2,17 @@
 
 #include <cstdint>
 #include <type_traits>
-#include <vector>
 
 #include "Entity.hpp"
+#include "Utilities/MaxSizedVector.hpp"
 
 namespace pokesim::types {
+namespace internal {
+const std::uint8_t MAX_TEAM_SIZE = 6U;
+const std::uint8_t MAX_ACTIVE_POKEMON_SLOTS = 2U;
+const std::uint8_t MAX_MOVE_SLOTS = 4U;
+}  // namespace internal
+
 using stateId = std::underlying_type_t<entity>;
 using stateProbability = float;
 using stateRngSeed = std::uint32_t;
@@ -19,8 +25,12 @@ using teamPositionIndex = std::uint8_t;
 using moveSlotPosition = std::uint8_t;
 
 template <typename T>
-using teamPositions = std::vector<T>;
+using teamPositions = types::internal::maxSizedVector<T, internal::MAX_TEAM_SIZE>;
+using teamOrder = types::teamPositions<types::teamPositionIndex>;
 
 template <typename T>
-using sideSlots = std::vector<T>;
+using moveSlots = types::internal::maxSizedVector<T, internal::MAX_MOVE_SLOTS>;
+
+template <typename T>
+using sideSlots = types::internal::maxSizedVector<T, internal::MAX_ACTIVE_POKEMON_SLOTS>;
 }  // namespace pokesim::types

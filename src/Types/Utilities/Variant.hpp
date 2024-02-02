@@ -6,12 +6,7 @@ namespace pokesim::types::internal {
 template <typename... Types>
 class variant : public std::variant<Types...> {
  public:
-  variant() = default;
-  variant(const variant& rhs) = default;
-  variant(variant&&) noexcept = default;
-  variant& operator=(const variant&) = default;
-  variant& operator=(variant&&) noexcept = default;
-  ~variant() = default;
+  using std::variant<Types...>::variant;
 
   template <typename T>
   variant& operator=(T&& rhs) {

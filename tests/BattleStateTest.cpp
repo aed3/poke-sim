@@ -182,7 +182,7 @@ void checkCreatedPokemon(const types::handle& truth, const Simulation::PokemonCr
   REQUIRE(truth.get<Ivs>().spd == ideal.ivs.spd);
   REQUIRE(truth.get<Ivs>().spe == ideal.ivs.spe);
 
-  const std::vector<types::entity>& moveSlotsTruth = truth.get<MoveSlots>().moveSlots;
+  const auto& moveSlotsTruth = truth.get<MoveSlots>().moveSlots;
   REQUIRE(moveSlotsTruth.size() == ideal.moves.size());
 
   for (std::size_t i = 0; i < ideal.moves.size(); i++) {
@@ -198,7 +198,7 @@ void checkCreatedPokemon(const types::handle& truth, const Simulation::PokemonCr
 void checkCreatedSide(const types::handle& truth, const Simulation::SideCreationInfo& ideal) {
   REQUIRE(truth.all_of<Team, FoeSide, Battle>());
 
-  const std::vector<types::entity>& teamTruth = truth.get<Team>().team;
+  const auto& teamTruth = truth.get<Team>().team;
   REQUIRE(teamTruth.size() == ideal.team.size());
 
   for (std::size_t i = 0; i < ideal.team.size(); i++) {

@@ -76,7 +76,13 @@ void PokemonStateSetup::setItem(dex::Item item) {
 }
 
 void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
-  handle.emplace<MoveSlots>(moveSlots);
+  MoveSlots& moveEntities = handle.emplace<MoveSlots>();
+  ENTT_ASSERT(
+    moveSlots.size() <= moveEntities.moveSlots.max_size(),
+    "Cannot add more moves to a Pokemon than types::internal::MAX_MOVE_SLOTS");
+  for (std::size_t i = 0; i < moveSlots.size(); i++) {
+    moveEntities.moveSlots.push_back(moveSlots[i]);
+  }
 }
 
 void PokemonStateSetup::setPostion(types::teamPositionIndex position) {

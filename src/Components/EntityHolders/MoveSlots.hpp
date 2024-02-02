@@ -1,11 +1,11 @@
 #pragma once
 
 #include <Types/Entity.hpp>
-#include <vector>
+#include <Types/State.hpp>
 
 namespace pokesim {
 // Contains a list of entities of the moves a Pokemon known.
 struct MoveSlots {
-  std::vector<types::entity> moveSlots{};
+  types::moveSlots<types::entity> moveSlots{};
 };
 }  // namespace pokesim

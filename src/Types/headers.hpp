@@ -27,4 +27,5 @@
 #include "Move.hpp"
 #include "State.hpp"
 #include "Stats.hpp"
+#include "Utilities/MaxSizedVector.hpp"
 #include "Utilities/Variant.hpp"

@@ -53,6 +53,7 @@
  * src/Types/Enums/Item.hpp
  * src/Types/Enums/Nature.hpp
  * src/Types/Enums/Species.hpp
+ * src/Types/Utilities/MaxSizedVector.hpp
  * src/Types/State.hpp
  * src/Battle/Setup/PokemonStateSetup.hpp
  * src/Types/Enums/PlayerSideId.hpp
@@ -12465,12 +12466,7 @@ namespace pokesim::types::internal {
 template <typename... Types>
 class variant : public std::variant<Types...> {
  public:
-  variant() = default;
-  variant(const variant& rhs) = default;
-  variant(variant&&) noexcept = default;
-  variant& operator=(const variant&) = default;
-  variant& operator=(variant&&) noexcept = default;
-  ~variant() = default;
+  using std::variant<Types...>::variant;
 
   template <typename T>
   variant& operator=(T&& rhs) {
@@ -12801,14 +12797,94 @@ enum class Species : std::uint16_t {
 
 ////////////////////// END OF src/Types/Enums/Species.hpp //////////////////////
 
+/////////////// START OF src/Types/Utilities/MaxSizedVector.hpp ////////////////
+
+#include <array>
+#include <cassert>
+#include <cstdint>
+
+namespace pokesim::types::internal {
+template <typename T, std::uint8_t N>
+class maxSizedVector : private std::array<T, N> {
+  using base = std::array<T, N>;
+  std::uint8_t used = 0;
+
+ public:
+  using base::begin;
+  using base::cbegin;
+  using base::crbegin;
+  using base::max_size;
+
+  maxSizedVector() : base() {}
+  maxSizedVector(std::initializer_list<T> list) : base() {
+    for (const T& item : list) {
+      push_back(item);
+    }
+  }
+
+  constexpr std::uint8_t size() const noexcept { return used; }
+  constexpr bool empty() const noexcept { return used == 0; }
+  constexpr typename base::const_reference front() const noexcept { return *base::begin(); }
+  constexpr typename base::const_reference back() const noexcept { return N ? *(end() - 1) : *end(); }
+
+  constexpr typename base::const_reference at(std::uint8_t pos) const {
+    assert(pos < used);
+    return base::at(pos);
+  }
+
+  constexpr typename base::const_reference operator[](std::uint8_t pos) const noexcept {
+    assert(pos < used);
+    return base::operator[](pos);
+  }
+
+  typename base::reference at(std::uint8_t pos) {
+    assert(pos < used);
+    return base::at(pos);
+  }
+
+  typename base::reference operator[](std::uint8_t pos) noexcept {
+    assert(pos < used);
+    return base::operator[](pos);
+  }
+
+  void push_back(const T& value) {
+    base::at(used) = value;
+    used++;
+  }
+
+  void pop_back() {
+    if (empty()) return;
+    used--;
+  }
+
+  template <class... Args>
+  void emplace_back(Args&&... args) {
+    base::at(used) = {args...};
+    used++;
+  }
+
+  typename base::const_iterator end() const noexcept { return base::begin() + used; }
+  typename base::const_iterator cend() const noexcept { return end(); }
+  typename base::const_reverse_iterator rend() const noexcept { return const_reverse_iterator(end()); }
+  typename base::const_reverse_iterator crend() const noexcept { return rend(); }
+};
+}  // namespace pokesim::types::internal
+
+//////////////// END OF src/Types/Utilities/MaxSizedVector.hpp /////////////////
+
 ///////////////////////// START OF src/Types/State.hpp /////////////////////////
 
 #include <cstdint>
 #include <type_traits>
-#include <vector>
 
 
 namespace pokesim::types {
+namespace internal {
+const std::uint8_t MAX_TEAM_SIZE = 6U;
+const std::uint8_t MAX_ACTIVE_POKEMON_SLOTS = 2U;
+const std::uint8_t MAX_MOVE_SLOTS = 4U;
+}  // namespace internal
+
 using stateId = std::underlying_type_t<entity>;
 using stateProbability = float;
 using stateRngSeed = std::uint32_t;
@@ -12821,10 +12897,14 @@ using teamPositionIndex = std::uint8_t;
 using moveSlotPosition = std::uint8_t;
 
 template <typename T>
-using teamPositions = std::vector<T>;
+using teamPositions = types::internal::maxSizedVector<T, internal::MAX_TEAM_SIZE>;
+using teamOrder = types::teamPositions<types::teamPositionIndex>;
 
 template <typename T>
-using sideSlots = std::vector<T>;
+using moveSlots = types::internal::maxSizedVector<T, internal::MAX_MOVE_SLOTS>;
+
+template <typename T>
+using sideSlots = types::internal::maxSizedVector<T, internal::MAX_ACTIVE_POKEMON_SLOTS>;
 }  // namespace pokesim::types
 
 ////////////////////////// END OF src/Types/State.hpp //////////////////////////
@@ -13435,7 +13515,7 @@ struct SlotDecision {
 
 struct SideDecision {
   PlayerSideId sideId = PlayerSideId::NONE;
-  types::internal::variant<types::slotDecisions, types::teamPositions<types::teamPositionIndex>> decisions;
+  types::internal::variant<types::slotDecisions, types::teamOrder> decisions;
 };
 }  // namespace pokesim
 
@@ -14331,7 +14411,7 @@ struct Terastallize {};
 namespace pokesim::action {
 // Action Tag: When team member order has been picked as part of team preview
 struct Team {
-  types::teamPositions<types::teamPositionIndex> teamOrder;
+  types::teamOrder teamOrder;
 };
 }  // namespace pokesim::action
 
@@ -14345,8 +14425,8 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision,
   ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty");
   types::registry& registry = *sideHandle.registry();
 
-  if (sideDecision.decisions.holds<types::sideSlots<SlotDecision>>()) {
-    const auto& decisions = sideDecision.decisions.get<types::sideSlots<SlotDecision>>();
+  if (sideDecision.decisions.holds<types::slotDecisions>()) {
+    const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
 
     for (const SlotDecision& decision : decisions) {
       ENTT_ASSERT(decision.sourceSlot != Slot::NONE, "Source slot must be assigned");
@@ -14396,8 +14476,8 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision,
       sideActionQueue.actionQueue.push_back(actionHandle.entity());
     }
   }
-  else if (sideDecision.decisions.holds<types::teamPositions<types::teamPositionIndex>>()) {
-    const auto& teamOrder = sideDecision.decisions.get<types::teamPositions<types::teamPositionIndex>>();
+  else if (sideDecision.decisions.holds<types::teamOrder>()) {
+    const auto& teamOrder = sideDecision.decisions.get<types::teamOrder>();
 
     ENTT_ASSERT(
       sideHandle.get<Team>().team.size() == teamOrder.size(),
@@ -16811,8 +16891,10 @@ void SideStateSetup::initBlank() {
 
 void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
   Team& teamEntities = handle.emplace<Team>();
-  teamEntities.team.reserve(team.size());
   Battle battle = handle.get<Battle>();
+  ENTT_ASSERT(
+    team.size() <= teamEntities.team.max_size(),
+    "Cannot add more Pokemon to a team than types::internal::MAX_TEAM_SIZE");
 
   for (std::size_t i = 0; i < team.size(); i++) {
     teamEntities.team.push_back(team[i].entity());
@@ -16835,12 +16917,10 @@ void SideStateSetup::setBattle(types::entity entity) {
 
 ///////////// START OF src/Components/EntityHolders/MoveSlots.hpp //////////////
 
-#include <vector>
-
 namespace pokesim {
 // Contains a list of entities of the moves a Pokemon known.
 struct MoveSlots {
-  std::vector<types::entity> moveSlots{};
+  types::moveSlots<types::entity> moveSlots{};
 };
 }  // namespace pokesim
 
@@ -16967,7 +17047,13 @@ void PokemonStateSetup::setItem(dex::Item item) {
 }
 
 void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
-  handle.emplace<MoveSlots>(moveSlots);
+  MoveSlots& moveEntities = handle.emplace<MoveSlots>();
+  ENTT_ASSERT(
+    moveSlots.size() <= moveEntities.moveSlots.max_size(),
+    "Cannot add more moves to a Pokemon than types::internal::MAX_MOVE_SLOTS");
+  for (std::size_t i = 0; i < moveSlots.size(); i++) {
+    moveEntities.moveSlots.push_back(moveSlots[i]);
+  }
 }
 
 void PokemonStateSetup::setPostion(types::teamPositionIndex position) {
@@ -17294,6 +17380,8 @@ struct Pokemon {
 /////////////// END OF src/Components/EntityHolders/Pokemon.hpp ////////////////
 
 ///////////////////// START OF src/Battle/Clone/Clone.cpp //////////////////////
+
+#include <vector>
 
 namespace pokesim {
 types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount) {

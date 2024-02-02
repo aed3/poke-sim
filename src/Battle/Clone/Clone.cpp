@@ -5,7 +5,12 @@
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SpeciesNames.hpp>
 #include <Components/SpeedSort.hpp>
+#include <Types/Entity.hpp>
+#include <Types/State.hpp>
+#include <entt/container/dense_map.hpp>
+#include <entt/core/fwd.hpp>
 #include <entt/entity/registry.hpp>
+#include <vector>
 
 namespace pokesim {
 types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount) {

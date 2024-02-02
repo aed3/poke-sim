@@ -29,6 +29,6 @@ struct SlotDecision {
 
 struct SideDecision {
   PlayerSideId sideId = PlayerSideId::NONE;
-  types::internal::variant<types::slotDecisions, types::teamPositions<types::teamPositionIndex>> decisions;
+  types::internal::variant<types::slotDecisions, types::teamOrder> decisions;
 };
 }  // namespace pokesim
