@@ -117,6 +117,10 @@ jobs:
         if: matrix.use_single_header == 'TRUE'
         uses: ./.github/actions/create-headers
 
+      - name: Remove clang-query
+        if: matrix.use_single_header == 'TRUE'
+        run: rm -rf ./llvm
+
       - name: Configure build
         working-directory: ${{runner.workspace}}
         env:
