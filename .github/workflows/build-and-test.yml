@@ -90,28 +90,13 @@ jobs:
           codename=`lsb_release -sc`
 
           sudo apt-add-repository --yes --update "deb http://apt.llvm.org/$codename/ llvm-toolchain-$codename-$version_number main"
-          sudo apt install -yq --no-install-recommends clang-$version_number
+          sudo apt install -yq --no-install-recommends clang-$version_number clang-tools-$version_number
 
       - name: Prepare environment
         if: matrix.other_pkgs
         run: |
           sudo apt update
           sudo apt install -y --no-install-recommends ${{matrix.other_pkgs}}
-
-      - name: Cache LLVM and Clang
-        if: matrix.use_single_header == 'TRUE'
-        id: cache-llvm
-        uses: actions/cache@v3
-        with:
-          path: ./llvm
-          key: llvm-15.0.6
-      - name: Install clang-query
-        if: matrix.use_single_header == 'TRUE'
-        uses: KyleMayes/install-llvm-action@v1.6.1
-        with:
-          version: "15.0.6"
-          directory: ./llvm
-          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
 
       - name: Create Single Header File
         if: matrix.use_single_header == 'TRUE'
@@ -158,7 +143,7 @@ jobs:
           key: llvm-15.0.6
       - name: Install clang-query
         if: matrix.use_single_header == 'TRUE'
-        uses: KyleMayes/install-llvm-action@v1.6.1
+        uses: KyleMayes/install-llvm-action@v1.9.0
         with:
           version: "15.0.6"
           directory: ./llvm
@@ -209,7 +194,7 @@ jobs:
           key: llvm-15.0.7
       - name: Install clang-query
         if: matrix.use_single_header == 'TRUE'
-        uses: KyleMayes/install-llvm-action@v1.6.1
+        uses: KyleMayes/install-llvm-action@v1.9.0
         with:
           version: "15.0.7"
           directory: ./llvm
