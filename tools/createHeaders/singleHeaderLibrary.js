@@ -245,7 +245,7 @@ const createSingleFileHeader = () => {
       }
     }
 
-    // fs.writeFileSync(fullPath('include', 'PokeSim.hpp'), singleFileHeader.join('\n'));
+    fs.writeFileSync(fullPath('include', 'PokeSim.hpp'), singleFileHeader.join('\n'));
   }
   catch (e) {
     console.error(e);
