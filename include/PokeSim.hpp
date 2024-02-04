@@ -12952,7 +12952,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   inline void setIVs(const Ivs& ivs);
 
   template <typename BoostType>
-  inline void setBoost(types::boost boost) {
+  void setBoost(types::boost boost) {
     static_assert(
       std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() ||
       std::is_same<SpaBoost, BoostType>() || std::is_same<SpdBoost, BoostType>() ||
@@ -12961,7 +12961,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   };
 
   template <typename StatType>
-  inline void setStat(types::stat stat) {
+  void setStat(types::stat stat) {
     static_assert(
       std::is_same<stat::Hp, StatType>() || std::is_same<stat::Atk, StatType>() ||
       std::is_same<stat::Def, StatType>() || std::is_same<stat::Spa, StatType>() ||
@@ -13367,7 +13367,7 @@ class Pokedex {
   entt::dense_map<dex::Move, types::entity> movesMap{};
 
   template <typename Build, typename T>
-  inline void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
+  void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
 
   inline types::entity buildSpecies(dex::Species species);
   inline types::entity buildMove(dex::Move move);
@@ -13527,8 +13527,7 @@ namespace pokesim {
 struct SideDecision;
 struct ActionQueue;
 
-inline void resolveDecision(
-  types::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue);
+inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue);
 }  // namespace pokesim
 
 ///////////// END OF src/SimulateTurn/Actions/ResolveDecision.hpp //////////////
@@ -13701,10 +13700,8 @@ class Simulation {
   inline PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
   inline void createInitialSide(SideStateSetup sideSetup, const SideCreationInfo& sideData);
 
-  inline void createInitialTurnDecision(
-    BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData);
-  inline void createCalcDamageInput(
-    BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData);
+  inline void createInitialTurnDecision(BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData);
+  inline void createCalcDamageInput(BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData);
   inline void createAnalyzeEffectInput(
     BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& analyzeEffectInputData);
 
@@ -14792,7 +14789,7 @@ struct MoveEffectSetup : DexDataSetup {
   inline void setEffectsTarget();
 
   template <typename BoostType>
-  inline void setBoost(types::boost boost) {
+  void setBoost(types::boost boost) {
     static_assert(
       std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() ||
       std::is_same<SpaBoost, BoostType>() || std::is_same<SpdBoost, BoostType>() ||
@@ -17147,10 +17144,9 @@ inline void cloneMove(
 
 inline void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap);
 template <typename Component, typename GetEntity>
-inline void remapEntityMembers(
-  types::registry& registry, const types::ClonedEntityMap& entityMap, GetEntity getEntity);
+void remapEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap, GetEntity getEntity);
 template <typename Component, typename GetEntityList>
-inline void remapEntityListMembers(
+void remapEntityListMembers(
   types::registry& registry, const types::ClonedEntityMap& entityMap, GetEntityList getEntityList);
 
 inline void remapActionQueueEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);

@@ -17,7 +17,7 @@ struct AnalyzeEffectOptions;
 // Tool to set properties of a battle's state to an entity.
 struct BattleStateSetup : internal::StateSetupBase {
   BattleStateSetup(types::registry& registry) : BattleStateSetup(registry, registry.create()) {}
-  /*_inline_*/ BattleStateSetup(types::registry& registry, types::entity entity);
+  BattleStateSetup(types::registry& registry, types::entity entity);
 
   /**
    * @brief Applies the defaults to the required properties for a battle state.
@@ -29,22 +29,22 @@ struct BattleStateSetup : internal::StateSetupBase {
    * - Sides: Unassigned entities for P1 and P2
    * - ActionQueue: An empty queue
    */
-  /*_inline_*/ void initBlank();
+  void initBlank();
 
-  /*_inline_*/ void setAutoID();
-  /*_inline_*/ void setID(types::stateId id);
-  /*_inline_*/ void setSide(PlayerSideId sideID, types::entity sideEntity);
+  void setAutoID();
+  void setID(types::stateId id);
+  void setSide(PlayerSideId sideID, types::entity sideEntity);
 
   // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
-  /*_inline_*/ void setRNGSeed(std::optional<types::stateRngSeed> seed = std::nullopt);
-  /*_inline_*/ void setActionQueue(const std::vector<types::entity>& queue);
-  /*_inline_*/ void setTurn(types::battleTurn turn);
-  /*_inline_*/ void setActiveMove(types::entity activeMove);
-  /*_inline_*/ void setActivePokemon(types::entity activePokemon);
-  /*_inline_*/ void setActiveTarget(types::entity activeTarget);
-  /*_inline_*/ void setActiveUser(types::entity activeSource);
-  /*_inline_*/ void setProbability(types::stateProbability probability);
+  void setRNGSeed(std::optional<types::stateRngSeed> seed = std::nullopt);
+  void setActionQueue(const std::vector<types::entity>& queue);
+  void setTurn(types::battleTurn turn);
+  void setActiveMove(types::entity activeMove);
+  void setActivePokemon(types::entity activePokemon);
+  void setActiveTarget(types::entity activeTarget);
+  void setActiveUser(types::entity activeSource);
+  void setProbability(types::stateProbability probability);
 
-  /*_inline_*/ std::vector<BattleStateSetup> clone(std::optional<types::cloneIndex> cloneCount = std::nullopt);
+  std::vector<BattleStateSetup> clone(std::optional<types::cloneIndex> cloneCount = std::nullopt);
 };
 }  // namespace pokesim

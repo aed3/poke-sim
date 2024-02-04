@@ -31,5 +31,5 @@ struct Serious {};
 struct Timid {};
 
 // Assigns a nature's tag to a handle
-/*_inline_*/ void enumToTag(dex::Nature nature, types::handle handle);
+void enumToTag(dex::Nature nature, types::handle handle);
 }  // namespace pokesim::nature::tags

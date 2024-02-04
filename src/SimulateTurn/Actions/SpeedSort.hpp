@@ -4,5 +4,5 @@
 
 namespace pokesim {
 struct ActionQueue;
-/*_inline_*/ void speedSort(types::handle handle, ActionQueue& actionQueue);
+void speedSort(types::handle handle, ActionQueue& actionQueue);
 }  // namespace pokesim

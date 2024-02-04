@@ -12,5 +12,5 @@ struct SweetVeil {};
 struct Trace {};
 
 // Assigns an ability's tag to a handle
-/*_inline_*/ void enumToTag(dex::Ability ability, types::handle handle);
+void enumToTag(dex::Ability ability, types::handle handle);
 }  // namespace pokesim::ability::tags

@@ -27,11 +27,11 @@ class Pokedex {
   entt::dense_map<dex::Move, types::entity> movesMap{};
 
   template <typename Build, typename T>
-  /*_inline_*/ void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
+  void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
 
-  /*_inline_*/ types::entity buildSpecies(dex::Species species);
-  /*_inline_*/ types::entity buildMove(dex::Move move);
-  /*_inline_*/ types::entity buildItem(dex::Item item);
+  types::entity buildSpecies(dex::Species species);
+  types::entity buildMove(dex::Move move);
+  types::entity buildItem(dex::Item item);
 
  public:
   /**
@@ -44,7 +44,7 @@ class Pokedex {
   Pokedex(GameMechanics mechanics_) : mechanics(mechanics_) {}
 
   // Creates an entity to store a new Pokedex entry of any species, item, or move.
-  /*_inline_*/ types::handle createEntry();
+  types::handle createEntry();
 
   /**
    * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.
@@ -55,7 +55,7 @@ class Pokedex {
    *
    * @note Only call this once per species per Pokedex instance.
    */
-  /*_inline_*/ void loadSpecies(const entt::dense_set<dex::Species>& speciesSet);
+  void loadSpecies(const entt::dense_set<dex::Species>& speciesSet);
 
   /**
    * @brief Calls the load functions for a set of items to add their data to a Pokedex's storage.
@@ -66,7 +66,7 @@ class Pokedex {
    *
    * @note Only call this once per item per Pokedex instance.
    */
-  /*_inline_*/ void loadItems(const entt::dense_set<dex::Item>& itemSet);
+  void loadItems(const entt::dense_set<dex::Item>& itemSet);
 
   /**
    * @brief Calls the load functions for a set of moves to add their data to a Pokedex's storage.
@@ -77,7 +77,7 @@ class Pokedex {
    *
    * @note Only call this once per move per Pokedex instance.
    */
-  /*_inline_*/ void loadMoves(const entt::dense_set<dex::Move>& moveSet);
+  void loadMoves(const entt::dense_set<dex::Move>& moveSet);
 
   /**
    * @brief Returns references to the given dex data components for a species

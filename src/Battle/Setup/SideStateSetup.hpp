@@ -19,10 +19,10 @@ struct SideStateSetup : internal::StateSetupBase {
    *
    * Some of the required properties are a blank `Battle`, `Side`, and `FoeSide` component.
    */
-  /*_inline_*/ void initBlank();
+  void initBlank();
 
-  /*_inline_*/ void setTeam(std::vector<PokemonStateSetup>& team);
-  /*_inline_*/ void setOpponent(types::entity entity);
-  /*_inline_*/ void setBattle(types::entity entity);
+  void setTeam(std::vector<PokemonStateSetup>& team);
+  void setOpponent(types::entity entity);
+  void setBattle(types::entity entity);
 };
 }  // namespace pokesim

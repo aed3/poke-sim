@@ -12,5 +12,5 @@ struct FocusSash {};
 struct LifeOrb {};
 
 // Assigns an item's tag to a handle
-/*_inline_*/ void enumToTag(dex::Item item, types::handle handle);
+void enumToTag(dex::Item item, types::handle handle);
 }  // namespace pokesim::item::tags

@@ -24,6 +24,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Cache LLVM and Clang
+        id: cache-llvm
+        uses: actions/cache@v3
+        with:
+          path: ./llvm
+          key: llvm-15.0.6
+      - name: Install clang-tidy and clang-format
+        uses: KyleMayes/install-llvm-action@v1.6.1
+        with:
+          version: "15.0.6"
+          directory: ./llvm
+          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
+
       - name: Create Single Header File
         uses: ./.github/actions/create-headers
 

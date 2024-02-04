@@ -105,18 +105,16 @@ class Simulation {
   };
 
  private:
-  /*_inline_*/ std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
-  /*_inline_*/ PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
-  /*_inline_*/ void createInitialSide(SideStateSetup sideSetup, const SideCreationInfo& sideData);
+  std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
+  PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
+  void createInitialSide(SideStateSetup sideSetup, const SideCreationInfo& sideData);
 
-  /*_inline_*/ void createInitialTurnDecision(
-    BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData);
-  /*_inline_*/ void createCalcDamageInput(
-    BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData);
-  /*_inline_*/ void createAnalyzeEffectInput(
+  void createInitialTurnDecision(BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData);
+  void createCalcDamageInput(BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData);
+  void createAnalyzeEffectInput(
     BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& analyzeEffectInputData);
 
-  /*_inline_*/ std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
+  std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleData);
 
  public:
@@ -128,32 +126,32 @@ class Simulation {
   calc_damage::Options calculateDamageOptions;
   analyze_effect::Options analyzeEffectOptions;
 
-  /*_inline_*/ Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
+  Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
 
   // Load information about any number of battle states into the simulation's registry.
-  /*_inline_*/ void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
+  void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
 
-  /*_inline_*/ void run();
+  void run();
 
-  /*_inline_*/ simulate_turn::Results simulateTurn(std::optional<simulate_turn::Options> options = std::nullopt);
-  /*_inline_*/ calc_damage::Results calculateDamage(std::optional<calc_damage::Options> options = std::nullopt);
-  /*_inline_*/ analyze_effect::Results analyzeEffect(std::optional<analyze_effect::Options> options = std::nullopt);
+  simulate_turn::Results simulateTurn(std::optional<simulate_turn::Options> options = std::nullopt);
+  calc_damage::Results calculateDamage(std::optional<calc_damage::Options> options = std::nullopt);
+  analyze_effect::Results analyzeEffect(std::optional<analyze_effect::Options> options = std::nullopt);
 
-  /*_inline_*/ simulate_turn::Results simulateTurn(
+  simulate_turn::Results simulateTurn(
     std::initializer_list<BattleCreationInfo> battleDataList,
     std::optional<simulate_turn::Options> options = std::nullopt);
 
-  /*_inline_*/ calc_damage::Results calculateDamage(
+  calc_damage::Results calculateDamage(
     std::initializer_list<BattleCreationInfo> battleDataList,
     std::optional<calc_damage::Options> options = std::nullopt);
 
-  /*_inline_*/ analyze_effect::Results analyzeEffect(
+  analyze_effect::Results analyzeEffect(
     std::initializer_list<BattleCreationInfo> battleDataList,
     std::optional<analyze_effect::Options> options = std::nullopt);
 
-  /*_inline_*/ void clearAllResults();
-  /*_inline_*/ void clearSimulateTurnResults();
-  /*_inline_*/ void clearCalculateDamageResults();
-  /*_inline_*/ void clearAnalyzeEffectResults();
+  void clearAllResults();
+  void clearSimulateTurnResults();
+  void clearCalculateDamageResults();
+  void clearAnalyzeEffectResults();
 };
 }  // namespace pokesim

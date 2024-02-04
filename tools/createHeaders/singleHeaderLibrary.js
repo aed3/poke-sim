@@ -1,5 +1,7 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
+const child_process = require('child_process');
 const {fullPath, toRelative} = require('../utils')
 
 const srcFolder = fullPath('src');
@@ -9,7 +11,6 @@ const mainHeader = path.join(srcFolder, 'PokeSim.hpp');
 
 const includeRegex = /^\s*#include\s+["<]([^"<>]+)([">])/;
 const pragmaOnceRegex = /^\s*#pragma\s+once/;
-const inlineRegex = /\/\*\s*_inline_\s*\*\//g;
 
 const fileText = {};
 const dependencies = {};
@@ -128,7 +129,7 @@ const pad = (str) => {
   return ' '.padStart(split, '/') + str + ' '.padEnd(split + (str.length % 2), '/');
 };
 
-const addToOneFileHeader = (files) => {
+const addToSingleFileHeader = (files) => {
   files = files.filter(file => path.basename(file) !== 'headers.hpp');
 
   singleFileHeader.push('', '/**', ' * FILE ORDER');
@@ -148,11 +149,78 @@ const addToOneFileHeader = (files) => {
       const line = lines[i];
       if ((!line && startOfFile) || fileDependencyLines.has(i) || pragmaOnceRegex.test(line)) continue;
       startOfFile = false;
-      singleFileHeader.push(line.replace(inlineRegex, 'inline'));
+      singleFileHeader.push(line);
     }
 
     singleFileHeader.push('', pad(`END OF ${normalizedFile}`));
   }
+};
+
+const createSingleFileHeader = () => {
+  try {
+    child_process.execSync(`${os.platform() === 'win32' ? 'where' : 'which'} clang-query`);
+  }
+  catch (e) {
+    throw new Error('clang-query was not found as is required to make the single header file.');
+  }
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), '_'));
+
+  try {
+    const tempHeaderPath = path.join(tempDir, 'PokeSim.hpp');
+    fs.writeFileSync(tempHeaderPath, singleFileHeader.join('\n'));
+    const query = `
+    set bind-root false
+    m namespaceDecl(
+      isExpansionInMainFile(),
+      matchesName("pokesim"),
+      forEach(cxxRecordDecl(
+        forEach(cxxMethodDecl(
+          decl().bind("inline"),
+          unless(cxxConstructorDecl(isDefinition())),
+          unless(isDefinition()),
+          unless(isInline()),
+          unless(isImplicit())
+        ))
+      ))
+    )
+    m namespaceDecl(
+      isExpansionInMainFile(),
+      matchesName("pokesim"),
+      forEach(functionDecl(
+        decl().bind("inline"),
+        unless(cxxConstructorDecl()),
+        unless(isInline()),
+        unless(isDefinition())
+      ))
+    )`;
+
+    const queryPath = path.join(tempDir, 'query');
+    fs.writeFileSync(queryPath, query);
+
+    const result =
+      child_process
+        .execSync(`clang-query -f "${queryPath}" -p "${fullPath('build')}" "${tempHeaderPath}"`, {stdio: 'pipe'})
+        .toString();
+
+    const inlineLocations = result.match(/\d+:\d+: note: "inline" binds here/g).map(resultLine => {
+      const [, line, column] = /(\d+):(\d+):/.exec(resultLine);
+      return {line: parseInt(line) - 1, column: parseInt(column) - 1};
+    });
+
+    inlineLocations.forEach(({line, column}) => {
+      const headerLine = singleFileHeader[line];
+      const newLine = `${headerLine.substring(0, column)}inline ${headerLine.substring(column)}`;
+      singleFileHeader[line] = newLine;
+    });
+
+    fs.writeFileSync(fullPath('include', 'PokeSim.hpp'), singleFileHeader.join('\n'));
+  }
+  catch (e) {
+    console.error(e);
+  }
+
+  fs.rmSync(tempDir, {recursive: true, force: true});
 };
 
 readSrcFiles();
@@ -160,6 +228,5 @@ findDependencies();
 checkDependencyCycles();
 findDependencyOrder();
 
-addToOneFileHeader(dependencyOrder);
-
-fs.writeFileSync(fullPath('include', 'PokeSim.hpp'), singleFileHeader.join('\n'));
+addToSingleFileHeader(dependencyOrder);
+createSingleFileHeader();

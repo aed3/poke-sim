@@ -18,10 +18,10 @@ struct MoveStateSetup : internal::StateSetupBase {
    *
    * Some of the required properties are a blank `MoveName`, `Pp`, and `MaxPp` component.
    */
-  /*_inline_*/ void initBlank();
+  void initBlank();
 
-  /*_inline_*/ void setName(dex::Move moveName);
-  /*_inline_*/ void setPP(types::pp pp);
-  /*_inline_*/ void setMaxPP(types::pp maxPp);
+  void setName(dex::Move moveName);
+  void setPP(types::pp pp);
+  void setMaxPP(types::pp maxPp);
 };
 }  // namespace pokesim

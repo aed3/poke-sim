@@ -18,9 +18,9 @@ struct TurnOutcomeBattles {
 };
 
 struct Results {
-  /*_inline_*/ types::view<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
+  types::view<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
 
-  /*_inline_*/ Results(const Simulation& simulation_);
+  Results(const Simulation& simulation_);
 
  private:
   const Simulation& simulation;
@@ -49,13 +49,13 @@ struct HitCount {
 };
 
 struct Results {
-  /*_inline_*/ types::view<MaxDamage> maxDamageResults() const;
-  /*_inline_*/ types::view<MinUsesUntilKo> minUsesUntilKoResults() const;
-  /*_inline_*/ types::view<AttackerHpRecovered> hpRecoveredResults() const;
-  /*_inline_*/ types::view<AttackerHpLost> hpLostResults() const;
-  /*_inline_*/ types::view<HitCount> hitCountResults() const;
+  types::view<MaxDamage> maxDamageResults() const;
+  types::view<MinUsesUntilKo> minUsesUntilKoResults() const;
+  types::view<AttackerHpRecovered> hpRecoveredResults() const;
+  types::view<AttackerHpLost> hpLostResults() const;
+  types::view<HitCount> hitCountResults() const;
 
-  /*_inline_*/ Results(const Simulation& simulation_);
+  Results(const Simulation& simulation_);
 
  private:
   const Simulation& simulation;
@@ -80,12 +80,12 @@ struct MultipliedKoChance {
 };
 
 struct Results {
-  /*_inline_*/ types::view<EffectMultiplier> effectMultiplierResults() const;
-  /*_inline_*/ types::view<MultipliedMaxDamage> multipliedMaxDamageResults() const;
-  /*_inline_*/ types::view<MultipliedDamageRolls> multipliedDamageRollsResults() const;
-  /*_inline_*/ types::view<MultipliedKoChance> multipliedKoChanceResults() const;
+  types::view<EffectMultiplier> effectMultiplierResults() const;
+  types::view<MultipliedMaxDamage> multipliedMaxDamageResults() const;
+  types::view<MultipliedDamageRolls> multipliedDamageRollsResults() const;
+  types::view<MultipliedKoChance> multipliedKoChanceResults() const;
 
-  /*_inline_*/ Results(const Simulation& simulation_);
+  Results(const Simulation& simulation_);
 
  private:
   const Simulation& simulation;
