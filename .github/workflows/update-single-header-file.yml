@@ -37,6 +37,9 @@ jobs:
           directory: ../llvm
           cached: ${{ steps.cache-llvm.outputs.cache-hit }}
 
+      - name: Query Version
+        run: clang-query --version
+
       - name: Create Single Header File
         uses: ./.github/actions/create-headers
 
