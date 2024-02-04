@@ -17119,7 +17119,7 @@ void MoveStateSetup::setMaxPP(types::pp maxPp) {
 namespace pokesim {
 struct CloneTo;
 
-inline types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount);
+types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount);
 
 namespace internal {
 inline void cloneEntity(
