@@ -98,6 +98,21 @@ jobs:
           sudo apt update
           sudo apt install -y --no-install-recommends ${{matrix.other_pkgs}}
 
+      - name: Cache LLVM and Clang
+        if: matrix.use_single_header == 'TRUE'
+        id: cache-llvm
+        uses: actions/cache@v3
+        with:
+          path: ./llvm
+          key: llvm-15.0.6
+      - name: Install clang-tidy and clang-format
+        if: matrix.use_single_header == 'TRUE'
+        uses: KyleMayes/install-llvm-action@v1.6.1
+        with:
+          version: "15.0.6"
+          directory: ./llvm
+          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
+
       - name: Create Single Header File
         if: matrix.use_single_header == 'TRUE'
         uses: ./.github/actions/create-headers
@@ -134,6 +149,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Cache LLVM and Clang
+        if: matrix.use_single_header == 'TRUE'
+        id: cache-llvm
+        uses: actions/cache@v3
+        with:
+          path: ./llvm
+          key: llvm-15.0.6
+      - name: Install clang-tidy and clang-format
+        if: matrix.use_single_header == 'TRUE'
+        uses: KyleMayes/install-llvm-action@v1.6.1
+        with:
+          version: "15.0.6"
+          directory: ./llvm
+          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
+
       - name: Create Single Header File
         if: matrix.use_single_header == 'TRUE'
         uses: ./.github/actions/create-headers
@@ -169,6 +199,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Cache LLVM and Clang
+        if: matrix.use_single_header == 'TRUE'
+        id: cache-llvm
+        uses: actions/cache@v3
+        with:
+          path: ./llvm
+          key: llvm-15.0.6
+      - name: Install clang-tidy and clang-format
+        if: matrix.use_single_header == 'TRUE'
+        uses: KyleMayes/install-llvm-action@v1.6.1
+        with:
+          version: "15.0.6"
+          directory: ./llvm
+          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
 
       - name: Create Single Header File
         if: matrix.use_single_header == 'TRUE'
