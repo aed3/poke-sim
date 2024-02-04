@@ -171,6 +171,7 @@ const createSingleFileHeader = () => {
     fs.writeFileSync(tempHeaderPath, singleFileHeader.join('\n'));
     const query = `
     set bind-root false
+    enable output dump
     m namespaceDecl(
       isExpansionInMainFile(),
       matchesName("pokesim"),
@@ -245,6 +246,7 @@ const createSingleFileHeader = () => {
       }
     }
 
+    fs.writeFileSync(fullPath('include', 'clang-query'), result);
     fs.writeFileSync(fullPath('include', 'PokeSim.hpp'), singleFileHeader.join('\n'));
   }
   catch (e) {
