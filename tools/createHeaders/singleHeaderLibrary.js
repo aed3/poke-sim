@@ -187,12 +187,35 @@ const createSingleFileHeader = () => {
     m namespaceDecl(
       isExpansionInMainFile(),
       matchesName("pokesim"),
+      forEach(cxxRecordDecl(
+        forEach(functionTemplateDecl(forEach(cxxMethodDecl(
+          decl().bind("inline"),
+          unless(cxxConstructorDecl(isDefinition())),
+          unless(isDefinition()),
+          unless(isInline()),
+          unless(isImplicit())
+        ))))
+      ))
+    )
+    m namespaceDecl(
+      isExpansionInMainFile(),
+      matchesName("pokesim"),
       forEach(functionDecl(
         decl().bind("inline"),
         unless(cxxConstructorDecl()),
         unless(isInline()),
         unless(isDefinition())
       ))
+    )
+    m namespaceDecl(
+      isExpansionInMainFile(),
+      matchesName("pokesim"),
+      forEach(functionTemplateDecl(forEach(functionDecl(
+        decl().bind("inline"),
+        unless(cxxConstructorDecl()),
+        unless(isInline()),
+        unless(isDefinition())
+      ))))
     )`;
 
     const queryPath = path.join(tempDir, 'query');
@@ -213,6 +236,14 @@ const createSingleFileHeader = () => {
       const newLine = `${headerLine.substring(0, column)}inline ${headerLine.substring(column)}`;
       singleFileHeader[line] = newLine;
     });
+
+    const headerPath = fullPath('include', 'PokeSim.hpp');
+    if (fs.existsSync(headerPath)) {
+      const originalHeader = fs.readFileSync(headerPath, 'utf8');
+      if (originalHeader !== singleFileHeader.join('\n')) {
+        console.log('Made changes to single header file');
+      }
+    }
 
     fs.writeFileSync(fullPath('include', 'PokeSim.hpp'), singleFileHeader.join('\n'));
   }

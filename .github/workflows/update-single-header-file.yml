@@ -30,7 +30,7 @@ jobs:
         with:
           path: ./llvm
           key: llvm-15.0.6
-      - name: Install clang-tidy and clang-format
+      - name: Install clang-query
         uses: KyleMayes/install-llvm-action@v1.6.1
         with:
           version: "15.0.6"

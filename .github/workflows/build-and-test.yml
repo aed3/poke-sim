@@ -105,7 +105,7 @@ jobs:
         with:
           path: ./llvm
           key: llvm-15.0.6
-      - name: Install clang-tidy and clang-format
+      - name: Install clang-query
         if: matrix.use_single_header == 'TRUE'
         uses: KyleMayes/install-llvm-action@v1.6.1
         with:
@@ -156,7 +156,7 @@ jobs:
         with:
           path: ./llvm
           key: llvm-15.0.6
-      - name: Install clang-tidy and clang-format
+      - name: Install clang-query
         if: matrix.use_single_header == 'TRUE'
         uses: KyleMayes/install-llvm-action@v1.6.1
         with:
@@ -206,12 +206,12 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./llvm
-          key: llvm-15.0.6
-      - name: Install clang-tidy and clang-format
+          key: llvm-15.0.7
+      - name: Install clang-query
         if: matrix.use_single_header == 'TRUE'
         uses: KyleMayes/install-llvm-action@v1.6.1
         with:
-          version: "15.0.6"
+          version: "15.0.7"
           directory: ./llvm
           cached: ${{ steps.cache-llvm.outputs.cache-hit }}
 

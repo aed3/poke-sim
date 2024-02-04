@@ -13367,7 +13367,7 @@ class Pokedex {
   entt::dense_map<dex::Move, types::entity> movesMap{};
 
   template <typename Build, typename T>
-  void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
+  inline void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
 
   inline types::entity buildSpecies(dex::Species species);
   inline types::entity buildMove(dex::Move move);
@@ -17144,9 +17144,9 @@ inline void cloneMove(
 
 inline void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap);
 template <typename Component, typename GetEntity>
-void remapEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap, GetEntity getEntity);
+inline void remapEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap, GetEntity getEntity);
 template <typename Component, typename GetEntityList>
-void remapEntityListMembers(
+inline void remapEntityListMembers(
   types::registry& registry, const types::ClonedEntityMap& entityMap, GetEntityList getEntityList);
 
 inline void remapActionQueueEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
