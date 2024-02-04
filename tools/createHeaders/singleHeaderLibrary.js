@@ -221,10 +221,11 @@ const createSingleFileHeader = () => {
 
     const queryPath = path.join(tempDir, 'query');
     fs.writeFileSync(queryPath, query);
+    console.log(`clang-query -f "${queryPath}" -p "${fullPath('build')}" "${tempHeaderPath}"`);
 
     const result =
       child_process
-        .execSync(`clang-query -f "${queryPath}" -p "${fullPath('build')}" "${tempHeaderPath}"`, {stdio: 'pipe'})
+        .execSync(`clang-query -f "${queryPath}" "${tempHeaderPath}" -- -std=c++17`, {stdio: 'pipe'})
         .toString();
 
     const inlineLocations = result.match(/\d+:\d+: note: "inline" binds here/g).map(resultLine => {
