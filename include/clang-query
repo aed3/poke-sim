@@ -1,2005 +1,2040 @@
 
 Match #1:
 
-/tmp/_kvVGVh/PokeSim.hpp:12537:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12537:3: note: "inline" binds here
   void setAttacker(types::entity entity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77345d8 </tmp/_kvVGVh/PokeSim.hpp:12537:3, col:40> col:8 used setAttacker 'void (types::entity)'
-`-ParmVarDecl 0x5580e77344e8 <col:20, col:34> col:34 entity 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1f9b05c8 </tmp/_sSiSlh/PokeSim.hpp:12537:3, col:40> col:8 used setAttacker 'void (types::entity)'
+`-ParmVarDecl 0x561d1f9b0508 <col:20, col:34> col:34 entity 'types::entity':'entt::entity'
 
 
 Match #2:
 
-/tmp/_kvVGVh/PokeSim.hpp:12538:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12538:3: note: "inline" binds here
   void setDefender(types::entity entity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7734760 </tmp/_kvVGVh/PokeSim.hpp:12538:3, col:40> col:8 used setDefender 'void (types::entity)'
-`-ParmVarDecl 0x5580e77346d0 <col:20, col:34> col:34 entity 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1f9b0750 </tmp/_sSiSlh/PokeSim.hpp:12538:3, col:40> col:8 used setDefender 'void (types::entity)'
+`-ParmVarDecl 0x561d1f9b06c0 <col:20, col:34> col:34 entity 'types::entity':'entt::entity'
 
 
 Match #3:
 
-/tmp/_kvVGVh/PokeSim.hpp:12539:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12539:3: note: "inline" binds here
   void setEffect(types::effectEnum effect);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77348c0 </tmp/_kvVGVh/PokeSim.hpp:12539:3, col:42> col:8 invalid setEffect 'void (int)'
-`-ParmVarDecl 0x5580e7734830 <col:18, col:36> col:36 invalid effect 'int'
+CXXMethodDecl 0x561d1f9b0998 </tmp/_sSiSlh/PokeSim.hpp:12539:3, col:42> col:8 used setEffect 'void (types::effectEnum)'
+`-ParmVarDecl 0x561d1f9b08a0 <col:18, col:36> col:36 effect 'types::effectEnum':'pokesim::types::internal::variant<std::monostate, pokesim::dex::PseudoWeather, pokesim::dex::SideCondition, pokesim::dex::Status, pokesim::dex::Terrain, pokesim::dex::Volatile, pokesim::dex::Weather>'
 
 
 Match #4:
 
-/tmp/_kvVGVh/PokeSim.hpp:12540:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12540:3: note: "inline" binds here
   void setBattle(types::entity entity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7734a48 </tmp/_kvVGVh/PokeSim.hpp:12540:3, col:38> col:8 used setBattle 'void (types::entity)'
-`-ParmVarDecl 0x5580e77349b8 <col:18, col:32> col:32 entity 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1f9b0b20 </tmp/_sSiSlh/PokeSim.hpp:12540:3, col:38> col:8 used setBattle 'void (types::entity)'
+`-ParmVarDecl 0x561d1f9b0a90 <col:18, col:32> col:32 entity 'types::entity':'entt::entity'
 
 
 Match #5:
 
-/tmp/_kvVGVh/PokeSim.hpp:12930:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12930:3: note: "inline" binds here
   void initBlank();
   ^~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e02a8 </tmp/_kvVGVh/PokeSim.hpp:12930:3, col:18> col:8 initBlank 'void ()'
-`-FullComment 0x5580e7a44660 <line:12925:5, line:12928:26>
-  |-ParagraphComment 0x5580e7a44530 <line:12925:5>
-  | `-TextComment 0x5580e7a44500 <col:5> Text=" "
-  |-BlockCommandComment 0x5580e7a44550 <col:6, col:80> Name="brief"
-  | `-ParagraphComment 0x5580e7a445b0 <col:12, col:80>
-  |   `-TextComment 0x5580e7a44580 <col:12, col:80> Text=" Applies the defaults to the required properties for a Pokemon state."
-  `-ParagraphComment 0x5580e7a44620 <line:12927:5, line:12928:26>
-    |-TextComment 0x5580e7a445d0 <line:12927:5, col:108> Text=" Some of the required properties are a blank `SpeciesName`, `Side`, and `Battle` component along with an"
-    `-TextComment 0x5580e7a445f0 <line:12928:5, col:26> Text=" automatically set Id."
+CXXMethodDecl 0x561d1fa3f408 </tmp/_sSiSlh/PokeSim.hpp:12930:3, col:18> col:8 initBlank 'void ()'
+`-FullComment 0x7f5b02c26a80 <line:12925:5, line:12928:26>
+  |-ParagraphComment 0x7f5b02c26950 <line:12925:5>
+  | `-TextComment 0x7f5b02c26920 <col:5> Text=" "
+  |-BlockCommandComment 0x7f5b02c26970 <col:6, col:80> Name="brief"
+  | `-ParagraphComment 0x7f5b02c269d0 <col:12, col:80>
+  |   `-TextComment 0x7f5b02c269a0 <col:12, col:80> Text=" Applies the defaults to the required properties for a Pokemon state."
+  `-ParagraphComment 0x7f5b02c26a40 <line:12927:5, line:12928:26>
+    |-TextComment 0x7f5b02c269f0 <line:12927:5, col:108> Text=" Some of the required properties are a blank `SpeciesName`, `Side`, and `Battle` component along with an"
+    `-TextComment 0x7f5b02c26a10 <line:12928:5, col:26> Text=" automatically set Id."
 
 
 Match #6:
 
-/tmp/_kvVGVh/PokeSim.hpp:12932:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12932:3: note: "inline" binds here
   void setAutoID();
   ^~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e0368 </tmp/_kvVGVh/PokeSim.hpp:12932:3, col:18> col:8 used setAutoID 'void ()'
+CXXMethodDecl 0x561d1fa3f4c8 </tmp/_sSiSlh/PokeSim.hpp:12932:3, col:18> col:8 used setAutoID 'void ()'
 
 
 Match #7:
 
-/tmp/_kvVGVh/PokeSim.hpp:12933:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12933:3: note: "inline" binds here
   void setID(types::stateId id);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e04c0 </tmp/_kvVGVh/PokeSim.hpp:12933:3, col:31> col:8 invalid setID 'void (int)'
-`-ParmVarDecl 0x5580e77e0430 <col:14, col:29> col:29 invalid id 'int'
+CXXMethodDecl 0x561d1fa3f708 </tmp/_sSiSlh/PokeSim.hpp:12933:3, col:31> col:8 used setID 'void (types::stateId)'
+`-ParmVarDecl 0x561d1fa3f610 <col:14, col:29> col:29 id 'types::stateId':'unsigned int'
 
 
 Match #8:
 
-/tmp/_kvVGVh/PokeSim.hpp:12934:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12934:3: note: "inline" binds here
   void setSpecies(dex::Species speciesName);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e06f8 </tmp/_kvVGVh/PokeSim.hpp:12934:3, col:43> col:8 used setSpecies 'void (dex::Species)'
-`-ParmVarDecl 0x5580e77e0600 <col:19, col:32> col:32 speciesName 'dex::Species':'pokesim::dex::Species'
+CXXMethodDecl 0x561d1fa3f948 </tmp/_sSiSlh/PokeSim.hpp:12934:3, col:43> col:8 used setSpecies 'void (dex::Species)'
+`-ParmVarDecl 0x561d1fa3f850 <col:19, col:32> col:32 speciesName 'dex::Species':'pokesim::dex::Species'
 
 
 Match #9:
 
-/tmp/_kvVGVh/PokeSim.hpp:12936:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12936:3: note: "inline" binds here
   void setSide(types::entity entity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e08b8 </tmp/_kvVGVh/PokeSim.hpp:12936:3, col:36> col:8 setSide 'void (types::entity)'
-`-ParmVarDecl 0x5580e77e07f0 <col:16, col:30> col:30 entity 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1fa3fb08 </tmp/_sSiSlh/PokeSim.hpp:12936:3, col:36> col:8 used setSide 'void (types::entity)'
+`-ParmVarDecl 0x561d1fa3fa40 <col:16, col:30> col:30 entity 'types::entity':'entt::entity'
 
 
 Match #10:
 
-/tmp/_kvVGVh/PokeSim.hpp:12937:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12937:3: note: "inline" binds here
   void setBattle(types::entity entity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e0a40 </tmp/_kvVGVh/PokeSim.hpp:12937:3, col:38> col:8 setBattle 'void (types::entity)'
-`-ParmVarDecl 0x5580e77e09b0 <col:18, col:32> col:32 entity 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1fa3fc90 </tmp/_sSiSlh/PokeSim.hpp:12937:3, col:38> col:8 used setBattle 'void (types::entity)'
+`-ParmVarDecl 0x561d1fa3fc00 <col:18, col:32> col:32 entity 'types::entity':'entt::entity'
 
 
 Match #11:
 
-/tmp/_kvVGVh/PokeSim.hpp:12939:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12939:3: note: "inline" binds here
   void setLevel(types::level level);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e0c88 </tmp/_kvVGVh/PokeSim.hpp:12939:3, col:35> col:8 used setLevel 'void (types::level)'
-`-ParmVarDecl 0x5580e77e0b90 <col:17, col:30> col:30 level 'types::level':'unsigned char'
+CXXMethodDecl 0x561d1fa3fed8 </tmp/_sSiSlh/PokeSim.hpp:12939:3, col:35> col:8 used setLevel 'void (types::level)'
+`-ParmVarDecl 0x561d1fa3fde0 <col:17, col:30> col:30 level 'types::level':'unsigned char'
 
 
 Match #12:
 
-/tmp/_kvVGVh/PokeSim.hpp:12940:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12940:3: note: "inline" binds here
   void setGender(dex::Gender gender);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e0ea8 </tmp/_kvVGVh/PokeSim.hpp:12940:3, col:36> col:8 used setGender 'void (dex::Gender)'
-`-ParmVarDecl 0x5580e77e0db0 <col:18, col:30> col:30 gender 'dex::Gender':'pokesim::dex::Gender'
+CXXMethodDecl 0x561d1fa400f8 </tmp/_sSiSlh/PokeSim.hpp:12940:3, col:36> col:8 used setGender 'void (dex::Gender)'
+`-ParmVarDecl 0x561d1fa40000 <col:18, col:30> col:30 gender 'dex::Gender':'pokesim::dex::Gender'
 
 
 Match #13:
 
-/tmp/_kvVGVh/PokeSim.hpp:12941:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12941:3: note: "inline" binds here
   void setAbility(dex::Ability ability);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e10c8 </tmp/_kvVGVh/PokeSim.hpp:12941:3, col:39> col:8 used setAbility 'void (dex::Ability)'
-`-ParmVarDecl 0x5580e77e0fd0 <col:19, col:32> col:32 ability 'dex::Ability':'pokesim::dex::Ability'
+CXXMethodDecl 0x561d1fa40318 </tmp/_sSiSlh/PokeSim.hpp:12941:3, col:39> col:8 used setAbility 'void (dex::Ability)'
+`-ParmVarDecl 0x561d1fa40220 <col:19, col:32> col:32 ability 'dex::Ability':'pokesim::dex::Ability'
 
 
 Match #14:
 
-/tmp/_kvVGVh/PokeSim.hpp:12942:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12942:3: note: "inline" binds here
   void setItem(dex::Item item);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e12e8 </tmp/_kvVGVh/PokeSim.hpp:12942:3, col:30> col:8 used setItem 'void (dex::Item)'
-`-ParmVarDecl 0x5580e77e11f0 <col:16, col:26> col:26 item 'dex::Item':'pokesim::dex::Item'
+CXXMethodDecl 0x561d1fa40538 </tmp/_sSiSlh/PokeSim.hpp:12942:3, col:30> col:8 used setItem 'void (dex::Item)'
+`-ParmVarDecl 0x561d1fa40440 <col:16, col:26> col:26 item 'dex::Item':'pokesim::dex::Item'
 
 
 Match #15:
 
-/tmp/_kvVGVh/PokeSim.hpp:12943:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12943:3: note: "inline" binds here
   void setMoves(const std::vector<types::entity>& moveSlots);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e1490 </tmp/_kvVGVh/PokeSim.hpp:12943:3, col:60> col:8 invalid setMoves 'void (const int &)'
-`-ParmVarDecl 0x5580e77e1400 <col:17, col:51> col:51 invalid moveSlots 'const int &'
+CXXMethodDecl 0x561d1fa408b8 </tmp/_sSiSlh/PokeSim.hpp:12943:3, col:60> col:8 used setMoves 'void (const std::vector<types::entity> &)'
+`-ParmVarDecl 0x561d1fa407f0 <col:17, col:51> col:51 moveSlots 'const std::vector<types::entity> &'
 
 
 Match #16:
 
-/tmp/_kvVGVh/PokeSim.hpp:12945:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12945:3: note: "inline" binds here
   void setPostion(types::teamPositionIndex position);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e1648 </tmp/_kvVGVh/PokeSim.hpp:12945:3, col:52> col:8 setPostion 'void (types::teamPositionIndex)'
-`-ParmVarDecl 0x5580e77e1588 <col:19, col:44> col:44 position 'types::teamPositionIndex':'unsigned char'
+CXXMethodDecl 0x561d1fa40a78 </tmp/_sSiSlh/PokeSim.hpp:12945:3, col:52> col:8 used setPostion 'void (types::teamPositionIndex)'
+`-ParmVarDecl 0x561d1fa409b0 <col:19, col:44> col:44 position 'types::teamPositionIndex':'unsigned char'
 
 
 Match #17:
 
-/tmp/_kvVGVh/PokeSim.hpp:12946:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12946:3: note: "inline" binds here
   void setStatus(dex::Status status);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e1868 </tmp/_kvVGVh/PokeSim.hpp:12946:3, col:36> col:8 used setStatus 'void (dex::Status)'
-`-ParmVarDecl 0x5580e77e1770 <col:18, col:30> col:30 status 'dex::Status':'pokesim::dex::Status'
+CXXMethodDecl 0x561d1fa40c98 </tmp/_sSiSlh/PokeSim.hpp:12946:3, col:36> col:8 used setStatus 'void (dex::Status)'
+`-ParmVarDecl 0x561d1fa40ba0 <col:18, col:30> col:30 status 'dex::Status':'pokesim::dex::Status'
 
 
 Match #18:
 
-/tmp/_kvVGVh/PokeSim.hpp:12948:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12948:3: note: "inline" binds here
   void setNature(dex::Nature nature);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e1a88 </tmp/_kvVGVh/PokeSim.hpp:12948:3, col:36> col:8 used setNature 'void (dex::Nature)'
-`-ParmVarDecl 0x5580e77e1990 <col:18, col:30> col:30 nature 'dex::Nature':'pokesim::dex::Nature'
+CXXMethodDecl 0x561d1fa40eb8 </tmp/_sSiSlh/PokeSim.hpp:12948:3, col:36> col:8 used setNature 'void (dex::Nature)'
+`-ParmVarDecl 0x561d1fa40dc0 <col:18, col:30> col:30 nature 'dex::Nature':'pokesim::dex::Nature'
 
 
 Match #19:
 
-/tmp/_kvVGVh/PokeSim.hpp:12949:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12949:3: note: "inline" binds here
   void setEVs(types::ev hp, types::ev atk, types::ev def, types::ev spa, types::ev spd, types::ev spe);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e20b8 </tmp/_kvVGVh/PokeSim.hpp:12949:3, col:102> col:8 setEVs 'void (types::ev, types::ev, types::ev, types::ev, types::ev, types::ev)'
-|-ParmVarDecl 0x5580e77e1bb0 <col:15, col:25> col:25 hp 'types::ev':'unsigned char'
-|-ParmVarDecl 0x5580e77e1c68 <col:29, col:39> col:39 atk 'types::ev':'unsigned char'
-|-ParmVarDecl 0x5580e77e1d20 <col:44, col:54> col:54 def 'types::ev':'unsigned char'
-|-ParmVarDecl 0x5580e77e1dd8 <col:59, col:69> col:69 spa 'types::ev':'unsigned char'
-|-ParmVarDecl 0x5580e77e1e90 <col:74, col:84> col:84 spd 'types::ev':'unsigned char'
-`-ParmVarDecl 0x5580e77e1f48 <col:89, col:99> col:99 spe 'types::ev':'unsigned char'
+CXXMethodDecl 0x561d1fa414e8 </tmp/_sSiSlh/PokeSim.hpp:12949:3, col:102> col:8 setEVs 'void (types::ev, types::ev, types::ev, types::ev, types::ev, types::ev)'
+|-ParmVarDecl 0x561d1fa40fe0 <col:15, col:25> col:25 hp 'types::ev':'unsigned char'
+|-ParmVarDecl 0x561d1fa41098 <col:29, col:39> col:39 atk 'types::ev':'unsigned char'
+|-ParmVarDecl 0x561d1fa41150 <col:44, col:54> col:54 def 'types::ev':'unsigned char'
+|-ParmVarDecl 0x561d1fa41208 <col:59, col:69> col:69 spa 'types::ev':'unsigned char'
+|-ParmVarDecl 0x561d1fa412c0 <col:74, col:84> col:84 spd 'types::ev':'unsigned char'
+`-ParmVarDecl 0x561d1fa41378 <col:89, col:99> col:99 spe 'types::ev':'unsigned char'
 
 
 Match #20:
 
-/tmp/_kvVGVh/PokeSim.hpp:12950:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12950:3: note: "inline" binds here
   void setEVs(const Evs& evs);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e2288 </tmp/_kvVGVh/PokeSim.hpp:12950:3, col:29> col:8 used setEVs 'void (const pokesim::Evs &)'
-`-ParmVarDecl 0x5580e77e21c8 <col:15, col:26> col:26 evs 'const pokesim::Evs &'
+CXXMethodDecl 0x561d1fa416b8 </tmp/_sSiSlh/PokeSim.hpp:12950:3, col:29> col:8 used setEVs 'void (const pokesim::Evs &)'
+`-ParmVarDecl 0x561d1fa415f8 <col:15, col:26> col:26 evs 'const pokesim::Evs &'
 
 
 Match #21:
 
-/tmp/_kvVGVh/PokeSim.hpp:12951:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12951:3: note: "inline" binds here
   void setIVs(types::iv hp, types::iv atk, types::iv def, types::iv spa, types::iv spd, types::iv spe);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e2898 </tmp/_kvVGVh/PokeSim.hpp:12951:3, col:102> col:8 setIVs 'void (types::iv, types::iv, types::iv, types::iv, types::iv, types::iv)'
-|-ParmVarDecl 0x5580e77e23c0 <col:15, col:25> col:25 hp 'types::iv':'unsigned char'
-|-ParmVarDecl 0x5580e77e2478 <col:29, col:39> col:39 atk 'types::iv':'unsigned char'
-|-ParmVarDecl 0x5580e77e2530 <col:44, col:54> col:54 def 'types::iv':'unsigned char'
-|-ParmVarDecl 0x5580e77e2610 <col:59, col:69> col:69 spa 'types::iv':'unsigned char'
-|-ParmVarDecl 0x5580e77e26c8 <col:74, col:84> col:84 spd 'types::iv':'unsigned char'
-`-ParmVarDecl 0x5580e77e2780 <col:89, col:99> col:99 spe 'types::iv':'unsigned char'
+CXXMethodDecl 0x561d1fa41c98 </tmp/_sSiSlh/PokeSim.hpp:12951:3, col:102> col:8 setIVs 'void (types::iv, types::iv, types::iv, types::iv, types::iv, types::iv)'
+|-ParmVarDecl 0x561d1fa417f0 <col:15, col:25> col:25 hp 'types::iv':'unsigned char'
+|-ParmVarDecl 0x561d1fa418a8 <col:29, col:39> col:39 atk 'types::iv':'unsigned char'
+|-ParmVarDecl 0x561d1fa41960 <col:44, col:54> col:54 def 'types::iv':'unsigned char'
+|-ParmVarDecl 0x561d1fa41a18 <col:59, col:69> col:69 spa 'types::iv':'unsigned char'
+|-ParmVarDecl 0x561d1fa41ad0 <col:74, col:84> col:84 spd 'types::iv':'unsigned char'
+`-ParmVarDecl 0x561d1fa41b88 <col:89, col:99> col:99 spe 'types::iv':'unsigned char'
 
 
 Match #22:
 
-/tmp/_kvVGVh/PokeSim.hpp:12952:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12952:3: note: "inline" binds here
   void setIVs(const Ivs& ivs);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e2a68 </tmp/_kvVGVh/PokeSim.hpp:12952:3, col:29> col:8 used setIVs 'void (const pokesim::Ivs &)'
-`-ParmVarDecl 0x5580e77e29a8 <col:15, col:26> col:26 ivs 'const pokesim::Ivs &'
+CXXMethodDecl 0x561d1fa41e68 </tmp/_sSiSlh/PokeSim.hpp:12952:3, col:29> col:8 used setIVs 'void (const pokesim::Ivs &)'
+`-ParmVarDecl 0x561d1fa41da8 <col:15, col:26> col:26 ivs 'const pokesim::Ivs &'
 
 
 Match #23:
 
-/tmp/_kvVGVh/PokeSim.hpp:13004:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13004:3: note: "inline" binds here
   BattleStateSetup(types::registry& registry, types::entity entity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXConstructorDecl 0x5580e77e58d0 </tmp/_kvVGVh/PokeSim.hpp:13004:3, col:67> col:3 invalid BattleStateSetup 'void (int &, types::entity)'
-|-ParmVarDecl 0x5580e77e5780 <col:20, col:37> col:37 invalid registry 'int &'
-`-ParmVarDecl 0x5580e77e5838 <col:47, col:61> col:61 entity 'types::entity':'entt::entity'
+CXXConstructorDecl 0x561d1faf5818 </tmp/_sSiSlh/PokeSim.hpp:13004:3, col:67> col:3 used BattleStateSetup 'void (types::registry &, types::entity)'
+|-ParmVarDecl 0x561d1faf56c8 <col:20, col:37> col:37 registry 'types::registry &'
+`-ParmVarDecl 0x561d1faf5780 <col:47, col:61> col:61 entity 'types::entity':'entt::entity'
 
 
 Match #24:
 
-/tmp/_kvVGVh/PokeSim.hpp:13016:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13016:3: note: "inline" binds here
   void initBlank();
   ^~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e59e8 </tmp/_kvVGVh/PokeSim.hpp:13016:3, col:18> col:8 initBlank 'void ()'
-`-FullComment 0x5580e7a44950 <line:13007:5, line:13014:34>
-  |-ParagraphComment 0x5580e7a44700 <line:13007:5>
-  | `-TextComment 0x5580e7a446d0 <col:5> Text=" "
-  |-BlockCommandComment 0x5580e7a44720 <col:6, col:79> Name="brief"
-  | `-ParagraphComment 0x5580e7a44780 <col:12, col:79>
-  |   `-TextComment 0x5580e7a44750 <col:12, col:79> Text=" Applies the defaults to the required properties for a battle state."
-  |-ParagraphComment 0x5580e7a447d0 <line:13009:5>
-  | `-TextComment 0x5580e7a447a0 <col:5> Text=" "
-  `-BlockCommandComment 0x5580e7a447f0 <col:6, line:13014:34> Name="details"
-    `-ParagraphComment 0x5580e7a44910 <line:13009:14, line:13014:34>
-      |-TextComment 0x5580e7a44820 <line:13009:14, col:65> Text=" Some of the required properties and their defaults:"
-      |-TextComment 0x5580e7a44840 <line:13010:5, col:14> Text=" - Turn: 0"
-      |-TextComment 0x5580e7a44860 <line:13011:5, col:21> Text=" - Probability: 1"
-      |-TextComment 0x5580e7a44880 <line:13012:5, col:47> Text=" - Id: The number of existing battle states"
-      |-TextComment 0x5580e7a448a0 <line:13013:5, col:47> Text=" - Sides: Unassigned entities for P1 and P2"
-      `-TextComment 0x5580e7a448c0 <line:13014:5, col:34> Text=" - ActionQueue: An empty queue"
+CXXMethodDecl 0x561d1faf5928 </tmp/_sSiSlh/PokeSim.hpp:13016:3, col:18> col:8 initBlank 'void ()'
+`-FullComment 0x7f5b02c26d70 <line:13007:5, line:13014:34>
+  |-ParagraphComment 0x7f5b02c26b20 <line:13007:5>
+  | `-TextComment 0x7f5b02c26af0 <col:5> Text=" "
+  |-BlockCommandComment 0x7f5b02c26b40 <col:6, col:79> Name="brief"
+  | `-ParagraphComment 0x7f5b02c26ba0 <col:12, col:79>
+  |   `-TextComment 0x7f5b02c26b70 <col:12, col:79> Text=" Applies the defaults to the required properties for a battle state."
+  |-ParagraphComment 0x7f5b02c26bf0 <line:13009:5>
+  | `-TextComment 0x7f5b02c26bc0 <col:5> Text=" "
+  `-BlockCommandComment 0x7f5b02c26c10 <col:6, line:13014:34> Name="details"
+    `-ParagraphComment 0x7f5b02c26d30 <line:13009:14, line:13014:34>
+      |-TextComment 0x7f5b02c26c40 <line:13009:14, col:65> Text=" Some of the required properties and their defaults:"
+      |-TextComment 0x7f5b02c26c60 <line:13010:5, col:14> Text=" - Turn: 0"
+      |-TextComment 0x7f5b02c26c80 <line:13011:5, col:21> Text=" - Probability: 1"
+      |-TextComment 0x7f5b02c26ca0 <line:13012:5, col:47> Text=" - Id: The number of existing battle states"
+      |-TextComment 0x7f5b02c26cc0 <line:13013:5, col:47> Text=" - Sides: Unassigned entities for P1 and P2"
+      `-TextComment 0x7f5b02c26ce0 <line:13014:5, col:34> Text=" - ActionQueue: An empty queue"
 
 
 Match #25:
 
-/tmp/_kvVGVh/PokeSim.hpp:13018:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13018:3: note: "inline" binds here
   void setAutoID();
   ^~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e5aa8 </tmp/_kvVGVh/PokeSim.hpp:13018:3, col:18> col:8 used setAutoID 'void ()'
+CXXMethodDecl 0x561d1faf59e8 </tmp/_sSiSlh/PokeSim.hpp:13018:3, col:18> col:8 used setAutoID 'void ()'
 
 
 Match #26:
 
-/tmp/_kvVGVh/PokeSim.hpp:13019:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13019:3: note: "inline" binds here
   void setID(types::stateId id);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e5c00 </tmp/_kvVGVh/PokeSim.hpp:13019:3, col:31> col:8 invalid setID 'void (int)'
-`-ParmVarDecl 0x5580e77e5b70 <col:14, col:29> col:29 invalid id 'int'
+CXXMethodDecl 0x561d1faf5b68 </tmp/_sSiSlh/PokeSim.hpp:13019:3, col:31> col:8 used setID 'void (types::stateId)'
+`-ParmVarDecl 0x561d1faf5ad8 <col:14, col:29> col:29 id 'types::stateId':'unsigned int'
 
 
 Match #27:
 
-/tmp/_kvVGVh/PokeSim.hpp:13020:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13020:3: note: "inline" binds here
   void setSide(PlayerSideId sideID, types::entity sideEntity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e5e88 </tmp/_kvVGVh/PokeSim.hpp:13020:3, col:61> col:8 used setSide 'void (pokesim::PlayerSideId, types::entity)'
-|-ParmVarDecl 0x5580e77e5cb8 <col:16, col:29> col:29 sideID 'pokesim::PlayerSideId'
-`-ParmVarDecl 0x5580e77e5d70 <col:37, col:51> col:51 sideEntity 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1faf5de8 </tmp/_sSiSlh/PokeSim.hpp:13020:3, col:61> col:8 used setSide 'void (pokesim::PlayerSideId, types::entity)'
+|-ParmVarDecl 0x561d1faf5c20 <col:16, col:29> col:29 sideID 'pokesim::PlayerSideId'
+`-ParmVarDecl 0x561d1faf5cd8 <col:37, col:51> col:51 sideEntity 'types::entity':'entt::entity'
 
 
 Match #28:
 
-/tmp/_kvVGVh/PokeSim.hpp:13023:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13023:3: note: "inline" binds here
   void setRNGSeed(std::optional<types::stateRngSeed> seed = std::nullopt);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e6090 </tmp/_kvVGVh/PokeSim.hpp:13023:3, col:73> col:8 invalid setRNGSeed 'void (int)'
-`-ParmVarDecl 0x5580e77e6000 <col:19, col:59> col:54 invalid seed 'int' cinit
-  `-OpaqueValueExpr 0x5580e77e6f50 <col:59> 'int'
+CXXMethodDecl 0x561d1faf6228 </tmp/_sSiSlh/PokeSim.hpp:13023:3, col:73> col:8 used setRNGSeed 'void (std::optional<types::stateRngSeed>)'
+`-ParmVarDecl 0x561d1faf6130 <col:19, col:66> col:54 seed 'std::optional<types::stateRngSeed>':'std::optional<unsigned int>' cinit
+  `-ImplicitCastExpr 0x561d1fb46ef0 <col:61, col:66> 'std::optional<types::stateRngSeed>':'std::optional<unsigned int>' <ConstructorConversion>
+    `-CXXConstructExpr 0x561d1fb46ec0 <col:61, col:66> 'std::optional<types::stateRngSeed>':'std::optional<unsigned int>' 'void (std::nullopt_t) noexcept'
+      `-CXXConstructExpr 0x561d1fb45ec0 <col:61, col:66> 'std::nullopt_t' 'void (const std::nullopt_t &) noexcept'
+        `-DeclRefExpr 0x561d1faf77d8 <col:61, col:66> 'const std::nullopt_t' lvalue Var 0x561d1fa5c638 'nullopt' 'const std::nullopt_t'
 
 
 Match #29:
 
-/tmp/_kvVGVh/PokeSim.hpp:13024:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13024:3: note: "inline" binds here
   void setActionQueue(const std::vector<types::entity>& queue);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e6238 </tmp/_kvVGVh/PokeSim.hpp:13024:3, col:62> col:8 invalid setActionQueue 'void (const int &)'
-`-ParmVarDecl 0x5580e77e61a8 <col:23, col:57> col:57 invalid queue 'const int &'
+CXXMethodDecl 0x561d1faf65b8 </tmp/_sSiSlh/PokeSim.hpp:13024:3, col:62> col:8 setActionQueue 'void (const std::vector<types::entity> &)'
+`-ParmVarDecl 0x561d1faf64f0 <col:23, col:57> col:57 queue 'const std::vector<types::entity> &'
 
 
 Match #30:
 
-/tmp/_kvVGVh/PokeSim.hpp:13025:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13025:3: note: "inline" binds here
   void setTurn(types::battleTurn turn);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e6448 </tmp/_kvVGVh/PokeSim.hpp:13025:3, col:38> col:8 used setTurn 'void (types::battleTurn)'
-`-ParmVarDecl 0x5580e77e6380 <col:16, col:34> col:34 turn 'types::battleTurn':'unsigned short'
+CXXMethodDecl 0x561d1faf67c8 </tmp/_sSiSlh/PokeSim.hpp:13025:3, col:38> col:8 used setTurn 'void (types::battleTurn)'
+`-ParmVarDecl 0x561d1faf6700 <col:16, col:34> col:34 turn 'types::battleTurn':'unsigned short'
 
 
 Match #31:
 
-/tmp/_kvVGVh/PokeSim.hpp:13026:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13026:3: note: "inline" binds here
   void setActiveMove(types::entity activeMove);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e65d0 </tmp/_kvVGVh/PokeSim.hpp:13026:3, col:46> col:8 setActiveMove 'void (types::entity)'
-`-ParmVarDecl 0x5580e77e6540 <col:22, col:36> col:36 activeMove 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1faf6950 </tmp/_sSiSlh/PokeSim.hpp:13026:3, col:46> col:8 setActiveMove 'void (types::entity)'
+`-ParmVarDecl 0x561d1faf68c0 <col:22, col:36> col:36 activeMove 'types::entity':'entt::entity'
 
 
 Match #32:
 
-/tmp/_kvVGVh/PokeSim.hpp:13027:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13027:3: note: "inline" binds here
   void setActivePokemon(types::entity activePokemon);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e6758 </tmp/_kvVGVh/PokeSim.hpp:13027:3, col:52> col:8 setActivePokemon 'void (types::entity)'
-`-ParmVarDecl 0x5580e77e66c8 <col:25, col:39> col:39 activePokemon 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1faf6ad8 </tmp/_sSiSlh/PokeSim.hpp:13027:3, col:52> col:8 setActivePokemon 'void (types::entity)'
+`-ParmVarDecl 0x561d1faf6a48 <col:25, col:39> col:39 activePokemon 'types::entity':'entt::entity'
 
 
 Match #33:
 
-/tmp/_kvVGVh/PokeSim.hpp:13028:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13028:3: note: "inline" binds here
   void setActiveTarget(types::entity activeTarget);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e68e0 </tmp/_kvVGVh/PokeSim.hpp:13028:3, col:50> col:8 setActiveTarget 'void (types::entity)'
-`-ParmVarDecl 0x5580e77e6850 <col:24, col:38> col:38 activeTarget 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1faf6c60 </tmp/_sSiSlh/PokeSim.hpp:13028:3, col:50> col:8 setActiveTarget 'void (types::entity)'
+`-ParmVarDecl 0x561d1faf6bd0 <col:24, col:38> col:38 activeTarget 'types::entity':'entt::entity'
 
 
 Match #34:
 
-/tmp/_kvVGVh/PokeSim.hpp:13029:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13029:3: note: "inline" binds here
   void setActiveUser(types::entity activeSource);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e6a68 </tmp/_kvVGVh/PokeSim.hpp:13029:3, col:48> col:8 setActiveUser 'void (types::entity)'
-`-ParmVarDecl 0x5580e77e69d8 <col:22, col:36> col:36 activeSource 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1faf6de8 </tmp/_sSiSlh/PokeSim.hpp:13029:3, col:48> col:8 setActiveUser 'void (types::entity)'
+`-ParmVarDecl 0x561d1faf6d58 <col:22, col:36> col:36 activeSource 'types::entity':'entt::entity'
 
 
 Match #35:
 
-/tmp/_kvVGVh/PokeSim.hpp:13030:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13030:3: note: "inline" binds here
   void setProbability(types::stateProbability probability);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e6ca8 </tmp/_kvVGVh/PokeSim.hpp:13030:3, col:58> col:8 used setProbability 'void (types::stateProbability)'
-`-ParmVarDecl 0x5580e77e6bb0 <col:23, col:47> col:47 probability 'types::stateProbability':'float'
+CXXMethodDecl 0x561d1faf6ff8 </tmp/_sSiSlh/PokeSim.hpp:13030:3, col:58> col:8 used setProbability 'void (types::stateProbability)'
+`-ParmVarDecl 0x561d1faf6f30 <col:23, col:47> col:47 probability 'types::stateProbability':'float'
 
 
 Match #36:
 
-/tmp/_kvVGVh/PokeSim.hpp:13032:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13032:3: note: "inline" binds here
   std::vector<BattleStateSetup> clone(std::optional<types::cloneIndex> cloneCount = std::nullopt);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e77e6e70 </tmp/_kvVGVh/PokeSim.hpp:13032:3, col:97> col:33 invalid clone 'int (int)'
-`-ParmVarDecl 0x5580e77e6dd8 <col:39, col:83> col:72 invalid cloneCount 'int' cinit
-  `-OpaqueValueExpr 0x5580e77e6f88 <col:83> 'int'
+CXXMethodDecl 0x561d1faf76f8 </tmp/_sSiSlh/PokeSim.hpp:13032:3, col:97> col:33 used clone 'std::vector<BattleStateSetup> (std::optional<types::cloneIndex>)'
+`-ParmVarDecl 0x561d1faf75e0 <col:39, col:90> col:72 cloneCount 'std::optional<types::cloneIndex>':'std::optional<unsigned int>' cinit
+  `-ImplicitCastExpr 0x561d1fb481d8 <col:85, col:90> 'std::optional<types::cloneIndex>':'std::optional<unsigned int>' <ConstructorConversion>
+    `-CXXConstructExpr 0x561d1fb481a8 <col:85, col:90> 'std::optional<types::cloneIndex>':'std::optional<unsigned int>' 'void (std::nullopt_t) noexcept'
+      `-CXXConstructExpr 0x561d1fb48150 <col:85, col:90> 'std::nullopt_t' 'void (const std::nullopt_t &) noexcept'
+        `-DeclRefExpr 0x561d1fb47010 <col:85, col:90> 'const std::nullopt_t' lvalue Var 0x561d1fa5c638 'nullopt' 'const std::nullopt_t'
 
 
 Match #37:
 
-/tmp/_kvVGVh/PokeSim.hpp:13083:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13083:3: note: "inline" binds here
   void initBlank();
   ^~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e780a728 </tmp/_kvVGVh/PokeSim.hpp:13083:3, col:18> col:8 initBlank 'void ()'
-`-FullComment 0x5580e7a44b00 <line:13079:5, line:13081:89>
-  |-ParagraphComment 0x5580e7a449f0 <line:13079:5>
-  | `-TextComment 0x5580e7a449c0 <col:5> Text=" "
-  |-BlockCommandComment 0x5580e7a44a10 <col:6, col:77> Name="brief"
-  | `-ParagraphComment 0x5580e7a44a70 <col:12, col:77>
-  |   `-TextComment 0x5580e7a44a40 <col:12, col:77> Text=" Applies the defaults to the required properties for a move state."
-  `-ParagraphComment 0x5580e7a44ac0 <line:13081:5, col:89>
-    `-TextComment 0x5580e7a44a90 <col:5, col:89> Text=" Some of the required properties are a blank `MoveName`, `Pp`, and `MaxPp` component."
+CXXMethodDecl 0x561d1fb5bde8 </tmp/_sSiSlh/PokeSim.hpp:13083:3, col:18> col:8 initBlank 'void ()'
+`-FullComment 0x7f5b02c26f20 <line:13079:5, line:13081:89>
+  |-ParagraphComment 0x7f5b02c26e10 <line:13079:5>
+  | `-TextComment 0x7f5b02c26de0 <col:5> Text=" "
+  |-BlockCommandComment 0x7f5b02c26e30 <col:6, col:77> Name="brief"
+  | `-ParagraphComment 0x7f5b02c26e90 <col:12, col:77>
+  |   `-TextComment 0x7f5b02c26e60 <col:12, col:77> Text=" Applies the defaults to the required properties for a move state."
+  `-ParagraphComment 0x7f5b02c26ee0 <line:13081:5, col:89>
+    `-TextComment 0x7f5b02c26eb0 <col:5, col:89> Text=" Some of the required properties are a blank `MoveName`, `Pp`, and `MaxPp` component."
 
 
 Match #38:
 
-/tmp/_kvVGVh/PokeSim.hpp:13085:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13085:3: note: "inline" binds here
   void setName(dex::Move moveName);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e780a958 </tmp/_kvVGVh/PokeSim.hpp:13085:3, col:34> col:8 used setName 'void (dex::Move)'
-`-ParmVarDecl 0x5580e780a860 <col:16, col:26> col:26 moveName 'dex::Move':'pokesim::dex::Move'
+CXXMethodDecl 0x561d1fb5c018 </tmp/_sSiSlh/PokeSim.hpp:13085:3, col:34> col:8 used setName 'void (dex::Move)'
+`-ParmVarDecl 0x561d1fb5bf20 <col:16, col:26> col:26 moveName 'dex::Move':'pokesim::dex::Move'
 
 
 Match #39:
 
-/tmp/_kvVGVh/PokeSim.hpp:13086:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13086:3: note: "inline" binds here
   void setPP(types::pp pp);
   ^~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e780ab68 </tmp/_kvVGVh/PokeSim.hpp:13086:3, col:26> col:8 used setPP 'void (types::pp)'
-`-ParmVarDecl 0x5580e780aaa0 <col:14, col:24> col:24 pp 'types::pp':'unsigned char'
+CXXMethodDecl 0x561d1fb5c228 </tmp/_sSiSlh/PokeSim.hpp:13086:3, col:26> col:8 used setPP 'void (types::pp)'
+`-ParmVarDecl 0x561d1fb5c160 <col:14, col:24> col:24 pp 'types::pp':'unsigned char'
 
 
 Match #40:
 
-/tmp/_kvVGVh/PokeSim.hpp:13087:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13087:3: note: "inline" binds here
   void setMaxPP(types::pp maxPp);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e780acf0 </tmp/_kvVGVh/PokeSim.hpp:13087:3, col:32> col:8 used setMaxPP 'void (types::pp)'
-`-ParmVarDecl 0x5580e780ac60 <col:17, col:27> col:27 maxPp 'types::pp':'unsigned char'
+CXXMethodDecl 0x561d1fb5c3b0 </tmp/_sSiSlh/PokeSim.hpp:13087:3, col:32> col:8 used setMaxPP 'void (types::pp)'
+`-ParmVarDecl 0x561d1fb5c320 <col:17, col:27> col:27 maxPp 'types::pp':'unsigned char'
 
 
 Match #41:
 
-/tmp/_kvVGVh/PokeSim.hpp:13110:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13110:3: note: "inline" binds here
   void initBlank();
   ^~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e780b868 </tmp/_kvVGVh/PokeSim.hpp:13110:3, col:18> col:8 initBlank 'void ()'
-`-FullComment 0x5580e7a44cb0 <line:13106:5, line:13108:91>
-  |-ParagraphComment 0x5580e7a44ba0 <line:13106:5>
-  | `-TextComment 0x5580e7a44b70 <col:5> Text=" "
-  |-BlockCommandComment 0x5580e7a44bc0 <col:6, col:86> Name="brief"
-  | `-ParagraphComment 0x5580e7a44c20 <col:12, col:86>
-  |   `-TextComment 0x5580e7a44bf0 <col:12, col:86> Text=" Applies the defaults to the required properties for a player side's state."
-  `-ParagraphComment 0x5580e7a44c70 <line:13108:5, col:91>
-    `-TextComment 0x5580e7a44c40 <col:5, col:91> Text=" Some of the required properties are a blank `Battle`, `Side`, and `FoeSide` component."
+CXXMethodDecl 0x561d1fb5d468 </tmp/_sSiSlh/PokeSim.hpp:13110:3, col:18> col:8 initBlank 'void ()'
+`-FullComment 0x7f5b02c270d0 <line:13106:5, line:13108:91>
+  |-ParagraphComment 0x7f5b02c26fc0 <line:13106:5>
+  | `-TextComment 0x7f5b02c26f90 <col:5> Text=" "
+  |-BlockCommandComment 0x7f5b02c26fe0 <col:6, col:86> Name="brief"
+  | `-ParagraphComment 0x7f5b02c27040 <col:12, col:86>
+  |   `-TextComment 0x7f5b02c27010 <col:12, col:86> Text=" Applies the defaults to the required properties for a player side's state."
+  `-ParagraphComment 0x7f5b02c27090 <line:13108:5, col:91>
+    `-TextComment 0x7f5b02c27060 <col:5, col:91> Text=" Some of the required properties are a blank `Battle`, `Side`, and `FoeSide` component."
 
 
 Match #42:
 
-/tmp/_kvVGVh/PokeSim.hpp:13112:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13112:3: note: "inline" binds here
   void setTeam(std::vector<PokemonStateSetup>& team);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e780b9d0 </tmp/_kvVGVh/PokeSim.hpp:13112:3, col:52> col:8 invalid setTeam 'void (int &)'
-`-ParmVarDecl 0x5580e780b940 <col:16, col:48> col:48 invalid team 'int &'
+CXXMethodDecl 0x561d1fb5da58 </tmp/_sSiSlh/PokeSim.hpp:13112:3, col:52> col:8 used setTeam 'void (std::vector<PokemonStateSetup> &)'
+`-ParmVarDecl 0x561d1fb5d960 <col:16, col:48> col:48 team 'std::vector<PokemonStateSetup> &'
 
 
 Match #43:
 
-/tmp/_kvVGVh/PokeSim.hpp:13113:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13113:3: note: "inline" binds here
   void setOpponent(types::entity entity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e780bb88 </tmp/_kvVGVh/PokeSim.hpp:13113:3, col:40> col:8 used setOpponent 'void (types::entity)'
-`-ParmVarDecl 0x5580e780bac8 <col:20, col:34> col:34 entity 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1fb5dc18 </tmp/_sSiSlh/PokeSim.hpp:13113:3, col:40> col:8 used setOpponent 'void (types::entity)'
+`-ParmVarDecl 0x561d1fb5db50 <col:20, col:34> col:34 entity 'types::entity':'entt::entity'
 
 
 Match #44:
 
-/tmp/_kvVGVh/PokeSim.hpp:13114:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13114:3: note: "inline" binds here
   void setBattle(types::entity entity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e780bd10 </tmp/_kvVGVh/PokeSim.hpp:13114:3, col:38> col:8 used setBattle 'void (types::entity)'
-`-ParmVarDecl 0x5580e780bc80 <col:18, col:32> col:32 entity 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1fb5dda0 </tmp/_sSiSlh/PokeSim.hpp:13114:3, col:38> col:8 used setBattle 'void (types::entity)'
+`-ParmVarDecl 0x561d1fb5dd10 <col:18, col:32> col:32 entity 'types::entity':'entt::entity'
 
 
 Match #45:
 
-/tmp/_kvVGVh/PokeSim.hpp:13131:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13131:3: note: "inline" binds here
   void setAttacker(types::entity entity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e780c950 </tmp/_kvVGVh/PokeSim.hpp:13131:3, col:40> col:8 used setAttacker 'void (types::entity)'
-`-ParmVarDecl 0x5580e780c8c0 <col:20, col:34> col:34 entity 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1fb5ef48 </tmp/_sSiSlh/PokeSim.hpp:13131:3, col:40> col:8 used setAttacker 'void (types::entity)'
+`-ParmVarDecl 0x561d1fb5eeb8 <col:20, col:34> col:34 entity 'types::entity':'entt::entity'
 
 
 Match #46:
 
-/tmp/_kvVGVh/PokeSim.hpp:13132:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13132:3: note: "inline" binds here
   void setDefender(types::entity entity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e780cad8 </tmp/_kvVGVh/PokeSim.hpp:13132:3, col:40> col:8 used setDefender 'void (types::entity)'
-`-ParmVarDecl 0x5580e780ca48 <col:20, col:34> col:34 entity 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1fb5f0d0 </tmp/_sSiSlh/PokeSim.hpp:13132:3, col:40> col:8 used setDefender 'void (types::entity)'
+`-ParmVarDecl 0x561d1fb5f040 <col:20, col:34> col:34 entity 'types::entity':'entt::entity'
 
 
 Match #47:
 
-/tmp/_kvVGVh/PokeSim.hpp:13133:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13133:3: note: "inline" binds here
   void setMove(dex::Move move);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e780cc60 </tmp/_kvVGVh/PokeSim.hpp:13133:3, col:30> col:8 used setMove 'void (dex::Move)'
-`-ParmVarDecl 0x5580e780cbd0 <col:16, col:26> col:26 move 'dex::Move':'pokesim::dex::Move'
+CXXMethodDecl 0x561d1fb5f258 </tmp/_sSiSlh/PokeSim.hpp:13133:3, col:30> col:8 used setMove 'void (dex::Move)'
+`-ParmVarDecl 0x561d1fb5f1c8 <col:16, col:26> col:26 move 'dex::Move':'pokesim::dex::Move'
 
 
 Match #48:
 
-/tmp/_kvVGVh/PokeSim.hpp:13134:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13134:3: note: "inline" binds here
   void setBattle(types::entity entity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e780cde8 </tmp/_kvVGVh/PokeSim.hpp:13134:3, col:38> col:8 used setBattle 'void (types::entity)'
-`-ParmVarDecl 0x5580e780cd58 <col:18, col:32> col:32 entity 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d1fb5f3e0 </tmp/_sSiSlh/PokeSim.hpp:13134:3, col:38> col:8 used setBattle 'void (types::entity)'
+`-ParmVarDecl 0x561d1fb5f350 <col:18, col:32> col:32 entity 'types::entity':'entt::entity'
 
 
 Match #49:
 
-/tmp/_kvVGVh/PokeSim.hpp:13372:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13372:3: note: "inline" binds here
   types::entity buildSpecies(dex::Species species);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e781a798 </tmp/_kvVGVh/PokeSim.hpp:13372:3, col:50> col:17 used buildSpecies 'types::entity (dex::Species)'
-`-ParmVarDecl 0x5580e7812668 <col:30, col:43> col:43 species 'dex::Species':'pokesim::dex::Species'
+CXXMethodDecl 0x561d1fce7478 </tmp/_sSiSlh/PokeSim.hpp:13372:3, col:50> col:17 used buildSpecies 'types::entity (dex::Species)'
+`-ParmVarDecl 0x561d1fce7378 <col:30, col:43> col:43 species 'dex::Species':'pokesim::dex::Species'
 
 
 Match #50:
 
-/tmp/_kvVGVh/PokeSim.hpp:13373:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13373:3: note: "inline" binds here
   types::entity buildMove(dex::Move move);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e781a9c8 </tmp/_kvVGVh/PokeSim.hpp:13373:3, col:41> col:17 used buildMove 'types::entity (dex::Move)'
-`-ParmVarDecl 0x5580e781a8c0 <col:27, col:37> col:37 move 'dex::Move':'pokesim::dex::Move'
+CXXMethodDecl 0x561d1fce76a8 </tmp/_sSiSlh/PokeSim.hpp:13373:3, col:41> col:17 used buildMove 'types::entity (dex::Move)'
+`-ParmVarDecl 0x561d1fce75a0 <col:27, col:37> col:37 move 'dex::Move':'pokesim::dex::Move'
 
 
 Match #51:
 
-/tmp/_kvVGVh/PokeSim.hpp:13374:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13374:3: note: "inline" binds here
   types::entity buildItem(dex::Item item);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e781abf8 </tmp/_kvVGVh/PokeSim.hpp:13374:3, col:41> col:17 used buildItem 'types::entity (dex::Item)'
-`-ParmVarDecl 0x5580e781aaf0 <col:27, col:37> col:37 item 'dex::Item':'pokesim::dex::Item'
+CXXMethodDecl 0x561d1fce78d8 </tmp/_sSiSlh/PokeSim.hpp:13374:3, col:41> col:17 used buildItem 'types::entity (dex::Item)'
+`-ParmVarDecl 0x561d1fce77d0 <col:27, col:37> col:37 item 'dex::Item':'pokesim::dex::Item'
 
 
 Match #52:
 
-/tmp/_kvVGVh/PokeSim.hpp:13387:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13387:3: note: "inline" binds here
   types::handle createEntry();
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e781af20 </tmp/_kvVGVh/PokeSim.hpp:13387:3, col:29> col:17 invalid createEntry 'int ()'
+CXXMethodDecl 0x561d1fce7c88 </tmp/_sSiSlh/PokeSim.hpp:13387:3, col:29> col:17 used createEntry 'types::handle ()'
 
 
 Match #53:
 
-/tmp/_kvVGVh/PokeSim.hpp:13398:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13398:3: note: "inline" binds here
   void loadSpecies(const entt::dense_set<dex::Species>& speciesSet);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e781b0e8 </tmp/_kvVGVh/PokeSim.hpp:13398:3, col:67> col:8 invalid loadSpecies 'void (const int &)'
-|-ParmVarDecl 0x5580e781b058 <col:20, col:57> col:57 invalid speciesSet 'const int &'
-`-FullComment 0x5580e7a45010 <line:13390:5, line:13396:64>
-  |-ParagraphComment 0x5580e7a44d50 <line:13390:5>
-  | `-TextComment 0x5580e7a44d20 <col:5> Text=" "
-  |-BlockCommandComment 0x5580e7a44d70 <col:6, col:99> Name="brief"
-  | `-ParagraphComment 0x5580e7a44dd0 <col:12, col:99>
-  |   `-TextComment 0x5580e7a44da0 <col:12, col:99> Text=" Calls the load functions for a set of species to add their data to a Pokedex's storage."
-  |-ParagraphComment 0x5580e7a44e20 <line:13392:5>
-  | `-TextComment 0x5580e7a44df0 <col:5> Text=" "
-  |-BlockCommandComment 0x5580e7a44e40 <col:6, line:13394:68> Name="details"
-  | `-ParagraphComment 0x5580e7a44ef0 <line:13392:14, line:13394:68>
-  |   |-TextComment 0x5580e7a44e70 <line:13392:14, col:118> Text=" The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex"
-  |   |-TextComment 0x5580e7a44e90 <line:13393:5, col:120> Text=" instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function"
-  |   `-TextComment 0x5580e7a44eb0 <line:13394:5, col:68> Text=" should only be called with a set of those 12 Pokemon's species."
-  |-ParagraphComment 0x5580e7a44f40 <line:13396:5>
-  | `-TextComment 0x5580e7a44f10 <col:5> Text=" "
-  `-BlockCommandComment 0x5580e7a44f60 <col:6, col:64> Name="note"
-    `-ParagraphComment 0x5580e7a44fc0 <col:11, col:64>
-      `-TextComment 0x5580e7a44f90 <col:11, col:64> Text=" Only call this once per species per Pokedex instance."
+CXXMethodDecl 0x561d1fce8468 </tmp/_sSiSlh/PokeSim.hpp:13398:3, col:67> col:8 loadSpecies 'void (const entt::dense_set<dex::Species> &)'
+|-ParmVarDecl 0x561d1fce8370 <col:20, col:57> col:57 speciesSet 'const entt::dense_set<dex::Species> &'
+`-FullComment 0x7f5b02c27430 <line:13390:5, line:13396:64>
+  |-ParagraphComment 0x7f5b02c27170 <line:13390:5>
+  | `-TextComment 0x7f5b02c27140 <col:5> Text=" "
+  |-BlockCommandComment 0x7f5b02c27190 <col:6, col:99> Name="brief"
+  | `-ParagraphComment 0x7f5b02c271f0 <col:12, col:99>
+  |   `-TextComment 0x7f5b02c271c0 <col:12, col:99> Text=" Calls the load functions for a set of species to add their data to a Pokedex's storage."
+  |-ParagraphComment 0x7f5b02c27240 <line:13392:5>
+  | `-TextComment 0x7f5b02c27210 <col:5> Text=" "
+  |-BlockCommandComment 0x7f5b02c27260 <col:6, line:13394:68> Name="details"
+  | `-ParagraphComment 0x7f5b02c27310 <line:13392:14, line:13394:68>
+  |   |-TextComment 0x7f5b02c27290 <line:13392:14, col:118> Text=" The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex"
+  |   |-TextComment 0x7f5b02c272b0 <line:13393:5, col:120> Text=" instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function"
+  |   `-TextComment 0x7f5b02c272d0 <line:13394:5, col:68> Text=" should only be called with a set of those 12 Pokemon's species."
+  |-ParagraphComment 0x7f5b02c27360 <line:13396:5>
+  | `-TextComment 0x7f5b02c27330 <col:5> Text=" "
+  `-BlockCommandComment 0x7f5b02c27380 <col:6, col:64> Name="note"
+    `-ParagraphComment 0x7f5b02c273e0 <col:11, col:64>
+      `-TextComment 0x7f5b02c273b0 <col:11, col:64> Text=" Only call this once per species per Pokedex instance."
 
 
 Match #54:
 
-/tmp/_kvVGVh/PokeSim.hpp:13409:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13409:3: note: "inline" binds here
   void loadItems(const entt::dense_set<dex::Item>& itemSet);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e781b2b8 </tmp/_kvVGVh/PokeSim.hpp:13409:3, col:59> col:8 invalid loadItems 'void (const int &)'
-|-ParmVarDecl 0x5580e781b228 <col:18, col:52> col:52 invalid itemSet 'const int &'
-`-FullComment 0x5580e7a45370 <line:13401:5, line:13407:61>
-  |-ParagraphComment 0x5580e7a450b0 <line:13401:5>
-  | `-TextComment 0x5580e7a45080 <col:5> Text=" "
-  |-BlockCommandComment 0x5580e7a450d0 <col:6, col:97> Name="brief"
-  | `-ParagraphComment 0x5580e7a45130 <col:12, col:97>
-  |   `-TextComment 0x5580e7a45100 <col:12, col:97> Text=" Calls the load functions for a set of items to add their data to a Pokedex's storage."
-  |-ParagraphComment 0x5580e7a45180 <line:13403:5>
-  | `-TextComment 0x5580e7a45150 <col:5> Text=" "
-  |-BlockCommandComment 0x5580e7a451a0 <col:6, line:13405:66> Name="details"
-  | `-ParagraphComment 0x5580e7a45250 <line:13403:14, line:13405:66>
-  |   |-TextComment 0x5580e7a451d0 <line:13403:14, col:118> Text=" The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex"
-  |   |-TextComment 0x5580e7a451f0 <line:13404:5, col:120> Text=" instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function"
-  |   `-TextComment 0x5580e7a45210 <line:13405:5, col:66> Text=" should only be called with a set of those 12 Pokemon's items."
-  |-ParagraphComment 0x5580e7a452a0 <line:13407:5>
-  | `-TextComment 0x5580e7a45270 <col:5> Text=" "
-  `-BlockCommandComment 0x5580e7a452c0 <col:6, col:61> Name="note"
-    `-ParagraphComment 0x5580e7a45320 <col:11, col:61>
-      `-TextComment 0x5580e7a452f0 <col:11, col:61> Text=" Only call this once per item per Pokedex instance."
+CXXMethodDecl 0x561d1fce8c48 </tmp/_sSiSlh/PokeSim.hpp:13409:3, col:59> col:8 loadItems 'void (const entt::dense_set<dex::Item> &)'
+|-ParmVarDecl 0x561d1fce8b50 <col:18, col:52> col:52 itemSet 'const entt::dense_set<dex::Item> &'
+`-FullComment 0x7f5b02c27790 <line:13401:5, line:13407:61>
+  |-ParagraphComment 0x7f5b02c274d0 <line:13401:5>
+  | `-TextComment 0x7f5b02c274a0 <col:5> Text=" "
+  |-BlockCommandComment 0x7f5b02c274f0 <col:6, col:97> Name="brief"
+  | `-ParagraphComment 0x7f5b02c27550 <col:12, col:97>
+  |   `-TextComment 0x7f5b02c27520 <col:12, col:97> Text=" Calls the load functions for a set of items to add their data to a Pokedex's storage."
+  |-ParagraphComment 0x7f5b02c275a0 <line:13403:5>
+  | `-TextComment 0x7f5b02c27570 <col:5> Text=" "
+  |-BlockCommandComment 0x7f5b02c275c0 <col:6, line:13405:66> Name="details"
+  | `-ParagraphComment 0x7f5b02c27670 <line:13403:14, line:13405:66>
+  |   |-TextComment 0x7f5b02c275f0 <line:13403:14, col:118> Text=" The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex"
+  |   |-TextComment 0x7f5b02c27610 <line:13404:5, col:120> Text=" instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function"
+  |   `-TextComment 0x7f5b02c27630 <line:13405:5, col:66> Text=" should only be called with a set of those 12 Pokemon's items."
+  |-ParagraphComment 0x7f5b02c276c0 <line:13407:5>
+  | `-TextComment 0x7f5b02c27690 <col:5> Text=" "
+  `-BlockCommandComment 0x7f5b02c276e0 <col:6, col:61> Name="note"
+    `-ParagraphComment 0x7f5b02c27740 <col:11, col:61>
+      `-TextComment 0x7f5b02c27710 <col:11, col:61> Text=" Only call this once per item per Pokedex instance."
 
 
 Match #55:
 
-/tmp/_kvVGVh/PokeSim.hpp:13420:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13420:3: note: "inline" binds here
   void loadMoves(const entt::dense_set<dex::Move>& moveSet);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e781b488 </tmp/_kvVGVh/PokeSim.hpp:13420:3, col:59> col:8 invalid loadMoves 'void (const int &)'
-|-ParmVarDecl 0x5580e781b3f8 <col:18, col:52> col:52 invalid moveSet 'const int &'
-`-FullComment 0x5580e7a456d0 <line:13412:5, line:13418:61>
-  |-ParagraphComment 0x5580e7a45410 <line:13412:5>
-  | `-TextComment 0x5580e7a453e0 <col:5> Text=" "
-  |-BlockCommandComment 0x5580e7a45430 <col:6, col:97> Name="brief"
-  | `-ParagraphComment 0x5580e7a45490 <col:12, col:97>
-  |   `-TextComment 0x5580e7a45460 <col:12, col:97> Text=" Calls the load functions for a set of moves to add their data to a Pokedex's storage."
-  |-ParagraphComment 0x5580e7a454e0 <line:13414:5>
-  | `-TextComment 0x5580e7a454b0 <col:5> Text=" "
-  |-BlockCommandComment 0x5580e7a45500 <col:6, line:13416:81> Name="details"
-  | `-ParagraphComment 0x5580e7a455b0 <line:13414:14, line:13416:81>
-  |   |-TextComment 0x5580e7a45530 <line:13414:14, col:118> Text=" The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex"
-  |   |-TextComment 0x5580e7a45550 <line:13415:5, col:114> Text=" instance is assigned to, so if one turn of a single battle is being simulated and the opposing Pokemon have 4"
-  |   `-TextComment 0x5580e7a45570 <line:13416:5, col:81> Text=" moves, then this function should only be called with a set of those 8 moves."
-  |-ParagraphComment 0x5580e7a45600 <line:13418:5>
-  | `-TextComment 0x5580e7a455d0 <col:5> Text=" "
-  `-BlockCommandComment 0x5580e7a45620 <col:6, col:61> Name="note"
-    `-ParagraphComment 0x5580e7a45680 <col:11, col:61>
-      `-TextComment 0x5580e7a45650 <col:11, col:61> Text=" Only call this once per move per Pokedex instance."
+CXXMethodDecl 0x561d1fce9428 </tmp/_sSiSlh/PokeSim.hpp:13420:3, col:59> col:8 loadMoves 'void (const entt::dense_set<dex::Move> &)'
+|-ParmVarDecl 0x561d1fce9330 <col:18, col:52> col:52 moveSet 'const entt::dense_set<dex::Move> &'
+`-FullComment 0x7f5b02c27af0 <line:13412:5, line:13418:61>
+  |-ParagraphComment 0x7f5b02c27830 <line:13412:5>
+  | `-TextComment 0x7f5b02c27800 <col:5> Text=" "
+  |-BlockCommandComment 0x7f5b02c27850 <col:6, col:97> Name="brief"
+  | `-ParagraphComment 0x7f5b02c278b0 <col:12, col:97>
+  |   `-TextComment 0x7f5b02c27880 <col:12, col:97> Text=" Calls the load functions for a set of moves to add their data to a Pokedex's storage."
+  |-ParagraphComment 0x7f5b02c27900 <line:13414:5>
+  | `-TextComment 0x7f5b02c278d0 <col:5> Text=" "
+  |-BlockCommandComment 0x7f5b02c27920 <col:6, line:13416:81> Name="details"
+  | `-ParagraphComment 0x7f5b02c279d0 <line:13414:14, line:13416:81>
+  |   |-TextComment 0x7f5b02c27950 <line:13414:14, col:118> Text=" The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex"
+  |   |-TextComment 0x7f5b02c27970 <line:13415:5, col:114> Text=" instance is assigned to, so if one turn of a single battle is being simulated and the opposing Pokemon have 4"
+  |   `-TextComment 0x7f5b02c27990 <line:13416:5, col:81> Text=" moves, then this function should only be called with a set of those 8 moves."
+  |-ParagraphComment 0x7f5b02c27a20 <line:13418:5>
+  | `-TextComment 0x7f5b02c279f0 <col:5> Text=" "
+  `-BlockCommandComment 0x7f5b02c27a40 <col:6, col:61> Name="note"
+    `-ParagraphComment 0x7f5b02c27aa0 <col:11, col:61>
+      `-TextComment 0x7f5b02c27a70 <col:11, col:61> Text=" Only call this once per move per Pokedex instance."
 
 
 Match #56:
 
-/tmp/_kvVGVh/PokeSim.hpp:13699:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13699:3: note: "inline" binds here
   std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7823338 </tmp/_kvVGVh/PokeSim.hpp:13699:3, col:98> col:30 invalid createInitialMoves 'int (const int &)'
-`-ParmVarDecl 0x5580e7823270 <col:49, col:86> col:86 invalid moveDataList 'const int &'
+CXXMethodDecl 0x561d200abab8 </tmp/_sSiSlh/PokeSim.hpp:13699:3, col:98> col:30 used createInitialMoves 'std::vector<types::entity> (const std::vector<MoveCreationInfo> &)'
+`-ParmVarDecl 0x561d200ab970 <col:49, col:86> col:86 moveDataList 'const std::vector<MoveCreationInfo> &'
 
 
 Match #57:
 
-/tmp/_kvVGVh/PokeSim.hpp:13700:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13700:3: note: "inline" binds here
   PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e78234d8 </tmp/_kvVGVh/PokeSim.hpp:13700:3, col:80> col:21 used createInitialPokemon 'pokesim::PokemonStateSetup (const pokesim::Simulation::PokemonCreationInfo &)'
-`-ParmVarDecl 0x5580e7823418 <col:42, col:69> col:69 pokemonData 'const pokesim::Simulation::PokemonCreationInfo &'
+CXXMethodDecl 0x561d200abc38 </tmp/_sSiSlh/PokeSim.hpp:13700:3, col:80> col:21 used createInitialPokemon 'pokesim::PokemonStateSetup (const pokesim::Simulation::PokemonCreationInfo &)'
+`-ParmVarDecl 0x561d200abb70 <col:42, col:69> col:69 pokemonData 'const pokesim::Simulation::PokemonCreationInfo &'
 
 
 Match #58:
 
-/tmp/_kvVGVh/PokeSim.hpp:13701:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13701:3: note: "inline" binds here
   void createInitialSide(SideStateSetup sideSetup, const SideCreationInfo& sideData);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7823708 </tmp/_kvVGVh/PokeSim.hpp:13701:3, col:84> col:8 used createInitialSide 'void (pokesim::SideStateSetup, const pokesim::Simulation::SideCreationInfo &)'
-|-ParmVarDecl 0x5580e7823590 <col:26, col:41> col:41 sideSetup 'pokesim::SideStateSetup'
-`-ParmVarDecl 0x5580e7823638 <col:52, col:76> col:76 sideData 'const pokesim::Simulation::SideCreationInfo &'
+CXXMethodDecl 0x561d200abe38 </tmp/_sSiSlh/PokeSim.hpp:13701:3, col:84> col:8 used createInitialSide 'void (pokesim::SideStateSetup, const pokesim::Simulation::SideCreationInfo &)'
+|-ParmVarDecl 0x561d200abcf0 <col:26, col:41> col:41 sideSetup 'pokesim::SideStateSetup'
+`-ParmVarDecl 0x561d200abd68 <col:52, col:76> col:76 sideData 'const pokesim::Simulation::SideCreationInfo &'
 
 
 Match #59:
 
-/tmp/_kvVGVh/PokeSim.hpp:13703:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13703:3: note: "inline" binds here
   void createInitialTurnDecision(BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7823938 </tmp/_kvVGVh/PokeSim.hpp:13703:3, col:109> col:8 used createInitialTurnDecision 'void (pokesim::BattleStateSetup, const pokesim::Simulation::TurnDecisionInfo &)'
-|-ParmVarDecl 0x5580e78237c8 <col:34, col:51> col:51 battleStateSetup 'pokesim::BattleStateSetup'
-`-ParmVarDecl 0x5580e7823868 <col:69, col:93> col:93 turnDecisionData 'const pokesim::Simulation::TurnDecisionInfo &'
+CXXMethodDecl 0x561d200ac048 </tmp/_sSiSlh/PokeSim.hpp:13703:3, col:109> col:8 used createInitialTurnDecision 'void (pokesim::BattleStateSetup, const pokesim::Simulation::TurnDecisionInfo &)'
+|-ParmVarDecl 0x561d200abef8 <col:34, col:51> col:51 battleStateSetup 'pokesim::BattleStateSetup'
+`-ParmVarDecl 0x561d200abf70 <col:69, col:93> col:93 turnDecisionData 'const pokesim::Simulation::TurnDecisionInfo &'
 
 
 Match #60:
 
-/tmp/_kvVGVh/PokeSim.hpp:13704:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13704:3: note: "inline" binds here
   void createCalcDamageInput(BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7823b68 </tmp/_kvVGVh/PokeSim.hpp:13704:3, col:111> col:8 used createCalcDamageInput 'void (pokesim::BattleStateSetup, const pokesim::Simulation::CalcDamageInputInfo &)'
-|-ParmVarDecl 0x5580e78239f8 <col:30, col:47> col:47 battleStateSetup 'pokesim::BattleStateSetup'
-`-ParmVarDecl 0x5580e7823a98 <col:65, col:92> col:92 damageCalcInputData 'const pokesim::Simulation::CalcDamageInputInfo &'
+CXXMethodDecl 0x561d200ac258 </tmp/_sSiSlh/PokeSim.hpp:13704:3, col:111> col:8 used createCalcDamageInput 'void (pokesim::BattleStateSetup, const pokesim::Simulation::CalcDamageInputInfo &)'
+|-ParmVarDecl 0x561d200ac108 <col:30, col:47> col:47 battleStateSetup 'pokesim::BattleStateSetup'
+`-ParmVarDecl 0x561d200ac180 <col:65, col:92> col:92 damageCalcInputData 'const pokesim::Simulation::CalcDamageInputInfo &'
 
 
 Match #61:
 
-/tmp/_kvVGVh/PokeSim.hpp:13705:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13705:3: note: "inline" binds here
   void createAnalyzeEffectInput(
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7823d98 </tmp/_kvVGVh/PokeSim.hpp:13705:3, line:13706:92> line:13705:8 used createAnalyzeEffectInput 'void (pokesim::BattleStateSetup, const pokesim::Simulation::AnalyzeEffectInputInfo &)'
-|-ParmVarDecl 0x5580e7823c28 <line:13706:5, col:22> col:22 battleStateSetup 'pokesim::BattleStateSetup'
-`-ParmVarDecl 0x5580e7823cc8 <col:40, col:70> col:70 analyzeEffectInputData 'const pokesim::Simulation::AnalyzeEffectInputInfo &'
+CXXMethodDecl 0x561d200ac468 </tmp/_sSiSlh/PokeSim.hpp:13705:3, line:13706:92> line:13705:8 used createAnalyzeEffectInput 'void (pokesim::BattleStateSetup, const pokesim::Simulation::AnalyzeEffectInputInfo &)'
+|-ParmVarDecl 0x561d200ac318 <line:13706:5, col:22> col:22 battleStateSetup 'pokesim::BattleStateSetup'
+`-ParmVarDecl 0x561d200ac390 <col:40, col:70> col:70 analyzeEffectInputData 'const pokesim::Simulation::AnalyzeEffectInputInfo &'
 
 
 Match #62:
 
-/tmp/_kvVGVh/PokeSim.hpp:13708:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13708:3: note: "inline" binds here
   std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7824260 </tmp/_kvVGVh/PokeSim.hpp:13708:3, line:13709:76> line:13708:46 createInitialBattle 'std::tuple<SideStateSetup, SideStateSetup> (pokesim::BattleStateSetup, const pokesim::Simulation::BattleCreationInfo &)'
-|-ParmVarDecl 0x5580e7824088 <line:13709:5, col:22> col:22 battleStateSetup 'pokesim::BattleStateSetup'
-`-ParmVarDecl 0x5580e7824128 <col:40, col:66> col:66 battleData 'const pokesim::Simulation::BattleCreationInfo &'
+CXXMethodDecl 0x561d200ac920 </tmp/_sSiSlh/PokeSim.hpp:13708:3, line:13709:76> line:13708:46 used createInitialBattle 'std::tuple<SideStateSetup, SideStateSetup> (pokesim::BattleStateSetup, const pokesim::Simulation::BattleCreationInfo &)'
+|-ParmVarDecl 0x561d200ac768 <line:13709:5, col:22> col:22 battleStateSetup 'pokesim::BattleStateSetup'
+`-ParmVarDecl 0x561d200ac7e0 <col:40, col:66> col:66 battleData 'const pokesim::Simulation::BattleCreationInfo &'
 
 
 Match #63:
 
-/tmp/_kvVGVh/PokeSim.hpp:13720:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13720:3: note: "inline" binds here
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXConstructorDecl 0x5580e78248e8 </tmp/_kvVGVh/PokeSim.hpp:13720:3, col:65> col:3 Simulation 'void (const pokesim::Pokedex &, pokesim::BattleFormat)'
-|-ParmVarDecl 0x5580e7824780 <col:14, col:29> col:29 pokedex_ 'const pokesim::Pokedex &'
-`-ParmVarDecl 0x5580e78247f8 <col:39, col:52> col:52 battleFormat_ 'pokesim::BattleFormat'
+CXXConstructorDecl 0x561d200acfd8 </tmp/_sSiSlh/PokeSim.hpp:13720:3, col:65> col:3 Simulation 'void (const pokesim::Pokedex &, pokesim::BattleFormat)'
+|-ParmVarDecl 0x561d200ace70 <col:14, col:29> col:29 pokedex_ 'const pokesim::Pokedex &'
+`-ParmVarDecl 0x561d200acee8 <col:39, col:52> col:52 battleFormat_ 'pokesim::BattleFormat'
 
 
 Match #64:
 
-/tmp/_kvVGVh/PokeSim.hpp:13723:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13723:3: note: "inline" binds here
   void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7824c88 </tmp/_kvVGVh/PokeSim.hpp:13723:3, col:84> col:8 createInitialStates 'void (std::initializer_list<BattleCreationInfo>)'
-`-ParmVarDecl 0x5580e7824b90 <col:28, col:70> col:70 battleDataList 'std::initializer_list<BattleCreationInfo>':'std::initializer_list<pokesim::Simulation::BattleCreationInfo>'
+CXXMethodDecl 0x561d200ad378 </tmp/_sSiSlh/PokeSim.hpp:13723:3, col:84> col:8 used createInitialStates 'void (std::initializer_list<BattleCreationInfo>)'
+`-ParmVarDecl 0x561d200ad280 <col:28, col:70> col:70 battleDataList 'std::initializer_list<BattleCreationInfo>':'std::initializer_list<pokesim::Simulation::BattleCreationInfo>'
 
 
 Match #65:
 
-/tmp/_kvVGVh/PokeSim.hpp:13725:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13725:3: note: "inline" binds here
   void run();
   ^~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7824d50 </tmp/_kvVGVh/PokeSim.hpp:13725:3, col:12> col:8 run 'void ()'
+CXXMethodDecl 0x561d200ad440 </tmp/_sSiSlh/PokeSim.hpp:13725:3, col:12> col:8 run 'void ()'
 
 
 Match #66:
 
-/tmp/_kvVGVh/PokeSim.hpp:13727:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13727:3: note: "inline" binds here
   simulate_turn::Results simulateTurn(std::optional<simulate_turn::Options> options = std::nullopt);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7824fc8 </tmp/_kvVGVh/PokeSim.hpp:13727:3, col:99> col:26 invalid simulateTurn 'simulate_turn::Results (int)'
-`-ParmVarDecl 0x5580e7824ec0 <col:39, col:85> col:77 invalid options 'int' cinit
-  `-OpaqueValueExpr 0x5580e7826440 <col:85> 'int'
+CXXMethodDecl 0x561d200ad878 </tmp/_sSiSlh/PokeSim.hpp:13727:3, col:99> col:26 used simulateTurn 'simulate_turn::Results (std::optional<simulate_turn::Options>)'
+`-ParmVarDecl 0x561d200ad770 <col:39, col:92> col:77 options 'std::optional<simulate_turn::Options>':'std::optional<pokesim::simulate_turn::Options>' cinit
+  `-ImplicitCastExpr 0x561d20107b60 <col:87, col:92> 'std::optional<simulate_turn::Options>':'std::optional<pokesim::simulate_turn::Options>' <ConstructorConversion>
+    `-CXXConstructExpr 0x561d20107b30 <col:87, col:92> 'std::optional<simulate_turn::Options>':'std::optional<pokesim::simulate_turn::Options>' 'void (std::nullopt_t) noexcept'
+      `-CXXConstructExpr 0x561d20106c10 <col:87, col:92> 'std::nullopt_t' 'void (const std::nullopt_t &) noexcept'
+        `-DeclRefExpr 0x561d200b07c0 <col:87, col:92> 'const std::nullopt_t' lvalue Var 0x561d1fa5c638 'nullopt' 'const std::nullopt_t'
 
 
 Match #67:
 
-/tmp/_kvVGVh/PokeSim.hpp:13728:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13728:3: note: "inline" binds here
   calc_damage::Results calculateDamage(std::optional<calc_damage::Options> options = std::nullopt);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7825248 </tmp/_kvVGVh/PokeSim.hpp:13728:3, col:98> col:24 invalid calculateDamage 'calc_damage::Results (int)'
-`-ParmVarDecl 0x5580e7825140 <col:40, col:84> col:76 invalid options 'int' cinit
-  `-OpaqueValueExpr 0x5580e7826478 <col:84> 'int'
+CXXMethodDecl 0x561d200adcb8 </tmp/_sSiSlh/PokeSim.hpp:13728:3, col:98> col:24 used calculateDamage 'calc_damage::Results (std::optional<calc_damage::Options>)'
+`-ParmVarDecl 0x561d200adbb0 <col:40, col:91> col:76 options 'std::optional<calc_damage::Options>':'std::optional<pokesim::calc_damage::Options>' cinit
+  `-ImplicitCastExpr 0x561d20165b10 <col:86, col:91> 'std::optional<calc_damage::Options>':'std::optional<pokesim::calc_damage::Options>' <ConstructorConversion>
+    `-CXXConstructExpr 0x561d20165ae0 <col:86, col:91> 'std::optional<calc_damage::Options>':'std::optional<pokesim::calc_damage::Options>' 'void (std::nullopt_t) noexcept'
+      `-CXXConstructExpr 0x561d20164bc0 <col:86, col:91> 'std::nullopt_t' 'void (const std::nullopt_t &) noexcept'
+        `-DeclRefExpr 0x561d20107c80 <col:86, col:91> 'const std::nullopt_t' lvalue Var 0x561d1fa5c638 'nullopt' 'const std::nullopt_t'
 
 
 Match #68:
 
-/tmp/_kvVGVh/PokeSim.hpp:13729:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13729:3: note: "inline" binds here
   analyze_effect::Results analyzeEffect(std::optional<analyze_effect::Options> options = std::nullopt);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e78254c8 </tmp/_kvVGVh/PokeSim.hpp:13729:3, col:102> col:27 invalid analyzeEffect 'analyze_effect::Results (int)'
-`-ParmVarDecl 0x5580e78253c0 <col:41, col:88> col:80 invalid options 'int' cinit
-  `-OpaqueValueExpr 0x5580e78264b0 <col:88> 'int'
+CXXMethodDecl 0x561d200ae0f8 </tmp/_sSiSlh/PokeSim.hpp:13729:3, col:102> col:27 used analyzeEffect 'analyze_effect::Results (std::optional<analyze_effect::Options>)'
+`-ParmVarDecl 0x561d200adff0 <col:41, col:95> col:80 options 'std::optional<analyze_effect::Options>':'std::optional<pokesim::analyze_effect::Options>' cinit
+  `-ImplicitCastExpr 0x561d201b8f70 <col:90, col:95> 'std::optional<analyze_effect::Options>':'std::optional<pokesim::analyze_effect::Options>' <ConstructorConversion>
+    `-CXXConstructExpr 0x561d201b8f40 <col:90, col:95> 'std::optional<analyze_effect::Options>':'std::optional<pokesim::analyze_effect::Options>' 'void (std::nullopt_t) noexcept'
+      `-CXXConstructExpr 0x561d201b8020 <col:90, col:95> 'std::nullopt_t' 'void (const std::nullopt_t &) noexcept'
+        `-DeclRefExpr 0x561d20165c30 <col:90, col:95> 'const std::nullopt_t' lvalue Var 0x561d1fa5c638 'nullopt' 'const std::nullopt_t'
 
 
 Match #69:
 
-/tmp/_kvVGVh/PokeSim.hpp:13731:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13731:3: note: "inline" binds here
   simulate_turn::Results simulateTurn(
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7825888 </tmp/_kvVGVh/PokeSim.hpp:13731:3, line:13733:65> line:13731:26 invalid simulateTurn 'simulate_turn::Results (std::initializer_list<BattleCreationInfo>, int)'
-|-ParmVarDecl 0x5580e7825690 <line:13732:5, col:47> col:47 battleDataList 'std::initializer_list<BattleCreationInfo>':'std::initializer_list<pokesim::Simulation::BattleCreationInfo>'
-`-ParmVarDecl 0x5580e7825768 <line:13733:5, col:51> col:43 invalid options 'int' cinit
-  `-OpaqueValueExpr 0x5580e78264e8 <col:51> 'int'
+CXXMethodDecl 0x561d200ae578 </tmp/_sSiSlh/PokeSim.hpp:13731:3, line:13733:65> line:13731:26 simulateTurn 'simulate_turn::Results (std::initializer_list<BattleCreationInfo>, std::optional<simulate_turn::Options>)'
+|-ParmVarDecl 0x561d200ae2c0 <line:13732:5, col:47> col:47 battleDataList 'std::initializer_list<BattleCreationInfo>':'std::initializer_list<pokesim::Simulation::BattleCreationInfo>'
+`-ParmVarDecl 0x561d200ae450 <line:13733:5, col:58> col:43 options 'std::optional<simulate_turn::Options>':'std::optional<pokesim::simulate_turn::Options>' cinit
+  `-ImplicitCastExpr 0x561d201ba258 <col:53, col:58> 'std::optional<simulate_turn::Options>':'std::optional<pokesim::simulate_turn::Options>' <ConstructorConversion>
+    `-CXXConstructExpr 0x561d201ba228 <col:53, col:58> 'std::optional<simulate_turn::Options>':'std::optional<pokesim::simulate_turn::Options>' 'void (std::nullopt_t) noexcept'
+      `-CXXConstructExpr 0x561d201ba1d0 <col:53, col:58> 'std::nullopt_t' 'void (const std::nullopt_t &) noexcept'
+        `-DeclRefExpr 0x561d201b9090 <col:53, col:58> 'const std::nullopt_t' lvalue Var 0x561d1fa5c638 'nullopt' 'const std::nullopt_t'
 
 
 Match #70:
 
-/tmp/_kvVGVh/PokeSim.hpp:13735:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13735:3: note: "inline" binds here
   calc_damage::Results calculateDamage(
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7825c68 </tmp/_kvVGVh/PokeSim.hpp:13735:3, line:13737:63> line:13735:24 invalid calculateDamage 'calc_damage::Results (std::initializer_list<BattleCreationInfo>, int)'
-|-ParmVarDecl 0x5580e7825a70 <line:13736:5, col:47> col:47 battleDataList 'std::initializer_list<BattleCreationInfo>':'std::initializer_list<pokesim::Simulation::BattleCreationInfo>'
-`-ParmVarDecl 0x5580e7825b48 <line:13737:5, col:49> col:41 invalid options 'int' cinit
-  `-OpaqueValueExpr 0x5580e7826520 <col:49> 'int'
+CXXMethodDecl 0x561d200aea18 </tmp/_sSiSlh/PokeSim.hpp:13735:3, line:13737:63> line:13735:24 calculateDamage 'calc_damage::Results (std::initializer_list<BattleCreationInfo>, std::optional<calc_damage::Options>)'
+|-ParmVarDecl 0x561d200ae760 <line:13736:5, col:47> col:47 battleDataList 'std::initializer_list<BattleCreationInfo>':'std::initializer_list<pokesim::Simulation::BattleCreationInfo>'
+`-ParmVarDecl 0x561d200ae8f0 <line:13737:5, col:56> col:41 options 'std::optional<calc_damage::Options>':'std::optional<pokesim::calc_damage::Options>' cinit
+  `-ImplicitCastExpr 0x561d201bb458 <col:51, col:56> 'std::optional<calc_damage::Options>':'std::optional<pokesim::calc_damage::Options>' <ConstructorConversion>
+    `-CXXConstructExpr 0x561d201bb428 <col:51, col:56> 'std::optional<calc_damage::Options>':'std::optional<pokesim::calc_damage::Options>' 'void (std::nullopt_t) noexcept'
+      `-CXXConstructExpr 0x561d201bb3d0 <col:51, col:56> 'std::nullopt_t' 'void (const std::nullopt_t &) noexcept'
+        `-DeclRefExpr 0x561d201ba290 <col:51, col:56> 'const std::nullopt_t' lvalue Var 0x561d1fa5c638 'nullopt' 'const std::nullopt_t'
 
 
 Match #71:
 
-/tmp/_kvVGVh/PokeSim.hpp:13739:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13739:3: note: "inline" binds here
   analyze_effect::Results analyzeEffect(
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7826048 </tmp/_kvVGVh/PokeSim.hpp:13739:3, line:13741:66> line:13739:27 invalid analyzeEffect 'analyze_effect::Results (std::initializer_list<BattleCreationInfo>, int)'
-|-ParmVarDecl 0x5580e7825e50 <line:13740:5, col:47> col:47 battleDataList 'std::initializer_list<BattleCreationInfo>':'std::initializer_list<pokesim::Simulation::BattleCreationInfo>'
-`-ParmVarDecl 0x5580e7825f28 <line:13741:5, col:52> col:44 invalid options 'int' cinit
-  `-OpaqueValueExpr 0x5580e7826558 <col:52> 'int'
+CXXMethodDecl 0x561d200aeeb8 </tmp/_sSiSlh/PokeSim.hpp:13739:3, line:13741:66> line:13739:27 analyzeEffect 'analyze_effect::Results (std::initializer_list<BattleCreationInfo>, std::optional<analyze_effect::Options>)'
+|-ParmVarDecl 0x561d200aec00 <line:13740:5, col:47> col:47 battleDataList 'std::initializer_list<BattleCreationInfo>':'std::initializer_list<pokesim::Simulation::BattleCreationInfo>'
+`-ParmVarDecl 0x561d200aed90 <line:13741:5, col:59> col:44 options 'std::optional<analyze_effect::Options>':'std::optional<pokesim::analyze_effect::Options>' cinit
+  `-ImplicitCastExpr 0x561d201bc658 <col:54, col:59> 'std::optional<analyze_effect::Options>':'std::optional<pokesim::analyze_effect::Options>' <ConstructorConversion>
+    `-CXXConstructExpr 0x561d201bc628 <col:54, col:59> 'std::optional<analyze_effect::Options>':'std::optional<pokesim::analyze_effect::Options>' 'void (std::nullopt_t) noexcept'
+      `-CXXConstructExpr 0x561d201bc5d0 <col:54, col:59> 'std::nullopt_t' 'void (const std::nullopt_t &) noexcept'
+        `-DeclRefExpr 0x561d201bb490 <col:54, col:59> 'const std::nullopt_t' lvalue Var 0x561d1fa5c638 'nullopt' 'const std::nullopt_t'
 
 
 Match #72:
 
-/tmp/_kvVGVh/PokeSim.hpp:13743:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13743:3: note: "inline" binds here
   void clearAllResults();
   ^~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7826128 </tmp/_kvVGVh/PokeSim.hpp:13743:3, col:24> col:8 clearAllResults 'void ()'
+CXXMethodDecl 0x561d200aef98 </tmp/_sSiSlh/PokeSim.hpp:13743:3, col:24> col:8 used clearAllResults 'void ()'
 
 
 Match #73:
 
-/tmp/_kvVGVh/PokeSim.hpp:13744:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13744:3: note: "inline" binds here
   void clearSimulateTurnResults();
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e78261e8 </tmp/_kvVGVh/PokeSim.hpp:13744:3, col:33> col:8 used clearSimulateTurnResults 'void ()'
+CXXMethodDecl 0x561d200af058 </tmp/_sSiSlh/PokeSim.hpp:13744:3, col:33> col:8 used clearSimulateTurnResults 'void ()'
 
 
 Match #74:
 
-/tmp/_kvVGVh/PokeSim.hpp:13745:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13745:3: note: "inline" binds here
   void clearCalculateDamageResults();
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e78262a8 </tmp/_kvVGVh/PokeSim.hpp:13745:3, col:36> col:8 used clearCalculateDamageResults 'void ()'
+CXXMethodDecl 0x561d200af118 </tmp/_sSiSlh/PokeSim.hpp:13745:3, col:36> col:8 used clearCalculateDamageResults 'void ()'
 
 
 Match #75:
 
-/tmp/_kvVGVh/PokeSim.hpp:13746:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13746:3: note: "inline" binds here
   void clearAnalyzeEffectResults();
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7826368 </tmp/_kvVGVh/PokeSim.hpp:13746:3, col:34> col:8 used clearAnalyzeEffectResults 'void ()'
+CXXMethodDecl 0x561d200af1d8 </tmp/_sSiSlh/PokeSim.hpp:13746:3, col:34> col:8 used clearAnalyzeEffectResults 'void ()'
 
 
 Match #76:
 
-/tmp/_kvVGVh/PokeSim.hpp:13956:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13956:3: note: "inline" binds here
   types::view<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7838440 </tmp/_kvVGVh/PokeSim.hpp:13956:3, col:63> col:35 invalid turnOutcomeBattlesResults 'int () const'
+CXXMethodDecl 0x561d2049f958 </tmp/_sSiSlh/PokeSim.hpp:13956:3, col:63> col:35 turnOutcomeBattlesResults 'types::view<TurnOutcomeBattles> () const'
 
 
 Match #77:
 
-/tmp/_kvVGVh/PokeSim.hpp:13958:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13958:3: note: "inline" binds here
   Results(const Simulation& simulation_);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXConstructorDecl 0x5580e78385c8 </tmp/_kvVGVh/PokeSim.hpp:13958:3, col:40> col:3 Results 'void (const pokesim::Simulation &)'
-`-ParmVarDecl 0x5580e78384f0 <col:11, col:29> col:29 simulation_ 'const pokesim::Simulation &'
+CXXConstructorDecl 0x561d2049fad8 </tmp/_sSiSlh/PokeSim.hpp:13958:3, col:40> col:3 used Results 'void (const pokesim::Simulation &)'
+`-ParmVarDecl 0x561d2049fa08 <col:11, col:29> col:29 simulation_ 'const pokesim::Simulation &'
 
 
 Match #78:
 
-/tmp/_kvVGVh/PokeSim.hpp:13987:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13987:3: note: "inline" binds here
   types::view<MaxDamage> maxDamageResults() const;
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e78397f0 </tmp/_kvVGVh/PokeSim.hpp:13987:3, col:45> col:26 invalid maxDamageResults 'int () const'
+CXXMethodDecl 0x561d204a3fc8 </tmp/_sSiSlh/PokeSim.hpp:13987:3, col:45> col:26 maxDamageResults 'types::view<MaxDamage> () const'
 
 
 Match #79:
 
-/tmp/_kvVGVh/PokeSim.hpp:13988:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13988:3: note: "inline" binds here
   types::view<MinUsesUntilKo> minUsesUntilKoResults() const;
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e78398d8 </tmp/_kvVGVh/PokeSim.hpp:13988:3, col:55> col:31 invalid minUsesUntilKoResults 'int () const'
+CXXMethodDecl 0x561d204a7378 </tmp/_sSiSlh/PokeSim.hpp:13988:3, col:55> col:31 minUsesUntilKoResults 'types::view<MinUsesUntilKo> () const'
 
 
 Match #80:
 
-/tmp/_kvVGVh/PokeSim.hpp:13989:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13989:3: note: "inline" binds here
   types::view<AttackerHpRecovered> hpRecoveredResults() const;
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e78399c0 </tmp/_kvVGVh/PokeSim.hpp:13989:3, col:57> col:36 invalid hpRecoveredResults 'int () const'
+CXXMethodDecl 0x561d204aa728 </tmp/_sSiSlh/PokeSim.hpp:13989:3, col:57> col:36 hpRecoveredResults 'types::view<AttackerHpRecovered> () const'
 
 
 Match #81:
 
-/tmp/_kvVGVh/PokeSim.hpp:13990:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13990:3: note: "inline" binds here
   types::view<AttackerHpLost> hpLostResults() const;
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7839aa8 </tmp/_kvVGVh/PokeSim.hpp:13990:3, col:47> col:31 invalid hpLostResults 'int () const'
+CXXMethodDecl 0x561d204adad8 </tmp/_sSiSlh/PokeSim.hpp:13990:3, col:47> col:31 hpLostResults 'types::view<AttackerHpLost> () const'
 
 
 Match #82:
 
-/tmp/_kvVGVh/PokeSim.hpp:13991:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13991:3: note: "inline" binds here
   types::view<HitCount> hitCountResults() const;
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7839b90 </tmp/_kvVGVh/PokeSim.hpp:13991:3, col:43> col:25 invalid hitCountResults 'int () const'
+CXXMethodDecl 0x561d204b0e88 </tmp/_sSiSlh/PokeSim.hpp:13991:3, col:43> col:25 hitCountResults 'types::view<HitCount> () const'
 
 
 Match #83:
 
-/tmp/_kvVGVh/PokeSim.hpp:13993:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13993:3: note: "inline" binds here
   Results(const Simulation& simulation_);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXConstructorDecl 0x5580e7839d18 </tmp/_kvVGVh/PokeSim.hpp:13993:3, col:40> col:3 Results 'void (const pokesim::Simulation &)'
-`-ParmVarDecl 0x5580e7839c40 <col:11, col:29> col:29 simulation_ 'const pokesim::Simulation &'
+CXXConstructorDecl 0x561d204b1008 </tmp/_sSiSlh/PokeSim.hpp:13993:3, col:40> col:3 used Results 'void (const pokesim::Simulation &)'
+`-ParmVarDecl 0x561d204b0f38 <col:11, col:29> col:29 simulation_ 'const pokesim::Simulation &'
 
 
 Match #84:
 
-/tmp/_kvVGVh/PokeSim.hpp:14018:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14018:3: note: "inline" binds here
   types::view<EffectMultiplier> effectMultiplierResults() const;
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e783aaf0 </tmp/_kvVGVh/PokeSim.hpp:14018:3, col:59> col:33 invalid effectMultiplierResults 'int () const'
+CXXMethodDecl 0x561d204b8ec8 </tmp/_sSiSlh/PokeSim.hpp:14018:3, col:59> col:33 effectMultiplierResults 'types::view<EffectMultiplier> () const'
 
 
 Match #85:
 
-/tmp/_kvVGVh/PokeSim.hpp:14019:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14019:3: note: "inline" binds here
   types::view<MultipliedMaxDamage> multipliedMaxDamageResults() const;
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e783abd8 </tmp/_kvVGVh/PokeSim.hpp:14019:3, col:65> col:36 invalid multipliedMaxDamageResults 'int () const'
+CXXMethodDecl 0x561d204bc298 </tmp/_sSiSlh/PokeSim.hpp:14019:3, col:65> col:36 multipliedMaxDamageResults 'types::view<MultipliedMaxDamage> () const'
 
 
 Match #86:
 
-/tmp/_kvVGVh/PokeSim.hpp:14020:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14020:3: note: "inline" binds here
   types::view<MultipliedDamageRolls> multipliedDamageRollsResults() const;
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e783acc0 </tmp/_kvVGVh/PokeSim.hpp:14020:3, col:69> col:38 invalid multipliedDamageRollsResults 'int () const'
+CXXMethodDecl 0x561d204bf648 </tmp/_sSiSlh/PokeSim.hpp:14020:3, col:69> col:38 multipliedDamageRollsResults 'types::view<MultipliedDamageRolls> () const'
 
 
 Match #87:
 
-/tmp/_kvVGVh/PokeSim.hpp:14021:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14021:3: note: "inline" binds here
   types::view<MultipliedKoChance> multipliedKoChanceResults() const;
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e783ada8 </tmp/_kvVGVh/PokeSim.hpp:14021:3, col:63> col:35 invalid multipliedKoChanceResults 'int () const'
+CXXMethodDecl 0x561d204c29f8 </tmp/_sSiSlh/PokeSim.hpp:14021:3, col:63> col:35 multipliedKoChanceResults 'types::view<MultipliedKoChance> () const'
 
 
 Match #88:
 
-/tmp/_kvVGVh/PokeSim.hpp:14023:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14023:3: note: "inline" binds here
   Results(const Simulation& simulation_);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXConstructorDecl 0x5580e783af28 </tmp/_kvVGVh/PokeSim.hpp:14023:3, col:40> col:3 Results 'void (const pokesim::Simulation &)'
-`-ParmVarDecl 0x5580e783ae58 <col:11, col:29> col:29 simulation_ 'const pokesim::Simulation &'
+CXXConstructorDecl 0x561d204c2b78 </tmp/_sSiSlh/PokeSim.hpp:14023:3, col:40> col:3 used Results 'void (const pokesim::Simulation &)'
+`-ParmVarDecl 0x561d204c2aa8 <col:11, col:29> col:29 simulation_ 'const pokesim::Simulation &'
 
 
 Match #89:
 
-/tmp/_kvVGVh/PokeSim.hpp:14599:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14599:3: note: "inline" binds here
   void setName(Species species);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e785d128 </tmp/_kvVGVh/PokeSim.hpp:14599:3, col:31> col:8 setName 'void (pokesim::dex::Species)'
-`-ParmVarDecl 0x5580e785d098 <col:16, col:24> col:24 species 'pokesim::dex::Species'
+CXXMethodDecl 0x561d2134a068 </tmp/_sSiSlh/PokeSim.hpp:14599:3, col:31> col:8 used setName 'void (pokesim::dex::Species)'
+`-ParmVarDecl 0x561d21349fd8 <col:16, col:24> col:24 species 'pokesim::dex::Species'
 
 
 Match #90:
 
-/tmp/_kvVGVh/PokeSim.hpp:14600:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14600:3: note: "inline" binds here
   void setType(Type type1, Type type2 = Type::NO_TYPE);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e785d328 </tmp/_kvVGVh/PokeSim.hpp:14600:3, col:54> col:8 setType 'void (pokesim::dex::Type, pokesim::dex::Type)'
-|-ParmVarDecl 0x5580e785d1e0 <col:16, col:21> col:21 type1 'pokesim::dex::Type'
-`-ParmVarDecl 0x5580e785d258 <col:28, col:47> col:33 type2 'pokesim::dex::Type' cinit
-  `-DeclRefExpr 0x5580e785dde8 <col:41, col:47> 'pokesim::dex::Type' EnumConstant 0x5580e7811358 'NO_TYPE' 'pokesim::dex::Type'
+CXXMethodDecl 0x561d2134a268 </tmp/_sSiSlh/PokeSim.hpp:14600:3, col:54> col:8 used setType 'void (pokesim::dex::Type, pokesim::dex::Type)'
+|-ParmVarDecl 0x561d2134a120 <col:16, col:21> col:21 type1 'pokesim::dex::Type'
+`-ParmVarDecl 0x561d2134a198 <col:28, col:47> col:33 type2 'pokesim::dex::Type' cinit
+  `-DeclRefExpr 0x561d2134ad28 <col:41, col:47> 'pokesim::dex::Type' EnumConstant 0x561d1fb8a398 'NO_TYPE' 'pokesim::dex::Type'
 
 
 Match #91:
 
-/tmp/_kvVGVh/PokeSim.hpp:14601:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14601:3: note: "inline" binds here
   void setBaseStats(
   ^~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e785d8d8 </tmp/_kvVGVh/PokeSim.hpp:14601:3, line:14603:24> line:14601:8 setBaseStats 'void (types::baseStat, types::baseStat, types::baseStat, types::baseStat, types::baseStat, types::baseStat)'
-|-ParmVarDecl 0x5580e785d428 <line:14602:5, col:21> col:21 hp 'types::baseStat':'unsigned char'
-|-ParmVarDecl 0x5580e785d4e0 <col:25, col:41> col:41 atk 'types::baseStat':'unsigned char'
-|-ParmVarDecl 0x5580e785d598 <col:46, col:62> col:62 def 'types::baseStat':'unsigned char'
-|-ParmVarDecl 0x5580e785d650 <col:67, col:83> col:83 spa 'types::baseStat':'unsigned char'
-|-ParmVarDecl 0x5580e785d708 <col:88, col:104> col:104 spd 'types::baseStat':'unsigned char'
-`-ParmVarDecl 0x5580e785d7c0 <line:14603:5, col:21> col:21 spe 'types::baseStat':'unsigned char'
+CXXMethodDecl 0x561d2134a818 </tmp/_sSiSlh/PokeSim.hpp:14601:3, line:14603:24> line:14601:8 used setBaseStats 'void (types::baseStat, types::baseStat, types::baseStat, types::baseStat, types::baseStat, types::baseStat)'
+|-ParmVarDecl 0x561d2134a368 <line:14602:5, col:21> col:21 hp 'types::baseStat':'unsigned char'
+|-ParmVarDecl 0x561d2134a420 <col:25, col:41> col:41 atk 'types::baseStat':'unsigned char'
+|-ParmVarDecl 0x561d2134a4d8 <col:46, col:62> col:62 def 'types::baseStat':'unsigned char'
+|-ParmVarDecl 0x561d2134a590 <col:67, col:83> col:83 spa 'types::baseStat':'unsigned char'
+|-ParmVarDecl 0x561d2134a648 <col:88, col:104> col:104 spd 'types::baseStat':'unsigned char'
+`-ParmVarDecl 0x561d2134a700 <line:14603:5, col:21> col:21 spe 'types::baseStat':'unsigned char'
 
 
 Match #92:
 
-/tmp/_kvVGVh/PokeSim.hpp:14604:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14604:3: note: "inline" binds here
   void setPrimaryAbility(Ability ability);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e785da48 </tmp/_kvVGVh/PokeSim.hpp:14604:3, col:41> col:8 setPrimaryAbility 'void (pokesim::dex::Ability)'
-`-ParmVarDecl 0x5580e785d9b8 <col:26, col:34> col:34 ability 'pokesim::dex::Ability'
+CXXMethodDecl 0x561d2134a988 </tmp/_sSiSlh/PokeSim.hpp:14604:3, col:41> col:8 used setPrimaryAbility 'void (pokesim::dex::Ability)'
+`-ParmVarDecl 0x561d2134a8f8 <col:26, col:34> col:34 ability 'pokesim::dex::Ability'
 
 
 Match #93:
 
-/tmp/_kvVGVh/PokeSim.hpp:14605:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14605:3: note: "inline" binds here
   void setSecondaryAbility(Ability ability);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e785db90 </tmp/_kvVGVh/PokeSim.hpp:14605:3, col:43> col:8 setSecondaryAbility 'void (pokesim::dex::Ability)'
-`-ParmVarDecl 0x5580e785db00 <col:28, col:36> col:36 ability 'pokesim::dex::Ability'
+CXXMethodDecl 0x561d2134aad0 </tmp/_sSiSlh/PokeSim.hpp:14605:3, col:43> col:8 used setSecondaryAbility 'void (pokesim::dex::Ability)'
+`-ParmVarDecl 0x561d2134aa40 <col:28, col:36> col:36 ability 'pokesim::dex::Ability'
 
 
 Match #94:
 
-/tmp/_kvVGVh/PokeSim.hpp:14606:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14606:3: note: "inline" binds here
   void setHiddenAbility(Ability ability);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e785dcd8 </tmp/_kvVGVh/PokeSim.hpp:14606:3, col:40> col:8 setHiddenAbility 'void (pokesim::dex::Ability)'
-`-ParmVarDecl 0x5580e785dc48 <col:25, col:33> col:33 ability 'pokesim::dex::Ability'
+CXXMethodDecl 0x561d2134ac18 </tmp/_sSiSlh/PokeSim.hpp:14606:3, col:40> col:8 used setHiddenAbility 'void (pokesim::dex::Ability)'
+`-ParmVarDecl 0x561d2134ab88 <col:25, col:33> col:33 ability 'pokesim::dex::Ability'
 
 
 Match #95:
 
-/tmp/_kvVGVh/PokeSim.hpp:14766:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14766:3: note: "inline" binds here
   void setName(Move move);
   ^~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7862f48 </tmp/_kvVGVh/PokeSim.hpp:14766:3, col:25> col:8 setName 'void (pokesim::dex::Move)'
-`-ParmVarDecl 0x5580e7862eb8 <col:16, col:21> col:21 move 'pokesim::dex::Move'
+CXXMethodDecl 0x561d216d8c58 </tmp/_sSiSlh/PokeSim.hpp:14766:3, col:25> col:8 used setName 'void (pokesim::dex::Move)'
+`-ParmVarDecl 0x561d216d8bc8 <col:16, col:21> col:21 move 'pokesim::dex::Move'
 
 
 Match #96:
 
-/tmp/_kvVGVh/PokeSim.hpp:14767:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14767:3: note: "inline" binds here
   void setType(Type type);
   ^~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e78630c8 </tmp/_kvVGVh/PokeSim.hpp:14767:3, col:25> col:8 setType 'void (pokesim::dex::Type)'
-`-ParmVarDecl 0x5580e7863000 <col:16, col:21> col:21 type 'pokesim::dex::Type'
+CXXMethodDecl 0x561d216d8dd8 </tmp/_sSiSlh/PokeSim.hpp:14767:3, col:25> col:8 used setType 'void (pokesim::dex::Type)'
+`-ParmVarDecl 0x561d216d8d10 <col:16, col:21> col:21 type 'pokesim::dex::Type'
 
 
 Match #97:
 
-/tmp/_kvVGVh/PokeSim.hpp:14768:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14768:3: note: "inline" binds here
   void setAccuracy(types::baseAccuracy accuracy);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7863288 </tmp/_kvVGVh/PokeSim.hpp:14768:3, col:48> col:8 setAccuracy 'void (types::baseAccuracy)'
-`-ParmVarDecl 0x5580e78631c0 <col:20, col:40> col:40 accuracy 'types::baseAccuracy':'unsigned char'
+CXXMethodDecl 0x561d216d8f98 </tmp/_sSiSlh/PokeSim.hpp:14768:3, col:48> col:8 used setAccuracy 'void (types::baseAccuracy)'
+`-ParmVarDecl 0x561d216d8ed0 <col:20, col:40> col:40 accuracy 'types::baseAccuracy':'unsigned char'
 
 
 Match #98:
 
-/tmp/_kvVGVh/PokeSim.hpp:14769:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14769:3: note: "inline" binds here
   void setBasePower(types::basePower basePower);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7863448 </tmp/_kvVGVh/PokeSim.hpp:14769:3, col:47> col:8 setBasePower 'void (types::basePower)'
-`-ParmVarDecl 0x5580e7863380 <col:21, col:38> col:38 basePower 'types::basePower':'unsigned char'
+CXXMethodDecl 0x561d216d9158 </tmp/_sSiSlh/PokeSim.hpp:14769:3, col:47> col:8 used setBasePower 'void (types::basePower)'
+`-ParmVarDecl 0x561d216d9090 <col:21, col:38> col:38 basePower 'types::basePower':'unsigned char'
 
 
 Match #99:
 
-/tmp/_kvVGVh/PokeSim.hpp:14771:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14771:3: note: "inline" binds here
   void setCategoryPhysical();
   ^~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7863510 </tmp/_kvVGVh/PokeSim.hpp:14771:3, col:28> col:8 setCategoryPhysical 'void ()'
+CXXMethodDecl 0x561d216d9220 </tmp/_sSiSlh/PokeSim.hpp:14771:3, col:28> col:8 used setCategoryPhysical 'void ()'
 
 
 Match #100:
 
-/tmp/_kvVGVh/PokeSim.hpp:14772:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14772:3: note: "inline" binds here
   void setCategorySpecial();
   ^~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e78635d0 </tmp/_kvVGVh/PokeSim.hpp:14772:3, col:27> col:8 setCategorySpecial 'void ()'
+CXXMethodDecl 0x561d216d92e0 </tmp/_sSiSlh/PokeSim.hpp:14772:3, col:27> col:8 used setCategorySpecial 'void ()'
 
 
 Match #101:
 
-/tmp/_kvVGVh/PokeSim.hpp:14773:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14773:3: note: "inline" binds here
   void setCategoryStatus();
   ^~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7863690 </tmp/_kvVGVh/PokeSim.hpp:14773:3, col:26> col:8 setCategoryStatus 'void ()'
+CXXMethodDecl 0x561d216d93a0 </tmp/_sSiSlh/PokeSim.hpp:14773:3, col:26> col:8 used setCategoryStatus 'void ()'
 
 
 Match #102:
 
-/tmp/_kvVGVh/PokeSim.hpp:14775:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14775:3: note: "inline" binds here
   void setBasePp(types::pp pp);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7863848 </tmp/_kvVGVh/PokeSim.hpp:14775:3, col:30> col:8 setBasePp 'void (types::pp)'
-`-ParmVarDecl 0x5580e7863780 <col:18, col:28> col:28 pp 'types::pp':'unsigned char'
+CXXMethodDecl 0x561d216d9558 </tmp/_sSiSlh/PokeSim.hpp:14775:3, col:30> col:8 used setBasePp 'void (types::pp)'
+`-ParmVarDecl 0x561d216d9490 <col:18, col:28> col:28 pp 'types::pp':'unsigned char'
 
 
 Match #103:
 
-/tmp/_kvVGVh/PokeSim.hpp:14776:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14776:3: note: "inline" binds here
   void setPriority(types::priority priority);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7863a08 </tmp/_kvVGVh/PokeSim.hpp:14776:3, col:44> col:8 setPriority 'void (types::priority)'
-`-ParmVarDecl 0x5580e7863940 <col:20, col:36> col:36 priority 'types::priority':'signed char'
+CXXMethodDecl 0x561d216d9718 </tmp/_sSiSlh/PokeSim.hpp:14776:3, col:44> col:8 setPriority 'void (types::priority)'
+`-ParmVarDecl 0x561d216d9650 <col:20, col:36> col:36 priority 'types::priority':'signed char'
 
 
 Match #104:
 
-/tmp/_kvVGVh/PokeSim.hpp:14777:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14777:3: note: "inline" binds here
   void setMultiHit(types::moveHits minHits, types::moveHits maxHits);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7863cc8 </tmp/_kvVGVh/PokeSim.hpp:14777:3, col:68> col:8 setMultiHit 'void (types::moveHits, types::moveHits)'
-|-ParmVarDecl 0x5580e7863b00 <col:20, col:36> col:36 minHits 'types::moveHits':'unsigned char'
-`-ParmVarDecl 0x5580e7863bb8 <col:45, col:61> col:61 maxHits 'types::moveHits':'unsigned char'
+CXXMethodDecl 0x561d216d99d8 </tmp/_sSiSlh/PokeSim.hpp:14777:3, col:68> col:8 used setMultiHit 'void (types::moveHits, types::moveHits)'
+|-ParmVarDecl 0x561d216d9810 <col:20, col:36> col:36 minHits 'types::moveHits':'unsigned char'
+`-ParmVarDecl 0x561d216d98c8 <col:45, col:61> col:61 maxHits 'types::moveHits':'unsigned char'
 
 
 Match #105:
 
-/tmp/_kvVGVh/PokeSim.hpp:14779:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14779:3: note: "inline" binds here
   void setPrimaryEffect(types::entity entity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7863e88 </tmp/_kvVGVh/PokeSim.hpp:14779:3, col:45> col:8 setPrimaryEffect 'void (types::entity)'
-`-ParmVarDecl 0x5580e7863dc8 <col:25, col:39> col:39 entity 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d216d9b98 </tmp/_sSiSlh/PokeSim.hpp:14779:3, col:45> col:8 used setPrimaryEffect 'void (types::entity)'
+`-ParmVarDecl 0x561d216d9ad8 <col:25, col:39> col:39 entity 'types::entity':'entt::entity'
 
 
 Match #106:
 
-/tmp/_kvVGVh/PokeSim.hpp:14780:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14780:3: note: "inline" binds here
   void setSecondaryEffect(types::entity entity);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7864010 </tmp/_kvVGVh/PokeSim.hpp:14780:3, col:47> col:8 setSecondaryEffect 'void (types::entity)'
-`-ParmVarDecl 0x5580e7863f80 <col:27, col:41> col:41 entity 'types::entity':'entt::entity'
+CXXMethodDecl 0x561d216d9d20 </tmp/_sSiSlh/PokeSim.hpp:14780:3, col:47> col:8 used setSecondaryEffect 'void (types::entity)'
+`-ParmVarDecl 0x561d216d9c90 <col:27, col:41> col:41 entity 'types::entity':'entt::entity'
 
 
 Match #107:
 
-/tmp/_kvVGVh/PokeSim.hpp:14787:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14787:3: note: "inline" binds here
   void setChance(types::baseEffectChance chance);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e78647b8 </tmp/_kvVGVh/PokeSim.hpp:14787:3, col:48> col:8 setChance 'void (types::baseEffectChance)'
-`-ParmVarDecl 0x5580e78646f8 <col:18, col:42> col:42 chance 'types::baseEffectChance':'unsigned char'
+CXXMethodDecl 0x561d216da4c8 </tmp/_sSiSlh/PokeSim.hpp:14787:3, col:48> col:8 used setChance 'void (types::baseEffectChance)'
+`-ParmVarDecl 0x561d216da408 <col:18, col:42> col:42 chance 'types::baseEffectChance':'unsigned char'
 
 
 Match #108:
 
-/tmp/_kvVGVh/PokeSim.hpp:14788:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14788:3: note: "inline" binds here
   void setEffectsSelf();
   ^~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7864880 </tmp/_kvVGVh/PokeSim.hpp:14788:3, col:23> col:8 setEffectsSelf 'void ()'
+CXXMethodDecl 0x561d216da590 </tmp/_sSiSlh/PokeSim.hpp:14788:3, col:23> col:8 used setEffectsSelf 'void ()'
 
 
 Match #109:
 
-/tmp/_kvVGVh/PokeSim.hpp:14789:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14789:3: note: "inline" binds here
   void setEffectsTarget();
   ^~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7864940 </tmp/_kvVGVh/PokeSim.hpp:14789:3, col:25> col:8 setEffectsTarget 'void ()'
+CXXMethodDecl 0x561d216da650 </tmp/_sSiSlh/PokeSim.hpp:14789:3, col:25> col:8 used setEffectsTarget 'void ()'
 
 
 Match #110:
 
-/tmp/_kvVGVh/PokeSim.hpp:14879:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14879:3: note: "inline" binds here
   void setName(Item item);
   ^~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e7868ed8 </tmp/_kvVGVh/PokeSim.hpp:14879:3, col:25> col:8 setName 'void (pokesim::dex::Item)'
-`-ParmVarDecl 0x5580e7868e48 <col:16, col:21> col:21 item 'pokesim::dex::Item'
+CXXMethodDecl 0x561d21e0a8f8 </tmp/_sSiSlh/PokeSim.hpp:14879:3, col:25> col:8 used setName 'void (pokesim::dex::Item)'
+`-ParmVarDecl 0x561d21e0a868 <col:16, col:21> col:21 item 'pokesim::dex::Item'
 
 110 matches.
 
 Match #1:
 
-/tmp/_kvVGVh/PokeSim.hpp:13370:3: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13370:3: note: "inline" binds here
   void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-CXXMethodDecl 0x5580e78124d8 </tmp/_kvVGVh/PokeSim.hpp:13370:3, col:96> col:8 invalid load 'void (int &, const int &, Build)'
-|-ParmVarDecl 0x5580e7812258 <col:13, col:48> col:48 invalid map 'int &'
-|-ParmVarDecl 0x5580e7812310 <col:53, col:79> col:79 invalid list 'const int &'
-`-ParmVarDecl 0x5580e7812388 <col:85, col:91> col:91 build 'Build'
+CXXMethodDecl 0x561d1fce71e8 </tmp/_sSiSlh/PokeSim.hpp:13370:3, col:96> col:8 load 'void (entt::dense_map<T, types::entity> &, const entt::dense_set<T> &, Build)'
+|-ParmVarDecl 0x561d1fce6b78 <col:13, col:48> col:48 map 'entt::dense_map<T, types::entity> &'
+|-ParmVarDecl 0x561d1fce7020 <col:53, col:79> col:79 list 'const entt::dense_set<T> &'
+`-ParmVarDecl 0x561d1fce7098 <col:85, col:91> col:91 build 'Build'
 
 1 match.
 
 Match #1:
 
-/tmp/_kvVGVh/PokeSim.hpp:12578:1: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12578:1: note: "inline" binds here
 types::entity slotToEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e7735948 </tmp/_kvVGVh/PokeSim.hpp:12578:1, col:102> col:15 invalid slotToEntity 'types::entity (const int &, types::entity, pokesim::Slot)'
-|-ParmVarDecl 0x5580e77356e8 <col:28, col:51> col:51 invalid registry 'const int &'
-|-ParmVarDecl 0x5580e77357a0 <col:61, col:75> col:75 sideEntity 'types::entity':'entt::entity'
-`-ParmVarDecl 0x5580e7735818 <col:87, col:92> col:92 targetSlot 'pokesim::Slot'
+FunctionDecl 0x561d1f9b31c8 </tmp/_sSiSlh/PokeSim.hpp:12578:1, col:102> col:15 used slotToEntity 'types::entity (const types::registry &, types::entity, pokesim::Slot)'
+|-ParmVarDecl 0x561d1f9b2f60 <col:28, col:51> col:51 registry 'const types::registry &'
+|-ParmVarDecl 0x561d1f9b3018 <col:61, col:75> col:75 sideEntity 'types::entity':'entt::entity'
+`-ParmVarDecl 0x561d1f9b3090 <col:87, col:92> col:92 targetSlot 'pokesim::Slot'
 
 
 Match #2:
 
-/tmp/_kvVGVh/PokeSim.hpp:12579:1: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:12579:1: note: "inline" binds here
 types::entity slotToEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e7735ca8 </tmp/_kvVGVh/PokeSim.hpp:12579:1, col:96> col:15 invalid slotToEntity 'types::entity (const int &, const pokesim::Sides &, pokesim::Slot)'
-|-ParmVarDecl 0x5580e7735a58 <col:28, col:51> col:51 invalid registry 'const int &'
-|-ParmVarDecl 0x5580e7735af8 <col:61, col:74> col:74 sides 'const pokesim::Sides &'
-`-ParmVarDecl 0x5580e7735b70 <col:81, col:86> col:86 targetSlot 'pokesim::Slot'
+FunctionDecl 0x561d1f9b3558 </tmp/_sSiSlh/PokeSim.hpp:12579:1, col:96> col:15 used slotToEntity 'types::entity (const types::registry &, const pokesim::Sides &, pokesim::Slot)'
+|-ParmVarDecl 0x561d1f9b3308 <col:28, col:51> col:51 registry 'const types::registry &'
+|-ParmVarDecl 0x561d1f9b33a8 <col:61, col:74> col:74 sides 'const pokesim::Sides &'
+`-ParmVarDecl 0x561d1f9b3420 <col:81, col:86> col:86 targetSlot 'pokesim::Slot'
 
 
 Match #3:
 
-/tmp/_kvVGVh/PokeSim.hpp:13530:1: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:13530:1: note: "inline" binds here
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e781e788 </tmp/_kvVGVh/PokeSim.hpp:13530:1, col:110> col:6 invalid resolveDecision 'void (int, const pokesim::SideDecision &, pokesim::ActionQueue &)'
-|-ParmVarDecl 0x5580e781e560 <col:22, col:36> col:36 invalid sideHandle 'int'
-|-ParmVarDecl 0x5580e781e608 <col:48, col:68> col:68 sideDecision 'const pokesim::SideDecision &'
-`-ParmVarDecl 0x5580e781e6a8 <col:82, col:95> col:95 sideActionQueue 'pokesim::ActionQueue &'
+FunctionDecl 0x561d1fe8f0a8 </tmp/_sSiSlh/PokeSim.hpp:13530:1, col:110> col:6 used resolveDecision 'void (types::handle, const pokesim::SideDecision &, pokesim::ActionQueue &)'
+|-ParmVarDecl 0x561d1fe8ee68 <col:22, col:36> col:36 sideHandle 'types::handle':'entt::basic_handle<entt::basic_registry<>>'
+|-ParmVarDecl 0x561d1fe8ef08 <col:48, col:68> col:68 sideDecision 'const pokesim::SideDecision &'
+`-ParmVarDecl 0x561d1fe8ef80 <col:82, col:95> col:95 sideActionQueue 'pokesim::ActionQueue &'
 
 
 Match #4:
 
-/tmp/_kvVGVh/PokeSim.hpp:14221:1: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:14221:1: note: "inline" binds here
 void speedSort(types::handle handle, ActionQueue& actionQueue);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e7843228 </tmp/_kvVGVh/PokeSim.hpp:14221:1, col:62> col:6 invalid speedSort 'void (int, pokesim::ActionQueue &)'
-|-ParmVarDecl 0x5580e78430e0 <col:16, col:30> col:30 invalid handle 'int'
-`-ParmVarDecl 0x5580e7843158 <col:38, col:51> col:51 actionQueue 'pokesim::ActionQueue &'
+FunctionDecl 0x561d20bfc168 </tmp/_sSiSlh/PokeSim.hpp:14221:1, col:62> col:6 speedSort 'void (types::handle, pokesim::ActionQueue &)'
+|-ParmVarDecl 0x561d20bfbfe0 <col:16, col:30> col:30 handle 'types::handle':'entt::basic_handle<entt::basic_registry<>>'
+`-ParmVarDecl 0x561d20bfc058 <col:38, col:51> col:51 actionQueue 'pokesim::ActionQueue &'
 
 
 Match #5:
 
-/tmp/_kvVGVh/PokeSim.hpp:15313:1: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:15313:1: note: "inline" binds here
 void enumToTag(dex::Status status, types::handle& handle);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e7890e58 </tmp/_kvVGVh/PokeSim.hpp:15313:1, col:57> col:6 invalid enumToTag 'void (dex::Status, int &)'
-|-ParmVarDecl 0x5580e7890cb8 <col:16, col:28> col:28 status 'dex::Status':'pokesim::dex::Status'
-`-ParmVarDecl 0x5580e7890d48 <col:36, col:51> col:51 invalid handle 'int &'
+FunctionDecl 0x561d21ed8e78 </tmp/_sSiSlh/PokeSim.hpp:15313:1, col:57> col:6 used enumToTag 'void (dex::Status, types::handle &)'
+|-ParmVarDecl 0x561d21ed8c78 <col:16, col:28> col:28 status 'dex::Status':'pokesim::dex::Status'
+`-ParmVarDecl 0x561d21ed8d60 <col:36, col:51> col:51 handle 'types::handle &'
 
 
 Match #6:
 
-/tmp/_kvVGVh/PokeSim.hpp:16721:1: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:16721:1: note: "inline" binds here
 void enumToTag(dex::Nature nature, types::handle handle);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e78fc0e8 </tmp/_kvVGVh/PokeSim.hpp:16721:1, col:56> col:6 invalid enumToTag 'void (dex::Nature, int)'
-|-ParmVarDecl 0x5580e78fbf48 <col:16, col:28> col:28 nature 'dex::Nature':'pokesim::dex::Nature'
-`-ParmVarDecl 0x5580e78fbfd8 <col:36, col:50> col:50 invalid handle 'int'
+FunctionDecl 0x561d221cd8e8 </tmp/_sSiSlh/PokeSim.hpp:16721:1, col:56> col:6 used enumToTag 'void (dex::Nature, types::handle)'
+|-ParmVarDecl 0x561d221cd718 <col:16, col:28> col:28 nature 'dex::Nature':'pokesim::dex::Nature'
+`-ParmVarDecl 0x561d221cd7d0 <col:36, col:50> col:50 handle 'types::handle':'entt::basic_handle<entt::basic_registry<>>'
 
 
 Match #7:
 
-/tmp/_kvVGVh/PokeSim.hpp:16780:1: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:16780:1: note: "inline" binds here
 void enumToTag(dex::Item item, types::handle handle);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79000e8 </tmp/_kvVGVh/PokeSim.hpp:16780:1, col:52> col:6 invalid enumToTag 'void (dex::Item, int)'
-|-ParmVarDecl 0x5580e78fff48 <col:16, col:26> col:26 item 'dex::Item':'pokesim::dex::Item'
-`-ParmVarDecl 0x5580e78fffd8 <col:32, col:46> col:46 invalid handle 'int'
+FunctionDecl 0x561d22b2e738 </tmp/_sSiSlh/PokeSim.hpp:16780:1, col:52> col:6 used enumToTag 'void (dex::Item, types::handle)'
+|-ParmVarDecl 0x561d22b2e568 <col:16, col:26> col:26 item 'dex::Item':'pokesim::dex::Item'
+`-ParmVarDecl 0x561d22b2e620 <col:32, col:46> col:46 handle 'types::handle':'entt::basic_handle<entt::basic_registry<>>'
 
 
 Match #8:
 
-/tmp/_kvVGVh/PokeSim.hpp:16820:1: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:16820:1: note: "inline" binds here
 void enumToTag(dex::Ability ability, types::handle handle);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e7902188 </tmp/_kvVGVh/PokeSim.hpp:16820:1, col:58> col:6 invalid enumToTag 'void (dex::Ability, int)'
-|-ParmVarDecl 0x5580e7901fe8 <col:16, col:29> col:29 ability 'dex::Ability':'pokesim::dex::Ability'
-`-ParmVarDecl 0x5580e7902078 <col:38, col:52> col:52 invalid handle 'int'
+FunctionDecl 0x561d22d5a918 </tmp/_sSiSlh/PokeSim.hpp:16820:1, col:58> col:6 used enumToTag 'void (dex::Ability, types::handle)'
+|-ParmVarDecl 0x561d22d5a748 <col:16, col:29> col:29 ability 'dex::Ability':'pokesim::dex::Ability'
+`-ParmVarDecl 0x561d22d5a800 <col:38, col:52> col:52 handle 'types::handle':'entt::basic_handle<entt::basic_registry<>>'
 
 
 Match #9:
 
-/tmp/_kvVGVh/PokeSim.hpp:17125:1: note: "inline" binds here
-void cloneEntity(
-^~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17122:1: note: "inline" binds here
+types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790d228 </tmp/_kvVGVh/PokeSim.hpp:17125:1, line:17127:110> line:17125:6 invalid cloneEntity 'void (types::entity, int &, int &, int &, int)'
-|-ParmVarDecl 0x5580e790cdd8 <line:17126:3, col:17> col:17 src 'types::entity':'entt::entity'
-|-ParmVarDecl 0x5580e790ce68 <col:22, col:39> col:39 invalid registry 'int &'
-|-ParmVarDecl 0x5580e790cef8 <col:49, col:73> col:73 invalid entityMap 'int &'
-|-ParmVarDecl 0x5580e790d048 <line:17127:3, col:63> col:63 invalid srcEntityStorages 'int &'
-`-ParmVarDecl 0x5580e790d0d8 <col:82, col:100> col:100 invalid cloneCount 'int'
+FunctionDecl 0x561d2398a2c8 </tmp/_sSiSlh/PokeSim.hpp:17122:1, col:100> col:24 used clone 'types::ClonedEntityMap (types::registry &, std::optional<types::cloneIndex>)'
+|-ParmVarDecl 0x561d2398a010 <col:30, col:47> col:47 registry 'types::registry &'
+`-ParmVarDecl 0x561d2398a1a0 <col:57, col:90> col:90 cloneCount 'std::optional<types::cloneIndex>':'std::optional<unsigned int>'
 
 
 Match #10:
 
-/tmp/_kvVGVh/PokeSim.hpp:17129:1: note: "inline" binds here
-void cloneBattle(
+/tmp/_sSiSlh/PokeSim.hpp:17125:1: note: "inline" binds here
+void cloneEntity(
 ^~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790d678 </tmp/_kvVGVh/PokeSim.hpp:17129:1, line:17131:110> line:17129:6 invalid cloneBattle 'void (int &, int &, int &, int)'
-|-ParmVarDecl 0x5580e790d3f8 <line:17130:3, col:20> col:20 invalid registry 'int &'
-|-ParmVarDecl 0x5580e790d478 <col:30, col:54> col:54 invalid entityMap 'int &'
-|-ParmVarDecl 0x5580e790d4f8 <line:17131:3, col:63> col:63 invalid srcEntityStorages 'int &'
-`-ParmVarDecl 0x5580e790d588 <col:82, col:100> col:100 invalid cloneCount 'int'
+FunctionDecl 0x561d2398b2f8 </tmp/_sSiSlh/PokeSim.hpp:17125:1, line:17127:110> line:17125:6 used cloneEntity 'void (types::entity, types::registry &, types::ClonedEntityMap &, entt::dense_map<entt::id_type, std::vector<types::entity>> &, types::cloneIndex)'
+|-ParmVarDecl 0x561d2398a430 <line:17126:3, col:17> col:17 src 'types::entity':'entt::entity'
+|-ParmVarDecl 0x561d2398a4f0 <col:22, col:39> col:39 registry 'types::registry &'
+|-ParmVarDecl 0x561d2398a610 <col:49, col:73> col:73 entityMap 'types::ClonedEntityMap &'
+|-ParmVarDecl 0x561d2398b0e8 <line:17127:3, col:63> col:63 srcEntityStorages 'entt::dense_map<entt::id_type, std::vector<types::entity>> &'
+`-ParmVarDecl 0x561d2398b1a0 <col:82, col:100> col:100 cloneCount 'types::cloneIndex':'unsigned int'
 
 
 Match #11:
 
-/tmp/_kvVGVh/PokeSim.hpp:17132:1: note: "inline" binds here
-void cloneSide(
-^~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17129:1: note: "inline" binds here
+void cloneBattle(
+^~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790da78 </tmp/_kvVGVh/PokeSim.hpp:17132:1, line:17134:110> line:17132:6 invalid cloneSide 'void (int &, int &, int &, int)'
-|-ParmVarDecl 0x5580e790d840 <line:17133:3, col:20> col:20 invalid registry 'int &'
-|-ParmVarDecl 0x5580e790d8c0 <col:30, col:54> col:54 invalid entityMap 'int &'
-|-ParmVarDecl 0x5580e790d940 <line:17134:3, col:63> col:63 invalid srcEntityStorages 'int &'
-`-ParmVarDecl 0x5580e790d9d0 <col:82, col:100> col:100 invalid cloneCount 'int'
+FunctionDecl 0x561d2398bd98 </tmp/_sSiSlh/PokeSim.hpp:17129:1, line:17131:110> line:17129:6 used cloneBattle 'void (types::registry &, types::ClonedEntityMap &, entt::dense_map<entt::id_type, std::vector<types::entity>> &, types::cloneIndex)'
+|-ParmVarDecl 0x561d2398b410 <line:17130:3, col:20> col:20 registry 'types::registry &'
+|-ParmVarDecl 0x561d2398b4d0 <col:30, col:54> col:54 entityMap 'types::ClonedEntityMap &'
+|-ParmVarDecl 0x561d2398bb98 <line:17131:3, col:63> col:63 srcEntityStorages 'entt::dense_map<entt::id_type, std::vector<types::entity>> &'
+`-ParmVarDecl 0x561d2398bc50 <col:82, col:100> col:100 cloneCount 'types::cloneIndex':'unsigned int'
 
 
 Match #12:
 
-/tmp/_kvVGVh/PokeSim.hpp:17135:1: note: "inline" binds here
-void cloneActionQueue(
-^~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17132:1: note: "inline" binds here
+void cloneSide(
+^~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790de78 </tmp/_kvVGVh/PokeSim.hpp:17135:1, line:17137:110> line:17135:6 invalid cloneActionQueue 'void (int &, int &, int &, int)'
-|-ParmVarDecl 0x5580e790dc40 <line:17136:3, col:20> col:20 invalid registry 'int &'
-|-ParmVarDecl 0x5580e790dcc0 <col:30, col:54> col:54 invalid entityMap 'int &'
-|-ParmVarDecl 0x5580e790dd40 <line:17137:3, col:63> col:63 invalid srcEntityStorages 'int &'
-`-ParmVarDecl 0x5580e790ddd0 <col:82, col:100> col:100 invalid cloneCount 'int'
+FunctionDecl 0x561d2398c7d8 </tmp/_sSiSlh/PokeSim.hpp:17132:1, line:17134:110> line:17132:6 used cloneSide 'void (types::registry &, types::ClonedEntityMap &, entt::dense_map<entt::id_type, std::vector<types::entity>> &, types::cloneIndex)'
+|-ParmVarDecl 0x561d2398bea8 <line:17133:3, col:20> col:20 registry 'types::registry &'
+|-ParmVarDecl 0x561d2398bf68 <col:30, col:54> col:54 entityMap 'types::ClonedEntityMap &'
+|-ParmVarDecl 0x561d2398c628 <line:17134:3, col:63> col:63 srcEntityStorages 'entt::dense_map<entt::id_type, std::vector<types::entity>> &'
+`-ParmVarDecl 0x561d2398c6e0 <col:82, col:100> col:100 cloneCount 'types::cloneIndex':'unsigned int'
 
 
 Match #13:
 
-/tmp/_kvVGVh/PokeSim.hpp:17138:1: note: "inline" binds here
-void clonePokemon(
-^~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17135:1: note: "inline" binds here
+void cloneActionQueue(
+^~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790e278 </tmp/_kvVGVh/PokeSim.hpp:17138:1, line:17140:110> line:17138:6 invalid clonePokemon 'void (int &, int &, int &, int)'
-|-ParmVarDecl 0x5580e790e040 <line:17139:3, col:20> col:20 invalid registry 'int &'
-|-ParmVarDecl 0x5580e790e0c0 <col:30, col:54> col:54 invalid entityMap 'int &'
-|-ParmVarDecl 0x5580e790e140 <line:17140:3, col:63> col:63 invalid srcEntityStorages 'int &'
-`-ParmVarDecl 0x5580e790e1d0 <col:82, col:100> col:100 invalid cloneCount 'int'
+FunctionDecl 0x561d2398d218 </tmp/_sSiSlh/PokeSim.hpp:17135:1, line:17137:110> line:17135:6 used cloneActionQueue 'void (types::registry &, types::ClonedEntityMap &, entt::dense_map<entt::id_type, std::vector<types::entity>> &, types::cloneIndex)'
+|-ParmVarDecl 0x561d2398c8e8 <line:17136:3, col:20> col:20 registry 'types::registry &'
+|-ParmVarDecl 0x561d2398c9a8 <col:30, col:54> col:54 entityMap 'types::ClonedEntityMap &'
+|-ParmVarDecl 0x561d2398d068 <line:17137:3, col:63> col:63 srcEntityStorages 'entt::dense_map<entt::id_type, std::vector<types::entity>> &'
+`-ParmVarDecl 0x561d2398d120 <col:82, col:100> col:100 cloneCount 'types::cloneIndex':'unsigned int'
 
 
 Match #14:
 
-/tmp/_kvVGVh/PokeSim.hpp:17141:1: note: "inline" binds here
-void cloneMove(
-^~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17138:1: note: "inline" binds here
+void clonePokemon(
+^~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790e678 </tmp/_kvVGVh/PokeSim.hpp:17141:1, line:17143:110> line:17141:6 invalid cloneMove 'void (int &, int &, int &, int)'
-|-ParmVarDecl 0x5580e790e440 <line:17142:3, col:20> col:20 invalid registry 'int &'
-|-ParmVarDecl 0x5580e790e4c0 <col:30, col:54> col:54 invalid entityMap 'int &'
-|-ParmVarDecl 0x5580e790e540 <line:17143:3, col:63> col:63 invalid srcEntityStorages 'int &'
-`-ParmVarDecl 0x5580e790e5d0 <col:82, col:100> col:100 invalid cloneCount 'int'
+FunctionDecl 0x561d2398dc58 </tmp/_sSiSlh/PokeSim.hpp:17138:1, line:17140:110> line:17138:6 used clonePokemon 'void (types::registry &, types::ClonedEntityMap &, entt::dense_map<entt::id_type, std::vector<types::entity>> &, types::cloneIndex)'
+|-ParmVarDecl 0x561d2398d328 <line:17139:3, col:20> col:20 registry 'types::registry &'
+|-ParmVarDecl 0x561d2398d3e8 <col:30, col:54> col:54 entityMap 'types::ClonedEntityMap &'
+|-ParmVarDecl 0x561d2398daa8 <line:17140:3, col:63> col:63 srcEntityStorages 'entt::dense_map<entt::id_type, std::vector<types::entity>> &'
+`-ParmVarDecl 0x561d2398db60 <col:82, col:100> col:100 cloneCount 'types::cloneIndex':'unsigned int'
 
 
 Match #15:
 
-/tmp/_kvVGVh/PokeSim.hpp:17145:1: note: "inline" binds here
-void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17141:1: note: "inline" binds here
+void cloneMove(
+^~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790ea38 </tmp/_kvVGVh/PokeSim.hpp:17145:1, col:104> col:6 invalid remapEntity 'void (types::entity &, const pokesim::CloneTo &, const int &)'
-|-ParmVarDecl 0x5580e790e7e0 <col:18, col:33> col:33 entity 'types::entity &'
-|-ParmVarDecl 0x5580e790e888 <col:41, col:56> col:56 cloneTo 'const pokesim::CloneTo &'
-`-ParmVarDecl 0x5580e790e918 <col:65, col:95> col:95 invalid entityMap 'const int &'
+FunctionDecl 0x561d2398e698 </tmp/_sSiSlh/PokeSim.hpp:17141:1, line:17143:110> line:17141:6 used cloneMove 'void (types::registry &, types::ClonedEntityMap &, entt::dense_map<entt::id_type, std::vector<types::entity>> &, types::cloneIndex)'
+|-ParmVarDecl 0x561d2398dd68 <line:17142:3, col:20> col:20 registry 'types::registry &'
+|-ParmVarDecl 0x561d2398de28 <col:30, col:54> col:54 entityMap 'types::ClonedEntityMap &'
+|-ParmVarDecl 0x561d2398e4e8 <line:17143:3, col:63> col:63 srcEntityStorages 'entt::dense_map<entt::id_type, std::vector<types::entity>> &'
+`-ParmVarDecl 0x561d2398e5a0 <col:82, col:100> col:100 cloneCount 'types::cloneIndex':'unsigned int'
 
 
 Match #16:
 
-/tmp/_kvVGVh/PokeSim.hpp:17152:1: note: "inline" binds here
-void remapActionQueueEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17145:1: note: "inline" binds here
+void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790f598 </tmp/_kvVGVh/PokeSim.hpp:17152:1, col:102> col:6 invalid remapActionQueueEntityMembers 'void (int &, const int &)'
-|-ParmVarDecl 0x5580e790f430 <col:36, col:53> col:53 invalid registry 'int &'
-`-ParmVarDecl 0x5580e790f4c0 <col:63, col:93> col:93 invalid entityMap 'const int &'
+FunctionDecl 0x561d2398ea88 </tmp/_sSiSlh/PokeSim.hpp:17145:1, col:104> col:6 used remapEntity 'void (types::entity &, const pokesim::CloneTo &, const types::ClonedEntityMap &)'
+|-ParmVarDecl 0x561d2398e7a8 <col:18, col:33> col:33 entity 'types::entity &'
+|-ParmVarDecl 0x561d2398e848 <col:41, col:56> col:56 cloneTo 'const pokesim::CloneTo &'
+`-ParmVarDecl 0x561d2398e960 <col:65, col:95> col:95 entityMap 'const types::ClonedEntityMap &'
 
 
 Match #17:
 
-/tmp/_kvVGVh/PokeSim.hpp:17153:1: note: "inline" binds here
-void remapBattleEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17152:1: note: "inline" binds here
+void remapActionQueueEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790f7b8 </tmp/_kvVGVh/PokeSim.hpp:17153:1, col:97> col:6 invalid remapBattleEntityMembers 'void (int &, const int &)'
-|-ParmVarDecl 0x5580e790f690 <col:31, col:48> col:48 invalid registry 'int &'
-`-ParmVarDecl 0x5580e790f720 <col:58, col:88> col:88 invalid entityMap 'const int &'
+FunctionDecl 0x561d2398f7c8 </tmp/_sSiSlh/PokeSim.hpp:17152:1, col:102> col:6 used remapActionQueueEntityMembers 'void (types::registry &, const types::ClonedEntityMap &)'
+|-ParmVarDecl 0x561d2398f5f0 <col:36, col:53> col:53 registry 'types::registry &'
+`-ParmVarDecl 0x561d2398f6b0 <col:63, col:93> col:93 entityMap 'const types::ClonedEntityMap &'
 
 
 Match #18:
 
-/tmp/_kvVGVh/PokeSim.hpp:17154:1: note: "inline" binds here
-void remapFoeSideEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17153:1: note: "inline" binds here
+void remapBattleEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790f9d8 </tmp/_kvVGVh/PokeSim.hpp:17154:1, col:98> col:6 invalid remapFoeSideEntityMembers 'void (int &, const int &)'
-|-ParmVarDecl 0x5580e790f8b0 <col:32, col:49> col:49 invalid registry 'int &'
-`-ParmVarDecl 0x5580e790f940 <col:59, col:89> col:89 invalid entityMap 'const int &'
+FunctionDecl 0x561d2398fa20 </tmp/_sSiSlh/PokeSim.hpp:17153:1, col:97> col:6 used remapBattleEntityMembers 'void (types::registry &, const types::ClonedEntityMap &)'
+|-ParmVarDecl 0x561d2398f8c8 <col:31, col:48> col:48 registry 'types::registry &'
+`-ParmVarDecl 0x561d2398f988 <col:58, col:88> col:88 entityMap 'const types::ClonedEntityMap &'
 
 
 Match #19:
 
-/tmp/_kvVGVh/PokeSim.hpp:17155:1: note: "inline" binds here
-void remapMoveEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17154:1: note: "inline" binds here
+void remapFoeSideEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790fbf8 </tmp/_kvVGVh/PokeSim.hpp:17155:1, col:95> col:6 invalid remapMoveEntityMembers 'void (int &, const int &)'
-|-ParmVarDecl 0x5580e790fad0 <col:29, col:46> col:46 invalid registry 'int &'
-`-ParmVarDecl 0x5580e790fb60 <col:56, col:86> col:86 invalid entityMap 'const int &'
+FunctionDecl 0x561d2398fc78 </tmp/_sSiSlh/PokeSim.hpp:17154:1, col:98> col:6 used remapFoeSideEntityMembers 'void (types::registry &, const types::ClonedEntityMap &)'
+|-ParmVarDecl 0x561d2398fb20 <col:32, col:49> col:49 registry 'types::registry &'
+`-ParmVarDecl 0x561d2398fbe0 <col:59, col:89> col:89 entityMap 'const types::ClonedEntityMap &'
 
 
 Match #20:
 
-/tmp/_kvVGVh/PokeSim.hpp:17156:1: note: "inline" binds here
-void remapMoveEffectEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17155:1: note: "inline" binds here
+void remapMoveEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790fe18 </tmp/_kvVGVh/PokeSim.hpp:17156:1, col:101> col:6 invalid remapMoveEffectEntityMembers 'void (int &, const int &)'
-|-ParmVarDecl 0x5580e790fcf0 <col:35, col:52> col:52 invalid registry 'int &'
-`-ParmVarDecl 0x5580e790fd80 <col:62, col:92> col:92 invalid entityMap 'const int &'
+FunctionDecl 0x561d2398fed0 </tmp/_sSiSlh/PokeSim.hpp:17155:1, col:95> col:6 used remapMoveEntityMembers 'void (types::registry &, const types::ClonedEntityMap &)'
+|-ParmVarDecl 0x561d2398fd78 <col:29, col:46> col:46 registry 'types::registry &'
+`-ParmVarDecl 0x561d2398fe38 <col:56, col:86> col:86 entityMap 'const types::ClonedEntityMap &'
 
 
 Match #21:
 
-/tmp/_kvVGVh/PokeSim.hpp:17157:1: note: "inline" binds here
-void remapMoveSlotsEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17156:1: note: "inline" binds here
+void remapMoveEffectEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e7910038 </tmp/_kvVGVh/PokeSim.hpp:17157:1, col:100> col:6 invalid remapMoveSlotsEntityMembers 'void (int &, const int &)'
-|-ParmVarDecl 0x5580e790ff10 <col:34, col:51> col:51 invalid registry 'int &'
-`-ParmVarDecl 0x5580e790ffa0 <col:61, col:91> col:91 invalid entityMap 'const int &'
+FunctionDecl 0x561d23990128 </tmp/_sSiSlh/PokeSim.hpp:17156:1, col:101> col:6 used remapMoveEffectEntityMembers 'void (types::registry &, const types::ClonedEntityMap &)'
+|-ParmVarDecl 0x561d2398ffd0 <col:35, col:52> col:52 registry 'types::registry &'
+`-ParmVarDecl 0x561d23990090 <col:62, col:92> col:92 entityMap 'const types::ClonedEntityMap &'
 
 
 Match #22:
 
-/tmp/_kvVGVh/PokeSim.hpp:17158:1: note: "inline" binds here
-void remapPokemonEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17157:1: note: "inline" binds here
+void remapMoveSlotsEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e7910258 </tmp/_kvVGVh/PokeSim.hpp:17158:1, col:98> col:6 invalid remapPokemonEntityMembers 'void (int &, const int &)'
-|-ParmVarDecl 0x5580e7910130 <col:32, col:49> col:49 invalid registry 'int &'
-`-ParmVarDecl 0x5580e79101c0 <col:59, col:89> col:89 invalid entityMap 'const int &'
+FunctionDecl 0x561d23990380 </tmp/_sSiSlh/PokeSim.hpp:17157:1, col:100> col:6 used remapMoveSlotsEntityMembers 'void (types::registry &, const types::ClonedEntityMap &)'
+|-ParmVarDecl 0x561d23990228 <col:34, col:51> col:51 registry 'types::registry &'
+`-ParmVarDecl 0x561d239902e8 <col:61, col:91> col:91 entityMap 'const types::ClonedEntityMap &'
 
 
 Match #23:
 
-/tmp/_kvVGVh/PokeSim.hpp:17159:1: note: "inline" binds here
-void remapSideEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17158:1: note: "inline" binds here
+void remapPokemonEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e7910478 </tmp/_kvVGVh/PokeSim.hpp:17159:1, col:95> col:6 invalid remapSideEntityMembers 'void (int &, const int &)'
-|-ParmVarDecl 0x5580e7910350 <col:29, col:46> col:46 invalid registry 'int &'
-`-ParmVarDecl 0x5580e79103e0 <col:56, col:86> col:86 invalid entityMap 'const int &'
+FunctionDecl 0x561d239905d8 </tmp/_sSiSlh/PokeSim.hpp:17158:1, col:98> col:6 used remapPokemonEntityMembers 'void (types::registry &, const types::ClonedEntityMap &)'
+|-ParmVarDecl 0x561d23990480 <col:32, col:49> col:49 registry 'types::registry &'
+`-ParmVarDecl 0x561d23990540 <col:59, col:89> col:89 entityMap 'const types::ClonedEntityMap &'
 
 
 Match #24:
 
-/tmp/_kvVGVh/PokeSim.hpp:17160:1: note: "inline" binds here
-void remapSidesEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17159:1: note: "inline" binds here
+void remapSideEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e7910698 </tmp/_kvVGVh/PokeSim.hpp:17160:1, col:96> col:6 invalid remapSidesEntityMembers 'void (int &, const int &)'
-|-ParmVarDecl 0x5580e7910570 <col:30, col:47> col:47 invalid registry 'int &'
-`-ParmVarDecl 0x5580e7910600 <col:57, col:87> col:87 invalid entityMap 'const int &'
+FunctionDecl 0x561d23990830 </tmp/_sSiSlh/PokeSim.hpp:17159:1, col:95> col:6 used remapSideEntityMembers 'void (types::registry &, const types::ClonedEntityMap &)'
+|-ParmVarDecl 0x561d239906d8 <col:29, col:46> col:46 registry 'types::registry &'
+`-ParmVarDecl 0x561d23990798 <col:56, col:86> col:86 entityMap 'const types::ClonedEntityMap &'
 
 
 Match #25:
 
-/tmp/_kvVGVh/PokeSim.hpp:17161:1: note: "inline" binds here
-void remapTeamEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17160:1: note: "inline" binds here
+void remapSidesEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79108b8 </tmp/_kvVGVh/PokeSim.hpp:17161:1, col:95> col:6 invalid remapTeamEntityMembers 'void (int &, const int &)'
-|-ParmVarDecl 0x5580e7910790 <col:29, col:46> col:46 invalid registry 'int &'
-`-ParmVarDecl 0x5580e7910820 <col:56, col:86> col:86 invalid entityMap 'const int &'
+FunctionDecl 0x561d23990a88 </tmp/_sSiSlh/PokeSim.hpp:17160:1, col:96> col:6 used remapSidesEntityMembers 'void (types::registry &, const types::ClonedEntityMap &)'
+|-ParmVarDecl 0x561d23990930 <col:30, col:47> col:47 registry 'types::registry &'
+`-ParmVarDecl 0x561d239909f0 <col:57, col:87> col:87 entityMap 'const types::ClonedEntityMap &'
 
 
 Match #26:
 
-/tmp/_kvVGVh/PokeSim.hpp:17763:1: note: "inline" binds here
-std::string toString(Species speciesEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17161:1: note: "inline" binds here
+void remapTeamEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b52f8 </tmp/_kvVGVh/PokeSim.hpp:17763:1, col:41> col:13 toString 'std::string (pokesim::dex::Species)'
-`-ParmVarDecl 0x5580e79b51f0 <col:22, col:30> col:30 speciesEnum 'pokesim::dex::Species'
+FunctionDecl 0x561d23990ce0 </tmp/_sSiSlh/PokeSim.hpp:17161:1, col:95> col:6 used remapTeamEntityMembers 'void (types::registry &, const types::ClonedEntityMap &)'
+|-ParmVarDecl 0x561d23990b88 <col:29, col:46> col:46 registry 'types::registry &'
+`-ParmVarDecl 0x561d23990c48 <col:56, col:86> col:86 entityMap 'const types::ClonedEntityMap &'
 
 
 Match #27:
 
-/tmp/_kvVGVh/PokeSim.hpp:17766:1: note: "inline" binds here
-std::string toString(Move moveEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17763:1: note: "inline" binds here
+std::string toString(Species speciesEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b54e8 </tmp/_kvVGVh/PokeSim.hpp:17766:1, col:35> col:13 toString 'std::string (pokesim::dex::Move)'
-`-ParmVarDecl 0x5580e79b53e0 <col:22, col:27> col:27 moveEnum 'pokesim::dex::Move'
+FunctionDecl 0x561d24e17e28 </tmp/_sSiSlh/PokeSim.hpp:17763:1, col:41> col:13 toString 'std::string (pokesim::dex::Species)'
+`-ParmVarDecl 0x561d24e17d20 <col:22, col:30> col:30 speciesEnum 'pokesim::dex::Species'
 
 
 Match #28:
 
-/tmp/_kvVGVh/PokeSim.hpp:17769:1: note: "inline" binds here
-std::string toString(Ability abilityEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17766:1: note: "inline" binds here
+std::string toString(Move moveEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b56e8 </tmp/_kvVGVh/PokeSim.hpp:17769:1, col:41> col:13 toString 'std::string (pokesim::dex::Ability)'
-`-ParmVarDecl 0x5580e79b55e0 <col:22, col:30> col:30 abilityEnum 'pokesim::dex::Ability'
+FunctionDecl 0x561d24e18018 </tmp/_sSiSlh/PokeSim.hpp:17766:1, col:35> col:13 toString 'std::string (pokesim::dex::Move)'
+`-ParmVarDecl 0x561d24e17f10 <col:22, col:27> col:27 moveEnum 'pokesim::dex::Move'
 
 
 Match #29:
 
-/tmp/_kvVGVh/PokeSim.hpp:17772:1: note: "inline" binds here
-std::string toString(Item itemEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17769:1: note: "inline" binds here
+std::string toString(Ability abilityEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b58e8 </tmp/_kvVGVh/PokeSim.hpp:17772:1, col:35> col:13 toString 'std::string (pokesim::dex::Item)'
-`-ParmVarDecl 0x5580e79b57e0 <col:22, col:27> col:27 itemEnum 'pokesim::dex::Item'
+FunctionDecl 0x561d24e18218 </tmp/_sSiSlh/PokeSim.hpp:17769:1, col:41> col:13 toString 'std::string (pokesim::dex::Ability)'
+`-ParmVarDecl 0x561d24e18110 <col:22, col:30> col:30 abilityEnum 'pokesim::dex::Ability'
 
 
 Match #30:
 
-/tmp/_kvVGVh/PokeSim.hpp:17775:1: note: "inline" binds here
-std::string toString(Nature natureEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17772:1: note: "inline" binds here
+std::string toString(Item itemEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b5ae8 </tmp/_kvVGVh/PokeSim.hpp:17775:1, col:39> col:13 toString 'std::string (pokesim::dex::Nature)'
-`-ParmVarDecl 0x5580e79b59e0 <col:22, col:29> col:29 natureEnum 'pokesim::dex::Nature'
+FunctionDecl 0x561d24e18418 </tmp/_sSiSlh/PokeSim.hpp:17772:1, col:35> col:13 toString 'std::string (pokesim::dex::Item)'
+`-ParmVarDecl 0x561d24e18310 <col:22, col:27> col:27 itemEnum 'pokesim::dex::Item'
 
 
 Match #31:
 
-/tmp/_kvVGVh/PokeSim.hpp:17778:1: note: "inline" binds here
-std::string toString(Status statusEnum);
+/tmp/_sSiSlh/PokeSim.hpp:17775:1: note: "inline" binds here
+std::string toString(Nature natureEnum);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b5ce8 </tmp/_kvVGVh/PokeSim.hpp:17778:1, col:39> col:13 toString 'std::string (pokesim::dex::Status)'
-`-ParmVarDecl 0x5580e79b5be0 <col:22, col:29> col:29 statusEnum 'pokesim::dex::Status'
+FunctionDecl 0x561d24e18618 </tmp/_sSiSlh/PokeSim.hpp:17775:1, col:39> col:13 toString 'std::string (pokesim::dex::Nature)'
+`-ParmVarDecl 0x561d24e18510 <col:22, col:29> col:29 natureEnum 'pokesim::dex::Nature'
 
 
 Match #32:
 
-/tmp/_kvVGVh/PokeSim.hpp:17781:1: note: "inline" binds here
-std::string toString(Gender genderEnum);
+/tmp/_sSiSlh/PokeSim.hpp:17778:1: note: "inline" binds here
+std::string toString(Status statusEnum);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b5ee8 </tmp/_kvVGVh/PokeSim.hpp:17781:1, col:39> col:13 toString 'std::string (pokesim::dex::Gender)'
-`-ParmVarDecl 0x5580e79b5de0 <col:22, col:29> col:29 genderEnum 'pokesim::dex::Gender'
+FunctionDecl 0x561d24e18818 </tmp/_sSiSlh/PokeSim.hpp:17778:1, col:39> col:13 toString 'std::string (pokesim::dex::Status)'
+`-ParmVarDecl 0x561d24e18710 <col:22, col:29> col:29 statusEnum 'pokesim::dex::Status'
 
 
 Match #33:
 
-/tmp/_kvVGVh/PokeSim.hpp:17784:1: note: "inline" binds here
-std::string toString(Type typeEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17781:1: note: "inline" binds here
+std::string toString(Gender genderEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b60e8 </tmp/_kvVGVh/PokeSim.hpp:17784:1, col:35> col:13 toString 'std::string (pokesim::dex::Type)'
-`-ParmVarDecl 0x5580e79b5fe0 <col:22, col:27> col:27 typeEnum 'pokesim::dex::Type'
+FunctionDecl 0x561d24e18a18 </tmp/_sSiSlh/PokeSim.hpp:17781:1, col:39> col:13 toString 'std::string (pokesim::dex::Gender)'
+`-ParmVarDecl 0x561d24e18910 <col:22, col:29> col:29 genderEnum 'pokesim::dex::Gender'
 
 
 Match #34:
 
-/tmp/_kvVGVh/PokeSim.hpp:17787:1: note: "inline" binds here
-std::string toString(Stat statEnum);
+/tmp/_sSiSlh/PokeSim.hpp:17784:1: note: "inline" binds here
+std::string toString(Type typeEnum);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b62e8 </tmp/_kvVGVh/PokeSim.hpp:17787:1, col:35> col:13 toString 'std::string (pokesim::dex::Stat)'
-`-ParmVarDecl 0x5580e79b61e0 <col:22, col:27> col:27 statEnum 'pokesim::dex::Stat'
+FunctionDecl 0x561d24e18c18 </tmp/_sSiSlh/PokeSim.hpp:17784:1, col:35> col:13 toString 'std::string (pokesim::dex::Type)'
+`-ParmVarDecl 0x561d24e18b10 <col:22, col:27> col:27 typeEnum 'pokesim::dex::Type'
 
 
 Match #35:
 
-/tmp/_kvVGVh/PokeSim.hpp:17790:1: note: "inline" binds here
-std::string toSmogonString(Species speciesEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17787:1: note: "inline" binds here
+std::string toString(Stat statEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b6480 </tmp/_kvVGVh/PokeSim.hpp:17790:1, col:47> col:13 toSmogonString 'std::string (pokesim::dex::Species)'
-`-ParmVarDecl 0x5580e79b63e0 <col:28, col:36> col:36 speciesEnum 'pokesim::dex::Species'
+FunctionDecl 0x561d24e18e18 </tmp/_sSiSlh/PokeSim.hpp:17787:1, col:35> col:13 toString 'std::string (pokesim::dex::Stat)'
+`-ParmVarDecl 0x561d24e18d10 <col:22, col:27> col:27 statEnum 'pokesim::dex::Stat'
 
 
 Match #36:
 
-/tmp/_kvVGVh/PokeSim.hpp:17793:1: note: "inline" binds here
-std::string toSmogonString(Move moveEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17790:1: note: "inline" binds here
+std::string toSmogonString(Species speciesEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b6608 </tmp/_kvVGVh/PokeSim.hpp:17793:1, col:41> col:13 toSmogonString 'std::string (pokesim::dex::Move)'
-`-ParmVarDecl 0x5580e79b6568 <col:28, col:33> col:33 moveEnum 'pokesim::dex::Move'
+FunctionDecl 0x561d24e18fb0 </tmp/_sSiSlh/PokeSim.hpp:17790:1, col:47> col:13 toSmogonString 'std::string (pokesim::dex::Species)'
+`-ParmVarDecl 0x561d24e18f10 <col:28, col:36> col:36 speciesEnum 'pokesim::dex::Species'
 
 
 Match #37:
 
-/tmp/_kvVGVh/PokeSim.hpp:17796:1: note: "inline" binds here
-std::string toSmogonString(Ability abilityEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17793:1: note: "inline" binds here
+std::string toSmogonString(Move moveEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b67a0 </tmp/_kvVGVh/PokeSim.hpp:17796:1, col:47> col:13 toSmogonString 'std::string (pokesim::dex::Ability)'
-`-ParmVarDecl 0x5580e79b6700 <col:28, col:36> col:36 abilityEnum 'pokesim::dex::Ability'
+FunctionDecl 0x561d24e19138 </tmp/_sSiSlh/PokeSim.hpp:17793:1, col:41> col:13 toSmogonString 'std::string (pokesim::dex::Move)'
+`-ParmVarDecl 0x561d24e19098 <col:28, col:33> col:33 moveEnum 'pokesim::dex::Move'
 
 
 Match #38:
 
-/tmp/_kvVGVh/PokeSim.hpp:17799:1: note: "inline" binds here
-std::string toSmogonString(Item itemEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17796:1: note: "inline" binds here
+std::string toSmogonString(Ability abilityEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b6938 </tmp/_kvVGVh/PokeSim.hpp:17799:1, col:41> col:13 toSmogonString 'std::string (pokesim::dex::Item)'
-`-ParmVarDecl 0x5580e79b6898 <col:28, col:33> col:33 itemEnum 'pokesim::dex::Item'
+FunctionDecl 0x561d24e192d0 </tmp/_sSiSlh/PokeSim.hpp:17796:1, col:47> col:13 toSmogonString 'std::string (pokesim::dex::Ability)'
+`-ParmVarDecl 0x561d24e19230 <col:28, col:36> col:36 abilityEnum 'pokesim::dex::Ability'
 
 
 Match #39:
 
-/tmp/_kvVGVh/PokeSim.hpp:17802:1: note: "inline" binds here
-std::string toSmogonIdString(Species speciesEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17799:1: note: "inline" binds here
+std::string toSmogonString(Item itemEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b6ad0 </tmp/_kvVGVh/PokeSim.hpp:17802:1, col:49> col:13 toSmogonIdString 'std::string (pokesim::dex::Species)'
-`-ParmVarDecl 0x5580e79b6a30 <col:30, col:38> col:38 speciesEnum 'pokesim::dex::Species'
+FunctionDecl 0x561d24e19468 </tmp/_sSiSlh/PokeSim.hpp:17799:1, col:41> col:13 toSmogonString 'std::string (pokesim::dex::Item)'
+`-ParmVarDecl 0x561d24e193c8 <col:28, col:33> col:33 itemEnum 'pokesim::dex::Item'
 
 
 Match #40:
 
-/tmp/_kvVGVh/PokeSim.hpp:17805:1: note: "inline" binds here
-std::string toSmogonIdString(Move moveEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17802:1: note: "inline" binds here
+std::string toSmogonIdString(Species speciesEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b6c58 </tmp/_kvVGVh/PokeSim.hpp:17805:1, col:43> col:13 toSmogonIdString 'std::string (pokesim::dex::Move)'
-`-ParmVarDecl 0x5580e79b6bb8 <col:30, col:35> col:35 moveEnum 'pokesim::dex::Move'
+FunctionDecl 0x561d24e19600 </tmp/_sSiSlh/PokeSim.hpp:17802:1, col:49> col:13 toSmogonIdString 'std::string (pokesim::dex::Species)'
+`-ParmVarDecl 0x561d24e19560 <col:30, col:38> col:38 speciesEnum 'pokesim::dex::Species'
 
 
 Match #41:
 
-/tmp/_kvVGVh/PokeSim.hpp:17808:1: note: "inline" binds here
-std::string toSmogonIdString(Ability abilityEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17805:1: note: "inline" binds here
+std::string toSmogonIdString(Move moveEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b6df0 </tmp/_kvVGVh/PokeSim.hpp:17808:1, col:49> col:13 toSmogonIdString 'std::string (pokesim::dex::Ability)'
-`-ParmVarDecl 0x5580e79b6d50 <col:30, col:38> col:38 abilityEnum 'pokesim::dex::Ability'
+FunctionDecl 0x561d24e19788 </tmp/_sSiSlh/PokeSim.hpp:17805:1, col:43> col:13 toSmogonIdString 'std::string (pokesim::dex::Move)'
+`-ParmVarDecl 0x561d24e196e8 <col:30, col:35> col:35 moveEnum 'pokesim::dex::Move'
 
 
 Match #42:
 
-/tmp/_kvVGVh/PokeSim.hpp:17811:1: note: "inline" binds here
-std::string toSmogonIdString(Item itemEnum);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17808:1: note: "inline" binds here
+std::string toSmogonIdString(Ability abilityEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79b6f88 </tmp/_kvVGVh/PokeSim.hpp:17811:1, col:43> col:13 toSmogonIdString 'std::string (pokesim::dex::Item)'
-`-ParmVarDecl 0x5580e79b6ee8 <col:30, col:35> col:35 itemEnum 'pokesim::dex::Item'
+FunctionDecl 0x561d24e19920 </tmp/_sSiSlh/PokeSim.hpp:17808:1, col:49> col:13 toSmogonIdString 'std::string (pokesim::dex::Ability)'
+`-ParmVarDecl 0x561d24e19880 <col:30, col:38> col:38 abilityEnum 'pokesim::dex::Ability'
 
 
 Match #43:
 
-/tmp/_kvVGVh/PokeSim.hpp:17817:1: note: "inline" binds here
-Species fromNameToSpeciesEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17811:1: note: "inline" binds here
+std::string toSmogonIdString(Item itemEnum);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79bd0d8 </tmp/_kvVGVh/PokeSim.hpp:17817:1, col:54> col:9 fromNameToSpeciesEnum 'pokesim::dex::Species (const std::string &)'
-|-ParmVarDecl 0x5580e79b70c0 <col:31, col:50> col:50 name 'const std::string &'
-`-FullComment 0x5580e7a45840 <line:17814:3, line:17815:67>
-  |-ParagraphComment 0x5580e7a45770 <line:17814:3>
-  | `-TextComment 0x5580e7a45740 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a45790 <col:4, line:17815:67> Name="brief"
-    `-ParagraphComment 0x5580e7a45810 <line:17814:10, line:17815:67>
-      |-TextComment 0x5580e7a457c0 <line:17814:10, col:54> Text=" Returns the enum of the species name string."
-      `-TextComment 0x5580e7a457e0 <line:17815:3, col:67> Text=" Returns `MISSING_NO` if the string does not represent a species."
+FunctionDecl 0x561d24e19ab8 </tmp/_sSiSlh/PokeSim.hpp:17811:1, col:43> col:13 toSmogonIdString 'std::string (pokesim::dex::Item)'
+`-ParmVarDecl 0x561d24e19a18 <col:30, col:35> col:35 itemEnum 'pokesim::dex::Item'
 
 
 Match #44:
 
-/tmp/_kvVGVh/PokeSim.hpp:17823:1: note: "inline" binds here
-Move fromNameToMoveEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17817:1: note: "inline" binds here
+Species fromNameToSpeciesEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79bd2c8 </tmp/_kvVGVh/PokeSim.hpp:17823:1, col:48> col:6 fromNameToMoveEnum 'pokesim::dex::Move (const std::string &)'
-|-ParmVarDecl 0x5580e79bd1d8 <col:25, col:44> col:44 name 'const std::string &'
-`-FullComment 0x5580e7a459b0 <line:17820:3, line:17821:61>
-  |-ParagraphComment 0x5580e7a458e0 <line:17820:3>
-  | `-TextComment 0x5580e7a458b0 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a45900 <col:4, line:17821:61> Name="brief"
-    `-ParagraphComment 0x5580e7a45980 <line:17820:10, line:17821:61>
-      |-TextComment 0x5580e7a45930 <line:17820:10, col:51> Text=" Returns the enum of the move name string."
-      `-TextComment 0x5580e7a45950 <line:17821:3, col:61> Text=" Returns `NO_MOVE` if the string does not represent a move."
+FunctionDecl 0x561d24e19d18 </tmp/_sSiSlh/PokeSim.hpp:17817:1, col:54> col:9 fromNameToSpeciesEnum 'pokesim::dex::Species (const std::string &)'
+|-ParmVarDecl 0x561d24e19c20 <col:31, col:50> col:50 name 'const std::string &'
+`-FullComment 0x7f5b02c27c60 <line:17814:3, line:17815:67>
+  |-ParagraphComment 0x7f5b02c27b90 <line:17814:3>
+  | `-TextComment 0x7f5b02c27b60 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c27bb0 <col:4, line:17815:67> Name="brief"
+    `-ParagraphComment 0x7f5b02c27c30 <line:17814:10, line:17815:67>
+      |-TextComment 0x7f5b02c27be0 <line:17814:10, col:54> Text=" Returns the enum of the species name string."
+      `-TextComment 0x7f5b02c27c00 <line:17815:3, col:67> Text=" Returns `MISSING_NO` if the string does not represent a species."
 
 
 Match #45:
 
-/tmp/_kvVGVh/PokeSim.hpp:17829:1: note: "inline" binds here
-Ability fromNameToAbilityEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17823:1: note: "inline" binds here
+Move fromNameToMoveEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79bd4b8 </tmp/_kvVGVh/PokeSim.hpp:17829:1, col:54> col:9 fromNameToAbilityEnum 'pokesim::dex::Ability (const std::string &)'
-|-ParmVarDecl 0x5580e79bd3c8 <col:31, col:50> col:50 name 'const std::string &'
-`-FullComment 0x5580e7a45b20 <line:17826:3, line:17827:68>
-  |-ParagraphComment 0x5580e7a45a50 <line:17826:3>
-  | `-TextComment 0x5580e7a45a20 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a45a70 <col:4, line:17827:68> Name="brief"
-    `-ParagraphComment 0x5580e7a45af0 <line:17826:10, line:17827:68>
-      |-TextComment 0x5580e7a45aa0 <line:17826:10, col:54> Text=" Returns the enum of the ability name string."
-      `-TextComment 0x5580e7a45ac0 <line:17827:3, col:68> Text=" Returns `NO_ABILITY` if the string does not represent an ability."
+FunctionDecl 0x561d24e19f38 </tmp/_sSiSlh/PokeSim.hpp:17823:1, col:48> col:6 fromNameToMoveEnum 'pokesim::dex::Move (const std::string &)'
+|-ParmVarDecl 0x561d24e19e40 <col:25, col:44> col:44 name 'const std::string &'
+`-FullComment 0x7f5b02c27dd0 <line:17820:3, line:17821:61>
+  |-ParagraphComment 0x7f5b02c27d00 <line:17820:3>
+  | `-TextComment 0x7f5b02c27cd0 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c27d20 <col:4, line:17821:61> Name="brief"
+    `-ParagraphComment 0x7f5b02c27da0 <line:17820:10, line:17821:61>
+      |-TextComment 0x7f5b02c27d50 <line:17820:10, col:51> Text=" Returns the enum of the move name string."
+      `-TextComment 0x7f5b02c27d70 <line:17821:3, col:61> Text=" Returns `NO_MOVE` if the string does not represent a move."
 
 
 Match #46:
 
-/tmp/_kvVGVh/PokeSim.hpp:17835:1: note: "inline" binds here
-Item fromNameToItemEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17829:1: note: "inline" binds here
+Ability fromNameToAbilityEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79bd6a8 </tmp/_kvVGVh/PokeSim.hpp:17835:1, col:48> col:6 fromNameToItemEnum 'pokesim::dex::Item (const std::string &)'
-|-ParmVarDecl 0x5580e79bd5b8 <col:25, col:44> col:44 name 'const std::string &'
-`-FullComment 0x5580e7a45c90 <line:17832:3, line:17833:62>
-  |-ParagraphComment 0x5580e7a45bc0 <line:17832:3>
-  | `-TextComment 0x5580e7a45b90 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a45be0 <col:4, line:17833:62> Name="brief"
-    `-ParagraphComment 0x5580e7a45c60 <line:17832:10, line:17833:62>
-      |-TextComment 0x5580e7a45c10 <line:17832:10, col:51> Text=" Returns the enum of the item name string."
-      `-TextComment 0x5580e7a45c30 <line:17833:3, col:62> Text=" Returns `NO_ITEM` if the string does not represent an item."
+FunctionDecl 0x561d24e1a158 </tmp/_sSiSlh/PokeSim.hpp:17829:1, col:54> col:9 fromNameToAbilityEnum 'pokesim::dex::Ability (const std::string &)'
+|-ParmVarDecl 0x561d24e1a060 <col:31, col:50> col:50 name 'const std::string &'
+`-FullComment 0x7f5b02c27f40 <line:17826:3, line:17827:68>
+  |-ParagraphComment 0x7f5b02c27e70 <line:17826:3>
+  | `-TextComment 0x7f5b02c27e40 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c27e90 <col:4, line:17827:68> Name="brief"
+    `-ParagraphComment 0x7f5b02c27f10 <line:17826:10, line:17827:68>
+      |-TextComment 0x7f5b02c27ec0 <line:17826:10, col:54> Text=" Returns the enum of the ability name string."
+      `-TextComment 0x7f5b02c27ee0 <line:17827:3, col:68> Text=" Returns `NO_ABILITY` if the string does not represent an ability."
 
 
 Match #47:
 
-/tmp/_kvVGVh/PokeSim.hpp:17841:1: note: "inline" binds here
-Nature fromNameToNatureEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17835:1: note: "inline" binds here
+Item fromNameToItemEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79bd898 </tmp/_kvVGVh/PokeSim.hpp:17841:1, col:52> col:8 fromNameToNatureEnum 'pokesim::dex::Nature (const std::string &)'
-|-ParmVarDecl 0x5580e79bd7a8 <col:29, col:48> col:48 name 'const std::string &'
-`-FullComment 0x5580e7a45e00 <line:17838:3, line:17839:65>
-  |-ParagraphComment 0x5580e7a45d30 <line:17838:3>
-  | `-TextComment 0x5580e7a45d00 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a45d50 <col:4, line:17839:65> Name="brief"
-    `-ParagraphComment 0x5580e7a45dd0 <line:17838:10, line:17839:65>
-      |-TextComment 0x5580e7a45d80 <line:17838:10, col:53> Text=" Returns the enum of the nature name string."
-      `-TextComment 0x5580e7a45da0 <line:17839:3, col:65> Text=" Returns `NO_NATURE` if the string does not represent a nature."
+FunctionDecl 0x561d24e1a378 </tmp/_sSiSlh/PokeSim.hpp:17835:1, col:48> col:6 fromNameToItemEnum 'pokesim::dex::Item (const std::string &)'
+|-ParmVarDecl 0x561d24e1a280 <col:25, col:44> col:44 name 'const std::string &'
+`-FullComment 0x7f5b02c280b0 <line:17832:3, line:17833:62>
+  |-ParagraphComment 0x7f5b02c27fe0 <line:17832:3>
+  | `-TextComment 0x7f5b02c27fb0 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c28000 <col:4, line:17833:62> Name="brief"
+    `-ParagraphComment 0x7f5b02c28080 <line:17832:10, line:17833:62>
+      |-TextComment 0x7f5b02c28030 <line:17832:10, col:51> Text=" Returns the enum of the item name string."
+      `-TextComment 0x7f5b02c28050 <line:17833:3, col:62> Text=" Returns `NO_ITEM` if the string does not represent an item."
 
 
 Match #48:
 
-/tmp/_kvVGVh/PokeSim.hpp:17847:1: note: "inline" binds here
-Status fromNameToStatusEnum(const std::string& name);
+/tmp/_sSiSlh/PokeSim.hpp:17841:1: note: "inline" binds here
+Nature fromNameToNatureEnum(const std::string& name);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79bda88 </tmp/_kvVGVh/PokeSim.hpp:17847:1, col:52> col:8 fromNameToStatusEnum 'pokesim::dex::Status (const std::string &)'
-|-ParmVarDecl 0x5580e79bd998 <col:29, col:48> col:48 name 'const std::string &'
-`-FullComment 0x5580e7a45f70 <line:17844:3, line:17845:75>
-  |-ParagraphComment 0x5580e7a45ea0 <line:17844:3>
-  | `-TextComment 0x5580e7a45e70 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a45ec0 <col:4, line:17845:75> Name="brief"
-    `-ParagraphComment 0x5580e7a45f40 <line:17844:10, line:17845:75>
-      |-TextComment 0x5580e7a45ef0 <line:17844:10, col:63> Text=" Returns the enum of the status condition name string."
-      `-TextComment 0x5580e7a45f10 <line:17845:3, col:75> Text=" Returns `NO_STATUS` if the string does not represent a status condition."
+FunctionDecl 0x561d24e1a598 </tmp/_sSiSlh/PokeSim.hpp:17841:1, col:52> col:8 fromNameToNatureEnum 'pokesim::dex::Nature (const std::string &)'
+|-ParmVarDecl 0x561d24e1a4a0 <col:29, col:48> col:48 name 'const std::string &'
+`-FullComment 0x7f5b02c28220 <line:17838:3, line:17839:65>
+  |-ParagraphComment 0x7f5b02c28150 <line:17838:3>
+  | `-TextComment 0x7f5b02c28120 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c28170 <col:4, line:17839:65> Name="brief"
+    `-ParagraphComment 0x7f5b02c281f0 <line:17838:10, line:17839:65>
+      |-TextComment 0x7f5b02c281a0 <line:17838:10, col:53> Text=" Returns the enum of the nature name string."
+      `-TextComment 0x7f5b02c281c0 <line:17839:3, col:65> Text=" Returns `NO_NATURE` if the string does not represent a nature."
 
 
 Match #49:
 
-/tmp/_kvVGVh/PokeSim.hpp:17853:1: note: "inline" binds here
-Gender fromNameToGenderEnum(const std::string& name);
+/tmp/_sSiSlh/PokeSim.hpp:17847:1: note: "inline" binds here
+Status fromNameToStatusEnum(const std::string& name);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79bdc78 </tmp/_kvVGVh/PokeSim.hpp:17853:1, col:52> col:8 fromNameToGenderEnum 'pokesim::dex::Gender (const std::string &)'
-|-ParmVarDecl 0x5580e79bdb88 <col:29, col:48> col:48 name 'const std::string &'
-`-FullComment 0x5580e7a460e0 <line:17850:3, line:17851:65>
-  |-ParagraphComment 0x5580e7a46010 <line:17850:3>
-  | `-TextComment 0x5580e7a45fe0 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a46030 <col:4, line:17851:65> Name="brief"
-    `-ParagraphComment 0x5580e7a460b0 <line:17850:10, line:17851:65>
-      |-TextComment 0x5580e7a46060 <line:17850:10, col:53> Text=" Returns the enum of the gender name string."
-      `-TextComment 0x5580e7a46080 <line:17851:3, col:65> Text=" Returns `NO_GENDER` if the string does not represent a gender."
+FunctionDecl 0x561d24e1a7b8 </tmp/_sSiSlh/PokeSim.hpp:17847:1, col:52> col:8 fromNameToStatusEnum 'pokesim::dex::Status (const std::string &)'
+|-ParmVarDecl 0x561d24e1a6c0 <col:29, col:48> col:48 name 'const std::string &'
+`-FullComment 0x7f5b02c28390 <line:17844:3, line:17845:75>
+  |-ParagraphComment 0x7f5b02c282c0 <line:17844:3>
+  | `-TextComment 0x7f5b02c28290 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c282e0 <col:4, line:17845:75> Name="brief"
+    `-ParagraphComment 0x7f5b02c28360 <line:17844:10, line:17845:75>
+      |-TextComment 0x7f5b02c28310 <line:17844:10, col:63> Text=" Returns the enum of the status condition name string."
+      `-TextComment 0x7f5b02c28330 <line:17845:3, col:75> Text=" Returns `NO_STATUS` if the string does not represent a status condition."
 
 
 Match #50:
 
-/tmp/_kvVGVh/PokeSim.hpp:17859:1: note: "inline" binds here
-Type fromNameToTypeEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17853:1: note: "inline" binds here
+Gender fromNameToGenderEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79bde68 </tmp/_kvVGVh/PokeSim.hpp:17859:1, col:48> col:6 fromNameToTypeEnum 'pokesim::dex::Type (const std::string &)'
-|-ParmVarDecl 0x5580e79bdd78 <col:25, col:44> col:44 name 'const std::string &'
-`-FullComment 0x5580e7a46250 <line:17856:3, line:17857:61>
-  |-ParagraphComment 0x5580e7a46180 <line:17856:3>
-  | `-TextComment 0x5580e7a46150 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a461a0 <col:4, line:17857:61> Name="brief"
-    `-ParagraphComment 0x5580e7a46220 <line:17856:10, line:17857:61>
-      |-TextComment 0x5580e7a461d0 <line:17856:10, col:51> Text=" Returns the enum of the type name string."
-      `-TextComment 0x5580e7a461f0 <line:17857:3, col:61> Text=" Returns `NO_TYPE` if the string does not represent a type."
+FunctionDecl 0x561d24e1a9d8 </tmp/_sSiSlh/PokeSim.hpp:17853:1, col:52> col:8 fromNameToGenderEnum 'pokesim::dex::Gender (const std::string &)'
+|-ParmVarDecl 0x561d24e1a8e0 <col:29, col:48> col:48 name 'const std::string &'
+`-FullComment 0x7f5b02c28500 <line:17850:3, line:17851:65>
+  |-ParagraphComment 0x7f5b02c28430 <line:17850:3>
+  | `-TextComment 0x7f5b02c28400 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c28450 <col:4, line:17851:65> Name="brief"
+    `-ParagraphComment 0x7f5b02c284d0 <line:17850:10, line:17851:65>
+      |-TextComment 0x7f5b02c28480 <line:17850:10, col:53> Text=" Returns the enum of the gender name string."
+      `-TextComment 0x7f5b02c284a0 <line:17851:3, col:65> Text=" Returns `NO_GENDER` if the string does not represent a gender."
 
 
 Match #51:
 
-/tmp/_kvVGVh/PokeSim.hpp:17864:1: note: "inline" binds here
-Stat fromNameToStatEnum(const std::string& name);
+/tmp/_sSiSlh/PokeSim.hpp:17859:1: note: "inline" binds here
+Type fromNameToTypeEnum(const std::string& name);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79be058 </tmp/_kvVGVh/PokeSim.hpp:17864:1, col:48> col:6 fromNameToStatEnum 'pokesim::dex::Stat (const std::string &)'
-|-ParmVarDecl 0x5580e79bdf68 <col:25, col:44> col:44 name 'const std::string &'
-`-FullComment 0x5580e7a463a0 <line:17862:3, col:68>
-  |-ParagraphComment 0x5580e7a462f0 <col:3>
-  | `-TextComment 0x5580e7a462c0 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a46310 <col:4, col:68> Name="brief"
-    `-ParagraphComment 0x5580e7a46370 <col:10, col:68>
-      `-TextComment 0x5580e7a46340 <col:10, col:68> Text=" Returns `NO_STAT` if the string does not represent a stat."
+FunctionDecl 0x561d24e1abf8 </tmp/_sSiSlh/PokeSim.hpp:17859:1, col:48> col:6 fromNameToTypeEnum 'pokesim::dex::Type (const std::string &)'
+|-ParmVarDecl 0x561d24e1ab00 <col:25, col:44> col:44 name 'const std::string &'
+`-FullComment 0x7f5b02c28670 <line:17856:3, line:17857:61>
+  |-ParagraphComment 0x7f5b02c285a0 <line:17856:3>
+  | `-TextComment 0x7f5b02c28570 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c285c0 <col:4, line:17857:61> Name="brief"
+    `-ParagraphComment 0x7f5b02c28640 <line:17856:10, line:17857:61>
+      |-TextComment 0x7f5b02c285f0 <line:17856:10, col:51> Text=" Returns the enum of the type name string."
+      `-TextComment 0x7f5b02c28610 <line:17857:3, col:61> Text=" Returns `NO_TYPE` if the string does not represent a type."
 
 
 Match #52:
 
-/tmp/_kvVGVh/PokeSim.hpp:17870:1: note: "inline" binds here
-Species fromSmogonNameToSpeciesEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17864:1: note: "inline" binds here
+Stat fromNameToStatEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79be1e8 </tmp/_kvVGVh/PokeSim.hpp:17870:1, col:60> col:9 fromSmogonNameToSpeciesEnum 'pokesim::dex::Species (const std::string &)'
-|-ParmVarDecl 0x5580e79be158 <col:37, col:56> col:56 name 'const std::string &'
-`-FullComment 0x5580e7a46510 <line:17867:3, line:17868:67>
-  |-ParagraphComment 0x5580e7a46440 <line:17867:3>
-  | `-TextComment 0x5580e7a46410 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a46460 <col:4, line:17868:67> Name="brief"
-    `-ParagraphComment 0x5580e7a464e0 <line:17867:10, line:17868:67>
-      |-TextComment 0x5580e7a46490 <line:17867:10, col:61> Text=" Returns the enum of the species Smogon name string."
-      `-TextComment 0x5580e7a464b0 <line:17868:3, col:67> Text=" Returns `MISSING_NO` if the string does not represent a species."
+FunctionDecl 0x561d24e1ae18 </tmp/_sSiSlh/PokeSim.hpp:17864:1, col:48> col:6 fromNameToStatEnum 'pokesim::dex::Stat (const std::string &)'
+|-ParmVarDecl 0x561d24e1ad20 <col:25, col:44> col:44 name 'const std::string &'
+`-FullComment 0x7f5b02c287c0 <line:17862:3, col:68>
+  |-ParagraphComment 0x7f5b02c28710 <col:3>
+  | `-TextComment 0x7f5b02c286e0 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c28730 <col:4, col:68> Name="brief"
+    `-ParagraphComment 0x7f5b02c28790 <col:10, col:68>
+      `-TextComment 0x7f5b02c28760 <col:10, col:68> Text=" Returns `NO_STAT` if the string does not represent a stat."
 
 
 Match #53:
 
-/tmp/_kvVGVh/PokeSim.hpp:17876:1: note: "inline" binds here
-Move fromSmogonNameToMoveEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17870:1: note: "inline" binds here
+Species fromSmogonNameToSpeciesEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79be378 </tmp/_kvVGVh/PokeSim.hpp:17876:1, col:54> col:6 fromSmogonNameToMoveEnum 'pokesim::dex::Move (const std::string &)'
-|-ParmVarDecl 0x5580e79be2e8 <col:31, col:50> col:50 name 'const std::string &'
-`-FullComment 0x5580e7a46680 <line:17873:3, line:17874:61>
-  |-ParagraphComment 0x5580e7a465b0 <line:17873:3>
-  | `-TextComment 0x5580e7a46580 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a465d0 <col:4, line:17874:61> Name="brief"
-    `-ParagraphComment 0x5580e7a46650 <line:17873:10, line:17874:61>
-      |-TextComment 0x5580e7a46600 <line:17873:10, col:58> Text=" Returns the enum of the move Smogon name string."
-      `-TextComment 0x5580e7a46620 <line:17874:3, col:61> Text=" Returns `NO_MOVE` if the string does not represent a move."
+FunctionDecl 0x561d24e1afd0 </tmp/_sSiSlh/PokeSim.hpp:17870:1, col:60> col:9 fromSmogonNameToSpeciesEnum 'pokesim::dex::Species (const std::string &)'
+|-ParmVarDecl 0x561d24e1af40 <col:37, col:56> col:56 name 'const std::string &'
+`-FullComment 0x7f5b02c28930 <line:17867:3, line:17868:67>
+  |-ParagraphComment 0x7f5b02c28860 <line:17867:3>
+  | `-TextComment 0x7f5b02c28830 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c28880 <col:4, line:17868:67> Name="brief"
+    `-ParagraphComment 0x7f5b02c28900 <line:17867:10, line:17868:67>
+      |-TextComment 0x7f5b02c288b0 <line:17867:10, col:61> Text=" Returns the enum of the species Smogon name string."
+      `-TextComment 0x7f5b02c288d0 <line:17868:3, col:67> Text=" Returns `MISSING_NO` if the string does not represent a species."
 
 
 Match #54:
 
-/tmp/_kvVGVh/PokeSim.hpp:17882:1: note: "inline" binds here
-Ability fromSmogonNameToAbilityEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17876:1: note: "inline" binds here
+Move fromSmogonNameToMoveEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79be508 </tmp/_kvVGVh/PokeSim.hpp:17882:1, col:60> col:9 fromSmogonNameToAbilityEnum 'pokesim::dex::Ability (const std::string &)'
-|-ParmVarDecl 0x5580e79be478 <col:37, col:56> col:56 name 'const std::string &'
-`-FullComment 0x5580e7a467f0 <line:17879:3, line:17880:68>
-  |-ParagraphComment 0x5580e7a46720 <line:17879:3>
-  | `-TextComment 0x5580e7a466f0 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a46740 <col:4, line:17880:68> Name="brief"
-    `-ParagraphComment 0x5580e7a467c0 <line:17879:10, line:17880:68>
-      |-TextComment 0x5580e7a46770 <line:17879:10, col:61> Text=" Returns the enum of the ability Smogon name string."
-      `-TextComment 0x5580e7a46790 <line:17880:3, col:68> Text=" Returns `NO_ABILITY` if the string does not represent an ability."
+FunctionDecl 0x561d24e1b190 </tmp/_sSiSlh/PokeSim.hpp:17876:1, col:54> col:6 fromSmogonNameToMoveEnum 'pokesim::dex::Move (const std::string &)'
+|-ParmVarDecl 0x561d24e1b100 <col:31, col:50> col:50 name 'const std::string &'
+`-FullComment 0x7f5b02c28aa0 <line:17873:3, line:17874:61>
+  |-ParagraphComment 0x7f5b02c289d0 <line:17873:3>
+  | `-TextComment 0x7f5b02c289a0 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c289f0 <col:4, line:17874:61> Name="brief"
+    `-ParagraphComment 0x7f5b02c28a70 <line:17873:10, line:17874:61>
+      |-TextComment 0x7f5b02c28a20 <line:17873:10, col:58> Text=" Returns the enum of the move Smogon name string."
+      `-TextComment 0x7f5b02c28a40 <line:17874:3, col:61> Text=" Returns `NO_MOVE` if the string does not represent a move."
 
 
 Match #55:
 
-/tmp/_kvVGVh/PokeSim.hpp:17888:1: note: "inline" binds here
-Item fromSmogonNameToItemEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17882:1: note: "inline" binds here
+Ability fromSmogonNameToAbilityEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79be698 </tmp/_kvVGVh/PokeSim.hpp:17888:1, col:54> col:6 fromSmogonNameToItemEnum 'pokesim::dex::Item (const std::string &)'
-|-ParmVarDecl 0x5580e79be608 <col:31, col:50> col:50 name 'const std::string &'
-`-FullComment 0x5580e7a46960 <line:17885:3, line:17886:62>
-  |-ParagraphComment 0x5580e7a46890 <line:17885:3>
-  | `-TextComment 0x5580e7a46860 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a468b0 <col:4, line:17886:62> Name="brief"
-    `-ParagraphComment 0x5580e7a46930 <line:17885:10, line:17886:62>
-      |-TextComment 0x5580e7a468e0 <line:17885:10, col:58> Text=" Returns the enum of the item Smogon name string."
-      `-TextComment 0x5580e7a46900 <line:17886:3, col:62> Text=" Returns `NO_ITEM` if the string does not represent an item."
+FunctionDecl 0x561d24e1b350 </tmp/_sSiSlh/PokeSim.hpp:17882:1, col:60> col:9 fromSmogonNameToAbilityEnum 'pokesim::dex::Ability (const std::string &)'
+|-ParmVarDecl 0x561d24e1b2c0 <col:37, col:56> col:56 name 'const std::string &'
+`-FullComment 0x7f5b02c28c10 <line:17879:3, line:17880:68>
+  |-ParagraphComment 0x7f5b02c28b40 <line:17879:3>
+  | `-TextComment 0x7f5b02c28b10 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c28b60 <col:4, line:17880:68> Name="brief"
+    `-ParagraphComment 0x7f5b02c28be0 <line:17879:10, line:17880:68>
+      |-TextComment 0x7f5b02c28b90 <line:17879:10, col:61> Text=" Returns the enum of the ability Smogon name string."
+      `-TextComment 0x7f5b02c28bb0 <line:17880:3, col:68> Text=" Returns `NO_ABILITY` if the string does not represent an ability."
 
 
 Match #56:
 
-/tmp/_kvVGVh/PokeSim.hpp:17894:1: note: "inline" binds here
-Species fromSmogonIDToSpeciesEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17888:1: note: "inline" binds here
+Item fromSmogonNameToItemEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79be828 </tmp/_kvVGVh/PokeSim.hpp:17894:1, col:58> col:9 fromSmogonIDToSpeciesEnum 'pokesim::dex::Species (const std::string &)'
-|-ParmVarDecl 0x5580e79be798 <col:35, col:54> col:54 name 'const std::string &'
-`-FullComment 0x5580e7a46ad0 <line:17891:3, line:17892:67>
-  |-ParagraphComment 0x5580e7a46a00 <line:17891:3>
-  | `-TextComment 0x5580e7a469d0 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a46a20 <col:4, line:17892:67> Name="brief"
-    `-ParagraphComment 0x5580e7a46aa0 <line:17891:10, line:17892:67>
-      |-TextComment 0x5580e7a46a50 <line:17891:10, col:59> Text=" Returns the enum of the species Smogon ID string."
-      `-TextComment 0x5580e7a46a70 <line:17892:3, col:67> Text=" Returns `MISSING_NO` if the string does not represent a species."
+FunctionDecl 0x561d24e1b510 </tmp/_sSiSlh/PokeSim.hpp:17888:1, col:54> col:6 fromSmogonNameToItemEnum 'pokesim::dex::Item (const std::string &)'
+|-ParmVarDecl 0x561d24e1b480 <col:31, col:50> col:50 name 'const std::string &'
+`-FullComment 0x7f5b02c28d80 <line:17885:3, line:17886:62>
+  |-ParagraphComment 0x7f5b02c28cb0 <line:17885:3>
+  | `-TextComment 0x7f5b02c28c80 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c28cd0 <col:4, line:17886:62> Name="brief"
+    `-ParagraphComment 0x7f5b02c28d50 <line:17885:10, line:17886:62>
+      |-TextComment 0x7f5b02c28d00 <line:17885:10, col:58> Text=" Returns the enum of the item Smogon name string."
+      `-TextComment 0x7f5b02c28d20 <line:17886:3, col:62> Text=" Returns `NO_ITEM` if the string does not represent an item."
 
 
 Match #57:
 
-/tmp/_kvVGVh/PokeSim.hpp:17900:1: note: "inline" binds here
-Move fromSmogonIDToMoveEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17894:1: note: "inline" binds here
+Species fromSmogonIDToSpeciesEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79be9b8 </tmp/_kvVGVh/PokeSim.hpp:17900:1, col:52> col:6 fromSmogonIDToMoveEnum 'pokesim::dex::Move (const std::string &)'
-|-ParmVarDecl 0x5580e79be928 <col:29, col:48> col:48 name 'const std::string &'
-`-FullComment 0x5580e7a46c40 <line:17897:3, line:17898:61>
-  |-ParagraphComment 0x5580e7a46b70 <line:17897:3>
-  | `-TextComment 0x5580e7a46b40 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a46b90 <col:4, line:17898:61> Name="brief"
-    `-ParagraphComment 0x5580e7a46c10 <line:17897:10, line:17898:61>
-      |-TextComment 0x5580e7a46bc0 <line:17897:10, col:56> Text=" Returns the enum of the move Smogon ID string."
-      `-TextComment 0x5580e7a46be0 <line:17898:3, col:61> Text=" Returns `NO_MOVE` if the string does not represent a move."
+FunctionDecl 0x561d24e1b6d0 </tmp/_sSiSlh/PokeSim.hpp:17894:1, col:58> col:9 fromSmogonIDToSpeciesEnum 'pokesim::dex::Species (const std::string &)'
+|-ParmVarDecl 0x561d24e1b640 <col:35, col:54> col:54 name 'const std::string &'
+`-FullComment 0x7f5b02c28ef0 <line:17891:3, line:17892:67>
+  |-ParagraphComment 0x7f5b02c28e20 <line:17891:3>
+  | `-TextComment 0x7f5b02c28df0 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c28e40 <col:4, line:17892:67> Name="brief"
+    `-ParagraphComment 0x7f5b02c28ec0 <line:17891:10, line:17892:67>
+      |-TextComment 0x7f5b02c28e70 <line:17891:10, col:59> Text=" Returns the enum of the species Smogon ID string."
+      `-TextComment 0x7f5b02c28e90 <line:17892:3, col:67> Text=" Returns `MISSING_NO` if the string does not represent a species."
 
 
 Match #58:
 
-/tmp/_kvVGVh/PokeSim.hpp:17906:1: note: "inline" binds here
-Ability fromSmogonIDToAbilityEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17900:1: note: "inline" binds here
+Move fromSmogonIDToMoveEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79beb48 </tmp/_kvVGVh/PokeSim.hpp:17906:1, col:58> col:9 fromSmogonIDToAbilityEnum 'pokesim::dex::Ability (const std::string &)'
-|-ParmVarDecl 0x5580e79beab8 <col:35, col:54> col:54 name 'const std::string &'
-`-FullComment 0x5580e7a46db0 <line:17903:3, line:17904:68>
-  |-ParagraphComment 0x5580e7a46ce0 <line:17903:3>
-  | `-TextComment 0x5580e7a46cb0 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a46d00 <col:4, line:17904:68> Name="brief"
-    `-ParagraphComment 0x5580e7a46d80 <line:17903:10, line:17904:68>
-      |-TextComment 0x5580e7a46d30 <line:17903:10, col:59> Text=" Returns the enum of the ability Smogon ID string."
-      `-TextComment 0x5580e7a46d50 <line:17904:3, col:68> Text=" Returns `NO_ABILITY` if the string does not represent an ability."
+FunctionDecl 0x561d24e1b890 </tmp/_sSiSlh/PokeSim.hpp:17900:1, col:52> col:6 fromSmogonIDToMoveEnum 'pokesim::dex::Move (const std::string &)'
+|-ParmVarDecl 0x561d24e1b800 <col:29, col:48> col:48 name 'const std::string &'
+`-FullComment 0x7f5b02c29060 <line:17897:3, line:17898:61>
+  |-ParagraphComment 0x7f5b02c28f90 <line:17897:3>
+  | `-TextComment 0x7f5b02c28f60 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c28fb0 <col:4, line:17898:61> Name="brief"
+    `-ParagraphComment 0x7f5b02c29030 <line:17897:10, line:17898:61>
+      |-TextComment 0x7f5b02c28fe0 <line:17897:10, col:56> Text=" Returns the enum of the move Smogon ID string."
+      `-TextComment 0x7f5b02c29000 <line:17898:3, col:61> Text=" Returns `NO_MOVE` if the string does not represent a move."
 
 
 Match #59:
 
-/tmp/_kvVGVh/PokeSim.hpp:17912:1: note: "inline" binds here
-Item fromSmogonIDToItemEnum(const std::string& name);
-^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/_sSiSlh/PokeSim.hpp:17906:1: note: "inline" binds here
+Ability fromSmogonIDToAbilityEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79becd8 </tmp/_kvVGVh/PokeSim.hpp:17912:1, col:52> col:6 fromSmogonIDToItemEnum 'pokesim::dex::Item (const std::string &)'
-|-ParmVarDecl 0x5580e79bec48 <col:29, col:48> col:48 name 'const std::string &'
-`-FullComment 0x5580e7a46f20 <line:17909:3, line:17910:62>
-  |-ParagraphComment 0x5580e7a46e50 <line:17909:3>
-  | `-TextComment 0x5580e7a46e20 <col:3> Text=" "
-  `-BlockCommandComment 0x5580e7a46e70 <col:4, line:17910:62> Name="brief"
-    `-ParagraphComment 0x5580e7a46ef0 <line:17909:10, line:17910:62>
-      |-TextComment 0x5580e7a46ea0 <line:17909:10, col:56> Text=" Returns the enum of the item Smogon ID string."
-      `-TextComment 0x5580e7a46ec0 <line:17910:3, col:62> Text=" Returns `NO_ITEM` if the string does not represent an item."
+FunctionDecl 0x561d24e1ba50 </tmp/_sSiSlh/PokeSim.hpp:17906:1, col:58> col:9 fromSmogonIDToAbilityEnum 'pokesim::dex::Ability (const std::string &)'
+|-ParmVarDecl 0x561d24e1b9c0 <col:35, col:54> col:54 name 'const std::string &'
+`-FullComment 0x7f5b02c291d0 <line:17903:3, line:17904:68>
+  |-ParagraphComment 0x7f5b02c29100 <line:17903:3>
+  | `-TextComment 0x7f5b02c290d0 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c29120 <col:4, line:17904:68> Name="brief"
+    `-ParagraphComment 0x7f5b02c291a0 <line:17903:10, line:17904:68>
+      |-TextComment 0x7f5b02c29150 <line:17903:10, col:59> Text=" Returns the enum of the ability Smogon ID string."
+      `-TextComment 0x7f5b02c29170 <line:17904:3, col:68> Text=" Returns `NO_ABILITY` if the string does not represent an ability."
 
 
 Match #60:
 
-/tmp/_kvVGVh/PokeSim.hpp:17915:1: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:17912:1: note: "inline" binds here
+Item fromSmogonIDToItemEnum(const std::string& name);
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Binding for "inline":
+FunctionDecl 0x561d24e1bc10 </tmp/_sSiSlh/PokeSim.hpp:17912:1, col:52> col:6 fromSmogonIDToItemEnum 'pokesim::dex::Item (const std::string &)'
+|-ParmVarDecl 0x561d24e1bb80 <col:29, col:48> col:48 name 'const std::string &'
+`-FullComment 0x7f5b02c29340 <line:17909:3, line:17910:62>
+  |-ParagraphComment 0x7f5b02c29270 <line:17909:3>
+  | `-TextComment 0x7f5b02c29240 <col:3> Text=" "
+  `-BlockCommandComment 0x7f5b02c29290 <col:4, line:17910:62> Name="brief"
+    `-ParagraphComment 0x7f5b02c29310 <line:17909:10, line:17910:62>
+      |-TextComment 0x7f5b02c292c0 <line:17909:10, col:56> Text=" Returns the enum of the item Smogon ID string."
+      `-TextComment 0x7f5b02c292e0 <line:17910:3, col:62> Text=" Returns `NO_ITEM` if the string does not represent an item."
+
+
+Match #61:
+
+/tmp/_sSiSlh/PokeSim.hpp:17915:1: note: "inline" binds here
 std::string toID(const std::string& name);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e79bef08 </tmp/_kvVGVh/PokeSim.hpp:17915:1, col:41> col:13 toID 'std::string (const std::string &)'
-`-ParmVarDecl 0x5580e79bee08 <col:18, col:37> col:37 name 'const std::string &'
+FunctionDecl 0x561d24e1be48 </tmp/_sSiSlh/PokeSim.hpp:17915:1, col:41> col:13 toID 'std::string (const std::string &)'
+`-ParmVarDecl 0x561d24e1bd40 <col:18, col:37> col:37 name 'const std::string &'
 
-60 matches.
+61 matches.
 
 Match #1:
 
-/tmp/_kvVGVh/PokeSim.hpp:17147:1: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:17147:1: note: "inline" binds here
 void remapEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap, GetEntity getEntity);
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790ee78 </tmp/_kvVGVh/PokeSim.hpp:17147:1, col:112> col:6 invalid remapEntityMembers 'void (int &, const int &, GetEntity)'
-|-ParmVarDecl 0x5580e790ec50 <col:25, col:42> col:42 invalid registry 'int &'
-|-ParmVarDecl 0x5580e790ece0 <col:52, col:82> col:82 invalid entityMap 'const int &'
-`-ParmVarDecl 0x5580e790ed58 <col:93, col:103> col:103 getEntity 'GetEntity'
+FunctionDecl 0x561d2398ef08 </tmp/_sSiSlh/PokeSim.hpp:17147:1, col:112> col:6 remapEntityMembers 'void (types::registry &, const types::ClonedEntityMap &, GetEntity)'
+|-ParmVarDecl 0x561d2398eca8 <col:25, col:42> col:42 registry 'types::registry &'
+|-ParmVarDecl 0x561d2398ed68 <col:52, col:82> col:82 entityMap 'const types::ClonedEntityMap &'
+`-ParmVarDecl 0x561d2398ede0 <col:93, col:103> col:103 getEntity 'GetEntity'
 
 
 Match #2:
 
-/tmp/_kvVGVh/PokeSim.hpp:17149:1: note: "inline" binds here
+/tmp/_sSiSlh/PokeSim.hpp:17149:1: note: "inline" binds here
 void remapEntityListMembers(
 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Binding for "inline":
-FunctionDecl 0x5580e790f2d8 </tmp/_kvVGVh/PokeSim.hpp:17149:1, line:17150:98> line:17149:6 invalid remapEntityListMembers 'void (int &, const int &, GetEntityList)'
-|-ParmVarDecl 0x5580e790f0f0 <line:17150:3, col:20> col:20 invalid registry 'int &'
-|-ParmVarDecl 0x5580e790f180 <col:30, col:60> col:60 invalid entityMap 'const int &'
-`-ParmVarDecl 0x5580e790f1f8 <col:71, col:85> col:85 getEntityList 'GetEntityList'
+FunctionDecl 0x561d2398f418 </tmp/_sSiSlh/PokeSim.hpp:17149:1, line:17150:98> line:17149:6 remapEntityListMembers 'void (types::registry &, const types::ClonedEntityMap &, GetEntityList)'
+|-ParmVarDecl 0x561d2398f1f8 <line:17150:3, col:20> col:20 registry 'types::registry &'
+|-ParmVarDecl 0x561d2398f2b8 <col:30, col:60> col:60 entityMap 'const types::ClonedEntityMap &'
+`-ParmVarDecl 0x561d2398f330 <col:71, col:85> col:85 getEntityList 'GetEntityList'
 
 2 matches.
