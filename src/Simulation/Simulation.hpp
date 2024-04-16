@@ -1,7 +1,7 @@
 #pragma once
 
+#include <Components/Decisions.hpp>
 #include <Components/EVsIVs.hpp>
-#include <SimulateTurn/Actions/Decisions.hpp>
 #include <Types/Entity.hpp>
 #include <Types/headers.hpp>
 #include <Utilities/RegistryLoop.hpp>

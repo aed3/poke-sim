@@ -7,6 +7,7 @@
 #include "CalcDamage/AttackerDefender.hpp"
 #include "Chance.hpp"
 #include "CloneFromCloneTo.hpp"
+#include "Decisions.hpp"
 #include "DexData/Abilities.hpp"
 #include "DexData/BaseStats.hpp"
 #include "DexData/SpeciesTypes.hpp"

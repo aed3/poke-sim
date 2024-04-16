@@ -143,8 +143,6 @@ TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
     Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
     simulation.createInitialStates({battleInfo});
 
-    simulation.run();
-
     types::registry& registry = simulation.registry;
     auto group = registry.group<ActionQueue, Id, Sides>();
     REQUIRE(group.size() == battleInfo.decisionsToSimulate.size());

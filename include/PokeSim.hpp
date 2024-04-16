@@ -64,6 +64,7 @@
  * src/Battle/Setup/SideStateSetup.hpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.hpp
  * src/Components/CalcDamage/AttackerDefender.hpp
+ * src/Components/Decisions.hpp
  * src/Components/EntityHolders/ActionQueue.hpp
  * src/Components/EntityHolders/Battle.hpp
  * src/Components/EntityHolders/Side.hpp
@@ -78,8 +79,7 @@
  * src/Types/Enums/Stat.hpp
  * src/Types/Enums/Type.hpp
  * src/Pokedex/Pokedex.hpp
- * src/SimulateTurn/Actions/Decisions.hpp
- * src/SimulateTurn/Actions/ResolveDecision.hpp
+ * src/SimulateTurn/Actions.hpp
  * src/Simulation/SimulationOptions.hpp
  * src/Types/Damage.hpp
  * src/Utilities/RegistryLoop.hpp
@@ -90,10 +90,7 @@
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Simulation/Simulation.cpp
  * src/Components/SpeedSort.hpp
- * src/SimulateTurn/Actions/SpeedSort.hpp
  * src/SimulateTurn/SimulateTurn.cpp
- * src/Components/SimulateTurn/SpeedTieIndexes.hpp
- * src/SimulateTurn/Actions/SpeedSort.cpp
  * src/Components/EntityHolders/Team.hpp
  * src/Components/Names/SourceSlotName.hpp
  * src/Components/Names/TargetSlotName.hpp
@@ -101,8 +98,9 @@
  * src/Components/Names/MoveNames.hpp
  * src/Components/SimulateTurn/ActionNames.hpp
  * src/Components/SimulateTurn/ActionTags.hpp
+ * src/Components/SimulateTurn/SpeedTieIndexes.hpp
  * src/Components/SimulateTurn/TeamAction.hpp
- * src/SimulateTurn/Actions/ResolveDecision.cpp
+ * src/SimulateTurn/Actions.cpp
  * src/Components/DexData/Abilities.hpp
  * src/Components/DexData/BaseStats.hpp
  * src/Components/DexData/SpeciesTypes.hpp
@@ -13156,6 +13154,37 @@ struct Defender {
 
 //////////// END OF src/Components/CalcDamage/AttackerDefender.hpp /////////////
 
+//////////////////// START OF src/Components/Decisions.hpp /////////////////////
+
+#include <optional>
+
+namespace pokesim {
+struct SlotDecision;
+namespace types {
+using slotDecisions = types::sideSlots<SlotDecision>;
+}
+
+struct SlotDecision {
+  Slot sourceSlot = Slot::NONE;
+  Slot targetSlot = Slot::NONE;
+
+  bool megaEvolve = false;
+  bool primalRevert = false;
+  bool dynamax = false;
+  bool terastallize = false;
+
+  std::optional<dex::Move> moveChoice = std::nullopt;
+  std::optional<dex::Item> itemChoice = std::nullopt;
+};
+
+struct SideDecision {
+  PlayerSideId sideId = PlayerSideId::NONE;
+  internal::variant<types::slotDecisions, types::teamOrder> decisions;
+};
+}  // namespace pokesim
+
+///////////////////// END OF src/Components/Decisions.hpp //////////////////////
+
 //////////// START OF src/Components/EntityHolders/ActionQueue.hpp /////////////
 
 #include <vector>
@@ -13493,46 +13522,17 @@ class Pokedex {
 
 //////////////////////// END OF src/Pokedex/Pokedex.hpp ////////////////////////
 
-/////////////// START OF src/SimulateTurn/Actions/Decisions.hpp ////////////////
-
-#include <optional>
-
-namespace pokesim {
-struct SlotDecision;
-namespace types {
-using slotDecisions = types::sideSlots<SlotDecision>;
-}
-
-struct SlotDecision {
-  Slot sourceSlot = Slot::NONE;
-  Slot targetSlot = Slot::NONE;
-
-  bool megaEvolve = false;
-  bool primalRevert = false;
-  bool dynamax = false;
-  bool terastallize = false;
-
-  std::optional<dex::Move> moveChoice = std::nullopt;
-  std::optional<dex::Item> itemChoice = std::nullopt;
-};
-
-struct SideDecision {
-  PlayerSideId sideId = PlayerSideId::NONE;
-  internal::variant<types::slotDecisions, types::teamOrder> decisions;
-};
-}  // namespace pokesim
-
-//////////////// END OF src/SimulateTurn/Actions/Decisions.hpp /////////////////
-
-//////////// START OF src/SimulateTurn/Actions/ResolveDecision.hpp /////////////
+//////////////////// START OF src/SimulateTurn/Actions.hpp /////////////////////
 
 namespace pokesim {
 struct SideDecision;
+struct ActionQueue;
 
 inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision);
+inline void speedSort(types::handle handle, ActionQueue& actionQueue);
 }  // namespace pokesim
 
-///////////// END OF src/SimulateTurn/Actions/ResolveDecision.hpp //////////////
+///////////////////// END OF src/SimulateTurn/Actions.hpp //////////////////////
 
 //////////////// START OF src/Simulation/SimulationOptions.hpp /////////////////
 
@@ -14281,15 +14281,6 @@ struct SpeedSort {
 
 ///////////////////// END OF src/Components/SpeedSort.hpp //////////////////////
 
-/////////////// START OF src/SimulateTurn/Actions/SpeedSort.hpp ////////////////
-
-namespace pokesim {
-struct ActionQueue;
-inline void speedSort(types::handle handle, ActionQueue& actionQueue);
-}  // namespace pokesim
-
-//////////////// END OF src/SimulateTurn/Actions/SpeedSort.hpp /////////////////
-
 ////////////////// START OF src/SimulateTurn/SimulateTurn.cpp //////////////////
 
 namespace pokesim::simulate_turn {
@@ -14302,99 +14293,6 @@ void run(Simulation& simulation) {
 }  // namespace pokesim::simulate_turn
 
 /////////////////// END OF src/SimulateTurn/SimulateTurn.cpp ///////////////////
-
-/////////// START OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ///////////
-
-#include <cstdint>
-#include <vector>
-
-namespace pokesim {
-struct SpeedTieIndexes {
-  struct Span {
-    std::size_t start;
-    std::size_t length;
-  };
-
-  std::vector<Span> spans;
-};
-}  // namespace pokesim
-
-//////////// END OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ////////////
-
-/////////////// START OF src/SimulateTurn/Actions/SpeedSort.cpp ////////////////
-
-#include <algorithm>
-#include <vector>
-
-namespace pokesim {
-void speedSort(types::handle handle, ActionQueue& actionQueue) {
-  std::vector<types::entity>& entityList = actionQueue.actionQueue;
-
-  if (entityList.size() == 1) return;
-  const types::registry* registry = handle.registry();
-
-  std::vector<std::pair<SpeedSort, types::entity>> speedSortList;
-  speedSortList.reserve(entityList.size());
-
-  for (types::entity entity : entityList) {
-    speedSortList.push_back({registry->get<SpeedSort>(entity), entity});
-  }
-
-  // TODO (aed3): Test how different sorting algorithms effect speed
-  std::sort(speedSortList.begin(), speedSortList.end(), [](const auto& pairA, const auto& pairB) {
-    if (pairA.first.order != pairB.first.order) {
-      return pairA.first.order < pairB.first.order;
-    }
-
-    if (pairA.first.priority != pairB.first.priority) {
-      return pairB.first.priority < pairA.first.priority;
-    }
-
-    if (pairA.first.fractionalPriority != pairB.first.fractionalPriority) {
-      return pairB.first.fractionalPriority;
-    }
-
-    if (pairA.first.speed != pairB.first.speed) {
-      return pairB.first.speed < pairA.first.speed;
-    }
-
-    return false;
-  });
-
-  SpeedTieIndexes speedTies;
-  std::size_t lastEqual = 0, tieCount = 1;
-
-  auto speedSortEqual = [](const SpeedSort& speedSortA, const SpeedSort& speedSortB) {
-    return speedSortA.order == speedSortB.order && speedSortA.priority == speedSortB.priority &&
-           speedSortA.speed == speedSortB.speed && speedSortA.fractionalPriority == speedSortB.fractionalPriority;
-  };
-
-  for (std::size_t i = 0; i < speedSortList.size(); i++) {
-    entityList[i] = speedSortList[i].second;
-
-    if (i > 0 && speedSortEqual(speedSortList[i].first, speedSortList[i - 1].first)) {
-      tieCount++;
-    }
-    else {
-      if (tieCount > 1) {
-        speedTies.spans.push_back({lastEqual, tieCount});
-      }
-      lastEqual = i;
-      tieCount = 1;
-    }
-  }
-
-  if (tieCount > 1) {
-    speedTies.spans.push_back({lastEqual, tieCount});
-  }
-
-  if (!speedTies.spans.empty()) {
-    handle.emplace<SpeedTieIndexes>(speedTies);
-  }
-}
-}  // namespace pokesim
-
-//////////////// END OF src/SimulateTurn/Actions/SpeedSort.cpp /////////////////
 
 //////////////// START OF src/Components/EntityHolders/Team.hpp ////////////////
 
@@ -14501,6 +14399,24 @@ struct Terastallize {};
 
 ////////////// END OF src/Components/SimulateTurn/ActionTags.hpp ///////////////
 
+/////////// START OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ///////////
+
+#include <cstdint>
+#include <vector>
+
+namespace pokesim {
+struct SpeedTieIndexes {
+  struct Span {
+    std::size_t start;
+    std::size_t length;
+  };
+
+  std::vector<Span> spans;
+};
+}  // namespace pokesim
+
+//////////// END OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ////////////
+
 ///////////// START OF src/Components/SimulateTurn/TeamAction.hpp //////////////
 
 namespace pokesim::action {
@@ -14512,7 +14428,10 @@ struct Team {
 
 ////////////// END OF src/Components/SimulateTurn/TeamAction.hpp ///////////////
 
-//////////// START OF src/SimulateTurn/Actions/ResolveDecision.cpp /////////////
+//////////////////// START OF src/SimulateTurn/Actions.cpp /////////////////////
+
+#include <algorithm>
+#include <vector>
 
 namespace pokesim {
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
@@ -14586,9 +14505,75 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
     battleActionQueue.actionQueue.push_back(actionHandle.entity());
   }
 }
+
+void speedSort(types::handle handle, ActionQueue& actionQueue) {
+  std::vector<types::entity>& entityList = actionQueue.actionQueue;
+
+  if (entityList.size() == 1) return;
+  const types::registry* registry = handle.registry();
+
+  std::vector<std::pair<SpeedSort, types::entity>> speedSortList;
+  speedSortList.reserve(entityList.size());
+
+  for (types::entity entity : entityList) {
+    speedSortList.push_back({registry->get<SpeedSort>(entity), entity});
+  }
+
+  // TODO (aed3): Test how different sorting algorithms effect speed
+  std::sort(speedSortList.begin(), speedSortList.end(), [](const auto& pairA, const auto& pairB) {
+    if (pairA.first.order != pairB.first.order) {
+      return pairA.first.order < pairB.first.order;
+    }
+
+    if (pairA.first.priority != pairB.first.priority) {
+      return pairB.first.priority < pairA.first.priority;
+    }
+
+    if (pairA.first.fractionalPriority != pairB.first.fractionalPriority) {
+      return pairB.first.fractionalPriority;
+    }
+
+    if (pairA.first.speed != pairB.first.speed) {
+      return pairB.first.speed < pairA.first.speed;
+    }
+
+    return false;
+  });
+
+  SpeedTieIndexes speedTies;
+  std::size_t lastEqual = 0, tieCount = 1;
+
+  auto speedSortEqual = [](const SpeedSort& speedSortA, const SpeedSort& speedSortB) {
+    return speedSortA.order == speedSortB.order && speedSortA.priority == speedSortB.priority &&
+           speedSortA.speed == speedSortB.speed && speedSortA.fractionalPriority == speedSortB.fractionalPriority;
+  };
+
+  for (std::size_t i = 0; i < speedSortList.size(); i++) {
+    entityList[i] = speedSortList[i].second;
+
+    if (i > 0 && speedSortEqual(speedSortList[i].first, speedSortList[i - 1].first)) {
+      tieCount++;
+    }
+    else {
+      if (tieCount > 1) {
+        speedTies.spans.push_back({lastEqual, tieCount});
+      }
+      lastEqual = i;
+      tieCount = 1;
+    }
+  }
+
+  if (tieCount > 1) {
+    speedTies.spans.push_back({lastEqual, tieCount});
+  }
+
+  if (!speedTies.spans.empty()) {
+    handle.emplace<SpeedTieIndexes>(speedTies);
+  }
+}
 }  // namespace pokesim
 
-///////////// END OF src/SimulateTurn/Actions/ResolveDecision.cpp //////////////
+///////////////////// END OF src/SimulateTurn/Actions.cpp //////////////////////
 
 //////////////// START OF src/Components/DexData/Abilities.hpp /////////////////
 

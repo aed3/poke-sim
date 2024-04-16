@@ -4,8 +4,7 @@
 #include <Components/SpeedSort.hpp>
 #include <Simulation/Simulation.hpp>
 
-#include "Actions/ResolveDecision.hpp"
-#include "Actions/SpeedSort.hpp"
+#include "Actions.hpp"
 
 namespace pokesim::simulate_turn {
 void run(Simulation& simulation) {

@@ -4,6 +4,7 @@
 #include <Battle/Setup/headers.hpp>
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
 #include <Components/CalcDamage/AttackerDefender.hpp>
+#include <Components/Decisions.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Side.hpp>
@@ -11,8 +12,7 @@
 #include <Components/Stats.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Pokedex/Pokedex.hpp>
-#include <SimulateTurn/Actions/Decisions.hpp>
-#include <SimulateTurn/Actions/ResolveDecision.hpp>
+#include <SimulateTurn/Actions.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
 #include <Utilities/Variant.hpp>

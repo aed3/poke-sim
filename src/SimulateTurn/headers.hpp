@@ -1,6 +1,4 @@
 #pragma once
 
-#include "Actions/Decisions.hpp"
-#include "Actions/ResolveDecision.hpp"
-#include "Actions/SpeedSort.hpp"
+#include "Actions.hpp"
 #include "SimulateTurn.hpp"
