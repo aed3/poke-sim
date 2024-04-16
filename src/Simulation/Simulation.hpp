@@ -105,14 +105,14 @@ class Simulation {
     std::vector<AnalyzeEffectInputInfo> effectsToAnalyze;
   };
 
-  template <auto Function, typename... ViewArgs>
+  template <auto Function, typename... Tags, typename... ViewArgs>
   void view(const ViewArgs&... viewArgs) {
-    internal::RegistryLoop<Function>::view(registry, viewArgs...);
+    internal::RegistryLoop<Function, Tags...>::view(registry, viewArgs...);
   }
 
-  template <auto Function, typename... GroupArgs>
+  template <auto Function, typename... Tags, typename... GroupArgs>
   void group(const GroupArgs&... groupArgs) {
-    internal::RegistryLoop<Function>::group(registry, groupArgs...);
+    internal::RegistryLoop<Function, Tags...>::group(registry, groupArgs...);
   }
 
  private:

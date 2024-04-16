@@ -6,7 +6,7 @@
 #include <type_traits>
 
 namespace pokesim::internal {
-template <auto Function>
+template <auto Function, typename... Tags>
 struct RegistryLoop {
  public:
   template <class Signature>
@@ -16,14 +16,14 @@ struct RegistryLoop {
   struct RegistryLoopInternal<Signature (*)(Args...)> {
     template <typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-      registry.view<std::decay_t<Args>...>(viewArgs...).each([](types::entity entity, auto&&... args) {
+      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([](types::entity entity, auto&&... args) {
         Function(args...);
       });
     }
 
     template <typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
-      registry.group<std::decay_t<Args>...>(groupArgs...).each([](types::entity entity, auto&&... args) {
+      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...).each([](types::entity entity, auto&&... args) {
         Function(args...);
       });
     }
@@ -33,14 +33,14 @@ struct RegistryLoop {
   struct RegistryLoopInternal<Signature (*)(types::handle, Args...)> {
     template <typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-      registry.view<std::decay_t<Args>...>(viewArgs...).each([&registry](types::entity entity, auto&&... args) {
+      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([&registry](types::entity entity, auto&&... args) {
         Function(types::handle{registry, entity}, args...);
       });
     }
 
     template <typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
-      registry.group<std::decay_t<Args>...>(groupArgs...).each([&registry](types::entity entity, auto&&... args) {
+      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...).each([&registry](types::entity entity, auto&&... args) {
         Function(types::handle{registry, entity}, args...);
       });
     }

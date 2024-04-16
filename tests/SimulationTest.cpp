@@ -128,6 +128,7 @@ types::entity targetSlotToEntity(
 TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
+  battleInfo.runWithSimulateTurn = true;
 
   SideDecision p1Decision{PlayerSideId::P1};
   SideDecision p2Decision{PlayerSideId::P2};
