@@ -58,8 +58,7 @@ set (SOURCES
   src/Pokedex/Setup/ItemDexDataSetup.cpp
   src/Pokedex/Setup/MoveDexDataSetup.cpp
   src/Pokedex/Setup/SpeciesDexDataSetup.cpp
-  src/SimulateTurn/Actions/ResolveDecision.cpp
-  src/SimulateTurn/Actions/SpeedSort.cpp
+  src/SimulateTurn/Actions.cpp
   src/SimulateTurn/SimulateTurn.cpp
   src/Simulation/Simulation.cpp
   src/Simulation/SimulationResults.cpp
