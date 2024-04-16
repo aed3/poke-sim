@@ -13,6 +13,7 @@
 #include "DexData/SpeciesTypes.hpp"
 #include "EVsIVs.hpp"
 #include "EntityHolders/ActionQueue.hpp"
+#include "EntityHolders/ActiveAction.hpp"
 #include "EntityHolders/Battle.hpp"
 #include "EntityHolders/FoeSide.hpp"
 #include "EntityHolders/Move.hpp"

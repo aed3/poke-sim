@@ -33,16 +33,18 @@ struct RegistryLoop {
   struct RegistryLoopInternal<Signature (*)(types::handle, Args...)> {
     template <typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([&registry](types::entity entity, auto&&... args) {
-        Function(types::handle{registry, entity}, args...);
-      });
+      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
+        .each([&registry](types::entity entity, auto&&... args) {
+          Function(types::handle{registry, entity}, args...);
+        });
     }
 
     template <typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...).each([&registry](types::entity entity, auto&&... args) {
-        Function(types::handle{registry, entity}, args...);
-      });
+      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
+        .each([&registry](types::entity entity, auto&&... args) {
+          Function(types::handle{registry, entity}, args...);
+        });
     }
   };
 

@@ -1,4 +1,4 @@
-#include "Actions.hpp"
+#include "ManageActionQueue.hpp"
 
 #include <Battle/Helpers/Helpers.hpp>
 #include <Components/Decisions.hpp>
@@ -23,7 +23,7 @@
 #include <entt/entity/registry.hpp>
 #include <vector>
 
-namespace pokesim {
+namespace pokesim::simulate_turn {
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
   ENTT_ASSERT(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player");
   ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty");
@@ -161,4 +161,10 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
     handle.emplace<SpeedTieIndexes>(speedTies);
   }
 }
-}  // namespace pokesim
+
+void addBeforeTurnAction(types::handle handle, ActionQueue& actionQueue) {}
+
+void addResidualAction(types::handle handle, ActionQueue& actionQueue) {}
+
+void setActiveAction(types::handle handle, ActionQueue& actionQueue) {}
+}  // namespace pokesim::simulate_turn

@@ -79,7 +79,6 @@
  * src/Types/Enums/Stat.hpp
  * src/Types/Enums/Type.hpp
  * src/Pokedex/Pokedex.hpp
- * src/SimulateTurn/Actions.hpp
  * src/Simulation/SimulationOptions.hpp
  * src/Types/Damage.hpp
  * src/Utilities/RegistryLoop.hpp
@@ -89,7 +88,11 @@
  * src/Simulation/SimulationResults.cpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Simulation/Simulation.cpp
+ * src/Components/EntityHolders/ActiveAction.hpp
  * src/Components/SpeedSort.hpp
+ * src/Components/Tags/BattleTags.hpp
+ * src/Components/Turn.hpp
+ * src/SimulateTurn/ManageActionQueue.hpp
  * src/SimulateTurn/SimulateTurn.cpp
  * src/Components/EntityHolders/Team.hpp
  * src/Components/Names/SourceSlotName.hpp
@@ -100,7 +103,7 @@
  * src/Components/SimulateTurn/ActionTags.hpp
  * src/Components/SimulateTurn/SpeedTieIndexes.hpp
  * src/Components/SimulateTurn/TeamAction.hpp
- * src/SimulateTurn/Actions.cpp
+ * src/SimulateTurn/ManageActionQueue.cpp
  * src/Components/DexData/Abilities.hpp
  * src/Components/DexData/BaseStats.hpp
  * src/Components/DexData/SpeciesTypes.hpp
@@ -169,9 +172,7 @@
  * src/Components/CloneFromCloneTo.hpp
  * src/Components/Probability.hpp
  * src/Components/RNGSeed.hpp
- * src/Components/Tags/BattleTags.hpp
  * src/Components/Tags/PokemonTags.hpp
- * src/Components/Turn.hpp
  * src/Battle/Setup/BattleStateSetup.cpp
  * src/Battle/Helpers/Helpers.cpp
  * src/Components/EntityHolders/Move.hpp
@@ -13271,6 +13272,8 @@ enum class ActionOrder : std::uint8_t {
   SWITCH = 103,
 
   MOVE = 200,
+
+  RESIDUAL = 254,
 };
 }
 
@@ -13522,18 +13525,6 @@ class Pokedex {
 
 //////////////////////// END OF src/Pokedex/Pokedex.hpp ////////////////////////
 
-//////////////////// START OF src/SimulateTurn/Actions.hpp /////////////////////
-
-namespace pokesim {
-struct SideDecision;
-struct ActionQueue;
-
-inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision);
-inline void speedSort(types::handle handle, ActionQueue& actionQueue);
-}  // namespace pokesim
-
-///////////////////// END OF src/SimulateTurn/Actions.hpp //////////////////////
-
 //////////////// START OF src/Simulation/SimulationOptions.hpp /////////////////
 
 #include <cstdint>
@@ -13602,7 +13593,7 @@ using damageRolls = std::array<damage, internal::MAX_DAMAGE_ROLL_COUNT>;
 #include <type_traits>
 
 namespace pokesim::internal {
-template <auto Function>
+template <auto Function, typename... Tags>
 struct RegistryLoop {
  public:
   template <class Signature>
@@ -13612,14 +13603,14 @@ struct RegistryLoop {
   struct RegistryLoopInternal<Signature (*)(Args...)> {
     template <typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-      registry.view<std::decay_t<Args>...>(viewArgs...).each([](types::entity entity, auto&&... args) {
+      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([](types::entity entity, auto&&... args) {
         Function(args...);
       });
     }
 
     template <typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
-      registry.group<std::decay_t<Args>...>(groupArgs...).each([](types::entity entity, auto&&... args) {
+      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...).each([](types::entity entity, auto&&... args) {
         Function(args...);
       });
     }
@@ -13629,16 +13620,18 @@ struct RegistryLoop {
   struct RegistryLoopInternal<Signature (*)(types::handle, Args...)> {
     template <typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-      registry.view<std::decay_t<Args>...>(viewArgs...).each([&registry](types::entity entity, auto&&... args) {
-        Function(types::handle{registry, entity}, args...);
-      });
+      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
+        .each([&registry](types::entity entity, auto&&... args) {
+          Function(types::handle{registry, entity}, args...);
+        });
     }
 
     template <typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
-      registry.group<std::decay_t<Args>...>(groupArgs...).each([&registry](types::entity entity, auto&&... args) {
-        Function(types::handle{registry, entity}, args...);
-      });
+      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
+        .each([&registry](types::entity entity, auto&&... args) {
+          Function(types::handle{registry, entity}, args...);
+        });
     }
   };
 
@@ -13759,14 +13752,14 @@ class Simulation {
     std::vector<AnalyzeEffectInputInfo> effectsToAnalyze;
   };
 
-  template <auto Function, typename... ViewArgs>
+  template <auto Function, typename... Tags, typename... ViewArgs>
   void view(const ViewArgs&... viewArgs) {
-    internal::RegistryLoop<Function>::view(registry, viewArgs...);
+    internal::RegistryLoop<Function, Tags...>::view(registry, viewArgs...);
   }
 
-  template <auto Function, typename... GroupArgs>
+  template <auto Function, typename... Tags, typename... GroupArgs>
   void group(const GroupArgs&... groupArgs) {
-    internal::RegistryLoop<Function>::group(registry, groupArgs...);
+    internal::RegistryLoop<Function, Tags...>::group(registry, groupArgs...);
   }
 
  private:
@@ -14171,6 +14164,8 @@ namespace pokesim {
 class Simulation;
 namespace simulate_turn {
 inline void run(Simulation& simulation);
+inline void runActiveAction(Simulation& simulation);
+inline void nextTurn(Simulation& simulation);
 }
 }  // namespace pokesim
 
@@ -14263,6 +14258,16 @@ void Simulation::run() {
 
 ///////////////////// END OF src/Simulation/Simulation.cpp /////////////////////
 
+//////////// START OF src/Components/EntityHolders/ActiveAction.hpp ////////////
+
+namespace pokesim {
+struct ActiveAction {
+  types::entity activeAction;
+};
+}  // namespace pokesim
+
+///////////// END OF src/Components/EntityHolders/ActiveAction.hpp /////////////
+
 //////////////////// START OF src/Components/SpeedSort.hpp /////////////////////
 
 namespace pokesim {
@@ -14281,6 +14286,55 @@ struct SpeedSort {
 
 ///////////////////// END OF src/Components/SpeedSort.hpp //////////////////////
 
+///////////////// START OF src/Components/Tags/BattleTags.hpp //////////////////
+
+namespace pokesim::tags {
+
+// Current Action Tag: The move that is being processed by the simulator
+struct ActiveMove {};
+// Current Action Tag: The target of the active move
+struct ActiveMoveTarget {};
+// Current Action Tag: The user of the active move
+struct ActiveMoveUser {};
+
+// Battle Turn State Tag: When a battle is in the middle of a turn
+struct BattleMidTurn {};
+// Battle Turn State Tag: When a battle has ended
+struct BattleEnded {};
+}  // namespace pokesim::tags
+
+////////////////// END OF src/Components/Tags/BattleTags.hpp ///////////////////
+
+/////////////////////// START OF src/Components/Turn.hpp ///////////////////////
+
+namespace pokesim {
+// The current turn of a battle
+struct Turn {
+  types::battleTurn turn = 0;
+};
+}  // namespace pokesim
+
+//////////////////////// END OF src/Components/Turn.hpp ////////////////////////
+
+/////////////// START OF src/SimulateTurn/ManageActionQueue.hpp ////////////////
+
+// Systems
+namespace pokesim {
+struct SideDecision;
+struct ActionQueue;
+
+namespace simulate_turn {
+inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision);
+inline void speedSort(types::handle handle, ActionQueue& actionQueue);
+
+inline void addBeforeTurnAction(types::handle handle, ActionQueue& actionQueue);
+inline void addResidualAction(types::handle handle, ActionQueue& actionQueue);
+inline void setActiveAction(types::handle handle, ActionQueue& actionQueue);
+}  // namespace simulate_turn
+}  // namespace pokesim
+
+//////////////// END OF src/SimulateTurn/ManageActionQueue.hpp /////////////////
+
 ////////////////// START OF src/SimulateTurn/SimulateTurn.cpp //////////////////
 
 namespace pokesim::simulate_turn {
@@ -14288,8 +14342,24 @@ void run(Simulation& simulation) {
   simulation.view<resolveDecision>();
   simulation.registry.clear<SideDecision>();
 
+  simulation.view<addBeforeTurnAction>(entt::exclude_t<tags::BattleMidTurn>{});
   simulation.view<speedSort>();
+  simulation.view<addResidualAction>(entt::exclude_t<tags::BattleMidTurn>{});
+
+  auto turnEntities = simulation.registry.view<Turn>();
+  simulation.registry.insert<tags::BattleMidTurn>(turnEntities.begin(), turnEntities.end());
+
+  simulation.view<setActiveAction>();
+  while (!simulation.registry.view<ActiveAction>().empty()) {
+    runActiveAction(simulation);
+    simulation.view<setActiveAction>();
+  }
+
+  nextTurn(simulation);
 }
+
+void runActiveAction(Simulation& simulation) {}
+void nextTurn(Simulation& simulation) {}
 }  // namespace pokesim::simulate_turn
 
 /////////////////// END OF src/SimulateTurn/SimulateTurn.cpp ///////////////////
@@ -14428,12 +14498,12 @@ struct Team {
 
 ////////////// END OF src/Components/SimulateTurn/TeamAction.hpp ///////////////
 
-//////////////////// START OF src/SimulateTurn/Actions.cpp /////////////////////
+/////////////// START OF src/SimulateTurn/ManageActionQueue.cpp ////////////////
 
 #include <algorithm>
 #include <vector>
 
-namespace pokesim {
+namespace pokesim::simulate_turn {
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
   ENTT_ASSERT(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player");
   ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty");
@@ -14571,9 +14641,15 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
     handle.emplace<SpeedTieIndexes>(speedTies);
   }
 }
-}  // namespace pokesim
 
-///////////////////// END OF src/SimulateTurn/Actions.cpp //////////////////////
+void addBeforeTurnAction(types::handle handle, ActionQueue& actionQueue) {}
+
+void addResidualAction(types::handle handle, ActionQueue& actionQueue) {}
+
+void setActiveAction(types::handle handle, ActionQueue& actionQueue) {}
+}  // namespace pokesim::simulate_turn
+
+//////////////// END OF src/SimulateTurn/ManageActionQueue.cpp /////////////////
 
 //////////////// START OF src/Components/DexData/Abilities.hpp /////////////////
 
@@ -17288,25 +17364,6 @@ struct RngSeed {
 
 ////////////////////// END OF src/Components/RNGSeed.hpp ///////////////////////
 
-///////////////// START OF src/Components/Tags/BattleTags.hpp //////////////////
-
-namespace pokesim::tags {
-
-// Current Action Tag: The move that is being processed by the simulator
-struct ActiveMove {};
-// Current Action Tag: The target of the active move
-struct ActiveMoveTarget {};
-// Current Action Tag: The user of the active move
-struct ActiveMoveUser {};
-
-// Battle Turn State Tag: When a battle is in the middle of a turn
-struct BattleMidTurn {};
-// Battle Turn State Tag: When a battle has ended
-struct BattleEnded {};
-}  // namespace pokesim::tags
-
-////////////////// END OF src/Components/Tags/BattleTags.hpp ///////////////////
-
 ///////////////// START OF src/Components/Tags/PokemonTags.hpp /////////////////
 
 namespace pokesim::tags {
@@ -17315,17 +17372,6 @@ struct ActivePokemon {};
 }  // namespace pokesim::tags
 
 ////////////////// END OF src/Components/Tags/PokemonTags.hpp //////////////////
-
-/////////////////////// START OF src/Components/Turn.hpp ///////////////////////
-
-namespace pokesim {
-// The current turn of a battle
-struct Turn {
-  types::battleTurn turn = 0;
-};
-}  // namespace pokesim
-
-//////////////////////// END OF src/Components/Turn.hpp ////////////////////////
 
 //////////////// START OF src/Battle/Setup/BattleStateSetup.cpp ////////////////
 

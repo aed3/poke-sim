@@ -20,7 +20,7 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
     types::handle handle{registry, registry.create()};
     ActionQueue sortedQueue = initialQueue;
 
-    speedSort(handle, sortedQueue);
+    simulate_turn::speedSort(handle, sortedQueue);
 
     REQUIRE(initialQueue.actionQueue.size() == sortedQueue.actionQueue.size());
     for (types::entity entity : initialQueue.actionQueue) {
