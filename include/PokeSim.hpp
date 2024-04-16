@@ -37,7 +37,7 @@
  * src/Types/Enums/Terrain.hpp
  * src/Types/Enums/Volatile.hpp
  * src/Types/Enums/Weather.hpp
- * src/Types/Utilities/Variant.hpp
+ * src/Utilities/Variant.hpp
  * src/Types/Effect.hpp
  * src/Types/Entity.hpp
  * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp
@@ -53,7 +53,7 @@
  * src/Types/Enums/Item.hpp
  * src/Types/Enums/Nature.hpp
  * src/Types/Enums/Species.hpp
- * src/Types/Utilities/MaxSizedVector.hpp
+ * src/Utilities/MaxSizedVector.hpp
  * src/Types/State.hpp
  * src/Battle/Setup/PokemonStateSetup.hpp
  * src/Types/Enums/PlayerSideId.hpp
@@ -82,14 +82,17 @@
  * src/SimulateTurn/Actions/ResolveDecision.hpp
  * src/Simulation/SimulationOptions.hpp
  * src/Types/Damage.hpp
+ * src/Utilities/RegistryLoop.hpp
  * src/Simulation/Simulation.hpp
  * src/Simulation/SimulationSetup.cpp
  * src/Simulation/SimulationResults.hpp
  * src/Simulation/SimulationResults.cpp
+ * src/SimulateTurn/SimulateTurn.hpp
  * src/Simulation/Simulation.cpp
- * src/Components/SimulateTurn/SpeedTieIndexes.hpp
  * src/Components/SpeedSort.hpp
  * src/SimulateTurn/Actions/SpeedSort.hpp
+ * src/SimulateTurn/SimulateTurn.cpp
+ * src/Components/SimulateTurn/SpeedTieIndexes.hpp
  * src/SimulateTurn/Actions/SpeedSort.cpp
  * src/Components/EntityHolders/Team.hpp
  * src/Components/Names/SourceSlotName.hpp
@@ -12458,11 +12461,11 @@ enum class Weather : std::uint8_t {
 
 ////////////////////// END OF src/Types/Enums/Weather.hpp //////////////////////
 
-/////////////////// START OF src/Types/Utilities/Variant.hpp ///////////////////
+////////////////////// START OF src/Utilities/Variant.hpp //////////////////////
 
 #include <variant>
 
-namespace pokesim::types::internal {
+namespace pokesim::internal {
 template <typename... Types>
 class variant : public std::variant<Types...> {
  public:
@@ -12491,14 +12494,14 @@ class variant : public std::variant<Types...> {
     return std::get<Type>(*this);
   }
 };
-}  // namespace pokesim::types::internal
+}  // namespace pokesim::internal
 
-//////////////////// END OF src/Types/Utilities/Variant.hpp ////////////////////
+/////////////////////// END OF src/Utilities/Variant.hpp ///////////////////////
 
 //////////////////////// START OF src/Types/Effect.hpp /////////////////////////
 
 namespace pokesim::types {
-using effectEnum = internal::variant<
+using effectEnum = pokesim::internal::variant<
   std::monostate, dex::PseudoWeather, dex::SideCondition, dex::Status, dex::Terrain, dex::Volatile, dex::Weather>;
 }  // namespace pokesim::types
 
@@ -12797,13 +12800,13 @@ enum class Species : std::uint16_t {
 
 ////////////////////// END OF src/Types/Enums/Species.hpp //////////////////////
 
-/////////////// START OF src/Types/Utilities/MaxSizedVector.hpp ////////////////
+////////////////// START OF src/Utilities/MaxSizedVector.hpp ///////////////////
 
 #include <array>
 #include <cassert>
 #include <cstdint>
 
-namespace pokesim::types::internal {
+namespace pokesim::internal {
 template <typename T, std::uint8_t N>
 class maxSizedVector : private std::array<T, N> {
   using base = std::array<T, N>;
@@ -12868,9 +12871,9 @@ class maxSizedVector : private std::array<T, N> {
   typename base::const_reverse_iterator rend() const noexcept { return const_reverse_iterator(end()); }
   typename base::const_reverse_iterator crend() const noexcept { return rend(); }
 };
-}  // namespace pokesim::types::internal
+}  // namespace pokesim::internal
 
-//////////////// END OF src/Types/Utilities/MaxSizedVector.hpp /////////////////
+/////////////////// END OF src/Utilities/MaxSizedVector.hpp ////////////////////
 
 ///////////////////////// START OF src/Types/State.hpp /////////////////////////
 
@@ -12897,14 +12900,14 @@ using teamPositionIndex = std::uint8_t;
 using moveSlotPosition = std::uint8_t;
 
 template <typename T>
-using teamPositions = types::internal::maxSizedVector<T, internal::MAX_TEAM_SIZE>;
+using teamPositions = pokesim::internal::maxSizedVector<T, internal::MAX_TEAM_SIZE>;
 using teamOrder = types::teamPositions<types::teamPositionIndex>;
 
 template <typename T>
-using moveSlots = types::internal::maxSizedVector<T, internal::MAX_MOVE_SLOTS>;
+using moveSlots = pokesim::internal::maxSizedVector<T, internal::MAX_MOVE_SLOTS>;
 
 template <typename T>
-using sideSlots = types::internal::maxSizedVector<T, internal::MAX_ACTIVE_POKEMON_SLOTS>;
+using sideSlots = pokesim::internal::maxSizedVector<T, internal::MAX_ACTIVE_POKEMON_SLOTS>;
 }  // namespace pokesim::types
 
 ////////////////////////// END OF src/Types/State.hpp //////////////////////////
@@ -13515,7 +13518,7 @@ struct SlotDecision {
 
 struct SideDecision {
   PlayerSideId sideId = PlayerSideId::NONE;
-  types::internal::variant<types::slotDecisions, types::teamOrder> decisions;
+  internal::variant<types::slotDecisions, types::teamOrder> decisions;
 };
 }  // namespace pokesim
 
@@ -13525,9 +13528,8 @@ struct SideDecision {
 
 namespace pokesim {
 struct SideDecision;
-struct ActionQueue;
 
-inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue);
+inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision);
 }  // namespace pokesim
 
 ///////////// END OF src/SimulateTurn/Actions/ResolveDecision.hpp //////////////
@@ -13594,6 +13596,68 @@ using damageRolls = std::array<damage, internal::MAX_DAMAGE_ROLL_COUNT>;
 }  // namespace pokesim::types
 
 ///////////////////////// END OF src/Types/Damage.hpp //////////////////////////
+
+/////////////////// START OF src/Utilities/RegistryLoop.hpp ////////////////////
+
+#include <type_traits>
+
+namespace pokesim::internal {
+template <auto Function>
+struct RegistryLoop {
+ public:
+  template <class Signature>
+  struct RegistryLoopInternal;
+
+  template <class Signature, class... Args>
+  struct RegistryLoopInternal<Signature (*)(Args...)> {
+    template <typename... ViewArgs>
+    static void view(types::registry& registry, const ViewArgs&... viewArgs) {
+      registry.view<std::decay_t<Args>...>(viewArgs...).each([](types::entity entity, auto&&... args) {
+        Function(args...);
+      });
+    }
+
+    template <typename... GroupArgs>
+    static void group(types::registry& registry, const GroupArgs&... groupArgs) {
+      registry.group<std::decay_t<Args>...>(groupArgs...).each([](types::entity entity, auto&&... args) {
+        Function(args...);
+      });
+    }
+  };
+
+  template <class Signature, class... Args>
+  struct RegistryLoopInternal<Signature (*)(types::handle, Args...)> {
+    template <typename... ViewArgs>
+    static void view(types::registry& registry, const ViewArgs&... viewArgs) {
+      registry.view<std::decay_t<Args>...>(viewArgs...).each([&registry](types::entity entity, auto&&... args) {
+        Function(types::handle{registry, entity}, args...);
+      });
+    }
+
+    template <typename... GroupArgs>
+    static void group(types::registry& registry, const GroupArgs&... groupArgs) {
+      registry.group<std::decay_t<Args>...>(groupArgs...).each([&registry](types::entity entity, auto&&... args) {
+        Function(types::handle{registry, entity}, args...);
+      });
+    }
+  };
+
+  using FunctionSig = std::decay_t<decltype(Function)>;
+
+ public:
+  template <typename... ViewArgs>
+  static void view(types::registry& registry, const ViewArgs&... viewArgs) {
+    RegistryLoopInternal<FunctionSig>::view(registry, viewArgs...);
+  }
+
+  template <typename... GetExcludeArgs>
+  static void group(types::registry& registry, const GetExcludeArgs&... getExcludeArgs) {
+    RegistryLoopInternal<FunctionSig>::group(registry, getExcludeArgs...);
+  }
+};
+}  // namespace pokesim::internal
+
+//////////////////// END OF src/Utilities/RegistryLoop.hpp /////////////////////
 
 //////////////////// START OF src/Simulation/Simulation.hpp ////////////////////
 
@@ -13694,6 +13758,16 @@ class Simulation {
     std::vector<CalcDamageInputInfo> damageCalculations;
     std::vector<AnalyzeEffectInputInfo> effectsToAnalyze;
   };
+
+  template <auto Function, typename... ViewArgs>
+  void view(const ViewArgs&... viewArgs) {
+    internal::RegistryLoop<Function>::view(registry, viewArgs...);
+  }
+
+  template <auto Function, typename... GroupArgs>
+  void group(const GroupArgs&... groupArgs) {
+    internal::RegistryLoop<Function>::group(registry, groupArgs...);
+  }
 
  private:
   inline std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
@@ -13861,8 +13935,8 @@ void Simulation::createInitialTurnDecision(
   types::handle battleHandle{registry, battleStateSetup.entity()};
   const Sides& sides = battleHandle.get<Sides>();
 
-  resolveDecision({registry, sides.p1}, turnDecisionData.p1, battleHandle.get<ActionQueue>());
-  resolveDecision({registry, sides.p2}, turnDecisionData.p2, battleHandle.get<ActionQueue>());
+  registry.emplace<SideDecision>(sides.p1, turnDecisionData.p1);
+  registry.emplace<SideDecision>(sides.p2, turnDecisionData.p2);
 }
 
 void Simulation::createCalcDamageInput(
@@ -14091,6 +14165,17 @@ types::view<MultipliedKoChance> Results::multipliedKoChanceResults() const {
 
 ///////////////// END OF src/Simulation/SimulationResults.cpp //////////////////
 
+////////////////// START OF src/SimulateTurn/SimulateTurn.hpp //////////////////
+
+namespace pokesim {
+class Simulation;
+namespace simulate_turn {
+inline void run(Simulation& simulation);
+}
+}  // namespace pokesim
+
+/////////////////// END OF src/SimulateTurn/SimulateTurn.hpp ///////////////////
+
 //////////////////// START OF src/Simulation/Simulation.cpp ////////////////////
 
 namespace pokesim {
@@ -14125,7 +14210,7 @@ simulate_turn::Results Simulation::simulateTurn(std::optional<simulate_turn::Opt
     simulateTurnOptions = options.value();
   }
 
-  // TODO(aed3): Add entry point
+  simulate_turn::run(*this);
 
   return {*this};
 }
@@ -14178,24 +14263,6 @@ void Simulation::run() {
 
 ///////////////////// END OF src/Simulation/Simulation.cpp /////////////////////
 
-/////////// START OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ///////////
-
-#include <cstdint>
-#include <vector>
-
-namespace pokesim {
-struct SpeedTieIndexes {
-  struct Span {
-    std::size_t start;
-    std::size_t length;
-  };
-
-  std::vector<Span> spans;
-};
-}  // namespace pokesim
-
-//////////// END OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ////////////
-
 //////////////////// START OF src/Components/SpeedSort.hpp /////////////////////
 
 namespace pokesim {
@@ -14222,6 +14289,37 @@ inline void speedSort(types::handle handle, ActionQueue& actionQueue);
 }  // namespace pokesim
 
 //////////////// END OF src/SimulateTurn/Actions/SpeedSort.hpp /////////////////
+
+////////////////// START OF src/SimulateTurn/SimulateTurn.cpp //////////////////
+
+namespace pokesim::simulate_turn {
+void run(Simulation& simulation) {
+  simulation.view<resolveDecision>();
+  simulation.registry.clear<SideDecision>();
+
+  simulation.view<speedSort>();
+}
+}  // namespace pokesim::simulate_turn
+
+/////////////////// END OF src/SimulateTurn/SimulateTurn.cpp ///////////////////
+
+/////////// START OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ///////////
+
+#include <cstdint>
+#include <vector>
+
+namespace pokesim {
+struct SpeedTieIndexes {
+  struct Span {
+    std::size_t start;
+    std::size_t length;
+  };
+
+  std::vector<Span> spans;
+};
+}  // namespace pokesim
+
+//////////// END OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ////////////
 
 /////////////// START OF src/SimulateTurn/Actions/SpeedSort.cpp ////////////////
 
@@ -14417,10 +14515,12 @@ struct Team {
 //////////// START OF src/SimulateTurn/Actions/ResolveDecision.cpp /////////////
 
 namespace pokesim {
-void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue) {
+void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
   ENTT_ASSERT(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player");
   ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty");
   types::registry& registry = *sideHandle.registry();
+
+  ActionQueue& battleActionQueue = sideHandle.registry()->get<ActionQueue>(sideHandle.get<Battle>().battle);
 
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
@@ -14470,7 +14570,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision,
 
       actionHandle.emplace<SpeedSort>(speedSort);
 
-      sideActionQueue.actionQueue.push_back(actionHandle.entity());
+      battleActionQueue.actionQueue.push_back(actionHandle.entity());
     }
   }
   else if (sideDecision.decisions.holds<types::teamOrder>()) {
@@ -14483,7 +14583,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision,
 
     actionHandle.emplace<action::Team>(teamOrder);
 
-    sideActionQueue.actionQueue.push_back(actionHandle.entity());
+    battleActionQueue.actionQueue.push_back(actionHandle.entity());
   }
 }
 }  // namespace pokesim
@@ -17048,8 +17148,8 @@ void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
   ENTT_ASSERT(
     moveSlots.size() <= moveEntities.moveSlots.max_size(),
     "Cannot add more moves to a Pokemon than types::internal::MAX_MOVE_SLOTS");
-  for (std::size_t i = 0; i < moveSlots.size(); i++) {
-    moveEntities.moveSlots.push_back(moveSlots[i]);
+  for (types::entity moveSlot : moveSlots) {
+    moveEntities.moveSlots.push_back(moveSlot);
   }
 }
 
@@ -17396,7 +17496,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
       const auto& sources = srcEntityStorages.at(id);
       storage.reserve(storage.size() + sources.size() * count);
       for (types::entity src : sources) {
-        auto value = storage.value(src);
+        auto* value = storage.value(src);
         for (types::cloneIndex i = 0; i < count; i++) {
           storage.push(entityMap[src][i], value);
         }

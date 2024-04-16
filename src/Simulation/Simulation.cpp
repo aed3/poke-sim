@@ -1,5 +1,7 @@
 #include "Simulation.hpp"
 
+#include <SimulateTurn/SimulateTurn.hpp>
+
 #include "SimulationOptions.hpp"
 #include "SimulationResults.hpp"
 
@@ -35,7 +37,7 @@ simulate_turn::Results Simulation::simulateTurn(std::optional<simulate_turn::Opt
     simulateTurnOptions = options.value();
   }
 
-  // TODO(aed3): Add entry point
+  simulate_turn::run(*this);
 
   return {*this};
 }

@@ -1,10 +1,10 @@
 #pragma once
 
+#include <Utilities/MaxSizedVector.hpp>
 #include <cstdint>
 #include <type_traits>
 
 #include "Entity.hpp"
-#include "Utilities/MaxSizedVector.hpp"
 
 namespace pokesim::types {
 namespace internal {
@@ -25,12 +25,12 @@ using teamPositionIndex = std::uint8_t;
 using moveSlotPosition = std::uint8_t;
 
 template <typename T>
-using teamPositions = types::internal::maxSizedVector<T, internal::MAX_TEAM_SIZE>;
+using teamPositions = pokesim::internal::maxSizedVector<T, internal::MAX_TEAM_SIZE>;
 using teamOrder = types::teamPositions<types::teamPositionIndex>;
 
 template <typename T>
-using moveSlots = types::internal::maxSizedVector<T, internal::MAX_MOVE_SLOTS>;
+using moveSlots = pokesim::internal::maxSizedVector<T, internal::MAX_MOVE_SLOTS>;
 
 template <typename T>
-using sideSlots = types::internal::maxSizedVector<T, internal::MAX_ACTIVE_POKEMON_SLOTS>;
+using sideSlots = pokesim::internal::maxSizedVector<T, internal::MAX_ACTIVE_POKEMON_SLOTS>;
 }  // namespace pokesim::types

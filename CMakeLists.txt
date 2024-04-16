@@ -40,8 +40,8 @@ check_ipo_supported(RESULT IpoSupported OUTPUT error)
 
 set (SOURCES
   src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp
-  src/Battle/Helpers/Helpers.cpp
   src/Battle/Clone/Clone.cpp
+  src/Battle/Helpers/Helpers.cpp
   src/Battle/Setup/BattleStateSetup.cpp
   src/Battle/Setup/MoveStateSetup.cpp
   src/Battle/Setup/PokemonStateSetup.cpp
@@ -60,6 +60,7 @@ set (SOURCES
   src/Pokedex/Setup/SpeciesDexDataSetup.cpp
   src/SimulateTurn/Actions/ResolveDecision.cpp
   src/SimulateTurn/Actions/SpeedSort.cpp
+  src/SimulateTurn/SimulateTurn.cpp
   src/Simulation/Simulation.cpp
   src/Simulation/SimulationResults.cpp
   src/Simulation/SimulationSetup.cpp

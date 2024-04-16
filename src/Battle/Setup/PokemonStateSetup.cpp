@@ -80,8 +80,8 @@ void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
   ENTT_ASSERT(
     moveSlots.size() <= moveEntities.moveSlots.max_size(),
     "Cannot add more moves to a Pokemon than types::internal::MAX_MOVE_SLOTS");
-  for (std::size_t i = 0; i < moveSlots.size(); i++) {
-    moveEntities.moveSlots.push_back(moveSlots[i]);
+  for (types::entity moveSlot : moveSlots) {
+    moveEntities.moveSlots.push_back(moveSlot);
   }
 }
 

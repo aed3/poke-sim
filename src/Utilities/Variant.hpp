@@ -2,7 +2,7 @@
 
 #include <variant>
 
-namespace pokesim::types::internal {
+namespace pokesim::internal {
 template <typename... Types>
 class variant : public std::variant<Types...> {
  public:
@@ -31,4 +31,4 @@ class variant : public std::variant<Types...> {
     return std::get<Type>(*this);
   }
 };
-}  // namespace pokesim::types::internal
+}  // namespace pokesim::internal

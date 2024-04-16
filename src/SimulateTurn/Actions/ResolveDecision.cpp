@@ -2,6 +2,7 @@
 
 #include <Battle/Helpers/Helpers.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
+#include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/Names/SourceSlotName.hpp>
@@ -14,17 +15,19 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/ActionOrder.hpp>
 #include <Types/State.hpp>
-#include <Types/Utilities/Variant.hpp>
+#include <Utilities/Variant.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
 #include "Decisions.hpp"
 
 namespace pokesim {
-void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision, ActionQueue& sideActionQueue) {
+void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
   ENTT_ASSERT(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player");
   ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty");
   types::registry& registry = *sideHandle.registry();
+
+  ActionQueue& battleActionQueue = sideHandle.registry()->get<ActionQueue>(sideHandle.get<Battle>().battle);
 
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
@@ -74,7 +77,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision,
 
       actionHandle.emplace<SpeedSort>(speedSort);
 
-      sideActionQueue.actionQueue.push_back(actionHandle.entity());
+      battleActionQueue.actionQueue.push_back(actionHandle.entity());
     }
   }
   else if (sideDecision.decisions.holds<types::teamOrder>()) {
@@ -87,7 +90,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision,
 
     actionHandle.emplace<action::Team>(teamOrder);
 
-    sideActionQueue.actionQueue.push_back(actionHandle.entity());
+    battleActionQueue.actionQueue.push_back(actionHandle.entity());
   }
 }
 }  // namespace pokesim

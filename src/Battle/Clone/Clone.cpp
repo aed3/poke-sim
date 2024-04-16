@@ -29,7 +29,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
       const auto& sources = srcEntityStorages.at(id);
       storage.reserve(storage.size() + sources.size() * count);
       for (types::entity src : sources) {
-        auto value = storage.value(src);
+        auto* value = storage.value(src);
         for (types::cloneIndex i = 0; i < count; i++) {
           storage.push(entityMap[src][i], value);
         }
