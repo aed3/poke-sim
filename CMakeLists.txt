@@ -42,6 +42,8 @@ set (SOURCES
   src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp
   src/Battle/Clone/Clone.cpp
   src/Battle/Helpers/Helpers.cpp
+  src/Battle/ManageBattleState.cpp
+  src/Battle/Pokemon/ManagePokemonState.cpp
   src/Battle/Setup/BattleStateSetup.cpp
   src/Battle/Setup/MoveStateSetup.cpp
   src/Battle/Setup/PokemonStateSetup.cpp

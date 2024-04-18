@@ -3,7 +3,8 @@
 #include <Types/Entity.hpp>
 
 namespace pokesim {
-struct ActiveAction {
-  types::entity activeAction;
-};
+struct Pp;
+
+void deductPp(Pp& pp);
+void setLastMoveUsed(types::handle handle);
 }  // namespace pokesim

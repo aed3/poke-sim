@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ActionQueue.hpp"
-#include "ActiveAction.hpp"
+#include "Active.hpp"
 #include "Battle.hpp"
 #include "FoeSide.hpp"
 #include "Move.hpp"

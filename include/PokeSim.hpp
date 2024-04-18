@@ -88,19 +88,22 @@
  * src/Simulation/SimulationResults.cpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Simulation/Simulation.cpp
- * src/Components/EntityHolders/ActiveAction.hpp
+ * src/Battle/ManageBattleState.hpp
+ * src/Battle/Pokemon/ManagePokemonState.hpp
+ * src/Components/EntityHolders/Active.hpp
+ * src/Components/Names/SourceSlotName.hpp
+ * src/Components/Names/TargetSlotName.hpp
+ * src/Components/PP.hpp
+ * src/Components/Names/ItemNames.hpp
+ * src/Components/Names/MoveNames.hpp
+ * src/Components/SimulateTurn/ActionNames.hpp
+ * src/Components/SimulateTurn/ActionTags.hpp
  * src/Components/SpeedSort.hpp
  * src/Components/Tags/BattleTags.hpp
  * src/Components/Turn.hpp
  * src/SimulateTurn/ManageActionQueue.hpp
  * src/SimulateTurn/SimulateTurn.cpp
  * src/Components/EntityHolders/Team.hpp
- * src/Components/Names/SourceSlotName.hpp
- * src/Components/Names/TargetSlotName.hpp
- * src/Components/Names/ItemNames.hpp
- * src/Components/Names/MoveNames.hpp
- * src/Components/SimulateTurn/ActionNames.hpp
- * src/Components/SimulateTurn/ActionTags.hpp
  * src/Components/SimulateTurn/SpeedTieIndexes.hpp
  * src/Components/SimulateTurn/TeamAction.hpp
  * src/SimulateTurn/ManageActionQueue.cpp
@@ -117,7 +120,6 @@
  * src/Components/Chance.hpp
  * src/Components/MultiHit.hpp
  * src/Components/Names/TypeNames.hpp
- * src/Components/PP.hpp
  * src/Components/Priority.hpp
  * src/Components/Tags/MoveTags.hpp
  * src/Pokedex/Setup/MoveDexDataSetup.hpp
@@ -174,6 +176,8 @@
  * src/Components/RNGSeed.hpp
  * src/Components/Tags/PokemonTags.hpp
  * src/Battle/Setup/BattleStateSetup.cpp
+ * src/Battle/Pokemon/ManagePokemonState.cpp
+ * src/Battle/ManageBattleState.cpp
  * src/Battle/Helpers/Helpers.cpp
  * src/Components/EntityHolders/Move.hpp
  * src/Components/EntityHolders/Pokemon.hpp
@@ -13028,7 +13032,7 @@ struct BattleStateSetup : internal::StateSetupBase {
   inline void setActiveMove(types::entity activeMove);
   inline void setActivePokemon(types::entity activePokemon);
   inline void setActiveTarget(types::entity activeTarget);
-  inline void setActiveUser(types::entity activeSource);
+  inline void setActiveSource(types::entity activeSource);
   inline void setProbability(types::stateProbability probability);
 
   inline std::vector<BattleStateSetup> clone(std::optional<types::cloneIndex> cloneCount = std::nullopt);
@@ -14162,11 +14166,16 @@ types::view<MultipliedKoChance> Results::multipliedKoChanceResults() const {
 
 namespace pokesim {
 class Simulation;
+
 namespace simulate_turn {
 inline void run(Simulation& simulation);
 inline void runActiveAction(Simulation& simulation);
 inline void nextTurn(Simulation& simulation);
-}
+
+inline void runBeforeTurnAction(Simulation& simulation);
+inline void runMoveAction(Simulation& simulation);
+inline void runResidualAction(Simulation& simulation);
+}  // namespace simulate_turn
 }  // namespace pokesim
 
 /////////////////// END OF src/SimulateTurn/SimulateTurn.hpp ///////////////////
@@ -14258,15 +14267,160 @@ void Simulation::run() {
 
 ///////////////////// END OF src/Simulation/Simulation.cpp /////////////////////
 
-//////////// START OF src/Components/EntityHolders/ActiveAction.hpp ////////////
+////////////////// START OF src/Battle/ManageBattleState.hpp ///////////////////
+
+namespace pokesim {
+struct ActiveAction;
+struct ActiveSource;
+
+inline void setActiveTarget(types::handle handle, ActiveAction activeAction, ActiveSource activeSource);
+inline void setActiveMove(types::handle handle, ActiveAction activeAction);
+}  // namespace pokesim
+
+/////////////////// END OF src/Battle/ManageBattleState.hpp ////////////////////
+
+////////////// START OF src/Battle/Pokemon/ManagePokemonState.hpp //////////////
+
+namespace pokesim {
+struct Pp;
+
+inline void deductPp(Pp& pp);
+inline void setLastMoveUsed(types::handle handle);
+}  // namespace pokesim
+
+/////////////// END OF src/Battle/Pokemon/ManagePokemonState.hpp ///////////////
+
+/////////////// START OF src/Components/EntityHolders/Active.hpp ///////////////
 
 namespace pokesim {
 struct ActiveAction {
   types::entity activeAction;
 };
+
+struct ActiveMove {
+  types::entity activeMove;
+};
+
+struct ActiveTarget {
+  types::entity activeTarget;
+};
+
+struct ActiveSource {
+  types::entity activeSource;
+};
 }  // namespace pokesim
 
-///////////// END OF src/Components/EntityHolders/ActiveAction.hpp /////////////
+//////////////// END OF src/Components/EntityHolders/Active.hpp ////////////////
+
+/////////////// START OF src/Components/Names/SourceSlotName.hpp ///////////////
+
+namespace pokesim {
+/**
+ * @brief Represents the source slot for a move in a Pokemon battle.
+ */
+struct SourceSlotName {
+  Slot sourceSlot = Slot::NONE;
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/Names/SourceSlotName.hpp ////////////////
+
+/////////////// START OF src/Components/Names/TargetSlotName.hpp ///////////////
+
+namespace pokesim {
+/**
+ * @brief Represents the target slot for a move in a Pokemon battle.
+ *
+ * In a single battle, only P1A and P2A are valid targets. In a double battle, P1B and P2B are also valid.
+ */
+struct TargetSlotName {
+  Slot targetSlot = Slot::NONE;
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/Names/TargetSlotName.hpp ////////////////
+
+//////////////////////// START OF src/Components/PP.hpp ////////////////////////
+
+namespace pokesim {
+struct Pp {
+  types::pp pp = 0;
+};
+
+struct MaxPp {
+  types::pp maxPp = 5;
+};
+}  // namespace pokesim
+
+///////////////////////// END OF src/Components/PP.hpp /////////////////////////
+
+///////////////// START OF src/Components/Names/ItemNames.hpp //////////////////
+
+namespace pokesim {
+struct ItemName {
+  dex::Item name = dex::Item::NO_ITEM;
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/Names/ItemNames.hpp ///////////////////
+
+///////////////// START OF src/Components/Names/MoveNames.hpp //////////////////
+
+namespace pokesim {
+struct MoveName {
+  dex::Move name = dex::Move::NO_MOVE;
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/Names/MoveNames.hpp ///////////////////
+
+///////////// START OF src/Components/SimulateTurn/ActionNames.hpp /////////////
+
+namespace pokesim::action {
+// Component to make an action one where a Pokemon uses a move. Contains the name of the move being used.
+struct Move : MoveName {};
+// Component to make an action one where a player uses an item. Contains the name of the item being used.
+struct Item : ItemName {};
+}  // namespace pokesim::action
+
+////////////// END OF src/Components/SimulateTurn/ActionNames.hpp //////////////
+
+///////////// START OF src/Components/SimulateTurn/ActionTags.hpp //////////////
+
+namespace pokesim::action::tags {
+struct Active {};
+
+struct Switch {};
+
+// Action Tag for Switching: When a Pokemon is about to be switched out
+// Example: Pursuit activating
+struct PreSwitchOut {};
+// Action Tag for Switching: When a Pokemon is being switched out
+struct SwitchOut {};
+/**
+ * @brief Action Tag for Switching: When a Pokemon is being switched in because a player chose to directly switch the
+ * Pokemon in as their turn action
+ */
+struct PreTurnSwitchIn {};
+// Action Tag for Switching: When a Pokemon is being switched in because a team member switches out mid-turn
+// Examples: U-Turn, Baton Pash, Emergency Exit
+struct MidTurnSwitchIn {};
+// Action Tag for Switching: When a Pokemon is being switched in to replace a fainted team member
+struct PostFoeFaintSwitchIn {};
+
+// Action Tag: When Revival Blessing is being used on a fainted party member
+struct RevivalBlessing {};
+// Action Tag: When a mega evolution is activating
+struct MegaEvolve {};
+// Action Tag: When a primal reversion is activating
+struct PrimalRevert {};
+// Action Tag: When a Pokemon dynamaxing
+struct Dynamax {};
+// Action Tag: When a Pokemon is terastallizing
+struct Terastallize {};
+}  // namespace pokesim::action::tags
+
+////////////// END OF src/Components/SimulateTurn/ActionTags.hpp ///////////////
 
 //////////////////// START OF src/Components/SpeedSort.hpp /////////////////////
 
@@ -14295,7 +14449,7 @@ struct ActiveMove {};
 // Current Action Tag: The target of the active move
 struct ActiveMoveTarget {};
 // Current Action Tag: The user of the active move
-struct ActiveMoveUser {};
+struct ActiveMoveSource {};
 
 // Battle Turn State Tag: When a battle is in the middle of a turn
 struct BattleMidTurn {};
@@ -14339,26 +14493,43 @@ inline void setActiveAction(types::handle handle, ActionQueue& actionQueue);
 
 namespace pokesim::simulate_turn {
 void run(Simulation& simulation) {
-  simulation.view<resolveDecision>();
+  simulation.view<resolveDecision, tags::SimulateTurn>();
   simulation.registry.clear<SideDecision>();
 
-  simulation.view<addBeforeTurnAction>(entt::exclude_t<tags::BattleMidTurn>{});
+  simulation.view<addBeforeTurnAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});
   simulation.view<speedSort>();
-  simulation.view<addResidualAction>(entt::exclude_t<tags::BattleMidTurn>{});
+  simulation.view<addResidualAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});
 
-  auto turnEntities = simulation.registry.view<Turn>();
+  auto turnEntities = simulation.registry.view<Turn, tags::SimulateTurn>();
   simulation.registry.insert<tags::BattleMidTurn>(turnEntities.begin(), turnEntities.end());
 
-  simulation.view<setActiveAction>();
-  while (!simulation.registry.view<ActiveAction>().empty()) {
+  simulation.view<setActiveAction, tags::SimulateTurn>();
+  while (!simulation.registry.view<action::tags::Active>().empty()) {
     runActiveAction(simulation);
-    simulation.view<setActiveAction>();
+    simulation.view<setActiveAction, tags::SimulateTurn>();
   }
 
   nextTurn(simulation);
 }
 
-void runActiveAction(Simulation& simulation) {}
+void runActiveAction(Simulation& simulation) {
+  runBeforeTurnAction(simulation);
+  runMoveAction(simulation);
+  runResidualAction(simulation);
+}
+
+void runBeforeTurnAction(Simulation& simulation) {}
+
+void runMoveAction(Simulation& simulation) {
+  simulation.view<setActiveTarget, tags::SimulateTurn>();
+  simulation.view<setActiveMove, tags::SimulateTurn>();
+
+  simulation.view<deductPp, tags::ActiveMove>();
+  simulation.view<setLastMoveUsed, tags::ActiveMove>();
+}
+
+void runResidualAction(Simulation& simulation) {}
+
 void nextTurn(Simulation& simulation) {}
 }  // namespace pokesim::simulate_turn
 
@@ -14374,100 +14545,6 @@ struct Team {
 }  // namespace pokesim
 
 ///////////////// END OF src/Components/EntityHolders/Team.hpp /////////////////
-
-/////////////// START OF src/Components/Names/SourceSlotName.hpp ///////////////
-
-namespace pokesim {
-/**
- * @brief Represents the source slot for a move in a Pokemon battle.
- */
-struct SourceSlotName {
-  Slot sourceSlot = Slot::NONE;
-};
-}  // namespace pokesim
-
-//////////////// END OF src/Components/Names/SourceSlotName.hpp ////////////////
-
-/////////////// START OF src/Components/Names/TargetSlotName.hpp ///////////////
-
-namespace pokesim {
-/**
- * @brief Represents the target slot for a move in a Pokemon battle.
- *
- * In a single battle, only P1A and P2A are valid targets. In a double battle, P1B and P2B are also valid.
- */
-struct TargetSlotName {
-  Slot targetSlot = Slot::NONE;
-};
-}  // namespace pokesim
-
-//////////////// END OF src/Components/Names/TargetSlotName.hpp ////////////////
-
-///////////////// START OF src/Components/Names/ItemNames.hpp //////////////////
-
-namespace pokesim {
-struct ItemName {
-  dex::Item name = dex::Item::NO_ITEM;
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Components/Names/ItemNames.hpp ///////////////////
-
-///////////////// START OF src/Components/Names/MoveNames.hpp //////////////////
-
-namespace pokesim {
-struct MoveName {
-  dex::Move name = dex::Move::NO_MOVE;
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Components/Names/MoveNames.hpp ///////////////////
-
-///////////// START OF src/Components/SimulateTurn/ActionNames.hpp /////////////
-
-namespace pokesim::action {
-// Component to make an action one where a Pokemon uses a move. Contains the name of the move being used.
-struct Move : MoveName {};
-// Component to make an action one where a player uses an item. Contains the name of the item being used.
-struct Item : ItemName {};
-}  // namespace pokesim::action
-
-////////////// END OF src/Components/SimulateTurn/ActionNames.hpp //////////////
-
-///////////// START OF src/Components/SimulateTurn/ActionTags.hpp //////////////
-
-namespace pokesim::action::tags {
-struct Switch {};
-
-// Action Tag for Switching: When a Pokemon is about to be switched out
-// Example: Pursuit activating
-struct PreSwitchOut {};
-// Action Tag for Switching: When a Pokemon is being switched out
-struct SwitchOut {};
-/**
- * @brief Action Tag for Switching: When a Pokemon is being switched in because a player chose to directly switch the
- * Pokemon in as their turn action
- */
-struct PreTurnSwitchIn {};
-// Action Tag for Switching: When a Pokemon is being switched in because a team member switches out mid-turn
-// Examples: U-Turn, Baton Pash, Emergency Exit
-struct MidTurnSwitchIn {};
-// Action Tag for Switching: When a Pokemon is being switched in to replace a fainted team member
-struct PostFoeFaintSwitchIn {};
-
-// Action Tag: When Revival Blessing is being used on a fainted party member
-struct RevivalBlessing {};
-// Action Tag: When a mega evolution is activating
-struct MegaEvolve {};
-// Action Tag: When a primal reversion is activating
-struct PrimalRevert {};
-// Action Tag: When a Pokemon dynamaxing
-struct Dynamax {};
-// Action Tag: When a Pokemon is terastallizing
-struct Terastallize {};
-}  // namespace pokesim::action::tags
-
-////////////// END OF src/Components/SimulateTurn/ActionTags.hpp ///////////////
 
 /////////// START OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ///////////
 
@@ -14858,20 +14935,6 @@ struct TypeName {
 }  // namespace pokesim
 
 ////////////////// END OF src/Components/Names/TypeNames.hpp ///////////////////
-
-//////////////////////// START OF src/Components/PP.hpp ////////////////////////
-
-namespace pokesim {
-struct Pp {
-  types::pp pp = 0;
-};
-
-struct MaxPp {
-  types::pp maxPp = 5;
-};
-}  // namespace pokesim
-
-///////////////////////// END OF src/Components/PP.hpp /////////////////////////
 
 ///////////////////// START OF src/Components/Priority.hpp /////////////////////
 
@@ -17423,6 +17486,7 @@ void BattleStateSetup::setTurn(types::battleTurn turn) {
 }
 
 void BattleStateSetup::setActiveMove(types::entity activeMove) {
+  handle.emplace<ActiveMove>(activeMove);
   handle.registry()->emplace<tags::ActiveMove>(activeMove);
 }
 
@@ -17431,11 +17495,13 @@ void BattleStateSetup::setActivePokemon(types::entity activePokemon) {
 }
 
 void BattleStateSetup::setActiveTarget(types::entity activeTarget) {
+  handle.emplace<ActiveTarget>(activeTarget);
   handle.registry()->emplace<tags::ActiveMoveTarget>(activeTarget);
 }
 
-void BattleStateSetup::setActiveUser(types::entity activeSource) {
-  handle.registry()->emplace<tags::ActiveMoveUser>(activeSource);
+void BattleStateSetup::setActiveSource(types::entity activeSource) {
+  handle.emplace<ActiveSource>(activeSource);
+  handle.registry()->emplace<tags::ActiveMoveSource>(activeSource);
 }
 
 void BattleStateSetup::setProbability(types::stateProbability probability) {
@@ -17461,6 +17527,25 @@ std::vector<BattleStateSetup> BattleStateSetup::clone(std::optional<types::clone
 }  // namespace pokesim
 
 ///////////////// END OF src/Battle/Setup/BattleStateSetup.cpp /////////////////
+
+////////////// START OF src/Battle/Pokemon/ManagePokemonState.cpp //////////////
+
+namespace pokesim {
+void deductPp(Pp& pp) {}
+void setLastMoveUsed(types::handle handle) {}
+}  // namespace pokesim
+
+/////////////// END OF src/Battle/Pokemon/ManagePokemonState.cpp ///////////////
+
+////////////////// START OF src/Battle/ManageBattleState.cpp ///////////////////
+
+namespace pokesim {
+void setActiveTarget(types::handle handle, ActiveAction activeAction, ActiveSource activeSource) {}
+void setActiveMove(types::handle handle, ActiveAction activeAction) {}
+
+}  // namespace pokesim
+
+/////////////////// END OF src/Battle/ManageBattleState.cpp ////////////////////
 
 /////////////////// START OF src/Battle/Helpers/Helpers.cpp ////////////////////
 
