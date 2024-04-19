@@ -88,6 +88,13 @@
  * src/Simulation/SimulationResults.cpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Simulation/Simulation.cpp
+ * src/Simulation/RunEvent.hpp
+ * src/Simulation/RunEvent.cpp
+ * src/Simulation/RandomChance.hpp
+ * src/Simulation/RandomChance.cpp
+ * src/Components/MultiHit.hpp
+ * src/Simulation/MoveHitSteps.hpp
+ * src/Simulation/MoveHitSteps.cpp
  * src/Battle/ManageBattleState.hpp
  * src/Battle/Pokemon/ManagePokemonState.hpp
  * src/Components/EntityHolders/Active.hpp
@@ -118,7 +125,6 @@
  * src/Components/Accuracy.hpp
  * src/Components/BasePower.hpp
  * src/Components/Chance.hpp
- * src/Components/MultiHit.hpp
  * src/Components/Names/TypeNames.hpp
  * src/Components/Priority.hpp
  * src/Components/Tags/MoveTags.hpp
@@ -14175,6 +14181,8 @@ inline void nextTurn(Simulation& simulation);
 inline void runBeforeTurnAction(Simulation& simulation);
 inline void runMoveAction(Simulation& simulation);
 inline void runResidualAction(Simulation& simulation);
+
+inline void useMove(Simulation& simulation);
 }  // namespace simulate_turn
 }  // namespace pokesim
 
@@ -14266,6 +14274,118 @@ void Simulation::run() {
 }  // namespace pokesim
 
 ///////////////////// END OF src/Simulation/Simulation.cpp /////////////////////
+
+///////////////////// START OF src/Simulation/RunEvent.hpp /////////////////////
+
+namespace pokesim {
+class Simulation;
+
+inline void runAccuracyEvent(Simulation& simulation);
+inline void runModifyAccuracyEvent(Simulation& simulation);
+inline void runModifyCritRatioEvent(Simulation& simulation);
+inline void runBasePowerEvent(Simulation& simulation);
+inline void runDamagingHitEvent(Simulation& simulation);
+}  // namespace pokesim
+
+////////////////////// END OF src/Simulation/RunEvent.hpp //////////////////////
+
+///////////////////// START OF src/Simulation/RunEvent.cpp /////////////////////
+
+namespace pokesim {
+void runAccuracyEvent(Simulation& simulation) {}
+
+void runModifyAccuracyEvent(Simulation& simulation) {}
+
+void runModifyCritRatioEvent(Simulation& simulation) {}
+
+void runBasePowerEvent(Simulation& simulation) {}
+
+void runDamagingHitEvent(Simulation& simulation) {}
+}  // namespace pokesim
+
+////////////////////// END OF src/Simulation/RunEvent.cpp //////////////////////
+
+/////////////////// START OF src/Simulation/RandomChance.hpp ///////////////////
+
+namespace pokesim {
+class Simulation;
+
+inline void accuracyRandomChance(Simulation& simulation);
+
+inline void sampleRandomChance(Simulation& simulation);
+}  // namespace pokesim
+
+//////////////////// END OF src/Simulation/RandomChance.hpp ////////////////////
+
+/////////////////// START OF src/Simulation/RandomChance.cpp ///////////////////
+
+namespace pokesim {
+void accuracyRandomChance(Simulation& simulation) {}
+
+void sampleRandomChance(Simulation& simulation) {}
+}  // namespace pokesim
+
+//////////////////// END OF src/Simulation/RandomChance.cpp ////////////////////
+
+///////////////////// START OF src/Components/MultiHit.hpp /////////////////////
+
+namespace pokesim {
+// The minimum and maximum number of hits a multi-hit move can cause
+struct MultiHit {
+  types::moveHits minHits = 2;
+  types::moveHits maxHits = 5;
+};
+
+struct HitCount {
+  types::moveHits hitCount = 1;
+};
+}  // namespace pokesim
+
+////////////////////// END OF src/Components/MultiHit.hpp //////////////////////
+
+/////////////////// START OF src/Simulation/MoveHitSteps.hpp ///////////////////
+
+namespace pokesim {
+class Simulation;
+
+inline void setMoveHitCount(Simulation& simulation);
+
+inline void accuracyCheckStep(Simulation& simulation);
+inline void moveHitStep(Simulation& simulation);
+
+inline void runMoveHitSteps(Simulation& simulation);
+}  // namespace pokesim
+
+//////////////////// END OF src/Simulation/MoveHitSteps.hpp ////////////////////
+
+/////////////////// START OF src/Simulation/MoveHitSteps.cpp ///////////////////
+
+namespace pokesim {
+void setMoveHitCount(Simulation& simulation) {
+  sampleRandomChance(simulation);
+}
+
+void accuracyCheckStep(Simulation& simulation) {
+  runModifyAccuracyEvent(simulation);
+  runAccuracyEvent(simulation);
+
+  accuracyRandomChance(simulation);
+}
+
+void moveHitStep(Simulation& simulation) {
+  setMoveHitCount(simulation);
+
+  while (!simulation.registry.view<HitCount>().empty()) {
+
+  }
+}
+
+void runMoveHitSteps(Simulation& simulation) {
+  accuracyCheckStep(simulation);
+}
+}  // namespace pokesim
+
+//////////////////// END OF src/Simulation/MoveHitSteps.cpp ////////////////////
 
 ////////////////// START OF src/Battle/ManageBattleState.hpp ///////////////////
 
@@ -14526,11 +14646,17 @@ void runMoveAction(Simulation& simulation) {
 
   simulation.view<deductPp, tags::ActiveMove>();
   simulation.view<setLastMoveUsed, tags::ActiveMove>();
+
+  useMove(simulation);
 }
 
 void runResidualAction(Simulation& simulation) {}
 
 void nextTurn(Simulation& simulation) {}
+
+void useMove(Simulation& simulation) {
+  runMoveHitSteps(simulation);
+}
 }  // namespace pokesim::simulate_turn
 
 /////////////////// END OF src/SimulateTurn/SimulateTurn.cpp ///////////////////
@@ -14913,18 +15039,6 @@ struct Chance {
 }  // namespace pokesim
 
 /////////////////////// END OF src/Components/Chance.hpp ///////////////////////
-
-///////////////////// START OF src/Components/MultiHit.hpp /////////////////////
-
-namespace pokesim {
-// The minimum and maximum number of hits a multi-hit move can cause
-struct MultiHit {
-  types::moveHits minHits = 2;
-  types::moveHits maxHits = 5;
-};
-}  // namespace pokesim
-
-////////////////////// END OF src/Components/MultiHit.hpp //////////////////////
 
 ///////////////// START OF src/Components/Names/TypeNames.hpp //////////////////
 

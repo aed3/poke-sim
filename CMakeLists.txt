@@ -48,6 +48,7 @@ set (SOURCES
   src/Battle/Setup/MoveStateSetup.cpp
   src/Battle/Setup/PokemonStateSetup.cpp
   src/Battle/Setup/SideStateSetup.cpp
+  src/CalcDamage/CalcDamage.cpp
   src/CalcDamage/Setup/CalcDamageInputSetup.cpp
   src/Components/Tags/AbilityTags.cpp
   src/Components/Tags/ItemTags.cpp
@@ -62,6 +63,9 @@ set (SOURCES
   src/Pokedex/Setup/SpeciesDexDataSetup.cpp
   src/SimulateTurn/ManageActionQueue.cpp
   src/SimulateTurn/SimulateTurn.cpp
+  src/Simulation/MoveHitSteps.cpp
+  src/Simulation/RandomChance.cpp
+  src/Simulation/RunEvent.cpp
   src/Simulation/Simulation.cpp
   src/Simulation/SimulationResults.cpp
   src/Simulation/SimulationSetup.cpp

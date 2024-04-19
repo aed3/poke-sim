@@ -211,4 +211,12 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
       idealList);
   }
 }
+
+TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
+  Simulation::BattleCreationInfo battleCreationInfo{};
+  Simulation simulation = createSingleBattleSimulation(battleCreationInfo);
+
+  battleCreationInfo.runWithSimulateTurn = true;
+  simulation.simulateTurn();
+}
 }  // namespace pokesim

@@ -8,4 +8,8 @@ struct MultiHit {
   types::moveHits minHits = 2;
   types::moveHits maxHits = 5;
 };
+
+struct HitCount {
+  types::moveHits hitCount = 1;
+};
 }  // namespace pokesim

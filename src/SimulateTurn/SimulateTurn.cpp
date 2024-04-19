@@ -13,6 +13,7 @@
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Turn.hpp>
+#include <Simulation/MoveHitSteps.hpp>
 #include <Simulation/Simulation.hpp>
 
 #include "ManageActionQueue.hpp"
@@ -52,9 +53,15 @@ void runMoveAction(Simulation& simulation) {
 
   simulation.view<deductPp, tags::ActiveMove>();
   simulation.view<setLastMoveUsed, tags::ActiveMove>();
+
+  useMove(simulation);
 }
 
 void runResidualAction(Simulation& simulation) {}
 
 void nextTurn(Simulation& simulation) {}
+
+void useMove(Simulation& simulation) {
+  runMoveHitSteps(simulation);
+}
 }  // namespace pokesim::simulate_turn
