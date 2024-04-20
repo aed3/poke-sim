@@ -54,7 +54,10 @@ set (SOURCES
   src/Components/Tags/ItemTags.cpp
   src/Components/Tags/NatureTags.cpp
   src/Components/Tags/StatusTags.cpp
+  src/Pokedex/Abilities/AbilityEvents.cpp
   src/Pokedex/Pokedex.cpp
+  src/Pokedex/Setup/AbilityDexDataSetup.cpp
+  src/Pokedex/Setup/GetAbilityBuild.cpp
   src/Pokedex/Setup/GetItemBuild.cpp
   src/Pokedex/Setup/GetMoveBuild.cpp
   src/Pokedex/Setup/GetSpeciesBuild.cpp

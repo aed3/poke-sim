@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Abilities/Static.hpp"
 #include "Items/AssaultVest.hpp"
 #include "Items/BrightPowder.hpp"
 #include "Items/ChoiceScarf.hpp"
@@ -14,6 +15,7 @@
 #include "Moves/WillOWisp.hpp"
 #include "Names.hpp"
 #include "Pokedex.hpp"
+#include "Setup/AbilityDexDataSetup.hpp"
 #include "Setup/DexDataSetup.hpp"
 #include "Setup/DexDataTags.hpp"
 #include "Setup/ItemDexDataSetup.hpp"

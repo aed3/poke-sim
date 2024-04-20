@@ -88,10 +88,12 @@
  * src/Simulation/SimulationResults.cpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Simulation/Simulation.cpp
+ * src/Pokedex/Abilities/Static.hpp
  * src/Simulation/RunEvent.hpp
  * src/Simulation/RunEvent.cpp
  * src/Simulation/RandomChance.hpp
  * src/Simulation/RandomChance.cpp
+ * src/CalcDamage/CalcDamage.hpp
  * src/Components/MultiHit.hpp
  * src/Simulation/MoveHitSteps.hpp
  * src/Simulation/MoveHitSteps.cpp
@@ -154,8 +156,13 @@
  * src/Pokedex/Items/FocusSash.hpp
  * src/Pokedex/Items/LifeOrb.hpp
  * src/Pokedex/Setup/GetItemBuild.cpp
+ * src/Pokedex/Setup/AbilityDexDataSetup.hpp
+ * src/Pokedex/Setup/GetAbilityBuild.cpp
+ * src/Components/Names/AbilityNames.hpp
+ * src/Pokedex/Setup/AbilityDexDataSetup.cpp
  * external/entt/container/dense_set.hpp
  * src/Pokedex/Pokedex.cpp
+ * src/Pokedex/Abilities/AbilityEvents.cpp
  * src/Components/Tags/StatusTags.cpp
  * src/Components/Tags/NatureTags.hpp
  * src/Components/Tags/NatureTags.cpp
@@ -164,12 +171,12 @@
  * src/Components/Tags/AbilityTags.hpp
  * src/Components/Tags/AbilityTags.cpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.cpp
+ * src/CalcDamage/CalcDamage.cpp
  * src/Components/EntityHolders/FoeSide.hpp
  * src/Battle/Setup/SideStateSetup.cpp
  * src/Components/EntityHolders/MoveSlots.hpp
  * src/Components/ID.hpp
  * src/Components/Level.hpp
- * src/Components/Names/AbilityNames.hpp
  * src/Components/Names/GenderNames.hpp
  * src/Components/Names/NatureNames.hpp
  * src/Components/Names/StatusNames.hpp
@@ -13410,6 +13417,7 @@ class Pokedex {
   entt::dense_map<dex::Species, types::entity> speciesMap{};
   entt::dense_map<dex::Item, types::entity> itemsMap{};
   entt::dense_map<dex::Move, types::entity> movesMap{};
+  entt::dense_map<dex::Ability, types::entity> abilitiesMap{};
 
   template <typename Build, typename T>
   inline void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
@@ -13417,6 +13425,7 @@ class Pokedex {
   inline types::entity buildSpecies(dex::Species species);
   inline types::entity buildMove(dex::Move move);
   inline types::entity buildItem(dex::Item item);
+  inline types::entity buildAbility(dex::Ability ability);
 
  public:
   /**
@@ -13463,6 +13472,17 @@ class Pokedex {
    * @note Only call this once per move per Pokedex instance.
    */
   inline void loadMoves(const entt::dense_set<dex::Move>& moveSet);
+
+  /**
+   * @brief Calls the load functions for a set of abilities to add their data to a Pokedex's storage.
+   *
+   * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
+   * instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function
+   * should only be called with a set of those 12 Pokemon's abilities.
+   *
+   * @note Only call this once per ability per Pokedex instance.
+   */
+  inline void loadAbilities(const entt::dense_set<dex::Ability>& abilitySet);
 
   /**
    * @brief Returns references to the given dex data components for a species
@@ -14275,6 +14295,34 @@ void Simulation::run() {
 
 ///////////////////// END OF src/Simulation/Simulation.cpp /////////////////////
 
+////////////////// START OF src/Pokedex/Abilities/Static.hpp ///////////////////
+
+#include <string_view>
+
+namespace pokesim {
+class Simulation;
+}
+
+namespace pokesim::dex {
+namespace internal {
+struct StaticEvents {
+  inline static void onDamagingHit(Simulation& simulation);
+};
+}  // namespace internal
+
+template <GameMechanics>
+struct Static : internal::StaticEvents {
+  static constexpr dex::Ability name = dex::Ability::STATIC;
+
+  struct Strings {
+    static constexpr std::string_view name = "Static";
+    static constexpr std::string_view smogonId = "static";
+  };
+};
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Abilities/Static.hpp ////////////////////
+
 ///////////////////// START OF src/Simulation/RunEvent.hpp /////////////////////
 
 namespace pokesim {
@@ -14300,7 +14348,9 @@ void runModifyCritRatioEvent(Simulation& simulation) {}
 
 void runBasePowerEvent(Simulation& simulation) {}
 
-void runDamagingHitEvent(Simulation& simulation) {}
+void runDamagingHitEvent(Simulation& simulation) {
+  dex::Static<GameMechanics::NONE>::onDamagingHit(simulation);
+}
 }  // namespace pokesim
 
 ////////////////////// END OF src/Simulation/RunEvent.cpp //////////////////////
@@ -14310,7 +14360,7 @@ void runDamagingHitEvent(Simulation& simulation) {}
 namespace pokesim {
 class Simulation;
 
-inline void accuracyRandomChance(Simulation& simulation);
+inline void randomChance(Simulation& simulation);
 
 inline void sampleRandomChance(Simulation& simulation);
 }  // namespace pokesim
@@ -14320,12 +14370,31 @@ inline void sampleRandomChance(Simulation& simulation);
 /////////////////// START OF src/Simulation/RandomChance.cpp ///////////////////
 
 namespace pokesim {
-void accuracyRandomChance(Simulation& simulation) {}
+void randomChance(Simulation& simulation) {}
 
 void sampleRandomChance(Simulation& simulation) {}
 }  // namespace pokesim
 
 //////////////////// END OF src/Simulation/RandomChance.cpp ////////////////////
+
+//////////////////// START OF src/CalcDamage/CalcDamage.hpp ////////////////////
+
+namespace pokesim {
+class Simulation;
+
+namespace calc_damage {
+inline void run(Simulation& simulation);
+
+inline void modifyDamageWithTypes(Simulation& simulation);
+inline void getDamageRole(Simulation& simulation);
+
+inline void criticalHitRandomChance(Simulation& simulation);
+inline void getCritMultiplier(Simulation& simulation);
+inline void getDamage(Simulation& simulation);
+}  // namespace calc_damage
+}  // namespace pokesim
+
+///////////////////// END OF src/CalcDamage/CalcDamage.hpp /////////////////////
 
 ///////////////////// START OF src/Components/MultiHit.hpp /////////////////////
 
@@ -14350,6 +14419,11 @@ class Simulation;
 
 inline void setMoveHitCount(Simulation& simulation);
 
+inline void trySetStatusFromEffect(Simulation& simulation);
+inline void applyDamage(Simulation& simulation);
+inline void runSecondaryMoveEffects(Simulation& simulation);
+
+inline void accuracyRandomChance(Simulation& simulation);
 inline void accuracyCheckStep(Simulation& simulation);
 inline void moveHitStep(Simulation& simulation);
 
@@ -14365,6 +14439,22 @@ void setMoveHitCount(Simulation& simulation) {
   sampleRandomChance(simulation);
 }
 
+void applyDamage(Simulation& simulation) {}
+
+void trySetStatusFromEffect(Simulation& simulation) {}
+
+void runSecondaryMoveEffects(Simulation& simulation) {
+  // Set secondary effect of active move
+
+  trySetStatusFromEffect(simulation);
+}
+
+void accuracyRandomChance(Simulation& simulation) {
+  // Set accuracies as random chance variable
+
+  randomChance(simulation);
+}
+
 void accuracyCheckStep(Simulation& simulation) {
   runModifyAccuracyEvent(simulation);
   runAccuracyEvent(simulation);
@@ -14376,7 +14466,12 @@ void moveHitStep(Simulation& simulation) {
   setMoveHitCount(simulation);
 
   while (!simulation.registry.view<HitCount>().empty()) {
+    calc_damage::run(simulation);
 
+    // for simulate turn only
+    applyDamage(simulation);
+    runSecondaryMoveEffects(simulation);
+    runDamagingHitEvent(simulation);
   }
 }
 
@@ -16081,6 +16176,89 @@ types::entity Pokedex::buildItem(dex::Item item) {
 
 ////////////////// END OF src/Pokedex/Setup/GetItemBuild.cpp ///////////////////
 
+////////////// START OF src/Pokedex/Setup/AbilityDexDataSetup.hpp //////////////
+
+namespace pokesim::dex::internal {
+struct AbilityDexDataSetup : DexDataSetup {
+  AbilityDexDataSetup(Pokedex* pokedex) : DexDataSetup(pokedex) {}
+
+  inline void setName(Ability ability);
+};
+}  // namespace pokesim::dex::internal
+
+/////////////// END OF src/Pokedex/Setup/AbilityDexDataSetup.hpp ///////////////
+
+//////////////// START OF src/Pokedex/Setup/GetAbilityBuild.cpp ////////////////
+
+#include <type_traits>
+
+
+// TODO(aed3): Make this and the individual ability files auto generated
+
+namespace pokesim {
+namespace internal {
+template <typename T>
+struct BuildAbility {
+ private:
+ public:
+  static types::entity build(Pokedex* pokedex) {
+    dex::internal::AbilityDexDataSetup ability(pokedex);
+
+    ability.setName(T::name);
+
+    return ability.entity();
+  }
+};
+
+template <template <GameMechanics> class T>
+auto buildAbilitySV(Pokedex* pokedex) {
+  return BuildAbility<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
+}
+};  // namespace internal
+
+types::entity Pokedex::buildAbility(dex::Ability ability) {
+  // Tidy check ignored because "using namespace" is in function
+  using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
+  using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
+
+  switch (mechanics) {
+    case GameMechanics::SCARLET_VIOLET: {
+      switch (ability) {
+        case Ability::STATIC: return buildAbilitySV<Static>(this);
+        default: break;
+      }
+      break;
+    }
+    default: break;
+  }
+
+  ENTT_FAIL("Building an ability that does not exist");
+  return types::entity{};
+}
+};  // namespace pokesim
+
+///////////////// END OF src/Pokedex/Setup/GetAbilityBuild.cpp /////////////////
+
+//////////////// START OF src/Components/Names/AbilityNames.hpp ////////////////
+
+namespace pokesim {
+struct AbilityName {
+  dex::Ability name = dex::Ability::NO_ABILITY;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/AbilityNames.hpp /////////////////
+
+////////////// START OF src/Pokedex/Setup/AbilityDexDataSetup.cpp //////////////
+
+namespace pokesim::dex::internal {
+void AbilityDexDataSetup::setName(Ability ability) {
+  handle.emplace<AbilityName>(ability);
+}
+}  // namespace pokesim::dex::internal
+
+/////////////// END OF src/Pokedex/Setup/AbilityDexDataSetup.cpp ///////////////
+
 //////////////// START OF external/entt/container/dense_set.hpp ////////////////
 
 #ifndef ENTT_CONTAINER_DENSE_SET_HPP
@@ -16998,9 +17176,20 @@ void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
   load(movesMap, moveSet, [this](dex::Move move) { return buildMove(move); });
 }
 
+void Pokedex::loadAbilities(const entt::dense_set<dex::Ability>& abilitySet) {
+  load(abilitiesMap, abilitySet, [this](dex::Ability ability) { return buildAbility(ability); });
+}
 }  // namespace pokesim
 
 //////////////////////// END OF src/Pokedex/Pokedex.cpp ////////////////////////
+
+/////////////// START OF src/Pokedex/Abilities/AbilityEvents.cpp ///////////////
+
+namespace pokesim::dex {
+void internal::StaticEvents::onDamagingHit(Simulation& simulation) {}
+}  // namespace pokesim::dex
+
+//////////////// END OF src/Pokedex/Abilities/AbilityEvents.cpp ////////////////
 
 ///////////////// START OF src/Components/Tags/StatusTags.cpp //////////////////
 
@@ -17204,6 +17393,42 @@ void InputSetup::setBattle(types::entity entity) {
 
 ///////////// END OF src/CalcDamage/Setup/CalcDamageInputSetup.cpp /////////////
 
+//////////////////// START OF src/CalcDamage/CalcDamage.cpp ////////////////////
+
+namespace pokesim::calc_damage {
+void run(Simulation& simulation) {}
+
+void criticalHitRandomChance(Simulation& simulation) {
+  // Set critical hit chances as random chance variable
+
+  randomChance(simulation);
+}
+
+void modifyDamageWithTypes(Simulation& simulation) {}
+
+void getDamageRole(Simulation& simulation) {
+  sampleRandomChance(simulation);
+}
+
+void getCritMultiplier(Simulation& simulation) {
+  runModifyCritRatioEvent(simulation);
+}
+
+void getDamage(Simulation& simulation) {
+  getCritMultiplier(simulation);
+  criticalHitRandomChance(simulation);
+
+  // Get base power, boosts, get atk/def stats
+  runBasePowerEvent(simulation);
+
+  getDamageRole(simulation);
+
+  modifyDamageWithTypes(simulation);
+}
+}  // namespace pokesim::calc_damage
+
+///////////////////// END OF src/CalcDamage/CalcDamage.cpp /////////////////////
+
 ////////////// START OF src/Components/EntityHolders/FoeSide.hpp ///////////////
 
 namespace pokesim {
@@ -17281,16 +17506,6 @@ struct Level {
 }  // namespace pokesim
 
 /////////////////////// END OF src/Components/Level.hpp ////////////////////////
-
-//////////////// START OF src/Components/Names/AbilityNames.hpp ////////////////
-
-namespace pokesim {
-struct AbilityName {
-  dex::Ability name = dex::Ability::NO_ABILITY;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/AbilityNames.hpp /////////////////
 
 //////////////// START OF src/Components/Names/GenderNames.hpp /////////////////
 

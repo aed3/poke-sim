@@ -3,7 +3,7 @@
 namespace pokesim {
 class Simulation;
 
-void accuracyRandomChance(Simulation& simulation);
+void randomChance(Simulation& simulation);
 
 void sampleRandomChance(Simulation& simulation);
 }  // namespace pokesim

@@ -33,4 +33,7 @@ void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
   load(movesMap, moveSet, [this](dex::Move move) { return buildMove(move); });
 }
 
+void Pokedex::loadAbilities(const entt::dense_set<dex::Ability>& abilitySet) {
+  load(abilitiesMap, abilitySet, [this](dex::Ability ability) { return buildAbility(ability); });
+}
 }  // namespace pokesim
