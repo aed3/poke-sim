@@ -7,7 +7,7 @@ struct ActiveMove {};
 // Current Action Tag: The target of the active move
 struct ActiveMoveTarget {};
 // Current Action Tag: The user of the active move
-struct ActiveMoveUser {};
+struct ActiveMoveSource {};
 
 // Battle Turn State Tag: When a battle is in the middle of a turn
 struct BattleMidTurn {};

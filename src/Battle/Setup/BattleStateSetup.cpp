@@ -3,6 +3,7 @@
 #include <Battle/Clone/Clone.hpp>
 #include <Components/CloneFromCloneTo.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
+#include <Components/EntityHolders/Active.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/ID.hpp>
 #include <Components/Probability.hpp>
@@ -64,6 +65,7 @@ void BattleStateSetup::setTurn(types::battleTurn turn) {
 }
 
 void BattleStateSetup::setActiveMove(types::entity activeMove) {
+  handle.emplace<ActiveMove>(activeMove);
   handle.registry()->emplace<tags::ActiveMove>(activeMove);
 }
 
@@ -72,11 +74,13 @@ void BattleStateSetup::setActivePokemon(types::entity activePokemon) {
 }
 
 void BattleStateSetup::setActiveTarget(types::entity activeTarget) {
+  handle.emplace<ActiveTarget>(activeTarget);
   handle.registry()->emplace<tags::ActiveMoveTarget>(activeTarget);
 }
 
-void BattleStateSetup::setActiveUser(types::entity activeSource) {
-  handle.registry()->emplace<tags::ActiveMoveUser>(activeSource);
+void BattleStateSetup::setActiveSource(types::entity activeSource) {
+  handle.emplace<ActiveSource>(activeSource);
+  handle.registry()->emplace<tags::ActiveMoveSource>(activeSource);
 }
 
 void BattleStateSetup::setProbability(types::stateProbability probability) {

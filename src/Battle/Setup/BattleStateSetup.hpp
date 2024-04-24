@@ -42,7 +42,7 @@ struct BattleStateSetup : internal::StateSetupBase {
   void setActiveMove(types::entity activeMove);
   void setActivePokemon(types::entity activePokemon);
   void setActiveTarget(types::entity activeTarget);
-  void setActiveUser(types::entity activeSource);
+  void setActiveSource(types::entity activeSource);
   void setProbability(types::stateProbability probability);
 
   std::vector<BattleStateSetup> clone(std::optional<types::cloneIndex> cloneCount = std::nullopt);

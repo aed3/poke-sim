@@ -128,6 +128,7 @@ types::entity targetSlotToEntity(
 TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
+  battleInfo.runWithSimulateTurn = true;
 
   SideDecision p1Decision{PlayerSideId::P1};
   SideDecision p2Decision{PlayerSideId::P2};
@@ -144,12 +145,19 @@ TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
     simulation.createInitialStates({battleInfo});
 
     types::registry& registry = simulation.registry;
-    auto group = registry.group<ActionQueue, Id>();
+    auto group = registry.group<ActionQueue, Id, Sides>();
     REQUIRE(group.size() == battleInfo.decisionsToSimulate.size());
 
     for (std::size_t i = 0; i < battleInfo.decisionsToSimulate.size(); i++) {
-      const auto id = registry.get<Id>(group[i]).id;
+      const auto sides = registry.get<Sides>(group[i]);
+      const types::handle p1Handle = {registry, sides.p1};
+      const types::handle p2Handle = {registry, sides.p2};
+
+      simulate_turn::resolveDecision(p1Handle, p1Handle.get<SideDecision>());
+      simulate_turn::resolveDecision(p2Handle, p2Handle.get<SideDecision>());
+
       const auto& queue = registry.get<ActionQueue>(group[i]).actionQueue;
+      const auto id = registry.get<Id>(group[i]).id;
       REQUIRE(queue.size() == 2);
 
       auto p1DecisionEntity = *std::find_if(queue.begin(), queue.end(), [&](types::entity entity) {

@@ -20,7 +20,7 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
     types::handle handle{registry, registry.create()};
     ActionQueue sortedQueue = initialQueue;
 
-    speedSort(handle, sortedQueue);
+    simulate_turn::speedSort(handle, sortedQueue);
 
     REQUIRE(initialQueue.actionQueue.size() == sortedQueue.actionQueue.size());
     for (types::entity entity : initialQueue.actionQueue) {
@@ -210,5 +210,13 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
       },
       idealList);
   }
+}
+
+TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
+  Simulation::BattleCreationInfo battleCreationInfo{};
+  Simulation simulation = createSingleBattleSimulation(battleCreationInfo);
+
+  battleCreationInfo.runWithSimulateTurn = true;
+  simulation.simulateTurn();
 }
 }  // namespace pokesim

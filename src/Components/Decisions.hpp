@@ -5,7 +5,7 @@
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/Enums/Slot.hpp>
 #include <Types/State.hpp>
-#include <Types/Utilities/Variant.hpp>
+#include <Utilities/Variant.hpp>
 #include <optional>
 
 namespace pokesim {
@@ -29,6 +29,6 @@ struct SlotDecision {
 
 struct SideDecision {
   PlayerSideId sideId = PlayerSideId::NONE;
-  types::internal::variant<types::slotDecisions, types::teamOrder> decisions;
+  internal::variant<types::slotDecisions, types::teamOrder> decisions;
 };
 }  // namespace pokesim

@@ -1,9 +1,10 @@
 #pragma once
 
+#include <Components/Decisions.hpp>
 #include <Components/EVsIVs.hpp>
-#include <SimulateTurn/Actions/Decisions.hpp>
 #include <Types/Entity.hpp>
 #include <Types/headers.hpp>
+#include <Utilities/RegistryLoop.hpp>
 #include <entt/entity/registry.hpp>
 #include <initializer_list>
 #include <optional>
@@ -103,6 +104,16 @@ class Simulation {
     std::vector<CalcDamageInputInfo> damageCalculations;
     std::vector<AnalyzeEffectInputInfo> effectsToAnalyze;
   };
+
+  template <auto Function, typename... Tags, typename... ViewArgs>
+  void view(const ViewArgs&... viewArgs) {
+    internal::RegistryLoop<Function, Tags...>::view(registry, viewArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... GroupArgs>
+  void group(const GroupArgs&... groupArgs) {
+    internal::RegistryLoop<Function, Tags...>::group(registry, groupArgs...);
+  }
 
  private:
   std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);

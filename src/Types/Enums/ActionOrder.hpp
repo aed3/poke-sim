@@ -15,5 +15,7 @@ enum class ActionOrder : std::uint8_t {
   SWITCH = 103,
 
   MOVE = 200,
+
+  RESIDUAL = 254,
 };
 }

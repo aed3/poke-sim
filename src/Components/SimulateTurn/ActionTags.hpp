@@ -1,6 +1,8 @@
 #pragma once
 
 namespace pokesim::action::tags {
+struct Active {};
+
 struct Switch {};
 
 // Action Tag for Switching: When a Pokemon is about to be switched out

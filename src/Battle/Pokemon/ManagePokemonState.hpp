@@ -3,6 +3,8 @@
 #include <Types/Entity.hpp>
 
 namespace pokesim {
-struct ActionQueue;
-void speedSort(types::handle handle, ActionQueue& actionQueue);
+struct Pp;
+
+void deductPp(Pp& pp);
+void setLastMoveUsed(types::handle handle);
 }  // namespace pokesim

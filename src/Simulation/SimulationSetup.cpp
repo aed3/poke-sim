@@ -4,6 +4,7 @@
 #include <Battle/Setup/headers.hpp>
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
 #include <Components/CalcDamage/AttackerDefender.hpp>
+#include <Components/Decisions.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Side.hpp>
@@ -11,11 +12,9 @@
 #include <Components/Stats.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Pokedex/Pokedex.hpp>
-#include <SimulateTurn/Actions/Decisions.hpp>
-#include <SimulateTurn/Actions/ResolveDecision.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
-#include <Types/Utilities/Variant.hpp>
+#include <Utilities/Variant.hpp>
 #include <cstddef>
 #include <entt/entity/registry.hpp>
 #include <initializer_list>
@@ -128,8 +127,8 @@ void Simulation::createInitialTurnDecision(
   types::handle battleHandle{registry, battleStateSetup.entity()};
   const Sides& sides = battleHandle.get<Sides>();
 
-  resolveDecision({registry, sides.p1}, turnDecisionData.p1, battleHandle.get<ActionQueue>());
-  resolveDecision({registry, sides.p2}, turnDecisionData.p2, battleHandle.get<ActionQueue>());
+  registry.emplace<SideDecision>(sides.p1, turnDecisionData.p1);
+  registry.emplace<SideDecision>(sides.p2, turnDecisionData.p2);
 }
 
 void Simulation::createCalcDamageInput(

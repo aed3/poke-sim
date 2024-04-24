@@ -4,7 +4,7 @@
 #include <cassert>
 #include <cstdint>
 
-namespace pokesim::types::internal {
+namespace pokesim::internal {
 template <typename T, std::uint8_t N>
 class maxSizedVector : private std::array<T, N> {
   using base = std::array<T, N>;
@@ -69,4 +69,4 @@ class maxSizedVector : private std::array<T, N> {
   typename base::const_reverse_iterator rend() const noexcept { return const_reverse_iterator(end()); }
   typename base::const_reverse_iterator crend() const noexcept { return rend(); }
 };
-}  // namespace pokesim::types::internal
+}  // namespace pokesim::internal

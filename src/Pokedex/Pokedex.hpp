@@ -25,6 +25,7 @@ class Pokedex {
   entt::dense_map<dex::Species, types::entity> speciesMap{};
   entt::dense_map<dex::Item, types::entity> itemsMap{};
   entt::dense_map<dex::Move, types::entity> movesMap{};
+  entt::dense_map<dex::Ability, types::entity> abilitiesMap{};
 
   template <typename Build, typename T>
   void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
@@ -32,6 +33,7 @@ class Pokedex {
   types::entity buildSpecies(dex::Species species);
   types::entity buildMove(dex::Move move);
   types::entity buildItem(dex::Item item);
+  types::entity buildAbility(dex::Ability ability);
 
  public:
   /**
@@ -78,6 +80,17 @@ class Pokedex {
    * @note Only call this once per move per Pokedex instance.
    */
   void loadMoves(const entt::dense_set<dex::Move>& moveSet);
+
+  /**
+   * @brief Calls the load functions for a set of abilities to add their data to a Pokedex's storage.
+   *
+   * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
+   * instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function
+   * should only be called with a set of those 12 Pokemon's abilities.
+   *
+   * @note Only call this once per ability per Pokedex instance.
+   */
+  void loadAbilities(const entt::dense_set<dex::Ability>& abilitySet);
 
   /**
    * @brief Returns references to the given dex data components for a species
