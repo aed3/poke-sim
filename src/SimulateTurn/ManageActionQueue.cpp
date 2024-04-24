@@ -162,9 +162,9 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   }
 }
 
-void addBeforeTurnAction(types::handle handle, ActionQueue& actionQueue) {}
+void addBeforeTurnAction(types::handle /*handle*/, ActionQueue& /*actionQueue*/) {}
 
-void addResidualAction(types::handle handle, ActionQueue& actionQueue) {}
+void addResidualAction(types::handle /*handle*/, ActionQueue& /*actionQueue*/) {}
 
-void setActiveAction(types::handle handle, ActionQueue& actionQueue) {}
+void setActiveAction(types::handle /*handle*/, ActionQueue& /*actionQueue*/) {}
 }  // namespace pokesim::simulate_turn

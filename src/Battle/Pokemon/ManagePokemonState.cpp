@@ -6,6 +6,6 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
-void deductPp(Pp& pp) {}
-void setLastMoveUsed(types::handle handle) {}
+void deductPp(Pp& /*pp*/) {}
+void setLastMoveUsed(types::handle /*handle*/) {}
 }  // namespace pokesim

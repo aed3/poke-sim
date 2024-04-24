@@ -12,9 +12,9 @@ void setMoveHitCount(Simulation& simulation) {
   sampleRandomChance(simulation);
 }
 
-void applyDamage(Simulation& simulation) {}
+void applyDamage(Simulation& /*simulation*/) {}
 
-void trySetStatusFromEffect(Simulation& simulation) {}
+void trySetStatusFromEffect(Simulation& /*simulation*/) {}
 
 void runSecondaryMoveEffects(Simulation& simulation) {
   // Set secondary effect of active move

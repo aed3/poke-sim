@@ -14340,13 +14340,13 @@ inline void runDamagingHitEvent(Simulation& simulation);
 ///////////////////// START OF src/Simulation/RunEvent.cpp /////////////////////
 
 namespace pokesim {
-void runAccuracyEvent(Simulation& simulation) {}
+void runAccuracyEvent(Simulation& /*simulation*/) {}
 
-void runModifyAccuracyEvent(Simulation& simulation) {}
+void runModifyAccuracyEvent(Simulation& /*simulation*/) {}
 
-void runModifyCritRatioEvent(Simulation& simulation) {}
+void runModifyCritRatioEvent(Simulation& /*simulation*/) {}
 
-void runBasePowerEvent(Simulation& simulation) {}
+void runBasePowerEvent(Simulation& /*simulation*/) {}
 
 void runDamagingHitEvent(Simulation& simulation) {
   dex::Static<GameMechanics::NONE>::onDamagingHit(simulation);
@@ -14370,9 +14370,9 @@ inline void sampleRandomChance(Simulation& simulation);
 /////////////////// START OF src/Simulation/RandomChance.cpp ///////////////////
 
 namespace pokesim {
-void randomChance(Simulation& simulation) {}
+void randomChance(Simulation& /*simulation*/) {}
 
-void sampleRandomChance(Simulation& simulation) {}
+void sampleRandomChance(Simulation& /*simulation*/) {}
 }  // namespace pokesim
 
 //////////////////// END OF src/Simulation/RandomChance.cpp ////////////////////
@@ -14439,9 +14439,9 @@ void setMoveHitCount(Simulation& simulation) {
   sampleRandomChance(simulation);
 }
 
-void applyDamage(Simulation& simulation) {}
+void applyDamage(Simulation& /*simulation*/) {}
 
-void trySetStatusFromEffect(Simulation& simulation) {}
+void trySetStatusFromEffect(Simulation& /*simulation*/) {}
 
 void runSecondaryMoveEffects(Simulation& simulation) {
   // Set secondary effect of active move
@@ -14733,7 +14733,7 @@ void runActiveAction(Simulation& simulation) {
   runResidualAction(simulation);
 }
 
-void runBeforeTurnAction(Simulation& simulation) {}
+void runBeforeTurnAction(Simulation& /*simulation*/) {}
 
 void runMoveAction(Simulation& simulation) {
   simulation.view<setActiveTarget, tags::SimulateTurn>();
@@ -14745,9 +14745,9 @@ void runMoveAction(Simulation& simulation) {
   useMove(simulation);
 }
 
-void runResidualAction(Simulation& simulation) {}
+void runResidualAction(Simulation& /*simulation*/) {}
 
-void nextTurn(Simulation& simulation) {}
+void nextTurn(Simulation& /*simulation*/) {}
 
 void useMove(Simulation& simulation) {
   runMoveHitSteps(simulation);
@@ -14940,11 +14940,11 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   }
 }
 
-void addBeforeTurnAction(types::handle handle, ActionQueue& actionQueue) {}
+void addBeforeTurnAction(types::handle /*handle*/, ActionQueue& /*actionQueue*/) {}
 
-void addResidualAction(types::handle handle, ActionQueue& actionQueue) {}
+void addResidualAction(types::handle /*handle*/, ActionQueue& /*actionQueue*/) {}
 
-void setActiveAction(types::handle handle, ActionQueue& actionQueue) {}
+void setActiveAction(types::handle /*handle*/, ActionQueue& /*actionQueue*/) {}
 }  // namespace pokesim::simulate_turn
 
 //////////////// END OF src/SimulateTurn/ManageActionQueue.cpp /////////////////
@@ -17186,7 +17186,7 @@ void Pokedex::loadAbilities(const entt::dense_set<dex::Ability>& abilitySet) {
 /////////////// START OF src/Pokedex/Abilities/AbilityEvents.cpp ///////////////
 
 namespace pokesim::dex {
-void internal::StaticEvents::onDamagingHit(Simulation& simulation) {}
+void internal::StaticEvents::onDamagingHit(Simulation& /*simulation*/) {}
 }  // namespace pokesim::dex
 
 //////////////// END OF src/Pokedex/Abilities/AbilityEvents.cpp ////////////////
@@ -17396,7 +17396,7 @@ void InputSetup::setBattle(types::entity entity) {
 //////////////////// START OF src/CalcDamage/CalcDamage.cpp ////////////////////
 
 namespace pokesim::calc_damage {
-void run(Simulation& simulation) {}
+void run(Simulation& /*simulation*/) {}
 
 void criticalHitRandomChance(Simulation& simulation) {
   // Set critical hit chances as random chance variable
@@ -17404,7 +17404,7 @@ void criticalHitRandomChance(Simulation& simulation) {
   randomChance(simulation);
 }
 
-void modifyDamageWithTypes(Simulation& simulation) {}
+void modifyDamageWithTypes(Simulation& /*simulation*/) {}
 
 void getDamageRole(Simulation& simulation) {
   sampleRandomChance(simulation);
@@ -17860,8 +17860,8 @@ std::vector<BattleStateSetup> BattleStateSetup::clone(std::optional<types::clone
 ////////////// START OF src/Battle/Pokemon/ManagePokemonState.cpp //////////////
 
 namespace pokesim {
-void deductPp(Pp& pp) {}
-void setLastMoveUsed(types::handle handle) {}
+void deductPp(Pp& /*pp*/) {}
+void setLastMoveUsed(types::handle /*handle*/) {}
 }  // namespace pokesim
 
 /////////////// END OF src/Battle/Pokemon/ManagePokemonState.cpp ///////////////
@@ -17869,9 +17869,8 @@ void setLastMoveUsed(types::handle handle) {}
 ////////////////// START OF src/Battle/ManageBattleState.cpp ///////////////////
 
 namespace pokesim {
-void setActiveTarget(types::handle handle, ActiveAction activeAction, ActiveSource activeSource) {}
-void setActiveMove(types::handle handle, ActiveAction activeAction) {}
-
+void setActiveTarget(types::handle /*handle*/, ActiveAction /*activeAction*/, ActiveSource /*activeSource*/) {}
+void setActiveMove(types::handle /*handle*/, ActiveAction /*activeAction*/) {}
 }  // namespace pokesim
 
 /////////////////// END OF src/Battle/ManageBattleState.cpp ////////////////////

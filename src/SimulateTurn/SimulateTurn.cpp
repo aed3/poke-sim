@@ -45,7 +45,7 @@ void runActiveAction(Simulation& simulation) {
   runResidualAction(simulation);
 }
 
-void runBeforeTurnAction(Simulation& simulation) {}
+void runBeforeTurnAction(Simulation& /*simulation*/) {}
 
 void runMoveAction(Simulation& simulation) {
   simulation.view<setActiveTarget, tags::SimulateTurn>();
@@ -57,9 +57,9 @@ void runMoveAction(Simulation& simulation) {
   useMove(simulation);
 }
 
-void runResidualAction(Simulation& simulation) {}
+void runResidualAction(Simulation& /*simulation*/) {}
 
-void nextTurn(Simulation& simulation) {}
+void nextTurn(Simulation& /*simulation*/) {}
 
 void useMove(Simulation& simulation) {
   runMoveHitSteps(simulation);

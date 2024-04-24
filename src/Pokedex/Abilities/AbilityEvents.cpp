@@ -4,5 +4,5 @@
 #include "headers.hpp"
 
 namespace pokesim::dex {
-void internal::StaticEvents::onDamagingHit(Simulation& simulation) {}
+void internal::StaticEvents::onDamagingHit(Simulation& /*simulation*/) {}
 }  // namespace pokesim::dex
