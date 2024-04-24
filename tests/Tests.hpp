@@ -85,43 +85,43 @@ inline Simulation createDoubleBattleSimulation(Simulation::BattleCreationInfo& b
     p1aMoveInfo.pp = p1aMoveInfo.maxPp - 4;
     p1aPokemonInfo.moves.push_back(p1aMoveInfo);
 
-    Simulation::PokemonCreationInfo p1bPokemonInfo{};
-    p1bPokemonInfo.species = dex::Species::PANGORO;
-    p1bPokemonInfo.ability = dex::Ability::IRON_FIST;
-    p1bPokemonInfo.gender = dex::Gender::MALE;
-    p1bPokemonInfo.item = dex::Item::LIFE_ORB;
-    p1bPokemonInfo.level = 95;
-    p1bPokemonInfo.stats = {331, 284, 192, 174, 178, 152};
-    p1bPokemonInfo.evs = {255, 200, 150, 100, 50, 0};
-
-    Simulation::MoveCreationInfo p1bMoveInfo{};
-    p1bMoveInfo.name = dex::Move::KNOCK_OFF;
-    p1bMoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::KNOCK_OFF).pp;
-    p1bMoveInfo.pp = p1bMoveInfo.maxPp - 3;
-    p1bPokemonInfo.moves.push_back(p1bMoveInfo);
-
     Simulation::PokemonCreationInfo p2aPokemonInfo{};
-    p2aPokemonInfo.species = dex::Species::DRAGAPULT;
-    p2aPokemonInfo.ability = dex::Ability::INFILTRATOR;
-    p2aPokemonInfo.gender = dex::Gender::FEMALE;
-    p2aPokemonInfo.item = dex::Item::FOCUS_SASH;
-    p2aPokemonInfo.level = 100;
-    p2aPokemonInfo.nature = dex::Nature::HASTY;
-    p2aPokemonInfo.stats = {217, 276, 186, 236, 186, 320};
-    p2aPokemonInfo.ivs = {5, 10, 15, 20, 25, 30};
+    p2aPokemonInfo.species = dex::Species::PANGORO;
+    p2aPokemonInfo.ability = dex::Ability::IRON_FIST;
+    p2aPokemonInfo.gender = dex::Gender::MALE;
+    p2aPokemonInfo.item = dex::Item::LIFE_ORB;
+    p2aPokemonInfo.level = 95;
+    p2aPokemonInfo.stats = {331, 284, 192, 174, 178, 152};
+    p2aPokemonInfo.evs = {255, 200, 150, 100, 50, 0};
 
     Simulation::MoveCreationInfo p2aMoveInfo{};
-    p2aMoveInfo.name = dex::Move::WILL_O_WISP;
-    p2aMoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::WILL_O_WISP).pp;
-    p2aMoveInfo.pp = p2aMoveInfo.maxPp - 2;
+    p2aMoveInfo.name = dex::Move::KNOCK_OFF;
+    p2aMoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::KNOCK_OFF).pp;
+    p2aMoveInfo.pp = p2aMoveInfo.maxPp - 3;
     p2aPokemonInfo.moves.push_back(p2aMoveInfo);
+
+    Simulation::PokemonCreationInfo p1bPokemonInfo{};
+    p1bPokemonInfo.species = dex::Species::DRAGAPULT;
+    p1bPokemonInfo.ability = dex::Ability::INFILTRATOR;
+    p1bPokemonInfo.gender = dex::Gender::FEMALE;
+    p1bPokemonInfo.item = dex::Item::FOCUS_SASH;
+    p1bPokemonInfo.level = 100;
+    p1bPokemonInfo.nature = dex::Nature::HASTY;
+    p1bPokemonInfo.stats = {217, 276, 186, 236, 186, 320};
+    p1bPokemonInfo.ivs = {5, 10, 15, 20, 25, 30};
+
+    Simulation::MoveCreationInfo p1bMoveInfo{};
+    p1bMoveInfo.name = dex::Move::WILL_O_WISP;
+    p1bMoveInfo.maxPp = pokedex.getMoveData<Pp>(dex::Move::WILL_O_WISP).pp;
+    p1bMoveInfo.pp = p1bMoveInfo.maxPp - 2;
+    p1bPokemonInfo.moves.push_back(p1bMoveInfo);
 
     Simulation::PokemonCreationInfo p2bPokemonInfo{};
     p2bPokemonInfo.species = dex::Species::RIBOMBEE;
     p2bPokemonInfo.ability = dex::Ability::SWEET_VEIL;
     p2bPokemonInfo.gender = dex::Gender::MALE;
     p2bPokemonInfo.item = dex::Item::BRIGHT_POWDER;
-    p2aPokemonInfo.level = 91;
+    p2bPokemonInfo.level = 91;
     p2bPokemonInfo.stats = {261, 146, 156, 226, 176, 284};
     p2bPokemonInfo.ivs = {30, 25, 20, 15, 10, 5};
 

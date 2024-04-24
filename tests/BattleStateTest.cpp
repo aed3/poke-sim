@@ -145,14 +145,14 @@ TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
   REQUIRE(registry.all_of<ability::tags::Trace>(p1aEntity));
   REQUIRE(registry.all_of<status::tags::Burn>(p1aEntity));
   REQUIRE(registry.all_of<item::tags::ChoiceScarf>(p1aEntity));
-  types::entity p1bEntity = registry.get<Team>(p1SideEntity).team[1];
-  REQUIRE(registry.all_of<ability::tags::IronFist>(p1bEntity));
-  REQUIRE(registry.all_of<item::tags::LifeOrb>(p1bEntity));
-
   types::entity p2aEntity = registry.get<Team>(p2SideEntity).team[0];
-  REQUIRE(registry.all_of<ability::tags::Infiltrator>(p2aEntity));
-  REQUIRE(registry.all_of<nature::tags::Hasty>(p2aEntity));
-  REQUIRE(registry.all_of<item::tags::FocusSash>(p2aEntity));
+  REQUIRE(registry.all_of<ability::tags::IronFist>(p2aEntity));
+  REQUIRE(registry.all_of<item::tags::LifeOrb>(p2aEntity));
+
+  types::entity p1bEntity = registry.get<Team>(p1SideEntity).team[1];
+  REQUIRE(registry.all_of<ability::tags::Infiltrator>(p1bEntity));
+  REQUIRE(registry.all_of<nature::tags::Hasty>(p1bEntity));
+  REQUIRE(registry.all_of<item::tags::FocusSash>(p1bEntity));
   types::entity p2bEntity = registry.get<Team>(p2SideEntity).team[1];
   REQUIRE(registry.all_of<ability::tags::SweetVeil>(p2bEntity));
   REQUIRE(registry.all_of<item::tags::BrightPowder>(p2bEntity));
