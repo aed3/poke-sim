@@ -171,51 +171,36 @@ const createSingleFileHeader = () => {
     fs.writeFileSync(tempHeaderPath, singleFileHeader.join('\n'));
     const query = `
     set bind-root false
+    l inline functionDecl(
+      unless(cxxConstructorDecl(isDefinition())),
+      unless(isDefinition()),
+      unless(isInline()),
+      unless(isImplicit())
+    ).bind("inline")
+    l method cxxMethodDecl(inline)
+    l function functionDecl(inline)
+
     m namespaceDecl(
       isExpansionInMainFile(),
       matchesName("pokesim"),
-      forEach(cxxRecordDecl(
-        forEach(cxxMethodDecl(
-          decl().bind("inline"),
-          unless(cxxConstructorDecl(isDefinition())),
-          unless(isDefinition()),
-          unless(isInline()),
-          unless(isImplicit())
-        ))
-      ))
+      forEach(cxxRecordDecl(forEach(method)))
     )
     m namespaceDecl(
       isExpansionInMainFile(),
       matchesName("pokesim"),
       forEach(cxxRecordDecl(
-        forEach(functionTemplateDecl(forEach(cxxMethodDecl(
-          decl().bind("inline"),
-          unless(cxxConstructorDecl(isDefinition())),
-          unless(isDefinition()),
-          unless(isInline()),
-          unless(isImplicit())
-        ))))
+        forEach(functionTemplateDecl(forEach(method)))
       ))
     )
     m namespaceDecl(
       isExpansionInMainFile(),
       matchesName("pokesim"),
-      forEach(functionDecl(
-        decl().bind("inline"),
-        unless(cxxConstructorDecl()),
-        unless(isInline()),
-        unless(isDefinition())
-      ))
+      forEach(function)
     )
     m namespaceDecl(
       isExpansionInMainFile(),
       matchesName("pokesim"),
-      forEach(functionTemplateDecl(forEach(functionDecl(
-        decl().bind("inline"),
-        unless(cxxConstructorDecl()),
-        unless(isInline()),
-        unless(isDefinition())
-      ))))
+      forEach(functionTemplateDecl(forEach(function)))
     )`;
 
     const queryPath = path.join(tempDir, 'query');
