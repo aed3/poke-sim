@@ -5,7 +5,9 @@
 #include <Simulation/Simulation.hpp>
 
 namespace pokesim::calc_damage {
-void run(Simulation& /*simulation*/) {}
+void run(Simulation& simulation) {
+  getDamage(simulation);
+}
 
 void criticalHitRandomChance(Simulation& simulation) {
   // Set critical hit chances as random chance variable

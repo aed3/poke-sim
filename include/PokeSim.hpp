@@ -86,6 +86,7 @@
  * src/Simulation/SimulationSetup.cpp
  * src/Simulation/SimulationResults.hpp
  * src/Simulation/SimulationResults.cpp
+ * src/CalcDamage/CalcDamage.hpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Simulation/Simulation.cpp
  * src/Pokedex/Abilities/Static.hpp
@@ -93,7 +94,6 @@
  * src/Simulation/RunEvent.cpp
  * src/Simulation/RandomChance.hpp
  * src/Simulation/RandomChance.cpp
- * src/CalcDamage/CalcDamage.hpp
  * src/Components/MultiHit.hpp
  * src/Simulation/MoveHitSteps.hpp
  * src/Simulation/MoveHitSteps.cpp
@@ -14188,6 +14188,25 @@ types::view<MultipliedKoChance> Results::multipliedKoChanceResults() const {
 
 ///////////////// END OF src/Simulation/SimulationResults.cpp //////////////////
 
+//////////////////// START OF src/CalcDamage/CalcDamage.hpp ////////////////////
+
+namespace pokesim {
+class Simulation;
+
+namespace calc_damage {
+inline void run(Simulation& simulation);
+
+inline void modifyDamageWithTypes(Simulation& simulation);
+inline void getDamageRole(Simulation& simulation);
+
+inline void criticalHitRandomChance(Simulation& simulation);
+inline void getCritMultiplier(Simulation& simulation);
+inline void getDamage(Simulation& simulation);
+}  // namespace calc_damage
+}  // namespace pokesim
+
+///////////////////// END OF src/CalcDamage/CalcDamage.hpp /////////////////////
+
 ////////////////// START OF src/SimulateTurn/SimulateTurn.hpp //////////////////
 
 namespace pokesim {
@@ -14252,7 +14271,7 @@ calc_damage::Results Simulation::calculateDamage(std::optional<calc_damage::Opti
     calculateDamageOptions = options.value();
   }
 
-  // TODO(aed3): Add entry point
+  calc_damage::run(*this);
 
   return {*this};
 }
@@ -14376,25 +14395,6 @@ void sampleRandomChance(Simulation& /*simulation*/) {}
 }  // namespace pokesim
 
 //////////////////// END OF src/Simulation/RandomChance.cpp ////////////////////
-
-//////////////////// START OF src/CalcDamage/CalcDamage.hpp ////////////////////
-
-namespace pokesim {
-class Simulation;
-
-namespace calc_damage {
-inline void run(Simulation& simulation);
-
-inline void modifyDamageWithTypes(Simulation& simulation);
-inline void getDamageRole(Simulation& simulation);
-
-inline void criticalHitRandomChance(Simulation& simulation);
-inline void getCritMultiplier(Simulation& simulation);
-inline void getDamage(Simulation& simulation);
-}  // namespace calc_damage
-}  // namespace pokesim
-
-///////////////////// END OF src/CalcDamage/CalcDamage.hpp /////////////////////
 
 ///////////////////// START OF src/Components/MultiHit.hpp /////////////////////
 
@@ -17396,7 +17396,9 @@ void InputSetup::setBattle(types::entity entity) {
 //////////////////// START OF src/CalcDamage/CalcDamage.cpp ////////////////////
 
 namespace pokesim::calc_damage {
-void run(Simulation& /*simulation*/) {}
+void run(Simulation& simulation) {
+  getDamage(simulation);
+}
 
 void criticalHitRandomChance(Simulation& simulation) {
   // Set critical hit chances as random chance variable
