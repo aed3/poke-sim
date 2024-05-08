@@ -86,6 +86,7 @@
  * src/Simulation/SimulationSetup.cpp
  * src/Simulation/SimulationResults.hpp
  * src/Simulation/SimulationResults.cpp
+ * src/AnalyzeEffect/AnalyzeEffect.hpp
  * src/CalcDamage/CalcDamage.hpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Simulation/Simulation.cpp
@@ -202,6 +203,8 @@
  * src/Components/Names/VolatileNames.hpp
  * src/Components/Names/WeatherNames.hpp
  * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp
+ * src/Components/AnalyzeEffect/RemovedEffect.hpp
+ * src/AnalyzeEffect/AnalyzeEffect.cpp
  * src/Components/Names/StatNames.hpp
  * src/Components/Tags/TypeTags.hpp
  * src/Pokedex/Names.hpp
@@ -14188,6 +14191,24 @@ types::view<MultipliedKoChance> Results::multipliedKoChanceResults() const {
 
 ///////////////// END OF src/Simulation/SimulationResults.cpp //////////////////
 
+///////////////// START OF src/AnalyzeEffect/AnalyzeEffect.hpp /////////////////
+
+namespace pokesim {
+class Simulation;
+
+namespace analyze_effect {
+inline void run(Simulation& simulation);
+
+inline void assignAttackerDefender(Simulation& simulation);
+inline void createAppliedEffectBattles(Simulation& simulation);
+inline void removeConsideredEffect(Simulation& simulation);
+inline void reapplyConsideredEffect(Simulation& simulation);
+inline void postRunCleanup(Simulation& simulation);
+}  // namespace analyze_effect
+}  // namespace pokesim
+
+////////////////// END OF src/AnalyzeEffect/AnalyzeEffect.hpp //////////////////
+
 //////////////////// START OF src/CalcDamage/CalcDamage.hpp ////////////////////
 
 namespace pokesim {
@@ -14281,7 +14302,7 @@ analyze_effect::Results Simulation::analyzeEffect(std::optional<analyze_effect::
     analyzeEffectOptions = options.value();
   }
 
-  // TODO(aed3): Add entry point
+  analyze_effect::run(*this);
 
   return {*this};
 }
@@ -18260,6 +18281,52 @@ void InputSetup::setBattle(types::entity entity) {
 }  // namespace pokesim::analyze_effect
 
 ////////// END OF src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp //////////
+
+/////////// START OF src/Components/AnalyzeEffect/RemovedEffect.hpp ////////////
+
+namespace pokesim::analyze_effect {
+struct RemovedEffect {
+  types::effectEnum effect;
+};
+}  // namespace pokesim::analyze_effect
+
+//////////// END OF src/Components/AnalyzeEffect/RemovedEffect.hpp /////////////
+
+///////////////// START OF src/AnalyzeEffect/AnalyzeEffect.cpp /////////////////
+
+namespace pokesim::analyze_effect {
+void run(Simulation& simulation) {
+  assignAttackerDefender(simulation);
+
+  if (simulation.analyzeEffectOptions.reconsiderActiveEffects) {
+    removeConsideredEffect(simulation);
+  }
+
+  createAppliedEffectBattles(simulation);
+
+  calc_damage::run(simulation);
+
+  if (simulation.analyzeEffectOptions.reconsiderActiveEffects) {
+    reapplyConsideredEffect(simulation);
+  }
+
+  postRunCleanup(simulation);
+}
+
+void assignAttackerDefender(Simulation& /*simulation*/) {}
+
+void createAppliedEffectBattles(Simulation& /*simulation*/) {}
+
+void removeConsideredEffect(Simulation& /*simulation*/) {}
+
+void reapplyConsideredEffect(Simulation& /*simulation*/) {}
+
+void postRunCleanup(Simulation& /*simulation*/) {
+  // Remove duplicate states and attacker/defender components
+}
+}  // namespace pokesim::analyze_effect
+
+////////////////// END OF src/AnalyzeEffect/AnalyzeEffect.cpp //////////////////
 
 ///////////////// START OF src/Components/Names/StatNames.hpp //////////////////
 

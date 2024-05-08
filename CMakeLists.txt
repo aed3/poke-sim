@@ -39,6 +39,7 @@ project(PokeSim)
 check_ipo_supported(RESULT IpoSupported OUTPUT error)
 
 set (SOURCES
+  src/AnalyzeEffect/AnalyzeEffect.cpp
   src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp
   src/Battle/Clone/Clone.cpp
   src/Battle/Helpers/Helpers.cpp
@@ -95,6 +96,7 @@ target_compile_options(PokeSim PRIVATE ${compiler_warning_options})
 ############################################################
 
 add_executable(PokeSimTests
+  tests/AnalyzeEffectTest.cpp
   tests/BattleStateTest.cpp
   tests/PokedexTest.cpp
   tests/CalculateDamageTest.cpp

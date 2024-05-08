@@ -1,5 +1,6 @@
 #include "Simulation.hpp"
 
+#include <AnalyzeEffect/AnalyzeEffect.hpp>
 #include <CalcDamage/CalcDamage.hpp>
 #include <SimulateTurn/SimulateTurn.hpp>
 
@@ -58,7 +59,7 @@ analyze_effect::Results Simulation::analyzeEffect(std::optional<analyze_effect::
     analyzeEffectOptions = options.value();
   }
 
-  // TODO(aed3): Add entry point
+  analyze_effect::run(*this);
 
   return {*this};
 }

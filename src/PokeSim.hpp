@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AnalyzeEffect/headers.hpp>
 #include <Battle/headers.hpp>
 #include <CalcDamage/headers.hpp>
 #include <Components/headers.hpp>
