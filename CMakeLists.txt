@@ -97,6 +97,7 @@ target_compile_options(PokeSim PRIVATE ${compiler_warning_options})
 add_executable(PokeSimTests
   tests/BattleStateTest.cpp
   tests/PokedexTest.cpp
+  tests/CalculateDamageTest.cpp
   tests/SimulationTest.cpp
   tests/SimulateTurnsTest.cpp
   tests/Tests.cpp

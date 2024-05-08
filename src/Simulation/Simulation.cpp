@@ -1,5 +1,6 @@
 #include "Simulation.hpp"
 
+#include <CalcDamage/CalcDamage.hpp>
 #include <SimulateTurn/SimulateTurn.hpp>
 
 #include "SimulationOptions.hpp"
@@ -47,7 +48,7 @@ calc_damage::Results Simulation::calculateDamage(std::optional<calc_damage::Opti
     calculateDamageOptions = options.value();
   }
 
-  // TODO(aed3): Add entry point
+  calc_damage::run(*this);
 
   return {*this};
 }
