@@ -2,6 +2,7 @@
 
 #include "Accuracy.hpp"
 #include "AnalyzeEffect/AttackerDefender.hpp"
+#include "AnalyzeEffect/RemovedEffect.hpp"
 #include "BasePower.hpp"
 #include "Boosts.hpp"
 #include "CalcDamage/AttackerDefender.hpp"
