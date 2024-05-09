@@ -48,6 +48,21 @@ struct RegistryLoop {
     }
   };
 
+  template <class Signature, class... Args>
+  struct RegistryLoopInternal<Signature (*)(types::registry&, Args...)> {
+    template <typename... ViewArgs>
+    static void view(types::registry& registry, const ViewArgs&... viewArgs) {
+      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
+        .each([&registry](types::entity /*entity*/, auto&&... args) { Function(registry, args...); });
+    }
+
+    template <typename... GroupArgs>
+    static void group(types::registry& registry, const GroupArgs&... groupArgs) {
+      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
+        .each([&registry](types::entity /*entity*/, auto&&... args) { Function(registry, args...); });
+    }
+  };
+
   using FunctionSig = std::decay_t<decltype(Function)>;
 
  public:
