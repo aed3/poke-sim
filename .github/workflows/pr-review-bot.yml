@@ -28,7 +28,7 @@ jobs:
           directory: ./llvm
           cached: ${{ steps.cache-llvm.outputs.cache-hit }}
       - name: Check out Git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4.15
       - name: Configure build
         working-directory: ${{runner.workspace}}
         run: |

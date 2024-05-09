@@ -9,7 +9,7 @@ jobs:
 
     steps:
     - name: Check out Git repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4.15
 
     - uses: DoozyX/clang-format-lint-action@v0.15
       with:
