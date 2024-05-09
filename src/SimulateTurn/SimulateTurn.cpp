@@ -20,7 +20,7 @@
 
 namespace pokesim::simulate_turn {
 void run(Simulation& simulation) {
-  simulation.view<resolveDecision, tags::SimulateTurn>();
+  simulation.view<resolveDecision>();
   simulation.registry.clear<SideDecision>();
 
   simulation.view<addBeforeTurnAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});

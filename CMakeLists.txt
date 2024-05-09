@@ -100,7 +100,7 @@ add_executable(PokeSimTests
   tests/BattleStateTest.cpp
   tests/PokedexTest.cpp
   tests/CalculateDamageTest.cpp
-  tests/SimulationTest.cpp
+  tests/SimulationSetupTest.cpp
   tests/SimulateTurnsTest.cpp
   tests/Tests.cpp
   external/Catch2/catch_amalgamated.cpp

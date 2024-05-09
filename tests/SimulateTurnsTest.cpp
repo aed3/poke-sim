@@ -214,9 +214,10 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
 
 TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   Simulation::BattleCreationInfo battleCreationInfo{};
-  Simulation simulation = createSingleBattleSimulation(battleCreationInfo);
+  Simulation simulation = createSingleBattleSimulation(battleCreationInfo, true);
 
   battleCreationInfo.runWithSimulateTurn = true;
+  simulation.createInitialStates({battleCreationInfo});
   simulation.simulateTurn();
 }
 }  // namespace pokesim

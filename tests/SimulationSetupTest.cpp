@@ -125,7 +125,7 @@ types::entity targetSlotToEntity(
   return types::entity{};
 }
 
-TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
+TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
   battleInfo.runWithSimulateTurn = true;
@@ -272,7 +272,7 @@ TEST_CASE("Simulation: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
   }
 }
 
-TEST_CASE("Simulation: Calc Damage", "[Simulation][CalcDamage][Setup]") {
+TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalcDamage][Setup]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
 
@@ -337,7 +337,7 @@ TEST_CASE("Simulation: Calc Damage", "[Simulation][CalcDamage][Setup]") {
   }
 }
 
-TEST_CASE("Simulation: Analyze Effect", "[Simulation][AnalyzeEffect][Setup]") {
+TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup]") {
   // TODO(aed3): Add in when effect enums are added
 }
 }  // namespace pokesim
