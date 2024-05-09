@@ -29,7 +29,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
   ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty");
   types::registry& registry = *sideHandle.registry();
 
-  ActionQueue& battleActionQueue = sideHandle.registry()->get<ActionQueue>(sideHandle.get<Battle>().battle);
+  ActionQueue& battleActionQueue = registry.get<ActionQueue>(sideHandle.get<Battle>().battle);
 
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
@@ -162,9 +162,32 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   }
 }
 
-void addBeforeTurnAction(types::handle /*handle*/, ActionQueue& /*actionQueue*/) {}
+void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue) {
+  types::handle actionHandle{registry, registry.create()};
+  SpeedSort speedSort{ActionOrder::BEFORE_TURN};
 
-void addResidualAction(types::handle /*handle*/, ActionQueue& /*actionQueue*/) {}
+  actionHandle.emplace<action::tags::BeforeTurn>();
+  actionHandle.emplace<SpeedSort>(speedSort);
+  actionQueue.actionQueue.push_back(actionHandle.entity());
+}
 
-void setActiveAction(types::handle /*handle*/, ActionQueue& /*actionQueue*/) {}
+void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
+  types::handle actionHandle{registry, registry.create()};
+  SpeedSort speedSort{ActionOrder::RESIDUAL};
+
+  actionHandle.emplace<action::tags::Residual>();
+  actionHandle.emplace<SpeedSort>(speedSort);
+  actionQueue.actionQueue.push_back(actionHandle.entity());
+}
+
+void setActiveAction(types::registry& registry, ActionQueue& actionQueue) {
+  registry.clear<action::tags::Active>();
+
+  if (actionQueue.actionQueue.empty()) return;
+
+  types::entity newActiveAction = actionQueue.actionQueue.front();
+  registry.emplace<action::tags::Active>(newActiveAction);
+
+  actionQueue.actionQueue.erase(actionQueue.actionQueue.begin());
+}
 }  // namespace pokesim::simulate_turn

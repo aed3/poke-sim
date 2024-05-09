@@ -10,7 +10,8 @@
 #include <entt/entt.hpp>
 
 namespace pokesim {
-inline Simulation createSingleBattleSimulation(Simulation::BattleCreationInfo& battleCreationInfo) {
+inline Simulation createSingleBattleSimulation(
+  Simulation::BattleCreationInfo& battleCreationInfo, bool addTsDecisions) {
   Pokedex pokedex(GameMechanics::SCARLET_VIOLET);
   entt::dense_set<dex::Move> moveSet{};
   for (dex::Move move : {dex::Move::FURY_ATTACK, dex::Move::THUNDERBOLT}) moveSet.insert(move);
@@ -52,12 +53,26 @@ inline Simulation createSingleBattleSimulation(Simulation::BattleCreationInfo& b
 
     battleCreationInfo.p1 = {{p1PokemonInfo}};
     battleCreationInfo.p2 = {{p2PokemonInfo}};
+
+    if (addTsDecisions) {
+      SideDecision p1Decision{PlayerSideId::P1};
+      SideDecision p2Decision{PlayerSideId::P2};
+      SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
+      SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
+
+      p1SlotDecision.moveChoice = dex::Move::FURY_ATTACK;
+      p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
+      p2SlotDecision.moveChoice = dex::Move::THUNDERBOLT;
+      p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
+      battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
+    }
   }
 
   return simulation;
 }
 
-inline Simulation createDoubleBattleSimulation(Simulation::BattleCreationInfo& battleCreationInfo) {
+inline Simulation createDoubleBattleSimulation(
+  Simulation::BattleCreationInfo& battleCreationInfo, bool /*addTsDecisions*/) {
   Pokedex pokedex(GameMechanics::SCARLET_VIOLET);
   entt::dense_set<dex::Move> moveSet{};
   for (dex::Move move : {dex::Move::MOONBLAST, dex::Move::KNOCK_OFF, dex::Move::WILL_O_WISP, dex::Move::QUIVER_DANCE}) {

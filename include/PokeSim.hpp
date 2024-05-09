@@ -13668,6 +13668,21 @@ struct RegistryLoop {
     }
   };
 
+  template <class Signature, class... Args>
+  struct RegistryLoopInternal<Signature (*)(types::registry&, Args...)> {
+    template <typename... ViewArgs>
+    static void view(types::registry& registry, const ViewArgs&... viewArgs) {
+      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
+        .each([&registry](types::entity /*entity*/, auto&&... args) { Function(registry, args...); });
+    }
+
+    template <typename... GroupArgs>
+    static void group(types::registry& registry, const GroupArgs&... groupArgs) {
+      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
+        .each([&registry](types::entity /*entity*/, auto&&... args) { Function(registry, args...); });
+    }
+  };
+
   using FunctionSig = std::decay_t<decltype(Function)>;
 
  public:
@@ -14624,6 +14639,9 @@ struct Item : ItemName {};
 ///////////// START OF src/Components/SimulateTurn/ActionTags.hpp //////////////
 
 namespace pokesim::action::tags {
+struct BeforeTurn {};
+struct Residual {};
+
 struct Active {};
 
 struct Switch {};
@@ -14717,9 +14735,9 @@ namespace simulate_turn {
 inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision);
 inline void speedSort(types::handle handle, ActionQueue& actionQueue);
 
-inline void addBeforeTurnAction(types::handle handle, ActionQueue& actionQueue);
-inline void addResidualAction(types::handle handle, ActionQueue& actionQueue);
-inline void setActiveAction(types::handle handle, ActionQueue& actionQueue);
+inline void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue);
+inline void addResidualAction(types::registry& registry, ActionQueue& actionQueue);
+inline void setActiveAction(types::registry& registry, ActionQueue& actionQueue);
 }  // namespace simulate_turn
 }  // namespace pokesim
 
@@ -14729,7 +14747,7 @@ inline void setActiveAction(types::handle handle, ActionQueue& actionQueue);
 
 namespace pokesim::simulate_turn {
 void run(Simulation& simulation) {
-  simulation.view<resolveDecision, tags::SimulateTurn>();
+  simulation.view<resolveDecision>();
   simulation.registry.clear<SideDecision>();
 
   simulation.view<addBeforeTurnAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});
@@ -14828,7 +14846,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
   ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty");
   types::registry& registry = *sideHandle.registry();
 
-  ActionQueue& battleActionQueue = sideHandle.registry()->get<ActionQueue>(sideHandle.get<Battle>().battle);
+  ActionQueue& battleActionQueue = registry.get<ActionQueue>(sideHandle.get<Battle>().battle);
 
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
@@ -14961,11 +14979,34 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   }
 }
 
-void addBeforeTurnAction(types::handle /*handle*/, ActionQueue& /*actionQueue*/) {}
+void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue) {
+  types::handle actionHandle{registry, registry.create()};
+  SpeedSort speedSort{ActionOrder::BEFORE_TURN};
 
-void addResidualAction(types::handle /*handle*/, ActionQueue& /*actionQueue*/) {}
+  actionHandle.emplace<action::tags::BeforeTurn>();
+  actionHandle.emplace<SpeedSort>(speedSort);
+  actionQueue.actionQueue.push_back(actionHandle.entity());
+}
 
-void setActiveAction(types::handle /*handle*/, ActionQueue& /*actionQueue*/) {}
+void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
+  types::handle actionHandle{registry, registry.create()};
+  SpeedSort speedSort{ActionOrder::RESIDUAL};
+
+  actionHandle.emplace<action::tags::Residual>();
+  actionHandle.emplace<SpeedSort>(speedSort);
+  actionQueue.actionQueue.push_back(actionHandle.entity());
+}
+
+void setActiveAction(types::registry& registry, ActionQueue& actionQueue) {
+  registry.clear<action::tags::Active>();
+
+  if (actionQueue.actionQueue.empty()) return;
+
+  types::entity newActiveAction = actionQueue.actionQueue.front();
+  registry.emplace<action::tags::Active>(newActiveAction);
+
+  actionQueue.actionQueue.erase(actionQueue.actionQueue.begin());
+}
 }  // namespace pokesim::simulate_turn
 
 //////////////// END OF src/SimulateTurn/ManageActionQueue.cpp /////////////////

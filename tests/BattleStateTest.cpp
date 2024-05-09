@@ -105,7 +105,7 @@ void checkCreatedBattle(const types::handle truth, const Simulation::BattleCreat
 
 TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
   Simulation::BattleCreationInfo battleCreationInfo{};
-  Simulation simulation = createSingleBattleSimulation(battleCreationInfo);
+  Simulation simulation = createSingleBattleSimulation(battleCreationInfo, false);
 
   simulation.createInitialStates({battleCreationInfo});
 
@@ -129,7 +129,7 @@ TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
 
 TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
   Simulation::BattleCreationInfo battleCreationInfo{};
-  Simulation simulation = createDoubleBattleSimulation(battleCreationInfo);
+  Simulation simulation = createDoubleBattleSimulation(battleCreationInfo, false);
   simulation.createInitialStates({battleCreationInfo});
 
   types::registry& registry = simulation.registry;
@@ -160,7 +160,7 @@ TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
 
 TEST_CASE("Battle State: Multiple Battles", "[BattleState][Setup]") {
   Simulation::BattleCreationInfo battle1CreationInfo{};
-  Simulation simulation = createSingleBattleSimulation(battle1CreationInfo);
+  Simulation simulation = createSingleBattleSimulation(battle1CreationInfo, false);
 
   Simulation::BattleCreationInfo battle2CreationInfo = battle1CreationInfo;
 
@@ -196,7 +196,7 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
   auto check = [&](decltype(createSingleBattleSimulation) create, types::cloneIndex cloneCount) {
     INFO("Clone Count: " + std::to_string(cloneCount));
 
-    Simulation simulation = create(battleCreationInfo);
+    Simulation simulation = create(battleCreationInfo, false);
     simulation.createInitialStates({battleCreationInfo});
 
     types::registry& registry = simulation.registry;

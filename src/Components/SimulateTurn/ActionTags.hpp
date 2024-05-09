@@ -1,6 +1,9 @@
 #pragma once
 
 namespace pokesim::action::tags {
+struct BeforeTurn {};
+struct Residual {};
+
 struct Active {};
 
 struct Switch {};
