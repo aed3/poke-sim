@@ -2,6 +2,7 @@
 
 #include <Components/Decisions.hpp>
 #include <Components/EVsIVs.hpp>
+#include <Components/Tags/SelectionTags.hpp>
 #include <Types/Entity.hpp>
 #include <Types/headers.hpp>
 #include <Utilities/RegistryLoop.hpp>
@@ -104,6 +105,68 @@ class Simulation {
     std::vector<CalcDamageInputInfo> damageCalculations;
     std::vector<AnalyzeEffectInputInfo> effectsToAnalyze;
   };
+
+ private:
+  template <typename Selected, auto Function, typename... Tags, typename... ViewArgs>
+  void viewForSelected(const ViewArgs&... viewArgs) {
+    if (registry.group<>(entt::get<Selected, Tags...>).empty()) {
+      view<Function, Tags...>(viewArgs...);
+    }
+    else {
+      view<Function, Selected, Tags...>(viewArgs...);
+    }
+  }
+
+  template <typename Selected, auto Function, typename... Tags, typename... GroupArgs>
+  void groupForSelected(const GroupArgs&... groupArgs) {
+    if (registry.group<>(entt::get<Selected, Tags...>).empty()) {
+      group<Function, Tags...>(groupArgs...);
+    }
+    else {
+      group<Function, Selected, Tags...>(groupArgs...);
+    }
+  }
+
+ public:
+  template <auto Function, typename... Tags, typename... ViewArgs>
+  void viewForSelectedBattles(const ViewArgs&... viewArgs) {
+    viewForSelected<tags::SelectedForViewBattle, Function, Tags...>(viewArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... GroupArgs>
+  void groupForSelectedBattles(const GroupArgs&... groupArgs) {
+    groupForSelected<tags::SelectedForViewBattle, Function, Tags...>(groupArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... ViewArgs>
+  void viewForSelectedSides(const ViewArgs&... viewArgs) {
+    viewForSelected<tags::SelectedForViewSide, Function, Tags...>(viewArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... GroupArgs>
+  void groupForSelectedSides(const GroupArgs&... groupArgs) {
+    groupForSelected<tags::SelectedForViewSide, Function, Tags...>(groupArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... ViewArgs>
+  void viewForSelectedPokemon(const ViewArgs&... viewArgs) {
+    viewForSelected<tags::SelectedForViewPokemon, Function, Tags...>(viewArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... GroupArgs>
+  void groupForSelectedPokemon(const GroupArgs&... groupArgs) {
+    groupForSelected<tags::SelectedForViewPokemon, Function, Tags...>(groupArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... ViewArgs>
+  void viewForSelectedMoves(const ViewArgs&... viewArgs) {
+    viewForSelected<tags::SelectedForViewMove, Function, Tags...>(viewArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... GroupArgs>
+  void groupForSelectedMoves(const GroupArgs&... groupArgs) {
+    groupForSelected<tags::SelectedForViewMove, Function, Tags...>(groupArgs...);
+  }
 
   template <auto Function, typename... Tags, typename... ViewArgs>
   void view(const ViewArgs&... viewArgs) {

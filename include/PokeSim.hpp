@@ -80,6 +80,7 @@
  * src/Types/Enums/Stat.hpp
  * src/Types/Enums/Type.hpp
  * src/Pokedex/Pokedex.hpp
+ * src/Components/Tags/SelectionTags.hpp
  * src/Simulation/SimulationOptions.hpp
  * src/Types/Damage.hpp
  * src/Utilities/RegistryLoop.hpp
@@ -114,6 +115,7 @@
  * src/Components/Tags/BattleTags.hpp
  * src/Components/Turn.hpp
  * src/SimulateTurn/ManageActionQueue.hpp
+ * src/Utilities/SelectForView.hpp
  * src/SimulateTurn/SimulateTurn.cpp
  * src/Components/EntityHolders/Team.hpp
  * src/Components/SimulateTurn/SpeedTieIndexes.hpp
@@ -13573,6 +13575,17 @@ class Pokedex {
 
 //////////////////////// END OF src/Pokedex/Pokedex.hpp ////////////////////////
 
+//////////////// START OF src/Components/Tags/SelectionTags.hpp ////////////////
+
+namespace pokesim::tags {
+struct SelectedForViewBattle {};
+struct SelectedForViewSide {};
+struct SelectedForViewPokemon {};
+struct SelectedForViewMove {};
+}  // namespace pokesim::tags
+
+///////////////// END OF src/Components/Tags/SelectionTags.hpp /////////////////
+
 //////////////// START OF src/Simulation/SimulationOptions.hpp /////////////////
 
 #include <cstdint>
@@ -13814,6 +13827,68 @@ class Simulation {
     std::vector<CalcDamageInputInfo> damageCalculations;
     std::vector<AnalyzeEffectInputInfo> effectsToAnalyze;
   };
+
+ private:
+  template <typename Selected, auto Function, typename... Tags, typename... ViewArgs>
+  void viewForSelected(const ViewArgs&... viewArgs) {
+    if (registry.group<>(entt::get<Selected, Tags...>).empty()) {
+      view<Function, Tags...>(viewArgs...);
+    }
+    else {
+      view<Function, Selected, Tags...>(viewArgs...);
+    }
+  }
+
+  template <typename Selected, auto Function, typename... Tags, typename... GroupArgs>
+  void groupForSelected(const GroupArgs&... groupArgs) {
+    if (registry.group<>(entt::get<Selected, Tags...>).empty()) {
+      group<Function, Tags...>(groupArgs...);
+    }
+    else {
+      group<Function, Selected, Tags...>(groupArgs...);
+    }
+  }
+
+ public:
+  template <auto Function, typename... Tags, typename... ViewArgs>
+  void viewForSelectedBattles(const ViewArgs&... viewArgs) {
+    viewForSelected<tags::SelectedForViewBattle, Function, Tags...>(viewArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... GroupArgs>
+  void groupForSelectedBattles(const GroupArgs&... groupArgs) {
+    groupForSelected<tags::SelectedForViewBattle, Function, Tags...>(groupArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... ViewArgs>
+  void viewForSelectedSides(const ViewArgs&... viewArgs) {
+    viewForSelected<tags::SelectedForViewSide, Function, Tags...>(viewArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... GroupArgs>
+  void groupForSelectedSides(const GroupArgs&... groupArgs) {
+    groupForSelected<tags::SelectedForViewSide, Function, Tags...>(groupArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... ViewArgs>
+  void viewForSelectedPokemon(const ViewArgs&... viewArgs) {
+    viewForSelected<tags::SelectedForViewPokemon, Function, Tags...>(viewArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... GroupArgs>
+  void groupForSelectedPokemon(const GroupArgs&... groupArgs) {
+    groupForSelected<tags::SelectedForViewPokemon, Function, Tags...>(groupArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... ViewArgs>
+  void viewForSelectedMoves(const ViewArgs&... viewArgs) {
+    viewForSelected<tags::SelectedForViewMove, Function, Tags...>(viewArgs...);
+  }
+
+  template <auto Function, typename... Tags, typename... GroupArgs>
+  void groupForSelectedMoves(const GroupArgs&... groupArgs) {
+    groupForSelected<tags::SelectedForViewMove, Function, Tags...>(groupArgs...);
+  }
 
   template <auto Function, typename... Tags, typename... ViewArgs>
   void view(const ViewArgs&... viewArgs) {
@@ -14455,7 +14530,7 @@ void runDamagingHitEvent(Simulation& simulation) {
 void runModifySpe(Simulation& simulation) {
   // simulation.view<function, ...Tags>();
 
-  simulation.view<dex::latest::Static::onModifySpe, status::tags::Paralysis>(
+  simulation.viewForSelectedPokemon<dex::latest::Static::onModifySpe, status::tags::Paralysis>(
     /*entt::exclude_t<ability::tags::QuickFeet>{}*/);
 }
 }  // namespace pokesim
@@ -14560,6 +14635,8 @@ void moveHitStep(Simulation& simulation) {
     applyDamage(simulation);
     runSecondaryMoveEffects(simulation);
     runDamagingHitEvent(simulation);
+
+    // Update stats if needed
   }
 }
 
@@ -14808,25 +14885,66 @@ inline void setActiveAction(types::handle& battleHandle, ActionQueue& actionQueu
 
 //////////////// END OF src/SimulateTurn/ManageActionQueue.hpp /////////////////
 
+/////////////////// START OF src/Utilities/SelectForView.hpp ///////////////////
+
+namespace pokesim::internal {
+template <typename SelectionTag, typename... ComponentsToSelect>
+struct SelectForView {
+  SelectForView(Simulation& simulation_) : simulation(simulation_) {
+    static_assert(
+      std::is_same<tags::SelectedForViewBattle, SelectionTag>() ||
+      std::is_same<tags::SelectedForViewSide, SelectionTag>() ||
+      std::is_same<tags::SelectedForViewPokemon, SelectionTag>() ||
+      std::is_same<tags::SelectedForViewMove, SelectionTag>());
+
+    auto view = simulation.registry.view<ComponentsToSelect...>();
+    simulation.registry.insert<SelectionTag>(view.begin(), view.end());
+  };
+
+  ~SelectForView() { deselect(); }
+
+  void deselect() {
+    auto view = simulation.registry.view<SelectionTag, ComponentsToSelect...>();
+    simulation.registry.erase<SelectionTag>(view.begin(), view.end());
+  }
+
+ private:
+  Simulation& simulation;
+};
+
+template <typename... ComponentsToSelect>
+struct SelectForBattleView : SelectForView<tags::SelectedForViewBattle, ComponentsToSelect...> {};
+template <typename... ComponentsToSelect>
+struct SelectForSideView : SelectForView<tags::SelectedForViewSide, ComponentsToSelect...> {};
+template <typename... ComponentsToSelect>
+struct SelectForPokemonView : SelectForView<tags::SelectedForViewPokemon, ComponentsToSelect...> {};
+template <typename... ComponentsToSelect>
+struct SelectForMoveView : SelectForView<tags::SelectedForViewMove, ComponentsToSelect...> {};
+}  // namespace pokesim::internal
+
+//////////////////// END OF src/Utilities/SelectForView.hpp ////////////////////
+
 ////////////////// START OF src/SimulateTurn/SimulateTurn.cpp //////////////////
 
 namespace pokesim::simulate_turn {
 void run(Simulation& simulation) {
+  internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
+
   updateSpeed(simulation);
-  simulation.view<resolveDecision>();
+  simulation.viewForSelectedBattles<resolveDecision>();
   simulation.registry.clear<SideDecision>();
 
-  // simulation.view<addBeforeTurnAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});
-  simulation.view<speedSort>();
-  simulation.view<addResidualAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});
+  // simulation.viewForSelectedBattles<addBeforeTurnAction>(entt::exclude_t<tags::BattleMidTurn>{});
+  simulation.viewForSelectedBattles<speedSort>();
+  simulation.viewForSelectedBattles<addResidualAction>(entt::exclude_t<tags::BattleMidTurn>{});
 
   auto turnEntities = simulation.registry.view<Turn, tags::SimulateTurn>();
   simulation.registry.insert<tags::BattleMidTurn>(turnEntities.begin(), turnEntities.end());
 
-  simulation.view<setActiveAction, tags::SimulateTurn>();
+  simulation.viewForSelectedBattles<setActiveAction>();
   while (!simulation.registry.view<action::tags::Active>().empty()) {
     runActiveAction(simulation);
-    simulation.view<setActiveAction, tags::SimulateTurn>();
+    simulation.viewForSelectedBattles<setActiveAction>();
   }
 
   nextTurn(simulation);
@@ -14844,7 +14962,7 @@ void runActiveAction(Simulation& simulation) {
 
   if (!simulation.registry.view<tags::SpeedUpdateRequired>().empty()) {
     updateSpeed(simulation);
-    simulation.view<speedSort>();  // Should only speed sort battles affected
+    simulation.viewForSelectedBattles<speedSort>();  // Should only speed sort battles affected
   }
 }
 
@@ -14853,8 +14971,8 @@ void runBeforeTurnAction(Simulation& /*simulation*/) {
 }
 
 void runMoveAction(Simulation& simulation) {
-  simulation.view<setActiveTarget, tags::SimulateTurn>();
-  simulation.view<setActiveMove, tags::SimulateTurn>();
+  simulation.viewForSelectedBattles<setActiveTarget>();
+  simulation.viewForSelectedBattles<setActiveMove>();
 
   simulation.view<deductPp, tags::ActiveMove>();
   simulation.view<setLastMoveUsed, tags::ActiveMove>();
@@ -17996,11 +18114,15 @@ void resetEffectiveSpeed(types::handle handle, stat::Spe spe) {
 }
 
 void updateSpeed(Simulation& simulation) {
-  simulation.view<resetEffectiveSpeed, tags::SpeedUpdateRequired>();
+  internal::SelectForPokemonView<tags::SpeedUpdateRequired> selectedSpeedUpdateRequired{simulation};
+
+  simulation.viewForSelectedPokemon<resetEffectiveSpeed>();
+
   // apply boosts
   runModifySpe(simulation);
   // trick room
 
+  selectedSpeedUpdateRequired.deselect();
   simulation.registry.clear<tags::SpeedUpdateRequired>();
 }
 }  // namespace pokesim

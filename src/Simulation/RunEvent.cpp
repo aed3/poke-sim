@@ -23,7 +23,7 @@ void runDamagingHitEvent(Simulation& simulation) {
 void runModifySpe(Simulation& simulation) {
   // simulation.view<function, ...Tags>();
 
-  simulation.view<dex::latest::Static::onModifySpe, status::tags::Paralysis>(
+  simulation.viewForSelectedPokemon<dex::latest::Static::onModifySpe, status::tags::Paralysis>(
     /*entt::exclude_t<ability::tags::QuickFeet>{}*/);
 }
 }  // namespace pokesim

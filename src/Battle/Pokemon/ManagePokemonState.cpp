@@ -6,6 +6,7 @@
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
+#include <Utilities/SelectForView.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
@@ -17,11 +18,15 @@ void resetEffectiveSpeed(types::handle handle, stat::Spe spe) {
 }
 
 void updateSpeed(Simulation& simulation) {
-  simulation.view<resetEffectiveSpeed, tags::SpeedUpdateRequired>();
+  internal::SelectForPokemonView<tags::SpeedUpdateRequired> selectedSpeedUpdateRequired{simulation};
+
+  simulation.viewForSelectedPokemon<resetEffectiveSpeed>();
+
   // apply boosts
   runModifySpe(simulation);
   // trick room
 
+  selectedSpeedUpdateRequired.deselect();
   simulation.registry.clear<tags::SpeedUpdateRequired>();
 }
 }  // namespace pokesim

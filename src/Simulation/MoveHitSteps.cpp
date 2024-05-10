@@ -45,6 +45,8 @@ void moveHitStep(Simulation& simulation) {
     applyDamage(simulation);
     runSecondaryMoveEffects(simulation);
     runDamagingHitEvent(simulation);
+
+    // Update stats if needed
   }
 }
 
