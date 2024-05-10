@@ -10,6 +10,7 @@
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/Stats.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
@@ -67,6 +68,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
   pokemonSetup.setStat<stat::Spa>(pokemonData.stats.spa);
   pokemonSetup.setStat<stat::Spd>(pokemonData.stats.spd);
   pokemonSetup.setStat<stat::Spe>(pokemonData.stats.spe);
+  pokemonSetup.setProperty<tags::SpeedUpdateRequired>();
 
   return pokemonSetup;
 }

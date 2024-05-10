@@ -6,12 +6,17 @@
 
 namespace pokesim {
 class Simulation;
+
+namespace stat {
+struct EffectiveSpeed;
 }
+}  // namespace pokesim
 
 namespace pokesim::dex {
 namespace internal {
 struct StaticEvents {
   static void onDamagingHit(Simulation& simulation);
+  static void onModifySpe(stat::EffectiveSpeed& effectiveSpeed);
 };
 }  // namespace internal
 
@@ -24,4 +29,8 @@ struct Static : internal::StaticEvents {
     static constexpr std::string_view smogonId = "static";
   };
 };
+
+namespace latest {
+using Static = dex::Static<GameMechanics::SCARLET_VIOLET>;
+}
 }  // namespace pokesim::dex
