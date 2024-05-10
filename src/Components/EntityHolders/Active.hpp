@@ -7,6 +7,10 @@ struct ActiveAction {
   types::entity activeAction;
 };
 
+struct NextAction {
+  types::entity nextAction;
+};
+
 struct ActiveMove {
   types::entity activeMove;
 };

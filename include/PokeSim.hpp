@@ -69,6 +69,7 @@
  * src/Components/EntityHolders/Battle.hpp
  * src/Components/EntityHolders/Side.hpp
  * src/Components/EntityHolders/Sides.hpp
+ * src/Components/Tags/PokemonTags.hpp
  * src/Components/Tags/SimulationTags.hpp
  * src/Components/EntityHolders/MoveEffect.hpp
  * src/Types/Enums/ActionOrder.hpp
@@ -90,6 +91,7 @@
  * src/CalcDamage/CalcDamage.hpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Simulation/Simulation.cpp
+ * src/Components/Tags/StatusTags.hpp
  * src/Pokedex/Abilities/Static.hpp
  * src/Simulation/RunEvent.hpp
  * src/Simulation/RunEvent.cpp
@@ -146,7 +148,6 @@
  * src/Pokedex/Moves/KnockOff.hpp
  * src/Pokedex/Moves/Moonblast.hpp
  * src/Pokedex/Moves/QuiverDance.hpp
- * src/Components/Tags/StatusTags.hpp
  * src/Pokedex/Moves/Thunderbolt.hpp
  * src/Pokedex/Moves/WillOWisp.hpp
  * src/Pokedex/Setup/GetMoveBuild.cpp
@@ -188,7 +189,6 @@
  * src/Components/CloneFromCloneTo.hpp
  * src/Components/Probability.hpp
  * src/Components/RNGSeed.hpp
- * src/Components/Tags/PokemonTags.hpp
  * src/Battle/Setup/BattleStateSetup.cpp
  * src/Battle/Pokemon/ManagePokemonState.cpp
  * src/Battle/ManageBattleState.cpp
@@ -12729,6 +12729,10 @@ struct Spd {
 struct Spe {
   types::stat stat = 1;
 };
+
+struct EffectiveSpeed {
+  types::stat effectiveSpeed = 1;
+};
 }  // namespace pokesim::stat
 
 /////////////////////// END OF src/Components/Stats.hpp ////////////////////////
@@ -13252,6 +13256,17 @@ struct Sides {
 }  // namespace pokesim
 
 //////////////// END OF src/Components/EntityHolders/Sides.hpp /////////////////
+
+///////////////// START OF src/Components/Tags/PokemonTags.hpp /////////////////
+
+namespace pokesim::tags {
+// Indicates the Pokemon is currently in a battle
+struct ActivePokemon {};
+
+struct SpeedUpdateRequired {};
+}  // namespace pokesim::tags
+
+////////////////// END OF src/Components/Tags/PokemonTags.hpp //////////////////
 
 /////////////// START OF src/Components/Tags/SimulationTags.hpp ////////////////
 
@@ -13916,6 +13931,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
   pokemonSetup.setStat<stat::Spa>(pokemonData.stats.spa);
   pokemonSetup.setStat<stat::Spd>(pokemonData.stats.spd);
   pokemonSetup.setStat<stat::Spe>(pokemonData.stats.spe);
+  pokemonSetup.setProperty<tags::SpeedUpdateRequired>();
 
   return pokemonSetup;
 }
@@ -14350,18 +14366,41 @@ void Simulation::run() {
 
 ///////////////////// END OF src/Simulation/Simulation.cpp /////////////////////
 
+///////////////// START OF src/Components/Tags/StatusTags.hpp //////////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::status::tags {
+struct Burn {};
+struct Freeze {};
+struct Paralysis {};
+struct Poison {};
+struct Sleep {};
+struct Toxic {};
+
+// Assigns a status' tag to a handle
+inline void enumToTag(dex::Status status, types::handle& handle);
+}  // namespace pokesim::status::tags
+
+////////////////// END OF src/Components/Tags/StatusTags.hpp ///////////////////
+
 ////////////////// START OF src/Pokedex/Abilities/Static.hpp ///////////////////
 
 #include <string_view>
 
 namespace pokesim {
 class Simulation;
+
+namespace stat {
+struct EffectiveSpeed;
 }
+}  // namespace pokesim
 
 namespace pokesim::dex {
 namespace internal {
 struct StaticEvents {
   inline static void onDamagingHit(Simulation& simulation);
+  inline static void onModifySpe(stat::EffectiveSpeed& effectiveSpeed);
 };
 }  // namespace internal
 
@@ -14374,6 +14413,10 @@ struct Static : internal::StaticEvents {
     static constexpr std::string_view smogonId = "static";
   };
 };
+
+namespace latest {
+using Static = dex::Static<GameMechanics::SCARLET_VIOLET>;
+}
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Abilities/Static.hpp ////////////////////
@@ -14388,6 +14431,8 @@ inline void runModifyAccuracyEvent(Simulation& simulation);
 inline void runModifyCritRatioEvent(Simulation& simulation);
 inline void runBasePowerEvent(Simulation& simulation);
 inline void runDamagingHitEvent(Simulation& simulation);
+
+inline void runModifySpe(Simulation& simulation);
 }  // namespace pokesim
 
 ////////////////////// END OF src/Simulation/RunEvent.hpp //////////////////////
@@ -14404,7 +14449,14 @@ void runModifyCritRatioEvent(Simulation& /*simulation*/) {}
 void runBasePowerEvent(Simulation& /*simulation*/) {}
 
 void runDamagingHitEvent(Simulation& simulation) {
-  dex::Static<GameMechanics::NONE>::onDamagingHit(simulation);
+  dex::latest::Static::onDamagingHit(simulation);
+}
+
+void runModifySpe(Simulation& simulation) {
+  // simulation.view<function, ...Tags>();
+
+  simulation.view<dex::latest::Static::onModifySpe, status::tags::Paralysis>(
+    /*entt::exclude_t<ability::tags::QuickFeet>{}*/);
 }
 }  // namespace pokesim
 
@@ -14521,11 +14573,13 @@ void runMoveHitSteps(Simulation& simulation) {
 ////////////////// START OF src/Battle/ManageBattleState.hpp ///////////////////
 
 namespace pokesim {
+class Simulation;
 struct ActiveAction;
 struct ActiveSource;
 
 inline void setActiveTarget(types::handle handle, ActiveAction activeAction, ActiveSource activeSource);
 inline void setActiveMove(types::handle handle, ActiveAction activeAction);
+inline void clearActive(Simulation& simulation);
 }  // namespace pokesim
 
 /////////////////// END OF src/Battle/ManageBattleState.hpp ////////////////////
@@ -14533,10 +14587,17 @@ inline void setActiveMove(types::handle handle, ActiveAction activeAction);
 ////////////// START OF src/Battle/Pokemon/ManagePokemonState.hpp //////////////
 
 namespace pokesim {
+class Simulation;
 struct Pp;
+namespace stat {
+struct Spe;
+}  // namespace stat
 
 inline void deductPp(Pp& pp);
 inline void setLastMoveUsed(types::handle handle);
+inline void resetEffectiveSpeed(types::handle handle, stat::Spe spe);
+
+inline void updateSpeed(Simulation& simulation);
 }  // namespace pokesim
 
 /////////////// END OF src/Battle/Pokemon/ManagePokemonState.hpp ///////////////
@@ -14546,6 +14607,10 @@ inline void setLastMoveUsed(types::handle handle);
 namespace pokesim {
 struct ActiveAction {
   types::entity activeAction;
+};
+
+struct NextAction {
+  types::entity nextAction;
 };
 
 struct ActiveMove {
@@ -14737,7 +14802,7 @@ inline void speedSort(types::handle handle, ActionQueue& actionQueue);
 
 inline void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue);
 inline void addResidualAction(types::registry& registry, ActionQueue& actionQueue);
-inline void setActiveAction(types::registry& registry, ActionQueue& actionQueue);
+inline void setActiveAction(types::handle& battleHandle, ActionQueue& actionQueue);
 }  // namespace simulate_turn
 }  // namespace pokesim
 
@@ -14747,10 +14812,11 @@ inline void setActiveAction(types::registry& registry, ActionQueue& actionQueue)
 
 namespace pokesim::simulate_turn {
 void run(Simulation& simulation) {
+  updateSpeed(simulation);
   simulation.view<resolveDecision>();
   simulation.registry.clear<SideDecision>();
 
-  simulation.view<addBeforeTurnAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});
+  // simulation.view<addBeforeTurnAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});
   simulation.view<speedSort>();
   simulation.view<addResidualAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});
 
@@ -14767,12 +14833,24 @@ void run(Simulation& simulation) {
 }
 
 void runActiveAction(Simulation& simulation) {
-  runBeforeTurnAction(simulation);
+  // runBeforeTurnAction(simulation);
   runMoveAction(simulation);
   runResidualAction(simulation);
+
+  clearActive(simulation);
+  // faint pokemon
+  // Update
+  // Switch requests
+
+  if (!simulation.registry.view<tags::SpeedUpdateRequired>().empty()) {
+    updateSpeed(simulation);
+    simulation.view<speedSort>();  // Should only speed sort battles affected
+  }
 }
 
-void runBeforeTurnAction(Simulation& /*simulation*/) {}
+void runBeforeTurnAction(Simulation& /*simulation*/) {
+  // Barely used, will find different way of handling it
+}
 
 void runMoveAction(Simulation& simulation) {
   simulation.view<setActiveTarget, tags::SimulateTurn>();
@@ -14876,7 +14954,13 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
       SpeedSort speedSort;
       types::entity sourceEntity = slotToEntity(registry, sideHandle.entity(), decision.sourceSlot);
 
-      speedSort.speed = registry.get<stat::Spe>(sourceEntity).stat;  // TODO (aed3): getActionSpeed
+      stat::EffectiveSpeed* effectiveSpeed = registry.try_get<stat::EffectiveSpeed>(sourceEntity);
+      if (effectiveSpeed != nullptr) {
+        speedSort.speed = effectiveSpeed->effectiveSpeed;
+      }
+      else {
+        speedSort.speed = registry.get<stat::Spe>(sourceEntity).stat;
+      }
 
       if (decision.moveChoice.has_value()) {
         actionHandle.emplace<action::Move>(decision.moveChoice.value());
@@ -14997,7 +15081,8 @@ void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
   actionQueue.actionQueue.push_back(actionHandle.entity());
 }
 
-void setActiveAction(types::registry& registry, ActionQueue& actionQueue) {
+void setActiveAction(types::handle& battleHandle, ActionQueue& actionQueue) {
+  types::registry& registry = *battleHandle.registry();
   registry.clear<action::tags::Active>();
 
   if (actionQueue.actionQueue.empty()) return;
@@ -15006,6 +15091,10 @@ void setActiveAction(types::registry& registry, ActionQueue& actionQueue) {
   registry.emplace<action::tags::Active>(newActiveAction);
 
   actionQueue.actionQueue.erase(actionQueue.actionQueue.begin());
+
+  registry.clear<NextAction>();
+  battleHandle.emplace<ActiveAction>(newActiveAction);
+  battleHandle.emplace<NextAction>(actionQueue.actionQueue[0]);
 }
 }  // namespace pokesim::simulate_turn
 
@@ -15791,24 +15880,6 @@ using QuiverDance = dex::QuiverDance<GameMechanics::SCARLET_VIOLET>;
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Moves/QuiverDance.hpp ///////////////////
-
-///////////////// START OF src/Components/Tags/StatusTags.hpp //////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::status::tags {
-struct Burn {};
-struct Freeze {};
-struct Paralysis {};
-struct Poison {};
-struct Sleep {};
-struct Toxic {};
-
-// Assigns a status' tag to a handle
-inline void enumToTag(dex::Status status, types::handle& handle);
-}  // namespace pokesim::status::tags
-
-////////////////// END OF src/Components/Tags/StatusTags.hpp ///////////////////
 
 ////////////////// START OF src/Pokedex/Moves/Thunderbolt.hpp //////////////////
 
@@ -17249,6 +17320,9 @@ void Pokedex::loadAbilities(const entt::dense_set<dex::Ability>& abilitySet) {
 
 namespace pokesim::dex {
 void internal::StaticEvents::onDamagingHit(Simulation& /*simulation*/) {}
+void internal::StaticEvents::onModifySpe(stat::EffectiveSpeed& effectiveSpeed) {
+  effectiveSpeed.effectiveSpeed /= 2;
+}
 }  // namespace pokesim::dex
 
 //////////////// END OF src/Pokedex/Abilities/AbilityEvents.cpp ////////////////
@@ -17820,15 +17894,6 @@ struct RngSeed {
 
 ////////////////////// END OF src/Components/RNGSeed.hpp ///////////////////////
 
-///////////////// START OF src/Components/Tags/PokemonTags.hpp /////////////////
-
-namespace pokesim::tags {
-// Indicates the Pokemon is currently in a battle
-struct ActivePokemon {};
-}  // namespace pokesim::tags
-
-////////////////// END OF src/Components/Tags/PokemonTags.hpp //////////////////
-
 //////////////// START OF src/Battle/Setup/BattleStateSetup.cpp ////////////////
 
 #include <chrono>
@@ -17926,6 +17991,18 @@ std::vector<BattleStateSetup> BattleStateSetup::clone(std::optional<types::clone
 namespace pokesim {
 void deductPp(Pp& /*pp*/) {}
 void setLastMoveUsed(types::handle /*handle*/) {}
+void resetEffectiveSpeed(types::handle handle, stat::Spe spe) {
+  handle.emplace_or_replace<stat::EffectiveSpeed>(spe.stat);
+}
+
+void updateSpeed(Simulation& simulation) {
+  simulation.view<resetEffectiveSpeed, tags::SpeedUpdateRequired>();
+  // apply boosts
+  runModifySpe(simulation);
+  // trick room
+
+  simulation.registry.clear<tags::SpeedUpdateRequired>();
+}
 }  // namespace pokesim
 
 /////////////// END OF src/Battle/Pokemon/ManagePokemonState.cpp ///////////////
@@ -17935,6 +18012,13 @@ void setLastMoveUsed(types::handle /*handle*/) {}
 namespace pokesim {
 void setActiveTarget(types::handle /*handle*/, ActiveAction /*activeAction*/, ActiveSource /*activeSource*/) {}
 void setActiveMove(types::handle /*handle*/, ActiveAction /*activeAction*/) {}
+void clearActive(Simulation& simulation) {
+  types::registry& registry = simulation.registry;
+  registry.clear<ActiveAction>();
+  registry.clear<ActiveMove>();
+  registry.clear<ActiveTarget>();
+  registry.clear<ActiveSource>();
+}
 }  // namespace pokesim
 
 /////////////////// END OF src/Battle/ManageBattleState.cpp ////////////////////

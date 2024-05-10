@@ -3,6 +3,7 @@
 #include <Battle/Helpers/Helpers.hpp>
 #include <Components/Decisions.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
+#include <Components/EntityHolders/Active.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
@@ -59,7 +60,13 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
       SpeedSort speedSort;
       types::entity sourceEntity = slotToEntity(registry, sideHandle.entity(), decision.sourceSlot);
 
-      speedSort.speed = registry.get<stat::Spe>(sourceEntity).stat;  // TODO (aed3): getActionSpeed
+      stat::EffectiveSpeed* effectiveSpeed = registry.try_get<stat::EffectiveSpeed>(sourceEntity);
+      if (effectiveSpeed != nullptr) {
+        speedSort.speed = effectiveSpeed->effectiveSpeed;
+      }
+      else {
+        speedSort.speed = registry.get<stat::Spe>(sourceEntity).stat;
+      }
 
       if (decision.moveChoice.has_value()) {
         actionHandle.emplace<action::Move>(decision.moveChoice.value());
@@ -180,7 +187,8 @@ void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
   actionQueue.actionQueue.push_back(actionHandle.entity());
 }
 
-void setActiveAction(types::registry& registry, ActionQueue& actionQueue) {
+void setActiveAction(types::handle& battleHandle, ActionQueue& actionQueue) {
+  types::registry& registry = *battleHandle.registry();
   registry.clear<action::tags::Active>();
 
   if (actionQueue.actionQueue.empty()) return;
@@ -189,5 +197,9 @@ void setActiveAction(types::registry& registry, ActionQueue& actionQueue) {
   registry.emplace<action::tags::Active>(newActiveAction);
 
   actionQueue.actionQueue.erase(actionQueue.actionQueue.begin());
+
+  registry.clear<NextAction>();
+  battleHandle.emplace<ActiveAction>(newActiveAction);
+  battleHandle.emplace<NextAction>(actionQueue.actionQueue[0]);
 }
 }  // namespace pokesim::simulate_turn

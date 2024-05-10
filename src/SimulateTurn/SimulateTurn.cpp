@@ -11,6 +11,7 @@
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SpeedSort.hpp>
 #include <Components/Tags/BattleTags.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Turn.hpp>
 #include <Simulation/MoveHitSteps.hpp>
@@ -20,10 +21,11 @@
 
 namespace pokesim::simulate_turn {
 void run(Simulation& simulation) {
+  updateSpeed(simulation);
   simulation.view<resolveDecision>();
   simulation.registry.clear<SideDecision>();
 
-  simulation.view<addBeforeTurnAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});
+  // simulation.view<addBeforeTurnAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});
   simulation.view<speedSort>();
   simulation.view<addResidualAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});
 
@@ -40,12 +42,24 @@ void run(Simulation& simulation) {
 }
 
 void runActiveAction(Simulation& simulation) {
-  runBeforeTurnAction(simulation);
+  // runBeforeTurnAction(simulation);
   runMoveAction(simulation);
   runResidualAction(simulation);
+
+  clearActive(simulation);
+  // faint pokemon
+  // Update
+  // Switch requests
+
+  if (!simulation.registry.view<tags::SpeedUpdateRequired>().empty()) {
+    updateSpeed(simulation);
+    simulation.view<speedSort>();  // Should only speed sort battles affected
+  }
 }
 
-void runBeforeTurnAction(Simulation& /*simulation*/) {}
+void runBeforeTurnAction(Simulation& /*simulation*/) {
+  // Barely used, will find different way of handling it
+}
 
 void runMoveAction(Simulation& simulation) {
   simulation.view<setActiveTarget, tags::SimulateTurn>();
