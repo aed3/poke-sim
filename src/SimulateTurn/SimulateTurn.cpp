@@ -16,26 +16,29 @@
 #include <Components/Turn.hpp>
 #include <Simulation/MoveHitSteps.hpp>
 #include <Simulation/Simulation.hpp>
+#include <Utilities/SelectForView.hpp>
 
 #include "ManageActionQueue.hpp"
 
 namespace pokesim::simulate_turn {
 void run(Simulation& simulation) {
+  internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
+
   updateSpeed(simulation);
-  simulation.view<resolveDecision>();
+  simulation.viewForSelectedBattles<resolveDecision>();
   simulation.registry.clear<SideDecision>();
 
-  // simulation.view<addBeforeTurnAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});
-  simulation.view<speedSort>();
-  simulation.view<addResidualAction, tags::SimulateTurn>(entt::exclude_t<tags::BattleMidTurn>{});
+  // simulation.viewForSelectedBattles<addBeforeTurnAction>(entt::exclude_t<tags::BattleMidTurn>{});
+  simulation.viewForSelectedBattles<speedSort>();
+  simulation.viewForSelectedBattles<addResidualAction>(entt::exclude_t<tags::BattleMidTurn>{});
 
   auto turnEntities = simulation.registry.view<Turn, tags::SimulateTurn>();
   simulation.registry.insert<tags::BattleMidTurn>(turnEntities.begin(), turnEntities.end());
 
-  simulation.view<setActiveAction, tags::SimulateTurn>();
+  simulation.viewForSelectedBattles<setActiveAction>();
   while (!simulation.registry.view<action::tags::Active>().empty()) {
     runActiveAction(simulation);
-    simulation.view<setActiveAction, tags::SimulateTurn>();
+    simulation.viewForSelectedBattles<setActiveAction>();
   }
 
   nextTurn(simulation);
@@ -53,7 +56,7 @@ void runActiveAction(Simulation& simulation) {
 
   if (!simulation.registry.view<tags::SpeedUpdateRequired>().empty()) {
     updateSpeed(simulation);
-    simulation.view<speedSort>();  // Should only speed sort battles affected
+    simulation.viewForSelectedBattles<speedSort>();  // Should only speed sort battles affected
   }
 }
 
@@ -62,8 +65,8 @@ void runBeforeTurnAction(Simulation& /*simulation*/) {
 }
 
 void runMoveAction(Simulation& simulation) {
-  simulation.view<setActiveTarget, tags::SimulateTurn>();
-  simulation.view<setActiveMove, tags::SimulateTurn>();
+  simulation.viewForSelectedBattles<setActiveTarget>();
+  simulation.viewForSelectedBattles<setActiveMove>();
 
   simulation.view<deductPp, tags::ActiveMove>();
   simulation.view<setLastMoveUsed, tags::ActiveMove>();
