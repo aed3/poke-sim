@@ -187,7 +187,7 @@ void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
   actionQueue.actionQueue.push_back(actionHandle.entity());
 }
 
-void setActiveAction(types::handle& battleHandle, ActionQueue& actionQueue) {
+void setActiveAction(types::handle battleHandle, ActionQueue& actionQueue) {
   types::registry& registry = *battleHandle.registry();
   registry.clear<action::tags::Active>();
 

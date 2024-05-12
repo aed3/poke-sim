@@ -25,7 +25,7 @@ void run(Simulation& simulation) {
   internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
 
   updateSpeed(simulation);
-  simulation.viewForSelectedBattles<resolveDecision>();
+  simulation.view<resolveDecision>();
   simulation.registry.clear<SideDecision>();
 
   // simulation.viewForSelectedBattles<addBeforeTurnAction>(entt::exclude_t<tags::BattleMidTurn>{});
