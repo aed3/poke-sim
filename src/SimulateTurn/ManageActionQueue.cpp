@@ -200,6 +200,8 @@ void setActiveAction(types::handle battleHandle, ActionQueue& actionQueue) {
 
   registry.clear<NextAction>();
   battleHandle.emplace<ActiveAction>(newActiveAction);
-  battleHandle.emplace<NextAction>(actionQueue.actionQueue[0]);
+  if (!actionQueue.actionQueue.empty()) {
+    battleHandle.emplace<NextAction>(actionQueue.actionQueue[0]);
+  }
 }
 }  // namespace pokesim::simulate_turn
