@@ -1,27 +1,28 @@
 #pragma once
 
-#include <Components/Tags/SelectionTags.hpp>
+#include <Components/Selection.hpp>
 #include <Simulation/Simulation.hpp>
 
 namespace pokesim::internal {
-template <typename SelectionTag, typename... ComponentsToSelect>
+template <typename Selection, typename... ComponentsToSelect>
 struct SelectForView {
   SelectForView(Simulation& simulation_) : simulation(simulation_) {
-    static_assert(
-      std::is_same<tags::SelectedForViewBattle, SelectionTag>() ||
-      std::is_same<tags::SelectedForViewSide, SelectionTag>() ||
-      std::is_same<tags::SelectedForViewPokemon, SelectionTag>() ||
-      std::is_same<tags::SelectedForViewMove, SelectionTag>());
-
-    auto view = simulation.registry.view<ComponentsToSelect...>();
-    simulation.registry.insert<SelectionTag>(view.begin(), view.end());
+    for (types::entity entity : simulation.registry.view<ComponentsToSelect...>()) {
+      simulation.registry.get_or_emplace<Selection>(entity).count++;
+    }
   };
 
   ~SelectForView() { deselect(); }
 
   void deselect() {
-    auto view = simulation.registry.view<SelectionTag, ComponentsToSelect...>();
-    simulation.registry.erase<SelectionTag>(view.begin(), view.end());
+    for (types::entity entity : simulation.registry.view<Selection, ComponentsToSelect...>()) {
+      Selection& selection = simulation.registry.get<Selection>(entity);
+      selection.count--;
+
+      if (!selection.count) {
+        simulation.registry.remove<Selection>(entity);
+      }
+    }
   }
 
  private:
@@ -29,11 +30,11 @@ struct SelectForView {
 };
 
 template <typename... ComponentsToSelect>
-struct SelectForBattleView : SelectForView<tags::SelectedForViewBattle, ComponentsToSelect...> {};
+struct SelectForBattleView : SelectForView<SelectedForViewBattle, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForSideView : SelectForView<tags::SelectedForViewSide, ComponentsToSelect...> {};
+struct SelectForSideView : SelectForView<SelectedForViewSide, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForPokemonView : SelectForView<tags::SelectedForViewPokemon, ComponentsToSelect...> {};
+struct SelectForPokemonView : SelectForView<SelectedForViewPokemon, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForMoveView : SelectForView<tags::SelectedForViewMove, ComponentsToSelect...> {};
+struct SelectForMoveView : SelectForView<SelectedForViewMove, ComponentsToSelect...> {};
 }  // namespace pokesim::internal

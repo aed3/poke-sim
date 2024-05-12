@@ -2,7 +2,7 @@
 
 #include <Components/Decisions.hpp>
 #include <Components/EVsIVs.hpp>
-#include <Components/Tags/SelectionTags.hpp>
+#include <Components/Selection.hpp>
 #include <Types/Entity.hpp>
 #include <Types/headers.hpp>
 #include <Utilities/RegistryLoop.hpp>
@@ -113,7 +113,7 @@ class Simulation {
       view<Function, Tags...>(viewArgs...);
     }
     else {
-      view<Function, Selected, Tags...>(viewArgs...);
+      internal::RegistryLoop<Function, Tags...>::template view<Selected>(registry, viewArgs...);
     }
   }
 
@@ -123,59 +123,59 @@ class Simulation {
       group<Function, Tags...>(groupArgs...);
     }
     else {
-      group<Function, Selected, Tags...>(groupArgs...);
+      internal::RegistryLoop<Function, Tags...>::template group<Selected>(registry, groupArgs...);
     }
   }
 
  public:
   template <auto Function, typename... Tags, typename... ViewArgs>
   void viewForSelectedBattles(const ViewArgs&... viewArgs) {
-    viewForSelected<tags::SelectedForViewBattle, Function, Tags...>(viewArgs...);
+    viewForSelected<SelectedForViewBattle, Function, Tags...>(viewArgs...);
   }
 
   template <auto Function, typename... Tags, typename... GroupArgs>
   void groupForSelectedBattles(const GroupArgs&... groupArgs) {
-    groupForSelected<tags::SelectedForViewBattle, Function, Tags...>(groupArgs...);
+    groupForSelected<SelectedForViewBattle, Function, Tags...>(groupArgs...);
   }
 
   template <auto Function, typename... Tags, typename... ViewArgs>
   void viewForSelectedSides(const ViewArgs&... viewArgs) {
-    viewForSelected<tags::SelectedForViewSide, Function, Tags...>(viewArgs...);
+    viewForSelected<SelectedForViewSide, Function, Tags...>(viewArgs...);
   }
 
   template <auto Function, typename... Tags, typename... GroupArgs>
   void groupForSelectedSides(const GroupArgs&... groupArgs) {
-    groupForSelected<tags::SelectedForViewSide, Function, Tags...>(groupArgs...);
+    groupForSelected<SelectedForViewSide, Function, Tags...>(groupArgs...);
   }
 
   template <auto Function, typename... Tags, typename... ViewArgs>
   void viewForSelectedPokemon(const ViewArgs&... viewArgs) {
-    viewForSelected<tags::SelectedForViewPokemon, Function, Tags...>(viewArgs...);
+    viewForSelected<SelectedForViewPokemon, Function, Tags...>(viewArgs...);
   }
 
   template <auto Function, typename... Tags, typename... GroupArgs>
   void groupForSelectedPokemon(const GroupArgs&... groupArgs) {
-    groupForSelected<tags::SelectedForViewPokemon, Function, Tags...>(groupArgs...);
+    groupForSelected<SelectedForViewPokemon, Function, Tags...>(groupArgs...);
   }
 
   template <auto Function, typename... Tags, typename... ViewArgs>
   void viewForSelectedMoves(const ViewArgs&... viewArgs) {
-    viewForSelected<tags::SelectedForViewMove, Function, Tags...>(viewArgs...);
+    viewForSelected<SelectedForViewMove, Function, Tags...>(viewArgs...);
   }
 
   template <auto Function, typename... Tags, typename... GroupArgs>
   void groupForSelectedMoves(const GroupArgs&... groupArgs) {
-    groupForSelected<tags::SelectedForViewMove, Function, Tags...>(groupArgs...);
+    groupForSelected<SelectedForViewMove, Function, Tags...>(groupArgs...);
   }
 
   template <auto Function, typename... Tags, typename... ViewArgs>
   void view(const ViewArgs&... viewArgs) {
-    internal::RegistryLoop<Function, Tags...>::view(registry, viewArgs...);
+    internal::RegistryLoop<Function, Tags...>::template view<>(registry, viewArgs...);
   }
 
   template <auto Function, typename... Tags, typename... GroupArgs>
   void group(const GroupArgs&... groupArgs) {
-    internal::RegistryLoop<Function, Tags...>::group(registry, groupArgs...);
+    internal::RegistryLoop<Function, Tags...>::template group<>(registry, groupArgs...);
   }
 
  private:

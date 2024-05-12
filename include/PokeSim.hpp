@@ -80,7 +80,7 @@
  * src/Types/Enums/Stat.hpp
  * src/Types/Enums/Type.hpp
  * src/Pokedex/Pokedex.hpp
- * src/Components/Tags/SelectionTags.hpp
+ * src/Components/Selection.hpp
  * src/Simulation/SimulationOptions.hpp
  * src/Types/Damage.hpp
  * src/Utilities/RegistryLoop.hpp
@@ -13575,16 +13575,26 @@ class Pokedex {
 
 //////////////////////// END OF src/Pokedex/Pokedex.hpp ////////////////////////
 
-//////////////// START OF src/Components/Tags/SelectionTags.hpp ////////////////
+//////////////////// START OF src/Components/Selection.hpp /////////////////////
 
-namespace pokesim::tags {
-struct SelectedForViewBattle {};
-struct SelectedForViewSide {};
-struct SelectedForViewPokemon {};
-struct SelectedForViewMove {};
-}  // namespace pokesim::tags
+#include <cstdint>
 
-///////////////// END OF src/Components/Tags/SelectionTags.hpp /////////////////
+namespace pokesim {
+struct SelectedForViewBattle {
+  std::uint8_t count = 0;
+};
+struct SelectedForViewSide {
+  std::uint8_t count = 0;
+};
+struct SelectedForViewPokemon {
+  std::uint8_t count = 0;
+};
+struct SelectedForViewMove {
+  std::uint8_t count = 0;
+};
+}  // namespace pokesim
+
+///////////////////// END OF src/Components/Selection.hpp //////////////////////
 
 //////////////// START OF src/Simulation/SimulationOptions.hpp /////////////////
 
@@ -13662,35 +13672,33 @@ struct RegistryLoop {
 
   template <class Signature, class... Args>
   struct RegistryLoopInternal<Signature (*)(Args...)> {
-    template <typename... ViewArgs>
+    template <typename... Selected, typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([](types::entity /*entity*/, auto&&... args) {
-        Function(args...);
-      });
+      registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...)
+        .each([](types::entity, const Selected&..., auto&&... args) { Function(args...); });
     }
 
-    template <typename... GroupArgs>
+    template <typename... Selected, typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...).each([](types::entity /*entity*/, auto&&... args) {
-        Function(args...);
-      });
+      registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...)
+        .each([](types::entity, const Selected&..., auto&&... args) { Function(args...); });
     }
   };
 
   template <class Signature, class... Args>
   struct RegistryLoopInternal<Signature (*)(types::handle, Args...)> {
-    template <typename... ViewArgs>
+    template <typename... Selected, typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
-        .each([&registry](types::entity entity, auto&&... args) {
+      registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...)
+        .each([&registry](types::entity entity, const Selected&..., auto&&... args) {
           Function(types::handle{registry, entity}, args...);
         });
     }
 
-    template <typename... GroupArgs>
+    template <typename... Selected, typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
-        .each([&registry](types::entity entity, auto&&... args) {
+      registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...)
+        .each([&registry](types::entity entity, const Selected&..., auto&&... args) {
           Function(types::handle{registry, entity}, args...);
         });
     }
@@ -13698,30 +13706,30 @@ struct RegistryLoop {
 
   template <class Signature, class... Args>
   struct RegistryLoopInternal<Signature (*)(types::registry&, Args...)> {
-    template <typename... ViewArgs>
+    template <typename... Selected, typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
-        .each([&registry](types::entity /*entity*/, auto&&... args) { Function(registry, args...); });
+      registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...)
+        .each([&registry](types::entity, const Selected&..., auto&&... args) { Function(registry, args...); });
     }
 
-    template <typename... GroupArgs>
+    template <typename... Selected, typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
-        .each([&registry](types::entity /*entity*/, auto&&... args) { Function(registry, args...); });
+      registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...)
+        .each([&registry](types::entity, const Selected&..., auto&&... args) { Function(registry, args...); });
     }
   };
 
   using FunctionSig = std::decay_t<decltype(Function)>;
 
  public:
-  template <typename... ViewArgs>
+  template <typename... Selected, typename... ViewArgs>
   static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-    RegistryLoopInternal<FunctionSig>::view(registry, viewArgs...);
+    RegistryLoopInternal<FunctionSig>::template view<Selected...>(registry, viewArgs...);
   }
 
-  template <typename... GetExcludeArgs>
-  static void group(types::registry& registry, const GetExcludeArgs&... getExcludeArgs) {
-    RegistryLoopInternal<FunctionSig>::group(registry, getExcludeArgs...);
+  template <typename... Selected, typename... GroupArgs>
+  static void group(types::registry& registry, const GroupArgs&... groupArgs) {
+    RegistryLoopInternal<FunctionSig>::template group<Selected...>(registry, groupArgs...);
   }
 };
 }  // namespace pokesim::internal
@@ -13835,7 +13843,7 @@ class Simulation {
       view<Function, Tags...>(viewArgs...);
     }
     else {
-      view<Function, Selected, Tags...>(viewArgs...);
+      internal::RegistryLoop<Function, Tags...>::template view<Selected>(registry, viewArgs...);
     }
   }
 
@@ -13845,59 +13853,59 @@ class Simulation {
       group<Function, Tags...>(groupArgs...);
     }
     else {
-      group<Function, Selected, Tags...>(groupArgs...);
+      internal::RegistryLoop<Function, Tags...>::template group<Selected>(registry, groupArgs...);
     }
   }
 
  public:
   template <auto Function, typename... Tags, typename... ViewArgs>
   void viewForSelectedBattles(const ViewArgs&... viewArgs) {
-    viewForSelected<tags::SelectedForViewBattle, Function, Tags...>(viewArgs...);
+    viewForSelected<SelectedForViewBattle, Function, Tags...>(viewArgs...);
   }
 
   template <auto Function, typename... Tags, typename... GroupArgs>
   void groupForSelectedBattles(const GroupArgs&... groupArgs) {
-    groupForSelected<tags::SelectedForViewBattle, Function, Tags...>(groupArgs...);
+    groupForSelected<SelectedForViewBattle, Function, Tags...>(groupArgs...);
   }
 
   template <auto Function, typename... Tags, typename... ViewArgs>
   void viewForSelectedSides(const ViewArgs&... viewArgs) {
-    viewForSelected<tags::SelectedForViewSide, Function, Tags...>(viewArgs...);
+    viewForSelected<SelectedForViewSide, Function, Tags...>(viewArgs...);
   }
 
   template <auto Function, typename... Tags, typename... GroupArgs>
   void groupForSelectedSides(const GroupArgs&... groupArgs) {
-    groupForSelected<tags::SelectedForViewSide, Function, Tags...>(groupArgs...);
+    groupForSelected<SelectedForViewSide, Function, Tags...>(groupArgs...);
   }
 
   template <auto Function, typename... Tags, typename... ViewArgs>
   void viewForSelectedPokemon(const ViewArgs&... viewArgs) {
-    viewForSelected<tags::SelectedForViewPokemon, Function, Tags...>(viewArgs...);
+    viewForSelected<SelectedForViewPokemon, Function, Tags...>(viewArgs...);
   }
 
   template <auto Function, typename... Tags, typename... GroupArgs>
   void groupForSelectedPokemon(const GroupArgs&... groupArgs) {
-    groupForSelected<tags::SelectedForViewPokemon, Function, Tags...>(groupArgs...);
+    groupForSelected<SelectedForViewPokemon, Function, Tags...>(groupArgs...);
   }
 
   template <auto Function, typename... Tags, typename... ViewArgs>
   void viewForSelectedMoves(const ViewArgs&... viewArgs) {
-    viewForSelected<tags::SelectedForViewMove, Function, Tags...>(viewArgs...);
+    viewForSelected<SelectedForViewMove, Function, Tags...>(viewArgs...);
   }
 
   template <auto Function, typename... Tags, typename... GroupArgs>
   void groupForSelectedMoves(const GroupArgs&... groupArgs) {
-    groupForSelected<tags::SelectedForViewMove, Function, Tags...>(groupArgs...);
+    groupForSelected<SelectedForViewMove, Function, Tags...>(groupArgs...);
   }
 
   template <auto Function, typename... Tags, typename... ViewArgs>
   void view(const ViewArgs&... viewArgs) {
-    internal::RegistryLoop<Function, Tags...>::view(registry, viewArgs...);
+    internal::RegistryLoop<Function, Tags...>::template view<>(registry, viewArgs...);
   }
 
   template <auto Function, typename... Tags, typename... GroupArgs>
   void group(const GroupArgs&... groupArgs) {
-    internal::RegistryLoop<Function, Tags...>::group(registry, groupArgs...);
+    internal::RegistryLoop<Function, Tags...>::template group<>(registry, groupArgs...);
   }
 
  private:
@@ -14879,7 +14887,7 @@ inline void speedSort(types::handle handle, ActionQueue& actionQueue);
 
 inline void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue);
 inline void addResidualAction(types::registry& registry, ActionQueue& actionQueue);
-inline void setActiveAction(types::handle& battleHandle, ActionQueue& actionQueue);
+inline void setActiveAction(types::handle battleHandle, ActionQueue& actionQueue);
 }  // namespace simulate_turn
 }  // namespace pokesim
 
@@ -14888,24 +14896,25 @@ inline void setActiveAction(types::handle& battleHandle, ActionQueue& actionQueu
 /////////////////// START OF src/Utilities/SelectForView.hpp ///////////////////
 
 namespace pokesim::internal {
-template <typename SelectionTag, typename... ComponentsToSelect>
+template <typename Selection, typename... ComponentsToSelect>
 struct SelectForView {
   SelectForView(Simulation& simulation_) : simulation(simulation_) {
-    static_assert(
-      std::is_same<tags::SelectedForViewBattle, SelectionTag>() ||
-      std::is_same<tags::SelectedForViewSide, SelectionTag>() ||
-      std::is_same<tags::SelectedForViewPokemon, SelectionTag>() ||
-      std::is_same<tags::SelectedForViewMove, SelectionTag>());
-
-    auto view = simulation.registry.view<ComponentsToSelect...>();
-    simulation.registry.insert<SelectionTag>(view.begin(), view.end());
+    for (types::entity entity : simulation.registry.view<ComponentsToSelect...>()) {
+      simulation.registry.get_or_emplace<Selection>(entity).count++;
+    }
   };
 
   ~SelectForView() { deselect(); }
 
   void deselect() {
-    auto view = simulation.registry.view<SelectionTag, ComponentsToSelect...>();
-    simulation.registry.erase<SelectionTag>(view.begin(), view.end());
+    for (types::entity entity : simulation.registry.view<Selection, ComponentsToSelect...>()) {
+      Selection& selection = simulation.registry.get<Selection>(entity);
+      selection.count--;
+
+      if (!selection.count) {
+        simulation.registry.remove<Selection>(entity);
+      }
+    }
   }
 
  private:
@@ -14913,13 +14922,13 @@ struct SelectForView {
 };
 
 template <typename... ComponentsToSelect>
-struct SelectForBattleView : SelectForView<tags::SelectedForViewBattle, ComponentsToSelect...> {};
+struct SelectForBattleView : SelectForView<SelectedForViewBattle, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForSideView : SelectForView<tags::SelectedForViewSide, ComponentsToSelect...> {};
+struct SelectForSideView : SelectForView<SelectedForViewSide, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForPokemonView : SelectForView<tags::SelectedForViewPokemon, ComponentsToSelect...> {};
+struct SelectForPokemonView : SelectForView<SelectedForViewPokemon, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForMoveView : SelectForView<tags::SelectedForViewMove, ComponentsToSelect...> {};
+struct SelectForMoveView : SelectForView<SelectedForViewMove, ComponentsToSelect...> {};
 }  // namespace pokesim::internal
 
 //////////////////// END OF src/Utilities/SelectForView.hpp ////////////////////
@@ -14931,7 +14940,7 @@ void run(Simulation& simulation) {
   internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
 
   updateSpeed(simulation);
-  simulation.viewForSelectedBattles<resolveDecision>();
+  simulation.view<resolveDecision>();
   simulation.registry.clear<SideDecision>();
 
   // simulation.viewForSelectedBattles<addBeforeTurnAction>(entt::exclude_t<tags::BattleMidTurn>{});
@@ -15199,7 +15208,7 @@ void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
   actionQueue.actionQueue.push_back(actionHandle.entity());
 }
 
-void setActiveAction(types::handle& battleHandle, ActionQueue& actionQueue) {
+void setActiveAction(types::handle battleHandle, ActionQueue& actionQueue) {
   types::registry& registry = *battleHandle.registry();
   registry.clear<action::tags::Active>();
 

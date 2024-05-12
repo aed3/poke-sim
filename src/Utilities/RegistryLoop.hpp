@@ -14,35 +14,33 @@ struct RegistryLoop {
 
   template <class Signature, class... Args>
   struct RegistryLoopInternal<Signature (*)(Args...)> {
-    template <typename... ViewArgs>
+    template <typename... Selected, typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([](types::entity /*entity*/, auto&&... args) {
-        Function(args...);
-      });
+      registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...)
+        .each([](types::entity, const Selected&..., auto&&... args) { Function(args...); });
     }
 
-    template <typename... GroupArgs>
+    template <typename... Selected, typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...).each([](types::entity /*entity*/, auto&&... args) {
-        Function(args...);
-      });
+      registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...)
+        .each([](types::entity, const Selected&..., auto&&... args) { Function(args...); });
     }
   };
 
   template <class Signature, class... Args>
   struct RegistryLoopInternal<Signature (*)(types::handle, Args...)> {
-    template <typename... ViewArgs>
+    template <typename... Selected, typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
-        .each([&registry](types::entity entity, auto&&... args) {
+      registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...)
+        .each([&registry](types::entity entity, const Selected&..., auto&&... args) {
           Function(types::handle{registry, entity}, args...);
         });
     }
 
-    template <typename... GroupArgs>
+    template <typename... Selected, typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
-        .each([&registry](types::entity entity, auto&&... args) {
+      registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...)
+        .each([&registry](types::entity entity, const Selected&..., auto&&... args) {
           Function(types::handle{registry, entity}, args...);
         });
     }
@@ -50,30 +48,30 @@ struct RegistryLoop {
 
   template <class Signature, class... Args>
   struct RegistryLoopInternal<Signature (*)(types::registry&, Args...)> {
-    template <typename... ViewArgs>
+    template <typename... Selected, typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
-        .each([&registry](types::entity /*entity*/, auto&&... args) { Function(registry, args...); });
+      registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...)
+        .each([&registry](types::entity, const Selected&..., auto&&... args) { Function(registry, args...); });
     }
 
-    template <typename... GroupArgs>
+    template <typename... Selected, typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
-        .each([&registry](types::entity /*entity*/, auto&&... args) { Function(registry, args...); });
+      registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...)
+        .each([&registry](types::entity, const Selected&..., auto&&... args) { Function(registry, args...); });
     }
   };
 
   using FunctionSig = std::decay_t<decltype(Function)>;
 
  public:
-  template <typename... ViewArgs>
+  template <typename... Selected, typename... ViewArgs>
   static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-    RegistryLoopInternal<FunctionSig>::view(registry, viewArgs...);
+    RegistryLoopInternal<FunctionSig>::template view<Selected...>(registry, viewArgs...);
   }
 
-  template <typename... GetExcludeArgs>
-  static void group(types::registry& registry, const GetExcludeArgs&... getExcludeArgs) {
-    RegistryLoopInternal<FunctionSig>::group(registry, getExcludeArgs...);
+  template <typename... Selected, typename... GroupArgs>
+  static void group(types::registry& registry, const GroupArgs&... groupArgs) {
+    RegistryLoopInternal<FunctionSig>::template group<Selected...>(registry, groupArgs...);
   }
 };
 }  // namespace pokesim::internal
