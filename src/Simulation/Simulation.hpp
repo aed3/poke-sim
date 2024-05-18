@@ -109,21 +109,21 @@ class Simulation {
  private:
   template <typename Selected, auto Function, typename... Tags, typename... ViewArgs>
   void viewForSelected(const ViewArgs&... viewArgs) {
-    if (registry.group<>(entt::get<Selected, Tags...>).empty()) {
-      view<Function, Tags...>(viewArgs...);
+    if (Selected::depth) {
+      internal::RegistryLoop<Function, Tags...>::template view<Selected>(registry, viewArgs...);
     }
     else {
-      internal::RegistryLoop<Function, Tags...>::template view<Selected>(registry, viewArgs...);
+      view<Function, Tags...>(viewArgs...);
     }
   }
 
   template <typename Selected, auto Function, typename... Tags, typename... GroupArgs>
   void groupForSelected(const GroupArgs&... groupArgs) {
-    if (registry.group<>(entt::get<Selected, Tags...>).empty()) {
-      group<Function, Tags...>(groupArgs...);
+    if (Selected::depth) {
+      internal::RegistryLoop<Function, Tags...>::template group<Selected>(registry, groupArgs...);
     }
     else {
-      internal::RegistryLoop<Function, Tags...>::template group<Selected>(registry, groupArgs...);
+      group<Function, Tags...>(groupArgs...);
     }
   }
 
@@ -177,6 +177,8 @@ class Simulation {
   void group(const GroupArgs&... groupArgs) {
     internal::RegistryLoop<Function, Tags...>::template group<>(registry, groupArgs...);
   }
+
+  std::vector<types::entity> selectedBattleEntities();
 
  private:
   std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);

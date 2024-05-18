@@ -1,5 +1,7 @@
 #include "ManagePokemonState.hpp"
 
+#include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/LastUsedMove.hpp>
 #include <Components/PP.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/PokemonTags.hpp>
@@ -11,8 +13,16 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
-void deductPp(Pp& /*pp*/) {}
-void setLastMoveUsed(types::handle /*handle*/) {}
+void deductPp(Pp& pp) {
+  if (pp.pp) {
+    pp.pp -= 1;
+  }
+}
+
+void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMove& move) {
+  registry.emplace<LastUsedMove>(source.actionSource, move.actionMove);
+}
+
 void resetEffectiveSpeed(types::handle handle, stat::Spe spe) {
   handle.emplace_or_replace<stat::EffectiveSpeed>(spe.stat);
 }

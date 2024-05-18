@@ -4,10 +4,12 @@
 
 namespace pokesim {
 class Simulation;
-struct ActiveAction;
-struct ActiveSource;
+struct Sides;
+struct CurrentAction;
+struct CurrentActionSource;
 
-void setActiveTarget(types::handle handle, ActiveAction activeAction, ActiveSource activeSource);
-void setActiveMove(types::handle handle, ActiveAction activeAction);
-void clearActive(Simulation& simulation);
+void setCurrentActionTarget(types::handle handle, const Sides& sides, const CurrentAction& action);
+void setCurrentActionSource(types::handle handle, const Sides& sides, const CurrentAction& action);
+void setCurrentActionMove(types::handle handle, const CurrentAction& action, const CurrentActionSource& source);
+void clearCurrentAction(Simulation& simulation);
 }  // namespace pokesim

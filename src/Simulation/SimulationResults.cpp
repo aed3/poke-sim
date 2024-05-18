@@ -1,8 +1,6 @@
 #include "SimulationResults.hpp"
 
 #include <Types/Entity.hpp>
-#include <entt/entity/view.hpp>
-#include <vector>
 
 #include "Simulation.hpp"
 

@@ -2,17 +2,18 @@
 
 #include <cstdint>
 
+// TODO (aed3): THIS WILL NOT BE OK WHEN RUNNING MULTIPLE SIMULATION OBJECTS ON DIFFERENT THREADS!
 namespace pokesim {
 struct SelectedForViewBattle {
-  std::uint8_t count = 0;
+  static inline std::uint8_t depth = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 };
 struct SelectedForViewSide {
-  std::uint8_t count = 0;
+  static inline std::uint8_t depth = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 };
 struct SelectedForViewPokemon {
-  std::uint8_t count = 0;
+  static inline std::uint8_t depth = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 };
 struct SelectedForViewMove {
-  std::uint8_t count = 0;
+  static inline std::uint8_t depth = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 };
 }  // namespace pokesim

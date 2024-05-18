@@ -2,6 +2,7 @@
 
 #include <AnalyzeEffect/AnalyzeEffect.hpp>
 #include <CalcDamage/CalcDamage.hpp>
+#include <Components/EntityHolders/Sides.hpp>
 #include <SimulateTurn/SimulateTurn.hpp>
 
 #include "SimulationOptions.hpp"
@@ -87,5 +88,15 @@ void Simulation::run() {
   simulateTurn();
   calculateDamage();
   analyzeEffect();
+}
+
+std::vector<types::entity> Simulation::selectedBattleEntities() {
+  if (SelectedForViewBattle::depth) {
+    auto view = registry.view<SelectedForViewBattle, Sides>();
+    return {view.begin(), view.end()};
+  }
+
+  auto view = registry.view<Sides>();
+  return {view.begin(), view.end()};
 }
 }  // namespace pokesim

@@ -41,6 +41,7 @@
  * src/Types/Effect.hpp
  * src/Types/Entity.hpp
  * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp
+ * src/Types/Enums/Move.hpp
  * src/Types/Enums/Slot.hpp
  * src/Battle/Helpers/Helpers.hpp
  * src/Battle/Setup/StateSetupBase.hpp
@@ -58,7 +59,6 @@
  * src/Battle/Setup/PokemonStateSetup.hpp
  * src/Types/Enums/PlayerSideId.hpp
  * src/Battle/Setup/BattleStateSetup.hpp
- * src/Types/Enums/Move.hpp
  * src/Types/Move.hpp
  * src/Battle/Setup/MoveStateSetup.hpp
  * src/Battle/Setup/SideStateSetup.hpp
@@ -103,7 +103,7 @@
  * src/Simulation/MoveHitSteps.cpp
  * src/Battle/ManageBattleState.hpp
  * src/Battle/Pokemon/ManagePokemonState.hpp
- * src/Components/EntityHolders/Active.hpp
+ * src/Components/EntityHolders/Current.hpp
  * src/Components/Names/SourceSlotName.hpp
  * src/Components/Names/TargetSlotName.hpp
  * src/Components/PP.hpp
@@ -115,16 +115,16 @@
  * src/Components/Tags/BattleTags.hpp
  * src/Components/Turn.hpp
  * src/SimulateTurn/ManageActionQueue.hpp
+ * src/Components/EntityHolders/Team.hpp
+ * src/Components/Names/SpeciesNames.hpp
  * src/Utilities/SelectForView.hpp
  * src/SimulateTurn/SimulateTurn.cpp
- * src/Components/EntityHolders/Team.hpp
  * src/Components/SimulateTurn/SpeedTieIndexes.hpp
  * src/Components/SimulateTurn/TeamAction.hpp
  * src/SimulateTurn/ManageActionQueue.cpp
  * src/Components/DexData/Abilities.hpp
  * src/Components/DexData/BaseStats.hpp
  * src/Components/DexData/SpeciesTypes.hpp
- * src/Components/Names/SpeciesNames.hpp
  * src/Pokedex/Setup/DexDataTags.hpp
  * src/Pokedex/Setup/DexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.hpp
@@ -192,10 +192,10 @@
  * src/Components/Probability.hpp
  * src/Components/RNGSeed.hpp
  * src/Battle/Setup/BattleStateSetup.cpp
+ * src/Components/EntityHolders/LastUsedMove.hpp
  * src/Battle/Pokemon/ManagePokemonState.cpp
  * src/Battle/ManageBattleState.cpp
  * src/Battle/Helpers/Helpers.cpp
- * src/Components/EntityHolders/Move.hpp
  * src/Components/EntityHolders/Pokemon.hpp
  * src/Battle/Clone/Clone.cpp
  * src/Components/AnalyzeEffect/AttackerDefender.hpp
@@ -12569,6 +12569,21 @@ struct InputSetup {
 
 ////////// END OF src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp //////////
 
+////////////////////// START OF src/Types/Enums/Move.hpp ///////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon move name
+enum class Move : std::uint16_t {
+  // clang-format off
+  NO_MOVE = 0, ONE_MILLION_VOLT_THUNDERBOLT, ABSORB, ACCELEROCK, ACID, ACID_ARMOR, ACID_DOWNPOUR, ACID_SPRAY, ACROBATICS, ACUPRESSURE, AERIAL_ACE, AEROBLAST, AFTER_YOU, AGILITY, AIR_CUTTER, AIR_SLASH, ALL_OUT_PUMMELING, ALLY_SWITCH, AMNESIA, ANCHOR_SHOT, ANCIENT_POWER, APPLE_ACID, AQUA_CUTTER, AQUA_JET, AQUA_RING, AQUA_STEP, AQUA_TAIL, ARMOR_CANNON, ARM_THRUST, AROMATHERAPY, AROMATIC_MIST, ASSIST, ASSURANCE, ASTONISH, ASTRAL_BARRAGE, ATTACK_ORDER, ATTRACT, AURA_SPHERE, AURA_WHEEL, AURORA_BEAM, AURORA_VEIL, AUTOTOMIZE, AVALANCHE, AXE_KICK, BABY_DOLL_EYES, BADDY_BAD, BANEFUL_BUNKER, BARB_BARRAGE, BARRAGE, BARRIER, BATON_PASS, BEAK_BLAST, BEAT_UP, BEHEMOTH_BASH, BEHEMOTH_BLADE, BELCH, BELLY_DRUM, BESTOW, BIDE, BIND, BITE, BITTER_BLADE, BITTER_MALICE, BLACK_HOLE_ECLIPSE, BLAST_BURN, BLAZE_KICK, BLAZING_TORQUE, BLEAKWIND_STORM, BLIZZARD, BLOCK, BLOOM_DOOM, BLUE_FLARE, BODY_PRESS, BODY_SLAM, BOLT_BEAK, BOLT_STRIKE, BONE_CLUB, BONEMERANG, BONE_RUSH, BOOMBURST, BOUNCE, BOUNCY_BUBBLE, BRANCH_POKE, BRAVE_BIRD, BREAKING_SWIPE, BREAKNECK_BLITZ, BRICK_BREAK, BRINE, BRUTAL_SWING, BUBBLE, BUBBLE_BEAM, BUG_BITE, BUG_BUZZ, BULK_UP, BULLDOZE, BULLET_PUNCH, BULLET_SEED, BURNING_JEALOUSY, BURN_UP, BUZZY_BUZZ, CALM_MIND, CAMOUFLAGE, CAPTIVATE, CATASTROPIKA, CEASELESS_EDGE, CELEBRATE, CHARGE, CHARGE_BEAM, CHARM, CHATTER, CHILLING_WATER, CHILLY_RECEPTION, CHIP_AWAY, CHLOROBLAST, CIRCLE_THROW, CLAMP, CLANGING_SCALES, CLANGOROUS_SOUL, CLANGOROUS_SOULBLAZE, CLEAR_SMOG, CLOSE_COMBAT, COACHING, COIL, COLLISION_COURSE, COMBAT_TORQUE, COMET_PUNCH, COMEUPPANCE, CONFIDE, CONFUSE_RAY, CONFUSION, CONSTRICT, CONTINENTAL_CRUSH, CONVERSION, CONVERSION_2, COPYCAT, CORE_ENFORCER, CORKSCREW_CRASH, CORROSIVE_GAS, COSMIC_POWER, COTTON_GUARD, COTTON_SPORE, COUNTER, COURT_CHANGE, COVET, CRABHAMMER, CRAFTY_SHIELD, CROSS_CHOP, CROSS_POISON, CRUNCH, CRUSH_CLAW, CRUSH_GRIP, CURSE, CUT, DARKEST_LARIAT, DARK_PULSE, DARK_VOID, DAZZLING_GLEAM, DECORATE, DEFEND_ORDER, DEFENSE_CURL, DEFOG, DESTINY_BOND, DETECT, DEVASTATING_DRAKE, DIAMOND_STORM, DIG, DISABLE, DISARMING_VOICE, DISCHARGE, DIRE_CLAW, DIVE, DIZZY_PUNCH, DOODLE, DOOM_DESIRE, DOUBLE_EDGE, DOUBLE_HIT, DOUBLE_IRON_BASH, DOUBLE_KICK, DOUBLE_SHOCK, DOUBLE_SLAP, DOUBLE_TEAM, DRACO_METEOR, DRAGON_ASCENT, DRAGON_BREATH, DRAGON_CLAW, DRAGON_DANCE, DRAGON_DARTS, DRAGON_ENERGY, DRAGON_HAMMER, DRAGON_PULSE, DRAGON_RAGE, DRAGON_RUSH, DRAGON_TAIL, DRAINING_KISS, DRAIN_PUNCH, DREAM_EATER, DRILL_PECK, DRILL_RUN, DRUM_BEATING, DUAL_CHOP, DUAL_WINGBEAT, DYNAMAX_CANNON, DYNAMIC_PUNCH, EARTH_POWER, EARTHQUAKE, ECHOED_VOICE, EERIE_IMPULSE, EERIE_SPELL, EGG_BOMB, ELECTRIC_TERRAIN, ELECTRIFY, ELECTRO_BALL, ELECTRO_DRIFT, ELECTROWEB, EMBARGO, EMBER, ENCORE, ENDEAVOR, ENDURE, ENERGY_BALL, ENTRAINMENT, ERUPTION, ESPER_WING, ETERNABEAM, EXPANDING_FORCE, EXPLOSION, EXTRASENSORY, EXTREME_EVOBOOST, EXTREME_SPEED, FACADE, FAIRY_LOCK, FAIRY_WIND, FAKE_OUT, FAKE_TEARS, FALSE_SURRENDER, FALSE_SWIPE, FEATHER_DANCE, FEINT, FEINT_ATTACK, FELL_STINGER, FIERY_DANCE, FIERY_WRATH, FILLET_AWAY, FINAL_GAMBIT, FIRE_BLAST, FIRE_FANG, FIRE_LASH, FIRE_PLEDGE, FIRE_PUNCH, FIRE_SPIN, FIRST_IMPRESSION, FISHIOUS_REND, FISSURE, FLAIL, FLAME_BURST, FLAME_CHARGE, FLAME_WHEEL, FLAMETHROWER, FLARE_BLITZ, FLASH, FLASH_CANNON, FLATTER, FLEUR_CANNON, FLING, FLIP_TURN, FLOATY_FALL, FLORAL_HEALING, FLOWER_SHIELD, FLOWER_TRICK, FLY, FLYING_PRESS, FOCUS_BLAST, FOCUS_ENERGY, FOCUS_PUNCH, FOLLOW_ME, FORCE_PALM, FORESIGHT, FORESTS_CURSE, FOUL_PLAY, FREEZE_DRY, FREEZE_SHOCK, FREEZING_GLARE, FREEZY_FROST, FRENZY_PLANT, FROST_BREATH, FRUSTRATION, FURY_ATTACK, FURY_CUTTER, FURY_SWIPES, FUSION_BOLT, FUSION_FLARE, FUTURE_SIGHT, GASTRO_ACID, GEAR_GRIND, GEAR_UP, GENESIS_SUPERNOVA, GEOMANCY, GIGA_DRAIN, GIGA_IMPACT, GIGATON_HAMMER, GIGAVOLT_HAVOC, GLACIAL_LANCE, GLACIATE, GLAIVE_RUSH, GLARE, GLITZY_GLOW, G_MAX_BEFUDDLE, G_MAX_CANNONADE, G_MAX_CENTIFERNO, G_MAX_CHI_STRIKE, G_MAX_CUDDLE, G_MAX_DEPLETION, G_MAX_DRUM_SOLO, G_MAX_FINALE, G_MAX_FIREBALL, G_MAX_FOAM_BURST, G_MAX_GOLD_RUSH, G_MAX_GRAVITAS, G_MAX_HYDROSNIPE, G_MAX_MALODOR, G_MAX_MELTDOWN, G_MAX_ONE_BLOW, G_MAX_RAPID_FLOW, G_MAX_REPLENISH, G_MAX_RESONANCE, G_MAX_SANDBLAST, G_MAX_SMITE, G_MAX_SNOOZE, G_MAX_STEELSURGE, G_MAX_STONESURGE, G_MAX_STUN_SHOCK, G_MAX_SWEETNESS, G_MAX_TARTNESS, G_MAX_TERROR, G_MAX_VINE_LASH, G_MAX_VOLCALITH, G_MAX_VOLT_CRASH, G_MAX_WILDFIRE, G_MAX_WIND_RAGE, GRASS_KNOT, GRASS_PLEDGE, GRASS_WHISTLE, GRASSY_GLIDE, GRASSY_TERRAIN, GRAV_APPLE, GRAVITY, GROWL, GROWTH, GRUDGE, GUARDIAN_OF_ALOLA, GUARD_SPLIT, GUARD_SWAP, GUILLOTINE, GUNK_SHOT, GUST, GYRO_BALL, HAIL, HAMMER_ARM, HAPPY_HOUR, HARDEN, HAZE, HEADBUTT, HEAD_CHARGE, HEADLONG_RUSH, HEAD_SMASH, HEAL_BELL, HEAL_BLOCK, HEALING_WISH, HEAL_ORDER, HEAL_PULSE, HEART_STAMP, HEART_SWAP, HEAT_CRASH, HEAT_WAVE, HEAVY_SLAM, HELPING_HAND, HEX, HIDDEN_POWER, HIDDEN_POWER_BUG, HIDDEN_POWER_DARK, HIDDEN_POWER_DRAGON, HIDDEN_POWER_ELECTRIC, HIDDEN_POWER_FIGHTING, HIDDEN_POWER_FIRE, HIDDEN_POWER_FLYING, HIDDEN_POWER_GHOST, HIDDEN_POWER_GRASS, HIDDEN_POWER_GROUND, HIDDEN_POWER_ICE, HIDDEN_POWER_POISON, HIDDEN_POWER_PSYCHIC, HIDDEN_POWER_ROCK, HIDDEN_POWER_STEEL, HIDDEN_POWER_WATER, HIGH_HORSEPOWER, HIGH_JUMP_KICK, HOLD_BACK, HOLD_HANDS, HONE_CLAWS, HORN_ATTACK, HORN_DRILL, HORN_LEECH, HOWL, HURRICANE, HYDRO_CANNON, HYDRO_PUMP, HYDRO_STEAM, HYDRO_VORTEX, HYPER_BEAM, HYPER_DRILL, HYPER_FANG, HYPERSPACE_FURY, HYPERSPACE_HOLE, HYPER_VOICE, HYPNOSIS, ICE_BALL, ICE_BEAM, ICE_BURN, ICE_FANG, ICE_HAMMER, ICE_PUNCH, ICE_SHARD, ICE_SPINNER, ICICLE_CRASH, ICICLE_SPEAR, ICY_WIND, IMPRISON, INCINERATE, INFERNAL_PARADE, INFERNO, INFERNO_OVERDRIVE, INFESTATION, INGRAIN, INSTRUCT, ION_DELUGE, IRON_DEFENSE, IRON_HEAD, IRON_TAIL, JAW_LOCK, JET_PUNCH, JUDGMENT, JUMP_KICK, JUNGLE_HEALING, KARATE_CHOP, KINESIS, KINGS_SHIELD, KNOCK_OFF, KOWTOW_CLEAVE, LANDS_WRATH, LASER_FOCUS, LASH_OUT, LAST_RESORT, LAST_RESPECTS, LAVA_PLUME, LEAFAGE, LEAF_BLADE, LEAF_STORM, LEAF_TORNADO, LEECH_LIFE, LEECH_SEED, LEER, LETS_SNUGGLE_FOREVER, LICK, LIFE_DEW, LIGHT_OF_RUIN, LIGHT_SCREEN, LIGHT_THAT_BURNS_THE_SKY, LIQUIDATION, LOCK_ON, LOVELY_KISS, LOW_KICK, LOW_SWEEP, LUCKY_CHANT, LUMINA_CRASH, LUNAR_BLESSING, LUNAR_DANCE, LUNGE, LUSTER_PURGE, MACH_PUNCH, MAGICAL_LEAF, MAGICAL_TORQUE, MAGIC_COAT, MAGIC_POWDER, MAGIC_ROOM, MAGMA_STORM, MAGNET_BOMB, MAGNETIC_FLUX, MAGNET_RISE, MAGNITUDE, MAKE_IT_RAIN, MALICIOUS_MOONSAULT, MAT_BLOCK, MAX_AIRSTREAM, MAX_DARKNESS, MAX_FLARE, MAX_FLUTTERBY, MAX_GEYSER, MAX_GUARD, MAX_HAILSTORM, MAX_KNUCKLE, MAX_LIGHTNING, MAX_MINDSTORM, MAX_OOZE, MAX_OVERGROWTH, MAX_PHANTASM, MAX_QUAKE, MAX_ROCKFALL, MAX_STARFALL, MAX_STEELSPIKE, MAX_STRIKE, MAX_WYRMWIND, MEAN_LOOK, MEDITATE, ME_FIRST, MEGA_DRAIN, MEGAHORN, MEGA_KICK, MEGA_PUNCH, MEMENTO, MENACING_MOONRAZE_MAELSTROM, METAL_BURST, METAL_CLAW, METAL_SOUND, METEOR_ASSAULT, METEOR_BEAM, METEOR_MASH, METRONOME, MILK_DRINK, MIMIC, MIND_BLOWN, MIND_READER, MINIMIZE, MIRACLE_EYE, MIRROR_COAT, MIRROR_MOVE, MIRROR_SHOT, MIST, MIST_BALL, MISTY_EXPLOSION, MISTY_TERRAIN, MOONBLAST, MOONGEIST_BEAM, MOONLIGHT, MORNING_SUN, MORTAL_SPIN, MOUNTAIN_GALE, MUD_BOMB, MUD_SHOT, MUD_SLAP, MUD_SPORT, MUDDY_WATER, MULTI_ATTACK, MYSTICAL_FIRE, MYSTICAL_POWER, NASTY_PLOT, NATURAL_GIFT, NATURE_POWER, NATURES_MADNESS, NEEDLE_ARM, NEVER_ENDING_NIGHTMARE, NIGHT_DAZE, NIGHTMARE, NIGHT_SHADE, NIGHT_SLASH, NOBLE_ROAR, NO_RETREAT, NOXIOUS_TORQUE, NUZZLE, OBLIVION_WING, OBSTRUCT, OCEANIC_OPERETTA, OCTAZOOKA, OCTOLOCK, ODOR_SLEUTH, OMINOUS_WIND, ORDER_UP, ORIGIN_PULSE, OUTRAGE, OVERDRIVE, OVERHEAT, PAIN_SPLIT, PARABOLIC_CHARGE, PARTING_SHOT, PAYBACK, PAY_DAY, PECK, PERISH_SONG, PETAL_BLIZZARD, PETAL_DANCE, PHANTOM_FORCE, PHOTON_GEYSER, PIKA_PAPOW, PIN_MISSILE, PLASMA_FISTS, PLAY_NICE, PLAY_ROUGH, PLUCK, POISON_FANG, POISON_GAS, POISON_JAB, POISON_POWDER, POISON_STING, POISON_TAIL, POLLEN_PUFF, POLTERGEIST, POPULATION_BOMB, POUNCE, POUND, POWDER, POWDER_SNOW, POWER_GEM, POWER_SHIFT, POWER_SPLIT, POWER_SWAP, POWER_TRICK, POWER_TRIP, POWER_UP_PUNCH, POWER_WHIP, PRECIPICE_BLADES, PRESENT, PRISMATIC_LASER, PROTECT, PSYBEAM, PSYBLADE, PSYCH_UP, PSYCHIC, PSYCHIC_FANGS, PSYCHIC_TERRAIN, PSYCHO_BOOST, PSYCHO_CUT, PSYCHO_SHIFT, PSYSHIELD_BASH, PSYSHOCK, PSYSTRIKE, PSYWAVE, PULVERIZING_PANCAKE, PUNISHMENT, PURIFY, PURSUIT, PYRO_BALL, QUASH, QUICK_ATTACK, QUICK_GUARD, QUIVER_DANCE, RAGE, RAGE_FIST, RAGE_POWDER, RAGING_BULL, RAGING_FURY, RAIN_DANCE, RAPID_SPIN, RAZOR_LEAF, RAZOR_SHELL, RAZOR_WIND, RECOVER, RECYCLE, REFLECT, REFLECT_TYPE, REFRESH, RELIC_SONG, REST, RETALIATE, RETURN, REVELATION_DANCE, REVENGE, REVERSAL, REVIVAL_BLESSING, RISING_VOLTAGE, ROAR, ROAR_OF_TIME, ROCK_BLAST, ROCK_CLIMB, ROCK_POLISH, ROCK_SLIDE, ROCK_SMASH, ROCK_THROW, ROCK_TOMB, ROCK_WRECKER, ROLE_PLAY, ROLLING_KICK, ROLLOUT, ROOST, ROTOTILLER, ROUND, RUINATION, SACRED_FIRE, SACRED_SWORD, SAFEGUARD, SALT_CURE, SAND_ATTACK, SANDSEAR_STORM, SANDSTORM, SAND_TOMB, SAPPY_SEED, SAVAGE_SPIN_OUT, SCALD, SCALE_SHOT, SCARY_FACE, SCORCHING_SANDS, SCRATCH, SCREECH, SEARING_SHOT, SEARING_SUNRAZE_SMASH, SECRET_POWER, SECRET_SWORD, SEED_BOMB, SEED_FLARE, SEISMIC_TOSS, SELF_DESTRUCT, SHADOW_BALL, SHADOW_BONE, SHADOW_CLAW, SHADOW_FORCE, SHADOW_PUNCH, SHADOW_SNEAK, SHARPEN, SHATTERED_PSYCHE, SHED_TAIL, SHEER_COLD, SHELL_SIDE_ARM, SHELL_SMASH, SHELL_TRAP, SHELTER, SHIFT_GEAR, SHOCK_WAVE, SHORE_UP, SIGNAL_BEAM, SILK_TRAP, SILVER_WIND, SIMPLE_BEAM, SING_MOVE /*Many math libraries define SING as a macro*/, SINISTER_ARROW_RAID, SIZZLY_SLIDE, SKETCH, SKILL_SWAP, SKITTER_SMACK, SKULL_BASH, SKY_ATTACK, SKY_DROP, SKY_UPPERCUT, SLACK_OFF, SLAM, SLASH, SLEEP_POWDER, SLEEP_TALK, SLUDGE, SLUDGE_BOMB, SLUDGE_WAVE, SMACK_DOWN, SMART_STRIKE, SMELLING_SALTS, SMOG, SMOKESCREEN, SNAP_TRAP, SNARL, SNATCH, SNIPE_SHOT, SNORE, SNOWSCAPE, SOAK, SOFT_BOILED, SOLAR_BEAM, SOLAR_BLADE, SONIC_BOOM, SOUL_STEALING_7_STAR_STRIKE, SPACIAL_REND, SPARK, SPARKLING_ARIA, SPARKLY_SWIRL, SPECTRAL_THIEF, SPEED_SWAP, SPICY_EXTRACT, SPIDER_WEB, SPIKE_CANNON, SPIKES, SPIKY_SHIELD, SPIN_OUT, SPIRIT_BREAK, SPIRIT_SHACKLE, SPIT_UP, SPITE, SPLASH, SPLINTERED_STORMSHARDS, SPLISHY_SPLASH, SPORE, SPOTLIGHT, SPRINGTIDE_STORM, STEALTH_ROCK, STEAM_ERUPTION, STEAMROLLER, STEEL_BEAM, STEEL_ROLLER, STEEL_WING, STICKY_WEB, STOCKPILE, STOKED_SPARKSURFER, STOMP, STOMPING_TANTRUM, STONE_AXE, STONE_EDGE, STORED_POWER, STORM_THROW, STRANGE_STEAM, STRENGTH, STRENGTH_SAP, STRING_SHOT, STRUGGLE, STRUGGLE_BUG, STUFF_CHEEKS, STUN_SPORE, SUBMISSION, SUBSTITUTE, SUBZERO_SLAMMER, SUCKER_PUNCH, SUNNY_DAY, SUNSTEEL_STRIKE, SUPER_FANG, SUPERPOWER, SUPERSONIC, SUPERSONIC_SKYSTRIKE, SURF, SURGING_STRIKES, SWAGGER, SWALLOW, SWEET_KISS, SWEET_SCENT, SWIFT, SWITCHEROO, SWORDS_DANCE, SYNCHRONOISE, SYNTHESIS, TACKLE, TAIL_GLOW, TAIL_SLAP, TAIL_WHIP, TAILWIND, TAKE_DOWN, TAKE_HEART, TAR_SHOT, TAUNT, TEARFUL_LOOK, TEATIME, TECHNO_BLAST, TECTONIC_RAGE, TEETER_DANCE, TELEKINESIS, TELEPORT, TERA_BLAST, TERRAIN_PULSE, THIEF, THOUSAND_ARROWS, THOUSAND_WAVES, THRASH, THROAT_CHOP, THUNDER, THUNDERBOLT, THUNDER_CAGE, THUNDER_FANG, THUNDEROUS_KICK, THUNDER_PUNCH, THUNDER_SHOCK, THUNDER_WAVE, TICKLE, TIDY_UP, TOPSY_TURVY, TORCH_SONG, TORMENT, TOXIC, TOXIC_SPIKES, TOXIC_THREAD, TRAILBLAZE, TRANSFORM, TRI_ATTACK, TRICK, TRICK_OR_TREAT, TRICK_ROOM, TRIPLE_ARROWS, TRIPLE_AXEL, TRIPLE_DIVE, TRIPLE_KICK, TROP_KICK, TRUMP_CARD, TWIN_BEAM, TWINEEDLE, TWINKLE_TACKLE, TWISTER, U_TURN, UPROAR, VACUUM_WAVE, V_CREATE, VEEVEE_VOLLEY, VENOM_DRENCH, VENOSHOCK, VICTORY_DANCE, VINE_WHIP, VISE_GRIP, VITAL_THROW, VOLT_SWITCH, VOLT_TACKLE, WAKE_UP_SLAP, WATERFALL, WATER_GUN, WATER_PLEDGE, WATER_PULSE, WATER_SHURIKEN, WATER_SPORT, WATER_SPOUT, WAVE_CRASH, WEATHER_BALL, WHIRLPOOL, WHIRLWIND, WICKED_BLOW, WICKED_TORQUE, WIDE_GUARD, WILDBOLT_STORM, WILD_CHARGE, WILL_O_WISP, WING_ATTACK, WISH, WITHDRAW, WONDER_ROOM, WOOD_HAMMER, WORK_UP, WORRY_SEED, WRAP, WRING_OUT, X_SCISSOR, YAWN, ZAP_CANNON, ZEN_HEADBUTT, ZING_ZAP, ZIPPY_ZAP, MOVE_TOTAL,
+  // clang-format on
+};
+}  // namespace pokesim::dex
+
+/////////////////////// END OF src/Types/Enums/Move.hpp ////////////////////////
+
 ////////////////////// START OF src/Types/Enums/Slot.hpp ///////////////////////
 
 #include <cstdint>
@@ -12598,9 +12613,11 @@ enum class Slot : std::uint8_t {
 
 namespace pokesim {
 struct Sides;
+struct MoveSlots;
 
 inline types::entity slotToEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot);
 inline types::entity slotToEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
+inline types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move);
 }  // namespace pokesim
 
 //////////////////// END OF src/Battle/Helpers/Helpers.hpp /////////////////////
@@ -13051,10 +13068,10 @@ struct BattleStateSetup : internal::StateSetupBase {
   inline void setRNGSeed(std::optional<types::stateRngSeed> seed = std::nullopt);
   inline void setActionQueue(const std::vector<types::entity>& queue);
   inline void setTurn(types::battleTurn turn);
-  inline void setActiveMove(types::entity activeMove);
   inline void setActivePokemon(types::entity activePokemon);
-  inline void setActiveTarget(types::entity activeTarget);
-  inline void setActiveSource(types::entity activeSource);
+  inline void setCurrentActionTarget(types::entity actionTarget);
+  inline void setCurrentActionSource(types::entity actionSource);
+  inline void setCurrentActionMove(types::entity actionMove);
   inline void setProbability(types::stateProbability probability);
 
   inline std::vector<BattleStateSetup> clone(std::optional<types::cloneIndex> cloneCount = std::nullopt);
@@ -13062,21 +13079,6 @@ struct BattleStateSetup : internal::StateSetupBase {
 }  // namespace pokesim
 
 ///////////////// END OF src/Battle/Setup/BattleStateSetup.hpp /////////////////
-
-////////////////////// START OF src/Types/Enums/Move.hpp ///////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon move name
-enum class Move : std::uint16_t {
-  // clang-format off
-  NO_MOVE = 0, ONE_MILLION_VOLT_THUNDERBOLT, ABSORB, ACCELEROCK, ACID, ACID_ARMOR, ACID_DOWNPOUR, ACID_SPRAY, ACROBATICS, ACUPRESSURE, AERIAL_ACE, AEROBLAST, AFTER_YOU, AGILITY, AIR_CUTTER, AIR_SLASH, ALL_OUT_PUMMELING, ALLY_SWITCH, AMNESIA, ANCHOR_SHOT, ANCIENT_POWER, APPLE_ACID, AQUA_CUTTER, AQUA_JET, AQUA_RING, AQUA_STEP, AQUA_TAIL, ARMOR_CANNON, ARM_THRUST, AROMATHERAPY, AROMATIC_MIST, ASSIST, ASSURANCE, ASTONISH, ASTRAL_BARRAGE, ATTACK_ORDER, ATTRACT, AURA_SPHERE, AURA_WHEEL, AURORA_BEAM, AURORA_VEIL, AUTOTOMIZE, AVALANCHE, AXE_KICK, BABY_DOLL_EYES, BADDY_BAD, BANEFUL_BUNKER, BARB_BARRAGE, BARRAGE, BARRIER, BATON_PASS, BEAK_BLAST, BEAT_UP, BEHEMOTH_BASH, BEHEMOTH_BLADE, BELCH, BELLY_DRUM, BESTOW, BIDE, BIND, BITE, BITTER_BLADE, BITTER_MALICE, BLACK_HOLE_ECLIPSE, BLAST_BURN, BLAZE_KICK, BLAZING_TORQUE, BLEAKWIND_STORM, BLIZZARD, BLOCK, BLOOM_DOOM, BLUE_FLARE, BODY_PRESS, BODY_SLAM, BOLT_BEAK, BOLT_STRIKE, BONE_CLUB, BONEMERANG, BONE_RUSH, BOOMBURST, BOUNCE, BOUNCY_BUBBLE, BRANCH_POKE, BRAVE_BIRD, BREAKING_SWIPE, BREAKNECK_BLITZ, BRICK_BREAK, BRINE, BRUTAL_SWING, BUBBLE, BUBBLE_BEAM, BUG_BITE, BUG_BUZZ, BULK_UP, BULLDOZE, BULLET_PUNCH, BULLET_SEED, BURNING_JEALOUSY, BURN_UP, BUZZY_BUZZ, CALM_MIND, CAMOUFLAGE, CAPTIVATE, CATASTROPIKA, CEASELESS_EDGE, CELEBRATE, CHARGE, CHARGE_BEAM, CHARM, CHATTER, CHILLING_WATER, CHILLY_RECEPTION, CHIP_AWAY, CHLOROBLAST, CIRCLE_THROW, CLAMP, CLANGING_SCALES, CLANGOROUS_SOUL, CLANGOROUS_SOULBLAZE, CLEAR_SMOG, CLOSE_COMBAT, COACHING, COIL, COLLISION_COURSE, COMBAT_TORQUE, COMET_PUNCH, COMEUPPANCE, CONFIDE, CONFUSE_RAY, CONFUSION, CONSTRICT, CONTINENTAL_CRUSH, CONVERSION, CONVERSION_2, COPYCAT, CORE_ENFORCER, CORKSCREW_CRASH, CORROSIVE_GAS, COSMIC_POWER, COTTON_GUARD, COTTON_SPORE, COUNTER, COURT_CHANGE, COVET, CRABHAMMER, CRAFTY_SHIELD, CROSS_CHOP, CROSS_POISON, CRUNCH, CRUSH_CLAW, CRUSH_GRIP, CURSE, CUT, DARKEST_LARIAT, DARK_PULSE, DARK_VOID, DAZZLING_GLEAM, DECORATE, DEFEND_ORDER, DEFENSE_CURL, DEFOG, DESTINY_BOND, DETECT, DEVASTATING_DRAKE, DIAMOND_STORM, DIG, DISABLE, DISARMING_VOICE, DISCHARGE, DIRE_CLAW, DIVE, DIZZY_PUNCH, DOODLE, DOOM_DESIRE, DOUBLE_EDGE, DOUBLE_HIT, DOUBLE_IRON_BASH, DOUBLE_KICK, DOUBLE_SHOCK, DOUBLE_SLAP, DOUBLE_TEAM, DRACO_METEOR, DRAGON_ASCENT, DRAGON_BREATH, DRAGON_CLAW, DRAGON_DANCE, DRAGON_DARTS, DRAGON_ENERGY, DRAGON_HAMMER, DRAGON_PULSE, DRAGON_RAGE, DRAGON_RUSH, DRAGON_TAIL, DRAINING_KISS, DRAIN_PUNCH, DREAM_EATER, DRILL_PECK, DRILL_RUN, DRUM_BEATING, DUAL_CHOP, DUAL_WINGBEAT, DYNAMAX_CANNON, DYNAMIC_PUNCH, EARTH_POWER, EARTHQUAKE, ECHOED_VOICE, EERIE_IMPULSE, EERIE_SPELL, EGG_BOMB, ELECTRIC_TERRAIN, ELECTRIFY, ELECTRO_BALL, ELECTRO_DRIFT, ELECTROWEB, EMBARGO, EMBER, ENCORE, ENDEAVOR, ENDURE, ENERGY_BALL, ENTRAINMENT, ERUPTION, ESPER_WING, ETERNABEAM, EXPANDING_FORCE, EXPLOSION, EXTRASENSORY, EXTREME_EVOBOOST, EXTREME_SPEED, FACADE, FAIRY_LOCK, FAIRY_WIND, FAKE_OUT, FAKE_TEARS, FALSE_SURRENDER, FALSE_SWIPE, FEATHER_DANCE, FEINT, FEINT_ATTACK, FELL_STINGER, FIERY_DANCE, FIERY_WRATH, FILLET_AWAY, FINAL_GAMBIT, FIRE_BLAST, FIRE_FANG, FIRE_LASH, FIRE_PLEDGE, FIRE_PUNCH, FIRE_SPIN, FIRST_IMPRESSION, FISHIOUS_REND, FISSURE, FLAIL, FLAME_BURST, FLAME_CHARGE, FLAME_WHEEL, FLAMETHROWER, FLARE_BLITZ, FLASH, FLASH_CANNON, FLATTER, FLEUR_CANNON, FLING, FLIP_TURN, FLOATY_FALL, FLORAL_HEALING, FLOWER_SHIELD, FLOWER_TRICK, FLY, FLYING_PRESS, FOCUS_BLAST, FOCUS_ENERGY, FOCUS_PUNCH, FOLLOW_ME, FORCE_PALM, FORESIGHT, FORESTS_CURSE, FOUL_PLAY, FREEZE_DRY, FREEZE_SHOCK, FREEZING_GLARE, FREEZY_FROST, FRENZY_PLANT, FROST_BREATH, FRUSTRATION, FURY_ATTACK, FURY_CUTTER, FURY_SWIPES, FUSION_BOLT, FUSION_FLARE, FUTURE_SIGHT, GASTRO_ACID, GEAR_GRIND, GEAR_UP, GENESIS_SUPERNOVA, GEOMANCY, GIGA_DRAIN, GIGA_IMPACT, GIGATON_HAMMER, GIGAVOLT_HAVOC, GLACIAL_LANCE, GLACIATE, GLAIVE_RUSH, GLARE, GLITZY_GLOW, G_MAX_BEFUDDLE, G_MAX_CANNONADE, G_MAX_CENTIFERNO, G_MAX_CHI_STRIKE, G_MAX_CUDDLE, G_MAX_DEPLETION, G_MAX_DRUM_SOLO, G_MAX_FINALE, G_MAX_FIREBALL, G_MAX_FOAM_BURST, G_MAX_GOLD_RUSH, G_MAX_GRAVITAS, G_MAX_HYDROSNIPE, G_MAX_MALODOR, G_MAX_MELTDOWN, G_MAX_ONE_BLOW, G_MAX_RAPID_FLOW, G_MAX_REPLENISH, G_MAX_RESONANCE, G_MAX_SANDBLAST, G_MAX_SMITE, G_MAX_SNOOZE, G_MAX_STEELSURGE, G_MAX_STONESURGE, G_MAX_STUN_SHOCK, G_MAX_SWEETNESS, G_MAX_TARTNESS, G_MAX_TERROR, G_MAX_VINE_LASH, G_MAX_VOLCALITH, G_MAX_VOLT_CRASH, G_MAX_WILDFIRE, G_MAX_WIND_RAGE, GRASS_KNOT, GRASS_PLEDGE, GRASS_WHISTLE, GRASSY_GLIDE, GRASSY_TERRAIN, GRAV_APPLE, GRAVITY, GROWL, GROWTH, GRUDGE, GUARDIAN_OF_ALOLA, GUARD_SPLIT, GUARD_SWAP, GUILLOTINE, GUNK_SHOT, GUST, GYRO_BALL, HAIL, HAMMER_ARM, HAPPY_HOUR, HARDEN, HAZE, HEADBUTT, HEAD_CHARGE, HEADLONG_RUSH, HEAD_SMASH, HEAL_BELL, HEAL_BLOCK, HEALING_WISH, HEAL_ORDER, HEAL_PULSE, HEART_STAMP, HEART_SWAP, HEAT_CRASH, HEAT_WAVE, HEAVY_SLAM, HELPING_HAND, HEX, HIDDEN_POWER, HIDDEN_POWER_BUG, HIDDEN_POWER_DARK, HIDDEN_POWER_DRAGON, HIDDEN_POWER_ELECTRIC, HIDDEN_POWER_FIGHTING, HIDDEN_POWER_FIRE, HIDDEN_POWER_FLYING, HIDDEN_POWER_GHOST, HIDDEN_POWER_GRASS, HIDDEN_POWER_GROUND, HIDDEN_POWER_ICE, HIDDEN_POWER_POISON, HIDDEN_POWER_PSYCHIC, HIDDEN_POWER_ROCK, HIDDEN_POWER_STEEL, HIDDEN_POWER_WATER, HIGH_HORSEPOWER, HIGH_JUMP_KICK, HOLD_BACK, HOLD_HANDS, HONE_CLAWS, HORN_ATTACK, HORN_DRILL, HORN_LEECH, HOWL, HURRICANE, HYDRO_CANNON, HYDRO_PUMP, HYDRO_STEAM, HYDRO_VORTEX, HYPER_BEAM, HYPER_DRILL, HYPER_FANG, HYPERSPACE_FURY, HYPERSPACE_HOLE, HYPER_VOICE, HYPNOSIS, ICE_BALL, ICE_BEAM, ICE_BURN, ICE_FANG, ICE_HAMMER, ICE_PUNCH, ICE_SHARD, ICE_SPINNER, ICICLE_CRASH, ICICLE_SPEAR, ICY_WIND, IMPRISON, INCINERATE, INFERNAL_PARADE, INFERNO, INFERNO_OVERDRIVE, INFESTATION, INGRAIN, INSTRUCT, ION_DELUGE, IRON_DEFENSE, IRON_HEAD, IRON_TAIL, JAW_LOCK, JET_PUNCH, JUDGMENT, JUMP_KICK, JUNGLE_HEALING, KARATE_CHOP, KINESIS, KINGS_SHIELD, KNOCK_OFF, KOWTOW_CLEAVE, LANDS_WRATH, LASER_FOCUS, LASH_OUT, LAST_RESORT, LAST_RESPECTS, LAVA_PLUME, LEAFAGE, LEAF_BLADE, LEAF_STORM, LEAF_TORNADO, LEECH_LIFE, LEECH_SEED, LEER, LETS_SNUGGLE_FOREVER, LICK, LIFE_DEW, LIGHT_OF_RUIN, LIGHT_SCREEN, LIGHT_THAT_BURNS_THE_SKY, LIQUIDATION, LOCK_ON, LOVELY_KISS, LOW_KICK, LOW_SWEEP, LUCKY_CHANT, LUMINA_CRASH, LUNAR_BLESSING, LUNAR_DANCE, LUNGE, LUSTER_PURGE, MACH_PUNCH, MAGICAL_LEAF, MAGICAL_TORQUE, MAGIC_COAT, MAGIC_POWDER, MAGIC_ROOM, MAGMA_STORM, MAGNET_BOMB, MAGNETIC_FLUX, MAGNET_RISE, MAGNITUDE, MAKE_IT_RAIN, MALICIOUS_MOONSAULT, MAT_BLOCK, MAX_AIRSTREAM, MAX_DARKNESS, MAX_FLARE, MAX_FLUTTERBY, MAX_GEYSER, MAX_GUARD, MAX_HAILSTORM, MAX_KNUCKLE, MAX_LIGHTNING, MAX_MINDSTORM, MAX_OOZE, MAX_OVERGROWTH, MAX_PHANTASM, MAX_QUAKE, MAX_ROCKFALL, MAX_STARFALL, MAX_STEELSPIKE, MAX_STRIKE, MAX_WYRMWIND, MEAN_LOOK, MEDITATE, ME_FIRST, MEGA_DRAIN, MEGAHORN, MEGA_KICK, MEGA_PUNCH, MEMENTO, MENACING_MOONRAZE_MAELSTROM, METAL_BURST, METAL_CLAW, METAL_SOUND, METEOR_ASSAULT, METEOR_BEAM, METEOR_MASH, METRONOME, MILK_DRINK, MIMIC, MIND_BLOWN, MIND_READER, MINIMIZE, MIRACLE_EYE, MIRROR_COAT, MIRROR_MOVE, MIRROR_SHOT, MIST, MIST_BALL, MISTY_EXPLOSION, MISTY_TERRAIN, MOONBLAST, MOONGEIST_BEAM, MOONLIGHT, MORNING_SUN, MORTAL_SPIN, MOUNTAIN_GALE, MUD_BOMB, MUD_SHOT, MUD_SLAP, MUD_SPORT, MUDDY_WATER, MULTI_ATTACK, MYSTICAL_FIRE, MYSTICAL_POWER, NASTY_PLOT, NATURAL_GIFT, NATURE_POWER, NATURES_MADNESS, NEEDLE_ARM, NEVER_ENDING_NIGHTMARE, NIGHT_DAZE, NIGHTMARE, NIGHT_SHADE, NIGHT_SLASH, NOBLE_ROAR, NO_RETREAT, NOXIOUS_TORQUE, NUZZLE, OBLIVION_WING, OBSTRUCT, OCEANIC_OPERETTA, OCTAZOOKA, OCTOLOCK, ODOR_SLEUTH, OMINOUS_WIND, ORDER_UP, ORIGIN_PULSE, OUTRAGE, OVERDRIVE, OVERHEAT, PAIN_SPLIT, PARABOLIC_CHARGE, PARTING_SHOT, PAYBACK, PAY_DAY, PECK, PERISH_SONG, PETAL_BLIZZARD, PETAL_DANCE, PHANTOM_FORCE, PHOTON_GEYSER, PIKA_PAPOW, PIN_MISSILE, PLASMA_FISTS, PLAY_NICE, PLAY_ROUGH, PLUCK, POISON_FANG, POISON_GAS, POISON_JAB, POISON_POWDER, POISON_STING, POISON_TAIL, POLLEN_PUFF, POLTERGEIST, POPULATION_BOMB, POUNCE, POUND, POWDER, POWDER_SNOW, POWER_GEM, POWER_SHIFT, POWER_SPLIT, POWER_SWAP, POWER_TRICK, POWER_TRIP, POWER_UP_PUNCH, POWER_WHIP, PRECIPICE_BLADES, PRESENT, PRISMATIC_LASER, PROTECT, PSYBEAM, PSYBLADE, PSYCH_UP, PSYCHIC, PSYCHIC_FANGS, PSYCHIC_TERRAIN, PSYCHO_BOOST, PSYCHO_CUT, PSYCHO_SHIFT, PSYSHIELD_BASH, PSYSHOCK, PSYSTRIKE, PSYWAVE, PULVERIZING_PANCAKE, PUNISHMENT, PURIFY, PURSUIT, PYRO_BALL, QUASH, QUICK_ATTACK, QUICK_GUARD, QUIVER_DANCE, RAGE, RAGE_FIST, RAGE_POWDER, RAGING_BULL, RAGING_FURY, RAIN_DANCE, RAPID_SPIN, RAZOR_LEAF, RAZOR_SHELL, RAZOR_WIND, RECOVER, RECYCLE, REFLECT, REFLECT_TYPE, REFRESH, RELIC_SONG, REST, RETALIATE, RETURN, REVELATION_DANCE, REVENGE, REVERSAL, REVIVAL_BLESSING, RISING_VOLTAGE, ROAR, ROAR_OF_TIME, ROCK_BLAST, ROCK_CLIMB, ROCK_POLISH, ROCK_SLIDE, ROCK_SMASH, ROCK_THROW, ROCK_TOMB, ROCK_WRECKER, ROLE_PLAY, ROLLING_KICK, ROLLOUT, ROOST, ROTOTILLER, ROUND, RUINATION, SACRED_FIRE, SACRED_SWORD, SAFEGUARD, SALT_CURE, SAND_ATTACK, SANDSEAR_STORM, SANDSTORM, SAND_TOMB, SAPPY_SEED, SAVAGE_SPIN_OUT, SCALD, SCALE_SHOT, SCARY_FACE, SCORCHING_SANDS, SCRATCH, SCREECH, SEARING_SHOT, SEARING_SUNRAZE_SMASH, SECRET_POWER, SECRET_SWORD, SEED_BOMB, SEED_FLARE, SEISMIC_TOSS, SELF_DESTRUCT, SHADOW_BALL, SHADOW_BONE, SHADOW_CLAW, SHADOW_FORCE, SHADOW_PUNCH, SHADOW_SNEAK, SHARPEN, SHATTERED_PSYCHE, SHED_TAIL, SHEER_COLD, SHELL_SIDE_ARM, SHELL_SMASH, SHELL_TRAP, SHELTER, SHIFT_GEAR, SHOCK_WAVE, SHORE_UP, SIGNAL_BEAM, SILK_TRAP, SILVER_WIND, SIMPLE_BEAM, SING_MOVE /*Many math libraries define SING as a macro*/, SINISTER_ARROW_RAID, SIZZLY_SLIDE, SKETCH, SKILL_SWAP, SKITTER_SMACK, SKULL_BASH, SKY_ATTACK, SKY_DROP, SKY_UPPERCUT, SLACK_OFF, SLAM, SLASH, SLEEP_POWDER, SLEEP_TALK, SLUDGE, SLUDGE_BOMB, SLUDGE_WAVE, SMACK_DOWN, SMART_STRIKE, SMELLING_SALTS, SMOG, SMOKESCREEN, SNAP_TRAP, SNARL, SNATCH, SNIPE_SHOT, SNORE, SNOWSCAPE, SOAK, SOFT_BOILED, SOLAR_BEAM, SOLAR_BLADE, SONIC_BOOM, SOUL_STEALING_7_STAR_STRIKE, SPACIAL_REND, SPARK, SPARKLING_ARIA, SPARKLY_SWIRL, SPECTRAL_THIEF, SPEED_SWAP, SPICY_EXTRACT, SPIDER_WEB, SPIKE_CANNON, SPIKES, SPIKY_SHIELD, SPIN_OUT, SPIRIT_BREAK, SPIRIT_SHACKLE, SPIT_UP, SPITE, SPLASH, SPLINTERED_STORMSHARDS, SPLISHY_SPLASH, SPORE, SPOTLIGHT, SPRINGTIDE_STORM, STEALTH_ROCK, STEAM_ERUPTION, STEAMROLLER, STEEL_BEAM, STEEL_ROLLER, STEEL_WING, STICKY_WEB, STOCKPILE, STOKED_SPARKSURFER, STOMP, STOMPING_TANTRUM, STONE_AXE, STONE_EDGE, STORED_POWER, STORM_THROW, STRANGE_STEAM, STRENGTH, STRENGTH_SAP, STRING_SHOT, STRUGGLE, STRUGGLE_BUG, STUFF_CHEEKS, STUN_SPORE, SUBMISSION, SUBSTITUTE, SUBZERO_SLAMMER, SUCKER_PUNCH, SUNNY_DAY, SUNSTEEL_STRIKE, SUPER_FANG, SUPERPOWER, SUPERSONIC, SUPERSONIC_SKYSTRIKE, SURF, SURGING_STRIKES, SWAGGER, SWALLOW, SWEET_KISS, SWEET_SCENT, SWIFT, SWITCHEROO, SWORDS_DANCE, SYNCHRONOISE, SYNTHESIS, TACKLE, TAIL_GLOW, TAIL_SLAP, TAIL_WHIP, TAILWIND, TAKE_DOWN, TAKE_HEART, TAR_SHOT, TAUNT, TEARFUL_LOOK, TEATIME, TECHNO_BLAST, TECTONIC_RAGE, TEETER_DANCE, TELEKINESIS, TELEPORT, TERA_BLAST, TERRAIN_PULSE, THIEF, THOUSAND_ARROWS, THOUSAND_WAVES, THRASH, THROAT_CHOP, THUNDER, THUNDERBOLT, THUNDER_CAGE, THUNDER_FANG, THUNDEROUS_KICK, THUNDER_PUNCH, THUNDER_SHOCK, THUNDER_WAVE, TICKLE, TIDY_UP, TOPSY_TURVY, TORCH_SONG, TORMENT, TOXIC, TOXIC_SPIKES, TOXIC_THREAD, TRAILBLAZE, TRANSFORM, TRI_ATTACK, TRICK, TRICK_OR_TREAT, TRICK_ROOM, TRIPLE_ARROWS, TRIPLE_AXEL, TRIPLE_DIVE, TRIPLE_KICK, TROP_KICK, TRUMP_CARD, TWIN_BEAM, TWINEEDLE, TWINKLE_TACKLE, TWISTER, U_TURN, UPROAR, VACUUM_WAVE, V_CREATE, VEEVEE_VOLLEY, VENOM_DRENCH, VENOSHOCK, VICTORY_DANCE, VINE_WHIP, VISE_GRIP, VITAL_THROW, VOLT_SWITCH, VOLT_TACKLE, WAKE_UP_SLAP, WATERFALL, WATER_GUN, WATER_PLEDGE, WATER_PULSE, WATER_SHURIKEN, WATER_SPORT, WATER_SPOUT, WAVE_CRASH, WEATHER_BALL, WHIRLPOOL, WHIRLWIND, WICKED_BLOW, WICKED_TORQUE, WIDE_GUARD, WILDBOLT_STORM, WILD_CHARGE, WILL_O_WISP, WING_ATTACK, WISH, WITHDRAW, WONDER_ROOM, WOOD_HAMMER, WORK_UP, WORRY_SEED, WRAP, WRING_OUT, X_SCISSOR, YAWN, ZAP_CANNON, ZEN_HEADBUTT, ZING_ZAP, ZIPPY_ZAP, MOVE_TOTAL,
-  // clang-format on
-};
-}  // namespace pokesim::dex
-
-/////////////////////// END OF src/Types/Enums/Move.hpp ////////////////////////
 
 ///////////////////////// START OF src/Types/Move.hpp //////////////////////////
 
@@ -13266,6 +13268,8 @@ namespace pokesim::tags {
 struct ActivePokemon {};
 
 struct SpeedUpdateRequired {};
+
+struct Fainted {};
 }  // namespace pokesim::tags
 
 ////////////////// END OF src/Components/Tags/PokemonTags.hpp //////////////////
@@ -13579,18 +13583,19 @@ class Pokedex {
 
 #include <cstdint>
 
+// TODO (aed3): THIS WILL NOT BE OK WHEN RUNNING MULTIPLE SIMULATION OBJECTS ON DIFFERENT THREADS!
 namespace pokesim {
 struct SelectedForViewBattle {
-  std::uint8_t count = 0;
+  static inline std::uint8_t depth = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 };
 struct SelectedForViewSide {
-  std::uint8_t count = 0;
+  static inline std::uint8_t depth = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 };
 struct SelectedForViewPokemon {
-  std::uint8_t count = 0;
+  static inline std::uint8_t depth = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 };
 struct SelectedForViewMove {
-  std::uint8_t count = 0;
+  static inline std::uint8_t depth = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 };
 }  // namespace pokesim
 
@@ -13674,14 +13679,16 @@ struct RegistryLoop {
   struct RegistryLoopInternal<Signature (*)(Args...)> {
     template <typename... Selected, typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...)
-        .each([](types::entity, const Selected&..., auto&&... args) { Function(args...); });
+      registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...).each([](types::entity, auto&&... args) {
+        Function(args...);
+      });
     }
 
     template <typename... Selected, typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...)
-        .each([](types::entity, const Selected&..., auto&&... args) { Function(args...); });
+      registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...).each([](types::entity, auto&&... args) {
+        Function(args...);
+      });
     }
   };
 
@@ -13690,7 +13697,7 @@ struct RegistryLoop {
     template <typename... Selected, typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
       registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...)
-        .each([&registry](types::entity entity, const Selected&..., auto&&... args) {
+        .each([&registry](types::entity entity, auto&&... args) {
           Function(types::handle{registry, entity}, args...);
         });
     }
@@ -13698,7 +13705,7 @@ struct RegistryLoop {
     template <typename... Selected, typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
       registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...)
-        .each([&registry](types::entity entity, const Selected&..., auto&&... args) {
+        .each([&registry](types::entity entity, auto&&... args) {
           Function(types::handle{registry, entity}, args...);
         });
     }
@@ -13709,13 +13716,13 @@ struct RegistryLoop {
     template <typename... Selected, typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
       registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...)
-        .each([&registry](types::entity, const Selected&..., auto&&... args) { Function(registry, args...); });
+        .each([&registry](types::entity, auto&&... args) { Function(registry, args...); });
     }
 
     template <typename... Selected, typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
       registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...)
-        .each([&registry](types::entity, const Selected&..., auto&&... args) { Function(registry, args...); });
+        .each([&registry](types::entity, auto&&... args) { Function(registry, args...); });
     }
   };
 
@@ -13839,21 +13846,21 @@ class Simulation {
  private:
   template <typename Selected, auto Function, typename... Tags, typename... ViewArgs>
   void viewForSelected(const ViewArgs&... viewArgs) {
-    if (registry.group<>(entt::get<Selected, Tags...>).empty()) {
-      view<Function, Tags...>(viewArgs...);
+    if (Selected::depth) {
+      internal::RegistryLoop<Function, Tags...>::template view<Selected>(registry, viewArgs...);
     }
     else {
-      internal::RegistryLoop<Function, Tags...>::template view<Selected>(registry, viewArgs...);
+      view<Function, Tags...>(viewArgs...);
     }
   }
 
   template <typename Selected, auto Function, typename... Tags, typename... GroupArgs>
   void groupForSelected(const GroupArgs&... groupArgs) {
-    if (registry.group<>(entt::get<Selected, Tags...>).empty()) {
-      group<Function, Tags...>(groupArgs...);
+    if (Selected::depth) {
+      internal::RegistryLoop<Function, Tags...>::template group<Selected>(registry, groupArgs...);
     }
     else {
-      internal::RegistryLoop<Function, Tags...>::template group<Selected>(registry, groupArgs...);
+      group<Function, Tags...>(groupArgs...);
     }
   }
 
@@ -13907,6 +13914,8 @@ class Simulation {
   void group(const GroupArgs&... groupArgs) {
     internal::RegistryLoop<Function, Tags...>::template group<>(registry, groupArgs...);
   }
+
+  inline std::vector<types::entity> selectedBattleEntities();
 
  private:
   inline std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
@@ -14246,9 +14255,6 @@ struct Results {
 
 //////////////// START OF src/Simulation/SimulationResults.cpp /////////////////
 
-#include <vector>
-
-
 namespace pokesim {
 namespace simulate_turn {
 Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
@@ -14349,7 +14355,7 @@ class Simulation;
 
 namespace simulate_turn {
 inline void run(Simulation& simulation);
-inline void runActiveAction(Simulation& simulation);
+inline void runCurrentAction(Simulation& simulation);
 inline void nextTurn(Simulation& simulation);
 
 inline void runBeforeTurnAction(Simulation& simulation);
@@ -14444,6 +14450,16 @@ void Simulation::run() {
   simulateTurn();
   calculateDamage();
   analyzeEffect();
+}
+
+std::vector<types::entity> Simulation::selectedBattleEntities() {
+  if (SelectedForViewBattle::depth) {
+    auto view = registry.view<SelectedForViewBattle, Sides>();
+    return {view.begin(), view.end()};
+  }
+
+  auto view = registry.view<Sides>();
+  return {view.begin(), view.end()};
 }
 }  // namespace pokesim
 
@@ -14659,12 +14675,14 @@ void runMoveHitSteps(Simulation& simulation) {
 
 namespace pokesim {
 class Simulation;
-struct ActiveAction;
-struct ActiveSource;
+struct Sides;
+struct CurrentAction;
+struct CurrentActionSource;
 
-inline void setActiveTarget(types::handle handle, ActiveAction activeAction, ActiveSource activeSource);
-inline void setActiveMove(types::handle handle, ActiveAction activeAction);
-inline void clearActive(Simulation& simulation);
+inline void setCurrentActionTarget(types::handle handle, const Sides& sides, const CurrentAction& action);
+inline void setCurrentActionSource(types::handle handle, const Sides& sides, const CurrentAction& action);
+inline void setCurrentActionMove(types::handle handle, const CurrentAction& action, const CurrentActionSource& source);
+inline void clearCurrentAction(Simulation& simulation);
 }  // namespace pokesim
 
 /////////////////// END OF src/Battle/ManageBattleState.hpp ////////////////////
@@ -14673,13 +14691,15 @@ inline void clearActive(Simulation& simulation);
 
 namespace pokesim {
 class Simulation;
+struct CurrentActionSource;
+struct CurrentActionMove;
 struct Pp;
 namespace stat {
 struct Spe;
 }  // namespace stat
 
 inline void deductPp(Pp& pp);
-inline void setLastMoveUsed(types::handle handle);
+inline void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMove& move);
 inline void resetEffectiveSpeed(types::handle handle, stat::Spe spe);
 
 inline void updateSpeed(Simulation& simulation);
@@ -14687,31 +14707,31 @@ inline void updateSpeed(Simulation& simulation);
 
 /////////////// END OF src/Battle/Pokemon/ManagePokemonState.hpp ///////////////
 
-/////////////// START OF src/Components/EntityHolders/Active.hpp ///////////////
+////////////// START OF src/Components/EntityHolders/Current.hpp ///////////////
 
 namespace pokesim {
-struct ActiveAction {
-  types::entity activeAction;
+struct CurrentAction {
+  types::entity currentAction;
 };
 
 struct NextAction {
   types::entity nextAction;
 };
 
-struct ActiveMove {
-  types::entity activeMove;
+struct CurrentActionTarget {
+  types::entity actionTarget;
 };
 
-struct ActiveTarget {
-  types::entity activeTarget;
+struct CurrentActionSource {
+  types::entity actionSource;
 };
 
-struct ActiveSource {
-  types::entity activeSource;
+struct CurrentActionMove {
+  types::entity actionMove;
 };
 }  // namespace pokesim
 
-//////////////// END OF src/Components/EntityHolders/Active.hpp ////////////////
+/////////////// END OF src/Components/EntityHolders/Current.hpp ////////////////
 
 /////////////// START OF src/Components/Names/SourceSlotName.hpp ///////////////
 
@@ -14792,7 +14812,7 @@ namespace pokesim::action::tags {
 struct BeforeTurn {};
 struct Residual {};
 
-struct Active {};
+struct Current {};
 
 struct Switch {};
 
@@ -14849,11 +14869,11 @@ struct SpeedSort {
 namespace pokesim::tags {
 
 // Current Action Tag: The move that is being processed by the simulator
-struct ActiveMove {};
+struct CurrentActionMove {};
 // Current Action Tag: The target of the active move
-struct ActiveMoveTarget {};
+struct CurrentActionMoveTarget {};
 // Current Action Tag: The user of the active move
-struct ActiveMoveSource {};
+struct CurrentActionMoveSource {};
 
 // Battle Turn State Tag: When a battle is in the middle of a turn
 struct BattleMidTurn {};
@@ -14887,48 +14907,89 @@ inline void speedSort(types::handle handle, ActionQueue& actionQueue);
 
 inline void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue);
 inline void addResidualAction(types::registry& registry, ActionQueue& actionQueue);
-inline void setActiveAction(types::handle battleHandle, ActionQueue& actionQueue);
+inline void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue);
 }  // namespace simulate_turn
 }  // namespace pokesim
 
 //////////////// END OF src/SimulateTurn/ManageActionQueue.hpp /////////////////
 
+//////////////// START OF src/Components/EntityHolders/Team.hpp ////////////////
+
+namespace pokesim {
+// Contains a list of entities pointing to the Pokemon on a team.
+struct Team {
+  types::teamPositions<types::entity> team{};
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/EntityHolders/Team.hpp /////////////////
+
+//////////////// START OF src/Components/Names/SpeciesNames.hpp ////////////////
+
+namespace pokesim {
+struct SpeciesName {
+  dex::Species name = dex::Species::MISSING_NO;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/SpeciesNames.hpp /////////////////
+
 /////////////////// START OF src/Utilities/SelectForView.hpp ///////////////////
+
+#include <cstdint>
+#include <vector>
 
 namespace pokesim::internal {
 template <typename Selection, typename... ComponentsToSelect>
 struct SelectForView {
-  SelectForView(Simulation& simulation_) : simulation(simulation_) {
-    for (types::entity entity : simulation.registry.view<ComponentsToSelect...>()) {
-      simulation.registry.get_or_emplace<Selection>(entity).count++;
+  SelectForView(Simulation& simulation_) : simulation(simulation_), depth(&Selection::depth) {
+    auto view = simulation.registry.view<Selection>();
+    if (!view.empty()) {
+      previouslySelected.insert(previouslySelected.begin(), view.begin(), view.end());
+      simulation.registry.clear<Selection>();
     }
-  };
+
+    for (types::entity entity : simulation.registry.view<ComponentsToSelect...>()) {
+      simulation.registry.emplace<Selection>(entity);
+    }
+
+    ENTT_ASSERT(depth != nullptr, "Depth needs to be defined.");
+    *depth = *depth + 1;
+  }
 
   ~SelectForView() { deselect(); }
 
   void deselect() {
-    for (types::entity entity : simulation.registry.view<Selection, ComponentsToSelect...>()) {
-      Selection& selection = simulation.registry.get<Selection>(entity);
-      selection.count--;
+    simulation.registry.clear<Selection>();
 
-      if (!selection.count) {
-        simulation.registry.remove<Selection>(entity);
+    for (types::entity entity : previouslySelected) {
+      if (simulation.registry.valid(entity)) {
+        simulation.registry.emplace<Selection>(entity);
       }
+    }
+    previouslySelected.clear();
+
+    if (depth) {
+      ENTT_ASSERT(*depth, "Selection depth cannot go negative.");
+      *depth = *depth - 1;
+      depth = nullptr;
     }
   }
 
  private:
   Simulation& simulation;
+  std::uint8_t* depth = nullptr;
+  std::vector<types::entity> previouslySelected;
 };
 
 template <typename... ComponentsToSelect>
-struct SelectForBattleView : SelectForView<SelectedForViewBattle, ComponentsToSelect...> {};
+struct SelectForBattleView : SelectForView<SelectedForViewBattle, Sides, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForSideView : SelectForView<SelectedForViewSide, ComponentsToSelect...> {};
+struct SelectForSideView : SelectForView<SelectedForViewSide, Team, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForPokemonView : SelectForView<SelectedForViewPokemon, ComponentsToSelect...> {};
+struct SelectForPokemonView : SelectForView<SelectedForViewPokemon, SpeciesName, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForMoveView : SelectForView<SelectedForViewMove, ComponentsToSelect...> {};
+struct SelectForMoveView : SelectForView<SelectedForViewMove, MoveName, ComponentsToSelect...> {};
 }  // namespace pokesim::internal
 
 //////////////////// END OF src/Utilities/SelectForView.hpp ////////////////////
@@ -14950,21 +15011,21 @@ void run(Simulation& simulation) {
   auto turnEntities = simulation.registry.view<Turn, tags::SimulateTurn>();
   simulation.registry.insert<tags::BattleMidTurn>(turnEntities.begin(), turnEntities.end());
 
-  simulation.viewForSelectedBattles<setActiveAction>();
-  while (!simulation.registry.view<action::tags::Active>().empty()) {
-    runActiveAction(simulation);
-    simulation.viewForSelectedBattles<setActiveAction>();
+  simulation.viewForSelectedBattles<setCurrentAction>();
+  while (!simulation.registry.view<action::tags::Current>().empty()) {
+    runCurrentAction(simulation);
+    simulation.viewForSelectedBattles<setCurrentAction>();
   }
 
   nextTurn(simulation);
 }
 
-void runActiveAction(Simulation& simulation) {
+void runCurrentAction(Simulation& simulation) {
   // runBeforeTurnAction(simulation);
   runMoveAction(simulation);
   runResidualAction(simulation);
 
-  clearActive(simulation);
+  clearCurrentAction(simulation);
   // faint pokemon
   // Update
   // Switch requests
@@ -14980,16 +15041,21 @@ void runBeforeTurnAction(Simulation& /*simulation*/) {
 }
 
 void runMoveAction(Simulation& simulation) {
-  simulation.viewForSelectedBattles<setActiveTarget>();
-  simulation.viewForSelectedBattles<setActiveMove>();
+  internal::SelectForBattleView<action::Move> selectedBattle{simulation};
 
-  simulation.view<deductPp, tags::ActiveMove>();
-  simulation.view<setLastMoveUsed, tags::ActiveMove>();
+  simulation.viewForSelectedBattles<setCurrentActionTarget>();
+  simulation.viewForSelectedBattles<setCurrentActionSource>();
+  simulation.viewForSelectedBattles<setCurrentActionMove>();
+
+  simulation.view<deductPp, tags::CurrentActionMove>();
+  simulation.view<setLastMoveUsed>();
 
   useMove(simulation);
 }
 
-void runResidualAction(Simulation& /*simulation*/) {}
+void runResidualAction(Simulation& simulation) {
+  internal::SelectForBattleView<action::tags::Residual> selectedBattle{simulation};
+}
 
 void nextTurn(Simulation& /*simulation*/) {}
 
@@ -14999,17 +15065,6 @@ void useMove(Simulation& simulation) {
 }  // namespace pokesim::simulate_turn
 
 /////////////////// END OF src/SimulateTurn/SimulateTurn.cpp ///////////////////
-
-//////////////// START OF src/Components/EntityHolders/Team.hpp ////////////////
-
-namespace pokesim {
-// Contains a list of entities pointing to the Pokemon on a team.
-struct Team {
-  types::teamPositions<types::entity> team{};
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/EntityHolders/Team.hpp /////////////////
 
 /////////// START OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ///////////
 
@@ -15208,20 +15263,30 @@ void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
   actionQueue.actionQueue.push_back(actionHandle.entity());
 }
 
-void setActiveAction(types::handle battleHandle, ActionQueue& actionQueue) {
+void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue) {
   types::registry& registry = *battleHandle.registry();
-  registry.clear<action::tags::Active>();
+  registry.clear<action::tags::Current>();
 
   if (actionQueue.actionQueue.empty()) return;
 
-  types::entity newActiveAction = actionQueue.actionQueue.front();
-  registry.emplace<action::tags::Active>(newActiveAction);
+  types::entity newCurrentAction = actionQueue.actionQueue.front();
+  registry.emplace<action::tags::Current>(newCurrentAction);
+
+  action::Move* moveAction = registry.try_get<action::Move>(newCurrentAction);
+  if (moveAction) {
+    battleHandle.emplace<action::Move>(*moveAction);
+  }
+  else if (registry.all_of<action::tags::Residual>(newCurrentAction)) {
+    battleHandle.emplace<action::tags::Residual>();
+  }
 
   actionQueue.actionQueue.erase(actionQueue.actionQueue.begin());
 
   registry.clear<NextAction>();
-  battleHandle.emplace<ActiveAction>(newActiveAction);
-  battleHandle.emplace<NextAction>(actionQueue.actionQueue[0]);
+  battleHandle.emplace<CurrentAction>(newCurrentAction);
+  if (!actionQueue.actionQueue.empty()) {
+    battleHandle.emplace<NextAction>(actionQueue.actionQueue[0]);
+  }
 }
 }  // namespace pokesim::simulate_turn
 
@@ -15275,16 +15340,6 @@ struct SpeciesTypes {
 }  // namespace pokesim
 
 //////////////// END OF src/Components/DexData/SpeciesTypes.hpp ////////////////
-
-//////////////// START OF src/Components/Names/SpeciesNames.hpp ////////////////
-
-namespace pokesim {
-struct SpeciesName {
-  dex::Species name = dex::Species::MISSING_NO;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/SpeciesNames.hpp /////////////////
 
 ////////////////// START OF src/Pokedex/Setup/DexDataTags.hpp //////////////////
 
@@ -18070,23 +18125,23 @@ void BattleStateSetup::setTurn(types::battleTurn turn) {
   handle.emplace<Turn>(turn);
 }
 
-void BattleStateSetup::setActiveMove(types::entity activeMove) {
-  handle.emplace<ActiveMove>(activeMove);
-  handle.registry()->emplace<tags::ActiveMove>(activeMove);
-}
-
 void BattleStateSetup::setActivePokemon(types::entity activePokemon) {
   handle.registry()->emplace<tags::ActivePokemon>(activePokemon);
 }
 
-void BattleStateSetup::setActiveTarget(types::entity activeTarget) {
-  handle.emplace<ActiveTarget>(activeTarget);
-  handle.registry()->emplace<tags::ActiveMoveTarget>(activeTarget);
+void BattleStateSetup::setCurrentActionTarget(types::entity actionTarget) {
+  handle.emplace<CurrentActionTarget>(actionTarget);
+  handle.registry()->emplace<tags::CurrentActionMoveTarget>(actionTarget);
 }
 
-void BattleStateSetup::setActiveSource(types::entity activeSource) {
-  handle.emplace<ActiveSource>(activeSource);
-  handle.registry()->emplace<tags::ActiveMoveSource>(activeSource);
+void BattleStateSetup::setCurrentActionSource(types::entity actionSource) {
+  handle.emplace<CurrentActionSource>(actionSource);
+  handle.registry()->emplace<tags::CurrentActionMoveSource>(actionSource);
+}
+
+void BattleStateSetup::setCurrentActionMove(types::entity actionMove) {
+  handle.emplace<CurrentActionMove>(actionMove);
+  handle.registry()->emplace<tags::CurrentActionMove>(actionMove);
 }
 
 void BattleStateSetup::setProbability(types::stateProbability probability) {
@@ -18113,11 +18168,29 @@ std::vector<BattleStateSetup> BattleStateSetup::clone(std::optional<types::clone
 
 ///////////////// END OF src/Battle/Setup/BattleStateSetup.cpp /////////////////
 
+//////////// START OF src/Components/EntityHolders/LastUsedMove.hpp ////////////
+
+namespace pokesim {
+struct LastUsedMove {
+  types::entity lastUsedMove;
+};
+}  // namespace pokesim
+
+///////////// END OF src/Components/EntityHolders/LastUsedMove.hpp /////////////
+
 ////////////// START OF src/Battle/Pokemon/ManagePokemonState.cpp //////////////
 
 namespace pokesim {
-void deductPp(Pp& /*pp*/) {}
-void setLastMoveUsed(types::handle /*handle*/) {}
+void deductPp(Pp& pp) {
+  if (pp.pp) {
+    pp.pp -= 1;
+  }
+}
+
+void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMove& move) {
+  registry.emplace<LastUsedMove>(source.actionSource, move.actionMove);
+}
+
 void resetEffectiveSpeed(types::handle handle, stat::Spe spe) {
   handle.emplace_or_replace<stat::EffectiveSpeed>(spe.stat);
 }
@@ -18141,14 +18214,68 @@ void updateSpeed(Simulation& simulation) {
 ////////////////// START OF src/Battle/ManageBattleState.cpp ///////////////////
 
 namespace pokesim {
-void setActiveTarget(types::handle /*handle*/, ActiveAction /*activeAction*/, ActiveSource /*activeSource*/) {}
-void setActiveMove(types::handle /*handle*/, ActiveAction /*activeAction*/) {}
-void clearActive(Simulation& simulation) {
+void setCurrentActionTarget(types::handle handle, const Sides& sides, const CurrentAction& action) {
+  types::registry& registry = *handle.registry();
+  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.currentAction);
+  types::entity targetEntity = slotToEntity(registry, sides, targetSlotName.targetSlot);
+
+  if (!registry.any_of<tags::Fainted>(targetEntity)) {
+    handle.emplace<CurrentActionTarget>(targetEntity);
+    registry.emplace<tags::CurrentActionMoveTarget>(targetEntity);
+  }
+  else {
+    // Set tag to get random target after this function exits
+  }
+}
+
+void setCurrentActionSource(types::handle handle, const Sides& sides, const CurrentAction& action) {
+  types::registry& registry = *handle.registry();
+  const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(action.currentAction);
+  types::entity sourceEntity = slotToEntity(registry, sides, sourceSlotName.sourceSlot);
+
+  handle.emplace<CurrentActionSource>(sourceEntity);
+  registry.emplace<tags::CurrentActionMoveSource>(sourceEntity);
+}
+
+void setCurrentActionMove(types::handle handle, const CurrentAction& action, const CurrentActionSource& source) {
+  types::registry& registry = *handle.registry();
+  const MoveSlots& moveSlots = registry.get<MoveSlots>(source.actionSource);
+  const action::Move& move = registry.get<action::Move>(action.currentAction);
+
+  types::entity moveEntity = moveToEntity(registry, moveSlots, move.name);
+
+  handle.emplace<CurrentActionMove>(moveEntity);
+  registry.emplace<tags::CurrentActionMoveSource>(moveEntity);
+}
+
+void clearCurrentAction(Simulation& simulation) {
   types::registry& registry = simulation.registry;
-  registry.clear<ActiveAction>();
-  registry.clear<ActiveMove>();
-  registry.clear<ActiveTarget>();
-  registry.clear<ActiveSource>();
+  registry.clear<CurrentAction>();
+  registry.clear<CurrentActionTarget>();
+  registry.clear<CurrentActionSource>();
+  registry.clear<CurrentActionMove>();
+
+  registry.clear<tags::CurrentActionMoveTarget>();
+  registry.clear<tags::CurrentActionMoveSource>();
+  registry.clear<tags::CurrentActionMove>();
+
+  auto battles = simulation.selectedBattleEntities();
+  registry.remove<
+    action::Item,
+    action::Move,
+    action::tags::BeforeTurn,
+    action::tags::Dynamax,
+    action::tags::MegaEvolve,
+    action::tags::MidTurnSwitchIn,
+    action::tags::PostFoeFaintSwitchIn,
+    action::tags::PreSwitchOut,
+    action::tags::PreTurnSwitchIn,
+    action::tags::PrimalRevert,
+    action::tags::Residual,
+    action::tags::RevivalBlessing,
+    action::tags::Switch,
+    action::tags::SwitchOut,
+    action::tags::Terastallize>(battles.begin(), battles.end());
 }
 }  // namespace pokesim
 
@@ -18172,20 +18299,19 @@ types::entity slotToEntity(const types::registry& registry, const Sides& sides, 
   types::entity sideEntity = (std::uint8_t)targetSlot % 2 ? sides.p1 : sides.p2;
   return slotToEntity(registry, sideEntity, targetSlot);
 }
+
+types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move) {
+  for (types::entity moveSlot : moveSlots.moveSlots) {
+    if (registry.get<MoveName>(moveSlot).name == move) {
+      return moveSlot;
+    }
+  }
+
+  return entt::null;
+}
 }  // namespace pokesim
 
 //////////////////// END OF src/Battle/Helpers/Helpers.cpp /////////////////////
-
-//////////////// START OF src/Components/EntityHolders/Move.hpp ////////////////
-
-namespace pokesim {
-// Contains the entity of a move's current state.
-struct Move {
-  types::entity move;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/EntityHolders/Move.hpp /////////////////
 
 ////////////// START OF src/Components/EntityHolders/Pokemon.hpp ///////////////
 
@@ -18374,11 +18500,11 @@ void remapFoeSideEntityMembers(types::registry& registry, const types::ClonedEnt
 }
 
 void remapMoveEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
-  auto getEntity = [](Move & move) -> auto& {
-    return move.move;
+  auto getEntity = [](LastUsedMove & lastUsedMove) -> auto& {
+    return lastUsedMove.lastUsedMove;
   };
 
-  remapEntityMembers<Move>(registry, entityMap, getEntity);
+  remapEntityMembers<LastUsedMove>(registry, entityMap, getEntity);
 }
 
 void remapMoveEffectEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {

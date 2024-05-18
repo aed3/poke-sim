@@ -3,7 +3,8 @@
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
-#include <Components/EntityHolders/Active.hpp>
+#include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/Sides.hpp>
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
 #include <Components/PP.hpp>
@@ -35,21 +36,21 @@ void run(Simulation& simulation) {
   auto turnEntities = simulation.registry.view<Turn, tags::SimulateTurn>();
   simulation.registry.insert<tags::BattleMidTurn>(turnEntities.begin(), turnEntities.end());
 
-  simulation.viewForSelectedBattles<setActiveAction>();
-  while (!simulation.registry.view<action::tags::Active>().empty()) {
-    runActiveAction(simulation);
-    simulation.viewForSelectedBattles<setActiveAction>();
+  simulation.viewForSelectedBattles<setCurrentAction>();
+  while (!simulation.registry.view<action::tags::Current>().empty()) {
+    runCurrentAction(simulation);
+    simulation.viewForSelectedBattles<setCurrentAction>();
   }
 
   nextTurn(simulation);
 }
 
-void runActiveAction(Simulation& simulation) {
+void runCurrentAction(Simulation& simulation) {
   // runBeforeTurnAction(simulation);
   runMoveAction(simulation);
   runResidualAction(simulation);
 
-  clearActive(simulation);
+  clearCurrentAction(simulation);
   // faint pokemon
   // Update
   // Switch requests
@@ -65,16 +66,21 @@ void runBeforeTurnAction(Simulation& /*simulation*/) {
 }
 
 void runMoveAction(Simulation& simulation) {
-  simulation.viewForSelectedBattles<setActiveTarget>();
-  simulation.viewForSelectedBattles<setActiveMove>();
+  internal::SelectForBattleView<action::Move> selectedBattle{simulation};
 
-  simulation.view<deductPp, tags::ActiveMove>();
-  simulation.view<setLastMoveUsed, tags::ActiveMove>();
+  simulation.viewForSelectedBattles<setCurrentActionTarget>();
+  simulation.viewForSelectedBattles<setCurrentActionSource>();
+  simulation.viewForSelectedBattles<setCurrentActionMove>();
+
+  simulation.view<deductPp, tags::CurrentActionMove>();
+  simulation.view<setLastMoveUsed>();
 
   useMove(simulation);
 }
 
-void runResidualAction(Simulation& /*simulation*/) {}
+void runResidualAction(Simulation& simulation) {
+  internal::SelectForBattleView<action::tags::Residual> selectedBattle{simulation};
+}
 
 void nextTurn(Simulation& /*simulation*/) {}
 

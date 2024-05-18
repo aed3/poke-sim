@@ -1,8 +1,11 @@
 #include "Helpers.hpp"
 
+#include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
+#include <Components/Names/MoveNames.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Enums/Move.hpp>
 #include <Types/Enums/Slot.hpp>
 #include <Types/State.hpp>
 #include <cstdint>
@@ -21,5 +24,16 @@ types::entity slotToEntity(const types::registry& registry, const Sides& sides, 
   ENTT_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot");
   types::entity sideEntity = (std::uint8_t)targetSlot % 2 ? sides.p1 : sides.p2;
   return slotToEntity(registry, sideEntity, targetSlot);
+}
+
+types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move) {
+  for (types::entity moveSlot : moveSlots.moveSlots) {
+    if (registry.get<MoveName>(moveSlot).name == move) {
+      return moveSlot;
+    }
+  }
+
+  ENTT_FAIL("No move of entity found");
+  return entt::null;
 }
 }  // namespace pokesim

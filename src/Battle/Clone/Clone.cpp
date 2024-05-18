@@ -184,11 +184,11 @@ void remapFoeSideEntityMembers(types::registry& registry, const types::ClonedEnt
 }
 
 void remapMoveEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
-  auto getEntity = [](Move & move) -> auto& {
-    return move.move;
+  auto getEntity = [](LastUsedMove & lastUsedMove) -> auto& {
+    return lastUsedMove.lastUsedMove;
   };
 
-  remapEntityMembers<Move>(registry, entityMap, getEntity);
+  remapEntityMembers<LastUsedMove>(registry, entityMap, getEntity);
 }
 
 void remapMoveEffectEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
