@@ -5,7 +5,7 @@ class Simulation;
 
 namespace simulate_turn {
 void run(Simulation& simulation);
-void runActiveAction(Simulation& simulation);
+void runCurrentAction(Simulation& simulation);
 void nextTurn(Simulation& simulation);
 
 void runBeforeTurnAction(Simulation& simulation);

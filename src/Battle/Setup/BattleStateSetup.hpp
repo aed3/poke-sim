@@ -39,10 +39,10 @@ struct BattleStateSetup : internal::StateSetupBase {
   void setRNGSeed(std::optional<types::stateRngSeed> seed = std::nullopt);
   void setActionQueue(const std::vector<types::entity>& queue);
   void setTurn(types::battleTurn turn);
-  void setActiveMove(types::entity activeMove);
   void setActivePokemon(types::entity activePokemon);
-  void setActiveTarget(types::entity activeTarget);
-  void setActiveSource(types::entity activeSource);
+  void setCurrentActionTarget(types::entity actionTarget);
+  void setCurrentActionSource(types::entity actionSource);
+  void setCurrentActionMove(types::entity actionMove);
   void setProbability(types::stateProbability probability);
 
   std::vector<BattleStateSetup> clone(std::optional<types::cloneIndex> cloneCount = std::nullopt);

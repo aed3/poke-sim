@@ -3,7 +3,7 @@
 #include <Battle/Clone/Clone.hpp>
 #include <Components/CloneFromCloneTo.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
-#include <Components/EntityHolders/Active.hpp>
+#include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/ID.hpp>
 #include <Components/Probability.hpp>
@@ -64,23 +64,23 @@ void BattleStateSetup::setTurn(types::battleTurn turn) {
   handle.emplace<Turn>(turn);
 }
 
-void BattleStateSetup::setActiveMove(types::entity activeMove) {
-  handle.emplace<ActiveMove>(activeMove);
-  handle.registry()->emplace<tags::ActiveMove>(activeMove);
-}
-
 void BattleStateSetup::setActivePokemon(types::entity activePokemon) {
   handle.registry()->emplace<tags::ActivePokemon>(activePokemon);
 }
 
-void BattleStateSetup::setActiveTarget(types::entity activeTarget) {
-  handle.emplace<ActiveTarget>(activeTarget);
-  handle.registry()->emplace<tags::ActiveMoveTarget>(activeTarget);
+void BattleStateSetup::setCurrentActionTarget(types::entity actionTarget) {
+  handle.emplace<CurrentActionTarget>(actionTarget);
+  handle.registry()->emplace<tags::CurrentActionMoveTarget>(actionTarget);
 }
 
-void BattleStateSetup::setActiveSource(types::entity activeSource) {
-  handle.emplace<ActiveSource>(activeSource);
-  handle.registry()->emplace<tags::ActiveMoveSource>(activeSource);
+void BattleStateSetup::setCurrentActionSource(types::entity actionSource) {
+  handle.emplace<CurrentActionSource>(actionSource);
+  handle.registry()->emplace<tags::CurrentActionMoveSource>(actionSource);
+}
+
+void BattleStateSetup::setCurrentActionMove(types::entity actionMove) {
+  handle.emplace<CurrentActionMove>(actionMove);
+  handle.registry()->emplace<tags::CurrentActionMove>(actionMove);
 }
 
 void BattleStateSetup::setProbability(types::stateProbability probability) {

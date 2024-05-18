@@ -16,14 +16,16 @@ struct RegistryLoop {
   struct RegistryLoopInternal<Signature (*)(Args...)> {
     template <typename... Selected, typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...)
-        .each([](types::entity, const Selected&..., auto&&... args) { Function(args...); });
+      registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...).each([](types::entity, auto&&... args) {
+        Function(args...);
+      });
     }
 
     template <typename... Selected, typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...)
-        .each([](types::entity, const Selected&..., auto&&... args) { Function(args...); });
+      registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...).each([](types::entity, auto&&... args) {
+        Function(args...);
+      });
     }
   };
 
@@ -32,7 +34,7 @@ struct RegistryLoop {
     template <typename... Selected, typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
       registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...)
-        .each([&registry](types::entity entity, const Selected&..., auto&&... args) {
+        .each([&registry](types::entity entity, auto&&... args) {
           Function(types::handle{registry, entity}, args...);
         });
     }
@@ -40,7 +42,7 @@ struct RegistryLoop {
     template <typename... Selected, typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
       registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...)
-        .each([&registry](types::entity entity, const Selected&..., auto&&... args) {
+        .each([&registry](types::entity entity, auto&&... args) {
           Function(types::handle{registry, entity}, args...);
         });
     }
@@ -51,13 +53,13 @@ struct RegistryLoop {
     template <typename... Selected, typename... ViewArgs>
     static void view(types::registry& registry, const ViewArgs&... viewArgs) {
       registry.view<Tags..., Selected..., std::decay_t<Args>...>(viewArgs...)
-        .each([&registry](types::entity, const Selected&..., auto&&... args) { Function(registry, args...); });
+        .each([&registry](types::entity, auto&&... args) { Function(registry, args...); });
     }
 
     template <typename... Selected, typename... GroupArgs>
     static void group(types::registry& registry, const GroupArgs&... groupArgs) {
       registry.group<Tags..., Selected..., std::decay_t<Args>...>(groupArgs...)
-        .each([&registry](types::entity, const Selected&..., auto&&... args) { Function(registry, args...); });
+        .each([&registry](types::entity, auto&&... args) { Function(registry, args...); });
     }
   };
 

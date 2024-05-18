@@ -3,8 +3,8 @@
 #include <Battle/Helpers/Helpers.hpp>
 #include <Components/Decisions.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
-#include <Components/EntityHolders/Active.hpp>
 #include <Components/EntityHolders/Battle.hpp>
+#include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/Names/SourceSlotName.hpp>
@@ -187,19 +187,27 @@ void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
   actionQueue.actionQueue.push_back(actionHandle.entity());
 }
 
-void setActiveAction(types::handle battleHandle, ActionQueue& actionQueue) {
+void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue) {
   types::registry& registry = *battleHandle.registry();
-  registry.clear<action::tags::Active>();
+  registry.clear<action::tags::Current>();
 
   if (actionQueue.actionQueue.empty()) return;
 
-  types::entity newActiveAction = actionQueue.actionQueue.front();
-  registry.emplace<action::tags::Active>(newActiveAction);
+  types::entity newCurrentAction = actionQueue.actionQueue.front();
+  registry.emplace<action::tags::Current>(newCurrentAction);
+
+  action::Move* moveAction = registry.try_get<action::Move>(newCurrentAction);
+  if (moveAction) {
+    battleHandle.emplace<action::Move>(*moveAction);
+  }
+  else if (registry.all_of<action::tags::Residual>(newCurrentAction)) {
+    battleHandle.emplace<action::tags::Residual>();
+  }
 
   actionQueue.actionQueue.erase(actionQueue.actionQueue.begin());
 
   registry.clear<NextAction>();
-  battleHandle.emplace<ActiveAction>(newActiveAction);
+  battleHandle.emplace<CurrentAction>(newCurrentAction);
   if (!actionQueue.actionQueue.empty()) {
     battleHandle.emplace<NextAction>(actionQueue.actionQueue[0]);
   }

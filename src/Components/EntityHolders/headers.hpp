@@ -1,10 +1,10 @@
 #pragma once
 
 #include "ActionQueue.hpp"
-#include "Active.hpp"
 #include "Battle.hpp"
+#include "Current.hpp"
 #include "FoeSide.hpp"
-#include "Move.hpp"
+#include "LastUsedMove.hpp"
 #include "MoveEffect.hpp"
 #include "MoveSlots.hpp"
 #include "Pokemon.hpp"

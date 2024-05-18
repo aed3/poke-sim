@@ -5,4 +5,6 @@ namespace pokesim::tags {
 struct ActivePokemon {};
 
 struct SpeedUpdateRequired {};
+
+struct Fainted {};
 }  // namespace pokesim::tags

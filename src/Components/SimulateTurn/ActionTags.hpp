@@ -4,7 +4,7 @@ namespace pokesim::action::tags {
 struct BeforeTurn {};
 struct Residual {};
 
-struct Active {};
+struct Current {};
 
 struct Switch {};
 

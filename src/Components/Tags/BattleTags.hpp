@@ -3,11 +3,11 @@
 namespace pokesim::tags {
 
 // Current Action Tag: The move that is being processed by the simulator
-struct ActiveMove {};
+struct CurrentActionMove {};
 // Current Action Tag: The target of the active move
-struct ActiveMoveTarget {};
+struct CurrentActionMoveTarget {};
 // Current Action Tag: The user of the active move
-struct ActiveMoveSource {};
+struct CurrentActionMoveSource {};
 
 // Battle Turn State Tag: When a battle is in the middle of a turn
 struct BattleMidTurn {};
