@@ -5,6 +5,7 @@
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
+#include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
 #include <string_view>
@@ -28,7 +29,7 @@ struct Thunderbolt {
     static constexpr internal::Tags<status::tags::Paralysis> effectTags{};
   };
 
-  static constexpr internal::Tags<move::tags::AnySingleTarget> moveTags{};
+  static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {
     static constexpr std::string_view name = "Thunderbolt";

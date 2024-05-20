@@ -4,6 +4,7 @@
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
+#include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
 #include <Types/Stats.hpp>
@@ -25,11 +26,9 @@ struct Moonblast {
   struct targetSecondaryEffect {
     static constexpr types::baseEffectChance chance = 30;
     static constexpr types::boost spaBoost = -1;
-
-    static constexpr internal::Tags<> effectTags{};
   };
 
-  static constexpr internal::Tags<move::tags::AnySingleTarget> moveTags{};
+  static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {
     static constexpr std::string_view name = "Moonblast";

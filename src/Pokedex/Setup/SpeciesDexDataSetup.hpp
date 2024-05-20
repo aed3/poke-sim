@@ -13,7 +13,7 @@ class Pokedex;
 
 namespace pokesim::dex::internal {
 struct SpeciesDexDataSetup : DexDataSetup {
-  SpeciesDexDataSetup(Pokedex* pokedex) : DexDataSetup(pokedex) {}
+  SpeciesDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
 
   void setName(Species species);
   void setType(Type type1, Type type2 = Type::NO_TYPE);

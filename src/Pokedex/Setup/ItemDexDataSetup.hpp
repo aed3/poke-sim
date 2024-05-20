@@ -7,7 +7,7 @@
 
 namespace pokesim::dex::internal {
 struct ItemDexDataSetup : DexDataSetup {
-  ItemDexDataSetup(Pokedex* pokedex) : DexDataSetup(pokedex) {}
+  ItemDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
 
   void setName(Item item);
 };

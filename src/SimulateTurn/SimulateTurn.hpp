@@ -12,6 +12,7 @@ void runBeforeTurnAction(Simulation& simulation);
 void runMoveAction(Simulation& simulation);
 void runResidualAction(Simulation& simulation);
 
+void getMoveTargets(Simulation& simulation);
 void useMove(Simulation& simulation);
 }  // namespace simulate_turn
 }  // namespace pokesim

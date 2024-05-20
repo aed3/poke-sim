@@ -15,10 +15,20 @@ struct BypassSubstitute {};
 // Move Property Tag: Power is multiplied by 1.2 when used by a Pokemon with the Ability Iron Fist.
 struct Punch {};
 
-// Move Target Tag: The move can hit one Pokemon of your choice
 struct AnySingleTarget {};
-// Move Target Tag: The move affects the user of the move
+struct AnySingleFoe {};
+struct AnySingleAlly {};
+struct AllyOrSelf {};
 struct Self {};
+struct AllFoes {};
+struct AlliesAndFoes {};
+struct AlliesAndSelf {};
+struct FoeSide {};
+struct AllySide {};
+struct Field {};
+struct AllyTeam {};
+struct Retaliation {};
+struct RandomFoe {};
 
 namespace effect {
 // Move Effect Participant Tag: Who the effect will affect

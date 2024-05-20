@@ -9,19 +9,20 @@
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
-void setCurrentActionTarget(types::handle handle, const Sides& sides, const CurrentAction& action) {
-  types::registry& registry = *handle.registry();
+void setCurrentActionTarget(types::handle battleHandle, const Sides& sides, const CurrentAction& action) {
+  types::registry& registry = *battleHandle.registry();
   const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.currentAction);
   types::entity targetEntity = slotToEntity(registry, sides, targetSlotName.targetSlot);
 
   if (!registry.any_of<tags::Fainted>(targetEntity)) {
-    handle.emplace<CurrentActionTarget>(targetEntity);
+    battleHandle.emplace<CurrentActionTarget>(targetEntity);
     registry.emplace<tags::CurrentActionMoveTarget>(targetEntity);
   }
   else {
@@ -29,24 +30,24 @@ void setCurrentActionTarget(types::handle handle, const Sides& sides, const Curr
   }
 }
 
-void setCurrentActionSource(types::handle handle, const Sides& sides, const CurrentAction& action) {
-  types::registry& registry = *handle.registry();
+void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action) {
+  types::registry& registry = *battleHandle.registry();
   const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(action.currentAction);
   types::entity sourceEntity = slotToEntity(registry, sides, sourceSlotName.sourceSlot);
 
-  handle.emplace<CurrentActionSource>(sourceEntity);
+  battleHandle.emplace<CurrentActionSource>(sourceEntity);
   registry.emplace<tags::CurrentActionMoveSource>(sourceEntity);
 }
 
-void setCurrentActionMove(types::handle handle, const CurrentAction& action, const CurrentActionSource& source) {
-  types::registry& registry = *handle.registry();
-  const MoveSlots& moveSlots = registry.get<MoveSlots>(source.actionSource);
+void setCurrentActionMove(
+  types::handle battleHandle, const Pokedex& pokedex, const CurrentAction& action, const CurrentActionSource& source) {
+  types::registry& registry = *battleHandle.registry();
   const action::Move& move = registry.get<action::Move>(action.currentAction);
 
-  types::entity moveEntity = moveToEntity(registry, moveSlots, move.name);
+  types::entity moveEntity = pokedex.buildActionMove(move.name, registry);
 
-  handle.emplace<CurrentActionMove>(moveEntity);
-  registry.emplace<tags::CurrentActionMoveSource>(moveEntity);
+  battleHandle.emplace<CurrentActionMove>(moveEntity);
+  registry.emplace<tags::CurrentActionMove>(moveEntity);
 }
 
 void clearCurrentAction(Simulation& simulation) {
@@ -58,7 +59,9 @@ void clearCurrentAction(Simulation& simulation) {
 
   registry.clear<tags::CurrentActionMoveTarget>();
   registry.clear<tags::CurrentActionMoveSource>();
-  registry.clear<tags::CurrentActionMove>();
+
+  auto actionMoves = registry.view<tags::CurrentActionMove>();
+  registry.destroy(actionMoves.begin(), actionMoves.end());
 
   auto battles = simulation.selectedBattleEntities();
   registry.remove<

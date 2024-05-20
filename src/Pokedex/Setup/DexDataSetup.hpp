@@ -12,7 +12,7 @@ struct DexDataSetup {
   types::handle handle;
 
  public:
-  DexDataSetup(Pokedex* pokedex) : handle(pokedex->createEntry()) {}
+  DexDataSetup(types::registry& registry) : handle(registry, registry.create()) {}
 
   template <typename Tag>
   void setProperty() {

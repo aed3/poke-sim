@@ -4,6 +4,7 @@
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
+#include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
 #include <Types/Stats.hpp>
@@ -22,11 +23,9 @@ struct QuiverDance {
 
   struct sourcePrimaryEffect {
     static constexpr types::boost spaBoost = 1, spdBoost = 1, speBoost = 1;
-
-    static constexpr internal::Tags<> effectTags{};
   };
 
-  static constexpr internal::Tags<move::tags::Self> moveTags{};
+  static constexpr MoveTarget target = MoveTarget::SELF;
 
   struct Strings {
     static constexpr std::string_view name = "Quiver Dance";
