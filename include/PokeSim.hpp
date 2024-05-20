@@ -14773,8 +14773,7 @@ struct CurrentActionSource;
 
 inline void setCurrentActionTarget(types::handle battleHandle, const Sides& sides, const CurrentAction& action);
 inline void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action);
-inline void setCurrentActionMove(
-  types::handle battleHandle, const Pokedex& pokedex, const CurrentAction& action, const CurrentActionSource& source);
+inline void setCurrentActionMove(types::handle battleHandle, const Pokedex& pokedex, const CurrentAction& action);
 inline void clearCurrentAction(Simulation& simulation);
 }  // namespace pokesim
 
@@ -16139,8 +16138,11 @@ struct Moonblast {
   struct targetSecondaryEffect {
     static constexpr types::baseEffectChance chance = 30;
     static constexpr types::boost spaBoost = -1;
+
+    static constexpr internal::Tags<> effectTags{};
   };
 
+  static constexpr internal::Tags<> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {
@@ -16172,8 +16174,11 @@ struct QuiverDance {
 
   struct sourcePrimaryEffect {
     static constexpr types::boost spaBoost = 1, spdBoost = 1, speBoost = 1;
+
+    static constexpr internal::Tags<> effectTags{};
   };
 
+  static constexpr internal::Tags<> moveTags{};
   static constexpr MoveTarget target = MoveTarget::SELF;
 
   struct Strings {
@@ -16211,6 +16216,7 @@ struct Thunderbolt {
     static constexpr internal::Tags<status::tags::Paralysis> effectTags{};
   };
 
+  static constexpr internal::Tags<> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {
@@ -16245,6 +16251,7 @@ struct WillOWisp {
     static constexpr internal::Tags<status::tags::Burn> effectTags{};
   };
 
+  static constexpr internal::Tags<> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {
@@ -16281,14 +16288,14 @@ struct BuildMove {
     targetSecondaryEffect,
     sourcePrimaryEffect,
     sourceSecondaryEffect,
-    moveTags,
     chance,
     atkBoost,
     defBoost,
     spaBoost,
     spdBoost,
     speBoost,
-    effectTags,
+
+    // moveTags and effectTags are not optional because setting them as optional does not work with clang
   };
 
   template <auto Member>
@@ -16315,8 +16322,6 @@ struct BuildMove {
   struct has<Optional::sourceSecondaryEffect, Type, std::void_t<typename Type::sourceSecondaryEffect>>
       : std::true_type {};
   template <typename Type>
-  struct has<Optional::moveTags, Type, void_t<Type::moveTags>> : std::true_type {};
-  template <typename Type>
   struct has<Optional::chance, Type, void_t<Type::chance>> : std::true_type {};
   template <typename Type>
   struct has<Optional::atkBoost, Type, void_t<Type::atkBoost>> : std::true_type {};
@@ -16328,8 +16333,6 @@ struct BuildMove {
   struct has<Optional::spdBoost, Type, void_t<Type::spdBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
-  template <typename Type>
-  struct has<Optional::effectTags, Type, void_t<Type::effectTags>> : std::true_type {};
 
   template <typename EffectData>
   static types::entity buildEffect(types::registry& registry, bool effectsTarget) {
@@ -16366,9 +16369,7 @@ struct BuildMove {
       effect.setBoost<SpeBoost>(EffectData::speBoost);
     }
 
-    if constexpr (has<Optional::effectTags, EffectData>::value) {
-      effect.setProperties(EffectData::effectTags);
-    }
+    effect.setProperties(EffectData::effectTags);
 
     return effect.entity();
   }
@@ -16426,9 +16427,7 @@ struct BuildMove {
       }
     }
 
-    if constexpr (has<Optional::moveTags, T>::value) {
-      move.setProperties(T::moveTags);
-    }
+    move.setProperties(T::moveTags);
 
     switch (T::target) {
       case MoveTarget::ANY_SINGLE_TARGET: {
@@ -18447,8 +18446,7 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, cons
   registry.emplace<tags::CurrentActionMoveSource>(sourceEntity);
 }
 
-void setCurrentActionMove(
-  types::handle battleHandle, const Pokedex& pokedex, const CurrentAction& action, const CurrentActionSource& source) {
+void setCurrentActionMove(types::handle battleHandle, const Pokedex& pokedex, const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
   const action::Move& move = registry.get<action::Move>(action.currentAction);
 
