@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Accuracy.hpp"
+#include "AddedTargets.hpp"
 #include "AnalyzeEffect/AttackerDefender.hpp"
 #include "AnalyzeEffect/RemovedEffect.hpp"
 #include "BasePower.hpp"
@@ -9,9 +10,6 @@
 #include "Chance.hpp"
 #include "CloneFromCloneTo.hpp"
 #include "Decisions.hpp"
-#include "DexData/Abilities.hpp"
-#include "DexData/BaseStats.hpp"
-#include "DexData/SpeciesTypes.hpp"
 #include "EVsIVs.hpp"
 #include "EntityHolders/ActionQueue.hpp"
 #include "EntityHolders/Battle.hpp"
@@ -44,6 +42,9 @@
 #include "Names/VolatileNames.hpp"
 #include "Names/WeatherNames.hpp"
 #include "PP.hpp"
+#include "Pokedex/Abilities.hpp"
+#include "Pokedex/BaseStats.hpp"
+#include "Pokedex/SpeciesTypes.hpp"
 #include "Position.hpp"
 #include "Priority.hpp"
 #include "Probability.hpp"

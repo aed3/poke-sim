@@ -2,6 +2,7 @@
 
 #include "Ability.hpp"
 #include "ActionOrder.hpp"
+#include "AddedTargets.hpp"
 #include "BattleFormat.hpp"
 #include "DamageRollKind.hpp"
 #include "GameMechanics.hpp"
@@ -9,6 +10,7 @@
 #include "Item.hpp"
 #include "Move.hpp"
 #include "MoveCategory.hpp"
+#include "MoveTarget.hpp"
 #include "Nature.hpp"
 #include "PlayerSideId.hpp"
 #include "PseudoWeather.hpp"

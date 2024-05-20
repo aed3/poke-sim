@@ -84,7 +84,14 @@ void runResidualAction(Simulation& simulation) {
 
 void nextTurn(Simulation& /*simulation*/) {}
 
+void getMoveTargets(Simulation& simulation) {}
+
 void useMove(Simulation& simulation) {
+  // ModifyTarget
+  // ModifyType
+  // ModifyMove
+
+  getMoveTargets(simulation);
   runMoveHitSteps(simulation);
 }
 }  // namespace pokesim::simulate_turn

@@ -20,7 +20,7 @@ namespace pokesim {
  */
 class Pokedex {
  private:
-  types::registry registry{};
+  types::registry dexRegistry{};
 
   entt::dense_map<dex::Species, types::entity> speciesMap{};
   entt::dense_map<dex::Item, types::entity> itemsMap{};
@@ -30,10 +30,10 @@ class Pokedex {
   template <typename Build, typename T>
   void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
 
-  types::entity buildSpecies(dex::Species species);
-  types::entity buildMove(dex::Move move);
-  types::entity buildItem(dex::Item item);
-  types::entity buildAbility(dex::Ability ability);
+  types::entity buildSpecies(dex::Species species, types::registry& registry, bool forActiveMove) const;
+  types::entity buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const;
+  types::entity buildItem(dex::Item item, types::registry& registry, bool forActiveMove) const;
+  types::entity buildAbility(dex::Ability ability, types::registry& registry, bool forActiveMove) const;
 
  public:
   /**
@@ -44,9 +44,6 @@ class Pokedex {
   const GameMechanics mechanics;
 
   Pokedex(GameMechanics mechanics_) : mechanics(mechanics_) {}
-
-  // Creates an entity to store a new Pokedex entry of any species, item, or move.
-  types::handle createEntry();
 
   /**
    * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.
@@ -105,7 +102,7 @@ class Pokedex {
   auto getSpeciesData(dex::Species species) const {
     // ENTT_ASSERT(registry.all_of<T...>(speciesMap.at(species)), "Species does not contain at least one of the
     // component types");
-    return registry.get<T...>(speciesMap.at(species));
+    return dexRegistry.get<T...>(speciesMap.at(species));
   }
 
   /**
@@ -118,7 +115,7 @@ class Pokedex {
    */
   template <typename... T>
   auto getItemData(dex::Item item) const {
-    return registry.get<T...>(itemsMap.at(item));
+    return dexRegistry.get<T...>(itemsMap.at(item));
   }
 
   /**
@@ -131,32 +128,34 @@ class Pokedex {
    */
   template <typename... T>
   auto getMoveData(dex::Move move) const {
-    return registry.get<T...>(movesMap.at(move));
+    return dexRegistry.get<T...>(movesMap.at(move));
   }
 
   template <typename... T>
   auto getEffectData(MoveEffect effect) const {
-    return registry.get<T...>(effect.moveEffect);
+    return dexRegistry.get<T...>(effect.moveEffect);
   }
 
   template <typename... T>
   bool speciesHas(dex::Species species) const {
-    return registry.all_of<T...>(speciesMap.at(species));
+    return dexRegistry.all_of<T...>(speciesMap.at(species));
   }
 
   template <typename... T>
   bool itemHas(dex::Item item) const {
-    return registry.all_of<T...>(itemsMap.at(item));
+    return dexRegistry.all_of<T...>(itemsMap.at(item));
   }
 
   template <typename... T>
   bool moveHas(dex::Move move) const {
-    return registry.all_of<T...>(movesMap.at(move));
+    return dexRegistry.all_of<T...>(movesMap.at(move));
   }
 
   template <typename... T>
   bool effectHas(MoveEffect effect) const {
-    return registry.all_of<T...>(effect.moveEffect);
+    return dexRegistry.all_of<T...>(effect.moveEffect);
   }
+
+  types::entity buildActionMove(dex::Move move, types::registry& registry) const;
 };
 }  // namespace pokesim

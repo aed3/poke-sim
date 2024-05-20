@@ -2,8 +2,8 @@
 
 #include <Components/Boosts.hpp>
 #include <Components/Tags/MoveTags.hpp>
-#include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Enums/AddedTargets.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
@@ -15,7 +15,7 @@
 
 namespace pokesim::dex::internal {
 struct MoveDexDataSetup : DexDataSetup {
-  MoveDexDataSetup(Pokedex* pokedex) : DexDataSetup(pokedex) {}
+  MoveDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
 
   void setName(Move move);
   void setType(Type type);
@@ -32,10 +32,12 @@ struct MoveDexDataSetup : DexDataSetup {
 
   void setPrimaryEffect(types::entity entity);
   void setSecondaryEffect(types::entity entity);
+
+  void addAddedTargets(AddedTargetOptions addedTargets);
 };
 
 struct MoveEffectSetup : DexDataSetup {
-  MoveEffectSetup(Pokedex* pokedex) : DexDataSetup(pokedex) {}
+  MoveEffectSetup(types::registry& registry) : DexDataSetup(registry) {}
   types::entity entity() const { return handle; }
 
   void setChance(types::baseEffectChance chance);

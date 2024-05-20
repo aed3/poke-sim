@@ -4,6 +4,7 @@
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
+#include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
 #include <string_view>
@@ -22,7 +23,8 @@ struct FuryAttack {
   static constexpr types::pp basePp = 20;
   static constexpr types::moveHits minHits = 2, maxHits = 5;
 
-  static constexpr internal::Tags<move::tags::AnySingleTarget, move::tags::Contact> moveTags{};
+  static constexpr internal::Tags<move::tags::Contact> moveTags{};
+  static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {
     static constexpr std::string_view name = "Fury Attack";

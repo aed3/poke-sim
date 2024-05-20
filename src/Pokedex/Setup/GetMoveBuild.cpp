@@ -1,8 +1,10 @@
 #include <Components/Boosts.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Enums/AddedTargets.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
+#include <Types/Enums/MoveTarget.hpp>
 #include <type_traits>
 
 #include "../Moves/headers.hpp"
@@ -24,12 +26,14 @@ struct BuildMove {
     targetSecondaryEffect,
     sourcePrimaryEffect,
     sourceSecondaryEffect,
+    moveTags,
     chance,
     atkBoost,
     defBoost,
     spaBoost,
     spdBoost,
     speBoost,
+    effectTags,
   };
 
   template <auto Member>
@@ -56,6 +60,8 @@ struct BuildMove {
   struct has<Optional::sourceSecondaryEffect, Type, std::void_t<typename Type::sourceSecondaryEffect>>
       : std::true_type {};
   template <typename Type>
+  struct has<Optional::moveTags, Type, void_t<Type::moveTags>> : std::true_type {};
+  template <typename Type>
   struct has<Optional::chance, Type, void_t<Type::chance>> : std::true_type {};
   template <typename Type>
   struct has<Optional::atkBoost, Type, void_t<Type::atkBoost>> : std::true_type {};
@@ -67,10 +73,12 @@ struct BuildMove {
   struct has<Optional::spdBoost, Type, void_t<Type::spdBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::effectTags, Type, void_t<Type::effectTags>> : std::true_type {};
 
   template <typename EffectData>
-  static types::entity buildEffect(Pokedex* pokedex, bool effectsTarget) {
-    dex::internal::MoveEffectSetup effect(pokedex);
+  static types::entity buildEffect(types::registry& registry, bool effectsTarget) {
+    dex::internal::MoveEffectSetup effect(registry);
 
     if constexpr (has<Optional::chance, EffectData>::value) {
       effect.setChance(EffectData::chance);
@@ -103,18 +111,23 @@ struct BuildMove {
       effect.setBoost<SpeBoost>(EffectData::speBoost);
     }
 
-    effect.setProperties(EffectData::effectTags);
+    if constexpr (has<Optional::effectTags, EffectData>::value) {
+      effect.setProperties(EffectData::effectTags);
+    }
 
     return effect.entity();
   }
 
  public:
-  static types::entity build(Pokedex* pokedex) {
-    dex::internal::MoveDexDataSetup move(pokedex);
+  static types::entity build(types::registry& registry, bool forActiveMove) {
+    dex::internal::MoveDexDataSetup move(registry);
 
-    move.setName(T::name);
+    if (!forActiveMove) {
+      move.setName(T::name);
+      move.setBasePp(T::basePp);
+    }
+
     move.setType(T::type);
-    move.setBasePp(T::basePp);
     switch (T::category) {
       case dex::MoveCategory::PHYSICAL: {
         move.setCategoryPhysical();
@@ -140,35 +153,108 @@ struct BuildMove {
       move.setMultiHit(T::minHits, T::maxHits);
     }
 
-    if constexpr (has<Optional::sourcePrimaryEffect, T>::value) {
-      move.setPrimaryEffect(buildEffect<typename T::sourcePrimaryEffect>(pokedex, false));
+    if (!forActiveMove) {
+      if constexpr (has<Optional::sourcePrimaryEffect, T>::value) {
+        move.setPrimaryEffect(buildEffect<typename T::sourcePrimaryEffect>(registry, false));
+      }
+
+      if constexpr (has<Optional::targetPrimaryEffect, T>::value) {
+        move.setPrimaryEffect(buildEffect<typename T::targetPrimaryEffect>(registry, true));
+      }
+
+      if constexpr (has<Optional::sourceSecondaryEffect, T>::value) {
+        move.setSecondaryEffect(buildEffect<typename T::sourceSecondaryEffect>(registry, false));
+      }
+
+      if constexpr (has<Optional::targetSecondaryEffect, T>::value) {
+        move.setSecondaryEffect(buildEffect<typename T::targetSecondaryEffect>(registry, true));
+      }
     }
 
-    if constexpr (has<Optional::targetPrimaryEffect, T>::value) {
-      move.setPrimaryEffect(buildEffect<typename T::targetPrimaryEffect>(pokedex, true));
+    if constexpr (has<Optional::moveTags, T>::value) {
+      move.setProperties(T::moveTags);
     }
 
-    if constexpr (has<Optional::sourceSecondaryEffect, T>::value) {
-      move.setSecondaryEffect(buildEffect<typename T::sourceSecondaryEffect>(pokedex, false));
+    switch (T::target) {
+      case MoveTarget::ANY_SINGLE_TARGET: {
+        move.setProperty<move::tags::AnySingleTarget>();
+        break;
+      }
+      case MoveTarget::ANY_SINGLE_FOE: {
+        move.setProperty<move::tags::AnySingleFoe>();
+        break;
+      }
+      case MoveTarget::ANY_SINGLE_ALLY: {
+        move.setProperty<move::tags::AnySingleAlly>();
+        break;
+      }
+      case MoveTarget::ALLY_OR_SELF: {
+        move.setProperty<move::tags::AllyOrSelf>();
+        break;
+      }
+      case MoveTarget::SELF: {
+        move.setProperty<move::tags::Self>();
+        break;
+      }
+      case MoveTarget::ALL_FOES: {
+        move.setProperty<move::tags::AllFoes>();
+        move.addAddedTargets(AddedTargetOptions::TARGET_ALLY);
+        break;
+      }
+      case MoveTarget::ALLIES_AND_FOES: {
+        move.setProperty<move::tags::AlliesAndFoes>();
+        move.addAddedTargets(AddedTargetOptions::TARGET_ALLY);
+        move.addAddedTargets(AddedTargetOptions::USER_ALLY);
+        break;
+      }
+      case MoveTarget::ALLIES_AND_SELF: {
+        move.setProperty<move::tags::AlliesAndSelf>();
+        // Deliberately not USER_ALLY as the target of AlliesAndSelf moves is the user
+        move.addAddedTargets(AddedTargetOptions::TARGET_ALLY);
+        break;
+      }
+      case MoveTarget::FOE_SIDE: {
+        move.setProperty<move::tags::FoeSide>();
+        move.addAddedTargets(AddedTargetOptions::TARGET_SIDE);
+        break;
+      }
+      case MoveTarget::ALLY_SIDE: {
+        move.setProperty<move::tags::AllySide>();
+        move.addAddedTargets(AddedTargetOptions::USER_SIDE);
+        break;
+      }
+      case MoveTarget::FIELD: {
+        move.setProperty<move::tags::Field>();
+        move.addAddedTargets(AddedTargetOptions::FIELD);
+        break;
+      }
+      case MoveTarget::ALLY_TEAM: {
+        move.setProperty<move::tags::AllyTeam>();
+        move.addAddedTargets(AddedTargetOptions::USER_SIDE);
+        break;
+      }
+      case MoveTarget::RETALIATION: {
+        move.setProperty<move::tags::Retaliation>();
+        break;
+      }
+      case MoveTarget::RANDOM_FOE: {
+        move.setProperty<move::tags::RandomFoe>();
+        break;
+      }
+      default: break;
     }
-
-    if constexpr (has<Optional::targetSecondaryEffect, T>::value) {
-      move.setSecondaryEffect(buildEffect<typename T::targetSecondaryEffect>(pokedex, true));
-    }
-
-    move.setProperties(T::moveTags);
 
     return move.entity();
   }
 };
 
 template <template <GameMechanics> class T>
-auto buildMoveSV(Pokedex* pokedex) {
-  return BuildMove<T<GameMechanics::SCARLET_VIOLET>>::build(pokedex);
+auto buildMoveSV(types::registry& registry, bool forActiveMove) {
+  return BuildMove<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
 }
 };  // namespace internal
 
-types::entity Pokedex::buildMove(dex::Move move) {
+types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
@@ -176,12 +262,12 @@ types::entity Pokedex::buildMove(dex::Move move) {
   switch (mechanics) {
     case GameMechanics::SCARLET_VIOLET: {
       switch (move) {
-        case Move::FURY_ATTACK: return buildMoveSV<FuryAttack>(this);
-        case Move::THUNDERBOLT: return buildMoveSV<Thunderbolt>(this);
-        case Move::WILL_O_WISP: return buildMoveSV<WillOWisp>(this);
-        case Move::KNOCK_OFF: return buildMoveSV<KnockOff>(this);
-        case Move::QUIVER_DANCE: return buildMoveSV<QuiverDance>(this);
-        case Move::MOONBLAST: return buildMoveSV<Moonblast>(this);
+        case Move::FURY_ATTACK: return buildMoveSV<FuryAttack>(registry, forActiveMove);
+        case Move::THUNDERBOLT: return buildMoveSV<Thunderbolt>(registry, forActiveMove);
+        case Move::WILL_O_WISP: return buildMoveSV<WillOWisp>(registry, forActiveMove);
+        case Move::KNOCK_OFF: return buildMoveSV<KnockOff>(registry, forActiveMove);
+        case Move::QUIVER_DANCE: return buildMoveSV<QuiverDance>(registry, forActiveMove);
+        case Move::MOONBLAST: return buildMoveSV<Moonblast>(registry, forActiveMove);
         default: break;
       }
       break;

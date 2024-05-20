@@ -145,6 +145,7 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     REQUIRE(pokedex.moveHas<move::tags::AnySingleTarget>(moveEnum));
     REQUIRE(pokedex.moveHas<move::tags::Contact>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHas<AddedTargets>(moveEnum));
   }
 
   {
@@ -173,6 +174,7 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE_FALSE(pokedex.effectHas<move::tags::effect::MoveSource>(secondaryEffect));
 
     REQUIRE(pokedex.moveHas<move::tags::AnySingleTarget>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHas<AddedTargets>(moveEnum));
   }
 
   {
@@ -201,6 +203,7 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE_FALSE(pokedex.effectHas<move::tags::effect::MoveSource>(secondaryEffect));
 
     REQUIRE(pokedex.moveHas<move::tags::AnySingleTarget>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHas<AddedTargets>(moveEnum));
   }
 
   {
@@ -228,6 +231,7 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE_FALSE(pokedex.effectHas<move::tags::effect::MoveSource>(primaryEffect));
 
     REQUIRE(pokedex.moveHas<move::tags::AnySingleTarget>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHas<AddedTargets>(moveEnum));
   }
 
   {
@@ -258,6 +262,7 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE_FALSE(pokedex.effectHas<move::tags::effect::MoveTarget>(primaryEffect));
 
     REQUIRE(pokedex.moveHas<move::tags::Self>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHas<AddedTargets>(moveEnum));
   }
 }
 }  // namespace pokesim

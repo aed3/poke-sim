@@ -1,6 +1,7 @@
 #include "MoveDexDataSetup.hpp"
 
 #include <Components/Accuracy.hpp>
+#include <Components/AddedTargets.hpp>
 #include <Components/BasePower.hpp>
 #include <Components/Boosts.hpp>
 #include <Components/Chance.hpp>
@@ -22,6 +23,12 @@ void MoveDexDataSetup::setName(Move move) {
 
 void MoveDexDataSetup::setType(Type type) {
   handle.emplace<TypeName>(type);
+}
+
+void MoveDexDataSetup::addAddedTargets(AddedTargetOptions addedTargets) {
+  AddedTargets& existingTargets = handle.get_or_emplace<AddedTargets>();
+  existingTargets.targets = static_cast<AddedTargetOptions>(
+    static_cast<std::uint8_t>(existingTargets.targets) | static_cast<std::uint8_t>(addedTargets));
 }
 
 void MoveDexDataSetup::setAccuracy(types::baseAccuracy accuracy) {
