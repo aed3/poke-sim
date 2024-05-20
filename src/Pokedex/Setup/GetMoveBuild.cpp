@@ -26,14 +26,14 @@ struct BuildMove {
     targetSecondaryEffect,
     sourcePrimaryEffect,
     sourceSecondaryEffect,
-    moveTags,
     chance,
     atkBoost,
     defBoost,
     spaBoost,
     spdBoost,
     speBoost,
-    effectTags,
+
+    // moveTags and effectTags are not optional because setting them as optional does not work with clang
   };
 
   template <auto Member>
@@ -60,8 +60,6 @@ struct BuildMove {
   struct has<Optional::sourceSecondaryEffect, Type, std::void_t<typename Type::sourceSecondaryEffect>>
       : std::true_type {};
   template <typename Type>
-  struct has<Optional::moveTags, Type, void_t<Type::moveTags>> : std::true_type {};
-  template <typename Type>
   struct has<Optional::chance, Type, void_t<Type::chance>> : std::true_type {};
   template <typename Type>
   struct has<Optional::atkBoost, Type, void_t<Type::atkBoost>> : std::true_type {};
@@ -73,8 +71,6 @@ struct BuildMove {
   struct has<Optional::spdBoost, Type, void_t<Type::spdBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
-  template <typename Type>
-  struct has<Optional::effectTags, Type, void_t<Type::effectTags>> : std::true_type {};
 
   template <typename EffectData>
   static types::entity buildEffect(types::registry& registry, bool effectsTarget) {
@@ -111,9 +107,7 @@ struct BuildMove {
       effect.setBoost<SpeBoost>(EffectData::speBoost);
     }
 
-    if constexpr (has<Optional::effectTags, EffectData>::value) {
-      effect.setProperties(EffectData::effectTags);
-    }
+    effect.setProperties(EffectData::effectTags);
 
     return effect.entity();
   }
@@ -171,9 +165,7 @@ struct BuildMove {
       }
     }
 
-    if constexpr (has<Optional::moveTags, T>::value) {
-      move.setProperties(T::moveTags);
-    }
+    move.setProperties(T::moveTags);
 
     switch (T::target) {
       case MoveTarget::ANY_SINGLE_TARGET: {

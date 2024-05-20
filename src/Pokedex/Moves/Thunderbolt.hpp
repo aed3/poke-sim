@@ -29,6 +29,7 @@ struct Thunderbolt {
     static constexpr internal::Tags<status::tags::Paralysis> effectTags{};
   };
 
+  static constexpr internal::Tags<> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {
