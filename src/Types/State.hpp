@@ -11,6 +11,7 @@ namespace internal {
 const std::uint8_t MAX_TEAM_SIZE = 6U;
 const std::uint8_t MAX_ACTIVE_POKEMON_SLOTS = 2U;
 const std::uint8_t MAX_MOVE_SLOTS = 4U;
+const std::uint8_t MAX_TARGETS = 4U;
 }  // namespace internal
 
 using stateId = std::underlying_type_t<entity>;
@@ -33,4 +34,7 @@ using moveSlots = pokesim::internal::maxSizedVector<T, internal::MAX_MOVE_SLOTS>
 
 template <typename T>
 using sideSlots = pokesim::internal::maxSizedVector<T, internal::MAX_ACTIVE_POKEMON_SLOTS>;
+
+template <typename T>
+using targets = pokesim::internal::maxSizedVector<T, internal::MAX_TARGETS>;
 }  // namespace pokesim::types

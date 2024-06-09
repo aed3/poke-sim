@@ -8,4 +8,5 @@
 #include "PokemonTags.hpp"
 #include "SimulationTags.hpp"
 #include "StatusTags.hpp"
+#include "TargetTags.hpp"
 #include "TypeTags.hpp"

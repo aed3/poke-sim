@@ -40,7 +40,7 @@ struct BattleStateSetup : internal::StateSetupBase {
   void setActionQueue(const std::vector<types::entity>& queue);
   void setTurn(types::battleTurn turn);
   void setActivePokemon(types::entity activePokemon);
-  void setCurrentActionTarget(types::entity actionTarget);
+  void setCurrentActionTarget(types::targets<types::entity> actionTargets);
   void setCurrentActionSource(types::entity actionSource);
   void setCurrentActionMove(types::entity actionMove);
   void setProbability(types::stateProbability probability);

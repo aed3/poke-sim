@@ -64,5 +64,6 @@
 #include "Tags/PokemonTags.hpp"
 #include "Tags/SimulationTags.hpp"
 #include "Tags/StatusTags.hpp"
+#include "Tags/TargetTags.hpp"
 #include "Tags/TypeTags.hpp"
 #include "Turn.hpp"
