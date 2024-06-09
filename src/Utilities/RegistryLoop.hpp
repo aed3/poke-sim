@@ -15,8 +15,8 @@ struct RegistryLoop {
   template <class Signature>
   struct RegistryLoopInternal;
 
-  template <class Signature, class... Args>
-  struct RegistryLoopInternal<Signature (*)(Args...)> {
+  template <class ReturnType, class... Args>
+  struct RegistryLoopInternal<ReturnType (*)(Args...)> {
     template <typename... ViewArgs>
     static void view(types::registry& registry, const Pokedex&, const ViewArgs&... viewArgs) {
       registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([](types::entity, auto&&... args) {
@@ -32,8 +32,8 @@ struct RegistryLoop {
     }
   };
 
-  template <class Signature, class... Args>
-  struct RegistryLoopInternal<Signature (*)(types::handle, Args...)> {
+  template <class ReturnType, class... Args>
+  struct RegistryLoopInternal<ReturnType (*)(types::handle, Args...)> {
     template <typename... ViewArgs>
     static void view(types::registry& registry, const Pokedex&, const ViewArgs&... viewArgs) {
       registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
@@ -51,8 +51,8 @@ struct RegistryLoop {
     }
   };
 
-  template <class Signature, class... Args>
-  struct RegistryLoopInternal<Signature (*)(const Pokedex&, Args...)> {
+  template <class ReturnType, class... Args>
+  struct RegistryLoopInternal<ReturnType (*)(const Pokedex&, Args...)> {
     template <typename... ViewArgs>
     static void view(types::registry& registry, const Pokedex& pokedex, const ViewArgs&... viewArgs) {
       registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([&pokedex](types::entity, auto&&... args) {
@@ -68,8 +68,8 @@ struct RegistryLoop {
     }
   };
 
-  template <class Signature, class... Args>
-  struct RegistryLoopInternal<Signature (*)(types::handle, const Pokedex&, Args...)> {
+  template <class ReturnType, class... Args>
+  struct RegistryLoopInternal<ReturnType (*)(types::handle, const Pokedex&, Args...)> {
     template <typename... ViewArgs>
     static void view(types::registry& registry, const Pokedex& pokedex, const ViewArgs&... viewArgs) {
       registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
@@ -87,8 +87,8 @@ struct RegistryLoop {
     }
   };
 
-  template <class Signature, class... Args>
-  struct RegistryLoopInternal<Signature (*)(types::registry&, Args...)> {
+  template <class ReturnType, class... Args>
+  struct RegistryLoopInternal<ReturnType (*)(types::registry&, Args...)> {
     template <typename... ViewArgs>
     static void view(types::registry& registry, const Pokedex&, const ViewArgs&... viewArgs) {
       registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([&registry](types::entity, auto&&... args) {

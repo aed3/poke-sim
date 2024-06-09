@@ -1,8 +1,11 @@
 #include "SimulateTurn.hpp"
 
+#include <Battle/Helpers/Helpers.hpp>
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
+#include <Components/AddedTargets.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
+#include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/Names/SourceSlotName.hpp>
@@ -14,6 +17,7 @@
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Components/Tags/TargetTags.hpp>
 #include <Components/Turn.hpp>
 #include <Simulation/MoveHitSteps.hpp>
 #include <Simulation/Simulation.hpp>
@@ -84,7 +88,43 @@ void runResidualAction(Simulation& simulation) {
 
 void nextTurn(Simulation& /*simulation*/) {}
 
-void getMoveTargets(Simulation& simulation) {}
+void addTargetAllyToTargets(types::registry& registry, const Battle& battle) {
+  const Sides& sides = registry.get<Sides>(battle.battle);
+  const TargetSlotName& targetSlotName =
+    registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.battle).currentAction);
+
+  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, targetSlotName.targetSlot);
+  if (allyEntity == entt::null) {
+    return;
+  }
+
+  CurrentActionTargets& targets = registry.get<CurrentActionTargets>(battle.battle);
+  targets.actionTargets.push_back(allyEntity);
+}
+
+void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
+  const Sides& sides = registry.get<Sides>(battle.battle);
+  const SourceSlotName& sourceSlotName =
+    registry.get<SourceSlotName>(registry.get<CurrentAction>(battle.battle).currentAction);
+
+  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, sourceSlotName.sourceSlot);
+  if (allyEntity == entt::null) {
+    return;
+  }
+
+  CurrentActionTargets& targets = registry.get<CurrentActionTargets>(battle.battle);
+  targets.actionTargets.push_back(allyEntity);
+}
+
+void resolveMoveTargets(CurrentActionTargets&) {}
+
+void getMoveTargets(Simulation& simulation) {
+  if (simulation.battleFormat == BattleFormat::DOUBLES_BATTLE_FORMAT) {
+    simulation.view<addTargetAllyToTargets, tags::CurrentActionMove, move::added_targets::tags::TargetAlly>();
+    simulation.view<addUserAllyToTargets, tags::CurrentActionMove, move::added_targets::tags::UserAlly>();
+  }
+  simulation.view<resolveMoveTargets, tags::CurrentActionMove>(entt::exclude<AddedTargets>);
+}
 
 void useMove(Simulation& simulation) {
   // ModifyTarget

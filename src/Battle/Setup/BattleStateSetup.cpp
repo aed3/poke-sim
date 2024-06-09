@@ -68,9 +68,11 @@ void BattleStateSetup::setActivePokemon(types::entity activePokemon) {
   handle.registry()->emplace<tags::ActivePokemon>(activePokemon);
 }
 
-void BattleStateSetup::setCurrentActionTarget(types::entity actionTarget) {
-  handle.emplace<CurrentActionTarget>(actionTarget);
-  handle.registry()->emplace<tags::CurrentActionMoveTarget>(actionTarget);
+void BattleStateSetup::setCurrentActionTarget(types::targets<types::entity> actionTargets) {
+  handle.emplace<CurrentActionTargets>(actionTargets);
+  for (types::entity entity : actionTargets) {
+    handle.registry()->emplace<tags::CurrentActionMoveTarget>(entity);
+  }
 }
 
 void BattleStateSetup::setCurrentActionSource(types::entity actionSource) {

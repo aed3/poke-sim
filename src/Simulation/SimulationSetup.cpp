@@ -140,8 +140,8 @@ void Simulation::createCalcDamageInput(
   ENTT_ASSERT(damageCalcInputData.move != dex::Move::NO_MOVE, "A damage calculation must have a move");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
-  types::entity attackerEntity = slotToEntity(registry, sides, damageCalcInputData.attackerSlot);
-  types::entity defenderEntity = slotToEntity(registry, sides, damageCalcInputData.defenderSlot);
+  types::entity attackerEntity = slotToPokemonEntity(registry, sides, damageCalcInputData.attackerSlot);
+  types::entity defenderEntity = slotToPokemonEntity(registry, sides, damageCalcInputData.defenderSlot);
 
   calc_damage::InputSetup inputSetup(registry);
   inputSetup.setAttacker(attackerEntity);
@@ -157,8 +157,8 @@ void Simulation::createAnalyzeEffectInput(
   ENTT_ASSERT(!analyzeEffectInputData.effect.empty(), "An effect analysis must have an effect");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
-  types::entity attackerEntity = slotToEntity(registry, sides, analyzeEffectInputData.attackerSlot);
-  types::entity defenderEntity = slotToEntity(registry, sides, analyzeEffectInputData.defenderSlot);
+  types::entity attackerEntity = slotToPokemonEntity(registry, sides, analyzeEffectInputData.attackerSlot);
+  types::entity defenderEntity = slotToPokemonEntity(registry, sides, analyzeEffectInputData.defenderSlot);
 
   analyze_effect::InputSetup inputSetup(registry);
   inputSetup.setAttacker(attackerEntity);

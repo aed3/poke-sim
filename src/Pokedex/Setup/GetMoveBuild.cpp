@@ -1,4 +1,5 @@
 #include <Components/Boosts.hpp>
+#include <Components/Tags/TargetTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/AddedTargets.hpp>

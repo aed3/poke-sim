@@ -1,6 +1,7 @@
 #include "ManageBattleState.hpp"
 
 #include <Battle/Helpers/Helpers.hpp>
+#include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/Names/SourceSlotName.hpp>
@@ -19,10 +20,10 @@ namespace pokesim {
 void setCurrentActionTarget(types::handle battleHandle, const Sides& sides, const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
   const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.currentAction);
-  types::entity targetEntity = slotToEntity(registry, sides, targetSlotName.targetSlot);
+  types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.targetSlot);
 
   if (!registry.any_of<tags::Fainted>(targetEntity)) {
-    battleHandle.emplace<CurrentActionTarget>(targetEntity);
+    battleHandle.emplace<CurrentActionTargets>(std::initializer_list<types::entity>{targetEntity});
     registry.emplace<tags::CurrentActionMoveTarget>(targetEntity);
   }
   else {
@@ -33,7 +34,7 @@ void setCurrentActionTarget(types::handle battleHandle, const Sides& sides, cons
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
   const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(action.currentAction);
-  types::entity sourceEntity = slotToEntity(registry, sides, sourceSlotName.sourceSlot);
+  types::entity sourceEntity = slotToPokemonEntity(registry, sides, sourceSlotName.sourceSlot);
 
   battleHandle.emplace<CurrentActionSource>(sourceEntity);
   registry.emplace<tags::CurrentActionMoveSource>(sourceEntity);
@@ -46,13 +47,14 @@ void setCurrentActionMove(types::handle battleHandle, const Pokedex& pokedex, co
   types::entity moveEntity = pokedex.buildActionMove(move.name, registry);
 
   battleHandle.emplace<CurrentActionMove>(moveEntity);
+  registry.emplace<Battle>(moveEntity, battleHandle.entity());
   registry.emplace<tags::CurrentActionMove>(moveEntity);
 }
 
 void clearCurrentAction(Simulation& simulation) {
   types::registry& registry = simulation.registry;
   registry.clear<CurrentAction>();
-  registry.clear<CurrentActionTarget>();
+  registry.clear<CurrentActionTargets>();
   registry.clear<CurrentActionSource>();
   registry.clear<CurrentActionMove>();
 

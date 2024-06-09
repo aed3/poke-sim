@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Types/Entity.hpp>
+#include <Types/State.hpp>
 
 namespace pokesim {
 struct CurrentAction {
@@ -11,8 +12,8 @@ struct NextAction {
   types::entity nextAction;
 };
 
-struct CurrentActionTarget {
-  types::entity actionTarget;
+struct CurrentActionTargets {
+  types::targets<types::entity> actionTargets;
 };
 
 struct CurrentActionSource {

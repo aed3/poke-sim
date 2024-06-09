@@ -12,6 +12,7 @@
 #include <Components/PP.hpp>
 #include <Components/Priority.hpp>
 #include <Components/Tags/MoveTags.hpp>
+#include <Components/Tags/TargetTags.hpp>
 #include <Types/Move.hpp>
 #include <Types/Stats.hpp>
 #include <entt/entity/handle.hpp>
@@ -29,6 +30,30 @@ void MoveDexDataSetup::addAddedTargets(AddedTargetOptions addedTargets) {
   AddedTargets& existingTargets = handle.get_or_emplace<AddedTargets>();
   existingTargets.targets = static_cast<AddedTargetOptions>(
     static_cast<std::uint8_t>(existingTargets.targets) | static_cast<std::uint8_t>(addedTargets));
+
+  switch (addedTargets) {
+    case AddedTargetOptions::TARGET_ALLY: {
+      setProperty<move::added_targets::tags::TargetAlly>();
+      break;
+    }
+    case AddedTargetOptions::USER_ALLY: {
+      setProperty<move::added_targets::tags::UserAlly>();
+      break;
+    }
+    case AddedTargetOptions::TARGET_SIDE: {
+      setProperty<move::added_targets::tags::TargetSide>();
+      break;
+    }
+    case AddedTargetOptions::USER_SIDE: {
+      setProperty<move::added_targets::tags::UserSide>();
+      break;
+    }
+    case AddedTargetOptions::FIELD: {
+      setProperty<move::added_targets::tags::Field>();
+      break;
+    }
+    default: break;
+  }
 }
 
 void MoveDexDataSetup::setAccuracy(types::baseAccuracy accuracy) {
@@ -41,17 +66,17 @@ void MoveDexDataSetup::setBasePower(types::basePower basePower) {
 
 void MoveDexDataSetup::setCategoryPhysical() {
   ENTT_ASSERT(!(handle.any_of<move::tags::Special, move::tags::Status>()), "A move can only have one category");
-  handle.emplace<move::tags::Physical>();
+  setProperty<move::tags::Physical>();
 }
 
 void MoveDexDataSetup::setCategorySpecial() {
   ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Status>()), "A move can only have one category");
-  handle.emplace<move::tags::Special>();
+  setProperty<move::tags::Special>();
 }
 
 void MoveDexDataSetup::setCategoryStatus() {
   ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Special>()), "A move can only have one category");
-  handle.emplace<move::tags::Status>();
+  setProperty<move::tags::Status>();
 }
 
 void MoveDexDataSetup::setBasePp(types::pp pp) {
