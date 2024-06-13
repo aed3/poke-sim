@@ -13,8 +13,9 @@
 #include <Components/Turn.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
+#include <Types/Random.hpp>
 #include <Types/State.hpp>
-#include <chrono>
+#include <Utilities/RNG.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/entity/view.hpp>
@@ -51,9 +52,13 @@ void BattleStateSetup::setSide(PlayerSideId sideID, types::entity sideEntity) {
   }
 }
 
-void BattleStateSetup::setRNGSeed(std::optional<types::stateRngSeed> seed) {
-  handle.emplace<RngSeed>(
-    seed.value_or((types::stateRngSeed)std::chrono::high_resolution_clock::now().time_since_epoch().count()));
+void BattleStateSetup::setRNGSeed(std::optional<types::rngState> seed) {
+  static types::rngState state = 1;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+  if (!seed.has_value()) {
+    seed = state;
+    internal::nextRandomValue(state);
+  }
+  handle.emplace<RngSeed>(seed.value());
 }
 
 void BattleStateSetup::setActionQueue(const std::vector<types::entity>& queue) {
@@ -85,7 +90,7 @@ void BattleStateSetup::setCurrentActionMove(types::entity actionMove) {
   handle.registry()->emplace<tags::CurrentActionMove>(actionMove);
 }
 
-void BattleStateSetup::setProbability(types::stateProbability probability) {
+void BattleStateSetup::setProbability(types::probability probability) {
   handle.emplace<Probability>(probability);
 }
 

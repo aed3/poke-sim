@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Types/Move.hpp>
+#include <Types/Random.hpp>
 
 namespace pokesim {
 struct Accuracy {
-  types::baseAccuracy accuracy = 100;
+  types::percentChance accuracy = 100;
 };
 }  // namespace pokesim

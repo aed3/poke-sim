@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Types/State.hpp>
+#include <Types/Random.hpp>
 
 namespace pokesim {
 /**
@@ -9,6 +9,6 @@ namespace pokesim {
  * Calculated by multiplying the various Accuracy and Chance numbers of a battle state's events.
  */
 struct Probability {
-  types::stateProbability probability = 1;
+  types::probability probability = 1;
 };
 }  // namespace pokesim

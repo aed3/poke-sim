@@ -27,5 +27,6 @@
 #include "Enums/Volatile.hpp"
 #include "Enums/Weather.hpp"
 #include "Move.hpp"
+#include "Random.hpp"
 #include "State.hpp"
 #include "Stats.hpp"

@@ -14,7 +14,7 @@
 
 namespace pokesim {
 
-types::entity slotToSideEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
+types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
   ENTT_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot");
   types::entity sideEntity = (std::uint8_t)targetSlot % 2 ? sides.p1 : sides.p2;
   return sideEntity;
@@ -30,7 +30,7 @@ types::entity slotToPokemonEntity(const types::registry& registry, types::entity
 
 types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
   ENTT_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot");
-  return slotToPokemonEntity(registry, slotToSideEntity(registry, sides, targetSlot), targetSlot);
+  return slotToPokemonEntity(registry, slotToSideEntity(sides, targetSlot), targetSlot);
 }
 
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
@@ -68,7 +68,7 @@ types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sid
     default: break;
   }
 
-  types::entity sideEntity = slotToSideEntity(registry, sides, allySlot);
+  types::entity sideEntity = slotToSideEntity(sides, allySlot);
   const Team& team = registry.get<Team>(sideEntity);
   if (team.team.size() <= index) {
     return entt::null;

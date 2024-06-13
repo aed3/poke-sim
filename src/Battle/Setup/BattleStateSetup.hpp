@@ -2,6 +2,7 @@
 
 #include <Types/Entity.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
+#include <Types/Random.hpp>
 #include <Types/State.hpp>
 #include <entt/entity/registry.hpp>
 #include <optional>
@@ -36,14 +37,14 @@ struct BattleStateSetup : internal::StateSetupBase {
   void setSide(PlayerSideId sideID, types::entity sideEntity);
 
   // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
-  void setRNGSeed(std::optional<types::stateRngSeed> seed = std::nullopt);
+  void setRNGSeed(std::optional<types::rngState> seed = std::nullopt);
   void setActionQueue(const std::vector<types::entity>& queue);
   void setTurn(types::battleTurn turn);
   void setActivePokemon(types::entity activePokemon);
   void setCurrentActionTarget(types::targets<types::entity> actionTargets);
   void setCurrentActionSource(types::entity actionSource);
   void setCurrentActionMove(types::entity actionMove);
-  void setProbability(types::stateProbability probability);
+  void setProbability(types::probability probability);
 
   std::vector<BattleStateSetup> clone(std::optional<types::cloneIndex> cloneCount = std::nullopt);
 };

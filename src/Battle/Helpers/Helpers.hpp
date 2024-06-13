@@ -8,7 +8,7 @@ namespace pokesim {
 struct Sides;
 struct MoveSlots;
 
-types::entity slotToSideEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
+types::entity slotToSideEntity(const Sides& sides, Slot targetSlot);
 types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot);
 types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
