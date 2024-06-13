@@ -15,8 +15,6 @@ const std::uint8_t MAX_TARGETS = 4U;
 }  // namespace internal
 
 using stateId = std::underlying_type_t<entity>;
-using stateProbability = float;
-using stateRngSeed = std::uint32_t;
 
 using battleTurn = std::uint16_t;
 

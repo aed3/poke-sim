@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Types/State.hpp>
+#include <Types/Random.hpp>
 
 namespace pokesim {
 struct RngSeed {
-  types::stateRngSeed seed = 0;
+  types::rngState seed = 1;
 };
 }  // namespace pokesim

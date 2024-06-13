@@ -114,7 +114,7 @@ CheckOptions:
   readability-magic-numbers.IgnoreAllFloatingPointValues: 'false'
   readability-magic-numbers.IgnoreBitFieldsWidths: 'true'
   readability-magic-numbers.IgnoredFloatingPointValues: '1.0;100.0;'
-  readability-magic-numbers.IgnoredIntegerValues: '1;2;5;100;'
+  readability-magic-numbers.IgnoredIntegerValues: '1;2;3;4;5;100;'
   readability-magic-numbers.IgnorePowersOf2IntegerValues: 'false'
   readability-qualified-auto.AddConstToQualified: 'true'
   readability-redundant-declaration.IgnoreMacros: 'true'

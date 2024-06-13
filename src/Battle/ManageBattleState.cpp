@@ -40,11 +40,11 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, cons
   registry.emplace<tags::CurrentActionMoveSource>(sourceEntity);
 }
 
-void setCurrentActionMove(types::handle battleHandle, const Pokedex& pokedex, const CurrentAction& action) {
+void setCurrentActionMove(types::handle battleHandle, const Simulation& simulation, const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
   const action::Move& move = registry.get<action::Move>(action.currentAction);
 
-  types::entity moveEntity = pokedex.buildActionMove(move.name, registry);
+  types::entity moveEntity = simulation.pokedex.buildActionMove(move.name, registry);
 
   battleHandle.emplace<CurrentActionMove>(moveEntity);
   registry.emplace<Battle>(moveEntity, battleHandle.entity());

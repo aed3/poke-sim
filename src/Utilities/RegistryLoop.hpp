@@ -6,7 +6,7 @@
 #include <type_traits>
 
 namespace pokesim {
-class Pokedex;
+class Simulation;
 
 namespace internal {
 template <auto Function, typename... Tags>
@@ -18,14 +18,14 @@ struct RegistryLoop {
   template <class ReturnType, class... Args>
   struct RegistryLoopInternal<ReturnType (*)(Args...)> {
     template <typename... ViewArgs>
-    static void view(types::registry& registry, const Pokedex&, const ViewArgs&... viewArgs) {
+    static void view(types::registry& registry, const Simulation&, const ViewArgs&... viewArgs) {
       registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([](types::entity, auto&&... args) {
         Function(args...);
       });
     }
 
     template <typename... GroupArgs>
-    static void group(types::registry& registry, const Pokedex&, const GroupArgs&... groupArgs) {
+    static void group(types::registry& registry, const Simulation&, const GroupArgs&... groupArgs) {
       registry.group<Tags..., std::decay_t<Args>...>(groupArgs...).each([](types::entity, auto&&... args) {
         Function(args...);
       });
@@ -35,7 +35,7 @@ struct RegistryLoop {
   template <class ReturnType, class... Args>
   struct RegistryLoopInternal<ReturnType (*)(types::handle, Args...)> {
     template <typename... ViewArgs>
-    static void view(types::registry& registry, const Pokedex&, const ViewArgs&... viewArgs) {
+    static void view(types::registry& registry, const Simulation&, const ViewArgs&... viewArgs) {
       registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
         .each([&registry](types::entity entity, auto&&... args) {
           Function(types::handle{registry, entity}, args...);
@@ -43,7 +43,7 @@ struct RegistryLoop {
     }
 
     template <typename... GroupArgs>
-    static void group(types::registry& registry, const Pokedex&, const GroupArgs&... groupArgs) {
+    static void group(types::registry& registry, const Simulation&, const GroupArgs&... groupArgs) {
       registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
         .each([&registry](types::entity entity, auto&&... args) {
           Function(types::handle{registry, entity}, args...);
@@ -52,37 +52,37 @@ struct RegistryLoop {
   };
 
   template <class ReturnType, class... Args>
-  struct RegistryLoopInternal<ReturnType (*)(const Pokedex&, Args...)> {
+  struct RegistryLoopInternal<ReturnType (*)(const Simulation&, Args...)> {
     template <typename... ViewArgs>
-    static void view(types::registry& registry, const Pokedex& pokedex, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([&pokedex](types::entity, auto&&... args) {
-        Function(pokedex, args...);
+    static void view(types::registry& registry, const Simulation& simulation, const ViewArgs&... viewArgs) {
+      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([&simulation](types::entity, auto&&... args) {
+        Function(simulation, args...);
       });
     }
 
     template <typename... GroupArgs>
-    static void group(types::registry& registry, const Pokedex& pokedex, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...).each([&pokedex](types::entity, auto&&... args) {
-        Function(pokedex, args...);
+    static void group(types::registry& registry, const Simulation& simulation, const GroupArgs&... groupArgs) {
+      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...).each([&simulation](types::entity, auto&&... args) {
+        Function(simulation, args...);
       });
     }
   };
 
   template <class ReturnType, class... Args>
-  struct RegistryLoopInternal<ReturnType (*)(types::handle, const Pokedex&, Args...)> {
+  struct RegistryLoopInternal<ReturnType (*)(types::handle, const Simulation&, Args...)> {
     template <typename... ViewArgs>
-    static void view(types::registry& registry, const Pokedex& pokedex, const ViewArgs&... viewArgs) {
+    static void view(types::registry& registry, const Simulation& simulation, const ViewArgs&... viewArgs) {
       registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
-        .each([&registry, &pokedex](types::entity entity, auto&&... args) {
-          Function(types::handle{registry, entity}, pokedex, args...);
+        .each([&registry, &simulation](types::entity entity, auto&&... args) {
+          Function(types::handle{registry, entity}, simulation, args...);
         });
     }
 
     template <typename... GroupArgs>
-    static void group(types::registry& registry, const Pokedex& pokedex, const GroupArgs&... groupArgs) {
+    static void group(types::registry& registry, const Simulation& simulation, const GroupArgs&... groupArgs) {
       registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
-        .each([&registry, &pokedex](types::entity entity, auto&&... args) {
-          Function(types::handle{registry, entity}, pokedex, args...);
+        .each([&registry, &simulation](types::entity entity, auto&&... args) {
+          Function(types::handle{registry, entity}, simulation, args...);
         });
     }
   };
@@ -90,17 +90,32 @@ struct RegistryLoop {
   template <class ReturnType, class... Args>
   struct RegistryLoopInternal<ReturnType (*)(types::registry&, Args...)> {
     template <typename... ViewArgs>
-    static void view(types::registry& registry, const Pokedex&, const ViewArgs&... viewArgs) {
+    static void view(types::registry& registry, const Simulation&, const ViewArgs&... viewArgs) {
       registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([&registry](types::entity, auto&&... args) {
         Function(registry, args...);
       });
     }
 
     template <typename... GroupArgs>
-    static void group(types::registry& registry, const Pokedex&, const GroupArgs&... groupArgs) {
+    static void group(types::registry& registry, const Simulation&, const GroupArgs&... groupArgs) {
       registry.group<Tags..., std::decay_t<Args>...>(groupArgs...).each([&registry](types::entity, auto&&... args) {
         Function(registry, args...);
       });
+    }
+  };
+
+  template <class ReturnType, class... Args>
+  struct RegistryLoopInternal<ReturnType (*)(types::registry&, const Simulation&, Args...)> {
+    template <typename... ViewArgs>
+    static void view(types::registry& registry, const Simulation& simulation, const ViewArgs&... viewArgs) {
+      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
+        .each([&registry, &simulation](types::entity, auto&&... args) { Function(registry, simulation, args...); });
+    }
+
+    template <typename... GroupArgs>
+    static void group(types::registry& registry, const Simulation& simulation, const GroupArgs&... groupArgs) {
+      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
+        .each([&registry, &simulation](types::entity, auto&&... args) { Function(registry, simulation, args...); });
     }
   };
 
@@ -108,13 +123,13 @@ struct RegistryLoop {
 
  public:
   template <typename... ViewArgs>
-  static void view(types::registry& registry, const Pokedex& pokedex, const ViewArgs&... viewArgs) {
-    RegistryLoopInternal<FunctionSig>::view(registry, pokedex, viewArgs...);
+  static void view(types::registry& registry, const Simulation& simulation, const ViewArgs&... viewArgs) {
+    RegistryLoopInternal<FunctionSig>::view(registry, simulation, viewArgs...);
   }
 
   template <typename... GroupArgs>
-  static void group(types::registry& registry, const Pokedex& pokedex, const GroupArgs&... groupArgs) {
-    RegistryLoopInternal<FunctionSig>::group(registry, pokedex, groupArgs...);
+  static void group(types::registry& registry, const Simulation& simulation, const GroupArgs&... groupArgs) {
+    RegistryLoopInternal<FunctionSig>::group(registry, simulation, groupArgs...);
   }
 };
 }  // namespace internal

@@ -95,8 +95,8 @@ class Simulation {
     bool runWithCalculateDamage = false;
     bool runWithAnalyzeEffect = false;
     types::battleTurn turn = 0;
-    std::optional<types::stateRngSeed> rngSeed = std::nullopt;
-    types::stateProbability probability = 1;
+    std::optional<types::rngState> rngSeed = std::nullopt;
+    types::probability probability = 1;
 
     SideCreationInfo p1;
     SideCreationInfo p2;
@@ -110,7 +110,7 @@ class Simulation {
   template <typename Selected, auto Function, typename... Tags, typename... ViewArgs>
   void viewForSelected(const ViewArgs&... viewArgs) {
     if (Selected::depth) {
-      internal::RegistryLoop<Function, Selected, Tags...>::view(registry, pokedex, viewArgs...);
+      internal::RegistryLoop<Function, Selected, Tags...>::view(registry, *this, viewArgs...);
     }
     else {
       view<Function, Tags...>(viewArgs...);
@@ -120,7 +120,7 @@ class Simulation {
   template <typename Selected, auto Function, typename... Tags, typename... GroupArgs>
   void groupForSelected(const GroupArgs&... groupArgs) {
     if (Selected::depth) {
-      internal::RegistryLoop<Function, Selected, Tags...>::group(registry, pokedex, groupArgs...);
+      internal::RegistryLoop<Function, Selected, Tags...>::group(registry, *this, groupArgs...);
     }
     else {
       group<Function, Tags...>(groupArgs...);
@@ -170,12 +170,12 @@ class Simulation {
 
   template <auto Function, typename... Tags, typename... ViewArgs>
   void view(const ViewArgs&... viewArgs) {
-    internal::RegistryLoop<Function, Tags...>::view(registry, pokedex, viewArgs...);
+    internal::RegistryLoop<Function, Tags...>::view(registry, *this, viewArgs...);
   }
 
   template <auto Function, typename... Tags, typename... GroupArgs>
   void group(const GroupArgs&... groupArgs) {
-    internal::RegistryLoop<Function, Tags...>::group(registry, pokedex, groupArgs...);
+    internal::RegistryLoop<Function, Tags...>::group(registry, *this, groupArgs...);
   }
 
   std::vector<types::entity> selectedBattleEntities();
