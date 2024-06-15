@@ -47,5 +47,6 @@ void remapPokemonEntityMembers(types::registry& registry, const types::ClonedEnt
 void remapSideEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
 void remapSidesEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
 void remapTeamEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+void remapActionTargetsEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
 }  // namespace internal
 }  // namespace pokesim

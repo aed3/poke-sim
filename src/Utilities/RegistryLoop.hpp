@@ -11,7 +11,7 @@ class Simulation;
 namespace internal {
 template <auto Function, typename... Tags>
 struct RegistryLoop {
- public:
+ private:
   template <class Signature>
   struct RegistryLoopInternal;
 

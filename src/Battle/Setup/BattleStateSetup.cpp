@@ -19,6 +19,7 @@
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/entity/view.hpp>
+#include <atomic>
 
 namespace pokesim {
 BattleStateSetup::BattleStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {
@@ -53,10 +54,12 @@ void BattleStateSetup::setSide(PlayerSideId sideID, types::entity sideEntity) {
 }
 
 void BattleStateSetup::setRNGSeed(std::optional<types::rngState> seed) {
-  static types::rngState state = 1;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
   if (!seed.has_value()) {
+    static std::atomic_uint64_t state = 1;
     seed = state;
-    internal::nextRandomValue(state);
+    types::rngState newState = state;
+    internal::nextRandomValue(newState);
+    state = newState;
   }
   handle.emplace<RngSeed>(seed.value());
 }

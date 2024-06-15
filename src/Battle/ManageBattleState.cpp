@@ -40,15 +40,19 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, cons
   registry.emplace<tags::CurrentActionMoveSource>(sourceEntity);
 }
 
-void setCurrentActionMove(types::handle battleHandle, const Simulation& simulation, const CurrentAction& action) {
+void setCurrentActionMove(types::handle battleHandle, const Simulation& simulation, const CurrentActionSource& source, const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
   const action::Move& move = registry.get<action::Move>(action.currentAction);
+  const MoveSlots& moveSlots = registry.get<MoveSlots>(source.actionSource);
 
+  types::entity moveSlotEntity = moveToEntity(registry, moveSlots, move.name);
   types::entity moveEntity = simulation.pokedex.buildActionMove(move.name, registry);
 
   battleHandle.emplace<CurrentActionMove>(moveEntity);
+  battleHandle.emplace<CurrentActionMoveSlot>(moveSlotEntity);
   registry.emplace<Battle>(moveEntity, battleHandle.entity());
   registry.emplace<tags::CurrentActionMove>(moveEntity);
+  registry.emplace<tags::CurrentActionMoveSlot>(moveSlotEntity);
 }
 
 void clearCurrentAction(Simulation& simulation) {
@@ -57,9 +61,11 @@ void clearCurrentAction(Simulation& simulation) {
   registry.clear<CurrentActionTargets>();
   registry.clear<CurrentActionSource>();
   registry.clear<CurrentActionMove>();
+  registry.clear<CurrentActionMoveSlot>();
 
   registry.clear<tags::CurrentActionMoveTarget>();
   registry.clear<tags::CurrentActionMoveSource>();
+  registry.clear<tags::CurrentActionMoveSlot>();
 
   auto actionMoves = registry.view<tags::CurrentActionMove>();
   registry.destroy(actionMoves.begin(), actionMoves.end());

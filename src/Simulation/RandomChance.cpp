@@ -14,10 +14,10 @@ namespace pokesim {
 void setRandomBinaryChoice(
   const Simulation& simulation, types::handle battleHandle, types::percentChance percentChance) {
   if (percentChance >= simulation.simulateTurnOptions.randomChanceUpperLimit) {
-    battleHandle.emplace<tags::RandomEventCheckFailed>();
+    battleHandle.emplace<tags::RandomEventCheckPassed>();
   }
   else if (percentChance <= simulation.simulateTurnOptions.randomChanceLowerLimit) {
-    battleHandle.emplace<tags::RandomEventCheckPassed>();
+    battleHandle.emplace<tags::RandomEventCheckFailed>();
   }
   else {
     battleHandle.emplace<RandomBinaryEventCheck>(percentChance);
@@ -104,6 +104,16 @@ void randomBinaryChance(Simulation& simulation) {
   }
 
   registry.clear<RandomBinaryEventCheck>();
+}
+
+void clearRandomChanceResult(Simulation& simulation) {
+  simulation.registry.clear<tags::RandomEventCheckPassed>();
+  simulation.registry.clear<tags::RandomEventCheckFailed>();
+  simulation.registry.clear<tags::RandomEvent1>();
+  simulation.registry.clear<tags::RandomEvent2>();
+  simulation.registry.clear<tags::RandomEvent3>();
+  simulation.registry.clear<tags::RandomEvent4>();
+  simulation.registry.clear<tags::RandomEvent5>();
 }
 
 template <>

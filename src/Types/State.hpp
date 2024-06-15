@@ -11,7 +11,7 @@ namespace internal {
 const std::uint8_t MAX_TEAM_SIZE = 6U;
 const std::uint8_t MAX_ACTIVE_POKEMON_SLOTS = 2U;
 const std::uint8_t MAX_MOVE_SLOTS = 4U;
-const std::uint8_t MAX_TARGETS = 4U;
+const std::uint8_t MAX_TARGETS = 3U;
 }  // namespace internal
 
 using stateId = std::underlying_type_t<entity>;
