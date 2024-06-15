@@ -23,4 +23,8 @@ struct CurrentActionSource {
 struct CurrentActionMove {
   types::entity actionMove;
 };
+
+struct CurrentActionMoveSlot {
+  types::entity actionMoveSlot;
+};
 }  // namespace pokesim

@@ -60,6 +60,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
   internal::remapSideEntityMembers(registry, entityMap);
   internal::remapSidesEntityMembers(registry, entityMap);
   internal::remapTeamEntityMembers(registry, entityMap);
+  internal::remapActionTargetsEntityMembers(registry, entityMap);
 
   registry.clear<CloneTo, tags::CloneFrom>();
 
@@ -236,6 +237,14 @@ void remapTeamEntityMembers(types::registry& registry, const types::ClonedEntity
   };
 
   remapEntityListMembers<Team>(registry, entityMap, getEntityList);
+}
+
+void remapActionTargetsEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
+  auto getEntityList = [](CurrentActionTargets & targets) -> auto& {
+    return targets.actionTargets;
+  };
+
+  remapEntityListMembers<CurrentActionTargets>(registry, entityMap, getEntityList);
 }
 }  // namespace internal
 }  // namespace pokesim

@@ -76,7 +76,7 @@ void runMoveAction(Simulation& simulation) {
   simulation.viewForSelectedBattles<setCurrentActionSource>();
   simulation.viewForSelectedBattles<setCurrentActionMove>();
 
-  simulation.view<deductPp, tags::CurrentActionMove>();
+  simulation.view<deductPp, tags::CurrentActionMoveSlot>();
   simulation.view<setLastMoveUsed>();
 
   useMove(simulation);
@@ -132,6 +132,6 @@ void useMove(Simulation& simulation) {
   // ModifyMove
 
   getMoveTargets(simulation);
-  runMoveHitSteps(simulation);
+  runMoveHitChecks(simulation);
 }
 }  // namespace pokesim::simulate_turn

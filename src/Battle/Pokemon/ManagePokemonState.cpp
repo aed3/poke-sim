@@ -19,8 +19,8 @@ void deductPp(Pp& pp) {
   }
 }
 
-void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMove& move) {
-  registry.emplace<LastUsedMove>(source.actionSource, move.actionMove);
+void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMoveSlot& move) {
+  registry.emplace<LastUsedMove>(source.actionSource, move.actionMoveSlot);
 }
 
 void resetEffectiveSpeed(types::handle handle, stat::Spe spe) {
