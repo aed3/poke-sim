@@ -12,11 +12,11 @@ const std::uint8_t MAX_TYPICAL_RANDOM_OPTIONS = 5U;
 }  // namespace internal
 
 template <std::uint8_t RANDOM_OPTIONS>
-struct RandomEventCheck {
-  internal::maxSizedVector<types::percentChance, RANDOM_OPTIONS> chances;
+struct RandomEventChances {
+  internal::maxSizedVector<types::percentChance, RANDOM_OPTIONS> val;
 };
 
-struct RandomBinaryEventCheckChance {
+struct RandomBinaryEventChance {
   types::percentChance val = 100;
 };
 }  // namespace pokesim
