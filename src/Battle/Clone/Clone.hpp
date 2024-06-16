@@ -20,7 +20,10 @@ void cloneBattle(
 void cloneSide(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount);
-void cloneActionQueue(
+void cloneAction(
+  types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount);
+void cloneCurrentActionMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount);
 void clonePokemon(
@@ -31,22 +34,9 @@ void cloneMove(
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount);
 
 void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap);
-template <typename Component, typename GetEntity>
-void remapEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap, GetEntity getEntity);
-template <typename Component, typename GetEntityList>
-void remapEntityListMembers(
-  types::registry& registry, const types::ClonedEntityMap& entityMap, GetEntityList getEntityList);
-
-void remapActionQueueEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-void remapBattleEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-void remapFoeSideEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-void remapMoveEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-void remapMoveEffectEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-void remapMoveSlotsEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-void remapPokemonEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-void remapSideEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-void remapSidesEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-void remapTeamEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
-void remapActionTargetsEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+template <typename Component>
+void remapEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
+template <typename Component>
+void remapEntityListMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);
 }  // namespace internal
 }  // namespace pokesim
