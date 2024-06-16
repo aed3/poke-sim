@@ -5,26 +5,26 @@
 
 namespace pokesim {
 struct CurrentAction {
-  types::entity currentAction;
+  types::entity val{};
 };
 
 struct NextAction {
-  types::entity nextAction;
+  types::entity val{};
 };
 
 struct CurrentActionTargets {
-  types::targets<types::entity> actionTargets;
+  types::targets<types::entity> val{};
 };
 
 struct CurrentActionSource {
-  types::entity actionSource;
+  types::entity val{};
 };
 
 struct CurrentActionMove {
-  types::entity actionMove;
+  types::entity val{};
 };
 
 struct CurrentActionMoveSlot {
-  types::entity actionMoveSlot;
+  types::entity val{};
 };
 }  // namespace pokesim

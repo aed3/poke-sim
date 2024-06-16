@@ -19,7 +19,7 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
 
   // TODO(aed3): Make this function generally available
   auto createMove = [&pokedex](dex::Move move) {
-    types::pp pp = pokedex.getMoveData<Pp>(move).pp;
+    types::pp pp = pokedex.getMoveData<Pp>(move).val;
     return Simulation::MoveCreationInfo{move, pp, pp};
   };
 
@@ -150,22 +150,22 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
 
     for (std::size_t i = 0; i < battleInfo.decisionsToSimulate.size(); i++) {
       const auto sides = registry.get<Sides>(group[i]);
-      const types::handle p1Handle = {registry, sides.p1};
-      const types::handle p2Handle = {registry, sides.p2};
+      const types::handle p1Handle = {registry, sides.p1()};
+      const types::handle p2Handle = {registry, sides.p2()};
 
       simulate_turn::resolveDecision(p1Handle, p1Handle.get<SideDecision>());
       simulate_turn::resolveDecision(p2Handle, p2Handle.get<SideDecision>());
 
-      const auto& queue = registry.get<ActionQueue>(group[i]).actionQueue;
-      const auto id = registry.get<Id>(group[i]).id;
+      const auto& queue = registry.get<ActionQueue>(group[i]).val;
+      const auto id = registry.get<Id>(group[i]).val;
       REQUIRE(queue.size() == 2);
 
       auto p1DecisionEntity = *std::find_if(queue.begin(), queue.end(), [&](types::entity entity) {
-        return registry.get<SourceSlotName>(entity).sourceSlot == Slot::P1A;
+        return registry.get<SourceSlotName>(entity).name == Slot::P1A;
       });
 
       auto p2DecisionEntity = *std::find_if(queue.begin(), queue.end(), [&](types::entity entity) {
-        return registry.get<SourceSlotName>(entity).sourceSlot == Slot::P2A;
+        return registry.get<SourceSlotName>(entity).name == Slot::P2A;
       });
 
       auto checkDecision = [&](
@@ -175,7 +175,7 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
         if (decision.moveChoice) {
           const auto [target, move, speedSort] = registry.get<TargetSlotName, action::Move, SpeedSort>(decisionEntity);
 
-          REQUIRE(target.targetSlot == decision.targetSlot);
+          REQUIRE(target.name == decision.targetSlot);
           REQUIRE(move.name == decision.moveChoice);
           REQUIRE(speedSort.speed == pokemon.stats.spe);
           REQUIRE(speedSort.order == ActionOrder::MOVE);
@@ -186,7 +186,7 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
           REQUIRE(registry.all_of<action::tags::Switch, TargetSlotName, SpeedSort>(decisionEntity));
           const auto [target, speedSort] = registry.get<TargetSlotName, SpeedSort>(decisionEntity);
 
-          REQUIRE(target.targetSlot == decision.targetSlot);
+          REQUIRE(target.name == decision.targetSlot);
           REQUIRE(speedSort.speed == pokemon.stats.spe);
           REQUIRE(speedSort.order == ActionOrder::SWITCH);
           REQUIRE(speedSort.priority == 0);
@@ -311,8 +311,8 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalcDamage][Setup]") {
   auto battles = registry.view<Sides>();
   REQUIRE(battles.size() == 1);
   types::entity battleEntity = battles[0];
-  const auto& p1Team = registry.get<Team>(registry.get<Sides>(battleEntity).p1).team;
-  const auto& p2Team = registry.get<Team>(registry.get<Sides>(battleEntity).p2).team;
+  const auto& p1Team = registry.get<Team>(registry.get<Sides>(battleEntity).p1()).val;
+  const auto& p2Team = registry.get<Team>(registry.get<Sides>(battleEntity).p2()).val;
 
   auto calculationsEntitiesGroup = registry.group<calc_damage::Attacker, calc_damage::Defender, MoveName, Battle>();
   REQUIRE(calculationsEntitiesGroup.size() == 5);
@@ -326,10 +326,10 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalcDamage][Setup]") {
 
     bool found = std::any_of(calculationsEntities.begin(), calculationsEntities.end(), [&](const auto& tuple) {
       const auto& [entity, attacker, defender, moveName, battle] = tuple;
-      if (battle.battle != battleEntity) return false;
+      if (battle.val != battleEntity) return false;
       if (moveName.name != calcDamageInfo.move) return false;
-      if (attacker.attacker != targetSlotToEntity(calcDamageInfo.attackerSlot, p1Team, p2Team)) return false;
-      if (defender.defender != targetSlotToEntity(calcDamageInfo.defenderSlot, p1Team, p2Team)) return false;
+      if (attacker.val != targetSlotToEntity(calcDamageInfo.attackerSlot, p1Team, p2Team)) return false;
+      if (defender.val != targetSlotToEntity(calcDamageInfo.defenderSlot, p1Team, p2Team)) return false;
       return true;
     });
 

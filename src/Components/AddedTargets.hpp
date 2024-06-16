@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct AddedTargets {
-  AddedTargetOptions targets = AddedTargetOptions::NONE;
+  AddedTargetOptions val = AddedTargetOptions::NONE;
 };
 }  // namespace pokesim

@@ -14,7 +14,7 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
     for (const SpeedSort& speedSort : speedSortList) {
       types::entity entity = registry.create();
       registry.emplace<SpeedSort>(entity, speedSort);
-      initialQueue.actionQueue.push_back(entity);
+      initialQueue.val.push_back(entity);
     }
 
     types::handle handle{registry, registry.create()};
@@ -22,10 +22,10 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
 
     simulate_turn::speedSort(handle, sortedQueue);
 
-    REQUIRE(initialQueue.actionQueue.size() == sortedQueue.actionQueue.size());
-    for (types::entity entity : initialQueue.actionQueue) {
+    REQUIRE(initialQueue.val.size() == sortedQueue.val.size());
+    for (types::entity entity : initialQueue.val) {
       bool entityFound = false;
-      for (types::entity sortedEntity : sortedQueue.actionQueue) {
+      for (types::entity sortedEntity : sortedQueue.val) {
         if (sortedEntity == entity) {
           entityFound = true;
           break;
@@ -38,7 +38,7 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
     for (std::size_t i = 0; i < idealSortedList.size(); i++) {
       INFO(std::to_string(i));
       const SpeedSort& idealSpeedSort = idealSortedList[i];
-      const SpeedSort& trueSpeedSort = registry.get<SpeedSort>(sortedQueue.actionQueue[i]);
+      const SpeedSort& trueSpeedSort = registry.get<SpeedSort>(sortedQueue.val[i]);
 
       REQUIRE(trueSpeedSort.order == idealSpeedSort.order);
       REQUIRE(trueSpeedSort.priority == idealSpeedSort.priority);

@@ -6,6 +6,6 @@
 namespace pokesim {
 // Contains a list of entities pointing to the Pokemon on a team.
 struct Team {
-  types::teamPositions<types::entity> team{};
+  types::teamPositions<types::entity> val{};
 };
 }  // namespace pokesim

@@ -4,10 +4,10 @@
 
 namespace pokesim::analyze_effect {
 struct Attacker {
-  types::entity attacker;
+  types::entity val{};
 };
 
 struct Defender {
-  types::entity defender;
+  types::entity val{};
 };
 }  // namespace pokesim::analyze_effect

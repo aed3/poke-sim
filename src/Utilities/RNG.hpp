@@ -19,7 +19,7 @@ inline types::rngResult nextRandomValue(types::rngState& state) {
 
 // Generate a uniformly distributed 32-bit random number
 inline types::rngResult nextRandomValue(RngSeed& seed) {
-  return nextRandomValue(seed.seed);
+  return nextRandomValue(seed.val);
 }
 
 // Generate a uniformly distributed number, r, where 0 <= r < bound
@@ -55,6 +55,6 @@ inline types::rngResult nextBoundedRandomValue(types::rngState& state, types::rn
 
 // Generate a uniformly distributed number, r, where 0 <= r < bound
 inline types::rngResult nextBoundedRandomValue(RngSeed& seed, types::rngResult upperBound) {
-  return nextBoundedRandomValue(seed.seed, upperBound);
+  return nextBoundedRandomValue(seed.val, upperBound);
 }
 }  // namespace pokesim::internal

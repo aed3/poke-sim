@@ -8,6 +8,6 @@ struct CloneFrom {};
 }  // namespace tags
 
 struct CloneTo {
-  types::cloneIndex index;
+  types::cloneIndex val{};
 };
 }  // namespace pokesim

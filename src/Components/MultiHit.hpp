@@ -10,6 +10,6 @@ struct MultiHit {
 };
 
 struct HitCount {
-  types::moveHits hitCount = 1;
+  types::moveHits val = 1;
 };
 }  // namespace pokesim

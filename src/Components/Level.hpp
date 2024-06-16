@@ -5,6 +5,6 @@
 namespace pokesim {
 // A Pokemon's level
 struct Level {
-  types::level level = 1;
+  types::level val = 1;
 };
 }  // namespace pokesim

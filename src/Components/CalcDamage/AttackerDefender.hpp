@@ -4,10 +4,10 @@
 
 namespace pokesim::calc_damage {
 struct Attacker {
-  types::entity attacker;
+  types::entity val;
 };
 
 struct Defender {
-  types::entity defender;
+  types::entity val;
 };
 }  // namespace pokesim::calc_damage

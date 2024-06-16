@@ -5,6 +5,6 @@
 namespace pokesim {
 // Contains the entity of a simulation's battle.
 struct Battle {
-  types::entity battle;
+  types::entity val{};
 };
 }  // namespace pokesim

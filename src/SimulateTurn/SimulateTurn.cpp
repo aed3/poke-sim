@@ -89,31 +89,29 @@ void runResidualAction(Simulation& simulation) {
 void nextTurn(Simulation& /*simulation*/) {}
 
 void addTargetAllyToTargets(types::registry& registry, const Battle& battle) {
-  const Sides& sides = registry.get<Sides>(battle.battle);
-  const TargetSlotName& targetSlotName =
-    registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.battle).currentAction);
+  const Sides& sides = registry.get<Sides>(battle.val);
+  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).val);
 
-  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, targetSlotName.targetSlot);
+  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, targetSlotName.name);
   if (allyEntity == entt::null) {
     return;
   }
 
-  CurrentActionTargets& targets = registry.get<CurrentActionTargets>(battle.battle);
-  targets.actionTargets.push_back(allyEntity);
+  CurrentActionTargets& targets = registry.get<CurrentActionTargets>(battle.val);
+  targets.val.push_back(allyEntity);
 }
 
 void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
-  const Sides& sides = registry.get<Sides>(battle.battle);
-  const SourceSlotName& sourceSlotName =
-    registry.get<SourceSlotName>(registry.get<CurrentAction>(battle.battle).currentAction);
+  const Sides& sides = registry.get<Sides>(battle.val);
+  const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(registry.get<CurrentAction>(battle.val).val);
 
-  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, sourceSlotName.sourceSlot);
+  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, sourceSlotName.name);
   if (allyEntity == entt::null) {
     return;
   }
 
-  CurrentActionTargets& targets = registry.get<CurrentActionTargets>(battle.battle);
-  targets.actionTargets.push_back(allyEntity);
+  CurrentActionTargets& targets = registry.get<CurrentActionTargets>(battle.val);
+  targets.val.push_back(allyEntity);
 }
 
 void resolveMoveTargets(CurrentActionTargets&) {}

@@ -53,6 +53,7 @@
 #include "Selection.hpp"
 #include "SimulateTurn/ActionNames.hpp"
 #include "SimulateTurn/ActionTags.hpp"
+#include "SimulateTurn/MoveHitStepTags.hpp"
 #include "SimulateTurn/SpeedTieIndexes.hpp"
 #include "SimulateTurn/TeamAction.hpp"
 #include "SpeedSort.hpp"

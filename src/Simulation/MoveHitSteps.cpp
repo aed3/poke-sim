@@ -30,17 +30,17 @@ void runSecondaryMoveEffects(Simulation& simulation) {
 
 void internal::assignAccuracyToRandomEvent(
   types::registry& registry, const Simulation& simulation, const Battle& battle, const Accuracy& accuracy) {
-  setRandomBinaryChoice(simulation, {registry, battle.battle}, accuracy.accuracy);
+  setRandomBinaryChoice(simulation, {registry, battle.val}, accuracy.val);
 }
 
 void internal::assignMoveAccuracyToTargets(types::handle targetHandle, const Battle& battle) {
   types::registry& registry = *targetHandle.registry();
-  const Accuracy& accuracy = registry.get<Accuracy>(registry.get<CurrentActionMove>(battle.battle).actionMove);
+  const Accuracy& accuracy = registry.get<Accuracy>(registry.get<CurrentActionMove>(battle.val).val);
   targetHandle.emplace<Accuracy>(accuracy);
 }
 
 void internal::removeAccuracyFromTargets(types::registry& registry, const CurrentActionTargets& targets) {
-  registry.remove<Accuracy>(targets.actionTargets.begin(), targets.actionTargets.end());
+  registry.remove<Accuracy>(targets.val.begin(), targets.val.end());
 }
 
 void accuracyCheck(Simulation& simulation) {
@@ -76,12 +76,12 @@ void moveHitLoop(Simulation& simulation) {
 }
 
 void internal::assignHitTags(types::registry& registry, const CurrentActionTargets& targets) {
-  registry.insert<tags::internal::TargetCanBeHit>(targets.actionTargets.begin(), targets.actionTargets.end());
+  registry.insert<tags::internal::TargetCanBeHit>(targets.val.begin(), targets.val.end());
 }
 
 void internal::removeFailedHitTargets(types::registry& registry, CurrentActionTargets& targets) {
   types::targets<types::entity> newTargets;
-  for (types::entity target : targets.actionTargets) {
+  for (types::entity target : targets.val) {
     if (!registry.all_of<tags::internal::TargetCanBeHit>(target)) {
       registry.remove<tags::CurrentActionMoveTarget>(target);
     }
@@ -89,7 +89,7 @@ void internal::removeFailedHitTargets(types::registry& registry, CurrentActionTa
       newTargets.push_back(target);
     }
   }
-  targets.actionTargets = newTargets;
+  targets.val = newTargets;
 }
 
 template <auto Function>

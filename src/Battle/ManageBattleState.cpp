@@ -19,8 +19,8 @@
 namespace pokesim {
 void setCurrentActionTarget(types::handle battleHandle, const Sides& sides, const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
-  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.currentAction);
-  types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.targetSlot);
+  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.val);
+  types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.name);
 
   if (!registry.any_of<tags::Fainted>(targetEntity)) {
     battleHandle.emplace<CurrentActionTargets>(std::initializer_list<types::entity>{targetEntity});
@@ -33,17 +33,19 @@ void setCurrentActionTarget(types::handle battleHandle, const Sides& sides, cons
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
-  const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(action.currentAction);
-  types::entity sourceEntity = slotToPokemonEntity(registry, sides, sourceSlotName.sourceSlot);
+  const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(action.val);
+  types::entity sourceEntity = slotToPokemonEntity(registry, sides, sourceSlotName.name);
 
   battleHandle.emplace<CurrentActionSource>(sourceEntity);
   registry.emplace<tags::CurrentActionMoveSource>(sourceEntity);
 }
 
-void setCurrentActionMove(types::handle battleHandle, const Simulation& simulation, const CurrentActionSource& source, const CurrentAction& action) {
+void setCurrentActionMove(
+  types::handle battleHandle, const Simulation& simulation, const CurrentActionSource& source,
+  const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
-  const action::Move& move = registry.get<action::Move>(action.currentAction);
-  const MoveSlots& moveSlots = registry.get<MoveSlots>(source.actionSource);
+  const action::Move& move = registry.get<action::Move>(action.val);
+  const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
 
   types::entity moveSlotEntity = moveToEntity(registry, moveSlots, move.name);
   types::entity moveEntity = simulation.pokedex.buildActionMove(move.name, registry);

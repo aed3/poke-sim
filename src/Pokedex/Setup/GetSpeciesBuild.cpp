@@ -37,7 +37,7 @@ struct BuildSpecies {
 
     species.setName(T::name);
     species.setBaseStats(T::hp, T::atk, T::def, T::spa, T::spd, T::spe);
-    species.setType(T::type.type1, T::type.type2);
+    species.setType(T::type.type1(), T::type.type2());
 
     if constexpr (has<Optional::primaryAbility>::value) {
       species.setPrimaryAbility(T::primaryAbility);
