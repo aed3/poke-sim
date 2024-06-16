@@ -110,9 +110,10 @@
  * src/Simulation/RandomChance.cpp
  * src/Components/Accuracy.hpp
  * src/Components/EntityHolders/Current.hpp
- * src/Components/MultiHit.hpp
+ * src/Components/HitCount.hpp
  * src/Components/SimulateTurn/MoveHitStepTags.hpp
  * src/Components/Tags/BattleTags.hpp
+ * src/Components/Tags/MoveTags.hpp
  * src/Simulation/MoveHitSteps.hpp
  * src/Simulation/MoveHitSteps.cpp
  * src/Battle/ManageBattleState.hpp
@@ -147,7 +148,6 @@
  * src/Components/Chance.hpp
  * src/Components/Names/TypeNames.hpp
  * src/Components/Priority.hpp
- * src/Components/Tags/MoveTags.hpp
  * src/Pokedex/Setup/MoveDexDataSetup.hpp
  * src/Pokedex/Setup/MoveDexDataSetup.cpp
  * src/Pokedex/Setup/ItemDexDataSetup.hpp
@@ -14787,6 +14787,7 @@ struct RngSeed {
 
 ///////////////// START OF src/Components/RandomEventCheck.hpp /////////////////
 
+#include <array>
 #include <cstdint>
 
 namespace pokesim {
@@ -14798,7 +14799,7 @@ const std::uint8_t MAX_TYPICAL_RANDOM_OPTIONS = 5U;
 
 template <std::uint8_t RANDOM_OPTIONS>
 struct RandomEventChances {
-  internal::maxSizedVector<types::percentChance, RANDOM_OPTIONS> val;
+  std::array<types::percentChance, RANDOM_OPTIONS> val;
 };
 
 struct RandomBinaryEventChance {
@@ -14814,11 +14815,11 @@ namespace pokesim::tags {
 struct RandomEventCheckPassed {};
 struct RandomEventCheckFailed {};
 
-struct RandomEvent1 {};
-struct RandomEvent2 {};
-struct RandomEvent3 {};
-struct RandomEvent4 {};
-struct RandomEvent5 {};
+struct RandomEventA {};
+struct RandomEventB {};
+struct RandomEventC {};
+struct RandomEventD {};
+struct RandomEventE {};
 }  // namespace pokesim::tags
 
 /////////////// END OF src/Components/Tags/RandomChanceTags.hpp ////////////////
@@ -14940,23 +14941,23 @@ void internal::assignRandomEvent(
   types::percentChance rng = internal::nextBoundedRandomValue(rngSeed, 100);
 
   if (rng <= eventCheck.val[0]) {
-    battleHandle.emplace<tags::RandomEvent1>();
+    battleHandle.emplace<tags::RandomEventA>();
     updateProbability(probability, eventCheck.val[0]);
   }
   else if (rng <= eventCheck.val[1]) {
-    battleHandle.emplace<tags::RandomEvent2>();
+    battleHandle.emplace<tags::RandomEventB>();
     updateProbability(probability, eventCheck.val[1] - eventCheck.val[0]);
   }
   else if (rng <= eventCheck.val[2]) {
-    battleHandle.emplace<tags::RandomEvent3>();
+    battleHandle.emplace<tags::RandomEventC>();
     updateProbability(probability, eventCheck.val[2] - eventCheck.val[1]);
   }
   else if (POSSIBLE_EVENT_COUNT >= 4U && rng <= eventCheck.val[3]) {
-    battleHandle.emplace<tags::RandomEvent4>();
+    battleHandle.emplace<tags::RandomEventD>();
     updateProbability(probability, eventCheck.val[3] - eventCheck.val[2]);
   }
   else if (POSSIBLE_EVENT_COUNT == 5U && rng <= eventCheck.val[4]) {
-    battleHandle.emplace<tags::RandomEvent5>();
+    battleHandle.emplace<tags::RandomEventE>();
     updateProbability(probability, eventCheck.val[4] - eventCheck.val[3]);
   }
 }
@@ -14977,39 +14978,39 @@ void randomChance(Simulation& simulation) {
     auto clonedEntityMap = clone(registry, POSSIBLE_EVENT_COUNT - 1);
 
     for (const auto [originalBattle, clonedBattles] : clonedEntityMap) {
-      registry.emplace<tags::RandomEvent1>(originalBattle);
-      registry.emplace<tags::RandomEvent2>(clonedBattles[0]);
-      registry.emplace<tags::RandomEvent3>(clonedBattles[1]);
+      registry.emplace<tags::RandomEventA>(originalBattle);
+      registry.emplace<tags::RandomEventB>(clonedBattles[0]);
+      registry.emplace<tags::RandomEventC>(clonedBattles[1]);
 
       if constexpr (POSSIBLE_EVENT_COUNT >= 4U) {
-        registry.emplace<tags::RandomEvent4>(clonedBattles[2]);
+        registry.emplace<tags::RandomEventD>(clonedBattles[2]);
       }
       if constexpr (POSSIBLE_EVENT_COUNT == 5U) {
-        registry.emplace<tags::RandomEvent5>(clonedBattles[3]);
+        registry.emplace<tags::RandomEventE>(clonedBattles[3]);
       }
     }
 
-    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEvent1>().each(
+    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEventA>().each(
       [](const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, Probability& probability) {
         internal::updateProbability(probability, eventChances.val[0]);
       });
 
-    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEvent2>().each(
+    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEventB>().each(
       [](const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, Probability& probability) {
         internal::updateProbability(probability, eventChances.val[1] - eventChances.val[0]);
       });
 
-    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEvent3>().each(
+    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEventC>().each(
       [](const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, Probability& probability) {
         internal::updateProbability(probability, eventChances.val[2] - eventChances.val[1]);
       });
 
-    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEvent4>().each(
+    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEventD>().each(
       [](const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, Probability& probability) {
         internal::updateProbability(probability, eventChances.val[3] - eventChances.val[2]);
       });
 
-    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEvent5>().each(
+    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEventE>().each(
       [](const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, Probability& probability) {
         internal::updateProbability(probability, eventChances.val[4] - eventChances.val[3]);
       });
@@ -15066,11 +15067,11 @@ void randomBinaryChance(Simulation& simulation) {
 void clearRandomChanceResult(Simulation& simulation) {
   simulation.registry.clear<tags::RandomEventCheckPassed>();
   simulation.registry.clear<tags::RandomEventCheckFailed>();
-  simulation.registry.clear<tags::RandomEvent1>();
-  simulation.registry.clear<tags::RandomEvent2>();
-  simulation.registry.clear<tags::RandomEvent3>();
-  simulation.registry.clear<tags::RandomEvent4>();
-  simulation.registry.clear<tags::RandomEvent5>();
+  simulation.registry.clear<tags::RandomEventA>();
+  simulation.registry.clear<tags::RandomEventB>();
+  simulation.registry.clear<tags::RandomEventC>();
+  simulation.registry.clear<tags::RandomEventD>();
+  simulation.registry.clear<tags::RandomEventE>();
 }
 
 template void randomChance<3U>(Simulation& simulation);
@@ -15122,21 +15123,15 @@ struct CurrentActionMoveSlot {
 
 /////////////// END OF src/Components/EntityHolders/Current.hpp ////////////////
 
-///////////////////// START OF src/Components/MultiHit.hpp /////////////////////
+///////////////////// START OF src/Components/HitCount.hpp /////////////////////
 
 namespace pokesim {
-// The minimum and maximum number of hits a multi-hit move can cause
-struct MultiHit {
-  types::moveHits minHits = 2;
-  types::moveHits maxHits = 5;
-};
-
 struct HitCount {
   types::moveHits val = 1;
 };
 }  // namespace pokesim
 
-////////////////////// END OF src/Components/MultiHit.hpp //////////////////////
+////////////////////// END OF src/Components/HitCount.hpp //////////////////////
 
 /////////// START OF src/Components/SimulateTurn/MoveHitStepTags.hpp ///////////
 
@@ -15167,19 +15162,60 @@ struct BattleEnded {};
 
 ////////////////// END OF src/Components/Tags/BattleTags.hpp ///////////////////
 
+////////////////// START OF src/Components/Tags/MoveTags.hpp ///////////////////
+
+namespace pokesim::move::tags {
+// Move Category Tag
+struct Physical {};
+// Move Category Tag
+struct Special {};
+// Move Category Tag
+struct Status {};
+
+// Move Property Tag: Makes contact
+struct Contact {};
+// Move Property Tag: Ignores a target's substitute
+struct BypassSubstitute {};
+// Move Property Tag: Power is multiplied by 1.2 when used by a Pokemon with the Ability Iron Fist.
+struct Punch {};
+// Move Property Tag: Move hits 2, 3, 4, or 5 times depending on random chance, items (i.e. Loaded Dice), and abilities
+// (i.e. Skill Link)
+struct VariableHitCount {};
+// Move Property Tag: A multi-hit move where each hit checks accuracy (i.e. Triple Kick)
+struct AccuracyDependentHitCount {};
+
+namespace effect {
+// Move Effect Participant Tag: Who the effect will affect
+struct MoveTarget {};
+// Move Effect Participant Tag: Who created the effect
+struct MoveSource {};
+}  // namespace effect
+}  // namespace pokesim::move::tags
+
+/////////////////// END OF src/Components/Tags/MoveTags.hpp ////////////////////
+
 /////////////////// START OF src/Simulation/MoveHitSteps.hpp ///////////////////
 
 namespace pokesim {
 class Simulation;
+struct CurrentActionMove;
 struct CurrentActionTargets;
 struct Accuracy;
 struct Battle;
+struct HitCount;
 
 namespace internal {
-inline void assignMoveAccuracyToTargets(types::handle targetHandle, const Battle& battle);
+inline void assignMoveAccuracyToTargets(types::handle targetHandle, const CurrentActionMove& currentMove);
 inline void removeAccuracyFromTargets(types::registry& registry, const CurrentActionTargets& targets);
 inline void assignAccuracyToRandomEvent(
   types::registry& registry, const Simulation& simulation, const Battle& battle, const Accuracy& accuracy);
+inline void removeFailedAccuracyCheckTargets(types::registry& registry, const CurrentActionTargets& targets);
+
+inline void assignHitCountToTargets(types::handle targetHandle, const CurrentActionMove& currentMove);
+template <types::moveHits MoveHits>
+inline void assignHitCountFromVariableHitChance(types::registry& registry, const CurrentActionTargets& targets);
+
+inline void deductMoveHitCount(types::handle targetHandle, HitCount& hitCount);
 
 inline void assignHitTags(types::registry& registry, const CurrentActionTargets& targets);
 inline void removeFailedHitTargets(types::registry& registry, CurrentActionTargets& targets);
@@ -15201,8 +15237,43 @@ inline void runMoveHitChecks(Simulation& simulation);
 /////////////////// START OF src/Simulation/MoveHitSteps.cpp ///////////////////
 
 namespace pokesim {
+
+void internal::assignHitCountToTargets(types::handle targetHandle, const CurrentActionMove& currentMove) {
+  types::registry& registry = *targetHandle.registry();
+  if (registry.all_of<move::tags::VariableHitCount>(currentMove.val)) {
+    // The 35%-35%-15%-15% out of 100 for 2-3-4-5 hits added so each index is the sum of the chance of its hit count and
+    // the hit counts less than it so it works with the randomChance function
+    static constexpr std::array<types::percentChance, 4U> progressiveMultiHitChances = {35U, 70U, 85U, 100U};
+
+    Battle battle = targetHandle.get<Battle>();
+    registry.emplace<RandomEventChances<4U>>(battle.val, progressiveMultiHitChances);
+    return;
+  }
+
+  const HitCount* hitCount = registry.try_get<HitCount>(currentMove.val);
+  targetHandle.emplace<HitCount>(hitCount ? hitCount->val : (types::moveHits)1U);
+}
+
+template <types::moveHits MoveHits>
+void internal::assignHitCountFromVariableHitChance(types::registry& registry, const CurrentActionTargets& targets) {
+  for (types::entity target : targets.val) {
+    if (registry.all_of<tags::internal::TargetCanBeHit>(target)) {
+      registry.emplace<HitCount>(target, MoveHits);
+    }
+  }
+}
+
 void setMoveHitCount(Simulation& simulation) {
-  sampleRandomChance(simulation);
+  simulation.view<internal::assignHitCountToTargets, tags::internal::TargetCanBeHit>();
+
+  if (!simulation.registry.view<RandomEventChances<4U>>().empty()) {
+    randomChance<4U>(simulation);
+    simulation.view<internal::assignHitCountFromVariableHitChance<2U>, tags::RandomEventA>();
+    simulation.view<internal::assignHitCountFromVariableHitChance<3U>, tags::RandomEventB>();
+    simulation.view<internal::assignHitCountFromVariableHitChance<4U>, tags::RandomEventC>();
+    simulation.view<internal::assignHitCountFromVariableHitChance<5U>, tags::RandomEventD>();
+    clearRandomChanceResult(simulation);
+  }
 }
 
 void applyDamage(Simulation& /*simulation*/) {}
@@ -15220,9 +15291,16 @@ void internal::assignAccuracyToRandomEvent(
   setRandomBinaryChoice(simulation, {registry, battle.val}, accuracy.val);
 }
 
-void internal::assignMoveAccuracyToTargets(types::handle targetHandle, const Battle& battle) {
-  types::registry& registry = *targetHandle.registry();
-  const Accuracy& accuracy = registry.get<Accuracy>(registry.get<CurrentActionMove>(battle.val).val);
+void internal::removeFailedAccuracyCheckTargets(types::registry& registry, const CurrentActionTargets& targets) {
+  for (types::entity target : targets.val) {
+    if (registry.all_of<tags::internal::TargetCanBeHit>(target)) {
+      registry.remove<tags::internal::TargetCanBeHit>(target);
+    }
+  }
+}
+
+void internal::assignMoveAccuracyToTargets(types::handle targetHandle, const CurrentActionMove& currentMove) {
+  const Accuracy& accuracy = targetHandle.registry()->get<Accuracy>(currentMove.val);
   targetHandle.emplace<Accuracy>(accuracy);
 }
 
@@ -15231,24 +15309,29 @@ void internal::removeAccuracyFromTargets(types::registry& registry, const Curren
 }
 
 void accuracyCheck(Simulation& simulation) {
-  simulation.view<internal::assignMoveAccuracyToTargets, tags::CurrentActionMoveTarget>();
+  simulation.view<internal::assignMoveAccuracyToTargets, tags::internal::TargetCanBeHit>();
   runModifyAccuracyEvent(simulation);
   runAccuracyEvent(simulation);
 
-  simulation.view<internal::assignAccuracyToRandomEvent, tags::CurrentActionMoveTarget>();
-  randomBinaryChance(simulation);
-
-  auto missed = simulation.registry.view<tags::RandomEventCheckFailed, tags::CurrentActionMoveTarget>();
-  simulation.registry.remove<tags::internal::TargetCanBeHit>(missed.begin(), missed.end());
+  simulation.view<internal::assignAccuracyToRandomEvent, tags::internal::TargetCanBeHit>();
+  randomBinaryChance(simulation);  // TODO(aed3): Handle each target one at a time
+  simulation.view<internal::removeFailedAccuracyCheckTargets, tags::RandomEventCheckFailed>();
 
   clearRandomChanceResult(simulation);
 
   simulation.view<internal::removeAccuracyFromTargets>();
-  // clear accuracy from target
+}
+
+void internal::deductMoveHitCount(types::handle targetHandle, HitCount& hitCount) {
+  ENTT_ASSERT(hitCount.val > 0, "A hit count shouldn't be decremented if it's already 0.");
+  hitCount.val--;
+  if (!hitCount.val) {
+    targetHandle.remove<HitCount>();
+  }
 }
 
 void moveHitLoop(Simulation& simulation) {
-  setMoveHitCount(simulation);
+  setMoveHitCount(simulation);  // TODO(aed3): Handle each target one at a time
 
   while (!simulation.registry.view<HitCount>().empty()) {
     calc_damage::run(simulation);
@@ -15259,6 +15342,7 @@ void moveHitLoop(Simulation& simulation) {
     runDamagingHitEvent(simulation);
 
     // Update stats if needed
+    simulation.view<internal::deductMoveHitCount>();
   }
 }
 
@@ -15284,11 +15368,6 @@ void runMoveHitCheck(Simulation& simulation) {
   simulation.view<internal::assignHitTags>();
 
   Function(simulation);
-  // exit if there are no targets
-  // assign a hit tag to each target
-  // for inside each function, use the hitResult as what's selected and remove the tag as needed when something fails
-  // if tag isn't there in the end, remove the target and its CurrentActionMoveTarget tag
-  // clear the tags
 
   simulation.view<internal::removeFailedHitTargets>();
   simulation.registry.clear<tags::internal::TargetCanBeHit>();
@@ -15318,12 +15397,13 @@ class Pokedex;
 struct Sides;
 struct CurrentAction;
 struct CurrentActionSource;
+struct CurrentActionTargets;
 
 inline void setCurrentActionTarget(types::handle battleHandle, const Sides& sides, const CurrentAction& action);
 inline void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action);
 inline void setCurrentActionMove(
   types::handle battleHandle, const Simulation& simulation, const CurrentActionSource& source,
-  const CurrentAction& action);
+  const CurrentActionTargets& targets, const CurrentAction& action);
 inline void clearCurrentAction(Simulation& simulation);
 }  // namespace pokesim
 
@@ -16163,33 +16243,6 @@ struct MovePriority {
 
 ////////////////////// END OF src/Components/Priority.hpp //////////////////////
 
-////////////////// START OF src/Components/Tags/MoveTags.hpp ///////////////////
-
-namespace pokesim::move::tags {
-// Move Category Tag
-struct Physical {};
-// Move Category Tag
-struct Special {};
-// Move Category Tag
-struct Status {};
-
-// Move Property Tag: Makes contact
-struct Contact {};
-// Move Property Tag: Ignores a target's substitute
-struct BypassSubstitute {};
-// Move Property Tag: Power is multiplied by 1.2 when used by a Pokemon with the Ability Iron Fist.
-struct Punch {};
-
-namespace effect {
-// Move Effect Participant Tag: Who the effect will affect
-struct MoveTarget {};
-// Move Effect Participant Tag: Who created the effect
-struct MoveSource {};
-}  // namespace effect
-}  // namespace pokesim::move::tags
-
-/////////////////// END OF src/Components/Tags/MoveTags.hpp ////////////////////
-
 /////////////// START OF src/Pokedex/Setup/MoveDexDataSetup.hpp ////////////////
 
 #include <type_traits>
@@ -16210,7 +16263,7 @@ struct MoveDexDataSetup : DexDataSetup {
 
   inline void setBasePp(types::pp pp);
   inline void setPriority(types::priority priority);
-  inline void setMultiHit(types::moveHits minHits, types::moveHits maxHits);
+  inline void setHitCount(types::moveHits hitCount);
 
   inline void setPrimaryEffect(types::entity entity);
   inline void setSecondaryEffect(types::entity entity);
@@ -16311,8 +16364,8 @@ void MoveDexDataSetup::setPriority(types::priority priority) {
   handle.emplace<MovePriority>(priority);
 }
 
-void MoveDexDataSetup::setMultiHit(types::moveHits minHits, types::moveHits maxHits) {
-  handle.emplace<MultiHit>(minHits, maxHits);
+void MoveDexDataSetup::setHitCount(types::moveHits hitCount) {
+  handle.emplace<HitCount>(hitCount);
 }
 
 void MoveDexDataSetup::setPrimaryEffect(types::entity entity) {
@@ -16644,9 +16697,8 @@ struct FuryAttack {
   static constexpr types::baseAccuracy accuracy = 85;
   static constexpr types::basePower basePower = 15;
   static constexpr types::pp basePp = 20;
-  static constexpr types::moveHits minHits = 2, maxHits = 5;
 
-  static constexpr internal::Tags<move::tags::Contact> moveTags{};
+  static constexpr internal::Tags<move::tags::Contact, move::tags::VariableHitCount> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {
@@ -16857,8 +16909,7 @@ struct BuildMove {
   enum class Optional {
     accuracy,
     basePower,
-    minHits,
-    maxHits,
+    hitCount,
     targetPrimaryEffect,
     targetSecondaryEffect,
     sourcePrimaryEffect,
@@ -16883,9 +16934,7 @@ struct BuildMove {
   template <typename Type>
   struct has<Optional::basePower, Type, void_t<Type::basePower>> : std::true_type {};
   template <typename Type>
-  struct has<Optional::minHits, Type, void_t<Type::minHits>> : std::true_type {};
-  template <typename Type>
-  struct has<Optional::maxHits, Type, void_t<Type::maxHits>> : std::true_type {};
+  struct has<Optional::hitCount, Type, void_t<Type::hitCount>> : std::true_type {};
   template <typename Type>
   struct has<Optional::targetPrimaryEffect, Type, std::void_t<typename Type::targetPrimaryEffect>> : std::true_type {};
   template <typename Type>
@@ -16980,8 +17029,8 @@ struct BuildMove {
     if constexpr (has<Optional::basePower, T>::value) {
       move.setBasePower(T::basePower);
     }
-    if constexpr (has<Optional::maxHits, T>::value && has<Optional::minHits, T>::value) {
-      move.setMultiHit(T::minHits, T::maxHits);
+    if constexpr (has<Optional::hitCount, T>::value) {
+      move.setHitCount(T::hitCount);
     }
 
     if (!forActiveMove) {
@@ -18506,6 +18555,7 @@ void criticalHitRandomChance(Simulation& simulation) {
   // Set critical hit chances as random chance variable
 
   randomChance<5U>(simulation);
+  clearRandomChanceResult(simulation);
 }
 
 void modifyDamageWithTypes(Simulation& /*simulation*/) {}
@@ -18940,7 +18990,7 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, cons
 
 void setCurrentActionMove(
   types::handle battleHandle, const Simulation& simulation, const CurrentActionSource& source,
-  const CurrentAction& action) {
+  const CurrentActionTargets& targets, const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
   const action::Move& move = registry.get<action::Move>(action.val);
   const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
@@ -18949,6 +18999,7 @@ void setCurrentActionMove(
   types::entity moveEntity = simulation.pokedex.buildActionMove(move.name, registry);
 
   battleHandle.emplace<CurrentActionMove>(moveEntity);
+  registry.insert<CurrentActionMove>(targets.val.begin(), targets.val.end(), {moveEntity});
   battleHandle.emplace<CurrentActionMoveSlot>(moveSlotEntity);
   registry.emplace<Battle>(moveEntity, battleHandle.entity());
   registry.emplace<tags::CurrentActionMove>(moveEntity);
@@ -19098,10 +19149,11 @@ struct Pokemon {
 namespace pokesim {
 types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount) {
   types::cloneIndex count = cloneCount.value_or(1);
-  types::ClonedEntityMap entityMap;
+  types::ClonedEntityMap entityMap, battleMap;
   entt::dense_map<entt::id_type, std::vector<types::entity>> srcEntityStorages;
 
   internal::cloneBattle(registry, entityMap, srcEntityStorages, count);
+  battleMap = entityMap;
   internal::cloneSide(registry, entityMap, srcEntityStorages, count);
   internal::cloneAction(registry, entityMap, srcEntityStorages, count);
   internal::cloneCurrentActionMove(registry, entityMap, srcEntityStorages, count);
@@ -19153,7 +19205,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
 
   registry.clear<CloneTo, tags::CloneFrom>();
 
-  return entityMap;
+  return battleMap;
 }
 
 namespace internal {

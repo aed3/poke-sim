@@ -129,8 +129,7 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     using FuryAttack = dex::FuryAttack<GameMechanics::SCARLET_VIOLET>;
     dex::Move moveEnum = dex::Move::FURY_ATTACK;
 
-    auto [move, type, accuracy, power, pp, multiHit] =
-      pokedex.getMoveData<MoveName, TypeName, Accuracy, BasePower, Pp, MultiHit>(moveEnum);
+    auto [move, type, accuracy, power, pp] = pokedex.getMoveData<MoveName, TypeName, Accuracy, BasePower, Pp>(moveEnum);
 
     REQUIRE(move.name == FuryAttack::name);
     REQUIRE(type.name == FuryAttack::type);
@@ -140,11 +139,10 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE(accuracy.val == FuryAttack::accuracy);
     REQUIRE(power.val == FuryAttack::basePower);
     REQUIRE(pp.val == FuryAttack::basePp);
-    REQUIRE(multiHit.minHits == FuryAttack::minHits);
-    REQUIRE(multiHit.maxHits == FuryAttack::maxHits);
 
     REQUIRE(pokedex.moveHas<move::tags::AnySingleTarget>(moveEnum));
     REQUIRE(pokedex.moveHas<move::tags::Contact>(moveEnum));
+    REQUIRE(pokedex.moveHas<move::tags::VariableHitCount>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<AddedTargets>(moveEnum));
   }
 

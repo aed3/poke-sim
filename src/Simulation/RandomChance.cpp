@@ -36,23 +36,23 @@ void internal::assignRandomEvent(
   types::percentChance rng = internal::nextBoundedRandomValue(rngSeed, 100);
 
   if (rng <= eventCheck.val[0]) {
-    battleHandle.emplace<tags::RandomEvent1>();
+    battleHandle.emplace<tags::RandomEventA>();
     updateProbability(probability, eventCheck.val[0]);
   }
   else if (rng <= eventCheck.val[1]) {
-    battleHandle.emplace<tags::RandomEvent2>();
+    battleHandle.emplace<tags::RandomEventB>();
     updateProbability(probability, eventCheck.val[1] - eventCheck.val[0]);
   }
   else if (rng <= eventCheck.val[2]) {
-    battleHandle.emplace<tags::RandomEvent3>();
+    battleHandle.emplace<tags::RandomEventC>();
     updateProbability(probability, eventCheck.val[2] - eventCheck.val[1]);
   }
   else if (POSSIBLE_EVENT_COUNT >= 4U && rng <= eventCheck.val[3]) {
-    battleHandle.emplace<tags::RandomEvent4>();
+    battleHandle.emplace<tags::RandomEventD>();
     updateProbability(probability, eventCheck.val[3] - eventCheck.val[2]);
   }
   else if (POSSIBLE_EVENT_COUNT == 5U && rng <= eventCheck.val[4]) {
-    battleHandle.emplace<tags::RandomEvent5>();
+    battleHandle.emplace<tags::RandomEventE>();
     updateProbability(probability, eventCheck.val[4] - eventCheck.val[3]);
   }
 }
@@ -73,39 +73,39 @@ void randomChance(Simulation& simulation) {
     auto clonedEntityMap = clone(registry, POSSIBLE_EVENT_COUNT - 1);
 
     for (const auto [originalBattle, clonedBattles] : clonedEntityMap) {
-      registry.emplace<tags::RandomEvent1>(originalBattle);
-      registry.emplace<tags::RandomEvent2>(clonedBattles[0]);
-      registry.emplace<tags::RandomEvent3>(clonedBattles[1]);
+      registry.emplace<tags::RandomEventA>(originalBattle);
+      registry.emplace<tags::RandomEventB>(clonedBattles[0]);
+      registry.emplace<tags::RandomEventC>(clonedBattles[1]);
 
       if constexpr (POSSIBLE_EVENT_COUNT >= 4U) {
-        registry.emplace<tags::RandomEvent4>(clonedBattles[2]);
+        registry.emplace<tags::RandomEventD>(clonedBattles[2]);
       }
       if constexpr (POSSIBLE_EVENT_COUNT == 5U) {
-        registry.emplace<tags::RandomEvent5>(clonedBattles[3]);
+        registry.emplace<tags::RandomEventE>(clonedBattles[3]);
       }
     }
 
-    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEvent1>().each(
+    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEventA>().each(
       [](const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, Probability& probability) {
         internal::updateProbability(probability, eventChances.val[0]);
       });
 
-    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEvent2>().each(
+    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEventB>().each(
       [](const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, Probability& probability) {
         internal::updateProbability(probability, eventChances.val[1] - eventChances.val[0]);
       });
 
-    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEvent3>().each(
+    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEventC>().each(
       [](const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, Probability& probability) {
         internal::updateProbability(probability, eventChances.val[2] - eventChances.val[1]);
       });
 
-    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEvent4>().each(
+    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEventD>().each(
       [](const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, Probability& probability) {
         internal::updateProbability(probability, eventChances.val[3] - eventChances.val[2]);
       });
 
-    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEvent5>().each(
+    registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>, Probability, tags::RandomEventE>().each(
       [](const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, Probability& probability) {
         internal::updateProbability(probability, eventChances.val[4] - eventChances.val[3]);
       });
@@ -162,11 +162,11 @@ void randomBinaryChance(Simulation& simulation) {
 void clearRandomChanceResult(Simulation& simulation) {
   simulation.registry.clear<tags::RandomEventCheckPassed>();
   simulation.registry.clear<tags::RandomEventCheckFailed>();
-  simulation.registry.clear<tags::RandomEvent1>();
-  simulation.registry.clear<tags::RandomEvent2>();
-  simulation.registry.clear<tags::RandomEvent3>();
-  simulation.registry.clear<tags::RandomEvent4>();
-  simulation.registry.clear<tags::RandomEvent5>();
+  simulation.registry.clear<tags::RandomEventA>();
+  simulation.registry.clear<tags::RandomEventB>();
+  simulation.registry.clear<tags::RandomEventC>();
+  simulation.registry.clear<tags::RandomEventD>();
+  simulation.registry.clear<tags::RandomEventE>();
 }
 
 template void randomChance<3U>(Simulation& simulation);

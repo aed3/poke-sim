@@ -42,7 +42,7 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, cons
 
 void setCurrentActionMove(
   types::handle battleHandle, const Simulation& simulation, const CurrentActionSource& source,
-  const CurrentAction& action) {
+  const CurrentActionTargets& targets, const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
   const action::Move& move = registry.get<action::Move>(action.val);
   const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
@@ -51,6 +51,7 @@ void setCurrentActionMove(
   types::entity moveEntity = simulation.pokedex.buildActionMove(move.name, registry);
 
   battleHandle.emplace<CurrentActionMove>(moveEntity);
+  registry.insert<CurrentActionMove>(targets.val.begin(), targets.val.end(), {moveEntity});
   battleHandle.emplace<CurrentActionMoveSlot>(moveSlotEntity);
   registry.emplace<Battle>(moveEntity, battleHandle.entity());
   registry.emplace<tags::CurrentActionMove>(moveEntity);

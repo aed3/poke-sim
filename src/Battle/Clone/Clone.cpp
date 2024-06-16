@@ -17,10 +17,11 @@
 namespace pokesim {
 types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount) {
   types::cloneIndex count = cloneCount.value_or(1);
-  types::ClonedEntityMap entityMap;
+  types::ClonedEntityMap entityMap, battleMap;
   entt::dense_map<entt::id_type, std::vector<types::entity>> srcEntityStorages;
 
   internal::cloneBattle(registry, entityMap, srcEntityStorages, count);
+  battleMap = entityMap;
   internal::cloneSide(registry, entityMap, srcEntityStorages, count);
   internal::cloneAction(registry, entityMap, srcEntityStorages, count);
   internal::cloneCurrentActionMove(registry, entityMap, srcEntityStorages, count);
@@ -72,7 +73,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
 
   registry.clear<CloneTo, tags::CloneFrom>();
 
-  return entityMap;
+  return battleMap;
 }
 
 namespace internal {

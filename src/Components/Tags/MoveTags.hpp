@@ -14,6 +14,11 @@ struct Contact {};
 struct BypassSubstitute {};
 // Move Property Tag: Power is multiplied by 1.2 when used by a Pokemon with the Ability Iron Fist.
 struct Punch {};
+// Move Property Tag: Move hits 2, 3, 4, or 5 times depending on random chance, items (i.e. Loaded Dice), and abilities
+// (i.e. Skill Link)
+struct VariableHitCount {};
+// Move Property Tag: A multi-hit move where each hit checks accuracy (i.e. Triple Kick)
+struct AccuracyDependentHitCount {};
 
 namespace effect {
 // Move Effect Participant Tag: Who the effect will affect
