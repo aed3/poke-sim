@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct Id {
-  types::stateId id = 1;
+  types::stateId val = 1;
 };
 }  // namespace pokesim

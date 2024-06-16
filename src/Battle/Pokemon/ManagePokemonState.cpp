@@ -14,17 +14,17 @@
 
 namespace pokesim {
 void deductPp(Pp& pp) {
-  if (pp.pp) {
-    pp.pp -= 1;
+  if (pp.val) {
+    pp.val -= 1;
   }
 }
 
 void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMoveSlot& move) {
-  registry.emplace<LastUsedMove>(source.actionSource, move.actionMoveSlot);
+  registry.emplace<LastUsedMove>(source.val, move.val);
 }
 
 void resetEffectiveSpeed(types::handle handle, stat::Spe spe) {
-  handle.emplace_or_replace<stat::EffectiveSpeed>(spe.stat);
+  handle.emplace_or_replace<stat::EffectiveSpeed>(spe.val);
 }
 
 void updateSpeed(Simulation& simulation) {

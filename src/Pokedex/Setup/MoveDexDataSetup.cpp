@@ -28,8 +28,8 @@ void MoveDexDataSetup::setType(Type type) {
 
 void MoveDexDataSetup::addAddedTargets(AddedTargetOptions addedTargets) {
   AddedTargets& existingTargets = handle.get_or_emplace<AddedTargets>();
-  existingTargets.targets = static_cast<AddedTargetOptions>(
-    static_cast<std::uint8_t>(existingTargets.targets) | static_cast<std::uint8_t>(addedTargets));
+  existingTargets.val = static_cast<AddedTargetOptions>(
+    static_cast<std::uint8_t>(existingTargets.val) | static_cast<std::uint8_t>(addedTargets));
 
   switch (addedTargets) {
     case AddedTargetOptions::TARGET_ALLY: {

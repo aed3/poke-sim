@@ -133,7 +133,7 @@ class Pokedex {
 
   template <typename... T>
   auto getEffectData(MoveEffect effect) const {
-    return dexRegistry.get<T...>(effect.moveEffect);
+    return dexRegistry.get<T...>(effect.val);
   }
 
   template <typename... T>
@@ -153,7 +153,7 @@ class Pokedex {
 
   template <typename... T>
   bool effectHas(MoveEffect effect) const {
-    return dexRegistry.all_of<T...>(effect.moveEffect);
+    return dexRegistry.all_of<T...>(effect.val);
   }
 
   types::entity buildActionMove(dex::Move move, types::registry& registry) const;

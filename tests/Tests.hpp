@@ -31,7 +31,7 @@ inline Simulation createSingleBattleSimulation(
 
     Simulation::MoveCreationInfo p1MoveInfo{};
     p1MoveInfo.name = dex::Move::FURY_ATTACK;
-    p1MoveInfo.maxPp = pokedex->getMoveData<Pp>(dex::Move::FURY_ATTACK).pp;
+    p1MoveInfo.maxPp = pokedex->getMoveData<Pp>(dex::Move::FURY_ATTACK).val;
     p1MoveInfo.pp = p1MoveInfo.maxPp - 1;
     p1PokemonInfo.moves.push_back(p1MoveInfo);
 
@@ -47,7 +47,7 @@ inline Simulation createSingleBattleSimulation(
 
     Simulation::MoveCreationInfo p2MoveInfo{};
     p2MoveInfo.name = dex::Move::THUNDERBOLT;
-    p2MoveInfo.maxPp = pokedex->getMoveData<Pp>(dex::Move::THUNDERBOLT).pp;
+    p2MoveInfo.maxPp = pokedex->getMoveData<Pp>(dex::Move::THUNDERBOLT).val;
     p2MoveInfo.pp = p2MoveInfo.maxPp - 2;
     p2PokemonInfo.moves.push_back(p2MoveInfo);
 
@@ -96,7 +96,7 @@ inline Simulation createDoubleBattleSimulation(
 
     Simulation::MoveCreationInfo p1aMoveInfo{};
     p1aMoveInfo.name = dex::Move::MOONBLAST;
-    p1aMoveInfo.maxPp = pokedex->getMoveData<Pp>(dex::Move::MOONBLAST).pp;
+    p1aMoveInfo.maxPp = pokedex->getMoveData<Pp>(dex::Move::MOONBLAST).val;
     p1aMoveInfo.pp = p1aMoveInfo.maxPp - 4;
     p1aPokemonInfo.moves.push_back(p1aMoveInfo);
 
@@ -111,7 +111,7 @@ inline Simulation createDoubleBattleSimulation(
 
     Simulation::MoveCreationInfo p2aMoveInfo{};
     p2aMoveInfo.name = dex::Move::KNOCK_OFF;
-    p2aMoveInfo.maxPp = pokedex->getMoveData<Pp>(dex::Move::KNOCK_OFF).pp;
+    p2aMoveInfo.maxPp = pokedex->getMoveData<Pp>(dex::Move::KNOCK_OFF).val;
     p2aMoveInfo.pp = p2aMoveInfo.maxPp - 3;
     p2aPokemonInfo.moves.push_back(p2aMoveInfo);
 
@@ -127,7 +127,7 @@ inline Simulation createDoubleBattleSimulation(
 
     Simulation::MoveCreationInfo p1bMoveInfo{};
     p1bMoveInfo.name = dex::Move::WILL_O_WISP;
-    p1bMoveInfo.maxPp = pokedex->getMoveData<Pp>(dex::Move::WILL_O_WISP).pp;
+    p1bMoveInfo.maxPp = pokedex->getMoveData<Pp>(dex::Move::WILL_O_WISP).val;
     p1bMoveInfo.pp = p1bMoveInfo.maxPp - 2;
     p1bPokemonInfo.moves.push_back(p1bMoveInfo);
 
@@ -142,7 +142,7 @@ inline Simulation createDoubleBattleSimulation(
 
     Simulation::MoveCreationInfo p2bMoveInfo{};
     p2bMoveInfo.name = dex::Move::QUIVER_DANCE;
-    p2bMoveInfo.maxPp = pokedex->getMoveData<Pp>(dex::Move::QUIVER_DANCE).pp;
+    p2bMoveInfo.maxPp = pokedex->getMoveData<Pp>(dex::Move::QUIVER_DANCE).val;
     p2bMoveInfo.pp = p2bMoveInfo.maxPp - 1;
     p2bPokemonInfo.moves.push_back(p2bMoveInfo);
 

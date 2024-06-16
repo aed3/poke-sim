@@ -16,7 +16,7 @@ namespace pokesim {
 
 types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
   ENTT_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot");
-  types::entity sideEntity = (std::uint8_t)targetSlot % 2 ? sides.p1 : sides.p2;
+  types::entity sideEntity = sides.val[((std::uint8_t)targetSlot - 1) % 2];
   return sideEntity;
 }
 
@@ -24,8 +24,8 @@ types::entity slotToPokemonEntity(const types::registry& registry, types::entity
   types::teamPositionIndex index = ((std::uint8_t)targetSlot - 1) / 2;
 
   const Team& team = registry.get<Team>(sideEntity);
-  ENTT_ASSERT(team.team.size() > index, "Choosing a target slot for team member that does not exist");
-  return team.team[index];
+  ENTT_ASSERT(team.val.size() > index, "Choosing a target slot for team member that does not exist");
+  return team.val[index];
 }
 
 types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
@@ -70,11 +70,11 @@ types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sid
 
   types::entity sideEntity = slotToSideEntity(sides, allySlot);
   const Team& team = registry.get<Team>(sideEntity);
-  if (team.team.size() <= index) {
+  if (team.val.size() <= index) {
     return entt::null;
   }
 
-  types::entity allyEntity = team.team[index];
+  types::entity allyEntity = team.val[index];
   if (registry.any_of<tags::Fainted>(allyEntity)) {
     return entt::null;
   }
@@ -83,7 +83,7 @@ types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sid
 }
 
 types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move) {
-  for (types::entity moveSlot : moveSlots.moveSlots) {
+  for (types::entity moveSlot : moveSlots.val) {
     if (registry.get<MoveName>(moveSlot).name == move) {
       return moveSlot;
     }

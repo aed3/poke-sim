@@ -46,7 +46,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
 
   for (const auto& [src, destinations] : entityMap) {
     for (types::cloneIndex i = 0; i < count; i++) {
-      cloneToStorage.get(destinations[i]).index = i;
+      cloneToStorage.get(destinations[i]).val = i;
     }
   }
 
@@ -85,9 +85,9 @@ void cloneBattle(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
   for (const auto [entity, sides, actionQueue] : registry.view<tags::CloneFrom, Sides, ActionQueue>().each()) {
-    registry.emplace<tags::CloneFrom>(sides.p1);
-    registry.emplace<tags::CloneFrom>(sides.p2);
-    for (auto queueItem : actionQueue.actionQueue) {
+    registry.emplace<tags::CloneFrom>(sides.p1());
+    registry.emplace<tags::CloneFrom>(sides.p2());
+    for (auto queueItem : actionQueue.val) {
       registry.emplace<tags::CloneFrom>(queueItem);
     }
 
@@ -99,7 +99,7 @@ void cloneSide(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
   for (const auto [entity, team] : registry.view<tags::CloneFrom, Team>().each()) {
-    for (auto pokemon : team.team) {
+    for (auto pokemon : team.val) {
       registry.emplace<tags::CloneFrom>(pokemon);
     }
 
@@ -119,7 +119,7 @@ void clonePokemon(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
   for (const auto [entity, species, moveSlots] : registry.view<tags::CloneFrom, SpeciesName, MoveSlots>().each()) {
-    for (auto move : moveSlots.moveSlots) {
+    for (auto move : moveSlots.val) {
       registry.emplace<tags::CloneFrom>(move);
     }
 
@@ -137,8 +137,8 @@ void cloneMove(
 
 void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
   ENTT_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map");
-  ENTT_ASSERT(entityMap.at(entity).size() > cloneTo.index, "More entities are trying to be copied to than were copied");
-  entity = entityMap.at(entity)[cloneTo.index];
+  ENTT_ASSERT(entityMap.at(entity).size() > cloneTo.val, "More entities are trying to be copied to than were copied");
+  entity = entityMap.at(entity)[cloneTo.val];
 }
 
 template <typename Component, typename GetEntity>
@@ -162,7 +162,7 @@ void remapEntityListMembers(
 
 void remapActionQueueEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   auto getEntityList = [](ActionQueue & queue) -> auto& {
-    return queue.actionQueue;
+    return queue.val;
   };
 
   remapEntityListMembers<ActionQueue>(registry, entityMap, getEntityList);
@@ -170,7 +170,7 @@ void remapActionQueueEntityMembers(types::registry& registry, const types::Clone
 
 void remapBattleEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   auto getEntity = [](Battle & battle) -> auto& {
-    return battle.battle;
+    return battle.val;
   };
 
   remapEntityMembers<Battle>(registry, entityMap, getEntity);
@@ -178,7 +178,7 @@ void remapBattleEntityMembers(types::registry& registry, const types::ClonedEnti
 
 void remapFoeSideEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   auto getEntity = [](FoeSide & foeSide) -> auto& {
-    return foeSide.foeSide;
+    return foeSide.val;
   };
 
   remapEntityMembers<FoeSide>(registry, entityMap, getEntity);
@@ -186,7 +186,7 @@ void remapFoeSideEntityMembers(types::registry& registry, const types::ClonedEnt
 
 void remapMoveEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   auto getEntity = [](LastUsedMove & lastUsedMove) -> auto& {
-    return lastUsedMove.lastUsedMove;
+    return lastUsedMove.val;
   };
 
   remapEntityMembers<LastUsedMove>(registry, entityMap, getEntity);
@@ -194,7 +194,7 @@ void remapMoveEntityMembers(types::registry& registry, const types::ClonedEntity
 
 void remapMoveEffectEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   auto getEntity = [](MoveEffect & moveEffect) -> auto& {
-    return moveEffect.moveEffect;
+    return moveEffect.val;
   };
 
   remapEntityMembers<MoveEffect>(registry, entityMap, getEntity);
@@ -202,7 +202,7 @@ void remapMoveEffectEntityMembers(types::registry& registry, const types::Cloned
 
 void remapMoveSlotsEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   auto getEntityList = [](MoveSlots & moveSlots) -> auto& {
-    return moveSlots.moveSlots;
+    return moveSlots.val;
   };
 
   remapEntityListMembers<MoveSlots>(registry, entityMap, getEntityList);
@@ -210,7 +210,7 @@ void remapMoveSlotsEntityMembers(types::registry& registry, const types::ClonedE
 
 void remapPokemonEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   auto getEntity = [](Pokemon & pokemon) -> auto& {
-    return pokemon.pokemon;
+    return pokemon.val;
   };
 
   remapEntityMembers<Pokemon>(registry, entityMap, getEntity);
@@ -218,7 +218,7 @@ void remapPokemonEntityMembers(types::registry& registry, const types::ClonedEnt
 
 void remapSideEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   auto getEntity = [](Side & side) -> auto& {
-    return side.side;
+    return side.val;
   };
 
   remapEntityMembers<Side>(registry, entityMap, getEntity);
@@ -226,14 +226,14 @@ void remapSideEntityMembers(types::registry& registry, const types::ClonedEntity
 
 void remapSidesEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   for (auto [clonedEntity, cloneTo, sides] : registry.view<CloneTo, Sides>().each()) {
-    remapEntity(sides.p1, cloneTo, entityMap);
-    remapEntity(sides.p2, cloneTo, entityMap);
+    remapEntity(sides.p1(), cloneTo, entityMap);
+    remapEntity(sides.p2(), cloneTo, entityMap);
   }
 }
 
 void remapTeamEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   auto getEntityList = [](Team & team) -> auto& {
-    return team.team;
+    return team.val;
   };
 
   remapEntityListMembers<Team>(registry, entityMap, getEntityList);
@@ -241,7 +241,7 @@ void remapTeamEntityMembers(types::registry& registry, const types::ClonedEntity
 
 void remapActionTargetsEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   auto getEntityList = [](CurrentActionTargets & targets) -> auto& {
-    return targets.actionTargets;
+    return targets.val;
   };
 
   remapEntityListMembers<CurrentActionTargets>(registry, entityMap, getEntityList);

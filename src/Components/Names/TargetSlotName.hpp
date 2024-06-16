@@ -9,6 +9,6 @@ namespace pokesim {
  * In a single battle, only P1A and P2A are valid targets. In a double battle, P1B and P2B are also valid.
  */
 struct TargetSlotName {
-  Slot targetSlot = Slot::NONE;
+  Slot name = Slot::NONE;
 };
 }  // namespace pokesim

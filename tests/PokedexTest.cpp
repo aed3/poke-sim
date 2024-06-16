@@ -20,8 +20,8 @@ TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
         dex::Species::EMPOLEON);
 
     REQUIRE(species.name == Empoleon::name);
-    REQUIRE(types.type1 == Empoleon::type.type1);
-    REQUIRE(types.type2 == Empoleon::type.type2);
+    REQUIRE(types.type1() == Empoleon::type.type1());
+    REQUIRE(types.type2() == Empoleon::type.type2());
     REQUIRE(baseStats.hp == Empoleon::hp);
     REQUIRE(baseStats.atk == Empoleon::atk);
     REQUIRE(baseStats.def == Empoleon::def);
@@ -29,8 +29,8 @@ TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
     REQUIRE(baseStats.spd == Empoleon::spd);
     REQUIRE(baseStats.spe == Empoleon::spe);
 
-    REQUIRE(primaryAbility.ability == Empoleon::primaryAbility);
-    REQUIRE(hiddenAbility.ability == Empoleon::hiddenAbility);
+    REQUIRE(primaryAbility.name == Empoleon::primaryAbility);
+    REQUIRE(hiddenAbility.name == Empoleon::hiddenAbility);
 
     REQUIRE_FALSE(pokedex.speciesHas<SecondaryAbility>(dex::Species::EMPOLEON));
 
@@ -46,8 +46,8 @@ TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
         dex::Species::AMPHAROS);
 
     REQUIRE(species.name == Ampharos::name);
-    REQUIRE(types.type1 == Ampharos::type.type1);
-    REQUIRE(types.type2 == Ampharos::type.type2);
+    REQUIRE(types.type1() == Ampharos::type.type1());
+    REQUIRE(types.type2() == Ampharos::type.type2());
     REQUIRE(baseStats.hp == Ampharos::hp);
     REQUIRE(baseStats.atk == Ampharos::atk);
     REQUIRE(baseStats.def == Ampharos::def);
@@ -55,8 +55,8 @@ TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
     REQUIRE(baseStats.spd == Ampharos::spd);
     REQUIRE(baseStats.spe == Ampharos::spe);
 
-    REQUIRE(primaryAbility.ability == Ampharos::primaryAbility);
-    REQUIRE(hiddenAbility.ability == Ampharos::hiddenAbility);
+    REQUIRE(primaryAbility.name == Ampharos::primaryAbility);
+    REQUIRE(hiddenAbility.name == Ampharos::hiddenAbility);
 
     REQUIRE_FALSE(pokedex.speciesHas<SecondaryAbility>(dex::Species::AMPHAROS));
   }
@@ -70,8 +70,8 @@ TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
         dex::Species::GARDEVOIR);
 
     REQUIRE(species.name == Gardevoir::name);
-    REQUIRE(types.type1 == Gardevoir::type.type1);
-    REQUIRE(types.type2 == Gardevoir::type.type2);
+    REQUIRE(types.type1() == Gardevoir::type.type1());
+    REQUIRE(types.type2() == Gardevoir::type.type2());
     REQUIRE(baseStats.hp == Gardevoir::hp);
     REQUIRE(baseStats.atk == Gardevoir::atk);
     REQUIRE(baseStats.def == Gardevoir::def);
@@ -79,9 +79,9 @@ TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
     REQUIRE(baseStats.spd == Gardevoir::spd);
     REQUIRE(baseStats.spe == Gardevoir::spe);
 
-    REQUIRE(primaryAbility.ability == Gardevoir::primaryAbility);
-    REQUIRE(secondaryAbility.ability == Gardevoir::secondaryAbility);
-    REQUIRE(hiddenAbility.ability == Gardevoir::hiddenAbility);
+    REQUIRE(primaryAbility.name == Gardevoir::primaryAbility);
+    REQUIRE(secondaryAbility.name == Gardevoir::secondaryAbility);
+    REQUIRE(hiddenAbility.name == Gardevoir::hiddenAbility);
   }
 }
 
@@ -137,9 +137,9 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE(pokedex.moveHas<move::tags::Physical>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Special>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Status>(moveEnum));
-    REQUIRE(accuracy.accuracy == FuryAttack::accuracy);
-    REQUIRE(power.basePower == FuryAttack::basePower);
-    REQUIRE(pp.pp == FuryAttack::basePp);
+    REQUIRE(accuracy.val == FuryAttack::accuracy);
+    REQUIRE(power.val == FuryAttack::basePower);
+    REQUIRE(pp.val == FuryAttack::basePp);
     REQUIRE(multiHit.minHits == FuryAttack::minHits);
     REQUIRE(multiHit.maxHits == FuryAttack::maxHits);
 
@@ -161,14 +161,14 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE(pokedex.moveHas<move::tags::Special>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Physical>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Status>(moveEnum));
-    REQUIRE(accuracy.accuracy == Thunderbolt::accuracy);
-    REQUIRE(power.basePower == Thunderbolt::basePower);
-    REQUIRE(pp.pp == Thunderbolt::basePp);
+    REQUIRE(accuracy.val == Thunderbolt::accuracy);
+    REQUIRE(power.val == Thunderbolt::basePower);
+    REQUIRE(pp.val == Thunderbolt::basePp);
 
     REQUIRE_FALSE(secondaryEffect.primary);
 
     auto chance = pokedex.getEffectData<Chance>(secondaryEffect);
-    REQUIRE(chance.chance == Thunderbolt::targetSecondaryEffect::chance);
+    REQUIRE(chance.val == Thunderbolt::targetSecondaryEffect::chance);
     REQUIRE(pokedex.effectHas<move::tags::effect::MoveTarget>(secondaryEffect));
     REQUIRE(pokedex.effectHas<status::tags::Paralysis>(secondaryEffect));
     REQUIRE_FALSE(pokedex.effectHas<move::tags::effect::MoveSource>(secondaryEffect));
@@ -190,15 +190,15 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE(pokedex.moveHas<move::tags::Special>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Physical>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Status>(moveEnum));
-    REQUIRE(accuracy.accuracy == Moonblast::accuracy);
-    REQUIRE(power.basePower == Moonblast::basePower);
-    REQUIRE(pp.pp == Moonblast::basePp);
+    REQUIRE(accuracy.val == Moonblast::accuracy);
+    REQUIRE(power.val == Moonblast::basePower);
+    REQUIRE(pp.val == Moonblast::basePp);
 
     REQUIRE_FALSE(secondaryEffect.primary);
 
     auto [chance, spaBoost] = pokedex.getEffectData<Chance, SpaBoost>(secondaryEffect);
-    REQUIRE(chance.chance == Moonblast::targetSecondaryEffect::chance);
-    REQUIRE(spaBoost.boost == Moonblast::targetSecondaryEffect::spaBoost);
+    REQUIRE(chance.val == Moonblast::targetSecondaryEffect::chance);
+    REQUIRE(spaBoost.val == Moonblast::targetSecondaryEffect::spaBoost);
     REQUIRE(pokedex.effectHas<move::tags::effect::MoveTarget>(secondaryEffect));
     REQUIRE_FALSE(pokedex.effectHas<move::tags::effect::MoveSource>(secondaryEffect));
 
@@ -219,8 +219,8 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE(pokedex.moveHas<move::tags::Status>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Physical>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Special>(moveEnum));
-    REQUIRE(accuracy.accuracy == WillOWisp::accuracy);
-    REQUIRE(pp.pp == WillOWisp::basePp);
+    REQUIRE(accuracy.val == WillOWisp::accuracy);
+    REQUIRE(pp.val == WillOWisp::basePp);
 
     REQUIRE_FALSE(pokedex.moveHas<BasePower>(moveEnum));
 
@@ -246,7 +246,7 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE(pokedex.moveHas<move::tags::Status>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Physical>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Special>(moveEnum));
-    REQUIRE(pp.pp == QuiverDance::basePp);
+    REQUIRE(pp.val == QuiverDance::basePp);
 
     REQUIRE_FALSE(pokedex.moveHas<BasePower>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<Accuracy>(moveEnum));
@@ -254,9 +254,9 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE(primaryEffect.primary);
 
     auto [spaBoost, spdBoost, speBoost] = pokedex.getEffectData<SpaBoost, SpdBoost, SpeBoost>(primaryEffect);
-    REQUIRE(spaBoost.boost == QuiverDance::sourcePrimaryEffect::spaBoost);
-    REQUIRE(spdBoost.boost == QuiverDance::sourcePrimaryEffect::spdBoost);
-    REQUIRE(speBoost.boost == QuiverDance::sourcePrimaryEffect::speBoost);
+    REQUIRE(spaBoost.val == QuiverDance::sourcePrimaryEffect::spaBoost);
+    REQUIRE(spdBoost.val == QuiverDance::sourcePrimaryEffect::spdBoost);
+    REQUIRE(speBoost.val == QuiverDance::sourcePrimaryEffect::speBoost);
 
     REQUIRE(pokedex.effectHas<move::tags::effect::MoveSource>(primaryEffect));
     REQUIRE_FALSE(pokedex.effectHas<move::tags::effect::MoveTarget>(primaryEffect));

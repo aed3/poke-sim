@@ -5,6 +5,6 @@
 namespace pokesim {
 // Contains the entity pointing to a Pokemon.
 struct Pokemon {
-  types::entity pokemon;
+  types::entity val{};
 };
 }  // namespace pokesim

@@ -4,10 +4,10 @@
 
 namespace pokesim {
 struct Pp {
-  types::pp pp = 0;
+  types::pp val = 0;
 };
 
 struct MaxPp {
-  types::pp maxPp = 5;
+  types::pp val = 5;
 };
 }  // namespace pokesim

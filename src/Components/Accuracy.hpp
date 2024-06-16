@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct Accuracy {
-  types::percentChance accuracy = 100;
+  types::percentChance val = 100;
 };
 }  // namespace pokesim

@@ -30,7 +30,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
   ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty");
   types::registry& registry = *sideHandle.registry();
 
-  ActionQueue& battleActionQueue = registry.get<ActionQueue>(sideHandle.get<Battle>().battle);
+  ActionQueue& battleActionQueue = registry.get<ActionQueue>(sideHandle.get<Battle>().val);
 
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
@@ -65,7 +65,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
         speedSort.speed = effectiveSpeed->effectiveSpeed;
       }
       else {
-        speedSort.speed = registry.get<stat::Spe>(sourceEntity).stat;
+        speedSort.speed = registry.get<stat::Spe>(sourceEntity).val;
       }
 
       if (decision.moveChoice.has_value()) {
@@ -86,25 +86,25 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
 
       actionHandle.emplace<SpeedSort>(speedSort);
 
-      battleActionQueue.actionQueue.push_back(actionHandle.entity());
+      battleActionQueue.val.push_back(actionHandle.entity());
     }
   }
   else if (sideDecision.decisions.holds<types::teamOrder>()) {
     const auto& teamOrder = sideDecision.decisions.get<types::teamOrder>();
 
     ENTT_ASSERT(
-      sideHandle.get<Team>().team.size() == teamOrder.size(),
+      sideHandle.get<Team>().val.size() == teamOrder.size(),
       "Must pick a placement for each Pokemon on the team");
     types::handle actionHandle = {registry, registry.create()};
 
     actionHandle.emplace<action::Team>(teamOrder);
 
-    battleActionQueue.actionQueue.push_back(actionHandle.entity());
+    battleActionQueue.val.push_back(actionHandle.entity());
   }
 }
 
 void speedSort(types::handle handle, ActionQueue& actionQueue) {
-  std::vector<types::entity>& entityList = actionQueue.actionQueue;
+  std::vector<types::entity>& entityList = actionQueue.val;
 
   if (entityList.size() == 1) return;
   const types::registry* registry = handle.registry();
@@ -175,7 +175,7 @@ void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue) {
 
   actionHandle.emplace<action::tags::BeforeTurn>();
   actionHandle.emplace<SpeedSort>(speedSort);
-  actionQueue.actionQueue.push_back(actionHandle.entity());
+  actionQueue.val.push_back(actionHandle.entity());
 }
 
 void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
@@ -184,16 +184,16 @@ void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
 
   actionHandle.emplace<action::tags::Residual>();
   actionHandle.emplace<SpeedSort>(speedSort);
-  actionQueue.actionQueue.push_back(actionHandle.entity());
+  actionQueue.val.push_back(actionHandle.entity());
 }
 
 void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue) {
   types::registry& registry = *battleHandle.registry();
   registry.clear<action::tags::Current>();
 
-  if (actionQueue.actionQueue.empty()) return;
+  if (actionQueue.val.empty()) return;
 
-  types::entity newCurrentAction = actionQueue.actionQueue.front();
+  types::entity newCurrentAction = actionQueue.val.front();
   registry.emplace<action::tags::Current>(newCurrentAction);
 
   action::Move* moveAction = registry.try_get<action::Move>(newCurrentAction);
@@ -204,12 +204,12 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue) {
     battleHandle.emplace<action::tags::Residual>();
   }
 
-  actionQueue.actionQueue.erase(actionQueue.actionQueue.begin());
+  actionQueue.val.erase(actionQueue.val.begin());
 
   registry.clear<NextAction>();
   battleHandle.emplace<CurrentAction>(newCurrentAction);
-  if (!actionQueue.actionQueue.empty()) {
-    battleHandle.emplace<NextAction>(actionQueue.actionQueue[0]);
+  if (!actionQueue.val.empty()) {
+    battleHandle.emplace<NextAction>(actionQueue.val[0]);
   }
 }
 }  // namespace pokesim::simulate_turn

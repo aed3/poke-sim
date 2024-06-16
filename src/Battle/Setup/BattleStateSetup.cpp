@@ -16,10 +16,10 @@
 #include <Types/Random.hpp>
 #include <Types/State.hpp>
 #include <Utilities/RNG.hpp>
+#include <atomic>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/entity/view.hpp>
-#include <atomic>
 
 namespace pokesim {
 BattleStateSetup::BattleStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {
@@ -47,8 +47,8 @@ void BattleStateSetup::setID(types::stateId id) {
 void BattleStateSetup::setSide(PlayerSideId sideID, types::entity sideEntity) {
   auto& sides = handle.get_or_emplace<Sides>();
   switch (sideID) {
-    case PlayerSideId::P1: sides.p1 = sideEntity; break;
-    case PlayerSideId::P2: sides.p2 = sideEntity; break;
+    case PlayerSideId::P1: sides.p1() = sideEntity; break;
+    case PlayerSideId::P2: sides.p2() = sideEntity; break;
     default: ENTT_FAIL("sideID must be assigned P1 or P2"); break;
   }
 }

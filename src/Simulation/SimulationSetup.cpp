@@ -129,8 +129,8 @@ void Simulation::createInitialTurnDecision(
   types::handle battleHandle{registry, battleStateSetup.entity()};
   const Sides& sides = battleHandle.get<Sides>();
 
-  registry.emplace<SideDecision>(sides.p1, turnDecisionData.p1);
-  registry.emplace<SideDecision>(sides.p2, turnDecisionData.p2);
+  registry.emplace<SideDecision>(sides.p1(), turnDecisionData.p1);
+  registry.emplace<SideDecision>(sides.p2(), turnDecisionData.p2);
 }
 
 void Simulation::createCalcDamageInput(

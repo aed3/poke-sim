@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct BasePower {
-  types::basePower basePower = 1;
+  types::basePower val = 1;
 };
 }  // namespace pokesim

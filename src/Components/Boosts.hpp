@@ -4,22 +4,22 @@
 
 namespace pokesim {
 struct AtkBoost {
-  types::boost boost = 0;
+  types::boost val = 0;
 };
 
 struct DefBoost {
-  types::boost boost = 0;
+  types::boost val = 0;
 };
 
 struct SpaBoost {
-  types::boost boost = 0;
+  types::boost val = 0;
 };
 
 struct SpdBoost {
-  types::boost boost = 0;
+  types::boost val = 0;
 };
 
 struct SpeBoost {
-  types::boost boost = 0;
+  types::boost val = 0;
 };
 }  // namespace pokesim

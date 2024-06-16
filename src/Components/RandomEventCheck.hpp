@@ -16,7 +16,7 @@ struct RandomEventCheck {
   internal::maxSizedVector<types::percentChance, RANDOM_OPTIONS> chances;
 };
 
-struct RandomBinaryEventCheck {
-  types::percentChance checkPassChance = 100;
+struct RandomBinaryEventCheckChance {
+  types::percentChance val = 100;
 };
 }  // namespace pokesim

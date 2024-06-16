@@ -20,7 +20,7 @@ void setRandomBinaryChoice(
     battleHandle.emplace<tags::RandomEventCheckFailed>();
   }
   else {
-    battleHandle.emplace<RandomBinaryEventCheck>(percentChance);
+    battleHandle.emplace<RandomBinaryEventCheckChance>(percentChance);
   }
 }
 
@@ -34,7 +34,7 @@ void randomChance(Simulation& simulation) {
     auto checkView = registry.view<RandomEventCheck<POSSIBLE_EVENT_COUNT>>();
     ENTT_ASSERT(
       checkView.empty() || POSSIBLE_EVENT_COUNT > 2U,
-      "RandomEventCheck should only be used for events with more than two options. Use RandomBinaryEventCheck "
+      "RandomEventCheck should only be used for events with more than two options. Use RandomBinaryEventCheckChance "
       "instead");
     registry.insert<tags::CloneFrom>(checkView.begin(), checkView.end());
     auto clonedEntityMap = clone(registry, POSSIBLE_EVENT_COUNT - 1);
@@ -81,7 +81,7 @@ void randomChance(Simulation& simulation) {
 void randomBinaryChance(Simulation& simulation) {
   types::registry& registry = simulation.registry;
   if (simulation.simulateTurnOptions.makeBranchesOnRandomEvents()) {
-    auto binaryCheckView = registry.view<RandomBinaryEventCheck>();
+    auto binaryCheckView = registry.view<RandomBinaryEventCheckChance>();
     registry.insert<tags::CloneFrom>(binaryCheckView.begin(), binaryCheckView.end());
     auto clonedEntityMap = clone(registry, 1);
     for (const auto [originalBattle, clonedBattle] : clonedEntityMap) {
@@ -90,11 +90,11 @@ void randomBinaryChance(Simulation& simulation) {
     }
   }
   else {
-    registry.view<RandomBinaryEventCheck, RngSeed>().each(
-      [&registry](types::entity entity, const RandomBinaryEventCheck& eventCheck, RngSeed& rngSeed) {
+    registry.view<RandomBinaryEventCheckChance, RngSeed>().each(
+      [&registry](types::entity entity, const RandomBinaryEventCheckChance& eventCheck, RngSeed& rngSeed) {
         types::percentChance rng = internal::nextBoundedRandomValue(rngSeed, 100);
 
-        if (rng <= eventCheck.checkPassChance) {
+        if (rng <= eventCheck.val) {
           registry.emplace<tags::RandomEventCheckPassed>(entity);
         }
         else {
@@ -103,7 +103,7 @@ void randomBinaryChance(Simulation& simulation) {
       });
   }
 
-  registry.clear<RandomBinaryEventCheck>();
+  registry.clear<RandomBinaryEventCheckChance>();
 }
 
 void clearRandomChanceResult(Simulation& simulation) {

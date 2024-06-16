@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct LastUsedMove {
-  types::entity lastUsedMove;
+  types::entity val{};
 };
 }  // namespace pokesim

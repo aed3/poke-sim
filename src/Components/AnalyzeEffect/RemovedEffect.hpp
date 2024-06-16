@@ -4,6 +4,6 @@
 
 namespace pokesim::analyze_effect {
 struct RemovedEffect {
-  types::effectEnum effect;
+  types::effectEnum val{};
 };
 }  // namespace pokesim::analyze_effect
