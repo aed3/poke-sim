@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Types/Random.hpp>
-#include <Utilities/MaxSizedVector.hpp>
+#include <array>
 #include <cstdint>
 
 namespace pokesim {
@@ -13,7 +13,7 @@ const std::uint8_t MAX_TYPICAL_RANDOM_OPTIONS = 5U;
 
 template <std::uint8_t RANDOM_OPTIONS>
 struct RandomEventChances {
-  internal::maxSizedVector<types::percentChance, RANDOM_OPTIONS> val;
+  std::array<types::percentChance, RANDOM_OPTIONS> val;
 };
 
 struct RandomBinaryEventChance {

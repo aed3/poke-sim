@@ -6,7 +6,7 @@
 #include <Components/Boosts.hpp>
 #include <Components/Chance.hpp>
 #include <Components/EntityHolders/MoveEffect.hpp>
-#include <Components/MultiHit.hpp>
+#include <Components/HitCount.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/TypeNames.hpp>
 #include <Components/PP.hpp>
@@ -87,8 +87,8 @@ void MoveDexDataSetup::setPriority(types::priority priority) {
   handle.emplace<MovePriority>(priority);
 }
 
-void MoveDexDataSetup::setMultiHit(types::moveHits minHits, types::moveHits maxHits) {
-  handle.emplace<MultiHit>(minHits, maxHits);
+void MoveDexDataSetup::setHitCount(types::moveHits hitCount) {
+  handle.emplace<HitCount>(hitCount);
 }
 
 void MoveDexDataSetup::setPrimaryEffect(types::entity entity) {

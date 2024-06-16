@@ -21,9 +21,8 @@ struct FuryAttack {
   static constexpr types::baseAccuracy accuracy = 85;
   static constexpr types::basePower basePower = 15;
   static constexpr types::pp basePp = 20;
-  static constexpr types::moveHits minHits = 2, maxHits = 5;
 
-  static constexpr internal::Tags<move::tags::Contact> moveTags{};
+  static constexpr internal::Tags<move::tags::Contact, move::tags::VariableHitCount> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {

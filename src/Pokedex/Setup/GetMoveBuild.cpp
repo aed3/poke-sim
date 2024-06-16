@@ -21,8 +21,7 @@ struct BuildMove {
   enum class Optional {
     accuracy,
     basePower,
-    minHits,
-    maxHits,
+    hitCount,
     targetPrimaryEffect,
     targetSecondaryEffect,
     sourcePrimaryEffect,
@@ -47,9 +46,7 @@ struct BuildMove {
   template <typename Type>
   struct has<Optional::basePower, Type, void_t<Type::basePower>> : std::true_type {};
   template <typename Type>
-  struct has<Optional::minHits, Type, void_t<Type::minHits>> : std::true_type {};
-  template <typename Type>
-  struct has<Optional::maxHits, Type, void_t<Type::maxHits>> : std::true_type {};
+  struct has<Optional::hitCount, Type, void_t<Type::hitCount>> : std::true_type {};
   template <typename Type>
   struct has<Optional::targetPrimaryEffect, Type, std::void_t<typename Type::targetPrimaryEffect>> : std::true_type {};
   template <typename Type>
@@ -144,8 +141,8 @@ struct BuildMove {
     if constexpr (has<Optional::basePower, T>::value) {
       move.setBasePower(T::basePower);
     }
-    if constexpr (has<Optional::maxHits, T>::value && has<Optional::minHits, T>::value) {
-      move.setMultiHit(T::minHits, T::maxHits);
+    if constexpr (has<Optional::hitCount, T>::value) {
+      move.setHitCount(T::hitCount);
     }
 
     if (!forActiveMove) {

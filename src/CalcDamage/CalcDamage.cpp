@@ -13,6 +13,7 @@ void criticalHitRandomChance(Simulation& simulation) {
   // Set critical hit chances as random chance variable
 
   randomChance<5U>(simulation);
+  clearRandomChanceResult(simulation);
 }
 
 void modifyDamageWithTypes(Simulation& /*simulation*/) {}

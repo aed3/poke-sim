@@ -28,7 +28,7 @@ struct MoveDexDataSetup : DexDataSetup {
 
   void setBasePp(types::pp pp);
   void setPriority(types::priority priority);
-  void setMultiHit(types::moveHits minHits, types::moveHits maxHits);
+  void setHitCount(types::moveHits hitCount);
 
   void setPrimaryEffect(types::entity entity);
   void setSecondaryEffect(types::entity entity);
