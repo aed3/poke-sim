@@ -49,7 +49,7 @@ void accuracyCheck(Simulation& simulation) {
   runAccuracyEvent(simulation);
 
   simulation.view<internal::assignAccuracyToRandomEvent, tags::CurrentActionMoveTarget>();
-  randomChance<2U>(simulation);
+  randomBinaryChance(simulation);
 
   auto missed = simulation.registry.view<tags::RandomEventCheckFailed, tags::CurrentActionMoveTarget>();
   simulation.registry.remove<tags::internal::TargetCanBeHit>(missed.begin(), missed.end());
