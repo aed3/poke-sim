@@ -109,21 +109,21 @@ class Simulation {
  private:
   template <typename Selected, auto Function, typename... Tags, typename... ViewArgs>
   void viewForSelected(const ViewArgs&... viewArgs) {
-    if (Selected::depth) {
-      internal::RegistryLoop<Function, Selected, Tags...>::view(registry, *this, viewArgs...);
+    if (Selected::depth.empty()) {
+      view<Function, Tags...>(viewArgs...);
     }
     else {
-      view<Function, Tags...>(viewArgs...);
+      internal::RegistryLoop<Function, Selected, Tags...>::view(registry, *this, viewArgs...);
     }
   }
 
   template <typename Selected, auto Function, typename... Tags, typename... GroupArgs>
   void groupForSelected(const GroupArgs&... groupArgs) {
-    if (Selected::depth) {
-      internal::RegistryLoop<Function, Selected, Tags...>::group(registry, *this, groupArgs...);
+    if (Selected::depth.empty()) {
+      group<Function, Tags...>(groupArgs...);
     }
     else {
-      group<Function, Tags...>(groupArgs...);
+      internal::RegistryLoop<Function, Selected, Tags...>::group(registry, *this, groupArgs...);
     }
   }
 

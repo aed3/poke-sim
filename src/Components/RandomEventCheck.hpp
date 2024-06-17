@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Types/Random.hpp>
+#include <Types/State.hpp>
 #include <array>
 #include <cstdint>
 
@@ -13,10 +14,19 @@ const std::uint8_t MAX_TYPICAL_RANDOM_OPTIONS = 5U;
 
 template <std::uint8_t RANDOM_OPTIONS>
 struct RandomEventChances {
-  std::array<types::percentChance, RANDOM_OPTIONS> val;
+  std::array<types::percentChance, RANDOM_OPTIONS> val{};
 };
 
 struct RandomBinaryEventChance {
   types::percentChance val = 100;
+};
+
+template <std::uint8_t RANDOM_OPTIONS>
+struct RandomEventChancesStack {
+  types::targets<RandomEventChances<RANDOM_OPTIONS>> val{};
+};
+
+struct RandomBinaryEventChanceStack {
+  types::targets<RandomBinaryEventChance> val{};
 };
 }  // namespace pokesim

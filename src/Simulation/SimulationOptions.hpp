@@ -13,9 +13,9 @@ namespace simulate_turn {
 struct Options {
   DamageRollKind damageRollsConsidered = DamageRollKind::AVERAGE_DAMAGE;
   bool applyChangesToInputBattle = true;
-  types::percentChance randomChanceUpperLimit = 90;  // NOLINT(readability-magic-numbers)
-  types::percentChance randomChanceLowerLimit = 10;  // NOLINT(readability-magic-numbers)
-  types::probability branchProbabilityLowerLimit = 0.0F;
+  std::optional<types::percentChance> randomChanceUpperLimit = std::nullopt;
+  std::optional<types::percentChance> randomChanceLowerLimit = std::nullopt;
+  std::optional<types::probability> branchProbabilityLowerLimit = std::nullopt;
 
   // For Monte Carlo method. If no number is given, the number of branches
   // is determined by the number of random chance events that happen in the turn.

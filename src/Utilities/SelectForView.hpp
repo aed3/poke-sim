@@ -8,49 +8,51 @@
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
 #include <cstdint>
+#include <entt/container/dense_set.hpp>
 #include <vector>
 
 namespace pokesim::internal {
 template <typename Selection, typename... ComponentsToSelect>
 struct SelectForView {
-  SelectForView(Simulation& simulation_) : simulation(simulation_), depth(&Selection::depth) {
-    auto view = simulation.registry.view<Selection>();
-    if (!view.empty()) {
-      previouslySelected.insert(previouslySelected.begin(), view.begin(), view.end());
-      simulation.registry.clear<Selection>();
-    }
+  SelectForView(Simulation& simulation_) : simulation(&simulation_) {
+    Selection::depth.emplace_back([](const void*, const types::registry& registry) {
+      auto view = registry.view<ComponentsToSelect...>();
+      return std::vector<types::entity>{view.begin(), view.end()};
+    });
 
-    for (types::entity entity : simulation.registry.view<ComponentsToSelect...>()) {
-      simulation.registry.emplace<Selection>(entity);
-    }
+    simulation->registry.clear<Selection>();
 
-    ENTT_ASSERT(depth != nullptr, "Depth needs to be defined.");
-    *depth = *depth + 1;
+    for (types::entity entity : simulation->registry.view<ComponentsToSelect...>()) {
+      simulation->registry.emplace<Selection>(entity);
+    }
   }
 
   ~SelectForView() { deselect(); }
 
   void deselect() {
-    simulation.registry.clear<Selection>();
+    if (!simulation) {
+      return;
+    }
 
-    for (types::entity entity : previouslySelected) {
-      if (simulation.registry.valid(entity)) {
-        simulation.registry.emplace<Selection>(entity);
+    simulation->registry.clear<Selection>();
+
+    ENTT_ASSERT(!Selection::depth.empty(), "Selection depth cannot go negative.");
+    Selection::depth.pop_back();
+
+    for (const auto delegate : Selection::depth) {
+      std::vector<types::entity> previouslySelected = delegate(simulation->registry);
+      for (types::entity entity : previouslySelected) {
+        if (simulation->registry.valid(entity)) {
+          simulation->registry.get_or_emplace<Selection>(entity);
+        }
       }
     }
-    previouslySelected.clear();
 
-    if (depth) {
-      ENTT_ASSERT(*depth, "Selection depth cannot go negative.");
-      *depth = *depth - 1;
-      depth = nullptr;
-    }
+    simulation = nullptr;
   }
 
  private:
-  Simulation& simulation;
-  std::uint8_t* depth = nullptr;
-  std::vector<types::entity> previouslySelected;
+  Simulation* simulation;
 };
 
 template <typename... ComponentsToSelect>
