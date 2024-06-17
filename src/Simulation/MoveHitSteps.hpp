@@ -15,8 +15,6 @@ struct HitCount;
 namespace internal {
 void assignMoveAccuracyToTargets(types::handle targetHandle, const CurrentActionMove& currentMove);
 void removeAccuracyFromTargets(types::registry& registry, const CurrentActionTargets& targets);
-void assignAccuracyToRandomEvent(
-  types::registry& registry, const Simulation& simulation, const Battle& battle, const Accuracy& accuracy);
 void removeFailedAccuracyCheckTargets(types::registry& registry, const CurrentActionTargets& targets);
 
 void assignHitCountToTargets(types::handle targetHandle, const CurrentActionMove& currentMove);

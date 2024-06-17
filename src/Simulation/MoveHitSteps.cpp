@@ -64,11 +64,6 @@ void runSecondaryMoveEffects(Simulation& simulation) {
   trySetStatusFromEffect(simulation);
 }
 
-void internal::assignAccuracyToRandomEvent(
-  types::registry& registry, const Simulation& simulation, const Battle& battle, const Accuracy& accuracy) {
-  setRandomBinaryChoice(simulation, {registry, battle.val}, accuracy.val);
-}
-
 void internal::removeFailedAccuracyCheckTargets(types::registry& registry, const CurrentActionTargets& targets) {
   for (types::entity target : targets.val) {
     if (registry.all_of<tags::internal::TargetCanBeHit>(target)) {
@@ -91,8 +86,8 @@ void accuracyCheck(Simulation& simulation) {
   runModifyAccuracyEvent(simulation);
   runAccuracyEvent(simulation);
 
-  simulation.view<internal::assignAccuracyToRandomEvent, tags::internal::TargetCanBeHit>();
-  randomBinaryChance(simulation);  // TODO(aed3): Handle each target one at a time
+  setRandomBinaryChoice<Accuracy, tags::internal::TargetCanBeHit>(simulation);
+  randomBinaryChance(simulation);
   simulation.view<internal::removeFailedAccuracyCheckTargets, tags::RandomEventCheckFailed>();
 
   clearRandomChanceResult(simulation);
