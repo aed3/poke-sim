@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Types/Entity.hpp>
-#include <cstdint>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <type_traits>
@@ -15,15 +14,20 @@ struct RegistryLoop;
 template <auto Function, typename... ExtraTags, typename... Exclude, typename... Include, typename... PassedInArgs>
 struct RegistryLoop<
   Function, Tags<ExtraTags...>, entt::exclude_t<Exclude...>, entt::get_t<Include...>, PassedInArgs...> {
+  static_assert(std::conjunction_v<std::is_empty<ExtraTags>...>);
+  static_assert(std::conjunction_v<std::is_class<ExtraTags>...>);
+  static_assert(std::conjunction_v<std::is_class<Exclude>...>);
+  static_assert(std::conjunction_v<std::is_class<Include>...>);
+
  private:
-  template <class Signature>
+  template <typename Signature>
   struct RegistryLoopInternal;
   template <bool, typename TupleFrom, typename TupleTo>
   struct ParameterShifter;
 
-  static constexpr std::size_t excludeSize = sizeof...(Exclude);
-  static constexpr std::size_t includeSize = sizeof...(Include);
-  static constexpr std::size_t passedInArgsSize = sizeof...(PassedInArgs);
+  static constexpr bool usesExclude = sizeof...(Exclude) > 0;
+  static constexpr bool usesInclude = sizeof...(Include) > 0;
+  static constexpr auto passedInArgsSize = sizeof...(PassedInArgs);
 
   template <typename TupleFromHead, typename... TupleFromTail, typename... TupleToTail>
   struct ParameterShifter<false, Tags<TupleFromHead, TupleFromTail...>, Tags<TupleToTail...>>
@@ -33,14 +37,24 @@ struct RegistryLoop<
   template <typename... TupleFromTail, typename... RegistryArgs>
   struct ParameterShifter<true, Tags<TupleFromTail...>, Tags<RegistryArgs...>> {
    private:
-    using FirstType = std::decay_t<std::tuple_element_t<0, std::tuple<RegistryArgs...>>>;
+    using FirstType = std::tuple_element_t<0, std::tuple<RegistryArgs...>>;
+    static constexpr bool hasRegistryFirst = std::is_same_v<FirstType, types::registry&>;
+    static constexpr bool hasHandleFirst = std::is_same_v<FirstType, types::handle>;
+
+    static_assert(sizeof...(TupleFromTail) == passedInArgsSize);
+    static_assert(std::conjunction_v<std::is_same<std::decay_t<TupleFromTail>, std::decay_t<PassedInArgs>>...>);
+    static_assert(sizeof...(RegistryArgs) > 0);
+    // If the first argument is a registry, it must be a non-constant reference
+    static_assert(!std::is_same_v<std::decay_t<FirstType>, types::registry> || hasRegistryFirst);
+    // If the first argument is a handle, it must be a non-constant value
+    static_assert(!std::is_same_v<std::decay_t<FirstType>, types::handle> || hasHandleFirst);
 
    public:
     static void view(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      if constexpr (std::is_same_v<FirstType, types::registry>) {
+      if constexpr (hasRegistryFirst) {
         viewWithRegistry<RegistryArgs...>(registry, passedInArgs...);
       }
-      else if constexpr (std::is_same_v<FirstType, types::handle>) {
+      else if constexpr (hasHandleFirst) {
         viewWithHandle<RegistryArgs...>(registry, passedInArgs...);
       }
       else {
@@ -49,10 +63,10 @@ struct RegistryLoop<
     }
 
     static void group(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      if constexpr (std::is_same_v<FirstType, types::registry>) {
+      if constexpr (hasRegistryFirst) {
         groupWithRegistry<RegistryArgs...>(registry, passedInArgs...);
       }
-      else if constexpr (std::is_same_v<FirstType, types::handle>) {
+      else if constexpr (hasHandleFirst) {
         groupWithHandle<RegistryArgs...>(registry, passedInArgs...);
       }
       else {
@@ -61,24 +75,35 @@ struct RegistryLoop<
     }
 
    private:
+    template <typename... Args>
+    static void argChecks() {
+      static_assert(sizeof...(Args) > 0);
+      static_assert(std::conjunction_v<std::is_class<std::decay_t<Args>>...>);
+      static_assert(std::conjunction_v<std::is_copy_assignable<std::decay_t<Args>>...>);
+    }
+
     template <typename... ViewArgs>
     static auto getView(types::registry& registry) {
-      if constexpr (excludeSize) {
-        return registry.view<ExtraTags..., std::decay_t<ViewArgs>...>(entt::exclude<Exclude...>);
+      argChecks<ViewArgs...>();
+
+      if constexpr (usesExclude) {
+        return registry.view<ExtraTags..., std::decay_t<ViewArgs>..., Include...>(entt::exclude<Exclude...>);
       }
       else {
-        return registry.view<ExtraTags..., std::decay_t<ViewArgs>...>();
+        return registry.view<ExtraTags..., std::decay_t<ViewArgs>..., Include...>();
       }
     }
 
     template <typename... GroupArgs>
     static auto getGroup(types::registry& registry) {
-      if constexpr (excludeSize) {
+      argChecks<GroupArgs...>();
+
+      if constexpr (usesExclude) {
         return registry.group<ExtraTags..., std::decay_t<GroupArgs>...>(
           entt::exclude<Exclude...>,
           entt::get<Include...>);
       }
-      else if constexpr (includeSize) {
+      else if constexpr (usesInclude) {
         return registry.group<ExtraTags..., std::decay_t<GroupArgs>...>(entt::get<Include...>);
       }
       else {
@@ -123,13 +148,13 @@ struct RegistryLoop<
     }
   };
 
-  template <class ReturnType, class... RegistryArgs>
-  struct RegistryLoopInternal<ReturnType (*)(RegistryArgs...)> {
+  template <typename... RegistryArgs>
+  struct RegistryLoopInternal<void (*)(RegistryArgs...)> {
     using WithPassedArgs = ParameterShifter<false, Tags<RegistryArgs...>, Tags<>>;
     using NoPassedArgs = ParameterShifter<true, Tags<>, Tags<RegistryArgs...>>;
 
     static void view(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      if constexpr (passedInArgsSize) {
+      if constexpr (passedInArgsSize > 0) {
         WithPassedArgs::view(registry, passedInArgs...);
       }
       else {
@@ -138,7 +163,7 @@ struct RegistryLoop<
     }
 
     static void group(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      if constexpr (passedInArgsSize) {
+      if constexpr (passedInArgsSize > 0) {
         WithPassedArgs::group(registry, passedInArgs...);
       }
       else {

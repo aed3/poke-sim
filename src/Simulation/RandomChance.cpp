@@ -60,27 +60,37 @@ template <std::uint8_t POSSIBLE_EVENT_COUNT>
 void internal::assignRandomEvent(
   types::handle battleHandle, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventCheck, RngSeed& rngSeed,
   Probability& probability) {
-  types::percentChance rng = internal::nextBoundedRandomValue(rngSeed, 100);
+  types::percentChance rng = (types::percentChance)internal::nextBoundedRandomValue(rngSeed, 100);
 
   if (rng <= eventCheck.val[0]) {
     battleHandle.emplace<tags::RandomEventA>();
     updateProbability(probability, eventCheck.val[0]);
+    return;
   }
-  else if (rng <= eventCheck.val[1]) {
+  if (rng <= eventCheck.val[1]) {
     battleHandle.emplace<tags::RandomEventB>();
     updateProbability(probability, eventCheck.val[1] - eventCheck.val[0]);
+    return;
   }
-  else if (rng <= eventCheck.val[2]) {
+  if (rng <= eventCheck.val[2]) {
     battleHandle.emplace<tags::RandomEventC>();
     updateProbability(probability, eventCheck.val[2] - eventCheck.val[1]);
+    return;
   }
-  else if (POSSIBLE_EVENT_COUNT >= 4U && rng <= eventCheck.val[3]) {
-    battleHandle.emplace<tags::RandomEventD>();
-    updateProbability(probability, eventCheck.val[3] - eventCheck.val[2]);
+
+  if constexpr (POSSIBLE_EVENT_COUNT >= 4U) {
+    if (rng <= eventCheck.val[3]) {
+      battleHandle.emplace<tags::RandomEventD>();
+      updateProbability(probability, eventCheck.val[3] - eventCheck.val[2]);
+      return;
+    }
   }
-  else if (POSSIBLE_EVENT_COUNT == 5U && rng <= eventCheck.val[4]) {
-    battleHandle.emplace<tags::RandomEventE>();
-    updateProbability(probability, eventCheck.val[4] - eventCheck.val[3]);
+
+  if constexpr (POSSIBLE_EVENT_COUNT == 5U) {
+    if (rng <= eventCheck.val[4]) {
+      battleHandle.emplace<tags::RandomEventE>();
+      updateProbability(probability, eventCheck.val[4] - eventCheck.val[3]);
+    }
   }
 }
 
@@ -174,7 +184,7 @@ void randomChance(Simulation& simulation) {
 
 void internal::assignRandomBinaryEvent(
   types::handle battleHandle, const RandomBinaryEventChance& eventCheck, RngSeed& rngSeed, Probability& probability) {
-  types::percentChance rng = internal::nextBoundedRandomValue(rngSeed, 100);
+  types::percentChance rng = (types::percentChance)internal::nextBoundedRandomValue(rngSeed, 100);
 
   if (rng <= eventCheck.val) {
     battleHandle.emplace<tags::RandomEventCheckPassed>();
@@ -251,5 +261,5 @@ template void randomChance<5U>(Simulation& simulation);
 
 template void setRandomBinaryChoice<Accuracy, tags::internal::TargetCanBeHit>(Simulation& simulation);
 
-void sampleRandomChance(Simulation& simulation) {}
+void sampleRandomChance(Simulation& /*simulation*/) {}
 }  // namespace pokesim
