@@ -29,6 +29,7 @@ void resetEffectiveSpeed(types::handle handle, stat::Spe spe) {
 
 void updateSpeed(Simulation& simulation) {
   internal::SelectForPokemonView<tags::SpeedUpdateRequired> selectedSpeedUpdateRequired{simulation};
+  if (selectedSpeedUpdateRequired.hasNoneSelected()) return;
 
   simulation.viewForSelectedPokemon<resetEffectiveSpeed>();
 
