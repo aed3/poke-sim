@@ -38,7 +38,7 @@ inline types::rngResult nextBoundedRandomValue(types::rngState& state, types::rn
   // because this version will calculate the same modulus, but the LHS
   // value is less than 2^32.
 
-  types::rngResult threshold = -upperBound % upperBound;
+  types::rngResult threshold = (-1 * upperBound) % upperBound;
 
   // Uniformity guarantees that this loop will terminate.  In practice, it
   // should usually terminate quickly; on average (assuming all bounds are

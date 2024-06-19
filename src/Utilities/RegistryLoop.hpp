@@ -4,6 +4,7 @@
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <type_traits>
+#include <iostream>
 
 #include "Tags.hpp"
 
@@ -41,16 +42,21 @@ struct RegistryLoop<
     static constexpr bool hasRegistryFirst = std::is_same_v<FirstType, types::registry&>;
     static constexpr bool hasHandleFirst = std::is_same_v<FirstType, types::handle>;
 
-    static_assert(sizeof...(TupleFromTail) == passedInArgsSize);
-    static_assert(std::conjunction_v<std::is_same<std::decay_t<TupleFromTail>, std::decay_t<PassedInArgs>>...>);
     static_assert(sizeof...(RegistryArgs) > 0);
     // If the first argument is a registry, it must be a non-constant reference
     static_assert(!std::is_same_v<std::decay_t<FirstType>, types::registry> || hasRegistryFirst);
     // If the first argument is a handle, it must be a non-constant value
     static_assert(!std::is_same_v<std::decay_t<FirstType>, types::handle> || hasHandleFirst);
 
+    static constexpr void paramShiftCheck() {
+      static_assert(sizeof...(TupleFromTail) == passedInArgsSize);
+      static_assert(std::conjunction_v<std::is_same<std::decay_t<TupleFromTail>, std::decay_t<PassedInArgs>>...>);
+    }
+
    public:
     static void view(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      paramShiftCheck();
+
       if constexpr (hasRegistryFirst) {
         viewWithRegistry<RegistryArgs...>(registry, passedInArgs...);
       }
@@ -63,6 +69,8 @@ struct RegistryLoop<
     }
 
     static void group(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      paramShiftCheck();
+
       if constexpr (hasRegistryFirst) {
         groupWithRegistry<RegistryArgs...>(registry, passedInArgs...);
       }
@@ -76,7 +84,7 @@ struct RegistryLoop<
 
    private:
     template <typename... Args>
-    static void argChecks() {
+    static constexpr void argChecks() {
       static_assert(sizeof...(Args) > 0);
       static_assert(std::conjunction_v<std::is_class<std::decay_t<Args>>...>);
       static_assert(std::conjunction_v<std::is_copy_assignable<std::decay_t<Args>>...>);
