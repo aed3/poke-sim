@@ -4,6 +4,7 @@
 #include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Abilities/headers.hpp>
 #include <Types/Enums/GameMechanics.hpp>
+#include <Utilities/Tags.hpp>
 
 #include "Simulation.hpp"
 
@@ -21,9 +22,8 @@ void runDamagingHitEvent(Simulation& simulation) {
 }
 
 void runModifySpe(Simulation& simulation) {
-  // simulation.view<function, ...Tags>();
-
-  simulation.viewForSelectedPokemon<dex::latest::Static::onModifySpe, status::tags::Paralysis>(
-    /*entt::exclude_t<ability::tags::QuickFeet>{}*/);
+  simulation.viewForSelectedPokemon<
+    dex::latest::Static::onModifySpe,
+    Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>();
 }
 }  // namespace pokesim

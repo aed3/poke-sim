@@ -8,9 +8,8 @@
 #include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
+#include <Utilities/Tags.hpp>
 #include <string_view>
-
-#include "../Setup/DexDataTags.hpp"
 
 namespace pokesim::dex {
 template <GameMechanics>
@@ -26,10 +25,10 @@ struct Thunderbolt {
   struct targetSecondaryEffect {
     static constexpr types::baseEffectChance chance = 10;
 
-    static constexpr internal::Tags<status::tags::Paralysis> effectTags{};
+    static constexpr Tags<status::tags::Paralysis> effectTags{};
   };
 
-  static constexpr internal::Tags<> moveTags{};
+  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {

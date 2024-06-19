@@ -17,7 +17,6 @@
 #include "Pokedex.hpp"
 #include "Setup/AbilityDexDataSetup.hpp"
 #include "Setup/DexDataSetup.hpp"
-#include "Setup/DexDataTags.hpp"
 #include "Setup/ItemDexDataSetup.hpp"
 #include "Setup/MoveDexDataSetup.hpp"
 #include "Setup/SpeciesDexDataSetup.hpp"
