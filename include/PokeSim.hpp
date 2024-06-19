@@ -16731,8 +16731,8 @@ struct SelectForView {
   SelectForView(Simulation& simulation_)
       : simulation(&simulation_), selectedCount(simulation->registry.group(entt::get<ComponentsToSelect...>).size()) {
     if (hasNoneSelected()) {
-      // simulation = nullptr;
-      // return;
+      simulation = nullptr;
+      return;
     }
 
     Selection::depth.emplace_back([](const void*, const types::registry& registry) {
