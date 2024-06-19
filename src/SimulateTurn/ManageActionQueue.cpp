@@ -62,7 +62,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
 
       stat::EffectiveSpeed* effectiveSpeed = registry.try_get<stat::EffectiveSpeed>(sourceEntity);
       if (effectiveSpeed != nullptr) {
-        speedSort.speed = effectiveSpeed->effectiveSpeed;
+        speedSort.speed = effectiveSpeed->val;
       }
       else {
         speedSort.speed = registry.get<stat::Spe>(sourceEntity).val;
