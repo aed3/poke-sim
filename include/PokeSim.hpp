@@ -16728,7 +16728,13 @@ struct SpeciesName {
 namespace pokesim::internal {
 template <typename Selection, typename... ComponentsToSelect>
 struct SelectForView {
-  SelectForView(Simulation& simulation_) : simulation(&simulation_) {
+  SelectForView(Simulation& simulation_)
+      : simulation(&simulation_), selectedCount(simulation->registry.group(entt::get<ComponentsToSelect...>).size()) {
+    if (hasNoneSelected()) {
+      // simulation = nullptr;
+      // return;
+    }
+
     Selection::depth.emplace_back([](const void*, const types::registry& registry) {
       auto view = registry.view<ComponentsToSelect...>();
       return std::vector<types::entity>{view.begin(), view.end()};
@@ -16765,8 +16771,11 @@ struct SelectForView {
     simulation = nullptr;
   }
 
+  bool hasNoneSelected() const { return selectedCount == 0; }
+
  private:
-  Simulation* simulation;
+  Simulation* simulation = nullptr;
+  const std::size_t selectedCount = 0;
 };
 
 template <typename... ComponentsToSelect>
@@ -16786,6 +16795,7 @@ struct SelectForMoveView : SelectForView<SelectedForViewMove, MoveName, Componen
 namespace pokesim::simulate_turn {
 void run(Simulation& simulation) {
   internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
+  if (selectedBattle.hasNoneSelected()) return;
 
   updateSpeed(simulation);
   simulation.view<resolveDecision>();
@@ -16829,6 +16839,7 @@ void runBeforeTurnAction(Simulation& /*simulation*/) {
 
 void runMoveAction(Simulation& simulation) {
   internal::SelectForBattleView<action::Move> selectedBattle{simulation};
+  if (selectedBattle.hasNoneSelected()) return;
 
   simulation.viewForSelectedBattles<setCurrentActionTarget>();
   simulation.viewForSelectedBattles<setCurrentActionSource>();
@@ -16842,6 +16853,7 @@ void runMoveAction(Simulation& simulation) {
 
 void runResidualAction(Simulation& simulation) {
   internal::SelectForBattleView<action::tags::Residual> selectedBattle{simulation};
+  if (selectedBattle.hasNoneSelected()) return;
 }
 
 void nextTurn(Simulation& /*simulation*/) {}
@@ -19111,6 +19123,7 @@ void resetEffectiveSpeed(types::handle handle, stat::Spe spe) {
 
 void updateSpeed(Simulation& simulation) {
   internal::SelectForPokemonView<tags::SpeedUpdateRequired> selectedSpeedUpdateRequired{simulation};
+  if (selectedSpeedUpdateRequired.hasNoneSelected()) return;
 
   simulation.viewForSelectedPokemon<resetEffectiveSpeed>();
 

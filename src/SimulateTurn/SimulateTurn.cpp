@@ -30,6 +30,7 @@
 namespace pokesim::simulate_turn {
 void run(Simulation& simulation) {
   internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
+  if (selectedBattle.hasNoneSelected()) return;
 
   updateSpeed(simulation);
   simulation.view<resolveDecision>();
@@ -73,6 +74,7 @@ void runBeforeTurnAction(Simulation& /*simulation*/) {
 
 void runMoveAction(Simulation& simulation) {
   internal::SelectForBattleView<action::Move> selectedBattle{simulation};
+  if (selectedBattle.hasNoneSelected()) return;
 
   simulation.viewForSelectedBattles<setCurrentActionTarget>();
   simulation.viewForSelectedBattles<setCurrentActionSource>();
@@ -86,6 +88,7 @@ void runMoveAction(Simulation& simulation) {
 
 void runResidualAction(Simulation& simulation) {
   internal::SelectForBattleView<action::tags::Residual> selectedBattle{simulation};
+  if (selectedBattle.hasNoneSelected()) return;
 }
 
 void nextTurn(Simulation& /*simulation*/) {}
