@@ -22,7 +22,8 @@ void updateProbability(Probability& currentProbability, types::percentChance per
 
 template <typename Component, BattleFormat Format>
 void setRandomBinaryChoice(
-  types::registry& registry, const Simulation& simulation, const Battle& battle, const Component& percentChance);
+  types::registry& registry, const Battle& battle, const Component& percentChance, types::percentChance autoPassLimit,
+  types::percentChance autoFailLimit);
 
 template <std::uint8_t POSSIBLE_EVENT_COUNT>
 void assignRandomEvent(

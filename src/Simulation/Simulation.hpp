@@ -6,6 +6,7 @@
 #include <Types/Entity.hpp>
 #include <Types/headers.hpp>
 #include <Utilities/RegistryLoop.hpp>
+#include <Utilities/Tags.hpp>
 #include <entt/entity/registry.hpp>
 #include <initializer_list>
 #include <optional>
@@ -107,75 +108,122 @@ class Simulation {
   };
 
  private:
-  template <typename Selected, auto Function, typename... Tags, typename... ViewArgs>
-  void viewForSelected(const ViewArgs&... viewArgs) {
-    if (Selected::depth.empty()) {
-      view<Function, Tags...>(viewArgs...);
-    }
-    else {
-      internal::RegistryLoop<Function, Selected, Tags...>::view(registry, *this, viewArgs...);
-    }
-  }
+  template <typename Selected, auto Function, typename...>
+  struct ForSelected;
 
-  template <typename Selected, auto Function, typename... Tags, typename... GroupArgs>
-  void groupForSelected(const GroupArgs&... groupArgs) {
-    if (Selected::depth.empty()) {
-      group<Function, Tags...>(groupArgs...);
+  template <
+    typename Selected, auto Function, typename ExcludeContainer, typename IncludeContainer, typename... ExtraTags>
+  struct ForSelected<Selected, Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer> {
+    template <typename... PassedInArgs>
+    static void view(Simulation* simulation, const PassedInArgs&... passedInArgs) {
+      if (Selected::depth.empty()) {
+        simulation->view<Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
+      }
+      else {
+        simulation->view<Function, Tags<Selected, ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
+      }
     }
-    else {
-      internal::RegistryLoop<Function, Selected, Tags...>::group(registry, *this, groupArgs...);
+
+    template <typename... PassedInArgs>
+    static void group(Simulation* simulation, const PassedInArgs&... passedInArgs) {
+      if (Selected::depth.empty()) {
+        simulation->group<Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
+      }
+      else {
+        simulation->view<Function, Tags<Selected, ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
+      }
     }
-  }
+  };
 
  public:
-  template <auto Function, typename... Tags, typename... ViewArgs>
-  void viewForSelectedBattles(const ViewArgs&... viewArgs) {
-    viewForSelected<SelectedForViewBattle, Function, Tags...>(viewArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void viewForSelectedBattles(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... GroupArgs>
-  void groupForSelectedBattles(const GroupArgs&... groupArgs) {
-    groupForSelected<SelectedForViewBattle, Function, Tags...>(groupArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void groupForSelectedBattles(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... ViewArgs>
-  void viewForSelectedSides(const ViewArgs&... viewArgs) {
-    viewForSelected<SelectedForViewSide, Function, Tags...>(viewArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void viewForSelectedSides(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... GroupArgs>
-  void groupForSelectedSides(const GroupArgs&... groupArgs) {
-    groupForSelected<SelectedForViewSide, Function, Tags...>(groupArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void groupForSelectedSides(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... ViewArgs>
-  void viewForSelectedPokemon(const ViewArgs&... viewArgs) {
-    viewForSelected<SelectedForViewPokemon, Function, Tags...>(viewArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void viewForSelectedPokemon(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... GroupArgs>
-  void groupForSelectedPokemon(const GroupArgs&... groupArgs) {
-    groupForSelected<SelectedForViewPokemon, Function, Tags...>(groupArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void groupForSelectedPokemon(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... ViewArgs>
-  void viewForSelectedMoves(const ViewArgs&... viewArgs) {
-    viewForSelected<SelectedForViewMove, Function, Tags...>(viewArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void viewForSelectedMoves(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... GroupArgs>
-  void groupForSelectedMoves(const GroupArgs&... groupArgs) {
-    groupForSelected<SelectedForViewMove, Function, Tags...>(groupArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void groupForSelectedMoves(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... ViewArgs>
-  void view(const ViewArgs&... viewArgs) {
-    internal::RegistryLoop<Function, Tags...>::view(registry, *this, viewArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void view(const PassedInArgs&... passedInArgs) {
+    internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::view(
+      registry,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... GroupArgs>
-  void group(const GroupArgs&... groupArgs) {
-    internal::RegistryLoop<Function, Tags...>::group(registry, *this, groupArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void group(const PassedInArgs&... passedInArgs) {
+    internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::group(
+      registry,
+      passedInArgs...);
   }
 
   std::vector<types::entity> selectedBattleEntities();

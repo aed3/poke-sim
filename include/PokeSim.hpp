@@ -86,6 +86,7 @@
  * src/Components/Selection.hpp
  * src/Simulation/SimulationOptions.hpp
  * src/Types/Damage.hpp
+ * src/Utilities/Tags.hpp
  * src/Utilities/RegistryLoop.hpp
  * src/Simulation/Simulation.hpp
  * src/Simulation/SimulationSetup.cpp
@@ -141,7 +142,6 @@
  * src/Components/Pokedex/Abilities.hpp
  * src/Components/Pokedex/BaseStats.hpp
  * src/Components/Pokedex/SpeciesTypes.hpp
- * src/Pokedex/Setup/DexDataTags.hpp
  * src/Pokedex/Setup/DexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.cpp
@@ -13747,139 +13747,172 @@ using damageRolls = std::array<damage, internal::MAX_DAMAGE_ROLL_COUNT>;
 
 ///////////////////////// END OF src/Types/Damage.hpp //////////////////////////
 
-/////////////////// START OF src/Utilities/RegistryLoop.hpp ////////////////////
-
-#include <type_traits>
+/////////////////////// START OF src/Utilities/Tags.hpp ////////////////////////
 
 namespace pokesim {
-class Simulation;
+template <typename... T>
+struct Tags {};
+}  // namespace pokesim
 
-namespace internal {
-template <auto Function, typename... Tags>
-struct RegistryLoop {
+//////////////////////// END OF src/Utilities/Tags.hpp /////////////////////////
+
+/////////////////// START OF src/Utilities/RegistryLoop.hpp ////////////////////
+
+#include <cstdint>
+#include <type_traits>
+
+
+namespace pokesim::internal {
+template <auto Function, typename...>
+struct RegistryLoop;
+
+template <auto Function, typename... ExtraTags, typename... Exclude, typename... Include, typename... PassedInArgs>
+struct RegistryLoop<
+  Function, Tags<ExtraTags...>, entt::exclude_t<Exclude...>, entt::get_t<Include...>, PassedInArgs...> {
  private:
   template <class Signature>
   struct RegistryLoopInternal;
+  template <bool, typename TupleFrom, typename TupleTo>
+  struct ParameterShifter;
 
-  template <class ReturnType, class... Args>
-  struct RegistryLoopInternal<ReturnType (*)(Args...)> {
+  static constexpr std::size_t excludeSize = sizeof...(Exclude);
+  static constexpr std::size_t includeSize = sizeof...(Include);
+  static constexpr std::size_t passedInArgsSize = sizeof...(PassedInArgs);
+
+  template <typename TupleFromHead, typename... TupleFromTail, typename... TupleToTail>
+  struct ParameterShifter<false, Tags<TupleFromHead, TupleFromTail...>, Tags<TupleToTail...>>
+      : ParameterShifter<
+          sizeof...(TupleFromTail) == passedInArgsSize, Tags<TupleFromTail...>, Tags<TupleToTail..., TupleFromHead>> {};
+
+  template <typename... TupleFromTail, typename... RegistryArgs>
+  struct ParameterShifter<true, Tags<TupleFromTail...>, Tags<RegistryArgs...>> {
+   private:
+    using FirstType = std::decay_t<std::tuple_element_t<0, std::tuple<RegistryArgs...>>>;
+
+   public:
+    static void view(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      if constexpr (std::is_same_v<FirstType, types::registry>) {
+        viewWithRegistry<RegistryArgs...>(registry, passedInArgs...);
+      }
+      else if constexpr (std::is_same_v<FirstType, types::handle>) {
+        viewWithHandle<RegistryArgs...>(registry, passedInArgs...);
+      }
+      else {
+        basicView(registry, passedInArgs...);
+      }
+    }
+
+    static void group(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      if constexpr (std::is_same_v<FirstType, types::registry>) {
+        groupWithRegistry<RegistryArgs...>(registry, passedInArgs...);
+      }
+      else if constexpr (std::is_same_v<FirstType, types::handle>) {
+        groupWithHandle<RegistryArgs...>(registry, passedInArgs...);
+      }
+      else {
+        basicGroup(registry, passedInArgs...);
+      }
+    }
+
+   private:
     template <typename... ViewArgs>
-    static void view(types::registry& registry, const Simulation&, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([](types::entity, auto&&... args) {
-        Function(args...);
-      });
+    static auto getView(types::registry& registry) {
+      if constexpr (excludeSize) {
+        return registry.view<ExtraTags..., std::decay_t<ViewArgs>...>(entt::exclude<Exclude...>);
+      }
+      else {
+        return registry.view<ExtraTags..., std::decay_t<ViewArgs>...>();
+      }
     }
 
     template <typename... GroupArgs>
-    static void group(types::registry& registry, const Simulation&, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...).each([](types::entity, auto&&... args) {
-        Function(args...);
+    static auto getGroup(types::registry& registry) {
+      if constexpr (excludeSize) {
+        return registry.group<ExtraTags..., std::decay_t<GroupArgs>...>(
+          entt::exclude<Exclude...>,
+          entt::get<Include...>);
+      }
+      else if constexpr (includeSize) {
+        return registry.group<ExtraTags..., std::decay_t<GroupArgs>...>(entt::get<Include...>);
+      }
+      else {
+        return registry.group<ExtraTags..., std::decay_t<GroupArgs>...>();
+      }
+    }
+
+    static void basicView(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      getView<RegistryArgs...>(registry).each(
+        [&passedInArgs...](types::entity, auto&&... args) { Function(args..., passedInArgs...); });
+    }
+
+    template <typename, typename... Rest>
+    static void viewWithHandle(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      getView<Rest...>(registry).each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
+        Function(types::handle{registry, entity}, args..., passedInArgs...);
       });
+    }
+
+    template <typename, typename... Rest>
+    static void viewWithRegistry(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      getView<Rest...>(registry).each(
+        [&registry, &passedInArgs...](types::entity, auto&&... args) { Function(registry, args..., passedInArgs...); });
+    }
+
+    static void basicGroup(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      getGroup<RegistryArgs...>(registry).each(
+        [&passedInArgs...](types::entity, auto&&... args) { Function(args..., passedInArgs...); });
+    }
+
+    template <typename, typename... Rest>
+    static void groupWithHandle(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      getGroup<Rest...>(registry).each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
+        Function(types::handle{registry, entity}, args..., passedInArgs...);
+      });
+    }
+
+    template <typename, typename... Rest>
+    static void groupWithRegistry(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      getGroup<Rest...>(registry).each(
+        [&registry, &passedInArgs...](types::entity, auto&&... args) { Function(registry, args..., passedInArgs...); });
     }
   };
 
-  template <class ReturnType, class... Args>
-  struct RegistryLoopInternal<ReturnType (*)(types::handle, Args...)> {
-    template <typename... ViewArgs>
-    static void view(types::registry& registry, const Simulation&, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
-        .each([&registry](types::entity entity, auto&&... args) {
-          Function(types::handle{registry, entity}, args...);
-        });
+  template <class ReturnType, class... RegistryArgs>
+  struct RegistryLoopInternal<ReturnType (*)(RegistryArgs...)> {
+    using WithPassedArgs = ParameterShifter<false, Tags<RegistryArgs...>, Tags<>>;
+    using NoPassedArgs = ParameterShifter<true, Tags<>, Tags<RegistryArgs...>>;
+
+    static void view(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      if constexpr (passedInArgsSize) {
+        WithPassedArgs::view(registry, passedInArgs...);
+      }
+      else {
+        NoPassedArgs::view(registry, passedInArgs...);
+      }
     }
 
-    template <typename... GroupArgs>
-    static void group(types::registry& registry, const Simulation&, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
-        .each([&registry](types::entity entity, auto&&... args) {
-          Function(types::handle{registry, entity}, args...);
-        });
-    }
-  };
-
-  template <class ReturnType, class... Args>
-  struct RegistryLoopInternal<ReturnType (*)(const Simulation&, Args...)> {
-    template <typename... ViewArgs>
-    static void view(types::registry& registry, const Simulation& simulation, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([&simulation](types::entity, auto&&... args) {
-        Function(simulation, args...);
-      });
-    }
-
-    template <typename... GroupArgs>
-    static void group(types::registry& registry, const Simulation& simulation, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...).each([&simulation](types::entity, auto&&... args) {
-        Function(simulation, args...);
-      });
-    }
-  };
-
-  template <class ReturnType, class... Args>
-  struct RegistryLoopInternal<ReturnType (*)(types::handle, const Simulation&, Args...)> {
-    template <typename... ViewArgs>
-    static void view(types::registry& registry, const Simulation& simulation, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
-        .each([&registry, &simulation](types::entity entity, auto&&... args) {
-          Function(types::handle{registry, entity}, simulation, args...);
-        });
-    }
-
-    template <typename... GroupArgs>
-    static void group(types::registry& registry, const Simulation& simulation, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
-        .each([&registry, &simulation](types::entity entity, auto&&... args) {
-          Function(types::handle{registry, entity}, simulation, args...);
-        });
-    }
-  };
-
-  template <class ReturnType, class... Args>
-  struct RegistryLoopInternal<ReturnType (*)(types::registry&, Args...)> {
-    template <typename... ViewArgs>
-    static void view(types::registry& registry, const Simulation&, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...).each([&registry](types::entity, auto&&... args) {
-        Function(registry, args...);
-      });
-    }
-
-    template <typename... GroupArgs>
-    static void group(types::registry& registry, const Simulation&, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...).each([&registry](types::entity, auto&&... args) {
-        Function(registry, args...);
-      });
-    }
-  };
-
-  template <class ReturnType, class... Args>
-  struct RegistryLoopInternal<ReturnType (*)(types::registry&, const Simulation&, Args...)> {
-    template <typename... ViewArgs>
-    static void view(types::registry& registry, const Simulation& simulation, const ViewArgs&... viewArgs) {
-      registry.view<Tags..., std::decay_t<Args>...>(viewArgs...)
-        .each([&registry, &simulation](types::entity, auto&&... args) { Function(registry, simulation, args...); });
-    }
-
-    template <typename... GroupArgs>
-    static void group(types::registry& registry, const Simulation& simulation, const GroupArgs&... groupArgs) {
-      registry.group<Tags..., std::decay_t<Args>...>(groupArgs...)
-        .each([&registry, &simulation](types::entity, auto&&... args) { Function(registry, simulation, args...); });
+    static void group(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      if constexpr (passedInArgsSize) {
+        WithPassedArgs::group(registry, passedInArgs...);
+      }
+      else {
+        NoPassedArgs::group(registry, passedInArgs...);
+      }
     }
   };
 
   using FunctionSig = std::decay_t<decltype(Function)>;
 
  public:
-  template <typename... ViewArgs>
-  static void view(types::registry& registry, const Simulation& simulation, const ViewArgs&... viewArgs) {
-    RegistryLoopInternal<FunctionSig>::view(registry, simulation, viewArgs...);
+  static void view(types::registry& registry, const PassedInArgs&... passedInArgs) {
+    RegistryLoopInternal<FunctionSig>::view(registry, passedInArgs...);
   }
 
-  template <typename... GroupArgs>
-  static void group(types::registry& registry, const Simulation& simulation, const GroupArgs&... groupArgs) {
-    RegistryLoopInternal<FunctionSig>::group(registry, simulation, groupArgs...);
+  static void group(types::registry& registry, const PassedInArgs&... passedInArgs) {
+    RegistryLoopInternal<FunctionSig>::group(registry, passedInArgs...);
   }
 };
-}  // namespace internal
-}  // namespace pokesim
+}  // namespace pokesim::internal
 
 //////////////////// END OF src/Utilities/RegistryLoop.hpp /////////////////////
 
@@ -13984,75 +14017,122 @@ class Simulation {
   };
 
  private:
-  template <typename Selected, auto Function, typename... Tags, typename... ViewArgs>
-  void viewForSelected(const ViewArgs&... viewArgs) {
-    if (Selected::depth.empty()) {
-      view<Function, Tags...>(viewArgs...);
-    }
-    else {
-      internal::RegistryLoop<Function, Selected, Tags...>::view(registry, *this, viewArgs...);
-    }
-  }
+  template <typename Selected, auto Function, typename...>
+  struct ForSelected;
 
-  template <typename Selected, auto Function, typename... Tags, typename... GroupArgs>
-  void groupForSelected(const GroupArgs&... groupArgs) {
-    if (Selected::depth.empty()) {
-      group<Function, Tags...>(groupArgs...);
+  template <
+    typename Selected, auto Function, typename ExcludeContainer, typename IncludeContainer, typename... ExtraTags>
+  struct ForSelected<Selected, Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer> {
+    template <typename... PassedInArgs>
+    static void view(Simulation* simulation, const PassedInArgs&... passedInArgs) {
+      if (Selected::depth.empty()) {
+        simulation->view<Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
+      }
+      else {
+        simulation->view<Function, Tags<Selected, ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
+      }
     }
-    else {
-      internal::RegistryLoop<Function, Selected, Tags...>::group(registry, *this, groupArgs...);
+
+    template <typename... PassedInArgs>
+    static void group(Simulation* simulation, const PassedInArgs&... passedInArgs) {
+      if (Selected::depth.empty()) {
+        simulation->group<Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
+      }
+      else {
+        simulation->view<Function, Tags<Selected, ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
+      }
     }
-  }
+  };
 
  public:
-  template <auto Function, typename... Tags, typename... ViewArgs>
-  void viewForSelectedBattles(const ViewArgs&... viewArgs) {
-    viewForSelected<SelectedForViewBattle, Function, Tags...>(viewArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void viewForSelectedBattles(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... GroupArgs>
-  void groupForSelectedBattles(const GroupArgs&... groupArgs) {
-    groupForSelected<SelectedForViewBattle, Function, Tags...>(groupArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void groupForSelectedBattles(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... ViewArgs>
-  void viewForSelectedSides(const ViewArgs&... viewArgs) {
-    viewForSelected<SelectedForViewSide, Function, Tags...>(viewArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void viewForSelectedSides(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... GroupArgs>
-  void groupForSelectedSides(const GroupArgs&... groupArgs) {
-    groupForSelected<SelectedForViewSide, Function, Tags...>(groupArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void groupForSelectedSides(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... ViewArgs>
-  void viewForSelectedPokemon(const ViewArgs&... viewArgs) {
-    viewForSelected<SelectedForViewPokemon, Function, Tags...>(viewArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void viewForSelectedPokemon(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... GroupArgs>
-  void groupForSelectedPokemon(const GroupArgs&... groupArgs) {
-    groupForSelected<SelectedForViewPokemon, Function, Tags...>(groupArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void groupForSelectedPokemon(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... ViewArgs>
-  void viewForSelectedMoves(const ViewArgs&... viewArgs) {
-    viewForSelected<SelectedForViewMove, Function, Tags...>(viewArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void viewForSelectedMoves(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... GroupArgs>
-  void groupForSelectedMoves(const GroupArgs&... groupArgs) {
-    groupForSelected<SelectedForViewMove, Function, Tags...>(groupArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void groupForSelectedMoves(const PassedInArgs&... passedInArgs) {
+    ForSelected<SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+      this,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... ViewArgs>
-  void view(const ViewArgs&... viewArgs) {
-    internal::RegistryLoop<Function, Tags...>::view(registry, *this, viewArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void view(const PassedInArgs&... passedInArgs) {
+    internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::view(
+      registry,
+      passedInArgs...);
   }
 
-  template <auto Function, typename... Tags, typename... GroupArgs>
-  void group(const GroupArgs&... groupArgs) {
-    internal::RegistryLoop<Function, Tags...>::group(registry, *this, groupArgs...);
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  void group(const PassedInArgs&... passedInArgs) {
+    internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::group(
+      registry,
+      passedInArgs...);
   }
 
   inline std::vector<types::entity> selectedBattleEntities();
@@ -14699,10 +14779,9 @@ void runDamagingHitEvent(Simulation& simulation) {
 }
 
 void runModifySpe(Simulation& simulation) {
-  // simulation.view<function, ...Tags>();
-
-  simulation.viewForSelectedPokemon<dex::latest::Static::onModifySpe, status::tags::Paralysis>(
-    /*entt::exclude_t<ability::tags::QuickFeet>{}*/);
+  simulation.viewForSelectedPokemon<
+    dex::latest::Static::onModifySpe,
+    Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>();
 }
 }  // namespace pokesim
 
@@ -14875,7 +14954,8 @@ inline void updateProbability(Probability& currentProbability, types::percentCha
 
 template <typename Component, BattleFormat Format>
 inline void setRandomBinaryChoice(
-  types::registry& registry, const Simulation& simulation, const Battle& battle, const Component& percentChance);
+  types::registry& registry, const Battle& battle, const Component& percentChance, types::percentChance autoPassLimit,
+  types::percentChance autoFailLimit);
 
 template <std::uint8_t POSSIBLE_EVENT_COUNT>
 inline void assignRandomEvent(
@@ -14967,23 +15047,30 @@ inline types::rngResult nextBoundedRandomValue(RngSeed& seed, types::rngResult u
 /////////////////// START OF src/Simulation/RandomChance.cpp ///////////////////
 
 namespace pokesim {
-template <typename Component, typename... Tags>
+template <typename Component, typename... T>
 void setRandomBinaryChoice(Simulation& simulation) {
+  types::percentChance autoPassLimit = simulation.simulateTurnOptions.randomChanceUpperLimit.value_or(100);
+  types::percentChance autoFailLimit = simulation.simulateTurnOptions.randomChanceLowerLimit.value_or(0);
   if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
-    simulation.view<internal::setRandomBinaryChoice<Component, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags...>();
+    simulation.view<internal::setRandomBinaryChoice<Component, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
+      autoPassLimit,
+      autoFailLimit);
   }
   else {
-    simulation.view<internal::setRandomBinaryChoice<Component, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags...>();
+    simulation.view<internal::setRandomBinaryChoice<Component, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<T...>>(
+      autoPassLimit,
+      autoFailLimit);
   }
 }
 
 template <typename Component, BattleFormat Format>
 void internal::setRandomBinaryChoice(
-  types::registry& registry, const Simulation& simulation, const Battle& battle, const Component& percentChance) {
-  if (percentChance.val >= simulation.simulateTurnOptions.randomChanceUpperLimit.value_or(100)) {
+  types::registry& registry, const Battle& battle, const Component& percentChance, types::percentChance autoPassLimit,
+  types::percentChance autoFailLimit) {
+  if (percentChance.val >= autoPassLimit) {
     registry.emplace<tags::RandomEventCheckPassed>(battle.val);
   }
-  else if (percentChance.val <= simulation.simulateTurnOptions.randomChanceLowerLimit.value_or(0)) {
+  else if (percentChance.val <= autoFailLimit) {
     registry.emplace<tags::RandomEventCheckFailed>(battle.val);
   }
   else {
@@ -15361,14 +15448,14 @@ void internal::assignHitCountFromVariableHitChance(types::registry& registry, co
 }
 
 void setMoveHitCount(Simulation& simulation) {
-  simulation.view<internal::assignHitCountToTargets, tags::internal::TargetCanBeHit>();
+  simulation.view<internal::assignHitCountToTargets, Tags<tags::internal::TargetCanBeHit>>();
 
   if (!simulation.registry.view<RandomEventChances<4U>>().empty()) {
     randomChance<4U>(simulation);
-    simulation.view<internal::assignHitCountFromVariableHitChance<2U>, tags::RandomEventA>();
-    simulation.view<internal::assignHitCountFromVariableHitChance<3U>, tags::RandomEventB>();
-    simulation.view<internal::assignHitCountFromVariableHitChance<4U>, tags::RandomEventC>();
-    simulation.view<internal::assignHitCountFromVariableHitChance<5U>, tags::RandomEventD>();
+    simulation.view<internal::assignHitCountFromVariableHitChance<2U>, Tags<tags::RandomEventA>>();
+    simulation.view<internal::assignHitCountFromVariableHitChance<3U>, Tags<tags::RandomEventB>>();
+    simulation.view<internal::assignHitCountFromVariableHitChance<4U>, Tags<tags::RandomEventC>>();
+    simulation.view<internal::assignHitCountFromVariableHitChance<5U>, Tags<tags::RandomEventD>>();
     clearRandomChanceResult(simulation);
   }
 }
@@ -15401,13 +15488,13 @@ void internal::removeAccuracyFromTargets(types::registry& registry, const Curren
 }
 
 void accuracyCheck(Simulation& simulation) {
-  simulation.view<internal::assignMoveAccuracyToTargets, tags::internal::TargetCanBeHit>();
+  simulation.view<internal::assignMoveAccuracyToTargets, Tags<tags::internal::TargetCanBeHit>>();
   runModifyAccuracyEvent(simulation);
   runAccuracyEvent(simulation);
 
   setRandomBinaryChoice<Accuracy, tags::internal::TargetCanBeHit>(simulation);
   randomBinaryChance(simulation);
-  simulation.view<internal::removeFailedAccuracyCheckTargets, tags::RandomEventCheckFailed>();
+  simulation.view<internal::removeFailedAccuracyCheckTargets, Tags<tags::RandomEventCheckFailed>>();
 
   clearRandomChanceResult(simulation);
 
@@ -15494,8 +15581,8 @@ struct CurrentActionTargets;
 inline void setCurrentActionTarget(types::handle battleHandle, const Sides& sides, const CurrentAction& action);
 inline void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action);
 inline void setCurrentActionMove(
-  types::handle battleHandle, const Simulation& simulation, const CurrentActionSource& source,
-  const CurrentActionTargets& targets, const CurrentAction& action);
+  types::handle battleHandle, const CurrentActionSource& source, const CurrentActionTargets& targets,
+  const CurrentAction& action, const Pokedex& pokedex);
 inline void clearCurrentAction(Simulation& simulation);
 }  // namespace pokesim
 
@@ -16704,9 +16791,9 @@ void run(Simulation& simulation) {
   simulation.view<resolveDecision>();
   simulation.registry.clear<SideDecision>();
 
-  // simulation.viewForSelectedBattles<addBeforeTurnAction>(entt::exclude_t<tags::BattleMidTurn>{});
+  // simulation.viewForSelectedBattles<addBeforeTurnAction, Tags<>, entt::exclude_t<tags::BattleMidTurn>>();
   simulation.viewForSelectedBattles<speedSort>();
-  simulation.viewForSelectedBattles<addResidualAction>(entt::exclude_t<tags::BattleMidTurn>{});
+  simulation.viewForSelectedBattles<addResidualAction, Tags<>, entt::exclude_t<tags::BattleMidTurn>>();
 
   auto turnEntities = simulation.registry.view<Turn, tags::SimulateTurn>();
   simulation.registry.insert<tags::BattleMidTurn>(turnEntities.begin(), turnEntities.end());
@@ -16745,9 +16832,9 @@ void runMoveAction(Simulation& simulation) {
 
   simulation.viewForSelectedBattles<setCurrentActionTarget>();
   simulation.viewForSelectedBattles<setCurrentActionSource>();
-  simulation.viewForSelectedBattles<setCurrentActionMove>();
+  simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex);
 
-  simulation.view<deductPp, tags::CurrentActionMoveSlot>();
+  simulation.view<deductPp, Tags<tags::CurrentActionMoveSlot>>();
   simulation.view<setLastMoveUsed>();
 
   useMove(simulation);
@@ -16789,10 +16876,10 @@ void resolveMoveTargets(CurrentActionTargets&) {}
 
 void getMoveTargets(Simulation& simulation) {
   if (simulation.battleFormat == BattleFormat::DOUBLES_BATTLE_FORMAT) {
-    simulation.view<addTargetAllyToTargets, tags::CurrentActionMove, move::added_targets::tags::TargetAlly>();
-    simulation.view<addUserAllyToTargets, tags::CurrentActionMove, move::added_targets::tags::UserAlly>();
+    simulation.view<addTargetAllyToTargets, Tags<tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
+    simulation.view<addUserAllyToTargets, Tags<tags::CurrentActionMove, move::added_targets::tags::UserAlly>>();
   }
-  simulation.view<resolveMoveTargets, tags::CurrentActionMove>(entt::exclude<AddedTargets>);
+  simulation.view<resolveMoveTargets, Tags<tags::CurrentActionMove>, entt::exclude_t<AddedTargets>>();
 }
 
 void useMove(Simulation& simulation) {
@@ -17087,17 +17174,6 @@ struct SpeciesTypes {
 }  // namespace pokesim
 
 //////////////// END OF src/Components/Pokedex/SpeciesTypes.hpp ////////////////
-
-////////////////// START OF src/Pokedex/Setup/DexDataTags.hpp //////////////////
-
-#include <type_traits>
-
-namespace pokesim::dex::internal {
-template <typename... T>
-struct Tags {};
-}  // namespace pokesim::dex::internal
-
-/////////////////// END OF src/Pokedex/Setup/DexDataTags.hpp ///////////////////
 
 ///////////////// START OF src/Pokedex/Setup/DexDataSetup.hpp //////////////////
 
@@ -17668,7 +17744,6 @@ types::entity Pokedex::buildSpecies(dex::Species species, types::registry& regis
 
 #include <string_view>
 
-
 namespace pokesim::dex {
 template <GameMechanics>
 struct FuryAttack {
@@ -17680,7 +17755,7 @@ struct FuryAttack {
   static constexpr types::basePower basePower = 15;
   static constexpr types::pp basePp = 20;
 
-  static constexpr internal::Tags<move::tags::Contact, move::tags::VariableHitCount> moveTags{};
+  static constexpr Tags<move::tags::Contact, move::tags::VariableHitCount> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {
@@ -17700,7 +17775,6 @@ using FuryAttack = dex::FuryAttack<GameMechanics::SCARLET_VIOLET>;
 
 #include <string_view>
 
-
 namespace pokesim::dex {
 template <GameMechanics>
 struct KnockOff {
@@ -17712,7 +17786,7 @@ struct KnockOff {
   static constexpr types::basePower basePower = 65;
   static constexpr types::pp basePp = 20;
 
-  static constexpr internal::Tags<move::tags::Contact> moveTags{};
+  static constexpr Tags<move::tags::Contact> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {
@@ -17732,7 +17806,6 @@ using KnockOff = dex::KnockOff<GameMechanics::SCARLET_VIOLET>;
 
 #include <string_view>
 
-
 namespace pokesim::dex {
 template <GameMechanics>
 struct Moonblast {
@@ -17748,10 +17821,10 @@ struct Moonblast {
     static constexpr types::baseEffectChance chance = 30;
     static constexpr types::boost spaBoost = -1;
 
-    static constexpr internal::Tags<> effectTags{};
+    static constexpr Tags<> effectTags{};
   };
 
-  static constexpr internal::Tags<> moveTags{};
+  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {
@@ -17771,7 +17844,6 @@ using Moonblast = dex::Moonblast<GameMechanics::SCARLET_VIOLET>;
 
 #include <string_view>
 
-
 namespace pokesim::dex {
 template <GameMechanics>
 struct QuiverDance {
@@ -17784,10 +17856,10 @@ struct QuiverDance {
   struct sourcePrimaryEffect {
     static constexpr types::boost spaBoost = 1, spdBoost = 1, speBoost = 1;
 
-    static constexpr internal::Tags<> effectTags{};
+    static constexpr Tags<> effectTags{};
   };
 
-  static constexpr internal::Tags<> moveTags{};
+  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target = MoveTarget::SELF;
 
   struct Strings {
@@ -17807,7 +17879,6 @@ using QuiverDance = dex::QuiverDance<GameMechanics::SCARLET_VIOLET>;
 
 #include <string_view>
 
-
 namespace pokesim::dex {
 template <GameMechanics>
 struct Thunderbolt {
@@ -17822,10 +17893,10 @@ struct Thunderbolt {
   struct targetSecondaryEffect {
     static constexpr types::baseEffectChance chance = 10;
 
-    static constexpr internal::Tags<status::tags::Paralysis> effectTags{};
+    static constexpr Tags<status::tags::Paralysis> effectTags{};
   };
 
-  static constexpr internal::Tags<> moveTags{};
+  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {
@@ -17845,7 +17916,6 @@ using Thunderbolt = dex::Thunderbolt<GameMechanics::SCARLET_VIOLET>;
 
 #include <string_view>
 
-
 namespace pokesim::dex {
 template <GameMechanics>
 struct WillOWisp {
@@ -17857,10 +17927,10 @@ struct WillOWisp {
   static constexpr types::pp basePp = 15;
 
   struct targetPrimaryEffect {
-    static constexpr internal::Tags<status::tags::Burn> effectTags{};
+    static constexpr Tags<status::tags::Burn> effectTags{};
   };
 
-  static constexpr internal::Tags<> moveTags{};
+  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {
@@ -18647,8 +18717,8 @@ void run(Simulation& simulation) {
 void criticalHitRandomChance(Simulation& simulation) {
   // Set critical hit chances as random chance variable
 
-  randomChance<5U>(simulation);
-  clearRandomChanceResult(simulation);
+  // randomChance<5U>(simulation);
+  // clearRandomChanceResult(simulation);
 }
 
 void modifyDamageWithTypes(Simulation& /*simulation*/) {}
@@ -19082,14 +19152,14 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, cons
 }
 
 void setCurrentActionMove(
-  types::handle battleHandle, const Simulation& simulation, const CurrentActionSource& source,
-  const CurrentActionTargets& targets, const CurrentAction& action) {
+  types::handle battleHandle, const CurrentActionSource& source, const CurrentActionTargets& targets,
+  const CurrentAction& action, const Pokedex& pokedex) {
   types::registry& registry = *battleHandle.registry();
   const action::Move& move = registry.get<action::Move>(action.val);
   const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
 
   types::entity moveSlotEntity = moveToEntity(registry, moveSlots, move.name);
-  types::entity moveEntity = simulation.pokedex.buildActionMove(move.name, registry);
+  types::entity moveEntity = pokedex.buildActionMove(move.name, registry);
 
   battleHandle.emplace<CurrentActionMove>(moveEntity);
   registry.insert<CurrentActionMove>(targets.val.begin(), targets.val.end(), {moveEntity});

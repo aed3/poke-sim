@@ -9,6 +9,7 @@
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/RandomChanceTags.hpp>
+#include <Utilities/Tags.hpp>
 
 #include "RandomChance.hpp"
 #include "RunEvent.hpp"
@@ -42,14 +43,14 @@ void internal::assignHitCountFromVariableHitChance(types::registry& registry, co
 }
 
 void setMoveHitCount(Simulation& simulation) {
-  simulation.view<internal::assignHitCountToTargets, tags::internal::TargetCanBeHit>();
+  simulation.view<internal::assignHitCountToTargets, Tags<tags::internal::TargetCanBeHit>>();
 
   if (!simulation.registry.view<RandomEventChances<4U>>().empty()) {
     randomChance<4U>(simulation);
-    simulation.view<internal::assignHitCountFromVariableHitChance<2U>, tags::RandomEventA>();
-    simulation.view<internal::assignHitCountFromVariableHitChance<3U>, tags::RandomEventB>();
-    simulation.view<internal::assignHitCountFromVariableHitChance<4U>, tags::RandomEventC>();
-    simulation.view<internal::assignHitCountFromVariableHitChance<5U>, tags::RandomEventD>();
+    simulation.view<internal::assignHitCountFromVariableHitChance<2U>, Tags<tags::RandomEventA>>();
+    simulation.view<internal::assignHitCountFromVariableHitChance<3U>, Tags<tags::RandomEventB>>();
+    simulation.view<internal::assignHitCountFromVariableHitChance<4U>, Tags<tags::RandomEventC>>();
+    simulation.view<internal::assignHitCountFromVariableHitChance<5U>, Tags<tags::RandomEventD>>();
     clearRandomChanceResult(simulation);
   }
 }
@@ -82,13 +83,13 @@ void internal::removeAccuracyFromTargets(types::registry& registry, const Curren
 }
 
 void accuracyCheck(Simulation& simulation) {
-  simulation.view<internal::assignMoveAccuracyToTargets, tags::internal::TargetCanBeHit>();
+  simulation.view<internal::assignMoveAccuracyToTargets, Tags<tags::internal::TargetCanBeHit>>();
   runModifyAccuracyEvent(simulation);
   runAccuracyEvent(simulation);
 
   setRandomBinaryChoice<Accuracy, tags::internal::TargetCanBeHit>(simulation);
   randomBinaryChance(simulation);
-  simulation.view<internal::removeFailedAccuracyCheckTargets, tags::RandomEventCheckFailed>();
+  simulation.view<internal::removeFailedAccuracyCheckTargets, Tags<tags::RandomEventCheckFailed>>();
 
   clearRandomChanceResult(simulation);
 

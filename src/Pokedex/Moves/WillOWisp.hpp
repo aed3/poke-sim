@@ -8,9 +8,8 @@
 #include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
+#include <Utilities/Tags.hpp>
 #include <string_view>
-
-#include "../Setup/DexDataTags.hpp"
 
 namespace pokesim::dex {
 template <GameMechanics>
@@ -23,10 +22,10 @@ struct WillOWisp {
   static constexpr types::pp basePp = 15;
 
   struct targetPrimaryEffect {
-    static constexpr internal::Tags<status::tags::Burn> effectTags{};
+    static constexpr Tags<status::tags::Burn> effectTags{};
   };
 
-  static constexpr internal::Tags<> moveTags{};
+  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {

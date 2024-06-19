@@ -7,9 +7,8 @@
 #include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
+#include <Utilities/Tags.hpp>
 #include <string_view>
-
-#include "../Setup/DexDataTags.hpp"
 
 namespace pokesim::dex {
 template <GameMechanics>
@@ -22,7 +21,7 @@ struct FuryAttack {
   static constexpr types::basePower basePower = 15;
   static constexpr types::pp basePp = 20;
 
-  static constexpr internal::Tags<move::tags::Contact, move::tags::VariableHitCount> moveTags{};
+  static constexpr Tags<move::tags::Contact, move::tags::VariableHitCount> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
 
   struct Strings {

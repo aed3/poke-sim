@@ -11,27 +11,35 @@
 #include <Components/Tags/RandomChanceTags.hpp>
 #include <Types/Random.hpp>
 #include <Utilities/RNG.hpp>
+#include <Utilities/Tags.hpp>
 
 #include "Simulation.hpp"
 
 namespace pokesim {
-template <typename Component, typename... Tags>
+template <typename Component, typename... T>
 void setRandomBinaryChoice(Simulation& simulation) {
+  types::percentChance autoPassLimit = simulation.simulateTurnOptions.randomChanceUpperLimit.value_or(100);
+  types::percentChance autoFailLimit = simulation.simulateTurnOptions.randomChanceLowerLimit.value_or(0);
   if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
-    simulation.view<internal::setRandomBinaryChoice<Component, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags...>();
+    simulation.view<internal::setRandomBinaryChoice<Component, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
+      autoPassLimit,
+      autoFailLimit);
   }
   else {
-    simulation.view<internal::setRandomBinaryChoice<Component, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags...>();
+    simulation.view<internal::setRandomBinaryChoice<Component, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<T...>>(
+      autoPassLimit,
+      autoFailLimit);
   }
 }
 
 template <typename Component, BattleFormat Format>
 void internal::setRandomBinaryChoice(
-  types::registry& registry, const Simulation& simulation, const Battle& battle, const Component& percentChance) {
-  if (percentChance.val >= simulation.simulateTurnOptions.randomChanceUpperLimit.value_or(100)) {
+  types::registry& registry, const Battle& battle, const Component& percentChance, types::percentChance autoPassLimit,
+  types::percentChance autoFailLimit) {
+  if (percentChance.val >= autoPassLimit) {
     registry.emplace<tags::RandomEventCheckPassed>(battle.val);
   }
-  else if (percentChance.val <= simulation.simulateTurnOptions.randomChanceLowerLimit.value_or(0)) {
+  else if (percentChance.val <= autoFailLimit) {
     registry.emplace<tags::RandomEventCheckFailed>(battle.val);
   }
   else {

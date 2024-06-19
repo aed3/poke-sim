@@ -8,9 +8,8 @@
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
 #include <Types/Stats.hpp>
+#include <Utilities/Tags.hpp>
 #include <string_view>
-
-#include "../Setup/DexDataTags.hpp"
 
 namespace pokesim::dex {
 template <GameMechanics>
@@ -24,10 +23,10 @@ struct QuiverDance {
   struct sourcePrimaryEffect {
     static constexpr types::boost spaBoost = 1, spdBoost = 1, speBoost = 1;
 
-    static constexpr internal::Tags<> effectTags{};
+    static constexpr Tags<> effectTags{};
   };
 
-  static constexpr internal::Tags<> moveTags{};
+  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target = MoveTarget::SELF;
 
   struct Strings {

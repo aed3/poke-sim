@@ -19,9 +19,11 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
 #include <Components/Turn.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <Simulation/MoveHitSteps.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Utilities/SelectForView.hpp>
+#include <Utilities/Tags.hpp>
 
 #include "ManageActionQueue.hpp"
 
@@ -33,9 +35,9 @@ void run(Simulation& simulation) {
   simulation.view<resolveDecision>();
   simulation.registry.clear<SideDecision>();
 
-  // simulation.viewForSelectedBattles<addBeforeTurnAction>(entt::exclude_t<tags::BattleMidTurn>{});
+  // simulation.viewForSelectedBattles<addBeforeTurnAction, Tags<>, entt::exclude_t<tags::BattleMidTurn>>();
   simulation.viewForSelectedBattles<speedSort>();
-  simulation.viewForSelectedBattles<addResidualAction>(entt::exclude_t<tags::BattleMidTurn>{});
+  simulation.viewForSelectedBattles<addResidualAction, Tags<>, entt::exclude_t<tags::BattleMidTurn>>();
 
   auto turnEntities = simulation.registry.view<Turn, tags::SimulateTurn>();
   simulation.registry.insert<tags::BattleMidTurn>(turnEntities.begin(), turnEntities.end());
@@ -74,9 +76,9 @@ void runMoveAction(Simulation& simulation) {
 
   simulation.viewForSelectedBattles<setCurrentActionTarget>();
   simulation.viewForSelectedBattles<setCurrentActionSource>();
-  simulation.viewForSelectedBattles<setCurrentActionMove>();
+  simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex);
 
-  simulation.view<deductPp, tags::CurrentActionMoveSlot>();
+  simulation.view<deductPp, Tags<tags::CurrentActionMoveSlot>>();
   simulation.view<setLastMoveUsed>();
 
   useMove(simulation);
@@ -118,10 +120,10 @@ void resolveMoveTargets(CurrentActionTargets&) {}
 
 void getMoveTargets(Simulation& simulation) {
   if (simulation.battleFormat == BattleFormat::DOUBLES_BATTLE_FORMAT) {
-    simulation.view<addTargetAllyToTargets, tags::CurrentActionMove, move::added_targets::tags::TargetAlly>();
-    simulation.view<addUserAllyToTargets, tags::CurrentActionMove, move::added_targets::tags::UserAlly>();
+    simulation.view<addTargetAllyToTargets, Tags<tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
+    simulation.view<addUserAllyToTargets, Tags<tags::CurrentActionMove, move::added_targets::tags::UserAlly>>();
   }
-  simulation.view<resolveMoveTargets, tags::CurrentActionMove>(entt::exclude<AddedTargets>);
+  simulation.view<resolveMoveTargets, Tags<tags::CurrentActionMove>, entt::exclude_t<AddedTargets>>();
 }
 
 void useMove(Simulation& simulation) {
