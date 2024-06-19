@@ -12761,7 +12761,7 @@ struct Spe {
 };
 
 struct EffectiveSpeed {
-  types::stat effectiveSpeed = 1;
+  types::stat val = 1;
 };
 }  // namespace pokesim::stat
 
@@ -16966,7 +16966,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
 
       stat::EffectiveSpeed* effectiveSpeed = registry.try_get<stat::EffectiveSpeed>(sourceEntity);
       if (effectiveSpeed != nullptr) {
-        speedSort.speed = effectiveSpeed->effectiveSpeed;
+        speedSort.speed = effectiveSpeed->val;
       }
       else {
         speedSort.speed = registry.get<stat::Spe>(sourceEntity).val;
@@ -18499,7 +18499,7 @@ types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry
 namespace pokesim::dex {
 void internal::StaticEvents::onDamagingHit(Simulation& /*simulation*/) {}
 void internal::StaticEvents::onModifySpe(stat::EffectiveSpeed& effectiveSpeed) {
-  effectiveSpeed.effectiveSpeed /= 2;
+  effectiveSpeed.val /= 2;
 }
 }  // namespace pokesim::dex
 

@@ -28,6 +28,6 @@ struct Spe {
 };
 
 struct EffectiveSpeed {
-  types::stat effectiveSpeed = 1;
+  types::stat val = 1;
 };
 }  // namespace pokesim::stat
