@@ -7,13 +7,13 @@
 namespace pokesim::internal {
 
 // Generate a uniformly distributed 32-bit random number
-inline types::rngResult nextRandomValue(types::rngState& state) {
+inline constexpr types::rngResult nextRandomValue(types::rngState& state) {
   // NOLINTBEGIN
   types::rngState oldState = state;
   state = oldState * 6364136223846793005ULL;
-  types::rngResult xorShifted = ((oldState >> 18U) ^ oldState) >> 27U;
+  types::rngResult xorShifted = (types::rngResult)(((oldState >> 18U) ^ oldState) >> 27U);
   types::rngResult rot = oldState >> 59U;
-  return (xorShifted >> rot) | (xorShifted << ((-rot) & 31));
+  return (xorShifted >> rot) | (xorShifted << ((-1 * rot) & 31));
   // NOLINTEND
 }
 

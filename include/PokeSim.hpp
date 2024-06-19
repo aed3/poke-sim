@@ -13758,7 +13758,6 @@ struct Tags {};
 
 /////////////////// START OF src/Utilities/RegistryLoop.hpp ////////////////////
 
-#include <cstdint>
 #include <type_traits>
 
 
@@ -13769,15 +13768,20 @@ struct RegistryLoop;
 template <auto Function, typename... ExtraTags, typename... Exclude, typename... Include, typename... PassedInArgs>
 struct RegistryLoop<
   Function, Tags<ExtraTags...>, entt::exclude_t<Exclude...>, entt::get_t<Include...>, PassedInArgs...> {
+  static_assert(std::conjunction_v<std::is_empty<ExtraTags>...>);
+  static_assert(std::conjunction_v<std::is_class<ExtraTags>...>);
+  static_assert(std::conjunction_v<std::is_class<Exclude>...>);
+  static_assert(std::conjunction_v<std::is_class<Include>...>);
+
  private:
-  template <class Signature>
+  template <typename Signature>
   struct RegistryLoopInternal;
   template <bool, typename TupleFrom, typename TupleTo>
   struct ParameterShifter;
 
-  static constexpr std::size_t excludeSize = sizeof...(Exclude);
-  static constexpr std::size_t includeSize = sizeof...(Include);
-  static constexpr std::size_t passedInArgsSize = sizeof...(PassedInArgs);
+  static constexpr bool usesExclude = sizeof...(Exclude) > 0;
+  static constexpr bool usesInclude = sizeof...(Include) > 0;
+  static constexpr auto passedInArgsSize = sizeof...(PassedInArgs);
 
   template <typename TupleFromHead, typename... TupleFromTail, typename... TupleToTail>
   struct ParameterShifter<false, Tags<TupleFromHead, TupleFromTail...>, Tags<TupleToTail...>>
@@ -13787,14 +13791,24 @@ struct RegistryLoop<
   template <typename... TupleFromTail, typename... RegistryArgs>
   struct ParameterShifter<true, Tags<TupleFromTail...>, Tags<RegistryArgs...>> {
    private:
-    using FirstType = std::decay_t<std::tuple_element_t<0, std::tuple<RegistryArgs...>>>;
+    using FirstType = std::tuple_element_t<0, std::tuple<RegistryArgs...>>;
+    static constexpr bool hasRegistryFirst = std::is_same_v<FirstType, types::registry&>;
+    static constexpr bool hasHandleFirst = std::is_same_v<FirstType, types::handle>;
+
+    static_assert(sizeof...(TupleFromTail) == passedInArgsSize);
+    static_assert(std::conjunction_v<std::is_same<std::decay_t<TupleFromTail>, std::decay_t<PassedInArgs>>...>);
+    static_assert(sizeof...(RegistryArgs) > 0);
+    // If the first argument is a registry, it must be a non-constant reference
+    static_assert(!std::is_same_v<std::decay_t<FirstType>, types::registry> || hasRegistryFirst);
+    // If the first argument is a handle, it must be a non-constant value
+    static_assert(!std::is_same_v<std::decay_t<FirstType>, types::handle> || hasHandleFirst);
 
    public:
     static void view(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      if constexpr (std::is_same_v<FirstType, types::registry>) {
+      if constexpr (hasRegistryFirst) {
         viewWithRegistry<RegistryArgs...>(registry, passedInArgs...);
       }
-      else if constexpr (std::is_same_v<FirstType, types::handle>) {
+      else if constexpr (hasHandleFirst) {
         viewWithHandle<RegistryArgs...>(registry, passedInArgs...);
       }
       else {
@@ -13803,10 +13817,10 @@ struct RegistryLoop<
     }
 
     static void group(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      if constexpr (std::is_same_v<FirstType, types::registry>) {
+      if constexpr (hasRegistryFirst) {
         groupWithRegistry<RegistryArgs...>(registry, passedInArgs...);
       }
-      else if constexpr (std::is_same_v<FirstType, types::handle>) {
+      else if constexpr (hasHandleFirst) {
         groupWithHandle<RegistryArgs...>(registry, passedInArgs...);
       }
       else {
@@ -13815,24 +13829,35 @@ struct RegistryLoop<
     }
 
    private:
+    template <typename... Args>
+    static void argChecks() {
+      static_assert(sizeof...(Args) > 0);
+      static_assert(std::conjunction_v<std::is_class<std::decay_t<Args>>...>);
+      static_assert(std::conjunction_v<std::is_copy_assignable<std::decay_t<Args>>...>);
+    }
+
     template <typename... ViewArgs>
     static auto getView(types::registry& registry) {
-      if constexpr (excludeSize) {
-        return registry.view<ExtraTags..., std::decay_t<ViewArgs>...>(entt::exclude<Exclude...>);
+      argChecks<ViewArgs...>();
+
+      if constexpr (usesExclude) {
+        return registry.view<ExtraTags..., std::decay_t<ViewArgs>..., Include...>(entt::exclude<Exclude...>);
       }
       else {
-        return registry.view<ExtraTags..., std::decay_t<ViewArgs>...>();
+        return registry.view<ExtraTags..., std::decay_t<ViewArgs>..., Include...>();
       }
     }
 
     template <typename... GroupArgs>
     static auto getGroup(types::registry& registry) {
-      if constexpr (excludeSize) {
+      argChecks<GroupArgs...>();
+
+      if constexpr (usesExclude) {
         return registry.group<ExtraTags..., std::decay_t<GroupArgs>...>(
           entt::exclude<Exclude...>,
           entt::get<Include...>);
       }
-      else if constexpr (includeSize) {
+      else if constexpr (usesInclude) {
         return registry.group<ExtraTags..., std::decay_t<GroupArgs>...>(entt::get<Include...>);
       }
       else {
@@ -13877,13 +13902,13 @@ struct RegistryLoop<
     }
   };
 
-  template <class ReturnType, class... RegistryArgs>
-  struct RegistryLoopInternal<ReturnType (*)(RegistryArgs...)> {
+  template <typename... RegistryArgs>
+  struct RegistryLoopInternal<void (*)(RegistryArgs...)> {
     using WithPassedArgs = ParameterShifter<false, Tags<RegistryArgs...>, Tags<>>;
     using NoPassedArgs = ParameterShifter<true, Tags<>, Tags<RegistryArgs...>>;
 
     static void view(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      if constexpr (passedInArgsSize) {
+      if constexpr (passedInArgsSize > 0) {
         WithPassedArgs::view(registry, passedInArgs...);
       }
       else {
@@ -13892,7 +13917,7 @@ struct RegistryLoop<
     }
 
     static void group(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      if constexpr (passedInArgsSize) {
+      if constexpr (passedInArgsSize > 0) {
         WithPassedArgs::group(registry, passedInArgs...);
       }
       else {
@@ -14990,13 +15015,13 @@ inline void sampleRandomChance(Simulation& simulation);
 namespace pokesim::internal {
 
 // Generate a uniformly distributed 32-bit random number
-inline types::rngResult nextRandomValue(types::rngState& state) {
+inline constexpr types::rngResult nextRandomValue(types::rngState& state) {
   // NOLINTBEGIN
   types::rngState oldState = state;
   state = oldState * 6364136223846793005ULL;
-  types::rngResult xorShifted = ((oldState >> 18U) ^ oldState) >> 27U;
+  types::rngResult xorShifted = (types::rngResult)(((oldState >> 18U) ^ oldState) >> 27U);
   types::rngResult rot = oldState >> 59U;
-  return (xorShifted >> rot) | (xorShifted << ((-rot) & 31));
+  return (xorShifted >> rot) | (xorShifted << ((-1 * rot) & 31));
   // NOLINTEND
 }
 
@@ -15091,27 +15116,37 @@ template <std::uint8_t POSSIBLE_EVENT_COUNT>
 void internal::assignRandomEvent(
   types::handle battleHandle, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventCheck, RngSeed& rngSeed,
   Probability& probability) {
-  types::percentChance rng = internal::nextBoundedRandomValue(rngSeed, 100);
+  types::percentChance rng = (types::percentChance)internal::nextBoundedRandomValue(rngSeed, 100);
 
   if (rng <= eventCheck.val[0]) {
     battleHandle.emplace<tags::RandomEventA>();
     updateProbability(probability, eventCheck.val[0]);
+    return;
   }
-  else if (rng <= eventCheck.val[1]) {
+  if (rng <= eventCheck.val[1]) {
     battleHandle.emplace<tags::RandomEventB>();
     updateProbability(probability, eventCheck.val[1] - eventCheck.val[0]);
+    return;
   }
-  else if (rng <= eventCheck.val[2]) {
+  if (rng <= eventCheck.val[2]) {
     battleHandle.emplace<tags::RandomEventC>();
     updateProbability(probability, eventCheck.val[2] - eventCheck.val[1]);
+    return;
   }
-  else if (POSSIBLE_EVENT_COUNT >= 4U && rng <= eventCheck.val[3]) {
-    battleHandle.emplace<tags::RandomEventD>();
-    updateProbability(probability, eventCheck.val[3] - eventCheck.val[2]);
+
+  if constexpr (POSSIBLE_EVENT_COUNT >= 4U) {
+    if (rng <= eventCheck.val[3]) {
+      battleHandle.emplace<tags::RandomEventD>();
+      updateProbability(probability, eventCheck.val[3] - eventCheck.val[2]);
+      return;
+    }
   }
-  else if (POSSIBLE_EVENT_COUNT == 5U && rng <= eventCheck.val[4]) {
-    battleHandle.emplace<tags::RandomEventE>();
-    updateProbability(probability, eventCheck.val[4] - eventCheck.val[3]);
+
+  if constexpr (POSSIBLE_EVENT_COUNT == 5U) {
+    if (rng <= eventCheck.val[4]) {
+      battleHandle.emplace<tags::RandomEventE>();
+      updateProbability(probability, eventCheck.val[4] - eventCheck.val[3]);
+    }
   }
 }
 
@@ -15205,7 +15240,7 @@ void randomChance(Simulation& simulation) {
 
 void internal::assignRandomBinaryEvent(
   types::handle battleHandle, const RandomBinaryEventChance& eventCheck, RngSeed& rngSeed, Probability& probability) {
-  types::percentChance rng = internal::nextBoundedRandomValue(rngSeed, 100);
+  types::percentChance rng = (types::percentChance)internal::nextBoundedRandomValue(rngSeed, 100);
 
   if (rng <= eventCheck.val) {
     battleHandle.emplace<tags::RandomEventCheckPassed>();
@@ -15282,7 +15317,7 @@ template void randomChance<5U>(Simulation& simulation);
 
 template void setRandomBinaryChoice<Accuracy, tags::internal::TargetCanBeHit>(Simulation& simulation);
 
-void sampleRandomChance(Simulation& simulation) {}
+void sampleRandomChance(Simulation& /*simulation*/) {}
 }  // namespace pokesim
 
 //////////////////// END OF src/Simulation/RandomChance.cpp ////////////////////
@@ -18729,8 +18764,8 @@ void run(Simulation& simulation) {
 void criticalHitRandomChance(Simulation& simulation) {
   // Set critical hit chances as random chance variable
 
-  // randomChance<5U>(simulation);
-  // clearRandomChanceResult(simulation);
+  randomChance<5U>(simulation);
+  clearRandomChanceResult(simulation);
 }
 
 void modifyDamageWithTypes(Simulation& /*simulation*/) {}
