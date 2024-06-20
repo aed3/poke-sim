@@ -2,6 +2,7 @@
 
 #include <Components/RandomEventCheck.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Enums/BattleFormat.hpp>
 #include <Types/Move.hpp>
 
 namespace pokesim {
@@ -17,6 +18,7 @@ void assignMoveAccuracyToTargets(types::handle targetHandle, const CurrentAction
 void removeAccuracyFromTargets(types::registry& registry, const CurrentActionTargets& targets);
 void removeFailedAccuracyCheckTargets(types::registry& registry, const CurrentActionTargets& targets);
 
+template <BattleFormat Format>
 void assignHitCountToTargets(types::handle targetHandle, const CurrentActionMove& currentMove);
 template <types::moveHits MoveHits>
 void assignHitCountFromVariableHitChance(types::registry& registry, const CurrentActionTargets& targets);
