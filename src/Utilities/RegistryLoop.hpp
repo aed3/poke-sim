@@ -4,7 +4,6 @@
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <type_traits>
-#include <iostream>
 
 #include "Tags.hpp"
 

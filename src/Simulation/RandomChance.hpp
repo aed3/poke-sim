@@ -37,8 +37,8 @@ void placeRandomEventChanceFromStack(types::handle battleHandle, RandomEventChan
 void placeRandomBinaryEventChanceFromStack(types::handle battleHandle, RandomBinaryEventChanceStack& stack);
 }  // namespace internal
 
-template <std::uint8_t POSSIBLE_EVENT_COUNT, typename Component>
-void setRandomChoice(Simulation& simulation);
+template <std::uint8_t POSSIBLE_EVENT_COUNT, BattleFormat Format, bool CumulativeSumChances>
+void setRandomChoice(types::handle battleHandle, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances);
 template <typename Component, typename... Tags>
 void setRandomBinaryChoice(Simulation& simulation);
 

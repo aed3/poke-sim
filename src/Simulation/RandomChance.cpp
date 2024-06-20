@@ -16,6 +16,34 @@
 #include "Simulation.hpp"
 
 namespace pokesim {
+template <std::uint8_t POSSIBLE_EVENT_COUNT, BattleFormat Format, bool CumulativeSumChances>
+void setRandomChoice(types::handle battleHandle, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances) {
+  if constexpr (CumulativeSumChances) {
+    types::percentChance chanceSum = 0;
+    for (types::percentChance& chance : chances) {
+      chanceSum += chance;
+      chance = chanceSum;
+    }
+
+    ENTT_ASSERT(chanceSum == 100, "The total probability of all possible outcomes should add up to 100%.");
+  }
+  else {
+    ENTT_ASSERT(chances.back() == 100, "The total probability of all possible outcomes should add up to 100%.");
+    for (std::uint8_t i = 1; i < POSSIBLE_EVENT_COUNT; i++) {
+      ENTT_ASSERT(
+        chances[i - 1] < chances[i],
+        "Chances should be a cumulative sum where each value is greater than the last.");
+    }
+  }
+
+  if constexpr (Format == BattleFormat::SINGLES_BATTLE_FORMAT) {
+    battleHandle.emplace<RandomEventChances<POSSIBLE_EVENT_COUNT>>(chances);
+  }
+  else {
+    battleHandle.get_or_emplace<RandomEventChancesStack<POSSIBLE_EVENT_COUNT>>().val.emplace_back(chances);
+  }
+}
+
 template <typename Component, typename... T>
 void setRandomBinaryChoice(Simulation& simulation) {
   types::percentChance autoPassLimit = simulation.simulateTurnOptions.randomChanceUpperLimit.value_or(100);
@@ -255,11 +283,38 @@ void clearRandomChanceResult(Simulation& simulation) {
   simulation.registry.clear<tags::RandomEventE>();
 }
 
-template void randomChance<3U>(Simulation& simulation);
-template void randomChance<4U>(Simulation& simulation);
-template void randomChance<5U>(Simulation& simulation);
+template void randomChance<3U>(Simulation&);
+template void randomChance<4U>(Simulation&);
+template void randomChance<5U>(Simulation&);
 
-template void setRandomBinaryChoice<Accuracy, tags::internal::TargetCanBeHit>(Simulation& simulation);
+template void setRandomChoice<3U, BattleFormat::SINGLES_BATTLE_FORMAT, false>(
+  types::handle, std::array<types::percentChance, 3U>);
+template void setRandomChoice<3U, BattleFormat::DOUBLES_BATTLE_FORMAT, false>(
+  types::handle, std::array<types::percentChance, 3U>);
+template void setRandomChoice<3U, BattleFormat::SINGLES_BATTLE_FORMAT, true>(
+  types::handle, std::array<types::percentChance, 3U>);
+template void setRandomChoice<3U, BattleFormat::DOUBLES_BATTLE_FORMAT, true>(
+  types::handle, std::array<types::percentChance, 3U>);
+
+template void setRandomChoice<4U, BattleFormat::SINGLES_BATTLE_FORMAT, false>(
+  types::handle, std::array<types::percentChance, 4U>);
+template void setRandomChoice<4U, BattleFormat::DOUBLES_BATTLE_FORMAT, false>(
+  types::handle, std::array<types::percentChance, 4U>);
+template void setRandomChoice<4U, BattleFormat::SINGLES_BATTLE_FORMAT, true>(
+  types::handle, std::array<types::percentChance, 4U>);
+template void setRandomChoice<4U, BattleFormat::DOUBLES_BATTLE_FORMAT, true>(
+  types::handle, std::array<types::percentChance, 4U>);
+
+template void setRandomChoice<5U, BattleFormat::SINGLES_BATTLE_FORMAT, false>(
+  types::handle, std::array<types::percentChance, 5U>);
+template void setRandomChoice<5U, BattleFormat::DOUBLES_BATTLE_FORMAT, false>(
+  types::handle, std::array<types::percentChance, 5U>);
+template void setRandomChoice<5U, BattleFormat::SINGLES_BATTLE_FORMAT, true>(
+  types::handle, std::array<types::percentChance, 5U>);
+template void setRandomChoice<5U, BattleFormat::DOUBLES_BATTLE_FORMAT, true>(
+  types::handle, std::array<types::percentChance, 5U>);
+
+template void setRandomBinaryChoice<Accuracy, tags::internal::TargetCanBeHit>(Simulation&);
 
 void sampleRandomChance(Simulation& /*simulation*/) {}
 }  // namespace pokesim

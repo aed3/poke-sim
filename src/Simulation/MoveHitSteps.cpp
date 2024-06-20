@@ -9,6 +9,7 @@
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/RandomChanceTags.hpp>
+#include <Types/Enums/BattleFormat.hpp>
 #include <Utilities/Tags.hpp>
 
 #include "RandomChance.hpp"
@@ -16,7 +17,7 @@
 #include "Simulation.hpp"
 
 namespace pokesim {
-
+template <BattleFormat Format>
 void internal::assignHitCountToTargets(types::handle targetHandle, const CurrentActionMove& currentMove) {
   types::registry& registry = *targetHandle.registry();
   if (registry.all_of<move::tags::VariableHitCount>(currentMove.val)) {
@@ -25,7 +26,7 @@ void internal::assignHitCountToTargets(types::handle targetHandle, const Current
     static constexpr std::array<types::percentChance, 4U> progressiveMultiHitChances = {35U, 70U, 85U, 100U};
 
     Battle battle = targetHandle.get<Battle>();
-    registry.emplace<RandomEventChances<4U>>(battle.val, progressiveMultiHitChances);
+    setRandomChoice<4U, Format, false>({registry, battle.val}, progressiveMultiHitChances);
     return;
   }
 
@@ -43,7 +44,16 @@ void internal::assignHitCountFromVariableHitChance(types::registry& registry, co
 }
 
 void setMoveHitCount(Simulation& simulation) {
-  simulation.view<internal::assignHitCountToTargets, Tags<tags::internal::TargetCanBeHit>>();
+  if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
+    simulation.view<
+      internal::assignHitCountToTargets<BattleFormat::SINGLES_BATTLE_FORMAT>,
+      Tags<tags::internal::TargetCanBeHit>>();
+  }
+  else {
+    simulation.view<
+      internal::assignHitCountToTargets<BattleFormat::DOUBLES_BATTLE_FORMAT>,
+      Tags<tags::internal::TargetCanBeHit>>();
+  }
 
   if (!simulation.registry.view<RandomEventChances<4U>>().empty()) {
     randomChance<4U>(simulation);
