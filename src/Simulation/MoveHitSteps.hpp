@@ -7,6 +7,7 @@
 
 namespace pokesim {
 class Simulation;
+struct CurrentActionSource;
 struct CurrentActionMove;
 struct CurrentActionTargets;
 struct Accuracy;
@@ -15,17 +16,12 @@ struct HitCount;
 
 namespace internal {
 void assignMoveAccuracyToTargets(types::handle targetHandle, const CurrentActionMove& currentMove);
-void removeAccuracyFromTargets(types::registry& registry, const CurrentActionTargets& targets);
-void removeFailedAccuracyCheckTargets(types::registry& registry, const CurrentActionTargets& targets);
 
 template <BattleFormat Format>
 void assignHitCountToTargets(types::handle targetHandle, const CurrentActionMove& currentMove);
-template <types::moveHits MoveHits>
-void assignHitCountFromVariableHitChance(types::registry& registry, const CurrentActionTargets& targets);
 
 void deductMoveHitCount(types::handle targetHandle, HitCount& hitCount);
 
-void assignHitTags(types::registry& registry, const CurrentActionTargets& targets);
 void removeFailedHitTargets(types::registry& registry, CurrentActionTargets& targets);
 }  // namespace internal
 

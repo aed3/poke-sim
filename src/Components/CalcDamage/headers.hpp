@@ -1,3 +1,5 @@
 #pragma once
 
-#include "AttackerDefender.hpp"
+#include "Aliases.hpp"
+#include "CalcDamageTarget.hpp"
+#include "CriticalHit.hpp"

@@ -2,11 +2,8 @@
 
 #include <Components/Decisions.hpp>
 #include <Components/EVsIVs.hpp>
-#include <Components/Selection.hpp>
 #include <Types/Entity.hpp>
 #include <Types/headers.hpp>
-#include <Utilities/RegistryLoop.hpp>
-#include <Utilities/Tags.hpp>
 #include <entt/entity/registry.hpp>
 #include <initializer_list>
 #include <optional>
@@ -14,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "RegistryContainer.hpp"
 #include "SimulationOptions.hpp"
 
 namespace pokesim {
@@ -38,7 +36,7 @@ struct Results;
  * @details Each `Simulation` instance will only simulate for either single or double battles. This class is optimized
  * for running multiple simulations of the same battle, where each battle state has completed the same number of turns.
  */
-class Simulation {
+class Simulation : public RegistryContainer {
  public:
   struct MoveCreationInfo {
     dex::Move name = dex::Move::NO_MOVE;
@@ -108,127 +106,6 @@ class Simulation {
   };
 
  private:
-  template <typename Selected, auto Function, typename...>
-  struct ForSelected;
-
-  template <
-    typename Selected, auto Function, typename ExcludeContainer, typename IncludeContainer, typename... ExtraTags>
-  struct ForSelected<Selected, Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer> {
-    template <typename... PassedInArgs>
-    static void view(Simulation* simulation, const PassedInArgs&... passedInArgs) {
-      if (Selected::depth.empty()) {
-        simulation->view<Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
-      }
-      else {
-        simulation->view<Function, Tags<Selected, ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
-      }
-    }
-
-    template <typename... PassedInArgs>
-    static void group(Simulation* simulation, const PassedInArgs&... passedInArgs) {
-      if (Selected::depth.empty()) {
-        simulation->group<Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
-      }
-      else {
-        simulation->view<Function, Tags<Selected, ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
-      }
-    }
-  };
-
- public:
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void viewForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
-      this,
-      passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void groupForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
-      this,
-      passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void viewForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
-      this,
-      passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void groupForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
-      this,
-      passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void viewForSelectedPokemon(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
-      this,
-      passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void groupForSelectedPokemon(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
-      this,
-      passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void viewForSelectedMoves(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
-      this,
-      passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void groupForSelectedMoves(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
-      this,
-      passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void view(const PassedInArgs&... passedInArgs) {
-    internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::view(
-      registry,
-      passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void group(const PassedInArgs&... passedInArgs) {
-    internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::group(
-      registry,
-      passedInArgs...);
-  }
-
-  std::vector<types::entity> selectedBattleEntities();
-
- private:
   std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
   PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
   void createInitialSide(SideStateSetup sideSetup, const SideCreationInfo& sideData);
@@ -244,7 +121,6 @@ class Simulation {
  public:
   const BattleFormat battleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
   const Pokedex& pokedex;
-  types::registry registry{};
 
   simulate_turn::Options simulateTurnOptions;
   calc_damage::Options calculateDamageOptions;
@@ -277,5 +153,7 @@ class Simulation {
   void clearSimulateTurnResults();
   void clearCalculateDamageResults();
   void clearAnalyzeEffectResults();
+
+  std::vector<types::entity> selectedBattleEntities();
 };
 }  // namespace pokesim

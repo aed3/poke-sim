@@ -8,7 +8,7 @@
 #include <Components/Names/TargetSlotName.hpp>
 #include <Components/SimulateTurn/ActionNames.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
-#include <Components/Tags/BattleTags.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
@@ -17,20 +17,6 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
-void setCurrentActionTarget(types::handle battleHandle, const Sides& sides, const CurrentAction& action) {
-  types::registry& registry = *battleHandle.registry();
-  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.val);
-  types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.name);
-
-  if (!registry.any_of<tags::Fainted>(targetEntity)) {
-    battleHandle.emplace<CurrentActionTargets>(std::initializer_list<types::entity>{targetEntity});
-    registry.emplace<tags::CurrentActionMoveTarget>(targetEntity);
-  }
-  else {
-    // Set tag to get random target after this function exits
-  }
-}
-
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
   const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(action.val);
@@ -38,6 +24,22 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, cons
 
   battleHandle.emplace<CurrentActionSource>(sourceEntity);
   registry.emplace<tags::CurrentActionMoveSource>(sourceEntity);
+}
+
+void setCurrentActionTarget(
+  types::handle battleHandle, const Sides& sides, const CurrentAction& action, const CurrentActionSource& source) {
+  types::registry& registry = *battleHandle.registry();
+  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.val);
+  types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.name);
+
+  if (!registry.any_of<tags::Fainted>(targetEntity)) {
+    battleHandle.emplace<CurrentActionTargets>(std::initializer_list<types::entity>{targetEntity});
+    registry.emplace<tags::CurrentActionMoveTarget>(targetEntity);
+    registry.emplace<CurrentActionSource>(targetEntity, source);
+  }
+  else {
+    // Set tag to get random target after this function exits
+  }
 }
 
 void setCurrentActionMove(

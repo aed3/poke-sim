@@ -3,7 +3,7 @@
 #include <Battle/Setup/PokemonStateSetup.hpp>
 #include <Battle/Setup/headers.hpp>
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
-#include <Components/CalcDamage/AttackerDefender.hpp>
+#include <Components/CalcDamage/Aliases.hpp>
 #include <Components/Decisions.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
@@ -146,7 +146,7 @@ void Simulation::createCalcDamageInput(
   calc_damage::InputSetup inputSetup(registry);
   inputSetup.setAttacker(attackerEntity);
   inputSetup.setDefender(defenderEntity);
-  inputSetup.setMove(damageCalcInputData.move);
+  inputSetup.setMove(damageCalcInputData.move, pokedex);
   inputSetup.setBattle(battleStateSetup.entity());
 }
 
