@@ -53,8 +53,8 @@ void assignReciprocalRandomBinaryEvent(
   types::handle handle, const Battle& battle, const RandomBinaryEventChance& eventChance);
 
 template <std::uint8_t POSSIBLE_EVENT_COUNT>
-void placeRandomEventChanceFromStack(types::handle handle, RandomEventChancesStack<POSSIBLE_EVENT_COUNT>& stack);
-void placeRandomBinaryEventChanceFromStack(types::handle handle, RandomBinaryEventChanceStack& stack);
+void placeRandomEventChanceFromStack(types::handle battleHandle, RandomEventChancesStack<POSSIBLE_EVENT_COUNT>& stack);
+void placeRandomBinaryEventChanceFromStack(types::handle battleHandle, RandomBinaryEventChanceStack& stack);
 }  // namespace internal
 
 template <std::uint8_t POSSIBLE_EVENT_COUNT, BattleFormat Format, bool CumulativeSumChances>

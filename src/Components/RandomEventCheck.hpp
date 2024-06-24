@@ -15,7 +15,7 @@ const std::uint8_t MAX_TYPICAL_RANDOM_OPTIONS = 5U;
 template <std::uint8_t RANDOM_OPTIONS>
 struct RandomEventChances {
   std::array<types::percentChance, RANDOM_OPTIONS> val{};
-  static_assert(RANDOM_OPTIONS <= MAX_TYPICAL_RANDOM_OPTIONS);
+  static_assert(RANDOM_OPTIONS <= internal::MAX_TYPICAL_RANDOM_OPTIONS);
 
   types::percentChance chanceA() const { return val[0]; }
   types::percentChance chanceB() const { return val[1] - val[0]; }
@@ -41,10 +41,10 @@ struct RandomBinaryEventChance {
 
 template <std::uint8_t RANDOM_OPTIONS>
 struct RandomEventChancesStack {
-  types::targets<RandomEventChances<RANDOM_OPTIONS>> val{};
+  types::targets<std::pair<std::array<types::percentChance, RANDOM_OPTIONS>, types::entity>> val{};
 };
 
 struct RandomBinaryEventChanceStack {
-  types::targets<RandomBinaryEventChance> val{};
+  types::targets<std::pair<types::percentChance, types::entity>> val{};
 };
 }  // namespace pokesim
