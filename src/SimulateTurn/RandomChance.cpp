@@ -84,7 +84,7 @@ template <typename Component, BattleFormat Format>
 void internal::setReciprocalRandomBinaryChoice(
   types::handle handle, const Component& percentChance, types::percentChance autoPassLimit,
   types::percentChance autoFailLimit) {
-  float passChance = 100 - 100.0 / percentChance.val;
+  types::probability passChance = 100.0F / (types::probability)percentChance.val;
   if (!checkPercentChanceLimits(handle, passChance, autoPassLimit, autoFailLimit)) {
     setBinaryChanceByFormat<Format>(handle, percentChance.val);
   }
@@ -131,8 +131,8 @@ void internal::updateProbability(Probability& currentProbability, Type percentCh
 
 template <std::uint8_t POSSIBLE_EVENT_COUNT, typename RandomEventTag>
 void internal::updateProbabilityFromRandomChance(
-  types::registry& registy, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, const Battle& battle) {
-  Probability& probability = registy.get<Probability>(battle.val);
+  types::registry& registry, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, const Battle& battle) {
+  Probability& probability = registry.get<Probability>(battle.val);
 
   if constexpr (std::is_same_v<RandomEventTag, tags::RandomEventA>) {
     updateProbability(probability, eventChances.chanceA());
@@ -153,8 +153,8 @@ void internal::updateProbabilityFromRandomChance(
 
 template <bool Reciprocal, typename RandomEventTag>
 void internal::updateProbabilityFromRandomBinaryChance(
-  types::registry& registy, const RandomBinaryEventChance& eventChance, const Battle& battle) {
-  Probability& probability = registy.get<Probability>(battle.val);
+  types::registry& registry, const RandomBinaryEventChance& eventChance, const Battle& battle) {
+  Probability& probability = registry.get<Probability>(battle.val);
 
   if constexpr (std::is_same_v<RandomEventTag, tags::RandomEventCheckPassed>) {
     if constexpr (Reciprocal) {
@@ -246,10 +246,10 @@ void randomChance(Simulation& simulation, void (*handleRandomEventChoice)(Simula
     registry.view<Battle, RandomEventChances<POSSIBLE_EVENT_COUNT>>().each(
       [&registry](const Battle& battle, auto&&... args) { registry.emplace<tags::CloneFrom>(battle.val); });
 
-    std::vector<types::entity> chacneEntities{chanceEntityView.begin(), chanceEntityView.end()};
+    std::vector<types::entity> chanceEntities{chanceEntityView.begin(), chanceEntityView.end()};
     auto clonedEntityMap = clone(registry, POSSIBLE_EVENT_COUNT - 1);
 
-    for (types::entity original : chacneEntities) {
+    for (types::entity original : chanceEntities) {
       const auto& cloned = clonedEntityMap[original];
       registry.emplace<tags::RandomEventA>(original);
       registry.emplace<tags::RandomEventB>(cloned[0]);
@@ -319,7 +319,7 @@ void internal::assignReciprocalRandomBinaryEvent(
   auto [rngSeed, probability] = handle.registry()->get<RngSeed, Probability>(battle.val);
   types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, eventChance.val);
 
-  if (rng > 1U) {
+  if (rng == 0) {
     handle.emplace<tags::RandomEventCheckPassed>();
     updateProbability(probability, eventChance.reciprocalPass());
   }
@@ -355,10 +355,10 @@ void internal::randomBinaryChance(Simulation& simulation, void (*handleRandomEve
     registry.view<Battle, RandomBinaryEventChance>().each(
       [&registry](const Battle& battle, auto&&... args) { registry.emplace<tags::CloneFrom>(battle.val); });
 
-    std::vector<types::entity> chacneEntities{chanceEntityView.begin(), chanceEntityView.end()};
+    std::vector<types::entity> chanceEntities{chanceEntityView.begin(), chanceEntityView.end()};
     auto clonedEntityMap = clone(registry, 1);
 
-    for (types::entity original : chacneEntities) {
+    for (types::entity original : chanceEntities) {
       const auto& cloned = clonedEntityMap[original];
       registry.emplace<tags::RandomEventCheckPassed>(original);
       registry.emplace<tags::RandomEventCheckFailed>(cloned[0]);

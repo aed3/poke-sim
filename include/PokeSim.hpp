@@ -15013,10 +15013,10 @@ template <typename Type>
 inline void updateProbability(Probability& currentProbability, Type percentChance);
 template <std::uint8_t POSSIBLE_EVENT_COUNT, typename RandomEventTag>
 inline void updateProbabilityFromRandomChance(
-  types::registry& registy, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, const Battle& battle);
+  types::registry& registry, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, const Battle& battle);
 template <bool Reciprocal, typename RandomEventTag>
 inline void updateProbabilityFromRandomBinaryChance(
-  types::registry& registy, const RandomBinaryEventChance& eventChance, const Battle& battle);
+  types::registry& registry, const RandomBinaryEventChance& eventChance, const Battle& battle);
 
 template <BattleFormat Format>
 inline void setBinaryChanceByFormat(types::handle handle, types::percentChance percentChance);
@@ -15081,17 +15081,17 @@ const std::uint8_t MAX_TYPICAL_RANDOM_OPTIONS = 5U;
 template <std::uint8_t RANDOM_OPTIONS>
 struct RandomEventChances {
   std::array<types::percentChance, RANDOM_OPTIONS> val{};
-  static_assert(RANDOM_OPTIONS <= 5);
+  static_assert(RANDOM_OPTIONS <= MAX_TYPICAL_RANDOM_OPTIONS);
 
   types::percentChance chanceA() const { return val[0]; }
   types::percentChance chanceB() const { return val[1] - val[0]; }
   types::percentChance chanceC() const { return val[2] - val[1]; }
   types::percentChance chanceD() const {
-    static_assert(RANDOM_OPTIONS >= 4);
+    static_assert(RANDOM_OPTIONS >= 4U);
     return val[3] - val[2];
   }
   types::percentChance chanceE() const {
-    static_assert(RANDOM_OPTIONS == 5);
+    static_assert(RANDOM_OPTIONS == 5U);
     return val[4] - val[3];
   }
 };
@@ -15101,8 +15101,8 @@ struct RandomBinaryEventChance {
 
   types::percentChance pass() const { return val; }
   types::percentChance fail() const { return 100 - pass(); }
-  float reciprocalPass() const { return 100.0 / pass(); }
-  float reciprocalFail() const { return 100 - reciprocalPass(); }
+  types::probability reciprocalPass() const { return 100.0F / (types::probability)pass(); }
+  types::probability reciprocalFail() const { return 100 - reciprocalPass(); }
 };
 
 template <std::uint8_t RANDOM_OPTIONS>
@@ -16872,7 +16872,7 @@ template <typename Component, BattleFormat Format>
 void internal::setReciprocalRandomBinaryChoice(
   types::handle handle, const Component& percentChance, types::percentChance autoPassLimit,
   types::percentChance autoFailLimit) {
-  float passChance = 100 - 100.0 / percentChance.val;
+  types::probability passChance = 100.0F / (types::probability)percentChance.val;
   if (!checkPercentChanceLimits(handle, passChance, autoPassLimit, autoFailLimit)) {
     setBinaryChanceByFormat<Format>(handle, percentChance.val);
   }
@@ -16919,8 +16919,8 @@ void internal::updateProbability(Probability& currentProbability, Type percentCh
 
 template <std::uint8_t POSSIBLE_EVENT_COUNT, typename RandomEventTag>
 void internal::updateProbabilityFromRandomChance(
-  types::registry& registy, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, const Battle& battle) {
-  Probability& probability = registy.get<Probability>(battle.val);
+  types::registry& registry, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, const Battle& battle) {
+  Probability& probability = registry.get<Probability>(battle.val);
 
   if constexpr (std::is_same_v<RandomEventTag, tags::RandomEventA>) {
     updateProbability(probability, eventChances.chanceA());
@@ -16941,8 +16941,8 @@ void internal::updateProbabilityFromRandomChance(
 
 template <bool Reciprocal, typename RandomEventTag>
 void internal::updateProbabilityFromRandomBinaryChance(
-  types::registry& registy, const RandomBinaryEventChance& eventChance, const Battle& battle) {
-  Probability& probability = registy.get<Probability>(battle.val);
+  types::registry& registry, const RandomBinaryEventChance& eventChance, const Battle& battle) {
+  Probability& probability = registry.get<Probability>(battle.val);
 
   if constexpr (std::is_same_v<RandomEventTag, tags::RandomEventCheckPassed>) {
     if constexpr (Reciprocal) {
@@ -17034,10 +17034,10 @@ void randomChance(Simulation& simulation, void (*handleRandomEventChoice)(Simula
     registry.view<Battle, RandomEventChances<POSSIBLE_EVENT_COUNT>>().each(
       [&registry](const Battle& battle, auto&&... args) { registry.emplace<tags::CloneFrom>(battle.val); });
 
-    std::vector<types::entity> chacneEntities{chanceEntityView.begin(), chanceEntityView.end()};
+    std::vector<types::entity> chanceEntities{chanceEntityView.begin(), chanceEntityView.end()};
     auto clonedEntityMap = clone(registry, POSSIBLE_EVENT_COUNT - 1);
 
-    for (types::entity original : chacneEntities) {
+    for (types::entity original : chanceEntities) {
       const auto& cloned = clonedEntityMap[original];
       registry.emplace<tags::RandomEventA>(original);
       registry.emplace<tags::RandomEventB>(cloned[0]);
@@ -17107,7 +17107,7 @@ void internal::assignReciprocalRandomBinaryEvent(
   auto [rngSeed, probability] = handle.registry()->get<RngSeed, Probability>(battle.val);
   types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, eventChance.val);
 
-  if (rng > 1U) {
+  if (rng == 0) {
     handle.emplace<tags::RandomEventCheckPassed>();
     updateProbability(probability, eventChance.reciprocalPass());
   }
@@ -17143,10 +17143,10 @@ void internal::randomBinaryChance(Simulation& simulation, void (*handleRandomEve
     registry.view<Battle, RandomBinaryEventChance>().each(
       [&registry](const Battle& battle, auto&&... args) { registry.emplace<tags::CloneFrom>(battle.val); });
 
-    std::vector<types::entity> chacneEntities{chanceEntityView.begin(), chanceEntityView.end()};
+    std::vector<types::entity> chanceEntities{chanceEntityView.begin(), chanceEntityView.end()};
     auto clonedEntityMap = clone(registry, 1);
 
-    for (types::entity original : chacneEntities) {
+    for (types::entity original : chanceEntities) {
       const auto& cloned = clonedEntityMap[original];
       registry.emplace<tags::RandomEventCheckPassed>(original);
       registry.emplace<tags::RandomEventCheckFailed>(cloned[0]);
