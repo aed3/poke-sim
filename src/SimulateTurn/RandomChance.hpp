@@ -22,10 +22,10 @@ template <typename Type>
 void updateProbability(Probability& currentProbability, Type percentChance);
 template <std::uint8_t POSSIBLE_EVENT_COUNT, typename RandomEventTag>
 void updateProbabilityFromRandomChance(
-  types::registry& registy, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, const Battle& battle);
+  types::registry& registry, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, const Battle& battle);
 template <bool Reciprocal, typename RandomEventTag>
 void updateProbabilityFromRandomBinaryChance(
-  types::registry& registy, const RandomBinaryEventChance& eventChance, const Battle& battle);
+  types::registry& registry, const RandomBinaryEventChance& eventChance, const Battle& battle);
 
 template <BattleFormat Format>
 void setBinaryChanceByFormat(types::handle handle, types::percentChance percentChance);
