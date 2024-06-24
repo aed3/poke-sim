@@ -42,7 +42,9 @@ void setRandomChoice(types::handle handle, std::array<types::percentChance, POSS
     handle.emplace<RandomEventChances<POSSIBLE_EVENT_COUNT>>(chances);
   }
   else {
-    handle.get_or_emplace<RandomEventChancesStack<POSSIBLE_EVENT_COUNT>>().val.emplace_back(chances);
+    handle.registry()
+      ->get_or_emplace<RandomEventChancesStack<POSSIBLE_EVENT_COUNT>>(handle.get<Battle>().val)
+      .val.emplace_back(chances, handle.entity());
   }
 }
 
@@ -67,7 +69,9 @@ void internal::setBinaryChanceByFormat(types::handle handle, types::percentChanc
     handle.emplace<RandomBinaryEventChance>(percentChance);
   }
   else {
-    handle.get_or_emplace<RandomBinaryEventChanceStack>().val.emplace_back(percentChance);
+    handle.registry()
+      ->get_or_emplace<RandomBinaryEventChanceStack>(handle.get<Battle>().val)
+      .val.emplace_back(percentChance, handle.entity());
   }
 }
 
@@ -214,11 +218,12 @@ void internal::assignRandomEvent(
 
 template <std::uint8_t POSSIBLE_EVENT_COUNT>
 void internal::placeRandomEventChanceFromStack(
-  types::handle handle, RandomEventChancesStack<POSSIBLE_EVENT_COUNT>& stack) {
-  handle.emplace<RandomEventChances<POSSIBLE_EVENT_COUNT>>(stack.val.back());
+  types::handle battleHandle, RandomEventChancesStack<POSSIBLE_EVENT_COUNT>& stack) {
+  auto [eventChances, entity] = stack.val.back();
+  battleHandle.registry()->emplace<RandomEventChances<POSSIBLE_EVENT_COUNT>>(entity, eventChances);
   stack.val.pop_back();
   if (stack.val.empty()) {
-    handle.remove<RandomEventChancesStack<POSSIBLE_EVENT_COUNT>>();
+    battleHandle.remove<RandomEventChancesStack<POSSIBLE_EVENT_COUNT>>();
   }
 }
 
@@ -329,11 +334,12 @@ void internal::assignReciprocalRandomBinaryEvent(
   }
 }
 
-void internal::placeRandomBinaryEventChanceFromStack(types::handle handle, RandomBinaryEventChanceStack& stack) {
-  handle.emplace<RandomBinaryEventChance>(stack.val.back());
+void internal::placeRandomBinaryEventChanceFromStack(types::handle battleHandle, RandomBinaryEventChanceStack& stack) {
+  auto [eventChance, entity] = stack.val.back();
+  battleHandle.registry()->emplace<RandomBinaryEventChance>(entity, eventChance);
   stack.val.pop_back();
   if (stack.val.empty()) {
-    handle.remove<RandomBinaryEventChanceStack>();
+    battleHandle.remove<RandomBinaryEventChanceStack>();
   }
 }
 
