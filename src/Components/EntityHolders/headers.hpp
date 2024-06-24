@@ -7,6 +7,7 @@
 #include "LastUsedMove.hpp"
 #include "MoveEffect.hpp"
 #include "MoveSlots.hpp"
+#include "ParentBattle.hpp"
 #include "Pokemon.hpp"
 #include "Side.hpp"
 #include "Sides.hpp"

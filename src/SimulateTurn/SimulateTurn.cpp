@@ -15,6 +15,7 @@
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SpeedSort.hpp>
 #include <Components/Tags/BattleTags.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
@@ -40,8 +41,7 @@ void run(Simulation& simulation) {
   simulation.viewForSelectedBattles<speedSort>();
   simulation.viewForSelectedBattles<addResidualAction, Tags<>, entt::exclude_t<tags::BattleMidTurn>>();
 
-  auto turnEntities = simulation.registry.view<Turn, tags::SimulateTurn>();
-  simulation.registry.insert<tags::BattleMidTurn>(turnEntities.begin(), turnEntities.end());
+  simulation.addToEntities<tags::BattleMidTurn, Turn, tags::SimulateTurn>();
 
   simulation.viewForSelectedBattles<setCurrentAction>();
   while (!simulation.registry.view<action::tags::Current>().empty()) {
@@ -76,8 +76,8 @@ void runMoveAction(Simulation& simulation) {
   internal::SelectForBattleView<action::Move> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 
-  simulation.viewForSelectedBattles<setCurrentActionTarget>();
   simulation.viewForSelectedBattles<setCurrentActionSource>();
+  simulation.viewForSelectedBattles<setCurrentActionTarget>();
   simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex);
 
   simulation.view<deductPp, Tags<tags::CurrentActionMoveSlot>>();

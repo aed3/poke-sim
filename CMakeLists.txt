@@ -66,9 +66,9 @@ set (SOURCES
   src/Pokedex/Setup/MoveDexDataSetup.cpp
   src/Pokedex/Setup/SpeciesDexDataSetup.cpp
   src/SimulateTurn/ManageActionQueue.cpp
+  src/SimulateTurn/RandomChance.cpp
   src/SimulateTurn/SimulateTurn.cpp
   src/Simulation/MoveHitSteps.cpp
-  src/Simulation/RandomChance.cpp
   src/Simulation/RunEvent.cpp
   src/Simulation/Simulation.cpp
   src/Simulation/SimulationResults.cpp

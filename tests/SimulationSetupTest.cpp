@@ -314,7 +314,8 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalcDamage][Setup]") {
   const auto& p1Team = registry.get<Team>(registry.get<Sides>(battleEntity).p1()).val;
   const auto& p2Team = registry.get<Team>(registry.get<Sides>(battleEntity).p2()).val;
 
-  auto calculationsEntitiesGroup = registry.group<calc_damage::Attacker, calc_damage::Defender, MoveName, Battle>();
+  auto calculationsEntitiesGroup =
+    registry.group<calc_damage::Attacker, calc_damage::Defenders, calc_damage::Move, Battle>();
   REQUIRE(calculationsEntitiesGroup.size() == 5);
 
   const auto calculationsEntities = calculationsEntitiesGroup.each();
@@ -325,11 +326,11 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalcDamage][Setup]") {
       std::to_string((std::uint16_t)calcDamageInfo.move));
 
     bool found = std::any_of(calculationsEntities.begin(), calculationsEntities.end(), [&](const auto& tuple) {
-      const auto& [entity, attacker, defender, moveName, battle] = tuple;
+      const auto& [entity, attacker, defenders, move, battle] = tuple;
       if (battle.val != battleEntity) return false;
-      if (moveName.name != calcDamageInfo.move) return false;
+      if (registry.get<MoveName>(move.val).name != calcDamageInfo.move) return false;
       if (attacker.val != targetSlotToEntity(calcDamageInfo.attackerSlot, p1Team, p2Team)) return false;
-      if (defender.val != targetSlotToEntity(calcDamageInfo.defenderSlot, p1Team, p2Team)) return false;
+      if (defenders.val[0] != targetSlotToEntity(calcDamageInfo.defenderSlot, p1Team, p2Team)) return false;
       return true;
     });
 

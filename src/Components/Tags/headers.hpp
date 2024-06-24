@@ -2,6 +2,7 @@
 
 #include "AbilityTags.hpp"
 #include "BattleTags.hpp"
+#include "Current.hpp"
 #include "ItemTags.hpp"
 #include "MoveTags.hpp"
 #include "NatureTags.hpp"

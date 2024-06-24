@@ -8,7 +8,7 @@
 #include <Components/ID.hpp>
 #include <Components/Probability.hpp>
 #include <Components/RNGSeed.hpp>
-#include <Components/Tags/BattleTags.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Turn.hpp>
 #include <Types/Entity.hpp>

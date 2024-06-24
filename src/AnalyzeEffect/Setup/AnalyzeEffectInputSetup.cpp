@@ -1,6 +1,6 @@
 #include "AnalyzeEffectInputSetup.hpp"
 
-#include <Components/AnalyzeEffect/AttackerDefender.hpp>
+#include <Components/AnalyzeEffect/Aliases.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/PseudoWeatherNames.hpp>
@@ -27,7 +27,7 @@ void InputSetup::setAttacker(types::entity entity) {
 }
 
 void InputSetup::setDefender(types::entity entity) {
-  handle.emplace<Defender>(entity);
+  handle.emplace_or_replace<Defenders>().val.push_back(entity);
 }
 
 void InputSetup::setEffect(types::effectEnum effect) {
