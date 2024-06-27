@@ -91,7 +91,7 @@ void Simulation::run() {
 }
 
 std::vector<types::entity> Simulation::selectedBattleEntities() {
-  if (!SelectedForViewBattle::depth.empty()) {
+  if (hasActiveSelection<SelectedForViewBattle>()) {
     auto view = registry.view<SelectedForViewBattle, Sides>();
     return {view.begin(), view.end()};
   }

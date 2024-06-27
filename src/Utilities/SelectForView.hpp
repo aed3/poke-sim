@@ -5,7 +5,7 @@
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SpeciesNames.hpp>
 #include <Components/Selection.hpp>
-#include <Simulation/Simulation.hpp>
+#include <Simulation/RegistryContainer.hpp>
 #include <Types/Entity.hpp>
 #include <cstdint>
 #include <entt/container/dense_set.hpp>
@@ -14,53 +14,27 @@
 namespace pokesim::internal {
 template <typename Selection, typename... ComponentsToSelect>
 struct SelectForView {
-  SelectForView(Simulation& simulation_)
-      : simulation(&simulation_), selectedCount(simulation->registry.group(entt::get<ComponentsToSelect...>).size()) {
+  SelectForView(RegistryContainer& registryContainer_)
+      : registryContainer(&registryContainer_),
+        selectedCount(registryContainer->select<Selection, ComponentsToSelect...>()) {
     if (hasNoneSelected()) {
-      simulation = nullptr;
-      return;
-    }
-
-    Selection::depth.emplace_back([](const void*, const types::registry& registry) {
-      auto view = registry.view<ComponentsToSelect...>();
-      return std::vector<types::entity>{view.begin(), view.end()};
-    });
-
-    simulation->registry.clear<Selection>();
-
-    for (types::entity entity : simulation->registry.view<ComponentsToSelect...>()) {
-      simulation->registry.emplace<Selection>(entity);
+      registryContainer = nullptr;
     }
   }
 
   ~SelectForView() { deselect(); }
 
   void deselect() {
-    if (!simulation) {
-      return;
+    if (registryContainer) {
+      registryContainer->deselect<Selection>();
+      registryContainer = nullptr;
     }
-
-    simulation->registry.clear<Selection>();
-
-    ENTT_ASSERT(!Selection::depth.empty(), "Selection depth cannot go negative.");
-    Selection::depth.pop_back();
-
-    for (const auto delegate : Selection::depth) {
-      std::vector<types::entity> previouslySelected = delegate(simulation->registry);
-      for (types::entity entity : previouslySelected) {
-        if (simulation->registry.valid(entity)) {
-          simulation->registry.get_or_emplace<Selection>(entity);
-        }
-      }
-    }
-
-    simulation = nullptr;
   }
 
   bool hasNoneSelected() const { return selectedCount == 0; }
 
  private:
-  Simulation* simulation = nullptr;
+  RegistryContainer* registryContainer = nullptr;
   const std::size_t selectedCount = 0;
 };
 
