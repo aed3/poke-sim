@@ -36,7 +36,7 @@ struct Results;
  * @details Each `Simulation` instance will only simulate for either single or double battles. This class is optimized
  * for running multiple simulations of the same battle, where each battle state has completed the same number of turns.
  */
-class Simulation : public RegistryContainer {
+class Simulation : public internal::RegistryContainer {
  public:
   struct MoveCreationInfo {
     dex::Move name = dex::Move::NO_MOVE;
@@ -107,8 +107,9 @@ class Simulation : public RegistryContainer {
 
  private:
   std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
-  PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
-  void createInitialSide(SideStateSetup sideSetup, const SideCreationInfo& sideData);
+  PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData, const BattleCreationInfo& battleData);
+  void createInitialSide(
+    SideStateSetup sideSetup, const SideCreationInfo& sideData, const BattleCreationInfo& battleData);
 
   void createInitialTurnDecision(BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData);
   void createCalcDamageInput(BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData);
