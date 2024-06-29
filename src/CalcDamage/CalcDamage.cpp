@@ -4,7 +4,9 @@
 #include <Components/CalcDamage/CalcDamageTarget.hpp>
 #include <Components/CalcDamage/CriticalHit.hpp>
 #include <Components/Names/MoveNames.hpp>
-#include <Components/Tags/RandomChanceTags.hpp>
+#include <Components/Selection.hpp>
+#include <Components/RandomEventOutputs.hpp>
+#include <Components/Tags/SimulationTags.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
@@ -23,9 +25,7 @@ void clearRunVariables(Simulation& simulation) {
 
 void modifyDamageWithTypes(Simulation& /*simulation*/) {}
 
-void getDamageRole(Simulation& simulation) {
-  sampleRandomChance(simulation);
-}
+void getDamageRole(Simulation& /*simulation*/) {}
 
 void internal::assignCritChanceDivisor(types::handle damageTargetHandle, CritBoost critBoost) {
   std::size_t index = std::min((std::size_t)critBoost.val, internal::CRIT_CHANCE_DIVISORS.size() - 1);

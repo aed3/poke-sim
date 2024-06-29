@@ -10,7 +10,7 @@
 #include <Components/SimulateTurn/MoveHitStepTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MoveTags.hpp>
-#include <Components/Tags/RandomChanceTags.hpp>
+#include <Components/RandomEventOutputs.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Types/Enums/BattleFormat.hpp>
 #include <Utilities/Tags.hpp>
@@ -24,7 +24,7 @@ void internal::assignHitCountToTargets(types::handle targetHandle, const Current
   types::registry& registry = *targetHandle.registry();
   if (registry.all_of<move::tags::VariableHitCount>(currentMove.val)) {
     // The 35%-35%-15%-15% out of 100 for 2-3-4-5 hits added so each index is the sum of the chance of its hit count and
-    // the hit counts less than it so it works with the randomChance function
+    // the hit counts less than it so it works with the randomEventChances function
     static constexpr std::array<types::percentChance, 4U> progressiveMultiHitChances = {35U, 70U, 85U, 100U};
 
     setRandomChoice<4U, Format, false>(targetHandle, progressiveMultiHitChances);
@@ -48,7 +48,7 @@ void setMoveHitCount(Simulation& simulation) {
   }
 
   if (!simulation.registry.view<RandomEventChances<4U>>().empty()) {
-    randomChance<4U>(simulation, [](Simulation& sim) {
+    randomEventChances<4U>(simulation, [](Simulation& sim) {
       sim.addToEntities<HitCount, tags::RandomEventA>(HitCount{2U});
       sim.addToEntities<HitCount, tags::RandomEventB>(HitCount{3U});
       sim.addToEntities<HitCount, tags::RandomEventC>(HitCount{4U});

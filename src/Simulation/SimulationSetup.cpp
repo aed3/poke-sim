@@ -43,7 +43,8 @@ std::vector<types::entity> Simulation::createInitialMoves(const std::vector<Move
   return moveEntities;
 }
 
-PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& pokemonData) {
+PokemonStateSetup Simulation::createInitialPokemon(
+  const PokemonCreationInfo& pokemonData, const BattleCreationInfo& battleData) {
   PokemonStateSetup pokemonSetup(registry);
   if (pokemonData.id.has_value()) {
     pokemonSetup.setID(pokemonData.id.value());
@@ -70,15 +71,26 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
   pokemonSetup.setStat<stat::Spe>(pokemonData.stats.spe);
   pokemonSetup.setProperty<tags::SpeedUpdateRequired>();
 
+  if (battleData.runWithSimulateTurn) {
+    pokemonSetup.setProperty<tags::SimulateTurn>();
+  }
+  if (battleData.runWithCalculateDamage) {
+    pokemonSetup.setProperty<tags::CalculateDamage>();
+  }
+  if (battleData.runWithAnalyzeEffect) {
+    pokemonSetup.setProperty<tags::AnalyzeEffect>();
+  }
+
   return pokemonSetup;
 }
 
-void Simulation::createInitialSide(SideStateSetup sideSetup, const SideCreationInfo& sideData) {
+void Simulation::createInitialSide(
+  SideStateSetup sideSetup, const SideCreationInfo& sideData, const BattleCreationInfo& battleData) {
   std::vector<PokemonStateSetup> pokemonSetupList;
   pokemonSetupList.reserve(sideData.team.size());
 
   for (const PokemonCreationInfo& pokemonData : sideData.team) {
-    PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonData);
+    PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonData, battleData);
     std::vector<types::entity> moveEntities = createInitialMoves(pokemonData.moves);
     pokemonSetup.setMoves(moveEntities);
 
@@ -172,8 +184,8 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
     BattleStateSetup battleStateSetup(registry);
     auto [p1SideSetup, p2SideSetup] = createInitialBattle(battleStateSetup, battleData);
 
-    createInitialSide(p1SideSetup, battleData.p1);
-    createInitialSide(p2SideSetup, battleData.p2);
+    createInitialSide(p1SideSetup, battleData.p1, battleData);
+    createInitialSide(p2SideSetup, battleData.p2, battleData);
 
     if (!battleData.decisionsToSimulate.empty()) {
       ENTT_ASSERT(
