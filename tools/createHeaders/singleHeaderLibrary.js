@@ -178,7 +178,7 @@ const createSingleFileHeader = () => {
       unless(isImplicit())
     ).bind("inline")
     l method cxxMethodDecl(inline)
-    l function functionDecl(inline)
+    l functionTemplate functionDecl(inline)
 
     m namespaceDecl(
       isExpansionInMainFile(),
@@ -195,12 +195,16 @@ const createSingleFileHeader = () => {
     m namespaceDecl(
       isExpansionInMainFile(),
       matchesName("pokesim"),
-      forEach(function)
+      forEach(functionDecl(
+        unless(cxxConstructorDecl(isDefinition())),
+        unless(isInline()),
+        unless(isImplicit())
+      ).bind("inline"))
     )
     m namespaceDecl(
       isExpansionInMainFile(),
       matchesName("pokesim"),
-      forEach(functionTemplateDecl(forEach(function)))
+      forEach(functionTemplateDecl(forEach(functionTemplate)))
     )`;
 
     const queryPath = path.join(tempDir, 'query');
