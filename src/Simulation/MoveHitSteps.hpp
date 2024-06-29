@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Components/RandomEventCheck.hpp>
+#include <Components/RandomEventInputs.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/BattleFormat.hpp>
 #include <Types/Move.hpp>
