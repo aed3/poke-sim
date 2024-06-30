@@ -2,6 +2,7 @@
 
 #include <Components/Selection.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Registry.hpp>
 #include <Utilities/RegistryLoop.hpp>
 #include <Utilities/Tags.hpp>
 #include <cstdint>

@@ -5,6 +5,7 @@
 #include "ManageBattleState.hpp"
 #include "Pokemon/ManagePokemonState.hpp"
 #include "Setup/BattleStateSetup.hpp"
+#include "Setup/EnumToTag.hpp"
 #include "Setup/MoveStateSetup.hpp"
 #include "Setup/PokemonStateSetup.hpp"
 #include "Setup/SideStateSetup.hpp"

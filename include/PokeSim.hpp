@@ -40,6 +40,7 @@
  * src/Utilities/Variant.hpp
  * src/Types/Effect.hpp
  * src/Types/Entity.hpp
+ * src/Types/Registry.hpp
  * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp
  * src/Types/Enums/Move.hpp
  * src/Types/Enums/Slot.hpp
@@ -60,6 +61,7 @@
  * src/Types/Enums/PlayerSideId.hpp
  * src/Types/Random.hpp
  * src/Battle/Setup/BattleStateSetup.hpp
+ * src/Battle/Setup/EnumToTag.hpp
  * src/Types/Move.hpp
  * src/Battle/Setup/MoveStateSetup.hpp
  * src/Battle/Setup/SideStateSetup.hpp
@@ -183,13 +185,6 @@
  * src/Pokedex/Setup/AbilityDexDataSetup.cpp
  * src/Pokedex/Pokedex.cpp
  * src/Pokedex/Abilities/AbilityEvents.cpp
- * src/Components/Tags/StatusTags.cpp
- * src/Components/Tags/NatureTags.hpp
- * src/Components/Tags/NatureTags.cpp
- * src/Components/Tags/ItemTags.hpp
- * src/Components/Tags/ItemTags.cpp
- * src/Components/Tags/AbilityTags.hpp
- * src/Components/Tags/AbilityTags.cpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.cpp
  * src/CalcDamage/CalcDamage.cpp
  * src/Components/EntityHolders/FoeSide.hpp
@@ -201,8 +196,12 @@
  * src/Components/Names/NatureNames.hpp
  * src/Components/Names/StatusNames.hpp
  * src/Components/Position.hpp
+ * src/Components/Tags/AbilityTags.hpp
+ * src/Components/Tags/ItemTags.hpp
+ * src/Components/Tags/NatureTags.hpp
  * src/Battle/Setup/PokemonStateSetup.cpp
  * src/Battle/Setup/MoveStateSetup.cpp
+ * src/Battle/Setup/EnumToTag.cpp
  * src/Battle/Setup/BattleStateSetup.cpp
  * src/Components/EntityHolders/LastUsedMove.hpp
  * src/Battle/Pokemon/ManagePokemonState.cpp
@@ -12543,15 +12542,11 @@ using effectEnum = pokesim::internal::variant<
 
 //////////////////////// START OF src/Types/Entity.hpp /////////////////////////
 
-namespace pokesim::types {
-using registry = entt::registry;
-}  // namespace pokesim::types
+#include <vector>
 
 namespace pokesim::types {
 template <typename T, typename... Other>
 using view = entt::view<entt::get_t<const T, const Other...>>;
-
-using handle = entt::basic_handle<registry>;
 
 using entity = entt::entity;
 
@@ -12559,6 +12554,18 @@ using ClonedEntityMap = entt::dense_map<entity, std::vector<entity>>;
 }  // namespace pokesim::types
 
 ///////////////////////// END OF src/Types/Entity.hpp //////////////////////////
+
+/////////////////////// START OF src/Types/Registry.hpp ////////////////////////
+
+namespace pokesim::types {
+using registry = entt::registry;
+}  // namespace pokesim::types
+
+namespace pokesim::types {
+using handle = entt::basic_handle<registry>;
+}  // namespace pokesim::types
+
+//////////////////////// END OF src/Types/Registry.hpp /////////////////////////
 
 ///////// START OF src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp /////////
 
@@ -13115,6 +13122,32 @@ struct BattleStateSetup : internal::StateSetupBase {
 }  // namespace pokesim
 
 ///////////////// END OF src/Battle/Setup/BattleStateSetup.hpp /////////////////
+
+/////////////////// START OF src/Battle/Setup/EnumToTag.hpp ////////////////////
+
+namespace pokesim {
+namespace ability::tags {
+// Assigns an ability's tag to a handle
+inline void enumToTag(dex::Ability ability, types::handle handle);
+}  // namespace ability::tags
+
+namespace item::tags {
+// Assigns an item's tag to a handle
+inline void enumToTag(dex::Item item, types::handle handle);
+}  // namespace item::tags
+
+namespace nature::tags {
+// Assigns a nature's tag to a handle
+inline void enumToTag(dex::Nature nature, types::handle handle);
+}  // namespace nature::tags
+
+namespace status::tags {
+// Assigns a status' tag to a handle
+inline void enumToTag(dex::Status status, types::handle& handle);
+}  // namespace status::tags
+}  // namespace pokesim
+
+//////////////////// END OF src/Battle/Setup/EnumToTag.hpp /////////////////////
 
 ///////////////////////// START OF src/Types/Move.hpp //////////////////////////
 
@@ -14879,9 +14912,6 @@ struct Paralysis {};
 struct Poison {};
 struct Sleep {};
 struct Toxic {};
-
-// Assigns a status' tag to a handle
-inline void enumToTag(dex::Status status, types::handle& handle);
 }  // namespace pokesim::status::tags
 
 ////////////////// END OF src/Components/Tags/StatusTags.hpp ///////////////////
@@ -18976,186 +19006,6 @@ inline void internal::StaticEvents::onModifySpe(stat::EffectiveSpeed& effectiveS
 
 //////////////// END OF src/Pokedex/Abilities/AbilityEvents.cpp ////////////////
 
-///////////////// START OF src/Components/Tags/StatusTags.cpp //////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::status::tags {
-inline void enumToTag(dex::Status status, types::handle& handle) {
-  switch (status) {
-    case dex::Status::BRN: handle.emplace<Burn>(); return;
-    case dex::Status::FRZ: handle.emplace<Freeze>(); return;
-    case dex::Status::PAR: handle.emplace<Paralysis>(); return;
-    case dex::Status::PSN: handle.emplace<Poison>(); return;
-    case dex::Status::SLP: handle.emplace<Sleep>(); return;
-    case dex::Status::TOX: handle.emplace<Toxic>(); return;
-    default: {
-      ENTT_ASSERT(false, "Adding tag for status that does not exist");
-    }
-  }
-}
-}  // namespace pokesim::status::tags
-
-////////////////// END OF src/Components/Tags/StatusTags.cpp ///////////////////
-
-///////////////// START OF src/Components/Tags/NatureTags.hpp //////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::nature::tags {
-struct Adamant {};
-struct Bashful {};
-struct Bold {};
-struct Brave {};
-struct Calm {};
-struct Careful {};
-struct Docile {};
-struct Gentle {};
-struct Hardy {};
-struct Hasty {};
-struct Impish {};
-struct Jolly {};
-struct Lax {};
-struct Lonely {};
-struct Mild {};
-struct Modest {};
-struct Naive {};
-struct Naughty {};
-struct Quiet {};
-struct Quirky {};
-struct Rash {};
-struct Relaxed {};
-struct Sassy {};
-struct Serious {};
-struct Timid {};
-
-// Assigns a nature's tag to a handle
-inline void enumToTag(dex::Nature nature, types::handle handle);
-}  // namespace pokesim::nature::tags
-
-////////////////// END OF src/Components/Tags/NatureTags.hpp ///////////////////
-
-///////////////// START OF src/Components/Tags/NatureTags.cpp //////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::nature::tags {
-inline void enumToTag(dex::Nature nature, types::handle handle) {
-  switch (nature) {
-    case dex::Nature::ADAMANT: handle.emplace<Adamant>(); return;
-    case dex::Nature::BASHFUL: handle.emplace<Bashful>(); return;
-    case dex::Nature::BOLD: handle.emplace<Bold>(); return;
-    case dex::Nature::BRAVE: handle.emplace<Brave>(); return;
-    case dex::Nature::CALM: handle.emplace<Calm>(); return;
-    case dex::Nature::CAREFUL: handle.emplace<Careful>(); return;
-    case dex::Nature::DOCILE: handle.emplace<Docile>(); return;
-    case dex::Nature::GENTLE: handle.emplace<Gentle>(); return;
-    case dex::Nature::HARDY: handle.emplace<Hardy>(); return;
-    case dex::Nature::HASTY: handle.emplace<Hasty>(); return;
-    case dex::Nature::IMPISH: handle.emplace<Impish>(); return;
-    case dex::Nature::JOLLY: handle.emplace<Jolly>(); return;
-    case dex::Nature::LAX: handle.emplace<Lax>(); return;
-    case dex::Nature::LONELY: handle.emplace<Lonely>(); return;
-    case dex::Nature::MILD: handle.emplace<Mild>(); return;
-    case dex::Nature::MODEST: handle.emplace<Modest>(); return;
-    case dex::Nature::NAIVE: handle.emplace<Naive>(); return;
-    case dex::Nature::NAUGHTY: handle.emplace<Naughty>(); return;
-    case dex::Nature::QUIET: handle.emplace<Quiet>(); return;
-    case dex::Nature::QUIRKY: handle.emplace<Quirky>(); return;
-    case dex::Nature::RASH: handle.emplace<Rash>(); return;
-    case dex::Nature::RELAXED: handle.emplace<Relaxed>(); return;
-    case dex::Nature::SASSY: handle.emplace<Sassy>(); return;
-    case dex::Nature::SERIOUS: handle.emplace<Serious>(); return;
-    case dex::Nature::TIMID: handle.emplace<Timid>(); return;
-    default: {
-      ENTT_ASSERT(false, "Adding tag for nature that does not exist");
-    }
-  }
-}
-}  // namespace pokesim::nature::tags
-
-////////////////// END OF src/Components/Tags/NatureTags.cpp ///////////////////
-
-////////////////// START OF src/Components/Tags/ItemTags.hpp ///////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::item::tags {
-struct AssaultVest {};
-struct BrightPowder {};
-struct ChoiceScarf {};
-struct ChoiceSpecs {};
-struct FocusSash {};
-struct LifeOrb {};
-
-// Assigns an item's tag to a handle
-inline void enumToTag(dex::Item item, types::handle handle);
-}  // namespace pokesim::item::tags
-
-/////////////////// END OF src/Components/Tags/ItemTags.hpp ////////////////////
-
-////////////////// START OF src/Components/Tags/ItemTags.cpp ///////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::item::tags {
-inline void enumToTag(dex::Item item, types::handle handle) {
-  switch (item) {
-    case dex::Item::ASSAULT_VEST: handle.emplace<AssaultVest>(); return;
-    case dex::Item::BRIGHT_POWDER: handle.emplace<BrightPowder>(); return;
-    case dex::Item::CHOICE_SCARF: handle.emplace<ChoiceScarf>(); return;
-    case dex::Item::CHOICE_SPECS: handle.emplace<ChoiceSpecs>(); return;
-    case dex::Item::FOCUS_SASH: handle.emplace<FocusSash>(); return;
-    case dex::Item::LIFE_ORB: handle.emplace<LifeOrb>(); return;
-    default: {
-      ENTT_ASSERT(false, "Adding tag for item that does not exist");
-    }
-  }
-}
-}  // namespace pokesim::item::tags
-
-/////////////////// END OF src/Components/Tags/ItemTags.cpp ////////////////////
-
-///////////////// START OF src/Components/Tags/AbilityTags.hpp /////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::ability::tags {
-struct Defiant {};
-struct Infiltrator {};
-struct IronFist {};
-struct Static {};
-struct SweetVeil {};
-struct Trace {};
-
-// Assigns an ability's tag to a handle
-inline void enumToTag(dex::Ability ability, types::handle handle);
-}  // namespace pokesim::ability::tags
-
-////////////////// END OF src/Components/Tags/AbilityTags.hpp //////////////////
-
-///////////////// START OF src/Components/Tags/AbilityTags.cpp /////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::ability::tags {
-inline void enumToTag(dex::Ability ability, types::handle handle) {
-  switch (ability) {
-    case dex::Ability::DEFIANT: handle.emplace<Defiant>(); return;
-    case dex::Ability::INFILTRATOR: handle.emplace<Infiltrator>(); return;
-    case dex::Ability::IRON_FIST: handle.emplace<IronFist>(); return;
-    case dex::Ability::STATIC: handle.emplace<Static>(); return;
-    case dex::Ability::SWEET_VEIL: handle.emplace<SweetVeil>(); return;
-    case dex::Ability::TRACE: handle.emplace<Trace>(); return;
-    default: {
-      ENTT_ASSERT(false, "Adding tag for ability that does not exist");
-    }
-  }
-}
-}  // namespace pokesim::ability::tags
-
-////////////////// END OF src/Components/Tags/AbilityTags.cpp //////////////////
-
 //////////// START OF src/CalcDamage/Setup/CalcDamageInputSetup.cpp ////////////
 
 namespace pokesim::calc_damage {
@@ -19361,6 +19211,70 @@ struct Position {
 
 ////////////////////// END OF src/Components/Position.hpp //////////////////////
 
+///////////////// START OF src/Components/Tags/AbilityTags.hpp /////////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::ability::tags {
+struct Defiant {};
+struct Infiltrator {};
+struct IronFist {};
+struct Static {};
+struct SweetVeil {};
+struct Trace {};
+}  // namespace pokesim::ability::tags
+
+////////////////// END OF src/Components/Tags/AbilityTags.hpp //////////////////
+
+////////////////// START OF src/Components/Tags/ItemTags.hpp ///////////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::item::tags {
+struct AssaultVest {};
+struct BrightPowder {};
+struct ChoiceScarf {};
+struct ChoiceSpecs {};
+struct FocusSash {};
+struct LifeOrb {};
+}  // namespace pokesim::item::tags
+
+/////////////////// END OF src/Components/Tags/ItemTags.hpp ////////////////////
+
+///////////////// START OF src/Components/Tags/NatureTags.hpp //////////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::nature::tags {
+struct Adamant {};
+struct Bashful {};
+struct Bold {};
+struct Brave {};
+struct Calm {};
+struct Careful {};
+struct Docile {};
+struct Gentle {};
+struct Hardy {};
+struct Hasty {};
+struct Impish {};
+struct Jolly {};
+struct Lax {};
+struct Lonely {};
+struct Mild {};
+struct Modest {};
+struct Naive {};
+struct Naughty {};
+struct Quiet {};
+struct Quirky {};
+struct Rash {};
+struct Relaxed {};
+struct Sassy {};
+struct Serious {};
+struct Timid {};
+}  // namespace pokesim::nature::tags
+
+////////////////// END OF src/Components/Tags/NatureTags.hpp ///////////////////
+
 /////////////// START OF src/Battle/Setup/PokemonStateSetup.cpp ////////////////
 
 namespace pokesim {
@@ -19477,6 +19391,89 @@ inline void MoveStateSetup::setMaxPP(types::pp maxPp) {
 }  // namespace pokesim
 
 ////////////////// END OF src/Battle/Setup/MoveStateSetup.cpp //////////////////
+
+/////////////////// START OF src/Battle/Setup/EnumToTag.cpp ////////////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim {
+inline void ability::tags::enumToTag(dex::Ability ability, types::handle handle) {
+  switch (ability) {
+    case dex::Ability::DEFIANT: handle.emplace<Defiant>(); return;
+    case dex::Ability::INFILTRATOR: handle.emplace<Infiltrator>(); return;
+    case dex::Ability::IRON_FIST: handle.emplace<IronFist>(); return;
+    case dex::Ability::STATIC: handle.emplace<Static>(); return;
+    case dex::Ability::SWEET_VEIL: handle.emplace<SweetVeil>(); return;
+    case dex::Ability::TRACE: handle.emplace<Trace>(); return;
+    default: {
+      ENTT_ASSERT(false, "Adding tag for ability that does not exist");
+    }
+  }
+}
+
+inline void item::tags::enumToTag(dex::Item item, types::handle handle) {
+  switch (item) {
+    case dex::Item::ASSAULT_VEST: handle.emplace<AssaultVest>(); return;
+    case dex::Item::BRIGHT_POWDER: handle.emplace<BrightPowder>(); return;
+    case dex::Item::CHOICE_SCARF: handle.emplace<ChoiceScarf>(); return;
+    case dex::Item::CHOICE_SPECS: handle.emplace<ChoiceSpecs>(); return;
+    case dex::Item::FOCUS_SASH: handle.emplace<FocusSash>(); return;
+    case dex::Item::LIFE_ORB: handle.emplace<LifeOrb>(); return;
+    default: {
+      ENTT_ASSERT(false, "Adding tag for item that does not exist");
+    }
+  }
+}
+
+inline void nature::tags::enumToTag(dex::Nature nature, types::handle handle) {
+  switch (nature) {
+    case dex::Nature::ADAMANT: handle.emplace<Adamant>(); return;
+    case dex::Nature::BASHFUL: handle.emplace<Bashful>(); return;
+    case dex::Nature::BOLD: handle.emplace<Bold>(); return;
+    case dex::Nature::BRAVE: handle.emplace<Brave>(); return;
+    case dex::Nature::CALM: handle.emplace<Calm>(); return;
+    case dex::Nature::CAREFUL: handle.emplace<Careful>(); return;
+    case dex::Nature::DOCILE: handle.emplace<Docile>(); return;
+    case dex::Nature::GENTLE: handle.emplace<Gentle>(); return;
+    case dex::Nature::HARDY: handle.emplace<Hardy>(); return;
+    case dex::Nature::HASTY: handle.emplace<Hasty>(); return;
+    case dex::Nature::IMPISH: handle.emplace<Impish>(); return;
+    case dex::Nature::JOLLY: handle.emplace<Jolly>(); return;
+    case dex::Nature::LAX: handle.emplace<Lax>(); return;
+    case dex::Nature::LONELY: handle.emplace<Lonely>(); return;
+    case dex::Nature::MILD: handle.emplace<Mild>(); return;
+    case dex::Nature::MODEST: handle.emplace<Modest>(); return;
+    case dex::Nature::NAIVE: handle.emplace<Naive>(); return;
+    case dex::Nature::NAUGHTY: handle.emplace<Naughty>(); return;
+    case dex::Nature::QUIET: handle.emplace<Quiet>(); return;
+    case dex::Nature::QUIRKY: handle.emplace<Quirky>(); return;
+    case dex::Nature::RASH: handle.emplace<Rash>(); return;
+    case dex::Nature::RELAXED: handle.emplace<Relaxed>(); return;
+    case dex::Nature::SASSY: handle.emplace<Sassy>(); return;
+    case dex::Nature::SERIOUS: handle.emplace<Serious>(); return;
+    case dex::Nature::TIMID: handle.emplace<Timid>(); return;
+    default: {
+      ENTT_ASSERT(false, "Adding tag for nature that does not exist");
+    }
+  }
+}
+
+inline void status::tags::enumToTag(dex::Status status, types::handle& handle) {
+  switch (status) {
+    case dex::Status::BRN: handle.emplace<Burn>(); return;
+    case dex::Status::FRZ: handle.emplace<Freeze>(); return;
+    case dex::Status::PAR: handle.emplace<Paralysis>(); return;
+    case dex::Status::PSN: handle.emplace<Poison>(); return;
+    case dex::Status::SLP: handle.emplace<Sleep>(); return;
+    case dex::Status::TOX: handle.emplace<Toxic>(); return;
+    default: {
+      ENTT_ASSERT(false, "Adding tag for status that does not exist");
+    }
+  }
+}
+}  // namespace pokesim
+
+//////////////////// END OF src/Battle/Setup/EnumToTag.cpp /////////////////////
 
 //////////////// START OF src/Battle/Setup/BattleStateSetup.cpp ////////////////
 

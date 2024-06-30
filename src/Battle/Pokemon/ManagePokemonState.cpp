@@ -7,6 +7,7 @@
 #include <Components/Tags/PokemonTags.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
+#include <Types/Registry.hpp>
 #include <Types/Entity.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <entt/entity/handle.hpp>

@@ -1,5 +1,6 @@
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Registry.hpp>
 #include <Types/Enums/Species.hpp>
 #include <type_traits>
 

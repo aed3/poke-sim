@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Components/CalcDamage/Aliases.hpp>
-#include <Types/Entity.hpp>
+#include <Types/Registry.hpp>
 
 namespace pokesim {
 class Simulation;

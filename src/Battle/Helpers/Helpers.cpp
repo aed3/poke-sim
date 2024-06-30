@@ -12,6 +12,7 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/Slot.hpp>
+#include <Types/Registry.hpp>
 #include <Types/State.hpp>
 #include <cstdint>
 #include <entt/entity/handle.hpp>
