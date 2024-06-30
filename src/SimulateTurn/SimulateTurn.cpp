@@ -121,12 +121,23 @@ void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
 
 void resolveMoveTargets(CurrentActionTargets&) {}
 
+void createActionMoveForTargets(
+  types::handle targetHandle, const Battle& battle, const CurrentActionSource& source, const Pokedex& pokedex) {
+  dex::Move move =
+    targetHandle.registry()->get<action::Move>(targetHandle.registry()->get<CurrentAction>(battle.val).val).name;
+  types::entity moveEntity = createActionMoveForTarget(targetHandle, battle.val, source.val, move, pokedex);
+
+  targetHandle.registry()->emplace<tags::SimulateTurn>(moveEntity);
+}
+
 void getMoveTargets(Simulation& simulation) {
   if (simulation.battleFormat == BattleFormat::DOUBLES_BATTLE_FORMAT) {
     simulation.view<addTargetAllyToTargets, Tags<tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
     simulation.view<addUserAllyToTargets, Tags<tags::CurrentActionMove, move::added_targets::tags::UserAlly>>();
   }
   simulation.view<resolveMoveTargets, Tags<tags::CurrentActionMove>, entt::exclude_t<AddedTargets>>();
+  simulation.view<createActionMoveForTargets, Tags<tags::CurrentActionMoveTarget>, entt::exclude_t<CurrentActionMove>>(
+    simulation.pokedex);
 }
 
 void useMove(Simulation& simulation) {

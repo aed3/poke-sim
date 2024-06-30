@@ -10,6 +10,7 @@
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/SimulationTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
@@ -50,13 +51,16 @@ void setCurrentActionMove(
   const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
 
   types::entity moveSlotEntity = moveToEntity(registry, moveSlots, move.name);
-  types::entity moveEntity = pokedex.buildActionMove(move.name, registry);
 
-  battleHandle.emplace<CurrentActionMove>(moveEntity);
-  registry.insert<CurrentActionMove>(targets.val.begin(), targets.val.end(), {moveEntity});
+  ENTT_ASSERT(targets.val.size() == 1, "How did we get here with more or less than 1 target?");
+  types::entity moveEntity =
+    createActionMoveForTarget({registry, targets.val[0]}, battleHandle.entity(), source.val, move.name, pokedex);
+
+  if (battleHandle.all_of<tags::SimulateTurn>()) {
+    registry.emplace<tags::SimulateTurn>(moveEntity);
+  }
+
   battleHandle.emplace<CurrentActionMoveSlot>(moveSlotEntity);
-  registry.emplace<Battle>(moveEntity, battleHandle.entity());
-  registry.emplace<tags::CurrentActionMove>(moveEntity);
   registry.emplace<tags::CurrentActionMoveSlot>(moveSlotEntity);
 }
 

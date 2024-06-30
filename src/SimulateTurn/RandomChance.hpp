@@ -11,6 +11,18 @@
 
 namespace pokesim {
 namespace internal {
+template <types::eventPossibilities POSSIBLE_EVENT_COUNT, BattleFormat Format>
+void setRandomChoice(types::handle handle, const std::array<types::percentChance, POSSIBLE_EVENT_COUNT>& chances) {
+  if constexpr (Format == BattleFormat::SINGLES_BATTLE_FORMAT) {
+    handle.emplace<RandomEventChances<POSSIBLE_EVENT_COUNT>>(chances);
+  }
+  else {
+    handle.registry()
+      ->get_or_emplace<RandomEventChancesStack<POSSIBLE_EVENT_COUNT>>(handle.get<Battle>().val)
+      .val.emplace_back(chances, handle.entity());
+  }
+}
+
 template <BattleFormat Format>
 void setBinaryChanceByFormat(types::handle handle, types::percentChance percentChance) {
   if constexpr (Format == BattleFormat::SINGLES_BATTLE_FORMAT) {
@@ -70,9 +82,11 @@ void setRandomEventCounts(types::handle handle, types::eventPossibilities possib
 }
 }  // namespace internal
 
-template <types::eventPossibilities POSSIBLE_EVENT_COUNT, BattleFormat Format, bool CumulativeSumChances>
-void setRandomChoice(types::handle handle, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances) {
-  if constexpr (CumulativeSumChances) {
+template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename... T>
+void setRandomChoice(
+  Simulation& simulation, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances,
+  const bool cumulativeSumChances) {
+  if (cumulativeSumChances) {
     types::percentChance chanceSum = 0;
     for (types::percentChance& chance : chances) {
       chanceSum += chance;
@@ -90,13 +104,13 @@ void setRandomChoice(types::handle handle, std::array<types::percentChance, POSS
     }
   }
 
-  if constexpr (Format == BattleFormat::SINGLES_BATTLE_FORMAT) {
-    handle.emplace<RandomEventChances<POSSIBLE_EVENT_COUNT>>(chances);
+  if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
+    simulation.view<internal::setRandomChoice<POSSIBLE_EVENT_COUNT, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
+      chances);
   }
   else {
-    handle.registry()
-      ->get_or_emplace<RandomEventChancesStack<POSSIBLE_EVENT_COUNT>>(handle.get<Battle>().val)
-      .val.emplace_back(chances, handle.entity());
+    simulation.view<internal::setRandomChoice<POSSIBLE_EVENT_COUNT, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<T...>>(
+      chances);
   }
 }
 
@@ -151,8 +165,7 @@ void randomEventChances(Simulation& simulation, void (*handleRandomEventChoice)(
 void randomBinaryChance(Simulation& simulation, void (*handleRandomEventChoice)(Simulation&));
 void reciprocalRandomBinaryChance(Simulation& simulation, void (*handleRandomEventChoice)(Simulation&));
 void randomEqualChance(
-  Simulation& simulation, types::eventPossibilities possibleEventCount,
-  void (*handleRandomEventChoice)(Simulation&));
+  Simulation& simulation, types::eventPossibilities possibleEventCount, void (*handleRandomEventChoice)(Simulation&));
 void randomEventCount(Simulation& simulation, void (*handleRandomEventChoice)(Simulation&));
 
 void clearRandomChanceResult(Simulation& simulation);

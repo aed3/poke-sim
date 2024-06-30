@@ -183,8 +183,8 @@ class RegistryContainer {
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void view(const PassedInArgs&... passedInArgs) {
-    internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::view(
+  auto view(const PassedInArgs&... passedInArgs) {
+    return internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::view(
       registry,
       passedInArgs...);
   }
@@ -192,8 +192,8 @@ class RegistryContainer {
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void group(const PassedInArgs&... passedInArgs) {
-    internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::group(
+  auto group(const PassedInArgs&... passedInArgs) {
+    return internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::group(
       registry,
       passedInArgs...);
   }

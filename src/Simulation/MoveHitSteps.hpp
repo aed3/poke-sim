@@ -15,14 +15,13 @@ struct Battle;
 struct HitCount;
 
 namespace internal {
-void assignMoveAccuracyToTargets(types::handle targetHandle, const CurrentActionMove& currentMove);
+void deductMoveHitCount(types::handle moveHandle, HitCount& hitCount);
 
-template <BattleFormat Format>
-void assignHitCountToTargets(types::handle targetHandle, const CurrentActionMove& currentMove);
-
-void deductMoveHitCount(types::handle targetHandle, HitCount& hitCount);
-
-void removeFailedHitTargets(types::registry& registry, CurrentActionTargets& targets);
+template <auto Function>
+void runMoveHitCheck(Simulation& simulation);
+void postMoveHitCheck(Simulation& simulation);
+void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets);
+void removeFailedHitTargets(types::handle moveTarget, const CurrentActionTargets& targets);
 }  // namespace internal
 
 void setMoveHitCount(Simulation& simulation);

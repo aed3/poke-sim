@@ -47,46 +47,11 @@ struct RegistryLoop<
     // If the first argument is a handle, it must be a non-constant value
     static_assert(!std::is_same_v<std::decay_t<FirstType>, types::handle> || hasHandleFirst);
 
-    static constexpr void paramShiftCheck() {
-      static_assert(sizeof...(TupleFromTail) == passedInArgsSize);
-      static_assert(std::conjunction_v<std::is_same<std::decay_t<TupleFromTail>, std::decay_t<PassedInArgs>>...>);
-    }
-
-   public:
-    static void view(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      paramShiftCheck();
-
-      if constexpr (hasRegistryFirst) {
-        viewWithRegistry<RegistryArgs...>(registry, passedInArgs...);
-      }
-      else if constexpr (hasHandleFirst) {
-        viewWithHandle<RegistryArgs...>(registry, passedInArgs...);
-      }
-      else {
-        basicView(registry, passedInArgs...);
-      }
-    }
-
-    static void group(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      paramShiftCheck();
-
-      if constexpr (hasRegistryFirst) {
-        groupWithRegistry<RegistryArgs...>(registry, passedInArgs...);
-      }
-      else if constexpr (hasHandleFirst) {
-        groupWithHandle<RegistryArgs...>(registry, passedInArgs...);
-      }
-      else {
-        basicGroup(registry, passedInArgs...);
-      }
-    }
-
-   private:
     template <typename... Args>
     static constexpr void argChecks() {
-      static_assert(sizeof...(Args) > 0);
       static_assert(std::conjunction_v<std::is_class<std::decay_t<Args>>...>);
       static_assert(std::conjunction_v<std::is_copy_assignable<std::decay_t<Args>>...>);
+      static_assert(sizeof...(Args) + sizeof...(ExtraTags) + sizeof...(Include) > 0);
     }
 
     template <typename... ViewArgs>
@@ -118,40 +83,57 @@ struct RegistryLoop<
       }
     }
 
-    static void basicView(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      getView<RegistryArgs...>(registry).each(
-        [&passedInArgs...](types::entity, auto&&... args) { Function(args..., passedInArgs...); });
-    }
-
-    template <typename, typename... Rest>
-    static void viewWithHandle(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      getView<Rest...>(registry).each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
-        Function(types::handle{registry, entity}, args..., passedInArgs...);
+    template <auto getList>
+    static auto run(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      auto list = getList(registry);
+      list.each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
+        if constexpr (hasRegistryFirst) {
+          Function(registry, args..., passedInArgs...);
+        }
+        else if constexpr (hasHandleFirst) {
+          Function(types::handle{registry, entity}, args..., passedInArgs...);
+        }
+        else {
+          Function(args..., passedInArgs...);
+        }
       });
+      return list;
     }
 
     template <typename, typename... Rest>
-    static void viewWithRegistry(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      getView<Rest...>(registry).each(
-        [&registry, &passedInArgs...](types::entity, auto&&... args) { Function(registry, args..., passedInArgs...); });
-    }
-
-    static void basicGroup(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      getGroup<RegistryArgs...>(registry).each(
-        [&passedInArgs...](types::entity, auto&&... args) { Function(args..., passedInArgs...); });
+    static auto runViewNoFirstArg(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      return run<getView<Rest...>>(registry, passedInArgs...);
     }
 
     template <typename, typename... Rest>
-    static void groupWithHandle(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      getGroup<Rest...>(registry).each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
-        Function(types::handle{registry, entity}, args..., passedInArgs...);
-      });
+    static auto runGroupNoFirstArg(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      return run<getGroup<Rest...>>(registry, passedInArgs...);
     }
 
-    template <typename, typename... Rest>
-    static void groupWithRegistry(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      getGroup<Rest...>(registry).each(
-        [&registry, &passedInArgs...](types::entity, auto&&... args) { Function(registry, args..., passedInArgs...); });
+    static constexpr void paramShiftCheck() {
+      static_assert(sizeof...(TupleFromTail) == passedInArgsSize);
+      static_assert(std::conjunction_v<std::is_same<std::decay_t<TupleFromTail>, std::decay_t<PassedInArgs>>...>);
+    }
+
+   public:
+    static auto view(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      paramShiftCheck();
+      if constexpr (hasRegistryFirst || hasHandleFirst) {
+        return runViewNoFirstArg<RegistryArgs...>(registry, passedInArgs...);
+      }
+      else {
+        return run<getView<RegistryArgs...>>(registry, passedInArgs...);
+      }
+    }
+
+    static auto group(types::registry& registry, const PassedInArgs&... passedInArgs) {
+      paramShiftCheck();
+      if constexpr (hasRegistryFirst || hasHandleFirst) {
+        return runGroupNoFirstArg<RegistryArgs...>(registry, passedInArgs...);
+      }
+      else {
+        return run<getGroup<RegistryArgs...>>(registry, passedInArgs...);
+      }
     }
   };
 
@@ -160,21 +142,21 @@ struct RegistryLoop<
     using WithPassedArgs = ParameterShifter<false, Tags<RegistryArgs...>, Tags<>>;
     using NoPassedArgs = ParameterShifter<true, Tags<>, Tags<RegistryArgs...>>;
 
-    static void view(types::registry& registry, const PassedInArgs&... passedInArgs) {
+    static auto view(types::registry& registry, const PassedInArgs&... passedInArgs) {
       if constexpr (passedInArgsSize > 0) {
-        WithPassedArgs::view(registry, passedInArgs...);
+        return WithPassedArgs::view(registry, passedInArgs...);
       }
       else {
-        NoPassedArgs::view(registry, passedInArgs...);
+        return NoPassedArgs::view(registry, passedInArgs...);
       }
     }
 
-    static void group(types::registry& registry, const PassedInArgs&... passedInArgs) {
+    static auto group(types::registry& registry, const PassedInArgs&... passedInArgs) {
       if constexpr (passedInArgsSize > 0) {
-        WithPassedArgs::group(registry, passedInArgs...);
+        return WithPassedArgs::group(registry, passedInArgs...);
       }
       else {
-        NoPassedArgs::group(registry, passedInArgs...);
+        return NoPassedArgs::group(registry, passedInArgs...);
       }
     }
   };
@@ -182,12 +164,12 @@ struct RegistryLoop<
   using FunctionSig = std::decay_t<decltype(Function)>;
 
  public:
-  static void view(types::registry& registry, const PassedInArgs&... passedInArgs) {
-    RegistryLoopInternal<FunctionSig>::view(registry, passedInArgs...);
+  static auto view(types::registry& registry, const PassedInArgs&... passedInArgs) {
+    return RegistryLoopInternal<FunctionSig>::view(registry, passedInArgs...);
   }
 
-  static void group(types::registry& registry, const PassedInArgs&... passedInArgs) {
-    RegistryLoopInternal<FunctionSig>::group(registry, passedInArgs...);
+  static auto group(types::registry& registry, const PassedInArgs&... passedInArgs) {
+    return RegistryLoopInternal<FunctionSig>::group(registry, passedInArgs...);
   }
 };
 }  // namespace pokesim::internal
