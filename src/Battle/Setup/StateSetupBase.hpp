@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Types/Entity.hpp>
+#include <Types/Registry.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 

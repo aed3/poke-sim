@@ -9,6 +9,7 @@
 #include <Components/RandomEventInputs.hpp>
 #include <Components/RandomEventOutputs.hpp>
 #include <Components/Tags/Current.hpp>
+#include <Types/Registry.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Random.hpp>

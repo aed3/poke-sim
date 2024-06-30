@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Types/Entity.hpp>
+#include <Types/Registry.hpp>
 
 namespace pokesim {
 class Simulation;

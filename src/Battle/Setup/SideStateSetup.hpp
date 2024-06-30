@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Types/Entity.hpp>
+#include <Types/Registry.hpp>
 #include <Types/State.hpp>
 #include <entt/entity/registry.hpp>
 #include <vector>

@@ -29,6 +29,8 @@
 #include <entt/entity/registry.hpp>
 #include <entt/entity/view.hpp>
 
+#include "EnumToTag.hpp"
+
 namespace pokesim {
 void PokemonStateSetup::initBlank() {
   handle.emplace<SpeciesName>();

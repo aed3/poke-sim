@@ -8,6 +8,7 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/RunEvent.hpp>
+#include <Types/Registry.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <cmath>

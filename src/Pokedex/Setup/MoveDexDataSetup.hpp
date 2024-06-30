@@ -7,6 +7,7 @@
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
+#include <Types/Registry.hpp>
 #include <Types/Stats.hpp>
 #include <entt/entity/handle.hpp>
 #include <type_traits>

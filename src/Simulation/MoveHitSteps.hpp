@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Components/RandomEventInputs.hpp>
-#include <Types/Entity.hpp>
+#include <Types/Registry.hpp>
 #include <Types/Enums/BattleFormat.hpp>
 #include <Types/Move.hpp>
 

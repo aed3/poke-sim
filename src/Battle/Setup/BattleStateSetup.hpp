@@ -3,6 +3,7 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/Random.hpp>
+#include <Types/Registry.hpp>
 #include <Types/State.hpp>
 #include <entt/entity/registry.hpp>
 #include <optional>

@@ -9,6 +9,7 @@
 #include <Types/Enums/Item.hpp>
 #include <Types/Enums/Nature.hpp>
 #include <Types/Enums/Species.hpp>
+#include <Types/Registry.hpp>
 #include <Types/Enums/Status.hpp>
 #include <Types/State.hpp>
 #include <Types/Stats.hpp>

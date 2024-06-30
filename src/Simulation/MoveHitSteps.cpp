@@ -11,6 +11,7 @@
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MoveTags.hpp>
 #include <SimulateTurn/RandomChance.hpp>
+#include <Types/Registry.hpp>
 #include <Types/Enums/BattleFormat.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>

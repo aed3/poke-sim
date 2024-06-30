@@ -2,6 +2,7 @@
 
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Enums/Item.hpp>
+#include <Types/Registry.hpp>
 
 #include "DexDataSetup.hpp"
 

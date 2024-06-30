@@ -13,6 +13,7 @@
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SimulateTurn/SpeedTieIndexes.hpp>
 #include <Components/SimulateTurn/TeamAction.hpp>
+#include <Types/Registry.hpp>
 #include <Components/SpeedSort.hpp>
 #include <Components/Stats.hpp>
 #include <Types/Entity.hpp>

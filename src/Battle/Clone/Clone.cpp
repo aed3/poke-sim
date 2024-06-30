@@ -10,6 +10,7 @@
 #include <Components/SpeedSort.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Registry.hpp>
 #include <Types/State.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/core/fwd.hpp>

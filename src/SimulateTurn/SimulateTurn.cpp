@@ -10,6 +10,7 @@
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
+#include <Types/Registry.hpp>
 #include <Components/PP.hpp>
 #include <Components/SimulateTurn/ActionNames.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>

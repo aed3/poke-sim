@@ -46,15 +46,12 @@ set (SOURCES
   src/Battle/ManageBattleState.cpp
   src/Battle/Pokemon/ManagePokemonState.cpp
   src/Battle/Setup/BattleStateSetup.cpp
+  src/Battle/Setup/EnumToTag.cpp
   src/Battle/Setup/MoveStateSetup.cpp
   src/Battle/Setup/PokemonStateSetup.cpp
   src/Battle/Setup/SideStateSetup.cpp
   src/CalcDamage/CalcDamage.cpp
   src/CalcDamage/Setup/CalcDamageInputSetup.cpp
-  src/Components/Tags/AbilityTags.cpp
-  src/Components/Tags/ItemTags.cpp
-  src/Components/Tags/NatureTags.cpp
-  src/Components/Tags/StatusTags.cpp
   src/Pokedex/Abilities/AbilityEvents.cpp
   src/Pokedex/Pokedex.cpp
   src/Pokedex/Setup/AbilityDexDataSetup.cpp

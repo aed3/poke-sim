@@ -2,6 +2,7 @@
 
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Registry.hpp>
 #include <Utilities/Tags.hpp>
 #include <entt/entity/handle.hpp>
 

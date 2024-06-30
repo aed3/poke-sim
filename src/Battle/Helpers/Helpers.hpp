@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Types/Entity.hpp>
+#include <Types/Registry.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/Slot.hpp>
 
