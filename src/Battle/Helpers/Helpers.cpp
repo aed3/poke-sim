@@ -1,15 +1,20 @@
 #include "Helpers.hpp"
 
+#include <Components/EntityHolders/Battle.hpp>
+#include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/Names/MoveNames.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/Slot.hpp>
 #include <Types/State.hpp>
 #include <cstdint>
+#include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
@@ -91,5 +96,21 @@ types::entity moveToEntity(const types::registry& registry, const MoveSlots& mov
 
   ENTT_FAIL("No move of entity found");
   return entt::null;
+}
+
+types::entity createActionMoveForTarget(
+  types::handle targetHandle, types::entity battleEntity, types::entity sourceEntity, dex::Move move,
+  const Pokedex& pokedex) {
+  types::registry& registry = *targetHandle.registry();
+  types::entity moveEntity = pokedex.buildActionMove(move, registry);
+
+  registry.emplace<tags::CurrentActionMove>(moveEntity);
+  registry.emplace<Battle>(moveEntity, battleEntity);
+  registry.emplace<CurrentActionSource>(moveEntity, sourceEntity);
+  registry.emplace<CurrentActionTargets>(moveEntity).val.push_back(targetHandle.entity());
+
+  targetHandle.emplace<CurrentActionMove>(moveEntity);
+
+  return moveEntity;
 }
 }  // namespace pokesim

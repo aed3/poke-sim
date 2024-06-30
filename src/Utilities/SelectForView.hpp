@@ -2,9 +2,9 @@
 
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
-#include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SpeciesNames.hpp>
 #include <Components/Selection.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Simulation/RegistryContainer.hpp>
 #include <Types/Entity.hpp>
 #include <cstdint>
@@ -45,5 +45,6 @@ struct SelectForSideView : SelectForView<SelectedForViewSide, Team, ComponentsTo
 template <typename... ComponentsToSelect>
 struct SelectForPokemonView : SelectForView<SelectedForViewPokemon, SpeciesName, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForMoveView : SelectForView<SelectedForViewMove, MoveName, ComponentsToSelect...> {};
+struct SelectForCurrentActionMoveView
+    : SelectForView<SelectedForViewMove, tags::CurrentActionMove, ComponentsToSelect...> {};
 }  // namespace pokesim::internal

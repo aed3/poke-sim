@@ -10,7 +10,7 @@ namespace calc_damage {
 struct CritBoost;
 
 namespace internal {
-void assignCritChanceDivisor(types::handle damageTargetHandle, CritBoost critBoost);
+void assignCritChanceDivisor(types::handle moveHandle, CritBoost critBoost);
 }  // namespace internal
 
 void run(Simulation& simulation);

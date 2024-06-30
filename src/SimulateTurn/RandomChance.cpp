@@ -1,15 +1,14 @@
 #include "RandomChance.hpp"
 
 #include <Battle/Clone/Clone.hpp>
-#include <Components/CalcDamage/CalcDamageTarget.hpp>
 #include <Components/CalcDamage/CriticalHit.hpp>
 #include <Components/CloneFromCloneTo.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/Probability.hpp>
 #include <Components/RNGSeed.hpp>
 #include <Components/RandomEventInputs.hpp>
-#include <Components/Tags/Current.hpp>
 #include <Components/RandomEventOutputs.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Random.hpp>

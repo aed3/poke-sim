@@ -4,8 +4,10 @@
 
 namespace pokesim {
 class Simulation;
+class Pokedex;
 struct Battle;
 struct CurrentActionTargets;
+struct CurrentActionSource;
 
 namespace simulate_turn {
 void run(Simulation& simulation);
@@ -19,6 +21,8 @@ void runResidualAction(Simulation& simulation);
 void addTargetAllyToTargets(types::registry& registry, const Battle& battle);
 void addUserAllyToTargets(types::registry& registry, const Battle& battle);
 void resolveMoveTargets(CurrentActionTargets&);
+void createActionMoveForTargets(
+  types::handle targetHandle, const Battle& battle, const CurrentActionSource& source, const Pokedex& pokedex);
 void getMoveTargets(Simulation& simulation);
 
 void useMove(Simulation& simulation);

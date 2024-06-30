@@ -7,7 +7,6 @@
 #include "BasePower.hpp"
 #include "Boosts.hpp"
 #include "CalcDamage/Aliases.hpp"
-#include "CalcDamage/CalcDamageTarget.hpp"
 #include "CalcDamage/CriticalHit.hpp"
 #include "Chance.hpp"
 #include "CloneFromCloneTo.hpp"

@@ -1,7 +1,6 @@
 #include "Clone.hpp"
 
 #include <Components/CalcDamage/Aliases.hpp>
-#include <Components/CalcDamage/CalcDamageTarget.hpp>
 #include <Components/CloneFromCloneTo.hpp>
 #include <Components/EntityHolders/headers.hpp>
 #include <Components/Names/MoveNames.hpp>
@@ -27,9 +26,8 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
   battleMap = entityMap;
   internal::cloneSide(registry, entityMap, srcEntityStorages, count);
   internal::cloneAction(registry, entityMap, srcEntityStorages, count);
-  internal::cloneCurrentActionMove(registry, entityMap, srcEntityStorages, count);
-  internal::cloneCalcDamageTarget(registry, entityMap, srcEntityStorages, count);
   internal::clonePokemon(registry, entityMap, srcEntityStorages, count);
+  internal::cloneCurrentActionMove(registry, entityMap, srcEntityStorages, count);
   internal::cloneMove(registry, entityMap, srcEntityStorages, count);
 
   for (auto [id, storage] : registry.storage()) {
@@ -74,7 +72,6 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
   internal::remapEntityMembers<Side>(registry, entityMap);
   internal::remapEntityListMembers<Sides>(registry, entityMap);
   internal::remapEntityListMembers<Team>(registry, entityMap);
-  internal::remapEntityListMembers<calc_damage::CalcDamageTargets>(registry, entityMap);
 
   registry.clear<CloneTo, tags::CloneFrom>();
 
@@ -119,14 +116,6 @@ void cloneBattle(
   for (const auto [entity, currentAction] : registry.view<tags::CloneFrom, CurrentAction>().each()) {
     registry.emplace<tags::CloneFrom>(currentAction.val);
   }
-  for (const auto [entity, move] : registry.view<tags::CloneFrom, CurrentActionMove>().each()) {
-    registry.emplace<tags::CloneFrom>(move.val);
-  }
-  for (const auto [entity, targets] : registry.view<tags::CloneFrom, calc_damage::CalcDamageTargets>().each()) {
-    for (types::entity target : targets.val) {
-      registry.emplace<tags::CloneFrom>(target);
-    }
-  }
 }
 
 void cloneSide(
@@ -157,15 +146,6 @@ void cloneCurrentActionMove(
   }
 }
 
-void cloneCalcDamageTarget(
-  types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
-  for (types::entity entity : registry.view<tags::CloneFrom, calc_damage::tags::CalcDamageTarget>(
-         entt::exclude<tags::CurrentActionMoveTarget>)) {
-    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
-  }
-}
-
 void clonePokemon(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -175,6 +155,10 @@ void clonePokemon(
     }
 
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
+  }
+
+  for (const auto [entity, move] : registry.view<tags::CloneFrom, CurrentActionMove>().each()) {
+    registry.emplace<tags::CloneFrom>(move.val);
   }
 }
 

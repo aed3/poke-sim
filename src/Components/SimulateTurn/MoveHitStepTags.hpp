@@ -1,5 +1,5 @@
 #pragma once
 
 namespace pokesim::tags::internal {
-struct TargetCanBeHit {};
+struct MoveHits {};
 }  // namespace pokesim::tags::internal
