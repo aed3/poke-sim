@@ -87,7 +87,7 @@
  * src/Types/Enums/Stat.hpp
  * src/Types/Enums/Type.hpp
  * src/Pokedex/Pokedex.hpp
- * src/Components/Selection.hpp
+ * src/Components/Tags/Selection.hpp
  * src/Utilities/Tags.hpp
  * src/Utilities/RegistryLoop.hpp
  * src/Simulation/RegistryContainer.hpp
@@ -105,6 +105,7 @@
  * src/Pokedex/Abilities/Static.hpp
  * src/Simulation/RunEvent.hpp
  * src/Simulation/RunEvent.cpp
+ * src/Battle/Pokemon/ManagePokemonState.hpp
  * src/Components/Accuracy.hpp
  * src/Components/HitCount.hpp
  * src/Components/RandomEventOutputs.hpp
@@ -119,7 +120,6 @@
  * src/Utilities/SelectForView.hpp
  * src/Simulation/MoveHitSteps.cpp
  * src/Battle/ManageBattleState.hpp
- * src/Battle/Pokemon/ManagePokemonState.hpp
  * src/Components/AddedTargets.hpp
  * src/Components/Names/SourceSlotName.hpp
  * src/Components/Names/TargetSlotName.hpp
@@ -186,12 +186,14 @@
  * src/Pokedex/Pokedex.cpp
  * src/Pokedex/Abilities/AbilityEvents.cpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.cpp
+ * src/Components/CalcDamage/DamageCalcVariables.hpp
+ * src/Components/Damage.hpp
+ * src/Components/Level.hpp
  * src/CalcDamage/CalcDamage.cpp
  * src/Components/EntityHolders/FoeSide.hpp
  * src/Battle/Setup/SideStateSetup.cpp
  * src/Components/EntityHolders/MoveSlots.hpp
  * src/Components/ID.hpp
- * src/Components/Level.hpp
  * src/Components/Names/GenderNames.hpp
  * src/Components/Names/NatureNames.hpp
  * src/Components/Names/StatusNames.hpp
@@ -12559,11 +12561,9 @@ using ClonedEntityMap = entt::dense_map<entity, std::vector<entity>>;
 
 namespace pokesim::types {
 using registry = entt::registry;
-}  // namespace pokesim::types
-
-namespace pokesim::types {
 using handle = entt::basic_handle<registry>;
 }  // namespace pokesim::types
+
 
 //////////////////////// END OF src/Types/Registry.hpp /////////////////////////
 
@@ -12776,7 +12776,23 @@ struct Spe {
   types::stat val = 1;
 };
 
-struct EffectiveSpeed {
+struct EffectiveAtk {
+  types::stat val = 1;
+};
+
+struct EffectiveDef {
+  types::stat val = 1;
+};
+
+struct EffectiveSpa {
+  types::stat val = 1;
+};
+
+struct EffectiveSpd {
+  types::stat val = 1;
+};
+
+struct EffectiveSpe {
   types::stat val = 1;
 };
 }  // namespace pokesim::stat
@@ -12927,6 +12943,11 @@ class maxSizedVector : private std::array<T, N> {
   void pop_back() {
     if (empty()) return;
     used--;
+  }
+
+  void pop_count(std::uint8_t remove) {
+    assert(remove <= used);
+    used -= remove;
   }
 
   template <class... Args>
@@ -13290,12 +13311,12 @@ struct CurrentActionMoveSource {};
 namespace pokesim::calc_damage {
 using Attacker = CurrentActionSource;
 using Defenders = CurrentActionTargets;
-using Move = CurrentActionMove;
+using UsedMove = CurrentActionMove;
 
 namespace tags {
 using Attacker = pokesim::tags::CurrentActionMoveSource;
 using Defender = pokesim::tags::CurrentActionMoveTarget;
-using Move = pokesim::tags::CurrentActionMove;
+using UsedMove = pokesim::tags::CurrentActionMove;
 }  // namespace tags
 }  // namespace pokesim::calc_damage
 
@@ -13391,7 +13412,11 @@ namespace pokesim::tags {
 // Indicates the Pokemon is currently in a battle
 struct ActivePokemon {};
 
-struct SpeedUpdateRequired {};
+struct AtkStatUpdateRequired {};
+struct DefStatUpdateRequired {};
+struct SpdStatUpdateRequired {};
+struct SpaStatUpdateRequired {};
+struct SpeStatUpdateRequired {};
 
 struct Fainted {};
 }  // namespace pokesim::tags
@@ -13748,19 +13773,19 @@ class Pokedex {
 
 //////////////////////// END OF src/Pokedex/Pokedex.hpp ////////////////////////
 
-//////////////////// START OF src/Components/Selection.hpp /////////////////////
+////////////////// START OF src/Components/Tags/Selection.hpp //////////////////
 
 #include <cstdint>
 #include <vector>
 
-namespace pokesim {
+namespace pokesim::tags {
 struct SelectedForViewBattle {};
 struct SelectedForViewSide {};
 struct SelectedForViewPokemon {};
 struct SelectedForViewMove {};
 }  // namespace pokesim
 
-///////////////////// END OF src/Components/Selection.hpp //////////////////////
+/////////////////// END OF src/Components/Tags/Selection.hpp ///////////////////
 
 /////////////////////// START OF src/Utilities/Tags.hpp ////////////////////////
 
@@ -13856,6 +13881,7 @@ struct RegistryLoop<
     static auto run(types::registry& registry, const PassedInArgs&... passedInArgs) {
       auto list = getList(registry);
       list.each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
+        (void) entity;
         if constexpr (hasRegistryFirst) {
           Function(registry, args..., passedInArgs...);
         }
@@ -13965,16 +13991,16 @@ class RegistryContainer {
 
   template <typename Selection>
   SelectionFunctionList& selectedFunctions() {
-    if constexpr (std::is_same_v<SelectedForViewBattle, Selection>) {
+    if constexpr (std::is_same_v<tags::SelectedForViewBattle, Selection>) {
       return battleSelection;
     }
-    else if constexpr (std::is_same_v<SelectedForViewSide, Selection>) {
+    else if constexpr (std::is_same_v<tags::SelectedForViewSide, Selection>) {
       return sideSelection;
     }
-    else if constexpr (std::is_same_v<SelectedForViewPokemon, Selection>) {
+    else if constexpr (std::is_same_v<tags::SelectedForViewPokemon, Selection>) {
       return pokemonSelection;
     }
-    else if constexpr (std::is_same_v<SelectedForViewMove, Selection>) {
+    else if constexpr (std::is_same_v<tags::SelectedForViewMove, Selection>) {
       return moveSelection;
     }
   }
@@ -14054,7 +14080,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+    ForSelected<tags::SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
       this,
       passedInArgs...);
   }
@@ -14063,7 +14089,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+    ForSelected<tags::SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
       this,
       passedInArgs...);
   }
@@ -14072,7 +14098,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+    ForSelected<tags::SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
       this,
       passedInArgs...);
   }
@@ -14081,7 +14107,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+    ForSelected<tags::SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
       this,
       passedInArgs...);
   }
@@ -14090,7 +14116,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedPokemon(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+    ForSelected<tags::SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
       this,
       passedInArgs...);
   }
@@ -14099,7 +14125,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedPokemon(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+    ForSelected<tags::SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
       this,
       passedInArgs...);
   }
@@ -14108,7 +14134,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedMoves(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+    ForSelected<tags::SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
       this,
       passedInArgs...);
   }
@@ -14117,7 +14143,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedMoves(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+    ForSelected<tags::SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
       this,
       passedInArgs...);
   }
@@ -14432,7 +14458,11 @@ inline PokemonStateSetup Simulation::createInitialPokemon(
   pokemonSetup.setStat<stat::Spa>(pokemonData.stats.spa);
   pokemonSetup.setStat<stat::Spd>(pokemonData.stats.spd);
   pokemonSetup.setStat<stat::Spe>(pokemonData.stats.spe);
-  pokemonSetup.setProperty<tags::SpeedUpdateRequired>();
+  pokemonSetup.setProperty<tags::AtkStatUpdateRequired>();
+  pokemonSetup.setProperty<tags::DefStatUpdateRequired>();
+  pokemonSetup.setProperty<tags::SpaStatUpdateRequired>();
+  pokemonSetup.setProperty<tags::SpdStatUpdateRequired>();
+  pokemonSetup.setProperty<tags::SpeStatUpdateRequired>();
 
   if (battleData.runWithSimulateTurn) {
     pokemonSetup.setProperty<tags::SimulateTurn>();
@@ -14752,12 +14782,23 @@ inline void postRunCleanup(Simulation& simulation);
 
 namespace pokesim {
 class Simulation;
+struct BasePower;
 
 namespace calc_damage {
 struct CritBoost;
+struct AttackingLevel;
+struct AttackingStat;
+struct DefendingStat;
 
 namespace internal {
-inline void assignCritChanceDivisor(types::handle moveHandle, CritBoost critBoost);
+inline void assignCritChanceDivisor(types::handle moveHandle, const CritBoost& critBoost);
+inline void setSourceLevel(types::handle moveHandle, const Attacker& attacker);
+template <typename Category>
+inline void setUsedAttackStat(types::handle moveHandle, const Attacker& attacker);
+template <typename Category>
+inline void setUsedDefenseStat(types::handle moveHandle, const Defenders& defenders);
+
+inline void calculateBaseDamage(types::handle moveHandle, const BasePower& basePower, const AttackingLevel& level, const AttackingStat& attack, const DefendingStat& defense);
 }  // namespace internal
 
 inline void run(Simulation& simulation);
@@ -14889,8 +14930,8 @@ inline void Simulation::run() {
 }
 
 inline std::vector<types::entity> Simulation::selectedBattleEntities() {
-  if (hasActiveSelection<SelectedForViewBattle>()) {
-    auto view = registry.view<SelectedForViewBattle, Sides>();
+  if (hasActiveSelection<tags::SelectedForViewBattle>()) {
+    auto view = registry.view<tags::SelectedForViewBattle, Sides>();
     return {view.begin(), view.end()};
   }
 
@@ -14924,7 +14965,7 @@ namespace pokesim {
 class Simulation;
 
 namespace stat {
-struct EffectiveSpeed;
+struct EffectiveSpe;
 }
 }  // namespace pokesim
 
@@ -14932,7 +14973,7 @@ namespace pokesim::dex {
 namespace internal {
 struct StaticEvents {
   inline static void onDamagingHit(Simulation& simulation);
-  inline static void onModifySpe(stat::EffectiveSpeed& effectiveSpeed);
+  inline static void onModifySpe(stat::EffectiveSpe& effectiveSpe);
 };
 }  // namespace internal
 
@@ -14964,6 +15005,10 @@ inline void runModifyCritBoostEvent(Simulation& simulation);
 inline void runBasePowerEvent(Simulation& simulation);
 inline void runDamagingHitEvent(Simulation& simulation);
 
+inline void runModifyAtk(Simulation& simulation);
+inline void runModifyDef(Simulation& simulation);
+inline void runModifySpa(Simulation& simulation);
+inline void runModifySpd(Simulation& simulation);
 inline void runModifySpe(Simulation& simulation);
 }  // namespace pokesim
 
@@ -14984,6 +15029,14 @@ inline void runDamagingHitEvent(Simulation& simulation) {
   dex::latest::Static::onDamagingHit(simulation);
 }
 
+inline void runModifyAtk(Simulation&) {}
+
+inline void runModifyDef(Simulation&) {}
+
+inline void runModifySpa(Simulation&) {}
+
+inline void runModifySpd(Simulation&) {}
+
 inline void runModifySpe(Simulation& simulation) {
   simulation.viewForSelectedPokemon<
     dex::latest::Static::onModifySpe,
@@ -14992,6 +15045,39 @@ inline void runModifySpe(Simulation& simulation) {
 }  // namespace pokesim
 
 ////////////////////// END OF src/Simulation/RunEvent.cpp //////////////////////
+
+////////////// START OF src/Battle/Pokemon/ManagePokemonState.hpp //////////////
+
+namespace pokesim {
+class Simulation;
+struct CurrentActionSource;
+struct CurrentActionMoveSlot;
+struct Pp;
+namespace stat {
+struct Atk;
+struct Def;
+struct Spa;
+struct Spd;
+struct Spe;
+}  // namespace stat
+
+inline void deductPp(Pp& pp);
+inline void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMoveSlot& move);
+inline void resetEffectiveAtk(types::handle handle, stat::Atk atk);
+inline void resetEffectiveDef(types::handle handle, stat::Def def);
+inline void resetEffectiveSpa(types::handle handle, stat::Spa spa);
+inline void resetEffectiveSpd(types::handle handle, stat::Spd spd);
+inline void resetEffectiveSpe(types::handle handle, stat::Spe spe);
+
+inline void updateAllStats(Simulation& simulation);
+inline void updateAtk(Simulation& simulation);
+inline void updateDef(Simulation& simulation);
+inline void updateSpa(Simulation& simulation);
+inline void updateSpd(Simulation& simulation);
+inline void updateSpe(Simulation& simulation);
+}  // namespace pokesim
+
+/////////////// END OF src/Battle/Pokemon/ManagePokemonState.hpp ///////////////
 
 ///////////////////// START OF src/Components/Accuracy.hpp /////////////////////
 
@@ -16294,14 +16380,14 @@ struct SelectForView {
 };
 
 template <typename... ComponentsToSelect>
-struct SelectForBattleView : SelectForView<SelectedForViewBattle, Sides, ComponentsToSelect...> {};
+struct SelectForBattleView : SelectForView<tags::SelectedForViewBattle, Sides, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForSideView : SelectForView<SelectedForViewSide, Team, ComponentsToSelect...> {};
+struct SelectForSideView : SelectForView<tags::SelectedForViewSide, Team, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForPokemonView : SelectForView<SelectedForViewPokemon, SpeciesName, ComponentsToSelect...> {};
+struct SelectForPokemonView : SelectForView<tags::SelectedForViewPokemon, SpeciesName, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
 struct SelectForCurrentActionMoveView
-    : SelectForView<SelectedForViewMove, tags::CurrentActionMove, ComponentsToSelect...> {};
+    : SelectForView<tags::SelectedForViewMove, tags::CurrentActionMove, ComponentsToSelect...> {};
 }  // namespace pokesim::internal
 
 //////////////////// END OF src/Utilities/SelectForView.hpp ////////////////////
@@ -16311,13 +16397,16 @@ struct SelectForCurrentActionMoveView
 namespace pokesim {
 inline void setMoveHitCount(Simulation& simulation) {
   auto noAssignedHitCount =
-    simulation.registry.view<SelectedForViewMove>(entt::exclude<move::tags::VariableHitCount, HitCount>);
+    simulation.registry.view<tags::SelectedForViewMove>(entt::exclude<move::tags::VariableHitCount, HitCount>);
   simulation.registry.insert<HitCount>(noAssignedHitCount.begin(), noAssignedHitCount.end(), {(types::moveHits)1U});
 
   // The 35%-35%-15%-15% out of 100 for 2-3-4-5 hits added so each index is the sum of the chance of its hit count and
   // the hit counts less than it so it works with the randomEventChances function
   static constexpr std::array<types::percentChance, 4U> progressiveMultiHitChances{35U, 70U, 85U, 100U};
-  setRandomChoice<4U, SelectedForViewMove, move::tags::VariableHitCount>(simulation, progressiveMultiHitChances, false);
+  setRandomChoice<4U, tags::SelectedForViewMove, move::tags::VariableHitCount>(
+    simulation,
+    progressiveMultiHitChances,
+    false);
 
   if (!simulation.registry.view<RandomEventChances<4U>>().empty()) {
     randomEventChances<4U>(simulation, [](Simulation& sim) {
@@ -16343,9 +16432,9 @@ inline void accuracyCheck(Simulation& simulation) {
   runModifyAccuracyEvent(simulation);
   runAccuracyEvent(simulation);
 
-  setRandomBinaryChoice<Accuracy, SelectedForViewMove>(simulation);
+  setRandomBinaryChoice<Accuracy, tags::SelectedForViewMove>(simulation);
   randomBinaryChance(simulation, [](Simulation& sim) {
-    sim.removeFromEntities<tags::internal::MoveHits, SelectedForViewMove, tags::RandomEventCheckFailed>();
+    sim.removeFromEntities<tags::internal::MoveHits, tags::SelectedForViewMove, tags::RandomEventCheckFailed>();
   });
 }
 
@@ -16368,8 +16457,7 @@ inline void moveHitLoop(Simulation& simulation) {
     runSecondaryMoveEffects(simulation);
     runDamagingHitEvent(simulation);
 
-    // Update stats if needed
-    
+    updateAllStats(simulation);
     internal::postMoveHitCheck(simulation);
     simulation.view<internal::deductMoveHitCount>();
   }
@@ -16387,16 +16475,14 @@ inline void internal::updateCurrentActionTargets(types::registry& registry, Curr
   std::uint8_t deleteCount = 0U;
   for (types::entity& target : targets.val) {
     if (!registry.all_of<tags::CurrentActionMoveTarget>(target)) {
-      auto swapIndex = targets.val.size() - 1 - deleteCount;
+      std::uint8_t swapIndex = targets.val.size() - 1 - deleteCount;
       ENTT_ASSERT(swapIndex >= 0 && swapIndex < targets.val.size(), "Swap index out of bounds");
       std::swap(target, targets.val[swapIndex]);
       deleteCount++;
     }
   }
 
-  for (std::uint8_t i = 0; i < deleteCount; i++) {
-    targets.val.pop_back();
-  }
+  targets.val.pop_count(deleteCount);
 }
 
 inline void internal::postMoveHitCheck(Simulation& simulation) {
@@ -16457,26 +16543,6 @@ inline void clearCurrentAction(Simulation& simulation);
 }  // namespace pokesim
 
 /////////////////// END OF src/Battle/ManageBattleState.hpp ////////////////////
-
-////////////// START OF src/Battle/Pokemon/ManagePokemonState.hpp //////////////
-
-namespace pokesim {
-class Simulation;
-struct CurrentActionSource;
-struct CurrentActionMoveSlot;
-struct Pp;
-namespace stat {
-struct Spe;
-}  // namespace stat
-
-inline void deductPp(Pp& pp);
-inline void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMoveSlot& move);
-inline void resetEffectiveSpeed(types::handle handle, stat::Spe spe);
-
-inline void updateSpeed(Simulation& simulation);
-}  // namespace pokesim
-
-/////////////// END OF src/Battle/Pokemon/ManagePokemonState.hpp ///////////////
 
 /////////////////// START OF src/Components/AddedTargets.hpp ///////////////////
 
@@ -16698,7 +16764,7 @@ inline void run(Simulation& simulation) {
   internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 
-  updateSpeed(simulation);
+  updateAllStats(simulation);
   simulation.view<resolveDecision>();
   simulation.registry.clear<SideDecision>();
 
@@ -16727,10 +16793,11 @@ inline void runCurrentAction(Simulation& simulation) {
   // Update
   // Switch requests
 
-  if (!simulation.registry.view<tags::SpeedUpdateRequired>().empty()) {
-    updateSpeed(simulation);
+  if (!simulation.registry.view<tags::SpeStatUpdateRequired>().empty()) {
+    updateSpe(simulation);
     simulation.viewForSelectedBattles<speedSort>();  // Should only speed sort battles affected
   }
+  updateAllStats(simulation);
 }
 
 inline void runBeforeTurnAction(Simulation& /*simulation*/) {
@@ -16877,7 +16944,9 @@ struct CritBoost {
   types::boost val = 0U;
 };
 
+namespace tags {
 struct Crit {};
+}
 }  // namespace pokesim::calc_damage
 
 /////////////// END OF src/Components/CalcDamage/CriticalHit.hpp ///////////////
@@ -17465,9 +17534,9 @@ inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDe
       SpeedSort speedSort;
       types::entity sourceEntity = slotToPokemonEntity(registry, sideHandle.entity(), decision.sourceSlot);
 
-      stat::EffectiveSpeed* effectiveSpeed = registry.try_get<stat::EffectiveSpeed>(sourceEntity);
-      if (effectiveSpeed != nullptr) {
-        speedSort.speed = effectiveSpeed->val;
+      stat::EffectiveSpe* effectiveSpe = registry.try_get<stat::EffectiveSpe>(sourceEntity);
+      if (effectiveSpe != nullptr) {
+        speedSort.speed = effectiveSpe->val;
       }
       else {
         speedSort.speed = registry.get<stat::Spe>(sourceEntity).val;
@@ -18999,8 +19068,8 @@ inline types::entity Pokedex::buildActionMove(dex::Move move, types::registry& r
 
 namespace pokesim::dex {
 inline void internal::StaticEvents::onDamagingHit(Simulation& /*simulation*/) {}
-inline void internal::StaticEvents::onModifySpe(stat::EffectiveSpeed& effectiveSpeed) {
-  effectiveSpeed.val /= 2;
+inline void internal::StaticEvents::onModifySpe(stat::EffectiveSpe& effectiveSpe) {
+  effectiveSpe.val /= 2;
 }
 }  // namespace pokesim::dex
 
@@ -19036,9 +19105,49 @@ inline types::entity InputSetup::entity() const {
 
 ///////////// END OF src/CalcDamage/Setup/CalcDamageInputSetup.cpp /////////////
 
+////////// START OF src/Components/CalcDamage/DamageCalcVariables.hpp //////////
+
+namespace pokesim::calc_damage {
+struct AttackingLevel {
+  types::level val = 1;
+};
+
+struct AttackingStat {
+  types::stat val = 1;
+};
+
+struct DefendingStat {
+  types::stat val = 1;
+};
+}  // namespace pokesim::calc_damage
+
+/////////// END OF src/Components/CalcDamage/DamageCalcVariables.hpp ///////////
+
+////////////////////// START OF src/Components/Damage.hpp //////////////////////
+
+namespace pokesim {
+struct Damage {
+  types::damage val = 1;
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Components/Damage.hpp ///////////////////////
+
+////////////////////// START OF src/Components/Level.hpp ///////////////////////
+
+namespace pokesim {
+// A Pokemon's level
+struct Level {
+  types::level val = 1;
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Components/Level.hpp ////////////////////////
+
 //////////////////// START OF src/CalcDamage/CalcDamage.cpp ////////////////////
 
 #include <cmath>
+#include <type_traits>
 
 namespace pokesim::calc_damage {
 inline void run(Simulation& simulation) {
@@ -19048,30 +19157,65 @@ inline void run(Simulation& simulation) {
 }
 
 inline void clearRunVariables(Simulation& simulation) {
-  simulation.registry.clear<Crit>();
+  simulation.registry.clear<tags::Crit>();
 }
 
 inline void modifyDamageWithTypes(Simulation& /*simulation*/) {}
 
 inline void getDamageRole(Simulation& /*simulation*/) {}
 
-inline void internal::assignCritChanceDivisor(types::handle moveHandle, CritBoost critBoost) {
+inline void internal::assignCritChanceDivisor(types::handle moveHandle, const CritBoost& critBoost) {
   std::size_t index = std::min((std::size_t)critBoost.val, internal::CRIT_CHANCE_DIVISORS.size() - 1);
   moveHandle.emplace<CritChanceDivisor>(internal::CRIT_CHANCE_DIVISORS[index]);
+}
+
+inline void internal::setSourceLevel(types::handle moveHandle, const Attacker& attacker) {
+  moveHandle.emplace<AttackingLevel>(moveHandle.registry()->get<Level>(attacker.val).val);
+}
+
+template <typename Category>
+void internal::setUsedAttackStat(types::handle moveHandle, const Attacker& attacker) {
+  types::stat attackingStat = 1;
+  if constexpr (std::is_same_v<Category, move::tags::Physical>) {
+    attackingStat = moveHandle.registry()->get<stat::EffectiveAtk>(attacker.val).val;
+  }
+  else {
+    attackingStat = moveHandle.registry()->get<stat::EffectiveSpa>(attacker.val).val;
+  }
+  moveHandle.emplace<AttackingStat>(attackingStat);
+}
+
+template <typename Category>
+void internal::setUsedDefenseStat(types::handle moveHandle, const Defenders& defenders) {
+  types::stat defendingStat = 1;
+  if constexpr (std::is_same_v<Category, move::tags::Physical>) {
+    defendingStat = moveHandle.registry()->get<stat::EffectiveDef>(defenders.val[0]).val;
+  }
+  else {
+    defendingStat = moveHandle.registry()->get<stat::EffectiveSpd>(defenders.val[0]).val;
+  }
+  moveHandle.emplace<DefendingStat>(defendingStat);
+}
+
+inline void internal::calculateBaseDamage(
+  types::handle moveHandle, const BasePower& basePower, const AttackingLevel& level, const AttackingStat& attack,
+  const DefendingStat& defense) {
+  types::damage damage = (((2 * level.val / 5 + 2) * basePower.val * attack.val) / defense.val) / 50;
+  moveHandle.emplace<Damage>(damage);
 }
 
 inline void setIfMoveCrits(Simulation& simulation) {
   pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn> selectedMoves{simulation};
   if (selectedMoves.hasNoneSelected()) return;
 
-  simulation.addToEntities<CritBoost, SelectedForViewMove>();
+  simulation.addToEntities<CritBoost, pokesim::tags::SelectedForViewMove>();
   runModifyCritBoostEvent(simulation);
   simulation.viewForSelectedMoves<internal::assignCritChanceDivisor>();
   simulation.registry.clear<CritBoost>();
 
-  setReciprocalRandomBinaryChoice<CritChanceDivisor, SelectedForViewMove>(simulation);
+  setReciprocalRandomBinaryChoice<CritChanceDivisor, pokesim::tags::SelectedForViewMove>(simulation);
   reciprocalRandomBinaryChance(simulation, [](Simulation& sim) {
-    sim.addToEntities<Crit, pokesim::tags::RandomEventCheckPassed>();
+    sim.addToEntities<tags::Crit, pokesim::tags::RandomEventCheckPassed>();
   });
 
   clearRandomChanceResult(simulation);
@@ -19079,10 +19223,21 @@ inline void setIfMoveCrits(Simulation& simulation) {
 }
 
 inline void getDamage(Simulation& simulation) {
+  pokesim::internal::SelectForCurrentActionMoveView<> selectedMoves{simulation};
+  if (selectedMoves.hasNoneSelected()) return;
+
   setIfMoveCrits(simulation);
 
   // Get base power, boosts, get atk/def stats
   runBasePowerEvent(simulation);
+  simulation.viewForSelectedMoves<internal::setSourceLevel>();
+
+  simulation.viewForSelectedMoves<internal::setUsedAttackStat<move::tags::Physical>, Tags<move::tags::Physical>>();
+  simulation.viewForSelectedMoves<internal::setUsedAttackStat<move::tags::Special>, Tags<move::tags::Special>>();
+  simulation.viewForSelectedMoves<internal::setUsedDefenseStat<move::tags::Physical>, Tags<move::tags::Physical>>();
+  simulation.viewForSelectedMoves<internal::setUsedDefenseStat<move::tags::Special>, Tags<move::tags::Special>>();
+
+  simulation.viewForSelectedMoves<internal::calculateBaseDamage>();
 
   getDamageRole(simulation);
 
@@ -19158,17 +19313,6 @@ struct Id {
 }  // namespace pokesim
 
 ///////////////////////// END OF src/Components/ID.hpp /////////////////////////
-
-////////////////////// START OF src/Components/Level.hpp ///////////////////////
-
-namespace pokesim {
-// A Pokemon's level
-struct Level {
-  types::level val = 1;
-};
-}  // namespace pokesim
-
-/////////////////////// END OF src/Components/Level.hpp ////////////////////////
 
 //////////////// START OF src/Components/Names/GenderNames.hpp /////////////////
 
@@ -19598,22 +19742,98 @@ inline void setLastMoveUsed(types::registry& registry, const CurrentActionSource
   registry.emplace<LastUsedMove>(source.val, move.val);
 }
 
-inline void resetEffectiveSpeed(types::handle handle, stat::Spe spe) {
-  handle.emplace_or_replace<stat::EffectiveSpeed>(spe.val);
+inline void resetEffectiveAtk(types::handle handle, stat::Atk atk) {
+  handle.emplace_or_replace<stat::EffectiveAtk>(atk.val);
 }
 
-inline void updateSpeed(Simulation& simulation) {
-  internal::SelectForPokemonView<tags::SpeedUpdateRequired> selectedSpeedUpdateRequired{simulation};
-  if (selectedSpeedUpdateRequired.hasNoneSelected()) return;
+inline void resetEffectiveDef(types::handle handle, stat::Def def) {
+  handle.emplace_or_replace<stat::EffectiveDef>(def.val);
+}
 
-  simulation.viewForSelectedPokemon<resetEffectiveSpeed>();
+inline void resetEffectiveSpa(types::handle handle, stat::Spa spa) {
+  handle.emplace_or_replace<stat::EffectiveSpa>(spa.val);
+}
+
+inline void resetEffectiveSpd(types::handle handle, stat::Spd spd) {
+  handle.emplace_or_replace<stat::EffectiveSpd>(spd.val);
+}
+
+inline void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
+  handle.emplace_or_replace<stat::EffectiveSpe>(spe.val);
+}
+
+inline void updateAllStats(Simulation& simulation) {
+  updateAtk(simulation);
+  updateDef(simulation);
+  updateSpa(simulation);
+  updateSpd(simulation);
+  updateSpe(simulation);
+}
+
+inline void updateAtk(Simulation& simulation) {
+  internal::SelectForPokemonView<tags::AtkStatUpdateRequired> selectedAtkUpdateRequired{simulation};
+  if (selectedAtkUpdateRequired.hasNoneSelected()) return;
+
+  simulation.viewForSelectedPokemon<resetEffectiveAtk>();
+
+  // apply boosts
+  runModifyAtk(simulation);
+
+  selectedAtkUpdateRequired.deselect();
+  simulation.registry.clear<tags::AtkStatUpdateRequired>();
+}
+
+inline void updateDef(Simulation& simulation) {
+  internal::SelectForPokemonView<tags::DefStatUpdateRequired> selectedDefUpdateRequired{simulation};
+  if (selectedDefUpdateRequired.hasNoneSelected()) return;
+
+  simulation.viewForSelectedPokemon<resetEffectiveDef>();
+
+  // apply boosts
+  runModifyDef(simulation);
+
+  selectedDefUpdateRequired.deselect();
+  simulation.registry.clear<tags::DefStatUpdateRequired>();
+}
+
+inline void updateSpa(Simulation& simulation) {
+  internal::SelectForPokemonView<tags::SpaStatUpdateRequired> selectedSpaUpdateRequired{simulation};
+  if (selectedSpaUpdateRequired.hasNoneSelected()) return;
+
+  simulation.viewForSelectedPokemon<resetEffectiveSpa>();
+
+  // apply boosts
+  runModifySpa(simulation);
+
+  selectedSpaUpdateRequired.deselect();
+  simulation.registry.clear<tags::SpaStatUpdateRequired>();
+}
+
+inline void updateSpd(Simulation& simulation) {
+  internal::SelectForPokemonView<tags::SpdStatUpdateRequired> selectedSpdUpdateRequired{simulation};
+  if (selectedSpdUpdateRequired.hasNoneSelected()) return;
+
+  simulation.viewForSelectedPokemon<resetEffectiveSpd>();
+
+  // apply boosts
+  runModifySpd(simulation);
+
+  selectedSpdUpdateRequired.deselect();
+  simulation.registry.clear<tags::SpdStatUpdateRequired>();
+}
+
+inline void updateSpe(Simulation& simulation) {
+  internal::SelectForPokemonView<tags::SpeStatUpdateRequired> selectedSpeUpdateRequired{simulation};
+  if (selectedSpeUpdateRequired.hasNoneSelected()) return;
+
+  simulation.viewForSelectedPokemon<resetEffectiveSpe>();
 
   // apply boosts
   runModifySpe(simulation);
   // trick room
 
-  selectedSpeedUpdateRequired.deselect();
-  simulation.registry.clear<tags::SpeedUpdateRequired>();
+  selectedSpeUpdateRequired.deselect();
+  simulation.registry.clear<tags::SpeStatUpdateRequired>();
 }
 }  // namespace pokesim
 

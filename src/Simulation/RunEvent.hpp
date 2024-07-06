@@ -9,5 +9,9 @@ void runModifyCritBoostEvent(Simulation& simulation);
 void runBasePowerEvent(Simulation& simulation);
 void runDamagingHitEvent(Simulation& simulation);
 
+void runModifyAtk(Simulation& simulation);
+void runModifyDef(Simulation& simulation);
+void runModifySpa(Simulation& simulation);
+void runModifySpd(Simulation& simulation);
 void runModifySpe(Simulation& simulation);
 }  // namespace pokesim

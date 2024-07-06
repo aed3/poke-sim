@@ -1,5 +1,6 @@
 #include "MoveHitSteps.hpp"
 
+#include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <CalcDamage/CalcDamage.hpp>
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
 #include <Components/Accuracy.hpp>
@@ -11,8 +12,8 @@
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MoveTags.hpp>
 #include <SimulateTurn/RandomChance.hpp>
-#include <Types/Registry.hpp>
 #include <Types/Enums/BattleFormat.hpp>
+#include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>
 
@@ -22,13 +23,16 @@
 namespace pokesim {
 void setMoveHitCount(Simulation& simulation) {
   auto noAssignedHitCount =
-    simulation.registry.view<SelectedForViewMove>(entt::exclude<move::tags::VariableHitCount, HitCount>);
+    simulation.registry.view<tags::SelectedForViewMove>(entt::exclude<move::tags::VariableHitCount, HitCount>);
   simulation.registry.insert<HitCount>(noAssignedHitCount.begin(), noAssignedHitCount.end(), {(types::moveHits)1U});
 
   // The 35%-35%-15%-15% out of 100 for 2-3-4-5 hits added so each index is the sum of the chance of its hit count and
   // the hit counts less than it so it works with the randomEventChances function
   static constexpr std::array<types::percentChance, 4U> progressiveMultiHitChances{35U, 70U, 85U, 100U};
-  setRandomChoice<4U, SelectedForViewMove, move::tags::VariableHitCount>(simulation, progressiveMultiHitChances, false);
+  setRandomChoice<4U, tags::SelectedForViewMove, move::tags::VariableHitCount>(
+    simulation,
+    progressiveMultiHitChances,
+    false);
 
   if (!simulation.registry.view<RandomEventChances<4U>>().empty()) {
     randomEventChances<4U>(simulation, [](Simulation& sim) {
@@ -54,9 +58,9 @@ void accuracyCheck(Simulation& simulation) {
   runModifyAccuracyEvent(simulation);
   runAccuracyEvent(simulation);
 
-  setRandomBinaryChoice<Accuracy, SelectedForViewMove>(simulation);
+  setRandomBinaryChoice<Accuracy, tags::SelectedForViewMove>(simulation);
   randomBinaryChance(simulation, [](Simulation& sim) {
-    sim.removeFromEntities<tags::internal::MoveHits, SelectedForViewMove, tags::RandomEventCheckFailed>();
+    sim.removeFromEntities<tags::internal::MoveHits, tags::SelectedForViewMove, tags::RandomEventCheckFailed>();
   });
 }
 
@@ -79,8 +83,7 @@ void moveHitLoop(Simulation& simulation) {
     runSecondaryMoveEffects(simulation);
     runDamagingHitEvent(simulation);
 
-    // Update stats if needed
-    
+    updateAllStats(simulation);
     internal::postMoveHitCheck(simulation);
     simulation.view<internal::deductMoveHitCount>();
   }
@@ -98,16 +101,14 @@ void internal::updateCurrentActionTargets(types::registry& registry, CurrentActi
   std::uint8_t deleteCount = 0U;
   for (types::entity& target : targets.val) {
     if (!registry.all_of<tags::CurrentActionMoveTarget>(target)) {
-      auto swapIndex = targets.val.size() - 1 - deleteCount;
+      std::uint8_t swapIndex = targets.val.size() - 1 - deleteCount;
       ENTT_ASSERT(swapIndex >= 0 && swapIndex < targets.val.size(), "Swap index out of bounds");
       std::swap(target, targets.val[swapIndex]);
       deleteCount++;
     }
   }
 
-  for (std::uint8_t i = 0; i < deleteCount; i++) {
-    targets.val.pop_back();
-  }
+  targets.val.pop_count(deleteCount);
 }
 
 void internal::postMoveHitCheck(Simulation& simulation) {

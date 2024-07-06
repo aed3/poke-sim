@@ -21,6 +21,14 @@ void runDamagingHitEvent(Simulation& simulation) {
   dex::latest::Static::onDamagingHit(simulation);
 }
 
+void runModifyAtk(Simulation&) {}
+
+void runModifyDef(Simulation&) {}
+
+void runModifySpa(Simulation&) {}
+
+void runModifySpd(Simulation&) {}
+
 void runModifySpe(Simulation& simulation) {
   simulation.viewForSelectedPokemon<
     dex::latest::Static::onModifySpe,

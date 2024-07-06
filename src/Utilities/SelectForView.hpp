@@ -3,7 +3,7 @@
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/Names/SpeciesNames.hpp>
-#include <Components/Selection.hpp>
+#include <Components/Tags/Selection.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Simulation/RegistryContainer.hpp>
 #include <Types/Entity.hpp>
@@ -39,12 +39,12 @@ struct SelectForView {
 };
 
 template <typename... ComponentsToSelect>
-struct SelectForBattleView : SelectForView<SelectedForViewBattle, Sides, ComponentsToSelect...> {};
+struct SelectForBattleView : SelectForView<tags::SelectedForViewBattle, Sides, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForSideView : SelectForView<SelectedForViewSide, Team, ComponentsToSelect...> {};
+struct SelectForSideView : SelectForView<tags::SelectedForViewSide, Team, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
-struct SelectForPokemonView : SelectForView<SelectedForViewPokemon, SpeciesName, ComponentsToSelect...> {};
+struct SelectForPokemonView : SelectForView<tags::SelectedForViewPokemon, SpeciesName, ComponentsToSelect...> {};
 template <typename... ComponentsToSelect>
 struct SelectForCurrentActionMoveView
-    : SelectForView<SelectedForViewMove, tags::CurrentActionMove, ComponentsToSelect...> {};
+    : SelectForView<tags::SelectedForViewMove, tags::CurrentActionMove, ComponentsToSelect...> {};
 }  // namespace pokesim::internal

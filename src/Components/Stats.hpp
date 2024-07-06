@@ -27,7 +27,23 @@ struct Spe {
   types::stat val = 1;
 };
 
-struct EffectiveSpeed {
+struct EffectiveAtk {
+  types::stat val = 1;
+};
+
+struct EffectiveDef {
+  types::stat val = 1;
+};
+
+struct EffectiveSpa {
+  types::stat val = 1;
+};
+
+struct EffectiveSpd {
+  types::stat val = 1;
+};
+
+struct EffectiveSpe {
   types::stat val = 1;
 };
 }  // namespace pokesim::stat

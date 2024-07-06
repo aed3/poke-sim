@@ -69,7 +69,11 @@ PokemonStateSetup Simulation::createInitialPokemon(
   pokemonSetup.setStat<stat::Spa>(pokemonData.stats.spa);
   pokemonSetup.setStat<stat::Spd>(pokemonData.stats.spd);
   pokemonSetup.setStat<stat::Spe>(pokemonData.stats.spe);
-  pokemonSetup.setProperty<tags::SpeedUpdateRequired>();
+  pokemonSetup.setProperty<tags::AtkStatUpdateRequired>();
+  pokemonSetup.setProperty<tags::DefStatUpdateRequired>();
+  pokemonSetup.setProperty<tags::SpaStatUpdateRequired>();
+  pokemonSetup.setProperty<tags::SpdStatUpdateRequired>();
+  pokemonSetup.setProperty<tags::SpeStatUpdateRequired>();
 
   if (battleData.runWithSimulateTurn) {
     pokemonSetup.setProperty<tags::SimulateTurn>();

@@ -5,7 +5,7 @@
 #include <entt/signal/delegate.hpp>
 #include <vector>
 
-namespace pokesim {
+namespace pokesim::tags {
 struct SelectedForViewBattle {};
 struct SelectedForViewSide {};
 struct SelectedForViewPokemon {};

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Components/Selection.hpp>
+#include <Components/Tags/Selection.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/RegistryLoop.hpp>
@@ -24,16 +24,16 @@ class RegistryContainer {
 
   template <typename Selection>
   SelectionFunctionList& selectedFunctions() {
-    if constexpr (std::is_same_v<SelectedForViewBattle, Selection>) {
+    if constexpr (std::is_same_v<tags::SelectedForViewBattle, Selection>) {
       return battleSelection;
     }
-    else if constexpr (std::is_same_v<SelectedForViewSide, Selection>) {
+    else if constexpr (std::is_same_v<tags::SelectedForViewSide, Selection>) {
       return sideSelection;
     }
-    else if constexpr (std::is_same_v<SelectedForViewPokemon, Selection>) {
+    else if constexpr (std::is_same_v<tags::SelectedForViewPokemon, Selection>) {
       return pokemonSelection;
     }
-    else if constexpr (std::is_same_v<SelectedForViewMove, Selection>) {
+    else if constexpr (std::is_same_v<tags::SelectedForViewMove, Selection>) {
       return moveSelection;
     }
   }
@@ -113,7 +113,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+    ForSelected<tags::SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
       this,
       passedInArgs...);
   }
@@ -122,7 +122,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+    ForSelected<tags::SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
       this,
       passedInArgs...);
   }
@@ -131,7 +131,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+    ForSelected<tags::SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
       this,
       passedInArgs...);
   }
@@ -140,7 +140,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+    ForSelected<tags::SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
       this,
       passedInArgs...);
   }
@@ -149,7 +149,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedPokemon(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+    ForSelected<tags::SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
       this,
       passedInArgs...);
   }
@@ -158,7 +158,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedPokemon(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+    ForSelected<tags::SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
       this,
       passedInArgs...);
   }
@@ -167,7 +167,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedMoves(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
+    ForSelected<tags::SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
       this,
       passedInArgs...);
   }
@@ -176,7 +176,7 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedMoves(const PassedInArgs&... passedInArgs) {
-    ForSelected<SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
+    ForSelected<tags::SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
       this,
       passedInArgs...);
   }

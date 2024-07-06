@@ -58,6 +58,11 @@ class maxSizedVector : private std::array<T, N> {
     used--;
   }
 
+  void pop_count(std::uint8_t remove) {
+    assert(remove <= used);
+    used -= remove;
+  }
+
   template <class... Args>
   void emplace_back(Args&&... args) {
     base::at(used) = {args...};

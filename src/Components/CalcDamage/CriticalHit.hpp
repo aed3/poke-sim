@@ -17,5 +17,7 @@ struct CritBoost {
   types::boost val = 0U;
 };
 
+namespace tags {
 struct Crit {};
+}
 }  // namespace pokesim::calc_damage
