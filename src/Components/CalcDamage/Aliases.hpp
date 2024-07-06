@@ -6,11 +6,11 @@
 namespace pokesim::calc_damage {
 using Attacker = CurrentActionSource;
 using Defenders = CurrentActionTargets;
-using Move = CurrentActionMove;
+using UsedMove = CurrentActionMove;
 
 namespace tags {
 using Attacker = pokesim::tags::CurrentActionMoveSource;
 using Defender = pokesim::tags::CurrentActionMoveTarget;
-using Move = pokesim::tags::CurrentActionMove;
+using UsedMove = pokesim::tags::CurrentActionMove;
 }  // namespace tags
 }  // namespace pokesim::calc_damage

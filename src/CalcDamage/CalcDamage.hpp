@@ -5,12 +5,23 @@
 
 namespace pokesim {
 class Simulation;
+struct BasePower;
 
 namespace calc_damage {
 struct CritBoost;
+struct AttackingLevel;
+struct AttackingStat;
+struct DefendingStat;
 
 namespace internal {
-void assignCritChanceDivisor(types::handle moveHandle, CritBoost critBoost);
+void assignCritChanceDivisor(types::handle moveHandle, const CritBoost& critBoost);
+void setSourceLevel(types::handle moveHandle, const Attacker& attacker);
+template <typename Category>
+void setUsedAttackStat(types::handle moveHandle, const Attacker& attacker);
+template <typename Category>
+void setUsedDefenseStat(types::handle moveHandle, const Defenders& defenders);
+
+void calculateBaseDamage(types::handle moveHandle, const BasePower& basePower, const AttackingLevel& level, const AttackingStat& attack, const DefendingStat& defense);
 }  // namespace internal
 
 void run(Simulation& simulation);

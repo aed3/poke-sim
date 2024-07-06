@@ -7,8 +7,8 @@
 #include <Components/Tags/PokemonTags.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
-#include <Types/Registry.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
@@ -24,21 +24,97 @@ void setLastMoveUsed(types::registry& registry, const CurrentActionSource& sourc
   registry.emplace<LastUsedMove>(source.val, move.val);
 }
 
-void resetEffectiveSpeed(types::handle handle, stat::Spe spe) {
-  handle.emplace_or_replace<stat::EffectiveSpeed>(spe.val);
+void resetEffectiveAtk(types::handle handle, stat::Atk atk) {
+  handle.emplace_or_replace<stat::EffectiveAtk>(atk.val);
 }
 
-void updateSpeed(Simulation& simulation) {
-  internal::SelectForPokemonView<tags::SpeedUpdateRequired> selectedSpeedUpdateRequired{simulation};
-  if (selectedSpeedUpdateRequired.hasNoneSelected()) return;
+void resetEffectiveDef(types::handle handle, stat::Def def) {
+  handle.emplace_or_replace<stat::EffectiveDef>(def.val);
+}
 
-  simulation.viewForSelectedPokemon<resetEffectiveSpeed>();
+void resetEffectiveSpa(types::handle handle, stat::Spa spa) {
+  handle.emplace_or_replace<stat::EffectiveSpa>(spa.val);
+}
+
+void resetEffectiveSpd(types::handle handle, stat::Spd spd) {
+  handle.emplace_or_replace<stat::EffectiveSpd>(spd.val);
+}
+
+void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
+  handle.emplace_or_replace<stat::EffectiveSpe>(spe.val);
+}
+
+void updateAllStats(Simulation& simulation) {
+  updateAtk(simulation);
+  updateDef(simulation);
+  updateSpa(simulation);
+  updateSpd(simulation);
+  updateSpe(simulation);
+}
+
+void updateAtk(Simulation& simulation) {
+  internal::SelectForPokemonView<tags::AtkStatUpdateRequired> selectedAtkUpdateRequired{simulation};
+  if (selectedAtkUpdateRequired.hasNoneSelected()) return;
+
+  simulation.viewForSelectedPokemon<resetEffectiveAtk>();
+
+  // apply boosts
+  runModifyAtk(simulation);
+
+  selectedAtkUpdateRequired.deselect();
+  simulation.registry.clear<tags::AtkStatUpdateRequired>();
+}
+
+void updateDef(Simulation& simulation) {
+  internal::SelectForPokemonView<tags::DefStatUpdateRequired> selectedDefUpdateRequired{simulation};
+  if (selectedDefUpdateRequired.hasNoneSelected()) return;
+
+  simulation.viewForSelectedPokemon<resetEffectiveDef>();
+
+  // apply boosts
+  runModifyDef(simulation);
+
+  selectedDefUpdateRequired.deselect();
+  simulation.registry.clear<tags::DefStatUpdateRequired>();
+}
+
+void updateSpa(Simulation& simulation) {
+  internal::SelectForPokemonView<tags::SpaStatUpdateRequired> selectedSpaUpdateRequired{simulation};
+  if (selectedSpaUpdateRequired.hasNoneSelected()) return;
+
+  simulation.viewForSelectedPokemon<resetEffectiveSpa>();
+
+  // apply boosts
+  runModifySpa(simulation);
+
+  selectedSpaUpdateRequired.deselect();
+  simulation.registry.clear<tags::SpaStatUpdateRequired>();
+}
+
+void updateSpd(Simulation& simulation) {
+  internal::SelectForPokemonView<tags::SpdStatUpdateRequired> selectedSpdUpdateRequired{simulation};
+  if (selectedSpdUpdateRequired.hasNoneSelected()) return;
+
+  simulation.viewForSelectedPokemon<resetEffectiveSpd>();
+
+  // apply boosts
+  runModifySpd(simulation);
+
+  selectedSpdUpdateRequired.deselect();
+  simulation.registry.clear<tags::SpdStatUpdateRequired>();
+}
+
+void updateSpe(Simulation& simulation) {
+  internal::SelectForPokemonView<tags::SpeStatUpdateRequired> selectedSpeUpdateRequired{simulation};
+  if (selectedSpeUpdateRequired.hasNoneSelected()) return;
+
+  simulation.viewForSelectedPokemon<resetEffectiveSpe>();
 
   // apply boosts
   runModifySpe(simulation);
   // trick room
 
-  selectedSpeedUpdateRequired.deselect();
-  simulation.registry.clear<tags::SpeedUpdateRequired>();
+  selectedSpeUpdateRequired.deselect();
+  simulation.registry.clear<tags::SpeStatUpdateRequired>();
 }
 }  // namespace pokesim

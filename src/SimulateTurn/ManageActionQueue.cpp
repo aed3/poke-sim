@@ -61,9 +61,9 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
       SpeedSort speedSort;
       types::entity sourceEntity = slotToPokemonEntity(registry, sideHandle.entity(), decision.sourceSlot);
 
-      stat::EffectiveSpeed* effectiveSpeed = registry.try_get<stat::EffectiveSpeed>(sourceEntity);
-      if (effectiveSpeed != nullptr) {
-        speedSort.speed = effectiveSpeed->val;
+      stat::EffectiveSpe* effectiveSpe = registry.try_get<stat::EffectiveSpe>(sourceEntity);
+      if (effectiveSpe != nullptr) {
+        speedSort.speed = effectiveSpe->val;
       }
       else {
         speedSort.speed = registry.get<stat::Spe>(sourceEntity).val;

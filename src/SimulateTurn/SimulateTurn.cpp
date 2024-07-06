@@ -34,7 +34,7 @@ void run(Simulation& simulation) {
   internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 
-  updateSpeed(simulation);
+  updateAllStats(simulation);
   simulation.view<resolveDecision>();
   simulation.registry.clear<SideDecision>();
 
@@ -63,10 +63,11 @@ void runCurrentAction(Simulation& simulation) {
   // Update
   // Switch requests
 
-  if (!simulation.registry.view<tags::SpeedUpdateRequired>().empty()) {
-    updateSpeed(simulation);
+  if (!simulation.registry.view<tags::SpeStatUpdateRequired>().empty()) {
+    updateSpe(simulation);
     simulation.viewForSelectedBattles<speedSort>();  // Should only speed sort battles affected
   }
+  updateAllStats(simulation);
 }
 
 void runBeforeTurnAction(Simulation& /*simulation*/) {

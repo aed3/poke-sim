@@ -91,8 +91,8 @@ void Simulation::run() {
 }
 
 std::vector<types::entity> Simulation::selectedBattleEntities() {
-  if (hasActiveSelection<SelectedForViewBattle>()) {
-    auto view = registry.view<SelectedForViewBattle, Sides>();
+  if (hasActiveSelection<tags::SelectedForViewBattle>()) {
+    auto view = registry.view<tags::SelectedForViewBattle, Sides>();
     return {view.begin(), view.end()};
   }
 
