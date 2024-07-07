@@ -6,16 +6,20 @@
 #include <Components/CalcDamage/DamageCalcVariables.hpp>
 #include <Components/Damage.hpp>
 #include <Components/Level.hpp>
-#include <Components/Stats.hpp>
 #include <Components/Names/MoveNames.hpp>
+#include <Components/PlayerSide.hpp>
 #include <Components/RandomEventOutputs.hpp>
+#include <Components/Stats.hpp>
 #include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
-#include <SimulateTurn/RandomChance.hpp>
+#include <SimulateTurn/CalcDamageSpecifics.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
+#include <Simulation/SimulationOptions.hpp>
 #include <Types/Damage.hpp>
+#include <Types/Enums/PlayerSideId.hpp>
+#include <Types/MechanicConstants.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <cmath>
@@ -29,16 +33,58 @@ void run(Simulation& simulation) {
 }
 
 void clearRunVariables(Simulation& simulation) {
-  simulation.registry.clear<tags::Crit>();
+  simulation.registry.clear<tags::Crit, AttackingLevel, AttackingStat, DefendingStat>();
 }
 
 void modifyDamageWithTypes(Simulation& /*simulation*/) {}
 
-void getDamageRole(Simulation& /*simulation*/) {}
+void internal::setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
+  types::registry& registry = *moveHandle.registry();
+  PlayerSideId playerSide = registry.get<PlayerSide>(registry.get<Side>(defenders.val[0]).val).val;
+  switch (playerSide) {
+    case PlayerSideId::NONE: {
+      ENTT_FAIL("Player side wasn't set properly");
+      break;
+    }
+    case PlayerSideId::P1: {
+      moveHandle.emplace<tags::P1Defending>();
+      break;
+    }
+    case PlayerSideId::P2: {
+      moveHandle.emplace<tags::P2Defending>();
+      break;
+    }
+  }
+}
+
+void getDamageRole(Simulation& simulation) {
+  pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn> selectedMoves{simulation};
+  if (selectedMoves.hasNoneSelected()) return;
+
+  const DamageRollOptions& damageRollsConsidered = simulation.simulateTurnOptions.damageRollsConsidered;
+  if (damageRollsConsidered.sidesMatch()) {
+    simulate_turn::getDamageRole(simulation, PlayerSideId::P1);
+  }
+  else {
+    simulation.viewForSelectedMoves<internal::setDefendingSide>();
+    pokesim::internal::SelectForCurrentActionMoveView<tags::P1Defending> p1DefendingMoves{simulation};
+    if (!p1DefendingMoves.hasNoneSelected()) {
+      simulate_turn::getDamageRole(simulation, PlayerSideId::P1);
+    }
+    p1DefendingMoves.deselect();
+
+    pokesim::internal::SelectForCurrentActionMoveView<tags::P2Defending> p2DefendingMoves{simulation};
+    if (!p2DefendingMoves.hasNoneSelected()) {
+      simulate_turn::getDamageRole(simulation, PlayerSideId::P2);
+    }
+
+    simulation.registry.clear<tags::P1Defending, tags::P2Defending>();
+  }
+}
 
 void internal::assignCritChanceDivisor(types::handle moveHandle, const CritBoost& critBoost) {
-  std::size_t index = std::min((std::size_t)critBoost.val, internal::CRIT_CHANCE_DIVISORS.size() - 1);
-  moveHandle.emplace<CritChanceDivisor>(internal::CRIT_CHANCE_DIVISORS[index]);
+  std::size_t index = std::min((std::size_t)critBoost.val, pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS.size() - 1);
+  moveHandle.emplace<CritChanceDivisor>(pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS[index]);
 }
 
 void internal::setSourceLevel(types::handle moveHandle, const Attacker& attacker) {
@@ -72,26 +118,36 @@ void internal::setUsedDefenseStat(types::handle moveHandle, const Defenders& def
 void internal::calculateBaseDamage(
   types::handle moveHandle, const BasePower& basePower, const AttackingLevel& level, const AttackingStat& attack,
   const DefendingStat& defense) {
-  types::damage damage = (((2 * level.val / 5 + 2) * basePower.val * attack.val) / defense.val) / 50;
+  // NOLINTNEXTLINE(readability-magic-numbers)
+  types::damage damage = (((2U * level.val / 5U + 2U) * basePower.val * attack.val) / defense.val) / 50U + 2;
   moveHandle.emplace<Damage>(damage);
 }
 
-void setIfMoveCrits(Simulation& simulation) {
-  pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn> selectedMoves{simulation};
-  if (selectedMoves.hasNoneSelected()) return;
+void internal::applyCritDamageIncrease(Damage& damage) {
+  damage.val = (types::damage)(damage.val * MechanicConstants::CRIT_MULTIPLIER);
+}
 
-  simulation.addToEntities<CritBoost, pokesim::tags::SelectedForViewMove>();
+void applyDamageRoll(Damage& damage, types::damageRoll damageRoll) {
+  damage.val = (types::damage)(damage.val * ((100 - damageRoll) / 100.0F));
+}
+
+void applyAverageDamageRoll(Damage& damage) {
+  damage.val = (types::damage)(damage.val * (100.0F - (MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U) / 2.0F));
+}
+
+void applyMinDamageRoll(Damage& damage) {
+  applyDamageRoll(damage, MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U);
+}
+
+void setIfMoveCrits(Simulation& simulation) {
+  simulation.addToEntities<calc_damage::CritBoost, pokesim::tags::SelectedForViewMove>();
   runModifyCritBoostEvent(simulation);
   simulation.viewForSelectedMoves<internal::assignCritChanceDivisor>();
   simulation.registry.clear<CritBoost>();
 
-  setReciprocalRandomBinaryChoice<CritChanceDivisor, pokesim::tags::SelectedForViewMove>(simulation);
-  reciprocalRandomBinaryChance(simulation, [](Simulation& sim) {
-    sim.addToEntities<tags::Crit, pokesim::tags::RandomEventCheckPassed>();
-  });
+  simulate_turn::setIfMoveCrits(simulation);
 
-  clearRandomChanceResult(simulation);
-  simulation.registry.clear<CritChanceDivisor>();
+  simulation.registry.clear<calc_damage::CritChanceDivisor>();
 }
 
 void getDamage(Simulation& simulation) {

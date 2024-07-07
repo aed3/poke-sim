@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Types/Entity.hpp>
+#include <Types/Enums/PlayerSideId.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
 #include <entt/entity/registry.hpp>
@@ -13,8 +14,10 @@ struct PokemonStateSetup;
 
 // Tool to set properties of a player's side state to an entity.
 struct SideStateSetup : internal::StateSetupBase {
-  SideStateSetup(types::registry& registry) : SideStateSetup(registry, registry.create()) {}
-  SideStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {}
+  SideStateSetup(types::registry& registry, PlayerSideId playerSideId)
+      : SideStateSetup(registry, registry.create(), playerSideId) {}
+  SideStateSetup(types::registry& registry, types::entity entity, PlayerSideId playerSideId)
+      : StateSetupBase(registry, entity) {}
   /**
    * @brief Applies the defaults to the required properties for a player side's state.
    *

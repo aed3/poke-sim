@@ -2,16 +2,24 @@
 
 #include <Types/Enums/DamageRollKind.hpp>
 #include <Types/Random.hpp>
+#include <Types/State.hpp>
 #include <cstdint>
 #include <entt/signal/delegate.hpp>
 #include <optional>
+#include <type_traits>
 
 namespace pokesim {
 class Simulation;
 
+struct DamageRollOptions {
+  DamageRollKind p1 = DamageRollKind::AVERAGE_DAMAGE;
+  DamageRollKind p2 = DamageRollKind::AVERAGE_DAMAGE;
+  bool sidesMatch() const { return p1 == p2; }
+};
+
 namespace simulate_turn {
 struct Options {
-  DamageRollKind damageRollsConsidered = DamageRollKind::AVERAGE_DAMAGE;
+  DamageRollOptions damageRollsConsidered;
   bool applyChangesToInputBattle = true;
   std::optional<types::percentChance> randomChanceUpperLimit = std::nullopt;
   std::optional<types::percentChance> randomChanceLowerLimit = std::nullopt;
@@ -24,14 +32,14 @@ struct Options {
   std::optional<std::uint32_t> numberOfSamples = std::nullopt;
   bool makeBranchesOnRandomEvents() const { return !numberOfSamples.has_value(); }
 
-  entt::delegate<void(Simulation&)> decisionCallback{};
-  entt::delegate<void(Simulation&)> faintCallback{};
+  entt::delegate<std::remove_pointer_t<types::callback>> decisionCallback{};
+  entt::delegate<std::remove_pointer_t<types::callback>> faintCallback{};
 };
 }  // namespace simulate_turn
 
 namespace calc_damage {
 struct Options {
-  DamageRollKind damageRollsReturned = DamageRollKind::ALL_DAMAGE_ROLES;
+  DamageRollOptions damageRollsReturned;
 };
 }  // namespace calc_damage
 
@@ -42,7 +50,7 @@ struct Options {
   bool reconsiderActiveEffects = false;
   bool returnMultipliedKoChance = false;
 
-  DamageRollKind damageRollsReturned = DamageRollKind::NONE;
+  DamageRollOptions damageRollsReturned;
 };
 }  // namespace analyze_effect
 }  // namespace pokesim

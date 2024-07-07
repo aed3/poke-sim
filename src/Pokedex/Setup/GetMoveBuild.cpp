@@ -4,9 +4,9 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/AddedTargets.hpp>
 #include <Types/Enums/Move.hpp>
-#include <Types/Registry.hpp>
 #include <Types/Enums/MoveCategory.hpp>
 #include <Types/Enums/MoveTarget.hpp>
+#include <Types/Registry.hpp>
 #include <type_traits>
 
 #include "../Moves/headers.hpp"

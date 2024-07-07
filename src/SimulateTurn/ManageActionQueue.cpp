@@ -13,11 +13,11 @@
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SimulateTurn/SpeedTieIndexes.hpp>
 #include <Components/SimulateTurn/TeamAction.hpp>
-#include <Types/Registry.hpp>
 #include <Components/SpeedSort.hpp>
 #include <Components/Stats.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/ActionOrder.hpp>
+#include <Types/Registry.hpp>
 #include <Types/State.hpp>
 #include <Utilities/Variant.hpp>
 #include <algorithm>

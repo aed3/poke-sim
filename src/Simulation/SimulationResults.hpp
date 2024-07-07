@@ -72,7 +72,7 @@ struct MultipliedMaxDamage {
 };
 
 struct MultipliedDamageRolls {
-  types::damageRolls multipliedDamageRolls;
+  types::allDamageRolls multipliedDamageRolls;
 };
 
 struct MultipliedKoChance {

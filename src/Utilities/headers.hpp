@@ -1,5 +1,6 @@
 #pragma once
 
+#include "LambdaToDelegate.hpp"
 #include "MaxSizedVector.hpp"
 #include "RNG.hpp"
 #include "RegistryLoop.hpp"

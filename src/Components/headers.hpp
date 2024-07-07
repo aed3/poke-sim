@@ -46,6 +46,7 @@
 #include "Names/VolatileNames.hpp"
 #include "Names/WeatherNames.hpp"
 #include "PP.hpp"
+#include "PlayerSide.hpp"
 #include "Pokedex/Abilities.hpp"
 #include "Pokedex/BaseStats.hpp"
 #include "Pokedex/SpeciesTypes.hpp"

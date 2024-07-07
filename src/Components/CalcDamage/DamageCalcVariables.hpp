@@ -14,4 +14,9 @@ struct AttackingStat {
 struct DefendingStat {
   types::stat val = 1;
 };
+
+namespace tags {
+struct P1Defending {};
+struct P2Defending {};
+}  // namespace tags
 }  // namespace pokesim::calc_damage

@@ -10,7 +10,6 @@
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
-#include <Types/Registry.hpp>
 #include <Components/PP.hpp>
 #include <Components/SimulateTurn/ActionNames.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
@@ -24,6 +23,7 @@
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/MoveHitSteps.hpp>
 #include <Simulation/Simulation.hpp>
+#include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>
 

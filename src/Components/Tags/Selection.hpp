@@ -10,4 +10,4 @@ struct SelectedForViewBattle {};
 struct SelectedForViewSide {};
 struct SelectedForViewPokemon {};
 struct SelectedForViewMove {};
-}  // namespace pokesim
+}  // namespace pokesim::tags

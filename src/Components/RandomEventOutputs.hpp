@@ -4,14 +4,14 @@
 
 namespace pokesim {
 namespace tags {
-struct RandomEventCheckPassed {};
-struct RandomEventCheckFailed {};
-
 struct RandomEventA {};
 struct RandomEventB {};
 struct RandomEventC {};
 struct RandomEventD {};
 struct RandomEventE {};
+
+using RandomEventCheckPassed = RandomEventA;
+using RandomEventCheckFailed = RandomEventB;
 }  // namespace tags
 
 // Indicates which of equally likely events was chosen randomly

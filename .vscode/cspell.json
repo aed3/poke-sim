@@ -25,7 +25,11 @@
   ],
   "words": [
     "copydoc",
+    "Crits",
+    "entt",
     "tparam",
-    "entt"
+    "NOLINTBEGIN",
+    "NOLINTEND",
+    "NOLINTNEXTLINE"
   ]
 }

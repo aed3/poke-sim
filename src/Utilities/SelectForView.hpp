@@ -3,8 +3,8 @@
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/Names/SpeciesNames.hpp>
-#include <Components/Tags/Selection.hpp>
 #include <Components/Tags/Current.hpp>
+#include <Components/Tags/Selection.hpp>
 #include <Simulation/RegistryContainer.hpp>
 #include <Types/Entity.hpp>
 #include <cstdint>

@@ -26,6 +26,7 @@
 #include "Enums/Type.hpp"
 #include "Enums/Volatile.hpp"
 #include "Enums/Weather.hpp"
+#include "MechanicConstants.hpp"
 #include "Move.hpp"
 #include "Random.hpp"
 #include "Registry.hpp"

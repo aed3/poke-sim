@@ -20,9 +20,7 @@ void SideStateSetup::initBlank() {
 void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
   Team& teamEntities = handle.emplace<Team>();
   Battle battle = handle.get<Battle>();
-  ENTT_ASSERT(
-    team.size() <= teamEntities.val.max_size(),
-    "Cannot add more Pokemon to a team than types::internal::MAX_TEAM_SIZE");
+  ENTT_ASSERT(team.size() <= teamEntities.val.max_size(), "Cannot add more Pokemon to a team than MAX_TEAM_SIZE");
 
   for (std::size_t i = 0; i < team.size(); i++) {
     teamEntities.val.push_back(team[i].entity());

@@ -5,8 +5,8 @@
 #include <Components/Names/MoveNames.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
-#include <Types/Registry.hpp>
 #include <Types/Enums/Move.hpp>
+#include <Types/Registry.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
