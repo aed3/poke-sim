@@ -117,6 +117,7 @@ void internal::postMoveHitCheck(Simulation& simulation) {
     Tags<tags::CurrentActionMove>,
     entt::exclude_t<tags::internal::MoveHits>>();
   simulation.registry.destroy(removedMoves.begin(), removedMoves.end());
+  simulation.registry.clear<Damage>();
   simulation.view<internal::updateCurrentActionTargets>();
 }
 

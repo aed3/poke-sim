@@ -12,9 +12,9 @@
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Pokedex/Pokedex.hpp>
-#include <Types/Registry.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Registry.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Components/RandomEventInputs.hpp>
-#include <Types/Registry.hpp>
 #include <Types/Enums/BattleFormat.hpp>
 #include <Types/Move.hpp>
+#include <Types/Registry.hpp>
 
 namespace pokesim {
 class Simulation;

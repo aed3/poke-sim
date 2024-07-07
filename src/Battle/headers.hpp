@@ -2,6 +2,7 @@
 
 #include "Clone/Clone.hpp"
 #include "Helpers/Helpers.hpp"
+#include "Helpers/IntegerModify.hpp"
 #include "ManageBattleState.hpp"
 #include "Pokemon/ManagePokemonState.hpp"
 #include "Setup/BattleStateSetup.hpp"

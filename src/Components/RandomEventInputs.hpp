@@ -33,7 +33,10 @@ struct RandomEventChances {
 
   types::percentChance chanceA() const { return val[0]; }
   types::percentChance chanceB() const { return val[1] - val[0]; }
-  types::percentChance chanceC() const { return val[2] - val[1]; }
+  types::percentChance chanceC() const {
+    static_assert(RANDOM_OPTIONS >= 3U);
+    return val[2] - val[1];
+  }
   types::percentChance chanceD() const {
     static_assert(RANDOM_OPTIONS >= 4U);
     return val[3] - val[2];

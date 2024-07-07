@@ -1,3 +1,5 @@
+#include "EnumToTag.hpp"
+
 #include <Components/Tags/AbilityTags.hpp>
 #include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/NatureTags.hpp>
@@ -6,8 +8,6 @@
 #include <Types/Registry.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
-
-#include "EnumToTag.hpp"
 // TODO(aed3): Make this auto generated
 
 namespace pokesim {

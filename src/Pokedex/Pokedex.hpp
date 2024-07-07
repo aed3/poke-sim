@@ -2,8 +2,8 @@
 
 #include <Components/EntityHolders/MoveEffect.hpp>
 #include <Types/Entity.hpp>
-#include <Types/Registry.hpp>
 #include <Types/Enums/headers.hpp>
+#include <Types/Registry.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/container/fwd.hpp>
 #include <entt/entity/registry.hpp>

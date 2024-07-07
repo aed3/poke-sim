@@ -121,8 +121,8 @@ std::tuple<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(
     battleStateSetup.setProperty<tags::AnalyzeEffect>();
   }
 
-  SideStateSetup p1SideSetup(registry);
-  SideStateSetup p2SideSetup(registry);
+  SideStateSetup p1SideSetup(registry, PlayerSideId::P1);
+  SideStateSetup p2SideSetup(registry, PlayerSideId::P2);
 
   types::entity battleEntity = battleStateSetup.entity();
   types::entity p1Entity = p1SideSetup.entity();

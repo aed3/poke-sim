@@ -1,8 +1,8 @@
 #include "Pokedex.hpp"
 
 #include <Types/Entity.hpp>
-#include <Types/Registry.hpp>
 #include <Types/Enums/headers.hpp>
+#include <Types/Registry.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/container/dense_set.hpp>
 #include <entt/entity/handle.hpp>

@@ -33,7 +33,7 @@ class RegistryContainer {
     else if constexpr (std::is_same_v<tags::SelectedForViewPokemon, Selection>) {
       return pokemonSelection;
     }
-    else if constexpr (std::is_same_v<tags::SelectedForViewMove, Selection>) {
+    else {
       return moveSelection;
     }
   }
@@ -45,15 +45,34 @@ class RegistryContainer {
       return 0U;
     }
 
+    bool narrowSelection = hasActiveSelection<Selection>();
+    std::size_t finalSelectionSize = 0U;
+
+    if (narrowSelection) {
+      auto unmatchedSelections = registry.group(entt::get<Selection>, entt::exclude<ComponentsToSelect...>);
+      std::size_t totalSelected = registry.view<Selection>().size();
+      std::size_t unmatchedSelectionSize = unmatchedSelections.size();
+      if (unmatchedSelectionSize == totalSelected) {
+        return 0U;
+      }
+
+      registry.remove<Selection>(unmatchedSelections.begin(), unmatchedSelections.end());
+
+      ENTT_ASSERT(totalSelected > unmatchedSelectionSize, "");
+      finalSelectionSize = totalSelected - unmatchedSelectionSize;
+    }
+    else {
+      registry.clear<Selection>();
+      registry.insert<Selection>(group.begin(), group.end());
+      finalSelectionSize = group.size();
+    }
+
     selectedFunctions<Selection>().emplace_back([](const void*, const types::registry& reg) {
       auto view = reg.view<ComponentsToSelect...>();
       return std::vector<types::entity>{view.begin(), view.end()};
     });
 
-    registry.clear<Selection>();
-    registry.insert<Selection>(group.begin(), group.end());
-
-    return group.size();
+    return finalSelectionSize;
   }
 
   template <typename Selection>
@@ -64,14 +83,23 @@ class RegistryContainer {
     SelectionFunctionList& functions = selectedFunctions<Selection>();
     functions.pop_back();
 
-    for (const auto delegate : functions) {
-      std::vector<types::entity> previouslySelected = delegate(registry);
-      for (types::entity entity : previouslySelected) {
-        if (registry.valid(entity)) {
-          registry.get_or_emplace<Selection>(entity);
-        }
-      }
+    if (functions.empty()) {
+      return;
     }
+
+    std::vector<types::entity> filteredEntityList = functions[0](registry);
+    auto end = filteredEntityList.end();
+    for (std::size_t i = 1; i < functions.size(); i++) {
+      std::vector<types::entity> previouslySelected = functions[i](registry);
+      end = std::remove_if(
+        filteredEntityList.begin(),
+        filteredEntityList.end(),
+        [&previouslySelected](types::entity entity) {
+          return std::find(previouslySelected.begin(), previouslySelected.end(), entity) == previouslySelected.end();
+        });
+    }
+
+    registry.insert<Selection>(filteredEntityList.begin(), end);
   }
 
  protected:

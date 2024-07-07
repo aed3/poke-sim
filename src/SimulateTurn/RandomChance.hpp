@@ -7,7 +7,9 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/BattleFormat.hpp>
 #include <Types/Random.hpp>
+#include <Types/Registry.hpp>
 #include <Types/State.hpp>
+#include <optional>
 
 namespace pokesim {
 namespace internal {
@@ -70,6 +72,18 @@ void setReciprocalRandomBinaryChoice(
 }
 
 template <BattleFormat Format>
+void setRandomEqualChoice(types::handle handle) {
+  if constexpr (Format == BattleFormat::SINGLES_BATTLE_FORMAT) {
+    handle.emplace<tags::RandomEqualChance>();
+  }
+  else {
+    handle.registry()
+      ->get_or_emplace<RandomEqualChanceStack>(handle.get<Battle>().val)
+      .val.emplace_back(handle.entity());
+  }
+}
+
+template <BattleFormat Format>
 void setRandomEventCounts(types::handle handle, types::eventPossibilities possibleEventCount) {
   if constexpr (Format == BattleFormat::SINGLES_BATTLE_FORMAT) {
     handle.emplace<RandomEventCount>(possibleEventCount);
@@ -99,7 +113,7 @@ void setRandomChoice(
     ENTT_ASSERT(chances.back() == 100, "The total probability of all possible outcomes should add up to 100%.");
     for (types::eventPossibilities i = 1; i < POSSIBLE_EVENT_COUNT; i++) {
       ENTT_ASSERT(
-        chances[i - 1] < chances[i],
+        chances[i - 1] <= chances[i],
         "Chances should be a cumulative sum where each value is greater than the last.");
     }
   }
@@ -149,6 +163,16 @@ void setReciprocalRandomBinaryChoice(Simulation& simulation) {
 }
 
 template <typename... T>
+void setRandomEqualChoice(Simulation& simulation) {
+  if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
+    simulation.view<internal::setRandomEqualChoice<BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>();
+  }
+  else {
+    simulation.view<internal::setRandomEqualChoice<BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<T...>>();
+  }
+}
+
+template <typename... T>
 void setRandomEventCounts(Simulation& simulation, types::eventPossibilities possibleEventCount) {
   if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation.view<internal::setRandomEventCounts<BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
@@ -161,12 +185,17 @@ void setRandomEventCounts(Simulation& simulation, types::eventPossibilities poss
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
-void randomEventChances(Simulation& simulation, void (*handleRandomEventChoice)(Simulation&));
-void randomBinaryChance(Simulation& simulation, void (*handleRandomEventChoice)(Simulation&));
-void reciprocalRandomBinaryChance(Simulation& simulation, void (*handleRandomEventChoice)(Simulation&));
+void randomEventChances(
+  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt);
+void randomBinaryChance(
+  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt);
+void reciprocalRandomBinaryChance(
+  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt);
 void randomEqualChance(
-  Simulation& simulation, types::eventPossibilities possibleEventCount, void (*handleRandomEventChoice)(Simulation&));
-void randomEventCount(Simulation& simulation, void (*handleRandomEventChoice)(Simulation&));
+  Simulation& simulation, types::eventPossibilities possibleEventCount, types::callback applyChoices,
+  types::optionalCallback updateProbabilities = std::nullopt);
+void randomEventCount(
+  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt);
 
 void clearRandomChanceResult(Simulation& simulation);
 }  // namespace pokesim

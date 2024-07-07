@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Types/Entity.hpp>
-#include <Types/Registry.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Move.hpp>
+#include <Types/Registry.hpp>
 #include <entt/entity/registry.hpp>
 
 #include "StateSetupBase.hpp"

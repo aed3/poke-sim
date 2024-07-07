@@ -88,7 +88,7 @@ struct RegistryLoop<
     static auto run(types::registry& registry, const PassedInArgs&... passedInArgs) {
       auto list = getList(registry);
       list.each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
-        (void) entity;
+        (void)entity;
         if constexpr (hasRegistryFirst) {
           Function(registry, args..., passedInArgs...);
         }

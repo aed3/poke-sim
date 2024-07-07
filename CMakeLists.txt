@@ -62,6 +62,7 @@ set (SOURCES
   src/Pokedex/Setup/ItemDexDataSetup.cpp
   src/Pokedex/Setup/MoveDexDataSetup.cpp
   src/Pokedex/Setup/SpeciesDexDataSetup.cpp
+  src/SimulateTurn/CalcDamageSpecifics.cpp
   src/SimulateTurn/ManageActionQueue.cpp
   src/SimulateTurn/RandomChance.cpp
   src/SimulateTurn/SimulateTurn.cpp
@@ -97,6 +98,7 @@ add_executable(PokeSimTests
   tests/BattleStateTest.cpp
   tests/PokedexTest.cpp
   tests/CalculateDamageTest.cpp
+  tests/RegistryContainerTests.cpp
   tests/SimulationSetupTest.cpp
   tests/SimulateTurnsTest.cpp
   tests/Tests.cpp
