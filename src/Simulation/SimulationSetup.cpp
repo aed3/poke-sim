@@ -55,6 +55,12 @@ PokemonStateSetup Simulation::createInitialPokemon(
 
   pokemonSetup.setSpecies(pokemonData.species);
   pokemonSetup.setLevel(pokemonData.level);
+  if (pokemonData.types.has_value()) {
+    pokemonSetup.setTypes(pokemonData.types.value());
+  }
+  else {
+    pokemonSetup.setTypes(pokedex.getSpeciesData<SpeciesTypes>(pokemonData.species));
+  }
   if (pokemonData.gender != dex::Gender::NO_GENDER) pokemonSetup.setGender(pokemonData.gender);
   if (pokemonData.ability != dex::Ability::NO_ABILITY) pokemonSetup.setAbility(pokemonData.ability);
   if (pokemonData.item != dex::Item::NO_ITEM) pokemonSetup.setItem(pokemonData.item);

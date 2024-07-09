@@ -54,6 +54,11 @@ inline Simulation createSingleBattleSimulation(
     battleCreationInfo.p1 = {{p1PokemonInfo}};
     battleCreationInfo.p2 = {{p2PokemonInfo}};
 
+    entt::dense_set<dex::Species> speciesSet{};
+    speciesSet.insert(p1PokemonInfo.species);
+    speciesSet.insert(p2PokemonInfo.species);
+    pokedex->loadSpecies(speciesSet);
+
     if (addTsDecisions) {
       SideDecision p1Decision{PlayerSideId::P1};
       SideDecision p2Decision{PlayerSideId::P2};
@@ -148,6 +153,14 @@ inline Simulation createDoubleBattleSimulation(
 
     battleCreationInfo.p1 = {{p1aPokemonInfo, p1bPokemonInfo}};
     battleCreationInfo.p2 = {{p2aPokemonInfo, p2bPokemonInfo}};
+
+    entt::dense_set<dex::Species> speciesSet{};
+    speciesSet.insert(p1aPokemonInfo.species);
+    speciesSet.insert(p1bPokemonInfo.species);
+    speciesSet.insert(p2aPokemonInfo.species);
+    speciesSet.insert(p2bPokemonInfo.species);
+    pokedex->loadSpecies(speciesSet);
+
   }
 
   battleCreationInfo.turn = 2;

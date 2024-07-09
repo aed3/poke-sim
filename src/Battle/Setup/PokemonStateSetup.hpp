@@ -2,6 +2,7 @@
 
 #include <Components/Boosts.hpp>
 #include <Components/EVsIVs.hpp>
+#include <Components/SpeciesTypes.hpp>
 #include <Components/Stats.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Ability.hpp>
@@ -40,6 +41,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   void setSide(types::entity entity);
   void setBattle(types::entity entity);
 
+  void setTypes(SpeciesTypes types);
   void setLevel(types::level level);
   void setGender(dex::Gender gender);
   void setAbility(dex::Ability ability);

@@ -74,6 +74,15 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   battleCreationInfo.p1 = {{p1aPokemonInfo, p1bPokemonInfo, p1cPokemonInfo}};
   battleCreationInfo.p2 = {{p2aPokemonInfo, p1bPokemonInfo, p2cPokemonInfo}};
 
+  entt::dense_set<dex::Species> speciesSet{};
+  speciesSet.insert(p1aPokemonInfo.species);
+  speciesSet.insert(p1bPokemonInfo.species);
+  speciesSet.insert(p1cPokemonInfo.species);
+  speciesSet.insert(p2aPokemonInfo.species);
+  speciesSet.insert(p2bPokemonInfo.species);
+  speciesSet.insert(p2cPokemonInfo.species);
+  pokedex.loadSpecies(speciesSet);
+
   return battleCreationInfo;
 }
 

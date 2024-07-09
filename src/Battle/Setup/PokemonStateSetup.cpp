@@ -59,6 +59,10 @@ void PokemonStateSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
 }
 
+void PokemonStateSetup::setTypes(SpeciesTypes types) {
+  handle.emplace<SpeciesTypes>(types);
+}
+
 void PokemonStateSetup::setLevel(types::level level) {
   handle.emplace<Level>(level);
 }

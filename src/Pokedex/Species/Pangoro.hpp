@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Components/Pokedex/SpeciesTypes.hpp>
+#include <Components/SpeciesTypes.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Species.hpp>
