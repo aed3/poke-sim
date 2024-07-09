@@ -9,6 +9,7 @@ class Simulation;
 struct BasePower;
 struct Damage;
 struct RandomEventIndex;
+struct TypeName;
 
 namespace calc_damage {
 struct CritBoost;
@@ -29,6 +30,7 @@ void calculateBaseDamage(
   const DefendingStat& defense);
 void applyCritDamageIncrease(Damage& damage);
 void setDefendingSide(types::handle moveHandle, const Defenders& defenders);
+void checkForAndApplyStab(types::handle moveHandle, const Attacker& attacker, const TypeName& type, Damage& damage);
 }  // namespace internal
 
 void run(Simulation& simulation);

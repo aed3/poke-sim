@@ -49,6 +49,8 @@
  * src/Types/Stats.hpp
  * src/Components/Boosts.hpp
  * src/Components/EVsIVs.hpp
+ * src/Types/Enums/Type.hpp
+ * src/Components/SpeciesTypes.hpp
  * src/Components/Stats.hpp
  * src/Types/Enums/Ability.hpp
  * src/Types/Enums/Gender.hpp
@@ -86,7 +88,6 @@
  * src/Types/Enums/MoveCategory.hpp
  * src/Types/Enums/MoveTarget.hpp
  * src/Types/Enums/Stat.hpp
- * src/Types/Enums/Type.hpp
  * src/Pokedex/Pokedex.hpp
  * src/Components/Tags/Selection.hpp
  * src/Utilities/Tags.hpp
@@ -94,6 +95,7 @@
  * src/Simulation/RegistryContainer.hpp
  * src/Simulation/SimulationOptions.hpp
  * src/Types/Damage.hpp
+ * src/Types/Event.hpp
  * src/Simulation/Simulation.hpp
  * src/Simulation/SimulationSetup.cpp
  * src/Simulation/SimulationResults.hpp
@@ -102,8 +104,17 @@
  * src/CalcDamage/CalcDamage.hpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Simulation/Simulation.cpp
+ * src/Battle/Helpers/IntegerModify.hpp
+ * src/Components/EventModifier.hpp
+ * src/Components/Tags/ItemTags.hpp
  * src/Components/Tags/StatusTags.hpp
  * src/Pokedex/Abilities/Static.hpp
+ * src/Pokedex/Items/AssaultVest.hpp
+ * src/Pokedex/Items/BrightPowder.hpp
+ * src/Pokedex/Items/ChoiceScarf.hpp
+ * src/Pokedex/Items/ChoiceSpecs.hpp
+ * src/Pokedex/Items/FocusSash.hpp
+ * src/Pokedex/Items/LifeOrb.hpp
  * src/Simulation/RunEvent.hpp
  * src/Simulation/RunEvent.cpp
  * src/Battle/Pokemon/ManagePokemonState.hpp
@@ -151,7 +162,6 @@
  * src/SimulateTurn/CalcDamageSpecifics.cpp
  * src/Components/Pokedex/Abilities.hpp
  * src/Components/Pokedex/BaseStats.hpp
- * src/Components/Pokedex/SpeciesTypes.hpp
  * src/Pokedex/Setup/DexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.cpp
@@ -177,18 +187,13 @@
  * src/Pokedex/Moves/Thunderbolt.hpp
  * src/Pokedex/Moves/WillOWisp.hpp
  * src/Pokedex/Setup/GetMoveBuild.cpp
- * src/Pokedex/Items/AssaultVest.hpp
- * src/Pokedex/Items/BrightPowder.hpp
- * src/Pokedex/Items/ChoiceScarf.hpp
- * src/Pokedex/Items/ChoiceSpecs.hpp
- * src/Pokedex/Items/FocusSash.hpp
- * src/Pokedex/Items/LifeOrb.hpp
  * src/Pokedex/Setup/GetItemBuild.cpp
  * src/Pokedex/Setup/AbilityDexDataSetup.hpp
  * src/Pokedex/Setup/GetAbilityBuild.cpp
  * src/Components/Names/AbilityNames.hpp
  * src/Pokedex/Setup/AbilityDexDataSetup.cpp
  * src/Pokedex/Pokedex.cpp
+ * src/Pokedex/Items/ItemEvents.cpp
  * src/Pokedex/Abilities/AbilityEvents.cpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.cpp
  * src/Components/CalcDamage/DamageCalcVariables.hpp
@@ -204,7 +209,6 @@
  * src/Components/Names/StatusNames.hpp
  * src/Components/Position.hpp
  * src/Components/Tags/AbilityTags.hpp
- * src/Components/Tags/ItemTags.hpp
  * src/Components/Tags/NatureTags.hpp
  * src/Battle/Setup/PokemonStateSetup.cpp
  * src/Battle/Setup/MoveStateSetup.cpp
@@ -226,7 +230,6 @@
  * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp
  * src/Components/AnalyzeEffect/RemovedEffect.hpp
  * src/AnalyzeEffect/AnalyzeEffect.cpp
- * src/Battle/Helpers/IntegerModify.hpp
  * src/Components/Names/StatNames.hpp
  * src/Components/Tags/TypeTags.hpp
  * src/Pokedex/Names.hpp
@@ -12756,6 +12759,41 @@ struct Ivs {
 
 /////////////////////// END OF src/Components/EVsIVs.hpp ///////////////////////
 
+////////////////////// START OF src/Types/Enums/Type.hpp ///////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon type name
+enum class Type : std::uint8_t {
+  // clang-format off
+  NO_TYPE = 0, NORMAL_TYPE, FIGHTING_TYPE, FLYING_TYPE, POISON_TYPE, GROUND_TYPE, ROCK_TYPE, BUG_TYPE, GHOST_TYPE, STEEL_TYPE, FIRE_TYPE, WATER_TYPE, GRASS_TYPE, ELECTRIC_TYPE, PSYCHIC_TYPE, ICE_TYPE, DRAGON_TYPE, DARK_TYPE, FAIRY_TYPE, TYPE_TOTAL
+  // clang-format on
+};
+}  // namespace pokesim::dex
+
+/////////////////////// END OF src/Types/Enums/Type.hpp ////////////////////////
+
+/////////////////// START OF src/Components/SpeciesTypes.hpp ///////////////////
+
+#include <array>
+
+namespace pokesim {
+// Contains the types a species has
+struct SpeciesTypes {
+  std::array<dex::Type, 2U> val{dex::Type::NO_TYPE, dex::Type::NO_TYPE};
+
+  dex::Type& type1() { return val[0]; };
+  dex::Type& type2() { return val[1]; };
+  const dex::Type& type1() const { return val[0]; };
+  const dex::Type& type2() const { return val[1]; };
+  const std::uint8_t size() const { return type2() == dex::Type::NO_TYPE ? type1() == dex::Type::NO_TYPE ? 0 : 1 : 2; }
+  const bool has(dex::Type type) const { return type1() == type || type2() == type; }
+};
+}  // namespace pokesim
+
+//////////////////// END OF src/Components/SpeciesTypes.hpp ////////////////////
+
 ////////////////////// START OF src/Components/Stats.hpp ///////////////////////
 
 namespace pokesim::stat {
@@ -12923,10 +12961,11 @@ struct MechanicConstants {
   static constexpr std::uint8_t MAX_TARGETS = 3U;
 
   static constexpr float CRIT_MULTIPLIER = 1.5F;
+  static constexpr float STAB_MULTIPLIER = 1.5F;
 
   static constexpr std::uint8_t FIXED_POINT_SCALING_FACTOR = 12U;
-  static constexpr std::uint16_t FIXED_POINT_DIVISOR = 1U << FIXED_POINT_SCALING_FACTOR;
-  static constexpr std::uint16_t FIXED_POINT_INTEGER_BITS = (1U << (FIXED_POINT_SCALING_FACTOR - 1U)) - 1U;
+  static constexpr std::uint16_t FIXED_POINT_SCALE = 1U << FIXED_POINT_SCALING_FACTOR;
+  static constexpr std::uint16_t FIXED_POINT_HALF_SCALE = FIXED_POINT_SCALE / 2U;
 };
 }  // namespace pokesim
 
@@ -13079,6 +13118,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   inline void setSide(types::entity entity);
   inline void setBattle(types::entity entity);
 
+  inline void setTypes(SpeciesTypes types);
   inline void setLevel(types::level level);
   inline void setGender(dex::Gender gender);
   inline void setAbility(dex::Ability ability);
@@ -13631,21 +13671,6 @@ enum class Stat : std::uint8_t {
 }  // namespace pokesim::dex
 
 /////////////////////// END OF src/Types/Enums/Stat.hpp ////////////////////////
-
-////////////////////// START OF src/Types/Enums/Type.hpp ///////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon type name
-enum class Type : std::uint8_t {
-  // clang-format off
-  NO_TYPE = 0, NORMAL_TYPE, FIGHTING_TYPE, FLYING_TYPE, POISON_TYPE, GROUND_TYPE, ROCK_TYPE, BUG_TYPE, GHOST_TYPE, STEEL_TYPE, FIRE_TYPE, WATER_TYPE, GRASS_TYPE, ELECTRIC_TYPE, PSYCHIC_TYPE, ICE_TYPE, DRAGON_TYPE, DARK_TYPE, FAIRY_TYPE, TYPE_TOTAL
-  // clang-format on
-};
-}  // namespace pokesim::dex
-
-/////////////////////// END OF src/Types/Enums/Type.hpp ////////////////////////
 
 /////////////////////// START OF src/Pokedex/Pokedex.hpp ///////////////////////
 
@@ -14313,6 +14338,16 @@ using allDamageRolls = std::array<damage, pokesim::MechanicConstants::MAX_DAMAGE
 
 ///////////////////////// END OF src/Types/Damage.hpp //////////////////////////
 
+///////////////////////// START OF src/Types/Event.hpp /////////////////////////
+
+#include <cstdint>
+
+namespace pokesim::types {
+using eventModifier = std::uint32_t;
+}  // namespace pokesim::types
+
+////////////////////////// END OF src/Types/Event.hpp //////////////////////////
+
 //////////////////// START OF src/Simulation/Simulation.hpp ////////////////////
 
 #include <initializer_list>
@@ -14355,6 +14390,7 @@ class Simulation : public internal::RegistryContainer {
   struct PokemonCreationInfo {
     std::optional<types::stateId> id = std::nullopt;
     dex::Species species = dex::Species::MISSING_NO;
+    std::optional<SpeciesTypes> types = std::nullopt;
     dex::Item item = dex::Item::NO_ITEM;
     dex::Ability ability = dex::Ability::NO_ABILITY;
     dex::Gender gender = dex::Gender::NO_GENDER;
@@ -14508,6 +14544,12 @@ inline PokemonStateSetup Simulation::createInitialPokemon(
 
   pokemonSetup.setSpecies(pokemonData.species);
   pokemonSetup.setLevel(pokemonData.level);
+  if (pokemonData.types.has_value()) {
+    pokemonSetup.setTypes(pokemonData.types.value());
+  }
+  else {
+    pokemonSetup.setTypes(pokedex.getSpeciesData<SpeciesTypes>(pokemonData.species));
+  }
   if (pokemonData.gender != dex::Gender::NO_GENDER) pokemonSetup.setGender(pokemonData.gender);
   if (pokemonData.ability != dex::Ability::NO_ABILITY) pokemonSetup.setAbility(pokemonData.ability);
   if (pokemonData.item != dex::Item::NO_ITEM) pokemonSetup.setItem(pokemonData.item);
@@ -14849,6 +14891,7 @@ class Simulation;
 struct BasePower;
 struct Damage;
 struct RandomEventIndex;
+struct TypeName;
 
 namespace calc_damage {
 struct CritBoost;
@@ -14869,6 +14912,7 @@ inline void calculateBaseDamage(
   const DefendingStat& defense);
 inline void applyCritDamageIncrease(Damage& damage);
 inline void setDefendingSide(types::handle moveHandle, const Defenders& defenders);
+inline void checkForAndApplyStab(types::handle moveHandle, const Attacker& attacker, const TypeName& type, Damage& damage);
 }  // namespace internal
 
 inline void run(Simulation& simulation);
@@ -15016,6 +15060,59 @@ inline std::vector<types::entity> Simulation::selectedBattleEntities() {
 
 ///////////////////// END OF src/Simulation/Simulation.cpp /////////////////////
 
+//////////////// START OF src/Battle/Helpers/IntegerModify.hpp /////////////////
+
+namespace pokesim {
+template <typename Number1, typename Number2>
+types::eventModifier fixedPointMultiply(Number1 value, Number2 multiplier) {
+  types::eventModifier modifier = multiplier * MechanicConstants::FIXED_POINT_SCALE;
+  types::eventModifier modified = value * modifier;
+  types::eventModifier scaled = modified + MechanicConstants::FIXED_POINT_HALF_SCALE - 1U;
+  return scaled / MechanicConstants::FIXED_POINT_SCALE;
+}
+
+template <typename Number1>
+void applyChainedModifier(Number1& value, types::eventModifier eventModifier) {
+  types::eventModifier modified = value * eventModifier;
+  types::eventModifier scaled = modified + MechanicConstants::FIXED_POINT_HALF_SCALE - 1U;
+  value = scaled / MechanicConstants::FIXED_POINT_SCALE;
+}
+
+template <typename Multiplier>
+void chainToModifier(types::eventModifier& eventModifier, Multiplier multiplier) {
+  types::eventModifier newModifier = multiplier * MechanicConstants::FIXED_POINT_SCALE;
+  eventModifier =
+    (eventModifier * newModifier + MechanicConstants::FIXED_POINT_HALF_SCALE) / MechanicConstants::FIXED_POINT_SCALE;
+}
+}  // namespace pokesim
+
+///////////////// END OF src/Battle/Helpers/IntegerModify.hpp //////////////////
+
+////////////////// START OF src/Components/EventModifier.hpp ///////////////////
+
+namespace pokesim {
+struct EventModifier {
+  types::eventModifier val = MechanicConstants::FIXED_POINT_SCALE;
+};
+}  // namespace pokesim
+
+/////////////////// END OF src/Components/EventModifier.hpp ////////////////////
+
+////////////////// START OF src/Components/Tags/ItemTags.hpp ///////////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::item::tags {
+struct AssaultVest {};
+struct BrightPowder {};
+struct ChoiceScarf {};
+struct ChoiceSpecs {};
+struct FocusSash {};
+struct LifeOrb {};
+}  // namespace pokesim::item::tags
+
+/////////////////// END OF src/Components/Tags/ItemTags.hpp ////////////////////
+
 ///////////////// START OF src/Components/Tags/StatusTags.hpp //////////////////
 
 // TODO(aed3): Make this auto generated
@@ -15068,6 +15165,129 @@ using Static = dex::Static<GameMechanics::SCARLET_VIOLET>;
 
 /////////////////// END OF src/Pokedex/Abilities/Static.hpp ////////////////////
 
+////////////////// START OF src/Pokedex/Items/AssaultVest.hpp //////////////////
+
+#include <string_view>
+
+namespace pokesim::dex {
+template <GameMechanics>
+struct AssaultVest {
+  static constexpr dex::Item name = dex::Item::ASSAULT_VEST;
+
+  struct Strings {
+    static constexpr std::string_view name = "Assault Vest";
+    static constexpr std::string_view smogonId = "assaultvest";
+  };
+};
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Items/AssaultVest.hpp ///////////////////
+
+///////////////// START OF src/Pokedex/Items/BrightPowder.hpp //////////////////
+
+#include <string_view>
+
+namespace pokesim::dex {
+template <GameMechanics>
+struct BrightPowder {
+  static constexpr dex::Item name = dex::Item::BRIGHT_POWDER;
+
+  struct Strings {
+    static constexpr std::string_view name = "Bright Powder";
+    static constexpr std::string_view smogonId = "brightpowder";
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////// END OF src/Pokedex/Items/BrightPowder.hpp ///////////////////
+
+////////////////// START OF src/Pokedex/Items/ChoiceScarf.hpp //////////////////
+
+#include <string_view>
+
+namespace pokesim::dex {
+template <GameMechanics>
+struct ChoiceScarf {
+  static constexpr dex::Item name = dex::Item::CHOICE_SCARF;
+
+  struct Strings {
+    static constexpr std::string_view name = "Choice Scarf";
+    static constexpr std::string_view smogonId = "choicescarf";
+  };
+};
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Items/ChoiceScarf.hpp ///////////////////
+
+////////////////// START OF src/Pokedex/Items/ChoiceSpecs.hpp //////////////////
+
+#include <string_view>
+
+namespace pokesim {
+struct EventModifier;
+}  // namespace pokesim
+
+namespace pokesim::dex {
+namespace internal {
+struct ChoiceSpecsEvents {
+  inline static void onModifySpa(EventModifier& eventModifier);
+};
+}  // namespace internal
+
+template <GameMechanics>
+struct ChoiceSpecs : internal::ChoiceSpecsEvents {
+  static constexpr dex::Item name = dex::Item::CHOICE_SPECS;
+
+  static constexpr float onModifySpaModifier = 1.5F;
+  struct Strings {
+    static constexpr std::string_view name = "Choice Specs";
+    static constexpr std::string_view smogonId = "choicespecs";
+  };
+};
+
+namespace latest {
+using ChoiceSpecs = dex::ChoiceSpecs<GameMechanics::SCARLET_VIOLET>;
+}
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Items/ChoiceSpecs.hpp ///////////////////
+
+/////////////////// START OF src/Pokedex/Items/FocusSash.hpp ///////////////////
+
+#include <string_view>
+
+namespace pokesim::dex {
+template <GameMechanics>
+struct FocusSash {
+  static constexpr dex::Item name = dex::Item::FOCUS_SASH;
+
+  struct Strings {
+    static constexpr std::string_view name = "Focus Sash";
+    static constexpr std::string_view smogonId = "focussash";
+  };
+};
+}  // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Items/FocusSash.hpp ////////////////////
+
+//////////////////// START OF src/Pokedex/Items/LifeOrb.hpp ////////////////////
+
+#include <string_view>
+
+namespace pokesim::dex {
+template <GameMechanics>
+struct LifeOrb {
+  static constexpr dex::Item name = dex::Item::LIFE_ORB;
+
+  struct Strings {
+    static constexpr std::string_view name = "Life Orb";
+    static constexpr std::string_view smogonId = "lifeorb";
+  };
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Items/LifeOrb.hpp /////////////////////
+
 ///////////////////// START OF src/Simulation/RunEvent.hpp /////////////////////
 
 namespace pokesim {
@@ -15090,7 +15310,16 @@ inline void runModifySpe(Simulation& simulation);
 
 ///////////////////// START OF src/Simulation/RunEvent.cpp /////////////////////
 
+// TODO(aed3) Auto generate?
+
 namespace pokesim {
+namespace internal {
+template <typename ModifiedComponent>
+void applyEventModifier(ModifiedComponent& component, const EventModifier& eventModifier) {
+  applyChainedModifier(component.val, eventModifier.val);
+}
+}  // namespace internal
+
 inline void runAccuracyEvent(Simulation& /*simulation*/) {}
 
 inline void runModifyAccuracyEvent(Simulation& /*simulation*/) {}
@@ -15107,11 +15336,20 @@ inline void runModifyAtk(Simulation&) {}
 
 inline void runModifyDef(Simulation&) {}
 
-inline void runModifySpa(Simulation&) {}
+inline void runModifySpa(Simulation& simulation) {
+  simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
+  simulation.viewForSelectedPokemon<dex::latest::ChoiceSpecs::onModifySpa, Tags<item::tags::ChoiceSpecs>>();
+  simulation.viewForSelectedPokemon<internal::applyEventModifier<stat::EffectiveSpa>>();
+  simulation.registry.clear<EventModifier>();
+}
 
 inline void runModifySpd(Simulation&) {}
 
 inline void runModifySpe(Simulation& simulation) {
+  simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
+  simulation.viewForSelectedPokemon<internal::applyEventModifier<stat::EffectiveSpe>>();
+  simulation.registry.clear<EventModifier>();
+
   simulation.viewForSelectedPokemon<
     dex::latest::Static::onModifySpe,
     Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>();
@@ -18027,24 +18265,6 @@ struct BaseStats {
 
 ///////////////// END OF src/Components/Pokedex/BaseStats.hpp //////////////////
 
-/////////////// START OF src/Components/Pokedex/SpeciesTypes.hpp ///////////////
-
-#include <array>
-
-namespace pokesim {
-// Contains the types a species has
-struct SpeciesTypes {
-  std::array<dex::Type, 2U> val{dex::Type::NO_TYPE, dex::Type::NO_TYPE};
-
-  dex::Type& type1() { return val[0]; };
-  dex::Type& type2() { return val[1]; };
-  const dex::Type& type1() const { return val[0]; };
-  const dex::Type& type2() const { return val[1]; };
-};
-}  // namespace pokesim
-
-//////////////// END OF src/Components/Pokedex/SpeciesTypes.hpp ////////////////
-
 ///////////////// START OF src/Pokedex/Setup/DexDataSetup.hpp //////////////////
 
 namespace pokesim::dex::internal {
@@ -19082,114 +19302,6 @@ inline types::entity Pokedex::buildMove(dex::Move move, types::registry& registr
 
 ////////////////// END OF src/Pokedex/Setup/GetMoveBuild.cpp ///////////////////
 
-////////////////// START OF src/Pokedex/Items/AssaultVest.hpp //////////////////
-
-#include <string_view>
-
-namespace pokesim::dex {
-template <GameMechanics>
-struct AssaultVest {
-  static constexpr dex::Item name = dex::Item::ASSAULT_VEST;
-
-  struct Strings {
-    static constexpr std::string_view name = "Assault Vest";
-    static constexpr std::string_view smogonId = "assaultvest";
-  };
-};
-}  // namespace pokesim::dex
-
-/////////////////// END OF src/Pokedex/Items/AssaultVest.hpp ///////////////////
-
-///////////////// START OF src/Pokedex/Items/BrightPowder.hpp //////////////////
-
-#include <string_view>
-
-namespace pokesim::dex {
-template <GameMechanics>
-struct BrightPowder {
-  static constexpr dex::Item name = dex::Item::BRIGHT_POWDER;
-
-  struct Strings {
-    static constexpr std::string_view name = "Bright Powder";
-    static constexpr std::string_view smogonId = "brightpowder";
-  };
-};
-}  // namespace pokesim::dex
-
-////////////////// END OF src/Pokedex/Items/BrightPowder.hpp ///////////////////
-
-////////////////// START OF src/Pokedex/Items/ChoiceScarf.hpp //////////////////
-
-#include <string_view>
-
-namespace pokesim::dex {
-template <GameMechanics>
-struct ChoiceScarf {
-  static constexpr dex::Item name = dex::Item::CHOICE_SCARF;
-
-  struct Strings {
-    static constexpr std::string_view name = "Choice Scarf";
-    static constexpr std::string_view smogonId = "choicescarf";
-  };
-};
-}  // namespace pokesim::dex
-
-/////////////////// END OF src/Pokedex/Items/ChoiceScarf.hpp ///////////////////
-
-////////////////// START OF src/Pokedex/Items/ChoiceSpecs.hpp //////////////////
-
-#include <string_view>
-
-namespace pokesim::dex {
-template <GameMechanics>
-struct ChoiceSpecs {
-  static constexpr dex::Item name = dex::Item::CHOICE_SPECS;
-
-  struct Strings {
-    static constexpr std::string_view name = "Choice Specs";
-    static constexpr std::string_view smogonId = "choicespecs";
-  };
-};
-}  // namespace pokesim::dex
-
-/////////////////// END OF src/Pokedex/Items/ChoiceSpecs.hpp ///////////////////
-
-/////////////////// START OF src/Pokedex/Items/FocusSash.hpp ///////////////////
-
-#include <string_view>
-
-namespace pokesim::dex {
-template <GameMechanics>
-struct FocusSash {
-  static constexpr dex::Item name = dex::Item::FOCUS_SASH;
-
-  struct Strings {
-    static constexpr std::string_view name = "Focus Sash";
-    static constexpr std::string_view smogonId = "focussash";
-  };
-};
-}  // namespace pokesim::dex
-
-//////////////////// END OF src/Pokedex/Items/FocusSash.hpp ////////////////////
-
-//////////////////// START OF src/Pokedex/Items/LifeOrb.hpp ////////////////////
-
-#include <string_view>
-
-namespace pokesim::dex {
-template <GameMechanics>
-struct LifeOrb {
-  static constexpr dex::Item name = dex::Item::LIFE_ORB;
-
-  struct Strings {
-    static constexpr std::string_view name = "Life Orb";
-    static constexpr std::string_view smogonId = "lifeorb";
-  };
-};
-}  // namespace pokesim::dex
-
-///////////////////// END OF src/Pokedex/Items/LifeOrb.hpp /////////////////////
-
 ///////////////// START OF src/Pokedex/Setup/GetItemBuild.cpp //////////////////
 
 #include <type_traits>
@@ -19364,6 +19476,16 @@ inline types::entity Pokedex::buildActionMove(dex::Move move, types::registry& r
 
 //////////////////////// END OF src/Pokedex/Pokedex.cpp ////////////////////////
 
+////////////////// START OF src/Pokedex/Items/ItemEvents.cpp ///////////////////
+
+namespace pokesim::dex {
+inline void internal::ChoiceSpecsEvents::onModifySpa(EventModifier& eventModifier) {
+  chainToModifier(eventModifier.val, latest::ChoiceSpecs::onModifySpaModifier);
+}
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Items/ItemEvents.cpp ////////////////////
+
 /////////////// START OF src/Pokedex/Abilities/AbilityEvents.cpp ///////////////
 
 namespace pokesim::dex {
@@ -19465,7 +19587,18 @@ inline void clearRunVariables(Simulation& simulation) {
   simulation.registry.clear<tags::Crit, AttackingLevel, AttackingStat, DefendingStat>();
 }
 
-inline void modifyDamageWithTypes(Simulation& /*simulation*/) {}
+inline void internal::checkForAndApplyStab(
+  types::handle moveHandle, const Attacker& attacker, const TypeName& type, Damage& damage) {
+  const SpeciesTypes& attackerTypes = moveHandle.registry()->get<SpeciesTypes>(attacker.val);
+
+  if (attackerTypes.has(type.name)) {
+    damage.val = fixedPointMultiply(damage.val, MechanicConstants::STAB_MULTIPLIER);
+  }
+}
+
+inline void modifyDamageWithTypes(Simulation& simulation) {
+  simulation.viewForSelectedMoves<internal::checkForAndApplyStab>();
+}
 
 inline void internal::setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
   types::registry& registry = *moveHandle.registry();
@@ -19557,11 +19690,11 @@ inline void internal::applyCritDamageIncrease(Damage& damage) {
 }
 
 inline void applyDamageRoll(Damage& damage, types::damageRoll damageRoll) {
-  damage.val = (types::damage)(damage.val * ((100 - damageRoll) / 100.0F));
+  damage.val = (types::damage)(damage.val * ((100U - damageRoll) / 100.0F));
 }
 
 inline void applyAverageDamageRoll(Damage& damage) {
-  damage.val = (types::damage)(damage.val * (100.0F - (MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U) / 2.0F));
+  damage.val = (types::damage)(damage.val * (100U - (MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U) / 2.0F) / 100.0F);
 }
 
 inline void applyMinDamageRoll(Damage& damage) {
@@ -19725,21 +19858,6 @@ struct Trace {};
 
 ////////////////// END OF src/Components/Tags/AbilityTags.hpp //////////////////
 
-////////////////// START OF src/Components/Tags/ItemTags.hpp ///////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::item::tags {
-struct AssaultVest {};
-struct BrightPowder {};
-struct ChoiceScarf {};
-struct ChoiceSpecs {};
-struct FocusSash {};
-struct LifeOrb {};
-}  // namespace pokesim::item::tags
-
-/////////////////// END OF src/Components/Tags/ItemTags.hpp ////////////////////
-
 ///////////////// START OF src/Components/Tags/NatureTags.hpp //////////////////
 
 // TODO(aed3): Make this auto generated
@@ -19802,6 +19920,10 @@ inline void PokemonStateSetup::setSide(types::entity entity) {
 
 inline void PokemonStateSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
+}
+
+inline void PokemonStateSetup::setTypes(SpeciesTypes types) {
+  handle.emplace<SpeciesTypes>(types);
 }
 
 inline void PokemonStateSetup::setLevel(types::level level) {
@@ -20740,22 +20862,6 @@ inline void postRunCleanup(Simulation& /*simulation*/) {
 }  // namespace pokesim::analyze_effect
 
 ////////////////// END OF src/AnalyzeEffect/AnalyzeEffect.cpp //////////////////
-
-//////////////// START OF src/Battle/Helpers/IntegerModify.hpp /////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-template <typename Number1, typename Number2>
-std::uint32_t fixedPointMultiply(Number1 value, Number2 multiplier) {
-  std::uint32_t modifier = multiplier * MechanicConstants::FIXED_POINT_DIVISOR;
-  std::uint32_t modified = value * modifier;
-  std::uint32_t result = (value + MechanicConstants::FIXED_POINT_INTEGER_BITS) / MechanicConstants::FIXED_POINT_DIVISOR;
-  return result;
-}
-}  // namespace pokesim
-
-///////////////// END OF src/Battle/Helpers/IntegerModify.hpp //////////////////
 
 ///////////////// START OF src/Components/Names/StatNames.hpp //////////////////
 

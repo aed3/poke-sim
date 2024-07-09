@@ -1,5 +1,6 @@
 #include "CalcDamage.hpp"
 
+#include <Battle/Helpers/IntegerModify.hpp>
 #include <Components/BasePower.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/CalcDamage/CriticalHit.hpp>
@@ -7,8 +8,10 @@
 #include <Components/Damage.hpp>
 #include <Components/Level.hpp>
 #include <Components/Names/MoveNames.hpp>
+#include <Components/Names/TypeNames.hpp>
 #include <Components/PlayerSide.hpp>
 #include <Components/RandomEventOutputs.hpp>
+#include <Components/SpeciesTypes.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/Selection.hpp>
@@ -36,7 +39,18 @@ void clearRunVariables(Simulation& simulation) {
   simulation.registry.clear<tags::Crit, AttackingLevel, AttackingStat, DefendingStat>();
 }
 
-void modifyDamageWithTypes(Simulation& /*simulation*/) {}
+void internal::checkForAndApplyStab(
+  types::handle moveHandle, const Attacker& attacker, const TypeName& type, Damage& damage) {
+  const SpeciesTypes& attackerTypes = moveHandle.registry()->get<SpeciesTypes>(attacker.val);
+
+  if (attackerTypes.has(type.name)) {
+    damage.val = fixedPointMultiply(damage.val, MechanicConstants::STAB_MULTIPLIER);
+  }
+}
+
+void modifyDamageWithTypes(Simulation& simulation) {
+  simulation.viewForSelectedMoves<internal::checkForAndApplyStab>();
+}
 
 void internal::setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
   types::registry& registry = *moveHandle.registry();
@@ -128,11 +142,11 @@ void internal::applyCritDamageIncrease(Damage& damage) {
 }
 
 void applyDamageRoll(Damage& damage, types::damageRoll damageRoll) {
-  damage.val = (types::damage)(damage.val * ((100 - damageRoll) / 100.0F));
+  damage.val = (types::damage)(damage.val * ((100U - damageRoll) / 100.0F));
 }
 
 void applyAverageDamageRoll(Damage& damage) {
-  damage.val = (types::damage)(damage.val * (100.0F - (MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U) / 2.0F));
+  damage.val = (types::damage)(damage.val * (100U - (MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U) / 2.0F) / 100.0F);
 }
 
 void applyMinDamageRoll(Damage& damage) {
