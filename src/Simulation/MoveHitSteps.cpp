@@ -4,6 +4,7 @@
 #include <CalcDamage/CalcDamage.hpp>
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
 #include <Components/Accuracy.hpp>
+#include <Components/Damage.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/HitCount.hpp>

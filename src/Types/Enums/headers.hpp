@@ -21,5 +21,6 @@
 #include "Status.hpp"
 #include "Terrain.hpp"
 #include "Type.hpp"
+#include "TypeEffectiveness.hpp"
 #include "Volatile.hpp"
 #include "Weather.hpp"

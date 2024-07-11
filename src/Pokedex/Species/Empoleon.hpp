@@ -14,7 +14,7 @@ struct Empoleon {
   static constexpr Species name = Species::EMPOLEON;
   static constexpr types::baseStat hp = 84, atk = 86, def = 88, spa = 111, spd = 101, spe = 60;
 
-  static constexpr SpeciesTypes type = {Type::WATER_TYPE, Type::STEEL_TYPE};
+  static constexpr SpeciesTypes type = {Type::WATER, Type::STEEL};
 
   static constexpr Ability primaryAbility = Ability::TORRENT;
   static constexpr Ability hiddenAbility = Ability::DEFIANT;

@@ -14,7 +14,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct KnockOff {
   static constexpr Move name = Move::KNOCK_OFF;
-  static constexpr Type type = Type::DARK_TYPE;
+  static constexpr Type type = Type::DARK;
   static constexpr MoveCategory category = MoveCategory::PHYSICAL;
 
   static constexpr types::baseAccuracy accuracy = 100;

@@ -15,7 +15,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct Moonblast {
   static constexpr Move name = Move::MOONBLAST;
-  static constexpr Type type = Type::FAIRY_TYPE;
+  static constexpr Type type = Type::FAIRY;
   static constexpr MoveCategory category = MoveCategory::SPECIAL;
 
   static constexpr types::baseAccuracy accuracy = 100;

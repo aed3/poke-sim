@@ -5,8 +5,27 @@
 namespace pokesim::dex {
 // Pokemon type name
 enum class Type : std::uint8_t {
-  // clang-format off
-  NO_TYPE = 0, NORMAL_TYPE, FIGHTING_TYPE, FLYING_TYPE, POISON_TYPE, GROUND_TYPE, ROCK_TYPE, BUG_TYPE, GHOST_TYPE, STEEL_TYPE, FIRE_TYPE, WATER_TYPE, GRASS_TYPE, ELECTRIC_TYPE, PSYCHIC_TYPE, ICE_TYPE, DRAGON_TYPE, DARK_TYPE, FAIRY_TYPE, TYPE_TOTAL
-  // clang-format on
+  NO_TYPE = 0,
+  NORMAL,
+  GRASS,
+  WATER,
+  FIRE,
+  BUG,
+  FLYING,
+  POISON,
+  ELECTRIC,
+  GROUND,
+  FIGHTING,
+  PSYCHIC,
+  ROCK,
+  ICE,
+  GHOST,
+  DRAGON,
+  DARK,
+  STEEL,
+  FAIRY,
+  TYPE_TOTAL
 };
+
+static constexpr std::size_t TOTAL_TYPE_COUNT = (std::size_t)Type::TYPE_TOTAL;
 }  // namespace pokesim::dex

@@ -5,6 +5,7 @@
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/CalcDamage/CriticalHit.hpp>
 #include <Components/Damage.hpp>
+#include <Components/Probability.hpp>
 #include <Components/RandomEventInputs.hpp>
 #include <Components/RandomEventOutputs.hpp>
 #include <Components/Tags/Selection.hpp>

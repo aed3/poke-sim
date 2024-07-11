@@ -11,7 +11,8 @@ enum class Stat : std::uint8_t {
   SPA = 0b001000,
   SPD = 0b010000,
   SPE = 0b100000,
-  STAT_TOTAL = 6
   // SPC = SPA | SPD,
 };
+
+static constexpr std::size_t TOTAL_STAT_COUNT = 6U;
 }  // namespace pokesim::dex

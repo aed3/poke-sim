@@ -2,6 +2,7 @@
 
 #include <Components/Decisions.hpp>
 #include <Components/EVsIVs.hpp>
+#include <Components/SpeciesTypes.hpp>
 #include <Types/Entity.hpp>
 #include <Types/headers.hpp>
 #include <entt/entity/registry.hpp>

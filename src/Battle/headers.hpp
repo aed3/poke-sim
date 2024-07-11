@@ -5,6 +5,7 @@
 #include "Helpers/IntegerModify.hpp"
 #include "ManageBattleState.hpp"
 #include "Pokemon/ManagePokemonState.hpp"
+#include "Pokemon/PokemonDataChecks.hpp"
 #include "Setup/BattleStateSetup.hpp"
 #include "Setup/EnumToTag.hpp"
 #include "Setup/MoveStateSetup.hpp"
