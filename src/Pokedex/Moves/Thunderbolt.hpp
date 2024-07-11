@@ -15,7 +15,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct Thunderbolt {
   static constexpr Move name = Move::THUNDERBOLT;
-  static constexpr Type type = Type::ELECTRIC_TYPE;
+  static constexpr Type type = Type::ELECTRIC;
   static constexpr MoveCategory category = MoveCategory::SPECIAL;
 
   static constexpr types::baseAccuracy accuracy = 100;

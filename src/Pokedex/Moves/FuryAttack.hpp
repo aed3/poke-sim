@@ -14,7 +14,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct FuryAttack {
   static constexpr Move name = Move::FURY_ATTACK;
-  static constexpr Type type = Type::NORMAL_TYPE;
+  static constexpr Type type = Type::NORMAL;
   static constexpr MoveCategory category = MoveCategory::PHYSICAL;
 
   static constexpr types::baseAccuracy accuracy = 85;

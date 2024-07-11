@@ -15,7 +15,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct QuiverDance {
   static constexpr Move name = Move::QUIVER_DANCE;
-  static constexpr Type type = Type::BUG_TYPE;
+  static constexpr Type type = Type::BUG;
   static constexpr MoveCategory category = MoveCategory::STATUS;
 
   static constexpr types::pp basePp = 20;

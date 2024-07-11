@@ -30,7 +30,10 @@ void calculateBaseDamage(
   const DefendingStat& defense);
 void applyCritDamageIncrease(Damage& damage);
 void setDefendingSide(types::handle moveHandle, const Defenders& defenders);
+
 void checkForAndApplyStab(types::handle moveHandle, const Attacker& attacker, const TypeName& type, Damage& damage);
+void checkForAndApplyTypeEffectiveness(
+  types::handle moveHandle, const Attacker& attacker, const Defenders& defenders, const TypeName& type, Damage& damage);
 }  // namespace internal
 
 void run(Simulation& simulation);

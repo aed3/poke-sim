@@ -1,11 +1,13 @@
 #include "CalcDamage.hpp"
 
 #include <Battle/Helpers/IntegerModify.hpp>
+#include <Battle/Pokemon/PokemonDataChecks.hpp>
 #include <Components/BasePower.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/CalcDamage/CriticalHit.hpp>
 #include <Components/CalcDamage/DamageCalcVariables.hpp>
 #include <Components/Damage.hpp>
+#include <Components/EntityHolders/Side.hpp>
 #include <Components/Level.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/TypeNames.hpp>
@@ -48,8 +50,23 @@ void internal::checkForAndApplyStab(
   }
 }
 
+void internal::checkForAndApplyTypeEffectiveness(
+  types::handle moveHandle, const Attacker& attacker, const Defenders& defenders, const TypeName& type,
+  Damage& damage) {
+  const SpeciesTypes& defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defenders.val[0]);
+
+  types::boost effectiveness = getAttackEffectiveness(defenderTypes, type.name);
+  if (effectiveness < 0) {
+    damage.val = damage.val >> -effectiveness;
+  }
+  else {
+    damage.val = damage.val << effectiveness;
+  }
+}
+
 void modifyDamageWithTypes(Simulation& simulation) {
   simulation.viewForSelectedMoves<internal::checkForAndApplyStab>();
+  simulation.viewForSelectedMoves<internal::checkForAndApplyTypeEffectiveness>();
 }
 
 void internal::setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
@@ -72,9 +89,6 @@ void internal::setDefendingSide(types::handle moveHandle, const Defenders& defen
 }
 
 void getDamageRole(Simulation& simulation) {
-  pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn> selectedMoves{simulation};
-  if (selectedMoves.hasNoneSelected()) return;
-
   const DamageRollOptions& damageRollsConsidered = simulation.simulateTurnOptions.damageRollsConsidered;
   if (damageRollsConsidered.sidesMatch()) {
     simulate_turn::getDamageRole(simulation, PlayerSideId::P1);
@@ -180,6 +194,8 @@ void getDamage(Simulation& simulation) {
   simulation.viewForSelectedMoves<internal::setUsedDefenseStat<move::tags::Special>, Tags<move::tags::Special>>();
 
   simulation.viewForSelectedMoves<internal::calculateBaseDamage>();
+
+  simulation.viewForSelectedMoves<internal::applyCritDamageIncrease, Tags<tags::Crit>>();
 
   getDamageRole(simulation);
 

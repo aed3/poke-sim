@@ -2,6 +2,7 @@
 
 #include <Components/Names/SpeciesNames.hpp>
 #include <Components/Pokedex/headers.hpp>
+#include <Components/SpeciesTypes.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Species.hpp>
 #include <Types/Enums/Type.hpp>

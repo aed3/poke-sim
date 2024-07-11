@@ -24,6 +24,7 @@
 #include "Enums/Status.hpp"
 #include "Enums/Terrain.hpp"
 #include "Enums/Type.hpp"
+#include "Enums/TypeEffectiveness.hpp"
 #include "Enums/Volatile.hpp"
 #include "Enums/Weather.hpp"
 #include "Event.hpp"

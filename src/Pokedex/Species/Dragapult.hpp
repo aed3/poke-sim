@@ -14,7 +14,7 @@ struct Dragapult {
   static constexpr Species name = Species::DRAGAPULT;
   static constexpr types::baseStat hp = 88, atk = 120, def = 75, spa = 100, spd = 75, spe = 142;
 
-  static constexpr SpeciesTypes type = {Type::DRAGON_TYPE, Type::GHOST_TYPE};
+  static constexpr SpeciesTypes type = {Type::DRAGON, Type::GHOST};
 
   static constexpr Ability primaryAbility = Ability::CLEAR_BODY;
   static constexpr Ability secondaryAbility = Ability::INFILTRATOR;

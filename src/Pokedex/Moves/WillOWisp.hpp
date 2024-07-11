@@ -15,7 +15,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct WillOWisp {
   static constexpr Move name = Move::WILL_O_WISP;
-  static constexpr Type type = Type::FIRE_TYPE;
+  static constexpr Type type = Type::FIRE;
   static constexpr MoveCategory category = MoveCategory::STATUS;
 
   static constexpr types::baseAccuracy accuracy = 85;
