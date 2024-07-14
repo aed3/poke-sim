@@ -45,7 +45,12 @@ void runModifySpa(Simulation& simulation) {
   simulation.registry.clear<EventModifier>();
 }
 
-void runModifySpd(Simulation&) {}
+void runModifySpd(Simulation& simulation) {
+  simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
+  simulation.viewForSelectedPokemon<dex::latest::AssaultVest::onModifySpd, Tags<item::tags::AssaultVest>>();
+  simulation.viewForSelectedPokemon<internal::applyEventModifier<stat::EffectiveSpd>>();
+  simulation.registry.clear<EventModifier>();
+}
 
 void runModifySpe(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();

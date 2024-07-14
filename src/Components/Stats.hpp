@@ -27,6 +27,10 @@ struct Spe {
   types::stat val = 1;
 };
 
+struct CurrentHp {
+  types::stat val = 1;
+};
+
 struct EffectiveAtk {
   types::stat val = 1;
 };

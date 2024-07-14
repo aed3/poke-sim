@@ -64,6 +64,10 @@ void internal::checkForAndApplyTypeEffectiveness(
   }
 }
 
+void internal::setDamageToAtLeastOne(Damage& damage) {
+  damage.val = std::max(damage.val, (types::damage)1U);
+}
+
 void modifyDamageWithTypes(Simulation& simulation) {
   simulation.viewForSelectedMoves<internal::checkForAndApplyStab>();
   simulation.viewForSelectedMoves<internal::checkForAndApplyTypeEffectiveness>();
@@ -200,5 +204,7 @@ void getDamage(Simulation& simulation) {
   getDamageRole(simulation);
 
   modifyDamageWithTypes(simulation);
+
+  simulation.viewForSelectedMoves<internal::setDamageToAtLeastOne>();
 }
 }  // namespace pokesim::calc_damage

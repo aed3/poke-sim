@@ -12849,6 +12849,10 @@ struct Spe {
   types::stat val = 1;
 };
 
+struct CurrentHp {
+  types::stat val = 1;
+};
+
 struct EffectiveAtk {
   types::stat val = 1;
 };
@@ -13409,6 +13413,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   inline void setSide(types::entity entity);
   inline void setBattle(types::entity entity);
 
+  inline void setHp(types::stat hp);
   inline void setTypes(SpeciesTypes types);
   inline void setLevel(types::level level);
   inline void setGender(dex::Gender gender);
@@ -14551,9 +14556,9 @@ class RegistryContainer {
     registry.insert<Type>(view.begin(), view.end(), args...);
   }
 
-  template <typename Type, typename... ViewComponents>
-  void removeFromEntities() {
-    auto view = registry.view<ViewComponents...>();
+  template <typename Type, typename... ViewComponents, typename... ExcludeComponents>
+  void removeFromEntities(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
+    auto view = registry.view<ViewComponents...>(exclude);
     registry.remove<Type>(view.begin(), view.end());
   }
 };
@@ -14681,6 +14686,7 @@ class Simulation : public internal::RegistryContainer {
 
   struct PokemonCreationInfo {
     std::optional<types::stateId> id = std::nullopt;
+    std::optional<types::stat> hp = std::nullopt;
     dex::Species species = dex::Species::MISSING_NO;
     std::optional<SpeciesTypes> types = std::nullopt;
     dex::Item item = dex::Item::NO_ITEM;
@@ -14856,6 +14862,7 @@ inline PokemonStateSetup Simulation::createInitialPokemon(
   pokemonSetup.setStat<stat::Spa>(pokemonData.stats.spa);
   pokemonSetup.setStat<stat::Spd>(pokemonData.stats.spd);
   pokemonSetup.setStat<stat::Spe>(pokemonData.stats.spe);
+  pokemonSetup.setHp(pokemonData.hp.value_or(pokemonData.stats.hp));
   pokemonSetup.setProperty<tags::AtkStatUpdateRequired>();
   pokemonSetup.setProperty<tags::DefStatUpdateRequired>();
   pokemonSetup.setProperty<tags::SpaStatUpdateRequired>();
@@ -15208,6 +15215,7 @@ inline void setDefendingSide(types::handle moveHandle, const Defenders& defender
 inline void checkForAndApplyStab(types::handle moveHandle, const Attacker& attacker, const TypeName& type, Damage& damage);
 inline void checkForAndApplyTypeEffectiveness(
   types::handle moveHandle, const Attacker& attacker, const Defenders& defenders, const TypeName& type, Damage& damage);
+inline void setDamageToAtLeastOne(Damage& damage);
 }  // namespace internal
 
 inline void run(Simulation& simulation);
@@ -15464,16 +15472,31 @@ using Static = dex::Static<GameMechanics::SCARLET_VIOLET>;
 
 #include <string_view>
 
+namespace pokesim {
+struct EventModifier;
+}  // namespace pokesim
+
 namespace pokesim::dex {
+namespace internal {
+struct AssaultVestEvents {
+  inline static void onModifySpd(EventModifier& eventModifier);
+};
+}  // namespace internal
+
 template <GameMechanics>
-struct AssaultVest {
+struct AssaultVest : internal::AssaultVestEvents {
   static constexpr dex::Item name = dex::Item::ASSAULT_VEST;
 
+  static constexpr float onModifySpdModifier = 1.5F;
   struct Strings {
     static constexpr std::string_view name = "Assault Vest";
     static constexpr std::string_view smogonId = "assaultvest";
   };
 };
+
+namespace latest {
+using AssaultVest = dex::AssaultVest<GameMechanics::SCARLET_VIOLET>;
+}
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Items/AssaultVest.hpp ///////////////////
@@ -15638,7 +15661,12 @@ inline void runModifySpa(Simulation& simulation) {
   simulation.registry.clear<EventModifier>();
 }
 
-inline void runModifySpd(Simulation&) {}
+inline void runModifySpd(Simulation& simulation) {
+  simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
+  simulation.viewForSelectedPokemon<dex::latest::AssaultVest::onModifySpd, Tags<item::tags::AssaultVest>>();
+  simulation.viewForSelectedPokemon<internal::applyEventModifier<stat::EffectiveSpd>>();
+  simulation.registry.clear<EventModifier>();
+}
 
 inline void runModifySpe(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
@@ -15658,14 +15686,18 @@ inline void runModifySpe(Simulation& simulation) {
 namespace pokesim {
 class Simulation;
 struct CurrentActionSource;
+struct CurrentActionTargets;
 struct CurrentActionMoveSlot;
+struct Damage;
 struct Pp;
+
 namespace stat {
 struct Atk;
 struct Def;
 struct Spa;
 struct Spd;
 struct Spe;
+struct CurrentHp;
 }  // namespace stat
 
 inline void deductPp(Pp& pp);
@@ -15675,6 +15707,8 @@ inline void resetEffectiveDef(types::handle handle, stat::Def def);
 inline void resetEffectiveSpa(types::handle handle, stat::Spa spa);
 inline void resetEffectiveSpd(types::handle handle, stat::Spd spd);
 inline void resetEffectiveSpe(types::handle handle, stat::Spe spe);
+
+inline void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets);
 
 inline void updateAllStats(Simulation& simulation);
 inline void updateAtk(Simulation& simulation);
@@ -17067,7 +17101,13 @@ inline void setMoveHitCount(Simulation& simulation) {
   }
 }
 
-inline void applyDamage(Simulation& /*simulation*/) {}
+inline void applyDamage(Simulation& simulation) {
+  simulation.viewForSelectedMoves<applyDamageToHp>();
+
+  simulation.removeFromEntities<tags::internal::MoveHits, tags::SelectedForViewMove>(entt::exclude<Damage>);
+  simulation.removeFromEntities<tags::SelectedForViewMove, tags::SelectedForViewMove>(
+    entt::exclude<tags::internal::MoveHits>);
+}
 
 inline void trySetStatusFromEffect(Simulation& /*simulation*/) {}
 
@@ -18461,7 +18501,7 @@ inline void getDamageRole(Simulation& simulation, PlayerSideId sideForDamageRoll
   ENTT_ASSERT(
     sideForDamageRolls != PlayerSideId::NONE,
     "The damage roll kinds are unique per side in the simulation's simulate turn options, so pick a side.");
-  pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn> selectedMoves{simulation};
+  pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn, Damage> selectedMoves{simulation};
   if (selectedMoves.hasNoneSelected()) return;
 
   DamageRollKind damageRollsConsidered = sideForDamageRolls == PlayerSideId::P1
@@ -19774,6 +19814,10 @@ inline types::entity Pokedex::buildActionMove(dex::Move move, types::registry& r
 ////////////////// START OF src/Pokedex/Items/ItemEvents.cpp ///////////////////
 
 namespace pokesim::dex {
+inline void internal::AssaultVestEvents::onModifySpd(EventModifier& eventModifier) {
+  chainToModifier(eventModifier.val, latest::AssaultVest::onModifySpdModifier);
+}
+
 inline void internal::ChoiceSpecsEvents::onModifySpa(EventModifier& eventModifier) {
   chainToModifier(eventModifier.val, latest::ChoiceSpecs::onModifySpaModifier);
 }
@@ -19834,15 +19878,15 @@ inline constexpr types::boost getAttackEffectiveness(const SpeciesTypes& species
       case TypeEffectiveness::IMMUNE: {
         return -std::numeric_limits<types::boost>::digits;
       }
+      case TypeEffectiveness::NEUTRAL: {
+        break;
+      }
       case TypeEffectiveness::NOT_VERY_EFFECTIVE: {
         modifier--;
         break;
       }
       case TypeEffectiveness::SUPER_EFFECTIVE: {
         modifier++;
-      }
-      case TypeEffectiveness::NEUTRAL: {
-        break;
       }
     }
   }
@@ -19934,6 +19978,10 @@ inline void internal::checkForAndApplyTypeEffectiveness(
   else {
     damage.val = damage.val << effectiveness;
   }
+}
+
+inline void internal::setDamageToAtLeastOne(Damage& damage) {
+  damage.val = std::max(damage.val, (types::damage)1U);
 }
 
 inline void modifyDamageWithTypes(Simulation& simulation) {
@@ -20072,6 +20120,8 @@ inline void getDamage(Simulation& simulation) {
   getDamageRole(simulation);
 
   modifyDamageWithTypes(simulation);
+
+  simulation.viewForSelectedMoves<internal::setDamageToAtLeastOne>();
 }
 }  // namespace pokesim::calc_damage
 
@@ -20260,6 +20310,10 @@ inline void PokemonStateSetup::setSide(types::entity entity) {
 
 inline void PokemonStateSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
+}
+
+inline void PokemonStateSetup::setHp(types::stat hp) {
+  handle.emplace<stat::CurrentHp>(hp);
 }
 
 inline void PokemonStateSetup::setTypes(SpeciesTypes types) {
@@ -20577,6 +20631,17 @@ inline void resetEffectiveSpd(types::handle handle, stat::Spd spd) {
 
 inline void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
   handle.emplace_or_replace<stat::EffectiveSpe>(spe.val);
+}
+
+inline void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets) {
+  stat::CurrentHp& hp = registry.get<stat::CurrentHp>(targets.val[0]);
+  if (damage.val > hp.val) {
+    hp.val = 0;
+    // Faint
+  }
+  else {
+    hp.val -= damage.val;
+  }
 }
 
 inline void updateAllStats(Simulation& simulation) {

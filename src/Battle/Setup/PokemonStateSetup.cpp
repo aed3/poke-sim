@@ -59,6 +59,10 @@ void PokemonStateSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
 }
 
+void PokemonStateSetup::setHp(types::stat hp) {
+  handle.emplace<stat::CurrentHp>(hp);
+}
+
 void PokemonStateSetup::setTypes(SpeciesTypes types) {
   handle.emplace<SpeciesTypes>(types);
 }

@@ -15,15 +15,15 @@ constexpr types::boost getAttackEffectiveness(const SpeciesTypes& speciesTypes, 
       case TypeEffectiveness::IMMUNE: {
         return -std::numeric_limits<types::boost>::digits;
       }
+      case TypeEffectiveness::NEUTRAL: {
+        break;
+      }
       case TypeEffectiveness::NOT_VERY_EFFECTIVE: {
         modifier--;
         break;
       }
       case TypeEffectiveness::SUPER_EFFECTIVE: {
         modifier++;
-      }
-      case TypeEffectiveness::NEUTRAL: {
-        break;
       }
     }
   }

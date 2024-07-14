@@ -91,7 +91,7 @@ void getDamageRole(Simulation& simulation, PlayerSideId sideForDamageRolls) {
   ENTT_ASSERT(
     sideForDamageRolls != PlayerSideId::NONE,
     "The damage roll kinds are unique per side in the simulation's simulate turn options, so pick a side.");
-  pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn> selectedMoves{simulation};
+  pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn, Damage> selectedMoves{simulation};
   if (selectedMoves.hasNoneSelected()) return;
 
   DamageRollKind damageRollsConsidered = sideForDamageRolls == PlayerSideId::P1

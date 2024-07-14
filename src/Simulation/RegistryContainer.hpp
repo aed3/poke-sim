@@ -236,9 +236,9 @@ class RegistryContainer {
     registry.insert<Type>(view.begin(), view.end(), args...);
   }
 
-  template <typename Type, typename... ViewComponents>
-  void removeFromEntities() {
-    auto view = registry.view<ViewComponents...>();
+  template <typename Type, typename... ViewComponents, typename... ExcludeComponents>
+  void removeFromEntities(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
+    auto view = registry.view<ViewComponents...>(exclude);
     registry.remove<Type>(view.begin(), view.end());
   }
 };
