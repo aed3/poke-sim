@@ -22,6 +22,7 @@ inline Simulation createSingleBattleSimulation(
   {
     Simulation::PokemonCreationInfo p1PokemonInfo{};
     p1PokemonInfo.species = dex::Species::EMPOLEON;
+    p1PokemonInfo.item = dex::Item::ASSAULT_VEST;
     p1PokemonInfo.ability = dex::Ability::DEFIANT;
     p1PokemonInfo.gender = dex::Gender::MALE;
     p1PokemonInfo.status = dex::Status::PAR;
@@ -160,7 +161,6 @@ inline Simulation createDoubleBattleSimulation(
     speciesSet.insert(p2aPokemonInfo.species);
     speciesSet.insert(p2bPokemonInfo.species);
     pokedex->loadSpecies(speciesSet);
-
   }
 
   battleCreationInfo.turn = 2;

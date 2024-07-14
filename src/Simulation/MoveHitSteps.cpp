@@ -45,7 +45,13 @@ void setMoveHitCount(Simulation& simulation) {
   }
 }
 
-void applyDamage(Simulation& /*simulation*/) {}
+void applyDamage(Simulation& simulation) {
+  simulation.viewForSelectedMoves<applyDamageToHp>();
+
+  simulation.removeFromEntities<tags::internal::MoveHits, tags::SelectedForViewMove>(entt::exclude<Damage>);
+  simulation.removeFromEntities<tags::SelectedForViewMove, tags::SelectedForViewMove>(
+    entt::exclude<tags::internal::MoveHits>);
+}
 
 void trySetStatusFromEffect(Simulation& /*simulation*/) {}
 

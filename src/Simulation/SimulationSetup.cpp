@@ -75,6 +75,7 @@ PokemonStateSetup Simulation::createInitialPokemon(
   pokemonSetup.setStat<stat::Spa>(pokemonData.stats.spa);
   pokemonSetup.setStat<stat::Spd>(pokemonData.stats.spd);
   pokemonSetup.setStat<stat::Spe>(pokemonData.stats.spe);
+  pokemonSetup.setHp(pokemonData.hp.value_or(pokemonData.stats.hp));
   pokemonSetup.setProperty<tags::AtkStatUpdateRequired>();
   pokemonSetup.setProperty<tags::DefStatUpdateRequired>();
   pokemonSetup.setProperty<tags::SpaStatUpdateRequired>();

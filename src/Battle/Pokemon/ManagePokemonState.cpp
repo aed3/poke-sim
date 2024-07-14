@@ -1,5 +1,6 @@
 #include "ManagePokemonState.hpp"
 
+#include <Components/Damage.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/LastUsedMove.hpp>
 #include <Components/PP.hpp>
@@ -42,6 +43,17 @@ void resetEffectiveSpd(types::handle handle, stat::Spd spd) {
 
 void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
   handle.emplace_or_replace<stat::EffectiveSpe>(spe.val);
+}
+
+void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets) {
+  stat::CurrentHp& hp = registry.get<stat::CurrentHp>(targets.val[0]);
+  if (damage.val > hp.val) {
+    hp.val = 0;
+    // Faint
+  }
+  else {
+    hp.val -= damage.val;
+  }
 }
 
 void updateAllStats(Simulation& simulation) {
