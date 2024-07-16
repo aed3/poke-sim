@@ -24,7 +24,7 @@ namespace pokesim {
 // Tool to set properties of a Pokemon's state to an entity.
 struct PokemonStateSetup : internal::StateSetupBase {
   PokemonStateSetup(types::registry& registry) : PokemonStateSetup(registry, registry.create()) {}
-  PokemonStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {}
+  PokemonStateSetup(types::registry& registry, types::entity entity);
 
   /**
    * @brief Applies the defaults to the required properties for a Pokemon state.

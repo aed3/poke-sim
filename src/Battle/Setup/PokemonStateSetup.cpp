@@ -16,6 +16,7 @@
 #include <Components/Tags/AbilityTags.hpp>
 #include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/NatureTags.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Gender.hpp>
@@ -32,6 +33,11 @@
 #include "EnumToTag.hpp"
 
 namespace pokesim {
+PokemonStateSetup::PokemonStateSetup(types::registry& registry, types::entity entity)
+    : StateSetupBase(registry, entity) {
+  handle.emplace<tags::Pokemon>();
+}
+
 void PokemonStateSetup::initBlank() {
   handle.emplace<SpeciesName>();
   handle.emplace<Side>();

@@ -4,11 +4,12 @@
 #include <Components/CloneFromCloneTo.hpp>
 #include <Components/EntityHolders/headers.hpp>
 #include <Components/Names/MoveNames.hpp>
-#include <Components/Names/SpeciesNames.hpp>
 #include <Components/PP.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SpeedSort.hpp>
+#include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
@@ -57,22 +58,24 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
     }
   }
 
-  internal::remapEntityListMembers<ActionQueue>(registry, entityMap);
-  internal::remapEntityMembers<Battle>(registry, entityMap);
-  internal::remapEntityMembers<CurrentAction>(registry, entityMap);
-  internal::remapEntityMembers<NextAction>(registry, entityMap);
-  internal::remapEntityListMembers<CurrentActionTargets>(registry, entityMap);
-  internal::remapEntityMembers<CurrentActionSource>(registry, entityMap);
-  internal::remapEntityMembers<CurrentActionMove>(registry, entityMap);
-  internal::remapEntityMembers<CurrentActionMoveSlot>(registry, entityMap);
-  internal::remapEntityMembers<FoeSide>(registry, entityMap);
-  internal::remapEntityMembers<LastUsedMove>(registry, entityMap);
-  internal::remapEntityMembers<MoveEffect>(registry, entityMap);
-  internal::remapEntityListMembers<MoveSlots>(registry, entityMap);
-  internal::remapEntityMembers<Pokemon>(registry, entityMap);
-  internal::remapEntityMembers<Side>(registry, entityMap);
-  internal::remapEntityListMembers<Sides>(registry, entityMap);
-  internal::remapEntityListMembers<Team>(registry, entityMap);
+  // Not simplified further to a, for example, packed template type list, to make debugging what type went wrong easier
+  internal::remapComponentEntities<ActionQueue>(registry, entityMap);
+  internal::remapComponentEntities<Battle>(registry, entityMap);
+  internal::remapComponentEntities<ChoiceLocked>(registry, entityMap);
+  internal::remapComponentEntities<CurrentAction>(registry, entityMap);
+  internal::remapComponentEntities<CurrentActionMove>(registry, entityMap);
+  internal::remapComponentEntities<CurrentActionMoveSlot>(registry, entityMap);
+  internal::remapComponentEntities<CurrentActionSource>(registry, entityMap);
+  internal::remapComponentEntities<CurrentActionTargets>(registry, entityMap);
+  internal::remapComponentEntities<FoeSide>(registry, entityMap);
+  internal::remapComponentEntities<LastUsedMove>(registry, entityMap);
+  internal::remapComponentEntities<MoveEffect>(registry, entityMap);
+  internal::remapComponentEntities<MoveSlots>(registry, entityMap);
+  internal::remapComponentEntities<NextAction>(registry, entityMap);
+  internal::remapComponentEntities<Pokemon>(registry, entityMap);
+  internal::remapComponentEntities<Side>(registry, entityMap);
+  internal::remapComponentEntities<Sides>(registry, entityMap);
+  internal::remapComponentEntities<Team>(registry, entityMap);
 
   registry.clear<CloneTo, tags::CloneFrom>();
 
@@ -104,7 +107,8 @@ void cloneEntity(
 void cloneBattle(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
-  for (const auto [entity, sides, actionQueue] : registry.view<tags::CloneFrom, Sides, ActionQueue>().each()) {
+  for (const auto [entity, sides, actionQueue] :
+       registry.view<tags::CloneFrom, tags::Battle, Sides, ActionQueue>().each()) {
     for (auto side : sides.val) {
       registry.emplace<tags::CloneFrom>(side);
     }
@@ -114,7 +118,7 @@ void cloneBattle(
 
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   }
-  for (const auto [entity, currentAction] : registry.view<tags::CloneFrom, CurrentAction>().each()) {
+  for (const auto [entity, currentAction] : registry.view<tags::CloneFrom, tags::Battle, CurrentAction>().each()) {
     registry.emplace<tags::CloneFrom>(currentAction.val);
   }
 }
@@ -122,7 +126,7 @@ void cloneBattle(
 void cloneSide(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
-  for (const auto [entity, team] : registry.view<tags::CloneFrom, Team>().each()) {
+  for (const auto [entity, team] : registry.view<tags::CloneFrom, tags::Side, Team>().each()) {
     for (auto pokemon : team.val) {
       registry.emplace<tags::CloneFrom>(pokemon);
     }
@@ -150,7 +154,7 @@ void cloneCurrentActionMove(
 void clonePokemon(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
-  for (const auto [entity, species, moveSlots] : registry.view<tags::CloneFrom, SpeciesName, MoveSlots>().each()) {
+  for (const auto [entity, moveSlots] : registry.view<tags::CloneFrom, tags::Pokemon, MoveSlots>().each()) {
     for (auto move : moveSlots.val) {
       registry.emplace<tags::CloneFrom>(move);
     }
@@ -175,6 +179,16 @@ void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::Clo
   ENTT_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map");
   ENTT_ASSERT(entityMap.at(entity).size() > cloneTo.val, "More entities are trying to be copied to than were copied");
   entity = entityMap.at(entity)[cloneTo.val];
+}
+
+template <typename Component>
+void remapComponentEntities(types::registry& registry, const types::ClonedEntityMap& entityMap) {
+  if constexpr (std::is_same_v<decltype(Component::val), types::entity>) {
+    remapEntityMembers<Component>(registry, entityMap);
+  }
+  else {
+    remapEntityListMembers<Component>(registry, entityMap);
+  }
 }
 
 template <typename Component>

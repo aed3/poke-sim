@@ -2,6 +2,7 @@
 
 #include "ActionQueue.hpp"
 #include "Battle.hpp"
+#include "ChoiceLocked.hpp"
 #include "Current.hpp"
 #include "FoeSide.hpp"
 #include "LastUsedMove.hpp"

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <Components/Tags/BattleTags.hpp>
+#include <Components/Tags/Current.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/Selection.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
@@ -12,11 +15,14 @@
 
 namespace pokesim::internal {
 class RegistryContainer {
+ public:
+  using SelectionFunction = entt::delegate<std::vector<types::entity>(const types::registry&)>;
+
  private:
   template <typename, typename...>
   friend struct SelectForView;
 
-  using SelectionFunctionList = std::vector<entt::delegate<std::vector<types::entity>(const types::registry&)>>;
+  using SelectionFunctionList = std::vector<SelectionFunction>;
   SelectionFunctionList battleSelection{};
   SelectionFunctionList sideSelection{};
   SelectionFunctionList pokemonSelection{};
@@ -38,9 +44,10 @@ class RegistryContainer {
     }
   }
 
-  template <typename Selection, typename... ComponentsToSelect>
-  std::size_t select() {
-    auto group = registry.group(entt::get<ComponentsToSelect...>);
+  template <typename Selection, typename GetNewSelection, typename GetUnmatchedSelection>
+  std::size_t select(
+    GetNewSelection getNewSelection, GetUnmatchedSelection getUnmatchedSelection, SelectionFunction selectionFunction) {
+    auto group = getNewSelection(registry);
     if (group.empty()) {
       return 0U;
     }
@@ -49,7 +56,7 @@ class RegistryContainer {
     std::size_t finalSelectionSize = 0U;
 
     if (narrowSelection) {
-      auto unmatchedSelections = registry.group(entt::get<Selection>, entt::exclude<ComponentsToSelect...>);
+      auto unmatchedSelections = getUnmatchedSelection(registry);
       std::size_t totalSelected = registry.view<Selection>().size();
       std::size_t unmatchedSelectionSize = unmatchedSelections.size();
       if (unmatchedSelectionSize == totalSelected) {
@@ -58,7 +65,9 @@ class RegistryContainer {
 
       registry.remove<Selection>(unmatchedSelections.begin(), unmatchedSelections.end());
 
-      ENTT_ASSERT(totalSelected > unmatchedSelectionSize, "");
+      ENTT_ASSERT(
+        unmatchedSelectionSize < totalSelected,
+        "The number of elements removed from the active selection must be less than the number of elements selected");
       finalSelectionSize = totalSelected - unmatchedSelectionSize;
     }
     else {
@@ -67,12 +76,38 @@ class RegistryContainer {
       finalSelectionSize = group.size();
     }
 
-    selectedFunctions<Selection>().emplace_back([](const void*, const types::registry& reg) {
-      auto view = reg.view<ComponentsToSelect...>();
-      return std::vector<types::entity>{view.begin(), view.end()};
-    });
+    selectedFunctions<Selection>().push_back(selectionFunction);
 
     return finalSelectionSize;
+  }
+
+  template <typename Selection, typename... ComponentsToSelect>
+  std::size_t select() {
+    auto getNewSelection = [](types::registry& reg) { return reg.group(entt::get<ComponentsToSelect...>); };
+    auto getUnmatchedSelection = [](types::registry& reg) {
+      return reg.group(entt::get<Selection>, entt::exclude<ComponentsToSelect...>);
+    };
+    SelectionFunction selectionFunction{[](const void*, const types::registry& reg) {
+      auto view = reg.view<ComponentsToSelect...>();
+      return std::vector<types::entity>{view.begin(), view.end()};
+    }};
+
+    return select<Selection>(getNewSelection, getUnmatchedSelection, selectionFunction);
+  }
+
+  template <typename Selection>
+  std::size_t select(SelectionFunction selectionFunction) {
+    auto getUnmatchedSelections = [&selectionFunction](const types::registry& reg) -> std::vector<types::entity> {
+      auto upcomingSelection = selectionFunction(reg);
+      auto currentSelection = reg.view<Selection>();
+      auto end =
+        std::remove_if(upcomingSelection.begin(), upcomingSelection.end(), [&currentSelection](types::entity entity) {
+          return !currentSelection.contains(entity);
+        });
+      return {upcomingSelection.begin(), end};
+    };
+
+    return select<Selection>(selectionFunction, getUnmatchedSelections, selectionFunction);
   }
 
   template <typename Selection>
@@ -109,19 +144,21 @@ class RegistryContainer {
   }
 
  private:
-  template <typename Selected, auto Function, typename...>
+  template <typename Selected, typename Required, auto Function, typename...>
   struct ForSelected;
 
   template <
-    typename Selected, auto Function, typename ExcludeContainer, typename IncludeContainer, typename... ExtraTags>
-  struct ForSelected<Selected, Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer> {
+    typename Selected, typename Required, auto Function, typename ExcludeContainer, typename IncludeContainer,
+    typename... ExtraTags>
+  struct ForSelected<Selected, Required, Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer> {
     template <typename... PassedInArgs>
     static void view(RegistryContainer* container, const PassedInArgs&... passedInArgs) {
       if (container->hasActiveSelection<Selected>()) {
-        container->view<Function, Tags<Selected, ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
+        container->view<Function, Tags<Selected, Required, ExtraTags...>, ExcludeContainer, IncludeContainer>(
+          passedInArgs...);
       }
       else {
-        container->view<Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
+        container->view<Function, Tags<Required, ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
       }
     }
 
@@ -141,72 +178,84 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
-      this,
-      passedInArgs...);
+    ForSelected<tags::SelectedForViewBattle, tags::Battle, Function, TagContainer, ExcludeContainer, IncludeContainer>::
+      view(this, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewBattle, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
-      this,
-      passedInArgs...);
+    ForSelected<tags::SelectedForViewBattle, tags::Battle, Function, TagContainer, ExcludeContainer, IncludeContainer>::
+      group(this, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
-      this,
-      passedInArgs...);
+    ForSelected<tags::SelectedForViewSide, tags::Side, Function, TagContainer, ExcludeContainer, IncludeContainer>::
+      view(this, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewSide, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
-      this,
-      passedInArgs...);
+    ForSelected<tags::SelectedForViewSide, tags::Side, Function, TagContainer, ExcludeContainer, IncludeContainer>::
+      group(this, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedPokemon(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
-      this,
-      passedInArgs...);
+    ForSelected<
+      tags::SelectedForViewPokemon,
+      tags::Pokemon,
+      Function,
+      TagContainer,
+      ExcludeContainer,
+      IncludeContainer>::view(this, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedPokemon(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewPokemon, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
-      this,
-      passedInArgs...);
+    ForSelected<
+      tags::SelectedForViewPokemon,
+      tags::Pokemon,
+      Function,
+      TagContainer,
+      ExcludeContainer,
+      IncludeContainer>::group(this, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedMoves(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::view(
-      this,
-      passedInArgs...);
+    ForSelected<
+      tags::SelectedForViewMove,
+      tags::CurrentActionMove,
+      Function,
+      TagContainer,
+      ExcludeContainer,
+      IncludeContainer>::view(this, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedMoves(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewMove, Function, TagContainer, ExcludeContainer, IncludeContainer>::group(
-      this,
-      passedInArgs...);
+    ForSelected<
+      tags::SelectedForViewMove,
+      tags::CurrentActionMove,
+      Function,
+      TagContainer,
+      ExcludeContainer,
+      IncludeContainer>::group(this, passedInArgs...);
   }
 
   template <

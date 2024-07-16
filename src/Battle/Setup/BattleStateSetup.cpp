@@ -8,6 +8,7 @@
 #include <Components/ID.hpp>
 #include <Components/Probability.hpp>
 #include <Components/RNGSeed.hpp>
+#include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Turn.hpp>
@@ -24,8 +25,9 @@
 
 namespace pokesim {
 BattleStateSetup::BattleStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {
-  if (!handle.any_of<ActionQueue>()) {
+  if (!handle.any_of<ActionQueue, tags::Battle>()) {
     handle.emplace<ActionQueue>();
+    handle.emplace<tags::Battle>();
   }
 }
 

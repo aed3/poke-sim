@@ -110,7 +110,7 @@ TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
   simulation.createInitialStates({battleCreationInfo});
 
   types::registry& registry = simulation.registry;
-  auto battles = registry.view<Sides>();
+  auto battles = registry.view<tags::Battle>();
   REQUIRE(battles.size() == 1);
   types::entity battleEntity = battles[0];
 
@@ -133,7 +133,7 @@ TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
   simulation.createInitialStates({battleCreationInfo});
 
   types::registry& registry = simulation.registry;
-  auto battles = registry.view<Sides>();
+  auto battles = registry.view<tags::Battle>();
   REQUIRE(battles.size() == 1);
   types::entity battleEntity = battles[0];
 
@@ -174,7 +174,7 @@ TEST_CASE("Battle State: Multiple Battles", "[BattleState][Setup]") {
   simulation.createInitialStates({battle1CreationInfo, battle2CreationInfo});
 
   types::registry& registry = simulation.registry;
-  auto battles = registry.view<Sides>();
+  auto battles = registry.view<tags::Battle>();
   REQUIRE(battles.size() == 2);
 
   types::handle battleA = types::handle(registry, battles[0]);
@@ -200,12 +200,12 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
     simulation.createInitialStates({battleCreationInfo});
 
     types::registry& registry = simulation.registry;
-    types::handle baseHandle(registry, registry.view<Sides>()[0]);
+    types::handle baseHandle(registry, registry.view<tags::Battle>()[0]);
     baseHandle.emplace<tags::CloneFrom>();
 
     clone(registry, cloneCount);
 
-    auto battles = registry.view<Sides>();
+    auto battles = registry.view<tags::Battle>();
     REQUIRE(battles.size() == cloneCount + 1);
     REQUIRE(registry.view<tags::CloneFrom>().empty());
     REQUIRE(registry.view<CloneTo>().empty());

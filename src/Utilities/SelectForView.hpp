@@ -1,9 +1,8 @@
 #pragma once
 
-#include <Components/EntityHolders/Sides.hpp>
-#include <Components/EntityHolders/Team.hpp>
-#include <Components/Names/SpeciesNames.hpp>
+#include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/Selection.hpp>
 #include <Simulation/RegistryContainer.hpp>
 #include <Types/Entity.hpp>
@@ -17,6 +16,13 @@ struct SelectForView {
   SelectForView(RegistryContainer& registryContainer_)
       : registryContainer(&registryContainer_),
         selectedCount(registryContainer->select<Selection, ComponentsToSelect...>()) {
+    if (hasNoneSelected()) {
+      registryContainer = nullptr;
+    }
+  }
+
+  SelectForView(RegistryContainer& registryContainer_, RegistryContainer::SelectionFunction selectionFunction)
+      : registryContainer(&registryContainer_), selectedCount(registryContainer->select<Selection>(selectionFunction)) {
     if (hasNoneSelected()) {
       registryContainer = nullptr;
     }
@@ -39,12 +45,12 @@ struct SelectForView {
 };
 
 template <typename... ComponentsToSelect>
-struct SelectForBattleView : SelectForView<tags::SelectedForViewBattle, Sides, ComponentsToSelect...> {};
+using SelectForBattleView = SelectForView<tags::SelectedForViewBattle, tags::Battle, ComponentsToSelect...>;
 template <typename... ComponentsToSelect>
-struct SelectForSideView : SelectForView<tags::SelectedForViewSide, Team, ComponentsToSelect...> {};
+using SelectForSideView = SelectForView<tags::SelectedForViewSide, tags::Side, ComponentsToSelect...>;
 template <typename... ComponentsToSelect>
-struct SelectForPokemonView : SelectForView<tags::SelectedForViewPokemon, SpeciesName, ComponentsToSelect...> {};
+using SelectForPokemonView = SelectForView<tags::SelectedForViewPokemon, tags::Pokemon, ComponentsToSelect...>;
 template <typename... ComponentsToSelect>
-struct SelectForCurrentActionMoveView
-    : SelectForView<tags::SelectedForViewMove, tags::CurrentActionMove, ComponentsToSelect...> {};
+using SelectForCurrentActionMoveView =
+  SelectForView<tags::SelectedForViewMove, tags::CurrentActionMove, ComponentsToSelect...>;
 }  // namespace pokesim::internal
