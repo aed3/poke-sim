@@ -16,8 +16,7 @@ struct PokemonStateSetup;
 struct SideStateSetup : internal::StateSetupBase {
   SideStateSetup(types::registry& registry, PlayerSideId playerSideId)
       : SideStateSetup(registry, registry.create(), playerSideId) {}
-  SideStateSetup(types::registry& registry, types::entity entity, PlayerSideId playerSideId)
-      : StateSetupBase(registry, entity) {}
+  SideStateSetup(types::registry& registry, types::entity entity, PlayerSideId playerSideId);
   /**
    * @brief Applies the defaults to the required properties for a player side's state.
    *

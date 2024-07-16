@@ -1,6 +1,8 @@
 #pragma once
 
 namespace pokesim::tags {
+struct Pokemon {};
+
 // Indicates the Pokemon is currently in a battle
 struct ActivePokemon {};
 

@@ -4,6 +4,7 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/Team.hpp>
+#include <Components/Tags/BattleTags.hpp>
 #include <Types/Entity.hpp>
 #include <Types/State.hpp>
 #include <entt/entity/handle.hpp>
@@ -11,6 +12,11 @@
 #include "PokemonStateSetup.hpp"
 
 namespace pokesim {
+SideStateSetup::SideStateSetup(types::registry& registry, types::entity entity, PlayerSideId playerSideId)
+    : StateSetupBase(registry, entity) {
+  handle.emplace<tags::Side>();
+}
+
 void SideStateSetup::initBlank() {
   handle.emplace<Battle>();
   handle.emplace<Team>();

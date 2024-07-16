@@ -34,6 +34,9 @@ void cloneMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount);
 
+template <typename Component>
+void remapComponentEntities(types::registry& registry, const types::ClonedEntityMap& entityMap);
+
 void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap);
 template <typename Component>
 void remapEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap);

@@ -22,6 +22,7 @@
 #include <Components/Turn.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/MoveHitSteps.hpp>
+#include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
@@ -31,7 +32,7 @@
 
 namespace pokesim::simulate_turn {
 void run(Simulation& simulation) {
-  internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
+  pokesim::internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 
   updateAllStats(simulation);
@@ -75,7 +76,7 @@ void runBeforeTurnAction(Simulation& /*simulation*/) {
 }
 
 void runMoveAction(Simulation& simulation) {
-  internal::SelectForBattleView<action::Move> selectedBattle{simulation};
+  pokesim::internal::SelectForBattleView<action::Move> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 
   simulation.viewForSelectedBattles<setCurrentActionSource>();
@@ -89,11 +90,19 @@ void runMoveAction(Simulation& simulation) {
 }
 
 void runResidualAction(Simulation& simulation) {
-  internal::SelectForBattleView<action::tags::Residual> selectedBattle{simulation};
+  pokesim::internal::SelectForBattleView<action::tags::Residual> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 }
 
-void nextTurn(Simulation& /*simulation*/) {}
+namespace internal {
+void incrementTurn(Turn& turn) {
+  turn.val++;
+}
+}  // namespace internal
+
+void nextTurn(Simulation& simulation) {
+  simulation.viewForSelectedBattles<internal::incrementTurn>();
+}
 
 void addTargetAllyToTargets(types::registry& registry, const Battle& battle) {
   const Sides& sides = registry.get<Sides>(battle.val);
@@ -125,11 +134,12 @@ void resolveMoveTargets(CurrentActionTargets&) {}
 
 void createActionMoveForTargets(
   types::handle targetHandle, const Battle& battle, const CurrentActionSource& source, const Pokedex& pokedex) {
-  dex::Move move =
-    targetHandle.registry()->get<action::Move>(targetHandle.registry()->get<CurrentAction>(battle.val).val).name;
+  types::registry& registry = *targetHandle.registry();
+
+  dex::Move move = registry.get<action::Move>(registry.get<CurrentAction>(battle.val).val).name;
   types::entity moveEntity = createActionMoveForTarget(targetHandle, battle.val, source.val, move, pokedex);
 
-  targetHandle.registry()->emplace<tags::SimulateTurn>(moveEntity);
+  registry.emplace<tags::SimulateTurn>(moveEntity);
 }
 
 void getMoveTargets(Simulation& simulation) {
@@ -145,7 +155,7 @@ void getMoveTargets(Simulation& simulation) {
 void useMove(Simulation& simulation) {
   // ModifyTarget
   // ModifyType
-  // ModifyMove
+  runModifyMove(simulation);
 
   getMoveTargets(simulation);
   runMoveHitChecks(simulation);

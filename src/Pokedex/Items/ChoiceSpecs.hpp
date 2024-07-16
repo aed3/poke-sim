@@ -2,16 +2,19 @@
 
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Item.hpp>
+#include <Types/Registry.hpp>
 #include <string_view>
 
 namespace pokesim {
 struct EventModifier;
+struct Battle;
 }  // namespace pokesim
 
 namespace pokesim::dex {
 namespace internal {
 struct ChoiceSpecsEvents {
   static void onModifySpa(EventModifier& eventModifier);
+  static void onSourceModifyMove(types::handle pokemonHandle, const Battle& battle);
 };
 }  // namespace internal
 

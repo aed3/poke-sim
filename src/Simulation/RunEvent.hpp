@@ -8,6 +8,7 @@ void runModifyAccuracyEvent(Simulation& simulation);
 void runModifyCritBoostEvent(Simulation& simulation);
 void runBasePowerEvent(Simulation& simulation);
 void runDamagingHitEvent(Simulation& simulation);
+void runModifyMove(Simulation& simulation);
 
 void runModifyAtk(Simulation& simulation);
 void runModifyDef(Simulation& simulation);
