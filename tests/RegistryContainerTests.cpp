@@ -1,17 +1,25 @@
 #include "Tests.hpp"
 
 namespace pokesim {
+struct FilterA {};
+struct FilterB {};
+struct FilterC {};
+struct Select {};
+struct Required {};
+
+template <typename... Components>
+using SelectForTest = internal::SelectForView<Select, Required, Components...>;
+
 TEST_CASE("Selection Levels", "[RegistryContainer]") {
   internal::RegistryContainer container;
-
-  struct FilterA {};
-  struct FilterB {};
-  struct FilterC {};
-  struct Select {};
 
   types::entity abc = container.registry.create();
   types::entity ab = container.registry.create();
   types::entity a = container.registry.create();
+  container.registry.emplace<Required>(abc);
+  container.registry.emplace<Required>(ab);
+  container.registry.emplace<Required>(a);
+
   container.registry.emplace<FilterA>(abc);
   container.registry.emplace<FilterA>(ab);
   container.registry.emplace<FilterA>(a);
@@ -22,15 +30,15 @@ TEST_CASE("Selection Levels", "[RegistryContainer]") {
   container.registry.emplace<FilterC>(abc);
 
   SECTION("Largest To Smallest") {
-    internal::SelectForView<Select, FilterA> stageOne{container};
+    SelectForTest<FilterA> stageOne{container};
     REQUIRE_FALSE(stageOne.hasNoneSelected());
     REQUIRE(container.registry.view<Select>().size() == 3);
 
-    internal::SelectForView<Select, FilterB> stageTwo{container};
+    SelectForTest<FilterB> stageTwo{container};
     REQUIRE_FALSE(stageTwo.hasNoneSelected());
     REQUIRE(container.registry.view<Select>().size() == 2);
 
-    internal::SelectForView<Select, FilterC> stageThree{container};
+    SelectForTest<FilterC> stageThree{container};
     REQUIRE_FALSE(stageThree.hasNoneSelected());
     REQUIRE(container.registry.view<Select>().size() == 1);
 
@@ -45,15 +53,15 @@ TEST_CASE("Selection Levels", "[RegistryContainer]") {
   }
 
   SECTION("Smallest to Largest") {
-    internal::SelectForView<Select, FilterC> stageOne{container};
+    SelectForTest<FilterC> stageOne{container};
     REQUIRE_FALSE(stageOne.hasNoneSelected());
     REQUIRE(container.registry.view<Select>().size() == 1);
 
-    internal::SelectForView<Select, FilterB> stageTwo{container};
+    SelectForTest<FilterB> stageTwo{container};
     REQUIRE_FALSE(stageTwo.hasNoneSelected());
     REQUIRE(container.registry.view<Select>().size() == 1);
 
-    internal::SelectForView<Select, FilterA> stageThree{container};
+    SelectForTest<FilterA> stageThree{container};
     REQUIRE_FALSE(stageThree.hasNoneSelected());
     REQUIRE(container.registry.view<Select>().size() == 1);
 
@@ -65,6 +73,26 @@ TEST_CASE("Selection Levels", "[RegistryContainer]") {
 
     stageOne.deselect();
     REQUIRE(container.registry.view<Select>().size() == 0);
+  }
+
+  SECTION("Blank Selection") {
+    SelectForTest<> stageZero{container};
+    REQUIRE_FALSE(stageZero.hasNoneSelected());
+    REQUIRE(container.registry.view<Select>().size() == 3);
+
+    stageZero.deselect();
+
+    SelectForTest<FilterB> stageOne{container};
+    REQUIRE_FALSE(stageOne.hasNoneSelected());
+    REQUIRE(container.registry.view<Select>().size() == 2);
+
+    SelectForTest<> stageTwo{container};
+    REQUIRE_FALSE(stageTwo.hasNoneSelected());
+    REQUIRE(container.registry.view<Select>().size() == 2);
+
+    stageTwo.deselect();
+
+    REQUIRE(container.registry.view<Select>().size() == 2);
   }
 }
 }  // namespace pokesim

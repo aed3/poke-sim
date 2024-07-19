@@ -7,6 +7,7 @@
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
@@ -16,6 +17,7 @@
 #include <Components/SpeedSort.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
+#include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
@@ -98,10 +100,20 @@ namespace internal {
 void incrementTurn(Turn& turn) {
   turn.val++;
 }
+
+void updateActivePokemonPostTurn(types::handle pokemonHandle, const pokesim::MoveSlots& moveSlots) {
+  pokemonHandle.registry()->remove<pokesim::move::tags::Disabled>(moveSlots.val.begin(), moveSlots.val.end());
+}
 }  // namespace internal
 
 void nextTurn(Simulation& simulation) {
   simulation.viewForSelectedBattles<internal::incrementTurn>();
+
+  pokesim::internal::SelectForPokemonView<tags::SimulateTurn, tags::ActivePokemon> selectedPokemon{simulation};
+  if (!selectedPokemon.hasNoneSelected()) {
+    simulation.viewForSelectedPokemon<internal::updateActivePokemonPostTurn>();
+    runDisableMove(simulation);
+  }
 }
 
 void addTargetAllyToTargets(types::registry& registry, const Battle& battle) {

@@ -10,6 +10,7 @@
 #include <Utilities/Tags.hpp>
 #include <cstdint>
 #include <entt/signal/delegate.hpp>
+#include <iterator>
 #include <type_traits>
 #include <vector>
 
@@ -19,7 +20,7 @@ class RegistryContainer {
   using SelectionFunction = entt::delegate<std::vector<types::entity>(const types::registry&)>;
 
  private:
-  template <typename, typename...>
+  template <typename, typename, typename...>
   friend struct SelectForView;
 
   using SelectionFunctionList = std::vector<SelectionFunction>;
@@ -46,16 +47,21 @@ class RegistryContainer {
 
   template <typename Selection, typename GetNewSelection, typename GetUnmatchedSelection>
   std::size_t select(
-    GetNewSelection getNewSelection, GetUnmatchedSelection getUnmatchedSelection, SelectionFunction selectionFunction) {
-    auto group = getNewSelection(registry);
-    if (group.empty()) {
+    GetNewSelection getNewSelection, GetUnmatchedSelection getUnmatchedSelection, SelectionFunction selectionFunction,
+    bool isEmptySelection = false) {
+    auto list = getNewSelection(registry);
+    if (list.empty()) {
       return 0U;
     }
 
     bool narrowSelection = hasActiveSelection<Selection>();
     std::size_t finalSelectionSize = 0U;
 
-    if (narrowSelection) {
+    if (narrowSelection && isEmptySelection) {
+      selectedFunctions<Selection>().push_back(selectionFunction);
+      return registry.view<Selection>().size();
+    }
+    else if (narrowSelection) {
       auto unmatchedSelections = getUnmatchedSelection(registry);
       std::size_t totalSelected = registry.view<Selection>().size();
       std::size_t unmatchedSelectionSize = unmatchedSelections.size();
@@ -72,8 +78,8 @@ class RegistryContainer {
     }
     else {
       registry.clear<Selection>();
-      registry.insert<Selection>(group.begin(), group.end());
-      finalSelectionSize = group.size();
+      registry.insert<Selection>(list.begin(), list.end());
+      finalSelectionSize = list.size();
     }
 
     selectedFunctions<Selection>().push_back(selectionFunction);
@@ -81,18 +87,22 @@ class RegistryContainer {
     return finalSelectionSize;
   }
 
-  template <typename Selection, typename... ComponentsToSelect>
+  template <typename Selection, typename Required, typename... ComponentsToSelect>
   std::size_t select() {
-    auto getNewSelection = [](types::registry& reg) { return reg.group(entt::get<ComponentsToSelect...>); };
+    auto getNewSelection = [](types::registry& reg) { return reg.group<>(entt::get<Required, ComponentsToSelect...>); };
     auto getUnmatchedSelection = [](types::registry& reg) {
-      return reg.group(entt::get<Selection>, entt::exclude<ComponentsToSelect...>);
+      return reg.group<>(entt::get<Selection>, entt::exclude<ComponentsToSelect...>);
     };
     SelectionFunction selectionFunction{[](const void*, const types::registry& reg) {
-      auto view = reg.view<ComponentsToSelect...>();
+      auto view = reg.view<Required, ComponentsToSelect...>();
       return std::vector<types::entity>{view.begin(), view.end()};
     }};
 
-    return select<Selection>(getNewSelection, getUnmatchedSelection, selectionFunction);
+    return select<Selection>(
+      getNewSelection,
+      getUnmatchedSelection,
+      selectionFunction,
+      sizeof...(ComponentsToSelect) == 0);
   }
 
   template <typename Selection>
@@ -126,12 +136,9 @@ class RegistryContainer {
     auto end = filteredEntityList.end();
     for (std::size_t i = 1; i < functions.size(); i++) {
       std::vector<types::entity> previouslySelected = functions[i](registry);
-      end = std::remove_if(
-        filteredEntityList.begin(),
-        filteredEntityList.end(),
-        [&previouslySelected](types::entity entity) {
-          return std::find(previouslySelected.begin(), previouslySelected.end(), entity) == previouslySelected.end();
-        });
+      end = std::remove_if(filteredEntityList.begin(), end, [&previouslySelected](types::entity entity) {
+        return std::find(previouslySelected.begin(), previouslySelected.end(), entity) == previouslySelected.end();
+      });
     }
 
     registry.insert<Selection>(filteredEntityList.begin(), end);

@@ -2,13 +2,14 @@
 
 #include <Battle/Helpers/IntegerModify.hpp>
 #include <Components/EntityHolders/Battle.hpp>
-#include <Components/EntityHolders/ChoiceLocked.hpp>
+#include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EventModifier.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Abilities/headers.hpp>
+#include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/Items/headers.hpp>
 #include <Simulation/RegistryContainer.hpp>
 #include <Types/Enums/GameMechanics.hpp>
@@ -16,6 +17,7 @@
 #include <Utilities/Tags.hpp>
 #include <cstdint>
 #include <entt/container/dense_set.hpp>
+#include <entt/entity/registry.hpp>
 #include <type_traits>
 
 #include "Simulation.hpp"
@@ -80,12 +82,16 @@ void runModifyMove(Simulation& simulation) {
   simulation.viewForSelectedPokemon<
     dex::latest::ChoiceScarf::onSourceModifyMove,
     Tags<item::tags::ChoiceScarf, tags::CurrentActionMoveSource>,
-    entt::exclude_t<ChoiceLocked>>();
+    entt::exclude_t<ChoiceLock>>();
 
   simulation.viewForSelectedPokemon<
     dex::latest::ChoiceSpecs::onSourceModifyMove,
     Tags<item::tags::ChoiceSpecs, tags::CurrentActionMoveSource>,
-    entt::exclude_t<ChoiceLocked>>();
+    entt::exclude_t<ChoiceLock>>();
+}
+
+void runDisableMove(Simulation& simulation) {
+  simulation.viewForSelectedPokemon<dex::latest::ChoiceLock::onDisableMove>();
 }
 
 void runModifyAtk(Simulation&) {}

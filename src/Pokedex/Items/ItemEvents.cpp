@@ -1,6 +1,6 @@
 #include <Battle/Helpers/IntegerModify.hpp>
 #include <Components/EntityHolders/Battle.hpp>
-#include <Components/EntityHolders/ChoiceLocked.hpp>
+#include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EventModifier.hpp>
 #include <Simulation/Simulation.hpp>
@@ -13,7 +13,7 @@
 namespace pokesim::dex::internal {
 void setChoiceLock(types::handle pokemonHandle, const Battle& battle) {
   types::entity moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val).val;
-  pokemonHandle.emplace<ChoiceLocked>(moveSlot);
+  pokemonHandle.emplace<ChoiceLock>(moveSlot);
 }
 }  // namespace pokesim::dex::internal
 

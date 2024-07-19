@@ -56,6 +56,8 @@ class Simulation : public internal::RegistryContainer {
     dex::Status status = dex::Status::NO_STATUS;
     types::level level = 1;
 
+    bool fainted = false;
+
     dex::Nature nature = dex::Nature::NO_NATURE;
     Evs evs;
     Ivs ivs;
@@ -110,7 +112,7 @@ class Simulation : public internal::RegistryContainer {
 
  private:
   std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
-  PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData, const BattleCreationInfo& battleData);
+  PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
   void createInitialSide(
     SideStateSetup sideSetup, const SideCreationInfo& sideData, const BattleCreationInfo& battleData);
 

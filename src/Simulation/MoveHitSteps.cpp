@@ -83,6 +83,7 @@ void moveHitLoop(Simulation& simulation) {
   setMoveHitCount(simulation);
 
   while (!simulation.registry.view<HitCount>().empty()) {
+    internal::SelectForCurrentActionMoveView<HitCount> selectedMoves{simulation};
     calc_damage::run(simulation);
 
     // for simulate turn only

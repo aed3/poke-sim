@@ -16,7 +16,7 @@
 #include "EVsIVs.hpp"
 #include "EntityHolders/ActionQueue.hpp"
 #include "EntityHolders/Battle.hpp"
-#include "EntityHolders/ChoiceLocked.hpp"
+#include "EntityHolders/ChoiceLock.hpp"
 #include "EntityHolders/Current.hpp"
 #include "EntityHolders/FoeSide.hpp"
 #include "EntityHolders/LastUsedMove.hpp"

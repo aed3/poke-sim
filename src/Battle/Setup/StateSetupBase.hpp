@@ -28,7 +28,7 @@ struct StateSetupBase {
     handle.emplace<Tag>();
   }
 
-  types::entity entity() { return handle.entity(); }
+  types::entity entity() const { return handle.entity(); }
 };
 
 }  // namespace pokesim::internal
