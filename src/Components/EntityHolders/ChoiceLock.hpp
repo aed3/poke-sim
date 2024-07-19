@@ -3,7 +3,7 @@
 #include <Types/Entity.hpp>
 
 namespace pokesim {
-struct ChoiceLocked {
+struct ChoiceLock {
   types::entity val{};
 };
 }  // namespace pokesim

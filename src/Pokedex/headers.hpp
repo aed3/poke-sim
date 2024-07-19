@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Abilities/Static.hpp"
+#include "Effects/ChoiceLock.hpp"
 #include "Items/AssaultVest.hpp"
 #include "Items/BrightPowder.hpp"
 #include "Items/ChoiceScarf.hpp"

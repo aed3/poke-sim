@@ -26,6 +26,8 @@ struct PokemonStateSetup : internal::StateSetupBase {
   PokemonStateSetup(types::registry& registry) : PokemonStateSetup(registry, registry.create()) {}
   PokemonStateSetup(types::registry& registry, types::entity entity);
 
+  operator types::entity() const { return entity(); }
+
   /**
    * @brief Applies the defaults to the required properties for a Pokemon state.
    *

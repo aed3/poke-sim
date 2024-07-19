@@ -43,8 +43,7 @@ std::vector<types::entity> Simulation::createInitialMoves(const std::vector<Move
   return moveEntities;
 }
 
-PokemonStateSetup Simulation::createInitialPokemon(
-  const PokemonCreationInfo& pokemonData, const BattleCreationInfo& battleData) {
+PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& pokemonData) {
   PokemonStateSetup pokemonSetup(registry);
   if (pokemonData.id.has_value()) {
     pokemonSetup.setID(pokemonData.id.value());
@@ -82,16 +81,6 @@ PokemonStateSetup Simulation::createInitialPokemon(
   pokemonSetup.setProperty<tags::SpdStatUpdateRequired>();
   pokemonSetup.setProperty<tags::SpeStatUpdateRequired>();
 
-  if (battleData.runWithSimulateTurn) {
-    pokemonSetup.setProperty<tags::SimulateTurn>();
-  }
-  if (battleData.runWithCalculateDamage) {
-    pokemonSetup.setProperty<tags::CalculateDamage>();
-  }
-  if (battleData.runWithAnalyzeEffect) {
-    pokemonSetup.setProperty<tags::AnalyzeEffect>();
-  }
-
   return pokemonSetup;
 }
 
@@ -100,12 +89,42 @@ void Simulation::createInitialSide(
   std::vector<PokemonStateSetup> pokemonSetupList;
   pokemonSetupList.reserve(sideData.team.size());
 
-  for (const PokemonCreationInfo& pokemonData : sideData.team) {
-    PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonData, battleData);
-    std::vector<types::entity> moveEntities = createInitialMoves(pokemonData.moves);
-    pokemonSetup.setMoves(moveEntities);
+  for (std::size_t i = 0; i < sideData.team.size(); i++) {
+    const PokemonCreationInfo& pokemonData = sideData.team[i];
+    PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonData);
+    if (
+      battleData.turn > 0 && !pokemonData.fainted &&
+      (i == 0 || (battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT && i == 1))) {
+      pokemonSetup.setProperty<tags::ActivePokemon>();
+    }
 
+    std::vector<types::entity> moveEntities = createInitialMoves(pokemonData.moves);
+
+    if (battleData.runWithSimulateTurn) {
+      registry.insert<tags::SimulateTurn>(moveEntities.begin(), moveEntities.end());
+    }
+    if (battleData.runWithCalculateDamage) {
+      registry.insert<tags::CalculateDamage>(moveEntities.begin(), moveEntities.end());
+    }
+    if (battleData.runWithAnalyzeEffect) {
+      registry.insert<tags::AnalyzeEffect>(moveEntities.begin(), moveEntities.end());
+    }
+
+    pokemonSetup.setMoves(moveEntities);
     pokemonSetupList.push_back(pokemonSetup);
+  }
+
+  if (battleData.runWithSimulateTurn) {
+    sideSetup.setProperty<tags::SimulateTurn>();
+    registry.insert<tags::SimulateTurn>(pokemonSetupList.begin(), pokemonSetupList.end());
+  }
+  if (battleData.runWithCalculateDamage) {
+    sideSetup.setProperty<tags::CalculateDamage>();
+    registry.insert<tags::CalculateDamage>(pokemonSetupList.begin(), pokemonSetupList.end());
+  }
+  if (battleData.runWithAnalyzeEffect) {
+    sideSetup.setProperty<tags::AnalyzeEffect>();
+    registry.insert<tags::AnalyzeEffect>(pokemonSetupList.begin(), pokemonSetupList.end());
   }
 
   sideSetup.setTeam(pokemonSetupList);

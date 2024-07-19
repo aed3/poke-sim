@@ -61,7 +61,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
   // Not simplified further to a, for example, packed template type list, to make debugging what type went wrong easier
   internal::remapComponentEntities<ActionQueue>(registry, entityMap);
   internal::remapComponentEntities<Battle>(registry, entityMap);
-  internal::remapComponentEntities<ChoiceLocked>(registry, entityMap);
+  internal::remapComponentEntities<ChoiceLock>(registry, entityMap);
   internal::remapComponentEntities<CurrentAction>(registry, entityMap);
   internal::remapComponentEntities<CurrentActionMove>(registry, entityMap);
   internal::remapComponentEntities<CurrentActionMoveSlot>(registry, entityMap);

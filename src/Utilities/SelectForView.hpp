@@ -11,11 +11,11 @@
 #include <vector>
 
 namespace pokesim::internal {
-template <typename Selection, typename... ComponentsToSelect>
+template <typename Selection, typename Required, typename... ComponentsToSelect>
 struct SelectForView {
   SelectForView(RegistryContainer& registryContainer_)
       : registryContainer(&registryContainer_),
-        selectedCount(registryContainer->select<Selection, ComponentsToSelect...>()) {
+        selectedCount(registryContainer->select<Selection, Required, ComponentsToSelect...>()) {
     if (hasNoneSelected()) {
       registryContainer = nullptr;
     }

@@ -9,6 +9,7 @@ void runModifyCritBoostEvent(Simulation& simulation);
 void runBasePowerEvent(Simulation& simulation);
 void runDamagingHitEvent(Simulation& simulation);
 void runModifyMove(Simulation& simulation);
+void runDisableMove(Simulation& simulation);
 
 void runModifyAtk(Simulation& simulation);
 void runModifyDef(Simulation& simulation);

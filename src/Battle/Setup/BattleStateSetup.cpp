@@ -10,7 +10,6 @@
 #include <Components/RNGSeed.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
-#include <Components/Tags/PokemonTags.hpp>
 #include <Components/Turn.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
@@ -73,10 +72,6 @@ void BattleStateSetup::setActionQueue(const std::vector<types::entity>& queue) {
 
 void BattleStateSetup::setTurn(types::battleTurn turn) {
   handle.emplace<Turn>(turn);
-}
-
-void BattleStateSetup::setActivePokemon(types::entity activePokemon) {
-  handle.registry()->emplace<tags::ActivePokemon>(activePokemon);
 }
 
 void BattleStateSetup::setCurrentActionTarget(types::targets<types::entity> actionTargets) {
