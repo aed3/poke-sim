@@ -9,6 +9,10 @@ struct Sides;
 struct CurrentAction;
 struct CurrentActionSource;
 struct CurrentActionTargets;
+struct RootBattle;
+
+void assignRootBattle(types::handle battleHandle);
+void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root);
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action);
 void setCurrentActionTarget(

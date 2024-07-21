@@ -6,6 +6,7 @@
 #include <Components/AddedTargets.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
+#include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Sides.hpp>
@@ -37,6 +38,8 @@ void run(Simulation& simulation) {
   pokesim::internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 
+  simulation.viewForSelectedBattles<assignRootBattle>();
+
   updateAllStats(simulation);
   simulation.view<resolveDecision>();
   simulation.registry.clear<SideDecision>();
@@ -54,6 +57,9 @@ void run(Simulation& simulation) {
   }
 
   nextTurn(simulation);
+
+  simulation.removeFromEntities<tags::BattleMidTurn, Turn, tags::SimulateTurn>();
+  simulation.viewForSelectedBattles<collectTurnOutcomeBattles>();
 }
 
 void runCurrentAction(Simulation& simulation) {

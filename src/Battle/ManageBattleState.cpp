@@ -2,6 +2,7 @@
 
 #include <Battle/Helpers/Helpers.hpp>
 #include <Components/EntityHolders/Battle.hpp>
+#include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/Names/SourceSlotName.hpp>
@@ -13,12 +14,22 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
+#include <Simulation/SimulationResults.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
+void assignRootBattle(types::handle battleHandle) {
+  battleHandle.emplace<RootBattle>(battleHandle.entity());
+}
+
+void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root) {
+  leafBattleHandle.registry()->get_or_emplace<simulate_turn::TurnOutcomeBattles>(root.val).val.push_back(
+    leafBattleHandle.entity());
+}
+
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
   const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(action.val);
