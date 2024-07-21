@@ -1,6 +1,7 @@
 #include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/Tags/MoveTags.hpp>
+#include <entt/entity/registry.hpp>
 
 #include "headers.hpp"
 

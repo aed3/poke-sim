@@ -101,6 +101,7 @@
  * src/Types/Event.hpp
  * src/Simulation/Simulation.hpp
  * src/Simulation/SimulationSetup.cpp
+ * src/Components/SimulationResults.hpp
  * src/Simulation/SimulationResults.hpp
  * src/Simulation/SimulationResults.cpp
  * src/AnalyzeEffect/AnalyzeEffect.hpp
@@ -110,6 +111,7 @@
  * external/entt/container/dense_set.hpp
  * src/Battle/Helpers/IntegerModify.hpp
  * src/Components/EntityHolders/ChoiceLock.hpp
+ * src/Components/EntityHolders/MoveSlots.hpp
  * src/Components/EventModifier.hpp
  * src/Components/Tags/ItemTags.hpp
  * src/Components/Tags/StatusTags.hpp
@@ -137,6 +139,7 @@
  * src/Simulation/MoveHitSteps.cpp
  * src/Battle/ManageBattleState.hpp
  * src/Components/AddedTargets.hpp
+ * src/Components/EntityHolders/BattleTree.hpp
  * src/Components/Names/SourceSlotName.hpp
  * src/Components/Names/TargetSlotName.hpp
  * src/Components/PP.hpp
@@ -198,7 +201,6 @@
  * src/Pokedex/Setup/AbilityDexDataSetup.cpp
  * src/Pokedex/Pokedex.cpp
  * src/Pokedex/Items/ItemEvents.cpp
- * src/Components/EntityHolders/MoveSlots.hpp
  * src/Pokedex/Effects/EffectEvents.cpp
  * src/Pokedex/Abilities/AbilityEvents.cpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.cpp
@@ -224,7 +226,6 @@
  * src/Battle/Pokemon/ManagePokemonState.cpp
  * src/Battle/ManageBattleState.cpp
  * src/Battle/Helpers/Helpers.cpp
- * src/Components/EntityHolders/ParentBattle.hpp
  * src/Components/EntityHolders/Pokemon.hpp
  * src/Battle/Clone/Clone.cpp
  * src/Components/AnalyzeEffect/Aliases.hpp
@@ -14402,14 +14403,7 @@ class RegistryContainer {
     GetNewSelection getNewSelection, GetUnmatchedSelection getUnmatchedSelection, SelectionFunction selectionFunction,
     bool isEmptySelection = false) {
     auto list = getNewSelection(registry);
-
-    const static bool listIsVector = std::is_same_v<std::vector<types::entity>, decltype(list)>;
-    if constexpr (listIsVector) {
-      if (list.empty()) {
-        return 0U;
-      }
-    }
-    else if (std::distance(list.begin(), list.end()) == 0) {
+    if (list.empty()) {
       return 0U;
     }
 
@@ -14423,15 +14417,7 @@ class RegistryContainer {
     else if (narrowSelection) {
       auto unmatchedSelections = getUnmatchedSelection(registry);
       std::size_t totalSelected = registry.view<Selection>().size();
-      std::size_t unmatchedSelectionSize = 0U;
-      if constexpr (listIsVector) {
-        unmatchedSelectionSize = unmatchedSelections.size();
-      }
-      else {
-        unmatchedSelectionSize = 0;
-      }
-      std::vector<types::entity> v1{list.begin(), list.end()};
-
+      std::size_t unmatchedSelectionSize = unmatchedSelections.size();
       if (unmatchedSelectionSize == totalSelected) {
         return 0U;
       }
@@ -14445,17 +14431,8 @@ class RegistryContainer {
     }
     else {
       registry.clear<Selection>();
-
-      if constexpr (listIsVector) {
-        registry.insert<Selection>(list.begin(), list.end());
-        finalSelectionSize = list.size();
-      }
-      else {
-        for (types::entity entity : list) {
-          registry.emplace<Selection>(entity);
-          finalSelectionSize++;
-        }
-      }
+      registry.insert<Selection>(list.begin(), list.end());
+      finalSelectionSize = list.size();
     }
 
     selectedFunctions<Selection>().push_back(selectionFunction);
@@ -14465,9 +14442,9 @@ class RegistryContainer {
 
   template <typename Selection, typename Required, typename... ComponentsToSelect>
   std::size_t select() {
-    auto getNewSelection = [](types::registry& reg) { return reg.view<Required, ComponentsToSelect...>(); };
+    auto getNewSelection = [](types::registry& reg) { return reg.group<>(entt::get<Required, ComponentsToSelect...>); };
     auto getUnmatchedSelection = [](types::registry& reg) {
-      return reg.view<Selection>(entt::exclude<ComponentsToSelect...>);
+      return reg.group<>(entt::get<Selection>, entt::exclude<ComponentsToSelect...>);
     };
     SelectionFunction selectionFunction{[](const void*, const types::registry& reg) {
       auto view = reg.view<Required, ComponentsToSelect...>();
@@ -15149,9 +15126,8 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
 
 ////////////////// END OF src/Simulation/SimulationSetup.cpp ///////////////////
 
-//////////////// START OF src/Simulation/SimulationResults.hpp /////////////////
+//////////////// START OF src/Components/SimulationResults.hpp /////////////////
 
-#include <array>
 #include <vector>
 
 namespace pokesim {
@@ -15159,9 +15135,59 @@ class Simulation;
 
 namespace simulate_turn {
 struct TurnOutcomeBattles {
-  std::vector<types::entity> turnOutcomeBattles;
+  std::vector<types::entity> val;
+};
+}  // namespace simulate_turn
+
+namespace calc_damage {
+struct MaxDamage {
+  types::damage val = 0;
 };
 
+struct MinUsesUntilKo {
+  types::damage val = 0;
+};
+
+struct AttackerHpRecovered {
+  types::stat val = 0;
+};
+
+struct AttackerHpLost {
+  types::stat val = 0;
+};
+
+struct HitCount {
+  types::moveHits val = 1;
+};
+}  // namespace calc_damage
+
+namespace analyze_effect {
+struct EffectMultiplier {
+  float val = 1.0F;
+};
+
+struct MultipliedMaxDamage {
+  types::damage val;
+};
+
+struct MultipliedDamageRolls {
+  types::allDamageRolls val;
+};
+
+struct MultipliedKoChance {
+  float val = 1.0F;
+};
+}  // namespace analyze_effect
+}  // namespace pokesim
+
+///////////////// END OF src/Components/SimulationResults.hpp //////////////////
+
+//////////////// START OF src/Simulation/SimulationResults.hpp /////////////////
+
+namespace pokesim {
+class Simulation;
+
+namespace simulate_turn {
 struct Results {
   types::view<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
 
@@ -15173,26 +15199,6 @@ struct Results {
 }  // namespace simulate_turn
 
 namespace calc_damage {
-struct MaxDamage {
-  types::damage maxDamage = 0;
-};
-
-struct MinUsesUntilKo {
-  types::damage minUsesUntilKo = 0;
-};
-
-struct AttackerHpRecovered {
-  types::stat hpRecovered = 0;
-};
-
-struct AttackerHpLost {
-  types::stat hpLost = 0;
-};
-
-struct HitCount {
-  types::moveHits hitCount = 1;
-};
-
 struct Results {
   types::view<MaxDamage> maxDamageResults() const;
   types::view<MinUsesUntilKo> minUsesUntilKoResults() const;
@@ -15208,22 +15214,6 @@ struct Results {
 }  // namespace calc_damage
 
 namespace analyze_effect {
-struct EffectMultiplier {
-  float effectMultiplier = 1.0F;
-};
-
-struct MultipliedMaxDamage {
-  types::damage multipliedMaxDamage;
-};
-
-struct MultipliedDamageRolls {
-  types::allDamageRolls multipliedDamageRolls;
-};
-
-struct MultipliedKoChance {
-  float multipliedKoChance = 1.0F;
-};
-
 struct Results {
   types::view<EffectMultiplier> effectMultiplierResults() const;
   types::view<MultipliedMaxDamage> multipliedMaxDamageResults() const;
@@ -16423,6 +16413,17 @@ struct ChoiceLock {
 
 ////////////// END OF src/Components/EntityHolders/ChoiceLock.hpp //////////////
 
+///////////// START OF src/Components/EntityHolders/MoveSlots.hpp //////////////
+
+namespace pokesim {
+// Contains a list of entities of the moves a Pokemon known.
+struct MoveSlots {
+  types::moveSlots<types::entity> val{};
+};
+}  // namespace pokesim
+
+////////////// END OF src/Components/EntityHolders/MoveSlots.hpp ///////////////
+
 ////////////////// START OF src/Components/EventModifier.hpp ///////////////////
 
 namespace pokesim {
@@ -17470,6 +17471,10 @@ struct Sides;
 struct CurrentAction;
 struct CurrentActionSource;
 struct CurrentActionTargets;
+struct RootBattle;
+
+void assignRootBattle(types::handle battleHandle);
+void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root);
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action);
 void setCurrentActionTarget(
@@ -17491,6 +17496,20 @@ struct AddedTargets {
 }  // namespace pokesim
 
 //////////////////// END OF src/Components/AddedTargets.hpp ////////////////////
+
+///////////// START OF src/Components/EntityHolders/BattleTree.hpp /////////////
+
+namespace pokesim {
+struct ParentBattle {
+  types::entity val{};
+};
+
+struct RootBattle {
+  types::entity val{};
+};
+}  // namespace pokesim
+
+////////////// END OF src/Components/EntityHolders/BattleTree.hpp //////////////
 
 /////////////// START OF src/Components/Names/SourceSlotName.hpp ///////////////
 
@@ -17691,6 +17710,8 @@ void run(Simulation& simulation) {
   pokesim::internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 
+  simulation.viewForSelectedBattles<assignRootBattle>();
+
   updateAllStats(simulation);
   simulation.view<resolveDecision>();
   simulation.registry.clear<SideDecision>();
@@ -17708,6 +17729,9 @@ void run(Simulation& simulation) {
   }
 
   nextTurn(simulation);
+
+  simulation.removeFromEntities<tags::BattleMidTurn, Turn, tags::SimulateTurn>();
+  simulation.viewForSelectedBattles<collectTurnOutcomeBattles>();
 }
 
 void runCurrentAction(Simulation& simulation) {
@@ -17755,8 +17779,8 @@ void incrementTurn(Turn& turn) {
   turn.val++;
 }
 
-void updateActivePokemonPostTurn(types::handle pokemonHandle, const MoveSlots& moveSlots) {
-  pokemonHandle.registry()->remove<move::tags::Disabled>(moveSlots.val.begin(), moveSlots.val.end());
+void updateActivePokemonPostTurn(types::handle pokemonHandle, const pokesim::MoveSlots& moveSlots) {
+  pokemonHandle.registry()->remove<pokesim::move::tags::Disabled>(moveSlots.val.begin(), moveSlots.val.end());
 }
 }  // namespace internal
 
@@ -20124,27 +20148,18 @@ void ChoiceSpecsEvents::onSourceModifyMove(types::handle pokemonHandle, const Ba
 
 /////////////////// END OF src/Pokedex/Items/ItemEvents.cpp ////////////////////
 
-///////////// START OF src/Components/EntityHolders/MoveSlots.hpp //////////////
-
-namespace pokesim {
-// Contains a list of entities of the moves a Pokemon known.
-struct MoveSlots {
-  types::moveSlots<types::entity> val{};
-};
-}  // namespace pokesim
-
-////////////// END OF src/Components/EntityHolders/MoveSlots.hpp ///////////////
-
 //////////////// START OF src/Pokedex/Effects/EffectEvents.cpp /////////////////
 
 namespace pokesim::dex {
 void internal::ChoiceLockEvents::onDisableMove(
   types::registry& registry, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
-  // Should skip if the move is no longer present, but when does that happen?
+  ENTT_ASSERT(
+    std::find(moveSlots.val.begin(), moveSlots.val.end(), choiceLocked.val),
+    "Should skip if the move is no longer present, but when does that happen?");
+
   for (types::entity entity : moveSlots.val) {
     if (entity != choiceLocked.val) {
       registry.emplace<move::tags::Disabled>(entity);
-      break;
     }
   }
 }
@@ -21047,6 +21062,15 @@ void updateSpe(Simulation& simulation) {
 ////////////////// START OF src/Battle/ManageBattleState.cpp ///////////////////
 
 namespace pokesim {
+void assignRootBattle(types::handle battleHandle) {
+  battleHandle.emplace<RootBattle>(battleHandle.entity());
+}
+
+void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root) {
+  leafBattleHandle.registry()->get_or_emplace<simulate_turn::TurnOutcomeBattles>(root.val).val.push_back(
+    leafBattleHandle.entity());
+}
+
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
   const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(action.val);
@@ -21233,16 +21257,6 @@ types::entity createActionMoveForTarget(
 }  // namespace pokesim
 
 //////////////////// END OF src/Battle/Helpers/Helpers.cpp /////////////////////
-
-//////////// START OF src/Components/EntityHolders/ParentBattle.hpp ////////////
-
-namespace pokesim {
-struct ParentBattle {
-  types::entity val{};
-};
-}  // namespace pokesim
-
-///////////// END OF src/Components/EntityHolders/ParentBattle.hpp /////////////
 
 ////////////// START OF src/Components/EntityHolders/Pokemon.hpp ///////////////
 

@@ -4,6 +4,7 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EventModifier.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/ItemTags.hpp>
