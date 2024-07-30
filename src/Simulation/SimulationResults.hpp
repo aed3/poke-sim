@@ -1,11 +1,13 @@
 #pragma once
 
-#include <Components/SimulationResults.hpp>
+#include <Types/Entity.hpp>
 
 namespace pokesim {
 class Simulation;
+struct HitCount;
 
 namespace simulate_turn {
+struct TurnOutcomeBattles;
 struct Results {
   types::view<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
 
@@ -17,6 +19,11 @@ struct Results {
 }  // namespace simulate_turn
 
 namespace calc_damage {
+struct MaxDamage;
+struct MinUsesUntilKo;
+struct AttackerHpRecovered;
+struct AttackerHpLost;
+
 struct Results {
   types::view<MaxDamage> maxDamageResults() const;
   types::view<MinUsesUntilKo> minUsesUntilKoResults() const;
@@ -32,6 +39,11 @@ struct Results {
 }  // namespace calc_damage
 
 namespace analyze_effect {
+struct EffectMultiplier;
+struct MultipliedMaxDamage;
+struct MultipliedDamageRolls;
+struct MultipliedKoChance;
+
 struct Results {
   types::view<EffectMultiplier> effectMultiplierResults() const;
   types::view<MultipliedMaxDamage> multipliedMaxDamageResults() const;

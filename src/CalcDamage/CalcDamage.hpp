@@ -2,12 +2,16 @@
 
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Types/Damage.hpp>
+#include <Types/Enums/DamageRollKind.hpp>
+#include <Types/Enums/PlayerSideId.hpp>
 #include <Types/Registry.hpp>
 
 namespace pokesim {
 class Simulation;
 struct BasePower;
 struct Damage;
+struct DamageRolls;
+struct DamageRollModifier;
 struct RandomEventIndex;
 struct TypeName;
 
@@ -31,9 +35,21 @@ void calculateBaseDamage(
 void applyCritDamageIncrease(Damage& damage);
 void setDefendingSide(types::handle moveHandle, const Defenders& defenders);
 
-void checkForAndApplyStab(types::handle moveHandle, const Attacker& attacker, const TypeName& type, Damage& damage);
+void checkForAndApplyStab(
+  types::handle moveHandle, const Attacker& attacker, const TypeName& type, DamageRollModifier& modifier);
 void checkForAndApplyTypeEffectiveness(
-  types::handle moveHandle, const Attacker& attacker, const Defenders& defenders, const TypeName& type, Damage& damage);
+  types::handle moveHandle, const Attacker& attacker, const Defenders& defenders, const TypeName& type,
+  DamageRollModifier& modifier);
+void applyDamageRollsAndModifiers(Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp);
+
+void calculateAllDamageRolls(DamageRolls& damageRolls, const Damage& damage, const DamageRollModifier& modifier);
+
+void applyAverageDamageRollAndModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier);
+void applyMinDamageRollAndModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier);
+void applyDamageModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier);
+
+void reduceDamageRollsToFoeHp(
+  types::handle moveHandle, DamageRolls& damageRolls, const DamageRollModifier& modifier, const Defenders& defenders);
 void setDamageToAtLeastOne(Damage& damage);
 }  // namespace internal
 
@@ -44,8 +60,9 @@ void applyDamageRoll(Damage& damage, types::damageRoll damageRoll);
 void applyAverageDamageRoll(Damage& damage);
 void applyMinDamageRoll(Damage& damage);
 
-void modifyDamageWithTypes(Simulation& simulation);
-void getDamageRole(Simulation& simulation);
+void setDamageRollModifiers(Simulation& simulation);
+template <typename SimulationTag>
+void applyDamageRollsAndModifiers(Simulation& simulation);
 
 void setIfMoveCrits(Simulation& simulation);
 void getDamage(Simulation& simulation);

@@ -217,6 +217,8 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   Simulation simulation = createSingleBattleSimulation(battleCreationInfo, true);
 
   battleCreationInfo.runWithSimulateTurn = true;
+  simulation.simulateTurnOptions.damageRollsConsidered.p1 = simulation.simulateTurnOptions.damageRollsConsidered.p2 =
+    DamageRollKind::MAX_DAMAGE;
   simulation.createInitialStates({battleCreationInfo});
   simulation.simulateTurn();
 }

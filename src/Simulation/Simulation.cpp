@@ -3,6 +3,8 @@
 #include <AnalyzeEffect/AnalyzeEffect.hpp>
 #include <CalcDamage/CalcDamage.hpp>
 #include <Components/EntityHolders/Sides.hpp>
+#include <Components/HitCount.hpp>
+#include <Components/SimulationResults.hpp>
 #include <SimulateTurn/SimulateTurn.hpp>
 
 #include "SimulationOptions.hpp"
@@ -25,7 +27,7 @@ void Simulation::clearCalculateDamageResults() {
   registry.clear<calc_damage::MinUsesUntilKo>();
   registry.clear<calc_damage::AttackerHpRecovered>();
   registry.clear<calc_damage::AttackerHpLost>();
-  registry.clear<calc_damage::HitCount>();
+  registry.clear<HitCount>();
 }
 
 void Simulation::clearAnalyzeEffectResults() {

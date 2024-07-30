@@ -9,6 +9,7 @@
 #include <Components/Names/TargetSlotName.hpp>
 #include <Components/SimulateTurn/ActionNames.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
+#include <Components/SimulationResults.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
