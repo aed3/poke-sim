@@ -1,5 +1,7 @@
 #include "SimulationResults.hpp"
 
+#include <Components/HitCount.hpp>
+#include <Components/SimulationResults.hpp>
 #include <Types/Entity.hpp>
 
 #include "Simulation.hpp"

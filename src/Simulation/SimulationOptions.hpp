@@ -40,6 +40,7 @@ struct Options {
 namespace calc_damage {
 struct Options {
   DamageRollOptions damageRollsReturned;
+  bool calculateUpToFoeHp = false;
 };
 }  // namespace calc_damage
 

@@ -30,6 +30,8 @@
 #include <cmath>
 #include <type_traits>
 
+#include "Helpers.hpp"
+
 namespace pokesim::calc_damage {
 void run(Simulation& simulation) {
   getDamage(simulation);
@@ -42,25 +44,25 @@ void clearRunVariables(Simulation& simulation) {
 }
 
 void internal::checkForAndApplyStab(
-  types::handle moveHandle, const Attacker& attacker, const TypeName& type, Damage& damage) {
+  types::handle moveHandle, const Attacker& attacker, const TypeName& type, DamageRollModifier& modifier) {
   const SpeciesTypes& attackerTypes = moveHandle.registry()->get<SpeciesTypes>(attacker.val);
 
   if (attackerTypes.has(type.name)) {
-    damage.val = fixedPointMultiply(damage.val, MechanicConstants::STAB_MULTIPLIER);
+    chainToModifier(modifier.val, MechanicConstants::STAB_MULTIPLIER);
   }
 }
 
 void internal::checkForAndApplyTypeEffectiveness(
   types::handle moveHandle, const Attacker& attacker, const Defenders& defenders, const TypeName& type,
-  Damage& damage) {
+  DamageRollModifier& modifier) {
   const SpeciesTypes& defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defenders.val[0]);
 
   types::boost effectiveness = getAttackEffectiveness(defenderTypes, type.name);
   if (effectiveness < 0) {
-    damage.val = damage.val >> -effectiveness;
+    modifier.val = modifier.val >> -effectiveness;
   }
   else {
-    damage.val = damage.val << effectiveness;
+    modifier.val = modifier.val << effectiveness;
   }
 }
 
@@ -68,7 +70,7 @@ void internal::setDamageToAtLeastOne(Damage& damage) {
   damage.val = std::max(damage.val, (types::damage)1U);
 }
 
-void modifyDamageWithTypes(Simulation& simulation) {
+void setDamageRollModifiers(Simulation& simulation) {
   simulation.viewForSelectedMoves<internal::checkForAndApplyStab>();
   simulation.viewForSelectedMoves<internal::checkForAndApplyTypeEffectiveness>();
 }
@@ -92,22 +94,108 @@ void internal::setDefendingSide(types::handle moveHandle, const Defenders& defen
   }
 }
 
-void getDamageRole(Simulation& simulation) {
-  const DamageRollOptions& damageRollsConsidered = simulation.simulateTurnOptions.damageRollsConsidered;
-  if (damageRollsConsidered.sidesMatch()) {
-    simulate_turn::getDamageRole(simulation, PlayerSideId::P1);
+void internal::calculateAllDamageRolls(
+  DamageRolls& damageRolls, const Damage& damage, const DamageRollModifier& modifier) {
+  damageRolls.val.reserve(MechanicConstants::MAX_DAMAGE_ROLL_COUNT);
+  for (std::uint8_t i = 0; i < MechanicConstants::MAX_DAMAGE_ROLL_COUNT; i++) {
+    Damage& damageRoll = damageRolls.val.emplace_back(damage);
+    applyDamageRoll(damageRoll, i);
+    applyChainedModifier(damageRoll.val, modifier.val);
+  }
+}
+
+void internal::reduceDamageRollsToFoeHp(
+  types::handle moveHandle, DamageRolls& damageRolls, const DamageRollModifier& modifier, const Defenders& defenders) {
+  const auto& defenderHp = moveHandle.registry()->get<pokesim::stat::CurrentHp>(defenders.val[0]);
+  for (auto& damageRoll : damageRolls.val) {
+    damageRoll.val = std::min(defenderHp.val, damageRoll.val);
+  }
+}
+
+void internal::applyAverageDamageRollAndModifier(
+  DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
+  applyAverageDamageRoll(damage);
+  applyChainedModifier(damage.val, modifier.val);
+  damageRolls.val.emplace_back(damage);
+}
+
+void internal::applyMinDamageRollAndModifier(
+  DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
+  applyMinDamageRoll(damage);
+  applyChainedModifier(damage.val, modifier.val);
+  damageRolls.val.emplace_back(damage);
+}
+void internal::applyDamageModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
+  applyChainedModifier(damage.val, modifier.val);
+  damageRolls.val.emplace_back(damage);
+}
+
+void internal::applyDamageRollsAndModifiers(
+  Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp) {
+  ENTT_ASSERT(damageRollKind != DamageRollKind::NONE, "Cannot calculate damage without knowing what rolls to consider");
+
+  simulation.addToEntities<DamageRolls, DamageRollModifier>();
+  if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
+    simulation.viewForSelectedMoves<calculateAllDamageRolls>();
+  }
+  else {
+    if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
+      simulation.viewForSelectedMoves<applyDamageModifier>();
+    }
+
+    if (damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE)) {
+      simulation.viewForSelectedMoves<applyAverageDamageRollAndModifier>();
+    }
+
+    if (damageKindsMatch(damageRollKind, DamageRollKind::MIN_DAMAGE)) {
+      simulation.viewForSelectedMoves<applyMinDamageRollAndModifier>();
+    }
+  }
+
+  if (calculateUpToFoeHp) {
+    simulation.viewForSelectedMoves<reduceDamageRollsToFoeHp>();
+  }
+}
+
+template <typename SimulationTag>
+void applyDamageRollsAndModifiers(Simulation& simulation) {
+  pokesim::internal::SelectForCurrentActionMoveView<SimulationTag> selectedMoves{simulation};
+  if (selectedMoves.hasNoneSelected()) {
+    return;
+  }
+
+  DamageRollOptions damageRollOptions;
+  bool calculateUpToFoeHp = false;
+  if constexpr (std::is_same_v<pokesim::tags::SimulateTurn, SimulationTag>) {
+    damageRollOptions = simulation.simulateTurnOptions.damageRollsConsidered;
+    calculateUpToFoeHp = true;
+  }
+  else if constexpr (std::is_same_v<pokesim::tags::CalculateDamage, SimulationTag>) {
+    damageRollOptions = simulation.calculateDamageOptions.damageRollsReturned;
+    calculateUpToFoeHp = simulation.calculateDamageOptions.calculateUpToFoeHp;
+  }
+
+  auto applyDamageRolls = [&simulation, calculateUpToFoeHp](DamageRollKind damageRollKind) {
+    internal::applyDamageRollsAndModifiers(simulation, damageRollKind, calculateUpToFoeHp);
+    if constexpr (std::is_same_v<pokesim::tags::SimulateTurn, SimulationTag>) {
+      simulate_turn::cloneFromDamageRolls(simulation, damageRollKind);
+    }
+  };
+
+  if (damageRollOptions.sidesMatch()) {
+    applyDamageRolls(damageRollOptions.p1);
   }
   else {
     simulation.viewForSelectedMoves<internal::setDefendingSide>();
     pokesim::internal::SelectForCurrentActionMoveView<tags::P1Defending> p1DefendingMoves{simulation};
     if (!p1DefendingMoves.hasNoneSelected()) {
-      simulate_turn::getDamageRole(simulation, PlayerSideId::P1);
+      applyDamageRolls(damageRollOptions.p1);
     }
     p1DefendingMoves.deselect();
 
     pokesim::internal::SelectForCurrentActionMoveView<tags::P2Defending> p2DefendingMoves{simulation};
     if (!p2DefendingMoves.hasNoneSelected()) {
-      simulate_turn::getDamageRole(simulation, PlayerSideId::P2);
+      applyDamageRolls(damageRollOptions.p2);
     }
 
     simulation.registry.clear<tags::P1Defending, tags::P2Defending>();
@@ -178,8 +266,6 @@ void setIfMoveCrits(Simulation& simulation) {
   simulation.registry.clear<CritBoost>();
 
   simulate_turn::setIfMoveCrits(simulation);
-
-  simulation.registry.clear<calc_damage::CritChanceDivisor>();
 }
 
 void getDamage(Simulation& simulation) {
@@ -201,9 +287,11 @@ void getDamage(Simulation& simulation) {
 
   simulation.viewForSelectedMoves<internal::applyCritDamageIncrease, Tags<tags::Crit>>();
 
-  getDamageRole(simulation);
-
-  modifyDamageWithTypes(simulation);
+  simulation.addToEntities<DamageRollModifier, pokesim::tags::SelectedForViewMove>();
+  setDamageRollModifiers(simulation);
+  applyDamageRollsAndModifiers<pokesim::tags::SimulateTurn>(simulation);
+  applyDamageRollsAndModifiers<pokesim::tags::CalculateDamage>(simulation);
+  simulation.registry.clear<DamageRollModifier>();
 
   simulation.viewForSelectedMoves<internal::setDamageToAtLeastOne>();
 }

@@ -74,6 +74,8 @@ inline Simulation createSingleBattleSimulation(
     }
   }
 
+  battleCreationInfo.turn = 2;
+
   return simulation;
 }
 

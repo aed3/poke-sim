@@ -14,130 +14,70 @@
 #include <Simulation/Simulation.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Enums/DamageRollKind.hpp>
-#include <Types/Enums/PlayerSideId.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Random.hpp>
-#include <Utilities/MaxSizedVector.hpp>
 #include <Utilities/SelectForView.hpp>
-#include <array>
 
 namespace pokesim::simulate_turn {
 namespace internal {
-void applyDamageRollIndex(Damage& damage, const RandomEventIndex& damageRollIndex) {
-  pokesim::calc_damage::applyDamageRoll(damage, damageRollIndex.val);
+void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls, const RandomEventIndex& randomRollIndex) {
+  types::eventPossibilities damageRollIndex = 0U;
+  for (std::size_t i = 0U; i < damageRolls.val.size(); i++) {
+    if (randomRollIndex.val == damageRollIndex) {
+      damage = damageRolls.val[damageRollIndex];
+      return;
+    }
+
+    damageRollIndex += i == 0 || damageRolls.val[i - 1].val != damageRolls.val[i].val ? 1 : 0;
+  }
+
+  ENTT_FAIL("How was a damage roll not found that matched the event index?");
 }
 
-template <typename RandomInput>
-void assignProbability(types::registry& registry, const Battle& battle, const RandomInput&) {
+void assignProbability(types::registry& registry, const Battle& battle, const RandomEventCount& randomEventCount) {
+  if (randomEventCount.val != 1U) {
+    Probability& probability = registry.get<Probability>(battle.val);
+    probability.val *= 1.0F / (types::probability)MechanicConstants::MAX_DAMAGE_ROLL_COUNT;
+  }
+}
+
+void assignAllDamageRollProbability(
+  types::registry& registry, const Damage& damage, DamageRolls& damageRolls, const Battle& battle,
+  const RandomEventIndex& randomRollIndex) {
+  types::eventPossibilities damageCount = 0U;
+  for (const Damage damageRoll : damageRolls.val) {
+    damageCount += damageRoll.val == damage.val ? 1 : 0;
+  }
+
+  ENTT_ASSERT(damageCount > 0U, "How was a damage roll not found that matched the damage dealt?");
+
   Probability& probability = registry.get<Probability>(battle.val);
-  probability.val *= 1.0F / (types::probability)MechanicConstants::MAX_DAMAGE_ROLL_COUNT;
+  probability.val *= damageCount / (types::probability)MechanicConstants::MAX_DAMAGE_ROLL_COUNT;
 }
 
-template <std::uint8_t Index, typename... T>
-void runApplyDamageRollView(Simulation& simulation, DamageRollKind damageRollsConsidered) {
-  if constexpr (Index < 1) {
-    if (calc_damage::damageKindsMatch(damageRollsConsidered, DamageRollKind::AVERAGE_DAMAGE)) {
-      simulation.viewForSelectedMoves<calc_damage::applyAverageDamageRoll, Tags<T...>>();
-      return;
-    }
+types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {
+  const DamageRolls& damageRolls = moveHandle.get<DamageRolls>();
+  types::eventPossibilities eventPossibilities = 1U;
+  for (std::size_t i = 1U; i < damageRolls.val.size(); i++) {
+    eventPossibilities += damageRolls.val[i - 1].val != damageRolls.val[i].val ? 1 : 0;
   }
-  if constexpr (Index < 2) {
-    if (calc_damage::damageKindsMatch(damageRollsConsidered, DamageRollKind::MIN_DAMAGE)) {
-      simulation.viewForSelectedMoves<calc_damage::applyMinDamageRoll, Tags<T...>>();
-      return;
-    }
-  }
-  if constexpr (Index < 3) {
-    // Do nothing as max damage is what Damage already stores
-  }
-}
-
-template <types::eventPossibilities POSSIBLE_EVENT_COUNT, PlayerSideId SideForDamageRolls>
-void handleDamageRollOptions(Simulation& simulation) {
-  std::array<types::percentChance, POSSIBLE_EVENT_COUNT> values{};
-  values.fill(0U);
-  values[POSSIBLE_EVENT_COUNT - 1U] = 100U;
-  setRandomChoice<POSSIBLE_EVENT_COUNT, pokesim::tags::SelectedForViewMove>(simulation, values, false);
-
-  auto applyChoices = [](Simulation& sim) {
-    DamageRollKind damageRollsConsidered{};
-
-    if constexpr (SideForDamageRolls == PlayerSideId::P1) {
-      damageRollsConsidered = sim.simulateTurnOptions.damageRollsConsidered.p1;
-    }
-    else {
-      damageRollsConsidered = sim.simulateTurnOptions.damageRollsConsidered.p2;
-    }
-    if constexpr (POSSIBLE_EVENT_COUNT >= 1U) {
-      runApplyDamageRollView<0U, pokesim::tags::RandomEventA>(sim, damageRollsConsidered);
-    }
-    if constexpr (POSSIBLE_EVENT_COUNT >= 2U) {
-      runApplyDamageRollView<1U, pokesim::tags::RandomEventB>(sim, damageRollsConsidered);
-    }
-    if constexpr (POSSIBLE_EVENT_COUNT == 3U) {
-      runApplyDamageRollView<2U, pokesim::tags::RandomEventC>(sim, damageRollsConsidered);
-    }
-  };
-
-  auto updateProbabilities = [](Simulation& sim) {
-    sim.viewForSelectedMoves<internal::assignProbability<RandomEventChances<POSSIBLE_EVENT_COUNT>>>();
-  };
-
-  randomEventChances<POSSIBLE_EVENT_COUNT>(simulation, applyChoices, updateProbabilities);
+  return eventPossibilities;
 }
 }  // namespace internal
 
-void getDamageRole(Simulation& simulation, PlayerSideId sideForDamageRolls) {
-  ENTT_ASSERT(
-    sideForDamageRolls != PlayerSideId::NONE,
-    "The damage roll kinds are unique per side in the simulation's simulate turn options, so pick a side.");
-  pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn, Damage> selectedMoves{simulation};
+void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind) {
+  pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn, DamageRolls> selectedMoves{simulation};
   if (selectedMoves.hasNoneSelected()) return;
 
-  DamageRollKind damageRollsConsidered = sideForDamageRolls == PlayerSideId::P1
-                                           ? simulation.simulateTurnOptions.damageRollsConsidered.p1
-                                           : simulation.simulateTurnOptions.damageRollsConsidered.p2;
-  ENTT_ASSERT(
-    damageRollsConsidered != DamageRollKind::NONE,
-    "Cannot calculate damage without knowing what rolls to consider");
+  setRandomEventCounts<internal::countUniqueDamageRolls, pokesim::tags::SelectedForViewMove>(simulation);
+  auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<internal::applyDamageRollIndex>(); };
 
-  if (calc_damage::damageKindsMatch(damageRollsConsidered, DamageRollKind::ALL_DAMAGE_ROLES)) {
-    setRandomEqualChoice<pokesim::tags::SelectedForViewMove>(simulation);
-    randomEqualChance(simulation, MechanicConstants::MAX_DAMAGE_ROLL_COUNT, [](Simulation& sim) {
-      sim.viewForSelectedMoves<internal::applyDamageRollIndex>();
-    });
-    return;
-  }
+  auto updateProbabilities =
+    calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)
+      ? [](Simulation& sim) { sim.viewForSelectedMoves<internal::assignAllDamageRollProbability>(); }
+      : [](Simulation& sim) { sim.viewForSelectedMoves<internal::assignProbability>(); };
 
-  types::damageRoll damageRollsUsed =
-    (calc_damage::damageKindsMatch(damageRollsConsidered, DamageRollKind::AVERAGE_DAMAGE) ? 1 : 0) +
-    (calc_damage::damageKindsMatch(damageRollsConsidered, DamageRollKind::MIN_DAMAGE) ? 1 : 0) +
-    (calc_damage::damageKindsMatch(damageRollsConsidered, DamageRollKind::MAX_DAMAGE) ? 1 : 0);
-
-  switch (damageRollsUsed) {
-    case 1: {
-      internal::runApplyDamageRollView<0U>(simulation, damageRollsConsidered);
-      break;
-    }
-    case 2: {
-      if (sideForDamageRolls == PlayerSideId::P1) {
-        internal::handleDamageRollOptions<2U, PlayerSideId::P1>(simulation);
-      }
-      else {
-        internal::handleDamageRollOptions<2U, PlayerSideId::P2>(simulation);
-      }
-      break;
-    }
-    case 3: {
-      if (sideForDamageRolls == PlayerSideId::P1) {
-        internal::handleDamageRollOptions<3U, PlayerSideId::P1>(simulation);
-      }
-      else {
-        internal::handleDamageRollOptions<3U, PlayerSideId::P2>(simulation);
-      }
-      break;
-    }
-  }
+  randomEventCount(simulation, applyChoices, updateProbabilities);
 }
 
 void setIfMoveCrits(Simulation& simulation) {
@@ -148,5 +88,7 @@ void setIfMoveCrits(Simulation& simulation) {
   reciprocalRandomBinaryChance(simulation, [](Simulation& sim) {
     sim.addToEntities<calc_damage::tags::Crit, pokesim::tags::RandomEventCheckPassed>();
   });
+
+  simulation.registry.clear<calc_damage::CritChanceDivisor>();
 }
 }  // namespace pokesim::simulate_turn

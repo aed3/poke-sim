@@ -83,15 +83,15 @@ void setRandomEqualChoice(types::handle handle) {
   }
 }
 
-template <BattleFormat Format>
-void setRandomEventCounts(types::handle handle, types::eventPossibilities possibleEventCount) {
+template <BattleFormat Format, auto GetPossibleEventCount>
+void setRandomEventCounts(types::handle handle) {
   if constexpr (Format == BattleFormat::SINGLES_BATTLE_FORMAT) {
-    handle.emplace<RandomEventCount>(possibleEventCount);
+    handle.emplace<RandomEventCount>(GetPossibleEventCount(handle));
   }
   else {
     handle.registry()
       ->get_or_emplace<RandomEventCountStack>(handle.get<Battle>().val)
-      .val.emplace_back(possibleEventCount, handle.entity());
+      .val.emplace_back(GetPossibleEventCount(handle), handle.entity());
   }
 }
 }  // namespace internal
@@ -172,15 +172,15 @@ void setRandomEqualChoice(Simulation& simulation) {
   }
 }
 
-template <typename... T>
-void setRandomEventCounts(Simulation& simulation, types::eventPossibilities possibleEventCount) {
+template <auto GetPossibleEventCount, typename... T>
+void setRandomEventCounts(Simulation& simulation) {
   if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
-    simulation.view<internal::setRandomEventCounts<BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
-      possibleEventCount);
+    simulation
+      .view<internal::setRandomEventCounts<BattleFormat::SINGLES_BATTLE_FORMAT, GetPossibleEventCount>, Tags<T...>>();
   }
   else {
-    simulation.view<internal::setRandomEventCounts<BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<T...>>(
-      possibleEventCount);
+    simulation
+      .view<internal::setRandomEventCounts<BattleFormat::DOUBLES_BATTLE_FORMAT, GetPossibleEventCount>, Tags<T...>>();
   }
 }
 

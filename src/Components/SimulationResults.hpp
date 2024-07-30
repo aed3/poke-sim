@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Components/Damage.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Move.hpp>
@@ -31,10 +32,6 @@ struct AttackerHpRecovered {
 struct AttackerHpLost {
   types::stat val = 0;
 };
-
-struct HitCount {
-  types::moveHits val = 1;
-};
 }  // namespace calc_damage
 
 namespace analyze_effect {
@@ -46,9 +43,7 @@ struct MultipliedMaxDamage {
   types::damage val;
 };
 
-struct MultipliedDamageRolls {
-  types::allDamageRolls val;
-};
+struct MultipliedDamageRolls : DamageRolls {};
 
 struct MultipliedKoChance {
   float val = 1.0F;

@@ -217,7 +217,7 @@ void randomChanceEvent(
   }
 
   types::registry& registry = simulation.registry;
-  if (simulation.simulateTurnOptions.makeBranchesOnRandomEvents() && cloneCount) {
+  if (simulation.simulateTurnOptions.makeBranchesOnRandomEvents()) {
     auto chanceEntityView = registry.view<Random>();
     if (chanceEntityView.empty()) {
       applyChoices(simulation);
@@ -226,19 +226,30 @@ void randomChanceEvent(
     }
 
     if constexpr (std::is_same_v<RandomEventCount, Random>) {
-      entt::dense_map<types::eventPossibilities, std::vector<types::entity>> battlesByEventCount{};
+      entt::dense_map<types::eventPossibilities, std::pair<std::vector<types::entity>, std::vector<types::entity>>>
+        entitiesByEventCount{};
 
-      auto assignCloneTags = [&battlesByEventCount](const Battle& battle, const RandomEventCount& eventCount) {
-        battlesByEventCount[eventCount.val].push_back(battle.val);
-      };
+      auto assignCloneTags =
+        [&entitiesByEventCount](entt::entity chanceEntity, const Battle& battle, const RandomEventCount& eventCount) {
+          entitiesByEventCount[eventCount.val].first.push_back(chanceEntity);
+          entitiesByEventCount[eventCount.val].second.push_back(battle.val);
+        };
 
       registry.view<Battle, RandomEventCount>().each(assignCloneTags);
 
-      for (const auto& [eventCount, battles] : battlesByEventCount) {
-        registry.insert<tags::CloneFrom>(battles.begin(), battles.end());
-        auto clonedEntityMap = clone(registry, eventCount);
+      for (const auto& [eventCount, entities] : entitiesByEventCount) {
+        const auto [chanceEntities, battleEntities] = entities;
+        if (eventCount == 1U) {
+          for (types::entity original : chanceEntities) {
+            assignClonesToEvents(registry, {}, original);
+          }
+          continue;
+        }
 
-        for (types::entity original : battles) {
+        registry.insert<tags::CloneFrom>(battleEntities.begin(), battleEntities.end());
+        auto clonedEntityMap = clone(registry, eventCount - 1U);
+
+        for (types::entity original : chanceEntities) {
           assignClonesToEvents(registry, clonedEntityMap[original], original);
         }
       }
@@ -257,14 +268,16 @@ void randomChanceEvent(
       }
     }
 
+    applyChoices(simulation);
     updateProbabilities(simulation);
   }
   else {
     simulation.view<AssignRandomEvents, Tags<AssignRandomEventsTags...>>(assignArgs...);
+    applyChoices(simulation);
+    updateProbabilities(simulation);
   }
 
   registry.clear<Random>();
-  applyChoices(simulation);
   clearRandomChanceResult(simulation);
   if (simulation.battleFormat == BattleFormat::DOUBLES_BATTLE_FORMAT && !registry.view<RandomStack>().empty()) {
     randomChanceEvent<Random, RandomStack, AssignRandomEvents, UpdateProbabilities, AssignRandomEventsTags...>(

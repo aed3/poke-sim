@@ -61,7 +61,7 @@ class RegistryContainer {
       selectedFunctions<Selection>().push_back(selectionFunction);
       return registry.view<Selection>().size();
     }
-    else if (narrowSelection) {
+    if (narrowSelection) {
       auto unmatchedSelections = getUnmatchedSelection(registry);
       std::size_t totalSelected = registry.view<Selection>().size();
       std::size_t unmatchedSelectionSize = unmatchedSelections.size();

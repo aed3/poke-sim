@@ -26,8 +26,8 @@ These are the minimum requirements for the functions I want the API to supply an
 #### Output:
 List of [scenarios](#battle-scenario) that can happen after the turn ends with the percent chance of each happening
 #### Options (Either set globally  or for each simulation):
-- Limit damage roles to:
-  - All damage roles
+- Limit damage rolls to:
+  - All damage rolls
   - Only average damage
   - Only max damage for one or both sides
   - Only min damage for one or both sides
@@ -125,7 +125,7 @@ The information about a Pokemon that can change within one turn. (Note: these ar
 - Number of hits
 #### Helper functions
 - For a given move, user, and target:
-  - Calc all damage roles
+  - Calc all damage rolls
   - Calc percent chance of a KO after each amount of uses
   - Damage after X uses
     - Used for moves like Draco Meteor, Knock Off, or Burn Up
@@ -137,7 +137,7 @@ Any status condition, volatile, stat boost, side condition, pseudo weather, terr
 #### Helper Functions
 - For a given move, user, and target:
   - Calc max damage with multipliers applied
-  - Calc all damage roles with multipliers applied
+  - Calc all damage rolls with multipliers applied
   - Calc percent chance of a KO after each amount of uses with multipliers applied
   - Damage after X uses with multipliers applied
     - This will also take into effect how long the effect lasts
