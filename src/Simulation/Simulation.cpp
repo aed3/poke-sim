@@ -32,7 +32,7 @@ void Simulation::clearCalculateDamageResults() {
 
 void Simulation::clearAnalyzeEffectResults() {
   registry.clear<analyze_effect::EffectMultiplier>();
-  registry.clear<analyze_effect::MultipliedMaxDamage>();
+  registry.clear<analyze_effect::MultipliedDamage>();
   registry.clear<analyze_effect::MultipliedDamageRolls>();
   registry.clear<analyze_effect::MultipliedKoChance>();
 }

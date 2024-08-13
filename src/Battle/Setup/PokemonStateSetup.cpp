@@ -1,5 +1,6 @@
 #include "PokemonStateSetup.hpp"
 
+#include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Components/EVsIVs.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
@@ -106,8 +107,7 @@ void PokemonStateSetup::setPostion(types::teamPositionIndex position) {
 }
 
 void PokemonStateSetup::setStatus(dex::Status status) {
-  handle.emplace<StatusName>(status);
-  status::tags::enumToTag(status, handle);
+  pokesim::setStatus(handle, status);
 }
 
 void PokemonStateSetup::setNature(dex::Nature nature) {

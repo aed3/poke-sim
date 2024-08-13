@@ -46,8 +46,8 @@ types::view<EffectMultiplier> Results::effectMultiplierResults() const {
   return simulation.registry.view<EffectMultiplier>();
 }
 
-types::view<MultipliedMaxDamage> Results::multipliedMaxDamageResults() const {
-  return simulation.registry.view<MultipliedMaxDamage>();
+types::view<MultipliedDamage> Results::multipliedMaxDamageResults() const {
+  return simulation.registry.view<MultipliedDamage>();
 }
 
 types::view<MultipliedDamageRolls> Results::multipliedDamageRollsResults() const {

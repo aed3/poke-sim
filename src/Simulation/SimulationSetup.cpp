@@ -195,17 +195,32 @@ void Simulation::createAnalyzeEffectInput(
   BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& analyzeEffectInputData) {
   ENTT_ASSERT(analyzeEffectInputData.attackerSlot != Slot::NONE, "An effect analysis must have a attacker");
   ENTT_ASSERT(analyzeEffectInputData.defenderSlot != Slot::NONE, "An effect analysis must have a defender");
-  ENTT_ASSERT(!analyzeEffectInputData.effect.empty(), "An effect analysis must have an effect");
+  ENTT_ASSERT(analyzeEffectInputData.effectTarget != Slot::NONE, "An effect analysis must have a effect target");
+  ENTT_ASSERT(!analyzeEffectInputData.moves.empty(), "An effect analysis must include a move");
+  const auto& effect = analyzeEffectInputData.effect;
+  const auto& boostEffect = analyzeEffectInputData.boostEffect;
+  ENTT_ASSERT(
+    boostEffect.has_value() || (effect.has_value() && !effect.value().empty()),
+    "An effect analysis must have an effect");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
   types::entity attackerEntity = slotToPokemonEntity(registry, sides, analyzeEffectInputData.attackerSlot);
   types::entity defenderEntity = slotToPokemonEntity(registry, sides, analyzeEffectInputData.defenderSlot);
+  types::entity effectTargetEntity = slotToPokemonEntity(registry, sides, analyzeEffectInputData.effectTarget);
 
   analyze_effect::InputSetup inputSetup(registry);
   inputSetup.setAttacker(attackerEntity);
   inputSetup.setDefender(defenderEntity);
-  inputSetup.setEffect(analyzeEffectInputData.effect);
+  inputSetup.setEffectTarget(effectTargetEntity);
+  inputSetup.setEffectMoves(analyzeEffectInputData.moves);
   inputSetup.setBattle(battleStateSetup.entity());
+
+  if (effect.has_value()) {
+    inputSetup.setEffect(effect.value());
+  }
+  if (boostEffect.has_value()) {
+    inputSetup.setBoostEffect(boostEffect.value().stat, boostEffect.value().boost);
+  }
 }
 
 void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList) {

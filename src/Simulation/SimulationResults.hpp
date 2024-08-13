@@ -5,6 +5,8 @@
 namespace pokesim {
 class Simulation;
 struct HitCount;
+struct Damage;
+struct DamageRolls;
 
 namespace simulate_turn {
 struct TurnOutcomeBattles;
@@ -40,13 +42,13 @@ struct Results {
 
 namespace analyze_effect {
 struct EffectMultiplier;
-struct MultipliedMaxDamage;
-struct MultipliedDamageRolls;
+using MultipliedDamage = Damage;
+using MultipliedDamageRolls = DamageRolls;
 struct MultipliedKoChance;
 
 struct Results {
   types::view<EffectMultiplier> effectMultiplierResults() const;
-  types::view<MultipliedMaxDamage> multipliedMaxDamageResults() const;
+  types::view<MultipliedDamage> multipliedMaxDamageResults() const;
   types::view<MultipliedDamageRolls> multipliedDamageRollsResults() const;
   types::view<MultipliedKoChance> multipliedKoChanceResults() const;
 

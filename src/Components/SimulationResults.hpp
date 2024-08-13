@@ -39,14 +39,16 @@ struct EffectMultiplier {
   float val = 1.0F;
 };
 
-struct MultipliedMaxDamage {
-  types::damage val;
-};
+using MultipliedDamage = Damage;
 
-struct MultipliedDamageRolls : DamageRolls {};
+using MultipliedDamageRolls = DamageRolls;
 
 struct MultipliedKoChance {
   float val = 1.0F;
 };
+
+namespace tags {
+struct InfiniteMultiplier {};
+}  // namespace tags
 }  // namespace analyze_effect
 }  // namespace pokesim

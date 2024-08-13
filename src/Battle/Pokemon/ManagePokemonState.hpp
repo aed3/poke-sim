@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Types/Enums/Status.hpp>
 #include <Types/Registry.hpp>
 
 namespace pokesim {
@@ -18,6 +19,9 @@ struct Spd;
 struct Spe;
 struct CurrentHp;
 }  // namespace stat
+
+void setStatus(types::handle pokemonHandle, dex::Status status);
+void clearStatus(types::handle pokemonHandle);
 
 void deductPp(Pp& pp);
 void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMoveSlot& move);

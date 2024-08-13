@@ -178,13 +178,22 @@ void assignRandomEventCount(types::handle handle, const Battle& battle, const Ra
   updateProbability(probability, 100.0F / (float)eventCount.val);
 }
 
-void assignIndexToClones(types::registry& registry, const std::vector<types::entity>& cloned, types::entity original) {
-  registry.emplace<RandomEventIndex>(original, (types::eventPossibilities)0U);
-  for (std::size_t index = 0; index < cloned.size(); index++) {
-    ENTT_ASSERT(
-      std::numeric_limits<types::eventPossibilities>::max() > index,
-      "Number of clones shouldn't be greater than the number of possible events");
-    registry.emplace<RandomEventIndex>(cloned[index], (types::eventPossibilities)(index + 1U));
+void assignIndexToClones(
+  types::registry& registry, const types::ClonedEntityMap& clonedEntityMap,
+  const std::vector<types::entity>& originals) {
+  for (types::entity original : originals) {
+    registry.emplace<RandomEventIndex>(original, (types::eventPossibilities)0U);
+
+    const auto clonedPointer = clonedEntityMap.find(original);
+    if (clonedPointer == clonedEntityMap.end()) continue;
+    const auto& cloned = clonedPointer->second;
+
+    for (std::size_t index = 0; index < cloned.size(); index++) {
+      ENTT_ASSERT(
+        std::numeric_limits<types::eventPossibilities>::max() > index,
+        "Number of clones shouldn't be greater than the number of possible events");
+      registry.emplace<RandomEventIndex>(cloned[index], (types::eventPossibilities)(index + 1U));
+    }
   }
 }
 
@@ -210,7 +219,7 @@ template <
   typename... AssignRandomEventsTags, typename... AssignArgs>
 void randomChanceEvent(
   Simulation& simulation, types::cloneIndex cloneCount, types::callback applyChoices,
-  void (*assignClonesToEvents)(types::registry&, const std::vector<types::entity>&, types::entity),
+  void (*assignClonesToEvents)(types::registry&, const types::ClonedEntityMap&, const std::vector<types::entity>&),
   UpdateProbabilities updateProbabilities, const AssignArgs&... assignArgs) {
   if (simulation.battleFormat == BattleFormat::DOUBLES_BATTLE_FORMAT) {
     simulation.view<placeChanceFromStack<RandomStack, Random>>();
@@ -229,29 +238,25 @@ void randomChanceEvent(
       entt::dense_map<types::eventPossibilities, std::pair<std::vector<types::entity>, std::vector<types::entity>>>
         entitiesByEventCount{};
 
-      auto assignCloneTags =
-        [&entitiesByEventCount](entt::entity chanceEntity, const Battle& battle, const RandomEventCount& eventCount) {
+      auto collectEntityEventCounts =
+        [&entitiesByEventCount](types::entity chanceEntity, const Battle& battle, const RandomEventCount& eventCount) {
           entitiesByEventCount[eventCount.val].first.push_back(chanceEntity);
           entitiesByEventCount[eventCount.val].second.push_back(battle.val);
         };
 
-      registry.view<Battle, RandomEventCount>().each(assignCloneTags);
+      registry.view<Battle, RandomEventCount>().each(collectEntityEventCounts);
 
       for (const auto& [eventCount, entities] : entitiesByEventCount) {
         const auto [chanceEntities, battleEntities] = entities;
         if (eventCount == 1U) {
-          for (types::entity original : chanceEntities) {
-            assignClonesToEvents(registry, {}, original);
-          }
+          assignClonesToEvents(registry, {}, chanceEntities);
           continue;
         }
 
         registry.insert<tags::CloneFrom>(battleEntities.begin(), battleEntities.end());
         auto clonedEntityMap = clone(registry, eventCount - 1U);
 
-        for (types::entity original : chanceEntities) {
-          assignClonesToEvents(registry, clonedEntityMap[original], original);
-        }
+        assignClonesToEvents(registry, clonedEntityMap, chanceEntities);
       }
     }
     else {
@@ -263,9 +268,7 @@ void randomChanceEvent(
       std::vector<types::entity> chanceEntities{chanceEntityView.begin(), chanceEntityView.end()};
       auto clonedEntityMap = clone(registry, cloneCount);
 
-      for (types::entity original : chanceEntities) {
-        assignClonesToEvents(registry, clonedEntityMap[original], original);
-      }
+      assignClonesToEvents(registry, clonedEntityMap, chanceEntities);
     }
 
     applyChoices(simulation);
@@ -293,11 +296,16 @@ void randomChanceEvent(
 template <bool Reciprocal>
 void randomBinaryChance(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities) {
-  auto assignClonesToEvents =
-    [](types::registry& registry, const std::vector<types::entity>& cloned, types::entity original) {
+  auto assignClonesToEvents = [](
+                                types::registry& registry,
+                                const types::ClonedEntityMap& clonedEntityMap,
+                                const std::vector<types::entity>& originals) {
+    for (types::entity original : originals) {
+      const auto& cloned = clonedEntityMap.at(original);
       registry.emplace<tags::RandomEventCheckPassed>(original);
       registry.emplace<tags::RandomEventCheckFailed>(cloned[0]);
-    };
+    }
+  };
 
   auto defaultUpdateProbabilities = [](Simulation& sim) {
     sim.view<
@@ -339,8 +347,12 @@ void randomEventChances(
     "RandomEventChances should only be used for events with more than two options.");
   static_assert(POSSIBLE_EVENT_COUNT <= internal::MAX_TYPICAL_RANDOM_OPTIONS);
 
-  auto assignClonesToEvents =
-    [](types::registry& registry, const std::vector<types::entity>& cloned, types::entity original) {
+  auto assignClonesToEvents = [](
+                                types::registry& registry,
+                                const types::ClonedEntityMap& clonedEntityMap,
+                                const std::vector<types::entity>& originals) {
+    for (types::entity original : originals) {
+      const auto& cloned = clonedEntityMap.at(original);
       registry.emplace<tags::RandomEventA>(original);
       registry.emplace<tags::RandomEventB>(cloned[0]);
       if constexpr (POSSIBLE_EVENT_COUNT >= 3U) {
@@ -352,7 +364,8 @@ void randomEventChances(
       if constexpr (POSSIBLE_EVENT_COUNT == 5U) {
         registry.emplace<tags::RandomEventE>(cloned[3]);
       }
-    };
+    }
+  };
 
   auto defaultUpdateProbabilities = [](Simulation& sim) {
     internal::viewUpdateProbabilityFromRandomEventChance<POSSIBLE_EVENT_COUNT, tags::RandomEventA>(sim);

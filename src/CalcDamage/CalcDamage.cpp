@@ -174,6 +174,10 @@ void applyDamageRollsAndModifiers(Simulation& simulation) {
     damageRollOptions = simulation.calculateDamageOptions.damageRollsReturned;
     calculateUpToFoeHp = simulation.calculateDamageOptions.calculateUpToFoeHp;
   }
+  else if constexpr (std::is_same_v<pokesim::tags::AnalyzeEffect, SimulationTag>) {
+    damageRollOptions = simulation.analyzeEffectOptions.damageRollsReturned;
+    calculateUpToFoeHp = simulation.analyzeEffectOptions.calculateUpToFoeHp;
+  }
 
   auto applyDamageRolls = [&simulation, calculateUpToFoeHp](DamageRollKind damageRollKind) {
     internal::applyDamageRollsAndModifiers(simulation, damageRollKind, calculateUpToFoeHp);
@@ -291,6 +295,7 @@ void getDamage(Simulation& simulation) {
   setDamageRollModifiers(simulation);
   applyDamageRollsAndModifiers<pokesim::tags::SimulateTurn>(simulation);
   applyDamageRollsAndModifiers<pokesim::tags::CalculateDamage>(simulation);
+  applyDamageRollsAndModifiers<pokesim::tags::AnalyzeEffect>(simulation);
   simulation.registry.clear<DamageRollModifier>();
 
   simulation.viewForSelectedMoves<internal::setDamageToAtLeastOne>();

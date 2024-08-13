@@ -91,7 +91,18 @@ class Simulation : public internal::RegistryContainer {
   struct AnalyzeEffectInputInfo {
     Slot attackerSlot = Slot::NONE;
     Slot defenderSlot = Slot::NONE;
-    types::effectEnum effect;
+    Slot effectTarget = Slot::NONE;
+    std::vector<dex::Move> moves;
+
+   private:
+    struct BoostInfo {
+      dex::Stat stat = dex::Stat::ATK;
+      types::boost boost = 0;
+    };
+
+   public:
+    std::optional<types::effectEnum> effect;
+    std::optional<BoostInfo> boostEffect;
   };
 
   struct BattleCreationInfo {
