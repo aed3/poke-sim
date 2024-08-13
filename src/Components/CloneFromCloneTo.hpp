@@ -5,6 +5,7 @@
 namespace pokesim {
 namespace tags {
 struct CloneFrom {};
+struct CloneToRemove {};
 }  // namespace tags
 
 struct CloneTo {

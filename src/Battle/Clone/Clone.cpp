@@ -1,6 +1,5 @@
 #include "Clone.hpp"
 
-#include <Components/CalcDamage/Aliases.hpp>
 #include <Components/CloneFromCloneTo.hpp>
 #include <Components/EntityHolders/headers.hpp>
 #include <Components/Names/MoveNames.hpp>
@@ -19,6 +18,212 @@
 #include <vector>
 
 namespace pokesim {
+namespace internal {
+void cloneEntity(
+  types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  for (auto [id, storage] : registry.storage()) {
+    if (storage.contains(src)) {
+      ENTT_ASSERT(
+        std::find(srcEntityStorages[id].begin(), srcEntityStorages[id].end(), src) == std::end(srcEntityStorages[id]),
+        "Adding an entity twice here means an entity will be duplicated more than it should.");
+      srcEntityStorages[id].push_back(src);
+    }
+  }
+
+  auto& destinations = entityMap[src] = std::vector<types::entity>{cloneCount};
+  registry.create(destinations.begin(), destinations.end());
+}
+
+template <typename VisitEntity = void*>
+void traverseBattle(types::registry& registry, VisitEntity visitEntity = nullptr) {
+  const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
+  using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
+
+  for (const auto [entity, sides, actionQueue] : registry.view<Tag, tags::Battle, Sides, ActionQueue>().each()) {
+    for (auto side : sides.val) {
+      registry.emplace<Tag>(side);
+    }
+    for (auto queueItem : actionQueue.val) {
+      registry.emplace<Tag>(queueItem);
+    }
+
+    if constexpr (ForCloning) {
+      visitEntity(entity);
+    }
+  }
+  for (const auto [entity, currentAction] : registry.view<Tag, tags::Battle, CurrentAction>().each()) {
+    registry.emplace<Tag>(currentAction.val);
+  }
+}
+
+template <typename VisitEntity = void*>
+void traverseSide(types::registry& registry, VisitEntity visitEntity = nullptr) {
+  const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
+  using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
+
+  for (const auto [entity, team] : registry.view<Tag, tags::Side, Team>().each()) {
+    for (auto pokemon : team.val) {
+      registry.emplace<Tag>(pokemon);
+    }
+
+    if constexpr (ForCloning) {
+      visitEntity(entity);
+    }
+  }
+}
+
+template <typename VisitEntity = void*>
+void traverseAction(types::registry& registry, VisitEntity visitEntity = nullptr) {
+  const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
+  using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
+
+  if constexpr (ForCloning) {
+    for (types::entity entity : registry.view<Tag, SpeedSort>()) {
+      visitEntity(entity);
+    }
+  }
+}
+
+template <typename VisitEntity = void*>
+void traverseCurrentActionMove(types::registry& registry, VisitEntity visitEntity = nullptr) {
+  const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
+  using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
+
+  if constexpr (ForCloning) {
+    for (types::entity entity : registry.view<Tag, tags::CurrentActionMove>()) {
+      visitEntity(entity);
+    }
+  }
+}
+
+template <typename VisitEntity = void*>
+void traversePokemon(types::registry& registry, VisitEntity visitEntity = nullptr) {
+  const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
+  using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
+
+  for (const auto [entity, moveSlots] : registry.view<Tag, tags::Pokemon, MoveSlots>().each()) {
+    for (auto move : moveSlots.val) {
+      registry.emplace<Tag>(move);
+    }
+
+    if constexpr (ForCloning) {
+      visitEntity(entity);
+    }
+  }
+
+  for (const auto [entity, move] : registry.view<Tag, CurrentActionMove>().each()) {
+    registry.emplace<Tag>(move.val);
+  }
+}
+
+template <typename VisitEntity = void*>
+void traverseMove(types::registry& registry, VisitEntity visitEntity = nullptr) {
+  const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
+  using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
+
+  if constexpr (ForCloning) {
+    for (types::entity entity : registry.view<Tag, MoveName, Pp>()) {
+      visitEntity(entity);
+    }
+  }
+}
+
+void cloneBattle(
+  types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  traverseBattle(registry, [&](types::entity entity) {
+    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
+  });
+}
+void cloneSide(
+  types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  traverseSide(registry, [&](types::entity entity) {
+    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
+  });
+}
+void cloneAction(
+  types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  traverseAction(registry, [&](types::entity entity) {
+    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
+  });
+}
+void cloneCurrentActionMove(
+  types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  traverseCurrentActionMove(registry, [&](types::entity entity) {
+    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
+  });
+}
+void clonePokemon(
+  types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  traversePokemon(registry, [&](types::entity entity) {
+    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
+  });
+}
+void cloneMove(
+  types::registry& registry, types::ClonedEntityMap& entityMap,
+  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  traverseMove(registry, [&](types::entity entity) {
+    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
+  });
+}
+
+void deleteBattle(types::registry& registry) {
+  traverseBattle(registry);
+}
+void deleteSide(types::registry& registry) {
+  traverseSide(registry);
+}
+void deleteAction(types::registry& registry) {
+  traverseAction(registry);
+}
+void deleteCurrentActionMove(types::registry& registry) {
+  traverseCurrentActionMove(registry);
+}
+void deletePokemon(types::registry& registry) {
+  traversePokemon(registry);
+}
+void deleteMove(types::registry& registry) {
+  traverseMove(registry);
+}
+
+void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
+  ENTT_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map");
+  ENTT_ASSERT(entityMap.at(entity).size() > cloneTo.val, "More entities are trying to be copied to than were copied");
+  entity = entityMap.at(entity)[cloneTo.val];
+}
+
+template <typename Component>
+void remapEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
+  for (auto [clonedEntity, cloneTo, component] : registry.view<CloneTo, Component>().each()) {
+    remapEntity(component.val, cloneTo, entityMap);
+  }
+}
+
+template <typename Component>
+void remapEntityListMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
+  for (auto [clonedEntity, cloneTo, component] : registry.view<CloneTo, Component>().each()) {
+    for (types::entity& entity : component.val) {
+      remapEntity(entity, cloneTo, entityMap);
+    }
+  }
+}
+
+template <typename Component>
+void remapComponentEntities(types::registry& registry, const types::ClonedEntityMap& entityMap) {
+  if constexpr (std::is_same_v<decltype(Component::val), types::entity>) {
+    remapEntityMembers<Component>(registry, entityMap);
+  }
+  else {
+    remapEntityListMembers<Component>(registry, entityMap);
+  }
+}
+}  // namespace internal
+
 types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount) {
   types::cloneIndex count = cloneCount.value_or(1);
   types::ClonedEntityMap entityMap, battleMap;
@@ -87,124 +292,12 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
   return entityMap;
 }
 
-namespace internal {
-void cloneEntity(
-  types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
-  for (auto [id, storage] : registry.storage()) {
-    if (storage.contains(src)) {
-      ENTT_ASSERT(
-        std::find(srcEntityStorages[id].begin(), srcEntityStorages[id].end(), src) == std::end(srcEntityStorages[id]),
-        "Adding an entity twice here means an entity will be duplicated more than it should.");
-      srcEntityStorages[id].push_back(src);
-    }
-  }
-
-  auto& destinations = entityMap[src] = std::vector<types::entity>{cloneCount};
-  registry.create(destinations.begin(), destinations.end());
+void deleteClones(types::registry& registry) {
+  internal::deleteBattle(registry);
+  internal::deleteSide(registry);
+  internal::deleteAction(registry);
+  internal::deletePokemon(registry);
+  internal::deleteCurrentActionMove(registry);
+  internal::deleteMove(registry);
 }
-
-void cloneBattle(
-  types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
-  for (const auto [entity, sides, actionQueue] :
-       registry.view<tags::CloneFrom, tags::Battle, Sides, ActionQueue>().each()) {
-    for (auto side : sides.val) {
-      registry.emplace<tags::CloneFrom>(side);
-    }
-    for (auto queueItem : actionQueue.val) {
-      registry.emplace<tags::CloneFrom>(queueItem);
-    }
-
-    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
-  }
-  for (const auto [entity, currentAction] : registry.view<tags::CloneFrom, tags::Battle, CurrentAction>().each()) {
-    registry.emplace<tags::CloneFrom>(currentAction.val);
-  }
-}
-
-void cloneSide(
-  types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
-  for (const auto [entity, team] : registry.view<tags::CloneFrom, tags::Side, Team>().each()) {
-    for (auto pokemon : team.val) {
-      registry.emplace<tags::CloneFrom>(pokemon);
-    }
-
-    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
-  }
-}
-
-void cloneAction(
-  types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
-  for (types::entity entity : registry.view<tags::CloneFrom, SpeedSort>()) {
-    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
-  }
-}
-
-void cloneCurrentActionMove(
-  types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
-  for (types::entity entity : registry.view<tags::CloneFrom, tags::CurrentActionMove>()) {
-    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
-  }
-}
-
-void clonePokemon(
-  types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
-  for (const auto [entity, moveSlots] : registry.view<tags::CloneFrom, tags::Pokemon, MoveSlots>().each()) {
-    for (auto move : moveSlots.val) {
-      registry.emplace<tags::CloneFrom>(move);
-    }
-
-    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
-  }
-
-  for (const auto [entity, move] : registry.view<tags::CloneFrom, CurrentActionMove>().each()) {
-    registry.emplace<tags::CloneFrom>(move.val);
-  }
-}
-
-void cloneMove(
-  types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
-  for (types::entity entity : registry.view<tags::CloneFrom, MoveName, Pp>()) {
-    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
-  }
-}
-
-void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
-  ENTT_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map");
-  ENTT_ASSERT(entityMap.at(entity).size() > cloneTo.val, "More entities are trying to be copied to than were copied");
-  entity = entityMap.at(entity)[cloneTo.val];
-}
-
-template <typename Component>
-void remapComponentEntities(types::registry& registry, const types::ClonedEntityMap& entityMap) {
-  if constexpr (std::is_same_v<decltype(Component::val), types::entity>) {
-    remapEntityMembers<Component>(registry, entityMap);
-  }
-  else {
-    remapEntityListMembers<Component>(registry, entityMap);
-  }
-}
-
-template <typename Component>
-void remapEntityMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
-  for (auto [clonedEntity, cloneTo, component] : registry.view<CloneTo, Component>().each()) {
-    remapEntity(component.val, cloneTo, entityMap);
-  }
-}
-
-template <typename Component>
-void remapEntityListMembers(types::registry& registry, const types::ClonedEntityMap& entityMap) {
-  for (auto [clonedEntity, cloneTo, component] : registry.view<CloneTo, Component>().each()) {
-    for (types::entity& entity : component.val) {
-      remapEntity(entity, cloneTo, entityMap);
-    }
-  }
-}
-}  // namespace internal
 }  // namespace pokesim

@@ -1,11 +1,14 @@
 #include "ManagePokemonState.hpp"
 
+#include <Battle/Setup/EnumToTag.hpp>
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/LastUsedMove.hpp>
+#include <Components/Names/StatNames.hpp>
 #include <Components/PP.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/StatusTags.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
@@ -15,6 +18,23 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
+void setStatus(types::handle pokemonHandle, dex::Status status) {
+  clearStatus(pokemonHandle);
+  pokemonHandle.emplace<StatusName>(status);
+  status::tags::enumToTag(status, pokemonHandle);
+}
+
+void clearStatus(types::handle pokemonHandle) {
+  pokemonHandle.remove<
+    StatusName,
+    status::tags::Burn,
+    status::tags::Freeze,
+    status::tags::Paralysis,
+    status::tags::Poison,
+    status::tags::Sleep,
+    status::tags::Toxic>();
+}
+
 void deductPp(Pp& pp) {
   if (pp.val) {
     pp.val -= 1;

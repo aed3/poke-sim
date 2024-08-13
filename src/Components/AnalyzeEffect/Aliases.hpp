@@ -10,5 +10,6 @@ using Defenders = CurrentActionTargets;
 namespace tags {
 using Attacker = pokesim::tags::CurrentActionMoveSource;
 using Defender = pokesim::tags::CurrentActionMoveTarget;
+using Move = pokesim::tags::CurrentActionMove;
 }  // namespace tags
 }  // namespace pokesim::analyze_effect

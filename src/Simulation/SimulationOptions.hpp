@@ -14,6 +14,7 @@ class Simulation;
 struct DamageRollOptions {
   DamageRollKind p1 = DamageRollKind::AVERAGE_DAMAGE;
   DamageRollKind p2 = DamageRollKind::AVERAGE_DAMAGE;
+  bool includeCritsInAverageAndMax = false;
   bool sidesMatch() const { return p1 == p2; }
 };
 
@@ -49,7 +50,8 @@ struct Options {
   // Whether to consider the multiplier even if the effect is already active (i.e. Rain will return a 1x multiplier
   // instead of 1.5x multiplier for Surf if this option is true and it's already raining)
   bool reconsiderActiveEffects = false;
-  bool returnMultipliedKoChance = false;
+  // bool returnMultipliedKoChance = false;
+  bool calculateUpToFoeHp = false;
 
   DamageRollOptions damageRollsReturned;
 };

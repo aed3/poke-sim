@@ -1,16 +1,20 @@
 #include "AnalyzeEffectInputSetup.hpp"
 
 #include <Components/AnalyzeEffect/Aliases.hpp>
+#include <Components/AnalyzeEffect/AnalyzeEventInputs.hpp>
+#include <Components/Boosts.hpp>
 #include <Components/EntityHolders/Battle.hpp>
-#include <Components/Names/MoveNames.hpp>
 #include <Components/Names/PseudoWeatherNames.hpp>
 #include <Components/Names/SideConditionNames.hpp>
 #include <Components/Names/StatusNames.hpp>
 #include <Components/Names/TerrainNames.hpp>
 #include <Components/Names/VolatileNames.hpp>
 #include <Components/Names/WeatherNames.hpp>
+#include <Components/Tags/SimulationTags.hpp>
 #include <Types/Effect.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Enums/Move.hpp>
+#include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/PseudoWeather.hpp>
 #include <Types/Enums/SideCondition.hpp>
 #include <Types/Enums/Status.hpp>
@@ -22,12 +26,27 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim::analyze_effect {
+InputSetup::InputSetup(types::registry& registry, types::entity entity) : handle(registry, entity) {
+  handle.emplace<tags::Input>();
+}
+
 void InputSetup::setAttacker(types::entity entity) {
   handle.emplace<Attacker>(entity);
 }
 
+void InputSetup::setEffectTarget(types::entity entity) {
+  handle.emplace<EffectTarget>(entity);
+}
+
 void InputSetup::setDefender(types::entity entity) {
-  handle.emplace_or_replace<Defenders>().val.push_back(entity);
+  ENTT_ASSERT(
+    !handle.try_get<Defenders>(),
+    "Calc damage only supports one defender per move. Make a new move instead.");
+  handle.emplace<Defenders>().val.push_back(entity);
+}
+
+void InputSetup::setEffectMoves(const std::vector<dex::Move>& moves) {
+  handle.get_or_emplace<EffectMoves>().val = moves;
 }
 
 void InputSetup::setEffect(types::effectEnum effect) {
@@ -54,7 +73,36 @@ void InputSetup::setEffect(types::effectEnum effect) {
   }
 }
 
+void InputSetup::setBoostEffect(dex::Stat stat, types::boost boost) {
+  switch (stat) {
+    case dex::Stat::ATK: {
+      handle.emplace<AtkBoost>(boost);
+      break;
+    }
+    case dex::Stat::DEF: {
+      handle.emplace<DefBoost>(boost);
+      break;
+    }
+    case dex::Stat::SPA: {
+      handle.emplace<SpaBoost>(boost);
+      break;
+    }
+    case dex::Stat::SPD: {
+      handle.emplace<SpdBoost>(boost);
+      break;
+    }
+    case dex::Stat::SPE: {
+      handle.emplace<SpeBoost>(boost);
+      break;
+    }
+    default: {
+      ENTT_FAIL("Using a stat enum that doesn't have boost.");
+    }
+  }
+}
+
 void InputSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
+  handle.registry()->get_or_emplace<Inputs>(entity).val.push_back(handle.entity());
 }
 }  // namespace pokesim::analyze_effect
