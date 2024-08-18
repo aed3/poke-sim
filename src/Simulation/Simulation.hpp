@@ -101,8 +101,8 @@ class Simulation : public internal::RegistryContainer {
     };
 
    public:
-    std::optional<types::effectEnum> effect;
-    std::optional<BoostInfo> boostEffect;
+    std::optional<types::effectEnum> effect = std::nullopt;
+    std::optional<BoostInfo> boostEffect = std::nullopt;
   };
 
   struct BattleCreationInfo {

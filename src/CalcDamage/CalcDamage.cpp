@@ -66,6 +66,16 @@ void internal::checkForAndApplyTypeEffectiveness(
   }
 }
 
+void internal::applyBurnModifier(types::registry& registry, const CurrentActionMoves& moves) {
+  for (types::entity move : moves.val) {
+    if (!registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag> */) {
+      return;
+    }
+
+    chainToModifier(registry.get<DamageRollModifier>(move).val, 0.5F);
+  }
+}
+
 void internal::setDamageToAtLeastOne(Damage& damage) {
   damage.val = std::max(damage.val, (types::damage)1U);
 }
@@ -73,6 +83,9 @@ void internal::setDamageToAtLeastOne(Damage& damage) {
 void setDamageRollModifiers(Simulation& simulation) {
   simulation.viewForSelectedMoves<internal::checkForAndApplyStab>();
   simulation.viewForSelectedMoves<internal::checkForAndApplyTypeEffectiveness>();
+  simulation.viewForSelectedPokemon<
+    internal::applyBurnModifier,
+    Tags<status::tags::Burn, tags::Attacker> /*, entt::exclude<ability::tags::Guts> */>();
 }
 
 void internal::setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
@@ -109,6 +122,7 @@ void internal::reduceDamageRollsToFoeHp(
   const auto& defenderHp = moveHandle.registry()->get<pokesim::stat::CurrentHp>(defenders.val[0]);
   for (auto& damageRoll : damageRolls.val) {
     damageRoll.val = std::min(defenderHp.val, damageRoll.val);
+    setDamageToAtLeastOne(damageRoll);
   }
 }
 
@@ -116,6 +130,8 @@ void internal::applyAverageDamageRollAndModifier(
   DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
   applyAverageDamageRoll(damage);
   applyChainedModifier(damage.val, modifier.val);
+  setDamageToAtLeastOne(damage);
+
   damageRolls.val.emplace_back(damage);
 }
 
@@ -123,11 +139,18 @@ void internal::applyMinDamageRollAndModifier(
   DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
   applyMinDamageRoll(damage);
   applyChainedModifier(damage.val, modifier.val);
+  setDamageToAtLeastOne(damage);
+
   damageRolls.val.emplace_back(damage);
 }
+
 void internal::applyDamageModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
   applyChainedModifier(damage.val, modifier.val);
   damageRolls.val.emplace_back(damage);
+}
+
+void internal::setDamageToFirstRoll(const DamageRolls& damageRolls, Damage& damage) {
+  damage = damageRolls.val[0];
 }
 
 void internal::applyDamageRollsAndModifiers(
@@ -183,6 +206,9 @@ void applyDamageRollsAndModifiers(Simulation& simulation) {
     internal::applyDamageRollsAndModifiers(simulation, damageRollKind, calculateUpToFoeHp);
     if constexpr (std::is_same_v<pokesim::tags::SimulateTurn, SimulationTag>) {
       simulate_turn::cloneFromDamageRolls(simulation, damageRollKind);
+    }
+    else {
+      simulation.viewForSelectedMoves<internal::setDamageToFirstRoll>();
     }
   };
 
@@ -297,7 +323,5 @@ void getDamage(Simulation& simulation) {
   applyDamageRollsAndModifiers<pokesim::tags::CalculateDamage>(simulation);
   applyDamageRollsAndModifiers<pokesim::tags::AnalyzeEffect>(simulation);
   simulation.registry.clear<DamageRollModifier>();
-
-  simulation.viewForSelectedMoves<internal::setDamageToAtLeastOne>();
 }
 }  // namespace pokesim::calc_damage

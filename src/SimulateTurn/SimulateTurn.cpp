@@ -166,7 +166,7 @@ void getMoveTargets(Simulation& simulation) {
     simulation.view<addUserAllyToTargets, Tags<tags::CurrentActionMove, move::added_targets::tags::UserAlly>>();
   }
   simulation.view<resolveMoveTargets, Tags<tags::CurrentActionMove>, entt::exclude_t<AddedTargets>>();
-  simulation.view<createActionMoveForTargets, Tags<tags::CurrentActionMoveTarget>, entt::exclude_t<CurrentActionMove>>(
+  simulation.view<createActionMoveForTargets, Tags<tags::CurrentActionMoveTarget>, entt::exclude_t<CurrentActionMoves>>(
     simulation.pokedex);
 }
 

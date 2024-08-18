@@ -112,8 +112,10 @@ void traversePokemon(types::registry& registry, VisitEntity visitEntity = nullpt
     }
   }
 
-  for (const auto [entity, move] : registry.view<Tag, CurrentActionMove>().each()) {
-    registry.emplace<Tag>(move.val);
+  for (const auto [entity, moves] : registry.view<Tag, CurrentActionMoves>().each()) {
+    for (types::entity move : moves.val) {
+      registry.emplace_or_replace<Tag>(move);
+    }
   }
 }
 
@@ -268,7 +270,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
   internal::remapComponentEntities<Battle>(registry, entityMap);
   internal::remapComponentEntities<ChoiceLock>(registry, entityMap);
   internal::remapComponentEntities<CurrentAction>(registry, entityMap);
-  internal::remapComponentEntities<CurrentActionMove>(registry, entityMap);
+  internal::remapComponentEntities<CurrentActionMoves>(registry, entityMap);
   internal::remapComponentEntities<CurrentActionMoveSlot>(registry, entityMap);
   internal::remapComponentEntities<CurrentActionSource>(registry, entityMap);
   internal::remapComponentEntities<CurrentActionTargets>(registry, entityMap);

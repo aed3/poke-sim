@@ -17,6 +17,7 @@
 #include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>
+#include <algorithm>
 
 #include "RunEvent.hpp"
 #include "Simulation.hpp"
@@ -97,12 +98,20 @@ void moveHitLoop(Simulation& simulation) {
   }
 }
 
-void internal::removeFailedHitTargets(types::handle moveTarget, const CurrentActionTargets& targets) {
+void internal::removeFailedHitTargets(
+  types::handle moveTarget, const CurrentActionTargets& targets, const CurrentActionSource& source) {
   types::registry& registry = *moveTarget.registry();
   for (types::entity target : targets.val) {
     registry.remove<tags::CurrentActionMoveTarget>(target);
-    registry.remove<CurrentActionMove>(target);
+
+    CurrentActionMoves& moves = registry.get<CurrentActionMoves>(target);
+    auto newEnd = std::remove(moves.val.begin(), moves.val.end(), moveTarget.entity());
+    moves.val.erase(newEnd, moves.val.end());
   }
+
+  CurrentActionMoves& moves = registry.get<CurrentActionMoves>(source.val);
+  auto newEnd = std::remove(moves.val.begin(), moves.val.end(), moveTarget.entity());
+  moves.val.erase(newEnd, moves.val.end());
 }
 
 void internal::updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets) {

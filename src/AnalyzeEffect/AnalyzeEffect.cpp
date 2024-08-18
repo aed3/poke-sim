@@ -1,6 +1,7 @@
 #include "AnalyzeEffect.hpp"
 
 #include <Battle/Clone/Clone.hpp>
+#include <Battle/Helpers/Helpers.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <CalcDamage/CalcDamage.hpp>
 #include <Components/AnalyzeEffect/Aliases.hpp>
@@ -22,6 +23,7 @@
 #include <Types/Enums/Move.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/SelectForView.hpp>
 #include <cstdint>
 #include <entt/container/dense_map.hpp>
 #include <entt/entity/registry.hpp>
@@ -30,35 +32,59 @@
 namespace pokesim::analyze_effect {
 namespace internal {
 void assignInputsToClones(
-  Simulation& simulation, types::entity battleEntity, const types::ClonedEntityMap& clonedEntityMap) {
-  const Inputs& inputs = simulation.registry.get<Inputs>(battleEntity);
-  const auto& battleClones = clonedEntityMap.at(battleEntity);
+  Simulation& simulation, types::entity originalBattleEntity, const types::ClonedEntityMap& clonedEntityMap) {
+  types::registry& registry = simulation.registry;
+  const Inputs& inputs = registry.get<Inputs>(originalBattleEntity);
+  const auto& battleClones = clonedEntityMap.at(originalBattleEntity);
   ENTT_ASSERT(
     inputs.val.size() == battleClones.size(),
     "Each input must have a clone and no more clones than inputs should be made.");
 
   for (std::size_t i = 0; i < battleClones.size(); i++) {
-    auto [battle, attacker, defenders, effectTarget] =
-      simulation.registry.get<Battle, Attacker, Defenders, EffectTarget>(inputs.val[i]);
-    battle.val = battleClones[i];
-    simulation.registry.emplace<tags::BattleCloneForCalculation>(battleClones[i]);
+    auto [battle, attacker, defenders, effectTarget, moves] =
+      registry.get<Battle, Attacker, Defenders, EffectTarget, EffectMoves>(inputs.val[i]);
+    registry.emplace<tags::BattleCloneForCalculation>(battleClones[i]);
+
+    MovePairs& movePairs = registry.emplace<MovePairs>(inputs.val[i]);
+    movePairs.val.reserve(moves.val.size());
 
     const auto& clonedAttackers = clonedEntityMap.at(attacker.val);
     ENTT_ASSERT(
       battleClones.size() == clonedAttackers.size(),
       "Each attacker must have a clone and no more clones than inputs should be made.");
-    attacker.val = clonedAttackers[i];
 
     const auto& clonedDefenders = clonedEntityMap.at(defenders.val[0]);
     ENTT_ASSERT(
       battleClones.size() == clonedDefenders.size(),
       "Each defender must have a clone and no more clones than inputs should be made.");
-    defenders.val[0] = clonedDefenders[i];
 
     const auto& clonedEffectTarget = clonedEntityMap.at(effectTarget.val);
     ENTT_ASSERT(
       battleClones.size() == clonedEffectTarget.size(),
       "Each effect target must have a clone and no more clones than inputs should be made.");
+
+    for (dex::Move move : moves.val) {
+      auto createMove = [&](types::entity battleEntity, types::entity attackerEntity, types::entity defenderEntity) {
+        types::entity moveEntity = createActionMoveForTarget(
+          {simulation.registry, defenderEntity},
+          battleEntity,
+          attackerEntity,
+          move,
+          simulation.pokedex);
+        registry.emplace<MoveName>(moveEntity, move);
+        registry.emplace<pokesim::tags::AnalyzeEffect>(moveEntity);
+
+        return moveEntity;
+      };
+
+      movePairs.val.emplace_back(
+        createMove(battle.val, attacker.val, defenders.val[0]),
+        createMove(battleClones[i], clonedAttackers[i], clonedDefenders[i]));
+    }
+
+    battle.val = battleClones[i];
+    attacker.val = clonedAttackers[i];
+    defenders.val[0] = clonedDefenders[i];
     effectTarget.val = clonedEffectTarget[i];
   }
 }
@@ -127,31 +153,6 @@ void applyBoostEffect(
   }
 }
 
-void createMoves(
-  types::handle inputHandle, Battle battle, ParentBattle parentBattle, Attacker attacker, const Defenders& defenders,
-  const EffectMoves& moves, const Pokedex& pokedex) {
-  types::registry& registry = *inputHandle.registry();
-  ENTT_ASSERT(!moves.val.empty(), "The list of moves cannot be blank.");
-
-  MovePairs& movePairs = inputHandle.emplace<MovePairs>();
-  movePairs.val.reserve(moves.val.size());
-
-  for (dex::Move move : moves.val) {
-    auto createMove = [&](types::entity battleEntity) {
-      types::handle moveHandle{registry, pokedex.buildActionMove(move, registry)};
-      moveHandle.emplace<MoveName>(move);
-      moveHandle.emplace<Attacker>(attacker);
-      moveHandle.emplace<Defenders>(defenders);
-      moveHandle.emplace<Battle>(battleEntity);
-      moveHandle.emplace<pokesim::tags::AnalyzeEffect>();
-      moveHandle.emplace<tags::Move>();
-      return moveHandle.entity();
-    };
-
-    movePairs.val.emplace_back(createMove(parentBattle.val), createMove(battle.val));
-  }
-}
-
 void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
   bool invert = inputHandle.all_of<tags::InvertFinalAnswer>();
   types::registry& registry = *inputHandle.registry();
@@ -161,19 +162,19 @@ void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
     auto [parentDamage, parentDamageRolls] = registry.get<Damage, DamageRolls>(parentBattleMove);
 
     if (invert) {
-      if (parentDamage.val == 0) {
-        registry.emplace<tags::InfiniteMultiplier>(parentBattleMove);
-      }
-      else {
-        registry.emplace<EffectMultiplier>(parentBattleMove, (float)childDamage.val / parentDamage.val);
-      }
-    }
-    else {
       if (childDamage.val == 0) {
         registry.emplace<tags::InfiniteMultiplier>(parentBattleMove);
       }
       else {
         registry.emplace<EffectMultiplier>(parentBattleMove, (float)parentDamage.val / childDamage.val);
+      }
+    }
+    else {
+      if (parentDamage.val == 0) {
+        registry.emplace<tags::InfiniteMultiplier>(parentBattleMove);
+      }
+      else {
+        registry.emplace<EffectMultiplier>(parentBattleMove, (float)childDamage.val / parentDamage.val);
       }
 
       parentDamage = childDamage;
@@ -190,6 +191,13 @@ void postRunCleanup(Simulation& simulation) {
 }  // namespace internal
 
 void run(Simulation& simulation) {
+  pokesim::internal::SelectForPokemonView<pokesim::tags::AnalyzeEffect> selectedPokemon(simulation);
+  pokesim::internal::SelectForBattleView<pokesim::tags::AnalyzeEffect> selectedBattle(simulation);
+
+  if (selectedPokemon.hasNoneSelected() || selectedBattle.hasNoneSelected()) {
+    return;
+  }
+
   if (!simulation.analyzeEffectOptions.reconsiderActiveEffects) {
     internal::ignoreBattlesWithEffectActive(simulation);
   }
@@ -208,8 +216,6 @@ void run(Simulation& simulation) {
   simulation.view<internal::applyBoostEffect<SpaBoost>, Tags<tags::Input>>();
   simulation.view<internal::applyBoostEffect<SpdBoost>, Tags<tags::Input>>();
   simulation.view<internal::applyBoostEffect<SpeBoost>, Tags<tags::Input>>();
-
-  simulation.view<internal::createMoves, Tags<tags::Input>>(simulation.pokedex);
 
   calc_damage::run(simulation);
 
