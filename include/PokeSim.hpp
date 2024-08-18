@@ -107,6 +107,7 @@
  * src/Simulation/SimulationResults.hpp
  * src/Simulation/SimulationResults.cpp
  * src/AnalyzeEffect/AnalyzeEffect.hpp
+ * src/Battle/Pokemon/ManagePokemonState.hpp
  * src/CalcDamage/CalcDamage.hpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Simulation/Simulation.cpp
@@ -128,7 +129,6 @@
  * src/Simulation/RunEvent.hpp
  * src/Utilities/SelectForView.hpp
  * src/Simulation/RunEvent.cpp
- * src/Battle/Pokemon/ManagePokemonState.hpp
  * src/Components/Accuracy.hpp
  * src/Components/RandomEventOutputs.hpp
  * src/Components/SimulateTurn/MoveHitStepTags.hpp
@@ -12657,7 +12657,7 @@ struct InputSetup {
   void setAttacker(types::entity entity);
   void setEffectTarget(types::entity entity);
   void setDefender(types::entity entity);
-  void setEffectMoves(std::vector<dex::Move> moves);
+  void setEffectMoves(const std::vector<dex::Move>& moves);
   void setEffect(types::effectEnum effect);
   void setBoostEffect(dex::Stat stat, types::boost boost);
   void setBattle(types::entity entity);
@@ -13667,11 +13667,9 @@ struct InputSetup {
   types::handle handle;
 
  public:
-  InputSetup(types::registry& registry, const Pokedex& pokedex, dex::Move move);
-
-  void setAttacker(types::entity entity);
-  void setDefender(types::entity entity);
-  void setBattle(types::entity entity);
+  InputSetup(
+    types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
+    dex::Move move, const Pokedex& pokedex);
 
   types::entity entity() const;
 };
@@ -13681,6 +13679,8 @@ struct InputSetup {
 ///////////// END OF src/CalcDamage/Setup/CalcDamageInputSetup.hpp /////////////
 
 ////////////// START OF src/Components/EntityHolders/Current.hpp ///////////////
+
+#include <vector>
 
 namespace pokesim {
 struct CurrentAction {
@@ -13699,8 +13699,8 @@ struct CurrentActionSource {
   types::entity val{};
 };
 
-struct CurrentActionMove {
-  types::entity val{};
+struct CurrentActionMoves {
+  std::vector<types::entity> val{};
 };
 
 struct CurrentActionMoveSlot {
@@ -13730,7 +13730,7 @@ struct CurrentActionMoveSource {};
 namespace pokesim::calc_damage {
 using Attacker = CurrentActionSource;
 using Defenders = CurrentActionTargets;
-using UsedMove = CurrentActionMove;
+using UsedMove = CurrentActionMoves;
 
 namespace tags {
 using Attacker = pokesim::tags::CurrentActionMoveSource;
@@ -14835,8 +14835,8 @@ class Simulation : public internal::RegistryContainer {
     };
 
    public:
-    std::optional<types::effectEnum> effect;
-    std::optional<BoostInfo> boostEffect;
+    std::optional<types::effectEnum> effect = std::nullopt;
+    std::optional<BoostInfo> boostEffect = std::nullopt;
   };
 
   struct BattleCreationInfo {
@@ -15080,10 +15080,8 @@ void Simulation::createCalcDamageInput(
   types::entity attackerEntity = slotToPokemonEntity(registry, sides, damageCalcInputData.attackerSlot);
   types::entity defenderEntity = slotToPokemonEntity(registry, sides, damageCalcInputData.defenderSlot);
 
-  calc_damage::InputSetup inputSetup(registry, pokedex, damageCalcInputData.move);
-  inputSetup.setAttacker(attackerEntity);
-  inputSetup.setDefender(defenderEntity);
-  inputSetup.setBattle(battleStateSetup.entity());
+  calc_damage::InputSetup
+    inputSetup(registry, battleStateSetup.entity(), attackerEntity, defenderEntity, damageCalcInputData.move, pokedex);
 }
 
 void Simulation::createAnalyzeEffectInput(
@@ -15372,11 +15370,54 @@ void run(Simulation& simulation);
 
 ////////////////// END OF src/AnalyzeEffect/AnalyzeEffect.hpp //////////////////
 
+////////////// START OF src/Battle/Pokemon/ManagePokemonState.hpp //////////////
+
+namespace pokesim {
+class Simulation;
+struct CurrentActionSource;
+struct CurrentActionTargets;
+struct CurrentActionMoveSlot;
+struct Damage;
+struct Pp;
+
+namespace stat {
+struct Atk;
+struct Def;
+struct Spa;
+struct Spd;
+struct Spe;
+struct CurrentHp;
+}  // namespace stat
+
+void setStatus(types::handle pokemonHandle, dex::Status status);
+void clearStatus(types::handle pokemonHandle);
+
+void deductPp(Pp& pp);
+void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMoveSlot& move);
+void resetEffectiveAtk(types::handle handle, stat::Atk atk);
+void resetEffectiveDef(types::handle handle, stat::Def def);
+void resetEffectiveSpa(types::handle handle, stat::Spa spa);
+void resetEffectiveSpd(types::handle handle, stat::Spd spd);
+void resetEffectiveSpe(types::handle handle, stat::Spe spe);
+
+void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets);
+
+void updateAllStats(Simulation& simulation);
+void updateAtk(Simulation& simulation);
+void updateDef(Simulation& simulation);
+void updateSpa(Simulation& simulation);
+void updateSpd(Simulation& simulation);
+void updateSpe(Simulation& simulation);
+}  // namespace pokesim
+
+/////////////// END OF src/Battle/Pokemon/ManagePokemonState.hpp ///////////////
+
 //////////////////// START OF src/CalcDamage/CalcDamage.hpp ////////////////////
 
 namespace pokesim {
 class Simulation;
 struct BasePower;
+struct CurrentActionMoves;
 struct Damage;
 struct DamageRolls;
 struct DamageRollModifier;
@@ -15409,6 +15450,8 @@ void checkForAndApplyTypeEffectiveness(
   types::handle moveHandle, const Attacker& attacker, const Defenders& defenders, const TypeName& type,
   DamageRollModifier& modifier);
 void applyDamageRollsAndModifiers(Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp);
+void applyBurnModifier(types::registry& registry, const CurrentActionMoves& moves);
+void setDamageToFirstRoll(const DamageRolls& damageRolls, Damage& damage);
 
 void calculateAllDamageRolls(DamageRolls& damageRolls, const Damage& damage, const DamageRollModifier& modifier);
 
@@ -15514,6 +15557,7 @@ calc_damage::Results Simulation::calculateDamage(std::optional<calc_damage::Opti
     calculateDamageOptions = options.value();
   }
 
+  updateAllStats(*this);
   calc_damage::run(*this);
 
   return {*this};
@@ -15524,6 +15568,7 @@ analyze_effect::Results Simulation::analyzeEffect(std::optional<analyze_effect::
     analyzeEffectOptions = options.value();
   }
 
+  updateAllStats(*this);
   analyze_effect::run(*this);
 
   return {*this};
@@ -16963,48 +17008,6 @@ void runModifySpe(Simulation& simulation) {
 
 ////////////////////// END OF src/Simulation/RunEvent.cpp //////////////////////
 
-////////////// START OF src/Battle/Pokemon/ManagePokemonState.hpp //////////////
-
-namespace pokesim {
-class Simulation;
-struct CurrentActionSource;
-struct CurrentActionTargets;
-struct CurrentActionMoveSlot;
-struct Damage;
-struct Pp;
-
-namespace stat {
-struct Atk;
-struct Def;
-struct Spa;
-struct Spd;
-struct Spe;
-struct CurrentHp;
-}  // namespace stat
-
-void setStatus(types::handle pokemonHandle, dex::Status status);
-void clearStatus(types::handle pokemonHandle);
-
-void deductPp(Pp& pp);
-void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMoveSlot& move);
-void resetEffectiveAtk(types::handle handle, stat::Atk atk);
-void resetEffectiveDef(types::handle handle, stat::Def def);
-void resetEffectiveSpa(types::handle handle, stat::Spa spa);
-void resetEffectiveSpd(types::handle handle, stat::Spd spd);
-void resetEffectiveSpe(types::handle handle, stat::Spe spe);
-
-void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets);
-
-void updateAllStats(Simulation& simulation);
-void updateAtk(Simulation& simulation);
-void updateDef(Simulation& simulation);
-void updateSpa(Simulation& simulation);
-void updateSpd(Simulation& simulation);
-void updateSpe(Simulation& simulation);
-}  // namespace pokesim
-
-/////////////// END OF src/Battle/Pokemon/ManagePokemonState.hpp ///////////////
-
 ///////////////////// START OF src/Components/Accuracy.hpp /////////////////////
 
 namespace pokesim {
@@ -17358,7 +17361,7 @@ void clearRandomChanceResult(Simulation& simulation);
 namespace pokesim {
 class Simulation;
 struct CurrentActionSource;
-struct CurrentActionMove;
+struct CurrentActionMoves;
 struct CurrentActionTargets;
 struct Accuracy;
 struct Battle;
@@ -17371,7 +17374,8 @@ template <auto Function>
 void runMoveHitCheck(Simulation& simulation);
 void postMoveHitCheck(Simulation& simulation);
 void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets);
-void removeFailedHitTargets(types::handle moveTarget, const CurrentActionTargets& targets);
+void removeFailedHitTargets(
+  types::handle moveTarget, const CurrentActionTargets& targets, const CurrentActionSource& source);
 }  // namespace internal
 
 void setMoveHitCount(Simulation& simulation);
@@ -17388,6 +17392,9 @@ void runMoveHitChecks(Simulation& simulation);
 //////////////////// END OF src/Simulation/MoveHitSteps.hpp ////////////////////
 
 /////////////////// START OF src/Simulation/MoveHitSteps.cpp ///////////////////
+
+#include <algorithm>
+
 
 namespace pokesim {
 void setMoveHitCount(Simulation& simulation) {
@@ -17465,12 +17472,20 @@ void moveHitLoop(Simulation& simulation) {
   }
 }
 
-void internal::removeFailedHitTargets(types::handle moveTarget, const CurrentActionTargets& targets) {
+void internal::removeFailedHitTargets(
+  types::handle moveTarget, const CurrentActionTargets& targets, const CurrentActionSource& source) {
   types::registry& registry = *moveTarget.registry();
   for (types::entity target : targets.val) {
     registry.remove<tags::CurrentActionMoveTarget>(target);
-    registry.remove<CurrentActionMove>(target);
+
+    CurrentActionMoves& moves = registry.get<CurrentActionMoves>(target);
+    auto newEnd = std::remove(moves.val.begin(), moves.val.end(), moveTarget.entity());
+    moves.val.erase(newEnd, moves.val.end());
   }
+
+  CurrentActionMoves& moves = registry.get<CurrentActionMoves>(source.val);
+  auto newEnd = std::remove(moves.val.begin(), moves.val.end(), moveTarget.entity());
+  moves.val.erase(newEnd, moves.val.end());
 }
 
 void internal::updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets) {
@@ -17902,7 +17917,7 @@ void getMoveTargets(Simulation& simulation) {
     simulation.view<addUserAllyToTargets, Tags<tags::CurrentActionMove, move::added_targets::tags::UserAlly>>();
   }
   simulation.view<resolveMoveTargets, Tags<tags::CurrentActionMove>, entt::exclude_t<AddedTargets>>();
-  simulation.view<createActionMoveForTargets, Tags<tags::CurrentActionMoveTarget>, entt::exclude_t<CurrentActionMove>>(
+  simulation.view<createActionMoveForTargets, Tags<tags::CurrentActionMoveTarget>, entt::exclude_t<CurrentActionMoves>>(
     simulation.pokedex);
 }
 
@@ -20182,24 +20197,14 @@ void internal::StaticEvents::onModifySpe(stat::EffectiveSpe& effectiveSpe) {
 //////////// START OF src/CalcDamage/Setup/CalcDamageInputSetup.cpp ////////////
 
 namespace pokesim::calc_damage {
-InputSetup::InputSetup(types::registry& registry, const Pokedex& pokedex, dex::Move move)
-    : handle(registry, pokedex.buildActionMove(move, registry)) {
+InputSetup::InputSetup(
+  types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
+  dex::Move move, const Pokedex& pokedex)
+    : handle(registry, createActionMoveForTarget({registry, targetEntity}, battleEntity, sourceEntity, move, pokedex)) {
   handle.emplace<MoveName>(move);
-}
-
-void InputSetup::setAttacker(types::entity entity) {
-  handle.emplace<Attacker>(entity);
-}
-
-void InputSetup::setDefender(types::entity entity) {
-  ENTT_ASSERT(
-    !handle.try_get<Defenders>(),
-    "Calc damage only supports one defender per move. Make a new move instead.");
-  handle.emplace<Defenders>().val.push_back(entity);
-}
-
-void InputSetup::setBattle(types::entity entity) {
-  handle.emplace<Battle>(entity);
+  handle.emplace<pokesim::tags::CalculateDamage>();
+  registry.emplace_or_replace<tags::Attacker>(sourceEntity);
+  registry.emplace_or_replace<tags::Defender>(targetEntity);
 }
 
 types::entity InputSetup::entity() const {
@@ -20324,6 +20329,16 @@ void internal::checkForAndApplyTypeEffectiveness(
   }
 }
 
+void internal::applyBurnModifier(types::registry& registry, const CurrentActionMoves& moves) {
+  for (types::entity move : moves.val) {
+    if (!registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag> */) {
+      return;
+    }
+
+    chainToModifier(registry.get<DamageRollModifier>(move).val, 0.5F);
+  }
+}
+
 void internal::setDamageToAtLeastOne(Damage& damage) {
   damage.val = std::max(damage.val, (types::damage)1U);
 }
@@ -20331,6 +20346,9 @@ void internal::setDamageToAtLeastOne(Damage& damage) {
 void setDamageRollModifiers(Simulation& simulation) {
   simulation.viewForSelectedMoves<internal::checkForAndApplyStab>();
   simulation.viewForSelectedMoves<internal::checkForAndApplyTypeEffectiveness>();
+  simulation.viewForSelectedPokemon<
+    internal::applyBurnModifier,
+    Tags<status::tags::Burn, tags::Attacker> /*, entt::exclude<ability::tags::Guts> */>();
 }
 
 void internal::setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
@@ -20367,6 +20385,7 @@ void internal::reduceDamageRollsToFoeHp(
   const auto& defenderHp = moveHandle.registry()->get<pokesim::stat::CurrentHp>(defenders.val[0]);
   for (auto& damageRoll : damageRolls.val) {
     damageRoll.val = std::min(defenderHp.val, damageRoll.val);
+    setDamageToAtLeastOne(damageRoll);
   }
 }
 
@@ -20374,6 +20393,8 @@ void internal::applyAverageDamageRollAndModifier(
   DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
   applyAverageDamageRoll(damage);
   applyChainedModifier(damage.val, modifier.val);
+  setDamageToAtLeastOne(damage);
+
   damageRolls.val.emplace_back(damage);
 }
 
@@ -20381,11 +20402,18 @@ void internal::applyMinDamageRollAndModifier(
   DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
   applyMinDamageRoll(damage);
   applyChainedModifier(damage.val, modifier.val);
+  setDamageToAtLeastOne(damage);
+
   damageRolls.val.emplace_back(damage);
 }
+
 void internal::applyDamageModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
   applyChainedModifier(damage.val, modifier.val);
   damageRolls.val.emplace_back(damage);
+}
+
+void internal::setDamageToFirstRoll(const DamageRolls& damageRolls, Damage& damage) {
+  damage = damageRolls.val[0];
 }
 
 void internal::applyDamageRollsAndModifiers(
@@ -20441,6 +20469,9 @@ void applyDamageRollsAndModifiers(Simulation& simulation) {
     internal::applyDamageRollsAndModifiers(simulation, damageRollKind, calculateUpToFoeHp);
     if constexpr (std::is_same_v<pokesim::tags::SimulateTurn, SimulationTag>) {
       simulate_turn::cloneFromDamageRolls(simulation, damageRollKind);
+    }
+    else {
+      simulation.viewForSelectedMoves<internal::setDamageToFirstRoll>();
     }
   };
 
@@ -20555,8 +20586,6 @@ void getDamage(Simulation& simulation) {
   applyDamageRollsAndModifiers<pokesim::tags::CalculateDamage>(simulation);
   applyDamageRollsAndModifiers<pokesim::tags::AnalyzeEffect>(simulation);
   simulation.registry.clear<DamageRollModifier>();
-
-  simulation.viewForSelectedMoves<internal::setDamageToAtLeastOne>();
 }
 }  // namespace pokesim::calc_damage
 
@@ -20992,7 +21021,7 @@ void BattleStateSetup::setCurrentActionSource(types::entity actionSource) {
 }
 
 void BattleStateSetup::setCurrentActionMove(types::entity actionMove) {
-  handle.emplace<CurrentActionMove>(actionMove);
+  handle.emplace<CurrentActionMoves>().val.push_back(actionMove);
   handle.registry()->emplace<tags::CurrentActionMove>(actionMove);
 }
 
@@ -21241,7 +21270,7 @@ void clearCurrentAction(Simulation& simulation) {
   registry.clear<CurrentAction>();
   registry.clear<CurrentActionTargets>();
   registry.clear<CurrentActionSource>();
-  registry.clear<CurrentActionMove>();
+  registry.clear<CurrentActionMoves>();
   registry.clear<CurrentActionMoveSlot>();
 
   registry.clear<tags::CurrentActionMoveTarget>();
@@ -21369,7 +21398,8 @@ types::entity createActionMoveForTarget(
   registry.emplace<CurrentActionSource>(moveEntity, sourceEntity);
   registry.emplace<CurrentActionTargets>(moveEntity).val.push_back(targetHandle.entity());
 
-  targetHandle.emplace<CurrentActionMove>(moveEntity);
+  targetHandle.get_or_emplace<CurrentActionMoves>().val.push_back(moveEntity);
+  registry.get_or_emplace<CurrentActionMoves>(sourceEntity).val.push_back(moveEntity);
 
   return moveEntity;
 }
@@ -21487,8 +21517,10 @@ void traversePokemon(types::registry& registry, VisitEntity visitEntity = nullpt
     }
   }
 
-  for (const auto [entity, move] : registry.view<Tag, CurrentActionMove>().each()) {
-    registry.emplace<Tag>(move.val);
+  for (const auto [entity, moves] : registry.view<Tag, CurrentActionMoves>().each()) {
+    for (types::entity move : moves.val) {
+      registry.emplace_or_replace<Tag>(move);
+    }
   }
 }
 
@@ -21643,7 +21675,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
   internal::remapComponentEntities<Battle>(registry, entityMap);
   internal::remapComponentEntities<ChoiceLock>(registry, entityMap);
   internal::remapComponentEntities<CurrentAction>(registry, entityMap);
-  internal::remapComponentEntities<CurrentActionMove>(registry, entityMap);
+  internal::remapComponentEntities<CurrentActionMoves>(registry, entityMap);
   internal::remapComponentEntities<CurrentActionMoveSlot>(registry, entityMap);
   internal::remapComponentEntities<CurrentActionSource>(registry, entityMap);
   internal::remapComponentEntities<CurrentActionTargets>(registry, entityMap);
@@ -21783,6 +21815,7 @@ InputSetup::InputSetup(types::registry& registry, types::entity entity) : handle
 
 void InputSetup::setAttacker(types::entity entity) {
   handle.emplace<Attacker>(entity);
+  handle.registry()->emplace_or_replace<tags::Attacker>(entity);
 }
 
 void InputSetup::setEffectTarget(types::entity entity) {
@@ -21794,9 +21827,10 @@ void InputSetup::setDefender(types::entity entity) {
     !handle.try_get<Defenders>(),
     "Calc damage only supports one defender per move. Make a new move instead.");
   handle.emplace<Defenders>().val.push_back(entity);
+  handle.registry()->emplace_or_replace<tags::Defender>(entity);
 }
 
-void InputSetup::setEffectMoves(std::vector<dex::Move> moves) {
+void InputSetup::setEffectMoves(const std::vector<dex::Move>& moves) {
   handle.get_or_emplace<EffectMoves>().val = moves;
 }
 
@@ -21878,35 +21912,59 @@ struct RemovedEffect {
 namespace pokesim::analyze_effect {
 namespace internal {
 void assignInputsToClones(
-  Simulation& simulation, types::entity battleEntity, const types::ClonedEntityMap& clonedEntityMap) {
-  const Inputs& inputs = simulation.registry.get<Inputs>(battleEntity);
-  const auto& battleClones = clonedEntityMap.at(battleEntity);
+  Simulation& simulation, types::entity originalBattleEntity, const types::ClonedEntityMap& clonedEntityMap) {
+  types::registry& registry = simulation.registry;
+  const Inputs& inputs = registry.get<Inputs>(originalBattleEntity);
+  const auto& battleClones = clonedEntityMap.at(originalBattleEntity);
   ENTT_ASSERT(
     inputs.val.size() == battleClones.size(),
     "Each input must have a clone and no more clones than inputs should be made.");
 
   for (std::size_t i = 0; i < battleClones.size(); i++) {
-    auto [battle, attacker, defenders, effectTarget] =
-      simulation.registry.get<Battle, Attacker, Defenders, EffectTarget>(inputs.val[i]);
-    battle.val = battleClones[i];
-    simulation.registry.emplace<tags::BattleCloneForCalculation>(battleClones[i]);
+    auto [battle, attacker, defenders, effectTarget, moves] =
+      registry.get<Battle, Attacker, Defenders, EffectTarget, EffectMoves>(inputs.val[i]);
+    registry.emplace<tags::BattleCloneForCalculation>(battleClones[i]);
+
+    MovePairs& movePairs = registry.emplace<MovePairs>(inputs.val[i]);
+    movePairs.val.reserve(moves.val.size());
 
     const auto& clonedAttackers = clonedEntityMap.at(attacker.val);
     ENTT_ASSERT(
       battleClones.size() == clonedAttackers.size(),
       "Each attacker must have a clone and no more clones than inputs should be made.");
-    attacker.val = clonedAttackers[i];
 
     const auto& clonedDefenders = clonedEntityMap.at(defenders.val[0]);
     ENTT_ASSERT(
       battleClones.size() == clonedDefenders.size(),
       "Each defender must have a clone and no more clones than inputs should be made.");
-    defenders.val[0] = clonedDefenders[i];
 
     const auto& clonedEffectTarget = clonedEntityMap.at(effectTarget.val);
     ENTT_ASSERT(
       battleClones.size() == clonedEffectTarget.size(),
       "Each effect target must have a clone and no more clones than inputs should be made.");
+
+    for (dex::Move move : moves.val) {
+      auto createMove = [&](types::entity battleEntity, types::entity attackerEntity, types::entity defenderEntity) {
+        types::entity moveEntity = createActionMoveForTarget(
+          {simulation.registry, defenderEntity},
+          battleEntity,
+          attackerEntity,
+          move,
+          simulation.pokedex);
+        registry.emplace<MoveName>(moveEntity, move);
+        registry.emplace<pokesim::tags::AnalyzeEffect>(moveEntity);
+
+        return moveEntity;
+      };
+
+      movePairs.val.emplace_back(
+        createMove(battle.val, attacker.val, defenders.val[0]),
+        createMove(battleClones[i], clonedAttackers[i], clonedDefenders[i]));
+    }
+
+    battle.val = battleClones[i];
+    attacker.val = clonedAttackers[i];
+    defenders.val[0] = clonedDefenders[i];
     effectTarget.val = clonedEffectTarget[i];
   }
 }
@@ -21975,31 +22033,6 @@ void applyBoostEffect(
   }
 }
 
-void createMoves(
-  types::handle inputHandle, Battle battle, ParentBattle parentBattle, Attacker attacker, const Defenders& defenders,
-  const EffectMoves& moves, const Pokedex& pokedex) {
-  types::registry& registry = *inputHandle.registry();
-  ENTT_ASSERT(!moves.val.empty(), "The list of moves cannot be blank.");
-
-  MovePairs& movePairs = inputHandle.emplace<MovePairs>();
-  movePairs.val.reserve(moves.val.size());
-
-  for (dex::Move move : moves.val) {
-    auto createMove = [&](types::entity battleEntity) {
-      types::handle moveHandle{registry, pokedex.buildActionMove(move, registry)};
-      moveHandle.emplace<MoveName>(move);
-      moveHandle.emplace<Attacker>(attacker);
-      moveHandle.emplace<Defenders>(defenders);
-      moveHandle.emplace<Battle>(battleEntity);
-      moveHandle.emplace<pokesim::tags::AnalyzeEffect>();
-      moveHandle.emplace<tags::Move>();
-      return moveHandle.entity();
-    };
-
-    movePairs.val.emplace_back(createMove(parentBattle.val), createMove(battle.val));
-  }
-}
-
 void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
   bool invert = inputHandle.all_of<tags::InvertFinalAnswer>();
   types::registry& registry = *inputHandle.registry();
@@ -22009,19 +22042,19 @@ void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
     auto [parentDamage, parentDamageRolls] = registry.get<Damage, DamageRolls>(parentBattleMove);
 
     if (invert) {
-      if (parentDamage.val == 0) {
-        registry.emplace<tags::InfiniteMultiplier>(parentBattleMove);
-      }
-      else {
-        registry.emplace<EffectMultiplier>(parentBattleMove, (float)childDamage.val / parentDamage.val);
-      }
-    }
-    else {
       if (childDamage.val == 0) {
         registry.emplace<tags::InfiniteMultiplier>(parentBattleMove);
       }
       else {
         registry.emplace<EffectMultiplier>(parentBattleMove, (float)parentDamage.val / childDamage.val);
+      }
+    }
+    else {
+      if (parentDamage.val == 0) {
+        registry.emplace<tags::InfiniteMultiplier>(parentBattleMove);
+      }
+      else {
+        registry.emplace<EffectMultiplier>(parentBattleMove, (float)childDamage.val / parentDamage.val);
       }
 
       parentDamage = childDamage;
@@ -22038,6 +22071,13 @@ void postRunCleanup(Simulation& simulation) {
 }  // namespace internal
 
 void run(Simulation& simulation) {
+  pokesim::internal::SelectForPokemonView<pokesim::tags::AnalyzeEffect> selectedPokemon(simulation);
+  pokesim::internal::SelectForBattleView<pokesim::tags::AnalyzeEffect> selectedBattle(simulation);
+
+  if (selectedPokemon.hasNoneSelected() || selectedBattle.hasNoneSelected()) {
+    return;
+  }
+
   if (!simulation.analyzeEffectOptions.reconsiderActiveEffects) {
     internal::ignoreBattlesWithEffectActive(simulation);
   }
@@ -22056,8 +22096,6 @@ void run(Simulation& simulation) {
   simulation.view<internal::applyBoostEffect<SpaBoost>, Tags<tags::Input>>();
   simulation.view<internal::applyBoostEffect<SpdBoost>, Tags<tags::Input>>();
   simulation.view<internal::applyBoostEffect<SpeBoost>, Tags<tags::Input>>();
-
-  simulation.view<internal::createMoves, Tags<tags::Input>>(simulation.pokedex);
 
   calc_damage::run(simulation);
 

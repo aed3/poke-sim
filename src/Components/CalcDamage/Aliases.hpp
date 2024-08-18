@@ -6,7 +6,7 @@
 namespace pokesim::calc_damage {
 using Attacker = CurrentActionSource;
 using Defenders = CurrentActionTargets;
-using UsedMove = CurrentActionMove;
+using UsedMove = CurrentActionMoves;
 
 namespace tags {
 using Attacker = pokesim::tags::CurrentActionMoveSource;

@@ -8,7 +8,7 @@
 namespace pokesim {
 class Simulation;
 struct CurrentActionSource;
-struct CurrentActionMove;
+struct CurrentActionMoves;
 struct CurrentActionTargets;
 struct Accuracy;
 struct Battle;
@@ -21,7 +21,8 @@ template <auto Function>
 void runMoveHitCheck(Simulation& simulation);
 void postMoveHitCheck(Simulation& simulation);
 void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets);
-void removeFailedHitTargets(types::handle moveTarget, const CurrentActionTargets& targets);
+void removeFailedHitTargets(
+  types::handle moveTarget, const CurrentActionTargets& targets, const CurrentActionSource& source);
 }  // namespace internal
 
 void setMoveHitCount(Simulation& simulation);

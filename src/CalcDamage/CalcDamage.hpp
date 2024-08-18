@@ -9,6 +9,7 @@
 namespace pokesim {
 class Simulation;
 struct BasePower;
+struct CurrentActionMoves;
 struct Damage;
 struct DamageRolls;
 struct DamageRollModifier;
@@ -41,6 +42,8 @@ void checkForAndApplyTypeEffectiveness(
   types::handle moveHandle, const Attacker& attacker, const Defenders& defenders, const TypeName& type,
   DamageRollModifier& modifier);
 void applyDamageRollsAndModifiers(Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp);
+void applyBurnModifier(types::registry& registry, const CurrentActionMoves& moves);
+void setDamageToFirstRoll(const DamageRolls& damageRolls, Damage& damage);
 
 void calculateAllDamageRolls(DamageRolls& damageRolls, const Damage& damage, const DamageRollModifier& modifier);
 

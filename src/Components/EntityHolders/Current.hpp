@@ -2,6 +2,7 @@
 
 #include <Types/Entity.hpp>
 #include <Types/State.hpp>
+#include <vector>
 
 namespace pokesim {
 struct CurrentAction {
@@ -20,8 +21,8 @@ struct CurrentActionSource {
   types::entity val{};
 };
 
-struct CurrentActionMove {
-  types::entity val{};
+struct CurrentActionMoves {
+  std::vector<types::entity> val{};
 };
 
 struct CurrentActionMoveSlot {

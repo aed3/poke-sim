@@ -15,11 +15,9 @@ struct InputSetup {
   types::handle handle;
 
  public:
-  InputSetup(types::registry& registry, const Pokedex& pokedex, dex::Move move);
-
-  void setAttacker(types::entity entity);
-  void setDefender(types::entity entity);
-  void setBattle(types::entity entity);
+  InputSetup(
+    types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
+    dex::Move move, const Pokedex& pokedex);
 
   types::entity entity() const;
 };

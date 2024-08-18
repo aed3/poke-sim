@@ -87,7 +87,7 @@ void BattleStateSetup::setCurrentActionSource(types::entity actionSource) {
 }
 
 void BattleStateSetup::setCurrentActionMove(types::entity actionMove) {
-  handle.emplace<CurrentActionMove>(actionMove);
+  handle.emplace<CurrentActionMoves>().val.push_back(actionMove);
   handle.registry()->emplace<tags::CurrentActionMove>(actionMove);
 }
 

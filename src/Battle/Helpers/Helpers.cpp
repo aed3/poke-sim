@@ -110,7 +110,8 @@ types::entity createActionMoveForTarget(
   registry.emplace<CurrentActionSource>(moveEntity, sourceEntity);
   registry.emplace<CurrentActionTargets>(moveEntity).val.push_back(targetHandle.entity());
 
-  targetHandle.emplace<CurrentActionMove>(moveEntity);
+  targetHandle.get_or_emplace<CurrentActionMoves>().val.push_back(moveEntity);
+  registry.get_or_emplace<CurrentActionMoves>(sourceEntity).val.push_back(moveEntity);
 
   return moveEntity;
 }

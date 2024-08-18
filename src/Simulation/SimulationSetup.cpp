@@ -185,10 +185,8 @@ void Simulation::createCalcDamageInput(
   types::entity attackerEntity = slotToPokemonEntity(registry, sides, damageCalcInputData.attackerSlot);
   types::entity defenderEntity = slotToPokemonEntity(registry, sides, damageCalcInputData.defenderSlot);
 
-  calc_damage::InputSetup inputSetup(registry, pokedex, damageCalcInputData.move);
-  inputSetup.setAttacker(attackerEntity);
-  inputSetup.setDefender(defenderEntity);
-  inputSetup.setBattle(battleStateSetup.entity());
+  calc_damage::InputSetup
+    inputSetup(registry, battleStateSetup.entity(), attackerEntity, defenderEntity, damageCalcInputData.move, pokedex);
 }
 
 void Simulation::createAnalyzeEffectInput(
