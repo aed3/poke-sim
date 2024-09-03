@@ -4,66 +4,64 @@ namespace pokesim {
 TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
   using SpeedSortList = std::vector<SpeedSort>;
 
-  auto runSpeedSortTest = [](
-                            SpeedSortList speedSortList,
-                            SpeedSortList idealSortedList,
-                            SpeedTieIndexes idealSpeedTies = {}) {
-    types::registry registry;
-    ActionQueue initialQueue;
+  auto runSpeedSortTest =
+    [](SpeedSortList speedSortList, SpeedSortList idealSortedList, SpeedTieIndexes idealSpeedTies = {}) {
+      types::registry registry;
+      ActionQueue initialQueue;
 
-    for (const SpeedSort& speedSort : speedSortList) {
-      types::entity entity = registry.create();
-      registry.emplace<SpeedSort>(entity, speedSort);
-      initialQueue.val.push_back(entity);
-    }
-
-    types::handle handle{registry, registry.create()};
-    ActionQueue sortedQueue = initialQueue;
-
-    simulate_turn::speedSort(handle, sortedQueue);
-
-    REQUIRE(initialQueue.val.size() == sortedQueue.val.size());
-    for (types::entity entity : initialQueue.val) {
-      bool entityFound = false;
-      for (types::entity sortedEntity : sortedQueue.val) {
-        if (sortedEntity == entity) {
-          entityFound = true;
-          break;
-        }
+      for (const SpeedSort& speedSort : speedSortList) {
+        types::entity entity = registry.create();
+        registry.emplace<SpeedSort>(entity, speedSort);
+        initialQueue.val.push_back(entity);
       }
 
-      REQUIRE(entityFound);
-    }
+      types::handle handle{registry, registry.create()};
+      ActionQueue sortedQueue = initialQueue;
 
-    for (std::size_t i = 0; i < idealSortedList.size(); i++) {
-      INFO(std::to_string(i));
-      const SpeedSort& idealSpeedSort = idealSortedList[i];
-      const SpeedSort& trueSpeedSort = registry.get<SpeedSort>(sortedQueue.val[i]);
+      simulate_turn::speedSort(handle, sortedQueue);
 
-      REQUIRE(trueSpeedSort.order == idealSpeedSort.order);
-      REQUIRE(trueSpeedSort.priority == idealSpeedSort.priority);
-      REQUIRE(trueSpeedSort.fractionalPriority == idealSpeedSort.fractionalPriority);
-      REQUIRE(trueSpeedSort.speed == idealSpeedSort.speed);
-    }
+      REQUIRE(initialQueue.val.size() == sortedQueue.val.size());
+      for (types::entity entity : initialQueue.val) {
+        bool entityFound = false;
+        for (types::entity sortedEntity : sortedQueue.val) {
+          if (sortedEntity == entity) {
+            entityFound = true;
+            break;
+          }
+        }
 
-    if (idealSpeedTies.spans.empty()) {
-      REQUIRE_FALSE(handle.all_of<SpeedTieIndexes>());
-      return;
-    }
+        REQUIRE(entityFound);
+      }
 
-    REQUIRE(handle.all_of<SpeedTieIndexes>());
-    const SpeedTieIndexes& trueSpeedTies = handle.get<SpeedTieIndexes>();
+      for (std::size_t i = 0; i < idealSortedList.size(); i++) {
+        INFO(std::to_string(i));
+        const SpeedSort& idealSpeedSort = idealSortedList[i];
+        const SpeedSort& trueSpeedSort = registry.get<SpeedSort>(sortedQueue.val[i]);
 
-    REQUIRE(trueSpeedTies.spans.size() == idealSpeedTies.spans.size());
-    for (const auto& idealSpeedTie : idealSpeedTies.spans) {
-      bool found =
-        std::any_of(trueSpeedTies.spans.begin(), trueSpeedTies.spans.end(), [&idealSpeedTie](const auto& trueSpeedTie) {
-          return trueSpeedTie.start == idealSpeedTie.start && trueSpeedTie.length == trueSpeedTie.length;
-        });
+        REQUIRE(trueSpeedSort.order == idealSpeedSort.order);
+        REQUIRE(trueSpeedSort.priority == idealSpeedSort.priority);
+        REQUIRE(trueSpeedSort.fractionalPriority == idealSpeedSort.fractionalPriority);
+        REQUIRE(trueSpeedSort.speed == idealSpeedSort.speed);
+      }
 
-      REQUIRE(found);
-    }
-  };
+      if (idealSpeedTies.val.empty()) {
+        REQUIRE_FALSE(handle.all_of<SpeedTieIndexes>());
+        return;
+      }
+
+      REQUIRE(handle.all_of<SpeedTieIndexes>());
+      const SpeedTieIndexes& trueSpeedTies = handle.get<SpeedTieIndexes>();
+
+      REQUIRE(trueSpeedTies.val.size() == idealSpeedTies.val.size());
+      for (const auto& idealSpeedTie : idealSpeedTies.val) {
+        bool found =
+          std::any_of(trueSpeedTies.val.begin(), trueSpeedTies.val.end(), [&idealSpeedTie](const auto& trueSpeedTie) {
+            return trueSpeedTie.start == idealSpeedTie.start && trueSpeedTie.length == trueSpeedTie.length;
+          });
+
+        REQUIRE(found);
+      }
+    };
 
   SECTION("One Queue Item") {
     SpeedSort emptySpeedSort{};

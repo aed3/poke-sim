@@ -191,7 +191,7 @@ void assignIndexToClones(
     for (std::size_t index = 0; index < cloned.size(); index++) {
       ENTT_ASSERT(
         std::numeric_limits<types::eventPossibilities>::max() > index,
-        "Number of clones shouldn't be greater than the number of possible events");
+        "Number of clones shouldn't be greater than the number of possible events.");
       registry.emplace<RandomEventIndex>(cloned[index], (types::eventPossibilities)(index + 1U));
     }
   }

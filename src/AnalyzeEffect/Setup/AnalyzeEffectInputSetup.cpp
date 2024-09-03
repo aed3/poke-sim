@@ -71,7 +71,7 @@ void InputSetup::setEffect(types::effectEnum effect) {
     handle.emplace<WeatherName>(effect.get<dex::Weather>());
   }
   else {
-    ENTT_FAIL("Effect does not contain a valid enum");
+    ENTT_FAIL("Effect does not contain a valid enum.");
   }
 }
 

@@ -194,8 +194,8 @@ void deleteMove(types::registry& registry) {
 }
 
 void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
-  ENTT_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map");
-  ENTT_ASSERT(entityMap.at(entity).size() > cloneTo.val, "More entities are trying to be copied to than were copied");
+  ENTT_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map.");
+  ENTT_ASSERT(entityMap.at(entity).size() > cloneTo.val, "More entities are trying to be copied to than were copied.");
   entity = entityMap.at(entity)[cloneTo.val];
 }
 
@@ -291,6 +291,13 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
     registry.insert<ParentBattle>(clonedBattles.begin(), clonedBattles.end(), {originalBattle});
   }
 
+#ifndef NDEBUG
+  for (const auto& [src, destinations] : entityMap) {
+    registry.remove<ParentEntity>(destinations.begin(), destinations.end());
+    registry.insert<ParentEntity>(destinations.begin(), destinations.end(), {src});
+  }
+#endif
+
   return entityMap;
 }
 
@@ -301,5 +308,7 @@ void deleteClones(types::registry& registry) {
   internal::deletePokemon(registry);
   internal::deleteCurrentActionMove(registry);
   internal::deleteMove(registry);
+  auto remove = registry.view<tags::CloneToRemove>();
+  registry.destroy(remove.begin(), remove.end());
 }
 }  // namespace pokesim

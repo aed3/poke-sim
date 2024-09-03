@@ -95,13 +95,23 @@ void Simulation::run() {
   analyzeEffect();
 }
 
-std::vector<types::entity> Simulation::selectedBattleEntities() {
+std::vector<types::entity> Simulation::selectedBattleEntities() const {
   if (hasActiveSelection<tags::SelectedForViewBattle>()) {
-    auto view = registry.view<tags::SelectedForViewBattle, Sides>();
+    auto view = registry.view<tags::SelectedForViewBattle, tags::Battle>();
     return {view.begin(), view.end()};
   }
 
-  auto view = registry.view<Sides>();
+  auto view = registry.view<tags::Battle>();
+  return {view.begin(), view.end()};
+}
+
+std::vector<types::entity> Simulation::selectedMoveEntities() const {
+  if (hasActiveSelection<tags::SelectedForViewMove>()) {
+    auto view = registry.view<tags::SelectedForViewMove, tags::CurrentActionMove>();
+    return {view.begin(), view.end()};
+  }
+
+  auto view = registry.view<tags::CurrentActionMove>();
   return {view.begin(), view.end()};
 }
 }  // namespace pokesim

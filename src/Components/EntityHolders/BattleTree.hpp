@@ -10,4 +10,10 @@ struct ParentBattle {
 struct RootBattle {
   types::entity val{};
 };
+
+#ifndef NDEBUG
+struct ParentEntity {
+  types::entity val{};
+};
+#endif
 }  // namespace pokesim

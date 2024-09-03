@@ -51,7 +51,7 @@ types::entity Pokedex::buildItem(dex::Item item, types::registry& registry, bool
     default: break;
   }
 
-  ENTT_FAIL("Building an item that does not exist");
+  ENTT_FAIL("Building an item that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim

@@ -1,6 +1,7 @@
 #include "CalcDamageInputSetup.hpp"
 
 #include <Battle/Helpers/Helpers.hpp>
+#include <Components/CalcDamage/Aliases.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Types/Entity.hpp>

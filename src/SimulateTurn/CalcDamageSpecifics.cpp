@@ -78,6 +78,7 @@ void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind)
       : [](Simulation& sim) { sim.viewForSelectedMoves<internal::assignProbability>(); };
 
   randomEventCount(simulation, applyChoices, updateProbabilities);
+  simulation.removeFromEntities<DamageRolls, pokesim::tags::SelectedForViewMove>();
 }
 
 void setIfMoveCrits(Simulation& simulation) {

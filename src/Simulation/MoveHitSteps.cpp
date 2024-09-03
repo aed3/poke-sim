@@ -119,7 +119,7 @@ void internal::updateCurrentActionTargets(types::registry& registry, CurrentActi
   for (types::entity& target : targets.val) {
     if (!registry.all_of<tags::CurrentActionMoveTarget>(target)) {
       std::uint8_t swapIndex = targets.val.size() - 1 - deleteCount;
-      ENTT_ASSERT(swapIndex >= 0 && swapIndex < targets.val.size(), "Swap index out of bounds");
+      ENTT_ASSERT(swapIndex >= 0 && swapIndex < targets.val.size(), "Swap index out of bounds.");
       std::swap(target, targets.val[swapIndex]);
       deleteCount++;
     }
@@ -134,7 +134,7 @@ void internal::postMoveHitCheck(Simulation& simulation) {
     Tags<tags::CurrentActionMove>,
     entt::exclude_t<tags::internal::MoveHits>>();
   simulation.registry.destroy(removedMoves.begin(), removedMoves.end());
-  simulation.registry.clear<Damage, DamageRolls>();
+  simulation.registry.clear<Damage>();
   simulation.view<internal::updateCurrentActionTargets>();
 }
 

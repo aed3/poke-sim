@@ -73,6 +73,7 @@ set (SOURCES
   src/Simulation/Simulation.cpp
   src/Simulation/SimulationResults.cpp
   src/Simulation/SimulationSetup.cpp
+  src/Utilities/DebugChecks.cpp
 )
 
 add_library(PokeSim STATIC ${SOURCES})
