@@ -81,7 +81,7 @@ types::entity Pokedex::buildSpecies(dex::Species species, types::registry& regis
     default: break;
   }
 
-  ENTT_FAIL("Building a species that does not exist");
+  ENTT_FAIL("Building a species that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim

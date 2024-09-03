@@ -5,6 +5,7 @@
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/LastUsedMove.hpp>
 #include <Components/Names/StatNames.hpp>
+#include <Components/Names/StatusNames.hpp>
 #include <Components/PP.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/PokemonTags.hpp>
@@ -66,7 +67,7 @@ void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
 }
 
 void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets) {
-  stat::CurrentHp& hp = registry.get<stat::CurrentHp>(targets.val[0]);
+  stat::CurrentHp& hp = registry.get<stat::CurrentHp>(targets.only());
   if (damage.val > hp.val) {
     hp.val = 0;
     // Faint

@@ -13,7 +13,7 @@
 namespace pokesim::dex::internal {
 void setChoiceLock(types::handle pokemonHandle, const Battle& battle) {
   types::entity moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val).val;
-  pokemonHandle.emplace<ChoiceLock>(moveSlot);
+  pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot);
 }
 }  // namespace pokesim::dex::internal
 

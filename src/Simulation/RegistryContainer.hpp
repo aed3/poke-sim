@@ -45,6 +45,22 @@ class RegistryContainer {
     }
   }
 
+  template <typename Selection>
+  const SelectionFunctionList& selectedFunctions() const {
+    if constexpr (std::is_same_v<tags::SelectedForViewBattle, Selection>) {
+      return battleSelection;
+    }
+    else if constexpr (std::is_same_v<tags::SelectedForViewSide, Selection>) {
+      return sideSelection;
+    }
+    else if constexpr (std::is_same_v<tags::SelectedForViewPokemon, Selection>) {
+      return pokemonSelection;
+    }
+    else {
+      return moveSelection;
+    }
+  }
+
   template <typename Selection, typename GetNewSelection, typename GetUnmatchedSelection>
   std::size_t select(
     GetNewSelection getNewSelection, GetUnmatchedSelection getUnmatchedSelection, SelectionFunction selectionFunction,
@@ -73,7 +89,7 @@ class RegistryContainer {
 
       ENTT_ASSERT(
         unmatchedSelectionSize < totalSelected,
-        "The number of elements removed from the active selection must be less than the number of elements selected");
+        "The number of elements removed from the active selection must be less than the number of elements selected.");
       finalSelectionSize = totalSelected - unmatchedSelectionSize;
     }
     else {
@@ -87,14 +103,16 @@ class RegistryContainer {
     return finalSelectionSize;
   }
 
-  template <typename Selection, typename Required, typename... ComponentsToSelect>
-  std::size_t select() {
-    auto getNewSelection = [](types::registry& reg) { return reg.group<>(entt::get<Required, ComponentsToSelect...>); };
+  template <typename Selection, typename Required, typename... ComponentsToSelect, typename... ComponentsToExclude>
+  std::size_t select(entt::exclude_t<ComponentsToExclude...> exclude) {
+    auto getNewSelection = [&exclude](types::registry& reg) {
+      return reg.group<>(entt::get<Required, ComponentsToSelect...>, exclude);
+    };
     auto getUnmatchedSelection = [](types::registry& reg) {
-      return reg.group<>(entt::get<Selection>, entt::exclude<ComponentsToSelect...>);
+      return reg.group<>(entt::get<Selection, ComponentsToExclude...>, entt::exclude<ComponentsToSelect...>);
     };
     SelectionFunction selectionFunction{[](const void*, const types::registry& reg) {
-      auto view = reg.view<Required, ComponentsToSelect...>();
+      auto view = reg.view<Required, ComponentsToSelect...>(entt::exclude<ComponentsToExclude...>);
       return std::vector<types::entity>{view.begin(), view.end()};
     }};
 
@@ -146,7 +164,7 @@ class RegistryContainer {
 
  protected:
   template <typename Selection>
-  bool hasActiveSelection() {
+  bool hasActiveSelection() const {
     return !selectedFunctions<Selection>().empty();
   }
 

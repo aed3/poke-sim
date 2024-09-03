@@ -65,9 +65,8 @@ void setCurrentActionMove(
 
   types::entity moveSlotEntity = moveToEntity(registry, moveSlots, move.name);
 
-  ENTT_ASSERT(targets.val.size() == 1, "How did we get here with more or less than 1 target?");
   types::entity moveEntity =
-    createActionMoveForTarget({registry, targets.val[0]}, battleHandle.entity(), source.val, move.name, pokedex);
+    createActionMoveForTarget({registry, targets.only()}, battleHandle.entity(), source.val, move.name, pokedex);
 
   if (battleHandle.all_of<tags::SimulateTurn>()) {
     registry.emplace<tags::SimulateTurn>(moveEntity);

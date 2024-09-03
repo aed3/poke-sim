@@ -10,6 +10,6 @@ struct SpeedTieIndexes {
     std::size_t length = 0;
   };
 
-  std::vector<Span> spans{};
+  std::vector<Span> val{};
 };
 }  // namespace pokesim

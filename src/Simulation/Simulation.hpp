@@ -171,6 +171,8 @@ class Simulation : public internal::RegistryContainer {
   void clearCalculateDamageResults();
   void clearAnalyzeEffectResults();
 
-  std::vector<types::entity> selectedBattleEntities();
+  std::vector<types::entity> selectedBattleEntities() const;
+  std::vector<types::entity> selectedMoveEntities() const;
+  std::vector<types::entity> selectedPokemonEntities() const;
 };
 }  // namespace pokesim

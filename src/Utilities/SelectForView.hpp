@@ -13,9 +13,12 @@
 namespace pokesim::internal {
 template <typename Selection, typename Required, typename... ComponentsToSelect>
 struct SelectForView {
-  SelectForView(RegistryContainer& registryContainer_)
+  template <typename... ComponentsToExclude>
+  SelectForView(
+    RegistryContainer& registryContainer_,
+    entt::exclude_t<ComponentsToExclude...> exclude = entt::exclude<ComponentsToExclude...>)
       : registryContainer(&registryContainer_),
-        selectedCount(registryContainer->select<Selection, Required, ComponentsToSelect...>()) {
+        selectedCount(registryContainer->select<Selection, Required, ComponentsToSelect...>(exclude)) {
     if (hasNoneSelected()) {
       registryContainer = nullptr;
     }

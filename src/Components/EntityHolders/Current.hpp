@@ -15,6 +15,12 @@ struct NextAction {
 
 struct CurrentActionTargets {
   types::targets<types::entity> val{};
+  const types::entity& only() const {
+    ENTT_ASSERT(
+      val.size() == 1,
+      "This method is supposed to get the first target when there's only one target stored.");
+    return val[0];
+  };
 };
 
 struct CurrentActionSource {

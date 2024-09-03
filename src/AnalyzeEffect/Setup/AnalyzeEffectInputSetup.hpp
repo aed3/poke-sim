@@ -5,6 +5,7 @@
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/Stat.hpp>
 #include <Types/Registry.hpp>
+#include <Types/Stats.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <vector>

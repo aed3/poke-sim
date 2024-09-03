@@ -266,7 +266,7 @@ types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool
     default: break;
   }
 
-  ENTT_FAIL("Building a move that does not exist");
+  ENTT_FAIL("Building a move that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim

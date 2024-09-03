@@ -102,7 +102,7 @@ class Pokedex {
   template <typename... T>
   auto getSpeciesData(dex::Species species) const {
     // ENTT_ASSERT(registry.all_of<T...>(speciesMap.at(species)), "Species does not contain at least one of the
-    // component types");
+    // component types.");
     return dexRegistry.get<T...>(speciesMap.at(species));
   }
 

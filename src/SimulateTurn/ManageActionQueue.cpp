@@ -27,8 +27,8 @@
 
 namespace pokesim::simulate_turn {
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
-  ENTT_ASSERT(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player");
-  ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty");
+  ENTT_ASSERT(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player.");
+  ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
   types::registry& registry = *sideHandle.registry();
 
   ActionQueue& battleActionQueue = registry.get<ActionQueue>(sideHandle.get<Battle>().val);
@@ -37,22 +37,22 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
 
     for (const SlotDecision& decision : decisions) {
-      ENTT_ASSERT(decision.sourceSlot != Slot::NONE, "Source slot must be assigned");
+      ENTT_ASSERT(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
       if (sideDecision.sideId == PlayerSideId::P1) {
         ENTT_ASSERT(
           (decision.sourceSlot == Slot::P1A || decision.sourceSlot == Slot::P1B),
-          "Source must be from a player 1 in battle slot");
+          "Source must be from a player 1 in battle slot.");
       }
       else {
         ENTT_ASSERT(
           (decision.sourceSlot == Slot::P2A || decision.sourceSlot == Slot::P2B),
-          "Source must be from a player 2 in battle slot");
+          "Source must be from a player 2 in battle slot.");
       }
 
-      ENTT_ASSERT(decision.targetSlot != Slot::NONE, "Target slot must be assigned");
+      ENTT_ASSERT(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
       ENTT_ASSERT(
         !(decision.moveChoice.has_value() && decision.itemChoice.has_value()),
-        "Decisions can't have a move and an item choice");
+        "Decisions can't have a move and an item choice.");
 
       types::handle actionHandle = {registry, registry.create()};
       actionHandle.emplace<SourceSlotName>(decision.sourceSlot);
@@ -95,7 +95,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
 
     ENTT_ASSERT(
       sideHandle.get<Team>().val.size() == teamOrder.size(),
-      "Must pick a placement for each Pokemon on the team");
+      "Must pick a placement for each Pokemon on the team.");
     types::handle actionHandle = {registry, registry.create()};
 
     actionHandle.emplace<action::Team>(teamOrder);
@@ -154,7 +154,7 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
     }
     else {
       if (tieCount > 1) {
-        speedTies.spans.push_back({lastEqual, tieCount});
+        speedTies.val.push_back({lastEqual, tieCount});
       }
       lastEqual = i;
       tieCount = 1;
@@ -162,10 +162,10 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   }
 
   if (tieCount > 1) {
-    speedTies.spans.push_back({lastEqual, tieCount});
+    speedTies.val.push_back({lastEqual, tieCount});
   }
 
-  if (!speedTies.spans.empty()) {
+  if (!speedTies.val.empty()) {
     handle.emplace<SpeedTieIndexes>(speedTies);
   }
 }

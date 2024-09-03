@@ -54,7 +54,7 @@ RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
 
       if constexpr (
         SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveTarget>...>) {
-        entities.insert(registry.get<CurrentActionTargets>(entity).val[0]);
+        entities.insert(registry.get<CurrentActionTargets>(entity).only());
       }
     });
 

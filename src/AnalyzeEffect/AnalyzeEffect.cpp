@@ -7,15 +7,19 @@
 #include <Components/AnalyzeEffect/Aliases.hpp>
 #include <Components/AnalyzeEffect/AnalyzeEventInputs.hpp>
 #include <Components/AnalyzeEffect/RemovedEffect.hpp>
+#include <Components/Boosts.hpp>
 #include <Components/CloneFromCloneTo.hpp>
+#include <Components/Damage.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
+#include <Components/Names/MoveNames.hpp>
 #include <Components/Names/PseudoWeatherNames.hpp>
 #include <Components/Names/SideConditionNames.hpp>
 #include <Components/Names/StatusNames.hpp>
 #include <Components/Names/TerrainNames.hpp>
 #include <Components/Names/VolatileNames.hpp>
 #include <Components/Names/WeatherNames.hpp>
+#include <Components/SimulationResults.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
@@ -23,6 +27,7 @@
 #include <Types/Enums/Move.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/DebugChecks.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <cstdint>
 #include <entt/container/dense_map.hpp>
@@ -31,6 +36,26 @@
 
 namespace pokesim::analyze_effect {
 namespace internal {
+struct DebugChecks {
+#ifdef NDEBUG
+  DebugChecks(const Simulation&) {}
+#else
+  std::size_t battleCount = 0;
+  const Simulation& simulation;
+
+  // Check that the number of analyze_effect entities are the same
+  // Check entities are equal
+  // Add analyze_effect outputs to exception list
+
+  void checkInputs() { battleCount = simulation.registry.view<pokesim::tags::Battle>().size(); }
+
+  void checkOutputs() { assert(battleCount == simulation.registry.view<pokesim::tags::Battle>().size()); }
+
+  DebugChecks(const Simulation& _simulation) : simulation(_simulation) { checkInputs(); }
+  ~DebugChecks() { checkOutputs(); }
+#endif
+};
+
 void assignInputsToClones(
   Simulation& simulation, types::entity originalBattleEntity, const types::ClonedEntityMap& clonedEntityMap) {
   types::registry& registry = simulation.registry;
@@ -53,7 +78,7 @@ void assignInputsToClones(
       battleClones.size() == clonedAttackers.size(),
       "Each attacker must have a clone and no more clones than inputs should be made.");
 
-    const auto& clonedDefenders = clonedEntityMap.at(defenders.val[0]);
+    const auto& clonedDefenders = clonedEntityMap.at(defenders.only());
     ENTT_ASSERT(
       battleClones.size() == clonedDefenders.size(),
       "Each defender must have a clone and no more clones than inputs should be made.");
@@ -78,7 +103,7 @@ void assignInputsToClones(
       };
 
       movePairs.val.emplace_back(
-        createMove(battle.val, attacker.val, defenders.val[0]),
+        createMove(battle.val, attacker.val, defenders.only()),
         createMove(battleClones[i], clonedAttackers[i], clonedDefenders[i]));
     }
 
@@ -191,6 +216,8 @@ void postRunCleanup(Simulation& simulation) {
 }  // namespace internal
 
 void run(Simulation& simulation) {
+  internal::DebugChecks debugChecks(simulation);
+
   pokesim::internal::SelectForPokemonView<pokesim::tags::AnalyzeEffect> selectedPokemon(simulation);
   pokesim::internal::SelectForBattleView<pokesim::tags::AnalyzeEffect> selectedBattle(simulation);
 

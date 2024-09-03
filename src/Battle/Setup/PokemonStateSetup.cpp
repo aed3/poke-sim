@@ -96,7 +96,7 @@ void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
   MoveSlots& moveEntities = handle.emplace<MoveSlots>();
   ENTT_ASSERT(
     moveSlots.size() <= moveEntities.val.max_size(),
-    "Cannot add more moves to a Pokemon than MAX_MOVE_SLOTS");
+    "Cannot add more moves to a Pokemon than MAX_MOVE_SLOTS.");
   for (types::entity moveSlot : moveSlots) {
     moveEntities.val.push_back(moveSlot);
   }

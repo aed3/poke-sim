@@ -12,6 +12,7 @@
  * external/entt/core/iterator.hpp
  * external/entt/core/memory.hpp
  * external/entt/container/dense_map.hpp
+ * external/entt/container/dense_set.hpp
  * external/entt/core/utility.hpp
  * external/entt/core/algorithm.hpp
  * external/entt/core/attribute.h
@@ -30,6 +31,25 @@
  * external/entt/entity/mixin.hpp
  * external/entt/entity/view.hpp
  * external/entt/entity/registry.hpp
+ * external/entt/locator/locator.hpp
+ * external/entt/meta/context.hpp
+ * external/entt/meta/adl_pointer.hpp
+ * external/entt/meta/fwd.hpp
+ * external/entt/core/enum.hpp
+ * external/entt/meta/type_traits.hpp
+ * external/entt/meta/node.hpp
+ * external/entt/meta/range.hpp
+ * external/entt/meta/meta.hpp
+ * external/entt/meta/resolve.hpp
+ * src/Types/Entity.hpp
+ * src/Components/EntityHolders/Battle.hpp
+ * src/Components/EntityHolders/BattleTree.hpp
+ * external/entt/meta/policy.hpp
+ * external/entt/meta/utility.hpp
+ * external/entt/meta/factory.hpp
+ * src/Utilities/DebugChecks.hpp
+ * src/Types/Registry.hpp
+ * src/Utilities/DebugChecks.cpp
  * external/entt/entity/handle.hpp
  * src/Types/Enums/PseudoWeather.hpp
  * src/Types/Enums/SideCondition.hpp
@@ -39,15 +59,13 @@
  * src/Types/Enums/Weather.hpp
  * src/Utilities/Variant.hpp
  * src/Types/Effect.hpp
- * src/Types/Entity.hpp
  * src/Types/Enums/Move.hpp
  * src/Types/Enums/Stat.hpp
- * src/Types/Registry.hpp
+ * src/Types/Stats.hpp
  * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp
  * src/Types/Enums/Slot.hpp
  * src/Battle/Helpers/Helpers.hpp
  * src/Battle/Setup/StateSetupBase.hpp
- * src/Types/Stats.hpp
  * src/Components/Boosts.hpp
  * src/Components/EVsIVs.hpp
  * src/Types/Enums/Type.hpp
@@ -77,7 +95,6 @@
  * src/Components/CalcDamage/Aliases.hpp
  * src/Components/Decisions.hpp
  * src/Components/EntityHolders/ActionQueue.hpp
- * src/Components/EntityHolders/Battle.hpp
  * src/Components/EntityHolders/Side.hpp
  * src/Components/EntityHolders/Sides.hpp
  * src/Components/Tags/PokemonTags.hpp
@@ -111,7 +128,6 @@
  * src/CalcDamage/CalcDamage.hpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Simulation/Simulation.cpp
- * external/entt/container/dense_set.hpp
  * src/Battle/Helpers/IntegerModify.hpp
  * src/Components/EntityHolders/ChoiceLock.hpp
  * src/Components/EntityHolders/MoveSlots.hpp
@@ -139,7 +155,6 @@
  * src/Simulation/MoveHitSteps.cpp
  * src/Battle/ManageBattleState.hpp
  * src/Components/AddedTargets.hpp
- * src/Components/EntityHolders/BattleTree.hpp
  * src/Components/Names/SourceSlotName.hpp
  * src/Components/Names/TargetSlotName.hpp
  * src/Components/PP.hpp
@@ -3171,6 +3186,895 @@ struct uses_allocator<entt::internal::dense_map_node<Key, Value>, Allocator>
 #endif
 
 ///////////////// END OF external/entt/container/dense_map.hpp /////////////////
+
+//////////////// START OF external/entt/container/dense_set.hpp ////////////////
+
+#ifndef ENTT_CONTAINER_DENSE_SET_HPP
+#define ENTT_CONTAINER_DENSE_SET_HPP
+
+#include <cmath>
+#include <cstddef>
+#include <functional>
+#include <iterator>
+#include <limits>
+#include <memory>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+namespace entt {
+
+/**
+ * @cond TURN_OFF_DOXYGEN
+ * Internal details not to be documented.
+ */
+
+namespace internal {
+
+template<typename It>
+class dense_set_iterator final {
+    template<typename>
+    friend class dense_set_iterator;
+
+public:
+    using value_type = typename It::value_type::second_type;
+    using pointer = const value_type *;
+    using reference = const value_type &;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::random_access_iterator_tag;
+
+    constexpr dense_set_iterator() noexcept
+        : it{} {}
+
+    constexpr dense_set_iterator(const It iter) noexcept
+        : it{iter} {}
+
+    template<typename Other, typename = std::enable_if_t<!std::is_same_v<It, Other> && std::is_constructible_v<It, Other>>>
+    constexpr dense_set_iterator(const dense_set_iterator<Other> &other) noexcept
+        : it{other.it} {}
+
+    constexpr dense_set_iterator &operator++() noexcept {
+        return ++it, *this;
+    }
+
+    constexpr dense_set_iterator operator++(int) noexcept {
+        dense_set_iterator orig = *this;
+        return ++(*this), orig;
+    }
+
+    constexpr dense_set_iterator &operator--() noexcept {
+        return --it, *this;
+    }
+
+    constexpr dense_set_iterator operator--(int) noexcept {
+        dense_set_iterator orig = *this;
+        return operator--(), orig;
+    }
+
+    constexpr dense_set_iterator &operator+=(const difference_type value) noexcept {
+        it += value;
+        return *this;
+    }
+
+    constexpr dense_set_iterator operator+(const difference_type value) const noexcept {
+        dense_set_iterator copy = *this;
+        return (copy += value);
+    }
+
+    constexpr dense_set_iterator &operator-=(const difference_type value) noexcept {
+        return (*this += -value);
+    }
+
+    constexpr dense_set_iterator operator-(const difference_type value) const noexcept {
+        return (*this + -value);
+    }
+
+    [[nodiscard]] constexpr reference operator[](const difference_type value) const noexcept {
+        return it[value].second;
+    }
+
+    [[nodiscard]] constexpr pointer operator->() const noexcept {
+        return std::addressof(it->second);
+    }
+
+    [[nodiscard]] constexpr reference operator*() const noexcept {
+        return *operator->();
+    }
+
+    template<typename Lhs, typename Rhs>
+    friend constexpr std::ptrdiff_t operator-(const dense_set_iterator<Lhs> &, const dense_set_iterator<Rhs> &) noexcept;
+
+    template<typename Lhs, typename Rhs>
+    friend constexpr bool operator==(const dense_set_iterator<Lhs> &, const dense_set_iterator<Rhs> &) noexcept;
+
+    template<typename Lhs, typename Rhs>
+    friend constexpr bool operator<(const dense_set_iterator<Lhs> &, const dense_set_iterator<Rhs> &) noexcept;
+
+private:
+    It it;
+};
+
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr std::ptrdiff_t operator-(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
+    return lhs.it - rhs.it;
+}
+
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator==(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
+    return lhs.it == rhs.it;
+}
+
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator!=(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator<(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
+    return lhs.it < rhs.it;
+}
+
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator>(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
+    return rhs < lhs;
+}
+
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator<=(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
+    return !(lhs > rhs);
+}
+
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator>=(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
+    return !(lhs < rhs);
+}
+
+template<typename It>
+class dense_set_local_iterator final {
+    template<typename>
+    friend class dense_set_local_iterator;
+
+public:
+    using value_type = typename It::value_type::second_type;
+    using pointer = const value_type *;
+    using reference = const value_type &;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+
+    constexpr dense_set_local_iterator() noexcept
+        : it{},
+          offset{} {}
+
+    constexpr dense_set_local_iterator(It iter, const std::size_t pos) noexcept
+        : it{iter},
+          offset{pos} {}
+
+    template<typename Other, typename = std::enable_if_t<!std::is_same_v<It, Other> && std::is_constructible_v<It, Other>>>
+    constexpr dense_set_local_iterator(const dense_set_local_iterator<Other> &other) noexcept
+        : it{other.it},
+          offset{other.offset} {}
+
+    constexpr dense_set_local_iterator &operator++() noexcept {
+        return offset = it[offset].first, *this;
+    }
+
+    constexpr dense_set_local_iterator operator++(int) noexcept {
+        dense_set_local_iterator orig = *this;
+        return ++(*this), orig;
+    }
+
+    [[nodiscard]] constexpr pointer operator->() const noexcept {
+        return std::addressof(it[offset].second);
+    }
+
+    [[nodiscard]] constexpr reference operator*() const noexcept {
+        return *operator->();
+    }
+
+    [[nodiscard]] constexpr std::size_t index() const noexcept {
+        return offset;
+    }
+
+private:
+    It it;
+    std::size_t offset;
+};
+
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator==(const dense_set_local_iterator<Lhs> &lhs, const dense_set_local_iterator<Rhs> &rhs) noexcept {
+    return lhs.index() == rhs.index();
+}
+
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator!=(const dense_set_local_iterator<Lhs> &lhs, const dense_set_local_iterator<Rhs> &rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+} // namespace internal
+
+/**
+ * Internal details not to be documented.
+ * @endcond
+ */
+
+/**
+ * @brief Associative container for unique objects of a given type.
+ *
+ * Internally, elements are organized into buckets. Which bucket an element is
+ * placed into depends entirely on its hash. Elements with the same hash code
+ * appear in the same bucket.
+ *
+ * @tparam Type Value type of the associative container.
+ * @tparam Hash Type of function to use to hash the values.
+ * @tparam KeyEqual Type of function to use to compare the values for equality.
+ * @tparam Allocator Type of allocator used to manage memory and elements.
+ */
+template<typename Type, typename Hash, typename KeyEqual, typename Allocator>
+class dense_set {
+    static constexpr float default_threshold = 0.875f;
+    static constexpr std::size_t minimum_capacity = 8u;
+
+    using node_type = std::pair<std::size_t, Type>;
+    using alloc_traits = std::allocator_traits<Allocator>;
+    static_assert(std::is_same_v<typename alloc_traits::value_type, Type>, "Invalid value type");
+    using sparse_container_type = std::vector<std::size_t, typename alloc_traits::template rebind_alloc<std::size_t>>;
+    using packed_container_type = std::vector<node_type, typename alloc_traits::template rebind_alloc<node_type>>;
+
+    template<typename Other>
+    [[nodiscard]] std::size_t value_to_bucket(const Other &value) const noexcept {
+        return fast_mod(static_cast<size_type>(sparse.second()(value)), bucket_count());
+    }
+
+    template<typename Other>
+    [[nodiscard]] auto constrained_find(const Other &value, std::size_t bucket) {
+        for(auto it = begin(bucket), last = end(bucket); it != last; ++it) {
+            if(packed.second()(*it, value)) {
+                return begin() + static_cast<typename iterator::difference_type>(it.index());
+            }
+        }
+
+        return end();
+    }
+
+    template<typename Other>
+    [[nodiscard]] auto constrained_find(const Other &value, std::size_t bucket) const {
+        for(auto it = cbegin(bucket), last = cend(bucket); it != last; ++it) {
+            if(packed.second()(*it, value)) {
+                return cbegin() + static_cast<typename iterator::difference_type>(it.index());
+            }
+        }
+
+        return cend();
+    }
+
+    template<typename Other>
+    [[nodiscard]] auto insert_or_do_nothing(Other &&value) {
+        const auto index = value_to_bucket(value);
+
+        if(auto it = constrained_find(value, index); it != end()) {
+            return std::make_pair(it, false);
+        }
+
+        packed.first().emplace_back(sparse.first()[index], std::forward<Other>(value));
+        sparse.first()[index] = packed.first().size() - 1u;
+        rehash_if_required();
+
+        return std::make_pair(--end(), true);
+    }
+
+    void move_and_pop(const std::size_t pos) {
+        if(const auto last = size() - 1u; pos != last) {
+            size_type *curr = sparse.first().data() + value_to_bucket(packed.first().back().second);
+            packed.first()[pos] = std::move(packed.first().back());
+            for(; *curr != last; curr = &packed.first()[*curr].first) {}
+            *curr = pos;
+        }
+
+        packed.first().pop_back();
+    }
+
+    void rehash_if_required() {
+        if(size() > (bucket_count() * max_load_factor())) {
+            rehash(bucket_count() * 2u);
+        }
+    }
+
+public:
+    /*! @brief Key type of the container. */
+    using key_type = Type;
+    /*! @brief Value type of the container. */
+    using value_type = Type;
+    /*! @brief Unsigned integer type. */
+    using size_type = std::size_t;
+    /*! @brief Type of function to use to hash the elements. */
+    using hasher = Hash;
+    /*! @brief Type of function to use to compare the elements for equality. */
+    using key_equal = KeyEqual;
+    /*! @brief Allocator type. */
+    using allocator_type = Allocator;
+    /*! @brief Random access iterator type. */
+    using iterator = internal::dense_set_iterator<typename packed_container_type::iterator>;
+    /*! @brief Constant random access iterator type. */
+    using const_iterator = internal::dense_set_iterator<typename packed_container_type::const_iterator>;
+    /*! @brief Forward iterator type. */
+    using local_iterator = internal::dense_set_local_iterator<typename packed_container_type::iterator>;
+    /*! @brief Constant forward iterator type. */
+    using const_local_iterator = internal::dense_set_local_iterator<typename packed_container_type::const_iterator>;
+
+    /*! @brief Default constructor. */
+    dense_set()
+        : dense_set{minimum_capacity} {}
+
+    /**
+     * @brief Constructs an empty container with a given allocator.
+     * @param allocator The allocator to use.
+     */
+    explicit dense_set(const allocator_type &allocator)
+        : dense_set{minimum_capacity, hasher{}, key_equal{}, allocator} {}
+
+    /**
+     * @brief Constructs an empty container with a given allocator and user
+     * supplied minimal number of buckets.
+     * @param cnt Minimal number of buckets.
+     * @param allocator The allocator to use.
+     */
+    dense_set(const size_type cnt, const allocator_type &allocator)
+        : dense_set{cnt, hasher{}, key_equal{}, allocator} {}
+
+    /**
+     * @brief Constructs an empty container with a given allocator, hash
+     * function and user supplied minimal number of buckets.
+     * @param cnt Minimal number of buckets.
+     * @param hash Hash function to use.
+     * @param allocator The allocator to use.
+     */
+    dense_set(const size_type cnt, const hasher &hash, const allocator_type &allocator)
+        : dense_set{cnt, hash, key_equal{}, allocator} {}
+
+    /**
+     * @brief Constructs an empty container with a given allocator, hash
+     * function, compare function and user supplied minimal number of buckets.
+     * @param cnt Minimal number of buckets.
+     * @param hash Hash function to use.
+     * @param equal Compare function to use.
+     * @param allocator The allocator to use.
+     */
+    explicit dense_set(const size_type cnt, const hasher &hash = hasher{}, const key_equal &equal = key_equal{}, const allocator_type &allocator = allocator_type{})
+        : sparse{allocator, hash},
+          packed{allocator, equal},
+          threshold{default_threshold} {
+        rehash(cnt);
+    }
+
+    /*! @brief Default copy constructor. */
+    dense_set(const dense_set &) = default;
+
+    /**
+     * @brief Allocator-extended copy constructor.
+     * @param other The instance to copy from.
+     * @param allocator The allocator to use.
+     */
+    dense_set(const dense_set &other, const allocator_type &allocator)
+        : sparse{std::piecewise_construct, std::forward_as_tuple(other.sparse.first(), allocator), std::forward_as_tuple(other.sparse.second())},
+          packed{std::piecewise_construct, std::forward_as_tuple(other.packed.first(), allocator), std::forward_as_tuple(other.packed.second())},
+          threshold{other.threshold} {}
+
+    /*! @brief Default move constructor. */
+    dense_set(dense_set &&) noexcept(std::is_nothrow_move_constructible_v<compressed_pair<sparse_container_type, hasher>> &&std::is_nothrow_move_constructible_v<compressed_pair<packed_container_type, key_equal>>) = default;
+
+    /**
+     * @brief Allocator-extended move constructor.
+     * @param other The instance to move from.
+     * @param allocator The allocator to use.
+     */
+    dense_set(dense_set &&other, const allocator_type &allocator)
+        : sparse{std::piecewise_construct, std::forward_as_tuple(std::move(other.sparse.first()), allocator), std::forward_as_tuple(std::move(other.sparse.second()))},
+          packed{std::piecewise_construct, std::forward_as_tuple(std::move(other.packed.first()), allocator), std::forward_as_tuple(std::move(other.packed.second()))},
+          threshold{other.threshold} {}
+
+    /**
+     * @brief Default copy assignment operator.
+     * @return This container.
+     */
+    dense_set &operator=(const dense_set &) = default;
+
+    /**
+     * @brief Default move assignment operator.
+     * @return This container.
+     */
+    dense_set &operator=(dense_set &&) noexcept(std::is_nothrow_move_assignable_v<compressed_pair<sparse_container_type, hasher>> &&std::is_nothrow_move_assignable_v<compressed_pair<packed_container_type, key_equal>>) = default;
+
+    /**
+     * @brief Returns the associated allocator.
+     * @return The associated allocator.
+     */
+    [[nodiscard]] constexpr allocator_type get_allocator() const noexcept {
+        return sparse.first().get_allocator();
+    }
+
+    /**
+     * @brief Returns an iterator to the beginning.
+     *
+     * If the array is empty, the returned iterator will be equal to `end()`.
+     *
+     * @return An iterator to the first instance of the internal array.
+     */
+    [[nodiscard]] const_iterator cbegin() const noexcept {
+        return packed.first().begin();
+    }
+
+    /*! @copydoc cbegin */
+    [[nodiscard]] const_iterator begin() const noexcept {
+        return cbegin();
+    }
+
+    /*! @copydoc begin */
+    [[nodiscard]] iterator begin() noexcept {
+        return packed.first().begin();
+    }
+
+    /**
+     * @brief Returns an iterator to the end.
+     * @return An iterator to the element following the last instance of the
+     * internal array.
+     */
+    [[nodiscard]] const_iterator cend() const noexcept {
+        return packed.first().end();
+    }
+
+    /*! @copydoc cend */
+    [[nodiscard]] const_iterator end() const noexcept {
+        return cend();
+    }
+
+    /*! @copydoc end */
+    [[nodiscard]] iterator end() noexcept {
+        return packed.first().end();
+    }
+
+    /**
+     * @brief Checks whether a container is empty.
+     * @return True if the container is empty, false otherwise.
+     */
+    [[nodiscard]] bool empty() const noexcept {
+        return packed.first().empty();
+    }
+
+    /**
+     * @brief Returns the number of elements in a container.
+     * @return Number of elements in a container.
+     */
+    [[nodiscard]] size_type size() const noexcept {
+        return packed.first().size();
+    }
+
+    /**
+     * @brief Returns the maximum possible number of elements.
+     * @return Maximum possible number of elements.
+     */
+    [[nodiscard]] size_type max_size() const noexcept {
+        return packed.first().max_size();
+    }
+
+    /*! @brief Clears the container. */
+    void clear() noexcept {
+        sparse.first().clear();
+        packed.first().clear();
+        rehash(0u);
+    }
+
+    /**
+     * @brief Inserts an element into the container, if it does not exist.
+     * @param value An element to insert into the container.
+     * @return A pair consisting of an iterator to the inserted element (or to
+     * the element that prevented the insertion) and a bool denoting whether the
+     * insertion took place.
+     */
+    std::pair<iterator, bool> insert(const value_type &value) {
+        return insert_or_do_nothing(value);
+    }
+
+    /*! @copydoc insert */
+    std::pair<iterator, bool> insert(value_type &&value) {
+        return insert_or_do_nothing(std::move(value));
+    }
+
+    /**
+     * @brief Inserts elements into the container, if they do not exist.
+     * @tparam It Type of input iterator.
+     * @param first An iterator to the first element of the range of elements.
+     * @param last An iterator past the last element of the range of elements.
+     */
+    template<typename It>
+    void insert(It first, It last) {
+        for(; first != last; ++first) {
+            insert(*first);
+        }
+    }
+
+    /**
+     * @brief Constructs an element in-place, if it does not exist.
+     *
+     * The element is also constructed when the container already has the key,
+     * in which case the newly constructed object is destroyed immediately.
+     *
+     * @tparam Args Types of arguments to forward to the constructor of the
+     * element.
+     * @param args Arguments to forward to the constructor of the element.
+     * @return A pair consisting of an iterator to the inserted element (or to
+     * the element that prevented the insertion) and a bool denoting whether the
+     * insertion took place.
+     */
+    template<typename... Args>
+    std::pair<iterator, bool> emplace(Args &&...args) {
+        if constexpr(((sizeof...(Args) == 1u) && ... && std::is_same_v<std::decay_t<Args>, value_type>)) {
+            return insert_or_do_nothing(std::forward<Args>(args)...);
+        } else {
+            auto &node = packed.first().emplace_back(std::piecewise_construct, std::make_tuple(packed.first().size()), std::forward_as_tuple(std::forward<Args>(args)...));
+            const auto index = value_to_bucket(node.second);
+
+            if(auto it = constrained_find(node.second, index); it != end()) {
+                packed.first().pop_back();
+                return std::make_pair(it, false);
+            }
+
+            std::swap(node.first, sparse.first()[index]);
+            rehash_if_required();
+
+            return std::make_pair(--end(), true);
+        }
+    }
+
+    /**
+     * @brief Removes an element from a given position.
+     * @param pos An iterator to the element to remove.
+     * @return An iterator following the removed element.
+     */
+    iterator erase(const_iterator pos) {
+        const auto diff = pos - cbegin();
+        erase(*pos);
+        return begin() + diff;
+    }
+
+    /**
+     * @brief Removes the given elements from a container.
+     * @param first An iterator to the first element of the range of elements.
+     * @param last An iterator past the last element of the range of elements.
+     * @return An iterator following the last removed element.
+     */
+    iterator erase(const_iterator first, const_iterator last) {
+        const auto dist = first - cbegin();
+
+        for(auto from = last - cbegin(); from != dist; --from) {
+            erase(packed.first()[from - 1u].second);
+        }
+
+        return (begin() + dist);
+    }
+
+    /**
+     * @brief Removes the element associated with a given value.
+     * @param value Value of an element to remove.
+     * @return Number of elements removed (either 0 or 1).
+     */
+    size_type erase(const value_type &value) {
+        for(size_type *curr = sparse.first().data() + value_to_bucket(value); *curr != (std::numeric_limits<size_type>::max)(); curr = &packed.first()[*curr].first) {
+            if(packed.second()(packed.first()[*curr].second, value)) {
+                const auto index = *curr;
+                *curr = packed.first()[*curr].first;
+                move_and_pop(index);
+                return 1u;
+            }
+        }
+
+        return 0u;
+    }
+
+    /**
+     * @brief Exchanges the contents with those of a given container.
+     * @param other Container to exchange the content with.
+     */
+    void swap(dense_set &other) {
+        using std::swap;
+        swap(sparse, other.sparse);
+        swap(packed, other.packed);
+        swap(threshold, other.threshold);
+    }
+
+    /**
+     * @brief Returns the number of elements matching a value (either 1 or 0).
+     * @param key Key value of an element to search for.
+     * @return Number of elements matching the key (either 1 or 0).
+     */
+    [[nodiscard]] size_type count(const value_type &key) const {
+        return find(key) != end();
+    }
+
+    /**
+     * @brief Returns the number of elements matching a key (either 1 or 0).
+     * @tparam Other Type of the key value of an element to search for.
+     * @param key Key value of an element to search for.
+     * @return Number of elements matching the key (either 1 or 0).
+     */
+    template<typename Other>
+    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, size_type>>
+    count(const Other &key) const {
+        return find(key) != end();
+    }
+
+    /**
+     * @brief Finds an element with a given value.
+     * @param value Value of an element to search for.
+     * @return An iterator to an element with the given value. If no such
+     * element is found, a past-the-end iterator is returned.
+     */
+    [[nodiscard]] iterator find(const value_type &value) {
+        return constrained_find(value, value_to_bucket(value));
+    }
+
+    /*! @copydoc find */
+    [[nodiscard]] const_iterator find(const value_type &value) const {
+        return constrained_find(value, value_to_bucket(value));
+    }
+
+    /**
+     * @brief Finds an element that compares _equivalent_ to a given value.
+     * @tparam Other Type of an element to search for.
+     * @param value Value of an element to search for.
+     * @return An iterator to an element with the given value. If no such
+     * element is found, a past-the-end iterator is returned.
+     */
+    template<typename Other>
+    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, iterator>>
+    find(const Other &value) {
+        return constrained_find(value, value_to_bucket(value));
+    }
+
+    /*! @copydoc find */
+    template<typename Other>
+    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, const_iterator>>
+    find(const Other &value) const {
+        return constrained_find(value, value_to_bucket(value));
+    }
+
+    /**
+     * @brief Returns a range containing all elements with a given value.
+     * @param value Value of an element to search for.
+     * @return A pair of iterators pointing to the first element and past the
+     * last element of the range.
+     */
+    [[nodiscard]] std::pair<iterator, iterator> equal_range(const value_type &value) {
+        const auto it = find(value);
+        return {it, it + !(it == end())};
+    }
+
+    /*! @copydoc equal_range */
+    [[nodiscard]] std::pair<const_iterator, const_iterator> equal_range(const value_type &value) const {
+        const auto it = find(value);
+        return {it, it + !(it == cend())};
+    }
+
+    /**
+     * @brief Returns a range containing all elements that compare _equivalent_
+     * to a given value.
+     * @tparam Other Type of an element to search for.
+     * @param value Value of an element to search for.
+     * @return A pair of iterators pointing to the first element and past the
+     * last element of the range.
+     */
+    template<typename Other>
+    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, std::pair<iterator, iterator>>>
+    equal_range(const Other &value) {
+        const auto it = find(value);
+        return {it, it + !(it == end())};
+    }
+
+    /*! @copydoc equal_range */
+    template<typename Other>
+    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, std::pair<const_iterator, const_iterator>>>
+    equal_range(const Other &value) const {
+        const auto it = find(value);
+        return {it, it + !(it == cend())};
+    }
+
+    /**
+     * @brief Checks if the container contains an element with a given value.
+     * @param value Value of an element to search for.
+     * @return True if there is such an element, false otherwise.
+     */
+    [[nodiscard]] bool contains(const value_type &value) const {
+        return (find(value) != cend());
+    }
+
+    /**
+     * @brief Checks if the container contains an element that compares
+     * _equivalent_ to a given value.
+     * @tparam Other Type of an element to search for.
+     * @param value Value of an element to search for.
+     * @return True if there is such an element, false otherwise.
+     */
+    template<typename Other>
+    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, bool>>
+    contains(const Other &value) const {
+        return (find(value) != cend());
+    }
+
+    /**
+     * @brief Returns an iterator to the beginning of a given bucket.
+     * @param index An index of a bucket to access.
+     * @return An iterator to the beginning of the given bucket.
+     */
+    [[nodiscard]] const_local_iterator cbegin(const size_type index) const {
+        return {packed.first().begin(), sparse.first()[index]};
+    }
+
+    /**
+     * @brief Returns an iterator to the beginning of a given bucket.
+     * @param index An index of a bucket to access.
+     * @return An iterator to the beginning of the given bucket.
+     */
+    [[nodiscard]] const_local_iterator begin(const size_type index) const {
+        return cbegin(index);
+    }
+
+    /**
+     * @brief Returns an iterator to the beginning of a given bucket.
+     * @param index An index of a bucket to access.
+     * @return An iterator to the beginning of the given bucket.
+     */
+    [[nodiscard]] local_iterator begin(const size_type index) {
+        return {packed.first().begin(), sparse.first()[index]};
+    }
+
+    /**
+     * @brief Returns an iterator to the end of a given bucket.
+     * @param index An index of a bucket to access.
+     * @return An iterator to the end of the given bucket.
+     */
+    [[nodiscard]] const_local_iterator cend([[maybe_unused]] const size_type index) const {
+        return {packed.first().begin(), (std::numeric_limits<size_type>::max)()};
+    }
+
+    /**
+     * @brief Returns an iterator to the end of a given bucket.
+     * @param index An index of a bucket to access.
+     * @return An iterator to the end of the given bucket.
+     */
+    [[nodiscard]] const_local_iterator end(const size_type index) const {
+        return cend(index);
+    }
+
+    /**
+     * @brief Returns an iterator to the end of a given bucket.
+     * @param index An index of a bucket to access.
+     * @return An iterator to the end of the given bucket.
+     */
+    [[nodiscard]] local_iterator end([[maybe_unused]] const size_type index) {
+        return {packed.first().begin(), (std::numeric_limits<size_type>::max)()};
+    }
+
+    /**
+     * @brief Returns the number of buckets.
+     * @return The number of buckets.
+     */
+    [[nodiscard]] size_type bucket_count() const {
+        return sparse.first().size();
+    }
+
+    /**
+     * @brief Returns the maximum number of buckets.
+     * @return The maximum number of buckets.
+     */
+    [[nodiscard]] size_type max_bucket_count() const {
+        return sparse.first().max_size();
+    }
+
+    /**
+     * @brief Returns the number of elements in a given bucket.
+     * @param index The index of the bucket to examine.
+     * @return The number of elements in the given bucket.
+     */
+    [[nodiscard]] size_type bucket_size(const size_type index) const {
+        return static_cast<size_type>(std::distance(begin(index), end(index)));
+    }
+
+    /**
+     * @brief Returns the bucket for a given element.
+     * @param value The value of the element to examine.
+     * @return The bucket for the given element.
+     */
+    [[nodiscard]] size_type bucket(const value_type &value) const {
+        return value_to_bucket(value);
+    }
+
+    /**
+     * @brief Returns the average number of elements per bucket.
+     * @return The average number of elements per bucket.
+     */
+    [[nodiscard]] float load_factor() const {
+        return size() / static_cast<float>(bucket_count());
+    }
+
+    /**
+     * @brief Returns the maximum average number of elements per bucket.
+     * @return The maximum average number of elements per bucket.
+     */
+    [[nodiscard]] float max_load_factor() const {
+        return threshold;
+    }
+
+    /**
+     * @brief Sets the desired maximum average number of elements per bucket.
+     * @param value A desired maximum average number of elements per bucket.
+     */
+    void max_load_factor(const float value) {
+        ENTT_ASSERT(value > 0.f, "Invalid load factor");
+        threshold = value;
+        rehash(0u);
+    }
+
+    /**
+     * @brief Reserves at least the specified number of buckets and regenerates
+     * the hash table.
+     * @param cnt New number of buckets.
+     */
+    void rehash(const size_type cnt) {
+        auto value = cnt > minimum_capacity ? cnt : minimum_capacity;
+        const auto cap = static_cast<size_type>(size() / max_load_factor());
+        value = value > cap ? value : cap;
+
+        if(const auto sz = next_power_of_two(value); sz != bucket_count()) {
+            sparse.first().resize(sz);
+
+            for(auto &&elem: sparse.first()) {
+                elem = std::numeric_limits<size_type>::max();
+            }
+
+            for(size_type pos{}, last = size(); pos < last; ++pos) {
+                const auto index = value_to_bucket(packed.first()[pos].second);
+                packed.first()[pos].first = std::exchange(sparse.first()[index], pos);
+            }
+        }
+    }
+
+    /**
+     * @brief Reserves space for at least the specified number of elements and
+     * regenerates the hash table.
+     * @param cnt New number of elements.
+     */
+    void reserve(const size_type cnt) {
+        packed.first().reserve(cnt);
+        rehash(static_cast<size_type>(std::ceil(cnt / max_load_factor())));
+    }
+
+    /**
+     * @brief Returns the function used to hash the elements.
+     * @return The function used to hash the elements.
+     */
+    [[nodiscard]] hasher hash_function() const {
+        return sparse.second();
+    }
+
+    /**
+     * @brief Returns the function used to compare elements for equality.
+     * @return The function used to compare elements for equality.
+     */
+    [[nodiscard]] key_equal key_eq() const {
+        return packed.second();
+    }
+
+private:
+    compressed_pair<sparse_container_type, hasher> sparse;
+    compressed_pair<packed_container_type, key_equal> packed;
+    float threshold;
+};
+
+} // namespace entt
+
+#endif
+
+///////////////// END OF external/entt/container/dense_set.hpp /////////////////
 
 /////////////////// START OF external/entt/core/utility.hpp ////////////////////
 
@@ -12039,6 +12943,4554 @@ private:
 
 /////////////////// END OF external/entt/entity/registry.hpp ///////////////////
 
+////////////////// START OF external/entt/locator/locator.hpp //////////////////
+
+#ifndef ENTT_LOCATOR_LOCATOR_HPP
+#define ENTT_LOCATOR_LOCATOR_HPP
+
+#include <memory>
+#include <utility>
+
+namespace entt {
+
+/**
+ * @brief Service locator, nothing more.
+ *
+ * A service locator is used to do what it promises: locate services.<br/>
+ * Usually service locators are tightly bound to the services they expose and
+ * thus it's hard to define a general purpose class to do that. This tiny class
+ * tries to fill the gap and to get rid of the burden of defining a different
+ * specific locator for each application.
+ *
+ * @note
+ * Users shouldn't retain references to a service. The recommended way is to
+ * retrieve the service implementation currently set each and every time the
+ * need for it arises. The risk is to incur in unexpected behaviors otherwise.
+ *
+ * @tparam Service Service type.
+ */
+template<typename Service>
+class locator final {
+    class service_handle {
+        friend class locator<Service>;
+        std::shared_ptr<Service> value{};
+    };
+
+public:
+    /*! @brief Service type. */
+    using type = Service;
+    /*! @brief Service node type. */
+    using node_type = service_handle;
+
+    /*! @brief Default constructor, deleted on purpose. */
+    locator() = delete;
+    /*! @brief Default destructor, deleted on purpose. */
+    ~locator() = delete;
+
+    /**
+     * @brief Checks whether a service locator contains a value.
+     * @return True if the service locator contains a value, false otherwise.
+     */
+    [[nodiscard]] static bool has_value() noexcept {
+        return (service != nullptr);
+    }
+
+    /**
+     * @brief Returns a reference to a valid service, if any.
+     *
+     * @warning
+     * Invoking this function can result in undefined behavior if the service
+     * hasn't been set yet.
+     *
+     * @return A reference to the service currently set, if any.
+     */
+    [[nodiscard]] static Service &value() noexcept {
+        ENTT_ASSERT(has_value(), "Service not available");
+        return *service;
+    }
+
+    /**
+     * @brief Returns a service if available or sets it from a fallback type.
+     *
+     * Arguments are used only if a service doesn't already exist. In all other
+     * cases, they are discarded.
+     *
+     * @tparam Args Types of arguments to use to construct the fallback service.
+     * @tparam Type Fallback service type.
+     * @param args Parameters to use to construct the fallback service.
+     * @return A reference to a valid service.
+     */
+    template<typename Type = Service, typename... Args>
+    [[nodiscard]] static Service &value_or(Args &&...args) {
+        return service ? *service : emplace<Type>(std::forward<Args>(args)...);
+    }
+
+    /**
+     * @brief Sets or replaces a service.
+     * @tparam Type Service type.
+     * @tparam Args Types of arguments to use to construct the service.
+     * @param args Parameters to use to construct the service.
+     * @return A reference to a valid service.
+     */
+    template<typename Type = Service, typename... Args>
+    static Service &emplace(Args &&...args) {
+        service = std::make_shared<Type>(std::forward<Args>(args)...);
+        return *service;
+    }
+
+    /**
+     * @brief Sets or replaces a service using a given allocator.
+     * @tparam Type Service type.
+     * @tparam Allocator Type of allocator used to manage memory and elements.
+     * @tparam Args Types of arguments to use to construct the service.
+     * @param alloc The allocator to use.
+     * @param args Parameters to use to construct the service.
+     * @return A reference to a valid service.
+     */
+    template<typename Type = Service, typename Allocator, typename... Args>
+    static Service &emplace(std::allocator_arg_t, Allocator alloc, Args &&...args) {
+        service = std::allocate_shared<Type>(alloc, std::forward<Args>(args)...);
+        return *service;
+    }
+
+    /**
+     * @brief Returns a handle to the underlying service.
+     * @return A handle to the underlying service.
+     */
+    static node_type handle() noexcept {
+        node_type node{};
+        node.value = service;
+        return node;
+    }
+
+    /**
+     * @brief Resets or replaces a service.
+     * @param other Optional handle with which to replace the service.
+     */
+    static void reset(const node_type &other = {}) noexcept {
+        service = other.value;
+    }
+
+    /**
+     * @brief Resets or replaces a service.
+     * @tparam Type Service type.
+     * @tparam Deleter Deleter type.
+     * @param elem A pointer to a service to manage.
+     * @param deleter A deleter to use to destroy the service.
+     */
+    template<typename Type, typename Deleter = std::default_delete<Type>>
+    static void reset(Type *elem, Deleter deleter = {}) {
+        service = std::shared_ptr<Service>{elem, std::move(deleter)};
+    }
+
+private:
+    // std::shared_ptr because of its type erased allocator which is useful here
+    inline static std::shared_ptr<Service> service{};
+};
+
+} // namespace entt
+
+#endif
+
+/////////////////// END OF external/entt/locator/locator.hpp ///////////////////
+
+/////////////////// START OF external/entt/meta/context.hpp ////////////////////
+
+#ifndef ENTT_META_CTX_HPP
+#define ENTT_META_CTX_HPP
+
+
+namespace entt {
+
+class meta_ctx;
+
+/**
+ * @cond TURN_OFF_DOXYGEN
+ * Internal details not to be documented.
+ */
+
+namespace internal {
+
+struct meta_type_node;
+
+struct meta_context {
+    dense_map<id_type, meta_type_node, identity> value{};
+
+    [[nodiscard]] static inline meta_context &from(meta_ctx &ctx);
+    [[nodiscard]] static inline const meta_context &from(const meta_ctx &ctx);
+};
+
+} // namespace internal
+
+/**
+ * Internal details not to be documented.
+ * @endcond
+ */
+
+/*! @brief Disambiguation tag for constructors and the like. */
+class meta_ctx_arg_t final {};
+
+/*! @brief Constant of type meta_context_arg_t used to disambiguate calls. */
+inline constexpr meta_ctx_arg_t meta_ctx_arg{};
+
+/*! @brief Opaque meta context type. */
+class meta_ctx: private internal::meta_context {
+    /*! @brief Attorney idiom like model to access the base class. */
+    friend struct internal::meta_context;
+};
+
+/**
+ * @cond TURN_OFF_DOXYGEN
+ * Internal details not to be documented.
+ */
+
+[[nodiscard]] inline internal::meta_context &internal::meta_context::from(meta_ctx &ctx) {
+    return ctx;
+}
+
+[[nodiscard]] inline const internal::meta_context &internal::meta_context::from(const meta_ctx &ctx) {
+    return ctx;
+}
+
+/**
+ * Internal details not to be documented.
+ * @endcond
+ */
+
+} // namespace entt
+
+#endif
+
+//////////////////// END OF external/entt/meta/context.hpp /////////////////////
+
+///////////////// START OF external/entt/meta/adl_pointer.hpp //////////////////
+
+#ifndef ENTT_META_ADL_POINTER_HPP
+#define ENTT_META_ADL_POINTER_HPP
+
+namespace entt {
+
+/**
+ * @brief ADL based lookup function for dereferencing meta pointer-like types.
+ * @tparam Type Element type.
+ * @param value A pointer-like object.
+ * @return The value returned from the dereferenced pointer.
+ */
+template<typename Type>
+decltype(auto) dereference_meta_pointer_like(const Type &value) {
+    return *value;
+}
+
+/**
+ * @brief Fake ADL based lookup function for meta pointer-like types.
+ * @tparam Type Element type.
+ */
+template<typename Type>
+struct adl_meta_pointer_like {
+    /**
+     * @brief Uses the default ADL based lookup method to resolve the call.
+     * @param value A pointer-like object.
+     * @return The value returned from the dereferenced pointer.
+     */
+    static decltype(auto) dereference(const Type &value) {
+        return dereference_meta_pointer_like(value);
+    }
+};
+
+} // namespace entt
+
+#endif
+
+////////////////// END OF external/entt/meta/adl_pointer.hpp ///////////////////
+
+///////////////////// START OF external/entt/meta/fwd.hpp //////////////////////
+
+#ifndef ENTT_META_FWD_HPP
+#define ENTT_META_FWD_HPP
+
+namespace entt {
+
+class meta_sequence_container;
+
+class meta_associative_container;
+
+class meta_any;
+
+struct meta_handle;
+
+struct meta_prop;
+
+struct meta_data;
+
+struct meta_func;
+
+class meta_type;
+
+} // namespace entt
+
+#endif
+
+////////////////////// END OF external/entt/meta/fwd.hpp ///////////////////////
+
+///////////////////// START OF external/entt/core/enum.hpp /////////////////////
+
+#ifndef ENTT_CORE_ENUM_HPP
+#define ENTT_CORE_ENUM_HPP
+
+#include <type_traits>
+
+namespace entt {
+
+/**
+ * @brief Enable bitmask support for enum classes.
+ * @tparam Type The enum type for which to enable bitmask support.
+ */
+template<typename Type, typename = void>
+struct enum_as_bitmask: std::false_type {};
+
+/*! @copydoc enum_as_bitmask */
+template<typename Type>
+struct enum_as_bitmask<Type, std::void_t<decltype(Type::_entt_enum_as_bitmask)>>: std::is_enum<Type> {};
+
+/**
+ * @brief Helper variable template.
+ * @tparam Type The enum class type for which to enable bitmask support.
+ */
+template<typename Type>
+inline constexpr bool enum_as_bitmask_v = enum_as_bitmask<Type>::value;
+
+} // namespace entt
+
+/**
+ * @brief Operator available for enums for which bitmask support is enabled.
+ * @tparam Type Enum class type.
+ * @param lhs The first value to use.
+ * @param rhs The second value to use.
+ * @return The result of invoking the operator on the underlying types of the
+ * two values provided.
+ */
+template<typename Type>
+[[nodiscard]] constexpr std::enable_if_t<entt::enum_as_bitmask_v<Type>, Type>
+operator|(const Type lhs, const Type rhs) noexcept {
+    return static_cast<Type>(static_cast<std::underlying_type_t<Type>>(lhs) | static_cast<std::underlying_type_t<Type>>(rhs));
+}
+
+/*! @copydoc operator| */
+template<typename Type>
+[[nodiscard]] constexpr std::enable_if_t<entt::enum_as_bitmask_v<Type>, Type>
+operator&(const Type lhs, const Type rhs) noexcept {
+    return static_cast<Type>(static_cast<std::underlying_type_t<Type>>(lhs) & static_cast<std::underlying_type_t<Type>>(rhs));
+}
+
+/*! @copydoc operator| */
+template<typename Type>
+[[nodiscard]] constexpr std::enable_if_t<entt::enum_as_bitmask_v<Type>, Type>
+operator^(const Type lhs, const Type rhs) noexcept {
+    return static_cast<Type>(static_cast<std::underlying_type_t<Type>>(lhs) ^ static_cast<std::underlying_type_t<Type>>(rhs));
+}
+
+/**
+ * @brief Operator available for enums for which bitmask support is enabled.
+ * @tparam Type Enum class type.
+ * @param value The value to use.
+ * @return The result of invoking the operator on the underlying types of the
+ * value provided.
+ */
+template<typename Type>
+[[nodiscard]] constexpr std::enable_if_t<entt::enum_as_bitmask_v<Type>, Type>
+operator~(const Type value) noexcept {
+    return static_cast<Type>(~static_cast<std::underlying_type_t<Type>>(value));
+}
+
+/*! @copydoc operator~ */
+template<typename Type>
+[[nodiscard]] constexpr std::enable_if_t<entt::enum_as_bitmask_v<Type>, bool>
+operator!(const Type value) noexcept {
+    return !static_cast<std::underlying_type_t<Type>>(value);
+}
+
+/*! @copydoc operator| */
+template<typename Type>
+constexpr std::enable_if_t<entt::enum_as_bitmask_v<Type>, Type &>
+operator|=(Type &lhs, const Type rhs) noexcept {
+    return (lhs = (lhs | rhs));
+}
+
+/*! @copydoc operator| */
+template<typename Type>
+constexpr std::enable_if_t<entt::enum_as_bitmask_v<Type>, Type &>
+operator&=(Type &lhs, const Type rhs) noexcept {
+    return (lhs = (lhs & rhs));
+}
+
+/*! @copydoc operator| */
+template<typename Type>
+constexpr std::enable_if_t<entt::enum_as_bitmask_v<Type>, Type &>
+operator^=(Type &lhs, const Type rhs) noexcept {
+    return (lhs = (lhs ^ rhs));
+}
+
+#endif
+
+////////////////////// END OF external/entt/core/enum.hpp //////////////////////
+
+///////////////// START OF external/entt/meta/type_traits.hpp //////////////////
+
+#ifndef ENTT_META_TYPE_TRAITS_HPP
+#define ENTT_META_TYPE_TRAITS_HPP
+
+#include <type_traits>
+#include <utility>
+
+namespace entt {
+
+/**
+ * @brief Traits class template to be specialized to enable support for meta
+ * template information.
+ */
+template<typename>
+struct meta_template_traits;
+
+/**
+ * @brief Traits class template to be specialized to enable support for meta
+ * sequence containers.
+ */
+template<typename>
+struct meta_sequence_container_traits;
+
+/**
+ * @brief Traits class template to be specialized to enable support for meta
+ * associative containers.
+ */
+template<typename>
+struct meta_associative_container_traits;
+
+/**
+ * @brief Provides the member constant `value` to true if a given type is a
+ * pointer-like type from the point of view of the meta system, false otherwise.
+ */
+template<typename>
+struct is_meta_pointer_like: std::false_type {};
+
+/**
+ * @brief Partial specialization to ensure that const pointer-like types are
+ * also accepted.
+ * @tparam Type Potentially pointer-like type.
+ */
+template<typename Type>
+struct is_meta_pointer_like<const Type>: is_meta_pointer_like<Type> {};
+
+/**
+ * @brief Helper variable template.
+ * @tparam Type Potentially pointer-like type.
+ */
+template<typename Type>
+inline constexpr auto is_meta_pointer_like_v = is_meta_pointer_like<Type>::value;
+
+} // namespace entt
+
+#endif
+
+////////////////// END OF external/entt/meta/type_traits.hpp ///////////////////
+
+///////////////////// START OF external/entt/meta/node.hpp /////////////////////
+
+#ifndef ENTT_META_NODE_HPP
+#define ENTT_META_NODE_HPP
+
+#include <cstddef>
+#include <memory>
+#include <type_traits>
+#include <utility>
+
+namespace entt {
+
+class meta_any;
+class meta_type;
+struct meta_handle;
+
+/**
+ * @cond TURN_OFF_DOXYGEN
+ * Internal details not to be documented.
+ */
+
+namespace internal {
+
+enum class meta_traits : std::uint32_t {
+    is_none = 0x0000,
+    is_const = 0x0001,
+    is_static = 0x0002,
+    is_arithmetic = 0x0004,
+    is_integral = 0x0008,
+    is_signed = 0x0010,
+    is_array = 0x0020,
+    is_enum = 0x0040,
+    is_class = 0x0080,
+    is_meta_pointer_like = 0x0100,
+    is_meta_sequence_container = 0x0200,
+    is_meta_associative_container = 0x0400,
+    _entt_enum_as_bitmask
+};
+
+struct meta_type_node;
+
+struct meta_prop_node {
+    meta_type_node (*type)(const meta_context &) noexcept {};
+    std::shared_ptr<void> value{};
+};
+
+struct meta_base_node {
+    meta_type_node (*type)(const meta_context &) noexcept {};
+    const void *(*cast)(const void *) noexcept {};
+};
+
+struct meta_conv_node {
+    meta_any (*conv)(const meta_ctx &, const void *){};
+};
+
+struct meta_ctor_node {
+    using size_type = std::size_t;
+
+    size_type arity{0u};
+    meta_type (*arg)(const meta_ctx &, const size_type) noexcept {};
+    meta_any (*invoke)(const meta_ctx &, meta_any *const){};
+};
+
+struct meta_dtor_node {
+    void (*dtor)(void *){};
+};
+
+struct meta_data_node {
+    using size_type = std::size_t;
+
+    meta_traits traits{meta_traits::is_none};
+    size_type arity{0u};
+    meta_type_node (*type)(const meta_context &) noexcept {};
+    meta_type (*arg)(const meta_ctx &, const size_type) noexcept {};
+    bool (*set)(meta_handle, meta_any){};
+    meta_any (*get)(const meta_ctx &, meta_handle){};
+    dense_map<id_type, meta_prop_node, identity> prop{};
+};
+
+struct meta_func_node {
+    using size_type = std::size_t;
+
+    meta_traits traits{meta_traits::is_none};
+    size_type arity{0u};
+    meta_type_node (*ret)(const meta_context &) noexcept {};
+    meta_type (*arg)(const meta_ctx &, const size_type) noexcept {};
+    meta_any (*invoke)(const meta_ctx &, meta_handle, meta_any *const){};
+    std::shared_ptr<meta_func_node> next{};
+    dense_map<id_type, meta_prop_node, identity> prop{};
+};
+
+struct meta_template_node {
+    using size_type = std::size_t;
+
+    size_type arity{0u};
+    meta_type_node (*type)(const meta_context &) noexcept {};
+    meta_type_node (*arg)(const meta_context &, const size_type) noexcept {};
+};
+
+struct meta_type_descriptor {
+    dense_map<id_type, meta_ctor_node, identity> ctor{};
+    dense_map<id_type, meta_base_node, identity> base{};
+    dense_map<id_type, meta_conv_node, identity> conv{};
+    dense_map<id_type, meta_data_node, identity> data{};
+    dense_map<id_type, meta_func_node, identity> func{};
+    dense_map<id_type, meta_prop_node, identity> prop{};
+};
+
+struct meta_type_node {
+    using size_type = std::size_t;
+
+    const type_info *info{};
+    id_type id{};
+    meta_traits traits{meta_traits::is_none};
+    size_type size_of{0u};
+    meta_type_node (*resolve)(const meta_context &) noexcept {};
+    meta_type_node (*remove_pointer)(const meta_context &) noexcept {};
+    meta_any (*default_constructor)(const meta_ctx &){};
+    double (*conversion_helper)(void *, const void *){};
+    meta_any (*from_void)(const meta_ctx &, void *, const void *){};
+    meta_template_node templ{};
+    meta_dtor_node dtor{};
+    std::shared_ptr<meta_type_descriptor> details{};
+};
+
+template<typename Type>
+meta_type_node resolve(const meta_context &) noexcept;
+
+template<typename... Args>
+[[nodiscard]] auto meta_arg_node(const meta_context &context, type_list<Args...>, [[maybe_unused]] const std::size_t index) noexcept {
+    [[maybe_unused]] std::size_t pos{};
+    meta_type_node (*value)(const meta_context &) noexcept = nullptr;
+    ((value = (pos++ == index ? &resolve<std::remove_cv_t<std::remove_reference_t<Args>>> : value)), ...);
+    ENTT_ASSERT(value != nullptr, "Out of bounds");
+    return value(context);
+}
+
+[[nodiscard]] inline const void *try_cast(const meta_context &context, const meta_type_node &from, const meta_type_node &to, const void *instance) noexcept {
+    if(from.info && to.info && *from.info == *to.info) {
+        return instance;
+    }
+
+    if(from.details) {
+        for(auto &&curr: from.details->base) {
+            if(const void *elem = try_cast(context, curr.second.type(context), to, curr.second.cast(instance)); elem) {
+                return elem;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+[[nodiscard]] inline const meta_type_node *try_resolve(const meta_context &context, const type_info &info) noexcept {
+    const auto it = context.value.find(info.hash());
+    return it != context.value.end() ? &it->second : nullptr;
+}
+
+template<typename Type>
+[[nodiscard]] meta_type_node resolve(const meta_context &context) noexcept {
+    static_assert(std::is_same_v<Type, std::remove_const_t<std::remove_reference_t<Type>>>, "Invalid type");
+
+    if(auto *elem = try_resolve(context, type_id<Type>()); elem) {
+        return *elem;
+    }
+
+    meta_type_node node{
+        &type_id<Type>(),
+        type_id<Type>().hash(),
+        (std::is_arithmetic_v<Type> ? meta_traits::is_arithmetic : meta_traits::is_none)
+            | (std::is_integral_v<Type> ? meta_traits::is_integral : meta_traits::is_none)
+            | (std::is_signed_v<Type> ? meta_traits::is_signed : meta_traits::is_none)
+            | (std::is_array_v<Type> ? meta_traits::is_array : meta_traits::is_none)
+            | (std::is_enum_v<Type> ? meta_traits::is_enum : meta_traits::is_none)
+            | (std::is_class_v<Type> ? meta_traits::is_class : meta_traits::is_none)
+            | (is_meta_pointer_like_v<Type> ? meta_traits::is_meta_pointer_like : meta_traits::is_none)
+            | (is_complete_v<meta_sequence_container_traits<Type>> ? meta_traits::is_meta_sequence_container : meta_traits::is_none)
+            | (is_complete_v<meta_associative_container_traits<Type>> ? meta_traits::is_meta_associative_container : meta_traits::is_none),
+        size_of_v<Type>,
+        &resolve<Type>,
+        &resolve<std::remove_cv_t<std::remove_pointer_t<Type>>>};
+
+    if constexpr(std::is_default_constructible_v<Type>) {
+        node.default_constructor = +[](const meta_ctx &ctx) {
+            return meta_any{ctx, std::in_place_type<Type>};
+        };
+    }
+
+    if constexpr(std::is_arithmetic_v<Type>) {
+        node.conversion_helper = +[](void *bin, const void *value) {
+            return bin ? static_cast<double>(*static_cast<Type *>(bin) = static_cast<Type>(*static_cast<const double *>(value))) : static_cast<double>(*static_cast<const Type *>(value));
+        };
+    } else if constexpr(std::is_enum_v<Type>) {
+        node.conversion_helper = +[](void *bin, const void *value) {
+            return bin ? static_cast<double>(*static_cast<Type *>(bin) = static_cast<Type>(static_cast<std::underlying_type_t<Type>>(*static_cast<const double *>(value)))) : static_cast<double>(*static_cast<const Type *>(value));
+        };
+    }
+
+    if constexpr(!std::is_same_v<Type, void> && !std::is_function_v<Type>) {
+        node.from_void = +[](const meta_ctx &ctx, void *element, const void *as_const) {
+            if(element) {
+                return meta_any{ctx, std::in_place_type<std::decay_t<Type> &>, *static_cast<std::decay_t<Type> *>(element)};
+            }
+
+            return meta_any{ctx, std::in_place_type<const std::decay_t<Type> &>, *static_cast<const std::decay_t<Type> *>(as_const)};
+        };
+    }
+
+    if constexpr(is_complete_v<meta_template_traits<Type>>) {
+        node.templ = meta_template_node{
+            meta_template_traits<Type>::args_type::size,
+            &resolve<typename meta_template_traits<Type>::class_type>,
+            +[](const meta_context &area, const std::size_t index) noexcept { return meta_arg_node(area, typename meta_template_traits<Type>::args_type{}, index); }};
+    }
+
+    return node;
+}
+
+} // namespace internal
+
+/**
+ * Internal details not to be documented.
+ * @endcond
+ */
+
+} // namespace entt
+
+#endif
+
+////////////////////// END OF external/entt/meta/node.hpp //////////////////////
+
+//////////////////// START OF external/entt/meta/range.hpp /////////////////////
+
+#ifndef ENTT_META_RANGE_HPP
+#define ENTT_META_RANGE_HPP
+
+#include <cstddef>
+#include <iterator>
+#include <utility>
+
+namespace entt {
+
+/**
+ * @cond TURN_OFF_DOXYGEN
+ * Internal details not to be documented.
+ */
+
+namespace internal {
+
+template<typename Type, typename It>
+struct meta_range_iterator final {
+    using difference_type = std::ptrdiff_t;
+    using value_type = std::pair<id_type, Type>;
+    using pointer = input_iterator_pointer<value_type>;
+    using reference = value_type;
+    using iterator_category = std::input_iterator_tag;
+
+    constexpr meta_range_iterator() noexcept
+        : it{},
+          ctx{} {}
+
+    constexpr meta_range_iterator(const meta_ctx &area, const It iter) noexcept
+        : it{iter},
+          ctx{&area} {}
+
+    constexpr meta_range_iterator &operator++() noexcept {
+        return ++it, *this;
+    }
+
+    constexpr meta_range_iterator operator++(int) noexcept {
+        meta_range_iterator orig = *this;
+        return ++(*this), orig;
+    }
+
+    constexpr meta_range_iterator &operator--() noexcept {
+        return --it, *this;
+    }
+
+    constexpr meta_range_iterator operator--(int) noexcept {
+        meta_range_iterator orig = *this;
+        return operator--(), orig;
+    }
+
+    constexpr meta_range_iterator &operator+=(const difference_type value) noexcept {
+        it += value;
+        return *this;
+    }
+
+    constexpr meta_range_iterator operator+(const difference_type value) const noexcept {
+        meta_range_iterator copy = *this;
+        return (copy += value);
+    }
+
+    constexpr meta_range_iterator &operator-=(const difference_type value) noexcept {
+        return (*this += -value);
+    }
+
+    constexpr meta_range_iterator operator-(const difference_type value) const noexcept {
+        return (*this + -value);
+    }
+
+    [[nodiscard]] constexpr reference operator[](const difference_type value) const noexcept {
+        return {it[value].first, Type{*ctx, it[value].second}};
+    }
+
+    [[nodiscard]] constexpr pointer operator->() const noexcept {
+        return operator*();
+    }
+
+    [[nodiscard]] constexpr reference operator*() const noexcept {
+        return {it->first, Type{*ctx, it->second}};
+    }
+
+    template<typename... Args>
+    friend constexpr std::ptrdiff_t operator-(const meta_range_iterator<Args...> &, const meta_range_iterator<Args...> &) noexcept;
+
+    template<typename... Args>
+    friend constexpr bool operator==(const meta_range_iterator<Args...> &, const meta_range_iterator<Args...> &) noexcept;
+
+    template<typename... Args>
+    friend constexpr bool operator<(const meta_range_iterator<Args...> &, const meta_range_iterator<Args...> &) noexcept;
+
+private:
+    It it;
+    const meta_ctx *ctx;
+};
+
+template<typename... Args>
+[[nodiscard]] constexpr std::ptrdiff_t operator-(const meta_range_iterator<Args...> &lhs, const meta_range_iterator<Args...> &rhs) noexcept {
+    return lhs.it - rhs.it;
+}
+
+template<typename... Args>
+[[nodiscard]] constexpr bool operator==(const meta_range_iterator<Args...> &lhs, const meta_range_iterator<Args...> &rhs) noexcept {
+    return lhs.it == rhs.it;
+}
+
+template<typename... Args>
+[[nodiscard]] constexpr bool operator!=(const meta_range_iterator<Args...> &lhs, const meta_range_iterator<Args...> &rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+template<typename... Args>
+[[nodiscard]] constexpr bool operator<(const meta_range_iterator<Args...> &lhs, const meta_range_iterator<Args...> &rhs) noexcept {
+    return lhs.it < rhs.it;
+}
+
+template<typename... Args>
+[[nodiscard]] constexpr bool operator>(const meta_range_iterator<Args...> &lhs, const meta_range_iterator<Args...> &rhs) noexcept {
+    return rhs < lhs;
+}
+
+template<typename... Args>
+[[nodiscard]] constexpr bool operator<=(const meta_range_iterator<Args...> &lhs, const meta_range_iterator<Args...> &rhs) noexcept {
+    return !(lhs > rhs);
+}
+
+template<typename... Args>
+[[nodiscard]] constexpr bool operator>=(const meta_range_iterator<Args...> &lhs, const meta_range_iterator<Args...> &rhs) noexcept {
+    return !(lhs < rhs);
+}
+
+} // namespace internal
+
+/**
+ * Internal details not to be documented.
+ * @endcond
+ */
+
+/**
+ * @brief Iterable range to use to iterate all types of meta objects.
+ * @tparam Type Type of meta objects returned.
+ * @tparam It Type of forward iterator.
+ */
+template<typename Type, typename It>
+using meta_range = iterable_adaptor<internal::meta_range_iterator<Type, It>>;
+
+} // namespace entt
+
+#endif
+
+///////////////////// END OF external/entt/meta/range.hpp //////////////////////
+
+///////////////////// START OF external/entt/meta/meta.hpp /////////////////////
+
+#ifndef ENTT_META_META_HPP
+#define ENTT_META_META_HPP
+
+#include <cstddef>
+#include <iterator>
+#include <memory>
+#include <type_traits>
+#include <utility>
+
+namespace entt {
+
+class meta_any;
+class meta_type;
+
+/*! @brief Proxy object for sequence containers. */
+class meta_sequence_container {
+    class meta_iterator;
+
+public:
+    /*! @brief Unsigned integer type. */
+    using size_type = std::size_t;
+    /*! @brief Meta iterator type. */
+    using iterator = meta_iterator;
+
+    /**
+     * @brief Context aware constructor.
+     * @param area The context from which to search for meta types.
+     */
+    meta_sequence_container(const meta_ctx &area = locator<meta_ctx>::value_or()) noexcept
+        : ctx{&area} {}
+
+    /**
+     * @brief Rebinds a proxy object to a sequence container type.
+     * @tparam Type Type of container to wrap.
+     * @param instance The container to wrap.
+     */
+    template<typename Type>
+    void rebind(any instance) noexcept {
+        value_type_node = &internal::resolve<typename Type::value_type>;
+        size_fn = &meta_sequence_container_traits<Type>::size;
+        resize_fn = &meta_sequence_container_traits<Type>::resize;
+        iter_fn = &meta_sequence_container_traits<Type>::iter;
+        insert_or_erase_fn = &meta_sequence_container_traits<Type>::insert_or_erase;
+        storage = std::move(instance);
+    }
+
+    [[nodiscard]] inline meta_type value_type() const noexcept;
+    [[nodiscard]] inline size_type size() const noexcept;
+    inline bool resize(const size_type);
+    inline bool clear();
+    [[nodiscard]] inline iterator begin();
+    [[nodiscard]] inline iterator end();
+    inline iterator insert(iterator, meta_any);
+    inline iterator erase(iterator);
+    [[nodiscard]] inline meta_any operator[](const size_type);
+    [[nodiscard]] inline explicit operator bool() const noexcept;
+
+private:
+    const meta_ctx *ctx{};
+    internal::meta_type_node (*value_type_node)(const internal::meta_context &){};
+    size_type (*size_fn)(const any &) noexcept {};
+    bool (*resize_fn)(any &, size_type){};
+    iterator (*iter_fn)(const meta_ctx &, any &, const bool){};
+    iterator (*insert_or_erase_fn)(const meta_ctx &, any &, const any &, meta_any &){};
+    any storage{};
+};
+
+/*! @brief Proxy object for associative containers. */
+class meta_associative_container {
+    class meta_iterator;
+
+public:
+    /*! @brief Unsigned integer type. */
+    using size_type = std::size_t;
+    /*! @brief Meta iterator type. */
+    using iterator = meta_iterator;
+
+    /**
+     * @brief Context aware constructor.
+     * @param area The context from which to search for meta types.
+     */
+    meta_associative_container(const meta_ctx &area = locator<meta_ctx>::value_or()) noexcept
+        : ctx{&area} {}
+
+    /**
+     * @brief Rebinds a proxy object to an associative container type.
+     * @tparam Type Type of container to wrap.
+     * @param instance The container to wrap.
+     */
+    template<typename Type>
+    void rebind(any instance) noexcept {
+        if constexpr(!meta_associative_container_traits<Type>::key_only) {
+            mapped_type_node = &internal::resolve<typename Type::mapped_type>;
+        }
+
+        key_only_container = meta_associative_container_traits<Type>::key_only;
+        key_type_node = &internal::resolve<typename Type::key_type>;
+        value_type_node = &internal::resolve<typename Type::value_type>;
+        size_fn = &meta_associative_container_traits<Type>::size;
+        clear_fn = &meta_associative_container_traits<Type>::clear;
+        iter_fn = &meta_associative_container_traits<Type>::iter;
+        insert_or_erase_fn = &meta_associative_container_traits<Type>::insert_or_erase;
+        find_fn = &meta_associative_container_traits<Type>::find;
+        storage = std::move(instance);
+    }
+
+    [[nodiscard]] inline bool key_only() const noexcept;
+    [[nodiscard]] inline meta_type key_type() const noexcept;
+    [[nodiscard]] inline meta_type mapped_type() const noexcept;
+    [[nodiscard]] inline meta_type value_type() const noexcept;
+    [[nodiscard]] inline size_type size() const noexcept;
+    inline bool clear();
+    [[nodiscard]] inline iterator begin();
+    [[nodiscard]] inline iterator end();
+    inline bool insert(meta_any);
+    inline bool insert(meta_any, meta_any);
+    inline size_type erase(meta_any);
+    [[nodiscard]] inline iterator find(meta_any);
+    [[nodiscard]] inline explicit operator bool() const noexcept;
+
+private:
+    const meta_ctx *ctx{};
+    bool key_only_container{};
+    internal::meta_type_node (*key_type_node)(const internal::meta_context &){};
+    internal::meta_type_node (*mapped_type_node)(const internal::meta_context &){};
+    internal::meta_type_node (*value_type_node)(const internal::meta_context &){};
+    size_type (*size_fn)(const any &) noexcept {};
+    bool (*clear_fn)(any &){};
+    iterator (*iter_fn)(const meta_ctx &, any &, const bool){};
+    size_type (*insert_or_erase_fn)(any &, meta_any &, meta_any &){};
+    iterator (*find_fn)(const meta_ctx &, any &, meta_any &){};
+    any storage{};
+};
+
+/*! @brief Opaque wrapper for values of any type. */
+class meta_any {
+    enum class operation : std::uint8_t {
+        deref,
+        seq,
+        assoc
+    };
+
+    using vtable_type = void(const operation, const any &, void *);
+
+    template<typename Type>
+    static void basic_vtable([[maybe_unused]] const operation op, [[maybe_unused]] const any &value, [[maybe_unused]] void *other) {
+        static_assert(std::is_same_v<std::remove_cv_t<std::remove_reference_t<Type>>, Type>, "Invalid type");
+
+        if constexpr(!std::is_void_v<Type>) {
+            switch(op) {
+            case operation::deref:
+                if constexpr(is_meta_pointer_like_v<Type>) {
+                    if constexpr(std::is_function_v<typename std::pointer_traits<Type>::element_type>) {
+                        static_cast<meta_any *>(other)->emplace<Type>(any_cast<Type>(value));
+                    } else if constexpr(!std::is_same_v<std::remove_const_t<typename std::pointer_traits<Type>::element_type>, void>) {
+                        using in_place_type = decltype(adl_meta_pointer_like<Type>::dereference(any_cast<const Type &>(value)));
+
+                        if constexpr(std::is_constructible_v<bool, Type>) {
+                            if(const auto &pointer_like = any_cast<const Type &>(value); pointer_like) {
+                                static_cast<meta_any *>(other)->emplace<in_place_type>(adl_meta_pointer_like<Type>::dereference(pointer_like));
+                            }
+                        } else {
+                            static_cast<meta_any *>(other)->emplace<in_place_type>(adl_meta_pointer_like<Type>::dereference(any_cast<const Type &>(value)));
+                        }
+                    }
+                }
+                break;
+            case operation::seq:
+                if constexpr(is_complete_v<meta_sequence_container_traits<Type>>) {
+                    static_cast<meta_sequence_container *>(other)->rebind<Type>(std::move(const_cast<any &>(value)));
+                }
+                break;
+            case operation::assoc:
+                if constexpr(is_complete_v<meta_associative_container_traits<Type>>) {
+                    static_cast<meta_associative_container *>(other)->rebind<Type>(std::move(const_cast<any &>(value)));
+                }
+                break;
+            }
+        }
+    }
+
+    void release() {
+        if(node.dtor.dtor && owner()) {
+            node.dtor.dtor(storage.data());
+        }
+    }
+
+    meta_any(const meta_ctx &area, const meta_any &other, any ref) noexcept
+        : storage{std::move(ref)},
+          ctx{&area},
+          node{storage ? other.node : internal::meta_type_node{}},
+          vtable{storage ? other.vtable : &basic_vtable<void>} {}
+
+public:
+    /*! Default constructor. */
+    meta_any() noexcept
+        : meta_any{meta_ctx_arg, locator<meta_ctx>::value_or()} {}
+
+    /**
+     * @brief Context aware constructor.
+     * @param area The context from which to search for meta types.
+     */
+    meta_any(meta_ctx_arg_t, const meta_ctx &area) noexcept
+        : storage{},
+          ctx{&area},
+          node{},
+          vtable{&basic_vtable<void>} {}
+
+    /**
+     * @brief Constructs a wrapper by directly initializing the new object.
+     * @tparam Type Type of object to use to initialize the wrapper.
+     * @tparam Args Types of arguments to use to construct the new instance.
+     * @param args Parameters to use to construct the instance.
+     */
+    template<typename Type, typename... Args>
+    explicit meta_any(std::in_place_type_t<Type>, Args &&...args)
+        : meta_any{locator<meta_ctx>::value_or(), std::in_place_type<Type>, std::forward<Args>(args)...} {}
+
+    /**
+     * @brief Constructs a wrapper by directly initializing the new object.
+     * @tparam Type Type of object to use to initialize the wrapper.
+     * @tparam Args Types of arguments to use to construct the new instance.
+     * @param area The context from which to search for meta types.
+     * @param args Parameters to use to construct the instance.
+     */
+    template<typename Type, typename... Args>
+    explicit meta_any(const meta_ctx &area, std::in_place_type_t<Type>, Args &&...args)
+        : storage{std::in_place_type<Type>, std::forward<Args>(args)...},
+          ctx{&area},
+          node{internal::resolve<std::remove_cv_t<std::remove_reference_t<Type>>>(internal::meta_context::from(*ctx))},
+          vtable{&basic_vtable<std::remove_cv_t<std::remove_reference_t<Type>>>} {}
+
+    /**
+     * @brief Constructs a wrapper from a given value.
+     * @tparam Type Type of object to use to initialize the wrapper.
+     * @param value An instance of an object to use to initialize the wrapper.
+     */
+    template<typename Type, typename = std::enable_if_t<!std::is_same_v<std::decay_t<Type>, meta_any>>>
+    meta_any(Type &&value)
+        : meta_any{locator<meta_ctx>::value_or(), std::forward<Type>(value)} {}
+
+    /**
+     * @brief Constructs a wrapper from a given value.
+     * @tparam Type Type of object to use to initialize the wrapper.
+     * @param area The context from which to search for meta types.
+     * @param value An instance of an object to use to initialize the wrapper.
+     */
+    template<typename Type, typename = std::enable_if_t<!std::is_same_v<std::decay_t<Type>, meta_any>>>
+    meta_any(const meta_ctx &area, Type &&value)
+        : meta_any{area, std::in_place_type<std::decay_t<Type>>, std::forward<Type>(value)} {}
+
+    /**
+     * @brief Context aware copy constructor.
+     * @param area The context from which to search for meta types.
+     * @param other The instance to copy from.
+     */
+    meta_any(const meta_ctx &area, const meta_any &other)
+        : meta_any{other} {
+        ctx = &area;
+        node = node.resolve ? node.resolve(internal::meta_context::from(*ctx)) : node;
+    }
+
+    /**
+     * @brief Context aware move constructor.
+     * @param area The context from which to search for meta types.
+     * @param other The instance to move from.
+     */
+    meta_any(const meta_ctx &area, meta_any &&other)
+        : meta_any{std::move(other)} {
+        ctx = &area;
+        node = node.resolve ? node.resolve(internal::meta_context::from(*ctx)) : node;
+    }
+
+    /**
+     * @brief Copy constructor.
+     * @param other The instance to copy from.
+     */
+    meta_any(const meta_any &other) = default;
+
+    /**
+     * @brief Move constructor.
+     * @param other The instance to move from.
+     */
+    meta_any(meta_any &&other) noexcept
+        : storage{std::move(other.storage)},
+          ctx{other.ctx},
+          node{std::exchange(other.node, internal::meta_type_node{})},
+          vtable{std::exchange(other.vtable, &basic_vtable<void>)} {}
+
+    /*! @brief Frees the internal storage, whatever it means. */
+    ~meta_any() {
+        release();
+    }
+
+    /**
+     * @brief Copy assignment operator.
+     * @param other The instance to copy from.
+     * @return This meta any object.
+     */
+    meta_any &operator=(const meta_any &other) {
+        release();
+        storage = other.storage;
+        ctx = other.ctx;
+        node = other.node;
+        vtable = other.vtable;
+        return *this;
+    }
+
+    /**
+     * @brief Move assignment operator.
+     * @param other The instance to move from.
+     * @return This meta any object.
+     */
+    meta_any &operator=(meta_any &&other) noexcept {
+        release();
+        storage = std::move(other.storage);
+        ctx = other.ctx;
+        node = std::exchange(other.node, internal::meta_type_node{});
+        vtable = std::exchange(other.vtable, &basic_vtable<void>);
+        return *this;
+    }
+
+    /**
+     * @brief Value assignment operator.
+     * @tparam Type Type of object to use to initialize the wrapper.
+     * @param value An instance of an object to use to initialize the wrapper.
+     * @return This meta any object.
+     */
+    template<typename Type>
+    std::enable_if_t<!std::is_same_v<std::decay_t<Type>, meta_any>, meta_any &>
+    operator=(Type &&value) {
+        emplace<std::decay_t<Type>>(std::forward<Type>(value));
+        return *this;
+    }
+
+    /*! @copydoc any::type */
+    [[nodiscard]] inline meta_type type() const noexcept;
+
+    /*! @copydoc any::data */
+    [[nodiscard]] const void *data() const noexcept {
+        return storage.data();
+    }
+
+    /*! @copydoc any::data */
+    [[nodiscard]] void *data() noexcept {
+        return storage.data();
+    }
+
+    /**
+     * @brief Invokes the underlying function, if possible.
+     * @tparam Args Types of arguments to use to invoke the function.
+     * @param id Unique identifier.
+     * @param args Parameters to use to invoke the function.
+     * @return A wrapper containing the returned value, if any.
+     */
+    template<typename... Args>
+    meta_any invoke(const id_type id, Args &&...args) const;
+
+    /*! @copydoc invoke */
+    template<typename... Args>
+    meta_any invoke(const id_type id, Args &&...args);
+
+    /**
+     * @brief Sets the value of a given variable.
+     * @tparam Type Type of value to assign.
+     * @param id Unique identifier.
+     * @param value Parameter to use to set the underlying variable.
+     * @return True in case of success, false otherwise.
+     */
+    template<typename Type>
+    bool set(const id_type id, Type &&value);
+
+    /**
+     * @brief Gets the value of a given variable.
+     * @param id Unique identifier.
+     * @return A wrapper containing the value of the underlying variable.
+     */
+    [[nodiscard]] meta_any get(const id_type id) const;
+
+    /*! @copydoc get */
+    [[nodiscard]] meta_any get(const id_type id);
+
+    /**
+     * @brief Tries to cast an instance to a given type.
+     * @tparam Type Type to which to cast the instance.
+     * @return A (possibly null) pointer to the contained instance.
+     */
+    template<typename Type>
+    [[nodiscard]] const Type *try_cast() const {
+        const auto other = internal::resolve<std::remove_cv_t<Type>>(internal::meta_context::from(*ctx));
+        return static_cast<const Type *>(internal::try_cast(internal::meta_context::from(*ctx), node, other, data()));
+    }
+
+    /*! @copydoc try_cast */
+    template<typename Type>
+    [[nodiscard]] Type *try_cast() {
+        if constexpr(std::is_const_v<Type>) {
+            return std::as_const(*this).try_cast<std::remove_const_t<Type>>();
+        } else {
+            const auto other = internal::resolve<std::remove_cv_t<Type>>(internal::meta_context::from(*ctx));
+            return static_cast<Type *>(const_cast<void *>(internal::try_cast(internal::meta_context::from(*ctx), node, other, data())));
+        }
+    }
+
+    /**
+     * @brief Tries to cast an instance to a given type.
+     *
+     * @warning
+     * Attempting to perform an invalid cast results is undefined behavior.
+     *
+     * @tparam Type Type to which to cast the instance.
+     * @return A reference to the contained instance.
+     */
+    template<typename Type>
+    [[nodiscard]] Type cast() const {
+        auto *const instance = try_cast<std::remove_reference_t<Type>>();
+        ENTT_ASSERT(instance, "Invalid instance");
+        return static_cast<Type>(*instance);
+    }
+
+    /*! @copydoc cast */
+    template<typename Type>
+    [[nodiscard]] Type cast() {
+        // forces const on non-reference types to make them work also with wrappers for const references
+        auto *const instance = try_cast<std::remove_reference_t<const Type>>();
+        ENTT_ASSERT(instance, "Invalid instance");
+        return static_cast<Type>(*instance);
+    }
+
+    /**
+     * @brief Converts an object in such a way that a given cast becomes viable.
+     * @param type Meta type to which the cast is requested.
+     * @return A valid meta any object if there exists a viable conversion, an
+     * invalid one otherwise.
+     */
+    [[nodiscard]] meta_any allow_cast(const meta_type &type) const;
+
+    /**
+     * @brief Converts an object in such a way that a given cast becomes viable.
+     * @param type Meta type to which the cast is requested.
+     * @return True if there exists a viable conversion, false otherwise.
+     */
+    [[nodiscard]] bool allow_cast(const meta_type &type) {
+        if(auto other = std::as_const(*this).allow_cast(type); other) {
+            if(other.owner()) {
+                std::swap(*this, other);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @brief Converts an object in such a way that a given cast becomes viable.
+     * @tparam Type Type to which the cast is requested.
+     * @return A valid meta any object if there exists a viable conversion, an
+     * invalid one otherwise.
+     */
+    template<typename Type>
+    [[nodiscard]] meta_any allow_cast() const {
+        if constexpr(std::is_reference_v<Type> && !std::is_const_v<std::remove_reference_t<Type>>) {
+            return meta_any{meta_ctx_arg, *ctx};
+        } else {
+            auto other = internal::resolve<std::remove_cv_t<std::remove_reference_t<Type>>>(internal::meta_context::from(*ctx));
+            return allow_cast(meta_type{*ctx, other});
+        }
+    }
+
+    /**
+     * @brief Converts an object in such a way that a given cast becomes viable.
+     * @tparam Type Type to which the cast is requested.
+     * @return True if there exists a viable conversion, false otherwise.
+     */
+    template<typename Type>
+    bool allow_cast() {
+        auto other = internal::resolve<std::remove_cv_t<std::remove_reference_t<Type>>>(internal::meta_context::from(*ctx));
+        return allow_cast(meta_type{*ctx, other}) && (!(std::is_reference_v<Type> && !std::is_const_v<std::remove_reference_t<Type>>) || storage.data() != nullptr);
+    }
+
+    /*! @copydoc any::emplace */
+    template<typename Type, typename... Args>
+    void emplace(Args &&...args) {
+        release();
+        storage.emplace<Type>(std::forward<Args>(args)...);
+        node = internal::resolve<std::remove_cv_t<std::remove_reference_t<Type>>>(internal::meta_context::from(*ctx));
+        vtable = &basic_vtable<std::remove_cv_t<std::remove_reference_t<Type>>>;
+    }
+
+    /*! @copydoc any::assign */
+    bool assign(const meta_any &other);
+
+    /*! @copydoc any::assign */
+    bool assign(meta_any &&other);
+
+    /*! @copydoc any::reset */
+    void reset() {
+        release();
+        storage.reset();
+        node = {};
+        vtable = &basic_vtable<void>;
+    }
+
+    /**
+     * @brief Returns a sequence container proxy.
+     * @return A sequence container proxy for the underlying object.
+     */
+    [[nodiscard]] meta_sequence_container as_sequence_container() noexcept {
+        any detached = storage.as_ref();
+        meta_sequence_container proxy{*ctx};
+        vtable(operation::seq, detached, &proxy);
+        return proxy;
+    }
+
+    /*! @copydoc as_sequence_container */
+    [[nodiscard]] meta_sequence_container as_sequence_container() const noexcept {
+        any detached = storage.as_ref();
+        meta_sequence_container proxy{*ctx};
+        vtable(operation::seq, detached, &proxy);
+        return proxy;
+    }
+
+    /**
+     * @brief Returns an associative container proxy.
+     * @return An associative container proxy for the underlying object.
+     */
+    [[nodiscard]] meta_associative_container as_associative_container() noexcept {
+        any detached = storage.as_ref();
+        meta_associative_container proxy{*ctx};
+        vtable(operation::assoc, detached, &proxy);
+        return proxy;
+    }
+
+    /*! @copydoc as_associative_container */
+    [[nodiscard]] meta_associative_container as_associative_container() const noexcept {
+        any detached = storage.as_ref();
+        meta_associative_container proxy{*ctx};
+        vtable(operation::assoc, detached, &proxy);
+        return proxy;
+    }
+
+    /**
+     * @brief Indirection operator for dereferencing opaque objects.
+     * @return A wrapper that shares a reference to an unmanaged object if the
+     * wrapped element is dereferenceable, an invalid meta any otherwise.
+     */
+    [[nodiscard]] meta_any operator*() const noexcept {
+        meta_any ret{meta_ctx_arg, *ctx};
+        vtable(operation::deref, storage, &ret);
+        return ret;
+    }
+
+    /**
+     * @brief Returns false if a wrapper is invalid, true otherwise.
+     * @return False if the wrapper is invalid, true otherwise.
+     */
+    [[nodiscard]] explicit operator bool() const noexcept {
+        return !(node.info == nullptr);
+    }
+
+    /*! @copydoc any::operator== */
+    [[nodiscard]] bool operator==(const meta_any &other) const noexcept {
+        return (ctx == other.ctx) && ((!node.info && !other.node.info) || (node.info && other.node.info && *node.info == *other.node.info && storage == other.storage));
+    }
+
+    /*! @copydoc any::operator!= */
+    [[nodiscard]] bool operator!=(const meta_any &other) const noexcept {
+        return !(*this == other);
+    }
+
+    /*! @copydoc any::as_ref */
+    [[nodiscard]] meta_any as_ref() noexcept {
+        return meta_any{*ctx, *this, storage.as_ref()};
+    }
+
+    /*! @copydoc any::as_ref */
+    [[nodiscard]] meta_any as_ref() const noexcept {
+        return meta_any{*ctx, *this, storage.as_ref()};
+    }
+
+    /*! @copydoc any::owner */
+    [[nodiscard]] bool owner() const noexcept {
+        return storage.owner();
+    }
+
+private:
+    any storage;
+    const meta_ctx *ctx;
+    internal::meta_type_node node;
+    vtable_type *vtable;
+};
+
+/**
+ * @brief Forwards its argument and avoids copies for lvalue references.
+ * @tparam Type Type of argument to use to construct the new instance.
+ * @param value Parameter to use to construct the instance.
+ * @param ctx The context from which to search for meta types.
+ * @return A properly initialized and not necessarily owning wrapper.
+ */
+template<typename Type>
+[[nodiscard]] meta_any forward_as_meta(const meta_ctx &ctx, Type &&value) {
+    return meta_any{ctx, std::in_place_type<Type &&>, std::forward<Type>(value)};
+}
+
+/**
+ * @brief Forwards its argument and avoids copies for lvalue references.
+ * @tparam Type Type of argument to use to construct the new instance.
+ * @param value Parameter to use to construct the instance.
+ * @return A properly initialized and not necessarily owning wrapper.
+ */
+template<typename Type>
+[[nodiscard]] meta_any forward_as_meta(Type &&value) {
+    return forward_as_meta(locator<meta_ctx>::value_or(), std::forward<Type>(value));
+}
+
+/**
+ * @brief Opaque pointers to instances of any type.
+ *
+ * A handle doesn't perform copies and isn't responsible for the contained
+ * object. It doesn't prolong the lifetime of the pointed instance.<br/>
+ * Handles are used to generate references to actual objects when needed.
+ */
+struct meta_handle {
+    /*! Default constructor. */
+    meta_handle() noexcept
+        : meta_handle{meta_ctx_arg, locator<meta_ctx>::value_or()} {}
+
+    /**
+     * @brief Context aware constructor.
+     * @param area The context from which to search for meta types.
+     */
+    meta_handle(meta_ctx_arg_t, const meta_ctx &area) noexcept
+        : any{meta_ctx_arg, area} {}
+
+    /**
+     * @brief Creates a handle that points to an unmanaged object.
+     * @param value An instance of an object to use to initialize the handle.
+     */
+    meta_handle(meta_any &value) noexcept
+        : any{value.as_ref()} {}
+
+    /**
+     * @brief Creates a handle that points to an unmanaged object.
+     * @param value An instance of an object to use to initialize the handle.
+     */
+    meta_handle(const meta_any &value) noexcept
+        : any{value.as_ref()} {}
+
+    /**
+     * @brief Creates a handle that points to an unmanaged object.
+     * @tparam Type Type of object to use to initialize the handle.
+     * @param ctx The context from which to search for meta types.
+     * @param value An instance of an object to use to initialize the handle.
+     */
+    template<typename Type, typename = std::enable_if_t<!std::is_same_v<std::decay_t<Type>, meta_handle>>>
+    meta_handle(const meta_ctx &ctx, Type &value) noexcept
+        : any{ctx, std::in_place_type<Type &>, value} {}
+
+    /**
+     * @brief Creates a handle that points to an unmanaged object.
+     * @tparam Type Type of object to use to initialize the handle.
+     * @param value An instance of an object to use to initialize the handle.
+     */
+    template<typename Type, typename = std::enable_if_t<!std::is_same_v<std::decay_t<Type>, meta_handle>>>
+    meta_handle(Type &value) noexcept
+        : meta_handle{locator<meta_ctx>::value_or(), value} {}
+
+    /**
+     * @brief Context aware copy constructor.
+     * @param area The context from which to search for meta types.
+     * @param other The instance to copy from.
+     */
+    meta_handle(const meta_ctx &area, const meta_handle &other)
+        : any{area, other.any} {}
+
+    /**
+     * @brief Context aware move constructor.
+     * @param area The context from which to search for meta types.
+     * @param other The instance to move from.
+     */
+    meta_handle(const meta_ctx &area, meta_handle &&other)
+        : any{area, std::move(other.any)} {}
+
+    /*! @brief Default copy constructor, deleted on purpose. */
+    meta_handle(const meta_handle &) = delete;
+
+    /*! @brief Default move constructor. */
+    meta_handle(meta_handle &&) = default;
+
+    /**
+     * @brief Default copy assignment operator, deleted on purpose.
+     * @return This meta handle.
+     */
+    meta_handle &operator=(const meta_handle &) = delete;
+
+    /**
+     * @brief Default move assignment operator.
+     * @return This meta handle.
+     */
+    meta_handle &operator=(meta_handle &&) = default;
+
+    /**
+     * @brief Returns false if a handle is invalid, true otherwise.
+     * @return False if the handle is invalid, true otherwise.
+     */
+    [[nodiscard]] explicit operator bool() const noexcept {
+        return static_cast<bool>(any);
+    }
+
+    /*! @copydoc meta_any::operator== */
+    [[nodiscard]] bool operator==(const meta_handle &other) const noexcept {
+        return (any == other.any);
+    }
+
+    /*! @copydoc meta_any::operator!= */
+    [[nodiscard]] bool operator!=(const meta_handle &other) const noexcept {
+        return !(*this == other);
+    }
+
+    /**
+     * @brief Access operator for accessing the contained opaque object.
+     * @return A wrapper that shares a reference to an unmanaged object.
+     */
+    [[nodiscard]] meta_any *operator->() {
+        return &any;
+    }
+
+    /*! @copydoc operator-> */
+    [[nodiscard]] const meta_any *operator->() const {
+        return &any;
+    }
+
+private:
+    meta_any any;
+};
+
+/*! @brief Opaque wrapper for properties of any type. */
+struct meta_prop {
+    /*! @brief Default constructor. */
+    meta_prop() noexcept
+        : node{},
+          ctx{} {}
+
+    /**
+     * @brief Context aware constructor for meta objects.
+     * @param area The context from which to search for meta types.
+     * @param curr The underlying node with which to construct the instance.
+     */
+    meta_prop(const meta_ctx &area, const internal::meta_prop_node &curr) noexcept
+        : node{&curr},
+          ctx{&area} {}
+
+    /**
+     * @brief Returns the stored value by const reference.
+     * @return A wrapper containing the value stored with the property.
+     */
+    [[nodiscard]] meta_any value() const {
+        return node->value ? node->type(internal::meta_context::from(*ctx)).from_void(*ctx, nullptr, node->value.get()) : meta_any{meta_ctx_arg, *ctx};
+    }
+
+    /**
+     * @brief Returns the stored value by reference.
+     * @return A wrapper containing the value stored with the property.
+     */
+    [[nodiscard]] meta_any value() {
+        return node->value ? node->type(internal::meta_context::from(*ctx)).from_void(*ctx, node->value.get(), nullptr) : meta_any{meta_ctx_arg, *ctx};
+    }
+
+    /**
+     * @brief Returns true if an object is valid, false otherwise.
+     * @return True if the object is valid, false otherwise.
+     */
+    [[nodiscard]] explicit operator bool() const noexcept {
+        return (node != nullptr);
+    }
+
+    /**
+     * @brief Checks if two objects refer to the same type.
+     * @param other The object with which to compare.
+     * @return True if the objects refer to the same type, false otherwise.
+     */
+    [[nodiscard]] bool operator==(const meta_prop &other) const noexcept {
+        return (ctx == other.ctx && node == other.node);
+    }
+
+private:
+    const internal::meta_prop_node *node;
+    const meta_ctx *ctx;
+};
+
+/**
+ * @brief Checks if two objects refer to the same type.
+ * @param lhs An object, either valid or not.
+ * @param rhs An object, either valid or not.
+ * @return False if the objects refer to the same node, true otherwise.
+ */
+[[nodiscard]] inline bool operator!=(const meta_prop &lhs, const meta_prop &rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+/*! @brief Opaque wrapper for data members. */
+struct meta_data {
+    /*! @brief Unsigned integer type. */
+    using size_type = typename internal::meta_data_node::size_type;
+
+    /*! @brief Default constructor. */
+    meta_data() noexcept
+        : node{},
+          ctx{} {}
+
+    /**
+     * @brief Context aware constructor for meta objects.
+     * @param area The context from which to search for meta types.
+     * @param curr The underlying node with which to construct the instance.
+     */
+    meta_data(const meta_ctx &area, const internal::meta_data_node &curr) noexcept
+        : node{&curr},
+          ctx{&area} {}
+
+    /**
+     * @brief Returns the number of setters available.
+     * @return The number of setters available.
+     */
+    [[nodiscard]] size_type arity() const noexcept {
+        return node->arity;
+    }
+
+    /**
+     * @brief Indicates whether a data member is constant or not.
+     * @return True if the data member is constant, false otherwise.
+     */
+    [[nodiscard]] bool is_const() const noexcept {
+        return static_cast<bool>(node->traits & internal::meta_traits::is_const);
+    }
+
+    /**
+     * @brief Indicates whether a data member is static or not.
+     * @return True if the data member is static, false otherwise.
+     */
+    [[nodiscard]] bool is_static() const noexcept {
+        return static_cast<bool>(node->traits & internal::meta_traits::is_static);
+    }
+
+    /*! @copydoc meta_any::type */
+    [[nodiscard]] inline meta_type type() const noexcept;
+
+    /**
+     * @brief Sets the value of a given variable.
+     * @tparam Type Type of value to assign.
+     * @param instance An opaque instance of the underlying type.
+     * @param value Parameter to use to set the underlying variable.
+     * @return True in case of success, false otherwise.
+     */
+    template<typename Type>
+    bool set(meta_handle instance, Type &&value) const {
+        return node->set && node->set(meta_handle{*ctx, std::move(instance)}, meta_any{*ctx, std::forward<Type>(value)});
+    }
+
+    /**
+     * @brief Gets the value of a given variable.
+     * @param instance An opaque instance of the underlying type.
+     * @return A wrapper containing the value of the underlying variable.
+     */
+    [[nodiscard]] meta_any get(meta_handle instance) const {
+        return node->get(*ctx, meta_handle{*ctx, std::move(instance)});
+    }
+
+    /**
+     * @brief Returns the type accepted by the i-th setter.
+     * @param index Index of the setter of which to return the accepted type.
+     * @return The type accepted by the i-th setter.
+     */
+    [[nodiscard]] inline meta_type arg(const size_type index) const noexcept;
+
+    /**
+     * @brief Returns a range to visit registered meta properties.
+     * @return An iterable range to visit registered meta properties.
+     */
+    [[nodiscard]] meta_range<meta_prop, typename decltype(internal::meta_data_node::prop)::const_iterator> prop() const noexcept {
+        return {{*ctx, node->prop.cbegin()}, {*ctx, node->prop.cend()}};
+    }
+
+    /**
+     * @brief Lookup utility for meta properties.
+     * @param key The key to use to search for a property.
+     * @return The registered meta property for the given key, if any.
+     */
+    [[nodiscard]] meta_prop prop(const id_type key) const {
+        const auto it = node->prop.find(key);
+        return it != node->prop.cend() ? meta_prop{*ctx, it->second} : meta_prop{};
+    }
+
+    /**
+     * @brief Returns true if an object is valid, false otherwise.
+     * @return True if the object is valid, false otherwise.
+     */
+    [[nodiscard]] explicit operator bool() const noexcept {
+        return (node != nullptr);
+    }
+
+    /*! @copydoc meta_prop::operator== */
+    [[nodiscard]] bool operator==(const meta_data &other) const noexcept {
+        return (ctx == other.ctx && node == other.node);
+    }
+
+private:
+    const internal::meta_data_node *node;
+    const meta_ctx *ctx;
+};
+
+/**
+ * @brief Checks if two objects refer to the same type.
+ * @param lhs An object, either valid or not.
+ * @param rhs An object, either valid or not.
+ * @return False if the objects refer to the same node, true otherwise.
+ */
+[[nodiscard]] inline bool operator!=(const meta_data &lhs, const meta_data &rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+/*! @brief Opaque wrapper for member functions. */
+struct meta_func {
+    /*! @brief Unsigned integer type. */
+    using size_type = typename internal::meta_func_node::size_type;
+
+    /*! @brief Default constructor. */
+    meta_func() noexcept
+        : node{},
+          ctx{} {}
+
+    /**
+     * @brief Context aware constructor for meta objects.
+     * @param area The context from which to search for meta types.
+     * @param curr The underlying node with which to construct the instance.
+     */
+    meta_func(const meta_ctx &area, const internal::meta_func_node &curr) noexcept
+        : node{&curr},
+          ctx{&area} {}
+
+    /**
+     * @brief Returns the number of arguments accepted by a member function.
+     * @return The number of arguments accepted by the member function.
+     */
+    [[nodiscard]] size_type arity() const noexcept {
+        return node->arity;
+    }
+
+    /**
+     * @brief Indicates whether a member function is constant or not.
+     * @return True if the member function is constant, false otherwise.
+     */
+    [[nodiscard]] bool is_const() const noexcept {
+        return static_cast<bool>(node->traits & internal::meta_traits::is_const);
+    }
+
+    /**
+     * @brief Indicates whether a member function is static or not.
+     * @return True if the member function is static, false otherwise.
+     */
+    [[nodiscard]] bool is_static() const noexcept {
+        return static_cast<bool>(node->traits & internal::meta_traits::is_static);
+    }
+
+    /**
+     * @brief Returns the return type of a member function.
+     * @return The return type of the member function.
+     */
+    [[nodiscard]] inline meta_type ret() const noexcept;
+
+    /**
+     * @brief Returns the type of the i-th argument of a member function.
+     * @param index Index of the argument of which to return the type.
+     * @return The type of the i-th argument of a member function.
+     */
+    [[nodiscard]] inline meta_type arg(const size_type index) const noexcept;
+
+    /**
+     * @brief Invokes the underlying function, if possible.
+     *
+     * @warning
+     * The context of the arguments is **not** changed.<br/>
+     * It's up to the caller to bind them to the right context(s).
+     *
+     * @param instance An opaque instance of the underlying type.
+     * @param args Parameters to use to invoke the function.
+     * @param sz Number of parameters to use to invoke the function.
+     * @return A wrapper containing the returned value, if any.
+     */
+    meta_any invoke(meta_handle instance, meta_any *const args, const size_type sz) const {
+        return sz == arity() ? node->invoke(*ctx, meta_handle{*ctx, std::move(instance)}, args) : meta_any{meta_ctx_arg, *ctx};
+    }
+
+    /**
+     * @copybrief invoke
+     * @tparam Args Types of arguments to use to invoke the function.
+     * @param instance An opaque instance of the underlying type.
+     * @param args Parameters to use to invoke the function.
+     * @return A wrapper containing the returned value, if any.
+     */
+    template<typename... Args>
+    meta_any invoke(meta_handle instance, Args &&...args) const {
+        if constexpr(sizeof...(Args) == 0u) {
+            return invoke(std::move(instance), static_cast<meta_any *>(nullptr), size_type{});
+        } else {
+            meta_any arguments[sizeof...(Args)]{{*ctx, std::forward<Args>(args)}...};
+            return invoke(std::move(instance), arguments, sizeof...(Args));
+        }
+    }
+
+    /*! @copydoc meta_data::prop */
+    [[nodiscard]] meta_range<meta_prop, typename decltype(internal::meta_func_node::prop)::const_iterator> prop() const noexcept {
+        return {{*ctx, node->prop.cbegin()}, {*ctx, node->prop.cend()}};
+    }
+
+    /**
+     * @brief Lookup utility for meta properties.
+     * @param key The key to use to search for a property.
+     * @return The registered meta property for the given key, if any.
+     */
+    [[nodiscard]] meta_prop prop(const id_type key) const {
+        const auto it = node->prop.find(key);
+        return it != node->prop.cend() ? meta_prop{*ctx, it->second} : meta_prop{};
+    }
+
+    /**
+     * @brief Returns the next overload of a given function, if any.
+     * @return The next overload of the given function, if any.
+     */
+    [[nodiscard]] meta_func next() const {
+        return node->next ? meta_func{*ctx, *node->next} : meta_func{};
+    }
+
+    /**
+     * @brief Returns true if an object is valid, false otherwise.
+     * @return True if the object is valid, false otherwise.
+     */
+    [[nodiscard]] explicit operator bool() const noexcept {
+        return (node != nullptr);
+    }
+
+    /*! @copydoc meta_prop::operator== */
+    [[nodiscard]] bool operator==(const meta_func &other) const noexcept {
+        return (ctx == other.ctx && node == other.node);
+    }
+
+private:
+    const internal::meta_func_node *node;
+    const meta_ctx *ctx;
+};
+
+/**
+ * @brief Checks if two objects refer to the same type.
+ * @param lhs An object, either valid or not.
+ * @param rhs An object, either valid or not.
+ * @return False if the objects refer to the same node, true otherwise.
+ */
+[[nodiscard]] inline bool operator!=(const meta_func &lhs, const meta_func &rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+/*! @brief Opaque wrapper for types. */
+class meta_type {
+    template<typename Func>
+    [[nodiscard]] auto lookup(meta_any *const args, const typename internal::meta_type_node::size_type sz, [[maybe_unused]] bool constness, Func next) const {
+        decltype(next()) candidate = nullptr;
+        size_type same{};
+        bool ambiguous{};
+
+        for(auto curr = next(); curr; curr = next()) {
+            if constexpr(std::is_same_v<std::decay_t<decltype(*curr)>, internal::meta_func_node>) {
+                if(constness && !static_cast<bool>(curr->traits & internal::meta_traits::is_const)) {
+                    continue;
+                }
+            }
+
+            if(curr->arity == sz) {
+                size_type match{};
+                size_type pos{};
+
+                for(; pos < sz && args[pos]; ++pos) {
+                    const auto other = curr->arg(*ctx, pos);
+                    const auto type = args[pos].type();
+
+                    if(const auto &info = other.info(); info == type.info()) {
+                        ++match;
+                    } else if(!((type.node.details && (type.node.details->base.contains(info.hash()) || type.node.details->conv.contains(info.hash()))) || (type.node.conversion_helper && other.node.conversion_helper))) {
+                        break;
+                    }
+                }
+
+                if(pos == sz) {
+                    if(!candidate || match > same) {
+                        candidate = curr;
+                        same = match;
+                        ambiguous = false;
+                    } else if(match == same) {
+                        if constexpr(std::is_same_v<std::decay_t<decltype(*curr)>, internal::meta_func_node>) {
+                            if(static_cast<bool>(curr->traits & internal::meta_traits::is_const) != static_cast<bool>(candidate->traits & internal::meta_traits::is_const)) {
+                                candidate = static_cast<bool>(candidate->traits & internal::meta_traits::is_const) ? curr : candidate;
+                                ambiguous = false;
+                                continue;
+                            }
+                        }
+
+                        ambiguous = true;
+                    }
+                }
+            }
+        }
+
+        return ambiguous ? nullptr : candidate;
+    }
+
+public:
+    /*! @brief Unsigned integer type. */
+    using size_type = typename internal::meta_type_node::size_type;
+
+    /*! @brief Default constructor. */
+    meta_type() noexcept
+        : node{},
+          ctx{} {}
+
+    /**
+     * @brief Context aware constructor for meta objects.
+     * @param area The context from which to search for meta types.
+     * @param curr The underlying node with which to construct the instance.
+     */
+    meta_type(const meta_ctx &area, const internal::meta_type_node &curr) noexcept
+        : node{curr},
+          ctx{&area} {}
+
+    /**
+     * @brief Context aware constructor for meta objects.
+     * @param area The context from which to search for meta types.
+     * @param curr The underlying node with which to construct the instance.
+     */
+    meta_type(const meta_ctx &area, const internal::meta_base_node &curr) noexcept
+        : meta_type{area, curr.type(internal::meta_context::from(area))} {}
+
+    /**
+     * @brief Returns the type info object of the underlying type.
+     * @return The type info object of the underlying type.
+     */
+    [[nodiscard]] const type_info &info() const noexcept {
+        return *node.info;
+    }
+
+    /**
+     * @brief Returns the identifier assigned to a type.
+     * @return The identifier assigned to the type.
+     */
+    [[nodiscard]] id_type id() const noexcept {
+        return node.id;
+    }
+
+    /**
+     * @brief Returns the size of the underlying type if known.
+     * @return The size of the underlying type if known, 0 otherwise.
+     */
+    [[nodiscard]] size_type size_of() const noexcept {
+        return node.size_of;
+    }
+
+    /**
+     * @brief Checks whether a type refers to an arithmetic type or not.
+     * @return True if the underlying type is an arithmetic type, false
+     * otherwise.
+     */
+    [[nodiscard]] bool is_arithmetic() const noexcept {
+        return static_cast<bool>(node.traits & internal::meta_traits::is_arithmetic);
+    }
+
+    /**
+     * @brief Checks whether a type refers to an integral type or not.
+     * @return True if the underlying type is an integral type, false otherwise.
+     */
+    [[nodiscard]] bool is_integral() const noexcept {
+        return static_cast<bool>(node.traits & internal::meta_traits::is_integral);
+    }
+
+    /**
+     * @brief Checks whether a type refers to a signed type or not.
+     * @return True if the underlying type is a signed type, false otherwise.
+     */
+    [[nodiscard]] bool is_signed() const noexcept {
+        return static_cast<bool>(node.traits & internal::meta_traits::is_signed);
+    }
+
+    /**
+     * @brief Checks whether a type refers to an array type or not.
+     * @return True if the underlying type is an array type, false otherwise.
+     */
+    [[nodiscard]] bool is_array() const noexcept {
+        return static_cast<bool>(node.traits & internal::meta_traits::is_array);
+    }
+
+    /**
+     * @brief Checks whether a type refers to an enum or not.
+     * @return True if the underlying type is an enum, false otherwise.
+     */
+    [[nodiscard]] bool is_enum() const noexcept {
+        return static_cast<bool>(node.traits & internal::meta_traits::is_enum);
+    }
+
+    /**
+     * @brief Checks whether a type refers to a class or not.
+     * @return True if the underlying type is a class, false otherwise.
+     */
+    [[nodiscard]] bool is_class() const noexcept {
+        return static_cast<bool>(node.traits & internal::meta_traits::is_class);
+    }
+
+    /**
+     * @brief Checks whether a type refers to a pointer or not.
+     * @return True if the underlying type is a pointer, false otherwise.
+     */
+    [[nodiscard]] bool is_pointer() const noexcept {
+        return node.info && (node.info->hash() != remove_pointer().info().hash());
+    }
+
+    /**
+     * @brief Provides the type for which the pointer is defined.
+     * @return The type for which the pointer is defined or this type if it
+     * doesn't refer to a pointer type.
+     */
+    [[nodiscard]] meta_type remove_pointer() const noexcept {
+        return {*ctx, node.remove_pointer(internal::meta_context::from(*ctx))};
+    }
+
+    /**
+     * @brief Checks whether a type is a pointer-like type or not.
+     * @return True if the underlying type is a pointer-like one, false
+     * otherwise.
+     */
+    [[nodiscard]] bool is_pointer_like() const noexcept {
+        return static_cast<bool>(node.traits & internal::meta_traits::is_meta_pointer_like);
+    }
+
+    /**
+     * @brief Checks whether a type refers to a sequence container or not.
+     * @return True if the type is a sequence container, false otherwise.
+     */
+    [[nodiscard]] bool is_sequence_container() const noexcept {
+        return static_cast<bool>(node.traits & internal::meta_traits::is_meta_sequence_container);
+    }
+
+    /**
+     * @brief Checks whether a type refers to an associative container or not.
+     * @return True if the type is an associative container, false otherwise.
+     */
+    [[nodiscard]] bool is_associative_container() const noexcept {
+        return static_cast<bool>(node.traits & internal::meta_traits::is_meta_associative_container);
+    }
+
+    /**
+     * @brief Checks whether a type refers to a recognized class template
+     * specialization or not.
+     * @return True if the type is a recognized class template specialization,
+     * false otherwise.
+     */
+    [[nodiscard]] bool is_template_specialization() const noexcept {
+        return (node.templ.arity != 0u);
+    }
+
+    /**
+     * @brief Returns the number of template arguments.
+     * @return The number of template arguments.
+     */
+    [[nodiscard]] size_type template_arity() const noexcept {
+        return node.templ.arity;
+    }
+
+    /**
+     * @brief Returns a tag for the class template of the underlying type.
+     * @return The tag for the class template of the underlying type.
+     */
+    [[nodiscard]] inline meta_type template_type() const noexcept {
+        return node.templ.type ? meta_type{*ctx, node.templ.type(internal::meta_context::from(*ctx))} : meta_type{};
+    }
+
+    /**
+     * @brief Returns the type of the i-th template argument of a type.
+     * @param index Index of the template argument of which to return the type.
+     * @return The type of the i-th template argument of a type.
+     */
+    [[nodiscard]] inline meta_type template_arg(const size_type index) const noexcept {
+        return index < template_arity() ? meta_type{*ctx, node.templ.arg(internal::meta_context::from(*ctx), index)} : meta_type{};
+    }
+
+    /**
+     * @brief Returns a range to visit registered top-level base meta types.
+     * @return An iterable range to visit registered top-level base meta types.
+     */
+    [[nodiscard]] meta_range<meta_type, typename decltype(internal::meta_type_descriptor::base)::const_iterator> base() const noexcept {
+        using range_type = meta_range<meta_type, typename decltype(internal::meta_type_descriptor::base)::const_iterator>;
+        return node.details ? range_type{{*ctx, node.details->base.cbegin()}, {*ctx, node.details->base.cend()}} : range_type{};
+    }
+
+    /**
+     * @brief Returns a range to visit registered top-level meta data.
+     * @return An iterable range to visit registered top-level meta data.
+     */
+    [[nodiscard]] meta_range<meta_data, typename decltype(internal::meta_type_descriptor::data)::const_iterator> data() const noexcept {
+        using range_type = meta_range<meta_data, typename decltype(internal::meta_type_descriptor::data)::const_iterator>;
+        return node.details ? range_type{{*ctx, node.details->data.cbegin()}, {*ctx, node.details->data.cend()}} : range_type{};
+    }
+
+    /**
+     * @brief Lookup utility for meta data (bases are also visited).
+     * @param id Unique identifier.
+     * @return The registered meta data for the given identifier, if any.
+     */
+    [[nodiscard]] meta_data data(const id_type id) const {
+        if(node.details) {
+            if(const auto it = node.details->data.find(id); it != node.details->data.cend()) {
+                return meta_data{*ctx, it->second};
+            }
+        }
+
+        for(auto &&curr: base()) {
+            if(auto elem = curr.second.data(id); elem) {
+                return elem;
+            }
+        }
+
+        return meta_data{};
+    }
+
+    /**
+     * @brief Returns a range to visit registered top-level functions.
+     * @return An iterable range to visit registered top-level functions.
+     */
+    [[nodiscard]] meta_range<meta_func, typename decltype(internal::meta_type_descriptor::func)::const_iterator> func() const noexcept {
+        using return_type = meta_range<meta_func, typename decltype(internal::meta_type_descriptor::func)::const_iterator>;
+        return node.details ? return_type{{*ctx, node.details->func.cbegin()}, {*ctx, node.details->func.cend()}} : return_type{};
+    }
+
+    /**
+     * @brief Lookup utility for meta functions (bases are also visited).
+     *
+     * In case of overloaded functions, the first one with the required
+     * identifier is returned.
+     *
+     * @param id Unique identifier.
+     * @return The registered meta function for the given identifier, if any.
+     */
+    [[nodiscard]] meta_func func(const id_type id) const {
+        if(node.details) {
+            if(const auto it = node.details->func.find(id); it != node.details->func.cend()) {
+                return meta_func{*ctx, it->second};
+            }
+        }
+
+        for(auto &&curr: base()) {
+            if(auto elem = curr.second.func(id); elem) {
+                return elem;
+            }
+        }
+
+        return meta_func{};
+    }
+
+    /**
+     * @brief Creates an instance of the underlying type, if possible.
+     *
+     * If suitable, the implicitly generated default constructor is used.
+     *
+     * @warning
+     * The context of the arguments is **not** changed.<br/>
+     * It's up to the caller to bind them to the right context(s).
+     *
+     * @param args Parameters to use to construct the instance.
+     * @param sz Number of parameters to use to construct the instance.
+     * @return A wrapper containing the new instance, if any.
+     */
+    [[nodiscard]] meta_any construct(meta_any *const args, const size_type sz) const {
+        if(node.details) {
+            if(const auto *candidate = lookup(args, sz, false, [first = node.details->ctor.cbegin(), last = node.details->ctor.cend()]() mutable { return first == last ? nullptr : &(first++)->second; }); candidate) {
+                return candidate->invoke(*ctx, args);
+            }
+        }
+
+        if(sz == 0u && node.default_constructor) {
+            return node.default_constructor(*ctx);
+        }
+
+        return meta_any{meta_ctx_arg, *ctx};
+    }
+
+    /**
+     * @copybrief construct
+     * @tparam Args Types of arguments to use to construct the instance.
+     * @param args Parameters to use to construct the instance.
+     * @return A wrapper containing the new instance, if any.
+     */
+    template<typename... Args>
+    [[nodiscard]] meta_any construct(Args &&...args) const {
+        if constexpr(sizeof...(Args) == 0u) {
+            return construct(static_cast<meta_any *>(nullptr), size_type{});
+        } else {
+            meta_any arguments[sizeof...(Args)]{{*ctx, std::forward<Args>(args)}...};
+            return construct(arguments, sizeof...(Args));
+        }
+    }
+
+    /**
+     * @brief Wraps an opaque element of the underlying type.
+     * @param element A valid pointer to an element of the underlying type.
+     * @return A wrapper that references the given instance.
+     */
+    [[nodiscard]] meta_any from_void(void *element) const {
+        return (element && node.from_void) ? node.from_void(*ctx, element, nullptr) : meta_any{meta_ctx_arg, *ctx};
+    }
+
+    /*! @copydoc from_void */
+    [[nodiscard]] meta_any from_void(const void *element) const {
+        return (element && node.from_void) ? node.from_void(*ctx, nullptr, element) : meta_any{meta_ctx_arg, *ctx};
+    }
+
+    /**
+     * @brief Invokes a function given an identifier, if possible.
+     *
+     * @warning
+     * The context of the arguments is **not** changed.<br/>
+     * It's up to the caller to bind them to the right context(s).
+     *
+     * @param id Unique identifier.
+     * @param instance An opaque instance of the underlying type.
+     * @param args Parameters to use to invoke the function.
+     * @param sz Number of parameters to use to invoke the function.
+     * @return A wrapper containing the returned value, if any.
+     */
+    meta_any invoke(const id_type id, meta_handle instance, meta_any *const args, const size_type sz) const {
+        if(node.details) {
+            if(auto it = node.details->func.find(id); it != node.details->func.cend()) {
+                if(const auto *candidate = lookup(args, sz, instance && (instance->data() == nullptr), [curr = &it->second]() mutable { return curr ? std::exchange(curr, curr->next.get()) : nullptr; }); candidate) {
+                    return candidate->invoke(*ctx, meta_handle{*ctx, std::move(instance)}, args);
+                }
+            }
+        }
+
+        for(auto &&curr: base()) {
+            if(auto elem = curr.second.invoke(id, *instance.operator->(), args, sz); elem) {
+                return elem;
+            }
+        }
+
+        return meta_any{meta_ctx_arg, *ctx};
+    }
+
+    /**
+     * @copybrief invoke
+     *
+     * @param id Unique identifier.
+     * @tparam Args Types of arguments to use to invoke the function.
+     * @param instance An opaque instance of the underlying type.
+     * @param args Parameters to use to invoke the function.
+     * @return A wrapper containing the returned value, if any.
+     */
+    template<typename... Args>
+    meta_any invoke(const id_type id, meta_handle instance, Args &&...args) const {
+        if constexpr(sizeof...(Args) == 0u) {
+            return invoke(id, std::move(instance), static_cast<meta_any *>(nullptr), size_type{});
+        } else {
+            meta_any arguments[sizeof...(Args)]{{*ctx, std::forward<Args>(args)}...};
+            return invoke(id, std::move(instance), arguments, sizeof...(Args));
+        }
+    }
+
+    /**
+     * @brief Sets the value of a given variable.
+     * @tparam Type Type of value to assign.
+     * @param id Unique identifier.
+     * @param instance An opaque instance of the underlying type.
+     * @param value Parameter to use to set the underlying variable.
+     * @return True in case of success, false otherwise.
+     */
+    template<typename Type>
+    bool set(const id_type id, meta_handle instance, Type &&value) const {
+        const auto candidate = data(id);
+        return candidate && candidate.set(std::move(instance), std::forward<Type>(value));
+    }
+
+    /**
+     * @brief Gets the value of a given variable.
+     * @param id Unique identifier.
+     * @param instance An opaque instance of the underlying type.
+     * @return A wrapper containing the value of the underlying variable.
+     */
+    [[nodiscard]] meta_any get(const id_type id, meta_handle instance) const {
+        const auto candidate = data(id);
+        return candidate ? candidate.get(std::move(instance)) : meta_any{meta_ctx_arg, *ctx};
+    }
+
+    /**
+     * @brief Returns a range to visit registered top-level meta properties.
+     * @return An iterable range to visit registered top-level meta properties.
+     */
+    [[nodiscard]] meta_range<meta_prop, typename decltype(internal::meta_type_descriptor::prop)::const_iterator> prop() const noexcept {
+        using range_type = meta_range<meta_prop, typename decltype(internal::meta_type_descriptor::prop)::const_iterator>;
+        return node.details ? range_type{{*ctx, node.details->prop.cbegin()}, {*ctx, node.details->prop.cend()}} : range_type{};
+    }
+
+    /**
+     * @brief Lookup utility for meta properties (bases are also visited).
+     * @param key The key to use to search for a property.
+     * @return The registered meta property for the given key, if any.
+     */
+    [[nodiscard]] meta_prop prop(const id_type key) const {
+        if(node.details) {
+            if(const auto it = node.details->prop.find(key); it != node.details->prop.cend()) {
+                return meta_prop{*ctx, it->second};
+            }
+        }
+
+        for(auto &&curr: base()) {
+            if(auto elem = curr.second.prop(key); elem) {
+                return elem;
+            }
+        }
+
+        return meta_prop{};
+    }
+
+    /**
+     * @brief Returns true if an object is valid, false otherwise.
+     * @return True if the object is valid, false otherwise.
+     */
+    [[nodiscard]] explicit operator bool() const noexcept {
+        return !(ctx == nullptr);
+    }
+
+    /*! @copydoc meta_prop::operator== */
+    [[nodiscard]] bool operator==(const meta_type &other) const noexcept {
+        return (ctx == other.ctx) && ((!node.info && !other.node.info) || (node.info && other.node.info && *node.info == *other.node.info));
+    }
+
+private:
+    internal::meta_type_node node;
+    const meta_ctx *ctx;
+};
+
+/**
+ * @brief Checks if two objects refer to the same type.
+ * @param lhs An object, either valid or not.
+ * @param rhs An object, either valid or not.
+ * @return False if the objects refer to the same node, true otherwise.
+ */
+[[nodiscard]] inline bool operator!=(const meta_type &lhs, const meta_type &rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+[[nodiscard]] inline meta_type meta_any::type() const noexcept {
+    return node.info ? meta_type{*ctx, node} : meta_type{};
+}
+
+template<typename... Args>
+meta_any meta_any::invoke(const id_type id, Args &&...args) const {
+    return type().invoke(id, *this, std::forward<Args>(args)...);
+}
+
+template<typename... Args>
+meta_any meta_any::invoke(const id_type id, Args &&...args) {
+    return type().invoke(id, *this, std::forward<Args>(args)...);
+}
+
+template<typename Type>
+bool meta_any::set(const id_type id, Type &&value) {
+    return type().set(id, *this, std::forward<Type>(value));
+}
+
+[[nodiscard]] inline meta_any meta_any::get(const id_type id) const {
+    return type().get(id, *this);
+}
+
+[[nodiscard]] inline meta_any meta_any::get(const id_type id) {
+    return type().get(id, *this);
+}
+
+[[nodiscard]] inline meta_any meta_any::allow_cast(const meta_type &type) const {
+    if(node.info && *node.info == type.info()) {
+        return as_ref();
+    }
+
+    if(const auto *value = data(); node.details) {
+        if(auto it = node.details->conv.find(type.info().hash()); it != node.details->conv.cend()) {
+            return it->second.conv(*ctx, data());
+        }
+
+        for(auto &&curr: node.details->base) {
+            const auto &as_const = curr.second.type(internal::meta_context::from(*ctx)).from_void(*ctx, nullptr, curr.second.cast(value));
+
+            if(auto other = as_const.allow_cast(type); other) {
+                return other;
+            }
+        }
+    }
+
+    if(node.conversion_helper && (type.is_arithmetic() || type.is_enum())) {
+        // exploits the fact that arithmetic types and enums are also default constructible
+        auto other = type.construct();
+        ENTT_ASSERT(other.node.conversion_helper, "Conversion helper not found");
+        const auto value = node.conversion_helper(nullptr, storage.data());
+        other.node.conversion_helper(other.storage.data(), &value);
+        return other;
+    }
+
+    return meta_any{meta_ctx_arg, *ctx};
+}
+
+inline bool meta_any::assign(const meta_any &other) {
+    auto value = other.allow_cast({*ctx, node});
+    return value && storage.assign(std::move(value.storage));
+}
+
+inline bool meta_any::assign(meta_any &&other) {
+    if(*node.info == *other.node.info) {
+        return storage.assign(std::move(other.storage));
+    }
+
+    return assign(std::as_const(other));
+}
+
+[[nodiscard]] inline meta_type meta_data::type() const noexcept {
+    return meta_type{*ctx, node->type(internal::meta_context::from(*ctx))};
+}
+
+[[nodiscard]] inline meta_type meta_data::arg(const size_type index) const noexcept {
+    return index < arity() ? node->arg(*ctx, index) : meta_type{};
+}
+
+[[nodiscard]] inline meta_type meta_func::ret() const noexcept {
+    return meta_type{*ctx, node->ret(internal::meta_context::from(*ctx))};
+}
+
+[[nodiscard]] inline meta_type meta_func::arg(const size_type index) const noexcept {
+    return index < arity() ? node->arg(*ctx, index) : meta_type{};
+}
+
+/**
+ * @cond TURN_OFF_DOXYGEN
+ * Internal details not to be documented.
+ */
+
+class meta_sequence_container::meta_iterator final {
+    friend class meta_sequence_container;
+
+    enum class operation : std::uint8_t {
+        incr,
+        deref
+    };
+
+    using vtable_type = void(const operation, const any &, const std::ptrdiff_t, meta_any *);
+
+    template<typename It>
+    static void basic_vtable(const operation op, const any &value, const std::ptrdiff_t offset, meta_any *other) {
+        switch(op) {
+        case operation::incr: {
+            auto &it = any_cast<It &>(const_cast<any &>(value));
+            it = std::next(it, offset);
+        } break;
+        case operation::deref: {
+            const auto &it = any_cast<const It &>(value);
+            other->emplace<decltype(*it)>(*it);
+        } break;
+        }
+    }
+
+public:
+    using difference_type = std::ptrdiff_t;
+    using value_type = meta_any;
+    using pointer = input_iterator_pointer<value_type>;
+    using reference = value_type;
+    using iterator_category = std::input_iterator_tag;
+
+    constexpr meta_iterator() noexcept
+        : ctx{},
+          vtable{},
+          handle{} {}
+
+    template<typename It>
+    explicit meta_iterator(const meta_ctx &area, It iter) noexcept
+        : ctx{&area},
+          vtable{&basic_vtable<It>},
+          handle{iter} {}
+
+    meta_iterator &operator++() noexcept {
+        vtable(operation::incr, handle, 1, nullptr);
+        return *this;
+    }
+
+    meta_iterator operator++(int value) noexcept {
+        meta_iterator orig = *this;
+        vtable(operation::incr, handle, ++value, nullptr);
+        return orig;
+    }
+
+    meta_iterator &operator--() noexcept {
+        vtable(operation::incr, handle, -1, nullptr);
+        return *this;
+    }
+
+    meta_iterator operator--(int value) noexcept {
+        meta_iterator orig = *this;
+        vtable(operation::incr, handle, --value, nullptr);
+        return orig;
+    }
+
+    [[nodiscard]] reference operator*() const {
+        reference other{meta_ctx_arg, *ctx};
+        vtable(operation::deref, handle, 0, &other);
+        return other;
+    }
+
+    [[nodiscard]] pointer operator->() const {
+        return operator*();
+    }
+
+    [[nodiscard]] explicit operator bool() const noexcept {
+        return static_cast<bool>(handle);
+    }
+
+    [[nodiscard]] bool operator==(const meta_iterator &other) const noexcept {
+        return handle == other.handle;
+    }
+
+    [[nodiscard]] bool operator!=(const meta_iterator &other) const noexcept {
+        return !(*this == other);
+    }
+
+private:
+    const meta_ctx *ctx;
+    vtable_type *vtable;
+    any handle;
+};
+
+class meta_associative_container::meta_iterator final {
+    enum class operation : std::uint8_t {
+        incr,
+        deref
+    };
+
+    using vtable_type = void(const operation, const any &, std::pair<meta_any, meta_any> *);
+
+    template<bool KeyOnly, typename It>
+    static void basic_vtable(const operation op, const any &value, std::pair<meta_any, meta_any> *other) {
+        switch(op) {
+        case operation::incr:
+            ++any_cast<It &>(const_cast<any &>(value));
+            break;
+        case operation::deref:
+            const auto &it = any_cast<const It &>(value);
+            if constexpr(KeyOnly) {
+                other->first.emplace<decltype(*it)>(*it);
+            } else {
+                other->first.emplace<decltype((it->first))>(it->first);
+                other->second.emplace<decltype((it->second))>(it->second);
+            }
+            break;
+        }
+    }
+
+public:
+    using difference_type = std::ptrdiff_t;
+    using value_type = std::pair<meta_any, meta_any>;
+    using pointer = input_iterator_pointer<value_type>;
+    using reference = value_type;
+    using iterator_category = std::input_iterator_tag;
+
+    constexpr meta_iterator() noexcept
+        : ctx{},
+          vtable{},
+          handle{} {}
+
+    template<bool KeyOnly, typename It>
+    meta_iterator(const meta_ctx &area, std::integral_constant<bool, KeyOnly>, It iter) noexcept
+        : ctx{&area},
+          vtable{&basic_vtable<KeyOnly, It>},
+          handle{iter} {}
+
+    meta_iterator &operator++() noexcept {
+        vtable(operation::incr, handle, nullptr);
+        return *this;
+    }
+
+    meta_iterator operator++(int) noexcept {
+        meta_iterator orig = *this;
+        return ++(*this), orig;
+    }
+
+    [[nodiscard]] reference operator*() const {
+        reference other{{meta_ctx_arg, *ctx}, {meta_ctx_arg, *ctx}};
+        vtable(operation::deref, handle, &other);
+        return other;
+    }
+
+    [[nodiscard]] pointer operator->() const {
+        return operator*();
+    }
+
+    [[nodiscard]] explicit operator bool() const noexcept {
+        return static_cast<bool>(handle);
+    }
+
+    [[nodiscard]] bool operator==(const meta_iterator &other) const noexcept {
+        return handle == other.handle;
+    }
+
+    [[nodiscard]] bool operator!=(const meta_iterator &other) const noexcept {
+        return !(*this == other);
+    }
+
+private:
+    const meta_ctx *ctx;
+    vtable_type *vtable;
+    any handle;
+};
+
+/**
+ * Internal details not to be documented.
+ * @endcond
+ */
+
+/**
+ * @brief Returns the meta value type of a container.
+ * @return The meta value type of the container.
+ */
+[[nodiscard]] inline meta_type meta_sequence_container::value_type() const noexcept {
+    return value_type_node ? meta_type{*ctx, value_type_node(internal::meta_context::from(*ctx))} : meta_type{};
+}
+
+/**
+ * @brief Returns the size of a container.
+ * @return The size of the container.
+ */
+[[nodiscard]] inline meta_sequence_container::size_type meta_sequence_container::size() const noexcept {
+    return size_fn(storage);
+}
+
+/**
+ * @brief Resizes a container to contain a given number of elements.
+ * @param sz The new size of the container.
+ * @return True in case of success, false otherwise.
+ */
+inline bool meta_sequence_container::resize(const size_type sz) {
+    return resize_fn(storage, sz);
+}
+
+/**
+ * @brief Clears the content of a container.
+ * @return True in case of success, false otherwise.
+ */
+inline bool meta_sequence_container::clear() {
+    return resize_fn(storage, 0u);
+}
+
+/**
+ * @brief Returns an iterator to the first element of a container.
+ * @return An iterator to the first element of the container.
+ */
+[[nodiscard]] inline meta_sequence_container::iterator meta_sequence_container::begin() {
+    return iter_fn(*ctx, storage, false);
+}
+
+/**
+ * @brief Returns an iterator that is past the last element of a container.
+ * @return An iterator that is past the last element of the container.
+ */
+[[nodiscard]] inline meta_sequence_container::iterator meta_sequence_container::end() {
+    return iter_fn(*ctx, storage, true);
+}
+
+/**
+ * @brief Inserts an element at a specified location of a container.
+ * @param it Iterator before which the element will be inserted.
+ * @param value Element value to insert.
+ * @return A possibly invalid iterator to the inserted element.
+ */
+inline meta_sequence_container::iterator meta_sequence_container::insert(iterator it, meta_any value) {
+    return insert_or_erase_fn(*ctx, storage, it.handle, value);
+}
+
+/**
+ * @brief Removes a given element from a container.
+ * @param it Iterator to the element to remove.
+ * @return A possibly invalid iterator following the last removed element.
+ */
+inline meta_sequence_container::iterator meta_sequence_container::erase(iterator it) {
+    return insert(it, {});
+}
+
+/**
+ * @brief Returns a reference to the element at a given location of a container
+ * (no bounds checking is performed).
+ * @param pos The position of the element to return.
+ * @return A reference to the requested element properly wrapped.
+ */
+[[nodiscard]] inline meta_any meta_sequence_container::operator[](const size_type pos) {
+    auto it = begin();
+    it.operator++(static_cast<int>(pos) - 1);
+    return *it;
+}
+
+/**
+ * @brief Returns false if a proxy is invalid, true otherwise.
+ * @return False if the proxy is invalid, true otherwise.
+ */
+[[nodiscard]] inline meta_sequence_container::operator bool() const noexcept {
+    return static_cast<bool>(storage);
+}
+
+/**
+ * @brief Returns true if a container is also key-only, false otherwise.
+ * @return True if the associative container is also key-only, false otherwise.
+ */
+[[nodiscard]] inline bool meta_associative_container::key_only() const noexcept {
+    return key_only_container;
+}
+
+/**
+ * @brief Returns the meta key type of a container.
+ * @return The meta key type of the a container.
+ */
+[[nodiscard]] inline meta_type meta_associative_container::key_type() const noexcept {
+    return key_type_node ? meta_type{*ctx, key_type_node(internal::meta_context::from(*ctx))} : meta_type{};
+}
+
+/**
+ * @brief Returns the meta mapped type of a container.
+ * @return The meta mapped type of the a container.
+ */
+[[nodiscard]] inline meta_type meta_associative_container::mapped_type() const noexcept {
+    return mapped_type_node ? meta_type{*ctx, mapped_type_node(internal::meta_context::from(*ctx))} : meta_type{};
+}
+
+/*! @copydoc meta_sequence_container::value_type */
+[[nodiscard]] inline meta_type meta_associative_container::value_type() const noexcept {
+    return value_type_node ? meta_type{*ctx, value_type_node(internal::meta_context::from(*ctx))} : meta_type{};
+}
+
+/*! @copydoc meta_sequence_container::size */
+[[nodiscard]] inline meta_associative_container::size_type meta_associative_container::size() const noexcept {
+    return size_fn(storage);
+}
+
+/*! @copydoc meta_sequence_container::clear */
+inline bool meta_associative_container::clear() {
+    return clear_fn(storage);
+}
+
+/*! @copydoc meta_sequence_container::begin */
+[[nodiscard]] inline meta_associative_container::iterator meta_associative_container::begin() {
+    return iter_fn(*ctx, storage, false);
+}
+
+/*! @copydoc meta_sequence_container::end */
+[[nodiscard]] inline meta_associative_container::iterator meta_associative_container::end() {
+    return iter_fn(*ctx, storage, true);
+}
+
+/**
+ * @brief Inserts a key only element into a container.
+ * @param key The key of the element to insert.
+ * @return A bool denoting whether the insertion took place.
+ */
+inline bool meta_associative_container::insert(meta_any key) {
+    meta_any value{*ctx, std::in_place_type<void>};
+    return (insert_or_erase_fn(storage, key, value) != 0u);
+}
+
+/**
+ * @brief Inserts a key/value element into a container.
+ * @param key The key of the element to insert.
+ * @param value The value of the element to insert.
+ * @return A bool denoting whether the insertion took place.
+ */
+inline bool meta_associative_container::insert(meta_any key, meta_any value) {
+    return (insert_or_erase_fn(storage, key, value) != 0u);
+}
+
+/**
+ * @brief Removes the specified element from a container.
+ * @param key The key of the element to remove.
+ * @return A bool denoting whether the removal took place.
+ */
+inline meta_associative_container::size_type meta_associative_container::erase(meta_any key) {
+    return insert(std::move(key), meta_any{meta_ctx_arg, *ctx});
+}
+
+/**
+ * @brief Returns an iterator to the element with a given key, if any.
+ * @param key The key of the element to search.
+ * @return An iterator to the element with the given key, if any.
+ */
+[[nodiscard]] inline meta_associative_container::iterator meta_associative_container::find(meta_any key) {
+    return find_fn(*ctx, storage, key);
+}
+
+/**
+ * @brief Returns false if a proxy is invalid, true otherwise.
+ * @return False if the proxy is invalid, true otherwise.
+ */
+[[nodiscard]] inline meta_associative_container::operator bool() const noexcept {
+    return static_cast<bool>(storage);
+}
+
+} // namespace entt
+
+#endif
+
+////////////////////// END OF external/entt/meta/meta.hpp //////////////////////
+
+/////////////////// START OF external/entt/meta/resolve.hpp ////////////////////
+
+#ifndef ENTT_META_RESOLVE_HPP
+#define ENTT_META_RESOLVE_HPP
+
+#include <type_traits>
+
+namespace entt {
+
+/**
+ * @brief Returns the meta type associated with a given type.
+ * @tparam Type Type to use to search for a meta type.
+ * @param ctx The context from which to search for meta types.
+ * @return The meta type associated with the given type, if any.
+ */
+template<typename Type>
+[[nodiscard]] meta_type resolve(const meta_ctx &ctx) noexcept {
+    auto &&context = internal::meta_context::from(ctx);
+    return {ctx, internal::resolve<std::remove_cv_t<std::remove_reference_t<Type>>>(context)};
+}
+
+/**
+ * @brief Returns the meta type associated with a given type.
+ * @tparam Type Type to use to search for a meta type.
+ * @return The meta type associated with the given type, if any.
+ */
+template<typename Type>
+[[nodiscard]] meta_type resolve() noexcept {
+    return resolve<Type>(locator<meta_ctx>::value_or());
+}
+
+/**
+ * @brief Returns a range to use to visit all meta types.
+ * @param ctx The context from which to search for meta types.
+ * @return An iterable range to use to visit all meta types.
+ */
+[[nodiscard]] inline meta_range<meta_type, typename decltype(internal::meta_context::value)::const_iterator> resolve(const meta_ctx &ctx) noexcept {
+    auto &&context = internal::meta_context::from(ctx);
+    return {{ctx, context.value.cbegin()}, {ctx, context.value.cend()}};
+}
+
+/**
+ * @brief Returns a range to use to visit all meta types.
+ * @return An iterable range to use to visit all meta types.
+ */
+[[nodiscard]] inline meta_range<meta_type, typename decltype(internal::meta_context::value)::const_iterator> resolve() noexcept {
+    return resolve(locator<meta_ctx>::value_or());
+}
+
+/**
+ * @brief Returns the meta type associated with a given identifier, if any.
+ * @param ctx The context from which to search for meta types.
+ * @param id Unique identifier.
+ * @return The meta type associated with the given identifier, if any.
+ */
+[[nodiscard]] inline meta_type resolve(const meta_ctx &ctx, const id_type id) noexcept {
+    for(auto &&curr: resolve(ctx)) {
+        if(curr.second.id() == id) {
+            return curr.second;
+        }
+    }
+
+    return meta_type{};
+}
+
+/**
+ * @brief Returns the meta type associated with a given identifier, if any.
+ * @param id Unique identifier.
+ * @return The meta type associated with the given identifier, if any.
+ */
+[[nodiscard]] inline meta_type resolve(const id_type id) noexcept {
+    return resolve(locator<meta_ctx>::value_or(), id);
+}
+
+/**
+ * @brief Returns the meta type associated with a given type info object.
+ * @param ctx The context from which to search for meta types.
+ * @param info The type info object of the requested type.
+ * @return The meta type associated with the given type info object, if any.
+ */
+[[nodiscard]] inline meta_type resolve(const meta_ctx &ctx, const type_info &info) noexcept {
+    auto &&context = internal::meta_context::from(ctx);
+    const auto *elem = internal::try_resolve(context, info);
+    return elem ? meta_type{ctx, *elem} : meta_type{};
+}
+
+/**
+ * @brief Returns the meta type associated with a given type info object.
+ * @param info The type info object of the requested type.
+ * @return The meta type associated with the given type info object, if any.
+ */
+[[nodiscard]] inline meta_type resolve(const type_info &info) noexcept {
+    return resolve(locator<meta_ctx>::value_or(), info);
+}
+
+} // namespace entt
+
+#endif
+
+//////////////////// END OF external/entt/meta/resolve.hpp /////////////////////
+
+//////////////////////// START OF src/Types/Entity.hpp /////////////////////////
+
+#include <vector>
+
+namespace pokesim::types {
+template <typename T, typename... Other>
+using view = entt::view<entt::get_t<const T, const Other...>>;
+
+using entity = entt::entity;
+
+using ClonedEntityMap = entt::dense_map<entity, std::vector<entity>>;
+}  // namespace pokesim::types
+
+///////////////////////// END OF src/Types/Entity.hpp //////////////////////////
+
+/////////////// START OF src/Components/EntityHolders/Battle.hpp ///////////////
+
+namespace pokesim {
+// Contains the entity of a simulation's battle.
+struct Battle {
+  types::entity val{};
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/EntityHolders/Battle.hpp ////////////////
+
+///////////// START OF src/Components/EntityHolders/BattleTree.hpp /////////////
+
+namespace pokesim {
+struct ParentBattle {
+  types::entity val{};
+};
+
+struct RootBattle {
+  types::entity val{};
+};
+
+#ifndef NDEBUG
+struct ParentEntity {
+  types::entity val{};
+};
+#endif
+}  // namespace pokesim
+
+////////////// END OF src/Components/EntityHolders/BattleTree.hpp //////////////
+
+//////////////////// START OF external/entt/meta/policy.hpp ////////////////////
+
+#ifndef ENTT_META_POLICY_HPP
+#define ENTT_META_POLICY_HPP
+
+#include <type_traits>
+
+namespace entt {
+
+/*! @brief Empty class type used to request the _as ref_ policy. */
+struct as_ref_t final {
+    /**
+     * @cond TURN_OFF_DOXYGEN
+     * Internal details not to be documented.
+     */
+    template<typename Type>
+    static constexpr bool value = std::is_reference_v<Type> && !std::is_const_v<std::remove_reference_t<Type>>;
+    /**
+     * Internal details not to be documented.
+     * @endcond
+     */
+};
+
+/*! @brief Empty class type used to request the _as cref_ policy. */
+struct as_cref_t final {
+    /**
+     * @cond TURN_OFF_DOXYGEN
+     * Internal details not to be documented.
+     */
+    template<typename Type>
+    static constexpr bool value = std::is_reference_v<Type>;
+    /**
+     * Internal details not to be documented.
+     * @endcond
+     */
+};
+
+/*! @brief Empty class type used to request the _as-is_ policy. */
+struct as_is_t final {
+    /**
+     * @cond TURN_OFF_DOXYGEN
+     * Internal details not to be documented.
+     */
+    template<typename>
+    static constexpr bool value = true;
+    /**
+     * Internal details not to be documented.
+     * @endcond
+     */
+};
+
+/*! @brief Empty class type used to request the _as void_ policy. */
+struct as_void_t final {
+    /**
+     * @cond TURN_OFF_DOXYGEN
+     * Internal details not to be documented.
+     */
+    template<typename>
+    static constexpr bool value = true;
+    /**
+     * Internal details not to be documented.
+     * @endcond
+     */
+};
+
+/**
+ * @brief Provides the member constant `value` to true if a type also is a meta
+ * policy, false otherwise.
+ * @tparam Type Type to check.
+ */
+template<typename Type>
+struct is_meta_policy
+    : std::bool_constant<std::is_same_v<Type, as_ref_t> || std::is_same_v<Type, as_cref_t> || std::is_same_v<Type, as_is_t> || std::is_same_v<Type, as_void_t>> {};
+
+/**
+ * @brief Helper variable template.
+ * @tparam Type Type to check.
+ */
+template<typename Type>
+inline constexpr bool is_meta_policy_v = is_meta_policy<Type>::value;
+
+} // namespace entt
+
+#endif
+
+///////////////////// END OF external/entt/meta/policy.hpp /////////////////////
+
+/////////////////// START OF external/entt/meta/utility.hpp ////////////////////
+
+#ifndef ENTT_META_UTILITY_HPP
+#define ENTT_META_UTILITY_HPP
+
+#include <cstddef>
+#include <functional>
+#include <type_traits>
+#include <utility>
+
+namespace entt {
+
+/**
+ * @brief Meta function descriptor traits.
+ * @tparam Ret Function return type.
+ * @tparam Args Function arguments.
+ * @tparam Static Function staticness.
+ * @tparam Const Function constness.
+ */
+template<typename Ret, typename Args, bool Static, bool Const>
+struct meta_function_descriptor_traits {
+    /*! @brief Meta function return type. */
+    using return_type = Ret;
+    /*! @brief Meta function arguments. */
+    using args_type = Args;
+
+    /*! @brief True if the meta function is static, false otherwise. */
+    static constexpr bool is_static = Static;
+    /*! @brief True if the meta function is const, false otherwise. */
+    static constexpr bool is_const = Const;
+};
+
+/*! @brief Primary template isn't defined on purpose. */
+template<typename, typename>
+struct meta_function_descriptor;
+
+/**
+ * @brief Meta function descriptor.
+ * @tparam Type Reflected type to which the meta function is associated.
+ * @tparam Ret Function return type.
+ * @tparam Class Actual owner of the member function.
+ * @tparam Args Function arguments.
+ */
+template<typename Type, typename Ret, typename Class, typename... Args>
+struct meta_function_descriptor<Type, Ret (Class::*)(Args...) const>
+    : meta_function_descriptor_traits<
+          Ret,
+          std::conditional_t<std::is_base_of_v<Class, Type>, type_list<Args...>, type_list<const Class &, Args...>>,
+          !std::is_base_of_v<Class, Type>,
+          true> {};
+
+/**
+ * @brief Meta function descriptor.
+ * @tparam Type Reflected type to which the meta function is associated.
+ * @tparam Ret Function return type.
+ * @tparam Class Actual owner of the member function.
+ * @tparam Args Function arguments.
+ */
+template<typename Type, typename Ret, typename Class, typename... Args>
+struct meta_function_descriptor<Type, Ret (Class::*)(Args...)>
+    : meta_function_descriptor_traits<
+          Ret,
+          std::conditional_t<std::is_base_of_v<Class, Type>, type_list<Args...>, type_list<Class &, Args...>>,
+          !std::is_base_of_v<Class, Type>,
+          false> {};
+
+/**
+ * @brief Meta function descriptor.
+ * @tparam Type Reflected type to which the meta data is associated.
+ * @tparam Class Actual owner of the data member.
+ * @tparam Ret Data member type.
+ */
+template<typename Type, typename Ret, typename Class>
+struct meta_function_descriptor<Type, Ret Class::*>
+    : meta_function_descriptor_traits<
+          Ret &,
+          std::conditional_t<std::is_base_of_v<Class, Type>, type_list<>, type_list<Class &>>,
+          !std::is_base_of_v<Class, Type>,
+          false> {};
+
+/**
+ * @brief Meta function descriptor.
+ * @tparam Type Reflected type to which the meta function is associated.
+ * @tparam Ret Function return type.
+ * @tparam MaybeType First function argument.
+ * @tparam Args Other function arguments.
+ */
+template<typename Type, typename Ret, typename MaybeType, typename... Args>
+struct meta_function_descriptor<Type, Ret (*)(MaybeType, Args...)>
+    : meta_function_descriptor_traits<
+          Ret,
+          std::conditional_t<
+              std::is_same_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type> || std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type>,
+              type_list<Args...>,
+              type_list<MaybeType, Args...>>,
+          !(std::is_same_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type> || std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type>),
+          std::is_const_v<std::remove_reference_t<MaybeType>> && (std::is_same_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type> || std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type>)> {};
+
+/**
+ * @brief Meta function descriptor.
+ * @tparam Type Reflected type to which the meta function is associated.
+ * @tparam Ret Function return type.
+ */
+template<typename Type, typename Ret>
+struct meta_function_descriptor<Type, Ret (*)()>
+    : meta_function_descriptor_traits<
+          Ret,
+          type_list<>,
+          true,
+          false> {};
+
+/**
+ * @brief Meta function helper.
+ *
+ * Converts a function type to be associated with a reflected type into its meta
+ * function descriptor.
+ *
+ * @tparam Type Reflected type to which the meta function is associated.
+ * @tparam Candidate The actual function to associate with the reflected type.
+ */
+template<typename Type, typename Candidate>
+class meta_function_helper {
+    template<typename Ret, typename... Args, typename Class>
+    static constexpr meta_function_descriptor<Type, Ret (Class::*)(Args...) const> get_rid_of_noexcept(Ret (Class::*)(Args...) const);
+
+    template<typename Ret, typename... Args, typename Class>
+    static constexpr meta_function_descriptor<Type, Ret (Class::*)(Args...)> get_rid_of_noexcept(Ret (Class::*)(Args...));
+
+    template<typename Ret, typename Class>
+    static constexpr meta_function_descriptor<Type, Ret Class::*> get_rid_of_noexcept(Ret Class::*);
+
+    template<typename Ret, typename... Args>
+    static constexpr meta_function_descriptor<Type, Ret (*)(Args...)> get_rid_of_noexcept(Ret (*)(Args...));
+
+    template<typename Class>
+    static constexpr meta_function_descriptor<Class, decltype(&Class::operator())> get_rid_of_noexcept(Class);
+
+public:
+    /*! @brief The meta function descriptor of the given function. */
+    using type = decltype(get_rid_of_noexcept(std::declval<Candidate>()));
+};
+
+/**
+ * @brief Helper type.
+ * @tparam Type Reflected type to which the meta function is associated.
+ * @tparam Candidate The actual function to associate with the reflected type.
+ */
+template<typename Type, typename Candidate>
+using meta_function_helper_t = typename meta_function_helper<Type, Candidate>::type;
+
+/**
+ * @brief Wraps a value depending on the given policy.
+ *
+ * This function always returns a wrapped value in the requested context.<br/>
+ * Therefore, if the passed value is itself a wrapped object with a different
+ * context, it undergoes a rebinding to the requested context.
+ *
+ * @tparam Policy Optional policy (no policy set by default).
+ * @tparam Type Type of value to wrap.
+ * @param ctx The context from which to search for meta types.
+ * @param value Value to wrap.
+ * @return A meta any containing the returned value, if any.
+ */
+template<typename Policy = as_is_t, typename Type>
+[[nodiscard]] std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_dispatch(const meta_ctx &ctx, [[maybe_unused]] Type &&value) {
+    if constexpr(std::is_same_v<Policy, as_void_t>) {
+        return meta_any{ctx, std::in_place_type<void>};
+    } else if constexpr(std::is_same_v<Policy, as_ref_t>) {
+        return meta_any{ctx, std::in_place_type<Type>, value};
+    } else if constexpr(std::is_same_v<Policy, as_cref_t>) {
+        static_assert(std::is_lvalue_reference_v<Type>, "Invalid type");
+        return meta_any{ctx, std::in_place_type<const std::remove_reference_t<Type> &>, std::as_const(value)};
+    } else {
+        return meta_any{ctx, std::forward<Type>(value)};
+    }
+}
+
+/**
+ * @brief Wraps a value depending on the given policy.
+ * @tparam Policy Optional policy (no policy set by default).
+ * @tparam Type Type of value to wrap.
+ * @param value Value to wrap.
+ * @return A meta any containing the returned value, if any.
+ */
+template<typename Policy = as_is_t, typename Type>
+[[nodiscard]] std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_dispatch(Type &&value) {
+    return meta_dispatch<Policy, Type>(locator<meta_ctx>::value_or(), std::forward<Type>(value));
+}
+
+/**
+ * @brief Returns the meta type of the i-th element of a list of arguments.
+ * @tparam Type Type list of the actual types of arguments.
+ * @param ctx The context from which to search for meta types.
+ * @param index The index of the element for which to return the meta type.
+ * @return The meta type of the i-th element of the list of arguments.
+ */
+template<typename Type>
+[[nodiscard]] static meta_type meta_arg(const meta_ctx &ctx, const std::size_t index) noexcept {
+    auto &&context = internal::meta_context::from(ctx);
+    return {ctx, internal::meta_arg_node(context, Type{}, index)};
+}
+
+/**
+ * @brief Returns the meta type of the i-th element of a list of arguments.
+ * @tparam Type Type list of the actual types of arguments.
+ * @param index The index of the element for which to return the meta type.
+ * @return The meta type of the i-th element of the list of arguments.
+ */
+template<typename Type>
+[[nodiscard]] static meta_type meta_arg(const std::size_t index) noexcept {
+    return meta_arg<Type>(locator<meta_ctx>::value_or(), index);
+}
+
+/**
+ * @brief Sets the value of a given variable.
+ * @tparam Type Reflected type to which the variable is associated.
+ * @tparam Data The actual variable to set.
+ * @param instance An opaque instance of the underlying type, if required.
+ * @param value Parameter to use to set the variable.
+ * @return True in case of success, false otherwise.
+ */
+template<typename Type, auto Data>
+[[nodiscard]] bool meta_setter([[maybe_unused]] meta_handle instance, [[maybe_unused]] meta_any value) {
+    if constexpr(!std::is_same_v<decltype(Data), Type> && !std::is_same_v<decltype(Data), std::nullptr_t>) {
+        if constexpr(std::is_member_function_pointer_v<decltype(Data)> || std::is_function_v<std::remove_reference_t<std::remove_pointer_t<decltype(Data)>>>) {
+            using descriptor = meta_function_helper_t<Type, decltype(Data)>;
+            using data_type = type_list_element_t<descriptor::is_static, typename descriptor::args_type>;
+
+            if(auto *const clazz = instance->try_cast<Type>(); clazz && value.allow_cast<data_type>()) {
+                std::invoke(Data, *clazz, value.cast<data_type>());
+                return true;
+            }
+        } else if constexpr(std::is_member_object_pointer_v<decltype(Data)>) {
+            using data_type = std::remove_reference_t<typename meta_function_helper_t<Type, decltype(Data)>::return_type>;
+
+            if constexpr(!std::is_array_v<data_type> && !std::is_const_v<data_type>) {
+                if(auto *const clazz = instance->try_cast<Type>(); clazz && value.allow_cast<data_type>()) {
+                    std::invoke(Data, *clazz) = value.cast<data_type>();
+                    return true;
+                }
+            }
+        } else {
+            using data_type = std::remove_reference_t<decltype(*Data)>;
+
+            if constexpr(!std::is_array_v<data_type> && !std::is_const_v<data_type>) {
+                if(value.allow_cast<data_type>()) {
+                    *Data = value.cast<data_type>();
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+/**
+ * @brief Gets the value of a given variable.
+ *
+ * @warning
+ * The context provided is used only for the return type.<br/>
+ * It's up to the caller to bind the arguments to the right context(s).
+ *
+ * @tparam Type Reflected type to which the variable is associated.
+ * @tparam Data The actual variable to get.
+ * @tparam Policy Optional policy (no policy set by default).
+ * @param ctx The context from which to search for meta types.
+ * @param instance An opaque instance of the underlying type, if required.
+ * @return A meta any containing the value of the underlying variable.
+ */
+template<typename Type, auto Data, typename Policy = as_is_t>
+[[nodiscard]] std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_getter(const meta_ctx &ctx, [[maybe_unused]] meta_handle instance) {
+    if constexpr(std::is_member_pointer_v<decltype(Data)> || std::is_function_v<std::remove_reference_t<std::remove_pointer_t<decltype(Data)>>>) {
+        if constexpr(!std::is_array_v<std::remove_cv_t<std::remove_reference_t<std::invoke_result_t<decltype(Data), Type &>>>>) {
+            if constexpr(std::is_invocable_v<decltype(Data), Type &>) {
+                if(auto *clazz = instance->try_cast<Type>(); clazz) {
+                    return meta_dispatch<Policy>(ctx, std::invoke(Data, *clazz));
+                }
+            }
+
+            if constexpr(std::is_invocable_v<decltype(Data), const Type &>) {
+                if(auto *fallback = instance->try_cast<const Type>(); fallback) {
+                    return meta_dispatch<Policy>(ctx, std::invoke(Data, *fallback));
+                }
+            }
+        }
+
+        return meta_any{meta_ctx_arg, ctx};
+    } else if constexpr(std::is_pointer_v<decltype(Data)>) {
+        if constexpr(std::is_array_v<std::remove_pointer_t<decltype(Data)>>) {
+            return meta_any{meta_ctx_arg, ctx};
+        } else {
+            return meta_dispatch<Policy>(ctx, *Data);
+        }
+    } else {
+        return meta_dispatch<Policy>(ctx, Data);
+    }
+}
+
+/**
+ * @brief Gets the value of a given variable.
+ * @tparam Type Reflected type to which the variable is associated.
+ * @tparam Data The actual variable to get.
+ * @tparam Policy Optional policy (no policy set by default).
+ * @param instance An opaque instance of the underlying type, if required.
+ * @return A meta any containing the value of the underlying variable.
+ */
+template<typename Type, auto Data, typename Policy = as_is_t>
+[[nodiscard]] std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_getter(meta_handle instance) {
+    return meta_getter<Type, Data, Policy>(locator<meta_ctx>::value_or(), std::move(instance));
+}
+
+/**
+ * @cond TURN_OFF_DOXYGEN
+ * Internal details not to be documented.
+ */
+
+namespace internal {
+
+template<typename Policy, typename Candidate, typename... Args>
+[[nodiscard]] meta_any meta_invoke_with_args(const meta_ctx &ctx, Candidate &&candidate, Args &&...args) {
+    if constexpr(std::is_same_v<decltype(std::invoke(std::forward<Candidate>(candidate), args...)), void>) {
+        std::invoke(std::forward<Candidate>(candidate), args...);
+        return meta_any{ctx, std::in_place_type<void>};
+    } else {
+        return meta_dispatch<Policy>(ctx, std::invoke(std::forward<Candidate>(candidate), args...));
+    }
+}
+
+template<typename Type, typename Policy, typename Candidate, std::size_t... Index>
+[[nodiscard]] meta_any meta_invoke(const meta_ctx &ctx, [[maybe_unused]] meta_handle instance, Candidate &&candidate, [[maybe_unused]] meta_any *args, std::index_sequence<Index...>) {
+    using descriptor = meta_function_helper_t<Type, std::remove_reference_t<Candidate>>;
+
+    if constexpr(std::is_invocable_v<std::remove_reference_t<Candidate>, const Type &, type_list_element_t<Index, typename descriptor::args_type>...>) {
+        if(const auto *const clazz = instance->try_cast<const Type>(); clazz && ((args + Index)->allow_cast<type_list_element_t<Index, typename descriptor::args_type>>() && ...)) {
+            return meta_invoke_with_args<Policy>(ctx, std::forward<Candidate>(candidate), *clazz, (args + Index)->cast<type_list_element_t<Index, typename descriptor::args_type>>()...);
+        }
+    } else if constexpr(std::is_invocable_v<std::remove_reference_t<Candidate>, Type &, type_list_element_t<Index, typename descriptor::args_type>...>) {
+        if(auto *const clazz = instance->try_cast<Type>(); clazz && ((args + Index)->allow_cast<type_list_element_t<Index, typename descriptor::args_type>>() && ...)) {
+            return meta_invoke_with_args<Policy>(ctx, std::forward<Candidate>(candidate), *clazz, (args + Index)->cast<type_list_element_t<Index, typename descriptor::args_type>>()...);
+        }
+    } else {
+        if(((args + Index)->allow_cast<type_list_element_t<Index, typename descriptor::args_type>>() && ...)) {
+            return meta_invoke_with_args<Policy>(ctx, std::forward<Candidate>(candidate), (args + Index)->cast<type_list_element_t<Index, typename descriptor::args_type>>()...);
+        }
+    }
+
+    return meta_any{meta_ctx_arg, ctx};
+}
+
+template<typename Type, typename... Args, std::size_t... Index>
+[[nodiscard]] meta_any meta_construct(const meta_ctx &ctx, meta_any *const args, std::index_sequence<Index...>) {
+    if(((args + Index)->allow_cast<Args>() && ...)) {
+        return meta_any{ctx, std::in_place_type<Type>, (args + Index)->cast<Args>()...};
+    }
+
+    return meta_any{meta_ctx_arg, ctx};
+}
+
+} // namespace internal
+
+/**
+ * Internal details not to be documented.
+ * @endcond
+ */
+
+/**
+ * @brief Tries to _invoke_ an object given a list of erased parameters.
+ *
+ * @warning
+ * The context provided is used only for the return type.<br/>
+ * It's up to the caller to bind the arguments to the right context(s).
+ *
+ * @tparam Type Reflected type to which the object to _invoke_ is associated.
+ * @tparam Policy Optional policy (no policy set by default).
+ * @param ctx The context from which to search for meta types.
+ * @tparam Candidate The type of the actual object to _invoke_.
+ * @param instance An opaque instance of the underlying type, if required.
+ * @param candidate The actual object to _invoke_.
+ * @param args Parameters to use to _invoke_ the object.
+ * @return A meta any containing the returned value, if any.
+ */
+template<typename Type, typename Policy = as_is_t, typename Candidate>
+[[nodiscard]] std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_invoke(const meta_ctx &ctx, meta_handle instance, Candidate &&candidate, meta_any *const args) {
+    return internal::meta_invoke<Type, Policy>(ctx, std::move(instance), std::forward<Candidate>(candidate), args, std::make_index_sequence<meta_function_helper_t<Type, std::remove_reference_t<Candidate>>::args_type::size>{});
+}
+
+/**
+ * @brief Tries to _invoke_ an object given a list of erased parameters.
+ * @tparam Type Reflected type to which the object to _invoke_ is associated.
+ * @tparam Policy Optional policy (no policy set by default).
+ * @tparam Candidate The type of the actual object to _invoke_.
+ * @param instance An opaque instance of the underlying type, if required.
+ * @param candidate The actual object to _invoke_.
+ * @param args Parameters to use to _invoke_ the object.
+ * @return A meta any containing the returned value, if any.
+ */
+template<typename Type, typename Policy = as_is_t, typename Candidate>
+[[nodiscard]] std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_invoke(meta_handle instance, Candidate &&candidate, meta_any *const args) {
+    return meta_invoke<Type, Policy>(locator<meta_ctx>::value_or(), std::move(instance), std::forward<Candidate>(candidate), args);
+}
+
+/**
+ * @brief Tries to invoke a function given a list of erased parameters.
+ *
+ * @warning
+ * The context provided is used only for the return type.<br/>
+ * It's up to the caller to bind the arguments to the right context(s).
+ *
+ * @tparam Type Reflected type to which the function is associated.
+ * @tparam Candidate The actual function to invoke.
+ * @tparam Policy Optional policy (no policy set by default).
+ * @param ctx The context from which to search for meta types.
+ * @param instance An opaque instance of the underlying type, if required.
+ * @param args Parameters to use to invoke the function.
+ * @return A meta any containing the returned value, if any.
+ */
+template<typename Type, auto Candidate, typename Policy = as_is_t>
+[[nodiscard]] std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_invoke(const meta_ctx &ctx, meta_handle instance, meta_any *const args) {
+    return internal::meta_invoke<Type, Policy>(ctx, std::move(instance), Candidate, args, std::make_index_sequence<meta_function_helper_t<Type, std::remove_reference_t<decltype(Candidate)>>::args_type::size>{});
+}
+
+/**
+ * @brief Tries to invoke a function given a list of erased parameters.
+ * @tparam Type Reflected type to which the function is associated.
+ * @tparam Candidate The actual function to invoke.
+ * @tparam Policy Optional policy (no policy set by default).
+ * @param instance An opaque instance of the underlying type, if required.
+ * @param args Parameters to use to invoke the function.
+ * @return A meta any containing the returned value, if any.
+ */
+template<typename Type, auto Candidate, typename Policy = as_is_t>
+[[nodiscard]] std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_invoke(meta_handle instance, meta_any *const args) {
+    return meta_invoke<Type, Candidate, Policy>(locator<meta_ctx>::value_or(), std::move(instance), args);
+}
+
+/**
+ * @brief Tries to construct an instance given a list of erased parameters.
+ *
+ * @warning
+ * The context provided is used only for the return type.<br/>
+ * It's up to the caller to bind the arguments to the right context(s).
+ *
+ * @tparam Type Actual type of the instance to construct.
+ * @tparam Args Types of arguments expected.
+ * @param ctx The context from which to search for meta types.
+ * @param args Parameters to use to construct the instance.
+ * @return A meta any containing the new instance, if any.
+ */
+template<typename Type, typename... Args>
+[[nodiscard]] meta_any meta_construct(const meta_ctx &ctx, meta_any *const args) {
+    return internal::meta_construct<Type, Args...>(ctx, args, std::index_sequence_for<Args...>{});
+}
+
+/**
+ * @brief Tries to construct an instance given a list of erased parameters.
+ * @tparam Type Actual type of the instance to construct.
+ * @tparam Args Types of arguments expected.
+ * @param args Parameters to use to construct the instance.
+ * @return A meta any containing the new instance, if any.
+ */
+template<typename Type, typename... Args>
+[[nodiscard]] meta_any meta_construct(meta_any *const args) {
+    return meta_construct<Type, Args...>(locator<meta_ctx>::value_or(), args);
+}
+
+/**
+ * @brief Tries to construct an instance given a list of erased parameters.
+ *
+ * @warning
+ * The context provided is used only for the return type.<br/>
+ * It's up to the caller to bind the arguments to the right context(s).
+ *
+ * @tparam Type Reflected type to which the object to _invoke_ is associated.
+ * @tparam Policy Optional policy (no policy set by default).
+ * @tparam Candidate The type of the actual object to _invoke_.
+ * @param ctx The context from which to search for meta types.
+ * @param candidate The actual object to _invoke_.
+ * @param args Parameters to use to _invoke_ the object.
+ * @return A meta any containing the returned value, if any.
+ */
+template<typename Type, typename Policy = as_is_t, typename Candidate>
+[[nodiscard]] meta_any meta_construct(const meta_ctx &ctx, Candidate &&candidate, meta_any *const args) {
+    if constexpr(meta_function_helper_t<Type, Candidate>::is_static || std::is_class_v<std::remove_cv_t<std::remove_reference_t<Candidate>>>) {
+        return internal::meta_invoke<Type, Policy>(ctx, {}, std::forward<Candidate>(candidate), args, std::make_index_sequence<meta_function_helper_t<Type, std::remove_reference_t<Candidate>>::args_type::size>{});
+    } else {
+        return internal::meta_invoke<Type, Policy>(ctx, *args, std::forward<Candidate>(candidate), args + 1u, std::make_index_sequence<meta_function_helper_t<Type, std::remove_reference_t<Candidate>>::args_type::size>{});
+    }
+}
+
+/**
+ * @brief Tries to construct an instance given a list of erased parameters.
+ * @tparam Type Reflected type to which the object to _invoke_ is associated.
+ * @tparam Policy Optional policy (no policy set by default).
+ * @tparam Candidate The type of the actual object to _invoke_.
+ * @param candidate The actual object to _invoke_.
+ * @param args Parameters to use to _invoke_ the object.
+ * @return A meta any containing the returned value, if any.
+ */
+template<typename Type, typename Policy = as_is_t, typename Candidate>
+[[nodiscard]] std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_construct(Candidate &&candidate, meta_any *const args) {
+    return meta_construct<Type, Policy>(locator<meta_ctx>::value_or(), std::forward<Candidate>(candidate), args);
+}
+
+/**
+ * @brief Tries to construct an instance given a list of erased parameters.
+ *
+ * @warning
+ * The context provided is used only for the return type.<br/>
+ * It's up to the caller to bind the arguments to the right context(s).
+ *
+ * @tparam Type Reflected type to which the function is associated.
+ * @tparam Candidate The actual function to invoke.
+ * @tparam Policy Optional policy (no policy set by default).
+ * @param ctx The context from which to search for meta types.
+ * @param args Parameters to use to invoke the function.
+ * @return A meta any containing the returned value, if any.
+ */
+template<typename Type, auto Candidate, typename Policy = as_is_t>
+[[nodiscard]] std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_construct(const meta_ctx &ctx, meta_any *const args) {
+    return meta_construct<Type, Policy>(ctx, Candidate, args);
+}
+
+/**
+ * @brief Tries to construct an instance given a list of erased parameters.
+ * @tparam Type Reflected type to which the function is associated.
+ * @tparam Candidate The actual function to invoke.
+ * @tparam Policy Optional policy (no policy set by default).
+ * @param args Parameters to use to invoke the function.
+ * @return A meta any containing the returned value, if any.
+ */
+template<typename Type, auto Candidate, typename Policy = as_is_t>
+[[nodiscard]] std::enable_if_t<is_meta_policy_v<Policy>, meta_any> meta_construct(meta_any *const args) {
+    return meta_construct<Type, Candidate, Policy>(locator<meta_ctx>::value_or(), args);
+}
+
+} // namespace entt
+
+#endif
+
+//////////////////// END OF external/entt/meta/utility.hpp /////////////////////
+
+/////////////////// START OF external/entt/meta/factory.hpp ////////////////////
+
+#ifndef ENTT_META_FACTORY_HPP
+#define ENTT_META_FACTORY_HPP
+
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+namespace entt {
+
+/**
+ * @cond TURN_OFF_DOXYGEN
+ * Internal details not to be documented.
+ */
+
+namespace internal {
+
+[[nodiscard]] inline decltype(auto) owner(meta_ctx &ctx, const type_info &info) {
+    auto &&context = internal::meta_context::from(ctx);
+    ENTT_ASSERT(context.value.contains(info.hash()), "Type not available");
+    return context.value[info.hash()];
+}
+
+inline meta_data_node &meta_extend(internal::meta_type_node &parent, const id_type id, meta_data_node node) {
+    return parent.details->data.insert_or_assign(id, std::move(node)).first->second;
+}
+
+inline meta_func_node &meta_extend(internal::meta_type_node &parent, const id_type id, meta_func_node node) {
+    if(auto it = parent.details->func.find(id); it != parent.details->func.end()) {
+        for(auto *curr = &it->second; curr; curr = curr->next.get()) {
+            if(curr->invoke == node.invoke) {
+                node.next = std::move(curr->next);
+                *curr = std::move(node);
+                return *curr;
+            }
+        }
+
+        // locally overloaded function
+        node.next = std::make_shared<meta_func_node>(std::move(parent.details->func[id]));
+    }
+
+    return parent.details->func.insert_or_assign(id, std::move(node)).first->second;
+}
+
+} // namespace internal
+
+/**
+ * Internal details not to be documented.
+ * @endcond
+ */
+
+/**
+ * @brief Basic meta factory to be used for reflection purposes.
+ * @tparam Type Reflected type for which the factory was created.
+ */
+template<typename Type>
+class meta_factory {
+    template<typename Setter, auto Getter, typename Policy, std::size_t... Index>
+    void data(const id_type id, std::index_sequence<Index...>) noexcept {
+        using data_type = std::invoke_result_t<decltype(Getter), Type &>;
+        using args_type = type_list<typename meta_function_helper_t<Type, decltype(value_list_element_v<Index, Setter>)>::args_type...>;
+        static_assert(Policy::template value<data_type>, "Invalid return type for the given policy");
+
+        auto &&elem = internal::meta_extend(
+            internal::owner(*ctx, *info),
+            id,
+            internal::meta_data_node{
+                /* this is never static */
+                (std::is_member_object_pointer_v<decltype(value_list_element_v<Index, Setter>)> && ... && std::is_const_v<std::remove_reference_t<data_type>>) ? internal::meta_traits::is_const : internal::meta_traits::is_none,
+                Setter::size,
+                &internal::resolve<std::remove_cv_t<std::remove_reference_t<data_type>>>,
+                &meta_arg<type_list<type_list_element_t<type_list_element_t<Index, args_type>::size != 1u, type_list_element_t<Index, args_type>>...>>,
+                +[](meta_handle instance, meta_any value) { return (meta_setter<Type, value_list_element_v<Index, Setter>>(*instance.operator->(), value.as_ref()) || ...); },
+                &meta_getter<Type, Getter, Policy>});
+
+        bucket = &elem.prop;
+    }
+
+public:
+    /*! @brief Default constructor. */
+    meta_factory() noexcept
+        : meta_factory{locator<meta_ctx>::value_or()} {}
+
+    /**
+     * @brief Context aware constructor.
+     * @param area The context into which to construct meta types.
+     */
+    meta_factory(meta_ctx &area) noexcept
+        : ctx{&area},
+          bucket{},
+          info{&type_id<Type>()} {
+        auto &&elem = internal::owner(*ctx, *info);
+
+        if(!elem.details) {
+            elem.details = std::make_shared<internal::meta_type_descriptor>();
+        }
+
+        bucket = &elem.details->prop;
+    }
+
+    /**
+     * @brief Assigns a custom unique identifier to a meta type.
+     * @param id A custom unique identifier.
+     * @return An extended meta factory for the given type.
+     */
+    auto type(const id_type id) noexcept {
+        auto &&elem = internal::owner(*ctx, *info);
+        ENTT_ASSERT(elem.id == id || !resolve(*ctx, id), "Duplicate identifier");
+        bucket = &elem.details->prop;
+        elem.id = id;
+        return *this;
+    }
+
+    /**
+     * @brief Assigns a meta base to a meta type.
+     *
+     * A reflected base class must be a real base class of the reflected type.
+     *
+     * @tparam Base Type of the base class to assign to the meta type.
+     * @return A meta factory for the parent type.
+     */
+    template<typename Base>
+    auto base() noexcept {
+        static_assert(!std::is_same_v<Type, Base> && std::is_base_of_v<Base, Type>, "Invalid base type");
+        auto *const op = +[](const void *instance) noexcept { return static_cast<const void *>(static_cast<const Base *>(static_cast<const Type *>(instance))); };
+        internal::owner(*ctx, *info).details->base.insert_or_assign(type_id<Base>().hash(), internal::meta_base_node{&internal::resolve<Base>, op});
+        bucket = nullptr;
+        return *this;
+    }
+
+    /**
+     * @brief Assigns a meta conversion function to a meta type.
+     *
+     * Conversion functions can be either free functions or member
+     * functions.<br/>
+     * In case of free functions, they must accept a const reference to an
+     * instance of the parent type as an argument. In case of member functions,
+     * they should have no arguments at all.
+     *
+     * @tparam Candidate The actual function to use for the conversion.
+     * @return A meta factory for the parent type.
+     */
+    template<auto Candidate>
+    auto conv() noexcept {
+        using conv_type = std::remove_cv_t<std::remove_reference_t<std::invoke_result_t<decltype(Candidate), Type &>>>;
+        auto *const op = +[](const meta_ctx &area, const void *instance) { return forward_as_meta(area, std::invoke(Candidate, *static_cast<const Type *>(instance))); };
+        internal::owner(*ctx, *info).details->conv.insert_or_assign(type_id<conv_type>().hash(), internal::meta_conv_node{op});
+        bucket = nullptr;
+        return *this;
+    }
+
+    /**
+     * @brief Assigns a meta conversion function to a meta type.
+     *
+     * The given type must be such that an instance of the reflected type can be
+     * converted to it.
+     *
+     * @tparam To Type of the conversion function to assign to the meta type.
+     * @return A meta factory for the parent type.
+     */
+    template<typename To>
+    auto conv() noexcept {
+        using conv_type = std::remove_cv_t<std::remove_reference_t<To>>;
+        auto *const op = +[](const meta_ctx &area, const void *instance) { return forward_as_meta(area, static_cast<To>(*static_cast<const Type *>(instance))); };
+        internal::owner(*ctx, *info).details->conv.insert_or_assign(type_id<conv_type>().hash(), internal::meta_conv_node{op});
+        bucket = nullptr;
+        return *this;
+    }
+
+    /**
+     * @brief Assigns a meta constructor to a meta type.
+     *
+     * Both member functions and free function can be assigned to meta types in
+     * the role of constructors. All that is required is that they return an
+     * instance of the underlying type.<br/>
+     * From a client's point of view, nothing changes if a constructor of a meta
+     * type is a built-in one or not.
+     *
+     * @tparam Candidate The actual function to use as a constructor.
+     * @tparam Policy Optional policy (no policy set by default).
+     * @return An extended meta factory for the parent type.
+     */
+    template<auto Candidate, typename Policy = as_is_t>
+    auto ctor() noexcept {
+        using descriptor = meta_function_helper_t<Type, decltype(Candidate)>;
+        static_assert(Policy::template value<typename descriptor::return_type>, "Invalid return type for the given policy");
+        static_assert(std::is_same_v<std::remove_cv_t<std::remove_reference_t<typename descriptor::return_type>>, Type>, "The function doesn't return an object of the required type");
+        internal::owner(*ctx, *info).details->ctor.insert_or_assign(type_id<typename descriptor::args_type>().hash(), internal::meta_ctor_node{descriptor::args_type::size, &meta_arg<typename descriptor::args_type>, &meta_construct<Type, Candidate, Policy>});
+        bucket = nullptr;
+        return *this;
+    }
+
+    /**
+     * @brief Assigns a meta constructor to a meta type.
+     *
+     * A meta constructor is uniquely identified by the types of its arguments
+     * and is such that there exists an actual constructor of the underlying
+     * type that can be invoked with parameters whose types are those given.
+     *
+     * @tparam Args Types of arguments to use to construct an instance.
+     * @return An extended meta factory for the parent type.
+     */
+    template<typename... Args>
+    auto ctor() noexcept {
+        // default constructor is already implicitly generated, no need for redundancy
+        if constexpr(sizeof...(Args) != 0u) {
+            using descriptor = meta_function_helper_t<Type, Type (*)(Args...)>;
+            internal::owner(*ctx, *info).details->ctor.insert_or_assign(type_id<typename descriptor::args_type>().hash(), internal::meta_ctor_node{descriptor::args_type::size, &meta_arg<typename descriptor::args_type>, &meta_construct<Type, Args...>});
+        }
+
+        bucket = nullptr;
+        return *this;
+    }
+
+    /**
+     * @brief Assigns a meta destructor to a meta type.
+     *
+     * Both free functions and member functions can be assigned to meta types in
+     * the role of destructors.<br/>
+     * The signature of a free function should be identical to the following:
+     *
+     * @code{.cpp}
+     * void(Type &);
+     * @endcode
+     *
+     * Member functions should not take arguments instead.<br/>
+     * The purpose is to give users the ability to free up resources that
+     * require special treatment before an object is actually destroyed.
+     *
+     * @tparam Func The actual function to use as a destructor.
+     * @return A meta factory for the parent type.
+     */
+    template<auto Func>
+    auto dtor() noexcept {
+        static_assert(std::is_invocable_v<decltype(Func), Type &>, "The function doesn't accept an object of the type provided");
+        auto *const op = +[](void *instance) { std::invoke(Func, *static_cast<Type *>(instance)); };
+        internal::owner(*ctx, *info).dtor = internal::meta_dtor_node{op};
+        bucket = nullptr;
+        return *this;
+    }
+
+    /**
+     * @brief Assigns a meta data to a meta type.
+     *
+     * Both data members and static and global variables, as well as constants
+     * of any kind, can be assigned to a meta type.<br/>
+     * From a client's point of view, all the variables associated with the
+     * reflected object will appear as if they were part of the type itself.
+     *
+     * @tparam Data The actual variable to attach to the meta type.
+     * @tparam Policy Optional policy (no policy set by default).
+     * @param id Unique identifier.
+     * @return An extended meta factory for the parent type.
+     */
+    template<auto Data, typename Policy = as_is_t>
+    auto data(const id_type id) noexcept {
+        if constexpr(std::is_member_object_pointer_v<decltype(Data)>) {
+            using data_type = std::invoke_result_t<decltype(Data), Type &>;
+            static_assert(Policy::template value<data_type>, "Invalid return type for the given policy");
+
+            auto &&elem = internal::meta_extend(
+                internal::owner(*ctx, *info),
+                id,
+                internal::meta_data_node{
+                    /* this is never static */
+                    std::is_const_v<std::remove_reference_t<data_type>> ? internal::meta_traits::is_const : internal::meta_traits::is_none,
+                    1u,
+                    &internal::resolve<std::remove_cv_t<std::remove_reference_t<data_type>>>,
+                    &meta_arg<type_list<std::remove_cv_t<std::remove_reference_t<data_type>>>>,
+                    &meta_setter<Type, Data>,
+                    &meta_getter<Type, Data, Policy>});
+
+            bucket = &elem.prop;
+        } else {
+            using data_type = std::remove_pointer_t<decltype(Data)>;
+
+            if constexpr(std::is_pointer_v<decltype(Data)>) {
+                static_assert(Policy::template value<decltype(*Data)>, "Invalid return type for the given policy");
+            } else {
+                static_assert(Policy::template value<data_type>, "Invalid return type for the given policy");
+            }
+
+            auto &&elem = internal::meta_extend(
+                internal::owner(*ctx, *info),
+                id,
+                internal::meta_data_node{
+                    ((std::is_same_v<Type, std::remove_cv_t<std::remove_reference_t<data_type>>> || std::is_const_v<std::remove_reference_t<data_type>>) ? internal::meta_traits::is_const : internal::meta_traits::is_none) | internal::meta_traits::is_static,
+                    1u,
+                    &internal::resolve<std::remove_cv_t<std::remove_reference_t<data_type>>>,
+                    &meta_arg<type_list<std::remove_cv_t<std::remove_reference_t<data_type>>>>,
+                    &meta_setter<Type, Data>,
+                    &meta_getter<Type, Data, Policy>});
+
+            bucket = &elem.prop;
+        }
+
+        return *this;
+    }
+
+    /**
+     * @brief Assigns a meta data to a meta type by means of its setter and
+     * getter.
+     *
+     * Setters and getters can be either free functions, member functions or a
+     * mix of them.<br/>
+     * In case of free functions, setters and getters must accept a reference to
+     * an instance of the parent type as their first argument. A setter has then
+     * an extra argument of a type convertible to that of the parameter to
+     * set.<br/>
+     * In case of member functions, getters have no arguments at all, while
+     * setters has an argument of a type convertible to that of the parameter to
+     * set.
+     *
+     * @tparam Setter The actual function to use as a setter.
+     * @tparam Getter The actual function to use as a getter.
+     * @tparam Policy Optional policy (no policy set by default).
+     * @param id Unique identifier.
+     * @return An extended meta factory for the parent type.
+     */
+    template<auto Setter, auto Getter, typename Policy = as_is_t>
+    auto data(const id_type id) noexcept {
+        using data_type = std::invoke_result_t<decltype(Getter), Type &>;
+        static_assert(Policy::template value<data_type>, "Invalid return type for the given policy");
+
+        if constexpr(std::is_same_v<decltype(Setter), std::nullptr_t>) {
+            auto &&elem = internal::meta_extend(
+                internal::owner(*ctx, *info),
+                id,
+                internal::meta_data_node{
+                    /* this is never static */
+                    internal::meta_traits::is_const,
+                    0u,
+                    &internal::resolve<std::remove_cv_t<std::remove_reference_t<data_type>>>,
+                    &meta_arg<type_list<>>,
+                    &meta_setter<Type, Setter>,
+                    &meta_getter<Type, Getter, Policy>});
+
+            bucket = &elem.prop;
+        } else {
+            using args_type = typename meta_function_helper_t<Type, decltype(Setter)>::args_type;
+
+            auto &&elem = internal::meta_extend(
+                internal::owner(*ctx, *info),
+                id,
+                internal::meta_data_node{
+                    /* this is never static nor const */
+                    internal::meta_traits::is_none,
+                    1u,
+                    &internal::resolve<std::remove_cv_t<std::remove_reference_t<data_type>>>,
+                    &meta_arg<type_list<type_list_element_t<args_type::size != 1u, args_type>>>,
+                    &meta_setter<Type, Setter>,
+                    &meta_getter<Type, Getter, Policy>});
+
+            bucket = &elem.prop;
+        }
+
+        return *this;
+    }
+
+    /**
+     * @brief Assigns a meta data to a meta type by means of its setters and
+     * getter.
+     *
+     * Multi-setter support for meta data members. All setters are tried in the
+     * order of definition before returning to the caller.<br/>
+     * Setters can be either free functions, member functions or a mix of them
+     * and are provided via a `value_list` type.
+     *
+     * @sa data
+     *
+     * @tparam Setter The actual functions to use as setters.
+     * @tparam Getter The actual getter function.
+     * @tparam Policy Optional policy (no policy set by default).
+     * @param id Unique identifier.
+     * @return An extended meta factory for the parent type.
+     */
+    template<typename Setter, auto Getter, typename Policy = as_is_t>
+    auto data(const id_type id) noexcept {
+        data<Setter, Getter, Policy>(id, std::make_index_sequence<Setter::size>{});
+        return *this;
+    }
+
+    /**
+     * @brief Assigns a meta function to a meta type.
+     *
+     * Both member functions and free functions can be assigned to a meta
+     * type.<br/>
+     * From a client's point of view, all the functions associated with the
+     * reflected object will appear as if they were part of the type itself.
+     *
+     * @tparam Candidate The actual function to attach to the meta type.
+     * @tparam Policy Optional policy (no policy set by default).
+     * @param id Unique identifier.
+     * @return An extended meta factory for the parent type.
+     */
+    template<auto Candidate, typename Policy = as_is_t>
+    auto func(const id_type id) noexcept {
+        using descriptor = meta_function_helper_t<Type, decltype(Candidate)>;
+        static_assert(Policy::template value<typename descriptor::return_type>, "Invalid return type for the given policy");
+
+        auto &&elem = internal::meta_extend(
+            internal::owner(*ctx, *info),
+            id,
+            internal::meta_func_node{
+                (descriptor::is_const ? internal::meta_traits::is_const : internal::meta_traits::is_none) | (descriptor::is_static ? internal::meta_traits::is_static : internal::meta_traits::is_none),
+                descriptor::args_type::size,
+                &internal::resolve<std::conditional_t<std::is_same_v<Policy, as_void_t>, void, std::remove_cv_t<std::remove_reference_t<typename descriptor::return_type>>>>,
+                &meta_arg<typename descriptor::args_type>,
+                &meta_invoke<Type, Candidate, Policy>});
+
+        bucket = &elem.prop;
+        return *this;
+    }
+
+    /**
+     * @brief Assigns a property to the last meta object created.
+     *
+     * Both the key and the value (if any) must be at least copy constructible.
+     *
+     * @tparam Value Optional type of the property value.
+     * @param id Property key.
+     * @param value Optional property value.
+     * @return An extended meta factory for the given type.
+     */
+    template<typename... Value>
+    meta_factory prop(id_type id, [[maybe_unused]] Value &&...value) {
+        ENTT_ASSERT(bucket != nullptr, "Meta object does not support properties");
+
+        if constexpr(sizeof...(Value) == 0u) {
+            (*bucket)[id] = internal::meta_prop_node{&internal::resolve<void>};
+        } else {
+            (*bucket)[id] = internal::meta_prop_node{
+                &internal::resolve<std::decay_t<Value>>...,
+                std::make_shared<std::decay_t<Value>>(std::forward<Value>(value))...};
+        }
+
+        return *this;
+    }
+
+private:
+    meta_ctx *ctx;
+    dense_map<id_type, internal::meta_prop_node, identity> *bucket;
+    const type_info *info;
+};
+
+/**
+ * @brief Utility function to use for reflection.
+ *
+ * This is the point from which everything starts.<br/>
+ * By invoking this function with a type that is not yet reflected, a meta type
+ * is created to which it will be possible to attach meta objects through a
+ * dedicated factory.
+ *
+ * @tparam Type Type to reflect.
+ * @param ctx The context into which to construct meta types.
+ * @return A meta factory for the given type.
+ */
+template<typename Type>
+[[nodiscard]] auto meta(meta_ctx &ctx) noexcept {
+    auto &&context = internal::meta_context::from(ctx);
+    // make sure the type exists in the context before returning a factory
+    context.value.try_emplace(type_id<Type>().hash(), internal::resolve<Type>(context));
+    return meta_factory<Type>{ctx};
+}
+
+/**
+ * @brief Utility function to use for reflection.
+ *
+ * This is the point from which everything starts.<br/>
+ * By invoking this function with a type that is not yet reflected, a meta type
+ * is created to which it will be possible to attach meta objects through a
+ * dedicated factory.
+ *
+ * @tparam Type Type to reflect.
+ * @return A meta factory for the given type.
+ */
+template<typename Type>
+[[nodiscard]] auto meta() noexcept {
+    return meta<Type>(locator<meta_ctx>::value_or());
+}
+
+/**
+ * @brief Resets a type and all its parts.
+ *
+ * Resets a type and all its data members, member functions and properties, as
+ * well as its constructors, destructors and conversion functions if any.<br/>
+ * Base classes aren't reset but the link between the two types is removed.
+ *
+ * The type is also removed from the set of searchable types.
+ *
+ * @param id Unique identifier.
+ * @param ctx The context from which to reset meta types.
+ */
+inline void meta_reset(meta_ctx &ctx, const id_type id) noexcept {
+    auto &&context = internal::meta_context::from(ctx);
+
+    for(auto it = context.value.begin(); it != context.value.end();) {
+        if(it->second.id == id) {
+            it = context.value.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+/**
+ * @brief Resets a type and all its parts.
+ *
+ * Resets a type and all its data members, member functions and properties, as
+ * well as its constructors, destructors and conversion functions if any.<br/>
+ * Base classes aren't reset but the link between the two types is removed.
+ *
+ * The type is also removed from the set of searchable types.
+ *
+ * @param id Unique identifier.
+ */
+inline void meta_reset(const id_type id) noexcept {
+    meta_reset(locator<meta_ctx>::value_or(), id);
+}
+
+/**
+ * @brief Resets a type and all its parts.
+ *
+ * @sa meta_reset
+ *
+ * @tparam Type Type to reset.
+ * @param ctx The context from which to reset meta types.
+ */
+template<typename Type>
+void meta_reset(meta_ctx &ctx) noexcept {
+    internal::meta_context::from(ctx).value.erase(type_id<Type>().hash());
+}
+
+/**
+ * @brief Resets a type and all its parts.
+ *
+ * @sa meta_reset
+ *
+ * @tparam Type Type to reset.
+ */
+template<typename Type>
+void meta_reset() noexcept {
+    meta_reset<Type>(locator<meta_ctx>::value_or());
+}
+
+/**
+ * @brief Resets all meta types.
+ *
+ * @sa meta_reset
+ *
+ * @param ctx The context from which to reset meta types.
+ */
+inline void meta_reset(meta_ctx &ctx) noexcept {
+    internal::meta_context::from(ctx).value.clear();
+}
+
+/**
+ * @brief Resets all meta types.
+ *
+ * @sa meta_reset
+ */
+inline void meta_reset() noexcept {
+    meta_reset(locator<meta_ctx>::value_or());
+}
+
+} // namespace entt
+
+#endif
+
+//////////////////// END OF external/entt/meta/factory.hpp /////////////////////
+
+//////////////////// START OF src/Utilities/DebugChecks.hpp ////////////////////
+
+#ifndef NDEBUG
+
+
+namespace pokesim {
+struct ParentEntity;
+namespace types {
+class registry;
+}
+namespace internal {
+template <typename T, std::uint8_t N>
+class maxSizedVector;
+}
+}  // namespace pokesim
+
+namespace pokesim::debug {
+struct TypesToIgnore : private entt::dense_set<entt::id_type> {
+  TypesToIgnore() : entt::dense_set<entt::id_type>() { add<ParentEntity>(); }
+
+  template <typename Type>
+  void add() {
+    emplace(entt::type_hash<Type>());
+  }
+
+  using entt::dense_set<entt::id_type>::contains;
+};
+
+inline types::entity createEntityCopy(types::entity entity, const types::registry& src, types::registry& dst);
+
+inline void hasSameComponents(
+  const types::registry& currReg, types::entity currEntity, const types::registry& initReg, types::entity initEntity,
+  const TypesToIgnore& typesToIgnore = {});
+
+inline void areEntitiesEqual(
+  const types::registry& currReg, types::entity currEntity, const types::registry& initReg, types::entity initEntity,
+  const TypesToIgnore& typesToIgnore = {});
+
+inline types::entity findCopyParent(
+  const entt::dense_map<types::entity, types::entity>& initialEntities, const types::registry& registry,
+  types::entity entity);
+
+inline bool checkIfCopyParent(types::entity current, types::entity initial, const types::registry& registry);
+
+template <typename Type>
+class AssertComponentsEqual {
+  template <typename, typename = void>
+  struct val : std::false_type {};
+  template <typename T>
+  struct val<T, std::void_t<decltype(T::val)>> : std::true_type {};
+
+  template <typename, typename = void>
+  struct name : std::false_type {};
+  template <typename T>
+  struct name<T, std::void_t<decltype(T::name)>> : std::true_type {};
+
+  template <class, class = void>
+  struct equals : std::false_type {};
+  template <class T>
+  struct equals<T, std::void_t<decltype(&T::operator==)>> : std::true_type {};
+
+  template <typename>
+  struct isList;
+  template <typename T, std::uint8_t N>
+  struct isList<internal::maxSizedVector<T, N>> {};
+  template <typename... Args>
+  struct isList<std::vector<Args...>> {};
+  template <typename T, auto N>
+  struct isList<std::array<T, N>> {};
+
+  template <typename Member>
+  static void compareMember(const Member& current, const Member& initial, const types::registry& registry) {
+    if constexpr (std::is_same_v<types::entity, Member>) {
+      if (current == initial) {
+        return;
+      }
+
+      bool initialIsParent = checkIfCopyParent(current, initial, registry);
+      bool currentIsParent = checkIfCopyParent(initial, current, registry);
+      assert((initialIsParent && !currentIsParent));
+    }
+    else if constexpr (equals<Member>::value || std::is_scalar_v<Member>) {
+      assert(current == initial);
+    }
+    else if constexpr (entt::is_complete_v<isList<Member>>) {
+      assert(current.size() == initial.size());
+      for (std::size_t i = 0; i < current.size(); i++) {
+        compareMember(current[i], initial[i], registry);
+      }
+    }
+    else {
+      ENTT_FAIL("There's a type that needs a dedicated equals function.");
+    }
+  }
+
+ public:
+  static void check(const Type& current, const Type& initial, const types::registry& registry) {
+    if constexpr (equals<Type>::value || std::is_scalar_v<Type>) {
+      assert(current == initial);
+      return;
+    }
+    else if constexpr (val<Type>::value) {
+      compareMember(current.val, initial.val, registry);
+      if constexpr (sizeof(current.val) == sizeof(current)) {
+        return;
+      }
+    }
+    else if constexpr (name<Type>::value) {
+      compareMember(current.name, initial.name, registry);
+      if constexpr (sizeof(current.name) == sizeof(current)) {
+        return;
+      }
+    }
+    else {
+      ENTT_FAIL("There's a component that needs a dedicated equals function.");
+    }
+  }
+};
+}  // namespace pokesim::debug
+
+#endif
+
+///////////////////// END OF src/Utilities/DebugChecks.hpp /////////////////////
+
+/////////////////////// START OF src/Types/Registry.hpp ////////////////////////
+
+#ifdef NDEBUG
+#include <memory>
+
+#ifndef ENTT_ID_TYPE
+#include <cstdint>
+#define ENTT_ID_TYPE std::uint32_t
+#endif
+
+namespace entt {
+enum class entity : ENTT_ID_TYPE;
+template <typename, typename>
+class basic_registry;
+using registry = basic_registry<entity, std::allocator<entity> >;
+
+template <typename, typename...>
+struct basic_handle;
+}  // namespace entt
+
+namespace pokesim::types {
+using registry = entt::registry;
+using handle = entt::basic_handle<registry>;
+}  // namespace pokesim::types
+#else
+
+#include <type_traits>
+
+namespace pokesim::types::internal {
+using BackingRegistry = entt::registry;
+template <typename Registry>
+using BackingHandle = entt::basic_handle<Registry>;
+}  // namespace pokesim::types::internal
+#endif
+
+namespace pokesim::types {
+class registry : public internal::BackingRegistry {
+ public:
+  enum MetaFunctions : entt::id_type {
+    COPY_TO_OTHER_REGISTRY,
+    ENTITY_COMPONENTS_EQUAL,
+  };
+
+ private:
+  using entt::registry::emplace;
+  using entt::registry::emplace_or_replace;
+  using entt::registry::get_or_emplace;
+  using entt::registry::insert;
+
+  template <typename Type>
+  static void copyToOtherRegistry(
+    const registry* srcReg, types::entity srcEntity, registry* dstReg, types::entity dstEntity) {
+    if constexpr (std::is_empty_v<Type>) {
+      dstReg->emplace<Type>(dstEntity);
+    }
+    else {
+      const Type& value = srcReg->get<Type>(srcEntity);
+      dstReg->emplace<Type>(dstEntity, value);
+    }
+  }
+
+  template <typename Type>
+  static void entityComponentsEqual(
+    const registry* currReg, types::entity currEntity, const registry* initReg, types::entity initEntity) {
+    if constexpr (!std::is_empty_v<Type>) {
+      const Type& currValue = currReg->get<Type>(currEntity);
+      const Type& initValue = initReg->get<Type>(initEntity);
+      debug::AssertComponentsEqual<Type>::check(currValue, initValue, *currReg);
+    }
+  }
+
+  template <typename Type>
+  void createMetaFunctions() const {
+    entt::meta<Type>()
+      .template func<&registry::copyToOtherRegistry<Type> >(MetaFunctions::COPY_TO_OTHER_REGISTRY)
+      .template func<&registry::entityComponentsEqual<Type> >(MetaFunctions::ENTITY_COMPONENTS_EQUAL);
+  }
+
+ public:
+  template <typename Type, typename... Args>
+  decltype(auto) emplace(const entity_type entt, Args&&... args) {
+    createMetaFunctions<Type>();
+    return entt::registry::emplace<Type>(entt, std::forward<Args>(args)...);
+  }
+
+  template <typename Type, typename... Args>
+  decltype(auto) emplace_or_replace(const entity_type entt, Args&&... args) {
+    createMetaFunctions<Type>();
+    return entt::registry::emplace_or_replace<Type>(entt, std::forward<Args>(args)...);
+  }
+
+  template <typename Type, typename... Args>
+  [[nodiscard]] decltype(auto) get_or_emplace(const entity_type entt, Args&&... args) {
+    createMetaFunctions<Type>();
+    return entt::registry::get_or_emplace<Type>(entt, std::forward<Args>(args)...);
+  }
+
+  template <typename Type, typename It>
+  void insert(It first, It last, const Type& value = {}) {
+    createMetaFunctions<Type>();
+    entt::registry::insert<Type>(std::move(first), std::move(last), value);
+  }
+
+  template <
+    typename Type, typename EIt, typename CIt,
+    typename = std::enable_if_t<std::is_same_v<typename std::iterator_traits<CIt>::value_type, Type> > >
+  void insert(EIt first, EIt last, CIt from) {
+    createMetaFunctions<Type>();
+    entt::registry::insert<Type>(first, last, from);
+  }
+};
+
+using handle = internal::BackingHandle<registry>;
+}  // namespace pokesim::types
+
+//////////////////////// END OF src/Types/Registry.hpp /////////////////////////
+
+//////////////////// START OF src/Utilities/DebugChecks.cpp ////////////////////
+
+#ifndef NDEBUG
+
+
+#include <vector>
+
+namespace pokesim::debug {
+inline types::entity createEntityCopy(types::entity entity, const types::registry& src, types::registry& dst) {
+  types::entity dstEntity = dst.create();
+  for (auto [id, storage] : src.storage()) {
+    if (storage.contains(entity)) {
+      entt::resolve(storage.type())
+        .invoke(types::registry::MetaFunctions::COPY_TO_OTHER_REGISTRY, {}, &src, entity, &dst, dstEntity);
+    }
+  }
+  return dstEntity;
+}
+
+inline void hasSameComponents(
+  const types::registry& currReg, types::entity currEntity, const types::registry& initReg, types::entity initEntity,
+  const TypesToIgnore& typesToIgnore) {
+  for (auto [id, storageA] : currReg.storage()) {
+    if (typesToIgnore.contains(id)) continue;
+
+    if (storageA.contains(currEntity)) {
+      const auto* const storageB = initReg.storage(id);
+      assert(storageB != nullptr);
+      ENTT_ASSERT(storageB->contains(initEntity), "The copy doesn't contain the original's component.");
+    }
+  }
+
+  for (auto [id, storageB] : initReg.storage()) {
+    if (typesToIgnore.contains(id)) continue;
+
+    if (storageB.contains(initEntity)) {
+      const auto* const storageA = currReg.storage(id);
+      assert(storageA != nullptr);
+      ENTT_ASSERT(storageA->contains(currEntity), "The original doesn't contain the copy's component.");
+    }
+  }
+}
+
+inline void areEntitiesEqual(
+  const types::registry& currReg, types::entity currEntity, const types::registry& initReg, types::entity initEntity,
+  const TypesToIgnore& typesToIgnore) {
+  hasSameComponents(currReg, currEntity, initReg, initEntity, typesToIgnore);
+  for (auto [id, storage] : currReg.storage()) {
+    if (typesToIgnore.contains(id)) continue;
+
+    if (storage.contains(currEntity)) {
+      entt::resolve(storage.type())
+        .invoke(
+          types::registry::MetaFunctions::ENTITY_COMPONENTS_EQUAL,
+          {},
+          &currReg,
+          currEntity,
+          &initReg,
+          initEntity);
+    }
+  }
+}
+
+inline types::entity findCopyParent(
+  const entt::dense_map<types::entity, types::entity>& initialEntities, const types::registry& registry,
+  types::entity entity) {
+  if (initialEntities.contains(entity)) {
+    return entity;
+  }
+
+  const ParentEntity* parentEntity = registry.try_get<ParentEntity>(entity);
+  for (std::size_t i = 0; parentEntity != nullptr; i++) {
+    if (i >= registry.storage<types::registry::entity_type>()->size()) {
+      ENTT_FAIL("A loop in the battle tree caused an infinite loop.");
+    }
+
+    for (auto [original, _] : initialEntities) {
+      if (original == parentEntity->val) {
+        return original;
+      }
+    }
+    parentEntity = registry.try_get<ParentEntity>(parentEntity->val);
+  }
+
+  ENTT_FAIL("Could not find original entity of a clone.");
+}
+
+inline bool checkIfCopyParent(types::entity current, types::entity initial, const types::registry& registry) {
+  const ParentEntity* parentEntity = registry.try_get<ParentEntity>(current);
+  for (std::size_t i = 0; parentEntity != nullptr; i++) {
+    if (i >= registry.storage<types::registry::entity_type>()->size()) {
+      ENTT_FAIL("A loop in the battle tree caused an infinite loop.");
+    }
+
+    if (parentEntity->val == initial) {
+      return true;
+    }
+    parentEntity = registry.try_get<ParentEntity>(parentEntity->val);
+  }
+
+  return false;
+}
+}  // namespace pokesim::debug
+
+#endif
+
+///////////////////// END OF src/Utilities/DebugChecks.cpp /////////////////////
+
 /////////////////// START OF external/entt/entity/handle.hpp ///////////////////
 
 #ifndef ENTT_ENTITY_HANDLE_HPP
@@ -12563,21 +18015,6 @@ using effectEnum = pokesim::internal::variant<
 
 ///////////////////////// END OF src/Types/Effect.hpp //////////////////////////
 
-//////////////////////// START OF src/Types/Entity.hpp /////////////////////////
-
-#include <vector>
-
-namespace pokesim::types {
-template <typename T, typename... Other>
-using view = entt::view<entt::get_t<const T, const Other...>>;
-
-using entity = entt::entity;
-
-using ClonedEntityMap = entt::dense_map<entity, std::vector<entity>>;
-}  // namespace pokesim::types
-
-///////////////////////// END OF src/Types/Entity.hpp //////////////////////////
-
 ////////////////////// START OF src/Types/Enums/Move.hpp ///////////////////////
 
 #include <cstdint>
@@ -12616,30 +18053,23 @@ static constexpr std::size_t TOTAL_STAT_COUNT = 6U;
 
 /////////////////////// END OF src/Types/Enums/Stat.hpp ////////////////////////
 
-/////////////////////// START OF src/Types/Registry.hpp ////////////////////////
+///////////////////////// START OF src/Types/Stats.hpp /////////////////////////
 
-#include <memory>
-
-#ifndef ENTT_ID_TYPE
 #include <cstdint>
-#define ENTT_ID_TYPE std::uint32_t
-namespace entt {
-enum class entity : ENTT_ID_TYPE;
-template <typename, typename>
-class basic_registry;
-using registry = basic_registry<entity, std::allocator<entity> >;
-
-template <typename, typename...>
-struct basic_handle;
-}  // namespace entt
 
 namespace pokesim::types {
-using registry = entt::registry;
-using handle = entt::basic_handle<registry>;
+using level = std::uint8_t;
+
+using stat = std::uint16_t;
+using baseStat = std::uint8_t;
+
+using ev = std::uint8_t;
+using iv = std::uint8_t;
+
+using boost = std::int8_t;
 }  // namespace pokesim::types
 
-
-//////////////////////// END OF src/Types/Registry.hpp /////////////////////////
+////////////////////////// END OF src/Types/Stats.hpp //////////////////////////
 
 ///////// START OF src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp /////////
 
@@ -12651,16 +18081,16 @@ struct InputSetup {
   types::handle handle;
 
  public:
-  InputSetup(types::registry& registry, types::entity entity);
+  inline InputSetup(types::registry& registry, types::entity entity);
   InputSetup(types::registry& registry) : InputSetup(registry, registry.create()) {}
 
-  void setAttacker(types::entity entity);
-  void setEffectTarget(types::entity entity);
-  void setDefender(types::entity entity);
-  void setEffectMoves(const std::vector<dex::Move>& moves);
-  void setEffect(types::effectEnum effect);
-  void setBoostEffect(dex::Stat stat, types::boost boost);
-  void setBattle(types::entity entity);
+  inline void setAttacker(types::entity entity);
+  inline void setEffectTarget(types::entity entity);
+  inline void setDefender(types::entity entity);
+  inline void setEffectMoves(const std::vector<dex::Move>& moves);
+  inline void setEffect(types::effectEnum effect);
+  inline void setBoostEffect(dex::Stat stat, types::boost boost);
+  inline void setBattle(types::entity entity);
 
   types::entity entity() { return handle.entity(); }
 };
@@ -12700,13 +18130,13 @@ struct Sides;
 struct MoveSlots;
 class Pokedex;
 
-types::entity slotToSideEntity(const Sides& sides, Slot targetSlot);
-types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot);
-types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
-types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
-types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move);
+inline types::entity slotToSideEntity(const Sides& sides, Slot targetSlot);
+inline types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot);
+inline types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
+inline types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
+inline types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move);
 
-types::entity createActionMoveForTarget(
+inline types::entity createActionMoveForTarget(
   types::handle targetHandle, types::entity battleEntity, types::entity sourceEntity, dex::Move move,
   const Pokedex& pokedex);
 }  // namespace pokesim
@@ -12745,24 +18175,6 @@ struct StateSetupBase {
 
 ////////////////// END OF src/Battle/Setup/StateSetupBase.hpp //////////////////
 
-///////////////////////// START OF src/Types/Stats.hpp /////////////////////////
-
-#include <cstdint>
-
-namespace pokesim::types {
-using level = std::uint8_t;
-
-using stat = std::uint16_t;
-using baseStat = std::uint8_t;
-
-using ev = std::uint8_t;
-using iv = std::uint8_t;
-
-using boost = std::int8_t;
-}  // namespace pokesim::types
-
-////////////////////////// END OF src/Types/Stats.hpp //////////////////////////
-
 ////////////////////// START OF src/Components/Boosts.hpp //////////////////////
 
 namespace pokesim {
@@ -12799,6 +18211,11 @@ struct Evs {
   types::ev spa = 0;
   types::ev spd = 0;
   types::ev spe = 0;
+
+  bool operator==(const Evs& other) const {
+    return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
+           spe == other.spe;
+  }
 };
 
 struct Ivs {
@@ -12808,6 +18225,11 @@ struct Ivs {
   types::iv spa = 0;
   types::iv spd = 0;
   types::iv spe = 0;
+
+  bool operator==(const Ivs& other) const {
+    return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
+           spe == other.spe;
+  }
 };
 }  // namespace pokesim
 
@@ -13443,7 +18865,7 @@ namespace pokesim {
 // Tool to set properties of a Pokemon's state to an entity.
 struct PokemonStateSetup : internal::StateSetupBase {
   PokemonStateSetup(types::registry& registry) : PokemonStateSetup(registry, registry.create()) {}
-  PokemonStateSetup(types::registry& registry, types::entity entity);
+  inline PokemonStateSetup(types::registry& registry, types::entity entity);
 
   operator types::entity() const { return entity(); }
 
@@ -13453,31 +18875,31 @@ struct PokemonStateSetup : internal::StateSetupBase {
    * Some of the required properties are a blank `SpeciesName`, `Side`, and `Battle` component along with an
    * automatically set Id.
    */
-  void initBlank();
+  inline void initBlank();
 
-  void setAutoID();
-  void setID(types::stateId id);
-  void setSpecies(dex::Species speciesName);
+  inline void setAutoID();
+  inline void setID(types::stateId id);
+  inline void setSpecies(dex::Species speciesName);
 
-  void setSide(types::entity entity);
-  void setBattle(types::entity entity);
+  inline void setSide(types::entity entity);
+  inline void setBattle(types::entity entity);
 
-  void setHp(types::stat hp);
-  void setTypes(SpeciesTypes types);
-  void setLevel(types::level level);
-  void setGender(dex::Gender gender);
-  void setAbility(dex::Ability ability);
-  void setItem(dex::Item item);
-  void setMoves(const std::vector<types::entity>& moveSlots);
+  inline void setHp(types::stat hp);
+  inline void setTypes(SpeciesTypes types);
+  inline void setLevel(types::level level);
+  inline void setGender(dex::Gender gender);
+  inline void setAbility(dex::Ability ability);
+  inline void setItem(dex::Item item);
+  inline void setMoves(const std::vector<types::entity>& moveSlots);
 
-  void setPostion(types::teamPositionIndex position);
-  void setStatus(dex::Status status);
+  inline void setPostion(types::teamPositionIndex position);
+  inline void setStatus(dex::Status status);
 
-  void setNature(dex::Nature nature);
-  void setEVs(types::ev hp, types::ev atk, types::ev def, types::ev spa, types::ev spd, types::ev spe);
-  void setEVs(const Evs& evs);
-  void setIVs(types::iv hp, types::iv atk, types::iv def, types::iv spa, types::iv spd, types::iv spe);
-  void setIVs(const Ivs& ivs);
+  inline void setNature(dex::Nature nature);
+  inline void setEVs(types::ev hp, types::ev atk, types::ev def, types::ev spa, types::ev spd, types::ev spe);
+  inline void setEVs(const Evs& evs);
+  inline void setIVs(types::iv hp, types::iv atk, types::iv def, types::iv spa, types::iv spd, types::iv spe);
+  inline void setIVs(const Ivs& ivs);
 
   template <typename BoostType>
   void setBoost(types::boost boost) {
@@ -13529,7 +18951,7 @@ struct AnalyzeEffectOptions;
 // Tool to set properties of a battle's state to an entity.
 struct BattleStateSetup : internal::StateSetupBase {
   BattleStateSetup(types::registry& registry) : BattleStateSetup(registry, registry.create()) {}
-  BattleStateSetup(types::registry& registry, types::entity entity);
+  inline BattleStateSetup(types::registry& registry, types::entity entity);
 
   /**
    * @brief Applies the defaults to the required properties for a battle state.
@@ -13541,22 +18963,22 @@ struct BattleStateSetup : internal::StateSetupBase {
    * - Sides: Unassigned entities for P1 and P2
    * - ActionQueue: An empty queue
    */
-  void initBlank();
+  inline void initBlank();
 
-  void setAutoID();
-  void setID(types::stateId id);
-  void setSide(PlayerSideId sideID, types::entity sideEntity);
+  inline void setAutoID();
+  inline void setID(types::stateId id);
+  inline void setSide(PlayerSideId sideID, types::entity sideEntity);
 
   // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
-  void setRNGSeed(std::optional<types::rngState> seed = std::nullopt);
-  void setActionQueue(const std::vector<types::entity>& queue);
-  void setTurn(types::battleTurn turn);
-  void setCurrentActionTarget(types::targets<types::entity> actionTargets);
-  void setCurrentActionSource(types::entity actionSource);
-  void setCurrentActionMove(types::entity actionMove);
-  void setProbability(types::probability probability);
+  inline void setRNGSeed(std::optional<types::rngState> seed = std::nullopt);
+  inline void setActionQueue(const std::vector<types::entity>& queue);
+  inline void setTurn(types::battleTurn turn);
+  inline void setCurrentActionTarget(types::targets<types::entity> actionTargets);
+  inline void setCurrentActionSource(types::entity actionSource);
+  inline void setCurrentActionMove(types::entity actionMove);
+  inline void setProbability(types::probability probability);
 
-  std::vector<BattleStateSetup> clone(std::optional<types::cloneIndex> cloneCount = std::nullopt);
+  inline std::vector<BattleStateSetup> clone(std::optional<types::cloneIndex> cloneCount = std::nullopt);
 };
 }  // namespace pokesim
 
@@ -13567,22 +18989,22 @@ struct BattleStateSetup : internal::StateSetupBase {
 namespace pokesim {
 namespace ability::tags {
 // Assigns an ability's tag to a handle
-void enumToTag(dex::Ability ability, types::handle handle);
+inline void enumToTag(dex::Ability ability, types::handle handle);
 }  // namespace ability::tags
 
 namespace item::tags {
 // Assigns an item's tag to a handle
-void enumToTag(dex::Item item, types::handle handle);
+inline void enumToTag(dex::Item item, types::handle handle);
 }  // namespace item::tags
 
 namespace nature::tags {
 // Assigns a nature's tag to a handle
-void enumToTag(dex::Nature nature, types::handle handle);
+inline void enumToTag(dex::Nature nature, types::handle handle);
 }  // namespace nature::tags
 
 namespace status::tags {
 // Assigns a status' tag to a handle
-void enumToTag(dex::Status status, types::handle& handle);
+inline void enumToTag(dex::Status status, types::handle& handle);
 }  // namespace status::tags
 }  // namespace pokesim
 
@@ -13618,11 +19040,11 @@ struct MoveStateSetup : internal::StateSetupBase {
    *
    * Some of the required properties are a blank `MoveName`, `Pp`, and `MaxPp` component.
    */
-  void initBlank();
+  inline void initBlank();
 
-  void setName(dex::Move moveName);
-  void setPP(types::pp pp);
-  void setMaxPP(types::pp maxPp);
+  inline void setName(dex::Move moveName);
+  inline void setPP(types::pp pp);
+  inline void setMaxPP(types::pp maxPp);
 };
 }  // namespace pokesim
 
@@ -13640,17 +19062,17 @@ struct PokemonStateSetup;
 struct SideStateSetup : internal::StateSetupBase {
   SideStateSetup(types::registry& registry, PlayerSideId playerSideId)
       : SideStateSetup(registry, registry.create(), playerSideId) {}
-  SideStateSetup(types::registry& registry, types::entity entity, PlayerSideId playerSideId);
+  inline SideStateSetup(types::registry& registry, types::entity entity, PlayerSideId playerSideId);
   /**
    * @brief Applies the defaults to the required properties for a player side's state.
    *
    * Some of the required properties are a blank `Battle`, `Side`, and `FoeSide` component.
    */
-  void initBlank();
+  inline void initBlank();
 
-  void setTeam(std::vector<PokemonStateSetup>& team);
-  void setOpponent(types::entity entity);
-  void setBattle(types::entity entity);
+  inline void setTeam(std::vector<PokemonStateSetup>& team);
+  inline void setOpponent(types::entity entity);
+  inline void setBattle(types::entity entity);
 };
 }  // namespace pokesim
 
@@ -13667,11 +19089,11 @@ struct InputSetup {
   types::handle handle;
 
  public:
-  InputSetup(
+  inline InputSetup(
     types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
     dex::Move move, const Pokedex& pokedex);
 
-  types::entity entity() const;
+  inline types::entity entity() const;
 };
 }  // namespace calc_damage
 }  // namespace pokesim
@@ -13693,6 +19115,12 @@ struct NextAction {
 
 struct CurrentActionTargets {
   types::targets<types::entity> val{};
+  const types::entity& only() const {
+    ENTT_ASSERT(
+      val.size() == 1,
+      "This method is supposed to get the first target when there's only one target stored.");
+    return val[0];
+  };
 };
 
 struct CurrentActionSource {
@@ -13730,7 +19158,7 @@ struct CurrentActionMoveSource {};
 namespace pokesim::calc_damage {
 using Attacker = CurrentActionSource;
 using Defenders = CurrentActionTargets;
-using UsedMove = CurrentActionMoves;
+using UsedMoves = CurrentActionMoves;
 
 namespace tags {
 using Attacker = pokesim::tags::CurrentActionMoveSource;
@@ -13784,17 +19212,6 @@ struct ActionQueue {
 }  // namespace pokesim
 
 ///////////// END OF src/Components/EntityHolders/ActionQueue.hpp //////////////
-
-/////////////// START OF src/Components/EntityHolders/Battle.hpp ///////////////
-
-namespace pokesim {
-// Contains the entity of a simulation's battle.
-struct Battle {
-  types::entity val{};
-};
-}  // namespace pokesim
-
-//////////////// END OF src/Components/EntityHolders/Battle.hpp ////////////////
 
 //////////////// START OF src/Components/EntityHolders/Side.hpp ////////////////
 
@@ -14020,12 +19437,12 @@ class Pokedex {
   entt::dense_map<dex::Ability, types::entity> abilitiesMap{};
 
   template <typename Build, typename T>
-  void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
+  inline void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
 
-  types::entity buildSpecies(dex::Species species, types::registry& registry, bool forActiveMove) const;
-  types::entity buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const;
-  types::entity buildItem(dex::Item item, types::registry& registry, bool forActiveMove) const;
-  types::entity buildAbility(dex::Ability ability, types::registry& registry, bool forActiveMove) const;
+  inline types::entity buildSpecies(dex::Species species, types::registry& registry, bool forActiveMove) const;
+  inline types::entity buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const;
+  inline types::entity buildItem(dex::Item item, types::registry& registry, bool forActiveMove) const;
+  inline types::entity buildAbility(dex::Ability ability, types::registry& registry, bool forActiveMove) const;
 
  public:
   /**
@@ -14046,7 +19463,7 @@ class Pokedex {
    *
    * @note Only call this once per species per Pokedex instance.
    */
-  void loadSpecies(const entt::dense_set<dex::Species>& speciesSet);
+  inline void loadSpecies(const entt::dense_set<dex::Species>& speciesSet);
 
   /**
    * @brief Calls the load functions for a set of items to add their data to a Pokedex's storage.
@@ -14057,7 +19474,7 @@ class Pokedex {
    *
    * @note Only call this once per item per Pokedex instance.
    */
-  void loadItems(const entt::dense_set<dex::Item>& itemSet);
+  inline void loadItems(const entt::dense_set<dex::Item>& itemSet);
 
   /**
    * @brief Calls the load functions for a set of moves to add their data to a Pokedex's storage.
@@ -14068,7 +19485,7 @@ class Pokedex {
    *
    * @note Only call this once per move per Pokedex instance.
    */
-  void loadMoves(const entt::dense_set<dex::Move>& moveSet);
+  inline void loadMoves(const entt::dense_set<dex::Move>& moveSet);
 
   /**
    * @brief Calls the load functions for a set of abilities to add their data to a Pokedex's storage.
@@ -14079,7 +19496,7 @@ class Pokedex {
    *
    * @note Only call this once per ability per Pokedex instance.
    */
-  void loadAbilities(const entt::dense_set<dex::Ability>& abilitySet);
+  inline void loadAbilities(const entt::dense_set<dex::Ability>& abilitySet);
 
   /**
    * @brief Returns references to the given dex data components for a species
@@ -14093,7 +19510,7 @@ class Pokedex {
   template <typename... T>
   auto getSpeciesData(dex::Species species) const {
     // ENTT_ASSERT(registry.all_of<T...>(speciesMap.at(species)), "Species does not contain at least one of the
-    // component types");
+    // component types.");
     return dexRegistry.get<T...>(speciesMap.at(species));
   }
 
@@ -14148,7 +19565,7 @@ class Pokedex {
     return dexRegistry.all_of<T...>(effect.val);
   }
 
-  types::entity buildActionMove(dex::Move move, types::registry& registry) const;
+  inline types::entity buildActionMove(dex::Move move, types::registry& registry) const;
 };
 }  // namespace pokesim
 
@@ -14404,6 +19821,22 @@ class RegistryContainer {
     }
   }
 
+  template <typename Selection>
+  const SelectionFunctionList& selectedFunctions() const {
+    if constexpr (std::is_same_v<tags::SelectedForViewBattle, Selection>) {
+      return battleSelection;
+    }
+    else if constexpr (std::is_same_v<tags::SelectedForViewSide, Selection>) {
+      return sideSelection;
+    }
+    else if constexpr (std::is_same_v<tags::SelectedForViewPokemon, Selection>) {
+      return pokemonSelection;
+    }
+    else {
+      return moveSelection;
+    }
+  }
+
   template <typename Selection, typename GetNewSelection, typename GetUnmatchedSelection>
   std::size_t select(
     GetNewSelection getNewSelection, GetUnmatchedSelection getUnmatchedSelection, SelectionFunction selectionFunction,
@@ -14432,7 +19865,7 @@ class RegistryContainer {
 
       ENTT_ASSERT(
         unmatchedSelectionSize < totalSelected,
-        "The number of elements removed from the active selection must be less than the number of elements selected");
+        "The number of elements removed from the active selection must be less than the number of elements selected.");
       finalSelectionSize = totalSelected - unmatchedSelectionSize;
     }
     else {
@@ -14446,14 +19879,16 @@ class RegistryContainer {
     return finalSelectionSize;
   }
 
-  template <typename Selection, typename Required, typename... ComponentsToSelect>
-  std::size_t select() {
-    auto getNewSelection = [](types::registry& reg) { return reg.group<>(entt::get<Required, ComponentsToSelect...>); };
+  template <typename Selection, typename Required, typename... ComponentsToSelect, typename... ComponentsToExclude>
+  std::size_t select(entt::exclude_t<ComponentsToExclude...> exclude) {
+    auto getNewSelection = [&exclude](types::registry& reg) {
+      return reg.group<>(entt::get<Required, ComponentsToSelect...>, exclude);
+    };
     auto getUnmatchedSelection = [](types::registry& reg) {
-      return reg.group<>(entt::get<Selection>, entt::exclude<ComponentsToSelect...>);
+      return reg.group<>(entt::get<Selection, ComponentsToExclude...>, entt::exclude<ComponentsToSelect...>);
     };
     SelectionFunction selectionFunction{[](const void*, const types::registry& reg) {
-      auto view = reg.view<Required, ComponentsToSelect...>();
+      auto view = reg.view<Required, ComponentsToSelect...>(entt::exclude<ComponentsToExclude...>);
       return std::vector<types::entity>{view.begin(), view.end()};
     }};
 
@@ -14505,7 +19940,7 @@ class RegistryContainer {
 
  protected:
   template <typename Selection>
-  bool hasActiveSelection() {
+  bool hasActiveSelection() const {
     return !selectedFunctions<Selection>().empty();
   }
 
@@ -14856,17 +20291,17 @@ class Simulation : public internal::RegistryContainer {
   };
 
  private:
-  std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
-  PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
-  void createInitialSide(
+  inline std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
+  inline PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
+  inline void createInitialSide(
     SideStateSetup sideSetup, const SideCreationInfo& sideData, const BattleCreationInfo& battleData);
 
-  void createInitialTurnDecision(BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData);
-  void createCalcDamageInput(BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData);
-  void createAnalyzeEffectInput(
+  inline void createInitialTurnDecision(BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData);
+  inline void createCalcDamageInput(BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData);
+  inline void createAnalyzeEffectInput(
     BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& analyzeEffectInputData);
 
-  std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
+  inline std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleData);
 
  public:
@@ -14877,35 +20312,37 @@ class Simulation : public internal::RegistryContainer {
   calc_damage::Options calculateDamageOptions;
   analyze_effect::Options analyzeEffectOptions;
 
-  Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
+  inline Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
 
   // Load information about any number of battle states into the simulation's registry.
-  void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
+  inline void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
 
-  void run();
+  inline void run();
 
-  simulate_turn::Results simulateTurn(std::optional<simulate_turn::Options> options = std::nullopt);
-  calc_damage::Results calculateDamage(std::optional<calc_damage::Options> options = std::nullopt);
-  analyze_effect::Results analyzeEffect(std::optional<analyze_effect::Options> options = std::nullopt);
+  inline simulate_turn::Results simulateTurn(std::optional<simulate_turn::Options> options = std::nullopt);
+  inline calc_damage::Results calculateDamage(std::optional<calc_damage::Options> options = std::nullopt);
+  inline analyze_effect::Results analyzeEffect(std::optional<analyze_effect::Options> options = std::nullopt);
 
-  simulate_turn::Results simulateTurn(
+  inline simulate_turn::Results simulateTurn(
     std::initializer_list<BattleCreationInfo> battleDataList,
     std::optional<simulate_turn::Options> options = std::nullopt);
 
-  calc_damage::Results calculateDamage(
+  inline calc_damage::Results calculateDamage(
     std::initializer_list<BattleCreationInfo> battleDataList,
     std::optional<calc_damage::Options> options = std::nullopt);
 
-  analyze_effect::Results analyzeEffect(
+  inline analyze_effect::Results analyzeEffect(
     std::initializer_list<BattleCreationInfo> battleDataList,
     std::optional<analyze_effect::Options> options = std::nullopt);
 
-  void clearAllResults();
-  void clearSimulateTurnResults();
-  void clearCalculateDamageResults();
-  void clearAnalyzeEffectResults();
+  inline void clearAllResults();
+  inline void clearSimulateTurnResults();
+  inline void clearCalculateDamageResults();
+  inline void clearAnalyzeEffectResults();
 
-  std::vector<types::entity> selectedBattleEntities();
+  inline std::vector<types::entity> selectedBattleEntities() const;
+  inline std::vector<types::entity> selectedMoveEntities() const;
+  inline std::vector<types::entity> selectedPokemonEntities() const;
 };
 }  // namespace pokesim
 
@@ -14923,7 +20360,7 @@ namespace pokesim {
 Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
     : battleFormat(battleFormat_), pokedex(pokedex_) {}
 
-std::vector<types::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList) {
+inline std::vector<types::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList) {
   std::vector<types::entity> moveEntities{};
   moveEntities.reserve(moveDataList.size());
 
@@ -14938,7 +20375,7 @@ std::vector<types::entity> Simulation::createInitialMoves(const std::vector<Move
   return moveEntities;
 }
 
-PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& pokemonData) {
+inline PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& pokemonData) {
   PokemonStateSetup pokemonSetup(registry);
   if (pokemonData.id.has_value()) {
     pokemonSetup.setID(pokemonData.id.value());
@@ -14979,7 +20416,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
   return pokemonSetup;
 }
 
-void Simulation::createInitialSide(
+inline void Simulation::createInitialSide(
   SideStateSetup sideSetup, const SideCreationInfo& sideData, const BattleCreationInfo& battleData) {
   std::vector<PokemonStateSetup> pokemonSetupList;
   pokemonSetupList.reserve(sideData.team.size());
@@ -15025,7 +20462,7 @@ void Simulation::createInitialSide(
   sideSetup.setTeam(pokemonSetupList);
 }
 
-std::tuple<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(
+inline std::tuple<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(
   BattleStateSetup battleStateSetup, const BattleCreationInfo& battleData) {
   battleStateSetup.setAutoID();
   battleStateSetup.setTurn(battleData.turn);
@@ -15061,7 +20498,7 @@ std::tuple<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(
   return {p1SideSetup, p2SideSetup};
 }
 
-void Simulation::createInitialTurnDecision(
+inline void Simulation::createInitialTurnDecision(
   BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData) {
   types::handle battleHandle{registry, battleStateSetup.entity()};
   const Sides& sides = battleHandle.get<Sides>();
@@ -15070,11 +20507,11 @@ void Simulation::createInitialTurnDecision(
   registry.emplace<SideDecision>(sides.p2(), turnDecisionData.p2);
 }
 
-void Simulation::createCalcDamageInput(
+inline void Simulation::createCalcDamageInput(
   BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData) {
-  ENTT_ASSERT(damageCalcInputData.attackerSlot != Slot::NONE, "A damage calculation must have a attacker");
-  ENTT_ASSERT(damageCalcInputData.defenderSlot != Slot::NONE, "A damage calculation must have a defender");
-  ENTT_ASSERT(damageCalcInputData.move != dex::Move::NO_MOVE, "A damage calculation must have a move");
+  ENTT_ASSERT(damageCalcInputData.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
+  ENTT_ASSERT(damageCalcInputData.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
+  ENTT_ASSERT(damageCalcInputData.move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
   types::entity attackerEntity = slotToPokemonEntity(registry, sides, damageCalcInputData.attackerSlot);
@@ -15084,17 +20521,17 @@ void Simulation::createCalcDamageInput(
     inputSetup(registry, battleStateSetup.entity(), attackerEntity, defenderEntity, damageCalcInputData.move, pokedex);
 }
 
-void Simulation::createAnalyzeEffectInput(
+inline void Simulation::createAnalyzeEffectInput(
   BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& analyzeEffectInputData) {
-  ENTT_ASSERT(analyzeEffectInputData.attackerSlot != Slot::NONE, "An effect analysis must have a attacker");
-  ENTT_ASSERT(analyzeEffectInputData.defenderSlot != Slot::NONE, "An effect analysis must have a defender");
-  ENTT_ASSERT(analyzeEffectInputData.effectTarget != Slot::NONE, "An effect analysis must have a effect target");
-  ENTT_ASSERT(!analyzeEffectInputData.moves.empty(), "An effect analysis must include a move");
+  ENTT_ASSERT(analyzeEffectInputData.attackerSlot != Slot::NONE, "An effect analysis must have a attacker.");
+  ENTT_ASSERT(analyzeEffectInputData.defenderSlot != Slot::NONE, "An effect analysis must have a defender.");
+  ENTT_ASSERT(analyzeEffectInputData.effectTarget != Slot::NONE, "An effect analysis must have a effect target.");
+  ENTT_ASSERT(!analyzeEffectInputData.moves.empty(), "An effect analysis must include a move.");
   const auto& effect = analyzeEffectInputData.effect;
   const auto& boostEffect = analyzeEffectInputData.boostEffect;
   ENTT_ASSERT(
     boostEffect.has_value() || (effect.has_value() && !effect.value().empty()),
-    "An effect analysis must have an effect");
+    "An effect analysis must have an effect.");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
   types::entity attackerEntity = slotToPokemonEntity(registry, sides, analyzeEffectInputData.attackerSlot);
@@ -15116,7 +20553,7 @@ void Simulation::createAnalyzeEffectInput(
   }
 }
 
-void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList) {
+inline void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList) {
   for (const BattleCreationInfo& battleData : battleDataList) {
     BattleStateSetup battleStateSetup(registry);
     auto [p1SideSetup, p2SideSetup] = createInitialBattle(battleStateSetup, battleData);
@@ -15127,7 +20564,7 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
     if (!battleData.decisionsToSimulate.empty()) {
       ENTT_ASSERT(
         battleData.decisionsToSimulate.size() < std::numeric_limits<types::cloneIndex>::max(),
-        "Cannot make more clones than their are entities");
+        "Cannot make more clones than their are entities.");
 
       types::cloneIndex cloneCount = (types::cloneIndex)(battleData.decisionsToSimulate.size() - 1);
       if (cloneCount) {
@@ -15249,9 +20686,9 @@ struct DamageRolls;
 namespace simulate_turn {
 struct TurnOutcomeBattles;
 struct Results {
-  types::view<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
+  inline types::view<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
 
-  Results(const Simulation& simulation_);
+  inline Results(const Simulation& simulation_);
 
  private:
   const Simulation& simulation;
@@ -15265,13 +20702,13 @@ struct AttackerHpRecovered;
 struct AttackerHpLost;
 
 struct Results {
-  types::view<MaxDamage> maxDamageResults() const;
-  types::view<MinUsesUntilKo> minUsesUntilKoResults() const;
-  types::view<AttackerHpRecovered> hpRecoveredResults() const;
-  types::view<AttackerHpLost> hpLostResults() const;
-  types::view<HitCount> hitCountResults() const;
+  inline types::view<MaxDamage> maxDamageResults() const;
+  inline types::view<MinUsesUntilKo> minUsesUntilKoResults() const;
+  inline types::view<AttackerHpRecovered> hpRecoveredResults() const;
+  inline types::view<AttackerHpLost> hpLostResults() const;
+  inline types::view<HitCount> hitCountResults() const;
 
-  Results(const Simulation& simulation_);
+  inline Results(const Simulation& simulation_);
 
  private:
   const Simulation& simulation;
@@ -15285,12 +20722,12 @@ using MultipliedDamageRolls = DamageRolls;
 struct MultipliedKoChance;
 
 struct Results {
-  types::view<EffectMultiplier> effectMultiplierResults() const;
-  types::view<MultipliedDamage> multipliedMaxDamageResults() const;
-  types::view<MultipliedDamageRolls> multipliedDamageRollsResults() const;
-  types::view<MultipliedKoChance> multipliedKoChanceResults() const;
+  inline types::view<EffectMultiplier> effectMultiplierResults() const;
+  inline types::view<MultipliedDamage> multipliedMaxDamageResults() const;
+  inline types::view<MultipliedDamageRolls> multipliedDamageRollsResults() const;
+  inline types::view<MultipliedKoChance> multipliedKoChanceResults() const;
 
-  Results(const Simulation& simulation_);
+  inline Results(const Simulation& simulation_);
 
  private:
   const Simulation& simulation;
@@ -15306,7 +20743,7 @@ namespace pokesim {
 namespace simulate_turn {
 Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
 
-types::view<TurnOutcomeBattles> Results::turnOutcomeBattlesResults() const {
+inline types::view<TurnOutcomeBattles> Results::turnOutcomeBattlesResults() const {
   return simulation.registry.view<TurnOutcomeBattles>();
 }
 }  // namespace simulate_turn
@@ -15314,23 +20751,23 @@ types::view<TurnOutcomeBattles> Results::turnOutcomeBattlesResults() const {
 namespace calc_damage {
 Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
 
-types::view<MaxDamage> Results::maxDamageResults() const {
+inline types::view<MaxDamage> Results::maxDamageResults() const {
   return simulation.registry.view<MaxDamage>();
 }
 
-types::view<MinUsesUntilKo> Results::minUsesUntilKoResults() const {
+inline types::view<MinUsesUntilKo> Results::minUsesUntilKoResults() const {
   return simulation.registry.view<MinUsesUntilKo>();
 }
 
-types::view<AttackerHpRecovered> Results::hpRecoveredResults() const {
+inline types::view<AttackerHpRecovered> Results::hpRecoveredResults() const {
   return simulation.registry.view<AttackerHpRecovered>();
 }
 
-types::view<AttackerHpLost> Results::hpLostResults() const {
+inline types::view<AttackerHpLost> Results::hpLostResults() const {
   return simulation.registry.view<AttackerHpLost>();
 }
 
-types::view<HitCount> Results::hitCountResults() const {
+inline types::view<HitCount> Results::hitCountResults() const {
   return simulation.registry.view<HitCount>();
 }
 }  // namespace calc_damage
@@ -15338,19 +20775,19 @@ types::view<HitCount> Results::hitCountResults() const {
 namespace analyze_effect {
 Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
 
-types::view<EffectMultiplier> Results::effectMultiplierResults() const {
+inline types::view<EffectMultiplier> Results::effectMultiplierResults() const {
   return simulation.registry.view<EffectMultiplier>();
 }
 
-types::view<MultipliedDamage> Results::multipliedMaxDamageResults() const {
+inline types::view<MultipliedDamage> Results::multipliedMaxDamageResults() const {
   return simulation.registry.view<MultipliedDamage>();
 }
 
-types::view<MultipliedDamageRolls> Results::multipliedDamageRollsResults() const {
+inline types::view<MultipliedDamageRolls> Results::multipliedDamageRollsResults() const {
   return simulation.registry.view<MultipliedDamageRolls>();
 }
 
-types::view<MultipliedKoChance> Results::multipliedKoChanceResults() const {
+inline types::view<MultipliedKoChance> Results::multipliedKoChanceResults() const {
   return simulation.registry.view<MultipliedKoChance>();
 }
 }  // namespace analyze_effect
@@ -15364,7 +20801,7 @@ namespace pokesim {
 class Simulation;
 
 namespace analyze_effect {
-void run(Simulation& simulation);
+inline void run(Simulation& simulation);
 }  // namespace analyze_effect
 }  // namespace pokesim
 
@@ -15389,25 +20826,25 @@ struct Spe;
 struct CurrentHp;
 }  // namespace stat
 
-void setStatus(types::handle pokemonHandle, dex::Status status);
-void clearStatus(types::handle pokemonHandle);
+inline void setStatus(types::handle pokemonHandle, dex::Status status);
+inline void clearStatus(types::handle pokemonHandle);
 
-void deductPp(Pp& pp);
-void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMoveSlot& move);
-void resetEffectiveAtk(types::handle handle, stat::Atk atk);
-void resetEffectiveDef(types::handle handle, stat::Def def);
-void resetEffectiveSpa(types::handle handle, stat::Spa spa);
-void resetEffectiveSpd(types::handle handle, stat::Spd spd);
-void resetEffectiveSpe(types::handle handle, stat::Spe spe);
+inline void deductPp(Pp& pp);
+inline void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMoveSlot& move);
+inline void resetEffectiveAtk(types::handle handle, stat::Atk atk);
+inline void resetEffectiveDef(types::handle handle, stat::Def def);
+inline void resetEffectiveSpa(types::handle handle, stat::Spa spa);
+inline void resetEffectiveSpd(types::handle handle, stat::Spd spd);
+inline void resetEffectiveSpe(types::handle handle, stat::Spe spe);
 
-void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets);
+inline void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets);
 
-void updateAllStats(Simulation& simulation);
-void updateAtk(Simulation& simulation);
-void updateDef(Simulation& simulation);
-void updateSpa(Simulation& simulation);
-void updateSpd(Simulation& simulation);
-void updateSpe(Simulation& simulation);
+inline void updateAllStats(Simulation& simulation);
+inline void updateAtk(Simulation& simulation);
+inline void updateDef(Simulation& simulation);
+inline void updateSpa(Simulation& simulation);
+inline void updateSpd(Simulation& simulation);
+inline void updateSpe(Simulation& simulation);
 }  // namespace pokesim
 
 /////////////// END OF src/Battle/Pokemon/ManagePokemonState.hpp ///////////////
@@ -15416,67 +20853,21 @@ void updateSpe(Simulation& simulation);
 
 namespace pokesim {
 class Simulation;
-struct BasePower;
-struct CurrentActionMoves;
 struct Damage;
-struct DamageRolls;
-struct DamageRollModifier;
-struct RandomEventIndex;
-struct TypeName;
 
 namespace calc_damage {
-struct CritBoost;
-struct AttackingLevel;
-struct AttackingStat;
-struct DefendingStat;
+inline void run(Simulation& simulation);
 
-namespace internal {
-void assignCritChanceDivisor(types::handle moveHandle, const CritBoost& critBoost);
-void setSourceLevel(types::handle moveHandle, const Attacker& attacker);
-template <typename Category>
-void setUsedAttackStat(types::handle moveHandle, const Attacker& attacker);
-template <typename Category>
-void setUsedDefenseStat(types::handle moveHandle, const Defenders& defenders);
+inline void applyDamageRoll(Damage& damage, types::damageRoll damageRoll);
+inline void applyAverageDamageRoll(Damage& damage);
+inline void applyMinDamageRoll(Damage& damage);
 
-void calculateBaseDamage(
-  types::handle moveHandle, const BasePower& basePower, const AttackingLevel& level, const AttackingStat& attack,
-  const DefendingStat& defense);
-void applyCritDamageIncrease(Damage& damage);
-void setDefendingSide(types::handle moveHandle, const Defenders& defenders);
-
-void checkForAndApplyStab(
-  types::handle moveHandle, const Attacker& attacker, const TypeName& type, DamageRollModifier& modifier);
-void checkForAndApplyTypeEffectiveness(
-  types::handle moveHandle, const Attacker& attacker, const Defenders& defenders, const TypeName& type,
-  DamageRollModifier& modifier);
-void applyDamageRollsAndModifiers(Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp);
-void applyBurnModifier(types::registry& registry, const CurrentActionMoves& moves);
-void setDamageToFirstRoll(const DamageRolls& damageRolls, Damage& damage);
-
-void calculateAllDamageRolls(DamageRolls& damageRolls, const Damage& damage, const DamageRollModifier& modifier);
-
-void applyAverageDamageRollAndModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier);
-void applyMinDamageRollAndModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier);
-void applyDamageModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier);
-
-void reduceDamageRollsToFoeHp(
-  types::handle moveHandle, DamageRolls& damageRolls, const DamageRollModifier& modifier, const Defenders& defenders);
-void setDamageToAtLeastOne(Damage& damage);
-}  // namespace internal
-
-void run(Simulation& simulation);
-void clearRunVariables(Simulation& simulation);
-
-void applyDamageRoll(Damage& damage, types::damageRoll damageRoll);
-void applyAverageDamageRoll(Damage& damage);
-void applyMinDamageRoll(Damage& damage);
-
-void setDamageRollModifiers(Simulation& simulation);
+inline void setDamageRollModifiers(Simulation& simulation);
 template <typename SimulationTag>
-void applyDamageRollsAndModifiers(Simulation& simulation);
+inline void applyDamageRollsAndModifiers(Simulation& simulation);
 
-void setIfMoveCrits(Simulation& simulation);
-void getDamage(Simulation& simulation);
+inline void setIfMoveCrits(Simulation& simulation);
+inline void getDamage(Simulation& simulation);
 }  // namespace calc_damage
 }  // namespace pokesim
 
@@ -15492,22 +20883,22 @@ struct CurrentActionTargets;
 struct CurrentActionSource;
 
 namespace simulate_turn {
-void run(Simulation& simulation);
-void runCurrentAction(Simulation& simulation);
-void nextTurn(Simulation& simulation);
+inline void run(Simulation& simulation);
+inline void runCurrentAction(Simulation& simulation);
+inline void nextTurn(Simulation& simulation);
 
-void runBeforeTurnAction(Simulation& simulation);
-void runMoveAction(Simulation& simulation);
-void runResidualAction(Simulation& simulation);
+inline void runBeforeTurnAction(Simulation& simulation);
+inline void runMoveAction(Simulation& simulation);
+inline void runResidualAction(Simulation& simulation);
 
-void addTargetAllyToTargets(types::registry& registry, const Battle& battle);
-void addUserAllyToTargets(types::registry& registry, const Battle& battle);
-void resolveMoveTargets(CurrentActionTargets&);
-void createActionMoveForTargets(
+inline void addTargetAllyToTargets(types::registry& registry, const Battle& battle);
+inline void addUserAllyToTargets(types::registry& registry, const Battle& battle);
+inline void resolveMoveTargets(CurrentActionTargets&);
+inline void createActionMoveForTargets(
   types::handle targetHandle, const Battle& battle, const CurrentActionSource& source, const Pokedex& pokedex);
-void getMoveTargets(Simulation& simulation);
+inline void getMoveTargets(Simulation& simulation);
 
-void useMove(Simulation& simulation);
+inline void useMove(Simulation& simulation);
 }  // namespace simulate_turn
 }  // namespace pokesim
 
@@ -15516,17 +20907,17 @@ void useMove(Simulation& simulation);
 //////////////////// START OF src/Simulation/Simulation.cpp ////////////////////
 
 namespace pokesim {
-void Simulation::clearAllResults() {
+inline void Simulation::clearAllResults() {
   clearSimulateTurnResults();
   clearCalculateDamageResults();
   clearAnalyzeEffectResults();
 }
 
-void Simulation::clearSimulateTurnResults() {
+inline void Simulation::clearSimulateTurnResults() {
   registry.clear<simulate_turn::TurnOutcomeBattles>();
 }
 
-void Simulation::clearCalculateDamageResults() {
+inline void Simulation::clearCalculateDamageResults() {
   registry.clear<calc_damage::MaxDamage>();
   registry.clear<calc_damage::MaxDamage>();
   registry.clear<calc_damage::MinUsesUntilKo>();
@@ -15535,14 +20926,14 @@ void Simulation::clearCalculateDamageResults() {
   registry.clear<HitCount>();
 }
 
-void Simulation::clearAnalyzeEffectResults() {
+inline void Simulation::clearAnalyzeEffectResults() {
   registry.clear<analyze_effect::EffectMultiplier>();
   registry.clear<analyze_effect::MultipliedDamage>();
   registry.clear<analyze_effect::MultipliedDamageRolls>();
   registry.clear<analyze_effect::MultipliedKoChance>();
 }
 
-simulate_turn::Results Simulation::simulateTurn(std::optional<simulate_turn::Options> options) {
+inline simulate_turn::Results Simulation::simulateTurn(std::optional<simulate_turn::Options> options) {
   if (options.has_value()) {
     simulateTurnOptions = options.value();
   }
@@ -15552,7 +20943,7 @@ simulate_turn::Results Simulation::simulateTurn(std::optional<simulate_turn::Opt
   return {*this};
 }
 
-calc_damage::Results Simulation::calculateDamage(std::optional<calc_damage::Options> options) {
+inline calc_damage::Results Simulation::calculateDamage(std::optional<calc_damage::Options> options) {
   if (options.has_value()) {
     calculateDamageOptions = options.value();
   }
@@ -15563,7 +20954,7 @@ calc_damage::Results Simulation::calculateDamage(std::optional<calc_damage::Opti
   return {*this};
 }
 
-analyze_effect::Results Simulation::analyzeEffect(std::optional<analyze_effect::Options> options) {
+inline analyze_effect::Results Simulation::analyzeEffect(std::optional<analyze_effect::Options> options) {
   if (options.has_value()) {
     analyzeEffectOptions = options.value();
   }
@@ -15574,932 +20965,53 @@ analyze_effect::Results Simulation::analyzeEffect(std::optional<analyze_effect::
   return {*this};
 }
 
-simulate_turn::Results Simulation::simulateTurn(
+inline simulate_turn::Results Simulation::simulateTurn(
   std::initializer_list<BattleCreationInfo> battleDataList, std::optional<simulate_turn::Options> options) {
   createInitialStates(battleDataList);
   return simulateTurn(options);
 }
 
-calc_damage::Results Simulation::calculateDamage(
+inline calc_damage::Results Simulation::calculateDamage(
   std::initializer_list<BattleCreationInfo> battleDataList, std::optional<calc_damage::Options> options) {
   createInitialStates(battleDataList);
   return calculateDamage(options);
 }
 
-analyze_effect::Results Simulation::analyzeEffect(
+inline analyze_effect::Results Simulation::analyzeEffect(
   std::initializer_list<BattleCreationInfo> battleDataList, std::optional<analyze_effect::Options> options) {
   createInitialStates(battleDataList);
   return analyzeEffect(options);
 }
 
-void Simulation::run() {
+inline void Simulation::run() {
   clearAllResults();
   simulateTurn();
   calculateDamage();
   analyzeEffect();
 }
 
-std::vector<types::entity> Simulation::selectedBattleEntities() {
+inline std::vector<types::entity> Simulation::selectedBattleEntities() const {
   if (hasActiveSelection<tags::SelectedForViewBattle>()) {
-    auto view = registry.view<tags::SelectedForViewBattle, Sides>();
+    auto view = registry.view<tags::SelectedForViewBattle, tags::Battle>();
     return {view.begin(), view.end()};
   }
 
-  auto view = registry.view<Sides>();
+  auto view = registry.view<tags::Battle>();
+  return {view.begin(), view.end()};
+}
+
+inline std::vector<types::entity> Simulation::selectedMoveEntities() const {
+  if (hasActiveSelection<tags::SelectedForViewMove>()) {
+    auto view = registry.view<tags::SelectedForViewMove, tags::CurrentActionMove>();
+    return {view.begin(), view.end()};
+  }
+
+  auto view = registry.view<tags::CurrentActionMove>();
   return {view.begin(), view.end()};
 }
 }  // namespace pokesim
 
 ///////////////////// END OF src/Simulation/Simulation.cpp /////////////////////
-
-//////////////// START OF external/entt/container/dense_set.hpp ////////////////
-
-#ifndef ENTT_CONTAINER_DENSE_SET_HPP
-#define ENTT_CONTAINER_DENSE_SET_HPP
-
-#include <cmath>
-#include <cstddef>
-#include <functional>
-#include <iterator>
-#include <limits>
-#include <memory>
-#include <tuple>
-#include <type_traits>
-#include <utility>
-#include <vector>
-
-namespace entt {
-
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
-namespace internal {
-
-template<typename It>
-class dense_set_iterator final {
-    template<typename>
-    friend class dense_set_iterator;
-
-public:
-    using value_type = typename It::value_type::second_type;
-    using pointer = const value_type *;
-    using reference = const value_type &;
-    using difference_type = std::ptrdiff_t;
-    using iterator_category = std::random_access_iterator_tag;
-
-    constexpr dense_set_iterator() noexcept
-        : it{} {}
-
-    constexpr dense_set_iterator(const It iter) noexcept
-        : it{iter} {}
-
-    template<typename Other, typename = std::enable_if_t<!std::is_same_v<It, Other> && std::is_constructible_v<It, Other>>>
-    constexpr dense_set_iterator(const dense_set_iterator<Other> &other) noexcept
-        : it{other.it} {}
-
-    constexpr dense_set_iterator &operator++() noexcept {
-        return ++it, *this;
-    }
-
-    constexpr dense_set_iterator operator++(int) noexcept {
-        dense_set_iterator orig = *this;
-        return ++(*this), orig;
-    }
-
-    constexpr dense_set_iterator &operator--() noexcept {
-        return --it, *this;
-    }
-
-    constexpr dense_set_iterator operator--(int) noexcept {
-        dense_set_iterator orig = *this;
-        return operator--(), orig;
-    }
-
-    constexpr dense_set_iterator &operator+=(const difference_type value) noexcept {
-        it += value;
-        return *this;
-    }
-
-    constexpr dense_set_iterator operator+(const difference_type value) const noexcept {
-        dense_set_iterator copy = *this;
-        return (copy += value);
-    }
-
-    constexpr dense_set_iterator &operator-=(const difference_type value) noexcept {
-        return (*this += -value);
-    }
-
-    constexpr dense_set_iterator operator-(const difference_type value) const noexcept {
-        return (*this + -value);
-    }
-
-    [[nodiscard]] constexpr reference operator[](const difference_type value) const noexcept {
-        return it[value].second;
-    }
-
-    [[nodiscard]] constexpr pointer operator->() const noexcept {
-        return std::addressof(it->second);
-    }
-
-    [[nodiscard]] constexpr reference operator*() const noexcept {
-        return *operator->();
-    }
-
-    template<typename Lhs, typename Rhs>
-    friend constexpr std::ptrdiff_t operator-(const dense_set_iterator<Lhs> &, const dense_set_iterator<Rhs> &) noexcept;
-
-    template<typename Lhs, typename Rhs>
-    friend constexpr bool operator==(const dense_set_iterator<Lhs> &, const dense_set_iterator<Rhs> &) noexcept;
-
-    template<typename Lhs, typename Rhs>
-    friend constexpr bool operator<(const dense_set_iterator<Lhs> &, const dense_set_iterator<Rhs> &) noexcept;
-
-private:
-    It it;
-};
-
-template<typename Lhs, typename Rhs>
-[[nodiscard]] constexpr std::ptrdiff_t operator-(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
-    return lhs.it - rhs.it;
-}
-
-template<typename Lhs, typename Rhs>
-[[nodiscard]] constexpr bool operator==(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
-    return lhs.it == rhs.it;
-}
-
-template<typename Lhs, typename Rhs>
-[[nodiscard]] constexpr bool operator!=(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
-    return !(lhs == rhs);
-}
-
-template<typename Lhs, typename Rhs>
-[[nodiscard]] constexpr bool operator<(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
-    return lhs.it < rhs.it;
-}
-
-template<typename Lhs, typename Rhs>
-[[nodiscard]] constexpr bool operator>(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
-    return rhs < lhs;
-}
-
-template<typename Lhs, typename Rhs>
-[[nodiscard]] constexpr bool operator<=(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
-    return !(lhs > rhs);
-}
-
-template<typename Lhs, typename Rhs>
-[[nodiscard]] constexpr bool operator>=(const dense_set_iterator<Lhs> &lhs, const dense_set_iterator<Rhs> &rhs) noexcept {
-    return !(lhs < rhs);
-}
-
-template<typename It>
-class dense_set_local_iterator final {
-    template<typename>
-    friend class dense_set_local_iterator;
-
-public:
-    using value_type = typename It::value_type::second_type;
-    using pointer = const value_type *;
-    using reference = const value_type &;
-    using difference_type = std::ptrdiff_t;
-    using iterator_category = std::forward_iterator_tag;
-
-    constexpr dense_set_local_iterator() noexcept
-        : it{},
-          offset{} {}
-
-    constexpr dense_set_local_iterator(It iter, const std::size_t pos) noexcept
-        : it{iter},
-          offset{pos} {}
-
-    template<typename Other, typename = std::enable_if_t<!std::is_same_v<It, Other> && std::is_constructible_v<It, Other>>>
-    constexpr dense_set_local_iterator(const dense_set_local_iterator<Other> &other) noexcept
-        : it{other.it},
-          offset{other.offset} {}
-
-    constexpr dense_set_local_iterator &operator++() noexcept {
-        return offset = it[offset].first, *this;
-    }
-
-    constexpr dense_set_local_iterator operator++(int) noexcept {
-        dense_set_local_iterator orig = *this;
-        return ++(*this), orig;
-    }
-
-    [[nodiscard]] constexpr pointer operator->() const noexcept {
-        return std::addressof(it[offset].second);
-    }
-
-    [[nodiscard]] constexpr reference operator*() const noexcept {
-        return *operator->();
-    }
-
-    [[nodiscard]] constexpr std::size_t index() const noexcept {
-        return offset;
-    }
-
-private:
-    It it;
-    std::size_t offset;
-};
-
-template<typename Lhs, typename Rhs>
-[[nodiscard]] constexpr bool operator==(const dense_set_local_iterator<Lhs> &lhs, const dense_set_local_iterator<Rhs> &rhs) noexcept {
-    return lhs.index() == rhs.index();
-}
-
-template<typename Lhs, typename Rhs>
-[[nodiscard]] constexpr bool operator!=(const dense_set_local_iterator<Lhs> &lhs, const dense_set_local_iterator<Rhs> &rhs) noexcept {
-    return !(lhs == rhs);
-}
-
-} // namespace internal
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
-
-/**
- * @brief Associative container for unique objects of a given type.
- *
- * Internally, elements are organized into buckets. Which bucket an element is
- * placed into depends entirely on its hash. Elements with the same hash code
- * appear in the same bucket.
- *
- * @tparam Type Value type of the associative container.
- * @tparam Hash Type of function to use to hash the values.
- * @tparam KeyEqual Type of function to use to compare the values for equality.
- * @tparam Allocator Type of allocator used to manage memory and elements.
- */
-template<typename Type, typename Hash, typename KeyEqual, typename Allocator>
-class dense_set {
-    static constexpr float default_threshold = 0.875f;
-    static constexpr std::size_t minimum_capacity = 8u;
-
-    using node_type = std::pair<std::size_t, Type>;
-    using alloc_traits = std::allocator_traits<Allocator>;
-    static_assert(std::is_same_v<typename alloc_traits::value_type, Type>, "Invalid value type");
-    using sparse_container_type = std::vector<std::size_t, typename alloc_traits::template rebind_alloc<std::size_t>>;
-    using packed_container_type = std::vector<node_type, typename alloc_traits::template rebind_alloc<node_type>>;
-
-    template<typename Other>
-    [[nodiscard]] std::size_t value_to_bucket(const Other &value) const noexcept {
-        return fast_mod(static_cast<size_type>(sparse.second()(value)), bucket_count());
-    }
-
-    template<typename Other>
-    [[nodiscard]] auto constrained_find(const Other &value, std::size_t bucket) {
-        for(auto it = begin(bucket), last = end(bucket); it != last; ++it) {
-            if(packed.second()(*it, value)) {
-                return begin() + static_cast<typename iterator::difference_type>(it.index());
-            }
-        }
-
-        return end();
-    }
-
-    template<typename Other>
-    [[nodiscard]] auto constrained_find(const Other &value, std::size_t bucket) const {
-        for(auto it = cbegin(bucket), last = cend(bucket); it != last; ++it) {
-            if(packed.second()(*it, value)) {
-                return cbegin() + static_cast<typename iterator::difference_type>(it.index());
-            }
-        }
-
-        return cend();
-    }
-
-    template<typename Other>
-    [[nodiscard]] auto insert_or_do_nothing(Other &&value) {
-        const auto index = value_to_bucket(value);
-
-        if(auto it = constrained_find(value, index); it != end()) {
-            return std::make_pair(it, false);
-        }
-
-        packed.first().emplace_back(sparse.first()[index], std::forward<Other>(value));
-        sparse.first()[index] = packed.first().size() - 1u;
-        rehash_if_required();
-
-        return std::make_pair(--end(), true);
-    }
-
-    void move_and_pop(const std::size_t pos) {
-        if(const auto last = size() - 1u; pos != last) {
-            size_type *curr = sparse.first().data() + value_to_bucket(packed.first().back().second);
-            packed.first()[pos] = std::move(packed.first().back());
-            for(; *curr != last; curr = &packed.first()[*curr].first) {}
-            *curr = pos;
-        }
-
-        packed.first().pop_back();
-    }
-
-    void rehash_if_required() {
-        if(size() > (bucket_count() * max_load_factor())) {
-            rehash(bucket_count() * 2u);
-        }
-    }
-
-public:
-    /*! @brief Key type of the container. */
-    using key_type = Type;
-    /*! @brief Value type of the container. */
-    using value_type = Type;
-    /*! @brief Unsigned integer type. */
-    using size_type = std::size_t;
-    /*! @brief Type of function to use to hash the elements. */
-    using hasher = Hash;
-    /*! @brief Type of function to use to compare the elements for equality. */
-    using key_equal = KeyEqual;
-    /*! @brief Allocator type. */
-    using allocator_type = Allocator;
-    /*! @brief Random access iterator type. */
-    using iterator = internal::dense_set_iterator<typename packed_container_type::iterator>;
-    /*! @brief Constant random access iterator type. */
-    using const_iterator = internal::dense_set_iterator<typename packed_container_type::const_iterator>;
-    /*! @brief Forward iterator type. */
-    using local_iterator = internal::dense_set_local_iterator<typename packed_container_type::iterator>;
-    /*! @brief Constant forward iterator type. */
-    using const_local_iterator = internal::dense_set_local_iterator<typename packed_container_type::const_iterator>;
-
-    /*! @brief Default constructor. */
-    dense_set()
-        : dense_set{minimum_capacity} {}
-
-    /**
-     * @brief Constructs an empty container with a given allocator.
-     * @param allocator The allocator to use.
-     */
-    explicit dense_set(const allocator_type &allocator)
-        : dense_set{minimum_capacity, hasher{}, key_equal{}, allocator} {}
-
-    /**
-     * @brief Constructs an empty container with a given allocator and user
-     * supplied minimal number of buckets.
-     * @param cnt Minimal number of buckets.
-     * @param allocator The allocator to use.
-     */
-    dense_set(const size_type cnt, const allocator_type &allocator)
-        : dense_set{cnt, hasher{}, key_equal{}, allocator} {}
-
-    /**
-     * @brief Constructs an empty container with a given allocator, hash
-     * function and user supplied minimal number of buckets.
-     * @param cnt Minimal number of buckets.
-     * @param hash Hash function to use.
-     * @param allocator The allocator to use.
-     */
-    dense_set(const size_type cnt, const hasher &hash, const allocator_type &allocator)
-        : dense_set{cnt, hash, key_equal{}, allocator} {}
-
-    /**
-     * @brief Constructs an empty container with a given allocator, hash
-     * function, compare function and user supplied minimal number of buckets.
-     * @param cnt Minimal number of buckets.
-     * @param hash Hash function to use.
-     * @param equal Compare function to use.
-     * @param allocator The allocator to use.
-     */
-    explicit dense_set(const size_type cnt, const hasher &hash = hasher{}, const key_equal &equal = key_equal{}, const allocator_type &allocator = allocator_type{})
-        : sparse{allocator, hash},
-          packed{allocator, equal},
-          threshold{default_threshold} {
-        rehash(cnt);
-    }
-
-    /*! @brief Default copy constructor. */
-    dense_set(const dense_set &) = default;
-
-    /**
-     * @brief Allocator-extended copy constructor.
-     * @param other The instance to copy from.
-     * @param allocator The allocator to use.
-     */
-    dense_set(const dense_set &other, const allocator_type &allocator)
-        : sparse{std::piecewise_construct, std::forward_as_tuple(other.sparse.first(), allocator), std::forward_as_tuple(other.sparse.second())},
-          packed{std::piecewise_construct, std::forward_as_tuple(other.packed.first(), allocator), std::forward_as_tuple(other.packed.second())},
-          threshold{other.threshold} {}
-
-    /*! @brief Default move constructor. */
-    dense_set(dense_set &&) noexcept(std::is_nothrow_move_constructible_v<compressed_pair<sparse_container_type, hasher>> &&std::is_nothrow_move_constructible_v<compressed_pair<packed_container_type, key_equal>>) = default;
-
-    /**
-     * @brief Allocator-extended move constructor.
-     * @param other The instance to move from.
-     * @param allocator The allocator to use.
-     */
-    dense_set(dense_set &&other, const allocator_type &allocator)
-        : sparse{std::piecewise_construct, std::forward_as_tuple(std::move(other.sparse.first()), allocator), std::forward_as_tuple(std::move(other.sparse.second()))},
-          packed{std::piecewise_construct, std::forward_as_tuple(std::move(other.packed.first()), allocator), std::forward_as_tuple(std::move(other.packed.second()))},
-          threshold{other.threshold} {}
-
-    /**
-     * @brief Default copy assignment operator.
-     * @return This container.
-     */
-    dense_set &operator=(const dense_set &) = default;
-
-    /**
-     * @brief Default move assignment operator.
-     * @return This container.
-     */
-    dense_set &operator=(dense_set &&) noexcept(std::is_nothrow_move_assignable_v<compressed_pair<sparse_container_type, hasher>> &&std::is_nothrow_move_assignable_v<compressed_pair<packed_container_type, key_equal>>) = default;
-
-    /**
-     * @brief Returns the associated allocator.
-     * @return The associated allocator.
-     */
-    [[nodiscard]] constexpr allocator_type get_allocator() const noexcept {
-        return sparse.first().get_allocator();
-    }
-
-    /**
-     * @brief Returns an iterator to the beginning.
-     *
-     * If the array is empty, the returned iterator will be equal to `end()`.
-     *
-     * @return An iterator to the first instance of the internal array.
-     */
-    [[nodiscard]] const_iterator cbegin() const noexcept {
-        return packed.first().begin();
-    }
-
-    /*! @copydoc cbegin */
-    [[nodiscard]] const_iterator begin() const noexcept {
-        return cbegin();
-    }
-
-    /*! @copydoc begin */
-    [[nodiscard]] iterator begin() noexcept {
-        return packed.first().begin();
-    }
-
-    /**
-     * @brief Returns an iterator to the end.
-     * @return An iterator to the element following the last instance of the
-     * internal array.
-     */
-    [[nodiscard]] const_iterator cend() const noexcept {
-        return packed.first().end();
-    }
-
-    /*! @copydoc cend */
-    [[nodiscard]] const_iterator end() const noexcept {
-        return cend();
-    }
-
-    /*! @copydoc end */
-    [[nodiscard]] iterator end() noexcept {
-        return packed.first().end();
-    }
-
-    /**
-     * @brief Checks whether a container is empty.
-     * @return True if the container is empty, false otherwise.
-     */
-    [[nodiscard]] bool empty() const noexcept {
-        return packed.first().empty();
-    }
-
-    /**
-     * @brief Returns the number of elements in a container.
-     * @return Number of elements in a container.
-     */
-    [[nodiscard]] size_type size() const noexcept {
-        return packed.first().size();
-    }
-
-    /**
-     * @brief Returns the maximum possible number of elements.
-     * @return Maximum possible number of elements.
-     */
-    [[nodiscard]] size_type max_size() const noexcept {
-        return packed.first().max_size();
-    }
-
-    /*! @brief Clears the container. */
-    void clear() noexcept {
-        sparse.first().clear();
-        packed.first().clear();
-        rehash(0u);
-    }
-
-    /**
-     * @brief Inserts an element into the container, if it does not exist.
-     * @param value An element to insert into the container.
-     * @return A pair consisting of an iterator to the inserted element (or to
-     * the element that prevented the insertion) and a bool denoting whether the
-     * insertion took place.
-     */
-    std::pair<iterator, bool> insert(const value_type &value) {
-        return insert_or_do_nothing(value);
-    }
-
-    /*! @copydoc insert */
-    std::pair<iterator, bool> insert(value_type &&value) {
-        return insert_or_do_nothing(std::move(value));
-    }
-
-    /**
-     * @brief Inserts elements into the container, if they do not exist.
-     * @tparam It Type of input iterator.
-     * @param first An iterator to the first element of the range of elements.
-     * @param last An iterator past the last element of the range of elements.
-     */
-    template<typename It>
-    void insert(It first, It last) {
-        for(; first != last; ++first) {
-            insert(*first);
-        }
-    }
-
-    /**
-     * @brief Constructs an element in-place, if it does not exist.
-     *
-     * The element is also constructed when the container already has the key,
-     * in which case the newly constructed object is destroyed immediately.
-     *
-     * @tparam Args Types of arguments to forward to the constructor of the
-     * element.
-     * @param args Arguments to forward to the constructor of the element.
-     * @return A pair consisting of an iterator to the inserted element (or to
-     * the element that prevented the insertion) and a bool denoting whether the
-     * insertion took place.
-     */
-    template<typename... Args>
-    std::pair<iterator, bool> emplace(Args &&...args) {
-        if constexpr(((sizeof...(Args) == 1u) && ... && std::is_same_v<std::decay_t<Args>, value_type>)) {
-            return insert_or_do_nothing(std::forward<Args>(args)...);
-        } else {
-            auto &node = packed.first().emplace_back(std::piecewise_construct, std::make_tuple(packed.first().size()), std::forward_as_tuple(std::forward<Args>(args)...));
-            const auto index = value_to_bucket(node.second);
-
-            if(auto it = constrained_find(node.second, index); it != end()) {
-                packed.first().pop_back();
-                return std::make_pair(it, false);
-            }
-
-            std::swap(node.first, sparse.first()[index]);
-            rehash_if_required();
-
-            return std::make_pair(--end(), true);
-        }
-    }
-
-    /**
-     * @brief Removes an element from a given position.
-     * @param pos An iterator to the element to remove.
-     * @return An iterator following the removed element.
-     */
-    iterator erase(const_iterator pos) {
-        const auto diff = pos - cbegin();
-        erase(*pos);
-        return begin() + diff;
-    }
-
-    /**
-     * @brief Removes the given elements from a container.
-     * @param first An iterator to the first element of the range of elements.
-     * @param last An iterator past the last element of the range of elements.
-     * @return An iterator following the last removed element.
-     */
-    iterator erase(const_iterator first, const_iterator last) {
-        const auto dist = first - cbegin();
-
-        for(auto from = last - cbegin(); from != dist; --from) {
-            erase(packed.first()[from - 1u].second);
-        }
-
-        return (begin() + dist);
-    }
-
-    /**
-     * @brief Removes the element associated with a given value.
-     * @param value Value of an element to remove.
-     * @return Number of elements removed (either 0 or 1).
-     */
-    size_type erase(const value_type &value) {
-        for(size_type *curr = sparse.first().data() + value_to_bucket(value); *curr != (std::numeric_limits<size_type>::max)(); curr = &packed.first()[*curr].first) {
-            if(packed.second()(packed.first()[*curr].second, value)) {
-                const auto index = *curr;
-                *curr = packed.first()[*curr].first;
-                move_and_pop(index);
-                return 1u;
-            }
-        }
-
-        return 0u;
-    }
-
-    /**
-     * @brief Exchanges the contents with those of a given container.
-     * @param other Container to exchange the content with.
-     */
-    void swap(dense_set &other) {
-        using std::swap;
-        swap(sparse, other.sparse);
-        swap(packed, other.packed);
-        swap(threshold, other.threshold);
-    }
-
-    /**
-     * @brief Returns the number of elements matching a value (either 1 or 0).
-     * @param key Key value of an element to search for.
-     * @return Number of elements matching the key (either 1 or 0).
-     */
-    [[nodiscard]] size_type count(const value_type &key) const {
-        return find(key) != end();
-    }
-
-    /**
-     * @brief Returns the number of elements matching a key (either 1 or 0).
-     * @tparam Other Type of the key value of an element to search for.
-     * @param key Key value of an element to search for.
-     * @return Number of elements matching the key (either 1 or 0).
-     */
-    template<typename Other>
-    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, size_type>>
-    count(const Other &key) const {
-        return find(key) != end();
-    }
-
-    /**
-     * @brief Finds an element with a given value.
-     * @param value Value of an element to search for.
-     * @return An iterator to an element with the given value. If no such
-     * element is found, a past-the-end iterator is returned.
-     */
-    [[nodiscard]] iterator find(const value_type &value) {
-        return constrained_find(value, value_to_bucket(value));
-    }
-
-    /*! @copydoc find */
-    [[nodiscard]] const_iterator find(const value_type &value) const {
-        return constrained_find(value, value_to_bucket(value));
-    }
-
-    /**
-     * @brief Finds an element that compares _equivalent_ to a given value.
-     * @tparam Other Type of an element to search for.
-     * @param value Value of an element to search for.
-     * @return An iterator to an element with the given value. If no such
-     * element is found, a past-the-end iterator is returned.
-     */
-    template<typename Other>
-    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, iterator>>
-    find(const Other &value) {
-        return constrained_find(value, value_to_bucket(value));
-    }
-
-    /*! @copydoc find */
-    template<typename Other>
-    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, const_iterator>>
-    find(const Other &value) const {
-        return constrained_find(value, value_to_bucket(value));
-    }
-
-    /**
-     * @brief Returns a range containing all elements with a given value.
-     * @param value Value of an element to search for.
-     * @return A pair of iterators pointing to the first element and past the
-     * last element of the range.
-     */
-    [[nodiscard]] std::pair<iterator, iterator> equal_range(const value_type &value) {
-        const auto it = find(value);
-        return {it, it + !(it == end())};
-    }
-
-    /*! @copydoc equal_range */
-    [[nodiscard]] std::pair<const_iterator, const_iterator> equal_range(const value_type &value) const {
-        const auto it = find(value);
-        return {it, it + !(it == cend())};
-    }
-
-    /**
-     * @brief Returns a range containing all elements that compare _equivalent_
-     * to a given value.
-     * @tparam Other Type of an element to search for.
-     * @param value Value of an element to search for.
-     * @return A pair of iterators pointing to the first element and past the
-     * last element of the range.
-     */
-    template<typename Other>
-    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, std::pair<iterator, iterator>>>
-    equal_range(const Other &value) {
-        const auto it = find(value);
-        return {it, it + !(it == end())};
-    }
-
-    /*! @copydoc equal_range */
-    template<typename Other>
-    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, std::pair<const_iterator, const_iterator>>>
-    equal_range(const Other &value) const {
-        const auto it = find(value);
-        return {it, it + !(it == cend())};
-    }
-
-    /**
-     * @brief Checks if the container contains an element with a given value.
-     * @param value Value of an element to search for.
-     * @return True if there is such an element, false otherwise.
-     */
-    [[nodiscard]] bool contains(const value_type &value) const {
-        return (find(value) != cend());
-    }
-
-    /**
-     * @brief Checks if the container contains an element that compares
-     * _equivalent_ to a given value.
-     * @tparam Other Type of an element to search for.
-     * @param value Value of an element to search for.
-     * @return True if there is such an element, false otherwise.
-     */
-    template<typename Other>
-    [[nodiscard]] std::enable_if_t<is_transparent_v<hasher> && is_transparent_v<key_equal>, std::conditional_t<false, Other, bool>>
-    contains(const Other &value) const {
-        return (find(value) != cend());
-    }
-
-    /**
-     * @brief Returns an iterator to the beginning of a given bucket.
-     * @param index An index of a bucket to access.
-     * @return An iterator to the beginning of the given bucket.
-     */
-    [[nodiscard]] const_local_iterator cbegin(const size_type index) const {
-        return {packed.first().begin(), sparse.first()[index]};
-    }
-
-    /**
-     * @brief Returns an iterator to the beginning of a given bucket.
-     * @param index An index of a bucket to access.
-     * @return An iterator to the beginning of the given bucket.
-     */
-    [[nodiscard]] const_local_iterator begin(const size_type index) const {
-        return cbegin(index);
-    }
-
-    /**
-     * @brief Returns an iterator to the beginning of a given bucket.
-     * @param index An index of a bucket to access.
-     * @return An iterator to the beginning of the given bucket.
-     */
-    [[nodiscard]] local_iterator begin(const size_type index) {
-        return {packed.first().begin(), sparse.first()[index]};
-    }
-
-    /**
-     * @brief Returns an iterator to the end of a given bucket.
-     * @param index An index of a bucket to access.
-     * @return An iterator to the end of the given bucket.
-     */
-    [[nodiscard]] const_local_iterator cend([[maybe_unused]] const size_type index) const {
-        return {packed.first().begin(), (std::numeric_limits<size_type>::max)()};
-    }
-
-    /**
-     * @brief Returns an iterator to the end of a given bucket.
-     * @param index An index of a bucket to access.
-     * @return An iterator to the end of the given bucket.
-     */
-    [[nodiscard]] const_local_iterator end(const size_type index) const {
-        return cend(index);
-    }
-
-    /**
-     * @brief Returns an iterator to the end of a given bucket.
-     * @param index An index of a bucket to access.
-     * @return An iterator to the end of the given bucket.
-     */
-    [[nodiscard]] local_iterator end([[maybe_unused]] const size_type index) {
-        return {packed.first().begin(), (std::numeric_limits<size_type>::max)()};
-    }
-
-    /**
-     * @brief Returns the number of buckets.
-     * @return The number of buckets.
-     */
-    [[nodiscard]] size_type bucket_count() const {
-        return sparse.first().size();
-    }
-
-    /**
-     * @brief Returns the maximum number of buckets.
-     * @return The maximum number of buckets.
-     */
-    [[nodiscard]] size_type max_bucket_count() const {
-        return sparse.first().max_size();
-    }
-
-    /**
-     * @brief Returns the number of elements in a given bucket.
-     * @param index The index of the bucket to examine.
-     * @return The number of elements in the given bucket.
-     */
-    [[nodiscard]] size_type bucket_size(const size_type index) const {
-        return static_cast<size_type>(std::distance(begin(index), end(index)));
-    }
-
-    /**
-     * @brief Returns the bucket for a given element.
-     * @param value The value of the element to examine.
-     * @return The bucket for the given element.
-     */
-    [[nodiscard]] size_type bucket(const value_type &value) const {
-        return value_to_bucket(value);
-    }
-
-    /**
-     * @brief Returns the average number of elements per bucket.
-     * @return The average number of elements per bucket.
-     */
-    [[nodiscard]] float load_factor() const {
-        return size() / static_cast<float>(bucket_count());
-    }
-
-    /**
-     * @brief Returns the maximum average number of elements per bucket.
-     * @return The maximum average number of elements per bucket.
-     */
-    [[nodiscard]] float max_load_factor() const {
-        return threshold;
-    }
-
-    /**
-     * @brief Sets the desired maximum average number of elements per bucket.
-     * @param value A desired maximum average number of elements per bucket.
-     */
-    void max_load_factor(const float value) {
-        ENTT_ASSERT(value > 0.f, "Invalid load factor");
-        threshold = value;
-        rehash(0u);
-    }
-
-    /**
-     * @brief Reserves at least the specified number of buckets and regenerates
-     * the hash table.
-     * @param cnt New number of buckets.
-     */
-    void rehash(const size_type cnt) {
-        auto value = cnt > minimum_capacity ? cnt : minimum_capacity;
-        const auto cap = static_cast<size_type>(size() / max_load_factor());
-        value = value > cap ? value : cap;
-
-        if(const auto sz = next_power_of_two(value); sz != bucket_count()) {
-            sparse.first().resize(sz);
-
-            for(auto &&elem: sparse.first()) {
-                elem = std::numeric_limits<size_type>::max();
-            }
-
-            for(size_type pos{}, last = size(); pos < last; ++pos) {
-                const auto index = value_to_bucket(packed.first()[pos].second);
-                packed.first()[pos].first = std::exchange(sparse.first()[index], pos);
-            }
-        }
-    }
-
-    /**
-     * @brief Reserves space for at least the specified number of elements and
-     * regenerates the hash table.
-     * @param cnt New number of elements.
-     */
-    void reserve(const size_type cnt) {
-        packed.first().reserve(cnt);
-        rehash(static_cast<size_type>(std::ceil(cnt / max_load_factor())));
-    }
-
-    /**
-     * @brief Returns the function used to hash the elements.
-     * @return The function used to hash the elements.
-     */
-    [[nodiscard]] hasher hash_function() const {
-        return sparse.second();
-    }
-
-    /**
-     * @brief Returns the function used to compare elements for equality.
-     * @return The function used to compare elements for equality.
-     */
-    [[nodiscard]] key_equal key_eq() const {
-        return packed.second();
-    }
-
-private:
-    compressed_pair<sparse_container_type, hasher> sparse;
-    compressed_pair<packed_container_type, key_equal> packed;
-    float threshold;
-};
-
-} // namespace entt
-
-#endif
-
-///////////////// END OF external/entt/container/dense_set.hpp /////////////////
 
 //////////////// START OF src/Battle/Helpers/IntegerModify.hpp /////////////////
 
@@ -16605,8 +21117,8 @@ struct EffectiveSpe;
 namespace pokesim::dex {
 namespace internal {
 struct StaticEvents {
-  static void onDamagingHit(Simulation& simulation);
-  static void onModifySpe(stat::EffectiveSpe& effectiveSpe);
+  inline static void onDamagingHit(Simulation& simulation);
+  inline static void onModifySpe(stat::EffectiveSpe& effectiveSpe);
 };
 }  // namespace internal
 
@@ -16639,7 +21151,7 @@ struct MoveSlots;
 namespace pokesim::dex {
 namespace internal {
 struct ChoiceLockEvents {
-  static void onDisableMove(
+  inline static void onDisableMove(
     types::registry& registry, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots);
 };
 }  // namespace internal
@@ -16672,7 +21184,7 @@ struct EventModifier;
 namespace pokesim::dex {
 namespace internal {
 struct AssaultVestEvents {
-  static void onModifySpd(EventModifier& eventModifier);
+  inline static void onModifySpd(EventModifier& eventModifier);
 };
 }  // namespace internal
 
@@ -16724,8 +21236,8 @@ struct Battle;
 namespace pokesim::dex {
 namespace internal {
 struct ChoiceScarfEvents {
-  static void onModifySpe(EventModifier& eventModifier);
-  static void onSourceModifyMove(types::handle pokemonHandle, const Battle& battle);
+  inline static void onModifySpe(EventModifier& eventModifier);
+  inline static void onSourceModifyMove(types::handle pokemonHandle, const Battle& battle);
 };
 }  // namespace internal
 
@@ -16759,8 +21271,8 @@ struct Battle;
 namespace pokesim::dex {
 namespace internal {
 struct ChoiceSpecsEvents {
-  static void onModifySpa(EventModifier& eventModifier);
-  static void onSourceModifyMove(types::handle pokemonHandle, const Battle& battle);
+  inline static void onModifySpa(EventModifier& eventModifier);
+  inline static void onSourceModifyMove(types::handle pokemonHandle, const Battle& battle);
 };
 }  // namespace internal
 
@@ -16823,19 +21335,19 @@ struct LifeOrb {
 namespace pokesim {
 class Simulation;
 
-void runAccuracyEvent(Simulation& simulation);
-void runModifyAccuracyEvent(Simulation& simulation);
-void runModifyCritBoostEvent(Simulation& simulation);
-void runBasePowerEvent(Simulation& simulation);
-void runDamagingHitEvent(Simulation& simulation);
-void runModifyMove(Simulation& simulation);
-void runDisableMove(Simulation& simulation);
+inline void runAccuracyEvent(Simulation& simulation);
+inline void runModifyAccuracyEvent(Simulation& simulation);
+inline void runModifyCritBoostEvent(Simulation& simulation);
+inline void runBasePowerEvent(Simulation& simulation);
+inline void runDamagingHitEvent(Simulation& simulation);
+inline void runModifyMove(Simulation& simulation);
+inline void runDisableMove(Simulation& simulation);
 
-void runModifyAtk(Simulation& simulation);
-void runModifyDef(Simulation& simulation);
-void runModifySpa(Simulation& simulation);
-void runModifySpd(Simulation& simulation);
-void runModifySpe(Simulation& simulation);
+inline void runModifyAtk(Simulation& simulation);
+inline void runModifyDef(Simulation& simulation);
+inline void runModifySpa(Simulation& simulation);
+inline void runModifySpd(Simulation& simulation);
+inline void runModifySpe(Simulation& simulation);
 }  // namespace pokesim
 
 ////////////////////// END OF src/Simulation/RunEvent.hpp //////////////////////
@@ -16848,9 +21360,12 @@ void runModifySpe(Simulation& simulation);
 namespace pokesim::internal {
 template <typename Selection, typename Required, typename... ComponentsToSelect>
 struct SelectForView {
-  SelectForView(RegistryContainer& registryContainer_)
+  template <typename... ComponentsToExclude>
+  SelectForView(
+    RegistryContainer& registryContainer_,
+    entt::exclude_t<ComponentsToExclude...> exclude = entt::exclude<ComponentsToExclude...>)
       : registryContainer(&registryContainer_),
-        selectedCount(registryContainer->select<Selection, Required, ComponentsToSelect...>()) {
+        selectedCount(registryContainer->select<Selection, Required, ComponentsToSelect...>(exclude)) {
     if (hasNoneSelected()) {
       registryContainer = nullptr;
     }
@@ -16929,7 +21444,7 @@ RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
 
       if constexpr (
         SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveTarget>...>) {
-        entities.insert(registry.get<CurrentActionTargets>(entity).val[0]);
+        entities.insert(registry.get<CurrentActionTargets>(entity).only());
       }
     });
 
@@ -16938,19 +21453,19 @@ RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
 }
 }  // namespace internal
 
-void runAccuracyEvent(Simulation& /*simulation*/) {}
+inline void runAccuracyEvent(Simulation& /*simulation*/) {}
 
-void runModifyAccuracyEvent(Simulation& /*simulation*/) {}
+inline void runModifyAccuracyEvent(Simulation& /*simulation*/) {}
 
-void runModifyCritBoostEvent(Simulation& /*simulation*/) {}
+inline void runModifyCritBoostEvent(Simulation& /*simulation*/) {}
 
-void runBasePowerEvent(Simulation& /*simulation*/) {}
+inline void runBasePowerEvent(Simulation& /*simulation*/) {}
 
-void runDamagingHitEvent(Simulation& simulation) {
+inline void runDamagingHitEvent(Simulation& simulation) {
   dex::latest::Static::onDamagingHit(simulation);
 }
 
-void runModifyMove(Simulation& simulation) {
+inline void runModifyMove(Simulation& simulation) {
   internal::SelectForPokemonView<> selectedPokemon{
     simulation,
     internal::getMoveEventPokemonSelector<tags::CurrentActionMoveSource>()};
@@ -16966,15 +21481,15 @@ void runModifyMove(Simulation& simulation) {
     entt::exclude_t<ChoiceLock>>();
 }
 
-void runDisableMove(Simulation& simulation) {
+inline void runDisableMove(Simulation& simulation) {
   simulation.viewForSelectedPokemon<dex::latest::ChoiceLock::onDisableMove>();
 }
 
-void runModifyAtk(Simulation&) {}
+inline void runModifyAtk(Simulation&) {}
 
-void runModifyDef(Simulation&) {}
+inline void runModifyDef(Simulation&) {}
 
-void runModifySpa(Simulation& simulation) {
+inline void runModifySpa(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
 
   simulation.viewForSelectedPokemon<dex::latest::ChoiceSpecs::onModifySpa, Tags<item::tags::ChoiceSpecs>>();
@@ -16983,7 +21498,7 @@ void runModifySpa(Simulation& simulation) {
   simulation.registry.clear<EventModifier>();
 }
 
-void runModifySpd(Simulation& simulation) {
+inline void runModifySpd(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
 
   simulation.viewForSelectedPokemon<dex::latest::AssaultVest::onModifySpd, Tags<item::tags::AssaultVest>>();
@@ -16992,7 +21507,7 @@ void runModifySpd(Simulation& simulation) {
   simulation.registry.clear<EventModifier>();
 }
 
-void runModifySpe(Simulation& simulation) {
+inline void runModifySpe(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
 
   simulation.viewForSelectedPokemon<dex::latest::ChoiceScarf::onModifySpe, Tags<item::tags::ChoiceScarf>>();
@@ -17339,19 +21854,19 @@ void setRandomEventCounts(Simulation& simulation) {
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
-void randomEventChances(
+inline void randomEventChances(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt);
-void randomBinaryChance(
+inline void randomBinaryChance(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt);
-void reciprocalRandomBinaryChance(
+inline void reciprocalRandomBinaryChance(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt);
-void randomEqualChance(
+inline void randomEqualChance(
   Simulation& simulation, types::eventPossibilities possibleEventCount, types::callback applyChoices,
   types::optionalCallback updateProbabilities = std::nullopt);
-void randomEventCount(
+inline void randomEventCount(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt);
 
-void clearRandomChanceResult(Simulation& simulation);
+inline void clearRandomChanceResult(Simulation& simulation);
 }  // namespace pokesim
 
 /////////////////// END OF src/SimulateTurn/RandomChance.hpp ///////////////////
@@ -17368,25 +21883,25 @@ struct Battle;
 struct HitCount;
 
 namespace internal {
-void deductMoveHitCount(types::handle moveHandle, HitCount& hitCount);
+inline void deductMoveHitCount(types::handle moveHandle, HitCount& hitCount);
 
 template <auto Function>
-void runMoveHitCheck(Simulation& simulation);
-void postMoveHitCheck(Simulation& simulation);
-void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets);
-void removeFailedHitTargets(
+inline void runMoveHitCheck(Simulation& simulation);
+inline void postMoveHitCheck(Simulation& simulation);
+inline void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets);
+inline void removeFailedHitTargets(
   types::handle moveTarget, const CurrentActionTargets& targets, const CurrentActionSource& source);
 }  // namespace internal
 
-void setMoveHitCount(Simulation& simulation);
+inline void setMoveHitCount(Simulation& simulation);
 
-void trySetStatusFromEffect(Simulation& simulation);
-void applyDamage(Simulation& simulation);
-void runSecondaryMoveEffects(Simulation& simulation);
-void accuracyCheck(Simulation& simulation);
-void moveHitLoop(Simulation& simulation);
+inline void trySetStatusFromEffect(Simulation& simulation);
+inline void applyDamage(Simulation& simulation);
+inline void runSecondaryMoveEffects(Simulation& simulation);
+inline void accuracyCheck(Simulation& simulation);
+inline void moveHitLoop(Simulation& simulation);
 
-void runMoveHitChecks(Simulation& simulation);
+inline void runMoveHitChecks(Simulation& simulation);
 }  // namespace pokesim
 
 //////////////////// END OF src/Simulation/MoveHitSteps.hpp ////////////////////
@@ -17397,7 +21912,7 @@ void runMoveHitChecks(Simulation& simulation);
 
 
 namespace pokesim {
-void setMoveHitCount(Simulation& simulation) {
+inline void setMoveHitCount(Simulation& simulation) {
   auto noAssignedHitCount =
     simulation.registry.view<tags::SelectedForViewMove>(entt::exclude<move::tags::VariableHitCount, HitCount>);
   simulation.registry.insert<HitCount>(noAssignedHitCount.begin(), noAssignedHitCount.end(), {(types::moveHits)1U});
@@ -17420,7 +21935,7 @@ void setMoveHitCount(Simulation& simulation) {
   }
 }
 
-void applyDamage(Simulation& simulation) {
+inline void applyDamage(Simulation& simulation) {
   simulation.viewForSelectedMoves<applyDamageToHp>();
 
   simulation.removeFromEntities<tags::internal::MoveHits, tags::SelectedForViewMove>(entt::exclude<Damage>);
@@ -17428,15 +21943,15 @@ void applyDamage(Simulation& simulation) {
     entt::exclude<tags::internal::MoveHits>);
 }
 
-void trySetStatusFromEffect(Simulation& /*simulation*/) {}
+inline void trySetStatusFromEffect(Simulation& /*simulation*/) {}
 
-void runSecondaryMoveEffects(Simulation& simulation) {
+inline void runSecondaryMoveEffects(Simulation& simulation) {
   // Set secondary effect of active move
 
   trySetStatusFromEffect(simulation);
 }
 
-void accuracyCheck(Simulation& simulation) {
+inline void accuracyCheck(Simulation& simulation) {
   runModifyAccuracyEvent(simulation);
   runAccuracyEvent(simulation);
 
@@ -17446,7 +21961,7 @@ void accuracyCheck(Simulation& simulation) {
   });
 }
 
-void internal::deductMoveHitCount(types::handle moveHandle, HitCount& hitCount) {
+inline void internal::deductMoveHitCount(types::handle moveHandle, HitCount& hitCount) {
   ENTT_ASSERT(hitCount.val > 0, "A hit count shouldn't be decremented if it's already 0.");
   hitCount.val--;
   if (!hitCount.val) {
@@ -17454,7 +21969,7 @@ void internal::deductMoveHitCount(types::handle moveHandle, HitCount& hitCount) 
   }
 }
 
-void moveHitLoop(Simulation& simulation) {
+inline void moveHitLoop(Simulation& simulation) {
   setMoveHitCount(simulation);
 
   while (!simulation.registry.view<HitCount>().empty()) {
@@ -17472,7 +21987,7 @@ void moveHitLoop(Simulation& simulation) {
   }
 }
 
-void internal::removeFailedHitTargets(
+inline void internal::removeFailedHitTargets(
   types::handle moveTarget, const CurrentActionTargets& targets, const CurrentActionSource& source) {
   types::registry& registry = *moveTarget.registry();
   for (types::entity target : targets.val) {
@@ -17488,12 +22003,12 @@ void internal::removeFailedHitTargets(
   moves.val.erase(newEnd, moves.val.end());
 }
 
-void internal::updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets) {
+inline void internal::updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets) {
   std::uint8_t deleteCount = 0U;
   for (types::entity& target : targets.val) {
     if (!registry.all_of<tags::CurrentActionMoveTarget>(target)) {
       std::uint8_t swapIndex = targets.val.size() - 1 - deleteCount;
-      ENTT_ASSERT(swapIndex >= 0 && swapIndex < targets.val.size(), "Swap index out of bounds");
+      ENTT_ASSERT(swapIndex >= 0 && swapIndex < targets.val.size(), "Swap index out of bounds.");
       std::swap(target, targets.val[swapIndex]);
       deleteCount++;
     }
@@ -17502,13 +22017,13 @@ void internal::updateCurrentActionTargets(types::registry& registry, CurrentActi
   targets.val.pop_count(deleteCount);
 }
 
-void internal::postMoveHitCheck(Simulation& simulation) {
+inline void internal::postMoveHitCheck(Simulation& simulation) {
   auto removedMoves = simulation.view<
     internal::removeFailedHitTargets,
     Tags<tags::CurrentActionMove>,
     entt::exclude_t<tags::internal::MoveHits>>();
   simulation.registry.destroy(removedMoves.begin(), removedMoves.end());
-  simulation.registry.clear<Damage, DamageRolls>();
+  simulation.registry.clear<Damage>();
   simulation.view<internal::updateCurrentActionTargets>();
 }
 
@@ -17528,7 +22043,7 @@ void internal::runMoveHitCheck(Simulation& simulation) {
   simulation.registry.clear<tags::internal::MoveHits>();
 }
 
-void runMoveHitChecks(Simulation& simulation) {
+inline void runMoveHitChecks(Simulation& simulation) {
   // invulnerabilityCheck
   // hitCheck
   // immunityCheck
@@ -17552,16 +22067,16 @@ struct CurrentActionSource;
 struct CurrentActionTargets;
 struct RootBattle;
 
-void assignRootBattle(types::handle battleHandle);
-void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root);
+inline void assignRootBattle(types::handle battleHandle);
+inline void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root);
 
-void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action);
-void setCurrentActionTarget(
+inline void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action);
+inline void setCurrentActionTarget(
   types::handle battleHandle, const Sides& sides, const CurrentAction& action, const CurrentActionSource& source);
-void setCurrentActionMove(
+inline void setCurrentActionMove(
   types::handle battleHandle, const CurrentActionSource& source, const CurrentActionTargets& targets,
   const CurrentAction& action, const Pokedex& pokedex);
-void clearCurrentAction(Simulation& simulation);
+inline void clearCurrentAction(Simulation& simulation);
 }  // namespace pokesim
 
 /////////////////// END OF src/Battle/ManageBattleState.hpp ////////////////////
@@ -17575,20 +22090,6 @@ struct AddedTargets {
 }  // namespace pokesim
 
 //////////////////// END OF src/Components/AddedTargets.hpp ////////////////////
-
-///////////// START OF src/Components/EntityHolders/BattleTree.hpp /////////////
-
-namespace pokesim {
-struct ParentBattle {
-  types::entity val{};
-};
-
-struct RootBattle {
-  types::entity val{};
-};
-}  // namespace pokesim
-
-////////////// END OF src/Components/EntityHolders/BattleTree.hpp //////////////
 
 /////////////// START OF src/Components/Names/SourceSlotName.hpp ///////////////
 
@@ -17771,12 +22272,12 @@ struct SideDecision;
 struct ActionQueue;
 
 namespace simulate_turn {
-void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision);
-void speedSort(types::handle handle, ActionQueue& actionQueue);
+inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision);
+inline void speedSort(types::handle handle, ActionQueue& actionQueue);
 
-void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue);
-void addResidualAction(types::registry& registry, ActionQueue& actionQueue);
-void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue);
+inline void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue);
+inline void addResidualAction(types::registry& registry, ActionQueue& actionQueue);
+inline void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue);
 }  // namespace simulate_turn
 }  // namespace pokesim
 
@@ -17785,7 +22286,7 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue);
 ////////////////// START OF src/SimulateTurn/SimulateTurn.cpp //////////////////
 
 namespace pokesim::simulate_turn {
-void run(Simulation& simulation) {
+inline void run(Simulation& simulation) {
   pokesim::internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 
@@ -17813,7 +22314,7 @@ void run(Simulation& simulation) {
   simulation.viewForSelectedBattles<collectTurnOutcomeBattles>();
 }
 
-void runCurrentAction(Simulation& simulation) {
+inline void runCurrentAction(Simulation& simulation) {
   // runBeforeTurnAction(simulation);
   runMoveAction(simulation);
   runResidualAction(simulation);
@@ -17830,11 +22331,11 @@ void runCurrentAction(Simulation& simulation) {
   updateAllStats(simulation);
 }
 
-void runBeforeTurnAction(Simulation& /*simulation*/) {
+inline void runBeforeTurnAction(Simulation& /*simulation*/) {
   // Barely used, will find different way of handling it
 }
 
-void runMoveAction(Simulation& simulation) {
+inline void runMoveAction(Simulation& simulation) {
   pokesim::internal::SelectForBattleView<action::Move> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 
@@ -17848,22 +22349,22 @@ void runMoveAction(Simulation& simulation) {
   useMove(simulation);
 }
 
-void runResidualAction(Simulation& simulation) {
+inline void runResidualAction(Simulation& simulation) {
   pokesim::internal::SelectForBattleView<action::tags::Residual> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 }
 
 namespace internal {
-void incrementTurn(Turn& turn) {
+inline void incrementTurn(Turn& turn) {
   turn.val++;
 }
 
-void updateActivePokemonPostTurn(types::handle pokemonHandle, const pokesim::MoveSlots& moveSlots) {
+inline void updateActivePokemonPostTurn(types::handle pokemonHandle, const pokesim::MoveSlots& moveSlots) {
   pokemonHandle.registry()->remove<pokesim::move::tags::Disabled>(moveSlots.val.begin(), moveSlots.val.end());
 }
 }  // namespace internal
 
-void nextTurn(Simulation& simulation) {
+inline void nextTurn(Simulation& simulation) {
   simulation.viewForSelectedBattles<internal::incrementTurn>();
 
   pokesim::internal::SelectForPokemonView<tags::SimulateTurn, tags::ActivePokemon> selectedPokemon{simulation};
@@ -17873,7 +22374,7 @@ void nextTurn(Simulation& simulation) {
   }
 }
 
-void addTargetAllyToTargets(types::registry& registry, const Battle& battle) {
+inline void addTargetAllyToTargets(types::registry& registry, const Battle& battle) {
   const Sides& sides = registry.get<Sides>(battle.val);
   const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).val);
 
@@ -17886,7 +22387,7 @@ void addTargetAllyToTargets(types::registry& registry, const Battle& battle) {
   targets.val.push_back(allyEntity);
 }
 
-void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
+inline void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
   const Sides& sides = registry.get<Sides>(battle.val);
   const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(registry.get<CurrentAction>(battle.val).val);
 
@@ -17899,9 +22400,9 @@ void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
   targets.val.push_back(allyEntity);
 }
 
-void resolveMoveTargets(CurrentActionTargets&) {}
+inline void resolveMoveTargets(CurrentActionTargets&) {}
 
-void createActionMoveForTargets(
+inline void createActionMoveForTargets(
   types::handle targetHandle, const Battle& battle, const CurrentActionSource& source, const Pokedex& pokedex) {
   types::registry& registry = *targetHandle.registry();
 
@@ -17911,7 +22412,7 @@ void createActionMoveForTargets(
   registry.emplace<tags::SimulateTurn>(moveEntity);
 }
 
-void getMoveTargets(Simulation& simulation) {
+inline void getMoveTargets(Simulation& simulation) {
   if (simulation.battleFormat == BattleFormat::DOUBLES_BATTLE_FORMAT) {
     simulation.view<addTargetAllyToTargets, Tags<tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
     simulation.view<addUserAllyToTargets, Tags<tags::CurrentActionMove, move::added_targets::tags::UserAlly>>();
@@ -17921,7 +22422,7 @@ void getMoveTargets(Simulation& simulation) {
     simulation.pokedex);
 }
 
-void useMove(Simulation& simulation) {
+inline void useMove(Simulation& simulation) {
   // ModifyTarget
   // ModifyType
   runModifyMove(simulation);
@@ -17940,8 +22441,8 @@ void useMove(Simulation& simulation) {
 namespace pokesim {
 struct CloneTo;
 
-types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount);
-void deleteClones(types::registry& registry);
+inline types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount);
+inline void deleteClones(types::registry& registry);
 }  // namespace pokesim
 
 ////////////////////// END OF src/Battle/Clone/Clone.hpp ///////////////////////
@@ -18129,7 +22630,7 @@ void updateProbabilityFromRandomBinaryChance(
   }
 }
 
-void updateProbabilityFromRandomEqualChance(
+inline void updateProbabilityFromRandomEqualChance(
   types::registry& registry, const Battle& battle, const RandomEventIndex&,
   types::eventPossibilities possibleEventCount) {
   Probability& probability = registry.get<Probability>(battle.val);
@@ -18137,7 +22638,7 @@ void updateProbabilityFromRandomEqualChance(
   updateProbability(probability, 100.0F / (float)possibleEventCount);
 }
 
-void updateProbabilityFromRandomEventCount(
+inline void updateProbabilityFromRandomEventCount(
   types::registry& registry, const RandomEventCount& eventChance, const Battle& battle) {
   Probability& probability = registry.get<Probability>(battle.val);
 
@@ -18184,7 +22685,7 @@ void assignRandomEvent(
   }
 }
 
-void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
+inline void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
   auto [rngSeed, probability] = handle.registry()->get<RngSeed, Probability>(battle.val);
   types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, 100);
 
@@ -18198,7 +22699,7 @@ void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const R
   }
 }
 
-void assignReciprocalRandomBinaryEvent(
+inline void assignReciprocalRandomBinaryEvent(
   types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
   auto [rngSeed, probability] = handle.registry()->get<RngSeed, Probability>(battle.val);
   types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, eventChance.val);
@@ -18213,7 +22714,7 @@ void assignReciprocalRandomBinaryEvent(
   }
 }
 
-void assignRandomEqualChance(types::handle handle, const Battle& battle, types::eventPossibilities possibleEventCount) {
+inline void assignRandomEqualChance(types::handle handle, const Battle& battle, types::eventPossibilities possibleEventCount) {
   auto [rngSeed, probability] = handle.registry()->get<RngSeed, Probability>(battle.val);
   types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, possibleEventCount);
 
@@ -18221,7 +22722,7 @@ void assignRandomEqualChance(types::handle handle, const Battle& battle, types::
   updateProbability(probability, 100.0F / (float)possibleEventCount);
 }
 
-void assignRandomEventCount(types::handle handle, const Battle& battle, const RandomEventCount& eventCount) {
+inline void assignRandomEventCount(types::handle handle, const Battle& battle, const RandomEventCount& eventCount) {
   auto [rngSeed, probability] = handle.registry()->get<RngSeed, Probability>(battle.val);
   types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, eventCount.val);
 
@@ -18229,7 +22730,7 @@ void assignRandomEventCount(types::handle handle, const Battle& battle, const Ra
   updateProbability(probability, 100.0F / (float)eventCount.val);
 }
 
-void assignIndexToClones(
+inline void assignIndexToClones(
   types::registry& registry, const types::ClonedEntityMap& clonedEntityMap,
   const std::vector<types::entity>& originals) {
   for (types::entity original : originals) {
@@ -18242,7 +22743,7 @@ void assignIndexToClones(
     for (std::size_t index = 0; index < cloned.size(); index++) {
       ENTT_ASSERT(
         std::numeric_limits<types::eventPossibilities>::max() > index,
-        "Number of clones shouldn't be greater than the number of possible events");
+        "Number of clones shouldn't be greater than the number of possible events.");
       registry.emplace<RandomEventIndex>(cloned[index], (types::eventPossibilities)(index + 1U));
     }
   }
@@ -18445,7 +22946,7 @@ void randomEventChances(
     updateProbabilities.value_or(defaultUpdateProbabilities));
 }
 
-void randomEqualChance(
+inline void randomEqualChance(
   Simulation& simulation, const types::eventPossibilities possibleEventCount, types::callback applyChoices,
   types::optionalCallback updateProbabilities) {
   auto defaultUpdateProbabilities = [possibleEventCount](Simulation& sim) {
@@ -18484,7 +22985,7 @@ void randomEqualChance(
     possibleEventCount);
 }
 
-void randomEventCount(
+inline void randomEventCount(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities) {
   auto defaultUpdateProbabilities = [](Simulation& sim) {
     sim.view<internal::updateProbabilityFromRandomEventCount>();
@@ -18499,17 +23000,17 @@ void randomEventCount(
       updateProbabilities.value_or(defaultUpdateProbabilities));
 }
 
-void randomBinaryChance(
+inline void randomBinaryChance(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities) {
   internal::randomBinaryChance<false>(simulation, applyChoices, updateProbabilities);
 }
 
-void reciprocalRandomBinaryChance(
+inline void reciprocalRandomBinaryChance(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities) {
   internal::randomBinaryChance<true>(simulation, applyChoices, updateProbabilities);
 }
 
-void clearRandomChanceResult(Simulation& simulation) {
+inline void clearRandomChanceResult(Simulation& simulation) {
   simulation.registry.clear<tags::RandomEventA>();
   simulation.registry.clear<tags::RandomEventB>();
   simulation.registry.clear<tags::RandomEventC>();
@@ -18549,7 +23050,7 @@ struct SpeedTieIndexes {
     std::size_t length = 0;
   };
 
-  std::vector<Span> spans{};
+  std::vector<Span> val{};
 };
 }  // namespace pokesim
 
@@ -18572,9 +23073,9 @@ struct Team {
 #include <vector>
 
 namespace pokesim::simulate_turn {
-void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
-  ENTT_ASSERT(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player");
-  ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty");
+inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
+  ENTT_ASSERT(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player.");
+  ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
   types::registry& registry = *sideHandle.registry();
 
   ActionQueue& battleActionQueue = registry.get<ActionQueue>(sideHandle.get<Battle>().val);
@@ -18583,22 +23084,22 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
 
     for (const SlotDecision& decision : decisions) {
-      ENTT_ASSERT(decision.sourceSlot != Slot::NONE, "Source slot must be assigned");
+      ENTT_ASSERT(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
       if (sideDecision.sideId == PlayerSideId::P1) {
         ENTT_ASSERT(
           (decision.sourceSlot == Slot::P1A || decision.sourceSlot == Slot::P1B),
-          "Source must be from a player 1 in battle slot");
+          "Source must be from a player 1 in battle slot.");
       }
       else {
         ENTT_ASSERT(
           (decision.sourceSlot == Slot::P2A || decision.sourceSlot == Slot::P2B),
-          "Source must be from a player 2 in battle slot");
+          "Source must be from a player 2 in battle slot.");
       }
 
-      ENTT_ASSERT(decision.targetSlot != Slot::NONE, "Target slot must be assigned");
+      ENTT_ASSERT(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
       ENTT_ASSERT(
         !(decision.moveChoice.has_value() && decision.itemChoice.has_value()),
-        "Decisions can't have a move and an item choice");
+        "Decisions can't have a move and an item choice.");
 
       types::handle actionHandle = {registry, registry.create()};
       actionHandle.emplace<SourceSlotName>(decision.sourceSlot);
@@ -18641,7 +23142,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
 
     ENTT_ASSERT(
       sideHandle.get<Team>().val.size() == teamOrder.size(),
-      "Must pick a placement for each Pokemon on the team");
+      "Must pick a placement for each Pokemon on the team.");
     types::handle actionHandle = {registry, registry.create()};
 
     actionHandle.emplace<action::Team>(teamOrder);
@@ -18650,7 +23151,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
   }
 }
 
-void speedSort(types::handle handle, ActionQueue& actionQueue) {
+inline void speedSort(types::handle handle, ActionQueue& actionQueue) {
   std::vector<types::entity>& entityList = actionQueue.val;
 
   if (entityList.size() == 1) return;
@@ -18700,7 +23201,7 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
     }
     else {
       if (tieCount > 1) {
-        speedTies.spans.push_back({lastEqual, tieCount});
+        speedTies.val.push_back({lastEqual, tieCount});
       }
       lastEqual = i;
       tieCount = 1;
@@ -18708,15 +23209,15 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   }
 
   if (tieCount > 1) {
-    speedTies.spans.push_back({lastEqual, tieCount});
+    speedTies.val.push_back({lastEqual, tieCount});
   }
 
-  if (!speedTies.spans.empty()) {
+  if (!speedTies.val.empty()) {
     handle.emplace<SpeedTieIndexes>(speedTies);
   }
 }
 
-void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue) {
+inline void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue) {
   types::handle actionHandle{registry, registry.create()};
   SpeedSort speedSort{ActionOrder::BEFORE_TURN};
 
@@ -18725,7 +23226,7 @@ void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue) {
   actionQueue.val.push_back(actionHandle.entity());
 }
 
-void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
+inline void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
   types::handle actionHandle{registry, registry.create()};
   SpeedSort speedSort{ActionOrder::RESIDUAL};
 
@@ -18734,7 +23235,7 @@ void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
   actionQueue.val.push_back(actionHandle.entity());
 }
 
-void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue) {
+inline void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue) {
   types::registry& registry = *battleHandle.registry();
   registry.clear<action::tags::Current>();
 
@@ -18787,8 +23288,8 @@ inline void setDamageKinds(DamageRollKind& kind, CombinedKinds... kinds) {
 namespace pokesim {
 class Simulation;
 namespace simulate_turn {
-void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind);
-void setIfMoveCrits(Simulation& simulation);
+inline void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind);
+inline void setIfMoveCrits(Simulation& simulation);
 }  // namespace simulate_turn
 }  // namespace pokesim
 
@@ -18798,7 +23299,7 @@ void setIfMoveCrits(Simulation& simulation);
 
 namespace pokesim::simulate_turn {
 namespace internal {
-void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls, const RandomEventIndex& randomRollIndex) {
+inline void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls, const RandomEventIndex& randomRollIndex) {
   types::eventPossibilities damageRollIndex = 0U;
   for (std::size_t i = 0U; i < damageRolls.val.size(); i++) {
     if (randomRollIndex.val == damageRollIndex) {
@@ -18812,14 +23313,14 @@ void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls, const 
   ENTT_FAIL("How was a damage roll not found that matched the event index?");
 }
 
-void assignProbability(types::registry& registry, const Battle& battle, const RandomEventCount& randomEventCount) {
+inline void assignProbability(types::registry& registry, const Battle& battle, const RandomEventCount& randomEventCount) {
   if (randomEventCount.val != 1U) {
     Probability& probability = registry.get<Probability>(battle.val);
     probability.val *= 1.0F / (types::probability)MechanicConstants::MAX_DAMAGE_ROLL_COUNT;
   }
 }
 
-void assignAllDamageRollProbability(
+inline void assignAllDamageRollProbability(
   types::registry& registry, const Damage& damage, DamageRolls& damageRolls, const Battle& battle,
   const RandomEventIndex& randomRollIndex) {
   types::eventPossibilities damageCount = 0U;
@@ -18833,7 +23334,7 @@ void assignAllDamageRollProbability(
   probability.val *= damageCount / (types::probability)MechanicConstants::MAX_DAMAGE_ROLL_COUNT;
 }
 
-types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {
+inline types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {
   const DamageRolls& damageRolls = moveHandle.get<DamageRolls>();
   types::eventPossibilities eventPossibilities = 1U;
   for (std::size_t i = 1U; i < damageRolls.val.size(); i++) {
@@ -18843,7 +23344,7 @@ types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {
 }
 }  // namespace internal
 
-void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind) {
+inline void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind) {
   pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn, DamageRolls> selectedMoves{simulation};
   if (selectedMoves.hasNoneSelected()) return;
 
@@ -18856,9 +23357,10 @@ void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind)
       : [](Simulation& sim) { sim.viewForSelectedMoves<internal::assignProbability>(); };
 
   randomEventCount(simulation, applyChoices, updateProbabilities);
+  simulation.removeFromEntities<DamageRolls, pokesim::tags::SelectedForViewMove>();
 }
 
-void setIfMoveCrits(Simulation& simulation) {
+inline void setIfMoveCrits(Simulation& simulation) {
   pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn> selectedMoves{simulation};
   if (selectedMoves.hasNoneSelected()) return;
 
@@ -18956,14 +23458,14 @@ namespace pokesim::dex::internal {
 struct SpeciesDexDataSetup : DexDataSetup {
   SpeciesDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
 
-  void setName(Species species);
-  void setType(Type type1, Type type2 = Type::NO_TYPE);
-  void setBaseStats(
+  inline void setName(Species species);
+  inline void setType(Type type1, Type type2 = Type::NO_TYPE);
+  inline void setBaseStats(
     types::baseStat hp, types::baseStat atk, types::baseStat def, types::baseStat spa, types::baseStat spd,
     types::baseStat spe);
-  void setPrimaryAbility(Ability ability);
-  void setSecondaryAbility(Ability ability);
-  void setHiddenAbility(Ability ability);
+  inline void setPrimaryAbility(Ability ability);
+  inline void setSecondaryAbility(Ability ability);
+  inline void setHiddenAbility(Ability ability);
 };
 }  // namespace pokesim::dex::internal
 
@@ -18972,29 +23474,29 @@ struct SpeciesDexDataSetup : DexDataSetup {
 ////////////// START OF src/Pokedex/Setup/SpeciesDexDataSetup.cpp //////////////
 
 namespace pokesim::dex::internal {
-void SpeciesDexDataSetup::setName(Species species) {
+inline void SpeciesDexDataSetup::setName(Species species) {
   handle.emplace<SpeciesName>(species);
 }
 
-void SpeciesDexDataSetup::setType(Type type1, Type type2) {
+inline void SpeciesDexDataSetup::setType(Type type1, Type type2) {
   handle.emplace<SpeciesTypes>(type1, type2);
 }
 
-void SpeciesDexDataSetup::setBaseStats(
+inline void SpeciesDexDataSetup::setBaseStats(
   types::baseStat hp, types::baseStat atk, types::baseStat def, types::baseStat spa, types::baseStat spd,
   types::baseStat spe) {
   handle.emplace<BaseStats>(hp, atk, def, spa, spd, spe);
 }
 
-void SpeciesDexDataSetup::setPrimaryAbility(Ability ability) {
+inline void SpeciesDexDataSetup::setPrimaryAbility(Ability ability) {
   handle.emplace<PrimaryAbility>(ability);
 }
 
-void SpeciesDexDataSetup::setSecondaryAbility(Ability ability) {
+inline void SpeciesDexDataSetup::setSecondaryAbility(Ability ability) {
   handle.emplace<SecondaryAbility>(ability);
 }
 
-void SpeciesDexDataSetup::setHiddenAbility(Ability ability) {
+inline void SpeciesDexDataSetup::setHiddenAbility(Ability ability) {
   handle.emplace<HiddenAbility>(ability);
 }
 }  // namespace pokesim::dex::internal
@@ -19055,32 +23557,32 @@ namespace pokesim::dex::internal {
 struct MoveDexDataSetup : DexDataSetup {
   MoveDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
 
-  void setName(Move move);
-  void setType(Type type);
-  void setAccuracy(types::baseAccuracy accuracy);
-  void setBasePower(types::basePower basePower);
+  inline void setName(Move move);
+  inline void setType(Type type);
+  inline void setAccuracy(types::baseAccuracy accuracy);
+  inline void setBasePower(types::basePower basePower);
 
-  void setCategoryPhysical();
-  void setCategorySpecial();
-  void setCategoryStatus();
+  inline void setCategoryPhysical();
+  inline void setCategorySpecial();
+  inline void setCategoryStatus();
 
-  void setBasePp(types::pp pp);
-  void setPriority(types::priority priority);
-  void setHitCount(types::moveHits hitCount);
+  inline void setBasePp(types::pp pp);
+  inline void setPriority(types::priority priority);
+  inline void setHitCount(types::moveHits hitCount);
 
-  void setPrimaryEffect(types::entity entity);
-  void setSecondaryEffect(types::entity entity);
+  inline void setPrimaryEffect(types::entity entity);
+  inline void setSecondaryEffect(types::entity entity);
 
-  void addAddedTargets(AddedTargetOptions addedTargets);
+  inline void addAddedTargets(AddedTargetOptions addedTargets);
 };
 
 struct MoveEffectSetup : DexDataSetup {
   MoveEffectSetup(types::registry& registry) : DexDataSetup(registry) {}
   types::entity entity() const { return handle; }
 
-  void setChance(types::baseEffectChance chance);
-  void setEffectsSelf();
-  void setEffectsTarget();
+  inline void setChance(types::baseEffectChance chance);
+  inline void setEffectsSelf();
+  inline void setEffectsTarget();
 
   template <typename BoostType>
   void setBoost(types::boost boost) {
@@ -19098,15 +23600,15 @@ struct MoveEffectSetup : DexDataSetup {
 /////////////// START OF src/Pokedex/Setup/MoveDexDataSetup.cpp ////////////////
 
 namespace pokesim::dex::internal {
-void MoveDexDataSetup::setName(Move move) {
+inline void MoveDexDataSetup::setName(Move move) {
   handle.emplace<MoveName>(move);
 }
 
-void MoveDexDataSetup::setType(Type type) {
+inline void MoveDexDataSetup::setType(Type type) {
   handle.emplace<TypeName>(type);
 }
 
-void MoveDexDataSetup::addAddedTargets(AddedTargetOptions addedTargets) {
+inline void MoveDexDataSetup::addAddedTargets(AddedTargetOptions addedTargets) {
   AddedTargets& existingTargets = handle.get_or_emplace<AddedTargets>();
   existingTargets.val = static_cast<AddedTargetOptions>(
     static_cast<std::uint8_t>(existingTargets.val) | static_cast<std::uint8_t>(addedTargets));
@@ -19136,58 +23638,58 @@ void MoveDexDataSetup::addAddedTargets(AddedTargetOptions addedTargets) {
   }
 }
 
-void MoveDexDataSetup::setAccuracy(types::baseAccuracy accuracy) {
+inline void MoveDexDataSetup::setAccuracy(types::baseAccuracy accuracy) {
   handle.emplace<Accuracy>(accuracy);
 }
 
-void MoveDexDataSetup::setBasePower(types::basePower basePower) {
+inline void MoveDexDataSetup::setBasePower(types::basePower basePower) {
   handle.emplace<BasePower>(basePower);
 }
 
-void MoveDexDataSetup::setCategoryPhysical() {
-  ENTT_ASSERT(!(handle.any_of<move::tags::Special, move::tags::Status>()), "A move can only have one category");
+inline void MoveDexDataSetup::setCategoryPhysical() {
+  ENTT_ASSERT(!(handle.any_of<move::tags::Special, move::tags::Status>()), "A move can only have one category.");
   setProperty<move::tags::Physical>();
 }
 
-void MoveDexDataSetup::setCategorySpecial() {
-  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Status>()), "A move can only have one category");
+inline void MoveDexDataSetup::setCategorySpecial() {
+  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Status>()), "A move can only have one category.");
   setProperty<move::tags::Special>();
 }
 
-void MoveDexDataSetup::setCategoryStatus() {
-  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Special>()), "A move can only have one category");
+inline void MoveDexDataSetup::setCategoryStatus() {
+  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Special>()), "A move can only have one category.");
   setProperty<move::tags::Status>();
 }
 
-void MoveDexDataSetup::setBasePp(types::pp pp) {
+inline void MoveDexDataSetup::setBasePp(types::pp pp) {
   handle.emplace<Pp>(pp);
 }
 
-void MoveDexDataSetup::setPriority(types::priority priority) {
+inline void MoveDexDataSetup::setPriority(types::priority priority) {
   handle.emplace<MovePriority>(priority);
 }
 
-void MoveDexDataSetup::setHitCount(types::moveHits hitCount) {
+inline void MoveDexDataSetup::setHitCount(types::moveHits hitCount) {
   handle.emplace<HitCount>(hitCount);
 }
 
-void MoveDexDataSetup::setPrimaryEffect(types::entity entity) {
+inline void MoveDexDataSetup::setPrimaryEffect(types::entity entity) {
   handle.emplace<MoveEffect>(true, entity);
 }
 
-void MoveDexDataSetup::setSecondaryEffect(types::entity entity) {
+inline void MoveDexDataSetup::setSecondaryEffect(types::entity entity) {
   handle.emplace<MoveEffect>(false, entity);
 }
 
-void MoveEffectSetup::setChance(types::baseEffectChance chance) {
+inline void MoveEffectSetup::setChance(types::baseEffectChance chance) {
   handle.emplace<Chance>(chance);
 }
 
-void MoveEffectSetup::setEffectsSelf() {
+inline void MoveEffectSetup::setEffectsSelf() {
   handle.emplace<move::tags::effect::MoveSource>();
 }
 
-void MoveEffectSetup::setEffectsTarget() {
+inline void MoveEffectSetup::setEffectsTarget() {
   handle.emplace<move::tags::effect::MoveTarget>();
 }
 }  // namespace pokesim::dex::internal
@@ -19200,7 +23702,7 @@ namespace pokesim::dex::internal {
 struct ItemDexDataSetup : DexDataSetup {
   ItemDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
 
-  void setName(Item item);
+  inline void setName(Item item);
 };
 }  // namespace pokesim::dex::internal
 
@@ -19209,7 +23711,7 @@ struct ItemDexDataSetup : DexDataSetup {
 /////////////// START OF src/Pokedex/Setup/ItemDexDataSetup.cpp ////////////////
 
 namespace pokesim::dex::internal {
-void ItemDexDataSetup::setName(Item item) {
+inline void ItemDexDataSetup::setName(Item item) {
   handle.emplace<ItemName>(item);
 }
 }  // namespace pokesim::dex::internal
@@ -19457,7 +23959,7 @@ auto buildSpeciesSV(types::registry& registry, bool forActiveMove) {
 }
 };  // namespace internal
 
-types::entity Pokedex::buildSpecies(dex::Species species, types::registry& registry, bool forActiveMove) const {
+inline types::entity Pokedex::buildSpecies(dex::Species species, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
@@ -19478,7 +23980,7 @@ types::entity Pokedex::buildSpecies(dex::Species species, types::registry& regis
     default: break;
   }
 
-  ENTT_FAIL("Building a species that does not exist");
+  ENTT_FAIL("Building a species that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim
@@ -19929,7 +24431,7 @@ auto buildMoveSV(types::registry& registry, bool forActiveMove) {
 }
 };  // namespace internal
 
-types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const {
+inline types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
@@ -19950,7 +24452,7 @@ types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool
     default: break;
   }
 
-  ENTT_FAIL("Building a move that does not exist");
+  ENTT_FAIL("Building a move that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim
@@ -19985,7 +24487,7 @@ auto buildItemSV(types::registry& registry, bool forActiveMove) {
 }
 };  // namespace internal
 
-types::entity Pokedex::buildItem(dex::Item item, types::registry& registry, bool forActiveMove) const {
+inline types::entity Pokedex::buildItem(dex::Item item, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
@@ -20006,7 +24508,7 @@ types::entity Pokedex::buildItem(dex::Item item, types::registry& registry, bool
     default: break;
   }
 
-  ENTT_FAIL("Building an item that does not exist");
+  ENTT_FAIL("Building an item that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim
@@ -20019,7 +24521,7 @@ namespace pokesim::dex::internal {
 struct AbilityDexDataSetup : DexDataSetup {
   AbilityDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
 
-  void setName(Ability ability);
+  inline void setName(Ability ability);
 };
 }  // namespace pokesim::dex::internal
 
@@ -20053,7 +24555,7 @@ auto buildAbilitySV(types::registry& registry, bool forActiveMove) {
 }
 };  // namespace internal
 
-types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& registry, bool forActiveMove) const {
+inline types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
@@ -20069,7 +24571,7 @@ types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& regis
     default: break;
   }
 
-  ENTT_FAIL("Building an ability that does not exist");
+  ENTT_FAIL("Building an ability that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim
@@ -20089,7 +24591,7 @@ struct AbilityName {
 ////////////// START OF src/Pokedex/Setup/AbilityDexDataSetup.cpp //////////////
 
 namespace pokesim::dex::internal {
-void AbilityDexDataSetup::setName(Ability ability) {
+inline void AbilityDexDataSetup::setName(Ability ability) {
   handle.emplace<AbilityName>(ability);
 }
 }  // namespace pokesim::dex::internal
@@ -20103,28 +24605,28 @@ template <typename Build, typename T>
 void Pokedex::load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build) {
   map.reserve(map.size() + list.size());
   for (T listItem : list) {
-    ENTT_ASSERT(!map.contains(listItem), "Shouldn't build data entries twice");
+    ENTT_ASSERT(!map.contains(listItem), "Shouldn't build data entries twice.");
     map[listItem] = build(listItem);
   }
 }
 
-void Pokedex::loadSpecies(const entt::dense_set<dex::Species>& speciesSet) {
+inline void Pokedex::loadSpecies(const entt::dense_set<dex::Species>& speciesSet) {
   load(speciesMap, speciesSet, [this](dex::Species species) { return buildSpecies(species, dexRegistry, false); });
 }
 
-void Pokedex::loadItems(const entt::dense_set<dex::Item>& itemSet) {
+inline void Pokedex::loadItems(const entt::dense_set<dex::Item>& itemSet) {
   load(itemsMap, itemSet, [this](dex::Item item) { return buildItem(item, dexRegistry, false); });
 }
 
-void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
+inline void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
   load(movesMap, moveSet, [this](dex::Move move) { return buildMove(move, dexRegistry, false); });
 }
 
-void Pokedex::loadAbilities(const entt::dense_set<dex::Ability>& abilitySet) {
+inline void Pokedex::loadAbilities(const entt::dense_set<dex::Ability>& abilitySet) {
   load(abilitiesMap, abilitySet, [this](dex::Ability ability) { return buildAbility(ability, dexRegistry, false); });
 }
 
-types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry) const {
+inline types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry) const {
   return buildMove(move, registry, true);
 }
 }  // namespace pokesim
@@ -20134,30 +24636,30 @@ types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry
 ////////////////// START OF src/Pokedex/Items/ItemEvents.cpp ///////////////////
 
 namespace pokesim::dex::internal {
-void setChoiceLock(types::handle pokemonHandle, const Battle& battle) {
+inline void setChoiceLock(types::handle pokemonHandle, const Battle& battle) {
   types::entity moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val).val;
-  pokemonHandle.emplace<ChoiceLock>(moveSlot);
+  pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot);
 }
 }  // namespace pokesim::dex::internal
 
 namespace pokesim::dex::internal {
-void AssaultVestEvents::onModifySpd(EventModifier& eventModifier) {
+inline void AssaultVestEvents::onModifySpd(EventModifier& eventModifier) {
   chainToModifier(eventModifier.val, latest::AssaultVest::onModifySpdModifier);
 }
 
-void ChoiceScarfEvents::onModifySpe(EventModifier& eventModifier) {
+inline void ChoiceScarfEvents::onModifySpe(EventModifier& eventModifier) {
   chainToModifier(eventModifier.val, latest::ChoiceScarf::onModifySpeModifier);
 }
 
-void ChoiceScarfEvents::onSourceModifyMove(types::handle pokemonHandle, const Battle& battle) {
+inline void ChoiceScarfEvents::onSourceModifyMove(types::handle pokemonHandle, const Battle& battle) {
   setChoiceLock(pokemonHandle, battle);
 }
 
-void ChoiceSpecsEvents::onModifySpa(EventModifier& eventModifier) {
+inline void ChoiceSpecsEvents::onModifySpa(EventModifier& eventModifier) {
   chainToModifier(eventModifier.val, latest::ChoiceSpecs::onModifySpaModifier);
 }
 
-void ChoiceSpecsEvents::onSourceModifyMove(types::handle pokemonHandle, const Battle& battle) {
+inline void ChoiceSpecsEvents::onSourceModifyMove(types::handle pokemonHandle, const Battle& battle) {
   setChoiceLock(pokemonHandle, battle);
 }
 }  // namespace pokesim::dex::internal
@@ -20167,7 +24669,7 @@ void ChoiceSpecsEvents::onSourceModifyMove(types::handle pokemonHandle, const Ba
 //////////////// START OF src/Pokedex/Effects/EffectEvents.cpp /////////////////
 
 namespace pokesim::dex {
-void internal::ChoiceLockEvents::onDisableMove(
+inline void internal::ChoiceLockEvents::onDisableMove(
   types::registry& registry, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
   ENTT_ASSERT(
     std::find(moveSlots.val.begin(), moveSlots.val.end(), choiceLocked.val),
@@ -20186,8 +24688,8 @@ void internal::ChoiceLockEvents::onDisableMove(
 /////////////// START OF src/Pokedex/Abilities/AbilityEvents.cpp ///////////////
 
 namespace pokesim::dex {
-void internal::StaticEvents::onDamagingHit(Simulation& /*simulation*/) {}
-void internal::StaticEvents::onModifySpe(stat::EffectiveSpe& effectiveSpe) {
+inline void internal::StaticEvents::onDamagingHit(Simulation& /*simulation*/) {}
+inline void internal::StaticEvents::onModifySpe(stat::EffectiveSpe& effectiveSpe) {
   effectiveSpe.val /= 2;
 }
 }  // namespace pokesim::dex
@@ -20207,7 +24709,7 @@ InputSetup::InputSetup(
   registry.emplace_or_replace<tags::Defender>(targetEntity);
 }
 
-types::entity InputSetup::entity() const {
+inline types::entity InputSetup::entity() const {
   return handle.entity();
 }
 }  // namespace pokesim::calc_damage
@@ -20219,7 +24721,7 @@ types::entity InputSetup::entity() const {
 #include <limits>
 
 namespace pokesim {
-constexpr types::boost getAttackEffectiveness(const SpeciesTypes& speciesTypes, dex::Type attackingType) {
+inline constexpr types::boost getAttackEffectiveness(const SpeciesTypes& speciesTypes, dex::Type attackingType) {
   types::boost modifier = 0;
   for (dex::Type defendingType : speciesTypes.val) {
     switch (MechanicConstants::TYPE_CHART.effectiveness(attackingType, defendingType)) {
@@ -20239,6 +24741,9 @@ constexpr types::boost getAttackEffectiveness(const SpeciesTypes& speciesTypes, 
     }
   }
 
+  ENTT_ASSERT(
+    modifier <= speciesTypes.size() && modifier >= -speciesTypes.size(),
+    "Modifier cannot exceed the number of types.");
   return modifier;
 }
 }  // namespace pokesim
@@ -20296,17 +24801,121 @@ struct PlayerSide {
 
 
 namespace pokesim::calc_damage {
-void run(Simulation& simulation) {
-  getDamage(simulation);
+namespace internal {
+struct DebugChecks {
+#ifdef NDEBUG
+  DebugChecks(const Simulation&) {}
+#else
+  const Simulation& simulation;
+  types::registry registryOnInput;
+  entt::dense_map<types::entity, types::entity> originalToCopy;
 
-  clearRunVariables(simulation);
-}
+  // Check that the number of calc_damage and analyze_effect entities are the same
+  // Add calc_damage outputs to exception list
 
-void clearRunVariables(Simulation& simulation) {
+  void checkInputs() {
+    const types::registry& registry = simulation.registry;
+    for (types::entity move : simulation.selectedMoveEntities()) {
+      originalToCopy[move] = debug::createEntityCopy(move, simulation.registry, registryOnInput);
+      assert(registry.all_of<Attacker>(move));
+      assert(registry.all_of<tags::Attacker>(registry.get<Attacker>(move).val));
+      assert(registry.all_of<Defenders>(move));
+      assert(registry.all_of<tags::Defender>(registry.get<Defenders>(move).only()));
+      assert(registry.all_of<Battle>(move));
+      assert(registry.all_of<TypeName>(move));
+      assert((registry.any_of<move::tags::Physical, move::tags::Special, move::tags::Status>(move)));
+      assert(
+        (registry.any_of<pokesim::tags::SimulateTurn, pokesim::tags::CalculateDamage, pokesim::tags::AnalyzeEffect>(
+          move)));
+    }
+
+    for (types::entity attacker : registry.view<tags::Attacker>()) {
+      originalToCopy[attacker] = debug::createEntityCopy(attacker, simulation.registry, registryOnInput);
+      assert(registry.all_of<UsedMoves>(attacker));
+      for (types::entity move : registry.get<UsedMoves>(attacker).val) {
+        assert(registry.all_of<tags::UsedMove>(move));
+      }
+      assert(registry.all_of<Battle>(attacker));
+      assert(registry.all_of<Side>(attacker));
+      assert(registry.all_of<Level>(attacker));
+      assert(registry.all_of<SpeciesTypes>(attacker));
+      assert((registry.any_of<stat::EffectiveAtk, stat::EffectiveSpa>(attacker)));
+      assert(
+        (registry.any_of<pokesim::tags::SimulateTurn, pokesim::tags::CalculateDamage, pokesim::tags::AnalyzeEffect>(
+          attacker)));
+    }
+
+    for (types::entity defender : registry.view<tags::Defender>()) {
+      originalToCopy[defender] = debug::createEntityCopy(defender, simulation.registry, registryOnInput);
+      assert(registry.all_of<UsedMoves>(defender));
+      for (types::entity move : registry.get<UsedMoves>(defender).val) {
+        assert(registry.all_of<tags::UsedMove>(move));
+      }
+      assert(registry.all_of<Battle>(defender));
+      assert(registry.all_of<Side>(defender));
+      assert(registry.all_of<Level>(defender));
+      assert(registry.all_of<SpeciesTypes>(defender));
+      assert((registry.any_of<stat::EffectiveDef, stat::EffectiveSpd>(defender)));
+      assert(
+        (registry.any_of<pokesim::tags::SimulateTurn, pokesim::tags::CalculateDamage, pokesim::tags::AnalyzeEffect>(
+          defender)));
+    }
+  }
+  void checkOutputs() {
+    const types::registry& registry = simulation.registry;
+
+    for (types::entity move : simulation.selectedMoveEntities()) {
+      debug::TypesToIgnore typesToIgnore;
+      typesToIgnore.add<Damage>();
+
+      assert(registry.all_of<Damage>(move));
+      assert(registry.get<Damage>(move).val > 0);
+      if (registry.all_of<pokesim::tags::SimulateTurn>(move)) {
+        assert(!registry.all_of<DamageRolls>(move));
+      }
+      else {
+        typesToIgnore.add<DamageRolls>();
+        assert(registry.all_of<DamageRolls>(move));
+
+        types::damage lastDamage = 0;
+        const DamageRolls& damageRolls = registry.get<DamageRolls>(move);
+        for (std::int64_t i = damageRolls.val.size() - 1; i >= 0; i--) {
+          assert(lastDamage <= damageRolls.val[i].val);
+          lastDamage = damageRolls.val[i].val;
+        }
+      }
+
+      assert((!registry.any_of<tags::Crit, AttackingLevel, AttackingStat, DefendingStat>(move)));
+      types::entity originalMove = debug::findCopyParent(originalToCopy, simulation.registry, move);
+      debug::areEntitiesEqual(
+        simulation.registry,
+        move,
+        registryOnInput,
+        originalToCopy.at(originalMove),
+        typesToIgnore);
+    }
+
+    for (types::entity attacker : registry.view<tags::Attacker>()) {
+      types::entity originalAttacker = debug::findCopyParent(originalToCopy, simulation.registry, attacker);
+      debug::areEntitiesEqual(simulation.registry, attacker, registryOnInput, originalToCopy.at(originalAttacker));
+    }
+
+    for (types::entity defender : registry.view<tags::Defender>()) {
+      types::entity originalDefender = debug::findCopyParent(originalToCopy, simulation.registry, defender);
+      debug::areEntitiesEqual(simulation.registry, defender, registryOnInput, originalToCopy.at(originalDefender));
+    }
+  }
+
+  DebugChecks(const Simulation& _simulation) : simulation(_simulation) { checkInputs(); }
+  ~DebugChecks() { checkOutputs(); }
+#endif
+};
+
+inline void clearRunVariables(Simulation& simulation) {
   simulation.registry.clear<tags::Crit, AttackingLevel, AttackingStat, DefendingStat>();
 }
 
-void internal::checkForAndApplyStab(
+inline void checkForAndApplyStab(
   types::handle moveHandle, const Attacker& attacker, const TypeName& type, DamageRollModifier& modifier) {
   const SpeciesTypes& attackerTypes = moveHandle.registry()->get<SpeciesTypes>(attacker.val);
 
@@ -20315,10 +24924,10 @@ void internal::checkForAndApplyStab(
   }
 }
 
-void internal::checkForAndApplyTypeEffectiveness(
+inline void checkForAndApplyTypeEffectiveness(
   types::handle moveHandle, const Attacker& attacker, const Defenders& defenders, const TypeName& type,
   DamageRollModifier& modifier) {
-  const SpeciesTypes& defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defenders.val[0]);
+  const SpeciesTypes& defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defenders.only());
 
   types::boost effectiveness = getAttackEffectiveness(defenderTypes, type.name);
   if (effectiveness < 0) {
@@ -20329,9 +24938,9 @@ void internal::checkForAndApplyTypeEffectiveness(
   }
 }
 
-void internal::applyBurnModifier(types::registry& registry, const CurrentActionMoves& moves) {
+inline void applyBurnModifier(types::registry& registry, const CurrentActionMoves& moves) {
   for (types::entity move : moves.val) {
-    if (!registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag> */) {
+    if (!registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
       return;
     }
 
@@ -20339,24 +24948,16 @@ void internal::applyBurnModifier(types::registry& registry, const CurrentActionM
   }
 }
 
-void internal::setDamageToAtLeastOne(Damage& damage) {
+inline void setDamageToAtLeastOne(Damage& damage) {
   damage.val = std::max(damage.val, (types::damage)1U);
 }
 
-void setDamageRollModifiers(Simulation& simulation) {
-  simulation.viewForSelectedMoves<internal::checkForAndApplyStab>();
-  simulation.viewForSelectedMoves<internal::checkForAndApplyTypeEffectiveness>();
-  simulation.viewForSelectedPokemon<
-    internal::applyBurnModifier,
-    Tags<status::tags::Burn, tags::Attacker> /*, entt::exclude<ability::tags::Guts> */>();
-}
-
-void internal::setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
+inline void setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
   types::registry& registry = *moveHandle.registry();
-  PlayerSideId playerSide = registry.get<PlayerSide>(registry.get<Side>(defenders.val[0]).val).val;
+  PlayerSideId playerSide = registry.get<PlayerSide>(registry.get<Side>(defenders.only()).val).val;
   switch (playerSide) {
     case PlayerSideId::NONE: {
-      ENTT_FAIL("Player side wasn't set properly");
+      ENTT_FAIL("Player side wasn't set properly.");
       break;
     }
     case PlayerSideId::P1: {
@@ -20370,8 +24971,7 @@ void internal::setDefendingSide(types::handle moveHandle, const Defenders& defen
   }
 }
 
-void internal::calculateAllDamageRolls(
-  DamageRolls& damageRolls, const Damage& damage, const DamageRollModifier& modifier) {
+inline void calculateAllDamageRolls(DamageRolls& damageRolls, const Damage& damage, const DamageRollModifier& modifier) {
   damageRolls.val.reserve(MechanicConstants::MAX_DAMAGE_ROLL_COUNT);
   for (std::uint8_t i = 0; i < MechanicConstants::MAX_DAMAGE_ROLL_COUNT; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
@@ -20380,17 +24980,15 @@ void internal::calculateAllDamageRolls(
   }
 }
 
-void internal::reduceDamageRollsToFoeHp(
+inline void reduceDamageRollsToFoeHp(
   types::handle moveHandle, DamageRolls& damageRolls, const DamageRollModifier& modifier, const Defenders& defenders) {
-  const auto& defenderHp = moveHandle.registry()->get<pokesim::stat::CurrentHp>(defenders.val[0]);
+  const auto& defenderHp = moveHandle.registry()->get<pokesim::stat::CurrentHp>(defenders.only());
   for (auto& damageRoll : damageRolls.val) {
     damageRoll.val = std::min(defenderHp.val, damageRoll.val);
-    setDamageToAtLeastOne(damageRoll);
   }
 }
 
-void internal::applyAverageDamageRollAndModifier(
-  DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
+inline void applyAverageDamageRollAndModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
   applyAverageDamageRoll(damage);
   applyChainedModifier(damage.val, modifier.val);
   setDamageToAtLeastOne(damage);
@@ -20398,8 +24996,7 @@ void internal::applyAverageDamageRollAndModifier(
   damageRolls.val.emplace_back(damage);
 }
 
-void internal::applyMinDamageRollAndModifier(
-  DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
+inline void applyMinDamageRollAndModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
   applyMinDamageRoll(damage);
   applyChainedModifier(damage.val, modifier.val);
   setDamageToAtLeastOne(damage);
@@ -20407,18 +25004,19 @@ void internal::applyMinDamageRollAndModifier(
   damageRolls.val.emplace_back(damage);
 }
 
-void internal::applyDamageModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
+inline void applyDamageModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifier& modifier) {
   applyChainedModifier(damage.val, modifier.val);
   damageRolls.val.emplace_back(damage);
 }
 
-void internal::setDamageToFirstRoll(const DamageRolls& damageRolls, Damage& damage) {
+inline void setDamageToFirstRoll(const DamageRolls& damageRolls, Damage& damage) {
   damage = damageRolls.val[0];
 }
 
-void internal::applyDamageRollsAndModifiers(
-  Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp) {
-  ENTT_ASSERT(damageRollKind != DamageRollKind::NONE, "Cannot calculate damage without knowing what rolls to consider");
+inline void applyDamageRollsAndModifiers(Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp) {
+  ENTT_ASSERT(
+    damageRollKind != DamageRollKind::NONE,
+    "Cannot calculate damage without knowing what rolls to consider.");
 
   simulation.addToEntities<DamageRolls, DamageRollModifier>();
   if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
@@ -20442,6 +25040,52 @@ void internal::applyDamageRollsAndModifiers(
     simulation.viewForSelectedMoves<reduceDamageRollsToFoeHp>();
   }
 }
+
+inline void assignCritChanceDivisor(types::handle moveHandle, const CritBoost& critBoost) {
+  std::size_t index = std::min((std::size_t)critBoost.val, pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS.size() - 1);
+  moveHandle.emplace<CritChanceDivisor>(pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS[index]);
+}
+
+inline void setSourceLevel(types::handle moveHandle, const Attacker& attacker) {
+  moveHandle.emplace<AttackingLevel>(moveHandle.registry()->get<Level>(attacker.val).val);
+}
+
+template <typename Category>
+void setUsedAttackStat(types::handle moveHandle, const Attacker& attacker) {
+  types::stat attackingStat = 1;
+  if constexpr (std::is_same_v<Category, move::tags::Physical>) {
+    attackingStat = moveHandle.registry()->get<stat::EffectiveAtk>(attacker.val).val;
+  }
+  else {
+    attackingStat = moveHandle.registry()->get<stat::EffectiveSpa>(attacker.val).val;
+  }
+  moveHandle.emplace<AttackingStat>(attackingStat);
+}
+
+template <typename Category>
+void setUsedDefenseStat(types::handle moveHandle, const Defenders& defenders) {
+  types::stat defendingStat = 1;
+  if constexpr (std::is_same_v<Category, move::tags::Physical>) {
+    defendingStat = moveHandle.registry()->get<stat::EffectiveDef>(defenders.only()).val;
+  }
+  else {
+    defendingStat = moveHandle.registry()->get<stat::EffectiveSpd>(defenders.only()).val;
+  }
+  moveHandle.emplace<DefendingStat>(defendingStat);
+}
+
+inline void calculateBaseDamage(
+  types::handle moveHandle, const BasePower& basePower, const AttackingLevel& level, const AttackingStat& attack,
+  const DefendingStat& defense) {
+  // NOLINTNEXTLINE(readability-magic-numbers)
+  types::damage damage = (((2U * level.val / 5U + 2U) * basePower.val * attack.val) / defense.val) / 50U + 2;
+  moveHandle.emplace<Damage>(damage);
+}
+
+inline void applyCritDamageIncrease(Damage& damage) {
+  damage.val = (types::damage)(damage.val * MechanicConstants::CRIT_MULTIPLIER);
+}
+}  // namespace internal
 
 template <typename SimulationTag>
 void applyDamageRollsAndModifiers(Simulation& simulation) {
@@ -20495,65 +25139,28 @@ void applyDamageRollsAndModifiers(Simulation& simulation) {
   }
 }
 
-void internal::assignCritChanceDivisor(types::handle moveHandle, const CritBoost& critBoost) {
-  std::size_t index = std::min((std::size_t)critBoost.val, pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS.size() - 1);
-  moveHandle.emplace<CritChanceDivisor>(pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS[index]);
+inline void setDamageRollModifiers(Simulation& simulation) {
+  simulation.viewForSelectedMoves<internal::checkForAndApplyStab>();
+  simulation.viewForSelectedMoves<internal::checkForAndApplyTypeEffectiveness>();
+  simulation.viewForSelectedPokemon<
+    internal::applyBurnModifier,
+    Tags<status::tags::Burn, tags::Attacker> /*, entt::exclude<ability::tags::Guts> */>();
 }
 
-void internal::setSourceLevel(types::handle moveHandle, const Attacker& attacker) {
-  moveHandle.emplace<AttackingLevel>(moveHandle.registry()->get<Level>(attacker.val).val);
-}
-
-template <typename Category>
-void internal::setUsedAttackStat(types::handle moveHandle, const Attacker& attacker) {
-  types::stat attackingStat = 1;
-  if constexpr (std::is_same_v<Category, move::tags::Physical>) {
-    attackingStat = moveHandle.registry()->get<stat::EffectiveAtk>(attacker.val).val;
-  }
-  else {
-    attackingStat = moveHandle.registry()->get<stat::EffectiveSpa>(attacker.val).val;
-  }
-  moveHandle.emplace<AttackingStat>(attackingStat);
-}
-
-template <typename Category>
-void internal::setUsedDefenseStat(types::handle moveHandle, const Defenders& defenders) {
-  types::stat defendingStat = 1;
-  if constexpr (std::is_same_v<Category, move::tags::Physical>) {
-    defendingStat = moveHandle.registry()->get<stat::EffectiveDef>(defenders.val[0]).val;
-  }
-  else {
-    defendingStat = moveHandle.registry()->get<stat::EffectiveSpd>(defenders.val[0]).val;
-  }
-  moveHandle.emplace<DefendingStat>(defendingStat);
-}
-
-void internal::calculateBaseDamage(
-  types::handle moveHandle, const BasePower& basePower, const AttackingLevel& level, const AttackingStat& attack,
-  const DefendingStat& defense) {
-  // NOLINTNEXTLINE(readability-magic-numbers)
-  types::damage damage = (((2U * level.val / 5U + 2U) * basePower.val * attack.val) / defense.val) / 50U + 2;
-  moveHandle.emplace<Damage>(damage);
-}
-
-void internal::applyCritDamageIncrease(Damage& damage) {
-  damage.val = (types::damage)(damage.val * MechanicConstants::CRIT_MULTIPLIER);
-}
-
-void applyDamageRoll(Damage& damage, types::damageRoll damageRoll) {
+inline void applyDamageRoll(Damage& damage, types::damageRoll damageRoll) {
   damage.val = (types::damage)(damage.val * ((100U - damageRoll) / 100.0F));
 }
 
-void applyAverageDamageRoll(Damage& damage) {
+inline void applyAverageDamageRoll(Damage& damage) {
   damage.val = (types::damage)(damage.val * (100U - (MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U) / 2.0F) / 100.0F);
 }
 
-void applyMinDamageRoll(Damage& damage) {
+inline void applyMinDamageRoll(Damage& damage) {
   applyDamageRoll(damage, MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U);
 }
 
-void setIfMoveCrits(Simulation& simulation) {
-  simulation.addToEntities<calc_damage::CritBoost, pokesim::tags::SelectedForViewMove>();
+inline void setIfMoveCrits(Simulation& simulation) {
+  simulation.addToEntities<calc_damage::CritBoost, pokesim::tags::SelectedForViewMove, pokesim::tags::SimulateTurn>();
   runModifyCritBoostEvent(simulation);
   simulation.viewForSelectedMoves<internal::assignCritChanceDivisor>();
   simulation.registry.clear<CritBoost>();
@@ -20561,8 +25168,8 @@ void setIfMoveCrits(Simulation& simulation) {
   simulate_turn::setIfMoveCrits(simulation);
 }
 
-void getDamage(Simulation& simulation) {
-  pokesim::internal::SelectForCurrentActionMoveView<> selectedMoves{simulation};
+inline void getDamage(Simulation& simulation) {
+  pokesim::internal::SelectForCurrentActionMoveView<> selectedMoves{simulation, entt::exclude<move::tags::Status>};
   if (selectedMoves.hasNoneSelected()) return;
 
   setIfMoveCrits(simulation);
@@ -20587,6 +25194,13 @@ void getDamage(Simulation& simulation) {
   applyDamageRollsAndModifiers<pokesim::tags::AnalyzeEffect>(simulation);
   simulation.registry.clear<DamageRollModifier>();
 }
+
+inline void run(Simulation& simulation) {
+  internal::DebugChecks debugChecks(simulation);
+
+  getDamage(simulation);
+  internal::clearRunVariables(simulation);
+}
 }  // namespace pokesim::calc_damage
 
 ///////////////////// END OF src/CalcDamage/CalcDamage.cpp /////////////////////
@@ -20610,16 +25224,16 @@ SideStateSetup::SideStateSetup(types::registry& registry, types::entity entity, 
   handle.emplace<tags::Side>();
 }
 
-void SideStateSetup::initBlank() {
+inline void SideStateSetup::initBlank() {
   handle.emplace<Battle>();
   handle.emplace<Team>();
   handle.emplace<FoeSide>();
 }
 
-void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
+inline void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
   Team& teamEntities = handle.emplace<Team>();
   Battle battle = handle.get<Battle>();
-  ENTT_ASSERT(team.size() <= teamEntities.val.max_size(), "Cannot add more Pokemon to a team than MAX_TEAM_SIZE");
+  ENTT_ASSERT(team.size() <= teamEntities.val.max_size(), "Cannot add more Pokemon to a team than MAX_TEAM_SIZE.");
 
   for (std::size_t i = 0; i < team.size(); i++) {
     teamEntities.val.push_back(team[i].entity());
@@ -20629,11 +25243,11 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
   }
 }
 
-void SideStateSetup::setOpponent(types::entity entity) {
+inline void SideStateSetup::setOpponent(types::entity entity) {
   handle.emplace<FoeSide>(entity);
 }
 
-void SideStateSetup::setBattle(types::entity entity) {
+inline void SideStateSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
 }
 }  // namespace pokesim
@@ -20748,97 +25362,97 @@ PokemonStateSetup::PokemonStateSetup(types::registry& registry, types::entity en
   handle.emplace<tags::Pokemon>();
 }
 
-void PokemonStateSetup::initBlank() {
+inline void PokemonStateSetup::initBlank() {
   handle.emplace<SpeciesName>();
   handle.emplace<Side>();
   handle.emplace<Battle>();
   setAutoID();
 }
 
-void PokemonStateSetup::setAutoID() {
+inline void PokemonStateSetup::setAutoID() {
   setID((uint16_t)handle.registry()->view<SpeciesName>().size() + 1);
 }
 
-void PokemonStateSetup::setID(types::stateId id) {
+inline void PokemonStateSetup::setID(types::stateId id) {
   handle.emplace<Id>(id);
 }
 
-void PokemonStateSetup::setSpecies(dex::Species speciesName) {
+inline void PokemonStateSetup::setSpecies(dex::Species speciesName) {
   handle.emplace<SpeciesName>(speciesName);
 }
 
-void PokemonStateSetup::setSide(types::entity entity) {
+inline void PokemonStateSetup::setSide(types::entity entity) {
   handle.emplace<Side>(entity);
 }
 
-void PokemonStateSetup::setBattle(types::entity entity) {
+inline void PokemonStateSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
 }
 
-void PokemonStateSetup::setHp(types::stat hp) {
+inline void PokemonStateSetup::setHp(types::stat hp) {
   handle.emplace<stat::CurrentHp>(hp);
 }
 
-void PokemonStateSetup::setTypes(SpeciesTypes types) {
+inline void PokemonStateSetup::setTypes(SpeciesTypes types) {
   handle.emplace<SpeciesTypes>(types);
 }
 
-void PokemonStateSetup::setLevel(types::level level) {
+inline void PokemonStateSetup::setLevel(types::level level) {
   handle.emplace<Level>(level);
 }
 
-void PokemonStateSetup::setGender(dex::Gender gender) {
+inline void PokemonStateSetup::setGender(dex::Gender gender) {
   handle.emplace<GenderName>(gender);
 }
 
-void PokemonStateSetup::setAbility(dex::Ability ability) {
+inline void PokemonStateSetup::setAbility(dex::Ability ability) {
   handle.emplace<AbilityName>(ability);
   ability::tags::enumToTag(ability, handle);
 }
 
-void PokemonStateSetup::setItem(dex::Item item) {
+inline void PokemonStateSetup::setItem(dex::Item item) {
   handle.emplace<ItemName>(item);
   item::tags::enumToTag(item, handle);
 }
 
-void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
+inline void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
   MoveSlots& moveEntities = handle.emplace<MoveSlots>();
   ENTT_ASSERT(
     moveSlots.size() <= moveEntities.val.max_size(),
-    "Cannot add more moves to a Pokemon than MAX_MOVE_SLOTS");
+    "Cannot add more moves to a Pokemon than MAX_MOVE_SLOTS.");
   for (types::entity moveSlot : moveSlots) {
     moveEntities.val.push_back(moveSlot);
   }
 }
 
-void PokemonStateSetup::setPostion(types::teamPositionIndex position) {
+inline void PokemonStateSetup::setPostion(types::teamPositionIndex position) {
   handle.emplace<Position>(position);
 }
 
-void PokemonStateSetup::setStatus(dex::Status status) {
+inline void PokemonStateSetup::setStatus(dex::Status status) {
   pokesim::setStatus(handle, status);
 }
 
-void PokemonStateSetup::setNature(dex::Nature nature) {
+inline void PokemonStateSetup::setNature(dex::Nature nature) {
   handle.emplace<NatureName>(nature);
   nature::tags::enumToTag(nature, handle);
 }
 
-void PokemonStateSetup::setEVs(
+inline void PokemonStateSetup::setEVs(
   types::ev hp, types::ev atk, types::ev def, types::ev spa, types::ev spd, types::ev spe) {
   handle.emplace<Evs>(hp, atk, def, spa, spd, spe);
 }
 
-void PokemonStateSetup::setEVs(const Evs& evs) {
+inline void PokemonStateSetup::setEVs(const Evs& evs) {
   handle.emplace<Evs>(evs);
 }
 
-void PokemonStateSetup::setIVs(
+inline void PokemonStateSetup::setIVs(
   types::iv hp, types::iv atk, types::iv def, types::iv spa, types::iv spd, types::iv spe) {
   handle.emplace<Ivs>(hp, atk, def, spa, spd, spe);
 }
 
-void PokemonStateSetup::setIVs(const Ivs& ivs) {
+inline void PokemonStateSetup::setIVs(const Ivs& ivs) {
   handle.emplace<Ivs>(ivs);
 }
 }  // namespace pokesim
@@ -20848,21 +25462,21 @@ void PokemonStateSetup::setIVs(const Ivs& ivs) {
 ///////////////// START OF src/Battle/Setup/MoveStateSetup.cpp /////////////////
 
 namespace pokesim {
-void MoveStateSetup::initBlank() {
+inline void MoveStateSetup::initBlank() {
   handle.emplace<MoveName>();
   handle.emplace<Pp>();
   handle.emplace<MaxPp>();
 }
 
-void MoveStateSetup::setName(dex::Move moveName) {
+inline void MoveStateSetup::setName(dex::Move moveName) {
   handle.emplace<MoveName>(moveName);
 }
 
-void MoveStateSetup::setPP(types::pp pp) {
+inline void MoveStateSetup::setPP(types::pp pp) {
   handle.emplace<Pp>(pp);
 }
 
-void MoveStateSetup::setMaxPP(types::pp maxPp) {
+inline void MoveStateSetup::setMaxPP(types::pp maxPp) {
   handle.emplace<MaxPp>(maxPp);
 }
 }  // namespace pokesim
@@ -20874,7 +25488,7 @@ void MoveStateSetup::setMaxPP(types::pp maxPp) {
 // TODO(aed3): Make this auto generated
 
 namespace pokesim {
-void ability::tags::enumToTag(dex::Ability ability, types::handle handle) {
+inline void ability::tags::enumToTag(dex::Ability ability, types::handle handle) {
   switch (ability) {
     case dex::Ability::DEFIANT: handle.emplace<Defiant>(); return;
     case dex::Ability::INFILTRATOR: handle.emplace<Infiltrator>(); return;
@@ -20883,12 +25497,12 @@ void ability::tags::enumToTag(dex::Ability ability, types::handle handle) {
     case dex::Ability::SWEET_VEIL: handle.emplace<SweetVeil>(); return;
     case dex::Ability::TRACE: handle.emplace<Trace>(); return;
     default: {
-      ENTT_ASSERT(false, "Adding tag for ability that does not exist");
+      ENTT_ASSERT(false, "Adding tag for ability that does not exist.");
     }
   }
 }
 
-void item::tags::enumToTag(dex::Item item, types::handle handle) {
+inline void item::tags::enumToTag(dex::Item item, types::handle handle) {
   switch (item) {
     case dex::Item::ASSAULT_VEST: handle.emplace<AssaultVest>(); return;
     case dex::Item::BRIGHT_POWDER: handle.emplace<BrightPowder>(); return;
@@ -20897,12 +25511,12 @@ void item::tags::enumToTag(dex::Item item, types::handle handle) {
     case dex::Item::FOCUS_SASH: handle.emplace<FocusSash>(); return;
     case dex::Item::LIFE_ORB: handle.emplace<LifeOrb>(); return;
     default: {
-      ENTT_ASSERT(false, "Adding tag for item that does not exist");
+      ENTT_ASSERT(false, "Adding tag for item that does not exist.");
     }
   }
 }
 
-void nature::tags::enumToTag(dex::Nature nature, types::handle handle) {
+inline void nature::tags::enumToTag(dex::Nature nature, types::handle handle) {
   switch (nature) {
     case dex::Nature::ADAMANT: handle.emplace<Adamant>(); return;
     case dex::Nature::BASHFUL: handle.emplace<Bashful>(); return;
@@ -20930,12 +25544,12 @@ void nature::tags::enumToTag(dex::Nature nature, types::handle handle) {
     case dex::Nature::SERIOUS: handle.emplace<Serious>(); return;
     case dex::Nature::TIMID: handle.emplace<Timid>(); return;
     default: {
-      ENTT_ASSERT(false, "Adding tag for nature that does not exist");
+      ENTT_ASSERT(false, "Adding tag for nature that does not exist.");
     }
   }
 }
 
-void status::tags::enumToTag(dex::Status status, types::handle& handle) {
+inline void status::tags::enumToTag(dex::Status status, types::handle& handle) {
   switch (status) {
     case dex::Status::BRN: handle.emplace<Burn>(); return;
     case dex::Status::FRZ: handle.emplace<Freeze>(); return;
@@ -20944,7 +25558,7 @@ void status::tags::enumToTag(dex::Status status, types::handle& handle) {
     case dex::Status::SLP: handle.emplace<Sleep>(); return;
     case dex::Status::TOX: handle.emplace<Toxic>(); return;
     default: {
-      ENTT_ASSERT(false, "Adding tag for status that does not exist");
+      ENTT_ASSERT(false, "Adding tag for status that does not exist.");
     }
   }
 }
@@ -20964,7 +25578,7 @@ BattleStateSetup::BattleStateSetup(types::registry& registry, types::entity enti
   }
 }
 
-void BattleStateSetup::initBlank() {
+inline void BattleStateSetup::initBlank() {
   handle.emplace<Sides>();
   handle.emplace<ActionQueue>();
   setAutoID();
@@ -20972,24 +25586,24 @@ void BattleStateSetup::initBlank() {
   setProbability(1);
 }
 
-void BattleStateSetup::setAutoID() {
+inline void BattleStateSetup::setAutoID() {
   setID((types::stateId)handle.registry()->view<Sides>().size());
 }
 
-void BattleStateSetup::setID(types::stateId id) {
+inline void BattleStateSetup::setID(types::stateId id) {
   handle.emplace_or_replace<Id>(id);
 }
 
-void BattleStateSetup::setSide(PlayerSideId sideID, types::entity sideEntity) {
+inline void BattleStateSetup::setSide(PlayerSideId sideID, types::entity sideEntity) {
   auto& sides = handle.get_or_emplace<Sides>();
   switch (sideID) {
     case PlayerSideId::P1: sides.p1() = sideEntity; break;
     case PlayerSideId::P2: sides.p2() = sideEntity; break;
-    default: ENTT_FAIL("sideID must be assigned P1 or P2"); break;
+    default: ENTT_FAIL("sideID must be assigned P1 or P2."); break;
   }
 }
 
-void BattleStateSetup::setRNGSeed(std::optional<types::rngState> seed) {
+inline void BattleStateSetup::setRNGSeed(std::optional<types::rngState> seed) {
   if (!seed.has_value()) {
     static std::atomic_uint64_t state = 1;
     seed = state;
@@ -21000,36 +25614,36 @@ void BattleStateSetup::setRNGSeed(std::optional<types::rngState> seed) {
   handle.emplace<RngSeed>(seed.value());
 }
 
-void BattleStateSetup::setActionQueue(const std::vector<types::entity>& queue) {
+inline void BattleStateSetup::setActionQueue(const std::vector<types::entity>& queue) {
   handle.emplace<ActionQueue>(queue);
 }
 
-void BattleStateSetup::setTurn(types::battleTurn turn) {
+inline void BattleStateSetup::setTurn(types::battleTurn turn) {
   handle.emplace<Turn>(turn);
 }
 
-void BattleStateSetup::setCurrentActionTarget(types::targets<types::entity> actionTargets) {
+inline void BattleStateSetup::setCurrentActionTarget(types::targets<types::entity> actionTargets) {
   handle.emplace<CurrentActionTargets>(actionTargets);
   for (types::entity entity : actionTargets) {
     handle.registry()->emplace<tags::CurrentActionMoveTarget>(entity);
   }
 }
 
-void BattleStateSetup::setCurrentActionSource(types::entity actionSource) {
+inline void BattleStateSetup::setCurrentActionSource(types::entity actionSource) {
   handle.emplace<CurrentActionSource>(actionSource);
   handle.registry()->emplace<tags::CurrentActionMoveSource>(actionSource);
 }
 
-void BattleStateSetup::setCurrentActionMove(types::entity actionMove) {
+inline void BattleStateSetup::setCurrentActionMove(types::entity actionMove) {
   handle.emplace<CurrentActionMoves>().val.push_back(actionMove);
   handle.registry()->emplace<tags::CurrentActionMove>(actionMove);
 }
 
-void BattleStateSetup::setProbability(types::probability probability) {
+inline void BattleStateSetup::setProbability(types::probability probability) {
   handle.emplace<Probability>(probability);
 }
 
-std::vector<BattleStateSetup> BattleStateSetup::clone(std::optional<types::cloneIndex> cloneCount) {
+inline std::vector<BattleStateSetup> BattleStateSetup::clone(std::optional<types::cloneIndex> cloneCount) {
   types::registry& registry = *handle.registry();
 
   handle.emplace<tags::CloneFrom>();
@@ -21072,13 +25686,13 @@ struct StatName {
 ////////////// START OF src/Battle/Pokemon/ManagePokemonState.cpp //////////////
 
 namespace pokesim {
-void setStatus(types::handle pokemonHandle, dex::Status status) {
+inline void setStatus(types::handle pokemonHandle, dex::Status status) {
   clearStatus(pokemonHandle);
   pokemonHandle.emplace<StatusName>(status);
   status::tags::enumToTag(status, pokemonHandle);
 }
 
-void clearStatus(types::handle pokemonHandle) {
+inline void clearStatus(types::handle pokemonHandle) {
   pokemonHandle.remove<
     StatusName,
     status::tags::Burn,
@@ -21089,38 +25703,38 @@ void clearStatus(types::handle pokemonHandle) {
     status::tags::Toxic>();
 }
 
-void deductPp(Pp& pp) {
+inline void deductPp(Pp& pp) {
   if (pp.val) {
     pp.val -= 1;
   }
 }
 
-void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMoveSlot& move) {
+inline void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMoveSlot& move) {
   registry.emplace<LastUsedMove>(source.val, move.val);
 }
 
-void resetEffectiveAtk(types::handle handle, stat::Atk atk) {
+inline void resetEffectiveAtk(types::handle handle, stat::Atk atk) {
   handle.emplace_or_replace<stat::EffectiveAtk>(atk.val);
 }
 
-void resetEffectiveDef(types::handle handle, stat::Def def) {
+inline void resetEffectiveDef(types::handle handle, stat::Def def) {
   handle.emplace_or_replace<stat::EffectiveDef>(def.val);
 }
 
-void resetEffectiveSpa(types::handle handle, stat::Spa spa) {
+inline void resetEffectiveSpa(types::handle handle, stat::Spa spa) {
   handle.emplace_or_replace<stat::EffectiveSpa>(spa.val);
 }
 
-void resetEffectiveSpd(types::handle handle, stat::Spd spd) {
+inline void resetEffectiveSpd(types::handle handle, stat::Spd spd) {
   handle.emplace_or_replace<stat::EffectiveSpd>(spd.val);
 }
 
-void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
+inline void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
   handle.emplace_or_replace<stat::EffectiveSpe>(spe.val);
 }
 
-void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets) {
-  stat::CurrentHp& hp = registry.get<stat::CurrentHp>(targets.val[0]);
+inline void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets) {
+  stat::CurrentHp& hp = registry.get<stat::CurrentHp>(targets.only());
   if (damage.val > hp.val) {
     hp.val = 0;
     // Faint
@@ -21130,7 +25744,7 @@ void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentAct
   }
 }
 
-void updateAllStats(Simulation& simulation) {
+inline void updateAllStats(Simulation& simulation) {
   updateAtk(simulation);
   updateDef(simulation);
   updateSpa(simulation);
@@ -21138,7 +25752,7 @@ void updateAllStats(Simulation& simulation) {
   updateSpe(simulation);
 }
 
-void updateAtk(Simulation& simulation) {
+inline void updateAtk(Simulation& simulation) {
   internal::SelectForPokemonView<tags::AtkStatUpdateRequired> selectedAtkUpdateRequired{simulation};
   if (selectedAtkUpdateRequired.hasNoneSelected()) return;
 
@@ -21151,7 +25765,7 @@ void updateAtk(Simulation& simulation) {
   simulation.registry.clear<tags::AtkStatUpdateRequired>();
 }
 
-void updateDef(Simulation& simulation) {
+inline void updateDef(Simulation& simulation) {
   internal::SelectForPokemonView<tags::DefStatUpdateRequired> selectedDefUpdateRequired{simulation};
   if (selectedDefUpdateRequired.hasNoneSelected()) return;
 
@@ -21164,7 +25778,7 @@ void updateDef(Simulation& simulation) {
   simulation.registry.clear<tags::DefStatUpdateRequired>();
 }
 
-void updateSpa(Simulation& simulation) {
+inline void updateSpa(Simulation& simulation) {
   internal::SelectForPokemonView<tags::SpaStatUpdateRequired> selectedSpaUpdateRequired{simulation};
   if (selectedSpaUpdateRequired.hasNoneSelected()) return;
 
@@ -21177,7 +25791,7 @@ void updateSpa(Simulation& simulation) {
   simulation.registry.clear<tags::SpaStatUpdateRequired>();
 }
 
-void updateSpd(Simulation& simulation) {
+inline void updateSpd(Simulation& simulation) {
   internal::SelectForPokemonView<tags::SpdStatUpdateRequired> selectedSpdUpdateRequired{simulation};
   if (selectedSpdUpdateRequired.hasNoneSelected()) return;
 
@@ -21190,7 +25804,7 @@ void updateSpd(Simulation& simulation) {
   simulation.registry.clear<tags::SpdStatUpdateRequired>();
 }
 
-void updateSpe(Simulation& simulation) {
+inline void updateSpe(Simulation& simulation) {
   internal::SelectForPokemonView<tags::SpeStatUpdateRequired> selectedSpeUpdateRequired{simulation};
   if (selectedSpeUpdateRequired.hasNoneSelected()) return;
 
@@ -21210,16 +25824,16 @@ void updateSpe(Simulation& simulation) {
 ////////////////// START OF src/Battle/ManageBattleState.cpp ///////////////////
 
 namespace pokesim {
-void assignRootBattle(types::handle battleHandle) {
+inline void assignRootBattle(types::handle battleHandle) {
   battleHandle.emplace<RootBattle>(battleHandle.entity());
 }
 
-void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root) {
+inline void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root) {
   leafBattleHandle.registry()->get_or_emplace<simulate_turn::TurnOutcomeBattles>(root.val).val.push_back(
     leafBattleHandle.entity());
 }
 
-void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action) {
+inline void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
   const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(action.val);
   types::entity sourceEntity = slotToPokemonEntity(registry, sides, sourceSlotName.name);
@@ -21228,7 +25842,7 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, cons
   registry.emplace<tags::CurrentActionMoveSource>(sourceEntity);
 }
 
-void setCurrentActionTarget(
+inline void setCurrentActionTarget(
   types::handle battleHandle, const Sides& sides, const CurrentAction& action, const CurrentActionSource& source) {
   types::registry& registry = *battleHandle.registry();
   const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.val);
@@ -21244,7 +25858,7 @@ void setCurrentActionTarget(
   }
 }
 
-void setCurrentActionMove(
+inline void setCurrentActionMove(
   types::handle battleHandle, const CurrentActionSource& source, const CurrentActionTargets& targets,
   const CurrentAction& action, const Pokedex& pokedex) {
   types::registry& registry = *battleHandle.registry();
@@ -21253,9 +25867,8 @@ void setCurrentActionMove(
 
   types::entity moveSlotEntity = moveToEntity(registry, moveSlots, move.name);
 
-  ENTT_ASSERT(targets.val.size() == 1, "How did we get here with more or less than 1 target?");
   types::entity moveEntity =
-    createActionMoveForTarget({registry, targets.val[0]}, battleHandle.entity(), source.val, move.name, pokedex);
+    createActionMoveForTarget({registry, targets.only()}, battleHandle.entity(), source.val, move.name, pokedex);
 
   if (battleHandle.all_of<tags::SimulateTurn>()) {
     registry.emplace<tags::SimulateTurn>(moveEntity);
@@ -21265,7 +25878,7 @@ void setCurrentActionMove(
   registry.emplace<tags::CurrentActionMoveSlot>(moveSlotEntity);
 }
 
-void clearCurrentAction(Simulation& simulation) {
+inline void clearCurrentAction(Simulation& simulation) {
   types::registry& registry = simulation.registry;
   registry.clear<CurrentAction>();
   registry.clear<CurrentActionTargets>();
@@ -21308,27 +25921,27 @@ void clearCurrentAction(Simulation& simulation) {
 
 namespace pokesim {
 
-types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
-  ENTT_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot");
+inline types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
+  ENTT_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   types::entity sideEntity = sides.val[((std::uint8_t)targetSlot - 1) % 2];
   return sideEntity;
 }
 
-types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot) {
+inline types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot) {
   types::teamPositionIndex index = ((std::uint8_t)targetSlot - 1) / 2;
 
   const Team& team = registry.get<Team>(sideEntity);
-  ENTT_ASSERT(team.val.size() > index, "Choosing a target slot for team member that does not exist");
+  ENTT_ASSERT(team.val.size() > index, "Choosing a target slot for team member that does not exist.");
   return team.val[index];
 }
 
-types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
-  ENTT_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot");
+inline types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
+  ENTT_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   return slotToPokemonEntity(registry, slotToSideEntity(sides, targetSlot), targetSlot);
 }
 
-types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
-  ENTT_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot");
+inline types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
+  ENTT_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   Slot allySlot = Slot::NONE;
   types::teamPositionIndex index = 0;
 
@@ -21376,18 +25989,18 @@ types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sid
   return allyEntity;
 }
 
-types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move) {
+inline types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move) {
   for (types::entity moveSlot : moveSlots.val) {
     if (registry.get<MoveName>(moveSlot).name == move) {
       return moveSlot;
     }
   }
 
-  ENTT_FAIL("No move of entity found");
+  ENTT_FAIL("No move of entity found.");
   return entt::null;
 }
 
-types::entity createActionMoveForTarget(
+inline types::entity createActionMoveForTarget(
   types::handle targetHandle, types::entity battleEntity, types::entity sourceEntity, dex::Move move,
   const Pokedex& pokedex) {
   types::registry& registry = *targetHandle.registry();
@@ -21424,7 +26037,7 @@ struct Pokemon {
 
 namespace pokesim {
 namespace internal {
-void cloneEntity(
+inline void cloneEntity(
   types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
   for (auto [id, storage] : registry.storage()) {
@@ -21536,42 +26149,42 @@ void traverseMove(types::registry& registry, VisitEntity visitEntity = nullptr) 
   }
 }
 
-void cloneBattle(
+inline void cloneBattle(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseBattle(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
-void cloneSide(
+inline void cloneSide(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseSide(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
-void cloneAction(
+inline void cloneAction(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseAction(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
-void cloneCurrentActionMove(
+inline void cloneCurrentActionMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseCurrentActionMove(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
-void clonePokemon(
+inline void clonePokemon(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
   traversePokemon(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
-void cloneMove(
+inline void cloneMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseMove(registry, [&](types::entity entity) {
@@ -21579,28 +26192,28 @@ void cloneMove(
   });
 }
 
-void deleteBattle(types::registry& registry) {
+inline void deleteBattle(types::registry& registry) {
   traverseBattle(registry);
 }
-void deleteSide(types::registry& registry) {
+inline void deleteSide(types::registry& registry) {
   traverseSide(registry);
 }
-void deleteAction(types::registry& registry) {
+inline void deleteAction(types::registry& registry) {
   traverseAction(registry);
 }
-void deleteCurrentActionMove(types::registry& registry) {
+inline void deleteCurrentActionMove(types::registry& registry) {
   traverseCurrentActionMove(registry);
 }
-void deletePokemon(types::registry& registry) {
+inline void deletePokemon(types::registry& registry) {
   traversePokemon(registry);
 }
-void deleteMove(types::registry& registry) {
+inline void deleteMove(types::registry& registry) {
   traverseMove(registry);
 }
 
-void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
-  ENTT_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map");
-  ENTT_ASSERT(entityMap.at(entity).size() > cloneTo.val, "More entities are trying to be copied to than were copied");
+inline void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
+  ENTT_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map.");
+  ENTT_ASSERT(entityMap.at(entity).size() > cloneTo.val, "More entities are trying to be copied to than were copied.");
   entity = entityMap.at(entity)[cloneTo.val];
 }
 
@@ -21631,7 +26244,7 @@ void remapComponentEntities(types::registry& registry, const types::ClonedEntity
 }
 }  // namespace internal
 
-types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount) {
+inline types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount) {
   types::cloneIndex count = cloneCount.value_or(1);
   types::ClonedEntityMap entityMap, battleMap;
   entt::dense_map<entt::id_type, std::vector<types::entity>> srcEntityStorages;
@@ -21696,16 +26309,25 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
     registry.insert<ParentBattle>(clonedBattles.begin(), clonedBattles.end(), {originalBattle});
   }
 
+#ifndef NDEBUG
+  for (const auto& [src, destinations] : entityMap) {
+    registry.remove<ParentEntity>(destinations.begin(), destinations.end());
+    registry.insert<ParentEntity>(destinations.begin(), destinations.end(), {src});
+  }
+#endif
+
   return entityMap;
 }
 
-void deleteClones(types::registry& registry) {
+inline void deleteClones(types::registry& registry) {
   internal::deleteBattle(registry);
   internal::deleteSide(registry);
   internal::deleteAction(registry);
   internal::deletePokemon(registry);
   internal::deleteCurrentActionMove(registry);
   internal::deleteMove(registry);
+  auto remove = registry.view<tags::CloneToRemove>();
+  registry.destroy(remove.begin(), remove.end());
 }
 }  // namespace pokesim
 
@@ -21813,16 +26435,16 @@ InputSetup::InputSetup(types::registry& registry, types::entity entity) : handle
   handle.emplace<tags::Input>();
 }
 
-void InputSetup::setAttacker(types::entity entity) {
+inline void InputSetup::setAttacker(types::entity entity) {
   handle.emplace<Attacker>(entity);
   handle.registry()->emplace_or_replace<tags::Attacker>(entity);
 }
 
-void InputSetup::setEffectTarget(types::entity entity) {
+inline void InputSetup::setEffectTarget(types::entity entity) {
   handle.emplace<EffectTarget>(entity);
 }
 
-void InputSetup::setDefender(types::entity entity) {
+inline void InputSetup::setDefender(types::entity entity) {
   ENTT_ASSERT(
     !handle.try_get<Defenders>(),
     "Calc damage only supports one defender per move. Make a new move instead.");
@@ -21830,11 +26452,11 @@ void InputSetup::setDefender(types::entity entity) {
   handle.registry()->emplace_or_replace<tags::Defender>(entity);
 }
 
-void InputSetup::setEffectMoves(const std::vector<dex::Move>& moves) {
+inline void InputSetup::setEffectMoves(const std::vector<dex::Move>& moves) {
   handle.get_or_emplace<EffectMoves>().val = moves;
 }
 
-void InputSetup::setEffect(types::effectEnum effect) {
+inline void InputSetup::setEffect(types::effectEnum effect) {
   if (effect.holds<dex::PseudoWeather>()) {
     handle.emplace<PseudoWeatherName>(effect.get<dex::PseudoWeather>());
   }
@@ -21854,11 +26476,11 @@ void InputSetup::setEffect(types::effectEnum effect) {
     handle.emplace<WeatherName>(effect.get<dex::Weather>());
   }
   else {
-    ENTT_FAIL("Effect does not contain a valid enum");
+    ENTT_FAIL("Effect does not contain a valid enum.");
   }
 }
 
-void InputSetup::setBoostEffect(dex::Stat stat, types::boost boost) {
+inline void InputSetup::setBoostEffect(dex::Stat stat, types::boost boost) {
   switch (stat) {
     case dex::Stat::ATK: {
       handle.emplace<AtkBoost>(boost);
@@ -21886,7 +26508,7 @@ void InputSetup::setBoostEffect(dex::Stat stat, types::boost boost) {
   }
 }
 
-void InputSetup::setBattle(types::entity entity) {
+inline void InputSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
   handle.registry()->get_or_emplace<Inputs>(entity).val.push_back(handle.entity());
 }
@@ -21911,7 +26533,27 @@ struct RemovedEffect {
 
 namespace pokesim::analyze_effect {
 namespace internal {
-void assignInputsToClones(
+struct DebugChecks {
+#ifdef NDEBUG
+  DebugChecks(const Simulation&) {}
+#else
+  std::size_t battleCount = 0;
+  const Simulation& simulation;
+
+  // Check that the number of analyze_effect entities are the same
+  // Check entities are equal
+  // Add analyze_effect outputs to exception list
+
+  void checkInputs() { battleCount = simulation.registry.view<pokesim::tags::Battle>().size(); }
+
+  void checkOutputs() { assert(battleCount == simulation.registry.view<pokesim::tags::Battle>().size()); }
+
+  DebugChecks(const Simulation& _simulation) : simulation(_simulation) { checkInputs(); }
+  ~DebugChecks() { checkOutputs(); }
+#endif
+};
+
+inline void assignInputsToClones(
   Simulation& simulation, types::entity originalBattleEntity, const types::ClonedEntityMap& clonedEntityMap) {
   types::registry& registry = simulation.registry;
   const Inputs& inputs = registry.get<Inputs>(originalBattleEntity);
@@ -21933,7 +26575,7 @@ void assignInputsToClones(
       battleClones.size() == clonedAttackers.size(),
       "Each attacker must have a clone and no more clones than inputs should be made.");
 
-    const auto& clonedDefenders = clonedEntityMap.at(defenders.val[0]);
+    const auto& clonedDefenders = clonedEntityMap.at(defenders.only());
     ENTT_ASSERT(
       battleClones.size() == clonedDefenders.size(),
       "Each defender must have a clone and no more clones than inputs should be made.");
@@ -21958,7 +26600,7 @@ void assignInputsToClones(
       };
 
       movePairs.val.emplace_back(
-        createMove(battle.val, attacker.val, defenders.val[0]),
+        createMove(battle.val, attacker.val, defenders.only()),
         createMove(battleClones[i], clonedAttackers[i], clonedDefenders[i]));
     }
 
@@ -21969,9 +26611,9 @@ void assignInputsToClones(
   }
 }
 
-void ignoreBattlesWithEffectActive(Simulation& /*simulation*/) {}
+inline void ignoreBattlesWithEffectActive(Simulation& /*simulation*/) {}
 
-void createAppliedEffectBattles(Simulation& simulation) {
+inline void createAppliedEffectBattles(Simulation& simulation) {
   entt::dense_map<types::eventPossibilities, std::vector<types::entity>> battlesByCloneCount{};
 
   simulation.registry.view<Inputs>().each([&battlesByCloneCount](types::entity battleEntity, const Inputs& inputs) {
@@ -21988,13 +26630,13 @@ void createAppliedEffectBattles(Simulation& simulation) {
   }
 }
 
-void applyPseudoWeatherEffect(types::handle /*inputHandle*/, Battle /*battle*/, PseudoWeatherName /*effect*/) {}
+inline void applyPseudoWeatherEffect(types::handle /*inputHandle*/, Battle /*battle*/, PseudoWeatherName /*effect*/) {}
 
-void applySideConditionEffect(
+inline void applySideConditionEffect(
   types::handle /*inputHandle*/, Attacker /*attacker*/, const Defenders& /*defenders*/, EffectTarget /*effectTarget*/,
   SideConditionName /*effect*/) {}
 
-void applyStatusEffect(
+inline void applyStatusEffect(
   types::handle inputHandle, Attacker attacker, const Defenders& defenders, EffectTarget effectTarget,
   StatusName effect) {
   types::registry& registry = *inputHandle.registry();
@@ -22009,13 +26651,13 @@ void applyStatusEffect(
   }
 }
 
-void applyTerrainEffect(types::handle /*inputHandle*/, Battle /*battle*/, TerrainName /*effect*/) {}
+inline void applyTerrainEffect(types::handle /*inputHandle*/, Battle /*battle*/, TerrainName /*effect*/) {}
 
-void applyVolatileEffect(
+inline void applyVolatileEffect(
   types::handle /*inputHandle*/, Battle /*battle*/, Attacker /*attacker*/, const Defenders& /*defenders*/,
   EffectTarget /*effectTarget*/, VolatileName /*effect*/) {}
 
-void applyWeatherEffect(types::handle /*inputHandle*/, Battle /*battle*/, WeatherName /*effect*/) {}
+inline void applyWeatherEffect(types::handle /*inputHandle*/, Battle /*battle*/, WeatherName /*effect*/) {}
 
 template <typename BoostType>
 void applyBoostEffect(
@@ -22033,7 +26675,7 @@ void applyBoostEffect(
   }
 }
 
-void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
+inline void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
   bool invert = inputHandle.all_of<tags::InvertFinalAnswer>();
   types::registry& registry = *inputHandle.registry();
 
@@ -22063,14 +26705,16 @@ void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
   }
 }
 
-void postRunCleanup(Simulation& simulation) {
+inline void postRunCleanup(Simulation& simulation) {
   simulation.addToEntities<pokesim::tags::CloneToRemove, tags::BattleCloneForCalculation>();
   deleteClones(simulation.registry);
   simulation.removeFromEntities<tags::Move, MoveName>();
 }
 }  // namespace internal
 
-void run(Simulation& simulation) {
+inline void run(Simulation& simulation) {
+  internal::DebugChecks debugChecks(simulation);
+
   pokesim::internal::SelectForPokemonView<pokesim::tags::AnalyzeEffect> selectedPokemon(simulation);
   pokesim::internal::SelectForBattleView<pokesim::tags::AnalyzeEffect> selectedBattle(simulation);
 
@@ -22142,159 +26786,159 @@ struct Fairy {};
 
 namespace pokesim::dex {
 // Returns the name of a species represented by its enum as a string.
-std::string toString(Species speciesEnum);
+inline std::string toString(Species speciesEnum);
 
 // Returns the name of a move represented by its enum as a string.
-std::string toString(Move moveEnum);
+inline std::string toString(Move moveEnum);
 
 // Returns the name of an ability represented by its enum as a string.
-std::string toString(Ability abilityEnum);
+inline std::string toString(Ability abilityEnum);
 
 // Returns the name of an item represented by its enum as a string.
-std::string toString(Item itemEnum);
+inline std::string toString(Item itemEnum);
 
 // Returns the name of a nature represented by its enum as a string.
-std::string toString(Nature natureEnum);
+inline std::string toString(Nature natureEnum);
 
 // Returns the name of a status condition represented by its enum as a string.
-std::string toString(Status statusEnum);
+inline std::string toString(Status statusEnum);
 
 // Returns the name of a gender represented by its enum as a string.
-std::string toString(Gender genderEnum);
+inline std::string toString(Gender genderEnum);
 
 // Returns the name of a type represented by its enum as a string.
-std::string toString(Type typeEnum);
+inline std::string toString(Type typeEnum);
 
 // Returns the name of a stat represented by its enum as a string.
-std::string toString(Stat statEnum);
+inline std::string toString(Stat statEnum);
 
 // Returns the Smogon name of a species represented by its enum as a string.
-std::string toSmogonString(Species speciesEnum);
+inline std::string toSmogonString(Species speciesEnum);
 
 // Returns the Smogon name of a move represented by its enum as a string.
-std::string toSmogonString(Move moveEnum);
+inline std::string toSmogonString(Move moveEnum);
 
 // Returns the Smogon name of an ability represented by its enum as a string.
-std::string toSmogonString(Ability abilityEnum);
+inline std::string toSmogonString(Ability abilityEnum);
 
 // Returns the Smogon name of an item represented by its enum as a string.
-std::string toSmogonString(Item itemEnum);
+inline std::string toSmogonString(Item itemEnum);
 
 // Returns the Smogon ID of a species represented by its enum as a string.
-std::string toSmogonIdString(Species speciesEnum);
+inline std::string toSmogonIdString(Species speciesEnum);
 
 // Returns the Smogon ID of a move represented by its enum as a string.
-std::string toSmogonIdString(Move moveEnum);
+inline std::string toSmogonIdString(Move moveEnum);
 
 // Returns the Smogon ID of an ability represented by its enum as a string.
-std::string toSmogonIdString(Ability abilityEnum);
+inline std::string toSmogonIdString(Ability abilityEnum);
 
 // Returns the Smogon ID of an item represented by its enum as a string.
-std::string toSmogonIdString(Item itemEnum);
+inline std::string toSmogonIdString(Item itemEnum);
 
 /**
  * @brief Returns the enum of the species name string.
  * Returns `MISSING_NO` if the string does not represent a species.
  */
-Species fromNameToSpeciesEnum(const std::string& name);
+inline Species fromNameToSpeciesEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the move name string.
  * Returns `NO_MOVE` if the string does not represent a move.
  */
-Move fromNameToMoveEnum(const std::string& name);
+inline Move fromNameToMoveEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the ability name string.
  * Returns `NO_ABILITY` if the string does not represent an ability.
  */
-Ability fromNameToAbilityEnum(const std::string& name);
+inline Ability fromNameToAbilityEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the item name string.
  * Returns `NO_ITEM` if the string does not represent an item.
  */
-Item fromNameToItemEnum(const std::string& name);
+inline Item fromNameToItemEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the nature name string.
  * Returns `NO_NATURE` if the string does not represent a nature.
  */
-Nature fromNameToNatureEnum(const std::string& name);
+inline Nature fromNameToNatureEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the status condition name string.
  * Returns `NO_STATUS` if the string does not represent a status condition.
  */
-Status fromNameToStatusEnum(const std::string& name);
+inline Status fromNameToStatusEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the gender name string.
  * Returns `NO_GENDER` if the string does not represent a gender.
  */
-Gender fromNameToGenderEnum(const std::string& name);
+inline Gender fromNameToGenderEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the type name string.
  * Returns `NO_TYPE` if the string does not represent a type.
  */
-Type fromNameToTypeEnum(const std::string& name);
+inline Type fromNameToTypeEnum(const std::string& name);
 
 /**
  * @brief Returns `NO_STAT` if the string does not represent a stat.
  */
-Stat fromNameToStatEnum(const std::string& name);
+inline Stat fromNameToStatEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the species Smogon name string.
  * Returns `MISSING_NO` if the string does not represent a species.
  */
-Species fromSmogonNameToSpeciesEnum(const std::string& name);
+inline Species fromSmogonNameToSpeciesEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the move Smogon name string.
  * Returns `NO_MOVE` if the string does not represent a move.
  */
-Move fromSmogonNameToMoveEnum(const std::string& name);
+inline Move fromSmogonNameToMoveEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the ability Smogon name string.
  * Returns `NO_ABILITY` if the string does not represent an ability.
  */
-Ability fromSmogonNameToAbilityEnum(const std::string& name);
+inline Ability fromSmogonNameToAbilityEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the item Smogon name string.
  * Returns `NO_ITEM` if the string does not represent an item.
  */
-Item fromSmogonNameToItemEnum(const std::string& name);
+inline Item fromSmogonNameToItemEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the species Smogon ID string.
  * Returns `MISSING_NO` if the string does not represent a species.
  */
-Species fromSmogonIDToSpeciesEnum(const std::string& name);
+inline Species fromSmogonIDToSpeciesEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the move Smogon ID string.
  * Returns `NO_MOVE` if the string does not represent a move.
  */
-Move fromSmogonIDToMoveEnum(const std::string& name);
+inline Move fromSmogonIDToMoveEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the ability Smogon ID string.
  * Returns `NO_ABILITY` if the string does not represent an ability.
  */
-Ability fromSmogonIDToAbilityEnum(const std::string& name);
+inline Ability fromSmogonIDToAbilityEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the item Smogon ID string.
  * Returns `NO_ITEM` if the string does not represent an item.
  */
-Item fromSmogonIDToItemEnum(const std::string& name);
+inline Item fromSmogonIDToItemEnum(const std::string& name);
 
 // Converts a string to only have lowercase alphanumeric characters
-std::string toID(const std::string& name);
+inline std::string toID(const std::string& name);
 }  // namespace pokesim::dex
 
 ///////////////////////// END OF src/Pokedex/Names.hpp /////////////////////////

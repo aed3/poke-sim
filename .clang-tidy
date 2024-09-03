@@ -113,7 +113,7 @@ CheckOptions:
   readability-inconsistent-declaration-parameter-name.Strict: 'false'
   readability-magic-numbers.IgnoreAllFloatingPointValues: 'false'
   readability-magic-numbers.IgnoreBitFieldsWidths: 'true'
-  readability-magic-numbers.IgnoredFloatingPointValues: '1.0;2.0;100.0;'
+  readability-magic-numbers.IgnoredFloatingPointValues: '1.0;2.0;0.5;100.0;'
   readability-magic-numbers.IgnoredIntegerValues: '1;2;3;4;5;100;'
   readability-magic-numbers.IgnorePowersOf2IntegerValues: 'false'
   readability-qualified-auto.AddConstToQualified: 'true'
