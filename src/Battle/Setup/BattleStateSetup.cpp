@@ -6,6 +6,7 @@
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/ID.hpp>
+#include <Components/PlayerSide.hpp>
 #include <Components/Probability.hpp>
 #include <Components/RNGSeed.hpp>
 #include <Components/Tags/BattleTags.hpp>
@@ -46,9 +47,10 @@ void BattleStateSetup::setID(types::stateId id) {
   handle.emplace_or_replace<Id>(id);
 }
 
-void BattleStateSetup::setSide(PlayerSideId sideID, types::entity sideEntity) {
+void BattleStateSetup::setSide(types::entity sideEntity) {
   auto& sides = handle.get_or_emplace<Sides>();
-  switch (sideID) {
+  PlayerSideId sideId = handle.registry()->get<PlayerSide>(sideEntity).val;
+  switch (sideId) {
     case PlayerSideId::P1: sides.p1() = sideEntity; break;
     case PlayerSideId::P2: sides.p2() = sideEntity; break;
     default: ENTT_FAIL("sideID must be assigned P1 or P2."); break;

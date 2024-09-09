@@ -10,6 +10,8 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
     {Slot::P1A, Slot::P2A, dex::Move::FURY_ATTACK},
     {Slot::P2A, Slot::P1A, dex::Move::THUNDERBOLT},
   };
+  simulation.calculateDamageOptions.damageRollOptions.p1 = DamageRollKind::ALL_DAMAGE_ROLLS;
+  simulation.calculateDamageOptions.damageRollOptions.p2 = DamageRollKind::ALL_DAMAGE_ROLLS;
   simulation.createInitialStates({battleCreationInfo});
   simulation.calculateDamage();
 }

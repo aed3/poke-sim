@@ -21,9 +21,9 @@ namespace pokesim::debug {
 struct TypesToIgnore : private entt::dense_set<entt::id_type> {
   TypesToIgnore() : entt::dense_set<entt::id_type>() { add<ParentEntity>(); }
 
-  template <typename Type>
+  template <typename... Types>
   void add() {
-    emplace(entt::type_hash<Type>());
+    (emplace(entt::type_hash<Types>()), ...);
   }
 
   using entt::dense_set<entt::id_type>::contains;
@@ -102,7 +102,7 @@ class AssertComponentsEqual {
  public:
   static void check(const Type& current, const Type& initial, const types::registry& registry) {
     if constexpr (hasEqualTo<Type>::value) {
-      assert(current == initial);
+      compareMember(current, initial, registry);
       return;
     }
     else if constexpr (val<Type>::value) {
@@ -118,7 +118,8 @@ class AssertComponentsEqual {
       }
     }
     else {
-      ENTT_FAIL("There's a component that needs a dedicated equals function.");
+      // Not a static assert so this only fails on types that actually get copied
+      ENTT_FAIL("This component needs a dedicated equals function.");
     }
   }
 };

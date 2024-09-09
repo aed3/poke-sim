@@ -154,8 +154,8 @@ std::tuple<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(
   types::entity p1Entity = p1SideSetup.entity();
   types::entity p2Entity = p2SideSetup.entity();
 
-  battleStateSetup.setSide(PlayerSideId::P1, p1Entity);
-  battleStateSetup.setSide(PlayerSideId::P2, p2Entity);
+  battleStateSetup.setSide(p1Entity);
+  battleStateSetup.setSide(p2Entity);
 
   p1SideSetup.setOpponent(p2Entity);
   p2SideSetup.setOpponent(p1Entity);

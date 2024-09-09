@@ -29,20 +29,23 @@ struct RandomEventStack {
 template <types::eventPossibilities RANDOM_OPTIONS>
 struct RandomEventChances {
   std::array<types::percentChance, RANDOM_OPTIONS> val{};
-  static_assert(RANDOM_OPTIONS <= internal::MAX_TYPICAL_RANDOM_OPTIONS);
+  static_assert(RANDOM_OPTIONS >= 2U, "RandomEventChances should only be used for events with more than two options.");
+  static_assert(
+    RANDOM_OPTIONS <= internal::MAX_TYPICAL_RANDOM_OPTIONS,
+    "Random events with more options than this should use RandomEqualChance or RandomEventCount");
 
   types::percentChance chanceA() const { return val[0]; }
   types::percentChance chanceB() const { return val[1] - val[0]; }
   types::percentChance chanceC() const {
-    static_assert(RANDOM_OPTIONS >= 3U);
+    static_assert(RANDOM_OPTIONS >= 3U, "This function is only for events with more than 2 outcomes.");
     return val[2] - val[1];
   }
   types::percentChance chanceD() const {
-    static_assert(RANDOM_OPTIONS >= 4U);
+    static_assert(RANDOM_OPTIONS >= 4U, "This function is only for events with more than 3 outcomes.");
     return val[3] - val[2];
   }
   types::percentChance chanceE() const {
-    static_assert(RANDOM_OPTIONS == 5U);
+    static_assert(RANDOM_OPTIONS == 5U, "This function is only for events with 5 outcomes.");
     return val[4] - val[3];
   }
 };

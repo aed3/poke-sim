@@ -16,5 +16,10 @@ struct SpeedSort {
   types::fractionalPriority fractionalPriority = false;
   // Speed of Pokemon using move (higher first if priority tie)
   types::stat speed = 1;
+
+  bool operator==(const SpeedSort& other) const {
+    return order == other.order && priority == other.priority && fractionalPriority == other.fractionalPriority &&
+           speed == other.speed;
+  }
 };
 }  // namespace pokesim

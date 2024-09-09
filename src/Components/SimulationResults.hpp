@@ -4,34 +4,48 @@
 #include <Types/Damage.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Move.hpp>
-#include <Types/Stats.hpp>
 #include <vector>
 
 namespace pokesim {
-class Simulation;
-
 namespace simulate_turn {
 struct TurnOutcomeBattles {
-  std::vector<types::entity> val;
+  std::vector<types::entity> val{};
 };
 }  // namespace simulate_turn
 
 namespace calc_damage {
-struct MaxDamage {
-  types::damage val = 0;
+using MaxDamage = Damage;
+
+struct UsesUntilKo {
+ private:
+  struct KoChance {
+    types::moveHits uses = 0;
+    types::useUntilKoChance chance = 0.0F;
+
+    bool operator==(const KoChance& other) const { return uses == other.uses && chance == other.chance; }
+  };
+
+ public:
+  std::vector<KoChance> val{};
+
+  const KoChance& minHits() const {
+    assert(!val.empty());
+    return val.front();
+  }
+
+  const KoChance& maxHits() const {
+    assert(!val.empty());
+    return val.back();
+  }
+
+  bool guaranteedKo() const {
+    const KoChance& min = minHits();
+    return min.uses == 1 && min.chance == 1.0F;
+  }
 };
 
-struct MinUsesUntilKo {
-  types::damage val = 0;
-};
-
-struct AttackerHpRecovered {
-  types::stat val = 0;
-};
-
-struct AttackerHpLost {
-  types::stat val = 0;
-};
+struct AttackerHpRecovered : DamageRolls {};
+struct AttackerHpLost : DamageRolls {};
 }  // namespace calc_damage
 
 namespace analyze_effect {
@@ -40,12 +54,8 @@ struct EffectMultiplier {
 };
 
 using MultipliedDamage = Damage;
-
 using MultipliedDamageRolls = DamageRolls;
-
-struct MultipliedKoChance {
-  float val = 1.0F;
-};
+using MultipliedUsesUntilKo = calc_damage::UsesUntilKo;
 
 namespace tags {
 struct InfiniteMultiplier {};

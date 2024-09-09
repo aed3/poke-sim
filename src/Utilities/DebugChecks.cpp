@@ -27,23 +27,21 @@ types::entity createEntityCopy(types::entity entity, const types::registry& src,
 void hasSameComponents(
   const types::registry& currReg, types::entity currEntity, const types::registry& initReg, types::entity initEntity,
   const TypesToIgnore& typesToIgnore) {
-  for (auto [id, storageA] : currReg.storage()) {
+  for (auto [id, currStorage] : currReg.storage()) {
     if (typesToIgnore.contains(id)) continue;
 
-    if (storageA.contains(currEntity)) {
-      const auto* const storageB = initReg.storage(id);
-      assert(storageB != nullptr);
-      ENTT_ASSERT(storageB->contains(initEntity), "The copy doesn't contain the original's component.");
+    if (currStorage.contains(currEntity)) {
+      const auto* const initStorage = initReg.storage(id);
+      ENTT_ASSERT(initStorage != nullptr, "The inital registry never contained this component.");
+      ENTT_ASSERT(initStorage->contains(initEntity), "The inital doesn't contain the current's component.");
     }
   }
 
-  for (auto [id, storageB] : initReg.storage()) {
-    if (typesToIgnore.contains(id)) continue;
-
-    if (storageB.contains(initEntity)) {
-      const auto* const storageA = currReg.storage(id);
-      assert(storageA != nullptr);
-      ENTT_ASSERT(storageA->contains(currEntity), "The original doesn't contain the copy's component.");
+  for (auto [id, initStorage] : initReg.storage()) {
+    if (initStorage.contains(initEntity)) {
+      const auto* const currStorage = currReg.storage(id);
+      ENTT_ASSERT(currStorage != nullptr, "The current registry never contained this component.");
+      ENTT_ASSERT(currStorage->contains(currEntity), "The current doesn't contain the inital's component.");
     }
   }
 }
