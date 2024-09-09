@@ -345,7 +345,9 @@ void randomEventChances(
   static_assert(
     POSSIBLE_EVENT_COUNT >= 2U,
     "RandomEventChances should only be used for events with more than two options.");
-  static_assert(POSSIBLE_EVENT_COUNT <= internal::MAX_TYPICAL_RANDOM_OPTIONS);
+  static_assert(
+    POSSIBLE_EVENT_COUNT <= internal::MAX_TYPICAL_RANDOM_OPTIONS,
+    "Random events with more options than this should use RandomEqualChance or RandomEventCount");
 
   auto assignClonesToEvents = [](
                                 types::registry& registry,

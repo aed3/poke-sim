@@ -1,6 +1,5 @@
 #include "SimulationResults.hpp"
 
-#include <Components/HitCount.hpp>
 #include <Components/SimulationResults.hpp>
 #include <Types/Entity.hpp>
 
@@ -22,8 +21,8 @@ types::view<MaxDamage> Results::maxDamageResults() const {
   return simulation.registry.view<MaxDamage>();
 }
 
-types::view<MinUsesUntilKo> Results::minUsesUntilKoResults() const {
-  return simulation.registry.view<MinUsesUntilKo>();
+types::view<UsesUntilKo> Results::usesUntilKoResults() const {
+  return simulation.registry.view<UsesUntilKo>();
 }
 
 types::view<AttackerHpRecovered> Results::hpRecoveredResults() const {
@@ -32,10 +31,6 @@ types::view<AttackerHpRecovered> Results::hpRecoveredResults() const {
 
 types::view<AttackerHpLost> Results::hpLostResults() const {
   return simulation.registry.view<AttackerHpLost>();
-}
-
-types::view<HitCount> Results::hitCountResults() const {
-  return simulation.registry.view<HitCount>();
 }
 }  // namespace calc_damage
 
@@ -54,8 +49,8 @@ types::view<MultipliedDamageRolls> Results::multipliedDamageRollsResults() const
   return simulation.registry.view<MultipliedDamageRolls>();
 }
 
-types::view<MultipliedKoChance> Results::multipliedKoChanceResults() const {
-  return simulation.registry.view<MultipliedKoChance>();
+types::view<MultipliedUsesUntilKo> Results::multipliedUsesUntilKoResults() const {
+  return simulation.registry.view<MultipliedUsesUntilKo>();
 }
 }  // namespace analyze_effect
 }  // namespace pokesim

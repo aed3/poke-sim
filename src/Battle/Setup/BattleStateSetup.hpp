@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Types/Entity.hpp>
-#include <Types/Enums/PlayerSideId.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
@@ -35,7 +34,7 @@ struct BattleStateSetup : internal::StateSetupBase {
 
   void setAutoID();
   void setID(types::stateId id);
-  void setSide(PlayerSideId sideID, types::entity sideEntity);
+  void setSide(types::entity sideEntity);
 
   // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
   void setRNGSeed(std::optional<types::rngState> seed = std::nullopt);

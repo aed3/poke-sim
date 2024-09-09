@@ -40,8 +40,11 @@ struct Options {
 
 namespace calc_damage {
 struct Options {
-  DamageRollOptions damageRollsReturned;
   bool calculateUpToFoeHp = false;
+  // KO chance is otherwise calculated if DamageRollKind::ALL_DAMAGE_ROLLS is set as the damage roll option
+  bool noKoChanceCalculation = false;
+
+  DamageRollOptions damageRollOptions;
 };
 }  // namespace calc_damage
 
@@ -50,10 +53,11 @@ struct Options {
   // Whether to consider the multiplier even if the effect is already active (i.e. Rain will return a 1x multiplier
   // instead of 1.5x multiplier for Surf if this option is true and it's already raining)
   bool reconsiderActiveEffects = false;
-  // bool returnMultipliedKoChance = false;
   bool calculateUpToFoeHp = false;
+  // KO chance is otherwise calculated if DamageRollKind::ALL_DAMAGE_ROLLS is set as the damage roll option
+  bool noKoChanceCalculation = false;
 
-  DamageRollOptions damageRollsReturned;
+  DamageRollOptions damageRollOptions;
 };
 }  // namespace analyze_effect
 }  // namespace pokesim

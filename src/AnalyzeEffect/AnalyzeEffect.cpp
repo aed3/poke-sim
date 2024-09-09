@@ -4,6 +4,7 @@
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <CalcDamage/CalcDamage.hpp>
+#include <CalcDamage/Helpers.hpp>
 #include <Components/AnalyzeEffect/Aliases.hpp>
 #include <Components/AnalyzeEffect/AnalyzeEventInputs.hpp>
 #include <Components/AnalyzeEffect/RemovedEffect.hpp>
@@ -12,6 +13,7 @@
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
+#include <Components/EntityHolders/Side.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/PseudoWeatherNames.hpp>
 #include <Components/Names/SideConditionNames.hpp>
@@ -19,6 +21,7 @@
 #include <Components/Names/TerrainNames.hpp>
 #include <Components/Names/VolatileNames.hpp>
 #include <Components/Names/WeatherNames.hpp>
+#include <Components/PlayerSide.hpp>
 #include <Components/SimulationResults.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Pokedex/Pokedex.hpp>
@@ -40,21 +43,181 @@ struct DebugChecks {
 #ifdef NDEBUG
   DebugChecks(const Simulation&) {}
 #else
-  std::size_t battleCount = 0;
-  const Simulation& simulation;
+  DebugChecks(const Simulation& _simulation) : simulation(_simulation), registry(simulation.registry) { checkInputs(); }
+  ~DebugChecks() { checkOutputs(); }
 
-  // Check that the number of analyze_effect entities are the same
-  // Check entities are equal
+ private:
+  const Simulation& simulation;
+  const types::registry& registry;
+  types::registry registryOnInput;
+  entt::dense_map<types::entity, types::entity> originalToCopy;
+  entt::dense_set<types::entity> specificallyChecked;
+  std::size_t entityCount = 0;
+
   // Add analyze_effect outputs to exception list
 
-  void checkInputs() { battleCount = simulation.registry.view<pokesim::tags::Battle>().size(); }
+  std::vector<types::entity> getPokemonList(bool forAttacker) const {
+    if (forAttacker) {
+      auto view = registry.view<tags::Attacker>();
+      return {view.begin(), view.end()};
+    }
 
-  void checkOutputs() { assert(battleCount == simulation.registry.view<pokesim::tags::Battle>().size()); }
+    auto view = registry.view<tags::Defender>();
+    return {view.begin(), view.end()};
+  }
 
-  DebugChecks(const Simulation& _simulation) : simulation(_simulation) { checkInputs(); }
-  ~DebugChecks() { checkOutputs(); }
+  DamageRollKind getDamageRollKind(types::entity input, DamageRollOptions damageRollOptions) const {
+    const Defenders& defenders = registry.get<Defenders>(input);
+    const Side& side = registry.get<Side>(defenders.only());
+    PlayerSideId playerSide = registry.get<PlayerSide>(side.val).val;
+    switch (playerSide) {
+      default: {
+        ENTT_FAIL("Player side wasn't set properly.");
+        break;
+      }
+      case PlayerSideId::P1: {
+        return damageRollOptions.p1;
+        break;
+      }
+      case PlayerSideId::P2: {
+        return damageRollOptions.p2;
+        break;
+      }
+    }
+  }
+
+  void checkInputOutputs() const {
+    for (types::entity input : registry.view<tags::Input>()) {
+      debug::TypesToIgnore typesToIgnore{};
+      typesToIgnore.add<MultipliedDamage, MultipliedDamageRolls>();
+
+      assert(registry.all_of<MultipliedDamage>(input));
+      assert(registry.all_of<MultipliedDamageRolls>(input));
+
+      if (registry.all_of<tags::InfiniteMultiplier>(input)) {
+        assert(!registry.all_of<EffectMultiplier>(input));
+        typesToIgnore.add<tags::InfiniteMultiplier>();
+      }
+
+      bool zeroEffectMultiplier = false;
+      if (registry.all_of<EffectMultiplier>(input)) {
+        assert(!registry.all_of<tags::InfiniteMultiplier>(input));
+        typesToIgnore.add<EffectMultiplier>();
+
+        const auto [effectMultiplier, multipliedDamage, multipliedDamageRolls] =
+          registry.get<EffectMultiplier, MultipliedDamage, MultipliedDamageRolls>(input);
+        if (effectMultiplier.val == 0) {
+          zeroEffectMultiplier = true;
+          assert(multipliedDamage.val == 0);
+          for (const MultipliedDamage& multipliedDamageRoll : multipliedDamageRolls.val) {
+            assert(multipliedDamageRoll.val == 0);
+          }
+        }
+      }
+
+      auto damageRollOptions = simulation.analyzeEffectOptions.damageRollOptions;
+      auto noKoChanceCalculation = simulation.analyzeEffectOptions.noKoChanceCalculation;
+      if (noKoChanceCalculation || zeroEffectMultiplier) {
+        assert(!registry.all_of<MultipliedUsesUntilKo>(input));
+      }
+      else if (calc_damage::damageKindsMatch(
+                 DamageRollKind::ALL_DAMAGE_ROLLS,
+                 getDamageRollKind(input, damageRollOptions))) {
+        assert(registry.all_of<MultipliedUsesUntilKo>(input));
+        typesToIgnore.add<MultipliedUsesUntilKo>();
+      }
+
+      debug::areEntitiesEqual(registry, input, registryOnInput, originalToCopy.at(input), typesToIgnore);
+    }
+  }
+
+  void checkPokemonOutputs(bool forAttacker) const {
+    const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
+    for (types::entity pokemon : pokemonList) {
+      debug::areEntitiesEqual(registry, pokemon, registryOnInput, originalToCopy.at(pokemon));
+    }
+  }
+
+  void checkRemainingOutputs() const {
+    for (auto [original, copy] : originalToCopy) {
+      if (!specificallyChecked.contains(original)) {
+        debug::areEntitiesEqual(registry, original, registryOnInput, copy);
+      }
+    }
+  }
+
+  void checkInputs() {
+    for (types::entity input : registry.view<tags::Input>()) {
+      originalToCopy[input] = debug::createEntityCopy(input, registry, registryOnInput);
+    }
+
+    const std::vector<types::entity> attackers = getPokemonList(true);
+    const std::vector<types::entity> defenders = getPokemonList(false);
+
+    for (const std::vector<types::entity>& pokemonList : {attackers, defenders}) {
+      for (types::entity pokemon : pokemonList) {
+        originalToCopy[pokemon] = debug::createEntityCopy(pokemon, registry, registryOnInput);
+      }
+    }
+
+    for (types::entity entity : registry.view<types::entity>()) {
+      if (!registry.orphan(entity)) {
+        entityCount++;
+        if (originalToCopy.contains(entity)) {
+          specificallyChecked.emplace(entity);
+        }
+        else {
+          originalToCopy[entity] = debug::createEntityCopy(entity, registry, registryOnInput);
+        }
+      }
+    }
+  }
+
+  void checkOutputs() const {
+    std::size_t inputCount = registry.view<Inputs>().size();
+    std::size_t finalEntityCount = 0;
+    for (types::entity entity : registry.view<types::entity>()) {
+      if (!registry.orphan(entity)) {
+        finalEntityCount++;
+      }
+    }
+    assert(entityCount + inputCount == finalEntityCount);
+    checkInputOutputs();
+    checkPokemonOutputs(true);
+    checkPokemonOutputs(false);
+    checkRemainingOutputs();
+  }
 #endif
 };
+
+void restoreInputs(
+  types::registry& registry, const MovePairs& movePairs, const OriginalInputEntities& originalEntities, Battle& battle,
+  Attacker& attacker, Defenders& defenders, EffectTarget& effectTarget) {
+  for (types::entity pokemon : {attacker.val, defenders.only(), originalEntities.attacker, originalEntities.defender}) {
+    CurrentActionMoves& moves = registry.get<CurrentActionMoves>(pokemon);
+
+    auto end = moves.val.end();
+    for (const auto& movePair : movePairs.val) {
+      end = std::remove_if(moves.val.begin(), end, [&movePair](types::entity entity) {
+        return entity == movePair.first || entity == movePair.second;
+      });
+    }
+
+    moves.val.resize(end - moves.val.begin());
+    if (moves.val.empty()) {
+      registry.remove<CurrentActionMoves>(pokemon);
+    }
+  }
+
+  for (auto [_, childBattleMove] : movePairs.val) {
+    registry.destroy(childBattleMove);
+  }
+
+  battle.val = originalEntities.battle;
+  attacker.val = originalEntities.attacker;
+  defenders.val[0] = originalEntities.defender;
+  effectTarget.val = originalEntities.effectTarget;
+}
 
 void assignInputsToClones(
   Simulation& simulation, types::entity originalBattleEntity, const types::ClonedEntityMap& clonedEntityMap) {
@@ -107,6 +270,10 @@ void assignInputsToClones(
         createMove(battleClones[i], clonedAttackers[i], clonedDefenders[i]));
     }
 
+    registry.emplace<OriginalInputEntities>(
+      inputs.val[0],
+      OriginalInputEntities{battle.val, attacker.val, defenders.only(), effectTarget.val});
+
     battle.val = battleClones[i];
     attacker.val = clonedAttackers[i];
     defenders.val[0] = clonedDefenders[i];
@@ -127,6 +294,7 @@ void createAppliedEffectBattles(Simulation& simulation) {
   for (const auto& [eventCount, battleEntities] : battlesByCloneCount) {
     simulation.registry.insert<pokesim::tags::CloneFrom>(battleEntities.begin(), battleEntities.end());
     auto clonedEntityMap = clone(simulation.registry, eventCount);
+
     for (types::entity battleEntity : battleEntities) {
       assignInputsToClones(simulation, battleEntity, clonedEntityMap);
     }
@@ -188,30 +356,42 @@ void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
 
     if (invert) {
       if (childDamage.val == 0) {
-        registry.emplace<tags::InfiniteMultiplier>(parentBattleMove);
+        inputHandle.emplace<tags::InfiniteMultiplier>();
       }
       else {
-        registry.emplace<EffectMultiplier>(parentBattleMove, (float)parentDamage.val / childDamage.val);
+        inputHandle.emplace<EffectMultiplier>((float)parentDamage.val / childDamage.val);
+      }
+
+      inputHandle.emplace<MultipliedDamage>(parentDamage);
+      inputHandle.emplace<MultipliedDamageRolls>(parentDamageRolls);
+      auto* const parentKoChances = registry.try_get<calc_damage::UsesUntilKo>(parentBattleMove);
+      if (parentKoChances != nullptr) {
+        inputHandle.emplace<MultipliedUsesUntilKo>(*parentKoChances);
       }
     }
     else {
       if (parentDamage.val == 0) {
-        registry.emplace<tags::InfiniteMultiplier>(parentBattleMove);
+        inputHandle.emplace<tags::InfiniteMultiplier>();
       }
       else {
-        registry.emplace<EffectMultiplier>(parentBattleMove, (float)childDamage.val / parentDamage.val);
+        inputHandle.emplace<EffectMultiplier>((float)childDamage.val / parentDamage.val);
       }
 
-      parentDamage = childDamage;
-      parentDamageRolls = childDamageRolls;
+      inputHandle.emplace<MultipliedDamage>(childDamage);
+      inputHandle.emplace<MultipliedDamageRolls>(childDamageRolls);
+      auto* const childKoChances = registry.try_get<calc_damage::UsesUntilKo>(childBattleMove);
+      if (childKoChances != nullptr) {
+        inputHandle.emplace<MultipliedUsesUntilKo>(*childKoChances);
+      }
     }
   }
 }
 
 void postRunCleanup(Simulation& simulation) {
+  simulation.view<restoreInputs>();
   simulation.addToEntities<pokesim::tags::CloneToRemove, tags::BattleCloneForCalculation>();
   deleteClones(simulation.registry);
-  simulation.removeFromEntities<tags::Move, MoveName>();
+  simulation.registry.clear<MovePairs, OriginalInputEntities>();
 }
 }  // namespace internal
 

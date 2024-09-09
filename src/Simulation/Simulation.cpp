@@ -23,19 +23,19 @@ void Simulation::clearSimulateTurnResults() {
 }
 
 void Simulation::clearCalculateDamageResults() {
-  registry.clear<calc_damage::MaxDamage>();
-  registry.clear<calc_damage::MaxDamage>();
-  registry.clear<calc_damage::MinUsesUntilKo>();
-  registry.clear<calc_damage::AttackerHpRecovered>();
-  registry.clear<calc_damage::AttackerHpLost>();
-  registry.clear<HitCount>();
+  registry.clear<
+    calc_damage::MaxDamage,
+    calc_damage::UsesUntilKo,
+    calc_damage::AttackerHpRecovered,
+    calc_damage::AttackerHpLost>();
 }
 
 void Simulation::clearAnalyzeEffectResults() {
-  registry.clear<analyze_effect::EffectMultiplier>();
-  registry.clear<analyze_effect::MultipliedDamage>();
-  registry.clear<analyze_effect::MultipliedDamageRolls>();
-  registry.clear<analyze_effect::MultipliedKoChance>();
+  registry.clear<
+    analyze_effect::EffectMultiplier,
+    analyze_effect::MultipliedDamage,
+    analyze_effect::MultipliedDamageRolls,
+    analyze_effect::MultipliedUsesUntilKo>();
 }
 
 simulate_turn::Results Simulation::simulateTurn(std::optional<simulate_turn::Options> options) {

@@ -15,10 +15,22 @@ struct RegistryLoop;
 template <auto Function, typename... ExtraTags, typename... Exclude, typename... Include, typename... PassedInArgs>
 struct RegistryLoop<
   Function, Tags<ExtraTags...>, entt::exclude_t<Exclude...>, entt::get_t<Include...>, PassedInArgs...> {
-  static_assert(std::conjunction_v<std::is_empty<ExtraTags>...>);
-  static_assert(std::conjunction_v<std::is_class<ExtraTags>...>);
-  static_assert(std::conjunction_v<std::is_class<Exclude>...>);
-  static_assert(std::conjunction_v<std::is_class<Include>...>);
+  static_assert(
+    std::conjunction_v<std::is_empty<ExtraTags>...>,
+    "Tags should only be empty classes or structs that are not arguments to the function being looped over."
+    "Using non-empty classes here with prevent the function from being called.");
+  static_assert(
+    std::conjunction_v<std::is_class<ExtraTags>...>,
+    "Only classes or structs can be added to entities,"
+    "so including not that as a tag will prevent the function from being called.");
+  static_assert(
+    std::conjunction_v<std::is_class<Exclude>...>,
+    "Only classes or structs can be added to entities,"
+    "so including not that as a function argument will prevent the function from being called.");
+  static_assert(
+    std::conjunction_v<std::is_class<Include>...>,
+    "Only classes or structs can be added to entities,"
+    "so including not that as a function argument will prevent the function from being called.");
 
  private:
   template <typename Signature>
@@ -35,6 +47,7 @@ struct RegistryLoop<
       : ParameterShifter<
           sizeof...(TupleFromTail) == passedInArgsSize, Tags<TupleFromTail...>, Tags<TupleToTail..., TupleFromHead>> {};
 
+  // Separates the function argument types used to select entities from those passed in from the registry loop caller.
   template <typename... TupleFromTail, typename... RegistryArgs>
   struct ParameterShifter<true, Tags<TupleFromTail...>, Tags<RegistryArgs...>> {
    private:
@@ -42,17 +55,30 @@ struct RegistryLoop<
     static constexpr bool hasRegistryFirst = std::is_same_v<FirstType, types::registry&>;
     static constexpr bool hasHandleFirst = std::is_same_v<FirstType, types::handle>;
 
-    static_assert(sizeof...(RegistryArgs) > 0);
-    // If the first argument is a registry, it must be a non-constant reference
-    static_assert(!std::is_same_v<std::decay_t<FirstType>, types::registry> || hasRegistryFirst);
-    // If the first argument is a handle, it must be a non-constant value
-    static_assert(!std::is_same_v<std::decay_t<FirstType>, types::handle> || hasHandleFirst);
+    static_assert(sizeof...(RegistryArgs) > 0, "The function must accept at least 1 argument to work here.");
+    static_assert(
+      !std::is_same_v<std::decay_t<FirstType>, types::registry> || hasRegistryFirst,
+      "If the first argument is a registry, it must be a non-constant reference.");
+    static_assert(
+      !std::is_same_v<std::decay_t<FirstType>, types::handle> || hasHandleFirst,
+      "If the first argument is a handle, it must be a non-constant value.");
 
     template <typename... Args>
     static constexpr void argChecks() {
-      static_assert(std::conjunction_v<std::is_class<std::decay_t<Args>>...>);
-      static_assert(std::conjunction_v<std::is_copy_assignable<std::decay_t<Args>>...>);
-      static_assert(sizeof...(Args) + sizeof...(ExtraTags) + sizeof...(Include) > 0);
+      static_assert(
+        std::conjunction_v<std::is_class<std::decay_t<Args>>...>,
+        "Only classes or structs can be added to entities,"
+        "so including not that as a tag will prevent the function from being called.");
+      static_assert(
+        !std::disjunction_v<std::is_empty<std::decay_t<Args>>...>,
+        "Empty classes or structs shouldn't be passed into a function: they won't do anything.");
+      static_assert(
+        std::conjunction_v<std::is_copy_assignable<std::decay_t<Args>>...>,
+        "Without the ability to be copied, an argument could not have been added to an entity,"
+        "preventing the function from being called.");
+      static_assert(
+        sizeof...(Args) + sizeof...(ExtraTags) + sizeof...(Include) > 0,
+        "At least 1 type must be present to pick the entities to loop over.");
     }
 
     template <typename... ViewArgs>
@@ -113,8 +139,12 @@ struct RegistryLoop<
     }
 
     static constexpr void paramShiftCheck() {
-      static_assert(sizeof...(TupleFromTail) == passedInArgsSize);
-      static_assert(std::conjunction_v<std::is_same<std::decay_t<TupleFromTail>, std::decay_t<PassedInArgs>>...>);
+      static_assert(
+        sizeof...(TupleFromTail) == passedInArgsSize,
+        "The parameter shifter works if TupleFromTail is the same as the PassedInArgs.");
+      static_assert(
+        std::conjunction_v<std::is_same<std::decay_t<TupleFromTail>, std::decay_t<PassedInArgs>>...>,
+        "The parameter shifter works if TupleFromTail is the same as the PassedInArgs.");
     }
 
    public:
