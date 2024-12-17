@@ -27,8 +27,8 @@ inline Simulation createSingleBattleSimulation(
     p1PokemonInfo.gender = dex::Gender::MALE;
     p1PokemonInfo.status = dex::Status::PAR;
     p1PokemonInfo.level = 99;
-    p1PokemonInfo.evs = {0, 50, 100, 150, 200, 255};
-    p1PokemonInfo.stats = {309, 208, 212, 258, 238, 156};
+    p1PokemonInfo.evs = {0, 25, 50, 75, 100, 125};
+    p1PokemonInfo.stats = {275, 181, 191, 242, 229, 154};
 
     Simulation::MoveCreationInfo p1MoveInfo{};
     p1MoveInfo.name = dex::Move::FURY_ATTACK;
@@ -44,7 +44,7 @@ inline Simulation createSingleBattleSimulation(
     p2PokemonInfo.level = 100;
     p2PokemonInfo.nature = dex::Nature::MODEST;
     p2PokemonInfo.ivs = {5, 10, 15, 20, 25, 30};
-    p2PokemonInfo.stats = {321, 186, 206, 266, 216, 146};
+    p2PokemonInfo.stats = {295, 148, 190, 280, 210, 145};
 
     Simulation::MoveCreationInfo p2MoveInfo{};
     p2MoveInfo.name = dex::Move::THUNDERBOLT;
@@ -99,8 +99,8 @@ inline Simulation createDoubleBattleSimulation(
     p1aPokemonInfo.item = dex::Item::CHOICE_SCARF;
     p1aPokemonInfo.status = dex::Status::BRN;
     p1aPokemonInfo.level = 90;
-    p1aPokemonInfo.stats = {277, 166, 166, 286, 266, 196};
-    p1aPokemonInfo.evs = {0, 50, 100, 150, 200, 255};
+    p1aPokemonInfo.stats = {222, 127, 132, 246, 234, 176};
+    p1aPokemonInfo.evs = {0, 25, 50, 75, 100, 125};
 
     Simulation::MoveCreationInfo p1aMoveInfo{};
     p1aMoveInfo.name = dex::Move::MOONBLAST;
@@ -114,8 +114,8 @@ inline Simulation createDoubleBattleSimulation(
     p2aPokemonInfo.gender = dex::Gender::MALE;
     p2aPokemonInfo.item = dex::Item::LIFE_ORB;
     p2aPokemonInfo.level = 95;
-    p2aPokemonInfo.stats = {331, 284, 192, 174, 178, 152};
-    p2aPokemonInfo.evs = {255, 200, 150, 100, 50, 0};
+    p2aPokemonInfo.stats = {314, 264, 170, 147, 145, 115};
+    p2aPokemonInfo.evs = {125, 100, 75, 50, 25, 0};
 
     Simulation::MoveCreationInfo p2aMoveInfo{};
     p2aMoveInfo.name = dex::Move::KNOCK_OFF;
@@ -130,7 +130,7 @@ inline Simulation createDoubleBattleSimulation(
     p1bPokemonInfo.item = dex::Item::FOCUS_SASH;
     p1bPokemonInfo.level = 100;
     p1bPokemonInfo.nature = dex::Nature::HASTY;
-    p1bPokemonInfo.stats = {217, 276, 186, 236, 186, 320};
+    p1bPokemonInfo.stats = {291, 255, 153, 225, 180, 350};
     p1bPokemonInfo.ivs = {5, 10, 15, 20, 25, 30};
 
     Simulation::MoveCreationInfo p1bMoveInfo{};
@@ -145,7 +145,7 @@ inline Simulation createDoubleBattleSimulation(
     p2bPokemonInfo.gender = dex::Gender::MALE;
     p2bPokemonInfo.item = dex::Item::BRIGHT_POWDER;
     p2bPokemonInfo.level = 91;
-    p2bPokemonInfo.stats = {261, 146, 156, 226, 176, 284};
+    p2bPokemonInfo.stats = {237, 127, 132, 191, 141, 235};
     p2bPokemonInfo.ivs = {30, 25, 20, 15, 10, 5};
 
     Simulation::MoveCreationInfo p2bMoveInfo{};

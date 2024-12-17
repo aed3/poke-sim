@@ -2,6 +2,7 @@
 
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
+#include <Types/Random.hpp>
 #include <vector>
 
 namespace pokesim::analyze_effect {
@@ -43,8 +44,13 @@ struct MovePairs {
   }
 };
 
+struct RunsOneCalculationCount {
+  types::eventPossibilities val = 0;
+};
+
 namespace tags {
 struct Input {};
+struct RunOneCalculation {};
 struct BattleCloneForCalculation {};
 struct InvertFinalAnswer {};
 }  // namespace tags

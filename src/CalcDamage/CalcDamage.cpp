@@ -83,13 +83,16 @@ struct DebugChecks {
   }
 
   std::vector<types::entity> getPokemonList(bool forAttacker) const {
-    if (forAttacker) {
-      auto view = registry.view<tags::Attacker>();
-      return {view.begin(), view.end()};
-    }
+    std::vector<types::entity> selectedPokemon = simulation.selectedPokemonEntities();
+    auto end = std::remove_if(selectedPokemon.begin(), selectedPokemon.end(), [&](types::entity entity) {
+      if (forAttacker) {
+        return !this->registry.all_of<tags::Attacker>(entity);
+      }
 
-    auto view = registry.view<tags::Defender>();
-    return {view.begin(), view.end()};
+      return !this->registry.all_of<tags::Defender>(entity);
+    });
+
+    return {selectedPokemon.begin(), end};
   }
 
   void checkPokemonInputs(bool forAttacker) {

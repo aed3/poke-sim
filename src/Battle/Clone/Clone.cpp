@@ -229,6 +229,10 @@ void remapComponentEntities(types::registry& registry, const types::ClonedEntity
 types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount) {
   types::cloneIndex count = cloneCount.value_or(1);
   types::ClonedEntityMap entityMap, battleMap;
+  if (count == 0) {
+    return entityMap;
+  }
+
   entt::dense_map<entt::id_type, std::vector<types::entity>> srcEntityStorages;
 
   internal::cloneBattle(registry, entityMap, srcEntityStorages, count);
