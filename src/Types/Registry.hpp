@@ -74,6 +74,7 @@ class registry : public internal::BackingRegistry {
 
   template <typename Type>
   void createMetaFunctions() const {
+    static_assert(std::is_class_v<Type>, "Only classes or structs should be added to an entity.");
     entt::meta<Type>()
       .template func<&registry::copyToOtherRegistry<Type> >(MetaFunctions::COPY_TO_OTHER_REGISTRY)
       .template func<&registry::entityComponentsEqual<Type> >(MetaFunctions::ENTITY_COMPONENTS_EQUAL);

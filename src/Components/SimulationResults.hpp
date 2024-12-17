@@ -50,7 +50,7 @@ struct AttackerHpLost : DamageRolls {};
 
 namespace analyze_effect {
 struct EffectMultiplier {
-  float val = 1.0F;
+  types::effectMultiplier val = 1.0F;
 };
 
 using MultipliedDamage = Damage;

@@ -114,4 +114,14 @@ std::vector<types::entity> Simulation::selectedMoveEntities() const {
   auto view = registry.view<tags::CurrentActionMove>();
   return {view.begin(), view.end()};
 }
+
+std::vector<types::entity> Simulation::selectedPokemonEntities() const {
+  if (hasActiveSelection<tags::SelectedForViewPokemon>()) {
+    auto view = registry.view<tags::SelectedForViewPokemon, tags::Pokemon>();
+    return {view.begin(), view.end()};
+  }
+
+  auto view = registry.view<tags::Pokemon>();
+  return {view.begin(), view.end()};
+}
 }  // namespace pokesim
