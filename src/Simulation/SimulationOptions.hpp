@@ -14,7 +14,6 @@ class Simulation;
 struct DamageRollOptions {
   DamageRollKind p1 = DamageRollKind::AVERAGE_DAMAGE;
   DamageRollKind p2 = DamageRollKind::AVERAGE_DAMAGE;
-  bool includeCritsInAverageAndMax = false;
   bool sidesMatch() const { return p1 == p2; }
 };
 

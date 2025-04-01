@@ -87,9 +87,8 @@ struct DebugChecks {
   void checkInputOutputs() const {
     for (types::entity input : registry.view<tags::Input>()) {
       debug::TypesToIgnore typesToIgnore{};
-      typesToIgnore.add<MultipliedDamage, MultipliedDamageRolls>();
+      typesToIgnore.add<MultipliedDamageRolls>();
 
-      assert(registry.all_of<MultipliedDamage>(input));
       assert(registry.all_of<MultipliedDamageRolls>(input));
 
       if (registry.all_of<tags::InfiniteMultiplier>(input)) {
@@ -102,12 +101,11 @@ struct DebugChecks {
         assert(!registry.all_of<tags::InfiniteMultiplier>(input));
         typesToIgnore.add<EffectMultiplier>();
 
-        const auto [effectMultiplier, multipliedDamage, multipliedDamageRolls] =
-          registry.get<EffectMultiplier, MultipliedDamage, MultipliedDamageRolls>(input);
+        const auto [effectMultiplier, multipliedDamageRolls] =
+          registry.get<EffectMultiplier, MultipliedDamageRolls>(input);
         if (effectMultiplier.val == 0) {
           zeroEffectMultiplier = true;
-          assert(multipliedDamage.val == 0);
-          for (const MultipliedDamage& multipliedDamageRoll : multipliedDamageRolls.val) {
+          for (const Damage& multipliedDamageRoll : multipliedDamageRolls.val) {
             assert(multipliedDamageRoll.val == 0);
           }
         }
@@ -482,7 +480,6 @@ void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
         inputHandle.emplace<EffectMultiplier>((types::effectMultiplier)parentDamage.val / childDamage.val);
       }
 
-      inputHandle.emplace<MultipliedDamage>(parentDamage);
       inputHandle.emplace<MultipliedDamageRolls>(parentDamageRolls);
       auto* const parentKoChances = registry.try_get<calc_damage::UsesUntilKo>(parentBattleMove);
       if (parentKoChances != nullptr) {
@@ -497,7 +494,6 @@ void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
         inputHandle.emplace<EffectMultiplier>((types::effectMultiplier)childDamage.val / parentDamage.val);
       }
 
-      inputHandle.emplace<MultipliedDamage>(childDamage);
       inputHandle.emplace<MultipliedDamageRolls>(childDamageRolls);
       auto* const childKoChances = registry.try_get<calc_damage::UsesUntilKo>(childBattleMove);
       if (childKoChances != nullptr) {
@@ -517,7 +513,8 @@ void postRunCleanup(Simulation& simulation) {
     OriginalInputEntities,
     tags::RunOneCalculation,
     tags::InvertFinalAnswer,
-    RunsOneCalculationCount>();
+    RunsOneCalculationCount,
+    Damage>();
 }
 }  // namespace internal
 

@@ -14,8 +14,6 @@ struct TurnOutcomeBattles {
 }  // namespace simulate_turn
 
 namespace calc_damage {
-using MaxDamage = Damage;
-
 struct UsesUntilKo {
  private:
   struct KoChance {
@@ -53,7 +51,6 @@ struct EffectMultiplier {
   types::effectMultiplier val = 1.0F;
 };
 
-using MultipliedDamage = Damage;
 using MultipliedDamageRolls = DamageRolls;
 using MultipliedUsesUntilKo = calc_damage::UsesUntilKo;
 
