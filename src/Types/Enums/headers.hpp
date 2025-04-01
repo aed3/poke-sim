@@ -17,6 +17,7 @@
 #include "SideCondition.hpp"
 #include "Slot.hpp"
 #include "Species.hpp"
+#include "StabBoostKind.hpp"
 #include "Stat.hpp"
 #include "Status.hpp"
 #include "Terrain.hpp"

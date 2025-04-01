@@ -20,13 +20,12 @@ struct Results {
 }  // namespace simulate_turn
 
 namespace calc_damage {
-using MaxDamage = Damage;
 struct UsesUntilKo;
 struct AttackerHpRecovered;
 struct AttackerHpLost;
 
 struct Results {
-  types::view<MaxDamage> maxDamageResults() const;
+  types::view<DamageRolls> damageRollResults() const;
   types::view<UsesUntilKo> usesUntilKoResults() const;
   types::view<AttackerHpRecovered> hpRecoveredResults() const;
   types::view<AttackerHpLost> hpLostResults() const;
@@ -40,13 +39,11 @@ struct Results {
 
 namespace analyze_effect {
 struct EffectMultiplier;
-using MultipliedDamage = Damage;
 using MultipliedDamageRolls = DamageRolls;
 using MultipliedUsesUntilKo = calc_damage::UsesUntilKo;
 
 struct Results {
   types::view<EffectMultiplier> effectMultiplierResults() const;
-  types::view<MultipliedDamage> multipliedMaxDamageResults() const;
   types::view<MultipliedDamageRolls> multipliedDamageRollsResults() const;
   types::view<MultipliedUsesUntilKo> multipliedUsesUntilKoResults() const;
 

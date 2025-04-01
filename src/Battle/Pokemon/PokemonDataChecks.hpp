@@ -3,6 +3,7 @@
 #include <entt/config/config.h>
 
 #include <Components/SpeciesTypes.hpp>
+#include <Types/Damage.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Enums/TypeEffectiveness.hpp>
 #include <Types/MechanicConstants.hpp>
@@ -10,12 +11,12 @@
 #include <limits>
 
 namespace pokesim {
-constexpr types::boost getAttackEffectiveness(const SpeciesTypes& speciesTypes, dex::Type attackingType) {
-  types::boost modifier = 0;
+constexpr types::typeEffectiveness getAttackEffectiveness(const SpeciesTypes& speciesTypes, dex::Type attackingType) {
+  types::typeEffectiveness modifier = 0;
   for (dex::Type defendingType : speciesTypes.val) {
     switch (MechanicConstants::TYPE_CHART.effectiveness(attackingType, defendingType)) {
       case TypeEffectiveness::IMMUNE: {
-        return -std::numeric_limits<types::boost>::digits;
+        return -std::numeric_limits<types::typeEffectiveness>::digits;
       }
       case TypeEffectiveness::NEUTRAL: {
         break;

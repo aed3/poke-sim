@@ -20,6 +20,7 @@
 #include "Enums/SideCondition.hpp"
 #include "Enums/Slot.hpp"
 #include "Enums/Species.hpp"
+#include "Enums/StabBoostKind.hpp"
 #include "Enums/Stat.hpp"
 #include "Enums/Status.hpp"
 #include "Enums/Terrain.hpp"

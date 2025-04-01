@@ -1,18 +1,214 @@
 #include "Tests.hpp"
 
+const pokesim::DamageRollKind AVERAGE_DAMAGE = pokesim::DamageRollKind::AVERAGE_DAMAGE;
+const pokesim::DamageRollKind MIN_DAMAGE = pokesim::DamageRollKind::MIN_DAMAGE;
+const pokesim::DamageRollKind MAX_DAMAGE = pokesim::DamageRollKind::MAX_DAMAGE;
+const pokesim::DamageRollKind GUARANTEED_CRIT_CHANCE = pokesim::DamageRollKind::GUARANTEED_CRIT_CHANCE;
+const pokesim::DamageRollKind ALL_DAMAGE_ROLLS = pokesim::DamageRollKind::ALL_DAMAGE_ROLLS;
+
+namespace Catch {
+template <>
+struct StringMaker<pokesim::DamageRollKind> {
+  static void append(std::string& fullName, std::string part) {
+    if (!fullName.empty()) {
+      fullName += " | " + part;
+    }
+    else {
+      fullName = part;
+    }
+  }
+
+  static std::string convert(pokesim::DamageRollKind const& value) {
+    std::string fullName = "";
+    if ((int)value & (int)AVERAGE_DAMAGE) {
+      append(fullName, "AVERAGE_DAMAGE");
+    }
+    if ((int)value & (int)MIN_DAMAGE) {
+      append(fullName, "MIN_DAMAGE");
+    }
+    if ((int)value & (int)MAX_DAMAGE) {
+      append(fullName, "MAX_DAMAGE");
+    }
+    if ((int)value & (int)GUARANTEED_CRIT_CHANCE) {
+      append(fullName, "GUARANTEED_CRIT_CHANCE");
+    }
+    if ((int)value & (int)ALL_DAMAGE_ROLLS) {
+      append(fullName, "ALL_DAMAGE_ROLLS");
+    }
+
+    return fullName;
+  }
+};
+}  // namespace Catch
+
 namespace pokesim {
+const std::array<DamageRollKind, 16> damageRollKindCombinations = {
+  AVERAGE_DAMAGE,
+  MIN_DAMAGE,
+  MAX_DAMAGE,
+  calc_damage::combineDamageKinds(AVERAGE_DAMAGE, MIN_DAMAGE),
+  calc_damage::combineDamageKinds(AVERAGE_DAMAGE, MAX_DAMAGE),
+  calc_damage::combineDamageKinds(AVERAGE_DAMAGE, GUARANTEED_CRIT_CHANCE),
+  calc_damage::combineDamageKinds(MIN_DAMAGE, MAX_DAMAGE),
+  calc_damage::combineDamageKinds(MIN_DAMAGE, GUARANTEED_CRIT_CHANCE),
+  calc_damage::combineDamageKinds(MAX_DAMAGE, GUARANTEED_CRIT_CHANCE),
+  calc_damage::combineDamageKinds(AVERAGE_DAMAGE, MIN_DAMAGE, MAX_DAMAGE),
+  calc_damage::combineDamageKinds(AVERAGE_DAMAGE, MIN_DAMAGE, GUARANTEED_CRIT_CHANCE),
+  calc_damage::combineDamageKinds(AVERAGE_DAMAGE, MAX_DAMAGE, GUARANTEED_CRIT_CHANCE),
+  calc_damage::combineDamageKinds(MIN_DAMAGE, MAX_DAMAGE, GUARANTEED_CRIT_CHANCE),
+  calc_damage::combineDamageKinds(AVERAGE_DAMAGE, MIN_DAMAGE, MAX_DAMAGE, GUARANTEED_CRIT_CHANCE),
+  ALL_DAMAGE_ROLLS,
+  calc_damage::combineDamageKinds(ALL_DAMAGE_ROLLS, GUARANTEED_CRIT_CHANCE),
+};
+
+struct IdealDamageValues {
+  DamageRolls rolls;
+  Damage average;
+  Damage minDamage;
+  Damage maxDamage;
+  calc_damage::UsesUntilKo koUses;
+
+  IdealDamageValues(DamageRolls _rolls, calc_damage::UsesUntilKo _koUses, types::damage _average)
+      : rolls(_rolls), average({_average}), minDamage(_rolls.val[15]), maxDamage(_rolls.val[0]), koUses(_koUses) {}
+};
+
 TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]") {
   Simulation::BattleCreationInfo battleCreationInfo{};
+  battleCreationInfo.runWithCalculateDamage = true;
   Simulation simulation = createSingleBattleSimulation(battleCreationInfo, false);
 
-  battleCreationInfo.runWithCalculateDamage = true;
   battleCreationInfo.damageCalculations = {
     {Slot::P1A, Slot::P2A, dex::Move::FURY_ATTACK},
     {Slot::P2A, Slot::P1A, dex::Move::THUNDERBOLT},
   };
-  simulation.calculateDamageOptions.damageRollOptions.p1 = DamageRollKind::ALL_DAMAGE_ROLLS;
-  simulation.calculateDamageOptions.damageRollOptions.p2 = DamageRollKind::ALL_DAMAGE_ROLLS;
+
+  const IdealDamageValues furyAttackBaseDamage(
+    {13, 12, 12, 12, 12, 12, 12, 12, 11, 11, 11, 11, 11, 11, 11, 11},
+    {{{23, 1 / 16.0F}, {25, 7 / 16.0F}, {27, 8 / 16.0F}}},
+    12);
+  const IdealDamageValues thunderboltBaseDamage(
+    {282, 278, 276, 272, 270, 266, 264, 260, 258, 254, 252, 248, 246, 242, 240, 236},
+    {{{1, 3 / 16.0F}, {2, 13 / 16.0F}}},
+    258);
+
+  const IdealDamageValues furyAttackCritDamage(
+    {19, 18, 18, 18, 18, 18, 17, 17, 17, 17, 17, 16, 16, 16, 16, 16},
+    {{{16, 1 / 16.0F}, {17, 5 / 16.0F}, {18, 5 / 16.0F}, {19, 5 / 16.0F}}},
+    17);
+  const IdealDamageValues thunderboltCritDamage(
+    {422, 416, 414, 408, 404, 398, 396, 392, 386, 384, 378, 374, 372, 366, 362, 356},
+    {{{1, 16 / 16.0F}}},
+    390);
+
+  DamageRollOptions damageRollOptions;
+  bool getKoUses = GENERATE(false, true);
+  bool calculateUpToFoeHp = GENERATE(false, true);
+  damageRollOptions.p1 = GENERATE(from_range(damageRollKindCombinations));
+  damageRollOptions.p2 = GENERATE(from_range(damageRollKindCombinations));
+
+  auto pickIdealDamageValues = [&](dex::Move move, DamageRollKind damageRollKind) -> const IdealDamageValues& {
+    REQUIRE((move == dex::Move::FURY_ATTACK || move == dex::Move::THUNDERBOLT));
+    bool isCrit = (int)damageRollKind & (int)GUARANTEED_CRIT_CHANCE;
+
+    if (move == dex::Move::FURY_ATTACK) {
+      return isCrit ? furyAttackCritDamage : furyAttackBaseDamage;
+    }
+
+    return isCrit ? thunderboltCritDamage : thunderboltBaseDamage;
+  };
+
+  CAPTURE(getKoUses, calculateUpToFoeHp, damageRollOptions.p1, damageRollOptions.p2);
+
+  auto& options = simulation.calculateDamageOptions;
+
+  options.calculateUpToFoeHp = calculateUpToFoeHp;
+  options.noKoChanceCalculation = !getKoUses;
+  options.damageRollOptions = damageRollOptions;
+
   simulation.createInitialStates({battleCreationInfo});
-  simulation.calculateDamage();
+  auto result = simulation.calculateDamage();
+
+  const auto damageRolls = result.damageRollResults();
+  const auto hpLost = result.hpLostResults();
+  const auto hpRecovered = result.hpRecoveredResults();
+  const auto koUses = result.usesUntilKoResults();
+
+  REQUIRE(damageRolls.size() == 2);
+  REQUIRE(hpLost.empty());
+  REQUIRE(hpRecovered.empty());
+
+  if (options.noKoChanceCalculation) {
+    REQUIRE(koUses.empty());
+  }
+  else {
+    std::uint8_t idealKoUsesSize = 0;
+    if (calc_damage::damageKindsMatch(damageRollOptions.p1, ALL_DAMAGE_ROLLS)) {
+      idealKoUsesSize++;
+    }
+    if (calc_damage::damageKindsMatch(damageRollOptions.p2, ALL_DAMAGE_ROLLS)) {
+      idealKoUsesSize++;
+    }
+    REQUIRE(koUses.size() == idealKoUsesSize);
+  }
+
+  const types::registry& registry = simulation.registry;
+  damageRolls.each([&](types::entity entity, const DamageRolls& trueDamageRolls) {
+    types::entity target = registry.get<CurrentActionTargets>(entity).only();
+    types::stat targetHp = registry.get<stat::CurrentHp>(target).val;
+
+    PlayerSideId sideId = registry.get<PlayerSide>(registry.get<Side>(target).val).val;
+    DamageRollKind damageRollKind = sideId == PlayerSideId::P1 ? damageRollOptions.p1 : damageRollOptions.p2;
+
+    dex::Move move = registry.get<MoveName>(entity).name;
+    const IdealDamageValues& idealDamageValues = pickIdealDamageValues(move, damageRollKind);
+
+    if (calc_damage::damageKindsMatch(damageRollKind, ALL_DAMAGE_ROLLS)) {
+      REQUIRE(trueDamageRolls.val.size() == idealDamageValues.rolls.val.size());
+      for (std::size_t i = 0; i < trueDamageRolls.val.size(); i++) {
+        types::damage idealDamage = idealDamageValues.rolls.val[i].val;
+        if (calculateUpToFoeHp) {
+          idealDamage = std::min(idealDamage, targetHp);
+        }
+        REQUIRE(trueDamageRolls.val[i].val == idealDamage);
+      }
+
+      if (getKoUses) {
+        REQUIRE(koUses.contains(entity));
+        const auto& [trueKosUses] = koUses.get(entity);
+        const auto& idealKoUses = idealDamageValues.koUses;
+
+        REQUIRE(trueKosUses.minHits() == idealKoUses.val[0]);
+        REQUIRE(trueKosUses.maxHits() == idealKoUses.val.back());
+        REQUIRE(trueKosUses.guaranteedKo() == (idealKoUses.val.size() == 1));
+
+        REQUIRE(trueKosUses.val.size() == idealKoUses.val.size());
+        for (std::size_t i = 0; i < trueKosUses.val.size(); i++) {
+          REQUIRE(trueKosUses.val[i] == idealKoUses.val[i]);
+        }
+      }
+    }
+    if (calc_damage::damageKindsMatch(damageRollKind, MAX_DAMAGE)) {
+      types::damage idealDamage = idealDamageValues.maxDamage.val;
+      if (calculateUpToFoeHp) {
+        idealDamage = std::min(idealDamage, targetHp);
+      }
+      REQUIRE(trueDamageRolls.max() == idealDamage);
+    }
+    if (calc_damage::damageKindsMatch(damageRollKind, MIN_DAMAGE)) {
+      types::damage idealDamage = idealDamageValues.minDamage.val;
+      if (calculateUpToFoeHp) {
+        idealDamage = std::min(idealDamage, targetHp);
+      }
+      REQUIRE(trueDamageRolls.min() == idealDamage);
+    }
+    if (calc_damage::damageKindsMatch(damageRollKind, AVERAGE_DAMAGE)) {
+      types::damage trueAverageDamage = calc_damage::averageOfDamageRolls(trueDamageRolls, damageRollKind);
+      types::damage idealDamage = idealDamageValues.average.val;
+      if (calculateUpToFoeHp) {
+        idealDamage = std::min(idealDamage, targetHp);
+      }
+      REQUIRE(trueAverageDamage == idealDamage);
+    }
+  });
 }
 }  // namespace pokesim

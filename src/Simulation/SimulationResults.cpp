@@ -17,8 +17,8 @@ types::view<TurnOutcomeBattles> Results::turnOutcomeBattlesResults() const {
 namespace calc_damage {
 Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
 
-types::view<MaxDamage> Results::maxDamageResults() const {
-  return simulation.registry.view<MaxDamage>();
+types::view<DamageRolls> Results::damageRollResults() const {
+  return simulation.registry.view<DamageRolls>();
 }
 
 types::view<UsesUntilKo> Results::usesUntilKoResults() const {
@@ -39,10 +39,6 @@ Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
 
 types::view<EffectMultiplier> Results::effectMultiplierResults() const {
   return simulation.registry.view<EffectMultiplier>();
-}
-
-types::view<MultipliedDamage> Results::multipliedMaxDamageResults() const {
-  return simulation.registry.view<MultipliedDamage>();
 }
 
 types::view<MultipliedDamageRolls> Results::multipliedDamageRollsResults() const {

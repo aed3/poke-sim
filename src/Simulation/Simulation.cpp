@@ -23,17 +23,12 @@ void Simulation::clearSimulateTurnResults() {
 }
 
 void Simulation::clearCalculateDamageResults() {
-  registry.clear<
-    calc_damage::MaxDamage,
-    calc_damage::UsesUntilKo,
-    calc_damage::AttackerHpRecovered,
-    calc_damage::AttackerHpLost>();
+  registry.clear<calc_damage::UsesUntilKo, calc_damage::AttackerHpRecovered, calc_damage::AttackerHpLost>();
 }
 
 void Simulation::clearAnalyzeEffectResults() {
   registry.clear<
     analyze_effect::EffectMultiplier,
-    analyze_effect::MultipliedDamage,
     analyze_effect::MultipliedDamageRolls,
     analyze_effect::MultipliedUsesUntilKo>();
 }

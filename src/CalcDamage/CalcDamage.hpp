@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Types/Damage.hpp>
+#include <Types/Enums/DamageRollKind.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 
 namespace pokesim {
@@ -16,9 +17,11 @@ void applyMinDamageRoll(Damage& damage);
 
 void setDamageRollModifiers(Simulation& simulation);
 template <typename SimulationTag>
-void applyDamageRollsAndModifiers(Simulation& simulation);
+void applyDamageRollsAndModifiers(
+  Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp, bool noKoChanceCalculation);
 
-void setIfMoveCrits(Simulation& simulation);
+template <typename SimulationTag>
+void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind);
 void getDamage(Simulation& simulation);
 }  // namespace calc_damage
 }  // namespace pokesim
