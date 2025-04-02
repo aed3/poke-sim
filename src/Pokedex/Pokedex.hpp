@@ -4,6 +4,7 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/headers.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/Assert.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/container/fwd.hpp>
 #include <entt/entity/registry.hpp>
@@ -101,7 +102,7 @@ class Pokedex {
    */
   template <typename... T>
   auto getSpeciesData(dex::Species species) const {
-    // ENTT_ASSERT(registry.all_of<T...>(speciesMap.at(species)), "Species does not contain at least one of the
+    // POKESIM_ASSERT(registry.all_of<T...>(speciesMap.at(species)), "Species does not contain at least one of the
     // component types.");
     return dexRegistry.get<T...>(speciesMap.at(species));
   }

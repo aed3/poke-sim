@@ -21,6 +21,7 @@
 #include <Types/Enums/Terrain.hpp>
 #include <Types/Enums/Volatile.hpp>
 #include <Types/Enums/Weather.hpp>
+#include <Utilities/Assert.hpp>
 #include <Utilities/Variant.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
@@ -40,7 +41,7 @@ void InputSetup::setEffectTarget(types::entity entity) {
 }
 
 void InputSetup::setDefender(types::entity entity) {
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     !handle.try_get<Defenders>(),
     "Calc damage only supports one defender per move. Make a new move instead.");
   handle.emplace<Defenders>().val.push_back(entity);
@@ -71,7 +72,7 @@ void InputSetup::setEffect(types::effectEnum effect) {
     handle.emplace<WeatherName>(effect.get<dex::Weather>());
   }
   else {
-    ENTT_FAIL("Effect does not contain a valid enum.");
+    POKESIM_ASSERT_FAIL("Effect does not contain a valid enum.");
   }
 }
 
@@ -98,7 +99,7 @@ void InputSetup::setBoostEffect(dex::Stat stat, types::boost boost) {
       break;
     }
     default: {
-      ENTT_FAIL("Using a stat enum that doesn't have boost.");
+      POKESIM_ASSERT_FAIL("Using a stat enum that doesn't have boost.");
     }
   }
 }

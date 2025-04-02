@@ -15,6 +15,7 @@
 #include <Components/Tags/TargetTags.hpp>
 #include <Types/Move.hpp>
 #include <Types/Stats.hpp>
+#include <Utilities/Assert.hpp>
 #include <entt/entity/handle.hpp>
 
 namespace pokesim::dex::internal {
@@ -65,17 +66,17 @@ void MoveDexDataSetup::setBasePower(types::basePower basePower) {
 }
 
 void MoveDexDataSetup::setCategoryPhysical() {
-  ENTT_ASSERT(!(handle.any_of<move::tags::Special, move::tags::Status>()), "A move can only have one category.");
+  POKESIM_ASSERT(!(handle.any_of<move::tags::Special, move::tags::Status>()), "A move can only have one category.");
   setProperty<move::tags::Physical>();
 }
 
 void MoveDexDataSetup::setCategorySpecial() {
-  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Status>()), "A move can only have one category.");
+  POKESIM_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Status>()), "A move can only have one category.");
   setProperty<move::tags::Special>();
 }
 
 void MoveDexDataSetup::setCategoryStatus() {
-  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Special>()), "A move can only have one category.");
+  POKESIM_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Special>()), "A move can only have one category.");
   setProperty<move::tags::Status>();
 }
 

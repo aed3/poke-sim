@@ -6,6 +6,7 @@
 #include <Components/Tags/Selection.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/Assert.hpp>
 #include <Utilities/RegistryLoop.hpp>
 #include <Utilities/Tags.hpp>
 #include <cstdint>
@@ -87,7 +88,7 @@ class RegistryContainer {
 
       registry.remove<Selection>(unmatchedSelections.begin(), unmatchedSelections.end());
 
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         unmatchedSelectionSize < totalSelected,
         "The number of elements removed from the active selection must be less than the number of elements selected.");
       finalSelectionSize = totalSelected - unmatchedSelectionSize;
@@ -140,7 +141,7 @@ class RegistryContainer {
 
   template <typename Selection>
   void deselect() {
-    ENTT_ASSERT(hasActiveSelection<Selection>(), "Selections must be present to deselect.");
+    POKESIM_ASSERT(hasActiveSelection<Selection>(), "Selections must be present to deselect.");
 
     registry.clear<Selection>();
     SelectionFunctionList& functions = selectedFunctions<Selection>();

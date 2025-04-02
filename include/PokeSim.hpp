@@ -47,6 +47,7 @@
  * external/entt/meta/policy.hpp
  * external/entt/meta/utility.hpp
  * external/entt/meta/factory.hpp
+ * src/Utilities/Assert.hpp
  * src/Utilities/DebugChecks.hpp
  * src/Types/Registry.hpp
  * src/Utilities/DebugChecks.cpp
@@ -221,9 +222,10 @@
  * src/Pokedex/Abilities/AbilityEvents.cpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.cpp
  * src/Battle/Pokemon/PokemonDataChecks.hpp
- * src/Components/CalcDamage/DamageCalcVariables.hpp
  * src/Components/Level.hpp
  * src/Components/PlayerSide.hpp
+ * src/CalcDamage/CalcDamageDebugChecks.hpp
+ * src/Components/CalcDamage/DamageCalcVariables.hpp
  * src/CalcDamage/CalcDamage.cpp
  * src/Components/EntityHolders/FoeSide.hpp
  * src/Battle/Setup/SideStateSetup.cpp
@@ -253,6 +255,7 @@
  * src/Components/Names/VolatileNames.hpp
  * src/Components/Names/WeatherNames.hpp
  * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp
+ * src/AnalyzeEffect/AnalyzeEffectDebugChecks.hpp
  * src/Components/AnalyzeEffect/RemovedEffect.hpp
  * src/AnalyzeEffect/AnalyzeEffect.cpp
  * src/Components/Tags/TypeTags.hpp
@@ -17143,6 +17146,31 @@ inline void meta_reset() noexcept {
 
 //////////////////// END OF external/entt/meta/factory.hpp /////////////////////
 
+////////////////////// START OF src/Utilities/Assert.hpp ///////////////////////
+
+// NOLINTBEGIN cppcoreguidelines-macro-usage
+#ifdef NDEBUG
+#define POKESIM_ASSERT(condition, message) (void(0))
+#define POKESIM_ASSERT_NM(condition) (void(0))
+#define POKESIM_ASSERT_FAIL(message) (void(0))
+#else
+#include <cassert>
+#include <cstdint>
+
+namespace pokesim::debug {
+inline uint64_t ASSERT_COUNT = 0;  // NOLINT cppcoreguidelines-avoid-non-const-global-variables
+}
+
+#define POKESIM_ASSERT(condition, message) \
+  pokesim::debug::ASSERT_COUNT++;          \
+  assert((void(message), condition))
+#define POKESIM_ASSERT_NM(condition) POKESIM_ASSERT(condition, 0)
+#define POKESIM_ASSERT_FAIL(message) POKESIM_ASSERT(false, message)
+#endif
+// NOLINTEND cppcoreguidelines-macro-usage
+
+/////////////////////// END OF src/Utilities/Assert.hpp ////////////////////////
+
 //////////////////// START OF src/Utilities/DebugChecks.hpp ////////////////////
 
 #ifndef NDEBUG
@@ -17225,19 +17253,20 @@ class AssertComponentsEqual {
 
       bool initialIsParent = checkIfCopyParent(current, initial, registry);
       bool currentIsParent = checkIfCopyParent(initial, current, registry);
-      assert((initialIsParent && !currentIsParent));
+      POKESIM_ASSERT_NM((initialIsParent && !currentIsParent));
     }
     else if constexpr (hasEqualTo<Member>::value) {
-      assert(current == initial);
+      POKESIM_ASSERT_NM(current == initial);
     }
     else if constexpr (entt::is_complete_v<isList<Member>>) {
-      assert(current.size() == initial.size());
+      POKESIM_ASSERT_NM(current.size() == initial.size());
       for (std::size_t i = 0; i < current.size(); i++) {
         compareMember(current[i], initial[i], registry);
       }
     }
     else {
-      ENTT_FAIL("There's a type that needs a dedicated equals function.");
+      // Not a static_assert so this only fails on types that actually get copied
+      POKESIM_ASSERT_FAIL("There's a type that needs a dedicated equals function.");
     }
   }
 
@@ -17259,10 +17288,9 @@ class AssertComponentsEqual {
         return;
       }
     }
-    else {
-      // Not a static assert so this only fails on types that actually get copied
-      ENTT_FAIL("This component needs a dedicated equals function.");
-    }
+
+    // Not a static_assert so this only fails on types that actually get copied
+    POKESIM_ASSERT_FAIL("This component needs a dedicated equals function.");
   }
 };
 }  // namespace pokesim::debug
@@ -17416,16 +17444,16 @@ inline void hasSameComponents(
 
     if (currStorage.contains(currEntity)) {
       const auto* const initStorage = initReg.storage(id);
-      ENTT_ASSERT(initStorage != nullptr, "The inital registry never contained this component.");
-      ENTT_ASSERT(initStorage->contains(initEntity), "The inital doesn't contain the current's component.");
+      POKESIM_ASSERT(initStorage != nullptr, "The inital registry never contained this component.");
+      POKESIM_ASSERT(initStorage->contains(initEntity), "The inital doesn't contain the current's component.");
     }
   }
 
   for (auto [id, initStorage] : initReg.storage()) {
     if (initStorage.contains(initEntity)) {
       const auto* const currStorage = currReg.storage(id);
-      ENTT_ASSERT(currStorage != nullptr, "The current registry never contained this component.");
-      ENTT_ASSERT(currStorage->contains(currEntity), "The current doesn't contain the inital's component.");
+      POKESIM_ASSERT(currStorage != nullptr, "The current registry never contained this component.");
+      POKESIM_ASSERT(currStorage->contains(currEntity), "The current doesn't contain the inital's component.");
     }
   }
 }
@@ -17460,7 +17488,7 @@ inline types::entity findCopyParent(
   const ParentEntity* parentEntity = registry.try_get<ParentEntity>(entity);
   for (std::size_t i = 0; parentEntity != nullptr; i++) {
     if (i >= registry.storage<types::registry::entity_type>()->size()) {
-      ENTT_FAIL("A loop in the battle tree caused an infinite loop.");
+      POKESIM_ASSERT_FAIL("A loop in the battle tree caused an infinite loop.");
     }
 
     for (auto [original, _] : initialEntities) {
@@ -17471,14 +17499,14 @@ inline types::entity findCopyParent(
     parentEntity = registry.try_get<ParentEntity>(parentEntity->val);
   }
 
-  ENTT_FAIL("Could not find original entity of a clone.");
+  POKESIM_ASSERT_FAIL("Could not find original entity of a clone.");
 }
 
 inline bool checkIfCopyParent(types::entity current, types::entity initial, const types::registry& registry) {
   const ParentEntity* parentEntity = registry.try_get<ParentEntity>(current);
   for (std::size_t i = 0; parentEntity != nullptr; i++) {
     if (i >= registry.storage<types::registry::entity_type>()->size()) {
-      ENTT_FAIL("A loop in the battle tree caused an infinite loop.");
+      POKESIM_ASSERT_FAIL("A loop in the battle tree caused an infinite loop.");
     }
 
     if (parentEntity->val == initial) {
@@ -18770,22 +18798,22 @@ class maxSizedVector : private std::array<T, N> {
   constexpr typename base::const_reference back() const noexcept { return N ? *(end() - 1) : *end(); }
 
   constexpr typename base::const_reference at(std::uint8_t pos) const {
-    assert(pos < used);
+    POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
     return base::at(pos);
   }
 
   constexpr typename base::const_reference operator[](std::uint8_t pos) const noexcept {
-    assert(pos < used);
+    POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
     return base::operator[](pos);
   }
 
   typename base::reference at(std::uint8_t pos) {
-    assert(pos < used);
+    POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
     return base::at(pos);
   }
 
   typename base::reference operator[](std::uint8_t pos) noexcept {
-    assert(pos < used);
+    POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
     return base::operator[](pos);
   }
 
@@ -18800,7 +18828,7 @@ class maxSizedVector : private std::array<T, N> {
   }
 
   void pop_count(std::uint8_t remove) {
-    assert(remove <= used);
+    POKESIM_ASSERT(remove <= used, "Removing more values than are used.");
     used -= remove;
   }
 
@@ -19123,7 +19151,7 @@ struct NextAction {
 struct CurrentActionTargets {
   types::targets<types::entity> val{};
   const types::entity& only() const {
-    ENTT_ASSERT(
+    POKESIM_ASSERT(
       val.size() == 1,
       "This method is supposed to get the first target when there's only one target stored.");
     return val[0];
@@ -19533,7 +19561,7 @@ class Pokedex {
    */
   template <typename... T>
   auto getSpeciesData(dex::Species species) const {
-    // ENTT_ASSERT(registry.all_of<T...>(speciesMap.at(species)), "Species does not contain at least one of the
+    // POKESIM_ASSERT(registry.all_of<T...>(speciesMap.at(species)), "Species does not contain at least one of the
     // component types.");
     return dexRegistry.get<T...>(speciesMap.at(species));
   }
@@ -19917,7 +19945,7 @@ class RegistryContainer {
 
       registry.remove<Selection>(unmatchedSelections.begin(), unmatchedSelections.end());
 
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         unmatchedSelectionSize < totalSelected,
         "The number of elements removed from the active selection must be less than the number of elements selected.");
       finalSelectionSize = totalSelected - unmatchedSelectionSize;
@@ -19970,7 +19998,7 @@ class RegistryContainer {
 
   template <typename Selection>
   void deselect() {
-    ENTT_ASSERT(hasActiveSelection<Selection>(), "Selections must be present to deselect.");
+    POKESIM_ASSERT(hasActiveSelection<Selection>(), "Selections must be present to deselect.");
 
     registry.clear<Selection>();
     SelectionFunctionList& functions = selectedFunctions<Selection>();
@@ -20569,9 +20597,9 @@ inline void Simulation::createInitialTurnDecision(
 
 inline void Simulation::createCalcDamageInput(
   BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData) {
-  ENTT_ASSERT(damageCalcInputData.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
-  ENTT_ASSERT(damageCalcInputData.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
-  ENTT_ASSERT(damageCalcInputData.move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
+  POKESIM_ASSERT(damageCalcInputData.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
+  POKESIM_ASSERT(damageCalcInputData.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
+  POKESIM_ASSERT(damageCalcInputData.move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
   types::entity attackerEntity = slotToPokemonEntity(registry, sides, damageCalcInputData.attackerSlot);
@@ -20583,13 +20611,13 @@ inline void Simulation::createCalcDamageInput(
 
 inline void Simulation::createAnalyzeEffectInput(
   BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& analyzeEffectInputData) {
-  ENTT_ASSERT(analyzeEffectInputData.attackerSlot != Slot::NONE, "An effect analysis must have a attacker.");
-  ENTT_ASSERT(analyzeEffectInputData.defenderSlot != Slot::NONE, "An effect analysis must have a defender.");
-  ENTT_ASSERT(analyzeEffectInputData.effectTarget != Slot::NONE, "An effect analysis must have a effect target.");
-  ENTT_ASSERT(!analyzeEffectInputData.moves.empty(), "An effect analysis must include a move.");
+  POKESIM_ASSERT(analyzeEffectInputData.attackerSlot != Slot::NONE, "An effect analysis must have a attacker.");
+  POKESIM_ASSERT(analyzeEffectInputData.defenderSlot != Slot::NONE, "An effect analysis must have a defender.");
+  POKESIM_ASSERT(analyzeEffectInputData.effectTarget != Slot::NONE, "An effect analysis must have a effect target.");
+  POKESIM_ASSERT(!analyzeEffectInputData.moves.empty(), "An effect analysis must include a move.");
   const auto& effect = analyzeEffectInputData.effect;
   const auto& boostEffect = analyzeEffectInputData.boostEffect;
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     boostEffect.has_value() || (effect.has_value() && !effect.value().empty()),
     "An effect analysis must have an effect.");
 
@@ -20622,7 +20650,7 @@ inline void Simulation::createInitialStates(std::initializer_list<BattleCreation
     createInitialSide(p2SideSetup, battleData.p2, battleData);
 
     if (!battleData.decisionsToSimulate.empty()) {
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         battleData.decisionsToSimulate.size() < std::numeric_limits<types::cloneIndex>::max(),
         "Cannot make more clones than their are entities.");
 
@@ -20686,12 +20714,12 @@ struct DamageRolls {
   }
 
   types::damage min() const {
-    ENTT_ASSERT(!val.empty(), "DamageRolls has no values to read.");
+    POKESIM_ASSERT(!val.empty(), "DamageRolls has no values to read.");
     return val.back().val;
   }
 
   types::damage max() const {
-    ENTT_ASSERT(!val.empty(), "DamageRolls has no values to read.");
+    POKESIM_ASSERT(!val.empty(), "DamageRolls has no values to read.");
     return val.front().val;
   }
 };
@@ -20724,12 +20752,12 @@ struct UsesUntilKo {
   std::vector<KoChance> val{};
 
   const KoChance& minHits() const {
-    assert(!val.empty());
+    POKESIM_ASSERT(!val.empty(), "UsesUntilKo has no values to read.");
     return val.front();
   }
 
   const KoChance& maxHits() const {
-    assert(!val.empty());
+    POKESIM_ASSERT(!val.empty(), "UsesUntilKo has no values to read.");
     return val.back();
   }
 
@@ -21867,12 +21895,12 @@ void setRandomChoice(
       chance = chanceSum;
     }
 
-    ENTT_ASSERT(chanceSum == 100, "The total probability of all possible outcomes should add up to 100%.");
+    POKESIM_ASSERT(chanceSum == 100, "The total probability of all possible outcomes should add up to 100%.");
   }
   else {
-    ENTT_ASSERT(chances.back() == 100, "The total probability of all possible outcomes should add up to 100%.");
+    POKESIM_ASSERT(chances.back() == 100, "The total probability of all possible outcomes should add up to 100%.");
     for (types::eventPossibilities i = 1; i < POSSIBLE_EVENT_COUNT; i++) {
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         chances[i - 1] <= chances[i],
         "Chances should be a cumulative sum where each value is greater than the last.");
     }
@@ -22052,7 +22080,7 @@ inline void accuracyCheck(Simulation& simulation) {
 }
 
 inline void internal::deductMoveHitCount(types::handle moveHandle, HitCount& hitCount) {
-  ENTT_ASSERT(hitCount.val > 0, "A hit count shouldn't be decremented if it's already 0.");
+  POKESIM_ASSERT(hitCount.val > 0, "A hit count shouldn't be decremented if it's already 0.");
   hitCount.val--;
   if (!hitCount.val) {
     moveHandle.remove<HitCount>();
@@ -22098,7 +22126,7 @@ inline void internal::updateCurrentActionTargets(types::registry& registry, Curr
   for (types::entity& target : targets.val) {
     if (!registry.all_of<tags::CurrentActionMoveTarget>(target)) {
       std::uint8_t swapIndex = targets.val.size() - 1 - deleteCount;
-      ENTT_ASSERT(swapIndex >= 0 && swapIndex < targets.val.size(), "Swap index out of bounds.");
+      POKESIM_ASSERT(swapIndex >= 0 && swapIndex < targets.val.size(), "Swap index out of bounds.");
       std::swap(target, targets.val[swapIndex]);
       deleteCount++;
     }
@@ -22836,7 +22864,7 @@ inline void assignIndexToClones(
     const auto& cloned = clonedPointer->second;
 
     for (std::size_t index = 0; index < cloned.size(); index++) {
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         std::numeric_limits<types::eventPossibilities>::max() > index,
         "Number of clones shouldn't be greater than the number of possible events.");
       registry.emplace<RandomEventIndex>(cloned[index], (types::eventPossibilities)(index + 1U));
@@ -23171,8 +23199,8 @@ struct Team {
 
 namespace pokesim::simulate_turn {
 inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
-  ENTT_ASSERT(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player.");
-  ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
+  POKESIM_ASSERT(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player.");
+  POKESIM_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
   types::registry& registry = *sideHandle.registry();
 
   ActionQueue& battleActionQueue = registry.get<ActionQueue>(sideHandle.get<Battle>().val);
@@ -23181,20 +23209,20 @@ inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDe
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
 
     for (const SlotDecision& decision : decisions) {
-      ENTT_ASSERT(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
+      POKESIM_ASSERT(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
       if (sideDecision.sideId == PlayerSideId::P1) {
-        ENTT_ASSERT(
+        POKESIM_ASSERT(
           (decision.sourceSlot == Slot::P1A || decision.sourceSlot == Slot::P1B),
           "Source must be from a player 1 in battle slot.");
       }
       else {
-        ENTT_ASSERT(
+        POKESIM_ASSERT(
           (decision.sourceSlot == Slot::P2A || decision.sourceSlot == Slot::P2B),
           "Source must be from a player 2 in battle slot.");
       }
 
-      ENTT_ASSERT(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
-      ENTT_ASSERT(
+      POKESIM_ASSERT(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
+      POKESIM_ASSERT(
         !(decision.moveChoice.has_value() && decision.itemChoice.has_value()),
         "Decisions can't have a move and an item choice.");
 
@@ -23237,7 +23265,7 @@ inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDe
   else if (sideDecision.decisions.holds<types::teamOrder>()) {
     const auto& teamOrder = sideDecision.decisions.get<types::teamOrder>();
 
-    ENTT_ASSERT(
+    POKESIM_ASSERT(
       sideHandle.get<Team>().val.size() == teamOrder.size(),
       "Must pick a placement for each Pokemon on the team.");
     types::handle actionHandle = {registry, registry.create()};
@@ -23372,18 +23400,20 @@ inline constexpr bool damageKindsMatch(DamageRollKind kindA, DamageRollKind kind
 }
 
 inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, DamageRollKind damageRollKind) {
-  ENTT_ASSERT(!damageRolls.val.empty(), "DamageRolls has no rolls yet.");
+  POKESIM_ASSERT(!damageRolls.val.empty(), "DamageRolls has no rolls yet.");
 
   if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
-    ENTT_ASSERT(
+    POKESIM_ASSERT(
       damageRolls.val.size() == MechanicConstants::MAX_DAMAGE_ROLL_COUNT,
       "DamageRolls does not have all rolls yet.");
     return damageRolls.val[MechanicConstants::MAX_DAMAGE_ROLL_COUNT / 2].val;
   }
-  ENTT_ASSERT(damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE), "DamageRolls does not contain average");
+  POKESIM_ASSERT(
+    damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE),
+    "DamageRolls does not contain average");
 
   if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
-    ENTT_ASSERT(damageRolls.val.size() > 1, "DamageRolls may not have average roll yet.");
+    POKESIM_ASSERT(damageRolls.val.size() > 1, "DamageRolls may not have average roll yet.");
     return damageRolls.val[1].val;
   }
   return damageRolls.val[0].val;
@@ -23427,7 +23457,7 @@ inline void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls,
     damageRollIndex += i == 0 || damageRolls.val[i - 1].val != damageRolls.val[i].val ? 1 : 0;
   }
 
-  ENTT_FAIL("How was a damage roll not found that matched the event index?");
+  POKESIM_ASSERT_FAIL("How was a damage roll not found that matched the event index?");
 }
 
 inline void assignProbability(types::registry& registry, const Battle& battle, const RandomEventCount& randomEventCount) {
@@ -23445,7 +23475,7 @@ inline void assignAllDamageRollProbability(
     damageCount += damageRoll.val == damage.val ? 1 : 0;
   }
 
-  ENTT_ASSERT(damageCount > 0U, "How was a damage roll not found that matched the damage dealt?");
+  POKESIM_ASSERT(damageCount > 0U, "How was a damage roll not found that matched the damage dealt?");
 
   Probability& probability = registry.get<Probability>(battle.val);
   probability.val *= damageCount / (types::probability)MechanicConstants::MAX_DAMAGE_ROLL_COUNT;
@@ -23765,17 +23795,17 @@ inline void MoveDexDataSetup::setBasePower(types::basePower basePower) {
 }
 
 inline void MoveDexDataSetup::setCategoryPhysical() {
-  ENTT_ASSERT(!(handle.any_of<move::tags::Special, move::tags::Status>()), "A move can only have one category.");
+  POKESIM_ASSERT(!(handle.any_of<move::tags::Special, move::tags::Status>()), "A move can only have one category.");
   setProperty<move::tags::Physical>();
 }
 
 inline void MoveDexDataSetup::setCategorySpecial() {
-  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Status>()), "A move can only have one category.");
+  POKESIM_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Status>()), "A move can only have one category.");
   setProperty<move::tags::Special>();
 }
 
 inline void MoveDexDataSetup::setCategoryStatus() {
-  ENTT_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Special>()), "A move can only have one category.");
+  POKESIM_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Special>()), "A move can only have one category.");
   setProperty<move::tags::Status>();
 }
 
@@ -24098,7 +24128,7 @@ inline types::entity Pokedex::buildSpecies(dex::Species species, types::registry
     default: break;
   }
 
-  ENTT_FAIL("Building a species that does not exist.");
+  POKESIM_ASSERT_FAIL("Building a species that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim
@@ -24570,7 +24600,7 @@ inline types::entity Pokedex::buildMove(dex::Move move, types::registry& registr
     default: break;
   }
 
-  ENTT_FAIL("Building a move that does not exist.");
+  POKESIM_ASSERT_FAIL("Building a move that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim
@@ -24626,7 +24656,7 @@ inline types::entity Pokedex::buildItem(dex::Item item, types::registry& registr
     default: break;
   }
 
-  ENTT_FAIL("Building an item that does not exist.");
+  POKESIM_ASSERT_FAIL("Building an item that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim
@@ -24689,7 +24719,7 @@ inline types::entity Pokedex::buildAbility(dex::Ability ability, types::registry
     default: break;
   }
 
-  ENTT_FAIL("Building an ability that does not exist.");
+  POKESIM_ASSERT_FAIL("Building an ability that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim
@@ -24723,7 +24753,7 @@ template <typename Build, typename T>
 void Pokedex::load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build) {
   map.reserve(map.size() + list.size());
   for (T listItem : list) {
-    ENTT_ASSERT(!map.contains(listItem), "Shouldn't build data entries twice.");
+    POKESIM_ASSERT(!map.contains(listItem), "Shouldn't build data entries twice.");
     map[listItem] = build(listItem);
   }
 }
@@ -24789,7 +24819,7 @@ inline void ChoiceSpecsEvents::onSourceModifyMove(types::handle pokemonHandle, c
 namespace pokesim::dex {
 inline void internal::ChoiceLockEvents::onDisableMove(
   types::registry& registry, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     std::find(moveSlots.val.begin(), moveSlots.val.end(), choiceLocked.val),
     "Should skip if the move is no longer present, but when does that happen?");
 
@@ -24859,7 +24889,7 @@ inline constexpr types::typeEffectiveness getAttackEffectiveness(const SpeciesTy
     }
   }
 
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     modifier <= speciesTypes.size() && modifier >= -speciesTypes.size(),
     "Modifier cannot exceed the number of types.");
   return modifier;
@@ -24867,29 +24897,6 @@ inline constexpr types::typeEffectiveness getAttackEffectiveness(const SpeciesTy
 }  // namespace pokesim
 
 /////////////// END OF src/Battle/Pokemon/PokemonDataChecks.hpp ////////////////
-
-////////// START OF src/Components/CalcDamage/DamageCalcVariables.hpp //////////
-
-namespace pokesim::calc_damage {
-struct AttackingLevel {
-  types::level val = 1;
-};
-
-struct AttackingStat {
-  types::stat val = 1;
-};
-
-struct DefendingStat {
-  types::stat val = 1;
-};
-
-namespace tags {
-struct P1Defending {};
-struct P2Defending {};
-}  // namespace tags
-}  // namespace pokesim::calc_damage
-
-/////////// END OF src/Components/CalcDamage/DamageCalcVariables.hpp ///////////
 
 ////////////////////// START OF src/Components/Level.hpp ///////////////////////
 
@@ -24912,14 +24919,9 @@ struct PlayerSide {
 
 ///////////////////// END OF src/Components/PlayerSide.hpp /////////////////////
 
-//////////////////// START OF src/CalcDamage/CalcDamage.cpp ////////////////////
+////////////// START OF src/CalcDamage/CalcDamageDebugChecks.hpp ///////////////
 
-#include <cmath>
-#include <type_traits>
-
-
-namespace pokesim::calc_damage {
-namespace internal {
+namespace pokesim::calc_damage::internal {
 struct DebugChecks {
 #ifdef NDEBUG
   DebugChecks(const Simulation&) {}
@@ -24943,21 +24945,21 @@ struct DebugChecks {
     for (types::entity move : simulation.selectedMoveEntities()) {
       originalToCopy[move] = debug::createEntityCopy(move, registry, registryOnInput);
 
-      assert(registry.all_of<Attacker>(move));
-      assert(registry.all_of<tags::Attacker>(registry.get<Attacker>(move).val));
-      assert(registry.all_of<Defenders>(move));
-      assert(registry.all_of<tags::Defender>(registry.get<Defenders>(move).only()));
-      assert(registry.all_of<Battle>(move));
-      assert(registry.all_of<TypeName>(move));
+      POKESIM_ASSERT_NM(registry.all_of<Attacker>(move));
+      POKESIM_ASSERT_NM(registry.all_of<tags::Attacker>(registry.get<Attacker>(move).val));
+      POKESIM_ASSERT_NM(registry.all_of<Defenders>(move));
+      POKESIM_ASSERT_NM(registry.all_of<tags::Defender>(registry.get<Defenders>(move).only()));
+      POKESIM_ASSERT_NM(registry.all_of<Battle>(move));
+      POKESIM_ASSERT_NM(registry.all_of<TypeName>(move));
       bool isPhysical = registry.all_of<move::tags::Physical>(move);
       bool isSpecial = registry.all_of<move::tags::Special>(move);
       bool isStatus = registry.all_of<move::tags::Status>(move);
-      assert(isPhysical || isSpecial || isStatus);
+      POKESIM_ASSERT_NM(isPhysical || isSpecial || isStatus);
 
       bool hasSimulateTurn = registry.all_of<pokesim::tags::SimulateTurn>(move);
       bool hasCalculateDamage = registry.all_of<pokesim::tags::CalculateDamage>(move);
       bool hasAnalyzeEffect = registry.all_of<pokesim::tags::AnalyzeEffect>(move);
-      assert(hasSimulateTurn || hasCalculateDamage || hasAnalyzeEffect);
+      POKESIM_ASSERT_NM(hasSimulateTurn || hasCalculateDamage || hasAnalyzeEffect);
     }
   }
 
@@ -24979,42 +24981,42 @@ struct DebugChecks {
     for (types::entity pokemon : pokemonList) {
       originalToCopy[pokemon] = debug::createEntityCopy(pokemon, registry, registryOnInput);
 
-      assert(registry.all_of<UsedMoves>(pokemon));
+      POKESIM_ASSERT_NM(registry.all_of<UsedMoves>(pokemon));
       bool needsPhy = false;
       bool needsSpc = false;
       for (types::entity move : registry.get<UsedMoves>(pokemon).val) {
-        assert(registry.all_of<tags::UsedMove>(move));
+        POKESIM_ASSERT_NM(registry.all_of<tags::UsedMove>(move));
         needsPhy |= registry.all_of<move::tags::Physical>(move);
         needsSpc |= registry.all_of<move::tags::Special>(move);
       }
-      assert(registry.all_of<Battle>(pokemon));
-      assert(registry.all_of<Side>(pokemon));
-      assert(registry.all_of<PlayerSide>(registry.get<Side>(pokemon).val));
-      assert(registry.all_of<Level>(pokemon));
-      assert(registry.all_of<SpeciesTypes>(pokemon));
+      POKESIM_ASSERT_NM(registry.all_of<Battle>(pokemon));
+      POKESIM_ASSERT_NM(registry.all_of<Side>(pokemon));
+      POKESIM_ASSERT_NM(registry.all_of<PlayerSide>(registry.get<Side>(pokemon).val));
+      POKESIM_ASSERT_NM(registry.all_of<Level>(pokemon));
+      POKESIM_ASSERT_NM(registry.all_of<SpeciesTypes>(pokemon));
 
       if (forAttacker) {
         if (needsPhy) {
-          assert(registry.all_of<stat::EffectiveAtk>(pokemon));
+          POKESIM_ASSERT_NM(registry.all_of<stat::EffectiveAtk>(pokemon));
         }
         if (needsSpc) {
-          assert(registry.all_of<stat::EffectiveSpa>(pokemon));
+          POKESIM_ASSERT_NM(registry.all_of<stat::EffectiveSpa>(pokemon));
         }
       }
       else {
-        assert(registry.all_of<stat::CurrentHp>(pokemon));
+        POKESIM_ASSERT_NM(registry.all_of<stat::CurrentHp>(pokemon));
         if (needsPhy) {
-          assert(registry.all_of<stat::EffectiveDef>(pokemon));
+          POKESIM_ASSERT_NM(registry.all_of<stat::EffectiveDef>(pokemon));
         }
         if (needsSpc) {
-          assert(registry.all_of<stat::EffectiveSpd>(pokemon));
+          POKESIM_ASSERT_NM(registry.all_of<stat::EffectiveSpd>(pokemon));
         }
       }
 
       bool hasSimulateTurn = registry.all_of<pokesim::tags::SimulateTurn>(pokemon);
       bool hasCalculateDamage = registry.all_of<pokesim::tags::CalculateDamage>(pokemon);
       bool hasAnalyzeEffect = registry.all_of<pokesim::tags::AnalyzeEffect>(pokemon);
-      assert(hasSimulateTurn || hasCalculateDamage || hasAnalyzeEffect);
+      POKESIM_ASSERT_NM(hasSimulateTurn || hasCalculateDamage || hasAnalyzeEffect);
     }
   }
 
@@ -25030,7 +25032,7 @@ struct DebugChecks {
     PlayerSideId playerSide = registry.get<PlayerSide>(side.val).val;
     switch (playerSide) {
       default: {
-        ENTT_FAIL("Player side wasn't set properly.");
+        POKESIM_ASSERT_FAIL("Player side wasn't set properly.");
         break;
       }
       case PlayerSideId::P1: {
@@ -25045,7 +25047,7 @@ struct DebugChecks {
   }
 
   void checkCalcDamageResultOutputs(types::entity move) const {
-    assert(registry.all_of<DamageRolls>(move));
+    POKESIM_ASSERT_NM(registry.all_of<DamageRolls>(move));
 
     DamageRollOptions damageRollOptions;
     bool noKoChanceCalculation;
@@ -25061,20 +25063,20 @@ struct DebugChecks {
       noKoChanceCalculation = simulation.analyzeEffectOptions.noKoChanceCalculation;
     }
     else {
-      ENTT_FAIL("Where'd the simulation type go? It was checked in the inputs.");
+      POKESIM_ASSERT_FAIL("Where'd the simulation type go? It was checked in the inputs.");
     }
 
     types::damage lastDamage = std::numeric_limits<types::damage>::max();
     const auto& [damageRolls, defenders] = registry.get<DamageRolls, Defenders>(move);
     const stat::CurrentHp& defenderHp = registry.get<stat::CurrentHp>(defenders.only());
 
-    assert(!damageRolls.val.empty());
+    POKESIM_ASSERT_NM(!damageRolls.val.empty());
 
     for (const Damage& damageRoll : damageRolls.val) {
-      assert(lastDamage >= damageRoll.val);
-      assert(damageRoll.val > 0);
+      POKESIM_ASSERT_NM(lastDamage >= damageRoll.val);
+      POKESIM_ASSERT_NM(damageRoll.val > 0);
       if (calculateUpToFoeHp) {
-        assert(damageRoll.val <= defenderHp.val);
+        POKESIM_ASSERT_NM(damageRoll.val <= defenderHp.val);
       }
 
       lastDamage = damageRoll.val;
@@ -25082,7 +25084,7 @@ struct DebugChecks {
 
     DamageRollKind damageRollKind = getDamageRollKind(move, damageRollOptions);
 
-    ENTT_ASSERT(
+    POKESIM_ASSERT(
       damageRollKind != DamageRollKind::NONE,
       "Cannot calculate damage without knowing what rolls to consider.");
 
@@ -25104,31 +25106,31 @@ struct DebugChecks {
       }
     }
 
-    assert(idealDamageRollCount);
-    assert(damageRolls.val.size() == idealDamageRollCount);
+    POKESIM_ASSERT_NM(idealDamageRollCount);
+    POKESIM_ASSERT_NM(damageRolls.val.size() == idealDamageRollCount);
 
     if (noKoChanceCalculation) {
-      assert(!registry.all_of<UsesUntilKo>(move));
+      POKESIM_ASSERT_NM(!registry.all_of<UsesUntilKo>(move));
     }
     else if (damageKindsMatch(DamageRollKind::ALL_DAMAGE_ROLLS, getDamageRollKind(move, damageRollOptions))) {
-      assert(registry.all_of<UsesUntilKo>(move));
+      POKESIM_ASSERT_NM(registry.all_of<UsesUntilKo>(move));
 
       const UsesUntilKo& usesUntilKo = registry.get<UsesUntilKo>(move);
-      assert(!usesUntilKo.val.empty());
-      assert(usesUntilKo.val.front() == usesUntilKo.minHits());
-      assert(usesUntilKo.val.back() == usesUntilKo.maxHits());
-      assert(usesUntilKo.val.size() <= MechanicConstants::MAX_DAMAGE_ROLL_COUNT);
-      assert(usesUntilKo.val.size() <= damageRolls.val.size());
+      POKESIM_ASSERT_NM(!usesUntilKo.val.empty());
+      POKESIM_ASSERT_NM(usesUntilKo.val.front() == usesUntilKo.minHits());
+      POKESIM_ASSERT_NM(usesUntilKo.val.back() == usesUntilKo.maxHits());
+      POKESIM_ASSERT_NM(usesUntilKo.val.size() <= MechanicConstants::MAX_DAMAGE_ROLL_COUNT);
+      POKESIM_ASSERT_NM(usesUntilKo.val.size() <= damageRolls.val.size());
 
       types::moveHits lastUses = 0;
       types::useUntilKoChance totalChance = 0;
       for (const auto& useUntilKo : usesUntilKo.val) {
-        assert(lastUses < useUntilKo.uses);
+        POKESIM_ASSERT_NM(lastUses < useUntilKo.uses);
         totalChance += useUntilKo.chance;
         lastUses = useUntilKo.uses;
       }
 
-      assert(totalChance == 1.0F);
+      POKESIM_ASSERT_NM(totalChance == 1.0F);
     }
   }
 
@@ -25136,15 +25138,15 @@ struct DebugChecks {
     const auto [attackerHpRecovered, attackerHpLost] = registry.try_get<AttackerHpRecovered, AttackerHpLost>(move);
     const DamageRolls& damageRolls = registry.get<DamageRolls>(move);
     if (attackerHpRecovered != nullptr) {
-      assert(attackerHpRecovered->val.size() == damageRolls.val.size());
+      POKESIM_ASSERT_NM(attackerHpRecovered->val.size() == damageRolls.val.size());
 
       for (std::size_t i = 0; i < damageRolls.val.size(); i++) {
-        assert(attackerHpRecovered->val[i].val <= damageRolls.val[i].val);
+        POKESIM_ASSERT_NM(attackerHpRecovered->val[i].val <= damageRolls.val[i].val);
       }
     }
 
     if (attackerHpLost != nullptr) {
-      assert(attackerHpLost->val.size() == damageRolls.val.size());
+      POKESIM_ASSERT_NM(attackerHpLost->val.size() == damageRolls.val.size());
     }
   }
 
@@ -25153,15 +25155,15 @@ struct DebugChecks {
       debug::TypesToIgnore typesToIgnore{};
       if (registry.all_of<pokesim::tags::AnalyzeEffect>(move)) {
         typesToIgnore.add<Damage>();
-        assert(registry.all_of<Damage>(move));
+        POKESIM_ASSERT_NM(registry.all_of<Damage>(move));
       }
 
       if (registry.all_of<pokesim::tags::SimulateTurn>(move)) {
         typesToIgnore.add<Damage>();
-        assert(registry.all_of<Damage>(move));
-        assert(registry.get<Damage>(move).val > 0);
-        assert(!registry.all_of<DamageRolls>(move));
-        assert(!registry.all_of<UsesUntilKo>(move));
+        POKESIM_ASSERT_NM(registry.all_of<Damage>(move));
+        POKESIM_ASSERT_NM(registry.get<Damage>(move).val > 0);
+        POKESIM_ASSERT_NM(!registry.all_of<DamageRolls>(move));
+        POKESIM_ASSERT_NM(!registry.all_of<UsesUntilKo>(move));
       }
       else {
         typesToIgnore.add<DamageRolls, UsesUntilKo>();
@@ -25244,21 +25246,55 @@ struct DebugChecks {
 
     if (!simulation.simulateTurnOptions.makeBranchesOnRandomEvents()) {
       std::size_t finalSimulationTurnCount = registry.view<pokesim::tags::SimulateTurn>().size();
-      assert(simulateTurnCount == finalSimulationTurnCount);
-      assert(entityCount == finalEntityCount);
+      POKESIM_ASSERT_NM(simulateTurnCount == finalSimulationTurnCount);
+      POKESIM_ASSERT_NM(entityCount == finalEntityCount);
     }
     else if (simulateTurnCount == 0) {
-      assert(entityCount == finalEntityCount);
+      POKESIM_ASSERT_NM(entityCount == finalEntityCount);
     }
 
     std::size_t finalCalcDamageCount = registry.view<pokesim::tags::CalculateDamage>().size();
-    assert(calcDamageCount == finalCalcDamageCount);
+    POKESIM_ASSERT_NM(calcDamageCount == finalCalcDamageCount);
     std::size_t finalAnalyzeEffectCount = registry.view<pokesim::tags::AnalyzeEffect>().size();
-    assert(analyzeEffectCount == finalAnalyzeEffectCount);
+    POKESIM_ASSERT_NM(analyzeEffectCount == finalAnalyzeEffectCount);
   }
 #endif
 };
+}  // namespace pokesim::calc_damage::internal
 
+/////////////// END OF src/CalcDamage/CalcDamageDebugChecks.hpp ////////////////
+
+////////// START OF src/Components/CalcDamage/DamageCalcVariables.hpp //////////
+
+namespace pokesim::calc_damage {
+struct AttackingLevel {
+  types::level val = 1;
+};
+
+struct AttackingStat {
+  types::stat val = 1;
+};
+
+struct DefendingStat {
+  types::stat val = 1;
+};
+
+namespace tags {
+struct P1Defending {};
+struct P2Defending {};
+}  // namespace tags
+}  // namespace pokesim::calc_damage
+
+/////////// END OF src/Components/CalcDamage/DamageCalcVariables.hpp ///////////
+
+//////////////////// START OF src/CalcDamage/CalcDamage.cpp ////////////////////
+
+#include <cmath>
+#include <type_traits>
+
+
+namespace pokesim::calc_damage {
+namespace internal {
 inline void clearRunVariables(Simulation& simulation) {
   simulation.registry.clear<tags::Crit, AttackingLevel, AttackingStat, DefendingStat, DamageRollModifiers>();
   simulation.removeFromEntities<Damage, pokesim::tags::CalculateDamage>();
@@ -25304,7 +25340,7 @@ inline void setDefendingSide(types::handle moveHandle, const Defenders& defender
   PlayerSideId playerSide = registry.get<PlayerSide>(registry.get<Side>(defenders.only()).val).val;
   switch (playerSide) {
     case PlayerSideId::NONE: {
-      ENTT_FAIL("Player side wasn't set properly.");
+      POKESIM_ASSERT_FAIL("Player side wasn't set properly.");
       break;
     }
     case PlayerSideId::P1: {
@@ -25376,10 +25412,10 @@ inline void reduceDamageRollsToDefenderHp(
 }
 
 inline void applyDamageRollsAndModifiers(Simulation& simulation, DamageRollKind damageRollKind) {
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     damageRollKind != DamageRollKind::NONE,
     "Cannot calculate damage without knowing what rolls to consider.");
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     damageRollKind != DamageRollKind::GUARANTEED_CRIT_CHANCE,
     "Must pick a damage roll kind to go along with crits.");
 
@@ -25446,7 +25482,7 @@ inline void calculateBaseDamage(
 inline void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, const Defenders& defender) {
   const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.only());
   UsesUntilKo usesUntilKo;
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     damageRolls.val.size() == MechanicConstants::MAX_DAMAGE_ROLL_COUNT,
     "All the damage rolls are needed to calculate this correctly.");
 
@@ -25658,7 +25694,7 @@ inline void SideStateSetup::initBlank() {
 inline void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
   Team& teamEntities = handle.emplace<Team>();
   Battle battle = handle.get<Battle>();
-  ENTT_ASSERT(team.size() <= teamEntities.val.max_size(), "Cannot add more Pokemon to a team than MAX_TEAM_SIZE.");
+  POKESIM_ASSERT(team.size() <= teamEntities.val.max_size(), "Cannot add more Pokemon to a team than MAX_TEAM_SIZE.");
 
   for (std::size_t i = 0; i < team.size(); i++) {
     teamEntities.val.push_back(team[i].entity());
@@ -25846,7 +25882,7 @@ inline void PokemonStateSetup::setItem(dex::Item item) {
 
 inline void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
   MoveSlots& moveEntities = handle.emplace<MoveSlots>();
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     moveSlots.size() <= moveEntities.val.max_size(),
     "Cannot add more moves to a Pokemon than MAX_MOVE_SLOTS.");
   for (types::entity moveSlot : moveSlots) {
@@ -25926,7 +25962,7 @@ inline void ability::tags::enumToTag(dex::Ability ability, types::handle handle)
     case dex::Ability::SWEET_VEIL: handle.emplace<SweetVeil>(); return;
     case dex::Ability::TRACE: handle.emplace<Trace>(); return;
     default: {
-      ENTT_ASSERT(false, "Adding tag for ability that does not exist.");
+      POKESIM_ASSERT(false, "Adding tag for ability that does not exist.");
     }
   }
 }
@@ -25940,7 +25976,7 @@ inline void item::tags::enumToTag(dex::Item item, types::handle handle) {
     case dex::Item::FOCUS_SASH: handle.emplace<FocusSash>(); return;
     case dex::Item::LIFE_ORB: handle.emplace<LifeOrb>(); return;
     default: {
-      ENTT_ASSERT(false, "Adding tag for item that does not exist.");
+      POKESIM_ASSERT(false, "Adding tag for item that does not exist.");
     }
   }
 }
@@ -25973,7 +26009,7 @@ inline void nature::tags::enumToTag(dex::Nature nature, types::handle handle) {
     case dex::Nature::SERIOUS: handle.emplace<Serious>(); return;
     case dex::Nature::TIMID: handle.emplace<Timid>(); return;
     default: {
-      ENTT_ASSERT(false, "Adding tag for nature that does not exist.");
+      POKESIM_ASSERT(false, "Adding tag for nature that does not exist.");
     }
   }
 }
@@ -25987,7 +26023,7 @@ inline void status::tags::enumToTag(dex::Status status, types::handle& handle) {
     case dex::Status::SLP: handle.emplace<Sleep>(); return;
     case dex::Status::TOX: handle.emplace<Toxic>(); return;
     default: {
-      ENTT_ASSERT(false, "Adding tag for status that does not exist.");
+      POKESIM_ASSERT(false, "Adding tag for status that does not exist.");
     }
   }
 }
@@ -26029,7 +26065,7 @@ inline void BattleStateSetup::setSide(types::entity sideEntity) {
   switch (sideId) {
     case PlayerSideId::P1: sides.p1() = sideEntity; break;
     case PlayerSideId::P2: sides.p2() = sideEntity; break;
-    default: ENTT_FAIL("sideID must be assigned P1 or P2."); break;
+    default: POKESIM_ASSERT_FAIL("sideID must be assigned P1 or P2."); break;
   }
 }
 
@@ -26352,7 +26388,7 @@ inline void clearCurrentAction(Simulation& simulation) {
 namespace pokesim {
 
 inline types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
-  ENTT_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
+  POKESIM_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   types::entity sideEntity = sides.val[((std::uint8_t)targetSlot - 1) % 2];
   return sideEntity;
 }
@@ -26361,17 +26397,17 @@ inline types::entity slotToPokemonEntity(const types::registry& registry, types:
   types::teamPositionIndex index = ((std::uint8_t)targetSlot - 1) / 2;
 
   const Team& team = registry.get<Team>(sideEntity);
-  ENTT_ASSERT(team.val.size() > index, "Choosing a target slot for team member that does not exist.");
+  POKESIM_ASSERT(team.val.size() > index, "Choosing a target slot for team member that does not exist.");
   return team.val[index];
 }
 
 inline types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
-  ENTT_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
+  POKESIM_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   return slotToPokemonEntity(registry, slotToSideEntity(sides, targetSlot), targetSlot);
 }
 
 inline types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
-  ENTT_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
+  POKESIM_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   Slot allySlot = Slot::NONE;
   types::teamPositionIndex index = 0;
 
@@ -26426,7 +26462,7 @@ inline types::entity moveToEntity(const types::registry& registry, const MoveSlo
     }
   }
 
-  ENTT_FAIL("No move of entity found.");
+  POKESIM_ASSERT_FAIL("No move of entity found.");
   return entt::null;
 }
 
@@ -26472,7 +26508,7 @@ inline void cloneEntity(
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
   for (auto [id, storage] : registry.storage()) {
     if (storage.contains(src)) {
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         std::find(srcEntityStorages[id].begin(), srcEntityStorages[id].end(), src) == std::end(srcEntityStorages[id]),
         "Adding an entity twice here means an entity will be duplicated more than it should.");
       srcEntityStorages[id].push_back(src);
@@ -26642,8 +26678,10 @@ inline void deleteMove(types::registry& registry) {
 }
 
 inline void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
-  ENTT_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map.");
-  ENTT_ASSERT(entityMap.at(entity).size() > cloneTo.val, "More entities are trying to be copied to than were copied.");
+  POKESIM_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map.");
+  POKESIM_ASSERT(
+    entityMap.at(entity).size() > cloneTo.val,
+    "More entities are trying to be copied to than were copied.");
   entity = entityMap.at(entity)[cloneTo.val];
 }
 
@@ -26906,7 +26944,7 @@ inline void InputSetup::setEffectTarget(types::entity entity) {
 }
 
 inline void InputSetup::setDefender(types::entity entity) {
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     !handle.try_get<Defenders>(),
     "Calc damage only supports one defender per move. Make a new move instead.");
   handle.emplace<Defenders>().val.push_back(entity);
@@ -26937,7 +26975,7 @@ inline void InputSetup::setEffect(types::effectEnum effect) {
     handle.emplace<WeatherName>(effect.get<dex::Weather>());
   }
   else {
-    ENTT_FAIL("Effect does not contain a valid enum.");
+    POKESIM_ASSERT_FAIL("Effect does not contain a valid enum.");
   }
 }
 
@@ -26964,7 +27002,7 @@ inline void InputSetup::setBoostEffect(dex::Stat stat, types::boost boost) {
       break;
     }
     default: {
-      ENTT_FAIL("Using a stat enum that doesn't have boost.");
+      POKESIM_ASSERT_FAIL("Using a stat enum that doesn't have boost.");
     }
   }
 }
@@ -26977,23 +27015,9 @@ inline void InputSetup::setBattle(types::entity entity) {
 
 ////////// END OF src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp //////////
 
-/////////// START OF src/Components/AnalyzeEffect/RemovedEffect.hpp ////////////
+/////////// START OF src/AnalyzeEffect/AnalyzeEffectDebugChecks.hpp ////////////
 
-namespace pokesim::analyze_effect {
-struct RemovedEffect {
-  types::effectEnum val{};
-};
-}  // namespace pokesim::analyze_effect
-
-//////////// END OF src/Components/AnalyzeEffect/RemovedEffect.hpp /////////////
-
-///////////////// START OF src/AnalyzeEffect/AnalyzeEffect.cpp /////////////////
-
-#include <cstdint>
-#include <vector>
-
-namespace pokesim::analyze_effect {
-namespace internal {
+namespace pokesim::analyze_effect::internal {
 struct DebugChecks {
 #ifdef NDEBUG
   DebugChecks(const Simulation&) {}
@@ -27025,7 +27049,7 @@ struct DebugChecks {
     PlayerSideId playerSide = registry.get<PlayerSide>(side.val).val;
     switch (playerSide) {
       default: {
-        ENTT_FAIL("Player side wasn't set properly.");
+        POKESIM_ASSERT_FAIL("Player side wasn't set properly.");
         break;
       }
       case PlayerSideId::P1: {
@@ -27044,16 +27068,16 @@ struct DebugChecks {
       debug::TypesToIgnore typesToIgnore{};
       typesToIgnore.add<MultipliedDamageRolls>();
 
-      assert(registry.all_of<MultipliedDamageRolls>(input));
+      POKESIM_ASSERT_NM(registry.all_of<MultipliedDamageRolls>(input));
 
       if (registry.all_of<tags::InfiniteMultiplier>(input)) {
-        assert(!registry.all_of<EffectMultiplier>(input));
+        POKESIM_ASSERT_NM(!registry.all_of<EffectMultiplier>(input));
         typesToIgnore.add<tags::InfiniteMultiplier>();
       }
 
       bool zeroEffectMultiplier = false;
       if (registry.all_of<EffectMultiplier>(input)) {
-        assert(!registry.all_of<tags::InfiniteMultiplier>(input));
+        POKESIM_ASSERT_NM(!registry.all_of<tags::InfiniteMultiplier>(input));
         typesToIgnore.add<EffectMultiplier>();
 
         const auto [effectMultiplier, multipliedDamageRolls] =
@@ -27061,7 +27085,7 @@ struct DebugChecks {
         if (effectMultiplier.val == 0) {
           zeroEffectMultiplier = true;
           for (const Damage& multipliedDamageRoll : multipliedDamageRolls.val) {
-            assert(multipliedDamageRoll.val == 0);
+            POKESIM_ASSERT_NM(multipliedDamageRoll.val == 0);
           }
         }
       }
@@ -27069,12 +27093,12 @@ struct DebugChecks {
       auto damageRollOptions = simulation.analyzeEffectOptions.damageRollOptions;
       auto noKoChanceCalculation = simulation.analyzeEffectOptions.noKoChanceCalculation;
       if (noKoChanceCalculation || zeroEffectMultiplier) {
-        assert(!registry.all_of<MultipliedUsesUntilKo>(input));
+        POKESIM_ASSERT_NM(!registry.all_of<MultipliedUsesUntilKo>(input));
       }
       else if (calc_damage::damageKindsMatch(
                  DamageRollKind::ALL_DAMAGE_ROLLS,
                  getDamageRollKind(input, damageRollOptions))) {
-        assert(registry.all_of<MultipliedUsesUntilKo>(input));
+        POKESIM_ASSERT_NM(registry.all_of<MultipliedUsesUntilKo>(input));
         typesToIgnore.add<MultipliedUsesUntilKo>();
       }
 
@@ -27131,7 +27155,7 @@ struct DebugChecks {
         finalEntityCount++;
       }
     }
-    assert(entityCount == finalEntityCount);
+    POKESIM_ASSERT_NM(entityCount == finalEntityCount);
     checkInputOutputs();
     checkPokemonOutputs(true);
     checkPokemonOutputs(false);
@@ -27139,7 +27163,28 @@ struct DebugChecks {
   }
 #endif
 };
+}  // namespace pokesim::analyze_effect::internal
 
+//////////// END OF src/AnalyzeEffect/AnalyzeEffectDebugChecks.hpp /////////////
+
+/////////// START OF src/Components/AnalyzeEffect/RemovedEffect.hpp ////////////
+
+namespace pokesim::analyze_effect {
+struct RemovedEffect {
+  types::effectEnum val{};
+};
+}  // namespace pokesim::analyze_effect
+
+//////////// END OF src/Components/AnalyzeEffect/RemovedEffect.hpp /////////////
+
+///////////////// START OF src/AnalyzeEffect/AnalyzeEffect.cpp /////////////////
+
+#include <cstdint>
+#include <vector>
+
+
+namespace pokesim::analyze_effect {
+namespace internal {
 enum class EffectPresentCheck {
   NOT_PRESENT,
   PRESENT_AND_NOT_APPLIED,
@@ -27188,13 +27233,13 @@ inline void assignInputsToClones(
   types::registry& registry = simulation.registry;
   const Inputs& inputs = registry.get<Inputs>(originalBattleEntity);
 
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     (cloneCount == 0) == clonedEntityMap.empty(),
     "There should be no cloned entities if no clones are needed.");
 
   const auto& battleClones = cloneCount == 0 ? std::vector<types::entity>{} : clonedEntityMap.at(originalBattleEntity);
 
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     cloneCount == battleClones.size(),
     "Each input must have a clone and no more clones than inputs should be made.");
 
@@ -27232,22 +27277,22 @@ inline void assignInputsToClones(
       OriginalInputEntities{battle.val, attacker.val, defenders.only(), effectTarget.val});
 
     if (usesClone) {
-      ENTT_ASSERT(battleClones.size() > cloneIndex, "More inputs want clones than clones made.");
+      POKESIM_ASSERT(battleClones.size() > cloneIndex, "More inputs want clones than clones made.");
 
       registry.emplace<tags::BattleCloneForCalculation>(battleClones[cloneIndex]);
 
       const auto& clonedAttackers = clonedEntityMap.at(attacker.val);
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         battleClones.size() == clonedAttackers.size(),
         "Each attacker must have a clone and no more clones than inputs should be made.");
 
       const auto& clonedDefenders = clonedEntityMap.at(defenders.only());
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         battleClones.size() == clonedDefenders.size(),
         "Each defender must have a clone and no more clones than inputs should be made.");
 
       const auto& clonedEffectTarget = clonedEntityMap.at(effectTarget.val);
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         battleClones.size() == clonedEffectTarget.size(),
         "Each effect target must have a clone and no more clones than inputs should be made.");
 
@@ -27351,18 +27396,18 @@ inline void createAppliedEffectBattles(Simulation& simulation) {
 
   if (simulation.analyzeEffectOptions.reconsiderActiveEffects) {
     simulation.registry.view<Inputs>().each([&](types::entity battleEntity, const Inputs& inputs) {
-      ENTT_ASSERT(!inputs.val.empty(), "Battles with input components should have input entities.");
+      POKESIM_ASSERT(!inputs.val.empty(), "Battles with input components should have input entities.");
       battlesByCloneCount[inputs.val.size()].push_back(battleEntity);
     });
   }
   else {
     simulation.registry.view<Inputs>().each([&](types::entity battleEntity, const Inputs& inputs) {
-      ENTT_ASSERT(!inputs.val.empty(), "Battles with input components should have input entities.");
+      POKESIM_ASSERT(!inputs.val.empty(), "Battles with input components should have input entities.");
       const RunsOneCalculationCount* ignoredInputCount =
         simulation.registry.try_get<RunsOneCalculationCount>(battleEntity);
       types::eventPossibilities ignoredCount = ignoredInputCount == nullptr ? 0U : ignoredInputCount->val;
 
-      ENTT_ASSERT(inputs.val.size() >= ignoredCount, "Must have more inputs than inputs ignored.");
+      POKESIM_ASSERT(inputs.val.size() >= ignoredCount, "Must have more inputs than inputs ignored.");
       battlesByCloneCount[inputs.val.size() - ignoredCount].push_back(battleEntity);
     });
   }

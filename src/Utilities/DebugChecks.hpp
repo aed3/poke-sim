@@ -2,6 +2,7 @@
 #ifndef NDEBUG
 
 #include <Types/Entity.hpp>
+#include <Utilities/Assert.hpp>
 #include <entt/container/dense_set.hpp>
 #include <entt/container/fwd.hpp>
 #include <entt/core/type_info.hpp>
@@ -83,19 +84,20 @@ class AssertComponentsEqual {
 
       bool initialIsParent = checkIfCopyParent(current, initial, registry);
       bool currentIsParent = checkIfCopyParent(initial, current, registry);
-      assert((initialIsParent && !currentIsParent));
+      POKESIM_ASSERT_NM((initialIsParent && !currentIsParent));
     }
     else if constexpr (hasEqualTo<Member>::value) {
-      assert(current == initial);
+      POKESIM_ASSERT_NM(current == initial);
     }
     else if constexpr (entt::is_complete_v<isList<Member>>) {
-      assert(current.size() == initial.size());
+      POKESIM_ASSERT_NM(current.size() == initial.size());
       for (std::size_t i = 0; i < current.size(); i++) {
         compareMember(current[i], initial[i], registry);
       }
     }
     else {
-      ENTT_FAIL("There's a type that needs a dedicated equals function.");
+      // Not a static_assert so this only fails on types that actually get copied
+      POKESIM_ASSERT_FAIL("There's a type that needs a dedicated equals function.");
     }
   }
 
@@ -117,10 +119,9 @@ class AssertComponentsEqual {
         return;
       }
     }
-    else {
-      // Not a static assert so this only fails on types that actually get copied
-      ENTT_FAIL("This component needs a dedicated equals function.");
-    }
+
+    // Not a static_assert so this only fails on types that actually get copied
+    POKESIM_ASSERT_FAIL("This component needs a dedicated equals function.");
   }
 };
 }  // namespace pokesim::debug

@@ -17,6 +17,7 @@
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
+#include <Utilities/Assert.hpp>
 #include <Utilities/RNG.hpp>
 #include <atomic>
 #include <entt/entity/handle.hpp>
@@ -53,7 +54,7 @@ void BattleStateSetup::setSide(types::entity sideEntity) {
   switch (sideId) {
     case PlayerSideId::P1: sides.p1() = sideEntity; break;
     case PlayerSideId::P2: sides.p2() = sideEntity; break;
-    default: ENTT_FAIL("sideID must be assigned P1 or P2."); break;
+    default: POKESIM_ASSERT_FAIL("sideID must be assigned P1 or P2."); break;
   }
 }
 

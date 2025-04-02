@@ -19,6 +19,7 @@
 #include <Types/Enums/ActionOrder.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
+#include <Utilities/Assert.hpp>
 #include <Utilities/Variant.hpp>
 #include <algorithm>
 #include <entt/entity/handle.hpp>
@@ -27,8 +28,8 @@
 
 namespace pokesim::simulate_turn {
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
-  ENTT_ASSERT(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player.");
-  ENTT_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
+  POKESIM_ASSERT(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player.");
+  POKESIM_ASSERT(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
   types::registry& registry = *sideHandle.registry();
 
   ActionQueue& battleActionQueue = registry.get<ActionQueue>(sideHandle.get<Battle>().val);
@@ -37,20 +38,20 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
 
     for (const SlotDecision& decision : decisions) {
-      ENTT_ASSERT(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
+      POKESIM_ASSERT(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
       if (sideDecision.sideId == PlayerSideId::P1) {
-        ENTT_ASSERT(
+        POKESIM_ASSERT(
           (decision.sourceSlot == Slot::P1A || decision.sourceSlot == Slot::P1B),
           "Source must be from a player 1 in battle slot.");
       }
       else {
-        ENTT_ASSERT(
+        POKESIM_ASSERT(
           (decision.sourceSlot == Slot::P2A || decision.sourceSlot == Slot::P2B),
           "Source must be from a player 2 in battle slot.");
       }
 
-      ENTT_ASSERT(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
-      ENTT_ASSERT(
+      POKESIM_ASSERT(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
+      POKESIM_ASSERT(
         !(decision.moveChoice.has_value() && decision.itemChoice.has_value()),
         "Decisions can't have a move and an item choice.");
 
@@ -93,7 +94,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
   else if (sideDecision.decisions.holds<types::teamOrder>()) {
     const auto& teamOrder = sideDecision.decisions.get<types::teamOrder>();
 
-    ENTT_ASSERT(
+    POKESIM_ASSERT(
       sideHandle.get<Team>().val.size() == teamOrder.size(),
       "Must pick a placement for each Pokemon on the team.");
     types::handle actionHandle = {registry, registry.create()};

@@ -2,6 +2,7 @@
 
 #include <Types/Entity.hpp>
 #include <Types/State.hpp>
+#include <Utilities/Assert.hpp>
 #include <vector>
 
 namespace pokesim {
@@ -16,7 +17,7 @@ struct NextAction {
 struct CurrentActionTargets {
   types::targets<types::entity> val{};
   const types::entity& only() const {
-    ENTT_ASSERT(
+    POKESIM_ASSERT(
       val.size() == 1,
       "This method is supposed to get the first target when there's only one target stored.");
     return val[0];

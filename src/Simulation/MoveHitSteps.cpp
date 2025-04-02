@@ -15,6 +15,7 @@
 #include <SimulateTurn/RandomChance.hpp>
 #include <Types/Enums/BattleFormat.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/Assert.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>
 #include <algorithm>
@@ -72,7 +73,7 @@ void accuracyCheck(Simulation& simulation) {
 }
 
 void internal::deductMoveHitCount(types::handle moveHandle, HitCount& hitCount) {
-  ENTT_ASSERT(hitCount.val > 0, "A hit count shouldn't be decremented if it's already 0.");
+  POKESIM_ASSERT(hitCount.val > 0, "A hit count shouldn't be decremented if it's already 0.");
   hitCount.val--;
   if (!hitCount.val) {
     moveHandle.remove<HitCount>();
@@ -118,7 +119,7 @@ void internal::updateCurrentActionTargets(types::registry& registry, CurrentActi
   for (types::entity& target : targets.val) {
     if (!registry.all_of<tags::CurrentActionMoveTarget>(target)) {
       std::uint8_t swapIndex = targets.val.size() - 1 - deleteCount;
-      ENTT_ASSERT(swapIndex >= 0 && swapIndex < targets.val.size(), "Swap index out of bounds.");
+      POKESIM_ASSERT(swapIndex >= 0 && swapIndex < targets.val.size(), "Swap index out of bounds.");
       std::swap(target, targets.val[swapIndex]);
       deleteCount++;
     }
