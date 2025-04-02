@@ -1,11 +1,10 @@
 #pragma once
 
-#include <entt/config/config.h>
-
 #include <Types/Damage.hpp>
 #include <Types/Enums/StabBoostKind.hpp>
 #include <Types/Event.hpp>
 #include <Types/MechanicConstants.hpp>
+#include <Utilities/Assert.hpp>
 #include <vector>
 
 namespace pokesim {
@@ -37,12 +36,12 @@ struct DamageRolls {
   }
 
   types::damage min() const {
-    ENTT_ASSERT(!val.empty(), "DamageRolls has no values to read.");
+    POKESIM_ASSERT(!val.empty(), "DamageRolls has no values to read.");
     return val.back().val;
   }
 
   types::damage max() const {
-    ENTT_ASSERT(!val.empty(), "DamageRolls has no values to read.");
+    POKESIM_ASSERT(!val.empty(), "DamageRolls has no values to read.");
     return val.front().val;
   }
 };

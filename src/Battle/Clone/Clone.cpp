@@ -12,6 +12,7 @@
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
+#include <Utilities/Assert.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/core/fwd.hpp>
 #include <entt/entity/registry.hpp>
@@ -24,7 +25,7 @@ void cloneEntity(
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
   for (auto [id, storage] : registry.storage()) {
     if (storage.contains(src)) {
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         std::find(srcEntityStorages[id].begin(), srcEntityStorages[id].end(), src) == std::end(srcEntityStorages[id]),
         "Adding an entity twice here means an entity will be duplicated more than it should.");
       srcEntityStorages[id].push_back(src);
@@ -194,8 +195,10 @@ void deleteMove(types::registry& registry) {
 }
 
 void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
-  ENTT_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map.");
-  ENTT_ASSERT(entityMap.at(entity).size() > cloneTo.val, "More entities are trying to be copied to than were copied.");
+  POKESIM_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map.");
+  POKESIM_ASSERT(
+    entityMap.at(entity).size() > cloneTo.val,
+    "More entities are trying to be copied to than were copied.");
   entity = entityMap.at(entity)[cloneTo.val];
 }
 

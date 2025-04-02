@@ -4,6 +4,7 @@
 #include <Types/Damage.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Move.hpp>
+#include <Utilities/Assert.hpp>
 #include <vector>
 
 namespace pokesim {
@@ -27,12 +28,12 @@ struct UsesUntilKo {
   std::vector<KoChance> val{};
 
   const KoChance& minHits() const {
-    assert(!val.empty());
+    POKESIM_ASSERT(!val.empty(), "UsesUntilKo has no values to read.");
     return val.front();
   }
 
   const KoChance& maxHits() const {
-    assert(!val.empty());
+    POKESIM_ASSERT(!val.empty(), "UsesUntilKo has no values to read.");
     return val.back();
   }
 

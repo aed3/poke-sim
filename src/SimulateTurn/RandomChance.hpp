@@ -9,6 +9,7 @@
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
+#include <Utilities/Assert.hpp>
 #include <optional>
 
 namespace pokesim {
@@ -107,12 +108,12 @@ void setRandomChoice(
       chance = chanceSum;
     }
 
-    ENTT_ASSERT(chanceSum == 100, "The total probability of all possible outcomes should add up to 100%.");
+    POKESIM_ASSERT(chanceSum == 100, "The total probability of all possible outcomes should add up to 100%.");
   }
   else {
-    ENTT_ASSERT(chances.back() == 100, "The total probability of all possible outcomes should add up to 100%.");
+    POKESIM_ASSERT(chances.back() == 100, "The total probability of all possible outcomes should add up to 100%.");
     for (types::eventPossibilities i = 1; i < POSSIBLE_EVENT_COUNT; i++) {
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         chances[i - 1] <= chances[i],
         "Chances should be a cumulative sum where each value is greater than the last.");
     }

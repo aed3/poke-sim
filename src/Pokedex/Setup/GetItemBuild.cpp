@@ -2,6 +2,7 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/Item.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/Assert.hpp>
 #include <type_traits>
 
 #include "../Items/headers.hpp"
@@ -51,7 +52,7 @@ types::entity Pokedex::buildItem(dex::Item item, types::registry& registry, bool
     default: break;
   }
 
-  ENTT_FAIL("Building an item that does not exist.");
+  POKESIM_ASSERT_FAIL("Building an item that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim

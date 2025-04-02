@@ -7,6 +7,7 @@
 #include <Types/Enums/MoveCategory.hpp>
 #include <Types/Enums/MoveTarget.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/Assert.hpp>
 #include <type_traits>
 
 #include "../Moves/headers.hpp"
@@ -266,7 +267,7 @@ types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool
     default: break;
   }
 
-  ENTT_FAIL("Building a move that does not exist.");
+  POKESIM_ASSERT_FAIL("Building a move that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim

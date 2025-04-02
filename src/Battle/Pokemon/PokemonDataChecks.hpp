@@ -1,13 +1,12 @@
 #pragma once
 
-#include <entt/config/config.h>
-
 #include <Components/SpeciesTypes.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Enums/TypeEffectiveness.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Stats.hpp>
+#include <Utilities/Assert.hpp>
 #include <limits>
 
 namespace pokesim {
@@ -31,7 +30,7 @@ constexpr types::typeEffectiveness getAttackEffectiveness(const SpeciesTypes& sp
     }
   }
 
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     modifier <= speciesTypes.size() && modifier >= -speciesTypes.size(),
     "Modifier cannot exceed the number of types.");
   return modifier;

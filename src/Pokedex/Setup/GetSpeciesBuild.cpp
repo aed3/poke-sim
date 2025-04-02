@@ -2,6 +2,7 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/Species.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/Assert.hpp>
 #include <type_traits>
 
 #include "../Species/headers.hpp"
@@ -81,7 +82,7 @@ types::entity Pokedex::buildSpecies(dex::Species species, types::registry& regis
     default: break;
   }
 
-  ENTT_FAIL("Building a species that does not exist.");
+  POKESIM_ASSERT_FAIL("Building a species that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim

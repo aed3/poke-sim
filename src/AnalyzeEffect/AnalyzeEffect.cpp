@@ -30,161 +30,16 @@
 #include <Types/Enums/Move.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/DebugChecks.hpp>
+#include <Utilities/Assert.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <cstdint>
 #include <entt/container/dense_map.hpp>
-#include <entt/entity/registry.hpp>
 #include <vector>
+
+#include "AnalyzeEffectDebugChecks.hpp"
 
 namespace pokesim::analyze_effect {
 namespace internal {
-struct DebugChecks {
-#ifdef NDEBUG
-  DebugChecks(const Simulation&) {}
-#else
-  DebugChecks(const Simulation& _simulation) : simulation(_simulation), registry(simulation.registry) { checkInputs(); }
-  ~DebugChecks() { checkOutputs(); }
-
- private:
-  const Simulation& simulation;
-  const types::registry& registry;
-  types::registry registryOnInput;
-  entt::dense_map<types::entity, types::entity> originalToCopy;
-  entt::dense_set<types::entity> specificallyChecked;
-  std::size_t entityCount = 0;
-
-  std::vector<types::entity> getPokemonList(bool forAttacker) const {
-    if (forAttacker) {
-      auto view = registry.view<tags::Attacker>();
-      return {view.begin(), view.end()};
-    }
-
-    auto view = registry.view<tags::Defender>();
-    return {view.begin(), view.end()};
-  }
-
-  DamageRollKind getDamageRollKind(types::entity input, DamageRollOptions damageRollOptions) const {
-    const Defenders& defenders = registry.get<Defenders>(input);
-    const Side& side = registry.get<Side>(defenders.only());
-    PlayerSideId playerSide = registry.get<PlayerSide>(side.val).val;
-    switch (playerSide) {
-      default: {
-        ENTT_FAIL("Player side wasn't set properly.");
-        break;
-      }
-      case PlayerSideId::P1: {
-        return damageRollOptions.p1;
-        break;
-      }
-      case PlayerSideId::P2: {
-        return damageRollOptions.p2;
-        break;
-      }
-    }
-  }
-
-  void checkInputOutputs() const {
-    for (types::entity input : registry.view<tags::Input>()) {
-      debug::TypesToIgnore typesToIgnore{};
-      typesToIgnore.add<MultipliedDamageRolls>();
-
-      assert(registry.all_of<MultipliedDamageRolls>(input));
-
-      if (registry.all_of<tags::InfiniteMultiplier>(input)) {
-        assert(!registry.all_of<EffectMultiplier>(input));
-        typesToIgnore.add<tags::InfiniteMultiplier>();
-      }
-
-      bool zeroEffectMultiplier = false;
-      if (registry.all_of<EffectMultiplier>(input)) {
-        assert(!registry.all_of<tags::InfiniteMultiplier>(input));
-        typesToIgnore.add<EffectMultiplier>();
-
-        const auto [effectMultiplier, multipliedDamageRolls] =
-          registry.get<EffectMultiplier, MultipliedDamageRolls>(input);
-        if (effectMultiplier.val == 0) {
-          zeroEffectMultiplier = true;
-          for (const Damage& multipliedDamageRoll : multipliedDamageRolls.val) {
-            assert(multipliedDamageRoll.val == 0);
-          }
-        }
-      }
-
-      auto damageRollOptions = simulation.analyzeEffectOptions.damageRollOptions;
-      auto noKoChanceCalculation = simulation.analyzeEffectOptions.noKoChanceCalculation;
-      if (noKoChanceCalculation || zeroEffectMultiplier) {
-        assert(!registry.all_of<MultipliedUsesUntilKo>(input));
-      }
-      else if (calc_damage::damageKindsMatch(
-                 DamageRollKind::ALL_DAMAGE_ROLLS,
-                 getDamageRollKind(input, damageRollOptions))) {
-        assert(registry.all_of<MultipliedUsesUntilKo>(input));
-        typesToIgnore.add<MultipliedUsesUntilKo>();
-      }
-
-      debug::areEntitiesEqual(registry, input, registryOnInput, originalToCopy.at(input), typesToIgnore);
-    }
-  }
-
-  void checkPokemonOutputs(bool forAttacker) const {
-    const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
-    for (types::entity pokemon : pokemonList) {
-      debug::areEntitiesEqual(registry, pokemon, registryOnInput, originalToCopy.at(pokemon));
-    }
-  }
-
-  void checkRemainingOutputs() const {
-    for (auto [original, copy] : originalToCopy) {
-      if (!specificallyChecked.contains(original)) {
-        debug::areEntitiesEqual(registry, original, registryOnInput, copy);
-      }
-    }
-  }
-
-  void checkInputs() {
-    for (types::entity input : registry.view<tags::Input>()) {
-      originalToCopy[input] = debug::createEntityCopy(input, registry, registryOnInput);
-    }
-
-    const std::vector<types::entity> attackers = getPokemonList(true);
-    const std::vector<types::entity> defenders = getPokemonList(false);
-
-    for (const std::vector<types::entity>& pokemonList : {attackers, defenders}) {
-      for (types::entity pokemon : pokemonList) {
-        originalToCopy[pokemon] = debug::createEntityCopy(pokemon, registry, registryOnInput);
-      }
-    }
-
-    for (types::entity entity : registry.view<types::entity>()) {
-      if (!registry.orphan(entity)) {
-        entityCount++;
-        if (originalToCopy.contains(entity)) {
-          specificallyChecked.emplace(entity);
-        }
-        else {
-          originalToCopy[entity] = debug::createEntityCopy(entity, registry, registryOnInput);
-        }
-      }
-    }
-  }
-
-  void checkOutputs() const {
-    std::size_t finalEntityCount = 0;
-    for (types::entity entity : registry.view<types::entity>()) {
-      if (!registry.orphan(entity)) {
-        finalEntityCount++;
-      }
-    }
-    assert(entityCount == finalEntityCount);
-    checkInputOutputs();
-    checkPokemonOutputs(true);
-    checkPokemonOutputs(false);
-    checkRemainingOutputs();
-  }
-#endif
-};
-
 enum class EffectPresentCheck {
   NOT_PRESENT,
   PRESENT_AND_NOT_APPLIED,
@@ -233,13 +88,13 @@ void assignInputsToClones(
   types::registry& registry = simulation.registry;
   const Inputs& inputs = registry.get<Inputs>(originalBattleEntity);
 
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     (cloneCount == 0) == clonedEntityMap.empty(),
     "There should be no cloned entities if no clones are needed.");
 
   const auto& battleClones = cloneCount == 0 ? std::vector<types::entity>{} : clonedEntityMap.at(originalBattleEntity);
 
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     cloneCount == battleClones.size(),
     "Each input must have a clone and no more clones than inputs should be made.");
 
@@ -277,22 +132,22 @@ void assignInputsToClones(
       OriginalInputEntities{battle.val, attacker.val, defenders.only(), effectTarget.val});
 
     if (usesClone) {
-      ENTT_ASSERT(battleClones.size() > cloneIndex, "More inputs want clones than clones made.");
+      POKESIM_ASSERT(battleClones.size() > cloneIndex, "More inputs want clones than clones made.");
 
       registry.emplace<tags::BattleCloneForCalculation>(battleClones[cloneIndex]);
 
       const auto& clonedAttackers = clonedEntityMap.at(attacker.val);
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         battleClones.size() == clonedAttackers.size(),
         "Each attacker must have a clone and no more clones than inputs should be made.");
 
       const auto& clonedDefenders = clonedEntityMap.at(defenders.only());
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         battleClones.size() == clonedDefenders.size(),
         "Each defender must have a clone and no more clones than inputs should be made.");
 
       const auto& clonedEffectTarget = clonedEntityMap.at(effectTarget.val);
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         battleClones.size() == clonedEffectTarget.size(),
         "Each effect target must have a clone and no more clones than inputs should be made.");
 
@@ -396,18 +251,18 @@ void createAppliedEffectBattles(Simulation& simulation) {
 
   if (simulation.analyzeEffectOptions.reconsiderActiveEffects) {
     simulation.registry.view<Inputs>().each([&](types::entity battleEntity, const Inputs& inputs) {
-      ENTT_ASSERT(!inputs.val.empty(), "Battles with input components should have input entities.");
+      POKESIM_ASSERT(!inputs.val.empty(), "Battles with input components should have input entities.");
       battlesByCloneCount[inputs.val.size()].push_back(battleEntity);
     });
   }
   else {
     simulation.registry.view<Inputs>().each([&](types::entity battleEntity, const Inputs& inputs) {
-      ENTT_ASSERT(!inputs.val.empty(), "Battles with input components should have input entities.");
+      POKESIM_ASSERT(!inputs.val.empty(), "Battles with input components should have input entities.");
       const RunsOneCalculationCount* ignoredInputCount =
         simulation.registry.try_get<RunsOneCalculationCount>(battleEntity);
       types::eventPossibilities ignoredCount = ignoredInputCount == nullptr ? 0U : ignoredInputCount->val;
 
-      ENTT_ASSERT(inputs.val.size() >= ignoredCount, "Must have more inputs than inputs ignored.");
+      POKESIM_ASSERT(inputs.val.size() >= ignoredCount, "Must have more inputs than inputs ignored.");
       battlesByCloneCount[inputs.val.size() - ignoredCount].push_back(battleEntity);
     });
   }

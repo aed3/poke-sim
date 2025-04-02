@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Utilities/Assert.hpp>
 #include <array>
 #include <cassert>
 #include <cstdint>
@@ -29,22 +30,22 @@ class maxSizedVector : private std::array<T, N> {
   constexpr typename base::const_reference back() const noexcept { return N ? *(end() - 1) : *end(); }
 
   constexpr typename base::const_reference at(std::uint8_t pos) const {
-    assert(pos < used);
+    POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
     return base::at(pos);
   }
 
   constexpr typename base::const_reference operator[](std::uint8_t pos) const noexcept {
-    assert(pos < used);
+    POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
     return base::operator[](pos);
   }
 
   typename base::reference at(std::uint8_t pos) {
-    assert(pos < used);
+    POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
     return base::at(pos);
   }
 
   typename base::reference operator[](std::uint8_t pos) noexcept {
-    assert(pos < used);
+    POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
     return base::operator[](pos);
   }
 
@@ -59,7 +60,7 @@ class maxSizedVector : private std::array<T, N> {
   }
 
   void pop_count(std::uint8_t remove) {
-    assert(remove <= used);
+    POKESIM_ASSERT(remove <= used, "Removing more values than are used.");
     used -= remove;
   }
 

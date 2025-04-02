@@ -15,6 +15,7 @@
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
+#include <Utilities/Assert.hpp>
 #include <Utilities/Variant.hpp>
 #include <cstddef>
 #include <entt/entity/registry.hpp>
@@ -177,9 +178,9 @@ void Simulation::createInitialTurnDecision(
 
 void Simulation::createCalcDamageInput(
   BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData) {
-  ENTT_ASSERT(damageCalcInputData.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
-  ENTT_ASSERT(damageCalcInputData.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
-  ENTT_ASSERT(damageCalcInputData.move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
+  POKESIM_ASSERT(damageCalcInputData.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
+  POKESIM_ASSERT(damageCalcInputData.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
+  POKESIM_ASSERT(damageCalcInputData.move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
   types::entity attackerEntity = slotToPokemonEntity(registry, sides, damageCalcInputData.attackerSlot);
@@ -191,13 +192,13 @@ void Simulation::createCalcDamageInput(
 
 void Simulation::createAnalyzeEffectInput(
   BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& analyzeEffectInputData) {
-  ENTT_ASSERT(analyzeEffectInputData.attackerSlot != Slot::NONE, "An effect analysis must have a attacker.");
-  ENTT_ASSERT(analyzeEffectInputData.defenderSlot != Slot::NONE, "An effect analysis must have a defender.");
-  ENTT_ASSERT(analyzeEffectInputData.effectTarget != Slot::NONE, "An effect analysis must have a effect target.");
-  ENTT_ASSERT(!analyzeEffectInputData.moves.empty(), "An effect analysis must include a move.");
+  POKESIM_ASSERT(analyzeEffectInputData.attackerSlot != Slot::NONE, "An effect analysis must have a attacker.");
+  POKESIM_ASSERT(analyzeEffectInputData.defenderSlot != Slot::NONE, "An effect analysis must have a defender.");
+  POKESIM_ASSERT(analyzeEffectInputData.effectTarget != Slot::NONE, "An effect analysis must have a effect target.");
+  POKESIM_ASSERT(!analyzeEffectInputData.moves.empty(), "An effect analysis must include a move.");
   const auto& effect = analyzeEffectInputData.effect;
   const auto& boostEffect = analyzeEffectInputData.boostEffect;
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     boostEffect.has_value() || (effect.has_value() && !effect.value().empty()),
     "An effect analysis must have an effect.");
 
@@ -230,7 +231,7 @@ void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> b
     createInitialSide(p2SideSetup, battleData.p2, battleData);
 
     if (!battleData.decisionsToSimulate.empty()) {
-      ENTT_ASSERT(
+      POKESIM_ASSERT(
         battleData.decisionsToSimulate.size() < std::numeric_limits<types::cloneIndex>::max(),
         "Cannot make more clones than their are entities.");
 

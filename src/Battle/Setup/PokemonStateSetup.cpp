@@ -27,6 +27,7 @@
 #include <Types/Enums/Status.hpp>
 #include <Types/State.hpp>
 #include <Types/Stats.hpp>
+#include <Utilities/Assert.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/entity/view.hpp>
@@ -94,7 +95,7 @@ void PokemonStateSetup::setItem(dex::Item item) {
 
 void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
   MoveSlots& moveEntities = handle.emplace<MoveSlots>();
-  ENTT_ASSERT(
+  POKESIM_ASSERT(
     moveSlots.size() <= moveEntities.val.max_size(),
     "Cannot add more moves to a Pokemon than MAX_MOVE_SLOTS.");
   for (types::entity moveSlot : moveSlots) {

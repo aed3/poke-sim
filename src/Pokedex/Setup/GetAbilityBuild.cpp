@@ -2,6 +2,7 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/Assert.hpp>
 #include <type_traits>
 
 #include "../Abilities/headers.hpp"
@@ -46,7 +47,7 @@ types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& regis
     default: break;
   }
 
-  ENTT_FAIL("Building an ability that does not exist.");
+  POKESIM_ASSERT_FAIL("Building an ability that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim
