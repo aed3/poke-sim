@@ -7,14 +7,19 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/Assert.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
 namespace pokesim::calc_damage {
-InputSetup::InputSetup(
-  types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
-  dex::Move move, const Pokedex& pokedex)
-    : handle(registry, createActionMoveForTarget({registry, targetEntity}, battleEntity, sourceEntity, move, pokedex)) {
+InputSetup::InputSetup(types::registry& _registry) : registry(_registry) {}
+
+void InputSetup::setup(
+  types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move,
+  const Pokedex& pokedex) {
+  moveEntity = createActionMoveForTarget({registry, targetEntity}, battleEntity, sourceEntity, move, pokedex);
+  types::handle handle{registry, moveEntity};
+
   handle.emplace<MoveName>(move);
   handle.emplace<pokesim::tags::CalculateDamage>();
   registry.emplace_or_replace<tags::Attacker>(sourceEntity);
@@ -22,6 +27,7 @@ InputSetup::InputSetup(
 }
 
 types::entity InputSetup::entity() const {
-  return handle.entity();
+  POKESIM_ASSERT(moveEntity != entt::null, "Getting move entity before proper setup.");
+  return moveEntity;
 }
 }  // namespace pokesim::calc_damage

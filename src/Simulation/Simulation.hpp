@@ -26,10 +26,12 @@ struct Results;
 }
 namespace calc_damage {
 struct Results;
-}
+struct InputSetup;
+}  // namespace calc_damage
 namespace analyze_effect {
 struct Results;
-}
+struct InputSetup;
+}  // namespace analyze_effect
 
 /**
  * @brief The entry point for creating and running simulations.
@@ -89,11 +91,6 @@ class Simulation : public internal::RegistryContainer {
   };
 
   struct AnalyzeEffectInputInfo {
-    Slot attackerSlot = Slot::NONE;
-    Slot defenderSlot = Slot::NONE;
-    Slot effectTarget = Slot::NONE;
-    std::vector<dex::Move> moves;
-
    private:
     struct BoostInfo {
       dex::Stat stat = dex::Stat::ATK;
@@ -101,6 +98,10 @@ class Simulation : public internal::RegistryContainer {
     };
 
    public:
+    Slot attackerSlot = Slot::NONE;
+    Slot defenderSlot = Slot::NONE;
+    Slot effectTarget = Slot::NONE;
+    std::vector<dex::Move> moves;
     std::optional<types::effectEnum> effect = std::nullopt;
     std::optional<BoostInfo> boostEffect = std::nullopt;
   };
@@ -122,18 +123,19 @@ class Simulation : public internal::RegistryContainer {
   };
 
  private:
-  std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList);
-  PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonData);
+  std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList);
+  PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonInfo);
   void createInitialSide(
-    SideStateSetup sideSetup, const SideCreationInfo& sideData, const BattleCreationInfo& battleData);
+    SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo);
 
-  void createInitialTurnDecision(BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData);
-  void createCalcDamageInput(BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData);
+  void createInitialTurnDecision(BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionInfo);
+  void createCalcDamageInput(
+    BattleStateSetup battleStateSetup, calc_damage::InputSetup& inputSetup, const CalcDamageInputInfo& inputInfo);
   void createAnalyzeEffectInput(
-    BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& analyzeEffectInputData);
+    BattleStateSetup battleStateSetup, analyze_effect::InputSetup& inputSetup, const AnalyzeEffectInputInfo& inputInfo);
 
   std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
-    BattleStateSetup battleStateSetup, const BattleCreationInfo& battleData);
+    BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
 
  public:
   const BattleFormat battleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
@@ -146,7 +148,7 @@ class Simulation : public internal::RegistryContainer {
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
 
   // Load information about any number of battle states into the simulation's registry.
-  void createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList);
+  void createInitialStates(std::initializer_list<BattleCreationInfo> battleInfoList);
 
   void run();
 
@@ -155,15 +157,15 @@ class Simulation : public internal::RegistryContainer {
   analyze_effect::Results analyzeEffect(std::optional<analyze_effect::Options> options = std::nullopt);
 
   simulate_turn::Results simulateTurn(
-    std::initializer_list<BattleCreationInfo> battleDataList,
+    std::initializer_list<BattleCreationInfo> battleInfoList,
     std::optional<simulate_turn::Options> options = std::nullopt);
 
   calc_damage::Results calculateDamage(
-    std::initializer_list<BattleCreationInfo> battleDataList,
+    std::initializer_list<BattleCreationInfo> battleInfoList,
     std::optional<calc_damage::Options> options = std::nullopt);
 
   analyze_effect::Results analyzeEffect(
-    std::initializer_list<BattleCreationInfo> battleDataList,
+    std::initializer_list<BattleCreationInfo> battleInfoList,
     std::optional<analyze_effect::Options> options = std::nullopt);
 
   void clearAllResults();

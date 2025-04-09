@@ -86,14 +86,14 @@ class AssertComponentsEqual {
       bool currentIsParent = checkIfCopyParent(initial, current, registry);
       POKESIM_ASSERT_NM((initialIsParent && !currentIsParent));
     }
-    else if constexpr (hasEqualTo<Member>::value) {
-      POKESIM_ASSERT_NM(current == initial);
-    }
     else if constexpr (entt::is_complete_v<isList<Member>>) {
       POKESIM_ASSERT_NM(current.size() == initial.size());
       for (std::size_t i = 0; i < current.size(); i++) {
         compareMember(current[i], initial[i], registry);
       }
+    }
+    else if constexpr (hasEqualTo<Member>::value) {
+      POKESIM_ASSERT_NM(current == initial);
     }
     else {
       // Not a static_assert so this only fails on types that actually get copied

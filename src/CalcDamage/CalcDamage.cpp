@@ -402,7 +402,7 @@ void getDamage(Simulation& simulation) {
 }
 
 void run(Simulation& simulation) {
-  internal::DebugChecks debugChecks(simulation);
+  debug::Checks debugChecks(simulation);
 
   getDamage(simulation);
 

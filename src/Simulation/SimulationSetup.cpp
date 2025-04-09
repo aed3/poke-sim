@@ -24,58 +24,59 @@
 #include <vector>
 
 #include "Simulation.hpp"
+#include "SimulationSetupDebugChecks.hpp"
 
 namespace pokesim {
 Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
     : battleFormat(battleFormat_), pokedex(pokedex_) {}
 
-std::vector<types::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveDataList) {
+std::vector<types::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList) {
   std::vector<types::entity> moveEntities{};
-  moveEntities.reserve(moveDataList.size());
+  moveEntities.reserve(moveInfoList.size());
 
-  for (const MoveCreationInfo& moveData : moveDataList) {
+  for (const MoveCreationInfo& moveInfo : moveInfoList) {
     MoveStateSetup moveSetup(registry);
-    moveSetup.setName(moveData.name);
-    moveSetup.setPP(moveData.pp);
-    moveSetup.setMaxPP(moveData.maxPp);
+    moveSetup.setName(moveInfo.name);
+    moveSetup.setPP(moveInfo.pp);
+    moveSetup.setMaxPP(moveInfo.maxPp);
     moveEntities.push_back(moveSetup.entity());
   }
 
   return moveEntities;
 }
 
-PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& pokemonData) {
+PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& pokemonInfo) {
   PokemonStateSetup pokemonSetup(registry);
-  if (pokemonData.id.has_value()) {
-    pokemonSetup.setID(pokemonData.id.value());
+  if (pokemonInfo.id.has_value()) {
+    pokemonSetup.setID(pokemonInfo.id.value());
   }
   else {
     pokemonSetup.setAutoID();
   }
 
-  pokemonSetup.setSpecies(pokemonData.species);
-  pokemonSetup.setLevel(pokemonData.level);
-  if (pokemonData.types.has_value()) {
-    pokemonSetup.setTypes(pokemonData.types.value());
+  pokemonSetup.setSpecies(pokemonInfo.species);
+  pokemonSetup.setLevel(pokemonInfo.level);
+  if (pokemonInfo.types.has_value()) {
+    pokemonSetup.setTypes(pokemonInfo.types.value());
   }
   else {
-    pokemonSetup.setTypes(pokedex.getSpeciesData<SpeciesTypes>(pokemonData.species));
+    pokemonSetup.setTypes(pokedex.getSpeciesData<SpeciesTypes>(pokemonInfo.species));
   }
-  if (pokemonData.gender != dex::Gender::NO_GENDER) pokemonSetup.setGender(pokemonData.gender);
-  if (pokemonData.ability != dex::Ability::NO_ABILITY) pokemonSetup.setAbility(pokemonData.ability);
-  if (pokemonData.item != dex::Item::NO_ITEM) pokemonSetup.setItem(pokemonData.item);
-  if (pokemonData.nature != dex::Nature::NO_NATURE) pokemonSetup.setNature(pokemonData.nature);
-  if (pokemonData.status != dex::Status::NO_STATUS) pokemonSetup.setStatus(pokemonData.status);
+  if (pokemonInfo.gender != dex::Gender::NO_GENDER) pokemonSetup.setGender(pokemonInfo.gender);
+  if (pokemonInfo.ability != dex::Ability::NO_ABILITY) pokemonSetup.setAbility(pokemonInfo.ability);
+  if (pokemonInfo.item != dex::Item::NO_ITEM) pokemonSetup.setItem(pokemonInfo.item);
+  if (pokemonInfo.nature != dex::Nature::NO_NATURE) pokemonSetup.setNature(pokemonInfo.nature);
+  if (pokemonInfo.status != dex::Status::NO_STATUS) pokemonSetup.setStatus(pokemonInfo.status);
 
-  pokemonSetup.setEVs(pokemonData.evs);
-  pokemonSetup.setIVs(pokemonData.ivs);
-  pokemonSetup.setStat<stat::Hp>(pokemonData.stats.hp);
-  pokemonSetup.setStat<stat::Atk>(pokemonData.stats.atk);
-  pokemonSetup.setStat<stat::Def>(pokemonData.stats.def);
-  pokemonSetup.setStat<stat::Spa>(pokemonData.stats.spa);
-  pokemonSetup.setStat<stat::Spd>(pokemonData.stats.spd);
-  pokemonSetup.setStat<stat::Spe>(pokemonData.stats.spe);
-  pokemonSetup.setHp(pokemonData.hp.value_or(pokemonData.stats.hp));
+  pokemonSetup.setEVs(pokemonInfo.evs);
+  pokemonSetup.setIVs(pokemonInfo.ivs);
+  pokemonSetup.setStat<stat::Hp>(pokemonInfo.stats.hp);
+  pokemonSetup.setStat<stat::Atk>(pokemonInfo.stats.atk);
+  pokemonSetup.setStat<stat::Def>(pokemonInfo.stats.def);
+  pokemonSetup.setStat<stat::Spa>(pokemonInfo.stats.spa);
+  pokemonSetup.setStat<stat::Spd>(pokemonInfo.stats.spd);
+  pokemonSetup.setStat<stat::Spe>(pokemonInfo.stats.spe);
+  pokemonSetup.setHp(pokemonInfo.hp.value_or(pokemonInfo.stats.hp));
   pokemonSetup.setProperty<tags::AtkStatUpdateRequired>();
   pokemonSetup.setProperty<tags::DefStatUpdateRequired>();
   pokemonSetup.setProperty<tags::SpaStatUpdateRequired>();
@@ -86,28 +87,28 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
 }
 
 void Simulation::createInitialSide(
-  SideStateSetup sideSetup, const SideCreationInfo& sideData, const BattleCreationInfo& battleData) {
+  SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo) {
   std::vector<PokemonStateSetup> pokemonSetupList;
-  pokemonSetupList.reserve(sideData.team.size());
+  pokemonSetupList.reserve(sideInfo.team.size());
 
-  for (std::size_t i = 0; i < sideData.team.size(); i++) {
-    const PokemonCreationInfo& pokemonData = sideData.team[i];
-    PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonData);
+  for (std::size_t i = 0; i < sideInfo.team.size(); i++) {
+    const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];
+    PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonInfo);
     if (
-      battleData.turn > 0 && !pokemonData.fainted &&
+      battleInfo.turn > 0 && !pokemonInfo.fainted &&
       (i == 0 || (battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT && i == 1))) {
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
 
-    std::vector<types::entity> moveEntities = createInitialMoves(pokemonData.moves);
+    std::vector<types::entity> moveEntities = createInitialMoves(pokemonInfo.moves);
 
-    if (battleData.runWithSimulateTurn) {
+    if (battleInfo.runWithSimulateTurn) {
       registry.insert<tags::SimulateTurn>(moveEntities.begin(), moveEntities.end());
     }
-    if (battleData.runWithCalculateDamage) {
+    if (battleInfo.runWithCalculateDamage) {
       registry.insert<tags::CalculateDamage>(moveEntities.begin(), moveEntities.end());
     }
-    if (battleData.runWithAnalyzeEffect) {
+    if (battleInfo.runWithAnalyzeEffect) {
       registry.insert<tags::AnalyzeEffect>(moveEntities.begin(), moveEntities.end());
     }
 
@@ -115,15 +116,15 @@ void Simulation::createInitialSide(
     pokemonSetupList.push_back(pokemonSetup);
   }
 
-  if (battleData.runWithSimulateTurn) {
+  if (battleInfo.runWithSimulateTurn) {
     sideSetup.setProperty<tags::SimulateTurn>();
     registry.insert<tags::SimulateTurn>(pokemonSetupList.begin(), pokemonSetupList.end());
   }
-  if (battleData.runWithCalculateDamage) {
+  if (battleInfo.runWithCalculateDamage) {
     sideSetup.setProperty<tags::CalculateDamage>();
     registry.insert<tags::CalculateDamage>(pokemonSetupList.begin(), pokemonSetupList.end());
   }
-  if (battleData.runWithAnalyzeEffect) {
+  if (battleInfo.runWithAnalyzeEffect) {
     sideSetup.setProperty<tags::AnalyzeEffect>();
     registry.insert<tags::AnalyzeEffect>(pokemonSetupList.begin(), pokemonSetupList.end());
   }
@@ -132,19 +133,19 @@ void Simulation::createInitialSide(
 }
 
 std::tuple<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(
-  BattleStateSetup battleStateSetup, const BattleCreationInfo& battleData) {
+  BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo) {
   battleStateSetup.setAutoID();
-  battleStateSetup.setTurn(battleData.turn);
-  battleStateSetup.setRNGSeed(battleData.rngSeed);
-  battleStateSetup.setProbability(battleData.probability);
+  battleStateSetup.setTurn(battleInfo.turn);
+  battleStateSetup.setRNGSeed(battleInfo.rngSeed);
+  battleStateSetup.setProbability(battleInfo.probability);
 
-  if (battleData.runWithSimulateTurn) {
+  if (battleInfo.runWithSimulateTurn) {
     battleStateSetup.setProperty<tags::SimulateTurn>();
   }
-  if (battleData.runWithCalculateDamage) {
+  if (battleInfo.runWithCalculateDamage) {
     battleStateSetup.setProperty<tags::CalculateDamage>();
   }
-  if (battleData.runWithAnalyzeEffect) {
+  if (battleInfo.runWithAnalyzeEffect) {
     battleStateSetup.setProperty<tags::AnalyzeEffect>();
   }
 
@@ -168,50 +169,48 @@ std::tuple<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(
 }
 
 void Simulation::createInitialTurnDecision(
-  BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionData) {
+  BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionInfo) {
   types::handle battleHandle{registry, battleStateSetup.entity()};
   const Sides& sides = battleHandle.get<Sides>();
 
-  registry.emplace<SideDecision>(sides.p1(), turnDecisionData.p1);
-  registry.emplace<SideDecision>(sides.p2(), turnDecisionData.p2);
+  registry.emplace<SideDecision>(sides.p1(), turnDecisionInfo.p1);
+  registry.emplace<SideDecision>(sides.p2(), turnDecisionInfo.p2);
 }
 
 void Simulation::createCalcDamageInput(
-  BattleStateSetup battleStateSetup, const CalcDamageInputInfo& damageCalcInputData) {
-  POKESIM_ASSERT(damageCalcInputData.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
-  POKESIM_ASSERT(damageCalcInputData.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
-  POKESIM_ASSERT(damageCalcInputData.move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
+  BattleStateSetup battleStateSetup, calc_damage::InputSetup& inputSetup, const CalcDamageInputInfo& inputInfo) {
+  POKESIM_ASSERT(inputInfo.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
+  POKESIM_ASSERT(inputInfo.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
+  POKESIM_ASSERT(inputInfo.move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
-  types::entity attackerEntity = slotToPokemonEntity(registry, sides, damageCalcInputData.attackerSlot);
-  types::entity defenderEntity = slotToPokemonEntity(registry, sides, damageCalcInputData.defenderSlot);
+  types::entity attackerEntity = slotToPokemonEntity(registry, sides, inputInfo.attackerSlot);
+  types::entity defenderEntity = slotToPokemonEntity(registry, sides, inputInfo.defenderSlot);
 
-  calc_damage::InputSetup
-    inputSetup(registry, battleStateSetup.entity(), attackerEntity, defenderEntity, damageCalcInputData.move, pokedex);
+  inputSetup.setup(battleStateSetup.entity(), attackerEntity, defenderEntity, inputInfo.move, pokedex);
 }
 
 void Simulation::createAnalyzeEffectInput(
-  BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& analyzeEffectInputData) {
-  POKESIM_ASSERT(analyzeEffectInputData.attackerSlot != Slot::NONE, "An effect analysis must have a attacker.");
-  POKESIM_ASSERT(analyzeEffectInputData.defenderSlot != Slot::NONE, "An effect analysis must have a defender.");
-  POKESIM_ASSERT(analyzeEffectInputData.effectTarget != Slot::NONE, "An effect analysis must have a effect target.");
-  POKESIM_ASSERT(!analyzeEffectInputData.moves.empty(), "An effect analysis must include a move.");
-  const auto& effect = analyzeEffectInputData.effect;
-  const auto& boostEffect = analyzeEffectInputData.boostEffect;
+  BattleStateSetup battleStateSetup, analyze_effect::InputSetup& inputSetup, const AnalyzeEffectInputInfo& inputInfo) {
+  POKESIM_ASSERT(inputInfo.attackerSlot != Slot::NONE, "An effect analysis must have a attacker.");
+  POKESIM_ASSERT(inputInfo.defenderSlot != Slot::NONE, "An effect analysis must have a defender.");
+  POKESIM_ASSERT(inputInfo.effectTarget != Slot::NONE, "An effect analysis must have a effect target.");
+  POKESIM_ASSERT(!inputInfo.moves.empty(), "An effect analysis must include a move.");
+  const auto& effect = inputInfo.effect;
+  const auto& boostEffect = inputInfo.boostEffect;
   POKESIM_ASSERT(
     boostEffect.has_value() || (effect.has_value() && !effect.value().empty()),
     "An effect analysis must have an effect.");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
-  types::entity attackerEntity = slotToPokemonEntity(registry, sides, analyzeEffectInputData.attackerSlot);
-  types::entity defenderEntity = slotToPokemonEntity(registry, sides, analyzeEffectInputData.defenderSlot);
-  types::entity effectTargetEntity = slotToPokemonEntity(registry, sides, analyzeEffectInputData.effectTarget);
+  types::entity attackerEntity = slotToPokemonEntity(registry, sides, inputInfo.attackerSlot);
+  types::entity defenderEntity = slotToPokemonEntity(registry, sides, inputInfo.defenderSlot);
+  types::entity effectTargetEntity = slotToPokemonEntity(registry, sides, inputInfo.effectTarget);
 
-  analyze_effect::InputSetup inputSetup(registry);
   inputSetup.setAttacker(attackerEntity);
   inputSetup.setDefender(defenderEntity);
   inputSetup.setEffectTarget(effectTargetEntity);
-  inputSetup.setEffectMoves(analyzeEffectInputData.moves);
+  inputSetup.setEffectMoves(inputInfo.moves);
   inputSetup.setBattle(battleStateSetup.entity());
 
   if (effect.has_value()) {
@@ -222,39 +221,54 @@ void Simulation::createAnalyzeEffectInput(
   }
 }
 
-void Simulation::createInitialStates(std::initializer_list<BattleCreationInfo> battleDataList) {
-  for (const BattleCreationInfo& battleData : battleDataList) {
+void Simulation::createInitialStates(const std::initializer_list<BattleCreationInfo> battleInfoList) {
+  debug::SimulationSetupChecks debugChecks(registry, battleInfoList);
+
+  for (const BattleCreationInfo& battleInfo : battleInfoList) {
     BattleStateSetup battleStateSetup(registry);
-    auto [p1SideSetup, p2SideSetup] = createInitialBattle(battleStateSetup, battleData);
+    auto [p1SideSetup, p2SideSetup] = createInitialBattle(battleStateSetup, battleInfo);
 
-    createInitialSide(p1SideSetup, battleData.p1, battleData);
-    createInitialSide(p2SideSetup, battleData.p2, battleData);
+    createInitialSide(p1SideSetup, battleInfo.p1, battleInfo);
+    createInitialSide(p2SideSetup, battleInfo.p2, battleInfo);
 
-    if (!battleData.decisionsToSimulate.empty()) {
+    debugChecks.addToBattleChecklist(battleStateSetup, battleInfo);
+
+    if (!battleInfo.decisionsToSimulate.empty()) {
       POKESIM_ASSERT(
-        battleData.decisionsToSimulate.size() < std::numeric_limits<types::cloneIndex>::max(),
-        "Cannot make more clones than their are entities.");
+        battleInfo.decisionsToSimulate.size() < std::numeric_limits<types::cloneIndex>::max(),
+        "Cannot make more clones than there are entities available.");
 
-      types::cloneIndex cloneCount = (types::cloneIndex)(battleData.decisionsToSimulate.size() - 1);
+      types::cloneIndex cloneCount = (types::cloneIndex)(battleInfo.decisionsToSimulate.size() - 1);
       if (cloneCount) {
         std::vector<BattleStateSetup> clones = battleStateSetup.clone(cloneCount);
 
         for (types::cloneIndex i = 0; i < cloneCount; i++) {
-          createInitialTurnDecision(clones[i], battleData.decisionsToSimulate[i]);
-          clones[i].setID(i);
+          BattleStateSetup& setupClone = clones[i];
+          const TurnDecisionInfo& turnDecisionInfo = battleInfo.decisionsToSimulate[i];
+          debugChecks.addToBattleChecklist(setupClone, battleInfo);
+
+          createInitialTurnDecision(setupClone, turnDecisionInfo);
+          setupClone.setID(i);
+
+          debugChecks.addToTurnDecisionChecklist(setupClone, turnDecisionInfo);
         }
       }
 
-      createInitialTurnDecision(battleStateSetup, *battleData.decisionsToSimulate.rbegin());
+      createInitialTurnDecision(battleStateSetup, battleInfo.decisionsToSimulate.back());
+      debugChecks.addToTurnDecisionChecklist(battleStateSetup, battleInfo.decisionsToSimulate.back());
       battleStateSetup.setID(cloneCount);
     }
 
-    for (const CalcDamageInputInfo& damageCalcInputData : battleData.damageCalculations) {
-      createCalcDamageInput(battleStateSetup, damageCalcInputData);
+    for (const CalcDamageInputInfo& calcDamageInputInfo : battleInfo.damageCalculations) {
+      calc_damage::InputSetup inputSetup(registry);
+      createCalcDamageInput(battleStateSetup, inputSetup, calcDamageInputInfo);
+      debugChecks.addToCalcDamageChecklist(battleStateSetup, inputSetup, calcDamageInputInfo);
     }
 
-    for (const AnalyzeEffectInputInfo& analyzeEffectInputData : battleData.effectsToAnalyze) {
-      createAnalyzeEffectInput(battleStateSetup, analyzeEffectInputData);
+    for (const AnalyzeEffectInputInfo& analyzeEffectInputInfo : battleInfo.effectsToAnalyze) {
+      analyze_effect::InputSetup inputSetup(registry);
+      createAnalyzeEffectInput(battleStateSetup, inputSetup, analyzeEffectInputInfo);
+      debugChecks.addToAnalyzeEffectChecklist(battleStateSetup, inputSetup, analyzeEffectInputInfo);
     }
   }
 }

@@ -1,7 +1,7 @@
 #include "AnalyzeEffectInputSetup.hpp"
 
 #include <Components/AnalyzeEffect/Aliases.hpp>
-#include <Components/AnalyzeEffect/AnalyzeEventInputs.hpp>
+#include <Components/AnalyzeEffect/AnalyzeEffectInputs.hpp>
 #include <Components/Boosts.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/Names/PseudoWeatherNames.hpp>

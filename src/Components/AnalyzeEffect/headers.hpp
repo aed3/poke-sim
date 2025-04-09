@@ -1,5 +1,5 @@
 #pragma once
 
 #include "Aliases.hpp"
-#include "AnalyzeEventInputs.hpp"
+#include "AnalyzeEffectInputs.hpp"
 #include "RemovedEffect.hpp"
