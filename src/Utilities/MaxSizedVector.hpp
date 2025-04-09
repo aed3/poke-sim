@@ -70,6 +70,10 @@ class maxSizedVector : private std::array<T, N> {
     used++;
   }
 
+  bool operator==(const maxSizedVector<T, N>& other) const noexcept {
+    return used == other.used && std::equal(begin(), end(), other.begin());
+  }
+
   typename base::const_iterator end() const noexcept { return base::begin() + used; }
   typename base::const_iterator cend() const noexcept { return end(); }
   typename base::const_reverse_iterator rend() const noexcept { return const_reverse_iterator(end()); }

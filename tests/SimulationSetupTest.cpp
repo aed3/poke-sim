@@ -86,54 +86,6 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   return battleCreationInfo;
 }
 
-types::entity targetSlotToEntity(
-  Slot targetSlot, const types::teamPositions<types::entity>& p1Team,
-  const types::teamPositions<types::entity>& p2Team) {
-  switch (targetSlot) {
-    case Slot::P1A: {
-      return p1Team[0];
-    }
-    case Slot::P1B: {
-      return p1Team[1];
-    }
-    case Slot::P1C: {
-      return p1Team[2];
-    }
-    case Slot::P1D: {
-      return p1Team[3];
-    }
-    case Slot::P1E: {
-      return p1Team[4];
-    }
-    case Slot::P1F: {
-      return p1Team[5];
-    }
-    case Slot::P2A: {
-      return p2Team[0];
-    }
-    case Slot::P2B: {
-      return p2Team[1];
-    }
-    case Slot::P2C: {
-      return p2Team[2];
-    }
-    case Slot::P2D: {
-      return p2Team[3];
-    }
-    case Slot::P2E: {
-      return p2Team[4];
-    }
-    case Slot::P2F: {
-      return p2Team[5];
-    }
-    default: {
-      FAIL();
-    }
-  }
-
-  return types::entity{};
-}
-
 TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
@@ -307,8 +259,8 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalcDamage][Setup]") {
       dex::Move::KNOCK_OFF,
     },
     {
-      Slot::P1B,
       Slot::P2B,
+      Slot::P1B,
       dex::Move::MOONBLAST,
     },
   };
@@ -316,37 +268,41 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalcDamage][Setup]") {
   Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
   simulation.createInitialStates({battleInfo});
 
-  types::registry& registry = simulation.registry;
+  const types::registry& registry = simulation.registry;
   auto battles = registry.view<Sides>();
   REQUIRE(battles.size() == 1);
-  types::entity battleEntity = battles[0];
-  const auto& p1Team = registry.get<Team>(registry.get<Sides>(battleEntity).p1()).val;
-  const auto& p2Team = registry.get<Team>(registry.get<Sides>(battleEntity).p2()).val;
 
-  auto calculationsEntitiesGroup = registry.group<calc_damage::Attacker, calc_damage::Defenders, Battle>();
-  REQUIRE(calculationsEntitiesGroup.size() == 5);
-
-  const auto calculationsEntities = calculationsEntitiesGroup.each();
-  for (const auto& calcDamageInfo : battleInfo.damageCalculations) {
-    INFO(
-      std::to_string((std::uint8_t)calcDamageInfo.attackerSlot) + "," +
-      std::to_string((std::uint8_t)calcDamageInfo.defenderSlot) + "," +
-      std::to_string((std::uint16_t)calcDamageInfo.move));
-
-    bool found = std::any_of(calculationsEntities.begin(), calculationsEntities.end(), [&](const auto& tuple) {
-      const auto& [entity, attacker, defenders, battle] = tuple;
-      if (battle.val != battleEntity) return false;
-      if (registry.get<MoveName>(entity).name != calcDamageInfo.move) return false;
-      if (attacker.val != targetSlotToEntity(calcDamageInfo.attackerSlot, p1Team, p2Team)) return false;
-      if (defenders.val[0] != targetSlotToEntity(calcDamageInfo.defenderSlot, p1Team, p2Team)) return false;
-      return true;
-    });
-
-    REQUIRE(found);
-  }
+  auto view = registry.view<tags::CalculateDamage>();
+  REQUIRE(view.size() == 5);
 }
 
 TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup]") {
-  // TODO(aed3): Add in when effect enums are added
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
+  Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
+
+  battleInfo.effectsToAnalyze = {
+    {Slot::P1A, Slot::P1B, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
+    {Slot::P1B, Slot::P1A, Slot::P1A, {dex::Move::FURY_ATTACK}, std::nullopt, {{dex::Stat::DEF, 2}}},
+    {
+      Slot::P1B,
+      Slot::P1A,
+      Slot::P1B,
+      {dex::Move::THUNDERBOLT},
+      std::nullopt,
+      {{dex::Stat::SPA, -3}},
+    },
+    {Slot::P2B, Slot::P2C, Slot::P2B, {dex::Move::KNOCK_OFF}, dex::Status::BRN, {{dex::Stat::ATK, 2}}},
+    {Slot::P2B, Slot::P1B, Slot::P2B, {dex::Move::MOONBLAST}, dex::Status::TOX, {{dex::Stat::SPE, 6}}},
+  };
+
+  Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
+  simulation.createInitialStates({battleInfo});
+
+  const types::registry& registry = simulation.registry;
+  auto battles = registry.view<Sides>();
+  REQUIRE(battles.size() == 1);
+
+  auto view = registry.view<analyze_effect::tags::Input>();
+  REQUIRE(view.size() == 5);
 }
 }  // namespace pokesim

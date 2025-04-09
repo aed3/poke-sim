@@ -27,6 +27,6 @@ struct InputSetup {
   void setBoostEffect(dex::Stat stat, types::boost boost);
   void setBattle(types::entity entity);
 
-  types::entity entity() { return handle.entity(); }
+  types::entity entity() const { return handle.entity(); }
 };
 }  // namespace pokesim::analyze_effect

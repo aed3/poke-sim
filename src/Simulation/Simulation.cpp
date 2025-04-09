@@ -66,20 +66,20 @@ analyze_effect::Results Simulation::analyzeEffect(std::optional<analyze_effect::
 }
 
 simulate_turn::Results Simulation::simulateTurn(
-  std::initializer_list<BattleCreationInfo> battleDataList, std::optional<simulate_turn::Options> options) {
-  createInitialStates(battleDataList);
+  std::initializer_list<BattleCreationInfo> battleInfoList, std::optional<simulate_turn::Options> options) {
+  createInitialStates(battleInfoList);
   return simulateTurn(options);
 }
 
 calc_damage::Results Simulation::calculateDamage(
-  std::initializer_list<BattleCreationInfo> battleDataList, std::optional<calc_damage::Options> options) {
-  createInitialStates(battleDataList);
+  std::initializer_list<BattleCreationInfo> battleInfoList, std::optional<calc_damage::Options> options) {
+  createInitialStates(battleInfoList);
   return calculateDamage(options);
 }
 
 analyze_effect::Results Simulation::analyzeEffect(
-  std::initializer_list<BattleCreationInfo> battleDataList, std::optional<analyze_effect::Options> options) {
-  createInitialStates(battleDataList);
+  std::initializer_list<BattleCreationInfo> battleInfoList, std::optional<analyze_effect::Options> options) {
+  createInitialStates(battleInfoList);
   return analyzeEffect(options);
 }
 

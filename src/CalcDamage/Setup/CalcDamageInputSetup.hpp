@@ -12,12 +12,15 @@ class Pokedex;
 namespace calc_damage {
 struct InputSetup {
  protected:
-  types::handle handle;
+  types::registry& registry;
+  types::entity moveEntity = entt::null;
 
  public:
-  InputSetup(
-    types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
-    dex::Move move, const Pokedex& pokedex);
+  InputSetup(types::registry& registry);
+
+  void setup(
+    types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move,
+    const Pokedex& pokedex);
 
   types::entity entity() const;
 };

@@ -6,7 +6,7 @@
 #include <CalcDamage/CalcDamage.hpp>
 #include <CalcDamage/Helpers.hpp>
 #include <Components/AnalyzeEffect/Aliases.hpp>
-#include <Components/AnalyzeEffect/AnalyzeEventInputs.hpp>
+#include <Components/AnalyzeEffect/AnalyzeEffectInputs.hpp>
 #include <Components/AnalyzeEffect/RemovedEffect.hpp>
 #include <Components/Boosts.hpp>
 #include <Components/CloneFromCloneTo.hpp>
@@ -374,7 +374,7 @@ void postRunCleanup(Simulation& simulation) {
 }  // namespace internal
 
 void run(Simulation& simulation) {
-  internal::DebugChecks debugChecks(simulation);
+  debug::Checks debugChecks(simulation);
 
   pokesim::internal::SelectForPokemonView<pokesim::tags::AnalyzeEffect> selectedPokemon(simulation);
   pokesim::internal::SelectForBattleView<pokesim::tags::AnalyzeEffect> selectedBattle(simulation);

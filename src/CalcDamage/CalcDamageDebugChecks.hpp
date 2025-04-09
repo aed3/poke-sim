@@ -28,13 +28,13 @@
 
 #include "Helpers.hpp"
 
-namespace pokesim::calc_damage::internal {
-struct DebugChecks {
+namespace pokesim::calc_damage::debug {
+struct Checks {
 #ifdef NDEBUG
-  DebugChecks(const Simulation&) {}
+  Checks(const Simulation&) {}
 #else
-  DebugChecks(const Simulation& _simulation) : simulation(_simulation), registry(simulation.registry) { checkInputs(); }
-  ~DebugChecks() { checkOutputs(); }
+  Checks(const Simulation& _simulation) : simulation(_simulation), registry(simulation.registry) { checkInputs(); }
+  ~Checks() { checkOutputs(); }
 
  private:
   const Simulation& simulation;
@@ -50,7 +50,7 @@ struct DebugChecks {
 
   void checkMoveInputs() {
     for (types::entity move : simulation.selectedMoveEntities()) {
-      originalToCopy[move] = debug::createEntityCopy(move, registry, registryOnInput);
+      originalToCopy[move] = pokesim::debug::createEntityCopy(move, registry, registryOnInput);
 
       POKESIM_ASSERT_NM(registry.all_of<Attacker>(move));
       POKESIM_ASSERT_NM(registry.all_of<tags::Attacker>(registry.get<Attacker>(move).val));
@@ -86,7 +86,7 @@ struct DebugChecks {
   void checkPokemonInputs(bool forAttacker) {
     const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
-      originalToCopy[pokemon] = debug::createEntityCopy(pokemon, registry, registryOnInput);
+      originalToCopy[pokemon] = pokesim::debug::createEntityCopy(pokemon, registry, registryOnInput);
 
       POKESIM_ASSERT_NM(registry.all_of<UsedMoves>(pokemon));
       bool needsPhy = false;
@@ -129,7 +129,7 @@ struct DebugChecks {
 
   void checkBattleInputs() {
     for (types::entity battle : simulation.selectedBattleEntities()) {
-      originalToCopy[battle] = debug::createEntityCopy(battle, registry, registryOnInput);
+      originalToCopy[battle] = pokesim::debug::createEntityCopy(battle, registry, registryOnInput);
     }
   }
 
@@ -259,7 +259,7 @@ struct DebugChecks {
 
   void checkMoveOutputs() const {
     for (types::entity move : simulation.selectedMoveEntities()) {
-      debug::TypesToIgnore typesToIgnore{};
+      pokesim::debug::TypesToIgnore typesToIgnore{};
       if (registry.all_of<pokesim::tags::AnalyzeEffect>(move)) {
         typesToIgnore.add<Damage>();
         POKESIM_ASSERT_NM(registry.all_of<Damage>(move));
@@ -282,34 +282,39 @@ struct DebugChecks {
         }
       }
 
-      types::entity originalMove = debug::findCopyParent(originalToCopy, registry, move);
-      debug::areEntitiesEqual(registry, move, registryOnInput, originalToCopy.at(originalMove), typesToIgnore);
+      types::entity originalMove = pokesim::debug::findCopyParent(originalToCopy, registry, move);
+      pokesim::debug::areEntitiesEqual(registry, move, registryOnInput, originalToCopy.at(originalMove), typesToIgnore);
     }
   }
 
   void checkPokemonOutputs(bool forAttacker) const {
     const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
-      types::entity originalPokemon = debug::findCopyParent(originalToCopy, registry, pokemon);
-      debug::areEntitiesEqual(registry, pokemon, registryOnInput, originalToCopy.at(originalPokemon));
+      types::entity originalPokemon = pokesim::debug::findCopyParent(originalToCopy, registry, pokemon);
+      pokesim::debug::areEntitiesEqual(registry, pokemon, registryOnInput, originalToCopy.at(originalPokemon));
     }
   }
 
   void checkBattleOutputs() const {
     for (types::entity battle : simulation.selectedBattleEntities()) {
-      debug::TypesToIgnore typesToIgnore;
+      pokesim::debug::TypesToIgnore typesToIgnore;
       if (registry.all_of<pokesim::tags::SimulateTurn>(battle)) {
         typesToIgnore.add<Probability, RngSeed, ParentBattle>();
       }
-      types::entity originalBattle = debug::findCopyParent(originalToCopy, registry, battle);
-      debug::areEntitiesEqual(registry, battle, registryOnInput, originalToCopy.at(originalBattle), typesToIgnore);
+      types::entity originalBattle = pokesim::debug::findCopyParent(originalToCopy, registry, battle);
+      pokesim::debug::areEntitiesEqual(
+        registry,
+        battle,
+        registryOnInput,
+        originalToCopy.at(originalBattle),
+        typesToIgnore);
     }
   }
 
   void checkRemainingOutputs() const {
     for (auto [original, copy] : originalToCopy) {
       if (!specificallyChecked.contains(original)) {
-        debug::areEntitiesEqual(registry, original, registryOnInput, copy);
+        pokesim::debug::areEntitiesEqual(registry, original, registryOnInput, copy);
       }
     }
   }
@@ -327,7 +332,7 @@ struct DebugChecks {
           specificallyChecked.emplace(entity);
         }
         else {
-          originalToCopy[entity] = debug::createEntityCopy(entity, registry, registryOnInput);
+          originalToCopy[entity] = pokesim::debug::createEntityCopy(entity, registry, registryOnInput);
         }
       }
     }
@@ -367,4 +372,4 @@ struct DebugChecks {
   }
 #endif
 };
-}  // namespace pokesim::calc_damage::internal
+}  // namespace pokesim::calc_damage::debug

@@ -3,7 +3,7 @@
 #include "Accuracy.hpp"
 #include "AddedTargets.hpp"
 #include "AnalyzeEffect/Aliases.hpp"
-#include "AnalyzeEffect/AnalyzeEventInputs.hpp"
+#include "AnalyzeEffect/AnalyzeEffectInputs.hpp"
 #include "AnalyzeEffect/RemovedEffect.hpp"
 #include "BasePower.hpp"
 #include "Boosts.hpp"
