@@ -4,6 +4,7 @@
 #include <Types/Enums/TypeEffectiveness.hpp>
 #include <array>
 #include <cstdint>
+#include <initializer_list>
 
 namespace pokesim::internal {
 using TypeChartBase =

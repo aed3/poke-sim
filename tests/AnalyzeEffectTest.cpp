@@ -4,7 +4,7 @@ namespace pokesim {
 TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
   Simulation::BattleCreationInfo battleCreationInfo{};
   battleCreationInfo.runWithAnalyzeEffect = true;
-  Simulation simulation = createSingleBattleSimulation(battleCreationInfo, false);
+  Simulation simulation = createSingleBattleSimulation(battleCreationInfo);
 
   bool getKoUses = GENERATE(false, true);
   bool reconsiderActiveEffects = GENERATE(false, true);
@@ -13,8 +13,8 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
 
   using Ideals = std::tuple<types::effectMultiplier, DamageRolls, calc_damage::UsesUntilKo>;
   entt::dense_map<types::entity, Ideals> idealMultipliers;
-  const DamageRolls idealBaseDamageRolls = {13, 12, 12, 12, 12, 12, 12, 12, 11, 11, 11, 11, 11, 11, 11, 11};
-  const DamageRolls idealHalvedDamageRolls = {6, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5};
+  const DamageRolls idealBaseDamageRolls = {{13, 12, 12, 12, 12, 12, 12, 12, 11, 11, 11, 11, 11, 11, 11, 11}};
+  const DamageRolls idealHalvedDamageRolls = {{6, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5}};
 
   types::effectMultiplier idealHalvedMultiplier =
     (types::effectMultiplier)idealHalvedDamageRolls.val[0].val / idealBaseDamageRolls.val[0].val;

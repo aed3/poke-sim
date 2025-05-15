@@ -191,7 +191,6 @@ void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
 
 void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue) {
   types::registry& registry = *battleHandle.registry();
-  registry.clear<action::tags::Current>();
 
   if (actionQueue.val.empty()) return;
 

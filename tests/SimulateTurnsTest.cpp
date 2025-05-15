@@ -210,14 +210,432 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
   }
 }
 
+constexpr std::array<DamageRollKind, 3> branchingDamageRollOptions = {
+  DamageRollKind::AVERAGE_DAMAGE,
+  calc_damage::combineDamageKinds(DamageRollKind::AVERAGE_DAMAGE, DamageRollKind::GUARANTEED_CRIT_CHANCE),
+  calc_damage::combineDamageKinds(DamageRollKind::MIN_DAMAGE, DamageRollKind::MAX_DAMAGE),
+};
+
+constexpr std::array<DamageRollKind, 4> fixedBranchDamageRollOptions = {
+  DamageRollKind::ALL_DAMAGE_ROLLS,
+  DamageRollKind::AVERAGE_DAMAGE,
+  calc_damage::combineDamageKinds(DamageRollKind::AVERAGE_DAMAGE, DamageRollKind::GUARANTEED_CRIT_CHANCE),
+  calc_damage::combineDamageKinds(DamageRollKind::MIN_DAMAGE, DamageRollKind::MAX_DAMAGE),
+};
+
+struct VerticalSlice1Checks : debug::Checks {
+ private:
+  const simulate_turn::Options& options;
+
+  template <typename Selector>
+  void specificallyCheckEntities(
+    const debug::TypesToIgnore& typesToIgnore, const debug::TypesToIgnore& typesIgnoredOnConstants = {}) const {
+    for (types::entity entity : registry.view<Selector>()) {
+      types::entity original = debug::findCopyParent(originalToCopy, registry, entity);
+      if (!specificallyChecked.contains(original)) {
+        continue;
+      }
+
+      bool shouldNotChange = !options.applyChangesToInputBattle && original == entity;
+      debug::areEntitiesEqual(
+        registry,
+        entity,
+        registryOnInput,
+        originalToCopy.at(original),
+        shouldNotChange ? typesIgnoredOnConstants : typesToIgnore);
+    }
+  }
+
+  void checkBattle() const {
+    debug::TypesToIgnore typesToIgnore;
+    typesToIgnore.add<simulate_turn::TurnOutcomeBattles>();
+
+    debug::TypesToIgnore typesIgnoredOnConstants = typesToIgnore;
+    typesToIgnore.add<Probability, ParentBattle, Turn, RootBattle>();
+
+    if (!options.makeBranchesOnRandomEvents) {
+      typesToIgnore.add<RngSeed>();
+    }
+
+    specificallyCheckEntities<tags::Battle>(typesToIgnore, typesIgnoredOnConstants);
+  }
+
+  void checkSides() const {
+    debug::TypesToIgnore typesToIgnore;
+    typesToIgnore.add<SideDecision>();
+
+    specificallyCheckEntities<tags::Side>(typesToIgnore);
+  }
+
+  void checkPokemon() const {
+    debug::TypesToIgnore typesToIgnore;
+    typesToIgnore.add<stat::CurrentHp, LastUsedMove>();
+
+    specificallyCheckEntities<tags::Pokemon>(typesToIgnore);
+  }
+
+  void checkMoves() const {
+    debug::TypesToIgnore typesToIgnore;
+    typesToIgnore.add<Pp>();
+
+    specificallyCheckEntities<MoveName>(typesToIgnore);
+  }
+
+ public:
+  VerticalSlice1Checks(const Simulation& _simulation)
+      : debug::Checks(_simulation), options(_simulation.simulateTurnOptions) {
+    for (types::entity battle : registry.view<tags::Battle>()) {
+      originalToCopy[battle] = debug::createEntityCopy(battle, registry, registryOnInput);
+    }
+
+    for (types::entity side : registry.view<tags::Side>()) {
+      originalToCopy[side] = debug::createEntityCopy(side, registry, registryOnInput);
+    }
+
+    for (types::entity pokemon : registry.view<tags::Pokemon>()) {
+      originalToCopy[pokemon] = debug::createEntityCopy(pokemon, registry, registryOnInput);
+    }
+
+    for (const auto& [entity, move] : registry.view<MoveName>().each()) {
+      if (move.name == dex::Move::KNOCK_OFF || move.name == dex::Move::THUNDERBOLT) {
+        originalToCopy[entity] = debug::createEntityCopy(entity, registry, registryOnInput);
+      }
+    }
+
+    copyRemainingEntities();
+  }
+
+  void checkConstantEntities() const {
+    checkBattle();
+    checkSides();
+    checkPokemon();
+    checkMoves();
+    checkRemainingOutputs();
+
+    if (!options.makeBranchesOnRandomEvents) {
+      std::size_t finalEntityCount = getFinalEntityCount();
+      if (options.applyChangesToInputBattle) {
+        REQUIRE(finalEntityCount == initialEntityCount);
+      }
+      else {
+        REQUIRE(finalEntityCount == (initialEntityCount * 2));
+      }
+    }
+  }
+
+  const RngSeed& originalRngSeed(types::entity battle) const {
+    types::entity original = debug::findCopyParent(originalToCopy, registry, battle);
+    return registryOnInput.get<RngSeed>(originalToCopy.at(original));
+  }
+
+  types::entity originalBattle(types::entity battle) const {
+    return debug::findCopyParent(originalToCopy, registry, battle);
+  }
+};
+
+struct DamageValueInfo {
+ private:
+  const std::vector<types::damage> baseDamage;
+  const std::vector<types::damage> critDamage;
+  const types::damage averageRegularDamage;
+  const types::damage averageCritDamage;
+  const types::stat startingHp;
+  const DamageRollKind damageRollKind;
+  bool checkWasCrit;
+  bool willChooseMinOrMax;
+
+ public:
+  DamageValueInfo(
+    std::vector<types::damage> _baseDamage, types::damage _averageRegularDamage, std::vector<types::damage> _critDamage,
+    types::damage _averageCritDamage, types::stat _startingHp, DamageRollKind _damageRollKind,
+    const simulate_turn::Options& options)
+      : baseDamage(_baseDamage),
+        critDamage(_critDamage),
+        averageRegularDamage(_averageRegularDamage),
+        averageCritDamage(_averageCritDamage),
+        startingHp(_startingHp),
+        damageRollKind(_damageRollKind) {
+    checkWasCrit = options.branchProbabilityLowerLimit.value_or(0) < 1.0F / MechanicConstants::CRIT_CHANCE_DIVISORS[0];
+    checkWasCrit &= options.randomChanceLowerLimit.value_or(0) < 100 / MechanicConstants::CRIT_CHANCE_DIVISORS[0];
+    checkWasCrit &= damageRollKind != branchingDamageRollOptions[1];
+
+    willChooseMinOrMax = options.makeBranchesOnRandomEvents;
+    willChooseMinOrMax |= options.branchProbabilityLowerLimit.value_or(0) < 0.5F &&
+                          options.randomChanceLowerLimit.value_or(0) < 50 &&
+                          options.randomChanceUpperLimit.value_or(100) > 50;
+    willChooseMinOrMax &= damageRollKind == branchingDamageRollOptions[2];
+  }
+
+  entt::dense_set<types::stat> possibleHpValues() const {
+    entt::dense_set<types::stat> hpValues;
+    auto addDamageValues = [&](const std::vector<types::damage> damages) {
+      for (types::damage damage : damages) {
+        hpValues.insert(startingHp - damage);
+      }
+    };
+
+    if (damageRollKind == fixedBranchDamageRollOptions[0]) {
+      if (checkWasCrit) {
+        addDamageValues(critDamage);
+      }
+      addDamageValues(baseDamage);
+    }
+    else if (damageRollKind == fixedBranchDamageRollOptions[1]) {
+      if (checkWasCrit) {
+        addDamageValues({averageCritDamage});
+      }
+      addDamageValues({averageRegularDamage});
+    }
+    else if (damageRollKind == fixedBranchDamageRollOptions[2]) {
+      addDamageValues({averageCritDamage});
+    }
+    else if (damageRollKind == fixedBranchDamageRollOptions[3]) {
+      if (checkWasCrit) {
+        addDamageValues({critDamage[0], critDamage[15]});
+      }
+      addDamageValues({baseDamage[0], baseDamage[15]});
+    }
+    else {
+      FAIL();
+    }
+
+    return hpValues;
+  }
+
+  std::size_t uniqueDamageCount() const {
+    types::eventPossibilities damageCounts = 1U;
+    for (std::size_t i = 1U; i < baseDamage.size(); i++) {
+      damageCounts += baseDamage[i - 1] != baseDamage[i] ? 1 : 0;
+    }
+    if (checkWasCrit) {
+      damageCounts++;
+      for (std::size_t i = 1U; i < critDamage.size(); i++) {
+        damageCounts += critDamage[i - 1] != critDamage[i] ? 1 : 0;
+      }
+    }
+    return damageCounts;
+  }
+
+  types::eventPossibilities possibilities() const {
+    types::eventPossibilities count = 1U;
+    if (checkWasCrit) {
+      count++;
+    }
+    if (willChooseMinOrMax) {
+      count *= 2;
+    }
+    if (damageRollKind == DamageRollKind::ALL_DAMAGE_ROLLS) {
+      count *= uniqueDamageCount();
+    }
+
+    return count;
+  }
+
+  types::probability getProbability(types::stat afterTurnHp) const {
+    types::damage damage = startingHp - afterTurnHp;
+    types::probability baseDamageRollInstances = std::count(baseDamage.begin(), baseDamage.end(), damage);
+    types::probability critDamageRollInstances = std::count(critDamage.begin(), critDamage.end(), damage);
+    REQUIRE(!!(baseDamageRollInstances || critDamageRollInstances));
+
+    types::probability probability = 1.0F;
+    if (checkWasCrit) {
+      if (critDamageRollInstances) {
+        probability /= MechanicConstants::CRIT_CHANCE_DIVISORS[0];
+      }
+      else {
+        probability *= 1.0F - 1.0F / MechanicConstants::CRIT_CHANCE_DIVISORS[0];
+      }
+    }
+
+    if (willChooseMinOrMax) {
+      probability /= 2;
+    }
+    if (damageRollKind == DamageRollKind::ALL_DAMAGE_ROLLS) {
+      if (critDamageRollInstances) {
+        probability *= critDamageRollInstances / MechanicConstants::MAX_DAMAGE_ROLL_COUNT;
+      }
+      else {
+        probability *= baseDamageRollInstances / MechanicConstants::MAX_DAMAGE_ROLL_COUNT;
+      }
+    }
+
+    return probability;
+  }
+};
+
 TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   Simulation::BattleCreationInfo battleCreationInfo{};
-  Simulation simulation = createSingleBattleSimulation(battleCreationInfo, true);
+  SideDecision p1Decision{PlayerSideId::P1};
+  SideDecision p2Decision{PlayerSideId::P2};
+  SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
+  SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
 
+  p1SlotDecision.moveChoice = dex::Move::KNOCK_OFF;
+  p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
+  p2SlotDecision.moveChoice = dex::Move::THUNDERBOLT;
+  p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
+  battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
+
+  Simulation simulation = createSingleBattleSimulation(battleCreationInfo);
+  auto& p1Info = battleCreationInfo.p1.team[0];
+  auto& p2Info = battleCreationInfo.p2.team[0];
+  p2Info.item = dex::Item::NO_ITEM;
+  p2Info.nature = dex::Nature::HARDY;
+  p2Info.stats = {295, 165, 190, 255, 210, 145};
   battleCreationInfo.runWithSimulateTurn = true;
-  simulation.simulateTurnOptions.damageRollsConsidered.p1 = simulation.simulateTurnOptions.damageRollsConsidered.p2 =
-    DamageRollKind::MAX_DAMAGE;
-  simulation.createInitialStates({battleCreationInfo});
-  simulation.simulateTurn();
+
+  auto numberOfSamples = GENERATE(std::optional<types::cloneIndex>{std::nullopt}, 1, 5);
+
+  bool applyChangesToInputBattle = GENERATE(true, false);
+  auto branchProbabilityLowerLimit = GENERATE(std::optional<types::probability>{std::nullopt}, 0.0F, 0.5F);
+  auto randomChanceLowerLimit = GENERATE(std::optional<std::uint32_t>{std::nullopt}, 0, 10, 50);
+  auto randomChanceUpperLimit = GENERATE(std::optional<std::uint32_t>{std::nullopt}, 100, 90, 50);
+
+  DamageRollOptions damageRollOptions;
+  if (numberOfSamples.has_value()) {
+    damageRollOptions.p1 = GENERATE(from_range(fixedBranchDamageRollOptions));
+    damageRollOptions.p2 = GENERATE(from_range(fixedBranchDamageRollOptions));
+  }
+  else {
+    damageRollOptions.p1 = GENERATE(from_range(branchingDamageRollOptions));
+    damageRollOptions.p2 = GENERATE(from_range(branchingDamageRollOptions));
+  }
+
+  CAPTURE(
+    applyChangesToInputBattle,
+    branchProbabilityLowerLimit,
+    numberOfSamples,
+    randomChanceLowerLimit,
+    randomChanceUpperLimit,
+    damageRollOptions.p1,
+    damageRollOptions.p2);
+
+  auto& options = simulation.simulateTurnOptions;
+  options.applyChangesToInputBattle = applyChangesToInputBattle;
+  options.branchProbabilityLowerLimit = branchProbabilityLowerLimit;
+  options.makeBranchesOnRandomEvents = !numberOfSamples.has_value();
+  options.randomChanceLowerLimit = randomChanceLowerLimit;
+  options.randomChanceUpperLimit = randomChanceUpperLimit;
+  options.damageRollsConsidered = damageRollOptions;
+
+  const DamageValueInfo p1DamageInfo(
+    {174, 170, 168, 168, 164, 164, 162, 158, 158, 156, 156, 152, 152, 150, 146, 146},  // 10
+    158,
+    {260, 258, 254, 252, 248, 246, 242, 240, 240, 236, 234, 230, 228, 224, 222, 218},  // 15
+    240,
+    p1Info.stats.hp,
+    damageRollOptions.p1,
+    options);
+
+  const DamageValueInfo p2DamageInfo(
+    {52, 51, 50, 50, 49, 49, 48, 48, 47, 47, 46, 46, 45, 45, 44, 44},  // 9
+    48,
+    {78, 77, 76, 75, 74, 74, 73, 72, 71, 70, 70, 69, 68, 67, 67, 66},  // 13
+    72,
+    p2Info.stats.hp,
+    damageRollOptions.p2,
+    options);
+
+  types::cloneIndex idealTurnOutcomeCount = 0U;
+  types::eventPossibilities totalPossibilities = p1DamageInfo.possibilities() * p2DamageInfo.possibilities();
+
+  if (options.makeBranchesOnRandomEvents) {
+    idealTurnOutcomeCount = totalPossibilities;
+  }
+  else {
+    idealTurnOutcomeCount = numberOfSamples.value();
+  }
+
+  const auto expectedP1Hp = p1DamageInfo.possibleHpValues();
+  const auto expectedP2Hp = p2DamageInfo.possibleHpValues();
+
+  std::vector<Simulation::BattleCreationInfo> battleCreationInfoList;
+  for (types::cloneIndex i = 0; i < numberOfSamples.value_or(1); i++) {
+    battleCreationInfoList.push_back(battleCreationInfo);
+  }
+
+  simulation.createInitialStates(battleCreationInfoList);
+  updateAllStats(simulation);
+  const auto originalBattles = simulation.selectedBattleEntities();
+
+  VerticalSlice1Checks checks{simulation};
+  const auto result = simulation.simulateTurn();
+  checks.checkConstantEntities();
+
+  REQUIRE(result.turnOutcomeBattlesResults().size() == battleCreationInfoList.size());
+  std::vector<types::entity> allTurnOutcomes;
+  result.turnOutcomeBattlesResults().each([&allTurnOutcomes](const auto& turnOutcomes) {
+    allTurnOutcomes.insert(allTurnOutcomes.end(), turnOutcomes.val.begin(), turnOutcomes.val.end());
+  });
+  REQUIRE(allTurnOutcomes.size() == idealTurnOutcomeCount);
+
+  if (!applyChangesToInputBattle) {
+    for (types::entity originalBattle : originalBattles) {
+      bool originalInOutcome =
+        std::find(allTurnOutcomes.begin(), allTurnOutcomes.end(), originalBattle) != allTurnOutcomes.end();
+      REQUIRE_FALSE(originalInOutcome);
+    }
+  }
+
+  entt::dense_set<types::stat> foundP1Hp;
+  entt::dense_set<types::stat> foundP2Hp;
+
+  const types::registry& registry = simulation.registry;
+  for (types::entity battle : allTurnOutcomes) {
+    const auto& [turn, probability, rngSeed, rootBattle, sides] =
+      registry.get<Turn, Probability, RngSeed, RootBattle, Sides>(battle);
+
+    types::entity p1Side = sides.p1();
+    types::entity p2Side = sides.p2();
+    types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
+    types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
+    types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[1];
+    types::entity p2Move = registry.get<MoveSlots>(p2Pokemon).val[0];
+
+    const auto& [p1Hp, p1LastUsedMove] = registry.get<stat::CurrentHp, LastUsedMove>(p1Pokemon);
+    const auto& [p2Hp, p2LastUsedMove] = registry.get<stat::CurrentHp, LastUsedMove>(p2Pokemon);
+    const Pp& p1Pp = registry.get<Pp>(p1Move);
+    const Pp& p2Pp = registry.get<Pp>(p2Move);
+
+    if (!applyChangesToInputBattle) {
+      REQUIRE_FALSE(registry.all_of<simulate_turn::TurnOutcomeBattles>(battle));
+    }
+
+    types::entity originalRootBattle = checks.originalBattle(battle);
+    REQUIRE(rootBattle.val == originalRootBattle);
+
+    REQUIRE(turn.val == 2);
+    const auto& originalRngSeed = checks.originalRngSeed(battle);
+    if (options.makeBranchesOnRandomEvents || totalPossibilities == 1) {
+      REQUIRE(rngSeed.val == originalRngSeed.val);
+    }
+    else {
+      REQUIRE_FALSE(rngSeed.val == originalRngSeed.val);
+    }
+
+    REQUIRE_FALSE(registry.all_of<SideDecision>(p1Side));
+    REQUIRE_FALSE(registry.all_of<SideDecision>(p2Side));
+
+    REQUIRE(p1LastUsedMove.val == p1Move);
+    REQUIRE(p2LastUsedMove.val == p2Move);
+    REQUIRE(p1Pp.val == (p1Info.moves[1].pp - 1));
+    REQUIRE(p2Pp.val == (p2Info.moves[0].pp - 1));
+
+    CAPTURE(p1Hp.val, p2Hp.val, expectedP1Hp, expectedP2Hp);
+
+    REQUIRE(expectedP1Hp.contains(p1Hp.val));
+    REQUIRE(expectedP2Hp.contains(p2Hp.val));
+
+    foundP1Hp.insert(p1Hp.val);
+    foundP2Hp.insert(p2Hp.val);
+
+    types::probability idealProbability = p1DamageInfo.getProbability(p1Hp.val) * p2DamageInfo.getProbability(p2Hp.val);
+    REQUIRE_THAT(probability.val, Catch::Matchers::WithinRel(idealProbability));
+  }
+
+  if (options.makeBranchesOnRandomEvents) {
+    REQUIRE(foundP1Hp.size() == expectedP1Hp.size());
+    REQUIRE(foundP2Hp.size() == expectedP2Hp.size());
+  }
 }
 }  // namespace pokesim

@@ -28,7 +28,10 @@ struct DamageRollModifiers {
 struct DamageRolls {
   std::vector<Damage> val{};
 
-  DamageRolls(std::initializer_list<types::damage> list) {
+  DamageRolls() {}
+  DamageRolls(const DamageRolls& other) : val(other.val) {}
+
+  DamageRolls(const std::vector<types::damage>& list) {
     val.reserve(list.size());
     for (types::damage damage : list) {
       val.push_back({damage});
