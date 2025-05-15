@@ -30,7 +30,7 @@ constexpr types::typeEffectiveness getAttackEffectiveness(const SpeciesTypes& sp
     }
   }
 
-  POKESIM_ASSERT(
+  POKESIM_REQUIRE(
     modifier <= speciesTypes.size() && modifier >= -speciesTypes.size(),
     "Modifier cannot exceed the number of types.");
   return modifier;

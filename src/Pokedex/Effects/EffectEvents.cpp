@@ -9,7 +9,7 @@
 namespace pokesim::dex {
 void internal::ChoiceLockEvents::onDisableMove(
   types::registry& registry, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
-  POKESIM_ASSERT(
+  POKESIM_REQUIRE(
     std::find(moveSlots.val.begin(), moveSlots.val.end(), choiceLocked.val),
     "Should skip if the move is no longer present, but when does that happen?");
 

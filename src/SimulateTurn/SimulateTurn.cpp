@@ -42,7 +42,7 @@ namespace pokesim::simulate_turn {
 void run(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
 #ifndef POKESIM_ALL_DAMAGE_ALL_BRANCHES
-  POKESIM_ASSERT(
+  POKESIM_REQUIRE(
     !options.makeBranchesOnRandomEvents ||
       !(calc_damage::damageKindsMatch(options.damageRollsConsidered.p1, DamageRollKind::ALL_DAMAGE_ROLLS) ||
         calc_damage::damageKindsMatch(options.damageRollsConsidered.p2, DamageRollKind::ALL_DAMAGE_ROLLS)),

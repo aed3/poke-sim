@@ -180,7 +180,7 @@ void assignIndexToClones(
     const auto& cloned = clonedPointer->second;
 
     for (std::size_t index = 0; index < cloned.size(); index++) {
-      POKESIM_ASSERT(
+      POKESIM_REQUIRE(
         std::numeric_limits<types::eventPossibilities>::max() > index,
         "Number of clones shouldn't be greater than the number of possible events.");
       registry.emplace<RandomEventIndex>(cloned[index], (types::eventPossibilities)(index + 1U));

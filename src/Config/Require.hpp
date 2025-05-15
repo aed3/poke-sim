@@ -37,20 +37,20 @@ class require : public std::exception {
 }  // namespace pokesim::debug
 
 #if defined __clang__ || defined __GNUC__
-#define POKESIM_ASSERT(condition, message) \
-  pokesim::debug::require::count++;        \
+#define POKESIM_REQUIRE(condition, message) \
+  pokesim::debug::require::count++;         \
   if (!(condition)) throw pokesim::debug::require(__FILE__, __LINE__, __PRETTY_FUNCTION__, #condition, message);
 #elif defined _MSC_VER
-#define POKESIM_ASSERT(condition, message) \
-  pokesim::debug::require::count++;        \
+#define POKESIM_REQUIRE(condition, message) \
+  pokesim::debug::require::count++;         \
   if (!(condition)) throw pokesim::debug::require(__FILE__, __LINE__, __FUNCSIG__, #condition, message);
 #endif
 
 #else
-#define POKESIM_ASSERT(condition, message)
+#define POKESIM_REQUIRE(condition, message)
 #endif
 
 // An assert with no message. For use in debug checks only.
-#define POKESIM_ASSERT_NM(condition) POKESIM_ASSERT(condition, "")
-#define POKESIM_ASSERT_FAIL(message) POKESIM_ASSERT(false, message)
+#define POKESIM_REQUIRE_NM(condition) POKESIM_REQUIRE(condition, "")
+#define POKESIM_REQUIRE_FAIL(message) POKESIM_REQUIRE(false, message)
 // NOLINTEND cppcoreguidelines-macro-usage

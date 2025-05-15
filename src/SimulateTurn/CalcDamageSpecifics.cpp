@@ -32,7 +32,7 @@ void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls, const 
     damageRollIndex += i == 0 || damageRolls.val[i - 1].val != damageRolls.val[i].val ? 1 : 0;
   }
 
-  POKESIM_ASSERT_FAIL("How was a damage roll not found that matched the event index?");
+  POKESIM_REQUIRE_FAIL("How was a damage roll not found that matched the event index?");
 }
 
 void assignPartialProbability(
@@ -51,7 +51,7 @@ void assignAllDamageRollProbability(
     damageCount += damageRoll.val == damage.val ? 1 : 0;
   }
 
-  POKESIM_ASSERT(damageCount > 0U, "How was a damage roll not found that matched the damage dealt?");
+  POKESIM_REQUIRE(damageCount > 0U, "How was a damage roll not found that matched the damage dealt?");
 
   Probability& probability = registry.get<Probability>(battle.val);
   probability.val *= damageCount / (types::probability)MechanicConstants::MAX_DAMAGE_ROLL_COUNT;

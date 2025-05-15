@@ -54,7 +54,7 @@ void BattleStateSetup::setSide(types::entity sideEntity) {
   switch (sideId) {
     case PlayerSideId::P1: sides.p1() = sideEntity; break;
     case PlayerSideId::P2: sides.p2() = sideEntity; break;
-    default: POKESIM_ASSERT_FAIL("sideID must be assigned P1 or P2."); break;
+    default: POKESIM_REQUIRE_FAIL("sideID must be assigned P1 or P2."); break;
   }
 }
 

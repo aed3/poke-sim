@@ -41,7 +41,7 @@ void InputSetup::setEffectTarget(types::entity entity) {
 }
 
 void InputSetup::setDefender(types::entity entity) {
-  POKESIM_ASSERT(
+  POKESIM_REQUIRE(
     !handle.try_get<Defenders>(),
     "Calc damage only supports one defender per move. Make a new move instead.");
   handle.emplace<Defenders>().val.push_back(entity);
@@ -72,7 +72,7 @@ void InputSetup::setEffect(types::effectEnum effect) {
     handle.emplace<WeatherName>(effect.get<dex::Weather>());
   }
   else {
-    POKESIM_ASSERT_FAIL("Effect does not contain a valid enum.");
+    POKESIM_REQUIRE_FAIL("Effect does not contain a valid enum.");
   }
 }
 
@@ -99,7 +99,7 @@ void InputSetup::setBoostEffect(dex::Stat stat, types::boost boost) {
       break;
     }
     default: {
-      POKESIM_ASSERT_FAIL("Using a stat enum that doesn't have boost.");
+      POKESIM_REQUIRE_FAIL("Using a stat enum that doesn't have boost.");
     }
   }
 }

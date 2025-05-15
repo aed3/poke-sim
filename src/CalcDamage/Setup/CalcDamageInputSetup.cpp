@@ -27,7 +27,7 @@ void InputSetup::setup(
 }
 
 types::entity InputSetup::entity() const {
-  POKESIM_ASSERT(moveEntity != entt::null, "Getting move entity before proper setup.");
+  POKESIM_REQUIRE(moveEntity != entt::null, "Getting move entity before proper setup.");
   return moveEntity;
 }
 }  // namespace pokesim::calc_damage

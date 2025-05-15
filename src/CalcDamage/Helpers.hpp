@@ -13,20 +13,20 @@ inline constexpr bool damageKindsMatch(DamageRollKind kindA, DamageRollKind kind
 }
 
 inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, DamageRollKind damageRollKind) {
-  POKESIM_ASSERT(!damageRolls.val.empty(), "DamageRolls has no rolls yet.");
+  POKESIM_REQUIRE(!damageRolls.val.empty(), "DamageRolls has no rolls yet.");
 
   if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
-    POKESIM_ASSERT(
+    POKESIM_REQUIRE(
       damageRolls.val.size() == MechanicConstants::MAX_DAMAGE_ROLL_COUNT,
       "DamageRolls does not have all rolls yet.");
     return damageRolls.val[MechanicConstants::MAX_DAMAGE_ROLL_COUNT / 2].val;
   }
-  POKESIM_ASSERT(
+  POKESIM_REQUIRE(
     damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE),
     "DamageRolls does not contain average");
 
   if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
-    POKESIM_ASSERT(damageRolls.val.size() > 1, "DamageRolls may not have average roll yet.");
+    POKESIM_REQUIRE(damageRolls.val.size() > 1, "DamageRolls may not have average roll yet.");
     return damageRolls.val[1].val;
   }
   return damageRolls.val[0].val;

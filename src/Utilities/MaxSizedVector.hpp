@@ -31,22 +31,22 @@ class maxSizedVector : private std::array<T, N> {
   constexpr typename base::const_reference back() const noexcept { return N ? *(end() - 1) : *end(); }
 
   constexpr typename base::const_reference at(std::uint8_t pos) const {
-    POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
+    POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
     return base::at(pos);
   }
 
   constexpr typename base::const_reference operator[](std::uint8_t pos) const {
-    POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
+    POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
     return base::operator[](pos);
   }
 
   typename base::reference at(std::uint8_t pos) {
-    POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
+    POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
     return base::at(pos);
   }
 
   typename base::reference operator[](std::uint8_t pos) {
-    POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
+    POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
     return base::operator[](pos);
   }
 
@@ -61,7 +61,7 @@ class maxSizedVector : private std::array<T, N> {
   }
 
   void pop_count(std::uint8_t remove) {
-    POKESIM_ASSERT(remove <= used, "Removing more values than are used.");
+    POKESIM_REQUIRE(remove <= used, "Removing more values than are used.");
     used -= remove;
   }
 

@@ -36,8 +36,8 @@ void hasSameComponents(
     if (currStorage.contains(currEntity)) {
       std::string typeName{currStorage.type().name()};
       const auto* const initStorage = initReg.storage(id);
-      POKESIM_ASSERT(initStorage != nullptr, "The inital registry never contained this component: " + typeName);
-      POKESIM_ASSERT(
+      POKESIM_REQUIRE(initStorage != nullptr, "The inital registry never contained this component: " + typeName);
+      POKESIM_REQUIRE(
         initStorage->contains(initEntity),
         "The inital registry doesn't contain the current's component: " + typeName);
     }
@@ -49,8 +49,8 @@ void hasSameComponents(
     if (initStorage.contains(initEntity)) {
       std::string typeName{initStorage.type().name()};
       const auto* const currStorage = currReg.storage(id);
-      POKESIM_ASSERT(currStorage != nullptr, "The current registry never contained this component: " + typeName);
-      POKESIM_ASSERT(
+      POKESIM_REQUIRE(currStorage != nullptr, "The current registry never contained this component: " + typeName);
+      POKESIM_REQUIRE(
         currStorage->contains(currEntity),
         "The current registry doesn't contain the inital's component: " + typeName);
     }
@@ -87,7 +87,7 @@ types::entity findCopyParent(
   const ParentEntity* parentEntity = registry.try_get<ParentEntity>(entity);
   for (std::size_t i = 0; parentEntity != nullptr; i++) {
     if (i >= registry.storage<types::registry::entity_type>()->size()) {
-      POKESIM_ASSERT_FAIL("A loop in the battle tree caused an infinite loop.");
+      POKESIM_REQUIRE_FAIL("A loop in the battle tree caused an infinite loop.");
     }
 
     for (auto [original, _] : initialEntities) {
@@ -98,14 +98,14 @@ types::entity findCopyParent(
     parentEntity = registry.try_get<ParentEntity>(parentEntity->val);
   }
 
-  POKESIM_ASSERT_FAIL("Could not find original entity of a clone.");
+  POKESIM_REQUIRE_FAIL("Could not find original entity of a clone.");
 }
 
 bool checkIfCopyParent(types::entity current, types::entity initial, const types::registry& registry) {
   const ParentEntity* parentEntity = registry.try_get<ParentEntity>(current);
   for (std::size_t i = 0; parentEntity != nullptr; i++) {
     if (i >= registry.storage<types::registry::entity_type>()->size()) {
-      POKESIM_ASSERT_FAIL("A loop in the battle tree caused an infinite loop.");
+      POKESIM_REQUIRE_FAIL("A loop in the battle tree caused an infinite loop.");
     }
 
     if (parentEntity->val == initial) {

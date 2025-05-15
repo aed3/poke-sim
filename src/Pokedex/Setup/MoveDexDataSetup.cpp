@@ -66,17 +66,17 @@ void MoveDexDataSetup::setBasePower(types::basePower basePower) {
 }
 
 void MoveDexDataSetup::setCategoryPhysical() {
-  POKESIM_ASSERT(!(handle.any_of<move::tags::Special, move::tags::Status>()), "A move can only have one category.");
+  POKESIM_REQUIRE(!(handle.any_of<move::tags::Special, move::tags::Status>()), "A move can only have one category.");
   setProperty<move::tags::Physical>();
 }
 
 void MoveDexDataSetup::setCategorySpecial() {
-  POKESIM_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Status>()), "A move can only have one category.");
+  POKESIM_REQUIRE(!(handle.any_of<move::tags::Physical, move::tags::Status>()), "A move can only have one category.");
   setProperty<move::tags::Special>();
 }
 
 void MoveDexDataSetup::setCategoryStatus() {
-  POKESIM_ASSERT(!(handle.any_of<move::tags::Physical, move::tags::Special>()), "A move can only have one category.");
+  POKESIM_REQUIRE(!(handle.any_of<move::tags::Physical, move::tags::Special>()), "A move can only have one category.");
   setProperty<move::tags::Status>();
 }
 

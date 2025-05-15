@@ -39,12 +39,12 @@ struct DamageRolls {
   }
 
   types::damage min() const {
-    POKESIM_ASSERT(!val.empty(), "DamageRolls has no values to read.");
+    POKESIM_REQUIRE(!val.empty(), "DamageRolls has no values to read.");
     return val.back().val;
   }
 
   types::damage max() const {
-    POKESIM_ASSERT(!val.empty(), "DamageRolls has no values to read.");
+    POKESIM_REQUIRE(!val.empty(), "DamageRolls has no values to read.");
     return val.front().val;
   }
 };

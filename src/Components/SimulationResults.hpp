@@ -28,12 +28,12 @@ struct UsesUntilKo {
   std::vector<KoChance> val{};
 
   const KoChance& minHits() const {
-    POKESIM_ASSERT(!val.empty(), "UsesUntilKo has no values to read.");
+    POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
     return val.front();
   }
 
   const KoChance& maxHits() const {
-    POKESIM_ASSERT(!val.empty(), "UsesUntilKo has no values to read.");
+    POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
     return val.back();
   }
 

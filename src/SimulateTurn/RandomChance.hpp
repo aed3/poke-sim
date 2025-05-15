@@ -158,12 +158,12 @@ void setRandomChoice(
       chance = chanceSum;
     }
 
-    POKESIM_ASSERT(chanceSum == 100, "The total probability of all possible outcomes should add up to 100%.");
+    POKESIM_REQUIRE(chanceSum == 100, "The total probability of all possible outcomes should add up to 100%.");
   }
   else {
-    POKESIM_ASSERT(chances.back() == 100, "The total probability of all possible outcomes should add up to 100%.");
+    POKESIM_REQUIRE(chances.back() == 100, "The total probability of all possible outcomes should add up to 100%.");
     for (types::eventPossibilities i = 1; i < POSSIBLE_EVENT_COUNT; i++) {
-      POKESIM_ASSERT(
+      POKESIM_REQUIRE(
         chances[i - 1] <= chances[i],
         "Chances should be a cumulative sum where each value is greater than the last.");
     }

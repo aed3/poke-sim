@@ -26,7 +26,7 @@ void cloneEntity(
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
   for (auto [id, storage] : registry.storage()) {
     if (storage.contains(src)) {
-      POKESIM_ASSERT(
+      POKESIM_REQUIRE(
         std::find(srcEntityStorages[id].begin(), srcEntityStorages[id].end(), src) == std::end(srcEntityStorages[id]),
         "Adding an entity twice here means an entity will be duplicated more than it should.");
       srcEntityStorages[id].push_back(src);
@@ -196,8 +196,8 @@ void deleteMove(types::registry& registry) {
 }
 
 void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
-  POKESIM_ASSERT(entityMap.contains(entity), "Source node was not loaded into the map.");
-  POKESIM_ASSERT(
+  POKESIM_REQUIRE(entityMap.contains(entity), "Source node was not loaded into the map.");
+  POKESIM_REQUIRE(
     entityMap.at(entity).size() > cloneTo.val,
     "More entities are trying to be copied to than were copied.");
   entity = entityMap.at(entity)[cloneTo.val];

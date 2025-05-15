@@ -21,7 +21,7 @@ void ability::tags::enumToTag(dex::Ability ability, types::handle handle) {
     case dex::Ability::SWEET_VEIL: handle.emplace<SweetVeil>(); return;
     case dex::Ability::TRACE: handle.emplace<Trace>(); return;
     default: {
-      POKESIM_ASSERT(false, "Adding tag for ability that does not exist.");
+      POKESIM_REQUIRE(false, "Adding tag for ability that does not exist.");
     }
   }
 }
@@ -35,7 +35,7 @@ void item::tags::enumToTag(dex::Item item, types::handle handle) {
     case dex::Item::FOCUS_SASH: handle.emplace<FocusSash>(); return;
     case dex::Item::LIFE_ORB: handle.emplace<LifeOrb>(); return;
     default: {
-      POKESIM_ASSERT(false, "Adding tag for item that does not exist.");
+      POKESIM_REQUIRE(false, "Adding tag for item that does not exist.");
     }
   }
 }
@@ -68,7 +68,7 @@ void nature::tags::enumToTag(dex::Nature nature, types::handle handle) {
     case dex::Nature::SERIOUS: handle.emplace<Serious>(); return;
     case dex::Nature::TIMID: handle.emplace<Timid>(); return;
     default: {
-      POKESIM_ASSERT(false, "Adding tag for nature that does not exist.");
+      POKESIM_REQUIRE(false, "Adding tag for nature that does not exist.");
     }
   }
 }
@@ -82,7 +82,7 @@ void status::tags::enumToTag(dex::Status status, types::handle& handle) {
     case dex::Status::SLP: handle.emplace<Sleep>(); return;
     case dex::Status::TOX: handle.emplace<Toxic>(); return;
     default: {
-      POKESIM_ASSERT(false, "Adding tag for status that does not exist.");
+      POKESIM_REQUIRE(false, "Adding tag for status that does not exist.");
     }
   }
 }
