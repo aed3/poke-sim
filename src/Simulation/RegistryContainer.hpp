@@ -88,7 +88,7 @@ class RegistryContainer {
 
       registry.remove<Selection>(unmatchedSelections.begin(), unmatchedSelections.end());
 
-      POKESIM_ASSERT(
+      POKESIM_REQUIRE(
         unmatchedSelectionSize < totalSelected,
         "The number of elements removed from the active selection must be less than the number of elements selected.");
       finalSelectionSize = totalSelected - unmatchedSelectionSize;
@@ -143,7 +143,7 @@ class RegistryContainer {
 
   template <typename Selection>
   void deselect() {
-    POKESIM_ASSERT(hasActiveSelection<Selection>(), "Selections must be present to deselect.");
+    POKESIM_REQUIRE(hasActiveSelection<Selection>(), "Selections must be present to deselect.");
 
     registry.clear<Selection>();
     SelectionFunctionList& functions = selectedFunctions<Selection>();

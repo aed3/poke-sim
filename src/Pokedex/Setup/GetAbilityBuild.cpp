@@ -47,7 +47,7 @@ types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& regis
     default: break;
   }
 
-  POKESIM_ASSERT_FAIL("Building an ability that does not exist.");
+  POKESIM_REQUIRE_FAIL("Building an ability that does not exist.");
   return types::entity{};
 }
 };  // namespace pokesim

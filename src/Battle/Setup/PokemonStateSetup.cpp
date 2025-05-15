@@ -95,7 +95,7 @@ void PokemonStateSetup::setItem(dex::Item item) {
 
 void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
   MoveSlots& moveEntities = handle.emplace<MoveSlots>();
-  POKESIM_ASSERT(
+  POKESIM_REQUIRE(
     moveSlots.size() <= moveEntities.val.max_size(),
     "Cannot add more moves to a Pokemon than MAX_MOVE_SLOTS.");
   for (types::entity moveSlot : moveSlots) {

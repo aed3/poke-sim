@@ -37,7 +37,7 @@ struct Checks : pokesim::debug::Checks {
 
   void checkOutputs() const {
     std::size_t finalEntityCount = getFinalEntityCount();
-    POKESIM_ASSERT_NM(initialEntityCount == finalEntityCount);
+    POKESIM_REQUIRE_NM(initialEntityCount == finalEntityCount);
     checkInputOutputs();
     checkPokemonOutputs(true);
     checkPokemonOutputs(false);
@@ -71,7 +71,7 @@ struct Checks : pokesim::debug::Checks {
       default: break;
     }
 
-    POKESIM_ASSERT_FAIL("Player side wasn't set properly.");
+    POKESIM_REQUIRE_FAIL("Player side wasn't set properly.");
     return DamageRollKind::NONE;
   }
 
@@ -80,16 +80,16 @@ struct Checks : pokesim::debug::Checks {
       pokesim::debug::TypesToIgnore typesToIgnore{};
       typesToIgnore.add<MultipliedDamageRolls>();
 
-      POKESIM_ASSERT_NM(registry.all_of<MultipliedDamageRolls>(input));
+      POKESIM_REQUIRE_NM(registry.all_of<MultipliedDamageRolls>(input));
 
       if (registry.all_of<tags::InfiniteMultiplier>(input)) {
-        POKESIM_ASSERT_NM(!registry.all_of<EffectMultiplier>(input));
+        POKESIM_REQUIRE_NM(!registry.all_of<EffectMultiplier>(input));
         typesToIgnore.add<tags::InfiniteMultiplier>();
       }
 
       bool zeroEffectMultiplier = false;
       if (registry.all_of<EffectMultiplier>(input)) {
-        POKESIM_ASSERT_NM(!registry.all_of<tags::InfiniteMultiplier>(input));
+        POKESIM_REQUIRE_NM(!registry.all_of<tags::InfiniteMultiplier>(input));
         typesToIgnore.add<EffectMultiplier>();
 
         const auto [effectMultiplier, multipliedDamageRolls] =
@@ -97,7 +97,7 @@ struct Checks : pokesim::debug::Checks {
         if (effectMultiplier.val == 0) {
           zeroEffectMultiplier = true;
           for (const Damage& multipliedDamageRoll : multipliedDamageRolls.val) {
-            POKESIM_ASSERT_NM(multipliedDamageRoll.val == 0);
+            POKESIM_REQUIRE_NM(multipliedDamageRoll.val == 0);
           }
         }
       }
@@ -105,12 +105,12 @@ struct Checks : pokesim::debug::Checks {
       auto damageRollOptions = simulation.analyzeEffectOptions.damageRollOptions;
       auto noKoChanceCalculation = simulation.analyzeEffectOptions.noKoChanceCalculation;
       if (noKoChanceCalculation || zeroEffectMultiplier) {
-        POKESIM_ASSERT_NM(!registry.all_of<MultipliedUsesUntilKo>(input));
+        POKESIM_REQUIRE_NM(!registry.all_of<MultipliedUsesUntilKo>(input));
       }
       else if (calc_damage::damageKindsMatch(
                  DamageRollKind::ALL_DAMAGE_ROLLS,
                  getDamageRollKind(input, damageRollOptions))) {
-        POKESIM_ASSERT_NM(registry.all_of<MultipliedUsesUntilKo>(input));
+        POKESIM_REQUIRE_NM(registry.all_of<MultipliedUsesUntilKo>(input));
         typesToIgnore.add<MultipliedUsesUntilKo>();
       }
 

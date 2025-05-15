@@ -178,9 +178,9 @@ void Simulation::createInitialTurnDecision(
 
 void Simulation::createCalcDamageInput(
   BattleStateSetup battleStateSetup, calc_damage::InputSetup& inputSetup, const CalcDamageInputInfo& inputInfo) {
-  POKESIM_ASSERT(inputInfo.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
-  POKESIM_ASSERT(inputInfo.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
-  POKESIM_ASSERT(inputInfo.move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
+  POKESIM_REQUIRE(inputInfo.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
+  POKESIM_REQUIRE(inputInfo.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
+  POKESIM_REQUIRE(inputInfo.move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
   types::entity attackerEntity = slotToPokemonEntity(registry, sides, inputInfo.attackerSlot);
@@ -191,13 +191,13 @@ void Simulation::createCalcDamageInput(
 
 void Simulation::createAnalyzeEffectInput(
   BattleStateSetup battleStateSetup, analyze_effect::InputSetup& inputSetup, const AnalyzeEffectInputInfo& inputInfo) {
-  POKESIM_ASSERT(inputInfo.attackerSlot != Slot::NONE, "An effect analysis must have a attacker.");
-  POKESIM_ASSERT(inputInfo.defenderSlot != Slot::NONE, "An effect analysis must have a defender.");
-  POKESIM_ASSERT(inputInfo.effectTarget != Slot::NONE, "An effect analysis must have a effect target.");
-  POKESIM_ASSERT(!inputInfo.moves.empty(), "An effect analysis must include a move.");
+  POKESIM_REQUIRE(inputInfo.attackerSlot != Slot::NONE, "An effect analysis must have a attacker.");
+  POKESIM_REQUIRE(inputInfo.defenderSlot != Slot::NONE, "An effect analysis must have a defender.");
+  POKESIM_REQUIRE(inputInfo.effectTarget != Slot::NONE, "An effect analysis must have a effect target.");
+  POKESIM_REQUIRE(!inputInfo.moves.empty(), "An effect analysis must include a move.");
   const auto& effect = inputInfo.effect;
   const auto& boostEffect = inputInfo.boostEffect;
-  POKESIM_ASSERT(
+  POKESIM_REQUIRE(
     boostEffect.has_value() || (effect.has_value() && !effect.value().empty()),
     "An effect analysis must have an effect.");
 
@@ -233,7 +233,7 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
     debugChecks.addToBattleChecklist(battleStateSetup, battleInfo);
 
     if (!battleInfo.decisionsToSimulate.empty()) {
-      POKESIM_ASSERT(
+      POKESIM_REQUIRE(
         battleInfo.decisionsToSimulate.size() < std::numeric_limits<types::cloneIndex>::max(),
         "Cannot make more clones than there are entities available.");
 

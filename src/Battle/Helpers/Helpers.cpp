@@ -22,7 +22,7 @@
 namespace pokesim {
 
 types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
-  POKESIM_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
+  POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   types::entity sideEntity = sides.val[((std::uint8_t)targetSlot - 1) % 2];
   return sideEntity;
 }
@@ -31,17 +31,17 @@ types::entity slotToPokemonEntity(const types::registry& registry, types::entity
   types::teamPositionIndex index = ((std::uint8_t)targetSlot - 1) / 2;
 
   const Team& team = registry.get<Team>(sideEntity);
-  POKESIM_ASSERT(team.val.size() > index, "Choosing a target slot for team member that does not exist.");
+  POKESIM_REQUIRE(team.val.size() > index, "Choosing a target slot for team member that does not exist.");
   return team.val[index];
 }
 
 types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
-  POKESIM_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
+  POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   return slotToPokemonEntity(registry, slotToSideEntity(sides, targetSlot), targetSlot);
 }
 
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
-  POKESIM_ASSERT(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
+  POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   Slot allySlot = Slot::NONE;
   types::teamPositionIndex index = 0;
 
@@ -96,7 +96,7 @@ types::entity moveToEntity(const types::registry& registry, const MoveSlots& mov
     }
   }
 
-  POKESIM_ASSERT_FAIL("No move of entity found.");
+  POKESIM_REQUIRE_FAIL("No move of entity found.");
   return entt::null;
 }
 

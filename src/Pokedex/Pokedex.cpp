@@ -14,7 +14,7 @@ template <typename Build, typename T>
 void Pokedex::load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build) {
   map.reserve(map.size() + list.size());
   for (T listItem : list) {
-    POKESIM_ASSERT(!map.contains(listItem), "Shouldn't build data entries twice.");
+    POKESIM_REQUIRE(!map.contains(listItem), "Shouldn't build data entries twice.");
     map[listItem] = build(listItem);
   }
 }

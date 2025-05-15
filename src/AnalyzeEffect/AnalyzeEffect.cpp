@@ -88,13 +88,13 @@ void assignInputsToClones(
   types::registry& registry = simulation.registry;
   const Inputs& inputs = registry.get<Inputs>(originalBattleEntity);
 
-  POKESIM_ASSERT(
+  POKESIM_REQUIRE(
     (cloneCount == 0) == clonedEntityMap.empty(),
     "There should be no cloned entities if no clones are needed.");
 
   const auto& battleClones = cloneCount == 0 ? std::vector<types::entity>{} : clonedEntityMap.at(originalBattleEntity);
 
-  POKESIM_ASSERT(
+  POKESIM_REQUIRE(
     cloneCount == battleClones.size(),
     "Each input must have a clone and no more clones than inputs should be made.");
 
@@ -132,22 +132,22 @@ void assignInputsToClones(
       OriginalInputEntities{battle.val, attacker.val, defenders.only(), effectTarget.val});
 
     if (usesClone) {
-      POKESIM_ASSERT(battleClones.size() > cloneIndex, "More inputs want clones than clones made.");
+      POKESIM_REQUIRE(battleClones.size() > cloneIndex, "More inputs want clones than clones made.");
 
       registry.emplace<tags::BattleCloneForCalculation>(battleClones[cloneIndex]);
 
       const auto& clonedAttackers = clonedEntityMap.at(attacker.val);
-      POKESIM_ASSERT(
+      POKESIM_REQUIRE(
         battleClones.size() == clonedAttackers.size(),
         "Each attacker must have a clone and no more clones than inputs should be made.");
 
       const auto& clonedDefenders = clonedEntityMap.at(defenders.only());
-      POKESIM_ASSERT(
+      POKESIM_REQUIRE(
         battleClones.size() == clonedDefenders.size(),
         "Each defender must have a clone and no more clones than inputs should be made.");
 
       const auto& clonedEffectTarget = clonedEntityMap.at(effectTarget.val);
-      POKESIM_ASSERT(
+      POKESIM_REQUIRE(
         battleClones.size() == clonedEffectTarget.size(),
         "Each effect target must have a clone and no more clones than inputs should be made.");
 
@@ -251,18 +251,18 @@ void createAppliedEffectBattles(Simulation& simulation) {
 
   if (simulation.analyzeEffectOptions.reconsiderActiveEffects) {
     simulation.registry.view<Inputs>().each([&](types::entity battleEntity, const Inputs& inputs) {
-      POKESIM_ASSERT(!inputs.val.empty(), "Battles with input components should have input entities.");
+      POKESIM_REQUIRE(!inputs.val.empty(), "Battles with input components should have input entities.");
       battlesByCloneCount[inputs.val.size()].push_back(battleEntity);
     });
   }
   else {
     simulation.registry.view<Inputs>().each([&](types::entity battleEntity, const Inputs& inputs) {
-      POKESIM_ASSERT(!inputs.val.empty(), "Battles with input components should have input entities.");
+      POKESIM_REQUIRE(!inputs.val.empty(), "Battles with input components should have input entities.");
       const RunsOneCalculationCount* ignoredInputCount =
         simulation.registry.try_get<RunsOneCalculationCount>(battleEntity);
       types::eventPossibilities ignoredCount = ignoredInputCount == nullptr ? 0U : ignoredInputCount->val;
 
-      POKESIM_ASSERT(inputs.val.size() >= ignoredCount, "Must have more inputs than inputs ignored.");
+      POKESIM_REQUIRE(inputs.val.size() >= ignoredCount, "Must have more inputs than inputs ignored.");
       battlesByCloneCount[inputs.val.size() - ignoredCount].push_back(battleEntity);
     });
   }

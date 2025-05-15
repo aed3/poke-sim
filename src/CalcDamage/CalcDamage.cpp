@@ -88,7 +88,7 @@ void setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
   PlayerSideId playerSide = registry.get<PlayerSide>(registry.get<Side>(defenders.only()).val).val;
   switch (playerSide) {
     case PlayerSideId::NONE: {
-      POKESIM_ASSERT_FAIL("Player side wasn't set properly.");
+      POKESIM_REQUIRE_FAIL("Player side wasn't set properly.");
       break;
     }
     case PlayerSideId::P1: {
@@ -160,10 +160,10 @@ void reduceDamageRollsToDefenderHp(
 }
 
 void applyDamageRollsAndModifiers(Simulation& simulation, DamageRollKind damageRollKind) {
-  POKESIM_ASSERT(
+  POKESIM_REQUIRE(
     damageRollKind != DamageRollKind::NONE,
     "Cannot calculate damage without knowing what rolls to consider.");
-  POKESIM_ASSERT(
+  POKESIM_REQUIRE(
     damageRollKind != DamageRollKind::GUARANTEED_CRIT_CHANCE,
     "Must pick a damage roll kind to go along with crits.");
 
@@ -230,7 +230,7 @@ void calculateBaseDamage(
 void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, const Defenders& defender) {
   const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.only());
   UsesUntilKo usesUntilKo;
-  POKESIM_ASSERT(
+  POKESIM_REQUIRE(
     damageRolls.val.size() == MechanicConstants::MAX_DAMAGE_ROLL_COUNT,
     "All the damage rolls are needed to calculate this correctly.");
 
