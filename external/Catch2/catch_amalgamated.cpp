@@ -22,7 +22,6 @@
 #include <cassert>
 #include <iterator>
 #include <random>
-#include <Utilities/Assert.hpp>
 
 
 #if defined(CATCH_CONFIG_USE_ASYNC)
@@ -7355,6 +7354,7 @@ private:
 
 #include <cfloat>
 #include <cstdio>
+#include <Config/Require.hpp>
 
 #if defined(_MSC_VER)
 #pragma warning(push)
@@ -7947,14 +7947,20 @@ struct SummaryColumn {
 };
 
 void ConsoleReporter::printTotals( Totals const& totals ) {
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+    const auto assertionCount = pokesim::debug::require::count;
+#else
+    const int assertionCount = 0;
+#endif
+
     if (totals.testCases.total() == 0) {
         stream << Colour(Colour::Warning) << "No tests ran\n";
     } else if (totals.assertions.total() > 0 && totals.testCases.allPassed()) {
         stream << Colour(Colour::ResultSuccess) << "All tests passed";
         stream << "  "
-            << pluralise(totals.assertions.passed + pokesim::debug::ASSERT_COUNT, "assertion") << " ("
+            << pluralise(totals.assertions.passed + assertionCount, "assertion") << " ("
             << totals.assertions.passed << " test and "
-            << pokesim::debug::ASSERT_COUNT << " debug) with "
+            << assertionCount << " debug) with "
             << pluralise(totals.sections.passed, "section") << " in "
             << pluralise(totals.testCases.passed, "test case")
             << '\n';
@@ -7963,10 +7969,10 @@ void ConsoleReporter::printTotals( Totals const& totals ) {
         std::vector<SummaryColumn> columns;
         columns.push_back(SummaryColumn("", Colour::None)
                           .addRow(totals.testCases.total())
-                          .addRow(totals.assertions.total() + pokesim::debug::ASSERT_COUNT));
+                          .addRow(totals.assertions.total() + assertionCount));
         columns.push_back(SummaryColumn("passed", Colour::Success)
                           .addRow(totals.testCases.passed)
-                          .addRow(totals.assertions.passed + pokesim::debug::ASSERT_COUNT));
+                          .addRow(totals.assertions.passed + assertionCount));
         columns.push_back(SummaryColumn("failed", Colour::ResultError)
                           .addRow(totals.testCases.failed)
                           .addRow(totals.assertions.failed));

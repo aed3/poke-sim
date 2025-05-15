@@ -1,10 +1,10 @@
 #pragma once
 
 #include <Components/EntityHolders/MoveEffect.hpp>
+#include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/headers.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/Assert.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/container/fwd.hpp>
 #include <entt/entity/registry.hpp>

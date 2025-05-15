@@ -35,6 +35,7 @@
 #include <Components/Stats.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Turn.hpp>
+#include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Item.hpp>
@@ -48,7 +49,6 @@
 #include <Types/Enums/Volatile.hpp>
 #include <Types/Enums/Weather.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/Assert.hpp>
 #include <Utilities/DebugChecks.hpp>
 
 #include "Simulation.hpp"

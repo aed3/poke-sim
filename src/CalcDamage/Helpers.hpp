@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Components/Damage.hpp>
+#include <Config/Require.hpp>
 #include <Types/Enums/DamageRollKind.hpp>
 #include <Types/MechanicConstants.hpp>
-#include <Utilities/Assert.hpp>
 #include <type_traits>
 
 namespace pokesim::calc_damage {

@@ -1,5 +1,6 @@
 #pragma once
 
+#ifndef NDEBUG
 #include <CalcDamage/Helpers.hpp>
 #include <Components/AnalyzeEffect/Aliases.hpp>
 #include <Components/AnalyzeEffect/AnalyzeEffectInputs.hpp>
@@ -7,18 +8,17 @@
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/PlayerSide.hpp>
 #include <Components/SimulationResults.hpp>
+#include <Config/Require.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/Assert.hpp>
 #include <Utilities/DebugChecks.hpp>
 
 namespace pokesim::analyze_effect::debug {
-struct Checks {
-#ifdef NDEBUG
-  Checks(const Simulation&) {}
-#else
-  Checks(const Simulation& _simulation) : simulation(_simulation), registry(simulation.registry) {
+struct Checks : pokesim::debug::Checks {
+  Checks(const Simulation& _simulation) : pokesim::debug::Checks(_simulation) {}
+
+  void checkInputs() {
     for (types::entity input : registry.view<tags::Input>()) {
       originalToCopy[input] = pokesim::debug::createEntityCopy(input, registry, registryOnInput);
     }
@@ -32,28 +32,19 @@ struct Checks {
       }
     }
 
-    for (types::entity entity : registry.view<types::entity>()) {
-      if (!registry.orphan(entity)) {
-        entityCount++;
-        if (originalToCopy.contains(entity)) {
-          specificallyChecked.emplace(entity);
-        }
-        else {
-          originalToCopy[entity] = pokesim::debug::createEntityCopy(entity, registry, registryOnInput);
-        }
-      }
-    }
+    copyRemainingEntities();
   }
-  ~Checks() { checkOutputs(); }
+
+  void checkOutputs() const {
+    std::size_t finalEntityCount = getFinalEntityCount();
+    POKESIM_ASSERT_NM(initialEntityCount == finalEntityCount);
+    checkInputOutputs();
+    checkPokemonOutputs(true);
+    checkPokemonOutputs(false);
+    checkRemainingOutputs();
+  }
 
  private:
-  const Simulation& simulation;
-  const types::registry& registry;
-  types::registry registryOnInput;
-  entt::dense_map<types::entity, types::entity> originalToCopy;
-  entt::dense_set<types::entity> specificallyChecked;
-  std::size_t entityCount = 0;
-
   std::vector<types::entity> getPokemonList(bool forAttacker) const {
     if (forAttacker) {
       auto view = registry.view<tags::Attacker>();
@@ -69,10 +60,6 @@ struct Checks {
     const Side& side = registry.get<Side>(defenders.only());
     PlayerSideId playerSide = registry.get<PlayerSide>(side.val).val;
     switch (playerSide) {
-      default: {
-        POKESIM_ASSERT_FAIL("Player side wasn't set properly.");
-        break;
-      }
       case PlayerSideId::P1: {
         return damageRollOptions.p1;
         break;
@@ -81,7 +68,11 @@ struct Checks {
         return damageRollOptions.p2;
         break;
       }
+      default: break;
     }
+
+    POKESIM_ASSERT_FAIL("Player side wasn't set properly.");
+    return DamageRollKind::NONE;
   }
 
   void checkInputOutputs() const {
@@ -133,28 +124,17 @@ struct Checks {
       pokesim::debug::areEntitiesEqual(registry, pokemon, registryOnInput, originalToCopy.at(pokemon));
     }
   }
-
-  void checkRemainingOutputs() const {
-    for (auto [original, copy] : originalToCopy) {
-      if (!specificallyChecked.contains(original)) {
-        pokesim::debug::areEntitiesEqual(registry, original, registryOnInput, copy);
-      }
-    }
-  }
-
-  void checkOutputs() const {
-    std::size_t finalEntityCount = 0;
-    for (types::entity entity : registry.view<types::entity>()) {
-      if (!registry.orphan(entity)) {
-        finalEntityCount++;
-      }
-    }
-    POKESIM_ASSERT_NM(entityCount == finalEntityCount);
-    checkInputOutputs();
-    checkPokemonOutputs(true);
-    checkPokemonOutputs(false);
-    checkRemainingOutputs();
-  }
-#endif
 };
 }  // namespace pokesim::analyze_effect::debug
+#else
+namespace pokesim {
+class Simulation;
+namespace analyze_effect::debug {
+struct Checks {
+  Checks(const Simulation&) {}
+  void checkInputs() const {}
+  void checkOutputs() const {}
+};
+}  // namespace analyze_effect::debug
+}  // namespace pokesim
+#endif

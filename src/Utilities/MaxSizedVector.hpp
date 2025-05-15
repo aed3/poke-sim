@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utilities/Assert.hpp>
+#include <Config/Require.hpp>
 #include <array>
 #include <cassert>
 #include <cstdint>

@@ -3159,6 +3159,7 @@ namespace Catch {
 // Separate std-lib types stringification, so it can be selectively enabled
 // This means that we do not bring in their headers
 
+#define CATCH_CONFIG_ENABLE_ALL_STRINGMAKERS
 #if defined(CATCH_CONFIG_ENABLE_ALL_STRINGMAKERS)
 #  define CATCH_CONFIG_ENABLE_PAIR_STRINGMAKER
 #  define CATCH_CONFIG_ENABLE_TUPLE_STRINGMAKER
@@ -7581,7 +7582,7 @@ namespace Catch {
 #define CATCH_CONSOLE_WIDTH_HPP_INCLUDED
 
 #ifndef CATCH_CONFIG_CONSOLE_WIDTH
-#define CATCH_CONFIG_CONSOLE_WIDTH 80
+#define CATCH_CONFIG_CONSOLE_WIDTH 160
 #endif
 
 #endif // CATCH_CONSOLE_WIDTH_HPP_INCLUDED

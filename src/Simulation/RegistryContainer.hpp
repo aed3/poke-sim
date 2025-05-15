@@ -4,9 +4,9 @@
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/Selection.hpp>
+#include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/Assert.hpp>
 #include <Utilities/RegistryLoop.hpp>
 #include <Utilities/Tags.hpp>
 #include <cstdint>

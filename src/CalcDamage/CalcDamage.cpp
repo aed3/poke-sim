@@ -11,6 +11,7 @@
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/HitCount.hpp>
 #include <Components/Level.hpp>
+#include <Components/Names/TypeNames.hpp>
 #include <Components/PlayerSide.hpp>
 #include <Components/Probability.hpp>
 #include <Components/RNGSeed.hpp>
@@ -22,6 +23,7 @@
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
+#include <Config/Require.hpp>
 #include <SimulateTurn/CalcDamageSpecifics.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
@@ -32,7 +34,6 @@
 #include <Types/Enums/StabBoostKind.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/Assert.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <cmath>
 #include <type_traits>
@@ -370,7 +371,9 @@ void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
 
 void getDamage(Simulation& simulation) {
   pokesim::internal::SelectForCurrentActionMoveView<> selectedMoves{simulation, entt::exclude<move::tags::Status>};
-  if (selectedMoves.hasNoneSelected()) return;
+  if (selectedMoves.hasNoneSelected()) {
+    return;
+  }
 
   using SimulateTurn = pokesim::tags::SimulateTurn;
   using CalculateDamage = pokesim::tags::CalculateDamage;
@@ -403,9 +406,11 @@ void getDamage(Simulation& simulation) {
 
 void run(Simulation& simulation) {
   debug::Checks debugChecks(simulation);
+  debugChecks.checkInputs();
 
   getDamage(simulation);
 
   internal::clearRunVariables(simulation);
+  debugChecks.checkOutputs();
 }
 }  // namespace pokesim::calc_damage

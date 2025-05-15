@@ -11,6 +11,7 @@
 #include <Components/Names/VolatileNames.hpp>
 #include <Components/Names/WeatherNames.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Config/Require.hpp>
 #include <Types/Effect.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
@@ -21,7 +22,6 @@
 #include <Types/Enums/Terrain.hpp>
 #include <Types/Enums/Volatile.hpp>
 #include <Types/Enums/Weather.hpp>
-#include <Utilities/Assert.hpp>
 #include <Utilities/Variant.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>

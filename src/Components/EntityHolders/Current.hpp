@@ -1,8 +1,8 @@
 #pragma once
 
+#include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/State.hpp>
-#include <Utilities/Assert.hpp>
 #include <vector>
 
 namespace pokesim {

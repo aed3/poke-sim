@@ -12,12 +12,12 @@
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Turn.hpp>
+#include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
-#include <Utilities/Assert.hpp>
 #include <Utilities/RNG.hpp>
 #include <atomic>
 #include <entt/entity/handle.hpp>
@@ -62,6 +62,7 @@ void BattleStateSetup::setRNGSeed(std::optional<types::rngState> seed) {
   if (!seed.has_value()) {
     static std::atomic_uint64_t state = 1;
     seed = state;
+
     types::rngState newState = state;
     internal::nextRandomValue(newState);
     state = newState;

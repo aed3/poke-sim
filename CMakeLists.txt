@@ -88,6 +88,7 @@ if (MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 else()
   set(compiler_warning_options -Wshadow -Wall)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffile-prefix-map=${CMAKE_SOURCE_DIR}=/PokeSim")
 endif()
 
 target_compile_options(PokeSim PRIVATE ${compiler_warning_options})

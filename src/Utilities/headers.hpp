@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Assert.hpp"
+#include "AssertComponentsEqual.hpp"
 #include "DebugChecks.hpp"
 #include "LambdaToDelegate.hpp"
 #include "MaxSizedVector.hpp"

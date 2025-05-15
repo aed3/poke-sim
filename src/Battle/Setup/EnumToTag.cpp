@@ -4,9 +4,9 @@
 #include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/NatureTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
+#include <Config/Require.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/Assert.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 // TODO(aed3): Make this auto generated

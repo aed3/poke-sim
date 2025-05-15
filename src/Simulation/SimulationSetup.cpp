@@ -12,10 +12,10 @@
 #include <Components/Stats.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
-#include <Utilities/Assert.hpp>
 #include <Utilities/Variant.hpp>
 #include <cstddef>
 #include <entt/entity/registry.hpp>

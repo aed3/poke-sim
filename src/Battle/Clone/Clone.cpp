@@ -9,10 +9,11 @@
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Config/Config.hpp>
+#include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
-#include <Utilities/Assert.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/core/fwd.hpp>
 #include <entt/entity/registry.hpp>
@@ -298,7 +299,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
     registry.insert<ParentBattle>(clonedBattles.begin(), clonedBattles.end(), {originalBattle});
   }
 
-#ifndef NDEBUG
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
   for (const auto& [src, destinations] : entityMap) {
     registry.remove<ParentEntity>(destinations.begin(), destinations.end());
     registry.insert<ParentEntity>(destinations.begin(), destinations.end(), {src});

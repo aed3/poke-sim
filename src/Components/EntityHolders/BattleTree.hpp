@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Config/Config.hpp>
 #include <Types/Entity.hpp>
 
 namespace pokesim {
@@ -11,7 +12,7 @@ struct RootBattle {
   types::entity val{};
 };
 
-#ifndef NDEBUG
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
 struct ParentEntity {
   types::entity val{};
 };
