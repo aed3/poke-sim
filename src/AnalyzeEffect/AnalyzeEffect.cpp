@@ -24,13 +24,13 @@
 #include <Components/PlayerSide.hpp>
 #include <Components/SimulationResults.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/Assert.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <cstdint>
 #include <entt/container/dense_map.hpp>
@@ -358,7 +358,7 @@ void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
   }
 }
 
-void postRunCleanup(Simulation& simulation) {
+void clearRunVariables(Simulation& simulation) {
   simulation.view<restoreInputs>();
   simulation.addToEntities<pokesim::tags::CloneToRemove, tags::BattleCloneForCalculation>();
   deleteClones(simulation.registry);
@@ -371,11 +371,8 @@ void postRunCleanup(Simulation& simulation) {
     RunsOneCalculationCount,
     Damage>();
 }
-}  // namespace internal
 
 void run(Simulation& simulation) {
-  debug::Checks debugChecks(simulation);
-
   pokesim::internal::SelectForPokemonView<pokesim::tags::AnalyzeEffect> selectedPokemon(simulation);
   pokesim::internal::SelectForBattleView<pokesim::tags::AnalyzeEffect> selectedBattle(simulation);
 
@@ -405,7 +402,16 @@ void run(Simulation& simulation) {
   calc_damage::run(simulation);
 
   simulation.view<internal::createOutput, Tags<tags::Input>>();
+}
+}  // namespace internal
 
-  internal::postRunCleanup(simulation);
+void run(Simulation& simulation) {
+  debug::Checks debugChecks(simulation);
+  debugChecks.checkInputs();
+
+  internal::run(simulation);
+
+  internal::clearRunVariables(simulation);
+  debugChecks.checkOutputs();
 }
 }  // namespace pokesim::analyze_effect

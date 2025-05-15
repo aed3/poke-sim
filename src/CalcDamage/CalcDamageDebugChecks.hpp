@@ -1,5 +1,6 @@
 #pragma once
 
+#ifndef NDEBUG
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Battle.hpp>
@@ -15,6 +16,7 @@
 #include <Components/Stats.hpp>
 #include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Config/Require.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Simulation/SimulationOptions.hpp>
 #include <Types/Damage.hpp>
@@ -23,30 +25,54 @@
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/Assert.hpp>
 #include <Utilities/DebugChecks.hpp>
 
 #include "Helpers.hpp"
 
 namespace pokesim::calc_damage::debug {
-struct Checks {
-#ifdef NDEBUG
-  Checks(const Simulation&) {}
-#else
-  Checks(const Simulation& _simulation) : simulation(_simulation), registry(simulation.registry) { checkInputs(); }
-  ~Checks() { checkOutputs(); }
+struct Checks : pokesim::debug::Checks {
+  Checks(const Simulation& _simulation) : pokesim::debug::Checks(_simulation) {}
+
+  void checkInputs() {
+    checkMoveInputs();
+    checkPokemonInputs(true);
+    checkPokemonInputs(false);
+    checkBattleInputs();
+    copyRemainingEntities();
+
+    simulateTurnCount = registry.view<pokesim::tags::SimulateTurn>().size();
+    calcDamageCount = registry.view<pokesim::tags::CalculateDamage>().size();
+    analyzeEffectCount = registry.view<pokesim::tags::AnalyzeEffect>().size();
+  }
+
+  void checkOutputs() const {
+    checkMoveOutputs();
+    checkPokemonOutputs(true);
+    checkPokemonOutputs(false);
+    checkBattleOutputs();
+    checkRemainingOutputs();
+
+    std::size_t finalEntityCount = getFinalEntityCount();
+
+    if (!simulation.simulateTurnOptions.makeBranchesOnRandomEvents) {
+      std::size_t finalSimulationTurnCount = registry.view<pokesim::tags::SimulateTurn>().size();
+      POKESIM_ASSERT_NM(simulateTurnCount == finalSimulationTurnCount);
+      POKESIM_ASSERT_NM(initialEntityCount == finalEntityCount);
+    }
+    else if (simulateTurnCount == 0) {
+      POKESIM_ASSERT_NM(initialEntityCount == finalEntityCount);
+    }
+
+    std::size_t finalCalcDamageCount = registry.view<pokesim::tags::CalculateDamage>().size();
+    POKESIM_ASSERT_NM(calcDamageCount == finalCalcDamageCount);
+    std::size_t finalAnalyzeEffectCount = registry.view<pokesim::tags::AnalyzeEffect>().size();
+    POKESIM_ASSERT_NM(analyzeEffectCount == finalAnalyzeEffectCount);
+  }
 
  private:
-  const Simulation& simulation;
-  const types::registry& registry;
-  types::registry registryOnInput;
-  entt::dense_map<types::entity, types::entity> originalToCopy;
-  entt::dense_set<types::entity> specificallyChecked;
-
   std::size_t simulateTurnCount = 0;
   std::size_t calcDamageCount = 0;
   std::size_t analyzeEffectCount = 0;
-  std::size_t entityCount = 0;
 
   void checkMoveInputs() {
     for (types::entity move : simulation.selectedMoveEntities()) {
@@ -138,10 +164,7 @@ struct Checks {
     const Side& side = registry.get<Side>(defenders.only());
     PlayerSideId playerSide = registry.get<PlayerSide>(side.val).val;
     switch (playerSide) {
-      default: {
-        POKESIM_ASSERT_FAIL("Player side wasn't set properly.");
-        break;
-      }
+      default: break;
       case PlayerSideId::P1: {
         return damageRollOptions.p1;
         break;
@@ -151,6 +174,9 @@ struct Checks {
         break;
       }
     }
+
+    POKESIM_ASSERT_FAIL("Player side wasn't set properly.");
+    return DamageRollKind::NONE;
   }
 
   void checkCalcDamageResultOutputs(types::entity move) const {
@@ -310,66 +336,17 @@ struct Checks {
         typesToIgnore);
     }
   }
-
-  void checkRemainingOutputs() const {
-    for (auto [original, copy] : originalToCopy) {
-      if (!specificallyChecked.contains(original)) {
-        pokesim::debug::areEntitiesEqual(registry, original, registryOnInput, copy);
-      }
-    }
-  }
-
-  void checkInputs() {
-    checkMoveInputs();
-    checkPokemonInputs(true);
-    checkPokemonInputs(false);
-    checkBattleInputs();
-
-    for (types::entity entity : registry.view<types::entity>()) {
-      if (!registry.orphan(entity)) {
-        entityCount++;
-        if (originalToCopy.contains(entity)) {
-          specificallyChecked.emplace(entity);
-        }
-        else {
-          originalToCopy[entity] = pokesim::debug::createEntityCopy(entity, registry, registryOnInput);
-        }
-      }
-    }
-
-    simulateTurnCount = registry.view<pokesim::tags::SimulateTurn>().size();
-    calcDamageCount = registry.view<pokesim::tags::CalculateDamage>().size();
-    analyzeEffectCount = registry.view<pokesim::tags::AnalyzeEffect>().size();
-  }
-
-  void checkOutputs() const {
-    checkMoveOutputs();
-    checkPokemonOutputs(true);
-    checkPokemonOutputs(false);
-    checkBattleOutputs();
-    checkRemainingOutputs();
-
-    std::size_t finalEntityCount = 0;
-    for (types::entity entity : registry.view<types::entity>()) {
-      if (!registry.orphan(entity)) {
-        finalEntityCount++;
-      }
-    }
-
-    if (!simulation.simulateTurnOptions.makeBranchesOnRandomEvents()) {
-      std::size_t finalSimulationTurnCount = registry.view<pokesim::tags::SimulateTurn>().size();
-      POKESIM_ASSERT_NM(simulateTurnCount == finalSimulationTurnCount);
-      POKESIM_ASSERT_NM(entityCount == finalEntityCount);
-    }
-    else if (simulateTurnCount == 0) {
-      POKESIM_ASSERT_NM(entityCount == finalEntityCount);
-    }
-
-    std::size_t finalCalcDamageCount = registry.view<pokesim::tags::CalculateDamage>().size();
-    POKESIM_ASSERT_NM(calcDamageCount == finalCalcDamageCount);
-    std::size_t finalAnalyzeEffectCount = registry.view<pokesim::tags::AnalyzeEffect>().size();
-    POKESIM_ASSERT_NM(analyzeEffectCount == finalAnalyzeEffectCount);
-  }
-#endif
 };
 }  // namespace pokesim::calc_damage::debug
+#else
+namespace pokesim {
+class Simulation;
+namespace calc_damage::debug {
+struct Checks {
+  Checks(const Simulation&) {}
+  void checkInputs() const {}
+  void checkOutputs() const {}
+};
+}  // namespace calc_damage::debug
+}  // namespace pokesim
+#endif

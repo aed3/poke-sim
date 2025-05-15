@@ -1,10 +1,10 @@
 #pragma once
 
 #include <Components/Damage.hpp>
+#include <Config/Require.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Move.hpp>
-#include <Utilities/Assert.hpp>
 #include <vector>
 
 namespace pokesim {

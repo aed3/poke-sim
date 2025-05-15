@@ -6,9 +6,9 @@
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/PlayerSide.hpp>
 #include <Components/Tags/BattleTags.hpp>
+#include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/State.hpp>
-#include <Utilities/Assert.hpp>
 #include <entt/entity/handle.hpp>
 
 #include "PokemonStateSetup.hpp"

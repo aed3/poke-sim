@@ -4,10 +4,10 @@
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/Assert.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 

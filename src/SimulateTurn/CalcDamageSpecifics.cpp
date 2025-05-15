@@ -10,13 +10,13 @@
 #include <Components/RandomEventOutputs.hpp>
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Config/Require.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Enums/DamageRollKind.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Random.hpp>
-#include <Utilities/Assert.hpp>
 #include <Utilities/SelectForView.hpp>
 
 namespace pokesim::simulate_turn {

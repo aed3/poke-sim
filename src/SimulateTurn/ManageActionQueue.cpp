@@ -15,11 +15,11 @@
 #include <Components/SimulateTurn/TeamAction.hpp>
 #include <Components/SpeedSort.hpp>
 #include <Components/Stats.hpp>
+#include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/ActionOrder.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
-#include <Utilities/Assert.hpp>
 #include <Utilities/Variant.hpp>
 #include <algorithm>
 #include <entt/entity/handle.hpp>

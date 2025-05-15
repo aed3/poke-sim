@@ -1,5 +1,6 @@
 #include <Components/Boosts.hpp>
 #include <Components/Tags/TargetTags.hpp>
+#include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/AddedTargets.hpp>
@@ -7,7 +8,6 @@
 #include <Types/Enums/MoveCategory.hpp>
 #include <Types/Enums/MoveTarget.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/Assert.hpp>
 #include <type_traits>
 
 #include "../Moves/headers.hpp"

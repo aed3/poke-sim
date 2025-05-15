@@ -19,6 +19,7 @@
 #include <Components/Tags/NatureTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
+#include <Config/Require.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Gender.hpp>
 #include <Types/Enums/Item.hpp>
@@ -27,7 +28,6 @@
 #include <Types/Enums/Status.hpp>
 #include <Types/State.hpp>
 #include <Types/Stats.hpp>
-#include <Utilities/Assert.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/entity/view.hpp>

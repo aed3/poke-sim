@@ -1,12 +1,12 @@
 #pragma once
 
 #include <Components/SpeciesTypes.hpp>
+#include <Config/Require.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Enums/TypeEffectiveness.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Stats.hpp>
-#include <Utilities/Assert.hpp>
 #include <limits>
 
 namespace pokesim {

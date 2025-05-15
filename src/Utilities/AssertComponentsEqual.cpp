@@ -1,17 +1,19 @@
-#ifndef NDEBUG
+#include <Config/Config.hpp>
 
-#include "DebugChecks.hpp"
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
+#include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/Assert.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/container/dense_set.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/meta/resolve.hpp>
 #include <vector>
+
+#include "AssertComponentsEqual.hpp"
 
 namespace pokesim::debug {
 types::entity createEntityCopy(types::entity entity, const types::registry& src, types::registry& dst) {
@@ -34,15 +36,17 @@ void hasSameComponents(
     if (currStorage.contains(currEntity)) {
       const auto* const initStorage = initReg.storage(id);
       POKESIM_ASSERT(initStorage != nullptr, "The inital registry never contained this component.");
-      POKESIM_ASSERT(initStorage->contains(initEntity), "The inital doesn't contain the current's component.");
+      POKESIM_ASSERT(initStorage->contains(initEntity), "The inital registry doesn't contain the current's component.");
     }
   }
 
   for (auto [id, initStorage] : initReg.storage()) {
+    if (typesToIgnore.contains(id)) continue;
+
     if (initStorage.contains(initEntity)) {
       const auto* const currStorage = currReg.storage(id);
       POKESIM_ASSERT(currStorage != nullptr, "The current registry never contained this component.");
-      POKESIM_ASSERT(currStorage->contains(currEntity), "The current doesn't contain the inital's component.");
+      POKESIM_ASSERT(currStorage->contains(currEntity), "The current registry doesn't contain the inital's component.");
     }
   }
 }

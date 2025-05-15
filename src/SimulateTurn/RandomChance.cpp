@@ -9,13 +9,13 @@
 #include <Components/RandomEventInputs.hpp>
 #include <Components/RandomEventOutputs.hpp>
 #include <Components/Tags/Current.hpp>
+#include <Config/Require.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Damage.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
-#include <Utilities/Assert.hpp>
 #include <Utilities/RNG.hpp>
 #include <Utilities/Tags.hpp>
 #include <cstdint>

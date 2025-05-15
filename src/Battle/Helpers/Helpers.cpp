@@ -8,13 +8,13 @@
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/Slot.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
-#include <Utilities/Assert.hpp>
 #include <cstdint>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>

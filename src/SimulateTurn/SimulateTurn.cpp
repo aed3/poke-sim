@@ -23,6 +23,7 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
 #include <Components/Turn.hpp>
+#include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/MoveHitSteps.hpp>
 #include <Simulation/RunEvent.hpp>

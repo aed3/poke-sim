@@ -1,8 +1,8 @@
+#include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/Assert.hpp>
 #include <type_traits>
 
 #include "../Abilities/headers.hpp"

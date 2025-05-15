@@ -1,6 +1,8 @@
 #pragma once
 
-#ifdef NDEBUG
+#include <Config/Config.hpp>
+
+#ifndef POKESIM_DEBUG_CHECK_UTILITIES
 #include <memory>
 
 #ifndef ENTT_ID_TYPE
@@ -25,7 +27,7 @@ using handle = entt::basic_handle<registry>;
 #else
 
 #include <Types/Entity.hpp>
-#include <Utilities/DebugChecks.hpp>
+#include <Utilities/AssertComponentsEqual.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/meta/factory.hpp>
 #include <type_traits>

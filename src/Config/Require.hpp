@@ -1,0 +1,56 @@
+#pragma once
+
+#include "Config.hpp"
+
+// NOLINTBEGIN cppcoreguidelines-macro-usage
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#include <cstdint>
+#include <cstring>
+#include <stdexcept>
+
+namespace pokesim::debug {
+class require : public std::exception {
+  std::string errorMessage;
+
+ public:
+  static inline uint64_t count = 0;
+
+  require(const char* file, int line, const char* function, const char* condition, const std::string& message) {
+    errorMessage += file;
+    errorMessage += ":" + std::to_string(line);
+
+    errorMessage += "  ";
+    errorMessage += function;
+    errorMessage += "  ( ";
+    errorMessage += condition;
+    errorMessage += " )";
+
+    if (!message.empty()) {
+      errorMessage += "  \" ";
+      errorMessage += message;
+      errorMessage += " \"";
+    }
+  }
+
+  virtual const char* what() const noexcept override { return errorMessage.c_str(); }
+};
+}  // namespace pokesim::debug
+
+#if defined __clang__ || defined __GNUC__
+#define POKESIM_ASSERT(condition, message) \
+  pokesim::debug::require::count++;        \
+  if (!(condition)) throw pokesim::debug::require(__FILE__, __LINE__, __PRETTY_FUNCTION__, #condition, message);
+#elif defined _MSC_VER
+#define POKESIM_ASSERT(condition, message) \
+  pokesim::debug::require::count++;        \
+  if (!(condition)) throw pokesim::debug::require(__FILE__, __LINE__, __FUNCSIG__, #condition, message);
+#endif
+
+#else
+#define POKESIM_ASSERT(condition, message)
+#endif
+
+// An assert with no message. For use in debug checks only.
+#define POKESIM_ASSERT_NM(condition) POKESIM_ASSERT(condition, "")
+#define POKESIM_ASSERT_FAIL(message) POKESIM_ASSERT(false, message)
+// NOLINTEND cppcoreguidelines-macro-usage

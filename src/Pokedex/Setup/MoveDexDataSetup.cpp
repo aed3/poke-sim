@@ -13,9 +13,9 @@
 #include <Components/Priority.hpp>
 #include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
+#include <Config/Require.hpp>
 #include <Types/Move.hpp>
 #include <Types/Stats.hpp>
-#include <Utilities/Assert.hpp>
 #include <entt/entity/handle.hpp>
 
 namespace pokesim::dex::internal {

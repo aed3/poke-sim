@@ -1,10 +1,10 @@
 #pragma once
 
+#include <Config/Require.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Enums/StabBoostKind.hpp>
 #include <Types/Event.hpp>
 #include <Types/MechanicConstants.hpp>
-#include <Utilities/Assert.hpp>
 #include <vector>
 
 namespace pokesim {

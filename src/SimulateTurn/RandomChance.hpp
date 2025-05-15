@@ -3,13 +3,13 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/RandomEventInputs.hpp>
 #include <Components/RandomEventOutputs.hpp>
+#include <Config/Require.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/BattleFormat.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
-#include <Utilities/Assert.hpp>
 #include <optional>
 
 namespace pokesim {
