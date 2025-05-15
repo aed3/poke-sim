@@ -8,7 +8,7 @@ struct IdealPP_MaxPP {
 
 TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
   Simulation::BattleCreationInfo battleCreationInfo{};
-  Simulation simulation = createSingleBattleSimulation(battleCreationInfo, false);
+  Simulation simulation = createSingleBattleSimulation(battleCreationInfo);
 
   simulation.createInitialStates({battleCreationInfo});
 
@@ -30,7 +30,7 @@ TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
 
 TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
   Simulation::BattleCreationInfo battleCreationInfo{};
-  Simulation simulation = createDoubleBattleSimulation(battleCreationInfo, false);
+  Simulation simulation = createDoubleBattleSimulation(battleCreationInfo);
   simulation.createInitialStates({battleCreationInfo});
 
   const types::registry& registry = simulation.registry;
@@ -59,7 +59,7 @@ TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
 
 TEST_CASE("Battle State: Multiple Battles", "[BattleState][Setup]") {
   Simulation::BattleCreationInfo battle1CreationInfo{};
-  Simulation simulation = createSingleBattleSimulation(battle1CreationInfo, false);
+  Simulation simulation = createSingleBattleSimulation(battle1CreationInfo);
 
   Simulation::BattleCreationInfo battle2CreationInfo = battle1CreationInfo;
 
@@ -88,10 +88,16 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
     std::string(
       create == createSingleBattleSimulation ? "createSingleBattleSimulation" : "createDoubleBattleSimulation"));
 
-  Simulation simulation = create(battleCreationInfo, false);
+  Simulation simulation = create(battleCreationInfo);
   simulation.createInitialStates({battleCreationInfo});
 
   types::registry& registry = simulation.registry;
+  entt::dense_set<types::entity> existingEntities;
+  for (types::entity existingEntity : registry.view<types::entity>()) {
+    existingEntities.insert(existingEntity);
+  }
+  existingEntities.reserve(existingEntities.size() * (cloneCount + 1));
+
   types::handle baseHandle(registry, registry.view<tags::Battle>()[0]);
   baseHandle.emplace<tags::CloneFrom>();
 
@@ -110,28 +116,54 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
 
     if (battle == baseHandle.entity()) continue;
 
+    REQUIRE_FALSE(existingEntities.contains(battle));
+    existingEntities.insert(battle);
     const auto cloneSides = cloneHandle.get<Sides>();
     REQUIRE(baseSides.p1() != cloneSides.p1());
     REQUIRE(baseSides.p2() != cloneSides.p2());
 
     auto checkSideEntities = [&](types::entity baseSide, types::entity cloneSide) {
+      REQUIRE_FALSE(existingEntities.contains(cloneSide));
+      existingEntities.insert(cloneSide);
+
       const auto& [baseTeam, baseFoeSide, baseSideBattle] = registry.get<Team, FoeSide, Battle>(baseSide);
       const auto& [cloneTeam, cloneFoeSide, cloneSideBattle] = registry.get<Team, FoeSide, Battle>(cloneSide);
       REQUIRE(baseFoeSide.val != cloneFoeSide.val);
+      REQUIRE(cloneSide != cloneFoeSide.val);
+      REQUIRE(
+        (cloneSide == cloneSides.p1() ? cloneSides.p2() == cloneFoeSide.val : cloneSides.p1() == cloneFoeSide.val));
+
       REQUIRE(baseSideBattle.val != cloneSideBattle.val);
+      REQUIRE(battle == cloneSideBattle.val);
+
+      REQUIRE(baseTeam.val.size() == cloneTeam.val.size());
 
       for (std::uint8_t i = 0; i < baseTeam.val.size(); i++) {
-        REQUIRE(baseTeam.val[i] != cloneTeam.val[i]);
+        types::entity basePokemon = baseTeam.val[i];
+        types::entity clonePokemon = cloneTeam.val[i];
+        existingEntities.insert(basePokemon);
+        REQUIRE_FALSE(existingEntities.contains(clonePokemon));
+        existingEntities.insert(clonePokemon);
+
         const auto& [baseMoveSlots, basePokemonSide, basePokemonBattle] =
-          registry.get<MoveSlots, Side, Battle>(baseTeam.val[i]);
+          registry.get<MoveSlots, Side, Battle>(basePokemon);
         const auto& [cloneMoveSlots, clonePokemonSide, clonePokemonBattle] =
-          registry.get<MoveSlots, Side, Battle>(cloneTeam.val[i]);
+          registry.get<MoveSlots, Side, Battle>(clonePokemon);
 
         REQUIRE(basePokemonSide.val != clonePokemonSide.val);
+        REQUIRE(cloneSide == clonePokemonSide.val);
+
         REQUIRE(basePokemonBattle.val != clonePokemonBattle.val);
+        REQUIRE(battle == clonePokemonBattle.val);
+
+        REQUIRE(baseMoveSlots.val.size() == cloneMoveSlots.val.size());
 
         for (std::uint8_t j = 0; j < baseMoveSlots.val.size(); j++) {
-          REQUIRE(baseMoveSlots.val[j] != cloneMoveSlots.val[j]);
+          types::entity baseMoveSlot = baseMoveSlots.val[j];
+          types::entity cloneMoveSlot = cloneMoveSlots.val[j];
+          existingEntities.insert(baseMoveSlot);
+          REQUIRE_FALSE(existingEntities.contains(cloneMoveSlot));
+          existingEntities.insert(cloneMoveSlot);
         }
       }
     };

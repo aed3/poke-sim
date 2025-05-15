@@ -97,23 +97,21 @@ void updateProbabilityFromRandomEventCount(
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void assignRandomEvent(
   types::handle handle, const Battle& battle, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances) {
-  auto [rngSeed, probability] = handle.registry()->get<RngSeed, Probability>(battle.val);
+  RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, 100);
 
   if (rng <= eventChances.val[0]) {
     handle.emplace<tags::RandomEventA>();
-    updateProbability(probability, eventChances.chanceA());
     return;
   }
   if (rng <= eventChances.val[1]) {
     handle.emplace<tags::RandomEventB>();
-    updateProbability(probability, eventChances.chanceB());
     return;
   }
+
   if constexpr (POSSIBLE_EVENT_COUNT >= 3U) {
     if (rng <= eventChances.val[2]) {
       handle.emplace<tags::RandomEventC>();
-      updateProbability(probability, eventChances.chanceC());
       return;
     }
   }
@@ -121,7 +119,6 @@ void assignRandomEvent(
   if constexpr (POSSIBLE_EVENT_COUNT >= 4U) {
     if (rng <= eventChances.val[3]) {
       handle.emplace<tags::RandomEventD>();
-      updateProbability(probability, eventChances.chanceD());
       return;
     }
   }
@@ -129,54 +126,47 @@ void assignRandomEvent(
   if constexpr (POSSIBLE_EVENT_COUNT == 5U) {
     if (rng <= eventChances.val[4]) {
       handle.emplace<tags::RandomEventE>();
-      updateProbability(probability, eventChances.chanceE());
     }
   }
 }
 
 void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
-  auto [rngSeed, probability] = handle.registry()->get<RngSeed, Probability>(battle.val);
+  RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, 100);
 
   if (rng <= eventChance.pass()) {
     handle.emplace<tags::RandomEventCheckPassed>();
-    updateProbability(probability, eventChance.pass());
   }
   else {
     handle.emplace<tags::RandomEventCheckFailed>();
-    updateProbability(probability, eventChance.fail());
   }
 }
 
 void assignReciprocalRandomBinaryEvent(
   types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
-  auto [rngSeed, probability] = handle.registry()->get<RngSeed, Probability>(battle.val);
+  RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, eventChance.val);
 
   if (rng == 0) {
     handle.emplace<tags::RandomEventCheckPassed>();
-    updateProbability(probability, eventChance.reciprocalPass());
   }
   else {
     handle.emplace<tags::RandomEventCheckFailed>();
-    updateProbability(probability, eventChance.reciprocalFail());
   }
 }
 
 void assignRandomEqualChance(types::handle handle, const Battle& battle, types::eventPossibilities possibleEventCount) {
-  auto [rngSeed, probability] = handle.registry()->get<RngSeed, Probability>(battle.val);
-  types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, possibleEventCount);
+  RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
+  types::eventPossibilities rng = (types::eventPossibilities)nextBoundedRandomValue(rngSeed, possibleEventCount);
 
   handle.emplace<RandomEventIndex>(rng);
-  updateProbability(probability, 100.0F / (float)possibleEventCount);
 }
 
 void assignRandomEventCount(types::handle handle, const Battle& battle, const RandomEventCount& eventCount) {
-  auto [rngSeed, probability] = handle.registry()->get<RngSeed, Probability>(battle.val);
-  types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, eventCount.val);
+  RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
+  types::eventPossibilities rng = (types::eventPossibilities)nextBoundedRandomValue(rngSeed, eventCount.val);
 
   handle.emplace<RandomEventIndex>(rng);
-  updateProbability(probability, 100.0F / (float)eventCount.val);
 }
 
 void assignIndexToClones(
@@ -227,7 +217,7 @@ void randomChanceEvent(
   }
 
   types::registry& registry = simulation.registry;
-  if (simulation.simulateTurnOptions.makeBranchesOnRandomEvents()) {
+  if (simulation.simulateTurnOptions.makeBranchesOnRandomEvents) {
     auto chanceEntityView = registry.view<Random>();
     if (chanceEntityView.empty()) {
       applyChoices(simulation);

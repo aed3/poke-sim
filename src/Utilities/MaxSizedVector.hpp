@@ -4,6 +4,7 @@
 #include <array>
 #include <cassert>
 #include <cstdint>
+#include <initializer_list>
 
 namespace pokesim::internal {
 template <typename T, std::uint8_t N>
@@ -34,7 +35,7 @@ class maxSizedVector : private std::array<T, N> {
     return base::at(pos);
   }
 
-  constexpr typename base::const_reference operator[](std::uint8_t pos) const noexcept {
+  constexpr typename base::const_reference operator[](std::uint8_t pos) const {
     POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
     return base::operator[](pos);
   }
@@ -44,7 +45,7 @@ class maxSizedVector : private std::array<T, N> {
     return base::at(pos);
   }
 
-  typename base::reference operator[](std::uint8_t pos) noexcept {
+  typename base::reference operator[](std::uint8_t pos) {
     POKESIM_ASSERT(pos < used, "Accessing value that isn't used.");
     return base::operator[](pos);
   }

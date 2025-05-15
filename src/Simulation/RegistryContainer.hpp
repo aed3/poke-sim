@@ -107,10 +107,12 @@ class RegistryContainer {
   template <typename Selection, typename Required, typename... ComponentsToSelect, typename... ComponentsToExclude>
   std::size_t select(entt::exclude_t<ComponentsToExclude...> exclude) {
     auto getNewSelection = [&exclude](types::registry& reg) {
-      return reg.group<>(entt::get<Required, ComponentsToSelect...>, exclude);
+      auto view = reg.view<Required, ComponentsToSelect...>(exclude);
+      return std::vector<types::entity>{view.begin(), view.end()};
     };
     auto getUnmatchedSelection = [](types::registry& reg) {
-      return reg.group<>(entt::get<Selection, ComponentsToExclude...>, entt::exclude<ComponentsToSelect...>);
+      auto view = reg.view<Selection, ComponentsToExclude...>(entt::exclude<ComponentsToSelect...>);
+      return std::vector<types::entity>{view.begin(), view.end()};
     };
     SelectionFunction selectionFunction{[](const void*, const types::registry& reg) {
       auto view = reg.view<Required, ComponentsToSelect...>(entt::exclude<ComponentsToExclude...>);

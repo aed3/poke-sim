@@ -19,7 +19,6 @@
 #include <Utilities/Variant.hpp>
 #include <cstddef>
 #include <entt/entity/registry.hpp>
-#include <initializer_list>
 #include <utility>
 #include <vector>
 
@@ -221,7 +220,7 @@ void Simulation::createAnalyzeEffectInput(
   }
 }
 
-void Simulation::createInitialStates(const std::initializer_list<BattleCreationInfo> battleInfoList) {
+void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList) {
   debug::SimulationSetupChecks debugChecks(registry, battleInfoList);
 
   for (const BattleCreationInfo& battleInfo : battleInfoList) {

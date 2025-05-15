@@ -1,9 +1,12 @@
 #include "SimulateTurn.hpp"
 
+#include <Battle/Clone/Clone.hpp>
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
+#include <CalcDamage/Helpers.hpp>
 #include <Components/AddedTargets.hpp>
+#include <Components/CloneFromCloneTo.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
@@ -15,6 +18,7 @@
 #include <Components/PP.hpp>
 #include <Components/SimulateTurn/ActionNames.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
+#include <Components/SimulateTurn/SimulateTurnInput.hpp>
 #include <Components/SpeedSort.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
@@ -36,20 +40,43 @@
 
 namespace pokesim::simulate_turn {
 void run(Simulation& simulation) {
-  pokesim::internal::SelectForBattleView<tags::SimulateTurn> selectedBattle{simulation};
-  if (selectedBattle.hasNoneSelected()) return;
+  const auto& options = simulation.simulateTurnOptions;
+#ifndef POKESIM_ALL_DAMAGE_ALL_BRANCHES
+  POKESIM_ASSERT(
+    !options.makeBranchesOnRandomEvents ||
+      !(calc_damage::damageKindsMatch(options.damageRollsConsidered.p1, DamageRollKind::ALL_DAMAGE_ROLLS) ||
+        calc_damage::damageKindsMatch(options.damageRollsConsidered.p2, DamageRollKind::ALL_DAMAGE_ROLLS)),
+    "Creating a branch for every damage roll is disabled by default to prevent easily reaching the battle count limit. "
+    "Rebuild PokeSim with the flag POKESIM_ALL_DAMAGE_ALL_BRANCHES to enable this option combination.");
+#endif
+
+  if (!options.applyChangesToInputBattle) {
+    simulation.addToEntities<pokesim::tags::CloneFrom, pokesim::tags::Battle, pokesim::tags::SimulateTurn>();
+    const auto entityMap = clone(simulation.registry, 1);
+    for (const auto& inputBattleMapping : entityMap) {
+      simulation.registry.emplace<tags::Input>(inputBattleMapping.first);
+    }
+  }
+
+  pokesim::internal::SelectForBattleView<pokesim::tags::SimulateTurn> selectedBattles{
+    simulation,
+    entt::exclude<tags::Input>};
+  pokesim::internal::SelectForSideView<pokesim::tags::SimulateTurn> selectedSides{
+    simulation,
+    entt::exclude<tags::Input>};
+  if (selectedBattles.hasNoneSelected() || selectedSides.hasNoneSelected()) return;
 
   simulation.viewForSelectedBattles<assignRootBattle>();
 
   updateAllStats(simulation);
-  simulation.view<resolveDecision>();
-  simulation.registry.clear<SideDecision>();
+  simulation.viewForSelectedSides<resolveDecision>();
+  simulation.removeFromEntities<SideDecision, pokesim::tags::SelectedForViewSide>();
 
-  // simulation.viewForSelectedBattles<addBeforeTurnAction, Tags<>, entt::exclude_t<tags::BattleMidTurn>>();
+  // simulation.viewForSelectedBattles<addBeforeTurnAction, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn>>();
   simulation.viewForSelectedBattles<speedSort>();
-  simulation.viewForSelectedBattles<addResidualAction, Tags<>, entt::exclude_t<tags::BattleMidTurn>>();
+  simulation.viewForSelectedBattles<addResidualAction, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn>>();
 
-  simulation.addToEntities<tags::BattleMidTurn, Turn, tags::SimulateTurn>();
+  simulation.addToEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SelectedForViewBattle>();
 
   simulation.viewForSelectedBattles<setCurrentAction>();
   while (!simulation.registry.view<action::tags::Current>().empty()) {
@@ -59,8 +86,9 @@ void run(Simulation& simulation) {
 
   nextTurn(simulation);
 
-  simulation.removeFromEntities<tags::BattleMidTurn, Turn, tags::SimulateTurn>();
+  simulation.removeFromEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SelectedForViewBattle>();
   simulation.viewForSelectedBattles<collectTurnOutcomeBattles>();
+  simulation.registry.clear<tags::Input>();
 }
 
 void runCurrentAction(Simulation& simulation) {
@@ -73,7 +101,7 @@ void runCurrentAction(Simulation& simulation) {
   // Update
   // Switch requests
 
-  if (!simulation.registry.view<tags::SpeStatUpdateRequired>().empty()) {
+  if (!simulation.registry.view<pokesim::tags::SpeStatUpdateRequired>().empty()) {
     updateSpe(simulation);
     simulation.viewForSelectedBattles<speedSort>();  // Should only speed sort battles affected
   }
@@ -92,7 +120,7 @@ void runMoveAction(Simulation& simulation) {
   simulation.viewForSelectedBattles<setCurrentActionTarget>();
   simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex);
 
-  simulation.view<deductPp, Tags<tags::CurrentActionMoveSlot>>();
+  simulation.view<deductPp, Tags<pokesim::tags::CurrentActionMoveSlot>>();
   simulation.view<setLastMoveUsed>();
 
   useMove(simulation);
@@ -116,7 +144,8 @@ void updateActivePokemonPostTurn(types::handle pokemonHandle, const pokesim::Mov
 void nextTurn(Simulation& simulation) {
   simulation.viewForSelectedBattles<internal::incrementTurn>();
 
-  pokesim::internal::SelectForPokemonView<tags::SimulateTurn, tags::ActivePokemon> selectedPokemon{simulation};
+  pokesim::internal::SelectForPokemonView<pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon> selectedPokemon{
+    simulation};
   if (!selectedPokemon.hasNoneSelected()) {
     simulation.viewForSelectedPokemon<internal::updateActivePokemonPostTurn>();
     runDisableMove(simulation);
@@ -158,17 +187,21 @@ void createActionMoveForTargets(
   dex::Move move = registry.get<action::Move>(registry.get<CurrentAction>(battle.val).val).name;
   types::entity moveEntity = createActionMoveForTarget(targetHandle, battle.val, source.val, move, pokedex);
 
-  registry.emplace<tags::SimulateTurn>(moveEntity);
+  registry.emplace<pokesim::tags::SimulateTurn>(moveEntity);
 }
 
 void getMoveTargets(Simulation& simulation) {
   if (simulation.battleFormat == BattleFormat::DOUBLES_BATTLE_FORMAT) {
-    simulation.view<addTargetAllyToTargets, Tags<tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
-    simulation.view<addUserAllyToTargets, Tags<tags::CurrentActionMove, move::added_targets::tags::UserAlly>>();
+    simulation
+      .view<addTargetAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
+    simulation
+      .view<addUserAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::UserAlly>>();
   }
-  simulation.view<resolveMoveTargets, Tags<tags::CurrentActionMove>, entt::exclude_t<AddedTargets>>();
-  simulation.view<createActionMoveForTargets, Tags<tags::CurrentActionMoveTarget>, entt::exclude_t<CurrentActionMoves>>(
-    simulation.pokedex);
+  simulation.view<resolveMoveTargets, Tags<pokesim::tags::CurrentActionMove>, entt::exclude_t<AddedTargets>>();
+  simulation.view<
+    createActionMoveForTargets,
+    Tags<pokesim::tags::CurrentActionMoveTarget>,
+    entt::exclude_t<CurrentActionMoves>>(simulation.pokedex);
 }
 
 void useMove(Simulation& simulation) {

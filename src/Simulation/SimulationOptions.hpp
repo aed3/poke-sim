@@ -25,12 +25,10 @@ struct Options {
   std::optional<types::percentChance> randomChanceLowerLimit = std::nullopt;
   std::optional<types::probability> branchProbabilityLowerLimit = std::nullopt;
 
-  // For Monte Carlo method. If no number is given, the number of branches
-  // is determined by the number of random chance events that happen in the turn.
-  // To get just one random outcome (aka using the simulator to just run a game),
-  // set the value to 1
-  std::optional<std::uint32_t> numberOfSamples = std::nullopt;
-  bool makeBranchesOnRandomEvents() const { return !numberOfSamples.has_value(); }
+  // For Monte Carlo method. When true, the number of branches is determined by the number of random chance events that
+  // happen in the turn. When false, the number of output battles is the same as the number in input battles as each
+  // battle picks a random outcome for each random event without branching.
+  bool makeBranchesOnRandomEvents = true;
 
   entt::delegate<std::remove_pointer_t<types::callback>> decisionCallback{};
   entt::delegate<std::remove_pointer_t<types::callback>> faintCallback{};

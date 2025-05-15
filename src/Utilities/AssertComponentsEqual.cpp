@@ -34,9 +34,12 @@ void hasSameComponents(
     if (typesToIgnore.contains(id)) continue;
 
     if (currStorage.contains(currEntity)) {
+      std::string typeName{currStorage.type().name()};
       const auto* const initStorage = initReg.storage(id);
-      POKESIM_ASSERT(initStorage != nullptr, "The inital registry never contained this component.");
-      POKESIM_ASSERT(initStorage->contains(initEntity), "The inital registry doesn't contain the current's component.");
+      POKESIM_ASSERT(initStorage != nullptr, "The inital registry never contained this component: " + typeName);
+      POKESIM_ASSERT(
+        initStorage->contains(initEntity),
+        "The inital registry doesn't contain the current's component: " + typeName);
     }
   }
 
@@ -44,9 +47,12 @@ void hasSameComponents(
     if (typesToIgnore.contains(id)) continue;
 
     if (initStorage.contains(initEntity)) {
+      std::string typeName{initStorage.type().name()};
       const auto* const currStorage = currReg.storage(id);
-      POKESIM_ASSERT(currStorage != nullptr, "The current registry never contained this component.");
-      POKESIM_ASSERT(currStorage->contains(currEntity), "The current registry doesn't contain the inital's component.");
+      POKESIM_ASSERT(currStorage != nullptr, "The current registry never contained this component: " + typeName);
+      POKESIM_ASSERT(
+        currStorage->contains(currEntity),
+        "The current registry doesn't contain the inital's component: " + typeName);
     }
   }
 }

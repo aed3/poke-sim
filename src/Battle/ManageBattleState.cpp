@@ -23,7 +23,9 @@
 
 namespace pokesim {
 void assignRootBattle(types::handle battleHandle) {
-  battleHandle.emplace<RootBattle>(battleHandle.entity());
+  const ParentBattle* parentBattle = battleHandle.try_get<ParentBattle>();
+  types::entity rootBattle = parentBattle == nullptr ? battleHandle.entity() : parentBattle->val;
+  battleHandle.emplace<RootBattle>(rootBattle);
 }
 
 void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root) {
@@ -47,7 +49,7 @@ void setCurrentActionTarget(
   types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.name);
 
   if (!registry.any_of<tags::Fainted>(targetEntity)) {
-    battleHandle.emplace<CurrentActionTargets>(std::initializer_list<types::entity>{targetEntity});
+    battleHandle.emplace<CurrentActionTargets>(types::targets<types::entity>{targetEntity});
     registry.emplace<tags::CurrentActionMoveTarget>(targetEntity);
     registry.emplace<CurrentActionSource>(targetEntity, source);
   }
@@ -90,6 +92,8 @@ void clearCurrentAction(Simulation& simulation) {
 
   auto actionMoves = registry.view<tags::CurrentActionMove>();
   registry.destroy(actionMoves.begin(), actionMoves.end());
+  auto currentActions = registry.view<action::tags::Current>();
+  registry.destroy(currentActions.begin(), currentActions.end());
 
   auto battles = simulation.selectedBattleEntities();
   registry.remove<

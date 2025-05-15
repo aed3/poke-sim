@@ -6,7 +6,6 @@
 #include <Types/Entity.hpp>
 #include <Types/headers.hpp>
 #include <entt/entity/registry.hpp>
-#include <initializer_list>
 #include <optional>
 #include <tuple>
 #include <utility>
@@ -148,7 +147,7 @@ class Simulation : public internal::RegistryContainer {
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
 
   // Load information about any number of battle states into the simulation's registry.
-  void createInitialStates(std::initializer_list<BattleCreationInfo> battleInfoList);
+  void createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList);
 
   void run();
 
@@ -157,15 +156,14 @@ class Simulation : public internal::RegistryContainer {
   analyze_effect::Results analyzeEffect(std::optional<analyze_effect::Options> options = std::nullopt);
 
   simulate_turn::Results simulateTurn(
-    std::initializer_list<BattleCreationInfo> battleInfoList,
+    const std::vector<BattleCreationInfo>& battleInfoList,
     std::optional<simulate_turn::Options> options = std::nullopt);
 
   calc_damage::Results calculateDamage(
-    std::initializer_list<BattleCreationInfo> battleInfoList,
-    std::optional<calc_damage::Options> options = std::nullopt);
+    const std::vector<BattleCreationInfo>& battleInfoList, std::optional<calc_damage::Options> options = std::nullopt);
 
   analyze_effect::Results analyzeEffect(
-    std::initializer_list<BattleCreationInfo> battleInfoList,
+    const std::vector<BattleCreationInfo>& battleInfoList,
     std::optional<analyze_effect::Options> options = std::nullopt);
 
   void clearAllResults();

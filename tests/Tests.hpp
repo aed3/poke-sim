@@ -14,13 +14,18 @@ static_assert(false, "Rebuild PokeSim with the flag POKESIM_ENABLE_TESTING to en
 #endif
 
 namespace pokesim {
-inline Simulation createSingleBattleSimulation(
-  Simulation::BattleCreationInfo& battleCreationInfo, bool addTsDecisions) {
-  Pokedex* pokedex = new Pokedex(GameMechanics::SCARLET_VIOLET);
-  entt::dense_set<dex::Move> moveSet{};
-  for (dex::Move move : {dex::Move::FURY_ATTACK, dex::Move::THUNDERBOLT}) moveSet.insert(move);
+inline Simulation createSingleBattleSimulation(Simulation::BattleCreationInfo& battleCreationInfo) {
+  static Pokedex* pokedex = nullptr;
+  if (!pokedex) {
+    pokedex = new Pokedex(GameMechanics::SCARLET_VIOLET);
+    entt::dense_set<dex::Move> moveSet{};
+    for (dex::Move move : {dex::Move::FURY_ATTACK, dex::Move::THUNDERBOLT, dex::Move::KNOCK_OFF}) moveSet.insert(move);
+    pokedex->loadMoves(moveSet);
 
-  pokedex->loadMoves(moveSet);
+    entt::dense_set<dex::Species> speciesSet{};
+    for (dex::Species species : {dex::Species::EMPOLEON, dex::Species::AMPHAROS}) speciesSet.insert(species);
+    pokedex->loadSpecies(speciesSet);
+  }
 
   Simulation simulation(*pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
   {
@@ -34,11 +39,16 @@ inline Simulation createSingleBattleSimulation(
     p1PokemonInfo.evs = {0, 25, 50, 75, 100, 125};
     p1PokemonInfo.stats = {275, 181, 191, 242, 229, 154};
 
-    Simulation::MoveCreationInfo p1MoveInfo{};
-    p1MoveInfo.name = dex::Move::FURY_ATTACK;
-    p1MoveInfo.maxPp = pokedex->getMoveData<Pp>(dex::Move::FURY_ATTACK).val;
-    p1MoveInfo.pp = p1MoveInfo.maxPp - 1;
-    p1PokemonInfo.moves.push_back(p1MoveInfo);
+    Simulation::MoveCreationInfo p1MoveInfoA{};
+    p1MoveInfoA.name = dex::Move::FURY_ATTACK;
+    p1MoveInfoA.maxPp = pokedex->getMoveData<Pp>(dex::Move::FURY_ATTACK).val;
+    p1MoveInfoA.pp = p1MoveInfoA.maxPp - 1;
+    p1PokemonInfo.moves.push_back(p1MoveInfoA);
+    Simulation::MoveCreationInfo p1MoveInfoB{};
+    p1MoveInfoB.name = dex::Move::KNOCK_OFF;
+    p1MoveInfoB.maxPp = pokedex->getMoveData<Pp>(dex::Move::KNOCK_OFF).val;
+    p1MoveInfoB.pp = p1MoveInfoB.maxPp;
+    p1PokemonInfo.moves.push_back(p1MoveInfoB);
 
     Simulation::PokemonCreationInfo p2PokemonInfo{};
     p2PokemonInfo.species = dex::Species::AMPHAROS;
@@ -58,40 +68,30 @@ inline Simulation createSingleBattleSimulation(
 
     battleCreationInfo.p1 = {{p1PokemonInfo}};
     battleCreationInfo.p2 = {{p2PokemonInfo}};
-
-    entt::dense_set<dex::Species> speciesSet{};
-    speciesSet.insert(p1PokemonInfo.species);
-    speciesSet.insert(p2PokemonInfo.species);
-    pokedex->loadSpecies(speciesSet);
-
-    if (addTsDecisions) {
-      SideDecision p1Decision{PlayerSideId::P1};
-      SideDecision p2Decision{PlayerSideId::P2};
-      SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
-      SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
-
-      p1SlotDecision.moveChoice = dex::Move::FURY_ATTACK;
-      p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-      p2SlotDecision.moveChoice = dex::Move::THUNDERBOLT;
-      p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
-      battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
-    }
   }
 
-  battleCreationInfo.turn = 2;
+  battleCreationInfo.turn = 1;
 
   return simulation;
 }
 
-inline Simulation createDoubleBattleSimulation(
-  Simulation::BattleCreationInfo& battleCreationInfo, bool /*addTsDecisions*/) {
-  Pokedex* pokedex = new Pokedex(GameMechanics::SCARLET_VIOLET);
-  entt::dense_set<dex::Move> moveSet{};
-  for (dex::Move move : {dex::Move::MOONBLAST, dex::Move::KNOCK_OFF, dex::Move::WILL_O_WISP, dex::Move::QUIVER_DANCE}) {
-    moveSet.insert(move);
-  }
+inline Simulation createDoubleBattleSimulation(Simulation::BattleCreationInfo& battleCreationInfo) {
+  static Pokedex* pokedex = nullptr;
+  if (!pokedex) {
+    pokedex = new Pokedex(GameMechanics::SCARLET_VIOLET);
+    entt::dense_set<dex::Move> moveSet{};
+    for (dex::Move move :
+         {dex::Move::MOONBLAST, dex::Move::KNOCK_OFF, dex::Move::WILL_O_WISP, dex::Move::QUIVER_DANCE}) {
+      moveSet.insert(move);
+    }
+    pokedex->loadMoves(moveSet);
 
-  pokedex->loadMoves(moveSet);
+    entt::dense_set<dex::Species> speciesSet{};
+    for (dex::Species species :
+         {dex::Species::GARDEVOIR, dex::Species::PANGORO, dex::Species::DRAGAPULT, dex::Species::RIBOMBEE})
+      speciesSet.insert(species);
+    pokedex->loadSpecies(speciesSet);
+  }
 
   Simulation simulation(*pokedex, BattleFormat::DOUBLES_BATTLE_FORMAT);
 
@@ -160,13 +160,6 @@ inline Simulation createDoubleBattleSimulation(
 
     battleCreationInfo.p1 = {{p1aPokemonInfo, p1bPokemonInfo}};
     battleCreationInfo.p2 = {{p2aPokemonInfo, p2bPokemonInfo}};
-
-    entt::dense_set<dex::Species> speciesSet{};
-    speciesSet.insert(p1aPokemonInfo.species);
-    speciesSet.insert(p1bPokemonInfo.species);
-    speciesSet.insert(p2aPokemonInfo.species);
-    speciesSet.insert(p2bPokemonInfo.species);
-    pokedex->loadSpecies(speciesSet);
   }
 
   battleCreationInfo.turn = 2;
@@ -176,3 +169,43 @@ inline Simulation createDoubleBattleSimulation(
   return simulation;
 }
 }  // namespace pokesim
+
+namespace Catch {
+template <>
+struct StringMaker<pokesim::DamageRollKind> {
+  static void append(std::string& fullName, std::string part) {
+    if (!fullName.empty()) {
+      fullName += " | " + part;
+    }
+    else {
+      fullName = part;
+    }
+  }
+
+  static std::string convert(const pokesim::DamageRollKind& value) {
+    std::string fullName = "";
+    if ((int)value & (int)pokesim::DamageRollKind::AVERAGE_DAMAGE) {
+      append(fullName, "AVERAGE_DAMAGE");
+    }
+    if ((int)value & (int)pokesim::DamageRollKind::MIN_DAMAGE) {
+      append(fullName, "MIN_DAMAGE");
+    }
+    if ((int)value & (int)pokesim::DamageRollKind::MAX_DAMAGE) {
+      append(fullName, "MAX_DAMAGE");
+    }
+    if ((int)value & (int)pokesim::DamageRollKind::GUARANTEED_CRIT_CHANCE) {
+      append(fullName, "GUARANTEED_CRIT_CHANCE");
+    }
+    if ((int)value & (int)pokesim::DamageRollKind::ALL_DAMAGE_ROLLS) {
+      append(fullName, "ALL_DAMAGE_ROLLS");
+    }
+
+    return fullName;
+  }
+};
+
+template <>
+struct StringMaker<std::nullopt_t> {
+  static std::string convert(const std::nullopt_t&) { return "nullopt"; }
+};
+}  // namespace Catch

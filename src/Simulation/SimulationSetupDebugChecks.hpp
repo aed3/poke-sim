@@ -56,7 +56,7 @@
 namespace pokesim::debug {
 struct SimulationSetupChecks {
 #ifdef NDEBUG
-  SimulationSetupChecks(const types::registry&, const std::initializer_list<Simulation::BattleCreationInfo>&) {}
+  SimulationSetupChecks(const types::registry&, const std::vector<Simulation::BattleCreationInfo>&) {}
   void addToBattleChecklist(const BattleStateSetup&, const Simulation::BattleCreationInfo&) {}
   void addToTurnDecisionChecklist(const BattleStateSetup&, const Simulation::TurnDecisionInfo&) {}
   void addToCalcDamageChecklist(
@@ -67,7 +67,7 @@ struct SimulationSetupChecks {
 #else
  private:
   const types::registry& registry;
-  const std::initializer_list<Simulation::BattleCreationInfo> battleInfoList;
+  const std::vector<Simulation::BattleCreationInfo>& battleInfoList;
 
   struct SetupEntities {
     types::entity battle;
@@ -123,7 +123,7 @@ struct SimulationSetupChecks {
       default: break;
     }
 
-    POKESIM_ASSERT_FAIL();
+    POKESIM_ASSERT_FAIL("Given target slot does not exist in a team.");
     return entt::null;
   }
 
@@ -459,7 +459,7 @@ struct SimulationSetupChecks {
 
  public:
   SimulationSetupChecks(
-    const types::registry& _registry, const std::initializer_list<Simulation::BattleCreationInfo>& _battleInfoList)
+    const types::registry& _registry, const std::vector<Simulation::BattleCreationInfo>& _battleInfoList)
       : registry(_registry), battleInfoList(_battleInfoList) {}
 
   ~SimulationSetupChecks() { checkOutputs(); }
