@@ -2,8 +2,8 @@
 
 #include "Config.hpp"
 
-// NOLINTBEGIN cppcoreguidelines-macro-usage
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
+
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
@@ -13,7 +13,7 @@ class require : public std::exception {
   std::string errorMessage;
 
  public:
-  static inline uint64_t count = 0;
+  static inline uint64_t count = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
   require(const char* file, int line, const char* function, const char* condition, const std::string& message) {
     errorMessage += file;
@@ -32,18 +32,19 @@ class require : public std::exception {
     }
   }
 
-  virtual const char* what() const noexcept override { return errorMessage.c_str(); }
+  const char* what() const noexcept override { return errorMessage.c_str(); }
 };
 }  // namespace pokesim::debug
 
+// NOLINTBEGIN cppcoreguidelines-macro-usage
 #if defined __clang__ || defined __GNUC__
 #define POKESIM_REQUIRE(condition, message) \
   pokesim::debug::require::count++;         \
-  if (!(condition)) throw pokesim::debug::require(__FILE__, __LINE__, __PRETTY_FUNCTION__, #condition, message);
+  if (!(condition)) throw pokesim::debug::require(__FILE__, __LINE__, __PRETTY_FUNCTION__, #condition, message)
 #elif defined _MSC_VER
 #define POKESIM_REQUIRE(condition, message) \
   pokesim::debug::require::count++;         \
-  if (!(condition)) throw pokesim::debug::require(__FILE__, __LINE__, __FUNCSIG__, #condition, message);
+  if (!(condition)) throw pokesim::debug::require(__FILE__, __LINE__, __FUNCSIG__, #condition, message)
 #endif
 
 #else

@@ -270,5 +270,7 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
       debugChecks.addToAnalyzeEffectChecklist(battleStateSetup, inputSetup, analyzeEffectInputInfo);
     }
   }
+
+  debugChecks.checkOutputs();
 }
 }  // namespace pokesim
