@@ -15960,8 +15960,8 @@ struct ParentEntity {
 
 /////////////////////// START OF src/Config/Require.hpp ////////////////////////
 
-// NOLINTBEGIN cppcoreguidelines-macro-usage
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
+
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
@@ -15971,7 +15971,7 @@ class require : public std::exception {
   std::string errorMessage;
 
  public:
-  static inline uint64_t count = 0;
+  static inline uint64_t count = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
   require(const char* file, int line, const char* function, const char* condition, const std::string& message) {
     errorMessage += file;
@@ -15990,18 +15990,19 @@ class require : public std::exception {
     }
   }
 
-  virtual const char* what() const noexcept override { return errorMessage.c_str(); }
+  const char* what() const noexcept override { return errorMessage.c_str(); }
 };
 }  // namespace pokesim::debug
 
+// NOLINTBEGIN cppcoreguidelines-macro-usage
 #if defined __clang__ || defined __GNUC__
 #define POKESIM_REQUIRE(condition, message) \
   pokesim::debug::require::count++;         \
-  if (!(condition)) throw pokesim::debug::require(__FILE__, __LINE__, __PRETTY_FUNCTION__, #condition, message);
+  if (!(condition)) throw pokesim::debug::require(__FILE__, __LINE__, __PRETTY_FUNCTION__, #condition, message)
 #elif defined _MSC_VER
 #define POKESIM_REQUIRE(condition, message) \
   pokesim::debug::require::count++;         \
-  if (!(condition)) throw pokesim::debug::require(__FILE__, __LINE__, __FUNCSIG__, #condition, message);
+  if (!(condition)) throw pokesim::debug::require(__FILE__, __LINE__, __FUNCSIG__, #condition, message)
 #endif
 
 #else
@@ -20867,16 +20868,7 @@ struct Checks {};
 
 namespace pokesim::debug {
 struct SimulationSetupChecks {
-#ifdef NDEBUG
-  SimulationSetupChecks(const types::registry&, const std::vector<Simulation::BattleCreationInfo>&) {}
-  void addToBattleChecklist(const BattleStateSetup&, const Simulation::BattleCreationInfo&) {}
-  void addToTurnDecisionChecklist(const BattleStateSetup&, const Simulation::TurnDecisionInfo&) {}
-  void addToCalcDamageChecklist(
-    const BattleStateSetup&, const calc_damage::InputSetup&, const Simulation::CalcDamageInputInfo&) {}
-  void addToAnalyzeEffectChecklist(
-    const BattleStateSetup&, const analyze_effect::InputSetup&, const Simulation::AnalyzeEffectInputInfo&) {}
-  static void checkBattle(const types::registry&, types::entity, const Simulation::BattleCreationInfo&) {}
-#else
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
  private:
   const types::registry& registry;
   const std::vector<Simulation::BattleCreationInfo>& battleInfoList;
@@ -21237,6 +21229,11 @@ struct SimulationSetupChecks {
     }
   }
 
+ public:
+  SimulationSetupChecks(
+    const types::registry& _registry, const std::vector<Simulation::BattleCreationInfo>& _battleInfoList)
+      : registry(_registry), battleInfoList(_battleInfoList) {}
+
   void checkOutputs() const {
     for (const auto& battleInfo : battleInfoList) {
       POKESIM_REQUIRE_NM(createdBattles.contains(&battleInfo));
@@ -21269,13 +21266,6 @@ struct SimulationSetupChecks {
     }
   }
 
- public:
-  SimulationSetupChecks(
-    const types::registry& _registry, const std::vector<Simulation::BattleCreationInfo>& _battleInfoList)
-      : registry(_registry), battleInfoList(_battleInfoList) {}
-
-  ~SimulationSetupChecks() { checkOutputs(); }
-
   void addToBattleChecklist(
     const BattleStateSetup& battleStateSetup, const Simulation::BattleCreationInfo& creationInfo) {
     createdBattles[&creationInfo].push_back(battleStateSetup.entity());
@@ -21303,7 +21293,16 @@ struct SimulationSetupChecks {
     const Simulation::BattleCreationInfo& battleCreationInfo) {
     SimulationSetupChecks(registry, {}).checkBattle(battleEntity, battleCreationInfo);
   }
-
+#else
+  SimulationSetupChecks(const types::registry&, const std::vector<Simulation::BattleCreationInfo>&) {}
+  void checkOutputs() const {}
+  void addToBattleChecklist(const BattleStateSetup&, const Simulation::BattleCreationInfo&) const {}
+  void addToTurnDecisionChecklist(const BattleStateSetup&, const Simulation::TurnDecisionInfo&) const {}
+  void addToCalcDamageChecklist(
+    const BattleStateSetup&, const calc_damage::InputSetup&, const Simulation::CalcDamageInputInfo&) const {}
+  void addToAnalyzeEffectChecklist(
+    const BattleStateSetup&, const analyze_effect::InputSetup&, const Simulation::AnalyzeEffectInputInfo&) const {}
+  static void checkBattle(const types::registry&, types::entity, const Simulation::BattleCreationInfo&) const {}
 #endif
 };
 }  // namespace pokesim::debug
@@ -21562,6 +21561,8 @@ inline void Simulation::createInitialStates(const std::vector<BattleCreationInfo
       debugChecks.addToAnalyzeEffectChecklist(battleStateSetup, inputSetup, analyzeEffectInputInfo);
     }
   }
+
+  debugChecks.checkOutputs();
 }
 }  // namespace pokesim
 
@@ -25774,7 +25775,8 @@ struct PlayerSide {
 
 ////////////// START OF src/CalcDamage/CalcDamageDebugChecks.hpp ///////////////
 
-#ifndef NDEBUG
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+
 
 
 namespace pokesim::calc_damage::debug {
@@ -27690,7 +27692,8 @@ inline void InputSetup::setBattle(types::entity entity) {
 
 /////////// START OF src/AnalyzeEffect/AnalyzeEffectDebugChecks.hpp ////////////
 
-#ifndef NDEBUG
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+
 
 namespace pokesim::analyze_effect::debug {
 struct Checks : pokesim::debug::Checks {

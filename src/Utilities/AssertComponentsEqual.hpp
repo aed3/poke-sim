@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Config/Config.hpp>
+
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
 #include <Config/Require.hpp>

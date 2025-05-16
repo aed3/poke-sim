@@ -1,6 +1,9 @@
 #pragma once
 
-#ifndef NDEBUG
+#include <Config/Config.hpp>
+
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Battle.hpp>
