@@ -27,9 +27,10 @@
     "copydoc",
     "Crits",
     "entt",
-    "tparam",
+    "FUNCSIG",
     "NOLINTBEGIN",
     "NOLINTEND",
-    "NOLINTNEXTLINE"
+    "NOLINTNEXTLINE",
+    "tparam"
   ]
 }

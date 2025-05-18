@@ -16,6 +16,7 @@
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/DebugChecks.hpp>
+#include <cstddef>
 
 namespace pokesim::analyze_effect::debug {
 struct Checks : pokesim::debug::Checks {

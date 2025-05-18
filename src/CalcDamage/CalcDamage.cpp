@@ -36,6 +36,7 @@
 #include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <cmath>
+#include <cstddef>
 #include <type_traits>
 
 #include "CalcDamageDebugChecks.hpp"
@@ -103,7 +104,7 @@ void setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
 }
 
 void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
-  damage.val = fixedPointMultiply(damage.val, ((std::uint8_t)modifiers.stab) / 100.0F);
+  damage.val = (types::damage)fixedPointMultiply(damage.val, ((std::uint8_t)modifiers.stab) / 100.0F);
 
   types::eventModifier typeEffectivenessModifier = MechanicConstants::FIXED_POINT_SCALE;
   if (modifiers.typeEffectiveness < 0) {
@@ -117,7 +118,7 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
   applyChainedModifier(damage.val, modifiers.modifyDamageEvent);
 
   if (modifiers.burn) {
-    damage.val = fixedPointMultiply(damage.val, 0.5F);
+    damage.val = (types::damage)fixedPointMultiply(damage.val, 0.5F);
   }
 
   setDamageToAtLeastOne(damage);

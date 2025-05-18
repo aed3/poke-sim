@@ -8,6 +8,7 @@
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/AssertComponentsEqual.hpp>
+#include <cstddef>
 #include <entt/container/dense_map.hpp>
 #include <entt/container/dense_set.hpp>
 #include <entt/core/type_info.hpp>

@@ -16,6 +16,7 @@
 #include <Types/Enums/GameMechanics.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>
+#include <cstddef>
 #include <cstdint>
 #include <entt/container/dense_set.hpp>
 #include <entt/entity/registry.hpp>

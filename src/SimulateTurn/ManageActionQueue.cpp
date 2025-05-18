@@ -22,6 +22,7 @@
 #include <Types/State.hpp>
 #include <Utilities/Variant.hpp>
 #include <algorithm>
+#include <cstddef>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <vector>

@@ -51,6 +51,7 @@
 #include <Types/Enums/Weather.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/DebugChecks.hpp>
+#include <cstddef>
 
 #include "Simulation.hpp"
 
@@ -490,7 +491,7 @@ struct SimulationSetupChecks {
     const BattleStateSetup&, const calc_damage::InputSetup&, const Simulation::CalcDamageInputInfo&) const {}
   void addToAnalyzeEffectChecklist(
     const BattleStateSetup&, const analyze_effect::InputSetup&, const Simulation::AnalyzeEffectInputInfo&) const {}
-  static void checkBattle(const types::registry&, types::entity, const Simulation::BattleCreationInfo&) const {}
+  static void checkBattle(const types::registry&, types::entity, const Simulation::BattleCreationInfo&) {}
 #endif
 };
 }  // namespace pokesim::debug

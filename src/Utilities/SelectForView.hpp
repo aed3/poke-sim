@@ -6,6 +6,7 @@
 #include <Components/Tags/Selection.hpp>
 #include <Simulation/RegistryContainer.hpp>
 #include <Types/Entity.hpp>
+#include <cstddef>
 #include <cstdint>
 #include <entt/container/dense_set.hpp>
 #include <vector>
