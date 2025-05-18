@@ -9,6 +9,7 @@
 #include <Types/Registry.hpp>
 #include <Utilities/RegistryLoop.hpp>
 #include <Utilities/Tags.hpp>
+#include <cstddef>
 #include <cstdint>
 #include <entt/signal/delegate.hpp>
 #include <iterator>

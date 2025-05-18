@@ -79,7 +79,7 @@ void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind)
 
   auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<internal::applyDamageRollIndex>(); };
 
-  auto updateProbabilities =
+  void (*updateProbabilities)(pokesim::Simulation&) =
     forAllDamageRolls ? [](Simulation& sim) { sim.viewForSelectedMoves<internal::assignAllDamageRollProbability>(); }
                       : [](Simulation& sim) { sim.viewForSelectedMoves<internal::assignPartialProbability>(); };
 

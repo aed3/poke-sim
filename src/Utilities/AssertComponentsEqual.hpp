@@ -6,6 +6,7 @@
 
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
+#include <cstddef>
 #include <entt/container/dense_set.hpp>
 #include <entt/container/fwd.hpp>
 #include <entt/core/type_info.hpp>

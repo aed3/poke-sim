@@ -18,6 +18,7 @@
 #include <Types/State.hpp>
 #include <Utilities/RNG.hpp>
 #include <Utilities/Tags.hpp>
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <type_traits>

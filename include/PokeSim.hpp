@@ -264,6 +264,7 @@
  * src/AnalyzeEffect/AnalyzeEffect.cpp
  * src/Components/Tags/TypeTags.hpp
  * src/Pokedex/Names.hpp
+ * src/Utilities/LambdaToDelegate.hpp
  * src/PokeSim.hpp
  */
 
@@ -15962,8 +15963,8 @@ struct ParentEntity {
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
 #include <cstdint>
-#include <cstring>
 #include <stdexcept>
+#include <string>
 
 namespace pokesim::debug {
 class require : public std::exception {
@@ -17223,6 +17224,7 @@ inline void meta_reset() noexcept {
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
+#include <cstddef>
 
 namespace pokesim {
 struct ParentEntity;
@@ -17380,6 +17382,7 @@ using BackingRegistry = entt::registry;
 template <typename Registry>
 using BackingHandle = entt::basic_handle<Registry>;
 }  // namespace pokesim::types::internal
+#endif
 
 namespace pokesim::types {
 class registry : public internal::BackingRegistry {
@@ -17461,7 +17464,6 @@ class registry : public internal::BackingRegistry {
 
 using handle = internal::BackingHandle<registry>;
 }  // namespace pokesim::types
-#endif
 
 //////////////////////// END OF src/Types/Registry.hpp /////////////////////////
 
@@ -17469,6 +17471,7 @@ using handle = internal::BackingHandle<registry>;
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
+#include <cstddef>
 #include <vector>
 
 
@@ -17994,6 +17997,7 @@ enum class SideCondition : std::uint8_t {
 
 ///////////////////// START OF src/Types/Enums/Status.hpp //////////////////////
 
+#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18105,6 +18109,7 @@ using effectEnum = pokesim::internal::variant<
 
 ////////////////////// START OF src/Types/Enums/Move.hpp ///////////////////////
 
+#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18122,6 +18127,7 @@ static constexpr std::size_t TOTAL_MOVE_COUNT = (std::size_t)Move::MOVE_TOTAL;
 
 ////////////////////// START OF src/Types/Enums/Stat.hpp ///////////////////////
 
+#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18325,6 +18331,7 @@ struct Ivs {
 
 ////////////////////// START OF src/Types/Enums/Type.hpp ///////////////////////
 
+#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18435,6 +18442,7 @@ struct EffectiveSpe {
 
 ///////////////////// START OF src/Types/Enums/Ability.hpp /////////////////////
 
+#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18452,6 +18460,7 @@ static constexpr std::size_t TOTAL_ABILITY_COUNT = (std::size_t)Ability::ABILITY
 
 ///////////////////// START OF src/Types/Enums/Gender.hpp //////////////////////
 
+#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18465,6 +18474,7 @@ static constexpr std::size_t TOTAL_GENDER_COUNT = 3U;
 
 ////////////////////// START OF src/Types/Enums/Item.hpp ///////////////////////
 
+#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18482,6 +18492,7 @@ static constexpr std::size_t TOTAL_ITEM_COUNT = (std::size_t)Item::ITEM_TOTAL;
 
 ///////////////////// START OF src/Types/Enums/Nature.hpp //////////////////////
 
+#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18499,6 +18510,7 @@ static constexpr std::size_t TOTAL_NATURE_COUNT = (std::size_t)Nature::NATURE_TO
 
 ///////////////////// START OF src/Types/Enums/Species.hpp /////////////////////
 
+#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18524,7 +18536,7 @@ enum class Species : std::uint16_t {
   // clang-format on
 };
 
-static constexpr std::size_t TOTAL_SPECIES_COUINT = (std::size_t)Species::SPECIES_TOTAL;
+static constexpr std::size_t TOTAL_SPECIES_COUNT = (std::size_t)Species::SPECIES_TOTAL;
 }  // namespace pokesim::dex
 
 ////////////////////// END OF src/Types/Enums/Species.hpp //////////////////////
@@ -19939,6 +19951,7 @@ struct RegistryLoop<
 
 //////////////// START OF src/Simulation/RegistryContainer.hpp /////////////////
 
+#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <type_traits>
@@ -20808,6 +20821,7 @@ struct Turn {
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
+#include <cstddef>
 
 namespace pokesim::debug {
 struct Checks {
@@ -20864,6 +20878,9 @@ struct Checks {};
 ///////////////////// END OF src/Utilities/DebugChecks.hpp /////////////////////
 
 //////////// START OF src/Simulation/SimulationSetupDebugChecks.hpp ////////////
+
+#include <cstddef>
+
 
 namespace pokesim::debug {
 struct SimulationSetupChecks {
@@ -21301,7 +21318,7 @@ struct SimulationSetupChecks {
     const BattleStateSetup&, const calc_damage::InputSetup&, const Simulation::CalcDamageInputInfo&) const {}
   void addToAnalyzeEffectChecklist(
     const BattleStateSetup&, const analyze_effect::InputSetup&, const Simulation::AnalyzeEffectInputInfo&) const {}
-  static void checkBattle(const types::registry&, types::entity, const Simulation::BattleCreationInfo&) const {}
+  static void checkBattle(const types::registry&, types::entity, const Simulation::BattleCreationInfo&) {}
 #endif
 };
 }  // namespace pokesim::debug
@@ -22348,6 +22365,7 @@ inline void runModifySpe(Simulation& simulation);
 
 /////////////////// START OF src/Utilities/SelectForView.hpp ///////////////////
 
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -22403,6 +22421,7 @@ using SelectForCurrentActionMoveView =
 
 ///////////////////// START OF src/Simulation/RunEvent.cpp /////////////////////
 
+#include <cstddef>
 #include <cstdint>
 #include <type_traits>
 
@@ -23629,6 +23648,7 @@ inline types::rngResult nextBoundedRandomValue(RngSeed& seed, types::rngResult u
 
 ////////////////// START OF src/SimulateTurn/RandomChance.cpp //////////////////
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <type_traits>
@@ -24111,6 +24131,7 @@ struct Team {
 /////////////// START OF src/SimulateTurn/ManageActionQueue.cpp ////////////////
 
 #include <algorithm>
+#include <cstddef>
 #include <vector>
 
 namespace pokesim::simulate_turn {
@@ -24378,7 +24399,7 @@ inline void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRo
 
   auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<internal::applyDamageRollIndex>(); };
 
-  auto updateProbabilities =
+  void (*updateProbabilities)(pokesim::Simulation&) =
     forAllDamageRolls ? [](Simulation& sim) { sim.viewForSelectedMoves<internal::assignAllDamageRollProbability>(); }
                       : [](Simulation& sim) { sim.viewForSelectedMoves<internal::assignPartialProbability>(); };
 
@@ -25776,6 +25797,7 @@ struct PlayerSide {
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
+#include <cstddef>
 
 
 namespace pokesim::calc_damage::debug {
@@ -26128,6 +26150,7 @@ struct P2Defending {};
 //////////////////// START OF src/CalcDamage/CalcDamage.cpp ////////////////////
 
 #include <cmath>
+#include <cstddef>
 #include <type_traits>
 
 
@@ -26193,7 +26216,7 @@ inline void setDefendingSide(types::handle moveHandle, const Defenders& defender
 }
 
 inline void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
-  damage.val = fixedPointMultiply(damage.val, ((std::uint8_t)modifiers.stab) / 100.0F);
+  damage.val = (types::damage)fixedPointMultiply(damage.val, ((std::uint8_t)modifiers.stab) / 100.0F);
 
   types::eventModifier typeEffectivenessModifier = MechanicConstants::FIXED_POINT_SCALE;
   if (modifiers.typeEffectiveness < 0) {
@@ -26207,7 +26230,7 @@ inline void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
   applyChainedModifier(damage.val, modifiers.modifyDamageEvent);
 
   if (modifiers.burn) {
-    damage.val = fixedPointMultiply(damage.val, 0.5F);
+    damage.val = (types::damage)fixedPointMultiply(damage.val, 0.5F);
   }
 
   setDamageToAtLeastOne(damage);
@@ -26508,6 +26531,9 @@ inline void run(Simulation& simulation) {
 ///////////////////// END OF src/CalcDamage/CalcDamage.cpp /////////////////////
 
 ///////////////// START OF src/Battle/Setup/SideStateSetup.cpp /////////////////
+
+#include <cstddef>
+
 
 namespace pokesim {
 SideStateSetup::SideStateSetup(types::registry& registry, types::entity entity, PlayerSideId playerSideId)
@@ -27693,6 +27719,7 @@ inline void InputSetup::setBattle(types::entity entity) {
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
+#include <cstddef>
 
 namespace pokesim::analyze_effect::debug {
 struct Checks : pokesim::debug::Checks {
@@ -27833,7 +27860,9 @@ struct RemovedEffect {
 
 ///////////////// START OF src/AnalyzeEffect/AnalyzeEffect.cpp /////////////////
 
+#include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <vector>
 
 
@@ -28051,18 +28080,27 @@ inline void createAppliedEffectBattles(Simulation& simulation) {
   if (simulation.analyzeEffectOptions.reconsiderActiveEffects) {
     simulation.registry.view<Inputs>().each([&](types::entity battleEntity, const Inputs& inputs) {
       POKESIM_REQUIRE(!inputs.val.empty(), "Battles with input components should have input entities.");
-      battlesByCloneCount[inputs.val.size()].push_back(battleEntity);
+      POKESIM_REQUIRE(
+        inputs.val.size() <= std::numeric_limits<types::eventPossibilities>().max(),
+        "More clones are being made than possibilities.");
+      types::eventPossibilities cloneCount = (types::eventPossibilities)inputs.val.size();
+      battlesByCloneCount[cloneCount].push_back(battleEntity);
     });
   }
   else {
     simulation.registry.view<Inputs>().each([&](types::entity battleEntity, const Inputs& inputs) {
       POKESIM_REQUIRE(!inputs.val.empty(), "Battles with input components should have input entities.");
+      POKESIM_REQUIRE(
+        inputs.val.size() <= std::numeric_limits<types::eventPossibilities>().max(),
+        "More clones are being made than possibilities.");
+      types::eventPossibilities cloneCount = (types::eventPossibilities)inputs.val.size();
+
       const RunsOneCalculationCount* ignoredInputCount =
         simulation.registry.try_get<RunsOneCalculationCount>(battleEntity);
       types::eventPossibilities ignoredCount = ignoredInputCount == nullptr ? 0U : ignoredInputCount->val;
 
-      POKESIM_REQUIRE(inputs.val.size() >= ignoredCount, "Must have more inputs than inputs ignored.");
-      battlesByCloneCount[inputs.val.size() - ignoredCount].push_back(battleEntity);
+      POKESIM_REQUIRE(cloneCount >= ignoredCount, "Must have more inputs than inputs ignored.");
+      battlesByCloneCount[cloneCount - ignoredCount].push_back(battleEntity);
     });
   }
 
@@ -28408,6 +28446,40 @@ inline std::string toID(const std::string& name);
 }  // namespace pokesim::dex
 
 ///////////////////////// END OF src/Pokedex/Names.hpp /////////////////////////
+
+///////////////// START OF src/Utilities/LambdaToDelegate.hpp //////////////////
+
+namespace pokesim::internal {
+struct LambdaToDelegate {
+  template <typename Lambda>
+  static auto create(Lambda lambda) {
+    return DelegateHolder<Lambda>(lambda);
+  }
+
+ private:
+  template <typename...>
+  struct DelegateHolder;
+
+  template <typename ReturnType, typename... LambdaArgs>
+  struct DelegateHolder<ReturnType (*)(LambdaArgs...)> {
+   private:
+    struct LambdaHolder {
+      ReturnType (*fn)(LambdaArgs...) = nullptr;
+    } lambdaHolder;
+
+    static ReturnType lambdaRunner(const void* ptr, LambdaArgs... args) {
+      return static_cast<const LambdaHolder*>(ptr)->fn(args...);
+    }
+
+   public:
+    entt::delegate<ReturnType(LambdaArgs...)> delegate;
+    DelegateHolder(ReturnType (*lambda)(LambdaArgs...))
+        : lambdaHolder{lambda}, delegate{&DelegateHolder::lambdaRunner, &lambdaHolder} {}
+  };
+};
+}  // namespace pokesim::internal
+
+////////////////// END OF src/Utilities/LambdaToDelegate.hpp ///////////////////
 
 /////////////////////////// START OF src/PokeSim.hpp ///////////////////////////
 

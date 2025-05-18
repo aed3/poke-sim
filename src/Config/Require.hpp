@@ -5,8 +5,8 @@
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
 #include <cstdint>
-#include <cstring>
 #include <stdexcept>
+#include <string>
 
 namespace pokesim::debug {
 class require : public std::exception {

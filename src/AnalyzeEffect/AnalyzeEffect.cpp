@@ -32,8 +32,10 @@
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
+#include <cstddef>
 #include <cstdint>
 #include <entt/container/dense_map.hpp>
+#include <limits>
 #include <vector>
 
 #include "AnalyzeEffectDebugChecks.hpp"
@@ -252,18 +254,27 @@ void createAppliedEffectBattles(Simulation& simulation) {
   if (simulation.analyzeEffectOptions.reconsiderActiveEffects) {
     simulation.registry.view<Inputs>().each([&](types::entity battleEntity, const Inputs& inputs) {
       POKESIM_REQUIRE(!inputs.val.empty(), "Battles with input components should have input entities.");
-      battlesByCloneCount[inputs.val.size()].push_back(battleEntity);
+      POKESIM_REQUIRE(
+        inputs.val.size() <= std::numeric_limits<types::eventPossibilities>().max(),
+        "More clones are being made than possibilities.");
+      types::eventPossibilities cloneCount = (types::eventPossibilities)inputs.val.size();
+      battlesByCloneCount[cloneCount].push_back(battleEntity);
     });
   }
   else {
     simulation.registry.view<Inputs>().each([&](types::entity battleEntity, const Inputs& inputs) {
       POKESIM_REQUIRE(!inputs.val.empty(), "Battles with input components should have input entities.");
+      POKESIM_REQUIRE(
+        inputs.val.size() <= std::numeric_limits<types::eventPossibilities>().max(),
+        "More clones are being made than possibilities.");
+      types::eventPossibilities cloneCount = (types::eventPossibilities)inputs.val.size();
+
       const RunsOneCalculationCount* ignoredInputCount =
         simulation.registry.try_get<RunsOneCalculationCount>(battleEntity);
       types::eventPossibilities ignoredCount = ignoredInputCount == nullptr ? 0U : ignoredInputCount->val;
 
-      POKESIM_REQUIRE(inputs.val.size() >= ignoredCount, "Must have more inputs than inputs ignored.");
-      battlesByCloneCount[inputs.val.size() - ignoredCount].push_back(battleEntity);
+      POKESIM_REQUIRE(cloneCount >= ignoredCount, "Must have more inputs than inputs ignored.");
+      battlesByCloneCount[cloneCount - ignoredCount].push_back(battleEntity);
     });
   }
 

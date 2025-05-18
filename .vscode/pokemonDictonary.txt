@@ -114,6 +114,7 @@ Slowbro
 Magnemite
 Magneton
 Farfetch
+Farfetchd
 Doduo
 Dodrio
 Seel
@@ -923,6 +924,7 @@ Style
 Oricorio
 Pom
 Pa
+Pau
 Sensu
 Cutiefly
 Ribombee
@@ -1073,6 +1075,7 @@ Obstagoon
 Perrserker
 Cursola
 Sirfetch
+Sirfetchd
 Rime
 Runerigus
 Milcery
@@ -2028,6 +2031,7 @@ Follow
 Force
 Foresight
 Forest
+Forests
 Forever
 Foul
 Freeze
@@ -2133,12 +2137,14 @@ Karate
 Kick
 Kinesis
 King
+Kings
 Kiss
 Knock
 Knot
 Knuckle
 Kowtow
 Lance
+Lands
 Lariat
 Laser
 Lash
@@ -2149,6 +2155,7 @@ Leafage
 Leech
 Leer
 Let
+Lets
 Lick
 Life
 Light
@@ -2214,6 +2221,7 @@ Multi
 Mystical
 Nasty
 Nature
+Natures
 Needle
 Never
 Nice
@@ -3389,6 +3397,7 @@ Disguise
 Dish
 Dog
 Download
+Dragons
 Draw
 Dreams
 Drizzle
@@ -3464,6 +3473,7 @@ Medicine
 Merciless
 Might
 Mimicry
+Minds
 Minus
 Mold
 Moody
@@ -3828,9 +3838,11 @@ Autograph
 Aux
 Avocado
 Awakening
+Azelfs
 Azure
 Babiri
 Bach
+Bachs
 Bacon
 Badge
 Bag
@@ -3869,6 +3881,7 @@ Bluesky
 Bluk
 Blunder
 Bob
+Bobs
 Bold
 Bones
 Bonnets
@@ -3883,6 +3896,7 @@ Brace
 Bracelet
 Bracer
 Briar
+Briars
 Bridge
 Bright
 Brittle
@@ -4089,6 +4103,7 @@ God
 Goggles
 Golden
 Gonzap
+Gonzaps
 Gorgeous
 Gracidea
 Grade
@@ -4138,6 +4153,7 @@ Iapapa
 Iceroot
 Icium
 Ilima
+Ilimas
 Impish
 Incense
 Incinium
@@ -4169,7 +4185,9 @@ Keystone
 Kit
 Kiwi
 Kofu
+Kofus
 Kommonium
+Koraidons
 Krane
 Kuo
 Lagging
@@ -4179,6 +4197,7 @@ Latiosite
 Lax
 Leaden
 Leader
+Leaders
 Leafy
 Leek
 Left
@@ -4239,6 +4258,7 @@ Materials
 Mawilite
 Mayonnaise
 Mayor
+Mayors
 Mech
 Mechanical
 Medal
@@ -4249,6 +4269,7 @@ Member
 Memo
 Memory
 Mental
+Mesprits
 Metagrossite
 Meteorite
 Mewnium
@@ -4258,6 +4279,7 @@ Mild
 Mimikium
 MiracleBerry
 Mirage
+Miraidons
 Miror
 Mix
 Mixed
@@ -4298,6 +4320,7 @@ Note
 Nugget
 Nutpea
 Oak
+Oaks
 Occa
 Odd
 Oil
@@ -4393,6 +4416,8 @@ Prison
 Prize
 Prof
 Professor
+Professors
+Profs
 Prop
 Prosciutto
 Protective
@@ -4506,6 +4531,7 @@ Soda
 Solarizer
 Solganium
 Sonia
+Sonias
 Soot
 Sootfoot
 Soothe
@@ -4610,6 +4636,7 @@ Unusual
 Upgrade
 Urge
 Utility
+Uxies
 Vase
 Vee
 Venusaurite

@@ -29,6 +29,7 @@
 #include <Types/MechanicConstants.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/DebugChecks.hpp>
+#include <cstddef>
 
 #include "Helpers.hpp"
 

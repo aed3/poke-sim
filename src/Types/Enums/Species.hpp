@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -25,5 +26,5 @@ enum class Species : std::uint16_t {
   // clang-format on
 };
 
-static constexpr std::size_t TOTAL_SPECIES_COUINT = (std::size_t)Species::SPECIES_TOTAL;
+static constexpr std::size_t TOTAL_SPECIES_COUNT = (std::size_t)Species::SPECIES_TOTAL;
 }  // namespace pokesim::dex
