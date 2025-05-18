@@ -10,6 +10,7 @@
 #include <entt/container/dense_set.hpp>
 #include <entt/container/fwd.hpp>
 #include <entt/core/type_info.hpp>
+#include <type_traits>
 
 namespace pokesim {
 struct ParentEntity;
@@ -92,7 +93,8 @@ class AssertComponentsEqual {
     }
     else if constexpr (entt::is_complete_v<isList<Member>>) {
       POKESIM_REQUIRE_NM(current.size() == initial.size());
-      for (std::size_t i = 0; i < current.size(); i++) {
+      using size = std::result_of_t<decltype (&Member::size)(Member)>;
+      for (size i = 0; i < current.size(); i++) {
         compareMember(current[i], initial[i], registry);
       }
     }
@@ -124,8 +126,11 @@ class AssertComponentsEqual {
       }
     }
 
-    // Not a static_assert so this only fails on types that actually get copied
+#ifdef _MSC_VER
+#pragma warning(surpress : 4702)
+#endif
     POKESIM_REQUIRE_FAIL("This component needs a dedicated equals function.");
+    // Not a static_assert so this only fails on types that actually get copied
   }
 };
 }  // namespace pokesim::debug
