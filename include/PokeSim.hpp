@@ -264,6 +264,7 @@
  * src/AnalyzeEffect/AnalyzeEffect.cpp
  * src/Components/Tags/TypeTags.hpp
  * src/Pokedex/Names.hpp
+ * src/Utilities/LambdaToDelegate.hpp
  * src/PokeSim.hpp
  */
 
@@ -17224,6 +17225,7 @@ inline void meta_reset() noexcept {
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
 #include <cstddef>
+#include <type_traits>
 
 namespace pokesim {
 struct ParentEntity;
@@ -17306,7 +17308,8 @@ class AssertComponentsEqual {
     }
     else if constexpr (entt::is_complete_v<isList<Member>>) {
       POKESIM_REQUIRE_NM(current.size() == initial.size());
-      for (std::size_t i = 0; i < current.size(); i++) {
+      using size = std::result_of_t<decltype (&Member::size)(Member)>;
+      for (size i = 0; i < current.size(); i++) {
         compareMember(current[i], initial[i], registry);
       }
     }
@@ -17338,8 +17341,11 @@ class AssertComponentsEqual {
       }
     }
 
-    // Not a static_assert so this only fails on types that actually get copied
+#ifdef _MSC_VER
+#pragma warning(surpress : 4702)
+#endif
     POKESIM_REQUIRE_FAIL("This component needs a dedicated equals function.");
+    // Not a static_assert so this only fails on types that actually get copied
   }
 };
 }  // namespace pokesim::debug
@@ -17376,15 +17382,6 @@ using handle = entt::basic_handle<registry>;
 
 #include <type_traits>
 
-#ifdef POKESIM_ENTITY_VIEWER
-#include <Utilities/EntityViewer.hpp>
-
-namespace pokesim::types::internal {
-using BackingRegistry = pokesim::debug::EntityViewerRegistry;
-template <typename Registry>
-using BackingHandle = pokesim::debug::EntityViewerHandle<Registry>;
-}  // namespace pokesim::types::internal
-#else
 namespace pokesim::types::internal {
 using BackingRegistry = entt::registry;
 template <typename Registry>
@@ -17472,7 +17469,6 @@ class registry : public internal::BackingRegistry {
 
 using handle = internal::BackingHandle<registry>;
 }  // namespace pokesim::types
-#endif
 
 //////////////////////// END OF src/Types/Registry.hpp /////////////////////////
 
@@ -22059,7 +22055,7 @@ template <typename Number1>
 void applyChainedModifier(Number1& value, types::eventModifier eventModifier) {
   types::eventModifier modified = value * eventModifier;
   types::eventModifier scaled = modified + MechanicConstants::FIXED_POINT_HALF_SCALE - 1U;
-  value = scaled / MechanicConstants::FIXED_POINT_SCALE;
+  value = (Number1)(scaled / MechanicConstants::FIXED_POINT_SCALE);
 }
 
 template <typename Multiplier>
@@ -28455,6 +28451,40 @@ inline std::string toID(const std::string& name);
 }  // namespace pokesim::dex
 
 ///////////////////////// END OF src/Pokedex/Names.hpp /////////////////////////
+
+///////////////// START OF src/Utilities/LambdaToDelegate.hpp //////////////////
+
+namespace pokesim::internal {
+struct LambdaToDelegate {
+  template <typename Lambda>
+  static auto create(Lambda lambda) {
+    return DelegateHolder<Lambda>(lambda);
+  }
+
+ private:
+  template <typename...>
+  struct DelegateHolder;
+
+  template <typename ReturnType, typename... LambdaArgs>
+  struct DelegateHolder<ReturnType (*)(LambdaArgs...)> {
+   private:
+    struct LambdaHolder {
+      ReturnType (*fn)(LambdaArgs...) = nullptr;
+    } lambdaHolder;
+
+    static ReturnType lambdaRunner(const void* ptr, LambdaArgs... args) {
+      return static_cast<const LambdaHolder*>(ptr)->fn(args...);
+    }
+
+   public:
+    entt::delegate<ReturnType(LambdaArgs...)> delegate;
+    DelegateHolder(ReturnType (*lambda)(LambdaArgs...))
+        : lambdaHolder{lambda}, delegate{&DelegateHolder::lambdaRunner, &lambdaHolder} {}
+  };
+};
+}  // namespace pokesim::internal
+
+////////////////// END OF src/Utilities/LambdaToDelegate.hpp ///////////////////
 
 /////////////////////////// START OF src/PokeSim.hpp ///////////////////////////
 

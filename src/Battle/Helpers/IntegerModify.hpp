@@ -16,7 +16,7 @@ template <typename Number1>
 void applyChainedModifier(Number1& value, types::eventModifier eventModifier) {
   types::eventModifier modified = value * eventModifier;
   types::eventModifier scaled = modified + MechanicConstants::FIXED_POINT_HALF_SCALE - 1U;
-  value = scaled / MechanicConstants::FIXED_POINT_SCALE;
+  value = (Number1)(scaled / MechanicConstants::FIXED_POINT_SCALE);
 }
 
 template <typename Multiplier>

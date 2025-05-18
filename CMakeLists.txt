@@ -38,6 +38,12 @@ project(PokeSim)
 
 check_ipo_supported(RESULT IpoSupported OUTPUT error)
 
+option(ENABLE_TESTING "Build the tests along with PokeSim. This will negatively effect the library's performance." ON)
+if (ENABLE_TESTING)
+  add_compile_definitions(POKESIM_ENABLE_TESTING)
+endif()
+
+
 set (SOURCES
   src/AnalyzeEffect/AnalyzeEffect.cpp
   src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp
