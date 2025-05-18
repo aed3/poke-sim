@@ -17341,8 +17341,14 @@ class AssertComponentsEqual {
       }
     }
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4702)
+#endif
     // Not a static_assert so this only fails on types that actually get copied
     POKESIM_REQUIRE_FAIL("This component needs a dedicated equals function.");
+#ifdef _MSC_VER
+#pragma warning(default : 4702)
+#endif
   }
 };
 }  // namespace pokesim::debug
@@ -24376,8 +24382,7 @@ inline void assignPartialProbability(
 }
 
 inline void assignAllDamageRollProbability(
-  types::registry& registry, const Damage& damage, DamageRolls& damageRolls, const Battle& battle,
-  const RandomEventIndex& randomRollIndex) {
+  types::registry& registry, const Damage& damage, DamageRolls& damageRolls, const Battle& battle) {
   types::eventPossibilities damageCount = 0U;
   for (const Damage damageRoll : damageRolls.val) {
     damageCount += damageRoll.val == damage.val ? 1 : 0;
@@ -25712,7 +25717,7 @@ namespace pokesim::dex {
 inline void internal::ChoiceLockEvents::onDisableMove(
   types::registry& registry, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
   POKESIM_REQUIRE(
-    std::find(moveSlots.val.begin(), moveSlots.val.end(), choiceLocked.val),
+    std::find(moveSlots.val.begin(), moveSlots.val.end(), choiceLocked.val) != moveSlots.val.end(),
     "Should skip if the move is no longer present, but when does that happen?");
 
   for (types::entity entity : moveSlots.val) {
