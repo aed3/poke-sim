@@ -109,6 +109,10 @@ class AssertComponentsEqual {
   }
 
  public:
+#ifdef _MSC_VER
+// The fail at the end is counted as unreachable, which in most cases is intended
+#pragma warning(disable : 4702)
+#endif
   static void check(const Type& current, const Type& initial, const types::registry& registry) {
     if constexpr (hasEqualTo<Type>::value) {
       compareMember(current, initial, registry);
@@ -127,15 +131,12 @@ class AssertComponentsEqual {
       }
     }
 
-#ifdef _MSC_VER
-#pragma warning(disable : 4702)
-#endif
     // Not a static_assert so this only fails on types that actually get copied
     POKESIM_REQUIRE_FAIL("This component needs a dedicated equals function.");
+  }
 #ifdef _MSC_VER
 #pragma warning(default : 4702)
 #endif
-  }
 };
 }  // namespace pokesim::debug
 
