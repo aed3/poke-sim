@@ -264,7 +264,6 @@
  * src/AnalyzeEffect/AnalyzeEffect.cpp
  * src/Components/Tags/TypeTags.hpp
  * src/Pokedex/Names.hpp
- * src/Utilities/LambdaToDelegate.hpp
  * src/PokeSim.hpp
  */
 
@@ -17382,6 +17381,15 @@ using handle = entt::basic_handle<registry>;
 
 #include <type_traits>
 
+#ifdef POKESIM_ENTITY_VIEWER
+#include <Utilities/EntityViewer.hpp>
+
+namespace pokesim::types::internal {
+using BackingRegistry = pokesim::debug::EntityViewerRegistry;
+template <typename Registry>
+using BackingHandle = pokesim::debug::EntityViewerHandle<Registry>;
+}  // namespace pokesim::types::internal
+#else
 namespace pokesim::types::internal {
 using BackingRegistry = entt::registry;
 template <typename Registry>
@@ -17469,6 +17477,7 @@ class registry : public internal::BackingRegistry {
 
 using handle = internal::BackingHandle<registry>;
 }  // namespace pokesim::types
+#endif
 
 //////////////////////// END OF src/Types/Registry.hpp /////////////////////////
 
@@ -28451,40 +28460,6 @@ inline std::string toID(const std::string& name);
 }  // namespace pokesim::dex
 
 ///////////////////////// END OF src/Pokedex/Names.hpp /////////////////////////
-
-///////////////// START OF src/Utilities/LambdaToDelegate.hpp //////////////////
-
-namespace pokesim::internal {
-struct LambdaToDelegate {
-  template <typename Lambda>
-  static auto create(Lambda lambda) {
-    return DelegateHolder<Lambda>(lambda);
-  }
-
- private:
-  template <typename...>
-  struct DelegateHolder;
-
-  template <typename ReturnType, typename... LambdaArgs>
-  struct DelegateHolder<ReturnType (*)(LambdaArgs...)> {
-   private:
-    struct LambdaHolder {
-      ReturnType (*fn)(LambdaArgs...) = nullptr;
-    } lambdaHolder;
-
-    static ReturnType lambdaRunner(const void* ptr, LambdaArgs... args) {
-      return static_cast<const LambdaHolder*>(ptr)->fn(args...);
-    }
-
-   public:
-    entt::delegate<ReturnType(LambdaArgs...)> delegate;
-    DelegateHolder(ReturnType (*lambda)(LambdaArgs...))
-        : lambdaHolder{lambda}, delegate{&DelegateHolder::lambdaRunner, &lambdaHolder} {}
-  };
-};
-}  // namespace pokesim::internal
-
-////////////////// END OF src/Utilities/LambdaToDelegate.hpp ///////////////////
 
 /////////////////////////// START OF src/PokeSim.hpp ///////////////////////////
 
