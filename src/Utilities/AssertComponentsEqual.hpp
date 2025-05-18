@@ -127,8 +127,14 @@ class AssertComponentsEqual {
       }
     }
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4702)
+#endif
     // Not a static_assert so this only fails on types that actually get copied
     POKESIM_REQUIRE_FAIL("This component needs a dedicated equals function.");
+#ifdef _MSC_VER
+#pragma warning(default : 4702)
+#endif
   }
 };
 }  // namespace pokesim::debug

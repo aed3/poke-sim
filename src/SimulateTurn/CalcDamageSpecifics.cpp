@@ -44,8 +44,7 @@ void assignPartialProbability(
 }
 
 void assignAllDamageRollProbability(
-  types::registry& registry, const Damage& damage, DamageRolls& damageRolls, const Battle& battle,
-  const RandomEventIndex& randomRollIndex) {
+  types::registry& registry, const Damage& damage, DamageRolls& damageRolls, const Battle& battle) {
   types::eventPossibilities damageCount = 0U;
   for (const Damage damageRoll : damageRolls.val) {
     damageCount += damageRoll.val == damage.val ? 1 : 0;
