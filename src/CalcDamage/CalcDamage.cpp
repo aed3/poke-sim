@@ -59,8 +59,7 @@ void checkForAndApplyStab(
 }
 
 void checkForAndApplyTypeEffectiveness(
-  types::handle moveHandle, const Attacker& attacker, const Defenders& defenders, const TypeName& type,
-  DamageRollModifiers& modifier) {
+  types::handle moveHandle, const Defenders& defenders, const TypeName& type, DamageRollModifiers& modifier) {
   const SpeciesTypes& defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defenders.only());
 
   modifier.typeEffectiveness = getAttackEffectiveness(defenderTypes, type.name);
@@ -151,8 +150,7 @@ void applyDamageRollModifier(DamageRolls& damageRolls, Damage damage, const Dama
 }
 
 void reduceDamageRollsToDefenderHp(
-  types::handle moveHandle, DamageRolls& damageRolls, Damage& damage, const DamageRollModifiers& modifier,
-  const Defenders& defenders) {
+  types::handle moveHandle, DamageRolls& damageRolls, Damage& damage, const Defenders& defenders) {
   const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defenders.only());
   for (auto& damageRoll : damageRolls.val) {
     damageRoll.val = std::min(defenderHp.val, damageRoll.val);

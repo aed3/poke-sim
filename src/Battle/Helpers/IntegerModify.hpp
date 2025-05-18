@@ -6,7 +6,7 @@
 namespace pokesim {
 template <typename Number1, typename Number2>
 types::eventModifier fixedPointMultiply(Number1 value, Number2 multiplier) {
-  types::eventModifier modifier = multiplier * MechanicConstants::FIXED_POINT_SCALE;
+  types::eventModifier modifier = (types::eventModifier)(multiplier * MechanicConstants::FIXED_POINT_SCALE);
   types::eventModifier modified = value * modifier;
   types::eventModifier scaled = modified + MechanicConstants::FIXED_POINT_HALF_SCALE - 1U;
   return scaled / MechanicConstants::FIXED_POINT_SCALE;
