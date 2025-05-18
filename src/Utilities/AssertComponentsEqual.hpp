@@ -93,7 +93,8 @@ class AssertComponentsEqual {
     }
     else if constexpr (entt::is_complete_v<isList<Member>>) {
       POKESIM_REQUIRE_NM(current.size() == initial.size());
-      using size = std::result_of_t<decltype (&Member::size)(Member)>;
+      using size = std::invoke_result_t<decltype(&Member::size), Member>;
+
       for (size i = 0; i < current.size(); i++) {
         compareMember(current[i], initial[i], registry);
       }
@@ -126,11 +127,8 @@ class AssertComponentsEqual {
       }
     }
 
-#ifdef _MSC_VER
-#pragma warning(surpress : 4702)
-#endif
-    POKESIM_REQUIRE_FAIL("This component needs a dedicated equals function.");
     // Not a static_assert so this only fails on types that actually get copied
+    POKESIM_REQUIRE_FAIL("This component needs a dedicated equals function.");
   }
 };
 }  // namespace pokesim::debug

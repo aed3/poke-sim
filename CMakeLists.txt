@@ -103,41 +103,43 @@ target_compile_options(PokeSim PRIVATE ${compiler_warning_options})
 # Tests
 ############################################################
 
-add_executable(PokeSimTests
-  tests/AnalyzeEffectTest.cpp
-  tests/BattleStateTest.cpp
-  tests/PokedexTest.cpp
-  tests/CalculateDamageTest.cpp
-  tests/RegistryContainerTests.cpp
-  tests/SimulationSetupTest.cpp
-  tests/SimulateTurnsTest.cpp
-  tests/Tests.cpp
-  external/Catch2/catch_amalgamated.cpp
-)
+if (ENABLE_TESTING)
+  add_executable(PokeSimTests
+    tests/AnalyzeEffectTest.cpp
+    tests/BattleStateTest.cpp
+    tests/PokedexTest.cpp
+    tests/CalculateDamageTest.cpp
+    tests/RegistryContainerTests.cpp
+    tests/SimulationSetupTest.cpp
+    tests/SimulateTurnsTest.cpp
+    tests/Tests.cpp
+    external/Catch2/catch_amalgamated.cpp
+  )
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-  if (IpoSupported)
-    cmake_host_system_information(RESULT SystemMemory QUERY TOTAL_PHYSICAL_MEMORY)
-    if (SystemMemory GREATER 4000)
-      message(STATUS "IPO / LTO enabled")
-      set_property(TARGET PokeSim PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-      set_property(TARGET PokeSimTests PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+  if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    if (IpoSupported)
+      cmake_host_system_information(RESULT SystemMemory QUERY TOTAL_PHYSICAL_MEMORY)
+      if (SystemMemory GREATER 4000)
+        message(STATUS "IPO / LTO enabled")
+        set_property(TARGET PokeSim PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+        set_property(TARGET PokeSimTests PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+      else()
+        message(STATUS "System memory of ${SystemMemory} is too low for LTO")
+      endif()
     else()
-      message(STATUS "System memory of ${SystemMemory} is too low for LTO")
+      message(STATUS "IPO / LTO not supported: <${error}>")
     endif()
-  else()
-    message(STATUS "IPO / LTO not supported: <${error}>")
   endif()
-endif()
 
-option(USE_SINGLE_HEADER_FILE "Use the Single Header File version of the library when running tests." OFF)
+  option(USE_SINGLE_HEADER_FILE "Use the Single Header File version of the library when running tests." OFF)
 
-target_compile_options(PokeSimTests PRIVATE ${compiler_warning_options})
+  target_compile_options(PokeSimTests PRIVATE ${compiler_warning_options})
 
-if (USE_SINGLE_HEADER_FILE)
-  message(STATUS "Using single header file instead of library")
-  target_include_directories(PokeSimTests PUBLIC ${PROJECT_SOURCE_DIR}/external)
-  target_compile_definitions(PokeSimTests PRIVATE USE_SINGLE_HEADER)
-else()
-  target_link_libraries(PokeSimTests PRIVATE PokeSim)
+  if (USE_SINGLE_HEADER_FILE)
+    message(STATUS "Using single header file instead of library")
+    target_include_directories(PokeSimTests PUBLIC ${PROJECT_SOURCE_DIR}/external)
+    target_compile_definitions(PokeSimTests PRIVATE POKESIM_USE_SINGLE_HEADER_FILE)
+  else()
+    target_link_libraries(PokeSimTests PRIVATE PokeSim)
+  endif()
 endif()

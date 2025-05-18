@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef USE_SINGLE_HEADER
+#ifdef POKESIM_USE_SINGLE_HEADER_FILE
 #include "../include/PokeSim.hpp"
 #else
 #include <PokeSim.hpp>

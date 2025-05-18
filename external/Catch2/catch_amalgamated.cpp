@@ -7354,7 +7354,11 @@ private:
 
 #include <cfloat>
 #include <cstdio>
+#ifdef POKESIM_USE_SINGLE_HEADER_FILE
+#include "../include/PokeSim.hpp"
+#else
 #include <Config/Require.hpp>
+#endif
 
 #if defined(_MSC_VER)
 #pragma warning(push)

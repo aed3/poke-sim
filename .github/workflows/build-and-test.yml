@@ -128,7 +128,7 @@ jobs:
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-                -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
+                -DPOKESIM_USE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
                 -G "Unix Makefiles"
 
@@ -177,7 +177,7 @@ jobs:
         run: |
           cmake -S $Env:GITHUB_WORKSPACE                               `
                 -B ${{runner.workspace}}\build                         `
-                -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} `
+                -DPOKESIM_USE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} `
                 -A ${{matrix.platform}}
       
       - name: Build tests
@@ -230,7 +230,7 @@ jobs:
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-                -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
+                -DPOKESIM_USE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
 
       - name: Build tests
