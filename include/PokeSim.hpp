@@ -17475,7 +17475,6 @@ class registry : public internal::BackingRegistry {
 using handle = internal::BackingHandle<registry>;
 }  // namespace pokesim::types
 
-
 //////////////////////// END OF src/Types/Registry.hpp /////////////////////////
 
 /////////////// START OF src/Utilities/AssertComponentsEqual.cpp ///////////////
