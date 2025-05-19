@@ -433,8 +433,8 @@ struct DamageValueInfo {
 
   types::probability getProbability(types::stat afterTurnHp) const {
     types::damage damage = startingHp - afterTurnHp;
-    types::probability baseDamageRollInstances = std::count(baseDamage.begin(), baseDamage.end(), damage);
-    types::probability critDamageRollInstances = std::count(critDamage.begin(), critDamage.end(), damage);
+    types::probability baseDamageRollInstances = (types::probability)std::count(baseDamage.begin(), baseDamage.end(), damage);
+    types::probability critDamageRollInstances = (types::probability)std::count(critDamage.begin(), critDamage.end(), damage);
     REQUIRE(!!(baseDamageRollInstances || critDamageRollInstances));
 
     types::probability probability = 1.0F;

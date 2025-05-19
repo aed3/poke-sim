@@ -126,7 +126,7 @@ jobs:
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-                -DPOKESIM_USE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
+                -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
                 -G "Unix Makefiles"
 
@@ -138,13 +138,12 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         run: bin/PokeSimTests
   windows:
-    name: '${{matrix.os}}: SHF ${{matrix.use_single_header}}, ${{matrix.platform}} ${{matrix.build_type}}'
+    name: '${{matrix.os}}: SHF ${{matrix.use_single_header}}, ${{matrix.build_type}}'
     runs-on: ${{matrix.os}}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, windows-2022]
-        platform: [Win32, x64]
+        os: [windows-2022, windows-2025]
         build_type: [Debug, Release]
         use_single_header: ['TRUE', 'FALSE']
     steps:
@@ -175,8 +174,8 @@ jobs:
         run: |
           cmake -S $Env:GITHUB_WORKSPACE                               `
                 -B ${{runner.workspace}}\build                         `
-                -DPOKESIM_USE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} `
-                -A ${{matrix.platform}}
+                -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} `
+                -A x64
       
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
@@ -229,7 +228,7 @@ jobs:
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-                -DPOKESIM_USE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
+                -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
 
       - name: Build tests
