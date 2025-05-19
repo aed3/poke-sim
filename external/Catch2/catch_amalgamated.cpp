@@ -7355,7 +7355,12 @@ private:
 #include <cfloat>
 #include <cstdio>
 #ifdef POKESIM_USE_SINGLE_HEADER_FILE
-#include "../include/PokeSim.hpp"
+namespace pokesim::debug {
+class require {
+public:
+    static inline std::size_t count = 0;
+};
+}
 #else
 #include <Config/Require.hpp>
 #endif
