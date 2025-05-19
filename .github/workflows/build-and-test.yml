@@ -182,13 +182,14 @@ jobs:
         run: bin\${{matrix.build_type}}\PokeSimTests.exe
   mac:
     name: 'Mac OS: ${{matrix.cxx}}, SHF ${{matrix.use_single_header}}, ${{matrix.build_type}}'
-    runs-on: macos-12
+    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
         cxx:
-          - g++-11
           - g++-12
+          - g++-13
+          - g++-14
           - clang++
         build_type: [Debug, Release]
         use_single_header: ['TRUE', 'FALSE']

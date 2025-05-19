@@ -126,7 +126,7 @@ void setRandomEventCounts(
 
   PercentChanceLimitResult limitReached = PercentChanceLimitResult::NO_LIMIT_REACHED;
   if (!forRequiredDamageRolls) {
-    types::percentChance passChance = 100.0F / eventCount;
+    types::percentChance passChance = types::percentChance(100.0F / eventCount);
     types::probability probability = handle.registry()->get<Probability>(battle.val).val;
     limitReached = checkPercentChanceLimits(passChance, probability, options);
   }

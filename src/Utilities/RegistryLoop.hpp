@@ -2,6 +2,7 @@
 
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
+#include <cstddef>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <type_traits>
@@ -12,9 +13,9 @@ namespace pokesim::internal {
 template <auto Function, typename...>
 struct RegistryLoop;
 
-template <typename R, typename... Types>
-constexpr long getArgumentCount(R (*)(Types...)) {
-  return sizeof...(Types);
+template <typename ReturnType, typename... Args>
+constexpr std::size_t getArgumentCount(ReturnType (*)(Args...)) {
+  return sizeof...(Args);
 }
 
 template <auto Function, typename... ExtraTags, typename... Exclude, typename... Include, typename... PassedInArgs>
