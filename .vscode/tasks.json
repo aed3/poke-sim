@@ -8,8 +8,13 @@
 			"targets": [
 				"PokeSimTests"
 			],
-			"group": "build",
-			"problemMatcher": []
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"dependsOn": ["Create Entity Viewer"],
+			"detail": "CMake template build task"
 		},
 		{
 			"type": "cmake",
@@ -31,19 +36,28 @@
 			"type": "shell",
 			"label": "Create Header Files",
 			"command": "node ${workspaceFolder}/tools/createHeaders",
+			"dependsOn": ["clang-format"],
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"label": "Create Entity Viewer",
+			"command": "node ${workspaceFolder}/tools/createEntityViewer",
+			"dependsOn": ["Create Header Files"],
 			"problemMatcher": []
 		},
 		{
 			"type": "shell",
 			"label": "clang-format",
-			"command": "find src tests -iname *.hpp -o -iname *.cpp | xargs clang-format --style=file -i",
+			"command": "find src tests tools -iname *.hpp -o -iname *.cpp -o -iname *.js | xargs clang-format --style=file -i",
 			"problemMatcher": []
 		},
 		{
 			"type": "shell",
 			"label": "clang-tidy",
-			"command": "find src -iname *.hpp -o -iname *.cpp | parallel clang-tidy --quiet --use-color --config-file .clang-tidy -p build",
-			"problemMatcher": []
+			"command": "find src -iname *.hpp -o -iname *.cpp | parallel clang-tidy --quiet --use-color --config-file .clang-tidy -p build 2>/dev/null",
+			"problemMatcher": [],
+			"dependsOn": ["Create Header Files"]
 		}
 	]
 }

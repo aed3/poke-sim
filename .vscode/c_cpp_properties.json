@@ -10,7 +10,8 @@
             "defines": [],
             "cppStandard": "c++17",
             "compileCommands": "${workspaceFolder}/build/compile_commands.json",
-            "compilerPath": "/usr/bin/g++-11"
+            "compilerPath": "/usr/bin/g++-11",
+            "configurationProvider": "ms-vscode.cmake-tools"
         },
         {
             "name": "Win32",

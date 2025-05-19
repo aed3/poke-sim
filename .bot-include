@@ -1,2 +1,4 @@
 src
 tests
+!src/Utilities/EntityViewer.cpp
+!src/Utilities/EntityViewer.hpp

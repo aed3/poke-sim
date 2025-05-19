@@ -1,8 +1,6 @@
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
-const child_process = require('child_process');
-const {fullPath, toRelative} = require('../utils')
+const {fullPath, toRelative, ignoredFile, tempDir, runClangQuery} = require('../utils')
 
 const srcFolder = fullPath('src');
 const externalFolder = fullPath('external');
@@ -26,13 +24,16 @@ const readSrcFiles = () => {
     const file = nextFiles.pop();
     if (fs.statSync(file).isDirectory() && file !== testLibraryFolder) {
       fs.readdirSync(file).forEach(dirFile => nextFiles.push(path.join(file, dirFile)));
+      continue;
     }
-    else {
-      const ext = path.extname(file);
-      if (['.cpp', '.hpp', '.h'].includes(ext)) {
-        const lines = fileText[file] = fs.readFileSync(file, 'utf8').split('\n');
 
-        while (!lines[lines.length - 1]) lines.pop();
+    const ext = path.extname(file);
+    const basename = path.basename(file);
+    if (['.cpp', '.hpp', '.h'].includes(ext) && !ignoredFile.includes(basename)) {
+      const lines = fileText[file] = fs.readFileSync(file, 'utf8').split('\n');
+
+      while (!fileText[file][lines.length - 1]) {
+        lines.pop();
       }
     }
   }
@@ -62,7 +63,7 @@ const findDependencies = () => {
         dependency = extFilePath;
       }
 
-      if (dependency) {
+      if (dependency && !ignoredFile.includes(path.basename(dependency))) {
         fileDependencies.push(dependency);
         fileDependencyLines.add(i);
       }
@@ -158,15 +159,6 @@ const addToSingleFileHeader = (files) => {
 
 const createSingleFileHeader = () => {
   try {
-    child_process.execSync(`${os.platform() === 'win32' ? 'where' : 'which'} clang-query`);
-  }
-  catch (e) {
-    throw new Error('clang-query was not found as is required to make the single header file.');
-  }
-
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), '_'));
-
-  try {
     const tempHeaderPath = path.join(tempDir, 'PokeSim.hpp');
     fs.writeFileSync(tempHeaderPath, singleFileHeader.join('\n'));
     const query = `
@@ -207,23 +199,7 @@ const createSingleFileHeader = () => {
       forEach(functionTemplateDecl(forEach(functionTemplate)))
     )`;
 
-    const queryPath = path.join(tempDir, 'query');
-    fs.writeFileSync(queryPath, query);
-
-    let buildArguments = '--extra-arg="-std=c++17"';
-    if (fs.existsSync(fullPath('build'))) {
-      buildArguments = `-p "${fullPath('build')}"`;
-    }
-
-    const result =
-      child_process
-        .execSync(`clang-query -f "${queryPath}" ${buildArguments} "${tempHeaderPath}"`, {stdio: 'pipe'})
-        .toString();
-
-    const inlineLocations = result.match(/\d+:\d+: note: "inline" binds here/g).map(resultLine => {
-      const [, line, column] = /(\d+):(\d+):/.exec(resultLine);
-      return {line: parseInt(line) - 1, column: parseInt(column) - 1};
-    });
+    const inlineLocations = runClangQuery(query, tempHeaderPath, 'inline');
 
     inlineLocations.forEach(({line, column}) => {
       const headerLine = singleFileHeader[line];
@@ -234,11 +210,12 @@ const createSingleFileHeader = () => {
     const headerPath = fullPath('include', 'PokeSim.hpp');
     if (fs.existsSync(headerPath)) {
       const originalHeader = fs.readFileSync(headerPath, 'utf8');
-      if (originalHeader !== singleFileHeader.join('\n')) {
-        console.log('Made changes to single header file');
+      if (originalHeader === singleFileHeader.join('\n')) {
+        return;
       }
     }
 
+    console.log('Made changes to single header file');
     fs.writeFileSync(fullPath('include', 'PokeSim.hpp'), singleFileHeader.join('\n'));
   }
   catch (e) {

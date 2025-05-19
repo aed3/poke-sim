@@ -43,6 +43,14 @@ if (ENABLE_TESTING)
   add_compile_definitions(POKESIM_ENABLE_TESTING)
 endif()
 
+option(ENTITY_VIEWER "Build the registry with component debugging tools" OFF)
+
+if (ENTITY_VIEWER AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+  add_compile_definitions(POKESIM_ENTITY_VIEWER)
+  set(ENTITY_VIEWER src/Utilities/EntityViewer.cpp)
+else()
+  set(ENTITY_VIEWER "")
+endif()
 
 set (SOURCES
   src/AnalyzeEffect/AnalyzeEffect.cpp
@@ -80,6 +88,7 @@ set (SOURCES
   src/Simulation/SimulationResults.cpp
   src/Simulation/SimulationSetup.cpp
   src/Utilities/AssertComponentsEqual.cpp
+  ${ENTITY_VIEWER}
 )
 
 add_library(PokeSim STATIC ${SOURCES})

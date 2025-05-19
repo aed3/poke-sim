@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const {fullPath, toRelative} = require('../utils');
+const {fullPath, toRelative, ignoredFile} = require('../utils');
 
 const headerFileName = 'headers.hpp';
 
@@ -16,15 +16,17 @@ const createHeadersFile = (folder) => {
       const subFolderHeaderFiles = createHeadersFile(file);
       if (subFolderHeaderFiles) {
         headerFiles.push(...subFolderHeaderFiles);
+        continue;
       }
-      else {
-        const sudFolderFiles = fs.readdirSync(file)
-                                 .filter(sudFile => path.extname(sudFile) === '.hpp')
-                                 .map(sudFile => path.join(file, sudFile));
-        headerFiles.push(...sudFolderFiles);
+
+      for (const subFile of fs.readdirSync(file)) {
+        if (path.extname(subFile) === '.hpp') {
+          headerFiles.push(path.join(file, subFile));
+        }
       }
+      continue;
     }
-    else if (path.extname(file) === '.hpp' && file !== folderHeadersFileName) {
+    if (path.extname(file) === '.hpp' && file !== folderHeadersFileName && !ignoredFile.includes(path.basename(file))) {
       headerFiles.push(file);
     }
   }
