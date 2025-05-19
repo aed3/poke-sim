@@ -36,31 +36,32 @@ void applyEventModifier(ModifiedComponent& component, const EventModifier& event
 template <typename... PokemonSpecifiers>
 RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
   static const size_t SelectAnyPokemon = sizeof...(PokemonSpecifiers) == 0U;
-  return {[](const void*, const types::registry& registry) -> std::vector<types::entity> {
-    entt::dense_set<types::entity> entities;
-    auto selectedMoveView = registry.view<tags::SelectedForViewMove>();
-    auto begin = selectedMoveView.begin();
-    auto end = selectedMoveView.end();
-    if (selectedMoveView.empty()) {
-      auto anyMoveView = registry.view<tags::CurrentActionMove>();
-      begin = anyMoveView.begin();
-      end = anyMoveView.end();
-    }
-
-    std::for_each(begin, end, [&registry, &entities](types::entity entity) {
-      if constexpr (
-        SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveSource>...>) {
-        entities.insert(registry.get<CurrentActionSource>(entity).val);
+  return RegistryContainer::SelectionFunction{
+    [](const void*, const types::registry& registry) -> std::vector<types::entity> {
+      entt::dense_set<types::entity> entities;
+      auto selectedMoveView = registry.view<tags::SelectedForViewMove>();
+      auto begin = selectedMoveView.begin();
+      auto end = selectedMoveView.end();
+      if (selectedMoveView.empty()) {
+        auto anyMoveView = registry.view<tags::CurrentActionMove>();
+        begin = anyMoveView.begin();
+        end = anyMoveView.end();
       }
 
-      if constexpr (
-        SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveTarget>...>) {
-        entities.insert(registry.get<CurrentActionTargets>(entity).only());
-      }
-    });
+      std::for_each(begin, end, [&registry, &entities](types::entity entity) {
+        if constexpr (
+          SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveSource>...>) {
+          entities.insert(registry.get<CurrentActionSource>(entity).val);
+        }
 
-    return {entities.begin(), entities.end()};
-  }};
+        if constexpr (
+          SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveTarget>...>) {
+          entities.insert(registry.get<CurrentActionTargets>(entity).only());
+        }
+      });
+
+      return {entities.begin(), entities.end()};
+    }};
 }
 }  // namespace internal
 
