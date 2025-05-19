@@ -32,15 +32,6 @@ using handle = entt::basic_handle<registry>;
 #include <entt/meta/factory.hpp>
 #include <type_traits>
 
-#ifdef POKESIM_ENTITY_VIEWER
-#include <Utilities/EntityViewer.hpp>
-
-namespace pokesim::types::internal {
-using BackingRegistry = pokesim::debug::EntityViewerRegistry;
-template <typename Registry>
-using BackingHandle = pokesim::debug::EntityViewerHandle<Registry>;
-}  // namespace pokesim::types::internal
-#else
 namespace pokesim::types::internal {
 using BackingRegistry = entt::registry;
 template <typename Registry>
@@ -128,4 +119,3 @@ class registry : public internal::BackingRegistry {
 
 using handle = internal::BackingHandle<registry>;
 }  // namespace pokesim::types
-#endif

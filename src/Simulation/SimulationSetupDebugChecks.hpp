@@ -428,8 +428,7 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(createdBattles.contains(&battleInfo));
       const std::vector<types::entity>& battleEntities = createdBattles.at(&battleInfo);
 
-      types::cloneIndex idealBattleCount =
-        battleInfo.decisionsToSimulate.empty() ? 1 : battleInfo.decisionsToSimulate.size();
+      std::size_t idealBattleCount = battleInfo.decisionsToSimulate.empty() ? 1 : battleInfo.decisionsToSimulate.size();
       POKESIM_REQUIRE_NM(idealBattleCount == battleEntities.size());
       for (types::entity entity : battleEntities) {
         checkBattle(entity, battleInfo);

@@ -15961,6 +15961,7 @@ struct ParentEntity {
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -15970,7 +15971,7 @@ class require : public std::exception {
   std::string errorMessage;
 
  public:
-  static inline uint64_t count = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+  static inline std::size_t count = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
   require(const char* file, int line, const char* function, const char* condition, const std::string& message) {
     errorMessage += file;
@@ -17386,15 +17387,6 @@ using handle = entt::basic_handle<registry>;
 
 #include <type_traits>
 
-#ifdef POKESIM_ENTITY_VIEWER
-#include <Utilities/EntityViewer.hpp>
-
-namespace pokesim::types::internal {
-using BackingRegistry = pokesim::debug::EntityViewerRegistry;
-template <typename Registry>
-using BackingHandle = pokesim::debug::EntityViewerHandle<Registry>;
-}  // namespace pokesim::types::internal
-#else
 namespace pokesim::types::internal {
 using BackingRegistry = entt::registry;
 template <typename Registry>
@@ -17482,7 +17474,7 @@ class registry : public internal::BackingRegistry {
 
 using handle = internal::BackingHandle<registry>;
 }  // namespace pokesim::types
-#endif
+
 
 //////////////////////// END OF src/Types/Registry.hpp /////////////////////////
 
@@ -21280,8 +21272,7 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(createdBattles.contains(&battleInfo));
       const std::vector<types::entity>& battleEntities = createdBattles.at(&battleInfo);
 
-      types::cloneIndex idealBattleCount =
-        battleInfo.decisionsToSimulate.empty() ? 1 : battleInfo.decisionsToSimulate.size();
+      std::size_t idealBattleCount = battleInfo.decisionsToSimulate.empty() ? 1 : battleInfo.decisionsToSimulate.size();
       POKESIM_REQUIRE_NM(idealBattleCount == battleEntities.size());
       for (types::entity entity : battleEntities) {
         checkBattle(entity, battleInfo);
