@@ -19765,6 +19765,7 @@ struct Tags {};
 
 /////////////////// START OF src/Utilities/RegistryLoop.hpp ////////////////////
 
+#include <cstddef>
 #include <type_traits>
 
 
@@ -19772,9 +19773,9 @@ namespace pokesim::internal {
 template <auto Function, typename...>
 struct RegistryLoop;
 
-template <typename R, typename... Types>
-constexpr long getArgumentCount(R (*)(Types...)) {
-  return sizeof...(Types);
+template <typename ReturnType, typename... Args>
+constexpr std::size_t getArgumentCount(ReturnType (*)(Args...)) {
+  return sizeof...(Args);
 }
 
 template <auto Function, typename... ExtraTags, typename... Exclude, typename... Include, typename... PassedInArgs>
@@ -22834,7 +22835,7 @@ void setRandomEventCounts(
 
   PercentChanceLimitResult limitReached = PercentChanceLimitResult::NO_LIMIT_REACHED;
   if (!forRequiredDamageRolls) {
-    types::percentChance passChance = 100.0F / eventCount;
+    types::percentChance passChance = types::percentChance(100.0F / eventCount);
     types::probability probability = handle.registry()->get<Probability>(battle.val).val;
     limitReached = checkPercentChanceLimits(passChance, probability, options);
   }
