@@ -19772,6 +19772,11 @@ namespace pokesim::internal {
 template <auto Function, typename...>
 struct RegistryLoop;
 
+template <typename R, typename... Types>
+constexpr long getArgumentCount(R (*)(Types...)) {
+  return sizeof...(Types);
+}
+
 template <auto Function, typename... ExtraTags, typename... Exclude, typename... Include, typename... PassedInArgs>
 struct RegistryLoop<
   Function, Tags<ExtraTags...>, entt::exclude_t<Exclude...>, entt::get_t<Include...>, PassedInArgs...> {
@@ -22074,7 +22079,7 @@ void applyChainedModifier(Number1& value, types::eventModifier eventModifier) {
 
 template <typename Multiplier>
 void chainToModifier(types::eventModifier& eventModifier, Multiplier multiplier) {
-  types::eventModifier newModifier = multiplier * MechanicConstants::FIXED_POINT_SCALE;
+  types::eventModifier newModifier = (types::eventModifier)(multiplier * MechanicConstants::FIXED_POINT_SCALE);
   eventModifier =
     (eventModifier * newModifier + MechanicConstants::FIXED_POINT_HALF_SCALE) / MechanicConstants::FIXED_POINT_SCALE;
 }
@@ -22457,31 +22462,32 @@ void applyEventModifier(ModifiedComponent& component, const EventModifier& event
 template <typename... PokemonSpecifiers>
 RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
   static const size_t SelectAnyPokemon = sizeof...(PokemonSpecifiers) == 0U;
-  return {[](const void*, const types::registry& registry) -> std::vector<types::entity> {
-    entt::dense_set<types::entity> entities;
-    auto selectedMoveView = registry.view<tags::SelectedForViewMove>();
-    auto begin = selectedMoveView.begin();
-    auto end = selectedMoveView.end();
-    if (selectedMoveView.empty()) {
-      auto anyMoveView = registry.view<tags::CurrentActionMove>();
-      begin = anyMoveView.begin();
-      end = anyMoveView.end();
-    }
-
-    std::for_each(begin, end, [&registry, &entities](types::entity entity) {
-      if constexpr (
-        SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveSource>...>) {
-        entities.insert(registry.get<CurrentActionSource>(entity).val);
+  return RegistryContainer::SelectionFunction{
+    [](const void*, const types::registry& registry) -> std::vector<types::entity> {
+      entt::dense_set<types::entity> entities;
+      auto selectedMoveView = registry.view<tags::SelectedForViewMove>();
+      auto begin = selectedMoveView.begin();
+      auto end = selectedMoveView.end();
+      if (selectedMoveView.empty()) {
+        auto anyMoveView = registry.view<tags::CurrentActionMove>();
+        begin = anyMoveView.begin();
+        end = anyMoveView.end();
       }
 
-      if constexpr (
-        SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveTarget>...>) {
-        entities.insert(registry.get<CurrentActionTargets>(entity).only());
-      }
-    });
+      std::for_each(begin, end, [&registry, &entities](types::entity entity) {
+        if constexpr (
+          SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveSource>...>) {
+          entities.insert(registry.get<CurrentActionSource>(entity).val);
+        }
 
-    return {entities.begin(), entities.end()};
-  }};
+        if constexpr (
+          SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveTarget>...>) {
+          entities.insert(registry.get<CurrentActionTargets>(entity).only());
+        }
+      });
+
+      return {entities.begin(), entities.end()};
+    }};
 }
 }  // namespace internal
 
@@ -24403,6 +24409,14 @@ inline types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle
   }
   return eventPossibilities;
 }
+
+inline void updateAllDamageRollProbabilities(Simulation& simulation) {
+  simulation.viewForSelectedMoves<internal::assignAllDamageRollProbability>();
+}
+
+inline void updatePartialProbabilities(Simulation& simulation) {
+  simulation.viewForSelectedMoves<internal::assignPartialProbability>();
+}
 }  // namespace internal
 
 inline void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind) {
@@ -24417,9 +24431,8 @@ inline void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRo
 
   auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<internal::applyDamageRollIndex>(); };
 
-  void (*updateProbabilities)(pokesim::Simulation&) =
-    forAllDamageRolls ? [](Simulation& sim) { sim.viewForSelectedMoves<internal::assignAllDamageRollProbability>(); }
-                      : [](Simulation& sim) { sim.viewForSelectedMoves<internal::assignPartialProbability>(); };
+  auto updateProbabilities =
+    forAllDamageRolls ? internal::updateAllDamageRollProbabilities : internal::updatePartialProbabilities;
 
   randomEventCount(simulation, applyChoices, updateProbabilities);
   simulation.removeFromEntities<DamageRolls, pokesim::tags::SelectedForViewMove>();
@@ -26382,8 +26395,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
   }
 
   static constexpr bool isSimulateTurn = std::is_same_v<pokesim::tags::SimulateTurn, SimulationTag>;
-  static constexpr bool onlyPassDamageRoll =
-    std::is_same_v<std::decay_t<void(Simulation&, DamageRollKind)>, decltype(ApplyDamageRollKind)>;
+  static constexpr bool onlyPassDamageRoll = pokesim::internal::getArgumentCount(ApplyDamageRollKind) == 2;
 
   DamageRollOptions damageRollOptions;
   bool noKoChanceCalculation = false;
