@@ -12,6 +12,11 @@ namespace pokesim::internal {
 template <auto Function, typename...>
 struct RegistryLoop;
 
+template <typename R, typename... Types>
+constexpr long getArgumentCount(R (*)(Types...)) {
+  return sizeof...(Types);
+}
+
 template <auto Function, typename... ExtraTags, typename... Exclude, typename... Include, typename... PassedInArgs>
 struct RegistryLoop<
   Function, Tags<ExtraTags...>, entt::exclude_t<Exclude...>, entt::get_t<Include...>, PassedInArgs...> {

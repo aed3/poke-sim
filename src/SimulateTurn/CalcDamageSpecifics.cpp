@@ -64,6 +64,14 @@ types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {
   }
   return eventPossibilities;
 }
+
+void updateAllDamageRollProbabilities(Simulation& simulation) {
+  simulation.viewForSelectedMoves<internal::assignAllDamageRollProbability>();
+}
+
+void updatePartialProbabilities(Simulation& simulation) {
+  simulation.viewForSelectedMoves<internal::assignPartialProbability>();
+}
 }  // namespace internal
 
 void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind) {
@@ -78,9 +86,8 @@ void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind)
 
   auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<internal::applyDamageRollIndex>(); };
 
-  void (*updateProbabilities)(pokesim::Simulation&) =
-    forAllDamageRolls ? [](Simulation& sim) { sim.viewForSelectedMoves<internal::assignAllDamageRollProbability>(); }
-                      : [](Simulation& sim) { sim.viewForSelectedMoves<internal::assignPartialProbability>(); };
+  auto updateProbabilities =
+    forAllDamageRolls ? internal::updateAllDamageRollProbabilities : internal::updatePartialProbabilities;
 
   randomEventCount(simulation, applyChoices, updateProbabilities);
   simulation.removeFromEntities<DamageRolls, pokesim::tags::SelectedForViewMove>();

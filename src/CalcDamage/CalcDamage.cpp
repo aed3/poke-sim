@@ -252,8 +252,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
   }
 
   static constexpr bool isSimulateTurn = std::is_same_v<pokesim::tags::SimulateTurn, SimulationTag>;
-  static constexpr bool onlyPassDamageRoll =
-    std::is_same_v<std::decay_t<void(Simulation&, DamageRollKind)>, decltype(ApplyDamageRollKind)>;
+  static constexpr bool onlyPassDamageRoll = pokesim::internal::getArgumentCount(ApplyDamageRollKind) == 2;
 
   DamageRollOptions damageRollOptions;
   bool noKoChanceCalculation = false;
