@@ -433,8 +433,10 @@ struct DamageValueInfo {
 
   types::probability getProbability(types::stat afterTurnHp) const {
     types::damage damage = startingHp - afterTurnHp;
-    types::probability baseDamageRollInstances = (types::probability)std::count(baseDamage.begin(), baseDamage.end(), damage);
-    types::probability critDamageRollInstances = (types::probability)std::count(critDamage.begin(), critDamage.end(), damage);
+    types::probability baseDamageRollInstances =
+      (types::probability)std::count(baseDamage.begin(), baseDamage.end(), damage);
+    types::probability critDamageRollInstances =
+      (types::probability)std::count(critDamage.begin(), critDamage.end(), damage);
     REQUIRE(!!(baseDamageRollInstances || critDamageRollInstances));
 
     types::probability probability = 1.0F;
@@ -484,12 +486,20 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   p2Info.stats = {295, 165, 190, 255, 210, 145};
   battleCreationInfo.runWithSimulateTurn = true;
 
-  auto numberOfSamples = GENERATE(std::optional<types::cloneIndex>{std::nullopt}, 1, 5);
+  auto numberOfSamples = GENERATE(std::optional<types::cloneIndex>{std::nullopt}, 1U, 5U);
 
   bool applyChangesToInputBattle = GENERATE(true, false);
   auto branchProbabilityLowerLimit = GENERATE(std::optional<types::probability>{std::nullopt}, 0.0F, 0.5F);
-  auto randomChanceLowerLimit = GENERATE(std::optional<types::percentChance>{std::nullopt}, 0, 10, 50);
-  auto randomChanceUpperLimit = GENERATE(std::optional<types::percentChance>{std::nullopt}, 100, 90, 50);
+  auto randomChanceLowerLimit = GENERATE(
+    std::optional<types::percentChance>{std::nullopt},
+    (types::percentChance)0U,
+    (types::percentChance)10U,
+    (types::percentChance)50U);
+  auto randomChanceUpperLimit = GENERATE(
+    std::optional<types::percentChance>{std::nullopt},
+    (types::percentChance)100U,
+    (types::percentChance)90U,
+    (types::percentChance)50U);
 
   DamageRollOptions damageRollOptions;
   if (numberOfSamples.has_value()) {
@@ -536,7 +546,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
     damageRollOptions.p2,
     options);
 
-  types::cloneIndex idealTurnOutcomeCount = 0U;
+  std::size_t idealTurnOutcomeCount = 0U;
   std::size_t totalPossibilities = p1DamageInfo.possibilities() * p2DamageInfo.possibilities();
 
   if (options.makeBranchesOnRandomEvents) {
