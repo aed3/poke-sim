@@ -4,6 +4,7 @@
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -13,7 +14,7 @@ class require : public std::exception {
   std::string errorMessage;
 
  public:
-  static inline uint64_t count = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+  static inline std::size_t count = 0;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
   require(const char* file, int line, const char* function, const char* condition, const std::string& message) {
     errorMessage += file;

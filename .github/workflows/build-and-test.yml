@@ -53,6 +53,9 @@ jobs:
           - cxx: g++-11
             other_pkgs: g++-11
             os: ubuntu-22.04
+          - cxx: g++-12
+            other_pkgs: g++-12
+            os: ubuntu-22.04
           - cxx: g++-13
             other_pkgs: g++-13
             os: ubuntu-24.04
@@ -64,6 +67,8 @@ jobs:
           - cxx: clang++-14
             os: ubuntu-22.04
           - cxx: clang++-15
+            os: ubuntu-22.04
+          - cxx: clang++-16
             os: ubuntu-22.04
           - cxx: clang++-17
             os: ubuntu-24.04
