@@ -9,7 +9,7 @@ class variant : public std::variant<Types...> {
   using std::variant<Types...>::variant;
 
   template <typename T>
-  variant& operator=(T&& rhs) {
+  variant& operator=(const T& rhs) {
     std::variant<Types...>::operator=(rhs);
     return *this;
   }

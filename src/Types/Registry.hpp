@@ -51,7 +51,7 @@ using BackingHandle = entt::basic_handle<Registry>;
 namespace pokesim::types {
 class registry : public internal::BackingRegistry {
  public:
-  enum MetaFunctions : entt::id_type {
+  enum MetaFunctions : std::uint8_t {
     COPY_TO_OTHER_REGISTRY,
     ENTITY_COMPONENTS_EQUAL,
   };

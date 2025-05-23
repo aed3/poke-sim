@@ -230,15 +230,15 @@ struct VerticalSlice1Checks : debug::Checks {
   template <typename Selector>
   void specificallyCheckEntities(
     const debug::TypesToIgnore& typesToIgnore, const debug::TypesToIgnore& typesIgnoredOnConstants = {}) const {
-    for (types::entity entity : registry.view<Selector>()) {
-      types::entity original = debug::findCopyParent(originalToCopy, registry, entity);
+    for (types::entity entity : registry->view<Selector>()) {
+      types::entity original = debug::findCopyParent(originalToCopy, *registry, entity);
       if (!specificallyChecked.contains(original)) {
         continue;
       }
 
       bool shouldNotChange = !options.applyChangesToInputBattle && original == entity;
       debug::areEntitiesEqual(
-        registry,
+        *registry,
         entity,
         registryOnInput,
         originalToCopy.at(original),
@@ -284,21 +284,21 @@ struct VerticalSlice1Checks : debug::Checks {
  public:
   VerticalSlice1Checks(const Simulation& _simulation)
       : debug::Checks(_simulation), options(_simulation.simulateTurnOptions) {
-    for (types::entity battle : registry.view<tags::Battle>()) {
-      originalToCopy[battle] = debug::createEntityCopy(battle, registry, registryOnInput);
+    for (types::entity battle : registry->view<tags::Battle>()) {
+      originalToCopy[battle] = debug::createEntityCopy(battle, *registry, registryOnInput);
     }
 
-    for (types::entity side : registry.view<tags::Side>()) {
-      originalToCopy[side] = debug::createEntityCopy(side, registry, registryOnInput);
+    for (types::entity side : registry->view<tags::Side>()) {
+      originalToCopy[side] = debug::createEntityCopy(side, *registry, registryOnInput);
     }
 
-    for (types::entity pokemon : registry.view<tags::Pokemon>()) {
-      originalToCopy[pokemon] = debug::createEntityCopy(pokemon, registry, registryOnInput);
+    for (types::entity pokemon : registry->view<tags::Pokemon>()) {
+      originalToCopy[pokemon] = debug::createEntityCopy(pokemon, *registry, registryOnInput);
     }
 
-    for (const auto& [entity, move] : registry.view<MoveName>().each()) {
+    for (const auto& [entity, move] : registry->view<MoveName>().each()) {
       if (move.name == dex::Move::KNOCK_OFF || move.name == dex::Move::THUNDERBOLT) {
-        originalToCopy[entity] = debug::createEntityCopy(entity, registry, registryOnInput);
+        originalToCopy[entity] = debug::createEntityCopy(entity, *registry, registryOnInput);
       }
     }
 
@@ -324,12 +324,12 @@ struct VerticalSlice1Checks : debug::Checks {
   }
 
   const RngSeed& originalRngSeed(types::entity battle) const {
-    types::entity original = debug::findCopyParent(originalToCopy, registry, battle);
+    types::entity original = debug::findCopyParent(originalToCopy, *registry, battle);
     return registryOnInput.get<RngSeed>(originalToCopy.at(original));
   }
 
   types::entity originalBattle(types::entity battle) const {
-    return debug::findCopyParent(originalToCopy, registry, battle);
+    return debug::findCopyParent(originalToCopy, *registry, battle);
   }
 };
 

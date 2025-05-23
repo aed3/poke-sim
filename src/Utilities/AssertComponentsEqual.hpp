@@ -49,7 +49,7 @@ types::entity findCopyParent(
   const entt::dense_map<types::entity, types::entity>& initialEntities, const types::registry& registry,
   types::entity entity);
 
-bool checkIfCopyParent(types::entity current, types::entity initial, const types::registry& registry);
+bool checkIfCopyParent(types::entity potentialChild, types::entity potentialParent, const types::registry& registry);
 
 template <typename Type>
 class AssertComponentsEqual {

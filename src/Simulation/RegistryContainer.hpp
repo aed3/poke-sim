@@ -309,7 +309,7 @@ class RegistryContainer {
   types::registry registry{};
 
   template <typename Type, typename... ViewComponents, typename... Args>
-  void addToEntities(Args&&... args) {
+  void addToEntities(const Args&... args) {
     auto view = registry.view<ViewComponents...>();
     registry.insert<Type>(view.begin(), view.end(), args...);
   }

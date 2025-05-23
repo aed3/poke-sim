@@ -10,12 +10,15 @@
 
 #include "headers.hpp"
 
-namespace pokesim::dex::internal {
+namespace pokesim::dex {
+namespace {
+
 void setChoiceLock(types::handle pokemonHandle, const Battle& battle) {
   types::entity moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val).val;
   pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot);
 }
-}  // namespace pokesim::dex::internal
+}  // namespace
+}  // namespace pokesim::dex
 
 namespace pokesim::dex::internal {
 void AssaultVestEvents::onModifySpd(EventModifier& eventModifier) {

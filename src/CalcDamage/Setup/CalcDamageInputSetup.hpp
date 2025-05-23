@@ -12,7 +12,7 @@ class Pokedex;
 namespace calc_damage {
 struct InputSetup {
  protected:
-  types::registry& registry;
+  types::registry* registry;
   types::entity moveEntity = entt::null;
 
  public:

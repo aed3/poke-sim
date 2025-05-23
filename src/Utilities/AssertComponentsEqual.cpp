@@ -102,14 +102,14 @@ types::entity findCopyParent(
   POKESIM_REQUIRE_FAIL("Could not find original entity of a clone.");
 }
 
-bool checkIfCopyParent(types::entity current, types::entity initial, const types::registry& registry) {
-  const ParentEntity* parentEntity = registry.try_get<ParentEntity>(current);
+bool checkIfCopyParent(types::entity potentialChild, types::entity potentialParent, const types::registry& registry) {
+  const ParentEntity* parentEntity = registry.try_get<ParentEntity>(potentialChild);
   for (std::size_t i = 0; parentEntity != nullptr; i++) {
     if (i >= registry.storage<types::registry::entity_type>()->size()) {
       POKESIM_REQUIRE_FAIL("A loop in the battle tree caused an infinite loop.");
     }
 
-    if (parentEntity->val == initial) {
+    if (parentEntity->val == potentialParent) {
       return true;
     }
     parentEntity = registry.try_get<ParentEntity>(parentEntity->val);

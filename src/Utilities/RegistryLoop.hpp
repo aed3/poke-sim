@@ -119,18 +119,23 @@ struct RegistryLoop<
     template <auto getList>
     static auto run(types::registry& registry, const PassedInArgs&... passedInArgs) {
       auto list = getList(registry);
-      list.each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
-        (void)entity;
-        if constexpr (hasRegistryFirst) {
+      if constexpr (hasRegistryFirst) {
+        list.each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
+          (void)entity;
           Function(registry, args..., passedInArgs...);
-        }
-        else if constexpr (hasHandleFirst) {
+        });
+      }
+      else if constexpr (hasHandleFirst) {
+        list.each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
           Function(types::handle{registry, entity}, args..., passedInArgs...);
-        }
-        else {
+        });
+      }
+      else {
+        list.each([&passedInArgs...](types::entity entity, auto&&... args) {
+          (void)entity;
           Function(args..., passedInArgs...);
-        }
-      });
+        });
+      }
       return list;
     }
 

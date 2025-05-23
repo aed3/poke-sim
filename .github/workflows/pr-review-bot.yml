@@ -20,11 +20,11 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./llvm
-          key: llvm-15.0.6
+          key: llvm-19.1.0
       - name: Install clang-tidy and clang-format
-        uses: KyleMayes/install-llvm-action@v1.6.1
+        uses: KyleMayes/install-llvm-action@v2.0.7
         with:
-          version: "15.0.6"
+          version: "19.1.0"
           directory: ./llvm
           cached: ${{ steps.cache-llvm.outputs.cache-hit }}
       - name: Check out Git repository
@@ -33,11 +33,13 @@ jobs:
         working-directory: ${{runner.workspace}}
         run: |
           cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE \
-          -H$GITHUB_WORKSPACE \
-          -Bbuild \
+          -DCMAKE_BUILD_TYPE:STRING=Debug \
+          -DENABLE_TESTING=ON \
+          -S$GITHUB_WORKSPACE \
+          -B$GITHUB_WORKSPACE/build \
           -G "Unix Makefiles"
       - name: Run One Review Bot
-        uses: aed3/one-review-bot@v1.2
+        uses: aed3/one-review-bot@main
         with:
           cspell_config: .vscode/cspell.json
           files_config: .bot-include

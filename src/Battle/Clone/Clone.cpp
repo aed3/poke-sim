@@ -20,7 +20,7 @@
 #include <vector>
 
 namespace pokesim {
-namespace internal {
+namespace {
 void cloneEntity(
   types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -140,6 +140,7 @@ void cloneBattle(
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
+
 void cloneSide(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -147,6 +148,7 @@ void cloneSide(
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
+
 void cloneAction(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -154,6 +156,7 @@ void cloneAction(
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
+
 void cloneCurrentActionMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -161,6 +164,7 @@ void cloneCurrentActionMove(
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
+
 void clonePokemon(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -168,6 +172,7 @@ void clonePokemon(
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
+
 void cloneMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -179,18 +184,23 @@ void cloneMove(
 void deleteBattle(types::registry& registry) {
   traverseBattle(registry);
 }
+
 void deleteSide(types::registry& registry) {
   traverseSide(registry);
 }
+
 void deleteAction(types::registry& registry) {
   traverseAction(registry);
 }
+
 void deleteCurrentActionMove(types::registry& registry) {
   traverseCurrentActionMove(registry);
 }
+
 void deletePokemon(types::registry& registry) {
   traversePokemon(registry);
 }
+
 void deleteMove(types::registry& registry) {
   traverseMove(registry);
 }
@@ -228,7 +238,7 @@ void remapComponentEntities(types::registry& registry, const types::ClonedEntity
     remapEntityListMembers<Component>(registry, entityMap);
   }
 }
-}  // namespace internal
+}  // namespace
 
 types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount) {
   types::cloneIndex count = cloneCount.value_or(1);
@@ -239,18 +249,18 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
 
   entt::dense_map<entt::id_type, std::vector<types::entity>> srcEntityStorages;
 
-  internal::cloneBattle(registry, entityMap, srcEntityStorages, count);
+  cloneBattle(registry, entityMap, srcEntityStorages, count);
   battleMap = entityMap;
-  internal::cloneSide(registry, entityMap, srcEntityStorages, count);
-  internal::cloneAction(registry, entityMap, srcEntityStorages, count);
-  internal::clonePokemon(registry, entityMap, srcEntityStorages, count);
-  internal::cloneCurrentActionMove(registry, entityMap, srcEntityStorages, count);
-  internal::cloneMove(registry, entityMap, srcEntityStorages, count);
+  cloneSide(registry, entityMap, srcEntityStorages, count);
+  cloneAction(registry, entityMap, srcEntityStorages, count);
+  clonePokemon(registry, entityMap, srcEntityStorages, count);
+  cloneCurrentActionMove(registry, entityMap, srcEntityStorages, count);
+  cloneMove(registry, entityMap, srcEntityStorages, count);
 
   for (auto [id, storage] : registry.storage()) {
     if (srcEntityStorages.contains(id)) {
       const auto& sources = srcEntityStorages.at(id);
-      storage.reserve(storage.size() + sources.size() * count);
+      storage.reserve(storage.size() + (sources.size() * count));
       for (types::entity src : sources) {
         auto* value = storage.value(src);
         for (types::cloneIndex i = 0; i < count; i++) {
@@ -274,23 +284,23 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
   }
 
   // Not simplified further to a, for example, packed template type list, to make debugging what type went wrong easier
-  internal::remapComponentEntities<ActionQueue>(registry, entityMap);
-  internal::remapComponentEntities<Battle>(registry, entityMap);
-  internal::remapComponentEntities<ChoiceLock>(registry, entityMap);
-  internal::remapComponentEntities<CurrentAction>(registry, entityMap);
-  internal::remapComponentEntities<CurrentActionMoves>(registry, entityMap);
-  internal::remapComponentEntities<CurrentActionMoveSlot>(registry, entityMap);
-  internal::remapComponentEntities<CurrentActionSource>(registry, entityMap);
-  internal::remapComponentEntities<CurrentActionTargets>(registry, entityMap);
-  internal::remapComponentEntities<FoeSide>(registry, entityMap);
-  internal::remapComponentEntities<LastUsedMove>(registry, entityMap);
-  internal::remapComponentEntities<MoveEffect>(registry, entityMap);
-  internal::remapComponentEntities<MoveSlots>(registry, entityMap);
-  internal::remapComponentEntities<NextAction>(registry, entityMap);
-  internal::remapComponentEntities<Pokemon>(registry, entityMap);
-  internal::remapComponentEntities<Side>(registry, entityMap);
-  internal::remapComponentEntities<Sides>(registry, entityMap);
-  internal::remapComponentEntities<Team>(registry, entityMap);
+  remapComponentEntities<ActionQueue>(registry, entityMap);
+  remapComponentEntities<Battle>(registry, entityMap);
+  remapComponentEntities<ChoiceLock>(registry, entityMap);
+  remapComponentEntities<CurrentAction>(registry, entityMap);
+  remapComponentEntities<CurrentActionMoves>(registry, entityMap);
+  remapComponentEntities<CurrentActionMoveSlot>(registry, entityMap);
+  remapComponentEntities<CurrentActionSource>(registry, entityMap);
+  remapComponentEntities<CurrentActionTargets>(registry, entityMap);
+  remapComponentEntities<FoeSide>(registry, entityMap);
+  remapComponentEntities<LastUsedMove>(registry, entityMap);
+  remapComponentEntities<MoveEffect>(registry, entityMap);
+  remapComponentEntities<MoveSlots>(registry, entityMap);
+  remapComponentEntities<NextAction>(registry, entityMap);
+  remapComponentEntities<Pokemon>(registry, entityMap);
+  remapComponentEntities<Side>(registry, entityMap);
+  remapComponentEntities<Sides>(registry, entityMap);
+  remapComponentEntities<Team>(registry, entityMap);
 
   registry.clear<CloneTo, tags::CloneFrom>();
 
@@ -310,12 +320,12 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
 }
 
 void deleteClones(types::registry& registry) {
-  internal::deleteBattle(registry);
-  internal::deleteSide(registry);
-  internal::deleteAction(registry);
-  internal::deletePokemon(registry);
-  internal::deleteCurrentActionMove(registry);
-  internal::deleteMove(registry);
+  deleteBattle(registry);
+  deleteSide(registry);
+  deleteAction(registry);
+  deletePokemon(registry);
+  deleteCurrentActionMove(registry);
+  deleteMove(registry);
   auto remove = registry.view<tags::CloneToRemove>();
   registry.destroy(remove.begin(), remove.end());
 }

@@ -136,15 +136,18 @@ class Simulation : public internal::RegistryContainer {
   std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
 
- public:
-  const BattleFormat battleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
-  const Pokedex& pokedex;
+  BattleFormat constantBattleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
+  const Pokedex* constantPokedex;
 
+ public:
   simulate_turn::Options simulateTurnOptions;
   calc_damage::Options calculateDamageOptions;
   analyze_effect::Options analyzeEffectOptions;
 
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
+
+  const Pokedex& pokedex() const { return *constantPokedex; }
+  BattleFormat battleFormat() const { return constantBattleFormat; }
 
   // Load information about any number of battle states into the simulation's registry.
   void createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList);

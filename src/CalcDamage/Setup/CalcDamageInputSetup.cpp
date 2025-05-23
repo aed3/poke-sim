@@ -12,18 +12,18 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim::calc_damage {
-InputSetup::InputSetup(types::registry& _registry) : registry(_registry) {}
+InputSetup::InputSetup(types::registry& _registry) : registry(&_registry) {}
 
 void InputSetup::setup(
   types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move,
   const Pokedex& pokedex) {
-  moveEntity = createActionMoveForTarget({registry, targetEntity}, battleEntity, sourceEntity, move, pokedex);
-  types::handle handle{registry, moveEntity};
+  moveEntity = createActionMoveForTarget({*registry, targetEntity}, battleEntity, sourceEntity, move, pokedex);
+  types::handle handle{*registry, moveEntity};
 
   handle.emplace<MoveName>(move);
   handle.emplace<pokesim::tags::CalculateDamage>();
-  registry.emplace_or_replace<tags::Attacker>(sourceEntity);
-  registry.emplace_or_replace<tags::Defender>(targetEntity);
+  registry->emplace_or_replace<tags::Attacker>(sourceEntity);
+  registry->emplace_or_replace<tags::Defender>(targetEntity);
 }
 
 types::entity InputSetup::entity() const {

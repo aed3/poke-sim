@@ -112,7 +112,7 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
 
   for (auto battle : battles) {
     const types::handle cloneHandle(registry, battle);
-    debug::SimulationSetupChecks::checkBattle(registry, battle, battleCreationInfo);
+    debug::SimulationSetupChecks::checkBattle(simulation, battle, battleCreationInfo);
 
     if (battle == baseHandle.entity()) continue;
 

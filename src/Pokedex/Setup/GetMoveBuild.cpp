@@ -8,6 +8,7 @@
 #include <Types/Enums/MoveCategory.hpp>
 #include <Types/Enums/MoveTarget.hpp>
 #include <Types/Registry.hpp>
+#include <cstdint>
 #include <type_traits>
 
 #include "../Moves/headers.hpp"
@@ -16,11 +17,11 @@
 // TODO(aed3): Make this and the individual move files auto generated
 
 namespace pokesim {
-namespace internal {
+namespace {
 template <typename T>
 struct BuildMove {
  private:
-  enum class Optional {
+  enum class Optional : std::uint8_t {
     accuracy,
     basePower,
     hitCount,
@@ -244,7 +245,7 @@ template <template <GameMechanics> class T>
 auto buildMoveSV(types::registry& registry, bool forActiveMove) {
   return BuildMove<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
 }
-};  // namespace internal
+};  // namespace
 
 types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
@@ -254,12 +255,13 @@ types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool
   switch (mechanics) {
     case GameMechanics::SCARLET_VIOLET: {
       switch (move) {
-        case Move::FURY_ATTACK: return buildMoveSV<FuryAttack>(registry, forActiveMove);
-        case Move::THUNDERBOLT: return buildMoveSV<Thunderbolt>(registry, forActiveMove);
-        case Move::WILL_O_WISP: return buildMoveSV<WillOWisp>(registry, forActiveMove);
-        case Move::KNOCK_OFF: return buildMoveSV<KnockOff>(registry, forActiveMove);
+        case Move::FURY_ATTACK:  return buildMoveSV<FuryAttack>(registry, forActiveMove);
+        case Move::THUNDERBOLT:  return buildMoveSV<Thunderbolt>(registry, forActiveMove);
+        case Move::WILL_O_WISP:  return buildMoveSV<WillOWisp>(registry, forActiveMove);
+        case Move::KNOCK_OFF:    return buildMoveSV<KnockOff>(registry, forActiveMove);
         case Move::QUIVER_DANCE: return buildMoveSV<QuiverDance>(registry, forActiveMove);
-        case Move::MOONBLAST: return buildMoveSV<Moonblast>(registry, forActiveMove);
+        case Move::MOONBLAST:    return buildMoveSV<Moonblast>(registry, forActiveMove);
+
         default: break;
       }
       break;

@@ -27,16 +27,16 @@
 // TODO(aed3) Auto generate?
 
 namespace pokesim {
-namespace internal {
+namespace {
 template <typename ModifiedComponent>
 void applyEventModifier(ModifiedComponent& component, const EventModifier& eventModifier) {
   applyChainedModifier(component.val, eventModifier.val);
 }
 
 template <typename... PokemonSpecifiers>
-RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
+internal::RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
   static const size_t SelectAnyPokemon = sizeof...(PokemonSpecifiers) == 0U;
-  return RegistryContainer::SelectionFunction{
+  return internal::RegistryContainer::SelectionFunction{
     [](const void*, const types::registry& registry) -> std::vector<types::entity> {
       entt::dense_set<types::entity> entities;
       auto selectedMoveView = registry.view<tags::SelectedForViewMove>();
@@ -63,7 +63,7 @@ RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
       return {entities.begin(), entities.end()};
     }};
 }
-}  // namespace internal
+}  // namespace
 
 void runAccuracyEvent(Simulation& /*simulation*/) {}
 
@@ -80,7 +80,7 @@ void runDamagingHitEvent(Simulation& simulation) {
 void runModifyMove(Simulation& simulation) {
   internal::SelectForPokemonView<> selectedPokemon{
     simulation,
-    internal::getMoveEventPokemonSelector<tags::CurrentActionMoveSource>()};
+    getMoveEventPokemonSelector<tags::CurrentActionMoveSource>()};
 
   simulation.viewForSelectedPokemon<
     dex::latest::ChoiceScarf::onSourceModifyMove,
@@ -106,7 +106,7 @@ void runModifySpa(Simulation& simulation) {
 
   simulation.viewForSelectedPokemon<dex::latest::ChoiceSpecs::onModifySpa, Tags<item::tags::ChoiceSpecs>>();
 
-  simulation.viewForSelectedPokemon<internal::applyEventModifier<stat::EffectiveSpa>>();
+  simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpa>>();
   simulation.registry.clear<EventModifier>();
 }
 
@@ -115,7 +115,7 @@ void runModifySpd(Simulation& simulation) {
 
   simulation.viewForSelectedPokemon<dex::latest::AssaultVest::onModifySpd, Tags<item::tags::AssaultVest>>();
 
-  simulation.viewForSelectedPokemon<internal::applyEventModifier<stat::EffectiveSpd>>();
+  simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpd>>();
   simulation.registry.clear<EventModifier>();
 }
 
@@ -124,7 +124,7 @@ void runModifySpe(Simulation& simulation) {
 
   simulation.viewForSelectedPokemon<dex::latest::ChoiceScarf::onModifySpe, Tags<item::tags::ChoiceScarf>>();
 
-  simulation.viewForSelectedPokemon<internal::applyEventModifier<stat::EffectiveSpe>>();
+  simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpe>>();
   simulation.registry.clear<EventModifier>();
 
   simulation.viewForSelectedPokemon<
