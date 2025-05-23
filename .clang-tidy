@@ -12,7 +12,6 @@ ImplementationFileExtensions:
   - cpp
   - cxx
 HeaderFilterRegex: ''
-ExcludeHeaderFilterRegex: ''
 FormatStyle:     none
 CheckOptions:
   bugprone-empty-catch.AllowEmptyCatchForExceptions: ''
