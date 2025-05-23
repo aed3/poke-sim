@@ -27,7 +27,7 @@
 
 namespace pokesim {
 Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
-    : battleFormat(battleFormat_), pokedex(pokedex_) {}
+    : constantBattleFormat(battleFormat_), constantPokedex(&pokedex_) {}
 
 std::vector<types::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList) {
   std::vector<types::entity> moveEntities{};
@@ -59,7 +59,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
     pokemonSetup.setTypes(pokemonInfo.types.value());
   }
   else {
-    pokemonSetup.setTypes(pokedex.getSpeciesData<SpeciesTypes>(pokemonInfo.species));
+    pokemonSetup.setTypes(pokedex().getSpeciesData<SpeciesTypes>(pokemonInfo.species));
   }
   if (pokemonInfo.gender != dex::Gender::NO_GENDER) pokemonSetup.setGender(pokemonInfo.gender);
   if (pokemonInfo.ability != dex::Ability::NO_ABILITY) pokemonSetup.setAbility(pokemonInfo.ability);
@@ -95,7 +95,7 @@ void Simulation::createInitialSide(
     PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonInfo);
     if (
       battleInfo.turn > 0 && !pokemonInfo.fainted &&
-      (i == 0 || (battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT && i == 1))) {
+      (i == 0 || (battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT && i == 1))) {
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
 
@@ -186,7 +186,7 @@ void Simulation::createCalcDamageInput(
   types::entity attackerEntity = slotToPokemonEntity(registry, sides, inputInfo.attackerSlot);
   types::entity defenderEntity = slotToPokemonEntity(registry, sides, inputInfo.defenderSlot);
 
-  inputSetup.setup(battleStateSetup.entity(), attackerEntity, defenderEntity, inputInfo.move, pokedex);
+  inputSetup.setup(battleStateSetup.entity(), attackerEntity, defenderEntity, inputInfo.move, pokedex());
 }
 
 void Simulation::createAnalyzeEffectInput(

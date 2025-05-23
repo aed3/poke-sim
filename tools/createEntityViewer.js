@@ -304,9 +304,8 @@ const makeAllDef =
     }
   }
 
-const makeUses = (component) => {
-  return ['get', 'count', 'all'].map(func => `${toFunctionName(func, component)}();`).join('\n');
-};
+const makeUses =
+  (component) => { return ['get', 'count', 'all'].map(func => `${toFunctionName(func, component)}();`).join('\n'); };
 
 const makeHandleAdapter = (component, declarationCreator, func) =>
   'template <typename Registry>\n' +

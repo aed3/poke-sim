@@ -15,7 +15,7 @@ struct Results {
   Results(const Simulation& simulation_);
 
  private:
-  const Simulation& simulation;
+  const Simulation* simulation;
 };
 }  // namespace simulate_turn
 
@@ -33,7 +33,7 @@ struct Results {
   Results(const Simulation& simulation_);
 
  private:
-  const Simulation& simulation;
+  const Simulation* simulation;
 };
 }  // namespace calc_damage
 
@@ -50,7 +50,7 @@ struct Results {
   Results(const Simulation& simulation_);
 
  private:
-  const Simulation& simulation;
+  const Simulation* simulation;
 };
 }  // namespace analyze_effect
 }  // namespace pokesim

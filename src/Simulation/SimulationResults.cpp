@@ -7,46 +7,46 @@
 
 namespace pokesim {
 namespace simulate_turn {
-Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
+Results::Results(const Simulation& simulation_) : simulation(&simulation_) {}
 
 types::view<TurnOutcomeBattles> Results::turnOutcomeBattlesResults() const {
-  return simulation.registry.view<TurnOutcomeBattles>();
+  return simulation->registry.view<TurnOutcomeBattles>();
 }
 }  // namespace simulate_turn
 
 namespace calc_damage {
-Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
+Results::Results(const Simulation& simulation_) : simulation(&simulation_) {}
 
 types::view<DamageRolls> Results::damageRollResults() const {
-  return simulation.registry.view<DamageRolls>();
+  return simulation->registry.view<DamageRolls>();
 }
 
 types::view<UsesUntilKo> Results::usesUntilKoResults() const {
-  return simulation.registry.view<UsesUntilKo>();
+  return simulation->registry.view<UsesUntilKo>();
 }
 
 types::view<AttackerHpRecovered> Results::hpRecoveredResults() const {
-  return simulation.registry.view<AttackerHpRecovered>();
+  return simulation->registry.view<AttackerHpRecovered>();
 }
 
 types::view<AttackerHpLost> Results::hpLostResults() const {
-  return simulation.registry.view<AttackerHpLost>();
+  return simulation->registry.view<AttackerHpLost>();
 }
 }  // namespace calc_damage
 
 namespace analyze_effect {
-Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
+Results::Results(const Simulation& simulation_) : simulation(&simulation_) {}
 
 types::view<EffectMultiplier> Results::effectMultiplierResults() const {
-  return simulation.registry.view<EffectMultiplier>();
+  return simulation->registry.view<EffectMultiplier>();
 }
 
 types::view<MultipliedDamageRolls> Results::multipliedDamageRollsResults() const {
-  return simulation.registry.view<MultipliedDamageRolls>();
+  return simulation->registry.view<MultipliedDamageRolls>();
 }
 
 types::view<MultipliedUsesUntilKo> Results::multipliedUsesUntilKoResults() const {
-  return simulation.registry.view<MultipliedUsesUntilKo>();
+  return simulation->registry.view<MultipliedUsesUntilKo>();
 }
 }  // namespace analyze_effect
 }  // namespace pokesim

@@ -16,12 +16,5 @@ void applyAverageDamageRoll(Damage& damage);
 void applyMinDamageRoll(Damage& damage);
 
 void setDamageRollModifiers(Simulation& simulation);
-template <typename SimulationTag>
-void applyDamageRollsAndModifiers(
-  Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp, bool noKoChanceCalculation);
-
-template <typename SimulationTag>
-void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind);
-void getDamage(Simulation& simulation);
 }  // namespace calc_damage
 }  // namespace pokesim

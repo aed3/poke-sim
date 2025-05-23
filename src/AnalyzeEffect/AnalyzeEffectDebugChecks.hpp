@@ -23,8 +23,8 @@ struct Checks : pokesim::debug::Checks {
   Checks(const Simulation& _simulation) : pokesim::debug::Checks(_simulation) {}
 
   void checkInputs() {
-    for (types::entity input : registry.view<tags::Input>()) {
-      originalToCopy[input] = pokesim::debug::createEntityCopy(input, registry, registryOnInput);
+    for (types::entity input : registry->view<tags::Input>()) {
+      originalToCopy[input] = pokesim::debug::createEntityCopy(input, *registry, registryOnInput);
     }
 
     const std::vector<types::entity> attackers = getPokemonList(true);
@@ -32,7 +32,7 @@ struct Checks : pokesim::debug::Checks {
 
     for (const std::vector<types::entity>& pokemonList : {attackers, defenders}) {
       for (types::entity pokemon : pokemonList) {
-        originalToCopy[pokemon] = pokesim::debug::createEntityCopy(pokemon, registry, registryOnInput);
+        originalToCopy[pokemon] = pokesim::debug::createEntityCopy(pokemon, *registry, registryOnInput);
       }
     }
 
@@ -51,18 +51,18 @@ struct Checks : pokesim::debug::Checks {
  private:
   std::vector<types::entity> getPokemonList(bool forAttacker) const {
     if (forAttacker) {
-      auto view = registry.view<tags::Attacker>();
+      auto view = registry->view<tags::Attacker>();
       return {view.begin(), view.end()};
     }
 
-    auto view = registry.view<tags::Defender>();
+    auto view = registry->view<tags::Defender>();
     return {view.begin(), view.end()};
   }
 
   DamageRollKind getDamageRollKind(types::entity input, DamageRollOptions damageRollOptions) const {
-    const Defenders& defenders = registry.get<Defenders>(input);
-    const Side& side = registry.get<Side>(defenders.only());
-    PlayerSideId playerSide = registry.get<PlayerSide>(side.val).val;
+    const Defenders& defenders = registry->get<Defenders>(input);
+    const Side& side = registry->get<Side>(defenders.only());
+    PlayerSideId playerSide = registry->get<PlayerSide>(side.val).val;
     switch (playerSide) {
       case PlayerSideId::P1: {
         return damageRollOptions.p1;
@@ -80,24 +80,24 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkInputOutputs() const {
-    for (types::entity input : registry.view<tags::Input>()) {
+    for (types::entity input : registry->view<tags::Input>()) {
       pokesim::debug::TypesToIgnore typesToIgnore{};
       typesToIgnore.add<MultipliedDamageRolls>();
 
-      POKESIM_REQUIRE_NM(registry.all_of<MultipliedDamageRolls>(input));
+      POKESIM_REQUIRE_NM(registry->all_of<MultipliedDamageRolls>(input));
 
-      if (registry.all_of<tags::InfiniteMultiplier>(input)) {
-        POKESIM_REQUIRE_NM(!registry.all_of<EffectMultiplier>(input));
+      if (registry->all_of<tags::InfiniteMultiplier>(input)) {
+        POKESIM_REQUIRE_NM(!registry->all_of<EffectMultiplier>(input));
         typesToIgnore.add<tags::InfiniteMultiplier>();
       }
 
       bool zeroEffectMultiplier = false;
-      if (registry.all_of<EffectMultiplier>(input)) {
-        POKESIM_REQUIRE_NM(!registry.all_of<tags::InfiniteMultiplier>(input));
+      if (registry->all_of<EffectMultiplier>(input)) {
+        POKESIM_REQUIRE_NM(!registry->all_of<tags::InfiniteMultiplier>(input));
         typesToIgnore.add<EffectMultiplier>();
 
         const auto [effectMultiplier, multipliedDamageRolls] =
-          registry.get<EffectMultiplier, MultipliedDamageRolls>(input);
+          registry->get<EffectMultiplier, MultipliedDamageRolls>(input);
         if (effectMultiplier.val == 0) {
           zeroEffectMultiplier = true;
           for (const Damage& multipliedDamageRoll : multipliedDamageRolls.val) {
@@ -106,26 +106,26 @@ struct Checks : pokesim::debug::Checks {
         }
       }
 
-      auto damageRollOptions = simulation.analyzeEffectOptions.damageRollOptions;
-      auto noKoChanceCalculation = simulation.analyzeEffectOptions.noKoChanceCalculation;
+      auto damageRollOptions = simulation->analyzeEffectOptions.damageRollOptions;
+      auto noKoChanceCalculation = simulation->analyzeEffectOptions.noKoChanceCalculation;
       if (noKoChanceCalculation || zeroEffectMultiplier) {
-        POKESIM_REQUIRE_NM(!registry.all_of<MultipliedUsesUntilKo>(input));
+        POKESIM_REQUIRE_NM(!registry->all_of<MultipliedUsesUntilKo>(input));
       }
       else if (calc_damage::damageKindsMatch(
                  DamageRollKind::ALL_DAMAGE_ROLLS,
                  getDamageRollKind(input, damageRollOptions))) {
-        POKESIM_REQUIRE_NM(registry.all_of<MultipliedUsesUntilKo>(input));
+        POKESIM_REQUIRE_NM(registry->all_of<MultipliedUsesUntilKo>(input));
         typesToIgnore.add<MultipliedUsesUntilKo>();
       }
 
-      pokesim::debug::areEntitiesEqual(registry, input, registryOnInput, originalToCopy.at(input), typesToIgnore);
+      pokesim::debug::areEntitiesEqual(*registry, input, registryOnInput, originalToCopy.at(input), typesToIgnore);
     }
   }
 
   void checkPokemonOutputs(bool forAttacker) const {
     const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
-      pokesim::debug::areEntitiesEqual(registry, pokemon, registryOnInput, originalToCopy.at(pokemon));
+      pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, originalToCopy.at(pokemon));
     }
   }
 };

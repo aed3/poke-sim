@@ -17264,7 +17264,7 @@ inline types::entity findCopyParent(
   const entt::dense_map<types::entity, types::entity>& initialEntities, const types::registry& registry,
   types::entity entity);
 
-inline bool checkIfCopyParent(types::entity current, types::entity initial, const types::registry& registry);
+inline bool checkIfCopyParent(types::entity potentialChild, types::entity potentialParent, const types::registry& registry);
 
 template <typename Type>
 class AssertComponentsEqual {
@@ -17406,7 +17406,7 @@ using BackingHandle = entt::basic_handle<Registry>;
 namespace pokesim::types {
 class registry : public internal::BackingRegistry {
  public:
-  enum MetaFunctions : entt::id_type {
+  enum MetaFunctions : std::uint8_t {
     COPY_TO_OTHER_REGISTRY,
     ENTITY_COMPONENTS_EQUAL,
   };
@@ -17581,14 +17581,14 @@ inline types::entity findCopyParent(
   POKESIM_REQUIRE_FAIL("Could not find original entity of a clone.");
 }
 
-inline bool checkIfCopyParent(types::entity current, types::entity initial, const types::registry& registry) {
-  const ParentEntity* parentEntity = registry.try_get<ParentEntity>(current);
+inline bool checkIfCopyParent(types::entity potentialChild, types::entity potentialParent, const types::registry& registry) {
+  const ParentEntity* parentEntity = registry.try_get<ParentEntity>(potentialChild);
   for (std::size_t i = 0; parentEntity != nullptr; i++) {
     if (i >= registry.storage<types::registry::entity_type>()->size()) {
       POKESIM_REQUIRE_FAIL("A loop in the battle tree caused an infinite loop.");
     }
 
-    if (parentEntity->val == initial) {
+    if (parentEntity->val == potentialParent) {
       return true;
     }
     parentEntity = registry.try_get<ParentEntity>(parentEntity->val);
@@ -18092,7 +18092,7 @@ class variant : public std::variant<Types...> {
   using std::variant<Types...>::variant;
 
   template <typename T>
-  variant& operator=(T&& rhs) {
+  variant& operator=(const T& rhs) {
     std::variant<Types...>::operator=(rhs);
     return *this;
   }
@@ -18398,7 +18398,10 @@ struct SpeciesTypes {
   constexpr const dex::Type& type1() const { return val[0]; };
   constexpr const dex::Type& type2() const { return val[1]; };
   constexpr std::uint8_t size() const {
-    return type2() == dex::Type::NO_TYPE ? type1() == dex::Type::NO_TYPE ? 0 : 1 : 2;
+    if (type2() == dex::Type::NO_TYPE) {
+      return type1() == dex::Type::NO_TYPE ? 0 : 1;
+    }
+    return 2;
   }
   constexpr bool has(dex::Type type) const { return type1() == type || type2() == type; }
 };
@@ -18923,7 +18926,7 @@ class maxSizedVector : private std::array<T, N> {
   }
 
   template <class... Args>
-  void emplace_back(Args&&... args) {
+  void emplace_back(const Args&... args) {
     base::at(used) = {args...};
     used++;
   }
@@ -19215,7 +19218,7 @@ class Pokedex;
 namespace calc_damage {
 struct InputSetup {
  protected:
-  types::registry& registry;
+  types::registry* registry;
   types::entity moveEntity = entt::null;
 
  public:
@@ -19600,14 +19603,14 @@ class Pokedex {
   inline types::entity buildItem(dex::Item item, types::registry& registry, bool forActiveMove) const;
   inline types::entity buildAbility(dex::Ability ability, types::registry& registry, bool forActiveMove) const;
 
- public:
   /**
    * @brief The data for the Pokedex will be based the this game's data.
    * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but if
    * it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
    */
-  const GameMechanics mechanics;
+  GameMechanics mechanics;
 
+ public:
   Pokedex(GameMechanics mechanics_) : mechanics(mechanics_) {}
 
   /**
@@ -20276,7 +20279,7 @@ class RegistryContainer {
   types::registry registry{};
 
   template <typename Type, typename... ViewComponents, typename... Args>
-  void addToEntities(Args&&... args) {
+  void addToEntities(const Args&... args) {
     auto view = registry.view<ViewComponents...>();
     registry.insert<Type>(view.begin(), view.end(), args...);
   }
@@ -20504,15 +20507,18 @@ class Simulation : public internal::RegistryContainer {
   inline std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
 
- public:
-  const BattleFormat battleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
-  const Pokedex& pokedex;
+  BattleFormat constantBattleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
+  const Pokedex* constantPokedex;
 
+ public:
   simulate_turn::Options simulateTurnOptions;
   calc_damage::Options calculateDamageOptions;
   analyze_effect::Options analyzeEffectOptions;
 
   inline Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
+
+  const Pokedex& pokedex() const { return *constantPokedex; }
+  BattleFormat battleFormat() const { return constantBattleFormat; }
 
   // Load information about any number of battle states into the simulation's registry.
   inline void createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList);
@@ -20851,25 +20857,25 @@ struct Turn {
 
 namespace pokesim::debug {
 struct Checks {
-  Checks(const Simulation& _simulation) : simulation(_simulation), registry(simulation.registry) {}
+  Checks(const Simulation& _simulation) : simulation(&_simulation), registry(&_simulation.registry) {}
 
  protected:
-  const Simulation& simulation;
-  const types::registry& registry;
+  const Simulation* simulation;
+  const types::registry* registry;
   types::registry registryOnInput;
   entt::dense_map<types::entity, types::entity> originalToCopy;
   entt::dense_set<types::entity> specificallyChecked;
   std::size_t initialEntityCount = 0;
 
   void copyRemainingEntities() {
-    for (types::entity entity : registry.view<types::entity>()) {
-      if (!registry.orphan(entity)) {
+    for (types::entity entity : registry->view<types::entity>()) {
+      if (!registry->orphan(entity)) {
         initialEntityCount++;
         if (originalToCopy.contains(entity)) {
           specificallyChecked.emplace(entity);
         }
         else {
-          originalToCopy[entity] = createEntityCopy(entity, registry, registryOnInput);
+          originalToCopy[entity] = createEntityCopy(entity, *registry, registryOnInput);
         }
       }
     }
@@ -20878,15 +20884,15 @@ struct Checks {
   void checkRemainingOutputs() const {
     for (auto [original, copy] : originalToCopy) {
       if (!specificallyChecked.contains(original)) {
-        areEntitiesEqual(registry, original, registryOnInput, copy);
+        areEntitiesEqual(*registry, original, registryOnInput, copy);
       }
     }
   }
 
   std::size_t getFinalEntityCount() const {
     std::size_t finalEntityCount = 0;
-    for (types::entity entity : registry.view<types::entity>()) {
-      if (!registry.orphan(entity)) {
+    for (types::entity entity : registry->view<types::entity>()) {
+      if (!registry->orphan(entity)) {
         finalEntityCount++;
       }
     }
@@ -20912,8 +20918,8 @@ namespace pokesim::debug {
 struct SimulationSetupChecks {
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
  private:
-  const types::registry& registry;
-  const std::vector<Simulation::BattleCreationInfo>& battleInfoList;
+  const types::registry* registry;
+  const std::vector<Simulation::BattleCreationInfo>* battleInfoList;
 
   struct SetupEntities {
     types::entity battle;
@@ -20975,9 +20981,9 @@ struct SimulationSetupChecks {
 
   void checkCreatedPokemon(types::entity pokemonEntity, const Simulation::PokemonCreationInfo& creationInfo) const {
     const auto& [id, side, battle, speciesName, abilityName, level, moveSlots, evs, ivs] =
-      registry.get<Id, Side, Battle, SpeciesName, AbilityName, Level, MoveSlots, Evs, Ivs>(pokemonEntity);
+      registry->get<Id, Side, Battle, SpeciesName, AbilityName, Level, MoveSlots, Evs, Ivs>(pokemonEntity);
     const auto& [hp, atk, def, spa, spd, spe] =
-      registry.get<stat::Hp, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>(pokemonEntity);
+      registry->get<stat::Hp, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>(pokemonEntity);
 
     if (creationInfo.id.has_value()) {
       POKESIM_REQUIRE_NM(id.val == creationInfo.id.value());
@@ -20991,31 +20997,31 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(level.val == creationInfo.level);
 
     if (creationInfo.item == dex::Item::NO_ITEM) {
-      POKESIM_REQUIRE_NM(!registry.all_of<ItemName>(pokemonEntity));
+      POKESIM_REQUIRE_NM(!registry->all_of<ItemName>(pokemonEntity));
     }
     else {
-      POKESIM_REQUIRE_NM(registry.get<ItemName>(pokemonEntity).name == creationInfo.item);
+      POKESIM_REQUIRE_NM(registry->get<ItemName>(pokemonEntity).name == creationInfo.item);
     }
 
     if (creationInfo.gender == dex::Gender::NO_GENDER) {
-      POKESIM_REQUIRE_NM(!registry.all_of<GenderName>(pokemonEntity));
+      POKESIM_REQUIRE_NM(!registry->all_of<GenderName>(pokemonEntity));
     }
     else {
-      POKESIM_REQUIRE_NM(registry.get<GenderName>(pokemonEntity).name == creationInfo.gender);
+      POKESIM_REQUIRE_NM(registry->get<GenderName>(pokemonEntity).name == creationInfo.gender);
     }
 
     if (creationInfo.status == dex::Status::NO_STATUS) {
-      POKESIM_REQUIRE_NM(!registry.all_of<StatusName>(pokemonEntity));
+      POKESIM_REQUIRE_NM(!registry->all_of<StatusName>(pokemonEntity));
     }
     else {
-      POKESIM_REQUIRE_NM(registry.get<StatusName>(pokemonEntity).name == creationInfo.status);
+      POKESIM_REQUIRE_NM(registry->get<StatusName>(pokemonEntity).name == creationInfo.status);
     }
 
     if (creationInfo.nature == dex::Nature::NO_NATURE) {
-      POKESIM_REQUIRE_NM(!registry.all_of<NatureName>(pokemonEntity));
+      POKESIM_REQUIRE_NM(!registry->all_of<NatureName>(pokemonEntity));
     }
     else {
-      POKESIM_REQUIRE_NM(registry.get<NatureName>(pokemonEntity).name == creationInfo.nature);
+      POKESIM_REQUIRE_NM(registry->get<NatureName>(pokemonEntity).name == creationInfo.nature);
     }
 
     POKESIM_REQUIRE_NM(hp.val == creationInfo.stats.hp);
@@ -21044,31 +21050,31 @@ struct SimulationSetupChecks {
     for (std::size_t i = 0; i < creationInfo.moves.size(); i++) {
       const Simulation::MoveCreationInfo& move = creationInfo.moves[i];
       types::entity moveEntity = moveSlots.val[(std::uint8_t)i];
-      POKESIM_REQUIRE_NM((registry.all_of<MoveName, Pp, MaxPp>(moveEntity)));
-      POKESIM_REQUIRE_NM(registry.get<MoveName>(moveEntity).name == move.name);
-      POKESIM_REQUIRE_NM(registry.get<Pp>(moveEntity).val == move.pp);
-      POKESIM_REQUIRE_NM(registry.get<MaxPp>(moveEntity).val == move.maxPp);
+      POKESIM_REQUIRE_NM((registry->all_of<MoveName, Pp, MaxPp>(moveEntity)));
+      POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).name == move.name);
+      POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == move.pp);
+      POKESIM_REQUIRE_NM(registry->get<MaxPp>(moveEntity).val == move.maxPp);
     }
   }
 
   void checkCreatedSide(types::entity sideEntity, const Simulation::SideCreationInfo& creationInfo) const {
-    POKESIM_REQUIRE_NM((registry.all_of<Team, FoeSide, Battle>(sideEntity)));
+    POKESIM_REQUIRE_NM((registry->all_of<Team, FoeSide, Battle>(sideEntity)));
 
-    const auto& team = registry.get<Team>(sideEntity).val;
+    const auto& team = registry->get<Team>(sideEntity).val;
     POKESIM_REQUIRE_NM(team.size() == creationInfo.team.size());
 
     for (std::size_t i = 0; i < creationInfo.team.size(); i++) {
       types::entity pokemonEntity = team[(std::uint8_t)i];
       checkCreatedPokemon(pokemonEntity, creationInfo.team[i]);
 
-      POKESIM_REQUIRE_NM(registry.get<Side>(pokemonEntity).val == sideEntity);
-      POKESIM_REQUIRE_NM(registry.get<Battle>(pokemonEntity).val == registry.get<Battle>(sideEntity).val);
+      POKESIM_REQUIRE_NM(registry->get<Side>(pokemonEntity).val == sideEntity);
+      POKESIM_REQUIRE_NM(registry->get<Battle>(pokemonEntity).val == registry->get<Battle>(sideEntity).val);
     }
   }
 
   void checkBattle(types::entity battleEntity, const Simulation::BattleCreationInfo& creationInfo) const {
-    POKESIM_REQUIRE_NM((registry.all_of<Sides, ActionQueue, Turn, Probability, RngSeed>(battleEntity)));
-    const auto& [sides, turn, probability, rngSeed] = registry.get<Sides, Turn, Probability, RngSeed>(battleEntity);
+    POKESIM_REQUIRE_NM((registry->all_of<Sides, ActionQueue, Turn, Probability, RngSeed>(battleEntity)));
+    const auto& [sides, turn, probability, rngSeed] = registry->get<Sides, Turn, Probability, RngSeed>(battleEntity);
 
     POKESIM_REQUIRE_NM(turn.val == creationInfo.turn);
     POKESIM_REQUIRE_NM(probability.val == creationInfo.probability);
@@ -21086,18 +21092,18 @@ struct SimulationSetupChecks {
     checkCreatedSide(p1SideEntity, creationInfo.p1);
     checkCreatedSide(p2SideEntity, creationInfo.p2);
 
-    POKESIM_REQUIRE_NM(registry.get<Battle>(p1SideEntity).val == battleEntity);
-    POKESIM_REQUIRE_NM(registry.get<Battle>(p2SideEntity).val == battleEntity);
-    POKESIM_REQUIRE_NM(registry.get<FoeSide>(p1SideEntity).val == p2SideEntity);
-    POKESIM_REQUIRE_NM(registry.get<FoeSide>(p2SideEntity).val == p1SideEntity);
+    POKESIM_REQUIRE_NM(registry->get<Battle>(p1SideEntity).val == battleEntity);
+    POKESIM_REQUIRE_NM(registry->get<Battle>(p2SideEntity).val == battleEntity);
+    POKESIM_REQUIRE_NM(registry->get<FoeSide>(p1SideEntity).val == p2SideEntity);
+    POKESIM_REQUIRE_NM(registry->get<FoeSide>(p2SideEntity).val == p1SideEntity);
   }
 
   void checkTurnDecision(types::entity battleEntity, const Simulation::TurnDecisionInfo& turnDecisionInfo) const {
-    const auto& sides = registry.get<Sides>(battleEntity).val;
+    const auto& sides = registry->get<Sides>(battleEntity).val;
 
     POKESIM_REQUIRE(sides.size() == 2, "Both sides should be have entities.");
     for (uint8_t side = 0; side < 2U; side++) {
-      const auto& sideDecision = registry.get<SideDecision>(sides[side]);
+      const auto& sideDecision = registry->get<SideDecision>(sides[side]);
       const auto& sideDecisionInfo = side ? turnDecisionInfo.p2 : turnDecisionInfo.p1;
 
       POKESIM_REQUIRE_NM(sideDecision.sideId == sideDecisionInfo.sideId);
@@ -21141,13 +21147,13 @@ struct SimulationSetupChecks {
   void checkCalcDamage(
     types::entity battleEntity, types::entity calcDamageEntity,
     const Simulation::CalcDamageInputInfo& calcDamageInputInfo) const {
-    POKESIM_REQUIRE_NM(registry.all_of<calc_damage::tags::UsedMove>(calcDamageEntity));
-    POKESIM_REQUIRE_NM(registry.all_of<tags::CalculateDamage>(calcDamageEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::UsedMove>(calcDamageEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<tags::CalculateDamage>(calcDamageEntity));
 
-    const auto& p1Team = registry.get<Team>(registry.get<Sides>(battleEntity).p1()).val;
-    const auto& p2Team = registry.get<Team>(registry.get<Sides>(battleEntity).p2()).val;
+    const auto& p1Team = registry->get<Team>(registry->get<Sides>(battleEntity).p1()).val;
+    const auto& p2Team = registry->get<Team>(registry->get<Sides>(battleEntity).p2()).val;
     const auto& [battle, moveName, attacker, defenders] =
-      registry.get<Battle, MoveName, calc_damage::Attacker, calc_damage::Defenders>(calcDamageEntity);
+      registry->get<Battle, MoveName, calc_damage::Attacker, calc_damage::Defenders>(calcDamageEntity);
     types::entity setupInfoAttacker = targetSlotToEntity(calcDamageInputInfo.attackerSlot, p1Team, p2Team);
     types::entity setupInfoDefender = targetSlotToEntity(calcDamageInputInfo.defenderSlot, p1Team, p2Team);
 
@@ -21156,11 +21162,11 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(defenders.only() == setupInfoDefender);
     POKESIM_REQUIRE_NM(moveName.name == calcDamageInputInfo.move);
 
-    POKESIM_REQUIRE_NM(registry.all_of<calc_damage::tags::Attacker>(setupInfoAttacker));
-    POKESIM_REQUIRE_NM(registry.all_of<calc_damage::tags::Defender>(setupInfoDefender));
+    POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::Attacker>(setupInfoAttacker));
+    POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::Defender>(setupInfoDefender));
 
-    const auto& attackerMoves = registry.get<calc_damage::UsedMoves>(setupInfoAttacker).val;
-    const auto& defenderMoves = registry.get<calc_damage::UsedMoves>(setupInfoDefender).val;
+    const auto& attackerMoves = registry->get<calc_damage::UsedMoves>(setupInfoAttacker).val;
+    const auto& defenderMoves = registry->get<calc_damage::UsedMoves>(setupInfoDefender).val;
 
     POKESIM_REQUIRE_NM(std::find(attackerMoves.begin(), attackerMoves.end(), calcDamageEntity) != attackerMoves.end());
     POKESIM_REQUIRE_NM(std::find(defenderMoves.begin(), defenderMoves.end(), calcDamageEntity) != defenderMoves.end());
@@ -21169,14 +21175,14 @@ struct SimulationSetupChecks {
   void checkAnalyzeEffect(
     types::entity battleEntity, types::entity analyzeEffectEntity,
     const Simulation::AnalyzeEffectInputInfo& analyzeEffectInputInfo) const {
-    POKESIM_REQUIRE_NM(registry.all_of<analyze_effect::tags::Input>(analyzeEffectEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<analyze_effect::tags::Input>(analyzeEffectEntity));
     POKESIM_REQUIRE(
-      !registry.all_of<tags::AnalyzeEffect>(analyzeEffectEntity),
+      !registry->all_of<tags::AnalyzeEffect>(analyzeEffectEntity),
       "This should not be set on the input entity as it's used for individual move calculations.");
 
-    const auto& p1Team = registry.get<Team>(registry.get<Sides>(battleEntity).p1()).val;
-    const auto& p2Team = registry.get<Team>(registry.get<Sides>(battleEntity).p2()).val;
-    const auto& [battle, effectMoves, attacker, defenders, effectTarget] = registry.get<
+    const auto& p1Team = registry->get<Team>(registry->get<Sides>(battleEntity).p1()).val;
+    const auto& p2Team = registry->get<Team>(registry->get<Sides>(battleEntity).p2()).val;
+    const auto& [battle, effectMoves, attacker, defenders, effectTarget] = registry->get<
       Battle,
       analyze_effect::EffectMoves,
       analyze_effect::Attacker,
@@ -21196,40 +21202,40 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(effectMoves.val[i] == analyzeEffectInputInfo.moves[i]);
     }
 
-    POKESIM_REQUIRE_NM(registry.all_of<analyze_effect::Inputs>(battle.val));
-    const auto& battleInputs = registry.get<analyze_effect::Inputs>(battle.val).val;
+    POKESIM_REQUIRE_NM(registry->all_of<analyze_effect::Inputs>(battle.val));
+    const auto& battleInputs = registry->get<analyze_effect::Inputs>(battle.val).val;
     POKESIM_REQUIRE_NM(std::find(battleInputs.begin(), battleInputs.end(), analyzeEffectEntity) != battleInputs.end());
 
-    POKESIM_REQUIRE_NM(registry.all_of<analyze_effect::tags::Attacker>(setupInfoAttacker));
-    POKESIM_REQUIRE_NM(registry.all_of<analyze_effect::tags::Defender>(setupInfoDefender));
+    POKESIM_REQUIRE_NM(registry->all_of<analyze_effect::tags::Attacker>(setupInfoAttacker));
+    POKESIM_REQUIRE_NM(registry->all_of<analyze_effect::tags::Defender>(setupInfoDefender));
 
     if (analyzeEffectInputInfo.effect.has_value()) {
       const auto& effect = analyzeEffectInputInfo.effect.value();
       if (effect.holds<dex::PseudoWeather>()) {
-        POKESIM_REQUIRE_NM(registry.all_of<PseudoWeatherName>(analyzeEffectEntity));
+        POKESIM_REQUIRE_NM(registry->all_of<PseudoWeatherName>(analyzeEffectEntity));
         POKESIM_REQUIRE_NM(
-          registry.get<PseudoWeatherName>(analyzeEffectEntity).name == effect.get<dex::PseudoWeather>());
+          registry->get<PseudoWeatherName>(analyzeEffectEntity).name == effect.get<dex::PseudoWeather>());
       }
       else if (effect.holds<dex::SideCondition>()) {
-        POKESIM_REQUIRE_NM(registry.all_of<SideConditionName>(analyzeEffectEntity));
+        POKESIM_REQUIRE_NM(registry->all_of<SideConditionName>(analyzeEffectEntity));
         POKESIM_REQUIRE_NM(
-          registry.get<SideConditionName>(analyzeEffectEntity).name == effect.get<dex::SideCondition>());
+          registry->get<SideConditionName>(analyzeEffectEntity).name == effect.get<dex::SideCondition>());
       }
       else if (effect.holds<dex::Status>()) {
-        POKESIM_REQUIRE_NM(registry.all_of<StatusName>(analyzeEffectEntity));
-        POKESIM_REQUIRE_NM(registry.get<StatusName>(analyzeEffectEntity).name == effect.get<dex::Status>());
+        POKESIM_REQUIRE_NM(registry->all_of<StatusName>(analyzeEffectEntity));
+        POKESIM_REQUIRE_NM(registry->get<StatusName>(analyzeEffectEntity).name == effect.get<dex::Status>());
       }
       else if (effect.holds<dex::Terrain>()) {
-        POKESIM_REQUIRE_NM(registry.all_of<TerrainName>(analyzeEffectEntity));
-        POKESIM_REQUIRE_NM(registry.get<TerrainName>(analyzeEffectEntity).name == effect.get<dex::Terrain>());
+        POKESIM_REQUIRE_NM(registry->all_of<TerrainName>(analyzeEffectEntity));
+        POKESIM_REQUIRE_NM(registry->get<TerrainName>(analyzeEffectEntity).name == effect.get<dex::Terrain>());
       }
       else if (effect.holds<dex::Volatile>()) {
-        POKESIM_REQUIRE_NM(registry.all_of<VolatileName>(analyzeEffectEntity));
-        POKESIM_REQUIRE_NM(registry.get<VolatileName>(analyzeEffectEntity).name == effect.get<dex::Volatile>());
+        POKESIM_REQUIRE_NM(registry->all_of<VolatileName>(analyzeEffectEntity));
+        POKESIM_REQUIRE_NM(registry->get<VolatileName>(analyzeEffectEntity).name == effect.get<dex::Volatile>());
       }
       else if (effect.holds<dex::Weather>()) {
-        POKESIM_REQUIRE_NM(registry.all_of<WeatherName>(analyzeEffectEntity));
-        POKESIM_REQUIRE_NM(registry.get<WeatherName>(analyzeEffectEntity).name == effect.get<dex::Weather>());
+        POKESIM_REQUIRE_NM(registry->all_of<WeatherName>(analyzeEffectEntity));
+        POKESIM_REQUIRE_NM(registry->get<WeatherName>(analyzeEffectEntity).name == effect.get<dex::Weather>());
       }
       else {
         POKESIM_REQUIRE_FAIL("Effect does not contain a valid enum.");
@@ -21240,28 +21246,28 @@ struct SimulationSetupChecks {
       const auto [stat, boostValue] = analyzeEffectInputInfo.boostEffect.value();
       switch (stat) {
         case dex::Stat::ATK: {
-          POKESIM_REQUIRE_NM(registry.all_of<AtkBoost>(analyzeEffectEntity));
-          POKESIM_REQUIRE_NM(registry.get<AtkBoost>(analyzeEffectEntity).val == boostValue);
+          POKESIM_REQUIRE_NM(registry->all_of<AtkBoost>(analyzeEffectEntity));
+          POKESIM_REQUIRE_NM(registry->get<AtkBoost>(analyzeEffectEntity).val == boostValue);
           break;
         }
         case dex::Stat::DEF: {
-          POKESIM_REQUIRE_NM(registry.all_of<DefBoost>(analyzeEffectEntity));
-          POKESIM_REQUIRE_NM(registry.get<DefBoost>(analyzeEffectEntity).val == boostValue);
+          POKESIM_REQUIRE_NM(registry->all_of<DefBoost>(analyzeEffectEntity));
+          POKESIM_REQUIRE_NM(registry->get<DefBoost>(analyzeEffectEntity).val == boostValue);
           break;
         }
         case dex::Stat::SPA: {
-          POKESIM_REQUIRE_NM(registry.all_of<SpaBoost>(analyzeEffectEntity));
-          POKESIM_REQUIRE_NM(registry.get<SpaBoost>(analyzeEffectEntity).val == boostValue);
+          POKESIM_REQUIRE_NM(registry->all_of<SpaBoost>(analyzeEffectEntity));
+          POKESIM_REQUIRE_NM(registry->get<SpaBoost>(analyzeEffectEntity).val == boostValue);
           break;
         }
         case dex::Stat::SPD: {
-          POKESIM_REQUIRE_NM(registry.all_of<SpdBoost>(analyzeEffectEntity));
-          POKESIM_REQUIRE_NM(registry.get<SpdBoost>(analyzeEffectEntity).val == boostValue);
+          POKESIM_REQUIRE_NM(registry->all_of<SpdBoost>(analyzeEffectEntity));
+          POKESIM_REQUIRE_NM(registry->get<SpdBoost>(analyzeEffectEntity).val == boostValue);
           break;
         }
         case dex::Stat::SPE: {
-          POKESIM_REQUIRE_NM(registry.all_of<SpeBoost>(analyzeEffectEntity));
-          POKESIM_REQUIRE_NM(registry.get<SpeBoost>(analyzeEffectEntity).val == boostValue);
+          POKESIM_REQUIRE_NM(registry->all_of<SpeBoost>(analyzeEffectEntity));
+          POKESIM_REQUIRE_NM(registry->get<SpeBoost>(analyzeEffectEntity).val == boostValue);
           break;
         }
         default: {
@@ -21274,10 +21280,10 @@ struct SimulationSetupChecks {
  public:
   SimulationSetupChecks(
     const types::registry& _registry, const std::vector<Simulation::BattleCreationInfo>& _battleInfoList)
-      : registry(_registry), battleInfoList(_battleInfoList) {}
+      : registry(&_registry), battleInfoList(&_battleInfoList) {}
 
   void checkOutputs() const {
-    for (const auto& battleInfo : battleInfoList) {
+    for (const auto& battleInfo : *battleInfoList) {
       POKESIM_REQUIRE_NM(createdBattles.contains(&battleInfo));
       const std::vector<types::entity>& battleEntities = createdBattles.at(&battleInfo);
 
@@ -21359,7 +21365,7 @@ struct SimulationSetupChecks {
 
 namespace pokesim {
 Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
-    : battleFormat(battleFormat_), pokedex(pokedex_) {}
+    : constantBattleFormat(battleFormat_), constantPokedex(&pokedex_) {}
 
 inline std::vector<types::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList) {
   std::vector<types::entity> moveEntities{};
@@ -21391,7 +21397,7 @@ inline PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationI
     pokemonSetup.setTypes(pokemonInfo.types.value());
   }
   else {
-    pokemonSetup.setTypes(pokedex.getSpeciesData<SpeciesTypes>(pokemonInfo.species));
+    pokemonSetup.setTypes(pokedex().getSpeciesData<SpeciesTypes>(pokemonInfo.species));
   }
   if (pokemonInfo.gender != dex::Gender::NO_GENDER) pokemonSetup.setGender(pokemonInfo.gender);
   if (pokemonInfo.ability != dex::Ability::NO_ABILITY) pokemonSetup.setAbility(pokemonInfo.ability);
@@ -21427,7 +21433,7 @@ inline void Simulation::createInitialSide(
     PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonInfo);
     if (
       battleInfo.turn > 0 && !pokemonInfo.fainted &&
-      (i == 0 || (battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT && i == 1))) {
+      (i == 0 || (battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT && i == 1))) {
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
 
@@ -21518,7 +21524,7 @@ inline void Simulation::createCalcDamageInput(
   types::entity attackerEntity = slotToPokemonEntity(registry, sides, inputInfo.attackerSlot);
   types::entity defenderEntity = slotToPokemonEntity(registry, sides, inputInfo.defenderSlot);
 
-  inputSetup.setup(battleStateSetup.entity(), attackerEntity, defenderEntity, inputInfo.move, pokedex);
+  inputSetup.setup(battleStateSetup.entity(), attackerEntity, defenderEntity, inputInfo.move, pokedex());
 }
 
 inline void Simulation::createAnalyzeEffectInput(
@@ -21733,7 +21739,7 @@ struct Results {
   inline Results(const Simulation& simulation_);
 
  private:
-  const Simulation& simulation;
+  const Simulation* simulation;
 };
 }  // namespace simulate_turn
 
@@ -21751,7 +21757,7 @@ struct Results {
   inline Results(const Simulation& simulation_);
 
  private:
-  const Simulation& simulation;
+  const Simulation* simulation;
 };
 }  // namespace calc_damage
 
@@ -21768,7 +21774,7 @@ struct Results {
   inline Results(const Simulation& simulation_);
 
  private:
-  const Simulation& simulation;
+  const Simulation* simulation;
 };
 }  // namespace analyze_effect
 }  // namespace pokesim
@@ -21779,46 +21785,46 @@ struct Results {
 
 namespace pokesim {
 namespace simulate_turn {
-Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
+Results::Results(const Simulation& simulation_) : simulation(&simulation_) {}
 
 inline types::view<TurnOutcomeBattles> Results::turnOutcomeBattlesResults() const {
-  return simulation.registry.view<TurnOutcomeBattles>();
+  return simulation->registry.view<TurnOutcomeBattles>();
 }
 }  // namespace simulate_turn
 
 namespace calc_damage {
-Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
+Results::Results(const Simulation& simulation_) : simulation(&simulation_) {}
 
 inline types::view<DamageRolls> Results::damageRollResults() const {
-  return simulation.registry.view<DamageRolls>();
+  return simulation->registry.view<DamageRolls>();
 }
 
 inline types::view<UsesUntilKo> Results::usesUntilKoResults() const {
-  return simulation.registry.view<UsesUntilKo>();
+  return simulation->registry.view<UsesUntilKo>();
 }
 
 inline types::view<AttackerHpRecovered> Results::hpRecoveredResults() const {
-  return simulation.registry.view<AttackerHpRecovered>();
+  return simulation->registry.view<AttackerHpRecovered>();
 }
 
 inline types::view<AttackerHpLost> Results::hpLostResults() const {
-  return simulation.registry.view<AttackerHpLost>();
+  return simulation->registry.view<AttackerHpLost>();
 }
 }  // namespace calc_damage
 
 namespace analyze_effect {
-Results::Results(const Simulation& simulation_) : simulation(simulation_) {}
+Results::Results(const Simulation& simulation_) : simulation(&simulation_) {}
 
 inline types::view<EffectMultiplier> Results::effectMultiplierResults() const {
-  return simulation.registry.view<EffectMultiplier>();
+  return simulation->registry.view<EffectMultiplier>();
 }
 
 inline types::view<MultipliedDamageRolls> Results::multipliedDamageRollsResults() const {
-  return simulation.registry.view<MultipliedDamageRolls>();
+  return simulation->registry.view<MultipliedDamageRolls>();
 }
 
 inline types::view<MultipliedUsesUntilKo> Results::multipliedUsesUntilKoResults() const {
-  return simulation.registry.view<MultipliedUsesUntilKo>();
+  return simulation->registry.view<MultipliedUsesUntilKo>();
 }
 }  // namespace analyze_effect
 }  // namespace pokesim
@@ -21893,13 +21899,6 @@ inline void applyAverageDamageRoll(Damage& damage);
 inline void applyMinDamageRoll(Damage& damage);
 
 inline void setDamageRollModifiers(Simulation& simulation);
-template <typename SimulationTag>
-inline void applyDamageRollsAndModifiers(
-  Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp, bool noKoChanceCalculation);
-
-template <typename SimulationTag>
-inline void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind);
-inline void getDamage(Simulation& simulation);
 }  // namespace calc_damage
 }  // namespace pokesim
 
@@ -22402,14 +22401,15 @@ struct SelectForView {
     RegistryContainer& registryContainer_,
     entt::exclude_t<ComponentsToExclude...> exclude = entt::exclude<ComponentsToExclude...>)
       : registryContainer(&registryContainer_),
-        selectedCount(registryContainer->select<Selection, Required, ComponentsToSelect...>(exclude)) {
+        constantSelectedCount(registryContainer->select<Selection, Required, ComponentsToSelect...>(exclude)) {
     if (hasNoneSelected()) {
       registryContainer = nullptr;
     }
   }
 
   SelectForView(RegistryContainer& registryContainer_, RegistryContainer::SelectionFunction selectionFunction)
-      : registryContainer(&registryContainer_), selectedCount(registryContainer->select<Selection>(selectionFunction)) {
+      : registryContainer(&registryContainer_),
+        constantSelectedCount(registryContainer->select<Selection>(selectionFunction)) {
     if (hasNoneSelected()) {
       registryContainer = nullptr;
     }
@@ -22424,11 +22424,11 @@ struct SelectForView {
     }
   }
 
-  bool hasNoneSelected() const { return selectedCount == 0; }
+  bool hasNoneSelected() const { return constantSelectedCount == 0; }
 
  private:
   RegistryContainer* registryContainer = nullptr;
-  const std::size_t selectedCount = 0;
+  std::size_t constantSelectedCount = 0;
 };
 
 template <typename... ComponentsToSelect>
@@ -22454,16 +22454,16 @@ using SelectForCurrentActionMoveView =
 // TODO(aed3) Auto generate?
 
 namespace pokesim {
-namespace internal {
+namespace {
 template <typename ModifiedComponent>
 void applyEventModifier(ModifiedComponent& component, const EventModifier& eventModifier) {
   applyChainedModifier(component.val, eventModifier.val);
 }
 
 template <typename... PokemonSpecifiers>
-RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
+internal::RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
   static const size_t SelectAnyPokemon = sizeof...(PokemonSpecifiers) == 0U;
-  return RegistryContainer::SelectionFunction{
+  return internal::RegistryContainer::SelectionFunction{
     [](const void*, const types::registry& registry) -> std::vector<types::entity> {
       entt::dense_set<types::entity> entities;
       auto selectedMoveView = registry.view<tags::SelectedForViewMove>();
@@ -22490,7 +22490,7 @@ RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
       return {entities.begin(), entities.end()};
     }};
 }
-}  // namespace internal
+}  // namespace
 
 inline void runAccuracyEvent(Simulation& /*simulation*/) {}
 
@@ -22507,7 +22507,7 @@ inline void runDamagingHitEvent(Simulation& simulation) {
 inline void runModifyMove(Simulation& simulation) {
   internal::SelectForPokemonView<> selectedPokemon{
     simulation,
-    internal::getMoveEventPokemonSelector<tags::CurrentActionMoveSource>()};
+    getMoveEventPokemonSelector<tags::CurrentActionMoveSource>()};
 
   simulation.viewForSelectedPokemon<
     dex::latest::ChoiceScarf::onSourceModifyMove,
@@ -22533,7 +22533,7 @@ inline void runModifySpa(Simulation& simulation) {
 
   simulation.viewForSelectedPokemon<dex::latest::ChoiceSpecs::onModifySpa, Tags<item::tags::ChoiceSpecs>>();
 
-  simulation.viewForSelectedPokemon<internal::applyEventModifier<stat::EffectiveSpa>>();
+  simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpa>>();
   simulation.registry.clear<EventModifier>();
 }
 
@@ -22542,7 +22542,7 @@ inline void runModifySpd(Simulation& simulation) {
 
   simulation.viewForSelectedPokemon<dex::latest::AssaultVest::onModifySpd, Tags<item::tags::AssaultVest>>();
 
-  simulation.viewForSelectedPokemon<internal::applyEventModifier<stat::EffectiveSpd>>();
+  simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpd>>();
   simulation.registry.clear<EventModifier>();
 }
 
@@ -22551,7 +22551,7 @@ inline void runModifySpe(Simulation& simulation) {
 
   simulation.viewForSelectedPokemon<dex::latest::ChoiceScarf::onModifySpe, Tags<item::tags::ChoiceScarf>>();
 
-  simulation.viewForSelectedPokemon<internal::applyEventModifier<stat::EffectiveSpe>>();
+  simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpe>>();
   simulation.registry.clear<EventModifier>();
 
   simulation.viewForSelectedPokemon<
@@ -22878,7 +22878,7 @@ void setRandomChoice(
     }
   }
 
-  if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation.view<internal::setRandomChoice<POSSIBLE_EVENT_COUNT, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
       chances);
   }
@@ -22892,7 +22892,7 @@ template <typename Component, typename... T>
 void setRandomBinaryChoice(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
 
-  if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation.view<internal::setRandomBinaryChoice<Component, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
       options);
   }
@@ -22906,7 +22906,7 @@ template <typename Component, typename... T>
 void setReciprocalRandomBinaryChoice(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
 
-  if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation
       .view<internal::setReciprocalRandomBinaryChoice<Component, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
         options);
@@ -22920,7 +22920,7 @@ void setReciprocalRandomBinaryChoice(Simulation& simulation) {
 
 template <typename... T>
 void setRandomEqualChoice(Simulation& simulation) {
-  if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation.view<internal::setRandomEqualChoice<BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>();
   }
   else {
@@ -22932,7 +22932,7 @@ template <auto GetPossibleEventCount, typename... T>
 void setRandomEventCounts(Simulation& simulation, bool forRequiredDamageRolls) {
   const auto& options = simulation.simulateTurnOptions;
 
-  if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation
       .view<internal::setRandomEventCounts<BattleFormat::SINGLES_BATTLE_FORMAT, GetPossibleEventCount>, Tags<T...>>(
         options,
@@ -23219,7 +23219,7 @@ inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, Damage
 template <
   typename... CombinedKinds,
   typename = std::enable_if_t<std::conjunction_v<std::is_same<CombinedKinds, DamageRollKind>...>>>
-inline constexpr DamageRollKind combineDamageKinds(CombinedKinds... kinds) {
+constexpr DamageRollKind combineDamageKinds(CombinedKinds... kinds) {
   using DamageRollKindBase = std::underlying_type_t<DamageRollKind>;
   return static_cast<DamageRollKind>((static_cast<DamageRollKindBase>(kinds) | ...));
 }
@@ -23494,7 +23494,7 @@ inline void runMoveAction(Simulation& simulation) {
 
   simulation.viewForSelectedBattles<setCurrentActionSource>();
   simulation.viewForSelectedBattles<setCurrentActionTarget>();
-  simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex);
+  simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex());
 
   simulation.view<deductPp, Tags<pokesim::tags::CurrentActionMoveSlot>>();
   simulation.view<setLastMoveUsed>();
@@ -23507,7 +23507,7 @@ inline void runResidualAction(Simulation& simulation) {
   if (selectedBattle.hasNoneSelected()) return;
 }
 
-namespace internal {
+namespace {
 inline void incrementTurn(Turn& turn) {
   turn.val++;
 }
@@ -23515,15 +23515,15 @@ inline void incrementTurn(Turn& turn) {
 inline void updateActivePokemonPostTurn(types::handle pokemonHandle, const pokesim::MoveSlots& moveSlots) {
   pokemonHandle.registry()->remove<pokesim::move::tags::Disabled>(moveSlots.val.begin(), moveSlots.val.end());
 }
-}  // namespace internal
+}  // namespace
 
 inline void nextTurn(Simulation& simulation) {
-  simulation.viewForSelectedBattles<internal::incrementTurn>();
+  simulation.viewForSelectedBattles<incrementTurn>();
 
   pokesim::internal::SelectForPokemonView<pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon> selectedPokemon{
     simulation};
   if (!selectedPokemon.hasNoneSelected()) {
-    simulation.viewForSelectedPokemon<internal::updateActivePokemonPostTurn>();
+    simulation.viewForSelectedPokemon<updateActivePokemonPostTurn>();
     runDisableMove(simulation);
   }
 }
@@ -23567,7 +23567,7 @@ inline void createActionMoveForTargets(
 }
 
 inline void getMoveTargets(Simulation& simulation) {
-  if (simulation.battleFormat == BattleFormat::DOUBLES_BATTLE_FORMAT) {
+  if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT) {
     simulation
       .view<addTargetAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
     simulation
@@ -23577,7 +23577,7 @@ inline void getMoveTargets(Simulation& simulation) {
   simulation.view<
     createActionMoveForTargets,
     Tags<pokesim::tags::CurrentActionMoveTarget>,
-    entt::exclude_t<CurrentActionMoves>>(simulation.pokedex);
+    entt::exclude_t<CurrentActionMoves>>(simulation.pokedex());
 }
 
 inline void useMove(Simulation& simulation) {
@@ -23680,7 +23680,7 @@ inline types::rngResult nextBoundedRandomValue(RngSeed& seed, types::rngResult u
 #include <type_traits>
 
 namespace pokesim {
-namespace internal {
+namespace {
 template <typename Type>
 void updateProbability(Probability& currentProbability, Type percentChance) {
   currentProbability.val *= (types::probability)percentChance / 100.0F;
@@ -23755,7 +23755,7 @@ template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void assignRandomEvent(
   types::handle handle, const Battle& battle, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, 100);
+  types::percentChance rng = (types::percentChance)internal::nextBoundedRandomValue(rngSeed, 100);
 
   if (rng <= eventChances.val[0]) {
     handle.emplace<tags::RandomEventA>();
@@ -23789,7 +23789,7 @@ void assignRandomEvent(
 
 inline void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, 100);
+  types::percentChance rng = (types::percentChance)internal::nextBoundedRandomValue(rngSeed, 100);
 
   if (rng <= eventChance.pass()) {
     handle.emplace<tags::RandomEventCheckPassed>();
@@ -23802,7 +23802,7 @@ inline void assignRandomBinaryEvent(types::handle handle, const Battle& battle, 
 inline void assignReciprocalRandomBinaryEvent(
   types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, eventChance.val);
+  types::percentChance rng = (types::percentChance)internal::nextBoundedRandomValue(rngSeed, eventChance.val);
 
   if (rng == 0) {
     handle.emplace<tags::RandomEventCheckPassed>();
@@ -23814,14 +23814,15 @@ inline void assignReciprocalRandomBinaryEvent(
 
 inline void assignRandomEqualChance(types::handle handle, const Battle& battle, types::eventPossibilities possibleEventCount) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::eventPossibilities rng = (types::eventPossibilities)nextBoundedRandomValue(rngSeed, possibleEventCount);
+  types::eventPossibilities rng =
+    (types::eventPossibilities)internal::nextBoundedRandomValue(rngSeed, possibleEventCount);
 
   handle.emplace<RandomEventIndex>(rng);
 }
 
 inline void assignRandomEventCount(types::handle handle, const Battle& battle, const RandomEventCount& eventCount) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::eventPossibilities rng = (types::eventPossibilities)nextBoundedRandomValue(rngSeed, eventCount.val);
+  types::eventPossibilities rng = (types::eventPossibilities)internal::nextBoundedRandomValue(rngSeed, eventCount.val);
 
   handle.emplace<RandomEventIndex>(rng);
 }
@@ -23869,7 +23870,7 @@ void randomChanceEvent(
   Simulation& simulation, types::cloneIndex cloneCount, types::callback applyChoices,
   void (*assignClonesToEvents)(types::registry&, const types::ClonedEntityMap&, const std::vector<types::entity>&),
   UpdateProbabilities updateProbabilities, const AssignArgs&... assignArgs) {
-  if (simulation.battleFormat == BattleFormat::DOUBLES_BATTLE_FORMAT) {
+  if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT) {
     simulation.view<placeChanceFromStack<RandomStack, Random>>();
   }
 
@@ -23930,7 +23931,7 @@ void randomChanceEvent(
 
   registry.clear<Random>();
   clearRandomChanceResult(simulation);
-  if (simulation.battleFormat == BattleFormat::DOUBLES_BATTLE_FORMAT && !registry.view<RandomStack>().empty()) {
+  if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT && !registry.view<RandomStack>().empty()) {
     randomChanceEvent<Random, RandomStack, AssignRandomEvents, UpdateProbabilities, AssignRandomEventsTags...>(
       simulation,
       cloneCount,
@@ -23985,7 +23986,7 @@ void randomBinaryChance(
       updateProbabilities.value_or(defaultUpdateProbabilities));
   }
 }
-}  // namespace internal
+}  // namespace
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void randomEventChances(
@@ -24018,24 +24019,24 @@ void randomEventChances(
   };
 
   auto defaultUpdateProbabilities = [](Simulation& sim) {
-    internal::viewUpdateProbabilityFromRandomEventChance<POSSIBLE_EVENT_COUNT, tags::RandomEventA>(sim);
-    internal::viewUpdateProbabilityFromRandomEventChance<POSSIBLE_EVENT_COUNT, tags::RandomEventB>(sim);
+    viewUpdateProbabilityFromRandomEventChance<POSSIBLE_EVENT_COUNT, tags::RandomEventA>(sim);
+    viewUpdateProbabilityFromRandomEventChance<POSSIBLE_EVENT_COUNT, tags::RandomEventB>(sim);
 
     if constexpr (POSSIBLE_EVENT_COUNT >= 3U) {
-      internal::viewUpdateProbabilityFromRandomEventChance<POSSIBLE_EVENT_COUNT, tags::RandomEventC>(sim);
+      viewUpdateProbabilityFromRandomEventChance<POSSIBLE_EVENT_COUNT, tags::RandomEventC>(sim);
     }
     if constexpr (POSSIBLE_EVENT_COUNT >= 4U) {
-      internal::viewUpdateProbabilityFromRandomEventChance<POSSIBLE_EVENT_COUNT, tags::RandomEventD>(sim);
+      viewUpdateProbabilityFromRandomEventChance<POSSIBLE_EVENT_COUNT, tags::RandomEventD>(sim);
     }
     if constexpr (POSSIBLE_EVENT_COUNT == 5U) {
-      internal::viewUpdateProbabilityFromRandomEventChance<POSSIBLE_EVENT_COUNT, tags::RandomEventE>(sim);
+      viewUpdateProbabilityFromRandomEventChance<POSSIBLE_EVENT_COUNT, tags::RandomEventE>(sim);
     }
   };
 
-  return internal::randomChanceEvent<
+  return randomChanceEvent<
     RandomEventChances<POSSIBLE_EVENT_COUNT>,
     RandomEventChancesStack<POSSIBLE_EVENT_COUNT>,
-    internal::assignRandomEvent<POSSIBLE_EVENT_COUNT>,
+    assignRandomEvent<POSSIBLE_EVENT_COUNT>,
     types::callback>(
     simulation,
     POSSIBLE_EVENT_COUNT - 1U,
@@ -24048,64 +24049,62 @@ inline void randomEqualChance(
   Simulation& simulation, const types::eventPossibilities possibleEventCount, types::callback applyChoices,
   types::optionalCallback updateProbabilities) {
   auto defaultUpdateProbabilities = [possibleEventCount](Simulation& sim) {
-    sim.view<internal::updateProbabilityFromRandomEqualChance>(possibleEventCount);
+    sim.view<updateProbabilityFromRandomEqualChance>(possibleEventCount);
   };
 
   types::cloneIndex cloneCount =
     possibleEventCount > MechanicConstants::MAX_DAMAGE_ROLL_COUNT ? 0 : possibleEventCount - 1;
 
   if (updateProbabilities.has_value()) {
-    return internal::randomChanceEvent<
+    randomChanceEvent<
       tags::RandomEqualChance,
       RandomEqualChanceStack,
-      internal::assignRandomEqualChance,
+      assignRandomEqualChance,
       types::callback,
       tags::RandomEqualChance>(
       simulation,
       cloneCount,
       applyChoices,
-      internal::assignIndexToClones,
+      assignIndexToClones,
       updateProbabilities.value(),
       possibleEventCount);
+    return;
   }
 
-  return internal::randomChanceEvent<
+  randomChanceEvent<
     tags::RandomEqualChance,
     RandomEqualChanceStack,
-    internal::assignRandomEqualChance,
+    assignRandomEqualChance,
     decltype(defaultUpdateProbabilities),
     tags::RandomEqualChance>(
     simulation,
     cloneCount,
     applyChoices,
-    internal::assignIndexToClones,
+    assignIndexToClones,
     defaultUpdateProbabilities,
     possibleEventCount);
 }
 
 inline void randomEventCount(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities) {
-  auto defaultUpdateProbabilities = [](Simulation& sim) {
-    sim.view<internal::updateProbabilityFromRandomEventCount>();
-  };
+  auto defaultUpdateProbabilities = [](Simulation& sim) { sim.view<updateProbabilityFromRandomEventCount>(); };
 
-  return internal::
-    randomChanceEvent<RandomEventCount, RandomEventCountStack, internal::assignRandomEventCount, types::callback>(
-      simulation,
-      0U,
-      applyChoices,
-      internal::assignIndexToClones,
-      updateProbabilities.value_or(defaultUpdateProbabilities));
+  randomChanceEvent<RandomEventCount, RandomEventCountStack, assignRandomEventCount, types::callback>(
+    simulation,
+    0U,
+    applyChoices,
+    assignIndexToClones,
+    updateProbabilities.value_or(defaultUpdateProbabilities));
 }
 
 inline void randomBinaryChance(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities) {
-  internal::randomBinaryChance<false>(simulation, applyChoices, updateProbabilities);
+  randomBinaryChance<false>(simulation, applyChoices, updateProbabilities);
 }
 
 inline void reciprocalRandomBinaryChance(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities) {
-  internal::randomBinaryChance<true>(simulation, applyChoices, updateProbabilities);
+  randomBinaryChance<true>(simulation, applyChoices, updateProbabilities);
 }
 
 inline void clearRandomChanceResult(Simulation& simulation) {
@@ -24366,7 +24365,7 @@ inline void setIfMoveCrits(Simulation& simulation);
 ////////////// START OF src/SimulateTurn/CalcDamageSpecifics.cpp ///////////////
 
 namespace pokesim::simulate_turn {
-namespace internal {
+namespace {
 inline void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls, const RandomEventIndex& randomRollIndex) {
   types::eventPossibilities damageRollIndex = 0U;
   for (std::size_t i = 0U; i < damageRolls.val.size(); i++) {
@@ -24412,13 +24411,13 @@ inline types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle
 }
 
 inline void updateAllDamageRollProbabilities(Simulation& simulation) {
-  simulation.viewForSelectedMoves<internal::assignAllDamageRollProbability>();
+  simulation.viewForSelectedMoves<assignAllDamageRollProbability>();
 }
 
 inline void updatePartialProbabilities(Simulation& simulation) {
-  simulation.viewForSelectedMoves<internal::assignPartialProbability>();
+  simulation.viewForSelectedMoves<assignPartialProbability>();
 }
-}  // namespace internal
+}  // namespace
 
 inline void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind) {
   pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn, DamageRolls> selectedMoves{simulation};
@@ -24426,14 +24425,11 @@ inline void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRo
 
   bool forAllDamageRolls = calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS);
   bool forRequiredDamageRolls = simulation.simulateTurnOptions.makeBranchesOnRandomEvents || forAllDamageRolls;
-  setRandomEventCounts<internal::countUniqueDamageRolls, pokesim::tags::SelectedForViewMove>(
-    simulation,
-    forRequiredDamageRolls);
+  setRandomEventCounts<countUniqueDamageRolls, pokesim::tags::SelectedForViewMove>(simulation, forRequiredDamageRolls);
 
-  auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<internal::applyDamageRollIndex>(); };
+  auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<applyDamageRollIndex>(); };
 
-  auto updateProbabilities =
-    forAllDamageRolls ? internal::updateAllDamageRollProbabilities : internal::updatePartialProbabilities;
+  auto updateProbabilities = forAllDamageRolls ? updateAllDamageRollProbabilities : updatePartialProbabilities;
 
   randomEventCount(simulation, applyChoices, updateProbabilities);
   simulation.removeFromEntities<DamageRolls, pokesim::tags::SelectedForViewMove>();
@@ -24973,17 +24969,18 @@ using Ribombee = dex::Ribombee<GameMechanics::SCARLET_VIOLET>;
 
 //////////////// START OF src/Pokedex/Setup/GetSpeciesBuild.cpp ////////////////
 
+#include <cstdint>
 #include <type_traits>
 
 
 // TODO(aed3): Make this and the individual species files auto generated
 
 namespace pokesim {
-namespace internal {
+namespace {
 template <typename T>
 struct BuildSpecies {
  private:
-  enum class Optional {
+  enum class Optional : std::uint8_t {
     primaryAbility,
     secondaryAbility,
     hiddenAbility,
@@ -25027,7 +25024,7 @@ template <template <GameMechanics> class T>
 auto buildSpeciesSV(types::registry& registry, bool forActiveMove) {
   return BuildSpecies<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
 }
-};  // namespace internal
+};  // namespace
 
 inline types::entity Pokedex::buildSpecies(dex::Species species, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
@@ -25037,12 +25034,13 @@ inline types::entity Pokedex::buildSpecies(dex::Species species, types::registry
   switch (mechanics) {
     case GameMechanics::SCARLET_VIOLET: {
       switch (species) {
-        case Species::AMPHAROS: return buildSpeciesSV<Ampharos>(registry, forActiveMove);
+        case Species::AMPHAROS:  return buildSpeciesSV<Ampharos>(registry, forActiveMove);
         case Species::GARDEVOIR: return buildSpeciesSV<Gardevoir>(registry, forActiveMove);
-        case Species::EMPOLEON: return buildSpeciesSV<Empoleon>(registry, forActiveMove);
-        case Species::PANGORO: return buildSpeciesSV<Pangoro>(registry, forActiveMove);
-        case Species::RIBOMBEE: return buildSpeciesSV<Ribombee>(registry, forActiveMove);
+        case Species::EMPOLEON:  return buildSpeciesSV<Empoleon>(registry, forActiveMove);
+        case Species::PANGORO:   return buildSpeciesSV<Pangoro>(registry, forActiveMove);
+        case Species::RIBOMBEE:  return buildSpeciesSV<Ribombee>(registry, forActiveMove);
         case Species::DRAGAPULT: return buildSpeciesSV<Dragapult>(registry, forActiveMove);
+
         default: break;
       }
       break;
@@ -25265,17 +25263,18 @@ using WillOWisp = dex::WillOWisp<GameMechanics::SCARLET_VIOLET>;
 
 ///////////////// START OF src/Pokedex/Setup/GetMoveBuild.cpp //////////////////
 
+#include <cstdint>
 #include <type_traits>
 
 
 // TODO(aed3): Make this and the individual move files auto generated
 
 namespace pokesim {
-namespace internal {
+namespace {
 template <typename T>
 struct BuildMove {
  private:
-  enum class Optional {
+  enum class Optional : std::uint8_t {
     accuracy,
     basePower,
     hitCount,
@@ -25499,7 +25498,7 @@ template <template <GameMechanics> class T>
 auto buildMoveSV(types::registry& registry, bool forActiveMove) {
   return BuildMove<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
 }
-};  // namespace internal
+};  // namespace
 
 inline types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
@@ -25509,12 +25508,13 @@ inline types::entity Pokedex::buildMove(dex::Move move, types::registry& registr
   switch (mechanics) {
     case GameMechanics::SCARLET_VIOLET: {
       switch (move) {
-        case Move::FURY_ATTACK: return buildMoveSV<FuryAttack>(registry, forActiveMove);
-        case Move::THUNDERBOLT: return buildMoveSV<Thunderbolt>(registry, forActiveMove);
-        case Move::WILL_O_WISP: return buildMoveSV<WillOWisp>(registry, forActiveMove);
-        case Move::KNOCK_OFF: return buildMoveSV<KnockOff>(registry, forActiveMove);
+        case Move::FURY_ATTACK:  return buildMoveSV<FuryAttack>(registry, forActiveMove);
+        case Move::THUNDERBOLT:  return buildMoveSV<Thunderbolt>(registry, forActiveMove);
+        case Move::WILL_O_WISP:  return buildMoveSV<WillOWisp>(registry, forActiveMove);
+        case Move::KNOCK_OFF:    return buildMoveSV<KnockOff>(registry, forActiveMove);
         case Move::QUIVER_DANCE: return buildMoveSV<QuiverDance>(registry, forActiveMove);
-        case Move::MOONBLAST: return buildMoveSV<Moonblast>(registry, forActiveMove);
+        case Move::MOONBLAST:    return buildMoveSV<Moonblast>(registry, forActiveMove);
+
         default: break;
       }
       break;
@@ -25537,7 +25537,7 @@ inline types::entity Pokedex::buildMove(dex::Move move, types::registry& registr
 // TODO(aed3): Make this and the individual item files auto generated
 
 namespace pokesim {
-namespace internal {
+namespace {
 template <typename T>
 struct BuildItem {
  private:
@@ -25555,7 +25555,7 @@ template <template <GameMechanics> class T>
 auto buildItemSV(types::registry& registry, bool forActiveMove) {
   return BuildItem<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
 }
-};  // namespace internal
+};  // namespace
 
 inline types::entity Pokedex::buildItem(dex::Item item, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
@@ -25565,12 +25565,13 @@ inline types::entity Pokedex::buildItem(dex::Item item, types::registry& registr
   switch (mechanics) {
     case GameMechanics::SCARLET_VIOLET: {
       switch (item) {
-        case Item::ASSAULT_VEST: return buildItemSV<AssaultVest>(registry, forActiveMove);
+        case Item::ASSAULT_VEST:  return buildItemSV<AssaultVest>(registry, forActiveMove);
         case Item::BRIGHT_POWDER: return buildItemSV<BrightPowder>(registry, forActiveMove);
-        case Item::CHOICE_SCARF: return buildItemSV<ChoiceScarf>(registry, forActiveMove);
-        case Item::CHOICE_SPECS: return buildItemSV<ChoiceSpecs>(registry, forActiveMove);
-        case Item::FOCUS_SASH: return buildItemSV<FocusSash>(registry, forActiveMove);
-        case Item::LIFE_ORB: return buildItemSV<LifeOrb>(registry, forActiveMove);
+        case Item::CHOICE_SCARF:  return buildItemSV<ChoiceScarf>(registry, forActiveMove);
+        case Item::CHOICE_SPECS:  return buildItemSV<ChoiceSpecs>(registry, forActiveMove);
+        case Item::FOCUS_SASH:    return buildItemSV<FocusSash>(registry, forActiveMove);
+        case Item::LIFE_ORB:      return buildItemSV<LifeOrb>(registry, forActiveMove);
+
         default: break;
       }
       break;
@@ -25605,7 +25606,7 @@ struct AbilityDexDataSetup : DexDataSetup {
 // TODO(aed3): Make this and the individual ability files auto generated
 
 namespace pokesim {
-namespace internal {
+namespace {
 template <typename T>
 struct BuildAbility {
  private:
@@ -25623,7 +25624,7 @@ template <template <GameMechanics> class T>
 auto buildAbilitySV(types::registry& registry, bool forActiveMove) {
   return BuildAbility<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
 }
-};  // namespace internal
+};  // namespace
 
 inline types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
@@ -25634,6 +25635,7 @@ inline types::entity Pokedex::buildAbility(dex::Ability ability, types::registry
     case GameMechanics::SCARLET_VIOLET: {
       switch (ability) {
         case Ability::STATIC: return buildAbilitySV<Static>(registry, forActiveMove);
+
         default: break;
       }
       break;
@@ -25695,12 +25697,15 @@ inline types::entity Pokedex::buildActionMove(dex::Move move, types::registry& r
 
 ////////////////// START OF src/Pokedex/Items/ItemEvents.cpp ///////////////////
 
-namespace pokesim::dex::internal {
+namespace pokesim::dex {
+namespace {
+
 inline void setChoiceLock(types::handle pokemonHandle, const Battle& battle) {
   types::entity moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val).val;
   pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot);
 }
-}  // namespace pokesim::dex::internal
+}  // namespace
+}  // namespace pokesim::dex
 
 namespace pokesim::dex::internal {
 inline void AssaultVestEvents::onModifySpd(EventModifier& eventModifier) {
@@ -25759,18 +25764,18 @@ inline void internal::StaticEvents::onModifySpe(stat::EffectiveSpe& effectiveSpe
 //////////// START OF src/CalcDamage/Setup/CalcDamageInputSetup.cpp ////////////
 
 namespace pokesim::calc_damage {
-InputSetup::InputSetup(types::registry& _registry) : registry(_registry) {}
+InputSetup::InputSetup(types::registry& _registry) : registry(&_registry) {}
 
 inline void InputSetup::setup(
   types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move,
   const Pokedex& pokedex) {
-  moveEntity = createActionMoveForTarget({registry, targetEntity}, battleEntity, sourceEntity, move, pokedex);
-  types::handle handle{registry, moveEntity};
+  moveEntity = createActionMoveForTarget({*registry, targetEntity}, battleEntity, sourceEntity, move, pokedex);
+  types::handle handle{*registry, moveEntity};
 
   handle.emplace<MoveName>(move);
   handle.emplace<pokesim::tags::CalculateDamage>();
-  registry.emplace_or_replace<tags::Attacker>(sourceEntity);
-  registry.emplace_or_replace<tags::Defender>(targetEntity);
+  registry->emplace_or_replace<tags::Attacker>(sourceEntity);
+  registry->emplace_or_replace<tags::Defender>(targetEntity);
 }
 
 inline types::entity InputSetup::entity() const {
@@ -25843,9 +25848,9 @@ struct Checks : pokesim::debug::Checks {
     checkBattleInputs();
     copyRemainingEntities();
 
-    simulateTurnCount = registry.view<pokesim::tags::SimulateTurn>().size();
-    calcDamageCount = registry.view<pokesim::tags::CalculateDamage>().size();
-    analyzeEffectCount = registry.view<pokesim::tags::AnalyzeEffect>().size();
+    simulateTurnCount = registry->view<pokesim::tags::SimulateTurn>().size();
+    calcDamageCount = registry->view<pokesim::tags::CalculateDamage>().size();
+    analyzeEffectCount = registry->view<pokesim::tags::AnalyzeEffect>().size();
   }
 
   void checkOutputs() const {
@@ -25857,8 +25862,8 @@ struct Checks : pokesim::debug::Checks {
 
     std::size_t finalEntityCount = getFinalEntityCount();
 
-    if (!simulation.simulateTurnOptions.makeBranchesOnRandomEvents) {
-      std::size_t finalSimulationTurnCount = registry.view<pokesim::tags::SimulateTurn>().size();
+    if (!simulation->simulateTurnOptions.makeBranchesOnRandomEvents) {
+      std::size_t finalSimulationTurnCount = registry->view<pokesim::tags::SimulateTurn>().size();
       POKESIM_REQUIRE_NM(simulateTurnCount == finalSimulationTurnCount);
       POKESIM_REQUIRE_NM(initialEntityCount == finalEntityCount);
     }
@@ -25866,9 +25871,9 @@ struct Checks : pokesim::debug::Checks {
       POKESIM_REQUIRE_NM(initialEntityCount == finalEntityCount);
     }
 
-    std::size_t finalCalcDamageCount = registry.view<pokesim::tags::CalculateDamage>().size();
+    std::size_t finalCalcDamageCount = registry->view<pokesim::tags::CalculateDamage>().size();
     POKESIM_REQUIRE_NM(calcDamageCount == finalCalcDamageCount);
-    std::size_t finalAnalyzeEffectCount = registry.view<pokesim::tags::AnalyzeEffect>().size();
+    std::size_t finalAnalyzeEffectCount = registry->view<pokesim::tags::AnalyzeEffect>().size();
     POKESIM_REQUIRE_NM(analyzeEffectCount == finalAnalyzeEffectCount);
   }
 
@@ -25878,35 +25883,35 @@ struct Checks : pokesim::debug::Checks {
   std::size_t analyzeEffectCount = 0;
 
   void checkMoveInputs() {
-    for (types::entity move : simulation.selectedMoveEntities()) {
-      originalToCopy[move] = pokesim::debug::createEntityCopy(move, registry, registryOnInput);
+    for (types::entity move : simulation->selectedMoveEntities()) {
+      originalToCopy[move] = pokesim::debug::createEntityCopy(move, *registry, registryOnInput);
 
-      POKESIM_REQUIRE_NM(registry.all_of<Attacker>(move));
-      POKESIM_REQUIRE_NM(registry.all_of<tags::Attacker>(registry.get<Attacker>(move).val));
-      POKESIM_REQUIRE_NM(registry.all_of<Defenders>(move));
-      POKESIM_REQUIRE_NM(registry.all_of<tags::Defender>(registry.get<Defenders>(move).only()));
-      POKESIM_REQUIRE_NM(registry.all_of<Battle>(move));
-      POKESIM_REQUIRE_NM(registry.all_of<TypeName>(move));
-      bool isPhysical = registry.all_of<move::tags::Physical>(move);
-      bool isSpecial = registry.all_of<move::tags::Special>(move);
-      bool isStatus = registry.all_of<move::tags::Status>(move);
+      POKESIM_REQUIRE_NM(registry->all_of<Attacker>(move));
+      POKESIM_REQUIRE_NM(registry->all_of<tags::Attacker>(registry->get<Attacker>(move).val));
+      POKESIM_REQUIRE_NM(registry->all_of<Defenders>(move));
+      POKESIM_REQUIRE_NM(registry->all_of<tags::Defender>(registry->get<Defenders>(move).only()));
+      POKESIM_REQUIRE_NM(registry->all_of<Battle>(move));
+      POKESIM_REQUIRE_NM(registry->all_of<TypeName>(move));
+      bool isPhysical = registry->all_of<move::tags::Physical>(move);
+      bool isSpecial = registry->all_of<move::tags::Special>(move);
+      bool isStatus = registry->all_of<move::tags::Status>(move);
       POKESIM_REQUIRE_NM(isPhysical || isSpecial || isStatus);
 
-      bool hasSimulateTurn = registry.all_of<pokesim::tags::SimulateTurn>(move);
-      bool hasCalculateDamage = registry.all_of<pokesim::tags::CalculateDamage>(move);
-      bool hasAnalyzeEffect = registry.all_of<pokesim::tags::AnalyzeEffect>(move);
+      bool hasSimulateTurn = registry->all_of<pokesim::tags::SimulateTurn>(move);
+      bool hasCalculateDamage = registry->all_of<pokesim::tags::CalculateDamage>(move);
+      bool hasAnalyzeEffect = registry->all_of<pokesim::tags::AnalyzeEffect>(move);
       POKESIM_REQUIRE_NM(hasSimulateTurn || hasCalculateDamage || hasAnalyzeEffect);
     }
   }
 
   std::vector<types::entity> getPokemonList(bool forAttacker) const {
-    std::vector<types::entity> selectedPokemon = simulation.selectedPokemonEntities();
+    std::vector<types::entity> selectedPokemon = simulation->selectedPokemonEntities();
     auto end = std::remove_if(selectedPokemon.begin(), selectedPokemon.end(), [&](types::entity entity) {
       if (forAttacker) {
-        return !this->registry.all_of<tags::Attacker>(entity);
+        return !this->registry->all_of<tags::Attacker>(entity);
       }
 
-      return !this->registry.all_of<tags::Defender>(entity);
+      return !this->registry->all_of<tags::Defender>(entity);
     });
 
     return {selectedPokemon.begin(), end};
@@ -25915,59 +25920,58 @@ struct Checks : pokesim::debug::Checks {
   void checkPokemonInputs(bool forAttacker) {
     const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
-      originalToCopy[pokemon] = pokesim::debug::createEntityCopy(pokemon, registry, registryOnInput);
+      originalToCopy[pokemon] = pokesim::debug::createEntityCopy(pokemon, *registry, registryOnInput);
 
-      POKESIM_REQUIRE_NM(registry.all_of<UsedMoves>(pokemon));
+      POKESIM_REQUIRE_NM(registry->all_of<UsedMoves>(pokemon));
       bool needsPhy = false;
       bool needsSpc = false;
-      for (types::entity move : registry.get<UsedMoves>(pokemon).val) {
-        POKESIM_REQUIRE_NM(registry.all_of<tags::UsedMove>(move));
-        needsPhy |= registry.all_of<move::tags::Physical>(move);
-        needsSpc |= registry.all_of<move::tags::Special>(move);
+      for (types::entity move : registry->get<UsedMoves>(pokemon).val) {
+        POKESIM_REQUIRE_NM(registry->all_of<tags::UsedMove>(move));
+        needsPhy |= registry->all_of<move::tags::Physical>(move);
+        needsSpc |= registry->all_of<move::tags::Special>(move);
       }
-      POKESIM_REQUIRE_NM(registry.all_of<Battle>(pokemon));
-      POKESIM_REQUIRE_NM(registry.all_of<Side>(pokemon));
-      POKESIM_REQUIRE_NM(registry.all_of<PlayerSide>(registry.get<Side>(pokemon).val));
-      POKESIM_REQUIRE_NM(registry.all_of<Level>(pokemon));
-      POKESIM_REQUIRE_NM(registry.all_of<SpeciesTypes>(pokemon));
+      POKESIM_REQUIRE_NM(registry->all_of<Battle>(pokemon));
+      POKESIM_REQUIRE_NM(registry->all_of<Side>(pokemon));
+      POKESIM_REQUIRE_NM(registry->all_of<PlayerSide>(registry->get<Side>(pokemon).val));
+      POKESIM_REQUIRE_NM(registry->all_of<Level>(pokemon));
+      POKESIM_REQUIRE_NM(registry->all_of<SpeciesTypes>(pokemon));
 
       if (forAttacker) {
         if (needsPhy) {
-          POKESIM_REQUIRE_NM(registry.all_of<stat::EffectiveAtk>(pokemon));
+          POKESIM_REQUIRE_NM(registry->all_of<stat::EffectiveAtk>(pokemon));
         }
         if (needsSpc) {
-          POKESIM_REQUIRE_NM(registry.all_of<stat::EffectiveSpa>(pokemon));
+          POKESIM_REQUIRE_NM(registry->all_of<stat::EffectiveSpa>(pokemon));
         }
       }
       else {
-        POKESIM_REQUIRE_NM(registry.all_of<stat::CurrentHp>(pokemon));
+        POKESIM_REQUIRE_NM(registry->all_of<stat::CurrentHp>(pokemon));
         if (needsPhy) {
-          POKESIM_REQUIRE_NM(registry.all_of<stat::EffectiveDef>(pokemon));
+          POKESIM_REQUIRE_NM(registry->all_of<stat::EffectiveDef>(pokemon));
         }
         if (needsSpc) {
-          POKESIM_REQUIRE_NM(registry.all_of<stat::EffectiveSpd>(pokemon));
+          POKESIM_REQUIRE_NM(registry->all_of<stat::EffectiveSpd>(pokemon));
         }
       }
 
-      bool hasSimulateTurn = registry.all_of<pokesim::tags::SimulateTurn>(pokemon);
-      bool hasCalculateDamage = registry.all_of<pokesim::tags::CalculateDamage>(pokemon);
-      bool hasAnalyzeEffect = registry.all_of<pokesim::tags::AnalyzeEffect>(pokemon);
+      bool hasSimulateTurn = registry->all_of<pokesim::tags::SimulateTurn>(pokemon);
+      bool hasCalculateDamage = registry->all_of<pokesim::tags::CalculateDamage>(pokemon);
+      bool hasAnalyzeEffect = registry->all_of<pokesim::tags::AnalyzeEffect>(pokemon);
       POKESIM_REQUIRE_NM(hasSimulateTurn || hasCalculateDamage || hasAnalyzeEffect);
     }
   }
 
   void checkBattleInputs() {
-    for (types::entity battle : simulation.selectedBattleEntities()) {
-      originalToCopy[battle] = pokesim::debug::createEntityCopy(battle, registry, registryOnInput);
+    for (types::entity battle : simulation->selectedBattleEntities()) {
+      originalToCopy[battle] = pokesim::debug::createEntityCopy(battle, *registry, registryOnInput);
     }
   }
 
   DamageRollKind getDamageRollKind(types::entity move, DamageRollOptions damageRollOptions) const {
-    const Defenders& defenders = registry.get<Defenders>(move);
-    const Side& side = registry.get<Side>(defenders.only());
-    PlayerSideId playerSide = registry.get<PlayerSide>(side.val).val;
+    const Defenders& defenders = registry->get<Defenders>(move);
+    const Side& side = registry->get<Side>(defenders.only());
+    PlayerSideId playerSide = registry->get<PlayerSide>(side.val).val;
     switch (playerSide) {
-      default: break;
       case PlayerSideId::P1: {
         return damageRollOptions.p1;
         break;
@@ -25976,6 +25980,8 @@ struct Checks : pokesim::debug::Checks {
         return damageRollOptions.p2;
         break;
       }
+
+      default: break;
     }
 
     POKESIM_REQUIRE_FAIL("Player side wasn't set properly.");
@@ -25983,28 +25989,28 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkCalcDamageResultOutputs(types::entity move) const {
-    POKESIM_REQUIRE_NM(registry.all_of<DamageRolls>(move));
+    POKESIM_REQUIRE_NM(registry->all_of<DamageRolls>(move));
 
     DamageRollOptions damageRollOptions;
     bool noKoChanceCalculation;
     bool calculateUpToFoeHp;
-    if (registry.all_of<pokesim::tags::CalculateDamage>(move)) {
-      damageRollOptions = simulation.calculateDamageOptions.damageRollOptions;
-      calculateUpToFoeHp = simulation.calculateDamageOptions.calculateUpToFoeHp;
-      noKoChanceCalculation = simulation.calculateDamageOptions.noKoChanceCalculation;
+    if (registry->all_of<pokesim::tags::CalculateDamage>(move)) {
+      damageRollOptions = simulation->calculateDamageOptions.damageRollOptions;
+      calculateUpToFoeHp = simulation->calculateDamageOptions.calculateUpToFoeHp;
+      noKoChanceCalculation = simulation->calculateDamageOptions.noKoChanceCalculation;
     }
-    else if (registry.all_of<pokesim::tags::AnalyzeEffect>(move)) {
-      damageRollOptions = simulation.analyzeEffectOptions.damageRollOptions;
-      calculateUpToFoeHp = simulation.analyzeEffectOptions.calculateUpToFoeHp;
-      noKoChanceCalculation = simulation.analyzeEffectOptions.noKoChanceCalculation;
+    else if (registry->all_of<pokesim::tags::AnalyzeEffect>(move)) {
+      damageRollOptions = simulation->analyzeEffectOptions.damageRollOptions;
+      calculateUpToFoeHp = simulation->analyzeEffectOptions.calculateUpToFoeHp;
+      noKoChanceCalculation = simulation->analyzeEffectOptions.noKoChanceCalculation;
     }
     else {
       POKESIM_REQUIRE_FAIL("Where'd the simulation type go? It was checked in the inputs.");
     }
 
     types::damage lastDamage = std::numeric_limits<types::damage>::max();
-    const auto& [damageRolls, defenders] = registry.get<DamageRolls, Defenders>(move);
-    const stat::CurrentHp& defenderHp = registry.get<stat::CurrentHp>(defenders.only());
+    const auto& [damageRolls, defenders] = registry->get<DamageRolls, Defenders>(move);
+    const stat::CurrentHp& defenderHp = registry->get<stat::CurrentHp>(defenders.only());
 
     POKESIM_REQUIRE_NM(!damageRolls.val.empty());
 
@@ -26046,12 +26052,12 @@ struct Checks : pokesim::debug::Checks {
     POKESIM_REQUIRE_NM(damageRolls.val.size() == idealDamageRollCount);
 
     if (noKoChanceCalculation) {
-      POKESIM_REQUIRE_NM(!registry.all_of<UsesUntilKo>(move));
+      POKESIM_REQUIRE_NM(!registry->all_of<UsesUntilKo>(move));
     }
     else if (damageKindsMatch(DamageRollKind::ALL_DAMAGE_ROLLS, getDamageRollKind(move, damageRollOptions))) {
-      POKESIM_REQUIRE_NM(registry.all_of<UsesUntilKo>(move));
+      POKESIM_REQUIRE_NM(registry->all_of<UsesUntilKo>(move));
 
-      const UsesUntilKo& usesUntilKo = registry.get<UsesUntilKo>(move);
+      const UsesUntilKo& usesUntilKo = registry->get<UsesUntilKo>(move);
       POKESIM_REQUIRE_NM(!usesUntilKo.val.empty());
       POKESIM_REQUIRE_NM(usesUntilKo.val.front() == usesUntilKo.minHits());
       POKESIM_REQUIRE_NM(usesUntilKo.val.back() == usesUntilKo.maxHits());
@@ -26071,8 +26077,8 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkAttackHpResults(types::entity move) const {
-    const auto [attackerHpRecovered, attackerHpLost] = registry.try_get<AttackerHpRecovered, AttackerHpLost>(move);
-    const DamageRolls& damageRolls = registry.get<DamageRolls>(move);
+    const auto [attackerHpRecovered, attackerHpLost] = registry->try_get<AttackerHpRecovered, AttackerHpLost>(move);
+    const DamageRolls& damageRolls = registry->get<DamageRolls>(move);
     if (attackerHpRecovered != nullptr) {
       POKESIM_REQUIRE_NM(attackerHpRecovered->val.size() == damageRolls.val.size());
 
@@ -26087,52 +26093,57 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkMoveOutputs() const {
-    for (types::entity move : simulation.selectedMoveEntities()) {
+    for (types::entity move : simulation->selectedMoveEntities()) {
       pokesim::debug::TypesToIgnore typesToIgnore{};
-      if (registry.all_of<pokesim::tags::AnalyzeEffect>(move)) {
+      if (registry->all_of<pokesim::tags::AnalyzeEffect>(move)) {
         typesToIgnore.add<Damage>();
-        POKESIM_REQUIRE_NM(registry.all_of<Damage>(move));
+        POKESIM_REQUIRE_NM(registry->all_of<Damage>(move));
       }
 
-      if (registry.all_of<pokesim::tags::SimulateTurn>(move)) {
+      if (registry->all_of<pokesim::tags::SimulateTurn>(move)) {
         typesToIgnore.add<Damage>();
-        POKESIM_REQUIRE_NM(registry.all_of<Damage>(move));
-        POKESIM_REQUIRE_NM(registry.get<Damage>(move).val > 0);
-        POKESIM_REQUIRE_NM(!registry.all_of<DamageRolls>(move));
-        POKESIM_REQUIRE_NM(!registry.all_of<UsesUntilKo>(move));
+        POKESIM_REQUIRE_NM(registry->all_of<Damage>(move));
+        POKESIM_REQUIRE_NM(registry->get<Damage>(move).val > 0);
+        POKESIM_REQUIRE_NM(!registry->all_of<DamageRolls>(move));
+        POKESIM_REQUIRE_NM(!registry->all_of<UsesUntilKo>(move));
       }
       else {
         typesToIgnore.add<DamageRolls, UsesUntilKo>();
         checkCalcDamageResultOutputs(move);
 
-        if (registry.all_of<pokesim::tags::CalculateDamage>(move)) {
+        if (registry->all_of<pokesim::tags::CalculateDamage>(move)) {
           typesToIgnore.add<AttackerHpRecovered, AttackerHpLost>();
           checkAttackHpResults(move);
         }
       }
 
-      types::entity originalMove = pokesim::debug::findCopyParent(originalToCopy, registry, move);
-      pokesim::debug::areEntitiesEqual(registry, move, registryOnInput, originalToCopy.at(originalMove), typesToIgnore);
+      types::entity originalMove = pokesim::debug::findCopyParent(originalToCopy, *registry, move);
+      pokesim::debug::areEntitiesEqual(
+        *registry,
+        move,
+        registryOnInput,
+        originalToCopy.at(originalMove),
+        typesToIgnore);
     }
   }
 
   void checkPokemonOutputs(bool forAttacker) const {
     const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
-      types::entity originalPokemon = pokesim::debug::findCopyParent(originalToCopy, registry, pokemon);
-      pokesim::debug::areEntitiesEqual(registry, pokemon, registryOnInput, originalToCopy.at(originalPokemon));
+      types::entity originalPokemon = pokesim::debug::findCopyParent(originalToCopy, *registry, pokemon);
+      pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, originalToCopy.at(originalPokemon));
     }
   }
 
   void checkBattleOutputs() const {
-    for (types::entity battle : simulation.selectedBattleEntities()) {
+    for (types::entity battle : simulation->selectedBattleEntities()) {
       pokesim::debug::TypesToIgnore typesToIgnore;
-      if (registry.all_of<pokesim::tags::SimulateTurn>(battle)) {
+      if (registry->all_of<pokesim::tags::SimulateTurn>(battle)) {
         typesToIgnore.add<Probability, RngSeed, ParentBattle>();
       }
-      types::entity originalBattle = pokesim::debug::findCopyParent(originalToCopy, registry, battle);
+      types::entity originalBattle = pokesim::debug::findCopyParent(originalToCopy, *registry, battle);
       pokesim::debug::areEntitiesEqual(
-        registry,
+        *registry,
         battle,
         registryOnInput,
         originalToCopy.at(originalBattle),
@@ -26187,7 +26198,7 @@ struct P2Defending {};
 
 
 namespace pokesim::calc_damage {
-namespace internal {
+namespace {
 inline void clearRunVariables(Simulation& simulation) {
   simulation.registry.clear<tags::Crit, AttackingLevel, AttackingStat, DefendingStat, DamageRollModifiers>();
   simulation.removeFromEntities<Damage, pokesim::tags::CalculateDamage>();
@@ -26302,33 +26313,6 @@ inline void reduceDamageRollsToDefenderHp(
   damage.val = std::min(defenderHp.val, damage.val);
 }
 
-inline void applyDamageRollsAndModifiers(Simulation& simulation, DamageRollKind damageRollKind) {
-  POKESIM_REQUIRE(
-    damageRollKind != DamageRollKind::NONE,
-    "Cannot calculate damage without knowing what rolls to consider.");
-  POKESIM_REQUIRE(
-    damageRollKind != DamageRollKind::GUARANTEED_CRIT_CHANCE,
-    "Must pick a damage roll kind to go along with crits.");
-
-  simulation.addToEntities<DamageRolls, DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
-  if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
-    simulation.viewForSelectedMoves<calculateAllDamageRolls>();
-  }
-  else {
-    if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
-      simulation.viewForSelectedMoves<applyDamageRollModifier>();
-    }
-
-    if (damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE)) {
-      simulation.viewForSelectedMoves<applyAverageDamageRollModifier>();
-    }
-
-    if (damageKindsMatch(damageRollKind, DamageRollKind::MIN_DAMAGE)) {
-      simulation.viewForSelectedMoves<applyMinDamageRollModifier>();
-    }
-  }
-}
-
 inline void assignCritChanceDivisor(types::handle moveHandle, const CritBoost& critBoost) {
   std::size_t index = std::min((std::size_t)critBoost.val, pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS.size() - 1);
   moveHandle.emplace<CritChanceDivisor>(pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS[index]);
@@ -26366,7 +26350,7 @@ inline void calculateBaseDamage(
   types::handle moveHandle, const BasePower& basePower, const AttackingLevel& level, const AttackingStat& attack,
   const DefendingStat& defense) {
   // NOLINTNEXTLINE(readability-magic-numbers)
-  types::damage damage = (((2U * level.val / 5U + 2U) * basePower.val * attack.val) / defense.val) / 50U + 2;
+  types::damage damage = ((((2U * level.val / 5U + 2U) * basePower.val * attack.val) / defense.val) / 50U) + 2;
   moveHandle.emplace<Damage>(damage);
 }
 
@@ -26425,7 +26409,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
     }
   }
   else {
-    simulation.viewForSelectedMoves<internal::setDefendingSide>();
+    simulation.viewForSelectedMoves<setDefendingSide>();
     pokesim::internal::SelectForCurrentActionMoveView<tags::P1Defending> p1DefendingMoves{simulation};
     if (!p1DefendingMoves.hasNoneSelected()) {
       if constexpr (onlyPassDamageRoll) {
@@ -26450,35 +26434,110 @@ void applySideDamageRollOptions(Simulation& simulation) {
     simulation.registry.clear<tags::P1Defending, tags::P2Defending>();
   }
 }
-}  // namespace internal
+
+template <typename SimulationTag>
+void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
+  if (damageKindsMatch(damageRollKind, DamageRollKind::GUARANTEED_CRIT_CHANCE)) {
+    simulation.addToEntities<tags::Crit, pokesim::tags::SelectedForViewMove>();
+    return;
+  }
+
+  if constexpr (std::is_same_v<SimulationTag, pokesim::tags::SimulateTurn>) {
+    simulation.addToEntities<calc_damage::CritBoost, pokesim::tags::SelectedForViewMove, pokesim::tags::SimulateTurn>();
+    runModifyCritBoostEvent(simulation);
+    simulation.viewForSelectedMoves<assignCritChanceDivisor>();
+    simulation.registry.clear<CritBoost>();
+
+    simulate_turn::setIfMoveCrits(simulation);
+  }
+}
 
 template <typename SimulationTag>
 void applyDamageRollsAndModifiers(
   Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp, bool noKoChanceCalculation) {
-  internal::applyDamageRollsAndModifiers(simulation, damageRollKind);
+  POKESIM_REQUIRE(
+    damageRollKind != DamageRollKind::NONE,
+    "Cannot calculate damage without knowing what rolls to consider.");
+  POKESIM_REQUIRE(
+    damageRollKind != DamageRollKind::GUARANTEED_CRIT_CHANCE,
+    "Must pick a damage roll kind to go along with crits.");
+
+  simulation.addToEntities<DamageRolls, DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
+  if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
+    simulation.viewForSelectedMoves<calculateAllDamageRolls>();
+  }
+  else {
+    if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
+      simulation.viewForSelectedMoves<applyDamageRollModifier>();
+    }
+
+    if (damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE)) {
+      simulation.viewForSelectedMoves<applyAverageDamageRollModifier>();
+    }
+
+    if (damageKindsMatch(damageRollKind, DamageRollKind::MIN_DAMAGE)) {
+      simulation.viewForSelectedMoves<applyMinDamageRollModifier>();
+    }
+  }
 
   if constexpr (std::is_same_v<pokesim::tags::SimulateTurn, SimulationTag>) {
     if (calculateUpToFoeHp) {
-      simulation.viewForSelectedMoves<internal::reduceDamageRollsToDefenderHp>();
+      simulation.viewForSelectedMoves<reduceDamageRollsToDefenderHp>();
     }
     simulate_turn::cloneFromDamageRolls(simulation, damageRollKind);
   }
   else {
-    simulation.viewForSelectedMoves<internal::modifyDamage>();
+    simulation.viewForSelectedMoves<modifyDamage>();
     if (calculateUpToFoeHp) {
-      simulation.viewForSelectedMoves<internal::reduceDamageRollsToDefenderHp>();
+      simulation.viewForSelectedMoves<reduceDamageRollsToDefenderHp>();
     }
     if (!noKoChanceCalculation && damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
-      simulation.viewForSelectedMoves<internal::applyUsesUntilKo, Tags<SimulationTag>>();
+      simulation.viewForSelectedMoves<applyUsesUntilKo, Tags<SimulationTag>>();
     }
   }
 }
 
+inline void calcDamage(Simulation& simulation) {
+  pokesim::internal::SelectForCurrentActionMoveView<> selectedMoves{simulation, entt::exclude<move::tags::Status>};
+  if (selectedMoves.hasNoneSelected()) {
+    return;
+  }
+
+  using SimulateTurn = pokesim::tags::SimulateTurn;
+  using CalculateDamage = pokesim::tags::CalculateDamage;
+  using AnalyzeEffect = pokesim::tags::AnalyzeEffect;
+
+  applySideDamageRollOptions<SimulateTurn, setIfMoveCrits<SimulateTurn>>(simulation);
+  applySideDamageRollOptions<CalculateDamage, setIfMoveCrits<CalculateDamage>>(simulation);
+  applySideDamageRollOptions<AnalyzeEffect, setIfMoveCrits<AnalyzeEffect>>(simulation);
+
+  // Get base power, boosts, get atk/def stats
+  runBasePowerEvent(simulation);
+  simulation.viewForSelectedMoves<setSourceLevel>();
+
+  simulation.viewForSelectedMoves<setUsedAttackStat<move::tags::Physical>, Tags<move::tags::Physical>>();
+  simulation.viewForSelectedMoves<setUsedAttackStat<move::tags::Special>, Tags<move::tags::Special>>();
+  simulation.viewForSelectedMoves<setUsedDefenseStat<move::tags::Physical>, Tags<move::tags::Physical>>();
+  simulation.viewForSelectedMoves<setUsedDefenseStat<move::tags::Special>, Tags<move::tags::Special>>();
+
+  simulation.viewForSelectedMoves<calculateBaseDamage>();
+
+  simulation.viewForSelectedMoves<applyCritDamageIncrease, Tags<tags::Crit>>();
+
+  simulation.addToEntities<DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
+  setDamageRollModifiers(simulation);
+
+  applySideDamageRollOptions<SimulateTurn, applyDamageRollsAndModifiers<SimulateTurn>>(simulation);
+  applySideDamageRollOptions<CalculateDamage, applyDamageRollsAndModifiers<CalculateDamage>>(simulation);
+  applySideDamageRollOptions<AnalyzeEffect, applyDamageRollsAndModifiers<AnalyzeEffect>>(simulation);
+}
+}  // namespace
+
 inline void setDamageRollModifiers(Simulation& simulation) {
-  simulation.viewForSelectedMoves<internal::checkForAndApplyStab>();
-  simulation.viewForSelectedMoves<internal::checkForAndApplyTypeEffectiveness>();
+  simulation.viewForSelectedMoves<checkForAndApplyStab>();
+  simulation.viewForSelectedMoves<checkForAndApplyTypeEffectiveness>();
   simulation.viewForSelectedPokemon<
-    internal::applyBurnModifier,
+    applyBurnModifier,
     Tags<status::tags::Burn, tags::Attacker> /*, entt::exclude<ability::tags::Guts> */>();
 }
 
@@ -26494,65 +26553,13 @@ inline void applyMinDamageRoll(Damage& damage) {
   applyDamageRoll(damage, MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U);
 }
 
-template <typename SimulationTag>
-void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
-  if (damageKindsMatch(damageRollKind, DamageRollKind::GUARANTEED_CRIT_CHANCE)) {
-    simulation.addToEntities<tags::Crit, pokesim::tags::SelectedForViewMove>();
-    return;
-  }
-
-  if constexpr (std::is_same_v<SimulationTag, pokesim::tags::SimulateTurn>) {
-    simulation.addToEntities<calc_damage::CritBoost, pokesim::tags::SelectedForViewMove, pokesim::tags::SimulateTurn>();
-    runModifyCritBoostEvent(simulation);
-    simulation.viewForSelectedMoves<internal::assignCritChanceDivisor>();
-    simulation.registry.clear<CritBoost>();
-
-    simulate_turn::setIfMoveCrits(simulation);
-  }
-}
-
-inline void getDamage(Simulation& simulation) {
-  pokesim::internal::SelectForCurrentActionMoveView<> selectedMoves{simulation, entt::exclude<move::tags::Status>};
-  if (selectedMoves.hasNoneSelected()) {
-    return;
-  }
-
-  using SimulateTurn = pokesim::tags::SimulateTurn;
-  using CalculateDamage = pokesim::tags::CalculateDamage;
-  using AnalyzeEffect = pokesim::tags::AnalyzeEffect;
-
-  internal::applySideDamageRollOptions<SimulateTurn, setIfMoveCrits<SimulateTurn>>(simulation);
-  internal::applySideDamageRollOptions<CalculateDamage, setIfMoveCrits<CalculateDamage>>(simulation);
-  internal::applySideDamageRollOptions<AnalyzeEffect, setIfMoveCrits<AnalyzeEffect>>(simulation);
-
-  // Get base power, boosts, get atk/def stats
-  runBasePowerEvent(simulation);
-  simulation.viewForSelectedMoves<internal::setSourceLevel>();
-
-  simulation.viewForSelectedMoves<internal::setUsedAttackStat<move::tags::Physical>, Tags<move::tags::Physical>>();
-  simulation.viewForSelectedMoves<internal::setUsedAttackStat<move::tags::Special>, Tags<move::tags::Special>>();
-  simulation.viewForSelectedMoves<internal::setUsedDefenseStat<move::tags::Physical>, Tags<move::tags::Physical>>();
-  simulation.viewForSelectedMoves<internal::setUsedDefenseStat<move::tags::Special>, Tags<move::tags::Special>>();
-
-  simulation.viewForSelectedMoves<internal::calculateBaseDamage>();
-
-  simulation.viewForSelectedMoves<internal::applyCritDamageIncrease, Tags<tags::Crit>>();
-
-  simulation.addToEntities<DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
-  setDamageRollModifiers(simulation);
-
-  internal::applySideDamageRollOptions<SimulateTurn, applyDamageRollsAndModifiers<SimulateTurn>>(simulation);
-  internal::applySideDamageRollOptions<CalculateDamage, applyDamageRollsAndModifiers<CalculateDamage>>(simulation);
-  internal::applySideDamageRollOptions<AnalyzeEffect, applyDamageRollsAndModifiers<AnalyzeEffect>>(simulation);
-}
-
 inline void run(Simulation& simulation) {
   debug::Checks debugChecks(simulation);
   debugChecks.checkInputs();
 
-  getDamage(simulation);
+  calcDamage(simulation);
 
-  internal::clearRunVariables(simulation);
+  clearRunVariables(simulation);
   debugChecks.checkOutputs();
 }
 }  // namespace pokesim::calc_damage
@@ -26801,12 +26808,13 @@ inline void MoveStateSetup::setMaxPP(types::pp maxPp) {
 namespace pokesim {
 inline void ability::tags::enumToTag(dex::Ability ability, types::handle handle) {
   switch (ability) {
-    case dex::Ability::DEFIANT: handle.emplace<Defiant>(); return;
+    case dex::Ability::DEFIANT:     handle.emplace<Defiant>(); return;
     case dex::Ability::INFILTRATOR: handle.emplace<Infiltrator>(); return;
-    case dex::Ability::IRON_FIST: handle.emplace<IronFist>(); return;
-    case dex::Ability::STATIC: handle.emplace<Static>(); return;
-    case dex::Ability::SWEET_VEIL: handle.emplace<SweetVeil>(); return;
-    case dex::Ability::TRACE: handle.emplace<Trace>(); return;
+    case dex::Ability::IRON_FIST:   handle.emplace<IronFist>(); return;
+    case dex::Ability::STATIC:      handle.emplace<Static>(); return;
+    case dex::Ability::SWEET_VEIL:  handle.emplace<SweetVeil>(); return;
+    case dex::Ability::TRACE:       handle.emplace<Trace>(); return;
+
     default: {
       POKESIM_REQUIRE(false, "Adding tag for ability that does not exist.");
     }
@@ -26815,12 +26823,13 @@ inline void ability::tags::enumToTag(dex::Ability ability, types::handle handle)
 
 inline void item::tags::enumToTag(dex::Item item, types::handle handle) {
   switch (item) {
-    case dex::Item::ASSAULT_VEST: handle.emplace<AssaultVest>(); return;
+    case dex::Item::ASSAULT_VEST:  handle.emplace<AssaultVest>(); return;
     case dex::Item::BRIGHT_POWDER: handle.emplace<BrightPowder>(); return;
-    case dex::Item::CHOICE_SCARF: handle.emplace<ChoiceScarf>(); return;
-    case dex::Item::CHOICE_SPECS: handle.emplace<ChoiceSpecs>(); return;
-    case dex::Item::FOCUS_SASH: handle.emplace<FocusSash>(); return;
-    case dex::Item::LIFE_ORB: handle.emplace<LifeOrb>(); return;
+    case dex::Item::CHOICE_SCARF:  handle.emplace<ChoiceScarf>(); return;
+    case dex::Item::CHOICE_SPECS:  handle.emplace<ChoiceSpecs>(); return;
+    case dex::Item::FOCUS_SASH:    handle.emplace<FocusSash>(); return;
+    case dex::Item::LIFE_ORB:      handle.emplace<LifeOrb>(); return;
+
     default: {
       POKESIM_REQUIRE(false, "Adding tag for item that does not exist.");
     }
@@ -26831,29 +26840,30 @@ inline void nature::tags::enumToTag(dex::Nature nature, types::handle handle) {
   switch (nature) {
     case dex::Nature::ADAMANT: handle.emplace<Adamant>(); return;
     case dex::Nature::BASHFUL: handle.emplace<Bashful>(); return;
-    case dex::Nature::BOLD: handle.emplace<Bold>(); return;
-    case dex::Nature::BRAVE: handle.emplace<Brave>(); return;
-    case dex::Nature::CALM: handle.emplace<Calm>(); return;
+    case dex::Nature::BOLD:    handle.emplace<Bold>(); return;
+    case dex::Nature::BRAVE:   handle.emplace<Brave>(); return;
+    case dex::Nature::CALM:    handle.emplace<Calm>(); return;
     case dex::Nature::CAREFUL: handle.emplace<Careful>(); return;
-    case dex::Nature::DOCILE: handle.emplace<Docile>(); return;
-    case dex::Nature::GENTLE: handle.emplace<Gentle>(); return;
-    case dex::Nature::HARDY: handle.emplace<Hardy>(); return;
-    case dex::Nature::HASTY: handle.emplace<Hasty>(); return;
-    case dex::Nature::IMPISH: handle.emplace<Impish>(); return;
-    case dex::Nature::JOLLY: handle.emplace<Jolly>(); return;
-    case dex::Nature::LAX: handle.emplace<Lax>(); return;
-    case dex::Nature::LONELY: handle.emplace<Lonely>(); return;
-    case dex::Nature::MILD: handle.emplace<Mild>(); return;
-    case dex::Nature::MODEST: handle.emplace<Modest>(); return;
-    case dex::Nature::NAIVE: handle.emplace<Naive>(); return;
+    case dex::Nature::DOCILE:  handle.emplace<Docile>(); return;
+    case dex::Nature::GENTLE:  handle.emplace<Gentle>(); return;
+    case dex::Nature::HARDY:   handle.emplace<Hardy>(); return;
+    case dex::Nature::HASTY:   handle.emplace<Hasty>(); return;
+    case dex::Nature::IMPISH:  handle.emplace<Impish>(); return;
+    case dex::Nature::JOLLY:   handle.emplace<Jolly>(); return;
+    case dex::Nature::LAX:     handle.emplace<Lax>(); return;
+    case dex::Nature::LONELY:  handle.emplace<Lonely>(); return;
+    case dex::Nature::MILD:    handle.emplace<Mild>(); return;
+    case dex::Nature::MODEST:  handle.emplace<Modest>(); return;
+    case dex::Nature::NAIVE:   handle.emplace<Naive>(); return;
     case dex::Nature::NAUGHTY: handle.emplace<Naughty>(); return;
-    case dex::Nature::QUIET: handle.emplace<Quiet>(); return;
-    case dex::Nature::QUIRKY: handle.emplace<Quirky>(); return;
-    case dex::Nature::RASH: handle.emplace<Rash>(); return;
+    case dex::Nature::QUIET:   handle.emplace<Quiet>(); return;
+    case dex::Nature::QUIRKY:  handle.emplace<Quirky>(); return;
+    case dex::Nature::RASH:    handle.emplace<Rash>(); return;
     case dex::Nature::RELAXED: handle.emplace<Relaxed>(); return;
-    case dex::Nature::SASSY: handle.emplace<Sassy>(); return;
+    case dex::Nature::SASSY:   handle.emplace<Sassy>(); return;
     case dex::Nature::SERIOUS: handle.emplace<Serious>(); return;
-    case dex::Nature::TIMID: handle.emplace<Timid>(); return;
+    case dex::Nature::TIMID:   handle.emplace<Timid>(); return;
+
     default: {
       POKESIM_REQUIRE(false, "Adding tag for nature that does not exist.");
     }
@@ -26868,6 +26878,7 @@ inline void status::tags::enumToTag(dex::Status status, types::handle& handle) {
     case dex::Status::PSN: handle.emplace<Poison>(); return;
     case dex::Status::SLP: handle.emplace<Sleep>(); return;
     case dex::Status::TOX: handle.emplace<Toxic>(); return;
+
     default: {
       POKESIM_REQUIRE(false, "Adding tag for status that does not exist.");
     }
@@ -26911,6 +26922,7 @@ inline void BattleStateSetup::setSide(types::entity sideEntity) {
   switch (sideId) {
     case PlayerSideId::P1: sides.p1() = sideEntity; break;
     case PlayerSideId::P2: sides.p2() = sideEntity; break;
+
     default: POKESIM_REQUIRE_FAIL("sideID must be assigned P1 or P2."); break;
   }
 }
@@ -27353,7 +27365,7 @@ struct Pokemon {
 #include <vector>
 
 namespace pokesim {
-namespace internal {
+namespace {
 inline void cloneEntity(
   types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -27473,6 +27485,7 @@ inline void cloneBattle(
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
+
 inline void cloneSide(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -27480,6 +27493,7 @@ inline void cloneSide(
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
+
 inline void cloneAction(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -27487,6 +27501,7 @@ inline void cloneAction(
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
+
 inline void cloneCurrentActionMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -27494,6 +27509,7 @@ inline void cloneCurrentActionMove(
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
+
 inline void clonePokemon(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -27501,6 +27517,7 @@ inline void clonePokemon(
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
 }
+
 inline void cloneMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -27512,18 +27529,23 @@ inline void cloneMove(
 inline void deleteBattle(types::registry& registry) {
   traverseBattle(registry);
 }
+
 inline void deleteSide(types::registry& registry) {
   traverseSide(registry);
 }
+
 inline void deleteAction(types::registry& registry) {
   traverseAction(registry);
 }
+
 inline void deleteCurrentActionMove(types::registry& registry) {
   traverseCurrentActionMove(registry);
 }
+
 inline void deletePokemon(types::registry& registry) {
   traversePokemon(registry);
 }
+
 inline void deleteMove(types::registry& registry) {
   traverseMove(registry);
 }
@@ -27561,7 +27583,7 @@ void remapComponentEntities(types::registry& registry, const types::ClonedEntity
     remapEntityListMembers<Component>(registry, entityMap);
   }
 }
-}  // namespace internal
+}  // namespace
 
 inline types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount) {
   types::cloneIndex count = cloneCount.value_or(1);
@@ -27572,18 +27594,18 @@ inline types::ClonedEntityMap clone(types::registry& registry, std::optional<typ
 
   entt::dense_map<entt::id_type, std::vector<types::entity>> srcEntityStorages;
 
-  internal::cloneBattle(registry, entityMap, srcEntityStorages, count);
+  cloneBattle(registry, entityMap, srcEntityStorages, count);
   battleMap = entityMap;
-  internal::cloneSide(registry, entityMap, srcEntityStorages, count);
-  internal::cloneAction(registry, entityMap, srcEntityStorages, count);
-  internal::clonePokemon(registry, entityMap, srcEntityStorages, count);
-  internal::cloneCurrentActionMove(registry, entityMap, srcEntityStorages, count);
-  internal::cloneMove(registry, entityMap, srcEntityStorages, count);
+  cloneSide(registry, entityMap, srcEntityStorages, count);
+  cloneAction(registry, entityMap, srcEntityStorages, count);
+  clonePokemon(registry, entityMap, srcEntityStorages, count);
+  cloneCurrentActionMove(registry, entityMap, srcEntityStorages, count);
+  cloneMove(registry, entityMap, srcEntityStorages, count);
 
   for (auto [id, storage] : registry.storage()) {
     if (srcEntityStorages.contains(id)) {
       const auto& sources = srcEntityStorages.at(id);
-      storage.reserve(storage.size() + sources.size() * count);
+      storage.reserve(storage.size() + (sources.size() * count));
       for (types::entity src : sources) {
         auto* value = storage.value(src);
         for (types::cloneIndex i = 0; i < count; i++) {
@@ -27607,23 +27629,23 @@ inline types::ClonedEntityMap clone(types::registry& registry, std::optional<typ
   }
 
   // Not simplified further to a, for example, packed template type list, to make debugging what type went wrong easier
-  internal::remapComponentEntities<ActionQueue>(registry, entityMap);
-  internal::remapComponentEntities<Battle>(registry, entityMap);
-  internal::remapComponentEntities<ChoiceLock>(registry, entityMap);
-  internal::remapComponentEntities<CurrentAction>(registry, entityMap);
-  internal::remapComponentEntities<CurrentActionMoves>(registry, entityMap);
-  internal::remapComponentEntities<CurrentActionMoveSlot>(registry, entityMap);
-  internal::remapComponentEntities<CurrentActionSource>(registry, entityMap);
-  internal::remapComponentEntities<CurrentActionTargets>(registry, entityMap);
-  internal::remapComponentEntities<FoeSide>(registry, entityMap);
-  internal::remapComponentEntities<LastUsedMove>(registry, entityMap);
-  internal::remapComponentEntities<MoveEffect>(registry, entityMap);
-  internal::remapComponentEntities<MoveSlots>(registry, entityMap);
-  internal::remapComponentEntities<NextAction>(registry, entityMap);
-  internal::remapComponentEntities<Pokemon>(registry, entityMap);
-  internal::remapComponentEntities<Side>(registry, entityMap);
-  internal::remapComponentEntities<Sides>(registry, entityMap);
-  internal::remapComponentEntities<Team>(registry, entityMap);
+  remapComponentEntities<ActionQueue>(registry, entityMap);
+  remapComponentEntities<Battle>(registry, entityMap);
+  remapComponentEntities<ChoiceLock>(registry, entityMap);
+  remapComponentEntities<CurrentAction>(registry, entityMap);
+  remapComponentEntities<CurrentActionMoves>(registry, entityMap);
+  remapComponentEntities<CurrentActionMoveSlot>(registry, entityMap);
+  remapComponentEntities<CurrentActionSource>(registry, entityMap);
+  remapComponentEntities<CurrentActionTargets>(registry, entityMap);
+  remapComponentEntities<FoeSide>(registry, entityMap);
+  remapComponentEntities<LastUsedMove>(registry, entityMap);
+  remapComponentEntities<MoveEffect>(registry, entityMap);
+  remapComponentEntities<MoveSlots>(registry, entityMap);
+  remapComponentEntities<NextAction>(registry, entityMap);
+  remapComponentEntities<Pokemon>(registry, entityMap);
+  remapComponentEntities<Side>(registry, entityMap);
+  remapComponentEntities<Sides>(registry, entityMap);
+  remapComponentEntities<Team>(registry, entityMap);
 
   registry.clear<CloneTo, tags::CloneFrom>();
 
@@ -27643,12 +27665,12 @@ inline types::ClonedEntityMap clone(types::registry& registry, std::optional<typ
 }
 
 inline void deleteClones(types::registry& registry) {
-  internal::deleteBattle(registry);
-  internal::deleteSide(registry);
-  internal::deleteAction(registry);
-  internal::deletePokemon(registry);
-  internal::deleteCurrentActionMove(registry);
-  internal::deleteMove(registry);
+  deleteBattle(registry);
+  deleteSide(registry);
+  deleteAction(registry);
+  deletePokemon(registry);
+  deleteCurrentActionMove(registry);
+  deleteMove(registry);
   auto remove = registry.view<tags::CloneToRemove>();
   registry.destroy(remove.begin(), remove.end());
 }
@@ -27658,6 +27680,7 @@ inline void deleteClones(types::registry& registry) {
 
 ///////// START OF src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp /////////
 
+// Not asserting entities as non-null
 namespace pokesim::analyze_effect {
 InputSetup::InputSetup(types::registry& registry, types::entity entity) : handle(registry, entity) {
   handle.emplace<tags::Input>();
@@ -27755,8 +27778,8 @@ struct Checks : pokesim::debug::Checks {
   Checks(const Simulation& _simulation) : pokesim::debug::Checks(_simulation) {}
 
   void checkInputs() {
-    for (types::entity input : registry.view<tags::Input>()) {
-      originalToCopy[input] = pokesim::debug::createEntityCopy(input, registry, registryOnInput);
+    for (types::entity input : registry->view<tags::Input>()) {
+      originalToCopy[input] = pokesim::debug::createEntityCopy(input, *registry, registryOnInput);
     }
 
     const std::vector<types::entity> attackers = getPokemonList(true);
@@ -27764,7 +27787,7 @@ struct Checks : pokesim::debug::Checks {
 
     for (const std::vector<types::entity>& pokemonList : {attackers, defenders}) {
       for (types::entity pokemon : pokemonList) {
-        originalToCopy[pokemon] = pokesim::debug::createEntityCopy(pokemon, registry, registryOnInput);
+        originalToCopy[pokemon] = pokesim::debug::createEntityCopy(pokemon, *registry, registryOnInput);
       }
     }
 
@@ -27783,18 +27806,18 @@ struct Checks : pokesim::debug::Checks {
  private:
   std::vector<types::entity> getPokemonList(bool forAttacker) const {
     if (forAttacker) {
-      auto view = registry.view<tags::Attacker>();
+      auto view = registry->view<tags::Attacker>();
       return {view.begin(), view.end()};
     }
 
-    auto view = registry.view<tags::Defender>();
+    auto view = registry->view<tags::Defender>();
     return {view.begin(), view.end()};
   }
 
   DamageRollKind getDamageRollKind(types::entity input, DamageRollOptions damageRollOptions) const {
-    const Defenders& defenders = registry.get<Defenders>(input);
-    const Side& side = registry.get<Side>(defenders.only());
-    PlayerSideId playerSide = registry.get<PlayerSide>(side.val).val;
+    const Defenders& defenders = registry->get<Defenders>(input);
+    const Side& side = registry->get<Side>(defenders.only());
+    PlayerSideId playerSide = registry->get<PlayerSide>(side.val).val;
     switch (playerSide) {
       case PlayerSideId::P1: {
         return damageRollOptions.p1;
@@ -27812,24 +27835,24 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkInputOutputs() const {
-    for (types::entity input : registry.view<tags::Input>()) {
+    for (types::entity input : registry->view<tags::Input>()) {
       pokesim::debug::TypesToIgnore typesToIgnore{};
       typesToIgnore.add<MultipliedDamageRolls>();
 
-      POKESIM_REQUIRE_NM(registry.all_of<MultipliedDamageRolls>(input));
+      POKESIM_REQUIRE_NM(registry->all_of<MultipliedDamageRolls>(input));
 
-      if (registry.all_of<tags::InfiniteMultiplier>(input)) {
-        POKESIM_REQUIRE_NM(!registry.all_of<EffectMultiplier>(input));
+      if (registry->all_of<tags::InfiniteMultiplier>(input)) {
+        POKESIM_REQUIRE_NM(!registry->all_of<EffectMultiplier>(input));
         typesToIgnore.add<tags::InfiniteMultiplier>();
       }
 
       bool zeroEffectMultiplier = false;
-      if (registry.all_of<EffectMultiplier>(input)) {
-        POKESIM_REQUIRE_NM(!registry.all_of<tags::InfiniteMultiplier>(input));
+      if (registry->all_of<EffectMultiplier>(input)) {
+        POKESIM_REQUIRE_NM(!registry->all_of<tags::InfiniteMultiplier>(input));
         typesToIgnore.add<EffectMultiplier>();
 
         const auto [effectMultiplier, multipliedDamageRolls] =
-          registry.get<EffectMultiplier, MultipliedDamageRolls>(input);
+          registry->get<EffectMultiplier, MultipliedDamageRolls>(input);
         if (effectMultiplier.val == 0) {
           zeroEffectMultiplier = true;
           for (const Damage& multipliedDamageRoll : multipliedDamageRolls.val) {
@@ -27838,26 +27861,26 @@ struct Checks : pokesim::debug::Checks {
         }
       }
 
-      auto damageRollOptions = simulation.analyzeEffectOptions.damageRollOptions;
-      auto noKoChanceCalculation = simulation.analyzeEffectOptions.noKoChanceCalculation;
+      auto damageRollOptions = simulation->analyzeEffectOptions.damageRollOptions;
+      auto noKoChanceCalculation = simulation->analyzeEffectOptions.noKoChanceCalculation;
       if (noKoChanceCalculation || zeroEffectMultiplier) {
-        POKESIM_REQUIRE_NM(!registry.all_of<MultipliedUsesUntilKo>(input));
+        POKESIM_REQUIRE_NM(!registry->all_of<MultipliedUsesUntilKo>(input));
       }
       else if (calc_damage::damageKindsMatch(
                  DamageRollKind::ALL_DAMAGE_ROLLS,
                  getDamageRollKind(input, damageRollOptions))) {
-        POKESIM_REQUIRE_NM(registry.all_of<MultipliedUsesUntilKo>(input));
+        POKESIM_REQUIRE_NM(registry->all_of<MultipliedUsesUntilKo>(input));
         typesToIgnore.add<MultipliedUsesUntilKo>();
       }
 
-      pokesim::debug::areEntitiesEqual(registry, input, registryOnInput, originalToCopy.at(input), typesToIgnore);
+      pokesim::debug::areEntitiesEqual(*registry, input, registryOnInput, originalToCopy.at(input), typesToIgnore);
     }
   }
 
   void checkPokemonOutputs(bool forAttacker) const {
     const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
-      pokesim::debug::areEntitiesEqual(registry, pokemon, registryOnInput, originalToCopy.at(pokemon));
+      pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, originalToCopy.at(pokemon));
     }
   }
 };
@@ -27896,8 +27919,8 @@ struct RemovedEffect {
 
 
 namespace pokesim::analyze_effect {
-namespace internal {
-enum class EffectPresentCheck {
+namespace {
+enum class EffectPresentCheck : std::uint8_t {
   NOT_PRESENT,
   PRESENT_AND_NOT_APPLIED,
   PRESENT_AND_APPLIED,
@@ -27972,7 +27995,7 @@ inline void assignInputsToClones(
           battleEntity,
           attackerEntity,
           move,
-          simulation.pokedex);
+          simulation.pokedex());
         registry.emplace<MoveName>(moveEntity, move);
         registry.emplace<pokesim::tags::AnalyzeEffect>(moveEntity);
 
@@ -28238,7 +28261,7 @@ inline void clearRunVariables(Simulation& simulation) {
     Damage>();
 }
 
-inline void run(Simulation& simulation) {
+inline void analyzeEffect(Simulation& simulation) {
   pokesim::internal::SelectForPokemonView<pokesim::tags::AnalyzeEffect> selectedPokemon(simulation);
   pokesim::internal::SelectForBattleView<pokesim::tags::AnalyzeEffect> selectedBattle(simulation);
 
@@ -28247,37 +28270,37 @@ inline void run(Simulation& simulation) {
   }
 
   if (!simulation.analyzeEffectOptions.reconsiderActiveEffects) {
-    internal::ignoreBattlesWithEffectActive(simulation);
+    ignoreBattlesWithEffectActive(simulation);
   }
 
-  internal::createAppliedEffectBattles(simulation);
+  createAppliedEffectBattles(simulation);
 
-  simulation.view<internal::applyPseudoWeatherEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyTerrainEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyWeatherEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applySideConditionEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyStatusEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyVolatileEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyPseudoWeatherEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyTerrainEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyWeatherEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applySideConditionEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyStatusEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyVolatileEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
 
-  simulation.view<internal::applyBoostEffect<AtkBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyBoostEffect<DefBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyBoostEffect<SpaBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyBoostEffect<SpdBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyBoostEffect<SpeBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyBoostEffect<AtkBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyBoostEffect<DefBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyBoostEffect<SpaBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyBoostEffect<SpdBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyBoostEffect<SpeBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
 
   calc_damage::run(simulation);
 
-  simulation.view<internal::createOutput, Tags<tags::Input>>();
+  simulation.view<createOutput, Tags<tags::Input>>();
 }
-}  // namespace internal
+}  // namespace
 
 inline void run(Simulation& simulation) {
   debug::Checks debugChecks(simulation);
   debugChecks.checkInputs();
 
-  internal::run(simulation);
+  analyzeEffect(simulation);
 
-  internal::clearRunVariables(simulation);
+  clearRunVariables(simulation);
   debugChecks.checkOutputs();
 }
 }  // namespace pokesim::analyze_effect

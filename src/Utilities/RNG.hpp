@@ -7,7 +7,7 @@
 namespace pokesim::internal {
 
 // Generate a uniformly distributed 32-bit random number
-inline constexpr types::rngResult nextRandomValue(types::rngState& state) {
+constexpr types::rngResult nextRandomValue(types::rngState& state) {
   // NOLINTBEGIN
   types::rngState oldState = state;
   state = oldState * 6364136223846793005ULL;

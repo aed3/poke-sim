@@ -20,11 +20,11 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./llvm
-          key: llvm-15.0.6
+          key: llvm-19.1.0
       - name: Install clang-tidy and clang-format
-        uses: KyleMayes/install-llvm-action@v1.6.1
+        uses: KyleMayes/install-llvm-action@v2.0.7
         with:
-          version: "15.0.6"
+          version: "19.1.0"
           directory: ./llvm
           cached: ${{ steps.cache-llvm.outputs.cache-hit }}
       - name: Check out Git repository

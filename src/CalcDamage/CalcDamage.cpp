@@ -43,7 +43,7 @@
 #include "Helpers.hpp"
 
 namespace pokesim::calc_damage {
-namespace internal {
+namespace {
 void clearRunVariables(Simulation& simulation) {
   simulation.registry.clear<tags::Crit, AttackingLevel, AttackingStat, DefendingStat, DamageRollModifiers>();
   simulation.removeFromEntities<Damage, pokesim::tags::CalculateDamage>();
@@ -158,33 +158,6 @@ void reduceDamageRollsToDefenderHp(
   damage.val = std::min(defenderHp.val, damage.val);
 }
 
-void applyDamageRollsAndModifiers(Simulation& simulation, DamageRollKind damageRollKind) {
-  POKESIM_REQUIRE(
-    damageRollKind != DamageRollKind::NONE,
-    "Cannot calculate damage without knowing what rolls to consider.");
-  POKESIM_REQUIRE(
-    damageRollKind != DamageRollKind::GUARANTEED_CRIT_CHANCE,
-    "Must pick a damage roll kind to go along with crits.");
-
-  simulation.addToEntities<DamageRolls, DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
-  if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
-    simulation.viewForSelectedMoves<calculateAllDamageRolls>();
-  }
-  else {
-    if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
-      simulation.viewForSelectedMoves<applyDamageRollModifier>();
-    }
-
-    if (damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE)) {
-      simulation.viewForSelectedMoves<applyAverageDamageRollModifier>();
-    }
-
-    if (damageKindsMatch(damageRollKind, DamageRollKind::MIN_DAMAGE)) {
-      simulation.viewForSelectedMoves<applyMinDamageRollModifier>();
-    }
-  }
-}
-
 void assignCritChanceDivisor(types::handle moveHandle, const CritBoost& critBoost) {
   std::size_t index = std::min((std::size_t)critBoost.val, pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS.size() - 1);
   moveHandle.emplace<CritChanceDivisor>(pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS[index]);
@@ -222,7 +195,7 @@ void calculateBaseDamage(
   types::handle moveHandle, const BasePower& basePower, const AttackingLevel& level, const AttackingStat& attack,
   const DefendingStat& defense) {
   // NOLINTNEXTLINE(readability-magic-numbers)
-  types::damage damage = (((2U * level.val / 5U + 2U) * basePower.val * attack.val) / defense.val) / 50U + 2;
+  types::damage damage = ((((2U * level.val / 5U + 2U) * basePower.val * attack.val) / defense.val) / 50U) + 2;
   moveHandle.emplace<Damage>(damage);
 }
 
@@ -281,7 +254,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
     }
   }
   else {
-    simulation.viewForSelectedMoves<internal::setDefendingSide>();
+    simulation.viewForSelectedMoves<setDefendingSide>();
     pokesim::internal::SelectForCurrentActionMoveView<tags::P1Defending> p1DefendingMoves{simulation};
     if (!p1DefendingMoves.hasNoneSelected()) {
       if constexpr (onlyPassDamageRoll) {
@@ -306,35 +279,110 @@ void applySideDamageRollOptions(Simulation& simulation) {
     simulation.registry.clear<tags::P1Defending, tags::P2Defending>();
   }
 }
-}  // namespace internal
+
+template <typename SimulationTag>
+void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
+  if (damageKindsMatch(damageRollKind, DamageRollKind::GUARANTEED_CRIT_CHANCE)) {
+    simulation.addToEntities<tags::Crit, pokesim::tags::SelectedForViewMove>();
+    return;
+  }
+
+  if constexpr (std::is_same_v<SimulationTag, pokesim::tags::SimulateTurn>) {
+    simulation.addToEntities<calc_damage::CritBoost, pokesim::tags::SelectedForViewMove, pokesim::tags::SimulateTurn>();
+    runModifyCritBoostEvent(simulation);
+    simulation.viewForSelectedMoves<assignCritChanceDivisor>();
+    simulation.registry.clear<CritBoost>();
+
+    simulate_turn::setIfMoveCrits(simulation);
+  }
+}
 
 template <typename SimulationTag>
 void applyDamageRollsAndModifiers(
   Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp, bool noKoChanceCalculation) {
-  internal::applyDamageRollsAndModifiers(simulation, damageRollKind);
+  POKESIM_REQUIRE(
+    damageRollKind != DamageRollKind::NONE,
+    "Cannot calculate damage without knowing what rolls to consider.");
+  POKESIM_REQUIRE(
+    damageRollKind != DamageRollKind::GUARANTEED_CRIT_CHANCE,
+    "Must pick a damage roll kind to go along with crits.");
+
+  simulation.addToEntities<DamageRolls, DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
+  if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
+    simulation.viewForSelectedMoves<calculateAllDamageRolls>();
+  }
+  else {
+    if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
+      simulation.viewForSelectedMoves<applyDamageRollModifier>();
+    }
+
+    if (damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE)) {
+      simulation.viewForSelectedMoves<applyAverageDamageRollModifier>();
+    }
+
+    if (damageKindsMatch(damageRollKind, DamageRollKind::MIN_DAMAGE)) {
+      simulation.viewForSelectedMoves<applyMinDamageRollModifier>();
+    }
+  }
 
   if constexpr (std::is_same_v<pokesim::tags::SimulateTurn, SimulationTag>) {
     if (calculateUpToFoeHp) {
-      simulation.viewForSelectedMoves<internal::reduceDamageRollsToDefenderHp>();
+      simulation.viewForSelectedMoves<reduceDamageRollsToDefenderHp>();
     }
     simulate_turn::cloneFromDamageRolls(simulation, damageRollKind);
   }
   else {
-    simulation.viewForSelectedMoves<internal::modifyDamage>();
+    simulation.viewForSelectedMoves<modifyDamage>();
     if (calculateUpToFoeHp) {
-      simulation.viewForSelectedMoves<internal::reduceDamageRollsToDefenderHp>();
+      simulation.viewForSelectedMoves<reduceDamageRollsToDefenderHp>();
     }
     if (!noKoChanceCalculation && damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
-      simulation.viewForSelectedMoves<internal::applyUsesUntilKo, Tags<SimulationTag>>();
+      simulation.viewForSelectedMoves<applyUsesUntilKo, Tags<SimulationTag>>();
     }
   }
 }
 
+void calcDamage(Simulation& simulation) {
+  pokesim::internal::SelectForCurrentActionMoveView<> selectedMoves{simulation, entt::exclude<move::tags::Status>};
+  if (selectedMoves.hasNoneSelected()) {
+    return;
+  }
+
+  using SimulateTurn = pokesim::tags::SimulateTurn;
+  using CalculateDamage = pokesim::tags::CalculateDamage;
+  using AnalyzeEffect = pokesim::tags::AnalyzeEffect;
+
+  applySideDamageRollOptions<SimulateTurn, setIfMoveCrits<SimulateTurn>>(simulation);
+  applySideDamageRollOptions<CalculateDamage, setIfMoveCrits<CalculateDamage>>(simulation);
+  applySideDamageRollOptions<AnalyzeEffect, setIfMoveCrits<AnalyzeEffect>>(simulation);
+
+  // Get base power, boosts, get atk/def stats
+  runBasePowerEvent(simulation);
+  simulation.viewForSelectedMoves<setSourceLevel>();
+
+  simulation.viewForSelectedMoves<setUsedAttackStat<move::tags::Physical>, Tags<move::tags::Physical>>();
+  simulation.viewForSelectedMoves<setUsedAttackStat<move::tags::Special>, Tags<move::tags::Special>>();
+  simulation.viewForSelectedMoves<setUsedDefenseStat<move::tags::Physical>, Tags<move::tags::Physical>>();
+  simulation.viewForSelectedMoves<setUsedDefenseStat<move::tags::Special>, Tags<move::tags::Special>>();
+
+  simulation.viewForSelectedMoves<calculateBaseDamage>();
+
+  simulation.viewForSelectedMoves<applyCritDamageIncrease, Tags<tags::Crit>>();
+
+  simulation.addToEntities<DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
+  setDamageRollModifiers(simulation);
+
+  applySideDamageRollOptions<SimulateTurn, applyDamageRollsAndModifiers<SimulateTurn>>(simulation);
+  applySideDamageRollOptions<CalculateDamage, applyDamageRollsAndModifiers<CalculateDamage>>(simulation);
+  applySideDamageRollOptions<AnalyzeEffect, applyDamageRollsAndModifiers<AnalyzeEffect>>(simulation);
+}
+}  // namespace
+
 void setDamageRollModifiers(Simulation& simulation) {
-  simulation.viewForSelectedMoves<internal::checkForAndApplyStab>();
-  simulation.viewForSelectedMoves<internal::checkForAndApplyTypeEffectiveness>();
+  simulation.viewForSelectedMoves<checkForAndApplyStab>();
+  simulation.viewForSelectedMoves<checkForAndApplyTypeEffectiveness>();
   simulation.viewForSelectedPokemon<
-    internal::applyBurnModifier,
+    applyBurnModifier,
     Tags<status::tags::Burn, tags::Attacker> /*, entt::exclude<ability::tags::Guts> */>();
 }
 
@@ -350,65 +398,13 @@ void applyMinDamageRoll(Damage& damage) {
   applyDamageRoll(damage, MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U);
 }
 
-template <typename SimulationTag>
-void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
-  if (damageKindsMatch(damageRollKind, DamageRollKind::GUARANTEED_CRIT_CHANCE)) {
-    simulation.addToEntities<tags::Crit, pokesim::tags::SelectedForViewMove>();
-    return;
-  }
-
-  if constexpr (std::is_same_v<SimulationTag, pokesim::tags::SimulateTurn>) {
-    simulation.addToEntities<calc_damage::CritBoost, pokesim::tags::SelectedForViewMove, pokesim::tags::SimulateTurn>();
-    runModifyCritBoostEvent(simulation);
-    simulation.viewForSelectedMoves<internal::assignCritChanceDivisor>();
-    simulation.registry.clear<CritBoost>();
-
-    simulate_turn::setIfMoveCrits(simulation);
-  }
-}
-
-void getDamage(Simulation& simulation) {
-  pokesim::internal::SelectForCurrentActionMoveView<> selectedMoves{simulation, entt::exclude<move::tags::Status>};
-  if (selectedMoves.hasNoneSelected()) {
-    return;
-  }
-
-  using SimulateTurn = pokesim::tags::SimulateTurn;
-  using CalculateDamage = pokesim::tags::CalculateDamage;
-  using AnalyzeEffect = pokesim::tags::AnalyzeEffect;
-
-  internal::applySideDamageRollOptions<SimulateTurn, setIfMoveCrits<SimulateTurn>>(simulation);
-  internal::applySideDamageRollOptions<CalculateDamage, setIfMoveCrits<CalculateDamage>>(simulation);
-  internal::applySideDamageRollOptions<AnalyzeEffect, setIfMoveCrits<AnalyzeEffect>>(simulation);
-
-  // Get base power, boosts, get atk/def stats
-  runBasePowerEvent(simulation);
-  simulation.viewForSelectedMoves<internal::setSourceLevel>();
-
-  simulation.viewForSelectedMoves<internal::setUsedAttackStat<move::tags::Physical>, Tags<move::tags::Physical>>();
-  simulation.viewForSelectedMoves<internal::setUsedAttackStat<move::tags::Special>, Tags<move::tags::Special>>();
-  simulation.viewForSelectedMoves<internal::setUsedDefenseStat<move::tags::Physical>, Tags<move::tags::Physical>>();
-  simulation.viewForSelectedMoves<internal::setUsedDefenseStat<move::tags::Special>, Tags<move::tags::Special>>();
-
-  simulation.viewForSelectedMoves<internal::calculateBaseDamage>();
-
-  simulation.viewForSelectedMoves<internal::applyCritDamageIncrease, Tags<tags::Crit>>();
-
-  simulation.addToEntities<DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
-  setDamageRollModifiers(simulation);
-
-  internal::applySideDamageRollOptions<SimulateTurn, applyDamageRollsAndModifiers<SimulateTurn>>(simulation);
-  internal::applySideDamageRollOptions<CalculateDamage, applyDamageRollsAndModifiers<CalculateDamage>>(simulation);
-  internal::applySideDamageRollOptions<AnalyzeEffect, applyDamageRollsAndModifiers<AnalyzeEffect>>(simulation);
-}
-
 void run(Simulation& simulation) {
   debug::Checks debugChecks(simulation);
   debugChecks.checkInputs();
 
-  getDamage(simulation);
+  calcDamage(simulation);
 
-  internal::clearRunVariables(simulation);
+  clearRunVariables(simulation);
   debugChecks.checkOutputs();
 }
 }  // namespace pokesim::calc_damage
