@@ -19883,18 +19883,23 @@ struct RegistryLoop<
     template <auto getList>
     static auto run(types::registry& registry, const PassedInArgs&... passedInArgs) {
       auto list = getList(registry);
-      list.each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
-        (void)entity;
-        if constexpr (hasRegistryFirst) {
+      if constexpr (hasRegistryFirst) {
+        list.each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
+          (void)entity;
           Function(registry, args..., passedInArgs...);
-        }
-        else if constexpr (hasHandleFirst) {
+        });
+      }
+      else if constexpr (hasHandleFirst) {
+        list.each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
           Function(types::handle{registry, entity}, args..., passedInArgs...);
-        }
-        else {
+        });
+      }
+      else {
+        list.each([&passedInArgs...](types::entity entity, auto&&... args) {
+          (void)entity;
           Function(args..., passedInArgs...);
-        }
-      });
+        });
+      }
       return list;
     }
 
@@ -20911,12 +20916,13 @@ struct Checks {};
 
 //////////// START OF src/Simulation/SimulationSetupDebugChecks.hpp ////////////
 
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+
 #include <cstddef>
 
 
 namespace pokesim::debug {
 struct SimulationSetupChecks {
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
  private:
   const types::registry* registry;
   const std::vector<Simulation::BattleCreationInfo>* battleInfoList;
@@ -21279,8 +21285,8 @@ struct SimulationSetupChecks {
 
  public:
   SimulationSetupChecks(
-    const types::registry& _registry, const std::vector<Simulation::BattleCreationInfo>& _battleInfoList)
-      : registry(&_registry), battleInfoList(&_battleInfoList) {}
+    const Simulation* simulation, const std::vector<Simulation::BattleCreationInfo>& _battleInfoList)
+      : registry(&simulation->registry), battleInfoList(&_battleInfoList) {}
 
   void checkOutputs() const {
     for (const auto& battleInfo : *battleInfoList) {
@@ -21336,12 +21342,19 @@ struct SimulationSetupChecks {
   }
 
   static void checkBattle(
-    const types::registry& registry, types::entity battleEntity,
+    const Simulation& simulation, types::entity battleEntity,
     const Simulation::BattleCreationInfo& battleCreationInfo) {
-    SimulationSetupChecks(registry, {}).checkBattle(battleEntity, battleCreationInfo);
+    SimulationSetupChecks(&simulation, {}).checkBattle(battleEntity, battleCreationInfo);
   }
+};
+}  // namespace pokesim::debug
 #else
-  SimulationSetupChecks(const types::registry&, const std::vector<Simulation::BattleCreationInfo>&) {}
+
+
+namespace pokesim {
+namespace debug {
+struct SimulationSetupChecks {
+  SimulationSetupChecks(const Simulation*, const std::vector<Simulation::BattleCreationInfo>&) {}
   void checkOutputs() const {}
   void addToBattleChecklist(const BattleStateSetup&, const Simulation::BattleCreationInfo&) const {}
   void addToTurnDecisionChecklist(const BattleStateSetup&, const Simulation::TurnDecisionInfo&) const {}
@@ -21349,10 +21362,11 @@ struct SimulationSetupChecks {
     const BattleStateSetup&, const calc_damage::InputSetup&, const Simulation::CalcDamageInputInfo&) const {}
   void addToAnalyzeEffectChecklist(
     const BattleStateSetup&, const analyze_effect::InputSetup&, const Simulation::AnalyzeEffectInputInfo&) const {}
-  static void checkBattle(const types::registry&, types::entity, const Simulation::BattleCreationInfo&) {}
-#endif
+  static void checkBattle(const Simulation&, types::entity, const Simulation::BattleCreationInfo&) {}
 };
-}  // namespace pokesim::debug
+}  // namespace debug
+}  // namespace pokesim
+#endif
 
 ///////////// END OF src/Simulation/SimulationSetupDebugChecks.hpp /////////////
 
@@ -21559,7 +21573,7 @@ inline void Simulation::createAnalyzeEffectInput(
 }
 
 inline void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList) {
-  debug::SimulationSetupChecks debugChecks(registry, battleInfoList);
+  debug::SimulationSetupChecks debugChecks(this, battleInfoList);
 
   for (const BattleCreationInfo& battleInfo : battleInfoList) {
     BattleStateSetup battleStateSetup(registry);

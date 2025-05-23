@@ -221,7 +221,7 @@ void Simulation::createAnalyzeEffectInput(
 }
 
 void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList) {
-  debug::SimulationSetupChecks debugChecks(registry, battleInfoList);
+  debug::SimulationSetupChecks debugChecks(this, battleInfoList);
 
   for (const BattleCreationInfo& battleInfo : battleInfoList) {
     BattleStateSetup battleStateSetup(registry);
