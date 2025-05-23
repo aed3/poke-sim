@@ -55,7 +55,7 @@
 		{
 			"type": "shell",
 			"label": "clang-tidy",
-			"command": "find src -iname *.hpp -o -iname *.cpp | parallel clang-tidy --quiet --use-color --config-file .clang-tidy -p build 2>/dev/null",
+			"command": "find src -name *.hpp -o -name *.cpp | parallel clang-tidy --quiet --use-color --config-file .clang-tidy -p build 2>/dev/null",
 			"problemMatcher": [],
 			"dependsOn": ["Create Header Files"]
 		}

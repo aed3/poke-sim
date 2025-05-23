@@ -7,7 +7,7 @@
 #include <type_traits>
 
 namespace pokesim::calc_damage {
-inline constexpr bool damageKindsMatch(DamageRollKind kindA, DamageRollKind kindB) {
+constexpr bool damageKindsMatch(DamageRollKind kindA, DamageRollKind kindB) {
   using DamageRollKindBase = std::underlying_type_t<DamageRollKind>;
   return ((DamageRollKindBase)kindA & (DamageRollKindBase)kindB) != 0;
 }
@@ -35,7 +35,7 @@ inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, Damage
 template <
   typename... CombinedKinds,
   typename = std::enable_if_t<std::conjunction_v<std::is_same<CombinedKinds, DamageRollKind>...>>>
-inline constexpr DamageRollKind combineDamageKinds(CombinedKinds... kinds) {
+constexpr DamageRollKind combineDamageKinds(CombinedKinds... kinds) {
   using DamageRollKindBase = std::underlying_type_t<DamageRollKind>;
   return static_cast<DamageRollKind>((static_cast<DamageRollKindBase>(kinds) | ...));
 }

@@ -3,6 +3,7 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/Species.hpp>
 #include <Types/Registry.hpp>
+#include <cstdint>
 #include <type_traits>
 
 #include "../Species/headers.hpp"
@@ -11,11 +12,11 @@
 // TODO(aed3): Make this and the individual species files auto generated
 
 namespace pokesim {
-namespace internal {
+namespace {
 template <typename T>
 struct BuildSpecies {
  private:
-  enum class Optional {
+  enum class Optional : std::uint8_t {
     primaryAbility,
     secondaryAbility,
     hiddenAbility,
@@ -59,7 +60,7 @@ template <template <GameMechanics> class T>
 auto buildSpeciesSV(types::registry& registry, bool forActiveMove) {
   return BuildSpecies<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
 }
-};  // namespace internal
+};  // namespace
 
 types::entity Pokedex::buildSpecies(dex::Species species, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
@@ -69,12 +70,13 @@ types::entity Pokedex::buildSpecies(dex::Species species, types::registry& regis
   switch (mechanics) {
     case GameMechanics::SCARLET_VIOLET: {
       switch (species) {
-        case Species::AMPHAROS: return buildSpeciesSV<Ampharos>(registry, forActiveMove);
+        case Species::AMPHAROS:  return buildSpeciesSV<Ampharos>(registry, forActiveMove);
         case Species::GARDEVOIR: return buildSpeciesSV<Gardevoir>(registry, forActiveMove);
-        case Species::EMPOLEON: return buildSpeciesSV<Empoleon>(registry, forActiveMove);
-        case Species::PANGORO: return buildSpeciesSV<Pangoro>(registry, forActiveMove);
-        case Species::RIBOMBEE: return buildSpeciesSV<Ribombee>(registry, forActiveMove);
+        case Species::EMPOLEON:  return buildSpeciesSV<Empoleon>(registry, forActiveMove);
+        case Species::PANGORO:   return buildSpeciesSV<Pangoro>(registry, forActiveMove);
+        case Species::RIBOMBEE:  return buildSpeciesSV<Ribombee>(registry, forActiveMove);
         case Species::DRAGAPULT: return buildSpeciesSV<Dragapult>(registry, forActiveMove);
+
         default: break;
       }
       break;

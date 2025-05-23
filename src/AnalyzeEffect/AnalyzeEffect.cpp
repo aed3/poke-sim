@@ -41,8 +41,8 @@
 #include "AnalyzeEffectDebugChecks.hpp"
 
 namespace pokesim::analyze_effect {
-namespace internal {
-enum class EffectPresentCheck {
+namespace {
+enum class EffectPresentCheck : std::uint8_t {
   NOT_PRESENT,
   PRESENT_AND_NOT_APPLIED,
   PRESENT_AND_APPLIED,
@@ -117,7 +117,7 @@ void assignInputsToClones(
           battleEntity,
           attackerEntity,
           move,
-          simulation.pokedex);
+          simulation.pokedex());
         registry.emplace<MoveName>(moveEntity, move);
         registry.emplace<pokesim::tags::AnalyzeEffect>(moveEntity);
 
@@ -383,7 +383,7 @@ void clearRunVariables(Simulation& simulation) {
     Damage>();
 }
 
-void run(Simulation& simulation) {
+void analyzeEffect(Simulation& simulation) {
   pokesim::internal::SelectForPokemonView<pokesim::tags::AnalyzeEffect> selectedPokemon(simulation);
   pokesim::internal::SelectForBattleView<pokesim::tags::AnalyzeEffect> selectedBattle(simulation);
 
@@ -392,37 +392,37 @@ void run(Simulation& simulation) {
   }
 
   if (!simulation.analyzeEffectOptions.reconsiderActiveEffects) {
-    internal::ignoreBattlesWithEffectActive(simulation);
+    ignoreBattlesWithEffectActive(simulation);
   }
 
-  internal::createAppliedEffectBattles(simulation);
+  createAppliedEffectBattles(simulation);
 
-  simulation.view<internal::applyPseudoWeatherEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyTerrainEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyWeatherEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applySideConditionEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyStatusEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyVolatileEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyPseudoWeatherEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyTerrainEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyWeatherEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applySideConditionEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyStatusEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyVolatileEffect, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
 
-  simulation.view<internal::applyBoostEffect<AtkBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyBoostEffect<DefBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyBoostEffect<SpaBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyBoostEffect<SpdBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
-  simulation.view<internal::applyBoostEffect<SpeBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyBoostEffect<AtkBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyBoostEffect<DefBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyBoostEffect<SpaBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyBoostEffect<SpdBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
+  simulation.view<applyBoostEffect<SpeBoost>, Tags<tags::Input>, entt::exclude_t<tags::RunOneCalculation>>();
 
   calc_damage::run(simulation);
 
-  simulation.view<internal::createOutput, Tags<tags::Input>>();
+  simulation.view<createOutput, Tags<tags::Input>>();
 }
-}  // namespace internal
+}  // namespace
 
 void run(Simulation& simulation) {
   debug::Checks debugChecks(simulation);
   debugChecks.checkInputs();
 
-  internal::run(simulation);
+  analyzeEffect(simulation);
 
-  internal::clearRunVariables(simulation);
+  clearRunVariables(simulation);
   debugChecks.checkOutputs();
 }
 }  // namespace pokesim::analyze_effect

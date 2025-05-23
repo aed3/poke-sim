@@ -15,25 +15,25 @@
 
 namespace pokesim::debug {
 struct Checks {
-  Checks(const Simulation& _simulation) : simulation(_simulation), registry(simulation.registry) {}
+  Checks(const Simulation& _simulation) : simulation(&_simulation), registry(&_simulation.registry) {}
 
  protected:
-  const Simulation& simulation;
-  const types::registry& registry;
+  const Simulation* simulation;
+  const types::registry* registry;
   types::registry registryOnInput;
   entt::dense_map<types::entity, types::entity> originalToCopy;
   entt::dense_set<types::entity> specificallyChecked;
   std::size_t initialEntityCount = 0;
 
   void copyRemainingEntities() {
-    for (types::entity entity : registry.view<types::entity>()) {
-      if (!registry.orphan(entity)) {
+    for (types::entity entity : registry->view<types::entity>()) {
+      if (!registry->orphan(entity)) {
         initialEntityCount++;
         if (originalToCopy.contains(entity)) {
           specificallyChecked.emplace(entity);
         }
         else {
-          originalToCopy[entity] = createEntityCopy(entity, registry, registryOnInput);
+          originalToCopy[entity] = createEntityCopy(entity, *registry, registryOnInput);
         }
       }
     }
@@ -42,15 +42,15 @@ struct Checks {
   void checkRemainingOutputs() const {
     for (auto [original, copy] : originalToCopy) {
       if (!specificallyChecked.contains(original)) {
-        areEntitiesEqual(registry, original, registryOnInput, copy);
+        areEntitiesEqual(*registry, original, registryOnInput, copy);
       }
     }
   }
 
   std::size_t getFinalEntityCount() const {
     std::size_t finalEntityCount = 0;
-    for (types::entity entity : registry.view<types::entity>()) {
-      if (!registry.orphan(entity)) {
+    for (types::entity entity : registry->view<types::entity>()) {
+      if (!registry->orphan(entity)) {
         finalEntityCount++;
       }
     }

@@ -19,14 +19,15 @@ struct SelectForView {
     RegistryContainer& registryContainer_,
     entt::exclude_t<ComponentsToExclude...> exclude = entt::exclude<ComponentsToExclude...>)
       : registryContainer(&registryContainer_),
-        selectedCount(registryContainer->select<Selection, Required, ComponentsToSelect...>(exclude)) {
+        constantSelectedCount(registryContainer->select<Selection, Required, ComponentsToSelect...>(exclude)) {
     if (hasNoneSelected()) {
       registryContainer = nullptr;
     }
   }
 
   SelectForView(RegistryContainer& registryContainer_, RegistryContainer::SelectionFunction selectionFunction)
-      : registryContainer(&registryContainer_), selectedCount(registryContainer->select<Selection>(selectionFunction)) {
+      : registryContainer(&registryContainer_),
+        constantSelectedCount(registryContainer->select<Selection>(selectionFunction)) {
     if (hasNoneSelected()) {
       registryContainer = nullptr;
     }
@@ -41,11 +42,11 @@ struct SelectForView {
     }
   }
 
-  bool hasNoneSelected() const { return selectedCount == 0; }
+  bool hasNoneSelected() const { return constantSelectedCount == 0; }
 
  private:
   RegistryContainer* registryContainer = nullptr;
-  const std::size_t selectedCount = 0;
+  std::size_t constantSelectedCount = 0;
 };
 
 template <typename... ComponentsToSelect>

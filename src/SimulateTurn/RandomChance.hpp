@@ -169,7 +169,7 @@ void setRandomChoice(
     }
   }
 
-  if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation.view<internal::setRandomChoice<POSSIBLE_EVENT_COUNT, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
       chances);
   }
@@ -183,7 +183,7 @@ template <typename Component, typename... T>
 void setRandomBinaryChoice(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
 
-  if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation.view<internal::setRandomBinaryChoice<Component, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
       options);
   }
@@ -197,7 +197,7 @@ template <typename Component, typename... T>
 void setReciprocalRandomBinaryChoice(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
 
-  if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation
       .view<internal::setReciprocalRandomBinaryChoice<Component, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
         options);
@@ -211,7 +211,7 @@ void setReciprocalRandomBinaryChoice(Simulation& simulation) {
 
 template <typename... T>
 void setRandomEqualChoice(Simulation& simulation) {
-  if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation.view<internal::setRandomEqualChoice<BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>();
   }
   else {
@@ -223,7 +223,7 @@ template <auto GetPossibleEventCount, typename... T>
 void setRandomEventCounts(Simulation& simulation, bool forRequiredDamageRolls) {
   const auto& options = simulation.simulateTurnOptions;
 
-  if (simulation.battleFormat == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation
       .view<internal::setRandomEventCounts<BattleFormat::SINGLES_BATTLE_FORMAT, GetPossibleEventCount>, Tags<T...>>(
         options,

@@ -66,7 +66,7 @@ class maxSizedVector : private std::array<T, N> {
   }
 
   template <class... Args>
-  void emplace_back(Args&&... args) {
+  void emplace_back(const Args&... args) {
     base::at(used) = {args...};
     used++;
   }

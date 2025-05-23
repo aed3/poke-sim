@@ -11,7 +11,7 @@
 // TODO(aed3): Make this and the individual ability files auto generated
 
 namespace pokesim {
-namespace internal {
+namespace {
 template <typename T>
 struct BuildAbility {
  private:
@@ -29,7 +29,7 @@ template <template <GameMechanics> class T>
 auto buildAbilitySV(types::registry& registry, bool forActiveMove) {
   return BuildAbility<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
 }
-};  // namespace internal
+};  // namespace
 
 types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
@@ -40,6 +40,7 @@ types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& regis
     case GameMechanics::SCARLET_VIOLET: {
       switch (ability) {
         case Ability::STATIC: return buildAbilitySV<Static>(registry, forActiveMove);
+
         default: break;
       }
       break;

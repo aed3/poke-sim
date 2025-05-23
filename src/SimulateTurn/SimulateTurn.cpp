@@ -118,7 +118,7 @@ void runMoveAction(Simulation& simulation) {
 
   simulation.viewForSelectedBattles<setCurrentActionSource>();
   simulation.viewForSelectedBattles<setCurrentActionTarget>();
-  simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex);
+  simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex());
 
   simulation.view<deductPp, Tags<pokesim::tags::CurrentActionMoveSlot>>();
   simulation.view<setLastMoveUsed>();
@@ -131,7 +131,7 @@ void runResidualAction(Simulation& simulation) {
   if (selectedBattle.hasNoneSelected()) return;
 }
 
-namespace internal {
+namespace {
 void incrementTurn(Turn& turn) {
   turn.val++;
 }
@@ -139,15 +139,15 @@ void incrementTurn(Turn& turn) {
 void updateActivePokemonPostTurn(types::handle pokemonHandle, const pokesim::MoveSlots& moveSlots) {
   pokemonHandle.registry()->remove<pokesim::move::tags::Disabled>(moveSlots.val.begin(), moveSlots.val.end());
 }
-}  // namespace internal
+}  // namespace
 
 void nextTurn(Simulation& simulation) {
-  simulation.viewForSelectedBattles<internal::incrementTurn>();
+  simulation.viewForSelectedBattles<incrementTurn>();
 
   pokesim::internal::SelectForPokemonView<pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon> selectedPokemon{
     simulation};
   if (!selectedPokemon.hasNoneSelected()) {
-    simulation.viewForSelectedPokemon<internal::updateActivePokemonPostTurn>();
+    simulation.viewForSelectedPokemon<updateActivePokemonPostTurn>();
     runDisableMove(simulation);
   }
 }
@@ -191,7 +191,7 @@ void createActionMoveForTargets(
 }
 
 void getMoveTargets(Simulation& simulation) {
-  if (simulation.battleFormat == BattleFormat::DOUBLES_BATTLE_FORMAT) {
+  if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT) {
     simulation
       .view<addTargetAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
     simulation
@@ -201,7 +201,7 @@ void getMoveTargets(Simulation& simulation) {
   simulation.view<
     createActionMoveForTargets,
     Tags<pokesim::tags::CurrentActionMoveTarget>,
-    entt::exclude_t<CurrentActionMoves>>(simulation.pokedex);
+    entt::exclude_t<CurrentActionMoves>>(simulation.pokedex());
 }
 
 void useMove(Simulation& simulation) {

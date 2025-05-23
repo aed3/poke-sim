@@ -20,7 +20,7 @@
 #include <Utilities/SelectForView.hpp>
 
 namespace pokesim::simulate_turn {
-namespace internal {
+namespace {
 void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls, const RandomEventIndex& randomRollIndex) {
   types::eventPossibilities damageRollIndex = 0U;
   for (std::size_t i = 0U; i < damageRolls.val.size(); i++) {
@@ -66,13 +66,13 @@ types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {
 }
 
 void updateAllDamageRollProbabilities(Simulation& simulation) {
-  simulation.viewForSelectedMoves<internal::assignAllDamageRollProbability>();
+  simulation.viewForSelectedMoves<assignAllDamageRollProbability>();
 }
 
 void updatePartialProbabilities(Simulation& simulation) {
-  simulation.viewForSelectedMoves<internal::assignPartialProbability>();
+  simulation.viewForSelectedMoves<assignPartialProbability>();
 }
-}  // namespace internal
+}  // namespace
 
 void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind) {
   pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn, DamageRolls> selectedMoves{simulation};
@@ -80,14 +80,11 @@ void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind)
 
   bool forAllDamageRolls = calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS);
   bool forRequiredDamageRolls = simulation.simulateTurnOptions.makeBranchesOnRandomEvents || forAllDamageRolls;
-  setRandomEventCounts<internal::countUniqueDamageRolls, pokesim::tags::SelectedForViewMove>(
-    simulation,
-    forRequiredDamageRolls);
+  setRandomEventCounts<countUniqueDamageRolls, pokesim::tags::SelectedForViewMove>(simulation, forRequiredDamageRolls);
 
-  auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<internal::applyDamageRollIndex>(); };
+  auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<applyDamageRollIndex>(); };
 
-  auto updateProbabilities =
-    forAllDamageRolls ? internal::updateAllDamageRollProbabilities : internal::updatePartialProbabilities;
+  auto updateProbabilities = forAllDamageRolls ? updateAllDamageRollProbabilities : updatePartialProbabilities;
 
   randomEventCount(simulation, applyChoices, updateProbabilities);
   simulation.removeFromEntities<DamageRolls, pokesim::tags::SelectedForViewMove>();
