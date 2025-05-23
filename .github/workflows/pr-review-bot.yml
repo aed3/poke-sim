@@ -33,8 +33,10 @@ jobs:
         working-directory: ${{runner.workspace}}
         run: |
           cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE \
-          -H$GITHUB_WORKSPACE \
-          -Bbuild \
+          -DCMAKE_BUILD_TYPE:STRING=Debug \
+          -DENABLE_TESTING=ON \
+          -S$GITHUB_WORKSPACE \
+          -B$GITHUB_WORKSPACE/build \
           -G "Unix Makefiles"
       - name: Run One Review Bot
         uses: aed3/one-review-bot@main
