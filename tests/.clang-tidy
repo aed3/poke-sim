@@ -1,0 +1,2 @@
+InheritParentConfig: 'true'
+Checks: '-readability-magic-numbers,-cppcoreguidelines-avoid-do-while,-misc-use-anonymous-namespace,-bugprone-chained-comparison' 

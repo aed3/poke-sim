@@ -49,13 +49,13 @@
 		{
 			"type": "shell",
 			"label": "clang-format",
-			"command": "find src tests tools -iname *.hpp -o -iname *.cpp -o -iname *.js | xargs clang-format --style=file -i",
+			"command": "find src tests tools -name *.hpp -o -name *.cpp -o -name *.js | xargs clang-format --style=file -i",
 			"problemMatcher": []
 		},
 		{
 			"type": "shell",
 			"label": "clang-tidy",
-			"command": "find src -name *.hpp -o -name *.cpp | parallel clang-tidy --quiet --use-color --config-file .clang-tidy -p build 2>/dev/null",
+			"command": "find src tests -name *.hpp -o -name *.cpp | parallel clang-tidy --quiet --use-color -p build 2>/dev/null",
 			"problemMatcher": [],
 			"dependsOn": ["Create Header Files"]
 		}
