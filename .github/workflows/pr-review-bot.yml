@@ -47,3 +47,4 @@ jobs:
           incremental_files_only: true
           root: .
           build_path: build
+          clang_tidy_config: ''
