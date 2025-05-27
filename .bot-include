@@ -1,5 +1,7 @@
-src
-tests
+src/**/*.hpp
+src/**/*.cpp
+tests/**/*.hpp
+tests/**/*.cpp
 !src/Utilities/EntityViewer.cpp
 !src/Utilities/EntityViewer.hpp
 !CMakeFiles

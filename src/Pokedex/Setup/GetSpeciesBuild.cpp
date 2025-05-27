@@ -60,7 +60,7 @@ template <template <GameMechanics> class T>
 auto buildSpeciesSV(types::registry& registry, bool forActiveMove) {
   return BuildSpecies<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
 }
-};  // namespace
+}  // namespace
 
 types::entity Pokedex::buildSpecies(dex::Species species, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
@@ -87,4 +87,4 @@ types::entity Pokedex::buildSpecies(dex::Species species, types::registry& regis
   POKESIM_REQUIRE_FAIL("Building a species that does not exist.");
   return types::entity{};
 }
-};  // namespace pokesim
+}  // namespace pokesim

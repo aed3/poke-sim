@@ -22468,7 +22468,6 @@ using SelectForCurrentActionMoveView =
 // TODO(aed3) Auto generate?
 
 namespace pokesim {
-namespace {
 template <typename ModifiedComponent>
 void applyEventModifier(ModifiedComponent& component, const EventModifier& eventModifier) {
   applyChainedModifier(component.val, eventModifier.val);
@@ -22504,7 +22503,6 @@ internal::RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
       return {entities.begin(), entities.end()};
     }};
 }
-}  // namespace
 
 inline void runAccuracyEvent(Simulation& /*simulation*/) {}
 
@@ -23521,7 +23519,6 @@ inline void runResidualAction(Simulation& simulation) {
   if (selectedBattle.hasNoneSelected()) return;
 }
 
-namespace {
 inline void incrementTurn(Turn& turn) {
   turn.val++;
 }
@@ -23529,7 +23526,6 @@ inline void incrementTurn(Turn& turn) {
 inline void updateActivePokemonPostTurn(types::handle pokemonHandle, const pokesim::MoveSlots& moveSlots) {
   pokemonHandle.registry()->remove<pokesim::move::tags::Disabled>(moveSlots.val.begin(), moveSlots.val.end());
 }
-}  // namespace
 
 inline void nextTurn(Simulation& simulation) {
   simulation.viewForSelectedBattles<incrementTurn>();
@@ -23694,7 +23690,6 @@ inline types::rngResult nextBoundedRandomValue(RngSeed& seed, types::rngResult u
 #include <type_traits>
 
 namespace pokesim {
-namespace {
 template <typename Type>
 void updateProbability(Probability& currentProbability, Type percentChance) {
   currentProbability.val *= (types::probability)percentChance / 100.0F;
@@ -24000,7 +23995,6 @@ void randomBinaryChance(
       updateProbabilities.value_or(defaultUpdateProbabilities));
   }
 }
-}  // namespace
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void randomEventChances(
@@ -24379,7 +24373,6 @@ inline void setIfMoveCrits(Simulation& simulation);
 ////////////// START OF src/SimulateTurn/CalcDamageSpecifics.cpp ///////////////
 
 namespace pokesim::simulate_turn {
-namespace {
 inline void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls, const RandomEventIndex& randomRollIndex) {
   types::eventPossibilities damageRollIndex = 0U;
   for (std::size_t i = 0U; i < damageRolls.val.size(); i++) {
@@ -24431,7 +24424,6 @@ inline void updateAllDamageRollProbabilities(Simulation& simulation) {
 inline void updatePartialProbabilities(Simulation& simulation) {
   simulation.viewForSelectedMoves<assignPartialProbability>();
 }
-}  // namespace
 
 inline void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind) {
   pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn, DamageRolls> selectedMoves{simulation};
@@ -24990,7 +24982,6 @@ using Ribombee = dex::Ribombee<GameMechanics::SCARLET_VIOLET>;
 // TODO(aed3): Make this and the individual species files auto generated
 
 namespace pokesim {
-namespace {
 template <typename T>
 struct BuildSpecies {
  private:
@@ -25038,7 +25029,6 @@ template <template <GameMechanics> class T>
 auto buildSpeciesSV(types::registry& registry, bool forActiveMove) {
   return BuildSpecies<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
 }
-};  // namespace
 
 inline types::entity Pokedex::buildSpecies(dex::Species species, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
@@ -25065,7 +25055,7 @@ inline types::entity Pokedex::buildSpecies(dex::Species species, types::registry
   POKESIM_REQUIRE_FAIL("Building a species that does not exist.");
   return types::entity{};
 }
-};  // namespace pokesim
+}  // namespace pokesim
 
 ///////////////// END OF src/Pokedex/Setup/GetSpeciesBuild.cpp /////////////////
 
@@ -25284,7 +25274,6 @@ using WillOWisp = dex::WillOWisp<GameMechanics::SCARLET_VIOLET>;
 // TODO(aed3): Make this and the individual move files auto generated
 
 namespace pokesim {
-namespace {
 template <typename T>
 struct BuildMove {
  private:
@@ -25512,7 +25501,6 @@ template <template <GameMechanics> class T>
 auto buildMoveSV(types::registry& registry, bool forActiveMove) {
   return BuildMove<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
 }
-};  // namespace
 
 inline types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
@@ -25539,7 +25527,7 @@ inline types::entity Pokedex::buildMove(dex::Move move, types::registry& registr
   POKESIM_REQUIRE_FAIL("Building a move that does not exist.");
   return types::entity{};
 }
-};  // namespace pokesim
+}  // namespace pokesim
 
 ////////////////// END OF src/Pokedex/Setup/GetMoveBuild.cpp ///////////////////
 
@@ -25551,7 +25539,6 @@ inline types::entity Pokedex::buildMove(dex::Move move, types::registry& registr
 // TODO(aed3): Make this and the individual item files auto generated
 
 namespace pokesim {
-namespace {
 template <typename T>
 struct BuildItem {
  private:
@@ -25569,7 +25556,6 @@ template <template <GameMechanics> class T>
 auto buildItemSV(types::registry& registry, bool forActiveMove) {
   return BuildItem<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
 }
-};  // namespace
 
 inline types::entity Pokedex::buildItem(dex::Item item, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
@@ -25596,7 +25582,7 @@ inline types::entity Pokedex::buildItem(dex::Item item, types::registry& registr
   POKESIM_REQUIRE_FAIL("Building an item that does not exist.");
   return types::entity{};
 }
-};  // namespace pokesim
+}  // namespace pokesim
 
 ////////////////// END OF src/Pokedex/Setup/GetItemBuild.cpp ///////////////////
 
@@ -25620,7 +25606,6 @@ struct AbilityDexDataSetup : DexDataSetup {
 // TODO(aed3): Make this and the individual ability files auto generated
 
 namespace pokesim {
-namespace {
 template <typename T>
 struct BuildAbility {
  private:
@@ -25638,7 +25623,6 @@ template <template <GameMechanics> class T>
 auto buildAbilitySV(types::registry& registry, bool forActiveMove) {
   return BuildAbility<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
 }
-};  // namespace
 
 inline types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& registry, bool forActiveMove) const {
   // Tidy check ignored because "using namespace" is in function
@@ -25660,7 +25644,7 @@ inline types::entity Pokedex::buildAbility(dex::Ability ability, types::registry
   POKESIM_REQUIRE_FAIL("Building an ability that does not exist.");
   return types::entity{};
 }
-};  // namespace pokesim
+}  // namespace pokesim
 
 ///////////////// END OF src/Pokedex/Setup/GetAbilityBuild.cpp /////////////////
 
@@ -25712,13 +25696,11 @@ inline types::entity Pokedex::buildActionMove(dex::Move move, types::registry& r
 ////////////////// START OF src/Pokedex/Items/ItemEvents.cpp ///////////////////
 
 namespace pokesim::dex {
-namespace {
 
 inline void setChoiceLock(types::handle pokemonHandle, const Battle& battle) {
   types::entity moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val).val;
   pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot);
 }
-}  // namespace
 }  // namespace pokesim::dex
 
 namespace pokesim::dex::internal {
@@ -26212,7 +26194,6 @@ struct P2Defending {};
 
 
 namespace pokesim::calc_damage {
-namespace {
 inline void clearRunVariables(Simulation& simulation) {
   simulation.registry.clear<tags::Crit, AttackingLevel, AttackingStat, DefendingStat, DamageRollModifiers>();
   simulation.removeFromEntities<Damage, pokesim::tags::CalculateDamage>();
@@ -26545,7 +26526,6 @@ inline void calcDamage(Simulation& simulation) {
   applySideDamageRollOptions<CalculateDamage, applyDamageRollsAndModifiers<CalculateDamage>>(simulation);
   applySideDamageRollOptions<AnalyzeEffect, applyDamageRollsAndModifiers<AnalyzeEffect>>(simulation);
 }
-}  // namespace
 
 inline void setDamageRollModifiers(Simulation& simulation) {
   simulation.viewForSelectedMoves<checkForAndApplyStab>();
@@ -27379,7 +27359,6 @@ struct Pokemon {
 #include <vector>
 
 namespace pokesim {
-namespace {
 inline void cloneEntity(
   types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
@@ -27597,7 +27576,6 @@ void remapComponentEntities(types::registry& registry, const types::ClonedEntity
     remapEntityListMembers<Component>(registry, entityMap);
   }
 }
-}  // namespace
 
 inline types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount) {
   types::cloneIndex count = cloneCount.value_or(1);
@@ -27933,7 +27911,6 @@ struct RemovedEffect {
 
 
 namespace pokesim::analyze_effect {
-namespace {
 enum class EffectPresentCheck : std::uint8_t {
   NOT_PRESENT,
   PRESENT_AND_NOT_APPLIED,
@@ -28306,7 +28283,6 @@ inline void analyzeEffect(Simulation& simulation) {
 
   simulation.view<createOutput, Tags<tags::Input>>();
 }
-}  // namespace
 
 inline void run(Simulation& simulation) {
   debug::Checks debugChecks(simulation);
