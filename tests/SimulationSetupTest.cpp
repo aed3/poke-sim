@@ -1,6 +1,7 @@
 #include "Tests.hpp"
 
 namespace pokesim {
+namespace {
 Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   Simulation::BattleCreationInfo battleCreationInfo{};
 
@@ -85,6 +86,7 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
 
   return battleCreationInfo;
 }
+}  // namespace
 
 TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
@@ -205,6 +207,7 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
             newP1SlotDecision.targetSlot = Slot::P1C;
             break;
           }
+          default: break;
         }
 
         switch (j) {
@@ -223,6 +226,7 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
             newP2SlotDecision.targetSlot = Slot::P2C;
             break;
           }
+          default: break;
         }
 
         battleInfo.decisionsToSimulate.push_back({newP1Decision, newP2Decision});
