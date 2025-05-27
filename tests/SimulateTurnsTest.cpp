@@ -1,68 +1,72 @@
 #include "Tests.hpp"
 
 namespace pokesim {
+
+namespace {
+using SpeedSortList = std::vector<SpeedSort>;
+
+void runSpeedSortTest(
+  const SpeedSortList& speedSortList, const SpeedSortList& idealSortedList,
+  const SpeedTieIndexes& idealSpeedTies = {}) {
+  types::registry registry;
+  ActionQueue initialQueue;
+
+  for (const SpeedSort& speedSort : speedSortList) {
+    types::entity entity = registry.create();
+    registry.emplace<SpeedSort>(entity, speedSort);
+    initialQueue.val.push_back(entity);
+  }
+
+  types::handle handle{registry, registry.create()};
+  ActionQueue sortedQueue = initialQueue;
+
+  simulate_turn::speedSort(handle, sortedQueue);
+
+  REQUIRE(initialQueue.val.size() == sortedQueue.val.size());
+  for (types::entity entity : initialQueue.val) {
+    bool entityFound = false;
+    for (types::entity sortedEntity : sortedQueue.val) {
+      if (sortedEntity == entity) {
+        entityFound = true;
+        break;
+      }
+    }
+
+    REQUIRE(entityFound);
+  }
+
+  for (std::size_t i = 0; i < idealSortedList.size(); i++) {
+    INFO(std::to_string(i));
+    const SpeedSort& idealSpeedSort = idealSortedList[i];
+    const SpeedSort& trueSpeedSort = registry.get<SpeedSort>(sortedQueue.val[i]);
+
+    REQUIRE(trueSpeedSort.order == idealSpeedSort.order);
+    REQUIRE(trueSpeedSort.priority == idealSpeedSort.priority);
+    REQUIRE(trueSpeedSort.fractionalPriority == idealSpeedSort.fractionalPriority);
+    REQUIRE(trueSpeedSort.speed == idealSpeedSort.speed);
+  }
+
+  if (idealSpeedTies.val.empty()) {
+    REQUIRE_FALSE(handle.all_of<SpeedTieIndexes>());
+    return;
+  }
+
+  REQUIRE(handle.all_of<SpeedTieIndexes>());
+  const SpeedTieIndexes& trueSpeedTies = handle.get<SpeedTieIndexes>();
+
+  REQUIRE(trueSpeedTies.val.size() == idealSpeedTies.val.size());
+  for (const auto& idealSpeedTie : idealSpeedTies.val) {
+    bool found =
+      std::any_of(trueSpeedTies.val.begin(), trueSpeedTies.val.end(), [&idealSpeedTie](const auto& trueSpeedTie) {
+        return trueSpeedTie.start == idealSpeedTie.start && trueSpeedTie.length == trueSpeedTie.length;
+      });
+
+    REQUIRE(found);
+  }
+};
+}  // namespace
+
 TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
-  using SpeedSortList = std::vector<SpeedSort>;
-
-  auto runSpeedSortTest =
-    [](SpeedSortList speedSortList, SpeedSortList idealSortedList, SpeedTieIndexes idealSpeedTies = {}) {
-      types::registry registry;
-      ActionQueue initialQueue;
-
-      for (const SpeedSort& speedSort : speedSortList) {
-        types::entity entity = registry.create();
-        registry.emplace<SpeedSort>(entity, speedSort);
-        initialQueue.val.push_back(entity);
-      }
-
-      types::handle handle{registry, registry.create()};
-      ActionQueue sortedQueue = initialQueue;
-
-      simulate_turn::speedSort(handle, sortedQueue);
-
-      REQUIRE(initialQueue.val.size() == sortedQueue.val.size());
-      for (types::entity entity : initialQueue.val) {
-        bool entityFound = false;
-        for (types::entity sortedEntity : sortedQueue.val) {
-          if (sortedEntity == entity) {
-            entityFound = true;
-            break;
-          }
-        }
-
-        REQUIRE(entityFound);
-      }
-
-      for (std::size_t i = 0; i < idealSortedList.size(); i++) {
-        INFO(std::to_string(i));
-        const SpeedSort& idealSpeedSort = idealSortedList[i];
-        const SpeedSort& trueSpeedSort = registry.get<SpeedSort>(sortedQueue.val[i]);
-
-        REQUIRE(trueSpeedSort.order == idealSpeedSort.order);
-        REQUIRE(trueSpeedSort.priority == idealSpeedSort.priority);
-        REQUIRE(trueSpeedSort.fractionalPriority == idealSpeedSort.fractionalPriority);
-        REQUIRE(trueSpeedSort.speed == idealSpeedSort.speed);
-      }
-
-      if (idealSpeedTies.val.empty()) {
-        REQUIRE_FALSE(handle.all_of<SpeedTieIndexes>());
-        return;
-      }
-
-      REQUIRE(handle.all_of<SpeedTieIndexes>());
-      const SpeedTieIndexes& trueSpeedTies = handle.get<SpeedTieIndexes>();
-
-      REQUIRE(trueSpeedTies.val.size() == idealSpeedTies.val.size());
-      for (const auto& idealSpeedTie : idealSpeedTies.val) {
-        bool found =
-          std::any_of(trueSpeedTies.val.begin(), trueSpeedTies.val.end(), [&idealSpeedTie](const auto& trueSpeedTie) {
-            return trueSpeedTie.start == idealSpeedTie.start && trueSpeedTie.length == trueSpeedTie.length;
-          });
-
-        REQUIRE(found);
-      }
-    };
-
   SECTION("One Queue Item") {
     SpeedSort emptySpeedSort{};
     runSpeedSortTest({emptySpeedSort}, {emptySpeedSort});
@@ -225,7 +229,7 @@ constexpr std::array<DamageRollKind, 4> fixedBranchDamageRollOptions = {
 
 struct VerticalSlice1Checks : debug::Checks {
  private:
-  const simulate_turn::Options& options;
+  const simulate_turn::Options* options;
 
   template <typename Selector>
   void specificallyCheckEntities(
@@ -236,7 +240,7 @@ struct VerticalSlice1Checks : debug::Checks {
         continue;
       }
 
-      bool shouldNotChange = !options.applyChangesToInputBattle && original == entity;
+      bool shouldNotChange = !options->applyChangesToInputBattle && original == entity;
       debug::areEntitiesEqual(
         *registry,
         entity,
@@ -253,7 +257,7 @@ struct VerticalSlice1Checks : debug::Checks {
     debug::TypesToIgnore typesIgnoredOnConstants = typesToIgnore;
     typesToIgnore.add<Probability, ParentBattle, Turn, RootBattle>();
 
-    if (!options.makeBranchesOnRandomEvents) {
+    if (!options->makeBranchesOnRandomEvents) {
       typesToIgnore.add<RngSeed>();
     }
 
@@ -283,7 +287,7 @@ struct VerticalSlice1Checks : debug::Checks {
 
  public:
   VerticalSlice1Checks(const Simulation& _simulation)
-      : debug::Checks(_simulation), options(_simulation.simulateTurnOptions) {
+      : debug::Checks(_simulation), options(&_simulation.simulateTurnOptions) {
     for (types::entity battle : registry->view<tags::Battle>()) {
       originalToCopy[battle] = debug::createEntityCopy(battle, *registry, registryOnInput);
     }
@@ -312,9 +316,9 @@ struct VerticalSlice1Checks : debug::Checks {
     checkMoves();
     checkRemainingOutputs();
 
-    if (!options.makeBranchesOnRandomEvents) {
+    if (!options->makeBranchesOnRandomEvents) {
       std::size_t finalEntityCount = getFinalEntityCount();
-      if (options.applyChangesToInputBattle) {
+      if (options->applyChangesToInputBattle) {
         REQUIRE(finalEntityCount == initialEntityCount);
       }
       else {
@@ -335,31 +339,31 @@ struct VerticalSlice1Checks : debug::Checks {
 
 struct DamageValueInfo {
  private:
-  const std::vector<types::damage> baseDamage;
-  const std::vector<types::damage> critDamage;
-  const types::damage averageRegularDamage;
-  const types::damage averageCritDamage;
-  const types::stat startingHp;
-  const DamageRollKind damageRollKind;
+  std::vector<types::damage> baseDamage;
+  std::vector<types::damage> critDamage;
+  types::damage averageRegularDamage;
+  types::damage averageCritDamage;
+  types::stat startingHp;
+  DamageRollKind damageRollKind;
   bool checkWasCrit;
   bool willChooseMinOrMax;
 
  public:
   DamageValueInfo(
-    std::vector<types::damage> _baseDamage, types::damage _averageRegularDamage, std::vector<types::damage> _critDamage,
-    types::damage _averageCritDamage, types::stat _startingHp, DamageRollKind _damageRollKind,
-    const simulate_turn::Options& options)
+    const std::vector<types::damage>& _baseDamage, types::damage _averageRegularDamage,
+    const std::vector<types::damage>& _critDamage, types::damage _averageCritDamage, types::stat _startingHp,
+    DamageRollKind _damageRollKind, const simulate_turn::Options& options)
       : baseDamage(_baseDamage),
         critDamage(_critDamage),
         averageRegularDamage(_averageRegularDamage),
         averageCritDamage(_averageCritDamage),
         startingHp(_startingHp),
-        damageRollKind(_damageRollKind) {
+        damageRollKind(_damageRollKind),
+        willChooseMinOrMax(options.makeBranchesOnRandomEvents) {
     checkWasCrit = options.branchProbabilityLowerLimit.value_or(0) < 1.0F / MechanicConstants::CRIT_CHANCE_DIVISORS[0];
     checkWasCrit &= options.randomChanceLowerLimit.value_or(0) < 100 / MechanicConstants::CRIT_CHANCE_DIVISORS[0];
     checkWasCrit &= damageRollKind != branchingDamageRollOptions[1];
 
-    willChooseMinOrMax = options.makeBranchesOnRandomEvents;
     willChooseMinOrMax |= options.branchProbabilityLowerLimit.value_or(0) < 0.5F &&
                           options.randomChanceLowerLimit.value_or(0) < 50 &&
                           options.randomChanceUpperLimit.value_or(100) > 50;
@@ -368,7 +372,7 @@ struct DamageValueInfo {
 
   entt::dense_set<types::stat> possibleHpValues() const {
     entt::dense_set<types::stat> hpValues;
-    auto addDamageValues = [&](const std::vector<types::damage> damages) {
+    auto addDamageValues = [&](const std::vector<types::damage>& damages) {
       for (types::damage damage : damages) {
         hpValues.insert(startingHp - damage);
       }
@@ -441,7 +445,7 @@ struct DamageValueInfo {
 
     types::probability probability = 1.0F;
     if (checkWasCrit) {
-      if (critDamageRollInstances) {
+      if (critDamageRollInstances != 0.0F) {
         probability /= MechanicConstants::CRIT_CHANCE_DIVISORS[0];
       }
       else {
@@ -453,7 +457,7 @@ struct DamageValueInfo {
       probability /= 2;
     }
     if (damageRollKind == DamageRollKind::ALL_DAMAGE_ROLLS) {
-      if (critDamageRollInstances) {
+      if (critDamageRollInstances != 0.0F) {
         probability *= critDamageRollInstances / MechanicConstants::MAX_DAMAGE_ROLL_COUNT;
       }
       else {

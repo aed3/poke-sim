@@ -13,21 +13,21 @@ using SelectForTest = internal::SelectForView<Select, Required, Components...>;
 TEST_CASE("Selection Levels", "[RegistryContainer]") {
   internal::RegistryContainer container;
 
-  types::entity abc = container.registry.create();
-  types::entity ab = container.registry.create();
-  types::entity a = container.registry.create();
-  container.registry.emplace<Required>(abc);
-  container.registry.emplace<Required>(ab);
-  container.registry.emplace<Required>(a);
+  types::entity filtersABC = container.registry.create();
+  types::entity filtersAB = container.registry.create();
+  types::entity filterA = container.registry.create();
+  container.registry.emplace<Required>(filtersABC);
+  container.registry.emplace<Required>(filtersAB);
+  container.registry.emplace<Required>(filterA);
 
-  container.registry.emplace<FilterA>(abc);
-  container.registry.emplace<FilterA>(ab);
-  container.registry.emplace<FilterA>(a);
+  container.registry.emplace<FilterA>(filtersABC);
+  container.registry.emplace<FilterA>(filtersAB);
+  container.registry.emplace<FilterA>(filterA);
 
-  container.registry.emplace<FilterB>(abc);
-  container.registry.emplace<FilterB>(ab);
+  container.registry.emplace<FilterB>(filtersABC);
+  container.registry.emplace<FilterB>(filtersAB);
 
-  container.registry.emplace<FilterC>(abc);
+  container.registry.emplace<FilterC>(filtersABC);
 
   SECTION("Largest To Smallest") {
     SelectForTest<FilterA> stageOne{container};
@@ -49,7 +49,7 @@ TEST_CASE("Selection Levels", "[RegistryContainer]") {
     REQUIRE(container.registry.view<Select>().size() == 3);
 
     stageOne.deselect();
-    REQUIRE(container.registry.view<Select>().size() == 0);
+    REQUIRE(container.registry.view<Select>().empty());
   }
 
   SECTION("Smallest to Largest") {
@@ -72,7 +72,7 @@ TEST_CASE("Selection Levels", "[RegistryContainer]") {
     REQUIRE(container.registry.view<Select>().size() == 1);
 
     stageOne.deselect();
-    REQUIRE(container.registry.view<Select>().size() == 0);
+    REQUIRE(container.registry.view<Select>().empty());
   }
 
   SECTION("Blank Selection") {

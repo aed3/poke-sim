@@ -173,7 +173,7 @@ inline Simulation createDoubleBattleSimulation(Simulation::BattleCreationInfo& b
 namespace Catch {
 template <>
 struct StringMaker<pokesim::DamageRollKind> {
-  static void append(std::string& fullName, std::string part) {
+  static void append(std::string& fullName, const std::string& part) {
     if (!fullName.empty()) {
       fullName += " | " + part;
     }
@@ -183,7 +183,7 @@ struct StringMaker<pokesim::DamageRollKind> {
   }
 
   static std::string convert(const pokesim::DamageRollKind& value) {
-    std::string fullName = "";
+    std::string fullName;
     if ((int)value & (int)pokesim::DamageRollKind::AVERAGE_DAMAGE) {
       append(fullName, "AVERAGE_DAMAGE");
     }

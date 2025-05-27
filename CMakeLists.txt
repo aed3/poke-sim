@@ -117,7 +117,7 @@ if (ENABLE_TESTING)
     tests/AnalyzeEffectTest.cpp
     tests/BattleStateTest.cpp
     tests/PokedexTest.cpp
-    tests/CalculateDamageTest.cpp
+    tests/CalcDamageTest.cpp
     tests/RegistryContainerTests.cpp
     tests/SimulationSetupTest.cpp
     tests/SimulateTurnsTest.cpp
