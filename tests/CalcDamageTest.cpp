@@ -107,7 +107,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
 
   auto pickIdealDamageValues = [&](dex::Move move, DamageRollKind damageRollKind) -> const IdealDamageValues& {
     REQUIRE((move == dex::Move::FURY_ATTACK || move == dex::Move::THUNDERBOLT));
-    bool isCrit = (int)damageRollKind & (int)DamageRollKind::GUARANTEED_CRIT_CHANCE;
+    bool isCrit = calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::GUARANTEED_CRIT_CHANCE);
 
     if (move == dex::Move::FURY_ATTACK) {
       return isCrit ? furyAttackCritDamage : furyAttackBaseDamage;
