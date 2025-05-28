@@ -9,7 +9,6 @@ const mainHeader = path.join(srcFolder, 'PokeSim.hpp');
 
 const includeRegex = /^\s*#include\s+["<]([^"<>]+)([">])/;
 const pragmaOnceRegex = /^\s*#pragma\s+once/;
-const anonymousNamespace = ['namespace {', '}  // namespace'];
 
 const fileText = {};
 const dependencies = {};
@@ -151,7 +150,6 @@ const addToSingleFileHeader = (files) => {
       const line = lines[i];
       if ((!line && startOfFile) || fileDependencyLines.has(i) || pragmaOnceRegex.test(line)) continue;
 
-      if (normalizedFile.startsWith('src/') && anonymousNamespace.includes(line)) continue;
       startOfFile = false;
       singleFileHeader.push(line);
     }
