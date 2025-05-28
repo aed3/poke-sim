@@ -25,7 +25,7 @@
 #include <Utilities/Variant.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
-// Not asserting entities as non-null
+
 namespace pokesim::analyze_effect {
 InputSetup::InputSetup(types::registry& registry, types::entity entity) : handle(registry, entity) {
   handle.emplace<tags::Input>();
