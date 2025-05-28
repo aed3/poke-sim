@@ -79,21 +79,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Cache LLVM and Clang
-        if: matrix.use_single_header == 'TRUE'
-        id: cache-llvm
-        uses: actions/cache@v3
-        with:
-          path: ./llvm
-          key: llvm-19.1.0
-      - name: Install clang-query
-        if: matrix.use_single_header == 'TRUE'
-        uses: KyleMayes/install-llvm-action@v2.0.7
-        with:
-          version: "19.1.0"
-          directory: ./llvm
-          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
-
       - name: Add Clang Upstream
         if: startsWith(matrix.cxx, 'clang')
         run: |
@@ -110,14 +95,6 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y --no-install-recommends ${{matrix.other_pkgs}}
-
-      - name: Create Single Header File
-        if: matrix.use_single_header == 'TRUE'
-        uses: ./.github/actions/create-headers
-
-      - name: Remove clang-query
-        if: matrix.use_single_header == 'TRUE'
-        run: rm -rf ./llvm
 
       - name: Configure build
         working-directory: ${{runner.workspace}}
@@ -150,25 +127,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.5
 
-      - name: Cache LLVM and Clang
-        if: matrix.use_single_header == 'TRUE'
-        id: cache-llvm
-        uses: actions/cache@v3
-        with:
-          path: ./llvm
-          key: llvm-19.1.0
-      - name: Install clang-query
-        if: matrix.use_single_header == 'TRUE'
-        uses: KyleMayes/install-llvm-action@v2.0.7
-        with:
-          version: "19.1.0"
-          directory: ./llvm
-          cached: ${{ steps.cache-llvm.outputs.cache-hit }}
-
-      - name: Create Single Header File
-        if: matrix.use_single_header == 'TRUE'
-        uses: ./.github/actions/create-headers
-      
       - name: Configure build
         working-directory: ${{runner.workspace}}
         run: |
