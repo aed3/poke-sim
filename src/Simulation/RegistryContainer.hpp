@@ -7,6 +7,7 @@
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/MaxSizedVector.hpp>
 #include <Utilities/RegistryLoop.hpp>
 #include <Utilities/Tags.hpp>
 #include <cstddef>
@@ -19,13 +20,13 @@
 namespace pokesim::internal {
 class RegistryContainer {
  public:
-  using SelectionFunction = entt::delegate<std::vector<types::entity>(const types::registry&)>;
+  using SelectionFunction = entt::delegate<types::entityVector(const types::registry&)>;
 
  private:
   template <typename, typename, typename...>
   friend struct SelectForView;
 
-  using SelectionFunctionList = std::vector<SelectionFunction>;
+  using SelectionFunctionList = internal::maxSizedVector<SelectionFunction>;
   SelectionFunctionList battleSelection{};
   SelectionFunctionList sideSelection{};
   SelectionFunctionList pokemonSelection{};
@@ -109,15 +110,15 @@ class RegistryContainer {
   std::size_t select(entt::exclude_t<ComponentsToExclude...> exclude) {
     auto getNewSelection = [&exclude](types::registry& reg) {
       auto view = reg.view<Required, ComponentsToSelect...>(exclude);
-      return std::vector<types::entity>{view.begin(), view.end()};
+      return types::entityVector{view.begin(), view.end()};
     };
     auto getUnmatchedSelection = [](types::registry& reg) {
       auto view = reg.view<Selection, ComponentsToExclude...>(entt::exclude<ComponentsToSelect...>);
-      return std::vector<types::entity>{view.begin(), view.end()};
+      return types::entityVector{view.begin(), view.end()};
     };
     SelectionFunction selectionFunction{[](const void*, const types::registry& reg) {
       auto view = reg.view<Required, ComponentsToSelect...>(entt::exclude<ComponentsToExclude...>);
-      return std::vector<types::entity>{view.begin(), view.end()};
+      return types::entityVector{view.begin(), view.end()};
     }};
 
     return select<Selection>(
@@ -129,7 +130,7 @@ class RegistryContainer {
 
   template <typename Selection>
   std::size_t select(SelectionFunction selectionFunction) {
-    auto getUnmatchedSelections = [&selectionFunction](const types::registry& reg) -> std::vector<types::entity> {
+    auto getUnmatchedSelections = [&selectionFunction](const types::registry& reg) -> types::entityVector {
       auto upcomingSelection = selectionFunction(reg);
       auto currentSelection = reg.view<Selection>();
       auto end =
@@ -154,10 +155,10 @@ class RegistryContainer {
       return;
     }
 
-    std::vector<types::entity> filteredEntityList = functions[0](registry);
+    types::entityVector filteredEntityList = functions[0](registry);
     auto end = filteredEntityList.end();
     for (std::size_t i = 1; i < functions.size(); i++) {
-      std::vector<types::entity> previouslySelected = functions[i](registry);
+      types::entityVector previouslySelected = functions[i](registry);
       end = std::remove_if(filteredEntityList.begin(), end, [&previouslySelected](types::entity entity) {
         return std::find(previouslySelected.begin(), previouslySelected.end(), entity) == previouslySelected.end();
       });

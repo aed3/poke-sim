@@ -4,13 +4,14 @@
 #include <Config/Require.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Entity.hpp>
+#include <Types/MechanicConstants.hpp>
 #include <Types/Move.hpp>
-#include <vector>
+#include <Utilities/MaxSizedVector.hpp>
 
 namespace pokesim {
 namespace simulate_turn {
 struct TurnOutcomeBattles {
-  std::vector<types::entity> val{};
+  types::entityVector val{};
 };
 }  // namespace simulate_turn
 
@@ -25,7 +26,7 @@ struct UsesUntilKo {
   };
 
  public:
-  std::vector<KoChance> val{};
+  internal::maxSizedVector<KoChance, MechanicConstants::MAX_DAMAGE_ROLL_COUNT> val{};
 
   const KoChance& minHits() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");

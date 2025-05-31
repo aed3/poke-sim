@@ -20,6 +20,7 @@
 #include <Types/Enums/ActionOrder.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
+#include <Utilities/MaxSizedVector.hpp>
 #include <Utilities/Variant.hpp>
 #include <algorithm>
 #include <cstddef>
@@ -107,12 +108,13 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
 }
 
 void speedSort(types::handle handle, ActionQueue& actionQueue) {
-  std::vector<types::entity>& entityList = actionQueue.val;
+  auto& entityList = actionQueue.val;
 
   if (entityList.size() == 1) return;
   const types::registry* registry = handle.registry();
 
-  std::vector<std::pair<SpeedSort, types::entity>> speedSortList;
+  internal::maxSizedVector<std::pair<SpeedSort, types::entity>, MechanicConstants::MAX_ACTION_QUEUE_LENGTH>
+    speedSortList;
   speedSortList.reserve(entityList.size());
 
   for (types::entity entity : entityList) {
@@ -141,14 +143,14 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   });
 
   SpeedTieIndexes speedTies;
-  std::size_t lastEqual = 0, tieCount = 1;
+  types::activePokemonIndex lastEqual = 0, tieCount = 1;
 
   auto speedSortEqual = [](const SpeedSort& speedSortA, const SpeedSort& speedSortB) {
     return speedSortA.order == speedSortB.order && speedSortA.priority == speedSortB.priority &&
            speedSortA.speed == speedSortB.speed && speedSortA.fractionalPriority == speedSortB.fractionalPriority;
   };
 
-  for (std::size_t i = 0; i < speedSortList.size(); i++) {
+  for (types::activePokemonIndex i = 0; i < speedSortList.size(); i++) {
     entityList[i] = speedSortList[i].second;
 
     if (i > 0 && speedSortEqual(speedSortList[i].first, speedSortList[i - 1].first)) {

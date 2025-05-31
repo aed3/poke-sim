@@ -41,11 +41,12 @@
  * external/entt/meta/range.hpp
  * external/entt/meta/meta.hpp
  * external/entt/meta/resolve.hpp
+ * src/Config/Config.hpp
+ * src/Config/Require.hpp
+ * src/Utilities/MaxSizedVector.hpp
  * src/Types/Entity.hpp
  * src/Components/EntityHolders/Battle.hpp
- * src/Config/Config.hpp
  * src/Components/EntityHolders/BattleTree.hpp
- * src/Config/Require.hpp
  * external/entt/meta/policy.hpp
  * external/entt/meta/utility.hpp
  * external/entt/meta/factory.hpp
@@ -65,12 +66,19 @@
  * src/Types/Enums/Stat.hpp
  * src/Types/Stats.hpp
  * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp
+ * src/Types/Enums/Type.hpp
+ * src/Types/Enums/TypeEffectiveness.hpp
+ * src/Types/Random.hpp
+ * src/Utilities/TypeChart.hpp
+ * src/Types/MechanicConstants.hpp
+ * src/Utilities/FixedMemoryVector.hpp
+ * src/Types/State.hpp
+ * src/Battle/Clone/Clone.hpp
  * src/Types/Enums/Slot.hpp
  * src/Battle/Helpers/Helpers.hpp
  * src/Battle/Setup/StateSetupBase.hpp
  * src/Components/Boosts.hpp
  * src/Components/EVsIVs.hpp
- * src/Types/Enums/Type.hpp
  * src/Components/SpeciesTypes.hpp
  * src/Components/Stats.hpp
  * src/Types/Enums/Ability.hpp
@@ -78,12 +86,6 @@
  * src/Types/Enums/Item.hpp
  * src/Types/Enums/Nature.hpp
  * src/Types/Enums/Species.hpp
- * src/Types/Enums/TypeEffectiveness.hpp
- * src/Types/Random.hpp
- * src/Utilities/TypeChart.hpp
- * src/Types/MechanicConstants.hpp
- * src/Utilities/MaxSizedVector.hpp
- * src/Types/State.hpp
  * src/Battle/Setup/PokemonStateSetup.hpp
  * src/Battle/Setup/BattleStateSetup.hpp
  * src/Battle/Setup/EnumToTag.hpp
@@ -95,6 +97,7 @@
  * src/Components/EntityHolders/Current.hpp
  * src/Components/Tags/Current.hpp
  * src/Components/CalcDamage/Aliases.hpp
+ * src/Components/CloneFromCloneTo.hpp
  * src/Components/Decisions.hpp
  * src/Components/EntityHolders/ActionQueue.hpp
  * src/Components/EntityHolders/Side.hpp
@@ -180,11 +183,9 @@
  * src/SimulateTurn/RandomChance.hpp
  * src/Simulation/MoveHitSteps.hpp
  * src/Simulation/MoveHitSteps.cpp
- * src/Battle/Clone/Clone.hpp
  * src/Battle/ManageBattleState.hpp
  * src/CalcDamage/Helpers.hpp
  * src/Components/AddedTargets.hpp
- * src/Components/CloneFromCloneTo.hpp
  * src/Components/Names/SourceSlotName.hpp
  * src/Components/Names/TargetSlotName.hpp
  * src/Components/SimulateTurn/ActionNames.hpp
@@ -15899,32 +15900,6 @@ template<typename Type>
 
 //////////////////// END OF external/entt/meta/resolve.hpp /////////////////////
 
-//////////////////////// START OF src/Types/Entity.hpp /////////////////////////
-
-#include <vector>
-
-namespace pokesim::types {
-template <typename T, typename... Other>
-using view = entt::view<entt::get_t<const T, const Other...>>;
-
-using entity = entt::entity;
-
-using ClonedEntityMap = entt::dense_map<entity, std::vector<entity>>;
-}  // namespace pokesim::types
-
-///////////////////////// END OF src/Types/Entity.hpp //////////////////////////
-
-/////////////// START OF src/Components/EntityHolders/Battle.hpp ///////////////
-
-namespace pokesim {
-// Contains the entity of a simulation's battle.
-struct Battle {
-  types::entity val{};
-};
-}  // namespace pokesim
-
-//////////////// END OF src/Components/EntityHolders/Battle.hpp ////////////////
-
 //////////////////////// START OF src/Config/Config.hpp ////////////////////////
 
 #ifdef POKESIM_ENABLE_TESTING
@@ -15936,26 +15911,6 @@ struct Battle {
 #endif
 
 ///////////////////////// END OF src/Config/Config.hpp /////////////////////////
-
-///////////// START OF src/Components/EntityHolders/BattleTree.hpp /////////////
-
-namespace pokesim {
-struct ParentBattle {
-  types::entity val{};
-};
-
-struct RootBattle {
-  types::entity val{};
-};
-
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
-struct ParentEntity {
-  types::entity val{};
-};
-#endif
-}  // namespace pokesim
-
-////////////// END OF src/Components/EntityHolders/BattleTree.hpp //////////////
 
 /////////////////////// START OF src/Config/Require.hpp ////////////////////////
 
@@ -16015,6 +15970,136 @@ class require : public std::exception {
 // NOLINTEND cppcoreguidelines-macro-usage
 
 //////////////////////// END OF src/Config/Require.hpp /////////////////////////
+
+////////////////// START OF src/Utilities/MaxSizedVector.hpp ///////////////////
+
+#include <cstdint>
+#include <initializer_list>
+#include <limits>
+#include <vector>
+
+namespace pokesim::internal {
+template <typename T, std::uint64_t N = std::numeric_limits<entt::id_type>::max()>
+class maxSizedVector : public std::vector<T> {
+  using base = std::vector<T>;
+
+  void checkSize() const {
+    POKESIM_REQUIRE(base::size() <= max_size(), "More than " + std::to_string(N) + " elements are in this vector.");
+  }
+
+ public:
+  using size_type = std::conditional_t<
+    N <= std::numeric_limits<std::uint32_t>::max(),
+    std::conditional_t<
+      N <= std::numeric_limits<std::uint16_t>::max(),
+      std::conditional_t<N <= std::numeric_limits<std::uint8_t>::max(), std::uint8_t, std::uint16_t>, std::uint32_t>,
+    std::uint64_t>;
+
+  template <typename... Args>
+  maxSizedVector(Args&&... args) : base(std::forward<Args>(args)...) {
+    checkSize();
+  }
+
+  maxSizedVector(std::initializer_list<T> list) : maxSizedVector() {
+    reserve(list.size());
+    for (const T& item : list) {
+      push_back(item);
+    }
+  }
+
+  void push_back(const T& value) {
+    base::push_back(value);
+    checkSize();
+  }
+
+  static constexpr size_type max() { return N; }
+  constexpr size_type max_size() const { return max(); }
+
+  size_type size() const { return (size_type)base::size(); }
+
+  void reserve(size_type size) {
+    POKESIM_REQUIRE(
+      size <= max_size(),
+      "More than " + std::to_string(N) + " elements are being reserved in this vector.");
+    base::reserve(size);
+  }
+
+  void push_back(T&& value) {
+    base::push_back(std::move(value));
+    checkSize();
+  }
+
+  template <typename... Args>
+  auto insert(Args&&... args) {
+    auto result = base::insert(std::forward<Args>(args)...);
+    checkSize();
+    return result;
+  }
+
+  template <typename... Args>
+  auto& emplace(Args&&... args) {
+    auto& result = base::emplace(std::forward<Args>(args)...);
+    checkSize();
+    return result;
+  }
+
+  template <typename... Args>
+  auto& emplace_back(Args&&... args) {
+    auto& result = base::emplace_back(std::forward<Args>(args)...);
+    checkSize();
+    return result;
+  }
+};
+}  // namespace pokesim::internal
+
+/////////////////// END OF src/Utilities/MaxSizedVector.hpp ////////////////////
+
+//////////////////////// START OF src/Types/Entity.hpp /////////////////////////
+
+#include <vector>
+
+namespace pokesim::types {
+template <typename T, typename... Other>
+using view = entt::view<entt::get_t<const T, const Other...>>;
+
+using entity = entt::entity;
+using entityVector = pokesim::internal::maxSizedVector<entity>;
+
+using ClonedEntityMap = entt::dense_map<entity, entityVector>;
+}  // namespace pokesim::types
+
+///////////////////////// END OF src/Types/Entity.hpp //////////////////////////
+
+/////////////// START OF src/Components/EntityHolders/Battle.hpp ///////////////
+
+namespace pokesim {
+// Contains the entity of a simulation's battle.
+struct Battle {
+  types::entity val{};
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/EntityHolders/Battle.hpp ////////////////
+
+///////////// START OF src/Components/EntityHolders/BattleTree.hpp /////////////
+
+namespace pokesim {
+struct ParentBattle {
+  types::entity val{};
+};
+
+struct RootBattle {
+  types::entity val{};
+};
+
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+struct ParentEntity {
+  types::entity val{};
+};
+#endif
+}  // namespace pokesim
+
+////////////// END OF src/Components/EntityHolders/BattleTree.hpp //////////////
 
 //////////////////// START OF external/entt/meta/policy.hpp ////////////////////
 
@@ -17234,8 +17319,10 @@ class registry;
 }
 namespace internal {
 template <typename T, std::uint8_t N>
+class fixedMemoryVector;
+template <typename T, std::uint64_t N>
 class maxSizedVector;
-}
+}  // namespace internal
 }  // namespace pokesim
 
 namespace pokesim::debug {
@@ -17289,6 +17376,8 @@ class AssertComponentsEqual {
   template <typename>
   struct isList;
   template <typename T, std::uint8_t N>
+  struct isList<internal::fixedMemoryVector<T, N>> {};
+  template <typename T, std::uint64_t N>
   struct isList<internal::maxSizedVector<T, N>> {};
   template <typename... Args>
   struct isList<std::vector<Args...>> {};
@@ -18212,143 +18301,6 @@ struct InputSetup {
 
 ////////// END OF src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp //////////
 
-////////////////////// START OF src/Types/Enums/Slot.hpp ///////////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-enum class Slot : std::uint8_t {
-  NONE,
-  P1A,
-  P2A,
-  P1B,
-  P2B,
-
-  P1C,
-  P2C,
-  P1D,
-  P2D,
-  P1E,
-  P2E,
-  P1F,
-  P2F,
-};
-}
-
-/////////////////////// END OF src/Types/Enums/Slot.hpp ////////////////////////
-
-/////////////////// START OF src/Battle/Helpers/Helpers.hpp ////////////////////
-
-namespace pokesim {
-struct Sides;
-struct MoveSlots;
-class Pokedex;
-
-inline types::entity slotToSideEntity(const Sides& sides, Slot targetSlot);
-inline types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot);
-inline types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
-inline types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
-inline types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move);
-
-inline types::entity createActionMoveForTarget(
-  types::handle targetHandle, types::entity battleEntity, types::entity sourceEntity, dex::Move move,
-  const Pokedex& pokedex);
-}  // namespace pokesim
-
-//////////////////// END OF src/Battle/Helpers/Helpers.hpp /////////////////////
-
-///////////////// START OF src/Battle/Setup/StateSetupBase.hpp /////////////////
-
-namespace pokesim::internal {
-/**
- * @brief Class that holds the shared methods used between the various battle state setup tools.
- *
- * It is intended to be extended by classes that set up the state of a battle, such as StateSetupSide.
- */
-struct StateSetupBase {
- protected:
-  types::handle handle;
-
- public:
-  StateSetupBase(types::registry& registry, types::entity entity) : handle(registry, entity) {}
-
-  /**
-   * @brief Sets a property on the entity.
-   *
-   * @tparam Tag The tag type of the property to set.
-   */
-  template <typename Tag>
-  void setProperty() {
-    handle.emplace<Tag>();
-  }
-
-  types::entity entity() const { return handle.entity(); }
-};
-
-}  // namespace pokesim::internal
-
-////////////////// END OF src/Battle/Setup/StateSetupBase.hpp //////////////////
-
-////////////////////// START OF src/Components/Boosts.hpp //////////////////////
-
-namespace pokesim {
-struct AtkBoost {
-  types::boost val = 0;
-};
-
-struct DefBoost {
-  types::boost val = 0;
-};
-
-struct SpaBoost {
-  types::boost val = 0;
-};
-
-struct SpdBoost {
-  types::boost val = 0;
-};
-
-struct SpeBoost {
-  types::boost val = 0;
-};
-}  // namespace pokesim
-
-/////////////////////// END OF src/Components/Boosts.hpp ///////////////////////
-
-////////////////////// START OF src/Components/EVsIVs.hpp //////////////////////
-
-namespace pokesim {
-struct Evs {
-  types::ev hp = 0;
-  types::ev atk = 0;
-  types::ev def = 0;
-  types::ev spa = 0;
-  types::ev spd = 0;
-  types::ev spe = 0;
-
-  bool operator==(const Evs& other) const {
-    return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
-           spe == other.spe;
-  }
-};
-
-struct Ivs {
-  types::iv hp = 0;
-  types::iv atk = 0;
-  types::iv def = 0;
-  types::iv spa = 0;
-  types::iv spd = 0;
-  types::iv spe = 0;
-
-  bool operator==(const Ivs& other) const {
-    return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
-           spe == other.spe;
-  }
-};
-}  // namespace pokesim
-
-/////////////////////// END OF src/Components/EVsIVs.hpp ///////////////////////
-
 ////////////////////// START OF src/Types/Enums/Type.hpp ///////////////////////
 
 #include <cstddef>
@@ -18383,186 +18335,6 @@ static constexpr std::size_t TOTAL_TYPE_COUNT = (std::size_t)Type::TYPE_TOTAL;
 }  // namespace pokesim::dex
 
 /////////////////////// END OF src/Types/Enums/Type.hpp ////////////////////////
-
-/////////////////// START OF src/Components/SpeciesTypes.hpp ///////////////////
-
-#include <array>
-
-namespace pokesim {
-// Contains the types a species has
-struct SpeciesTypes {
-  std::array<dex::Type, 2U> val{dex::Type::NO_TYPE, dex::Type::NO_TYPE};
-
-  dex::Type& type1() { return val[0]; };
-  dex::Type& type2() { return val[1]; };
-  constexpr const dex::Type& type1() const { return val[0]; };
-  constexpr const dex::Type& type2() const { return val[1]; };
-  constexpr std::uint8_t size() const {
-    if (type2() == dex::Type::NO_TYPE) {
-      return type1() == dex::Type::NO_TYPE ? 0 : 1;
-    }
-    return 2;
-  }
-  constexpr bool has(dex::Type type) const { return type1() == type || type2() == type; }
-};
-}  // namespace pokesim
-
-//////////////////// END OF src/Components/SpeciesTypes.hpp ////////////////////
-
-////////////////////// START OF src/Components/Stats.hpp ///////////////////////
-
-namespace pokesim::stat {
-struct Hp {
-  types::stat val = 1;
-};
-
-struct Atk {
-  types::stat val = 1;
-};
-
-struct Def {
-  types::stat val = 1;
-};
-
-struct Spa {
-  types::stat val = 1;
-};
-
-struct Spd {
-  types::stat val = 1;
-};
-
-struct Spe {
-  types::stat val = 1;
-};
-
-struct CurrentHp {
-  types::stat val = 1;
-};
-
-struct EffectiveAtk {
-  types::stat val = 1;
-};
-
-struct EffectiveDef {
-  types::stat val = 1;
-};
-
-struct EffectiveSpa {
-  types::stat val = 1;
-};
-
-struct EffectiveSpd {
-  types::stat val = 1;
-};
-
-struct EffectiveSpe {
-  types::stat val = 1;
-};
-}  // namespace pokesim::stat
-
-/////////////////////// END OF src/Components/Stats.hpp ////////////////////////
-
-///////////////////// START OF src/Types/Enums/Ability.hpp /////////////////////
-
-#include <cstddef>
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon ability name
-enum class Ability : std::uint16_t {
-  // clang-format off
-  NO_ABILITY = 0, ADAPTABILITY, AERILATE, AFTERMATH, AIR_LOCK, ANALYTIC, ANGER_POINT, ANGER_SHELL, ANTICIPATION, ARENA_TRAP, ARMOR_TAIL, AROMA_VEIL, AS_ONE, AURA_BREAK, BAD_DREAMS, BALL_FETCH, BATTERY, BATTLE_ARMOR, BATTLE_BOND, BEADS_OF_RUIN, BEAST_BOOST, BERSERK, BIG_PECKS, BLAZE, BULLETPROOF, CHEEK_POUCH, CHILLING_NEIGH, CHLOROPHYLL, CLEAR_BODY, CLOUD_NINE, COLOR_CHANGE, COMATOSE, COMMANDER, COMPETITIVE, COMPOUND_EYES, CONTRARY, CORROSION, COSTAR, COTTON_DOWN, CUD_CHEW, CURIOUS_MEDICINE, CURSED_BODY, CUTE_CHARM, DAMP, DANCER, DARK_AURA, DAUNTLESS_SHIELD, DAZZLING, DEFEATIST, DEFIANT, DELTA_STREAM, DESOLATE_LAND, DISGUISE, DOWNLOAD, DRAGONS_MAW, DRIZZLE, DROUGHT, DRY_SKIN, EARTH_EATER, EARLY_BIRD, EFFECT_SPORE, ELECTRIC_SURGE, ELECTROMORPHOSIS, EMERGENCY_EXIT, FAIRY_AURA, FILTER, FLAME_BODY, FLARE_BOOST, FLASH_FIRE, FLOWER_GIFT, FLOWER_VEIL, FLUFFY, FORECAST, FOREWARN, FRIEND_GUARD, FRISK, FULL_METAL_BODY, FUR_COAT, GALE_WINGS, GALVANIZE, GLUTTONY, GOOD_AS_GOLD, GOOEY, GORILLA_TACTICS, GRASS_PELT, GRASSY_SURGE, GRIM_NEIGH, GUARD_DOG, GULP_MISSILE, GUTS, HADRON_ENGINE, HARVEST, HEALER, HEATPROOF, HEAVY_METAL, HONEY_GATHER, HUGE_POWER, HUNGER_SWITCH, HUSTLE, HYDRATION, HYPER_CUTTER, ICE_BODY, ICE_FACE, ICE_SCALES, ILLUMINATE, ILLUSION, IMMUNITY, IMPOSTER, INFILTRATOR, INNARDS_OUT, INNER_FOCUS, INSOMNIA, INTIMIDATE, INTREPID_SWORD, IRON_BARBS, IRON_FIST, JUSTIFIED, KEEN_EYE, KLUTZ, LEAF_GUARD, LEVITATE, LIBERO, LIGHT_METAL, LIGHTNING_ROD, LINGERING_AROMA, LIMBER, LIQUID_OOZE, LIQUID_VOICE, LONG_REACH, MAGIC_BOUNCE, MAGIC_GUARD, MAGICIAN, MAGMA_ARMOR, MAGNET_PULL, MARVEL_SCALE, MEGA_LAUNCHER, MERCILESS, MIMICRY, MINUS, MIRROR_ARMOR, MISTY_SURGE, MOLD_BREAKER, MOODY, MOTOR_DRIVE, MOXIE, MULTISCALE, MULTITYPE, MUMMY, MYCELIUM_MIGHT, NATURAL_CURE, NEUROFORCE, NEUTRALIZING_GAS, NO_GUARD, NORMALIZE, OBLIVIOUS, OPPORTUNIST, ORICHALCUM_PULSE, OVERCOAT, OVERGROW, OWN_TEMPO, PARENTAL_BOND, PASTEL_VEIL, PERISH_BODY, PICKPOCKET, PICKUP, PIXILATE, PLUS, POISON_HEAL, POISON_POINT, POISON_TOUCH, POWER_CONSTRUCT, POWER_OF_ALCHEMY, POWER_SPOT, PRANKSTER, PRESSURE, PRIMORDIAL_SEA, PRISM_ARMOR, PROPELLER_TAIL, PROTEAN, PROTOSYNTHESIS, PSYCHIC_SURGE, PUNK_ROCK, PURE_POWER, PURIFYING_SALT, QUARK_DRIVE, QUEENLY_MAJESTY, QUICK_DRAW, QUICK_FEET, RAIN_DISH, RATTLED, RECEIVER, RECKLESS, REFRIGERATE, REGENERATOR, RIPEN, RIVALRY, RKS_SYSTEM, ROCK_HEAD, ROCKY_PAYLOAD, ROUGH_SKIN, RUN_AWAY, SAND_FORCE, SAND_RUSH, SAND_SPIT, SAND_STREAM, SAND_VEIL, SAP_SIPPER, SCHOOLING, SCRAPPY, SCREEN_CLEANER, SEED_SOWER, SERENE_GRACE, SHADOW_SHIELD, SHADOW_TAG, SHARPNESS, SHED_SKIN, SHEER_FORCE, SHELL_ARMOR, SHIELD_DUST, SHIELDS_DOWN, SIMPLE, SKILL_LINK, SLOW_START, SLUSH_RUSH, SNIPER, SNOW_CLOAK, SNOW_WARNING, SOLAR_POWER, SOLID_ROCK, SOUL_HEART, SOUNDPROOF, SPEED_BOOST, STAKEOUT, STALL, STALWART, STAMINA, STANCE_CHANGE, STATIC, STEADFAST, STEAM_ENGINE, STEELWORKER, STEELY_SPIRIT, STENCH, STICKY_HOLD, STORM_DRAIN, STRONG_JAW, STURDY, SUCTION_CUPS, SUPER_LUCK, SUPREME_OVERLORD, SURGE_SURFER, SWARM, SWEET_VEIL, SWIFT_SWIM, SYMBIOSIS, SYNCHRONIZE, SWORD_OF_RUIN, TABLETS_OF_RUIN, TANGLED_FEET, TANGLING_HAIR, TECHNICIAN, TELEPATHY, TERAVOLT, THERMAL_EXCHANGE, THICK_FAT, TINTED_LENS, TORRENT, TOUGH_CLAWS, TOXIC_BOOST, TOXIC_DEBRIS, TRACE, TRANSISTOR, TRIAGE, TRUANT, TURBOBLAZE, UNAWARE, UNBURDEN, UNNERVE, UNSEEN_FIST, VESSEL_OF_RUIN, VICTORY_STAR, VITAL_SPIRIT, VOLT_ABSORB, WANDERING_SPIRIT, WATER_ABSORB, WATER_BUBBLE, WATER_COMPACTION, WATER_VEIL, WEAK_ARMOR, WELL_BAKED_BODY, WHITE_SMOKE, WIMP_OUT, WIND_POWER, WIND_RIDER, WONDER_GUARD, WONDER_SKIN, ZEN_MODE, ZERO_TO_HERO, ABILITY_TOTAL,
-  // clang-format on
-};
-
-static constexpr std::size_t TOTAL_ABILITY_COUNT = (std::size_t)Ability::ABILITY_TOTAL;
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Ability.hpp //////////////////////
-
-///////////////////// START OF src/Types/Enums/Gender.hpp //////////////////////
-
-#include <cstddef>
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon gender name
-enum class Gender : std::uint8_t { NO_GENDER = 0, FEMALE, MALE };
-
-static constexpr std::size_t TOTAL_GENDER_COUNT = 3U;
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Gender.hpp ///////////////////////
-
-////////////////////// START OF src/Types/Enums/Item.hpp ///////////////////////
-
-#include <cstddef>
-#include <cstdint>
-
-namespace pokesim::dex {
-// Name of items in Pokemon games
-enum class Item : std::uint16_t {
-  // clang-format off
-  NO_ITEM = 0, ABILITY_CAPSULE, ABILITY_PATCH, ABILITY_SHIELD, ABOMASITE, ABRA_CANDY, ABSOLITE, ABSORB_BULB, ACRO_BIKE, ADAMANT_CRYSTAL, ADAMANT_MINT, ADAMANT_ORB, ADRENALINE_ORB, ADVENTURE_GUIDE, AERODACTYLITE, AERODACTYL_CANDY, AGGRONITE, AGUAV_BERRY, AIR_BALLOON, AIR_MAIL, ALAKAZITE, ALORAICHIUM_Z, ALTARIANITE, AMAZE_MULCH, AMPHAROSITE, AMULET_COIN, ANTIDOTE, APICOT_BERRY, APRICORN, APRICORN_BOX, AQUA_SUIT, ARMOR_FOSSIL, ARMOR_PASS, ARMORITE_ORE, ARTICUNO_CANDY, ASPEAR_BERRY, ASSAULT_VEST, AUDINITE, AURORATICKET, AUSPICIOUS_ARMOR, AUTOGRAPH, AUX_EVASION, AUX_GUARD, AUX_POWER, AUX_POWERGUARD, AWAKENING, AZELFS_FANG, AZURE_FLUTE, BABIRI_BERRY, BALL_OF_MUD, BALM_MUSHROOM, BAND_AUTOGRAPH, BANETTITE, BASCULEGION_FOOD, BASEMENT_KEY, BEACH_GLASS, BEAD_MAIL, BEAN_CAKE, BEAST_BALL, BEEDRILLITE, BELLSPROUT_CANDY, BELUE_BERRY, BERRY, BERRY_JUICE, BERRY_POTS, BERRY_POUCH, BERRY_SWEET, BERSERK_GENE, BICYCLE, BIG_BAMBOO_SHOOT, BIG_MALASADA, BIG_MUSHROOM, BIG_NUGGET, BIG_PEARL, BIG_ROOT, BIKE_VOUCHER, BINDING_BAND, BITTER_BERRY, BLACK_APRICORN, BLACK_AUGURITE, BLACK_BELT, BLACK_FLUTE, BLACK_GLASSES, BLACK_MANE_HAIR, BLACK_SLUDGE, BLACK_TUMBLESTONE, BLANK_PLATE, BLASTOISINITE, BLAZIKENITE, BLOOM_MAIL, BLUE_APRICORN, BLUE_CARD, BLUE_FLUTE, BLUE_ORB, BLUE_PETAL, BLUE_SCARF, BLUE_SHARD, BLUESKY_MAIL, BLU_ID_BADGE, BLUK_BERRY, BLUNDER_POLICY, BOLD_MINT, BONSLY_CARD, BONSLY_PHOTO, BOOST_MULCH, BOOSTER_ENERGY, BOTTLE_CAP, BRAVE_MINT, BRICK_MAIL, BRICK_PIECE, BRIDGE_MAIL_D, BRIDGE_MAIL_M, BRIDGE_MAIL_S, BRIDGE_MAIL_T, BRIDGE_MAIL_V, BRIGHT_POWDER, BUBBLE_MAIL, BUG_GEM, BUG_MEMORY, BUG_TERA_SHARD, BUGINIUM_Z, BUGWORT, BULBASAUR_CANDY, BURN_DRIVE, BURN_HEAL, BURNT_BERRY, CAKE_LURE_BASE, CALCIUM, CALM_MINT, CAMERUPTITE, CAMPING_GEAR, CANDY_TRUFFLE, CARBOS, CARD_KEY, CAREFUL_MINT, CARROT_SEEDS, CASTELIACONE, CASTER_FERN, CATCHING_CHARM, CATERPIE_CANDY, CELESTICA_FLUTE, CELL_BATTERY, CHALKY_STONE, CHANSEY_CANDY, CHARCOAL, CHARIZARDITE_X, CHARIZARDITE_Y, CHARMANDER_CANDY, CHARTI_BERRY, CHERI_BERRY, CHERISH_BALL, CHESTO_BERRY, CHILAN_BERRY, CHILL_DRIVE, CHIPPED_POT, CHOICE_BAND, CHOICE_DUMPLING, CHOICE_SCARF, CHOICE_SPECS, CHOPLE_BERRY, CLAW_FOSSIL, CLEANSE_TAG, CLEAR_AMULET, CLEAR_BELL, CLEFAIRY_CANDY, CLEVER_FEATHER, CLOVER_SWEET, COBA_BERRY, COIN_CASE, COLBUR_BERRY, COLOGNE_CASE, COLRESS_MACHINE, COMET_SHARD, COMMON_STONE, CONTEST_COSTUME, CONTEST_PASS, CORNN_BERRY, COUPON_1, COUPON_2, COUPON_3, COURAGE_CANDY, COURAGE_CANDY_L, COURAGE_CANDY_XL, COVER_FOSSIL, COVERT_CLOAK, CRACKED_POT, CRAFTING_KIT, CROWN_PASS, CRUNCHY_SALT, CUBONE_CANDY, CRY_ANALYZER, CUSTAP_BERRY, DAMP_MULCH, DAMP_ROCK, DARK_GEM, DARK_MEMORY, DARK_STONE, DARK_TERA_SHARD, DARKINIUM_Z, DATA_CARDS, DATA_ROM, DAWN_STONE, DAZZLING_HONEY, D_DISK, DECIDIUM_Z, DEEP_SEA_SCALE, DEEP_SEA_TOOTH, DESTINY_KNOT, DEVON_PARTS, DEVON_SCOPE, DEVON_SCUBA_GEAR, DIANCITE, DIGGER_DRILL, DIGLETT_CANDY, DIRE_HIT, DIRESHROOM, DISC_CASE, DISCOUNT_COUPON, DISCOVERY_SLATE, DISTORTION_SLATE, DITTO_CANDY, DIVE_BALL, DNA_SAMPLE, DNA_SPLICERS, DODUO_CANDY, DOME_FOSSIL, DOPPEL_BONNETS, DOUSE_DRIVE, DOWN_ST_KEY, DOWSING_MACHINE, DRACO_PLATE, DRAGON_FANG, DRAGON_GEM, DRAGON_MEMORY, DRAGON_SCALE, DRAGON_SKULL, DRAGON_TERA_SHARD, DRAGONIUM_Z, DRASH_BERRY, DRATINI_CANDY, DREAD_PLATE, DREAM_BALL, DREAM_MAIL, DROPPED_ITEM, DROWZEE_CANDY, DS_SOUNDS, DUBIOUS_DISC, DURIN_BERRY, DUSK_BALL, DUSK_STONE, DYNAMAX_BAND, DYNAMAX_CANDY, DYNAMAX_CRYSTALS, DYNITE_ORE, EARTH_PLATE, EEVEE_CANDY, EEVIUM_Z, EGG_TICKET, EGGANT_BERRY, EIN_FILE_C, EIN_FILE_F, EIN_FILE_H, EIN_FILE_P, EIN_FILE_S, EJECT_BUTTON, EJECT_PACK, EKANS_CANDY, ELECTABUZZ_CANDY, ELECTIRIZER, ELECTRIC_GEM, ELECTRIC_MEMORY, ELECTRIC_SEED, ELECTRIC_TERA_SHARD, ELECTRIUM_Z, ELEVATOR_KEY, ELIXIR, ENDORSEMENT, ENERGY_POWDER, ENERGY_ROOT, ENIGMA_BERRY, ENIGMA_STONE, ENIGMATIC_CARD, EON_FLUTE, EON_MAIL, EON_TICKET, ESCAPE_ROPE, ETERNAL_ICE, ETHER, EVERSTONE, EVIOLITE, EXCITE_SCENT, EXEGGCUTE_CANDY, EXP_CANDY_L, EXP_CANDY_M, EXP_CANDY_S, EXP_CANDY_XL, EXP_CANDY_XS, EXP_CHARM, EXP_SHARE, EXPERT_BELT, EXPLORER_KIT, FAB_MAIL, FAIRIUM_Z, FAIRY_GEM, FAIRY_MEMORY, FAIRY_TERA_SHARD, FAME_CHECKER, FARFETCHD_CANDY, FASHION_CASE, FAST_BALL, FAVORED_MAIL, F_DISK, FEATHER_BALL, FESTIVAL_TICKET, FIGHTING_GEM, FIGHTING_MEMORY, FIGHTING_TERA_SHARD, FIGHTINIUM_Z, FIGY_BERRY, FINE_REMEDY, FIRE_GEM, FIRE_MEMORY, FIRE_STONE, FIRE_TERA_SHARD, FIRIUM_Z, FISHING_ROD, FIST_PLATE, FLAME_MAIL, FLAME_ORB, FLAME_PLATE, FLOAT_STONE, FLOWER_MAIL, FLOWER_SWEET, FLUFFY_TAIL, FLYING_GEM, FLYING_MEMORY, FLYING_TERA_SHARD, FLYINIUM_Z, FOCUS_BAND, FOCUS_SASH, FORAGE_BAG, FOREST_BALM, FOSSILIZED_BIRD, FOSSILIZED_DINO, FOSSILIZED_DRAKE, FOSSILIZED_FISH, FRESH_WATER, FRIEND_BALL, FULL_HEAL, FULL_INCENSE, FULL_RESTORE, GALACTIC_KEY, GALARICA_CUFF, GALARICA_TWIG, GALARICA_WREATH, GALLADITE, GANLON_BERRY, GARCHOMPITE, GARDEVOIRITE, GASTLY_CANDY, GB_SOUNDS, GEAR, GENGARITE, GENIUS_FEATHER, GENOME_SLATE, GENTLE_MINT, GEODUDE_CANDY, GHOST_GEM, GHOST_MEMORY, GHOST_TERA_SHARD, GHOSTIUM_Z, GIGATON_BALL, GINEMA_BERRY, GLALITITE, GLITTER_MAIL, GO_GOGGLES, GOD_STONE, GOLD_BERRY, GOLD_BOTTLE_CAP, GOLD_LEAF, GOLD_TEETH, GOLDEEN_CANDY, GONZAPS_KEY, GOLDEN_NANAB_BERRY, GOLDEN_PINAP_BERRY, GOLDEN_RAZZ_BERRY, GOOD_ROD, GOOEY_MULCH, GORGEOUS_BOX, GRACIDEA, GRAIN_CAKE, GRAM_1, GRAM_2, GRAM_3, GRASS_GEM, GRASS_MEMORY, GRASS_TERA_SHARD, GRASSIUM_Z, GRASS_MAIL, GRASSY_SEED, GREAT_BALL, GREEN_APRICORN, GREEN_PETAL, GREEN_SCARF, GREEN_SHARD, GREET_MAIL, GREPA_BERRY, GRIMER_CANDY, GRIP_CLAW, GRIT_DUST, GRIT_GRAVEL, GRIT_PEBBLE, GRIT_ROCK, GRISEOUS_CORE, GRISEOUS_ORB, GRN_ID_BADGE, GROUND_GEM, GROUND_MEMORY, GROUND_TERA_SHARD, GROUNDIUM_Z, GROWLITHE_CANDY, GROWTH_MULCH, GRUBBY_HANKY, GS_BALL, GUARD_SPEC, GUIDEBOOK, GYARADOSITE, HABAN_BERRY, HARBOR_MAIL, HARD_STONE, HASTY_MINT, HEAL_BALL, HEAL_POWDER, HEALTH_CANDY, HEALTH_CANDY_L, HEALTH_CANDY_XL, HEALTH_FEATHER, HEART_MAIL, HEART_SCALE, HEARTY_GRAINS, HEAT_ROCK, HEAVY_BALL, HEAVY_DUTY_BOOTS, HELIX_FOSSIL, HERACRONITE, HI_TECH_EARBUDS, HITMONCHAN_CANDY, HITMONLEE_CANDY, HM01, HM02, HM03, HM04, HM05, HM06, HM07, HM08, HOLO_CASTER, HOMETOWN_MUFFIN, HONDEW_BERRY, HONEY, HONEY_CAKE, HONOR_OF_KALOS, HOPO_BERRY, HORSEA_CANDY, HOUNDOOMINITE, HP_UP, HYPER_POTION, IAPAPA_BERRY, ICE_BERRY, ICE_GEM, ICE_HEAL, ICE_MEMORY, ICE_STONE, ICE_TERA_SHARD, ICEROOT_CARROT, ICICLE_PLATE, ICIUM_Z, ICY_ROCK, ID_CARD, ILIMAS_NORMALIUM_Z, IMPISH_MINT, INCINIUM_Z, INQUIRY_MAIL, INSECT_PLATE, INTRIGUING_STONE, IRON, IRON_BALL, IRON_BARKTONGUE, IRON_CHUNK, IRON_PLATE, JABOCA_BERRY, JADE_ORB, JAIL_KEY, JAW_FOSSIL, JET_BALL, JIGGLYPUFF_CANDY, JOHTO_SLATE, JOLLY_MINT, JOY_SCENT, JUBILIFE_MUFFIN, JYNX_CANDY, KABUTO_CANDY, KANGASKHAN_CANDY, KANGASKHANITE, KANTO_SLATE, KASIB_BERRY, KEBIA_BERRY, KEE_BERRY, KELPSY_BERRY, KEY_STONE, KEY_TO_ROOM_1, KEY_TO_ROOM_2, KEY_TO_ROOM_4, KEY_TO_ROOM_6, KINGS_LEAF, KINGS_ROCK, KOFFING_CANDY, KOFUS_BOOK, KOMMONIUM_Z, KORAIDONS_POKE_BALL, KRABBY_CANDY, KRANE_MEMO_1, KRANE_MEMO_2, KRANE_MEMO_3, KRANE_MEMO_4, KRANE_MEMO_5, KUO_BERRY, LAGGING_TAIL, LANSAT_BERRY, LAPRAS_CANDY, LATIASITE, LATIOSITE, LAVA_COOKIE, LAX_INCENSE, LAX_MINT, L_DISK, LEADEN_BALL, LEADERS_CREST, LEAF_LETTER, LEAF_STONE, LEEK, LEFT_POKE_BALL, LEFTOVERS, LEGEND_PLATE, LEGENDARY_CLUE_1, LEGENDARY_CLUE_2, LEGENDARY_CLUE_3, LEGENDARY_CLUE, LEMONADE, LENS_CASE, LEPPA_BERRY, LETTER, LEVEL_BALL, LIBERTY_PASS, LICKITUNG_CANDY, LIECHI_BERRY, LIFE_ORB, LIFT_KEY, LIGHT_BALL, LIGHT_CLAY, LIGHT_STONE, LIKE_MAIL, LINKING_CORD, LITEBLUEMAIL, LOADED_DICE, LOCK_CAPSULE, LONE_EARRING, LONELY_MINT, LOOKER_TICKET, LOOT_SACK, LOPUNNITE, LOST_ITEM, LOST_SATCHEL, LOVE_BALL, LOVE_SWEET, LOVELY_MAIL, LUCARIONITE, LUCK_INCENSE, LUCKY_EGG, LUCKY_PUNCH, LUM_BERRY, LUMINOUS_MOSS, LUMIOSE_GALETTE, LUNALIUM_Z, LUNAR_FEATHER, LURE, LURE_BALL, LUSTROUS_GLOBE, LUSTROUS_ORB, LUXURY_BALL, LYCANIUM_Z, MACH_BIKE, MACHINE_PART, MACHO_BRACE, MACHOP_CANDY, MAGIKARP_CANDY, MAGMA_EMBLEM, MAGMA_STONE, MAGMA_SUIT, MAGMAR_CANDY, MAGMARIZER, MAGNEMITE_CANDY, MAGNET, MAGO_BERRY, MAGOST_BERRY, MAINGATE_KEY, MAKEUP_BAG, MALICIOUS_ARMOR, MANECTITE, MANKEY_CANDY, MARANGA_BERRY, MARBLE, MARK_CHARM, MARSHADIUM_Z, MARSH_BALM, MASTER_BALL, MAWILITE, MAX_ELIXIR, MAX_ETHER, MAX_LURE, MAX_HONEY, MAX_MUSHROOMS, MAX_POTION, MAX_REPEL, MAX_REVIVE, MAYORS_NOTE, MEADOW_PLATE, MECH_MAIL, MECHANICAL_BOX, MECHANICAL_CABINET, MECHANICAL_CIRCULAR_SAW, MECHANICAL_PINWHEEL, MECHANICAL_TUB, MEDAL_BOX, MEDICHAMITE, MEDICINAL_LEEK, MEGA_BRACELET, MEGA_RING, MELTAN_CANDY, MEMBER_CARD, MENTAL_HERB, MEOWTH_CANDY, MESPRITS_PLUME, METAGROSSITE, METAL_COAT, METAL_POWDER, METEORITE, METEORITE_SHARD, METRONOME, MEW_CANDY, MEWNIUM_Z, MEWTWO_CANDY, MEWTWONITE_X, MEWTWONITE_Y, MICLE_BERRY, MIGHTY_CANDY, MIGHTY_CANDY_L, MIGHTY_CANDY_XL, MILD_MINT, MIMIKIUM_Z, MIND_PLATE, MINT_BERRY, MIRACLEBERRY, MIRACLE_SEED, MIRAGE_MAIL, MIRAIDONS_POKE_BALL, MIROR_RADAR, MIRROR_HERB, MISTY_SEED, MODEST_MINT, MOLTRES_CANDY, MOOMOO_MILK, MOON_BALL, MOON_FLUTE, MOON_SHARD, MOON_STONE, MORPH_MAIL, MOSAIC_MAIL, MOUNTAIN_BALM, MR_MIME_CANDY, MUSCLE_BAND, MUSCLE_FEATHER, MUSHROOM_CAKE, MUSIC_DISC, MUSIC_MAIL, MYSTERIOUS_BALM, MYSTERIOUS_SHARD_S, MYSTERIOUS_SHARD_L, MYSTERYBERRY, MYSTERY_EGG, MYSTIC_WATER, MYSTICTICKET, NAIVE_MINT, NANAB_BERRY, NAUGHTY_MINT, NEST_BALL, NET_BALL, NEVER_MELT_ICE, NIDORAN_MALE_CANDY, NIDORAN_FEMALE_CANDY, NINIKU_BERRY, N_LUNARIZER, NOMEL_BERRY, NORMAL_BOX, NORMAL_GEM, NORMAL_TERA_SHARD, NORMALIUM_Z, N_SOLARIZER, NUGGET, NUTPEA_BERRY, OAKS_LETTER, OAKS_PARCEL, OCCA_BERRY, OCEANIC_SLATE, ODD_INCENSE, ODD_KEYSTONE, ODDISH_CANDY, OLD_AMBER, OLD_CHARM, OLD_GATEAU, OLD_JOURNAL, OLD_LETTER, OLD_ROD, OLD_SEA_MAP, OLD_VERSES, OMANYTE_CANDY, ONIX_CANDY, ORAN_BERRY, ORANGE_MAIL, ORANGE_PETAL, ORIGIN_BALL, ORIGIN_ORE, OVAL_CHARM, OVAL_STONE, PAIR_OF_TICKETS, PAL_PAD, PAMTRE_BERRY, PARALYZE_HEAL, PARAS_CANDY, PARCEL, PARK_BALL, PASS, PASS_ORB, PASSHO_BERRY, PAYAPA_BERRY, PEARL, PEARL_STRING, PEAT_BLOCK, PECHA_BERRY, PEP_UP_PLANT, PERMIT, PERSIM_BERRY, PETAYA_BERRY, PEWTER_CRUNCHIES, PICNIC_SET, PIDGEOTITE, PIDGEY_CANDY, PIKACHU_CANDY, PIKANIUM_Z, PIKASHUNIUM_Z, PINAP_BERRY, PINK_APRICORN, PINK_BOW, PINK_NECTAR, PINK_PETAL, PINK_SCARF, PINSIR_CANDY, PINSIRITE, PIXIE_PLATE, PLASMA_CARD, PLUME_FOSSIL, PLUMP_BEANS, POFFIN_CASE, POINT_CARD, POISON_BARB, POISON_GEM, POISON_MEMORY, POISON_TERA_SHARD, POISONIUM_Z, POKE_BALL, POKE_DOLL, POKE_FLUTE, POKE_RADAR, POKE_SNACK, POKE_TOY, POKEBLOCK_CASE, POKEBLOCK_KIT, POKEDEX, POKEMON_BOX_LINK, POKESHI_DOLL, POLKADOT_BOW, POLISHED_MUD_BALL, POLIWAG_CANDY, POMEG_BERRY, PONYTA_CANDY, POP_POD, PORTRAITMAIL, PORYGON_CANDY, POTION, POWER_ANKLET, POWER_BAND, POWER_BELT, POWER_BRACER, POWER_HERB, POWER_LENS, POWER_PLANT_PASS, POWER_WEIGHT, POWERUP_PART, POWDER_JAR, PP_MAX, PP_UP, PREMIER_BALL, PRETTY_FEATHER, PRIMARIUM_Z, PRISM_SCALE, PRISON_BOTTLE, PROFS_LETTER, PROFESSORS_MASK, PROP_CASE, PROTECTIVE_PADS, PROTECTOR, PROTEIN, PRZCUREBERRY, PSNCUREBERRY, PSYCHIC_GEM, PSYCHIC_MEMORY, PSYCHIC_SEED, PSYCHIC_TERA_SHARD, PSYCHIUM_Z, PSYDUCK_CANDY, PUMKIN_BERRY, PUNCHING_GLOVE, PURE_INCENSE, PURPLE_NECTAR, PURPLE_PETAL, QUALOT_BERRY, QUICK_BALL, QUICK_CANDY, QUICK_CANDY_L, QUICK_CANDY_XL, QUICK_CLAW, QUICK_POWDER, QUIET_MINT, RABUTA_BERRY, RADIANT_PETAL, RAGECANDYBAR, RAINBOW_FLOWER, RAINBOW_PASS, RAINBOW_SLATE, RAINBOW_WING, RARE_BONE, RARE_CANDY, RASH_MINT, RATTATA_CANDY, RAWST_BERRY, RAZOR_CLAW, RAZOR_FANG, RAZZ_BERRY, R_DISK, REAPER_CLOTH, RECIPES, RED_APRICORN, RED_CARD, RED_CHAIN, RED_FLUTE, RED_ID_BADGE, RED_NECTAR, RED_ORB, RED_PETAL, RED_SCALE, RED_SCARF, RED_SHARD, REINS_OF_UNITY, RELAXED_MINT, RELIC_BAND, RELIC_COPPER, RELIC_CROWN, RELIC_GOLD, RELIC_SILVER, RELIC_STATUE, RELIC_VASE, REMEDY, REPEAT_BALL, REPEL, REPLY_MAIL, RESIST_FEATHER, RETRO_MAIL, REVEAL_GLASS, REVIVAL_HERB, REVIVE, RHYHORN_CANDY, RIBBON_SWEET, RICH_MULCH, RIDE_PAGER, RINDO_BERRY, RING_TARGET, ROCK_GEM, ROCK_INCENSE, ROCK_MEMORY, ROCK_TERA_SHARD, ROCKIUM_Z, ROCKY_HELMET, ROLLER_SKATES, ROOM_SERVICE, ROOT_FOSSIL, ROSE_INCENSE, ROSELI_BERRY, ROTO_BARGAIN, ROTO_BOOST, ROTO_CATCH, ROTO_ENCOUNTER, ROTO_EXP_POINTS, ROTO_FRIENDSHIP, ROTO_HATCH, ROTO_HP_RESTORE, ROTO_PP_RESTORE, ROTO_PRIZE_MONEY, ROTO_STEALTH, ROTOM_BIKE, ROTOM_CATALOG, ROTOM_PHONE, ROWAP_BERRY, RSVP_MAIL, RUBY, RUNNING_SHOES, RUSTED_SHIELD, RUSTED_SWORD, S_S_TICKET, SABLENITE, SACHET, SACRED_ASH, SAFARI_BALL, SAFETY_GOGGLES, SAIL_FOSSIL, SALAC_BERRY, SALAMENCITE, SALT_CAKE, SAND_RADISH, SANDSHREW_CANDY, SANDWICH, SAPPHIRE, SASSY_MINT, SCANNER, SCARLET_BOOK, SCATTER_BANG, SCEPTILITE, SCIZORITE, SCOPE_LENS, SCROLL_OF_DARKNESS, SCROLL_OF_WATERS, SCYTHER_CANDY, SEA_INCENSE, SEAL_CASE, SECRET_KEY, SECRET_MEDICINE, SEED_OF_MASTERY, SEEL_CANDY, SERIOUS_MINT, SHADOW_MAIL, SHADEROOT_CARROT, SHALOUR_SABLE, SHARP_BEAK, SHARPEDONITE, SHED_SHELL, SHELL_BELL, SHELLDER_CANDY, SHINY_CHARM, SHINY_LEAF, SHINY_STONE, SHOAL_SALT, SHOAL_SHELL, SHOCK_DRIVE, SHUCA_BERRY, SILK_SCARF, SILPH_SCOPE, SILVER_LEAF, SILVER_NANAB_BERRY, SILVER_PINAP_BERRY, SILVER_POWDER, SILVER_RAZZ_BERRY, SILVER_WING, SITRUS_BERRY, SKULL_FOSSIL, SKY_PLATE, SKY_TUMBLESTONE, SLOWBRONITE, SLOWPOKE_CANDY, SLOWPOKE_TAIL, SMALL_BOUQUET, SMALL_TABLET, SMART_CANDY, SMART_CANDY_L, SMART_CANDY_XL, SMOKE_BALL, SMOKE_BOMB, SMOOTH_ROCK, SNORLAX_CANDY, SNORLIUM_Z, SNOWBALL, SNOW_BALM, SNOW_MAIL, SODA_POP, SOFT_SAND, SOLGANIUM_Z, SONIAS_BOOK, SOOT_SACK, SOOTFOOT_ROOT, SOOTHE_BELL, SOUL_DEW, SOUL_SLATE, SPACE_BALM, SPACE_MAIL, SPARKLING_STONE, SPEAROW_CANDY, SPELL_TAG, SPELON_BERRY, SPLASH_PLATE, SPOILED_APRICORN, SPOOKY_PLATE, SPORT_BALL, SPRAYDUCK, SPRINGY_MUSHROOM, SPRINKLOTAD, SQUALL_SLATE, SQUIRT_BOTTLE, SQUIRTLE_CANDY, STABLE_MULCH, STAR_PIECE, STAR_SWEET, STARDUST, STARF_BERRY, STARYU_CANDY, STEALTH_SPRAY, STEEL_GEM, STEEL_MAIL, STEEL_MEMORY, STEEL_TEETH, STEEL_TERA_SHARD, STEELIUM_Z, STEELIXITE, STICKY_BARB, STICKY_GLOB, STONE_PLATE, STORAGE_KEY, STRANGE_BALL, STRANGE_SOUVENIR, STRATOSPHERIC_SLATE, STRAWBERRY_SWEET, STRETCHY_SPRING, STRIB_BERRY, STYLE_CARD, SUBWAY_KEY, SUITE_KEY, SUN_FLUTE, SUN_SHARD, SUN_STONE, SUPER_LURE, SUPER_POTION, SUPER_REPEL, SUPER_ROD, SUPERB_REMEDY, SURFBOARD, SURF_MAIL, SURGE_BADGE, SURPRISE_MULCH, SURVIVAL_CHARM_B, SURVIVAL_CHARM_P, SURVIVAL_CHARM_R, SURVIVAL_CHARM_T, SURVIVAL_CHARM_Y, SWAMPERTITE, SWAP_SNACK, SWEET_APPLE, SWEET_HEART, SWIFT_FEATHER, SWORDCAP, SYSTEM_LEVER, TAMATO_BERRY, TANGA_BERRY, TANGELA_CANDY, TAPUNIUM_Z, TART_APPLE, TAUROS_CANDY, TEA, TEACHY_TV, TECTONIC_SLATE, TEMPTING_CHARM_B, TEMPTING_CHARM_P, TEMPTING_CHARM_R, TEMPTING_CHARM_T, TEMPTING_CHARM_Y, TENTACOOL_CANDY, TERA_ORB, TERRAIN_EXTENDER, TERU_SAMA, THANKS_MAIL, THICK_CLUB, THROAT_SPRAY, THUNDER_STONE, TIDAL_BELL, TIME_BALM, TIME_FLUTE, TIMER_BALL, TIMID_MINT, TINY_BAMBOO_SHOOT, TINY_MUSHROOM, TM01, TM02, TM03, TM04, TM05, TM06, TM07, TM08, TM09, TM10, TM11, TM12, TM13, TM14, TM15, TM16, TM17, TM18, TM19, TM20, TM21, TM22, TM23, TM24, TM25, TM26, TM27, TM28, TM29, TM30, TM31, TM32, TM33, TM34, TM35, TM36, TM37, TM38, TM39, TM40, TM41, TM42, TM43, TM44, TM45, TM46, TM47, TM48, TM49, TM50, TM51, TM52, TM53, TM54, TM55, TM56, TM57, TM58, TM59, TM60, TM61, TM62, TM63, TM64, TM65, TM66, TM67, TM68, TM69, TM70, TM71, TM72, TM73, TM74, TM75, TM76, TM77, TM78, TM79, TM80, TM81, TM82, TM83, TM84, TM85, TM86, TM87, TM88, TM89, TM90, TM91, TM92, TM93, TM94, TM95, TM96, TM97, TM98, TM99, TM_CASE, TM_MATERIALS, TR01, TR02, TR03, TR04, TR05, TR06, TR07, TR08, TR09, TR10, TR11, TR12, TR13, TR14, TR15, TR16, TR17, TR18, TR19, TR20, TR21, TR22, TR23, TR24, TR25, TR26, TR27, TR28, TR29, TR30, TR31, TR32, TR33, TR34, TR35, TR36, TR37, TR38, TR39, TR40, TR41, TR42, TR43, TR44, TR45, TR46, TR47, TR48, TR49, TR50, TR51, TR52, TR53, TR54, TR55, TR56, TR57, TR58, TR59, TR60, TR61, TR62, TR63, TR64, TR65, TR66, TR67, TR68, TR69, TR70, TR71, TR72, TR73, TR74, TR75, TR76, TR77, TR78, TR79, TR80, TR81, TR82, TR83, TR84, TR85, TR86, TR87, TR88, TR89, TR90, TR91, TR92, TR93, TR94, TR95, TR96, TR97, TR98, TR99, TMV_PASS, TOPO_BERRY, TORN_JOURNAL, TOUGA_BERRY, TOUGH_CANDY, TOUGH_CANDY_L, TOUGH_CANDY_XL, TOWN_MAP, TOXIC_ORB, TOXIC_PLATE, TRAVEL_TRUNK, TRI_PASS, TROPIC_MAIL, TROPICAL_SHELL, TUMBLESTONE, TUNNEL_MAIL, TWICE_SPICED_RADISH, TWISTED_SPOON, TYRANITARITE, U_DISK, ULTRA_BALL, ULTRANECROZIUM_Z, UNOWN_REPORT, UNUSUAL_SHOES, UPGRADE, UTILITY_UMBRELLA, UXIES_CLAW, VENONAT_CANDY, VENUSAURITE, VIOLET_BOOK, VIVICHOKE, VIVID_SCENT, VOICE_CASE_1, VOICE_CASE_2, VOICE_CASE_3, VOICE_CASE_4, VOICE_CASE_5, VOLCANO_BALM, VOLTORB_CANDY, VS_RECORDER, VS_SEEKER, VULPIX_CANDY, WACAN_BERRY, WAILMER_PAIL, WALL_FRAGMENT, WARDING_CHARM_B, WARDING_CHARM_P, WARDING_CHARM_R, WARDING_CHARM_T, WARDING_CHARM_Y, WATER_GEM, WATER_MEMORY, WATER_STONE, WATER_TERA_SHARD, WATERIUM_Z, WATMEL_BERRY, WAVE_INCENSE, WAVE_MAIL, WEAKNESS_POLICY, WEEDLE_CANDY, WEPEAR_BERRY, WHIPPED_DREAM, WHITE_APRICORN, WHITE_FLUTE, WHITE_HERB, WHITE_MANE_HAIR, WIDE_LENS, WIKI_BERRY, WING_BALL, WISE_GLASSES, WISHING_CHIP, WISHING_PIECE, WISHING_STAR, WOOD, WOOD_MAIL, WOODEN_CROWN, WORKS_KEY, X_ACCURACY, X_ATTACK, X_DEFENSE, X_SP_ATK, X_SP_DEF, X_SPEED, XTRANSCEIVER, YACHE_BERRY, YAGO_BERRY, YELLOW_APRICORN, YELLOW_FLUTE, YELLOW_NECTAR, YELLOW_PETAL, YELLOW_SCARF, YELLOW_SHARD, YLW_ID_BADGE, ZAP_PLATE, ZAPDOS_CANDY, ZINC, ZOOM_LENS, Z_POWER_RING, Z_RING, ZUBAT_CANDY, ZYGARDE_CUBE, ITEM_TOTAL
-  // clang-format on
-};
-
-static constexpr std::size_t TOTAL_ITEM_COUNT = (std::size_t)Item::ITEM_TOTAL;
-}  // namespace pokesim::dex
-
-/////////////////////// END OF src/Types/Enums/Item.hpp ////////////////////////
-
-///////////////////// START OF src/Types/Enums/Nature.hpp //////////////////////
-
-#include <cstddef>
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon nature name
-enum class Nature : std::uint8_t {
-  // clang-format off
-  NO_NATURE = 0, ADAMANT, BASHFUL, BOLD, BRAVE, CALM, CAREFUL, DOCILE, GENTLE, HARDY, HASTY, IMPISH, JOLLY, LAX, LONELY, MILD, MODEST, NAIVE, NAUGHTY, QUIET, QUIRKY, RASH, RELAXED, SASSY, SERIOUS, TIMID, NATURE_TOTAL
-  // clang-format on
-};
-
-static constexpr std::size_t TOTAL_NATURE_COUNT = (std::size_t)Nature::NATURE_TOTAL;
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Nature.hpp ///////////////////////
-
-///////////////////// START OF src/Types/Enums/Species.hpp /////////////////////
-
-#include <cstddef>
-#include <cstdint>
-
-namespace pokesim::dex {
-
-/**
- * @brief Pokemon and Pokemon form name.
- *
- * @details Pokemon that have multiple forms will have their base form and alternate forms listed here.
- * However, if none of a Pokemon's forms are cosmetic (i.e. change nothing expect appearance), the forms cannot be
- * changed during battle, and no true base form exists, then the Pokemon's species name without a form specifier is
- * omitted. For example:
- *  - `VENUSAUR`, `MEGA_VENUSAUR`, and `GIGANTAMAX_VENUSAUR` are all listed because Venusaur changes into the other
- * forms mid-battle
- *  - `GASTRODON`, `WEST_SEA_GASTRODON`, and `EAST_SEA_GASTRODON` are all listed because although Gastrodon's forms
- * are permanent, their only difference is how they look
- *  - `PLANT_CLOAK_WORMADAM`, `SANDY_CLOAK_WORMADAM`, and `TRASH_CLOAK_WORMADAM` listed while `WORMADAM` is not
- * because the Wormadam forms have different types, stats, and moves; their forms are permanent; and there is no base
- * Wormadam.
- */
-enum class Species : std::uint16_t {
-  // clang-format off
-  MISSING_NO = 0, BULBASAUR, IVYSAUR, VENUSAUR, MEGA_VENUSAUR, GIGANTAMAX_VENUSAUR, CHARMANDER, CHARMELEON, CHARIZARD, MEGA_CHARIZARD_X, MEGA_CHARIZARD_Y, GIGANTAMAX_CHARIZARD, SQUIRTLE, WARTORTLE, BLASTOISE, MEGA_BLASTOISE, GIGANTAMAX_BLASTOISE, CATERPIE, METAPOD, BUTTERFREE, GIGANTAMAX_BUTTERFREE, WEEDLE, KAKUNA, BEEDRILL, MEGA_BEEDRILL, PIDGEY, PIDGEOTTO, PIDGEOT, MEGA_PIDGEOT, RATTATA, ALOLAN_RATTATA, RATICATE, ALOLAN_RATICATE, TOTEM_ALOLAN_RATICATE, SPEAROW, FEAROW, EKANS, ARBOK, PIKACHU, COSPLAY_PIKACHU, PIKACHU_ROCK_STAR, PIKACHU_BELLE, PIKACHU_POP_STAR, PIKACHU_PHD, PIKACHU_LIBRE, ORIGINAL_CAP_PIKACHU, HOENN_CAP_PIKACHU, SINNOH_CAP_PIKACHU, UNOVA_CAP_PIKACHU, KALOS_CAP_PIKACHU, ALOLA_CAP_PIKACHU, PARTNER_CAP_PIKACHU, STARTER_PIKACHU, GIGANTAMAX_PIKACHU, WORLD_CAP_PIKACHU, RAICHU, ALOLAN_RAICHU, SANDSHREW, ALOLAN_SANDSHREW, SANDSLASH, ALOLAN_SANDSLASH, NIDORAN_FEMALE, NIDORINA, NIDOQUEEN, NIDORAN_MALE, NIDORINO, NIDOKING, CLEFAIRY, CLEFABLE, VULPIX, ALOLAN_VULPIX, NINETALES, ALOLAN_NINETALES, JIGGLYPUFF, WIGGLYTUFF, ZUBAT, GOLBAT, ODDISH, GLOOM, VILEPLUME, PARAS, PARASECT, VENONAT, VENOMOTH, DIGLETT, ALOLAN_DIGLETT, DUGTRIO, ALOLAN_DUGTRIO, MEOWTH, ALOLAN_MEOWTH, GALARIAN_MEOWTH, GIGANTAMAX_MEOWTH, PERSIAN, ALOLAN_PERSIAN, PSYDUCK, GOLDUCK, MANKEY, PRIMEAPE, HISUIAN_GROWLITHE, GROWLITHE, HISUIAN_ARCANINE, ARCANINE, POLIWAG, POLIWHIRL, POLIWRATH, ABRA, KADABRA, ALAKAZAM, MEGA_ALAKAZAM, MACHOP, MACHOKE, MACHAMP, GIGANTAMAX_MACHAMP, BELLSPROUT, WEEPINBELL, VICTREEBEL, TENTACOOL, TENTACRUEL, GEODUDE, ALOLAN_GEODUDE, GRAVELER, ALOLAN_GRAVELER, GOLEM, ALOLAN_GOLEM, PONYTA, GALARIAN_PONYTA, RAPIDASH, GALARIAN_RAPIDASH, SLOWPOKE, GALARIAN_SLOWPOKE, SLOWBRO, MEGA_SLOWBRO, GALARIAN_SLOWBRO, MAGNEMITE, MAGNETON, FARFETCH_D, GALARIAN_FARFETCH_D, DODUO, DODRIO, SEEL, DEWGONG, GRIMER, ALOLAN_GRIMER, MUK, ALOLAN_MUK, SHELLDER, CLOYSTER, GASTLY, HAUNTER, GENGAR, MEGA_GENGAR, GIGANTAMAX_GENGAR, ONIX, DROWZEE, HYPNO, KRABBY, KINGLER, GIGANTAMAX_KINGLER, VOLTORB, HISUIAN_VOLTORB, ELECTRODE, HISUIAN_ELECTRODE, EXEGGCUTE, EXEGGUTOR, ALOLAN_EXEGGUTOR, CUBONE, MAROWAK, ALOLAN_MAROWAK, TOTEM_ALOLAN_MAROWAK, HITMONLEE, HITMONCHAN, LICKITUNG, KOFFING, WEEZING, GALARIAN_WEEZING, RHYHORN, RHYDON, CHANSEY, TANGELA, KANGASKHAN, MEGA_KANGASKHAN, HORSEA, SEADRA, GOLDEEN, SEAKING, STARYU, STARMIE, MR_MIME, GALARIAN_MR_MIME, SCYTHER, JYNX, ELECTABUZZ, MAGMAR, PINSIR, MEGA_PINSIR, TAUROS, PALDEAN_TAUROS_COMBAT_BREAD, PALDEAN_TAUROS_BLAZE_BREAD, PALDEAN_TAUROS_AQUA_BREAD, MAGIKARP, GYARADOS, MEGA_GYARADOS, LAPRAS, GIGANTAMAX_LAPRAS, DITTO, EEVEE, STARTER_EEVEE, GIGANTAMAX_EEVEE, VAPOREON, JOLTEON, FLAREON, PORYGON, OMANYTE, OMASTAR, KABUTO, KABUTOPS, AERODACTYL, MEGA_AERODACTYL, SNORLAX, GIGANTAMAX_SNORLAX, ARTICUNO, GALARIAN_ARTICUNO, ZAPDOS, GALARIAN_ZAPDOS, MOLTRES, GALARIAN_MOLTRES, DRATINI, DRAGONAIR, DRAGONITE, MEWTWO, MEGA_MEWTWO_X, MEGA_MEWTWO_Y, MEW, CHIKORITA, BAYLEEF, MEGANIUM, CYNDAQUIL, QUILAVA, HISUIAN_TYPHLOSION, TYPHLOSION, TOTODILE, CROCONAW, FERALIGATR, SENTRET, FURRET, HOOTHOOT, NOCTOWL, LEDYBA, LEDIAN, SPINARAK, ARIADOS, CROBAT, CHINCHOU, LANTURN, PICHU, SPIKY_EARED_PICHU, CLEFFA, IGGLYBUFF, TOGEPI, TOGETIC, NATU, XATU, MAREEP, FLAAFFY, AMPHAROS, MEGA_AMPHAROS, BELLOSSOM, MARILL, AZUMARILL, SUDOWOODO, POLITOED, HOPPIP, SKIPLOOM, JUMPLUFF, AIPOM, SUNKERN, SUNFLORA, YANMA, WOOPER, PALDEAN_WOOPER, QUAGSIRE, ESPEON, UMBREON, MURKROW, SLOWKING, GALARIAN_SLOWKING, MISDREAVUS, UNOWN, UNOWN_A, UNOWN_B, UNOWN_C, UNOWN_D, UNOWN_E, UNOWN_F, UNOWN_G, UNOWN_H, UNOWN_I, UNOWN_J, UNOWN_K, UNOWN_L, UNOWN_M, UNOWN_N, UNOWN_O, UNOWN_P, UNOWN_Q, UNOWN_R, UNOWN_S, UNOWN_T, UNOWN_U, UNOWN_V, UNOWN_W, UNOWN_X, UNOWN_Y, UNOWN_Z, UNOWN_EXCLAMATION, UNOWN_QUESTION, WOBBUFFET, GIRAFARIG, PINECO, FORRETRESS, DUNSPARCE, GLIGAR, STEELIX, MEGA_STEELIX, SNUBBULL, GRANBULL, QWILFISH, HISUIAN_QWILFISH, SCIZOR, MEGA_SCIZOR, SHUCKLE, HERACROSS, MEGA_HERACROSS, HISUIAN_SNEASEL, SNEASEL, TEDDIURSA, URSARING, SLUGMA, MAGCARGO, SWINUB, PILOSWINE, CORSOLA, GALARIAN_CORSOLA, REMORAID, OCTILLERY, DELIBIRD, MANTINE, SKARMORY, HOUNDOUR, HOUNDOOM, MEGA_HOUNDOOM, KINGDRA, PHANPY, DONPHAN, PORYGON2, STANTLER, SMEARGLE, TYROGUE, HITMONTOP, SMOOCHUM, ELEKID, MAGBY, MILTANK, BLISSEY, RAIKOU, ENTEI, SUICUNE, LARVITAR, PUPITAR, TYRANITAR, MEGA_TYRANITAR, LUGIA, HO_OH, CELEBI, TREECKO, GROVYLE, SCEPTILE, MEGA_SCEPTILE, TORCHIC, COMBUSKEN, BLAZIKEN, MEGA_BLAZIKEN, MUDKIP, MARSHTOMP, SWAMPERT, MEGA_SWAMPERT, POOCHYENA, MIGHTYENA, ZIGZAGOON, GALARIAN_ZIGZAGOON, LINOONE, GALARIAN_LINOONE, WURMPLE, SILCOON, BEAUTIFLY, CASCOON, DUSTOX, LOTAD, LOMBRE, LUDICOLO, SEEDOT, NUZLEAF, SHIFTRY, TAILLOW, SWELLOW, WINGULL, PELIPPER, RALTS, KIRLIA, GARDEVOIR, MEGA_GARDEVOIR, SURSKIT, MASQUERAIN, SHROOMISH, BRELOOM, SLAKOTH, VIGOROTH, SLAKING, NINCADA, NINJASK, SHEDINJA, WHISMUR, LOUDRED, EXPLOUD, MAKUHITA, HARIYAMA, AZURILL, NOSEPASS, SKITTY, DELCATTY, SABLEYE, MEGA_SABLEYE, MAWILE, MEGA_MAWILE, ARON, LAIRON, AGGRON, MEGA_AGGRON, MEDITITE, MEDICHAM, MEGA_MEDICHAM, ELECTRIKE, MANECTRIC, MEGA_MANECTRIC, PLUSLE, MINUN, VOLBEAT, ILLUMISE, ROSELIA, GULPIN, SWALOT, CARVANHA, SHARPEDO, MEGA_SHARPEDO, WAILMER, WAILORD, NUMEL, CAMERUPT, MEGA_CAMERUPT, TORKOAL, SPOINK, GRUMPIG, SPINDA, TRAPINCH, VIBRAVA, FLYGON, CACNEA, CACTURNE, SWABLU, ALTARIA, MEGA_ALTARIA, ZANGOOSE, SEVIPER, LUNATONE, SOLROCK, BARBOACH, WHISCASH, CORPHISH, CRAWDAUNT, BALTOY, CLAYDOL, LILEEP, CRADILY, ANORITH, ARMALDO, FEEBAS, MILOTIC, CASTFORM, SUNNY_CASTFORM, RAINY_CASTFORM, SNOWY_CASTFORM, KECLEON, SHUPPET, BANETTE, MEGA_BANETTE, DUSKULL, DUSCLOPS, TROPIUS, CHIMECHO, ABSOL, MEGA_ABSOL, WYNAUT, SNORUNT, GLALIE, MEGA_GLALIE, SPHEAL, SEALEO, WALREIN, CLAMPERL, HUNTAIL, GOREBYSS, RELICANTH, LUVDISC, BAGON, SHELGON, SALAMENCE, MEGA_SALAMENCE, BELDUM, METANG, METAGROSS, MEGA_METAGROSS, REGIROCK, REGICE, REGISTEEL, LATIAS, MEGA_LATIAS, LATIOS, MEGA_LATIOS, KYOGRE, PRIMAL_KYOGRE, GROUDON, PRIMAL_GROUDON, RAYQUAZA, MEGA_RAYQUAZA, JIRACHI, DEOXYS, ATTACK_DEOXYS, DEFENSE_DEOXYS, SPEED_DEOXYS, TURTWIG, GROTLE, TORTERRA, CHIMCHAR, MONFERNO, INFERNAPE, PIPLUP, PRINPLUP, EMPOLEON, STARLY, STARAVIA, STARAPTOR, BIDOOF, BIBAREL, KRICKETOT, KRICKETUNE, SHINX, LUXIO, LUXRAY, BUDEW, ROSERADE, CRANIDOS, RAMPARDOS, SHIELDON, BASTIODON, BURMY, PLANT_CLOAK_BURMY, SANDY_CLOAK_BURMY, TRASH_CLOAK_BURMY, PLANT_CLOAK_WORMADAM, SANDY_CLOAK_WORMADAM, TRASH_CLOAK_WORMADAM, MOTHIM, COMBEE, VESPIQUEN, PACHIRISU, BUIZEL, FLOATZEL, CHERUBI, CHERRIM, CHERRIM_OVERCAST, CHERRIM_SUNSHINE, SHELLOS, WEST_SEA_SHELLOS, EAST_SEA_SHELLOS, GASTRODON, WEST_SEA_GASTRODON, EAST_SEA_GASTRODON, AMBIPOM, DRIFLOON, DRIFBLIM, BUNEARY, LOPUNNY, MEGA_LOPUNNY, MISMAGIUS, HONCHKROW, GLAMEOW, PURUGLY, CHINGLING, STUNKY, SKUNTANK, BRONZOR, BRONZONG, BONSLY, MIME_JR, HAPPINY, CHATOT, SPIRITOMB, GIBLE, GABITE, GARCHOMP, MEGA_GARCHOMP, MUNCHLAX, RIOLU, LUCARIO, MEGA_LUCARIO, HIPPOPOTAS, HIPPOWDON, SKORUPI, DRAPION, CROAGUNK, TOXICROAK, CARNIVINE, FINNEON, LUMINEON, MANTYKE, SNOVER, ABOMASNOW, MEGA_ABOMASNOW, WEAVILE, MAGNEZONE, LICKILICKY, RHYPERIOR, TANGROWTH, ELECTIVIRE, MAGMORTAR, TOGEKISS, YANMEGA, LEAFEON, GLACEON, GLISCOR, MAMOSWINE, PORYGON_Z, GALLADE, MEGA_GALLADE, PROBOPASS, DUSKNOIR, FROSLASS, ROTOM, HEAT_ROTOM, WASH_ROTOM, FROST_ROTOM, FAN_ROTOM, MOW_ROTOM, UXIE, MESPRIT, AZELF, DIALGA, DIALGA_ORIGIN, PALKIA, PALKIA_ORIGIN, HEATRAN, REGIGIGAS, GIRATINA_ALTERED, GIRATINA_ORIGIN, CRESSELIA, PHIONE, MANAPHY, DARKRAI, SHAYMIN, SHAYMIN_LAND, SHAYMIN_SKY, ARCEUS, ARCEUS_BUG, ARCEUS_DARK, ARCEUS_DRAGON, ARCEUS_ELECTRIC, ARCEUS_FAIRY, ARCEUS_FIGHTING, ARCEUS_FIRE, ARCEUS_FLYING, ARCEUS_GHOST, ARCEUS_GRASS, ARCEUS_GROUND, ARCEUS_ICE, ARCEUS_POISON, ARCEUS_PSYCHIC, ARCEUS_ROCK, ARCEUS_STEEL, ARCEUS_WATER, VICTINI, SNIVY, SERVINE, SERPERIOR, TEPIG, PIGNITE, EMBOAR, OSHAWOTT, DEWOTT, HISUIAN_SAMUROTT, SAMUROTT, PATRAT, WATCHOG, LILLIPUP, HERDIER, STOUTLAND, PURRLOIN, LIEPARD, PANSAGE, SIMISAGE, PANSEAR, SIMISEAR, PANPOUR, SIMIPOUR, MUNNA, MUSHARNA, PIDOVE, TRANQUILL, UNFEZANT, BLITZLE, ZEBSTRIKA, ROGGENROLA, BOLDORE, GIGALITH, WOOBAT, SWOOBAT, DRILBUR, EXCADRILL, AUDINO, MEGA_AUDINO, TIMBURR, GURDURR, CONKELDURR, TYMPOLE, PALPITOAD, SEISMITOAD, THROH, SAWK, SEWADDLE, SWADLOON, LEAVANNY, VENIPEDE, WHIRLIPEDE, SCOLIPEDE, COTTONEE, WHIMSICOTT, PETILIL, LILLIGANT, HISUIAN_LILLIGANT, RED_STRIPED_BASCULIN, BLUE_STRIPED_BASCULIN, WHITE_STRIPED_BASCULIN, SANDILE, KROKOROK, KROOKODILE, DARUMAKA, GALARIAN_DARUMAKA, DARMANITAN, ZEN_MODE_DARMANITAN, GALARIAN_DARMANITAN, GALARIAN_ZEN_MODE_DARMANITAN, MARACTUS, DWEBBLE, CRUSTLE, SCRAGGY, SCRAFTY, SIGILYPH, YAMASK, GALARIAN_YAMASK, COFAGRIGUS, TIRTOUGA, CARRACOSTA, ARCHEN, ARCHEOPS, TRUBBISH, GARBODOR, GIGANTAMAX_GARBODOR, ZORUA, HISUIAN_ZORUA, HISUIAN_ZOROARK, ZOROARK, MINCCINO, CINCCINO, GOTHITA, GOTHORITA, GOTHITELLE, SOLOSIS, DUOSION, REUNICLUS, DUCKLETT, SWANNA, VANILLITE, VANILLISH, VANILLUXE, DEERLING, DEERLING_SPRING, DEERLING_SUMMER, DEERLING_AUTUMN, DEERLING_WINTER, SAWSBUCK, SAWSBUCK_SPRING, SAWSBUCK_SUMMER, SAWSBUCK_AUTUMN, SAWSBUCK_WINTER, EMOLGA, KARRABLAST, ESCAVALIER, FOONGUS, AMOONGUSS, FRILLISH, JELLICENT, ALOMOMOLA, JOLTIK, GALVANTULA, FERROSEED, FERROTHORN, KLINK, KLANG, KLINKLANG, TYNAMO, EELEKTRIK, EELEKTROSS, ELGYEM, BEHEEYEM, LITWICK, LAMPENT, CHANDELURE, AXEW, FRAXURE, HAXORUS, CUBCHOO, BEARTIC, CRYOGONAL, SHELMET, ACCELGOR, STUNFISK, GALARIAN_STUNFISK, MIENFOO, MIENSHAO, DRUDDIGON, GOLETT, GOLURK, PAWNIARD, BISHARP, BOUFFALANT, RUFFLET, HISUIAN_BRAVIARY, BRAVIARY, VULLABY, MANDIBUZZ, HEATMOR, DURANT, DEINO, ZWEILOUS, HYDREIGON, LARVESTA, VOLCARONA, COBALION, TERRAKION, VIRIZION, INCARNATE_TORNADUS, TORNADUS_THERIAN, INCARNATE_THUNDURUS, THUNDURUS_THERIAN, RESHIRAM, ZEKROM, INCARNATE_LANDORUS, LANDORUS_THERIAN, KYUREM, BLACK_KYUREM, WHITE_KYUREM, KELDEO, RESOLUTE_KELDEO, ARIA_MELOETTA, PIROUETTE_MELOETTA, GENESECT, DOUSE_DRIVE_GENESECT, SHOCK_DRIVE_GENESECT, BURN_DRIVE_GENESECT, CHILL_DRIVE_GENESECT, CHESPIN, QUILLADIN, CHESNAUGHT, FENNEKIN, BRAIXEN, DELPHOX, FROAKIE, FROGADIER, GRENINJA, ASH_GRENINJA, BUNNELBY, DIGGERSBY, FLETCHLING, FLETCHINDER, TALONFLAME, SCATTERBUG, SPEWPA, VIVILLON, MEADOW_PATTERN_VIVILLON, ARCHIPELAGO_PATTERN_VIVILLON, CONTINENTAL_PATTERN_VIVILLON, ELEGANT_PATTERN_VIVILLON, GARDEN_PATTERN_VIVILLON, HIGH_PLAINS_PATTERN_VIVILLON, ICY_SNOW_PATTERN_VIVILLON, JUNGLE_PATTERN_VIVILLON, MARINE_PATTERN_VIVILLON, MODERN_PATTERN_VIVILLON, MONSOON_PATTERN_VIVILLON, OCEAN_PATTERN_VIVILLON, POLAR_PATTERN_VIVILLON, RIVER_PATTERN_VIVILLON, SANDSTORM_PATTERN_VIVILLON, SAVANNA_PATTERN_VIVILLON, SUN_PATTERN_VIVILLON, TUNDRA_PATTERN_VIVILLON, FANCY_PATTERN_VIVILLON, POKEBALL_PATTERN_VIVILLON, LITLEO, PYROAR, FLABEBE, RED_FLOWER_FLABEBE, BLUE_FLOWER_FLABEBE, ORANGE_FLOWER_FLABEBE, WHITE_FLOWER_FLABEBE, YELLOW_FLOWER_FLABEBE, FLOETTE, RED_FLOWER_FLOETTE, BLUE_FLOWER_FLOETTE, ORANGE_FLOWER_FLOETTE, WHITE_FLOWER_FLOETTE, YELLOW_FLOWER_FLOETTE, ETERNAL_FLOWER_FLOETTE, FLORGES, RED_FLOWER_FLORGES, BLUE_FLOWER_FLORGES, ORANGE_FLOWER_FLORGES, WHITE_FLOWER_FLORGES, YELLOW_FLOWER_FLORGES, SKIDDO, GOGOAT, PANCHAM, PANGORO, FURFROU, NATURAL_FURFROU, DANDY_TRIM_FURFROU, DEBUTANTE_TRIM_FURFROU, DIAMOND_TRIM_FURFROU, HEART_TRIM_FURFROU, KABUKI_TRIM_FURFROU, LA_REINE_TRIM_FURFROU, MATRON_TRIM_FURFROU, PHARAOH_TRIM_FURFROU, STAR_TRIM_FURFROU, ESPURR, MALE_MEOWSTIC, FEMALE_MEOWSTIC, HONEDGE, DOUBLADE, AEGISLASH, SHIELD_AEGISLASH, BLADE_AEGISLASH, SPRITZEE, AROMATISSE, SWIRLIX, SLURPUFF, INKAY, MALAMAR, BINACLE, BARBARACLE, SKRELP, DRAGALGE, CLAUNCHER, CLAWITZER, HELIOPTILE, HELIOLISK, TYRUNT, TYRANTRUM, AMAURA, AURORUS, SYLVEON, HAWLUCHA, DEDENNE, CARBINK, GOOMY, HISUIAN_SLIGGOO, SLIGGOO, HISUIAN_GOODRA, GOODRA, KLEFKI, PHANTUMP, TREVENANT, AVERAGE_SIZE_PUMPKABOO, SMALL_SIZE_PUMPKABOO, LARGE_SIZE_PUMPKABOO, SUPER_SIZE_PUMPKABOO, AVERAGE_SIZE_GOURGEIST, SMALL_SIZE_GOURGEIST, LARGE_SIZE_GOURGEIST, SUPER_SIZE_GOURGEIST, BERGMITE, AVALUGG, HISUIAN_AVALUGG, NOIBAT, NOIVERN, XERNEAS, YVELTAL, ZYGARDE_50, ZYGARDE_10, ZYGARDE_COMPLETE, DIANCIE, MEGA_DIANCIE, HOOPA_CONFINED, HOOPA_UNBOUND, VOLCANION, ROWLET, DARTRIX, HISUIAN_DECIDUEYE, DECIDUEYE, LITTEN, TORRACAT, INCINEROAR, POPPLIO, BRIONNE, PRIMARINA, PIKIPEK, TRUMBEAK, TOUCANNON, YUNGOOS, GUMSHOOS, TOTEM_GUMSHOOS, GRUBBIN, CHARJABUG, VIKAVOLT, TOTEM_VIKAVOLT, CRABRAWLER, CRABOMINABLE, BAILE_STYLE_ORICORIO, POM_POM_STYLE_ORICORIO, PA_U_STYLE_ORICORIO, SENSU_STYLE_ORICORIO, CUTIEFLY, RIBOMBEE, TOTEM_RIBOMBEE, ROCKRUFF, MIDDAY_ROCKRUFF, MIDDAY_LYCANROC, MIDNIGHT_LYCANROC, DUSK_LYCANROC, WISHIWASHI, SOLO_WISHIWASHI, SCHOOL_WISHIWASHI, MAREANIE, TOXAPEX, MUDBRAY, MUDSDALE, DEWPIDER, ARAQUANID, TOTEM_ARAQUANID, FOMANTIS, LURANTIS, TOTEM_LURANTIS, MORELULL, SHIINOTIC, SALANDIT, SALAZZLE, TOTEM_SALAZZLE, STUFFUL, BEWEAR, BOUNSWEET, STEENEE, TSAREENA, COMFEY, ORANGURU, PASSIMIAN, WIMPOD, GOLISOPOD, SANDYGAST, PALOSSAND, PYUKUMUKU, TYPE_NULL, SILVALLY, SILVALLY_BUG, SILVALLY_DARK, SILVALLY_DRAGON, SILVALLY_ELECTRIC, SILVALLY_FAIRY, SILVALLY_FIGHTING, SILVALLY_FIRE, SILVALLY_FLYING, SILVALLY_GHOST, SILVALLY_GRASS, SILVALLY_GROUND, SILVALLY_ICE, SILVALLY_POISON, SILVALLY_PSYCHIC, SILVALLY_ROCK, SILVALLY_STEEL, SILVALLY_WATER, MINIOR, CORE_MINIOR, RED_CORE_MINIOR, ORANGE_CORE_MINIOR, YELLOW_CORE_MINIOR, GREEN_CORE_MINIOR, BLUE_CORE_MINIOR, INDIGO_CORE_MINIOR, VIOLET_CORE_MINIOR, METEOR_MINIOR, KOMALA, TURTONATOR, TOGEDEMARU, TOTEM_TOGEDEMARU, MIMIKYU, MIMIKYU_BUSTED, TOTEM_MIMIKYU, BUSTED_TOTEM_MIMIKYU, BRUXISH, DRAMPA, DHELMISE, JANGMO_O, HAKAMO_O, KOMMO_O, TOTEM_KOMMO_O, TAPU_KOKO, TAPU_LELE, TAPU_BULU, TAPU_FINI, COSMOG, COSMOEM, SOLGALEO, LUNALA, NIHILEGO, BUZZWOLE, PHEROMOSA, XURKITREE, CELESTEELA, KARTANA, GUZZLORD, NECROZMA, DUSK_MANE_NECROZMA, DAWN_WINGS_NECROZMA, ULTRA_NECROZMA, MAGEARNA, ORIGINAL_COLOR_MAGEARNA, MARSHADOW, POIPOLE, NAGANADEL, STAKATAKA, BLACEPHALON, ZERAORA, MELTAN, MELMETAL, GIGANTAMAX_MELMETAL, GROOKEY, THWACKEY, RILLABOOM, GIGANTAMAX_RILLABOOM, SCORBUNNY, RABOOT, CINDERACE, GIGANTAMAX_CINDERACE, SOBBLE, DRIZZILE, INTELEON, GIGANTAMAX_INTELEON, SKWOVET, GREEDENT, ROOKIDEE, CORVISQUIRE, CORVIKNIGHT, GIGANTAMAX_CORVIKNIGHT, BLIPBUG, DOTTLER, ORBEETLE, GIGANTAMAX_ORBEETLE, NICKIT, THIEVUL, GOSSIFLEUR, ELDEGOSS, WOOLOO, DUBWOOL, CHEWTLE, DREDNAW, GIGANTAMAX_DREDNAW, YAMPER, BOLTUND, ROLYCOLY, CARKOL, COALOSSAL, GIGANTAMAX_COALOSSAL, APPLIN, FLAPPLE, GIGANTAMAX_FLAPPLE, APPLETUN, GIGANTAMAX_APPLETUN, SILICOBRA, SANDACONDA, GIGANTAMAX_SANDACONDA, CRAMORANT, CRAMORANT_GULPING, CRAMORANT_GORGING, ARROKUDA, BARRASKEWDA, TOXEL, TOXTRICITY_AMPED, TOXTRICITY_LOW_KEY, GIGANTAMAX_TOXTRICITY_AMPED, GIGANTAMAX_TOXTRICITY_LOW_KEY, SIZZLIPEDE, CENTISKORCH, GIGANTAMAX_CENTISKORCH, CLOBBOPUS, GRAPPLOCT, SINISTEA, ANTIQUE_SINISTEA, POLTEAGEIST, ANTIQUE_POLTEAGEIST, HATENNA, HATTREM, HATTERENE, GIGANTAMAX_HATTERENE, IMPIDIMP, MORGREM, GRIMMSNARL, GIGANTAMAX_GRIMMSNARL, OBSTAGOON, PERRSERKER, CURSOLA, SIRFETCH_D, MR_RIME, RUNERIGUS, MILCERY, ALCREMIE, VANILLA_CREAM_ALCREMIE, RUBY_CREAM_ALCREMIE, MATCHA_CREAM_ALCREMIE, MINT_CREAM_ALCREMIE, LEMON_CREAM_ALCREMIE, SALTED_CREAM_ALCREMIE, RUBY_SWIRL_ALCREMIE, CARAMEL_SWIRL_ALCREMIE, RAINBOW_SWIRL_ALCREMIE, GIGANTAMAX_ALCREMIE, FALINKS, PINCURCHIN, SNOM, FROSMOTH, STONJOURNER, EISCUE, ICE_FACE_EISCUE, NOICE_FACE_EISCUE, MALE_INDEEDEE, FEMALE_INDEEDEE, MORPEKO, FULL_BELLY_MODE_MORPEKO, HANGRY_MODE_MORPEKO, CUFANT, COPPERAJAH, GIGANTAMAX_COPPERAJAH, DRACOZOLT, ARCTOZOLT, DRACOVISH, ARCTOVISH, DURALUDON, GIGANTAMAX_DURALUDON, DREEPY, DRAKLOAK, DRAGAPULT, HERO_OF_MANY_BATTLES_ZACIAN, CROWNED_SWORD_ZACIAN, HERO_OF_MANY_BATTLES_ZAMAZENTA, CROWNED_SHIELD_ZAMAZENTA, ETERNATUS, ETERNAMAX_ETERNATUS, KUBFU, SINGLE_STRIKE_STYLE_URSHIFU, RAPID_STRIKE_STYLE_URSHIFU, GIGANTAMAX_SINGLE_STRIKE_STYLE_URSHIFU, GIGANTAMAX_RAPID_STRIKE_STYLE_URSHIFU, ZARUDE, DADA_ZARUDE, REGIELEKI, REGIDRAGO, GLASTRIER, SPECTRIER, CALYREX, ICE_RIDER_CALYREX, SHADOW_RIDER_CALYREX, WYRDEER, KLEAVOR, URSALUNA, MALE_BASCULEGION, FEMALE_BASCULEGION, SNEASLER, OVERQWIL, INCARNATE_ENAMORUS, ENAMORUS_THERIAN, SPRIGATITO, FLORAGATO, MEOWSCARADA, FUECOCO, CROCALOR, SKELEDIRGE, QUAXLY, QUAXWELL, QUAQUAVAL, LECHONK, MALE_OINKOLOGNE, FEMALE_OINKOLOGNE, TAROUNTULA, SPIDOPS, NYMBLE, LOKIX, PAWMI, PAWMO, PAWMOT, TANDEMAUS, MAUSHOLD, FAMILY_OF_THREE_MAUSHOLD, FAMILY_OF_FOUR_MAUSHOLD, FIDOUGH, DACHSBUN, SMOLIV, DOLLIV, ARBOLIVA, GREEN_PLUMAGE_SQUAWKABILLY, BLUE_PLUMAGE_SQUAWKABILLY, YELLOW_PLUMAGE_SQUAWKABILLY, WHITE_PLUMAGE_SQUAWKABILLY, NACLI, NACLSTACK, GARGANACL, CHARCADET, ARMAROUGE, CERULEDGE, TADBULB, BELLIBOLT, WATTREL, KILOWATTREL, MASCHIFF, MABOSSTIFF, SHROODLE, GRAFAIAI, BRAMBLIN, BRAMBLEGHAST, TOEDSCOOL, TOEDSCRUEL, KLAWF, CAPSAKID, SCOVILLAIN, RELLOR, RABSCA, FLITTLE, ESPATHRA, TINKATINK, TINKATUFF, TINKATON, WIGLETT, WUGTRIO, BOMBIRDIER, FINIZEN, ZERO_PALAFIN, HERO_PALAFIN, VAROOM, REVAVROOM, CYCLIZAR, ORTHWORM, GLIMMET, GLIMMORA, GREAVARD, HOUNDSTONE, FLAMIGO, CETODDLE, CETITAN, VELUZA, DONDOZO, TATSUGIRI, CURLY_TATSUGIRI, DROOPY_TATSUGIRI, STRETCHY_TATSUGIRI, ANNIHILAPE, CLODSIRE, FARIGIRAF, DUDUNSPARCE, TWO_SEGMENT_DUDUNSPARCE, THREE_SEGMENT_DUDUNSPARCE, KINGAMBIT, GREAT_TUSK, SCREAM_TAIL, BRUTE_BONNET, FLUTTER_MANE, SLITHER_WING, SANDY_SHOCKS, IRON_TREADS, IRON_BUNDLE, IRON_HANDS, IRON_JUGULIS, IRON_MOTH, IRON_THORNS, FRIGIBAX, ARCTIBAX, BAXCALIBUR, CHEST_GIMMIGHOUL, ROAMING_GIMMIGHOUL, GHOLDENGO, WO_CHIEN, CHIEN_PAO, TING_LU, CHI_YU, ROARING_MOON, IRON_VALIANT, KORAIDON, MIRAIDON, WALKING_WAKE, IRON_LEAVES, SPECIES_TOTAL
-  // clang-format on
-};
-
-static constexpr std::size_t TOTAL_SPECIES_COUNT = (std::size_t)Species::SPECIES_TOTAL;
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Species.hpp //////////////////////
 
 //////////////// START OF src/Types/Enums/TypeEffectiveness.hpp ////////////////
 
@@ -18642,10 +18414,14 @@ struct MechanicConstants {
   static constexpr std::array<types::percentChance, 4U> CRIT_CHANCE_DIVISORS{24U, 8U, 2U, 1U};
   static constexpr std::uint8_t MAX_DAMAGE_ROLL_COUNT = 16U;
 
+  static constexpr std::uint8_t SIDE_COUNT = 2U;
   static constexpr std::uint8_t MAX_TEAM_SIZE = 6U;
-  static constexpr std::uint8_t MAX_ACTIVE_POKEMON_SLOTS = 2U;
+  static constexpr std::uint8_t MAX_ACTIVE_POKEMON_SLOTS_PER_SIDE = 2U;
+  static constexpr std::uint8_t MAX_ACTIVE_POKEMON = MAX_ACTIVE_POKEMON_SLOTS_PER_SIDE * SIDE_COUNT;
   static constexpr std::uint8_t MAX_MOVE_SLOTS = 4U;
   static constexpr std::uint8_t MAX_TARGETS = 3U;
+  // TODO(aed3): 64 is a guess, so find out what the actual number is
+  static constexpr std::uint8_t MAX_ACTION_QUEUE_LENGTH = 64U;
 
   static constexpr float CRIT_MULTIPLIER = 1.5F;
   static constexpr float STAB_MULTIPLIER = 1.5F;
@@ -18859,16 +18635,16 @@ struct MechanicConstants {
 
 //////////////////// END OF src/Types/MechanicConstants.hpp ////////////////////
 
-////////////////// START OF src/Utilities/MaxSizedVector.hpp ///////////////////
+///////////////// START OF src/Utilities/FixedMemoryVector.hpp /////////////////
 
 #include <array>
-#include <cassert>
 #include <cstdint>
 #include <initializer_list>
+#include <vector>
 
 namespace pokesim::internal {
 template <typename T, std::uint8_t N>
-class maxSizedVector : private std::array<T, N> {
+class fixedMemoryVector : private std::array<T, N> {
   using base = std::array<T, N>;
   std::uint8_t used = 0;
 
@@ -18878,8 +18654,13 @@ class maxSizedVector : private std::array<T, N> {
   using base::crbegin;
   using base::max_size;
 
-  maxSizedVector() : base() {}
-  maxSizedVector(std::initializer_list<T> list) : base() {
+  fixedMemoryVector() : base() {
+    static_assert(
+      sizeof(fixedMemoryVector<T, N>) <= sizeof(std::vector<T>) + (sizeof(T) * N / 2),
+      "A std::vector for this type and size would be smaller.");
+  }
+
+  fixedMemoryVector(std::initializer_list<T> list) : fixedMemoryVector() {
     for (const T& item : list) {
       push_back(item);
     }
@@ -18887,8 +18668,12 @@ class maxSizedVector : private std::array<T, N> {
 
   constexpr std::uint8_t size() const noexcept { return used; }
   constexpr bool empty() const noexcept { return used == 0; }
+
   constexpr typename base::const_reference front() const noexcept { return *base::begin(); }
   constexpr typename base::const_reference back() const noexcept { return N ? *(end() - 1) : *end(); }
+
+  constexpr typename base::reference front() noexcept { return *base::begin(); }
+  constexpr typename base::reference back() noexcept { return N ? *(end() - 1) : *end(); }
 
   constexpr typename base::const_reference at(std::uint8_t pos) const {
     POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
@@ -18931,9 +18716,11 @@ class maxSizedVector : private std::array<T, N> {
     used++;
   }
 
-  bool operator==(const maxSizedVector<T, N>& other) const noexcept {
+  bool operator==(const fixedMemoryVector<T, N>& other) const noexcept {
     return used == other.used && std::equal(begin(), end(), other.begin());
   }
+
+  typename base::iterator end() noexcept { return base::begin() + used; }
 
   typename base::const_iterator end() const noexcept { return base::begin() + used; }
   typename base::const_iterator cend() const noexcept { return end(); }
@@ -18942,7 +18729,7 @@ class maxSizedVector : private std::array<T, N> {
 };
 }  // namespace pokesim::internal
 
-/////////////////// END OF src/Utilities/MaxSizedVector.hpp ////////////////////
+////////////////// END OF src/Utilities/FixedMemoryVector.hpp //////////////////
 
 ///////////////////////// START OF src/Types/State.hpp /////////////////////////
 
@@ -18963,19 +18750,20 @@ using cloneIndex = std::underlying_type_t<entity>;
 
 using teamPositionIndex = std::uint8_t;
 using moveSlotPosition = std::uint8_t;
+using activePokemonIndex = std::uint8_t;
 
 template <typename T>
-using teamPositions = pokesim::internal::maxSizedVector<T, MechanicConstants::MAX_TEAM_SIZE>;
+using teamPositions = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MAX_TEAM_SIZE>;
 using teamOrder = types::teamPositions<types::teamPositionIndex>;
 
 template <typename T>
-using moveSlots = pokesim::internal::maxSizedVector<T, MechanicConstants::MAX_MOVE_SLOTS>;
+using moveSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MAX_MOVE_SLOTS>;
 
 template <typename T>
-using sideSlots = pokesim::internal::maxSizedVector<T, MechanicConstants::MAX_ACTIVE_POKEMON_SLOTS>;
+using sideSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MAX_ACTIVE_POKEMON_SLOTS_PER_SIDE>;
 
 template <typename T>
-using targets = pokesim::internal::maxSizedVector<T, MechanicConstants::MAX_TARGETS>;
+using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MAX_TARGETS>;
 
 using callback = void (*)(Simulation&);
 using optionalCallback = std::optional<void (*)(Simulation&)>;
@@ -18983,6 +18771,336 @@ using optionalCallback = std::optional<void (*)(Simulation&)>;
 }  // namespace pokesim
 
 ////////////////////////// END OF src/Types/State.hpp //////////////////////////
+
+///////////////////// START OF src/Battle/Clone/Clone.hpp //////////////////////
+
+#include <optional>
+
+namespace pokesim {
+struct CloneTo;
+
+inline types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount);
+inline void deleteClones(types::registry& registry);
+}  // namespace pokesim
+
+////////////////////// END OF src/Battle/Clone/Clone.hpp ///////////////////////
+
+////////////////////// START OF src/Types/Enums/Slot.hpp ///////////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+enum class Slot : std::uint8_t {
+  NONE,
+  P1A,
+  P2A,
+  P1B,
+  P2B,
+
+  P1C,
+  P2C,
+  P1D,
+  P2D,
+  P1E,
+  P2E,
+  P1F,
+  P2F,
+};
+}
+
+/////////////////////// END OF src/Types/Enums/Slot.hpp ////////////////////////
+
+/////////////////// START OF src/Battle/Helpers/Helpers.hpp ////////////////////
+
+namespace pokesim {
+struct Sides;
+struct MoveSlots;
+class Pokedex;
+
+inline types::entity slotToSideEntity(const Sides& sides, Slot targetSlot);
+inline types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot);
+inline types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
+inline types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
+inline types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move);
+
+inline types::entity createActionMoveForTarget(
+  types::handle targetHandle, types::entity battleEntity, types::entity sourceEntity, dex::Move move,
+  const Pokedex& pokedex);
+}  // namespace pokesim
+
+//////////////////// END OF src/Battle/Helpers/Helpers.hpp /////////////////////
+
+///////////////// START OF src/Battle/Setup/StateSetupBase.hpp /////////////////
+
+namespace pokesim::internal {
+/**
+ * @brief Class that holds the shared methods used between the various battle state setup tools.
+ *
+ * It is intended to be extended by classes that set up the state of a battle, such as StateSetupSide.
+ */
+struct StateSetupBase {
+ protected:
+  types::handle handle;
+
+ public:
+  StateSetupBase(types::registry& registry, types::entity entity) : handle(registry, entity) {}
+
+  /**
+   * @brief Sets a property on the entity.
+   *
+   * @tparam Tag The tag type of the property to set.
+   */
+  template <typename Tag>
+  void setProperty() {
+    handle.emplace<Tag>();
+  }
+
+  types::entity entity() const { return handle.entity(); }
+};
+
+}  // namespace pokesim::internal
+
+////////////////// END OF src/Battle/Setup/StateSetupBase.hpp //////////////////
+
+////////////////////// START OF src/Components/Boosts.hpp //////////////////////
+
+namespace pokesim {
+struct AtkBoost {
+  types::boost val = 0;
+};
+
+struct DefBoost {
+  types::boost val = 0;
+};
+
+struct SpaBoost {
+  types::boost val = 0;
+};
+
+struct SpdBoost {
+  types::boost val = 0;
+};
+
+struct SpeBoost {
+  types::boost val = 0;
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Components/Boosts.hpp ///////////////////////
+
+////////////////////// START OF src/Components/EVsIVs.hpp //////////////////////
+
+namespace pokesim {
+struct Evs {
+  types::ev hp = 0;
+  types::ev atk = 0;
+  types::ev def = 0;
+  types::ev spa = 0;
+  types::ev spd = 0;
+  types::ev spe = 0;
+
+  bool operator==(const Evs& other) const {
+    return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
+           spe == other.spe;
+  }
+};
+
+struct Ivs {
+  types::iv hp = 0;
+  types::iv atk = 0;
+  types::iv def = 0;
+  types::iv spa = 0;
+  types::iv spd = 0;
+  types::iv spe = 0;
+
+  bool operator==(const Ivs& other) const {
+    return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
+           spe == other.spe;
+  }
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Components/EVsIVs.hpp ///////////////////////
+
+/////////////////// START OF src/Components/SpeciesTypes.hpp ///////////////////
+
+#include <array>
+
+namespace pokesim {
+// Contains the types a species has
+struct SpeciesTypes {
+  std::array<dex::Type, 2U> val{dex::Type::NO_TYPE, dex::Type::NO_TYPE};
+
+  dex::Type& type1() { return val[0]; };
+  dex::Type& type2() { return val[1]; };
+  constexpr const dex::Type& type1() const { return val[0]; };
+  constexpr const dex::Type& type2() const { return val[1]; };
+  constexpr std::uint8_t size() const {
+    if (type2() == dex::Type::NO_TYPE) {
+      return type1() == dex::Type::NO_TYPE ? 0 : 1;
+    }
+    return 2;
+  }
+  constexpr bool has(dex::Type type) const { return type1() == type || type2() == type; }
+};
+}  // namespace pokesim
+
+//////////////////// END OF src/Components/SpeciesTypes.hpp ////////////////////
+
+////////////////////// START OF src/Components/Stats.hpp ///////////////////////
+
+namespace pokesim::stat {
+struct Hp {
+  types::stat val = 1;
+};
+
+struct Atk {
+  types::stat val = 1;
+};
+
+struct Def {
+  types::stat val = 1;
+};
+
+struct Spa {
+  types::stat val = 1;
+};
+
+struct Spd {
+  types::stat val = 1;
+};
+
+struct Spe {
+  types::stat val = 1;
+};
+
+struct CurrentHp {
+  types::stat val = 1;
+};
+
+struct EffectiveAtk {
+  types::stat val = 1;
+};
+
+struct EffectiveDef {
+  types::stat val = 1;
+};
+
+struct EffectiveSpa {
+  types::stat val = 1;
+};
+
+struct EffectiveSpd {
+  types::stat val = 1;
+};
+
+struct EffectiveSpe {
+  types::stat val = 1;
+};
+}  // namespace pokesim::stat
+
+/////////////////////// END OF src/Components/Stats.hpp ////////////////////////
+
+///////////////////// START OF src/Types/Enums/Ability.hpp /////////////////////
+
+#include <cstddef>
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon ability name
+enum class Ability : std::uint16_t {
+  // clang-format off
+  NO_ABILITY = 0, ADAPTABILITY, AERILATE, AFTERMATH, AIR_LOCK, ANALYTIC, ANGER_POINT, ANGER_SHELL, ANTICIPATION, ARENA_TRAP, ARMOR_TAIL, AROMA_VEIL, AS_ONE, AURA_BREAK, BAD_DREAMS, BALL_FETCH, BATTERY, BATTLE_ARMOR, BATTLE_BOND, BEADS_OF_RUIN, BEAST_BOOST, BERSERK, BIG_PECKS, BLAZE, BULLETPROOF, CHEEK_POUCH, CHILLING_NEIGH, CHLOROPHYLL, CLEAR_BODY, CLOUD_NINE, COLOR_CHANGE, COMATOSE, COMMANDER, COMPETITIVE, COMPOUND_EYES, CONTRARY, CORROSION, COSTAR, COTTON_DOWN, CUD_CHEW, CURIOUS_MEDICINE, CURSED_BODY, CUTE_CHARM, DAMP, DANCER, DARK_AURA, DAUNTLESS_SHIELD, DAZZLING, DEFEATIST, DEFIANT, DELTA_STREAM, DESOLATE_LAND, DISGUISE, DOWNLOAD, DRAGONS_MAW, DRIZZLE, DROUGHT, DRY_SKIN, EARTH_EATER, EARLY_BIRD, EFFECT_SPORE, ELECTRIC_SURGE, ELECTROMORPHOSIS, EMERGENCY_EXIT, FAIRY_AURA, FILTER, FLAME_BODY, FLARE_BOOST, FLASH_FIRE, FLOWER_GIFT, FLOWER_VEIL, FLUFFY, FORECAST, FOREWARN, FRIEND_GUARD, FRISK, FULL_METAL_BODY, FUR_COAT, GALE_WINGS, GALVANIZE, GLUTTONY, GOOD_AS_GOLD, GOOEY, GORILLA_TACTICS, GRASS_PELT, GRASSY_SURGE, GRIM_NEIGH, GUARD_DOG, GULP_MISSILE, GUTS, HADRON_ENGINE, HARVEST, HEALER, HEATPROOF, HEAVY_METAL, HONEY_GATHER, HUGE_POWER, HUNGER_SWITCH, HUSTLE, HYDRATION, HYPER_CUTTER, ICE_BODY, ICE_FACE, ICE_SCALES, ILLUMINATE, ILLUSION, IMMUNITY, IMPOSTER, INFILTRATOR, INNARDS_OUT, INNER_FOCUS, INSOMNIA, INTIMIDATE, INTREPID_SWORD, IRON_BARBS, IRON_FIST, JUSTIFIED, KEEN_EYE, KLUTZ, LEAF_GUARD, LEVITATE, LIBERO, LIGHT_METAL, LIGHTNING_ROD, LINGERING_AROMA, LIMBER, LIQUID_OOZE, LIQUID_VOICE, LONG_REACH, MAGIC_BOUNCE, MAGIC_GUARD, MAGICIAN, MAGMA_ARMOR, MAGNET_PULL, MARVEL_SCALE, MEGA_LAUNCHER, MERCILESS, MIMICRY, MINUS, MIRROR_ARMOR, MISTY_SURGE, MOLD_BREAKER, MOODY, MOTOR_DRIVE, MOXIE, MULTISCALE, MULTITYPE, MUMMY, MYCELIUM_MIGHT, NATURAL_CURE, NEUROFORCE, NEUTRALIZING_GAS, NO_GUARD, NORMALIZE, OBLIVIOUS, OPPORTUNIST, ORICHALCUM_PULSE, OVERCOAT, OVERGROW, OWN_TEMPO, PARENTAL_BOND, PASTEL_VEIL, PERISH_BODY, PICKPOCKET, PICKUP, PIXILATE, PLUS, POISON_HEAL, POISON_POINT, POISON_TOUCH, POWER_CONSTRUCT, POWER_OF_ALCHEMY, POWER_SPOT, PRANKSTER, PRESSURE, PRIMORDIAL_SEA, PRISM_ARMOR, PROPELLER_TAIL, PROTEAN, PROTOSYNTHESIS, PSYCHIC_SURGE, PUNK_ROCK, PURE_POWER, PURIFYING_SALT, QUARK_DRIVE, QUEENLY_MAJESTY, QUICK_DRAW, QUICK_FEET, RAIN_DISH, RATTLED, RECEIVER, RECKLESS, REFRIGERATE, REGENERATOR, RIPEN, RIVALRY, RKS_SYSTEM, ROCK_HEAD, ROCKY_PAYLOAD, ROUGH_SKIN, RUN_AWAY, SAND_FORCE, SAND_RUSH, SAND_SPIT, SAND_STREAM, SAND_VEIL, SAP_SIPPER, SCHOOLING, SCRAPPY, SCREEN_CLEANER, SEED_SOWER, SERENE_GRACE, SHADOW_SHIELD, SHADOW_TAG, SHARPNESS, SHED_SKIN, SHEER_FORCE, SHELL_ARMOR, SHIELD_DUST, SHIELDS_DOWN, SIMPLE, SKILL_LINK, SLOW_START, SLUSH_RUSH, SNIPER, SNOW_CLOAK, SNOW_WARNING, SOLAR_POWER, SOLID_ROCK, SOUL_HEART, SOUNDPROOF, SPEED_BOOST, STAKEOUT, STALL, STALWART, STAMINA, STANCE_CHANGE, STATIC, STEADFAST, STEAM_ENGINE, STEELWORKER, STEELY_SPIRIT, STENCH, STICKY_HOLD, STORM_DRAIN, STRONG_JAW, STURDY, SUCTION_CUPS, SUPER_LUCK, SUPREME_OVERLORD, SURGE_SURFER, SWARM, SWEET_VEIL, SWIFT_SWIM, SYMBIOSIS, SYNCHRONIZE, SWORD_OF_RUIN, TABLETS_OF_RUIN, TANGLED_FEET, TANGLING_HAIR, TECHNICIAN, TELEPATHY, TERAVOLT, THERMAL_EXCHANGE, THICK_FAT, TINTED_LENS, TORRENT, TOUGH_CLAWS, TOXIC_BOOST, TOXIC_DEBRIS, TRACE, TRANSISTOR, TRIAGE, TRUANT, TURBOBLAZE, UNAWARE, UNBURDEN, UNNERVE, UNSEEN_FIST, VESSEL_OF_RUIN, VICTORY_STAR, VITAL_SPIRIT, VOLT_ABSORB, WANDERING_SPIRIT, WATER_ABSORB, WATER_BUBBLE, WATER_COMPACTION, WATER_VEIL, WEAK_ARMOR, WELL_BAKED_BODY, WHITE_SMOKE, WIMP_OUT, WIND_POWER, WIND_RIDER, WONDER_GUARD, WONDER_SKIN, ZEN_MODE, ZERO_TO_HERO, ABILITY_TOTAL,
+  // clang-format on
+};
+
+static constexpr std::size_t TOTAL_ABILITY_COUNT = (std::size_t)Ability::ABILITY_TOTAL;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Ability.hpp //////////////////////
+
+///////////////////// START OF src/Types/Enums/Gender.hpp //////////////////////
+
+#include <cstddef>
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon gender name
+enum class Gender : std::uint8_t { NO_GENDER = 0, FEMALE, MALE };
+
+static constexpr std::size_t TOTAL_GENDER_COUNT = 3U;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Gender.hpp ///////////////////////
+
+////////////////////// START OF src/Types/Enums/Item.hpp ///////////////////////
+
+#include <cstddef>
+#include <cstdint>
+
+namespace pokesim::dex {
+// Name of items in Pokemon games
+enum class Item : std::uint16_t {
+  // clang-format off
+  NO_ITEM = 0, ABILITY_CAPSULE, ABILITY_PATCH, ABILITY_SHIELD, ABOMASITE, ABRA_CANDY, ABSOLITE, ABSORB_BULB, ACRO_BIKE, ADAMANT_CRYSTAL, ADAMANT_MINT, ADAMANT_ORB, ADRENALINE_ORB, ADVENTURE_GUIDE, AERODACTYLITE, AERODACTYL_CANDY, AGGRONITE, AGUAV_BERRY, AIR_BALLOON, AIR_MAIL, ALAKAZITE, ALORAICHIUM_Z, ALTARIANITE, AMAZE_MULCH, AMPHAROSITE, AMULET_COIN, ANTIDOTE, APICOT_BERRY, APRICORN, APRICORN_BOX, AQUA_SUIT, ARMOR_FOSSIL, ARMOR_PASS, ARMORITE_ORE, ARTICUNO_CANDY, ASPEAR_BERRY, ASSAULT_VEST, AUDINITE, AURORATICKET, AUSPICIOUS_ARMOR, AUTOGRAPH, AUX_EVASION, AUX_GUARD, AUX_POWER, AUX_POWERGUARD, AWAKENING, AZELFS_FANG, AZURE_FLUTE, BABIRI_BERRY, BALL_OF_MUD, BALM_MUSHROOM, BAND_AUTOGRAPH, BANETTITE, BASCULEGION_FOOD, BASEMENT_KEY, BEACH_GLASS, BEAD_MAIL, BEAN_CAKE, BEAST_BALL, BEEDRILLITE, BELLSPROUT_CANDY, BELUE_BERRY, BERRY, BERRY_JUICE, BERRY_POTS, BERRY_POUCH, BERRY_SWEET, BERSERK_GENE, BICYCLE, BIG_BAMBOO_SHOOT, BIG_MALASADA, BIG_MUSHROOM, BIG_NUGGET, BIG_PEARL, BIG_ROOT, BIKE_VOUCHER, BINDING_BAND, BITTER_BERRY, BLACK_APRICORN, BLACK_AUGURITE, BLACK_BELT, BLACK_FLUTE, BLACK_GLASSES, BLACK_MANE_HAIR, BLACK_SLUDGE, BLACK_TUMBLESTONE, BLANK_PLATE, BLASTOISINITE, BLAZIKENITE, BLOOM_MAIL, BLUE_APRICORN, BLUE_CARD, BLUE_FLUTE, BLUE_ORB, BLUE_PETAL, BLUE_SCARF, BLUE_SHARD, BLUESKY_MAIL, BLU_ID_BADGE, BLUK_BERRY, BLUNDER_POLICY, BOLD_MINT, BONSLY_CARD, BONSLY_PHOTO, BOOST_MULCH, BOOSTER_ENERGY, BOTTLE_CAP, BRAVE_MINT, BRICK_MAIL, BRICK_PIECE, BRIDGE_MAIL_D, BRIDGE_MAIL_M, BRIDGE_MAIL_S, BRIDGE_MAIL_T, BRIDGE_MAIL_V, BRIGHT_POWDER, BUBBLE_MAIL, BUG_GEM, BUG_MEMORY, BUG_TERA_SHARD, BUGINIUM_Z, BUGWORT, BULBASAUR_CANDY, BURN_DRIVE, BURN_HEAL, BURNT_BERRY, CAKE_LURE_BASE, CALCIUM, CALM_MINT, CAMERUPTITE, CAMPING_GEAR, CANDY_TRUFFLE, CARBOS, CARD_KEY, CAREFUL_MINT, CARROT_SEEDS, CASTELIACONE, CASTER_FERN, CATCHING_CHARM, CATERPIE_CANDY, CELESTICA_FLUTE, CELL_BATTERY, CHALKY_STONE, CHANSEY_CANDY, CHARCOAL, CHARIZARDITE_X, CHARIZARDITE_Y, CHARMANDER_CANDY, CHARTI_BERRY, CHERI_BERRY, CHERISH_BALL, CHESTO_BERRY, CHILAN_BERRY, CHILL_DRIVE, CHIPPED_POT, CHOICE_BAND, CHOICE_DUMPLING, CHOICE_SCARF, CHOICE_SPECS, CHOPLE_BERRY, CLAW_FOSSIL, CLEANSE_TAG, CLEAR_AMULET, CLEAR_BELL, CLEFAIRY_CANDY, CLEVER_FEATHER, CLOVER_SWEET, COBA_BERRY, COIN_CASE, COLBUR_BERRY, COLOGNE_CASE, COLRESS_MACHINE, COMET_SHARD, COMMON_STONE, CONTEST_COSTUME, CONTEST_PASS, CORNN_BERRY, COUPON_1, COUPON_2, COUPON_3, COURAGE_CANDY, COURAGE_CANDY_L, COURAGE_CANDY_XL, COVER_FOSSIL, COVERT_CLOAK, CRACKED_POT, CRAFTING_KIT, CROWN_PASS, CRUNCHY_SALT, CUBONE_CANDY, CRY_ANALYZER, CUSTAP_BERRY, DAMP_MULCH, DAMP_ROCK, DARK_GEM, DARK_MEMORY, DARK_STONE, DARK_TERA_SHARD, DARKINIUM_Z, DATA_CARDS, DATA_ROM, DAWN_STONE, DAZZLING_HONEY, D_DISK, DECIDIUM_Z, DEEP_SEA_SCALE, DEEP_SEA_TOOTH, DESTINY_KNOT, DEVON_PARTS, DEVON_SCOPE, DEVON_SCUBA_GEAR, DIANCITE, DIGGER_DRILL, DIGLETT_CANDY, DIRE_HIT, DIRESHROOM, DISC_CASE, DISCOUNT_COUPON, DISCOVERY_SLATE, DISTORTION_SLATE, DITTO_CANDY, DIVE_BALL, DNA_SAMPLE, DNA_SPLICERS, DODUO_CANDY, DOME_FOSSIL, DOPPEL_BONNETS, DOUSE_DRIVE, DOWN_ST_KEY, DOWSING_MACHINE, DRACO_PLATE, DRAGON_FANG, DRAGON_GEM, DRAGON_MEMORY, DRAGON_SCALE, DRAGON_SKULL, DRAGON_TERA_SHARD, DRAGONIUM_Z, DRASH_BERRY, DRATINI_CANDY, DREAD_PLATE, DREAM_BALL, DREAM_MAIL, DROPPED_ITEM, DROWZEE_CANDY, DS_SOUNDS, DUBIOUS_DISC, DURIN_BERRY, DUSK_BALL, DUSK_STONE, DYNAMAX_BAND, DYNAMAX_CANDY, DYNAMAX_CRYSTALS, DYNITE_ORE, EARTH_PLATE, EEVEE_CANDY, EEVIUM_Z, EGG_TICKET, EGGANT_BERRY, EIN_FILE_C, EIN_FILE_F, EIN_FILE_H, EIN_FILE_P, EIN_FILE_S, EJECT_BUTTON, EJECT_PACK, EKANS_CANDY, ELECTABUZZ_CANDY, ELECTIRIZER, ELECTRIC_GEM, ELECTRIC_MEMORY, ELECTRIC_SEED, ELECTRIC_TERA_SHARD, ELECTRIUM_Z, ELEVATOR_KEY, ELIXIR, ENDORSEMENT, ENERGY_POWDER, ENERGY_ROOT, ENIGMA_BERRY, ENIGMA_STONE, ENIGMATIC_CARD, EON_FLUTE, EON_MAIL, EON_TICKET, ESCAPE_ROPE, ETERNAL_ICE, ETHER, EVERSTONE, EVIOLITE, EXCITE_SCENT, EXEGGCUTE_CANDY, EXP_CANDY_L, EXP_CANDY_M, EXP_CANDY_S, EXP_CANDY_XL, EXP_CANDY_XS, EXP_CHARM, EXP_SHARE, EXPERT_BELT, EXPLORER_KIT, FAB_MAIL, FAIRIUM_Z, FAIRY_GEM, FAIRY_MEMORY, FAIRY_TERA_SHARD, FAME_CHECKER, FARFETCHD_CANDY, FASHION_CASE, FAST_BALL, FAVORED_MAIL, F_DISK, FEATHER_BALL, FESTIVAL_TICKET, FIGHTING_GEM, FIGHTING_MEMORY, FIGHTING_TERA_SHARD, FIGHTINIUM_Z, FIGY_BERRY, FINE_REMEDY, FIRE_GEM, FIRE_MEMORY, FIRE_STONE, FIRE_TERA_SHARD, FIRIUM_Z, FISHING_ROD, FIST_PLATE, FLAME_MAIL, FLAME_ORB, FLAME_PLATE, FLOAT_STONE, FLOWER_MAIL, FLOWER_SWEET, FLUFFY_TAIL, FLYING_GEM, FLYING_MEMORY, FLYING_TERA_SHARD, FLYINIUM_Z, FOCUS_BAND, FOCUS_SASH, FORAGE_BAG, FOREST_BALM, FOSSILIZED_BIRD, FOSSILIZED_DINO, FOSSILIZED_DRAKE, FOSSILIZED_FISH, FRESH_WATER, FRIEND_BALL, FULL_HEAL, FULL_INCENSE, FULL_RESTORE, GALACTIC_KEY, GALARICA_CUFF, GALARICA_TWIG, GALARICA_WREATH, GALLADITE, GANLON_BERRY, GARCHOMPITE, GARDEVOIRITE, GASTLY_CANDY, GB_SOUNDS, GEAR, GENGARITE, GENIUS_FEATHER, GENOME_SLATE, GENTLE_MINT, GEODUDE_CANDY, GHOST_GEM, GHOST_MEMORY, GHOST_TERA_SHARD, GHOSTIUM_Z, GIGATON_BALL, GINEMA_BERRY, GLALITITE, GLITTER_MAIL, GO_GOGGLES, GOD_STONE, GOLD_BERRY, GOLD_BOTTLE_CAP, GOLD_LEAF, GOLD_TEETH, GOLDEEN_CANDY, GONZAPS_KEY, GOLDEN_NANAB_BERRY, GOLDEN_PINAP_BERRY, GOLDEN_RAZZ_BERRY, GOOD_ROD, GOOEY_MULCH, GORGEOUS_BOX, GRACIDEA, GRAIN_CAKE, GRAM_1, GRAM_2, GRAM_3, GRASS_GEM, GRASS_MEMORY, GRASS_TERA_SHARD, GRASSIUM_Z, GRASS_MAIL, GRASSY_SEED, GREAT_BALL, GREEN_APRICORN, GREEN_PETAL, GREEN_SCARF, GREEN_SHARD, GREET_MAIL, GREPA_BERRY, GRIMER_CANDY, GRIP_CLAW, GRIT_DUST, GRIT_GRAVEL, GRIT_PEBBLE, GRIT_ROCK, GRISEOUS_CORE, GRISEOUS_ORB, GRN_ID_BADGE, GROUND_GEM, GROUND_MEMORY, GROUND_TERA_SHARD, GROUNDIUM_Z, GROWLITHE_CANDY, GROWTH_MULCH, GRUBBY_HANKY, GS_BALL, GUARD_SPEC, GUIDEBOOK, GYARADOSITE, HABAN_BERRY, HARBOR_MAIL, HARD_STONE, HASTY_MINT, HEAL_BALL, HEAL_POWDER, HEALTH_CANDY, HEALTH_CANDY_L, HEALTH_CANDY_XL, HEALTH_FEATHER, HEART_MAIL, HEART_SCALE, HEARTY_GRAINS, HEAT_ROCK, HEAVY_BALL, HEAVY_DUTY_BOOTS, HELIX_FOSSIL, HERACRONITE, HI_TECH_EARBUDS, HITMONCHAN_CANDY, HITMONLEE_CANDY, HM01, HM02, HM03, HM04, HM05, HM06, HM07, HM08, HOLO_CASTER, HOMETOWN_MUFFIN, HONDEW_BERRY, HONEY, HONEY_CAKE, HONOR_OF_KALOS, HOPO_BERRY, HORSEA_CANDY, HOUNDOOMINITE, HP_UP, HYPER_POTION, IAPAPA_BERRY, ICE_BERRY, ICE_GEM, ICE_HEAL, ICE_MEMORY, ICE_STONE, ICE_TERA_SHARD, ICEROOT_CARROT, ICICLE_PLATE, ICIUM_Z, ICY_ROCK, ID_CARD, ILIMAS_NORMALIUM_Z, IMPISH_MINT, INCINIUM_Z, INQUIRY_MAIL, INSECT_PLATE, INTRIGUING_STONE, IRON, IRON_BALL, IRON_BARKTONGUE, IRON_CHUNK, IRON_PLATE, JABOCA_BERRY, JADE_ORB, JAIL_KEY, JAW_FOSSIL, JET_BALL, JIGGLYPUFF_CANDY, JOHTO_SLATE, JOLLY_MINT, JOY_SCENT, JUBILIFE_MUFFIN, JYNX_CANDY, KABUTO_CANDY, KANGASKHAN_CANDY, KANGASKHANITE, KANTO_SLATE, KASIB_BERRY, KEBIA_BERRY, KEE_BERRY, KELPSY_BERRY, KEY_STONE, KEY_TO_ROOM_1, KEY_TO_ROOM_2, KEY_TO_ROOM_4, KEY_TO_ROOM_6, KINGS_LEAF, KINGS_ROCK, KOFFING_CANDY, KOFUS_BOOK, KOMMONIUM_Z, KORAIDONS_POKE_BALL, KRABBY_CANDY, KRANE_MEMO_1, KRANE_MEMO_2, KRANE_MEMO_3, KRANE_MEMO_4, KRANE_MEMO_5, KUO_BERRY, LAGGING_TAIL, LANSAT_BERRY, LAPRAS_CANDY, LATIASITE, LATIOSITE, LAVA_COOKIE, LAX_INCENSE, LAX_MINT, L_DISK, LEADEN_BALL, LEADERS_CREST, LEAF_LETTER, LEAF_STONE, LEEK, LEFT_POKE_BALL, LEFTOVERS, LEGEND_PLATE, LEGENDARY_CLUE_1, LEGENDARY_CLUE_2, LEGENDARY_CLUE_3, LEGENDARY_CLUE, LEMONADE, LENS_CASE, LEPPA_BERRY, LETTER, LEVEL_BALL, LIBERTY_PASS, LICKITUNG_CANDY, LIECHI_BERRY, LIFE_ORB, LIFT_KEY, LIGHT_BALL, LIGHT_CLAY, LIGHT_STONE, LIKE_MAIL, LINKING_CORD, LITEBLUEMAIL, LOADED_DICE, LOCK_CAPSULE, LONE_EARRING, LONELY_MINT, LOOKER_TICKET, LOOT_SACK, LOPUNNITE, LOST_ITEM, LOST_SATCHEL, LOVE_BALL, LOVE_SWEET, LOVELY_MAIL, LUCARIONITE, LUCK_INCENSE, LUCKY_EGG, LUCKY_PUNCH, LUM_BERRY, LUMINOUS_MOSS, LUMIOSE_GALETTE, LUNALIUM_Z, LUNAR_FEATHER, LURE, LURE_BALL, LUSTROUS_GLOBE, LUSTROUS_ORB, LUXURY_BALL, LYCANIUM_Z, MACH_BIKE, MACHINE_PART, MACHO_BRACE, MACHOP_CANDY, MAGIKARP_CANDY, MAGMA_EMBLEM, MAGMA_STONE, MAGMA_SUIT, MAGMAR_CANDY, MAGMARIZER, MAGNEMITE_CANDY, MAGNET, MAGO_BERRY, MAGOST_BERRY, MAINGATE_KEY, MAKEUP_BAG, MALICIOUS_ARMOR, MANECTITE, MANKEY_CANDY, MARANGA_BERRY, MARBLE, MARK_CHARM, MARSHADIUM_Z, MARSH_BALM, MASTER_BALL, MAWILITE, MAX_ELIXIR, MAX_ETHER, MAX_LURE, MAX_HONEY, MAX_MUSHROOMS, MAX_POTION, MAX_REPEL, MAX_REVIVE, MAYORS_NOTE, MEADOW_PLATE, MECH_MAIL, MECHANICAL_BOX, MECHANICAL_CABINET, MECHANICAL_CIRCULAR_SAW, MECHANICAL_PINWHEEL, MECHANICAL_TUB, MEDAL_BOX, MEDICHAMITE, MEDICINAL_LEEK, MEGA_BRACELET, MEGA_RING, MELTAN_CANDY, MEMBER_CARD, MENTAL_HERB, MEOWTH_CANDY, MESPRITS_PLUME, METAGROSSITE, METAL_COAT, METAL_POWDER, METEORITE, METEORITE_SHARD, METRONOME, MEW_CANDY, MEWNIUM_Z, MEWTWO_CANDY, MEWTWONITE_X, MEWTWONITE_Y, MICLE_BERRY, MIGHTY_CANDY, MIGHTY_CANDY_L, MIGHTY_CANDY_XL, MILD_MINT, MIMIKIUM_Z, MIND_PLATE, MINT_BERRY, MIRACLEBERRY, MIRACLE_SEED, MIRAGE_MAIL, MIRAIDONS_POKE_BALL, MIROR_RADAR, MIRROR_HERB, MISTY_SEED, MODEST_MINT, MOLTRES_CANDY, MOOMOO_MILK, MOON_BALL, MOON_FLUTE, MOON_SHARD, MOON_STONE, MORPH_MAIL, MOSAIC_MAIL, MOUNTAIN_BALM, MR_MIME_CANDY, MUSCLE_BAND, MUSCLE_FEATHER, MUSHROOM_CAKE, MUSIC_DISC, MUSIC_MAIL, MYSTERIOUS_BALM, MYSTERIOUS_SHARD_S, MYSTERIOUS_SHARD_L, MYSTERYBERRY, MYSTERY_EGG, MYSTIC_WATER, MYSTICTICKET, NAIVE_MINT, NANAB_BERRY, NAUGHTY_MINT, NEST_BALL, NET_BALL, NEVER_MELT_ICE, NIDORAN_MALE_CANDY, NIDORAN_FEMALE_CANDY, NINIKU_BERRY, N_LUNARIZER, NOMEL_BERRY, NORMAL_BOX, NORMAL_GEM, NORMAL_TERA_SHARD, NORMALIUM_Z, N_SOLARIZER, NUGGET, NUTPEA_BERRY, OAKS_LETTER, OAKS_PARCEL, OCCA_BERRY, OCEANIC_SLATE, ODD_INCENSE, ODD_KEYSTONE, ODDISH_CANDY, OLD_AMBER, OLD_CHARM, OLD_GATEAU, OLD_JOURNAL, OLD_LETTER, OLD_ROD, OLD_SEA_MAP, OLD_VERSES, OMANYTE_CANDY, ONIX_CANDY, ORAN_BERRY, ORANGE_MAIL, ORANGE_PETAL, ORIGIN_BALL, ORIGIN_ORE, OVAL_CHARM, OVAL_STONE, PAIR_OF_TICKETS, PAL_PAD, PAMTRE_BERRY, PARALYZE_HEAL, PARAS_CANDY, PARCEL, PARK_BALL, PASS, PASS_ORB, PASSHO_BERRY, PAYAPA_BERRY, PEARL, PEARL_STRING, PEAT_BLOCK, PECHA_BERRY, PEP_UP_PLANT, PERMIT, PERSIM_BERRY, PETAYA_BERRY, PEWTER_CRUNCHIES, PICNIC_SET, PIDGEOTITE, PIDGEY_CANDY, PIKACHU_CANDY, PIKANIUM_Z, PIKASHUNIUM_Z, PINAP_BERRY, PINK_APRICORN, PINK_BOW, PINK_NECTAR, PINK_PETAL, PINK_SCARF, PINSIR_CANDY, PINSIRITE, PIXIE_PLATE, PLASMA_CARD, PLUME_FOSSIL, PLUMP_BEANS, POFFIN_CASE, POINT_CARD, POISON_BARB, POISON_GEM, POISON_MEMORY, POISON_TERA_SHARD, POISONIUM_Z, POKE_BALL, POKE_DOLL, POKE_FLUTE, POKE_RADAR, POKE_SNACK, POKE_TOY, POKEBLOCK_CASE, POKEBLOCK_KIT, POKEDEX, POKEMON_BOX_LINK, POKESHI_DOLL, POLKADOT_BOW, POLISHED_MUD_BALL, POLIWAG_CANDY, POMEG_BERRY, PONYTA_CANDY, POP_POD, PORTRAITMAIL, PORYGON_CANDY, POTION, POWER_ANKLET, POWER_BAND, POWER_BELT, POWER_BRACER, POWER_HERB, POWER_LENS, POWER_PLANT_PASS, POWER_WEIGHT, POWERUP_PART, POWDER_JAR, PP_MAX, PP_UP, PREMIER_BALL, PRETTY_FEATHER, PRIMARIUM_Z, PRISM_SCALE, PRISON_BOTTLE, PROFS_LETTER, PROFESSORS_MASK, PROP_CASE, PROTECTIVE_PADS, PROTECTOR, PROTEIN, PRZCUREBERRY, PSNCUREBERRY, PSYCHIC_GEM, PSYCHIC_MEMORY, PSYCHIC_SEED, PSYCHIC_TERA_SHARD, PSYCHIUM_Z, PSYDUCK_CANDY, PUMKIN_BERRY, PUNCHING_GLOVE, PURE_INCENSE, PURPLE_NECTAR, PURPLE_PETAL, QUALOT_BERRY, QUICK_BALL, QUICK_CANDY, QUICK_CANDY_L, QUICK_CANDY_XL, QUICK_CLAW, QUICK_POWDER, QUIET_MINT, RABUTA_BERRY, RADIANT_PETAL, RAGECANDYBAR, RAINBOW_FLOWER, RAINBOW_PASS, RAINBOW_SLATE, RAINBOW_WING, RARE_BONE, RARE_CANDY, RASH_MINT, RATTATA_CANDY, RAWST_BERRY, RAZOR_CLAW, RAZOR_FANG, RAZZ_BERRY, R_DISK, REAPER_CLOTH, RECIPES, RED_APRICORN, RED_CARD, RED_CHAIN, RED_FLUTE, RED_ID_BADGE, RED_NECTAR, RED_ORB, RED_PETAL, RED_SCALE, RED_SCARF, RED_SHARD, REINS_OF_UNITY, RELAXED_MINT, RELIC_BAND, RELIC_COPPER, RELIC_CROWN, RELIC_GOLD, RELIC_SILVER, RELIC_STATUE, RELIC_VASE, REMEDY, REPEAT_BALL, REPEL, REPLY_MAIL, RESIST_FEATHER, RETRO_MAIL, REVEAL_GLASS, REVIVAL_HERB, REVIVE, RHYHORN_CANDY, RIBBON_SWEET, RICH_MULCH, RIDE_PAGER, RINDO_BERRY, RING_TARGET, ROCK_GEM, ROCK_INCENSE, ROCK_MEMORY, ROCK_TERA_SHARD, ROCKIUM_Z, ROCKY_HELMET, ROLLER_SKATES, ROOM_SERVICE, ROOT_FOSSIL, ROSE_INCENSE, ROSELI_BERRY, ROTO_BARGAIN, ROTO_BOOST, ROTO_CATCH, ROTO_ENCOUNTER, ROTO_EXP_POINTS, ROTO_FRIENDSHIP, ROTO_HATCH, ROTO_HP_RESTORE, ROTO_PP_RESTORE, ROTO_PRIZE_MONEY, ROTO_STEALTH, ROTOM_BIKE, ROTOM_CATALOG, ROTOM_PHONE, ROWAP_BERRY, RSVP_MAIL, RUBY, RUNNING_SHOES, RUSTED_SHIELD, RUSTED_SWORD, S_S_TICKET, SABLENITE, SACHET, SACRED_ASH, SAFARI_BALL, SAFETY_GOGGLES, SAIL_FOSSIL, SALAC_BERRY, SALAMENCITE, SALT_CAKE, SAND_RADISH, SANDSHREW_CANDY, SANDWICH, SAPPHIRE, SASSY_MINT, SCANNER, SCARLET_BOOK, SCATTER_BANG, SCEPTILITE, SCIZORITE, SCOPE_LENS, SCROLL_OF_DARKNESS, SCROLL_OF_WATERS, SCYTHER_CANDY, SEA_INCENSE, SEAL_CASE, SECRET_KEY, SECRET_MEDICINE, SEED_OF_MASTERY, SEEL_CANDY, SERIOUS_MINT, SHADOW_MAIL, SHADEROOT_CARROT, SHALOUR_SABLE, SHARP_BEAK, SHARPEDONITE, SHED_SHELL, SHELL_BELL, SHELLDER_CANDY, SHINY_CHARM, SHINY_LEAF, SHINY_STONE, SHOAL_SALT, SHOAL_SHELL, SHOCK_DRIVE, SHUCA_BERRY, SILK_SCARF, SILPH_SCOPE, SILVER_LEAF, SILVER_NANAB_BERRY, SILVER_PINAP_BERRY, SILVER_POWDER, SILVER_RAZZ_BERRY, SILVER_WING, SITRUS_BERRY, SKULL_FOSSIL, SKY_PLATE, SKY_TUMBLESTONE, SLOWBRONITE, SLOWPOKE_CANDY, SLOWPOKE_TAIL, SMALL_BOUQUET, SMALL_TABLET, SMART_CANDY, SMART_CANDY_L, SMART_CANDY_XL, SMOKE_BALL, SMOKE_BOMB, SMOOTH_ROCK, SNORLAX_CANDY, SNORLIUM_Z, SNOWBALL, SNOW_BALM, SNOW_MAIL, SODA_POP, SOFT_SAND, SOLGANIUM_Z, SONIAS_BOOK, SOOT_SACK, SOOTFOOT_ROOT, SOOTHE_BELL, SOUL_DEW, SOUL_SLATE, SPACE_BALM, SPACE_MAIL, SPARKLING_STONE, SPEAROW_CANDY, SPELL_TAG, SPELON_BERRY, SPLASH_PLATE, SPOILED_APRICORN, SPOOKY_PLATE, SPORT_BALL, SPRAYDUCK, SPRINGY_MUSHROOM, SPRINKLOTAD, SQUALL_SLATE, SQUIRT_BOTTLE, SQUIRTLE_CANDY, STABLE_MULCH, STAR_PIECE, STAR_SWEET, STARDUST, STARF_BERRY, STARYU_CANDY, STEALTH_SPRAY, STEEL_GEM, STEEL_MAIL, STEEL_MEMORY, STEEL_TEETH, STEEL_TERA_SHARD, STEELIUM_Z, STEELIXITE, STICKY_BARB, STICKY_GLOB, STONE_PLATE, STORAGE_KEY, STRANGE_BALL, STRANGE_SOUVENIR, STRATOSPHERIC_SLATE, STRAWBERRY_SWEET, STRETCHY_SPRING, STRIB_BERRY, STYLE_CARD, SUBWAY_KEY, SUITE_KEY, SUN_FLUTE, SUN_SHARD, SUN_STONE, SUPER_LURE, SUPER_POTION, SUPER_REPEL, SUPER_ROD, SUPERB_REMEDY, SURFBOARD, SURF_MAIL, SURGE_BADGE, SURPRISE_MULCH, SURVIVAL_CHARM_B, SURVIVAL_CHARM_P, SURVIVAL_CHARM_R, SURVIVAL_CHARM_T, SURVIVAL_CHARM_Y, SWAMPERTITE, SWAP_SNACK, SWEET_APPLE, SWEET_HEART, SWIFT_FEATHER, SWORDCAP, SYSTEM_LEVER, TAMATO_BERRY, TANGA_BERRY, TANGELA_CANDY, TAPUNIUM_Z, TART_APPLE, TAUROS_CANDY, TEA, TEACHY_TV, TECTONIC_SLATE, TEMPTING_CHARM_B, TEMPTING_CHARM_P, TEMPTING_CHARM_R, TEMPTING_CHARM_T, TEMPTING_CHARM_Y, TENTACOOL_CANDY, TERA_ORB, TERRAIN_EXTENDER, TERU_SAMA, THANKS_MAIL, THICK_CLUB, THROAT_SPRAY, THUNDER_STONE, TIDAL_BELL, TIME_BALM, TIME_FLUTE, TIMER_BALL, TIMID_MINT, TINY_BAMBOO_SHOOT, TINY_MUSHROOM, TM01, TM02, TM03, TM04, TM05, TM06, TM07, TM08, TM09, TM10, TM11, TM12, TM13, TM14, TM15, TM16, TM17, TM18, TM19, TM20, TM21, TM22, TM23, TM24, TM25, TM26, TM27, TM28, TM29, TM30, TM31, TM32, TM33, TM34, TM35, TM36, TM37, TM38, TM39, TM40, TM41, TM42, TM43, TM44, TM45, TM46, TM47, TM48, TM49, TM50, TM51, TM52, TM53, TM54, TM55, TM56, TM57, TM58, TM59, TM60, TM61, TM62, TM63, TM64, TM65, TM66, TM67, TM68, TM69, TM70, TM71, TM72, TM73, TM74, TM75, TM76, TM77, TM78, TM79, TM80, TM81, TM82, TM83, TM84, TM85, TM86, TM87, TM88, TM89, TM90, TM91, TM92, TM93, TM94, TM95, TM96, TM97, TM98, TM99, TM_CASE, TM_MATERIALS, TR01, TR02, TR03, TR04, TR05, TR06, TR07, TR08, TR09, TR10, TR11, TR12, TR13, TR14, TR15, TR16, TR17, TR18, TR19, TR20, TR21, TR22, TR23, TR24, TR25, TR26, TR27, TR28, TR29, TR30, TR31, TR32, TR33, TR34, TR35, TR36, TR37, TR38, TR39, TR40, TR41, TR42, TR43, TR44, TR45, TR46, TR47, TR48, TR49, TR50, TR51, TR52, TR53, TR54, TR55, TR56, TR57, TR58, TR59, TR60, TR61, TR62, TR63, TR64, TR65, TR66, TR67, TR68, TR69, TR70, TR71, TR72, TR73, TR74, TR75, TR76, TR77, TR78, TR79, TR80, TR81, TR82, TR83, TR84, TR85, TR86, TR87, TR88, TR89, TR90, TR91, TR92, TR93, TR94, TR95, TR96, TR97, TR98, TR99, TMV_PASS, TOPO_BERRY, TORN_JOURNAL, TOUGA_BERRY, TOUGH_CANDY, TOUGH_CANDY_L, TOUGH_CANDY_XL, TOWN_MAP, TOXIC_ORB, TOXIC_PLATE, TRAVEL_TRUNK, TRI_PASS, TROPIC_MAIL, TROPICAL_SHELL, TUMBLESTONE, TUNNEL_MAIL, TWICE_SPICED_RADISH, TWISTED_SPOON, TYRANITARITE, U_DISK, ULTRA_BALL, ULTRANECROZIUM_Z, UNOWN_REPORT, UNUSUAL_SHOES, UPGRADE, UTILITY_UMBRELLA, UXIES_CLAW, VENONAT_CANDY, VENUSAURITE, VIOLET_BOOK, VIVICHOKE, VIVID_SCENT, VOICE_CASE_1, VOICE_CASE_2, VOICE_CASE_3, VOICE_CASE_4, VOICE_CASE_5, VOLCANO_BALM, VOLTORB_CANDY, VS_RECORDER, VS_SEEKER, VULPIX_CANDY, WACAN_BERRY, WAILMER_PAIL, WALL_FRAGMENT, WARDING_CHARM_B, WARDING_CHARM_P, WARDING_CHARM_R, WARDING_CHARM_T, WARDING_CHARM_Y, WATER_GEM, WATER_MEMORY, WATER_STONE, WATER_TERA_SHARD, WATERIUM_Z, WATMEL_BERRY, WAVE_INCENSE, WAVE_MAIL, WEAKNESS_POLICY, WEEDLE_CANDY, WEPEAR_BERRY, WHIPPED_DREAM, WHITE_APRICORN, WHITE_FLUTE, WHITE_HERB, WHITE_MANE_HAIR, WIDE_LENS, WIKI_BERRY, WING_BALL, WISE_GLASSES, WISHING_CHIP, WISHING_PIECE, WISHING_STAR, WOOD, WOOD_MAIL, WOODEN_CROWN, WORKS_KEY, X_ACCURACY, X_ATTACK, X_DEFENSE, X_SP_ATK, X_SP_DEF, X_SPEED, XTRANSCEIVER, YACHE_BERRY, YAGO_BERRY, YELLOW_APRICORN, YELLOW_FLUTE, YELLOW_NECTAR, YELLOW_PETAL, YELLOW_SCARF, YELLOW_SHARD, YLW_ID_BADGE, ZAP_PLATE, ZAPDOS_CANDY, ZINC, ZOOM_LENS, Z_POWER_RING, Z_RING, ZUBAT_CANDY, ZYGARDE_CUBE, ITEM_TOTAL
+  // clang-format on
+};
+
+static constexpr std::size_t TOTAL_ITEM_COUNT = (std::size_t)Item::ITEM_TOTAL;
+}  // namespace pokesim::dex
+
+/////////////////////// END OF src/Types/Enums/Item.hpp ////////////////////////
+
+///////////////////// START OF src/Types/Enums/Nature.hpp //////////////////////
+
+#include <cstddef>
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon nature name
+enum class Nature : std::uint8_t {
+  // clang-format off
+  NO_NATURE = 0, ADAMANT, BASHFUL, BOLD, BRAVE, CALM, CAREFUL, DOCILE, GENTLE, HARDY, HASTY, IMPISH, JOLLY, LAX, LONELY, MILD, MODEST, NAIVE, NAUGHTY, QUIET, QUIRKY, RASH, RELAXED, SASSY, SERIOUS, TIMID, NATURE_TOTAL
+  // clang-format on
+};
+
+static constexpr std::size_t TOTAL_NATURE_COUNT = (std::size_t)Nature::NATURE_TOTAL;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Nature.hpp ///////////////////////
+
+///////////////////// START OF src/Types/Enums/Species.hpp /////////////////////
+
+#include <cstddef>
+#include <cstdint>
+
+namespace pokesim::dex {
+
+/**
+ * @brief Pokemon and Pokemon form name.
+ *
+ * @details Pokemon that have multiple forms will have their base form and alternate forms listed here.
+ * However, if none of a Pokemon's forms are cosmetic (i.e. change nothing expect appearance), the forms cannot be
+ * changed during battle, and no true base form exists, then the Pokemon's species name without a form specifier is
+ * omitted. For example:
+ *  - `VENUSAUR`, `MEGA_VENUSAUR`, and `GIGANTAMAX_VENUSAUR` are all listed because Venusaur changes into the other
+ * forms mid-battle
+ *  - `GASTRODON`, `WEST_SEA_GASTRODON`, and `EAST_SEA_GASTRODON` are all listed because although Gastrodon's forms
+ * are permanent, their only difference is how they look
+ *  - `PLANT_CLOAK_WORMADAM`, `SANDY_CLOAK_WORMADAM`, and `TRASH_CLOAK_WORMADAM` listed while `WORMADAM` is not
+ * because the Wormadam forms have different types, stats, and moves; their forms are permanent; and there is no base
+ * Wormadam.
+ */
+enum class Species : std::uint16_t {
+  // clang-format off
+  MISSING_NO = 0, BULBASAUR, IVYSAUR, VENUSAUR, MEGA_VENUSAUR, GIGANTAMAX_VENUSAUR, CHARMANDER, CHARMELEON, CHARIZARD, MEGA_CHARIZARD_X, MEGA_CHARIZARD_Y, GIGANTAMAX_CHARIZARD, SQUIRTLE, WARTORTLE, BLASTOISE, MEGA_BLASTOISE, GIGANTAMAX_BLASTOISE, CATERPIE, METAPOD, BUTTERFREE, GIGANTAMAX_BUTTERFREE, WEEDLE, KAKUNA, BEEDRILL, MEGA_BEEDRILL, PIDGEY, PIDGEOTTO, PIDGEOT, MEGA_PIDGEOT, RATTATA, ALOLAN_RATTATA, RATICATE, ALOLAN_RATICATE, TOTEM_ALOLAN_RATICATE, SPEAROW, FEAROW, EKANS, ARBOK, PIKACHU, COSPLAY_PIKACHU, PIKACHU_ROCK_STAR, PIKACHU_BELLE, PIKACHU_POP_STAR, PIKACHU_PHD, PIKACHU_LIBRE, ORIGINAL_CAP_PIKACHU, HOENN_CAP_PIKACHU, SINNOH_CAP_PIKACHU, UNOVA_CAP_PIKACHU, KALOS_CAP_PIKACHU, ALOLA_CAP_PIKACHU, PARTNER_CAP_PIKACHU, STARTER_PIKACHU, GIGANTAMAX_PIKACHU, WORLD_CAP_PIKACHU, RAICHU, ALOLAN_RAICHU, SANDSHREW, ALOLAN_SANDSHREW, SANDSLASH, ALOLAN_SANDSLASH, NIDORAN_FEMALE, NIDORINA, NIDOQUEEN, NIDORAN_MALE, NIDORINO, NIDOKING, CLEFAIRY, CLEFABLE, VULPIX, ALOLAN_VULPIX, NINETALES, ALOLAN_NINETALES, JIGGLYPUFF, WIGGLYTUFF, ZUBAT, GOLBAT, ODDISH, GLOOM, VILEPLUME, PARAS, PARASECT, VENONAT, VENOMOTH, DIGLETT, ALOLAN_DIGLETT, DUGTRIO, ALOLAN_DUGTRIO, MEOWTH, ALOLAN_MEOWTH, GALARIAN_MEOWTH, GIGANTAMAX_MEOWTH, PERSIAN, ALOLAN_PERSIAN, PSYDUCK, GOLDUCK, MANKEY, PRIMEAPE, HISUIAN_GROWLITHE, GROWLITHE, HISUIAN_ARCANINE, ARCANINE, POLIWAG, POLIWHIRL, POLIWRATH, ABRA, KADABRA, ALAKAZAM, MEGA_ALAKAZAM, MACHOP, MACHOKE, MACHAMP, GIGANTAMAX_MACHAMP, BELLSPROUT, WEEPINBELL, VICTREEBEL, TENTACOOL, TENTACRUEL, GEODUDE, ALOLAN_GEODUDE, GRAVELER, ALOLAN_GRAVELER, GOLEM, ALOLAN_GOLEM, PONYTA, GALARIAN_PONYTA, RAPIDASH, GALARIAN_RAPIDASH, SLOWPOKE, GALARIAN_SLOWPOKE, SLOWBRO, MEGA_SLOWBRO, GALARIAN_SLOWBRO, MAGNEMITE, MAGNETON, FARFETCH_D, GALARIAN_FARFETCH_D, DODUO, DODRIO, SEEL, DEWGONG, GRIMER, ALOLAN_GRIMER, MUK, ALOLAN_MUK, SHELLDER, CLOYSTER, GASTLY, HAUNTER, GENGAR, MEGA_GENGAR, GIGANTAMAX_GENGAR, ONIX, DROWZEE, HYPNO, KRABBY, KINGLER, GIGANTAMAX_KINGLER, VOLTORB, HISUIAN_VOLTORB, ELECTRODE, HISUIAN_ELECTRODE, EXEGGCUTE, EXEGGUTOR, ALOLAN_EXEGGUTOR, CUBONE, MAROWAK, ALOLAN_MAROWAK, TOTEM_ALOLAN_MAROWAK, HITMONLEE, HITMONCHAN, LICKITUNG, KOFFING, WEEZING, GALARIAN_WEEZING, RHYHORN, RHYDON, CHANSEY, TANGELA, KANGASKHAN, MEGA_KANGASKHAN, HORSEA, SEADRA, GOLDEEN, SEAKING, STARYU, STARMIE, MR_MIME, GALARIAN_MR_MIME, SCYTHER, JYNX, ELECTABUZZ, MAGMAR, PINSIR, MEGA_PINSIR, TAUROS, PALDEAN_TAUROS_COMBAT_BREAD, PALDEAN_TAUROS_BLAZE_BREAD, PALDEAN_TAUROS_AQUA_BREAD, MAGIKARP, GYARADOS, MEGA_GYARADOS, LAPRAS, GIGANTAMAX_LAPRAS, DITTO, EEVEE, STARTER_EEVEE, GIGANTAMAX_EEVEE, VAPOREON, JOLTEON, FLAREON, PORYGON, OMANYTE, OMASTAR, KABUTO, KABUTOPS, AERODACTYL, MEGA_AERODACTYL, SNORLAX, GIGANTAMAX_SNORLAX, ARTICUNO, GALARIAN_ARTICUNO, ZAPDOS, GALARIAN_ZAPDOS, MOLTRES, GALARIAN_MOLTRES, DRATINI, DRAGONAIR, DRAGONITE, MEWTWO, MEGA_MEWTWO_X, MEGA_MEWTWO_Y, MEW, CHIKORITA, BAYLEEF, MEGANIUM, CYNDAQUIL, QUILAVA, HISUIAN_TYPHLOSION, TYPHLOSION, TOTODILE, CROCONAW, FERALIGATR, SENTRET, FURRET, HOOTHOOT, NOCTOWL, LEDYBA, LEDIAN, SPINARAK, ARIADOS, CROBAT, CHINCHOU, LANTURN, PICHU, SPIKY_EARED_PICHU, CLEFFA, IGGLYBUFF, TOGEPI, TOGETIC, NATU, XATU, MAREEP, FLAAFFY, AMPHAROS, MEGA_AMPHAROS, BELLOSSOM, MARILL, AZUMARILL, SUDOWOODO, POLITOED, HOPPIP, SKIPLOOM, JUMPLUFF, AIPOM, SUNKERN, SUNFLORA, YANMA, WOOPER, PALDEAN_WOOPER, QUAGSIRE, ESPEON, UMBREON, MURKROW, SLOWKING, GALARIAN_SLOWKING, MISDREAVUS, UNOWN, UNOWN_A, UNOWN_B, UNOWN_C, UNOWN_D, UNOWN_E, UNOWN_F, UNOWN_G, UNOWN_H, UNOWN_I, UNOWN_J, UNOWN_K, UNOWN_L, UNOWN_M, UNOWN_N, UNOWN_O, UNOWN_P, UNOWN_Q, UNOWN_R, UNOWN_S, UNOWN_T, UNOWN_U, UNOWN_V, UNOWN_W, UNOWN_X, UNOWN_Y, UNOWN_Z, UNOWN_EXCLAMATION, UNOWN_QUESTION, WOBBUFFET, GIRAFARIG, PINECO, FORRETRESS, DUNSPARCE, GLIGAR, STEELIX, MEGA_STEELIX, SNUBBULL, GRANBULL, QWILFISH, HISUIAN_QWILFISH, SCIZOR, MEGA_SCIZOR, SHUCKLE, HERACROSS, MEGA_HERACROSS, HISUIAN_SNEASEL, SNEASEL, TEDDIURSA, URSARING, SLUGMA, MAGCARGO, SWINUB, PILOSWINE, CORSOLA, GALARIAN_CORSOLA, REMORAID, OCTILLERY, DELIBIRD, MANTINE, SKARMORY, HOUNDOUR, HOUNDOOM, MEGA_HOUNDOOM, KINGDRA, PHANPY, DONPHAN, PORYGON2, STANTLER, SMEARGLE, TYROGUE, HITMONTOP, SMOOCHUM, ELEKID, MAGBY, MILTANK, BLISSEY, RAIKOU, ENTEI, SUICUNE, LARVITAR, PUPITAR, TYRANITAR, MEGA_TYRANITAR, LUGIA, HO_OH, CELEBI, TREECKO, GROVYLE, SCEPTILE, MEGA_SCEPTILE, TORCHIC, COMBUSKEN, BLAZIKEN, MEGA_BLAZIKEN, MUDKIP, MARSHTOMP, SWAMPERT, MEGA_SWAMPERT, POOCHYENA, MIGHTYENA, ZIGZAGOON, GALARIAN_ZIGZAGOON, LINOONE, GALARIAN_LINOONE, WURMPLE, SILCOON, BEAUTIFLY, CASCOON, DUSTOX, LOTAD, LOMBRE, LUDICOLO, SEEDOT, NUZLEAF, SHIFTRY, TAILLOW, SWELLOW, WINGULL, PELIPPER, RALTS, KIRLIA, GARDEVOIR, MEGA_GARDEVOIR, SURSKIT, MASQUERAIN, SHROOMISH, BRELOOM, SLAKOTH, VIGOROTH, SLAKING, NINCADA, NINJASK, SHEDINJA, WHISMUR, LOUDRED, EXPLOUD, MAKUHITA, HARIYAMA, AZURILL, NOSEPASS, SKITTY, DELCATTY, SABLEYE, MEGA_SABLEYE, MAWILE, MEGA_MAWILE, ARON, LAIRON, AGGRON, MEGA_AGGRON, MEDITITE, MEDICHAM, MEGA_MEDICHAM, ELECTRIKE, MANECTRIC, MEGA_MANECTRIC, PLUSLE, MINUN, VOLBEAT, ILLUMISE, ROSELIA, GULPIN, SWALOT, CARVANHA, SHARPEDO, MEGA_SHARPEDO, WAILMER, WAILORD, NUMEL, CAMERUPT, MEGA_CAMERUPT, TORKOAL, SPOINK, GRUMPIG, SPINDA, TRAPINCH, VIBRAVA, FLYGON, CACNEA, CACTURNE, SWABLU, ALTARIA, MEGA_ALTARIA, ZANGOOSE, SEVIPER, LUNATONE, SOLROCK, BARBOACH, WHISCASH, CORPHISH, CRAWDAUNT, BALTOY, CLAYDOL, LILEEP, CRADILY, ANORITH, ARMALDO, FEEBAS, MILOTIC, CASTFORM, SUNNY_CASTFORM, RAINY_CASTFORM, SNOWY_CASTFORM, KECLEON, SHUPPET, BANETTE, MEGA_BANETTE, DUSKULL, DUSCLOPS, TROPIUS, CHIMECHO, ABSOL, MEGA_ABSOL, WYNAUT, SNORUNT, GLALIE, MEGA_GLALIE, SPHEAL, SEALEO, WALREIN, CLAMPERL, HUNTAIL, GOREBYSS, RELICANTH, LUVDISC, BAGON, SHELGON, SALAMENCE, MEGA_SALAMENCE, BELDUM, METANG, METAGROSS, MEGA_METAGROSS, REGIROCK, REGICE, REGISTEEL, LATIAS, MEGA_LATIAS, LATIOS, MEGA_LATIOS, KYOGRE, PRIMAL_KYOGRE, GROUDON, PRIMAL_GROUDON, RAYQUAZA, MEGA_RAYQUAZA, JIRACHI, DEOXYS, ATTACK_DEOXYS, DEFENSE_DEOXYS, SPEED_DEOXYS, TURTWIG, GROTLE, TORTERRA, CHIMCHAR, MONFERNO, INFERNAPE, PIPLUP, PRINPLUP, EMPOLEON, STARLY, STARAVIA, STARAPTOR, BIDOOF, BIBAREL, KRICKETOT, KRICKETUNE, SHINX, LUXIO, LUXRAY, BUDEW, ROSERADE, CRANIDOS, RAMPARDOS, SHIELDON, BASTIODON, BURMY, PLANT_CLOAK_BURMY, SANDY_CLOAK_BURMY, TRASH_CLOAK_BURMY, PLANT_CLOAK_WORMADAM, SANDY_CLOAK_WORMADAM, TRASH_CLOAK_WORMADAM, MOTHIM, COMBEE, VESPIQUEN, PACHIRISU, BUIZEL, FLOATZEL, CHERUBI, CHERRIM, CHERRIM_OVERCAST, CHERRIM_SUNSHINE, SHELLOS, WEST_SEA_SHELLOS, EAST_SEA_SHELLOS, GASTRODON, WEST_SEA_GASTRODON, EAST_SEA_GASTRODON, AMBIPOM, DRIFLOON, DRIFBLIM, BUNEARY, LOPUNNY, MEGA_LOPUNNY, MISMAGIUS, HONCHKROW, GLAMEOW, PURUGLY, CHINGLING, STUNKY, SKUNTANK, BRONZOR, BRONZONG, BONSLY, MIME_JR, HAPPINY, CHATOT, SPIRITOMB, GIBLE, GABITE, GARCHOMP, MEGA_GARCHOMP, MUNCHLAX, RIOLU, LUCARIO, MEGA_LUCARIO, HIPPOPOTAS, HIPPOWDON, SKORUPI, DRAPION, CROAGUNK, TOXICROAK, CARNIVINE, FINNEON, LUMINEON, MANTYKE, SNOVER, ABOMASNOW, MEGA_ABOMASNOW, WEAVILE, MAGNEZONE, LICKILICKY, RHYPERIOR, TANGROWTH, ELECTIVIRE, MAGMORTAR, TOGEKISS, YANMEGA, LEAFEON, GLACEON, GLISCOR, MAMOSWINE, PORYGON_Z, GALLADE, MEGA_GALLADE, PROBOPASS, DUSKNOIR, FROSLASS, ROTOM, HEAT_ROTOM, WASH_ROTOM, FROST_ROTOM, FAN_ROTOM, MOW_ROTOM, UXIE, MESPRIT, AZELF, DIALGA, DIALGA_ORIGIN, PALKIA, PALKIA_ORIGIN, HEATRAN, REGIGIGAS, GIRATINA_ALTERED, GIRATINA_ORIGIN, CRESSELIA, PHIONE, MANAPHY, DARKRAI, SHAYMIN, SHAYMIN_LAND, SHAYMIN_SKY, ARCEUS, ARCEUS_BUG, ARCEUS_DARK, ARCEUS_DRAGON, ARCEUS_ELECTRIC, ARCEUS_FAIRY, ARCEUS_FIGHTING, ARCEUS_FIRE, ARCEUS_FLYING, ARCEUS_GHOST, ARCEUS_GRASS, ARCEUS_GROUND, ARCEUS_ICE, ARCEUS_POISON, ARCEUS_PSYCHIC, ARCEUS_ROCK, ARCEUS_STEEL, ARCEUS_WATER, VICTINI, SNIVY, SERVINE, SERPERIOR, TEPIG, PIGNITE, EMBOAR, OSHAWOTT, DEWOTT, HISUIAN_SAMUROTT, SAMUROTT, PATRAT, WATCHOG, LILLIPUP, HERDIER, STOUTLAND, PURRLOIN, LIEPARD, PANSAGE, SIMISAGE, PANSEAR, SIMISEAR, PANPOUR, SIMIPOUR, MUNNA, MUSHARNA, PIDOVE, TRANQUILL, UNFEZANT, BLITZLE, ZEBSTRIKA, ROGGENROLA, BOLDORE, GIGALITH, WOOBAT, SWOOBAT, DRILBUR, EXCADRILL, AUDINO, MEGA_AUDINO, TIMBURR, GURDURR, CONKELDURR, TYMPOLE, PALPITOAD, SEISMITOAD, THROH, SAWK, SEWADDLE, SWADLOON, LEAVANNY, VENIPEDE, WHIRLIPEDE, SCOLIPEDE, COTTONEE, WHIMSICOTT, PETILIL, LILLIGANT, HISUIAN_LILLIGANT, RED_STRIPED_BASCULIN, BLUE_STRIPED_BASCULIN, WHITE_STRIPED_BASCULIN, SANDILE, KROKOROK, KROOKODILE, DARUMAKA, GALARIAN_DARUMAKA, DARMANITAN, ZEN_MODE_DARMANITAN, GALARIAN_DARMANITAN, GALARIAN_ZEN_MODE_DARMANITAN, MARACTUS, DWEBBLE, CRUSTLE, SCRAGGY, SCRAFTY, SIGILYPH, YAMASK, GALARIAN_YAMASK, COFAGRIGUS, TIRTOUGA, CARRACOSTA, ARCHEN, ARCHEOPS, TRUBBISH, GARBODOR, GIGANTAMAX_GARBODOR, ZORUA, HISUIAN_ZORUA, HISUIAN_ZOROARK, ZOROARK, MINCCINO, CINCCINO, GOTHITA, GOTHORITA, GOTHITELLE, SOLOSIS, DUOSION, REUNICLUS, DUCKLETT, SWANNA, VANILLITE, VANILLISH, VANILLUXE, DEERLING, DEERLING_SPRING, DEERLING_SUMMER, DEERLING_AUTUMN, DEERLING_WINTER, SAWSBUCK, SAWSBUCK_SPRING, SAWSBUCK_SUMMER, SAWSBUCK_AUTUMN, SAWSBUCK_WINTER, EMOLGA, KARRABLAST, ESCAVALIER, FOONGUS, AMOONGUSS, FRILLISH, JELLICENT, ALOMOMOLA, JOLTIK, GALVANTULA, FERROSEED, FERROTHORN, KLINK, KLANG, KLINKLANG, TYNAMO, EELEKTRIK, EELEKTROSS, ELGYEM, BEHEEYEM, LITWICK, LAMPENT, CHANDELURE, AXEW, FRAXURE, HAXORUS, CUBCHOO, BEARTIC, CRYOGONAL, SHELMET, ACCELGOR, STUNFISK, GALARIAN_STUNFISK, MIENFOO, MIENSHAO, DRUDDIGON, GOLETT, GOLURK, PAWNIARD, BISHARP, BOUFFALANT, RUFFLET, HISUIAN_BRAVIARY, BRAVIARY, VULLABY, MANDIBUZZ, HEATMOR, DURANT, DEINO, ZWEILOUS, HYDREIGON, LARVESTA, VOLCARONA, COBALION, TERRAKION, VIRIZION, INCARNATE_TORNADUS, TORNADUS_THERIAN, INCARNATE_THUNDURUS, THUNDURUS_THERIAN, RESHIRAM, ZEKROM, INCARNATE_LANDORUS, LANDORUS_THERIAN, KYUREM, BLACK_KYUREM, WHITE_KYUREM, KELDEO, RESOLUTE_KELDEO, ARIA_MELOETTA, PIROUETTE_MELOETTA, GENESECT, DOUSE_DRIVE_GENESECT, SHOCK_DRIVE_GENESECT, BURN_DRIVE_GENESECT, CHILL_DRIVE_GENESECT, CHESPIN, QUILLADIN, CHESNAUGHT, FENNEKIN, BRAIXEN, DELPHOX, FROAKIE, FROGADIER, GRENINJA, ASH_GRENINJA, BUNNELBY, DIGGERSBY, FLETCHLING, FLETCHINDER, TALONFLAME, SCATTERBUG, SPEWPA, VIVILLON, MEADOW_PATTERN_VIVILLON, ARCHIPELAGO_PATTERN_VIVILLON, CONTINENTAL_PATTERN_VIVILLON, ELEGANT_PATTERN_VIVILLON, GARDEN_PATTERN_VIVILLON, HIGH_PLAINS_PATTERN_VIVILLON, ICY_SNOW_PATTERN_VIVILLON, JUNGLE_PATTERN_VIVILLON, MARINE_PATTERN_VIVILLON, MODERN_PATTERN_VIVILLON, MONSOON_PATTERN_VIVILLON, OCEAN_PATTERN_VIVILLON, POLAR_PATTERN_VIVILLON, RIVER_PATTERN_VIVILLON, SANDSTORM_PATTERN_VIVILLON, SAVANNA_PATTERN_VIVILLON, SUN_PATTERN_VIVILLON, TUNDRA_PATTERN_VIVILLON, FANCY_PATTERN_VIVILLON, POKEBALL_PATTERN_VIVILLON, LITLEO, PYROAR, FLABEBE, RED_FLOWER_FLABEBE, BLUE_FLOWER_FLABEBE, ORANGE_FLOWER_FLABEBE, WHITE_FLOWER_FLABEBE, YELLOW_FLOWER_FLABEBE, FLOETTE, RED_FLOWER_FLOETTE, BLUE_FLOWER_FLOETTE, ORANGE_FLOWER_FLOETTE, WHITE_FLOWER_FLOETTE, YELLOW_FLOWER_FLOETTE, ETERNAL_FLOWER_FLOETTE, FLORGES, RED_FLOWER_FLORGES, BLUE_FLOWER_FLORGES, ORANGE_FLOWER_FLORGES, WHITE_FLOWER_FLORGES, YELLOW_FLOWER_FLORGES, SKIDDO, GOGOAT, PANCHAM, PANGORO, FURFROU, NATURAL_FURFROU, DANDY_TRIM_FURFROU, DEBUTANTE_TRIM_FURFROU, DIAMOND_TRIM_FURFROU, HEART_TRIM_FURFROU, KABUKI_TRIM_FURFROU, LA_REINE_TRIM_FURFROU, MATRON_TRIM_FURFROU, PHARAOH_TRIM_FURFROU, STAR_TRIM_FURFROU, ESPURR, MALE_MEOWSTIC, FEMALE_MEOWSTIC, HONEDGE, DOUBLADE, AEGISLASH, SHIELD_AEGISLASH, BLADE_AEGISLASH, SPRITZEE, AROMATISSE, SWIRLIX, SLURPUFF, INKAY, MALAMAR, BINACLE, BARBARACLE, SKRELP, DRAGALGE, CLAUNCHER, CLAWITZER, HELIOPTILE, HELIOLISK, TYRUNT, TYRANTRUM, AMAURA, AURORUS, SYLVEON, HAWLUCHA, DEDENNE, CARBINK, GOOMY, HISUIAN_SLIGGOO, SLIGGOO, HISUIAN_GOODRA, GOODRA, KLEFKI, PHANTUMP, TREVENANT, AVERAGE_SIZE_PUMPKABOO, SMALL_SIZE_PUMPKABOO, LARGE_SIZE_PUMPKABOO, SUPER_SIZE_PUMPKABOO, AVERAGE_SIZE_GOURGEIST, SMALL_SIZE_GOURGEIST, LARGE_SIZE_GOURGEIST, SUPER_SIZE_GOURGEIST, BERGMITE, AVALUGG, HISUIAN_AVALUGG, NOIBAT, NOIVERN, XERNEAS, YVELTAL, ZYGARDE_50, ZYGARDE_10, ZYGARDE_COMPLETE, DIANCIE, MEGA_DIANCIE, HOOPA_CONFINED, HOOPA_UNBOUND, VOLCANION, ROWLET, DARTRIX, HISUIAN_DECIDUEYE, DECIDUEYE, LITTEN, TORRACAT, INCINEROAR, POPPLIO, BRIONNE, PRIMARINA, PIKIPEK, TRUMBEAK, TOUCANNON, YUNGOOS, GUMSHOOS, TOTEM_GUMSHOOS, GRUBBIN, CHARJABUG, VIKAVOLT, TOTEM_VIKAVOLT, CRABRAWLER, CRABOMINABLE, BAILE_STYLE_ORICORIO, POM_POM_STYLE_ORICORIO, PA_U_STYLE_ORICORIO, SENSU_STYLE_ORICORIO, CUTIEFLY, RIBOMBEE, TOTEM_RIBOMBEE, ROCKRUFF, MIDDAY_ROCKRUFF, MIDDAY_LYCANROC, MIDNIGHT_LYCANROC, DUSK_LYCANROC, WISHIWASHI, SOLO_WISHIWASHI, SCHOOL_WISHIWASHI, MAREANIE, TOXAPEX, MUDBRAY, MUDSDALE, DEWPIDER, ARAQUANID, TOTEM_ARAQUANID, FOMANTIS, LURANTIS, TOTEM_LURANTIS, MORELULL, SHIINOTIC, SALANDIT, SALAZZLE, TOTEM_SALAZZLE, STUFFUL, BEWEAR, BOUNSWEET, STEENEE, TSAREENA, COMFEY, ORANGURU, PASSIMIAN, WIMPOD, GOLISOPOD, SANDYGAST, PALOSSAND, PYUKUMUKU, TYPE_NULL, SILVALLY, SILVALLY_BUG, SILVALLY_DARK, SILVALLY_DRAGON, SILVALLY_ELECTRIC, SILVALLY_FAIRY, SILVALLY_FIGHTING, SILVALLY_FIRE, SILVALLY_FLYING, SILVALLY_GHOST, SILVALLY_GRASS, SILVALLY_GROUND, SILVALLY_ICE, SILVALLY_POISON, SILVALLY_PSYCHIC, SILVALLY_ROCK, SILVALLY_STEEL, SILVALLY_WATER, MINIOR, CORE_MINIOR, RED_CORE_MINIOR, ORANGE_CORE_MINIOR, YELLOW_CORE_MINIOR, GREEN_CORE_MINIOR, BLUE_CORE_MINIOR, INDIGO_CORE_MINIOR, VIOLET_CORE_MINIOR, METEOR_MINIOR, KOMALA, TURTONATOR, TOGEDEMARU, TOTEM_TOGEDEMARU, MIMIKYU, MIMIKYU_BUSTED, TOTEM_MIMIKYU, BUSTED_TOTEM_MIMIKYU, BRUXISH, DRAMPA, DHELMISE, JANGMO_O, HAKAMO_O, KOMMO_O, TOTEM_KOMMO_O, TAPU_KOKO, TAPU_LELE, TAPU_BULU, TAPU_FINI, COSMOG, COSMOEM, SOLGALEO, LUNALA, NIHILEGO, BUZZWOLE, PHEROMOSA, XURKITREE, CELESTEELA, KARTANA, GUZZLORD, NECROZMA, DUSK_MANE_NECROZMA, DAWN_WINGS_NECROZMA, ULTRA_NECROZMA, MAGEARNA, ORIGINAL_COLOR_MAGEARNA, MARSHADOW, POIPOLE, NAGANADEL, STAKATAKA, BLACEPHALON, ZERAORA, MELTAN, MELMETAL, GIGANTAMAX_MELMETAL, GROOKEY, THWACKEY, RILLABOOM, GIGANTAMAX_RILLABOOM, SCORBUNNY, RABOOT, CINDERACE, GIGANTAMAX_CINDERACE, SOBBLE, DRIZZILE, INTELEON, GIGANTAMAX_INTELEON, SKWOVET, GREEDENT, ROOKIDEE, CORVISQUIRE, CORVIKNIGHT, GIGANTAMAX_CORVIKNIGHT, BLIPBUG, DOTTLER, ORBEETLE, GIGANTAMAX_ORBEETLE, NICKIT, THIEVUL, GOSSIFLEUR, ELDEGOSS, WOOLOO, DUBWOOL, CHEWTLE, DREDNAW, GIGANTAMAX_DREDNAW, YAMPER, BOLTUND, ROLYCOLY, CARKOL, COALOSSAL, GIGANTAMAX_COALOSSAL, APPLIN, FLAPPLE, GIGANTAMAX_FLAPPLE, APPLETUN, GIGANTAMAX_APPLETUN, SILICOBRA, SANDACONDA, GIGANTAMAX_SANDACONDA, CRAMORANT, CRAMORANT_GULPING, CRAMORANT_GORGING, ARROKUDA, BARRASKEWDA, TOXEL, TOXTRICITY_AMPED, TOXTRICITY_LOW_KEY, GIGANTAMAX_TOXTRICITY_AMPED, GIGANTAMAX_TOXTRICITY_LOW_KEY, SIZZLIPEDE, CENTISKORCH, GIGANTAMAX_CENTISKORCH, CLOBBOPUS, GRAPPLOCT, SINISTEA, ANTIQUE_SINISTEA, POLTEAGEIST, ANTIQUE_POLTEAGEIST, HATENNA, HATTREM, HATTERENE, GIGANTAMAX_HATTERENE, IMPIDIMP, MORGREM, GRIMMSNARL, GIGANTAMAX_GRIMMSNARL, OBSTAGOON, PERRSERKER, CURSOLA, SIRFETCH_D, MR_RIME, RUNERIGUS, MILCERY, ALCREMIE, VANILLA_CREAM_ALCREMIE, RUBY_CREAM_ALCREMIE, MATCHA_CREAM_ALCREMIE, MINT_CREAM_ALCREMIE, LEMON_CREAM_ALCREMIE, SALTED_CREAM_ALCREMIE, RUBY_SWIRL_ALCREMIE, CARAMEL_SWIRL_ALCREMIE, RAINBOW_SWIRL_ALCREMIE, GIGANTAMAX_ALCREMIE, FALINKS, PINCURCHIN, SNOM, FROSMOTH, STONJOURNER, EISCUE, ICE_FACE_EISCUE, NOICE_FACE_EISCUE, MALE_INDEEDEE, FEMALE_INDEEDEE, MORPEKO, FULL_BELLY_MODE_MORPEKO, HANGRY_MODE_MORPEKO, CUFANT, COPPERAJAH, GIGANTAMAX_COPPERAJAH, DRACOZOLT, ARCTOZOLT, DRACOVISH, ARCTOVISH, DURALUDON, GIGANTAMAX_DURALUDON, DREEPY, DRAKLOAK, DRAGAPULT, HERO_OF_MANY_BATTLES_ZACIAN, CROWNED_SWORD_ZACIAN, HERO_OF_MANY_BATTLES_ZAMAZENTA, CROWNED_SHIELD_ZAMAZENTA, ETERNATUS, ETERNAMAX_ETERNATUS, KUBFU, SINGLE_STRIKE_STYLE_URSHIFU, RAPID_STRIKE_STYLE_URSHIFU, GIGANTAMAX_SINGLE_STRIKE_STYLE_URSHIFU, GIGANTAMAX_RAPID_STRIKE_STYLE_URSHIFU, ZARUDE, DADA_ZARUDE, REGIELEKI, REGIDRAGO, GLASTRIER, SPECTRIER, CALYREX, ICE_RIDER_CALYREX, SHADOW_RIDER_CALYREX, WYRDEER, KLEAVOR, URSALUNA, MALE_BASCULEGION, FEMALE_BASCULEGION, SNEASLER, OVERQWIL, INCARNATE_ENAMORUS, ENAMORUS_THERIAN, SPRIGATITO, FLORAGATO, MEOWSCARADA, FUECOCO, CROCALOR, SKELEDIRGE, QUAXLY, QUAXWELL, QUAQUAVAL, LECHONK, MALE_OINKOLOGNE, FEMALE_OINKOLOGNE, TAROUNTULA, SPIDOPS, NYMBLE, LOKIX, PAWMI, PAWMO, PAWMOT, TANDEMAUS, MAUSHOLD, FAMILY_OF_THREE_MAUSHOLD, FAMILY_OF_FOUR_MAUSHOLD, FIDOUGH, DACHSBUN, SMOLIV, DOLLIV, ARBOLIVA, GREEN_PLUMAGE_SQUAWKABILLY, BLUE_PLUMAGE_SQUAWKABILLY, YELLOW_PLUMAGE_SQUAWKABILLY, WHITE_PLUMAGE_SQUAWKABILLY, NACLI, NACLSTACK, GARGANACL, CHARCADET, ARMAROUGE, CERULEDGE, TADBULB, BELLIBOLT, WATTREL, KILOWATTREL, MASCHIFF, MABOSSTIFF, SHROODLE, GRAFAIAI, BRAMBLIN, BRAMBLEGHAST, TOEDSCOOL, TOEDSCRUEL, KLAWF, CAPSAKID, SCOVILLAIN, RELLOR, RABSCA, FLITTLE, ESPATHRA, TINKATINK, TINKATUFF, TINKATON, WIGLETT, WUGTRIO, BOMBIRDIER, FINIZEN, ZERO_PALAFIN, HERO_PALAFIN, VAROOM, REVAVROOM, CYCLIZAR, ORTHWORM, GLIMMET, GLIMMORA, GREAVARD, HOUNDSTONE, FLAMIGO, CETODDLE, CETITAN, VELUZA, DONDOZO, TATSUGIRI, CURLY_TATSUGIRI, DROOPY_TATSUGIRI, STRETCHY_TATSUGIRI, ANNIHILAPE, CLODSIRE, FARIGIRAF, DUDUNSPARCE, TWO_SEGMENT_DUDUNSPARCE, THREE_SEGMENT_DUDUNSPARCE, KINGAMBIT, GREAT_TUSK, SCREAM_TAIL, BRUTE_BONNET, FLUTTER_MANE, SLITHER_WING, SANDY_SHOCKS, IRON_TREADS, IRON_BUNDLE, IRON_HANDS, IRON_JUGULIS, IRON_MOTH, IRON_THORNS, FRIGIBAX, ARCTIBAX, BAXCALIBUR, CHEST_GIMMIGHOUL, ROAMING_GIMMIGHOUL, GHOLDENGO, WO_CHIEN, CHIEN_PAO, TING_LU, CHI_YU, ROARING_MOON, IRON_VALIANT, KORAIDON, MIRAIDON, WALKING_WAKE, IRON_LEAVES, SPECIES_TOTAL
+  // clang-format on
+};
+
+static constexpr std::size_t TOTAL_SPECIES_COUNT = (std::size_t)Species::SPECIES_TOTAL;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Species.hpp //////////////////////
 
 /////////////// START OF src/Battle/Setup/PokemonStateSetup.hpp ////////////////
 
@@ -19094,8 +19212,6 @@ struct BattleStateSetup : internal::StateSetupBase {
   inline void setCurrentActionSource(types::entity actionSource);
   inline void setCurrentActionMove(types::entity actionMove);
   inline void setProbability(types::probability probability);
-
-  inline std::vector<BattleStateSetup> clone(std::optional<types::cloneIndex> cloneCount = std::nullopt);
 };
 }  // namespace pokesim
 
@@ -19263,7 +19379,7 @@ struct CurrentActionSource {
 };
 
 struct CurrentActionMoves {
-  std::vector<types::entity> val{};
+  types::entityVector val{};
 };
 
 struct CurrentActionMoveSlot {
@@ -19303,6 +19419,21 @@ using UsedMove = pokesim::tags::CurrentActionMove;
 }  // namespace pokesim::calc_damage
 
 ///////////////// END OF src/Components/CalcDamage/Aliases.hpp /////////////////
+
+///////////////// START OF src/Components/CloneFromCloneTo.hpp /////////////////
+
+namespace pokesim {
+namespace tags {
+struct CloneFrom {};
+struct CloneToRemove {};
+}  // namespace tags
+
+struct CloneTo {
+  types::cloneIndex val{};
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/CloneFromCloneTo.hpp //////////////////
 
 //////////////////// START OF src/Components/Decisions.hpp /////////////////////
 
@@ -19349,7 +19480,7 @@ struct SideDecision {
 namespace pokesim {
 // Contains the list of action entities queued up to be simulated for a battle's current turn.
 struct ActionQueue {
-  std::vector<types::entity> val{};
+  internal::maxSizedVector<types::entity, MechanicConstants::MAX_ACTION_QUEUE_LENGTH> val{};
 };
 }  // namespace pokesim
 
@@ -19373,12 +19504,12 @@ struct Side {
 namespace pokesim {
 // Contains the entities pointing to the two sides of a battle.
 struct Sides {
-  std::array<types::entity, 2U> val{};
+  std::array<types::entity, MechanicConstants::SIDE_COUNT> val{};
 
-  types::entity& p1() { return val[0]; };
-  types::entity& p2() { return val[1]; };
-  const types::entity& p1() const { return val[0]; };
-  const types::entity& p2() const { return val[1]; };
+  constexpr types::entity& p1() { return val[0]; };
+  constexpr types::entity& p2() { return val[1]; };
+  constexpr const types::entity& p1() const { return val[0]; };
+  constexpr const types::entity& p2() const { return val[1]; };
 };
 }  // namespace pokesim
 
@@ -19994,13 +20125,13 @@ struct RegistryLoop<
 namespace pokesim::internal {
 class RegistryContainer {
  public:
-  using SelectionFunction = entt::delegate<std::vector<types::entity>(const types::registry&)>;
+  using SelectionFunction = entt::delegate<types::entityVector(const types::registry&)>;
 
  private:
   template <typename, typename, typename...>
   friend struct SelectForView;
 
-  using SelectionFunctionList = std::vector<SelectionFunction>;
+  using SelectionFunctionList = internal::maxSizedVector<SelectionFunction>;
   SelectionFunctionList battleSelection{};
   SelectionFunctionList sideSelection{};
   SelectionFunctionList pokemonSelection{};
@@ -20084,15 +20215,15 @@ class RegistryContainer {
   std::size_t select(entt::exclude_t<ComponentsToExclude...> exclude) {
     auto getNewSelection = [&exclude](types::registry& reg) {
       auto view = reg.view<Required, ComponentsToSelect...>(exclude);
-      return std::vector<types::entity>{view.begin(), view.end()};
+      return types::entityVector{view.begin(), view.end()};
     };
     auto getUnmatchedSelection = [](types::registry& reg) {
       auto view = reg.view<Selection, ComponentsToExclude...>(entt::exclude<ComponentsToSelect...>);
-      return std::vector<types::entity>{view.begin(), view.end()};
+      return types::entityVector{view.begin(), view.end()};
     };
     SelectionFunction selectionFunction{[](const void*, const types::registry& reg) {
       auto view = reg.view<Required, ComponentsToSelect...>(entt::exclude<ComponentsToExclude...>);
-      return std::vector<types::entity>{view.begin(), view.end()};
+      return types::entityVector{view.begin(), view.end()};
     }};
 
     return select<Selection>(
@@ -20104,7 +20235,7 @@ class RegistryContainer {
 
   template <typename Selection>
   std::size_t select(SelectionFunction selectionFunction) {
-    auto getUnmatchedSelections = [&selectionFunction](const types::registry& reg) -> std::vector<types::entity> {
+    auto getUnmatchedSelections = [&selectionFunction](const types::registry& reg) -> types::entityVector {
       auto upcomingSelection = selectionFunction(reg);
       auto currentSelection = reg.view<Selection>();
       auto end =
@@ -20129,10 +20260,10 @@ class RegistryContainer {
       return;
     }
 
-    std::vector<types::entity> filteredEntityList = functions[0](registry);
+    types::entityVector filteredEntityList = functions[0](registry);
     auto end = filteredEntityList.end();
     for (std::size_t i = 1; i < functions.size(); i++) {
-      std::vector<types::entity> previouslySelected = functions[i](registry);
+      types::entityVector previouslySelected = functions[i](registry);
       end = std::remove_if(filteredEntityList.begin(), end, [&previouslySelected](types::entity entity) {
         return std::find(previouslySelected.begin(), previouslySelected.end(), entity) == previouslySelected.end();
       });
@@ -20498,7 +20629,7 @@ class Simulation : public internal::RegistryContainer {
   };
 
  private:
-  inline std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList);
+  inline types::entityVector createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList);
   inline PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonInfo);
   inline void createInitialSide(
     SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo);
@@ -20550,9 +20681,9 @@ class Simulation : public internal::RegistryContainer {
   inline void clearCalculateDamageResults();
   inline void clearAnalyzeEffectResults();
 
-  inline std::vector<types::entity> selectedBattleEntities() const;
-  inline std::vector<types::entity> selectedMoveEntities() const;
-  inline std::vector<types::entity> selectedPokemonEntities() const;
+  inline types::entityVector selectedBattleEntities() const;
+  inline types::entityVector selectedMoveEntities() const;
+  inline types::entityVector selectedPokemonEntities() const;
 };
 }  // namespace pokesim
 
@@ -20583,11 +20714,11 @@ struct EffectTarget {
 };
 
 struct EffectMoves {
-  std::vector<dex::Move> val{};
+  internal::maxSizedVector<dex::Move> val{};
 };
 
 struct Inputs {
-  std::vector<types::entity> val{};
+  types::entityVector val{};
 };
 
 struct OriginalInputEntities {
@@ -20603,7 +20734,7 @@ struct OriginalInputEntities {
 };
 
 struct MovePairs {
-  std::vector<std::pair<types::entity, types::entity>> val{};
+  internal::maxSizedVector<std::pair<types::entity, types::entity>> val{};
 
   bool operator==(const MovePairs& other) const {
     if (val.size() != other.val.size()) return false;
@@ -20932,8 +21063,8 @@ struct SimulationSetupChecks {
     types::entity setup;
   };
 
-  entt::dense_map<const Simulation::BattleCreationInfo*, std::vector<entt::entity> > createdBattles;
-  entt::dense_map<const Simulation::TurnDecisionInfo*, entt::entity> createdTurnDecisions;
+  entt::dense_map<const Simulation::BattleCreationInfo*, types::entityVector> createdBattles;
+  entt::dense_map<const Simulation::TurnDecisionInfo*, types::entity> createdTurnDecisions;
 
   entt::dense_map<const Simulation::CalcDamageInputInfo*, SetupEntities> createdCalcDamageInputs;
   entt::dense_map<const Simulation::AnalyzeEffectInputInfo*, SetupEntities> createdAnalyzeEffectInputs;
@@ -21289,9 +21420,10 @@ struct SimulationSetupChecks {
       : registry(&simulation->registry), battleInfoList(&_battleInfoList) {}
 
   void checkOutputs() const {
+    POKESIM_REQUIRE_NM(battleInfoList->size() <= internal::maxSizedVector<Simulation::BattleCreationInfo>::max());
     for (const auto& battleInfo : *battleInfoList) {
       POKESIM_REQUIRE_NM(createdBattles.contains(&battleInfo));
-      const std::vector<types::entity>& battleEntities = createdBattles.at(&battleInfo);
+      const types::entityVector& battleEntities = createdBattles.at(&battleInfo);
 
       std::size_t idealBattleCount = battleInfo.decisionsToSimulate.empty() ? 1 : battleInfo.decisionsToSimulate.size();
       POKESIM_REQUIRE_NM(idealBattleCount == battleEntities.size());
@@ -21381,8 +21513,8 @@ namespace pokesim {
 Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
     : constantBattleFormat(battleFormat_), constantPokedex(&pokedex_) {}
 
-inline std::vector<types::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList) {
-  std::vector<types::entity> moveEntities{};
+inline types::entityVector Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList) {
+  types::entityVector moveEntities{};
   moveEntities.reserve(moveInfoList.size());
 
   for (const MoveCreationInfo& moveInfo : moveInfoList) {
@@ -21439,7 +21571,7 @@ inline PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationI
 
 inline void Simulation::createInitialSide(
   SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo) {
-  std::vector<PokemonStateSetup> pokemonSetupList;
+  internal::maxSizedVector<PokemonStateSetup, MechanicConstants::MAX_TEAM_SIZE> pokemonSetupList;
   pokemonSetupList.reserve(sideInfo.team.size());
 
   for (std::size_t i = 0; i < sideInfo.team.size(); i++) {
@@ -21451,7 +21583,7 @@ inline void Simulation::createInitialSide(
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
 
-    std::vector<types::entity> moveEntities = createInitialMoves(pokemonInfo.moves);
+    types::entityVector moveEntities = createInitialMoves(pokemonInfo.moves);
 
     if (battleInfo.runWithSimulateTurn) {
       registry.insert<tags::SimulateTurn>(moveEntities.begin(), moveEntities.end());
@@ -21591,7 +21723,16 @@ inline void Simulation::createInitialStates(const std::vector<BattleCreationInfo
 
       types::cloneIndex cloneCount = (types::cloneIndex)(battleInfo.decisionsToSimulate.size() - 1);
       if (cloneCount) {
-        std::vector<BattleStateSetup> clones = battleStateSetup.clone(cloneCount);
+        battleStateSetup.setProperty<tags::CloneFrom>();
+        const types::ClonedEntityMap entityMap = pokesim::clone(registry, cloneCount);
+
+        const auto& clonedBattles = entityMap.at(battleStateSetup.entity());
+        internal::maxSizedVector<BattleStateSetup> clones;
+        clones.reserve(clonedBattles.size());
+
+        for (types::entity entity : clonedBattles) {
+          clones.emplace_back(registry, entity);
+        }
 
         for (types::cloneIndex i = 0; i < cloneCount; i++) {
           BattleStateSetup& setupClone = clones[i];
@@ -21652,7 +21793,7 @@ struct DamageRollModifiers {
 };
 
 struct DamageRolls {
-  std::vector<Damage> val{};
+  internal::maxSizedVector<Damage, MechanicConstants::MAX_DAMAGE_ROLL_COUNT> val{};
 
   DamageRolls() {}
   DamageRolls(const DamageRolls& other) : val(other.val) {}
@@ -21680,12 +21821,10 @@ struct DamageRolls {
 
 //////////////// START OF src/Components/SimulationResults.hpp /////////////////
 
-#include <vector>
-
 namespace pokesim {
 namespace simulate_turn {
 struct TurnOutcomeBattles {
-  std::vector<types::entity> val{};
+  types::entityVector val{};
 };
 }  // namespace simulate_turn
 
@@ -21700,7 +21839,7 @@ struct UsesUntilKo {
   };
 
  public:
-  std::vector<KoChance> val{};
+  internal::maxSizedVector<KoChance, MechanicConstants::MAX_DAMAGE_ROLL_COUNT> val{};
 
   const KoChance& minHits() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
@@ -22040,7 +22179,7 @@ inline void Simulation::run() {
   analyzeEffect();
 }
 
-inline std::vector<types::entity> Simulation::selectedBattleEntities() const {
+inline types::entityVector Simulation::selectedBattleEntities() const {
   if (hasActiveSelection<tags::SelectedForViewBattle>()) {
     auto view = registry.view<tags::SelectedForViewBattle, tags::Battle>();
     return {view.begin(), view.end()};
@@ -22050,7 +22189,7 @@ inline std::vector<types::entity> Simulation::selectedBattleEntities() const {
   return {view.begin(), view.end()};
 }
 
-inline std::vector<types::entity> Simulation::selectedMoveEntities() const {
+inline types::entityVector Simulation::selectedMoveEntities() const {
   if (hasActiveSelection<tags::SelectedForViewMove>()) {
     auto view = registry.view<tags::SelectedForViewMove, tags::CurrentActionMove>();
     return {view.begin(), view.end()};
@@ -22060,7 +22199,7 @@ inline std::vector<types::entity> Simulation::selectedMoveEntities() const {
   return {view.begin(), view.end()};
 }
 
-inline std::vector<types::entity> Simulation::selectedPokemonEntities() const {
+inline types::entityVector Simulation::selectedPokemonEntities() const {
   if (hasActiveSelection<tags::SelectedForViewPokemon>()) {
     auto view = registry.view<tags::SelectedForViewPokemon, tags::Pokemon>();
     return {view.begin(), view.end()};
@@ -22478,7 +22617,7 @@ template <typename... PokemonSpecifiers>
 internal::RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
   static const size_t SelectAnyPokemon = sizeof...(PokemonSpecifiers) == 0U;
   return internal::RegistryContainer::SelectionFunction{
-    [](const void*, const types::registry& registry) -> std::vector<types::entity> {
+    [](const void*, const types::registry& registry) -> types::entityVector {
       entt::dense_set<types::entity> entities;
       auto selectedMoveView = registry.view<tags::SelectedForViewMove>();
       auto begin = selectedMoveView.begin();
@@ -23162,19 +23301,6 @@ inline void runMoveHitChecks(Simulation& simulation) {
 
 //////////////////// END OF src/Simulation/MoveHitSteps.cpp ////////////////////
 
-///////////////////// START OF src/Battle/Clone/Clone.hpp //////////////////////
-
-#include <optional>
-
-namespace pokesim {
-struct CloneTo;
-
-inline types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount);
-inline void deleteClones(types::registry& registry);
-}  // namespace pokesim
-
-////////////////////// END OF src/Battle/Clone/Clone.hpp ///////////////////////
-
 ////////////////// START OF src/Battle/ManageBattleState.hpp ///////////////////
 
 namespace pokesim {
@@ -23250,21 +23376,6 @@ struct AddedTargets {
 }  // namespace pokesim
 
 //////////////////// END OF src/Components/AddedTargets.hpp ////////////////////
-
-///////////////// START OF src/Components/CloneFromCloneTo.hpp /////////////////
-
-namespace pokesim {
-namespace tags {
-struct CloneFrom {};
-struct CloneToRemove {};
-}  // namespace tags
-
-struct CloneTo {
-  types::cloneIndex val{};
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Components/CloneFromCloneTo.hpp //////////////////
 
 /////////////// START OF src/Components/Names/SourceSlotName.hpp ///////////////
 
@@ -23842,8 +23953,7 @@ inline void assignRandomEventCount(types::handle handle, const Battle& battle, c
 }
 
 inline void assignIndexToClones(
-  types::registry& registry, const types::ClonedEntityMap& clonedEntityMap,
-  const std::vector<types::entity>& originals) {
+  types::registry& registry, const types::ClonedEntityMap& clonedEntityMap, const types::entityVector& originals) {
   for (types::entity original : originals) {
     registry.emplace<RandomEventIndex>(original, (types::eventPossibilities)0U);
 
@@ -23882,7 +23992,7 @@ template <
   typename... AssignRandomEventsTags, typename... AssignArgs>
 void randomChanceEvent(
   Simulation& simulation, types::cloneIndex cloneCount, types::callback applyChoices,
-  void (*assignClonesToEvents)(types::registry&, const types::ClonedEntityMap&, const std::vector<types::entity>&),
+  void (*assignClonesToEvents)(types::registry&, const types::ClonedEntityMap&, const types::entityVector&),
   UpdateProbabilities updateProbabilities, const AssignArgs&... assignArgs) {
   if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT) {
     simulation.view<placeChanceFromStack<RandomStack, Random>>();
@@ -23898,7 +24008,7 @@ void randomChanceEvent(
     }
 
     if constexpr (std::is_same_v<RandomEventCount, Random>) {
-      entt::dense_map<types::eventPossibilities, std::pair<std::vector<types::entity>, std::vector<types::entity>>>
+      entt::dense_map<types::eventPossibilities, std::pair<types::entityVector, types::entityVector>>
         entitiesByEventCount{};
 
       auto collectEntityEventCounts =
@@ -23928,7 +24038,7 @@ void randomChanceEvent(
       };
       registry.view<Battle, Random>().each(assignCloneTags);
 
-      std::vector<types::entity> chanceEntities{chanceEntityView.begin(), chanceEntityView.end()};
+      types::entityVector chanceEntities{chanceEntityView.begin(), chanceEntityView.end()};
       auto clonedEntityMap = clone(registry, cloneCount);
 
       assignClonesToEvents(registry, clonedEntityMap, chanceEntities);
@@ -23959,16 +24069,14 @@ void randomChanceEvent(
 template <bool Reciprocal>
 void randomBinaryChance(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities) {
-  auto assignClonesToEvents = [](
-                                types::registry& registry,
-                                const types::ClonedEntityMap& clonedEntityMap,
-                                const std::vector<types::entity>& originals) {
-    for (types::entity original : originals) {
-      const auto& cloned = clonedEntityMap.at(original);
-      registry.emplace<tags::RandomEventCheckPassed>(original);
-      registry.emplace<tags::RandomEventCheckFailed>(cloned[0]);
-    }
-  };
+  auto assignClonesToEvents =
+    [](types::registry& registry, const types::ClonedEntityMap& clonedEntityMap, const types::entityVector& originals) {
+      for (types::entity original : originals) {
+        const auto& cloned = clonedEntityMap.at(original);
+        registry.emplace<tags::RandomEventCheckPassed>(original);
+        registry.emplace<tags::RandomEventCheckFailed>(cloned[0]);
+      }
+    };
 
   auto defaultUpdateProbabilities = [](Simulation& sim) {
     sim.view<
@@ -24012,25 +24120,23 @@ void randomEventChances(
     POSSIBLE_EVENT_COUNT <= internal::MAX_TYPICAL_RANDOM_OPTIONS,
     "Random events with more options than this should use RandomEqualChance or RandomEventCount");
 
-  auto assignClonesToEvents = [](
-                                types::registry& registry,
-                                const types::ClonedEntityMap& clonedEntityMap,
-                                const std::vector<types::entity>& originals) {
-    for (types::entity original : originals) {
-      const auto& cloned = clonedEntityMap.at(original);
-      registry.emplace<tags::RandomEventA>(original);
-      registry.emplace<tags::RandomEventB>(cloned[0]);
-      if constexpr (POSSIBLE_EVENT_COUNT >= 3U) {
-        registry.emplace<tags::RandomEventC>(cloned[1]);
+  auto assignClonesToEvents =
+    [](types::registry& registry, const types::ClonedEntityMap& clonedEntityMap, const types::entityVector& originals) {
+      for (types::entity original : originals) {
+        const auto& cloned = clonedEntityMap.at(original);
+        registry.emplace<tags::RandomEventA>(original);
+        registry.emplace<tags::RandomEventB>(cloned[0]);
+        if constexpr (POSSIBLE_EVENT_COUNT >= 3U) {
+          registry.emplace<tags::RandomEventC>(cloned[1]);
+        }
+        if constexpr (POSSIBLE_EVENT_COUNT >= 4U) {
+          registry.emplace<tags::RandomEventD>(cloned[2]);
+        }
+        if constexpr (POSSIBLE_EVENT_COUNT == 5U) {
+          registry.emplace<tags::RandomEventE>(cloned[3]);
+        }
       }
-      if constexpr (POSSIBLE_EVENT_COUNT >= 4U) {
-        registry.emplace<tags::RandomEventD>(cloned[2]);
-      }
-      if constexpr (POSSIBLE_EVENT_COUNT == 5U) {
-        registry.emplace<tags::RandomEventE>(cloned[3]);
-      }
-    }
-  };
+    };
 
   auto defaultUpdateProbabilities = [](Simulation& sim) {
     viewUpdateProbabilityFromRandomEventChance<POSSIBLE_EVENT_COUNT, tags::RandomEventA>(sim);
@@ -24141,16 +24247,15 @@ template void randomEventChances<5U>(Simulation&, types::callback, types::option
 /////////// START OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ///////////
 
 #include <cstdint>
-#include <vector>
 
 namespace pokesim {
 struct SpeedTieIndexes {
   struct Span {
-    std::size_t start = 0;
-    std::size_t length = 0;
+    types::activePokemonIndex start = 0;
+    types::activePokemonIndex length = 0;
   };
 
-  std::vector<Span> val{};
+  internal::fixedMemoryVector<Span, MechanicConstants::MAX_ACTIVE_POKEMON> val{};
 };
 }  // namespace pokesim
 
@@ -24253,12 +24358,13 @@ inline void resolveDecision(types::handle sideHandle, const SideDecision& sideDe
 }
 
 inline void speedSort(types::handle handle, ActionQueue& actionQueue) {
-  std::vector<types::entity>& entityList = actionQueue.val;
+  auto& entityList = actionQueue.val;
 
   if (entityList.size() == 1) return;
   const types::registry* registry = handle.registry();
 
-  std::vector<std::pair<SpeedSort, types::entity>> speedSortList;
+  internal::maxSizedVector<std::pair<SpeedSort, types::entity>, MechanicConstants::MAX_ACTION_QUEUE_LENGTH>
+    speedSortList;
   speedSortList.reserve(entityList.size());
 
   for (types::entity entity : entityList) {
@@ -24287,14 +24393,14 @@ inline void speedSort(types::handle handle, ActionQueue& actionQueue) {
   });
 
   SpeedTieIndexes speedTies;
-  std::size_t lastEqual = 0, tieCount = 1;
+  types::activePokemonIndex lastEqual = 0, tieCount = 1;
 
   auto speedSortEqual = [](const SpeedSort& speedSortA, const SpeedSort& speedSortB) {
     return speedSortA.order == speedSortB.order && speedSortA.priority == speedSortB.priority &&
            speedSortA.speed == speedSortB.speed && speedSortA.fractionalPriority == speedSortB.fractionalPriority;
   };
 
-  for (std::size_t i = 0; i < speedSortList.size(); i++) {
+  for (types::activePokemonIndex i = 0; i < speedSortList.size(); i++) {
     entityList[i] = speedSortList[i].second;
 
     if (i > 0 && speedSortEqual(speedSortList[i].first, speedSortList[i - 1].first)) {
@@ -25918,8 +26024,8 @@ struct Checks : pokesim::debug::Checks {
     }
   }
 
-  std::vector<types::entity> getPokemonList(bool forAttacker) const {
-    std::vector<types::entity> selectedPokemon = simulation->selectedPokemonEntities();
+  types::entityVector getPokemonList(bool forAttacker) const {
+    types::entityVector selectedPokemon = simulation->selectedPokemonEntities();
     auto end = std::remove_if(selectedPokemon.begin(), selectedPokemon.end(), [&](types::entity entity) {
       if (forAttacker) {
         return !this->registry->all_of<tags::Attacker>(entity);
@@ -25932,7 +26038,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkPokemonInputs(bool forAttacker) {
-    const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
+    const types::entityVector pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
       originalToCopy[pokemon] = pokesim::debug::createEntityCopy(pokemon, *registry, registryOnInput);
 
@@ -26142,7 +26248,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkPokemonOutputs(bool forAttacker) const {
-    const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
+    const types::entityVector pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
       types::entity originalPokemon = pokesim::debug::findCopyParent(originalToCopy, *registry, pokemon);
       pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, originalToCopy.at(originalPokemon));
@@ -26981,23 +27087,6 @@ inline void BattleStateSetup::setCurrentActionMove(types::entity actionMove) {
 inline void BattleStateSetup::setProbability(types::probability probability) {
   handle.emplace<Probability>(probability);
 }
-
-inline std::vector<BattleStateSetup> BattleStateSetup::clone(std::optional<types::cloneIndex> cloneCount) {
-  types::registry& registry = *handle.registry();
-
-  handle.emplace<tags::CloneFrom>();
-  const types::ClonedEntityMap entityMap = pokesim::clone(registry, cloneCount);
-
-  const auto& clonedBattles = entityMap.at(handle.entity());
-  std::vector<BattleStateSetup> clonedSetups;
-  clonedSetups.reserve(clonedBattles.size());
-
-  for (types::entity entity : clonedBattles) {
-    clonedSetups.emplace_back(registry, entity);
-  }
-
-  return clonedSetups;
-}
 }  // namespace pokesim
 
 ///////////////// END OF src/Battle/Setup/BattleStateSetup.cpp /////////////////
@@ -27266,12 +27355,12 @@ namespace pokesim {
 
 inline types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
   POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
-  types::entity sideEntity = sides.val[((std::uint8_t)targetSlot - 1) % 2];
+  types::entity sideEntity = sides.val[((types::teamPositionIndex)targetSlot - 1) % 2];
   return sideEntity;
 }
 
 inline types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot) {
-  types::teamPositionIndex index = ((std::uint8_t)targetSlot - 1) / 2;
+  types::teamPositionIndex index = ((types::teamPositionIndex)targetSlot - 1) / 2;
 
   const Team& team = registry.get<Team>(sideEntity);
   POKESIM_REQUIRE(team.val.size() > index, "Choosing a target slot for team member that does not exist.");
@@ -27382,7 +27471,7 @@ namespace pokesim {
 namespace {
 inline void cloneEntity(
   types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   for (auto [id, storage] : registry.storage()) {
     if (storage.contains(src)) {
       POKESIM_REQUIRE(
@@ -27392,7 +27481,7 @@ inline void cloneEntity(
     }
   }
 
-  auto& destinations = entityMap[src] = std::vector<types::entity>{cloneCount};
+  auto& destinations = entityMap[src] = types::entityVector{cloneCount};
   registry.create(destinations.begin(), destinations.end());
 }
 
@@ -27494,7 +27583,7 @@ void traverseMove(types::registry& registry, VisitEntity visitEntity = nullptr) 
 
 inline void cloneBattle(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseBattle(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -27502,7 +27591,7 @@ inline void cloneBattle(
 
 inline void cloneSide(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseSide(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -27510,7 +27599,7 @@ inline void cloneSide(
 
 inline void cloneAction(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseAction(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -27518,7 +27607,7 @@ inline void cloneAction(
 
 inline void cloneCurrentActionMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseCurrentActionMove(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -27526,7 +27615,7 @@ inline void cloneCurrentActionMove(
 
 inline void clonePokemon(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   traversePokemon(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -27534,7 +27623,7 @@ inline void clonePokemon(
 
 inline void cloneMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseMove(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -27606,7 +27695,7 @@ inline types::ClonedEntityMap clone(types::registry& registry, std::optional<typ
     return entityMap;
   }
 
-  entt::dense_map<entt::id_type, std::vector<types::entity>> srcEntityStorages;
+  entt::dense_map<entt::id_type, types::entityVector> srcEntityStorages;
 
   cloneBattle(registry, entityMap, srcEntityStorages, count);
   battleMap = entityMap;
@@ -27795,10 +27884,10 @@ struct Checks : pokesim::debug::Checks {
       originalToCopy[input] = pokesim::debug::createEntityCopy(input, *registry, registryOnInput);
     }
 
-    const std::vector<types::entity> attackers = getPokemonList(true);
-    const std::vector<types::entity> defenders = getPokemonList(false);
+    const types::entityVector attackers = getPokemonList(true);
+    const types::entityVector defenders = getPokemonList(false);
 
-    for (const std::vector<types::entity>& pokemonList : {attackers, defenders}) {
+    for (const types::entityVector& pokemonList : {attackers, defenders}) {
       for (types::entity pokemon : pokemonList) {
         originalToCopy[pokemon] = pokesim::debug::createEntityCopy(pokemon, *registry, registryOnInput);
       }
@@ -27817,7 +27906,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
  private:
-  std::vector<types::entity> getPokemonList(bool forAttacker) const {
+  types::entityVector getPokemonList(bool forAttacker) const {
     if (forAttacker) {
       auto view = registry->view<tags::Attacker>();
       return {view.begin(), view.end()};
@@ -27891,7 +27980,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkPokemonOutputs(bool forAttacker) const {
-    const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
+    const types::entityVector pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
       pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, originalToCopy.at(pokemon));
     }
@@ -27985,7 +28074,11 @@ inline void assignInputsToClones(
     (cloneCount == 0) == clonedEntityMap.empty(),
     "There should be no cloned entities if no clones are needed.");
 
-  const auto& battleClones = cloneCount == 0 ? std::vector<types::entity>{} : clonedEntityMap.at(originalBattleEntity);
+  POKESIM_REQUIRE(
+    cloneCount <= inputs.val.size(),
+    "Not all inputs need clones, so there shouldn't be more clones than inputs.");
+
+  const auto& battleClones = cloneCount == 0 ? types::entityVector{} : clonedEntityMap.at(originalBattleEntity);
 
   POKESIM_REQUIRE(
     cloneCount == battleClones.size(),
@@ -28140,7 +28233,7 @@ inline void ignoreBattlesWithEffectActive(Simulation& simulation) {
 }
 
 inline void createAppliedEffectBattles(Simulation& simulation) {
-  entt::dense_map<types::eventPossibilities, std::vector<types::entity>> battlesByCloneCount{};
+  entt::dense_map<types::eventPossibilities, types::entityVector> battlesByCloneCount{};
 
   if (simulation.analyzeEffectOptions.reconsiderActiveEffects) {
     simulation.registry.view<Inputs>().each([&](types::entity battleEntity, const Inputs& inputs) {

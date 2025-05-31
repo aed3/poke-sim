@@ -1,7 +1,5 @@
 #include "BattleStateSetup.hpp"
 
-#include <Battle/Clone/Clone.hpp>
-#include <Components/CloneFromCloneTo.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/Sides.hpp>
@@ -18,6 +16,7 @@
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
+#include <Utilities/MaxSizedVector.hpp>
 #include <Utilities/RNG.hpp>
 #include <atomic>
 #include <entt/entity/handle.hpp>
@@ -98,22 +97,5 @@ void BattleStateSetup::setCurrentActionMove(types::entity actionMove) {
 
 void BattleStateSetup::setProbability(types::probability probability) {
   handle.emplace<Probability>(probability);
-}
-
-std::vector<BattleStateSetup> BattleStateSetup::clone(std::optional<types::cloneIndex> cloneCount) {
-  types::registry& registry = *handle.registry();
-
-  handle.emplace<tags::CloneFrom>();
-  const types::ClonedEntityMap entityMap = pokesim::clone(registry, cloneCount);
-
-  const auto& clonedBattles = entityMap.at(handle.entity());
-  std::vector<BattleStateSetup> clonedSetups;
-  clonedSetups.reserve(clonedBattles.size());
-
-  for (types::entity entity : clonedBattles) {
-    clonedSetups.emplace_back(registry, entity);
-  }
-
-  return clonedSetups;
 }
 }  // namespace pokesim

@@ -37,7 +37,7 @@ template <typename... PokemonSpecifiers>
 internal::RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
   static const size_t SelectAnyPokemon = sizeof...(PokemonSpecifiers) == 0U;
   return internal::RegistryContainer::SelectionFunction{
-    [](const void*, const types::registry& registry) -> std::vector<types::entity> {
+    [](const void*, const types::registry& registry) -> types::entityVector {
       entt::dense_set<types::entity> entities;
       auto selectedMoveView = registry.view<tags::SelectedForViewMove>();
       auto begin = selectedMoveView.begin();

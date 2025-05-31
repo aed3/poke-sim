@@ -577,7 +577,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   checks.checkConstantEntities();
 
   REQUIRE(result.turnOutcomeBattlesResults().size() == battleCreationInfoList.size());
-  std::vector<types::entity> allTurnOutcomes;
+  types::entityVector allTurnOutcomes;
   result.turnOutcomeBattlesResults().each([&allTurnOutcomes](const auto& turnOutcomes) {
     allTurnOutcomes.insert(allTurnOutcomes.end(), turnOutcomes.val.begin(), turnOutcomes.val.end());
   });

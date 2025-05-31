@@ -23,7 +23,7 @@ namespace pokesim {
 namespace {
 void cloneEntity(
   types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   for (auto [id, storage] : registry.storage()) {
     if (storage.contains(src)) {
       POKESIM_REQUIRE(
@@ -33,7 +33,7 @@ void cloneEntity(
     }
   }
 
-  auto& destinations = entityMap[src] = std::vector<types::entity>{cloneCount};
+  auto& destinations = entityMap[src] = types::entityVector{cloneCount};
   registry.create(destinations.begin(), destinations.end());
 }
 
@@ -135,7 +135,7 @@ void traverseMove(types::registry& registry, VisitEntity visitEntity = nullptr) 
 
 void cloneBattle(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseBattle(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -143,7 +143,7 @@ void cloneBattle(
 
 void cloneSide(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseSide(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -151,7 +151,7 @@ void cloneSide(
 
 void cloneAction(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseAction(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -159,7 +159,7 @@ void cloneAction(
 
 void cloneCurrentActionMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseCurrentActionMove(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -167,7 +167,7 @@ void cloneCurrentActionMove(
 
 void clonePokemon(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   traversePokemon(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -175,7 +175,7 @@ void clonePokemon(
 
 void cloneMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, std::vector<types::entity>>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
   traverseMove(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -247,7 +247,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
     return entityMap;
   }
 
-  entt::dense_map<entt::id_type, std::vector<types::entity>> srcEntityStorages;
+  entt::dense_map<entt::id_type, types::entityVector> srcEntityStorages;
 
   cloneBattle(registry, entityMap, srcEntityStorages, count);
   battleMap = entityMap;

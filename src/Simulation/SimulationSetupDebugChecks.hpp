@@ -53,6 +53,7 @@
 #include <Types/Enums/Volatile.hpp>
 #include <Types/Enums/Weather.hpp>
 #include <Types/Registry.hpp>
+#include <Types/State.hpp>
 #include <Utilities/DebugChecks.hpp>
 #include <cstddef>
 
@@ -69,8 +70,8 @@ struct SimulationSetupChecks {
     types::entity setup;
   };
 
-  entt::dense_map<const Simulation::BattleCreationInfo*, std::vector<entt::entity> > createdBattles;
-  entt::dense_map<const Simulation::TurnDecisionInfo*, entt::entity> createdTurnDecisions;
+  entt::dense_map<const Simulation::BattleCreationInfo*, types::entityVector> createdBattles;
+  entt::dense_map<const Simulation::TurnDecisionInfo*, types::entity> createdTurnDecisions;
 
   entt::dense_map<const Simulation::CalcDamageInputInfo*, SetupEntities> createdCalcDamageInputs;
   entt::dense_map<const Simulation::AnalyzeEffectInputInfo*, SetupEntities> createdAnalyzeEffectInputs;
@@ -426,9 +427,10 @@ struct SimulationSetupChecks {
       : registry(&simulation->registry), battleInfoList(&_battleInfoList) {}
 
   void checkOutputs() const {
+    POKESIM_REQUIRE_NM(battleInfoList->size() <= internal::maxSizedVector<Simulation::BattleCreationInfo>::max());
     for (const auto& battleInfo : *battleInfoList) {
       POKESIM_REQUIRE_NM(createdBattles.contains(&battleInfo));
-      const std::vector<types::entity>& battleEntities = createdBattles.at(&battleInfo);
+      const types::entityVector& battleEntities = createdBattles.at(&battleInfo);
 
       std::size_t idealBattleCount = battleInfo.decisionsToSimulate.empty() ? 1 : battleInfo.decisionsToSimulate.size();
       POKESIM_REQUIRE_NM(idealBattleCount == battleEntities.size());

@@ -94,7 +94,11 @@ void assignInputsToClones(
     (cloneCount == 0) == clonedEntityMap.empty(),
     "There should be no cloned entities if no clones are needed.");
 
-  const auto& battleClones = cloneCount == 0 ? std::vector<types::entity>{} : clonedEntityMap.at(originalBattleEntity);
+  POKESIM_REQUIRE(
+    cloneCount <= inputs.val.size(),
+    "Not all inputs need clones, so there shouldn't be more clones than inputs.");
+
+  const auto& battleClones = cloneCount == 0 ? types::entityVector{} : clonedEntityMap.at(originalBattleEntity);
 
   POKESIM_REQUIRE(
     cloneCount == battleClones.size(),
@@ -249,7 +253,7 @@ void ignoreBattlesWithEffectActive(Simulation& simulation) {
 }
 
 void createAppliedEffectBattles(Simulation& simulation) {
-  entt::dense_map<types::eventPossibilities, std::vector<types::entity>> battlesByCloneCount{};
+  entt::dense_map<types::eventPossibilities, types::entityVector> battlesByCloneCount{};
 
   if (simulation.analyzeEffectOptions.reconsiderActiveEffects) {
     simulation.registry.view<Inputs>().each([&](types::entity battleEntity, const Inputs& inputs) {

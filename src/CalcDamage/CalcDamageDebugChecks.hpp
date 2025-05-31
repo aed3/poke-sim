@@ -100,8 +100,8 @@ struct Checks : pokesim::debug::Checks {
     }
   }
 
-  std::vector<types::entity> getPokemonList(bool forAttacker) const {
-    std::vector<types::entity> selectedPokemon = simulation->selectedPokemonEntities();
+  types::entityVector getPokemonList(bool forAttacker) const {
+    types::entityVector selectedPokemon = simulation->selectedPokemonEntities();
     auto end = std::remove_if(selectedPokemon.begin(), selectedPokemon.end(), [&](types::entity entity) {
       if (forAttacker) {
         return !this->registry->all_of<tags::Attacker>(entity);
@@ -114,7 +114,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkPokemonInputs(bool forAttacker) {
-    const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
+    const types::entityVector pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
       originalToCopy[pokemon] = pokesim::debug::createEntityCopy(pokemon, *registry, registryOnInput);
 
@@ -324,7 +324,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkPokemonOutputs(bool forAttacker) const {
-    const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
+    const types::entityVector pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
       types::entity originalPokemon = pokesim::debug::findCopyParent(originalToCopy, *registry, pokemon);
       pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, originalToCopy.at(originalPokemon));

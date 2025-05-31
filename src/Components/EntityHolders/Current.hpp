@@ -29,7 +29,7 @@ struct CurrentActionSource {
 };
 
 struct CurrentActionMoves {
-  std::vector<types::entity> val{};
+  types::entityVector val{};
 };
 
 struct CurrentActionMoveSlot {

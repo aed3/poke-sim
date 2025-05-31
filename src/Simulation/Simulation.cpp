@@ -90,7 +90,7 @@ void Simulation::run() {
   analyzeEffect();
 }
 
-std::vector<types::entity> Simulation::selectedBattleEntities() const {
+types::entityVector Simulation::selectedBattleEntities() const {
   if (hasActiveSelection<tags::SelectedForViewBattle>()) {
     auto view = registry.view<tags::SelectedForViewBattle, tags::Battle>();
     return {view.begin(), view.end()};
@@ -100,7 +100,7 @@ std::vector<types::entity> Simulation::selectedBattleEntities() const {
   return {view.begin(), view.end()};
 }
 
-std::vector<types::entity> Simulation::selectedMoveEntities() const {
+types::entityVector Simulation::selectedMoveEntities() const {
   if (hasActiveSelection<tags::SelectedForViewMove>()) {
     auto view = registry.view<tags::SelectedForViewMove, tags::CurrentActionMove>();
     return {view.begin(), view.end()};
@@ -110,7 +110,7 @@ std::vector<types::entity> Simulation::selectedMoveEntities() const {
   return {view.begin(), view.end()};
 }
 
-std::vector<types::entity> Simulation::selectedPokemonEntities() const {
+types::entityVector Simulation::selectedPokemonEntities() const {
   if (hasActiveSelection<tags::SelectedForViewPokemon>()) {
     auto view = registry.view<tags::SelectedForViewPokemon, tags::Pokemon>();
     return {view.begin(), view.end()};

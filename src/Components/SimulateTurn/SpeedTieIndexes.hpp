@@ -1,15 +1,17 @@
 #pragma once
 
+#include <Types/MechanicConstants.hpp>
+#include <Types/State.hpp>
+#include <Utilities/FixedMemoryVector.hpp>
 #include <cstdint>
-#include <vector>
 
 namespace pokesim {
 struct SpeedTieIndexes {
   struct Span {
-    std::size_t start = 0;
-    std::size_t length = 0;
+    types::activePokemonIndex start = 0;
+    types::activePokemonIndex length = 0;
   };
 
-  std::vector<Span> val{};
+  internal::fixedMemoryVector<Span, MechanicConstants::MAX_ACTIVE_POKEMON> val{};
 };
 }  // namespace pokesim

@@ -3,6 +3,7 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Random.hpp>
+#include <Utilities/MaxSizedVector.hpp>
 #include <vector>
 
 namespace pokesim::analyze_effect {
@@ -11,11 +12,11 @@ struct EffectTarget {
 };
 
 struct EffectMoves {
-  std::vector<dex::Move> val{};
+  internal::maxSizedVector<dex::Move> val{};
 };
 
 struct Inputs {
-  std::vector<types::entity> val{};
+  types::entityVector val{};
 };
 
 struct OriginalInputEntities {
@@ -31,7 +32,7 @@ struct OriginalInputEntities {
 };
 
 struct MovePairs {
-  std::vector<std::pair<types::entity, types::entity>> val{};
+  internal::maxSizedVector<std::pair<types::entity, types::entity>> val{};
 
   bool operator==(const MovePairs& other) const {
     if (val.size() != other.val.size()) return false;

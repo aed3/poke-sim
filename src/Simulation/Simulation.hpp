@@ -122,7 +122,7 @@ class Simulation : public internal::RegistryContainer {
   };
 
  private:
-  std::vector<types::entity> createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList);
+  types::entityVector createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList);
   PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonInfo);
   void createInitialSide(
     SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo);
@@ -174,8 +174,8 @@ class Simulation : public internal::RegistryContainer {
   void clearCalculateDamageResults();
   void clearAnalyzeEffectResults();
 
-  std::vector<types::entity> selectedBattleEntities() const;
-  std::vector<types::entity> selectedMoveEntities() const;
-  std::vector<types::entity> selectedPokemonEntities() const;
+  types::entityVector selectedBattleEntities() const;
+  types::entityVector selectedMoveEntities() const;
+  types::entityVector selectedPokemonEntities() const;
 };
 }  // namespace pokesim

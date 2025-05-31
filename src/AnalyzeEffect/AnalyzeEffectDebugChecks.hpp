@@ -27,10 +27,10 @@ struct Checks : pokesim::debug::Checks {
       originalToCopy[input] = pokesim::debug::createEntityCopy(input, *registry, registryOnInput);
     }
 
-    const std::vector<types::entity> attackers = getPokemonList(true);
-    const std::vector<types::entity> defenders = getPokemonList(false);
+    const types::entityVector attackers = getPokemonList(true);
+    const types::entityVector defenders = getPokemonList(false);
 
-    for (const std::vector<types::entity>& pokemonList : {attackers, defenders}) {
+    for (const types::entityVector& pokemonList : {attackers, defenders}) {
       for (types::entity pokemon : pokemonList) {
         originalToCopy[pokemon] = pokesim::debug::createEntityCopy(pokemon, *registry, registryOnInput);
       }
@@ -49,7 +49,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
  private:
-  std::vector<types::entity> getPokemonList(bool forAttacker) const {
+  types::entityVector getPokemonList(bool forAttacker) const {
     if (forAttacker) {
       auto view = registry->view<tags::Attacker>();
       return {view.begin(), view.end()};
@@ -123,7 +123,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkPokemonOutputs(bool forAttacker) const {
-    const std::vector<types::entity> pokemonList = getPokemonList(forAttacker);
+    const types::entityVector pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
       pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, originalToCopy.at(pokemon));
     }

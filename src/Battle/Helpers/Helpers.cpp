@@ -23,12 +23,12 @@ namespace pokesim {
 
 types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
   POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
-  types::entity sideEntity = sides.val[((std::uint8_t)targetSlot - 1) % 2];
+  types::entity sideEntity = sides.val[((types::teamPositionIndex)targetSlot - 1) % 2];
   return sideEntity;
 }
 
 types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot) {
-  types::teamPositionIndex index = ((std::uint8_t)targetSlot - 1) / 2;
+  types::teamPositionIndex index = ((types::teamPositionIndex)targetSlot - 1) / 2;
 
   const Team& team = registry.get<Team>(sideEntity);
   POKESIM_REQUIRE(team.val.size() > index, "Choosing a target slot for team member that does not exist.");

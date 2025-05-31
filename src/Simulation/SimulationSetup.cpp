@@ -1,9 +1,11 @@
 #include <AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp>
+#include <Battle/Clone/Clone.hpp>
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/Setup/PokemonStateSetup.hpp>
 #include <Battle/Setup/headers.hpp>
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
+#include <Components/CloneFromCloneTo.hpp>
 #include <Components/Decisions.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
@@ -29,8 +31,8 @@ namespace pokesim {
 Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
     : constantBattleFormat(battleFormat_), constantPokedex(&pokedex_) {}
 
-std::vector<types::entity> Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList) {
-  std::vector<types::entity> moveEntities{};
+types::entityVector Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList) {
+  types::entityVector moveEntities{};
   moveEntities.reserve(moveInfoList.size());
 
   for (const MoveCreationInfo& moveInfo : moveInfoList) {
@@ -87,7 +89,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
 
 void Simulation::createInitialSide(
   SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo) {
-  std::vector<PokemonStateSetup> pokemonSetupList;
+  internal::maxSizedVector<PokemonStateSetup, MechanicConstants::MAX_TEAM_SIZE> pokemonSetupList;
   pokemonSetupList.reserve(sideInfo.team.size());
 
   for (std::size_t i = 0; i < sideInfo.team.size(); i++) {
@@ -99,7 +101,7 @@ void Simulation::createInitialSide(
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
 
-    std::vector<types::entity> moveEntities = createInitialMoves(pokemonInfo.moves);
+    types::entityVector moveEntities = createInitialMoves(pokemonInfo.moves);
 
     if (battleInfo.runWithSimulateTurn) {
       registry.insert<tags::SimulateTurn>(moveEntities.begin(), moveEntities.end());
@@ -239,7 +241,16 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
 
       types::cloneIndex cloneCount = (types::cloneIndex)(battleInfo.decisionsToSimulate.size() - 1);
       if (cloneCount) {
-        std::vector<BattleStateSetup> clones = battleStateSetup.clone(cloneCount);
+        battleStateSetup.setProperty<tags::CloneFrom>();
+        const types::ClonedEntityMap entityMap = pokesim::clone(registry, cloneCount);
+
+        const auto& clonedBattles = entityMap.at(battleStateSetup.entity());
+        internal::maxSizedVector<BattleStateSetup> clones;
+        clones.reserve(clonedBattles.size());
+
+        for (types::entity entity : clonedBattles) {
+          clones.emplace_back(registry, entity);
+        }
 
         for (types::cloneIndex i = 0; i < cloneCount; i++) {
           BattleStateSetup& setupClone = clones[i];
