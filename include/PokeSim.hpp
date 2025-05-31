@@ -15983,8 +15983,8 @@ template <typename T, std::uint64_t N = std::numeric_limits<entt::id_type>::max(
 class maxSizedVector : public std::vector<T> {
   using base = std::vector<T>;
 
-  void checkSize() const {
-    POKESIM_REQUIRE(base::size() <= max_size(), "More than " + std::to_string(N) + " elements are in this vector.");
+  void checkSize(std::size_t newSize) const {
+    POKESIM_REQUIRE(newSize <= max_size(), "More than " + std::to_string(N) + " elements are in this vector.");
   }
 
  public:
@@ -15997,19 +15997,20 @@ class maxSizedVector : public std::vector<T> {
 
   template <typename... Args>
   maxSizedVector(Args&&... args) : base(std::forward<Args>(args)...) {
-    checkSize();
+    checkSize(base::size());
   }
 
   maxSizedVector(std::initializer_list<T> list) : maxSizedVector() {
-    reserve(list.size());
+    checkSize(list.size());
+    reserve((size_type)list.size());
     for (const T& item : list) {
       push_back(item);
     }
   }
 
   void push_back(const T& value) {
+    checkSize(base::size() + 1U);
     base::push_back(value);
-    checkSize();
   }
 
   static constexpr size_type max() { return N; }
@@ -16017,36 +16018,34 @@ class maxSizedVector : public std::vector<T> {
 
   size_type size() const { return (size_type)base::size(); }
 
-  void reserve(size_type size) {
-    POKESIM_REQUIRE(
-      size <= max_size(),
-      "More than " + std::to_string(N) + " elements are being reserved in this vector.");
-    base::reserve(size);
+  void reserve(size_type newSize) {
+    checkSize(newSize);
+    base::reserve(newSize);
   }
 
   void push_back(T&& value) {
+    checkSize(base::size() + 1U);
     base::push_back(std::move(value));
-    checkSize();
   }
 
   template <typename... Args>
   auto insert(Args&&... args) {
     auto result = base::insert(std::forward<Args>(args)...);
-    checkSize();
+    checkSize(base::size());
     return result;
   }
 
   template <typename... Args>
   auto& emplace(Args&&... args) {
+    checkSize(base::size() + 1U);
     auto& result = base::emplace(std::forward<Args>(args)...);
-    checkSize();
     return result;
   }
 
   template <typename... Args>
   auto& emplace_back(Args&&... args) {
+    checkSize(base::size() + 1U);
     auto& result = base::emplace_back(std::forward<Args>(args)...);
-    checkSize();
     return result;
   }
 };
@@ -21515,7 +21514,7 @@ Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
 
 inline types::entityVector Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList) {
   types::entityVector moveEntities{};
-  moveEntities.reserve(moveInfoList.size());
+  moveEntities.reserve((types::entityVector::size_type)moveInfoList.size());
 
   for (const MoveCreationInfo& moveInfo : moveInfoList) {
     MoveStateSetup moveSetup(registry);
@@ -21572,7 +21571,7 @@ inline PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationI
 inline void Simulation::createInitialSide(
   SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo) {
   internal::maxSizedVector<PokemonStateSetup, MechanicConstants::MAX_TEAM_SIZE> pokemonSetupList;
-  pokemonSetupList.reserve(sideInfo.team.size());
+  pokemonSetupList.reserve((types::teamPositionIndex)sideInfo.team.size());
 
   for (std::size_t i = 0; i < sideInfo.team.size(); i++) {
     const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];

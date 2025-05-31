@@ -33,7 +33,7 @@ Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
 
 types::entityVector Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList) {
   types::entityVector moveEntities{};
-  moveEntities.reserve(moveInfoList.size());
+  moveEntities.reserve((types::entityVector::size_type)moveInfoList.size());
 
   for (const MoveCreationInfo& moveInfo : moveInfoList) {
     MoveStateSetup moveSetup(registry);
@@ -90,7 +90,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
 void Simulation::createInitialSide(
   SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo) {
   internal::maxSizedVector<PokemonStateSetup, MechanicConstants::MAX_TEAM_SIZE> pokemonSetupList;
-  pokemonSetupList.reserve(sideInfo.team.size());
+  pokemonSetupList.reserve((types::teamPositionIndex)sideInfo.team.size());
 
   for (std::size_t i = 0; i < sideInfo.team.size(); i++) {
     const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];
