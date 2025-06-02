@@ -11,5 +11,5 @@ enum class Ability : std::uint16_t {
   // clang-format on
 };
 
-static constexpr std::size_t TOTAL_ABILITY_COUNT = (std::size_t)Ability::ABILITY_TOTAL;
+static constexpr std::size_t TOTAL_ABILITY_COUNT = (std::size_t)Ability::ABILITY_TOTAL - 1U;
 }  // namespace pokesim::dex

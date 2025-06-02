@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct SpeciesName {
-  dex::Species name = dex::Species::MISSING_NO;
+  dex::Species name = dex::Species::NO_SPECIES;
 };
 }  // namespace pokesim

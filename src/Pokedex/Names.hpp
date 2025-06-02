@@ -59,7 +59,7 @@ std::string toSmogonIdString(Item itemEnum);
 
 /**
  * @brief Returns the enum of the species name string.
- * Returns `MISSING_NO` if the string does not represent a species.
+ * Returns `NO_SPECIES` if the string does not represent a species.
  */
 Species fromNameToSpeciesEnum(const std::string& name);
 
@@ -112,7 +112,7 @@ Stat fromNameToStatEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the species Smogon name string.
- * Returns `MISSING_NO` if the string does not represent a species.
+ * Returns `NO_SPECIES` if the string does not represent a species.
  */
 Species fromSmogonNameToSpeciesEnum(const std::string& name);
 
@@ -136,7 +136,7 @@ Item fromSmogonNameToItemEnum(const std::string& name);
 
 /**
  * @brief Returns the enum of the species Smogon ID string.
- * Returns `MISSING_NO` if the string does not represent a species.
+ * Returns `NO_SPECIES` if the string does not represent a species.
  */
 Species fromSmogonIDToSpeciesEnum(const std::string& name);
 

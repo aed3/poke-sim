@@ -59,10 +59,11 @@ void checkForAndApplyStab(
 }
 
 void checkForAndApplyTypeEffectiveness(
-  types::handle moveHandle, const Defenders& defenders, const TypeName& type, DamageRollModifiers& modifier) {
+  types::handle moveHandle, const Defenders& defenders, const TypeName& type, DamageRollModifiers& modifier,
+  const Pokedex& pokedex) {
   const SpeciesTypes& defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defenders.only());
 
-  modifier.typeEffectiveness = getAttackEffectiveness(defenderTypes, type.name);
+  modifier.typeEffectiveness = getAttackEffectiveness(defenderTypes, type.name, pokedex.typeChart());
 }
 
 void applyBurnModifier(types::registry& registry, const CurrentActionMoves& moves) {
@@ -380,7 +381,7 @@ void calcDamage(Simulation& simulation) {
 
 void setDamageRollModifiers(Simulation& simulation) {
   simulation.viewForSelectedMoves<checkForAndApplyStab>();
-  simulation.viewForSelectedMoves<checkForAndApplyTypeEffectiveness>();
+  simulation.viewForSelectedMoves<checkForAndApplyTypeEffectiveness>(simulation.pokedex());
   simulation.viewForSelectedPokemon<
     applyBurnModifier,
     Tags<status::tags::Burn, tags::Attacker> /*, entt::exclude<ability::tags::Guts> */>();

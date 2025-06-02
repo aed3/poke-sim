@@ -11,5 +11,5 @@ enum class Item : std::uint16_t {
   // clang-format on
 };
 
-static constexpr std::size_t TOTAL_ITEM_COUNT = (std::size_t)Item::ITEM_TOTAL;
+static constexpr std::size_t TOTAL_ITEM_COUNT = (std::size_t)Item::ITEM_TOTAL - 1U;
 }  // namespace pokesim::dex

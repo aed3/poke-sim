@@ -11,5 +11,5 @@ enum class Nature : std::uint8_t {
   // clang-format on
 };
 
-static constexpr std::size_t TOTAL_NATURE_COUNT = (std::size_t)Nature::NATURE_TOTAL;
+static constexpr std::size_t TOTAL_NATURE_COUNT = (std::size_t)Nature::NATURE_TOTAL - 1U;
 }  // namespace pokesim::dex

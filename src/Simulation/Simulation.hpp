@@ -49,7 +49,7 @@ class Simulation : public internal::RegistryContainer {
   struct PokemonCreationInfo {
     std::optional<types::stateId> id = std::nullopt;
     std::optional<types::stat> hp = std::nullopt;
-    dex::Species species = dex::Species::MISSING_NO;
+    dex::Species species = dex::Species::NO_SPECIES;
     std::optional<SpeciesTypes> types = std::nullopt;
     dex::Item item = dex::Item::NO_ITEM;
     dex::Ability ability = dex::Ability::NO_ABILITY;
@@ -146,8 +146,8 @@ class Simulation : public internal::RegistryContainer {
 
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
 
-  const Pokedex& pokedex() const { return *constantPokedex; }
-  BattleFormat battleFormat() const { return constantBattleFormat; }
+  constexpr const Pokedex& pokedex() const { return *constantPokedex; }
+  constexpr BattleFormat battleFormat() const { return constantBattleFormat; }
 
   // Load information about any number of battle states into the simulation's registry.
   void createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList);

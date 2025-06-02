@@ -16,5 +16,5 @@ enum class Status : std::uint8_t {
   /*, FRB, DRO, */ STATUS_TOTAL,
 };
 
-static constexpr std::size_t TOTAL_STATUS_COUNT = (std::size_t)Status::STATUS_TOTAL;
+static constexpr std::size_t TOTAL_STATUS_COUNT = (std::size_t)Status::STATUS_TOTAL - 1U;
 }  // namespace pokesim::dex

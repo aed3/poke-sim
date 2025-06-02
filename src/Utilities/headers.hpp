@@ -8,5 +8,4 @@
 #include "RegistryLoop.hpp"
 #include "SelectForView.hpp"
 #include "Tags.hpp"
-#include "TypeChart.hpp"
 #include "Variant.hpp"

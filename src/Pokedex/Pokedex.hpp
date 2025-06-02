@@ -9,6 +9,8 @@
 #include <entt/container/fwd.hpp>
 #include <entt/entity/registry.hpp>
 
+#include "TypeChart.hpp"
+
 namespace pokesim {
 
 /**
@@ -43,9 +45,10 @@ class Pokedex {
    * it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
    */
   GameMechanics mechanics;
+  TypeChart constantTypeChart;
 
  public:
-  Pokedex(GameMechanics mechanics_) : mechanics(mechanics_) {}
+  Pokedex(GameMechanics mechanics_) : mechanics(mechanics_), constantTypeChart(mechanics_) {}
 
   /**
    * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.
@@ -157,6 +160,8 @@ class Pokedex {
   bool effectHas(MoveEffect effect) const {
     return dexRegistry.all_of<T...>(effect.val);
   }
+
+  constexpr const TypeChart& typeChart() const { return constantTypeChart; }
 
   types::entity buildActionMove(dex::Move move, types::registry& registry) const;
 };

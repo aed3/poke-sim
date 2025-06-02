@@ -28,5 +28,5 @@ enum class Type : std::uint8_t {
   TYPE_TOTAL
 };
 
-static constexpr std::size_t TOTAL_TYPE_COUNT = (std::size_t)Type::TYPE_TOTAL;
+static constexpr std::size_t TOTAL_TYPE_COUNT = (std::size_t)Type::TYPE_TOTAL - 1U;
 }  // namespace pokesim::dex
