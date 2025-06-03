@@ -19372,6 +19372,9 @@ struct TypeChart : private TypeChartBase {
  private:
   static constexpr TypeChart pickForMechanics(GameMechanics mechanics) {
     switch (mechanics) {
+      case GameMechanics::SWORD_SHIELD:
+      case GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL:
+      case GameMechanics::SCARLET_VIOLET:
       default:
         // X_Y
         return TypeChart{
