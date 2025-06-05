@@ -1,11 +1,12 @@
 #pragma once
 
-#include <cstdint>
+#include "MechanicConstants.hpp"
+#include "NumberToType.hpp"
 
 namespace pokesim::types {
-using damage = std::uint16_t;
-using damageRoll = std::uint8_t;
-using effectMultiplier = float;
+using damage = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::DAMAGE>;
+using damageRollIndex = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT>;
 using useUntilKoChance = float;
-using typeEffectiveness = std::int8_t;
+using typeEffectiveness = pokesim::internal::signedIntType<
+  MechanicConstants::MaxValues::TYPE_EFFECTIVENESS_SHIFT, MechanicConstants::MinValues::TYPE_EFFECTIVENESS_SHIFT>;
 }  // namespace pokesim::types

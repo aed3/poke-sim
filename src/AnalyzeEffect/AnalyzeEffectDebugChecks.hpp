@@ -40,7 +40,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkOutputs() const {
-    std::size_t finalEntityCount = getFinalEntityCount();
+    types::cloneIndex finalEntityCount = getFinalEntityCount();
     POKESIM_REQUIRE_NM(initialEntityCount == finalEntityCount);
     checkInputOutputs();
     checkPokemonOutputs(true);

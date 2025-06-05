@@ -23,7 +23,7 @@ struct Checks {
   types::registry registryOnInput;
   entt::dense_map<types::entity, types::entity> originalToCopy;
   entt::dense_set<types::entity> specificallyChecked;
-  std::size_t initialEntityCount = 0;
+  types::cloneIndex initialEntityCount = 0;
 
   void copyRemainingEntities() {
     for (types::entity entity : registry->view<types::entity>()) {
@@ -47,8 +47,8 @@ struct Checks {
     }
   }
 
-  std::size_t getFinalEntityCount() const {
-    std::size_t finalEntityCount = 0;
+  types::cloneIndex getFinalEntityCount() const {
+    types::cloneIndex finalEntityCount = 0;
     for (types::entity entity : registry->view<types::entity>()) {
       if (!registry->orphan(entity)) {
         finalEntityCount++;

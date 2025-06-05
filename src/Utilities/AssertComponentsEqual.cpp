@@ -7,11 +7,13 @@
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
+#include <Types/State.hpp>
 #include <cstddef>
 #include <entt/container/dense_map.hpp>
 #include <entt/container/dense_set.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/meta/resolve.hpp>
+#include <limits>
 #include <vector>
 
 #include "AssertComponentsEqual.hpp"
@@ -86,9 +88,12 @@ types::entity findCopyParent(
   }
 
   const ParentEntity* parentEntity = registry.try_get<ParentEntity>(entity);
-  for (std::size_t i = 0; parentEntity != nullptr; i++) {
-    if (i >= registry.storage<types::registry::entity_type>()->size()) {
+  for (types::cloneIndex i = 0; parentEntity != nullptr; i++) {
+    if (
+      i >= registry.storage<types::registry::entity_type>()->size() ||
+      i == std::numeric_limits<types::cloneIndex>::max()) {
       POKESIM_REQUIRE_FAIL("A loop in the battle tree caused an infinite loop.");
+      break;
     }
 
     for (auto [original, _] : initialEntities) {
@@ -100,13 +105,17 @@ types::entity findCopyParent(
   }
 
   POKESIM_REQUIRE_FAIL("Could not find original entity of a clone.");
+  return entt::null;
 }
 
 bool checkIfCopyParent(types::entity potentialChild, types::entity potentialParent, const types::registry& registry) {
   const ParentEntity* parentEntity = registry.try_get<ParentEntity>(potentialChild);
-  for (std::size_t i = 0; parentEntity != nullptr; i++) {
-    if (i >= registry.storage<types::registry::entity_type>()->size()) {
+  for (types::cloneIndex i = 0; parentEntity != nullptr; i++) {
+    if (
+      i >= registry.storage<types::registry::entity_type>()->size() ||
+      i == std::numeric_limits<types::cloneIndex>::max()) {
       POKESIM_REQUIRE_FAIL("A loop in the battle tree caused an infinite loop.");
+      return false;
     }
 
     if (parentEntity->val == potentialParent) {

@@ -12,6 +12,6 @@ struct SpeedTieIndexes {
     types::activePokemonIndex length = 0;
   };
 
-  internal::fixedMemoryVector<Span, MechanicConstants::MAX_ACTIVE_POKEMON> val{};
+  internal::fixedMemoryVector<Span, MechanicConstants::MaxValues::ACTIVE_POKEMON> val{};
 };
 }  // namespace pokesim

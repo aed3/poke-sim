@@ -29,6 +29,7 @@
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
+#include <Types/Event.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
@@ -104,7 +105,7 @@ void assignInputsToClones(
     cloneCount == battleClones.size(),
     "Each input must have a clone and no more clones than inputs should be made.");
 
-  std::size_t cloneIndex = 0;
+  types::cloneIndex cloneIndex = 0;
   for (types::entity input : inputs.val) {
     bool usesClone = !registry.all_of<tags::RunOneCalculation>(input);
 
@@ -128,7 +129,7 @@ void assignInputsToClones(
         return moveEntity;
       };
 
-    for (std::size_t moveIndex = 0; moveIndex < moves.val.size(); moveIndex++) {
+    for (types::cloneIndex moveIndex = 0; moveIndex < moves.val.size(); moveIndex++) {
       entt::entity moveEntity = createMove(moves.val[moveIndex], battle.val, attacker.val, defenders.only());
       movePairs.val[moveIndex].first = movePairs.val[moveIndex].second = moveEntity;
     }
@@ -157,7 +158,7 @@ void assignInputsToClones(
         battleClones.size() == clonedEffectTarget.size(),
         "Each effect target must have a clone and no more clones than inputs should be made.");
 
-      for (std::size_t moveIndex = 0; moveIndex < moves.val.size(); moveIndex++) {
+      for (types::cloneIndex moveIndex = 0; moveIndex < moves.val.size(); moveIndex++) {
         movePairs.val[moveIndex].second = createMove(
           moves.val[moveIndex],
           battleClones[cloneIndex],
@@ -262,6 +263,7 @@ void createAppliedEffectBattles(Simulation& simulation) {
         inputs.val.size() <= std::numeric_limits<types::eventPossibilities>().max(),
         "More clones are being made than possibilities.");
       types::eventPossibilities cloneCount = (types::eventPossibilities)inputs.val.size();
+
       battlesByCloneCount[cloneCount].push_back(battleEntity);
     });
   }

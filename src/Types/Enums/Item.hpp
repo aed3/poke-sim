@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -11,5 +10,5 @@ enum class Item : std::uint16_t {
   // clang-format on
 };
 
-static constexpr std::size_t TOTAL_ITEM_COUNT = (std::size_t)Item::ITEM_TOTAL - 1U;
+static constexpr std::uint16_t TOTAL_ITEM_COUNT = (std::uint16_t)Item::ITEM_TOTAL - 1U;
 }  // namespace pokesim::dex

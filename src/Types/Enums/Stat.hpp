@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -15,5 +14,5 @@ enum class Stat : std::uint8_t {
   // SPC = SPA | SPD,
 };
 
-static constexpr std::size_t TOTAL_STAT_COUNT = 6U;
+static constexpr std::uint8_t TOTAL_STAT_COUNT = 6U;
 }  // namespace pokesim::dex

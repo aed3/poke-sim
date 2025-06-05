@@ -95,7 +95,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
     REQUIRE(koUses.empty());
   }
   else {
-    std::uint8_t idealKoUsesSize = 0;
+    types::damageRollIndex idealKoUsesSize = 0;
     if (calc_damage::damageKindsMatch(damageRollOptions.p1, DamageRollKind::ALL_DAMAGE_ROLLS)) {
       idealKoUsesSize++;
     }
@@ -129,7 +129,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
 
     if (calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
       REQUIRE(trueDamageRolls.val.size() == idealDamageValues.rolls.val.size());
-      for (std::size_t i = 0; i < trueDamageRolls.val.size(); i++) {
+      for (types::damageRollIndex i = 0; i < trueDamageRolls.val.size(); i++) {
         types::damage idealDamage = idealDamageValues.rolls.val[i].val;
         if (calculateUpToFoeHp) {
           idealDamage = std::min(idealDamage, targetHp);
@@ -147,7 +147,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
         REQUIRE(trueKosUses.guaranteedKo() == (idealKoUses.val.size() == 1));
 
         REQUIRE(trueKosUses.val.size() == idealKoUses.val.size());
-        for (std::size_t i = 0; i < trueKosUses.val.size(); i++) {
+        for (types::damageRollIndex i = 0; i < trueKosUses.val.size(); i++) {
           REQUIRE(trueKosUses.val[i] == idealKoUses.val[i]);
         }
       }

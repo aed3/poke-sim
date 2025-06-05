@@ -6,36 +6,38 @@
 #include <array>
 #include <cstdint>
 #include <initializer_list>
+#include <type_traits>
 
 namespace pokesim {
 // The extra array element is for NO_TYPE
-using TypeChartBase = std::array<
-  std::array<pokesim::TypeEffectiveness, pokesim::dex::TOTAL_TYPE_COUNT + 1U>, pokesim::dex::TOTAL_TYPE_COUNT + 1U>;
+using TypeChartBase = std::array<std::array<TypeEffectiveness, dex::TOTAL_TYPE_COUNT + 1U>, dex::TOTAL_TYPE_COUNT + 1U>;
 
 struct TypeChart : private TypeChartBase {
  private:
-  using constructorType = std::initializer_list<
-    std::pair<pokesim::dex::Type, std::initializer_list<std::pair<pokesim::dex::Type, pokesim::TypeEffectiveness>>>>;
+  using constructorType =
+    std::initializer_list<std::pair<dex::Type, std::initializer_list<std::pair<dex::Type, TypeEffectiveness>>>>;
+
+  using enumType = std::underlying_type_t<dex::Type>;
 
  public:
   constexpr TypeChart(const constructorType partialChart) : TypeChartBase() {
     for (auto& ratios : *this) {
       for (auto& effectiveness : ratios) {
-        effectiveness = pokesim::TypeEffectiveness::NEUTRAL;
+        effectiveness = TypeEffectiveness::NEUTRAL;
       }
     }
 
     for (const auto& [defending, ratios] : partialChart) {
       for (const auto& [attacking, effectiveness] : ratios) {
-        at((std::uint8_t)attacking).at((std::uint8_t)defending) = effectiveness;
+        at((enumType)attacking).at((enumType)defending) = effectiveness;
       }
     }
   }
 
   constexpr TypeChart(GameMechanics gameMechanics) : TypeChart(TypeChart::pickForMechanics(gameMechanics)) {}
 
-  constexpr pokesim::TypeEffectiveness effectiveness(pokesim::dex::Type attacking, pokesim::dex::Type defending) const {
-    return at((std::uint8_t)attacking).at((std::uint8_t)defending);
+  constexpr TypeEffectiveness effectiveness(dex::Type attacking, dex::Type defending) const {
+    return at((enumType)attacking).at((enumType)defending);
   }
 
  private:

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -16,5 +15,5 @@ enum class Status : std::uint8_t {
   /*, FRB, DRO, */ STATUS_TOTAL,
 };
 
-static constexpr std::size_t TOTAL_STATUS_COUNT = (std::size_t)Status::STATUS_TOTAL - 1U;
+static constexpr std::uint8_t TOTAL_STATUS_COUNT = (std::uint8_t)Status::STATUS_TOTAL - 1U;
 }  // namespace pokesim::dex

@@ -31,6 +31,7 @@ class fixedMemoryVector : private std::array<T, N> {
   }
 
   constexpr std::uint8_t size() const noexcept { return used; }
+  constexpr std::uint8_t max_size() const noexcept { return N; }
   constexpr bool empty() const noexcept { return used == 0; }
 
   constexpr typename base::const_reference front() const noexcept { return *base::begin(); }

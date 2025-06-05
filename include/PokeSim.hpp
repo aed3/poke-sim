@@ -43,6 +43,7 @@
  * external/entt/meta/resolve.hpp
  * src/Config/Config.hpp
  * src/Config/Require.hpp
+ * src/Types/NumberToType.hpp
  * src/Utilities/MaxSizedVector.hpp
  * src/Types/Entity.hpp
  * src/Components/EntityHolders/Battle.hpp
@@ -52,6 +53,10 @@
  * external/entt/meta/factory.hpp
  * src/Utilities/AssertComponentsEqual.hpp
  * src/Types/Registry.hpp
+ * src/Types/Random.hpp
+ * src/Types/MechanicConstants.hpp
+ * src/Utilities/FixedMemoryVector.hpp
+ * src/Types/State.hpp
  * src/Utilities/AssertComponentsEqual.cpp
  * external/entt/entity/handle.hpp
  * src/Types/Enums/PseudoWeather.hpp
@@ -66,10 +71,6 @@
  * src/Types/Enums/Stat.hpp
  * src/Types/Stats.hpp
  * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp
- * src/Types/Random.hpp
- * src/Types/MechanicConstants.hpp
- * src/Utilities/FixedMemoryVector.hpp
- * src/Types/State.hpp
  * src/Battle/Clone/Clone.hpp
  * src/Types/Enums/Slot.hpp
  * src/Battle/Helpers/Helpers.hpp
@@ -15971,6 +15972,36 @@ class require : public std::exception {
 
 //////////////////////// END OF src/Config/Require.hpp /////////////////////////
 
+///////////////////// START OF src/Types/NumberToType.hpp //////////////////////
+
+#include <cstdint>
+#include <limits>
+#include <type_traits>
+
+namespace pokesim::internal {
+template <std::uint64_t MaxValue>
+using unsignedIntType = std::conditional_t<
+  MaxValue <= std::numeric_limits<std::uint32_t>::max(),
+  std::conditional_t<
+    MaxValue <= std::numeric_limits<std::uint16_t>::max(),
+    std::conditional_t<MaxValue <= std::numeric_limits<std::uint8_t>::max(), std::uint8_t, std::uint16_t>,
+    std::uint32_t>,
+  std::uint64_t>;
+
+template <std::int64_t MaxValue, std::int64_t MinValue>
+using signedIntType = std::conditional_t<
+  MaxValue <= std::numeric_limits<std::int32_t>::max() && MinValue >= std::numeric_limits<std::int32_t>::min(),
+  std::conditional_t<
+    MaxValue <= std::numeric_limits<std::uint16_t>::max() && MinValue >= std::numeric_limits<std::int16_t>::min(),
+    std::conditional_t<
+      MaxValue <= std::numeric_limits<std::int8_t>::max() && MinValue >= std::numeric_limits<std::int8_t>::min(),
+      std::int8_t, std::int16_t>,
+    std::int32_t>,
+  std::int64_t>;
+}  // namespace pokesim::internal
+
+////////////////////// END OF src/Types/NumberToType.hpp ///////////////////////
+
 ////////////////// START OF src/Utilities/MaxSizedVector.hpp ///////////////////
 
 #include <cstdint>
@@ -15983,17 +16014,12 @@ template <typename T, std::uint64_t N = std::numeric_limits<entt::id_type>::max(
 class maxSizedVector : public std::vector<T> {
   using base = std::vector<T>;
 
-  void checkSize(std::size_t newSize) const {
+  void checkSize(std::uint64_t newSize) const {
     POKESIM_REQUIRE(newSize <= max_size(), "More than " + std::to_string(N) + " elements are in this vector.");
   }
 
  public:
-  using size_type = std::conditional_t<
-    N <= std::numeric_limits<std::uint32_t>::max(),
-    std::conditional_t<
-      N <= std::numeric_limits<std::uint16_t>::max(),
-      std::conditional_t<N <= std::numeric_limits<std::uint8_t>::max(), std::uint8_t, std::uint16_t>, std::uint32_t>,
-    std::uint64_t>;
+  using size_type = unsignedIntType<N>;
 
   template <typename... Args>
   maxSizedVector(Args&&... args) : base(std::forward<Args>(args)...) {
@@ -16018,7 +16044,7 @@ class maxSizedVector : public std::vector<T> {
 
   size_type size() const { return (size_type)base::size(); }
 
-  void reserve(size_type newSize) {
+  void reserve(std::uint64_t newSize) {
     checkSize(newSize);
     base::reserve(newSize);
   }
@@ -17452,16 +17478,11 @@ class AssertComponentsEqual {
 #ifndef POKESIM_DEBUG_CHECK_UTILITIES
 #include <memory>
 
-#ifndef ENTT_ID_TYPE
-#include <cstdint>
-#define ENTT_ID_TYPE std::uint32_t
-#endif
-
 namespace entt {
 enum class entity : ENTT_ID_TYPE;
 template <typename, typename>
 class basic_registry;
-using registry = basic_registry<entity, std::allocator<entity> >;
+using registry = basic_registry<entity, std::allocator<entity>>;
 
 template <typename, typename...>
 struct basic_handle;
@@ -17473,6 +17494,7 @@ using handle = entt::basic_handle<registry>;
 }  // namespace pokesim::types
 #else
 
+#include <limits>
 #include <type_traits>
 
 #ifdef POKESIM_ENTITY_VIEWER
@@ -17500,10 +17522,13 @@ class registry : public internal::BackingRegistry {
   };
 
  private:
+  using entt::registry::create;
   using entt::registry::emplace;
   using entt::registry::emplace_or_replace;
   using entt::registry::get_or_emplace;
   using entt::registry::insert;
+
+  static constexpr std::uint64_t maxEntityCount = std::numeric_limits<entt::id_type>::max();
 
   template <typename Type>
   static void copyToOtherRegistry(
@@ -17531,8 +17556,8 @@ class registry : public internal::BackingRegistry {
   void createMetaFunctions() const {
     static_assert(std::is_class_v<Type>, "Only classes or structs should be added to an entity.");
     entt::meta<Type>()
-      .template func<&registry::copyToOtherRegistry<Type> >(MetaFunctions::COPY_TO_OTHER_REGISTRY)
-      .template func<&registry::entityComponentsEqual<Type> >(MetaFunctions::ENTITY_COMPONENTS_EQUAL);
+      .template func<&registry::copyToOtherRegistry<Type>>(MetaFunctions::COPY_TO_OTHER_REGISTRY)
+      .template func<&registry::entityComponentsEqual<Type>>(MetaFunctions::ENTITY_COMPONENTS_EQUAL);
   }
 
  public:
@@ -17554,6 +17579,28 @@ class registry : public internal::BackingRegistry {
     return entt::registry::get_or_emplace<Type>(entt, std::forward<Args>(args)...);
   }
 
+  [[nodiscard]] entity_type create() {
+    POKESIM_REQUIRE(
+      storage<entity>().size() + 1 <= maxEntityCount,
+      "More entities are being created clone than allowed.");
+    return entt::registry::create();
+  }
+
+  [[nodiscard]] entity_type create(const entity_type hint) {
+    POKESIM_REQUIRE(
+      storage<entity>().size() + 1 <= maxEntityCount,
+      "More entities are being created clone than allowed.");
+    return entt::registry::create(hint);
+  }
+
+  template <typename It>
+  void create(It first, It last) {
+    POKESIM_REQUIRE(
+      storage<entity_type>().size() + (last - first) <= maxEntityCount,
+      "More entities are being created clone than allowed.");
+    entt::registry::create(std::move(first), std::move(last));
+  }
+
   template <typename Type, typename It>
   void insert(It first, It last, const Type& value = {}) {
     createMetaFunctions<Type>();
@@ -17562,7 +17609,7 @@ class registry : public internal::BackingRegistry {
 
   template <
     typename Type, typename EIt, typename CIt,
-    typename = std::enable_if_t<std::is_same_v<typename std::iterator_traits<CIt>::value_type, Type> > >
+    typename = std::enable_if_t<std::is_same_v<typename std::iterator_traits<CIt>::value_type, Type>>>
   void insert(EIt first, EIt last, CIt from) {
     createMetaFunctions<Type>();
     entt::registry::insert<Type>(first, last, from);
@@ -17575,11 +17622,255 @@ using handle = internal::BackingHandle<registry>;
 
 //////////////////////// END OF src/Types/Registry.hpp /////////////////////////
 
+//////////////////////// START OF src/Types/Random.hpp /////////////////////////
+
+#include <cstdint>
+
+namespace pokesim::types {
+using probability = float;
+using rngState = std::uint64_t;
+using rngResult = std::uint32_t;
+using percentChance = std::uint8_t;
+using eventPossibilities = std::uint8_t;
+}  // namespace pokesim::types
+
+///////////////////////// END OF src/Types/Random.hpp //////////////////////////
+
+/////////////////// START OF src/Types/MechanicConstants.hpp ///////////////////
+
+#include <array>
+#include <cstdint>
+
+namespace pokesim {
+struct MechanicConstants {
+  static constexpr std::uint8_t TYPES_PER_POKEMON = 2U;
+
+  static constexpr std::array<types::percentChance, 4U> CRIT_CHANCE_DIVISORS{24U, 8U, 2U, 1U};
+
+  // The 35%-35%-15%-15% out of 100 for 2-3-4-5 hits added so each index is the sum of the chance of its hit count and
+  // the hit counts less than it so it works with the randomEventChances function
+  static constexpr std::array<types::percentChance, 4U> PROGRESSIVE_MULTI_HIT_CHANCES{35U, 70U, 85U, 100U};
+
+  // TODO(aed3): Should change based on simulation's game mechanics
+  static constexpr float CRIT_MULTIPLIER = 1.5F;
+
+  static constexpr std::uint8_t FIXED_POINT_SCALING_FACTOR = 12U;
+  static constexpr std::uint16_t FIXED_POINT_SCALE = 1U << FIXED_POINT_SCALING_FACTOR;
+  static constexpr std::uint16_t FIXED_POINT_HALF_SCALE = FIXED_POINT_SCALE / 2U;
+
+  static constexpr std::uint8_t SIDE_COUNT = 2U;
+
+  struct MaxValues {
+    static constexpr std::uint8_t POKEMON_LEVEL = 100U;
+    static constexpr std::uint8_t POKEMON_BASE_STAT = 255U;
+    static constexpr std::uint16_t POKEMON_STAT = 65535U;
+    static constexpr std::uint8_t POKEMON_EV = 255U;
+    static constexpr std::uint8_t POKEMON_IV = 31U;
+    static constexpr std::int8_t POKEMON_STAT_BOOST = 6;
+
+    static constexpr std::uint8_t MOVE_MAX_PP = 64U;
+    static constexpr std::uint8_t MOVE_BASE_POWER = 255U;
+    static constexpr std::uint8_t MOVE_BASE_ACCURACY = 100U;
+    static constexpr std::uint8_t MOVE_HITS = 10U;
+    static constexpr std::uint8_t MOVE_BASE_EFFECT_CHANCE = 100U;
+    static constexpr std::int8_t MOVE_PRIORITY =
+      5;  // 8 is theoretically possible, but no existing move has more than 5
+
+    static constexpr std::uint16_t DAMAGE = 65535U;
+    static constexpr std::uint8_t DAMAGE_ROLL_COUNT = 16U;
+
+    static constexpr std::int8_t TYPE_EFFECTIVENESS_SHIFT = 3;
+
+    static constexpr std::uint8_t TEAM_SIZE = 6U;
+    static constexpr std::uint8_t ACTIVE_POKEMON_SLOTS_PER_SIDE = 2U;
+    static constexpr std::uint8_t ACTIVE_POKEMON = ACTIVE_POKEMON_SLOTS_PER_SIDE * SIDE_COUNT;
+    static constexpr std::uint8_t MOVE_SLOTS = 4U;
+    static constexpr std::uint8_t TARGETS = 3U;
+
+    // TODO(aed3): 64 is a guess, so find out what the actual number is
+    static constexpr std::uint8_t ACTION_QUEUE_LENGTH = 64U;
+
+    // TODO(aed3): Technically 65535, but battles over 1000 turns aren't usually supported on Showdown
+    static constexpr std::uint16_t TURN_COUNT = 1000U;
+  };
+
+  struct MinValues {
+    static constexpr std::uint8_t POKEMON_LEVEL = 1U;
+    static constexpr std::uint8_t POKEMON_BASE_STAT = 1U;
+    static constexpr std::uint16_t POKEMON_STAT = 1U;
+    static constexpr std::uint8_t POKEMON_EV = 0U;
+    static constexpr std::uint8_t POKEMON_IV = 0U;
+    static constexpr std::int8_t POKEMON_STAT_BOOST = -6;
+
+    static constexpr std::uint8_t MOVE_MAX_PP = 1U;
+    static constexpr std::uint8_t MOVE_BASE_POWER = 1U;
+    static constexpr std::uint8_t MOVE_BASE_ACCURACY = 1U;
+    static constexpr std::uint8_t MOVE_HITS = 1U;
+    static constexpr std::uint8_t MOVE_BASE_EFFECT_CHANCE = 1U;
+    static constexpr std::int8_t MOVE_PRIORITY = -7;
+
+    static constexpr std::uint16_t DAMAGE = 1U;
+    static constexpr std::uint8_t DAMAGE_ROLL_COUNT = 1U;
+
+    static constexpr std::int8_t TYPE_EFFECTIVENESS_SHIFT = -7;
+
+    static constexpr std::uint8_t TEAM_SIZE = 1U;
+    static constexpr std::uint8_t ACTIVE_POKEMON_SLOTS_PER_SIDE = 1U;
+    static constexpr std::uint8_t ACTIVE_POKEMON = 0U;
+    static constexpr std::uint8_t MOVE_SLOTS = 1U;
+    static constexpr std::uint8_t TARGETS = 1U;
+
+    static constexpr std::uint8_t ACTION_QUEUE_LENGTH = 0U;
+    static constexpr std::uint16_t TURN_COUNT = 0U;
+  };
+};
+}  // namespace pokesim
+
+//////////////////// END OF src/Types/MechanicConstants.hpp ////////////////////
+
+///////////////// START OF src/Utilities/FixedMemoryVector.hpp /////////////////
+
+#include <array>
+#include <cstdint>
+#include <initializer_list>
+#include <vector>
+
+namespace pokesim::internal {
+template <typename T, std::uint8_t N>
+class fixedMemoryVector : private std::array<T, N> {
+  using base = std::array<T, N>;
+  std::uint8_t used = 0;
+
+ public:
+  using base::begin;
+  using base::cbegin;
+  using base::crbegin;
+  using base::max_size;
+
+  fixedMemoryVector() : base() {
+    static_assert(
+      sizeof(fixedMemoryVector<T, N>) <= sizeof(std::vector<T>) + (sizeof(T) * N / 2),
+      "A std::vector for this type and size would be smaller.");
+  }
+
+  fixedMemoryVector(std::initializer_list<T> list) : fixedMemoryVector() {
+    for (const T& item : list) {
+      push_back(item);
+    }
+  }
+
+  constexpr std::uint8_t size() const noexcept { return used; }
+  constexpr std::uint8_t max_size() const noexcept { return N; }
+  constexpr bool empty() const noexcept { return used == 0; }
+
+  constexpr typename base::const_reference front() const noexcept { return *base::begin(); }
+  constexpr typename base::const_reference back() const noexcept { return N ? *(end() - 1) : *end(); }
+
+  constexpr typename base::reference front() noexcept { return *base::begin(); }
+  constexpr typename base::reference back() noexcept { return N ? *(end() - 1) : *end(); }
+
+  constexpr typename base::const_reference at(std::uint8_t pos) const {
+    POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
+    return base::at(pos);
+  }
+
+  constexpr typename base::const_reference operator[](std::uint8_t pos) const {
+    POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
+    return base::operator[](pos);
+  }
+
+  typename base::reference at(std::uint8_t pos) {
+    POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
+    return base::at(pos);
+  }
+
+  typename base::reference operator[](std::uint8_t pos) {
+    POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
+    return base::operator[](pos);
+  }
+
+  void push_back(const T& value) {
+    base::at(used) = value;
+    used++;
+  }
+
+  void pop_back() {
+    if (empty()) return;
+    used--;
+  }
+
+  void pop_count(std::uint8_t remove) {
+    POKESIM_REQUIRE(remove <= used, "Removing more values than are used.");
+    used -= remove;
+  }
+
+  template <class... Args>
+  void emplace_back(const Args&... args) {
+    base::at(used) = {args...};
+    used++;
+  }
+
+  bool operator==(const fixedMemoryVector<T, N>& other) const noexcept {
+    return used == other.used && std::equal(begin(), end(), other.begin());
+  }
+
+  typename base::iterator end() noexcept { return base::begin() + used; }
+
+  typename base::const_iterator end() const noexcept { return base::begin() + used; }
+  typename base::const_iterator cend() const noexcept { return end(); }
+  typename base::const_reverse_iterator rend() const noexcept { return const_reverse_iterator(end()); }
+  typename base::const_reverse_iterator crend() const noexcept { return rend(); }
+};
+}  // namespace pokesim::internal
+
+////////////////// END OF src/Utilities/FixedMemoryVector.hpp //////////////////
+
+///////////////////////// START OF src/Types/State.hpp /////////////////////////
+
+#include <optional>
+#include <type_traits>
+
+
+namespace pokesim {
+class Simulation;
+
+namespace types {
+using stateId = std::underlying_type_t<entity>;
+
+using battleTurn = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::TURN_COUNT>;
+
+using cloneIndex = std::underlying_type_t<entity>;
+
+using teamPositionIndex = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::TEAM_SIZE>;
+using moveSlotIndex = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::MOVE_SLOTS>;
+using activePokemonIndex = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::ACTIVE_POKEMON>;
+
+template <typename T>
+using teamPositions = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MaxValues::TEAM_SIZE>;
+using teamOrder = types::teamPositions<types::teamPositionIndex>;
+
+template <typename T>
+using moveSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MaxValues::MOVE_SLOTS>;
+
+template <typename T>
+using sideSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MaxValues::ACTIVE_POKEMON_SLOTS_PER_SIDE>;
+
+template <typename T>
+using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MaxValues::TARGETS>;
+
+using callback = void (*)(Simulation&);
+using optionalCallback = std::optional<void (*)(Simulation&)>;
+}  // namespace types
+}  // namespace pokesim
+
+////////////////////////// END OF src/Types/State.hpp //////////////////////////
+
 /////////////// START OF src/Utilities/AssertComponentsEqual.cpp ///////////////
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
 #include <cstddef>
+#include <limits>
 #include <vector>
 
 
@@ -17653,9 +17944,12 @@ inline types::entity findCopyParent(
   }
 
   const ParentEntity* parentEntity = registry.try_get<ParentEntity>(entity);
-  for (std::size_t i = 0; parentEntity != nullptr; i++) {
-    if (i >= registry.storage<types::registry::entity_type>()->size()) {
+  for (types::cloneIndex i = 0; parentEntity != nullptr; i++) {
+    if (
+      i >= registry.storage<types::registry::entity_type>()->size() ||
+      i == std::numeric_limits<types::cloneIndex>::max()) {
       POKESIM_REQUIRE_FAIL("A loop in the battle tree caused an infinite loop.");
+      break;
     }
 
     for (auto [original, _] : initialEntities) {
@@ -17667,13 +17961,17 @@ inline types::entity findCopyParent(
   }
 
   POKESIM_REQUIRE_FAIL("Could not find original entity of a clone.");
+  return entt::null;
 }
 
 inline bool checkIfCopyParent(types::entity potentialChild, types::entity potentialParent, const types::registry& registry) {
   const ParentEntity* parentEntity = registry.try_get<ParentEntity>(potentialChild);
-  for (std::size_t i = 0; parentEntity != nullptr; i++) {
-    if (i >= registry.storage<types::registry::entity_type>()->size()) {
+  for (types::cloneIndex i = 0; parentEntity != nullptr; i++) {
+    if (
+      i >= registry.storage<types::registry::entity_type>()->size() ||
+      i == std::numeric_limits<types::cloneIndex>::max()) {
       POKESIM_REQUIRE_FAIL("A loop in the battle tree caused an infinite loop.");
+      return false;
     }
 
     if (parentEntity->val == potentialParent) {
@@ -18105,7 +18403,6 @@ enum class SideCondition : std::uint8_t {
 
 ///////////////////// START OF src/Types/Enums/Status.hpp //////////////////////
 
-#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18121,7 +18418,7 @@ enum class Status : std::uint8_t {
   /*, FRB, DRO, */ STATUS_TOTAL,
 };
 
-static constexpr std::size_t TOTAL_STATUS_COUNT = (std::size_t)Status::STATUS_TOTAL - 1U;
+static constexpr std::uint8_t TOTAL_STATUS_COUNT = (std::uint8_t)Status::STATUS_TOTAL - 1U;
 }  // namespace pokesim::dex
 
 ////////////////////// END OF src/Types/Enums/Status.hpp ///////////////////////
@@ -18217,7 +18514,6 @@ using effectEnum = pokesim::internal::variant<
 
 ////////////////////// START OF src/Types/Enums/Move.hpp ///////////////////////
 
-#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18228,14 +18524,13 @@ enum class Move : std::uint16_t {
   // clang-format on
 };
 
-static constexpr std::size_t TOTAL_MOVE_COUNT = (std::size_t)Move::MOVE_TOTAL - 1U;
+static constexpr std::uint16_t TOTAL_MOVE_COUNT = (std::uint16_t)Move::MOVE_TOTAL - 1U;
 }  // namespace pokesim::dex
 
 /////////////////////// END OF src/Types/Enums/Move.hpp ////////////////////////
 
 ////////////////////// START OF src/Types/Enums/Stat.hpp ///////////////////////
 
-#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18250,25 +18545,24 @@ enum class Stat : std::uint8_t {
   // SPC = SPA | SPD,
 };
 
-static constexpr std::size_t TOTAL_STAT_COUNT = 6U;
+static constexpr std::uint8_t TOTAL_STAT_COUNT = 6U;
 }  // namespace pokesim::dex
 
 /////////////////////// END OF src/Types/Enums/Stat.hpp ////////////////////////
 
 ///////////////////////// START OF src/Types/Stats.hpp /////////////////////////
 
-#include <cstdint>
-
 namespace pokesim::types {
-using level = std::uint8_t;
+using level = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_LEVEL>;
 
-using stat = std::uint16_t;
-using baseStat = std::uint8_t;
+using stat = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_STAT>;
+using baseStat = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_BASE_STAT>;
 
-using ev = std::uint8_t;
-using iv = std::uint8_t;
+using ev = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_EV>;
+using iv = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_IV>;
 
-using boost = std::int8_t;
+using boost = pokesim::internal::signedIntType<
+  MechanicConstants::MaxValues::POKEMON_STAT_BOOST, MechanicConstants::MinValues::POKEMON_STAT_BOOST>;
 }  // namespace pokesim::types
 
 ////////////////////////// END OF src/Types/Stats.hpp //////////////////////////
@@ -18299,188 +18593,6 @@ struct InputSetup {
 }  // namespace pokesim::analyze_effect
 
 ////////// END OF src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp //////////
-
-//////////////////////// START OF src/Types/Random.hpp /////////////////////////
-
-#include <cstdint>
-
-namespace pokesim::types {
-using probability = float;
-using rngState = std::uint64_t;
-using rngResult = std::uint32_t;
-using percentChance = std::uint8_t;
-using eventPossibilities = std::uint8_t;
-}  // namespace pokesim::types
-
-///////////////////////// END OF src/Types/Random.hpp //////////////////////////
-
-/////////////////// START OF src/Types/MechanicConstants.hpp ///////////////////
-
-#include <array>
-#include <cmath>
-#include <cstdint>
-
-namespace pokesim {
-struct MechanicConstants {
-  static constexpr std::array<types::percentChance, 4U> CRIT_CHANCE_DIVISORS{24U, 8U, 2U, 1U};
-  static constexpr std::uint8_t MAX_DAMAGE_ROLL_COUNT = 16U;
-
-  static constexpr std::uint8_t SIDE_COUNT = 2U;
-  static constexpr std::uint8_t MAX_TEAM_SIZE = 6U;
-  static constexpr std::uint8_t MAX_ACTIVE_POKEMON_SLOTS_PER_SIDE = 2U;
-  static constexpr std::uint8_t MAX_ACTIVE_POKEMON = MAX_ACTIVE_POKEMON_SLOTS_PER_SIDE * SIDE_COUNT;
-  static constexpr std::uint8_t MAX_MOVE_SLOTS = 4U;
-  static constexpr std::uint8_t MAX_TARGETS = 3U;
-  // TODO(aed3): 64 is a guess, so find out what the actual number is
-  static constexpr std::uint8_t MAX_ACTION_QUEUE_LENGTH = 64U;
-
-  static constexpr float CRIT_MULTIPLIER = 1.5F;
-  static constexpr float STAB_MULTIPLIER = 1.5F;
-
-  static constexpr std::uint8_t FIXED_POINT_SCALING_FACTOR = 12U;
-  static constexpr std::uint16_t FIXED_POINT_SCALE = 1U << FIXED_POINT_SCALING_FACTOR;
-  static constexpr std::uint16_t FIXED_POINT_HALF_SCALE = FIXED_POINT_SCALE / 2U;
-};
-}  // namespace pokesim
-
-//////////////////// END OF src/Types/MechanicConstants.hpp ////////////////////
-
-///////////////// START OF src/Utilities/FixedMemoryVector.hpp /////////////////
-
-#include <array>
-#include <cstdint>
-#include <initializer_list>
-#include <vector>
-
-namespace pokesim::internal {
-template <typename T, std::uint8_t N>
-class fixedMemoryVector : private std::array<T, N> {
-  using base = std::array<T, N>;
-  std::uint8_t used = 0;
-
- public:
-  using base::begin;
-  using base::cbegin;
-  using base::crbegin;
-  using base::max_size;
-
-  fixedMemoryVector() : base() {
-    static_assert(
-      sizeof(fixedMemoryVector<T, N>) <= sizeof(std::vector<T>) + (sizeof(T) * N / 2),
-      "A std::vector for this type and size would be smaller.");
-  }
-
-  fixedMemoryVector(std::initializer_list<T> list) : fixedMemoryVector() {
-    for (const T& item : list) {
-      push_back(item);
-    }
-  }
-
-  constexpr std::uint8_t size() const noexcept { return used; }
-  constexpr bool empty() const noexcept { return used == 0; }
-
-  constexpr typename base::const_reference front() const noexcept { return *base::begin(); }
-  constexpr typename base::const_reference back() const noexcept { return N ? *(end() - 1) : *end(); }
-
-  constexpr typename base::reference front() noexcept { return *base::begin(); }
-  constexpr typename base::reference back() noexcept { return N ? *(end() - 1) : *end(); }
-
-  constexpr typename base::const_reference at(std::uint8_t pos) const {
-    POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
-    return base::at(pos);
-  }
-
-  constexpr typename base::const_reference operator[](std::uint8_t pos) const {
-    POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
-    return base::operator[](pos);
-  }
-
-  typename base::reference at(std::uint8_t pos) {
-    POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
-    return base::at(pos);
-  }
-
-  typename base::reference operator[](std::uint8_t pos) {
-    POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
-    return base::operator[](pos);
-  }
-
-  void push_back(const T& value) {
-    base::at(used) = value;
-    used++;
-  }
-
-  void pop_back() {
-    if (empty()) return;
-    used--;
-  }
-
-  void pop_count(std::uint8_t remove) {
-    POKESIM_REQUIRE(remove <= used, "Removing more values than are used.");
-    used -= remove;
-  }
-
-  template <class... Args>
-  void emplace_back(const Args&... args) {
-    base::at(used) = {args...};
-    used++;
-  }
-
-  bool operator==(const fixedMemoryVector<T, N>& other) const noexcept {
-    return used == other.used && std::equal(begin(), end(), other.begin());
-  }
-
-  typename base::iterator end() noexcept { return base::begin() + used; }
-
-  typename base::const_iterator end() const noexcept { return base::begin() + used; }
-  typename base::const_iterator cend() const noexcept { return end(); }
-  typename base::const_reverse_iterator rend() const noexcept { return const_reverse_iterator(end()); }
-  typename base::const_reverse_iterator crend() const noexcept { return rend(); }
-};
-}  // namespace pokesim::internal
-
-////////////////// END OF src/Utilities/FixedMemoryVector.hpp //////////////////
-
-///////////////////////// START OF src/Types/State.hpp /////////////////////////
-
-#include <cstdint>
-#include <optional>
-#include <type_traits>
-
-
-namespace pokesim {
-class Simulation;
-
-namespace types {
-using stateId = std::underlying_type_t<entity>;
-
-using battleTurn = std::uint16_t;
-
-using cloneIndex = std::underlying_type_t<entity>;
-
-using teamPositionIndex = std::uint8_t;
-using moveSlotPosition = std::uint8_t;
-using activePokemonIndex = std::uint8_t;
-
-template <typename T>
-using teamPositions = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MAX_TEAM_SIZE>;
-using teamOrder = types::teamPositions<types::teamPositionIndex>;
-
-template <typename T>
-using moveSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MAX_MOVE_SLOTS>;
-
-template <typename T>
-using sideSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MAX_ACTIVE_POKEMON_SLOTS_PER_SIDE>;
-
-template <typename T>
-using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MAX_TARGETS>;
-
-using callback = void (*)(Simulation&);
-using optionalCallback = std::optional<void (*)(Simulation&)>;
-}  // namespace types
-}  // namespace pokesim
-
-////////////////////////// END OF src/Types/State.hpp //////////////////////////
 
 ///////////////////// START OF src/Battle/Clone/Clone.hpp //////////////////////
 
@@ -18634,7 +18746,6 @@ struct Ivs {
 
 ////////////////////// START OF src/Types/Enums/Type.hpp ///////////////////////
 
-#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18662,7 +18773,7 @@ enum class Type : std::uint8_t {
   TYPE_TOTAL
 };
 
-static constexpr std::size_t TOTAL_TYPE_COUNT = (std::size_t)Type::TYPE_TOTAL - 1U;
+static constexpr std::uint8_t TOTAL_TYPE_COUNT = (std::uint8_t)Type::TYPE_TOTAL - 1U;
 }  // namespace pokesim::dex
 
 /////////////////////// END OF src/Types/Enums/Type.hpp ////////////////////////
@@ -18674,13 +18785,13 @@ static constexpr std::size_t TOTAL_TYPE_COUNT = (std::size_t)Type::TYPE_TOTAL - 
 namespace pokesim {
 // Contains the types a species has
 struct SpeciesTypes {
-  std::array<dex::Type, 2U> val{dex::Type::NO_TYPE, dex::Type::NO_TYPE};
+  std::array<dex::Type, MechanicConstants::TYPES_PER_POKEMON> val{};
 
   dex::Type& type1() { return val[0]; };
   dex::Type& type2() { return val[1]; };
   constexpr const dex::Type& type1() const { return val[0]; };
   constexpr const dex::Type& type2() const { return val[1]; };
-  constexpr std::uint8_t size() const {
+  constexpr internal::unsignedIntType<MechanicConstants::TYPES_PER_POKEMON> size() const {
     if (type2() == dex::Type::NO_TYPE) {
       return type1() == dex::Type::NO_TYPE ? 0 : 1;
     }
@@ -18748,7 +18859,6 @@ struct EffectiveSpe {
 
 ///////////////////// START OF src/Types/Enums/Ability.hpp /////////////////////
 
-#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18759,28 +18869,26 @@ enum class Ability : std::uint16_t {
   // clang-format on
 };
 
-static constexpr std::size_t TOTAL_ABILITY_COUNT = (std::size_t)Ability::ABILITY_TOTAL - 1U;
+static constexpr std::uint16_t TOTAL_ABILITY_COUNT = (std::uint16_t)Ability::ABILITY_TOTAL - 1U;
 }  // namespace pokesim::dex
 
 ////////////////////// END OF src/Types/Enums/Ability.hpp //////////////////////
 
 ///////////////////// START OF src/Types/Enums/Gender.hpp //////////////////////
 
-#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
 // Pokemon gender name
 enum class Gender : std::uint8_t { NO_GENDER = 0, FEMALE, MALE };
 
-static constexpr std::size_t TOTAL_GENDER_COUNT = 3U;
+static constexpr std::uint8_t TOTAL_GENDER_COUNT = 3U;
 }  // namespace pokesim::dex
 
 ////////////////////// END OF src/Types/Enums/Gender.hpp ///////////////////////
 
 ////////////////////// START OF src/Types/Enums/Item.hpp ///////////////////////
 
-#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18791,14 +18899,13 @@ enum class Item : std::uint16_t {
   // clang-format on
 };
 
-static constexpr std::size_t TOTAL_ITEM_COUNT = (std::size_t)Item::ITEM_TOTAL - 1U;
+static constexpr std::uint16_t TOTAL_ITEM_COUNT = (std::uint16_t)Item::ITEM_TOTAL - 1U;
 }  // namespace pokesim::dex
 
 /////////////////////// END OF src/Types/Enums/Item.hpp ////////////////////////
 
 ///////////////////// START OF src/Types/Enums/Nature.hpp //////////////////////
 
-#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18809,14 +18916,13 @@ enum class Nature : std::uint8_t {
   // clang-format on
 };
 
-static constexpr std::size_t TOTAL_NATURE_COUNT = (std::size_t)Nature::NATURE_TOTAL - 1U;
+static constexpr std::uint8_t TOTAL_NATURE_COUNT = (std::uint8_t)Nature::NATURE_TOTAL - 1U;
 }  // namespace pokesim::dex
 
 ////////////////////// END OF src/Types/Enums/Nature.hpp ///////////////////////
 
 ///////////////////// START OF src/Types/Enums/Species.hpp /////////////////////
 
-#include <cstddef>
 #include <cstdint>
 
 namespace pokesim::dex {
@@ -18842,7 +18948,7 @@ enum class Species : std::uint16_t {
   // clang-format on
 };
 
-static constexpr std::size_t TOTAL_SPECIES_COUNT = (std::size_t)Species::SPECIES_TOTAL - 1U;
+static constexpr std::uint16_t TOTAL_SPECIES_COUNT = (std::uint16_t)Species::SPECIES_TOTAL - 1U;
 }  // namespace pokesim::dex
 
 ////////////////////// END OF src/Types/Enums/Species.hpp //////////////////////
@@ -18990,16 +19096,15 @@ inline void enumToTag(dex::Status status, types::handle& handle);
 
 ///////////////////////// START OF src/Types/Move.hpp //////////////////////////
 
-#include <cstdint>
-
 namespace pokesim::types {
-using pp = std::uint8_t;
-using basePower = std::uint8_t;
-using baseAccuracy = std::uint8_t;
-using moveHits = std::uint8_t;
-using baseEffectChance = std::uint8_t;
+using pp = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::MOVE_MAX_PP>;
+using basePower = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::MOVE_BASE_POWER>;
+using baseAccuracy = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::MOVE_BASE_ACCURACY>;
+using moveHits = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::MOVE_HITS>;
+using baseEffectChance = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::MOVE_BASE_EFFECT_CHANCE>;
 
-using priority = std::int8_t;
+using priority = pokesim::internal::signedIntType<
+  MechanicConstants::MaxValues::MOVE_PRIORITY, MechanicConstants::MinValues::MOVE_PRIORITY>;
 using fractionalPriority = bool;
 }  // namespace pokesim::types
 
@@ -19225,7 +19330,7 @@ struct SideDecision {
 namespace pokesim {
 // Contains the list of action entities queued up to be simulated for a battle's current turn.
 struct ActionQueue {
-  internal::maxSizedVector<types::entity, MechanicConstants::MAX_ACTION_QUEUE_LENGTH> val{};
+  internal::maxSizedVector<types::entity, MechanicConstants::MaxValues::ACTION_QUEUE_LENGTH> val{};
 };
 }  // namespace pokesim
 
@@ -19337,36 +19442,38 @@ enum class TypeEffectiveness : std::uint8_t {
 #include <array>
 #include <cstdint>
 #include <initializer_list>
+#include <type_traits>
 
 namespace pokesim {
 // The extra array element is for NO_TYPE
-using TypeChartBase = std::array<
-  std::array<pokesim::TypeEffectiveness, pokesim::dex::TOTAL_TYPE_COUNT + 1U>, pokesim::dex::TOTAL_TYPE_COUNT + 1U>;
+using TypeChartBase = std::array<std::array<TypeEffectiveness, dex::TOTAL_TYPE_COUNT + 1U>, dex::TOTAL_TYPE_COUNT + 1U>;
 
 struct TypeChart : private TypeChartBase {
  private:
-  using constructorType = std::initializer_list<
-    std::pair<pokesim::dex::Type, std::initializer_list<std::pair<pokesim::dex::Type, pokesim::TypeEffectiveness>>>>;
+  using constructorType =
+    std::initializer_list<std::pair<dex::Type, std::initializer_list<std::pair<dex::Type, TypeEffectiveness>>>>;
+
+  using enumType = std::underlying_type_t<dex::Type>;
 
  public:
   constexpr TypeChart(const constructorType partialChart) : TypeChartBase() {
     for (auto& ratios : *this) {
       for (auto& effectiveness : ratios) {
-        effectiveness = pokesim::TypeEffectiveness::NEUTRAL;
+        effectiveness = TypeEffectiveness::NEUTRAL;
       }
     }
 
     for (const auto& [defending, ratios] : partialChart) {
       for (const auto& [attacking, effectiveness] : ratios) {
-        at((std::uint8_t)attacking).at((std::uint8_t)defending) = effectiveness;
+        at((enumType)attacking).at((enumType)defending) = effectiveness;
       }
     }
   }
 
   constexpr TypeChart(GameMechanics gameMechanics) : TypeChart(TypeChart::pickForMechanics(gameMechanics)) {}
 
-  constexpr pokesim::TypeEffectiveness effectiveness(pokesim::dex::Type attacking, pokesim::dex::Type defending) const {
-    return at((std::uint8_t)attacking).at((std::uint8_t)defending);
+  constexpr TypeEffectiveness effectiveness(dex::Type attacking, dex::Type defending) const {
+    return at((enumType)attacking).at((enumType)defending);
   }
 
  private:
@@ -20506,14 +20613,12 @@ struct Options {
 
 //////////////////////// START OF src/Types/Damage.hpp /////////////////////////
 
-#include <cstdint>
-
 namespace pokesim::types {
-using damage = std::uint16_t;
-using damageRoll = std::uint8_t;
-using effectMultiplier = float;
+using damage = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::DAMAGE>;
+using damageRollIndex = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT>;
 using useUntilKoChance = float;
-using typeEffectiveness = std::int8_t;
+using typeEffectiveness = pokesim::internal::signedIntType<
+  MechanicConstants::MaxValues::TYPE_EFFECTIVENESS_SHIFT, MechanicConstants::MinValues::TYPE_EFFECTIVENESS_SHIFT>;
 }  // namespace pokesim::types
 
 ///////////////////////// END OF src/Types/Damage.hpp //////////////////////////
@@ -20524,6 +20629,7 @@ using typeEffectiveness = std::int8_t;
 
 namespace pokesim::types {
 using eventModifier = std::uint32_t;
+using effectMultiplier = float;
 }  // namespace pokesim::types
 
 ////////////////////////// END OF src/Types/Event.hpp //////////////////////////
@@ -20753,7 +20859,7 @@ struct MovePairs {
 
   bool operator==(const MovePairs& other) const {
     if (val.size() != other.val.size()) return false;
-    for (std::size_t i = 0; i < val.size(); i++) {
+    for (types::cloneIndex i = 0; i < val.size(); i++) {
       if (val[i].first != other.val[i].first || val[i].second != other.val[i].second) {
         return false;
       }
@@ -21016,7 +21122,7 @@ struct Checks {
   types::registry registryOnInput;
   entt::dense_map<types::entity, types::entity> originalToCopy;
   entt::dense_set<types::entity> specificallyChecked;
-  std::size_t initialEntityCount = 0;
+  types::cloneIndex initialEntityCount = 0;
 
   void copyRemainingEntities() {
     for (types::entity entity : registry->view<types::entity>()) {
@@ -21040,8 +21146,8 @@ struct Checks {
     }
   }
 
-  std::size_t getFinalEntityCount() const {
-    std::size_t finalEntityCount = 0;
+  types::cloneIndex getFinalEntityCount() const {
+    types::cloneIndex finalEntityCount = 0;
     for (types::entity entity : registry->view<types::entity>()) {
       if (!registry->orphan(entity)) {
         finalEntityCount++;
@@ -21201,7 +21307,7 @@ struct SimulationSetupChecks {
 
     for (std::size_t i = 0; i < creationInfo.moves.size(); i++) {
       const Simulation::MoveCreationInfo& move = creationInfo.moves[i];
-      types::entity moveEntity = moveSlots.val[(std::uint8_t)i];
+      types::entity moveEntity = moveSlots.val[(types::moveSlotIndex)i];
       POKESIM_REQUIRE_NM((registry->all_of<MoveName, Pp, MaxPp>(moveEntity)));
       POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).name == move.name);
       POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == move.pp);
@@ -21216,7 +21322,7 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(team.size() == creationInfo.team.size());
 
     for (std::size_t i = 0; i < creationInfo.team.size(); i++) {
-      types::entity pokemonEntity = team[(std::uint8_t)i];
+      types::entity pokemonEntity = team[(types::teamPositionIndex)i];
       checkCreatedPokemon(pokemonEntity, creationInfo.team[i]);
 
       POKESIM_REQUIRE_NM(registry->get<Side>(pokemonEntity).val == sideEntity);
@@ -21586,8 +21692,8 @@ inline PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationI
 
 inline void Simulation::createInitialSide(
   SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo) {
-  internal::maxSizedVector<PokemonStateSetup, MechanicConstants::MAX_TEAM_SIZE> pokemonSetupList;
-  pokemonSetupList.reserve((types::teamPositionIndex)sideInfo.team.size());
+  internal::maxSizedVector<PokemonStateSetup, MechanicConstants::MaxValues::TEAM_SIZE> pokemonSetupList;
+  pokemonSetupList.reserve(sideInfo.team.size());
 
   for (std::size_t i = 0; i < sideInfo.team.size(); i++) {
     const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];
@@ -21808,16 +21914,16 @@ struct DamageRollModifiers {
 };
 
 struct DamageRolls {
-  internal::maxSizedVector<Damage, MechanicConstants::MAX_DAMAGE_ROLL_COUNT> val{};
+  internal::maxSizedVector<Damage, MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT> val{};
 
   DamageRolls() {}
   DamageRolls(const DamageRolls& other) : val(other.val) {}
 
   DamageRolls(const std::vector<types::damage>& list) {
     POKESIM_REQUIRE(
-      list.size() <= MechanicConstants::MAX_DAMAGE_ROLL_COUNT,
+      list.size() <= MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT,
       "More damage rolls are being added than allowed.");
-    val.reserve((types::damageRoll)list.size());
+    val.reserve((types::damageRollIndex)list.size());
     for (types::damage damage : list) {
       val.push_back({damage});
     }
@@ -21857,7 +21963,7 @@ struct UsesUntilKo {
   };
 
  public:
-  internal::maxSizedVector<KoChance, MechanicConstants::MAX_DAMAGE_ROLL_COUNT> val{};
+  internal::maxSizedVector<KoChance, MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT> val{};
 
   const KoChance& minHits() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
@@ -22065,7 +22171,7 @@ struct Damage;
 namespace calc_damage {
 inline void run(Simulation& simulation);
 
-inline void applyDamageRoll(Damage& damage, types::damageRoll damageRoll);
+inline void applyDamageRoll(Damage& damage, types::damageRollIndex damageRoll);
 inline void applyAverageDamageRoll(Damage& damage);
 inline void applyMinDamageRoll(Damage& damage);
 
@@ -22398,7 +22504,7 @@ template <GameMechanics>
 struct AssaultVest : internal::AssaultVestEvents {
   static constexpr dex::Item name = dex::Item::ASSAULT_VEST;
 
-  static constexpr float onModifySpdModifier = 1.5F;
+  static constexpr types::effectMultiplier onModifySpdModifier = 1.5F;
   struct Strings {
     static constexpr std::string_view name = "Assault Vest";
     static constexpr std::string_view smogonId = "assaultvest";
@@ -22451,7 +22557,7 @@ template <GameMechanics>
 struct ChoiceScarf : internal::ChoiceScarfEvents {
   static constexpr dex::Item name = dex::Item::CHOICE_SCARF;
 
-  static constexpr float onModifySpeModifier = 1.5F;
+  static constexpr types::effectMultiplier onModifySpeModifier = 1.5F;
   struct Strings {
     static constexpr std::string_view name = "Choice Scarf";
     static constexpr std::string_view smogonId = "choicescarf";
@@ -22486,7 +22592,7 @@ template <GameMechanics>
 struct ChoiceSpecs : internal::ChoiceSpecsEvents {
   static constexpr dex::Item name = dex::Item::CHOICE_SPECS;
 
-  static constexpr float onModifySpaModifier = 1.5F;
+  static constexpr types::effectMultiplier onModifySpaModifier = 1.5F;
   struct Strings {
     static constexpr std::string_view name = "Choice Specs";
     static constexpr std::string_view smogonId = "choicespecs";
@@ -23181,12 +23287,9 @@ inline void setMoveHitCount(Simulation& simulation) {
     simulation.registry.view<tags::SelectedForViewMove>(entt::exclude<move::tags::VariableHitCount, HitCount>);
   simulation.registry.insert<HitCount>(noAssignedHitCount.begin(), noAssignedHitCount.end(), {(types::moveHits)1U});
 
-  // The 35%-35%-15%-15% out of 100 for 2-3-4-5 hits added so each index is the sum of the chance of its hit count and
-  // the hit counts less than it so it works with the randomEventChances function
-  static constexpr std::array<types::percentChance, 4U> progressiveMultiHitChances{35U, 70U, 85U, 100U};
   setRandomChoice<4U, tags::SelectedForViewMove, move::tags::VariableHitCount>(
     simulation,
-    progressiveMultiHitChances,
+    MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES,
     false);
 
   if (!simulation.registry.view<RandomEventChances<4U>>().empty()) {
@@ -23267,10 +23370,10 @@ inline void internal::removeFailedHitTargets(
 }
 
 inline void internal::updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets) {
-  std::uint8_t deleteCount = 0U;
+  types::activePokemonIndex deleteCount = 0U;
   for (types::entity& target : targets.val) {
     if (!registry.all_of<tags::CurrentActionMoveTarget>(target)) {
-      std::uint8_t swapIndex = targets.val.size() - 1 - deleteCount;
+      types::activePokemonIndex swapIndex = targets.val.size() - 1 - deleteCount;
       POKESIM_REQUIRE(swapIndex >= 0 && swapIndex < targets.val.size(), "Swap index out of bounds.");
       std::swap(target, targets.val[swapIndex]);
       deleteCount++;
@@ -23359,9 +23462,9 @@ inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, Damage
 
   if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
     POKESIM_REQUIRE(
-      damageRolls.val.size() == MechanicConstants::MAX_DAMAGE_ROLL_COUNT,
+      damageRolls.val.size() == MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT,
       "DamageRolls does not have all rolls yet.");
-    return damageRolls.val[MechanicConstants::MAX_DAMAGE_ROLL_COUNT / 2].val;
+    return damageRolls.val[MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT / 2].val;
   }
   POKESIM_REQUIRE(
     damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE),
@@ -23884,14 +23987,14 @@ inline void updateProbabilityFromRandomEqualChance(
   types::eventPossibilities possibleEventCount) {
   Probability& probability = registry.get<Probability>(battle.val);
 
-  updateProbability(probability, 100.0F / (float)possibleEventCount);
+  updateProbability(probability, 100.0F / (types::probability)possibleEventCount);
 }
 
 inline void updateProbabilityFromRandomEventCount(
   types::registry& registry, const RandomEventCount& eventChance, const Battle& battle) {
   Probability& probability = registry.get<Probability>(battle.val);
 
-  updateProbability(probability, 100.0F / (float)eventChance.val);
+  updateProbability(probability, 100.0F / (types::probability)eventChance.val);
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
@@ -23979,7 +24082,7 @@ inline void assignIndexToClones(
     if (clonedPointer == clonedEntityMap.end()) continue;
     const auto& cloned = clonedPointer->second;
 
-    for (std::size_t index = 0; index < cloned.size(); index++) {
+    for (types::cloneIndex index = 0; index < cloned.size(); index++) {
       POKESIM_REQUIRE(
         std::numeric_limits<types::eventPossibilities>::max() > index,
         "Number of clones shouldn't be greater than the number of possible events.");
@@ -24191,7 +24294,7 @@ inline void randomEqualChance(
   };
 
   types::cloneIndex cloneCount =
-    possibleEventCount > MechanicConstants::MAX_DAMAGE_ROLL_COUNT ? 0 : possibleEventCount - 1;
+    possibleEventCount > MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT ? 0 : possibleEventCount - 1;
 
   if (updateProbabilities.has_value()) {
     randomChanceEvent<
@@ -24273,7 +24376,7 @@ struct SpeedTieIndexes {
     types::activePokemonIndex length = 0;
   };
 
-  internal::fixedMemoryVector<Span, MechanicConstants::MAX_ACTIVE_POKEMON> val{};
+  internal::fixedMemoryVector<Span, MechanicConstants::MaxValues::ACTIVE_POKEMON> val{};
 };
 }  // namespace pokesim
 
@@ -24381,7 +24484,7 @@ inline void speedSort(types::handle handle, ActionQueue& actionQueue) {
   if (entityList.size() == 1) return;
   const types::registry* registry = handle.registry();
 
-  internal::maxSizedVector<std::pair<SpeedSort, types::entity>, MechanicConstants::MAX_ACTION_QUEUE_LENGTH>
+  internal::maxSizedVector<std::pair<SpeedSort, types::entity>, MechanicConstants::MaxValues::ACTION_QUEUE_LENGTH>
     speedSortList;
   speedSortList.reserve(entityList.size());
 
@@ -24506,7 +24609,7 @@ namespace pokesim::simulate_turn {
 namespace {
 inline void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls, const RandomEventIndex& randomRollIndex) {
   types::eventPossibilities damageRollIndex = 0U;
-  for (std::size_t i = 0U; i < damageRolls.val.size(); i++) {
+  for (types::damageRollIndex i = 0U; i < damageRolls.val.size(); i++) {
     if (randomRollIndex.val == damageRollIndex) {
       damage = damageRolls.val[damageRollIndex];
       return;
@@ -24536,13 +24639,13 @@ inline void assignAllDamageRollProbability(
   POKESIM_REQUIRE(damageCount > 0U, "How was a damage roll not found that matched the damage dealt?");
 
   Probability& probability = registry.get<Probability>(battle.val);
-  probability.val *= damageCount / (types::probability)MechanicConstants::MAX_DAMAGE_ROLL_COUNT;
+  probability.val *= damageCount / (types::probability)MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT;
 }
 
 inline types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {
   const DamageRolls& damageRolls = moveHandle.get<DamageRolls>();
   types::eventPossibilities eventPossibilities = 1U;
-  for (std::size_t i = 1U; i < damageRolls.val.size(); i++) {
+  for (types::damageRollIndex i = 1U; i < damageRolls.val.size(); i++) {
     eventPossibilities += damageRolls.val[i - 1].val != damageRolls.val[i].val ? 1 : 0;
   }
   return eventPossibilities;
@@ -24803,6 +24906,8 @@ struct MoveEffectSetup : DexDataSetup {
 
 /////////////// START OF src/Pokedex/Setup/MoveDexDataSetup.cpp ////////////////
 
+#include <type_traits>
+
 namespace pokesim::dex::internal {
 inline void MoveDexDataSetup::setName(Move move) {
   handle.emplace<MoveName>(move);
@@ -24814,8 +24919,8 @@ inline void MoveDexDataSetup::setType(Type type) {
 
 inline void MoveDexDataSetup::addAddedTargets(AddedTargetOptions addedTargets) {
   AddedTargets& existingTargets = handle.get_or_emplace<AddedTargets>();
-  existingTargets.val = static_cast<AddedTargetOptions>(
-    static_cast<std::uint8_t>(existingTargets.val) | static_cast<std::uint8_t>(addedTargets));
+  using targetType = std::underlying_type_t<AddedTargetOptions>;
+  existingTargets.val = (AddedTargetOptions)((targetType)existingTargets.val | (targetType)addedTargets);
 
   switch (addedTargets) {
     case AddedTargetOptions::TARGET_ALLY: {
@@ -26171,7 +26276,7 @@ struct Checks : pokesim::debug::Checks {
 
     std::size_t idealDamageRollCount = 0;
     if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
-      idealDamageRollCount = MechanicConstants::MAX_DAMAGE_ROLL_COUNT;
+      idealDamageRollCount = MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT;
     }
     else {
       if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
@@ -26200,7 +26305,7 @@ struct Checks : pokesim::debug::Checks {
       POKESIM_REQUIRE_NM(!usesUntilKo.val.empty());
       POKESIM_REQUIRE_NM(usesUntilKo.val.front() == usesUntilKo.minHits());
       POKESIM_REQUIRE_NM(usesUntilKo.val.back() == usesUntilKo.maxHits());
-      POKESIM_REQUIRE_NM(usesUntilKo.val.size() <= MechanicConstants::MAX_DAMAGE_ROLL_COUNT);
+      POKESIM_REQUIRE_NM(usesUntilKo.val.size() <= MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT);
       POKESIM_REQUIRE_NM(usesUntilKo.val.size() <= damageRolls.val.size());
 
       types::moveHits lastUses = 0;
@@ -26221,7 +26326,7 @@ struct Checks : pokesim::debug::Checks {
     if (attackerHpRecovered != nullptr) {
       POKESIM_REQUIRE_NM(attackerHpRecovered->val.size() == damageRolls.val.size());
 
-      for (std::size_t i = 0; i < damageRolls.val.size(); i++) {
+      for (types::damageRollIndex i = 0; i < damageRolls.val.size(); i++) {
         POKESIM_REQUIRE_NM(attackerHpRecovered->val[i].val <= damageRolls.val[i].val);
       }
     }
@@ -26374,8 +26479,8 @@ inline void applyCritDamageIncrease(Damage& damage) {
   damage.val = (types::damage)(damage.val * MechanicConstants::CRIT_MULTIPLIER);
 }
 
-inline void setDamageToAtLeastOne(Damage& damage) {
-  damage.val = std::max(damage.val, (types::damage)1U);
+inline void setDamageToMinimumPossible(Damage& damage) {
+  damage.val = std::max(damage.val, MechanicConstants::MinValues::DAMAGE);
 }
 
 inline void setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
@@ -26398,7 +26503,8 @@ inline void setDefendingSide(types::handle moveHandle, const Defenders& defender
 }
 
 inline void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
-  damage.val = (types::damage)fixedPointMultiply(damage.val, ((std::uint8_t)modifiers.stab) / 100.0F);
+  types::effectMultiplier stab = ((std::underlying_type_t<StabBoostKind>)modifiers.stab) / 100.0F;
+  damage.val = (types::damage)fixedPointMultiply(damage.val, stab);
 
   types::eventModifier typeEffectivenessModifier = MechanicConstants::FIXED_POINT_SCALE;
   if (modifiers.typeEffectiveness < 0) {
@@ -26415,12 +26521,12 @@ inline void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
     damage.val = (types::damage)fixedPointMultiply(damage.val, 0.5F);
   }
 
-  setDamageToAtLeastOne(damage);
+  setDamageToMinimumPossible(damage);
 }
 
 inline void calculateAllDamageRolls(DamageRolls& damageRolls, const Damage& damage, const DamageRollModifiers& modifier) {
-  damageRolls.val.reserve(MechanicConstants::MAX_DAMAGE_ROLL_COUNT);
-  for (std::uint8_t i = 0; i < MechanicConstants::MAX_DAMAGE_ROLL_COUNT; i++) {
+  damageRolls.val.reserve(MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT);
+  for (types::damageRollIndex i = 0; i < MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
     applyDamageRoll(damageRoll, i);
     modifyDamage(damageRoll, modifier);
@@ -26498,7 +26604,7 @@ inline void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damage
   const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.only());
   UsesUntilKo usesUntilKo;
   POKESIM_REQUIRE(
-    damageRolls.val.size() == MechanicConstants::MAX_DAMAGE_ROLL_COUNT,
+    damageRolls.val.size() == MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT,
     "All the damage rolls are needed to calculate this correctly.");
 
   for (const Damage& damageRoll : damageRolls.val) {
@@ -26507,7 +26613,7 @@ inline void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damage
       usesUntilKo.val.push_back({uses, 0.0F});
     }
 
-    usesUntilKo.val.back().chance += (1.0 / MechanicConstants::MAX_DAMAGE_ROLL_COUNT);
+    usesUntilKo.val.back().chance += (1.0 / MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT);
   }
   moveHandle.emplace<UsesUntilKo>(usesUntilKo);
 }
@@ -26681,16 +26787,17 @@ inline void setDamageRollModifiers(Simulation& simulation) {
     Tags<status::tags::Burn, tags::Attacker> /*, entt::exclude<ability::tags::Guts> */>();
 }
 
-inline void applyDamageRoll(Damage& damage, types::damageRoll damageRoll) {
+inline void applyDamageRoll(Damage& damage, types::damageRollIndex damageRoll) {
   damage.val = (types::damage)(damage.val * ((100U - damageRoll) / 100.0F));
 }
 
 inline void applyAverageDamageRoll(Damage& damage) {
-  damage.val = (types::damage)(damage.val * (100U - (MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U) / 2.0F) / 100.0F);
+  damage.val =
+    (types::damage)(damage.val * (100U - (MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT - 1U) / 2.0F) / 100.0F);
 }
 
 inline void applyMinDamageRoll(Damage& damage) {
-  applyDamageRoll(damage, MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U);
+  applyDamageRoll(damage, MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT - 1U);
 }
 
 inline void run(Simulation& simulation) {
@@ -26729,11 +26836,11 @@ inline void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
   Battle battle = handle.get<Battle>();
   POKESIM_REQUIRE(team.size() <= teamEntities.val.max_size(), "Cannot add more Pokemon to a team than MAX_TEAM_SIZE.");
 
-  for (std::size_t i = 0; i < team.size(); i++) {
-    teamEntities.val.push_back(team[i].entity());
-    team[i].setPostion((types::teamPositionIndex)(i + 1));
-    team[i].setSide(entity());
-    team[i].setBattle(battle.val);
+  for (PokemonStateSetup& pokemonSetup : team) {
+    teamEntities.val.push_back(pokemonSetup.entity());
+    pokemonSetup.setPostion(teamEntities.val.size());
+    pokemonSetup.setSide(entity());
+    pokemonSetup.setBattle(battle.val);
   }
 }
 
@@ -27917,7 +28024,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkOutputs() const {
-    std::size_t finalEntityCount = getFinalEntityCount();
+    types::cloneIndex finalEntityCount = getFinalEntityCount();
     POKESIM_REQUIRE_NM(initialEntityCount == finalEntityCount);
     checkInputOutputs();
     checkPokemonOutputs(true);
@@ -28104,7 +28211,7 @@ inline void assignInputsToClones(
     cloneCount == battleClones.size(),
     "Each input must have a clone and no more clones than inputs should be made.");
 
-  std::size_t cloneIndex = 0;
+  types::cloneIndex cloneIndex = 0;
   for (types::entity input : inputs.val) {
     bool usesClone = !registry.all_of<tags::RunOneCalculation>(input);
 
@@ -28128,7 +28235,7 @@ inline void assignInputsToClones(
         return moveEntity;
       };
 
-    for (std::size_t moveIndex = 0; moveIndex < moves.val.size(); moveIndex++) {
+    for (types::cloneIndex moveIndex = 0; moveIndex < moves.val.size(); moveIndex++) {
       entt::entity moveEntity = createMove(moves.val[moveIndex], battle.val, attacker.val, defenders.only());
       movePairs.val[moveIndex].first = movePairs.val[moveIndex].second = moveEntity;
     }
@@ -28157,7 +28264,7 @@ inline void assignInputsToClones(
         battleClones.size() == clonedEffectTarget.size(),
         "Each effect target must have a clone and no more clones than inputs should be made.");
 
-      for (std::size_t moveIndex = 0; moveIndex < moves.val.size(); moveIndex++) {
+      for (types::cloneIndex moveIndex = 0; moveIndex < moves.val.size(); moveIndex++) {
         movePairs.val[moveIndex].second = createMove(
           moves.val[moveIndex],
           battleClones[cloneIndex],
@@ -28262,6 +28369,7 @@ inline void createAppliedEffectBattles(Simulation& simulation) {
         inputs.val.size() <= std::numeric_limits<types::eventPossibilities>().max(),
         "More clones are being made than possibilities.");
       types::eventPossibilities cloneCount = (types::eventPossibilities)inputs.val.size();
+
       battlesByCloneCount[cloneCount].push_back(battleEntity);
     });
   }

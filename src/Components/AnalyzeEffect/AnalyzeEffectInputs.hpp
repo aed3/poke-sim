@@ -3,6 +3,7 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Random.hpp>
+#include <Types/State.hpp>
 #include <Utilities/MaxSizedVector.hpp>
 #include <vector>
 
@@ -36,7 +37,7 @@ struct MovePairs {
 
   bool operator==(const MovePairs& other) const {
     if (val.size() != other.val.size()) return false;
-    for (std::size_t i = 0; i < val.size(); i++) {
+    for (types::cloneIndex i = 0; i < val.size(); i++) {
       if (val[i].first != other.val[i].first || val[i].second != other.val[i].second) {
         return false;
       }

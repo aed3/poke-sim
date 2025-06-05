@@ -3,18 +3,14 @@
 #include <Config/Config.hpp>
 
 #ifndef POKESIM_DEBUG_CHECK_UTILITIES
+#include <entt/core/fwd.hpp>
 #include <memory>
-
-#ifndef ENTT_ID_TYPE
-#include <cstdint>
-#define ENTT_ID_TYPE std::uint32_t
-#endif
 
 namespace entt {
 enum class entity : ENTT_ID_TYPE;
 template <typename, typename>
 class basic_registry;
-using registry = basic_registry<entity, std::allocator<entity> >;
+using registry = basic_registry<entity, std::allocator<entity>>;
 
 template <typename, typename...>
 struct basic_handle;
@@ -30,6 +26,7 @@ using handle = entt::basic_handle<registry>;
 #include <Utilities/AssertComponentsEqual.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/meta/factory.hpp>
+#include <limits>
 #include <type_traits>
 
 #ifdef POKESIM_ENTITY_VIEWER
@@ -57,10 +54,13 @@ class registry : public internal::BackingRegistry {
   };
 
  private:
+  using entt::registry::create;
   using entt::registry::emplace;
   using entt::registry::emplace_or_replace;
   using entt::registry::get_or_emplace;
   using entt::registry::insert;
+
+  static constexpr std::uint64_t maxEntityCount = std::numeric_limits<entt::id_type>::max();
 
   template <typename Type>
   static void copyToOtherRegistry(
@@ -88,8 +88,8 @@ class registry : public internal::BackingRegistry {
   void createMetaFunctions() const {
     static_assert(std::is_class_v<Type>, "Only classes or structs should be added to an entity.");
     entt::meta<Type>()
-      .template func<&registry::copyToOtherRegistry<Type> >(MetaFunctions::COPY_TO_OTHER_REGISTRY)
-      .template func<&registry::entityComponentsEqual<Type> >(MetaFunctions::ENTITY_COMPONENTS_EQUAL);
+      .template func<&registry::copyToOtherRegistry<Type>>(MetaFunctions::COPY_TO_OTHER_REGISTRY)
+      .template func<&registry::entityComponentsEqual<Type>>(MetaFunctions::ENTITY_COMPONENTS_EQUAL);
   }
 
  public:
@@ -111,6 +111,28 @@ class registry : public internal::BackingRegistry {
     return entt::registry::get_or_emplace<Type>(entt, std::forward<Args>(args)...);
   }
 
+  [[nodiscard]] entity_type create() {
+    POKESIM_REQUIRE(
+      storage<entity>().size() + 1 <= maxEntityCount,
+      "More entities are being created clone than allowed.");
+    return entt::registry::create();
+  }
+
+  [[nodiscard]] entity_type create(const entity_type hint) {
+    POKESIM_REQUIRE(
+      storage<entity>().size() + 1 <= maxEntityCount,
+      "More entities are being created clone than allowed.");
+    return entt::registry::create(hint);
+  }
+
+  template <typename It>
+  void create(It first, It last) {
+    POKESIM_REQUIRE(
+      storage<entity_type>().size() + (last - first) <= maxEntityCount,
+      "More entities are being created clone than allowed.");
+    entt::registry::create(std::move(first), std::move(last));
+  }
+
   template <typename Type, typename It>
   void insert(It first, It last, const Type& value = {}) {
     createMetaFunctions<Type>();
@@ -119,7 +141,7 @@ class registry : public internal::BackingRegistry {
 
   template <
     typename Type, typename EIt, typename CIt,
-    typename = std::enable_if_t<std::is_same_v<typename std::iterator_traits<CIt>::value_type, Type> > >
+    typename = std::enable_if_t<std::is_same_v<typename std::iterator_traits<CIt>::value_type, Type>>>
   void insert(EIt first, EIt last, CIt from) {
     createMetaFunctions<Type>();
     entt::registry::insert<Type>(first, last, from);

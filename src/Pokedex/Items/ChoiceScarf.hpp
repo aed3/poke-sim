@@ -2,6 +2,7 @@
 
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Item.hpp>
+#include <Types/Event.hpp>
 #include <Types/Registry.hpp>
 #include <string_view>
 
@@ -22,7 +23,7 @@ template <GameMechanics>
 struct ChoiceScarf : internal::ChoiceScarfEvents {
   static constexpr dex::Item name = dex::Item::CHOICE_SCARF;
 
-  static constexpr float onModifySpeModifier = 1.5F;
+  static constexpr types::effectMultiplier onModifySpeModifier = 1.5F;
   struct Strings {
     static constexpr std::string_view name = "Choice Scarf";
     static constexpr std::string_view smogonId = "choicescarf";

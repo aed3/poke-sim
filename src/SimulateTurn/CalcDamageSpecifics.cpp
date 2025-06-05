@@ -23,7 +23,7 @@ namespace pokesim::simulate_turn {
 namespace {
 void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls, const RandomEventIndex& randomRollIndex) {
   types::eventPossibilities damageRollIndex = 0U;
-  for (std::size_t i = 0U; i < damageRolls.val.size(); i++) {
+  for (types::damageRollIndex i = 0U; i < damageRolls.val.size(); i++) {
     if (randomRollIndex.val == damageRollIndex) {
       damage = damageRolls.val[damageRollIndex];
       return;
@@ -53,13 +53,13 @@ void assignAllDamageRollProbability(
   POKESIM_REQUIRE(damageCount > 0U, "How was a damage roll not found that matched the damage dealt?");
 
   Probability& probability = registry.get<Probability>(battle.val);
-  probability.val *= damageCount / (types::probability)MechanicConstants::MAX_DAMAGE_ROLL_COUNT;
+  probability.val *= damageCount / (types::probability)MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT;
 }
 
 types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {
   const DamageRolls& damageRolls = moveHandle.get<DamageRolls>();
   types::eventPossibilities eventPossibilities = 1U;
-  for (std::size_t i = 1U; i < damageRolls.val.size(); i++) {
+  for (types::damageRollIndex i = 1U; i < damageRolls.val.size(); i++) {
     eventPossibilities += damageRolls.val[i - 1].val != damageRolls.val[i].val ? 1 : 0;
   }
   return eventPossibilities;

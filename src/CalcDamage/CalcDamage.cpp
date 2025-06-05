@@ -32,6 +32,7 @@
 #include <Types/Enums/DamageRollKind.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/Enums/StabBoostKind.hpp>
+#include <Types/Event.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
@@ -80,8 +81,8 @@ void applyCritDamageIncrease(Damage& damage) {
   damage.val = (types::damage)(damage.val * MechanicConstants::CRIT_MULTIPLIER);
 }
 
-void setDamageToAtLeastOne(Damage& damage) {
-  damage.val = std::max(damage.val, (types::damage)1U);
+void setDamageToMinimumPossible(Damage& damage) {
+  damage.val = std::max(damage.val, MechanicConstants::MinValues::DAMAGE);
 }
 
 void setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
@@ -104,7 +105,8 @@ void setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
 }
 
 void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
-  damage.val = (types::damage)fixedPointMultiply(damage.val, ((std::uint8_t)modifiers.stab) / 100.0F);
+  types::effectMultiplier stab = ((std::underlying_type_t<StabBoostKind>)modifiers.stab) / 100.0F;
+  damage.val = (types::damage)fixedPointMultiply(damage.val, stab);
 
   types::eventModifier typeEffectivenessModifier = MechanicConstants::FIXED_POINT_SCALE;
   if (modifiers.typeEffectiveness < 0) {
@@ -121,12 +123,12 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
     damage.val = (types::damage)fixedPointMultiply(damage.val, 0.5F);
   }
 
-  setDamageToAtLeastOne(damage);
+  setDamageToMinimumPossible(damage);
 }
 
 void calculateAllDamageRolls(DamageRolls& damageRolls, const Damage& damage, const DamageRollModifiers& modifier) {
-  damageRolls.val.reserve(MechanicConstants::MAX_DAMAGE_ROLL_COUNT);
-  for (std::uint8_t i = 0; i < MechanicConstants::MAX_DAMAGE_ROLL_COUNT; i++) {
+  damageRolls.val.reserve(MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT);
+  for (types::damageRollIndex i = 0; i < MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
     applyDamageRoll(damageRoll, i);
     modifyDamage(damageRoll, modifier);
@@ -204,7 +206,7 @@ void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, 
   const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.only());
   UsesUntilKo usesUntilKo;
   POKESIM_REQUIRE(
-    damageRolls.val.size() == MechanicConstants::MAX_DAMAGE_ROLL_COUNT,
+    damageRolls.val.size() == MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT,
     "All the damage rolls are needed to calculate this correctly.");
 
   for (const Damage& damageRoll : damageRolls.val) {
@@ -213,7 +215,7 @@ void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, 
       usesUntilKo.val.push_back({uses, 0.0F});
     }
 
-    usesUntilKo.val.back().chance += (1.0 / MechanicConstants::MAX_DAMAGE_ROLL_COUNT);
+    usesUntilKo.val.back().chance += (1.0 / MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT);
   }
   moveHandle.emplace<UsesUntilKo>(usesUntilKo);
 }
@@ -387,16 +389,17 @@ void setDamageRollModifiers(Simulation& simulation) {
     Tags<status::tags::Burn, tags::Attacker> /*, entt::exclude<ability::tags::Guts> */>();
 }
 
-void applyDamageRoll(Damage& damage, types::damageRoll damageRoll) {
+void applyDamageRoll(Damage& damage, types::damageRollIndex damageRoll) {
   damage.val = (types::damage)(damage.val * ((100U - damageRoll) / 100.0F));
 }
 
 void applyAverageDamageRoll(Damage& damage) {
-  damage.val = (types::damage)(damage.val * (100U - (MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U) / 2.0F) / 100.0F);
+  damage.val =
+    (types::damage)(damage.val * (100U - (MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT - 1U) / 2.0F) / 100.0F);
 }
 
 void applyMinDamageRoll(Damage& damage) {
-  applyDamageRoll(damage, MechanicConstants::MAX_DAMAGE_ROLL_COUNT - 1U);
+  applyDamageRoll(damage, MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT - 1U);
 }
 
 void run(Simulation& simulation) {

@@ -228,7 +228,7 @@ struct Checks : pokesim::debug::Checks {
 
     std::size_t idealDamageRollCount = 0;
     if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
-      idealDamageRollCount = MechanicConstants::MAX_DAMAGE_ROLL_COUNT;
+      idealDamageRollCount = MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT;
     }
     else {
       if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
@@ -257,7 +257,7 @@ struct Checks : pokesim::debug::Checks {
       POKESIM_REQUIRE_NM(!usesUntilKo.val.empty());
       POKESIM_REQUIRE_NM(usesUntilKo.val.front() == usesUntilKo.minHits());
       POKESIM_REQUIRE_NM(usesUntilKo.val.back() == usesUntilKo.maxHits());
-      POKESIM_REQUIRE_NM(usesUntilKo.val.size() <= MechanicConstants::MAX_DAMAGE_ROLL_COUNT);
+      POKESIM_REQUIRE_NM(usesUntilKo.val.size() <= MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT);
       POKESIM_REQUIRE_NM(usesUntilKo.val.size() <= damageRolls.val.size());
 
       types::moveHits lastUses = 0;
@@ -278,7 +278,7 @@ struct Checks : pokesim::debug::Checks {
     if (attackerHpRecovered != nullptr) {
       POKESIM_REQUIRE_NM(attackerHpRecovered->val.size() == damageRolls.val.size());
 
-      for (std::size_t i = 0; i < damageRolls.val.size(); i++) {
+      for (types::damageRollIndex i = 0; i < damageRolls.val.size(); i++) {
         POKESIM_REQUIRE_NM(attackerHpRecovered->val[i].val <= damageRolls.val[i].val);
       }
     }

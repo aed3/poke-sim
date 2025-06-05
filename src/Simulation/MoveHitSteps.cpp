@@ -15,6 +15,7 @@
 #include <Config/Require.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Types/Enums/BattleFormat.hpp>
+#include <Types/MechanicConstants.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>
@@ -29,12 +30,9 @@ void setMoveHitCount(Simulation& simulation) {
     simulation.registry.view<tags::SelectedForViewMove>(entt::exclude<move::tags::VariableHitCount, HitCount>);
   simulation.registry.insert<HitCount>(noAssignedHitCount.begin(), noAssignedHitCount.end(), {(types::moveHits)1U});
 
-  // The 35%-35%-15%-15% out of 100 for 2-3-4-5 hits added so each index is the sum of the chance of its hit count and
-  // the hit counts less than it so it works with the randomEventChances function
-  static constexpr std::array<types::percentChance, 4U> progressiveMultiHitChances{35U, 70U, 85U, 100U};
   setRandomChoice<4U, tags::SelectedForViewMove, move::tags::VariableHitCount>(
     simulation,
-    progressiveMultiHitChances,
+    MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES,
     false);
 
   if (!simulation.registry.view<RandomEventChances<4U>>().empty()) {
@@ -115,10 +113,10 @@ void internal::removeFailedHitTargets(
 }
 
 void internal::updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets) {
-  std::uint8_t deleteCount = 0U;
+  types::activePokemonIndex deleteCount = 0U;
   for (types::entity& target : targets.val) {
     if (!registry.all_of<tags::CurrentActionMoveTarget>(target)) {
-      std::uint8_t swapIndex = targets.val.size() - 1 - deleteCount;
+      types::activePokemonIndex swapIndex = targets.val.size() - 1 - deleteCount;
       POKESIM_REQUIRE(swapIndex >= 0 && swapIndex < targets.val.size(), "Swap index out of bounds.");
       std::swap(target, targets.val[swapIndex]);
       deleteCount++;

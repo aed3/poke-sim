@@ -17,6 +17,7 @@
 #include <Types/Move.hpp>
 #include <Types/Stats.hpp>
 #include <entt/entity/handle.hpp>
+#include <type_traits>
 
 namespace pokesim::dex::internal {
 void MoveDexDataSetup::setName(Move move) {
@@ -29,8 +30,8 @@ void MoveDexDataSetup::setType(Type type) {
 
 void MoveDexDataSetup::addAddedTargets(AddedTargetOptions addedTargets) {
   AddedTargets& existingTargets = handle.get_or_emplace<AddedTargets>();
-  existingTargets.val = static_cast<AddedTargetOptions>(
-    static_cast<std::uint8_t>(existingTargets.val) | static_cast<std::uint8_t>(addedTargets));
+  using targetType = std::underlying_type_t<AddedTargetOptions>;
+  existingTargets.val = (AddedTargetOptions)((targetType)existingTargets.val | (targetType)addedTargets);
 
   switch (addedTargets) {
     case AddedTargetOptions::TARGET_ALLY: {

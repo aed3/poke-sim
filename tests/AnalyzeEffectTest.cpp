@@ -43,7 +43,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
         REQUIRE(damageRolls.contains(entity));
         const auto& [trueDamageRolls] = damageRolls.get(entity);
         REQUIRE(trueDamageRolls.val.size() == idealDamageRolls.val.size());
-        for (std::size_t i = 0; i < trueDamageRolls.val.size(); i++) {
+        for (types::damageRollIndex i = 0; i < trueDamageRolls.val.size(); i++) {
           REQUIRE(trueDamageRolls.val[i].val == idealDamageRolls.val[i].val);
         }
 
@@ -55,7 +55,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
         REQUIRE(trueKosUses.guaranteedKo() == false);
 
         REQUIRE(trueKosUses.val.size() == idealKoUses.val.size());
-        for (std::size_t i = 0; i < trueKosUses.val.size(); i++) {
+        for (types::damageRollIndex i = 0; i < trueKosUses.val.size(); i++) {
           REQUIRE(trueKosUses.val[i] == idealKoUses.val[i]);
         }
       }

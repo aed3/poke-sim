@@ -1,15 +1,17 @@
 #pragma once
 
-#include <cstdint>
+#include "MechanicConstants.hpp"
+#include "NumberToType.hpp"
 
 namespace pokesim::types {
-using level = std::uint8_t;
+using level = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_LEVEL>;
 
-using stat = std::uint16_t;
-using baseStat = std::uint8_t;
+using stat = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_STAT>;
+using baseStat = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_BASE_STAT>;
 
-using ev = std::uint8_t;
-using iv = std::uint8_t;
+using ev = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_EV>;
+using iv = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_IV>;
 
-using boost = std::int8_t;
+using boost = pokesim::internal::signedIntType<
+  MechanicConstants::MaxValues::POKEMON_STAT_BOOST, MechanicConstants::MinValues::POKEMON_STAT_BOOST>;
 }  // namespace pokesim::types

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Config/Require.hpp>
+#include <Types/NumberToType.hpp>
 #include <cstdint>
 #include <entt/core/fwd.hpp>
 #include <initializer_list>
@@ -12,17 +13,12 @@ template <typename T, std::uint64_t N = std::numeric_limits<entt::id_type>::max(
 class maxSizedVector : public std::vector<T> {
   using base = std::vector<T>;
 
-  void checkSize(std::size_t newSize) const {
+  void checkSize(std::uint64_t newSize) const {
     POKESIM_REQUIRE(newSize <= max_size(), "More than " + std::to_string(N) + " elements are in this vector.");
   }
 
  public:
-  using size_type = std::conditional_t<
-    N <= std::numeric_limits<std::uint32_t>::max(),
-    std::conditional_t<
-      N <= std::numeric_limits<std::uint16_t>::max(),
-      std::conditional_t<N <= std::numeric_limits<std::uint8_t>::max(), std::uint8_t, std::uint16_t>, std::uint32_t>,
-    std::uint64_t>;
+  using size_type = unsignedIntType<N>;
 
   template <typename... Args>
   maxSizedVector(Args&&... args) : base(std::forward<Args>(args)...) {
@@ -47,7 +43,7 @@ class maxSizedVector : public std::vector<T> {
 
   size_type size() const { return (size_type)base::size(); }
 
-  void reserve(size_type newSize) {
+  void reserve(std::uint64_t newSize) {
     checkSize(newSize);
     base::reserve(newSize);
   }

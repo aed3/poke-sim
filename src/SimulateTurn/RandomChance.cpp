@@ -85,14 +85,14 @@ void updateProbabilityFromRandomEqualChance(
   types::eventPossibilities possibleEventCount) {
   Probability& probability = registry.get<Probability>(battle.val);
 
-  updateProbability(probability, 100.0F / (float)possibleEventCount);
+  updateProbability(probability, 100.0F / (types::probability)possibleEventCount);
 }
 
 void updateProbabilityFromRandomEventCount(
   types::registry& registry, const RandomEventCount& eventChance, const Battle& battle) {
   Probability& probability = registry.get<Probability>(battle.val);
 
-  updateProbability(probability, 100.0F / (float)eventChance.val);
+  updateProbability(probability, 100.0F / (types::probability)eventChance.val);
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
@@ -180,7 +180,7 @@ void assignIndexToClones(
     if (clonedPointer == clonedEntityMap.end()) continue;
     const auto& cloned = clonedPointer->second;
 
-    for (std::size_t index = 0; index < cloned.size(); index++) {
+    for (types::cloneIndex index = 0; index < cloned.size(); index++) {
       POKESIM_REQUIRE(
         std::numeric_limits<types::eventPossibilities>::max() > index,
         "Number of clones shouldn't be greater than the number of possible events.");
@@ -392,7 +392,7 @@ void randomEqualChance(
   };
 
   types::cloneIndex cloneCount =
-    possibleEventCount > MechanicConstants::MAX_DAMAGE_ROLL_COUNT ? 0 : possibleEventCount - 1;
+    possibleEventCount > MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT ? 0 : possibleEventCount - 1;
 
   if (updateProbabilities.has_value()) {
     randomChanceEvent<

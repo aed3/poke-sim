@@ -193,7 +193,7 @@ struct SimulationSetupChecks {
 
     for (std::size_t i = 0; i < creationInfo.moves.size(); i++) {
       const Simulation::MoveCreationInfo& move = creationInfo.moves[i];
-      types::entity moveEntity = moveSlots.val[(std::uint8_t)i];
+      types::entity moveEntity = moveSlots.val[(types::moveSlotIndex)i];
       POKESIM_REQUIRE_NM((registry->all_of<MoveName, Pp, MaxPp>(moveEntity)));
       POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).name == move.name);
       POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == move.pp);
@@ -208,7 +208,7 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(team.size() == creationInfo.team.size());
 
     for (std::size_t i = 0; i < creationInfo.team.size(); i++) {
-      types::entity pokemonEntity = team[(std::uint8_t)i];
+      types::entity pokemonEntity = team[(types::teamPositionIndex)i];
       checkCreatedPokemon(pokemonEntity, creationInfo.team[i]);
 
       POKESIM_REQUIRE_NM(registry->get<Side>(pokemonEntity).val == sideEntity);

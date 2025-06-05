@@ -138,7 +138,7 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
 
       REQUIRE(baseTeam.val.size() == cloneTeam.val.size());
 
-      for (std::uint8_t i = 0; i < baseTeam.val.size(); i++) {
+      for (types::teamPositionIndex i = 0; i < baseTeam.val.size(); i++) {
         types::entity basePokemon = baseTeam.val[i];
         types::entity clonePokemon = cloneTeam.val[i];
         existingEntities.insert(basePokemon);
@@ -158,7 +158,7 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
 
         REQUIRE(baseMoveSlots.val.size() == cloneMoveSlots.val.size());
 
-        for (std::uint8_t j = 0; j < baseMoveSlots.val.size(); j++) {
+        for (types::moveSlotIndex j = 0; j < baseMoveSlots.val.size(); j++) {
           types::entity baseMoveSlot = baseMoveSlots.val[j];
           types::entity cloneMoveSlot = cloneMoveSlots.val[j];
           existingEntities.insert(baseMoveSlot);

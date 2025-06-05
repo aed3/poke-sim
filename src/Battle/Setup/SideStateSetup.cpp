@@ -32,11 +32,11 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
   Battle battle = handle.get<Battle>();
   POKESIM_REQUIRE(team.size() <= teamEntities.val.max_size(), "Cannot add more Pokemon to a team than MAX_TEAM_SIZE.");
 
-  for (std::size_t i = 0; i < team.size(); i++) {
-    teamEntities.val.push_back(team[i].entity());
-    team[i].setPostion((types::teamPositionIndex)(i + 1));
-    team[i].setSide(entity());
-    team[i].setBattle(battle.val);
+  for (PokemonStateSetup& pokemonSetup : team) {
+    teamEntities.val.push_back(pokemonSetup.entity());
+    pokemonSetup.setPostion(teamEntities.val.size());
+    pokemonSetup.setSide(entity());
+    pokemonSetup.setBattle(battle.val);
   }
 }
 

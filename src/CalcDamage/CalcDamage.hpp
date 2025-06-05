@@ -11,7 +11,7 @@ struct Damage;
 namespace calc_damage {
 void run(Simulation& simulation);
 
-void applyDamageRoll(Damage& damage, types::damageRoll damageRoll);
+void applyDamageRoll(Damage& damage, types::damageRollIndex damageRoll);
 void applyAverageDamageRoll(Damage& damage);
 void applyMinDamageRoll(Damage& damage);
 

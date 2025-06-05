@@ -89,8 +89,8 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
 
 void Simulation::createInitialSide(
   SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo) {
-  internal::maxSizedVector<PokemonStateSetup, MechanicConstants::MAX_TEAM_SIZE> pokemonSetupList;
-  pokemonSetupList.reserve((types::teamPositionIndex)sideInfo.team.size());
+  internal::maxSizedVector<PokemonStateSetup, MechanicConstants::MaxValues::TEAM_SIZE> pokemonSetupList;
+  pokemonSetupList.reserve(sideInfo.team.size());
 
   for (std::size_t i = 0; i < sideInfo.team.size(); i++) {
     const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];

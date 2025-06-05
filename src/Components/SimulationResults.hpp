@@ -4,6 +4,7 @@
 #include <Config/Require.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Event.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Move.hpp>
 #include <Utilities/MaxSizedVector.hpp>
@@ -26,7 +27,7 @@ struct UsesUntilKo {
   };
 
  public:
-  internal::maxSizedVector<KoChance, MechanicConstants::MAX_DAMAGE_ROLL_COUNT> val{};
+  internal::maxSizedVector<KoChance, MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT> val{};
 
   const KoChance& minHits() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
