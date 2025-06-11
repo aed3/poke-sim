@@ -32,6 +32,7 @@ struct MechanicConstants {
     static constexpr std::int8_t POKEMON_STAT_BOOST = 6;
 
     static constexpr std::uint8_t MOVE_MAX_PP = 64U;
+    static constexpr std::uint8_t MOVE_PP = MOVE_MAX_PP;
     static constexpr std::uint8_t MOVE_BASE_POWER = 255U;
     static constexpr std::uint8_t MOVE_BASE_ACCURACY = 100U;
     static constexpr std::uint8_t MOVE_HITS = 10U;
@@ -50,6 +51,8 @@ struct MechanicConstants {
     static constexpr std::uint8_t MOVE_SLOTS = 4U;
     static constexpr std::uint8_t TARGETS = 3U;
 
+    static constexpr float PROBABILITY = 1.0F;
+
     // TODO(aed3): 64 is a guess, so find out what the actual number is
     static constexpr std::uint8_t ACTION_QUEUE_LENGTH = 64U;
 
@@ -66,6 +69,7 @@ struct MechanicConstants {
     static constexpr std::int8_t POKEMON_STAT_BOOST = -6;
 
     static constexpr std::uint8_t MOVE_MAX_PP = 1U;
+    static constexpr std::uint8_t MOVE_PP = 0U;
     static constexpr std::uint8_t MOVE_BASE_POWER = 1U;
     static constexpr std::uint8_t MOVE_BASE_ACCURACY = 1U;
     static constexpr std::uint8_t MOVE_HITS = 1U;
@@ -82,6 +86,8 @@ struct MechanicConstants {
     static constexpr std::uint8_t ACTIVE_POKEMON = 0U;
     static constexpr std::uint8_t MOVE_SLOTS = 1U;
     static constexpr std::uint8_t TARGETS = 1U;
+
+    static constexpr float PROBABILITY = 0.0F;
 
     static constexpr std::uint8_t ACTION_QUEUE_LENGTH = 0U;
     static constexpr std::uint16_t TURN_COUNT = 0U;

@@ -1,18 +1,20 @@
 #pragma once
 
 #include <Components/EntityHolders/MoveEffect.hpp>
+#include <Config/Config.hpp>
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/headers.hpp>
 #include <Types/Registry.hpp>
 #include <entt/container/dense_map.hpp>
+#include <entt/container/dense_set.hpp>
 #include <entt/container/fwd.hpp>
 #include <entt/entity/registry.hpp>
 
 #include "TypeChart.hpp"
 
 namespace pokesim {
-
+class Simulation;
 /**
  * @brief Holds the data of each species, item, and move in a simulation.
  *
@@ -23,6 +25,8 @@ namespace pokesim {
  * holding a small amount of data.
  */
 class Pokedex {
+  friend class Simulation;
+
  private:
   types::registry dexRegistry{};
 
@@ -47,8 +51,54 @@ class Pokedex {
   GameMechanics mechanics;
   TypeChart constantTypeChart;
 
+ private:
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+  static inline entt::dense_map<const Pokedex*, entt::dense_set<const Simulation*>> attachedSimulations;
+  static void attachSimulation(const Pokedex* pokedex, const Simulation* simulation) {
+    for (const auto& [existingPokedex, simulations] : attachedSimulations) {
+      POKESIM_REQUIRE(!simulations.contains(simulation), "Simulation was already assigned to Pokedex.");
+    }
+    attachedSimulations[pokedex].insert(simulation);
+  }
+
+  static void detachSimulation(const Pokedex* pokedex, const Simulation* simulation) {
+    POKESIM_REQUIRE(attachedSimulations.contains(pokedex), "Detaching Simulation from a Pokedex that was never added.");
+    auto& simulations = attachedSimulations[pokedex];
+    POKESIM_REQUIRE(simulations.contains(simulation), "Detaching Simulation from a Pokedex it was never attached to.");
+    simulations.erase(simulation);
+    if (simulations.empty()) {
+      attachedSimulations.erase(pokedex);
+    }
+  }
+
+  static void checkIfDetached(const Pokedex* pokedex) {
+    if (attachedSimulations.contains(pokedex)) {
+      std::size_t simulationCount = attachedSimulations[pokedex].size();
+      if (simulationCount) {
+        POKESIM_REQUIRE_FAIL(std::to_string(simulationCount) + " simulations are still using this Pokedex.");
+      }
+      else {
+        POKESIM_REQUIRE_FAIL("Pokedex still exist on attachment list despite having no simulations attached.");
+      }
+    }
+  }
+
+  static bool isPokedexAttachedToSimulation(const Pokedex* pokedex, const Simulation* simulation) {
+    if (attachedSimulations.contains(pokedex)) {
+      return attachedSimulations[pokedex].contains(simulation);
+    }
+    return false;
+  }
+#else
+  static void attachSimulation(const Pokedex*, const Simulation*) {}
+  static void detachSimulation(const Pokedex*, const Simulation*) {}
+  static void checkIfDetached(const Pokedex*) {}
+  static bool isPokedexAttachedToSimulation(const Pokedex*, const Simulation*) { return true; }
+#endif
+
  public:
   Pokedex(GameMechanics mechanics_) : mechanics(mechanics_), constantTypeChart(mechanics_) {}
+  ~Pokedex() { Pokedex::checkIfDetached(this); }
 
   /**
    * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.

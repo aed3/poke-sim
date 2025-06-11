@@ -137,7 +137,7 @@ class Simulation : public internal::RegistryContainer {
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
 
   BattleFormat constantBattleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
-  const Pokedex* constantPokedex;
+  const Pokedex* const pokedexPointer;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
  public:
   simulate_turn::Options simulateTurnOptions;
@@ -145,8 +145,10 @@ class Simulation : public internal::RegistryContainer {
   analyze_effect::Options analyzeEffectOptions;
 
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
+  Simulation(Simulation&& other) = default;
+  ~Simulation();
 
-  constexpr const Pokedex& pokedex() const { return *constantPokedex; }
+  const Pokedex& pokedex() const;
   constexpr BattleFormat battleFormat() const { return constantBattleFormat; }
 
   // Load information about any number of battle states into the simulation's registry.

@@ -37,120 +37,10 @@
 #include <Utilities/Tags.hpp>
 
 #include "ManageActionQueue.hpp"
+#include "SimulateTurnDebugChecks.hpp"
 
 namespace pokesim::simulate_turn {
-void run(Simulation& simulation) {
-  const auto& options = simulation.simulateTurnOptions;
-#ifndef POKESIM_ALL_DAMAGE_ALL_BRANCHES
-  POKESIM_REQUIRE(
-    !options.makeBranchesOnRandomEvents ||
-      !(calc_damage::damageKindsMatch(options.damageRollsConsidered.p1, DamageRollKind::ALL_DAMAGE_ROLLS) ||
-        calc_damage::damageKindsMatch(options.damageRollsConsidered.p2, DamageRollKind::ALL_DAMAGE_ROLLS)),
-    "Creating a branch for every damage roll is disabled by default to prevent easily reaching the battle count limit. "
-    "Rebuild PokeSim with the flag POKESIM_ALL_DAMAGE_ALL_BRANCHES to enable this option combination.");
-#endif
-
-  if (!options.applyChangesToInputBattle) {
-    simulation.addToEntities<pokesim::tags::CloneFrom, pokesim::tags::Battle, pokesim::tags::SimulateTurn>();
-    const auto entityMap = clone(simulation.registry, 1);
-    for (const auto& inputBattleMapping : entityMap) {
-      simulation.registry.emplace<tags::Input>(inputBattleMapping.first);
-    }
-  }
-
-  pokesim::internal::SelectForBattleView<pokesim::tags::SimulateTurn> selectedBattles{
-    simulation,
-    entt::exclude<tags::Input>};
-  pokesim::internal::SelectForSideView<pokesim::tags::SimulateTurn> selectedSides{
-    simulation,
-    entt::exclude<tags::Input>};
-  if (selectedBattles.hasNoneSelected() || selectedSides.hasNoneSelected()) return;
-
-  simulation.viewForSelectedBattles<assignRootBattle>();
-
-  updateAllStats(simulation);
-  simulation.viewForSelectedSides<resolveDecision>();
-  simulation.removeFromEntities<SideDecision, pokesim::tags::SelectedForViewSide>();
-
-  // simulation.viewForSelectedBattles<addBeforeTurnAction, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn>>();
-  simulation.viewForSelectedBattles<speedSort>();
-  simulation.viewForSelectedBattles<addResidualAction, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn>>();
-
-  simulation.addToEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SelectedForViewBattle>();
-
-  simulation.viewForSelectedBattles<setCurrentAction>();
-  while (!simulation.registry.view<action::tags::Current>().empty()) {
-    runCurrentAction(simulation);
-    simulation.viewForSelectedBattles<setCurrentAction>();
-  }
-
-  nextTurn(simulation);
-
-  simulation.removeFromEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SelectedForViewBattle>();
-  simulation.viewForSelectedBattles<collectTurnOutcomeBattles>();
-  simulation.registry.clear<tags::Input>();
-}
-
-void runCurrentAction(Simulation& simulation) {
-  // runBeforeTurnAction(simulation);
-  runMoveAction(simulation);
-  runResidualAction(simulation);
-
-  clearCurrentAction(simulation);
-  // faint pokemon
-  // Update
-  // Switch requests
-
-  if (!simulation.registry.view<pokesim::tags::SpeStatUpdateRequired>().empty()) {
-    updateSpe(simulation);
-    simulation.viewForSelectedBattles<speedSort>();  // Should only speed sort battles affected
-  }
-  updateAllStats(simulation);
-}
-
-void runBeforeTurnAction(Simulation& /*simulation*/) {
-  // Barely used, will find different way of handling it
-}
-
-void runMoveAction(Simulation& simulation) {
-  pokesim::internal::SelectForBattleView<action::Move> selectedBattle{simulation};
-  if (selectedBattle.hasNoneSelected()) return;
-
-  simulation.viewForSelectedBattles<setCurrentActionSource>();
-  simulation.viewForSelectedBattles<setCurrentActionTarget>();
-  simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex());
-
-  simulation.view<deductPp, Tags<pokesim::tags::CurrentActionMoveSlot>>();
-  simulation.view<setLastMoveUsed>();
-
-  useMove(simulation);
-}
-
-void runResidualAction(Simulation& simulation) {
-  pokesim::internal::SelectForBattleView<action::tags::Residual> selectedBattle{simulation};
-  if (selectedBattle.hasNoneSelected()) return;
-}
-
 namespace {
-void incrementTurn(Turn& turn) {
-  turn.val++;
-}
-
-void updateActivePokemonPostTurn(types::handle pokemonHandle, const pokesim::MoveSlots& moveSlots) {
-  pokemonHandle.registry()->remove<pokesim::move::tags::Disabled>(moveSlots.val.begin(), moveSlots.val.end());
-}
-}  // namespace
-
-void nextTurn(Simulation& simulation) {
-  simulation.viewForSelectedBattles<incrementTurn>();
-
-  pokesim::internal::SelectForPokemonView<pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon> selectedPokemon{
-    simulation};
-  if (!selectedPokemon.hasNoneSelected()) {
-    simulation.viewForSelectedPokemon<updateActivePokemonPostTurn>();
-    runDisableMove(simulation);
-  }
-}
 
 void addTargetAllyToTargets(types::registry& registry, const Battle& battle) {
   const Sides& sides = registry.get<Sides>(battle.val);
@@ -211,5 +101,126 @@ void useMove(Simulation& simulation) {
 
   getMoveTargets(simulation);
   runMoveHitChecks(simulation);
+}
+
+void runMoveAction(Simulation& simulation) {
+  pokesim::internal::SelectForBattleView<action::Move> selectedBattle{simulation};
+  if (selectedBattle.hasNoneSelected()) return;
+
+  simulation.viewForSelectedBattles<setCurrentActionSource>();
+  simulation.viewForSelectedBattles<setCurrentActionTarget>();
+  simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex());
+
+  simulation.view<deductPp, Tags<pokesim::tags::CurrentActionMoveSlot>>();
+  simulation.view<setLastMoveUsed>();
+
+  useMove(simulation);
+}
+
+void runResidualAction(Simulation& simulation) {
+  pokesim::internal::SelectForBattleView<action::tags::Residual> selectedBattle{simulation};
+  if (selectedBattle.hasNoneSelected()) return;
+}
+
+void runBeforeTurnAction(Simulation& /*simulation*/) {
+  // Barely used, will find different way of handling it
+}
+
+void runCurrentAction(Simulation& simulation) {
+  runBeforeTurnAction(simulation);
+  runMoveAction(simulation);
+  runResidualAction(simulation);
+
+  clearCurrentAction(simulation);
+  // faint pokemon
+  // Update
+  // Switch requests
+
+  if (!simulation.registry.view<pokesim::tags::SpeStatUpdateRequired>().empty()) {
+    updateSpe(simulation);
+    simulation.viewForSelectedBattles<speedSort>();  // Should only speed sort battles affected
+  }
+  updateAllStats(simulation);
+}
+
+void incrementTurn(Turn& turn) {
+  turn.val++;
+}
+
+void updateActivePokemonPostTurn(types::handle pokemonHandle, const pokesim::MoveSlots& moveSlots) {
+  pokemonHandle.registry()->remove<pokesim::move::tags::Disabled>(moveSlots.val.begin(), moveSlots.val.end());
+}
+
+void nextTurn(Simulation& simulation) {
+  simulation.viewForSelectedBattles<incrementTurn>();
+
+  pokesim::internal::SelectForPokemonView<pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon> selectedPokemon{
+    simulation};
+  if (!selectedPokemon.hasNoneSelected()) {
+    simulation.viewForSelectedPokemon<updateActivePokemonPostTurn>();
+    runDisableMove(simulation);
+  }
+}
+
+void simulateTurn(Simulation& simulation) {
+  const auto& options = simulation.simulateTurnOptions;
+#ifndef POKESIM_ALL_DAMAGE_ALL_BRANCHES
+  POKESIM_REQUIRE(
+    !options.makeBranchesOnRandomEvents ||
+      !(calc_damage::damageKindsMatch(options.damageRollsConsidered.p1, DamageRollKind::ALL_DAMAGE_ROLLS) ||
+        calc_damage::damageKindsMatch(options.damageRollsConsidered.p2, DamageRollKind::ALL_DAMAGE_ROLLS)),
+    "Creating a branch for every damage roll is disabled by default to prevent easily reaching the battle count limit. "
+    "Rebuild PokeSim with the flag POKESIM_ALL_DAMAGE_ALL_BRANCHES to enable this option combination.");
+#endif
+
+  if (!options.applyChangesToInputBattle) {
+    simulation.addToEntities<pokesim::tags::CloneFrom, pokesim::tags::Battle, pokesim::tags::SimulateTurn>();
+    const auto entityMap = clone(simulation.registry, 1);
+    for (const auto& inputBattleMapping : entityMap) {
+      simulation.registry.emplace<tags::Input>(inputBattleMapping.first);
+    }
+  }
+
+  pokesim::internal::SelectForBattleView<pokesim::tags::SimulateTurn> selectedBattles{
+    simulation,
+    entt::exclude<tags::Input>};
+  pokesim::internal::SelectForSideView<pokesim::tags::SimulateTurn> selectedSides{
+    simulation,
+    entt::exclude<tags::Input>};
+  if (selectedBattles.hasNoneSelected() || selectedSides.hasNoneSelected()) return;
+
+  simulation.viewForSelectedBattles<assignRootBattle>();
+
+  updateAllStats(simulation);
+  simulation.viewForSelectedSides<resolveDecision>();
+  simulation.removeFromEntities<SideDecision, pokesim::tags::SelectedForViewSide>();
+
+  // simulation.viewForSelectedBattles<addBeforeTurnAction, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn>>();
+  simulation.viewForSelectedBattles<speedSort>();
+  simulation.viewForSelectedBattles<addResidualAction, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn>>();
+
+  simulation.addToEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SelectedForViewBattle>();
+
+  simulation.viewForSelectedBattles<setCurrentAction>();
+  while (!simulation.registry.view<action::tags::Current>().empty()) {
+    runCurrentAction(simulation);
+    simulation.viewForSelectedBattles<setCurrentAction>();
+  }
+
+  nextTurn(simulation);
+
+  simulation.removeFromEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SelectedForViewBattle>();
+  simulation.viewForSelectedBattles<collectTurnOutcomeBattles>();
+  simulation.registry.clear<tags::Input>();
+}
+}  // namespace
+
+void run(Simulation& simulation) {
+  debug::Checks debugChecks(simulation);
+  debugChecks.checkInputs();
+
+  simulateTurn(simulation);
+
+  debugChecks.checkOutputs();
 }
 }  // namespace pokesim::simulate_turn

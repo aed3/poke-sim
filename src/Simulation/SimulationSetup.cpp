@@ -28,9 +28,6 @@
 #include "SimulationSetupDebugChecks.hpp"
 
 namespace pokesim {
-Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
-    : constantBattleFormat(battleFormat_), constantPokedex(&pokedex_) {}
-
 types::entityVector Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList) {
   types::entityVector moveEntities{};
   moveEntities.reserve((types::entityVector::size_type)moveInfoList.size());

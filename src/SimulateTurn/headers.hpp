@@ -4,3 +4,4 @@
 #include "ManageActionQueue.hpp"
 #include "RandomChance.hpp"
 #include "SimulateTurn.hpp"
+#include "SimulateTurnDebugChecks.hpp"

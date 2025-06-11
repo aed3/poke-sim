@@ -6,12 +6,29 @@
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/HitCount.hpp>
 #include <Components/SimulationResults.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/SimulateTurn.hpp>
 
 #include "SimulationOptions.hpp"
 #include "SimulationResults.hpp"
 
 namespace pokesim {
+Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
+    : constantBattleFormat(battleFormat_), pokedexPointer(&pokedex_) {
+  Pokedex::attachSimulation(pokedexPointer, this);
+}
+
+Simulation::~Simulation() {
+  Pokedex::detachSimulation(pokedexPointer, this);
+}
+
+const Pokedex& Simulation::pokedex() const {
+  POKESIM_REQUIRE(
+    Pokedex::isPokedexAttachedToSimulation(pokedexPointer, this),
+    "The Pokedex has changed since initialization.");
+  return *pokedexPointer;
+}
+
 void Simulation::clearAllResults() {
   clearSimulateTurnResults();
   clearCalculateDamageResults();
