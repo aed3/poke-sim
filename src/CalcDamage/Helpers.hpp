@@ -17,9 +17,9 @@ inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, Damage
 
   if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
     POKESIM_REQUIRE(
-      damageRolls.val.size() == MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT,
+      damageRolls.val.size() == MechanicConstants::DamageRollCount::MAX,
       "DamageRolls does not have all rolls yet.");
-    return damageRolls.val[MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT / 2].val;
+    return damageRolls.val[MechanicConstants::DamageRollCount::MAX / 2].val;
   }
   POKESIM_REQUIRE(
     damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE),

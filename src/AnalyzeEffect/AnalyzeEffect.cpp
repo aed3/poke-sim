@@ -50,7 +50,7 @@ enum class EffectPresentCheck : std::uint8_t {
 };
 
 void restoreInputs(
-  types::registry& registry, const MovePairs& movePairs, const OriginalInputEntities& originalEntities, Battle& battle,
+  types::registry& registry, MovePairs& movePairs, const OriginalInputEntities& originalEntities, Battle& battle,
   Attacker& attacker, Defenders& defenders, EffectTarget& effectTarget) {
   for (types::entity pokemon : {attacker.val, defenders.only(), originalEntities.attacker, originalEntities.defender}) {
     CurrentActionMoves* moves = registry.try_get<CurrentActionMoves>(pokemon);
@@ -78,6 +78,8 @@ void restoreInputs(
       registry.destroy(childBattleMove);
     }
   }
+
+  movePairs.val.clear();
 
   battle.val = originalEntities.battle;
   attacker.val = originalEntities.attacker;

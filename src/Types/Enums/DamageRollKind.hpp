@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 namespace pokesim {
@@ -10,5 +11,14 @@ enum class DamageRollKind : std::uint8_t {
   MIN_DAMAGE = 0b00000100,
   GUARANTEED_CRIT_CHANCE = 0b00001000,
   ALL_DAMAGE_ROLLS = 0b00010000,
+};
+
+static constexpr inline std::array<DamageRollKind, 6U> VALID_DAMAGE_ROLL_KINDS = {
+  DamageRollKind::NONE,
+  DamageRollKind::AVERAGE_DAMAGE,
+  DamageRollKind::MAX_DAMAGE,
+  DamageRollKind::MIN_DAMAGE,
+  DamageRollKind::GUARANTEED_CRIT_CHANCE,
+  DamageRollKind::ALL_DAMAGE_ROLLS,
 };
 }  // namespace pokesim

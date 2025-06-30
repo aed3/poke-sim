@@ -458,10 +458,10 @@ struct DamageValueInfo {
     }
     if (damageRollKind == DamageRollKind::ALL_DAMAGE_ROLLS) {
       if (critDamageRollInstances != 0.0F) {
-        probability *= critDamageRollInstances / MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT;
+        probability *= critDamageRollInstances / MechanicConstants::DamageRollCount::MAX;
       }
       else {
-        probability *= baseDamageRollInstances / MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT;
+        probability *= baseDamageRollInstances / MechanicConstants::DamageRollCount::MAX;
       }
     }
 

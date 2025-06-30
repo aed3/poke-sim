@@ -1,3 +1,5 @@
+// AUTO GENERATED FILE, DO NOT EDIT
+
 #pragma once
 
 #include "Accuracy.hpp"
@@ -5,12 +7,12 @@
 #include "AnalyzeEffect/Aliases.hpp"
 #include "AnalyzeEffect/AnalyzeEffectInputs.hpp"
 #include "AnalyzeEffect/RemovedEffect.hpp"
+#include "BaseEffectChance.hpp"
 #include "BasePower.hpp"
 #include "Boosts.hpp"
 #include "CalcDamage/Aliases.hpp"
 #include "CalcDamage/CriticalHit.hpp"
 #include "CalcDamage/DamageCalcVariables.hpp"
-#include "Chance.hpp"
 #include "CloneFromCloneTo.hpp"
 #include "Damage.hpp"
 #include "Decisions.hpp"

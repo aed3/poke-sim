@@ -23,74 +23,153 @@ struct MechanicConstants {
 
   static constexpr std::uint8_t SIDE_COUNT = 2U;
 
-  struct MaxValues {
-    static constexpr std::uint8_t POKEMON_LEVEL = 100U;
-    static constexpr std::uint8_t POKEMON_BASE_STAT = 255U;
-    static constexpr std::uint16_t POKEMON_STAT = 65535U;
-    static constexpr std::uint8_t POKEMON_EV = 255U;
-    static constexpr std::uint8_t POKEMON_IV = 31U;
-    static constexpr std::int8_t POKEMON_STAT_BOOST = 6;
-
-    static constexpr std::uint8_t MOVE_MAX_PP = 64U;
-    static constexpr std::uint8_t MOVE_PP = MOVE_MAX_PP;
-    static constexpr std::uint8_t MOVE_BASE_POWER = 255U;
-    static constexpr std::uint8_t MOVE_BASE_ACCURACY = 100U;
-    static constexpr std::uint8_t MOVE_HITS = 10U;
-    static constexpr std::uint8_t MOVE_BASE_EFFECT_CHANCE = 100U;
-    static constexpr std::int8_t MOVE_PRIORITY =
-      5;  // 8 is theoretically possible, but no existing move has more than 5
-
-    static constexpr std::uint16_t DAMAGE = 65535U;
-    static constexpr std::uint8_t DAMAGE_ROLL_COUNT = 16U;
-
-    static constexpr std::int8_t TYPE_EFFECTIVENESS_SHIFT = 3;
-
-    static constexpr std::uint8_t TEAM_SIZE = 6U;
-    static constexpr std::uint8_t ACTIVE_POKEMON_SLOTS_PER_SIDE = 2U;
-    static constexpr std::uint8_t ACTIVE_POKEMON = ACTIVE_POKEMON_SLOTS_PER_SIDE * SIDE_COUNT;
-    static constexpr std::uint8_t MOVE_SLOTS = 4U;
-    static constexpr std::uint8_t TARGETS = 3U;
-
-    static constexpr float PROBABILITY = 1.0F;
-
-    // TODO(aed3): 64 is a guess, so find out what the actual number is
-    static constexpr std::uint8_t ACTION_QUEUE_LENGTH = 64U;
-
-    // TODO(aed3): Technically 65535, but battles over 1000 turns aren't usually supported on Showdown
-    static constexpr std::uint16_t TURN_COUNT = 1000U;
+  struct PokemonLevel {
+    static constexpr std::uint8_t MAX = 100U;
+    static constexpr std::uint8_t MIN = 1U;
   };
 
-  struct MinValues {
-    static constexpr std::uint8_t POKEMON_LEVEL = 1U;
-    static constexpr std::uint8_t POKEMON_BASE_STAT = 1U;
-    static constexpr std::uint16_t POKEMON_STAT = 1U;
-    static constexpr std::uint8_t POKEMON_EV = 0U;
-    static constexpr std::uint8_t POKEMON_IV = 0U;
-    static constexpr std::int8_t POKEMON_STAT_BOOST = -6;
+  struct PokemonBaseStat {
+    static constexpr std::uint8_t MAX = 255U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
 
-    static constexpr std::uint8_t MOVE_MAX_PP = 1U;
-    static constexpr std::uint8_t MOVE_PP = 0U;
-    static constexpr std::uint8_t MOVE_BASE_POWER = 1U;
-    static constexpr std::uint8_t MOVE_BASE_ACCURACY = 1U;
-    static constexpr std::uint8_t MOVE_HITS = 1U;
-    static constexpr std::uint8_t MOVE_BASE_EFFECT_CHANCE = 1U;
-    static constexpr std::int8_t MOVE_PRIORITY = -7;
+  struct PokemonHpStat {
+    static constexpr std::uint16_t MAX = 1428U;
+    static constexpr std::uint16_t MIN = 1U;
+  };
 
-    static constexpr std::uint16_t DAMAGE = 1U;
-    static constexpr std::uint8_t DAMAGE_ROLL_COUNT = 1U;
+  struct PokemonStat {
+    static constexpr std::uint16_t MAX = 633U;
+    static constexpr std::uint16_t MIN = 1U;
+  };
 
-    static constexpr std::int8_t TYPE_EFFECTIVENESS_SHIFT = -7;
+  struct PokemonEffectiveStat {
+    static constexpr std::uint16_t MAX = 65535U;
+    static constexpr std::uint16_t MIN = 1U;
+  };
 
-    static constexpr std::uint8_t TEAM_SIZE = 1U;
-    static constexpr std::uint8_t ACTIVE_POKEMON_SLOTS_PER_SIDE = 1U;
-    static constexpr std::uint8_t ACTIVE_POKEMON = 0U;
-    static constexpr std::uint8_t MOVE_SLOTS = 1U;
-    static constexpr std::uint8_t TARGETS = 1U;
+  struct PokemonEv {
+    static constexpr std::uint8_t MAX = 255U;
+    static constexpr std::uint8_t MIN = 0U;
+  };
 
-    static constexpr float PROBABILITY = 0.0F;
+  struct PokemonIv {
+    static constexpr std::uint8_t MAX = 31U;
+    static constexpr std::uint8_t MIN = 0U;
+  };
 
-    static constexpr std::uint8_t ACTION_QUEUE_LENGTH = 0U;
-    static constexpr std::uint16_t TURN_COUNT = 0U;
+  struct PokemonStatBoost {
+    static constexpr std::int8_t MAX = 6;
+    static constexpr std::int8_t MIN = -6;
+  };
+
+  struct MoveMaxPp {
+    static constexpr std::uint8_t MAX = 64U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct MovePp {
+    static constexpr std::uint8_t MAX = MoveMaxPp::MAX;
+    static constexpr std::uint8_t MIN = 0U;
+  };
+
+  struct MoveBasePower {
+    static constexpr std::uint8_t MAX = 255U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct MoveBaseAccuracy {
+    static constexpr std::uint8_t MAX = 100U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct MoveHits {
+    static constexpr std::uint8_t MAX = 10U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct MoveBaseEffectChance {
+    static constexpr std::uint8_t MAX = 100U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct MovePriority {
+    static constexpr std::int8_t MAX = 5;  // 8 is theoretically possible, but no existing move has more than 5
+    static constexpr std::int8_t MIN = -7;
+  };
+
+  struct CritBoost {
+    // 255 is theoretically possible, but the various effects that can increase crit chance can be added up to 7 at most
+    // as of now
+    static constexpr std::uint8_t MAX = 7U;
+    static constexpr std::uint8_t MIN = 0U;
+  };
+
+  struct Damage {
+    static constexpr std::uint16_t MAX = 65535U;
+    static constexpr std::uint16_t MIN = 1U;
+  };
+
+  struct DamageRollCount {
+    static constexpr std::uint8_t MAX = 16U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct TypeEffectivenessShift {
+    static constexpr std::int8_t MAX = 3;
+    static constexpr std::int8_t MIN = -7;
+  };
+
+  struct TeamSize {
+    static constexpr std::uint8_t MAX = 6U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct ActivePokemonSlotsPerSide {
+    static constexpr std::uint8_t MAX = 2U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct ActivePokemon {
+    static constexpr std::uint8_t MAX = ActivePokemonSlotsPerSide::MAX * SIDE_COUNT;
+    static constexpr std::uint8_t MIN = 0U;
+  };
+
+  struct MoveSlots {
+    static constexpr std::uint8_t MAX = 4U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct Targets {
+    static constexpr std::uint8_t MAX = 3U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct PercentChance {
+    static constexpr std::uint8_t MAX = 100U;
+    static constexpr std::uint8_t MIN = 0U;
+  };
+
+  struct Probability {
+    static constexpr float MAX = 1.0F;
+    static constexpr float MIN = 0.0F;
+  };
+
+  struct AnalyzeEffectMultiplier {
+    static constexpr float MAX = PokemonHpStat::MAX;
+    static constexpr float MIN = 0.0F;
+  };
+
+  struct ActionQueueLength {
+    // TODO(aed3): 64 is a guess, so find out what the actual number is
+    static constexpr std::uint8_t MAX = 64U;
+    static constexpr std::uint8_t MIN = 0U;
+  };
+
+  struct TurnCount {
+    // Technically 65535, but battles over 1000 turns aren't usually supported on Showdown
+    static constexpr std::uint16_t MAX = 1000U;
+    static constexpr std::uint16_t MIN = 0U;
   };
 };
 }  // namespace pokesim

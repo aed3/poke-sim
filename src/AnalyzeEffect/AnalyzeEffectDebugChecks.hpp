@@ -33,13 +33,19 @@
 
 namespace pokesim::analyze_effect::debug {
 struct Checks : pokesim::debug::Checks {
-  Checks(const Simulation& _simulation) : pokesim::debug::Checks(_simulation) {}
+  Options options;
+  Checks(const Simulation& _simulation)
+      : pokesim::debug::Checks(_simulation), options(_simulation.analyzeEffectOptions) {}
 
   void checkInputs() {
-    for (types::entity input : registry->view<tags::Input>()) {
+    pokesim::debug::check(options.damageRollOptions);
+
+    auto view = registry->view<tags::Input>();
+    types::entityVector inputs{view.begin(), view.end()};
+    for (types::entity input : inputs) {
       originalToCopy[input] = pokesim::debug::createEntityCopy(input, *registry, registryOnInput);
-      checkInput(input);
     }
+    pokesim::debug::check(Inputs{inputs}, *registry);
 
     for (types::entity battle : simulation->selectedBattleEntities()) {
       checkBattle(battle);
@@ -60,6 +66,8 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkOutputs() const {
+    POKESIM_REQUIRE_NM(options == simulation->analyzeEffectOptions);
+
     types::cloneIndex finalEntityCount = getFinalEntityCount();
     POKESIM_REQUIRE_NM(initialEntityCount == finalEntityCount);
     checkInputOutputs();
@@ -69,87 +77,6 @@ struct Checks : pokesim::debug::Checks {
   }
 
  private:
-  void checkInput(types::entity input) const {
-    POKESIM_REQUIRE_NM(has<Attacker>(input));
-    POKESIM_REQUIRE_NM(has<Defenders>(input));
-    POKESIM_REQUIRE_NM(has<EffectTarget>(input));
-    POKESIM_REQUIRE_NM(has<EffectMoves>(input));
-    POKESIM_REQUIRE_NM(has<Battle>(input));
-    POKESIM_REQUIRE_NM((registry->any_of<
-                        PseudoWeatherName,
-                        SideConditionName,
-                        StatusName,
-                        TerrainName,
-                        VolatileName,
-                        WeatherName,
-                        AtkBoost,
-                        DefBoost,
-                        SpaBoost,
-                        SpdBoost,
-                        SpeBoost>(input)));
-
-    auto const& [attacker, defenders, target, moves] =
-      registry->get<Attacker, Defenders, EffectTarget, EffectMoves>(input);
-    POKESIM_REQUIRE_NM(has<tags::Attacker>(attacker.val));
-    POKESIM_REQUIRE_NM(has<tags::Defender>(defenders.only()));
-    checkPokemon(attacker.val);
-    checkPokemon(defenders.only());
-    if (attacker.val != target.val && defenders.only() != target.val) {
-      checkPokemon(target.val);
-    }
-
-    POKESIM_REQUIRE_NM(std::find(moves.val.begin(), moves.val.end(), dex::Move::NO_MOVE) == moves.val.end());
-
-    if (has<PseudoWeatherName>(input)) {
-      POKESIM_REQUIRE_NM(registry->get<PseudoWeatherName>(input).name != dex::PseudoWeather::NO_PSEUDO_WEATHER);
-    }
-
-    if (has<SideConditionName>(input)) {
-      POKESIM_REQUIRE_NM(registry->get<SideConditionName>(input).name != dex::SideCondition::NO_SIDE_CONDITION);
-    }
-
-    if (has<StatusName>(input)) {
-      POKESIM_REQUIRE_NM(registry->get<StatusName>(input).name != dex::Status::NO_STATUS);
-    }
-
-    if (has<TerrainName>(input)) {
-      POKESIM_REQUIRE_NM(registry->get<TerrainName>(input).name != dex::Terrain::NO_TERRAIN);
-    }
-
-    if (has<VolatileName>(input)) {
-      POKESIM_REQUIRE_NM(registry->get<VolatileName>(input).name != dex::Volatile::NO_VOLATILE);
-    }
-
-    if (has<WeatherName>(input)) {
-      POKESIM_REQUIRE_NM(registry->get<WeatherName>(input).name != dex::Weather::NO_WEATHER);
-    }
-
-    if (has<AtkBoost>(input)) {
-      types::boost boost = registry->get<AtkBoost>(input).val;
-      checkBoost(boost);
-    }
-
-    if (has<DefBoost>(input)) {
-      types::boost boost = registry->get<DefBoost>(input).val;
-      checkBoost(boost);
-    }
-
-    if (has<SpaBoost>(input)) {
-      types::boost boost = registry->get<SpaBoost>(input).val;
-      checkBoost(boost);
-    }
-
-    if (has<SpdBoost>(input)) {
-      types::boost boost = registry->get<SpdBoost>(input).val;
-      checkBoost(boost);
-    }
-
-    if (has<SpeBoost>(input)) {
-      types::boost boost = registry->get<SpeBoost>(input).val;
-      checkBoost(boost);
-    }
-  }
-
   types::entityVector getPokemonList(bool forAttacker) const {
     if (forAttacker) {
       auto view = registry->view<tags::Attacker>();

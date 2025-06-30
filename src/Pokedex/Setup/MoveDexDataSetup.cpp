@@ -2,9 +2,9 @@
 
 #include <Components/Accuracy.hpp>
 #include <Components/AddedTargets.hpp>
+#include <Components/BaseEffectChance.hpp>
 #include <Components/BasePower.hpp>
 #include <Components/Boosts.hpp>
-#include <Components/Chance.hpp>
 #include <Components/EntityHolders/MoveEffect.hpp>
 #include <Components/HitCount.hpp>
 #include <Components/Names/MoveNames.hpp>
@@ -102,7 +102,7 @@ void MoveDexDataSetup::setSecondaryEffect(types::entity entity) {
 }
 
 void MoveEffectSetup::setChance(types::baseEffectChance chance) {
-  handle.emplace<Chance>(chance);
+  handle.emplace<BaseEffectChance>(chance);
 }
 
 void MoveEffectSetup::setEffectsSelf() {

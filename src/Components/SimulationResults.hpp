@@ -7,6 +7,7 @@
 #include <Types/Event.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Move.hpp>
+#include <Types/Random.hpp>
 #include <Utilities/MaxSizedVector.hpp>
 
 namespace pokesim {
@@ -19,29 +20,29 @@ struct TurnOutcomeBattles {
 namespace calc_damage {
 struct UsesUntilKo {
  private:
-  struct KoChance {
+  struct KoProbability {
     types::moveHits uses = 0;
-    types::useUntilKoChance chance = 0.0F;
+    types::probability probability = MechanicConstants::Probability::MIN;
 
-    bool operator==(const KoChance& other) const { return uses == other.uses && chance == other.chance; }
+    bool operator==(const KoProbability& other) const { return uses == other.uses && probability == other.probability; }
   };
 
  public:
-  internal::maxSizedVector<KoChance, MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT> val{};
+  internal::maxSizedVector<KoProbability, MechanicConstants::DamageRollCount::MAX> val{};
 
-  const KoChance& minHits() const {
+  const KoProbability& minHits() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
     return val.front();
   }
 
-  const KoChance& maxHits() const {
+  const KoProbability& maxHits() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
     return val.back();
   }
 
   bool guaranteedKo() const {
-    const KoChance& min = minHits();
-    return min.uses == 1 && min.chance == 1.0F;
+    const KoProbability& min = minHits();
+    return min.uses == 1 && min.probability == MechanicConstants::Probability::MAX;
   }
 };
 

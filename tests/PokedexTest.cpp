@@ -165,7 +165,7 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     REQUIRE_FALSE(secondaryEffect.primary);
 
-    auto chance = pokedex.getEffectData<Chance>(secondaryEffect);
+    auto chance = pokedex.getEffectData<BaseEffectChance>(secondaryEffect);
     REQUIRE(chance.val == Thunderbolt::targetSecondaryEffect::chance);
     REQUIRE(pokedex.effectHas<move::tags::effect::MoveTarget>(secondaryEffect));
     REQUIRE(pokedex.effectHas<status::tags::Paralysis>(secondaryEffect));
@@ -194,7 +194,7 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     REQUIRE_FALSE(secondaryEffect.primary);
 
-    auto [chance, spaBoost] = pokedex.getEffectData<Chance, SpaBoost>(secondaryEffect);
+    auto [chance, spaBoost] = pokedex.getEffectData<BaseEffectChance, SpaBoost>(secondaryEffect);
     REQUIRE(chance.val == Moonblast::targetSecondaryEffect::chance);
     REQUIRE(spaBoost.val == Moonblast::targetSecondaryEffect::spaBoost);
     REQUIRE(pokedex.effectHas<move::tags::effect::MoveTarget>(secondaryEffect));

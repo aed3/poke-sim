@@ -1,5 +1,8 @@
+// AUTO GENERATED FILE, DO NOT EDIT
+
 #pragma once
 
+#include "ArgumentChecks.hpp"
 #include "AssertComponentsEqual.hpp"
 #include "DebugChecks.hpp"
 #include "FixedMemoryVector.hpp"

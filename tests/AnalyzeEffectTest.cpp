@@ -50,7 +50,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
         REQUIRE(koUses.contains(entity));
         const auto& [trueKosUses] = koUses.get(entity);
 
-        REQUIRE(trueKosUses.minHits() == idealKoUses.val[0]);
+        REQUIRE(trueKosUses.minHits() == idealKoUses.val.front());
         REQUIRE(trueKosUses.maxHits() == idealKoUses.val.back());
         REQUIRE(trueKosUses.guaranteedKo() == false);
 

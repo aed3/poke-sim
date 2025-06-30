@@ -53,7 +53,7 @@ void assignAllDamageRollProbability(
   POKESIM_REQUIRE(damageCount > 0U, "How was a damage roll not found that matched the damage dealt?");
 
   Probability& probability = registry.get<Probability>(battle.val);
-  probability.val *= damageCount / (types::probability)MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT;
+  probability.val *= damageCount / (types::probability)MechanicConstants::DamageRollCount::MAX;
 }
 
 types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {

@@ -53,6 +53,11 @@ class registry : public internal::BackingRegistry {
     ENTITY_COMPONENTS_EQUAL,
   };
 
+  static void checkEntity(entity_type entt, const registry& registry) {
+    POKESIM_REQUIRE_NM(entt != entt::null);
+    POKESIM_REQUIRE_NM(registry.valid(entt));
+  }
+
  private:
   using entt::registry::create;
   using entt::registry::emplace;
@@ -92,21 +97,26 @@ class registry : public internal::BackingRegistry {
       .template func<&registry::entityComponentsEqual<Type>>(MetaFunctions::ENTITY_COMPONENTS_EQUAL);
   }
 
+  void checkEntity(entity_type entt) const { registry::checkEntity(entt, *this); }
+
  public:
   template <typename Type, typename... Args>
   decltype(auto) emplace(const entity_type entt, Args&&... args) {
+    checkEntity(entt);
     createMetaFunctions<Type>();
     return entt::registry::emplace<Type>(entt, std::forward<Args>(args)...);
   }
 
   template <typename Type, typename... Args>
   decltype(auto) emplace_or_replace(const entity_type entt, Args&&... args) {
+    checkEntity(entt);
     createMetaFunctions<Type>();
     return entt::registry::emplace_or_replace<Type>(entt, std::forward<Args>(args)...);
   }
 
   template <typename Type, typename... Args>
   [[nodiscard]] decltype(auto) get_or_emplace(const entity_type entt, Args&&... args) {
+    checkEntity(entt);
     createMetaFunctions<Type>();
     return entt::registry::get_or_emplace<Type>(entt, std::forward<Args>(args)...);
   }

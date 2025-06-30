@@ -22,5 +22,9 @@ enum class MoveTarget : std::uint8_t {
   ALLY_TEAM,    // Targets all non-fainted Pokemon on the user's team
   RETALIATION,  // Targets the last Pokemon to damage the user during a turn
   RANDOM_FOE,   // Targets a random foe
+
+  TOTAL_MOVE_TARGET,
 };
-}
+
+static constexpr std::uint8_t TOTAL_MOVE_TARGET_COUNT = (std::uint8_t)MoveTarget::TOTAL_MOVE_TARGET - 1U;
+}  // namespace pokesim

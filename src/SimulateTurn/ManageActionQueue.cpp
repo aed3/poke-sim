@@ -113,7 +113,7 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   if (entityList.size() == 1) return;
   const types::registry* registry = handle.registry();
 
-  internal::maxSizedVector<std::pair<SpeedSort, types::entity>, MechanicConstants::MaxValues::ACTION_QUEUE_LENGTH>
+  internal::maxSizedVector<std::pair<SpeedSort, types::entity>, MechanicConstants::ActionQueueLength::MAX>
     speedSortList;
   speedSortList.reserve(entityList.size());
 

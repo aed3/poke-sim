@@ -1,9 +1,10 @@
 #pragma once
 
+#include <Types/MechanicConstants.hpp>
 #include <Types/Random.hpp>
 
 namespace pokesim {
 struct Accuracy {
-  types::percentChance val = 100;
+  types::percentChance val = MechanicConstants::MoveBaseAccuracy::MAX;
 };
 }  // namespace pokesim

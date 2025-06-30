@@ -7,6 +7,7 @@
 #include <entt/entity/registry.hpp>
 #include <type_traits>
 
+#include "ArgumentChecks.hpp"
 #include "Tags.hpp"
 
 namespace pokesim::internal {
@@ -70,7 +71,7 @@ struct RegistryLoop<
       "If the first argument is a handle, it must be a non-constant value.");
 
     template <typename... Args>
-    static constexpr void argChecks() {
+    static constexpr void staticArgChecks() {
       static_assert(
         std::conjunction_v<std::is_class<std::decay_t<Args>>...>,
         "Only classes or structs can be added to entities,"
@@ -80,8 +81,8 @@ struct RegistryLoop<
         "Empty classes or structs shouldn't be passed into a function: they won't do anything.");
       static_assert(
         std::conjunction_v<std::is_copy_assignable<std::decay_t<Args>>...>,
-        "Without the ability to be copied, an argument could not have been added to an entity,"
-        "preventing the function from being called.");
+        "Without the ability to be copied, an argument could not have been added to an entity, preventing the function "
+        "from being called.");
       static_assert(
         sizeof...(Args) + sizeof...(ExtraTags) + sizeof...(Include) > 0,
         "At least 1 type must be present to pick the entities to loop over.");
@@ -89,7 +90,7 @@ struct RegistryLoop<
 
     template <typename... ViewArgs>
     static auto getView(types::registry& registry) {
-      argChecks<ViewArgs...>();
+      staticArgChecks<ViewArgs...>();
 
       if constexpr (usesExclude) {
         return registry.view<ExtraTags..., std::decay_t<ViewArgs>..., Include...>(entt::exclude<Exclude...>);
@@ -101,7 +102,7 @@ struct RegistryLoop<
 
     template <typename... GroupArgs>
     static auto getGroup(types::registry& registry) {
-      argChecks<GroupArgs...>();
+      staticArgChecks<GroupArgs...>();
 
       if constexpr (usesExclude) {
         return registry.group<ExtraTags..., std::decay_t<GroupArgs>...>(
@@ -119,9 +120,9 @@ struct RegistryLoop<
     template <auto getList>
     static auto run(types::registry& registry, const PassedInArgs&... passedInArgs) {
       auto list = getList(registry);
+
       if constexpr (hasRegistryFirst) {
-        list.each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
-          (void)entity;
+        list.each([&registry, &passedInArgs...](types::entity, auto&&... args) {
           Function(registry, args..., passedInArgs...);
         });
       }
@@ -131,11 +132,15 @@ struct RegistryLoop<
         });
       }
       else {
-        list.each([&passedInArgs...](types::entity entity, auto&&... args) {
-          (void)entity;
-          Function(args..., passedInArgs...);
-        });
+        list.each([&passedInArgs...](types::entity, auto&&... args) { Function(args..., passedInArgs...); });
       }
+
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+      list.each([&registry](types::entity, auto&&... args) {
+        (pokesim::debug::check(args, registry), ...);
+        (pokesim::debug::check(args), ...);
+      });
+#endif
       return list;
     }
 

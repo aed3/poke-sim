@@ -8,17 +8,37 @@
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
+#include <Components/RandomEventInputs.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/DebugChecks.hpp>
 
 namespace pokesim::simulate_turn::debug {
 struct Checks : pokesim::debug::Checks {
-  Checks(const Simulation& _simulation) : pokesim::debug::Checks(_simulation) {}
+  Options options;
+  Checks(const Simulation& _simulation)
+      : pokesim::debug::Checks(_simulation), options(_simulation.simulateTurnOptions) {}
 
-  void checkInputs() const { check(); }
+  void checkInputs() const {
+    pokesim::debug::check(options.damageRollsConsidered);
+    if (options.randomChanceLowerLimit.has_value()) {
+      pokesim::debug::check(RandomBinaryChance{options.randomChanceLowerLimit.value()});
+    }
+    if (options.randomChanceUpperLimit.has_value()) {
+      pokesim::debug::check(RandomBinaryChance{options.randomChanceUpperLimit.value()});
+    }
+    if (options.branchProbabilityLowerLimit.has_value()) {
+      pokesim::debug::check(Probability{options.branchProbabilityLowerLimit.value()});
+    }
 
-  void checkOutputs() const { check(); }
+    check();
+  }
+
+  void checkOutputs() const {
+    POKESIM_REQUIRE_NM(options == simulation->simulateTurnOptions);
+
+    check();
+  }
 
  private:
   void check() const {

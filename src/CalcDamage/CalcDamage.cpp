@@ -82,7 +82,7 @@ void applyCritDamageIncrease(Damage& damage) {
 }
 
 void setDamageToMinimumPossible(Damage& damage) {
-  damage.val = std::max(damage.val, MechanicConstants::MinValues::DAMAGE);
+  damage.val = std::max(damage.val, MechanicConstants::Damage::MIN);
 }
 
 void setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
@@ -127,8 +127,8 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
 }
 
 void calculateAllDamageRolls(DamageRolls& damageRolls, const Damage& damage, const DamageRollModifiers& modifier) {
-  damageRolls.val.reserve(MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT);
-  for (types::damageRollIndex i = 0; i < MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT; i++) {
+  damageRolls.val.reserve(MechanicConstants::DamageRollCount::MAX);
+  for (types::damageRollIndex i = 0; i < MechanicConstants::DamageRollCount::MAX; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
     applyDamageRoll(damageRoll, i);
     modifyDamage(damageRoll, modifier);
@@ -206,16 +206,16 @@ void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, 
   const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.only());
   UsesUntilKo usesUntilKo;
   POKESIM_REQUIRE(
-    damageRolls.val.size() == MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT,
+    damageRolls.val.size() == MechanicConstants::DamageRollCount::MAX,
     "All the damage rolls are needed to calculate this correctly.");
 
   for (const Damage& damageRoll : damageRolls.val) {
-    types::moveHits uses = (types::moveHits)std::ceil(defenderHp.val / (types::useUntilKoChance)damageRoll.val);
+    types::moveHits uses = (types::moveHits)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
     if (usesUntilKo.val.empty() || usesUntilKo.val.back().uses != uses) {
       usesUntilKo.val.push_back({uses, 0.0F});
     }
 
-    usesUntilKo.val.back().chance += (1.0 / MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT);
+    usesUntilKo.val.back().probability += (1.0 / MechanicConstants::DamageRollCount::MAX);
   }
   moveHandle.emplace<UsesUntilKo>(usesUntilKo);
 }
@@ -394,12 +394,11 @@ void applyDamageRoll(Damage& damage, types::damageRollIndex damageRoll) {
 }
 
 void applyAverageDamageRoll(Damage& damage) {
-  damage.val =
-    (types::damage)(damage.val * (100U - (MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT - 1U) / 2.0F) / 100.0F);
+  damage.val = (types::damage)(damage.val * (100U - (MechanicConstants::DamageRollCount::MAX - 1U) / 2.0F) / 100.0F);
 }
 
 void applyMinDamageRoll(Damage& damage) {
-  applyDamageRoll(damage, MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT - 1U);
+  applyDamageRoll(damage, MechanicConstants::DamageRollCount::MAX - 1U);
 }
 
 void run(Simulation& simulation) {

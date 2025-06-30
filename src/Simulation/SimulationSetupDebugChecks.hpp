@@ -13,7 +13,6 @@
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
-#include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Side.hpp>
@@ -198,7 +197,10 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).name == move.name);
       POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == move.pp);
       POKESIM_REQUIRE_NM(registry->get<MaxPp>(moveEntity).val == move.maxPp);
+      pokesim::debug::checkMoveSlot(moveEntity, *registry);
     }
+
+    pokesim::debug::checkPokemon(pokemonEntity, *registry);
   }
 
   void checkCreatedSide(types::entity sideEntity, const Simulation::SideCreationInfo& creationInfo) const {
@@ -214,6 +216,8 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(registry->get<Side>(pokemonEntity).val == sideEntity);
       POKESIM_REQUIRE_NM(registry->get<Battle>(pokemonEntity).val == registry->get<Battle>(sideEntity).val);
     }
+
+    pokesim::debug::checkSide(sideEntity, *registry);
   }
 
   void checkBattle(types::entity battleEntity, const Simulation::BattleCreationInfo& creationInfo) const {
@@ -240,6 +244,8 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->get<Battle>(p2SideEntity).val == battleEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p1SideEntity).val == p2SideEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p2SideEntity).val == p1SideEntity);
+
+    pokesim::debug::checkBattle(battleEntity, *registry);
   }
 
   void checkTurnDecision(types::entity battleEntity, const Simulation::TurnDecisionInfo& turnDecisionInfo) const {
@@ -285,6 +291,8 @@ struct SimulationSetupChecks {
           POKESIM_REQUIRE_NM(teamOrder[position] == teamOrderInfo[position]);
         }
       }
+
+      pokesim::debug::check(sideDecision);
     }
   }
 
@@ -314,6 +322,8 @@ struct SimulationSetupChecks {
 
     POKESIM_REQUIRE_NM(std::find(attackerMoves.begin(), attackerMoves.end(), calcDamageEntity) != attackerMoves.end());
     POKESIM_REQUIRE_NM(std::find(defenderMoves.begin(), defenderMoves.end(), calcDamageEntity) != defenderMoves.end());
+
+    checkActionMove(calcDamageEntity, *registry);
   }
 
   void checkAnalyzeEffect(
@@ -450,11 +460,14 @@ struct SimulationSetupChecks {
         checkCalcDamage(battleEntity, setupEntity, calcDamageInputInfo);
       }
 
+      analyze_effect::Inputs analyzeEffectInputs;
       for (const auto& analyzeEffectInputInfo : battleInfo.effectsToAnalyze) {
         POKESIM_REQUIRE_NM(createdAnalyzeEffectInputs.contains(&analyzeEffectInputInfo));
         auto [battleEntity, setupEntity] = createdAnalyzeEffectInputs.at(&analyzeEffectInputInfo);
         checkAnalyzeEffect(battleEntity, setupEntity, analyzeEffectInputInfo);
+        analyzeEffectInputs.val.push_back(setupEntity);
       }
+      pokesim::debug::check(analyzeEffectInputs, *registry);
     }
   }
 

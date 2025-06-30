@@ -15,6 +15,8 @@ struct DamageRollOptions {
   DamageRollKind p1 = DamageRollKind::AVERAGE_DAMAGE;
   DamageRollKind p2 = DamageRollKind::AVERAGE_DAMAGE;
   bool sidesMatch() const { return p1 == p2; }
+
+  bool operator==(const DamageRollOptions& other) const { return p1 == other.p1 && p2 == other.p2; }
 };
 
 namespace simulate_turn {
@@ -32,6 +34,16 @@ struct Options {
 
   entt::delegate<std::remove_pointer_t<types::callback>> decisionCallback{};
   entt::delegate<std::remove_pointer_t<types::callback>> faintCallback{};
+
+  bool operator==(const Options& other) const {
+    return damageRollsConsidered == other.damageRollsConsidered &&
+           applyChangesToInputBattle == other.applyChangesToInputBattle &&
+           randomChanceLowerLimit == other.randomChanceLowerLimit &&
+           randomChanceUpperLimit == other.randomChanceUpperLimit &&
+           branchProbabilityLowerLimit == other.branchProbabilityLowerLimit &&
+           makeBranchesOnRandomEvents == other.makeBranchesOnRandomEvents &&
+           decisionCallback == other.decisionCallback && faintCallback == other.faintCallback;
+  }
 };
 }  // namespace simulate_turn
 
@@ -42,6 +54,11 @@ struct Options {
   bool noKoChanceCalculation = false;
 
   DamageRollOptions damageRollOptions;
+
+  bool operator==(const Options& other) const {
+    return calculateUpToFoeHp == other.calculateUpToFoeHp && noKoChanceCalculation == other.noKoChanceCalculation &&
+           damageRollOptions == other.damageRollOptions;
+  }
 };
 }  // namespace calc_damage
 
@@ -55,6 +72,11 @@ struct Options {
   bool noKoChanceCalculation = false;
 
   DamageRollOptions damageRollOptions;
+
+  bool operator==(const Options& other) const {
+    return reconsiderActiveEffects == other.reconsiderActiveEffects && calculateUpToFoeHp == other.calculateUpToFoeHp &&
+           noKoChanceCalculation == other.noKoChanceCalculation && damageRollOptions == other.damageRollOptions;
+  }
 };
 }  // namespace analyze_effect
 }  // namespace pokesim

@@ -14,26 +14,26 @@ class Simulation;
 namespace types {
 using stateId = std::underlying_type_t<entity>;
 
-using battleTurn = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::TURN_COUNT>;
+using battleTurn = pokesim::internal::unsignedIntType<MechanicConstants::TurnCount::MAX>;
 
 using cloneIndex = std::underlying_type_t<entity>;
 
-using teamPositionIndex = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::TEAM_SIZE>;
-using moveSlotIndex = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::MOVE_SLOTS>;
-using activePokemonIndex = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::ACTIVE_POKEMON>;
+using teamPositionIndex = pokesim::internal::unsignedIntType<MechanicConstants::TeamSize::MAX>;
+using moveSlotIndex = pokesim::internal::unsignedIntType<MechanicConstants::MoveSlots::MAX>;
+using activePokemonIndex = pokesim::internal::unsignedIntType<MechanicConstants::ActivePokemon::MAX>;
 
 template <typename T>
-using teamPositions = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MaxValues::TEAM_SIZE>;
+using teamPositions = pokesim::internal::fixedMemoryVector<T, MechanicConstants::TeamSize::MAX>;
 using teamOrder = types::teamPositions<types::teamPositionIndex>;
 
 template <typename T>
-using moveSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MaxValues::MOVE_SLOTS>;
+using moveSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MoveSlots::MAX>;
 
 template <typename T>
-using sideSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MaxValues::ACTIVE_POKEMON_SLOTS_PER_SIDE>;
+using sideSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::ActivePokemonSlotsPerSide::MAX>;
 
 template <typename T>
-using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MaxValues::TARGETS>;
+using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::Targets::MAX>;
 
 using callback = void (*)(Simulation&);
 using optionalCallback = std::optional<void (*)(Simulation&)>;

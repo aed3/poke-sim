@@ -13,7 +13,7 @@
 				"isDefault": true
 			},
 			"problemMatcher": [],
-			"dependsOn": ["Create Entity Viewer"],
+			"dependsOn": ["Create Auto-Generated Files"],
 			"detail": "CMake template build task"
 		},
 		{
@@ -34,8 +34,23 @@
 		},
 		{
 			"type": "shell",
+			"label": "Create Auto-Generated Files",
+			"command": "node ${workspaceFolder}/tools/create",
+			"dependsOn": ["clang-format"],
+			"detail": "Runs the tools that create all the auto-generated files",
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
 			"label": "Create Header Files",
 			"command": "node ${workspaceFolder}/tools/createHeaders",
+			"dependsOn": ["clang-format"],
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"label": "Create Argument Checks",
+			"command": "node ${workspaceFolder}/tools/createArgumentChecks",
 			"dependsOn": ["clang-format"],
 			"problemMatcher": []
 		},
@@ -57,7 +72,7 @@
 			"label": "clang-tidy",
 			"command": "find src tests -name *.hpp -o -name *.cpp | parallel clang-tidy --quiet --use-color -p build 2>/dev/null",
 			"problemMatcher": [],
-			"dependsOn": ["Create Header Files"]
+			"dependsOn": ["Create Auto-Generated Files"]
 		}
 	]
 }

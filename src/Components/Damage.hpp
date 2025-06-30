@@ -27,14 +27,14 @@ struct DamageRollModifiers {
 };
 
 struct DamageRolls {
-  internal::maxSizedVector<Damage, MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT> val{};
+  internal::maxSizedVector<Damage, MechanicConstants::DamageRollCount::MAX> val{};
 
   DamageRolls() {}
   DamageRolls(const DamageRolls& other) : val(other.val) {}
 
   DamageRolls(const std::vector<types::damage>& list) {
     POKESIM_REQUIRE(
-      list.size() <= MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT,
+      list.size() <= MechanicConstants::DamageRollCount::MAX,
       "More damage rolls are being added than allowed.");
     val.reserve((types::damageRollIndex)list.size());
     for (types::damage damage : list) {

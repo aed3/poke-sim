@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <limits>
 #include <type_traits>
@@ -18,4 +19,15 @@ enum class ActionOrder : std::uint8_t {
 
   RESIDUAL = 254,
 };
-}
+
+static constexpr inline std::array<ActionOrder, 8U> VALID_ACTION_ORDERS = {
+  ActionOrder::NONE,
+  ActionOrder::TEAM,
+  ActionOrder::START,
+  ActionOrder::BEFORE_TURN,
+  ActionOrder::ITEM,
+  ActionOrder::SWITCH,
+  ActionOrder::MOVE,
+  ActionOrder::RESIDUAL,
+};
+}  // namespace pokesim

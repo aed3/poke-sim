@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Types/Damage.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Random.hpp>
 #include <Types/Stats.hpp>
@@ -11,7 +12,7 @@ struct CritChanceDivisor {
 };
 
 struct CritBoost {
-  types::boost val = 0U;
+  types::critBoost val = pokesim::MechanicConstants::CritBoost::MIN;
 };
 
 namespace tags {

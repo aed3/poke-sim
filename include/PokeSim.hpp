@@ -58,7 +58,20 @@
  * src/Utilities/FixedMemoryVector.hpp
  * src/Types/State.hpp
  * src/Utilities/AssertComponentsEqual.cpp
- * external/entt/entity/handle.hpp
+ * src/Types/Damage.hpp
+ * src/Types/Enums/StabBoostKind.hpp
+ * src/Types/Event.hpp
+ * src/Components/Damage.hpp
+ * src/Types/Enums/DamageRollKind.hpp
+ * src/CalcDamage/Helpers.hpp
+ * src/Components/Accuracy.hpp
+ * src/Types/Enums/AddedTargets.hpp
+ * src/Components/AddedTargets.hpp
+ * src/Components/EntityHolders/Current.hpp
+ * src/Components/Tags/Current.hpp
+ * src/Components/AnalyzeEffect/Aliases.hpp
+ * src/Types/Enums/Move.hpp
+ * src/Components/AnalyzeEffect/AnalyzeEffectInputs.hpp
  * src/Types/Enums/PseudoWeather.hpp
  * src/Types/Enums/SideCondition.hpp
  * src/Types/Enums/Status.hpp
@@ -67,105 +80,126 @@
  * src/Types/Enums/Weather.hpp
  * src/Utilities/Variant.hpp
  * src/Types/Effect.hpp
- * src/Types/Enums/Move.hpp
- * src/Types/Enums/Stat.hpp
- * src/Types/Stats.hpp
- * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp
- * src/Battle/Clone/Clone.hpp
- * src/Types/Enums/Slot.hpp
- * src/Battle/Helpers/Helpers.hpp
- * src/Battle/Setup/StateSetupBase.hpp
- * src/Components/Boosts.hpp
- * src/Components/EVsIVs.hpp
- * src/Types/Enums/Type.hpp
- * src/Components/SpeciesTypes.hpp
- * src/Components/Stats.hpp
- * src/Types/Enums/Ability.hpp
- * src/Types/Enums/Gender.hpp
- * src/Types/Enums/Item.hpp
- * src/Types/Enums/Nature.hpp
- * src/Types/Enums/Species.hpp
- * src/Battle/Setup/PokemonStateSetup.hpp
- * src/Battle/Setup/BattleStateSetup.hpp
- * src/Battle/Setup/EnumToTag.hpp
+ * src/Components/AnalyzeEffect/RemovedEffect.hpp
  * src/Types/Move.hpp
- * src/Battle/Setup/MoveStateSetup.hpp
- * src/Types/Enums/PlayerSideId.hpp
- * src/Battle/Setup/SideStateSetup.hpp
- * src/CalcDamage/Setup/CalcDamageInputSetup.hpp
- * src/Components/EntityHolders/Current.hpp
- * src/Components/Tags/Current.hpp
+ * src/Components/BaseEffectChance.hpp
+ * src/Components/BasePower.hpp
+ * src/Types/Stats.hpp
+ * src/Components/Boosts.hpp
  * src/Components/CalcDamage/Aliases.hpp
+ * src/Components/CalcDamage/CriticalHit.hpp
+ * src/Components/CalcDamage/DamageCalcVariables.hpp
  * src/Components/CloneFromCloneTo.hpp
+ * src/Types/Enums/Item.hpp
+ * src/Types/Enums/PlayerSideId.hpp
+ * src/Types/Enums/Slot.hpp
  * src/Components/Decisions.hpp
+ * src/Components/EVsIVs.hpp
  * src/Components/EntityHolders/ActionQueue.hpp
+ * src/Components/EntityHolders/ChoiceLock.hpp
+ * src/Components/EntityHolders/FoeSide.hpp
+ * src/Components/EntityHolders/LastUsedMove.hpp
+ * src/Components/EntityHolders/MoveEffect.hpp
+ * src/Components/EntityHolders/MoveSlots.hpp
+ * src/Components/EntityHolders/Pokemon.hpp
  * src/Components/EntityHolders/Side.hpp
  * src/Components/EntityHolders/Sides.hpp
- * src/Components/Tags/PokemonTags.hpp
- * src/Components/Tags/SimulationTags.hpp
- * src/Components/EntityHolders/MoveEffect.hpp
- * src/Types/Enums/GameMechanics.hpp
- * src/Types/Enums/TypeEffectiveness.hpp
- * src/Pokedex/TypeChart.hpp
- * src/Types/Enums/ActionOrder.hpp
- * src/Types/Enums/AddedTargets.hpp
- * src/Types/Enums/BattleFormat.hpp
- * src/Types/Enums/DamageRollKind.hpp
- * src/Types/Enums/MoveCategory.hpp
- * src/Types/Enums/MoveTarget.hpp
- * src/Types/Enums/StabBoostKind.hpp
- * src/Pokedex/Pokedex.hpp
- * src/Components/Tags/BattleTags.hpp
- * src/Components/Tags/Selection.hpp
- * src/Utilities/Tags.hpp
- * src/Utilities/RegistryLoop.hpp
- * src/Simulation/RegistryContainer.hpp
- * src/Simulation/SimulationOptions.hpp
- * src/Types/Damage.hpp
- * src/Types/Event.hpp
- * src/Simulation/Simulation.hpp
- * src/Components/AnalyzeEffect/Aliases.hpp
- * src/Components/AnalyzeEffect/AnalyzeEffectInputs.hpp
- * src/Components/EntityHolders/FoeSide.hpp
- * src/Components/EntityHolders/MoveSlots.hpp
  * src/Components/EntityHolders/Team.hpp
+ * src/Components/EventModifier.hpp
+ * src/Components/HitCount.hpp
  * src/Components/ID.hpp
  * src/Components/Level.hpp
+ * src/Types/Enums/Ability.hpp
  * src/Components/Names/AbilityNames.hpp
+ * src/Types/Enums/Gender.hpp
  * src/Components/Names/GenderNames.hpp
  * src/Components/Names/ItemNames.hpp
  * src/Components/Names/MoveNames.hpp
+ * src/Types/Enums/Nature.hpp
  * src/Components/Names/NatureNames.hpp
  * src/Components/Names/PseudoWeatherNames.hpp
  * src/Components/Names/SideConditionNames.hpp
+ * src/Components/Names/SourceSlotName.hpp
+ * src/Types/Enums/Species.hpp
  * src/Components/Names/SpeciesNames.hpp
+ * src/Types/Enums/Stat.hpp
+ * src/Components/Names/StatNames.hpp
  * src/Components/Names/StatusNames.hpp
+ * src/Components/Names/TargetSlotName.hpp
  * src/Components/Names/TerrainNames.hpp
+ * src/Types/Enums/Type.hpp
+ * src/Components/Names/TypeNames.hpp
  * src/Components/Names/VolatileNames.hpp
  * src/Components/Names/WeatherNames.hpp
  * src/Components/PP.hpp
+ * src/Components/PlayerSide.hpp
+ * src/Components/Pokedex/Abilities.hpp
+ * src/Components/Pokedex/BaseStats.hpp
+ * src/Components/Position.hpp
+ * src/Components/Priority.hpp
  * src/Components/Probability.hpp
  * src/Components/RNGSeed.hpp
+ * src/Components/RandomEventInputs.hpp
+ * src/Components/RandomEventOutputs.hpp
+ * src/Components/SimulateTurn/ActionNames.hpp
+ * src/Components/SimulateTurn/ActionTags.hpp
+ * src/Components/SimulateTurn/MoveHitStepTags.hpp
+ * src/Components/SimulateTurn/SimulateTurnInput.hpp
+ * src/Components/SimulateTurn/SpeedTieIndexes.hpp
+ * src/Components/SimulateTurn/TeamAction.hpp
+ * src/Components/SimulationResults.hpp
+ * src/Components/SpeciesTypes.hpp
+ * src/Types/Enums/ActionOrder.hpp
+ * src/Components/SpeedSort.hpp
+ * src/Components/Stats.hpp
+ * src/Components/Tags/AbilityTags.hpp
+ * src/Components/Tags/BattleTags.hpp
+ * src/Components/Tags/ItemTags.hpp
+ * src/Components/Tags/MoveTags.hpp
+ * src/Components/Tags/NatureTags.hpp
+ * src/Components/Tags/PokemonTags.hpp
+ * src/Components/Tags/Selection.hpp
+ * src/Components/Tags/SimulationTags.hpp
+ * src/Components/Tags/StatusTags.hpp
+ * src/Components/Tags/TargetTags.hpp
+ * src/Components/Tags/TypeTags.hpp
  * src/Components/Turn.hpp
- * src/Components/PlayerSide.hpp
+ * src/Types/Enums/BattleFormat.hpp
+ * src/Types/Enums/GameMechanics.hpp
+ * src/Types/Enums/MoveCategory.hpp
+ * src/Types/Enums/MoveTarget.hpp
+ * src/Types/Enums/TypeEffectiveness.hpp
+ * src/Simulation/SimulationOptions.hpp
+ * src/Utilities/ArgumentChecks.hpp
+ * src/Utilities/ArgumentChecks.cpp
+ * external/entt/entity/handle.hpp
+ * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp
+ * src/Battle/Clone/Clone.hpp
+ * src/Battle/Helpers/Helpers.hpp
+ * src/Battle/Setup/StateSetupBase.hpp
+ * src/Battle/Setup/PokemonStateSetup.hpp
+ * src/Battle/Setup/BattleStateSetup.hpp
+ * src/Battle/Setup/EnumToTag.hpp
+ * src/Battle/Setup/MoveStateSetup.hpp
+ * src/Battle/Setup/SideStateSetup.hpp
+ * src/CalcDamage/Setup/CalcDamageInputSetup.hpp
+ * src/Pokedex/TypeChart.hpp
+ * src/Pokedex/Pokedex.hpp
+ * src/Utilities/Tags.hpp
+ * src/Utilities/RegistryLoop.hpp
+ * src/Simulation/RegistryContainer.hpp
+ * src/Simulation/Simulation.hpp
  * src/Utilities/DebugChecks.hpp
  * src/Simulation/SimulationSetupDebugChecks.hpp
  * src/Simulation/SimulationSetup.cpp
- * src/Components/Damage.hpp
- * src/Components/SimulationResults.hpp
  * src/Simulation/SimulationResults.hpp
  * src/Simulation/SimulationResults.cpp
  * src/AnalyzeEffect/AnalyzeEffect.hpp
  * src/Battle/Pokemon/ManagePokemonState.hpp
  * src/CalcDamage/CalcDamage.hpp
- * src/Components/HitCount.hpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Simulation/Simulation.cpp
  * src/Battle/Helpers/IntegerModify.hpp
- * src/Components/EntityHolders/ChoiceLock.hpp
- * src/Components/EventModifier.hpp
- * src/Components/Tags/ItemTags.hpp
- * src/Components/Tags/StatusTags.hpp
  * src/Pokedex/Abilities/Static.hpp
  * src/Pokedex/Effects/ChoiceLock.hpp
  * src/Pokedex/Items/AssaultVest.hpp
@@ -177,44 +211,21 @@
  * src/Simulation/RunEvent.hpp
  * src/Utilities/SelectForView.hpp
  * src/Simulation/RunEvent.cpp
- * src/Components/Accuracy.hpp
- * src/Components/RandomEventOutputs.hpp
- * src/Components/SimulateTurn/MoveHitStepTags.hpp
- * src/Components/Tags/MoveTags.hpp
- * src/Components/RandomEventInputs.hpp
  * src/SimulateTurn/RandomChance.hpp
  * src/Simulation/MoveHitSteps.hpp
  * src/Simulation/MoveHitSteps.cpp
  * src/Battle/ManageBattleState.hpp
- * src/CalcDamage/Helpers.hpp
- * src/Components/AddedTargets.hpp
- * src/Components/Names/SourceSlotName.hpp
- * src/Components/Names/TargetSlotName.hpp
- * src/Components/SimulateTurn/ActionNames.hpp
- * src/Components/SimulateTurn/ActionTags.hpp
- * src/Components/SimulateTurn/SimulateTurnInput.hpp
- * src/Components/SpeedSort.hpp
- * src/Components/Tags/TargetTags.hpp
  * src/SimulateTurn/ManageActionQueue.hpp
  * src/SimulateTurn/SimulateTurnDebugChecks.hpp
  * src/SimulateTurn/SimulateTurn.cpp
- * src/Components/CalcDamage/CriticalHit.hpp
  * src/Utilities/RNG.hpp
  * src/SimulateTurn/RandomChance.cpp
- * src/Components/SimulateTurn/SpeedTieIndexes.hpp
- * src/Components/SimulateTurn/TeamAction.hpp
  * src/SimulateTurn/ManageActionQueue.cpp
  * src/SimulateTurn/CalcDamageSpecifics.hpp
  * src/SimulateTurn/CalcDamageSpecifics.cpp
- * src/Components/Pokedex/Abilities.hpp
- * src/Components/Pokedex/BaseStats.hpp
  * src/Pokedex/Setup/DexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.cpp
- * src/Components/BasePower.hpp
- * src/Components/Chance.hpp
- * src/Components/Names/TypeNames.hpp
- * src/Components/Priority.hpp
  * src/Pokedex/Setup/MoveDexDataSetup.hpp
  * src/Pokedex/Setup/MoveDexDataSetup.cpp
  * src/Pokedex/Setup/ItemDexDataSetup.hpp
@@ -244,28 +255,19 @@
  * src/CalcDamage/Setup/CalcDamageInputSetup.cpp
  * src/Battle/Pokemon/PokemonDataChecks.hpp
  * src/CalcDamage/CalcDamageDebugChecks.hpp
- * src/Components/CalcDamage/DamageCalcVariables.hpp
  * src/CalcDamage/CalcDamage.cpp
  * src/Battle/Setup/SideStateSetup.cpp
- * src/Components/Position.hpp
- * src/Components/Tags/AbilityTags.hpp
- * src/Components/Tags/NatureTags.hpp
  * src/Battle/Setup/PokemonStateSetup.cpp
  * src/Battle/Setup/MoveStateSetup.cpp
  * src/Battle/Setup/EnumToTag.cpp
  * src/Battle/Setup/BattleStateSetup.cpp
- * src/Components/EntityHolders/LastUsedMove.hpp
- * src/Components/Names/StatNames.hpp
  * src/Battle/Pokemon/ManagePokemonState.cpp
  * src/Battle/ManageBattleState.cpp
  * src/Battle/Helpers/Helpers.cpp
- * src/Components/EntityHolders/Pokemon.hpp
  * src/Battle/Clone/Clone.cpp
  * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.cpp
  * src/AnalyzeEffect/AnalyzeEffectDebugChecks.hpp
- * src/Components/AnalyzeEffect/RemovedEffect.hpp
  * src/AnalyzeEffect/AnalyzeEffect.cpp
- * src/Components/Tags/TypeTags.hpp
  * src/Pokedex/Names.hpp
  * src/PokeSim.hpp
  */
@@ -17522,6 +17524,11 @@ class registry : public internal::BackingRegistry {
     ENTITY_COMPONENTS_EQUAL,
   };
 
+  static void checkEntity(entity_type entt, const registry& registry) {
+    POKESIM_REQUIRE_NM(entt != entt::null);
+    POKESIM_REQUIRE_NM(registry.valid(entt));
+  }
+
  private:
   using entt::registry::create;
   using entt::registry::emplace;
@@ -17561,21 +17568,26 @@ class registry : public internal::BackingRegistry {
       .template func<&registry::entityComponentsEqual<Type>>(MetaFunctions::ENTITY_COMPONENTS_EQUAL);
   }
 
+  void checkEntity(entity_type entt) const { registry::checkEntity(entt, *this); }
+
  public:
   template <typename Type, typename... Args>
   decltype(auto) emplace(const entity_type entt, Args&&... args) {
+    checkEntity(entt);
     createMetaFunctions<Type>();
     return entt::registry::emplace<Type>(entt, std::forward<Args>(args)...);
   }
 
   template <typename Type, typename... Args>
   decltype(auto) emplace_or_replace(const entity_type entt, Args&&... args) {
+    checkEntity(entt);
     createMetaFunctions<Type>();
     return entt::registry::emplace_or_replace<Type>(entt, std::forward<Args>(args)...);
   }
 
   template <typename Type, typename... Args>
   [[nodiscard]] decltype(auto) get_or_emplace(const entity_type entt, Args&&... args) {
+    checkEntity(entt);
     createMetaFunctions<Type>();
     return entt::registry::get_or_emplace<Type>(entt, std::forward<Args>(args)...);
   }
@@ -17661,74 +17673,153 @@ struct MechanicConstants {
 
   static constexpr std::uint8_t SIDE_COUNT = 2U;
 
-  struct MaxValues {
-    static constexpr std::uint8_t POKEMON_LEVEL = 100U;
-    static constexpr std::uint8_t POKEMON_BASE_STAT = 255U;
-    static constexpr std::uint16_t POKEMON_STAT = 65535U;
-    static constexpr std::uint8_t POKEMON_EV = 255U;
-    static constexpr std::uint8_t POKEMON_IV = 31U;
-    static constexpr std::int8_t POKEMON_STAT_BOOST = 6;
-
-    static constexpr std::uint8_t MOVE_MAX_PP = 64U;
-    static constexpr std::uint8_t MOVE_PP = MOVE_MAX_PP;
-    static constexpr std::uint8_t MOVE_BASE_POWER = 255U;
-    static constexpr std::uint8_t MOVE_BASE_ACCURACY = 100U;
-    static constexpr std::uint8_t MOVE_HITS = 10U;
-    static constexpr std::uint8_t MOVE_BASE_EFFECT_CHANCE = 100U;
-    static constexpr std::int8_t MOVE_PRIORITY =
-      5;  // 8 is theoretically possible, but no existing move has more than 5
-
-    static constexpr std::uint16_t DAMAGE = 65535U;
-    static constexpr std::uint8_t DAMAGE_ROLL_COUNT = 16U;
-
-    static constexpr std::int8_t TYPE_EFFECTIVENESS_SHIFT = 3;
-
-    static constexpr std::uint8_t TEAM_SIZE = 6U;
-    static constexpr std::uint8_t ACTIVE_POKEMON_SLOTS_PER_SIDE = 2U;
-    static constexpr std::uint8_t ACTIVE_POKEMON = ACTIVE_POKEMON_SLOTS_PER_SIDE * SIDE_COUNT;
-    static constexpr std::uint8_t MOVE_SLOTS = 4U;
-    static constexpr std::uint8_t TARGETS = 3U;
-
-    static constexpr float PROBABILITY = 1.0F;
-
-    // TODO(aed3): 64 is a guess, so find out what the actual number is
-    static constexpr std::uint8_t ACTION_QUEUE_LENGTH = 64U;
-
-    // TODO(aed3): Technically 65535, but battles over 1000 turns aren't usually supported on Showdown
-    static constexpr std::uint16_t TURN_COUNT = 1000U;
+  struct PokemonLevel {
+    static constexpr std::uint8_t MAX = 100U;
+    static constexpr std::uint8_t MIN = 1U;
   };
 
-  struct MinValues {
-    static constexpr std::uint8_t POKEMON_LEVEL = 1U;
-    static constexpr std::uint8_t POKEMON_BASE_STAT = 1U;
-    static constexpr std::uint16_t POKEMON_STAT = 1U;
-    static constexpr std::uint8_t POKEMON_EV = 0U;
-    static constexpr std::uint8_t POKEMON_IV = 0U;
-    static constexpr std::int8_t POKEMON_STAT_BOOST = -6;
+  struct PokemonBaseStat {
+    static constexpr std::uint8_t MAX = 255U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
 
-    static constexpr std::uint8_t MOVE_MAX_PP = 1U;
-    static constexpr std::uint8_t MOVE_PP = 0U;
-    static constexpr std::uint8_t MOVE_BASE_POWER = 1U;
-    static constexpr std::uint8_t MOVE_BASE_ACCURACY = 1U;
-    static constexpr std::uint8_t MOVE_HITS = 1U;
-    static constexpr std::uint8_t MOVE_BASE_EFFECT_CHANCE = 1U;
-    static constexpr std::int8_t MOVE_PRIORITY = -7;
+  struct PokemonHpStat {
+    static constexpr std::uint16_t MAX = 1428U;
+    static constexpr std::uint16_t MIN = 1U;
+  };
 
-    static constexpr std::uint16_t DAMAGE = 1U;
-    static constexpr std::uint8_t DAMAGE_ROLL_COUNT = 1U;
+  struct PokemonStat {
+    static constexpr std::uint16_t MAX = 633U;
+    static constexpr std::uint16_t MIN = 1U;
+  };
 
-    static constexpr std::int8_t TYPE_EFFECTIVENESS_SHIFT = -7;
+  struct PokemonEffectiveStat {
+    static constexpr std::uint16_t MAX = 65535U;
+    static constexpr std::uint16_t MIN = 1U;
+  };
 
-    static constexpr std::uint8_t TEAM_SIZE = 1U;
-    static constexpr std::uint8_t ACTIVE_POKEMON_SLOTS_PER_SIDE = 1U;
-    static constexpr std::uint8_t ACTIVE_POKEMON = 0U;
-    static constexpr std::uint8_t MOVE_SLOTS = 1U;
-    static constexpr std::uint8_t TARGETS = 1U;
+  struct PokemonEv {
+    static constexpr std::uint8_t MAX = 255U;
+    static constexpr std::uint8_t MIN = 0U;
+  };
 
-    static constexpr float PROBABILITY = 0.0F;
+  struct PokemonIv {
+    static constexpr std::uint8_t MAX = 31U;
+    static constexpr std::uint8_t MIN = 0U;
+  };
 
-    static constexpr std::uint8_t ACTION_QUEUE_LENGTH = 0U;
-    static constexpr std::uint16_t TURN_COUNT = 0U;
+  struct PokemonStatBoost {
+    static constexpr std::int8_t MAX = 6;
+    static constexpr std::int8_t MIN = -6;
+  };
+
+  struct MoveMaxPp {
+    static constexpr std::uint8_t MAX = 64U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct MovePp {
+    static constexpr std::uint8_t MAX = MoveMaxPp::MAX;
+    static constexpr std::uint8_t MIN = 0U;
+  };
+
+  struct MoveBasePower {
+    static constexpr std::uint8_t MAX = 255U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct MoveBaseAccuracy {
+    static constexpr std::uint8_t MAX = 100U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct MoveHits {
+    static constexpr std::uint8_t MAX = 10U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct MoveBaseEffectChance {
+    static constexpr std::uint8_t MAX = 100U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct MovePriority {
+    static constexpr std::int8_t MAX = 5;  // 8 is theoretically possible, but no existing move has more than 5
+    static constexpr std::int8_t MIN = -7;
+  };
+
+  struct CritBoost {
+    // 255 is theoretically possible, but the various effects that can increase crit chance can be added up to 7 at most
+    // as of now
+    static constexpr std::uint8_t MAX = 7U;
+    static constexpr std::uint8_t MIN = 0U;
+  };
+
+  struct Damage {
+    static constexpr std::uint16_t MAX = 65535U;
+    static constexpr std::uint16_t MIN = 1U;
+  };
+
+  struct DamageRollCount {
+    static constexpr std::uint8_t MAX = 16U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct TypeEffectivenessShift {
+    static constexpr std::int8_t MAX = 3;
+    static constexpr std::int8_t MIN = -7;
+  };
+
+  struct TeamSize {
+    static constexpr std::uint8_t MAX = 6U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct ActivePokemonSlotsPerSide {
+    static constexpr std::uint8_t MAX = 2U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct ActivePokemon {
+    static constexpr std::uint8_t MAX = ActivePokemonSlotsPerSide::MAX * SIDE_COUNT;
+    static constexpr std::uint8_t MIN = 0U;
+  };
+
+  struct MoveSlots {
+    static constexpr std::uint8_t MAX = 4U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct Targets {
+    static constexpr std::uint8_t MAX = 3U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct PercentChance {
+    static constexpr std::uint8_t MAX = 100U;
+    static constexpr std::uint8_t MIN = 0U;
+  };
+
+  struct Probability {
+    static constexpr float MAX = 1.0F;
+    static constexpr float MIN = 0.0F;
+  };
+
+  struct AnalyzeEffectMultiplier {
+    static constexpr float MAX = PokemonHpStat::MAX;
+    static constexpr float MIN = 0.0F;
+  };
+
+  struct ActionQueueLength {
+    // TODO(aed3): 64 is a guess, so find out what the actual number is
+    static constexpr std::uint8_t MAX = 64U;
+    static constexpr std::uint8_t MIN = 0U;
+  };
+
+  struct TurnCount {
+    // Technically 65535, but battles over 1000 turns aren't usually supported on Showdown
+    static constexpr std::uint16_t MAX = 1000U;
+    static constexpr std::uint16_t MIN = 0U;
   };
 };
 }  // namespace pokesim
@@ -17844,26 +17935,26 @@ class Simulation;
 namespace types {
 using stateId = std::underlying_type_t<entity>;
 
-using battleTurn = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::TURN_COUNT>;
+using battleTurn = pokesim::internal::unsignedIntType<MechanicConstants::TurnCount::MAX>;
 
 using cloneIndex = std::underlying_type_t<entity>;
 
-using teamPositionIndex = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::TEAM_SIZE>;
-using moveSlotIndex = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::MOVE_SLOTS>;
-using activePokemonIndex = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::ACTIVE_POKEMON>;
+using teamPositionIndex = pokesim::internal::unsignedIntType<MechanicConstants::TeamSize::MAX>;
+using moveSlotIndex = pokesim::internal::unsignedIntType<MechanicConstants::MoveSlots::MAX>;
+using activePokemonIndex = pokesim::internal::unsignedIntType<MechanicConstants::ActivePokemon::MAX>;
 
 template <typename T>
-using teamPositions = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MaxValues::TEAM_SIZE>;
+using teamPositions = pokesim::internal::fixedMemoryVector<T, MechanicConstants::TeamSize::MAX>;
 using teamOrder = types::teamPositions<types::teamPositionIndex>;
 
 template <typename T>
-using moveSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MaxValues::MOVE_SLOTS>;
+using moveSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MoveSlots::MAX>;
 
 template <typename T>
-using sideSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MaxValues::ACTIVE_POKEMON_SLOTS_PER_SIDE>;
+using sideSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::ActivePokemonSlotsPerSide::MAX>;
 
 template <typename T>
-using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MaxValues::TARGETS>;
+using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::Targets::MAX>;
 
 using callback = void (*)(Simulation&);
 using optionalCallback = std::optional<void (*)(Simulation&)>;
@@ -17994,6 +18085,3776 @@ inline bool checkIfCopyParent(types::entity potentialChild, types::entity potent
 #endif
 
 //////////////// END OF src/Utilities/AssertComponentsEqual.cpp ////////////////
+
+//////////////////////// START OF src/Types/Damage.hpp /////////////////////////
+
+namespace pokesim::types {
+using damage = pokesim::internal::unsignedIntType<MechanicConstants::Damage::MAX>;
+using damageRollIndex = pokesim::internal::unsignedIntType<MechanicConstants::DamageRollCount::MAX>;
+using critBoost = pokesim::internal::unsignedIntType<MechanicConstants::CritBoost::MAX>;
+using typeEffectiveness = pokesim::internal::signedIntType<
+  MechanicConstants::TypeEffectivenessShift::MAX, MechanicConstants::TypeEffectivenessShift::MIN>;
+}  // namespace pokesim::types
+
+///////////////////////// END OF src/Types/Damage.hpp //////////////////////////
+
+////////////////// START OF src/Types/Enums/StabBoostKind.hpp //////////////////
+
+#include <array>
+#include <cstdint>
+
+namespace pokesim {
+enum class StabBoostKind : std::uint8_t {
+  NONE = 100,
+  STANDARD = 150,
+  STELLAR_NON_STAB = 120,
+  ADAPTABILITY_OR_STELLAR_STAB_OR_TERA_STAB = 200,
+  ADAPTABILITY_AND_TERA_STAB = 225,
+};
+
+static constexpr inline std::array<StabBoostKind, 5U> VALID_STAB_BOOST_KINDS = {
+  StabBoostKind::NONE,
+  StabBoostKind::STANDARD,
+  StabBoostKind::STELLAR_NON_STAB,
+  StabBoostKind::ADAPTABILITY_OR_STELLAR_STAB_OR_TERA_STAB,
+  StabBoostKind::ADAPTABILITY_AND_TERA_STAB,
+};
+}  // namespace pokesim
+
+/////////////////// END OF src/Types/Enums/StabBoostKind.hpp ///////////////////
+
+///////////////////////// START OF src/Types/Event.hpp /////////////////////////
+
+#include <cstdint>
+
+namespace pokesim::types {
+using eventModifier = std::uint32_t;
+using effectMultiplier = float;
+}  // namespace pokesim::types
+
+////////////////////////// END OF src/Types/Event.hpp //////////////////////////
+
+////////////////////// START OF src/Components/Damage.hpp //////////////////////
+
+#include <vector>
+
+namespace pokesim {
+struct Damage {
+  types::damage val = 1;
+};
+
+struct DamageRollModifiers {
+  StabBoostKind stab = StabBoostKind::NONE;
+  types::typeEffectiveness typeEffectiveness = 0;
+  bool burn = false;
+  bool zOrMaxBrokenProtect = false;
+  types::eventModifier modifyDamageEvent = MechanicConstants::FIXED_POINT_SCALE;
+
+  bool operator==(const DamageRollModifiers& other) const {
+    return stab == other.stab && typeEffectiveness == other.typeEffectiveness && burn == other.burn &&
+           modifyDamageEvent == other.modifyDamageEvent && zOrMaxBrokenProtect == other.zOrMaxBrokenProtect;
+  }
+};
+
+struct DamageRolls {
+  internal::maxSizedVector<Damage, MechanicConstants::DamageRollCount::MAX> val{};
+
+  DamageRolls() {}
+  DamageRolls(const DamageRolls& other) : val(other.val) {}
+
+  DamageRolls(const std::vector<types::damage>& list) {
+    POKESIM_REQUIRE(
+      list.size() <= MechanicConstants::DamageRollCount::MAX,
+      "More damage rolls are being added than allowed.");
+    val.reserve((types::damageRollIndex)list.size());
+    for (types::damage damage : list) {
+      val.push_back({damage});
+    }
+  }
+
+  types::damage min() const {
+    POKESIM_REQUIRE(!val.empty(), "DamageRolls has no values to read.");
+    return val.back().val;
+  }
+
+  types::damage max() const {
+    POKESIM_REQUIRE(!val.empty(), "DamageRolls has no values to read.");
+    return val.front().val;
+  }
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Components/Damage.hpp ///////////////////////
+
+///////////////// START OF src/Types/Enums/DamageRollKind.hpp //////////////////
+
+#include <array>
+#include <cstdint>
+
+namespace pokesim {
+enum class DamageRollKind : std::uint8_t {
+  NONE = 0b00000000,
+  AVERAGE_DAMAGE = 0b000000001,
+  MAX_DAMAGE = 0b00000010,
+  MIN_DAMAGE = 0b00000100,
+  GUARANTEED_CRIT_CHANCE = 0b00001000,
+  ALL_DAMAGE_ROLLS = 0b00010000,
+};
+
+static constexpr inline std::array<DamageRollKind, 6U> VALID_DAMAGE_ROLL_KINDS = {
+  DamageRollKind::NONE,
+  DamageRollKind::AVERAGE_DAMAGE,
+  DamageRollKind::MAX_DAMAGE,
+  DamageRollKind::MIN_DAMAGE,
+  DamageRollKind::GUARANTEED_CRIT_CHANCE,
+  DamageRollKind::ALL_DAMAGE_ROLLS,
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Types/Enums/DamageRollKind.hpp ///////////////////
+
+///////////////////// START OF src/CalcDamage/Helpers.hpp //////////////////////
+
+#include <type_traits>
+
+namespace pokesim::calc_damage {
+inline constexpr bool damageKindsMatch(DamageRollKind kindA, DamageRollKind kindB) {
+  using DamageRollKindBase = std::underlying_type_t<DamageRollKind>;
+  return ((DamageRollKindBase)kindA & (DamageRollKindBase)kindB) != 0;
+}
+
+inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, DamageRollKind damageRollKind) {
+  POKESIM_REQUIRE(!damageRolls.val.empty(), "DamageRolls has no rolls yet.");
+
+  if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
+    POKESIM_REQUIRE(
+      damageRolls.val.size() == MechanicConstants::DamageRollCount::MAX,
+      "DamageRolls does not have all rolls yet.");
+    return damageRolls.val[MechanicConstants::DamageRollCount::MAX / 2].val;
+  }
+  POKESIM_REQUIRE(
+    damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE),
+    "DamageRolls does not contain average");
+
+  if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
+    POKESIM_REQUIRE(damageRolls.val.size() > 1, "DamageRolls may not have average roll yet.");
+    return damageRolls.val[1].val;
+  }
+  return damageRolls.val[0].val;
+}
+
+template <
+  typename... CombinedKinds,
+  typename = std::enable_if_t<std::conjunction_v<std::is_same<CombinedKinds, DamageRollKind>...>>>
+constexpr DamageRollKind combineDamageKinds(CombinedKinds... kinds) {
+  using DamageRollKindBase = std::underlying_type_t<DamageRollKind>;
+  return static_cast<DamageRollKind>((static_cast<DamageRollKindBase>(kinds) | ...));
+}
+}  // namespace pokesim::calc_damage
+
+////////////////////// END OF src/CalcDamage/Helpers.hpp ///////////////////////
+
+///////////////////// START OF src/Components/Accuracy.hpp /////////////////////
+
+namespace pokesim {
+struct Accuracy {
+  types::percentChance val = MechanicConstants::MoveBaseAccuracy::MAX;
+};
+}  // namespace pokesim
+
+////////////////////// END OF src/Components/Accuracy.hpp //////////////////////
+
+////////////////// START OF src/Types/Enums/AddedTargets.hpp ///////////////////
+
+#include <array>
+#include <cstdint>
+
+namespace pokesim {
+enum class AddedTargetOptions : std::uint8_t {
+  NONE = 0b00000000,
+  TARGET_ALLY = 0b00000001,
+  USER_ALLY = 0b00000010,
+  TARGET_SIDE = 0b00000100,
+  USER_SIDE = 0b00001000,
+  FIELD = 0b00010000,
+};
+
+static constexpr inline std::array<AddedTargetOptions, 6U> VALID_ADDED_TARGET_OPTIONS = {
+  AddedTargetOptions::NONE,
+  AddedTargetOptions::TARGET_ALLY,
+  AddedTargetOptions::USER_ALLY,
+  AddedTargetOptions::TARGET_SIDE,
+  AddedTargetOptions::USER_SIDE,
+  AddedTargetOptions::FIELD,
+};
+}  // namespace pokesim
+
+/////////////////// END OF src/Types/Enums/AddedTargets.hpp ////////////////////
+
+/////////////////// START OF src/Components/AddedTargets.hpp ///////////////////
+
+namespace pokesim {
+struct AddedTargets {
+  AddedTargetOptions val = AddedTargetOptions::NONE;
+};
+}  // namespace pokesim
+
+//////////////////// END OF src/Components/AddedTargets.hpp ////////////////////
+
+////////////// START OF src/Components/EntityHolders/Current.hpp ///////////////
+
+#include <vector>
+
+namespace pokesim {
+struct CurrentAction {
+  types::entity val{};
+};
+
+struct NextAction {
+  types::entity val{};
+};
+
+struct CurrentActionTargets {
+  types::targets<types::entity> val{};
+  const types::entity& only() const {
+    POKESIM_REQUIRE(
+      val.size() == 1,
+      "This method is supposed to get the first target when there's only one target stored.");
+    return val[0];
+  };
+};
+
+struct CurrentActionSource {
+  types::entity val{};
+};
+
+struct CurrentActionMoves {
+  types::entityVector val{};
+};
+
+struct CurrentActionMoveSlot {
+  types::entity val{};
+};
+}  // namespace pokesim
+
+/////////////// END OF src/Components/EntityHolders/Current.hpp ////////////////
+
+/////////////////// START OF src/Components/Tags/Current.hpp ///////////////////
+
+namespace pokesim::tags {
+// Current Action Tag: The move that is being processed by the simulator
+struct CurrentActionMove {};
+// Current Action Tag: The move slot the current action's move was chosen and will deduct PP from
+struct CurrentActionMoveSlot {};
+// Current Action Tag: The target of the active move
+struct CurrentActionMoveTarget {};
+// Current Action Tag: The user of the active move
+struct CurrentActionMoveSource {};
+}  // namespace pokesim::tags
+
+//////////////////// END OF src/Components/Tags/Current.hpp ////////////////////
+
+////////////// START OF src/Components/AnalyzeEffect/Aliases.hpp ///////////////
+
+namespace pokesim::analyze_effect {
+using Attacker = CurrentActionSource;
+using Defenders = CurrentActionTargets;
+
+namespace tags {
+using Attacker = pokesim::tags::CurrentActionMoveSource;
+using Defender = pokesim::tags::CurrentActionMoveTarget;
+using Move = pokesim::tags::CurrentActionMove;
+}  // namespace tags
+}  // namespace pokesim::analyze_effect
+
+/////////////// END OF src/Components/AnalyzeEffect/Aliases.hpp ////////////////
+
+////////////////////// START OF src/Types/Enums/Move.hpp ///////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon move name
+enum class Move : std::uint16_t {
+  // clang-format off
+  NO_MOVE = 0, ONE_MILLION_VOLT_THUNDERBOLT, ABSORB, ACCELEROCK, ACID, ACID_ARMOR, ACID_DOWNPOUR, ACID_SPRAY, ACROBATICS, ACUPRESSURE, AERIAL_ACE, AEROBLAST, AFTER_YOU, AGILITY, AIR_CUTTER, AIR_SLASH, ALL_OUT_PUMMELING, ALLY_SWITCH, AMNESIA, ANCHOR_SHOT, ANCIENT_POWER, APPLE_ACID, AQUA_CUTTER, AQUA_JET, AQUA_RING, AQUA_STEP, AQUA_TAIL, ARMOR_CANNON, ARM_THRUST, AROMATHERAPY, AROMATIC_MIST, ASSIST, ASSURANCE, ASTONISH, ASTRAL_BARRAGE, ATTACK_ORDER, ATTRACT, AURA_SPHERE, AURA_WHEEL, AURORA_BEAM, AURORA_VEIL, AUTOTOMIZE, AVALANCHE, AXE_KICK, BABY_DOLL_EYES, BADDY_BAD, BANEFUL_BUNKER, BARB_BARRAGE, BARRAGE, BARRIER, BATON_PASS, BEAK_BLAST, BEAT_UP, BEHEMOTH_BASH, BEHEMOTH_BLADE, BELCH, BELLY_DRUM, BESTOW, BIDE, BIND, BITE, BITTER_BLADE, BITTER_MALICE, BLACK_HOLE_ECLIPSE, BLAST_BURN, BLAZE_KICK, BLAZING_TORQUE, BLEAKWIND_STORM, BLIZZARD, BLOCK, BLOOM_DOOM, BLUE_FLARE, BODY_PRESS, BODY_SLAM, BOLT_BEAK, BOLT_STRIKE, BONE_CLUB, BONEMERANG, BONE_RUSH, BOOMBURST, BOUNCE, BOUNCY_BUBBLE, BRANCH_POKE, BRAVE_BIRD, BREAKING_SWIPE, BREAKNECK_BLITZ, BRICK_BREAK, BRINE, BRUTAL_SWING, BUBBLE, BUBBLE_BEAM, BUG_BITE, BUG_BUZZ, BULK_UP, BULLDOZE, BULLET_PUNCH, BULLET_SEED, BURNING_JEALOUSY, BURN_UP, BUZZY_BUZZ, CALM_MIND, CAMOUFLAGE, CAPTIVATE, CATASTROPIKA, CEASELESS_EDGE, CELEBRATE, CHARGE, CHARGE_BEAM, CHARM, CHATTER, CHILLING_WATER, CHILLY_RECEPTION, CHIP_AWAY, CHLOROBLAST, CIRCLE_THROW, CLAMP, CLANGING_SCALES, CLANGOROUS_SOUL, CLANGOROUS_SOULBLAZE, CLEAR_SMOG, CLOSE_COMBAT, COACHING, COIL, COLLISION_COURSE, COMBAT_TORQUE, COMET_PUNCH, COMEUPPANCE, CONFIDE, CONFUSE_RAY, CONFUSION, CONSTRICT, CONTINENTAL_CRUSH, CONVERSION, CONVERSION_2, COPYCAT, CORE_ENFORCER, CORKSCREW_CRASH, CORROSIVE_GAS, COSMIC_POWER, COTTON_GUARD, COTTON_SPORE, COUNTER, COURT_CHANGE, COVET, CRABHAMMER, CRAFTY_SHIELD, CROSS_CHOP, CROSS_POISON, CRUNCH, CRUSH_CLAW, CRUSH_GRIP, CURSE, CUT, DARKEST_LARIAT, DARK_PULSE, DARK_VOID, DAZZLING_GLEAM, DECORATE, DEFEND_ORDER, DEFENSE_CURL, DEFOG, DESTINY_BOND, DETECT, DEVASTATING_DRAKE, DIAMOND_STORM, DIG, DISABLE, DISARMING_VOICE, DISCHARGE, DIRE_CLAW, DIVE, DIZZY_PUNCH, DOODLE, DOOM_DESIRE, DOUBLE_EDGE, DOUBLE_HIT, DOUBLE_IRON_BASH, DOUBLE_KICK, DOUBLE_SHOCK, DOUBLE_SLAP, DOUBLE_TEAM, DRACO_METEOR, DRAGON_ASCENT, DRAGON_BREATH, DRAGON_CLAW, DRAGON_DANCE, DRAGON_DARTS, DRAGON_ENERGY, DRAGON_HAMMER, DRAGON_PULSE, DRAGON_RAGE, DRAGON_RUSH, DRAGON_TAIL, DRAINING_KISS, DRAIN_PUNCH, DREAM_EATER, DRILL_PECK, DRILL_RUN, DRUM_BEATING, DUAL_CHOP, DUAL_WINGBEAT, DYNAMAX_CANNON, DYNAMIC_PUNCH, EARTH_POWER, EARTHQUAKE, ECHOED_VOICE, EERIE_IMPULSE, EERIE_SPELL, EGG_BOMB, ELECTRIC_TERRAIN, ELECTRIFY, ELECTRO_BALL, ELECTRO_DRIFT, ELECTROWEB, EMBARGO, EMBER, ENCORE, ENDEAVOR, ENDURE, ENERGY_BALL, ENTRAINMENT, ERUPTION, ESPER_WING, ETERNABEAM, EXPANDING_FORCE, EXPLOSION, EXTRASENSORY, EXTREME_EVOBOOST, EXTREME_SPEED, FACADE, FAIRY_LOCK, FAIRY_WIND, FAKE_OUT, FAKE_TEARS, FALSE_SURRENDER, FALSE_SWIPE, FEATHER_DANCE, FEINT, FEINT_ATTACK, FELL_STINGER, FIERY_DANCE, FIERY_WRATH, FILLET_AWAY, FINAL_GAMBIT, FIRE_BLAST, FIRE_FANG, FIRE_LASH, FIRE_PLEDGE, FIRE_PUNCH, FIRE_SPIN, FIRST_IMPRESSION, FISHIOUS_REND, FISSURE, FLAIL, FLAME_BURST, FLAME_CHARGE, FLAME_WHEEL, FLAMETHROWER, FLARE_BLITZ, FLASH, FLASH_CANNON, FLATTER, FLEUR_CANNON, FLING, FLIP_TURN, FLOATY_FALL, FLORAL_HEALING, FLOWER_SHIELD, FLOWER_TRICK, FLY, FLYING_PRESS, FOCUS_BLAST, FOCUS_ENERGY, FOCUS_PUNCH, FOLLOW_ME, FORCE_PALM, FORESIGHT, FORESTS_CURSE, FOUL_PLAY, FREEZE_DRY, FREEZE_SHOCK, FREEZING_GLARE, FREEZY_FROST, FRENZY_PLANT, FROST_BREATH, FRUSTRATION, FURY_ATTACK, FURY_CUTTER, FURY_SWIPES, FUSION_BOLT, FUSION_FLARE, FUTURE_SIGHT, GASTRO_ACID, GEAR_GRIND, GEAR_UP, GENESIS_SUPERNOVA, GEOMANCY, GIGA_DRAIN, GIGA_IMPACT, GIGATON_HAMMER, GIGAVOLT_HAVOC, GLACIAL_LANCE, GLACIATE, GLAIVE_RUSH, GLARE, GLITZY_GLOW, G_MAX_BEFUDDLE, G_MAX_CANNONADE, G_MAX_CENTIFERNO, G_MAX_CHI_STRIKE, G_MAX_CUDDLE, G_MAX_DEPLETION, G_MAX_DRUM_SOLO, G_MAX_FINALE, G_MAX_FIREBALL, G_MAX_FOAM_BURST, G_MAX_GOLD_RUSH, G_MAX_GRAVITAS, G_MAX_HYDROSNIPE, G_MAX_MALODOR, G_MAX_MELTDOWN, G_MAX_ONE_BLOW, G_MAX_RAPID_FLOW, G_MAX_REPLENISH, G_MAX_RESONANCE, G_MAX_SANDBLAST, G_MAX_SMITE, G_MAX_SNOOZE, G_MAX_STEELSURGE, G_MAX_STONESURGE, G_MAX_STUN_SHOCK, G_MAX_SWEETNESS, G_MAX_TARTNESS, G_MAX_TERROR, G_MAX_VINE_LASH, G_MAX_VOLCALITH, G_MAX_VOLT_CRASH, G_MAX_WILDFIRE, G_MAX_WIND_RAGE, GRASS_KNOT, GRASS_PLEDGE, GRASS_WHISTLE, GRASSY_GLIDE, GRASSY_TERRAIN, GRAV_APPLE, GRAVITY, GROWL, GROWTH, GRUDGE, GUARDIAN_OF_ALOLA, GUARD_SPLIT, GUARD_SWAP, GUILLOTINE, GUNK_SHOT, GUST, GYRO_BALL, HAIL, HAMMER_ARM, HAPPY_HOUR, HARDEN, HAZE, HEADBUTT, HEAD_CHARGE, HEADLONG_RUSH, HEAD_SMASH, HEAL_BELL, HEAL_BLOCK, HEALING_WISH, HEAL_ORDER, HEAL_PULSE, HEART_STAMP, HEART_SWAP, HEAT_CRASH, HEAT_WAVE, HEAVY_SLAM, HELPING_HAND, HEX, HIDDEN_POWER, HIDDEN_POWER_BUG, HIDDEN_POWER_DARK, HIDDEN_POWER_DRAGON, HIDDEN_POWER_ELECTRIC, HIDDEN_POWER_FIGHTING, HIDDEN_POWER_FIRE, HIDDEN_POWER_FLYING, HIDDEN_POWER_GHOST, HIDDEN_POWER_GRASS, HIDDEN_POWER_GROUND, HIDDEN_POWER_ICE, HIDDEN_POWER_POISON, HIDDEN_POWER_PSYCHIC, HIDDEN_POWER_ROCK, HIDDEN_POWER_STEEL, HIDDEN_POWER_WATER, HIGH_HORSEPOWER, HIGH_JUMP_KICK, HOLD_BACK, HOLD_HANDS, HONE_CLAWS, HORN_ATTACK, HORN_DRILL, HORN_LEECH, HOWL, HURRICANE, HYDRO_CANNON, HYDRO_PUMP, HYDRO_STEAM, HYDRO_VORTEX, HYPER_BEAM, HYPER_DRILL, HYPER_FANG, HYPERSPACE_FURY, HYPERSPACE_HOLE, HYPER_VOICE, HYPNOSIS, ICE_BALL, ICE_BEAM, ICE_BURN, ICE_FANG, ICE_HAMMER, ICE_PUNCH, ICE_SHARD, ICE_SPINNER, ICICLE_CRASH, ICICLE_SPEAR, ICY_WIND, IMPRISON, INCINERATE, INFERNAL_PARADE, INFERNO, INFERNO_OVERDRIVE, INFESTATION, INGRAIN, INSTRUCT, ION_DELUGE, IRON_DEFENSE, IRON_HEAD, IRON_TAIL, JAW_LOCK, JET_PUNCH, JUDGMENT, JUMP_KICK, JUNGLE_HEALING, KARATE_CHOP, KINESIS, KINGS_SHIELD, KNOCK_OFF, KOWTOW_CLEAVE, LANDS_WRATH, LASER_FOCUS, LASH_OUT, LAST_RESORT, LAST_RESPECTS, LAVA_PLUME, LEAFAGE, LEAF_BLADE, LEAF_STORM, LEAF_TORNADO, LEECH_LIFE, LEECH_SEED, LEER, LETS_SNUGGLE_FOREVER, LICK, LIFE_DEW, LIGHT_OF_RUIN, LIGHT_SCREEN, LIGHT_THAT_BURNS_THE_SKY, LIQUIDATION, LOCK_ON, LOVELY_KISS, LOW_KICK, LOW_SWEEP, LUCKY_CHANT, LUMINA_CRASH, LUNAR_BLESSING, LUNAR_DANCE, LUNGE, LUSTER_PURGE, MACH_PUNCH, MAGICAL_LEAF, MAGICAL_TORQUE, MAGIC_COAT, MAGIC_POWDER, MAGIC_ROOM, MAGMA_STORM, MAGNET_BOMB, MAGNETIC_FLUX, MAGNET_RISE, MAGNITUDE, MAKE_IT_RAIN, MALICIOUS_MOONSAULT, MAT_BLOCK, MAX_AIRSTREAM, MAX_DARKNESS, MAX_FLARE, MAX_FLUTTERBY, MAX_GEYSER, MAX_GUARD, MAX_HAILSTORM, MAX_KNUCKLE, MAX_LIGHTNING, MAX_MINDSTORM, MAX_OOZE, MAX_OVERGROWTH, MAX_PHANTASM, MAX_QUAKE, MAX_ROCKFALL, MAX_STARFALL, MAX_STEELSPIKE, MAX_STRIKE, MAX_WYRMWIND, MEAN_LOOK, MEDITATE, ME_FIRST, MEGA_DRAIN, MEGAHORN, MEGA_KICK, MEGA_PUNCH, MEMENTO, MENACING_MOONRAZE_MAELSTROM, METAL_BURST, METAL_CLAW, METAL_SOUND, METEOR_ASSAULT, METEOR_BEAM, METEOR_MASH, METRONOME, MILK_DRINK, MIMIC, MIND_BLOWN, MIND_READER, MINIMIZE, MIRACLE_EYE, MIRROR_COAT, MIRROR_MOVE, MIRROR_SHOT, MIST, MIST_BALL, MISTY_EXPLOSION, MISTY_TERRAIN, MOONBLAST, MOONGEIST_BEAM, MOONLIGHT, MORNING_SUN, MORTAL_SPIN, MOUNTAIN_GALE, MUD_BOMB, MUD_SHOT, MUD_SLAP, MUD_SPORT, MUDDY_WATER, MULTI_ATTACK, MYSTICAL_FIRE, MYSTICAL_POWER, NASTY_PLOT, NATURAL_GIFT, NATURE_POWER, NATURES_MADNESS, NEEDLE_ARM, NEVER_ENDING_NIGHTMARE, NIGHT_DAZE, NIGHTMARE, NIGHT_SHADE, NIGHT_SLASH, NOBLE_ROAR, NO_RETREAT, NOXIOUS_TORQUE, NUZZLE, OBLIVION_WING, OBSTRUCT, OCEANIC_OPERETTA, OCTAZOOKA, OCTOLOCK, ODOR_SLEUTH, OMINOUS_WIND, ORDER_UP, ORIGIN_PULSE, OUTRAGE, OVERDRIVE, OVERHEAT, PAIN_SPLIT, PARABOLIC_CHARGE, PARTING_SHOT, PAYBACK, PAY_DAY, PECK, PERISH_SONG, PETAL_BLIZZARD, PETAL_DANCE, PHANTOM_FORCE, PHOTON_GEYSER, PIKA_PAPOW, PIN_MISSILE, PLASMA_FISTS, PLAY_NICE, PLAY_ROUGH, PLUCK, POISON_FANG, POISON_GAS, POISON_JAB, POISON_POWDER, POISON_STING, POISON_TAIL, POLLEN_PUFF, POLTERGEIST, POPULATION_BOMB, POUNCE, POUND, POWDER, POWDER_SNOW, POWER_GEM, POWER_SHIFT, POWER_SPLIT, POWER_SWAP, POWER_TRICK, POWER_TRIP, POWER_UP_PUNCH, POWER_WHIP, PRECIPICE_BLADES, PRESENT, PRISMATIC_LASER, PROTECT, PSYBEAM, PSYBLADE, PSYCH_UP, PSYCHIC, PSYCHIC_FANGS, PSYCHIC_TERRAIN, PSYCHO_BOOST, PSYCHO_CUT, PSYCHO_SHIFT, PSYSHIELD_BASH, PSYSHOCK, PSYSTRIKE, PSYWAVE, PULVERIZING_PANCAKE, PUNISHMENT, PURIFY, PURSUIT, PYRO_BALL, QUASH, QUICK_ATTACK, QUICK_GUARD, QUIVER_DANCE, RAGE, RAGE_FIST, RAGE_POWDER, RAGING_BULL, RAGING_FURY, RAIN_DANCE, RAPID_SPIN, RAZOR_LEAF, RAZOR_SHELL, RAZOR_WIND, RECOVER, RECYCLE, REFLECT, REFLECT_TYPE, REFRESH, RELIC_SONG, REST, RETALIATE, RETURN, REVELATION_DANCE, REVENGE, REVERSAL, REVIVAL_BLESSING, RISING_VOLTAGE, ROAR, ROAR_OF_TIME, ROCK_BLAST, ROCK_CLIMB, ROCK_POLISH, ROCK_SLIDE, ROCK_SMASH, ROCK_THROW, ROCK_TOMB, ROCK_WRECKER, ROLE_PLAY, ROLLING_KICK, ROLLOUT, ROOST, ROTOTILLER, ROUND, RUINATION, SACRED_FIRE, SACRED_SWORD, SAFEGUARD, SALT_CURE, SAND_ATTACK, SANDSEAR_STORM, SANDSTORM, SAND_TOMB, SAPPY_SEED, SAVAGE_SPIN_OUT, SCALD, SCALE_SHOT, SCARY_FACE, SCORCHING_SANDS, SCRATCH, SCREECH, SEARING_SHOT, SEARING_SUNRAZE_SMASH, SECRET_POWER, SECRET_SWORD, SEED_BOMB, SEED_FLARE, SEISMIC_TOSS, SELF_DESTRUCT, SHADOW_BALL, SHADOW_BONE, SHADOW_CLAW, SHADOW_FORCE, SHADOW_PUNCH, SHADOW_SNEAK, SHARPEN, SHATTERED_PSYCHE, SHED_TAIL, SHEER_COLD, SHELL_SIDE_ARM, SHELL_SMASH, SHELL_TRAP, SHELTER, SHIFT_GEAR, SHOCK_WAVE, SHORE_UP, SIGNAL_BEAM, SILK_TRAP, SILVER_WIND, SIMPLE_BEAM, SING_MOVE /*Many math libraries define SING as a macro*/, SINISTER_ARROW_RAID, SIZZLY_SLIDE, SKETCH, SKILL_SWAP, SKITTER_SMACK, SKULL_BASH, SKY_ATTACK, SKY_DROP, SKY_UPPERCUT, SLACK_OFF, SLAM, SLASH, SLEEP_POWDER, SLEEP_TALK, SLUDGE, SLUDGE_BOMB, SLUDGE_WAVE, SMACK_DOWN, SMART_STRIKE, SMELLING_SALTS, SMOG, SMOKESCREEN, SNAP_TRAP, SNARL, SNATCH, SNIPE_SHOT, SNORE, SNOWSCAPE, SOAK, SOFT_BOILED, SOLAR_BEAM, SOLAR_BLADE, SONIC_BOOM, SOUL_STEALING_7_STAR_STRIKE, SPACIAL_REND, SPARK, SPARKLING_ARIA, SPARKLY_SWIRL, SPECTRAL_THIEF, SPEED_SWAP, SPICY_EXTRACT, SPIDER_WEB, SPIKE_CANNON, SPIKES, SPIKY_SHIELD, SPIN_OUT, SPIRIT_BREAK, SPIRIT_SHACKLE, SPIT_UP, SPITE, SPLASH, SPLINTERED_STORMSHARDS, SPLISHY_SPLASH, SPORE, SPOTLIGHT, SPRINGTIDE_STORM, STEALTH_ROCK, STEAM_ERUPTION, STEAMROLLER, STEEL_BEAM, STEEL_ROLLER, STEEL_WING, STICKY_WEB, STOCKPILE, STOKED_SPARKSURFER, STOMP, STOMPING_TANTRUM, STONE_AXE, STONE_EDGE, STORED_POWER, STORM_THROW, STRANGE_STEAM, STRENGTH, STRENGTH_SAP, STRING_SHOT, STRUGGLE, STRUGGLE_BUG, STUFF_CHEEKS, STUN_SPORE, SUBMISSION, SUBSTITUTE, SUBZERO_SLAMMER, SUCKER_PUNCH, SUNNY_DAY, SUNSTEEL_STRIKE, SUPER_FANG, SUPERPOWER, SUPERSONIC, SUPERSONIC_SKYSTRIKE, SURF, SURGING_STRIKES, SWAGGER, SWALLOW, SWEET_KISS, SWEET_SCENT, SWIFT, SWITCHEROO, SWORDS_DANCE, SYNCHRONOISE, SYNTHESIS, TACKLE, TAIL_GLOW, TAIL_SLAP, TAIL_WHIP, TAILWIND, TAKE_DOWN, TAKE_HEART, TAR_SHOT, TAUNT, TEARFUL_LOOK, TEATIME, TECHNO_BLAST, TECTONIC_RAGE, TEETER_DANCE, TELEKINESIS, TELEPORT, TERA_BLAST, TERRAIN_PULSE, THIEF, THOUSAND_ARROWS, THOUSAND_WAVES, THRASH, THROAT_CHOP, THUNDER, THUNDERBOLT, THUNDER_CAGE, THUNDER_FANG, THUNDEROUS_KICK, THUNDER_PUNCH, THUNDER_SHOCK, THUNDER_WAVE, TICKLE, TIDY_UP, TOPSY_TURVY, TORCH_SONG, TORMENT, TOXIC, TOXIC_SPIKES, TOXIC_THREAD, TRAILBLAZE, TRANSFORM, TRI_ATTACK, TRICK, TRICK_OR_TREAT, TRICK_ROOM, TRIPLE_ARROWS, TRIPLE_AXEL, TRIPLE_DIVE, TRIPLE_KICK, TROP_KICK, TRUMP_CARD, TWIN_BEAM, TWINEEDLE, TWINKLE_TACKLE, TWISTER, U_TURN, UPROAR, VACUUM_WAVE, V_CREATE, VEEVEE_VOLLEY, VENOM_DRENCH, VENOSHOCK, VICTORY_DANCE, VINE_WHIP, VISE_GRIP, VITAL_THROW, VOLT_SWITCH, VOLT_TACKLE, WAKE_UP_SLAP, WATERFALL, WATER_GUN, WATER_PLEDGE, WATER_PULSE, WATER_SHURIKEN, WATER_SPORT, WATER_SPOUT, WAVE_CRASH, WEATHER_BALL, WHIRLPOOL, WHIRLWIND, WICKED_BLOW, WICKED_TORQUE, WIDE_GUARD, WILDBOLT_STORM, WILD_CHARGE, WILL_O_WISP, WING_ATTACK, WISH, WITHDRAW, WONDER_ROOM, WOOD_HAMMER, WORK_UP, WORRY_SEED, WRAP, WRING_OUT, X_SCISSOR, YAWN, ZAP_CANNON, ZEN_HEADBUTT, ZING_ZAP, ZIPPY_ZAP, MOVE_TOTAL,
+  // clang-format on
+};
+
+static constexpr std::uint16_t TOTAL_MOVE_COUNT = (std::uint16_t)Move::MOVE_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+/////////////////////// END OF src/Types/Enums/Move.hpp ////////////////////////
+
+//////// START OF src/Components/AnalyzeEffect/AnalyzeEffectInputs.hpp /////////
+
+#include <vector>
+
+namespace pokesim::analyze_effect {
+struct EffectTarget {
+  types::entity val{};
+};
+
+struct EffectMoves {
+  internal::maxSizedVector<dex::Move> val{};
+};
+
+struct Inputs {
+  types::entityVector val{};
+};
+
+struct OriginalInputEntities {
+  types::entity battle{};
+  types::entity attacker{};
+  types::entity defender{};
+  types::entity effectTarget{};
+
+  bool operator==(const OriginalInputEntities& other) const {
+    return battle == other.battle && attacker == other.attacker && defender == other.defender &&
+           effectTarget == other.effectTarget;
+  }
+};
+
+struct MovePairs {
+  internal::maxSizedVector<std::pair<types::entity, types::entity>> val{};
+
+  bool operator==(const MovePairs& other) const {
+    if (val.size() != other.val.size()) return false;
+    for (types::cloneIndex i = 0; i < val.size(); i++) {
+      if (val[i].first != other.val[i].first || val[i].second != other.val[i].second) {
+        return false;
+      }
+    }
+    return true;
+  }
+};
+
+struct RunsOneCalculationCount {
+  types::eventPossibilities val = 0;
+};
+
+namespace tags {
+struct Input {};
+struct RunOneCalculation {};
+struct BattleCloneForCalculation {};
+struct InvertFinalAnswer {};
+}  // namespace tags
+}  // namespace pokesim::analyze_effect
+
+///////// END OF src/Components/AnalyzeEffect/AnalyzeEffectInputs.hpp //////////
+
+////////////////// START OF src/Types/Enums/PseudoWeather.hpp //////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+enum class PseudoWeather : std::uint8_t {
+  // clang-format off
+  NO_PSEUDO_WEATHER = 0, PSEUDO_WEATHER_TOTAL
+  // clang-format on
+};
+
+static constexpr std::uint8_t TOTAL_PSEUDO_WEATHER_COUNT = (std::uint8_t)PseudoWeather::PSEUDO_WEATHER_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Types/Enums/PseudoWeather.hpp ///////////////////
+
+////////////////// START OF src/Types/Enums/SideCondition.hpp //////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+enum class SideCondition : std::uint8_t {
+  // clang-format off
+  NO_SIDE_CONDITION = 0, SIDE_CONDITION_TOTAL
+  // clang-format on
+};
+
+static constexpr std::uint8_t TOTAL_SIDE_CONDITION_COUNT = (std::uint8_t)SideCondition::SIDE_CONDITION_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Types/Enums/SideCondition.hpp ///////////////////
+
+///////////////////// START OF src/Types/Enums/Status.hpp //////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon status condition name
+enum class Status : std::uint8_t {
+  NO_STATUS = 0,
+  BRN,
+  FRZ,
+  PAR,
+  PSN,
+  SLP,
+  TOX,
+  /*, FRB, DRO, */ STATUS_TOTAL,
+};
+
+static constexpr std::uint8_t TOTAL_STATUS_COUNT = (std::uint8_t)Status::STATUS_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Status.hpp ///////////////////////
+
+///////////////////// START OF src/Types/Enums/Terrain.hpp /////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+enum class Terrain : std::uint8_t {
+  // clang-format off
+  NO_TERRAIN = 0, TERRAIN_TOTAL
+  // clang-format on
+};
+
+static constexpr std::uint8_t TOTAL_TERRAIN_COUNT = (std::uint8_t)Terrain::TERRAIN_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Terrain.hpp //////////////////////
+
+//////////////////// START OF src/Types/Enums/Volatile.hpp /////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+enum class Volatile : std::uint8_t {
+  // clang-format off
+  NO_VOLATILE = 0,
+  CHOICE_LOCK,
+  VOLATILE_TOTAL
+  // clang-format on
+};
+
+static constexpr std::uint8_t TOTAL_VOLATILE_COUNT = (std::uint8_t)Volatile::VOLATILE_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Types/Enums/Volatile.hpp //////////////////////
+
+///////////////////// START OF src/Types/Enums/Weather.hpp /////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+enum class Weather : std::uint8_t {
+  // clang-format off
+  NO_WEATHER = 0, WEATHER_TOTAL
+  // clang-format on
+};
+
+static constexpr std::uint8_t TOTAL_WEATHER_COUNT = (std::uint8_t)Weather::WEATHER_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Weather.hpp //////////////////////
+
+////////////////////// START OF src/Utilities/Variant.hpp //////////////////////
+
+#include <variant>
+
+namespace pokesim::internal {
+template <typename... Types>
+class variant : public std::variant<Types...> {
+ public:
+  using std::variant<Types...>::variant;
+
+  template <typename T>
+  variant& operator=(const T& rhs) {
+    std::variant<Types...>::operator=(rhs);
+    return *this;
+  }
+
+  bool empty() const { return holds<std::monostate>(); }
+
+  template <typename Type>
+  bool holds() const {
+    return std::holds_alternative<Type>(*this);
+  }
+
+  template <typename Type>
+  auto& get() const {
+    return std::get<Type>(*this);
+  }
+
+  template <typename Type>
+  auto& get() {
+    return std::get<Type>(*this);
+  }
+};
+}  // namespace pokesim::internal
+
+/////////////////////// END OF src/Utilities/Variant.hpp ///////////////////////
+
+//////////////////////// START OF src/Types/Effect.hpp /////////////////////////
+
+namespace pokesim::types {
+using effectEnum = pokesim::internal::variant<
+  std::monostate, dex::PseudoWeather, dex::SideCondition, dex::Status, dex::Terrain, dex::Volatile, dex::Weather>;
+}  // namespace pokesim::types
+
+///////////////////////// END OF src/Types/Effect.hpp //////////////////////////
+
+/////////// START OF src/Components/AnalyzeEffect/RemovedEffect.hpp ////////////
+
+namespace pokesim::analyze_effect {
+struct RemovedEffect {
+  types::effectEnum val{};
+};
+}  // namespace pokesim::analyze_effect
+
+//////////// END OF src/Components/AnalyzeEffect/RemovedEffect.hpp /////////////
+
+///////////////////////// START OF src/Types/Move.hpp //////////////////////////
+
+namespace pokesim::types {
+using pp = pokesim::internal::unsignedIntType<MechanicConstants::MoveMaxPp::MAX>;
+using basePower = pokesim::internal::unsignedIntType<MechanicConstants::MoveBasePower::MAX>;
+using baseAccuracy = pokesim::internal::unsignedIntType<MechanicConstants::MoveBaseAccuracy::MAX>;
+using moveHits = pokesim::internal::unsignedIntType<MechanicConstants::PokemonHpStat::MAX>;
+using baseEffectChance = pokesim::internal::unsignedIntType<MechanicConstants::MoveBaseEffectChance::MAX>;
+
+using priority =
+  pokesim::internal::signedIntType<MechanicConstants::MovePriority::MAX, MechanicConstants::MovePriority::MIN>;
+using fractionalPriority = bool;
+}  // namespace pokesim::types
+
+////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
+
+///////////////// START OF src/Components/BaseEffectChance.hpp /////////////////
+
+namespace pokesim {
+/**
+ * @brief Chance of an effect occurring.
+ *
+ * Examples: Air Slash has a 60% chance to flinch, Harvest has a 50% chance to restore a used berry.
+ */
+struct BaseEffectChance {
+  types::baseEffectChance val = MechanicConstants::MoveBaseEffectChance::MAX;
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/BaseEffectChance.hpp //////////////////
+
+//////////////////// START OF src/Components/BasePower.hpp /////////////////////
+
+namespace pokesim {
+struct BasePower {
+  types::basePower val = MechanicConstants::MoveBasePower::MIN;
+};
+}  // namespace pokesim
+
+///////////////////// END OF src/Components/BasePower.hpp //////////////////////
+
+///////////////////////// START OF src/Types/Stats.hpp /////////////////////////
+
+namespace pokesim::types {
+using level = pokesim::internal::unsignedIntType<MechanicConstants::PokemonLevel::MAX>;
+
+using stat = pokesim::internal::unsignedIntType<MechanicConstants::PokemonEffectiveStat::MAX>;
+using baseStat = pokesim::internal::unsignedIntType<MechanicConstants::PokemonBaseStat::MAX>;
+
+using ev = pokesim::internal::unsignedIntType<MechanicConstants::PokemonEv::MAX>;
+using iv = pokesim::internal::unsignedIntType<MechanicConstants::PokemonIv::MAX>;
+
+using boost =
+  pokesim::internal::signedIntType<MechanicConstants::PokemonStatBoost::MAX, MechanicConstants::PokemonStatBoost::MIN>;
+}  // namespace pokesim::types
+
+////////////////////////// END OF src/Types/Stats.hpp //////////////////////////
+
+////////////////////// START OF src/Components/Boosts.hpp //////////////////////
+
+namespace pokesim {
+struct AtkBoost {
+  types::boost val = 0;
+};
+
+struct DefBoost {
+  types::boost val = 0;
+};
+
+struct SpaBoost {
+  types::boost val = 0;
+};
+
+struct SpdBoost {
+  types::boost val = 0;
+};
+
+struct SpeBoost {
+  types::boost val = 0;
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Components/Boosts.hpp ///////////////////////
+
+//////////////// START OF src/Components/CalcDamage/Aliases.hpp ////////////////
+
+namespace pokesim::calc_damage {
+using Attacker = CurrentActionSource;
+using Defenders = CurrentActionTargets;
+using UsedMoves = CurrentActionMoves;
+
+namespace tags {
+using Attacker = pokesim::tags::CurrentActionMoveSource;
+using Defender = pokesim::tags::CurrentActionMoveTarget;
+using UsedMove = pokesim::tags::CurrentActionMove;
+}  // namespace tags
+}  // namespace pokesim::calc_damage
+
+///////////////// END OF src/Components/CalcDamage/Aliases.hpp /////////////////
+
+////////////// START OF src/Components/CalcDamage/CriticalHit.hpp //////////////
+
+#include <array>
+
+namespace pokesim::calc_damage {
+struct CritChanceDivisor {
+  types::percentChance val = pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS[0];
+};
+
+struct CritBoost {
+  types::critBoost val = pokesim::MechanicConstants::CritBoost::MIN;
+};
+
+namespace tags {
+struct Crit {};
+}  // namespace tags
+}  // namespace pokesim::calc_damage
+
+/////////////// END OF src/Components/CalcDamage/CriticalHit.hpp ///////////////
+
+////////// START OF src/Components/CalcDamage/DamageCalcVariables.hpp //////////
+
+namespace pokesim::calc_damage {
+struct AttackingLevel {
+  types::level val = 1;
+};
+
+struct AttackingStat {
+  types::stat val = 1;
+};
+
+struct DefendingStat {
+  types::stat val = 1;
+};
+
+namespace tags {
+struct P1Defending {};
+struct P2Defending {};
+}  // namespace tags
+}  // namespace pokesim::calc_damage
+
+/////////// END OF src/Components/CalcDamage/DamageCalcVariables.hpp ///////////
+
+///////////////// START OF src/Components/CloneFromCloneTo.hpp /////////////////
+
+namespace pokesim {
+namespace tags {
+struct CloneFrom {};
+struct CloneToRemove {};
+}  // namespace tags
+
+struct CloneTo {
+  types::cloneIndex val{};
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/CloneFromCloneTo.hpp //////////////////
+
+////////////////////// START OF src/Types/Enums/Item.hpp ///////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+// Name of items in Pokemon games
+enum class Item : std::uint16_t {
+  // clang-format off
+  NO_ITEM = 0, ABILITY_CAPSULE, ABILITY_PATCH, ABILITY_SHIELD, ABOMASITE, ABRA_CANDY, ABSOLITE, ABSORB_BULB, ACRO_BIKE, ADAMANT_CRYSTAL, ADAMANT_MINT, ADAMANT_ORB, ADRENALINE_ORB, ADVENTURE_GUIDE, AERODACTYLITE, AERODACTYL_CANDY, AGGRONITE, AGUAV_BERRY, AIR_BALLOON, AIR_MAIL, ALAKAZITE, ALORAICHIUM_Z, ALTARIANITE, AMAZE_MULCH, AMPHAROSITE, AMULET_COIN, ANTIDOTE, APICOT_BERRY, APRICORN, APRICORN_BOX, AQUA_SUIT, ARMOR_FOSSIL, ARMOR_PASS, ARMORITE_ORE, ARTICUNO_CANDY, ASPEAR_BERRY, ASSAULT_VEST, AUDINITE, AURORATICKET, AUSPICIOUS_ARMOR, AUTOGRAPH, AUX_EVASION, AUX_GUARD, AUX_POWER, AUX_POWERGUARD, AWAKENING, AZELFS_FANG, AZURE_FLUTE, BABIRI_BERRY, BALL_OF_MUD, BALM_MUSHROOM, BAND_AUTOGRAPH, BANETTITE, BASCULEGION_FOOD, BASEMENT_KEY, BEACH_GLASS, BEAD_MAIL, BEAN_CAKE, BEAST_BALL, BEEDRILLITE, BELLSPROUT_CANDY, BELUE_BERRY, BERRY, BERRY_JUICE, BERRY_POTS, BERRY_POUCH, BERRY_SWEET, BERSERK_GENE, BICYCLE, BIG_BAMBOO_SHOOT, BIG_MALASADA, BIG_MUSHROOM, BIG_NUGGET, BIG_PEARL, BIG_ROOT, BIKE_VOUCHER, BINDING_BAND, BITTER_BERRY, BLACK_APRICORN, BLACK_AUGURITE, BLACK_BELT, BLACK_FLUTE, BLACK_GLASSES, BLACK_MANE_HAIR, BLACK_SLUDGE, BLACK_TUMBLESTONE, BLANK_PLATE, BLASTOISINITE, BLAZIKENITE, BLOOM_MAIL, BLUE_APRICORN, BLUE_CARD, BLUE_FLUTE, BLUE_ORB, BLUE_PETAL, BLUE_SCARF, BLUE_SHARD, BLUESKY_MAIL, BLU_ID_BADGE, BLUK_BERRY, BLUNDER_POLICY, BOLD_MINT, BONSLY_CARD, BONSLY_PHOTO, BOOST_MULCH, BOOSTER_ENERGY, BOTTLE_CAP, BRAVE_MINT, BRICK_MAIL, BRICK_PIECE, BRIDGE_MAIL_D, BRIDGE_MAIL_M, BRIDGE_MAIL_S, BRIDGE_MAIL_T, BRIDGE_MAIL_V, BRIGHT_POWDER, BUBBLE_MAIL, BUG_GEM, BUG_MEMORY, BUG_TERA_SHARD, BUGINIUM_Z, BUGWORT, BULBASAUR_CANDY, BURN_DRIVE, BURN_HEAL, BURNT_BERRY, CAKE_LURE_BASE, CALCIUM, CALM_MINT, CAMERUPTITE, CAMPING_GEAR, CANDY_TRUFFLE, CARBOS, CARD_KEY, CAREFUL_MINT, CARROT_SEEDS, CASTELIACONE, CASTER_FERN, CATCHING_CHARM, CATERPIE_CANDY, CELESTICA_FLUTE, CELL_BATTERY, CHALKY_STONE, CHANSEY_CANDY, CHARCOAL, CHARIZARDITE_X, CHARIZARDITE_Y, CHARMANDER_CANDY, CHARTI_BERRY, CHERI_BERRY, CHERISH_BALL, CHESTO_BERRY, CHILAN_BERRY, CHILL_DRIVE, CHIPPED_POT, CHOICE_BAND, CHOICE_DUMPLING, CHOICE_SCARF, CHOICE_SPECS, CHOPLE_BERRY, CLAW_FOSSIL, CLEANSE_TAG, CLEAR_AMULET, CLEAR_BELL, CLEFAIRY_CANDY, CLEVER_FEATHER, CLOVER_SWEET, COBA_BERRY, COIN_CASE, COLBUR_BERRY, COLOGNE_CASE, COLRESS_MACHINE, COMET_SHARD, COMMON_STONE, CONTEST_COSTUME, CONTEST_PASS, CORNN_BERRY, COUPON_1, COUPON_2, COUPON_3, COURAGE_CANDY, COURAGE_CANDY_L, COURAGE_CANDY_XL, COVER_FOSSIL, COVERT_CLOAK, CRACKED_POT, CRAFTING_KIT, CROWN_PASS, CRUNCHY_SALT, CUBONE_CANDY, CRY_ANALYZER, CUSTAP_BERRY, DAMP_MULCH, DAMP_ROCK, DARK_GEM, DARK_MEMORY, DARK_STONE, DARK_TERA_SHARD, DARKINIUM_Z, DATA_CARDS, DATA_ROM, DAWN_STONE, DAZZLING_HONEY, D_DISK, DECIDIUM_Z, DEEP_SEA_SCALE, DEEP_SEA_TOOTH, DESTINY_KNOT, DEVON_PARTS, DEVON_SCOPE, DEVON_SCUBA_GEAR, DIANCITE, DIGGER_DRILL, DIGLETT_CANDY, DIRE_HIT, DIRESHROOM, DISC_CASE, DISCOUNT_COUPON, DISCOVERY_SLATE, DISTORTION_SLATE, DITTO_CANDY, DIVE_BALL, DNA_SAMPLE, DNA_SPLICERS, DODUO_CANDY, DOME_FOSSIL, DOPPEL_BONNETS, DOUSE_DRIVE, DOWN_ST_KEY, DOWSING_MACHINE, DRACO_PLATE, DRAGON_FANG, DRAGON_GEM, DRAGON_MEMORY, DRAGON_SCALE, DRAGON_SKULL, DRAGON_TERA_SHARD, DRAGONIUM_Z, DRASH_BERRY, DRATINI_CANDY, DREAD_PLATE, DREAM_BALL, DREAM_MAIL, DROPPED_ITEM, DROWZEE_CANDY, DS_SOUNDS, DUBIOUS_DISC, DURIN_BERRY, DUSK_BALL, DUSK_STONE, DYNAMAX_BAND, DYNAMAX_CANDY, DYNAMAX_CRYSTALS, DYNITE_ORE, EARTH_PLATE, EEVEE_CANDY, EEVIUM_Z, EGG_TICKET, EGGANT_BERRY, EIN_FILE_C, EIN_FILE_F, EIN_FILE_H, EIN_FILE_P, EIN_FILE_S, EJECT_BUTTON, EJECT_PACK, EKANS_CANDY, ELECTABUZZ_CANDY, ELECTIRIZER, ELECTRIC_GEM, ELECTRIC_MEMORY, ELECTRIC_SEED, ELECTRIC_TERA_SHARD, ELECTRIUM_Z, ELEVATOR_KEY, ELIXIR, ENDORSEMENT, ENERGY_POWDER, ENERGY_ROOT, ENIGMA_BERRY, ENIGMA_STONE, ENIGMATIC_CARD, EON_FLUTE, EON_MAIL, EON_TICKET, ESCAPE_ROPE, ETERNAL_ICE, ETHER, EVERSTONE, EVIOLITE, EXCITE_SCENT, EXEGGCUTE_CANDY, EXP_CANDY_L, EXP_CANDY_M, EXP_CANDY_S, EXP_CANDY_XL, EXP_CANDY_XS, EXP_CHARM, EXP_SHARE, EXPERT_BELT, EXPLORER_KIT, FAB_MAIL, FAIRIUM_Z, FAIRY_GEM, FAIRY_MEMORY, FAIRY_TERA_SHARD, FAME_CHECKER, FARFETCHD_CANDY, FASHION_CASE, FAST_BALL, FAVORED_MAIL, F_DISK, FEATHER_BALL, FESTIVAL_TICKET, FIGHTING_GEM, FIGHTING_MEMORY, FIGHTING_TERA_SHARD, FIGHTINIUM_Z, FIGY_BERRY, FINE_REMEDY, FIRE_GEM, FIRE_MEMORY, FIRE_STONE, FIRE_TERA_SHARD, FIRIUM_Z, FISHING_ROD, FIST_PLATE, FLAME_MAIL, FLAME_ORB, FLAME_PLATE, FLOAT_STONE, FLOWER_MAIL, FLOWER_SWEET, FLUFFY_TAIL, FLYING_GEM, FLYING_MEMORY, FLYING_TERA_SHARD, FLYINIUM_Z, FOCUS_BAND, FOCUS_SASH, FORAGE_BAG, FOREST_BALM, FOSSILIZED_BIRD, FOSSILIZED_DINO, FOSSILIZED_DRAKE, FOSSILIZED_FISH, FRESH_WATER, FRIEND_BALL, FULL_HEAL, FULL_INCENSE, FULL_RESTORE, GALACTIC_KEY, GALARICA_CUFF, GALARICA_TWIG, GALARICA_WREATH, GALLADITE, GANLON_BERRY, GARCHOMPITE, GARDEVOIRITE, GASTLY_CANDY, GB_SOUNDS, GEAR, GENGARITE, GENIUS_FEATHER, GENOME_SLATE, GENTLE_MINT, GEODUDE_CANDY, GHOST_GEM, GHOST_MEMORY, GHOST_TERA_SHARD, GHOSTIUM_Z, GIGATON_BALL, GINEMA_BERRY, GLALITITE, GLITTER_MAIL, GO_GOGGLES, GOD_STONE, GOLD_BERRY, GOLD_BOTTLE_CAP, GOLD_LEAF, GOLD_TEETH, GOLDEEN_CANDY, GONZAPS_KEY, GOLDEN_NANAB_BERRY, GOLDEN_PINAP_BERRY, GOLDEN_RAZZ_BERRY, GOOD_ROD, GOOEY_MULCH, GORGEOUS_BOX, GRACIDEA, GRAIN_CAKE, GRAM_1, GRAM_2, GRAM_3, GRASS_GEM, GRASS_MEMORY, GRASS_TERA_SHARD, GRASSIUM_Z, GRASS_MAIL, GRASSY_SEED, GREAT_BALL, GREEN_APRICORN, GREEN_PETAL, GREEN_SCARF, GREEN_SHARD, GREET_MAIL, GREPA_BERRY, GRIMER_CANDY, GRIP_CLAW, GRIT_DUST, GRIT_GRAVEL, GRIT_PEBBLE, GRIT_ROCK, GRISEOUS_CORE, GRISEOUS_ORB, GRN_ID_BADGE, GROUND_GEM, GROUND_MEMORY, GROUND_TERA_SHARD, GROUNDIUM_Z, GROWLITHE_CANDY, GROWTH_MULCH, GRUBBY_HANKY, GS_BALL, GUARD_SPEC, GUIDEBOOK, GYARADOSITE, HABAN_BERRY, HARBOR_MAIL, HARD_STONE, HASTY_MINT, HEAL_BALL, HEAL_POWDER, HEALTH_CANDY, HEALTH_CANDY_L, HEALTH_CANDY_XL, HEALTH_FEATHER, HEART_MAIL, HEART_SCALE, HEARTY_GRAINS, HEAT_ROCK, HEAVY_BALL, HEAVY_DUTY_BOOTS, HELIX_FOSSIL, HERACRONITE, HI_TECH_EARBUDS, HITMONCHAN_CANDY, HITMONLEE_CANDY, HM01, HM02, HM03, HM04, HM05, HM06, HM07, HM08, HOLO_CASTER, HOMETOWN_MUFFIN, HONDEW_BERRY, HONEY, HONEY_CAKE, HONOR_OF_KALOS, HOPO_BERRY, HORSEA_CANDY, HOUNDOOMINITE, HP_UP, HYPER_POTION, IAPAPA_BERRY, ICE_BERRY, ICE_GEM, ICE_HEAL, ICE_MEMORY, ICE_STONE, ICE_TERA_SHARD, ICEROOT_CARROT, ICICLE_PLATE, ICIUM_Z, ICY_ROCK, ID_CARD, ILIMAS_NORMALIUM_Z, IMPISH_MINT, INCINIUM_Z, INQUIRY_MAIL, INSECT_PLATE, INTRIGUING_STONE, IRON, IRON_BALL, IRON_BARKTONGUE, IRON_CHUNK, IRON_PLATE, JABOCA_BERRY, JADE_ORB, JAIL_KEY, JAW_FOSSIL, JET_BALL, JIGGLYPUFF_CANDY, JOHTO_SLATE, JOLLY_MINT, JOY_SCENT, JUBILIFE_MUFFIN, JYNX_CANDY, KABUTO_CANDY, KANGASKHAN_CANDY, KANGASKHANITE, KANTO_SLATE, KASIB_BERRY, KEBIA_BERRY, KEE_BERRY, KELPSY_BERRY, KEY_STONE, KEY_TO_ROOM_1, KEY_TO_ROOM_2, KEY_TO_ROOM_4, KEY_TO_ROOM_6, KINGS_LEAF, KINGS_ROCK, KOFFING_CANDY, KOFUS_BOOK, KOMMONIUM_Z, KORAIDONS_POKE_BALL, KRABBY_CANDY, KRANE_MEMO_1, KRANE_MEMO_2, KRANE_MEMO_3, KRANE_MEMO_4, KRANE_MEMO_5, KUO_BERRY, LAGGING_TAIL, LANSAT_BERRY, LAPRAS_CANDY, LATIASITE, LATIOSITE, LAVA_COOKIE, LAX_INCENSE, LAX_MINT, L_DISK, LEADEN_BALL, LEADERS_CREST, LEAF_LETTER, LEAF_STONE, LEEK, LEFT_POKE_BALL, LEFTOVERS, LEGEND_PLATE, LEGENDARY_CLUE_1, LEGENDARY_CLUE_2, LEGENDARY_CLUE_3, LEGENDARY_CLUE, LEMONADE, LENS_CASE, LEPPA_BERRY, LETTER, LEVEL_BALL, LIBERTY_PASS, LICKITUNG_CANDY, LIECHI_BERRY, LIFE_ORB, LIFT_KEY, LIGHT_BALL, LIGHT_CLAY, LIGHT_STONE, LIKE_MAIL, LINKING_CORD, LITEBLUEMAIL, LOADED_DICE, LOCK_CAPSULE, LONE_EARRING, LONELY_MINT, LOOKER_TICKET, LOOT_SACK, LOPUNNITE, LOST_ITEM, LOST_SATCHEL, LOVE_BALL, LOVE_SWEET, LOVELY_MAIL, LUCARIONITE, LUCK_INCENSE, LUCKY_EGG, LUCKY_PUNCH, LUM_BERRY, LUMINOUS_MOSS, LUMIOSE_GALETTE, LUNALIUM_Z, LUNAR_FEATHER, LURE, LURE_BALL, LUSTROUS_GLOBE, LUSTROUS_ORB, LUXURY_BALL, LYCANIUM_Z, MACH_BIKE, MACHINE_PART, MACHO_BRACE, MACHOP_CANDY, MAGIKARP_CANDY, MAGMA_EMBLEM, MAGMA_STONE, MAGMA_SUIT, MAGMAR_CANDY, MAGMARIZER, MAGNEMITE_CANDY, MAGNET, MAGO_BERRY, MAGOST_BERRY, MAINGATE_KEY, MAKEUP_BAG, MALICIOUS_ARMOR, MANECTITE, MANKEY_CANDY, MARANGA_BERRY, MARBLE, MARK_CHARM, MARSHADIUM_Z, MARSH_BALM, MASTER_BALL, MAWILITE, MAX_ELIXIR, MAX_ETHER, MAX_LURE, MAX_HONEY, MAX_MUSHROOMS, MAX_POTION, MAX_REPEL, MAX_REVIVE, MAYORS_NOTE, MEADOW_PLATE, MECH_MAIL, MECHANICAL_BOX, MECHANICAL_CABINET, MECHANICAL_CIRCULAR_SAW, MECHANICAL_PINWHEEL, MECHANICAL_TUB, MEDAL_BOX, MEDICHAMITE, MEDICINAL_LEEK, MEGA_BRACELET, MEGA_RING, MELTAN_CANDY, MEMBER_CARD, MENTAL_HERB, MEOWTH_CANDY, MESPRITS_PLUME, METAGROSSITE, METAL_COAT, METAL_POWDER, METEORITE, METEORITE_SHARD, METRONOME, MEW_CANDY, MEWNIUM_Z, MEWTWO_CANDY, MEWTWONITE_X, MEWTWONITE_Y, MICLE_BERRY, MIGHTY_CANDY, MIGHTY_CANDY_L, MIGHTY_CANDY_XL, MILD_MINT, MIMIKIUM_Z, MIND_PLATE, MINT_BERRY, MIRACLEBERRY, MIRACLE_SEED, MIRAGE_MAIL, MIRAIDONS_POKE_BALL, MIROR_RADAR, MIRROR_HERB, MISTY_SEED, MODEST_MINT, MOLTRES_CANDY, MOOMOO_MILK, MOON_BALL, MOON_FLUTE, MOON_SHARD, MOON_STONE, MORPH_MAIL, MOSAIC_MAIL, MOUNTAIN_BALM, MR_MIME_CANDY, MUSCLE_BAND, MUSCLE_FEATHER, MUSHROOM_CAKE, MUSIC_DISC, MUSIC_MAIL, MYSTERIOUS_BALM, MYSTERIOUS_SHARD_S, MYSTERIOUS_SHARD_L, MYSTERYBERRY, MYSTERY_EGG, MYSTIC_WATER, MYSTICTICKET, NAIVE_MINT, NANAB_BERRY, NAUGHTY_MINT, NEST_BALL, NET_BALL, NEVER_MELT_ICE, NIDORAN_MALE_CANDY, NIDORAN_FEMALE_CANDY, NINIKU_BERRY, N_LUNARIZER, NOMEL_BERRY, NORMAL_BOX, NORMAL_GEM, NORMAL_TERA_SHARD, NORMALIUM_Z, N_SOLARIZER, NUGGET, NUTPEA_BERRY, OAKS_LETTER, OAKS_PARCEL, OCCA_BERRY, OCEANIC_SLATE, ODD_INCENSE, ODD_KEYSTONE, ODDISH_CANDY, OLD_AMBER, OLD_CHARM, OLD_GATEAU, OLD_JOURNAL, OLD_LETTER, OLD_ROD, OLD_SEA_MAP, OLD_VERSES, OMANYTE_CANDY, ONIX_CANDY, ORAN_BERRY, ORANGE_MAIL, ORANGE_PETAL, ORIGIN_BALL, ORIGIN_ORE, OVAL_CHARM, OVAL_STONE, PAIR_OF_TICKETS, PAL_PAD, PAMTRE_BERRY, PARALYZE_HEAL, PARAS_CANDY, PARCEL, PARK_BALL, PASS, PASS_ORB, PASSHO_BERRY, PAYAPA_BERRY, PEARL, PEARL_STRING, PEAT_BLOCK, PECHA_BERRY, PEP_UP_PLANT, PERMIT, PERSIM_BERRY, PETAYA_BERRY, PEWTER_CRUNCHIES, PICNIC_SET, PIDGEOTITE, PIDGEY_CANDY, PIKACHU_CANDY, PIKANIUM_Z, PIKASHUNIUM_Z, PINAP_BERRY, PINK_APRICORN, PINK_BOW, PINK_NECTAR, PINK_PETAL, PINK_SCARF, PINSIR_CANDY, PINSIRITE, PIXIE_PLATE, PLASMA_CARD, PLUME_FOSSIL, PLUMP_BEANS, POFFIN_CASE, POINT_CARD, POISON_BARB, POISON_GEM, POISON_MEMORY, POISON_TERA_SHARD, POISONIUM_Z, POKE_BALL, POKE_DOLL, POKE_FLUTE, POKE_RADAR, POKE_SNACK, POKE_TOY, POKEBLOCK_CASE, POKEBLOCK_KIT, POKEDEX, POKEMON_BOX_LINK, POKESHI_DOLL, POLKADOT_BOW, POLISHED_MUD_BALL, POLIWAG_CANDY, POMEG_BERRY, PONYTA_CANDY, POP_POD, PORTRAITMAIL, PORYGON_CANDY, POTION, POWER_ANKLET, POWER_BAND, POWER_BELT, POWER_BRACER, POWER_HERB, POWER_LENS, POWER_PLANT_PASS, POWER_WEIGHT, POWERUP_PART, POWDER_JAR, PP_MAX, PP_UP, PREMIER_BALL, PRETTY_FEATHER, PRIMARIUM_Z, PRISM_SCALE, PRISON_BOTTLE, PROFS_LETTER, PROFESSORS_MASK, PROP_CASE, PROTECTIVE_PADS, PROTECTOR, PROTEIN, PRZCUREBERRY, PSNCUREBERRY, PSYCHIC_GEM, PSYCHIC_MEMORY, PSYCHIC_SEED, PSYCHIC_TERA_SHARD, PSYCHIUM_Z, PSYDUCK_CANDY, PUMKIN_BERRY, PUNCHING_GLOVE, PURE_INCENSE, PURPLE_NECTAR, PURPLE_PETAL, QUALOT_BERRY, QUICK_BALL, QUICK_CANDY, QUICK_CANDY_L, QUICK_CANDY_XL, QUICK_CLAW, QUICK_POWDER, QUIET_MINT, RABUTA_BERRY, RADIANT_PETAL, RAGECANDYBAR, RAINBOW_FLOWER, RAINBOW_PASS, RAINBOW_SLATE, RAINBOW_WING, RARE_BONE, RARE_CANDY, RASH_MINT, RATTATA_CANDY, RAWST_BERRY, RAZOR_CLAW, RAZOR_FANG, RAZZ_BERRY, R_DISK, REAPER_CLOTH, RECIPES, RED_APRICORN, RED_CARD, RED_CHAIN, RED_FLUTE, RED_ID_BADGE, RED_NECTAR, RED_ORB, RED_PETAL, RED_SCALE, RED_SCARF, RED_SHARD, REINS_OF_UNITY, RELAXED_MINT, RELIC_BAND, RELIC_COPPER, RELIC_CROWN, RELIC_GOLD, RELIC_SILVER, RELIC_STATUE, RELIC_VASE, REMEDY, REPEAT_BALL, REPEL, REPLY_MAIL, RESIST_FEATHER, RETRO_MAIL, REVEAL_GLASS, REVIVAL_HERB, REVIVE, RHYHORN_CANDY, RIBBON_SWEET, RICH_MULCH, RIDE_PAGER, RINDO_BERRY, RING_TARGET, ROCK_GEM, ROCK_INCENSE, ROCK_MEMORY, ROCK_TERA_SHARD, ROCKIUM_Z, ROCKY_HELMET, ROLLER_SKATES, ROOM_SERVICE, ROOT_FOSSIL, ROSE_INCENSE, ROSELI_BERRY, ROTO_BARGAIN, ROTO_BOOST, ROTO_CATCH, ROTO_ENCOUNTER, ROTO_EXP_POINTS, ROTO_FRIENDSHIP, ROTO_HATCH, ROTO_HP_RESTORE, ROTO_PP_RESTORE, ROTO_PRIZE_MONEY, ROTO_STEALTH, ROTOM_BIKE, ROTOM_CATALOG, ROTOM_PHONE, ROWAP_BERRY, RSVP_MAIL, RUBY, RUNNING_SHOES, RUSTED_SHIELD, RUSTED_SWORD, S_S_TICKET, SABLENITE, SACHET, SACRED_ASH, SAFARI_BALL, SAFETY_GOGGLES, SAIL_FOSSIL, SALAC_BERRY, SALAMENCITE, SALT_CAKE, SAND_RADISH, SANDSHREW_CANDY, SANDWICH, SAPPHIRE, SASSY_MINT, SCANNER, SCARLET_BOOK, SCATTER_BANG, SCEPTILITE, SCIZORITE, SCOPE_LENS, SCROLL_OF_DARKNESS, SCROLL_OF_WATERS, SCYTHER_CANDY, SEA_INCENSE, SEAL_CASE, SECRET_KEY, SECRET_MEDICINE, SEED_OF_MASTERY, SEEL_CANDY, SERIOUS_MINT, SHADOW_MAIL, SHADEROOT_CARROT, SHALOUR_SABLE, SHARP_BEAK, SHARPEDONITE, SHED_SHELL, SHELL_BELL, SHELLDER_CANDY, SHINY_CHARM, SHINY_LEAF, SHINY_STONE, SHOAL_SALT, SHOAL_SHELL, SHOCK_DRIVE, SHUCA_BERRY, SILK_SCARF, SILPH_SCOPE, SILVER_LEAF, SILVER_NANAB_BERRY, SILVER_PINAP_BERRY, SILVER_POWDER, SILVER_RAZZ_BERRY, SILVER_WING, SITRUS_BERRY, SKULL_FOSSIL, SKY_PLATE, SKY_TUMBLESTONE, SLOWBRONITE, SLOWPOKE_CANDY, SLOWPOKE_TAIL, SMALL_BOUQUET, SMALL_TABLET, SMART_CANDY, SMART_CANDY_L, SMART_CANDY_XL, SMOKE_BALL, SMOKE_BOMB, SMOOTH_ROCK, SNORLAX_CANDY, SNORLIUM_Z, SNOWBALL, SNOW_BALM, SNOW_MAIL, SODA_POP, SOFT_SAND, SOLGANIUM_Z, SONIAS_BOOK, SOOT_SACK, SOOTFOOT_ROOT, SOOTHE_BELL, SOUL_DEW, SOUL_SLATE, SPACE_BALM, SPACE_MAIL, SPARKLING_STONE, SPEAROW_CANDY, SPELL_TAG, SPELON_BERRY, SPLASH_PLATE, SPOILED_APRICORN, SPOOKY_PLATE, SPORT_BALL, SPRAYDUCK, SPRINGY_MUSHROOM, SPRINKLOTAD, SQUALL_SLATE, SQUIRT_BOTTLE, SQUIRTLE_CANDY, STABLE_MULCH, STAR_PIECE, STAR_SWEET, STARDUST, STARF_BERRY, STARYU_CANDY, STEALTH_SPRAY, STEEL_GEM, STEEL_MAIL, STEEL_MEMORY, STEEL_TEETH, STEEL_TERA_SHARD, STEELIUM_Z, STEELIXITE, STICKY_BARB, STICKY_GLOB, STONE_PLATE, STORAGE_KEY, STRANGE_BALL, STRANGE_SOUVENIR, STRATOSPHERIC_SLATE, STRAWBERRY_SWEET, STRETCHY_SPRING, STRIB_BERRY, STYLE_CARD, SUBWAY_KEY, SUITE_KEY, SUN_FLUTE, SUN_SHARD, SUN_STONE, SUPER_LURE, SUPER_POTION, SUPER_REPEL, SUPER_ROD, SUPERB_REMEDY, SURFBOARD, SURF_MAIL, SURGE_BADGE, SURPRISE_MULCH, SURVIVAL_CHARM_B, SURVIVAL_CHARM_P, SURVIVAL_CHARM_R, SURVIVAL_CHARM_T, SURVIVAL_CHARM_Y, SWAMPERTITE, SWAP_SNACK, SWEET_APPLE, SWEET_HEART, SWIFT_FEATHER, SWORDCAP, SYSTEM_LEVER, TAMATO_BERRY, TANGA_BERRY, TANGELA_CANDY, TAPUNIUM_Z, TART_APPLE, TAUROS_CANDY, TEA, TEACHY_TV, TECTONIC_SLATE, TEMPTING_CHARM_B, TEMPTING_CHARM_P, TEMPTING_CHARM_R, TEMPTING_CHARM_T, TEMPTING_CHARM_Y, TENTACOOL_CANDY, TERA_ORB, TERRAIN_EXTENDER, TERU_SAMA, THANKS_MAIL, THICK_CLUB, THROAT_SPRAY, THUNDER_STONE, TIDAL_BELL, TIME_BALM, TIME_FLUTE, TIMER_BALL, TIMID_MINT, TINY_BAMBOO_SHOOT, TINY_MUSHROOM, TM01, TM02, TM03, TM04, TM05, TM06, TM07, TM08, TM09, TM10, TM11, TM12, TM13, TM14, TM15, TM16, TM17, TM18, TM19, TM20, TM21, TM22, TM23, TM24, TM25, TM26, TM27, TM28, TM29, TM30, TM31, TM32, TM33, TM34, TM35, TM36, TM37, TM38, TM39, TM40, TM41, TM42, TM43, TM44, TM45, TM46, TM47, TM48, TM49, TM50, TM51, TM52, TM53, TM54, TM55, TM56, TM57, TM58, TM59, TM60, TM61, TM62, TM63, TM64, TM65, TM66, TM67, TM68, TM69, TM70, TM71, TM72, TM73, TM74, TM75, TM76, TM77, TM78, TM79, TM80, TM81, TM82, TM83, TM84, TM85, TM86, TM87, TM88, TM89, TM90, TM91, TM92, TM93, TM94, TM95, TM96, TM97, TM98, TM99, TM_CASE, TM_MATERIALS, TR01, TR02, TR03, TR04, TR05, TR06, TR07, TR08, TR09, TR10, TR11, TR12, TR13, TR14, TR15, TR16, TR17, TR18, TR19, TR20, TR21, TR22, TR23, TR24, TR25, TR26, TR27, TR28, TR29, TR30, TR31, TR32, TR33, TR34, TR35, TR36, TR37, TR38, TR39, TR40, TR41, TR42, TR43, TR44, TR45, TR46, TR47, TR48, TR49, TR50, TR51, TR52, TR53, TR54, TR55, TR56, TR57, TR58, TR59, TR60, TR61, TR62, TR63, TR64, TR65, TR66, TR67, TR68, TR69, TR70, TR71, TR72, TR73, TR74, TR75, TR76, TR77, TR78, TR79, TR80, TR81, TR82, TR83, TR84, TR85, TR86, TR87, TR88, TR89, TR90, TR91, TR92, TR93, TR94, TR95, TR96, TR97, TR98, TR99, TMV_PASS, TOPO_BERRY, TORN_JOURNAL, TOUGA_BERRY, TOUGH_CANDY, TOUGH_CANDY_L, TOUGH_CANDY_XL, TOWN_MAP, TOXIC_ORB, TOXIC_PLATE, TRAVEL_TRUNK, TRI_PASS, TROPIC_MAIL, TROPICAL_SHELL, TUMBLESTONE, TUNNEL_MAIL, TWICE_SPICED_RADISH, TWISTED_SPOON, TYRANITARITE, U_DISK, ULTRA_BALL, ULTRANECROZIUM_Z, UNOWN_REPORT, UNUSUAL_SHOES, UPGRADE, UTILITY_UMBRELLA, UXIES_CLAW, VENONAT_CANDY, VENUSAURITE, VIOLET_BOOK, VIVICHOKE, VIVID_SCENT, VOICE_CASE_1, VOICE_CASE_2, VOICE_CASE_3, VOICE_CASE_4, VOICE_CASE_5, VOLCANO_BALM, VOLTORB_CANDY, VS_RECORDER, VS_SEEKER, VULPIX_CANDY, WACAN_BERRY, WAILMER_PAIL, WALL_FRAGMENT, WARDING_CHARM_B, WARDING_CHARM_P, WARDING_CHARM_R, WARDING_CHARM_T, WARDING_CHARM_Y, WATER_GEM, WATER_MEMORY, WATER_STONE, WATER_TERA_SHARD, WATERIUM_Z, WATMEL_BERRY, WAVE_INCENSE, WAVE_MAIL, WEAKNESS_POLICY, WEEDLE_CANDY, WEPEAR_BERRY, WHIPPED_DREAM, WHITE_APRICORN, WHITE_FLUTE, WHITE_HERB, WHITE_MANE_HAIR, WIDE_LENS, WIKI_BERRY, WING_BALL, WISE_GLASSES, WISHING_CHIP, WISHING_PIECE, WISHING_STAR, WOOD, WOOD_MAIL, WOODEN_CROWN, WORKS_KEY, X_ACCURACY, X_ATTACK, X_DEFENSE, X_SP_ATK, X_SP_DEF, X_SPEED, XTRANSCEIVER, YACHE_BERRY, YAGO_BERRY, YELLOW_APRICORN, YELLOW_FLUTE, YELLOW_NECTAR, YELLOW_PETAL, YELLOW_SCARF, YELLOW_SHARD, YLW_ID_BADGE, ZAP_PLATE, ZAPDOS_CANDY, ZINC, ZOOM_LENS, Z_POWER_RING, Z_RING, ZUBAT_CANDY, ZYGARDE_CUBE, ITEM_TOTAL
+  // clang-format on
+};
+
+static constexpr std::uint16_t TOTAL_ITEM_COUNT = (std::uint16_t)Item::ITEM_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+/////////////////////// END OF src/Types/Enums/Item.hpp ////////////////////////
+
+////////////////// START OF src/Types/Enums/PlayerSideId.hpp ///////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+enum class PlayerSideId : std::uint8_t {
+  NONE = 0,
+  P1 = 1,
+  P2 = 2,
+};
+
+static constexpr std::uint8_t TOTAL_PLAYER_SIDE_ID_COUNT = 2U;
+}  // namespace pokesim
+
+/////////////////// END OF src/Types/Enums/PlayerSideId.hpp ////////////////////
+
+////////////////////// START OF src/Types/Enums/Slot.hpp ///////////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+enum class Slot : std::uint8_t {
+  NONE = 0,
+  P1A,
+  P2A,
+  P1B,
+  P2B,
+
+  P1C,
+  P2C,
+  P1D,
+  P2D,
+  P1E,
+  P2E,
+  P1F,
+  P2F,
+
+  TOTAL_SLOT,
+};
+
+static constexpr std::uint8_t TOTAL_SLOT_COUNT = (std::uint8_t)Slot::TOTAL_SLOT - 1U;
+}  // namespace pokesim
+
+/////////////////////// END OF src/Types/Enums/Slot.hpp ////////////////////////
+
+//////////////////// START OF src/Components/Decisions.hpp /////////////////////
+
+#include <optional>
+
+namespace pokesim {
+struct SlotDecision {
+  Slot sourceSlot = Slot::NONE;
+  Slot targetSlot = Slot::NONE;
+
+  bool megaEvolve = false;
+  bool primalRevert = false;
+  bool dynamax = false;
+  bool terastallize = false;
+
+  std::optional<dex::Move> moveChoice = std::nullopt;
+  std::optional<dex::Item> itemChoice = std::nullopt;
+
+  bool operator==(const SlotDecision& other) const {
+    return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot && megaEvolve == other.megaEvolve &&
+           primalRevert == other.primalRevert && dynamax == other.dynamax && terastallize == other.terastallize &&
+           moveChoice == other.moveChoice && itemChoice == other.itemChoice;
+  }
+};
+
+namespace types {
+using slotDecisions = types::sideSlots<SlotDecision>;
+}
+
+struct SideDecision {
+  PlayerSideId sideId = PlayerSideId::NONE;
+  internal::variant<types::slotDecisions, types::teamOrder> decisions{};
+
+  bool operator==(const SideDecision other) const { return sideId == other.sideId && decisions == other.decisions; }
+};
+}  // namespace pokesim
+
+///////////////////// END OF src/Components/Decisions.hpp //////////////////////
+
+////////////////////// START OF src/Components/EVsIVs.hpp //////////////////////
+
+namespace pokesim {
+struct Evs {
+  types::ev hp = 0;
+  types::ev atk = 0;
+  types::ev def = 0;
+  types::ev spa = 0;
+  types::ev spd = 0;
+  types::ev spe = 0;
+
+  bool operator==(const Evs& other) const {
+    return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
+           spe == other.spe;
+  }
+};
+
+struct Ivs {
+  types::iv hp = 0;
+  types::iv atk = 0;
+  types::iv def = 0;
+  types::iv spa = 0;
+  types::iv spd = 0;
+  types::iv spe = 0;
+
+  bool operator==(const Ivs& other) const {
+    return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
+           spe == other.spe;
+  }
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Components/EVsIVs.hpp ///////////////////////
+
+//////////// START OF src/Components/EntityHolders/ActionQueue.hpp /////////////
+
+#include <vector>
+
+namespace pokesim {
+// Contains the list of action entities queued up to be simulated for a battle's current turn.
+struct ActionQueue {
+  internal::maxSizedVector<types::entity, MechanicConstants::ActionQueueLength::MAX> val{};
+};
+}  // namespace pokesim
+
+///////////// END OF src/Components/EntityHolders/ActionQueue.hpp //////////////
+
+///////////// START OF src/Components/EntityHolders/ChoiceLock.hpp /////////////
+
+namespace pokesim {
+struct ChoiceLock {
+  types::entity val{};
+};
+}  // namespace pokesim
+
+////////////// END OF src/Components/EntityHolders/ChoiceLock.hpp //////////////
+
+////////////// START OF src/Components/EntityHolders/FoeSide.hpp ///////////////
+
+namespace pokesim {
+// Contains the entity of a side's opponent.
+struct FoeSide {
+  types::entity val{};
+};
+}  // namespace pokesim
+
+/////////////// END OF src/Components/EntityHolders/FoeSide.hpp ////////////////
+
+//////////// START OF src/Components/EntityHolders/LastUsedMove.hpp ////////////
+
+namespace pokesim {
+struct LastUsedMove {
+  types::entity val{};
+};
+}  // namespace pokesim
+
+///////////// END OF src/Components/EntityHolders/LastUsedMove.hpp /////////////
+
+///////////// START OF src/Components/EntityHolders/MoveEffect.hpp /////////////
+
+namespace pokesim {
+// Contains the entity of what the primary or secondary effect of a move does.
+struct MoveEffect {
+  bool primary = true;
+  types::entity val{};
+};
+}  // namespace pokesim
+
+////////////// END OF src/Components/EntityHolders/MoveEffect.hpp //////////////
+
+///////////// START OF src/Components/EntityHolders/MoveSlots.hpp //////////////
+
+namespace pokesim {
+// Contains a list of entities of the moves a Pokemon known.
+struct MoveSlots {
+  types::moveSlots<types::entity> val{};
+};
+}  // namespace pokesim
+
+////////////// END OF src/Components/EntityHolders/MoveSlots.hpp ///////////////
+
+////////////// START OF src/Components/EntityHolders/Pokemon.hpp ///////////////
+
+namespace pokesim {
+// Contains the entity pointing to a Pokemon.
+struct Pokemon {
+  types::entity val{};
+};
+}  // namespace pokesim
+
+/////////////// END OF src/Components/EntityHolders/Pokemon.hpp ////////////////
+
+//////////////// START OF src/Components/EntityHolders/Side.hpp ////////////////
+
+namespace pokesim {
+// Contains the entity pointing to the player 1 or player 2 side of a battle.
+struct Side {
+  types::entity val{};
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/EntityHolders/Side.hpp /////////////////
+
+/////////////// START OF src/Components/EntityHolders/Sides.hpp ////////////////
+
+#include <array>
+
+namespace pokesim {
+// Contains the entities pointing to the two sides of a battle.
+struct Sides {
+  std::array<types::entity, MechanicConstants::SIDE_COUNT> val{};
+
+  constexpr types::entity& p1() { return val[0]; };
+  constexpr types::entity& p2() { return val[1]; };
+  constexpr const types::entity& p1() const { return val[0]; };
+  constexpr const types::entity& p2() const { return val[1]; };
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/EntityHolders/Sides.hpp /////////////////
+
+//////////////// START OF src/Components/EntityHolders/Team.hpp ////////////////
+
+namespace pokesim {
+// Contains a list of entities pointing to the Pokemon on a team.
+struct Team {
+  types::teamPositions<types::entity> val{};
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/EntityHolders/Team.hpp /////////////////
+
+////////////////// START OF src/Components/EventModifier.hpp ///////////////////
+
+namespace pokesim {
+struct EventModifier {
+  types::eventModifier val = MechanicConstants::FIXED_POINT_SCALE;
+};
+}  // namespace pokesim
+
+/////////////////// END OF src/Components/EventModifier.hpp ////////////////////
+
+///////////////////// START OF src/Components/HitCount.hpp /////////////////////
+
+namespace pokesim {
+struct HitCount {
+  types::moveHits val = 1;
+};
+}  // namespace pokesim
+
+////////////////////// END OF src/Components/HitCount.hpp //////////////////////
+
+//////////////////////// START OF src/Components/ID.hpp ////////////////////////
+
+namespace pokesim {
+struct Id {
+  types::stateId val = 1;
+};
+}  // namespace pokesim
+
+///////////////////////// END OF src/Components/ID.hpp /////////////////////////
+
+////////////////////// START OF src/Components/Level.hpp ///////////////////////
+
+namespace pokesim {
+// A Pokemon's level
+struct Level {
+  types::level val = 1;
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Components/Level.hpp ////////////////////////
+
+///////////////////// START OF src/Types/Enums/Ability.hpp /////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon ability name
+enum class Ability : std::uint16_t {
+  // clang-format off
+  NO_ABILITY = 0, ADAPTABILITY, AERILATE, AFTERMATH, AIR_LOCK, ANALYTIC, ANGER_POINT, ANGER_SHELL, ANTICIPATION, ARENA_TRAP, ARMOR_TAIL, AROMA_VEIL, AS_ONE, AURA_BREAK, BAD_DREAMS, BALL_FETCH, BATTERY, BATTLE_ARMOR, BATTLE_BOND, BEADS_OF_RUIN, BEAST_BOOST, BERSERK, BIG_PECKS, BLAZE, BULLETPROOF, CHEEK_POUCH, CHILLING_NEIGH, CHLOROPHYLL, CLEAR_BODY, CLOUD_NINE, COLOR_CHANGE, COMATOSE, COMMANDER, COMPETITIVE, COMPOUND_EYES, CONTRARY, CORROSION, COSTAR, COTTON_DOWN, CUD_CHEW, CURIOUS_MEDICINE, CURSED_BODY, CUTE_CHARM, DAMP, DANCER, DARK_AURA, DAUNTLESS_SHIELD, DAZZLING, DEFEATIST, DEFIANT, DELTA_STREAM, DESOLATE_LAND, DISGUISE, DOWNLOAD, DRAGONS_MAW, DRIZZLE, DROUGHT, DRY_SKIN, EARTH_EATER, EARLY_BIRD, EFFECT_SPORE, ELECTRIC_SURGE, ELECTROMORPHOSIS, EMERGENCY_EXIT, FAIRY_AURA, FILTER, FLAME_BODY, FLARE_BOOST, FLASH_FIRE, FLOWER_GIFT, FLOWER_VEIL, FLUFFY, FORECAST, FOREWARN, FRIEND_GUARD, FRISK, FULL_METAL_BODY, FUR_COAT, GALE_WINGS, GALVANIZE, GLUTTONY, GOOD_AS_GOLD, GOOEY, GORILLA_TACTICS, GRASS_PELT, GRASSY_SURGE, GRIM_NEIGH, GUARD_DOG, GULP_MISSILE, GUTS, HADRON_ENGINE, HARVEST, HEALER, HEATPROOF, HEAVY_METAL, HONEY_GATHER, HUGE_POWER, HUNGER_SWITCH, HUSTLE, HYDRATION, HYPER_CUTTER, ICE_BODY, ICE_FACE, ICE_SCALES, ILLUMINATE, ILLUSION, IMMUNITY, IMPOSTER, INFILTRATOR, INNARDS_OUT, INNER_FOCUS, INSOMNIA, INTIMIDATE, INTREPID_SWORD, IRON_BARBS, IRON_FIST, JUSTIFIED, KEEN_EYE, KLUTZ, LEAF_GUARD, LEVITATE, LIBERO, LIGHT_METAL, LIGHTNING_ROD, LINGERING_AROMA, LIMBER, LIQUID_OOZE, LIQUID_VOICE, LONG_REACH, MAGIC_BOUNCE, MAGIC_GUARD, MAGICIAN, MAGMA_ARMOR, MAGNET_PULL, MARVEL_SCALE, MEGA_LAUNCHER, MERCILESS, MIMICRY, MINUS, MIRROR_ARMOR, MISTY_SURGE, MOLD_BREAKER, MOODY, MOTOR_DRIVE, MOXIE, MULTISCALE, MULTITYPE, MUMMY, MYCELIUM_MIGHT, NATURAL_CURE, NEUROFORCE, NEUTRALIZING_GAS, NO_GUARD, NORMALIZE, OBLIVIOUS, OPPORTUNIST, ORICHALCUM_PULSE, OVERCOAT, OVERGROW, OWN_TEMPO, PARENTAL_BOND, PASTEL_VEIL, PERISH_BODY, PICKPOCKET, PICKUP, PIXILATE, PLUS, POISON_HEAL, POISON_POINT, POISON_TOUCH, POWER_CONSTRUCT, POWER_OF_ALCHEMY, POWER_SPOT, PRANKSTER, PRESSURE, PRIMORDIAL_SEA, PRISM_ARMOR, PROPELLER_TAIL, PROTEAN, PROTOSYNTHESIS, PSYCHIC_SURGE, PUNK_ROCK, PURE_POWER, PURIFYING_SALT, QUARK_DRIVE, QUEENLY_MAJESTY, QUICK_DRAW, QUICK_FEET, RAIN_DISH, RATTLED, RECEIVER, RECKLESS, REFRIGERATE, REGENERATOR, RIPEN, RIVALRY, RKS_SYSTEM, ROCK_HEAD, ROCKY_PAYLOAD, ROUGH_SKIN, RUN_AWAY, SAND_FORCE, SAND_RUSH, SAND_SPIT, SAND_STREAM, SAND_VEIL, SAP_SIPPER, SCHOOLING, SCRAPPY, SCREEN_CLEANER, SEED_SOWER, SERENE_GRACE, SHADOW_SHIELD, SHADOW_TAG, SHARPNESS, SHED_SKIN, SHEER_FORCE, SHELL_ARMOR, SHIELD_DUST, SHIELDS_DOWN, SIMPLE, SKILL_LINK, SLOW_START, SLUSH_RUSH, SNIPER, SNOW_CLOAK, SNOW_WARNING, SOLAR_POWER, SOLID_ROCK, SOUL_HEART, SOUNDPROOF, SPEED_BOOST, STAKEOUT, STALL, STALWART, STAMINA, STANCE_CHANGE, STATIC, STEADFAST, STEAM_ENGINE, STEELWORKER, STEELY_SPIRIT, STENCH, STICKY_HOLD, STORM_DRAIN, STRONG_JAW, STURDY, SUCTION_CUPS, SUPER_LUCK, SUPREME_OVERLORD, SURGE_SURFER, SWARM, SWEET_VEIL, SWIFT_SWIM, SYMBIOSIS, SYNCHRONIZE, SWORD_OF_RUIN, TABLETS_OF_RUIN, TANGLED_FEET, TANGLING_HAIR, TECHNICIAN, TELEPATHY, TERAVOLT, THERMAL_EXCHANGE, THICK_FAT, TINTED_LENS, TORRENT, TOUGH_CLAWS, TOXIC_BOOST, TOXIC_DEBRIS, TRACE, TRANSISTOR, TRIAGE, TRUANT, TURBOBLAZE, UNAWARE, UNBURDEN, UNNERVE, UNSEEN_FIST, VESSEL_OF_RUIN, VICTORY_STAR, VITAL_SPIRIT, VOLT_ABSORB, WANDERING_SPIRIT, WATER_ABSORB, WATER_BUBBLE, WATER_COMPACTION, WATER_VEIL, WEAK_ARMOR, WELL_BAKED_BODY, WHITE_SMOKE, WIMP_OUT, WIND_POWER, WIND_RIDER, WONDER_GUARD, WONDER_SKIN, ZEN_MODE, ZERO_TO_HERO, ABILITY_TOTAL,
+  // clang-format on
+};
+
+static constexpr std::uint16_t TOTAL_ABILITY_COUNT = (std::uint16_t)Ability::ABILITY_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Ability.hpp //////////////////////
+
+//////////////// START OF src/Components/Names/AbilityNames.hpp ////////////////
+
+namespace pokesim {
+struct AbilityName {
+  dex::Ability name = dex::Ability::NO_ABILITY;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/AbilityNames.hpp /////////////////
+
+///////////////////// START OF src/Types/Enums/Gender.hpp //////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon gender name
+enum class Gender : std::uint8_t { NO_GENDER = 0, FEMALE, MALE };
+
+static constexpr std::uint8_t TOTAL_GENDER_COUNT = 3U;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Gender.hpp ///////////////////////
+
+//////////////// START OF src/Components/Names/GenderNames.hpp /////////////////
+
+namespace pokesim {
+struct GenderName {
+  dex::Gender name = dex::Gender::NO_GENDER;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/GenderNames.hpp //////////////////
+
+///////////////// START OF src/Components/Names/ItemNames.hpp //////////////////
+
+namespace pokesim {
+struct ItemName {
+  dex::Item name = dex::Item::NO_ITEM;
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/Names/ItemNames.hpp ///////////////////
+
+///////////////// START OF src/Components/Names/MoveNames.hpp //////////////////
+
+namespace pokesim {
+struct MoveName {
+  dex::Move name = dex::Move::NO_MOVE;
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/Names/MoveNames.hpp ///////////////////
+
+///////////////////// START OF src/Types/Enums/Nature.hpp //////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon nature name
+enum class Nature : std::uint8_t {
+  // clang-format off
+  NO_NATURE = 0, ADAMANT, BASHFUL, BOLD, BRAVE, CALM, CAREFUL, DOCILE, GENTLE, HARDY, HASTY, IMPISH, JOLLY, LAX, LONELY, MILD, MODEST, NAIVE, NAUGHTY, QUIET, QUIRKY, RASH, RELAXED, SASSY, SERIOUS, TIMID, NATURE_TOTAL
+  // clang-format on
+};
+
+static constexpr std::uint8_t TOTAL_NATURE_COUNT = (std::uint8_t)Nature::NATURE_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Nature.hpp ///////////////////////
+
+//////////////// START OF src/Components/Names/NatureNames.hpp /////////////////
+
+namespace pokesim {
+struct NatureName {
+  dex::Nature name = dex::Nature::NO_NATURE;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/NatureNames.hpp //////////////////
+
+///////////// START OF src/Components/Names/PseudoWeatherNames.hpp /////////////
+
+namespace pokesim {
+struct PseudoWeatherName {
+  dex::PseudoWeather name = dex::PseudoWeather::NO_PSEUDO_WEATHER;
+};
+}  // namespace pokesim
+
+////////////// END OF src/Components/Names/PseudoWeatherNames.hpp //////////////
+
+///////////// START OF src/Components/Names/SideConditionNames.hpp /////////////
+
+namespace pokesim {
+struct SideConditionName {
+  dex::SideCondition name = dex::SideCondition::NO_SIDE_CONDITION;
+};
+}  // namespace pokesim
+
+////////////// END OF src/Components/Names/SideConditionNames.hpp //////////////
+
+/////////////// START OF src/Components/Names/SourceSlotName.hpp ///////////////
+
+namespace pokesim {
+/**
+ * @brief Represents the source slot for a move in a Pokemon battle.
+ */
+struct SourceSlotName {
+  Slot name = Slot::NONE;
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/Names/SourceSlotName.hpp ////////////////
+
+///////////////////// START OF src/Types/Enums/Species.hpp /////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+
+/**
+ * @brief Pokemon and Pokemon form name.
+ *
+ * @details Pokemon that have multiple forms will have their base form and alternate forms listed here.
+ * However, if none of a Pokemon's forms are cosmetic (i.e. change nothing expect appearance), the forms cannot be
+ * changed during battle, and no true base form exists, then the Pokemon's species name without a form specifier is
+ * omitted. For example:
+ *  - `VENUSAUR`, `MEGA_VENUSAUR`, and `GIGANTAMAX_VENUSAUR` are all listed because Venusaur changes into the other
+ * forms mid-battle
+ *  - `GASTRODON`, `WEST_SEA_GASTRODON`, and `EAST_SEA_GASTRODON` are all listed because although Gastrodon's forms
+ * are permanent, their only difference is how they look
+ *  - `PLANT_CLOAK_WORMADAM`, `SANDY_CLOAK_WORMADAM`, and `TRASH_CLOAK_WORMADAM` listed while `WORMADAM` is not
+ * because the Wormadam forms have different types, stats, and moves; their forms are permanent; and there is no base
+ * Wormadam.
+ */
+enum class Species : std::uint16_t {
+  // clang-format off
+  NO_SPECIES = 0, BULBASAUR, IVYSAUR, VENUSAUR, MEGA_VENUSAUR, GIGANTAMAX_VENUSAUR, CHARMANDER, CHARMELEON, CHARIZARD, MEGA_CHARIZARD_X, MEGA_CHARIZARD_Y, GIGANTAMAX_CHARIZARD, SQUIRTLE, WARTORTLE, BLASTOISE, MEGA_BLASTOISE, GIGANTAMAX_BLASTOISE, CATERPIE, METAPOD, BUTTERFREE, GIGANTAMAX_BUTTERFREE, WEEDLE, KAKUNA, BEEDRILL, MEGA_BEEDRILL, PIDGEY, PIDGEOTTO, PIDGEOT, MEGA_PIDGEOT, RATTATA, ALOLAN_RATTATA, RATICATE, ALOLAN_RATICATE, TOTEM_ALOLAN_RATICATE, SPEAROW, FEAROW, EKANS, ARBOK, PIKACHU, COSPLAY_PIKACHU, PIKACHU_ROCK_STAR, PIKACHU_BELLE, PIKACHU_POP_STAR, PIKACHU_PHD, PIKACHU_LIBRE, ORIGINAL_CAP_PIKACHU, HOENN_CAP_PIKACHU, SINNOH_CAP_PIKACHU, UNOVA_CAP_PIKACHU, KALOS_CAP_PIKACHU, ALOLA_CAP_PIKACHU, PARTNER_CAP_PIKACHU, STARTER_PIKACHU, GIGANTAMAX_PIKACHU, WORLD_CAP_PIKACHU, RAICHU, ALOLAN_RAICHU, SANDSHREW, ALOLAN_SANDSHREW, SANDSLASH, ALOLAN_SANDSLASH, NIDORAN_FEMALE, NIDORINA, NIDOQUEEN, NIDORAN_MALE, NIDORINO, NIDOKING, CLEFAIRY, CLEFABLE, VULPIX, ALOLAN_VULPIX, NINETALES, ALOLAN_NINETALES, JIGGLYPUFF, WIGGLYTUFF, ZUBAT, GOLBAT, ODDISH, GLOOM, VILEPLUME, PARAS, PARASECT, VENONAT, VENOMOTH, DIGLETT, ALOLAN_DIGLETT, DUGTRIO, ALOLAN_DUGTRIO, MEOWTH, ALOLAN_MEOWTH, GALARIAN_MEOWTH, GIGANTAMAX_MEOWTH, PERSIAN, ALOLAN_PERSIAN, PSYDUCK, GOLDUCK, MANKEY, PRIMEAPE, HISUIAN_GROWLITHE, GROWLITHE, HISUIAN_ARCANINE, ARCANINE, POLIWAG, POLIWHIRL, POLIWRATH, ABRA, KADABRA, ALAKAZAM, MEGA_ALAKAZAM, MACHOP, MACHOKE, MACHAMP, GIGANTAMAX_MACHAMP, BELLSPROUT, WEEPINBELL, VICTREEBEL, TENTACOOL, TENTACRUEL, GEODUDE, ALOLAN_GEODUDE, GRAVELER, ALOLAN_GRAVELER, GOLEM, ALOLAN_GOLEM, PONYTA, GALARIAN_PONYTA, RAPIDASH, GALARIAN_RAPIDASH, SLOWPOKE, GALARIAN_SLOWPOKE, SLOWBRO, MEGA_SLOWBRO, GALARIAN_SLOWBRO, MAGNEMITE, MAGNETON, FARFETCH_D, GALARIAN_FARFETCH_D, DODUO, DODRIO, SEEL, DEWGONG, GRIMER, ALOLAN_GRIMER, MUK, ALOLAN_MUK, SHELLDER, CLOYSTER, GASTLY, HAUNTER, GENGAR, MEGA_GENGAR, GIGANTAMAX_GENGAR, ONIX, DROWZEE, HYPNO, KRABBY, KINGLER, GIGANTAMAX_KINGLER, VOLTORB, HISUIAN_VOLTORB, ELECTRODE, HISUIAN_ELECTRODE, EXEGGCUTE, EXEGGUTOR, ALOLAN_EXEGGUTOR, CUBONE, MAROWAK, ALOLAN_MAROWAK, TOTEM_ALOLAN_MAROWAK, HITMONLEE, HITMONCHAN, LICKITUNG, KOFFING, WEEZING, GALARIAN_WEEZING, RHYHORN, RHYDON, CHANSEY, TANGELA, KANGASKHAN, MEGA_KANGASKHAN, HORSEA, SEADRA, GOLDEEN, SEAKING, STARYU, STARMIE, MR_MIME, GALARIAN_MR_MIME, SCYTHER, JYNX, ELECTABUZZ, MAGMAR, PINSIR, MEGA_PINSIR, TAUROS, PALDEAN_TAUROS_COMBAT_BREAD, PALDEAN_TAUROS_BLAZE_BREAD, PALDEAN_TAUROS_AQUA_BREAD, MAGIKARP, GYARADOS, MEGA_GYARADOS, LAPRAS, GIGANTAMAX_LAPRAS, DITTO, EEVEE, STARTER_EEVEE, GIGANTAMAX_EEVEE, VAPOREON, JOLTEON, FLAREON, PORYGON, OMANYTE, OMASTAR, KABUTO, KABUTOPS, AERODACTYL, MEGA_AERODACTYL, SNORLAX, GIGANTAMAX_SNORLAX, ARTICUNO, GALARIAN_ARTICUNO, ZAPDOS, GALARIAN_ZAPDOS, MOLTRES, GALARIAN_MOLTRES, DRATINI, DRAGONAIR, DRAGONITE, MEWTWO, MEGA_MEWTWO_X, MEGA_MEWTWO_Y, MEW, CHIKORITA, BAYLEEF, MEGANIUM, CYNDAQUIL, QUILAVA, HISUIAN_TYPHLOSION, TYPHLOSION, TOTODILE, CROCONAW, FERALIGATR, SENTRET, FURRET, HOOTHOOT, NOCTOWL, LEDYBA, LEDIAN, SPINARAK, ARIADOS, CROBAT, CHINCHOU, LANTURN, PICHU, SPIKY_EARED_PICHU, CLEFFA, IGGLYBUFF, TOGEPI, TOGETIC, NATU, XATU, MAREEP, FLAAFFY, AMPHAROS, MEGA_AMPHAROS, BELLOSSOM, MARILL, AZUMARILL, SUDOWOODO, POLITOED, HOPPIP, SKIPLOOM, JUMPLUFF, AIPOM, SUNKERN, SUNFLORA, YANMA, WOOPER, PALDEAN_WOOPER, QUAGSIRE, ESPEON, UMBREON, MURKROW, SLOWKING, GALARIAN_SLOWKING, MISDREAVUS, UNOWN, UNOWN_A, UNOWN_B, UNOWN_C, UNOWN_D, UNOWN_E, UNOWN_F, UNOWN_G, UNOWN_H, UNOWN_I, UNOWN_J, UNOWN_K, UNOWN_L, UNOWN_M, UNOWN_N, UNOWN_O, UNOWN_P, UNOWN_Q, UNOWN_R, UNOWN_S, UNOWN_T, UNOWN_U, UNOWN_V, UNOWN_W, UNOWN_X, UNOWN_Y, UNOWN_Z, UNOWN_EXCLAMATION, UNOWN_QUESTION, WOBBUFFET, GIRAFARIG, PINECO, FORRETRESS, DUNSPARCE, GLIGAR, STEELIX, MEGA_STEELIX, SNUBBULL, GRANBULL, QWILFISH, HISUIAN_QWILFISH, SCIZOR, MEGA_SCIZOR, SHUCKLE, HERACROSS, MEGA_HERACROSS, HISUIAN_SNEASEL, SNEASEL, TEDDIURSA, URSARING, SLUGMA, MAGCARGO, SWINUB, PILOSWINE, CORSOLA, GALARIAN_CORSOLA, REMORAID, OCTILLERY, DELIBIRD, MANTINE, SKARMORY, HOUNDOUR, HOUNDOOM, MEGA_HOUNDOOM, KINGDRA, PHANPY, DONPHAN, PORYGON2, STANTLER, SMEARGLE, TYROGUE, HITMONTOP, SMOOCHUM, ELEKID, MAGBY, MILTANK, BLISSEY, RAIKOU, ENTEI, SUICUNE, LARVITAR, PUPITAR, TYRANITAR, MEGA_TYRANITAR, LUGIA, HO_OH, CELEBI, TREECKO, GROVYLE, SCEPTILE, MEGA_SCEPTILE, TORCHIC, COMBUSKEN, BLAZIKEN, MEGA_BLAZIKEN, MUDKIP, MARSHTOMP, SWAMPERT, MEGA_SWAMPERT, POOCHYENA, MIGHTYENA, ZIGZAGOON, GALARIAN_ZIGZAGOON, LINOONE, GALARIAN_LINOONE, WURMPLE, SILCOON, BEAUTIFLY, CASCOON, DUSTOX, LOTAD, LOMBRE, LUDICOLO, SEEDOT, NUZLEAF, SHIFTRY, TAILLOW, SWELLOW, WINGULL, PELIPPER, RALTS, KIRLIA, GARDEVOIR, MEGA_GARDEVOIR, SURSKIT, MASQUERAIN, SHROOMISH, BRELOOM, SLAKOTH, VIGOROTH, SLAKING, NINCADA, NINJASK, SHEDINJA, WHISMUR, LOUDRED, EXPLOUD, MAKUHITA, HARIYAMA, AZURILL, NOSEPASS, SKITTY, DELCATTY, SABLEYE, MEGA_SABLEYE, MAWILE, MEGA_MAWILE, ARON, LAIRON, AGGRON, MEGA_AGGRON, MEDITITE, MEDICHAM, MEGA_MEDICHAM, ELECTRIKE, MANECTRIC, MEGA_MANECTRIC, PLUSLE, MINUN, VOLBEAT, ILLUMISE, ROSELIA, GULPIN, SWALOT, CARVANHA, SHARPEDO, MEGA_SHARPEDO, WAILMER, WAILORD, NUMEL, CAMERUPT, MEGA_CAMERUPT, TORKOAL, SPOINK, GRUMPIG, SPINDA, TRAPINCH, VIBRAVA, FLYGON, CACNEA, CACTURNE, SWABLU, ALTARIA, MEGA_ALTARIA, ZANGOOSE, SEVIPER, LUNATONE, SOLROCK, BARBOACH, WHISCASH, CORPHISH, CRAWDAUNT, BALTOY, CLAYDOL, LILEEP, CRADILY, ANORITH, ARMALDO, FEEBAS, MILOTIC, CASTFORM, SUNNY_CASTFORM, RAINY_CASTFORM, SNOWY_CASTFORM, KECLEON, SHUPPET, BANETTE, MEGA_BANETTE, DUSKULL, DUSCLOPS, TROPIUS, CHIMECHO, ABSOL, MEGA_ABSOL, WYNAUT, SNORUNT, GLALIE, MEGA_GLALIE, SPHEAL, SEALEO, WALREIN, CLAMPERL, HUNTAIL, GOREBYSS, RELICANTH, LUVDISC, BAGON, SHELGON, SALAMENCE, MEGA_SALAMENCE, BELDUM, METANG, METAGROSS, MEGA_METAGROSS, REGIROCK, REGICE, REGISTEEL, LATIAS, MEGA_LATIAS, LATIOS, MEGA_LATIOS, KYOGRE, PRIMAL_KYOGRE, GROUDON, PRIMAL_GROUDON, RAYQUAZA, MEGA_RAYQUAZA, JIRACHI, DEOXYS, ATTACK_DEOXYS, DEFENSE_DEOXYS, SPEED_DEOXYS, TURTWIG, GROTLE, TORTERRA, CHIMCHAR, MONFERNO, INFERNAPE, PIPLUP, PRINPLUP, EMPOLEON, STARLY, STARAVIA, STARAPTOR, BIDOOF, BIBAREL, KRICKETOT, KRICKETUNE, SHINX, LUXIO, LUXRAY, BUDEW, ROSERADE, CRANIDOS, RAMPARDOS, SHIELDON, BASTIODON, BURMY, PLANT_CLOAK_BURMY, SANDY_CLOAK_BURMY, TRASH_CLOAK_BURMY, PLANT_CLOAK_WORMADAM, SANDY_CLOAK_WORMADAM, TRASH_CLOAK_WORMADAM, MOTHIM, COMBEE, VESPIQUEN, PACHIRISU, BUIZEL, FLOATZEL, CHERUBI, CHERRIM, CHERRIM_OVERCAST, CHERRIM_SUNSHINE, SHELLOS, WEST_SEA_SHELLOS, EAST_SEA_SHELLOS, GASTRODON, WEST_SEA_GASTRODON, EAST_SEA_GASTRODON, AMBIPOM, DRIFLOON, DRIFBLIM, BUNEARY, LOPUNNY, MEGA_LOPUNNY, MISMAGIUS, HONCHKROW, GLAMEOW, PURUGLY, CHINGLING, STUNKY, SKUNTANK, BRONZOR, BRONZONG, BONSLY, MIME_JR, HAPPINY, CHATOT, SPIRITOMB, GIBLE, GABITE, GARCHOMP, MEGA_GARCHOMP, MUNCHLAX, RIOLU, LUCARIO, MEGA_LUCARIO, HIPPOPOTAS, HIPPOWDON, SKORUPI, DRAPION, CROAGUNK, TOXICROAK, CARNIVINE, FINNEON, LUMINEON, MANTYKE, SNOVER, ABOMASNOW, MEGA_ABOMASNOW, WEAVILE, MAGNEZONE, LICKILICKY, RHYPERIOR, TANGROWTH, ELECTIVIRE, MAGMORTAR, TOGEKISS, YANMEGA, LEAFEON, GLACEON, GLISCOR, MAMOSWINE, PORYGON_Z, GALLADE, MEGA_GALLADE, PROBOPASS, DUSKNOIR, FROSLASS, ROTOM, HEAT_ROTOM, WASH_ROTOM, FROST_ROTOM, FAN_ROTOM, MOW_ROTOM, UXIE, MESPRIT, AZELF, DIALGA, DIALGA_ORIGIN, PALKIA, PALKIA_ORIGIN, HEATRAN, REGIGIGAS, GIRATINA_ALTERED, GIRATINA_ORIGIN, CRESSELIA, PHIONE, MANAPHY, DARKRAI, SHAYMIN, SHAYMIN_LAND, SHAYMIN_SKY, ARCEUS, ARCEUS_BUG, ARCEUS_DARK, ARCEUS_DRAGON, ARCEUS_ELECTRIC, ARCEUS_FAIRY, ARCEUS_FIGHTING, ARCEUS_FIRE, ARCEUS_FLYING, ARCEUS_GHOST, ARCEUS_GRASS, ARCEUS_GROUND, ARCEUS_ICE, ARCEUS_POISON, ARCEUS_PSYCHIC, ARCEUS_ROCK, ARCEUS_STEEL, ARCEUS_WATER, VICTINI, SNIVY, SERVINE, SERPERIOR, TEPIG, PIGNITE, EMBOAR, OSHAWOTT, DEWOTT, HISUIAN_SAMUROTT, SAMUROTT, PATRAT, WATCHOG, LILLIPUP, HERDIER, STOUTLAND, PURRLOIN, LIEPARD, PANSAGE, SIMISAGE, PANSEAR, SIMISEAR, PANPOUR, SIMIPOUR, MUNNA, MUSHARNA, PIDOVE, TRANQUILL, UNFEZANT, BLITZLE, ZEBSTRIKA, ROGGENROLA, BOLDORE, GIGALITH, WOOBAT, SWOOBAT, DRILBUR, EXCADRILL, AUDINO, MEGA_AUDINO, TIMBURR, GURDURR, CONKELDURR, TYMPOLE, PALPITOAD, SEISMITOAD, THROH, SAWK, SEWADDLE, SWADLOON, LEAVANNY, VENIPEDE, WHIRLIPEDE, SCOLIPEDE, COTTONEE, WHIMSICOTT, PETILIL, LILLIGANT, HISUIAN_LILLIGANT, RED_STRIPED_BASCULIN, BLUE_STRIPED_BASCULIN, WHITE_STRIPED_BASCULIN, SANDILE, KROKOROK, KROOKODILE, DARUMAKA, GALARIAN_DARUMAKA, DARMANITAN, ZEN_MODE_DARMANITAN, GALARIAN_DARMANITAN, GALARIAN_ZEN_MODE_DARMANITAN, MARACTUS, DWEBBLE, CRUSTLE, SCRAGGY, SCRAFTY, SIGILYPH, YAMASK, GALARIAN_YAMASK, COFAGRIGUS, TIRTOUGA, CARRACOSTA, ARCHEN, ARCHEOPS, TRUBBISH, GARBODOR, GIGANTAMAX_GARBODOR, ZORUA, HISUIAN_ZORUA, HISUIAN_ZOROARK, ZOROARK, MINCCINO, CINCCINO, GOTHITA, GOTHORITA, GOTHITELLE, SOLOSIS, DUOSION, REUNICLUS, DUCKLETT, SWANNA, VANILLITE, VANILLISH, VANILLUXE, DEERLING, DEERLING_SPRING, DEERLING_SUMMER, DEERLING_AUTUMN, DEERLING_WINTER, SAWSBUCK, SAWSBUCK_SPRING, SAWSBUCK_SUMMER, SAWSBUCK_AUTUMN, SAWSBUCK_WINTER, EMOLGA, KARRABLAST, ESCAVALIER, FOONGUS, AMOONGUSS, FRILLISH, JELLICENT, ALOMOMOLA, JOLTIK, GALVANTULA, FERROSEED, FERROTHORN, KLINK, KLANG, KLINKLANG, TYNAMO, EELEKTRIK, EELEKTROSS, ELGYEM, BEHEEYEM, LITWICK, LAMPENT, CHANDELURE, AXEW, FRAXURE, HAXORUS, CUBCHOO, BEARTIC, CRYOGONAL, SHELMET, ACCELGOR, STUNFISK, GALARIAN_STUNFISK, MIENFOO, MIENSHAO, DRUDDIGON, GOLETT, GOLURK, PAWNIARD, BISHARP, BOUFFALANT, RUFFLET, HISUIAN_BRAVIARY, BRAVIARY, VULLABY, MANDIBUZZ, HEATMOR, DURANT, DEINO, ZWEILOUS, HYDREIGON, LARVESTA, VOLCARONA, COBALION, TERRAKION, VIRIZION, INCARNATE_TORNADUS, TORNADUS_THERIAN, INCARNATE_THUNDURUS, THUNDURUS_THERIAN, RESHIRAM, ZEKROM, INCARNATE_LANDORUS, LANDORUS_THERIAN, KYUREM, BLACK_KYUREM, WHITE_KYUREM, KELDEO, RESOLUTE_KELDEO, ARIA_MELOETTA, PIROUETTE_MELOETTA, GENESECT, DOUSE_DRIVE_GENESECT, SHOCK_DRIVE_GENESECT, BURN_DRIVE_GENESECT, CHILL_DRIVE_GENESECT, CHESPIN, QUILLADIN, CHESNAUGHT, FENNEKIN, BRAIXEN, DELPHOX, FROAKIE, FROGADIER, GRENINJA, ASH_GRENINJA, BUNNELBY, DIGGERSBY, FLETCHLING, FLETCHINDER, TALONFLAME, SCATTERBUG, SPEWPA, VIVILLON, MEADOW_PATTERN_VIVILLON, ARCHIPELAGO_PATTERN_VIVILLON, CONTINENTAL_PATTERN_VIVILLON, ELEGANT_PATTERN_VIVILLON, GARDEN_PATTERN_VIVILLON, HIGH_PLAINS_PATTERN_VIVILLON, ICY_SNOW_PATTERN_VIVILLON, JUNGLE_PATTERN_VIVILLON, MARINE_PATTERN_VIVILLON, MODERN_PATTERN_VIVILLON, MONSOON_PATTERN_VIVILLON, OCEAN_PATTERN_VIVILLON, POLAR_PATTERN_VIVILLON, RIVER_PATTERN_VIVILLON, SANDSTORM_PATTERN_VIVILLON, SAVANNA_PATTERN_VIVILLON, SUN_PATTERN_VIVILLON, TUNDRA_PATTERN_VIVILLON, FANCY_PATTERN_VIVILLON, POKEBALL_PATTERN_VIVILLON, LITLEO, PYROAR, FLABEBE, RED_FLOWER_FLABEBE, BLUE_FLOWER_FLABEBE, ORANGE_FLOWER_FLABEBE, WHITE_FLOWER_FLABEBE, YELLOW_FLOWER_FLABEBE, FLOETTE, RED_FLOWER_FLOETTE, BLUE_FLOWER_FLOETTE, ORANGE_FLOWER_FLOETTE, WHITE_FLOWER_FLOETTE, YELLOW_FLOWER_FLOETTE, ETERNAL_FLOWER_FLOETTE, FLORGES, RED_FLOWER_FLORGES, BLUE_FLOWER_FLORGES, ORANGE_FLOWER_FLORGES, WHITE_FLOWER_FLORGES, YELLOW_FLOWER_FLORGES, SKIDDO, GOGOAT, PANCHAM, PANGORO, FURFROU, NATURAL_FURFROU, DANDY_TRIM_FURFROU, DEBUTANTE_TRIM_FURFROU, DIAMOND_TRIM_FURFROU, HEART_TRIM_FURFROU, KABUKI_TRIM_FURFROU, LA_REINE_TRIM_FURFROU, MATRON_TRIM_FURFROU, PHARAOH_TRIM_FURFROU, STAR_TRIM_FURFROU, ESPURR, MALE_MEOWSTIC, FEMALE_MEOWSTIC, HONEDGE, DOUBLADE, AEGISLASH, SHIELD_AEGISLASH, BLADE_AEGISLASH, SPRITZEE, AROMATISSE, SWIRLIX, SLURPUFF, INKAY, MALAMAR, BINACLE, BARBARACLE, SKRELP, DRAGALGE, CLAUNCHER, CLAWITZER, HELIOPTILE, HELIOLISK, TYRUNT, TYRANTRUM, AMAURA, AURORUS, SYLVEON, HAWLUCHA, DEDENNE, CARBINK, GOOMY, HISUIAN_SLIGGOO, SLIGGOO, HISUIAN_GOODRA, GOODRA, KLEFKI, PHANTUMP, TREVENANT, AVERAGE_SIZE_PUMPKABOO, SMALL_SIZE_PUMPKABOO, LARGE_SIZE_PUMPKABOO, SUPER_SIZE_PUMPKABOO, AVERAGE_SIZE_GOURGEIST, SMALL_SIZE_GOURGEIST, LARGE_SIZE_GOURGEIST, SUPER_SIZE_GOURGEIST, BERGMITE, AVALUGG, HISUIAN_AVALUGG, NOIBAT, NOIVERN, XERNEAS, YVELTAL, ZYGARDE_50, ZYGARDE_10, ZYGARDE_COMPLETE, DIANCIE, MEGA_DIANCIE, HOOPA_CONFINED, HOOPA_UNBOUND, VOLCANION, ROWLET, DARTRIX, HISUIAN_DECIDUEYE, DECIDUEYE, LITTEN, TORRACAT, INCINEROAR, POPPLIO, BRIONNE, PRIMARINA, PIKIPEK, TRUMBEAK, TOUCANNON, YUNGOOS, GUMSHOOS, TOTEM_GUMSHOOS, GRUBBIN, CHARJABUG, VIKAVOLT, TOTEM_VIKAVOLT, CRABRAWLER, CRABOMINABLE, BAILE_STYLE_ORICORIO, POM_POM_STYLE_ORICORIO, PA_U_STYLE_ORICORIO, SENSU_STYLE_ORICORIO, CUTIEFLY, RIBOMBEE, TOTEM_RIBOMBEE, ROCKRUFF, MIDDAY_ROCKRUFF, MIDDAY_LYCANROC, MIDNIGHT_LYCANROC, DUSK_LYCANROC, WISHIWASHI, SOLO_WISHIWASHI, SCHOOL_WISHIWASHI, MAREANIE, TOXAPEX, MUDBRAY, MUDSDALE, DEWPIDER, ARAQUANID, TOTEM_ARAQUANID, FOMANTIS, LURANTIS, TOTEM_LURANTIS, MORELULL, SHIINOTIC, SALANDIT, SALAZZLE, TOTEM_SALAZZLE, STUFFUL, BEWEAR, BOUNSWEET, STEENEE, TSAREENA, COMFEY, ORANGURU, PASSIMIAN, WIMPOD, GOLISOPOD, SANDYGAST, PALOSSAND, PYUKUMUKU, TYPE_NULL, SILVALLY, SILVALLY_BUG, SILVALLY_DARK, SILVALLY_DRAGON, SILVALLY_ELECTRIC, SILVALLY_FAIRY, SILVALLY_FIGHTING, SILVALLY_FIRE, SILVALLY_FLYING, SILVALLY_GHOST, SILVALLY_GRASS, SILVALLY_GROUND, SILVALLY_ICE, SILVALLY_POISON, SILVALLY_PSYCHIC, SILVALLY_ROCK, SILVALLY_STEEL, SILVALLY_WATER, MINIOR, CORE_MINIOR, RED_CORE_MINIOR, ORANGE_CORE_MINIOR, YELLOW_CORE_MINIOR, GREEN_CORE_MINIOR, BLUE_CORE_MINIOR, INDIGO_CORE_MINIOR, VIOLET_CORE_MINIOR, METEOR_MINIOR, KOMALA, TURTONATOR, TOGEDEMARU, TOTEM_TOGEDEMARU, MIMIKYU, MIMIKYU_BUSTED, TOTEM_MIMIKYU, BUSTED_TOTEM_MIMIKYU, BRUXISH, DRAMPA, DHELMISE, JANGMO_O, HAKAMO_O, KOMMO_O, TOTEM_KOMMO_O, TAPU_KOKO, TAPU_LELE, TAPU_BULU, TAPU_FINI, COSMOG, COSMOEM, SOLGALEO, LUNALA, NIHILEGO, BUZZWOLE, PHEROMOSA, XURKITREE, CELESTEELA, KARTANA, GUZZLORD, NECROZMA, DUSK_MANE_NECROZMA, DAWN_WINGS_NECROZMA, ULTRA_NECROZMA, MAGEARNA, ORIGINAL_COLOR_MAGEARNA, MARSHADOW, POIPOLE, NAGANADEL, STAKATAKA, BLACEPHALON, ZERAORA, MELTAN, MELMETAL, GIGANTAMAX_MELMETAL, GROOKEY, THWACKEY, RILLABOOM, GIGANTAMAX_RILLABOOM, SCORBUNNY, RABOOT, CINDERACE, GIGANTAMAX_CINDERACE, SOBBLE, DRIZZILE, INTELEON, GIGANTAMAX_INTELEON, SKWOVET, GREEDENT, ROOKIDEE, CORVISQUIRE, CORVIKNIGHT, GIGANTAMAX_CORVIKNIGHT, BLIPBUG, DOTTLER, ORBEETLE, GIGANTAMAX_ORBEETLE, NICKIT, THIEVUL, GOSSIFLEUR, ELDEGOSS, WOOLOO, DUBWOOL, CHEWTLE, DREDNAW, GIGANTAMAX_DREDNAW, YAMPER, BOLTUND, ROLYCOLY, CARKOL, COALOSSAL, GIGANTAMAX_COALOSSAL, APPLIN, FLAPPLE, GIGANTAMAX_FLAPPLE, APPLETUN, GIGANTAMAX_APPLETUN, SILICOBRA, SANDACONDA, GIGANTAMAX_SANDACONDA, CRAMORANT, CRAMORANT_GULPING, CRAMORANT_GORGING, ARROKUDA, BARRASKEWDA, TOXEL, TOXTRICITY_AMPED, TOXTRICITY_LOW_KEY, GIGANTAMAX_TOXTRICITY_AMPED, GIGANTAMAX_TOXTRICITY_LOW_KEY, SIZZLIPEDE, CENTISKORCH, GIGANTAMAX_CENTISKORCH, CLOBBOPUS, GRAPPLOCT, SINISTEA, ANTIQUE_SINISTEA, POLTEAGEIST, ANTIQUE_POLTEAGEIST, HATENNA, HATTREM, HATTERENE, GIGANTAMAX_HATTERENE, IMPIDIMP, MORGREM, GRIMMSNARL, GIGANTAMAX_GRIMMSNARL, OBSTAGOON, PERRSERKER, CURSOLA, SIRFETCH_D, MR_RIME, RUNERIGUS, MILCERY, ALCREMIE, VANILLA_CREAM_ALCREMIE, RUBY_CREAM_ALCREMIE, MATCHA_CREAM_ALCREMIE, MINT_CREAM_ALCREMIE, LEMON_CREAM_ALCREMIE, SALTED_CREAM_ALCREMIE, RUBY_SWIRL_ALCREMIE, CARAMEL_SWIRL_ALCREMIE, RAINBOW_SWIRL_ALCREMIE, GIGANTAMAX_ALCREMIE, FALINKS, PINCURCHIN, SNOM, FROSMOTH, STONJOURNER, EISCUE, ICE_FACE_EISCUE, NOICE_FACE_EISCUE, MALE_INDEEDEE, FEMALE_INDEEDEE, MORPEKO, FULL_BELLY_MODE_MORPEKO, HANGRY_MODE_MORPEKO, CUFANT, COPPERAJAH, GIGANTAMAX_COPPERAJAH, DRACOZOLT, ARCTOZOLT, DRACOVISH, ARCTOVISH, DURALUDON, GIGANTAMAX_DURALUDON, DREEPY, DRAKLOAK, DRAGAPULT, HERO_OF_MANY_BATTLES_ZACIAN, CROWNED_SWORD_ZACIAN, HERO_OF_MANY_BATTLES_ZAMAZENTA, CROWNED_SHIELD_ZAMAZENTA, ETERNATUS, ETERNAMAX_ETERNATUS, KUBFU, SINGLE_STRIKE_STYLE_URSHIFU, RAPID_STRIKE_STYLE_URSHIFU, GIGANTAMAX_SINGLE_STRIKE_STYLE_URSHIFU, GIGANTAMAX_RAPID_STRIKE_STYLE_URSHIFU, ZARUDE, DADA_ZARUDE, REGIELEKI, REGIDRAGO, GLASTRIER, SPECTRIER, CALYREX, ICE_RIDER_CALYREX, SHADOW_RIDER_CALYREX, WYRDEER, KLEAVOR, URSALUNA, MALE_BASCULEGION, FEMALE_BASCULEGION, SNEASLER, OVERQWIL, INCARNATE_ENAMORUS, ENAMORUS_THERIAN, SPRIGATITO, FLORAGATO, MEOWSCARADA, FUECOCO, CROCALOR, SKELEDIRGE, QUAXLY, QUAXWELL, QUAQUAVAL, LECHONK, MALE_OINKOLOGNE, FEMALE_OINKOLOGNE, TAROUNTULA, SPIDOPS, NYMBLE, LOKIX, PAWMI, PAWMO, PAWMOT, TANDEMAUS, MAUSHOLD, FAMILY_OF_THREE_MAUSHOLD, FAMILY_OF_FOUR_MAUSHOLD, FIDOUGH, DACHSBUN, SMOLIV, DOLLIV, ARBOLIVA, GREEN_PLUMAGE_SQUAWKABILLY, BLUE_PLUMAGE_SQUAWKABILLY, YELLOW_PLUMAGE_SQUAWKABILLY, WHITE_PLUMAGE_SQUAWKABILLY, NACLI, NACLSTACK, GARGANACL, CHARCADET, ARMAROUGE, CERULEDGE, TADBULB, BELLIBOLT, WATTREL, KILOWATTREL, MASCHIFF, MABOSSTIFF, SHROODLE, GRAFAIAI, BRAMBLIN, BRAMBLEGHAST, TOEDSCOOL, TOEDSCRUEL, KLAWF, CAPSAKID, SCOVILLAIN, RELLOR, RABSCA, FLITTLE, ESPATHRA, TINKATINK, TINKATUFF, TINKATON, WIGLETT, WUGTRIO, BOMBIRDIER, FINIZEN, ZERO_PALAFIN, HERO_PALAFIN, VAROOM, REVAVROOM, CYCLIZAR, ORTHWORM, GLIMMET, GLIMMORA, GREAVARD, HOUNDSTONE, FLAMIGO, CETODDLE, CETITAN, VELUZA, DONDOZO, TATSUGIRI, CURLY_TATSUGIRI, DROOPY_TATSUGIRI, STRETCHY_TATSUGIRI, ANNIHILAPE, CLODSIRE, FARIGIRAF, DUDUNSPARCE, TWO_SEGMENT_DUDUNSPARCE, THREE_SEGMENT_DUDUNSPARCE, KINGAMBIT, GREAT_TUSK, SCREAM_TAIL, BRUTE_BONNET, FLUTTER_MANE, SLITHER_WING, SANDY_SHOCKS, IRON_TREADS, IRON_BUNDLE, IRON_HANDS, IRON_JUGULIS, IRON_MOTH, IRON_THORNS, FRIGIBAX, ARCTIBAX, BAXCALIBUR, CHEST_GIMMIGHOUL, ROAMING_GIMMIGHOUL, GHOLDENGO, WO_CHIEN, CHIEN_PAO, TING_LU, CHI_YU, ROARING_MOON, IRON_VALIANT, KORAIDON, MIRAIDON, WALKING_WAKE, IRON_LEAVES, SPECIES_TOTAL
+  // clang-format on
+};
+
+static constexpr std::uint16_t TOTAL_SPECIES_COUNT = (std::uint16_t)Species::SPECIES_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Species.hpp //////////////////////
+
+//////////////// START OF src/Components/Names/SpeciesNames.hpp ////////////////
+
+namespace pokesim {
+struct SpeciesName {
+  dex::Species name = dex::Species::NO_SPECIES;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/SpeciesNames.hpp /////////////////
+
+////////////////////// START OF src/Types/Enums/Stat.hpp ///////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon stat abbreviated name
+enum class Stat : std::uint8_t {
+  HP = 0b000001,
+  ATK = 0b000010,
+  DEF = 0b000100,
+  SPA = 0b001000,
+  SPD = 0b010000,
+  SPE = 0b100000,
+  // SPC = SPA | SPD,
+};
+
+static constexpr std::uint8_t TOTAL_STAT_COUNT = 6U;
+}  // namespace pokesim::dex
+
+/////////////////////// END OF src/Types/Enums/Stat.hpp ////////////////////////
+
+///////////////// START OF src/Components/Names/StatNames.hpp //////////////////
+
+namespace pokesim {
+struct StatName {
+  dex::Stat name;
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/Names/StatNames.hpp ///////////////////
+
+//////////////// START OF src/Components/Names/StatusNames.hpp /////////////////
+
+namespace pokesim {
+struct StatusName {
+  dex::Status name = dex::Status::NO_STATUS;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/StatusNames.hpp //////////////////
+
+/////////////// START OF src/Components/Names/TargetSlotName.hpp ///////////////
+
+namespace pokesim {
+/**
+ * @brief Represents the target slot for a move in a Pokemon battle.
+ *
+ * In a single battle, only P1A and P2A are valid targets. In a double battle, P1B and P2B are also valid.
+ */
+struct TargetSlotName {
+  Slot name = Slot::NONE;
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/Names/TargetSlotName.hpp ////////////////
+
+//////////////// START OF src/Components/Names/TerrainNames.hpp ////////////////
+
+namespace pokesim {
+struct TerrainName {
+  dex::Terrain name = dex::Terrain::NO_TERRAIN;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/TerrainNames.hpp /////////////////
+
+////////////////////// START OF src/Types/Enums/Type.hpp ///////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon type name
+enum class Type : std::uint8_t {
+  NO_TYPE = 0,
+  NORMAL,
+  GRASS,
+  WATER,
+  FIRE,
+  BUG,
+  FLYING,
+  POISON,
+  ELECTRIC,
+  GROUND,
+  FIGHTING,
+  PSYCHIC,
+  ROCK,
+  ICE,
+  GHOST,
+  DRAGON,
+  DARK,
+  STEEL,
+  FAIRY,
+  TYPE_TOTAL
+};
+
+static constexpr std::uint8_t TOTAL_TYPE_COUNT = (std::uint8_t)Type::TYPE_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+/////////////////////// END OF src/Types/Enums/Type.hpp ////////////////////////
+
+///////////////// START OF src/Components/Names/TypeNames.hpp //////////////////
+
+namespace pokesim {
+struct TypeName {
+  dex::Type name = dex::Type::NO_TYPE;
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/Names/TypeNames.hpp ///////////////////
+
+/////////////// START OF src/Components/Names/VolatileNames.hpp ////////////////
+
+namespace pokesim {
+struct VolatileName {
+  dex::Volatile name = dex::Volatile::NO_VOLATILE;
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/Names/VolatileNames.hpp /////////////////
+
+//////////////// START OF src/Components/Names/WeatherNames.hpp ////////////////
+
+namespace pokesim {
+struct WeatherName {
+  dex::Weather name = dex::Weather::NO_WEATHER;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/WeatherNames.hpp /////////////////
+
+//////////////////////// START OF src/Components/PP.hpp ////////////////////////
+
+namespace pokesim {
+struct Pp {
+  types::pp val = 0;
+};
+
+struct MaxPp {
+  types::pp val = 5;
+};
+}  // namespace pokesim
+
+///////////////////////// END OF src/Components/PP.hpp /////////////////////////
+
+//////////////////// START OF src/Components/PlayerSide.hpp ////////////////////
+
+namespace pokesim {
+struct PlayerSide {
+  PlayerSideId val = PlayerSideId::NONE;
+};
+}  // namespace pokesim
+
+///////////////////// END OF src/Components/PlayerSide.hpp /////////////////////
+
+//////////////// START OF src/Components/Pokedex/Abilities.hpp /////////////////
+
+namespace pokesim {
+// Contains one of the standard abilities a species can have.
+struct PrimaryAbility {
+  dex::Ability name = dex::Ability::NO_ABILITY;
+};
+
+// Contains one of the standard abilities a species can have if the species can have two standard abilities.
+struct SecondaryAbility {
+  dex::Ability name = dex::Ability::NO_ABILITY;
+};
+
+// Contains The hidden ability a species has.
+struct HiddenAbility {
+  dex::Ability name = dex::Ability::NO_ABILITY;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Pokedex/Abilities.hpp //////////////////
+
+//////////////// START OF src/Components/Pokedex/BaseStats.hpp /////////////////
+
+namespace pokesim {
+// Contains all of the base stats of a species
+struct BaseStats {
+  types::baseStat hp = 1;
+  types::baseStat atk = 1;
+  types::baseStat def = 1;
+  types::baseStat spa = 1;
+  types::baseStat spd = 1;
+  types::baseStat spe = 1;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Pokedex/BaseStats.hpp //////////////////
+
+///////////////////// START OF src/Components/Position.hpp /////////////////////
+
+namespace pokesim {
+// The position of a Pokemon in its team's order (starts at 1)
+struct Position {
+  types::teamPositionIndex val = 1;
+};
+}  // namespace pokesim
+
+////////////////////// END OF src/Components/Position.hpp //////////////////////
+
+///////////////////// START OF src/Components/Priority.hpp /////////////////////
+
+namespace pokesim {
+struct MovePriority {
+  types::priority val = 0;
+};
+}  // namespace pokesim
+
+////////////////////// END OF src/Components/Priority.hpp //////////////////////
+
+/////////////////// START OF src/Components/Probability.hpp ////////////////////
+
+namespace pokesim {
+/**
+ * @brief The probability of all the previous actions in a battle's simulation occurring.
+ *
+ * Calculated by multiplying the various Accuracy and Chance numbers of a battle state's events.
+ */
+struct Probability {
+  types::probability val = 1;
+};
+}  // namespace pokesim
+
+//////////////////// END OF src/Components/Probability.hpp /////////////////////
+
+///////////////////// START OF src/Components/RNGSeed.hpp //////////////////////
+
+namespace pokesim {
+struct RngSeed {
+  types::rngState val = 1;
+};
+}  // namespace pokesim
+
+////////////////////// END OF src/Components/RNGSeed.hpp ///////////////////////
+
+//////////////// START OF src/Components/RandomEventInputs.hpp /////////////////
+
+#include <array>
+
+namespace pokesim {
+namespace internal {
+// Moves such as Metronome and Psywave, the Forewarn ability, and damage rolls have more random options than this, but
+// those cases will be handled separately
+const types::eventPossibilities MAX_TYPICAL_RANDOM_OPTIONS = 5U;
+
+template <typename T = void>
+struct RandomEventStack;
+
+template <>
+struct RandomEventStack<void> {
+  types::targets<types::entity> val{};
+};
+
+template <typename T>
+struct RandomEventStack {
+  types::targets<std::pair<decltype(T::val), types::entity>> val{};
+};
+}  // namespace internal
+
+// Used for random events that have a small number of outcomes that can happen and the chance each event can happen is
+// not equal (i.e. how many times a multi-hit move hits, Effect Spore)
+template <types::eventPossibilities RANDOM_OPTIONS>
+struct RandomEventChances {
+  std::array<types::percentChance, RANDOM_OPTIONS> val{};
+  static_assert(RANDOM_OPTIONS >= 2U, "RandomEventChances should only be used for events with more than two options.");
+  static_assert(
+    RANDOM_OPTIONS <= internal::MAX_TYPICAL_RANDOM_OPTIONS,
+    "Random events with more options than this should use RandomEqualChance or RandomEventCount");
+
+  types::percentChance chanceA() const { return val[0]; }
+  types::percentChance chanceB() const { return val[1] - val[0]; }
+  types::percentChance chanceC() const {
+    static_assert(RANDOM_OPTIONS >= 3U, "This function is only for events with more than 2 outcomes.");
+    return val[2] - val[1];
+  }
+  types::percentChance chanceD() const {
+    static_assert(RANDOM_OPTIONS >= 4U, "This function is only for events with more than 3 outcomes.");
+    return val[3] - val[2];
+  }
+  types::percentChance chanceE() const {
+    static_assert(RANDOM_OPTIONS == 5U, "This function is only for events with 5 outcomes.");
+    return val[4] - val[3];
+  }
+};
+
+// Used for random events that always have two outcomes where the chance the events happens may not be equal (i.e. move
+// accuracy checks, secondary move effects)
+struct RandomBinaryChance {
+  types::percentChance val = 100U;
+
+  types::percentChance pass() const { return val; }
+  types::percentChance fail() const { return 100U - pass(); }
+  types::probability reciprocalPass() const { return 100.0F / (types::probability)pass(); }
+  types::probability reciprocalFail() const { return 100U - reciprocalPass(); }
+};
+
+namespace tags {
+// Used for when the number of outcomes a random event can have is always the same (i.e. damage rolls, Psywave) and the
+// chance each of those events can happen is equal
+struct RandomEqualChance {};
+}  // namespace tags
+
+// Used for when the number of outcomes a random event can have depends on the situation (i.e. speed ties, Trace) and
+// the chance each of those events can happen is equal
+struct RandomEventCount {
+  types::eventPossibilities val = 0U;
+};
+
+template <types::eventPossibilities RANDOM_OPTIONS>
+struct RandomEventChancesStack : internal::RandomEventStack<RandomEventChances<RANDOM_OPTIONS>> {};
+struct RandomBinaryChanceStack : internal::RandomEventStack<RandomBinaryChance> {};
+struct RandomEventCountStack : internal::RandomEventStack<RandomEventCount> {};
+struct RandomEqualChanceStack : internal::RandomEventStack<> {};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/RandomEventInputs.hpp //////////////////
+
+//////////////// START OF src/Components/RandomEventOutputs.hpp ////////////////
+
+namespace pokesim {
+namespace tags {
+struct RandomEventA {};
+struct RandomEventB {};
+struct RandomEventC {};
+struct RandomEventD {};
+struct RandomEventE {};
+
+using RandomEventCheckPassed = RandomEventA;
+using RandomEventCheckFailed = RandomEventB;
+}  // namespace tags
+
+// Indicates which of equally likely events was chosen randomly
+struct RandomEventIndex {
+  types::eventPossibilities val = 0U;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/RandomEventOutputs.hpp /////////////////
+
+///////////// START OF src/Components/SimulateTurn/ActionNames.hpp /////////////
+
+namespace pokesim::action {
+// Component to make an action one where a Pokemon uses a move. Contains the name of the move being used.
+struct Move : MoveName {};
+// Component to make an action one where a player uses an item. Contains the name of the item being used.
+struct Item : ItemName {};
+}  // namespace pokesim::action
+
+////////////// END OF src/Components/SimulateTurn/ActionNames.hpp //////////////
+
+///////////// START OF src/Components/SimulateTurn/ActionTags.hpp //////////////
+
+namespace pokesim::action::tags {
+struct BeforeTurn {};
+struct Residual {};
+
+struct Current {};
+
+struct Switch {};
+
+// Action Tag for Switching: When a Pokemon is about to be switched out
+// Example: Pursuit activating
+struct PreSwitchOut {};
+// Action Tag for Switching: When a Pokemon is being switched out
+struct SwitchOut {};
+/**
+ * @brief Action Tag for Switching: When a Pokemon is being switched in because a player chose to directly switch the
+ * Pokemon in as their turn action
+ */
+struct PreTurnSwitchIn {};
+// Action Tag for Switching: When a Pokemon is being switched in because a team member switches out mid-turn
+// Examples: U-Turn, Baton Pash, Emergency Exit
+struct MidTurnSwitchIn {};
+// Action Tag for Switching: When a Pokemon is being switched in to replace a fainted team member
+struct PostFoeFaintSwitchIn {};
+
+// Action Tag: When Revival Blessing is being used on a fainted party member
+struct RevivalBlessing {};
+// Action Tag: When a mega evolution is activating
+struct MegaEvolve {};
+// Action Tag: When a primal reversion is activating
+struct PrimalRevert {};
+// Action Tag: When a Pokemon dynamaxing
+struct Dynamax {};
+// Action Tag: When a Pokemon is terastallizing
+struct Terastallize {};
+}  // namespace pokesim::action::tags
+
+////////////// END OF src/Components/SimulateTurn/ActionTags.hpp ///////////////
+
+/////////// START OF src/Components/SimulateTurn/MoveHitStepTags.hpp ///////////
+
+namespace pokesim::tags::internal {
+struct MoveHits {};
+}  // namespace pokesim::tags::internal
+
+//////////// END OF src/Components/SimulateTurn/MoveHitStepTags.hpp ////////////
+
+////////// START OF src/Components/SimulateTurn/SimulateTurnInput.hpp //////////
+
+namespace pokesim::simulate_turn::tags {
+struct Input {};
+}  // namespace pokesim::simulate_turn::tags
+
+/////////// END OF src/Components/SimulateTurn/SimulateTurnInput.hpp ///////////
+
+/////////// START OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ///////////
+
+#include <cstdint>
+
+namespace pokesim {
+struct SpeedTieIndexes {
+  struct Span {
+    types::activePokemonIndex start = 0;
+    types::activePokemonIndex length = 0;
+  };
+
+  internal::fixedMemoryVector<Span, MechanicConstants::ActivePokemon::MAX> val{};
+};
+}  // namespace pokesim
+
+//////////// END OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ////////////
+
+///////////// START OF src/Components/SimulateTurn/TeamAction.hpp //////////////
+
+namespace pokesim::action {
+// Action Tag: When team member order has been picked as part of team preview
+struct Team {
+  types::teamOrder val{};
+};
+}  // namespace pokesim::action
+
+////////////// END OF src/Components/SimulateTurn/TeamAction.hpp ///////////////
+
+//////////////// START OF src/Components/SimulationResults.hpp /////////////////
+
+namespace pokesim {
+namespace simulate_turn {
+struct TurnOutcomeBattles {
+  types::entityVector val{};
+};
+}  // namespace simulate_turn
+
+namespace calc_damage {
+struct UsesUntilKo {
+ private:
+  struct KoProbability {
+    types::moveHits uses = 0;
+    types::probability probability = MechanicConstants::Probability::MIN;
+
+    bool operator==(const KoProbability& other) const { return uses == other.uses && probability == other.probability; }
+  };
+
+ public:
+  internal::maxSizedVector<KoProbability, MechanicConstants::DamageRollCount::MAX> val{};
+
+  const KoProbability& minHits() const {
+    POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
+    return val.front();
+  }
+
+  const KoProbability& maxHits() const {
+    POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
+    return val.back();
+  }
+
+  bool guaranteedKo() const {
+    const KoProbability& min = minHits();
+    return min.uses == 1 && min.probability == MechanicConstants::Probability::MAX;
+  }
+};
+
+struct AttackerHpRecovered : DamageRolls {};
+struct AttackerHpLost : DamageRolls {};
+}  // namespace calc_damage
+
+namespace analyze_effect {
+struct EffectMultiplier {
+  types::effectMultiplier val = 1.0F;
+};
+
+using MultipliedDamageRolls = DamageRolls;
+using MultipliedUsesUntilKo = calc_damage::UsesUntilKo;
+
+namespace tags {
+struct InfiniteMultiplier {};
+}  // namespace tags
+}  // namespace analyze_effect
+}  // namespace pokesim
+
+///////////////// END OF src/Components/SimulationResults.hpp //////////////////
+
+/////////////////// START OF src/Components/SpeciesTypes.hpp ///////////////////
+
+#include <array>
+
+namespace pokesim {
+// Contains the types a species has
+struct SpeciesTypes {
+  std::array<dex::Type, MechanicConstants::TYPES_PER_POKEMON> val{};
+
+  dex::Type& type1() { return val[0]; };
+  dex::Type& type2() { return val[1]; };
+  constexpr const dex::Type& type1() const { return val[0]; };
+  constexpr const dex::Type& type2() const { return val[1]; };
+  constexpr internal::unsignedIntType<MechanicConstants::TYPES_PER_POKEMON> size() const {
+    if (type2() == dex::Type::NO_TYPE) {
+      return type1() == dex::Type::NO_TYPE ? 0 : 1;
+    }
+    return 2;
+  }
+  constexpr bool has(dex::Type type) const { return type1() == type || type2() == type; }
+};
+}  // namespace pokesim
+
+//////////////////// END OF src/Components/SpeciesTypes.hpp ////////////////////
+
+/////////////////// START OF src/Types/Enums/ActionOrder.hpp ///////////////////
+
+#include <array>
+#include <cstdint>
+#include <limits>
+#include <type_traits>
+
+namespace pokesim {
+enum class ActionOrder : std::uint8_t {
+  NONE = std::numeric_limits<std::underlying_type_t<ActionOrder>>::max(),
+  TEAM = 1,
+  START = 2,
+  BEFORE_TURN = 4,
+  ITEM = BEFORE_TURN,
+
+  SWITCH = 103,
+
+  MOVE = 200,
+
+  RESIDUAL = 254,
+};
+
+static constexpr inline std::array<ActionOrder, 8U> VALID_ACTION_ORDERS = {
+  ActionOrder::NONE,
+  ActionOrder::TEAM,
+  ActionOrder::START,
+  ActionOrder::BEFORE_TURN,
+  ActionOrder::ITEM,
+  ActionOrder::SWITCH,
+  ActionOrder::MOVE,
+  ActionOrder::RESIDUAL,
+};
+}  // namespace pokesim
+
+//////////////////// END OF src/Types/Enums/ActionOrder.hpp ////////////////////
+
+//////////////////// START OF src/Components/SpeedSort.hpp /////////////////////
+
+namespace pokesim {
+// Data that determines the order actions take place
+struct SpeedSort {
+  // Order of the types of actions (lower first)
+  ActionOrder order = ActionOrder::NONE;
+  // Priority of the action (higher first)
+  types::priority priority = 0;
+  // Whether negative fractional priority is active for the action (false first)
+  types::fractionalPriority fractionalPriority = false;
+  // Speed of Pokemon using move (higher first if priority tie)
+  types::stat speed = 1;
+
+  bool operator==(const SpeedSort& other) const {
+    return order == other.order && priority == other.priority && fractionalPriority == other.fractionalPriority &&
+           speed == other.speed;
+  }
+};
+}  // namespace pokesim
+
+///////////////////// END OF src/Components/SpeedSort.hpp //////////////////////
+
+////////////////////// START OF src/Components/Stats.hpp ///////////////////////
+
+namespace pokesim::stat {
+struct Hp {
+  types::stat val = 1;
+};
+
+struct Atk {
+  types::stat val = 1;
+};
+
+struct Def {
+  types::stat val = 1;
+};
+
+struct Spa {
+  types::stat val = 1;
+};
+
+struct Spd {
+  types::stat val = 1;
+};
+
+struct Spe {
+  types::stat val = 1;
+};
+
+struct CurrentHp {
+  types::stat val = 1;
+};
+
+struct EffectiveAtk {
+  types::stat val = 1;
+};
+
+struct EffectiveDef {
+  types::stat val = 1;
+};
+
+struct EffectiveSpa {
+  types::stat val = 1;
+};
+
+struct EffectiveSpd {
+  types::stat val = 1;
+};
+
+struct EffectiveSpe {
+  types::stat val = 1;
+};
+}  // namespace pokesim::stat
+
+/////////////////////// END OF src/Components/Stats.hpp ////////////////////////
+
+///////////////// START OF src/Components/Tags/AbilityTags.hpp /////////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::ability::tags {
+struct Defiant {};
+struct Infiltrator {};
+struct IronFist {};
+struct Static {};
+struct SweetVeil {};
+struct Trace {};
+}  // namespace pokesim::ability::tags
+
+////////////////// END OF src/Components/Tags/AbilityTags.hpp //////////////////
+
+///////////////// START OF src/Components/Tags/BattleTags.hpp //////////////////
+
+namespace pokesim::tags {
+struct Battle {};
+struct Side {};
+
+// Battle Turn State Tag: When a battle is in the middle of a turn
+struct BattleMidTurn {};
+// Battle Turn State Tag: When a battle has ended
+struct BattleEnded {};
+}  // namespace pokesim::tags
+
+////////////////// END OF src/Components/Tags/BattleTags.hpp ///////////////////
+
+////////////////// START OF src/Components/Tags/ItemTags.hpp ///////////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::item::tags {
+struct AssaultVest {};
+struct BrightPowder {};
+struct ChoiceScarf {};
+struct ChoiceSpecs {};
+struct FocusSash {};
+struct LifeOrb {};
+}  // namespace pokesim::item::tags
+
+/////////////////// END OF src/Components/Tags/ItemTags.hpp ////////////////////
+
+////////////////// START OF src/Components/Tags/MoveTags.hpp ///////////////////
+
+namespace pokesim::move::tags {
+// Move Category Tag
+struct Physical {};
+// Move Category Tag
+struct Special {};
+// Move Category Tag
+struct Status {};
+
+// Move Property Tag: Makes contact
+struct Contact {};
+// Move Property Tag: Ignores a target's substitute
+struct BypassSubstitute {};
+// Move Property Tag: Power is multiplied by 1.2 when used by a Pokemon with the Ability Iron Fist.
+struct Punch {};
+// Move Property Tag: Move hits 2, 3, 4, or 5 times depending on random chance, items (i.e. Loaded Dice), and abilities
+// (i.e. Skill Link)
+struct VariableHitCount {};
+// Move Property Tag: A multi-hit move where each hit checks accuracy (i.e. Triple Kick)
+struct AccuracyDependentHitCount {};
+
+struct Disabled {};
+
+namespace effect {
+// Move Effect Participant Tag: Who the effect will affect
+struct MoveTarget {};
+// Move Effect Participant Tag: Who created the effect
+struct MoveSource {};
+}  // namespace effect
+}  // namespace pokesim::move::tags
+
+/////////////////// END OF src/Components/Tags/MoveTags.hpp ////////////////////
+
+///////////////// START OF src/Components/Tags/NatureTags.hpp //////////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::nature::tags {
+struct Adamant {};
+struct Bashful {};
+struct Bold {};
+struct Brave {};
+struct Calm {};
+struct Careful {};
+struct Docile {};
+struct Gentle {};
+struct Hardy {};
+struct Hasty {};
+struct Impish {};
+struct Jolly {};
+struct Lax {};
+struct Lonely {};
+struct Mild {};
+struct Modest {};
+struct Naive {};
+struct Naughty {};
+struct Quiet {};
+struct Quirky {};
+struct Rash {};
+struct Relaxed {};
+struct Sassy {};
+struct Serious {};
+struct Timid {};
+}  // namespace pokesim::nature::tags
+
+////////////////// END OF src/Components/Tags/NatureTags.hpp ///////////////////
+
+///////////////// START OF src/Components/Tags/PokemonTags.hpp /////////////////
+
+namespace pokesim::tags {
+struct Pokemon {};
+
+// Indicates the Pokemon is currently in a battle
+struct ActivePokemon {};
+
+struct AtkStatUpdateRequired {};
+struct DefStatUpdateRequired {};
+struct SpdStatUpdateRequired {};
+struct SpaStatUpdateRequired {};
+struct SpeStatUpdateRequired {};
+
+struct Fainted {};
+}  // namespace pokesim::tags
+
+////////////////// END OF src/Components/Tags/PokemonTags.hpp //////////////////
+
+////////////////// START OF src/Components/Tags/Selection.hpp //////////////////
+
+#include <cstdint>
+#include <vector>
+
+namespace pokesim::tags {
+struct SelectedForViewBattle {};
+struct SelectedForViewSide {};
+struct SelectedForViewPokemon {};
+struct SelectedForViewMove {};
+}  // namespace pokesim::tags
+
+/////////////////// END OF src/Components/Tags/Selection.hpp ///////////////////
+
+/////////////// START OF src/Components/Tags/SimulationTags.hpp ////////////////
+
+namespace pokesim::tags {
+struct SimulateTurn {};
+struct CalculateDamage {};
+struct AnalyzeEffect {};
+}  // namespace pokesim::tags
+
+//////////////// END OF src/Components/Tags/SimulationTags.hpp /////////////////
+
+///////////////// START OF src/Components/Tags/StatusTags.hpp //////////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::status::tags {
+struct Burn {};
+struct Freeze {};
+struct Paralysis {};
+struct Poison {};
+struct Sleep {};
+struct Toxic {};
+}  // namespace pokesim::status::tags
+
+////////////////// END OF src/Components/Tags/StatusTags.hpp ///////////////////
+
+///////////////// START OF src/Components/Tags/TargetTags.hpp //////////////////
+
+namespace pokesim::move {
+namespace tags {
+struct AnySingleTarget {};
+struct AnySingleFoe {};
+struct AnySingleAlly {};
+struct AllyOrSelf {};
+struct Self {};
+struct AllFoes {};
+struct AlliesAndFoes {};
+struct AlliesAndSelf {};
+struct FoeSide {};
+struct AllySide {};
+struct Field {};
+struct AllyTeam {};
+struct Retaliation {};
+struct RandomFoe {};
+}  // namespace tags
+
+namespace added_targets::tags {
+struct TargetAlly {};
+struct UserAlly {};
+struct TargetSide {};
+struct UserSide {};
+struct Field {};
+}  // namespace added_targets::tags
+}  // namespace pokesim::move
+
+////////////////// END OF src/Components/Tags/TargetTags.hpp ///////////////////
+
+////////////////// START OF src/Components/Tags/TypeTags.hpp ///////////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::type::tags {
+struct Normal {};
+struct Fighting {};
+struct Flying {};
+struct Poison {};
+struct Ground {};
+struct Rock {};
+struct Bug {};
+struct Ghost {};
+struct Steel {};
+struct Fire {};
+struct Water {};
+struct Grass {};
+struct Electric {};
+struct Psychic {};
+struct Ice {};
+struct Dragon {};
+struct Dark {};
+struct Fairy {};
+}  // namespace pokesim::type::tags
+
+/////////////////// END OF src/Components/Tags/TypeTags.hpp ////////////////////
+
+/////////////////////// START OF src/Components/Turn.hpp ///////////////////////
+
+namespace pokesim {
+// The current turn of a battle
+struct Turn {
+  types::battleTurn val = 0;
+};
+}  // namespace pokesim
+
+//////////////////////// END OF src/Components/Turn.hpp ////////////////////////
+
+////////////////// START OF src/Types/Enums/BattleFormat.hpp ///////////////////
+
+#include <array>
+#include <cstdint>
+
+namespace pokesim {
+// Denotes if the simulated battle is a single or double battle
+enum class BattleFormat : std::uint8_t {
+  SINGLES_BATTLE_FORMAT = 1,
+  DOUBLES_BATTLE_FORMAT = 2,
+};
+
+static constexpr inline std::array<BattleFormat, 2U> VALID_BATTLE_FORMATS = {
+  BattleFormat::SINGLES_BATTLE_FORMAT,
+  BattleFormat::DOUBLES_BATTLE_FORMAT,
+};
+}  // namespace pokesim
+
+/////////////////// END OF src/Types/Enums/BattleFormat.hpp ////////////////////
+
+////////////////// START OF src/Types/Enums/GameMechanics.hpp //////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+// Game the simulator is imitating the mechanics of
+enum class GameMechanics : std::uint8_t {
+  NONE = 0,
+  SWORD_SHIELD,
+  BRILLIANT_DIAMOND_SHINING_PEARL,
+  SCARLET_VIOLET,
+
+  TOTAL_GAME_MECHANICS,
+};
+
+static constexpr std::uint8_t TOTAL_GAME_MECHANICS_COUNT = std::uint8_t(GameMechanics::TOTAL_GAME_MECHANICS) - 1U;
+}  // namespace pokesim
+
+/////////////////// END OF src/Types/Enums/GameMechanics.hpp ///////////////////
+
+////////////////// START OF src/Types/Enums/MoveCategory.hpp ///////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+
+enum class MoveCategory : std::uint8_t {
+  PHYSICAL,
+  SPECIAL,
+  STATUS,
+};
+
+static constexpr std::uint8_t TOTAL_MOVE_CATEGORY_COUNT = 3U;
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Types/Enums/MoveCategory.hpp ////////////////////
+
+/////////////////// START OF src/Types/Enums/MoveTarget.hpp ////////////////////
+
+#include <cstdint>
+
+namespace pokesim {
+enum class MoveTarget : std::uint8_t {
+  NONE = 0,
+  ANY_SINGLE_TARGET,  // Targets one Pokemon other than the move's user
+  ANY_SINGLE_FOE,     // Targets one foe
+  ANY_SINGLE_ALLY,    // Targets one ally
+  ALLY_OR_SELF,       // Targets either one ally or the move's user
+  SELF,               // Targets the move's user
+
+  ALL_FOES,         // Targets every active foe
+  ALLIES_AND_FOES,  // Targets every active foe and the move user's allies
+  ALLIES_AND_SELF,  // Targets the move user's allies and the user
+
+  FOE_SIDE,   // Targets the opponent's side
+  ALLY_SIDE,  // Targets the move user's side
+  FIELD,      // Targets the field or all Pokemon at once
+
+  ALLY_TEAM,    // Targets all non-fainted Pokemon on the user's team
+  RETALIATION,  // Targets the last Pokemon to damage the user during a turn
+  RANDOM_FOE,   // Targets a random foe
+
+  TOTAL_MOVE_TARGET,
+};
+
+static constexpr std::uint8_t TOTAL_MOVE_TARGET_COUNT = (std::uint8_t)MoveTarget::TOTAL_MOVE_TARGET - 1U;
+}  // namespace pokesim
+
+//////////////////// END OF src/Types/Enums/MoveTarget.hpp /////////////////////
+
+//////////////// START OF src/Types/Enums/TypeEffectiveness.hpp ////////////////
+
+#include <array>
+#include <cstdint>
+
+namespace pokesim {
+enum class TypeEffectiveness : std::uint8_t {
+  IMMUNE,
+  NOT_VERY_EFFECTIVE,
+  NEUTRAL,
+  SUPER_EFFECTIVE,
+};
+
+static constexpr inline std::array<TypeEffectiveness, 4U> VALID_TYPE_EFFECTIVENESS = {
+  TypeEffectiveness::IMMUNE,
+  TypeEffectiveness::NOT_VERY_EFFECTIVE,
+  TypeEffectiveness::NEUTRAL,
+  TypeEffectiveness::SUPER_EFFECTIVE,
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Types/Enums/TypeEffectiveness.hpp /////////////////
+
+//////////////// START OF src/Simulation/SimulationOptions.hpp /////////////////
+
+#include <cstdint>
+#include <optional>
+#include <type_traits>
+
+namespace pokesim {
+class Simulation;
+
+struct DamageRollOptions {
+  DamageRollKind p1 = DamageRollKind::AVERAGE_DAMAGE;
+  DamageRollKind p2 = DamageRollKind::AVERAGE_DAMAGE;
+  bool sidesMatch() const { return p1 == p2; }
+
+  bool operator==(const DamageRollOptions& other) const { return p1 == other.p1 && p2 == other.p2; }
+};
+
+namespace simulate_turn {
+struct Options {
+  DamageRollOptions damageRollsConsidered;
+  bool applyChangesToInputBattle = true;
+  std::optional<types::percentChance> randomChanceUpperLimit = std::nullopt;
+  std::optional<types::percentChance> randomChanceLowerLimit = std::nullopt;
+  std::optional<types::probability> branchProbabilityLowerLimit = std::nullopt;
+
+  // For Monte Carlo method. When true, the number of branches is determined by the number of random chance events that
+  // happen in the turn. When false, the number of output battles is the same as the number in input battles as each
+  // battle picks a random outcome for each random event without branching.
+  bool makeBranchesOnRandomEvents = true;
+
+  entt::delegate<std::remove_pointer_t<types::callback>> decisionCallback{};
+  entt::delegate<std::remove_pointer_t<types::callback>> faintCallback{};
+
+  bool operator==(const Options& other) const {
+    return damageRollsConsidered == other.damageRollsConsidered &&
+           applyChangesToInputBattle == other.applyChangesToInputBattle &&
+           randomChanceLowerLimit == other.randomChanceLowerLimit &&
+           randomChanceUpperLimit == other.randomChanceUpperLimit &&
+           branchProbabilityLowerLimit == other.branchProbabilityLowerLimit &&
+           makeBranchesOnRandomEvents == other.makeBranchesOnRandomEvents &&
+           decisionCallback == other.decisionCallback && faintCallback == other.faintCallback;
+  }
+};
+}  // namespace simulate_turn
+
+namespace calc_damage {
+struct Options {
+  bool calculateUpToFoeHp = false;
+  // KO chance is otherwise calculated if DamageRollKind::ALL_DAMAGE_ROLLS is set as the damage roll option
+  bool noKoChanceCalculation = false;
+
+  DamageRollOptions damageRollOptions;
+
+  bool operator==(const Options& other) const {
+    return calculateUpToFoeHp == other.calculateUpToFoeHp && noKoChanceCalculation == other.noKoChanceCalculation &&
+           damageRollOptions == other.damageRollOptions;
+  }
+};
+}  // namespace calc_damage
+
+namespace analyze_effect {
+struct Options {
+  // Whether to consider the multiplier even if the effect is already active (i.e. Rain will return a 1x multiplier
+  // instead of 1.5x multiplier for Surf if this option is true and it's already raining)
+  bool reconsiderActiveEffects = false;
+  bool calculateUpToFoeHp = false;
+  // KO chance is otherwise calculated if DamageRollKind::ALL_DAMAGE_ROLLS is set as the damage roll option
+  bool noKoChanceCalculation = false;
+
+  DamageRollOptions damageRollOptions;
+
+  bool operator==(const Options& other) const {
+    return reconsiderActiveEffects == other.reconsiderActiveEffects && calculateUpToFoeHp == other.calculateUpToFoeHp &&
+           noKoChanceCalculation == other.noKoChanceCalculation && damageRollOptions == other.damageRollOptions;
+  }
+};
+}  // namespace analyze_effect
+}  // namespace pokesim
+
+///////////////// END OF src/Simulation/SimulationOptions.hpp //////////////////
+
+////////////////// START OF src/Utilities/ArgumentChecks.hpp ///////////////////
+
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+
+
+namespace pokesim {
+struct Accuracy;
+struct AddedTargets;
+struct BaseEffectChance;
+struct BasePower;
+struct AtkBoost;
+struct DefBoost;
+struct SpaBoost;
+struct SpdBoost;
+struct SpeBoost;
+struct CloneTo;
+struct Damage;
+struct DamageRollModifiers;
+struct DamageRolls;
+struct SlotDecision;
+struct SideDecision;
+struct Evs;
+struct Ivs;
+struct ActionQueue;
+struct Battle;
+struct ParentBattle;
+struct RootBattle;
+struct ParentEntity;
+struct ChoiceLock;
+struct CurrentAction;
+struct NextAction;
+struct CurrentActionTargets;
+struct CurrentActionSource;
+struct CurrentActionMoves;
+struct CurrentActionMoveSlot;
+struct FoeSide;
+struct LastUsedMove;
+struct MoveEffect;
+struct MoveSlots;
+struct Pokemon;
+struct Side;
+struct Sides;
+struct Team;
+struct EventModifier;
+struct HitCount;
+struct Id;
+struct Level;
+struct AbilityName;
+struct GenderName;
+struct ItemName;
+struct MoveName;
+struct NatureName;
+struct PseudoWeatherName;
+struct SideConditionName;
+struct SourceSlotName;
+struct SpeciesName;
+struct StatName;
+struct StatusName;
+struct TargetSlotName;
+struct TerrainName;
+struct TypeName;
+struct VolatileName;
+struct WeatherName;
+struct Pp;
+struct MaxPp;
+struct PlayerSide;
+struct PrimaryAbility;
+struct SecondaryAbility;
+struct HiddenAbility;
+struct BaseStats;
+struct Position;
+struct MovePriority;
+struct Probability;
+struct RngSeed;
+template <types::eventPossibilities>
+struct RandomEventChances;
+struct RandomBinaryChance;
+struct RandomEventCount;
+template <types::eventPossibilities>
+struct RandomEventChancesStack;
+struct RandomBinaryChanceStack;
+struct RandomEventCountStack;
+struct RandomEqualChanceStack;
+struct RandomEventIndex;
+struct SpeedTieIndexes;
+struct SpeciesTypes;
+struct SpeedSort;
+struct Turn;
+namespace analyze_effect {
+struct EffectTarget;
+struct EffectMoves;
+struct Inputs;
+struct OriginalInputEntities;
+struct MovePairs;
+struct RunsOneCalculationCount;
+struct RemovedEffect;
+struct EffectMultiplier;
+}  // namespace analyze_effect
+namespace calc_damage {
+struct CritChanceDivisor;
+struct CritBoost;
+struct AttackingLevel;
+struct AttackingStat;
+struct DefendingStat;
+struct UsesUntilKo;
+struct AttackerHpRecovered;
+struct AttackerHpLost;
+}  // namespace calc_damage
+namespace action {
+struct Move;
+struct Item;
+struct Team;
+}  // namespace action
+namespace simulate_turn {
+struct TurnOutcomeBattles;
+}  // namespace simulate_turn
+namespace stat {
+struct Hp;
+struct Atk;
+struct Def;
+struct Spa;
+struct Spd;
+struct Spe;
+struct CurrentHp;
+struct EffectiveAtk;
+struct EffectiveDef;
+struct EffectiveSpa;
+struct EffectiveSpd;
+struct EffectiveSpe;
+}  // namespace stat
+}  // namespace pokesim
+
+namespace pokesim::debug {
+template <typename T>
+void check(const T&, const types::registry&) {}
+template <typename T>
+void check(const T&) {}
+
+inline void checkBattle(types::entity, const types::registry&);
+inline void checkSide(types::entity, const types::registry&);
+inline void checkPokemon(types::entity, const types::registry&);
+inline void checkMoveSlot(types::entity, const types::registry&);
+inline void checkActionMove(types::entity, const types::registry&);
+
+inline template <>
+void check(const Accuracy&);
+
+inline template <>
+void check(const AddedTargets&);
+
+inline template <>
+void check(const analyze_effect::EffectTarget&, const types::registry&);
+
+inline template <>
+void check(const analyze_effect::EffectMoves&);
+
+inline template <>
+void check(const analyze_effect::Inputs&, const types::registry&);
+
+// template <> void check(const analyze_effect::OriginalInputEntities&, const types::registry&);
+
+inline template <>
+void check(const analyze_effect::MovePairs&, const types::registry&);
+
+// template <> void check(const analyze_effect::RunsOneCalculationCount&);
+
+// template <> void check(const analyze_effect::RemovedEffect&);
+
+inline template <>
+void check(const BaseEffectChance&);
+
+inline template <>
+void check(const BasePower&);
+
+inline template <>
+void check(const AtkBoost&);
+
+inline template <>
+void check(const DefBoost&);
+
+inline template <>
+void check(const SpaBoost&);
+
+inline template <>
+void check(const SpdBoost&);
+
+inline template <>
+void check(const SpeBoost&);
+
+inline template <>
+void check(const calc_damage::CritChanceDivisor&);
+
+inline template <>
+void check(const calc_damage::CritBoost&);
+
+inline template <>
+void check(const calc_damage::AttackingLevel&);
+
+inline template <>
+void check(const calc_damage::AttackingStat&);
+
+inline template <>
+void check(const calc_damage::DefendingStat&);
+
+// template <> void check(const CloneTo&);
+
+inline template <>
+void check(const Damage&);
+
+inline template <>
+void check(const DamageRollModifiers&);
+
+inline template <>
+void check(const DamageRolls&);
+
+inline template <>
+void check(const SlotDecision&);
+
+inline template <>
+void check(const SideDecision&);
+
+inline template <>
+void check(const Evs&);
+
+inline template <>
+void check(const Ivs&);
+
+inline template <>
+void check(const ActionQueue&, const types::registry&);
+
+inline template <>
+void check(const Battle&, const types::registry&);
+
+inline template <>
+void check(const ParentBattle&, const types::registry&);
+
+inline template <>
+void check(const RootBattle&, const types::registry&);
+
+inline template <>
+void check(const ParentEntity&, const types::registry&);
+
+inline template <>
+void check(const ChoiceLock&, const types::registry&);
+
+inline template <>
+void check(const CurrentAction&, const types::registry&);
+
+inline template <>
+void check(const NextAction&, const types::registry&);
+
+inline template <>
+void check(const CurrentActionTargets&, const types::registry&);
+
+inline template <>
+void check(const CurrentActionSource&, const types::registry&);
+
+inline template <>
+void check(const CurrentActionMoves&, const types::registry&);
+
+inline template <>
+void check(const CurrentActionMoveSlot&, const types::registry&);
+
+inline template <>
+void check(const FoeSide&, const types::registry&);
+
+inline template <>
+void check(const LastUsedMove&, const types::registry&);
+
+// template <> void check(const MoveEffect&, const types::registry&);
+
+inline template <>
+void check(const MoveSlots&, const types::registry&);
+
+inline template <>
+void check(const Pokemon&, const types::registry&);
+
+inline template <>
+void check(const Side&, const types::registry&);
+
+inline template <>
+void check(const Sides&, const types::registry&);
+
+inline template <>
+void check(const Team&, const types::registry&);
+
+// template <> void check(const EventModifier&);
+
+inline template <>
+void check(const HitCount&);
+
+// template <> void check(const Id&);
+
+inline template <>
+void check(const Level&);
+
+inline template <>
+void check(const AbilityName&);
+
+inline template <>
+void check(const GenderName&);
+
+inline template <>
+void check(const ItemName&);
+
+inline template <>
+void check(const MoveName&);
+
+inline template <>
+void check(const NatureName&);
+
+inline template <>
+void check(const PseudoWeatherName&);
+
+inline template <>
+void check(const SideConditionName&);
+
+inline template <>
+void check(const SourceSlotName&);
+
+inline template <>
+void check(const SpeciesName&);
+
+inline template <>
+void check(const StatName&);
+
+inline template <>
+void check(const StatusName&);
+
+inline template <>
+void check(const TargetSlotName&);
+
+inline template <>
+void check(const TerrainName&);
+
+inline template <>
+void check(const TypeName&);
+
+inline template <>
+void check(const VolatileName&);
+
+inline template <>
+void check(const WeatherName&);
+
+inline template <>
+void check(const Pp&);
+
+inline template <>
+void check(const MaxPp&);
+
+inline template <>
+void check(const PlayerSide&);
+
+inline template <>
+void check(const PrimaryAbility&);
+
+inline template <>
+void check(const SecondaryAbility&);
+
+inline template <>
+void check(const HiddenAbility&);
+
+inline template <>
+void check(const BaseStats&);
+
+inline template <>
+void check(const Position&);
+
+inline template <>
+void check(const MovePriority&);
+
+inline template <>
+void check(const Probability&);
+
+inline template <>
+void check(const RngSeed&);
+
+inline template <>
+void check(const RandomEventChances<2U>&);
+
+inline template <>
+void check(const RandomEventChances<3U>&);
+
+inline template <>
+void check(const RandomEventChances<4U>&);
+
+inline template <>
+void check(const RandomEventChances<5U>&);
+
+inline template <>
+void check(const RandomBinaryChance&);
+
+// template <> void check(const RandomEventCount&);
+
+inline template <>
+void check(const RandomEventChancesStack<2U>&, const types::registry&);
+
+inline template <>
+void check(const RandomEventChancesStack<3U>&, const types::registry&);
+
+inline template <>
+void check(const RandomEventChancesStack<4U>&, const types::registry&);
+
+inline template <>
+void check(const RandomEventChancesStack<5U>&, const types::registry&);
+
+inline template <>
+void check(const RandomBinaryChanceStack&, const types::registry&);
+
+inline template <>
+void check(const RandomEventCountStack&, const types::registry&);
+
+inline template <>
+void check(const RandomEqualChanceStack&, const types::registry&);
+
+// template <> void check(const RandomEventIndex&);
+
+inline template <>
+void check(const action::Move&);
+
+inline template <>
+void check(const action::Item&);
+
+inline template <>
+void check(const SpeedTieIndexes&);
+
+inline template <>
+void check(const action::Team&);
+
+inline template <>
+void check(const simulate_turn::TurnOutcomeBattles&, const types::registry&);
+
+inline template <>
+void check(const calc_damage::UsesUntilKo&);
+
+inline template <>
+void check(const calc_damage::AttackerHpRecovered&);
+
+inline template <>
+void check(const calc_damage::AttackerHpLost&);
+
+inline template <>
+void check(const analyze_effect::EffectMultiplier&);
+
+inline template <>
+void check(const SpeciesTypes&);
+
+inline template <>
+void check(const SpeedSort&);
+
+inline template <>
+void check(const stat::Hp&);
+
+inline template <>
+void check(const stat::Atk&);
+
+inline template <>
+void check(const stat::Def&);
+
+inline template <>
+void check(const stat::Spa&);
+
+inline template <>
+void check(const stat::Spd&);
+
+inline template <>
+void check(const stat::Spe&);
+
+inline template <>
+void check(const stat::CurrentHp&);
+
+inline template <>
+void check(const stat::EffectiveAtk&);
+
+inline template <>
+void check(const stat::EffectiveDef&);
+
+inline template <>
+void check(const stat::EffectiveSpa&);
+
+inline template <>
+void check(const stat::EffectiveSpd&);
+
+inline template <>
+void check(const stat::EffectiveSpe&);
+
+inline template <>
+void check(const Turn&);
+
+inline template <>
+void check(const DamageRollKind&);
+
+inline template <>
+void check(const DamageRollOptions&);
+}  // namespace pokesim::debug
+
+#endif
+
+/////////////////// END OF src/Utilities/ArgumentChecks.hpp ////////////////////
+
+////////////////// START OF src/Utilities/ArgumentChecks.cpp ///////////////////
+
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+
+
+
+namespace pokesim::debug {
+namespace {
+template <typename T>
+bool has(types::entity entity, const types::registry& registry) {
+  return registry.all_of<T>(entity);
+}
+
+template <typename List, typename Value>
+bool listContains(const List& list, const Value& value) {
+  return std::find(list.begin(), list.end(), value) != list.end();
+}
+
+template <typename MaxMinStruct, typename T>
+void checkBounds(const T& value) {
+  POKESIM_REQUIRE(
+    value >= MaxMinStruct::MIN,
+    std::to_string(value) + " is not in the bounds of " + std::string(entt::type_name<MaxMinStruct>().value()) + ".");
+  POKESIM_REQUIRE(
+    value <= MaxMinStruct::MAX,
+    std::to_string(value) + " is not in the bounds of " + std::string(entt::type_name<MaxMinStruct>().value()) + ".");
+}
+
+inline void checkBoost(types::boost boost) {
+  checkBounds<MechanicConstants::PokemonStatBoost>(boost);
+}
+
+inline void checkStat(types::stat stat, bool hp = false) {
+  if (hp) {
+    checkBounds<MechanicConstants::PokemonHpStat>(stat);
+  }
+  else {
+    checkBounds<MechanicConstants::PokemonStat>(stat);
+  }
+}
+
+inline void checkEffectiveStat(types::stat stat, bool hp = false) {
+  if (hp) {
+    checkBounds<MechanicConstants::PokemonHpStat>(stat);
+  }
+  else {
+    checkBounds<MechanicConstants::PokemonEffectiveStat>(stat);
+  }
+}
+
+inline void checkBaseStat(types::baseStat stat) {
+  checkBounds<MechanicConstants::PokemonBaseStat>(stat);
+}
+
+inline void checkSlot(Slot slot) {
+  POKESIM_REQUIRE_NM(slot != Slot::NONE);
+}
+
+inline void checkPlayerSideId(PlayerSideId sideId) {
+  POKESIM_REQUIRE_NM(sideId == PlayerSideId::P1 || sideId == PlayerSideId::P2);
+}
+
+inline void checkEv(types::ev ev) {
+  checkBounds<MechanicConstants::PokemonEv>(ev);
+}
+
+inline void checkIv(types::iv iv) {
+  checkBounds<MechanicConstants::PokemonIv>(iv);
+}
+
+inline void checkPercentChance(types::percentChance chance) {
+  checkBounds<MechanicConstants::PercentChance>(chance);
+}
+
+inline void checkProbability(types::probability probability) {
+  checkBounds<MechanicConstants::Probability>(probability);
+}
+
+inline void checkTeamOrder(const types::teamOrder& teamOrder) {
+  for (types::teamPositionIndex position : teamOrder) {
+    checkBounds<MechanicConstants::TeamSize>(position);
+  }
+}
+
+inline void checkAction(types::entity actionEntity, const types::registry& registry) {
+  types::registry::checkEntity(actionEntity, registry);
+  if (has<action::Team>(actionEntity, registry)) {
+    POKESIM_REQUIRE_NM(!has<action::Item>(actionEntity, registry));
+    POKESIM_REQUIRE_NM(!has<action::Move>(actionEntity, registry));
+    POKESIM_REQUIRE_NM(!has<action::tags::Switch>(actionEntity, registry));
+    POKESIM_REQUIRE_NM(!has<SourceSlotName>(actionEntity, registry));
+    POKESIM_REQUIRE_NM(!has<TargetSlotName>(actionEntity, registry));
+    POKESIM_REQUIRE_NM(!has<SpeedSort>(actionEntity, registry));
+
+    checkTeamOrder(registry.get<action::Team>(actionEntity).val);
+  }
+  else {
+    POKESIM_REQUIRE_NM(has<SpeedSort>(actionEntity, registry));
+  }
+
+  if (registry.any_of<action::Item, action::Move, action::tags::Switch>(actionEntity)) {
+    POKESIM_REQUIRE_NM(has<SourceSlotName>(actionEntity, registry));
+    POKESIM_REQUIRE_NM(has<TargetSlotName>(actionEntity, registry));
+    POKESIM_REQUIRE_NM(!has<action::Team>(actionEntity, registry));
+
+    const auto& [source, target, speedSort] = registry.get<SourceSlotName, TargetSlotName, SpeedSort>(actionEntity);
+    check(source);
+    check(target);
+    check(speedSort);
+
+    if (has<action::Item>(actionEntity, registry)) {
+      check((ItemName)registry.get<action::Item>(actionEntity));
+    }
+    if (has<action::Move>(actionEntity, registry)) {
+      check((MoveName)registry.get<action::Move>(actionEntity));
+    }
+  }
+}
+
+template <types::eventPossibilities RANDOM_OPTIONS>
+void checkRandomChanceEvents(const RandomEventChances<RANDOM_OPTIONS>& randomEventChances) {
+  for (types::percentChance chance : randomEventChances.val) {
+    checkPercentChance(chance);
+  }
+}
+}  // namespace
+
+inline void checkBattle(types::entity battleEntity, const types::registry& registry) {
+  types::registry::checkEntity(battleEntity, registry);
+  POKESIM_REQUIRE_NM(has<tags::Battle>(battleEntity, registry));
+  POKESIM_REQUIRE_NM(has<Sides>(battleEntity, registry));
+  POKESIM_REQUIRE_NM(has<Probability>(battleEntity, registry));
+  POKESIM_REQUIRE_NM(has<RngSeed>(battleEntity, registry));
+  const auto& [sides, probability] = registry.get<Sides, Probability>(battleEntity);
+
+  check(probability);
+
+  POKESIM_REQUIRE_NM(sides.val.size() == MechanicConstants::SIDE_COUNT);
+  auto [p1SideEntity, p2SideEntity] = sides.val;
+
+  POKESIM_REQUIRE_NM(registry.get<Battle>(p1SideEntity).val == battleEntity);
+  POKESIM_REQUIRE_NM(registry.get<Battle>(p2SideEntity).val == battleEntity);
+  POKESIM_REQUIRE_NM(has<tags::Side>(p1SideEntity, registry));
+  POKESIM_REQUIRE_NM(has<tags::Side>(p2SideEntity, registry));
+
+  POKESIM_REQUIRE_NM(registry.get<PlayerSide>(p1SideEntity).val == PlayerSideId::P1);
+  POKESIM_REQUIRE_NM(registry.get<PlayerSide>(p2SideEntity).val == PlayerSideId::P2);
+
+  POKESIM_REQUIRE_NM(registry.get<FoeSide>(p1SideEntity).val == p2SideEntity);
+  POKESIM_REQUIRE_NM(registry.get<FoeSide>(p2SideEntity).val == p1SideEntity);
+}
+
+inline void checkSide(types::entity sideEntity, const types::registry& registry) {
+  types::registry::checkEntity(sideEntity, registry);
+  POKESIM_REQUIRE_NM(has<tags::Side>(sideEntity, registry));
+  POKESIM_REQUIRE_NM(has<Team>(sideEntity, registry));
+  POKESIM_REQUIRE_NM(has<FoeSide>(sideEntity, registry));
+  POKESIM_REQUIRE_NM(has<Battle>(sideEntity, registry));
+  POKESIM_REQUIRE_NM(has<PlayerSide>(sideEntity, registry));
+
+  const auto& [battle, team, foeSide] = registry.get<Battle, Team, FoeSide>(sideEntity);
+  checkBounds<MechanicConstants::TeamSize>(team.val.size());
+
+  POKESIM_REQUIRE_NM(registry.get<FoeSide>(foeSide.val).val == sideEntity);
+
+  for (types::entity pokemonEntity : team.val) {
+    types::registry::checkEntity(pokemonEntity, registry);
+    POKESIM_REQUIRE_NM(has<tags::Pokemon>(pokemonEntity, registry));
+    POKESIM_REQUIRE_NM(has<Battle>(pokemonEntity, registry));
+    POKESIM_REQUIRE_NM(has<Side>(pokemonEntity, registry));
+    POKESIM_REQUIRE_NM(registry.get<Battle>(pokemonEntity).val == battle.val);
+    POKESIM_REQUIRE_NM(registry.get<Side>(pokemonEntity).val == sideEntity);
+  }
+}
+
+inline void checkPokemon(types::entity pokemonEntity, const types::registry& registry) {
+  types::registry::checkEntity(pokemonEntity, registry);
+  POKESIM_REQUIRE_NM(has<tags::Pokemon>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<Id>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<Side>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<Battle>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<SpeciesName>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<AbilityName>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<Level>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<MoveSlots>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<Evs>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<Ivs>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<SpeciesTypes>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<stat::Hp>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<stat::Atk>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<stat::Def>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<stat::Spa>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<stat::Spd>(pokemonEntity, registry));
+  POKESIM_REQUIRE_NM(has<stat::Spe>(pokemonEntity, registry));
+
+  const auto& [side, battle, speciesName, speciesTypes, abilityName, level, moveSlots, evs, ivs] =
+    registry.get<Side, Battle, SpeciesName, SpeciesTypes, AbilityName, Level, MoveSlots, Evs, Ivs>(pokemonEntity);
+
+  const auto& [hp, atk, def, spa, spd, spe] =
+    registry.get<stat::Hp, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>(pokemonEntity);
+
+  const auto& [currentHp, effectiveAtk, effectiveDef, effectiveSpa, effectiveSpd, effectiveSpe] = registry.try_get<
+    stat::CurrentHp,
+    stat::EffectiveAtk,
+    stat::EffectiveDef,
+    stat::EffectiveSpa,
+    stat::EffectiveSpd,
+    stat::EffectiveSpe>(pokemonEntity);
+
+  POKESIM_REQUIRE_NM(has<tags::Battle>(battle.val, registry));
+  POKESIM_REQUIRE_NM(has<tags::Side>(side.val, registry));
+
+  check(speciesName);
+  check(speciesTypes);
+  check(abilityName);
+  check(level);
+  check(hp);
+  check(atk);
+  check(def);
+  check(spa);
+  check(spd);
+  check(spe);
+  check(evs);
+  check(ivs);
+
+  if (currentHp) check(*currentHp);
+  if (effectiveAtk) check(*effectiveAtk);
+  if (effectiveDef) check(*effectiveDef);
+  if (effectiveSpa) check(*effectiveSpa);
+  if (effectiveSpd) check(*effectiveSpd);
+  if (effectiveSpe) check(*effectiveSpe);
+
+  checkBounds<MechanicConstants::MoveSlots>(moveSlots.val.size());
+}
+
+inline void checkMoveSlot(types::entity moveSlotEntity, const types::registry& registry) {
+  types::registry::checkEntity(moveSlotEntity, registry);
+  POKESIM_REQUIRE_NM(has<MoveName>(moveSlotEntity, registry));
+  POKESIM_REQUIRE_NM(has<Pp>(moveSlotEntity, registry));
+  POKESIM_REQUIRE_NM(has<MaxPp>(moveSlotEntity, registry));
+
+  const auto& [move, pp, maxPp] = registry.get<MoveName, Pp, MaxPp>(moveSlotEntity);
+
+  check(move);
+  check(pp);
+  check(maxPp);
+}
+
+inline void checkActionMove(types::entity moveEntity, const types::registry& registry) {
+  types::registry::checkEntity(moveEntity, registry);
+  POKESIM_REQUIRE_NM(has<CurrentActionSource>(moveEntity, registry));
+  POKESIM_REQUIRE_NM(has<CurrentActionTargets>(moveEntity, registry));
+  POKESIM_REQUIRE_NM(has<Battle>(moveEntity, registry));
+  POKESIM_REQUIRE_NM(has<TypeName>(moveEntity, registry));
+  POKESIM_REQUIRE_NM(has<MoveName>(moveEntity, registry) != has<tags::SimulateTurn>(moveEntity, registry));
+
+  const auto& [attacker, defender, battle, typeName] =
+    registry.get<CurrentActionSource, CurrentActionTargets, Battle, TypeName>(moveEntity);
+
+  POKESIM_REQUIRE_NM(has<tags::CurrentActionMoveSource>(attacker.val, registry));
+  POKESIM_REQUIRE_NM(has<tags::CurrentActionMoveTarget>(defender.only(), registry));
+  POKESIM_REQUIRE_NM(has<tags::Battle>(battle.val, registry));
+  check(typeName);
+
+  if (has<MoveName>(moveEntity, registry)) {
+    check(registry.get<MoveName>(moveEntity));
+  }
+
+  bool isPhysical = has<move::tags::Physical>(moveEntity, registry);
+  bool isSpecial = has<move::tags::Special>(moveEntity, registry);
+  bool isStatus = has<move::tags::Status>(moveEntity, registry);
+  POKESIM_REQUIRE_NM(isPhysical || isSpecial || isStatus);
+  POKESIM_REQUIRE_NM(isPhysical == !(isSpecial || isStatus));
+  POKESIM_REQUIRE_NM(isSpecial == !(isPhysical || isStatus));
+  POKESIM_REQUIRE_NM(isStatus == !(isPhysical || isSpecial));
+}
+
+inline template <>
+void check(const Accuracy& accuracy) {
+  checkBounds<MechanicConstants::MoveBaseAccuracy>(accuracy.val);
+}
+
+inline template <>
+void check(const AddedTargets& addedTargets) {
+  POKESIM_REQUIRE_NM(listContains(VALID_ADDED_TARGET_OPTIONS, addedTargets.val));
+}
+
+inline template <>
+void check(const analyze_effect::EffectTarget& effectTarget, const types::registry& registry) {
+  checkPokemon(effectTarget.val, registry);
+}
+
+inline template <>
+void check(const analyze_effect::EffectMoves& effectMoves) {
+  for (dex::Move move : effectMoves.val) {
+    check(MoveName{move});
+  }
+}
+
+inline template <>
+void check(const analyze_effect::Inputs& inputs, const types::registry& registry) {
+  for (types::entity input : inputs.val) {
+    types::registry::checkEntity(input, registry);
+    POKESIM_REQUIRE_NM(has<analyze_effect::tags::Input>(input, registry));
+    POKESIM_REQUIRE_NM(has<analyze_effect::Attacker>(input, registry));
+    POKESIM_REQUIRE_NM(has<analyze_effect::Defenders>(input, registry));
+    POKESIM_REQUIRE_NM(has<analyze_effect::EffectTarget>(input, registry));
+    POKESIM_REQUIRE_NM(has<analyze_effect::EffectMoves>(input, registry));
+    POKESIM_REQUIRE_NM(has<Battle>(input, registry));
+    const auto
+      [pseudoWeather,
+       sideCondition,
+       status,
+       terrain,
+       volatileCondition,
+       weather,
+       atkBoost,
+       defBoost,
+       spaBoost,
+       spdBoost,
+       speBoost] =
+        registry.try_get<
+          PseudoWeatherName,
+          SideConditionName,
+          StatusName,
+          TerrainName,
+          VolatileName,
+          WeatherName,
+          AtkBoost,
+          DefBoost,
+          SpaBoost,
+          SpdBoost,
+          SpeBoost>(input);
+    POKESIM_REQUIRE_NM(
+      pseudoWeather || sideCondition || status || terrain || volatileCondition || weather || atkBoost || defBoost ||
+      spaBoost || spdBoost || speBoost);
+
+    auto const& [attacker, defenders, target, moves] = registry.get<
+      analyze_effect::Attacker,
+      analyze_effect::Defenders,
+      analyze_effect::EffectTarget,
+      analyze_effect::EffectMoves>(input);
+    POKESIM_REQUIRE_NM(has<analyze_effect::tags::Attacker>(attacker.val, registry));
+    POKESIM_REQUIRE_NM(has<analyze_effect::tags::Defender>(defenders.only(), registry));
+    checkPokemon(attacker.val, registry);
+    checkPokemon(defenders.only(), registry);
+    checkPokemon(target.val, registry);
+
+    for (dex::Move move : moves.val) check(MoveName{move});
+
+    if (pseudoWeather) check(*pseudoWeather);
+    if (sideCondition) check(*sideCondition);
+    if (status) check(*status);
+    if (terrain) check(*terrain);
+    if (volatileCondition) check(*volatileCondition);
+    if (weather) check(*weather);
+    if (atkBoost) check(*atkBoost);
+    if (defBoost) check(*defBoost);
+    if (spaBoost) check(*spaBoost);
+    if (spdBoost) check(*spdBoost);
+    if (speBoost) check(*speBoost);
+  }
+}
+
+inline template <>
+void check(const analyze_effect::MovePairs& movePairs, const types::registry& registry) {
+  for (auto [parentBattleMove, childBattleMove] : movePairs.val) {
+    checkActionMove(parentBattleMove, registry);
+    checkActionMove(childBattleMove, registry);
+  }
+
+  for (auto [parentBattleMove, childBattleMove] : movePairs.val) {
+    const auto& [parentAttacker, parentDefenders, parentBattle, parentTypeName, parentMoveName] =
+      registry.get<analyze_effect::Attacker, analyze_effect::Defenders, Battle, TypeName, MoveName>(parentBattleMove);
+    const auto& [childAttacker, childDefenders, childBattle, childTypeName, childMoveName] =
+      registry.get<analyze_effect::Attacker, analyze_effect::Defenders, Battle, TypeName, MoveName>(childBattleMove);
+    if (has<analyze_effect::tags::BattleCloneForCalculation>(childBattle.val, registry)) {
+      POKESIM_REQUIRE_NM(parentAttacker.val != childAttacker.val);
+      POKESIM_REQUIRE_NM(parentDefenders.only() != childDefenders.only());
+      POKESIM_REQUIRE_NM(parentBattle.val != childBattle.val);
+    }
+    else {
+      POKESIM_REQUIRE_NM(parentAttacker.val == childAttacker.val);
+      POKESIM_REQUIRE_NM(parentDefenders.only() == childDefenders.only());
+      POKESIM_REQUIRE_NM(parentBattle.val == childBattle.val);
+    }
+
+    POKESIM_REQUIRE_NM(parentTypeName.name == childTypeName.name);
+    POKESIM_REQUIRE_NM(parentMoveName.name == childMoveName.name);
+
+    POKESIM_REQUIRE_NM(
+      has<move::tags::Physical>(parentBattleMove, registry) == has<move::tags::Physical>(childBattleMove, registry));
+    POKESIM_REQUIRE_NM(
+      has<move::tags::Special>(parentBattleMove, registry) == has<move::tags::Special>(childBattleMove, registry));
+    POKESIM_REQUIRE_NM(
+      has<move::tags::Status>(parentBattleMove, registry) == has<move::tags::Status>(childBattleMove, registry));
+  }
+}
+
+inline template <>
+void check(const BaseEffectChance& chance) {
+  checkBounds<MechanicConstants::MoveBaseEffectChance>(chance.val);
+}
+
+inline template <>
+void check(const BasePower& basePower) {
+  checkBounds<MechanicConstants::MoveBasePower>(basePower.val);
+}
+
+inline template <>
+void check(const AtkBoost& atkBoost) {
+  checkBoost(atkBoost.val);
+}
+
+inline template <>
+void check(const DefBoost& defBoost) {
+  checkBoost(defBoost.val);
+}
+
+inline template <>
+void check(const SpaBoost& spaBoost) {
+  checkBoost(spaBoost.val);
+}
+
+inline template <>
+void check(const SpdBoost& spdBoost) {
+  checkBoost(spdBoost.val);
+}
+
+inline template <>
+void check(const SpeBoost& speBoost) {
+  checkBoost(speBoost.val);
+}
+
+inline template <>
+void check(const calc_damage::CritChanceDivisor& critChanceDivisor) {
+  POKESIM_REQUIRE_NM(listContains(MechanicConstants::CRIT_CHANCE_DIVISORS, critChanceDivisor.val));
+}
+
+inline template <>
+void check(const calc_damage::CritBoost& critBoost) {
+  checkBounds<MechanicConstants::CritBoost>(critBoost.val);
+}
+
+inline template <>
+void check(const calc_damage::AttackingLevel& attackingLevel) {
+  checkBounds<MechanicConstants::PokemonLevel>(attackingLevel.val);
+}
+
+inline template <>
+void check(const calc_damage::AttackingStat& attackingStat) {
+  checkStat(attackingStat.val);
+}
+
+inline template <>
+void check(const calc_damage::DefendingStat& defendingStat) {
+  checkStat(defendingStat.val);
+}
+
+inline template <>
+void check(const Damage& damage) {
+  POKESIM_REQUIRE_NM(damage.val <= MechanicConstants::Damage::MAX);
+}
+
+inline template <>
+void check(const DamageRollModifiers& modifiers) {
+  POKESIM_REQUIRE_NM(listContains(VALID_STAB_BOOST_KINDS, modifiers.stab));
+  checkBounds<MechanicConstants::TypeEffectivenessShift>(modifiers.typeEffectiveness);
+}
+
+inline template <>
+void check(const DamageRolls& damageRolls) {
+  POKESIM_REQUIRE_NM(damageRolls.val.size() <= MechanicConstants::DamageRollCount::MAX);
+  for (const Damage& damage : damageRolls.val) {
+    check(damage);
+  }
+}
+
+inline template <>
+void check(const SlotDecision& slotDecision) {
+  checkSlot(slotDecision.sourceSlot);
+  checkSlot(slotDecision.targetSlot);
+  POKESIM_REQUIRE_NM(!(slotDecision.moveChoice.has_value() && slotDecision.itemChoice.has_value()));
+  POKESIM_REQUIRE_NM(!(slotDecision.megaEvolve && slotDecision.primalRevert));
+}
+
+inline template <>
+void check(const SideDecision& sideDecision) {
+  checkPlayerSideId(sideDecision.sideId);
+  if (sideDecision.decisions.holds<types::slotDecisions>()) {
+    const types::slotDecisions& decisions = sideDecision.decisions.get<types::slotDecisions>();
+    for (const SlotDecision& decision : decisions) {
+      check(decision);
+    }
+  }
+  else {
+    checkTeamOrder(sideDecision.decisions.get<types::teamOrder>());
+  }
+}
+
+inline template <>
+void check(const Evs& evs) {
+  checkEv(evs.hp);
+  checkEv(evs.atk);
+  checkEv(evs.def);
+  checkEv(evs.spa);
+  checkEv(evs.spd);
+  checkEv(evs.spe);
+}
+
+inline template <>
+void check(const Ivs& ivs) {
+  checkIv(ivs.hp);
+  checkIv(ivs.atk);
+  checkIv(ivs.def);
+  checkIv(ivs.spa);
+  checkIv(ivs.spd);
+  checkIv(ivs.spe);
+}
+
+inline template <>
+void check(const ActionQueue& actionQueue, const types::registry& registry) {
+  checkBounds<MechanicConstants::ActionQueueLength>(actionQueue.val.size());
+  for (types::entity entity : actionQueue.val) {
+    checkAction(entity, registry);
+  }
+}
+
+inline template <>
+void check(const Battle& battle, const types::registry& registry) {
+  checkBattle(battle.val, registry);
+}
+
+inline template <>
+void check(const ParentBattle& battle, const types::registry& registry) {
+  checkBattle(battle.val, registry);
+}
+
+inline template <>
+void check(const RootBattle& battle, const types::registry& registry) {
+  checkBattle(battle.val, registry);
+}
+
+inline template <>
+void check(const ParentEntity& parentEntity, const types::registry& registry) {
+  types::registry::checkEntity(parentEntity.val, registry);
+}
+
+inline template <>
+void check(const ChoiceLock& choiceLock, const types::registry& registry) {
+  checkPokemon(choiceLock.val, registry);
+}
+
+inline template <>
+void check(const CurrentAction& currentAction, const types::registry& registry) {
+  checkAction(currentAction.val, registry);
+}
+
+inline template <>
+void check(const NextAction& nextAction, const types::registry& registry) {
+  checkAction(nextAction.val, registry);
+}
+
+inline template <>
+void check(const CurrentActionTargets& targets, const types::registry& registry) {
+  for (types::entity target : targets.val) {
+    checkPokemon(target, registry);
+  }
+}
+
+inline template <>
+void check(const CurrentActionSource& source, const types::registry& registry) {
+  checkPokemon(source.val, registry);
+}
+
+inline template <>
+void check(const CurrentActionMoves& moves, const types::registry& registry) {
+  for (types::entity moveEntity : moves.val) {
+    checkActionMove(moveEntity, registry);
+  }
+}
+
+inline template <>
+void check(const CurrentActionMoveSlot& move, const types::registry& registry) {
+  checkMoveSlot(move.val, registry);
+}
+
+inline template <>
+void check(const FoeSide& foeSide, const types::registry& registry) {
+  checkSide(foeSide.val, registry);
+}
+
+inline template <>
+void check(const LastUsedMove& lastUsedMove, const types::registry& registry) {
+  checkMoveSlot(lastUsedMove.val, registry);
+}
+
+inline template <>
+void check(const MoveSlots& moveSlots, const types::registry& registry) {
+  checkBounds<MechanicConstants::MoveSlots>(moveSlots.val.size());
+  for (types::entity moveEntity : moveSlots.val) {
+    checkMoveSlot(moveEntity, registry);
+  }
+}
+
+inline template <>
+void check(const Pokemon& pokemon, const types::registry& registry) {
+  checkPokemon(pokemon.val, registry);
+}
+
+inline template <>
+void check(const Side& side, const types::registry& registry) {
+  checkSide(side.val, registry);
+}
+
+inline template <>
+void check(const Sides& sides, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(sides.val.size() == MechanicConstants::SIDE_COUNT);
+  checkSide(sides.p1(), registry);
+  checkSide(sides.p2(), registry);
+}
+
+inline template <>
+void check(const Team& team, const types::registry& registry) {
+  for (types::entity pokemonEntity : team.val) {
+    checkPokemon(pokemonEntity, registry);
+  }
+}
+
+inline template <>
+void check(const HitCount& hitCount) {
+  checkBounds<MechanicConstants::MoveHits>(hitCount.val);
+}
+
+inline template <>
+void check(const Level& level) {
+  checkBounds<MechanicConstants::PokemonLevel>(level.val);
+}
+
+inline template <>
+void check(const AbilityName& abilityName) {
+  POKESIM_REQUIRE_NM(abilityName.name != dex::Ability::NO_ABILITY);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Ability>)abilityName.name <= dex::TOTAL_ABILITY_COUNT);
+}
+
+inline template <>
+void check(const GenderName& genderName) {
+  POKESIM_REQUIRE_NM(genderName.name != dex::Gender::NO_GENDER);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Gender>)genderName.name <= dex::TOTAL_GENDER_COUNT);
+}
+
+inline template <>
+void check(const ItemName& itemName) {
+  POKESIM_REQUIRE_NM(itemName.name != dex::Item::NO_ITEM);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Item>)itemName.name <= dex::TOTAL_ITEM_COUNT);
+}
+
+inline template <>
+void check(const MoveName& moveName) {
+  POKESIM_REQUIRE_NM(moveName.name != dex::Move::NO_MOVE);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Move>)moveName.name <= dex::TOTAL_MOVE_COUNT);
+}
+
+inline template <>
+void check(const NatureName& natureName) {
+  POKESIM_REQUIRE_NM(natureName.name != dex::Nature::NO_NATURE);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Nature>)natureName.name <= dex::TOTAL_NATURE_COUNT);
+}
+
+inline template <>
+void check(const PseudoWeatherName& pseudoWeatherName) {
+  POKESIM_REQUIRE_NM(pseudoWeatherName.name != dex::PseudoWeather::NO_PSEUDO_WEATHER);
+  POKESIM_REQUIRE_NM(
+    (std::underlying_type_t<dex::PseudoWeather>)pseudoWeatherName.name <= dex::TOTAL_PSEUDO_WEATHER_COUNT);
+}
+
+inline template <>
+void check(const SideConditionName& sideConditionName) {
+  POKESIM_REQUIRE_NM(sideConditionName.name != dex::SideCondition::NO_SIDE_CONDITION);
+  POKESIM_REQUIRE_NM(
+    (std::underlying_type_t<dex::SideCondition>)sideConditionName.name <= dex::TOTAL_SIDE_CONDITION_COUNT);
+}
+
+inline template <>
+void check(const SourceSlotName& sourceSlotName) {
+  checkSlot(sourceSlotName.name);
+}
+
+inline template <>
+void check(const SpeciesName& speciesName) {
+  POKESIM_REQUIRE_NM(speciesName.name != dex::Species::NO_SPECIES);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Species>)speciesName.name <= dex::TOTAL_SPECIES_COUNT);
+}
+
+inline template <>
+void check(const StatName& statName) {
+  switch (statName.name) {
+    case dex::Stat::HP:
+    case dex::Stat::ATK:
+    case dex::Stat::DEF:
+    case dex::Stat::SPA:
+    case dex::Stat::SPD:
+    case dex::Stat::SPE: return;
+  }
+
+  POKESIM_REQUIRE_FAIL(std::to_string((std::underlying_type_t<dex::Stat>)statName.name) + " is not a valid Stat enum.");
+}
+
+inline template <>
+void check(const StatusName& statusName) {
+  POKESIM_REQUIRE_NM(statusName.name != dex::Status::NO_STATUS);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Status>)statusName.name <= dex::TOTAL_STATUS_COUNT);
+}
+
+inline template <>
+void check(const TargetSlotName& targetSlotName) {
+  checkSlot(targetSlotName.name);
+}
+
+inline template <>
+void check(const TerrainName& terrainName) {
+  POKESIM_REQUIRE_NM(terrainName.name != dex::Terrain::NO_TERRAIN);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Terrain>)terrainName.name <= dex::TOTAL_TERRAIN_COUNT);
+}
+
+inline template <>
+void check(const TypeName& typeName) {
+  POKESIM_REQUIRE_NM(typeName.name != dex::Type::NO_TYPE);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Type>)typeName.name <= dex::TOTAL_TYPE_COUNT);
+}
+
+inline template <>
+void check(const VolatileName& volatileName) {
+  POKESIM_REQUIRE_NM(volatileName.name != dex::Volatile::NO_VOLATILE);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Volatile>)volatileName.name <= dex::TOTAL_VOLATILE_COUNT);
+}
+
+inline template <>
+void check(const WeatherName& weatherName) {
+  POKESIM_REQUIRE_NM(weatherName.name != dex::Weather::NO_WEATHER);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Weather>)weatherName.name <= dex::TOTAL_WEATHER_COUNT);
+}
+
+inline template <>
+void check(const Pp& pp) {
+  checkBounds<MechanicConstants::MovePp>(pp.val);
+}
+
+inline template <>
+void check(const MaxPp& maxPp) {
+  checkBounds<MechanicConstants::MoveMaxPp>(maxPp.val);
+}
+
+inline template <>
+void check(const PlayerSide& playerSide) {
+  checkPlayerSideId(playerSide.val);
+}
+
+inline template <>
+void check(const PrimaryAbility& ability) {
+  check(AbilityName{ability.name});
+}
+
+inline template <>
+void check(const SecondaryAbility& ability) {
+  check(AbilityName{ability.name});
+}
+
+inline template <>
+void check(const HiddenAbility& ability) {
+  check(AbilityName{ability.name});
+}
+
+inline template <>
+void check(const BaseStats& baseStats) {
+  checkBaseStat(baseStats.hp);
+  checkBaseStat(baseStats.atk);
+  checkBaseStat(baseStats.def);
+  checkBaseStat(baseStats.spa);
+  checkBaseStat(baseStats.spd);
+  checkBaseStat(baseStats.spe);
+}
+
+inline template <>
+void check(const Position& position) {
+  checkBounds<MechanicConstants::TeamSize>(position.val);
+}
+
+inline template <>
+void check(const MovePriority& movePriority) {
+  checkBounds<MechanicConstants::MovePriority>(movePriority.val);
+}
+
+inline template <>
+void check(const Probability& probability) {
+  checkProbability(probability.val);
+}
+
+inline template <>
+void check(const RngSeed& seed) {
+  POKESIM_REQUIRE_NM(seed.val != 0U);
+}
+
+inline template <>
+void check(const RandomEventChances<2U>& randomEventChances) {
+  checkRandomChanceEvents(randomEventChances);
+}
+
+inline template <>
+void check(const RandomEventChances<3U>& randomEventChances) {
+  checkRandomChanceEvents(randomEventChances);
+}
+
+inline template <>
+void check(const RandomEventChances<4U>& randomEventChances) {
+  checkRandomChanceEvents(randomEventChances);
+}
+
+inline template <>
+void check(const RandomEventChances<5U>& randomEventChances) {
+  checkRandomChanceEvents(randomEventChances);
+}
+
+inline template <>
+void check(const RandomBinaryChance& randomBinaryChance) {
+  checkPercentChance(randomBinaryChance.val);
+}
+
+inline template <>
+void check(const RandomEventChancesStack<2U>& randomEventChancesStack, const types::registry& registry) {
+  for (const auto& [chances, target] : randomEventChancesStack.val) {
+    checkPokemon(target, registry);
+    check(RandomEventChances<2U>{chances});
+  }
+}
+
+inline template <>
+void check(const RandomEventChancesStack<3U>& randomEventChancesStack, const types::registry& registry) {
+  for (const auto& [chances, target] : randomEventChancesStack.val) {
+    checkPokemon(target, registry);
+    check(RandomEventChances<3U>{chances});
+  }
+}
+
+inline template <>
+void check(const RandomEventChancesStack<4U>& randomEventChancesStack, const types::registry& registry) {
+  for (const auto& [chances, target] : randomEventChancesStack.val) {
+    checkPokemon(target, registry);
+    check(RandomEventChances<4U>{chances});
+  }
+}
+
+inline template <>
+void check(const RandomEventChancesStack<5U>& randomEventChancesStack, const types::registry& registry) {
+  for (const auto& [chances, target] : randomEventChancesStack.val) {
+    checkPokemon(target, registry);
+    check(RandomEventChances<5U>{chances});
+  }
+}
+
+inline template <>
+void check(const RandomBinaryChanceStack& randomBinaryChanceStack, const types::registry& registry) {
+  for (const auto& [chance, target] : randomBinaryChanceStack.val) {
+    checkPokemon(target, registry);
+    check(RandomBinaryChance{chance});
+  }
+}
+
+inline template <>
+void check(const RandomEventCountStack& randomEventCountStack, const types::registry& registry) {
+  for (const auto& [chance, target] : randomEventCountStack.val) {
+    checkPokemon(target, registry);
+  }
+}
+
+inline template <>
+void check(const RandomEqualChanceStack& randomEqualChanceStack, const types::registry& registry) {
+  for (const auto& target : randomEqualChanceStack.val) {
+    checkPokemon(target, registry);
+  }
+}
+
+inline template <>
+void check(const action::Move& move) {
+  check(MoveName{move});
+}
+
+inline template <>
+void check(const action::Item& item) {
+  check(ItemName{item});
+}
+
+inline template <>
+void check(const SpeedTieIndexes& speedTieIndexes) {
+  types::activePokemonIndex total = 0U;
+  for (const auto& span : speedTieIndexes.val) {
+    checkBounds<MechanicConstants::ActivePokemon>(span.start);
+    checkBounds<MechanicConstants::ActivePokemon>(span.length);
+    checkBounds<MechanicConstants::ActivePokemon>(span.start + span.length);
+    total += span.length;
+  }
+  checkBounds<MechanicConstants::ActivePokemon>(total);
+}
+
+inline template <>
+void check(const action::Team& team) {
+  checkTeamOrder(team.val);
+}
+
+inline template <>
+void check(const simulate_turn::TurnOutcomeBattles& teamOutcomBattles, const types::registry& registry) {
+  for (types::entity entity : teamOutcomBattles.val) {
+    checkBattle(entity, registry);
+  }
+}
+
+inline template <>
+void check(const calc_damage::UsesUntilKo& usesUntilKo) {
+  checkBounds<MechanicConstants::DamageRollCount>(usesUntilKo.val.size());
+
+  types::moveHits lastUses = 0;
+  types::probability totalProbability = 0;
+  for (const auto& useUntilKo : usesUntilKo.val) {
+    checkBounds<MechanicConstants::PokemonHpStat>(useUntilKo.uses);  // TODO(aed3): What if a move does no damage?
+    checkProbability(useUntilKo.probability);
+    POKESIM_REQUIRE(lastUses < useUntilKo.uses, "The list should be in order from least to most hits.");
+    totalProbability += useUntilKo.probability;
+    lastUses = useUntilKo.uses;
+  }
+
+  POKESIM_REQUIRE_NM(usesUntilKo.minHits() == usesUntilKo.val.front());
+  POKESIM_REQUIRE_NM(usesUntilKo.maxHits() == usesUntilKo.val.back());
+
+  checkProbability(totalProbability);
+}
+
+inline template <>
+void check(const calc_damage::AttackerHpRecovered& attackerHpRecovered) {
+  check((DamageRolls)attackerHpRecovered);
+}
+
+inline template <>
+void check(const calc_damage::AttackerHpLost& attackerHpLost) {
+  check((DamageRolls)attackerHpLost);
+}
+
+inline template <>
+void check(const analyze_effect::EffectMultiplier& effectiveMultiplier) {
+  checkBounds<MechanicConstants::AnalyzeEffectMultiplier>(effectiveMultiplier.val);
+}
+
+inline template <>
+void check(const SpeciesTypes& speciesTypes) {
+  check(TypeName{speciesTypes.type1()});
+  POKESIM_REQUIRE_NM(speciesTypes.type1() != speciesTypes.type2());
+  if (speciesTypes.type2() != dex::Type::NO_TYPE) {
+    check(TypeName{speciesTypes.type2()});
+  }
+}
+
+inline template <>
+void check(const SpeedSort& speedSort) {
+  POKESIM_REQUIRE_NM(listContains(VALID_ACTION_ORDERS, speedSort.order));
+  checkBounds<MechanicConstants::MovePriority>(speedSort.priority);
+  checkStat(speedSort.speed);
+}
+
+inline template <>
+void check(const stat::Hp& hp) {
+  checkStat(hp.val, true);
+}
+
+inline template <>
+void check(const stat::Atk& atk) {
+  checkStat(atk.val);
+}
+
+inline template <>
+void check(const stat::Def& def) {
+  checkStat(def.val);
+}
+
+inline template <>
+void check(const stat::Spa& spa) {
+  checkStat(spa.val);
+}
+
+inline template <>
+void check(const stat::Spd& spd) {
+  checkStat(spd.val);
+}
+
+inline template <>
+void check(const stat::Spe& spe) {
+  checkStat(spe.val);
+}
+
+inline template <>
+void check(const stat::CurrentHp& hp) {
+  checkEffectiveStat(hp.val, true);
+}
+
+inline template <>
+void check(const stat::EffectiveAtk& atk) {
+  checkEffectiveStat(atk.val);
+}
+
+inline template <>
+void check(const stat::EffectiveDef& def) {
+  checkEffectiveStat(def.val);
+}
+
+inline template <>
+void check(const stat::EffectiveSpa& spa) {
+  checkEffectiveStat(spa.val);
+}
+
+inline template <>
+void check(const stat::EffectiveSpd& spd) {
+  checkEffectiveStat(spd.val);
+}
+
+inline template <>
+void check(const stat::EffectiveSpe& spe) {
+  checkEffectiveStat(spe.val);
+}
+
+inline template <>
+void check(const Turn& turn) {
+  checkBounds<MechanicConstants::TurnCount>(turn.val);
+}
+
+inline template <>
+void check(const DamageRollKind& damageRollKind) {
+  if (listContains(VALID_DAMAGE_ROLL_KINDS, damageRollKind)) {
+    return;
+  }
+
+  bool hasAverage = calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE);
+  bool hasMax = calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE);
+  bool hasMin = calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::MIN_DAMAGE);
+  bool hasAll = calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS);
+
+  POKESIM_REQUIRE_NM(hasAll != (hasAverage || hasMax || hasMin));
+  POKESIM_REQUIRE_NM(hasAverage || hasMax || hasMin || hasAll);
+  using DamageRollKindBase = std::underlying_type_t<DamageRollKind>;
+  DamageRollKindBase binaryValue = 0;
+  for (DamageRollKind kind : VALID_DAMAGE_ROLL_KINDS) {
+    binaryValue |= (DamageRollKindBase)kind;
+  }
+
+  POKESIM_REQUIRE_NM((binaryValue | (DamageRollKindBase)damageRollKind) == binaryValue);
+}
+
+inline template <>
+void check(const DamageRollOptions& damageRollOptions) {
+  check(damageRollOptions.p1);
+  check(damageRollOptions.p2);
+}
+}  // namespace pokesim::debug
+
+#endif
+
+/////////////////// END OF src/Utilities/ArgumentChecks.cpp ////////////////////
 
 /////////////////// START OF external/entt/entity/handle.hpp ///////////////////
 
@@ -18380,200 +22241,6 @@ template<typename... Args, typename... Other>
 
 //////////////////// END OF external/entt/entity/handle.hpp ////////////////////
 
-////////////////// START OF src/Types/Enums/PseudoWeather.hpp //////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-enum class PseudoWeather : std::uint8_t {
-  // clang-format off
-  NO_PSEUDO_WEATHER = 0,
-  // clang-format on
-};
-}  // namespace pokesim::dex
-
-/////////////////// END OF src/Types/Enums/PseudoWeather.hpp ///////////////////
-
-////////////////// START OF src/Types/Enums/SideCondition.hpp //////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-enum class SideCondition : std::uint8_t {
-  // clang-format off
-  NO_SIDE_CONDITION = 0
-  // clang-format on
-};
-}  // namespace pokesim::dex
-
-/////////////////// END OF src/Types/Enums/SideCondition.hpp ///////////////////
-
-///////////////////// START OF src/Types/Enums/Status.hpp //////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon status condition name
-enum class Status : std::uint8_t {
-  NO_STATUS = 0,
-  BRN,
-  FRZ,
-  PAR,
-  PSN,
-  SLP,
-  TOX,
-  /*, FRB, DRO, */ STATUS_TOTAL,
-};
-
-static constexpr std::uint8_t TOTAL_STATUS_COUNT = (std::uint8_t)Status::STATUS_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Status.hpp ///////////////////////
-
-///////////////////// START OF src/Types/Enums/Terrain.hpp /////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-enum class Terrain : std::uint8_t {
-  // clang-format off
-  NO_TERRAIN = 0
-  // clang-format on
-};
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Terrain.hpp //////////////////////
-
-//////////////////// START OF src/Types/Enums/Volatile.hpp /////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-enum class Volatile : std::uint8_t {
-  // clang-format off
-  NO_VOLATILE = 0,
-  CHOICE_LOCK,
-  // clang-format on
-};
-}  // namespace pokesim::dex
-
-///////////////////// END OF src/Types/Enums/Volatile.hpp //////////////////////
-
-///////////////////// START OF src/Types/Enums/Weather.hpp /////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-enum class Weather : std::uint8_t {
-  // clang-format off
-  NO_WEATHER = 0
-  // clang-format on
-};
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Weather.hpp //////////////////////
-
-////////////////////// START OF src/Utilities/Variant.hpp //////////////////////
-
-#include <variant>
-
-namespace pokesim::internal {
-template <typename... Types>
-class variant : public std::variant<Types...> {
- public:
-  using std::variant<Types...>::variant;
-
-  template <typename T>
-  variant& operator=(const T& rhs) {
-    std::variant<Types...>::operator=(rhs);
-    return *this;
-  }
-
-  bool empty() const { return holds<std::monostate>(); }
-
-  template <typename Type>
-  bool holds() const {
-    return std::holds_alternative<Type>(*this);
-  }
-
-  template <typename Type>
-  auto& get() const {
-    return std::get<Type>(*this);
-  }
-
-  template <typename Type>
-  auto& get() {
-    return std::get<Type>(*this);
-  }
-};
-}  // namespace pokesim::internal
-
-/////////////////////// END OF src/Utilities/Variant.hpp ///////////////////////
-
-//////////////////////// START OF src/Types/Effect.hpp /////////////////////////
-
-namespace pokesim::types {
-using effectEnum = pokesim::internal::variant<
-  std::monostate, dex::PseudoWeather, dex::SideCondition, dex::Status, dex::Terrain, dex::Volatile, dex::Weather>;
-}  // namespace pokesim::types
-
-///////////////////////// END OF src/Types/Effect.hpp //////////////////////////
-
-////////////////////// START OF src/Types/Enums/Move.hpp ///////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon move name
-enum class Move : std::uint16_t {
-  // clang-format off
-  NO_MOVE = 0, ONE_MILLION_VOLT_THUNDERBOLT, ABSORB, ACCELEROCK, ACID, ACID_ARMOR, ACID_DOWNPOUR, ACID_SPRAY, ACROBATICS, ACUPRESSURE, AERIAL_ACE, AEROBLAST, AFTER_YOU, AGILITY, AIR_CUTTER, AIR_SLASH, ALL_OUT_PUMMELING, ALLY_SWITCH, AMNESIA, ANCHOR_SHOT, ANCIENT_POWER, APPLE_ACID, AQUA_CUTTER, AQUA_JET, AQUA_RING, AQUA_STEP, AQUA_TAIL, ARMOR_CANNON, ARM_THRUST, AROMATHERAPY, AROMATIC_MIST, ASSIST, ASSURANCE, ASTONISH, ASTRAL_BARRAGE, ATTACK_ORDER, ATTRACT, AURA_SPHERE, AURA_WHEEL, AURORA_BEAM, AURORA_VEIL, AUTOTOMIZE, AVALANCHE, AXE_KICK, BABY_DOLL_EYES, BADDY_BAD, BANEFUL_BUNKER, BARB_BARRAGE, BARRAGE, BARRIER, BATON_PASS, BEAK_BLAST, BEAT_UP, BEHEMOTH_BASH, BEHEMOTH_BLADE, BELCH, BELLY_DRUM, BESTOW, BIDE, BIND, BITE, BITTER_BLADE, BITTER_MALICE, BLACK_HOLE_ECLIPSE, BLAST_BURN, BLAZE_KICK, BLAZING_TORQUE, BLEAKWIND_STORM, BLIZZARD, BLOCK, BLOOM_DOOM, BLUE_FLARE, BODY_PRESS, BODY_SLAM, BOLT_BEAK, BOLT_STRIKE, BONE_CLUB, BONEMERANG, BONE_RUSH, BOOMBURST, BOUNCE, BOUNCY_BUBBLE, BRANCH_POKE, BRAVE_BIRD, BREAKING_SWIPE, BREAKNECK_BLITZ, BRICK_BREAK, BRINE, BRUTAL_SWING, BUBBLE, BUBBLE_BEAM, BUG_BITE, BUG_BUZZ, BULK_UP, BULLDOZE, BULLET_PUNCH, BULLET_SEED, BURNING_JEALOUSY, BURN_UP, BUZZY_BUZZ, CALM_MIND, CAMOUFLAGE, CAPTIVATE, CATASTROPIKA, CEASELESS_EDGE, CELEBRATE, CHARGE, CHARGE_BEAM, CHARM, CHATTER, CHILLING_WATER, CHILLY_RECEPTION, CHIP_AWAY, CHLOROBLAST, CIRCLE_THROW, CLAMP, CLANGING_SCALES, CLANGOROUS_SOUL, CLANGOROUS_SOULBLAZE, CLEAR_SMOG, CLOSE_COMBAT, COACHING, COIL, COLLISION_COURSE, COMBAT_TORQUE, COMET_PUNCH, COMEUPPANCE, CONFIDE, CONFUSE_RAY, CONFUSION, CONSTRICT, CONTINENTAL_CRUSH, CONVERSION, CONVERSION_2, COPYCAT, CORE_ENFORCER, CORKSCREW_CRASH, CORROSIVE_GAS, COSMIC_POWER, COTTON_GUARD, COTTON_SPORE, COUNTER, COURT_CHANGE, COVET, CRABHAMMER, CRAFTY_SHIELD, CROSS_CHOP, CROSS_POISON, CRUNCH, CRUSH_CLAW, CRUSH_GRIP, CURSE, CUT, DARKEST_LARIAT, DARK_PULSE, DARK_VOID, DAZZLING_GLEAM, DECORATE, DEFEND_ORDER, DEFENSE_CURL, DEFOG, DESTINY_BOND, DETECT, DEVASTATING_DRAKE, DIAMOND_STORM, DIG, DISABLE, DISARMING_VOICE, DISCHARGE, DIRE_CLAW, DIVE, DIZZY_PUNCH, DOODLE, DOOM_DESIRE, DOUBLE_EDGE, DOUBLE_HIT, DOUBLE_IRON_BASH, DOUBLE_KICK, DOUBLE_SHOCK, DOUBLE_SLAP, DOUBLE_TEAM, DRACO_METEOR, DRAGON_ASCENT, DRAGON_BREATH, DRAGON_CLAW, DRAGON_DANCE, DRAGON_DARTS, DRAGON_ENERGY, DRAGON_HAMMER, DRAGON_PULSE, DRAGON_RAGE, DRAGON_RUSH, DRAGON_TAIL, DRAINING_KISS, DRAIN_PUNCH, DREAM_EATER, DRILL_PECK, DRILL_RUN, DRUM_BEATING, DUAL_CHOP, DUAL_WINGBEAT, DYNAMAX_CANNON, DYNAMIC_PUNCH, EARTH_POWER, EARTHQUAKE, ECHOED_VOICE, EERIE_IMPULSE, EERIE_SPELL, EGG_BOMB, ELECTRIC_TERRAIN, ELECTRIFY, ELECTRO_BALL, ELECTRO_DRIFT, ELECTROWEB, EMBARGO, EMBER, ENCORE, ENDEAVOR, ENDURE, ENERGY_BALL, ENTRAINMENT, ERUPTION, ESPER_WING, ETERNABEAM, EXPANDING_FORCE, EXPLOSION, EXTRASENSORY, EXTREME_EVOBOOST, EXTREME_SPEED, FACADE, FAIRY_LOCK, FAIRY_WIND, FAKE_OUT, FAKE_TEARS, FALSE_SURRENDER, FALSE_SWIPE, FEATHER_DANCE, FEINT, FEINT_ATTACK, FELL_STINGER, FIERY_DANCE, FIERY_WRATH, FILLET_AWAY, FINAL_GAMBIT, FIRE_BLAST, FIRE_FANG, FIRE_LASH, FIRE_PLEDGE, FIRE_PUNCH, FIRE_SPIN, FIRST_IMPRESSION, FISHIOUS_REND, FISSURE, FLAIL, FLAME_BURST, FLAME_CHARGE, FLAME_WHEEL, FLAMETHROWER, FLARE_BLITZ, FLASH, FLASH_CANNON, FLATTER, FLEUR_CANNON, FLING, FLIP_TURN, FLOATY_FALL, FLORAL_HEALING, FLOWER_SHIELD, FLOWER_TRICK, FLY, FLYING_PRESS, FOCUS_BLAST, FOCUS_ENERGY, FOCUS_PUNCH, FOLLOW_ME, FORCE_PALM, FORESIGHT, FORESTS_CURSE, FOUL_PLAY, FREEZE_DRY, FREEZE_SHOCK, FREEZING_GLARE, FREEZY_FROST, FRENZY_PLANT, FROST_BREATH, FRUSTRATION, FURY_ATTACK, FURY_CUTTER, FURY_SWIPES, FUSION_BOLT, FUSION_FLARE, FUTURE_SIGHT, GASTRO_ACID, GEAR_GRIND, GEAR_UP, GENESIS_SUPERNOVA, GEOMANCY, GIGA_DRAIN, GIGA_IMPACT, GIGATON_HAMMER, GIGAVOLT_HAVOC, GLACIAL_LANCE, GLACIATE, GLAIVE_RUSH, GLARE, GLITZY_GLOW, G_MAX_BEFUDDLE, G_MAX_CANNONADE, G_MAX_CENTIFERNO, G_MAX_CHI_STRIKE, G_MAX_CUDDLE, G_MAX_DEPLETION, G_MAX_DRUM_SOLO, G_MAX_FINALE, G_MAX_FIREBALL, G_MAX_FOAM_BURST, G_MAX_GOLD_RUSH, G_MAX_GRAVITAS, G_MAX_HYDROSNIPE, G_MAX_MALODOR, G_MAX_MELTDOWN, G_MAX_ONE_BLOW, G_MAX_RAPID_FLOW, G_MAX_REPLENISH, G_MAX_RESONANCE, G_MAX_SANDBLAST, G_MAX_SMITE, G_MAX_SNOOZE, G_MAX_STEELSURGE, G_MAX_STONESURGE, G_MAX_STUN_SHOCK, G_MAX_SWEETNESS, G_MAX_TARTNESS, G_MAX_TERROR, G_MAX_VINE_LASH, G_MAX_VOLCALITH, G_MAX_VOLT_CRASH, G_MAX_WILDFIRE, G_MAX_WIND_RAGE, GRASS_KNOT, GRASS_PLEDGE, GRASS_WHISTLE, GRASSY_GLIDE, GRASSY_TERRAIN, GRAV_APPLE, GRAVITY, GROWL, GROWTH, GRUDGE, GUARDIAN_OF_ALOLA, GUARD_SPLIT, GUARD_SWAP, GUILLOTINE, GUNK_SHOT, GUST, GYRO_BALL, HAIL, HAMMER_ARM, HAPPY_HOUR, HARDEN, HAZE, HEADBUTT, HEAD_CHARGE, HEADLONG_RUSH, HEAD_SMASH, HEAL_BELL, HEAL_BLOCK, HEALING_WISH, HEAL_ORDER, HEAL_PULSE, HEART_STAMP, HEART_SWAP, HEAT_CRASH, HEAT_WAVE, HEAVY_SLAM, HELPING_HAND, HEX, HIDDEN_POWER, HIDDEN_POWER_BUG, HIDDEN_POWER_DARK, HIDDEN_POWER_DRAGON, HIDDEN_POWER_ELECTRIC, HIDDEN_POWER_FIGHTING, HIDDEN_POWER_FIRE, HIDDEN_POWER_FLYING, HIDDEN_POWER_GHOST, HIDDEN_POWER_GRASS, HIDDEN_POWER_GROUND, HIDDEN_POWER_ICE, HIDDEN_POWER_POISON, HIDDEN_POWER_PSYCHIC, HIDDEN_POWER_ROCK, HIDDEN_POWER_STEEL, HIDDEN_POWER_WATER, HIGH_HORSEPOWER, HIGH_JUMP_KICK, HOLD_BACK, HOLD_HANDS, HONE_CLAWS, HORN_ATTACK, HORN_DRILL, HORN_LEECH, HOWL, HURRICANE, HYDRO_CANNON, HYDRO_PUMP, HYDRO_STEAM, HYDRO_VORTEX, HYPER_BEAM, HYPER_DRILL, HYPER_FANG, HYPERSPACE_FURY, HYPERSPACE_HOLE, HYPER_VOICE, HYPNOSIS, ICE_BALL, ICE_BEAM, ICE_BURN, ICE_FANG, ICE_HAMMER, ICE_PUNCH, ICE_SHARD, ICE_SPINNER, ICICLE_CRASH, ICICLE_SPEAR, ICY_WIND, IMPRISON, INCINERATE, INFERNAL_PARADE, INFERNO, INFERNO_OVERDRIVE, INFESTATION, INGRAIN, INSTRUCT, ION_DELUGE, IRON_DEFENSE, IRON_HEAD, IRON_TAIL, JAW_LOCK, JET_PUNCH, JUDGMENT, JUMP_KICK, JUNGLE_HEALING, KARATE_CHOP, KINESIS, KINGS_SHIELD, KNOCK_OFF, KOWTOW_CLEAVE, LANDS_WRATH, LASER_FOCUS, LASH_OUT, LAST_RESORT, LAST_RESPECTS, LAVA_PLUME, LEAFAGE, LEAF_BLADE, LEAF_STORM, LEAF_TORNADO, LEECH_LIFE, LEECH_SEED, LEER, LETS_SNUGGLE_FOREVER, LICK, LIFE_DEW, LIGHT_OF_RUIN, LIGHT_SCREEN, LIGHT_THAT_BURNS_THE_SKY, LIQUIDATION, LOCK_ON, LOVELY_KISS, LOW_KICK, LOW_SWEEP, LUCKY_CHANT, LUMINA_CRASH, LUNAR_BLESSING, LUNAR_DANCE, LUNGE, LUSTER_PURGE, MACH_PUNCH, MAGICAL_LEAF, MAGICAL_TORQUE, MAGIC_COAT, MAGIC_POWDER, MAGIC_ROOM, MAGMA_STORM, MAGNET_BOMB, MAGNETIC_FLUX, MAGNET_RISE, MAGNITUDE, MAKE_IT_RAIN, MALICIOUS_MOONSAULT, MAT_BLOCK, MAX_AIRSTREAM, MAX_DARKNESS, MAX_FLARE, MAX_FLUTTERBY, MAX_GEYSER, MAX_GUARD, MAX_HAILSTORM, MAX_KNUCKLE, MAX_LIGHTNING, MAX_MINDSTORM, MAX_OOZE, MAX_OVERGROWTH, MAX_PHANTASM, MAX_QUAKE, MAX_ROCKFALL, MAX_STARFALL, MAX_STEELSPIKE, MAX_STRIKE, MAX_WYRMWIND, MEAN_LOOK, MEDITATE, ME_FIRST, MEGA_DRAIN, MEGAHORN, MEGA_KICK, MEGA_PUNCH, MEMENTO, MENACING_MOONRAZE_MAELSTROM, METAL_BURST, METAL_CLAW, METAL_SOUND, METEOR_ASSAULT, METEOR_BEAM, METEOR_MASH, METRONOME, MILK_DRINK, MIMIC, MIND_BLOWN, MIND_READER, MINIMIZE, MIRACLE_EYE, MIRROR_COAT, MIRROR_MOVE, MIRROR_SHOT, MIST, MIST_BALL, MISTY_EXPLOSION, MISTY_TERRAIN, MOONBLAST, MOONGEIST_BEAM, MOONLIGHT, MORNING_SUN, MORTAL_SPIN, MOUNTAIN_GALE, MUD_BOMB, MUD_SHOT, MUD_SLAP, MUD_SPORT, MUDDY_WATER, MULTI_ATTACK, MYSTICAL_FIRE, MYSTICAL_POWER, NASTY_PLOT, NATURAL_GIFT, NATURE_POWER, NATURES_MADNESS, NEEDLE_ARM, NEVER_ENDING_NIGHTMARE, NIGHT_DAZE, NIGHTMARE, NIGHT_SHADE, NIGHT_SLASH, NOBLE_ROAR, NO_RETREAT, NOXIOUS_TORQUE, NUZZLE, OBLIVION_WING, OBSTRUCT, OCEANIC_OPERETTA, OCTAZOOKA, OCTOLOCK, ODOR_SLEUTH, OMINOUS_WIND, ORDER_UP, ORIGIN_PULSE, OUTRAGE, OVERDRIVE, OVERHEAT, PAIN_SPLIT, PARABOLIC_CHARGE, PARTING_SHOT, PAYBACK, PAY_DAY, PECK, PERISH_SONG, PETAL_BLIZZARD, PETAL_DANCE, PHANTOM_FORCE, PHOTON_GEYSER, PIKA_PAPOW, PIN_MISSILE, PLASMA_FISTS, PLAY_NICE, PLAY_ROUGH, PLUCK, POISON_FANG, POISON_GAS, POISON_JAB, POISON_POWDER, POISON_STING, POISON_TAIL, POLLEN_PUFF, POLTERGEIST, POPULATION_BOMB, POUNCE, POUND, POWDER, POWDER_SNOW, POWER_GEM, POWER_SHIFT, POWER_SPLIT, POWER_SWAP, POWER_TRICK, POWER_TRIP, POWER_UP_PUNCH, POWER_WHIP, PRECIPICE_BLADES, PRESENT, PRISMATIC_LASER, PROTECT, PSYBEAM, PSYBLADE, PSYCH_UP, PSYCHIC, PSYCHIC_FANGS, PSYCHIC_TERRAIN, PSYCHO_BOOST, PSYCHO_CUT, PSYCHO_SHIFT, PSYSHIELD_BASH, PSYSHOCK, PSYSTRIKE, PSYWAVE, PULVERIZING_PANCAKE, PUNISHMENT, PURIFY, PURSUIT, PYRO_BALL, QUASH, QUICK_ATTACK, QUICK_GUARD, QUIVER_DANCE, RAGE, RAGE_FIST, RAGE_POWDER, RAGING_BULL, RAGING_FURY, RAIN_DANCE, RAPID_SPIN, RAZOR_LEAF, RAZOR_SHELL, RAZOR_WIND, RECOVER, RECYCLE, REFLECT, REFLECT_TYPE, REFRESH, RELIC_SONG, REST, RETALIATE, RETURN, REVELATION_DANCE, REVENGE, REVERSAL, REVIVAL_BLESSING, RISING_VOLTAGE, ROAR, ROAR_OF_TIME, ROCK_BLAST, ROCK_CLIMB, ROCK_POLISH, ROCK_SLIDE, ROCK_SMASH, ROCK_THROW, ROCK_TOMB, ROCK_WRECKER, ROLE_PLAY, ROLLING_KICK, ROLLOUT, ROOST, ROTOTILLER, ROUND, RUINATION, SACRED_FIRE, SACRED_SWORD, SAFEGUARD, SALT_CURE, SAND_ATTACK, SANDSEAR_STORM, SANDSTORM, SAND_TOMB, SAPPY_SEED, SAVAGE_SPIN_OUT, SCALD, SCALE_SHOT, SCARY_FACE, SCORCHING_SANDS, SCRATCH, SCREECH, SEARING_SHOT, SEARING_SUNRAZE_SMASH, SECRET_POWER, SECRET_SWORD, SEED_BOMB, SEED_FLARE, SEISMIC_TOSS, SELF_DESTRUCT, SHADOW_BALL, SHADOW_BONE, SHADOW_CLAW, SHADOW_FORCE, SHADOW_PUNCH, SHADOW_SNEAK, SHARPEN, SHATTERED_PSYCHE, SHED_TAIL, SHEER_COLD, SHELL_SIDE_ARM, SHELL_SMASH, SHELL_TRAP, SHELTER, SHIFT_GEAR, SHOCK_WAVE, SHORE_UP, SIGNAL_BEAM, SILK_TRAP, SILVER_WIND, SIMPLE_BEAM, SING_MOVE /*Many math libraries define SING as a macro*/, SINISTER_ARROW_RAID, SIZZLY_SLIDE, SKETCH, SKILL_SWAP, SKITTER_SMACK, SKULL_BASH, SKY_ATTACK, SKY_DROP, SKY_UPPERCUT, SLACK_OFF, SLAM, SLASH, SLEEP_POWDER, SLEEP_TALK, SLUDGE, SLUDGE_BOMB, SLUDGE_WAVE, SMACK_DOWN, SMART_STRIKE, SMELLING_SALTS, SMOG, SMOKESCREEN, SNAP_TRAP, SNARL, SNATCH, SNIPE_SHOT, SNORE, SNOWSCAPE, SOAK, SOFT_BOILED, SOLAR_BEAM, SOLAR_BLADE, SONIC_BOOM, SOUL_STEALING_7_STAR_STRIKE, SPACIAL_REND, SPARK, SPARKLING_ARIA, SPARKLY_SWIRL, SPECTRAL_THIEF, SPEED_SWAP, SPICY_EXTRACT, SPIDER_WEB, SPIKE_CANNON, SPIKES, SPIKY_SHIELD, SPIN_OUT, SPIRIT_BREAK, SPIRIT_SHACKLE, SPIT_UP, SPITE, SPLASH, SPLINTERED_STORMSHARDS, SPLISHY_SPLASH, SPORE, SPOTLIGHT, SPRINGTIDE_STORM, STEALTH_ROCK, STEAM_ERUPTION, STEAMROLLER, STEEL_BEAM, STEEL_ROLLER, STEEL_WING, STICKY_WEB, STOCKPILE, STOKED_SPARKSURFER, STOMP, STOMPING_TANTRUM, STONE_AXE, STONE_EDGE, STORED_POWER, STORM_THROW, STRANGE_STEAM, STRENGTH, STRENGTH_SAP, STRING_SHOT, STRUGGLE, STRUGGLE_BUG, STUFF_CHEEKS, STUN_SPORE, SUBMISSION, SUBSTITUTE, SUBZERO_SLAMMER, SUCKER_PUNCH, SUNNY_DAY, SUNSTEEL_STRIKE, SUPER_FANG, SUPERPOWER, SUPERSONIC, SUPERSONIC_SKYSTRIKE, SURF, SURGING_STRIKES, SWAGGER, SWALLOW, SWEET_KISS, SWEET_SCENT, SWIFT, SWITCHEROO, SWORDS_DANCE, SYNCHRONOISE, SYNTHESIS, TACKLE, TAIL_GLOW, TAIL_SLAP, TAIL_WHIP, TAILWIND, TAKE_DOWN, TAKE_HEART, TAR_SHOT, TAUNT, TEARFUL_LOOK, TEATIME, TECHNO_BLAST, TECTONIC_RAGE, TEETER_DANCE, TELEKINESIS, TELEPORT, TERA_BLAST, TERRAIN_PULSE, THIEF, THOUSAND_ARROWS, THOUSAND_WAVES, THRASH, THROAT_CHOP, THUNDER, THUNDERBOLT, THUNDER_CAGE, THUNDER_FANG, THUNDEROUS_KICK, THUNDER_PUNCH, THUNDER_SHOCK, THUNDER_WAVE, TICKLE, TIDY_UP, TOPSY_TURVY, TORCH_SONG, TORMENT, TOXIC, TOXIC_SPIKES, TOXIC_THREAD, TRAILBLAZE, TRANSFORM, TRI_ATTACK, TRICK, TRICK_OR_TREAT, TRICK_ROOM, TRIPLE_ARROWS, TRIPLE_AXEL, TRIPLE_DIVE, TRIPLE_KICK, TROP_KICK, TRUMP_CARD, TWIN_BEAM, TWINEEDLE, TWINKLE_TACKLE, TWISTER, U_TURN, UPROAR, VACUUM_WAVE, V_CREATE, VEEVEE_VOLLEY, VENOM_DRENCH, VENOSHOCK, VICTORY_DANCE, VINE_WHIP, VISE_GRIP, VITAL_THROW, VOLT_SWITCH, VOLT_TACKLE, WAKE_UP_SLAP, WATERFALL, WATER_GUN, WATER_PLEDGE, WATER_PULSE, WATER_SHURIKEN, WATER_SPORT, WATER_SPOUT, WAVE_CRASH, WEATHER_BALL, WHIRLPOOL, WHIRLWIND, WICKED_BLOW, WICKED_TORQUE, WIDE_GUARD, WILDBOLT_STORM, WILD_CHARGE, WILL_O_WISP, WING_ATTACK, WISH, WITHDRAW, WONDER_ROOM, WOOD_HAMMER, WORK_UP, WORRY_SEED, WRAP, WRING_OUT, X_SCISSOR, YAWN, ZAP_CANNON, ZEN_HEADBUTT, ZING_ZAP, ZIPPY_ZAP, MOVE_TOTAL,
-  // clang-format on
-};
-
-static constexpr std::uint16_t TOTAL_MOVE_COUNT = (std::uint16_t)Move::MOVE_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-/////////////////////// END OF src/Types/Enums/Move.hpp ////////////////////////
-
-////////////////////// START OF src/Types/Enums/Stat.hpp ///////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon stat abbreviated name
-enum class Stat : std::uint8_t {
-  HP = 0b000001,
-  ATK = 0b000010,
-  DEF = 0b000100,
-  SPA = 0b001000,
-  SPD = 0b010000,
-  SPE = 0b100000,
-  // SPC = SPA | SPD,
-};
-
-static constexpr std::uint8_t TOTAL_STAT_COUNT = 6U;
-}  // namespace pokesim::dex
-
-/////////////////////// END OF src/Types/Enums/Stat.hpp ////////////////////////
-
-///////////////////////// START OF src/Types/Stats.hpp /////////////////////////
-
-namespace pokesim::types {
-using level = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_LEVEL>;
-
-using stat = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_STAT>;
-using baseStat = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_BASE_STAT>;
-
-using ev = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_EV>;
-using iv = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::POKEMON_IV>;
-
-using boost = pokesim::internal::signedIntType<
-  MechanicConstants::MaxValues::POKEMON_STAT_BOOST, MechanicConstants::MinValues::POKEMON_STAT_BOOST>;
-}  // namespace pokesim::types
-
-////////////////////////// END OF src/Types/Stats.hpp //////////////////////////
-
 ///////// START OF src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp /////////
 
 #include <vector>
@@ -18613,31 +22280,6 @@ inline void deleteClones(types::registry& registry);
 }  // namespace pokesim
 
 ////////////////////// END OF src/Battle/Clone/Clone.hpp ///////////////////////
-
-////////////////////// START OF src/Types/Enums/Slot.hpp ///////////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-enum class Slot : std::uint8_t {
-  NONE,
-  P1A,
-  P2A,
-  P1B,
-  P2B,
-
-  P1C,
-  P2C,
-  P1D,
-  P2D,
-  P1E,
-  P2E,
-  P1F,
-  P2F,
-};
-}
-
-/////////////////////// END OF src/Types/Enums/Slot.hpp ////////////////////////
 
 /////////////////// START OF src/Battle/Helpers/Helpers.hpp ////////////////////
 
@@ -18690,275 +22332,6 @@ struct StateSetupBase {
 }  // namespace pokesim::internal
 
 ////////////////// END OF src/Battle/Setup/StateSetupBase.hpp //////////////////
-
-////////////////////// START OF src/Components/Boosts.hpp //////////////////////
-
-namespace pokesim {
-struct AtkBoost {
-  types::boost val = 0;
-};
-
-struct DefBoost {
-  types::boost val = 0;
-};
-
-struct SpaBoost {
-  types::boost val = 0;
-};
-
-struct SpdBoost {
-  types::boost val = 0;
-};
-
-struct SpeBoost {
-  types::boost val = 0;
-};
-}  // namespace pokesim
-
-/////////////////////// END OF src/Components/Boosts.hpp ///////////////////////
-
-////////////////////// START OF src/Components/EVsIVs.hpp //////////////////////
-
-namespace pokesim {
-struct Evs {
-  types::ev hp = 0;
-  types::ev atk = 0;
-  types::ev def = 0;
-  types::ev spa = 0;
-  types::ev spd = 0;
-  types::ev spe = 0;
-
-  bool operator==(const Evs& other) const {
-    return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
-           spe == other.spe;
-  }
-};
-
-struct Ivs {
-  types::iv hp = 0;
-  types::iv atk = 0;
-  types::iv def = 0;
-  types::iv spa = 0;
-  types::iv spd = 0;
-  types::iv spe = 0;
-
-  bool operator==(const Ivs& other) const {
-    return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
-           spe == other.spe;
-  }
-};
-}  // namespace pokesim
-
-/////////////////////// END OF src/Components/EVsIVs.hpp ///////////////////////
-
-////////////////////// START OF src/Types/Enums/Type.hpp ///////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon type name
-enum class Type : std::uint8_t {
-  NO_TYPE = 0,
-  NORMAL,
-  GRASS,
-  WATER,
-  FIRE,
-  BUG,
-  FLYING,
-  POISON,
-  ELECTRIC,
-  GROUND,
-  FIGHTING,
-  PSYCHIC,
-  ROCK,
-  ICE,
-  GHOST,
-  DRAGON,
-  DARK,
-  STEEL,
-  FAIRY,
-  TYPE_TOTAL
-};
-
-static constexpr std::uint8_t TOTAL_TYPE_COUNT = (std::uint8_t)Type::TYPE_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-/////////////////////// END OF src/Types/Enums/Type.hpp ////////////////////////
-
-/////////////////// START OF src/Components/SpeciesTypes.hpp ///////////////////
-
-#include <array>
-
-namespace pokesim {
-// Contains the types a species has
-struct SpeciesTypes {
-  std::array<dex::Type, MechanicConstants::TYPES_PER_POKEMON> val{};
-
-  dex::Type& type1() { return val[0]; };
-  dex::Type& type2() { return val[1]; };
-  constexpr const dex::Type& type1() const { return val[0]; };
-  constexpr const dex::Type& type2() const { return val[1]; };
-  constexpr internal::unsignedIntType<MechanicConstants::TYPES_PER_POKEMON> size() const {
-    if (type2() == dex::Type::NO_TYPE) {
-      return type1() == dex::Type::NO_TYPE ? 0 : 1;
-    }
-    return 2;
-  }
-  constexpr bool has(dex::Type type) const { return type1() == type || type2() == type; }
-};
-}  // namespace pokesim
-
-//////////////////// END OF src/Components/SpeciesTypes.hpp ////////////////////
-
-////////////////////// START OF src/Components/Stats.hpp ///////////////////////
-
-namespace pokesim::stat {
-struct Hp {
-  types::stat val = 1;
-};
-
-struct Atk {
-  types::stat val = 1;
-};
-
-struct Def {
-  types::stat val = 1;
-};
-
-struct Spa {
-  types::stat val = 1;
-};
-
-struct Spd {
-  types::stat val = 1;
-};
-
-struct Spe {
-  types::stat val = 1;
-};
-
-struct CurrentHp {
-  types::stat val = 1;
-};
-
-struct EffectiveAtk {
-  types::stat val = 1;
-};
-
-struct EffectiveDef {
-  types::stat val = 1;
-};
-
-struct EffectiveSpa {
-  types::stat val = 1;
-};
-
-struct EffectiveSpd {
-  types::stat val = 1;
-};
-
-struct EffectiveSpe {
-  types::stat val = 1;
-};
-}  // namespace pokesim::stat
-
-/////////////////////// END OF src/Components/Stats.hpp ////////////////////////
-
-///////////////////// START OF src/Types/Enums/Ability.hpp /////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon ability name
-enum class Ability : std::uint16_t {
-  // clang-format off
-  NO_ABILITY = 0, ADAPTABILITY, AERILATE, AFTERMATH, AIR_LOCK, ANALYTIC, ANGER_POINT, ANGER_SHELL, ANTICIPATION, ARENA_TRAP, ARMOR_TAIL, AROMA_VEIL, AS_ONE, AURA_BREAK, BAD_DREAMS, BALL_FETCH, BATTERY, BATTLE_ARMOR, BATTLE_BOND, BEADS_OF_RUIN, BEAST_BOOST, BERSERK, BIG_PECKS, BLAZE, BULLETPROOF, CHEEK_POUCH, CHILLING_NEIGH, CHLOROPHYLL, CLEAR_BODY, CLOUD_NINE, COLOR_CHANGE, COMATOSE, COMMANDER, COMPETITIVE, COMPOUND_EYES, CONTRARY, CORROSION, COSTAR, COTTON_DOWN, CUD_CHEW, CURIOUS_MEDICINE, CURSED_BODY, CUTE_CHARM, DAMP, DANCER, DARK_AURA, DAUNTLESS_SHIELD, DAZZLING, DEFEATIST, DEFIANT, DELTA_STREAM, DESOLATE_LAND, DISGUISE, DOWNLOAD, DRAGONS_MAW, DRIZZLE, DROUGHT, DRY_SKIN, EARTH_EATER, EARLY_BIRD, EFFECT_SPORE, ELECTRIC_SURGE, ELECTROMORPHOSIS, EMERGENCY_EXIT, FAIRY_AURA, FILTER, FLAME_BODY, FLARE_BOOST, FLASH_FIRE, FLOWER_GIFT, FLOWER_VEIL, FLUFFY, FORECAST, FOREWARN, FRIEND_GUARD, FRISK, FULL_METAL_BODY, FUR_COAT, GALE_WINGS, GALVANIZE, GLUTTONY, GOOD_AS_GOLD, GOOEY, GORILLA_TACTICS, GRASS_PELT, GRASSY_SURGE, GRIM_NEIGH, GUARD_DOG, GULP_MISSILE, GUTS, HADRON_ENGINE, HARVEST, HEALER, HEATPROOF, HEAVY_METAL, HONEY_GATHER, HUGE_POWER, HUNGER_SWITCH, HUSTLE, HYDRATION, HYPER_CUTTER, ICE_BODY, ICE_FACE, ICE_SCALES, ILLUMINATE, ILLUSION, IMMUNITY, IMPOSTER, INFILTRATOR, INNARDS_OUT, INNER_FOCUS, INSOMNIA, INTIMIDATE, INTREPID_SWORD, IRON_BARBS, IRON_FIST, JUSTIFIED, KEEN_EYE, KLUTZ, LEAF_GUARD, LEVITATE, LIBERO, LIGHT_METAL, LIGHTNING_ROD, LINGERING_AROMA, LIMBER, LIQUID_OOZE, LIQUID_VOICE, LONG_REACH, MAGIC_BOUNCE, MAGIC_GUARD, MAGICIAN, MAGMA_ARMOR, MAGNET_PULL, MARVEL_SCALE, MEGA_LAUNCHER, MERCILESS, MIMICRY, MINUS, MIRROR_ARMOR, MISTY_SURGE, MOLD_BREAKER, MOODY, MOTOR_DRIVE, MOXIE, MULTISCALE, MULTITYPE, MUMMY, MYCELIUM_MIGHT, NATURAL_CURE, NEUROFORCE, NEUTRALIZING_GAS, NO_GUARD, NORMALIZE, OBLIVIOUS, OPPORTUNIST, ORICHALCUM_PULSE, OVERCOAT, OVERGROW, OWN_TEMPO, PARENTAL_BOND, PASTEL_VEIL, PERISH_BODY, PICKPOCKET, PICKUP, PIXILATE, PLUS, POISON_HEAL, POISON_POINT, POISON_TOUCH, POWER_CONSTRUCT, POWER_OF_ALCHEMY, POWER_SPOT, PRANKSTER, PRESSURE, PRIMORDIAL_SEA, PRISM_ARMOR, PROPELLER_TAIL, PROTEAN, PROTOSYNTHESIS, PSYCHIC_SURGE, PUNK_ROCK, PURE_POWER, PURIFYING_SALT, QUARK_DRIVE, QUEENLY_MAJESTY, QUICK_DRAW, QUICK_FEET, RAIN_DISH, RATTLED, RECEIVER, RECKLESS, REFRIGERATE, REGENERATOR, RIPEN, RIVALRY, RKS_SYSTEM, ROCK_HEAD, ROCKY_PAYLOAD, ROUGH_SKIN, RUN_AWAY, SAND_FORCE, SAND_RUSH, SAND_SPIT, SAND_STREAM, SAND_VEIL, SAP_SIPPER, SCHOOLING, SCRAPPY, SCREEN_CLEANER, SEED_SOWER, SERENE_GRACE, SHADOW_SHIELD, SHADOW_TAG, SHARPNESS, SHED_SKIN, SHEER_FORCE, SHELL_ARMOR, SHIELD_DUST, SHIELDS_DOWN, SIMPLE, SKILL_LINK, SLOW_START, SLUSH_RUSH, SNIPER, SNOW_CLOAK, SNOW_WARNING, SOLAR_POWER, SOLID_ROCK, SOUL_HEART, SOUNDPROOF, SPEED_BOOST, STAKEOUT, STALL, STALWART, STAMINA, STANCE_CHANGE, STATIC, STEADFAST, STEAM_ENGINE, STEELWORKER, STEELY_SPIRIT, STENCH, STICKY_HOLD, STORM_DRAIN, STRONG_JAW, STURDY, SUCTION_CUPS, SUPER_LUCK, SUPREME_OVERLORD, SURGE_SURFER, SWARM, SWEET_VEIL, SWIFT_SWIM, SYMBIOSIS, SYNCHRONIZE, SWORD_OF_RUIN, TABLETS_OF_RUIN, TANGLED_FEET, TANGLING_HAIR, TECHNICIAN, TELEPATHY, TERAVOLT, THERMAL_EXCHANGE, THICK_FAT, TINTED_LENS, TORRENT, TOUGH_CLAWS, TOXIC_BOOST, TOXIC_DEBRIS, TRACE, TRANSISTOR, TRIAGE, TRUANT, TURBOBLAZE, UNAWARE, UNBURDEN, UNNERVE, UNSEEN_FIST, VESSEL_OF_RUIN, VICTORY_STAR, VITAL_SPIRIT, VOLT_ABSORB, WANDERING_SPIRIT, WATER_ABSORB, WATER_BUBBLE, WATER_COMPACTION, WATER_VEIL, WEAK_ARMOR, WELL_BAKED_BODY, WHITE_SMOKE, WIMP_OUT, WIND_POWER, WIND_RIDER, WONDER_GUARD, WONDER_SKIN, ZEN_MODE, ZERO_TO_HERO, ABILITY_TOTAL,
-  // clang-format on
-};
-
-static constexpr std::uint16_t TOTAL_ABILITY_COUNT = (std::uint16_t)Ability::ABILITY_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Ability.hpp //////////////////////
-
-///////////////////// START OF src/Types/Enums/Gender.hpp //////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon gender name
-enum class Gender : std::uint8_t { NO_GENDER = 0, FEMALE, MALE };
-
-static constexpr std::uint8_t TOTAL_GENDER_COUNT = 3U;
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Gender.hpp ///////////////////////
-
-////////////////////// START OF src/Types/Enums/Item.hpp ///////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-// Name of items in Pokemon games
-enum class Item : std::uint16_t {
-  // clang-format off
-  NO_ITEM = 0, ABILITY_CAPSULE, ABILITY_PATCH, ABILITY_SHIELD, ABOMASITE, ABRA_CANDY, ABSOLITE, ABSORB_BULB, ACRO_BIKE, ADAMANT_CRYSTAL, ADAMANT_MINT, ADAMANT_ORB, ADRENALINE_ORB, ADVENTURE_GUIDE, AERODACTYLITE, AERODACTYL_CANDY, AGGRONITE, AGUAV_BERRY, AIR_BALLOON, AIR_MAIL, ALAKAZITE, ALORAICHIUM_Z, ALTARIANITE, AMAZE_MULCH, AMPHAROSITE, AMULET_COIN, ANTIDOTE, APICOT_BERRY, APRICORN, APRICORN_BOX, AQUA_SUIT, ARMOR_FOSSIL, ARMOR_PASS, ARMORITE_ORE, ARTICUNO_CANDY, ASPEAR_BERRY, ASSAULT_VEST, AUDINITE, AURORATICKET, AUSPICIOUS_ARMOR, AUTOGRAPH, AUX_EVASION, AUX_GUARD, AUX_POWER, AUX_POWERGUARD, AWAKENING, AZELFS_FANG, AZURE_FLUTE, BABIRI_BERRY, BALL_OF_MUD, BALM_MUSHROOM, BAND_AUTOGRAPH, BANETTITE, BASCULEGION_FOOD, BASEMENT_KEY, BEACH_GLASS, BEAD_MAIL, BEAN_CAKE, BEAST_BALL, BEEDRILLITE, BELLSPROUT_CANDY, BELUE_BERRY, BERRY, BERRY_JUICE, BERRY_POTS, BERRY_POUCH, BERRY_SWEET, BERSERK_GENE, BICYCLE, BIG_BAMBOO_SHOOT, BIG_MALASADA, BIG_MUSHROOM, BIG_NUGGET, BIG_PEARL, BIG_ROOT, BIKE_VOUCHER, BINDING_BAND, BITTER_BERRY, BLACK_APRICORN, BLACK_AUGURITE, BLACK_BELT, BLACK_FLUTE, BLACK_GLASSES, BLACK_MANE_HAIR, BLACK_SLUDGE, BLACK_TUMBLESTONE, BLANK_PLATE, BLASTOISINITE, BLAZIKENITE, BLOOM_MAIL, BLUE_APRICORN, BLUE_CARD, BLUE_FLUTE, BLUE_ORB, BLUE_PETAL, BLUE_SCARF, BLUE_SHARD, BLUESKY_MAIL, BLU_ID_BADGE, BLUK_BERRY, BLUNDER_POLICY, BOLD_MINT, BONSLY_CARD, BONSLY_PHOTO, BOOST_MULCH, BOOSTER_ENERGY, BOTTLE_CAP, BRAVE_MINT, BRICK_MAIL, BRICK_PIECE, BRIDGE_MAIL_D, BRIDGE_MAIL_M, BRIDGE_MAIL_S, BRIDGE_MAIL_T, BRIDGE_MAIL_V, BRIGHT_POWDER, BUBBLE_MAIL, BUG_GEM, BUG_MEMORY, BUG_TERA_SHARD, BUGINIUM_Z, BUGWORT, BULBASAUR_CANDY, BURN_DRIVE, BURN_HEAL, BURNT_BERRY, CAKE_LURE_BASE, CALCIUM, CALM_MINT, CAMERUPTITE, CAMPING_GEAR, CANDY_TRUFFLE, CARBOS, CARD_KEY, CAREFUL_MINT, CARROT_SEEDS, CASTELIACONE, CASTER_FERN, CATCHING_CHARM, CATERPIE_CANDY, CELESTICA_FLUTE, CELL_BATTERY, CHALKY_STONE, CHANSEY_CANDY, CHARCOAL, CHARIZARDITE_X, CHARIZARDITE_Y, CHARMANDER_CANDY, CHARTI_BERRY, CHERI_BERRY, CHERISH_BALL, CHESTO_BERRY, CHILAN_BERRY, CHILL_DRIVE, CHIPPED_POT, CHOICE_BAND, CHOICE_DUMPLING, CHOICE_SCARF, CHOICE_SPECS, CHOPLE_BERRY, CLAW_FOSSIL, CLEANSE_TAG, CLEAR_AMULET, CLEAR_BELL, CLEFAIRY_CANDY, CLEVER_FEATHER, CLOVER_SWEET, COBA_BERRY, COIN_CASE, COLBUR_BERRY, COLOGNE_CASE, COLRESS_MACHINE, COMET_SHARD, COMMON_STONE, CONTEST_COSTUME, CONTEST_PASS, CORNN_BERRY, COUPON_1, COUPON_2, COUPON_3, COURAGE_CANDY, COURAGE_CANDY_L, COURAGE_CANDY_XL, COVER_FOSSIL, COVERT_CLOAK, CRACKED_POT, CRAFTING_KIT, CROWN_PASS, CRUNCHY_SALT, CUBONE_CANDY, CRY_ANALYZER, CUSTAP_BERRY, DAMP_MULCH, DAMP_ROCK, DARK_GEM, DARK_MEMORY, DARK_STONE, DARK_TERA_SHARD, DARKINIUM_Z, DATA_CARDS, DATA_ROM, DAWN_STONE, DAZZLING_HONEY, D_DISK, DECIDIUM_Z, DEEP_SEA_SCALE, DEEP_SEA_TOOTH, DESTINY_KNOT, DEVON_PARTS, DEVON_SCOPE, DEVON_SCUBA_GEAR, DIANCITE, DIGGER_DRILL, DIGLETT_CANDY, DIRE_HIT, DIRESHROOM, DISC_CASE, DISCOUNT_COUPON, DISCOVERY_SLATE, DISTORTION_SLATE, DITTO_CANDY, DIVE_BALL, DNA_SAMPLE, DNA_SPLICERS, DODUO_CANDY, DOME_FOSSIL, DOPPEL_BONNETS, DOUSE_DRIVE, DOWN_ST_KEY, DOWSING_MACHINE, DRACO_PLATE, DRAGON_FANG, DRAGON_GEM, DRAGON_MEMORY, DRAGON_SCALE, DRAGON_SKULL, DRAGON_TERA_SHARD, DRAGONIUM_Z, DRASH_BERRY, DRATINI_CANDY, DREAD_PLATE, DREAM_BALL, DREAM_MAIL, DROPPED_ITEM, DROWZEE_CANDY, DS_SOUNDS, DUBIOUS_DISC, DURIN_BERRY, DUSK_BALL, DUSK_STONE, DYNAMAX_BAND, DYNAMAX_CANDY, DYNAMAX_CRYSTALS, DYNITE_ORE, EARTH_PLATE, EEVEE_CANDY, EEVIUM_Z, EGG_TICKET, EGGANT_BERRY, EIN_FILE_C, EIN_FILE_F, EIN_FILE_H, EIN_FILE_P, EIN_FILE_S, EJECT_BUTTON, EJECT_PACK, EKANS_CANDY, ELECTABUZZ_CANDY, ELECTIRIZER, ELECTRIC_GEM, ELECTRIC_MEMORY, ELECTRIC_SEED, ELECTRIC_TERA_SHARD, ELECTRIUM_Z, ELEVATOR_KEY, ELIXIR, ENDORSEMENT, ENERGY_POWDER, ENERGY_ROOT, ENIGMA_BERRY, ENIGMA_STONE, ENIGMATIC_CARD, EON_FLUTE, EON_MAIL, EON_TICKET, ESCAPE_ROPE, ETERNAL_ICE, ETHER, EVERSTONE, EVIOLITE, EXCITE_SCENT, EXEGGCUTE_CANDY, EXP_CANDY_L, EXP_CANDY_M, EXP_CANDY_S, EXP_CANDY_XL, EXP_CANDY_XS, EXP_CHARM, EXP_SHARE, EXPERT_BELT, EXPLORER_KIT, FAB_MAIL, FAIRIUM_Z, FAIRY_GEM, FAIRY_MEMORY, FAIRY_TERA_SHARD, FAME_CHECKER, FARFETCHD_CANDY, FASHION_CASE, FAST_BALL, FAVORED_MAIL, F_DISK, FEATHER_BALL, FESTIVAL_TICKET, FIGHTING_GEM, FIGHTING_MEMORY, FIGHTING_TERA_SHARD, FIGHTINIUM_Z, FIGY_BERRY, FINE_REMEDY, FIRE_GEM, FIRE_MEMORY, FIRE_STONE, FIRE_TERA_SHARD, FIRIUM_Z, FISHING_ROD, FIST_PLATE, FLAME_MAIL, FLAME_ORB, FLAME_PLATE, FLOAT_STONE, FLOWER_MAIL, FLOWER_SWEET, FLUFFY_TAIL, FLYING_GEM, FLYING_MEMORY, FLYING_TERA_SHARD, FLYINIUM_Z, FOCUS_BAND, FOCUS_SASH, FORAGE_BAG, FOREST_BALM, FOSSILIZED_BIRD, FOSSILIZED_DINO, FOSSILIZED_DRAKE, FOSSILIZED_FISH, FRESH_WATER, FRIEND_BALL, FULL_HEAL, FULL_INCENSE, FULL_RESTORE, GALACTIC_KEY, GALARICA_CUFF, GALARICA_TWIG, GALARICA_WREATH, GALLADITE, GANLON_BERRY, GARCHOMPITE, GARDEVOIRITE, GASTLY_CANDY, GB_SOUNDS, GEAR, GENGARITE, GENIUS_FEATHER, GENOME_SLATE, GENTLE_MINT, GEODUDE_CANDY, GHOST_GEM, GHOST_MEMORY, GHOST_TERA_SHARD, GHOSTIUM_Z, GIGATON_BALL, GINEMA_BERRY, GLALITITE, GLITTER_MAIL, GO_GOGGLES, GOD_STONE, GOLD_BERRY, GOLD_BOTTLE_CAP, GOLD_LEAF, GOLD_TEETH, GOLDEEN_CANDY, GONZAPS_KEY, GOLDEN_NANAB_BERRY, GOLDEN_PINAP_BERRY, GOLDEN_RAZZ_BERRY, GOOD_ROD, GOOEY_MULCH, GORGEOUS_BOX, GRACIDEA, GRAIN_CAKE, GRAM_1, GRAM_2, GRAM_3, GRASS_GEM, GRASS_MEMORY, GRASS_TERA_SHARD, GRASSIUM_Z, GRASS_MAIL, GRASSY_SEED, GREAT_BALL, GREEN_APRICORN, GREEN_PETAL, GREEN_SCARF, GREEN_SHARD, GREET_MAIL, GREPA_BERRY, GRIMER_CANDY, GRIP_CLAW, GRIT_DUST, GRIT_GRAVEL, GRIT_PEBBLE, GRIT_ROCK, GRISEOUS_CORE, GRISEOUS_ORB, GRN_ID_BADGE, GROUND_GEM, GROUND_MEMORY, GROUND_TERA_SHARD, GROUNDIUM_Z, GROWLITHE_CANDY, GROWTH_MULCH, GRUBBY_HANKY, GS_BALL, GUARD_SPEC, GUIDEBOOK, GYARADOSITE, HABAN_BERRY, HARBOR_MAIL, HARD_STONE, HASTY_MINT, HEAL_BALL, HEAL_POWDER, HEALTH_CANDY, HEALTH_CANDY_L, HEALTH_CANDY_XL, HEALTH_FEATHER, HEART_MAIL, HEART_SCALE, HEARTY_GRAINS, HEAT_ROCK, HEAVY_BALL, HEAVY_DUTY_BOOTS, HELIX_FOSSIL, HERACRONITE, HI_TECH_EARBUDS, HITMONCHAN_CANDY, HITMONLEE_CANDY, HM01, HM02, HM03, HM04, HM05, HM06, HM07, HM08, HOLO_CASTER, HOMETOWN_MUFFIN, HONDEW_BERRY, HONEY, HONEY_CAKE, HONOR_OF_KALOS, HOPO_BERRY, HORSEA_CANDY, HOUNDOOMINITE, HP_UP, HYPER_POTION, IAPAPA_BERRY, ICE_BERRY, ICE_GEM, ICE_HEAL, ICE_MEMORY, ICE_STONE, ICE_TERA_SHARD, ICEROOT_CARROT, ICICLE_PLATE, ICIUM_Z, ICY_ROCK, ID_CARD, ILIMAS_NORMALIUM_Z, IMPISH_MINT, INCINIUM_Z, INQUIRY_MAIL, INSECT_PLATE, INTRIGUING_STONE, IRON, IRON_BALL, IRON_BARKTONGUE, IRON_CHUNK, IRON_PLATE, JABOCA_BERRY, JADE_ORB, JAIL_KEY, JAW_FOSSIL, JET_BALL, JIGGLYPUFF_CANDY, JOHTO_SLATE, JOLLY_MINT, JOY_SCENT, JUBILIFE_MUFFIN, JYNX_CANDY, KABUTO_CANDY, KANGASKHAN_CANDY, KANGASKHANITE, KANTO_SLATE, KASIB_BERRY, KEBIA_BERRY, KEE_BERRY, KELPSY_BERRY, KEY_STONE, KEY_TO_ROOM_1, KEY_TO_ROOM_2, KEY_TO_ROOM_4, KEY_TO_ROOM_6, KINGS_LEAF, KINGS_ROCK, KOFFING_CANDY, KOFUS_BOOK, KOMMONIUM_Z, KORAIDONS_POKE_BALL, KRABBY_CANDY, KRANE_MEMO_1, KRANE_MEMO_2, KRANE_MEMO_3, KRANE_MEMO_4, KRANE_MEMO_5, KUO_BERRY, LAGGING_TAIL, LANSAT_BERRY, LAPRAS_CANDY, LATIASITE, LATIOSITE, LAVA_COOKIE, LAX_INCENSE, LAX_MINT, L_DISK, LEADEN_BALL, LEADERS_CREST, LEAF_LETTER, LEAF_STONE, LEEK, LEFT_POKE_BALL, LEFTOVERS, LEGEND_PLATE, LEGENDARY_CLUE_1, LEGENDARY_CLUE_2, LEGENDARY_CLUE_3, LEGENDARY_CLUE, LEMONADE, LENS_CASE, LEPPA_BERRY, LETTER, LEVEL_BALL, LIBERTY_PASS, LICKITUNG_CANDY, LIECHI_BERRY, LIFE_ORB, LIFT_KEY, LIGHT_BALL, LIGHT_CLAY, LIGHT_STONE, LIKE_MAIL, LINKING_CORD, LITEBLUEMAIL, LOADED_DICE, LOCK_CAPSULE, LONE_EARRING, LONELY_MINT, LOOKER_TICKET, LOOT_SACK, LOPUNNITE, LOST_ITEM, LOST_SATCHEL, LOVE_BALL, LOVE_SWEET, LOVELY_MAIL, LUCARIONITE, LUCK_INCENSE, LUCKY_EGG, LUCKY_PUNCH, LUM_BERRY, LUMINOUS_MOSS, LUMIOSE_GALETTE, LUNALIUM_Z, LUNAR_FEATHER, LURE, LURE_BALL, LUSTROUS_GLOBE, LUSTROUS_ORB, LUXURY_BALL, LYCANIUM_Z, MACH_BIKE, MACHINE_PART, MACHO_BRACE, MACHOP_CANDY, MAGIKARP_CANDY, MAGMA_EMBLEM, MAGMA_STONE, MAGMA_SUIT, MAGMAR_CANDY, MAGMARIZER, MAGNEMITE_CANDY, MAGNET, MAGO_BERRY, MAGOST_BERRY, MAINGATE_KEY, MAKEUP_BAG, MALICIOUS_ARMOR, MANECTITE, MANKEY_CANDY, MARANGA_BERRY, MARBLE, MARK_CHARM, MARSHADIUM_Z, MARSH_BALM, MASTER_BALL, MAWILITE, MAX_ELIXIR, MAX_ETHER, MAX_LURE, MAX_HONEY, MAX_MUSHROOMS, MAX_POTION, MAX_REPEL, MAX_REVIVE, MAYORS_NOTE, MEADOW_PLATE, MECH_MAIL, MECHANICAL_BOX, MECHANICAL_CABINET, MECHANICAL_CIRCULAR_SAW, MECHANICAL_PINWHEEL, MECHANICAL_TUB, MEDAL_BOX, MEDICHAMITE, MEDICINAL_LEEK, MEGA_BRACELET, MEGA_RING, MELTAN_CANDY, MEMBER_CARD, MENTAL_HERB, MEOWTH_CANDY, MESPRITS_PLUME, METAGROSSITE, METAL_COAT, METAL_POWDER, METEORITE, METEORITE_SHARD, METRONOME, MEW_CANDY, MEWNIUM_Z, MEWTWO_CANDY, MEWTWONITE_X, MEWTWONITE_Y, MICLE_BERRY, MIGHTY_CANDY, MIGHTY_CANDY_L, MIGHTY_CANDY_XL, MILD_MINT, MIMIKIUM_Z, MIND_PLATE, MINT_BERRY, MIRACLEBERRY, MIRACLE_SEED, MIRAGE_MAIL, MIRAIDONS_POKE_BALL, MIROR_RADAR, MIRROR_HERB, MISTY_SEED, MODEST_MINT, MOLTRES_CANDY, MOOMOO_MILK, MOON_BALL, MOON_FLUTE, MOON_SHARD, MOON_STONE, MORPH_MAIL, MOSAIC_MAIL, MOUNTAIN_BALM, MR_MIME_CANDY, MUSCLE_BAND, MUSCLE_FEATHER, MUSHROOM_CAKE, MUSIC_DISC, MUSIC_MAIL, MYSTERIOUS_BALM, MYSTERIOUS_SHARD_S, MYSTERIOUS_SHARD_L, MYSTERYBERRY, MYSTERY_EGG, MYSTIC_WATER, MYSTICTICKET, NAIVE_MINT, NANAB_BERRY, NAUGHTY_MINT, NEST_BALL, NET_BALL, NEVER_MELT_ICE, NIDORAN_MALE_CANDY, NIDORAN_FEMALE_CANDY, NINIKU_BERRY, N_LUNARIZER, NOMEL_BERRY, NORMAL_BOX, NORMAL_GEM, NORMAL_TERA_SHARD, NORMALIUM_Z, N_SOLARIZER, NUGGET, NUTPEA_BERRY, OAKS_LETTER, OAKS_PARCEL, OCCA_BERRY, OCEANIC_SLATE, ODD_INCENSE, ODD_KEYSTONE, ODDISH_CANDY, OLD_AMBER, OLD_CHARM, OLD_GATEAU, OLD_JOURNAL, OLD_LETTER, OLD_ROD, OLD_SEA_MAP, OLD_VERSES, OMANYTE_CANDY, ONIX_CANDY, ORAN_BERRY, ORANGE_MAIL, ORANGE_PETAL, ORIGIN_BALL, ORIGIN_ORE, OVAL_CHARM, OVAL_STONE, PAIR_OF_TICKETS, PAL_PAD, PAMTRE_BERRY, PARALYZE_HEAL, PARAS_CANDY, PARCEL, PARK_BALL, PASS, PASS_ORB, PASSHO_BERRY, PAYAPA_BERRY, PEARL, PEARL_STRING, PEAT_BLOCK, PECHA_BERRY, PEP_UP_PLANT, PERMIT, PERSIM_BERRY, PETAYA_BERRY, PEWTER_CRUNCHIES, PICNIC_SET, PIDGEOTITE, PIDGEY_CANDY, PIKACHU_CANDY, PIKANIUM_Z, PIKASHUNIUM_Z, PINAP_BERRY, PINK_APRICORN, PINK_BOW, PINK_NECTAR, PINK_PETAL, PINK_SCARF, PINSIR_CANDY, PINSIRITE, PIXIE_PLATE, PLASMA_CARD, PLUME_FOSSIL, PLUMP_BEANS, POFFIN_CASE, POINT_CARD, POISON_BARB, POISON_GEM, POISON_MEMORY, POISON_TERA_SHARD, POISONIUM_Z, POKE_BALL, POKE_DOLL, POKE_FLUTE, POKE_RADAR, POKE_SNACK, POKE_TOY, POKEBLOCK_CASE, POKEBLOCK_KIT, POKEDEX, POKEMON_BOX_LINK, POKESHI_DOLL, POLKADOT_BOW, POLISHED_MUD_BALL, POLIWAG_CANDY, POMEG_BERRY, PONYTA_CANDY, POP_POD, PORTRAITMAIL, PORYGON_CANDY, POTION, POWER_ANKLET, POWER_BAND, POWER_BELT, POWER_BRACER, POWER_HERB, POWER_LENS, POWER_PLANT_PASS, POWER_WEIGHT, POWERUP_PART, POWDER_JAR, PP_MAX, PP_UP, PREMIER_BALL, PRETTY_FEATHER, PRIMARIUM_Z, PRISM_SCALE, PRISON_BOTTLE, PROFS_LETTER, PROFESSORS_MASK, PROP_CASE, PROTECTIVE_PADS, PROTECTOR, PROTEIN, PRZCUREBERRY, PSNCUREBERRY, PSYCHIC_GEM, PSYCHIC_MEMORY, PSYCHIC_SEED, PSYCHIC_TERA_SHARD, PSYCHIUM_Z, PSYDUCK_CANDY, PUMKIN_BERRY, PUNCHING_GLOVE, PURE_INCENSE, PURPLE_NECTAR, PURPLE_PETAL, QUALOT_BERRY, QUICK_BALL, QUICK_CANDY, QUICK_CANDY_L, QUICK_CANDY_XL, QUICK_CLAW, QUICK_POWDER, QUIET_MINT, RABUTA_BERRY, RADIANT_PETAL, RAGECANDYBAR, RAINBOW_FLOWER, RAINBOW_PASS, RAINBOW_SLATE, RAINBOW_WING, RARE_BONE, RARE_CANDY, RASH_MINT, RATTATA_CANDY, RAWST_BERRY, RAZOR_CLAW, RAZOR_FANG, RAZZ_BERRY, R_DISK, REAPER_CLOTH, RECIPES, RED_APRICORN, RED_CARD, RED_CHAIN, RED_FLUTE, RED_ID_BADGE, RED_NECTAR, RED_ORB, RED_PETAL, RED_SCALE, RED_SCARF, RED_SHARD, REINS_OF_UNITY, RELAXED_MINT, RELIC_BAND, RELIC_COPPER, RELIC_CROWN, RELIC_GOLD, RELIC_SILVER, RELIC_STATUE, RELIC_VASE, REMEDY, REPEAT_BALL, REPEL, REPLY_MAIL, RESIST_FEATHER, RETRO_MAIL, REVEAL_GLASS, REVIVAL_HERB, REVIVE, RHYHORN_CANDY, RIBBON_SWEET, RICH_MULCH, RIDE_PAGER, RINDO_BERRY, RING_TARGET, ROCK_GEM, ROCK_INCENSE, ROCK_MEMORY, ROCK_TERA_SHARD, ROCKIUM_Z, ROCKY_HELMET, ROLLER_SKATES, ROOM_SERVICE, ROOT_FOSSIL, ROSE_INCENSE, ROSELI_BERRY, ROTO_BARGAIN, ROTO_BOOST, ROTO_CATCH, ROTO_ENCOUNTER, ROTO_EXP_POINTS, ROTO_FRIENDSHIP, ROTO_HATCH, ROTO_HP_RESTORE, ROTO_PP_RESTORE, ROTO_PRIZE_MONEY, ROTO_STEALTH, ROTOM_BIKE, ROTOM_CATALOG, ROTOM_PHONE, ROWAP_BERRY, RSVP_MAIL, RUBY, RUNNING_SHOES, RUSTED_SHIELD, RUSTED_SWORD, S_S_TICKET, SABLENITE, SACHET, SACRED_ASH, SAFARI_BALL, SAFETY_GOGGLES, SAIL_FOSSIL, SALAC_BERRY, SALAMENCITE, SALT_CAKE, SAND_RADISH, SANDSHREW_CANDY, SANDWICH, SAPPHIRE, SASSY_MINT, SCANNER, SCARLET_BOOK, SCATTER_BANG, SCEPTILITE, SCIZORITE, SCOPE_LENS, SCROLL_OF_DARKNESS, SCROLL_OF_WATERS, SCYTHER_CANDY, SEA_INCENSE, SEAL_CASE, SECRET_KEY, SECRET_MEDICINE, SEED_OF_MASTERY, SEEL_CANDY, SERIOUS_MINT, SHADOW_MAIL, SHADEROOT_CARROT, SHALOUR_SABLE, SHARP_BEAK, SHARPEDONITE, SHED_SHELL, SHELL_BELL, SHELLDER_CANDY, SHINY_CHARM, SHINY_LEAF, SHINY_STONE, SHOAL_SALT, SHOAL_SHELL, SHOCK_DRIVE, SHUCA_BERRY, SILK_SCARF, SILPH_SCOPE, SILVER_LEAF, SILVER_NANAB_BERRY, SILVER_PINAP_BERRY, SILVER_POWDER, SILVER_RAZZ_BERRY, SILVER_WING, SITRUS_BERRY, SKULL_FOSSIL, SKY_PLATE, SKY_TUMBLESTONE, SLOWBRONITE, SLOWPOKE_CANDY, SLOWPOKE_TAIL, SMALL_BOUQUET, SMALL_TABLET, SMART_CANDY, SMART_CANDY_L, SMART_CANDY_XL, SMOKE_BALL, SMOKE_BOMB, SMOOTH_ROCK, SNORLAX_CANDY, SNORLIUM_Z, SNOWBALL, SNOW_BALM, SNOW_MAIL, SODA_POP, SOFT_SAND, SOLGANIUM_Z, SONIAS_BOOK, SOOT_SACK, SOOTFOOT_ROOT, SOOTHE_BELL, SOUL_DEW, SOUL_SLATE, SPACE_BALM, SPACE_MAIL, SPARKLING_STONE, SPEAROW_CANDY, SPELL_TAG, SPELON_BERRY, SPLASH_PLATE, SPOILED_APRICORN, SPOOKY_PLATE, SPORT_BALL, SPRAYDUCK, SPRINGY_MUSHROOM, SPRINKLOTAD, SQUALL_SLATE, SQUIRT_BOTTLE, SQUIRTLE_CANDY, STABLE_MULCH, STAR_PIECE, STAR_SWEET, STARDUST, STARF_BERRY, STARYU_CANDY, STEALTH_SPRAY, STEEL_GEM, STEEL_MAIL, STEEL_MEMORY, STEEL_TEETH, STEEL_TERA_SHARD, STEELIUM_Z, STEELIXITE, STICKY_BARB, STICKY_GLOB, STONE_PLATE, STORAGE_KEY, STRANGE_BALL, STRANGE_SOUVENIR, STRATOSPHERIC_SLATE, STRAWBERRY_SWEET, STRETCHY_SPRING, STRIB_BERRY, STYLE_CARD, SUBWAY_KEY, SUITE_KEY, SUN_FLUTE, SUN_SHARD, SUN_STONE, SUPER_LURE, SUPER_POTION, SUPER_REPEL, SUPER_ROD, SUPERB_REMEDY, SURFBOARD, SURF_MAIL, SURGE_BADGE, SURPRISE_MULCH, SURVIVAL_CHARM_B, SURVIVAL_CHARM_P, SURVIVAL_CHARM_R, SURVIVAL_CHARM_T, SURVIVAL_CHARM_Y, SWAMPERTITE, SWAP_SNACK, SWEET_APPLE, SWEET_HEART, SWIFT_FEATHER, SWORDCAP, SYSTEM_LEVER, TAMATO_BERRY, TANGA_BERRY, TANGELA_CANDY, TAPUNIUM_Z, TART_APPLE, TAUROS_CANDY, TEA, TEACHY_TV, TECTONIC_SLATE, TEMPTING_CHARM_B, TEMPTING_CHARM_P, TEMPTING_CHARM_R, TEMPTING_CHARM_T, TEMPTING_CHARM_Y, TENTACOOL_CANDY, TERA_ORB, TERRAIN_EXTENDER, TERU_SAMA, THANKS_MAIL, THICK_CLUB, THROAT_SPRAY, THUNDER_STONE, TIDAL_BELL, TIME_BALM, TIME_FLUTE, TIMER_BALL, TIMID_MINT, TINY_BAMBOO_SHOOT, TINY_MUSHROOM, TM01, TM02, TM03, TM04, TM05, TM06, TM07, TM08, TM09, TM10, TM11, TM12, TM13, TM14, TM15, TM16, TM17, TM18, TM19, TM20, TM21, TM22, TM23, TM24, TM25, TM26, TM27, TM28, TM29, TM30, TM31, TM32, TM33, TM34, TM35, TM36, TM37, TM38, TM39, TM40, TM41, TM42, TM43, TM44, TM45, TM46, TM47, TM48, TM49, TM50, TM51, TM52, TM53, TM54, TM55, TM56, TM57, TM58, TM59, TM60, TM61, TM62, TM63, TM64, TM65, TM66, TM67, TM68, TM69, TM70, TM71, TM72, TM73, TM74, TM75, TM76, TM77, TM78, TM79, TM80, TM81, TM82, TM83, TM84, TM85, TM86, TM87, TM88, TM89, TM90, TM91, TM92, TM93, TM94, TM95, TM96, TM97, TM98, TM99, TM_CASE, TM_MATERIALS, TR01, TR02, TR03, TR04, TR05, TR06, TR07, TR08, TR09, TR10, TR11, TR12, TR13, TR14, TR15, TR16, TR17, TR18, TR19, TR20, TR21, TR22, TR23, TR24, TR25, TR26, TR27, TR28, TR29, TR30, TR31, TR32, TR33, TR34, TR35, TR36, TR37, TR38, TR39, TR40, TR41, TR42, TR43, TR44, TR45, TR46, TR47, TR48, TR49, TR50, TR51, TR52, TR53, TR54, TR55, TR56, TR57, TR58, TR59, TR60, TR61, TR62, TR63, TR64, TR65, TR66, TR67, TR68, TR69, TR70, TR71, TR72, TR73, TR74, TR75, TR76, TR77, TR78, TR79, TR80, TR81, TR82, TR83, TR84, TR85, TR86, TR87, TR88, TR89, TR90, TR91, TR92, TR93, TR94, TR95, TR96, TR97, TR98, TR99, TMV_PASS, TOPO_BERRY, TORN_JOURNAL, TOUGA_BERRY, TOUGH_CANDY, TOUGH_CANDY_L, TOUGH_CANDY_XL, TOWN_MAP, TOXIC_ORB, TOXIC_PLATE, TRAVEL_TRUNK, TRI_PASS, TROPIC_MAIL, TROPICAL_SHELL, TUMBLESTONE, TUNNEL_MAIL, TWICE_SPICED_RADISH, TWISTED_SPOON, TYRANITARITE, U_DISK, ULTRA_BALL, ULTRANECROZIUM_Z, UNOWN_REPORT, UNUSUAL_SHOES, UPGRADE, UTILITY_UMBRELLA, UXIES_CLAW, VENONAT_CANDY, VENUSAURITE, VIOLET_BOOK, VIVICHOKE, VIVID_SCENT, VOICE_CASE_1, VOICE_CASE_2, VOICE_CASE_3, VOICE_CASE_4, VOICE_CASE_5, VOLCANO_BALM, VOLTORB_CANDY, VS_RECORDER, VS_SEEKER, VULPIX_CANDY, WACAN_BERRY, WAILMER_PAIL, WALL_FRAGMENT, WARDING_CHARM_B, WARDING_CHARM_P, WARDING_CHARM_R, WARDING_CHARM_T, WARDING_CHARM_Y, WATER_GEM, WATER_MEMORY, WATER_STONE, WATER_TERA_SHARD, WATERIUM_Z, WATMEL_BERRY, WAVE_INCENSE, WAVE_MAIL, WEAKNESS_POLICY, WEEDLE_CANDY, WEPEAR_BERRY, WHIPPED_DREAM, WHITE_APRICORN, WHITE_FLUTE, WHITE_HERB, WHITE_MANE_HAIR, WIDE_LENS, WIKI_BERRY, WING_BALL, WISE_GLASSES, WISHING_CHIP, WISHING_PIECE, WISHING_STAR, WOOD, WOOD_MAIL, WOODEN_CROWN, WORKS_KEY, X_ACCURACY, X_ATTACK, X_DEFENSE, X_SP_ATK, X_SP_DEF, X_SPEED, XTRANSCEIVER, YACHE_BERRY, YAGO_BERRY, YELLOW_APRICORN, YELLOW_FLUTE, YELLOW_NECTAR, YELLOW_PETAL, YELLOW_SCARF, YELLOW_SHARD, YLW_ID_BADGE, ZAP_PLATE, ZAPDOS_CANDY, ZINC, ZOOM_LENS, Z_POWER_RING, Z_RING, ZUBAT_CANDY, ZYGARDE_CUBE, ITEM_TOTAL
-  // clang-format on
-};
-
-static constexpr std::uint16_t TOTAL_ITEM_COUNT = (std::uint16_t)Item::ITEM_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-/////////////////////// END OF src/Types/Enums/Item.hpp ////////////////////////
-
-///////////////////// START OF src/Types/Enums/Nature.hpp //////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon nature name
-enum class Nature : std::uint8_t {
-  // clang-format off
-  NO_NATURE = 0, ADAMANT, BASHFUL, BOLD, BRAVE, CALM, CAREFUL, DOCILE, GENTLE, HARDY, HASTY, IMPISH, JOLLY, LAX, LONELY, MILD, MODEST, NAIVE, NAUGHTY, QUIET, QUIRKY, RASH, RELAXED, SASSY, SERIOUS, TIMID, NATURE_TOTAL
-  // clang-format on
-};
-
-static constexpr std::uint8_t TOTAL_NATURE_COUNT = (std::uint8_t)Nature::NATURE_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Nature.hpp ///////////////////////
-
-///////////////////// START OF src/Types/Enums/Species.hpp /////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-
-/**
- * @brief Pokemon and Pokemon form name.
- *
- * @details Pokemon that have multiple forms will have their base form and alternate forms listed here.
- * However, if none of a Pokemon's forms are cosmetic (i.e. change nothing expect appearance), the forms cannot be
- * changed during battle, and no true base form exists, then the Pokemon's species name without a form specifier is
- * omitted. For example:
- *  - `VENUSAUR`, `MEGA_VENUSAUR`, and `GIGANTAMAX_VENUSAUR` are all listed because Venusaur changes into the other
- * forms mid-battle
- *  - `GASTRODON`, `WEST_SEA_GASTRODON`, and `EAST_SEA_GASTRODON` are all listed because although Gastrodon's forms
- * are permanent, their only difference is how they look
- *  - `PLANT_CLOAK_WORMADAM`, `SANDY_CLOAK_WORMADAM`, and `TRASH_CLOAK_WORMADAM` listed while `WORMADAM` is not
- * because the Wormadam forms have different types, stats, and moves; their forms are permanent; and there is no base
- * Wormadam.
- */
-enum class Species : std::uint16_t {
-  // clang-format off
-  NO_SPECIES = 0, BULBASAUR, IVYSAUR, VENUSAUR, MEGA_VENUSAUR, GIGANTAMAX_VENUSAUR, CHARMANDER, CHARMELEON, CHARIZARD, MEGA_CHARIZARD_X, MEGA_CHARIZARD_Y, GIGANTAMAX_CHARIZARD, SQUIRTLE, WARTORTLE, BLASTOISE, MEGA_BLASTOISE, GIGANTAMAX_BLASTOISE, CATERPIE, METAPOD, BUTTERFREE, GIGANTAMAX_BUTTERFREE, WEEDLE, KAKUNA, BEEDRILL, MEGA_BEEDRILL, PIDGEY, PIDGEOTTO, PIDGEOT, MEGA_PIDGEOT, RATTATA, ALOLAN_RATTATA, RATICATE, ALOLAN_RATICATE, TOTEM_ALOLAN_RATICATE, SPEAROW, FEAROW, EKANS, ARBOK, PIKACHU, COSPLAY_PIKACHU, PIKACHU_ROCK_STAR, PIKACHU_BELLE, PIKACHU_POP_STAR, PIKACHU_PHD, PIKACHU_LIBRE, ORIGINAL_CAP_PIKACHU, HOENN_CAP_PIKACHU, SINNOH_CAP_PIKACHU, UNOVA_CAP_PIKACHU, KALOS_CAP_PIKACHU, ALOLA_CAP_PIKACHU, PARTNER_CAP_PIKACHU, STARTER_PIKACHU, GIGANTAMAX_PIKACHU, WORLD_CAP_PIKACHU, RAICHU, ALOLAN_RAICHU, SANDSHREW, ALOLAN_SANDSHREW, SANDSLASH, ALOLAN_SANDSLASH, NIDORAN_FEMALE, NIDORINA, NIDOQUEEN, NIDORAN_MALE, NIDORINO, NIDOKING, CLEFAIRY, CLEFABLE, VULPIX, ALOLAN_VULPIX, NINETALES, ALOLAN_NINETALES, JIGGLYPUFF, WIGGLYTUFF, ZUBAT, GOLBAT, ODDISH, GLOOM, VILEPLUME, PARAS, PARASECT, VENONAT, VENOMOTH, DIGLETT, ALOLAN_DIGLETT, DUGTRIO, ALOLAN_DUGTRIO, MEOWTH, ALOLAN_MEOWTH, GALARIAN_MEOWTH, GIGANTAMAX_MEOWTH, PERSIAN, ALOLAN_PERSIAN, PSYDUCK, GOLDUCK, MANKEY, PRIMEAPE, HISUIAN_GROWLITHE, GROWLITHE, HISUIAN_ARCANINE, ARCANINE, POLIWAG, POLIWHIRL, POLIWRATH, ABRA, KADABRA, ALAKAZAM, MEGA_ALAKAZAM, MACHOP, MACHOKE, MACHAMP, GIGANTAMAX_MACHAMP, BELLSPROUT, WEEPINBELL, VICTREEBEL, TENTACOOL, TENTACRUEL, GEODUDE, ALOLAN_GEODUDE, GRAVELER, ALOLAN_GRAVELER, GOLEM, ALOLAN_GOLEM, PONYTA, GALARIAN_PONYTA, RAPIDASH, GALARIAN_RAPIDASH, SLOWPOKE, GALARIAN_SLOWPOKE, SLOWBRO, MEGA_SLOWBRO, GALARIAN_SLOWBRO, MAGNEMITE, MAGNETON, FARFETCH_D, GALARIAN_FARFETCH_D, DODUO, DODRIO, SEEL, DEWGONG, GRIMER, ALOLAN_GRIMER, MUK, ALOLAN_MUK, SHELLDER, CLOYSTER, GASTLY, HAUNTER, GENGAR, MEGA_GENGAR, GIGANTAMAX_GENGAR, ONIX, DROWZEE, HYPNO, KRABBY, KINGLER, GIGANTAMAX_KINGLER, VOLTORB, HISUIAN_VOLTORB, ELECTRODE, HISUIAN_ELECTRODE, EXEGGCUTE, EXEGGUTOR, ALOLAN_EXEGGUTOR, CUBONE, MAROWAK, ALOLAN_MAROWAK, TOTEM_ALOLAN_MAROWAK, HITMONLEE, HITMONCHAN, LICKITUNG, KOFFING, WEEZING, GALARIAN_WEEZING, RHYHORN, RHYDON, CHANSEY, TANGELA, KANGASKHAN, MEGA_KANGASKHAN, HORSEA, SEADRA, GOLDEEN, SEAKING, STARYU, STARMIE, MR_MIME, GALARIAN_MR_MIME, SCYTHER, JYNX, ELECTABUZZ, MAGMAR, PINSIR, MEGA_PINSIR, TAUROS, PALDEAN_TAUROS_COMBAT_BREAD, PALDEAN_TAUROS_BLAZE_BREAD, PALDEAN_TAUROS_AQUA_BREAD, MAGIKARP, GYARADOS, MEGA_GYARADOS, LAPRAS, GIGANTAMAX_LAPRAS, DITTO, EEVEE, STARTER_EEVEE, GIGANTAMAX_EEVEE, VAPOREON, JOLTEON, FLAREON, PORYGON, OMANYTE, OMASTAR, KABUTO, KABUTOPS, AERODACTYL, MEGA_AERODACTYL, SNORLAX, GIGANTAMAX_SNORLAX, ARTICUNO, GALARIAN_ARTICUNO, ZAPDOS, GALARIAN_ZAPDOS, MOLTRES, GALARIAN_MOLTRES, DRATINI, DRAGONAIR, DRAGONITE, MEWTWO, MEGA_MEWTWO_X, MEGA_MEWTWO_Y, MEW, CHIKORITA, BAYLEEF, MEGANIUM, CYNDAQUIL, QUILAVA, HISUIAN_TYPHLOSION, TYPHLOSION, TOTODILE, CROCONAW, FERALIGATR, SENTRET, FURRET, HOOTHOOT, NOCTOWL, LEDYBA, LEDIAN, SPINARAK, ARIADOS, CROBAT, CHINCHOU, LANTURN, PICHU, SPIKY_EARED_PICHU, CLEFFA, IGGLYBUFF, TOGEPI, TOGETIC, NATU, XATU, MAREEP, FLAAFFY, AMPHAROS, MEGA_AMPHAROS, BELLOSSOM, MARILL, AZUMARILL, SUDOWOODO, POLITOED, HOPPIP, SKIPLOOM, JUMPLUFF, AIPOM, SUNKERN, SUNFLORA, YANMA, WOOPER, PALDEAN_WOOPER, QUAGSIRE, ESPEON, UMBREON, MURKROW, SLOWKING, GALARIAN_SLOWKING, MISDREAVUS, UNOWN, UNOWN_A, UNOWN_B, UNOWN_C, UNOWN_D, UNOWN_E, UNOWN_F, UNOWN_G, UNOWN_H, UNOWN_I, UNOWN_J, UNOWN_K, UNOWN_L, UNOWN_M, UNOWN_N, UNOWN_O, UNOWN_P, UNOWN_Q, UNOWN_R, UNOWN_S, UNOWN_T, UNOWN_U, UNOWN_V, UNOWN_W, UNOWN_X, UNOWN_Y, UNOWN_Z, UNOWN_EXCLAMATION, UNOWN_QUESTION, WOBBUFFET, GIRAFARIG, PINECO, FORRETRESS, DUNSPARCE, GLIGAR, STEELIX, MEGA_STEELIX, SNUBBULL, GRANBULL, QWILFISH, HISUIAN_QWILFISH, SCIZOR, MEGA_SCIZOR, SHUCKLE, HERACROSS, MEGA_HERACROSS, HISUIAN_SNEASEL, SNEASEL, TEDDIURSA, URSARING, SLUGMA, MAGCARGO, SWINUB, PILOSWINE, CORSOLA, GALARIAN_CORSOLA, REMORAID, OCTILLERY, DELIBIRD, MANTINE, SKARMORY, HOUNDOUR, HOUNDOOM, MEGA_HOUNDOOM, KINGDRA, PHANPY, DONPHAN, PORYGON2, STANTLER, SMEARGLE, TYROGUE, HITMONTOP, SMOOCHUM, ELEKID, MAGBY, MILTANK, BLISSEY, RAIKOU, ENTEI, SUICUNE, LARVITAR, PUPITAR, TYRANITAR, MEGA_TYRANITAR, LUGIA, HO_OH, CELEBI, TREECKO, GROVYLE, SCEPTILE, MEGA_SCEPTILE, TORCHIC, COMBUSKEN, BLAZIKEN, MEGA_BLAZIKEN, MUDKIP, MARSHTOMP, SWAMPERT, MEGA_SWAMPERT, POOCHYENA, MIGHTYENA, ZIGZAGOON, GALARIAN_ZIGZAGOON, LINOONE, GALARIAN_LINOONE, WURMPLE, SILCOON, BEAUTIFLY, CASCOON, DUSTOX, LOTAD, LOMBRE, LUDICOLO, SEEDOT, NUZLEAF, SHIFTRY, TAILLOW, SWELLOW, WINGULL, PELIPPER, RALTS, KIRLIA, GARDEVOIR, MEGA_GARDEVOIR, SURSKIT, MASQUERAIN, SHROOMISH, BRELOOM, SLAKOTH, VIGOROTH, SLAKING, NINCADA, NINJASK, SHEDINJA, WHISMUR, LOUDRED, EXPLOUD, MAKUHITA, HARIYAMA, AZURILL, NOSEPASS, SKITTY, DELCATTY, SABLEYE, MEGA_SABLEYE, MAWILE, MEGA_MAWILE, ARON, LAIRON, AGGRON, MEGA_AGGRON, MEDITITE, MEDICHAM, MEGA_MEDICHAM, ELECTRIKE, MANECTRIC, MEGA_MANECTRIC, PLUSLE, MINUN, VOLBEAT, ILLUMISE, ROSELIA, GULPIN, SWALOT, CARVANHA, SHARPEDO, MEGA_SHARPEDO, WAILMER, WAILORD, NUMEL, CAMERUPT, MEGA_CAMERUPT, TORKOAL, SPOINK, GRUMPIG, SPINDA, TRAPINCH, VIBRAVA, FLYGON, CACNEA, CACTURNE, SWABLU, ALTARIA, MEGA_ALTARIA, ZANGOOSE, SEVIPER, LUNATONE, SOLROCK, BARBOACH, WHISCASH, CORPHISH, CRAWDAUNT, BALTOY, CLAYDOL, LILEEP, CRADILY, ANORITH, ARMALDO, FEEBAS, MILOTIC, CASTFORM, SUNNY_CASTFORM, RAINY_CASTFORM, SNOWY_CASTFORM, KECLEON, SHUPPET, BANETTE, MEGA_BANETTE, DUSKULL, DUSCLOPS, TROPIUS, CHIMECHO, ABSOL, MEGA_ABSOL, WYNAUT, SNORUNT, GLALIE, MEGA_GLALIE, SPHEAL, SEALEO, WALREIN, CLAMPERL, HUNTAIL, GOREBYSS, RELICANTH, LUVDISC, BAGON, SHELGON, SALAMENCE, MEGA_SALAMENCE, BELDUM, METANG, METAGROSS, MEGA_METAGROSS, REGIROCK, REGICE, REGISTEEL, LATIAS, MEGA_LATIAS, LATIOS, MEGA_LATIOS, KYOGRE, PRIMAL_KYOGRE, GROUDON, PRIMAL_GROUDON, RAYQUAZA, MEGA_RAYQUAZA, JIRACHI, DEOXYS, ATTACK_DEOXYS, DEFENSE_DEOXYS, SPEED_DEOXYS, TURTWIG, GROTLE, TORTERRA, CHIMCHAR, MONFERNO, INFERNAPE, PIPLUP, PRINPLUP, EMPOLEON, STARLY, STARAVIA, STARAPTOR, BIDOOF, BIBAREL, KRICKETOT, KRICKETUNE, SHINX, LUXIO, LUXRAY, BUDEW, ROSERADE, CRANIDOS, RAMPARDOS, SHIELDON, BASTIODON, BURMY, PLANT_CLOAK_BURMY, SANDY_CLOAK_BURMY, TRASH_CLOAK_BURMY, PLANT_CLOAK_WORMADAM, SANDY_CLOAK_WORMADAM, TRASH_CLOAK_WORMADAM, MOTHIM, COMBEE, VESPIQUEN, PACHIRISU, BUIZEL, FLOATZEL, CHERUBI, CHERRIM, CHERRIM_OVERCAST, CHERRIM_SUNSHINE, SHELLOS, WEST_SEA_SHELLOS, EAST_SEA_SHELLOS, GASTRODON, WEST_SEA_GASTRODON, EAST_SEA_GASTRODON, AMBIPOM, DRIFLOON, DRIFBLIM, BUNEARY, LOPUNNY, MEGA_LOPUNNY, MISMAGIUS, HONCHKROW, GLAMEOW, PURUGLY, CHINGLING, STUNKY, SKUNTANK, BRONZOR, BRONZONG, BONSLY, MIME_JR, HAPPINY, CHATOT, SPIRITOMB, GIBLE, GABITE, GARCHOMP, MEGA_GARCHOMP, MUNCHLAX, RIOLU, LUCARIO, MEGA_LUCARIO, HIPPOPOTAS, HIPPOWDON, SKORUPI, DRAPION, CROAGUNK, TOXICROAK, CARNIVINE, FINNEON, LUMINEON, MANTYKE, SNOVER, ABOMASNOW, MEGA_ABOMASNOW, WEAVILE, MAGNEZONE, LICKILICKY, RHYPERIOR, TANGROWTH, ELECTIVIRE, MAGMORTAR, TOGEKISS, YANMEGA, LEAFEON, GLACEON, GLISCOR, MAMOSWINE, PORYGON_Z, GALLADE, MEGA_GALLADE, PROBOPASS, DUSKNOIR, FROSLASS, ROTOM, HEAT_ROTOM, WASH_ROTOM, FROST_ROTOM, FAN_ROTOM, MOW_ROTOM, UXIE, MESPRIT, AZELF, DIALGA, DIALGA_ORIGIN, PALKIA, PALKIA_ORIGIN, HEATRAN, REGIGIGAS, GIRATINA_ALTERED, GIRATINA_ORIGIN, CRESSELIA, PHIONE, MANAPHY, DARKRAI, SHAYMIN, SHAYMIN_LAND, SHAYMIN_SKY, ARCEUS, ARCEUS_BUG, ARCEUS_DARK, ARCEUS_DRAGON, ARCEUS_ELECTRIC, ARCEUS_FAIRY, ARCEUS_FIGHTING, ARCEUS_FIRE, ARCEUS_FLYING, ARCEUS_GHOST, ARCEUS_GRASS, ARCEUS_GROUND, ARCEUS_ICE, ARCEUS_POISON, ARCEUS_PSYCHIC, ARCEUS_ROCK, ARCEUS_STEEL, ARCEUS_WATER, VICTINI, SNIVY, SERVINE, SERPERIOR, TEPIG, PIGNITE, EMBOAR, OSHAWOTT, DEWOTT, HISUIAN_SAMUROTT, SAMUROTT, PATRAT, WATCHOG, LILLIPUP, HERDIER, STOUTLAND, PURRLOIN, LIEPARD, PANSAGE, SIMISAGE, PANSEAR, SIMISEAR, PANPOUR, SIMIPOUR, MUNNA, MUSHARNA, PIDOVE, TRANQUILL, UNFEZANT, BLITZLE, ZEBSTRIKA, ROGGENROLA, BOLDORE, GIGALITH, WOOBAT, SWOOBAT, DRILBUR, EXCADRILL, AUDINO, MEGA_AUDINO, TIMBURR, GURDURR, CONKELDURR, TYMPOLE, PALPITOAD, SEISMITOAD, THROH, SAWK, SEWADDLE, SWADLOON, LEAVANNY, VENIPEDE, WHIRLIPEDE, SCOLIPEDE, COTTONEE, WHIMSICOTT, PETILIL, LILLIGANT, HISUIAN_LILLIGANT, RED_STRIPED_BASCULIN, BLUE_STRIPED_BASCULIN, WHITE_STRIPED_BASCULIN, SANDILE, KROKOROK, KROOKODILE, DARUMAKA, GALARIAN_DARUMAKA, DARMANITAN, ZEN_MODE_DARMANITAN, GALARIAN_DARMANITAN, GALARIAN_ZEN_MODE_DARMANITAN, MARACTUS, DWEBBLE, CRUSTLE, SCRAGGY, SCRAFTY, SIGILYPH, YAMASK, GALARIAN_YAMASK, COFAGRIGUS, TIRTOUGA, CARRACOSTA, ARCHEN, ARCHEOPS, TRUBBISH, GARBODOR, GIGANTAMAX_GARBODOR, ZORUA, HISUIAN_ZORUA, HISUIAN_ZOROARK, ZOROARK, MINCCINO, CINCCINO, GOTHITA, GOTHORITA, GOTHITELLE, SOLOSIS, DUOSION, REUNICLUS, DUCKLETT, SWANNA, VANILLITE, VANILLISH, VANILLUXE, DEERLING, DEERLING_SPRING, DEERLING_SUMMER, DEERLING_AUTUMN, DEERLING_WINTER, SAWSBUCK, SAWSBUCK_SPRING, SAWSBUCK_SUMMER, SAWSBUCK_AUTUMN, SAWSBUCK_WINTER, EMOLGA, KARRABLAST, ESCAVALIER, FOONGUS, AMOONGUSS, FRILLISH, JELLICENT, ALOMOMOLA, JOLTIK, GALVANTULA, FERROSEED, FERROTHORN, KLINK, KLANG, KLINKLANG, TYNAMO, EELEKTRIK, EELEKTROSS, ELGYEM, BEHEEYEM, LITWICK, LAMPENT, CHANDELURE, AXEW, FRAXURE, HAXORUS, CUBCHOO, BEARTIC, CRYOGONAL, SHELMET, ACCELGOR, STUNFISK, GALARIAN_STUNFISK, MIENFOO, MIENSHAO, DRUDDIGON, GOLETT, GOLURK, PAWNIARD, BISHARP, BOUFFALANT, RUFFLET, HISUIAN_BRAVIARY, BRAVIARY, VULLABY, MANDIBUZZ, HEATMOR, DURANT, DEINO, ZWEILOUS, HYDREIGON, LARVESTA, VOLCARONA, COBALION, TERRAKION, VIRIZION, INCARNATE_TORNADUS, TORNADUS_THERIAN, INCARNATE_THUNDURUS, THUNDURUS_THERIAN, RESHIRAM, ZEKROM, INCARNATE_LANDORUS, LANDORUS_THERIAN, KYUREM, BLACK_KYUREM, WHITE_KYUREM, KELDEO, RESOLUTE_KELDEO, ARIA_MELOETTA, PIROUETTE_MELOETTA, GENESECT, DOUSE_DRIVE_GENESECT, SHOCK_DRIVE_GENESECT, BURN_DRIVE_GENESECT, CHILL_DRIVE_GENESECT, CHESPIN, QUILLADIN, CHESNAUGHT, FENNEKIN, BRAIXEN, DELPHOX, FROAKIE, FROGADIER, GRENINJA, ASH_GRENINJA, BUNNELBY, DIGGERSBY, FLETCHLING, FLETCHINDER, TALONFLAME, SCATTERBUG, SPEWPA, VIVILLON, MEADOW_PATTERN_VIVILLON, ARCHIPELAGO_PATTERN_VIVILLON, CONTINENTAL_PATTERN_VIVILLON, ELEGANT_PATTERN_VIVILLON, GARDEN_PATTERN_VIVILLON, HIGH_PLAINS_PATTERN_VIVILLON, ICY_SNOW_PATTERN_VIVILLON, JUNGLE_PATTERN_VIVILLON, MARINE_PATTERN_VIVILLON, MODERN_PATTERN_VIVILLON, MONSOON_PATTERN_VIVILLON, OCEAN_PATTERN_VIVILLON, POLAR_PATTERN_VIVILLON, RIVER_PATTERN_VIVILLON, SANDSTORM_PATTERN_VIVILLON, SAVANNA_PATTERN_VIVILLON, SUN_PATTERN_VIVILLON, TUNDRA_PATTERN_VIVILLON, FANCY_PATTERN_VIVILLON, POKEBALL_PATTERN_VIVILLON, LITLEO, PYROAR, FLABEBE, RED_FLOWER_FLABEBE, BLUE_FLOWER_FLABEBE, ORANGE_FLOWER_FLABEBE, WHITE_FLOWER_FLABEBE, YELLOW_FLOWER_FLABEBE, FLOETTE, RED_FLOWER_FLOETTE, BLUE_FLOWER_FLOETTE, ORANGE_FLOWER_FLOETTE, WHITE_FLOWER_FLOETTE, YELLOW_FLOWER_FLOETTE, ETERNAL_FLOWER_FLOETTE, FLORGES, RED_FLOWER_FLORGES, BLUE_FLOWER_FLORGES, ORANGE_FLOWER_FLORGES, WHITE_FLOWER_FLORGES, YELLOW_FLOWER_FLORGES, SKIDDO, GOGOAT, PANCHAM, PANGORO, FURFROU, NATURAL_FURFROU, DANDY_TRIM_FURFROU, DEBUTANTE_TRIM_FURFROU, DIAMOND_TRIM_FURFROU, HEART_TRIM_FURFROU, KABUKI_TRIM_FURFROU, LA_REINE_TRIM_FURFROU, MATRON_TRIM_FURFROU, PHARAOH_TRIM_FURFROU, STAR_TRIM_FURFROU, ESPURR, MALE_MEOWSTIC, FEMALE_MEOWSTIC, HONEDGE, DOUBLADE, AEGISLASH, SHIELD_AEGISLASH, BLADE_AEGISLASH, SPRITZEE, AROMATISSE, SWIRLIX, SLURPUFF, INKAY, MALAMAR, BINACLE, BARBARACLE, SKRELP, DRAGALGE, CLAUNCHER, CLAWITZER, HELIOPTILE, HELIOLISK, TYRUNT, TYRANTRUM, AMAURA, AURORUS, SYLVEON, HAWLUCHA, DEDENNE, CARBINK, GOOMY, HISUIAN_SLIGGOO, SLIGGOO, HISUIAN_GOODRA, GOODRA, KLEFKI, PHANTUMP, TREVENANT, AVERAGE_SIZE_PUMPKABOO, SMALL_SIZE_PUMPKABOO, LARGE_SIZE_PUMPKABOO, SUPER_SIZE_PUMPKABOO, AVERAGE_SIZE_GOURGEIST, SMALL_SIZE_GOURGEIST, LARGE_SIZE_GOURGEIST, SUPER_SIZE_GOURGEIST, BERGMITE, AVALUGG, HISUIAN_AVALUGG, NOIBAT, NOIVERN, XERNEAS, YVELTAL, ZYGARDE_50, ZYGARDE_10, ZYGARDE_COMPLETE, DIANCIE, MEGA_DIANCIE, HOOPA_CONFINED, HOOPA_UNBOUND, VOLCANION, ROWLET, DARTRIX, HISUIAN_DECIDUEYE, DECIDUEYE, LITTEN, TORRACAT, INCINEROAR, POPPLIO, BRIONNE, PRIMARINA, PIKIPEK, TRUMBEAK, TOUCANNON, YUNGOOS, GUMSHOOS, TOTEM_GUMSHOOS, GRUBBIN, CHARJABUG, VIKAVOLT, TOTEM_VIKAVOLT, CRABRAWLER, CRABOMINABLE, BAILE_STYLE_ORICORIO, POM_POM_STYLE_ORICORIO, PA_U_STYLE_ORICORIO, SENSU_STYLE_ORICORIO, CUTIEFLY, RIBOMBEE, TOTEM_RIBOMBEE, ROCKRUFF, MIDDAY_ROCKRUFF, MIDDAY_LYCANROC, MIDNIGHT_LYCANROC, DUSK_LYCANROC, WISHIWASHI, SOLO_WISHIWASHI, SCHOOL_WISHIWASHI, MAREANIE, TOXAPEX, MUDBRAY, MUDSDALE, DEWPIDER, ARAQUANID, TOTEM_ARAQUANID, FOMANTIS, LURANTIS, TOTEM_LURANTIS, MORELULL, SHIINOTIC, SALANDIT, SALAZZLE, TOTEM_SALAZZLE, STUFFUL, BEWEAR, BOUNSWEET, STEENEE, TSAREENA, COMFEY, ORANGURU, PASSIMIAN, WIMPOD, GOLISOPOD, SANDYGAST, PALOSSAND, PYUKUMUKU, TYPE_NULL, SILVALLY, SILVALLY_BUG, SILVALLY_DARK, SILVALLY_DRAGON, SILVALLY_ELECTRIC, SILVALLY_FAIRY, SILVALLY_FIGHTING, SILVALLY_FIRE, SILVALLY_FLYING, SILVALLY_GHOST, SILVALLY_GRASS, SILVALLY_GROUND, SILVALLY_ICE, SILVALLY_POISON, SILVALLY_PSYCHIC, SILVALLY_ROCK, SILVALLY_STEEL, SILVALLY_WATER, MINIOR, CORE_MINIOR, RED_CORE_MINIOR, ORANGE_CORE_MINIOR, YELLOW_CORE_MINIOR, GREEN_CORE_MINIOR, BLUE_CORE_MINIOR, INDIGO_CORE_MINIOR, VIOLET_CORE_MINIOR, METEOR_MINIOR, KOMALA, TURTONATOR, TOGEDEMARU, TOTEM_TOGEDEMARU, MIMIKYU, MIMIKYU_BUSTED, TOTEM_MIMIKYU, BUSTED_TOTEM_MIMIKYU, BRUXISH, DRAMPA, DHELMISE, JANGMO_O, HAKAMO_O, KOMMO_O, TOTEM_KOMMO_O, TAPU_KOKO, TAPU_LELE, TAPU_BULU, TAPU_FINI, COSMOG, COSMOEM, SOLGALEO, LUNALA, NIHILEGO, BUZZWOLE, PHEROMOSA, XURKITREE, CELESTEELA, KARTANA, GUZZLORD, NECROZMA, DUSK_MANE_NECROZMA, DAWN_WINGS_NECROZMA, ULTRA_NECROZMA, MAGEARNA, ORIGINAL_COLOR_MAGEARNA, MARSHADOW, POIPOLE, NAGANADEL, STAKATAKA, BLACEPHALON, ZERAORA, MELTAN, MELMETAL, GIGANTAMAX_MELMETAL, GROOKEY, THWACKEY, RILLABOOM, GIGANTAMAX_RILLABOOM, SCORBUNNY, RABOOT, CINDERACE, GIGANTAMAX_CINDERACE, SOBBLE, DRIZZILE, INTELEON, GIGANTAMAX_INTELEON, SKWOVET, GREEDENT, ROOKIDEE, CORVISQUIRE, CORVIKNIGHT, GIGANTAMAX_CORVIKNIGHT, BLIPBUG, DOTTLER, ORBEETLE, GIGANTAMAX_ORBEETLE, NICKIT, THIEVUL, GOSSIFLEUR, ELDEGOSS, WOOLOO, DUBWOOL, CHEWTLE, DREDNAW, GIGANTAMAX_DREDNAW, YAMPER, BOLTUND, ROLYCOLY, CARKOL, COALOSSAL, GIGANTAMAX_COALOSSAL, APPLIN, FLAPPLE, GIGANTAMAX_FLAPPLE, APPLETUN, GIGANTAMAX_APPLETUN, SILICOBRA, SANDACONDA, GIGANTAMAX_SANDACONDA, CRAMORANT, CRAMORANT_GULPING, CRAMORANT_GORGING, ARROKUDA, BARRASKEWDA, TOXEL, TOXTRICITY_AMPED, TOXTRICITY_LOW_KEY, GIGANTAMAX_TOXTRICITY_AMPED, GIGANTAMAX_TOXTRICITY_LOW_KEY, SIZZLIPEDE, CENTISKORCH, GIGANTAMAX_CENTISKORCH, CLOBBOPUS, GRAPPLOCT, SINISTEA, ANTIQUE_SINISTEA, POLTEAGEIST, ANTIQUE_POLTEAGEIST, HATENNA, HATTREM, HATTERENE, GIGANTAMAX_HATTERENE, IMPIDIMP, MORGREM, GRIMMSNARL, GIGANTAMAX_GRIMMSNARL, OBSTAGOON, PERRSERKER, CURSOLA, SIRFETCH_D, MR_RIME, RUNERIGUS, MILCERY, ALCREMIE, VANILLA_CREAM_ALCREMIE, RUBY_CREAM_ALCREMIE, MATCHA_CREAM_ALCREMIE, MINT_CREAM_ALCREMIE, LEMON_CREAM_ALCREMIE, SALTED_CREAM_ALCREMIE, RUBY_SWIRL_ALCREMIE, CARAMEL_SWIRL_ALCREMIE, RAINBOW_SWIRL_ALCREMIE, GIGANTAMAX_ALCREMIE, FALINKS, PINCURCHIN, SNOM, FROSMOTH, STONJOURNER, EISCUE, ICE_FACE_EISCUE, NOICE_FACE_EISCUE, MALE_INDEEDEE, FEMALE_INDEEDEE, MORPEKO, FULL_BELLY_MODE_MORPEKO, HANGRY_MODE_MORPEKO, CUFANT, COPPERAJAH, GIGANTAMAX_COPPERAJAH, DRACOZOLT, ARCTOZOLT, DRACOVISH, ARCTOVISH, DURALUDON, GIGANTAMAX_DURALUDON, DREEPY, DRAKLOAK, DRAGAPULT, HERO_OF_MANY_BATTLES_ZACIAN, CROWNED_SWORD_ZACIAN, HERO_OF_MANY_BATTLES_ZAMAZENTA, CROWNED_SHIELD_ZAMAZENTA, ETERNATUS, ETERNAMAX_ETERNATUS, KUBFU, SINGLE_STRIKE_STYLE_URSHIFU, RAPID_STRIKE_STYLE_URSHIFU, GIGANTAMAX_SINGLE_STRIKE_STYLE_URSHIFU, GIGANTAMAX_RAPID_STRIKE_STYLE_URSHIFU, ZARUDE, DADA_ZARUDE, REGIELEKI, REGIDRAGO, GLASTRIER, SPECTRIER, CALYREX, ICE_RIDER_CALYREX, SHADOW_RIDER_CALYREX, WYRDEER, KLEAVOR, URSALUNA, MALE_BASCULEGION, FEMALE_BASCULEGION, SNEASLER, OVERQWIL, INCARNATE_ENAMORUS, ENAMORUS_THERIAN, SPRIGATITO, FLORAGATO, MEOWSCARADA, FUECOCO, CROCALOR, SKELEDIRGE, QUAXLY, QUAXWELL, QUAQUAVAL, LECHONK, MALE_OINKOLOGNE, FEMALE_OINKOLOGNE, TAROUNTULA, SPIDOPS, NYMBLE, LOKIX, PAWMI, PAWMO, PAWMOT, TANDEMAUS, MAUSHOLD, FAMILY_OF_THREE_MAUSHOLD, FAMILY_OF_FOUR_MAUSHOLD, FIDOUGH, DACHSBUN, SMOLIV, DOLLIV, ARBOLIVA, GREEN_PLUMAGE_SQUAWKABILLY, BLUE_PLUMAGE_SQUAWKABILLY, YELLOW_PLUMAGE_SQUAWKABILLY, WHITE_PLUMAGE_SQUAWKABILLY, NACLI, NACLSTACK, GARGANACL, CHARCADET, ARMAROUGE, CERULEDGE, TADBULB, BELLIBOLT, WATTREL, KILOWATTREL, MASCHIFF, MABOSSTIFF, SHROODLE, GRAFAIAI, BRAMBLIN, BRAMBLEGHAST, TOEDSCOOL, TOEDSCRUEL, KLAWF, CAPSAKID, SCOVILLAIN, RELLOR, RABSCA, FLITTLE, ESPATHRA, TINKATINK, TINKATUFF, TINKATON, WIGLETT, WUGTRIO, BOMBIRDIER, FINIZEN, ZERO_PALAFIN, HERO_PALAFIN, VAROOM, REVAVROOM, CYCLIZAR, ORTHWORM, GLIMMET, GLIMMORA, GREAVARD, HOUNDSTONE, FLAMIGO, CETODDLE, CETITAN, VELUZA, DONDOZO, TATSUGIRI, CURLY_TATSUGIRI, DROOPY_TATSUGIRI, STRETCHY_TATSUGIRI, ANNIHILAPE, CLODSIRE, FARIGIRAF, DUDUNSPARCE, TWO_SEGMENT_DUDUNSPARCE, THREE_SEGMENT_DUDUNSPARCE, KINGAMBIT, GREAT_TUSK, SCREAM_TAIL, BRUTE_BONNET, FLUTTER_MANE, SLITHER_WING, SANDY_SHOCKS, IRON_TREADS, IRON_BUNDLE, IRON_HANDS, IRON_JUGULIS, IRON_MOTH, IRON_THORNS, FRIGIBAX, ARCTIBAX, BAXCALIBUR, CHEST_GIMMIGHOUL, ROAMING_GIMMIGHOUL, GHOLDENGO, WO_CHIEN, CHIEN_PAO, TING_LU, CHI_YU, ROARING_MOON, IRON_VALIANT, KORAIDON, MIRAIDON, WALKING_WAKE, IRON_LEAVES, SPECIES_TOTAL
-  // clang-format on
-};
-
-static constexpr std::uint16_t TOTAL_SPECIES_COUNT = (std::uint16_t)Species::SPECIES_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Species.hpp //////////////////////
 
 /////////////// START OF src/Battle/Setup/PokemonStateSetup.hpp ////////////////
 
@@ -19101,22 +22474,6 @@ inline void enumToTag(dex::Status status, types::handle& handle);
 
 //////////////////// END OF src/Battle/Setup/EnumToTag.hpp /////////////////////
 
-///////////////////////// START OF src/Types/Move.hpp //////////////////////////
-
-namespace pokesim::types {
-using pp = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::MOVE_MAX_PP>;
-using basePower = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::MOVE_BASE_POWER>;
-using baseAccuracy = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::MOVE_BASE_ACCURACY>;
-using moveHits = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::MOVE_HITS>;
-using baseEffectChance = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::MOVE_BASE_EFFECT_CHANCE>;
-
-using priority = pokesim::internal::signedIntType<
-  MechanicConstants::MaxValues::MOVE_PRIORITY, MechanicConstants::MinValues::MOVE_PRIORITY>;
-using fractionalPriority = bool;
-}  // namespace pokesim::types
-
-////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
-
 ///////////////// START OF src/Battle/Setup/MoveStateSetup.hpp /////////////////
 
 namespace pokesim {
@@ -19139,20 +22496,6 @@ struct MoveStateSetup : internal::StateSetupBase {
 }  // namespace pokesim
 
 ////////////////// END OF src/Battle/Setup/MoveStateSetup.hpp //////////////////
-
-////////////////// START OF src/Types/Enums/PlayerSideId.hpp ///////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-enum class PlayerSideId : std::uint8_t {
-  NONE = 0,
-  P1 = 1,
-  P2 = 2,
-};
-}
-
-/////////////////// END OF src/Types/Enums/PlayerSideId.hpp ////////////////////
 
 ///////////////// START OF src/Battle/Setup/SideStateSetup.hpp /////////////////
 
@@ -19207,242 +22550,6 @@ struct InputSetup {
 }  // namespace pokesim
 
 ///////////// END OF src/CalcDamage/Setup/CalcDamageInputSetup.hpp /////////////
-
-////////////// START OF src/Components/EntityHolders/Current.hpp ///////////////
-
-#include <vector>
-
-namespace pokesim {
-struct CurrentAction {
-  types::entity val{};
-};
-
-struct NextAction {
-  types::entity val{};
-};
-
-struct CurrentActionTargets {
-  types::targets<types::entity> val{};
-  const types::entity& only() const {
-    POKESIM_REQUIRE(
-      val.size() == 1,
-      "This method is supposed to get the first target when there's only one target stored.");
-    return val[0];
-  };
-};
-
-struct CurrentActionSource {
-  types::entity val{};
-};
-
-struct CurrentActionMoves {
-  types::entityVector val{};
-};
-
-struct CurrentActionMoveSlot {
-  types::entity val{};
-};
-}  // namespace pokesim
-
-/////////////// END OF src/Components/EntityHolders/Current.hpp ////////////////
-
-/////////////////// START OF src/Components/Tags/Current.hpp ///////////////////
-
-namespace pokesim::tags {
-// Current Action Tag: The move that is being processed by the simulator
-struct CurrentActionMove {};
-// Current Action Tag: The move slot the current action's move was chosen and will deduct PP from
-struct CurrentActionMoveSlot {};
-// Current Action Tag: The target of the active move
-struct CurrentActionMoveTarget {};
-// Current Action Tag: The user of the active move
-struct CurrentActionMoveSource {};
-}  // namespace pokesim::tags
-
-//////////////////// END OF src/Components/Tags/Current.hpp ////////////////////
-
-//////////////// START OF src/Components/CalcDamage/Aliases.hpp ////////////////
-
-namespace pokesim::calc_damage {
-using Attacker = CurrentActionSource;
-using Defenders = CurrentActionTargets;
-using UsedMoves = CurrentActionMoves;
-
-namespace tags {
-using Attacker = pokesim::tags::CurrentActionMoveSource;
-using Defender = pokesim::tags::CurrentActionMoveTarget;
-using UsedMove = pokesim::tags::CurrentActionMove;
-}  // namespace tags
-}  // namespace pokesim::calc_damage
-
-///////////////// END OF src/Components/CalcDamage/Aliases.hpp /////////////////
-
-///////////////// START OF src/Components/CloneFromCloneTo.hpp /////////////////
-
-namespace pokesim {
-namespace tags {
-struct CloneFrom {};
-struct CloneToRemove {};
-}  // namespace tags
-
-struct CloneTo {
-  types::cloneIndex val{};
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Components/CloneFromCloneTo.hpp //////////////////
-
-//////////////////// START OF src/Components/Decisions.hpp /////////////////////
-
-#include <optional>
-
-namespace pokesim {
-struct SlotDecision {
-  Slot sourceSlot = Slot::NONE;
-  Slot targetSlot = Slot::NONE;
-
-  bool megaEvolve = false;
-  bool primalRevert = false;
-  bool dynamax = false;
-  bool terastallize = false;
-
-  std::optional<dex::Move> moveChoice = std::nullopt;
-  std::optional<dex::Item> itemChoice = std::nullopt;
-
-  bool operator==(const SlotDecision& other) const {
-    return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot && megaEvolve == other.megaEvolve &&
-           primalRevert == other.primalRevert && dynamax == other.dynamax && terastallize == other.terastallize &&
-           moveChoice == other.moveChoice && itemChoice == other.itemChoice;
-  }
-};
-
-namespace types {
-using slotDecisions = types::sideSlots<SlotDecision>;
-}
-
-struct SideDecision {
-  PlayerSideId sideId = PlayerSideId::NONE;
-  internal::variant<types::slotDecisions, types::teamOrder> decisions{};
-
-  bool operator==(const SideDecision other) const { return sideId == other.sideId && decisions == other.decisions; }
-};
-}  // namespace pokesim
-
-///////////////////// END OF src/Components/Decisions.hpp //////////////////////
-
-//////////// START OF src/Components/EntityHolders/ActionQueue.hpp /////////////
-
-#include <vector>
-
-namespace pokesim {
-// Contains the list of action entities queued up to be simulated for a battle's current turn.
-struct ActionQueue {
-  internal::maxSizedVector<types::entity, MechanicConstants::MaxValues::ACTION_QUEUE_LENGTH> val{};
-};
-}  // namespace pokesim
-
-///////////// END OF src/Components/EntityHolders/ActionQueue.hpp //////////////
-
-//////////////// START OF src/Components/EntityHolders/Side.hpp ////////////////
-
-namespace pokesim {
-// Contains the entity pointing to the player 1 or player 2 side of a battle.
-struct Side {
-  types::entity val{};
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/EntityHolders/Side.hpp /////////////////
-
-/////////////// START OF src/Components/EntityHolders/Sides.hpp ////////////////
-
-#include <array>
-
-namespace pokesim {
-// Contains the entities pointing to the two sides of a battle.
-struct Sides {
-  std::array<types::entity, MechanicConstants::SIDE_COUNT> val{};
-
-  constexpr types::entity& p1() { return val[0]; };
-  constexpr types::entity& p2() { return val[1]; };
-  constexpr const types::entity& p1() const { return val[0]; };
-  constexpr const types::entity& p2() const { return val[1]; };
-};
-}  // namespace pokesim
-
-//////////////// END OF src/Components/EntityHolders/Sides.hpp /////////////////
-
-///////////////// START OF src/Components/Tags/PokemonTags.hpp /////////////////
-
-namespace pokesim::tags {
-struct Pokemon {};
-
-// Indicates the Pokemon is currently in a battle
-struct ActivePokemon {};
-
-struct AtkStatUpdateRequired {};
-struct DefStatUpdateRequired {};
-struct SpdStatUpdateRequired {};
-struct SpaStatUpdateRequired {};
-struct SpeStatUpdateRequired {};
-
-struct Fainted {};
-}  // namespace pokesim::tags
-
-////////////////// END OF src/Components/Tags/PokemonTags.hpp //////////////////
-
-/////////////// START OF src/Components/Tags/SimulationTags.hpp ////////////////
-
-namespace pokesim::tags {
-struct SimulateTurn {};
-struct CalculateDamage {};
-struct AnalyzeEffect {};
-}  // namespace pokesim::tags
-
-//////////////// END OF src/Components/Tags/SimulationTags.hpp /////////////////
-
-///////////// START OF src/Components/EntityHolders/MoveEffect.hpp /////////////
-
-namespace pokesim {
-// Contains the entity of what the primary or secondary effect of a move does.
-struct MoveEffect {
-  bool primary = true;
-  types::entity val{};
-};
-}  // namespace pokesim
-
-////////////// END OF src/Components/EntityHolders/MoveEffect.hpp //////////////
-
-////////////////// START OF src/Types/Enums/GameMechanics.hpp //////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-// Game the simulator is imitating the mechanics of
-enum class GameMechanics : std::uint8_t {
-  NONE = 0,
-  SWORD_SHIELD,
-  BRILLIANT_DIAMOND_SHINING_PEARL,
-  SCARLET_VIOLET,
-};
-}  // namespace pokesim
-
-/////////////////// END OF src/Types/Enums/GameMechanics.hpp ///////////////////
-
-//////////////// START OF src/Types/Enums/TypeEffectiveness.hpp ////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-enum class TypeEffectiveness : std::uint8_t {
-  IMMUNE,
-  NOT_VERY_EFFECTIVE,
-  NEUTRAL,
-  SUPER_EFFECTIVE,
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Types/Enums/TypeEffectiveness.hpp /////////////////
 
 ////////////////////// START OF src/Pokedex/TypeChart.hpp //////////////////////
 
@@ -19698,138 +22805,6 @@ struct TypeChart : private TypeChartBase {
 
 /////////////////////// END OF src/Pokedex/TypeChart.hpp ///////////////////////
 
-/////////////////// START OF src/Types/Enums/ActionOrder.hpp ///////////////////
-
-#include <cstdint>
-#include <limits>
-#include <type_traits>
-
-namespace pokesim {
-enum class ActionOrder : std::uint8_t {
-  NONE = std::numeric_limits<std::underlying_type_t<ActionOrder>>::max(),
-  TEAM = 1,
-  START = 2,
-  BEFORE_TURN = 4,
-  ITEM = BEFORE_TURN,
-
-  SWITCH = 103,
-
-  MOVE = 200,
-
-  RESIDUAL = 254,
-};
-}
-
-//////////////////// END OF src/Types/Enums/ActionOrder.hpp ////////////////////
-
-////////////////// START OF src/Types/Enums/AddedTargets.hpp ///////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-enum class AddedTargetOptions : std::uint8_t {
-  NONE = 0b00000000,
-  TARGET_ALLY = 0b00000001,
-  USER_ALLY = 0b00000010,
-  TARGET_SIDE = 0b00000100,
-  USER_SIDE = 0b00001000,
-  FIELD = 0b00010000,
-};
-}
-
-/////////////////// END OF src/Types/Enums/AddedTargets.hpp ////////////////////
-
-////////////////// START OF src/Types/Enums/BattleFormat.hpp ///////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-// Denotes if the simulated battle is a single or double battle
-enum class BattleFormat : std::uint8_t {
-  SINGLES_BATTLE_FORMAT = 1,
-  DOUBLES_BATTLE_FORMAT = 2,
-};
-}  // namespace pokesim
-
-/////////////////// END OF src/Types/Enums/BattleFormat.hpp ////////////////////
-
-///////////////// START OF src/Types/Enums/DamageRollKind.hpp //////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-enum class DamageRollKind : std::uint8_t {
-  NONE = 0b00000000,
-  AVERAGE_DAMAGE = 0b000000001,
-  MAX_DAMAGE = 0b00000010,
-  MIN_DAMAGE = 0b00000100,
-  GUARANTEED_CRIT_CHANCE = 0b00001000,
-  ALL_DAMAGE_ROLLS = 0b00010000,
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Types/Enums/DamageRollKind.hpp ///////////////////
-
-////////////////// START OF src/Types/Enums/MoveCategory.hpp ///////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-
-enum class MoveCategory : std::uint8_t {
-  PHYSICAL,
-  SPECIAL,
-  STATUS,
-};
-}  // namespace pokesim::dex
-
-/////////////////// END OF src/Types/Enums/MoveCategory.hpp ////////////////////
-
-/////////////////// START OF src/Types/Enums/MoveTarget.hpp ////////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-enum class MoveTarget : std::uint8_t {
-  NONE = 0,
-  ANY_SINGLE_TARGET,  // Targets one Pokemon other than the move's user
-  ANY_SINGLE_FOE,     // Targets one foe
-  ANY_SINGLE_ALLY,    // Targets one ally
-  ALLY_OR_SELF,       // Targets either one ally or the move's user
-  SELF,               // Targets the move's user
-
-  ALL_FOES,         // Targets every active foe
-  ALLIES_AND_FOES,  // Targets every active foe and the move user's allies
-  ALLIES_AND_SELF,  // Targets the move user's allies and the user
-
-  FOE_SIDE,   // Targets the opponent's side
-  ALLY_SIDE,  // Targets the move user's side
-  FIELD,      // Targets the field or all Pokemon at once
-
-  ALLY_TEAM,    // Targets all non-fainted Pokemon on the user's team
-  RETALIATION,  // Targets the last Pokemon to damage the user during a turn
-  RANDOM_FOE,   // Targets a random foe
-};
-}
-
-//////////////////// END OF src/Types/Enums/MoveTarget.hpp /////////////////////
-
-////////////////// START OF src/Types/Enums/StabBoostKind.hpp //////////////////
-
-#include <cstdint>
-
-namespace pokesim {
-enum class StabBoostKind : std::uint8_t {
-  NONE = 100,
-  STANDARD = 150,
-  STELLAR_NON_STAB = 120,
-  ADAPTABILITY_OR_STELLAR_STAB_OR_TERA_STAB = 200,
-  ADAPTABILITY_AND_TERA_STAB = 225,
-};
-}
-
-/////////////////// END OF src/Types/Enums/StabBoostKind.hpp ///////////////////
-
 /////////////////////// START OF src/Pokedex/Pokedex.hpp ///////////////////////
 
 namespace pokesim {
@@ -20038,34 +23013,6 @@ class Pokedex {
 
 //////////////////////// END OF src/Pokedex/Pokedex.hpp ////////////////////////
 
-///////////////// START OF src/Components/Tags/BattleTags.hpp //////////////////
-
-namespace pokesim::tags {
-struct Battle {};
-struct Side {};
-
-// Battle Turn State Tag: When a battle is in the middle of a turn
-struct BattleMidTurn {};
-// Battle Turn State Tag: When a battle has ended
-struct BattleEnded {};
-}  // namespace pokesim::tags
-
-////////////////// END OF src/Components/Tags/BattleTags.hpp ///////////////////
-
-////////////////// START OF src/Components/Tags/Selection.hpp //////////////////
-
-#include <cstdint>
-#include <vector>
-
-namespace pokesim::tags {
-struct SelectedForViewBattle {};
-struct SelectedForViewSide {};
-struct SelectedForViewPokemon {};
-struct SelectedForViewMove {};
-}  // namespace pokesim::tags
-
-/////////////////// END OF src/Components/Tags/Selection.hpp ///////////////////
-
 /////////////////////// START OF src/Utilities/Tags.hpp ////////////////////////
 
 namespace pokesim {
@@ -20142,7 +23089,7 @@ struct RegistryLoop<
       "If the first argument is a handle, it must be a non-constant value.");
 
     template <typename... Args>
-    static constexpr void argChecks() {
+    static constexpr void staticArgChecks() {
       static_assert(
         std::conjunction_v<std::is_class<std::decay_t<Args>>...>,
         "Only classes or structs can be added to entities,"
@@ -20152,8 +23099,8 @@ struct RegistryLoop<
         "Empty classes or structs shouldn't be passed into a function: they won't do anything.");
       static_assert(
         std::conjunction_v<std::is_copy_assignable<std::decay_t<Args>>...>,
-        "Without the ability to be copied, an argument could not have been added to an entity,"
-        "preventing the function from being called.");
+        "Without the ability to be copied, an argument could not have been added to an entity, preventing the function "
+        "from being called.");
       static_assert(
         sizeof...(Args) + sizeof...(ExtraTags) + sizeof...(Include) > 0,
         "At least 1 type must be present to pick the entities to loop over.");
@@ -20161,7 +23108,7 @@ struct RegistryLoop<
 
     template <typename... ViewArgs>
     static auto getView(types::registry& registry) {
-      argChecks<ViewArgs...>();
+      staticArgChecks<ViewArgs...>();
 
       if constexpr (usesExclude) {
         return registry.view<ExtraTags..., std::decay_t<ViewArgs>..., Include...>(entt::exclude<Exclude...>);
@@ -20173,7 +23120,7 @@ struct RegistryLoop<
 
     template <typename... GroupArgs>
     static auto getGroup(types::registry& registry) {
-      argChecks<GroupArgs...>();
+      staticArgChecks<GroupArgs...>();
 
       if constexpr (usesExclude) {
         return registry.group<ExtraTags..., std::decay_t<GroupArgs>...>(
@@ -20191,9 +23138,9 @@ struct RegistryLoop<
     template <auto getList>
     static auto run(types::registry& registry, const PassedInArgs&... passedInArgs) {
       auto list = getList(registry);
+
       if constexpr (hasRegistryFirst) {
-        list.each([&registry, &passedInArgs...](types::entity entity, auto&&... args) {
-          (void)entity;
+        list.each([&registry, &passedInArgs...](types::entity, auto&&... args) {
           Function(registry, args..., passedInArgs...);
         });
       }
@@ -20203,11 +23150,15 @@ struct RegistryLoop<
         });
       }
       else {
-        list.each([&passedInArgs...](types::entity entity, auto&&... args) {
-          (void)entity;
-          Function(args..., passedInArgs...);
-        });
+        list.each([&passedInArgs...](types::entity, auto&&... args) { Function(args..., passedInArgs...); });
       }
+
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+      list.each([&registry](types::entity, auto&&... args) {
+        (pokesim::debug::check(args, registry), ...);
+        (pokesim::debug::check(args), ...);
+      });
+#endif
       return list;
     }
 
@@ -20607,88 +23558,6 @@ class RegistryContainer {
 
 ///////////////// END OF src/Simulation/RegistryContainer.hpp //////////////////
 
-//////////////// START OF src/Simulation/SimulationOptions.hpp /////////////////
-
-#include <cstdint>
-#include <optional>
-#include <type_traits>
-
-namespace pokesim {
-class Simulation;
-
-struct DamageRollOptions {
-  DamageRollKind p1 = DamageRollKind::AVERAGE_DAMAGE;
-  DamageRollKind p2 = DamageRollKind::AVERAGE_DAMAGE;
-  bool sidesMatch() const { return p1 == p2; }
-};
-
-namespace simulate_turn {
-struct Options {
-  DamageRollOptions damageRollsConsidered;
-  bool applyChangesToInputBattle = true;
-  std::optional<types::percentChance> randomChanceUpperLimit = std::nullopt;
-  std::optional<types::percentChance> randomChanceLowerLimit = std::nullopt;
-  std::optional<types::probability> branchProbabilityLowerLimit = std::nullopt;
-
-  // For Monte Carlo method. When true, the number of branches is determined by the number of random chance events that
-  // happen in the turn. When false, the number of output battles is the same as the number in input battles as each
-  // battle picks a random outcome for each random event without branching.
-  bool makeBranchesOnRandomEvents = true;
-
-  entt::delegate<std::remove_pointer_t<types::callback>> decisionCallback{};
-  entt::delegate<std::remove_pointer_t<types::callback>> faintCallback{};
-};
-}  // namespace simulate_turn
-
-namespace calc_damage {
-struct Options {
-  bool calculateUpToFoeHp = false;
-  // KO chance is otherwise calculated if DamageRollKind::ALL_DAMAGE_ROLLS is set as the damage roll option
-  bool noKoChanceCalculation = false;
-
-  DamageRollOptions damageRollOptions;
-};
-}  // namespace calc_damage
-
-namespace analyze_effect {
-struct Options {
-  // Whether to consider the multiplier even if the effect is already active (i.e. Rain will return a 1x multiplier
-  // instead of 1.5x multiplier for Surf if this option is true and it's already raining)
-  bool reconsiderActiveEffects = false;
-  bool calculateUpToFoeHp = false;
-  // KO chance is otherwise calculated if DamageRollKind::ALL_DAMAGE_ROLLS is set as the damage roll option
-  bool noKoChanceCalculation = false;
-
-  DamageRollOptions damageRollOptions;
-};
-}  // namespace analyze_effect
-}  // namespace pokesim
-
-///////////////// END OF src/Simulation/SimulationOptions.hpp //////////////////
-
-//////////////////////// START OF src/Types/Damage.hpp /////////////////////////
-
-namespace pokesim::types {
-using damage = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::DAMAGE>;
-using damageRollIndex = pokesim::internal::unsignedIntType<MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT>;
-using useUntilKoChance = float;
-using typeEffectiveness = pokesim::internal::signedIntType<
-  MechanicConstants::MaxValues::TYPE_EFFECTIVENESS_SHIFT, MechanicConstants::MinValues::TYPE_EFFECTIVENESS_SHIFT>;
-}  // namespace pokesim::types
-
-///////////////////////// END OF src/Types/Damage.hpp //////////////////////////
-
-///////////////////////// START OF src/Types/Event.hpp /////////////////////////
-
-#include <cstdint>
-
-namespace pokesim::types {
-using eventModifier = std::uint32_t;
-using effectMultiplier = float;
-}  // namespace pokesim::types
-
-////////////////////////// END OF src/Types/Event.hpp //////////////////////////
-
 //////////////////// START OF src/Simulation/Simulation.hpp ////////////////////
 
 #include <optional>
@@ -20867,317 +23736,12 @@ class Simulation : public internal::RegistryContainer {
 
 ///////////////////// END OF src/Simulation/Simulation.hpp /////////////////////
 
-////////////// START OF src/Components/AnalyzeEffect/Aliases.hpp ///////////////
-
-namespace pokesim::analyze_effect {
-using Attacker = CurrentActionSource;
-using Defenders = CurrentActionTargets;
-
-namespace tags {
-using Attacker = pokesim::tags::CurrentActionMoveSource;
-using Defender = pokesim::tags::CurrentActionMoveTarget;
-using Move = pokesim::tags::CurrentActionMove;
-}  // namespace tags
-}  // namespace pokesim::analyze_effect
-
-/////////////// END OF src/Components/AnalyzeEffect/Aliases.hpp ////////////////
-
-//////// START OF src/Components/AnalyzeEffect/AnalyzeEffectInputs.hpp /////////
-
-#include <vector>
-
-namespace pokesim::analyze_effect {
-struct EffectTarget {
-  types::entity val{};
-};
-
-struct EffectMoves {
-  internal::maxSizedVector<dex::Move> val{};
-};
-
-struct Inputs {
-  types::entityVector val{};
-};
-
-struct OriginalInputEntities {
-  types::entity battle{};
-  types::entity attacker{};
-  types::entity defender{};
-  types::entity effectTarget{};
-
-  bool operator==(const OriginalInputEntities& other) const {
-    return battle == other.battle && attacker == other.attacker && defender == other.defender &&
-           effectTarget == other.effectTarget;
-  }
-};
-
-struct MovePairs {
-  internal::maxSizedVector<std::pair<types::entity, types::entity>> val{};
-
-  bool operator==(const MovePairs& other) const {
-    if (val.size() != other.val.size()) return false;
-    for (types::cloneIndex i = 0; i < val.size(); i++) {
-      if (val[i].first != other.val[i].first || val[i].second != other.val[i].second) {
-        return false;
-      }
-    }
-    return true;
-  }
-};
-
-struct RunsOneCalculationCount {
-  types::eventPossibilities val = 0;
-};
-
-namespace tags {
-struct Input {};
-struct RunOneCalculation {};
-struct BattleCloneForCalculation {};
-struct InvertFinalAnswer {};
-}  // namespace tags
-}  // namespace pokesim::analyze_effect
-
-///////// END OF src/Components/AnalyzeEffect/AnalyzeEffectInputs.hpp //////////
-
-////////////// START OF src/Components/EntityHolders/FoeSide.hpp ///////////////
-
-namespace pokesim {
-// Contains the entity of a side's opponent.
-struct FoeSide {
-  types::entity val{};
-};
-}  // namespace pokesim
-
-/////////////// END OF src/Components/EntityHolders/FoeSide.hpp ////////////////
-
-///////////// START OF src/Components/EntityHolders/MoveSlots.hpp //////////////
-
-namespace pokesim {
-// Contains a list of entities of the moves a Pokemon known.
-struct MoveSlots {
-  types::moveSlots<types::entity> val{};
-};
-}  // namespace pokesim
-
-////////////// END OF src/Components/EntityHolders/MoveSlots.hpp ///////////////
-
-//////////////// START OF src/Components/EntityHolders/Team.hpp ////////////////
-
-namespace pokesim {
-// Contains a list of entities pointing to the Pokemon on a team.
-struct Team {
-  types::teamPositions<types::entity> val{};
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/EntityHolders/Team.hpp /////////////////
-
-//////////////////////// START OF src/Components/ID.hpp ////////////////////////
-
-namespace pokesim {
-struct Id {
-  types::stateId val = 1;
-};
-}  // namespace pokesim
-
-///////////////////////// END OF src/Components/ID.hpp /////////////////////////
-
-////////////////////// START OF src/Components/Level.hpp ///////////////////////
-
-namespace pokesim {
-// A Pokemon's level
-struct Level {
-  types::level val = 1;
-};
-}  // namespace pokesim
-
-/////////////////////// END OF src/Components/Level.hpp ////////////////////////
-
-//////////////// START OF src/Components/Names/AbilityNames.hpp ////////////////
-
-namespace pokesim {
-struct AbilityName {
-  dex::Ability name = dex::Ability::NO_ABILITY;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/AbilityNames.hpp /////////////////
-
-//////////////// START OF src/Components/Names/GenderNames.hpp /////////////////
-
-namespace pokesim {
-struct GenderName {
-  dex::Gender name = dex::Gender::NO_GENDER;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/GenderNames.hpp //////////////////
-
-///////////////// START OF src/Components/Names/ItemNames.hpp //////////////////
-
-namespace pokesim {
-struct ItemName {
-  dex::Item name = dex::Item::NO_ITEM;
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Components/Names/ItemNames.hpp ///////////////////
-
-///////////////// START OF src/Components/Names/MoveNames.hpp //////////////////
-
-namespace pokesim {
-struct MoveName {
-  dex::Move name = dex::Move::NO_MOVE;
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Components/Names/MoveNames.hpp ///////////////////
-
-//////////////// START OF src/Components/Names/NatureNames.hpp /////////////////
-
-namespace pokesim {
-struct NatureName {
-  dex::Nature name = dex::Nature::NO_NATURE;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/NatureNames.hpp //////////////////
-
-///////////// START OF src/Components/Names/PseudoWeatherNames.hpp /////////////
-
-namespace pokesim {
-struct PseudoWeatherName {
-  dex::PseudoWeather name = dex::PseudoWeather::NO_PSEUDO_WEATHER;
-};
-}  // namespace pokesim
-
-////////////// END OF src/Components/Names/PseudoWeatherNames.hpp //////////////
-
-///////////// START OF src/Components/Names/SideConditionNames.hpp /////////////
-
-namespace pokesim {
-struct SideConditionName {
-  dex::SideCondition name = dex::SideCondition::NO_SIDE_CONDITION;
-};
-}  // namespace pokesim
-
-////////////// END OF src/Components/Names/SideConditionNames.hpp //////////////
-
-//////////////// START OF src/Components/Names/SpeciesNames.hpp ////////////////
-
-namespace pokesim {
-struct SpeciesName {
-  dex::Species name = dex::Species::NO_SPECIES;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/SpeciesNames.hpp /////////////////
-
-//////////////// START OF src/Components/Names/StatusNames.hpp /////////////////
-
-namespace pokesim {
-struct StatusName {
-  dex::Status name = dex::Status::NO_STATUS;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/StatusNames.hpp //////////////////
-
-//////////////// START OF src/Components/Names/TerrainNames.hpp ////////////////
-
-namespace pokesim {
-struct TerrainName {
-  dex::Terrain name = dex::Terrain::NO_TERRAIN;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/TerrainNames.hpp /////////////////
-
-/////////////// START OF src/Components/Names/VolatileNames.hpp ////////////////
-
-namespace pokesim {
-struct VolatileName {
-  dex::Volatile name = dex::Volatile::NO_VOLATILE;
-};
-}  // namespace pokesim
-
-//////////////// END OF src/Components/Names/VolatileNames.hpp /////////////////
-
-//////////////// START OF src/Components/Names/WeatherNames.hpp ////////////////
-
-namespace pokesim {
-struct WeatherName {
-  dex::Weather name = dex::Weather::NO_WEATHER;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/WeatherNames.hpp /////////////////
-
-//////////////////////// START OF src/Components/PP.hpp ////////////////////////
-
-namespace pokesim {
-struct Pp {
-  types::pp val = 0;
-};
-
-struct MaxPp {
-  types::pp val = 5;
-};
-}  // namespace pokesim
-
-///////////////////////// END OF src/Components/PP.hpp /////////////////////////
-
-/////////////////// START OF src/Components/Probability.hpp ////////////////////
-
-namespace pokesim {
-/**
- * @brief The probability of all the previous actions in a battle's simulation occurring.
- *
- * Calculated by multiplying the various Accuracy and Chance numbers of a battle state's events.
- */
-struct Probability {
-  types::probability val = 1;
-};
-}  // namespace pokesim
-
-//////////////////// END OF src/Components/Probability.hpp /////////////////////
-
-///////////////////// START OF src/Components/RNGSeed.hpp //////////////////////
-
-namespace pokesim {
-struct RngSeed {
-  types::rngState val = 1;
-};
-}  // namespace pokesim
-
-////////////////////// END OF src/Components/RNGSeed.hpp ///////////////////////
-
-/////////////////////// START OF src/Components/Turn.hpp ///////////////////////
-
-namespace pokesim {
-// The current turn of a battle
-struct Turn {
-  types::battleTurn val = 0;
-};
-}  // namespace pokesim
-
-//////////////////////// END OF src/Components/Turn.hpp ////////////////////////
-
-//////////////////// START OF src/Components/PlayerSide.hpp ////////////////////
-
-namespace pokesim {
-struct PlayerSide {
-  PlayerSideId val = PlayerSideId::NONE;
-};
-}  // namespace pokesim
-
-///////////////////// END OF src/Components/PlayerSide.hpp /////////////////////
-
 //////////////////// START OF src/Utilities/DebugChecks.hpp ////////////////////
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
 #include <cstddef>
+
 
 namespace pokesim::debug {
 struct Checks {
@@ -21228,147 +23792,10 @@ struct Checks {
     return finalEntityCount;
   }
 
-  static void checkBoost(types::boost boost) {
-    POKESIM_REQUIRE_NM(boost >= MechanicConstants::MinValues::POKEMON_STAT_BOOST);
-    POKESIM_REQUIRE_NM(boost <= MechanicConstants::MaxValues::POKEMON_STAT_BOOST);
-  }
-
-  static void checkStat(types::stat stat) {
-    POKESIM_REQUIRE_NM(stat >= MechanicConstants::MinValues::POKEMON_STAT);
-    POKESIM_REQUIRE_NM(stat <= MechanicConstants::MaxValues::POKEMON_STAT);
-  }
-
-  static void checkEv(types::ev ev) {
-    POKESIM_REQUIRE_NM(ev >= MechanicConstants::MinValues::POKEMON_EV);
-    POKESIM_REQUIRE_NM(ev <= MechanicConstants::MaxValues::POKEMON_EV);
-  }
-
-  static void checkIv(types::iv iv) {
-    POKESIM_REQUIRE_NM(iv >= MechanicConstants::MinValues::POKEMON_IV);
-    POKESIM_REQUIRE_NM(iv <= MechanicConstants::MaxValues::POKEMON_IV);
-  }
-
-  void checkMoveSlot(types::entity moveEntity) const {
-    POKESIM_REQUIRE_NM(moveEntity != entt::null);
-    POKESIM_REQUIRE_NM(has<MoveName>(moveEntity));
-    POKESIM_REQUIRE_NM(has<Pp>(moveEntity));
-    POKESIM_REQUIRE_NM(has<MaxPp>(moveEntity));
-
-    const auto& [move, pp, maxPp] = registry->get<MoveName, Pp, MaxPp>(moveEntity);
-
-    POKESIM_REQUIRE_NM(move.name != dex::Move::NO_MOVE);
-    POKESIM_REQUIRE_NM(pp.val >= MechanicConstants::MinValues::MOVE_PP);
-    POKESIM_REQUIRE_NM(maxPp.val >= MechanicConstants::MinValues::MOVE_MAX_PP);
-    POKESIM_REQUIRE_NM(pp.val <= MechanicConstants::MaxValues::MOVE_PP);
-    POKESIM_REQUIRE_NM(maxPp.val <= MechanicConstants::MaxValues::MOVE_MAX_PP);
-  }
-
-  void checkPokemon(types::entity pokemonEntity) const {
-    POKESIM_REQUIRE_NM(pokemonEntity != entt::null);
-    POKESIM_REQUIRE_NM(has<tags::Pokemon>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<Id>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<Side>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<Battle>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<SpeciesName>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<AbilityName>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<Level>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<MoveSlots>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<Evs>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<Ivs>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<SpeciesTypes>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<stat::Hp>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<stat::Atk>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<stat::Def>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<stat::Spa>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<stat::Spd>(pokemonEntity));
-    POKESIM_REQUIRE_NM(has<stat::Spe>(pokemonEntity));
-
-    const auto& [side, battle, speciesName, speciesTypes, abilityName, level, moveSlots, evs, ivs] =
-      registry->get<Side, Battle, SpeciesName, SpeciesTypes, AbilityName, Level, MoveSlots, Evs, Ivs>(pokemonEntity);
-
-    const auto& [hp, atk, def, spa, spd, spe] =
-      registry->get<stat::Hp, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>(pokemonEntity);
-
-    POKESIM_REQUIRE_NM(has<tags::Battle>(battle.val));
-    POKESIM_REQUIRE_NM(has<tags::Side>(side.val));
-    POKESIM_REQUIRE_NM(speciesName.name != dex::Species::NO_SPECIES);
-    POKESIM_REQUIRE_NM(speciesTypes.size() != 0);
-    POKESIM_REQUIRE_NM(abilityName.name != dex::Ability::NO_ABILITY);
-
-    POKESIM_REQUIRE_NM(level.val >= MechanicConstants::MinValues::POKEMON_LEVEL);
-    POKESIM_REQUIRE_NM(level.val <= MechanicConstants::MaxValues::POKEMON_LEVEL);
-
-    checkStat(hp.val);
-    checkStat(atk.val);
-    checkStat(def.val);
-    checkStat(spa.val);
-    checkStat(spd.val);
-    checkStat(spe.val);
-
-    checkEv(evs.hp);
-    checkEv(evs.atk);
-    checkEv(evs.def);
-    checkEv(evs.spa);
-    checkEv(evs.spd);
-    checkEv(evs.spe);
-
-    checkIv(ivs.hp);
-    checkIv(ivs.atk);
-    checkIv(ivs.def);
-    checkIv(ivs.spa);
-    checkIv(ivs.spd);
-    checkIv(ivs.spe);
-
-    POKESIM_REQUIRE_NM(moveSlots.val.size() >= MechanicConstants::MinValues::MOVE_SLOTS);
-    POKESIM_REQUIRE_NM(moveSlots.val.size() <= MechanicConstants::MaxValues::MOVE_SLOTS);
-  }
-
-  void checkSide(types::entity sideEntity) const {
-    POKESIM_REQUIRE_NM(sideEntity != entt::null);
-    POKESIM_REQUIRE_NM(has<tags::Side>(sideEntity));
-    POKESIM_REQUIRE_NM(has<Team>(sideEntity));
-    POKESIM_REQUIRE_NM(has<FoeSide>(sideEntity));
-    POKESIM_REQUIRE_NM(has<Battle>(sideEntity));
-    POKESIM_REQUIRE_NM(has<PlayerSide>(sideEntity));
-
-    const auto& [battle, team] = registry->get<Battle, Team>(sideEntity);
-    POKESIM_REQUIRE_NM(team.val.size() >= MechanicConstants::MinValues::TEAM_SIZE);
-    POKESIM_REQUIRE_NM(team.val.size() <= MechanicConstants::MaxValues::TEAM_SIZE);
-
-    for (types::entity pokemonEntity : team.val) {
-      POKESIM_REQUIRE_NM(has<tags::Pokemon>(pokemonEntity));
-      POKESIM_REQUIRE_NM(has<Battle>(pokemonEntity));
-      POKESIM_REQUIRE_NM(has<Side>(pokemonEntity));
-      POKESIM_REQUIRE_NM(registry->get<Battle>(pokemonEntity).val == battle.val);
-      POKESIM_REQUIRE_NM(registry->get<Side>(pokemonEntity).val == sideEntity);
-    }
-  }
-
-  void checkBattle(types::entity battleEntity) const {
-    POKESIM_REQUIRE_NM(battleEntity != entt::null);
-    POKESIM_REQUIRE_NM(has<tags::Battle>(battleEntity));
-    POKESIM_REQUIRE_NM(has<Sides>(battleEntity));
-    POKESIM_REQUIRE_NM(has<Probability>(battleEntity));
-    POKESIM_REQUIRE_NM(has<RngSeed>(battleEntity));
-    const auto& [sides, probability] = registry->get<Sides, Probability>(battleEntity);
-
-    POKESIM_REQUIRE_NM(probability.val >= MechanicConstants::MinValues::PROBABILITY);
-    POKESIM_REQUIRE_NM(probability.val <= MechanicConstants::MaxValues::PROBABILITY);
-
-    POKESIM_REQUIRE(sides.val.size() == MechanicConstants::SIDE_COUNT, "Both sides should be have entities.");
-    auto [p1SideEntity, p2SideEntity] = sides.val;
-
-    POKESIM_REQUIRE_NM(registry->get<Battle>(p1SideEntity).val == battleEntity);
-    POKESIM_REQUIRE_NM(registry->get<Battle>(p2SideEntity).val == battleEntity);
-    POKESIM_REQUIRE_NM(has<tags::Side>(p1SideEntity));
-    POKESIM_REQUIRE_NM(has<tags::Side>(p2SideEntity));
-
-    POKESIM_REQUIRE_NM(registry->get<PlayerSide>(p1SideEntity).val == PlayerSideId::P1);
-    POKESIM_REQUIRE_NM(registry->get<PlayerSide>(p2SideEntity).val == PlayerSideId::P2);
-
-    POKESIM_REQUIRE_NM(registry->get<FoeSide>(p1SideEntity).val == p2SideEntity);
-    POKESIM_REQUIRE_NM(registry->get<FoeSide>(p2SideEntity).val == p1SideEntity);
-  }
+  void checkMoveSlot(types::entity moveEntity) const { pokesim::debug::checkMoveSlot(moveEntity, *registry); }
+  void checkPokemon(types::entity pokemonEntity) const { pokesim::debug::checkPokemon(pokemonEntity, *registry); }
+  void checkSide(types::entity sideEntity) const { pokesim::debug::checkSide(sideEntity, *registry); }
+  void checkBattle(types::entity battleEntity) const { pokesim::debug::checkBattle(battleEntity, *registry); }
 };
 }  // namespace pokesim::debug
 
@@ -21526,7 +23953,10 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).name == move.name);
       POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == move.pp);
       POKESIM_REQUIRE_NM(registry->get<MaxPp>(moveEntity).val == move.maxPp);
+      pokesim::debug::checkMoveSlot(moveEntity, *registry);
     }
+
+    pokesim::debug::checkPokemon(pokemonEntity, *registry);
   }
 
   void checkCreatedSide(types::entity sideEntity, const Simulation::SideCreationInfo& creationInfo) const {
@@ -21542,6 +23972,8 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(registry->get<Side>(pokemonEntity).val == sideEntity);
       POKESIM_REQUIRE_NM(registry->get<Battle>(pokemonEntity).val == registry->get<Battle>(sideEntity).val);
     }
+
+    pokesim::debug::checkSide(sideEntity, *registry);
   }
 
   void checkBattle(types::entity battleEntity, const Simulation::BattleCreationInfo& creationInfo) const {
@@ -21568,6 +24000,8 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->get<Battle>(p2SideEntity).val == battleEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p1SideEntity).val == p2SideEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p2SideEntity).val == p1SideEntity);
+
+    pokesim::debug::checkBattle(battleEntity, *registry);
   }
 
   void checkTurnDecision(types::entity battleEntity, const Simulation::TurnDecisionInfo& turnDecisionInfo) const {
@@ -21613,6 +24047,8 @@ struct SimulationSetupChecks {
           POKESIM_REQUIRE_NM(teamOrder[position] == teamOrderInfo[position]);
         }
       }
+
+      pokesim::debug::check(sideDecision);
     }
   }
 
@@ -21642,6 +24078,8 @@ struct SimulationSetupChecks {
 
     POKESIM_REQUIRE_NM(std::find(attackerMoves.begin(), attackerMoves.end(), calcDamageEntity) != attackerMoves.end());
     POKESIM_REQUIRE_NM(std::find(defenderMoves.begin(), defenderMoves.end(), calcDamageEntity) != defenderMoves.end());
+
+    checkActionMove(calcDamageEntity, *registry);
   }
 
   void checkAnalyzeEffect(
@@ -21778,11 +24216,14 @@ struct SimulationSetupChecks {
         checkCalcDamage(battleEntity, setupEntity, calcDamageInputInfo);
       }
 
+      analyze_effect::Inputs analyzeEffectInputs;
       for (const auto& analyzeEffectInputInfo : battleInfo.effectsToAnalyze) {
         POKESIM_REQUIRE_NM(createdAnalyzeEffectInputs.contains(&analyzeEffectInputInfo));
         auto [battleEntity, setupEntity] = createdAnalyzeEffectInputs.at(&analyzeEffectInputInfo);
         checkAnalyzeEffect(battleEntity, setupEntity, analyzeEffectInputInfo);
+        analyzeEffectInputs.val.push_back(setupEntity);
       }
+      pokesim::debug::check(analyzeEffectInputs, *registry);
     }
   }
 
@@ -21903,7 +24344,7 @@ inline PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationI
 
 inline void Simulation::createInitialSide(
   SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo) {
-  internal::maxSizedVector<PokemonStateSetup, MechanicConstants::MaxValues::TEAM_SIZE> pokemonSetupList;
+  internal::maxSizedVector<PokemonStateSetup, MechanicConstants::TeamSize::MAX> pokemonSetupList;
   pokemonSetupList.reserve(sideInfo.team.size());
 
   for (std::size_t i = 0; i < sideInfo.team.size(); i++) {
@@ -22102,116 +24543,6 @@ inline void Simulation::createInitialStates(const std::vector<BattleCreationInfo
 
 ////////////////// END OF src/Simulation/SimulationSetup.cpp ///////////////////
 
-////////////////////// START OF src/Components/Damage.hpp //////////////////////
-
-#include <vector>
-
-namespace pokesim {
-struct Damage {
-  types::damage val = 1;
-};
-
-struct DamageRollModifiers {
-  StabBoostKind stab = StabBoostKind::NONE;
-  types::typeEffectiveness typeEffectiveness = 0;
-  bool burn = false;
-  bool zOrMaxBrokenProtect = false;
-  types::eventModifier modifyDamageEvent = MechanicConstants::FIXED_POINT_SCALE;
-
-  bool operator==(const DamageRollModifiers& other) const {
-    return stab == other.stab && typeEffectiveness == other.typeEffectiveness && burn == other.burn &&
-           modifyDamageEvent == other.modifyDamageEvent && zOrMaxBrokenProtect == other.zOrMaxBrokenProtect;
-  }
-};
-
-struct DamageRolls {
-  internal::maxSizedVector<Damage, MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT> val{};
-
-  DamageRolls() {}
-  DamageRolls(const DamageRolls& other) : val(other.val) {}
-
-  DamageRolls(const std::vector<types::damage>& list) {
-    POKESIM_REQUIRE(
-      list.size() <= MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT,
-      "More damage rolls are being added than allowed.");
-    val.reserve((types::damageRollIndex)list.size());
-    for (types::damage damage : list) {
-      val.push_back({damage});
-    }
-  }
-
-  types::damage min() const {
-    POKESIM_REQUIRE(!val.empty(), "DamageRolls has no values to read.");
-    return val.back().val;
-  }
-
-  types::damage max() const {
-    POKESIM_REQUIRE(!val.empty(), "DamageRolls has no values to read.");
-    return val.front().val;
-  }
-};
-}  // namespace pokesim
-
-/////////////////////// END OF src/Components/Damage.hpp ///////////////////////
-
-//////////////// START OF src/Components/SimulationResults.hpp /////////////////
-
-namespace pokesim {
-namespace simulate_turn {
-struct TurnOutcomeBattles {
-  types::entityVector val{};
-};
-}  // namespace simulate_turn
-
-namespace calc_damage {
-struct UsesUntilKo {
- private:
-  struct KoChance {
-    types::moveHits uses = 0;
-    types::useUntilKoChance chance = 0.0F;
-
-    bool operator==(const KoChance& other) const { return uses == other.uses && chance == other.chance; }
-  };
-
- public:
-  internal::maxSizedVector<KoChance, MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT> val{};
-
-  const KoChance& minHits() const {
-    POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
-    return val.front();
-  }
-
-  const KoChance& maxHits() const {
-    POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
-    return val.back();
-  }
-
-  bool guaranteedKo() const {
-    const KoChance& min = minHits();
-    return min.uses == 1 && min.chance == 1.0F;
-  }
-};
-
-struct AttackerHpRecovered : DamageRolls {};
-struct AttackerHpLost : DamageRolls {};
-}  // namespace calc_damage
-
-namespace analyze_effect {
-struct EffectMultiplier {
-  types::effectMultiplier val = 1.0F;
-};
-
-using MultipliedDamageRolls = DamageRolls;
-using MultipliedUsesUntilKo = calc_damage::UsesUntilKo;
-
-namespace tags {
-struct InfiniteMultiplier {};
-}  // namespace tags
-}  // namespace analyze_effect
-}  // namespace pokesim
-
-///////////////// END OF src/Components/SimulationResults.hpp //////////////////
-
 //////////////// START OF src/Simulation/SimulationResults.hpp /////////////////
 
 namespace pokesim {
@@ -22392,16 +24723,6 @@ inline void setDamageRollModifiers(Simulation& simulation);
 
 ///////////////////// END OF src/CalcDamage/CalcDamage.hpp /////////////////////
 
-///////////////////// START OF src/Components/HitCount.hpp /////////////////////
-
-namespace pokesim {
-struct HitCount {
-  types::moveHits val = 1;
-};
-}  // namespace pokesim
-
-////////////////////// END OF src/Components/HitCount.hpp //////////////////////
-
 ////////////////// START OF src/SimulateTurn/SimulateTurn.hpp //////////////////
 
 namespace pokesim {
@@ -22575,56 +24896,6 @@ void chainToModifier(types::eventModifier& eventModifier, Multiplier multiplier)
 }  // namespace pokesim
 
 ///////////////// END OF src/Battle/Helpers/IntegerModify.hpp //////////////////
-
-///////////// START OF src/Components/EntityHolders/ChoiceLock.hpp /////////////
-
-namespace pokesim {
-struct ChoiceLock {
-  types::entity val{};
-};
-}  // namespace pokesim
-
-////////////// END OF src/Components/EntityHolders/ChoiceLock.hpp //////////////
-
-////////////////// START OF src/Components/EventModifier.hpp ///////////////////
-
-namespace pokesim {
-struct EventModifier {
-  types::eventModifier val = MechanicConstants::FIXED_POINT_SCALE;
-};
-}  // namespace pokesim
-
-/////////////////// END OF src/Components/EventModifier.hpp ////////////////////
-
-////////////////// START OF src/Components/Tags/ItemTags.hpp ///////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::item::tags {
-struct AssaultVest {};
-struct BrightPowder {};
-struct ChoiceScarf {};
-struct ChoiceSpecs {};
-struct FocusSash {};
-struct LifeOrb {};
-}  // namespace pokesim::item::tags
-
-/////////////////// END OF src/Components/Tags/ItemTags.hpp ////////////////////
-
-///////////////// START OF src/Components/Tags/StatusTags.hpp //////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::status::tags {
-struct Burn {};
-struct Freeze {};
-struct Paralysis {};
-struct Poison {};
-struct Sleep {};
-struct Toxic {};
-}  // namespace pokesim::status::tags
-
-////////////////// END OF src/Components/Tags/StatusTags.hpp ///////////////////
 
 ////////////////// START OF src/Pokedex/Abilities/Static.hpp ///////////////////
 
@@ -23050,162 +25321,6 @@ inline void runModifySpe(Simulation& simulation) {
 }  // namespace pokesim
 
 ////////////////////// END OF src/Simulation/RunEvent.cpp //////////////////////
-
-///////////////////// START OF src/Components/Accuracy.hpp /////////////////////
-
-namespace pokesim {
-struct Accuracy {
-  types::percentChance val = 100;
-};
-}  // namespace pokesim
-
-////////////////////// END OF src/Components/Accuracy.hpp //////////////////////
-
-//////////////// START OF src/Components/RandomEventOutputs.hpp ////////////////
-
-namespace pokesim {
-namespace tags {
-struct RandomEventA {};
-struct RandomEventB {};
-struct RandomEventC {};
-struct RandomEventD {};
-struct RandomEventE {};
-
-using RandomEventCheckPassed = RandomEventA;
-using RandomEventCheckFailed = RandomEventB;
-}  // namespace tags
-
-// Indicates which of equally likely events was chosen randomly
-struct RandomEventIndex {
-  types::eventPossibilities val = 0U;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/RandomEventOutputs.hpp /////////////////
-
-/////////// START OF src/Components/SimulateTurn/MoveHitStepTags.hpp ///////////
-
-namespace pokesim::tags::internal {
-struct MoveHits {};
-}  // namespace pokesim::tags::internal
-
-//////////// END OF src/Components/SimulateTurn/MoveHitStepTags.hpp ////////////
-
-////////////////// START OF src/Components/Tags/MoveTags.hpp ///////////////////
-
-namespace pokesim::move::tags {
-// Move Category Tag
-struct Physical {};
-// Move Category Tag
-struct Special {};
-// Move Category Tag
-struct Status {};
-
-// Move Property Tag: Makes contact
-struct Contact {};
-// Move Property Tag: Ignores a target's substitute
-struct BypassSubstitute {};
-// Move Property Tag: Power is multiplied by 1.2 when used by a Pokemon with the Ability Iron Fist.
-struct Punch {};
-// Move Property Tag: Move hits 2, 3, 4, or 5 times depending on random chance, items (i.e. Loaded Dice), and abilities
-// (i.e. Skill Link)
-struct VariableHitCount {};
-// Move Property Tag: A multi-hit move where each hit checks accuracy (i.e. Triple Kick)
-struct AccuracyDependentHitCount {};
-
-struct Disabled {};
-
-namespace effect {
-// Move Effect Participant Tag: Who the effect will affect
-struct MoveTarget {};
-// Move Effect Participant Tag: Who created the effect
-struct MoveSource {};
-}  // namespace effect
-}  // namespace pokesim::move::tags
-
-/////////////////// END OF src/Components/Tags/MoveTags.hpp ////////////////////
-
-//////////////// START OF src/Components/RandomEventInputs.hpp /////////////////
-
-#include <array>
-
-namespace pokesim {
-namespace internal {
-// Moves such as Metronome and Psywave, the Forewarn ability, and damage rolls have more random options than this, but
-// those cases will be handled separately
-const types::eventPossibilities MAX_TYPICAL_RANDOM_OPTIONS = 5U;
-
-template <typename T = void>
-struct RandomEventStack;
-
-template <>
-struct RandomEventStack<void> {
-  types::targets<types::entity> val{};
-};
-
-template <typename T>
-struct RandomEventStack {
-  types::targets<std::pair<decltype(T::val), types::entity>> val{};
-};
-}  // namespace internal
-
-// Used for random events that have a small number of outcomes that can happen and the chance each event can happen is
-// not equal (i.e. how many times a multi-hit move hits, Effect Spore)
-template <types::eventPossibilities RANDOM_OPTIONS>
-struct RandomEventChances {
-  std::array<types::percentChance, RANDOM_OPTIONS> val{};
-  static_assert(RANDOM_OPTIONS >= 2U, "RandomEventChances should only be used for events with more than two options.");
-  static_assert(
-    RANDOM_OPTIONS <= internal::MAX_TYPICAL_RANDOM_OPTIONS,
-    "Random events with more options than this should use RandomEqualChance or RandomEventCount");
-
-  types::percentChance chanceA() const { return val[0]; }
-  types::percentChance chanceB() const { return val[1] - val[0]; }
-  types::percentChance chanceC() const {
-    static_assert(RANDOM_OPTIONS >= 3U, "This function is only for events with more than 2 outcomes.");
-    return val[2] - val[1];
-  }
-  types::percentChance chanceD() const {
-    static_assert(RANDOM_OPTIONS >= 4U, "This function is only for events with more than 3 outcomes.");
-    return val[3] - val[2];
-  }
-  types::percentChance chanceE() const {
-    static_assert(RANDOM_OPTIONS == 5U, "This function is only for events with 5 outcomes.");
-    return val[4] - val[3];
-  }
-};
-
-// Used for random events that always have two outcomes where the chance the events happens may not be equal (i.e. move
-// accuracy checks, secondary move effects)
-struct RandomBinaryChance {
-  types::percentChance val = 100U;
-
-  types::percentChance pass() const { return val; }
-  types::percentChance fail() const { return 100U - pass(); }
-  types::probability reciprocalPass() const { return 100.0F / (types::probability)pass(); }
-  types::probability reciprocalFail() const { return 100U - reciprocalPass(); }
-};
-
-namespace tags {
-// Used for when the number of outcomes a random event can have is always the same (i.e. damage rolls, Psywave) and the
-// chance each of those events can happen is equal
-struct RandomEqualChance {};
-}  // namespace tags
-
-// Used for when the number of outcomes a random event can have depends on the situation (i.e. speed ties, Trace) and
-// the chance each of those events can happen is equal
-struct RandomEventCount {
-  types::eventPossibilities val = 0U;
-};
-
-template <types::eventPossibilities RANDOM_OPTIONS>
-struct RandomEventChancesStack : internal::RandomEventStack<RandomEventChances<RANDOM_OPTIONS>> {};
-struct RandomBinaryChanceStack : internal::RandomEventStack<RandomBinaryChance> {};
-struct RandomEventCountStack : internal::RandomEventStack<RandomEventCount> {};
-struct RandomEqualChanceStack : internal::RandomEventStack<> {};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/RandomEventInputs.hpp //////////////////
 
 ////////////////// START OF src/SimulateTurn/RandomChance.hpp //////////////////
 
@@ -23659,198 +25774,6 @@ inline void clearCurrentAction(Simulation& simulation);
 
 /////////////////// END OF src/Battle/ManageBattleState.hpp ////////////////////
 
-///////////////////// START OF src/CalcDamage/Helpers.hpp //////////////////////
-
-#include <type_traits>
-
-namespace pokesim::calc_damage {
-inline constexpr bool damageKindsMatch(DamageRollKind kindA, DamageRollKind kindB) {
-  using DamageRollKindBase = std::underlying_type_t<DamageRollKind>;
-  return ((DamageRollKindBase)kindA & (DamageRollKindBase)kindB) != 0;
-}
-
-inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, DamageRollKind damageRollKind) {
-  POKESIM_REQUIRE(!damageRolls.val.empty(), "DamageRolls has no rolls yet.");
-
-  if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
-    POKESIM_REQUIRE(
-      damageRolls.val.size() == MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT,
-      "DamageRolls does not have all rolls yet.");
-    return damageRolls.val[MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT / 2].val;
-  }
-  POKESIM_REQUIRE(
-    damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE),
-    "DamageRolls does not contain average");
-
-  if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
-    POKESIM_REQUIRE(damageRolls.val.size() > 1, "DamageRolls may not have average roll yet.");
-    return damageRolls.val[1].val;
-  }
-  return damageRolls.val[0].val;
-}
-
-template <
-  typename... CombinedKinds,
-  typename = std::enable_if_t<std::conjunction_v<std::is_same<CombinedKinds, DamageRollKind>...>>>
-constexpr DamageRollKind combineDamageKinds(CombinedKinds... kinds) {
-  using DamageRollKindBase = std::underlying_type_t<DamageRollKind>;
-  return static_cast<DamageRollKind>((static_cast<DamageRollKindBase>(kinds) | ...));
-}
-}  // namespace pokesim::calc_damage
-
-////////////////////// END OF src/CalcDamage/Helpers.hpp ///////////////////////
-
-/////////////////// START OF src/Components/AddedTargets.hpp ///////////////////
-
-namespace pokesim {
-struct AddedTargets {
-  AddedTargetOptions val = AddedTargetOptions::NONE;
-};
-}  // namespace pokesim
-
-//////////////////// END OF src/Components/AddedTargets.hpp ////////////////////
-
-/////////////// START OF src/Components/Names/SourceSlotName.hpp ///////////////
-
-namespace pokesim {
-/**
- * @brief Represents the source slot for a move in a Pokemon battle.
- */
-struct SourceSlotName {
-  Slot name = Slot::NONE;
-};
-}  // namespace pokesim
-
-//////////////// END OF src/Components/Names/SourceSlotName.hpp ////////////////
-
-/////////////// START OF src/Components/Names/TargetSlotName.hpp ///////////////
-
-namespace pokesim {
-/**
- * @brief Represents the target slot for a move in a Pokemon battle.
- *
- * In a single battle, only P1A and P2A are valid targets. In a double battle, P1B and P2B are also valid.
- */
-struct TargetSlotName {
-  Slot name = Slot::NONE;
-};
-}  // namespace pokesim
-
-//////////////// END OF src/Components/Names/TargetSlotName.hpp ////////////////
-
-///////////// START OF src/Components/SimulateTurn/ActionNames.hpp /////////////
-
-namespace pokesim::action {
-// Component to make an action one where a Pokemon uses a move. Contains the name of the move being used.
-struct Move : MoveName {};
-// Component to make an action one where a player uses an item. Contains the name of the item being used.
-struct Item : ItemName {};
-}  // namespace pokesim::action
-
-////////////// END OF src/Components/SimulateTurn/ActionNames.hpp //////////////
-
-///////////// START OF src/Components/SimulateTurn/ActionTags.hpp //////////////
-
-namespace pokesim::action::tags {
-struct BeforeTurn {};
-struct Residual {};
-
-struct Current {};
-
-struct Switch {};
-
-// Action Tag for Switching: When a Pokemon is about to be switched out
-// Example: Pursuit activating
-struct PreSwitchOut {};
-// Action Tag for Switching: When a Pokemon is being switched out
-struct SwitchOut {};
-/**
- * @brief Action Tag for Switching: When a Pokemon is being switched in because a player chose to directly switch the
- * Pokemon in as their turn action
- */
-struct PreTurnSwitchIn {};
-// Action Tag for Switching: When a Pokemon is being switched in because a team member switches out mid-turn
-// Examples: U-Turn, Baton Pash, Emergency Exit
-struct MidTurnSwitchIn {};
-// Action Tag for Switching: When a Pokemon is being switched in to replace a fainted team member
-struct PostFoeFaintSwitchIn {};
-
-// Action Tag: When Revival Blessing is being used on a fainted party member
-struct RevivalBlessing {};
-// Action Tag: When a mega evolution is activating
-struct MegaEvolve {};
-// Action Tag: When a primal reversion is activating
-struct PrimalRevert {};
-// Action Tag: When a Pokemon dynamaxing
-struct Dynamax {};
-// Action Tag: When a Pokemon is terastallizing
-struct Terastallize {};
-}  // namespace pokesim::action::tags
-
-////////////// END OF src/Components/SimulateTurn/ActionTags.hpp ///////////////
-
-////////// START OF src/Components/SimulateTurn/SimulateTurnInput.hpp //////////
-
-namespace pokesim::simulate_turn::tags {
-struct Input {};
-}  // namespace pokesim::simulate_turn::tags
-
-/////////// END OF src/Components/SimulateTurn/SimulateTurnInput.hpp ///////////
-
-//////////////////// START OF src/Components/SpeedSort.hpp /////////////////////
-
-namespace pokesim {
-// Data that determines the order actions take place
-struct SpeedSort {
-  // Order of the types of actions (lower first)
-  ActionOrder order = ActionOrder::NONE;
-  // Priority of the action (higher first)
-  types::priority priority = 0;
-  // Whether negative fractional priority is active for the action (false first)
-  types::fractionalPriority fractionalPriority = false;
-  // Speed of Pokemon using move (higher first if priority tie)
-  types::stat speed = 1;
-
-  bool operator==(const SpeedSort& other) const {
-    return order == other.order && priority == other.priority && fractionalPriority == other.fractionalPriority &&
-           speed == other.speed;
-  }
-};
-}  // namespace pokesim
-
-///////////////////// END OF src/Components/SpeedSort.hpp //////////////////////
-
-///////////////// START OF src/Components/Tags/TargetTags.hpp //////////////////
-
-namespace pokesim::move {
-namespace tags {
-struct AnySingleTarget {};
-struct AnySingleFoe {};
-struct AnySingleAlly {};
-struct AllyOrSelf {};
-struct Self {};
-struct AllFoes {};
-struct AlliesAndFoes {};
-struct AlliesAndSelf {};
-struct FoeSide {};
-struct AllySide {};
-struct Field {};
-struct AllyTeam {};
-struct Retaliation {};
-struct RandomFoe {};
-}  // namespace tags
-
-namespace added_targets::tags {
-struct TargetAlly {};
-struct UserAlly {};
-struct TargetSide {};
-struct UserSide {};
-struct Field {};
-}  // namespace added_targets::tags
-}  // namespace pokesim::move
-
-////////////////// END OF src/Components/Tags/TargetTags.hpp ///////////////////
-
 /////////////// START OF src/SimulateTurn/ManageActionQueue.hpp ////////////////
 
 // Systems
@@ -23877,11 +25800,30 @@ inline void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueu
 
 namespace pokesim::simulate_turn::debug {
 struct Checks : pokesim::debug::Checks {
-  Checks(const Simulation& _simulation) : pokesim::debug::Checks(_simulation) {}
+  Options options;
+  Checks(const Simulation& _simulation)
+      : pokesim::debug::Checks(_simulation), options(_simulation.simulateTurnOptions) {}
 
-  void checkInputs() const { check(); }
+  void checkInputs() const {
+    pokesim::debug::check(options.damageRollsConsidered);
+    if (options.randomChanceLowerLimit.has_value()) {
+      pokesim::debug::check(RandomBinaryChance{options.randomChanceLowerLimit.value()});
+    }
+    if (options.randomChanceUpperLimit.has_value()) {
+      pokesim::debug::check(RandomBinaryChance{options.randomChanceUpperLimit.value()});
+    }
+    if (options.branchProbabilityLowerLimit.has_value()) {
+      pokesim::debug::check(Probability{options.branchProbabilityLowerLimit.value()});
+    }
 
-  void checkOutputs() const { check(); }
+    check();
+  }
+
+  void checkOutputs() const {
+    POKESIM_REQUIRE_NM(options == simulation->simulateTurnOptions);
+
+    check();
+  }
 
  private:
   void check() const {
@@ -24104,26 +26046,6 @@ inline void run(Simulation& simulation) {
 }  // namespace pokesim::simulate_turn
 
 /////////////////// END OF src/SimulateTurn/SimulateTurn.cpp ///////////////////
-
-////////////// START OF src/Components/CalcDamage/CriticalHit.hpp //////////////
-
-#include <array>
-
-namespace pokesim::calc_damage {
-struct CritChanceDivisor {
-  types::percentChance val = pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS[0];
-};
-
-struct CritBoost {
-  types::boost val = 0U;
-};
-
-namespace tags {
-struct Crit {};
-}  // namespace tags
-}  // namespace pokesim::calc_damage
-
-/////////////// END OF src/Components/CalcDamage/CriticalHit.hpp ///////////////
 
 //////////////////////// START OF src/Utilities/RNG.hpp ////////////////////////
 
@@ -24561,7 +26483,7 @@ inline void randomEqualChance(
   };
 
   types::cloneIndex cloneCount =
-    possibleEventCount > MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT ? 0 : possibleEventCount - 1;
+    possibleEventCount > MechanicConstants::DamageRollCount::MAX ? 0 : possibleEventCount - 1;
 
   if (updateProbabilities.has_value()) {
     randomChanceEvent<
@@ -24631,34 +26553,6 @@ template void randomEventChances<5U>(Simulation&, types::callback, types::option
 }  // namespace pokesim
 
 /////////////////// END OF src/SimulateTurn/RandomChance.cpp ///////////////////
-
-/////////// START OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ///////////
-
-#include <cstdint>
-
-namespace pokesim {
-struct SpeedTieIndexes {
-  struct Span {
-    types::activePokemonIndex start = 0;
-    types::activePokemonIndex length = 0;
-  };
-
-  internal::fixedMemoryVector<Span, MechanicConstants::MaxValues::ACTIVE_POKEMON> val{};
-};
-}  // namespace pokesim
-
-//////////// END OF src/Components/SimulateTurn/SpeedTieIndexes.hpp ////////////
-
-///////////// START OF src/Components/SimulateTurn/TeamAction.hpp //////////////
-
-namespace pokesim::action {
-// Action Tag: When team member order has been picked as part of team preview
-struct Team {
-  types::teamOrder val{};
-};
-}  // namespace pokesim::action
-
-////////////// END OF src/Components/SimulateTurn/TeamAction.hpp ///////////////
 
 /////////////// START OF src/SimulateTurn/ManageActionQueue.cpp ////////////////
 
@@ -24751,7 +26645,7 @@ inline void speedSort(types::handle handle, ActionQueue& actionQueue) {
   if (entityList.size() == 1) return;
   const types::registry* registry = handle.registry();
 
-  internal::maxSizedVector<std::pair<SpeedSort, types::entity>, MechanicConstants::MaxValues::ACTION_QUEUE_LENGTH>
+  internal::maxSizedVector<std::pair<SpeedSort, types::entity>, MechanicConstants::ActionQueueLength::MAX>
     speedSortList;
   speedSortList.reserve(entityList.size());
 
@@ -24906,7 +26800,7 @@ inline void assignAllDamageRollProbability(
   POKESIM_REQUIRE(damageCount > 0U, "How was a damage roll not found that matched the damage dealt?");
 
   Probability& probability = registry.get<Probability>(battle.val);
-  probability.val *= damageCount / (types::probability)MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT;
+  probability.val *= damageCount / (types::probability)MechanicConstants::DamageRollCount::MAX;
 }
 
 inline types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {
@@ -24957,43 +26851,6 @@ inline void setIfMoveCrits(Simulation& simulation) {
 }  // namespace pokesim::simulate_turn
 
 /////////////// END OF src/SimulateTurn/CalcDamageSpecifics.cpp ////////////////
-
-//////////////// START OF src/Components/Pokedex/Abilities.hpp /////////////////
-
-namespace pokesim {
-// Contains one of the standard abilities a species can have.
-struct PrimaryAbility {
-  dex::Ability name = dex::Ability::NO_ABILITY;
-};
-
-// Contains one of the standard abilities a species can have if the species can have two standard abilities.
-struct SecondaryAbility {
-  dex::Ability name = dex::Ability::NO_ABILITY;
-};
-
-// Contains The hidden ability a species has.
-struct HiddenAbility {
-  dex::Ability name = dex::Ability::NO_ABILITY;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Pokedex/Abilities.hpp //////////////////
-
-//////////////// START OF src/Components/Pokedex/BaseStats.hpp /////////////////
-
-namespace pokesim {
-// Contains all of the base stats of a species
-struct BaseStats {
-  types::baseStat hp = 1;
-  types::baseStat atk = 1;
-  types::baseStat def = 1;
-  types::baseStat spa = 1;
-  types::baseStat spd = 1;
-  types::baseStat spe = 1;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Pokedex/BaseStats.hpp //////////////////
 
 ///////////////// START OF src/Pokedex/Setup/DexDataSetup.hpp //////////////////
 
@@ -25075,51 +26932,6 @@ inline void SpeciesDexDataSetup::setHiddenAbility(Ability ability) {
 }  // namespace pokesim::dex::internal
 
 /////////////// END OF src/Pokedex/Setup/SpeciesDexDataSetup.cpp ///////////////
-
-//////////////////// START OF src/Components/BasePower.hpp /////////////////////
-
-namespace pokesim {
-struct BasePower {
-  types::basePower val = 1;
-};
-}  // namespace pokesim
-
-///////////////////// END OF src/Components/BasePower.hpp //////////////////////
-
-////////////////////// START OF src/Components/Chance.hpp //////////////////////
-
-namespace pokesim {
-/**
- * @brief Chance of an effect occurring.
- *
- * Examples: Air Slash has a 60% chance to flinch, Harvest has a 50% chance to restore a used berry.
- */
-struct Chance {
-  types::baseEffectChance val = 100;
-};
-}  // namespace pokesim
-
-/////////////////////// END OF src/Components/Chance.hpp ///////////////////////
-
-///////////////// START OF src/Components/Names/TypeNames.hpp //////////////////
-
-namespace pokesim {
-struct TypeName {
-  dex::Type name = dex::Type::NO_TYPE;
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Components/Names/TypeNames.hpp ///////////////////
-
-///////////////////// START OF src/Components/Priority.hpp /////////////////////
-
-namespace pokesim {
-struct MovePriority {
-  types::priority val = 0;
-};
-}  // namespace pokesim
-
-////////////////////// END OF src/Components/Priority.hpp //////////////////////
 
 /////////////// START OF src/Pokedex/Setup/MoveDexDataSetup.hpp ////////////////
 
@@ -25258,7 +27070,7 @@ inline void MoveDexDataSetup::setSecondaryEffect(types::entity entity) {
 }
 
 inline void MoveEffectSetup::setChance(types::baseEffectChance chance) {
-  handle.emplace<Chance>(chance);
+  handle.emplace<BaseEffectChance>(chance);
 }
 
 inline void MoveEffectSetup::setEffectsSelf() {
@@ -26340,9 +28152,13 @@ inline constexpr types::typeEffectiveness getAttackEffectiveness(
 
 namespace pokesim::calc_damage::debug {
 struct Checks : pokesim::debug::Checks {
-  Checks(const Simulation& _simulation) : pokesim::debug::Checks(_simulation) {}
+  Options options;
+  Checks(const Simulation& _simulation)
+      : pokesim::debug::Checks(_simulation), options(_simulation.calculateDamageOptions) {}
 
   void checkInputs() {
+    pokesim::debug::check(options.damageRollOptions);
+
     checkMoveInputs();
     checkPokemonInputs(true);
     checkPokemonInputs(false);
@@ -26355,6 +28171,8 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkOutputs() const {
+    POKESIM_REQUIRE_NM(options == simulation->calculateDamageOptions);
+
     checkMoveOutputs();
     checkPokemonOutputs(true);
     checkPokemonOutputs(false);
@@ -26384,25 +28202,17 @@ struct Checks : pokesim::debug::Checks {
   std::size_t analyzeEffectCount = 0;
 
   void checkMoveInputs() {
-    for (types::entity move : simulation->selectedMoveEntities()) {
+    CurrentActionMoves moves{simulation->selectedMoveEntities()};
+    for (types::entity move : moves.val) {
       originalToCopy[move] = pokesim::debug::createEntityCopy(move, *registry, registryOnInput);
-
-      POKESIM_REQUIRE_NM(has<Attacker>(move));
-      POKESIM_REQUIRE_NM(has<tags::Attacker>(registry->get<Attacker>(move).val));
-      POKESIM_REQUIRE_NM(has<Defenders>(move));
-      POKESIM_REQUIRE_NM(has<tags::Defender>(registry->get<Defenders>(move).only()));
-      POKESIM_REQUIRE_NM(has<Battle>(move));
-      POKESIM_REQUIRE_NM(has<TypeName>(move));
-      bool isPhysical = has<move::tags::Physical>(move);
-      bool isSpecial = has<move::tags::Special>(move);
-      bool isStatus = has<move::tags::Status>(move);
-      POKESIM_REQUIRE_NM(isPhysical || isSpecial || isStatus);
 
       bool hasSimulateTurn = has<pokesim::tags::SimulateTurn>(move);
       bool hasCalculateDamage = has<pokesim::tags::CalculateDamage>(move);
       bool hasAnalyzeEffect = has<pokesim::tags::AnalyzeEffect>(move);
       POKESIM_REQUIRE_NM(hasSimulateTurn || hasCalculateDamage || hasAnalyzeEffect);
     }
+
+    pokesim::debug::check(moves, *registry);
   }
 
   types::entityVector getPokemonList(bool forAttacker) const {
@@ -26532,7 +28342,7 @@ struct Checks : pokesim::debug::Checks {
 
     std::size_t idealDamageRollCount = 0;
     if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
-      idealDamageRollCount = MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT;
+      idealDamageRollCount = MechanicConstants::DamageRollCount::MAX;
     }
     else {
       if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
@@ -26558,21 +28368,8 @@ struct Checks : pokesim::debug::Checks {
       POKESIM_REQUIRE_NM(has<UsesUntilKo>(move));
 
       const UsesUntilKo& usesUntilKo = registry->get<UsesUntilKo>(move);
-      POKESIM_REQUIRE_NM(!usesUntilKo.val.empty());
-      POKESIM_REQUIRE_NM(usesUntilKo.val.front() == usesUntilKo.minHits());
-      POKESIM_REQUIRE_NM(usesUntilKo.val.back() == usesUntilKo.maxHits());
-      POKESIM_REQUIRE_NM(usesUntilKo.val.size() <= MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT);
+      pokesim::debug::check(usesUntilKo);
       POKESIM_REQUIRE_NM(usesUntilKo.val.size() <= damageRolls.val.size());
-
-      types::moveHits lastUses = 0;
-      types::useUntilKoChance totalChance = 0;
-      for (const auto& useUntilKo : usesUntilKo.val) {
-        POKESIM_REQUIRE_NM(lastUses < useUntilKo.uses);
-        totalChance += useUntilKo.chance;
-        lastUses = useUntilKo.uses;
-      }
-
-      POKESIM_REQUIRE_NM(totalChance == 1.0F);
     }
   }
 
@@ -26668,29 +28465,6 @@ struct Checks {
 
 /////////////// END OF src/CalcDamage/CalcDamageDebugChecks.hpp ////////////////
 
-////////// START OF src/Components/CalcDamage/DamageCalcVariables.hpp //////////
-
-namespace pokesim::calc_damage {
-struct AttackingLevel {
-  types::level val = 1;
-};
-
-struct AttackingStat {
-  types::stat val = 1;
-};
-
-struct DefendingStat {
-  types::stat val = 1;
-};
-
-namespace tags {
-struct P1Defending {};
-struct P2Defending {};
-}  // namespace tags
-}  // namespace pokesim::calc_damage
-
-/////////// END OF src/Components/CalcDamage/DamageCalcVariables.hpp ///////////
-
 //////////////////// START OF src/CalcDamage/CalcDamage.cpp ////////////////////
 
 #include <cmath>
@@ -26737,7 +28511,7 @@ inline void applyCritDamageIncrease(Damage& damage) {
 }
 
 inline void setDamageToMinimumPossible(Damage& damage) {
-  damage.val = std::max(damage.val, MechanicConstants::MinValues::DAMAGE);
+  damage.val = std::max(damage.val, MechanicConstants::Damage::MIN);
 }
 
 inline void setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
@@ -26782,8 +28556,8 @@ inline void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
 }
 
 inline void calculateAllDamageRolls(DamageRolls& damageRolls, const Damage& damage, const DamageRollModifiers& modifier) {
-  damageRolls.val.reserve(MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT);
-  for (types::damageRollIndex i = 0; i < MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT; i++) {
+  damageRolls.val.reserve(MechanicConstants::DamageRollCount::MAX);
+  for (types::damageRollIndex i = 0; i < MechanicConstants::DamageRollCount::MAX; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
     applyDamageRoll(damageRoll, i);
     modifyDamage(damageRoll, modifier);
@@ -26861,16 +28635,16 @@ inline void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damage
   const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.only());
   UsesUntilKo usesUntilKo;
   POKESIM_REQUIRE(
-    damageRolls.val.size() == MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT,
+    damageRolls.val.size() == MechanicConstants::DamageRollCount::MAX,
     "All the damage rolls are needed to calculate this correctly.");
 
   for (const Damage& damageRoll : damageRolls.val) {
-    types::moveHits uses = (types::moveHits)std::ceil(defenderHp.val / (types::useUntilKoChance)damageRoll.val);
+    types::moveHits uses = (types::moveHits)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
     if (usesUntilKo.val.empty() || usesUntilKo.val.back().uses != uses) {
       usesUntilKo.val.push_back({uses, 0.0F});
     }
 
-    usesUntilKo.val.back().chance += (1.0 / MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT);
+    usesUntilKo.val.back().probability += (1.0 / MechanicConstants::DamageRollCount::MAX);
   }
   moveHandle.emplace<UsesUntilKo>(usesUntilKo);
 }
@@ -27049,12 +28823,11 @@ inline void applyDamageRoll(Damage& damage, types::damageRollIndex damageRoll) {
 }
 
 inline void applyAverageDamageRoll(Damage& damage) {
-  damage.val =
-    (types::damage)(damage.val * (100U - (MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT - 1U) / 2.0F) / 100.0F);
+  damage.val = (types::damage)(damage.val * (100U - (MechanicConstants::DamageRollCount::MAX - 1U) / 2.0F) / 100.0F);
 }
 
 inline void applyMinDamageRoll(Damage& damage) {
-  applyDamageRoll(damage, MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT - 1U);
+  applyDamageRoll(damage, MechanicConstants::DamageRollCount::MAX - 1U);
 }
 
 inline void run(Simulation& simulation) {
@@ -27115,66 +28888,6 @@ inline void SideStateSetup::setPlayerSide(PlayerSideId playerSideId) {
 }  // namespace pokesim
 
 ////////////////// END OF src/Battle/Setup/SideStateSetup.cpp //////////////////
-
-///////////////////// START OF src/Components/Position.hpp /////////////////////
-
-namespace pokesim {
-// The position of a Pokemon in its team's order (starts at 1)
-struct Position {
-  types::teamPositionIndex val = 1;
-};
-}  // namespace pokesim
-
-////////////////////// END OF src/Components/Position.hpp //////////////////////
-
-///////////////// START OF src/Components/Tags/AbilityTags.hpp /////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::ability::tags {
-struct Defiant {};
-struct Infiltrator {};
-struct IronFist {};
-struct Static {};
-struct SweetVeil {};
-struct Trace {};
-}  // namespace pokesim::ability::tags
-
-////////////////// END OF src/Components/Tags/AbilityTags.hpp //////////////////
-
-///////////////// START OF src/Components/Tags/NatureTags.hpp //////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::nature::tags {
-struct Adamant {};
-struct Bashful {};
-struct Bold {};
-struct Brave {};
-struct Calm {};
-struct Careful {};
-struct Docile {};
-struct Gentle {};
-struct Hardy {};
-struct Hasty {};
-struct Impish {};
-struct Jolly {};
-struct Lax {};
-struct Lonely {};
-struct Mild {};
-struct Modest {};
-struct Naive {};
-struct Naughty {};
-struct Quiet {};
-struct Quirky {};
-struct Rash {};
-struct Relaxed {};
-struct Sassy {};
-struct Serious {};
-struct Timid {};
-}  // namespace pokesim::nature::tags
-
-////////////////// END OF src/Components/Tags/NatureTags.hpp ///////////////////
 
 /////////////// START OF src/Battle/Setup/PokemonStateSetup.cpp ////////////////
 
@@ -27474,26 +29187,6 @@ inline void BattleStateSetup::setProbability(types::probability probability) {
 }  // namespace pokesim
 
 ///////////////// END OF src/Battle/Setup/BattleStateSetup.cpp /////////////////
-
-//////////// START OF src/Components/EntityHolders/LastUsedMove.hpp ////////////
-
-namespace pokesim {
-struct LastUsedMove {
-  types::entity val{};
-};
-}  // namespace pokesim
-
-///////////// END OF src/Components/EntityHolders/LastUsedMove.hpp /////////////
-
-///////////////// START OF src/Components/Names/StatNames.hpp //////////////////
-
-namespace pokesim {
-struct StatName {
-  dex::Stat name;
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Components/Names/StatNames.hpp ///////////////////
 
 ////////////// START OF src/Battle/Pokemon/ManagePokemonState.cpp //////////////
 
@@ -27835,17 +29528,6 @@ inline types::entity createActionMoveForTarget(
 }  // namespace pokesim
 
 //////////////////// END OF src/Battle/Helpers/Helpers.cpp /////////////////////
-
-////////////// START OF src/Components/EntityHolders/Pokemon.hpp ///////////////
-
-namespace pokesim {
-// Contains the entity pointing to a Pokemon.
-struct Pokemon {
-  types::entity val{};
-};
-}  // namespace pokesim
-
-/////////////// END OF src/Components/EntityHolders/Pokemon.hpp ////////////////
 
 ///////////////////// START OF src/Battle/Clone/Clone.cpp //////////////////////
 
@@ -28261,13 +29943,19 @@ inline void InputSetup::setBattle(types::entity entity) {
 
 namespace pokesim::analyze_effect::debug {
 struct Checks : pokesim::debug::Checks {
-  Checks(const Simulation& _simulation) : pokesim::debug::Checks(_simulation) {}
+  Options options;
+  Checks(const Simulation& _simulation)
+      : pokesim::debug::Checks(_simulation), options(_simulation.analyzeEffectOptions) {}
 
   void checkInputs() {
-    for (types::entity input : registry->view<tags::Input>()) {
+    pokesim::debug::check(options.damageRollOptions);
+
+    auto view = registry->view<tags::Input>();
+    types::entityVector inputs{view.begin(), view.end()};
+    for (types::entity input : inputs) {
       originalToCopy[input] = pokesim::debug::createEntityCopy(input, *registry, registryOnInput);
-      checkInput(input);
     }
+    pokesim::debug::check(Inputs{inputs}, *registry);
 
     for (types::entity battle : simulation->selectedBattleEntities()) {
       checkBattle(battle);
@@ -28288,6 +29976,8 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkOutputs() const {
+    POKESIM_REQUIRE_NM(options == simulation->analyzeEffectOptions);
+
     types::cloneIndex finalEntityCount = getFinalEntityCount();
     POKESIM_REQUIRE_NM(initialEntityCount == finalEntityCount);
     checkInputOutputs();
@@ -28297,87 +29987,6 @@ struct Checks : pokesim::debug::Checks {
   }
 
  private:
-  void checkInput(types::entity input) const {
-    POKESIM_REQUIRE_NM(has<Attacker>(input));
-    POKESIM_REQUIRE_NM(has<Defenders>(input));
-    POKESIM_REQUIRE_NM(has<EffectTarget>(input));
-    POKESIM_REQUIRE_NM(has<EffectMoves>(input));
-    POKESIM_REQUIRE_NM(has<Battle>(input));
-    POKESIM_REQUIRE_NM((registry->any_of<
-                        PseudoWeatherName,
-                        SideConditionName,
-                        StatusName,
-                        TerrainName,
-                        VolatileName,
-                        WeatherName,
-                        AtkBoost,
-                        DefBoost,
-                        SpaBoost,
-                        SpdBoost,
-                        SpeBoost>(input)));
-
-    auto const& [attacker, defenders, target, moves] =
-      registry->get<Attacker, Defenders, EffectTarget, EffectMoves>(input);
-    POKESIM_REQUIRE_NM(has<tags::Attacker>(attacker.val));
-    POKESIM_REQUIRE_NM(has<tags::Defender>(defenders.only()));
-    checkPokemon(attacker.val);
-    checkPokemon(defenders.only());
-    if (attacker.val != target.val && defenders.only() != target.val) {
-      checkPokemon(target.val);
-    }
-
-    POKESIM_REQUIRE_NM(std::find(moves.val.begin(), moves.val.end(), dex::Move::NO_MOVE) == moves.val.end());
-
-    if (has<PseudoWeatherName>(input)) {
-      POKESIM_REQUIRE_NM(registry->get<PseudoWeatherName>(input).name != dex::PseudoWeather::NO_PSEUDO_WEATHER);
-    }
-
-    if (has<SideConditionName>(input)) {
-      POKESIM_REQUIRE_NM(registry->get<SideConditionName>(input).name != dex::SideCondition::NO_SIDE_CONDITION);
-    }
-
-    if (has<StatusName>(input)) {
-      POKESIM_REQUIRE_NM(registry->get<StatusName>(input).name != dex::Status::NO_STATUS);
-    }
-
-    if (has<TerrainName>(input)) {
-      POKESIM_REQUIRE_NM(registry->get<TerrainName>(input).name != dex::Terrain::NO_TERRAIN);
-    }
-
-    if (has<VolatileName>(input)) {
-      POKESIM_REQUIRE_NM(registry->get<VolatileName>(input).name != dex::Volatile::NO_VOLATILE);
-    }
-
-    if (has<WeatherName>(input)) {
-      POKESIM_REQUIRE_NM(registry->get<WeatherName>(input).name != dex::Weather::NO_WEATHER);
-    }
-
-    if (has<AtkBoost>(input)) {
-      types::boost boost = registry->get<AtkBoost>(input).val;
-      checkBoost(boost);
-    }
-
-    if (has<DefBoost>(input)) {
-      types::boost boost = registry->get<DefBoost>(input).val;
-      checkBoost(boost);
-    }
-
-    if (has<SpaBoost>(input)) {
-      types::boost boost = registry->get<SpaBoost>(input).val;
-      checkBoost(boost);
-    }
-
-    if (has<SpdBoost>(input)) {
-      types::boost boost = registry->get<SpdBoost>(input).val;
-      checkBoost(boost);
-    }
-
-    if (has<SpeBoost>(input)) {
-      types::boost boost = registry->get<SpeBoost>(input).val;
-      checkBoost(boost);
-    }
-  }
-
   types::entityVector getPokemonList(bool forAttacker) const {
     if (forAttacker) {
       auto view = registry->view<tags::Attacker>();
@@ -28474,16 +30083,6 @@ struct Checks {
 
 //////////// END OF src/AnalyzeEffect/AnalyzeEffectDebugChecks.hpp /////////////
 
-/////////// START OF src/Components/AnalyzeEffect/RemovedEffect.hpp ////////////
-
-namespace pokesim::analyze_effect {
-struct RemovedEffect {
-  types::effectEnum val{};
-};
-}  // namespace pokesim::analyze_effect
-
-//////////// END OF src/Components/AnalyzeEffect/RemovedEffect.hpp /////////////
-
 ///////////////// START OF src/AnalyzeEffect/AnalyzeEffect.cpp /////////////////
 
 #include <cstddef>
@@ -28501,7 +30100,7 @@ enum class EffectPresentCheck : std::uint8_t {
 };
 
 inline void restoreInputs(
-  types::registry& registry, const MovePairs& movePairs, const OriginalInputEntities& originalEntities, Battle& battle,
+  types::registry& registry, MovePairs& movePairs, const OriginalInputEntities& originalEntities, Battle& battle,
   Attacker& attacker, Defenders& defenders, EffectTarget& effectTarget) {
   for (types::entity pokemon : {attacker.val, defenders.only(), originalEntities.attacker, originalEntities.defender}) {
     CurrentActionMoves* moves = registry.try_get<CurrentActionMoves>(pokemon);
@@ -28529,6 +30128,8 @@ inline void restoreInputs(
       registry.destroy(childBattleMove);
     }
   }
+
+  movePairs.val.clear();
 
   battle.val = originalEntities.battle;
   attacker.val = originalEntities.attacker;
@@ -28885,33 +30486,6 @@ inline void run(Simulation& simulation) {
 }  // namespace pokesim::analyze_effect
 
 ////////////////// END OF src/AnalyzeEffect/AnalyzeEffect.cpp //////////////////
-
-////////////////// START OF src/Components/Tags/TypeTags.hpp ///////////////////
-
-// TODO(aed3): Make this auto generated
-
-namespace pokesim::type::tags {
-struct Normal {};
-struct Fighting {};
-struct Flying {};
-struct Poison {};
-struct Ground {};
-struct Rock {};
-struct Bug {};
-struct Ghost {};
-struct Steel {};
-struct Fire {};
-struct Water {};
-struct Grass {};
-struct Electric {};
-struct Psychic {};
-struct Ice {};
-struct Dragon {};
-struct Dark {};
-struct Fairy {};
-}  // namespace pokesim::type::tags
-
-/////////////////// END OF src/Components/Tags/TypeTags.hpp ////////////////////
 
 //////////////////////// START OF src/Pokedex/Names.hpp ////////////////////////
 

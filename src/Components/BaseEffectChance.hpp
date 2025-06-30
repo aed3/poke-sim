@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Types/MechanicConstants.hpp>
 #include <Types/Move.hpp>
 
 namespace pokesim {
@@ -8,7 +9,7 @@ namespace pokesim {
  *
  * Examples: Air Slash has a 60% chance to flinch, Harvest has a 50% chance to restore a used berry.
  */
-struct Chance {
-  types::baseEffectChance val = 100;
+struct BaseEffectChance {
+  types::baseEffectChance val = MechanicConstants::MoveBaseEffectChance::MAX;
 };
 }  // namespace pokesim

@@ -392,7 +392,7 @@ void randomEqualChance(
   };
 
   types::cloneIndex cloneCount =
-    possibleEventCount > MechanicConstants::MaxValues::DAMAGE_ROLL_COUNT ? 0 : possibleEventCount - 1;
+    possibleEventCount > MechanicConstants::DamageRollCount::MAX ? 0 : possibleEventCount - 1;
 
   if (updateProbabilities.has_value()) {
     randomChanceEvent<
