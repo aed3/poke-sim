@@ -39,7 +39,8 @@ const runClangQuery = (query, file, bound) => {
 
   return matches.map(resultLine => {
     const [, line, column] = /(\d+):(\d+):/.exec(resultLine);
-    return {line: parseInt(line) - 1, column: parseInt(column) - 1, text: resultLine.split('\n')[1]?.trim()};
+    const lineAdjustment = resultLine.endsWith(' | template <>') ? 0 : 1;
+    return {line: parseInt(line) - lineAdjustment, column: parseInt(column) - 1, text: resultLine.split('\n')[1]?.trim()};
   });
 };
 

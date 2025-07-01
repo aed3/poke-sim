@@ -17412,6 +17412,10 @@ class AssertComponentsEqual {
   template <typename T, auto N>
   struct isList<std::array<T, N>> {};
 
+#ifdef _MSC_VER
+// The fails at the end of the following two methods are counted as unreachable, which in most cases is intended
+#pragma warning(disable : 4702)
+#endif
   template <typename Member>
   static void compareMember(const Member& current, const Member& initial, const types::registry& registry) {
     if constexpr (std::is_same_v<types::entity, Member>) {
@@ -17441,10 +17445,6 @@ class AssertComponentsEqual {
   }
 
  public:
-#ifdef _MSC_VER
-// The fail at the end is counted as unreachable, which in most cases is intended
-#pragma warning(disable : 4702)
-#endif
   static void check(const Type& current, const Type& initial, const types::registry& registry) {
     if constexpr (hasEqualTo<Type>::value) {
       compareMember(current, initial, registry);
@@ -20435,356 +20435,356 @@ inline void checkPokemon(types::entity, const types::registry&);
 inline void checkMoveSlot(types::entity, const types::registry&);
 inline void checkActionMove(types::entity, const types::registry&);
 
-inline template <>
-void check(const Accuracy&);
+template <>
+inline void check(const Accuracy&);
 
-inline template <>
-void check(const AddedTargets&);
+template <>
+inline void check(const AddedTargets&);
 
-inline template <>
-void check(const analyze_effect::EffectTarget&, const types::registry&);
+template <>
+inline void check(const analyze_effect::EffectTarget&, const types::registry&);
 
-inline template <>
-void check(const analyze_effect::EffectMoves&);
+template <>
+inline void check(const analyze_effect::EffectMoves&);
 
-inline template <>
-void check(const analyze_effect::Inputs&, const types::registry&);
+template <>
+inline void check(const analyze_effect::Inputs&, const types::registry&);
 
 // template <> void check(const analyze_effect::OriginalInputEntities&, const types::registry&);
 
-inline template <>
-void check(const analyze_effect::MovePairs&, const types::registry&);
+template <>
+inline void check(const analyze_effect::MovePairs&, const types::registry&);
 
 // template <> void check(const analyze_effect::RunsOneCalculationCount&);
 
 // template <> void check(const analyze_effect::RemovedEffect&);
 
-inline template <>
-void check(const BaseEffectChance&);
+template <>
+inline void check(const BaseEffectChance&);
 
-inline template <>
-void check(const BasePower&);
+template <>
+inline void check(const BasePower&);
 
-inline template <>
-void check(const AtkBoost&);
+template <>
+inline void check(const AtkBoost&);
 
-inline template <>
-void check(const DefBoost&);
+template <>
+inline void check(const DefBoost&);
 
-inline template <>
-void check(const SpaBoost&);
+template <>
+inline void check(const SpaBoost&);
 
-inline template <>
-void check(const SpdBoost&);
+template <>
+inline void check(const SpdBoost&);
 
-inline template <>
-void check(const SpeBoost&);
+template <>
+inline void check(const SpeBoost&);
 
-inline template <>
-void check(const calc_damage::CritChanceDivisor&);
+template <>
+inline void check(const calc_damage::CritChanceDivisor&);
 
-inline template <>
-void check(const calc_damage::CritBoost&);
+template <>
+inline void check(const calc_damage::CritBoost&);
 
-inline template <>
-void check(const calc_damage::AttackingLevel&);
+template <>
+inline void check(const calc_damage::AttackingLevel&);
 
-inline template <>
-void check(const calc_damage::AttackingStat&);
+template <>
+inline void check(const calc_damage::AttackingStat&);
 
-inline template <>
-void check(const calc_damage::DefendingStat&);
+template <>
+inline void check(const calc_damage::DefendingStat&);
 
 // template <> void check(const CloneTo&);
 
-inline template <>
-void check(const Damage&);
+template <>
+inline void check(const Damage&);
 
-inline template <>
-void check(const DamageRollModifiers&);
+template <>
+inline void check(const DamageRollModifiers&);
 
-inline template <>
-void check(const DamageRolls&);
+template <>
+inline void check(const DamageRolls&);
 
-inline template <>
-void check(const SlotDecision&);
+template <>
+inline void check(const SlotDecision&);
 
-inline template <>
-void check(const SideDecision&);
+template <>
+inline void check(const SideDecision&);
 
-inline template <>
-void check(const Evs&);
+template <>
+inline void check(const Evs&);
 
-inline template <>
-void check(const Ivs&);
+template <>
+inline void check(const Ivs&);
 
-inline template <>
-void check(const ActionQueue&, const types::registry&);
+template <>
+inline void check(const ActionQueue&, const types::registry&);
 
-inline template <>
-void check(const Battle&, const types::registry&);
+template <>
+inline void check(const Battle&, const types::registry&);
 
-inline template <>
-void check(const ParentBattle&, const types::registry&);
+template <>
+inline void check(const ParentBattle&, const types::registry&);
 
-inline template <>
-void check(const RootBattle&, const types::registry&);
+template <>
+inline void check(const RootBattle&, const types::registry&);
 
-inline template <>
-void check(const ParentEntity&, const types::registry&);
+template <>
+inline void check(const ParentEntity&, const types::registry&);
 
-inline template <>
-void check(const ChoiceLock&, const types::registry&);
+template <>
+inline void check(const ChoiceLock&, const types::registry&);
 
-inline template <>
-void check(const CurrentAction&, const types::registry&);
+template <>
+inline void check(const CurrentAction&, const types::registry&);
 
-inline template <>
-void check(const NextAction&, const types::registry&);
+template <>
+inline void check(const NextAction&, const types::registry&);
 
-inline template <>
-void check(const CurrentActionTargets&, const types::registry&);
+template <>
+inline void check(const CurrentActionTargets&, const types::registry&);
 
-inline template <>
-void check(const CurrentActionSource&, const types::registry&);
+template <>
+inline void check(const CurrentActionSource&, const types::registry&);
 
-inline template <>
-void check(const CurrentActionMoves&, const types::registry&);
+template <>
+inline void check(const CurrentActionMoves&, const types::registry&);
 
-inline template <>
-void check(const CurrentActionMoveSlot&, const types::registry&);
+template <>
+inline void check(const CurrentActionMoveSlot&, const types::registry&);
 
-inline template <>
-void check(const FoeSide&, const types::registry&);
+template <>
+inline void check(const FoeSide&, const types::registry&);
 
-inline template <>
-void check(const LastUsedMove&, const types::registry&);
+template <>
+inline void check(const LastUsedMove&, const types::registry&);
 
 // template <> void check(const MoveEffect&, const types::registry&);
 
-inline template <>
-void check(const MoveSlots&, const types::registry&);
+template <>
+inline void check(const MoveSlots&, const types::registry&);
 
-inline template <>
-void check(const Pokemon&, const types::registry&);
+template <>
+inline void check(const Pokemon&, const types::registry&);
 
-inline template <>
-void check(const Side&, const types::registry&);
+template <>
+inline void check(const Side&, const types::registry&);
 
-inline template <>
-void check(const Sides&, const types::registry&);
+template <>
+inline void check(const Sides&, const types::registry&);
 
-inline template <>
-void check(const Team&, const types::registry&);
+template <>
+inline void check(const Team&, const types::registry&);
 
 // template <> void check(const EventModifier&);
 
-inline template <>
-void check(const HitCount&);
+template <>
+inline void check(const HitCount&);
 
 // template <> void check(const Id&);
 
-inline template <>
-void check(const Level&);
+template <>
+inline void check(const Level&);
 
-inline template <>
-void check(const AbilityName&);
+template <>
+inline void check(const AbilityName&);
 
-inline template <>
-void check(const GenderName&);
+template <>
+inline void check(const GenderName&);
 
-inline template <>
-void check(const ItemName&);
+template <>
+inline void check(const ItemName&);
 
-inline template <>
-void check(const MoveName&);
+template <>
+inline void check(const MoveName&);
 
-inline template <>
-void check(const NatureName&);
+template <>
+inline void check(const NatureName&);
 
-inline template <>
-void check(const PseudoWeatherName&);
+template <>
+inline void check(const PseudoWeatherName&);
 
-inline template <>
-void check(const SideConditionName&);
+template <>
+inline void check(const SideConditionName&);
 
-inline template <>
-void check(const SourceSlotName&);
+template <>
+inline void check(const SourceSlotName&);
 
-inline template <>
-void check(const SpeciesName&);
+template <>
+inline void check(const SpeciesName&);
 
-inline template <>
-void check(const StatName&);
+template <>
+inline void check(const StatName&);
 
-inline template <>
-void check(const StatusName&);
+template <>
+inline void check(const StatusName&);
 
-inline template <>
-void check(const TargetSlotName&);
+template <>
+inline void check(const TargetSlotName&);
 
-inline template <>
-void check(const TerrainName&);
+template <>
+inline void check(const TerrainName&);
 
-inline template <>
-void check(const TypeName&);
+template <>
+inline void check(const TypeName&);
 
-inline template <>
-void check(const VolatileName&);
+template <>
+inline void check(const VolatileName&);
 
-inline template <>
-void check(const WeatherName&);
+template <>
+inline void check(const WeatherName&);
 
-inline template <>
-void check(const Pp&);
+template <>
+inline void check(const Pp&);
 
-inline template <>
-void check(const MaxPp&);
+template <>
+inline void check(const MaxPp&);
 
-inline template <>
-void check(const PlayerSide&);
+template <>
+inline void check(const PlayerSide&);
 
-inline template <>
-void check(const PrimaryAbility&);
+template <>
+inline void check(const PrimaryAbility&);
 
-inline template <>
-void check(const SecondaryAbility&);
+template <>
+inline void check(const SecondaryAbility&);
 
-inline template <>
-void check(const HiddenAbility&);
+template <>
+inline void check(const HiddenAbility&);
 
-inline template <>
-void check(const BaseStats&);
+template <>
+inline void check(const BaseStats&);
 
-inline template <>
-void check(const Position&);
+template <>
+inline void check(const Position&);
 
-inline template <>
-void check(const MovePriority&);
+template <>
+inline void check(const MovePriority&);
 
-inline template <>
-void check(const Probability&);
+template <>
+inline void check(const Probability&);
 
-inline template <>
-void check(const RngSeed&);
+template <>
+inline void check(const RngSeed&);
 
-inline template <>
-void check(const RandomEventChances<2U>&);
+template <>
+inline void check(const RandomEventChances<2U>&);
 
-inline template <>
-void check(const RandomEventChances<3U>&);
+template <>
+inline void check(const RandomEventChances<3U>&);
 
-inline template <>
-void check(const RandomEventChances<4U>&);
+template <>
+inline void check(const RandomEventChances<4U>&);
 
-inline template <>
-void check(const RandomEventChances<5U>&);
+template <>
+inline void check(const RandomEventChances<5U>&);
 
-inline template <>
-void check(const RandomBinaryChance&);
+template <>
+inline void check(const RandomBinaryChance&);
 
 // template <> void check(const RandomEventCount&);
 
-inline template <>
-void check(const RandomEventChancesStack<2U>&, const types::registry&);
+template <>
+inline void check(const RandomEventChancesStack<2U>&, const types::registry&);
 
-inline template <>
-void check(const RandomEventChancesStack<3U>&, const types::registry&);
+template <>
+inline void check(const RandomEventChancesStack<3U>&, const types::registry&);
 
-inline template <>
-void check(const RandomEventChancesStack<4U>&, const types::registry&);
+template <>
+inline void check(const RandomEventChancesStack<4U>&, const types::registry&);
 
-inline template <>
-void check(const RandomEventChancesStack<5U>&, const types::registry&);
+template <>
+inline void check(const RandomEventChancesStack<5U>&, const types::registry&);
 
-inline template <>
-void check(const RandomBinaryChanceStack&, const types::registry&);
+template <>
+inline void check(const RandomBinaryChanceStack&, const types::registry&);
 
-inline template <>
-void check(const RandomEventCountStack&, const types::registry&);
+template <>
+inline void check(const RandomEventCountStack&, const types::registry&);
 
-inline template <>
-void check(const RandomEqualChanceStack&, const types::registry&);
+template <>
+inline void check(const RandomEqualChanceStack&, const types::registry&);
 
 // template <> void check(const RandomEventIndex&);
 
-inline template <>
-void check(const action::Move&);
+template <>
+inline void check(const action::Move&);
 
-inline template <>
-void check(const action::Item&);
+template <>
+inline void check(const action::Item&);
 
-inline template <>
-void check(const SpeedTieIndexes&);
+template <>
+inline void check(const SpeedTieIndexes&);
 
-inline template <>
-void check(const action::Team&);
+template <>
+inline void check(const action::Team&);
 
-inline template <>
-void check(const simulate_turn::TurnOutcomeBattles&, const types::registry&);
+template <>
+inline void check(const simulate_turn::TurnOutcomeBattles&, const types::registry&);
 
-inline template <>
-void check(const calc_damage::UsesUntilKo&);
+template <>
+inline void check(const calc_damage::UsesUntilKo&);
 
-inline template <>
-void check(const calc_damage::AttackerHpRecovered&);
+template <>
+inline void check(const calc_damage::AttackerHpRecovered&);
 
-inline template <>
-void check(const calc_damage::AttackerHpLost&);
+template <>
+inline void check(const calc_damage::AttackerHpLost&);
 
-inline template <>
-void check(const analyze_effect::EffectMultiplier&);
+template <>
+inline void check(const analyze_effect::EffectMultiplier&);
 
-inline template <>
-void check(const SpeciesTypes&);
+template <>
+inline void check(const SpeciesTypes&);
 
-inline template <>
-void check(const SpeedSort&);
+template <>
+inline void check(const SpeedSort&);
 
-inline template <>
-void check(const stat::Hp&);
+template <>
+inline void check(const stat::Hp&);
 
-inline template <>
-void check(const stat::Atk&);
+template <>
+inline void check(const stat::Atk&);
 
-inline template <>
-void check(const stat::Def&);
+template <>
+inline void check(const stat::Def&);
 
-inline template <>
-void check(const stat::Spa&);
+template <>
+inline void check(const stat::Spa&);
 
-inline template <>
-void check(const stat::Spd&);
+template <>
+inline void check(const stat::Spd&);
 
-inline template <>
-void check(const stat::Spe&);
+template <>
+inline void check(const stat::Spe&);
 
-inline template <>
-void check(const stat::CurrentHp&);
+template <>
+inline void check(const stat::CurrentHp&);
 
-inline template <>
-void check(const stat::EffectiveAtk&);
+template <>
+inline void check(const stat::EffectiveAtk&);
 
-inline template <>
-void check(const stat::EffectiveDef&);
+template <>
+inline void check(const stat::EffectiveDef&);
 
-inline template <>
-void check(const stat::EffectiveSpa&);
+template <>
+inline void check(const stat::EffectiveSpa&);
 
-inline template <>
-void check(const stat::EffectiveSpd&);
+template <>
+inline void check(const stat::EffectiveSpd&);
 
-inline template <>
-void check(const stat::EffectiveSpe&);
+template <>
+inline void check(const stat::EffectiveSpe&);
 
-inline template <>
-void check(const Turn&);
+template <>
+inline void check(const Turn&);
 
-inline template <>
-void check(const DamageRollKind&);
+template <>
+inline void check(const DamageRollKind&);
 
-inline template <>
-void check(const DamageRollOptions&);
+template <>
+inline void check(const DamageRollOptions&);
 }  // namespace pokesim::debug
 
 #endif
@@ -21068,30 +21068,30 @@ inline void checkActionMove(types::entity moveEntity, const types::registry& reg
   POKESIM_REQUIRE_NM(isStatus == !(isPhysical || isSpecial));
 }
 
-inline template <>
-void check(const Accuracy& accuracy) {
+template <>
+inline void check(const Accuracy& accuracy) {
   checkBounds<MechanicConstants::MoveBaseAccuracy>(accuracy.val);
 }
 
-inline template <>
-void check(const AddedTargets& addedTargets) {
+template <>
+inline void check(const AddedTargets& addedTargets) {
   POKESIM_REQUIRE_NM(listContains(VALID_ADDED_TARGET_OPTIONS, addedTargets.val));
 }
 
-inline template <>
-void check(const analyze_effect::EffectTarget& effectTarget, const types::registry& registry) {
+template <>
+inline void check(const analyze_effect::EffectTarget& effectTarget, const types::registry& registry) {
   checkPokemon(effectTarget.val, registry);
 }
 
-inline template <>
-void check(const analyze_effect::EffectMoves& effectMoves) {
+template <>
+inline void check(const analyze_effect::EffectMoves& effectMoves) {
   for (dex::Move move : effectMoves.val) {
     check(MoveName{move});
   }
 }
 
-inline template <>
-void check(const analyze_effect::Inputs& inputs, const types::registry& registry) {
+template <>
+inline void check(const analyze_effect::Inputs& inputs, const types::registry& registry) {
   for (types::entity input : inputs.val) {
     types::registry::checkEntity(input, registry);
     POKESIM_REQUIRE_NM(has<analyze_effect::tags::Input>(input, registry));
@@ -21155,8 +21155,8 @@ void check(const analyze_effect::Inputs& inputs, const types::registry& registry
   }
 }
 
-inline template <>
-void check(const analyze_effect::MovePairs& movePairs, const types::registry& registry) {
+template <>
+inline void check(const analyze_effect::MovePairs& movePairs, const types::registry& registry) {
   for (auto [parentBattleMove, childBattleMove] : movePairs.val) {
     checkActionMove(parentBattleMove, registry);
     checkActionMove(childBattleMove, registry);
@@ -21190,95 +21190,95 @@ void check(const analyze_effect::MovePairs& movePairs, const types::registry& re
   }
 }
 
-inline template <>
-void check(const BaseEffectChance& chance) {
+template <>
+inline void check(const BaseEffectChance& chance) {
   checkBounds<MechanicConstants::MoveBaseEffectChance>(chance.val);
 }
 
-inline template <>
-void check(const BasePower& basePower) {
+template <>
+inline void check(const BasePower& basePower) {
   checkBounds<MechanicConstants::MoveBasePower>(basePower.val);
 }
 
-inline template <>
-void check(const AtkBoost& atkBoost) {
+template <>
+inline void check(const AtkBoost& atkBoost) {
   checkBoost(atkBoost.val);
 }
 
-inline template <>
-void check(const DefBoost& defBoost) {
+template <>
+inline void check(const DefBoost& defBoost) {
   checkBoost(defBoost.val);
 }
 
-inline template <>
-void check(const SpaBoost& spaBoost) {
+template <>
+inline void check(const SpaBoost& spaBoost) {
   checkBoost(spaBoost.val);
 }
 
-inline template <>
-void check(const SpdBoost& spdBoost) {
+template <>
+inline void check(const SpdBoost& spdBoost) {
   checkBoost(spdBoost.val);
 }
 
-inline template <>
-void check(const SpeBoost& speBoost) {
+template <>
+inline void check(const SpeBoost& speBoost) {
   checkBoost(speBoost.val);
 }
 
-inline template <>
-void check(const calc_damage::CritChanceDivisor& critChanceDivisor) {
+template <>
+inline void check(const calc_damage::CritChanceDivisor& critChanceDivisor) {
   POKESIM_REQUIRE_NM(listContains(MechanicConstants::CRIT_CHANCE_DIVISORS, critChanceDivisor.val));
 }
 
-inline template <>
-void check(const calc_damage::CritBoost& critBoost) {
+template <>
+inline void check(const calc_damage::CritBoost& critBoost) {
   checkBounds<MechanicConstants::CritBoost>(critBoost.val);
 }
 
-inline template <>
-void check(const calc_damage::AttackingLevel& attackingLevel) {
+template <>
+inline void check(const calc_damage::AttackingLevel& attackingLevel) {
   checkBounds<MechanicConstants::PokemonLevel>(attackingLevel.val);
 }
 
-inline template <>
-void check(const calc_damage::AttackingStat& attackingStat) {
+template <>
+inline void check(const calc_damage::AttackingStat& attackingStat) {
   checkStat(attackingStat.val);
 }
 
-inline template <>
-void check(const calc_damage::DefendingStat& defendingStat) {
+template <>
+inline void check(const calc_damage::DefendingStat& defendingStat) {
   checkStat(defendingStat.val);
 }
 
-inline template <>
-void check(const Damage& damage) {
+template <>
+inline void check(const Damage& damage) {
   POKESIM_REQUIRE_NM(damage.val <= MechanicConstants::Damage::MAX);
 }
 
-inline template <>
-void check(const DamageRollModifiers& modifiers) {
+template <>
+inline void check(const DamageRollModifiers& modifiers) {
   POKESIM_REQUIRE_NM(listContains(VALID_STAB_BOOST_KINDS, modifiers.stab));
   checkBounds<MechanicConstants::TypeEffectivenessShift>(modifiers.typeEffectiveness);
 }
 
-inline template <>
-void check(const DamageRolls& damageRolls) {
+template <>
+inline void check(const DamageRolls& damageRolls) {
   POKESIM_REQUIRE_NM(damageRolls.val.size() <= MechanicConstants::DamageRollCount::MAX);
   for (const Damage& damage : damageRolls.val) {
     check(damage);
   }
 }
 
-inline template <>
-void check(const SlotDecision& slotDecision) {
+template <>
+inline void check(const SlotDecision& slotDecision) {
   checkSlot(slotDecision.sourceSlot);
   checkSlot(slotDecision.targetSlot);
   POKESIM_REQUIRE_NM(!(slotDecision.moveChoice.has_value() && slotDecision.itemChoice.has_value()));
   POKESIM_REQUIRE_NM(!(slotDecision.megaEvolve && slotDecision.primalRevert));
 }
 
-inline template <>
-void check(const SideDecision& sideDecision) {
+template <>
+inline void check(const SideDecision& sideDecision) {
   checkPlayerSideId(sideDecision.sideId);
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     const types::slotDecisions& decisions = sideDecision.decisions.get<types::slotDecisions>();
@@ -21291,8 +21291,8 @@ void check(const SideDecision& sideDecision) {
   }
 }
 
-inline template <>
-void check(const Evs& evs) {
+template <>
+inline void check(const Evs& evs) {
   checkEv(evs.hp);
   checkEv(evs.atk);
   checkEv(evs.def);
@@ -21301,8 +21301,8 @@ void check(const Evs& evs) {
   checkEv(evs.spe);
 }
 
-inline template <>
-void check(const Ivs& ivs) {
+template <>
+inline void check(const Ivs& ivs) {
   checkIv(ivs.hp);
   checkIv(ivs.atk);
   checkIv(ivs.def);
@@ -21311,182 +21311,182 @@ void check(const Ivs& ivs) {
   checkIv(ivs.spe);
 }
 
-inline template <>
-void check(const ActionQueue& actionQueue, const types::registry& registry) {
+template <>
+inline void check(const ActionQueue& actionQueue, const types::registry& registry) {
   checkBounds<MechanicConstants::ActionQueueLength>(actionQueue.val.size());
   for (types::entity entity : actionQueue.val) {
     checkAction(entity, registry);
   }
 }
 
-inline template <>
-void check(const Battle& battle, const types::registry& registry) {
+template <>
+inline void check(const Battle& battle, const types::registry& registry) {
   checkBattle(battle.val, registry);
 }
 
-inline template <>
-void check(const ParentBattle& battle, const types::registry& registry) {
+template <>
+inline void check(const ParentBattle& battle, const types::registry& registry) {
   checkBattle(battle.val, registry);
 }
 
-inline template <>
-void check(const RootBattle& battle, const types::registry& registry) {
+template <>
+inline void check(const RootBattle& battle, const types::registry& registry) {
   checkBattle(battle.val, registry);
 }
 
-inline template <>
-void check(const ParentEntity& parentEntity, const types::registry& registry) {
+template <>
+inline void check(const ParentEntity& parentEntity, const types::registry& registry) {
   types::registry::checkEntity(parentEntity.val, registry);
 }
 
-inline template <>
-void check(const ChoiceLock& choiceLock, const types::registry& registry) {
+template <>
+inline void check(const ChoiceLock& choiceLock, const types::registry& registry) {
   checkPokemon(choiceLock.val, registry);
 }
 
-inline template <>
-void check(const CurrentAction& currentAction, const types::registry& registry) {
+template <>
+inline void check(const CurrentAction& currentAction, const types::registry& registry) {
   checkAction(currentAction.val, registry);
 }
 
-inline template <>
-void check(const NextAction& nextAction, const types::registry& registry) {
+template <>
+inline void check(const NextAction& nextAction, const types::registry& registry) {
   checkAction(nextAction.val, registry);
 }
 
-inline template <>
-void check(const CurrentActionTargets& targets, const types::registry& registry) {
+template <>
+inline void check(const CurrentActionTargets& targets, const types::registry& registry) {
   for (types::entity target : targets.val) {
     checkPokemon(target, registry);
   }
 }
 
-inline template <>
-void check(const CurrentActionSource& source, const types::registry& registry) {
+template <>
+inline void check(const CurrentActionSource& source, const types::registry& registry) {
   checkPokemon(source.val, registry);
 }
 
-inline template <>
-void check(const CurrentActionMoves& moves, const types::registry& registry) {
+template <>
+inline void check(const CurrentActionMoves& moves, const types::registry& registry) {
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }
 }
 
-inline template <>
-void check(const CurrentActionMoveSlot& move, const types::registry& registry) {
+template <>
+inline void check(const CurrentActionMoveSlot& move, const types::registry& registry) {
   checkMoveSlot(move.val, registry);
 }
 
-inline template <>
-void check(const FoeSide& foeSide, const types::registry& registry) {
+template <>
+inline void check(const FoeSide& foeSide, const types::registry& registry) {
   checkSide(foeSide.val, registry);
 }
 
-inline template <>
-void check(const LastUsedMove& lastUsedMove, const types::registry& registry) {
+template <>
+inline void check(const LastUsedMove& lastUsedMove, const types::registry& registry) {
   checkMoveSlot(lastUsedMove.val, registry);
 }
 
-inline template <>
-void check(const MoveSlots& moveSlots, const types::registry& registry) {
+template <>
+inline void check(const MoveSlots& moveSlots, const types::registry& registry) {
   checkBounds<MechanicConstants::MoveSlots>(moveSlots.val.size());
   for (types::entity moveEntity : moveSlots.val) {
     checkMoveSlot(moveEntity, registry);
   }
 }
 
-inline template <>
-void check(const Pokemon& pokemon, const types::registry& registry) {
+template <>
+inline void check(const Pokemon& pokemon, const types::registry& registry) {
   checkPokemon(pokemon.val, registry);
 }
 
-inline template <>
-void check(const Side& side, const types::registry& registry) {
+template <>
+inline void check(const Side& side, const types::registry& registry) {
   checkSide(side.val, registry);
 }
 
-inline template <>
-void check(const Sides& sides, const types::registry& registry) {
+template <>
+inline void check(const Sides& sides, const types::registry& registry) {
   POKESIM_REQUIRE_NM(sides.val.size() == MechanicConstants::SIDE_COUNT);
   checkSide(sides.p1(), registry);
   checkSide(sides.p2(), registry);
 }
 
-inline template <>
-void check(const Team& team, const types::registry& registry) {
+template <>
+inline void check(const Team& team, const types::registry& registry) {
   for (types::entity pokemonEntity : team.val) {
     checkPokemon(pokemonEntity, registry);
   }
 }
 
-inline template <>
-void check(const HitCount& hitCount) {
+template <>
+inline void check(const HitCount& hitCount) {
   checkBounds<MechanicConstants::MoveHits>(hitCount.val);
 }
 
-inline template <>
-void check(const Level& level) {
+template <>
+inline void check(const Level& level) {
   checkBounds<MechanicConstants::PokemonLevel>(level.val);
 }
 
-inline template <>
-void check(const AbilityName& abilityName) {
+template <>
+inline void check(const AbilityName& abilityName) {
   POKESIM_REQUIRE_NM(abilityName.name != dex::Ability::NO_ABILITY);
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Ability>)abilityName.name <= dex::TOTAL_ABILITY_COUNT);
 }
 
-inline template <>
-void check(const GenderName& genderName) {
+template <>
+inline void check(const GenderName& genderName) {
   POKESIM_REQUIRE_NM(genderName.name != dex::Gender::NO_GENDER);
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Gender>)genderName.name <= dex::TOTAL_GENDER_COUNT);
 }
 
-inline template <>
-void check(const ItemName& itemName) {
+template <>
+inline void check(const ItemName& itemName) {
   POKESIM_REQUIRE_NM(itemName.name != dex::Item::NO_ITEM);
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Item>)itemName.name <= dex::TOTAL_ITEM_COUNT);
 }
 
-inline template <>
-void check(const MoveName& moveName) {
+template <>
+inline void check(const MoveName& moveName) {
   POKESIM_REQUIRE_NM(moveName.name != dex::Move::NO_MOVE);
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Move>)moveName.name <= dex::TOTAL_MOVE_COUNT);
 }
 
-inline template <>
-void check(const NatureName& natureName) {
+template <>
+inline void check(const NatureName& natureName) {
   POKESIM_REQUIRE_NM(natureName.name != dex::Nature::NO_NATURE);
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Nature>)natureName.name <= dex::TOTAL_NATURE_COUNT);
 }
 
-inline template <>
-void check(const PseudoWeatherName& pseudoWeatherName) {
+template <>
+inline void check(const PseudoWeatherName& pseudoWeatherName) {
   POKESIM_REQUIRE_NM(pseudoWeatherName.name != dex::PseudoWeather::NO_PSEUDO_WEATHER);
   POKESIM_REQUIRE_NM(
     (std::underlying_type_t<dex::PseudoWeather>)pseudoWeatherName.name <= dex::TOTAL_PSEUDO_WEATHER_COUNT);
 }
 
-inline template <>
-void check(const SideConditionName& sideConditionName) {
+template <>
+inline void check(const SideConditionName& sideConditionName) {
   POKESIM_REQUIRE_NM(sideConditionName.name != dex::SideCondition::NO_SIDE_CONDITION);
   POKESIM_REQUIRE_NM(
     (std::underlying_type_t<dex::SideCondition>)sideConditionName.name <= dex::TOTAL_SIDE_CONDITION_COUNT);
 }
 
-inline template <>
-void check(const SourceSlotName& sourceSlotName) {
+template <>
+inline void check(const SourceSlotName& sourceSlotName) {
   checkSlot(sourceSlotName.name);
 }
 
-inline template <>
-void check(const SpeciesName& speciesName) {
+template <>
+inline void check(const SpeciesName& speciesName) {
   POKESIM_REQUIRE_NM(speciesName.name != dex::Species::NO_SPECIES);
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Species>)speciesName.name <= dex::TOTAL_SPECIES_COUNT);
 }
 
-inline template <>
-void check(const StatName& statName) {
+template <>
+inline void check(const StatName& statName) {
   switch (statName.name) {
     case dex::Stat::HP:
     case dex::Stat::ATK:
@@ -21499,73 +21499,73 @@ void check(const StatName& statName) {
   POKESIM_REQUIRE_FAIL(std::to_string((std::underlying_type_t<dex::Stat>)statName.name) + " is not a valid Stat enum.");
 }
 
-inline template <>
-void check(const StatusName& statusName) {
+template <>
+inline void check(const StatusName& statusName) {
   POKESIM_REQUIRE_NM(statusName.name != dex::Status::NO_STATUS);
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Status>)statusName.name <= dex::TOTAL_STATUS_COUNT);
 }
 
-inline template <>
-void check(const TargetSlotName& targetSlotName) {
+template <>
+inline void check(const TargetSlotName& targetSlotName) {
   checkSlot(targetSlotName.name);
 }
 
-inline template <>
-void check(const TerrainName& terrainName) {
+template <>
+inline void check(const TerrainName& terrainName) {
   POKESIM_REQUIRE_NM(terrainName.name != dex::Terrain::NO_TERRAIN);
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Terrain>)terrainName.name <= dex::TOTAL_TERRAIN_COUNT);
 }
 
-inline template <>
-void check(const TypeName& typeName) {
+template <>
+inline void check(const TypeName& typeName) {
   POKESIM_REQUIRE_NM(typeName.name != dex::Type::NO_TYPE);
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Type>)typeName.name <= dex::TOTAL_TYPE_COUNT);
 }
 
-inline template <>
-void check(const VolatileName& volatileName) {
+template <>
+inline void check(const VolatileName& volatileName) {
   POKESIM_REQUIRE_NM(volatileName.name != dex::Volatile::NO_VOLATILE);
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Volatile>)volatileName.name <= dex::TOTAL_VOLATILE_COUNT);
 }
 
-inline template <>
-void check(const WeatherName& weatherName) {
+template <>
+inline void check(const WeatherName& weatherName) {
   POKESIM_REQUIRE_NM(weatherName.name != dex::Weather::NO_WEATHER);
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Weather>)weatherName.name <= dex::TOTAL_WEATHER_COUNT);
 }
 
-inline template <>
-void check(const Pp& pp) {
+template <>
+inline void check(const Pp& pp) {
   checkBounds<MechanicConstants::MovePp>(pp.val);
 }
 
-inline template <>
-void check(const MaxPp& maxPp) {
+template <>
+inline void check(const MaxPp& maxPp) {
   checkBounds<MechanicConstants::MoveMaxPp>(maxPp.val);
 }
 
-inline template <>
-void check(const PlayerSide& playerSide) {
+template <>
+inline void check(const PlayerSide& playerSide) {
   checkPlayerSideId(playerSide.val);
 }
 
-inline template <>
-void check(const PrimaryAbility& ability) {
+template <>
+inline void check(const PrimaryAbility& ability) {
   check(AbilityName{ability.name});
 }
 
-inline template <>
-void check(const SecondaryAbility& ability) {
+template <>
+inline void check(const SecondaryAbility& ability) {
   check(AbilityName{ability.name});
 }
 
-inline template <>
-void check(const HiddenAbility& ability) {
+template <>
+inline void check(const HiddenAbility& ability) {
   check(AbilityName{ability.name});
 }
 
-inline template <>
-void check(const BaseStats& baseStats) {
+template <>
+inline void check(const BaseStats& baseStats) {
   checkBaseStat(baseStats.hp);
   checkBaseStat(baseStats.atk);
   checkBaseStat(baseStats.def);
@@ -21574,117 +21574,117 @@ void check(const BaseStats& baseStats) {
   checkBaseStat(baseStats.spe);
 }
 
-inline template <>
-void check(const Position& position) {
+template <>
+inline void check(const Position& position) {
   checkBounds<MechanicConstants::TeamSize>(position.val);
 }
 
-inline template <>
-void check(const MovePriority& movePriority) {
+template <>
+inline void check(const MovePriority& movePriority) {
   checkBounds<MechanicConstants::MovePriority>(movePriority.val);
 }
 
-inline template <>
-void check(const Probability& probability) {
+template <>
+inline void check(const Probability& probability) {
   checkProbability(probability.val);
 }
 
-inline template <>
-void check(const RngSeed& seed) {
+template <>
+inline void check(const RngSeed& seed) {
   POKESIM_REQUIRE_NM(seed.val != 0U);
 }
 
-inline template <>
-void check(const RandomEventChances<2U>& randomEventChances) {
+template <>
+inline void check(const RandomEventChances<2U>& randomEventChances) {
   checkRandomChanceEvents(randomEventChances);
 }
 
-inline template <>
-void check(const RandomEventChances<3U>& randomEventChances) {
+template <>
+inline void check(const RandomEventChances<3U>& randomEventChances) {
   checkRandomChanceEvents(randomEventChances);
 }
 
-inline template <>
-void check(const RandomEventChances<4U>& randomEventChances) {
+template <>
+inline void check(const RandomEventChances<4U>& randomEventChances) {
   checkRandomChanceEvents(randomEventChances);
 }
 
-inline template <>
-void check(const RandomEventChances<5U>& randomEventChances) {
+template <>
+inline void check(const RandomEventChances<5U>& randomEventChances) {
   checkRandomChanceEvents(randomEventChances);
 }
 
-inline template <>
-void check(const RandomBinaryChance& randomBinaryChance) {
+template <>
+inline void check(const RandomBinaryChance& randomBinaryChance) {
   checkPercentChance(randomBinaryChance.val);
 }
 
-inline template <>
-void check(const RandomEventChancesStack<2U>& randomEventChancesStack, const types::registry& registry) {
+template <>
+inline void check(const RandomEventChancesStack<2U>& randomEventChancesStack, const types::registry& registry) {
   for (const auto& [chances, target] : randomEventChancesStack.val) {
     checkPokemon(target, registry);
     check(RandomEventChances<2U>{chances});
   }
 }
 
-inline template <>
-void check(const RandomEventChancesStack<3U>& randomEventChancesStack, const types::registry& registry) {
+template <>
+inline void check(const RandomEventChancesStack<3U>& randomEventChancesStack, const types::registry& registry) {
   for (const auto& [chances, target] : randomEventChancesStack.val) {
     checkPokemon(target, registry);
     check(RandomEventChances<3U>{chances});
   }
 }
 
-inline template <>
-void check(const RandomEventChancesStack<4U>& randomEventChancesStack, const types::registry& registry) {
+template <>
+inline void check(const RandomEventChancesStack<4U>& randomEventChancesStack, const types::registry& registry) {
   for (const auto& [chances, target] : randomEventChancesStack.val) {
     checkPokemon(target, registry);
     check(RandomEventChances<4U>{chances});
   }
 }
 
-inline template <>
-void check(const RandomEventChancesStack<5U>& randomEventChancesStack, const types::registry& registry) {
+template <>
+inline void check(const RandomEventChancesStack<5U>& randomEventChancesStack, const types::registry& registry) {
   for (const auto& [chances, target] : randomEventChancesStack.val) {
     checkPokemon(target, registry);
     check(RandomEventChances<5U>{chances});
   }
 }
 
-inline template <>
-void check(const RandomBinaryChanceStack& randomBinaryChanceStack, const types::registry& registry) {
+template <>
+inline void check(const RandomBinaryChanceStack& randomBinaryChanceStack, const types::registry& registry) {
   for (const auto& [chance, target] : randomBinaryChanceStack.val) {
     checkPokemon(target, registry);
     check(RandomBinaryChance{chance});
   }
 }
 
-inline template <>
-void check(const RandomEventCountStack& randomEventCountStack, const types::registry& registry) {
+template <>
+inline void check(const RandomEventCountStack& randomEventCountStack, const types::registry& registry) {
   for (const auto& [chance, target] : randomEventCountStack.val) {
     checkPokemon(target, registry);
   }
 }
 
-inline template <>
-void check(const RandomEqualChanceStack& randomEqualChanceStack, const types::registry& registry) {
+template <>
+inline void check(const RandomEqualChanceStack& randomEqualChanceStack, const types::registry& registry) {
   for (const auto& target : randomEqualChanceStack.val) {
     checkPokemon(target, registry);
   }
 }
 
-inline template <>
-void check(const action::Move& move) {
+template <>
+inline void check(const action::Move& move) {
   check(MoveName{move});
 }
 
-inline template <>
-void check(const action::Item& item) {
+template <>
+inline void check(const action::Item& item) {
   check(ItemName{item});
 }
 
-inline template <>
-void check(const SpeedTieIndexes& speedTieIndexes) {
+template <>
+inline void check(const SpeedTieIndexes& speedTieIndexes) {
   types::activePokemonIndex total = 0U;
   for (const auto& span : speedTieIndexes.val) {
     checkBounds<MechanicConstants::ActivePokemon>(span.start);
@@ -21695,20 +21695,20 @@ void check(const SpeedTieIndexes& speedTieIndexes) {
   checkBounds<MechanicConstants::ActivePokemon>(total);
 }
 
-inline template <>
-void check(const action::Team& team) {
+template <>
+inline void check(const action::Team& team) {
   checkTeamOrder(team.val);
 }
 
-inline template <>
-void check(const simulate_turn::TurnOutcomeBattles& teamOutcomBattles, const types::registry& registry) {
+template <>
+inline void check(const simulate_turn::TurnOutcomeBattles& teamOutcomBattles, const types::registry& registry) {
   for (types::entity entity : teamOutcomBattles.val) {
     checkBattle(entity, registry);
   }
 }
 
-inline template <>
-void check(const calc_damage::UsesUntilKo& usesUntilKo) {
+template <>
+inline void check(const calc_damage::UsesUntilKo& usesUntilKo) {
   checkBounds<MechanicConstants::DamageRollCount>(usesUntilKo.val.size());
 
   types::moveHits lastUses = 0;
@@ -21727,23 +21727,23 @@ void check(const calc_damage::UsesUntilKo& usesUntilKo) {
   checkProbability(totalProbability);
 }
 
-inline template <>
-void check(const calc_damage::AttackerHpRecovered& attackerHpRecovered) {
+template <>
+inline void check(const calc_damage::AttackerHpRecovered& attackerHpRecovered) {
   check((DamageRolls)attackerHpRecovered);
 }
 
-inline template <>
-void check(const calc_damage::AttackerHpLost& attackerHpLost) {
+template <>
+inline void check(const calc_damage::AttackerHpLost& attackerHpLost) {
   check((DamageRolls)attackerHpLost);
 }
 
-inline template <>
-void check(const analyze_effect::EffectMultiplier& effectiveMultiplier) {
+template <>
+inline void check(const analyze_effect::EffectMultiplier& effectiveMultiplier) {
   checkBounds<MechanicConstants::AnalyzeEffectMultiplier>(effectiveMultiplier.val);
 }
 
-inline template <>
-void check(const SpeciesTypes& speciesTypes) {
+template <>
+inline void check(const SpeciesTypes& speciesTypes) {
   check(TypeName{speciesTypes.type1()});
   POKESIM_REQUIRE_NM(speciesTypes.type1() != speciesTypes.type2());
   if (speciesTypes.type2() != dex::Type::NO_TYPE) {
@@ -21751,80 +21751,80 @@ void check(const SpeciesTypes& speciesTypes) {
   }
 }
 
-inline template <>
-void check(const SpeedSort& speedSort) {
+template <>
+inline void check(const SpeedSort& speedSort) {
   POKESIM_REQUIRE_NM(listContains(VALID_ACTION_ORDERS, speedSort.order));
   checkBounds<MechanicConstants::MovePriority>(speedSort.priority);
   checkStat(speedSort.speed);
 }
 
-inline template <>
-void check(const stat::Hp& hp) {
+template <>
+inline void check(const stat::Hp& hp) {
   checkStat(hp.val, true);
 }
 
-inline template <>
-void check(const stat::Atk& atk) {
+template <>
+inline void check(const stat::Atk& atk) {
   checkStat(atk.val);
 }
 
-inline template <>
-void check(const stat::Def& def) {
+template <>
+inline void check(const stat::Def& def) {
   checkStat(def.val);
 }
 
-inline template <>
-void check(const stat::Spa& spa) {
+template <>
+inline void check(const stat::Spa& spa) {
   checkStat(spa.val);
 }
 
-inline template <>
-void check(const stat::Spd& spd) {
+template <>
+inline void check(const stat::Spd& spd) {
   checkStat(spd.val);
 }
 
-inline template <>
-void check(const stat::Spe& spe) {
+template <>
+inline void check(const stat::Spe& spe) {
   checkStat(spe.val);
 }
 
-inline template <>
-void check(const stat::CurrentHp& hp) {
+template <>
+inline void check(const stat::CurrentHp& hp) {
   checkEffectiveStat(hp.val, true);
 }
 
-inline template <>
-void check(const stat::EffectiveAtk& atk) {
+template <>
+inline void check(const stat::EffectiveAtk& atk) {
   checkEffectiveStat(atk.val);
 }
 
-inline template <>
-void check(const stat::EffectiveDef& def) {
+template <>
+inline void check(const stat::EffectiveDef& def) {
   checkEffectiveStat(def.val);
 }
 
-inline template <>
-void check(const stat::EffectiveSpa& spa) {
+template <>
+inline void check(const stat::EffectiveSpa& spa) {
   checkEffectiveStat(spa.val);
 }
 
-inline template <>
-void check(const stat::EffectiveSpd& spd) {
+template <>
+inline void check(const stat::EffectiveSpd& spd) {
   checkEffectiveStat(spd.val);
 }
 
-inline template <>
-void check(const stat::EffectiveSpe& spe) {
+template <>
+inline void check(const stat::EffectiveSpe& spe) {
   checkEffectiveStat(spe.val);
 }
 
-inline template <>
-void check(const Turn& turn) {
+template <>
+inline void check(const Turn& turn) {
   checkBounds<MechanicConstants::TurnCount>(turn.val);
 }
 
-inline template <>
-void check(const DamageRollKind& damageRollKind) {
+template <>
+inline void check(const DamageRollKind& damageRollKind) {
   if (listContains(VALID_DAMAGE_ROLL_KINDS, damageRollKind)) {
     return;
   }
@@ -21845,8 +21845,8 @@ void check(const DamageRollKind& damageRollKind) {
   POKESIM_REQUIRE_NM((binaryValue | (DamageRollKindBase)damageRollKind) == binaryValue);
 }
 
-inline template <>
-void check(const DamageRollOptions& damageRollOptions) {
+template <>
+inline void check(const DamageRollOptions& damageRollOptions) {
   check(damageRollOptions.p1);
   check(damageRollOptions.p2);
 }

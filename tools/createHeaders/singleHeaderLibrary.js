@@ -197,7 +197,7 @@ const createSingleFileHeader = () => {
     m namespaceDecl(
       isExpansionInMainFile(),
       matchesName("pokesim"),
-      forEach(functionTemplateDecl(forEach(functionTemplate)))
+      forEach(functionTemplateDecl(forEach(inline)))
     )`;
 
     const inlineLocations = runClangQuery(query, tempHeaderPath, 'inline');

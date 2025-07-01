@@ -84,6 +84,10 @@ class AssertComponentsEqual {
   template <typename T, auto N>
   struct isList<std::array<T, N>> {};
 
+#ifdef _MSC_VER
+// The fails at the end of the following two methods are counted as unreachable, which in most cases is intended
+#pragma warning(disable : 4702)
+#endif
   template <typename Member>
   static void compareMember(const Member& current, const Member& initial, const types::registry& registry) {
     if constexpr (std::is_same_v<types::entity, Member>) {
@@ -113,10 +117,6 @@ class AssertComponentsEqual {
   }
 
  public:
-#ifdef _MSC_VER
-// The fail at the end is counted as unreachable, which in most cases is intended
-#pragma warning(disable : 4702)
-#endif
   static void check(const Type& current, const Type& initial, const types::registry& registry) {
     if constexpr (hasEqualTo<Type>::value) {
       compareMember(current, initial, registry);
