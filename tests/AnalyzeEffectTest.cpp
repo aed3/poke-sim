@@ -13,16 +13,17 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
 
   using Ideals = std::tuple<types::effectMultiplier, DamageRolls, calc_damage::UsesUntilKo>;
   entt::dense_map<types::entity, Ideals> idealMultipliers;
-  const DamageRolls idealBaseDamageRolls = {{13, 12, 12, 12, 12, 12, 12, 12, 11, 11, 11, 11, 11, 11, 11, 11}};
-  const DamageRolls idealHalvedDamageRolls = {{6, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5}};
+  const DamageRolls idealBaseDamageRolls = {
+    {13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U, 11U, 11U, 11U, 11U, 11U, 11U, 11U}};
+  const DamageRolls idealHalvedDamageRolls = {{6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U}};
 
   types::effectMultiplier idealHalvedMultiplier =
     (types::effectMultiplier)idealHalvedDamageRolls.val[0].val / idealBaseDamageRolls.val[0].val;
   types::effectMultiplier idealDoubledMultiplier =
     (types::effectMultiplier)idealBaseDamageRolls.val[0].val / idealHalvedDamageRolls.val[0].val;
 
-  calc_damage::UsesUntilKo idealBaseKoUses = {{{23, 1 / 16.0F}, {25, 7 / 16.0F}, {27, 8 / 16.0F}}};
-  calc_damage::UsesUntilKo idealHalvedKoUses = {{{50, 0.5F}, {59, 0.5F}}};
+  calc_damage::UsesUntilKo idealBaseKoUses = {{{23U, 1 / 16.0F}, {25U, 7 / 16.0F}, {27U, 8 / 16.0F}}};
+  calc_damage::UsesUntilKo idealHalvedKoUses = {{{50U, 0.5F}, {59U, 0.5F}}};
 
   auto checkResults = [&](const analyze_effect::Results& results) {
     const auto multipliers = results.effectMultiplierResults();
@@ -43,7 +44,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
         REQUIRE(damageRolls.contains(entity));
         const auto& [trueDamageRolls] = damageRolls.get(entity);
         REQUIRE(trueDamageRolls.val.size() == idealDamageRolls.val.size());
-        for (types::damageRollIndex i = 0; i < trueDamageRolls.val.size(); i++) {
+        for (types::damageRollIndex i = 0U; i < trueDamageRolls.val.size(); i++) {
           REQUIRE(trueDamageRolls.val[i].val == idealDamageRolls.val[i].val);
         }
 
@@ -55,7 +56,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
         REQUIRE(trueKosUses.guaranteedKo() == false);
 
         REQUIRE(trueKosUses.val.size() == idealKoUses.val.size());
-        for (types::damageRollIndex i = 0; i < trueKosUses.val.size(); i++) {
+        for (types::damageRollIndex i = 0U; i < trueKosUses.val.size(); i++) {
           REQUIRE(trueKosUses.val[i] == idealKoUses.val[i]);
         }
       }

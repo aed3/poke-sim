@@ -4,12 +4,12 @@
 
 namespace pokesim {
 struct Evs {
-  types::ev hp = 0;
-  types::ev atk = 0;
-  types::ev def = 0;
-  types::ev spa = 0;
-  types::ev spd = 0;
-  types::ev spe = 0;
+  types::ev hp = MechanicConstants::PokemonEv::MIN;
+  types::ev atk = MechanicConstants::PokemonEv::MIN;
+  types::ev def = MechanicConstants::PokemonEv::MIN;
+  types::ev spa = MechanicConstants::PokemonEv::MIN;
+  types::ev spd = MechanicConstants::PokemonEv::MIN;
+  types::ev spe = MechanicConstants::PokemonEv::MIN;
 
   bool operator==(const Evs& other) const {
     return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
@@ -18,12 +18,12 @@ struct Evs {
 };
 
 struct Ivs {
-  types::iv hp = 0;
-  types::iv atk = 0;
-  types::iv def = 0;
-  types::iv spa = 0;
-  types::iv spd = 0;
-  types::iv spe = 0;
+  types::iv hp = MechanicConstants::PokemonIv::MIN;
+  types::iv atk = MechanicConstants::PokemonIv::MIN;
+  types::iv def = MechanicConstants::PokemonIv::MIN;
+  types::iv spa = MechanicConstants::PokemonIv::MIN;
+  types::iv spd = MechanicConstants::PokemonIv::MIN;
+  types::iv spe = MechanicConstants::PokemonIv::MIN;
 
   bool operator==(const Ivs& other) const {
     return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&

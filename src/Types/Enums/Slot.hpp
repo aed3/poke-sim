@@ -4,7 +4,7 @@
 
 namespace pokesim {
 enum class Slot : std::uint8_t {
-  NONE = 0,
+  NONE = 0U,
   P1A,
   P2A,
   P1B,

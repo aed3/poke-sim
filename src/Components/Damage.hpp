@@ -10,12 +10,12 @@
 
 namespace pokesim {
 struct Damage {
-  types::damage val = 1;
+  types::damage val = MechanicConstants::Damage::MIN;
 };
 
 struct DamageRollModifiers {
   StabBoostKind stab = StabBoostKind::NONE;
-  types::typeEffectiveness typeEffectiveness = 0;
+  types::typeEffectiveness typeEffectiveness = MechanicConstants::TypeEffectivenessShift::BASE;
   bool burn = false;
   bool zOrMaxBrokenProtect = false;
   types::eventModifier modifyDamageEvent = MechanicConstants::FIXED_POINT_SCALE;

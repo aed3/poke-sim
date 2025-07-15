@@ -60,6 +60,7 @@ struct MechanicConstants {
 
   struct PokemonStatBoost {
     static constexpr std::int8_t MAX = 6;
+    static constexpr std::int8_t BASE = 0;
     static constexpr std::int8_t MIN = -6;
   };
 
@@ -95,6 +96,7 @@ struct MechanicConstants {
 
   struct MovePriority {
     static constexpr std::int8_t MAX = 5;  // 8 is theoretically possible, but no existing move has more than 5
+    static constexpr std::int8_t BASE = 0;
     static constexpr std::int8_t MIN = -7;
   };
 
@@ -117,6 +119,7 @@ struct MechanicConstants {
 
   struct TypeEffectivenessShift {
     static constexpr std::int8_t MAX = 3;
+    static constexpr std::int8_t BASE = 0;
     static constexpr std::int8_t MIN = -7;
   };
 
@@ -154,6 +157,8 @@ struct MechanicConstants {
     static constexpr float MAX = 1.0F;
     static constexpr float MIN = 0.0F;
   };
+
+  static constexpr float PercentChanceToProbability = PercentChance::MAX / Probability::MAX;
 
   struct AnalyzeEffectMultiplier {
     static constexpr float MAX = PokemonHpStat::MAX;

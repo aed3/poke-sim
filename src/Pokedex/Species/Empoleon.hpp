@@ -12,7 +12,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct Empoleon {
   static constexpr Species name = Species::EMPOLEON;
-  static constexpr types::baseStat hp = 84, atk = 86, def = 88, spa = 111, spd = 101, spe = 60;
+  static constexpr types::baseStat hp = 84U, atk = 86U, def = 88U, spa = 111U, spd = 101U, spe = 60U;
 
   static constexpr SpeciesTypes type = {Type::WATER, Type::STEEL};
 

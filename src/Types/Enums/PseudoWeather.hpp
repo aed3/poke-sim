@@ -5,7 +5,7 @@
 namespace pokesim::dex {
 enum class PseudoWeather : std::uint8_t {
   // clang-format off
-  NO_PSEUDO_WEATHER = 0, PSEUDO_WEATHER_TOTAL
+  NO_PSEUDO_WEATHER = 0U, PSEUDO_WEATHER_TOTAL
   // clang-format on
 };
 

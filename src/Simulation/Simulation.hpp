@@ -4,6 +4,7 @@
 #include <Components/EVsIVs.hpp>
 #include <Components/SpeciesTypes.hpp>
 #include <Types/Entity.hpp>
+#include <Types/MechanicConstants.hpp>
 #include <Types/headers.hpp>
 #include <entt/entity/registry.hpp>
 #include <optional>
@@ -42,8 +43,8 @@ class Simulation : public internal::RegistryContainer {
  public:
   struct MoveCreationInfo {
     dex::Move name = dex::Move::NO_MOVE;
-    types::pp pp = 1;
-    types::pp maxPp = 1;
+    types::pp pp = MechanicConstants::MovePp::MIN;
+    types::pp maxPp = MechanicConstants::MoveMaxPp::MIN;
   };
 
   struct PokemonCreationInfo {
@@ -55,7 +56,7 @@ class Simulation : public internal::RegistryContainer {
     dex::Ability ability = dex::Ability::NO_ABILITY;
     dex::Gender gender = dex::Gender::NO_GENDER;
     dex::Status status = dex::Status::NO_STATUS;
-    types::level level = 1;
+    types::level level = MechanicConstants::PokemonLevel::MIN;
 
     bool fainted = false;
 
@@ -63,12 +64,12 @@ class Simulation : public internal::RegistryContainer {
     Evs evs;
     Ivs ivs;
     struct {
-      types::stat hp = 1;
-      types::stat atk = 1;
-      types::stat def = 1;
-      types::stat spa = 1;
-      types::stat spd = 1;
-      types::stat spe = 1;
+      types::stat hp = MechanicConstants::PokemonHpStat::MIN;
+      types::stat atk = MechanicConstants::PokemonStat::MIN;
+      types::stat def = MechanicConstants::PokemonStat::MIN;
+      types::stat spa = MechanicConstants::PokemonStat::MIN;
+      types::stat spd = MechanicConstants::PokemonStat::MIN;
+      types::stat spe = MechanicConstants::PokemonStat::MIN;
     } stats;
 
     std::vector<MoveCreationInfo> moves{};
@@ -93,7 +94,7 @@ class Simulation : public internal::RegistryContainer {
    private:
     struct BoostInfo {
       dex::Stat stat = dex::Stat::ATK;
-      types::boost boost = 0;
+      types::boost boost = MechanicConstants::PokemonStatBoost::BASE;
     };
 
    public:
@@ -109,9 +110,9 @@ class Simulation : public internal::RegistryContainer {
     bool runWithSimulateTurn = false;
     bool runWithCalculateDamage = false;
     bool runWithAnalyzeEffect = false;
-    types::battleTurn turn = 0;
+    types::battleTurn turn = MechanicConstants::TurnCount::MIN;
     std::optional<types::rngState> rngSeed = std::nullopt;
-    types::probability probability = 1;
+    types::probability probability = MechanicConstants::Probability::MAX;
 
     SideCreationInfo p1;
     SideCreationInfo p2;
@@ -145,7 +146,7 @@ class Simulation : public internal::RegistryContainer {
   analyze_effect::Options analyzeEffectOptions;
 
   Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_);
-  Simulation(Simulation&& other) = default;
+  Simulation(Simulation&& other) noexcept;
   ~Simulation();
 
   const Pokedex& pokedex() const;

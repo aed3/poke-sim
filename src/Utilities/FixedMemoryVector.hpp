@@ -10,7 +10,7 @@ namespace pokesim::internal {
 template <typename T, std::uint8_t N>
 class fixedMemoryVector : private std::array<T, N> {
   using base = std::array<T, N>;
-  std::uint8_t used = 0;
+  std::uint8_t used = 0U;
 
  public:
   using base::begin;
@@ -20,7 +20,7 @@ class fixedMemoryVector : private std::array<T, N> {
 
   fixedMemoryVector() : base() {
     static_assert(
-      sizeof(fixedMemoryVector<T, N>) <= sizeof(std::vector<T>) + (sizeof(T) * N / 2),
+      sizeof(fixedMemoryVector<T, N>) <= sizeof(std::vector<T>) + (sizeof(T) * N / 2U),
       "A std::vector for this type and size would be smaller.");
   }
 
@@ -32,7 +32,7 @@ class fixedMemoryVector : private std::array<T, N> {
 
   constexpr std::uint8_t size() const noexcept { return used; }
   constexpr std::uint8_t max_size() const noexcept { return N; }
-  constexpr bool empty() const noexcept { return used == 0; }
+  constexpr bool empty() const noexcept { return used == 0U; }
 
   constexpr typename base::const_reference front() const noexcept { return *base::begin(); }
   constexpr typename base::const_reference back() const noexcept { return N ? *(end() - 1) : *end(); }

@@ -7,7 +7,7 @@ const DamageRollKind MAX_DAMAGE = DamageRollKind::MAX_DAMAGE;
 const DamageRollKind GUARANTEED_CRIT_CHANCE = DamageRollKind::GUARANTEED_CRIT_CHANCE;
 const DamageRollKind ALL_DAMAGE_ROLLS = DamageRollKind::ALL_DAMAGE_ROLLS;
 
-const std::array<DamageRollKind, 16> damageRollKindCombinations = {
+const std::array<DamageRollKind, 16U> damageRollKindCombinations = {
   AVERAGE_DAMAGE,
   MIN_DAMAGE,
   MAX_DAMAGE,
@@ -49,22 +49,22 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
   };
 
   const IdealDamageValues furyAttackBaseDamage(
-    {13, 12, 12, 12, 12, 12, 12, 12, 11, 11, 11, 11, 11, 11, 11, 11},
-    {{{23, 1 / 16.0F}, {25, 7 / 16.0F}, {27, 8 / 16.0F}}},
-    12);
+    {13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U, 11U, 11U, 11U, 11U, 11U, 11U, 11U},
+    {{{23U, 1 / 16.0F}, {25U, 7 / 16.0F}, {27U, 8 / 16.0F}}},
+    12U);
   const IdealDamageValues thunderboltBaseDamage(
-    {282, 278, 276, 272, 270, 266, 264, 260, 258, 254, 252, 248, 246, 242, 240, 236},
-    {{{1, 3 / 16.0F}, {2, 13 / 16.0F}}},
-    258);
+    {282U, 278U, 276U, 272U, 270U, 266U, 264U, 260U, 258U, 254U, 252U, 248U, 246U, 242U, 240U, 236U},
+    {{{1U, 3 / 16.0F}, {2U, 13 / 16.0F}}},
+    258U);
 
   const IdealDamageValues furyAttackCritDamage(
-    {19, 18, 18, 18, 18, 18, 17, 17, 17, 17, 17, 16, 16, 16, 16, 16},
-    {{{16, 1 / 16.0F}, {17, 5 / 16.0F}, {18, 5 / 16.0F}, {19, 5 / 16.0F}}},
-    17);
+    {19U, 18U, 18U, 18U, 18U, 18U, 17U, 17U, 17U, 17U, 17U, 16U, 16U, 16U, 16U, 16U},
+    {{{16U, 1 / 16.0F}, {17U, 5 / 16.0F}, {18U, 5 / 16.0F}, {19U, 5 / 16.0F}}},
+    17U);
   const IdealDamageValues thunderboltCritDamage(
-    {422, 416, 414, 408, 404, 398, 396, 392, 386, 384, 378, 374, 372, 366, 362, 356},
-    {{{1, 16 / 16.0F}}},
-    390);
+    {422U, 416U, 414U, 408U, 404U, 398U, 396U, 392U, 386U, 384U, 378U, 374U, 372U, 366U, 362U, 356U},
+    {{{1U, 16 / 16.0F}}},
+    390U);
 
   DamageRollOptions damageRollOptions;
   bool getKoUses = GENERATE(false, true);
@@ -87,7 +87,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
   const auto hpRecovered = result.hpRecoveredResults();
   const auto koUses = result.usesUntilKoResults();
 
-  REQUIRE(damageRolls.size() == 2);
+  REQUIRE(damageRolls.size() == 2U);
   REQUIRE(hpLost.empty());
   REQUIRE(hpRecovered.empty());
 
@@ -95,7 +95,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
     REQUIRE(koUses.empty());
   }
   else {
-    types::damageRollIndex idealKoUsesSize = 0;
+    types::damageRollIndex idealKoUsesSize = 0U;
     if (calc_damage::damageKindsMatch(damageRollOptions.p1, DamageRollKind::ALL_DAMAGE_ROLLS)) {
       idealKoUsesSize++;
     }
@@ -129,7 +129,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
 
     if (calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
       REQUIRE(trueDamageRolls.val.size() == idealDamageValues.rolls.val.size());
-      for (types::damageRollIndex i = 0; i < trueDamageRolls.val.size(); i++) {
+      for (types::damageRollIndex i = 0U; i < trueDamageRolls.val.size(); i++) {
         types::damage idealDamage = idealDamageValues.rolls.val[i].val;
         if (calculateUpToFoeHp) {
           idealDamage = std::min(idealDamage, targetHp);
@@ -144,10 +144,10 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
 
         REQUIRE(trueKosUses.minHits() == idealKoUses.val[0]);
         REQUIRE(trueKosUses.maxHits() == idealKoUses.val.back());
-        REQUIRE(trueKosUses.guaranteedKo() == (idealKoUses.val.size() == 1));
+        REQUIRE(trueKosUses.guaranteedKo() == (idealKoUses.val.size() == 1U));
 
         REQUIRE(trueKosUses.val.size() == idealKoUses.val.size());
-        for (types::damageRollIndex i = 0; i < trueKosUses.val.size(); i++) {
+        for (types::damageRollIndex i = 0U; i < trueKosUses.val.size(); i++) {
           REQUIRE(trueKosUses.val[i] == idealKoUses.val[i]);
         }
       }

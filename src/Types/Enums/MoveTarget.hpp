@@ -4,7 +4,7 @@
 
 namespace pokesim {
 enum class MoveTarget : std::uint8_t {
-  NONE = 0,
+  NONE = 0U,
   ANY_SINGLE_TARGET,  // Targets one Pokemon other than the move's user
   ANY_SINGLE_FOE,     // Targets one foe
   ANY_SINGLE_ALLY,    // Targets one ally

@@ -5,7 +5,7 @@
 namespace pokesim::dex {
 enum class Terrain : std::uint8_t {
   // clang-format off
-  NO_TERRAIN = 0, TERRAIN_TOTAL
+  NO_TERRAIN = 0U, TERRAIN_TOTAL
   // clang-format on
 };
 

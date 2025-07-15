@@ -12,7 +12,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct Dragapult {
   static constexpr Species name = Species::DRAGAPULT;
-  static constexpr types::baseStat hp = 88, atk = 120, def = 75, spa = 100, spd = 75, spe = 142;
+  static constexpr types::baseStat hp = 88U, atk = 120U, def = 75U, spa = 100U, spd = 75U, spe = 142U;
 
   static constexpr SpeciesTypes type = {Type::DRAGON, Type::GHOST};
 

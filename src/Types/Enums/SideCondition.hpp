@@ -5,7 +5,7 @@
 namespace pokesim::dex {
 enum class SideCondition : std::uint8_t {
   // clang-format off
-  NO_SIDE_CONDITION = 0, SIDE_CONDITION_TOTAL
+  NO_SIDE_CONDITION = 0U, SIDE_CONDITION_TOTAL
   // clang-format on
 };
 

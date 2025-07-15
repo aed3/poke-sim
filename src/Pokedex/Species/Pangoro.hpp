@@ -12,7 +12,7 @@ namespace pokesim::dex {
 template <GameMechanics>
 struct Pangoro {
   static constexpr Species name = Species::PANGORO;
-  static constexpr types::baseStat hp = 95, atk = 124, def = 78, spa = 69, spd = 71, spe = 58;
+  static constexpr types::baseStat hp = 95U, atk = 124U, def = 78U, spa = 69U, spd = 71U, spe = 58U;
 
   static constexpr SpeciesTypes type = {Type::FIGHTING, Type::DARK};
 

@@ -132,7 +132,7 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(id.val == creationInfo.id.value());
     }
     else {
-      POKESIM_REQUIRE_NM(id.val != 0);
+      POKESIM_REQUIRE_NM(id.val != 0U);
     }
 
     POKESIM_REQUIRE_NM(speciesName.name == creationInfo.species);
@@ -190,7 +190,7 @@ struct SimulationSetupChecks {
 
     POKESIM_REQUIRE_NM(moveSlots.val.size() == creationInfo.moves.size());
 
-    for (std::size_t i = 0; i < creationInfo.moves.size(); i++) {
+    for (std::size_t i = 0U; i < creationInfo.moves.size(); i++) {
       const Simulation::MoveCreationInfo& move = creationInfo.moves[i];
       types::entity moveEntity = moveSlots.val[(types::moveSlotIndex)i];
       POKESIM_REQUIRE_NM((registry->all_of<MoveName, Pp, MaxPp>(moveEntity)));
@@ -209,7 +209,7 @@ struct SimulationSetupChecks {
     const auto& team = registry->get<Team>(sideEntity).val;
     POKESIM_REQUIRE_NM(team.size() == creationInfo.team.size());
 
-    for (std::size_t i = 0; i < creationInfo.team.size(); i++) {
+    for (std::size_t i = 0U; i < creationInfo.team.size(); i++) {
       types::entity pokemonEntity = team[(types::teamPositionIndex)i];
       checkCreatedPokemon(pokemonEntity, creationInfo.team[i]);
 
@@ -231,10 +231,10 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(rngSeed.val == creationInfo.rngSeed);
     }
     else {
-      POKESIM_REQUIRE_NM(rngSeed.val != 0);
+      POKESIM_REQUIRE_NM(rngSeed.val != 0U);
     }
 
-    POKESIM_REQUIRE(sides.val.size() == 2, "Both sides should be have entities.");
+    POKESIM_REQUIRE(sides.val.size() == MechanicConstants::SIDE_COUNT, "Both sides should be have entities.");
     auto [p1SideEntity, p2SideEntity] = sides.val;
 
     checkCreatedSide(p1SideEntity, creationInfo.p1);
@@ -251,8 +251,8 @@ struct SimulationSetupChecks {
   void checkTurnDecision(types::entity battleEntity, const Simulation::TurnDecisionInfo& turnDecisionInfo) const {
     const auto& sides = registry->get<Sides>(battleEntity).val;
 
-    POKESIM_REQUIRE(sides.size() == 2, "Both sides should be have entities.");
-    for (uint8_t side = 0; side < 2U; side++) {
+    POKESIM_REQUIRE(sides.size() == MechanicConstants::SIDE_COUNT, "Both sides should be have entities.");
+    for (std::uint8_t side = 0U; side < MechanicConstants::SIDE_COUNT; side++) {
       const auto& sideDecision = registry->get<SideDecision>(sides[side]);
       const auto& sideDecisionInfo = side ? turnDecisionInfo.p2 : turnDecisionInfo.p1;
 
@@ -265,7 +265,7 @@ struct SimulationSetupChecks {
         const auto& slotDecisionsInfo = sideDecisionInfo.decisions.get<types::slotDecisions>();
         POKESIM_REQUIRE_NM(slotDecisions.size() == slotDecisionsInfo.size());
         POKESIM_REQUIRE_NM(!slotDecisions.empty());
-        for (uint8_t slot = 0; slot < slotDecisions.size(); slot++) {
+        for (std::uint8_t slot = 0U; slot < slotDecisions.size(); slot++) {
           const auto& slotDecision = slotDecisions[slot];
           const auto& slotDecisionInfo = slotDecisionsInfo[slot];
 
@@ -287,9 +287,13 @@ struct SimulationSetupChecks {
         POKESIM_REQUIRE_NM(teamOrder.size() == teamOrderInfo.size());
         POKESIM_REQUIRE_NM(!teamOrder.empty());
 
-        for (uint8_t position = 0; position < teamOrder.size(); position++) {
+        for (std::uint8_t position = 0U; position < teamOrder.size(); position++) {
           POKESIM_REQUIRE_NM(teamOrder[position] == teamOrderInfo[position]);
         }
+      }
+      else {
+        POKESIM_REQUIRE_FAIL(
+          "Decision kind of index " + std::to_string(sideDecisionInfo.decisions.index()) + "not implemented yet.");
       }
 
       pokesim::debug::check(sideDecision);
@@ -352,7 +356,7 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(effectTarget.val == setupInfoEffectTarget);
 
     POKESIM_REQUIRE_NM(effectMoves.val.size() == analyzeEffectInputInfo.moves.size());
-    for (std::size_t i = 0; i < effectMoves.val.size(); i++) {
+    for (std::size_t i = 0U; i < effectMoves.val.size(); i++) {
       POKESIM_REQUIRE_NM(effectMoves.val[i] == analyzeEffectInputInfo.moves[i]);
     }
 
@@ -442,7 +446,8 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(createdBattles.contains(&battleInfo));
       const types::entityVector& battleEntities = createdBattles.at(&battleInfo);
 
-      std::size_t idealBattleCount = battleInfo.decisionsToSimulate.empty() ? 1 : battleInfo.decisionsToSimulate.size();
+      std::size_t idealBattleCount =
+        battleInfo.decisionsToSimulate.empty() ? 1U : battleInfo.decisionsToSimulate.size();
       POKESIM_REQUIRE_NM(idealBattleCount == battleEntities.size());
       for (types::entity entity : battleEntities) {
         checkBattle(entity, battleInfo);

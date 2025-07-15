@@ -175,7 +175,7 @@ void simulateTurn(Simulation& simulation) {
 
   if (!options.applyChangesToInputBattle) {
     simulation.addToEntities<pokesim::tags::CloneFrom, pokesim::tags::Battle, pokesim::tags::SimulateTurn>();
-    const auto entityMap = clone(simulation.registry, 1);
+    const auto entityMap = clone(simulation.registry, 1U);
     for (const auto& inputBattleMapping : entityMap) {
       simulation.registry.emplace<tags::Input>(inputBattleMapping.first);
     }

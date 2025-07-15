@@ -71,7 +71,7 @@ void accuracyCheck(Simulation& simulation) {
 }
 
 void internal::deductMoveHitCount(types::handle moveHandle, HitCount& hitCount) {
-  POKESIM_REQUIRE(hitCount.val > 0, "A hit count shouldn't be decremented if it's already 0.");
+  POKESIM_REQUIRE(hitCount.val > 0U, "A hit count shouldn't be decremented if it's already 0.");
   hitCount.val--;
   if (!hitCount.val) {
     moveHandle.remove<HitCount>();
@@ -117,7 +117,7 @@ void internal::updateCurrentActionTargets(types::registry& registry, CurrentActi
   for (types::entity& target : targets.val) {
     if (!registry.all_of<tags::CurrentActionMoveTarget>(target)) {
       types::activePokemonIndex swapIndex = targets.val.size() - 1 - deleteCount;
-      POKESIM_REQUIRE(swapIndex >= 0 && swapIndex < targets.val.size(), "Swap index out of bounds.");
+      POKESIM_REQUIRE(swapIndex < targets.val.size(), "Swap index out of bounds.");
       std::swap(target, targets.val[swapIndex]);
       deleteCount++;
     }

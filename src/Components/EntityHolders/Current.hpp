@@ -18,7 +18,7 @@ struct CurrentActionTargets {
   types::targets<types::entity> val{};
   const types::entity& only() const {
     POKESIM_REQUIRE(
-      val.size() == 1,
+      val.size() == 1U,
       "This method is supposed to get the first target when there's only one target stored.");
     return val[0];
   };

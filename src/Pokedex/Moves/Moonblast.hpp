@@ -18,12 +18,12 @@ struct Moonblast {
   static constexpr Type type = Type::FAIRY;
   static constexpr MoveCategory category = MoveCategory::SPECIAL;
 
-  static constexpr types::baseAccuracy accuracy = 100;
-  static constexpr types::basePower basePower = 95;
-  static constexpr types::pp basePp = 15;
+  static constexpr types::baseAccuracy accuracy = 100U;
+  static constexpr types::basePower basePower = 95U;
+  static constexpr types::pp basePp = 15U;
 
   struct targetSecondaryEffect {
-    static constexpr types::baseEffectChance chance = 30;
+    static constexpr types::baseEffectChance chance = 30U;
     static constexpr types::boost spaBoost = -1;
 
     static constexpr Tags<> effectTags{};

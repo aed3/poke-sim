@@ -69,7 +69,7 @@ struct Checks : pokesim::debug::Checks {
       POKESIM_REQUIRE_NM(simulateTurnCount == finalSimulationTurnCount);
       POKESIM_REQUIRE_NM(initialEntityCount == finalEntityCount);
     }
-    else if (simulateTurnCount == 0) {
+    else if (simulateTurnCount == 0U) {
       POKESIM_REQUIRE_NM(initialEntityCount == finalEntityCount);
     }
 
@@ -80,9 +80,9 @@ struct Checks : pokesim::debug::Checks {
   }
 
  private:
-  std::size_t simulateTurnCount = 0;
-  std::size_t calcDamageCount = 0;
-  std::size_t analyzeEffectCount = 0;
+  std::size_t simulateTurnCount = 0U;
+  std::size_t calcDamageCount = 0U;
+  std::size_t analyzeEffectCount = 0U;
 
   void checkMoveInputs() {
     CurrentActionMoves moves{simulation->selectedMoveEntities()};
@@ -209,7 +209,7 @@ struct Checks : pokesim::debug::Checks {
 
     for (const Damage& damageRoll : damageRolls.val) {
       POKESIM_REQUIRE_NM(lastDamage >= damageRoll.val);
-      POKESIM_REQUIRE_NM(damageRoll.val > 0);
+      POKESIM_REQUIRE_NM(damageRoll.val >= MechanicConstants::Damage::MIN);
       if (calculateUpToFoeHp) {
         POKESIM_REQUIRE_NM(damageRoll.val <= defenderHp.val);
       }
@@ -223,7 +223,7 @@ struct Checks : pokesim::debug::Checks {
       damageRollKind != DamageRollKind::NONE,
       "Cannot calculate damage without knowing what rolls to consider.");
 
-    std::size_t idealDamageRollCount = 0;
+    std::size_t idealDamageRollCount = 0U;
     if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
       idealDamageRollCount = MechanicConstants::DamageRollCount::MAX;
     }
@@ -262,7 +262,7 @@ struct Checks : pokesim::debug::Checks {
     if (attackerHpRecovered != nullptr) {
       POKESIM_REQUIRE_NM(attackerHpRecovered->val.size() == damageRolls.val.size());
 
-      for (types::damageRollIndex i = 0; i < damageRolls.val.size(); i++) {
+      for (types::damageRollIndex i = 0U; i < damageRolls.val.size(); i++) {
         POKESIM_REQUIRE_NM(attackerHpRecovered->val[i].val <= damageRolls.val[i].val);
       }
     }
@@ -283,7 +283,7 @@ struct Checks : pokesim::debug::Checks {
       if (has<pokesim::tags::SimulateTurn>(move)) {
         typesToIgnore.add<Damage>();
         POKESIM_REQUIRE_NM(has<Damage>(move));
-        POKESIM_REQUIRE_NM(registry->get<Damage>(move).val > 0);
+        POKESIM_REQUIRE_NM(registry->get<Damage>(move).val >= MechanicConstants::Damage::MIN);
         POKESIM_REQUIRE_NM(!has<DamageRolls>(move));
         POKESIM_REQUIRE_NM(!has<UsesUntilKo>(move));
       }

@@ -455,12 +455,12 @@ void check(const calc_damage::AttackingLevel& attackingLevel) {
 
 template <>
 void check(const calc_damage::AttackingStat& attackingStat) {
-  checkStat(attackingStat.val);
+  checkEffectiveStat(attackingStat.val);
 }
 
 template <>
 void check(const calc_damage::DefendingStat& defendingStat) {
-  checkStat(defendingStat.val);
+  checkEffectiveStat(defendingStat.val);
 }
 
 template <>
@@ -924,8 +924,8 @@ template <>
 void check(const calc_damage::UsesUntilKo& usesUntilKo) {
   checkBounds<MechanicConstants::DamageRollCount>(usesUntilKo.val.size());
 
-  types::moveHits lastUses = 0;
-  types::probability totalProbability = 0;
+  types::moveHits lastUses = 0U;
+  types::probability totalProbability = 0.0F;
   for (const auto& useUntilKo : usesUntilKo.val) {
     checkBounds<MechanicConstants::PokemonHpStat>(useUntilKo.uses);  // TODO(aed3): What if a move does no damage?
     checkProbability(useUntilKo.probability);
@@ -1050,7 +1050,7 @@ void check(const DamageRollKind& damageRollKind) {
   POKESIM_REQUIRE_NM(hasAll != (hasAverage || hasMax || hasMin));
   POKESIM_REQUIRE_NM(hasAverage || hasMax || hasMin || hasAll);
   using DamageRollKindBase = std::underlying_type_t<DamageRollKind>;
-  DamageRollKindBase binaryValue = 0;
+  DamageRollKindBase binaryValue = 0U;
   for (DamageRollKind kind : VALID_DAMAGE_ROLL_KINDS) {
     binaryValue |= (DamageRollKindBase)kind;
   }

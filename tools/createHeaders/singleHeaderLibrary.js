@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const {fullPath, toRelative, ignoredFile, tempDir, runClangQuery} = require('../utils')
+const {getFullPath, toRelative, ignoredFiles, tempDir, runClangQuery, writeCppFile} = require('../utils')
 
-const srcFolder = fullPath('src');
-const externalFolder = fullPath('external');
+const srcFolder = getFullPath('src');
+const externalFolder = getFullPath('external');
 const testLibraryFolder = path.join(externalFolder, 'Catch2');
 const mainHeader = path.join(srcFolder, 'PokeSim.hpp');
 
@@ -29,7 +29,7 @@ const readSrcFiles = () => {
 
     const ext = path.extname(file);
     const basename = path.basename(file);
-    if (['.cpp', '.hpp', '.h'].includes(ext) && !ignoredFile.includes(basename)) {
+    if (['.cpp', '.hpp', '.h'].includes(ext) && !ignoredFiles.includes(basename)) {
       const lines = fileText[file] = fs.readFileSync(file, 'utf8').split('\n');
 
       while (!fileText[file][lines.length - 1]) {
@@ -63,7 +63,7 @@ const findDependencies = () => {
         dependency = extFilePath;
       }
 
-      if (dependency && !ignoredFile.includes(path.basename(dependency))) {
+      if (dependency && !ignoredFiles.includes(path.basename(dependency))) {
         fileDependencies.push(dependency);
         fileDependencyLines.add(i);
       }
@@ -208,22 +208,11 @@ const createSingleFileHeader = () => {
       singleFileHeader[line] = newLine;
     });
 
-    const headerPath = fullPath('include', 'PokeSim.hpp');
-    if (fs.existsSync(headerPath)) {
-      const originalHeader = fs.readFileSync(headerPath, 'utf8');
-      if (originalHeader === singleFileHeader.join('\n')) {
-        return;
-      }
-    }
-
-    console.log('Made changes to single header file');
-    fs.writeFileSync(fullPath('include', 'PokeSim.hpp'), singleFileHeader.join('\n'));
+    writeCppFile('PokeSim.hpp', 'include', singleFileHeader.join('\n'), false);
   }
   catch (e) {
     console.error(e);
   }
-
-  fs.rmSync(tempDir, {recursive: true, force: true});
 };
 
 readSrcFiles();

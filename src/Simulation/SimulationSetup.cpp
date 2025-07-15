@@ -89,12 +89,12 @@ void Simulation::createInitialSide(
   internal::maxSizedVector<PokemonStateSetup, MechanicConstants::TeamSize::MAX> pokemonSetupList;
   pokemonSetupList.reserve(sideInfo.team.size());
 
-  for (std::size_t i = 0; i < sideInfo.team.size(); i++) {
+  for (std::size_t i = 0U; i < sideInfo.team.size(); i++) {
     const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];
     PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonInfo);
     if (
-      battleInfo.turn > 0 && !pokemonInfo.fainted &&
-      (i == 0 || (battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT && i == 1))) {
+      battleInfo.turn > 0U && !pokemonInfo.fainted &&
+      (i == 0U || (battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT && i == 1U))) {
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
 
@@ -236,7 +236,7 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
         battleInfo.decisionsToSimulate.size() < std::numeric_limits<types::cloneIndex>::max(),
         "Cannot make more clones than there are entities available.");
 
-      types::cloneIndex cloneCount = (types::cloneIndex)(battleInfo.decisionsToSimulate.size() - 1);
+      types::cloneIndex cloneCount = (types::cloneIndex)(battleInfo.decisionsToSimulate.size() - 1U);
       if (cloneCount) {
         battleStateSetup.setProperty<tags::CloneFrom>();
         const types::ClonedEntityMap entityMap = pokesim::clone(registry, cloneCount);
@@ -249,7 +249,7 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
           clones.emplace_back(registry, entity);
         }
 
-        for (types::cloneIndex i = 0; i < cloneCount; i++) {
+        for (types::cloneIndex i = 0U; i < cloneCount; i++) {
           BattleStateSetup& setupClone = clones[i];
           const TurnDecisionInfo& turnDecisionInfo = battleInfo.decisionsToSimulate[i];
           debugChecks.addToBattleChecklist(setupClone, battleInfo);

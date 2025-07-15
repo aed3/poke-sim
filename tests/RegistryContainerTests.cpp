@@ -32,21 +32,21 @@ TEST_CASE("Selection Levels", "[RegistryContainer]") {
   SECTION("Largest To Smallest") {
     SelectForTest<FilterA> stageOne{container};
     REQUIRE_FALSE(stageOne.hasNoneSelected());
-    REQUIRE(container.registry.view<Select>().size() == 3);
+    REQUIRE(container.registry.view<Select>().size() == 3U);
 
     SelectForTest<FilterB> stageTwo{container};
     REQUIRE_FALSE(stageTwo.hasNoneSelected());
-    REQUIRE(container.registry.view<Select>().size() == 2);
+    REQUIRE(container.registry.view<Select>().size() == 2U);
 
     SelectForTest<FilterC> stageThree{container};
     REQUIRE_FALSE(stageThree.hasNoneSelected());
-    REQUIRE(container.registry.view<Select>().size() == 1);
+    REQUIRE(container.registry.view<Select>().size() == 1U);
 
     stageThree.deselect();
-    REQUIRE(container.registry.view<Select>().size() == 2);
+    REQUIRE(container.registry.view<Select>().size() == 2U);
 
     stageTwo.deselect();
-    REQUIRE(container.registry.view<Select>().size() == 3);
+    REQUIRE(container.registry.view<Select>().size() == 3U);
 
     stageOne.deselect();
     REQUIRE(container.registry.view<Select>().empty());
@@ -55,21 +55,21 @@ TEST_CASE("Selection Levels", "[RegistryContainer]") {
   SECTION("Smallest to Largest") {
     SelectForTest<FilterC> stageOne{container};
     REQUIRE_FALSE(stageOne.hasNoneSelected());
-    REQUIRE(container.registry.view<Select>().size() == 1);
+    REQUIRE(container.registry.view<Select>().size() == 1U);
 
     SelectForTest<FilterB> stageTwo{container};
     REQUIRE_FALSE(stageTwo.hasNoneSelected());
-    REQUIRE(container.registry.view<Select>().size() == 1);
+    REQUIRE(container.registry.view<Select>().size() == 1U);
 
     SelectForTest<FilterA> stageThree{container};
     REQUIRE_FALSE(stageThree.hasNoneSelected());
-    REQUIRE(container.registry.view<Select>().size() == 1);
+    REQUIRE(container.registry.view<Select>().size() == 1U);
 
     stageThree.deselect();
-    REQUIRE(container.registry.view<Select>().size() == 1);
+    REQUIRE(container.registry.view<Select>().size() == 1U);
 
     stageTwo.deselect();
-    REQUIRE(container.registry.view<Select>().size() == 1);
+    REQUIRE(container.registry.view<Select>().size() == 1U);
 
     stageOne.deselect();
     REQUIRE(container.registry.view<Select>().empty());
@@ -78,21 +78,21 @@ TEST_CASE("Selection Levels", "[RegistryContainer]") {
   SECTION("Blank Selection") {
     SelectForTest<> stageZero{container};
     REQUIRE_FALSE(stageZero.hasNoneSelected());
-    REQUIRE(container.registry.view<Select>().size() == 3);
+    REQUIRE(container.registry.view<Select>().size() == 3U);
 
     stageZero.deselect();
 
     SelectForTest<FilterB> stageOne{container};
     REQUIRE_FALSE(stageOne.hasNoneSelected());
-    REQUIRE(container.registry.view<Select>().size() == 2);
+    REQUIRE(container.registry.view<Select>().size() == 2U);
 
     SelectForTest<> stageTwo{container};
     REQUIRE_FALSE(stageTwo.hasNoneSelected());
-    REQUIRE(container.registry.view<Select>().size() == 2);
+    REQUIRE(container.registry.view<Select>().size() == 2U);
 
     stageTwo.deselect();
 
-    REQUIRE(container.registry.view<Select>().size() == 2);
+    REQUIRE(container.registry.view<Select>().size() == 2U);
   }
 }
 }  // namespace pokesim

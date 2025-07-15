@@ -18,12 +18,12 @@ struct Thunderbolt {
   static constexpr Type type = Type::ELECTRIC;
   static constexpr MoveCategory category = MoveCategory::SPECIAL;
 
-  static constexpr types::baseAccuracy accuracy = 100;
-  static constexpr types::basePower basePower = 90;
-  static constexpr types::pp basePp = 15;
+  static constexpr types::baseAccuracy accuracy = 100U;
+  static constexpr types::basePower basePower = 90U;
+  static constexpr types::pp basePp = 15U;
 
   struct targetSecondaryEffect {
-    static constexpr types::baseEffectChance chance = 10;
+    static constexpr types::baseEffectChance chance = 10U;
 
     static constexpr Tags<status::tags::Paralysis> effectTags{};
   };

@@ -38,7 +38,7 @@ void clearStatus(types::handle pokemonHandle) {
 
 void deductPp(Pp& pp) {
   if (pp.val) {
-    pp.val -= 1;
+    pp.val -= 1U;
   }
 }
 
@@ -68,12 +68,12 @@ void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
 
 void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets) {
   stat::CurrentHp& hp = registry.get<stat::CurrentHp>(targets.only());
-  if (damage.val > hp.val) {
-    hp.val = 0;
-    // Faint
+  if (damage.val < hp.val) {
+    hp.val -= damage.val;
   }
   else {
-    hp.val -= damage.val;
+    hp.val = 0U;
+    // Faint
   }
 }
 

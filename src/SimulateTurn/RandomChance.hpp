@@ -40,7 +40,7 @@ void setBinaryChanceByFormat(types::handle handle, types::percentChance percentC
 }
 
 enum class PercentChanceLimitResult : std::uint8_t {
-  NO_LIMIT_REACHED = 0,
+  NO_LIMIT_REACHED = 0U,
   REACHED_PASS_LIMIT,
   REACHED_FAIL_LIMIT,
 };
@@ -53,15 +53,19 @@ inline PercentChanceLimitResult checkPercentChanceLimits(
 
   bool skipBranch = false;
   if (branchProbabilityLowerLimit.has_value()) {
-    skipBranch = percentChance * probability <= branchProbabilityLowerLimit.value() * 100;
+    skipBranch =
+      percentChance * probability <= branchProbabilityLowerLimit.value() * MechanicConstants::PercentChance::MAX;
   }
-  const types::percentChance PASS_FAIL_BOUNDARY = 50U;
+  const types::percentChance PASS_FAIL_BOUNDARY =
+    (MechanicConstants::PercentChance::MAX - MechanicConstants::PercentChance::MIN) / 2U;
 
-  if (percentChance >= autoPassLimit.value_or(100U) || (skipBranch && percentChance >= PASS_FAIL_BOUNDARY)) {
+  if (
+    percentChance >= autoPassLimit.value_or(MechanicConstants::PercentChance::MAX) ||
+    (skipBranch && percentChance >= PASS_FAIL_BOUNDARY)) {
     return PercentChanceLimitResult::REACHED_PASS_LIMIT;
   }
 
-  if (percentChance <= autoFailLimit.value_or(0U) || skipBranch) {
+  if (percentChance <= autoFailLimit.value_or(MechanicConstants::PercentChance::MIN) || skipBranch) {
     return PercentChanceLimitResult::REACHED_FAIL_LIMIT;
   }
 
@@ -101,7 +105,7 @@ void setRandomBinaryChoice(
 template <typename Component, BattleFormat Format>
 void setReciprocalRandomBinaryChoice(
   types::handle handle, const Component& percentChance, const Battle& battle, const simulate_turn::Options& options) {
-  types::percentChance passChance = 100U / percentChance.val;
+  types::percentChance passChance = MechanicConstants::PercentChance::MAX / percentChance.val;
   types::probability probability = handle.registry()->get<Probability>(battle.val).val;
 
   setBinaryChanceFromChanceLimit<Format>(handle, passChance, percentChance.val, probability, options);
@@ -126,7 +130,8 @@ void setRandomEventCounts(
 
   PercentChanceLimitResult limitReached = PercentChanceLimitResult::NO_LIMIT_REACHED;
   if (!forRequiredDamageRolls) {
-    types::percentChance passChance = types::percentChance(100.0F / eventCount);
+    types::percentChance passChance =
+      types::percentChance((types::probability)MechanicConstants::PercentChance::MAX / eventCount);
     types::probability probability = handle.registry()->get<Probability>(battle.val).val;
     limitReached = checkPercentChanceLimits(passChance, probability, options);
   }
@@ -152,17 +157,23 @@ void setRandomChoice(
   Simulation& simulation, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances,
   const bool cumulativeSumChances) {
   if (cumulativeSumChances) {
-    types::percentChance chanceSum = 0;
+    types::percentChance chanceSum = 0U;
     for (types::percentChance& chance : chances) {
       chanceSum += chance;
       chance = chanceSum;
     }
 
-    POKESIM_REQUIRE(chanceSum == 100, "The total probability of all possible outcomes should add up to 100%.");
+    POKESIM_REQUIRE(
+      chanceSum == MechanicConstants::PercentChance::MAX,
+      "The total probability of all possible outcomes should add up to " +
+        std::to_string(MechanicConstants::PercentChance::MAX) + "%.");
   }
   else {
-    POKESIM_REQUIRE(chances.back() == 100, "The total probability of all possible outcomes should add up to 100%.");
-    for (types::eventPossibilities i = 1; i < POSSIBLE_EVENT_COUNT; i++) {
+    POKESIM_REQUIRE(
+      chances.back() == MechanicConstants::PercentChance::MAX,
+      "The total probability of all possible outcomes should add up to " +
+        std::to_string(MechanicConstants::PercentChance::MAX) + "%.");
+    for (types::eventPossibilities i = 1U; i < POSSIBLE_EVENT_COUNT; i++) {
       POKESIM_REQUIRE(
         chances[i - 1] <= chances[i],
         "Chances should be a cumulative sum where each value is greater than the last.");

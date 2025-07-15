@@ -5,7 +5,7 @@
 namespace pokesim::dex {
 // Pokemon type name
 enum class Type : std::uint8_t {
-  NO_TYPE = 0,
+  NO_TYPE = 0U,
   NORMAL,
   GRASS,
   WATER,

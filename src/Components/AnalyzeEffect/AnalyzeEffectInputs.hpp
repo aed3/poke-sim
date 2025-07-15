@@ -37,7 +37,7 @@ struct MovePairs {
 
   bool operator==(const MovePairs& other) const {
     if (val.size() != other.val.size()) return false;
-    for (types::cloneIndex i = 0; i < val.size(); i++) {
+    for (types::cloneIndex i = 0U; i < val.size(); i++) {
       if (val[i].first != other.val[i].first || val[i].second != other.val[i].second) {
         return false;
       }
@@ -47,7 +47,7 @@ struct MovePairs {
 };
 
 struct RunsOneCalculationCount {
-  types::eventPossibilities val = 0;
+  types::eventPossibilities val = 0U;
 };
 
 namespace tags {

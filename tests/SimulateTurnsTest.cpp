@@ -35,7 +35,7 @@ void runSpeedSortTest(
     REQUIRE(entityFound);
   }
 
-  for (std::size_t i = 0; i < idealSortedList.size(); i++) {
+  for (std::size_t i = 0U; i < idealSortedList.size(); i++) {
     INFO(std::to_string(i));
     const SpeedSort& idealSpeedSort = idealSortedList[i];
     const SpeedSort& trueSpeedSort = registry.get<SpeedSort>(sortedQueue.val[i]);
@@ -78,7 +78,7 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
       {emptySpeedSort, emptySpeedSort},
       {emptySpeedSort, emptySpeedSort},
       SpeedTieIndexes{
-        {SpeedTieIndexes::Span{0, 2}},
+        {SpeedTieIndexes::Span{0U, 2U}},
       });
   }
 
@@ -161,14 +161,14 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
 
   SECTION("Sort By Speed") {
     SpeedSortList idealList = {
-      SpeedSort{ActionOrder::MOVE, 0, false, 772},
-      SpeedSort{ActionOrder::MOVE, 0, false, 621},
-      SpeedSort{ActionOrder::MOVE, 0, false, 584},
-      SpeedSort{ActionOrder::MOVE, 0, false, 444},
-      SpeedSort{ActionOrder::MOVE, 0, false, 305},
-      SpeedSort{ActionOrder::MOVE, 0, false, 152},
-      SpeedSort{ActionOrder::MOVE, 0, false, 90},
-      SpeedSort{ActionOrder::MOVE, 0, false, 11},
+      SpeedSort{ActionOrder::MOVE, 0, false, 772U},
+      SpeedSort{ActionOrder::MOVE, 0, false, 621U},
+      SpeedSort{ActionOrder::MOVE, 0, false, 584U},
+      SpeedSort{ActionOrder::MOVE, 0, false, 444U},
+      SpeedSort{ActionOrder::MOVE, 0, false, 305U},
+      SpeedSort{ActionOrder::MOVE, 0, false, 152U},
+      SpeedSort{ActionOrder::MOVE, 0, false, 90U},
+      SpeedSort{ActionOrder::MOVE, 0, false, 11U},
     };
 
     runSpeedSortTest(
@@ -189,13 +189,13 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
     SpeedSortList idealList = {
       SpeedSort{ActionOrder::TEAM},
       SpeedSort{ActionOrder::START},
-      SpeedSort{ActionOrder::BEFORE_TURN, 0, false, 584},
-      SpeedSort{ActionOrder::BEFORE_TURN, 0, false, 444},
-      SpeedSort{ActionOrder::SWITCH, 0, false, 52},
-      SpeedSort{ActionOrder::SWITCH, 0, false, 40},
-      SpeedSort{ActionOrder::MOVE, 1, false, 152},
-      SpeedSort{ActionOrder::MOVE, 0, false, 315},
-      SpeedSort{ActionOrder::MOVE, -3, true, 700},
+      SpeedSort{ActionOrder::BEFORE_TURN, 0, false, 584U},
+      SpeedSort{ActionOrder::BEFORE_TURN, 0, false, 444U},
+      SpeedSort{ActionOrder::SWITCH, 0, false, 52U},
+      SpeedSort{ActionOrder::SWITCH, 0, false, 40U},
+      SpeedSort{ActionOrder::MOVE, 1, false, 152U},
+      SpeedSort{ActionOrder::MOVE, 0, false, 315U},
+      SpeedSort{ActionOrder::MOVE, -3, true, 700U},
     };
 
     runSpeedSortTest(
@@ -214,13 +214,13 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
   }
 }
 
-constexpr std::array<DamageRollKind, 3> branchingDamageRollOptions = {
+constexpr std::array<DamageRollKind, 3U> branchingDamageRollOptions = {
   DamageRollKind::AVERAGE_DAMAGE,
   calc_damage::combineDamageKinds(DamageRollKind::AVERAGE_DAMAGE, DamageRollKind::GUARANTEED_CRIT_CHANCE),
   calc_damage::combineDamageKinds(DamageRollKind::MIN_DAMAGE, DamageRollKind::MAX_DAMAGE),
 };
 
-constexpr std::array<DamageRollKind, 4> fixedBranchDamageRollOptions = {
+constexpr std::array<DamageRollKind, 4U> fixedBranchDamageRollOptions = {
   DamageRollKind::ALL_DAMAGE_ROLLS,
   DamageRollKind::AVERAGE_DAMAGE,
   calc_damage::combineDamageKinds(DamageRollKind::AVERAGE_DAMAGE, DamageRollKind::GUARANTEED_CRIT_CHANCE),
@@ -322,7 +322,7 @@ struct VerticalSlice1Checks : debug::Checks {
         REQUIRE(finalEntityCount == initialEntityCount);
       }
       else {
-        REQUIRE(finalEntityCount == (initialEntityCount * 2));
+        REQUIRE(finalEntityCount == (initialEntityCount * 2U));
       }
     }
   }
@@ -359,14 +359,19 @@ struct DamageValueInfo {
         averageCritDamage(_averageCritDamage),
         startingHp(_startingHp),
         damageRollKind(_damageRollKind),
+        checkWasCrit(
+          options.branchProbabilityLowerLimit.value_or(MechanicConstants::Probability::MIN) <
+          1.0F / MechanicConstants::CRIT_CHANCE_DIVISORS[0]),
         willChooseMinOrMax(options.makeBranchesOnRandomEvents) {
-    checkWasCrit = options.branchProbabilityLowerLimit.value_or(0) < 1.0F / MechanicConstants::CRIT_CHANCE_DIVISORS[0];
-    checkWasCrit &= options.randomChanceLowerLimit.value_or(0) < 100 / MechanicConstants::CRIT_CHANCE_DIVISORS[0];
+    checkWasCrit &= options.randomChanceLowerLimit.value_or(MechanicConstants::PercentChance::MIN) <
+                    MechanicConstants::PercentChance::MAX / MechanicConstants::CRIT_CHANCE_DIVISORS[0];
     checkWasCrit &= damageRollKind != branchingDamageRollOptions[1];
 
-    willChooseMinOrMax |= options.branchProbabilityLowerLimit.value_or(0) < 0.5F &&
-                          options.randomChanceLowerLimit.value_or(0) < 50 &&
-                          options.randomChanceUpperLimit.value_or(100) > 50;
+    willChooseMinOrMax |= options.branchProbabilityLowerLimit.value_or(MechanicConstants::Probability::MIN) < 0.5F &&
+                          options.randomChanceLowerLimit.value_or(MechanicConstants::PercentChance::MIN) <
+                            (MechanicConstants::PercentChance::MAX / 2U) &&
+                          options.randomChanceUpperLimit.value_or(MechanicConstants::PercentChance::MAX) >
+                            (MechanicConstants::PercentChance::MAX / 2U);
     willChooseMinOrMax &= damageRollKind == branchingDamageRollOptions[2];
   }
 
@@ -409,12 +414,16 @@ struct DamageValueInfo {
   std::size_t uniqueDamageCount() const {
     std::size_t damageCounts = 1U;
     for (std::size_t i = 1U; i < baseDamage.size(); i++) {
-      damageCounts += baseDamage[i - 1] != baseDamage[i] ? 1 : 0;
+      if (baseDamage[i - 1] != baseDamage[i]) {
+        damageCounts++;
+      }
     }
     if (checkWasCrit) {
       damageCounts++;
       for (std::size_t i = 1U; i < critDamage.size(); i++) {
-        damageCounts += critDamage[i - 1] != critDamage[i] ? 1 : 0;
+        if (critDamage[i - 1] != critDamage[i]) {
+          damageCounts++;
+        }
       }
     }
     return damageCounts;
@@ -426,7 +435,7 @@ struct DamageValueInfo {
       count++;
     }
     if (willChooseMinOrMax) {
-      count *= 2;
+      count *= 2U;
     }
     if (damageRollKind == DamageRollKind::ALL_DAMAGE_ROLLS) {
       count *= uniqueDamageCount();
@@ -454,7 +463,7 @@ struct DamageValueInfo {
     }
 
     if (willChooseMinOrMax) {
-      probability /= 2;
+      probability /= 2.0F;
     }
     if (damageRollKind == DamageRollKind::ALL_DAMAGE_ROLLS) {
       if (critDamageRollInstances != 0.0F) {
@@ -487,7 +496,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   auto& p2Info = battleCreationInfo.p2.team[0];
   p2Info.item = dex::Item::NO_ITEM;
   p2Info.nature = dex::Nature::HARDY;
-  p2Info.stats = {295, 165, 190, 255, 210, 145};
+  p2Info.stats = {295U, 165U, 190U, 255U, 210U, 145U};
   battleCreationInfo.runWithSimulateTurn = true;
 
   auto numberOfSamples = GENERATE(std::optional<types::cloneIndex>{std::nullopt}, 1U, 5U);
@@ -533,19 +542,19 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   options.damageRollsConsidered = damageRollOptions;
 
   const DamageValueInfo p1DamageInfo(
-    {174, 170, 168, 168, 164, 164, 162, 158, 158, 156, 156, 152, 152, 150, 146, 146},  // 10
-    158,
-    {260, 258, 254, 252, 248, 246, 242, 240, 240, 236, 234, 230, 228, 224, 222, 218},  // 15
-    240,
+    {174U, 170U, 168U, 168U, 164U, 164U, 162U, 158U, 158U, 156U, 156U, 152U, 152U, 150U, 146U, 146U},  // 10
+    158U,
+    {260U, 258U, 254U, 252U, 248U, 246U, 242U, 240U, 240U, 236U, 234U, 230U, 228U, 224U, 222U, 218U},  // 15
+    240U,
     p1Info.stats.hp,
     damageRollOptions.p1,
     options);
 
   const DamageValueInfo p2DamageInfo(
-    {52, 51, 50, 50, 49, 49, 48, 48, 47, 47, 46, 46, 45, 45, 44, 44},  // 9
-    48,
-    {78, 77, 76, 75, 74, 74, 73, 72, 71, 70, 70, 69, 68, 67, 67, 66},  // 13
-    72,
+    {52U, 51U, 50U, 50U, 49U, 49U, 48U, 48U, 47U, 47U, 46U, 46U, 45U, 45U, 44U, 44U},  // 9
+    48U,
+    {78U, 77U, 76U, 75U, 74U, 74U, 73U, 72U, 71U, 70U, 70U, 69U, 68U, 67U, 67U, 66U},  // 13
+    72U,
     p2Info.stats.hp,
     damageRollOptions.p2,
     options);
@@ -564,7 +573,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   const auto expectedP2Hp = p2DamageInfo.possibleHpValues();
 
   std::vector<Simulation::BattleCreationInfo> battleCreationInfoList;
-  for (types::cloneIndex i = 0; i < numberOfSamples.value_or(1); i++) {
+  for (types::cloneIndex i = 0U; i < numberOfSamples.value_or(1U); i++) {
     battleCreationInfoList.push_back(battleCreationInfo);
   }
 
@@ -618,9 +627,9 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
     types::entity originalRootBattle = checks.originalBattle(battle);
     REQUIRE(rootBattle.val == originalRootBattle);
 
-    REQUIRE(turn.val == 2);
+    REQUIRE(turn.val == 2U);
     const auto& originalRngSeed = checks.originalRngSeed(battle);
-    if (options.makeBranchesOnRandomEvents || totalPossibilities == 1) {
+    if (options.makeBranchesOnRandomEvents || totalPossibilities == 1U) {
       REQUIRE(rngSeed.val == originalRngSeed.val);
     }
     else {
@@ -632,8 +641,8 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
 
     REQUIRE(p1LastUsedMove.val == p1Move);
     REQUIRE(p2LastUsedMove.val == p2Move);
-    REQUIRE(p1Pp.val == (p1Info.moves[1].pp - 1));
-    REQUIRE(p2Pp.val == (p2Info.moves[0].pp - 1));
+    REQUIRE(p1Pp.val == (p1Info.moves[1].pp - 1U));
+    REQUIRE(p2Pp.val == (p2Info.moves[0].pp - 1U));
 
     CAPTURE(p1Hp.val, p2Hp.val, expectedP1Hp, expectedP2Hp);
 

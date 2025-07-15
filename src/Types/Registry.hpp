@@ -123,14 +123,14 @@ class registry : public internal::BackingRegistry {
 
   [[nodiscard]] entity_type create() {
     POKESIM_REQUIRE(
-      storage<entity>().size() + 1 <= maxEntityCount,
+      storage<entity>().size() + 1U <= maxEntityCount,
       "More entities are being created clone than allowed.");
     return entt::registry::create();
   }
 
   [[nodiscard]] entity_type create(const entity_type hint) {
     POKESIM_REQUIRE(
-      storage<entity>().size() + 1 <= maxEntityCount,
+      storage<entity>().size() + 1U <= maxEntityCount,
       "More entities are being created clone than allowed.");
     return entt::registry::create(hint);
   }

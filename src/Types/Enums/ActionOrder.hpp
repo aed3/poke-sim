@@ -8,16 +8,16 @@
 namespace pokesim {
 enum class ActionOrder : std::uint8_t {
   NONE = std::numeric_limits<std::underlying_type_t<ActionOrder>>::max(),
-  TEAM = 1,
-  START = 2,
-  BEFORE_TURN = 4,
+  TEAM = 1U,
+  START = 2U,
+  BEFORE_TURN = 4U,
   ITEM = BEFORE_TURN,
 
-  SWITCH = 103,
+  SWITCH = 103U,
 
-  MOVE = 200,
+  MOVE = 200U,
 
-  RESIDUAL = 254,
+  RESIDUAL = 254U,
 };
 
 static constexpr inline std::array<ActionOrder, 8U> VALID_ACTION_ORDERS = {

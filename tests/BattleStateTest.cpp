@@ -14,7 +14,7 @@ TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
 
   const types::registry& registry = simulation.registry;
   auto battles = registry.view<tags::Battle>();
-  REQUIRE(battles.size() == 1);
+  REQUIRE(battles.size() == 1U);
   types::entity battleEntity = battles[0];
 
   auto [p1SideEntity, p2SideEntity] = registry.get<Sides>(battleEntity).val;
@@ -35,7 +35,7 @@ TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
 
   const types::registry& registry = simulation.registry;
   auto battles = registry.view<tags::Battle>();
-  REQUIRE(battles.size() == 1);
+  REQUIRE(battles.size() == 1U);
   types::entity battleEntity = battles[0];
 
   auto [p1SideEntity, p2SideEntity] = registry.get<Sides>(battleEntity).val;
@@ -63,24 +63,24 @@ TEST_CASE("Battle State: Multiple Battles", "[BattleState][Setup]") {
 
   Simulation::BattleCreationInfo battle2CreationInfo = battle1CreationInfo;
 
-  battle1CreationInfo.turn = 12;
+  battle1CreationInfo.turn = 12U;
   battle1CreationInfo.probability = 0.1F;
   battle1CreationInfo.rngSeed = 0xFFFFFFFF;
 
-  battle2CreationInfo.turn = 7;
+  battle2CreationInfo.turn = 7U;
   battle2CreationInfo.probability = 1.0F;
-  battle2CreationInfo.rngSeed = 9826;
+  battle2CreationInfo.rngSeed = 9826U;
   simulation.createInitialStates({battle1CreationInfo, battle2CreationInfo});
 
   const types::registry& registry = simulation.registry;
   auto battles = registry.view<tags::Battle>();
-  REQUIRE(battles.size() == 2);
+  REQUIRE(battles.size() == 2U);
 }
 
 TEST_CASE("Clone Battles", "[BattleState][Setup]") {
   Simulation::BattleCreationInfo battleCreationInfo{};
   auto create = GENERATE(createSingleBattleSimulation, createDoubleBattleSimulation);
-  types::cloneIndex cloneCount = GENERATE(1, 5, 100);
+  types::cloneIndex cloneCount = GENERATE(1U, 5U, 100U);
 
   CAPTURE(cloneCount);
   INFO(
@@ -96,7 +96,7 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
   for (types::entity existingEntity : registry.view<types::entity>()) {
     existingEntities.insert(existingEntity);
   }
-  existingEntities.reserve(existingEntities.size() * (cloneCount + 1));
+  existingEntities.reserve(existingEntities.size() * (cloneCount + 1U));
 
   types::handle baseHandle(registry, registry.view<tags::Battle>()[0]);
   baseHandle.emplace<tags::CloneFrom>();
@@ -104,7 +104,7 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
   clone(registry, cloneCount);
 
   const auto battles = registry.view<tags::Battle>();
-  REQUIRE(battles.size() == cloneCount + 1);
+  REQUIRE(battles.size() == cloneCount + 1U);
   REQUIRE(registry.view<tags::CloneFrom>().empty());
   REQUIRE(registry.view<CloneTo>().empty());
 
@@ -138,7 +138,7 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
 
       REQUIRE(baseTeam.val.size() == cloneTeam.val.size());
 
-      for (types::teamPositionIndex i = 0; i < baseTeam.val.size(); i++) {
+      for (types::teamPositionIndex i = 0U; i < baseTeam.val.size(); i++) {
         types::entity basePokemon = baseTeam.val[i];
         types::entity clonePokemon = cloneTeam.val[i];
         existingEntities.insert(basePokemon);
@@ -158,7 +158,7 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
 
         REQUIRE(baseMoveSlots.val.size() == cloneMoveSlots.val.size());
 
-        for (types::moveSlotIndex j = 0; j < baseMoveSlots.val.size(); j++) {
+        for (types::moveSlotIndex j = 0U; j < baseMoveSlots.val.size(); j++) {
           types::entity baseMoveSlot = baseMoveSlots.val[j];
           types::entity cloneMoveSlot = cloneMoveSlots.val[j];
           existingEntities.insert(baseMoveSlot);

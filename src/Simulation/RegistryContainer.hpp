@@ -125,7 +125,7 @@ class RegistryContainer {
       getNewSelection,
       getUnmatchedSelection,
       selectionFunction,
-      sizeof...(ComponentsToSelect) == 0);
+      sizeof...(ComponentsToSelect) == 0U);
   }
 
   template <typename Selection>
@@ -157,7 +157,7 @@ class RegistryContainer {
 
     types::entityVector filteredEntityList = functions[0](registry);
     auto end = filteredEntityList.end();
-    for (std::size_t i = 1; i < functions.size(); i++) {
+    for (std::size_t i = 1U; i < functions.size(); i++) {
       types::entityVector previouslySelected = functions[i](registry);
       end = std::remove_if(filteredEntityList.begin(), end, [&previouslySelected](types::entity entity) {
         return std::find(previouslySelected.begin(), previouslySelected.end(), entity) == previouslySelected.end();

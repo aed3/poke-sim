@@ -18,7 +18,7 @@ struct QuiverDance {
   static constexpr Type type = Type::BUG;
   static constexpr MoveCategory category = MoveCategory::STATUS;
 
-  static constexpr types::pp basePp = 20;
+  static constexpr types::pp basePp = 20U;
 
   struct sourcePrimaryEffect {
     static constexpr types::boost spaBoost = 1, spdBoost = 1, speBoost = 1;

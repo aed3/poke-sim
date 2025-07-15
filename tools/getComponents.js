@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
-const {fullPath} = require('./utils');
+const {getFullPath} = require('./utils');
 
-const componentFolder = fullPath('src/Components');
+const componentFolder = getFullPath('src', 'Components');
 
 /**@typedef {{declarations: string[][], subNamespaces: {[name: string]: Namespace}}} Namespace */
 

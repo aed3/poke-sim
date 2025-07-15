@@ -241,9 +241,9 @@ void remapComponentEntities(types::registry& registry, const types::ClonedEntity
 }  // namespace
 
 types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount) {
-  types::cloneIndex count = cloneCount.value_or(1);
+  types::cloneIndex count = cloneCount.value_or(1U);
   types::ClonedEntityMap entityMap, battleMap;
-  if (count == 0) {
+  if (count == 0U) {
     return entityMap;
   }
 
@@ -263,7 +263,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
       storage.reserve(storage.size() + (sources.size() * count));
       for (types::entity src : sources) {
         auto* value = storage.value(src);
-        for (types::cloneIndex i = 0; i < count; i++) {
+        for (types::cloneIndex i = 0U; i < count; i++) {
           storage.push(entityMap[src][i], value);
         }
       }
@@ -278,7 +278,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
   }
 
   for (const auto& [src, destinations] : entityMap) {
-    for (types::cloneIndex i = 0; i < count; i++) {
+    for (types::cloneIndex i = 0U; i < count; i++) {
       cloneToStorage.get(destinations[i]).val = i;
     }
   }

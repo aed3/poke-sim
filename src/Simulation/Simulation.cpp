@@ -22,6 +22,13 @@ Simulation::~Simulation() {
   Pokedex::detachSimulation(pokedexPointer, this);
 }
 
+Simulation::Simulation(Simulation&& other) noexcept : Simulation(*other.pokedexPointer, other.constantBattleFormat) {
+  registry = std::move(other.registry);
+  analyzeEffectOptions = other.analyzeEffectOptions;
+  calculateDamageOptions = other.calculateDamageOptions;
+  simulateTurnOptions = other.simulateTurnOptions;
+}
+
 const Pokedex& Simulation::pokedex() const {
   POKESIM_REQUIRE(
     Pokedex::isPokedexAttachedToSimulation(pokedexPointer, this),

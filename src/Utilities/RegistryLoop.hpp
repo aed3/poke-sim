@@ -45,8 +45,8 @@ struct RegistryLoop<
   template <bool, typename TupleFrom, typename TupleTo>
   struct ParameterShifter;
 
-  static constexpr bool usesExclude = sizeof...(Exclude) > 0;
-  static constexpr bool usesInclude = sizeof...(Include) > 0;
+  static constexpr bool usesExclude = sizeof...(Exclude) > 0U;
+  static constexpr bool usesInclude = sizeof...(Include) > 0U;
   static constexpr auto passedInArgsSize = sizeof...(PassedInArgs);
 
   template <typename TupleFromHead, typename... TupleFromTail, typename... TupleToTail>
@@ -58,11 +58,11 @@ struct RegistryLoop<
   template <typename... TupleFromTail, typename... RegistryArgs>
   struct ParameterShifter<true, Tags<TupleFromTail...>, Tags<RegistryArgs...>> {
    private:
-    using FirstType = std::tuple_element_t<0, std::tuple<RegistryArgs...>>;
+    using FirstType = std::tuple_element_t<0U, std::tuple<RegistryArgs...>>;
     static constexpr bool hasRegistryFirst = std::is_same_v<FirstType, types::registry&>;
     static constexpr bool hasHandleFirst = std::is_same_v<FirstType, types::handle>;
 
-    static_assert(sizeof...(RegistryArgs) > 0, "The function must accept at least 1 argument to work here.");
+    static_assert(sizeof...(RegistryArgs) > 0U, "The function must accept at least 1 argument to work here.");
     static_assert(
       !std::is_same_v<std::decay_t<FirstType>, types::registry> || hasRegistryFirst,
       "If the first argument is a registry, it must be a non-constant reference.");
@@ -84,7 +84,7 @@ struct RegistryLoop<
         "Without the ability to be copied, an argument could not have been added to an entity, preventing the function "
         "from being called.");
       static_assert(
-        sizeof...(Args) + sizeof...(ExtraTags) + sizeof...(Include) > 0,
+        sizeof...(Args) + sizeof...(ExtraTags) + sizeof...(Include) > 0U,
         "At least 1 type must be present to pick the entities to loop over.");
     }
 
@@ -191,7 +191,7 @@ struct RegistryLoop<
     using NoPassedArgs = ParameterShifter<true, Tags<>, Tags<RegistryArgs...>>;
 
     static auto view(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      if constexpr (passedInArgsSize > 0) {
+      if constexpr (passedInArgsSize > 0U) {
         return WithPassedArgs::view(registry, passedInArgs...);
       }
       else {
@@ -200,7 +200,7 @@ struct RegistryLoop<
     }
 
     static auto group(types::registry& registry, const PassedInArgs&... passedInArgs) {
-      if constexpr (passedInArgsSize > 0) {
+      if constexpr (passedInArgsSize > 0U) {
         return WithPassedArgs::group(registry, passedInArgs...);
       }
       else {

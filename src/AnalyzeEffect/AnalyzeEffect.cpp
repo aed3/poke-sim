@@ -94,20 +94,20 @@ void assignInputsToClones(
   const Inputs& inputs = registry.get<Inputs>(originalBattleEntity);
 
   POKESIM_REQUIRE(
-    (cloneCount == 0) == clonedEntityMap.empty(),
+    (cloneCount == 0U) == clonedEntityMap.empty(),
     "There should be no cloned entities if no clones are needed.");
 
   POKESIM_REQUIRE(
     cloneCount <= inputs.val.size(),
     "Not all inputs need clones, so there shouldn't be more clones than inputs.");
 
-  const auto& battleClones = cloneCount == 0 ? types::entityVector{} : clonedEntityMap.at(originalBattleEntity);
+  const auto& battleClones = cloneCount == 0U ? types::entityVector{} : clonedEntityMap.at(originalBattleEntity);
 
   POKESIM_REQUIRE(
     cloneCount == battleClones.size(),
     "Each input must have a clone and no more clones than inputs should be made.");
 
-  types::cloneIndex cloneIndex = 0;
+  types::cloneIndex cloneIndex = 0U;
   for (types::entity input : inputs.val) {
     bool usesClone = !registry.all_of<tags::RunOneCalculation>(input);
 
@@ -131,7 +131,7 @@ void assignInputsToClones(
         return moveEntity;
       };
 
-    for (types::cloneIndex moveIndex = 0; moveIndex < moves.val.size(); moveIndex++) {
+    for (types::cloneIndex moveIndex = 0U; moveIndex < moves.val.size(); moveIndex++) {
       entt::entity moveEntity = createMove(moves.val[moveIndex], battle.val, attacker.val, defenders.only());
       movePairs.val[moveIndex].first = movePairs.val[moveIndex].second = moveEntity;
     }
@@ -160,7 +160,7 @@ void assignInputsToClones(
         battleClones.size() == clonedEffectTarget.size(),
         "Each effect target must have a clone and no more clones than inputs should be made.");
 
-      for (types::cloneIndex moveIndex = 0; moveIndex < moves.val.size(); moveIndex++) {
+      for (types::cloneIndex moveIndex = 0U; moveIndex < moves.val.size(); moveIndex++) {
         movePairs.val[moveIndex].second = createMove(
           moves.val[moveIndex],
           battleClones[cloneIndex],
@@ -347,7 +347,7 @@ void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
     auto [parentDamage, parentDamageRolls] = registry.get<Damage, DamageRolls>(parentBattleMove);
 
     if (invert) {
-      if (childDamage.val == 0) {
+      if (childDamage.val == 0U) {
         inputHandle.emplace<tags::InfiniteMultiplier>();
       }
       else {
@@ -361,7 +361,7 @@ void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
       }
     }
     else {
-      if (parentDamage.val == 0) {
+      if (parentDamage.val == 0U) {
         inputHandle.emplace<tags::InfiniteMultiplier>();
       }
       else {

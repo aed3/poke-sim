@@ -18,8 +18,8 @@ struct WillOWisp {
   static constexpr Type type = Type::FIRE;
   static constexpr MoveCategory category = MoveCategory::STATUS;
 
-  static constexpr types::baseAccuracy accuracy = 85;
-  static constexpr types::pp basePp = 15;
+  static constexpr types::baseAccuracy accuracy = 85U;
+  static constexpr types::pp basePp = 15U;
 
   struct targetPrimaryEffect {
     static constexpr Tags<status::tags::Burn> effectTags{};

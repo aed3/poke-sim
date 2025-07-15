@@ -126,10 +126,10 @@ struct Checks : pokesim::debug::Checks {
 
         const auto [effectMultiplier, multipliedDamageRolls] =
           registry->get<EffectMultiplier, MultipliedDamageRolls>(input);
-        if (effectMultiplier.val == 0) {
+        if (effectMultiplier.val == 0U) {
           zeroEffectMultiplier = true;
           for (const Damage& multipliedDamageRoll : multipliedDamageRolls.val) {
-            POKESIM_REQUIRE_NM(multipliedDamageRoll.val == 0);
+            POKESIM_REQUIRE_NM(multipliedDamageRoll.val == 0U);
           }
         }
       }

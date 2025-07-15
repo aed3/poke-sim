@@ -8,8 +8,8 @@
 namespace pokesim {
 struct SpeedTieIndexes {
   struct Span {
-    types::activePokemonIndex start = 0;
-    types::activePokemonIndex length = 0;
+    types::activePokemonIndex start = MechanicConstants::ActivePokemon::MIN;
+    types::activePokemonIndex length = MechanicConstants::ActivePokemon::MIN;
   };
 
   internal::fixedMemoryVector<Span, MechanicConstants::ActivePokemon::MAX> val{};

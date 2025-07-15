@@ -48,7 +48,7 @@ void PokemonStateSetup::initBlank() {
 }
 
 void PokemonStateSetup::setAutoID() {
-  setID((uint16_t)handle.registry()->view<SpeciesName>().size() + 1);
+  setID((uint16_t)handle.registry()->view<SpeciesName>().size() + 1U);
 }
 
 void PokemonStateSetup::setID(types::stateId id) {

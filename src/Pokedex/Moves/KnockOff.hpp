@@ -17,9 +17,9 @@ struct KnockOff {
   static constexpr Type type = Type::DARK;
   static constexpr MoveCategory category = MoveCategory::PHYSICAL;
 
-  static constexpr types::baseAccuracy accuracy = 100;
-  static constexpr types::basePower basePower = 65;
-  static constexpr types::pp basePp = 20;
+  static constexpr types::baseAccuracy accuracy = 100U;
+  static constexpr types::basePower basePower = 65U;
+  static constexpr types::pp basePp = 20U;
 
   static constexpr Tags<move::tags::Contact> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;

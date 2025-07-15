@@ -21,7 +21,7 @@ namespace calc_damage {
 struct UsesUntilKo {
  private:
   struct KoProbability {
-    types::moveHits uses = 0;
+    types::moveHits uses = 0U;
     types::probability probability = MechanicConstants::Probability::MIN;
 
     bool operator==(const KoProbability& other) const { return uses == other.uses && probability == other.probability; }
@@ -42,7 +42,7 @@ struct UsesUntilKo {
 
   bool guaranteedKo() const {
     const KoProbability& min = minHits();
-    return min.uses == 1 && min.probability == MechanicConstants::Probability::MAX;
+    return min.uses == 1U && min.probability == MechanicConstants::Probability::MAX;
   }
 };
 

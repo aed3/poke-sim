@@ -5,7 +5,7 @@
 namespace pokesim::dex {
 // Pokemon status condition name
 enum class Status : std::uint8_t {
-  NO_STATUS = 0,
+  NO_STATUS = 0U,
   BRN,
   FRZ,
   PAR,

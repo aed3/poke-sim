@@ -128,7 +128,7 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
 
 void calculateAllDamageRolls(DamageRolls& damageRolls, const Damage& damage, const DamageRollModifiers& modifier) {
   damageRolls.val.reserve(MechanicConstants::DamageRollCount::MAX);
-  for (types::damageRollIndex i = 0; i < MechanicConstants::DamageRollCount::MAX; i++) {
+  for (types::damageRollIndex i = 0U; i < MechanicConstants::DamageRollCount::MAX; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
     applyDamageRoll(damageRoll, i);
     modifyDamage(damageRoll, modifier);
@@ -162,7 +162,8 @@ void reduceDamageRollsToDefenderHp(
 }
 
 void assignCritChanceDivisor(types::handle moveHandle, const CritBoost& critBoost) {
-  std::size_t index = std::min((std::size_t)critBoost.val, pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS.size() - 1);
+  std::size_t index =
+    std::min((std::size_t)critBoost.val, pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS.size() - 1U);
   moveHandle.emplace<CritChanceDivisor>(pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS[index]);
 }
 
@@ -172,7 +173,7 @@ void setSourceLevel(types::handle moveHandle, const Attacker& attacker) {
 
 template <typename Category>
 void setUsedAttackStat(types::handle moveHandle, const Attacker& attacker) {
-  types::stat attackingStat = 1;
+  types::stat attackingStat = MechanicConstants::PokemonEffectiveStat::MIN;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     attackingStat = moveHandle.registry()->get<stat::EffectiveAtk>(attacker.val).val;
   }
@@ -184,7 +185,7 @@ void setUsedAttackStat(types::handle moveHandle, const Attacker& attacker) {
 
 template <typename Category>
 void setUsedDefenseStat(types::handle moveHandle, const Defenders& defenders) {
-  types::stat defendingStat = 1;
+  types::stat defendingStat = MechanicConstants::PokemonEffectiveStat::MIN;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     defendingStat = moveHandle.registry()->get<stat::EffectiveDef>(defenders.only()).val;
   }
@@ -198,7 +199,7 @@ void calculateBaseDamage(
   types::handle moveHandle, const BasePower& basePower, const AttackingLevel& level, const AttackingStat& attack,
   const DefendingStat& defense) {
   // NOLINTNEXTLINE(readability-magic-numbers)
-  types::damage damage = ((((2U * level.val / 5U + 2U) * basePower.val * attack.val) / defense.val) / 50U) + 2;
+  types::damage damage = ((((2U * level.val / 5U + 2U) * basePower.val * attack.val) / defense.val) / 50U) + 2U;
   moveHandle.emplace<Damage>(damage);
 }
 
@@ -212,23 +213,31 @@ void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, 
   for (const Damage& damageRoll : damageRolls.val) {
     types::moveHits uses = (types::moveHits)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
     if (usesUntilKo.val.empty() || usesUntilKo.val.back().uses != uses) {
-      usesUntilKo.val.push_back({uses, 0.0F});
+      usesUntilKo.val.push_back({uses, MechanicConstants::Probability::MIN});
     }
 
-    usesUntilKo.val.back().probability += (1.0 / MechanicConstants::DamageRollCount::MAX);
+    usesUntilKo.val.back().probability +=
+      (MechanicConstants::Probability::MAX / MechanicConstants::DamageRollCount::MAX);
   }
   moveHandle.emplace<UsesUntilKo>(usesUntilKo);
 }
 
 template <typename SimulationTag, auto ApplyDamageRollKind>
 void applySideDamageRollOptions(Simulation& simulation) {
+  static constexpr bool isSimulateTurn = std::is_same_v<pokesim::tags::SimulateTurn, SimulationTag>;
+  static constexpr bool isCalculateDamage = std::is_same_v<pokesim::tags::CalculateDamage, SimulationTag>;
+  static constexpr bool isAnalyzeEffect = std::is_same_v<pokesim::tags::AnalyzeEffect, SimulationTag>;
+
+  static_assert(
+    isSimulateTurn || isCalculateDamage || isAnalyzeEffect,
+    "Using a type that isn't a valid simulation tag.");
+
   pokesim::internal::SelectForCurrentActionMoveView<SimulationTag> selectedMoves{simulation};
   if (selectedMoves.hasNoneSelected()) {
     return;
   }
 
-  static constexpr bool isSimulateTurn = std::is_same_v<pokesim::tags::SimulateTurn, SimulationTag>;
-  static constexpr bool onlyPassDamageRoll = pokesim::internal::getArgumentCount(ApplyDamageRollKind) == 2;
+  static constexpr bool onlyPassDamageRoll = pokesim::internal::getArgumentCount(ApplyDamageRollKind) == 2U;
 
   DamageRollOptions damageRollOptions;
   bool noKoChanceCalculation = false;
@@ -237,12 +246,12 @@ void applySideDamageRollOptions(Simulation& simulation) {
     damageRollOptions = simulation.simulateTurnOptions.damageRollsConsidered;
     calculateUpToFoeHp = true;
   }
-  else if constexpr (std::is_same_v<pokesim::tags::CalculateDamage, SimulationTag>) {
+  else if constexpr (isCalculateDamage) {
     damageRollOptions = simulation.calculateDamageOptions.damageRollOptions;
     calculateUpToFoeHp = simulation.calculateDamageOptions.calculateUpToFoeHp;
     noKoChanceCalculation = simulation.calculateDamageOptions.noKoChanceCalculation;
   }
-  else if constexpr (std::is_same_v<pokesim::tags::AnalyzeEffect, SimulationTag>) {
+  else if constexpr (isAnalyzeEffect) {
     damageRollOptions = simulation.analyzeEffectOptions.damageRollOptions;
     calculateUpToFoeHp = simulation.analyzeEffectOptions.calculateUpToFoeHp;
     noKoChanceCalculation = simulation.calculateDamageOptions.noKoChanceCalculation;

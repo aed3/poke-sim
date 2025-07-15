@@ -17,9 +17,9 @@ struct FuryAttack {
   static constexpr Type type = Type::NORMAL;
   static constexpr MoveCategory category = MoveCategory::PHYSICAL;
 
-  static constexpr types::baseAccuracy accuracy = 85;
-  static constexpr types::basePower basePower = 15;
-  static constexpr types::pp basePp = 20;
+  static constexpr types::baseAccuracy accuracy = 85U;
+  static constexpr types::basePower basePower = 15U;
+  static constexpr types::pp basePp = 20U;
 
   static constexpr Tags<move::tags::Contact, move::tags::VariableHitCount> moveTags{};
   static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;

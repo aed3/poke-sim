@@ -27,27 +27,37 @@ namespace pokesim {
 namespace {
 template <typename Type>
 void updateProbability(Probability& currentProbability, Type percentChance) {
-  currentProbability.val *= (types::probability)percentChance / 100.0F;
+  currentProbability.val *= (types::probability)percentChance / MechanicConstants::PercentChanceToProbability;
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename RandomEventTag>
 void updateProbabilityFromRandomEventChance(
   types::registry& registry, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, const Battle& battle) {
+  static constexpr bool isEventA = std::is_same_v<RandomEventTag, tags::RandomEventA>;
+  static constexpr bool isEventB = std::is_same_v<RandomEventTag, tags::RandomEventB>;
+  static constexpr bool isEventC = std::is_same_v<RandomEventTag, tags::RandomEventC>;
+  static constexpr bool isEventD = std::is_same_v<RandomEventTag, tags::RandomEventD>;
+  static constexpr bool isEventE = std::is_same_v<RandomEventTag, tags::RandomEventE>;
+
+  static_assert(
+    isEventA || isEventB || isEventC || isEventD || isEventE,
+    "Using a type that isn't a valid random event type.");
+
   Probability& probability = registry.get<Probability>(battle.val);
 
-  if constexpr (std::is_same_v<RandomEventTag, tags::RandomEventA>) {
+  if constexpr (isEventA) {
     updateProbability(probability, eventChances.chanceA());
   }
-  else if constexpr (std::is_same_v<RandomEventTag, tags::RandomEventB>) {
+  else if constexpr (isEventB) {
     updateProbability(probability, eventChances.chanceB());
   }
-  else if constexpr (std::is_same_v<RandomEventTag, tags::RandomEventC>) {
+  else if constexpr (isEventC) {
     updateProbability(probability, eventChances.chanceC());
   }
-  else if constexpr (std::is_same_v<RandomEventTag, tags::RandomEventD>) {
+  else if constexpr (isEventD) {
     updateProbability(probability, eventChances.chanceD());
   }
-  else if constexpr (std::is_same_v<RandomEventTag, tags::RandomEventE>) {
+  else if constexpr (isEventE) {
     updateProbability(probability, eventChances.chanceE());
   }
 }
@@ -60,9 +70,14 @@ void viewUpdateProbabilityFromRandomEventChance(Simulation& simulation) {
 template <bool Reciprocal, typename RandomEventTag>
 void updateProbabilityFromRandomBinaryChance(
   types::registry& registry, const RandomBinaryChance& eventChance, const Battle& battle) {
+  static constexpr bool hasEventPassed = std::is_same_v<RandomEventTag, tags::RandomEventCheckPassed>;
+  static constexpr bool hasEventFailed = std::is_same_v<RandomEventTag, tags::RandomEventCheckFailed>;
+
+  static_assert(hasEventPassed || hasEventFailed, "Using a type that isn't a valid random binary chance outcome type.");
+
   Probability& probability = registry.get<Probability>(battle.val);
 
-  if constexpr (std::is_same_v<RandomEventTag, tags::RandomEventCheckPassed>) {
+  if constexpr (hasEventPassed) {
     if constexpr (Reciprocal) {
       updateProbability(probability, eventChance.reciprocalPass());
     }
@@ -70,7 +85,7 @@ void updateProbabilityFromRandomBinaryChance(
       updateProbability(probability, eventChance.pass());
     }
   }
-  else if constexpr (std::is_same_v<RandomEventTag, tags::RandomEventCheckFailed>) {
+  else if constexpr (hasEventFailed) {
     if constexpr (Reciprocal) {
       updateProbability(probability, eventChance.reciprocalFail());
     }
@@ -85,21 +100,24 @@ void updateProbabilityFromRandomEqualChance(
   types::eventPossibilities possibleEventCount) {
   Probability& probability = registry.get<Probability>(battle.val);
 
-  updateProbability(probability, 100.0F / (types::probability)possibleEventCount);
+  updateProbability(
+    probability,
+    MechanicConstants::PercentChanceToProbability / (types::probability)possibleEventCount);
 }
 
 void updateProbabilityFromRandomEventCount(
   types::registry& registry, const RandomEventCount& eventChance, const Battle& battle) {
   Probability& probability = registry.get<Probability>(battle.val);
 
-  updateProbability(probability, 100.0F / (types::probability)eventChance.val);
+  updateProbability(probability, MechanicConstants::PercentChanceToProbability / (types::probability)eventChance.val);
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void assignRandomEvent(
   types::handle handle, const Battle& battle, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::percentChance rng = (types::percentChance)internal::nextBoundedRandomValue(rngSeed, 100);
+  types::percentChance rng =
+    (types::percentChance)internal::nextBoundedRandomValue(rngSeed, MechanicConstants::PercentChance::MAX);
 
   if (rng <= eventChances.val[0]) {
     handle.emplace<tags::RandomEventA>();
@@ -133,7 +151,8 @@ void assignRandomEvent(
 
 void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::percentChance rng = (types::percentChance)internal::nextBoundedRandomValue(rngSeed, 100);
+  types::percentChance rng =
+    (types::percentChance)internal::nextBoundedRandomValue(rngSeed, MechanicConstants::PercentChance::MAX);
 
   if (rng <= eventChance.pass()) {
     handle.emplace<tags::RandomEventCheckPassed>();
@@ -148,7 +167,7 @@ void assignReciprocalRandomBinaryEvent(
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::percentChance rng = (types::percentChance)internal::nextBoundedRandomValue(rngSeed, eventChance.val);
 
-  if (rng == 0) {
+  if (rng == 0U) {
     handle.emplace<tags::RandomEventCheckPassed>();
   }
   else {
@@ -180,7 +199,7 @@ void assignIndexToClones(
     if (clonedPointer == clonedEntityMap.end()) continue;
     const auto& cloned = clonedPointer->second;
 
-    for (types::cloneIndex index = 0; index < cloned.size(); index++) {
+    for (types::cloneIndex index = 0U; index < cloned.size(); index++) {
       POKESIM_REQUIRE(
         std::numeric_limits<types::eventPossibilities>::max() > index,
         "Number of clones shouldn't be greater than the number of possible events.");
@@ -392,7 +411,7 @@ void randomEqualChance(
   };
 
   types::cloneIndex cloneCount =
-    possibleEventCount > MechanicConstants::DamageRollCount::MAX ? 0 : possibleEventCount - 1;
+    possibleEventCount > MechanicConstants::DamageRollCount::MAX ? 0U : possibleEventCount - 1U;
 
   if (updateProbabilities.has_value()) {
     randomChanceEvent<

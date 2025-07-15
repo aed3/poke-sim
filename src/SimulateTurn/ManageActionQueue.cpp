@@ -29,18 +29,72 @@
 #include <vector>
 
 namespace pokesim::simulate_turn {
+namespace {
+void resolveSlotDecisions(
+  types::handle sideHandle, const types::slotDecisions& decisions, ActionQueue& battleActionQueue) {
+  types::registry& registry = *sideHandle.registry();
+  for (const SlotDecision& decision : decisions) {
+    POKESIM_REQUIRE(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
+    POKESIM_REQUIRE(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
+    POKESIM_REQUIRE(
+      !(decision.moveChoice.has_value() && decision.itemChoice.has_value()),
+      "Decisions can't have a move and an item choice.");
+
+    types::handle actionHandle = {registry, registry.create()};
+    actionHandle.emplace<SourceSlotName>(decision.sourceSlot);
+    actionHandle.emplace<TargetSlotName>(decision.targetSlot);
+
+    SpeedSort speedSort;
+    types::entity sourceEntity = slotToPokemonEntity(registry, sideHandle.entity(), decision.sourceSlot);
+
+    stat::EffectiveSpe* effectiveSpe = registry.try_get<stat::EffectiveSpe>(sourceEntity);
+    if (effectiveSpe != nullptr) {
+      speedSort.speed = effectiveSpe->val;
+    }
+    else {
+      speedSort.speed = registry.get<stat::Spe>(sourceEntity).val;
+    }
+
+    if (decision.moveChoice.has_value()) {
+      actionHandle.emplace<action::Move>(decision.moveChoice.value());
+
+      speedSort.order = ActionOrder::MOVE;
+      speedSort.priority = MechanicConstants::MovePriority::BASE;  // TODO (aed3): Move priority + modify priority
+      speedSort.fractionalPriority = false;                        // TODO (aed3): get fractionalPriority
+    }
+    else if (decision.itemChoice.has_value()) {
+      actionHandle.emplace<action::Item>(decision.itemChoice.value());
+      speedSort.order = ActionOrder::ITEM;
+    }
+    else {
+      actionHandle.emplace<action::tags::Switch>();
+      speedSort.order = ActionOrder::SWITCH;
+    }
+
+    actionHandle.emplace<SpeedSort>(speedSort);
+
+    battleActionQueue.val.push_back(actionHandle.entity());
+  }
+}
+
+void resolveTeamDecision(types::registry& registry, const types::teamOrder& teamOrder, ActionQueue& battleActionQueue) {
+  types::handle actionHandle = {registry, registry.create()};
+
+  actionHandle.emplace<action::Team>(teamOrder);
+
+  battleActionQueue.val.push_back(actionHandle.entity());
+}
+}  // namespace
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
   POKESIM_REQUIRE(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player.");
   POKESIM_REQUIRE(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
-  types::registry& registry = *sideHandle.registry();
 
-  ActionQueue& battleActionQueue = registry.get<ActionQueue>(sideHandle.get<Battle>().val);
+  ActionQueue& battleActionQueue = sideHandle.registry()->get<ActionQueue>(sideHandle.get<Battle>().val);
 
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
 
     for (const SlotDecision& decision : decisions) {
-      POKESIM_REQUIRE(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
       if (sideDecision.sideId == PlayerSideId::P1) {
         POKESIM_REQUIRE(
           (decision.sourceSlot == Slot::P1A || decision.sourceSlot == Slot::P1B),
@@ -51,47 +105,9 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
           (decision.sourceSlot == Slot::P2A || decision.sourceSlot == Slot::P2B),
           "Source must be from a player 2 in battle slot.");
       }
-
-      POKESIM_REQUIRE(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
-      POKESIM_REQUIRE(
-        !(decision.moveChoice.has_value() && decision.itemChoice.has_value()),
-        "Decisions can't have a move and an item choice.");
-
-      types::handle actionHandle = {registry, registry.create()};
-      actionHandle.emplace<SourceSlotName>(decision.sourceSlot);
-      actionHandle.emplace<TargetSlotName>(decision.targetSlot);
-
-      SpeedSort speedSort;
-      types::entity sourceEntity = slotToPokemonEntity(registry, sideHandle.entity(), decision.sourceSlot);
-
-      stat::EffectiveSpe* effectiveSpe = registry.try_get<stat::EffectiveSpe>(sourceEntity);
-      if (effectiveSpe != nullptr) {
-        speedSort.speed = effectiveSpe->val;
-      }
-      else {
-        speedSort.speed = registry.get<stat::Spe>(sourceEntity).val;
-      }
-
-      if (decision.moveChoice.has_value()) {
-        actionHandle.emplace<action::Move>(decision.moveChoice.value());
-
-        speedSort.order = ActionOrder::MOVE;
-        speedSort.priority = 0;                // TODO (aed3): Move priority + modify priority
-        speedSort.fractionalPriority = false;  // TODO (aed3): get fractionalPriority
-      }
-      else if (decision.itemChoice.has_value()) {
-        actionHandle.emplace<action::Item>(decision.itemChoice.value());
-        speedSort.order = ActionOrder::ITEM;
-      }
-      else {
-        actionHandle.emplace<action::tags::Switch>();
-        speedSort.order = ActionOrder::SWITCH;
-      }
-
-      actionHandle.emplace<SpeedSort>(speedSort);
-
-      battleActionQueue.val.push_back(actionHandle.entity());
     }
+
+    resolveSlotDecisions(sideHandle, decisions, battleActionQueue);
   }
   else if (sideDecision.decisions.holds<types::teamOrder>()) {
     const auto& teamOrder = sideDecision.decisions.get<types::teamOrder>();
@@ -99,18 +115,18 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
     POKESIM_REQUIRE(
       sideHandle.get<Team>().val.size() == teamOrder.size(),
       "Must pick a placement for each Pokemon on the team.");
-    types::handle actionHandle = {registry, registry.create()};
-
-    actionHandle.emplace<action::Team>(teamOrder);
-
-    battleActionQueue.val.push_back(actionHandle.entity());
+    resolveTeamDecision(*sideHandle.registry(), teamOrder, battleActionQueue);
+  }
+  else {
+    POKESIM_REQUIRE_FAIL(
+      "Decision kind of index " + std::to_string(sideDecision.decisions.index()) + "not implemented yet.");
   }
 }
 
 void speedSort(types::handle handle, ActionQueue& actionQueue) {
   auto& entityList = actionQueue.val;
 
-  if (entityList.size() == 1) return;
+  if (entityList.size() == 1U) return;
   const types::registry* registry = handle.registry();
 
   internal::maxSizedVector<std::pair<SpeedSort, types::entity>, MechanicConstants::ActionQueueLength::MAX>
@@ -143,29 +159,29 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   });
 
   SpeedTieIndexes speedTies;
-  types::activePokemonIndex lastEqual = 0, tieCount = 1;
+  types::activePokemonIndex lastEqual = 0U, tieCount = 1U;
 
   auto speedSortEqual = [](const SpeedSort& speedSortA, const SpeedSort& speedSortB) {
     return speedSortA.order == speedSortB.order && speedSortA.priority == speedSortB.priority &&
            speedSortA.speed == speedSortB.speed && speedSortA.fractionalPriority == speedSortB.fractionalPriority;
   };
 
-  for (types::activePokemonIndex i = 0; i < speedSortList.size(); i++) {
+  for (types::activePokemonIndex i = 0U; i < speedSortList.size(); i++) {
     entityList[i] = speedSortList[i].second;
 
-    if (i > 0 && speedSortEqual(speedSortList[i].first, speedSortList[i - 1].first)) {
+    if (i > 0U && speedSortEqual(speedSortList[i].first, speedSortList[i - 1].first)) {
       tieCount++;
     }
     else {
-      if (tieCount > 1) {
+      if (tieCount > 1U) {
         speedTies.val.push_back({lastEqual, tieCount});
       }
       lastEqual = i;
-      tieCount = 1;
+      tieCount = 1U;
     }
   }
 
-  if (tieCount > 1) {
+  if (tieCount > 1U) {
     speedTies.val.push_back({lastEqual, tieCount});
   }
 
@@ -206,6 +222,9 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue) {
   }
   else if (registry.all_of<action::tags::Residual>(newCurrentAction)) {
     battleHandle.emplace<action::tags::Residual>();
+  }
+  else {
+    POKESIM_REQUIRE_FAIL("Action kind not implemented yet.");
   }
 
   actionQueue.val.erase(actionQueue.val.begin());

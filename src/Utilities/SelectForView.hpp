@@ -42,11 +42,11 @@ struct SelectForView {
     }
   }
 
-  bool hasNoneSelected() const { return constantSelectedCount == 0; }
+  bool hasNoneSelected() const { return constantSelectedCount == 0U; }
 
  private:
   RegistryContainer* registryContainer = nullptr;
-  std::size_t constantSelectedCount = 0;
+  std::size_t constantSelectedCount = 0U;
 };
 
 template <typename... ComponentsToSelect>

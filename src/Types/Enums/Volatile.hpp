@@ -5,7 +5,7 @@
 namespace pokesim::dex {
 enum class Volatile : std::uint8_t {
   // clang-format off
-  NO_VOLATILE = 0,
+  NO_VOLATILE = 0U,
   CHOICE_LOCK,
   VOLATILE_TOTAL
   // clang-format on

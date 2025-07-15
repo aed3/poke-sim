@@ -35,8 +35,8 @@ void BattleStateSetup::initBlank() {
   handle.emplace<Sides>();
   handle.emplace<ActionQueue>();
   setAutoID();
-  setTurn(0);
-  setProbability(1);
+  setTurn(MechanicConstants::TurnCount::MIN);
+  setProbability(MechanicConstants::Probability::MAX);
 }
 
 void BattleStateSetup::setAutoID() {
@@ -60,7 +60,7 @@ void BattleStateSetup::setSide(types::entity sideEntity) {
 
 void BattleStateSetup::setRNGSeed(std::optional<types::rngState> seed) {
   if (!seed.has_value()) {
-    static std::atomic_uint64_t state = 1;
+    static std::atomic_uint64_t state = 1U;
     seed = state;
 
     types::rngState newState = state;

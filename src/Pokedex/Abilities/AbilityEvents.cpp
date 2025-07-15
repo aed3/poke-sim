@@ -7,6 +7,6 @@
 namespace pokesim::dex {
 void internal::StaticEvents::onDamagingHit(Simulation& /*simulation*/) {}
 void internal::StaticEvents::onModifySpe(stat::EffectiveSpe& effectiveSpe) {
-  effectiveSpe.val /= 2;
+  effectiveSpe.val /= 2U;
 }
 }  // namespace pokesim::dex

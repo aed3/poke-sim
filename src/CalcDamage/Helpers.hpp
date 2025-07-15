@@ -9,7 +9,7 @@
 namespace pokesim::calc_damage {
 constexpr bool damageKindsMatch(DamageRollKind kindA, DamageRollKind kindB) {
   using DamageRollKindBase = std::underlying_type_t<DamageRollKind>;
-  return ((DamageRollKindBase)kindA & (DamageRollKindBase)kindB) != 0;
+  return ((DamageRollKindBase)kindA & (DamageRollKindBase)kindB) != 0U;
 }
 
 inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, DamageRollKind damageRollKind) {
@@ -26,7 +26,7 @@ inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, Damage
     "DamageRolls does not contain average");
 
   if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
-    POKESIM_REQUIRE(damageRolls.val.size() > 1, "DamageRolls may not have average roll yet.");
+    POKESIM_REQUIRE(damageRolls.val.size() > 1U, "DamageRolls may not have average roll yet.");
     return damageRolls.val[1].val;
   }
   return damageRolls.val[0].val;

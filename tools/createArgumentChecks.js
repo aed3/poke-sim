@@ -1,10 +1,10 @@
 const fs = require('fs');
-const {fullPath, noBase} = require('./utils');
+const {getFullPath, noBase} = require('./utils');
 const {getComponents, createForwardDeclaration} = require('./getComponents');
 
 const {components, componentData, declarationsByNamespace} = getComponents(false);
-const headerPath = fullPath('src/Utilities/ArgumentChecks.hpp');
-const sourcePath = fullPath('src/Utilities/ArgumentChecks.cpp');
+const headerPath = getFullPath('src', 'Utilities', 'ArgumentChecks.hpp');
+const sourcePath = getFullPath('src', 'Utilities', 'ArgumentChecks.cpp');
 const existingHeader = fs.readFileSync(headerPath, 'utf8').split('\n');
 const existingSource = fs.readFileSync(sourcePath, 'utf8').split('\n');
 

@@ -29,7 +29,9 @@ void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls, const 
       return;
     }
 
-    damageRollIndex += i == 0 || damageRolls.val[i - 1].val != damageRolls.val[i].val ? 1 : 0;
+    if (i == 0U || damageRolls.val[i - 1].val != damageRolls.val[i].val) {
+      damageRollIndex++;
+    }
   }
 
   POKESIM_REQUIRE_FAIL("How was a damage roll not found that matched the event index?");
@@ -39,7 +41,7 @@ void assignPartialProbability(
   types::registry& registry, const Battle& battle, const RandomEventCount& randomEventCount) {
   if (randomEventCount.val != 1U) {
     Probability& probability = registry.get<Probability>(battle.val);
-    probability.val *= 1.0F / (types::probability)randomEventCount.val;
+    probability.val *= MechanicConstants::Probability::MAX / (types::probability)randomEventCount.val;
   }
 }
 
@@ -47,7 +49,9 @@ void assignAllDamageRollProbability(
   types::registry& registry, const Damage& damage, DamageRolls& damageRolls, const Battle& battle) {
   types::eventPossibilities damageCount = 0U;
   for (const Damage damageRoll : damageRolls.val) {
-    damageCount += damageRoll.val == damage.val ? 1 : 0;
+    if (damageRoll.val == damage.val) {
+      damageCount++;
+    }
   }
 
   POKESIM_REQUIRE(damageCount > 0U, "How was a damage roll not found that matched the damage dealt?");
@@ -60,7 +64,9 @@ types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {
   const DamageRolls& damageRolls = moveHandle.get<DamageRolls>();
   types::eventPossibilities eventPossibilities = 1U;
   for (types::damageRollIndex i = 1U; i < damageRolls.val.size(); i++) {
-    eventPossibilities += damageRolls.val[i - 1].val != damageRolls.val[i].val ? 1 : 0;
+    if (damageRolls.val[i - 1].val != damageRolls.val[i].val) {
+      eventPossibilities++;
+    }
   }
   return eventPossibilities;
 }
