@@ -23636,11 +23636,9 @@ struct Results;
 }
 namespace calc_damage {
 struct Results;
-struct InputSetup;
 }  // namespace calc_damage
 namespace analyze_effect {
 struct Results;
-struct InputSetup;
 }  // namespace analyze_effect
 namespace debug {
 struct SimulationSetupChecks;
@@ -23700,7 +23698,7 @@ class Simulation : public internal::RegistryContainer {
   struct CalcDamageInputInfo {
     Slot attackerSlot = Slot::NONE;
     Slot defenderSlot = Slot::NONE;
-    dex::Move move = dex::Move::NO_MOVE;
+    std::vector<dex::Move> moves;
   };
 
   struct AnalyzeEffectInputInfo {
@@ -23743,7 +23741,7 @@ class Simulation : public internal::RegistryContainer {
 
   inline void createInitialTurnDecision(BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionInfo);
   inline void createCalcDamageInput(
-    BattleStateSetup battleStateSetup, calc_damage::InputSetup& inputSetup, const CalcDamageInputInfo& inputInfo);
+    BattleStateSetup battleStateSetup, const CalcDamageInputInfo& inputInfo, debug::SimulationSetupChecks& debugChecks);
   inline void createAnalyzeEffectInput(
     BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& inputInfo,
     debug::SimulationSetupChecks& debugChecks);
@@ -24135,7 +24133,9 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(battle.val == battleEntity);
     POKESIM_REQUIRE_NM(attacker.val == setupInfoAttacker);
     POKESIM_REQUIRE_NM(defenders.only() == setupInfoDefender);
-    POKESIM_REQUIRE_NM(moveName.name == calcDamageInputInfo.move);
+    POKESIM_REQUIRE_NM(
+      std::find(calcDamageInputInfo.moves.begin(), calcDamageInputInfo.moves.end(), moveName.name) !=
+      calcDamageInputInfo.moves.end());
 
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::Attacker>(setupInfoAttacker));
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::Defender>(setupInfoDefender));
@@ -24501,16 +24501,22 @@ inline void Simulation::createInitialTurnDecision(
 }
 
 inline void Simulation::createCalcDamageInput(
-  BattleStateSetup battleStateSetup, calc_damage::InputSetup& inputSetup, const CalcDamageInputInfo& inputInfo) {
+  BattleStateSetup battleStateSetup, const CalcDamageInputInfo& inputInfo, debug::SimulationSetupChecks& debugChecks) {
   POKESIM_REQUIRE(inputInfo.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
   POKESIM_REQUIRE(inputInfo.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
-  POKESIM_REQUIRE(inputInfo.move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
+  POKESIM_REQUIRE(!inputInfo.moves.empty(), "A damage calculation must have a move.");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
   types::entity attackerEntity = slotToPokemonEntity(registry, sides, inputInfo.attackerSlot);
   types::entity defenderEntity = slotToPokemonEntity(registry, sides, inputInfo.defenderSlot);
 
-  inputSetup.setup(battleStateSetup.entity(), attackerEntity, defenderEntity, inputInfo.move, pokedex());
+  for (dex::Move move : inputInfo.moves) {
+    calc_damage::InputSetup inputSetup(registry);
+    POKESIM_REQUIRE(move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
+
+    inputSetup.setup(battleStateSetup.entity(), attackerEntity, defenderEntity, move, pokedex());
+    debugChecks.addToCalcDamageChecklist(battleStateSetup, inputSetup, inputInfo);
+  }
 }
 
 inline void Simulation::createAnalyzeEffectInput(
@@ -24598,9 +24604,7 @@ inline void Simulation::createInitialStates(const std::vector<BattleCreationInfo
     }
 
     for (const CalcDamageInputInfo& calcDamageInputInfo : battleInfo.damageCalculations) {
-      calc_damage::InputSetup inputSetup(registry);
-      createCalcDamageInput(battleStateSetup, inputSetup, calcDamageInputInfo);
-      debugChecks.addToCalcDamageChecklist(battleStateSetup, inputSetup, calcDamageInputInfo);
+      createCalcDamageInput(battleStateSetup, calcDamageInputInfo, debugChecks);
     }
 
     for (const AnalyzeEffectInputInfo& analyzeEffectInputInfo : battleInfo.effectsToAnalyze) {

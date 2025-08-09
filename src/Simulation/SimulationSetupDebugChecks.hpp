@@ -316,7 +316,9 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(battle.val == battleEntity);
     POKESIM_REQUIRE_NM(attacker.val == setupInfoAttacker);
     POKESIM_REQUIRE_NM(defenders.only() == setupInfoDefender);
-    POKESIM_REQUIRE_NM(moveName.name == calcDamageInputInfo.move);
+    POKESIM_REQUIRE_NM(
+      std::find(calcDamageInputInfo.moves.begin(), calcDamageInputInfo.moves.end(), moveName.name) !=
+      calcDamageInputInfo.moves.end());
 
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::Attacker>(setupInfoAttacker));
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::Defender>(setupInfoDefender));

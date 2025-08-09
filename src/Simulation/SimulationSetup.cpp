@@ -176,16 +176,22 @@ void Simulation::createInitialTurnDecision(
 }
 
 void Simulation::createCalcDamageInput(
-  BattleStateSetup battleStateSetup, calc_damage::InputSetup& inputSetup, const CalcDamageInputInfo& inputInfo) {
+  BattleStateSetup battleStateSetup, const CalcDamageInputInfo& inputInfo, debug::SimulationSetupChecks& debugChecks) {
   POKESIM_REQUIRE(inputInfo.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
   POKESIM_REQUIRE(inputInfo.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
-  POKESIM_REQUIRE(inputInfo.move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
+  POKESIM_REQUIRE(!inputInfo.moves.empty(), "A damage calculation must have a move.");
 
   const Sides& sides = registry.get<Sides>(battleStateSetup.entity());
   types::entity attackerEntity = slotToPokemonEntity(registry, sides, inputInfo.attackerSlot);
   types::entity defenderEntity = slotToPokemonEntity(registry, sides, inputInfo.defenderSlot);
 
-  inputSetup.setup(battleStateSetup.entity(), attackerEntity, defenderEntity, inputInfo.move, pokedex());
+  for (dex::Move move : inputInfo.moves) {
+    calc_damage::InputSetup inputSetup(registry);
+    POKESIM_REQUIRE(move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
+
+    inputSetup.setup(battleStateSetup.entity(), attackerEntity, defenderEntity, move, pokedex());
+    debugChecks.addToCalcDamageChecklist(battleStateSetup, inputSetup, inputInfo);
+  }
 }
 
 void Simulation::createAnalyzeEffectInput(
@@ -273,9 +279,7 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
     }
 
     for (const CalcDamageInputInfo& calcDamageInputInfo : battleInfo.damageCalculations) {
-      calc_damage::InputSetup inputSetup(registry);
-      createCalcDamageInput(battleStateSetup, inputSetup, calcDamageInputInfo);
-      debugChecks.addToCalcDamageChecklist(battleStateSetup, inputSetup, calcDamageInputInfo);
+      createCalcDamageInput(battleStateSetup, calcDamageInputInfo, debugChecks);
     }
 
     for (const AnalyzeEffectInputInfo& analyzeEffectInputInfo : battleInfo.effectsToAnalyze) {

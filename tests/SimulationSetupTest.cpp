@@ -245,27 +245,27 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalcDamage][Setup]") {
     {
       Slot::P1A,
       Slot::P1B,
-      dex::Move::FURY_ATTACK,
+      {dex::Move::FURY_ATTACK, dex::Move::KNOCK_OFF},
     },
     {
       Slot::P1B,
       Slot::P1A,
-      dex::Move::FURY_ATTACK,
+      {dex::Move::FURY_ATTACK},
     },
     {
       Slot::P1B,
       Slot::P1A,
-      dex::Move::THUNDERBOLT,
+      {dex::Move::THUNDERBOLT},
     },
     {
       Slot::P2B,
       Slot::P2C,
-      dex::Move::KNOCK_OFF,
+      {dex::Move::KNOCK_OFF},
     },
     {
       Slot::P2B,
       Slot::P1B,
-      dex::Move::MOONBLAST,
+      {dex::Move::MOONBLAST},
     },
   };
 
@@ -277,7 +277,7 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalcDamage][Setup]") {
   REQUIRE(battles.size() == 1U);
 
   auto view = registry.view<tags::CalculateDamage>();
-  REQUIRE(view.size() == 5U);
+  REQUIRE(view.size() == 6U);
 }
 
 TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup]") {
@@ -285,7 +285,7 @@ TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup
   Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
 
   battleInfo.effectsToAnalyze = {
-    {Slot::P1A, Slot::P1B, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
+    {Slot::P1A, Slot::P1B, Slot::P1A, {dex::Move::FURY_ATTACK, dex::Move::KNOCK_OFF}, dex::Status::BRN},
     {Slot::P1B, Slot::P1A, Slot::P1A, {dex::Move::FURY_ATTACK}, std::nullopt, {{dex::Stat::DEF, 2}}},
     {
       Slot::P1B,
@@ -307,6 +307,6 @@ TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup
   REQUIRE(battles.size() == 1U);
 
   auto view = registry.view<analyze_effect::tags::Input>();
-  REQUIRE(view.size() == 5U);
+  REQUIRE(view.size() == 6U);
 }
 }  // namespace pokesim

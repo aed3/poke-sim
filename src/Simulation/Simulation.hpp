@@ -26,11 +26,9 @@ struct Results;
 }
 namespace calc_damage {
 struct Results;
-struct InputSetup;
 }  // namespace calc_damage
 namespace analyze_effect {
 struct Results;
-struct InputSetup;
 }  // namespace analyze_effect
 namespace debug {
 struct SimulationSetupChecks;
@@ -90,7 +88,7 @@ class Simulation : public internal::RegistryContainer {
   struct CalcDamageInputInfo {
     Slot attackerSlot = Slot::NONE;
     Slot defenderSlot = Slot::NONE;
-    dex::Move move = dex::Move::NO_MOVE;
+    std::vector<dex::Move> moves;
   };
 
   struct AnalyzeEffectInputInfo {
@@ -133,7 +131,7 @@ class Simulation : public internal::RegistryContainer {
 
   void createInitialTurnDecision(BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionInfo);
   void createCalcDamageInput(
-    BattleStateSetup battleStateSetup, calc_damage::InputSetup& inputSetup, const CalcDamageInputInfo& inputInfo);
+    BattleStateSetup battleStateSetup, const CalcDamageInputInfo& inputInfo, debug::SimulationSetupChecks& debugChecks);
   void createAnalyzeEffectInput(
     BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& inputInfo,
     debug::SimulationSetupChecks& debugChecks);
