@@ -23,7 +23,7 @@ namespace pokesim {
 namespace {
 void cloneEntity(
   types::entity src, types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::entityIndex cloneCount) {
   for (auto [id, storage] : registry.storage()) {
     if (storage.contains(src)) {
       POKESIM_REQUIRE(
@@ -135,7 +135,7 @@ void traverseMove(types::registry& registry, VisitEntity visitEntity = nullptr) 
 
 void cloneBattle(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::entityIndex cloneCount) {
   traverseBattle(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -143,7 +143,7 @@ void cloneBattle(
 
 void cloneSide(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::entityIndex cloneCount) {
   traverseSide(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -151,7 +151,7 @@ void cloneSide(
 
 void cloneAction(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::entityIndex cloneCount) {
   traverseAction(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -159,7 +159,7 @@ void cloneAction(
 
 void cloneCurrentActionMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::entityIndex cloneCount) {
   traverseCurrentActionMove(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -167,7 +167,7 @@ void cloneCurrentActionMove(
 
 void clonePokemon(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::entityIndex cloneCount) {
   traversePokemon(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -175,7 +175,7 @@ void clonePokemon(
 
 void cloneMove(
   types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::cloneIndex cloneCount) {
+  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::entityIndex cloneCount) {
   traverseMove(registry, [&](types::entity entity) {
     cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
   });
@@ -240,8 +240,8 @@ void remapComponentEntities(types::registry& registry, const types::ClonedEntity
 }
 }  // namespace
 
-types::ClonedEntityMap clone(types::registry& registry, std::optional<types::cloneIndex> cloneCount) {
-  types::cloneIndex count = cloneCount.value_or(1U);
+types::ClonedEntityMap clone(types::registry& registry, std::optional<types::entityIndex> cloneCount) {
+  types::entityIndex count = cloneCount.value_or(1U);
   types::ClonedEntityMap entityMap, battleMap;
   if (count == 0U) {
     return entityMap;
@@ -263,7 +263,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
       storage.reserve(storage.size() + (sources.size() * count));
       for (types::entity src : sources) {
         auto* value = storage.value(src);
-        for (types::cloneIndex i = 0U; i < count; i++) {
+        for (types::entityIndex i = 0U; i < count; i++) {
           storage.push(entityMap[src][i], value);
         }
       }
@@ -278,7 +278,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::clo
   }
 
   for (const auto& [src, destinations] : entityMap) {
-    for (types::cloneIndex i = 0U; i < count; i++) {
+    for (types::entityIndex i = 0U; i < count; i++) {
       cloneToStorage.get(destinations[i]).val = i;
     }
   }

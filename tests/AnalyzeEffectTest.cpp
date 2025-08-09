@@ -150,6 +150,108 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     checkResults(results);
   }
 
+  SECTION("One Effect Not Applied, Multiple Calculations") {
+    battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
+    battleCreationInfo.effectsToAnalyze = {
+      {
+        Slot::P1A,
+        Slot::P2A,
+        Slot::P1A,
+        {dex::Move::FURY_ATTACK},
+        dex::Status::BRN,
+      },
+      {
+        Slot::P1A,
+        Slot::P2A,
+        Slot::P1A,
+        {dex::Move::FURY_ATTACK},
+        dex::Status::BRN,
+      },
+    };
+    simulation.createInitialStates({battleCreationInfo});
+
+    simulation.registry.view<analyze_effect::tags::Input>().each([&](types::entity entity) {
+      idealMultipliers.emplace(entity, Ideals{idealHalvedMultiplier, idealHalvedDamageRolls, idealHalvedKoUses});
+    });
+
+    auto results = simulation.analyzeEffect();
+    checkResults(results);
+  }
+
+  SECTION("One Effect, One Applied, Multiple Calculations") {
+    battleCreationInfo.p1.team[0].status = dex::Status::BRN;
+    battleCreationInfo.effectsToAnalyze = {
+      {
+        Slot::P1A,
+        Slot::P2A,
+        Slot::P1A,
+        {dex::Move::FURY_ATTACK},
+        dex::Status::BRN,
+      },
+      {
+        Slot::P1A,
+        Slot::P2A,
+        Slot::P1A,
+        {dex::Move::FURY_ATTACK},
+        dex::Status::BRN,
+      },
+    };
+    simulation.createInitialStates({battleCreationInfo});
+
+    simulation.registry.view<analyze_effect::tags::Input>().each([&](types::entity entity) {
+      idealMultipliers.emplace(
+        entity,
+        Ideals{reconsiderActiveEffects ? idealHalvedMultiplier : 1.0F, idealHalvedDamageRolls, idealHalvedKoUses});
+    });
+
+    auto results = simulation.analyzeEffect();
+    checkResults(results);
+  }
+
+  SECTION("One Effect Not Applied, Multiple Calculations, Multiple Attacks Per Input, Same Attack") {
+    battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
+    battleCreationInfo.effectsToAnalyze = {
+      {
+        Slot::P1A,
+        Slot::P2A,
+        Slot::P1A,
+        {dex::Move::FURY_ATTACK, dex::Move::FURY_ATTACK},
+        dex::Status::BRN,
+      },
+    };
+    simulation.createInitialStates({battleCreationInfo});
+
+    simulation.registry.view<analyze_effect::tags::Input>().each([&](types::entity entity) {
+      idealMultipliers.emplace(entity, Ideals{idealHalvedMultiplier, idealHalvedDamageRolls, idealHalvedKoUses});
+    });
+
+    auto results = simulation.analyzeEffect();
+    checkResults(results);
+  }
+
+  SECTION("One Effect, One Applied, Multiple Calculations, Multiple Attacks Per Input, Same Attack") {
+    battleCreationInfo.p1.team[0].status = dex::Status::BRN;
+    battleCreationInfo.effectsToAnalyze = {
+      {
+        Slot::P1A,
+        Slot::P2A,
+        Slot::P1A,
+        {dex::Move::FURY_ATTACK, dex::Move::FURY_ATTACK},
+        dex::Status::BRN,
+      },
+    };
+    simulation.createInitialStates({battleCreationInfo});
+
+    simulation.registry.view<analyze_effect::tags::Input>().each([&](types::entity entity) {
+      idealMultipliers.emplace(
+        entity,
+        Ideals{reconsiderActiveEffects ? idealHalvedMultiplier : 1.0F, idealHalvedDamageRolls, idealHalvedKoUses});
+    });
+
+    auto results = simulation.analyzeEffect();
+    checkResults(results);
+  }
+
   SECTION("Multiple Effects, None Applied") {
     battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
     battleCreationInfo.effectsToAnalyze = {

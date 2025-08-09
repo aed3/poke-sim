@@ -94,11 +94,12 @@ struct SpeedSort;
 struct Turn;
 namespace analyze_effect {
 struct EffectTarget;
-struct EffectMoves;
+struct EffectMove;
+struct MovesAndInputs;
 struct Inputs;
 struct OriginalInputEntities;
 struct MovePairs;
-struct RunsOneCalculationCount;
+struct SkippedInputCount;
 struct RemovedEffect;
 struct EffectMultiplier;
 }  // namespace analyze_effect
@@ -158,7 +159,10 @@ template <>
 void check(const analyze_effect::EffectTarget&, const types::registry&);
 
 template <>
-void check(const analyze_effect::EffectMoves&);
+void check(const analyze_effect::EffectMove&);
+
+template <>
+void check(const analyze_effect::MovesAndInputs&, const types::registry&);
 
 template <>
 void check(const analyze_effect::Inputs&, const types::registry&);
@@ -168,7 +172,7 @@ void check(const analyze_effect::Inputs&, const types::registry&);
 template <>
 void check(const analyze_effect::MovePairs&, const types::registry&);
 
-// template <> void check(const analyze_effect::RunsOneCalculationCount&);
+// template <> void check(const analyze_effect::SkippedInputCount&);
 
 // template <> void check(const analyze_effect::RemovedEffect&);
 

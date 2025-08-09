@@ -297,9 +297,15 @@ void check(const analyze_effect::EffectTarget& effectTarget, const types::regist
 }
 
 template <>
-void check(const analyze_effect::EffectMoves& effectMoves) {
-  for (dex::Move move : effectMoves.val) {
+void check(const analyze_effect::EffectMove& effectMove) {
+  check(MoveName{effectMove.val});
+}
+
+template <>
+void check(const analyze_effect::MovesAndInputs& effectMoves, const types::registry& registry) {
+  for (auto [move, input] : effectMoves.val) {
     check(MoveName{move});
+    types::registry::checkEntity(input, registry);
   }
 }
 
@@ -311,7 +317,7 @@ void check(const analyze_effect::Inputs& inputs, const types::registry& registry
     POKESIM_REQUIRE_NM(has<analyze_effect::Attacker>(input, registry));
     POKESIM_REQUIRE_NM(has<analyze_effect::Defenders>(input, registry));
     POKESIM_REQUIRE_NM(has<analyze_effect::EffectTarget>(input, registry));
-    POKESIM_REQUIRE_NM(has<analyze_effect::EffectMoves>(input, registry));
+    POKESIM_REQUIRE_NM(has<analyze_effect::EffectMove>(input, registry));
     POKESIM_REQUIRE_NM(has<Battle>(input, registry));
     const auto
       [pseudoWeather,
@@ -341,18 +347,18 @@ void check(const analyze_effect::Inputs& inputs, const types::registry& registry
       pseudoWeather || sideCondition || status || terrain || volatileCondition || weather || atkBoost || defBoost ||
       spaBoost || spdBoost || speBoost);
 
-    auto const& [attacker, defenders, target, moves] = registry.get<
+    auto const& [attacker, defenders, target, move] = registry.get<
       analyze_effect::Attacker,
       analyze_effect::Defenders,
       analyze_effect::EffectTarget,
-      analyze_effect::EffectMoves>(input);
+      analyze_effect::EffectMove>(input);
     POKESIM_REQUIRE_NM(has<analyze_effect::tags::Attacker>(attacker.val, registry));
     POKESIM_REQUIRE_NM(has<analyze_effect::tags::Defender>(defenders.only(), registry));
     checkPokemon(attacker.val, registry);
     checkPokemon(defenders.only(), registry);
     checkPokemon(target.val, registry);
 
-    for (dex::Move move : moves.val) check(MoveName{move});
+    check(move);
 
     if (pseudoWeather) check(*pseudoWeather);
     if (sideCondition) check(*sideCondition);
@@ -370,12 +376,13 @@ void check(const analyze_effect::Inputs& inputs, const types::registry& registry
 
 template <>
 void check(const analyze_effect::MovePairs& movePairs, const types::registry& registry) {
-  for (auto [parentBattleMove, childBattleMove] : movePairs.val) {
+  for (auto [parentBattleMove, childBattleMove, originInput] : movePairs.val) {
     checkActionMove(parentBattleMove, registry);
     checkActionMove(childBattleMove, registry);
+    types::registry::checkEntity(originInput, registry);
   }
 
-  for (auto [parentBattleMove, childBattleMove] : movePairs.val) {
+  for (auto [parentBattleMove, childBattleMove, _] : movePairs.val) {
     const auto& [parentAttacker, parentDefenders, parentBattle, parentTypeName, parentMoveName] =
       registry.get<analyze_effect::Attacker, analyze_effect::Defenders, Battle, TypeName, MoveName>(parentBattleMove);
     const auto& [childAttacker, childDefenders, childBattle, childTypeName, childMoveName] =

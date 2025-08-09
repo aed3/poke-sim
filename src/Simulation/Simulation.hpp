@@ -32,6 +32,9 @@ namespace analyze_effect {
 struct Results;
 struct InputSetup;
 }  // namespace analyze_effect
+namespace debug {
+struct SimulationSetupChecks;
+}
 
 /**
  * @brief The entry point for creating and running simulations.
@@ -132,7 +135,8 @@ class Simulation : public internal::RegistryContainer {
   void createCalcDamageInput(
     BattleStateSetup battleStateSetup, calc_damage::InputSetup& inputSetup, const CalcDamageInputInfo& inputInfo);
   void createAnalyzeEffectInput(
-    BattleStateSetup battleStateSetup, analyze_effect::InputSetup& inputSetup, const AnalyzeEffectInputInfo& inputInfo);
+    BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& inputInfo,
+    debug::SimulationSetupChecks& debugChecks);
 
   std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);

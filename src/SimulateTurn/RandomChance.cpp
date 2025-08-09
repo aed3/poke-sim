@@ -199,7 +199,7 @@ void assignIndexToClones(
     if (clonedPointer == clonedEntityMap.end()) continue;
     const auto& cloned = clonedPointer->second;
 
-    for (types::cloneIndex index = 0U; index < cloned.size(); index++) {
+    for (types::entityIndex index = 0U; index < cloned.size(); index++) {
       POKESIM_REQUIRE(
         std::numeric_limits<types::eventPossibilities>::max() > index,
         "Number of clones shouldn't be greater than the number of possible events.");
@@ -229,7 +229,7 @@ template <
   typename Random, typename RandomStack, auto AssignRandomEvents, typename UpdateProbabilities,
   typename... AssignRandomEventsTags, typename... AssignArgs>
 void randomChanceEvent(
-  Simulation& simulation, types::cloneIndex cloneCount, types::callback applyChoices,
+  Simulation& simulation, types::entityIndex cloneCount, types::callback applyChoices,
   void (*assignClonesToEvents)(types::registry&, const types::ClonedEntityMap&, const types::entityVector&),
   UpdateProbabilities updateProbabilities, const AssignArgs&... assignArgs) {
   if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT) {
@@ -410,7 +410,7 @@ void randomEqualChance(
     sim.view<updateProbabilityFromRandomEqualChance>(possibleEventCount);
   };
 
-  types::cloneIndex cloneCount =
+  types::entityIndex cloneCount =
     possibleEventCount > MechanicConstants::DamageRollCount::MAX ? 0U : possibleEventCount - 1U;
 
   if (updateProbabilities.has_value()) {

@@ -189,7 +189,8 @@ void Simulation::createCalcDamageInput(
 }
 
 void Simulation::createAnalyzeEffectInput(
-  BattleStateSetup battleStateSetup, analyze_effect::InputSetup& inputSetup, const AnalyzeEffectInputInfo& inputInfo) {
+  BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& inputInfo,
+  debug::SimulationSetupChecks& debugChecks) {
   POKESIM_REQUIRE(inputInfo.attackerSlot != Slot::NONE, "An effect analysis must have a attacker.");
   POKESIM_REQUIRE(inputInfo.defenderSlot != Slot::NONE, "An effect analysis must have a defender.");
   POKESIM_REQUIRE(inputInfo.effectTarget != Slot::NONE, "An effect analysis must have a effect target.");
@@ -205,17 +206,22 @@ void Simulation::createAnalyzeEffectInput(
   types::entity defenderEntity = slotToPokemonEntity(registry, sides, inputInfo.defenderSlot);
   types::entity effectTargetEntity = slotToPokemonEntity(registry, sides, inputInfo.effectTarget);
 
-  inputSetup.setAttacker(attackerEntity);
-  inputSetup.setDefender(defenderEntity);
-  inputSetup.setEffectTarget(effectTargetEntity);
-  inputSetup.setEffectMoves(inputInfo.moves);
-  inputSetup.setBattle(battleStateSetup.entity());
+  for (dex::Move move : inputInfo.moves) {
+    analyze_effect::InputSetup inputSetup(registry);
 
-  if (effect.has_value()) {
-    inputSetup.setEffect(effect.value());
-  }
-  if (boostEffect.has_value()) {
-    inputSetup.setBoostEffect(boostEffect.value().stat, boostEffect.value().boost);
+    inputSetup.setAttacker(attackerEntity);
+    inputSetup.setDefender(defenderEntity);
+    inputSetup.setEffectTarget(effectTargetEntity);
+    inputSetup.setEffectMove(move);
+    inputSetup.setBattle(battleStateSetup.entity());
+
+    if (effect.has_value()) {
+      inputSetup.setEffect(effect.value());
+    }
+    if (boostEffect.has_value()) {
+      inputSetup.setBoostEffect(boostEffect.value().stat, boostEffect.value().boost);
+    }
+    debugChecks.addToAnalyzeEffectChecklist(battleStateSetup, inputSetup, inputInfo);
   }
 }
 
@@ -233,10 +239,10 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
 
     if (!battleInfo.decisionsToSimulate.empty()) {
       POKESIM_REQUIRE(
-        battleInfo.decisionsToSimulate.size() < std::numeric_limits<types::cloneIndex>::max(),
+        battleInfo.decisionsToSimulate.size() < std::numeric_limits<types::entityIndex>::max(),
         "Cannot make more clones than there are entities available.");
 
-      types::cloneIndex cloneCount = (types::cloneIndex)(battleInfo.decisionsToSimulate.size() - 1U);
+      types::entityIndex cloneCount = (types::entityIndex)(battleInfo.decisionsToSimulate.size() - 1U);
       if (cloneCount) {
         battleStateSetup.setProperty<tags::CloneFrom>();
         const types::ClonedEntityMap entityMap = pokesim::clone(registry, cloneCount);
@@ -249,7 +255,7 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
           clones.emplace_back(registry, entity);
         }
 
-        for (types::cloneIndex i = 0U; i < cloneCount; i++) {
+        for (types::entityIndex i = 0U; i < cloneCount; i++) {
           BattleStateSetup& setupClone = clones[i];
           const TurnDecisionInfo& turnDecisionInfo = battleInfo.decisionsToSimulate[i];
           debugChecks.addToBattleChecklist(setupClone, battleInfo);
@@ -273,9 +279,7 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
     }
 
     for (const AnalyzeEffectInputInfo& analyzeEffectInputInfo : battleInfo.effectsToAnalyze) {
-      analyze_effect::InputSetup inputSetup(registry);
-      createAnalyzeEffectInput(battleStateSetup, inputSetup, analyzeEffectInputInfo);
-      debugChecks.addToAnalyzeEffectChecklist(battleStateSetup, inputSetup, analyzeEffectInputInfo);
+      createAnalyzeEffectInput(battleStateSetup, analyzeEffectInputInfo, debugChecks);
     }
   }
 

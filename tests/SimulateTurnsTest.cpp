@@ -317,7 +317,7 @@ struct VerticalSlice1Checks : debug::Checks {
     checkRemainingOutputs();
 
     if (!options->makeBranchesOnRandomEvents) {
-      types::cloneIndex finalEntityCount = getFinalEntityCount();
+      types::entityIndex finalEntityCount = getFinalEntityCount();
       if (options->applyChangesToInputBattle) {
         REQUIRE(finalEntityCount == initialEntityCount);
       }
@@ -499,7 +499,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   p2Info.stats = {295U, 165U, 190U, 255U, 210U, 145U};
   battleCreationInfo.runWithSimulateTurn = true;
 
-  auto numberOfSamples = GENERATE(std::optional<types::cloneIndex>{std::nullopt}, 1U, 5U);
+  auto numberOfSamples = GENERATE(std::optional<types::entityIndex>{std::nullopt}, 1U, 5U);
 
   bool applyChangesToInputBattle = GENERATE(true, false);
   auto branchProbabilityLowerLimit = GENERATE(std::optional<types::probability>{std::nullopt}, 0.0F, 0.5F);
@@ -573,7 +573,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   const auto expectedP2Hp = p2DamageInfo.possibleHpValues();
 
   std::vector<Simulation::BattleCreationInfo> battleCreationInfoList;
-  for (types::cloneIndex i = 0U; i < numberOfSamples.value_or(1U); i++) {
+  for (types::entityIndex i = 0U; i < numberOfSamples.value_or(1U); i++) {
     battleCreationInfoList.push_back(battleCreationInfo);
   }
 

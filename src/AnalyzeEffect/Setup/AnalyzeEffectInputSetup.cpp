@@ -48,8 +48,8 @@ void InputSetup::setDefender(types::entity entity) {
   handle.registry()->emplace_or_replace<tags::Defender>(entity);
 }
 
-void InputSetup::setEffectMoves(const std::vector<dex::Move>& moves) {
-  handle.get_or_emplace<EffectMoves>().val = moves;
+void InputSetup::setEffectMove(dex::Move move) {
+  handle.emplace<EffectMove>(move);
 }
 
 void InputSetup::setEffect(types::effectEnum effect) {

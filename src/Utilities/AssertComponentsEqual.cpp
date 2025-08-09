@@ -88,10 +88,10 @@ types::entity findCopyParent(
   }
 
   const ParentEntity* parentEntity = registry.try_get<ParentEntity>(entity);
-  for (types::cloneIndex i = 0U; parentEntity != nullptr; i++) {
+  for (types::entityIndex i = 0U; parentEntity != nullptr; i++) {
     if (
       i >= registry.storage<types::registry::entity_type>()->size() ||
-      i == std::numeric_limits<types::cloneIndex>::max()) {
+      i == std::numeric_limits<types::entityIndex>::max()) {
       POKESIM_REQUIRE_FAIL("A loop in the battle tree caused an infinite loop.");
       break;
     }
@@ -110,10 +110,10 @@ types::entity findCopyParent(
 
 bool checkIfCopyParent(types::entity potentialChild, types::entity potentialParent, const types::registry& registry) {
   const ParentEntity* parentEntity = registry.try_get<ParentEntity>(potentialChild);
-  for (types::cloneIndex i = 0U; parentEntity != nullptr; i++) {
+  for (types::entityIndex i = 0U; parentEntity != nullptr; i++) {
     if (
       i >= registry.storage<types::registry::entity_type>()->size() ||
-      i == std::numeric_limits<types::cloneIndex>::max()) {
+      i == std::numeric_limits<types::entityIndex>::max()) {
       POKESIM_REQUIRE_FAIL("A loop in the battle tree caused an infinite loop.");
       return false;
     }

@@ -9,6 +9,6 @@ struct CloneToRemove {};
 }  // namespace tags
 
 struct CloneTo {
-  types::cloneIndex val{};
+  types::entityIndex val{};
 };
 }  // namespace pokesim

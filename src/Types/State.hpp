@@ -16,7 +16,7 @@ using stateId = std::underlying_type_t<entity>;
 
 using battleTurn = pokesim::internal::unsignedIntType<MechanicConstants::TurnCount::MAX>;
 
-using cloneIndex = std::underlying_type_t<entity>;
+using entityIndex = std::underlying_type_t<entity>;
 
 using teamPositionIndex = pokesim::internal::unsignedIntType<MechanicConstants::TeamSize::MAX>;
 using moveSlotIndex = pokesim::internal::unsignedIntType<MechanicConstants::MoveSlots::MAX>;

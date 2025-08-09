@@ -22,7 +22,7 @@ struct InputSetup {
   void setAttacker(types::entity entity);
   void setEffectTarget(types::entity entity);
   void setDefender(types::entity entity);
-  void setEffectMoves(const std::vector<dex::Move>& moves);
+  void setEffectMove(dex::Move move);
   void setEffect(types::effectEnum effect);
   void setBoostEffect(dex::Stat stat, types::boost boost);
   void setBattle(types::entity entity);

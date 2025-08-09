@@ -80,7 +80,7 @@ TEST_CASE("Battle State: Multiple Battles", "[BattleState][Setup]") {
 TEST_CASE("Clone Battles", "[BattleState][Setup]") {
   Simulation::BattleCreationInfo battleCreationInfo{};
   auto create = GENERATE(createSingleBattleSimulation, createDoubleBattleSimulation);
-  types::cloneIndex cloneCount = GENERATE(1U, 5U, 100U);
+  types::entityIndex cloneCount = GENERATE(1U, 5U, 100U);
 
   CAPTURE(cloneCount);
   INFO(

@@ -47,7 +47,7 @@ struct Checks {
   types::registry registryOnInput;
   entt::dense_map<types::entity, types::entity> originalToCopy;
   entt::dense_set<types::entity> specificallyChecked;
-  types::cloneIndex initialEntityCount = 0U;
+  types::entityIndex initialEntityCount = 0U;
 
   template <typename T>
   bool has(types::entity entity) const {
@@ -76,8 +76,8 @@ struct Checks {
     }
   }
 
-  types::cloneIndex getFinalEntityCount() const {
-    types::cloneIndex finalEntityCount = 0U;
+  types::entityIndex getFinalEntityCount() const {
+    types::entityIndex finalEntityCount = 0U;
     for (types::entity entity : registry->view<types::entity>()) {
       if (!registry->orphan(entity)) {
         finalEntityCount++;

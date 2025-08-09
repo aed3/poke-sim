@@ -340,9 +340,9 @@ struct SimulationSetupChecks {
 
     const auto& p1Team = registry->get<Team>(registry->get<Sides>(battleEntity).p1()).val;
     const auto& p2Team = registry->get<Team>(registry->get<Sides>(battleEntity).p2()).val;
-    const auto& [battle, effectMoves, attacker, defenders, effectTarget] = registry->get<
+    const auto& [battle, effectMove, attacker, defenders, effectTarget] = registry->get<
       Battle,
-      analyze_effect::EffectMoves,
+      analyze_effect::EffectMove,
       analyze_effect::Attacker,
       analyze_effect::Defenders,
       analyze_effect::EffectTarget>(analyzeEffectEntity);
@@ -355,10 +355,9 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(defenders.only() == setupInfoDefender);
     POKESIM_REQUIRE_NM(effectTarget.val == setupInfoEffectTarget);
 
-    POKESIM_REQUIRE_NM(effectMoves.val.size() == analyzeEffectInputInfo.moves.size());
-    for (std::size_t i = 0U; i < effectMoves.val.size(); i++) {
-      POKESIM_REQUIRE_NM(effectMoves.val[i] == analyzeEffectInputInfo.moves[i]);
-    }
+    POKESIM_REQUIRE_NM(
+      std::find(analyzeEffectInputInfo.moves.begin(), analyzeEffectInputInfo.moves.end(), effectMove.val) !=
+      analyzeEffectInputInfo.moves.end());
 
     POKESIM_REQUIRE_NM(registry->all_of<analyze_effect::Inputs>(battle.val));
     const auto& battleInputs = registry->get<analyze_effect::Inputs>(battle.val).val;
