@@ -2,6 +2,7 @@
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
+#include <AnalyzeEffect/Helpers.hpp>
 #include <CalcDamage/Helpers.hpp>
 #include <Components/headers.hpp>
 #include <Config/Require.hpp>
@@ -330,19 +331,7 @@ void check(const analyze_effect::Inputs& inputs, const types::registry& registry
        defBoost,
        spaBoost,
        spdBoost,
-       speBoost] =
-        registry.try_get<
-          PseudoWeatherName,
-          SideConditionName,
-          StatusName,
-          TerrainName,
-          VolatileName,
-          WeatherName,
-          AtkBoost,
-          DefBoost,
-          SpaBoost,
-          SpdBoost,
-          SpeBoost>(input);
+       speBoost] = analyze_effect::tryGetAllInputEffects(input, registry);
     POKESIM_REQUIRE_NM(
       pseudoWeather || sideCondition || status || terrain || volatileCondition || weather || atkBoost || defBoost ||
       spaBoost || spdBoost || speBoost);

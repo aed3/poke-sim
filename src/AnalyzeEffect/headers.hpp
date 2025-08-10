@@ -4,4 +4,5 @@
 
 #include "AnalyzeEffect.hpp"
 #include "AnalyzeEffectDebugChecks.hpp"
+#include "Helpers.hpp"
 #include "Setup/AnalyzeEffectInputSetup.hpp"

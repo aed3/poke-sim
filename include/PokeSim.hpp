@@ -60,6 +60,23 @@
  * src/Utilities/FixedMemoryVector.hpp
  * src/Types/State.hpp
  * src/Utilities/AssertComponentsEqual.cpp
+ * src/Types/Stats.hpp
+ * src/Components/Boosts.hpp
+ * src/Types/Enums/PseudoWeather.hpp
+ * src/Components/Names/PseudoWeatherNames.hpp
+ * src/Types/Enums/SideCondition.hpp
+ * src/Components/Names/SideConditionNames.hpp
+ * src/Types/Enums/Stat.hpp
+ * src/Components/Names/StatNames.hpp
+ * src/Types/Enums/Status.hpp
+ * src/Components/Names/StatusNames.hpp
+ * src/Types/Enums/Terrain.hpp
+ * src/Components/Names/TerrainNames.hpp
+ * src/Types/Enums/Volatile.hpp
+ * src/Components/Names/VolatileNames.hpp
+ * src/Types/Enums/Weather.hpp
+ * src/Components/Names/WeatherNames.hpp
+ * src/AnalyzeEffect/Helpers.hpp
  * src/Types/Damage.hpp
  * src/Types/Enums/StabBoostKind.hpp
  * src/Types/Event.hpp
@@ -74,20 +91,12 @@
  * src/Components/AnalyzeEffect/Aliases.hpp
  * src/Types/Enums/Move.hpp
  * src/Components/AnalyzeEffect/AnalyzeEffectInputs.hpp
- * src/Types/Enums/PseudoWeather.hpp
- * src/Types/Enums/SideCondition.hpp
- * src/Types/Enums/Status.hpp
- * src/Types/Enums/Terrain.hpp
- * src/Types/Enums/Volatile.hpp
- * src/Types/Enums/Weather.hpp
  * src/Utilities/Variant.hpp
  * src/Types/Effect.hpp
  * src/Components/AnalyzeEffect/RemovedEffect.hpp
  * src/Types/Move.hpp
  * src/Components/BaseEffectChance.hpp
  * src/Components/BasePower.hpp
- * src/Types/Stats.hpp
- * src/Components/Boosts.hpp
  * src/Components/CalcDamage/Aliases.hpp
  * src/Components/CalcDamage/CriticalHit.hpp
  * src/Components/CalcDamage/DamageCalcVariables.hpp
@@ -119,20 +128,12 @@
  * src/Components/Names/MoveNames.hpp
  * src/Types/Enums/Nature.hpp
  * src/Components/Names/NatureNames.hpp
- * src/Components/Names/PseudoWeatherNames.hpp
- * src/Components/Names/SideConditionNames.hpp
  * src/Components/Names/SourceSlotName.hpp
  * src/Types/Enums/Species.hpp
  * src/Components/Names/SpeciesNames.hpp
- * src/Types/Enums/Stat.hpp
- * src/Components/Names/StatNames.hpp
- * src/Components/Names/StatusNames.hpp
  * src/Components/Names/TargetSlotName.hpp
- * src/Components/Names/TerrainNames.hpp
  * src/Types/Enums/Type.hpp
  * src/Components/Names/TypeNames.hpp
- * src/Components/Names/VolatileNames.hpp
- * src/Components/Names/WeatherNames.hpp
  * src/Components/PP.hpp
  * src/Components/PlayerSide.hpp
  * src/Components/Pokedex/Abilities.hpp
@@ -18093,6 +18094,265 @@ inline bool checkIfCopyParent(types::entity potentialChild, types::entity potent
 
 //////////////// END OF src/Utilities/AssertComponentsEqual.cpp ////////////////
 
+///////////////////////// START OF src/Types/Stats.hpp /////////////////////////
+
+namespace pokesim::types {
+using level = pokesim::internal::unsignedIntType<MechanicConstants::PokemonLevel::MAX>;
+
+using stat = pokesim::internal::unsignedIntType<MechanicConstants::PokemonEffectiveStat::MAX>;
+using baseStat = pokesim::internal::unsignedIntType<MechanicConstants::PokemonBaseStat::MAX>;
+
+using ev = pokesim::internal::unsignedIntType<MechanicConstants::PokemonEv::MAX>;
+using iv = pokesim::internal::unsignedIntType<MechanicConstants::PokemonIv::MAX>;
+
+using boost =
+  pokesim::internal::signedIntType<MechanicConstants::PokemonStatBoost::MAX, MechanicConstants::PokemonStatBoost::MIN>;
+}  // namespace pokesim::types
+
+////////////////////////// END OF src/Types/Stats.hpp //////////////////////////
+
+////////////////////// START OF src/Components/Boosts.hpp //////////////////////
+
+namespace pokesim {
+struct AtkBoost {
+  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
+};
+
+struct DefBoost {
+  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
+};
+
+struct SpaBoost {
+  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
+};
+
+struct SpdBoost {
+  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
+};
+
+struct SpeBoost {
+  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Components/Boosts.hpp ///////////////////////
+
+////////////////// START OF src/Types/Enums/PseudoWeather.hpp //////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+enum class PseudoWeather : std::uint8_t {
+  // clang-format off
+  NO_PSEUDO_WEATHER = 0U, PSEUDO_WEATHER_TOTAL
+  // clang-format on
+};
+
+static constexpr std::uint8_t TOTAL_PSEUDO_WEATHER_COUNT = (std::uint8_t)PseudoWeather::PSEUDO_WEATHER_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Types/Enums/PseudoWeather.hpp ///////////////////
+
+///////////// START OF src/Components/Names/PseudoWeatherNames.hpp /////////////
+
+namespace pokesim {
+struct PseudoWeatherName {
+  dex::PseudoWeather name = dex::PseudoWeather::NO_PSEUDO_WEATHER;
+};
+}  // namespace pokesim
+
+////////////// END OF src/Components/Names/PseudoWeatherNames.hpp //////////////
+
+////////////////// START OF src/Types/Enums/SideCondition.hpp //////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+enum class SideCondition : std::uint8_t {
+  // clang-format off
+  NO_SIDE_CONDITION = 0U, SIDE_CONDITION_TOTAL
+  // clang-format on
+};
+
+static constexpr std::uint8_t TOTAL_SIDE_CONDITION_COUNT = (std::uint8_t)SideCondition::SIDE_CONDITION_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Types/Enums/SideCondition.hpp ///////////////////
+
+///////////// START OF src/Components/Names/SideConditionNames.hpp /////////////
+
+namespace pokesim {
+struct SideConditionName {
+  dex::SideCondition name = dex::SideCondition::NO_SIDE_CONDITION;
+};
+}  // namespace pokesim
+
+////////////// END OF src/Components/Names/SideConditionNames.hpp //////////////
+
+////////////////////// START OF src/Types/Enums/Stat.hpp ///////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon stat abbreviated name
+enum class Stat : std::uint8_t {
+  HP = 0b000001,
+  ATK = 0b000010,
+  DEF = 0b000100,
+  SPA = 0b001000,
+  SPD = 0b010000,
+  SPE = 0b100000,
+  // SPC = SPA | SPD,
+};
+
+static constexpr std::uint8_t TOTAL_STAT_COUNT = 6U;
+}  // namespace pokesim::dex
+
+/////////////////////// END OF src/Types/Enums/Stat.hpp ////////////////////////
+
+///////////////// START OF src/Components/Names/StatNames.hpp //////////////////
+
+namespace pokesim {
+struct StatName {
+  dex::Stat name;
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/Names/StatNames.hpp ///////////////////
+
+///////////////////// START OF src/Types/Enums/Status.hpp //////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+// Pokemon status condition name
+enum class Status : std::uint8_t {
+  NO_STATUS = 0U,
+  BRN,
+  FRZ,
+  PAR,
+  PSN,
+  SLP,
+  TOX,
+  /*, FRB, DRO, */ STATUS_TOTAL,
+};
+
+static constexpr std::uint8_t TOTAL_STATUS_COUNT = (std::uint8_t)Status::STATUS_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Status.hpp ///////////////////////
+
+//////////////// START OF src/Components/Names/StatusNames.hpp /////////////////
+
+namespace pokesim {
+struct StatusName {
+  dex::Status name = dex::Status::NO_STATUS;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/StatusNames.hpp //////////////////
+
+///////////////////// START OF src/Types/Enums/Terrain.hpp /////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+enum class Terrain : std::uint8_t {
+  // clang-format off
+  NO_TERRAIN = 0U, TERRAIN_TOTAL
+  // clang-format on
+};
+
+static constexpr std::uint8_t TOTAL_TERRAIN_COUNT = (std::uint8_t)Terrain::TERRAIN_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Terrain.hpp //////////////////////
+
+//////////////// START OF src/Components/Names/TerrainNames.hpp ////////////////
+
+namespace pokesim {
+struct TerrainName {
+  dex::Terrain name = dex::Terrain::NO_TERRAIN;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/TerrainNames.hpp /////////////////
+
+//////////////////// START OF src/Types/Enums/Volatile.hpp /////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+enum class Volatile : std::uint8_t {
+  // clang-format off
+  NO_VOLATILE = 0U,
+  CHOICE_LOCK,
+  VOLATILE_TOTAL
+  // clang-format on
+};
+
+static constexpr std::uint8_t TOTAL_VOLATILE_COUNT = (std::uint8_t)Volatile::VOLATILE_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Types/Enums/Volatile.hpp //////////////////////
+
+/////////////// START OF src/Components/Names/VolatileNames.hpp ////////////////
+
+namespace pokesim {
+struct VolatileName {
+  dex::Volatile name = dex::Volatile::NO_VOLATILE;
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/Names/VolatileNames.hpp /////////////////
+
+///////////////////// START OF src/Types/Enums/Weather.hpp /////////////////////
+
+#include <cstdint>
+
+namespace pokesim::dex {
+enum class Weather : std::uint8_t {
+  // clang-format off
+  NO_WEATHER = 0U, WEATHER_TOTAL
+  // clang-format on
+};
+
+static constexpr std::uint8_t TOTAL_WEATHER_COUNT = (std::uint8_t)Weather::WEATHER_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Weather.hpp //////////////////////
+
+//////////////// START OF src/Components/Names/WeatherNames.hpp ////////////////
+
+namespace pokesim {
+struct WeatherName {
+  dex::Weather name = dex::Weather::NO_WEATHER;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Names/WeatherNames.hpp /////////////////
+
+//////////////////// START OF src/AnalyzeEffect/Helpers.hpp ////////////////////
+
+namespace pokesim::analyze_effect {
+inline auto tryGetAllInputEffects(types::entity input, const types::registry& registry) {
+  return registry.try_get<
+    PseudoWeatherName,
+    SideConditionName,
+    StatusName,
+    TerrainName,
+    VolatileName,
+    WeatherName,
+    AtkBoost,
+    DefBoost,
+    SpaBoost,
+    SpdBoost,
+    SpeBoost>(input);
+}
+}  // namespace pokesim::analyze_effect
+
+///////////////////// END OF src/AnalyzeEffect/Helpers.hpp /////////////////////
+
 //////////////////////// START OF src/Types/Damage.hpp /////////////////////////
 
 namespace pokesim::types {
@@ -18489,110 +18749,6 @@ struct InvertFinalAnswer {};
 
 ///////// END OF src/Components/AnalyzeEffect/AnalyzeEffectInputs.hpp //////////
 
-////////////////// START OF src/Types/Enums/PseudoWeather.hpp //////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-enum class PseudoWeather : std::uint8_t {
-  // clang-format off
-  NO_PSEUDO_WEATHER = 0U, PSEUDO_WEATHER_TOTAL
-  // clang-format on
-};
-
-static constexpr std::uint8_t TOTAL_PSEUDO_WEATHER_COUNT = (std::uint8_t)PseudoWeather::PSEUDO_WEATHER_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-/////////////////// END OF src/Types/Enums/PseudoWeather.hpp ///////////////////
-
-////////////////// START OF src/Types/Enums/SideCondition.hpp //////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-enum class SideCondition : std::uint8_t {
-  // clang-format off
-  NO_SIDE_CONDITION = 0U, SIDE_CONDITION_TOTAL
-  // clang-format on
-};
-
-static constexpr std::uint8_t TOTAL_SIDE_CONDITION_COUNT = (std::uint8_t)SideCondition::SIDE_CONDITION_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-/////////////////// END OF src/Types/Enums/SideCondition.hpp ///////////////////
-
-///////////////////// START OF src/Types/Enums/Status.hpp //////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon status condition name
-enum class Status : std::uint8_t {
-  NO_STATUS = 0U,
-  BRN,
-  FRZ,
-  PAR,
-  PSN,
-  SLP,
-  TOX,
-  /*, FRB, DRO, */ STATUS_TOTAL,
-};
-
-static constexpr std::uint8_t TOTAL_STATUS_COUNT = (std::uint8_t)Status::STATUS_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Status.hpp ///////////////////////
-
-///////////////////// START OF src/Types/Enums/Terrain.hpp /////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-enum class Terrain : std::uint8_t {
-  // clang-format off
-  NO_TERRAIN = 0U, TERRAIN_TOTAL
-  // clang-format on
-};
-
-static constexpr std::uint8_t TOTAL_TERRAIN_COUNT = (std::uint8_t)Terrain::TERRAIN_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Terrain.hpp //////////////////////
-
-//////////////////// START OF src/Types/Enums/Volatile.hpp /////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-enum class Volatile : std::uint8_t {
-  // clang-format off
-  NO_VOLATILE = 0U,
-  CHOICE_LOCK,
-  VOLATILE_TOTAL
-  // clang-format on
-};
-
-static constexpr std::uint8_t TOTAL_VOLATILE_COUNT = (std::uint8_t)Volatile::VOLATILE_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-///////////////////// END OF src/Types/Enums/Volatile.hpp //////////////////////
-
-///////////////////// START OF src/Types/Enums/Weather.hpp /////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-enum class Weather : std::uint8_t {
-  // clang-format off
-  NO_WEATHER = 0U, WEATHER_TOTAL
-  // clang-format on
-};
-
-static constexpr std::uint8_t TOTAL_WEATHER_COUNT = (std::uint8_t)Weather::WEATHER_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Weather.hpp //////////////////////
-
 ////////////////////// START OF src/Utilities/Variant.hpp //////////////////////
 
 #include <variant>
@@ -18689,49 +18845,6 @@ struct BasePower {
 }  // namespace pokesim
 
 ///////////////////// END OF src/Components/BasePower.hpp //////////////////////
-
-///////////////////////// START OF src/Types/Stats.hpp /////////////////////////
-
-namespace pokesim::types {
-using level = pokesim::internal::unsignedIntType<MechanicConstants::PokemonLevel::MAX>;
-
-using stat = pokesim::internal::unsignedIntType<MechanicConstants::PokemonEffectiveStat::MAX>;
-using baseStat = pokesim::internal::unsignedIntType<MechanicConstants::PokemonBaseStat::MAX>;
-
-using ev = pokesim::internal::unsignedIntType<MechanicConstants::PokemonEv::MAX>;
-using iv = pokesim::internal::unsignedIntType<MechanicConstants::PokemonIv::MAX>;
-
-using boost =
-  pokesim::internal::signedIntType<MechanicConstants::PokemonStatBoost::MAX, MechanicConstants::PokemonStatBoost::MIN>;
-}  // namespace pokesim::types
-
-////////////////////////// END OF src/Types/Stats.hpp //////////////////////////
-
-////////////////////// START OF src/Components/Boosts.hpp //////////////////////
-
-namespace pokesim {
-struct AtkBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
-};
-
-struct DefBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
-};
-
-struct SpaBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
-};
-
-struct SpdBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
-};
-
-struct SpeBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
-};
-}  // namespace pokesim
-
-/////////////////////// END OF src/Components/Boosts.hpp ///////////////////////
 
 //////////////// START OF src/Components/CalcDamage/Aliases.hpp ////////////////
 
@@ -19197,26 +19310,6 @@ struct NatureName {
 
 ///////////////// END OF src/Components/Names/NatureNames.hpp //////////////////
 
-///////////// START OF src/Components/Names/PseudoWeatherNames.hpp /////////////
-
-namespace pokesim {
-struct PseudoWeatherName {
-  dex::PseudoWeather name = dex::PseudoWeather::NO_PSEUDO_WEATHER;
-};
-}  // namespace pokesim
-
-////////////// END OF src/Components/Names/PseudoWeatherNames.hpp //////////////
-
-///////////// START OF src/Components/Names/SideConditionNames.hpp /////////////
-
-namespace pokesim {
-struct SideConditionName {
-  dex::SideCondition name = dex::SideCondition::NO_SIDE_CONDITION;
-};
-}  // namespace pokesim
-
-////////////// END OF src/Components/Names/SideConditionNames.hpp //////////////
-
 /////////////// START OF src/Components/Names/SourceSlotName.hpp ///////////////
 
 namespace pokesim {
@@ -19272,47 +19365,6 @@ struct SpeciesName {
 
 ///////////////// END OF src/Components/Names/SpeciesNames.hpp /////////////////
 
-////////////////////// START OF src/Types/Enums/Stat.hpp ///////////////////////
-
-#include <cstdint>
-
-namespace pokesim::dex {
-// Pokemon stat abbreviated name
-enum class Stat : std::uint8_t {
-  HP = 0b000001,
-  ATK = 0b000010,
-  DEF = 0b000100,
-  SPA = 0b001000,
-  SPD = 0b010000,
-  SPE = 0b100000,
-  // SPC = SPA | SPD,
-};
-
-static constexpr std::uint8_t TOTAL_STAT_COUNT = 6U;
-}  // namespace pokesim::dex
-
-/////////////////////// END OF src/Types/Enums/Stat.hpp ////////////////////////
-
-///////////////// START OF src/Components/Names/StatNames.hpp //////////////////
-
-namespace pokesim {
-struct StatName {
-  dex::Stat name;
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Components/Names/StatNames.hpp ///////////////////
-
-//////////////// START OF src/Components/Names/StatusNames.hpp /////////////////
-
-namespace pokesim {
-struct StatusName {
-  dex::Status name = dex::Status::NO_STATUS;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/StatusNames.hpp //////////////////
-
 /////////////// START OF src/Components/Names/TargetSlotName.hpp ///////////////
 
 namespace pokesim {
@@ -19327,16 +19379,6 @@ struct TargetSlotName {
 }  // namespace pokesim
 
 //////////////// END OF src/Components/Names/TargetSlotName.hpp ////////////////
-
-//////////////// START OF src/Components/Names/TerrainNames.hpp ////////////////
-
-namespace pokesim {
-struct TerrainName {
-  dex::Terrain name = dex::Terrain::NO_TERRAIN;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/TerrainNames.hpp /////////////////
 
 ////////////////////// START OF src/Types/Enums/Type.hpp ///////////////////////
 
@@ -19381,26 +19423,6 @@ struct TypeName {
 }  // namespace pokesim
 
 ////////////////// END OF src/Components/Names/TypeNames.hpp ///////////////////
-
-/////////////// START OF src/Components/Names/VolatileNames.hpp ////////////////
-
-namespace pokesim {
-struct VolatileName {
-  dex::Volatile name = dex::Volatile::NO_VOLATILE;
-};
-}  // namespace pokesim
-
-//////////////// END OF src/Components/Names/VolatileNames.hpp /////////////////
-
-//////////////// START OF src/Components/Names/WeatherNames.hpp ////////////////
-
-namespace pokesim {
-struct WeatherName {
-  dex::Weather name = dex::Weather::NO_WEATHER;
-};
-}  // namespace pokesim
-
-///////////////// END OF src/Components/Names/WeatherNames.hpp /////////////////
 
 //////////////////////// START OF src/Components/PP.hpp ////////////////////////
 
@@ -21169,19 +21191,7 @@ inline void check(const analyze_effect::Inputs& inputs, const types::registry& r
        defBoost,
        spaBoost,
        spdBoost,
-       speBoost] =
-        registry.try_get<
-          PseudoWeatherName,
-          SideConditionName,
-          StatusName,
-          TerrainName,
-          VolatileName,
-          WeatherName,
-          AtkBoost,
-          DefBoost,
-          SpaBoost,
-          SpdBoost,
-          SpeBoost>(input);
+       speBoost] = analyze_effect::tryGetAllInputEffects(input, registry);
     POKESIM_REQUIRE_NM(
       pseudoWeather || sideCondition || status || terrain || volatileCondition || weather || atkBoost || defBoost ||
       spaBoost || spdBoost || speBoost);
@@ -30430,81 +30440,89 @@ EffectPresentCheck hasBoostEffect(types::registry& registry, EffectTarget effect
   return EffectPresentCheck::PRESENT_AND_NOT_APPLIED;
 }
 
-template <typename T>
-bool namedEffectPointerMatch(T current, T other) {
-  if ((current == nullptr) != (other == nullptr)) return false;
-  if (current == nullptr) return true;
-  return current->name == other->name;
+template <typename T, typename EffectTuple>
+bool namedEffectPointerMatch(const EffectTuple& current, const EffectTuple& other) {
+  const T* currentProperty = std::get<const T*>(current);
+  const T* outherProperty = std::get<const T*>(other);
+
+  if ((currentProperty == nullptr) != (outherProperty == nullptr)) return false;
+  if (currentProperty == nullptr) return true;
+  return currentProperty->name == outherProperty->name;
 }
 
-template <typename T>
-bool valuedEffectPointerMatch(const T* current, const T* other) {
-  if ((current == nullptr) != (other == nullptr)) return false;
-  if (current == nullptr) return true;
-  return current->val == other->val;
+template <typename T, typename EffectTuple>
+bool valuedEffectPointerMatch(const EffectTuple& current, const EffectTuple& other) {
+  const T* currentProperty = std::get<const T*>(current);
+  const T* outherProperty = std::get<const T*>(other);
+
+  if ((currentProperty == nullptr) != (outherProperty == nullptr)) return false;
+  if (currentProperty == nullptr) return true;
+  return currentProperty->val == outherProperty->val;
 }
 
-inline void groupSimilarEffects(types::handle battleHandle, const Inputs& inputs) {
+template <typename EffectTuple, typename PokemonTuple>
+bool canInputsShareABattle(
+  const EffectTuple& currentEffects, const PokemonTuple& currentPokemon, types::entity otherInput,
+  const types::registry& registry) {
+  const auto& [attacker, defenders, effectTarget] = currentPokemon;
+  auto [otherAttacker, otherDefenders] = registry.get<Attacker, Defenders>(otherInput);
+
+  if (attacker.val != otherAttacker.val) return false;
+  if (defenders.only() != otherDefenders.only()) return false;
+
+  const auto otherEffects = tryGetAllInputEffects(otherInput, registry);
+
+  if (!namedEffectPointerMatch<PseudoWeatherName>(currentEffects, otherEffects)) return false;
+  if (!namedEffectPointerMatch<TerrainName>(currentEffects, otherEffects)) return false;
+  if (!namedEffectPointerMatch<WeatherName>(currentEffects, otherEffects)) return false;
+
+  EffectTarget otherEffectTarget = registry.get<EffectTarget>(otherInput);
+  if (registry.get<Side>(effectTarget.val).val != registry.get<Side>(otherEffectTarget.val).val) return false;
+  if (!namedEffectPointerMatch<SideConditionName>(currentEffects, otherEffects)) return false;
+
+  if (effectTarget.val != otherEffectTarget.val) return false;
+  if (!namedEffectPointerMatch<StatusName>(currentEffects, otherEffects)) return false;
+  if (!namedEffectPointerMatch<VolatileName>(currentEffects, otherEffects)) return false;
+  if (!valuedEffectPointerMatch<AtkBoost>(currentEffects, otherEffects)) return false;
+  if (!valuedEffectPointerMatch<DefBoost>(currentEffects, otherEffects)) return false;
+  if (!valuedEffectPointerMatch<SpaBoost>(currentEffects, otherEffects)) return false;
+  if (!valuedEffectPointerMatch<SpdBoost>(currentEffects, otherEffects)) return false;
+  if (!valuedEffectPointerMatch<SpeBoost>(currentEffects, otherEffects)) return false;
+
+  return true;
+}
+
+inline void groupSimilarInputs(types::handle battleHandle, const Inputs& inputs) {
   types::registry& registry = *battleHandle.registry();
-  std::vector<bool> checkedIndexes;
-  checkedIndexes.resize(inputs.val.size());
+  types::entityIndex inputCount = inputs.val.size();
+  std::vector<bool> checkedIndexes(inputCount, false);
 
-  for (types::entityIndex currentInputIndex = 0U; currentInputIndex < inputs.val.size(); currentInputIndex++) {
-    if (checkedIndexes[currentInputIndex]) continue;
+  for (types::entityIndex currentIndex = 0U; currentIndex < inputCount; currentIndex++) {
+    if (checkedIndexes[currentIndex]) continue;
 
-    types::entity currentInput = inputs.val[currentInputIndex];
+    types::entity currentInput = inputs.val[currentIndex];
     MovesAndInputs& movesAndInputs = registry.emplace<MovesAndInputs>(currentInput);
-    auto [attacker, defenders, effectTarget, move] =
-      registry.get<Attacker, Defenders, EffectTarget, EffectMove>(currentInput);
-    const auto [pseudoWeather, terrain, weather, sideCondition, status, volatileCondition] =
-      registry.try_get<PseudoWeatherName, TerrainName, WeatherName, SideConditionName, StatusName, VolatileName>(
-        currentInput);
-    const auto [atkBoost, defBoost, spaBoost, spdBoost, speBoost] =
-      registry.try_get<AtkBoost, DefBoost, SpaBoost, SpdBoost, SpeBoost>(currentInput);
+
+    EffectMove move = registry.get<EffectMove>(currentInput);
+    const auto currentEffects = tryGetAllInputEffects(currentInput, registry);
+    const auto currentPokemon = registry.get<Attacker, Defenders, EffectTarget>(currentInput);
 
     movesAndInputs.val.push_back({move.val, currentInput});
-    for (types::entityIndex checkingInputIndex = currentInputIndex + 1U; checkingInputIndex < inputs.val.size();
-         checkingInputIndex++) {
-      if (checkedIndexes[checkingInputIndex]) continue;
 
-      types::entity checkingInput = inputs.val[checkingInputIndex];
-      auto [otherAttacker, otherDefenders] = registry.get<Attacker, Defenders>(checkingInput);
+    for (types::entityIndex otherIndex = currentIndex + 1U; otherIndex < inputCount; otherIndex++) {
+      if (checkedIndexes[otherIndex]) continue;
 
-      if (attacker.val != otherAttacker.val) continue;
-      if (defenders.only() != defenders.only()) continue;
+      types::entity otherInput = inputs.val[otherIndex];
+      if (!canInputsShareABattle(currentEffects, currentPokemon, otherInput, registry)) continue;
 
-      const auto
-        [otherPseudoWeather, otherTerrain, otherWeather, otherSideCondition, otherStatus, otherVolatileCondition] =
-          registry.try_get<PseudoWeatherName, TerrainName, WeatherName, SideConditionName, StatusName, VolatileName>(
-            checkingInput);
-      const auto [otherAtkBoost, otherDefBoost, otherSpaBoost, otherSpdBoost, otherSpeBoost] =
-        registry.try_get<AtkBoost, DefBoost, SpaBoost, SpdBoost, SpeBoost>(checkingInput);
-
-      if (!namedEffectPointerMatch(pseudoWeather, otherPseudoWeather)) continue;
-      if (!namedEffectPointerMatch(terrain, otherTerrain)) continue;
-      if (!namedEffectPointerMatch(weather, otherWeather)) continue;
-
-      EffectTarget otherEffectTarget = registry.get<EffectTarget>(checkingInput);
-      if (registry.get<Side>(effectTarget.val).val != registry.get<Side>(otherEffectTarget.val).val) continue;
-      if (!namedEffectPointerMatch(sideCondition, otherSideCondition)) continue;
-
-      if (effectTarget.val != otherEffectTarget.val) continue;
-      if (!namedEffectPointerMatch(status, otherStatus)) continue;
-      if (!namedEffectPointerMatch(volatileCondition, otherVolatileCondition)) continue;
-      if (!valuedEffectPointerMatch(atkBoost, otherAtkBoost)) continue;
-      if (!valuedEffectPointerMatch(defBoost, otherDefBoost)) continue;
-      if (!valuedEffectPointerMatch(spaBoost, otherSpaBoost)) continue;
-      if (!valuedEffectPointerMatch(spdBoost, otherSpdBoost)) continue;
-      if (!valuedEffectPointerMatch(speBoost, otherSpeBoost)) continue;
-
-      EffectMove otherEffectMove = registry.get<EffectMove>(checkingInput);
-      movesAndInputs.val.push_back({otherEffectMove.val, checkingInput});
-      checkedIndexes[checkingInputIndex] = true;
+      movesAndInputs.val.push_back({registry.get<EffectMove>(otherInput).val, otherInput});
+      registry.emplace<tags::GroupedWithOtherInput>(otherInput);
       battleHandle.get_or_emplace<SkippedInputCount>().val++;
-      registry.emplace<tags::GroupedWithOtherInput>(checkingInput);
+
+      checkedIndexes[otherIndex] = true;
     }
 
-    checkedIndexes[currentInputIndex] = true;
+    checkedIndexes[currentIndex] = true;
   }
 }
 
@@ -30713,7 +30731,7 @@ inline void analyzeEffect(Simulation& simulation) {
     return;
   }
 
-  simulation.viewForSelectedBattles<groupSimilarEffects>();
+  simulation.viewForSelectedBattles<groupSimilarInputs>();
 
   if (!simulation.analyzeEffectOptions.reconsiderActiveEffects) {
     ignoreBattlesWithEffectActive(simulation);

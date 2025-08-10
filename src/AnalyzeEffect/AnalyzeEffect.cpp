@@ -40,6 +40,7 @@
 #include <vector>
 
 #include "AnalyzeEffectDebugChecks.hpp"
+#include "Helpers.hpp"
 
 namespace pokesim::analyze_effect {
 namespace {
@@ -234,81 +235,89 @@ EffectPresentCheck hasBoostEffect(types::registry& registry, EffectTarget effect
   return EffectPresentCheck::PRESENT_AND_NOT_APPLIED;
 }
 
-template <typename T>
-bool namedEffectPointerMatch(T current, T other) {
-  if ((current == nullptr) != (other == nullptr)) return false;
-  if (current == nullptr) return true;
-  return current->name == other->name;
+template <typename T, typename EffectTuple>
+bool namedEffectPointerMatch(const EffectTuple& current, const EffectTuple& other) {
+  const T* currentProperty = std::get<const T*>(current);
+  const T* outherProperty = std::get<const T*>(other);
+
+  if ((currentProperty == nullptr) != (outherProperty == nullptr)) return false;
+  if (currentProperty == nullptr) return true;
+  return currentProperty->name == outherProperty->name;
 }
 
-template <typename T>
-bool valuedEffectPointerMatch(const T* current, const T* other) {
-  if ((current == nullptr) != (other == nullptr)) return false;
-  if (current == nullptr) return true;
-  return current->val == other->val;
+template <typename T, typename EffectTuple>
+bool valuedEffectPointerMatch(const EffectTuple& current, const EffectTuple& other) {
+  const T* currentProperty = std::get<const T*>(current);
+  const T* outherProperty = std::get<const T*>(other);
+
+  if ((currentProperty == nullptr) != (outherProperty == nullptr)) return false;
+  if (currentProperty == nullptr) return true;
+  return currentProperty->val == outherProperty->val;
 }
 
-void groupSimilarEffects(types::handle battleHandle, const Inputs& inputs) {
+template <typename EffectTuple, typename PokemonTuple>
+bool canInputsShareABattle(
+  const EffectTuple& currentEffects, const PokemonTuple& currentPokemon, types::entity otherInput,
+  const types::registry& registry) {
+  const auto& [attacker, defenders, effectTarget] = currentPokemon;
+  auto [otherAttacker, otherDefenders] = registry.get<Attacker, Defenders>(otherInput);
+
+  if (attacker.val != otherAttacker.val) return false;
+  if (defenders.only() != otherDefenders.only()) return false;
+
+  const auto otherEffects = tryGetAllInputEffects(otherInput, registry);
+
+  if (!namedEffectPointerMatch<PseudoWeatherName>(currentEffects, otherEffects)) return false;
+  if (!namedEffectPointerMatch<TerrainName>(currentEffects, otherEffects)) return false;
+  if (!namedEffectPointerMatch<WeatherName>(currentEffects, otherEffects)) return false;
+
+  EffectTarget otherEffectTarget = registry.get<EffectTarget>(otherInput);
+  if (registry.get<Side>(effectTarget.val).val != registry.get<Side>(otherEffectTarget.val).val) return false;
+  if (!namedEffectPointerMatch<SideConditionName>(currentEffects, otherEffects)) return false;
+
+  if (effectTarget.val != otherEffectTarget.val) return false;
+  if (!namedEffectPointerMatch<StatusName>(currentEffects, otherEffects)) return false;
+  if (!namedEffectPointerMatch<VolatileName>(currentEffects, otherEffects)) return false;
+  if (!valuedEffectPointerMatch<AtkBoost>(currentEffects, otherEffects)) return false;
+  if (!valuedEffectPointerMatch<DefBoost>(currentEffects, otherEffects)) return false;
+  if (!valuedEffectPointerMatch<SpaBoost>(currentEffects, otherEffects)) return false;
+  if (!valuedEffectPointerMatch<SpdBoost>(currentEffects, otherEffects)) return false;
+  if (!valuedEffectPointerMatch<SpeBoost>(currentEffects, otherEffects)) return false;
+
+  return true;
+}
+
+void groupSimilarInputs(types::handle battleHandle, const Inputs& inputs) {
   types::registry& registry = *battleHandle.registry();
-  std::vector<bool> checkedIndexes;
-  checkedIndexes.resize(inputs.val.size());
+  types::entityIndex inputCount = inputs.val.size();
+  std::vector<bool> checkedIndexes(inputCount, false);
 
-  for (types::entityIndex currentInputIndex = 0U; currentInputIndex < inputs.val.size(); currentInputIndex++) {
-    if (checkedIndexes[currentInputIndex]) continue;
+  for (types::entityIndex currentIndex = 0U; currentIndex < inputCount; currentIndex++) {
+    if (checkedIndexes[currentIndex]) continue;
 
-    types::entity currentInput = inputs.val[currentInputIndex];
+    types::entity currentInput = inputs.val[currentIndex];
     MovesAndInputs& movesAndInputs = registry.emplace<MovesAndInputs>(currentInput);
-    auto [attacker, defenders, effectTarget, move] =
-      registry.get<Attacker, Defenders, EffectTarget, EffectMove>(currentInput);
-    const auto [pseudoWeather, terrain, weather, sideCondition, status, volatileCondition] =
-      registry.try_get<PseudoWeatherName, TerrainName, WeatherName, SideConditionName, StatusName, VolatileName>(
-        currentInput);
-    const auto [atkBoost, defBoost, spaBoost, spdBoost, speBoost] =
-      registry.try_get<AtkBoost, DefBoost, SpaBoost, SpdBoost, SpeBoost>(currentInput);
+
+    EffectMove move = registry.get<EffectMove>(currentInput);
+    const auto currentEffects = tryGetAllInputEffects(currentInput, registry);
+    const auto currentPokemon = registry.get<Attacker, Defenders, EffectTarget>(currentInput);
 
     movesAndInputs.val.push_back({move.val, currentInput});
-    for (types::entityIndex checkingInputIndex = currentInputIndex + 1U; checkingInputIndex < inputs.val.size();
-         checkingInputIndex++) {
-      if (checkedIndexes[checkingInputIndex]) continue;
 
-      types::entity checkingInput = inputs.val[checkingInputIndex];
-      auto [otherAttacker, otherDefenders] = registry.get<Attacker, Defenders>(checkingInput);
+    for (types::entityIndex otherIndex = currentIndex + 1U; otherIndex < inputCount; otherIndex++) {
+      if (checkedIndexes[otherIndex]) continue;
 
-      if (attacker.val != otherAttacker.val) continue;
-      if (defenders.only() != defenders.only()) continue;
+      types::entity otherInput = inputs.val[otherIndex];
+      if (!canInputsShareABattle(currentEffects, currentPokemon, otherInput, registry)) continue;
 
-      const auto
-        [otherPseudoWeather, otherTerrain, otherWeather, otherSideCondition, otherStatus, otherVolatileCondition] =
-          registry.try_get<PseudoWeatherName, TerrainName, WeatherName, SideConditionName, StatusName, VolatileName>(
-            checkingInput);
-      const auto [otherAtkBoost, otherDefBoost, otherSpaBoost, otherSpdBoost, otherSpeBoost] =
-        registry.try_get<AtkBoost, DefBoost, SpaBoost, SpdBoost, SpeBoost>(checkingInput);
-
-      if (!namedEffectPointerMatch(pseudoWeather, otherPseudoWeather)) continue;
-      if (!namedEffectPointerMatch(terrain, otherTerrain)) continue;
-      if (!namedEffectPointerMatch(weather, otherWeather)) continue;
-
-      EffectTarget otherEffectTarget = registry.get<EffectTarget>(checkingInput);
-      if (registry.get<Side>(effectTarget.val).val != registry.get<Side>(otherEffectTarget.val).val) continue;
-      if (!namedEffectPointerMatch(sideCondition, otherSideCondition)) continue;
-
-      if (effectTarget.val != otherEffectTarget.val) continue;
-      if (!namedEffectPointerMatch(status, otherStatus)) continue;
-      if (!namedEffectPointerMatch(volatileCondition, otherVolatileCondition)) continue;
-      if (!valuedEffectPointerMatch(atkBoost, otherAtkBoost)) continue;
-      if (!valuedEffectPointerMatch(defBoost, otherDefBoost)) continue;
-      if (!valuedEffectPointerMatch(spaBoost, otherSpaBoost)) continue;
-      if (!valuedEffectPointerMatch(spdBoost, otherSpdBoost)) continue;
-      if (!valuedEffectPointerMatch(speBoost, otherSpeBoost)) continue;
-
-      EffectMove otherEffectMove = registry.get<EffectMove>(checkingInput);
-      movesAndInputs.val.push_back({otherEffectMove.val, checkingInput});
-      checkedIndexes[checkingInputIndex] = true;
+      movesAndInputs.val.push_back({registry.get<EffectMove>(otherInput).val, otherInput});
+      registry.emplace<tags::GroupedWithOtherInput>(otherInput);
       battleHandle.get_or_emplace<SkippedInputCount>().val++;
-      registry.emplace<tags::GroupedWithOtherInput>(checkingInput);
+
+      checkedIndexes[otherIndex] = true;
     }
 
-    checkedIndexes[currentInputIndex] = true;
+    checkedIndexes[currentIndex] = true;
   }
 }
 
@@ -517,7 +526,7 @@ void analyzeEffect(Simulation& simulation) {
     return;
   }
 
-  simulation.viewForSelectedBattles<groupSimilarEffects>();
+  simulation.viewForSelectedBattles<groupSimilarInputs>();
 
   if (!simulation.analyzeEffectOptions.reconsiderActiveEffects) {
     ignoreBattlesWithEffectActive(simulation);
