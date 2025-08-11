@@ -60,7 +60,7 @@ set (SOURCES
   src/Battle/ManageBattleState.cpp
   src/Battle/Pokemon/ManagePokemonState.cpp
   src/Battle/Setup/BattleStateSetup.cpp
-  src/Battle/Setup/EnumToTag.cpp
+  src/Battle/Setup/EmplaceTagFromEnum.cpp
   src/Battle/Setup/MoveStateSetup.cpp
   src/Battle/Setup/PokemonStateSetup.cpp
   src/Battle/Setup/SideStateSetup.cpp

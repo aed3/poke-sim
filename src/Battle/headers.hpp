@@ -9,7 +9,7 @@
 #include "Pokemon/ManagePokemonState.hpp"
 #include "Pokemon/PokemonDataChecks.hpp"
 #include "Setup/BattleStateSetup.hpp"
-#include "Setup/EnumToTag.hpp"
+#include "Setup/EmplaceTagFromEnum.hpp"
 #include "Setup/MoveStateSetup.hpp"
 #include "Setup/PokemonStateSetup.hpp"
 #include "Setup/SideStateSetup.hpp"

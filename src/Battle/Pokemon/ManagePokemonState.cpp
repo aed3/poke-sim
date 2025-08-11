@@ -1,6 +1,6 @@
 #include "ManagePokemonState.hpp"
 
-#include <Battle/Setup/EnumToTag.hpp>
+#include <Battle/Setup/EmplaceTagFromEnum.hpp>
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/LastUsedMove.hpp>
@@ -22,7 +22,7 @@ namespace pokesim {
 void setStatus(types::handle pokemonHandle, dex::Status status) {
   clearStatus(pokemonHandle);
   pokemonHandle.emplace<StatusName>(status);
-  status::tags::enumToTag(status, pokemonHandle);
+  status::tags::emplaceTagFromEnum(status, pokemonHandle);
 }
 
 void clearStatus(types::handle pokemonHandle) {

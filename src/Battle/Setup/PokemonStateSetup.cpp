@@ -32,7 +32,7 @@
 #include <entt/entity/registry.hpp>
 #include <entt/entity/view.hpp>
 
-#include "EnumToTag.hpp"
+#include "EmplaceTagFromEnum.hpp"
 
 namespace pokesim {
 PokemonStateSetup::PokemonStateSetup(types::registry& registry, types::entity entity)
@@ -85,12 +85,12 @@ void PokemonStateSetup::setGender(dex::Gender gender) {
 
 void PokemonStateSetup::setAbility(dex::Ability ability) {
   handle.emplace<AbilityName>(ability);
-  ability::tags::enumToTag(ability, handle);
+  ability::tags::emplaceTagFromEnum(ability, handle);
 }
 
 void PokemonStateSetup::setItem(dex::Item item) {
   handle.emplace<ItemName>(item);
-  item::tags::enumToTag(item, handle);
+  item::tags::emplaceTagFromEnum(item, handle);
 }
 
 void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
@@ -113,7 +113,7 @@ void PokemonStateSetup::setStatus(dex::Status status) {
 
 void PokemonStateSetup::setNature(dex::Nature nature) {
   handle.emplace<NatureName>(nature);
-  nature::tags::enumToTag(nature, handle);
+  nature::tags::emplaceTagFromEnum(nature, handle);
 }
 
 void PokemonStateSetup::setEVs(

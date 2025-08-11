@@ -4,6 +4,10 @@
 
 #include "Abilities/Static.hpp"
 #include "Effects/ChoiceLock.hpp"
+#include "EnumToTag/AbililtyEnumToTag.hpp"
+#include "EnumToTag/ItemEnumToTag.hpp"
+#include "EnumToTag/NatureEnumToTag.hpp"
+#include "EnumToTag/StatusEnumToTag.hpp"
 #include "Items/AssaultVest.hpp"
 #include "Items/BrightPowder.hpp"
 #include "Items/ChoiceScarf.hpp"

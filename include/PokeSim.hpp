@@ -182,7 +182,7 @@
  * src/Battle/Setup/StateSetupBase.hpp
  * src/Battle/Setup/PokemonStateSetup.hpp
  * src/Battle/Setup/BattleStateSetup.hpp
- * src/Battle/Setup/EnumToTag.hpp
+ * src/Battle/Setup/EmplaceTagFromEnum.hpp
  * src/Battle/Setup/MoveStateSetup.hpp
  * src/Battle/Setup/SideStateSetup.hpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.hpp
@@ -262,7 +262,11 @@
  * src/Battle/Setup/SideStateSetup.cpp
  * src/Battle/Setup/PokemonStateSetup.cpp
  * src/Battle/Setup/MoveStateSetup.cpp
- * src/Battle/Setup/EnumToTag.cpp
+ * src/Pokedex/EnumToTag/AbililtyEnumToTag.hpp
+ * src/Pokedex/EnumToTag/ItemEnumToTag.hpp
+ * src/Pokedex/EnumToTag/NatureEnumToTag.hpp
+ * src/Pokedex/EnumToTag/StatusEnumToTag.hpp
+ * src/Battle/Setup/EmplaceTagFromEnum.cpp
  * src/Battle/Setup/BattleStateSetup.cpp
  * src/Battle/Pokemon/ManagePokemonState.cpp
  * src/Battle/ManageBattleState.cpp
@@ -22517,31 +22521,31 @@ struct BattleStateSetup : internal::StateSetupBase {
 
 ///////////////// END OF src/Battle/Setup/BattleStateSetup.hpp /////////////////
 
-/////////////////// START OF src/Battle/Setup/EnumToTag.hpp ////////////////////
+/////////////// START OF src/Battle/Setup/EmplaceTagFromEnum.hpp ///////////////
 
 namespace pokesim {
 namespace ability::tags {
 // Assigns an ability's tag to a handle
-inline void enumToTag(dex::Ability ability, types::handle handle);
+inline void emplaceTagFromEnum(dex::Ability ability, types::handle handle);
 }  // namespace ability::tags
 
 namespace item::tags {
 // Assigns an item's tag to a handle
-inline void enumToTag(dex::Item item, types::handle handle);
+inline void emplaceTagFromEnum(dex::Item item, types::handle handle);
 }  // namespace item::tags
 
 namespace nature::tags {
 // Assigns a nature's tag to a handle
-inline void enumToTag(dex::Nature nature, types::handle handle);
+inline void emplaceTagFromEnum(dex::Nature nature, types::handle handle);
 }  // namespace nature::tags
 
 namespace status::tags {
 // Assigns a status' tag to a handle
-inline void enumToTag(dex::Status status, types::handle& handle);
+inline void emplaceTagFromEnum(dex::Status status, types::handle handle);
 }  // namespace status::tags
 }  // namespace pokesim
 
-//////////////////// END OF src/Battle/Setup/EnumToTag.hpp /////////////////////
+//////////////// END OF src/Battle/Setup/EmplaceTagFromEnum.hpp ////////////////
 
 ///////////////// START OF src/Battle/Setup/MoveStateSetup.hpp /////////////////
 
@@ -29098,12 +29102,12 @@ inline void PokemonStateSetup::setGender(dex::Gender gender) {
 
 inline void PokemonStateSetup::setAbility(dex::Ability ability) {
   handle.emplace<AbilityName>(ability);
-  ability::tags::enumToTag(ability, handle);
+  ability::tags::emplaceTagFromEnum(ability, handle);
 }
 
 inline void PokemonStateSetup::setItem(dex::Item item) {
   handle.emplace<ItemName>(item);
-  item::tags::enumToTag(item, handle);
+  item::tags::emplaceTagFromEnum(item, handle);
 }
 
 inline void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
@@ -29126,7 +29130,7 @@ inline void PokemonStateSetup::setStatus(dex::Status status) {
 
 inline void PokemonStateSetup::setNature(dex::Nature nature) {
   handle.emplace<NatureName>(nature);
-  nature::tags::enumToTag(nature, handle);
+  nature::tags::emplaceTagFromEnum(nature, handle);
 }
 
 inline void PokemonStateSetup::setEVs(
@@ -29174,92 +29178,205 @@ inline void MoveStateSetup::setMaxPP(types::pp maxPp) {
 
 ////////////////// END OF src/Battle/Setup/MoveStateSetup.cpp //////////////////
 
-/////////////////// START OF src/Battle/Setup/EnumToTag.cpp ////////////////////
+///////////// START OF src/Pokedex/EnumToTag/AbililtyEnumToTag.hpp /////////////
 
 // TODO(aed3): Make this auto generated
 
-namespace pokesim {
-inline void ability::tags::enumToTag(dex::Ability ability, types::handle handle) {
+namespace pokesim::ability::tags {
+/*
+ * Runs a function with a certain ability tag based on the passed in enum.
+ * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the ability tags with
+ * a static `run` function.
+ *
+ * @code
+ * template <typename Tag>
+ * struct EmplaceTag {
+ *   static void run(types::handle handle) { handle.emplace<Tag>(); }
+ * };
+ *
+ * enumToTag<EmplaceTag>(dex::Ability::DEFIANT, handle);
+ * @endcode
+ */
+template <template <typename> typename RunStruct, typename... RunFunctionArgs>
+auto enumToTag(dex::Ability ability, RunFunctionArgs&&... args) {
   switch (ability) {
-    case dex::Ability::DEFIANT:     handle.emplace<Defiant>(); return;
-    case dex::Ability::INFILTRATOR: handle.emplace<Infiltrator>(); return;
-    case dex::Ability::IRON_FIST:   handle.emplace<IronFist>(); return;
-    case dex::Ability::STATIC:      handle.emplace<Static>(); return;
-    case dex::Ability::SWEET_VEIL:  handle.emplace<SweetVeil>(); return;
-    case dex::Ability::TRACE:       handle.emplace<Trace>(); return;
+    case dex::Ability::DEFIANT:     return RunStruct<Defiant>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::INFILTRATOR: return RunStruct<Infiltrator>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::IRON_FIST:   return RunStruct<IronFist>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::STATIC:      return RunStruct<Static>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::SWEET_VEIL:  return RunStruct<SweetVeil>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::TRACE:       return RunStruct<Trace>::run(std::forward<RunFunctionArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE(false, "Adding tag for ability that does not exist.");
     }
   }
 }
+}  // namespace pokesim::ability::tags
 
-inline void item::tags::enumToTag(dex::Item item, types::handle handle) {
+////////////// END OF src/Pokedex/EnumToTag/AbililtyEnumToTag.hpp //////////////
+
+/////////////// START OF src/Pokedex/EnumToTag/ItemEnumToTag.hpp ///////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::item::tags {
+/*
+ * Runs a function with a certain item tag based on the passed in enum.
+ * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the item tags with
+ * a static `run` function.
+ *
+ * @code
+ * template <typename Tag>
+ * struct EmplaceTag {
+ *   static void run(types::handle handle) { handle.emplace<Tag>(); }
+ * };
+ *
+ * enumToTag<EmplaceTag>(dex::Item::ASSAULT_VEST, handle);
+ * @endcode
+ */
+template <template <typename> typename RunStruct, typename... RunFunctionArgs>
+auto enumToTag(dex::Item item, RunFunctionArgs&&... args) {
   switch (item) {
-    case dex::Item::ASSAULT_VEST:  handle.emplace<AssaultVest>(); return;
-    case dex::Item::BRIGHT_POWDER: handle.emplace<BrightPowder>(); return;
-    case dex::Item::CHOICE_SCARF:  handle.emplace<ChoiceScarf>(); return;
-    case dex::Item::CHOICE_SPECS:  handle.emplace<ChoiceSpecs>(); return;
-    case dex::Item::FOCUS_SASH:    handle.emplace<FocusSash>(); return;
-    case dex::Item::LIFE_ORB:      handle.emplace<LifeOrb>(); return;
+    case dex::Item::ASSAULT_VEST:  return RunStruct<AssaultVest>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Item::BRIGHT_POWDER: return RunStruct<BrightPowder>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Item::CHOICE_SCARF:  return RunStruct<ChoiceScarf>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Item::CHOICE_SPECS:  return RunStruct<ChoiceSpecs>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Item::FOCUS_SASH:    return RunStruct<FocusSash>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Item::LIFE_ORB:      return RunStruct<LifeOrb>::run(std::forward<RunFunctionArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE(false, "Adding tag for item that does not exist.");
     }
   }
 }
+}  // namespace pokesim::item::tags
 
-inline void nature::tags::enumToTag(dex::Nature nature, types::handle handle) {
+//////////////// END OF src/Pokedex/EnumToTag/ItemEnumToTag.hpp ////////////////
+
+////////////// START OF src/Pokedex/EnumToTag/NatureEnumToTag.hpp //////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::nature::tags {
+/*
+ * Runs a function with a certain nature tag based on the passed in enum.
+ * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the nature tags with
+ * a static `run` function.
+ *
+ * @code
+ * template <typename Tag>
+ * struct EmplaceTag {
+ *   static void run(types::handle handle) { handle.emplace<Tag>(); }
+ * };
+ *
+ * enumToTag<EmplaceTag>(dex::Nature::ADAMANT, handle);
+ * @endcode
+ */
+template <template <typename> typename RunStruct, typename... RunFunctionArgs>
+auto enumToTag(dex::Nature nature, RunFunctionArgs&&... args) {
   switch (nature) {
-    case dex::Nature::ADAMANT: handle.emplace<Adamant>(); return;
-    case dex::Nature::BASHFUL: handle.emplace<Bashful>(); return;
-    case dex::Nature::BOLD:    handle.emplace<Bold>(); return;
-    case dex::Nature::BRAVE:   handle.emplace<Brave>(); return;
-    case dex::Nature::CALM:    handle.emplace<Calm>(); return;
-    case dex::Nature::CAREFUL: handle.emplace<Careful>(); return;
-    case dex::Nature::DOCILE:  handle.emplace<Docile>(); return;
-    case dex::Nature::GENTLE:  handle.emplace<Gentle>(); return;
-    case dex::Nature::HARDY:   handle.emplace<Hardy>(); return;
-    case dex::Nature::HASTY:   handle.emplace<Hasty>(); return;
-    case dex::Nature::IMPISH:  handle.emplace<Impish>(); return;
-    case dex::Nature::JOLLY:   handle.emplace<Jolly>(); return;
-    case dex::Nature::LAX:     handle.emplace<Lax>(); return;
-    case dex::Nature::LONELY:  handle.emplace<Lonely>(); return;
-    case dex::Nature::MILD:    handle.emplace<Mild>(); return;
-    case dex::Nature::MODEST:  handle.emplace<Modest>(); return;
-    case dex::Nature::NAIVE:   handle.emplace<Naive>(); return;
-    case dex::Nature::NAUGHTY: handle.emplace<Naughty>(); return;
-    case dex::Nature::QUIET:   handle.emplace<Quiet>(); return;
-    case dex::Nature::QUIRKY:  handle.emplace<Quirky>(); return;
-    case dex::Nature::RASH:    handle.emplace<Rash>(); return;
-    case dex::Nature::RELAXED: handle.emplace<Relaxed>(); return;
-    case dex::Nature::SASSY:   handle.emplace<Sassy>(); return;
-    case dex::Nature::SERIOUS: handle.emplace<Serious>(); return;
-    case dex::Nature::TIMID:   handle.emplace<Timid>(); return;
+    case dex::Nature::ADAMANT: return RunStruct<Adamant>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::BASHFUL: return RunStruct<Bashful>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::BOLD:    return RunStruct<Bold>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::BRAVE:   return RunStruct<Brave>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::CALM:    return RunStruct<Calm>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::CAREFUL: return RunStruct<Careful>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::DOCILE:  return RunStruct<Docile>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::GENTLE:  return RunStruct<Gentle>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::HARDY:   return RunStruct<Hardy>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::HASTY:   return RunStruct<Hasty>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::IMPISH:  return RunStruct<Impish>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::JOLLY:   return RunStruct<Jolly>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::LAX:     return RunStruct<Lax>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::LONELY:  return RunStruct<Lonely>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::MILD:    return RunStruct<Mild>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::MODEST:  return RunStruct<Modest>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::NAIVE:   return RunStruct<Naive>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::NAUGHTY: return RunStruct<Naughty>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::QUIET:   return RunStruct<Quiet>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::QUIRKY:  return RunStruct<Quirky>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::RASH:    return RunStruct<Rash>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::RELAXED: return RunStruct<Relaxed>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::SASSY:   return RunStruct<Sassy>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::SERIOUS: return RunStruct<Serious>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Nature::TIMID:   return RunStruct<Timid>::run(std::forward<RunFunctionArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE(false, "Adding tag for nature that does not exist.");
     }
   }
 }
+}  // namespace pokesim::nature::tags
 
-inline void status::tags::enumToTag(dex::Status status, types::handle& handle) {
+/////////////// END OF src/Pokedex/EnumToTag/NatureEnumToTag.hpp ///////////////
+
+////////////// START OF src/Pokedex/EnumToTag/StatusEnumToTag.hpp //////////////
+
+// TODO(aed3): Make this auto generated
+
+namespace pokesim::status::tags {
+/*
+ * Runs a function with a certain status tag based on the passed in enum.
+ * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the status tags with
+ * a static `run` function.
+ *
+ * @code
+ * template <typename Tag>
+ * struct EmplaceTag {
+ *   static void run(types::handle handle) { handle.emplace<Tag>(); }
+ * };
+ *
+ * enumToTag<EmplaceTag>(dex::Status::BRN, handle);
+ * @endcode
+ */
+template <template <typename> typename RunStruct, typename... RunFunctionArgs>
+auto enumToTag(dex::Status status, RunFunctionArgs&&... args) {
   switch (status) {
-    case dex::Status::BRN: handle.emplace<Burn>(); return;
-    case dex::Status::FRZ: handle.emplace<Freeze>(); return;
-    case dex::Status::PAR: handle.emplace<Paralysis>(); return;
-    case dex::Status::PSN: handle.emplace<Poison>(); return;
-    case dex::Status::SLP: handle.emplace<Sleep>(); return;
-    case dex::Status::TOX: handle.emplace<Toxic>(); return;
+    case dex::Status::BRN: return RunStruct<Burn>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Status::FRZ: return RunStruct<Freeze>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Status::PAR: return RunStruct<Paralysis>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Status::PSN: return RunStruct<Poison>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Status::SLP: return RunStruct<Sleep>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Status::TOX: return RunStruct<Toxic>::run(std::forward<RunFunctionArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE(false, "Adding tag for status that does not exist.");
     }
   }
 }
+}  // namespace pokesim::status::tags
+
+/////////////// END OF src/Pokedex/EnumToTag/StatusEnumToTag.hpp ///////////////
+
+/////////////// START OF src/Battle/Setup/EmplaceTagFromEnum.cpp ///////////////
+
+namespace pokesim {
+namespace {
+template <typename Tag>
+struct EmplaceTag {
+  static void run(types::handle handle) { handle.emplace<Tag>(); }
+};
+}  // namespace
+
+inline void ability::tags::emplaceTagFromEnum(dex::Ability ability, types::handle handle) {
+  enumToTag<EmplaceTag>(ability, handle);
+}
+
+inline void item::tags::emplaceTagFromEnum(dex::Item item, types::handle handle) {
+  enumToTag<EmplaceTag>(item, handle);
+}
+
+inline void nature::tags::emplaceTagFromEnum(dex::Nature nature, types::handle handle) {
+  enumToTag<EmplaceTag>(nature, handle);
+}
+
+inline void status::tags::emplaceTagFromEnum(dex::Status status, types::handle handle) {
+  enumToTag<EmplaceTag>(status, handle);
+}
 }  // namespace pokesim
 
-//////////////////// END OF src/Battle/Setup/EnumToTag.cpp /////////////////////
+//////////////// END OF src/Battle/Setup/EmplaceTagFromEnum.cpp ////////////////
 
 //////////////// START OF src/Battle/Setup/BattleStateSetup.cpp ////////////////
 
@@ -29350,7 +29467,7 @@ namespace pokesim {
 inline void setStatus(types::handle pokemonHandle, dex::Status status) {
   clearStatus(pokemonHandle);
   pokemonHandle.emplace<StatusName>(status);
-  status::tags::enumToTag(status, pokemonHandle);
+  status::tags::emplaceTagFromEnum(status, pokemonHandle);
 }
 
 inline void clearStatus(types::handle pokemonHandle) {
