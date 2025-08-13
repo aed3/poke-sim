@@ -16,28 +16,8 @@ struct EffectMove {
   dex::Move val = dex::Move::NO_MOVE;
 };
 
-struct MovesAndInputs {
- private:
-  struct MoveAndInput {
-    dex::Move move = dex::Move::NO_MOVE;
-    types::entity input{};
-  };
-
- public:
-  internal::maxSizedVector<MoveAndInput> val{};
-
-  bool operator==(const MovesAndInputs& other) const {
-    if (val.size() != other.val.size()) return false;
-    for (types::entityIndex i = 0U; i < val.size(); i++) {
-      if (val[i].move != other.val[i].move) {
-        return false;
-      }
-      if (val[i].input != other.val[i].input) {
-        return false;
-      }
-    }
-    return true;
-  }
+struct GroupedInputs {
+  internal::maxSizedVector<types::entity> val{};
 };
 
 struct Inputs {
@@ -56,32 +36,11 @@ struct OriginalInputEntities {
   }
 };
 
-struct MovePairs {
- private:
-  struct MovePair {
-    types::entity original;
-    types::entity copy;
-    types::entity originInput;
-  };
+struct MovePair {
+  types::entity original;
+  types::entity copy;
 
- public:
-  internal::maxSizedVector<MovePair> val{};
-
-  bool operator==(const MovePairs& other) const {
-    if (val.size() != other.val.size()) return false;
-    for (types::entityIndex i = 0U; i < val.size(); i++) {
-      if (val[i].original != other.val[i].original) {
-        return false;
-      }
-      if (val[i].copy != other.val[i].copy) {
-        return false;
-      }
-      if (val[i].originInput != other.val[i].originInput) {
-        return false;
-      }
-    }
-    return true;
-  }
+  bool operator==(const MovePair& other) const { return original == other.original && copy == other.copy; }
 };
 
 struct SkippedInputCount {

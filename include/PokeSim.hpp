@@ -18670,28 +18670,8 @@ struct EffectMove {
   dex::Move val = dex::Move::NO_MOVE;
 };
 
-struct MovesAndInputs {
- private:
-  struct MoveAndInput {
-    dex::Move move = dex::Move::NO_MOVE;
-    types::entity input{};
-  };
-
- public:
-  internal::maxSizedVector<MoveAndInput> val{};
-
-  bool operator==(const MovesAndInputs& other) const {
-    if (val.size() != other.val.size()) return false;
-    for (types::entityIndex i = 0U; i < val.size(); i++) {
-      if (val[i].move != other.val[i].move) {
-        return false;
-      }
-      if (val[i].input != other.val[i].input) {
-        return false;
-      }
-    }
-    return true;
-  }
+struct GroupedInputs {
+  internal::maxSizedVector<types::entity> val{};
 };
 
 struct Inputs {
@@ -18710,32 +18690,11 @@ struct OriginalInputEntities {
   }
 };
 
-struct MovePairs {
- private:
-  struct MovePair {
-    types::entity original;
-    types::entity copy;
-    types::entity originInput;
-  };
+struct MovePair {
+  types::entity original;
+  types::entity copy;
 
- public:
-  internal::maxSizedVector<MovePair> val{};
-
-  bool operator==(const MovePairs& other) const {
-    if (val.size() != other.val.size()) return false;
-    for (types::entityIndex i = 0U; i < val.size(); i++) {
-      if (val[i].original != other.val[i].original) {
-        return false;
-      }
-      if (val[i].copy != other.val[i].copy) {
-        return false;
-      }
-      if (val[i].originInput != other.val[i].originInput) {
-        return false;
-      }
-    }
-    return true;
-  }
+  bool operator==(const MovePair& other) const { return original == other.original && copy == other.copy; }
 };
 
 struct SkippedInputCount {
@@ -20456,10 +20415,10 @@ struct Turn;
 namespace analyze_effect {
 struct EffectTarget;
 struct EffectMove;
-struct MovesAndInputs;
+struct GroupedInputs;
 struct Inputs;
 struct OriginalInputEntities;
-struct MovePairs;
+struct MovePair;
 struct SkippedInputCount;
 struct RemovedEffect;
 struct EffectMultiplier;
@@ -20523,7 +20482,7 @@ template <>
 inline void check(const analyze_effect::EffectMove&);
 
 template <>
-inline void check(const analyze_effect::MovesAndInputs&, const types::registry&);
+inline void check(const analyze_effect::GroupedInputs&, const types::registry&);
 
 template <>
 inline void check(const analyze_effect::Inputs&, const types::registry&);
@@ -20531,7 +20490,7 @@ inline void check(const analyze_effect::Inputs&, const types::registry&);
 // template <> void check(const analyze_effect::OriginalInputEntities&, const types::registry&);
 
 template <>
-inline void check(const analyze_effect::MovePairs&, const types::registry&);
+inline void check(const analyze_effect::MovePair&, const types::registry&);
 
 // template <> void check(const analyze_effect::SkippedInputCount&);
 
@@ -21167,9 +21126,8 @@ inline void check(const analyze_effect::EffectMove& effectMove) {
 }
 
 template <>
-inline void check(const analyze_effect::MovesAndInputs& effectMoves, const types::registry& registry) {
-  for (auto [move, input] : effectMoves.val) {
-    check(MoveName{move});
+inline void check(const analyze_effect::GroupedInputs& groupedInputs, const types::registry& registry) {
+  for (types::entity input : groupedInputs.val) {
     types::registry::checkEntity(input, registry);
   }
 }
@@ -21228,39 +21186,43 @@ inline void check(const analyze_effect::Inputs& inputs, const types::registry& r
 }
 
 template <>
-inline void check(const analyze_effect::MovePairs& movePairs, const types::registry& registry) {
-  for (auto [parentBattleMove, childBattleMove, originInput] : movePairs.val) {
+inline void check(const analyze_effect::MovePair& movePair, const types::registry& registry) {
+  auto [parentBattleMove, childBattleMove] = movePair;
+  if (parentBattleMove != entt::null) {
     checkActionMove(parentBattleMove, registry);
+  }
+  if (childBattleMove != entt::null) {
     checkActionMove(childBattleMove, registry);
-    types::registry::checkEntity(originInput, registry);
   }
 
-  for (auto [parentBattleMove, childBattleMove, _] : movePairs.val) {
-    const auto& [parentAttacker, parentDefenders, parentBattle, parentTypeName, parentMoveName] =
-      registry.get<analyze_effect::Attacker, analyze_effect::Defenders, Battle, TypeName, MoveName>(parentBattleMove);
-    const auto& [childAttacker, childDefenders, childBattle, childTypeName, childMoveName] =
-      registry.get<analyze_effect::Attacker, analyze_effect::Defenders, Battle, TypeName, MoveName>(childBattleMove);
-    if (has<analyze_effect::tags::BattleCloneForCalculation>(childBattle.val, registry)) {
-      POKESIM_REQUIRE_NM(parentAttacker.val != childAttacker.val);
-      POKESIM_REQUIRE_NM(parentDefenders.only() != childDefenders.only());
-      POKESIM_REQUIRE_NM(parentBattle.val != childBattle.val);
-    }
-    else {
-      POKESIM_REQUIRE_NM(parentAttacker.val == childAttacker.val);
-      POKESIM_REQUIRE_NM(parentDefenders.only() == childDefenders.only());
-      POKESIM_REQUIRE_NM(parentBattle.val == childBattle.val);
-    }
-
-    POKESIM_REQUIRE_NM(parentTypeName.name == childTypeName.name);
-    POKESIM_REQUIRE_NM(parentMoveName.name == childMoveName.name);
-
-    POKESIM_REQUIRE_NM(
-      has<move::tags::Physical>(parentBattleMove, registry) == has<move::tags::Physical>(childBattleMove, registry));
-    POKESIM_REQUIRE_NM(
-      has<move::tags::Special>(parentBattleMove, registry) == has<move::tags::Special>(childBattleMove, registry));
-    POKESIM_REQUIRE_NM(
-      has<move::tags::Status>(parentBattleMove, registry) == has<move::tags::Status>(childBattleMove, registry));
+  if (parentBattleMove == entt::null || childBattleMove == entt::null) {
+    return;
   }
+
+  const auto& [parentAttacker, parentDefenders, parentBattle, parentTypeName, parentMoveName] =
+    registry.get<analyze_effect::Attacker, analyze_effect::Defenders, Battle, TypeName, MoveName>(parentBattleMove);
+  const auto& [childAttacker, childDefenders, childBattle, childTypeName, childMoveName] =
+    registry.get<analyze_effect::Attacker, analyze_effect::Defenders, Battle, TypeName, MoveName>(childBattleMove);
+  if (has<analyze_effect::tags::BattleCloneForCalculation>(childBattle.val, registry)) {
+    POKESIM_REQUIRE_NM(parentAttacker.val != childAttacker.val);
+    POKESIM_REQUIRE_NM(parentDefenders.only() != childDefenders.only());
+    POKESIM_REQUIRE_NM(parentBattle.val != childBattle.val);
+  }
+  else {
+    POKESIM_REQUIRE_NM(parentAttacker.val == childAttacker.val);
+    POKESIM_REQUIRE_NM(parentDefenders.only() == childDefenders.only());
+    POKESIM_REQUIRE_NM(parentBattle.val == childBattle.val);
+  }
+
+  POKESIM_REQUIRE_NM(parentTypeName.name == childTypeName.name);
+  POKESIM_REQUIRE_NM(parentMoveName.name == childMoveName.name);
+
+  POKESIM_REQUIRE_NM(
+    has<move::tags::Physical>(parentBattleMove, registry) == has<move::tags::Physical>(childBattleMove, registry));
+  POKESIM_REQUIRE_NM(
+    has<move::tags::Special>(parentBattleMove, registry) == has<move::tags::Special>(childBattleMove, registry));
+  POKESIM_REQUIRE_NM(
+    has<move::tags::Status>(parentBattleMove, registry) == has<move::tags::Status>(childBattleMove, registry));
 }
 
 template <>
@@ -30373,7 +30335,7 @@ enum class EffectPresentCheck : std::uint8_t {
 };
 
 inline void restoreInputs(
-  types::registry& registry, MovePairs& movePairs, const OriginalInputEntities& originalEntities, Battle& battle,
+  types::registry& registry, MovePair& movePair, const OriginalInputEntities& originalEntities, Battle& battle,
   Attacker& attacker, Defenders& defenders, EffectTarget& effectTarget) {
   for (types::entity pokemon : {attacker.val, defenders.only(), originalEntities.attacker, originalEntities.defender}) {
     CurrentActionMoves* moves = registry.try_get<CurrentActionMoves>(pokemon);
@@ -30383,11 +30345,9 @@ inline void restoreInputs(
     }
 
     auto end = moves->val.end();
-    for (const auto& movePair : movePairs.val) {
-      end = std::remove_if(moves->val.begin(), end, [&movePair](types::entity entity) {
-        return entity == movePair.original || entity == movePair.copy;
-      });
-    }
+    end = std::remove_if(moves->val.begin(), end, [&movePair](types::entity entity) {
+      return entity == movePair.original || entity == movePair.copy;
+    });
 
     moves->val.resize(end - moves->val.begin());
     if (moves->val.empty()) {
@@ -30395,14 +30355,13 @@ inline void restoreInputs(
     }
   }
 
-  for (auto [parentBattleMove, childBattleMove, _] : movePairs.val) {
-    registry.destroy(parentBattleMove);
-    if (parentBattleMove != childBattleMove) {
-      registry.destroy(childBattleMove);
-    }
+  registry.destroy(movePair.original);
+  if (movePair.original != movePair.copy) {
+    registry.destroy(movePair.copy);
   }
 
-  movePairs.val.clear();
+  movePair.original = entt::null;
+  movePair.copy = entt::null;
 
   battle.val = originalEntities.battle;
   attacker.val = originalEntities.attacker;
@@ -30434,15 +30393,9 @@ inline void assignInputsToClones(
   for (types::entity input : inputs.val) {
     bool usesClone = !registry.all_of<tags::RunOneCalculation>(input);
 
-    if (!registry.all_of<MovesAndInputs>(input)) {
+    if (!registry.all_of<GroupedInputs>(input)) {
       continue;
     }
-
-    auto [battle, attacker, defenders, effectTarget, moves] =
-      registry.get<Battle, Attacker, Defenders, EffectTarget, MovesAndInputs>(input);
-
-    MovePairs& movePairs = registry.emplace<MovePairs>(input);
-    movePairs.val.resize(moves.val.size());
 
     auto createMove =
       [&](dex::Move move, types::entity battleEntity, types::entity attackerEntity, types::entity defenderEntity) {
@@ -30458,51 +30411,48 @@ inline void assignInputsToClones(
         return moveEntity;
       };
 
-    for (types::entityIndex moveIndex = 0U; moveIndex < moves.val.size(); moveIndex++) {
-      auto [move, originInput] = moves.val[moveIndex];
-      entt::entity moveEntity = createMove(move, battle.val, attacker.val, defenders.only());
-      auto& movePair = movePairs.val[moveIndex];
-      movePair.original = movePair.copy = moveEntity;
-      movePair.originInput = originInput;
+    const GroupedInputs& groupedInputs = registry.get<GroupedInputs>(input);
+    for (types::entity originalInput : groupedInputs.val) {
+      const auto& [battle, move, attacker, defenders, effectTarget] =
+        registry.get<Battle, EffectMove, Attacker, Defenders, EffectTarget>(originalInput);
+
+      entt::entity moveEntity = createMove(move.val, battle.val, attacker.val, defenders.only());
+      MovePair& movePair = registry.emplace<MovePair>(originalInput, moveEntity, moveEntity);
+
+      registry.emplace<OriginalInputEntities>(
+        originalInput,
+        OriginalInputEntities{battle.val, attacker.val, defenders.only(), effectTarget.val});
+
+      if (usesClone) {
+        POKESIM_REQUIRE(battleClones.size() > cloneIndex, "More inputs want clones than clones made.");
+        registry.emplace_or_replace<tags::BattleCloneForCalculation>(battleClones[cloneIndex]);
+
+        const auto& clonedAttackers = clonedEntityMap.at(attacker.val);
+        POKESIM_REQUIRE(
+          battleClones.size() == clonedAttackers.size(),
+          "Each attacker must have a clone and no more clones than inputs should be made.");
+
+        const auto& clonedDefenders = clonedEntityMap.at(defenders.only());
+        POKESIM_REQUIRE(
+          battleClones.size() == clonedDefenders.size(),
+          "Each defender must have a clone and no more clones than inputs should be made.");
+
+        const auto& clonedEffectTarget = clonedEntityMap.at(effectTarget.val);
+        POKESIM_REQUIRE(
+          battleClones.size() == clonedEffectTarget.size(),
+          "Each effect target must have a clone and no more clones than inputs should be made.");
+
+        movePair.copy =
+          createMove(move.val, battleClones[cloneIndex], clonedAttackers[cloneIndex], clonedDefenders[cloneIndex]);
+
+        battle.val = battleClones[cloneIndex];
+        attacker.val = clonedAttackers[cloneIndex];
+        defenders.val[0] = clonedDefenders[cloneIndex];
+        effectTarget.val = clonedEffectTarget[cloneIndex];
+      }
     }
 
-    registry.emplace<OriginalInputEntities>(
-      input,
-      OriginalInputEntities{battle.val, attacker.val, defenders.only(), effectTarget.val});
-
     if (usesClone) {
-      POKESIM_REQUIRE(battleClones.size() > cloneIndex, "More inputs want clones than clones made.");
-
-      registry.emplace<tags::BattleCloneForCalculation>(battleClones[cloneIndex]);
-
-      const auto& clonedAttackers = clonedEntityMap.at(attacker.val);
-      POKESIM_REQUIRE(
-        battleClones.size() == clonedAttackers.size(),
-        "Each attacker must have a clone and no more clones than inputs should be made.");
-
-      const auto& clonedDefenders = clonedEntityMap.at(defenders.only());
-      POKESIM_REQUIRE(
-        battleClones.size() == clonedDefenders.size(),
-        "Each defender must have a clone and no more clones than inputs should be made.");
-
-      const auto& clonedEffectTarget = clonedEntityMap.at(effectTarget.val);
-      POKESIM_REQUIRE(
-        battleClones.size() == clonedEffectTarget.size(),
-        "Each effect target must have a clone and no more clones than inputs should be made.");
-
-      for (types::entityIndex moveIndex = 0U; moveIndex < moves.val.size(); moveIndex++) {
-        movePairs.val[moveIndex].copy = createMove(
-          moves.val[moveIndex].move,
-          battleClones[cloneIndex],
-          clonedAttackers[cloneIndex],
-          clonedDefenders[cloneIndex]);
-      }
-
-      battle.val = battleClones[cloneIndex];
-      attacker.val = clonedAttackers[cloneIndex];
-      defenders.val[0] = clonedDefenders[cloneIndex];
-      effectTarget.val = clonedEffectTarget[cloneIndex];
-
       cloneIndex++;
     }
   }
@@ -30560,33 +30510,27 @@ EffectPresentCheck hasBoostEffect(types::registry& registry, EffectTarget effect
 template <typename T, typename EffectTuple>
 bool namedEffectPointerMatch(const EffectTuple& current, const EffectTuple& other) {
   const T* currentProperty = std::get<const T*>(current);
-  const T* outherProperty = std::get<const T*>(other);
+  const T* otherProperty = std::get<const T*>(other);
 
-  if ((currentProperty == nullptr) != (outherProperty == nullptr)) return false;
+  if ((currentProperty == nullptr) != (otherProperty == nullptr)) return false;
   if (currentProperty == nullptr) return true;
-  return currentProperty->name == outherProperty->name;
+  return currentProperty->name == otherProperty->name;
 }
 
 template <typename T, typename EffectTuple>
 bool valuedEffectPointerMatch(const EffectTuple& current, const EffectTuple& other) {
   const T* currentProperty = std::get<const T*>(current);
-  const T* outherProperty = std::get<const T*>(other);
+  const T* otherProperty = std::get<const T*>(other);
 
-  if ((currentProperty == nullptr) != (outherProperty == nullptr)) return false;
+  if ((currentProperty == nullptr) != (otherProperty == nullptr)) return false;
   if (currentProperty == nullptr) return true;
-  return currentProperty->val == outherProperty->val;
+  return currentProperty->val == otherProperty->val;
 }
 
-template <typename EffectTuple, typename PokemonTuple>
+template <typename EffectTuple>
 bool canInputsShareABattle(
-  const EffectTuple& currentEffects, const PokemonTuple& currentPokemon, types::entity otherInput,
+  const EffectTuple& currentEffects, const EffectTarget& currentEffectTarget, types::entity otherInput,
   const types::registry& registry) {
-  const auto& [attacker, defenders, effectTarget] = currentPokemon;
-  auto [otherAttacker, otherDefenders] = registry.get<Attacker, Defenders>(otherInput);
-
-  if (attacker.val != otherAttacker.val) return false;
-  if (defenders.only() != otherDefenders.only()) return false;
-
   const auto otherEffects = tryGetAllInputEffects(otherInput, registry);
 
   if (!namedEffectPointerMatch<PseudoWeatherName>(currentEffects, otherEffects)) return false;
@@ -30594,10 +30538,10 @@ bool canInputsShareABattle(
   if (!namedEffectPointerMatch<WeatherName>(currentEffects, otherEffects)) return false;
 
   EffectTarget otherEffectTarget = registry.get<EffectTarget>(otherInput);
-  if (registry.get<Side>(effectTarget.val).val != registry.get<Side>(otherEffectTarget.val).val) return false;
+  if (registry.get<Side>(currentEffectTarget.val).val != registry.get<Side>(otherEffectTarget.val).val) return false;
   if (!namedEffectPointerMatch<SideConditionName>(currentEffects, otherEffects)) return false;
 
-  if (effectTarget.val != otherEffectTarget.val) return false;
+  if (currentEffectTarget.val != otherEffectTarget.val) return false;
   if (!namedEffectPointerMatch<StatusName>(currentEffects, otherEffects)) return false;
   if (!namedEffectPointerMatch<VolatileName>(currentEffects, otherEffects)) return false;
   if (!valuedEffectPointerMatch<AtkBoost>(currentEffects, otherEffects)) return false;
@@ -30618,21 +30562,20 @@ inline void groupSimilarInputs(types::handle battleHandle, const Inputs& inputs)
     if (checkedIndexes[currentIndex]) continue;
 
     types::entity currentInput = inputs.val[currentIndex];
-    MovesAndInputs& movesAndInputs = registry.emplace<MovesAndInputs>(currentInput);
+    GroupedInputs& groupedInputs = registry.emplace<GroupedInputs>(currentInput);
 
-    EffectMove move = registry.get<EffectMove>(currentInput);
     const auto currentEffects = tryGetAllInputEffects(currentInput, registry);
-    const auto currentPokemon = registry.get<Attacker, Defenders, EffectTarget>(currentInput);
+    EffectTarget currentEffectTarget = registry.get<EffectTarget>(currentInput);
 
-    movesAndInputs.val.push_back({move.val, currentInput});
+    groupedInputs.val.push_back(currentInput);
 
     for (types::entityIndex otherIndex = currentIndex + 1U; otherIndex < inputCount; otherIndex++) {
       if (checkedIndexes[otherIndex]) continue;
 
       types::entity otherInput = inputs.val[otherIndex];
-      if (!canInputsShareABattle(currentEffects, currentPokemon, otherInput, registry)) continue;
+      if (!canInputsShareABattle(currentEffects, currentEffectTarget, otherInput, registry)) continue;
 
-      movesAndInputs.val.push_back({registry.get<EffectMove>(otherInput).val, otherInput});
+      groupedInputs.val.push_back(otherInput);
       registry.emplace<tags::GroupedWithOtherInput>(otherInput);
       battleHandle.get_or_emplace<SkippedInputCount>().val++;
 
@@ -30646,6 +30589,12 @@ inline void groupSimilarInputs(types::handle battleHandle, const Inputs& inputs)
 inline void setRunOneCalculation(types::handle inputHandle, Battle battle) {
   inputHandle.emplace<tags::RunOneCalculation>();
   inputHandle.registry()->get_or_emplace<SkippedInputCount>(battle.val).val++;
+}
+
+inline void setInvertFinalAnswer(types::handle inputHandle) {
+  for (types::entity input : inputHandle.get<GroupedInputs>().val) {
+    inputHandle.registry()->emplace<tags::InvertFinalAnswer>(input);
+  }
 }
 
 template <typename BattleEffectType>
@@ -30760,7 +30709,7 @@ inline void applyStatusEffect(types::handle inputHandle, EffectTarget effectTarg
   EffectPresentCheck statusCheck = hasStatusEffect(registry, effectTarget, effect);
   if (statusCheck == EffectPresentCheck::PRESENT_AND_APPLIED) {
     clearStatus({registry, effectTarget.val});
-    inputHandle.emplace<tags::InvertFinalAnswer>();
+    setInvertFinalAnswer(inputHandle);
   }
   else {
     setStatus({registry, effectTarget.val}, effect.name);
@@ -30776,50 +30725,47 @@ void applyBoostEffect(types::handle inputHandle, EffectTarget effectTarget, Boos
   EffectPresentCheck boostCheck = hasBoostEffect(registry, effectTarget, effect);
   if (boostCheck == EffectPresentCheck::PRESENT_AND_APPLIED) {
     registry.remove<BoostType>(effectTarget.val);
-    inputHandle.emplace<tags::InvertFinalAnswer>();
+    setInvertFinalAnswer(inputHandle);
   }
   else {
     registry.emplace_or_replace<BoostType>(effectTarget.val, effect);
   }
 }
 
-inline void createOutput(types::handle inputHandle, const MovePairs& movePairs) {
+inline void createOutput(types::handle inputHandle, const MovePair& movePairs) {
   bool invert = inputHandle.all_of<tags::InvertFinalAnswer>();
   types::registry& registry = *inputHandle.registry();
 
-  for (auto [parentBattleMove, childBattleMove, originInput] : movePairs.val) {
-    const auto [childDamage, childDamageRolls] = registry.get<Damage, DamageRolls>(childBattleMove);
-    auto [parentDamage, parentDamageRolls] = registry.get<Damage, DamageRolls>(parentBattleMove);
+  auto [parentBattleMove, childBattleMove] = movePairs;
+  const auto [childDamage, childDamageRolls] = registry.get<Damage, DamageRolls>(childBattleMove);
+  auto [parentDamage, parentDamageRolls] = registry.get<Damage, DamageRolls>(parentBattleMove);
 
-    types::handle outputHandle{registry, originInput};
-
-    if (invert) {
-      if (childDamage.val == 0U) {
-        outputHandle.emplace<tags::InfiniteMultiplier>();
-      }
-      else {
-        outputHandle.emplace<EffectMultiplier>((types::effectMultiplier)parentDamage.val / childDamage.val);
-      }
-
-      outputHandle.emplace<MultipliedDamageRolls>(parentDamageRolls);
-      auto* const parentKoChances = registry.try_get<calc_damage::UsesUntilKo>(parentBattleMove);
-      if (parentKoChances != nullptr) {
-        outputHandle.emplace<MultipliedUsesUntilKo>(*parentKoChances);
-      }
+  if (invert) {
+    if (childDamage.val == 0U) {
+      inputHandle.emplace<tags::InfiniteMultiplier>();
     }
     else {
-      if (parentDamage.val == 0U) {
-        outputHandle.emplace<tags::InfiniteMultiplier>();
-      }
-      else {
-        outputHandle.emplace<EffectMultiplier>((types::effectMultiplier)childDamage.val / parentDamage.val);
-      }
+      inputHandle.emplace<EffectMultiplier>((types::effectMultiplier)parentDamage.val / childDamage.val);
+    }
 
-      outputHandle.emplace<MultipliedDamageRolls>(childDamageRolls);
-      auto* const childKoChances = registry.try_get<calc_damage::UsesUntilKo>(childBattleMove);
-      if (childKoChances != nullptr) {
-        outputHandle.emplace<MultipliedUsesUntilKo>(*childKoChances);
-      }
+    inputHandle.emplace<MultipliedDamageRolls>(parentDamageRolls);
+    auto* const parentKoChances = registry.try_get<calc_damage::UsesUntilKo>(parentBattleMove);
+    if (parentKoChances != nullptr) {
+      inputHandle.emplace<MultipliedUsesUntilKo>(*parentKoChances);
+    }
+  }
+  else {
+    if (parentDamage.val == 0U) {
+      inputHandle.emplace<tags::InfiniteMultiplier>();
+    }
+    else {
+      inputHandle.emplace<EffectMultiplier>((types::effectMultiplier)childDamage.val / parentDamage.val);
+    }
+
+    inputHandle.emplace<MultipliedDamageRolls>(childDamageRolls);
+    auto* const childKoChances = registry.try_get<calc_damage::UsesUntilKo>(childBattleMove);
+    if (childKoChances != nullptr) {
+      inputHandle.emplace<MultipliedUsesUntilKo>(*childKoChances);
     }
   }
 }
@@ -30830,8 +30776,8 @@ inline void clearRunVariables(Simulation& simulation) {
   deleteClones(simulation.registry);
 
   simulation.registry.clear<
-    MovesAndInputs,
-    MovePairs,
+    GroupedInputs,
+    MovePair,
     OriginalInputEntities,
     tags::RunOneCalculation,
     tags::InvertFinalAnswer,

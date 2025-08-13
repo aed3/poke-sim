@@ -303,9 +303,8 @@ void check(const analyze_effect::EffectMove& effectMove) {
 }
 
 template <>
-void check(const analyze_effect::MovesAndInputs& effectMoves, const types::registry& registry) {
-  for (auto [move, input] : effectMoves.val) {
-    check(MoveName{move});
+void check(const analyze_effect::GroupedInputs& groupedInputs, const types::registry& registry) {
+  for (types::entity input : groupedInputs.val) {
     types::registry::checkEntity(input, registry);
   }
 }
@@ -364,39 +363,43 @@ void check(const analyze_effect::Inputs& inputs, const types::registry& registry
 }
 
 template <>
-void check(const analyze_effect::MovePairs& movePairs, const types::registry& registry) {
-  for (auto [parentBattleMove, childBattleMove, originInput] : movePairs.val) {
+void check(const analyze_effect::MovePair& movePair, const types::registry& registry) {
+  auto [parentBattleMove, childBattleMove] = movePair;
+  if (parentBattleMove != entt::null) {
     checkActionMove(parentBattleMove, registry);
+  }
+  if (childBattleMove != entt::null) {
     checkActionMove(childBattleMove, registry);
-    types::registry::checkEntity(originInput, registry);
   }
 
-  for (auto [parentBattleMove, childBattleMove, _] : movePairs.val) {
-    const auto& [parentAttacker, parentDefenders, parentBattle, parentTypeName, parentMoveName] =
-      registry.get<analyze_effect::Attacker, analyze_effect::Defenders, Battle, TypeName, MoveName>(parentBattleMove);
-    const auto& [childAttacker, childDefenders, childBattle, childTypeName, childMoveName] =
-      registry.get<analyze_effect::Attacker, analyze_effect::Defenders, Battle, TypeName, MoveName>(childBattleMove);
-    if (has<analyze_effect::tags::BattleCloneForCalculation>(childBattle.val, registry)) {
-      POKESIM_REQUIRE_NM(parentAttacker.val != childAttacker.val);
-      POKESIM_REQUIRE_NM(parentDefenders.only() != childDefenders.only());
-      POKESIM_REQUIRE_NM(parentBattle.val != childBattle.val);
-    }
-    else {
-      POKESIM_REQUIRE_NM(parentAttacker.val == childAttacker.val);
-      POKESIM_REQUIRE_NM(parentDefenders.only() == childDefenders.only());
-      POKESIM_REQUIRE_NM(parentBattle.val == childBattle.val);
-    }
-
-    POKESIM_REQUIRE_NM(parentTypeName.name == childTypeName.name);
-    POKESIM_REQUIRE_NM(parentMoveName.name == childMoveName.name);
-
-    POKESIM_REQUIRE_NM(
-      has<move::tags::Physical>(parentBattleMove, registry) == has<move::tags::Physical>(childBattleMove, registry));
-    POKESIM_REQUIRE_NM(
-      has<move::tags::Special>(parentBattleMove, registry) == has<move::tags::Special>(childBattleMove, registry));
-    POKESIM_REQUIRE_NM(
-      has<move::tags::Status>(parentBattleMove, registry) == has<move::tags::Status>(childBattleMove, registry));
+  if (parentBattleMove == entt::null || childBattleMove == entt::null) {
+    return;
   }
+
+  const auto& [parentAttacker, parentDefenders, parentBattle, parentTypeName, parentMoveName] =
+    registry.get<analyze_effect::Attacker, analyze_effect::Defenders, Battle, TypeName, MoveName>(parentBattleMove);
+  const auto& [childAttacker, childDefenders, childBattle, childTypeName, childMoveName] =
+    registry.get<analyze_effect::Attacker, analyze_effect::Defenders, Battle, TypeName, MoveName>(childBattleMove);
+  if (has<analyze_effect::tags::BattleCloneForCalculation>(childBattle.val, registry)) {
+    POKESIM_REQUIRE_NM(parentAttacker.val != childAttacker.val);
+    POKESIM_REQUIRE_NM(parentDefenders.only() != childDefenders.only());
+    POKESIM_REQUIRE_NM(parentBattle.val != childBattle.val);
+  }
+  else {
+    POKESIM_REQUIRE_NM(parentAttacker.val == childAttacker.val);
+    POKESIM_REQUIRE_NM(parentDefenders.only() == childDefenders.only());
+    POKESIM_REQUIRE_NM(parentBattle.val == childBattle.val);
+  }
+
+  POKESIM_REQUIRE_NM(parentTypeName.name == childTypeName.name);
+  POKESIM_REQUIRE_NM(parentMoveName.name == childMoveName.name);
+
+  POKESIM_REQUIRE_NM(
+    has<move::tags::Physical>(parentBattleMove, registry) == has<move::tags::Physical>(childBattleMove, registry));
+  POKESIM_REQUIRE_NM(
+    has<move::tags::Special>(parentBattleMove, registry) == has<move::tags::Special>(childBattleMove, registry));
+  POKESIM_REQUIRE_NM(
+    has<move::tags::Status>(parentBattleMove, registry) == has<move::tags::Status>(childBattleMove, registry));
 }
 
 template <>

@@ -95,10 +95,10 @@ struct Turn;
 namespace analyze_effect {
 struct EffectTarget;
 struct EffectMove;
-struct MovesAndInputs;
+struct GroupedInputs;
 struct Inputs;
 struct OriginalInputEntities;
-struct MovePairs;
+struct MovePair;
 struct SkippedInputCount;
 struct RemovedEffect;
 struct EffectMultiplier;
@@ -162,7 +162,7 @@ template <>
 void check(const analyze_effect::EffectMove&);
 
 template <>
-void check(const analyze_effect::MovesAndInputs&, const types::registry&);
+void check(const analyze_effect::GroupedInputs&, const types::registry&);
 
 template <>
 void check(const analyze_effect::Inputs&, const types::registry&);
@@ -170,7 +170,7 @@ void check(const analyze_effect::Inputs&, const types::registry&);
 // template <> void check(const analyze_effect::OriginalInputEntities&, const types::registry&);
 
 template <>
-void check(const analyze_effect::MovePairs&, const types::registry&);
+void check(const analyze_effect::MovePair&, const types::registry&);
 
 // template <> void check(const analyze_effect::SkippedInputCount&);
 
