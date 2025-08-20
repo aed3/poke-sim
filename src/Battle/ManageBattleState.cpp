@@ -83,7 +83,8 @@ void clearCurrentAction(Simulation& simulation) {
   registry.clear<CurrentAction>();
   registry.clear<CurrentActionTargets>();
   registry.clear<CurrentActionSource>();
-  registry.clear<CurrentActionMoves>();
+  registry.clear<CurrentActionMovesAsSource>();
+  registry.clear<CurrentActionMovesAsTarget>();
   registry.clear<CurrentActionMoveSlot>();
 
   registry.clear<tags::CurrentActionMoveTarget>();

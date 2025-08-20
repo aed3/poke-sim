@@ -3,17 +3,16 @@
 #include <Types/Damage.hpp>
 #include <Types/Enums/DamageRollKind.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
+#include <Types/Stats.hpp>
 
 namespace pokesim {
 class Simulation;
-struct Damage;
-
 namespace calc_damage {
 void run(Simulation& simulation);
 
-void applyDamageRoll(Damage& damage, types::damageRollIndex damageRoll);
-void applyAverageDamageRoll(Damage& damage);
-void applyMinDamageRoll(Damage& damage);
+void applyDamageRoll(types::damage& damage, types::damageRollIndex damageRoll);
+void applyAverageDamageRoll(types::damage& damage);
+void applyMinDamageRoll(types::damage& damage);
 
 void setDamageRollModifiers(Simulation& simulation);
 }  // namespace calc_damage

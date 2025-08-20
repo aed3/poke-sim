@@ -37,7 +37,8 @@ struct CurrentAction;
 struct NextAction;
 struct CurrentActionTargets;
 struct CurrentActionSource;
-struct CurrentActionMoves;
+struct CurrentActionMovesAsTarget;
+struct CurrentActionMovesAsSource;
 struct CurrentActionMoveSlot;
 struct FoeSide;
 struct LastUsedMove;
@@ -109,6 +110,7 @@ struct CritBoost;
 struct AttackingLevel;
 struct AttackingStat;
 struct DefendingStat;
+struct RealEffectiveStat;
 struct UsesUntilKo;
 struct AttackerHpRecovered;
 struct AttackerHpLost;
@@ -212,6 +214,9 @@ void check(const calc_damage::AttackingStat&);
 template <>
 void check(const calc_damage::DefendingStat&);
 
+template <>
+void check(const calc_damage::RealEffectiveStat&);
+
 // template <> void check(const CloneTo&);
 
 template <>
@@ -266,7 +271,10 @@ template <>
 void check(const CurrentActionSource&, const types::registry&);
 
 template <>
-void check(const CurrentActionMoves&, const types::registry&);
+void check(const CurrentActionMovesAsTarget&, const types::registry&);
+
+template <>
+void check(const CurrentActionMovesAsSource&, const types::registry&);
 
 template <>
 void check(const CurrentActionMoveSlot&, const types::registry&);

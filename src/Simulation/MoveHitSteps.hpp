@@ -8,7 +8,6 @@
 namespace pokesim {
 class Simulation;
 struct CurrentActionSource;
-struct CurrentActionMoves;
 struct CurrentActionTargets;
 struct Accuracy;
 struct Battle;

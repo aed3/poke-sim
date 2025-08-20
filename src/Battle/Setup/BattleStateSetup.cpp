@@ -91,8 +91,17 @@ void BattleStateSetup::setCurrentActionSource(types::entity actionSource) {
 }
 
 void BattleStateSetup::setCurrentActionMove(types::entity actionMove) {
-  handle.emplace<CurrentActionMoves>().val.push_back(actionMove);
   handle.registry()->emplace<tags::CurrentActionMove>(actionMove);
+  const auto* source = handle.try_get<CurrentActionSource>();
+  const auto* targets = handle.try_get<CurrentActionTargets>();
+  if (source) {
+    handle.registry()->emplace<CurrentActionMovesAsSource>(source->val).val.push_back(actionMove);
+  }
+  if (targets) {
+    for (types::entity target : targets->val) {
+      handle.registry()->emplace<CurrentActionMovesAsTarget>(target).val.push_back(actionMove);
+    }
+  }
 }
 
 void BattleStateSetup::setProbability(types::probability probability) {

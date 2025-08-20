@@ -18,6 +18,11 @@ bool has(types::entity entity, const types::registry& registry) {
   return registry.all_of<T>(entity);
 }
 
+template <typename... T>
+std::size_t totalComponentsPresent(types::entity entity, const types::registry& registry) {
+  return ((has<T>(entity, registry) ? 1U : 0U) + ...);
+}
+
 template <typename List, typename Value>
 bool listContains(const List& list, const Value& value) {
   return std::find(list.begin(), list.end(), value) != list.end();
@@ -280,6 +285,32 @@ void checkActionMove(types::entity moveEntity, const types::registry& registry) 
   POKESIM_REQUIRE_NM(isPhysical == !(isSpecial || isStatus));
   POKESIM_REQUIRE_NM(isSpecial == !(isPhysical || isStatus));
   POKESIM_REQUIRE_NM(isStatus == !(isPhysical || isSpecial));
+
+  std::size_t totalOUsesOffenseTags =
+    totalComponentsPresent<calc_damage::tags::UsesAtk, calc_damage::tags::UsesSpa, calc_damage::tags::UsesDefAsOffense>(
+      moveEntity,
+      registry);
+  std::size_t totalOUsesDefenseTags =
+    totalComponentsPresent<calc_damage::tags::UsesDef, calc_damage::tags::UsesSpa>(moveEntity, registry);
+
+  POKESIM_REQUIRE_NM(totalOUsesOffenseTags <= 1U);
+  POKESIM_REQUIRE_NM(totalOUsesDefenseTags <= 1U);
+
+  const auto [attackingLevel, attackingStat, defendingStat, realEffectiveStat, critBoost, critChanceDivisor] =
+    registry.try_get<
+      calc_damage::AttackingLevel,
+      calc_damage::AttackingStat,
+      calc_damage::DefendingStat,
+      calc_damage::RealEffectiveStat,
+      calc_damage::CritBoost,
+      calc_damage::CritChanceDivisor>(moveEntity);
+
+  if (attackingLevel) check(*attackingLevel);
+  if (attackingStat) check(*attackingStat);
+  if (defendingStat) check(*defendingStat);
+  if (realEffectiveStat) check(*realEffectiveStat);
+  if (critBoost) check(*critBoost);
+  if (critChanceDivisor) check(*critChanceDivisor);
 }
 
 template <>
@@ -340,8 +371,7 @@ void check(const analyze_effect::Inputs& inputs, const types::registry& registry
       analyze_effect::Defenders,
       analyze_effect::EffectTarget,
       analyze_effect::EffectMove>(input);
-    POKESIM_REQUIRE_NM(has<analyze_effect::tags::Attacker>(attacker.val, registry));
-    POKESIM_REQUIRE_NM(has<analyze_effect::tags::Defender>(defenders.only(), registry));
+
     checkPokemon(attacker.val, registry);
     checkPokemon(defenders.only(), registry);
     checkPokemon(target.val, registry);
@@ -463,6 +493,11 @@ void check(const calc_damage::DefendingStat& defendingStat) {
 }
 
 template <>
+void check(const calc_damage::RealEffectiveStat& realEffectiveStat) {
+  checkEffectiveStat(realEffectiveStat.val);
+}
+
+template <>
 void check(const Damage& damage) {
   POKESIM_REQUIRE_NM(damage.val <= MechanicConstants::Damage::MAX);
 }
@@ -579,7 +614,14 @@ void check(const CurrentActionSource& source, const types::registry& registry) {
 }
 
 template <>
-void check(const CurrentActionMoves& moves, const types::registry& registry) {
+void check(const CurrentActionMovesAsTarget& moves, const types::registry& registry) {
+  for (types::entity moveEntity : moves.val) {
+    checkActionMove(moveEntity, registry);
+  }
+}
+
+template <>
+void check(const CurrentActionMovesAsSource& moves, const types::registry& registry) {
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }

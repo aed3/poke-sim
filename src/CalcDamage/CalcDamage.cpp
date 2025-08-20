@@ -1,11 +1,15 @@
 #include "CalcDamage.hpp"
 
 #include <Battle/Helpers/IntegerModify.hpp>
+#include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Battle/Pokemon/PokemonDataChecks.hpp>
 #include <Components/BasePower.hpp>
+#include <Components/Boosts.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/CalcDamage/CriticalHit.hpp>
-#include <Components/CalcDamage/DamageCalcVariables.hpp>
+#include <Components/CalcDamage/DamageFormulaVariables.hpp>
+#include <Components/CalcDamage/DamageRollSides.hpp>
+#include <Components/CalcDamage/TemporaryMoveProperties.hpp>
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Side.hpp>
@@ -46,7 +50,19 @@
 namespace pokesim::calc_damage {
 namespace {
 void clearRunVariables(Simulation& simulation) {
-  simulation.registry.clear<tags::Crit, AttackingLevel, AttackingStat, DefendingStat, DamageRollModifiers>();
+  simulation.registry.clear<
+    tags::Crit,
+    AttackingLevel,
+    AttackingStat,
+    DefendingStat,
+    DamageRollModifiers,
+    tags::UsesAtk,
+    tags::UsesDef,
+    tags::UsesSpa,
+    tags::UsesSpd,
+    tags::UsesDefAsOffense,
+    tags::IgnoresAttackingBoost,
+    tags::IgnoresDefendingBoost>();
   simulation.removeFromEntities<Damage, pokesim::tags::CalculateDamage>();
 }
 
@@ -67,13 +83,11 @@ void checkForAndApplyTypeEffectiveness(
   modifier.typeEffectiveness = getAttackEffectiveness(defenderTypes, type.name, pokedex.typeChart());
 }
 
-void applyBurnModifier(types::registry& registry, const CurrentActionMoves& moves) {
+void applyBurnModifier(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves.val) {
-    if (!registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
-      return;
+    if (registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
+      registry.get<DamageRollModifiers>(move).burn = true;
     }
-
-    registry.get<DamageRollModifiers>(move).burn = true;
   }
 }
 
@@ -130,19 +144,19 @@ void calculateAllDamageRolls(DamageRolls& damageRolls, const Damage& damage, con
   damageRolls.val.reserve(MechanicConstants::DamageRollCount::MAX);
   for (types::damageRollIndex i = 0U; i < MechanicConstants::DamageRollCount::MAX; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
-    applyDamageRoll(damageRoll, i);
+    applyDamageRoll(damageRoll.val, i);
     modifyDamage(damageRoll, modifier);
   }
 }
 
 void applyAverageDamageRollModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier) {
-  applyAverageDamageRoll(damage);
+  applyAverageDamageRoll(damage.val);
   modifyDamage(damage, modifier);
   damageRolls.val.emplace_back(damage);
 }
 
 void applyMinDamageRollModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier) {
-  applyMinDamageRoll(damage);
+  applyMinDamageRoll(damage.val);
   modifyDamage(damage, modifier);
   damageRolls.val.emplace_back(damage);
 }
@@ -176,9 +190,11 @@ void setUsedAttackStat(types::handle moveHandle, const Attacker& attacker) {
   types::stat attackingStat = MechanicConstants::PokemonEffectiveStat::MIN;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     attackingStat = moveHandle.registry()->get<stat::EffectiveAtk>(attacker.val).val;
+    moveHandle.emplace<tags::UsesAtk>();
   }
   else {
     attackingStat = moveHandle.registry()->get<stat::EffectiveSpa>(attacker.val).val;
+    moveHandle.emplace<tags::UsesSpa>();
   }
   moveHandle.emplace<AttackingStat>(attackingStat);
 }
@@ -188,11 +204,29 @@ void setUsedDefenseStat(types::handle moveHandle, const Defenders& defenders) {
   types::stat defendingStat = MechanicConstants::PokemonEffectiveStat::MIN;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     defendingStat = moveHandle.registry()->get<stat::EffectiveDef>(defenders.only()).val;
+    moveHandle.emplace<tags::UsesDef>();
   }
   else {
     defendingStat = moveHandle.registry()->get<stat::EffectiveSpd>(defenders.only()).val;
+    moveHandle.emplace<tags::UsesSpd>();
   }
   moveHandle.emplace<DefendingStat>(defendingStat);
+}
+
+template <typename BoostType>
+void setIgnoreAttackingBoostIfNegative(types::handle moveHandle, Attacker attacker) {
+  BoostType* boost = moveHandle.registry()->try_get<BoostType>(attacker.val);
+  if (boost && boost->val < MechanicConstants::PokemonStatBoost::BASE) {
+    moveHandle.emplace<tags::IgnoresAttackingBoost>();
+  }
+}
+
+template <typename BoostType>
+void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, const Defenders& defenders) {
+  BoostType* boost = moveHandle.registry()->try_get<BoostType>(defenders.only());
+  if (boost && boost->val > MechanicConstants::PokemonStatBoost::BASE) {
+    moveHandle.emplace<tags::IgnoresDefendingBoost>();
+  }
 }
 
 void calculateBaseDamage(
@@ -354,6 +388,106 @@ void applyDamageRollsAndModifiers(
   }
 }
 
+template <typename EffectiveStat>
+void saveRealEffectiveAttackerStat(types::registry& registry, Attacker attacker) {
+  EffectiveStat effectiveStat = registry.get<EffectiveStat>(attacker.val);
+  registry.emplace<RealEffectiveStat>(attacker.val, effectiveStat.val);
+}
+
+template <typename EffectiveStat>
+void saveRealEffectiveDefenderStat(types::registry& registry, const Defenders& defenders) {
+  EffectiveStat effectiveStat = registry.get<EffectiveStat>(defenders.only());
+  registry.emplace<RealEffectiveStat>(defenders.only(), effectiveStat.val);
+}
+
+template <typename EffectiveStat>
+void resetEffectiveAndAttackingStat(types::registry& registry, Attacker attacker, AttackingStat& attackingStat) {
+  auto [effectiveStat, realEffectiveStat] = registry.get<EffectiveStat, RealEffectiveStat>(attacker.val);
+  attackingStat.val = effectiveStat.val;
+  effectiveStat.val = realEffectiveStat.val;
+}
+
+template <typename EffectiveStat>
+void resetEffectiveAndDefendingStat(
+  types::registry& registry, const Defenders& defenders, DefendingStat& defendingStat) {
+  auto [effectiveStat, realEffectiveStat] = registry.get<EffectiveStat, RealEffectiveStat>(defenders.only());
+  defendingStat.val = effectiveStat.val;
+  effectiveStat.val = realEffectiveStat.val;
+}
+
+template <typename EffectiveStat, typename IgnoresBoostTag, typename UsesStatTag>
+void setUnboostedStat(Simulation& simulation) {
+  static constexpr bool forAttacker = std::is_same_v<IgnoresBoostTag, tags::IgnoresAttackingBoost>;
+  if constexpr (forAttacker) {
+    simulation.viewForSelectedMoves<saveRealEffectiveAttackerStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
+  }
+  else {
+    simulation.viewForSelectedMoves<saveRealEffectiveDefenderStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
+  }
+
+  internal::SelectForPokemonView<RealEffectiveStat> selectedPokemon{simulation};
+  if (selectedPokemon.hasNoneSelected()) {
+    return;
+  }
+
+  if constexpr (std::is_same_v<UsesStatTag, tags::UsesAtk>) {
+    simulation.viewForSelectedPokemon<resetEffectiveAtk>();
+    runModifyAtk(simulation);
+  }
+  else if constexpr (
+    std::is_same_v<UsesStatTag, tags::UsesDef> || std::is_same_v<UsesStatTag, tags::UsesDefAsOffense>) {
+    simulation.viewForSelectedPokemon<resetEffectiveDef>();
+    runModifyDef(simulation);
+  }
+  else if constexpr (std::is_same_v<UsesStatTag, tags::UsesSpa>) {
+    simulation.viewForSelectedPokemon<resetEffectiveSpa>();
+    runModifySpa(simulation);
+  }
+  else if constexpr (std::is_same_v<UsesStatTag, tags::UsesSpd>) {
+    simulation.viewForSelectedPokemon<resetEffectiveSpd>();
+    runModifySpd(simulation);
+  }
+  else {
+    static_assert("No other stat is used as the attacking or defending stat.");
+  }
+
+  if constexpr (forAttacker) {
+    simulation
+      .viewForSelectedMoves<resetEffectiveAndAttackingStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
+  }
+  else {
+    simulation
+      .viewForSelectedMoves<resetEffectiveAndDefendingStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
+  }
+
+  simulation.registry.clear<RealEffectiveStat>();
+}
+
+void setDamageFormulaVariables(Simulation& simulation) {
+  simulation.viewForSelectedMoves<setSourceLevel>();
+
+  simulation.viewForSelectedMoves<setUsedAttackStat<move::tags::Physical>, Tags<move::tags::Physical>>();
+  simulation.viewForSelectedMoves<setUsedAttackStat<move::tags::Special>, Tags<move::tags::Special>>();
+  simulation.viewForSelectedMoves<setUsedDefenseStat<move::tags::Physical>, Tags<move::tags::Physical>>();
+  simulation.viewForSelectedMoves<setUsedDefenseStat<move::tags::Special>, Tags<move::tags::Special>>();
+
+  simulation.viewForSelectedMoves<setIgnoreAttackingBoostIfNegative<AtkBoost>, Tags<tags::Crit, tags::UsesAtk>>();
+  simulation.viewForSelectedMoves<setIgnoreAttackingBoostIfNegative<SpaBoost>, Tags<tags::Crit, tags::UsesSpa>>();
+  simulation.viewForSelectedMoves<setIgnoreDefendingBoostIfPositive<DefBoost>, Tags<tags::Crit, tags::UsesDef>>();
+  simulation.viewForSelectedMoves<setIgnoreDefendingBoostIfPositive<SpdBoost>, Tags<tags::Crit, tags::UsesSpd>>();
+  // simulation.viewForSelectedMoves<setIgnoreAttackingBoostIfNegative<DefBoost>, Tags<tags::Crit,
+  // tags::UsesDefAsOffense>>();
+
+  // simulation.viewForSelectedPokemon<dex::latest::Unaware::onUsesBoost, Tags<ability::tags::Unaware,
+  // tags::Attacker>>();
+
+  setUnboostedStat<stat::EffectiveAtk, tags::IgnoresAttackingBoost, tags::UsesAtk>(simulation);
+  setUnboostedStat<stat::EffectiveSpa, tags::IgnoresAttackingBoost, tags::UsesSpa>(simulation);
+  setUnboostedStat<stat::EffectiveDef, tags::IgnoresDefendingBoost, tags::UsesDef>(simulation);
+  setUnboostedStat<stat::EffectiveSpd, tags::IgnoresDefendingBoost, tags::UsesSpd>(simulation);
+  // setUnboostedStat<stat::EffectiveDef, tags::IgnoresAttackingBoost, tags::UsesDefAsOffense>(simulation);
+}
+
 void calcDamage(Simulation& simulation) {
   pokesim::internal::SelectForCurrentActionMoveView<> selectedMoves{simulation, entt::exclude<move::tags::Status>};
   if (selectedMoves.hasNoneSelected()) {
@@ -368,17 +502,10 @@ void calcDamage(Simulation& simulation) {
   applySideDamageRollOptions<CalculateDamage, setIfMoveCrits<CalculateDamage>>(simulation);
   applySideDamageRollOptions<AnalyzeEffect, setIfMoveCrits<AnalyzeEffect>>(simulation);
 
-  // Get base power, boosts, get atk/def stats
   runBasePowerEvent(simulation);
-  simulation.viewForSelectedMoves<setSourceLevel>();
-
-  simulation.viewForSelectedMoves<setUsedAttackStat<move::tags::Physical>, Tags<move::tags::Physical>>();
-  simulation.viewForSelectedMoves<setUsedAttackStat<move::tags::Special>, Tags<move::tags::Special>>();
-  simulation.viewForSelectedMoves<setUsedDefenseStat<move::tags::Physical>, Tags<move::tags::Physical>>();
-  simulation.viewForSelectedMoves<setUsedDefenseStat<move::tags::Special>, Tags<move::tags::Special>>();
+  setDamageFormulaVariables(simulation);
 
   simulation.viewForSelectedMoves<calculateBaseDamage>();
-
   simulation.viewForSelectedMoves<applyCritDamageIncrease, Tags<tags::Crit>>();
 
   simulation.addToEntities<DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
@@ -387,27 +514,28 @@ void calcDamage(Simulation& simulation) {
   applySideDamageRollOptions<SimulateTurn, applyDamageRollsAndModifiers<SimulateTurn>>(simulation);
   applySideDamageRollOptions<CalculateDamage, applyDamageRollsAndModifiers<CalculateDamage>>(simulation);
   applySideDamageRollOptions<AnalyzeEffect, applyDamageRollsAndModifiers<AnalyzeEffect>>(simulation);
+
+  clearRunVariables(simulation);
 }
 }  // namespace
+
+void applyDamageRoll(types::damage& damage, types::damageRollIndex damageRoll) {
+  damage = (types::damage)(damage * ((100U - damageRoll) / 100.0F));
+}
+
+void applyAverageDamageRoll(types::damage& damage) {
+  damage = (types::damage)(damage * (100U - (MechanicConstants::DamageRollCount::MAX - 1U) / 2.0F) / 100.0F);
+}
+
+void applyMinDamageRoll(types::damage& damage) {
+  applyDamageRoll(damage, MechanicConstants::DamageRollCount::MAX - 1U);
+}
 
 void setDamageRollModifiers(Simulation& simulation) {
   simulation.viewForSelectedMoves<checkForAndApplyStab>();
   simulation.viewForSelectedMoves<checkForAndApplyTypeEffectiveness>(simulation.pokedex());
-  simulation.viewForSelectedPokemon<
-    applyBurnModifier,
-    Tags<status::tags::Burn, tags::Attacker> /*, entt::exclude<ability::tags::Guts> */>();
-}
-
-void applyDamageRoll(Damage& damage, types::damageRollIndex damageRoll) {
-  damage.val = (types::damage)(damage.val * ((100U - damageRoll) / 100.0F));
-}
-
-void applyAverageDamageRoll(Damage& damage) {
-  damage.val = (types::damage)(damage.val * (100U - (MechanicConstants::DamageRollCount::MAX - 1U) / 2.0F) / 100.0F);
-}
-
-void applyMinDamageRoll(Damage& damage) {
-  applyDamageRoll(damage, MechanicConstants::DamageRollCount::MAX - 1U);
+  simulation
+    .viewForSelectedPokemon<applyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<ability::tags::Guts> */>();
 }
 
 void run(Simulation& simulation) {
@@ -416,7 +544,6 @@ void run(Simulation& simulation) {
 
   calcDamage(simulation);
 
-  clearRunVariables(simulation);
   debugChecks.checkOutputs();
 }
 }  // namespace pokesim::calc_damage

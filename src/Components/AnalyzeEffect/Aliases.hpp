@@ -6,6 +6,8 @@
 namespace pokesim::analyze_effect {
 using Attacker = CurrentActionSource;
 using Defenders = CurrentActionTargets;
+using UsedMovesAsAttacker = CurrentActionMovesAsSource;
+using UsedMovesAsDefender = CurrentActionMovesAsTarget;
 
 namespace tags {
 using Attacker = pokesim::tags::CurrentActionMoveSource;

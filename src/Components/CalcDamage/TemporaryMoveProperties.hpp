@@ -4,20 +4,18 @@
 #include <Types/Stats.hpp>
 
 namespace pokesim::calc_damage {
-struct AttackingLevel {
-  types::level val = MechanicConstants::PokemonLevel::MIN;
-};
-
-struct AttackingStat {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::MIN;
-};
-
-struct DefendingStat {
+struct RealEffectiveStat {
   types::stat val = MechanicConstants::PokemonEffectiveStat::MIN;
 };
 
 namespace tags {
-struct P1Defending {};
-struct P2Defending {};
+struct UsesAtk {};
+struct UsesDef {};
+struct UsesSpa {};
+struct UsesSpd {};
+struct UsesDefAsOffense {};  // For Body Press
+
+struct IgnoresAttackingBoost {};
+struct IgnoresDefendingBoost {};
 }  // namespace tags
 }  // namespace pokesim::calc_damage

@@ -323,8 +323,8 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::Attacker>(setupInfoAttacker));
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::Defender>(setupInfoDefender));
 
-    const auto& attackerMoves = registry->get<calc_damage::UsedMoves>(setupInfoAttacker).val;
-    const auto& defenderMoves = registry->get<calc_damage::UsedMoves>(setupInfoDefender).val;
+    const auto& attackerMoves = registry->get<calc_damage::UsedMovesAsAttacker>(setupInfoAttacker).val;
+    const auto& defenderMoves = registry->get<calc_damage::UsedMovesAsDefender>(setupInfoDefender).val;
 
     POKESIM_REQUIRE_NM(std::find(attackerMoves.begin(), attackerMoves.end(), calcDamageEntity) != attackerMoves.end());
     POKESIM_REQUIRE_NM(std::find(defenderMoves.begin(), defenderMoves.end(), calcDamageEntity) != defenderMoves.end());
@@ -364,9 +364,6 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<analyze_effect::Inputs>(battle.val));
     const auto& battleInputs = registry->get<analyze_effect::Inputs>(battle.val).val;
     POKESIM_REQUIRE_NM(std::find(battleInputs.begin(), battleInputs.end(), analyzeEffectEntity) != battleInputs.end());
-
-    POKESIM_REQUIRE_NM(registry->all_of<analyze_effect::tags::Attacker>(setupInfoAttacker));
-    POKESIM_REQUIRE_NM(registry->all_of<analyze_effect::tags::Defender>(setupInfoDefender));
 
     if (analyzeEffectInputInfo.effect.has_value()) {
       const auto& effect = analyzeEffectInputInfo.effect.value();

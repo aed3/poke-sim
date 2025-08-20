@@ -85,7 +85,7 @@ struct Checks : pokesim::debug::Checks {
   std::size_t analyzeEffectCount = 0U;
 
   void checkMoveInputs() {
-    CurrentActionMoves moves{simulation->selectedMoveEntities()};
+    CurrentActionMovesAsSource moves{simulation->selectedMoveEntities()};
     for (types::entity move : moves.val) {
       originalToCopy[move] = pokesim::debug::createEntityCopy(move, *registry, registryOnInput);
 
@@ -117,10 +117,19 @@ struct Checks : pokesim::debug::Checks {
       originalToCopy[pokemon] = pokesim::debug::createEntityCopy(pokemon, *registry, registryOnInput);
       checkPokemon(pokemon);
 
-      POKESIM_REQUIRE_NM(has<UsedMoves>(pokemon));
+      types::entityVector moves;
+      if (forAttacker) {
+        POKESIM_REQUIRE_NM(has<UsedMovesAsAttacker>(pokemon));
+        moves = registry->get<UsedMovesAsAttacker>(pokemon).val;
+      }
+      else {
+        POKESIM_REQUIRE_NM(has<UsedMovesAsDefender>(pokemon));
+        moves = registry->get<UsedMovesAsDefender>(pokemon).val;
+      }
+
       bool needsPhy = false;
       bool needsSpc = false;
-      for (types::entity move : registry->get<UsedMoves>(pokemon).val) {
+      for (types::entity move : moves) {
         POKESIM_REQUIRE_NM(has<tags::UsedMove>(move));
         needsPhy |= has<move::tags::Physical>(move);
         needsSpc |= has<move::tags::Special>(move);

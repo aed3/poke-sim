@@ -37,7 +37,6 @@ struct IdealDamageValues {
       : rolls(_rolls), average({_average}), minDamage({_rolls[15]}), maxDamage({_rolls[0]}), koUses(_koUses) {}
 };
 
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]") {
   Simulation::BattleCreationInfo battleCreationInfo{};
   battleCreationInfo.runWithCalculateDamage = true;

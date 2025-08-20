@@ -91,7 +91,7 @@ void getMoveTargets(Simulation& simulation) {
   simulation.view<
     createActionMoveForTargets,
     Tags<pokesim::tags::CurrentActionMoveTarget>,
-    entt::exclude_t<CurrentActionMoves>>(simulation.pokedex());
+    entt::exclude_t<CurrentActionMovesAsTarget>>(simulation.pokedex());
 }
 
 void useMove(Simulation& simulation) {
@@ -140,7 +140,10 @@ void runCurrentAction(Simulation& simulation) {
     updateSpe(simulation);
     simulation.viewForSelectedBattles<speedSort>();  // Should only speed sort battles affected
   }
-  updateAllStats(simulation);
+  updateAtk(simulation);
+  updateDef(simulation);
+  updateSpa(simulation);
+  updateSpd(simulation);
 }
 
 void incrementTurn(Turn& turn) {

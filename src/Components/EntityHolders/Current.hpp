@@ -28,7 +28,11 @@ struct CurrentActionSource {
   types::entity val{};
 };
 
-struct CurrentActionMoves {
+struct CurrentActionMovesAsTarget {
+  types::entityVector val{};
+};
+
+struct CurrentActionMovesAsSource {
   types::entityVector val{};
 };
 

@@ -18,6 +18,7 @@
 #include <Components/Names/WeatherNames.hpp>
 #include <Components/PlayerSide.hpp>
 #include <Components/SimulationResults.hpp>
+#include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
@@ -53,13 +54,8 @@ struct Checks : pokesim::debug::Checks {
       checkSide(registry->get<Sides>(battle).p2());
     }
 
-    const types::entityVector attackers = getPokemonList(true);
-    const types::entityVector defenders = getPokemonList(false);
-
-    for (const types::entityVector& pokemonList : {attackers, defenders}) {
-      for (types::entity pokemon : pokemonList) {
-        checkPokemon(pokemon);
-      }
+    for (types::entity pokemon : getPokemonList()) {
+      checkPokemon(pokemon);
     }
 
     copyRemainingEntities();
@@ -71,19 +67,13 @@ struct Checks : pokesim::debug::Checks {
     types::entityIndex finalEntityCount = getFinalEntityCount();
     POKESIM_REQUIRE_NM(initialEntityCount == finalEntityCount);
     checkInputOutputs();
-    checkPokemonOutputs(true);
-    checkPokemonOutputs(false);
+    checkPokemonOutputs();
     checkRemainingOutputs();
   }
 
  private:
-  types::entityVector getPokemonList(bool forAttacker) const {
-    if (forAttacker) {
-      auto view = registry->view<tags::Attacker>();
-      return {view.begin(), view.end()};
-    }
-
-    auto view = registry->view<tags::Defender>();
+  types::entityVector getPokemonList() const {
+    auto view = registry->view<pokesim::tags::Pokemon, pokesim::tags::AnalyzeEffect>();
     return {view.begin(), view.end()};
   }
 
@@ -150,9 +140,8 @@ struct Checks : pokesim::debug::Checks {
     }
   }
 
-  void checkPokemonOutputs(bool forAttacker) const {
-    const types::entityVector pokemonList = getPokemonList(forAttacker);
-    for (types::entity pokemon : pokemonList) {
+  void checkPokemonOutputs() const {
+    for (types::entity pokemon : getPokemonList()) {
       pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, originalToCopy.at(pokemon));
     }
   }

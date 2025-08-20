@@ -102,12 +102,12 @@ void internal::removeFailedHitTargets(
   for (types::entity target : targets.val) {
     registry.remove<tags::CurrentActionMoveTarget>(target);
 
-    CurrentActionMoves& moves = registry.get<CurrentActionMoves>(target);
+    CurrentActionMovesAsTarget& moves = registry.get<CurrentActionMovesAsTarget>(target);
     auto newEnd = std::remove(moves.val.begin(), moves.val.end(), moveTarget.entity());
     moves.val.erase(newEnd, moves.val.end());
   }
 
-  CurrentActionMoves& moves = registry.get<CurrentActionMoves>(source.val);
+  CurrentActionMovesAsSource& moves = registry.get<CurrentActionMovesAsSource>(source.val);
   auto newEnd = std::remove(moves.val.begin(), moves.val.end(), moveTarget.entity());
   moves.val.erase(newEnd, moves.val.end());
 }

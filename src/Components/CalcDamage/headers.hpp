@@ -4,4 +4,6 @@
 
 #include "Aliases.hpp"
 #include "CriticalHit.hpp"
-#include "DamageCalcVariables.hpp"
+#include "DamageFormulaVariables.hpp"
+#include "DamageRollSides.hpp"
+#include "TemporaryMoveProperties.hpp"

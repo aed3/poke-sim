@@ -1,6 +1,7 @@
 #include "ManagePokemonState.hpp"
 
 #include <Battle/Setup/EmplaceTagFromEnum.hpp>
+#include <Components/Boosts.hpp>
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/LastUsedMove.hpp>
@@ -19,6 +20,13 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
+namespace {
+template <typename EffectiveStat, typename BoostType>
+void applyBoostToEffectiveStat(EffectiveStat& effectiveStat, BoostType boost) {
+  applyStatBoost(effectiveStat.val, boost.val);
+}
+}  // namespace
+
 void setStatus(types::handle pokemonHandle, dex::Status status) {
   clearStatus(pokemonHandle);
   pokemonHandle.emplace<StatusName>(status);
@@ -77,6 +85,15 @@ void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentAct
   }
 }
 
+void applyStatBoost(types::stat& stat, types::boost boost) {
+  if (boost >= 0) {
+    stat = types::stat(stat * MechanicConstants::STAT_BOOST_STAGES[boost]);
+  }
+  else {
+    stat = types::stat(stat / MechanicConstants::STAT_BOOST_STAGES[-boost]);
+  }
+}
+
 void updateAllStats(Simulation& simulation) {
   updateAtk(simulation);
   updateDef(simulation);
@@ -91,10 +108,9 @@ void updateAtk(Simulation& simulation) {
 
   simulation.viewForSelectedPokemon<resetEffectiveAtk>();
 
-  // apply boosts
+  simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveAtk, AtkBoost>>();
   runModifyAtk(simulation);
 
-  selectedAtkUpdateRequired.deselect();
   simulation.registry.clear<tags::AtkStatUpdateRequired>();
 }
 
@@ -104,10 +120,9 @@ void updateDef(Simulation& simulation) {
 
   simulation.viewForSelectedPokemon<resetEffectiveDef>();
 
-  // apply boosts
+  simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveDef, DefBoost>>();
   runModifyDef(simulation);
 
-  selectedDefUpdateRequired.deselect();
   simulation.registry.clear<tags::DefStatUpdateRequired>();
 }
 
@@ -117,10 +132,9 @@ void updateSpa(Simulation& simulation) {
 
   simulation.viewForSelectedPokemon<resetEffectiveSpa>();
 
-  // apply boosts
+  simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpa, SpaBoost>>();
   runModifySpa(simulation);
 
-  selectedSpaUpdateRequired.deselect();
   simulation.registry.clear<tags::SpaStatUpdateRequired>();
 }
 
@@ -130,10 +144,9 @@ void updateSpd(Simulation& simulation) {
 
   simulation.viewForSelectedPokemon<resetEffectiveSpd>();
 
-  // apply boosts
+  simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpd, SpdBoost>>();
   runModifySpd(simulation);
 
-  selectedSpdUpdateRequired.deselect();
   simulation.registry.clear<tags::SpdStatUpdateRequired>();
 }
 
@@ -143,11 +156,10 @@ void updateSpe(Simulation& simulation) {
 
   simulation.viewForSelectedPokemon<resetEffectiveSpe>();
 
-  // apply boosts
+  simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpe, SpeBoost>>();
   runModifySpe(simulation);
   // trick room
 
-  selectedSpeUpdateRequired.deselect();
   simulation.registry.clear<tags::SpeStatUpdateRequired>();
 }
 }  // namespace pokesim

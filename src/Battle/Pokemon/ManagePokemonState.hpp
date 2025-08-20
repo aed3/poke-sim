@@ -2,6 +2,7 @@
 
 #include <Types/Enums/Status.hpp>
 #include <Types/Registry.hpp>
+#include <Types/Stats.hpp>
 
 namespace pokesim {
 class Simulation;
@@ -32,6 +33,7 @@ void resetEffectiveSpd(types::handle handle, stat::Spd spd);
 void resetEffectiveSpe(types::handle handle, stat::Spe spe);
 
 void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets);
+void applyStatBoost(types::stat& stat, types::boost boost);
 
 void updateAllStats(Simulation& simulation);
 void updateAtk(Simulation& simulation);

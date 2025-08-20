@@ -33,7 +33,6 @@ InputSetup::InputSetup(types::registry& registry, types::entity entity) : handle
 
 void InputSetup::setAttacker(types::entity entity) {
   handle.emplace<Attacker>(entity);
-  handle.registry()->emplace_or_replace<tags::Attacker>(entity);
 }
 
 void InputSetup::setEffectTarget(types::entity entity) {
@@ -45,7 +44,6 @@ void InputSetup::setDefender(types::entity entity) {
     !handle.try_get<Defenders>(),
     "Calc damage only supports one defender per move. Make a new move instead.");
   handle.emplace<Defenders>().val.push_back(entity);
-  handle.registry()->emplace_or_replace<tags::Defender>(entity);
 }
 
 void InputSetup::setEffectMove(dex::Move move) {

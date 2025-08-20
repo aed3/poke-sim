@@ -9,6 +9,7 @@ struct MechanicConstants {
   static constexpr std::uint8_t TYPES_PER_POKEMON = 2U;
 
   static constexpr std::array<types::percentChance, 4U> CRIT_CHANCE_DIVISORS{24U, 8U, 2U, 1U};
+  static constexpr std::array<float, 7U> STAT_BOOST_STAGES{1.0F, 1.5F, 2.0F, 2.5F, 3.0F, 3.5F, 4.0F};
 
   // The 35%-35%-15%-15% out of 100 for 2-3-4-5 hits added so each index is the sum of the chance of its hit count and
   // the hit counts less than it so it works with the randomEventChances function
