@@ -54,8 +54,8 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
 
   pokemonSetup.setSpecies(pokemonInfo.species);
   pokemonSetup.setLevel(pokemonInfo.level);
-  if (pokemonInfo.types.has_value()) {
-    pokemonSetup.setTypes(pokemonInfo.types.value());
+  if (pokemonInfo.currentTypes.has_value()) {
+    pokemonSetup.setTypes(pokemonInfo.currentTypes.value());
   }
   else {
     pokemonSetup.setTypes(pokedex().getSpeciesData<SpeciesTypes>(pokemonInfo.species));
@@ -74,7 +74,20 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
   pokemonSetup.setStat<stat::Spa>(pokemonInfo.stats.spa);
   pokemonSetup.setStat<stat::Spd>(pokemonInfo.stats.spd);
   pokemonSetup.setStat<stat::Spe>(pokemonInfo.stats.spe);
-  pokemonSetup.setHp(pokemonInfo.hp.value_or(pokemonInfo.stats.hp));
+
+  pokemonSetup.setCurrentHp(pokemonInfo.currentHp.value_or(pokemonInfo.stats.hp));
+
+  if (pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN) {
+    pokemonSetup.setProperty<tags::Fainted>();
+  }
+
+  const auto& currentBoosts = pokemonInfo.currentBoosts;
+  if (currentBoosts.atk.has_value()) pokemonSetup.setBoost<AtkBoost>(currentBoosts.atk.value());
+  if (currentBoosts.def.has_value()) pokemonSetup.setBoost<DefBoost>(currentBoosts.def.value());
+  if (currentBoosts.spa.has_value()) pokemonSetup.setBoost<SpaBoost>(currentBoosts.spa.value());
+  if (currentBoosts.spd.has_value()) pokemonSetup.setBoost<SpdBoost>(currentBoosts.spd.value());
+  if (currentBoosts.spe.has_value()) pokemonSetup.setBoost<SpeBoost>(currentBoosts.spe.value());
+
   pokemonSetup.setProperty<tags::AtkStatUpdateRequired>();
   pokemonSetup.setProperty<tags::DefStatUpdateRequired>();
   pokemonSetup.setProperty<tags::SpaStatUpdateRequired>();
@@ -92,9 +105,11 @@ void Simulation::createInitialSide(
   for (std::size_t i = 0U; i < sideInfo.team.size(); i++) {
     const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];
     PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonInfo);
-    if (
-      battleInfo.turn > 0U && !pokemonInfo.fainted &&
-      (i == 0U || (battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT && i == 1U))) {
+    bool battleStarted = battleInfo.turn > MechanicConstants::TurnCount::MIN;
+    bool inActiveSlot = (battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT ? 1U : 2U) > i;
+    bool isFainted =
+      pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN;
+    if (battleStarted && inActiveSlot && isFainted) {
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
 

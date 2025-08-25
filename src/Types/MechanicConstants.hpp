@@ -39,6 +39,12 @@ struct MechanicConstants {
     static constexpr std::uint16_t MIN = 1U;
   };
 
+  struct PokemonCurrentHpStat {
+    // TODO(aed3): Should this be doubled for dynamax or should that be a different value?
+    static constexpr std::uint16_t MAX = 1428U;
+    static constexpr std::uint16_t MIN = 0U;
+  };
+
   struct PokemonStat {
     static constexpr std::uint16_t MAX = 633U;
     static constexpr std::uint16_t MIN = 1U;

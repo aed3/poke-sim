@@ -43,7 +43,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   void setSide(types::entity entity);
   void setBattle(types::entity entity);
 
-  void setHp(types::stat hp);
+  void setCurrentHp(types::stat hp);
   void setTypes(SpeciesTypes types);
   void setLevel(types::level level);
   void setGender(dex::Gender gender);

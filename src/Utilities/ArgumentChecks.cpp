@@ -1044,7 +1044,7 @@ void check(const stat::Spe& spe) {
 
 template <>
 void check(const stat::CurrentHp& hp) {
-  checkEffectiveStat(hp.val, true);
+  checkBounds<MechanicConstants::PokemonCurrentHpStat>(hp.val);
 }
 
 template <>

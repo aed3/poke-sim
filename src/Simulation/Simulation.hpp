@@ -50,16 +50,11 @@ class Simulation : public internal::RegistryContainer {
 
   struct PokemonCreationInfo {
     std::optional<types::stateId> id = std::nullopt;
-    std::optional<types::stat> hp = std::nullopt;
     dex::Species species = dex::Species::NO_SPECIES;
-    std::optional<SpeciesTypes> types = std::nullopt;
     dex::Item item = dex::Item::NO_ITEM;
     dex::Ability ability = dex::Ability::NO_ABILITY;
     dex::Gender gender = dex::Gender::NO_GENDER;
-    dex::Status status = dex::Status::NO_STATUS;
     types::level level = MechanicConstants::PokemonLevel::MIN;
-
-    bool fainted = false;
 
     dex::Nature nature = dex::Nature::NO_NATURE;
     Evs evs;
@@ -74,6 +69,18 @@ class Simulation : public internal::RegistryContainer {
     } stats;
 
     std::vector<MoveCreationInfo> moves{};
+
+    std::optional<types::stat> currentHp = std::nullopt;
+    std::optional<SpeciesTypes> currentTypes = std::nullopt;
+    dex::Status status = dex::Status::NO_STATUS;
+
+    struct {
+      std::optional<types::boost> atk = std::nullopt;
+      std::optional<types::boost> def = std::nullopt;
+      std::optional<types::boost> spa = std::nullopt;
+      std::optional<types::boost> spd = std::nullopt;
+      std::optional<types::boost> spe = std::nullopt;
+    } currentBoosts;
   };
 
   struct SideCreationInfo {

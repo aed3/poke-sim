@@ -42,6 +42,16 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
   battleCreationInfo.runWithCalculateDamage = true;
   Simulation simulation = createSingleBattleSimulation(battleCreationInfo);
 
+  bool useSpecsInsteadOfBoost = GENERATE(false, true);
+  if (useSpecsInsteadOfBoost) {
+    battleCreationInfo.p2.team[0].item = dex::Item::CHOICE_SPECS;
+    battleCreationInfo.p2.team[0].currentBoosts.spa = 0U;
+  }
+  else {
+    battleCreationInfo.p2.team[0].item = dex::Item::NO_ITEM;
+    battleCreationInfo.p2.team[0].currentBoosts.spa = 1U;
+  }
+
   battleCreationInfo.damageCalculations = {
     {Slot::P1A, Slot::P2A, {dex::Move::FURY_ATTACK}},
     {Slot::P2A, Slot::P1A, {dex::Move::THUNDERBOLT}},
@@ -71,7 +81,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
   damageRollOptions.p1 = GENERATE(from_range(damageRollKindCombinations));
   damageRollOptions.p2 = GENERATE(from_range(damageRollKindCombinations));
 
-  CAPTURE(getKoUses, calculateUpToFoeHp, damageRollOptions.p1, damageRollOptions.p2);
+  CAPTURE(useSpecsInsteadOfBoost, getKoUses, calculateUpToFoeHp, damageRollOptions.p1, damageRollOptions.p2);
 
   auto& options = simulation.calculateDamageOptions;
   options.calculateUpToFoeHp = calculateUpToFoeHp;

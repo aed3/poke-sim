@@ -21,5 +21,9 @@ struct SpeciesTypes {
     return 2U;
   }
   constexpr bool has(dex::Type type) const { return type1() == type || type2() == type; }
+
+  constexpr bool operator==(const SpeciesTypes& other) const {
+    return type1() == other.type1() && type2() == other.type2();
+  }
 };
 }  // namespace pokesim

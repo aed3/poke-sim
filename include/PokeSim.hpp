@@ -17698,6 +17698,12 @@ struct MechanicConstants {
     static constexpr std::uint16_t MIN = 1U;
   };
 
+  struct PokemonCurrentHpStat {
+    // TODO(aed3): Should this be doubled for dynamax or should that be a different value?
+    static constexpr std::uint16_t MAX = 1428U;
+    static constexpr std::uint16_t MIN = 0U;
+  };
+
   struct PokemonStat {
     static constexpr std::uint16_t MAX = 633U;
     static constexpr std::uint16_t MIN = 1U;
@@ -19808,6 +19814,10 @@ struct SpeciesTypes {
     return 2U;
   }
   constexpr bool has(dex::Type type) const { return type1() == type || type2() == type; }
+
+  constexpr bool operator==(const SpeciesTypes& other) const {
+    return type1() == other.type1() && type2() == other.type2();
+  }
 };
 }  // namespace pokesim
 
@@ -21910,7 +21920,7 @@ inline void check(const stat::Spe& spe) {
 
 template <>
 inline void check(const stat::CurrentHp& hp) {
-  checkEffectiveStat(hp.val, true);
+  checkBounds<MechanicConstants::PokemonCurrentHpStat>(hp.val);
 }
 
 template <>
@@ -22482,7 +22492,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   inline void setSide(types::entity entity);
   inline void setBattle(types::entity entity);
 
-  inline void setHp(types::stat hp);
+  inline void setCurrentHp(types::stat hp);
   inline void setTypes(SpeciesTypes types);
   inline void setLevel(types::level level);
   inline void setGender(dex::Gender gender);
@@ -23721,16 +23731,11 @@ class Simulation : public internal::RegistryContainer {
 
   struct PokemonCreationInfo {
     std::optional<types::stateId> id = std::nullopt;
-    std::optional<types::stat> hp = std::nullopt;
     dex::Species species = dex::Species::NO_SPECIES;
-    std::optional<SpeciesTypes> types = std::nullopt;
     dex::Item item = dex::Item::NO_ITEM;
     dex::Ability ability = dex::Ability::NO_ABILITY;
     dex::Gender gender = dex::Gender::NO_GENDER;
-    dex::Status status = dex::Status::NO_STATUS;
     types::level level = MechanicConstants::PokemonLevel::MIN;
-
-    bool fainted = false;
 
     dex::Nature nature = dex::Nature::NO_NATURE;
     Evs evs;
@@ -23745,6 +23750,18 @@ class Simulation : public internal::RegistryContainer {
     } stats;
 
     std::vector<MoveCreationInfo> moves{};
+
+    std::optional<types::stat> currentHp = std::nullopt;
+    std::optional<SpeciesTypes> currentTypes = std::nullopt;
+    dex::Status status = dex::Status::NO_STATUS;
+
+    struct {
+      std::optional<types::boost> atk = std::nullopt;
+      std::optional<types::boost> def = std::nullopt;
+      std::optional<types::boost> spa = std::nullopt;
+      std::optional<types::boost> spd = std::nullopt;
+      std::optional<types::boost> spe = std::nullopt;
+    } currentBoosts;
   };
 
   struct SideCreationInfo {
@@ -24076,6 +24093,41 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == move.pp);
       POKESIM_REQUIRE_NM(registry->get<MaxPp>(moveEntity).val == move.maxPp);
       pokesim::debug::checkMoveSlot(moveEntity, *registry);
+    }
+
+    if (creationInfo.currentHp.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<stat::CurrentHp>(pokemonEntity).val == creationInfo.currentHp);
+      if (creationInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN) {
+        POKESIM_REQUIRE_NM(registry->all_of<tags::Fainted>(pokemonEntity));
+      }
+      else {
+        POKESIM_REQUIRE_NM(!registry->all_of<tags::Fainted>(pokemonEntity));
+      }
+    }
+    else {
+      POKESIM_REQUIRE_NM(registry->get<stat::CurrentHp>(pokemonEntity).val == hp.val);
+      POKESIM_REQUIRE_NM(!registry->all_of<tags::Fainted>(pokemonEntity));
+    }
+
+    if (creationInfo.currentTypes.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpeciesTypes>(pokemonEntity) == creationInfo.currentTypes);
+    }
+
+    const auto& currentBoosts = creationInfo.currentBoosts;
+    if (currentBoosts.atk.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<AtkBoost>(pokemonEntity).val == currentBoosts.atk.value());
+    }
+    if (currentBoosts.def.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<DefBoost>(pokemonEntity).val == currentBoosts.def.value());
+    }
+    if (currentBoosts.spa.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpaBoost>(pokemonEntity).val == currentBoosts.spa.value());
+    }
+    if (currentBoosts.spd.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpdBoost>(pokemonEntity).val == currentBoosts.spd.value());
+    }
+    if (currentBoosts.spe.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpeBoost>(pokemonEntity).val == currentBoosts.spe.value());
     }
 
     pokesim::debug::checkPokemon(pokemonEntity, *registry);
@@ -24437,8 +24489,8 @@ inline PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationI
 
   pokemonSetup.setSpecies(pokemonInfo.species);
   pokemonSetup.setLevel(pokemonInfo.level);
-  if (pokemonInfo.types.has_value()) {
-    pokemonSetup.setTypes(pokemonInfo.types.value());
+  if (pokemonInfo.currentTypes.has_value()) {
+    pokemonSetup.setTypes(pokemonInfo.currentTypes.value());
   }
   else {
     pokemonSetup.setTypes(pokedex().getSpeciesData<SpeciesTypes>(pokemonInfo.species));
@@ -24457,7 +24509,20 @@ inline PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationI
   pokemonSetup.setStat<stat::Spa>(pokemonInfo.stats.spa);
   pokemonSetup.setStat<stat::Spd>(pokemonInfo.stats.spd);
   pokemonSetup.setStat<stat::Spe>(pokemonInfo.stats.spe);
-  pokemonSetup.setHp(pokemonInfo.hp.value_or(pokemonInfo.stats.hp));
+
+  pokemonSetup.setCurrentHp(pokemonInfo.currentHp.value_or(pokemonInfo.stats.hp));
+
+  if (pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN) {
+    pokemonSetup.setProperty<tags::Fainted>();
+  }
+
+  const auto& currentBoosts = pokemonInfo.currentBoosts;
+  if (currentBoosts.atk.has_value()) pokemonSetup.setBoost<AtkBoost>(currentBoosts.atk.value());
+  if (currentBoosts.def.has_value()) pokemonSetup.setBoost<DefBoost>(currentBoosts.def.value());
+  if (currentBoosts.spa.has_value()) pokemonSetup.setBoost<SpaBoost>(currentBoosts.spa.value());
+  if (currentBoosts.spd.has_value()) pokemonSetup.setBoost<SpdBoost>(currentBoosts.spd.value());
+  if (currentBoosts.spe.has_value()) pokemonSetup.setBoost<SpeBoost>(currentBoosts.spe.value());
+
   pokemonSetup.setProperty<tags::AtkStatUpdateRequired>();
   pokemonSetup.setProperty<tags::DefStatUpdateRequired>();
   pokemonSetup.setProperty<tags::SpaStatUpdateRequired>();
@@ -24475,9 +24540,11 @@ inline void Simulation::createInitialSide(
   for (std::size_t i = 0U; i < sideInfo.team.size(); i++) {
     const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];
     PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonInfo);
-    if (
-      battleInfo.turn > 0U && !pokemonInfo.fainted &&
-      (i == 0U || (battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT && i == 1U))) {
+    bool battleStarted = battleInfo.turn > MechanicConstants::TurnCount::MIN;
+    bool inActiveSlot = (battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT ? 1U : 2U) > i;
+    bool isFainted =
+      pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN;
+    if (battleStarted && inActiveSlot && isFainted) {
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
 
@@ -29261,7 +29328,7 @@ inline void PokemonStateSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
 }
 
-inline void PokemonStateSetup::setHp(types::stat hp) {
+inline void PokemonStateSetup::setCurrentHp(types::stat hp) {
   handle.emplace<stat::CurrentHp>(hp);
 }
 

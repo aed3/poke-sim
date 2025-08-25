@@ -200,6 +200,41 @@ struct SimulationSetupChecks {
       pokesim::debug::checkMoveSlot(moveEntity, *registry);
     }
 
+    if (creationInfo.currentHp.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<stat::CurrentHp>(pokemonEntity).val == creationInfo.currentHp);
+      if (creationInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN) {
+        POKESIM_REQUIRE_NM(registry->all_of<tags::Fainted>(pokemonEntity));
+      }
+      else {
+        POKESIM_REQUIRE_NM(!registry->all_of<tags::Fainted>(pokemonEntity));
+      }
+    }
+    else {
+      POKESIM_REQUIRE_NM(registry->get<stat::CurrentHp>(pokemonEntity).val == hp.val);
+      POKESIM_REQUIRE_NM(!registry->all_of<tags::Fainted>(pokemonEntity));
+    }
+
+    if (creationInfo.currentTypes.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpeciesTypes>(pokemonEntity) == creationInfo.currentTypes);
+    }
+
+    const auto& currentBoosts = creationInfo.currentBoosts;
+    if (currentBoosts.atk.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<AtkBoost>(pokemonEntity).val == currentBoosts.atk.value());
+    }
+    if (currentBoosts.def.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<DefBoost>(pokemonEntity).val == currentBoosts.def.value());
+    }
+    if (currentBoosts.spa.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpaBoost>(pokemonEntity).val == currentBoosts.spa.value());
+    }
+    if (currentBoosts.spd.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpdBoost>(pokemonEntity).val == currentBoosts.spd.value());
+    }
+    if (currentBoosts.spe.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpeBoost>(pokemonEntity).val == currentBoosts.spe.value());
+    }
+
     pokesim::debug::checkPokemon(pokemonEntity, *registry);
   }
 
