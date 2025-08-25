@@ -45,11 +45,11 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
   bool useSpecsInsteadOfBoost = GENERATE(false, true);
   if (useSpecsInsteadOfBoost) {
     battleCreationInfo.p2.team[0].item = dex::Item::CHOICE_SPECS;
-    battleCreationInfo.p2.team[0].currentBoosts.spa = 0U;
+    battleCreationInfo.p2.team[0].currentBoosts.spa = (types::boost)0U;
   }
   else {
     battleCreationInfo.p2.team[0].item = dex::Item::NO_ITEM;
-    battleCreationInfo.p2.team[0].currentBoosts.spa = 1U;
+    battleCreationInfo.p2.team[0].currentBoosts.spa = (types::boost)1U;
   }
 
   battleCreationInfo.damageCalculations = {
