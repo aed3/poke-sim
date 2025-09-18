@@ -984,8 +984,8 @@ void check(const action::Team& team) {
 }
 
 template <>
-void check(const simulate_turn::TurnOutcomeBattles& teamOutcomBattles, const types::registry& registry) {
-  for (types::entity entity : teamOutcomBattles.val) {
+void check(const simulate_turn::TurnOutcomeBattles& teamOutcomeBattles, const types::registry& registry) {
+  for (types::entity entity : teamOutcomeBattles.val) {
     checkBattle(entity, registry);
   }
 }
