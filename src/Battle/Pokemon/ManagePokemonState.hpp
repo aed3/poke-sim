@@ -7,7 +7,7 @@
 namespace pokesim {
 class Simulation;
 struct CurrentActionSource;
-struct CurrentActionTargets;
+struct CurrentActionTarget;
 struct CurrentActionMoveSlot;
 struct Damage;
 struct Pp;
@@ -21,19 +21,22 @@ struct Spe;
 struct CurrentHp;
 }  // namespace stat
 
-void setStatus(types::handle pokemonHandle, dex::Status status);
+void checkIfStatusIsSettable(Simulation& simulation);
+void trySetStatus(Simulation& simulation);
 void clearStatus(types::handle pokemonHandle);
 
 void deductPp(Pp& pp);
-void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMoveSlot& move);
+void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move);
 void resetEffectiveAtk(types::handle handle, stat::Atk atk);
 void resetEffectiveDef(types::handle handle, stat::Def def);
 void resetEffectiveSpa(types::handle handle, stat::Spa spa);
 void resetEffectiveSpd(types::handle handle, stat::Spd spd);
 void resetEffectiveSpe(types::handle handle, stat::Spe spe);
 
-void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets);
+void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTarget target);
 void applyStatBoost(types::stat& stat, types::boost boost);
+
+void tryBoost(Simulation& simulation);
 
 void updateAllStats(Simulation& simulation);
 void updateAtk(Simulation& simulation);

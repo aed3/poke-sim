@@ -273,7 +273,7 @@ struct VerticalSlice1Checks : debug::Checks {
 
   void checkPokemon() const {
     debug::TypesToIgnore typesToIgnore;
-    typesToIgnore.add<stat::CurrentHp, LastUsedMove>();
+    typesToIgnore.add<stat::CurrentHp, LastUsedMove, StatusName, status::tags::Paralysis>();
 
     specificallyCheckEntities<tags::Pokemon>(typesToIgnore);
   }
@@ -345,12 +345,20 @@ struct DamageValueInfo {
   types::damage averageCritDamage;
   types::stat startingHp;
   DamageRollKind damageRollKind;
+  bool checkParalysisChance;
   bool checkWasCrit;
   bool willChooseMinOrMax;
 
+  static auto constexpr MIN_PROBABILITY = MechanicConstants::Probability::MIN;
+  static auto constexpr MIN_PERCENT_CHANCE = MechanicConstants::PercentChance::MIN;
+  static auto constexpr MAX_PERCENT_CHANCE = MechanicConstants::PercentChance::MAX;
+  static auto constexpr CRIT_CHANCE = MechanicConstants::CRIT_CHANCE_DIVISORS[0];
+  static auto constexpr THUNDERBOLT_PAR_CHANCE =
+    dex::Thunderbolt<GameMechanics::SCARLET_VIOLET>::targetSecondaryEffect::chance;
+
  public:
   DamageValueInfo(
-    const std::vector<types::damage>& _baseDamage, types::damage _averageRegularDamage,
+    PlayerSideId sideId, const std::vector<types::damage>& _baseDamage, types::damage _averageRegularDamage,
     const std::vector<types::damage>& _critDamage, types::damage _averageCritDamage, types::stat _startingHp,
     DamageRollKind _damageRollKind, const simulate_turn::Options& options)
       : baseDamage(_baseDamage),
@@ -359,19 +367,22 @@ struct DamageValueInfo {
         averageCritDamage(_averageCritDamage),
         startingHp(_startingHp),
         damageRollKind(_damageRollKind),
-        checkWasCrit(
-          options.branchProbabilityLowerLimit.value_or(MechanicConstants::Probability::MIN) <
-          1.0F / MechanicConstants::CRIT_CHANCE_DIVISORS[0]),
+        checkParalysisChance(sideId == PlayerSideId::P2),
+        checkWasCrit(true),
         willChooseMinOrMax(options.makeBranchesOnRandomEvents) {
-    checkWasCrit &= options.randomChanceLowerLimit.value_or(MechanicConstants::PercentChance::MIN) <
-                    MechanicConstants::PercentChance::MAX / MechanicConstants::CRIT_CHANCE_DIVISORS[0];
+    auto lowerLimit = options.randomChanceLowerLimit.value_or(MIN_PERCENT_CHANCE);
+    auto upperLimit = options.randomChanceUpperLimit.value_or(MAX_PERCENT_CHANCE);
+    auto branchProbabilityLowerLimit = options.branchProbabilityLowerLimit.value_or(MIN_PROBABILITY);
+
+    checkParalysisChance &= branchProbabilityLowerLimit < 1.0F / THUNDERBOLT_PAR_CHANCE;
+    checkWasCrit &= branchProbabilityLowerLimit < 1.0F / CRIT_CHANCE;
+
+    checkParalysisChance &= lowerLimit < MAX_PERCENT_CHANCE / THUNDERBOLT_PAR_CHANCE;
+    checkWasCrit &= lowerLimit < MAX_PERCENT_CHANCE / CRIT_CHANCE;
     checkWasCrit &= damageRollKind != branchingDamageRollOptions[1];
 
-    willChooseMinOrMax |= options.branchProbabilityLowerLimit.value_or(MechanicConstants::Probability::MIN) < 0.5F &&
-                          options.randomChanceLowerLimit.value_or(MechanicConstants::PercentChance::MIN) <
-                            (MechanicConstants::PercentChance::MAX / 2U) &&
-                          options.randomChanceUpperLimit.value_or(MechanicConstants::PercentChance::MAX) >
-                            (MechanicConstants::PercentChance::MAX / 2U);
+    willChooseMinOrMax |= branchProbabilityLowerLimit < 0.5F && lowerLimit < (MAX_PERCENT_CHANCE / 2U) &&
+                          upperLimit > (MAX_PERCENT_CHANCE / 2U);
     willChooseMinOrMax &= damageRollKind == branchingDamageRollOptions[2];
   }
 
@@ -434,6 +445,9 @@ struct DamageValueInfo {
     if (checkWasCrit) {
       count++;
     }
+    if (checkParalysisChance) {
+      count *= 2U;
+    }
     if (willChooseMinOrMax) {
       count *= 2U;
     }
@@ -444,7 +458,7 @@ struct DamageValueInfo {
     return count;
   }
 
-  types::probability getProbability(types::stat afterTurnHp) const {
+  types::probability getProbability(types::stat afterTurnHp, bool causedParalysisFromThunderbolt) const {
     types::damage damage = startingHp - afterTurnHp;
     types::probability baseDamageRollInstances =
       (types::probability)std::count(baseDamage.begin(), baseDamage.end(), damage);
@@ -455,10 +469,19 @@ struct DamageValueInfo {
     types::probability probability = 1.0F;
     if (checkWasCrit) {
       if (critDamageRollInstances != 0.0F) {
-        probability /= MechanicConstants::CRIT_CHANCE_DIVISORS[0];
+        probability /= CRIT_CHANCE;
       }
       else {
-        probability *= 1.0F - 1.0F / MechanicConstants::CRIT_CHANCE_DIVISORS[0];
+        probability *= 1.0F - 1.0F / CRIT_CHANCE;
+      }
+    }
+
+    if (checkParalysisChance) {
+      if (causedParalysisFromThunderbolt) {
+        probability *= THUNDERBOLT_PAR_CHANCE / (types::probability)(MAX_PERCENT_CHANCE);
+      }
+      else {
+        probability *= 1.0F - (THUNDERBOLT_PAR_CHANCE / (types::probability)(MAX_PERCENT_CHANCE));
       }
     }
 
@@ -476,6 +499,8 @@ struct DamageValueInfo {
 
     return probability;
   }
+
+  bool mightCauseParalysis() const { return checkParalysisChance; }
 };
 
 TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
@@ -494,6 +519,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   Simulation simulation = createSingleBattleSimulation(battleCreationInfo);
   auto& p1Info = battleCreationInfo.p1.team[0];
   auto& p2Info = battleCreationInfo.p2.team[0];
+  p1Info.status = dex::Status::NO_STATUS;
   p2Info.item = dex::Item::NO_ITEM;
   p2Info.nature = dex::Nature::HARDY;
   p2Info.stats = {295U, 165U, 190U, 255U, 210U, 145U};
@@ -542,6 +568,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   options.damageRollsConsidered = damageRollOptions;
 
   const DamageValueInfo p1DamageInfo(
+    PlayerSideId::P1,
     {174U, 170U, 168U, 168U, 164U, 164U, 162U, 158U, 158U, 156U, 156U, 152U, 152U, 150U, 146U, 146U},  // 10
     158U,
     {260U, 258U, 254U, 252U, 248U, 246U, 242U, 240U, 240U, 236U, 234U, 230U, 228U, 224U, 222U, 218U},  // 15
@@ -551,6 +578,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
     options);
 
   const DamageValueInfo p2DamageInfo(
+    PlayerSideId::P2,
     {52U, 51U, 50U, 50U, 49U, 49U, 48U, 48U, 47U, 47U, 46U, 46U, 45U, 45U, 44U, 44U},  // 9
     48U,
     {78U, 77U, 76U, 75U, 74U, 74U, 73U, 72U, 71U, 70U, 70U, 69U, 68U, 67U, 67U, 66U},  // 13
@@ -615,6 +643,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
     types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[1];
     types::entity p2Move = registry.get<MoveSlots>(p2Pokemon).val[0];
 
+    bool p1Paralyzed = registry.all_of<status::tags::Paralysis>(p1Pokemon);
     const auto& [p1Hp, p1LastUsedMove] = registry.get<stat::CurrentHp, LastUsedMove>(p1Pokemon);
     const auto& [p2Hp, p2LastUsedMove] = registry.get<stat::CurrentHp, LastUsedMove>(p2Pokemon);
     const Pp& p1Pp = registry.get<Pp>(p1Move);
@@ -644,7 +673,18 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
     REQUIRE(p1Pp.val == (p1Info.moves[1].pp - 1U));
     REQUIRE(p2Pp.val == (p2Info.moves[0].pp - 1U));
 
-    CAPTURE(p1Hp.val, p2Hp.val, expectedP1Hp, expectedP2Hp);
+    if (!p2DamageInfo.mightCauseParalysis()) {
+      REQUIRE_FALSE(registry.all_of<StatusName>(p1Pokemon));
+      REQUIRE_FALSE(p1Paralyzed);
+    }
+    else if (p1Paralyzed) {
+      REQUIRE(registry.get<StatusName>(p1Pokemon).name == dex::Status::PAR);
+    }
+
+    REQUIRE_FALSE(registry.all_of<StatusName>(p2Pokemon));
+    REQUIRE_FALSE(registry.all_of<status::tags::Paralysis>(p2Pokemon));
+
+    CAPTURE(p1Paralyzed, p1Hp.val, p2Hp.val, expectedP1Hp, expectedP2Hp);
 
     REQUIRE(expectedP1Hp.contains(p1Hp.val));
     REQUIRE(expectedP2Hp.contains(p2Hp.val));
@@ -652,7 +692,8 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
     foundP1Hp.insert(p1Hp.val);
     foundP2Hp.insert(p2Hp.val);
 
-    types::probability idealProbability = p1DamageInfo.getProbability(p1Hp.val) * p2DamageInfo.getProbability(p2Hp.val);
+    types::probability idealProbability =
+      p1DamageInfo.getProbability(p1Hp.val, false) * p2DamageInfo.getProbability(p2Hp.val, p1Paralyzed);
     REQUIRE_THAT(probability.val, Catch::Matchers::WithinRel(idealProbability));
   }
 

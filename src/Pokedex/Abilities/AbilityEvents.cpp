@@ -4,9 +4,11 @@
 
 #include "headers.hpp"
 
-namespace pokesim::dex {
-void internal::StaticEvents::onDamagingHit(Simulation& /*simulation*/) {}
-void internal::StaticEvents::onModifySpe(stat::EffectiveSpe& effectiveSpe) {
+namespace pokesim::dex::internal {
+void PlusEvents::onModifySpA(types::handle, EventModifier&) {}
+
+void StaticEvents::onDamagingHit(Simulation&) {}
+void StaticEvents::onModifySpe(stat::EffectiveSpe& effectiveSpe) {
   effectiveSpe.val /= 2U;
 }
-}  // namespace pokesim::dex
+}  // namespace pokesim::dex::internal

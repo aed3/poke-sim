@@ -40,10 +40,7 @@ void InputSetup::setEffectTarget(types::entity entity) {
 }
 
 void InputSetup::setDefender(types::entity entity) {
-  POKESIM_REQUIRE(
-    !handle.try_get<Defenders>(),
-    "Calc damage only supports one defender per move. Make a new move instead.");
-  handle.emplace<Defenders>().val.push_back(entity);
+  handle.emplace<Defender>(entity);
 }
 
 void InputSetup::setEffectMove(dex::Move move) {

@@ -155,10 +155,10 @@ std::tuple<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(
   if (battleInfo.runWithSimulateTurn) {
     battleStateSetup.setProperty<tags::SimulateTurn>();
   }
-  if (battleInfo.runWithCalculateDamage) {
+  if (battleInfo.runWithCalculateDamage || !battleInfo.damageCalculations.empty()) {
     battleStateSetup.setProperty<tags::CalculateDamage>();
   }
-  if (battleInfo.runWithAnalyzeEffect) {
+  if (battleInfo.runWithAnalyzeEffect || !battleInfo.effectsToAnalyze.empty()) {
     battleStateSetup.setProperty<tags::AnalyzeEffect>();
   }
 
@@ -216,6 +216,7 @@ void Simulation::createAnalyzeEffectInput(
   POKESIM_REQUIRE(inputInfo.defenderSlot != Slot::NONE, "An effect analysis must have a defender.");
   POKESIM_REQUIRE(inputInfo.effectTarget != Slot::NONE, "An effect analysis must have a effect target.");
   POKESIM_REQUIRE(!inputInfo.moves.empty(), "An effect analysis must include a move.");
+
   const auto& effect = inputInfo.effect;
   const auto& boostEffect = inputInfo.boostEffect;
   POKESIM_REQUIRE(

@@ -67,7 +67,7 @@ void clearRunVariables(Simulation& simulation) {
 }
 
 void checkForAndApplyStab(
-  types::handle moveHandle, const Attacker& attacker, const TypeName& type, DamageRollModifiers& modifier) {
+  types::handle moveHandle, const Attacker& attacker, TypeName type, DamageRollModifiers& modifier) {
   const SpeciesTypes& attackerTypes = moveHandle.registry()->get<SpeciesTypes>(attacker.val);
 
   if (attackerTypes.has(type.name)) {
@@ -76,9 +76,8 @@ void checkForAndApplyStab(
 }
 
 void checkForAndApplyTypeEffectiveness(
-  types::handle moveHandle, const Defenders& defenders, const TypeName& type, DamageRollModifiers& modifier,
-  const Pokedex& pokedex) {
-  const SpeciesTypes& defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defenders.only());
+  types::handle moveHandle, Defender defender, TypeName type, DamageRollModifiers& modifier, const Pokedex& pokedex) {
+  const SpeciesTypes& defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defender.val);
 
   modifier.typeEffectiveness = getAttackEffectiveness(defenderTypes, type.name, pokedex.typeChart());
 }
@@ -99,9 +98,9 @@ void setDamageToMinimumPossible(Damage& damage) {
   damage.val = std::max(damage.val, MechanicConstants::Damage::MIN);
 }
 
-void setDefendingSide(types::handle moveHandle, const Defenders& defenders) {
+void setDefendingSide(types::handle moveHandle, Defender defender) {
   types::registry& registry = *moveHandle.registry();
-  PlayerSideId playerSide = registry.get<PlayerSide>(registry.get<Side>(defenders.only()).val).val;
+  PlayerSideId playerSide = registry.get<PlayerSide>(registry.get<Side>(defender.val).val).val;
   switch (playerSide) {
     case PlayerSideId::NONE: {
       POKESIM_REQUIRE_FAIL("Player side wasn't set properly.");
@@ -140,7 +139,7 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
   setDamageToMinimumPossible(damage);
 }
 
-void calculateAllDamageRolls(DamageRolls& damageRolls, const Damage& damage, const DamageRollModifiers& modifier) {
+void calculateAllDamageRolls(DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier) {
   damageRolls.val.reserve(MechanicConstants::DamageRollCount::MAX);
   for (types::damageRollIndex i = 0U; i < MechanicConstants::DamageRollCount::MAX; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
@@ -167,26 +166,26 @@ void applyDamageRollModifier(DamageRolls& damageRolls, Damage damage, const Dama
 }
 
 void reduceDamageRollsToDefenderHp(
-  types::handle moveHandle, DamageRolls& damageRolls, Damage& damage, const Defenders& defenders) {
-  const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defenders.only());
+  types::handle moveHandle, DamageRolls& damageRolls, Damage& damage, Defender defender) {
+  const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
   for (auto& damageRoll : damageRolls.val) {
     damageRoll.val = std::min(defenderHp.val, damageRoll.val);
   }
   damage.val = std::min(defenderHp.val, damage.val);
 }
 
-void assignCritChanceDivisor(types::handle moveHandle, const CritBoost& critBoost) {
+void assignCritChanceDivisor(types::handle moveHandle, CritBoost critBoost) {
   std::size_t index =
     std::min((std::size_t)critBoost.val, pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS.size() - 1U);
   moveHandle.emplace<CritChanceDivisor>(pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS[index]);
 }
 
-void setSourceLevel(types::handle moveHandle, const Attacker& attacker) {
+void setSourceLevel(types::handle moveHandle, Attacker attacker) {
   moveHandle.emplace<AttackingLevel>(moveHandle.registry()->get<Level>(attacker.val).val);
 }
 
 template <typename Category>
-void setUsedAttackStat(types::handle moveHandle, const Attacker& attacker) {
+void setUsedAttackStat(types::handle moveHandle, Attacker attacker) {
   types::stat attackingStat = MechanicConstants::PokemonEffectiveStat::MIN;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     attackingStat = moveHandle.registry()->get<stat::EffectiveAtk>(attacker.val).val;
@@ -200,14 +199,14 @@ void setUsedAttackStat(types::handle moveHandle, const Attacker& attacker) {
 }
 
 template <typename Category>
-void setUsedDefenseStat(types::handle moveHandle, const Defenders& defenders) {
+void setUsedDefenseStat(types::handle moveHandle, Defender defender) {
   types::stat defendingStat = MechanicConstants::PokemonEffectiveStat::MIN;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
-    defendingStat = moveHandle.registry()->get<stat::EffectiveDef>(defenders.only()).val;
+    defendingStat = moveHandle.registry()->get<stat::EffectiveDef>(defender.val).val;
     moveHandle.emplace<tags::UsesDef>();
   }
   else {
-    defendingStat = moveHandle.registry()->get<stat::EffectiveSpd>(defenders.only()).val;
+    defendingStat = moveHandle.registry()->get<stat::EffectiveSpd>(defender.val).val;
     moveHandle.emplace<tags::UsesSpd>();
   }
   moveHandle.emplace<DefendingStat>(defendingStat);
@@ -222,23 +221,22 @@ void setIgnoreAttackingBoostIfNegative(types::handle moveHandle, Attacker attack
 }
 
 template <typename BoostType>
-void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, const Defenders& defenders) {
-  BoostType* boost = moveHandle.registry()->try_get<BoostType>(defenders.only());
+void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, Defender defender) {
+  BoostType* boost = moveHandle.registry()->try_get<BoostType>(defender.val);
   if (boost && boost->val > MechanicConstants::PokemonStatBoost::BASE) {
     moveHandle.emplace<tags::IgnoresDefendingBoost>();
   }
 }
 
 void calculateBaseDamage(
-  types::handle moveHandle, const BasePower& basePower, const AttackingLevel& level, const AttackingStat& attack,
-  const DefendingStat& defense) {
+  types::handle moveHandle, BasePower basePower, AttackingLevel level, AttackingStat attack, DefendingStat defense) {
   // NOLINTNEXTLINE(readability-magic-numbers)
   types::damage damage = ((((2U * level.val / 5U + 2U) * basePower.val * attack.val) / defense.val) / 50U) + 2U;
   moveHandle.emplace<Damage>(damage);
 }
 
-void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, const Defenders& defender) {
-  const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.only());
+void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, Defender defender) {
+  const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
   UsesUntilKo usesUntilKo;
   POKESIM_REQUIRE(
     damageRolls.val.size() == MechanicConstants::DamageRollCount::MAX,
@@ -395,9 +393,9 @@ void saveRealEffectiveAttackerStat(types::registry& registry, Attacker attacker)
 }
 
 template <typename EffectiveStat>
-void saveRealEffectiveDefenderStat(types::registry& registry, const Defenders& defenders) {
-  EffectiveStat effectiveStat = registry.get<EffectiveStat>(defenders.only());
-  registry.emplace<RealEffectiveStat>(defenders.only(), effectiveStat.val);
+void saveRealEffectiveDefenderStat(types::registry& registry, Defender defender) {
+  EffectiveStat effectiveStat = registry.get<EffectiveStat>(defender.val);
+  registry.emplace<RealEffectiveStat>(defender.val, effectiveStat.val);
 }
 
 template <typename EffectiveStat>
@@ -408,9 +406,8 @@ void resetEffectiveAndAttackingStat(types::registry& registry, Attacker attacker
 }
 
 template <typename EffectiveStat>
-void resetEffectiveAndDefendingStat(
-  types::registry& registry, const Defenders& defenders, DefendingStat& defendingStat) {
-  auto [effectiveStat, realEffectiveStat] = registry.get<EffectiveStat, RealEffectiveStat>(defenders.only());
+void resetEffectiveAndDefendingStat(types::registry& registry, Defender defender, DefendingStat& defendingStat) {
+  auto [effectiveStat, realEffectiveStat] = registry.get<EffectiveStat, RealEffectiveStat>(defender.val);
   defendingStat.val = effectiveStat.val;
   effectiveStat.val = realEffectiveStat.val;
 }

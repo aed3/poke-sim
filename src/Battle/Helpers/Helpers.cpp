@@ -8,6 +8,7 @@
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
@@ -109,10 +110,20 @@ types::entity createActionMoveForTarget(
   registry.emplace<tags::CurrentActionMove>(moveEntity);
   registry.emplace<Battle>(moveEntity, battleEntity);
   registry.emplace<CurrentActionSource>(moveEntity, sourceEntity);
-  registry.emplace<CurrentActionTargets>(moveEntity).val.push_back(targetHandle.entity());
+  registry.emplace<CurrentActionTarget>(moveEntity, targetHandle.entity());
 
   targetHandle.get_or_emplace<CurrentActionMovesAsTarget>().val.push_back(moveEntity);
   registry.get_or_emplace<CurrentActionMovesAsSource>(sourceEntity).val.push_back(moveEntity);
+
+  if (registry.all_of<tags::SimulateTurn>(battleEntity)) {
+    registry.emplace<tags::SimulateTurn>(moveEntity);
+  }
+  if (registry.all_of<tags::CalculateDamage>(battleEntity)) {
+    registry.emplace<tags::CalculateDamage>(moveEntity);
+  }
+  if (registry.all_of<tags::AnalyzeEffect>(battleEntity)) {
+    registry.emplace<tags::AnalyzeEffect>(moveEntity);
+  }
 
   return moveEntity;
 }

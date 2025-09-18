@@ -14,12 +14,7 @@
 #include <Components/Names/SpeciesNames.hpp>
 #include <Components/Names/StatusNames.hpp>
 #include <Components/Position.hpp>
-#include <Components/Tags/AbilityTags.hpp>
-#include <Components/Tags/ItemTags.hpp>
-#include <Components/Tags/NatureTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
-#include <Components/Tags/StatusTags.hpp>
-#include <Config/Require.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Gender.hpp>
 #include <Types/Enums/Item.hpp>
@@ -73,6 +68,8 @@ void PokemonStateSetup::setCurrentHp(types::stat hp) {
 
 void PokemonStateSetup::setTypes(SpeciesTypes types) {
   handle.emplace<SpeciesTypes>(types);
+  type::tags::emplaceTagFromEnum(types.type1(), handle);
+  type::tags::emplaceTagFromEnum(types.type2(), handle);
 }
 
 void PokemonStateSetup::setLevel(types::level level) {
@@ -108,7 +105,8 @@ void PokemonStateSetup::setPostion(types::teamPositionIndex position) {
 }
 
 void PokemonStateSetup::setStatus(dex::Status status) {
-  pokesim::setStatus(handle, status);
+  handle.emplace<StatusName>(status);
+  status::tags::emplaceTagFromEnum(status, handle);
 }
 
 void PokemonStateSetup::setNature(dex::Nature nature) {

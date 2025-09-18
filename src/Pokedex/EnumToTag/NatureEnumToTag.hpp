@@ -3,7 +3,6 @@
 #include <Components/Tags/NatureTags.hpp>
 #include <Config/Require.hpp>
 #include <Types/Enums/Nature.hpp>
-// TODO(aed3): Make this auto generated
 
 namespace pokesim::nature::tags {
 /*
@@ -50,7 +49,7 @@ auto enumToTag(dex::Nature nature, RunFunctionArgs&&... args) {
     case dex::Nature::TIMID:   return RunStruct<Timid>::run(std::forward<RunFunctionArgs>(args)...);
 
     default: {
-      POKESIM_REQUIRE(false, "Adding tag for nature that does not exist.");
+      POKESIM_REQUIRE_FAIL("Using a tag for nature that does not exist.");
     }
   }
 }

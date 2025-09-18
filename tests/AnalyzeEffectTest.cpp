@@ -102,14 +102,14 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     REQUIRE(koUses.size() == (getKoUses ? idealResults.size() : 0U));
 
     multipliers.each([&](types::entity entity, const analyze_effect::EffectMultiplier& multiplier) {
-      auto [attacker, defenders, effectTarget, move] = registry.get<
+      auto [attacker, defender, effectTarget, move] = registry.get<
         analyze_effect::Attacker,
-        analyze_effect::Defenders,
+        analyze_effect::Defender,
         analyze_effect::EffectTarget,
         analyze_effect::EffectMove>(entity);
 
       auto attackerSide = registry.get<PlayerSide>(registry.get<Side>(attacker.val).val).val;
-      auto defenderSide = registry.get<PlayerSide>(registry.get<Side>(defenders.only()).val).val;
+      auto defenderSide = registry.get<PlayerSide>(registry.get<Side>(defender.val).val).val;
       auto effectTargetSide = registry.get<PlayerSide>(registry.get<Side>(effectTarget.val).val).val;
 
       auto effectStatus = registry.try_get<StatusName>(entity) ? registry.get<StatusName>(entity) : StatusName{};

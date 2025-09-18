@@ -343,14 +343,14 @@ struct SimulationSetupChecks {
 
     const auto& p1Team = registry->get<Team>(registry->get<Sides>(battleEntity).p1()).val;
     const auto& p2Team = registry->get<Team>(registry->get<Sides>(battleEntity).p2()).val;
-    const auto& [battle, moveName, attacker, defenders] =
-      registry->get<Battle, MoveName, calc_damage::Attacker, calc_damage::Defenders>(calcDamageEntity);
+    const auto& [battle, moveName, attacker, defender] =
+      registry->get<Battle, MoveName, calc_damage::Attacker, calc_damage::Defender>(calcDamageEntity);
     types::entity setupInfoAttacker = targetSlotToEntity(calcDamageInputInfo.attackerSlot, p1Team, p2Team);
     types::entity setupInfoDefender = targetSlotToEntity(calcDamageInputInfo.defenderSlot, p1Team, p2Team);
 
     POKESIM_REQUIRE_NM(battle.val == battleEntity);
     POKESIM_REQUIRE_NM(attacker.val == setupInfoAttacker);
-    POKESIM_REQUIRE_NM(defenders.only() == setupInfoDefender);
+    POKESIM_REQUIRE_NM(defender.val == setupInfoDefender);
     POKESIM_REQUIRE_NM(
       std::find(calcDamageInputInfo.moves.begin(), calcDamageInputInfo.moves.end(), moveName.name) !=
       calcDamageInputInfo.moves.end());
@@ -377,11 +377,11 @@ struct SimulationSetupChecks {
 
     const auto& p1Team = registry->get<Team>(registry->get<Sides>(battleEntity).p1()).val;
     const auto& p2Team = registry->get<Team>(registry->get<Sides>(battleEntity).p2()).val;
-    const auto& [battle, effectMove, attacker, defenders, effectTarget] = registry->get<
+    const auto& [battle, effectMove, attacker, defender, effectTarget] = registry->get<
       Battle,
       analyze_effect::EffectMove,
       analyze_effect::Attacker,
-      analyze_effect::Defenders,
+      analyze_effect::Defender,
       analyze_effect::EffectTarget>(analyzeEffectEntity);
     types::entity setupInfoAttacker = targetSlotToEntity(analyzeEffectInputInfo.attackerSlot, p1Team, p2Team);
     types::entity setupInfoDefender = targetSlotToEntity(analyzeEffectInputInfo.defenderSlot, p1Team, p2Team);
@@ -389,7 +389,7 @@ struct SimulationSetupChecks {
 
     POKESIM_REQUIRE_NM(battle.val == battleEntity);
     POKESIM_REQUIRE_NM(attacker.val == setupInfoAttacker);
-    POKESIM_REQUIRE_NM(defenders.only() == setupInfoDefender);
+    POKESIM_REQUIRE_NM(defender.val == setupInfoDefender);
     POKESIM_REQUIRE_NM(effectTarget.val == setupInfoEffectTarget);
 
     POKESIM_REQUIRE_NM(

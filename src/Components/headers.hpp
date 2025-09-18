@@ -26,7 +26,6 @@
 #include "EntityHolders/Current.hpp"
 #include "EntityHolders/FoeSide.hpp"
 #include "EntityHolders/LastUsedMove.hpp"
-#include "EntityHolders/MoveEffect.hpp"
 #include "EntityHolders/MoveSlots.hpp"
 #include "EntityHolders/Pokemon.hpp"
 #include "EntityHolders/Side.hpp"

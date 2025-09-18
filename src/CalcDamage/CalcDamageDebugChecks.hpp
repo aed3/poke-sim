@@ -87,6 +87,8 @@ struct Checks : pokesim::debug::Checks {
   void checkMoveInputs() {
     CurrentActionMovesAsSource moves{simulation->selectedMoveEntities()};
     for (types::entity move : moves.val) {
+      if (has<pokesim::move::tags::Status>(move)) continue;
+
       originalToCopy[move] = pokesim::debug::createEntityCopy(move, *registry, registryOnInput);
 
       bool hasSimulateTurn = has<pokesim::tags::SimulateTurn>(move);
@@ -170,8 +172,8 @@ struct Checks : pokesim::debug::Checks {
   }
 
   DamageRollKind getDamageRollKind(types::entity move, DamageRollOptions damageRollOptions) const {
-    const Defenders& defenders = registry->get<Defenders>(move);
-    const Side& side = registry->get<Side>(defenders.only());
+    const Defender& defender = registry->get<Defender>(move);
+    const Side& side = registry->get<Side>(defender.val);
     PlayerSideId playerSide = registry->get<PlayerSide>(side.val).val;
     switch (playerSide) {
       case PlayerSideId::P1: {
@@ -211,8 +213,8 @@ struct Checks : pokesim::debug::Checks {
     }
 
     types::damage lastDamage = std::numeric_limits<types::damage>::max();
-    const auto& [damageRolls, defenders] = registry->get<DamageRolls, Defenders>(move);
-    const stat::CurrentHp& defenderHp = registry->get<stat::CurrentHp>(defenders.only());
+    const auto& [damageRolls, defender] = registry->get<DamageRolls, Defender>(move);
+    const stat::CurrentHp& defenderHp = registry->get<stat::CurrentHp>(defender.val);
 
     POKESIM_REQUIRE_NM(!damageRolls.val.empty());
 
@@ -283,6 +285,8 @@ struct Checks : pokesim::debug::Checks {
 
   void checkMoveOutputs() const {
     for (types::entity move : simulation->selectedMoveEntities()) {
+      if (has<pokesim::move::tags::Status>(move)) continue;
+
       pokesim::debug::TypesToIgnore typesToIgnore{};
       if (has<pokesim::tags::AnalyzeEffect>(move)) {
         typesToIgnore.add<Damage>();

@@ -6,6 +6,7 @@ namespace pokesim::ability::tags {
 struct Defiant {};
 struct Infiltrator {};
 struct IronFist {};
+struct Plus {};
 struct Static {};
 struct SweetVeil {};
 struct Trace {};

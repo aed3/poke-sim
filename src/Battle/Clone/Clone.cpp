@@ -297,10 +297,14 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<CurrentActionMovesAsTarget>(registry, entityMap);
   remapComponentEntities<CurrentActionMoveSlot>(registry, entityMap);
   remapComponentEntities<CurrentActionSource>(registry, entityMap);
+  remapComponentEntities<CurrentActionTarget>(registry, entityMap);
   remapComponentEntities<CurrentActionTargets>(registry, entityMap);
+  remapComponentEntities<CurrentEffectsAsSource>(registry, entityMap);
+  remapComponentEntities<CurrentEffectsAsTarget>(registry, entityMap);
+  remapComponentEntities<CurrentEffectSource>(registry, entityMap);
+  remapComponentEntities<CurrentEffectTarget>(registry, entityMap);
   remapComponentEntities<FoeSide>(registry, entityMap);
   remapComponentEntities<LastUsedMove>(registry, entityMap);
-  remapComponentEntities<MoveEffect>(registry, entityMap);
   remapComponentEntities<MoveSlots>(registry, entityMap);
   remapComponentEntities<NextAction>(registry, entityMap);
   remapComponentEntities<Pokemon>(registry, entityMap);

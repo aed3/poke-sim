@@ -4,6 +4,7 @@
 #include <Types/Enums/Item.hpp>
 #include <Types/Enums/Nature.hpp>
 #include <Types/Enums/Status.hpp>
+#include <Types/Enums/Type.hpp>
 #include <Types/Registry.hpp>
 
 namespace pokesim {
@@ -26,4 +27,9 @@ namespace status::tags {
 // Assigns a status' tag to a handle
 void emplaceTagFromEnum(dex::Status status, types::handle handle);
 }  // namespace status::tags
+
+namespace type::tags {
+// Assigns a type' tag to a handle
+void emplaceTagFromEnum(dex::Type type, types::handle handle);
+}  // namespace type::tags
 }  // namespace pokesim

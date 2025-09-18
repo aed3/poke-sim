@@ -36,13 +36,17 @@ struct ChoiceLock;
 struct CurrentAction;
 struct NextAction;
 struct CurrentActionTargets;
+struct CurrentActionTarget;
 struct CurrentActionSource;
 struct CurrentActionMovesAsTarget;
 struct CurrentActionMovesAsSource;
 struct CurrentActionMoveSlot;
+struct CurrentEffectTarget;
+struct CurrentEffectSource;
+struct CurrentEffectsAsTarget;
+struct CurrentEffectsAsSource;
 struct FoeSide;
 struct LastUsedMove;
-struct MoveEffect;
 struct MoveSlots;
 struct Pokemon;
 struct Side;
@@ -268,6 +272,9 @@ template <>
 void check(const CurrentActionTargets&, const types::registry&);
 
 template <>
+void check(const CurrentActionTarget&, const types::registry&);
+
+template <>
 void check(const CurrentActionSource&, const types::registry&);
 
 template <>
@@ -280,12 +287,22 @@ template <>
 void check(const CurrentActionMoveSlot&, const types::registry&);
 
 template <>
+void check(const CurrentEffectTarget&, const types::registry&);
+
+template <>
+void check(const CurrentEffectSource&, const types::registry&);
+
+template <>
+void check(const CurrentEffectsAsTarget&, const types::registry&);
+
+template <>
+void check(const CurrentEffectsAsSource&, const types::registry&);
+
+template <>
 void check(const FoeSide&, const types::registry&);
 
 template <>
 void check(const LastUsedMove&, const types::registry&);
-
-// template <> void check(const MoveEffect&, const types::registry&);
 
 template <>
 void check(const MoveSlots&, const types::registry&);

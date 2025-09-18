@@ -16,12 +16,10 @@ struct NextAction {
 
 struct CurrentActionTargets {
   types::targets<types::entity> val{};
-  const types::entity& only() const {
-    POKESIM_REQUIRE(
-      val.size() == 1U,
-      "This method is supposed to get the first target when there's only one target stored.");
-    return val[0];
-  };
+};
+
+struct CurrentActionTarget {
+  types::entity val{};
 };
 
 struct CurrentActionSource {
@@ -39,4 +37,21 @@ struct CurrentActionMovesAsSource {
 struct CurrentActionMoveSlot {
   types::entity val{};
 };
+
+struct CurrentEffectTarget {
+  types::entity val{};
+};
+
+struct CurrentEffectSource {
+  types::entity val{};
+};
+
+struct CurrentEffectsAsTarget {
+  types::entityVector val{};
+};
+
+struct CurrentEffectsAsSource {
+  types::entityVector val{};
+};
+
 }  // namespace pokesim

@@ -1,12 +1,14 @@
 #include "RunEvent.hpp"
 
 #include <Battle/Helpers/IntegerModify.hpp>
+#include <Components/Boosts.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EventModifier.hpp>
 #include <Components/Stats.hpp>
+#include <Components/Tags/AbilityTags.hpp>
 #include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Abilities/headers.hpp>
@@ -56,7 +58,7 @@ internal::RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
 
         if constexpr (
           SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveTarget>...>) {
-          entities.insert(registry.get<CurrentActionTargets>(entity).only());
+          entities.insert(registry.get<CurrentActionTarget>(entity).val);
         }
       });
 
@@ -65,29 +67,58 @@ internal::RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
 }
 }  // namespace
 
-void runAccuracyEvent(Simulation& /*simulation*/) {}
+void runAccuracyEvent(Simulation&) {}
 
-void runModifyAccuracyEvent(Simulation& /*simulation*/) {}
+void runModifyAccuracyEvent(Simulation&) {}
 
-void runModifyCritBoostEvent(Simulation& /*simulation*/) {}
+void runModifyCritBoostEvent(Simulation&) {}
 
-void runBasePowerEvent(Simulation& /*simulation*/) {}
+void runBasePowerEvent(Simulation&) {}
 
 void runDamagingHitEvent(Simulation& simulation) {
   dex::latest::Static::onDamagingHit(simulation);
 }
 
-void runModifyMove(Simulation& simulation) {
-  internal::SelectForPokemonView<> selectedPokemon{
-    simulation,
-    getMoveEventPokemonSelector<tags::CurrentActionMoveSource>()};
+void runModifySecondariesEvent(Simulation&) {}
+template <typename StatusType>
+void runStatusImmunityEvent(Simulation&) {
+  // This is where Corrosion (will add CanSetStatus back), the `onSetStatus` events that only block status (i.e. Misty
+  // Terrain), and all the `onImmunity` events that relate to non-volatile status conditions will go
+}
 
-  simulation.viewForSelectedPokemon<
+template void runStatusImmunityEvent<status::tags::Burn>(Simulation&);
+template void runStatusImmunityEvent<status::tags::Freeze>(Simulation&);
+template void runStatusImmunityEvent<status::tags::Paralysis>(Simulation&);
+template void runStatusImmunityEvent<status::tags::Poison>(Simulation&);
+template void runStatusImmunityEvent<status::tags::Sleep>(Simulation&);
+template void runStatusImmunityEvent<status::tags::Toxic>(Simulation&);
+
+void runAfterSetStatusEvent(Simulation&) {}
+
+void runChangeBoostEvent(Simulation&) {}
+void runTryBoostEvent(Simulation&) {}
+
+template <typename BoostType>
+void runAfterEachBoostEvent(Simulation&) {}
+template void runAfterEachBoostEvent<AtkBoost>(Simulation&);
+template void runAfterEachBoostEvent<DefBoost>(Simulation&);
+template void runAfterEachBoostEvent<SpaBoost>(Simulation&);
+template void runAfterEachBoostEvent<SpdBoost>(Simulation&);
+template void runAfterEachBoostEvent<SpeBoost>(Simulation&);
+
+void runAfterBoostEvent(Simulation&) {}
+
+void runModifyMove(Simulation& simulation) {
+  // internal::SelectForPokemonView<> selectedPokemon{
+  //   simulation,
+  //   getMoveEventPokemonSelector<tags::CurrentActionMoveSource>()};
+
+  simulation.view<
     dex::latest::ChoiceScarf::onSourceModifyMove,
     Tags<item::tags::ChoiceScarf, tags::CurrentActionMoveSource>,
     entt::exclude_t<ChoiceLock>>();
 
-  simulation.viewForSelectedPokemon<
+  simulation.view<
     dex::latest::ChoiceSpecs::onSourceModifyMove,
     Tags<item::tags::ChoiceSpecs, tags::CurrentActionMoveSource>,
     entt::exclude_t<ChoiceLock>>();
@@ -104,7 +135,13 @@ void runModifyDef(Simulation&) {}
 void runModifySpa(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
 
+  // Priority 1
   simulation.viewForSelectedPokemon<dex::latest::ChoiceSpecs::onModifySpa, Tags<item::tags::ChoiceSpecs>>();
+
+  // Priority 5
+  if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT) {
+    simulation.viewForSelectedPokemon<dex::latest::Plus::onModifySpA, Tags<ability::tags::Plus>>();
+  }
 
   simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpa>>();
   simulation.registry.clear<EventModifier>();
@@ -130,5 +167,10 @@ void runModifySpe(Simulation& simulation) {
   simulation.viewForSelectedPokemon<
     dex::latest::Static::onModifySpe,
     Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>();
+}
+
+void runStartSleep(Simulation&) {}
+void runStartFreeze(Simulation&) {
+  // Just Shaymin
 }
 }  // namespace pokesim

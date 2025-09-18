@@ -23,7 +23,7 @@ TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
   REQUIRE(registry.all_of<ability::tags::Defiant>(p1Entity));
   REQUIRE(registry.all_of<status::tags::Paralysis>(p1Entity));
   types::entity p2Entity = registry.get<Team>(p2SideEntity).val[0];
-  REQUIRE(registry.all_of<ability::tags::Static>(p2Entity));
+  REQUIRE(registry.all_of<ability::tags::Plus>(p2Entity));
   REQUIRE(registry.all_of<nature::tags::Modest>(p2Entity));
   REQUIRE(registry.all_of<item::tags::ChoiceSpecs>(p2Entity));
 }
