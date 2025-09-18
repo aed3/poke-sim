@@ -103,6 +103,62 @@ std::size_t EntityViewerRegistry::count() const {
   }
 }
 
+namespace {
+template <typename T>
+const T* get_type(types::entity entity, const EntityViewerRegistry* registry) {
+  try {
+    return registry->try_get<T>(entity);
+  }
+  catch (...) {
+    return nullptr;
+  }
+}
+
+template <typename T>
+bool get_tag_type(types::entity entity, const EntityViewerRegistry* registry) {
+  try {
+    return registry->all_of<T>(entity);
+  }
+  catch (...) {
+    return false;
+  }
+}
+
+template <typename T>
+std::size_t count_type(const EntityViewerRegistry* registry) {
+  try {
+    return registry->view<T>().size();
+  }
+  catch (...) {
+    return 0;
+  }
+}
+
+template <typename T>
+std::vector<std::pair<entt::entity, T>> all(const EntityViewerRegistry* registry) {
+  try {
+    std::vector<std::pair<entt::entity, T>> ret{};
+    for (const auto& pair : registry->view<T>().each()) {
+      ret.emplace_back(std::get<0>(pair), std::get<1>(pair));
+    }
+    return ret;
+  }
+  catch (...) {
+    return {};
+  }
+}
+
+template <typename T>
+std::vector<entt::entity> all_tag(const EntityViewerRegistry* registry) {
+  try {
+    return {registry->view<T>().begin(), registry->view<T>().end()};
+  }
+  catch (...) {
+    return {};
+  }
+}
+}
+
 ${getComponentDefinitions.join('')}
 ${getComponentFromNumDefinitions.join('')}
 ${getSizeDefinitions.join('')}
@@ -150,61 +206,32 @@ const makeGetComponentDef = (component) => {
   if (isTag(component)) {
     return `${getReturnType(component)} EntityViewerRegistry::${
       toFunctionName('get', component)}(types::entity entity) const {
-      try {
-        return all_of<${component}>(entity); 
-      }
-      catch (...) {
-        return false;
-      }
+      return get_tag_type<${component}>(entity, this);
     }`;
   }
   else {
     return `${getReturnType(component)} EntityViewerRegistry::${
       toFunctionName('get', component)}(types::entity entity) const {
-        try {
-          return try_get<${component}>(entity);
-        }
-        catch (...) {
-          return nullptr;
-        }
+        return get_type<${component}>(entity, this);
       }`;
   }
 };
 
 const makeSizeDef = (component) => `
 std::size_t EntityViewerRegistry::${toFunctionName('count', component)}() const {
-  try {
-    return view<${component}>().size();
-  }
-  catch (...) {
-    return 0;
-  }
+  return count_type<${component}>(this);
 }`;
 
 const makeAllDef =
   (component) => {
     if (isTag(component)) {
       return `${getAllReturnType(component)} EntityViewerRegistry::${toFunctionName('all', component)}() const {
-      try {
-        return {view<${component}>().begin(), view<${component}>().end()};
-      }
-      catch (...) {
-        return {};
-      }
+      return all_tag<${component}>(this);
     }`;
     }
     else {
       return `${getAllReturnType(component)} EntityViewerRegistry::${toFunctionName('all', component)}() const {
-      try {
-        ${getAllReturnType(component)} ret{};
-        for (const auto& pair : view<${component}>().each()) {
-          ret.emplace_back(std::get<0>(pair), std::get<1>(pair));
-        }
-        return ret;
-      }
-      catch (...) {
-        return {};
-      }
+      return all<${component}>(this);
     }`;
     }
   }
