@@ -2,10 +2,8 @@
 
 #include <Components/Accuracy.hpp>
 #include <Components/AddedTargets.hpp>
-#include <Components/BaseEffectChance.hpp>
 #include <Components/BasePower.hpp>
 #include <Components/Boosts.hpp>
-#include <Components/EntityHolders/MoveEffect.hpp>
 #include <Components/HitCount.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/TypeNames.hpp>
@@ -93,23 +91,17 @@ void MoveDexDataSetup::setHitCount(types::moveHits hitCount) {
   handle.emplace<HitCount>(hitCount);
 }
 
-void MoveDexDataSetup::setPrimaryEffect(types::entity entity) {
-  handle.emplace<MoveEffect>(true, entity);
+void MoveDexDataSetup::setEffectTargetsMoveSource() {
+  POKESIM_REQUIRE(
+    !handle.all_of<move::effect::tags::MoveTarget>(),
+    "Moves effects can only affect the target or source, not both.");
+  handle.emplace<move::effect::tags::MoveSource>();
 }
 
-void MoveDexDataSetup::setSecondaryEffect(types::entity entity) {
-  handle.emplace<MoveEffect>(false, entity);
-}
-
-void MoveEffectSetup::setChance(types::baseEffectChance chance) {
-  handle.emplace<BaseEffectChance>(chance);
-}
-
-void MoveEffectSetup::setEffectsSelf() {
-  handle.emplace<move::tags::effect::MoveSource>();
-}
-
-void MoveEffectSetup::setEffectsTarget() {
-  handle.emplace<move::tags::effect::MoveTarget>();
+void MoveDexDataSetup::setEffectTargetsMoveTarget() {
+  POKESIM_REQUIRE(
+    !handle.all_of<move::effect::tags::MoveTarget>(),
+    "Moves effects can only affect the source or target, not both.");
+  handle.emplace<move::effect::tags::MoveTarget>();
 }
 }  // namespace pokesim::dex::internal

@@ -13,4 +13,6 @@ struct SpaStatUpdateRequired {};
 struct SpeStatUpdateRequired {};
 
 struct Fainted {};
+
+struct CanSetStatus {};
 }  // namespace pokesim::tags

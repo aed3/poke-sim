@@ -3,6 +3,7 @@
 #include <Battle/Clone/Clone.hpp>
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
+#include <Battle/Setup/EmplaceTagFromEnum.hpp>
 #include <CalcDamage/CalcDamage.hpp>
 #include <CalcDamage/Helpers.hpp>
 #include <Components/AnalyzeEffect/Aliases.hpp>
@@ -261,7 +262,6 @@ types::entity createAnalyzeEffectMove(
   types::entity moveEntity =
     createActionMoveForTarget({registry, defenderEntity}, battleEntity, attackerEntity, move, pokedex);
   registry.emplace<MoveName>(moveEntity, move);
-  registry.emplace<pokesim::tags::AnalyzeEffect>(moveEntity);
   registry.emplace_or_replace<tags::Attacker>(attackerEntity);
   registry.emplace_or_replace<tags::Defender>(defenderEntity);
 
@@ -269,26 +269,26 @@ types::entity createAnalyzeEffectMove(
 }
 
 void createOneCalculationMovePair(
-  types::handle inputHandle, Battle battle, EffectMove move, Attacker attacker, const Defenders& defenders,
+  types::handle inputHandle, Battle battle, EffectMove move, Attacker attacker, Defender defender,
   const Pokedex& pokedex) {
   entt::entity moveEntity =
-    createAnalyzeEffectMove(*inputHandle.registry(), move.val, battle.val, attacker.val, defenders.only(), pokedex);
+    createAnalyzeEffectMove(*inputHandle.registry(), move.val, battle.val, attacker.val, defender.val, pokedex);
   inputHandle.emplace<MovePair>(moveEntity, moveEntity);
 }
 
 void createTwoCalculationsMovePair(
-  types::handle inputHandle, Battle battle, EffectMove move, Attacker attacker, const Defenders& defenders,
+  types::handle inputHandle, Battle battle, EffectMove move, Attacker attacker, Defender defender,
   const OriginalInputEntities& originals, const Pokedex& pokedex) {
   types::registry& registry = *inputHandle.registry();
 
   entt::entity originalEntity =
     createAnalyzeEffectMove(registry, move.val, originals.battle, originals.attacker, originals.defender, pokedex);
   entt::entity copyEntity =
-    createAnalyzeEffectMove(registry, move.val, battle.val, attacker.val, defenders.only(), pokedex);
+    createAnalyzeEffectMove(registry, move.val, battle.val, attacker.val, defender.val, pokedex);
 
   // All active pokemon in should have their stats refreshed in doubles for moves like Beat Up which rely on the stats
   // of Pokemon outside of the attacker and defender
-  for (types::entity pokemon : {attacker.val, defenders.only()}) {
+  for (types::entity pokemon : {attacker.val, defender.val}) {
     registry.emplace_or_replace<pokesim::tags::AtkStatUpdateRequired>(pokemon);
     registry.emplace_or_replace<pokesim::tags::DefStatUpdateRequired>(pokemon);
     registry.emplace_or_replace<pokesim::tags::SpaStatUpdateRequired>(pokemon);
@@ -334,19 +334,19 @@ void assignInputsToClones(
 
     const GroupedInputs& groupedInputs = registry.get<GroupedInputs>(input);
     for (types::entity originalInput : groupedInputs.val) {
-      const auto& [battle, move, attacker, defenders, effectTarget] =
-        registry.get<Battle, EffectMove, Attacker, Defenders, EffectTarget>(originalInput);
+      const auto& [battle, move, attacker, defender, effectTarget] =
+        registry.get<Battle, EffectMove, Attacker, Defender, EffectTarget>(originalInput);
 
       registry.emplace<OriginalInputEntities>(
         originalInput,
-        OriginalInputEntities{battle.val, attacker.val, defenders.only(), effectTarget.val});
+        OriginalInputEntities{battle.val, attacker.val, defender.val, effectTarget.val});
 
       const auto& clonedAttackers = clonedEntityMap.at(attacker.val);
       POKESIM_REQUIRE(
         battleClones.size() == clonedAttackers.size(),
         "Each attacker must have a clone and no more clones than inputs should be made.");
 
-      const auto& clonedDefenders = clonedEntityMap.at(defenders.only());
+      const auto& clonedDefenders = clonedEntityMap.at(defender.val);
       POKESIM_REQUIRE(
         battleClones.size() == clonedDefenders.size(),
         "Each defender must have a clone and no more clones than inputs should be made.");
@@ -358,7 +358,7 @@ void assignInputsToClones(
 
       battle.val = battleClones[cloneIndex];
       attacker.val = clonedAttackers[cloneIndex];
-      defenders.val[0] = clonedDefenders[cloneIndex];
+      defender.val = clonedDefenders[cloneIndex];
       effectTarget.val = clonedEffectTarget[cloneIndex];
     }
 
@@ -414,12 +414,14 @@ void applyStatusEffect(types::handle inputHandle, EffectTarget effectTarget, Sta
   types::registry& registry = *inputHandle.registry();
 
   EffectPresentCheck statusCheck = hasStatusEffect(registry, effectTarget, effect);
+  types::handle pokemonHandle{registry, effectTarget.val};
+  clearStatus(pokemonHandle);
   if (statusCheck == EffectPresentCheck::PRESENT_AND_APPLIED) {
-    clearStatus({registry, effectTarget.val});
     setInvertFinalAnswer(inputHandle);
   }
   else {
-    setStatus({registry, effectTarget.val}, effect.name);
+    pokemonHandle.emplace<StatusName>(effect.name);
+    status::tags::emplaceTagFromEnum(effect.name, pokemonHandle);
   }
 }
 
@@ -478,11 +480,11 @@ void createOutput(types::handle inputHandle, const MovePair& movePairs) {
 }
 
 void restoreInputs(
-  const OriginalInputEntities& originalEntities, Battle& battle, Attacker& attacker, Defenders& defenders,
+  const OriginalInputEntities& originalEntities, Battle& battle, Attacker& attacker, Defender& defender,
   EffectTarget& effectTarget) {
   battle.val = originalEntities.battle;
   attacker.val = originalEntities.attacker;
-  defenders.val[0] = originalEntities.defender;
+  defender.val = originalEntities.defender;
   effectTarget.val = originalEntities.effectTarget;
 }
 
@@ -511,10 +513,10 @@ void removeUsedMoves(types::registry& registry, const MovePair& movePair, types:
   }
 }
 
-void removeMovePairs(types::handle inputHandle, MovePair& movePair, Attacker& attacker, Defenders& defenders) {
+void removeMovePairs(types::handle inputHandle, MovePair& movePair, Attacker& attacker, Defender& defender) {
   types::registry& registry = *inputHandle.registry();
   removeUsedMoves<UsedMovesAsAttacker>(registry, movePair, attacker.val);
-  removeUsedMoves<UsedMovesAsDefender>(registry, movePair, defenders.only());
+  removeUsedMoves<UsedMovesAsDefender>(registry, movePair, defender.val);
 
   const OriginalInputEntities* original = inputHandle.try_get<OriginalInputEntities>();
   if (original) {

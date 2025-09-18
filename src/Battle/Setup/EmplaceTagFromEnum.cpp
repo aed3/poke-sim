@@ -5,6 +5,7 @@
 #include <Types/Enums/Item.hpp>
 #include <Types/Enums/Nature.hpp>
 #include <Types/Enums/Status.hpp>
+#include <Types/Enums/Type.hpp>
 #include <Types/Registry.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
@@ -31,5 +32,9 @@ void nature::tags::emplaceTagFromEnum(dex::Nature nature, types::handle handle) 
 
 void status::tags::emplaceTagFromEnum(dex::Status status, types::handle handle) {
   enumToTag<EmplaceTag>(status, handle);
+}
+
+void type::tags::emplaceTagFromEnum(dex::Type type, types::handle handle) {
+  enumToTag<EmplaceTag>(type, handle);
 }
 }  // namespace pokesim

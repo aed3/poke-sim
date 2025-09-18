@@ -20,7 +20,7 @@ struct QuiverDance {
 
   static constexpr types::pp basePp = 20U;
 
-  struct sourcePrimaryEffect {
+  struct targetPrimaryEffect {
     static constexpr types::boost spaBoost = 1, spdBoost = 1, speBoost = 1;
 
     static constexpr Tags<> effectTags{};

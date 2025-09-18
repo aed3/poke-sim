@@ -12,7 +12,6 @@
 
 namespace pokesim::dex {
 namespace {
-
 void setChoiceLock(types::handle pokemonHandle, const Battle& battle) {
   types::entity moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val).val;
   pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot);

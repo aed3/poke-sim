@@ -26,12 +26,13 @@ auto enumToTag(dex::Ability ability, RunFunctionArgs&&... args) {
     case dex::Ability::DEFIANT:     return RunStruct<Defiant>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Ability::INFILTRATOR: return RunStruct<Infiltrator>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Ability::IRON_FIST:   return RunStruct<IronFist>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::PLUS:        return RunStruct<Plus>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Ability::STATIC:      return RunStruct<Static>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Ability::SWEET_VEIL:  return RunStruct<SweetVeil>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Ability::TRACE:       return RunStruct<Trace>::run(std::forward<RunFunctionArgs>(args)...);
 
     default: {
-      POKESIM_REQUIRE(false, "Adding tag for ability that does not exist.");
+      POKESIM_REQUIRE_FAIL("Using a tag for ability that does not exist.");
     }
   }
 }

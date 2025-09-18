@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Components/BaseEffectChance.hpp>
 #include <Components/Boosts.hpp>
 #include <Components/Tags/MoveTags.hpp>
 #include <Types/Entity.hpp>
@@ -31,28 +32,28 @@ struct MoveDexDataSetup : DexDataSetup {
   void setPriority(types::priority priority);
   void setHitCount(types::moveHits hitCount);
 
-  void setPrimaryEffect(types::entity entity);
-  void setSecondaryEffect(types::entity entity);
-
   void addAddedTargets(AddedTargetOptions addedTargets);
-};
 
-struct MoveEffectSetup : DexDataSetup {
-  MoveEffectSetup(types::registry& registry) : DexDataSetup(registry) {}
-  types::entity entity() const { return handle; }
+  void setEffectTargetsMoveSource();
+  void setEffectTargetsMoveTarget();
 
-  void setChance(types::baseEffectChance chance);
-  void setEffectsSelf();
-  void setEffectsTarget();
+  template <typename EffectType, typename... EffectValues>
+  void setPrimaryEffect(const EffectValues&... effectValues) {
+    POKESIM_REQUIRE(
+      !handle.all_of<move::effect::tags::Secondary>(),
+      "Moves can only have primary or secondary effects, not both.");
+    handle.emplace_or_replace<move::effect::tags::Primary>();
+    handle.emplace<EffectType>(effectValues...);
+  }
 
-  template <typename BoostType>
-  void setBoost(types::boost boost) {
-    static_assert(
-      std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() ||
-        std::is_same<SpaBoost, BoostType>() || std::is_same<SpdBoost, BoostType>() ||
-        std::is_same<SpeBoost, BoostType>(),
-      "Boosts can only be applied to a Pokemon boost stat struct (excluding HP).");
-    handle.emplace<BoostType>(boost);
+  template <typename EffectType, typename... EffectValues>
+  void setSecondaryEffect(types::baseEffectChance chance, const EffectValues&... effectValues) {
+    POKESIM_REQUIRE(
+      !handle.all_of<move::effect::tags::Primary>(),
+      "Moves can only have secondary or primary effects, not both.");
+    handle.emplace_or_replace<move::effect::tags::Secondary>();
+    handle.emplace<EffectType>(effectValues...);
+    handle.emplace<BaseEffectChance>(chance);
   }
 };
 }  // namespace pokesim::dex::internal

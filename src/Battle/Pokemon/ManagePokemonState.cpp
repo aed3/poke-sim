@@ -11,11 +11,14 @@
 #include <Components/Stats.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
+#include <Components/Tags/TypeTags.hpp>
+#include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
+#include <cmath>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
@@ -25,12 +28,109 @@ template <typename EffectiveStat, typename BoostType>
 void applyBoostToEffectiveStat(EffectiveStat& effectiveStat, BoostType boost) {
   applyStatBoost(effectiveStat.val, boost.val);
 }
+
+template <typename BoostType, typename StatUpdateRequired>
+void boostStat(types::registry& registry, CurrentEffectTarget target, BoostType& boost) {
+  BoostType& currentBoost = registry.get_or_emplace<BoostType>(target.val);
+  currentBoost.val += boost.val;
+
+  if (boost.val) {
+    registry.emplace_or_replace<StatUpdateRequired>(target.val);
+  }
+}
+
+template <typename BoostType>
+void clampBoost(types::registry& registry, CurrentEffectTarget target, BoostType& boost) {
+  BoostType* currentBoost = registry.try_get<BoostType>(target.val);
+  if (!currentBoost) {
+    return;
+  }
+
+  types::boost combinedBoost = currentBoost->val + boost.val;
+  combinedBoost = std::max(combinedBoost, MechanicConstants::PokemonStatBoost::MIN);
+  combinedBoost = std::min(combinedBoost, MechanicConstants::PokemonStatBoost::MAX);
+  boost.val = combinedBoost - boost.val;
+}
+
+template <typename BoostType, typename StatUpdateRequired>
+void boost(Simulation& simulation) {
+  simulation.view<boostStat<BoostType, StatUpdateRequired>>();
+  runAfterEachBoostEvent<BoostType>(simulation);
+}
+
+template <typename Type>
+void checkTypeStatusImmunity(types::handle handle, CurrentEffectTarget target) {
+  if (handle.registry()->all_of<Type>(target.val)) {
+    handle.remove<tags::CanSetStatus>();
+  }
+}
+
+template <typename StatusType>
+struct CheckIfStatusIsSettable {
+  static void run(Simulation& simulation) {
+    simulation.addToEntities<tags::CanSetStatus, StatusType, CurrentEffectSource, CurrentEffectTarget>();
+    simulation.view<checkIfTargetHasStatus, Tags<StatusType>>();
+    if constexpr (std::is_same_v<StatusType, status::tags::Burn>) {
+      simulation.view<checkTypeStatusImmunity<type::tags::Fire>, Tags<StatusType>>();
+    }
+    if constexpr (std::is_same_v<StatusType, status::tags::Freeze>) {
+      simulation.view<checkTypeStatusImmunity<type::tags::Ice>, Tags<StatusType>>();
+    }
+    if constexpr (std::is_same_v<StatusType, status::tags::Paralysis>) {  // And simulation is using a mechanic where
+                                                                          // electric types cannot be paralyzed
+      simulation.view<checkTypeStatusImmunity<type::tags::Electric>, Tags<StatusType>>();
+    }
+
+    if constexpr (std::is_same_v<StatusType, status::tags::Poison> || std::is_same_v<StatusType, status::tags::Toxic>) {
+      simulation.view<checkTypeStatusImmunity<type::tags::Poison>, Tags<StatusType>>();
+      simulation.view<checkTypeStatusImmunity<type::tags::Steel>, Tags<StatusType>>();
+    }
+
+    runStatusImmunityEvent<StatusType>(simulation);
+  }
+
+  static void checkIfTargetHasStatus(types::handle handle, CurrentEffectTarget target) {
+    if (handle.registry()->all_of<StatusName>(target.val)) {
+      handle.remove<tags::CanSetStatus>();
+    }
+  };
+};
+
+template <typename StatusType>
+struct RemoveNotSettableStatus {
+  static void run(Simulation& simulation) {
+    simulation.removeFromEntities<StatusType, CurrentEffectSource, CurrentEffectTarget>(
+      entt::exclude<tags::CanSetStatus>);
+  }
+};
+
+template <typename StatusType>
+void setStatus(types::registry& registry, CurrentEffectTarget target, dex::Status status) {
+  registry.emplace<StatusName>(target.val, status);
+  registry.emplace<StatusType>(target.val);
+}
 }  // namespace
 
-void setStatus(types::handle pokemonHandle, dex::Status status) {
-  clearStatus(pokemonHandle);
-  pokemonHandle.emplace<StatusName>(status);
-  status::tags::emplaceTagFromEnum(status, pokemonHandle);
+void checkIfStatusIsSettable(Simulation& simulation) {
+  status::tags::forEach<CheckIfStatusIsSettable>(simulation);
+}
+
+void trySetStatus(Simulation& simulation) {
+  checkIfStatusIsSettable(simulation);
+  status::tags::forEach<RemoveNotSettableStatus>(simulation);
+  simulation.registry.clear<tags::CanSetStatus>();
+
+  simulation.view<setStatus<status::tags::Burn>, Tags<status::tags::Burn>>(dex::Status::BRN);
+  simulation.view<setStatus<status::tags::Freeze>, Tags<status::tags::Freeze>>(dex::Status::FRZ);
+  simulation.view<setStatus<status::tags::Paralysis>, Tags<status::tags::Paralysis>>(dex::Status::PAR);
+  simulation.view<setStatus<status::tags::Poison>, Tags<status::tags::Poison>>(dex::Status::PSN);
+  simulation.view<setStatus<status::tags::Sleep>, Tags<status::tags::Sleep>>(dex::Status::SLP);
+  simulation.view<setStatus<status::tags::Toxic>, Tags<status::tags::Toxic>>(dex::Status::TOX);
+
+  runStartSleep(simulation);
+  runStartFreeze(simulation);
+
+  runAfterSetStatusEvent(simulation);
 }
 
 void clearStatus(types::handle pokemonHandle) {
@@ -50,7 +150,7 @@ void deductPp(Pp& pp) {
   }
 }
 
-void setLastMoveUsed(types::registry& registry, const CurrentActionSource& source, const CurrentActionMoveSlot& move) {
+void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move) {
   registry.emplace<LastUsedMove>(source.val, move.val);
 }
 
@@ -74,8 +174,8 @@ void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
   handle.emplace_or_replace<stat::EffectiveSpe>(spe.val);
 }
 
-void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTargets& targets) {
-  stat::CurrentHp& hp = registry.get<stat::CurrentHp>(targets.only());
+void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTarget target) {
+  stat::CurrentHp& hp = registry.get<stat::CurrentHp>(target.val);
   if (damage.val < hp.val) {
     hp.val -= damage.val;
   }
@@ -92,6 +192,23 @@ void applyStatBoost(types::stat& stat, types::boost boost) {
   else {
     stat = types::stat(stat / MechanicConstants::STAT_BOOST_STAGES[-boost]);
   }
+}
+
+void tryBoost(Simulation& simulation) {
+  runChangeBoostEvent(simulation);
+  simulation.view<clampBoost<AtkBoost>>();
+  simulation.view<clampBoost<DefBoost>>();
+  simulation.view<clampBoost<SpaBoost>>();
+  simulation.view<clampBoost<SpdBoost>>();
+  simulation.view<clampBoost<SpeBoost>>();
+  runTryBoostEvent(simulation);
+
+  boost<AtkBoost, tags::AtkStatUpdateRequired>(simulation);
+  boost<DefBoost, tags::DefStatUpdateRequired>(simulation);
+  boost<SpaBoost, tags::SpaStatUpdateRequired>(simulation);
+  boost<SpdBoost, tags::SpdStatUpdateRequired>(simulation);
+  boost<SpeBoost, tags::SpeStatUpdateRequired>(simulation);
+  runAfterBoostEvent(simulation);
 }
 
 void updateAllStats(Simulation& simulation) {

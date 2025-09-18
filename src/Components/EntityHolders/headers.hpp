@@ -9,7 +9,6 @@
 #include "Current.hpp"
 #include "FoeSide.hpp"
 #include "LastUsedMove.hpp"
-#include "MoveEffect.hpp"
 #include "MoveSlots.hpp"
 #include "Pokemon.hpp"
 #include "Side.hpp"

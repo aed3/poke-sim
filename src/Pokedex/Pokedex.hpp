@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Components/EntityHolders/MoveEffect.hpp>
 #include <Config/Config.hpp>
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
@@ -187,11 +186,6 @@ class Pokedex {
   }
 
   template <typename... T>
-  auto getEffectData(MoveEffect effect) const {
-    return dexRegistry.get<T...>(effect.val);
-  }
-
-  template <typename... T>
   bool speciesHas(dex::Species species) const {
     return dexRegistry.all_of<T...>(speciesMap.at(species));
   }
@@ -204,11 +198,6 @@ class Pokedex {
   template <typename... T>
   bool moveHas(dex::Move move) const {
     return dexRegistry.all_of<T...>(movesMap.at(move));
-  }
-
-  template <typename... T>
-  bool effectHas(MoveEffect effect) const {
-    return dexRegistry.all_of<T...>(effect.val);
   }
 
   constexpr const TypeChart& typeChart() const { return constantTypeChart; }

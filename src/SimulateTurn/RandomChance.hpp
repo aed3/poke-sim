@@ -94,17 +94,19 @@ void setBinaryChanceFromChanceLimit(
   }
 }
 
-template <typename Component, BattleFormat Format>
+template <typename PercentChanceComponent, BattleFormat Format>
 void setRandomBinaryChoice(
-  types::handle handle, const Component& percentChance, const Battle& battle, const simulate_turn::Options& options) {
+  types::handle handle, const PercentChanceComponent& percentChance, const Battle& battle,
+  const simulate_turn::Options& options) {
   types::probability probability = handle.registry()->get<Probability>(battle.val).val;
 
   setBinaryChanceFromChanceLimit<Format>(handle, percentChance.val, percentChance.val, probability, options);
 }
 
-template <typename Component, BattleFormat Format>
+template <typename PercentChanceComponent, BattleFormat Format>
 void setReciprocalRandomBinaryChoice(
-  types::handle handle, const Component& percentChance, const Battle& battle, const simulate_turn::Options& options) {
+  types::handle handle, const PercentChanceComponent& percentChance, const Battle& battle,
+  const simulate_turn::Options& options) {
   types::percentChance passChance = MechanicConstants::PercentChance::MAX / percentChance.val;
   types::probability probability = handle.registry()->get<Probability>(battle.val).val;
 
@@ -190,33 +192,35 @@ void setRandomChoice(
   }
 }
 
-template <typename Component, typename... T>
+template <typename PercentChanceComponent, typename... T>
 void setRandomBinaryChoice(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
 
   if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
-    simulation.view<internal::setRandomBinaryChoice<Component, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
-      options);
+    simulation
+      .view<internal::setRandomBinaryChoice<PercentChanceComponent, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
+        options);
   }
   else {
-    simulation.view<internal::setRandomBinaryChoice<Component, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<T...>>(
-      options);
+    simulation
+      .view<internal::setRandomBinaryChoice<PercentChanceComponent, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<T...>>(
+        options);
   }
 }
 
-template <typename Component, typename... T>
+template <typename PercentChanceComponent, typename... T>
 void setReciprocalRandomBinaryChoice(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
 
   if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
-    simulation
-      .view<internal::setReciprocalRandomBinaryChoice<Component, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
-        options);
+    simulation.view<
+      internal::setReciprocalRandomBinaryChoice<PercentChanceComponent, BattleFormat::SINGLES_BATTLE_FORMAT>,
+      Tags<T...>>(options);
   }
   else {
-    simulation
-      .view<internal::setReciprocalRandomBinaryChoice<Component, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<T...>>(
-        options);
+    simulation.view<
+      internal::setReciprocalRandomBinaryChoice<PercentChanceComponent, BattleFormat::DOUBLES_BATTLE_FORMAT>,
+      Tags<T...>>(options);
   }
 }
 

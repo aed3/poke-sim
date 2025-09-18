@@ -261,16 +261,16 @@ void checkMoveSlot(types::entity moveSlotEntity, const types::registry& registry
 void checkActionMove(types::entity moveEntity, const types::registry& registry) {
   types::registry::checkEntity(moveEntity, registry);
   POKESIM_REQUIRE_NM(has<CurrentActionSource>(moveEntity, registry));
-  POKESIM_REQUIRE_NM(has<CurrentActionTargets>(moveEntity, registry));
+  POKESIM_REQUIRE_NM(has<CurrentActionTarget>(moveEntity, registry));
   POKESIM_REQUIRE_NM(has<Battle>(moveEntity, registry));
   POKESIM_REQUIRE_NM(has<TypeName>(moveEntity, registry));
   POKESIM_REQUIRE_NM(has<MoveName>(moveEntity, registry) != has<tags::SimulateTurn>(moveEntity, registry));
 
   const auto& [attacker, defender, battle, typeName] =
-    registry.get<CurrentActionSource, CurrentActionTargets, Battle, TypeName>(moveEntity);
+    registry.get<CurrentActionSource, CurrentActionTarget, Battle, TypeName>(moveEntity);
 
   POKESIM_REQUIRE_NM(has<tags::CurrentActionMoveSource>(attacker.val, registry));
-  POKESIM_REQUIRE_NM(has<tags::CurrentActionMoveTarget>(defender.only(), registry));
+  POKESIM_REQUIRE_NM(has<tags::CurrentActionMoveTarget>(defender.val, registry));
   POKESIM_REQUIRE_NM(has<tags::Battle>(battle.val, registry));
   check(typeName);
 
@@ -346,7 +346,7 @@ void check(const analyze_effect::Inputs& inputs, const types::registry& registry
     types::registry::checkEntity(input, registry);
     POKESIM_REQUIRE_NM(has<analyze_effect::tags::Input>(input, registry));
     POKESIM_REQUIRE_NM(has<analyze_effect::Attacker>(input, registry));
-    POKESIM_REQUIRE_NM(has<analyze_effect::Defenders>(input, registry));
+    POKESIM_REQUIRE_NM(has<analyze_effect::Defender>(input, registry));
     POKESIM_REQUIRE_NM(has<analyze_effect::EffectTarget>(input, registry));
     POKESIM_REQUIRE_NM(has<analyze_effect::EffectMove>(input, registry));
     POKESIM_REQUIRE_NM(has<Battle>(input, registry));
@@ -366,14 +366,14 @@ void check(const analyze_effect::Inputs& inputs, const types::registry& registry
       pseudoWeather || sideCondition || status || terrain || volatileCondition || weather || atkBoost || defBoost ||
       spaBoost || spdBoost || speBoost);
 
-    auto const& [attacker, defenders, target, move] = registry.get<
+    auto const& [attacker, defender, target, move] = registry.get<
       analyze_effect::Attacker,
-      analyze_effect::Defenders,
+      analyze_effect::Defender,
       analyze_effect::EffectTarget,
       analyze_effect::EffectMove>(input);
 
     checkPokemon(attacker.val, registry);
-    checkPokemon(defenders.only(), registry);
+    checkPokemon(defender.val, registry);
     checkPokemon(target.val, registry);
 
     check(move);
@@ -407,17 +407,17 @@ void check(const analyze_effect::MovePair& movePair, const types::registry& regi
   }
 
   const auto& [parentAttacker, parentDefenders, parentBattle, parentTypeName, parentMoveName] =
-    registry.get<analyze_effect::Attacker, analyze_effect::Defenders, Battle, TypeName, MoveName>(parentBattleMove);
+    registry.get<analyze_effect::Attacker, analyze_effect::Defender, Battle, TypeName, MoveName>(parentBattleMove);
   const auto& [childAttacker, childDefenders, childBattle, childTypeName, childMoveName] =
-    registry.get<analyze_effect::Attacker, analyze_effect::Defenders, Battle, TypeName, MoveName>(childBattleMove);
+    registry.get<analyze_effect::Attacker, analyze_effect::Defender, Battle, TypeName, MoveName>(childBattleMove);
   if (has<analyze_effect::tags::BattleCloneForCalculation>(childBattle.val, registry)) {
     POKESIM_REQUIRE_NM(parentAttacker.val != childAttacker.val);
-    POKESIM_REQUIRE_NM(parentDefenders.only() != childDefenders.only());
+    POKESIM_REQUIRE_NM(parentDefenders.val != childDefenders.val);
     POKESIM_REQUIRE_NM(parentBattle.val != childBattle.val);
   }
   else {
     POKESIM_REQUIRE_NM(parentAttacker.val == childAttacker.val);
-    POKESIM_REQUIRE_NM(parentDefenders.only() == childDefenders.only());
+    POKESIM_REQUIRE_NM(parentDefenders.val == childDefenders.val);
     POKESIM_REQUIRE_NM(parentBattle.val == childBattle.val);
   }
 
@@ -609,6 +609,11 @@ void check(const CurrentActionTargets& targets, const types::registry& registry)
 }
 
 template <>
+void check(const CurrentActionTarget& target, const types::registry& registry) {
+  checkPokemon(target.val, registry);
+}
+
+template <>
 void check(const CurrentActionSource& source, const types::registry& registry) {
   checkPokemon(source.val, registry);
 }
@@ -630,6 +635,30 @@ void check(const CurrentActionMovesAsSource& moves, const types::registry& regis
 template <>
 void check(const CurrentActionMoveSlot& move, const types::registry& registry) {
   checkMoveSlot(move.val, registry);
+}
+
+template <>
+void check(const CurrentEffectTarget& target, const types::registry& registry) {
+  checkPokemon(target.val, registry);
+}
+
+template <>
+void check(const CurrentEffectSource& source, const types::registry& registry) {
+  checkPokemon(source.val, registry);
+}
+
+template <>
+void check(const CurrentEffectsAsTarget& effects, const types::registry& registry) {
+  for (types::entity effect : effects.val) {
+    types::registry::checkEntity(effect, registry);
+  }
+}
+
+template <>
+void check(const CurrentEffectsAsSource& effects, const types::registry& registry) {
+  for (types::entity effect : effects.val) {
+    types::registry::checkEntity(effect, registry);
+  }
 }
 
 template <>

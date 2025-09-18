@@ -14,11 +14,11 @@ struct RootBattle;
 void assignRootBattle(types::handle battleHandle);
 void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root);
 
-void setCurrentActionSource(types::handle battleHandle, const Sides& sides, const CurrentAction& action);
+void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction action);
 void setCurrentActionTarget(
-  types::handle battleHandle, const Sides& sides, const CurrentAction& action, const CurrentActionSource& source);
+  types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source);
 void setCurrentActionMove(
-  types::handle battleHandle, const CurrentActionSource& source, const CurrentActionTargets& targets,
-  const CurrentAction& action, const Pokedex& pokedex);
+  types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
+  const Pokedex& pokedex);
 void clearCurrentAction(Simulation& simulation);
 }  // namespace pokesim

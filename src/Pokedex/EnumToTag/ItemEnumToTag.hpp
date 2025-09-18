@@ -31,7 +31,7 @@ auto enumToTag(dex::Item item, RunFunctionArgs&&... args) {
     case dex::Item::LIFE_ORB:      return RunStruct<LifeOrb>::run(std::forward<RunFunctionArgs>(args)...);
 
     default: {
-      POKESIM_REQUIRE(false, "Adding tag for item that does not exist.");
+      POKESIM_REQUIRE_FAIL("Using a tag for item that does not exist.");
     }
   }
 }

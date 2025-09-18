@@ -39,6 +39,11 @@ struct BuildMove {
     // moveTags and effectTags are not optional because setting them as optional does not work with clang
   };
 
+  enum class MoveEffectKind : std::uint8_t {
+    primary,
+    secondary,
+  };
+
   template <auto Member>
   using void_t = std::void_t<decltype(Member)>;
 
@@ -73,44 +78,63 @@ struct BuildMove {
   template <typename Type>
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
 
-  template <typename EffectData>
-  static types::entity buildEffect(types::registry& registry, bool effectsTarget) {
-    dex::internal::MoveEffectSetup effect(registry);
-
-    if constexpr (has<Optional::chance, EffectData>::value) {
-      effect.setChance(EffectData::chance);
-    }
-
-    if (effectsTarget) {
-      effect.setEffectsTarget();
+  template <typename EffectType, typename EffectData, MoveEffectKind moveEffectKind, typename... EffectValues>
+  static void setEffect(dex::internal::MoveDexDataSetup& move, const EffectValues&... effectValues) {
+    if constexpr (moveEffectKind == MoveEffectKind::primary) {
+      static_assert(
+        !has<Optional::chance, EffectData>::value,
+        "Primary effects cannot have a chance to happen because they always happen if the move is successful.");
+      move.setPrimaryEffect<EffectType>(effectValues...);
     }
     else {
-      effect.setEffectsSelf();
+      types::baseEffectChance chance = MechanicConstants::MoveBaseEffectChance::MAX;
+      if constexpr (has<Optional::chance, EffectData>::value) {
+        chance = EffectData::chance;
+      }
+      move.setSecondaryEffect<EffectType>(chance, effectValues...);
     }
+  }
 
+  template <typename EffectData, MoveEffectKind moveEffectKind, typename... EffectTypes>
+  static void setEffectTags(dex::internal::MoveDexDataSetup& move, Tags<EffectTypes...>) {
+    if constexpr (moveEffectKind == MoveEffectKind::primary) {
+      static_assert(
+        !has<Optional::chance, EffectData>::value,
+        "Primary effects cannot have a chance to happen because they always happen if the move is successful.");
+      (move.setPrimaryEffect<EffectTypes>(), ...);
+    }
+    else {
+      types::baseEffectChance chance = MechanicConstants::MoveBaseEffectChance::MAX;
+      if constexpr (has<Optional::chance, EffectData>::value) {
+        chance = EffectData::chance;
+      }
+      (move.setSecondaryEffect<EffectTypes>(chance), ...);
+    }
+  }
+
+  template <typename EffectData, MoveEffectKind moveEffectKind>
+  static void buildEffect(dex::internal::MoveDexDataSetup& move) {
     if constexpr (has<Optional::atkBoost, EffectData>::value) {
-      effect.setBoost<AtkBoost>(EffectData::atkBoost);
+      setEffect<AtkBoost, EffectData, moveEffectKind>(move, EffectData::atkBoost);
     }
 
     if constexpr (has<Optional::defBoost, EffectData>::value) {
-      effect.setBoost<DefBoost>(EffectData::defBoost);
+      setEffect<DefBoost, EffectData, moveEffectKind>(move, EffectData::defBoost);
     }
 
     if constexpr (has<Optional::spaBoost, EffectData>::value) {
-      effect.setBoost<SpaBoost>(EffectData::spaBoost);
+      setEffect<SpaBoost, EffectData, moveEffectKind>(move, EffectData::spaBoost);
     }
 
     if constexpr (has<Optional::spdBoost, EffectData>::value) {
-      effect.setBoost<SpdBoost>(EffectData::spdBoost);
+      setEffect<SpdBoost, EffectData, moveEffectKind>(move, EffectData::spdBoost);
     }
 
     if constexpr (has<Optional::speBoost, EffectData>::value) {
-      effect.setBoost<SpeBoost>(EffectData::speBoost);
+      setEffect<SpeBoost, EffectData, moveEffectKind>(move, EffectData::speBoost);
     }
 
-    effect.setProperties(EffectData::effectTags);
-
-    return effect.entity();
+    setEffectTags<EffectData, moveEffectKind>(move, EffectData::effectTags);
   }
 
  public:
@@ -148,22 +172,24 @@ struct BuildMove {
       move.setHitCount(T::hitCount);
     }
 
-    if (!forActiveMove) {
-      if constexpr (has<Optional::sourcePrimaryEffect, T>::value) {
-        move.setPrimaryEffect(buildEffect<typename T::sourcePrimaryEffect>(registry, false));
-      }
+    if constexpr (has<Optional::sourcePrimaryEffect, T>::value) {
+      buildEffect<typename T::sourcePrimaryEffect, MoveEffectKind::primary>(move);
+      move.setEffectTargetsMoveSource();
+    }
 
-      if constexpr (has<Optional::targetPrimaryEffect, T>::value) {
-        move.setPrimaryEffect(buildEffect<typename T::targetPrimaryEffect>(registry, true));
-      }
+    if constexpr (has<Optional::targetPrimaryEffect, T>::value) {
+      buildEffect<typename T::targetPrimaryEffect, MoveEffectKind::primary>(move);
+      move.setEffectTargetsMoveTarget();
+    }
 
-      if constexpr (has<Optional::sourceSecondaryEffect, T>::value) {
-        move.setSecondaryEffect(buildEffect<typename T::sourceSecondaryEffect>(registry, false));
-      }
+    if constexpr (has<Optional::sourceSecondaryEffect, T>::value) {
+      buildEffect<typename T::sourceSecondaryEffect, MoveEffectKind::secondary>(move);
+      move.setEffectTargetsMoveSource();
+    }
 
-      if constexpr (has<Optional::targetSecondaryEffect, T>::value) {
-        move.setSecondaryEffect(buildEffect<typename T::targetSecondaryEffect>(registry, true));
-      }
+    if constexpr (has<Optional::targetSecondaryEffect, T>::value) {
+      buildEffect<typename T::targetSecondaryEffect, MoveEffectKind::secondary>(move);
+      move.setEffectTargetsMoveTarget();
     }
 
     move.setProperties(T::moveTags);

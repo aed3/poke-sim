@@ -41,7 +41,6 @@
 
 namespace pokesim::simulate_turn {
 namespace {
-
 void addTargetAllyToTargets(types::registry& registry, const Battle& battle) {
   const Sides& sides = registry.get<Sides>(battle.val);
   const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).val);
@@ -68,10 +67,16 @@ void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
   targets.val.push_back(allyEntity);
 }
 
-void resolveMoveTargets(CurrentActionTargets&) {}
+void resolveMoveTargets(types::registry& registry, CurrentActionTargets& targets) {
+  for (types::entity target : targets.val) {
+    registry.emplace_or_replace<pokesim::tags::CurrentActionMoveTarget>(target);
+  }
+
+  // More to do...
+}
 
 void createActionMoveForTargets(
-  types::handle targetHandle, const Battle& battle, const CurrentActionSource& source, const Pokedex& pokedex) {
+  types::handle targetHandle, Battle battle, CurrentActionSource source, const Pokedex& pokedex) {
   types::registry& registry = *targetHandle.registry();
 
   dex::Move move = registry.get<action::Move>(registry.get<CurrentAction>(battle.val).val).name;
@@ -122,7 +127,7 @@ void runResidualAction(Simulation& simulation) {
   if (selectedBattle.hasNoneSelected()) return;
 }
 
-void runBeforeTurnAction(Simulation& /*simulation*/) {
+void runBeforeTurnAction(Simulation&) {
   // Barely used, will find different way of handling it
 }
 

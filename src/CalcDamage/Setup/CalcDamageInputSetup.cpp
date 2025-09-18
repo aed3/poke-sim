@@ -21,7 +21,6 @@ void InputSetup::setup(
   types::handle handle{*registry, moveEntity};
 
   handle.emplace<MoveName>(move);
-  handle.emplace<pokesim::tags::CalculateDamage>();
   registry->emplace_or_replace<tags::Attacker>(sourceEntity);
   registry->emplace_or_replace<tags::Defender>(targetEntity);
 }

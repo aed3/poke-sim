@@ -127,7 +127,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
 
   const types::registry& registry = simulation.registry;
   damageRolls.each([&](types::entity entity, const DamageRolls& trueDamageRolls) {
-    types::entity target = registry.get<CurrentActionTargets>(entity).only();
+    types::entity target = registry.get<CurrentActionTarget>(entity).val;
     types::stat targetHp = registry.get<stat::CurrentHp>(target).val;
 
     PlayerSideId sideId = registry.get<PlayerSide>(registry.get<Side>(target).val).val;

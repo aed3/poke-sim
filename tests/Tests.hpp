@@ -53,7 +53,7 @@ inline Simulation createSingleBattleSimulation(Simulation::BattleCreationInfo& b
     Simulation::PokemonCreationInfo p2PokemonInfo{};
     p2PokemonInfo.species = dex::Species::AMPHAROS;
     p2PokemonInfo.item = dex::Item::CHOICE_SPECS;
-    p2PokemonInfo.ability = dex::Ability::STATIC;
+    p2PokemonInfo.ability = dex::Ability::PLUS;
     p2PokemonInfo.gender = dex::Gender::FEMALE;
     p2PokemonInfo.level = 100U;
     p2PokemonInfo.nature = dex::Nature::MODEST;

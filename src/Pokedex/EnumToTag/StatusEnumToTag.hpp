@@ -3,7 +3,6 @@
 #include <Components/Tags/StatusTags.hpp>
 #include <Config/Require.hpp>
 #include <Types/Enums/Status.hpp>
-// TODO(aed3): Make this auto generated
 
 namespace pokesim::status::tags {
 /*
@@ -31,8 +30,18 @@ auto enumToTag(dex::Status status, RunFunctionArgs&&... args) {
     case dex::Status::TOX: return RunStruct<Toxic>::run(std::forward<RunFunctionArgs>(args)...);
 
     default: {
-      POKESIM_REQUIRE(false, "Adding tag for status that does not exist.");
+      POKESIM_REQUIRE_FAIL("Using a tag for status that does not exist.");
     }
   }
+}
+
+template <template <typename> typename RunStruct, typename... RunFunctionArgs>
+void forEach(RunFunctionArgs&&... args) {
+  enumToTag<RunStruct>(dex::Status::BRN, std::forward<RunFunctionArgs>(args)...);
+  enumToTag<RunStruct>(dex::Status::FRZ, std::forward<RunFunctionArgs>(args)...);
+  enumToTag<RunStruct>(dex::Status::PAR, std::forward<RunFunctionArgs>(args)...);
+  enumToTag<RunStruct>(dex::Status::PSN, std::forward<RunFunctionArgs>(args)...);
+  enumToTag<RunStruct>(dex::Status::SLP, std::forward<RunFunctionArgs>(args)...);
+  enumToTag<RunStruct>(dex::Status::TOX, std::forward<RunFunctionArgs>(args)...);
 }
 }  // namespace pokesim::status::tags

@@ -6,3 +6,4 @@
 #include "ItemEnumToTag.hpp"
 #include "NatureEnumToTag.hpp"
 #include "StatusEnumToTag.hpp"
+#include "TypeEnumToTag.hpp"

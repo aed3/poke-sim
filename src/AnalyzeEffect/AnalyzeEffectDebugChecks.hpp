@@ -78,8 +78,8 @@ struct Checks : pokesim::debug::Checks {
   }
 
   DamageRollKind getDamageRollKind(types::entity input, DamageRollOptions damageRollOptions) const {
-    const Defenders& defenders = registry->get<Defenders>(input);
-    const Side& side = registry->get<Side>(defenders.only());
+    Defender defender = registry->get<Defender>(input);
+    const Side& side = registry->get<Side>(defender.val);
     PlayerSideId playerSide = registry->get<PlayerSide>(side.val).val;
     switch (playerSide) {
       case PlayerSideId::P1: {

@@ -277,7 +277,7 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalcDamage][Setup]") {
   REQUIRE(battles.size() == 1U);
 
   auto view = registry.view<tags::CalculateDamage>();
-  REQUIRE(view.size() == 6U);
+  REQUIRE(view.size() == 7U);
 }
 
 TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup]") {

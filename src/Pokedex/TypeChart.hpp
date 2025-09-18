@@ -19,7 +19,6 @@ struct TypeChart : private TypeChartBase {
 
   using enumType = std::underlying_type_t<dex::Type>;
 
- public:
   constexpr TypeChart(const constructorType partialChart) : TypeChartBase() {
     for (auto& ratios : *this) {
       for (auto& effectiveness : ratios) {
@@ -34,6 +33,7 @@ struct TypeChart : private TypeChartBase {
     }
   }
 
+ public:
   constexpr TypeChart(GameMechanics gameMechanics) : TypeChart(TypeChart::pickForMechanics(gameMechanics)) {}
 
   constexpr TypeEffectiveness effectiveness(dex::Type attacking, dex::Type defending) const {
