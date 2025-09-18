@@ -273,7 +273,7 @@ struct VerticalSlice1Checks : debug::Checks {
 
   void checkPokemon() const {
     debug::TypesToIgnore typesToIgnore;
-    typesToIgnore.add<stat::CurrentHp, LastUsedMove, StatusName, status::tags::Paralysis>();
+    typesToIgnore.add<stat::CurrentHp, LastUsedMove, StatusName, status::tags::Paralysis, stat::EffectiveSpe>();
 
     specificallyCheckEntities<tags::Pokemon>(typesToIgnore);
   }
@@ -325,6 +325,11 @@ struct VerticalSlice1Checks : debug::Checks {
         REQUIRE(finalEntityCount == (initialEntityCount * 2U));
       }
     }
+  }
+
+  types::stat originalSpeed(types::entity pokemon) const {
+    types::entity original = debug::findCopyParent(originalToCopy, *registry, pokemon);
+    return registryOnInput.get<stat::EffectiveSpe>(originalToCopy.at(original)).val;
   }
 
   const RngSeed& originalRngSeed(types::entity battle) const {
@@ -644,10 +649,15 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
     types::entity p2Move = registry.get<MoveSlots>(p2Pokemon).val[0];
 
     bool p1Paralyzed = registry.all_of<status::tags::Paralysis>(p1Pokemon);
-    const auto& [p1Hp, p1LastUsedMove] = registry.get<stat::CurrentHp, LastUsedMove>(p1Pokemon);
-    const auto& [p2Hp, p2LastUsedMove] = registry.get<stat::CurrentHp, LastUsedMove>(p2Pokemon);
+    const auto& [p1Hp, p1LastUsedMove, p1Speed] =
+      registry.get<stat::CurrentHp, LastUsedMove, stat::EffectiveSpe>(p1Pokemon);
+    const auto& [p2Hp, p2LastUsedMove, p2Speed] =
+      registry.get<stat::CurrentHp, LastUsedMove, stat::EffectiveSpe>(p2Pokemon);
     const Pp& p1Pp = registry.get<Pp>(p1Move);
     const Pp& p2Pp = registry.get<Pp>(p2Move);
+
+    types::stat originalP1Speed = checks.originalSpeed(p1Pokemon);
+    types::stat originalP2Speed = checks.originalSpeed(p2Pokemon);
 
     if (!applyChangesToInputBattle) {
       REQUIRE_FALSE(registry.all_of<simulate_turn::TurnOutcomeBattles>(battle));
@@ -673,16 +683,19 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
     REQUIRE(p1Pp.val == (p1Info.moves[1].pp - 1U));
     REQUIRE(p2Pp.val == (p2Info.moves[0].pp - 1U));
 
-    if (!p2DamageInfo.mightCauseParalysis()) {
+    if (!p2DamageInfo.mightCauseParalysis() || !p1Paralyzed) {
       REQUIRE_FALSE(registry.all_of<StatusName>(p1Pokemon));
       REQUIRE_FALSE(p1Paralyzed);
+      REQUIRE(p1Speed.val == originalP1Speed);
     }
-    else if (p1Paralyzed) {
+    if (p1Paralyzed) {
       REQUIRE(registry.get<StatusName>(p1Pokemon).name == dex::Status::PAR);
+      REQUIRE(p1Speed.val == (originalP1Speed / 2U));
     }
 
     REQUIRE_FALSE(registry.all_of<StatusName>(p2Pokemon));
     REQUIRE_FALSE(registry.all_of<status::tags::Paralysis>(p2Pokemon));
+    REQUIRE(p2Speed.val == originalP2Speed);
 
     CAPTURE(p1Paralyzed, p1Hp.val, p2Hp.val, expectedP1Hp, expectedP2Hp);
 

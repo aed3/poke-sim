@@ -1,11 +1,10 @@
 #include <Components/Stats.hpp>
-#include <Simulation/Simulation.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 
 #include "headers.hpp"
 
 namespace pokesim::dex::internal {
-void PlusEvents::onModifySpA(types::handle, EventModifier&) {}
-
-void StaticEvents::onDamagingHit(Simulation&) {}
+void ParalysisEvents::onModifySpe(stat::EffectiveSpe& effectiveSpe) {
+  effectiveSpe.val /= latest::Paralysis::onModifySpaModifier;
+}
 }  // namespace pokesim::dex::internal

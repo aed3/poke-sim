@@ -6,17 +6,12 @@
 
 namespace pokesim {
 class Simulation;
-
-namespace stat {
-struct EffectiveSpe;
-}
 }  // namespace pokesim
 
 namespace pokesim::dex {
 namespace internal {
 struct StaticEvents {
   static void onDamagingHit(Simulation& simulation);
-  static void onModifySpe(stat::EffectiveSpe& effectiveSpe);
 };
 }  // namespace internal
 

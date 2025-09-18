@@ -14,6 +14,7 @@
 #include <Pokedex/Abilities/headers.hpp>
 #include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/Items/headers.hpp>
+#include <Pokedex/Statuses/headers.hpp>
 #include <Simulation/RegistryContainer.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Utilities/SelectForView.hpp>
@@ -165,7 +166,7 @@ void runModifySpe(Simulation& simulation) {
   simulation.registry.clear<EventModifier>();
 
   simulation.viewForSelectedPokemon<
-    dex::latest::Static::onModifySpe,
+    dex::latest::Paralysis::onModifySpe,
     Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>();
 }
 

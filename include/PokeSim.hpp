@@ -213,6 +213,7 @@
  * src/Pokedex/Items/ChoiceSpecs.hpp
  * src/Pokedex/Items/FocusSash.hpp
  * src/Pokedex/Items/LifeOrb.hpp
+ * src/Pokedex/Statuses/Paralysis.hpp
  * src/Simulation/RunEvent.hpp
  * src/Utilities/SelectForView.hpp
  * src/Simulation/RunEvent.cpp
@@ -228,6 +229,7 @@
  * src/SimulateTurn/ManageActionQueue.cpp
  * src/SimulateTurn/CalcDamageSpecifics.hpp
  * src/SimulateTurn/CalcDamageSpecifics.cpp
+ * src/Pokedex/Statuses/StatusEvents.cpp
  * src/Pokedex/Setup/DexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.cpp
@@ -25196,17 +25198,12 @@ using Plus = dex::Plus<GameMechanics::SCARLET_VIOLET>;
 
 namespace pokesim {
 class Simulation;
-
-namespace stat {
-struct EffectiveSpe;
-}
 }  // namespace pokesim
 
 namespace pokesim::dex {
 namespace internal {
 struct StaticEvents {
   inline static void onDamagingHit(Simulation& simulation);
-  inline static void onModifySpe(stat::EffectiveSpe& effectiveSpe);
 };
 }  // namespace internal
 
@@ -25417,6 +25414,39 @@ struct LifeOrb {
 }  // namespace pokesim::dex
 
 ///////////////////// END OF src/Pokedex/Items/LifeOrb.hpp /////////////////////
+
+///////////////// START OF src/Pokedex/Statuses/Paralysis.hpp //////////////////
+
+#include <string_view>
+
+namespace pokesim::stat {
+struct EffectiveSpe;
+}  // namespace pokesim::stat
+
+namespace pokesim::dex {
+namespace internal {
+struct ParalysisEvents {
+  inline static void onModifySpe(stat::EffectiveSpe& effectiveSpe);
+};
+}  // namespace internal
+
+template <GameMechanics>
+struct Paralysis : internal::ParalysisEvents {
+  static constexpr dex::Status name = dex::Status::PAR;
+
+  static constexpr types::stat onModifySpaModifier = 2U;
+  struct Strings {
+    static constexpr std::string_view name = "Paralysis";
+    static constexpr std::string_view smogonId = "par";
+  };
+};
+
+namespace latest {
+using Paralysis = dex::Paralysis<GameMechanics::SCARLET_VIOLET>;
+}
+}  // namespace pokesim::dex
+
+////////////////// END OF src/Pokedex/Statuses/Paralysis.hpp ///////////////////
 
 ///////////////////// START OF src/Simulation/RunEvent.hpp /////////////////////
 
@@ -25657,7 +25687,7 @@ inline void runModifySpe(Simulation& simulation) {
   simulation.registry.clear<EventModifier>();
 
   simulation.viewForSelectedPokemon<
-    dex::latest::Static::onModifySpe,
+    dex::latest::Paralysis::onModifySpe,
     Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>();
 }
 
@@ -27306,6 +27336,16 @@ inline void setIfMoveCrits(Simulation& simulation) {
 
 /////////////// END OF src/SimulateTurn/CalcDamageSpecifics.cpp ////////////////
 
+//////////////// START OF src/Pokedex/Statuses/StatusEvents.cpp ////////////////
+
+namespace pokesim::dex::internal {
+inline void ParalysisEvents::onModifySpe(stat::EffectiveSpe& effectiveSpe) {
+  effectiveSpe.val /= latest::Paralysis::onModifySpaModifier;
+}
+}  // namespace pokesim::dex::internal
+
+///////////////// END OF src/Pokedex/Statuses/StatusEvents.cpp /////////////////
+
 ///////////////// START OF src/Pokedex/Setup/DexDataSetup.hpp //////////////////
 
 namespace pokesim::dex::internal {
@@ -28551,9 +28591,6 @@ namespace pokesim::dex::internal {
 inline void PlusEvents::onModifySpA(types::handle, EventModifier&) {}
 
 inline void StaticEvents::onDamagingHit(Simulation&) {}
-inline void StaticEvents::onModifySpe(stat::EffectiveSpe& effectiveSpe) {
-  effectiveSpe.val /= 2U;
-}
 }  // namespace pokesim::dex::internal
 
 //////////////// END OF src/Pokedex/Abilities/AbilityEvents.cpp ////////////////
@@ -30081,6 +30118,9 @@ template <typename StatusType>
 void setStatus(types::registry& registry, CurrentEffectTarget target, dex::Status status) {
   registry.emplace<StatusName>(target.val, status);
   registry.emplace<StatusType>(target.val);
+  if constexpr (std::is_same_v<StatusType, status::tags::Paralysis>) {
+    registry.emplace<tags::SpeStatUpdateRequired>(target.val);
+  }
 }
 }  // namespace
 

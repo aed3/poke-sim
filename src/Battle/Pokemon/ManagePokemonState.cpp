@@ -108,6 +108,9 @@ template <typename StatusType>
 void setStatus(types::registry& registry, CurrentEffectTarget target, dex::Status status) {
   registry.emplace<StatusName>(target.val, status);
   registry.emplace<StatusType>(target.val);
+  if constexpr (std::is_same_v<StatusType, status::tags::Paralysis>) {
+    registry.emplace<tags::SpeStatUpdateRequired>(target.val);
+  }
 }
 }  // namespace
 

@@ -35,4 +35,5 @@
 #include "Species/Gardevoir.hpp"
 #include "Species/Pangoro.hpp"
 #include "Species/Ribombee.hpp"
+#include "Statuses/Paralysis.hpp"
 #include "TypeChart.hpp"

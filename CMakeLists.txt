@@ -67,6 +67,7 @@ set (SOURCES
   src/CalcDamage/CalcDamage.cpp
   src/CalcDamage/Setup/CalcDamageInputSetup.cpp
   src/Pokedex/Abilities/AbilityEvents.cpp
+  src/Pokedex/Statuses/StatusEvents.cpp
   src/Pokedex/Effects/EffectEvents.cpp
   src/Pokedex/Items/ItemEvents.cpp
   src/Pokedex/Pokedex.cpp
