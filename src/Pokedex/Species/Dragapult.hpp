@@ -28,6 +28,6 @@ struct Dragapult {
 };
 
 namespace latest {
-using Dragapult = dex::Dragapult<GameMechanics::SCARLET_VIOLET>;
+using Dragapult = dex::Dragapult<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

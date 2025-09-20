@@ -9,14 +9,14 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace internal {
-struct StaticEvents {
+namespace events {
+struct Static {
   static void onDamagingHit(Simulation& simulation);
 };
-}  // namespace internal
+}  // namespace events
 
 template <GameMechanics>
-struct Static : internal::StaticEvents {
+struct Static : events::Static {
   static constexpr dex::Ability name = dex::Ability::STATIC;
 
   struct Strings {
@@ -26,6 +26,6 @@ struct Static : internal::StaticEvents {
 };
 
 namespace latest {
-using Static = dex::Static<GameMechanics::SCARLET_VIOLET>;
+using Static = dex::Static<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

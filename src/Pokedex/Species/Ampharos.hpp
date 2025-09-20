@@ -27,6 +27,6 @@ struct Ampharos {
 };
 
 namespace latest {
-using Ampharos = dex::Ampharos<GameMechanics::SCARLET_VIOLET>;
+using Ampharos = dex::Ampharos<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

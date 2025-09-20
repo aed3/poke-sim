@@ -37,17 +37,17 @@ class Pokedex {
   template <typename Build, typename T>
   void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
 
-  types::entity buildSpecies(dex::Species species, types::registry& registry, bool forActiveMove) const;
+  types::entity buildSpecies(dex::Species species, types::registry& registry) const;
   types::entity buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const;
-  types::entity buildItem(dex::Item item, types::registry& registry, bool forActiveMove) const;
-  types::entity buildAbility(dex::Ability ability, types::registry& registry, bool forActiveMove) const;
+  types::entity buildItem(dex::Item item, types::registry& registry) const;
+  types::entity buildAbility(dex::Ability ability, types::registry& registry) const;
 
   /**
    * @brief The data for the Pokedex will be based the this game's data.
    * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but if
    * it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
    */
-  GameMechanics mechanics;
+  GameMechanics constantMechanics;
   TypeChart constantTypeChart;
 
  private:
@@ -96,8 +96,10 @@ class Pokedex {
 #endif
 
  public:
-  Pokedex(GameMechanics mechanics_) : mechanics(mechanics_), constantTypeChart(mechanics_) {}
+  Pokedex(GameMechanics mechanics_) : constantMechanics(mechanics_), constantTypeChart(mechanics_) {}
   ~Pokedex() { Pokedex::checkIfDetached(this); }
+
+  constexpr GameMechanics mechanics() const { return constantMechanics; }
 
   /**
    * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.

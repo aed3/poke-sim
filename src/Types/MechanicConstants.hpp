@@ -169,6 +169,7 @@ struct MechanicConstants {
 
   struct AnalyzeEffectMultiplier {
     static constexpr float MAX = PokemonHpStat::MAX;
+    static constexpr float BASE = 1.0F;
     static constexpr float MIN = 0.0F;
   };
 

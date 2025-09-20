@@ -39,6 +39,6 @@ struct Moonblast {
 };
 
 namespace latest {
-using Moonblast = dex::Moonblast<GameMechanics::SCARLET_VIOLET>;
+using Moonblast = dex::Moonblast<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

@@ -16,7 +16,7 @@ template <typename T>
 struct BuildAbility {
  private:
  public:
-  static types::entity build(types::registry& registry, bool /*forActiveMove*/) {
+  static types::entity build(types::registry& registry) {
     dex::internal::AbilityDexDataSetup ability(registry);
 
     ability.setName(T::name);
@@ -26,20 +26,20 @@ struct BuildAbility {
 };
 
 template <template <GameMechanics> class T>
-auto buildAbilitySV(types::registry& registry, bool forActiveMove) {
-  return BuildAbility<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
+auto buildAbilitySV(types::registry& registry) {
+  return BuildAbility<T<GameMechanics::SCARLET_VIOLET>>::build(registry);
 }
 }  // namespace
 
-types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& registry, bool forActiveMove) const {
+types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& registry) const {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics) {
+  switch (mechanics()) {
     case GameMechanics::SCARLET_VIOLET: {
       switch (ability) {
-        case Ability::STATIC: return buildAbilitySV<Static>(registry, forActiveMove);
+        case Ability::STATIC: return buildAbilitySV<Static>(registry);
 
         default: break;
       }

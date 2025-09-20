@@ -14,7 +14,6 @@
 #include <Pokedex/Abilities/headers.hpp>
 #include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/Items/headers.hpp>
-#include <Pokedex/Statuses/headers.hpp>
 #include <Simulation/RegistryContainer.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Utilities/SelectForView.hpp>
@@ -77,7 +76,7 @@ void runModifyCritBoostEvent(Simulation&) {}
 void runBasePowerEvent(Simulation&) {}
 
 void runDamagingHitEvent(Simulation& simulation) {
-  dex::latest::Static::onDamagingHit(simulation);
+  dex::events::Static::onDamagingHit(simulation);
 }
 
 void runModifySecondariesEvent(Simulation&) {}
@@ -114,19 +113,12 @@ void runModifyMove(Simulation& simulation) {
   //   simulation,
   //   getMoveEventPokemonSelector<tags::CurrentActionMoveSource>()};
 
-  simulation.view<
-    dex::latest::ChoiceScarf::onSourceModifyMove,
-    Tags<item::tags::ChoiceScarf, tags::CurrentActionMoveSource>,
-    entt::exclude_t<ChoiceLock>>();
-
-  simulation.view<
-    dex::latest::ChoiceSpecs::onSourceModifyMove,
-    Tags<item::tags::ChoiceSpecs, tags::CurrentActionMoveSource>,
-    entt::exclude_t<ChoiceLock>>();
+  dex::events::ChoiceScarf::onSourceModifyMove(simulation);
+  dex::events::ChoiceSpecs::onSourceModifyMove(simulation);
 }
 
 void runDisableMove(Simulation& simulation) {
-  simulation.viewForSelectedPokemon<dex::latest::ChoiceLock::onDisableMove>();
+  dex::events::ChoiceLock::onDisableMove(simulation);
 }
 
 void runModifyAtk(Simulation&) {}
@@ -137,12 +129,10 @@ void runModifySpa(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
 
   // Priority 1
-  simulation.viewForSelectedPokemon<dex::latest::ChoiceSpecs::onModifySpa, Tags<item::tags::ChoiceSpecs>>();
+  dex::events::ChoiceSpecs::onModifySpa(simulation);
 
   // Priority 5
-  if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT) {
-    simulation.viewForSelectedPokemon<dex::latest::Plus::onModifySpA, Tags<ability::tags::Plus>>();
-  }
+  dex::events::Plus::onModifySpA(simulation);
 
   simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpa>>();
   simulation.registry.clear<EventModifier>();
@@ -151,7 +141,7 @@ void runModifySpa(Simulation& simulation) {
 void runModifySpd(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
 
-  simulation.viewForSelectedPokemon<dex::latest::AssaultVest::onModifySpd, Tags<item::tags::AssaultVest>>();
+  dex::events::AssaultVest::onModifySpd(simulation);
 
   simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpd>>();
   simulation.registry.clear<EventModifier>();
@@ -160,14 +150,12 @@ void runModifySpd(Simulation& simulation) {
 void runModifySpe(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
 
-  simulation.viewForSelectedPokemon<dex::latest::ChoiceScarf::onModifySpe, Tags<item::tags::ChoiceScarf>>();
+  dex::events::ChoiceScarf::onModifySpe(simulation);
 
   simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpe>>();
   simulation.registry.clear<EventModifier>();
 
-  simulation.viewForSelectedPokemon<
-    dex::latest::Paralysis::onModifySpe,
-    Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>();
+  dex::events::Paralysis::onModifySpe(simulation);
 }
 
 void runStartSleep(Simulation&) {}

@@ -28,6 +28,6 @@ struct Gardevoir {
 };
 
 namespace latest {
-using Gardevoir = dex::Gardevoir<GameMechanics::SCARLET_VIOLET>;
+using Gardevoir = dex::Gardevoir<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

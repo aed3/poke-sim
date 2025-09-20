@@ -52,7 +52,7 @@ struct AttackerHpLost : DamageRolls {};
 
 namespace analyze_effect {
 struct EffectMultiplier {
-  types::effectMultiplier val = 1.0F;
+  types::effectMultiplier val = MechanicConstants::AnalyzeEffectMultiplier::BASE;
 };
 
 using MultipliedDamageRolls = DamageRolls;

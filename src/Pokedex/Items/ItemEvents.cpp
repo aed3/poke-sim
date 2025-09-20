@@ -3,6 +3,7 @@
 #include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EventModifier.hpp>
+#include <Components/Tags/ItemTags.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Registry.hpp>
@@ -10,33 +11,39 @@
 
 #include "headers.hpp"
 
-namespace pokesim::dex {
+namespace pokesim::dex::events {
 namespace {
-void setChoiceLock(types::handle pokemonHandle, const Battle& battle) {
+void setChoiceLock(types::handle pokemonHandle, Battle battle) {
   types::entity moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val).val;
   pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot);
 }
 }  // namespace
-}  // namespace pokesim::dex
 
-namespace pokesim::dex::internal {
-void AssaultVestEvents::onModifySpd(EventModifier& eventModifier) {
-  chainToModifier(eventModifier.val, latest::AssaultVest::onModifySpdModifier);
+void AssaultVest::onModifySpd(Simulation& simulation) {
+  constexpr auto modifier = latest::AssaultVest::onModifySpdModifier;
+  simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::AssaultVest>>(
+    modifier);
 }
 
-void ChoiceScarfEvents::onModifySpe(EventModifier& eventModifier) {
-  chainToModifier(eventModifier.val, latest::ChoiceScarf::onModifySpeModifier);
+void ChoiceScarf::onModifySpe(Simulation& simulation) {
+  constexpr auto modifier = latest::ChoiceScarf::onModifySpeModifier;
+  simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceScarf>>(
+    modifier);
 }
 
-void ChoiceScarfEvents::onSourceModifyMove(types::handle pokemonHandle, const Battle& battle) {
-  setChoiceLock(pokemonHandle, battle);
+void ChoiceScarf::onSourceModifyMove(Simulation& simulation) {
+  simulation
+    .view<setChoiceLock, Tags<item::tags::ChoiceScarf, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
 }
 
-void ChoiceSpecsEvents::onModifySpa(EventModifier& eventModifier) {
-  chainToModifier(eventModifier.val, latest::ChoiceSpecs::onModifySpaModifier);
+void ChoiceSpecs::onModifySpa(Simulation& simulation) {
+  constexpr auto modifier = latest::ChoiceSpecs::onModifySpaModifier;
+  simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceSpecs>>(
+    modifier);
 }
 
-void ChoiceSpecsEvents::onSourceModifyMove(types::handle pokemonHandle, const Battle& battle) {
-  setChoiceLock(pokemonHandle, battle);
+void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
+  simulation
+    .view<setChoiceLock, Tags<item::tags::ChoiceScarf, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
 }
-}  // namespace pokesim::dex::internal
+}  // namespace pokesim::dex::events

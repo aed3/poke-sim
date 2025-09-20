@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Components/EventModifier.hpp>
 #include <Types/Event.hpp>
 #include <Types/MechanicConstants.hpp>
 
@@ -20,9 +21,14 @@ void applyChainedModifier(Number1& value, types::eventModifier eventModifier) {
 }
 
 template <typename Multiplier>
-void chainToModifier(types::eventModifier& eventModifier, Multiplier multiplier) {
+void chainValueToModifier(types::eventModifier& eventModifier, Multiplier multiplier) {
   types::eventModifier newModifier = (types::eventModifier)(multiplier * MechanicConstants::FIXED_POINT_SCALE);
   eventModifier =
     (eventModifier * newModifier + MechanicConstants::FIXED_POINT_HALF_SCALE) / MechanicConstants::FIXED_POINT_SCALE;
+}
+
+template <typename Multiplier>
+void chainComponentToModifier(EventModifier& eventModifier, Multiplier multiplier) {
+  chainValueToModifier(eventModifier.val, multiplier);
 }
 }  // namespace pokesim

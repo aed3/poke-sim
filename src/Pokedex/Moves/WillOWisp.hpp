@@ -35,6 +35,6 @@ struct WillOWisp {
 };
 
 namespace latest {
-using WillOWisp = dex::WillOWisp<GameMechanics::SCARLET_VIOLET>;
+using WillOWisp = dex::WillOWisp<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

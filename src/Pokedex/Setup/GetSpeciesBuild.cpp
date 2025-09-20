@@ -35,7 +35,7 @@ struct BuildSpecies {
   struct has<Optional::hiddenAbility, Type, void_t<Type::hiddenAbility>> : std::true_type {};
 
  public:
-  static types::entity build(types::registry& registry, bool /*forActiveMove*/) {
+  static types::entity build(types::registry& registry) {
     dex::internal::SpeciesDexDataSetup species(registry);
 
     species.setName(T::name);
@@ -57,25 +57,25 @@ struct BuildSpecies {
 };
 
 template <template <GameMechanics> class T>
-auto buildSpeciesSV(types::registry& registry, bool forActiveMove) {
-  return BuildSpecies<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
+auto buildSpeciesSV(types::registry& registry) {
+  return BuildSpecies<T<GameMechanics::SCARLET_VIOLET>>::build(registry);
 }
 }  // namespace
 
-types::entity Pokedex::buildSpecies(dex::Species species, types::registry& registry, bool forActiveMove) const {
+types::entity Pokedex::buildSpecies(dex::Species species, types::registry& registry) const {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics) {
+  switch (mechanics()) {
     case GameMechanics::SCARLET_VIOLET: {
       switch (species) {
-        case Species::AMPHAROS:  return buildSpeciesSV<Ampharos>(registry, forActiveMove);
-        case Species::GARDEVOIR: return buildSpeciesSV<Gardevoir>(registry, forActiveMove);
-        case Species::EMPOLEON:  return buildSpeciesSV<Empoleon>(registry, forActiveMove);
-        case Species::PANGORO:   return buildSpeciesSV<Pangoro>(registry, forActiveMove);
-        case Species::RIBOMBEE:  return buildSpeciesSV<Ribombee>(registry, forActiveMove);
-        case Species::DRAGAPULT: return buildSpeciesSV<Dragapult>(registry, forActiveMove);
+        case Species::AMPHAROS:  return buildSpeciesSV<Ampharos>(registry);
+        case Species::GARDEVOIR: return buildSpeciesSV<Gardevoir>(registry);
+        case Species::EMPOLEON:  return buildSpeciesSV<Empoleon>(registry);
+        case Species::PANGORO:   return buildSpeciesSV<Pangoro>(registry);
+        case Species::RIBOMBEE:  return buildSpeciesSV<Ribombee>(registry);
+        case Species::DRAGAPULT: return buildSpeciesSV<Dragapult>(registry);
 
         default: break;
       }

@@ -20,11 +20,11 @@ void Pokedex::load(entt::dense_map<T, types::entity>& map, const entt::dense_set
 }
 
 void Pokedex::loadSpecies(const entt::dense_set<dex::Species>& speciesSet) {
-  load(speciesMap, speciesSet, [this](dex::Species species) { return buildSpecies(species, dexRegistry, false); });
+  load(speciesMap, speciesSet, [this](dex::Species species) { return buildSpecies(species, dexRegistry); });
 }
 
 void Pokedex::loadItems(const entt::dense_set<dex::Item>& itemSet) {
-  load(itemsMap, itemSet, [this](dex::Item item) { return buildItem(item, dexRegistry, false); });
+  load(itemsMap, itemSet, [this](dex::Item item) { return buildItem(item, dexRegistry); });
 }
 
 void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
@@ -32,7 +32,7 @@ void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
 }
 
 void Pokedex::loadAbilities(const entt::dense_set<dex::Ability>& abilitySet) {
-  load(abilitiesMap, abilitySet, [this](dex::Ability ability) { return buildAbility(ability, dexRegistry, false); });
+  load(abilitiesMap, abilitySet, [this](dex::Ability ability) { return buildAbility(ability, dexRegistry); });
 }
 
 types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry) const {

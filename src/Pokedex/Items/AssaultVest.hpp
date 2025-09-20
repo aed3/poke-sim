@@ -6,18 +6,18 @@
 #include <string_view>
 
 namespace pokesim {
-struct EventModifier;
+class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace internal {
-struct AssaultVestEvents {
-  static void onModifySpd(EventModifier& eventModifier);
+namespace events {
+struct AssaultVest {
+  static void onModifySpd(Simulation& simulation);
 };
-}  // namespace internal
+}  // namespace events
 
 template <GameMechanics>
-struct AssaultVest : internal::AssaultVestEvents {
+struct AssaultVest : events::AssaultVest {
   static constexpr dex::Item name = dex::Item::ASSAULT_VEST;
 
   static constexpr types::effectMultiplier onModifySpdModifier = 1.5F;
@@ -28,6 +28,6 @@ struct AssaultVest : internal::AssaultVestEvents {
 };
 
 namespace latest {
-using AssaultVest = dex::AssaultVest<GameMechanics::SCARLET_VIOLET>;
+using AssaultVest = dex::AssaultVest<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

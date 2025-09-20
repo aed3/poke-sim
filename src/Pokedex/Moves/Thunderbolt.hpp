@@ -38,6 +38,6 @@ struct Thunderbolt {
 };
 
 namespace latest {
-using Thunderbolt = dex::Thunderbolt<GameMechanics::SCARLET_VIOLET>;
+using Thunderbolt = dex::Thunderbolt<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

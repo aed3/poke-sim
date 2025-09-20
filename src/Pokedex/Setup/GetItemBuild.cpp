@@ -16,7 +16,7 @@ template <typename T>
 struct BuildItem {
  private:
  public:
-  static types::entity build(types::registry& registry, bool /*forActiveMove*/) {
+  static types::entity build(types::registry& registry) {
     dex::internal::ItemDexDataSetup item(registry);
 
     item.setName(T::name);
@@ -26,25 +26,25 @@ struct BuildItem {
 };
 
 template <template <GameMechanics> class T>
-auto buildItemSV(types::registry& registry, bool forActiveMove) {
-  return BuildItem<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
+auto buildItemSV(types::registry& registry) {
+  return BuildItem<T<GameMechanics::SCARLET_VIOLET>>::build(registry);
 }
 }  // namespace
 
-types::entity Pokedex::buildItem(dex::Item item, types::registry& registry, bool forActiveMove) const {
+types::entity Pokedex::buildItem(dex::Item item, types::registry& registry) const {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics) {
+  switch (mechanics()) {
     case GameMechanics::SCARLET_VIOLET: {
       switch (item) {
-        case Item::ASSAULT_VEST:  return buildItemSV<AssaultVest>(registry, forActiveMove);
-        case Item::BRIGHT_POWDER: return buildItemSV<BrightPowder>(registry, forActiveMove);
-        case Item::CHOICE_SCARF:  return buildItemSV<ChoiceScarf>(registry, forActiveMove);
-        case Item::CHOICE_SPECS:  return buildItemSV<ChoiceSpecs>(registry, forActiveMove);
-        case Item::FOCUS_SASH:    return buildItemSV<FocusSash>(registry, forActiveMove);
-        case Item::LIFE_ORB:      return buildItemSV<LifeOrb>(registry, forActiveMove);
+        case Item::ASSAULT_VEST:  return buildItemSV<AssaultVest>(registry);
+        case Item::BRIGHT_POWDER: return buildItemSV<BrightPowder>(registry);
+        case Item::CHOICE_SCARF:  return buildItemSV<ChoiceScarf>(registry);
+        case Item::CHOICE_SPECS:  return buildItemSV<ChoiceSpecs>(registry);
+        case Item::FOCUS_SASH:    return buildItemSV<FocusSash>(registry);
+        case Item::LIFE_ORB:      return buildItemSV<LifeOrb>(registry);
 
         default: break;
       }

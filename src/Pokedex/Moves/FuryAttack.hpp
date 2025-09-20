@@ -31,6 +31,6 @@ struct FuryAttack {
 };
 
 namespace latest {
-using FuryAttack = dex::FuryAttack<GameMechanics::SCARLET_VIOLET>;
+using FuryAttack = dex::FuryAttack<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

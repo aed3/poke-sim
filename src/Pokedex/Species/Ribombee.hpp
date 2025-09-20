@@ -28,6 +28,6 @@ struct Ribombee {
 };
 
 namespace latest {
-using Ribombee = dex::Ribombee<GameMechanics::SCARLET_VIOLET>;
+using Ribombee = dex::Ribombee<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

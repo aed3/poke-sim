@@ -3,24 +3,22 @@
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Item.hpp>
 #include <Types/Event.hpp>
-#include <Types/Registry.hpp>
 #include <string_view>
 
 namespace pokesim {
-struct EventModifier;
-struct Battle;
+class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace internal {
-struct ChoiceScarfEvents {
-  static void onModifySpe(EventModifier& eventModifier);
-  static void onSourceModifyMove(types::handle pokemonHandle, const Battle& battle);
+namespace events {
+struct ChoiceScarf {
+  static void onModifySpe(Simulation& simulation);
+  static void onSourceModifyMove(Simulation& simulation);
 };
-}  // namespace internal
+}  // namespace events
 
 template <GameMechanics>
-struct ChoiceScarf : internal::ChoiceScarfEvents {
+struct ChoiceScarf : events::ChoiceScarf {
   static constexpr dex::Item name = dex::Item::CHOICE_SCARF;
 
   static constexpr types::effectMultiplier onModifySpeModifier = 1.5F;
@@ -31,6 +29,6 @@ struct ChoiceScarf : internal::ChoiceScarfEvents {
 };
 
 namespace latest {
-using ChoiceScarf = dex::ChoiceScarf<GameMechanics::SCARLET_VIOLET>;
+using ChoiceScarf = dex::ChoiceScarf<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

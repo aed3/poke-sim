@@ -5,22 +5,23 @@
 #include <Types/Stats.hpp>
 #include <string_view>
 
-namespace pokesim::stat {
-struct EffectiveSpe;
-}  // namespace pokesim::stat
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
 
 namespace pokesim::dex {
-namespace internal {
-struct ParalysisEvents {
-  static void onModifySpe(stat::EffectiveSpe& effectiveSpe);
+namespace events {
+struct Paralysis {
+  static void onModifySpe(Simulation& simulation);
 };
-}  // namespace internal
+}  // namespace events
 
 template <GameMechanics>
-struct Paralysis : internal::ParalysisEvents {
+struct Paralysis : events::Paralysis {
   static constexpr dex::Status name = dex::Status::PAR;
 
-  static constexpr types::stat onModifySpaModifier = 2U;
+  static constexpr types::stat speedDividend = 50U;
+  static constexpr types::stat speedDivisor = 100U;
   struct Strings {
     static constexpr std::string_view name = "Paralysis";
     static constexpr std::string_view smogonId = "par";
@@ -28,6 +29,6 @@ struct Paralysis : internal::ParalysisEvents {
 };
 
 namespace latest {
-using Paralysis = dex::Paralysis<GameMechanics::SCARLET_VIOLET>;
+using Paralysis = dex::Paralysis<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

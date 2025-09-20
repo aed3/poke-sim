@@ -31,6 +31,6 @@ struct KnockOff {
 };
 
 namespace latest {
-using KnockOff = dex::KnockOff<GameMechanics::SCARLET_VIOLET>;
+using KnockOff = dex::KnockOff<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

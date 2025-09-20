@@ -5,6 +5,7 @@
 #include "Abilities/Plus.hpp"
 #include "Abilities/Static.hpp"
 #include "Effects/ChoiceLock.hpp"
+#include "Effects/Paralysis.hpp"
 #include "EnumToTag/AbililtyEnumToTag.hpp"
 #include "EnumToTag/ItemEnumToTag.hpp"
 #include "EnumToTag/NatureEnumToTag.hpp"
@@ -35,5 +36,4 @@
 #include "Species/Gardevoir.hpp"
 #include "Species/Pangoro.hpp"
 #include "Species/Ribombee.hpp"
-#include "Statuses/Paralysis.hpp"
 #include "TypeChart.hpp"

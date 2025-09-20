@@ -36,6 +36,6 @@ struct QuiverDance {
 };
 
 namespace latest {
-using QuiverDance = dex::QuiverDance<GameMechanics::SCARLET_VIOLET>;
+using QuiverDance = dex::QuiverDance<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

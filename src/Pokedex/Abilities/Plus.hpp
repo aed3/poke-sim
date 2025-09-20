@@ -3,22 +3,21 @@
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Event.hpp>
-#include <Types/Registry.hpp>
 #include <string_view>
 
 namespace pokesim {
-struct EventModifier;
+class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace internal {
-struct PlusEvents {
-  static void onModifySpA(types::handle pokemonHandle, EventModifier& eventModifier);
+namespace events {
+struct Plus {
+  static void onModifySpA(Simulation& simulation);
 };
-}  // namespace internal
+}  // namespace events
 
 template <GameMechanics>
-struct Plus : internal::PlusEvents {
+struct Plus : events::Plus {
   static constexpr dex::Ability name = dex::Ability::PLUS;
 
   static constexpr types::effectMultiplier onModifySpaModifier = 1.5F;
@@ -29,6 +28,6 @@ struct Plus : internal::PlusEvents {
 };
 
 namespace latest {
-using Plus = dex::Plus<GameMechanics::SCARLET_VIOLET>;
+using Plus = dex::Plus<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

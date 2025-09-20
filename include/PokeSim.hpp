@@ -207,13 +207,13 @@
  * src/Pokedex/Abilities/Plus.hpp
  * src/Pokedex/Abilities/Static.hpp
  * src/Pokedex/Effects/ChoiceLock.hpp
+ * src/Pokedex/Effects/Paralysis.hpp
  * src/Pokedex/Items/AssaultVest.hpp
  * src/Pokedex/Items/BrightPowder.hpp
  * src/Pokedex/Items/ChoiceScarf.hpp
  * src/Pokedex/Items/ChoiceSpecs.hpp
  * src/Pokedex/Items/FocusSash.hpp
  * src/Pokedex/Items/LifeOrb.hpp
- * src/Pokedex/Statuses/Paralysis.hpp
  * src/Simulation/RunEvent.hpp
  * src/Utilities/SelectForView.hpp
  * src/Simulation/RunEvent.cpp
@@ -229,7 +229,6 @@
  * src/SimulateTurn/ManageActionQueue.cpp
  * src/SimulateTurn/CalcDamageSpecifics.hpp
  * src/SimulateTurn/CalcDamageSpecifics.cpp
- * src/Pokedex/Statuses/StatusEvents.cpp
  * src/Pokedex/Setup/DexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.cpp
@@ -17831,6 +17830,7 @@ struct MechanicConstants {
 
   struct AnalyzeEffectMultiplier {
     static constexpr float MAX = PokemonHpStat::MAX;
+    static constexpr float BASE = 1.0F;
     static constexpr float MIN = 0.0F;
   };
 
@@ -19787,7 +19787,7 @@ struct AttackerHpLost : DamageRolls {};
 
 namespace analyze_effect {
 struct EffectMultiplier {
-  types::effectMultiplier val = 1.0F;
+  types::effectMultiplier val = MechanicConstants::AnalyzeEffectMultiplier::BASE;
 };
 
 using MultipliedDamageRolls = DamageRolls;
@@ -20218,14 +20218,14 @@ namespace pokesim {
 // Game the simulator is imitating the mechanics of
 enum class GameMechanics : std::uint8_t {
   NONE = 0U,
-  SWORD_SHIELD,
-  BRILLIANT_DIAMOND_SHINING_PEARL,
-  SCARLET_VIOLET,
+  SWORD_SHIELD = 80U,
+  BRILLIANT_DIAMOND_SHINING_PEARL = 83U,
+  SCARLET_VIOLET = 90U,
 
-  TOTAL_GAME_MECHANICS,
+  LATEST = SCARLET_VIOLET,
 };
 
-static constexpr std::uint8_t TOTAL_GAME_MECHANICS_COUNT = std::uint8_t(GameMechanics::TOTAL_GAME_MECHANICS) - 1U;
+static constexpr std::uint8_t TOTAL_GAME_MECHANICS_COUNT = 3U;
 }  // namespace pokesim
 
 /////////////////// END OF src/Types/Enums/GameMechanics.hpp ///////////////////
@@ -23028,17 +23028,17 @@ class Pokedex {
   template <typename Build, typename T>
   inline void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
 
-  inline types::entity buildSpecies(dex::Species species, types::registry& registry, bool forActiveMove) const;
+  inline types::entity buildSpecies(dex::Species species, types::registry& registry) const;
   inline types::entity buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const;
-  inline types::entity buildItem(dex::Item item, types::registry& registry, bool forActiveMove) const;
-  inline types::entity buildAbility(dex::Ability ability, types::registry& registry, bool forActiveMove) const;
+  inline types::entity buildItem(dex::Item item, types::registry& registry) const;
+  inline types::entity buildAbility(dex::Ability ability, types::registry& registry) const;
 
   /**
    * @brief The data for the Pokedex will be based the this game's data.
    * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but if
    * it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
    */
-  GameMechanics mechanics;
+  GameMechanics constantMechanics;
   TypeChart constantTypeChart;
 
  private:
@@ -23087,8 +23087,10 @@ class Pokedex {
 #endif
 
  public:
-  Pokedex(GameMechanics mechanics_) : mechanics(mechanics_), constantTypeChart(mechanics_) {}
+  Pokedex(GameMechanics mechanics_) : constantMechanics(mechanics_), constantTypeChart(mechanics_) {}
   ~Pokedex() { Pokedex::checkIfDetached(this); }
+
+  constexpr GameMechanics mechanics() const { return constantMechanics; }
 
   /**
    * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.
@@ -25150,10 +25152,15 @@ void applyChainedModifier(Number1& value, types::eventModifier eventModifier) {
 }
 
 template <typename Multiplier>
-void chainToModifier(types::eventModifier& eventModifier, Multiplier multiplier) {
+void chainValueToModifier(types::eventModifier& eventModifier, Multiplier multiplier) {
   types::eventModifier newModifier = (types::eventModifier)(multiplier * MechanicConstants::FIXED_POINT_SCALE);
   eventModifier =
     (eventModifier * newModifier + MechanicConstants::FIXED_POINT_HALF_SCALE) / MechanicConstants::FIXED_POINT_SCALE;
+}
+
+template <typename Multiplier>
+void chainComponentToModifier(EventModifier& eventModifier, Multiplier multiplier) {
+  chainValueToModifier(eventModifier.val, multiplier);
 }
 }  // namespace pokesim
 
@@ -25164,18 +25171,18 @@ void chainToModifier(types::eventModifier& eventModifier, Multiplier multiplier)
 #include <string_view>
 
 namespace pokesim {
-struct EventModifier;
+class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace internal {
-struct PlusEvents {
-  inline static void onModifySpA(types::handle pokemonHandle, EventModifier& eventModifier);
+namespace events {
+struct Plus {
+  inline static void onModifySpA(Simulation& simulation);
 };
-}  // namespace internal
+}  // namespace events
 
 template <GameMechanics>
-struct Plus : internal::PlusEvents {
+struct Plus : events::Plus {
   static constexpr dex::Ability name = dex::Ability::PLUS;
 
   static constexpr types::effectMultiplier onModifySpaModifier = 1.5F;
@@ -25186,7 +25193,7 @@ struct Plus : internal::PlusEvents {
 };
 
 namespace latest {
-using Plus = dex::Plus<GameMechanics::SCARLET_VIOLET>;
+using Plus = dex::Plus<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -25201,14 +25208,14 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace internal {
-struct StaticEvents {
+namespace events {
+struct Static {
   inline static void onDamagingHit(Simulation& simulation);
 };
-}  // namespace internal
+}  // namespace events
 
 template <GameMechanics>
-struct Static : internal::StaticEvents {
+struct Static : events::Static {
   static constexpr dex::Ability name = dex::Ability::STATIC;
 
   struct Strings {
@@ -25218,7 +25225,7 @@ struct Static : internal::StaticEvents {
 };
 
 namespace latest {
-using Static = dex::Static<GameMechanics::SCARLET_VIOLET>;
+using Static = dex::Static<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -25229,20 +25236,18 @@ using Static = dex::Static<GameMechanics::SCARLET_VIOLET>;
 #include <string_view>
 
 namespace pokesim {
-struct ChoiceLock;
-struct MoveSlots;
+class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace internal {
-struct ChoiceLockEvents {
-  inline static void onDisableMove(
-    types::registry& registry, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots);
+namespace events {
+struct ChoiceLock {
+  inline static void onDisableMove(Simulation& simulation);
 };
-}  // namespace internal
+}  // namespace events
 
 template <GameMechanics>
-struct ChoiceLock : internal::ChoiceLockEvents {
+struct ChoiceLock : events::ChoiceLock {
   static constexpr dex::Volatile name = dex::Volatile::CHOICE_LOCK;
 
   struct Strings {
@@ -25252,29 +25257,63 @@ struct ChoiceLock : internal::ChoiceLockEvents {
 };
 
 namespace latest {
-using ChoiceLock = dex::ChoiceLock<GameMechanics::SCARLET_VIOLET>;
+using ChoiceLock = dex::ChoiceLock<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
 ////////////////// END OF src/Pokedex/Effects/ChoiceLock.hpp ///////////////////
+
+////////////////// START OF src/Pokedex/Effects/Paralysis.hpp //////////////////
+
+#include <string_view>
+
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
+
+namespace pokesim::dex {
+namespace events {
+struct Paralysis {
+  inline static void onModifySpe(Simulation& simulation);
+};
+}  // namespace events
+
+template <GameMechanics>
+struct Paralysis : events::Paralysis {
+  static constexpr dex::Status name = dex::Status::PAR;
+
+  static constexpr types::stat speedDividend = 50U;
+  static constexpr types::stat speedDivisor = 100U;
+  struct Strings {
+    static constexpr std::string_view name = "Paralysis";
+    static constexpr std::string_view smogonId = "par";
+  };
+};
+
+namespace latest {
+using Paralysis = dex::Paralysis<GameMechanics::LATEST>;
+}
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Effects/Paralysis.hpp ///////////////////
 
 ////////////////// START OF src/Pokedex/Items/AssaultVest.hpp //////////////////
 
 #include <string_view>
 
 namespace pokesim {
-struct EventModifier;
+class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace internal {
-struct AssaultVestEvents {
-  inline static void onModifySpd(EventModifier& eventModifier);
+namespace events {
+struct AssaultVest {
+  inline static void onModifySpd(Simulation& simulation);
 };
-}  // namespace internal
+}  // namespace events
 
 template <GameMechanics>
-struct AssaultVest : internal::AssaultVestEvents {
+struct AssaultVest : events::AssaultVest {
   static constexpr dex::Item name = dex::Item::ASSAULT_VEST;
 
   static constexpr types::effectMultiplier onModifySpdModifier = 1.5F;
@@ -25285,7 +25324,7 @@ struct AssaultVest : internal::AssaultVestEvents {
 };
 
 namespace latest {
-using AssaultVest = dex::AssaultVest<GameMechanics::SCARLET_VIOLET>;
+using AssaultVest = dex::AssaultVest<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -25314,20 +25353,19 @@ struct BrightPowder {
 #include <string_view>
 
 namespace pokesim {
-struct EventModifier;
-struct Battle;
+class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace internal {
-struct ChoiceScarfEvents {
-  inline static void onModifySpe(EventModifier& eventModifier);
-  inline static void onSourceModifyMove(types::handle pokemonHandle, const Battle& battle);
+namespace events {
+struct ChoiceScarf {
+  inline static void onModifySpe(Simulation& simulation);
+  inline static void onSourceModifyMove(Simulation& simulation);
 };
-}  // namespace internal
+}  // namespace events
 
 template <GameMechanics>
-struct ChoiceScarf : internal::ChoiceScarfEvents {
+struct ChoiceScarf : events::ChoiceScarf {
   static constexpr dex::Item name = dex::Item::CHOICE_SCARF;
 
   static constexpr types::effectMultiplier onModifySpeModifier = 1.5F;
@@ -25338,7 +25376,7 @@ struct ChoiceScarf : internal::ChoiceScarfEvents {
 };
 
 namespace latest {
-using ChoiceScarf = dex::ChoiceScarf<GameMechanics::SCARLET_VIOLET>;
+using ChoiceScarf = dex::ChoiceScarf<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -25349,20 +25387,19 @@ using ChoiceScarf = dex::ChoiceScarf<GameMechanics::SCARLET_VIOLET>;
 #include <string_view>
 
 namespace pokesim {
-struct EventModifier;
-struct Battle;
+class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace internal {
-struct ChoiceSpecsEvents {
-  inline static void onModifySpa(EventModifier& eventModifier);
-  inline static void onSourceModifyMove(types::handle pokemonHandle, const Battle& battle);
+namespace events {
+struct ChoiceSpecs {
+  inline static void onModifySpa(Simulation& simulation);
+  inline static void onSourceModifyMove(Simulation& simulation);
 };
-}  // namespace internal
+}  // namespace events
 
 template <GameMechanics>
-struct ChoiceSpecs : internal::ChoiceSpecsEvents {
+struct ChoiceSpecs : events::ChoiceSpecs {
   static constexpr dex::Item name = dex::Item::CHOICE_SPECS;
 
   static constexpr types::effectMultiplier onModifySpaModifier = 1.5F;
@@ -25373,7 +25410,7 @@ struct ChoiceSpecs : internal::ChoiceSpecsEvents {
 };
 
 namespace latest {
-using ChoiceSpecs = dex::ChoiceSpecs<GameMechanics::SCARLET_VIOLET>;
+using ChoiceSpecs = dex::ChoiceSpecs<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -25414,39 +25451,6 @@ struct LifeOrb {
 }  // namespace pokesim::dex
 
 ///////////////////// END OF src/Pokedex/Items/LifeOrb.hpp /////////////////////
-
-///////////////// START OF src/Pokedex/Statuses/Paralysis.hpp //////////////////
-
-#include <string_view>
-
-namespace pokesim::stat {
-struct EffectiveSpe;
-}  // namespace pokesim::stat
-
-namespace pokesim::dex {
-namespace internal {
-struct ParalysisEvents {
-  inline static void onModifySpe(stat::EffectiveSpe& effectiveSpe);
-};
-}  // namespace internal
-
-template <GameMechanics>
-struct Paralysis : internal::ParalysisEvents {
-  static constexpr dex::Status name = dex::Status::PAR;
-
-  static constexpr types::stat onModifySpaModifier = 2U;
-  struct Strings {
-    static constexpr std::string_view name = "Paralysis";
-    static constexpr std::string_view smogonId = "par";
-  };
-};
-
-namespace latest {
-using Paralysis = dex::Paralysis<GameMechanics::SCARLET_VIOLET>;
-}
-}  // namespace pokesim::dex
-
-////////////////// END OF src/Pokedex/Statuses/Paralysis.hpp ///////////////////
 
 ///////////////////// START OF src/Simulation/RunEvent.hpp /////////////////////
 
@@ -25598,7 +25602,7 @@ inline void runModifyCritBoostEvent(Simulation&) {}
 inline void runBasePowerEvent(Simulation&) {}
 
 inline void runDamagingHitEvent(Simulation& simulation) {
-  dex::latest::Static::onDamagingHit(simulation);
+  dex::events::Static::onDamagingHit(simulation);
 }
 
 inline void runModifySecondariesEvent(Simulation&) {}
@@ -25635,19 +25639,12 @@ inline void runModifyMove(Simulation& simulation) {
   //   simulation,
   //   getMoveEventPokemonSelector<tags::CurrentActionMoveSource>()};
 
-  simulation.view<
-    dex::latest::ChoiceScarf::onSourceModifyMove,
-    Tags<item::tags::ChoiceScarf, tags::CurrentActionMoveSource>,
-    entt::exclude_t<ChoiceLock>>();
-
-  simulation.view<
-    dex::latest::ChoiceSpecs::onSourceModifyMove,
-    Tags<item::tags::ChoiceSpecs, tags::CurrentActionMoveSource>,
-    entt::exclude_t<ChoiceLock>>();
+  dex::events::ChoiceScarf::onSourceModifyMove(simulation);
+  dex::events::ChoiceSpecs::onSourceModifyMove(simulation);
 }
 
 inline void runDisableMove(Simulation& simulation) {
-  simulation.viewForSelectedPokemon<dex::latest::ChoiceLock::onDisableMove>();
+  dex::events::ChoiceLock::onDisableMove(simulation);
 }
 
 inline void runModifyAtk(Simulation&) {}
@@ -25658,12 +25655,10 @@ inline void runModifySpa(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
 
   // Priority 1
-  simulation.viewForSelectedPokemon<dex::latest::ChoiceSpecs::onModifySpa, Tags<item::tags::ChoiceSpecs>>();
+  dex::events::ChoiceSpecs::onModifySpa(simulation);
 
   // Priority 5
-  if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT) {
-    simulation.viewForSelectedPokemon<dex::latest::Plus::onModifySpA, Tags<ability::tags::Plus>>();
-  }
+  dex::events::Plus::onModifySpA(simulation);
 
   simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpa>>();
   simulation.registry.clear<EventModifier>();
@@ -25672,7 +25667,7 @@ inline void runModifySpa(Simulation& simulation) {
 inline void runModifySpd(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
 
-  simulation.viewForSelectedPokemon<dex::latest::AssaultVest::onModifySpd, Tags<item::tags::AssaultVest>>();
+  dex::events::AssaultVest::onModifySpd(simulation);
 
   simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpd>>();
   simulation.registry.clear<EventModifier>();
@@ -25681,14 +25676,12 @@ inline void runModifySpd(Simulation& simulation) {
 inline void runModifySpe(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
 
-  simulation.viewForSelectedPokemon<dex::latest::ChoiceScarf::onModifySpe, Tags<item::tags::ChoiceScarf>>();
+  dex::events::ChoiceScarf::onModifySpe(simulation);
 
   simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpe>>();
   simulation.registry.clear<EventModifier>();
 
-  simulation.viewForSelectedPokemon<
-    dex::latest::Paralysis::onModifySpe,
-    Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>();
+  dex::events::Paralysis::onModifySpe(simulation);
 }
 
 inline void runStartSleep(Simulation&) {}
@@ -27336,16 +27329,6 @@ inline void setIfMoveCrits(Simulation& simulation) {
 
 /////////////// END OF src/SimulateTurn/CalcDamageSpecifics.cpp ////////////////
 
-//////////////// START OF src/Pokedex/Statuses/StatusEvents.cpp ////////////////
-
-namespace pokesim::dex::internal {
-inline void ParalysisEvents::onModifySpe(stat::EffectiveSpe& effectiveSpe) {
-  effectiveSpe.val /= latest::Paralysis::onModifySpaModifier;
-}
-}  // namespace pokesim::dex::internal
-
-///////////////// END OF src/Pokedex/Statuses/StatusEvents.cpp /////////////////
-
 ///////////////// START OF src/Pokedex/Setup/DexDataSetup.hpp //////////////////
 
 namespace pokesim::dex::internal {
@@ -27617,7 +27600,7 @@ struct Ampharos {
 };
 
 namespace latest {
-using Ampharos = dex::Ampharos<GameMechanics::SCARLET_VIOLET>;
+using Ampharos = dex::Ampharos<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -27647,7 +27630,7 @@ struct Dragapult {
 };
 
 namespace latest {
-using Dragapult = dex::Dragapult<GameMechanics::SCARLET_VIOLET>;
+using Dragapult = dex::Dragapult<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -27666,7 +27649,7 @@ struct Empoleon {
   static constexpr SpeciesTypes type = {Type::WATER, Type::STEEL};
 
   static constexpr Ability primaryAbility = Ability::TORRENT;
-  static constexpr Ability hiddenAbility = Ability::DEFIANT;
+  static constexpr Ability hiddenAbility = Ability::COMPETITIVE;
 
   struct Strings {
     static constexpr std::string_view name = "Empoleon";
@@ -27676,12 +27659,15 @@ struct Empoleon {
 };
 
 template <>
-struct Empoleon<GameMechanics::SCARLET_VIOLET> : Empoleon<GameMechanics::NONE> {
-  static constexpr Ability hiddenAbility = Ability::COMPETITIVE;
+struct Empoleon<GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL> : Empoleon<GameMechanics::NONE> {
+  static constexpr Ability hiddenAbility = Ability::DEFIANT;
 };
 
+template <>
+struct Empoleon<GameMechanics::SWORD_SHIELD> : Empoleon<GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL> {};
+
 namespace latest {
-using Empoleon = dex::Empoleon<GameMechanics::SCARLET_VIOLET>;
+using Empoleon = dex::Empoleon<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -27711,7 +27697,7 @@ struct Gardevoir {
 };
 
 namespace latest {
-using Gardevoir = dex::Gardevoir<GameMechanics::SCARLET_VIOLET>;
+using Gardevoir = dex::Gardevoir<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -27741,7 +27727,7 @@ struct Pangoro {
 };
 
 namespace latest {
-using Pangoro = dex::Pangoro<GameMechanics::SCARLET_VIOLET>;
+using Pangoro = dex::Pangoro<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -27771,7 +27757,7 @@ struct Ribombee {
 };
 
 namespace latest {
-using Ribombee = dex::Ribombee<GameMechanics::SCARLET_VIOLET>;
+using Ribombee = dex::Ribombee<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -27809,7 +27795,7 @@ struct BuildSpecies {
   struct has<Optional::hiddenAbility, Type, void_t<Type::hiddenAbility>> : std::true_type {};
 
  public:
-  static types::entity build(types::registry& registry, bool /*forActiveMove*/) {
+  static types::entity build(types::registry& registry) {
     dex::internal::SpeciesDexDataSetup species(registry);
 
     species.setName(T::name);
@@ -27831,25 +27817,25 @@ struct BuildSpecies {
 };
 
 template <template <GameMechanics> class T>
-auto buildSpeciesSV(types::registry& registry, bool forActiveMove) {
-  return BuildSpecies<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
+auto buildSpeciesSV(types::registry& registry) {
+  return BuildSpecies<T<GameMechanics::SCARLET_VIOLET>>::build(registry);
 }
 }  // namespace
 
-inline types::entity Pokedex::buildSpecies(dex::Species species, types::registry& registry, bool forActiveMove) const {
+inline types::entity Pokedex::buildSpecies(dex::Species species, types::registry& registry) const {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics) {
+  switch (mechanics()) {
     case GameMechanics::SCARLET_VIOLET: {
       switch (species) {
-        case Species::AMPHAROS:  return buildSpeciesSV<Ampharos>(registry, forActiveMove);
-        case Species::GARDEVOIR: return buildSpeciesSV<Gardevoir>(registry, forActiveMove);
-        case Species::EMPOLEON:  return buildSpeciesSV<Empoleon>(registry, forActiveMove);
-        case Species::PANGORO:   return buildSpeciesSV<Pangoro>(registry, forActiveMove);
-        case Species::RIBOMBEE:  return buildSpeciesSV<Ribombee>(registry, forActiveMove);
-        case Species::DRAGAPULT: return buildSpeciesSV<Dragapult>(registry, forActiveMove);
+        case Species::AMPHAROS:  return buildSpeciesSV<Ampharos>(registry);
+        case Species::GARDEVOIR: return buildSpeciesSV<Gardevoir>(registry);
+        case Species::EMPOLEON:  return buildSpeciesSV<Empoleon>(registry);
+        case Species::PANGORO:   return buildSpeciesSV<Pangoro>(registry);
+        case Species::RIBOMBEE:  return buildSpeciesSV<Ribombee>(registry);
+        case Species::DRAGAPULT: return buildSpeciesSV<Dragapult>(registry);
 
         default: break;
       }
@@ -27890,7 +27876,7 @@ struct FuryAttack {
 };
 
 namespace latest {
-using FuryAttack = dex::FuryAttack<GameMechanics::SCARLET_VIOLET>;
+using FuryAttack = dex::FuryAttack<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -27921,7 +27907,7 @@ struct KnockOff {
 };
 
 namespace latest {
-using KnockOff = dex::KnockOff<GameMechanics::SCARLET_VIOLET>;
+using KnockOff = dex::KnockOff<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -27959,7 +27945,7 @@ struct Moonblast {
 };
 
 namespace latest {
-using Moonblast = dex::Moonblast<GameMechanics::SCARLET_VIOLET>;
+using Moonblast = dex::Moonblast<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -27994,7 +27980,7 @@ struct QuiverDance {
 };
 
 namespace latest {
-using QuiverDance = dex::QuiverDance<GameMechanics::SCARLET_VIOLET>;
+using QuiverDance = dex::QuiverDance<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -28031,7 +28017,7 @@ struct Thunderbolt {
 };
 
 namespace latest {
-using Thunderbolt = dex::Thunderbolt<GameMechanics::SCARLET_VIOLET>;
+using Thunderbolt = dex::Thunderbolt<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -28065,7 +28051,7 @@ struct WillOWisp {
 };
 
 namespace latest {
-using WillOWisp = dex::WillOWisp<GameMechanics::SCARLET_VIOLET>;
+using WillOWisp = dex::WillOWisp<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex
 
@@ -28341,7 +28327,7 @@ inline types::entity Pokedex::buildMove(dex::Move move, types::registry& registr
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics) {
+  switch (mechanics()) {
     case GameMechanics::SCARLET_VIOLET: {
       switch (move) {
         case Move::FURY_ATTACK:  return buildMoveSV<FuryAttack>(registry, forActiveMove);
@@ -28378,7 +28364,7 @@ template <typename T>
 struct BuildItem {
  private:
  public:
-  static types::entity build(types::registry& registry, bool /*forActiveMove*/) {
+  static types::entity build(types::registry& registry) {
     dex::internal::ItemDexDataSetup item(registry);
 
     item.setName(T::name);
@@ -28388,25 +28374,25 @@ struct BuildItem {
 };
 
 template <template <GameMechanics> class T>
-auto buildItemSV(types::registry& registry, bool forActiveMove) {
-  return BuildItem<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
+auto buildItemSV(types::registry& registry) {
+  return BuildItem<T<GameMechanics::SCARLET_VIOLET>>::build(registry);
 }
 }  // namespace
 
-inline types::entity Pokedex::buildItem(dex::Item item, types::registry& registry, bool forActiveMove) const {
+inline types::entity Pokedex::buildItem(dex::Item item, types::registry& registry) const {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics) {
+  switch (mechanics()) {
     case GameMechanics::SCARLET_VIOLET: {
       switch (item) {
-        case Item::ASSAULT_VEST:  return buildItemSV<AssaultVest>(registry, forActiveMove);
-        case Item::BRIGHT_POWDER: return buildItemSV<BrightPowder>(registry, forActiveMove);
-        case Item::CHOICE_SCARF:  return buildItemSV<ChoiceScarf>(registry, forActiveMove);
-        case Item::CHOICE_SPECS:  return buildItemSV<ChoiceSpecs>(registry, forActiveMove);
-        case Item::FOCUS_SASH:    return buildItemSV<FocusSash>(registry, forActiveMove);
-        case Item::LIFE_ORB:      return buildItemSV<LifeOrb>(registry, forActiveMove);
+        case Item::ASSAULT_VEST:  return buildItemSV<AssaultVest>(registry);
+        case Item::BRIGHT_POWDER: return buildItemSV<BrightPowder>(registry);
+        case Item::CHOICE_SCARF:  return buildItemSV<ChoiceScarf>(registry);
+        case Item::CHOICE_SPECS:  return buildItemSV<ChoiceSpecs>(registry);
+        case Item::FOCUS_SASH:    return buildItemSV<FocusSash>(registry);
+        case Item::LIFE_ORB:      return buildItemSV<LifeOrb>(registry);
 
         default: break;
       }
@@ -28447,7 +28433,7 @@ template <typename T>
 struct BuildAbility {
  private:
  public:
-  static types::entity build(types::registry& registry, bool /*forActiveMove*/) {
+  static types::entity build(types::registry& registry) {
     dex::internal::AbilityDexDataSetup ability(registry);
 
     ability.setName(T::name);
@@ -28457,20 +28443,20 @@ struct BuildAbility {
 };
 
 template <template <GameMechanics> class T>
-auto buildAbilitySV(types::registry& registry, bool forActiveMove) {
-  return BuildAbility<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
+auto buildAbilitySV(types::registry& registry) {
+  return BuildAbility<T<GameMechanics::SCARLET_VIOLET>>::build(registry);
 }
 }  // namespace
 
-inline types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& registry, bool forActiveMove) const {
+inline types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& registry) const {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics) {
+  switch (mechanics()) {
     case GameMechanics::SCARLET_VIOLET: {
       switch (ability) {
-        case Ability::STATIC: return buildAbilitySV<Static>(registry, forActiveMove);
+        case Ability::STATIC: return buildAbilitySV<Static>(registry);
 
         default: break;
       }
@@ -28509,11 +28495,11 @@ void Pokedex::load(entt::dense_map<T, types::entity>& map, const entt::dense_set
 }
 
 inline void Pokedex::loadSpecies(const entt::dense_set<dex::Species>& speciesSet) {
-  load(speciesMap, speciesSet, [this](dex::Species species) { return buildSpecies(species, dexRegistry, false); });
+  load(speciesMap, speciesSet, [this](dex::Species species) { return buildSpecies(species, dexRegistry); });
 }
 
 inline void Pokedex::loadItems(const entt::dense_set<dex::Item>& itemSet) {
-  load(itemsMap, itemSet, [this](dex::Item item) { return buildItem(item, dexRegistry, false); });
+  load(itemsMap, itemSet, [this](dex::Item item) { return buildItem(item, dexRegistry); });
 }
 
 inline void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
@@ -28521,7 +28507,7 @@ inline void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
 }
 
 inline void Pokedex::loadAbilities(const entt::dense_set<dex::Ability>& abilitySet) {
-  load(abilitiesMap, abilitySet, [this](dex::Ability ability) { return buildAbility(ability, dexRegistry, false); });
+  load(abilitiesMap, abilitySet, [this](dex::Ability ability) { return buildAbility(ability, dexRegistry); });
 }
 
 inline types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry) const {
@@ -28533,43 +28519,54 @@ inline types::entity Pokedex::buildActionMove(dex::Move move, types::registry& r
 
 ////////////////// START OF src/Pokedex/Items/ItemEvents.cpp ///////////////////
 
-namespace pokesim::dex {
+namespace pokesim::dex::events {
 namespace {
-inline void setChoiceLock(types::handle pokemonHandle, const Battle& battle) {
+inline void setChoiceLock(types::handle pokemonHandle, Battle battle) {
   types::entity moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val).val;
   pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot);
 }
 }  // namespace
-}  // namespace pokesim::dex
 
-namespace pokesim::dex::internal {
-inline void AssaultVestEvents::onModifySpd(EventModifier& eventModifier) {
-  chainToModifier(eventModifier.val, latest::AssaultVest::onModifySpdModifier);
+inline void AssaultVest::onModifySpd(Simulation& simulation) {
+  constexpr auto modifier = latest::AssaultVest::onModifySpdModifier;
+  simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::AssaultVest>>(
+    modifier);
 }
 
-inline void ChoiceScarfEvents::onModifySpe(EventModifier& eventModifier) {
-  chainToModifier(eventModifier.val, latest::ChoiceScarf::onModifySpeModifier);
+inline void ChoiceScarf::onModifySpe(Simulation& simulation) {
+  constexpr auto modifier = latest::ChoiceScarf::onModifySpeModifier;
+  simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceScarf>>(
+    modifier);
 }
 
-inline void ChoiceScarfEvents::onSourceModifyMove(types::handle pokemonHandle, const Battle& battle) {
-  setChoiceLock(pokemonHandle, battle);
+inline void ChoiceScarf::onSourceModifyMove(Simulation& simulation) {
+  simulation
+    .view<setChoiceLock, Tags<item::tags::ChoiceScarf, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
 }
 
-inline void ChoiceSpecsEvents::onModifySpa(EventModifier& eventModifier) {
-  chainToModifier(eventModifier.val, latest::ChoiceSpecs::onModifySpaModifier);
+inline void ChoiceSpecs::onModifySpa(Simulation& simulation) {
+  constexpr auto modifier = latest::ChoiceSpecs::onModifySpaModifier;
+  simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceSpecs>>(
+    modifier);
 }
 
-inline void ChoiceSpecsEvents::onSourceModifyMove(types::handle pokemonHandle, const Battle& battle) {
-  setChoiceLock(pokemonHandle, battle);
+inline void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
+  simulation
+    .view<setChoiceLock, Tags<item::tags::ChoiceScarf, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
 }
-}  // namespace pokesim::dex::internal
+}  // namespace pokesim::dex::events
 
 /////////////////// END OF src/Pokedex/Items/ItemEvents.cpp ////////////////////
 
 //////////////// START OF src/Pokedex/Effects/EffectEvents.cpp /////////////////
 
-namespace pokesim::dex {
-inline void internal::ChoiceLockEvents::onDisableMove(
+namespace pokesim::dex::events {
+namespace {
+inline void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedDividend) {
+  effectiveSpe.val = effectiveSpe.val * speedDividend / dex::latest::Paralysis::speedDivisor;
+}
+
+inline void choiceLockOnDisableMove(
   types::registry& registry, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
   POKESIM_REQUIRE(
     std::find(moveSlots.val.begin(), moveSlots.val.end(), choiceLocked.val) != moveSlots.val.end(),
@@ -28581,17 +28578,38 @@ inline void internal::ChoiceLockEvents::onDisableMove(
     }
   }
 }
-}  // namespace pokesim::dex
+}  // namespace
+
+inline void Paralysis::onModifySpe(Simulation& simulation) {
+  constexpr auto speedDividend = dex::latest::Paralysis::speedDividend;
+  simulation.viewForSelectedPokemon<
+    paralysisOnModifySpeed,
+    Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>(speedDividend);
+}
+
+inline void ChoiceLock::onDisableMove(Simulation& simulation) {
+  simulation.viewForSelectedPokemon<choiceLockOnDisableMove>();
+}
+}  // namespace pokesim::dex::events
 
 ///////////////// END OF src/Pokedex/Effects/EffectEvents.cpp //////////////////
 
 /////////////// START OF src/Pokedex/Abilities/AbilityEvents.cpp ///////////////
 
-namespace pokesim::dex::internal {
-inline void PlusEvents::onModifySpA(types::handle, EventModifier&) {}
+namespace pokesim::dex::events {
+namespace {
+inline void plusOnModifySpa(types::handle, EventModifier&) {}
+}  // namespace
 
-inline void StaticEvents::onDamagingHit(Simulation&) {}
-}  // namespace pokesim::dex::internal
+inline void Plus::onModifySpA(Simulation& simulation) {
+  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
+    return;
+  }
+  simulation.viewForSelectedPokemon<plusOnModifySpa, Tags<ability::tags::Plus>>();
+}
+
+inline void Static::onDamagingHit(Simulation&) {}
+}  // namespace pokesim::dex::events
 
 //////////////// END OF src/Pokedex/Abilities/AbilityEvents.cpp ////////////////
 

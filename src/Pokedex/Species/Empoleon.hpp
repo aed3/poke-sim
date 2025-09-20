@@ -17,7 +17,7 @@ struct Empoleon {
   static constexpr SpeciesTypes type = {Type::WATER, Type::STEEL};
 
   static constexpr Ability primaryAbility = Ability::TORRENT;
-  static constexpr Ability hiddenAbility = Ability::DEFIANT;
+  static constexpr Ability hiddenAbility = Ability::COMPETITIVE;
 
   struct Strings {
     static constexpr std::string_view name = "Empoleon";
@@ -27,11 +27,14 @@ struct Empoleon {
 };
 
 template <>
-struct Empoleon<GameMechanics::SCARLET_VIOLET> : Empoleon<GameMechanics::NONE> {
-  static constexpr Ability hiddenAbility = Ability::COMPETITIVE;
+struct Empoleon<GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL> : Empoleon<GameMechanics::NONE> {
+  static constexpr Ability hiddenAbility = Ability::DEFIANT;
 };
 
+template <>
+struct Empoleon<GameMechanics::SWORD_SHIELD> : Empoleon<GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL> {};
+
 namespace latest {
-using Empoleon = dex::Empoleon<GameMechanics::SCARLET_VIOLET>;
+using Empoleon = dex::Empoleon<GameMechanics::LATEST>;
 }
 }  // namespace pokesim::dex

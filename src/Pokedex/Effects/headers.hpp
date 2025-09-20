@@ -3,3 +3,4 @@
 #pragma once
 
 #include "ChoiceLock.hpp"
+#include "Paralysis.hpp"
