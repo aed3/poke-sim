@@ -23,7 +23,7 @@
 #include <optional>
 #include <type_traits>
 
-namespace pokesim {
+namespace pokesim::internal {
 namespace {
 template <typename Type>
 void updateProbability(Probability& currentProbability, Type percentChance) {
@@ -117,7 +117,7 @@ void assignRandomEvent(
   types::handle handle, const Battle& battle, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::percentChance rng =
-    (types::percentChance)internal::nextBoundedRandomValue(rngSeed, MechanicConstants::PercentChance::MAX);
+    (types::percentChance)nextBoundedRandomValue(rngSeed, MechanicConstants::PercentChance::MAX);
 
   if (rng <= eventChances.val[0]) {
     handle.emplace<tags::RandomEventA>();
@@ -152,7 +152,7 @@ void assignRandomEvent(
 void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::percentChance rng =
-    (types::percentChance)internal::nextBoundedRandomValue(rngSeed, MechanicConstants::PercentChance::MAX);
+    (types::percentChance)nextBoundedRandomValue(rngSeed, MechanicConstants::PercentChance::MAX);
 
   if (rng <= eventChance.pass()) {
     handle.emplace<tags::RandomEventCheckPassed>();
@@ -165,7 +165,7 @@ void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const R
 void assignReciprocalRandomBinaryEvent(
   types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::percentChance rng = (types::percentChance)internal::nextBoundedRandomValue(rngSeed, eventChance.val);
+  types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, eventChance.val);
 
   if (rng == 0U) {
     handle.emplace<tags::RandomEventCheckPassed>();
@@ -177,15 +177,14 @@ void assignReciprocalRandomBinaryEvent(
 
 void assignRandomEqualChance(types::handle handle, const Battle& battle, types::eventPossibilities possibleEventCount) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::eventPossibilities rng =
-    (types::eventPossibilities)internal::nextBoundedRandomValue(rngSeed, possibleEventCount);
+  types::eventPossibilities rng = (types::eventPossibilities)nextBoundedRandomValue(rngSeed, possibleEventCount);
 
   handle.emplace<RandomEventIndex>(rng);
 }
 
 void assignRandomEventCount(types::handle handle, const Battle& battle, const RandomEventCount& eventCount) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::eventPossibilities rng = (types::eventPossibilities)internal::nextBoundedRandomValue(rngSeed, eventCount.val);
+  types::eventPossibilities rng = (types::eventPossibilities)nextBoundedRandomValue(rngSeed, eventCount.val);
 
   handle.emplace<RandomEventIndex>(rng);
 }
@@ -355,7 +354,7 @@ void randomEventChances(
     POSSIBLE_EVENT_COUNT >= 2U,
     "RandomEventChances should only be used for events with more than two options.");
   static_assert(
-    POSSIBLE_EVENT_COUNT <= internal::MAX_TYPICAL_RANDOM_OPTIONS,
+    POSSIBLE_EVENT_COUNT <= MAX_TYPICAL_RANDOM_OPTIONS,
     "Random events with more options than this should use RandomEqualChance or RandomEventCount");
 
   auto assignClonesToEvents =
@@ -478,4 +477,4 @@ template void randomEventChances<2U>(Simulation&, types::callback, types::option
 template void randomEventChances<3U>(Simulation&, types::callback, types::optionalCallback);
 template void randomEventChances<4U>(Simulation&, types::callback, types::optionalCallback);
 template void randomEventChances<5U>(Simulation&, types::callback, types::optionalCallback);
-}  // namespace pokesim
+}  // namespace pokesim::internal

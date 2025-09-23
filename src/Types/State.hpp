@@ -36,6 +36,6 @@ template <typename T>
 using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::Targets::MAX>;
 
 using callback = void (*)(Simulation&);
-using optionalCallback = std::optional<void (*)(Simulation&)>;
+using optionalCallback = std::optional<callback>;
 }  // namespace types
 }  // namespace pokesim

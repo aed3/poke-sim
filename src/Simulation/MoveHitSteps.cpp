@@ -135,19 +135,16 @@ void setMoveHitCount(Simulation& simulation) {
     simulation.registry.view<tags::SelectedForViewMove>(entt::exclude<move::tags::VariableHitCount, HitCount>);
   simulation.registry.insert<HitCount>(noAssignedHitCount.begin(), noAssignedHitCount.end(), {(types::moveHits)1U});
 
-  setRandomChoice<4U, tags::SelectedForViewMove, move::tags::VariableHitCount>(
+  runRandomEventChances<4U, tags::SelectedForViewMove, move::tags::VariableHitCount>(
     simulation,
     MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES,
-    false);
-
-  if (!simulation.registry.view<RandomEventChances<4U>>().empty()) {
-    randomEventChances<4U>(simulation, [](Simulation& sim) {
+    false,
+    [](Simulation& sim) {
       sim.addToEntities<HitCount, tags::RandomEventA>(HitCount{2U});
       sim.addToEntities<HitCount, tags::RandomEventB>(HitCount{3U});
       sim.addToEntities<HitCount, tags::RandomEventC>(HitCount{4U});
       sim.addToEntities<HitCount, tags::RandomEventD>(HitCount{5U});
     });
-  }
 }
 
 void applyDamage(Simulation& simulation) {
@@ -167,10 +164,12 @@ void runPrimaryMoveEffects(Simulation& simulation) {
 void runSecondaryMoveEffects(Simulation& simulation) {
   runModifySecondariesEvent(simulation);
 
-  setRandomBinaryChoice<BaseEffectChance, move::effect::tags::Secondary, tags::SelectedForViewMove>(simulation);
-  randomBinaryChance(simulation, [](Simulation& sim) {
+  runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::SelectedForViewMove>(
+    simulation,
+    [](Simulation& sim) {
     sim.addToEntities<tags::internal::RunEffect, tags::SelectedForViewMove, tags::RandomEventCheckPassed>();
   });
+
   runMoveEffects(simulation);
   simulation.registry.clear<tags::internal::RunEffect>();
 }
@@ -179,8 +178,7 @@ void accuracyCheck(Simulation& simulation) {
   runModifyAccuracyEvent(simulation);
   runAccuracyEvent(simulation);
 
-  setRandomBinaryChoice<Accuracy, tags::SelectedForViewMove>(simulation);
-  randomBinaryChance(simulation, [](Simulation& sim) {
+  runRandomBinaryChance<Accuracy, tags::SelectedForViewMove>(simulation, [](Simulation& sim) {
     sim.removeFromEntities<tags::internal::MoveHits, tags::SelectedForViewMove, tags::RandomEventCheckFailed>();
   });
 }

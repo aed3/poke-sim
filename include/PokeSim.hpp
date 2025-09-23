@@ -17981,7 +17981,7 @@ template <typename T>
 using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::Targets::MAX>;
 
 using callback = void (*)(Simulation&);
-using optionalCallback = std::optional<void (*)(Simulation&)>;
+using optionalCallback = std::optional<callback>;
 }  // namespace types
 }  // namespace pokesim
 
@@ -25835,9 +25835,8 @@ void setRandomEventCounts(
     handle.emplace<RandomEventIndex>((types::eventPossibilities)(eventCount / 2U));
   }
 }
-}  // namespace internal
 
-template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename... T>
+template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename... SelectionTags>
 void setRandomChoice(
   Simulation& simulation, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances,
   const bool cumulativeSumChances) {
@@ -25866,70 +25865,70 @@ void setRandomChoice(
   }
 
   if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
-    simulation.view<internal::setRandomChoice<POSSIBLE_EVENT_COUNT, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
+    simulation.view<setRandomChoice<POSSIBLE_EVENT_COUNT, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<SelectionTags...>>(
       chances);
   }
   else {
-    simulation.view<internal::setRandomChoice<POSSIBLE_EVENT_COUNT, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<T...>>(
+    simulation.view<setRandomChoice<POSSIBLE_EVENT_COUNT, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<SelectionTags...>>(
       chances);
   }
 }
 
-template <typename PercentChanceComponent, typename... T>
+template <typename PercentChanceComponent, typename... SelectionTags>
 void setRandomBinaryChoice(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
 
   if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation
-      .view<internal::setRandomBinaryChoice<PercentChanceComponent, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>(
+      .view<setRandomBinaryChoice<PercentChanceComponent, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<SelectionTags...>>(
         options);
   }
   else {
     simulation
-      .view<internal::setRandomBinaryChoice<PercentChanceComponent, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<T...>>(
+      .view<setRandomBinaryChoice<PercentChanceComponent, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<SelectionTags...>>(
         options);
   }
 }
 
-template <typename PercentChanceComponent, typename... T>
+template <typename PercentChanceComponent, typename... SelectionTags>
 void setReciprocalRandomBinaryChoice(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
 
   if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation.view<
-      internal::setReciprocalRandomBinaryChoice<PercentChanceComponent, BattleFormat::SINGLES_BATTLE_FORMAT>,
-      Tags<T...>>(options);
+      setReciprocalRandomBinaryChoice<PercentChanceComponent, BattleFormat::SINGLES_BATTLE_FORMAT>,
+      Tags<SelectionTags...>>(options);
   }
   else {
     simulation.view<
-      internal::setReciprocalRandomBinaryChoice<PercentChanceComponent, BattleFormat::DOUBLES_BATTLE_FORMAT>,
-      Tags<T...>>(options);
+      setReciprocalRandomBinaryChoice<PercentChanceComponent, BattleFormat::DOUBLES_BATTLE_FORMAT>,
+      Tags<SelectionTags...>>(options);
   }
 }
 
-template <typename... T>
+template <typename... SelectionTags>
 void setRandomEqualChoice(Simulation& simulation) {
   if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
-    simulation.view<internal::setRandomEqualChoice<BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<T...>>();
+    simulation.view<setRandomEqualChoice<BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<SelectionTags...>>();
   }
   else {
-    simulation.view<internal::setRandomEqualChoice<BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<T...>>();
+    simulation.view<setRandomEqualChoice<BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<SelectionTags...>>();
   }
 }
 
-template <auto GetPossibleEventCount, typename... T>
+template <auto GetPossibleEventCount, typename... SelectionTags>
 void setRandomEventCounts(Simulation& simulation, bool forRequiredDamageRolls) {
   const auto& options = simulation.simulateTurnOptions;
 
   if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
     simulation
-      .view<internal::setRandomEventCounts<BattleFormat::SINGLES_BATTLE_FORMAT, GetPossibleEventCount>, Tags<T...>>(
+      .view<setRandomEventCounts<BattleFormat::SINGLES_BATTLE_FORMAT, GetPossibleEventCount>, Tags<SelectionTags...>>(
         options,
         forRequiredDamageRolls);
   }
   else {
     simulation
-      .view<internal::setRandomEventCounts<BattleFormat::DOUBLES_BATTLE_FORMAT, GetPossibleEventCount>, Tags<T...>>(
+      .view<setRandomEventCounts<BattleFormat::DOUBLES_BATTLE_FORMAT, GetPossibleEventCount>, Tags<SelectionTags...>>(
         options,
         forRequiredDamageRolls);
   }
@@ -25937,18 +25936,61 @@ void setRandomEventCounts(Simulation& simulation, bool forRequiredDamageRolls) {
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 inline void randomEventChances(
-  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt);
+  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities);
 inline void randomBinaryChance(
-  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt);
+  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities);
 inline void reciprocalRandomBinaryChance(
-  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt);
+  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities);
 inline void randomEqualChance(
   Simulation& simulation, types::eventPossibilities possibleEventCount, types::callback applyChoices,
-  types::optionalCallback updateProbabilities = std::nullopt);
+  types::optionalCallback updateProbabilities);
 inline void randomEventCount(
-  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt);
+  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities);
 
 inline void clearRandomChanceResult(Simulation& simulation);
+}  // namespace internal
+
+template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename... SelectionTags>
+void runRandomEventChances(
+  Simulation& simulation, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances,
+  const bool cumulativeSumChances, types::callback applyChoices,
+  types::optionalCallback updateProbabilities = std::nullopt) {
+  internal::setRandomChoice<POSSIBLE_EVENT_COUNT, SelectionTags...>(simulation, chances, cumulativeSumChances);
+
+  if (!simulation.registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>>().empty()) {
+    internal::randomEventChances<POSSIBLE_EVENT_COUNT>(simulation, applyChoices, updateProbabilities);
+  }
+}
+
+template <typename PercentChanceComponent, typename... SelectionTags>
+void runRandomBinaryChance(
+  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt) {
+  internal::setRandomBinaryChoice<PercentChanceComponent, SelectionTags...>(simulation);
+  internal::randomBinaryChance(simulation, applyChoices, updateProbabilities);
+}
+
+template <typename PercentChanceComponent, typename... SelectionTags>
+void runReciprocalRandomBinaryChance(
+  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt) {
+  internal::setReciprocalRandomBinaryChoice<PercentChanceComponent, SelectionTags...>(simulation);
+  internal::reciprocalRandomBinaryChance(simulation, applyChoices, updateProbabilities);
+}
+
+template <typename... SelectionTags>
+void runRandomEqualChance(
+  Simulation& simulation, types::eventPossibilities possibleEventCount, types::callback applyChoices,
+  types::optionalCallback updateProbabilities = std::nullopt) {
+  internal::setRandomEqualChoice<SelectionTags...>(simulation);
+  internal::randomEqualChance(simulation, possibleEventCount, applyChoices, updateProbabilities);
+}
+
+template <auto GetPossibleEventCount, typename... SelectionTags>
+void runRandomEventCount(
+  Simulation& simulation, bool forRequiredDamageRolls, types::callback applyChoices,
+  types::optionalCallback updateProbabilities = std::nullopt) {
+  internal::setRandomEventCounts<GetPossibleEventCount, SelectionTags...>(simulation, forRequiredDamageRolls);
+  internal::randomEventCount(simulation, applyChoices, updateProbabilities);
+}
 }  // namespace pokesim
 
 /////////////////// END OF src/SimulateTurn/RandomChance.hpp ///////////////////
@@ -26086,19 +26128,16 @@ inline void setMoveHitCount(Simulation& simulation) {
     simulation.registry.view<tags::SelectedForViewMove>(entt::exclude<move::tags::VariableHitCount, HitCount>);
   simulation.registry.insert<HitCount>(noAssignedHitCount.begin(), noAssignedHitCount.end(), {(types::moveHits)1U});
 
-  setRandomChoice<4U, tags::SelectedForViewMove, move::tags::VariableHitCount>(
+  runRandomEventChances<4U, tags::SelectedForViewMove, move::tags::VariableHitCount>(
     simulation,
     MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES,
-    false);
-
-  if (!simulation.registry.view<RandomEventChances<4U>>().empty()) {
-    randomEventChances<4U>(simulation, [](Simulation& sim) {
+    false,
+    [](Simulation& sim) {
       sim.addToEntities<HitCount, tags::RandomEventA>(HitCount{2U});
       sim.addToEntities<HitCount, tags::RandomEventB>(HitCount{3U});
       sim.addToEntities<HitCount, tags::RandomEventC>(HitCount{4U});
       sim.addToEntities<HitCount, tags::RandomEventD>(HitCount{5U});
     });
-  }
 }
 
 inline void applyDamage(Simulation& simulation) {
@@ -26118,10 +26157,12 @@ inline void runPrimaryMoveEffects(Simulation& simulation) {
 inline void runSecondaryMoveEffects(Simulation& simulation) {
   runModifySecondariesEvent(simulation);
 
-  setRandomBinaryChoice<BaseEffectChance, move::effect::tags::Secondary, tags::SelectedForViewMove>(simulation);
-  randomBinaryChance(simulation, [](Simulation& sim) {
+  runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::SelectedForViewMove>(
+    simulation,
+    [](Simulation& sim) {
     sim.addToEntities<tags::internal::RunEffect, tags::SelectedForViewMove, tags::RandomEventCheckPassed>();
   });
+
   runMoveEffects(simulation);
   simulation.registry.clear<tags::internal::RunEffect>();
 }
@@ -26130,8 +26171,7 @@ inline void accuracyCheck(Simulation& simulation) {
   runModifyAccuracyEvent(simulation);
   runAccuracyEvent(simulation);
 
-  setRandomBinaryChoice<Accuracy, tags::SelectedForViewMove>(simulation);
-  randomBinaryChance(simulation, [](Simulation& sim) {
+  runRandomBinaryChance<Accuracy, tags::SelectedForViewMove>(simulation, [](Simulation& sim) {
     sim.removeFromEntities<tags::internal::MoveHits, tags::SelectedForViewMove, tags::RandomEventCheckFailed>();
   });
 }
@@ -26547,7 +26587,7 @@ inline types::rngResult nextBoundedRandomValue(RngSeed& seed, types::rngResult u
 #include <optional>
 #include <type_traits>
 
-namespace pokesim {
+namespace pokesim::internal {
 namespace {
 template <typename Type>
 void updateProbability(Probability& currentProbability, Type percentChance) {
@@ -26641,7 +26681,7 @@ void assignRandomEvent(
   types::handle handle, const Battle& battle, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::percentChance rng =
-    (types::percentChance)internal::nextBoundedRandomValue(rngSeed, MechanicConstants::PercentChance::MAX);
+    (types::percentChance)nextBoundedRandomValue(rngSeed, MechanicConstants::PercentChance::MAX);
 
   if (rng <= eventChances.val[0]) {
     handle.emplace<tags::RandomEventA>();
@@ -26676,7 +26716,7 @@ void assignRandomEvent(
 inline void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::percentChance rng =
-    (types::percentChance)internal::nextBoundedRandomValue(rngSeed, MechanicConstants::PercentChance::MAX);
+    (types::percentChance)nextBoundedRandomValue(rngSeed, MechanicConstants::PercentChance::MAX);
 
   if (rng <= eventChance.pass()) {
     handle.emplace<tags::RandomEventCheckPassed>();
@@ -26689,7 +26729,7 @@ inline void assignRandomBinaryEvent(types::handle handle, const Battle& battle, 
 inline void assignReciprocalRandomBinaryEvent(
   types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::percentChance rng = (types::percentChance)internal::nextBoundedRandomValue(rngSeed, eventChance.val);
+  types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, eventChance.val);
 
   if (rng == 0U) {
     handle.emplace<tags::RandomEventCheckPassed>();
@@ -26701,15 +26741,14 @@ inline void assignReciprocalRandomBinaryEvent(
 
 inline void assignRandomEqualChance(types::handle handle, const Battle& battle, types::eventPossibilities possibleEventCount) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::eventPossibilities rng =
-    (types::eventPossibilities)internal::nextBoundedRandomValue(rngSeed, possibleEventCount);
+  types::eventPossibilities rng = (types::eventPossibilities)nextBoundedRandomValue(rngSeed, possibleEventCount);
 
   handle.emplace<RandomEventIndex>(rng);
 }
 
 inline void assignRandomEventCount(types::handle handle, const Battle& battle, const RandomEventCount& eventCount) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::eventPossibilities rng = (types::eventPossibilities)internal::nextBoundedRandomValue(rngSeed, eventCount.val);
+  types::eventPossibilities rng = (types::eventPossibilities)nextBoundedRandomValue(rngSeed, eventCount.val);
 
   handle.emplace<RandomEventIndex>(rng);
 }
@@ -26879,7 +26918,7 @@ void randomEventChances(
     POSSIBLE_EVENT_COUNT >= 2U,
     "RandomEventChances should only be used for events with more than two options.");
   static_assert(
-    POSSIBLE_EVENT_COUNT <= internal::MAX_TYPICAL_RANDOM_OPTIONS,
+    POSSIBLE_EVENT_COUNT <= MAX_TYPICAL_RANDOM_OPTIONS,
     "Random events with more options than this should use RandomEqualChance or RandomEventCount");
 
   auto assignClonesToEvents =
@@ -27002,7 +27041,7 @@ template void randomEventChances<2U>(Simulation&, types::callback, types::option
 template void randomEventChances<3U>(Simulation&, types::callback, types::optionalCallback);
 template void randomEventChances<4U>(Simulation&, types::callback, types::optionalCallback);
 template void randomEventChances<5U>(Simulation&, types::callback, types::optionalCallback);
-}  // namespace pokesim
+}  // namespace pokesim::internal
 
 /////////////////// END OF src/SimulateTurn/RandomChance.cpp ///////////////////
 
@@ -27304,13 +27343,15 @@ inline void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRo
 
   bool forAllDamageRolls = calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS);
   bool forRequiredDamageRolls = simulation.simulateTurnOptions.makeBranchesOnRandomEvents || forAllDamageRolls;
-  setRandomEventCounts<countUniqueDamageRolls, pokesim::tags::SelectedForViewMove>(simulation, forRequiredDamageRolls);
-
   auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<applyDamageRollIndex>(); };
-
   auto updateProbabilities = forAllDamageRolls ? updateAllDamageRollProbabilities : updatePartialProbabilities;
 
-  randomEventCount(simulation, applyChoices, updateProbabilities);
+  runRandomEventCount<countUniqueDamageRolls, pokesim::tags::SelectedForViewMove>(
+    simulation,
+    forRequiredDamageRolls,
+    applyChoices,
+    updateProbabilities);
+
   simulation.removeFromEntities<DamageRolls, pokesim::tags::SelectedForViewMove>();
 }
 
@@ -27318,10 +27359,9 @@ inline void setIfMoveCrits(Simulation& simulation) {
   pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn> selectedMoves{simulation};
   if (selectedMoves.hasNoneSelected()) return;
 
-  setReciprocalRandomBinaryChoice<calc_damage::CritChanceDivisor, pokesim::tags::SelectedForViewMove>(simulation);
-  reciprocalRandomBinaryChance(simulation, [](Simulation& sim) {
-    sim.addToEntities<calc_damage::tags::Crit, pokesim::tags::RandomEventCheckPassed>();
-  });
+  runReciprocalRandomBinaryChance<calc_damage::CritChanceDivisor, pokesim::tags::SelectedForViewMove>(
+    simulation,
+    [](Simulation& sim) { sim.addToEntities<calc_damage::tags::Crit, pokesim::tags::RandomEventCheckPassed>(); });
 
   simulation.registry.clear<calc_damage::CritChanceDivisor>();
 }

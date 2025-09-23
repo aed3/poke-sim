@@ -86,13 +86,15 @@ void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind)
 
   bool forAllDamageRolls = calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS);
   bool forRequiredDamageRolls = simulation.simulateTurnOptions.makeBranchesOnRandomEvents || forAllDamageRolls;
-  setRandomEventCounts<countUniqueDamageRolls, pokesim::tags::SelectedForViewMove>(simulation, forRequiredDamageRolls);
-
   auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<applyDamageRollIndex>(); };
-
   auto updateProbabilities = forAllDamageRolls ? updateAllDamageRollProbabilities : updatePartialProbabilities;
 
-  randomEventCount(simulation, applyChoices, updateProbabilities);
+  runRandomEventCount<countUniqueDamageRolls, pokesim::tags::SelectedForViewMove>(
+    simulation,
+    forRequiredDamageRolls,
+    applyChoices,
+    updateProbabilities);
+
   simulation.removeFromEntities<DamageRolls, pokesim::tags::SelectedForViewMove>();
 }
 
@@ -100,10 +102,9 @@ void setIfMoveCrits(Simulation& simulation) {
   pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn> selectedMoves{simulation};
   if (selectedMoves.hasNoneSelected()) return;
 
-  setReciprocalRandomBinaryChoice<calc_damage::CritChanceDivisor, pokesim::tags::SelectedForViewMove>(simulation);
-  reciprocalRandomBinaryChance(simulation, [](Simulation& sim) {
-    sim.addToEntities<calc_damage::tags::Crit, pokesim::tags::RandomEventCheckPassed>();
-  });
+  runReciprocalRandomBinaryChance<calc_damage::CritChanceDivisor, pokesim::tags::SelectedForViewMove>(
+    simulation,
+    [](Simulation& sim) { sim.addToEntities<calc_damage::tags::Crit, pokesim::tags::RandomEventCheckPassed>(); });
 
   simulation.registry.clear<calc_damage::CritChanceDivisor>();
 }
