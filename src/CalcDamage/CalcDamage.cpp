@@ -149,8 +149,8 @@ void calculateAllDamageRolls(DamageRolls& damageRolls, Damage damage, const Dama
 }
 
 void applyAverageDamageRollModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier) {
-  applyAverageDamageRoll(damage.val);
   modifyDamage(damage, modifier);
+  applyAverageDamageRoll(damage.val);
   damageRolls.val.emplace_back(damage);
 }
 
@@ -243,13 +243,12 @@ void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, 
     "All the damage rolls are needed to calculate this correctly.");
 
   for (const Damage& damageRoll : damageRolls.val) {
-    types::moveHits uses = (types::moveHits)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
-    if (usesUntilKo.val.empty() || usesUntilKo.val.back().uses != uses) {
-      usesUntilKo.val.push_back({uses, MechanicConstants::Probability::MIN});
+    types::moveHits hits = (types::moveHits)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
+    if (usesUntilKo.val.empty() || usesUntilKo.val.back().hits != hits) {
+      usesUntilKo.val.push_back({hits});
     }
 
-    usesUntilKo.val.back().probability +=
-      (MechanicConstants::Probability::MAX / MechanicConstants::DamageRollCount::MAX);
+    usesUntilKo.val.back().damageRollsIncluded++;
   }
   moveHandle.emplace<UsesUntilKo>(usesUntilKo);
 }

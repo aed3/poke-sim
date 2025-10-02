@@ -19755,29 +19755,31 @@ struct TurnOutcomeBattles {
 namespace calc_damage {
 struct UsesUntilKo {
  private:
-  struct KoProbability {
-    types::moveHits uses = 0U;
-    types::probability probability = MechanicConstants::Probability::MIN;
+  struct Uses {
+    types::moveHits hits = 0U;
+    types::damageRollIndex damageRollsIncluded = 0U;
 
-    bool operator==(const KoProbability& other) const { return uses == other.uses && probability == other.probability; }
+    bool operator==(const Uses& other) const {
+      return hits == other.hits && damageRollsIncluded == other.damageRollsIncluded;
+    }
   };
 
  public:
-  internal::maxSizedVector<KoProbability, MechanicConstants::DamageRollCount::MAX> val{};
+  internal::maxSizedVector<Uses, MechanicConstants::DamageRollCount::MAX> val{};
 
-  const KoProbability& minHits() const {
+  const Uses& minUses() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
     return val.front();
   }
 
-  const KoProbability& maxHits() const {
+  const Uses& maxUses() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
     return val.back();
   }
 
   bool guaranteedKo() const {
-    const KoProbability& min = minHits();
-    return min.uses == 1U && min.probability == MechanicConstants::Probability::MAX;
+    const Uses& min = minUses();
+    return min.hits == 1U && min.damageRollsIncluded == MechanicConstants::DamageRollCount::MAX;
   }
 };
 
@@ -21902,20 +21904,20 @@ template <>
 inline void check(const calc_damage::UsesUntilKo& usesUntilKo) {
   checkBounds<MechanicConstants::DamageRollCount>(usesUntilKo.val.size());
 
-  types::moveHits lastUses = 0U;
-  types::probability totalProbability = 0.0F;
+  types::moveHits lastHits = 0U;
+  types::damageRollIndex totalDamageRollsIncluded = 0U;
   for (const auto& useUntilKo : usesUntilKo.val) {
-    checkBounds<MechanicConstants::PokemonHpStat>(useUntilKo.uses);  // TODO(aed3): What if a move does no damage?
-    checkProbability(useUntilKo.probability);
-    POKESIM_REQUIRE(lastUses < useUntilKo.uses, "The list should be in order from least to most hits.");
-    totalProbability += useUntilKo.probability;
-    lastUses = useUntilKo.uses;
+    checkBounds<MechanicConstants::PokemonHpStat>(useUntilKo.hits);  // TODO(aed3): What if a move does no damage?
+    checkBounds<MechanicConstants::DamageRollCount>(useUntilKo.damageRollsIncluded);
+    POKESIM_REQUIRE(lastHits < useUntilKo.hits, "The list should be in order from least to most hits.");
+    totalDamageRollsIncluded += useUntilKo.damageRollsIncluded;
+    lastHits = useUntilKo.hits;
   }
 
-  POKESIM_REQUIRE_NM(usesUntilKo.minHits() == usesUntilKo.val.front());
-  POKESIM_REQUIRE_NM(usesUntilKo.maxHits() == usesUntilKo.val.back());
+  POKESIM_REQUIRE_NM(usesUntilKo.minUses() == usesUntilKo.val.front());
+  POKESIM_REQUIRE_NM(usesUntilKo.maxUses() == usesUntilKo.val.back());
 
-  checkProbability(totalProbability);
+  POKESIM_REQUIRE_NM(totalDamageRollsIncluded == MechanicConstants::DamageRollCount::MAX);
 }
 
 template <>
@@ -29156,8 +29158,8 @@ inline void calculateAllDamageRolls(DamageRolls& damageRolls, Damage damage, con
 }
 
 inline void applyAverageDamageRollModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier) {
-  applyAverageDamageRoll(damage.val);
   modifyDamage(damage, modifier);
+  applyAverageDamageRoll(damage.val);
   damageRolls.val.emplace_back(damage);
 }
 
@@ -29250,13 +29252,12 @@ inline void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damage
     "All the damage rolls are needed to calculate this correctly.");
 
   for (const Damage& damageRoll : damageRolls.val) {
-    types::moveHits uses = (types::moveHits)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
-    if (usesUntilKo.val.empty() || usesUntilKo.val.back().uses != uses) {
-      usesUntilKo.val.push_back({uses, MechanicConstants::Probability::MIN});
+    types::moveHits hits = (types::moveHits)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
+    if (usesUntilKo.val.empty() || usesUntilKo.val.back().hits != hits) {
+      usesUntilKo.val.push_back({hits});
     }
 
-    usesUntilKo.val.back().probability +=
-      (MechanicConstants::Probability::MAX / MechanicConstants::DamageRollCount::MAX);
+    usesUntilKo.val.back().damageRollsIncluded++;
   }
   moveHandle.emplace<UsesUntilKo>(usesUntilKo);
 }

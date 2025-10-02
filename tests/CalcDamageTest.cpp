@@ -59,20 +59,20 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
 
   const IdealDamageValues furyAttackBaseDamage(
     {13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U, 11U, 11U, 11U, 11U, 11U, 11U, 11U},
-    {{{23U, 1 / 16.0F}, {25U, 7 / 16.0F}, {27U, 8 / 16.0F}}},
+    {{{23U, 1U}, {25U, 7U}, {27U, 8U}}},
     12U);
   const IdealDamageValues thunderboltBaseDamage(
     {282U, 278U, 276U, 272U, 270U, 266U, 264U, 260U, 258U, 254U, 252U, 248U, 246U, 242U, 240U, 236U},
-    {{{1U, 3 / 16.0F}, {2U, 13 / 16.0F}}},
-    258U);
+    {{{1U, 3U}, {2U, 13U}}},
+    260U);
 
   const IdealDamageValues furyAttackCritDamage(
     {19U, 18U, 18U, 18U, 18U, 18U, 17U, 17U, 17U, 17U, 17U, 16U, 16U, 16U, 16U, 16U},
-    {{{16U, 1 / 16.0F}, {17U, 5 / 16.0F}, {18U, 5 / 16.0F}, {19U, 5 / 16.0F}}},
+    {{{16U, 1U}, {17U, 5U}, {18U, 5U}, {19U, 5U}}},
     17U);
   const IdealDamageValues thunderboltCritDamage(
     {422U, 416U, 414U, 408U, 404U, 398U, 396U, 392U, 386U, 384U, 378U, 374U, 372U, 366U, 362U, 356U},
-    {{{1U, 16 / 16.0F}}},
+    {{{1U, 16U}}},
     390U);
 
   DamageRollOptions damageRollOptions;
@@ -151,8 +151,8 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
         const auto& [trueKosUses] = koUses.get(entity);
         const auto& idealKoUses = idealDamageValues.koUses;
 
-        REQUIRE(trueKosUses.minHits() == idealKoUses.val[0]);
-        REQUIRE(trueKosUses.maxHits() == idealKoUses.val.back());
+        REQUIRE(trueKosUses.minUses() == idealKoUses.val[0]);
+        REQUIRE(trueKosUses.maxUses() == idealKoUses.val.back());
         REQUIRE(trueKosUses.guaranteedKo() == (idealKoUses.val.size() == 1U));
 
         REQUIRE(trueKosUses.val.size() == idealKoUses.val.size());

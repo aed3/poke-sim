@@ -38,57 +38,57 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
 
   IdealDamageResults p1FuryAttack = {
     {13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U, 11U, 11U, 11U, 11U, 11U, 11U, 11U},
-    {{{23U, 1 / 16.0F}, {25U, 7 / 16.0F}, {27U, 8 / 16.0F}}},
+    {{{23U, 1U}, {25U, 7U}, {27U, 8U}}},
   };
   IdealDamageResults p1FuryAttackBurn = {
     {6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U},
-    {{{50U, 0.5F}, {59U, 0.5F}}},
+    {{{50U, 8U}, {59U, 8U}}},
   };
   IdealDamageResults p1FuryAttackBurnPlus2Atk = {
     {12U, 12U, 12U, 12U, 12U, 11U, 11U, 11U, 11U, 11U, 11U, 11U, 11U, 10U, 10U, 10U},
-    {{{25U, 5 / 16.0F}, {27U, 8 / 16.0F}, {30U, 3 / 16.0F}}},
+    {{{25U, 5U}, {27U, 8U}, {30U, 3U}}},
   };
   IdealDamageResults p1KnockOff = {
     {52U, 51U, 50U, 50U, 49U, 49U, 48U, 48U, 47U, 47U, 46U, 46U, 45U, 45U, 44U, 44U},
-    {{{6U, 4 / 16.0F}, {7U, 12 / 16.0F}}},
+    {{{6U, 4U}, {7U, 12U}}},
   };
   IdealDamageResults p1KnockOffBurn = {
     {26U, 25U, 25U, 25U, 24U, 24U, 24U, 24U, 23U, 23U, 23U, 23U, 22U, 22U, 22U, 22U},
-    {{{12U, 4 / 16.0F}, {13U, 8 / 16.0F}, {14U, 4 / 16.0F}}},
+    {{{12U, 4U}, {13U, 8U}, {14U, 4U}}},
   };
   IdealDamageResults p1KnockOffMinus1Atk = {
     {35U, 34U, 34U, 33U, 33U, 33U, 32U, 32U, 32U, 31U, 31U, 31U, 30U, 30U, 30U, 29U},
-    {{{9U, 6 / 16.0F}, {10U, 9 / 16.0F}, {11U, 1 / 16.0F}}},
+    {{{9U, 6U}, {10U, 9U}, {11U, 1U}}},
   };
   IdealDamageResults p1Thunderbolt = {
     {43U, 43U, 42U, 42U, 41U, 41U, 40U, 40U, 40U, 39U, 39U, 38U, 38U, 37U, 37U, 36U},
-    {{{7U, 2 / 16.0F}, {8U, 13 / 16.0F}, {9U, 1 / 16.0F}}},
+    {{{7U, 2U}, {8U, 13U}, {9U, 1U}}},
   };
 
   IdealDamageResults p2FuryAttack = {
     {5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 4U, 4U, 4U, 4U, 4U, 4U},
-    {{{55U, 10 / 16.0F}, {69U, 6 / 16.0F}}},
+    {{{55U, 10U}, {69U, 6U}}},
   };
   IdealDamageResults p2KnockOff = {
     {44U, 43U, 43U, 42U, 42U, 41U, 41U, 40U, 40U, 40U, 39U, 39U, 38U, 38U, 37U, 37U},
-    {{{7U, 10 / 16.0F}, {8U, 6 / 16.0F}}},
+    {{{7U, 10U}, {8U, 6U}}},
   };
   IdealDamageResults p2KnockOffBurnPlus2Atk = {
     {43U, 42U, 42U, 41U, 41U, 40U, 40U, 39U, 39U, 39U, 38U, 38U, 37U, 37U, 36U, 36U},
-    {{{7U, 7 / 16.0F}, {8U, 9 / 16.0F}}},
+    {{{7U, 7U}, {8U, 9U}}},
   };
   IdealDamageResults p2KnockOffP1Plus2Def = {
     {23U, 22U, 22U, 22U, 22U, 21U, 21U, 21U, 21U, 20U, 20U, 20U, 20U, 20U, 19U, 19U},
-    {{{12U, 1 / 16.0F}, {13U, 4 / 16.0F}, {14U, 9 / 16.0F}, {15U, 2 / 16.0F}}},
+    {{{12U, 1U}, {13U, 4U}, {14U, 9U}, {15U, 2U}}},
   };
   IdealDamageResults p2Thunderbolt = {
     {282U, 278U, 276U, 272U, 270U, 266U, 264U, 260U, 258U, 254U, 252U, 248U, 246U, 242U, 240U, 236U},
-    {{{1U, 3 / 16.0F}, {2U, 13 / 16.0F}}},
+    {{{1U, 3U}, {2U, 13U}}},
   };
 
   IdealDamageResults p2ThunderboltPlus3Spa = {
     {698U, 690U, 684U, 678U, 668U, 662U, 656U, 648U, 642U, 636U, 626U, 620U, 614U, 606U, 600U, 594U},
-    {{{1U, 16 / 16.0F}}},
+    {{{1U, 16U}}},
   };
 
   entt::dense_map<types::entity, Ideals> idealResults;
@@ -145,8 +145,8 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
         REQUIRE(koUses.contains(entity));
         const auto& [trueKosUses] = koUses.get(entity);
 
-        REQUIRE(trueKosUses.minHits() == ideals.koUses().front());
-        REQUIRE(trueKosUses.maxHits() == ideals.koUses().back());
+        REQUIRE(trueKosUses.minUses() == ideals.koUses().front());
+        REQUIRE(trueKosUses.maxUses() == ideals.koUses().back());
         REQUIRE(trueKosUses.guaranteedKo() == (ideals.koUses().size() == 1U));
 
         REQUIRE(trueKosUses.val.size() == ideals.koUses().size());

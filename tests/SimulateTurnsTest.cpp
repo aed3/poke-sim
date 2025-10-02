@@ -448,7 +448,7 @@ struct DamageValueInfo {
   std::size_t possibilities() const {
     std::size_t count = 1U;
     if (checkWasCrit) {
-      count++;
+      count *= 2U;
     }
     if (checkParalysisChance) {
       count *= 2U;
@@ -465,15 +465,15 @@ struct DamageValueInfo {
 
   types::probability getProbability(types::stat afterTurnHp, bool causedParalysisFromThunderbolt) const {
     types::damage damage = startingHp - afterTurnHp;
-    types::probability baseDamageRollInstances =
-      (types::probability)std::count(baseDamage.begin(), baseDamage.end(), damage);
     types::probability critDamageRollInstances =
       (types::probability)std::count(critDamage.begin(), critDamage.end(), damage);
-    REQUIRE(!!(baseDamageRollInstances || critDamageRollInstances));
+    bool wasCrit =
+      critDamageRollInstances != 0.0F ||
+      (calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE) && damage == averageCritDamage);
 
     types::probability probability = 1.0F;
     if (checkWasCrit) {
-      if (critDamageRollInstances != 0.0F) {
+      if (wasCrit) {
         probability /= CRIT_CHANCE;
       }
       else {
@@ -481,7 +481,7 @@ struct DamageValueInfo {
       }
     }
 
-    if (checkParalysisChance) {
+    if (mightCauseParalysis()) {
       if (causedParalysisFromThunderbolt) {
         probability *= THUNDERBOLT_PAR_CHANCE / (types::probability)(MAX_PERCENT_CHANCE);
       }
@@ -494,7 +494,10 @@ struct DamageValueInfo {
       probability /= 2.0F;
     }
     if (damageRollKind == DamageRollKind::ALL_DAMAGE_ROLLS) {
-      if (critDamageRollInstances != 0.0F) {
+      types::probability baseDamageRollInstances =
+        (types::probability)std::count(baseDamage.begin(), baseDamage.end(), damage);
+      REQUIRE(!!(baseDamageRollInstances || critDamageRollInstances));
+      if (wasCrit) {
         probability *= critDamageRollInstances / MechanicConstants::DamageRollCount::MAX;
       }
       else {
@@ -575,7 +578,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   const DamageValueInfo p1DamageInfo(
     PlayerSideId::P1,
     {174U, 170U, 168U, 168U, 164U, 164U, 162U, 158U, 158U, 156U, 156U, 152U, 152U, 150U, 146U, 146U},  // 10
-    158U,
+    160U,
     {260U, 258U, 254U, 252U, 248U, 246U, 242U, 240U, 240U, 236U, 234U, 230U, 228U, 224U, 222U, 218U},  // 15
     240U,
     p1Info.stats.hp,

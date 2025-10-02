@@ -994,20 +994,20 @@ template <>
 void check(const calc_damage::UsesUntilKo& usesUntilKo) {
   checkBounds<MechanicConstants::DamageRollCount>(usesUntilKo.val.size());
 
-  types::moveHits lastUses = 0U;
-  types::probability totalProbability = 0.0F;
+  types::moveHits lastHits = 0U;
+  types::damageRollIndex totalDamageRollsIncluded = 0U;
   for (const auto& useUntilKo : usesUntilKo.val) {
-    checkBounds<MechanicConstants::PokemonHpStat>(useUntilKo.uses);  // TODO(aed3): What if a move does no damage?
-    checkProbability(useUntilKo.probability);
-    POKESIM_REQUIRE(lastUses < useUntilKo.uses, "The list should be in order from least to most hits.");
-    totalProbability += useUntilKo.probability;
-    lastUses = useUntilKo.uses;
+    checkBounds<MechanicConstants::PokemonHpStat>(useUntilKo.hits);  // TODO(aed3): What if a move does no damage?
+    checkBounds<MechanicConstants::DamageRollCount>(useUntilKo.damageRollsIncluded);
+    POKESIM_REQUIRE(lastHits < useUntilKo.hits, "The list should be in order from least to most hits.");
+    totalDamageRollsIncluded += useUntilKo.damageRollsIncluded;
+    lastHits = useUntilKo.hits;
   }
 
-  POKESIM_REQUIRE_NM(usesUntilKo.minHits() == usesUntilKo.val.front());
-  POKESIM_REQUIRE_NM(usesUntilKo.maxHits() == usesUntilKo.val.back());
+  POKESIM_REQUIRE_NM(usesUntilKo.minUses() == usesUntilKo.val.front());
+  POKESIM_REQUIRE_NM(usesUntilKo.maxUses() == usesUntilKo.val.back());
 
-  checkProbability(totalProbability);
+  POKESIM_REQUIRE_NM(totalDamageRollsIncluded == MechanicConstants::DamageRollCount::MAX);
 }
 
 template <>

@@ -20,29 +20,31 @@ struct TurnOutcomeBattles {
 namespace calc_damage {
 struct UsesUntilKo {
  private:
-  struct KoProbability {
-    types::moveHits uses = 0U;
-    types::probability probability = MechanicConstants::Probability::MIN;
+  struct Uses {
+    types::moveHits hits = 0U;
+    types::damageRollIndex damageRollsIncluded = 0U;
 
-    bool operator==(const KoProbability& other) const { return uses == other.uses && probability == other.probability; }
+    bool operator==(const Uses& other) const {
+      return hits == other.hits && damageRollsIncluded == other.damageRollsIncluded;
+    }
   };
 
  public:
-  internal::maxSizedVector<KoProbability, MechanicConstants::DamageRollCount::MAX> val{};
+  internal::maxSizedVector<Uses, MechanicConstants::DamageRollCount::MAX> val{};
 
-  const KoProbability& minHits() const {
+  const Uses& minUses() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
     return val.front();
   }
 
-  const KoProbability& maxHits() const {
+  const Uses& maxUses() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
     return val.back();
   }
 
   bool guaranteedKo() const {
-    const KoProbability& min = minHits();
-    return min.uses == 1U && min.probability == MechanicConstants::Probability::MAX;
+    const Uses& min = minUses();
+    return min.hits == 1U && min.damageRollsIncluded == MechanicConstants::DamageRollCount::MAX;
   }
 };
 
