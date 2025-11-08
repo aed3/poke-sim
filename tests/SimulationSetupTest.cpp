@@ -3,7 +3,7 @@
 namespace pokesim {
 namespace {
 Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
-  Simulation::BattleCreationInfo battleCreationInfo{};
+  Simulation::BattleCreationInfo battleCreationInfo;
 
   entt::dense_set<dex::Move> moveSet{};
   for (dex::Move move :
@@ -237,7 +237,7 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
   }
 }
 
-TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalcDamage][Setup]") {
+TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalculateDamage][Setup]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
 

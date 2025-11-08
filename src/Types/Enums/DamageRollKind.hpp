@@ -13,6 +13,14 @@ enum class DamageRollKind : std::uint8_t {
   ALL_DAMAGE_ROLLS = 0b00010000,
 };
 
+constexpr DamageRollKind operator|(DamageRollKind kindA, DamageRollKind kindB) {
+  return static_cast<DamageRollKind>(static_cast<std::uint8_t>(kindA) | static_cast<std::uint8_t>(kindB));
+}
+
+constexpr bool operator&(DamageRollKind kindA, DamageRollKind kindB) {
+  return (static_cast<std::uint8_t>(kindA) & static_cast<std::uint8_t>(kindB)) != 0U;
+}
+
 static constexpr inline std::array<DamageRollKind, 6U> VALID_DAMAGE_ROLL_KINDS = {
   DamageRollKind::NONE,
   DamageRollKind::AVERAGE_DAMAGE,

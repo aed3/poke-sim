@@ -5,6 +5,7 @@
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
 #include <Components/CalcDamage/Aliases.hpp>
+#include <Components/CalcDamage/ModifyingEventRanTags.hpp>
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
@@ -17,7 +18,7 @@
 #include <Components/SimulationResults.hpp>
 #include <Components/SpeciesTypes.hpp>
 #include <Components/Stats.hpp>
-#include <Components/Tags/MoveTags.hpp>
+#include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
 #include <Simulation/Simulation.hpp>
@@ -235,19 +236,19 @@ struct Checks : pokesim::debug::Checks {
       "Cannot calculate damage without knowing what rolls to consider.");
 
     std::size_t idealDamageRollCount = 0U;
-    if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
+    if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
       idealDamageRollCount = MechanicConstants::DamageRollCount::MAX;
     }
     else {
-      if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
+      if (damageRollKind & DamageRollKind::MAX_DAMAGE) {
         idealDamageRollCount++;
       }
 
-      if (damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE)) {
+      if (damageRollKind & DamageRollKind::AVERAGE_DAMAGE) {
         idealDamageRollCount++;
       }
 
-      if (damageKindsMatch(damageRollKind, DamageRollKind::MIN_DAMAGE)) {
+      if (damageRollKind & DamageRollKind::MIN_DAMAGE) {
         idealDamageRollCount++;
       }
     }
@@ -258,7 +259,7 @@ struct Checks : pokesim::debug::Checks {
     if (noKoChanceCalculation) {
       POKESIM_REQUIRE_NM(!has<UsesUntilKo>(move));
     }
-    else if (damageKindsMatch(DamageRollKind::ALL_DAMAGE_ROLLS, getDamageRollKind(move, damageRollOptions))) {
+    else if (DamageRollKind::ALL_DAMAGE_ROLLS & getDamageRollKind(move, damageRollOptions)) {
       POKESIM_REQUIRE_NM(has<UsesUntilKo>(move));
 
       const UsesUntilKo& usesUntilKo = registry->get<UsesUntilKo>(move);
@@ -323,8 +324,17 @@ struct Checks : pokesim::debug::Checks {
   void checkPokemonOutputs(bool forAttacker) const {
     const types::entityVector pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
+      pokesim::debug::TypesToIgnore typesToIgnore;
+      if (has<pokesim::tags::SimulateTurn>(pokemon) && !forAttacker) {
+        typesToIgnore.add<tags::RanAfterModifyDamage>();
+      }
       types::entity originalPokemon = pokesim::debug::findCopyParent(originalToCopy, *registry, pokemon);
-      pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, originalToCopy.at(originalPokemon));
+      pokesim::debug::areEntitiesEqual(
+        *registry,
+        pokemon,
+        registryOnInput,
+        originalToCopy.at(originalPokemon),
+        typesToIgnore);
     }
   }
 

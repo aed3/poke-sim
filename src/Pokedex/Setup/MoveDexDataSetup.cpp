@@ -1,5 +1,6 @@
 #include "MoveDexDataSetup.hpp"
 
+#include <Battle/Setup/EmplaceTagFromEnum.hpp>
 #include <Components/Accuracy.hpp>
 #include <Components/AddedTargets.hpp>
 #include <Components/BasePower.hpp>
@@ -9,7 +10,7 @@
 #include <Components/Names/TypeNames.hpp>
 #include <Components/PP.hpp>
 #include <Components/Priority.hpp>
-#include <Components/Tags/MoveTags.hpp>
+#include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
 #include <Config/Require.hpp>
 #include <Types/Move.hpp>
@@ -22,14 +23,17 @@ void MoveDexDataSetup::setName(Move move) {
   handle.emplace<MoveName>(move);
 }
 
+void MoveDexDataSetup::setNameTag(Move move) {
+  move::tags::emplaceTagFromEnum(move, handle);
+}
+
 void MoveDexDataSetup::setType(Type type) {
   handle.emplace<TypeName>(type);
 }
 
 void MoveDexDataSetup::addAddedTargets(AddedTargetOptions addedTargets) {
   AddedTargets& existingTargets = handle.get_or_emplace<AddedTargets>();
-  using targetType = std::underlying_type_t<AddedTargetOptions>;
-  existingTargets.val = (AddedTargetOptions)((targetType)existingTargets.val | (targetType)addedTargets);
+  existingTargets.val = existingTargets.val | addedTargets;
 
   switch (addedTargets) {
     case AddedTargetOptions::TARGET_ALLY: {

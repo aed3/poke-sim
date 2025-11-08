@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Components/Tags/MoveTags.hpp>
+#include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
@@ -8,6 +8,7 @@
 #include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
+#include <Types/Random.hpp>
 #include <Utilities/Tags.hpp>
 #include <string_view>
 
@@ -23,7 +24,7 @@ struct Thunderbolt {
   static constexpr types::pp basePp = 15U;
 
   struct targetSecondaryEffect {
-    static constexpr types::baseEffectChance chance = 10U;
+    static constexpr types::percentChance chance = 10U;
 
     static constexpr Tags<status::tags::Paralysis> effectTags{};
   };

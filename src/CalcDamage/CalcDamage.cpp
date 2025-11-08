@@ -23,11 +23,12 @@
 #include <Components/SimulationResults.hpp>
 #include <Components/SpeciesTypes.hpp>
 #include <Components/Stats.hpp>
-#include <Components/Tags/MoveTags.hpp>
+#include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/Effects/Burn.hpp>
 #include <SimulateTurn/CalcDamageSpecifics.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
@@ -56,6 +57,7 @@ void clearRunVariables(Simulation& simulation) {
     AttackingStat,
     DefendingStat,
     DamageRollModifiers,
+    Power,
     tags::UsesAtk,
     tags::UsesDef,
     tags::UsesSpa,
@@ -80,14 +82,6 @@ void checkForAndApplyTypeEffectiveness(
   const SpeciesTypes& defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defender.val);
 
   modifier.typeEffectiveness = getAttackEffectiveness(defenderTypes, type.name, pokedex.typeChart());
-}
-
-void applyBurnModifier(types::registry& registry, const CurrentActionMovesAsSource& moves) {
-  for (types::entity move : moves.val) {
-    if (registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
-      registry.get<DamageRollModifiers>(move).burn = true;
-    }
-  }
 }
 
 void applyCritDamageIncrease(Damage& damage) {
@@ -129,11 +123,11 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
     typeEffectivenessModifier = typeEffectivenessModifier << modifiers.typeEffectiveness;
   }
 
-  applyChainedModifier(damage.val, typeEffectivenessModifier);
-  applyChainedModifier(damage.val, modifiers.modifyDamageEvent);
+  damage.val = applyChainedModifier(damage.val, typeEffectivenessModifier);
+  damage.val = applyChainedModifier(damage.val, modifiers.modifyDamageEvent);
 
   if (modifiers.burn) {
-    damage.val = (types::damage)fixedPointMultiply(damage.val, 0.5F);
+    damage.val = (types::damage)fixedPointMultiply(damage.val, dex::latest::Burn::physicalDamageMultiplier);
   }
 
   setDamageToMinimumPossible(damage);
@@ -229,10 +223,10 @@ void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, Defender defend
 }
 
 void calculateBaseDamage(
-  types::handle moveHandle, BasePower basePower, AttackingLevel level, AttackingStat attack, DefendingStat defense) {
+  types::handle moveHandle, Power power, AttackingLevel level, AttackingStat attack, DefendingStat defense) {
   // NOLINTNEXTLINE(readability-magic-numbers)
-  types::damage damage = ((((2U * level.val / 5U + 2U) * basePower.val * attack.val) / defense.val) / 50U) + 2U;
-  moveHandle.emplace<Damage>(damage);
+  types::damage damage = ((((2U * level.val / 5U + 2U) * power.val * attack.val) / defense.val) / 50U) + 2U;
+  moveHandle.emplace_or_replace<Damage>(damage);
 }
 
 void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, Defender defender) {
@@ -325,7 +319,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
 
 template <typename SimulationTag>
 void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
-  if (damageKindsMatch(damageRollKind, DamageRollKind::GUARANTEED_CRIT_CHANCE)) {
+  if (damageRollKind & DamageRollKind::GUARANTEED_CRIT_CHANCE) {
     simulation.addToEntities<tags::Crit, pokesim::tags::SelectedForViewMove>();
     return;
   }
@@ -351,19 +345,19 @@ void applyDamageRollsAndModifiers(
     "Must pick a damage roll kind to go along with crits.");
 
   simulation.addToEntities<DamageRolls, DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
-  if (damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
+  if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
     simulation.viewForSelectedMoves<calculateAllDamageRolls>();
   }
   else {
-    if (damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE)) {
+    if (damageRollKind & DamageRollKind::MAX_DAMAGE) {
       simulation.viewForSelectedMoves<applyDamageRollModifier>();
     }
 
-    if (damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE)) {
+    if (damageRollKind & DamageRollKind::AVERAGE_DAMAGE) {
       simulation.viewForSelectedMoves<applyAverageDamageRollModifier>();
     }
 
-    if (damageKindsMatch(damageRollKind, DamageRollKind::MIN_DAMAGE)) {
+    if (damageRollKind & DamageRollKind::MIN_DAMAGE) {
       simulation.viewForSelectedMoves<applyMinDamageRollModifier>();
     }
   }
@@ -379,7 +373,7 @@ void applyDamageRollsAndModifiers(
     if (calculateUpToFoeHp) {
       simulation.viewForSelectedMoves<reduceDamageRollsToDefenderHp>();
     }
-    if (!noKoChanceCalculation && damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS)) {
+    if (!noKoChanceCalculation && damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
       simulation.viewForSelectedMoves<applyUsesUntilKo, Tags<SimulationTag>>();
     }
   }
@@ -511,6 +505,8 @@ void calcDamage(Simulation& simulation) {
   applySideDamageRollOptions<CalculateDamage, applyDamageRollsAndModifiers<CalculateDamage>>(simulation);
   applySideDamageRollOptions<AnalyzeEffect, applyDamageRollsAndModifiers<AnalyzeEffect>>(simulation);
 
+  runAfterModifyDamageEvent(simulation);
+
   clearRunVariables(simulation);
 }
 }  // namespace
@@ -530,8 +526,8 @@ void applyMinDamageRoll(types::damage& damage) {
 void setDamageRollModifiers(Simulation& simulation) {
   simulation.viewForSelectedMoves<checkForAndApplyStab>();
   simulation.viewForSelectedMoves<checkForAndApplyTypeEffectiveness>(simulation.pokedex());
-  simulation
-    .viewForSelectedPokemon<applyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<ability::tags::Guts> */>();
+  dex::events::Burn::onSetDamageRollModifiers(simulation);
+  runModifyDamageEvent(simulation);
 }
 
 void run(Simulation& simulation) {

@@ -14,5 +14,7 @@ struct SpeStatUpdateRequired {};
 
 struct Fainted {};
 
+struct CanUseItem {};
+struct CanRemoveItem {};
 struct CanSetStatus {};
 }  // namespace pokesim::tags

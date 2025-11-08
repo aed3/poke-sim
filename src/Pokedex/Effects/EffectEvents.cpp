@@ -1,7 +1,9 @@
+#include <Components/Damage.hpp>
 #include <Components/EntityHolders/ChoiceLock.hpp>
+#include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/Stats.hpp>
-#include <Components/Tags/MoveTags.hpp>
+#include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Config/Require.hpp>
 #include <Simulation/Simulation.hpp>
@@ -11,6 +13,14 @@
 
 namespace pokesim::dex::events {
 namespace {
+void applyBurnModifier(types::registry& registry, const CurrentActionMovesAsSource& moves) {
+  for (types::entity move : moves.val) {
+    if (registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
+      registry.get<DamageRollModifiers>(move).burn = true;
+    }
+  }
+}
+
 void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedDividend) {
   effectiveSpe.val = effectiveSpe.val * speedDividend / dex::latest::Paralysis::speedDivisor;
 }
@@ -28,6 +38,11 @@ void choiceLockOnDisableMove(
   }
 }
 }  // namespace
+
+void Burn::onSetDamageRollModifiers(Simulation& simulation) {
+  simulation
+    .viewForSelectedPokemon<applyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<ability::tags::Guts> */>();
+}
 
 void Paralysis::onModifySpe(Simulation& simulation) {
   constexpr auto speedDividend = dex::latest::Paralysis::speedDividend;

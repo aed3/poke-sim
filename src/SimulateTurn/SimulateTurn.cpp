@@ -18,11 +18,11 @@
 #include <Components/PP.hpp>
 #include <Components/SimulateTurn/ActionNames.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
-#include <Components/SimulateTurn/SimulateTurnInput.hpp>
+#include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/SpeedSort.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
-#include <Components/Tags/MoveTags.hpp>
+#include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
@@ -106,6 +106,7 @@ void useMove(Simulation& simulation) {
 
   getMoveTargets(simulation);
   runMoveHitChecks(simulation);
+  runAfterMoveUsedEvent(simulation);
 }
 
 void runMoveAction(Simulation& simulation) {
@@ -141,22 +142,17 @@ void runCurrentAction(Simulation& simulation) {
   // Update
   // Switch requests
 
-  if (!simulation.registry.view<pokesim::tags::SpeStatUpdateRequired>().empty()) {
-    updateSpe(simulation);
-    simulation.viewForSelectedBattles<speedSort>();  // Should only speed sort battles affected
-  }
-  updateAtk(simulation);
-  updateDef(simulation);
-  updateSpa(simulation);
-  updateSpd(simulation);
+  updateAllStats(simulation);
+  simulation.viewForSelectedBattles<speedSort, Tags<tags::SpeedSortNeeded>>();
+  simulation.registry.clear<tags::SpeedSortNeeded>();
 }
 
 void incrementTurn(Turn& turn) {
   turn.val++;
 }
 
-void updateActivePokemonPostTurn(types::handle pokemonHandle, const pokesim::MoveSlots& moveSlots) {
-  pokemonHandle.registry()->remove<pokesim::move::tags::Disabled>(moveSlots.val.begin(), moveSlots.val.end());
+void updateActivePokemonPostTurn(types::registry& registry, const pokesim::MoveSlots& moveSlots) {
+  registry.remove<pokesim::move::tags::Disabled>(moveSlots.val.begin(), moveSlots.val.end());
 }
 
 void nextTurn(Simulation& simulation) {
@@ -174,9 +170,8 @@ void simulateTurn(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
 #ifndef POKESIM_ALL_DAMAGE_ALL_BRANCHES
   POKESIM_REQUIRE(
-    !options.makeBranchesOnRandomEvents ||
-      !(calc_damage::damageKindsMatch(options.damageRollsConsidered.p1, DamageRollKind::ALL_DAMAGE_ROLLS) ||
-        calc_damage::damageKindsMatch(options.damageRollsConsidered.p2, DamageRollKind::ALL_DAMAGE_ROLLS)),
+    !options.makeBranchesOnRandomEvents || !(options.damageRollsConsidered.p1 & DamageRollKind::ALL_DAMAGE_ROLLS ||
+                                             options.damageRollsConsidered.p2 & DamageRollKind::ALL_DAMAGE_ROLLS),
     "Creating a branch for every damage roll is disabled by default to prevent easily reaching the battle count limit. "
     "Rebuild PokeSim with the flag POKESIM_ALL_DAMAGE_ALL_BRANCHES to enable this option combination.");
 #endif

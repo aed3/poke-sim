@@ -7,6 +7,8 @@
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
 #include <Types/Enums/MoveTarget.hpp>
+#include <Types/Move.hpp>
+#include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <cstdint>
 #include <type_traits>
@@ -87,7 +89,7 @@ struct BuildMove {
       move.setPrimaryEffect<EffectType>(effectValues...);
     }
     else {
-      types::baseEffectChance chance = MechanicConstants::MoveBaseEffectChance::MAX;
+      types::percentChance chance = MechanicConstants::MoveBaseEffectChance::MAX;
       if constexpr (has<Optional::chance, EffectData>::value) {
         chance = EffectData::chance;
       }
@@ -104,7 +106,7 @@ struct BuildMove {
       (move.setPrimaryEffect<EffectTypes>(), ...);
     }
     else {
-      types::baseEffectChance chance = MechanicConstants::MoveBaseEffectChance::MAX;
+      types::percentChance chance = MechanicConstants::MoveBaseEffectChance::MAX;
       if constexpr (has<Optional::chance, EffectData>::value) {
         chance = EffectData::chance;
       }
@@ -141,7 +143,10 @@ struct BuildMove {
   static types::entity build(types::registry& registry, bool forActiveMove) {
     dex::internal::MoveDexDataSetup move(registry);
 
-    if (!forActiveMove) {
+    if (forActiveMove) {
+      move.setNameTag(T::name);
+    }
+    else {
       move.setName(T::name);
       move.setBasePp(T::basePp);
     }

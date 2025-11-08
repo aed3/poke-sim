@@ -498,6 +498,11 @@ void check(const calc_damage::RealEffectiveStat& realEffectiveStat) {
 }
 
 template <>
+void check(const calc_damage::Power& power) {
+  checkBounds<MechanicConstants::MovePower>(power.val);
+}
+
+template <>
 void check(const Damage& damage) {
   POKESIM_REQUIRE_NM(damage.val <= MechanicConstants::Damage::MAX);
 }
@@ -1112,10 +1117,10 @@ void check(const DamageRollKind& damageRollKind) {
     return;
   }
 
-  bool hasAverage = calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE);
-  bool hasMax = calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::MAX_DAMAGE);
-  bool hasMin = calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::MIN_DAMAGE);
-  bool hasAll = calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::ALL_DAMAGE_ROLLS);
+  bool hasAverage = damageRollKind & DamageRollKind::AVERAGE_DAMAGE;
+  bool hasMax = damageRollKind & DamageRollKind::MAX_DAMAGE;
+  bool hasMin = damageRollKind & DamageRollKind::MIN_DAMAGE;
+  bool hasAll = damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS;
 
   POKESIM_REQUIRE_NM(hasAll != (hasAverage || hasMax || hasMin));
   POKESIM_REQUIRE_NM(hasAverage || hasMax || hasMin || hasAll);

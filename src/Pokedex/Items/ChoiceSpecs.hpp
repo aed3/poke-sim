@@ -14,6 +14,7 @@ namespace events {
 struct ChoiceSpecs {
   static void onModifySpa(Simulation& simulation);
   static void onSourceModifyMove(Simulation& simulation);
+  static void onEnd(Simulation& simulation);
 };
 }  // namespace events
 

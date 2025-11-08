@@ -6,6 +6,7 @@
 #include "BattleTags.hpp"
 #include "Current.hpp"
 #include "ItemTags.hpp"
+#include "MovePropertyTags.hpp"
 #include "MoveTags.hpp"
 #include "NatureTags.hpp"
 #include "PokemonTags.hpp"

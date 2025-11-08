@@ -13,6 +13,14 @@ enum class AddedTargetOptions : std::uint8_t {
   FIELD = 0b00010000,
 };
 
+constexpr AddedTargetOptions operator|(AddedTargetOptions optionA, AddedTargetOptions optionB) {
+  return static_cast<AddedTargetOptions>(static_cast<std::uint8_t>(optionA) | static_cast<std::uint8_t>(optionB));
+}
+
+constexpr bool operator&(AddedTargetOptions optionA, AddedTargetOptions optionB) {
+  return (static_cast<std::uint8_t>(optionA) & static_cast<std::uint8_t>(optionB)) != 0U;
+}
+
 static constexpr inline std::array<AddedTargetOptions, 6U> VALID_ADDED_TARGET_OPTIONS = {
   AddedTargetOptions::NONE,
   AddedTargetOptions::TARGET_ALLY,

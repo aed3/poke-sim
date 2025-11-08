@@ -115,6 +115,7 @@ struct AttackingLevel;
 struct AttackingStat;
 struct DefendingStat;
 struct RealEffectiveStat;
+struct Power;
 struct UsesUntilKo;
 struct AttackerHpRecovered;
 struct AttackerHpLost;
@@ -220,6 +221,9 @@ void check(const calc_damage::DefendingStat&);
 
 template <>
 void check(const calc_damage::RealEffectiveStat&);
+
+template <>
+void check(const calc_damage::Power&);
 
 // template <> void check(const CloneTo&);
 

@@ -2,6 +2,7 @@
 
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/GameMechanics.hpp>
+#include <Types/Random.hpp>
 #include <string_view>
 
 namespace pokesim {
@@ -19,6 +20,7 @@ template <GameMechanics>
 struct Static : events::Static {
   static constexpr dex::Ability name = dex::Ability::STATIC;
 
+  static constexpr types::percentChance onDamagingHitChance = 30U;
   struct Strings {
     static constexpr std::string_view name = "Static";
     static constexpr std::string_view smogonId = "static";

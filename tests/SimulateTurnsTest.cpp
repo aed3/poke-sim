@@ -216,15 +216,15 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
 
 constexpr std::array<DamageRollKind, 3U> branchingDamageRollOptions = {
   DamageRollKind::AVERAGE_DAMAGE,
-  calc_damage::combineDamageKinds(DamageRollKind::AVERAGE_DAMAGE, DamageRollKind::GUARANTEED_CRIT_CHANCE),
-  calc_damage::combineDamageKinds(DamageRollKind::MIN_DAMAGE, DamageRollKind::MAX_DAMAGE),
+  DamageRollKind::AVERAGE_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE,
+  DamageRollKind::MIN_DAMAGE | DamageRollKind::MAX_DAMAGE,
 };
 
 constexpr std::array<DamageRollKind, 4U> fixedBranchDamageRollOptions = {
   DamageRollKind::ALL_DAMAGE_ROLLS,
   DamageRollKind::AVERAGE_DAMAGE,
-  calc_damage::combineDamageKinds(DamageRollKind::AVERAGE_DAMAGE, DamageRollKind::GUARANTEED_CRIT_CHANCE),
-  calc_damage::combineDamageKinds(DamageRollKind::MIN_DAMAGE, DamageRollKind::MAX_DAMAGE),
+  DamageRollKind::AVERAGE_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE,
+  DamageRollKind::MIN_DAMAGE | DamageRollKind::MAX_DAMAGE,
 };
 
 struct VerticalSlice1Checks : debug::Checks {
@@ -252,7 +252,7 @@ struct VerticalSlice1Checks : debug::Checks {
 
   void checkBattle() const {
     debug::TypesToIgnore typesToIgnore;
-    typesToIgnore.add<simulate_turn::TurnOutcomeBattles>();
+    typesToIgnore.add<simulate_turn::TurnOutcomeBattles, simulate_turn::tags::SpeedSortNeeded>();
 
     debug::TypesToIgnore typesIgnoredOnConstants = typesToIgnore;
     typesToIgnore.add<Probability, ParentBattle, Turn, RootBattle>();
@@ -467,9 +467,8 @@ struct DamageValueInfo {
     types::damage damage = startingHp - afterTurnHp;
     types::probability critDamageRollInstances =
       (types::probability)std::count(critDamage.begin(), critDamage.end(), damage);
-    bool wasCrit =
-      critDamageRollInstances != 0.0F ||
-      (calc_damage::damageKindsMatch(damageRollKind, DamageRollKind::AVERAGE_DAMAGE) && damage == averageCritDamage);
+    bool wasCrit = critDamageRollInstances != 0.0F ||
+                   (damageRollKind & DamageRollKind::AVERAGE_DAMAGE && damage == averageCritDamage);
 
     types::probability probability = 1.0F;
     if (checkWasCrit) {
@@ -512,7 +511,8 @@ struct DamageValueInfo {
 };
 
 TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
-  Simulation::BattleCreationInfo battleCreationInfo{};
+  static Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
+  Simulation::BattleCreationInfo battleCreationInfo;
   SideDecision p1Decision{PlayerSideId::P1};
   SideDecision p2Decision{PlayerSideId::P2};
   SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
@@ -524,7 +524,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
   battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
 
-  Simulation simulation = createSingleBattleSimulation(battleCreationInfo);
+  Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
   auto& p1Info = battleCreationInfo.p1.team[0];
   auto& p2Info = battleCreationInfo.p2.team[0];
   p1Info.status = dex::Status::NO_STATUS;
@@ -558,14 +558,10 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
     damageRollOptions.p2 = GENERATE(from_range(branchingDamageRollOptions));
   }
 
-  CAPTURE(
-    applyChangesToInputBattle,
-    branchProbabilityLowerLimit,
-    numberOfSamples,
-    randomChanceLowerLimit,
-    randomChanceUpperLimit,
-    damageRollOptions.p1,
-    damageRollOptions.p2);
+  CAPTURE(applyChangesToInputBattle, branchProbabilityLowerLimit, numberOfSamples);
+  INFO("randomChanceLowerLimit := " + Catch::StringMaker<std::optional<int>>::convert(randomChanceLowerLimit));
+  INFO("randomChanceUpperLimit := " + Catch::StringMaker<std::optional<int>>::convert(randomChanceUpperLimit));
+  CAPTURE(damageRollOptions.p1, damageRollOptions.p2);
 
   auto& options = simulation.simulateTurnOptions;
   options.applyChangesToInputBattle = applyChangesToInputBattle;

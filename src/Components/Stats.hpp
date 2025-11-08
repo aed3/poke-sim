@@ -29,7 +29,7 @@ struct Spe {
 };
 
 struct CurrentHp {
-  types::stat val = MechanicConstants::PokemonHpStat::MIN;
+  types::stat val = MechanicConstants::PokemonCurrentHpStat::MIN;
 };
 
 struct EffectiveAtk {

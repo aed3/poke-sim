@@ -2,5 +2,6 @@
 
 #pragma once
 
+#include "Burn.hpp"
 #include "ChoiceLock.hpp"
 #include "Paralysis.hpp"

@@ -3,6 +3,7 @@
 #include <Components/Decisions.hpp>
 #include <Components/EVsIVs.hpp>
 #include <Components/SpeciesTypes.hpp>
+#include <Components/Tags/SimulationTags.hpp>
 #include <Types/Entity.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/headers.hpp>
@@ -189,5 +190,12 @@ class Simulation : public internal::RegistryContainer {
   types::entityVector selectedBattleEntities() const;
   types::entityVector selectedMoveEntities() const;
   types::entityVector selectedPokemonEntities() const;
+
+  template <template <typename> typename RunStruct, typename... RunFunctionArgs>
+  static void forEachSimulationTag(RunFunctionArgs&&... args) {
+    RunStruct<tags::SimulateTurn>::run(std::forward<RunFunctionArgs>(args)...);
+    RunStruct<tags::CalculateDamage>::run(std::forward<RunFunctionArgs>(args)...);
+    RunStruct<tags::AnalyzeEffect>::run(std::forward<RunFunctionArgs>(args)...);
+  }
 };
 }  // namespace pokesim

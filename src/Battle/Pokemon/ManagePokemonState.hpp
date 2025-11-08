@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Types/Damage.hpp>
 #include <Types/Enums/Status.hpp>
 #include <Types/Registry.hpp>
 #include <Types/Stats.hpp>
@@ -21,7 +22,15 @@ struct Spe;
 struct CurrentHp;
 }  // namespace stat
 
-void checkIfStatusIsSettable(Simulation& simulation);
+void checkIfCanUseItem(Simulation& simulation);
+void useItem(Simulation& simulation);
+void tryUseItem(Simulation& simulation);
+void checkIfCanRemoveItem(Simulation& simulation);
+void removeItem(Simulation& simulation);
+void tryRemoveItem(Simulation& simulation);
+
+void checkIfCanSetStatus(Simulation& simulation);
+void setStatus(Simulation& simulation);
 void trySetStatus(Simulation& simulation);
 void clearStatus(types::handle pokemonHandle);
 
@@ -33,7 +42,7 @@ void resetEffectiveSpa(types::handle handle, stat::Spa spa);
 void resetEffectiveSpd(types::handle handle, stat::Spd spd);
 void resetEffectiveSpe(types::handle handle, stat::Spe spe);
 
-void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTarget target);
+void applyDamage(types::handle pokemonHandle, types::damage damage);
 void applyStatBoost(types::stat& stat, types::boost boost);
 
 void tryBoost(Simulation& simulation);

@@ -1,12 +1,13 @@
 #pragma once
 
-#include <Components/Tags/MoveTags.hpp>
+#include <Components/Tags/MovePropertyTags.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
 #include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
+#include <Types/Random.hpp>
 #include <Types/Stats.hpp>
 #include <Utilities/Tags.hpp>
 #include <string_view>
@@ -23,7 +24,7 @@ struct Moonblast {
   static constexpr types::pp basePp = 15U;
 
   struct targetSecondaryEffect {
-    static constexpr types::baseEffectChance chance = 30U;
+    static constexpr types::percentChance chance = 30U;
     static constexpr types::boost spaBoost = -1;
 
     static constexpr Tags<> effectTags{};

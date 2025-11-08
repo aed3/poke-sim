@@ -137,7 +137,7 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
     speedSortList.push_back({registry->get<SpeedSort>(entity), entity});
   }
 
-  // TODO (aed3): Test how different sorting algorithms effect speed
+  // TODO (aed3): Test how different sorting algorithms affect speed
   std::sort(speedSortList.begin(), speedSortList.end(), [](const auto& pairA, const auto& pairB) {
     if (pairA.first.order != pairB.first.order) {
       return pairA.first.order < pairB.first.order;

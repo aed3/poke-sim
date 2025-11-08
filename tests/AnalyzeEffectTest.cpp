@@ -26,9 +26,10 @@ struct Ideals {
 };
 
 TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
-  Simulation::BattleCreationInfo battleCreationInfo{};
+  static Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
+  Simulation::BattleCreationInfo battleCreationInfo;
   battleCreationInfo.runWithAnalyzeEffect = true;
-  Simulation simulation = createSingleBattleSimulation(battleCreationInfo);
+  Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
   const types::registry& registry = simulation.registry;
 
   bool getKoUses = GENERATE(false, true);

@@ -2,12 +2,13 @@
 
 #include <Components/BaseEffectChance.hpp>
 #include <Components/Boosts.hpp>
-#include <Components/Tags/MoveTags.hpp>
+#include <Components/Tags/MovePropertyTags.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/AddedTargets.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
+#include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Types/Stats.hpp>
 #include <entt/entity/handle.hpp>
@@ -20,6 +21,7 @@ struct MoveDexDataSetup : DexDataSetup {
   MoveDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
 
   void setName(Move move);
+  void setNameTag(Move move);
   void setType(Type type);
   void setAccuracy(types::baseAccuracy accuracy);
   void setBasePower(types::basePower basePower);
@@ -47,7 +49,7 @@ struct MoveDexDataSetup : DexDataSetup {
   }
 
   template <typename EffectType, typename... EffectValues>
-  void setSecondaryEffect(types::baseEffectChance chance, const EffectValues&... effectValues) {
+  void setSecondaryEffect(types::percentChance chance, const EffectValues&... effectValues) {
     POKESIM_REQUIRE(
       !handle.all_of<move::effect::tags::Primary>(),
       "Moves can only have secondary or primary effects, not both.");

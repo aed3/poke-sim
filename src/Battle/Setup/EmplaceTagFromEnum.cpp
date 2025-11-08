@@ -3,6 +3,7 @@
 #include <Pokedex/EnumToTag/headers.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Item.hpp>
+#include <Types/Enums/Move.hpp>
 #include <Types/Enums/Nature.hpp>
 #include <Types/Enums/Status.hpp>
 #include <Types/Enums/Type.hpp>
@@ -36,5 +37,9 @@ void status::tags::emplaceTagFromEnum(dex::Status status, types::handle handle) 
 
 void type::tags::emplaceTagFromEnum(dex::Type type, types::handle handle) {
   enumToTag<EmplaceTag>(type, handle);
+}
+
+void move::tags::emplaceTagFromEnum(dex::Move move, types::handle handle) {
+  enumToTag<EmplaceTag>(move, handle);
 }
 }  // namespace pokesim

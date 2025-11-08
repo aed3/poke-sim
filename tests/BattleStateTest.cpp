@@ -6,9 +6,10 @@ struct IdealPP_MaxPP {
   types::pp maxPp;
 };
 
-TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
-  Simulation::BattleCreationInfo battleCreationInfo{};
-  Simulation simulation = createSingleBattleSimulation(battleCreationInfo);
+TEST_CASE("Battle State: Single Battle", "[Simulation][Setup]") {
+  Simulation::BattleCreationInfo battleCreationInfo;
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
+  Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
 
   simulation.createInitialStates({battleCreationInfo});
 
@@ -28,9 +29,10 @@ TEST_CASE("Battle State: Single Battle", "[BattleState][Setup]") {
   REQUIRE(registry.all_of<item::tags::ChoiceSpecs>(p2Entity));
 }
 
-TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
-  Simulation::BattleCreationInfo battleCreationInfo{};
-  Simulation simulation = createDoubleBattleSimulation(battleCreationInfo);
+TEST_CASE("Battle State: Double Battle", "[Simulation][Setup]") {
+  Simulation::BattleCreationInfo battleCreationInfo;
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
+  Simulation simulation = createDoubleBattleSimulation(pokedex, battleCreationInfo);
   simulation.createInitialStates({battleCreationInfo});
 
   const types::registry& registry = simulation.registry;
@@ -57,9 +59,10 @@ TEST_CASE("Battle State: Double Battle", "[BattleState][Setup]") {
   REQUIRE(registry.all_of<item::tags::BrightPowder>(p2bEntity));
 }
 
-TEST_CASE("Battle State: Multiple Battles", "[BattleState][Setup]") {
-  Simulation::BattleCreationInfo battle1CreationInfo{};
-  Simulation simulation = createSingleBattleSimulation(battle1CreationInfo);
+TEST_CASE("Battle State: Multiple Battles", "[Simulation][Setup]") {
+  Simulation::BattleCreationInfo battle1CreationInfo;
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
+  Simulation simulation = createSingleBattleSimulation(pokedex, battle1CreationInfo);
 
   Simulation::BattleCreationInfo battle2CreationInfo = battle1CreationInfo;
 
@@ -77,8 +80,9 @@ TEST_CASE("Battle State: Multiple Battles", "[BattleState][Setup]") {
   REQUIRE(battles.size() == 2U);
 }
 
-TEST_CASE("Clone Battles", "[BattleState][Setup]") {
-  Simulation::BattleCreationInfo battleCreationInfo{};
+TEST_CASE("Clone Battles", "[Simulation][Setup]") {
+  Simulation::BattleCreationInfo battleCreationInfo;
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   auto create = GENERATE(createSingleBattleSimulation, createDoubleBattleSimulation);
   types::entityIndex cloneCount = GENERATE(1U, 5U, 100U);
 
@@ -88,7 +92,7 @@ TEST_CASE("Clone Battles", "[BattleState][Setup]") {
     std::string(
       create == createSingleBattleSimulation ? "createSingleBattleSimulation" : "createDoubleBattleSimulation"));
 
-  Simulation simulation = create(battleCreationInfo);
+  Simulation simulation = create(pokedex, battleCreationInfo);
   simulation.createInitialStates({battleCreationInfo});
 
   types::registry& registry = simulation.registry;

@@ -4,10 +4,12 @@
 
 #include "Abilities/Plus.hpp"
 #include "Abilities/Static.hpp"
+#include "Effects/Burn.hpp"
 #include "Effects/ChoiceLock.hpp"
 #include "Effects/Paralysis.hpp"
 #include "EnumToTag/AbililtyEnumToTag.hpp"
 #include "EnumToTag/ItemEnumToTag.hpp"
+#include "EnumToTag/MoveEnumToTag.hpp"
 #include "EnumToTag/NatureEnumToTag.hpp"
 #include "EnumToTag/StatusEnumToTag.hpp"
 #include "EnumToTag/TypeEnumToTag.hpp"

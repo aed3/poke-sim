@@ -129,9 +129,7 @@ struct Checks : pokesim::debug::Checks {
       if (noKoChanceCalculation || zeroEffectMultiplier) {
         POKESIM_REQUIRE_NM(!has<MultipliedUsesUntilKo>(input));
       }
-      else if (calc_damage::damageKindsMatch(
-                 DamageRollKind::ALL_DAMAGE_ROLLS,
-                 getDamageRollKind(input, damageRollOptions))) {
+      else if (DamageRollKind::ALL_DAMAGE_ROLLS & getDamageRollKind(input, damageRollOptions)) {
         POKESIM_REQUIRE_NM(has<MultipliedUsesUntilKo>(input));
         typesToIgnore.add<MultipliedUsesUntilKo>();
       }

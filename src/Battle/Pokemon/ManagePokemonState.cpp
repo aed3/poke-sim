@@ -3,15 +3,20 @@
 #include <Battle/Setup/EmplaceTagFromEnum.hpp>
 #include <Components/Boosts.hpp>
 #include <Components/Damage.hpp>
+#include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/LastUsedMove.hpp>
+#include <Components/Names/ItemNames.hpp>
 #include <Components/Names/StatNames.hpp>
 #include <Components/Names/StatusNames.hpp>
 #include <Components/PP.hpp>
+#include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Components/Tags/TypeTags.hpp>
+#include <Pokedex/EnumToTag/ItemEnumToTag.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
@@ -24,6 +29,22 @@
 
 namespace pokesim {
 namespace {
+template <typename Type>
+struct RemoveItem {
+  static void run(types::handle handle) { handle.remove<Type>(); }
+};
+
+void removeItemTags(types::handle handle, ItemName item) {
+  item::tags::enumToTag<RemoveItem>(item.name, handle);
+}
+
+template <typename SelectionTag>
+void removeItemComponents(Simulation& simulation) {
+  simulation.viewForSelectedPokemon<removeItemTags>();
+  simulation.removeFromEntities<ItemName, SelectionTag>();
+  simulation.registry.clear<SelectionTag>();
+}
+
 template <typename EffectiveStat, typename BoostType>
 void applyBoostToEffectiveStat(EffectiveStat& effectiveStat, BoostType boost) {
   applyStatBoost(effectiveStat.val, boost.val);
@@ -112,14 +133,56 @@ void setStatus(types::registry& registry, CurrentEffectTarget target, dex::Statu
     registry.emplace<tags::SpeStatUpdateRequired>(target.val);
   }
 }
+
+void setSpeedSortNeeded(types::registry& registry, Battle battle) {
+  registry.emplace_or_replace<simulate_turn::tags::SpeedSortNeeded>(battle.val);
+}
 }  // namespace
 
-void checkIfStatusIsSettable(Simulation& simulation) {
+void checkIfCanUseItem(Simulation& simulation) {
+  simulation.removeFromEntities<tags::CanUseItem>(entt::exclude<ItemName>);
+}
+
+void useItem(Simulation& simulation) {
+  pokesim::internal::SelectForPokemonView<tags::CanUseItem> selectedPokemon{simulation};
+  if (selectedPokemon.hasNoneSelected()) {
+    return;
+  }
+
+  runAfterUseItemEvent(simulation);
+  removeItemComponents<tags::CanUseItem>(simulation);
+}
+
+void tryUseItem(Simulation& simulation) {
+  checkIfCanUseItem(simulation);
+  useItem(simulation);
+}
+
+void checkIfCanRemoveItem(Simulation& simulation) {
+  simulation.removeFromEntities<tags::CanRemoveItem>(entt::exclude<ItemName>);
+  runTryTakeItemEvent(simulation);
+}
+
+void removeItem(Simulation& simulation) {
+  pokesim::internal::SelectForPokemonView<tags::CanRemoveItem> selectedPokemon{simulation};
+  if (selectedPokemon.hasNoneSelected()) {
+    return;
+  }
+
+  runEndItemEvent(simulation);
+  removeItemComponents<tags::CanRemoveItem>(simulation);
+}
+
+void tryRemoveItem(Simulation& simulation) {
+  checkIfCanRemoveItem(simulation);
+  removeItem(simulation);
+}
+
+void checkIfCanSetStatus(Simulation& simulation) {
   status::tags::forEach<CheckIfStatusIsSettable>(simulation);
 }
 
-void trySetStatus(Simulation& simulation) {
-  checkIfStatusIsSettable(simulation);
+void setStatus(Simulation& simulation) {
   status::tags::forEach<RemoveNotSettableStatus>(simulation);
   simulation.registry.clear<tags::CanSetStatus>();
 
@@ -134,6 +197,11 @@ void trySetStatus(Simulation& simulation) {
   runStartFreeze(simulation);
 
   runAfterSetStatusEvent(simulation);
+}
+
+void trySetStatus(Simulation& simulation) {
+  checkIfCanSetStatus(simulation);
+  setStatus(simulation);
 }
 
 void clearStatus(types::handle pokemonHandle) {
@@ -177,10 +245,10 @@ void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
   handle.emplace_or_replace<stat::EffectiveSpe>(spe.val);
 }
 
-void applyDamageToHp(types::registry& registry, const Damage& damage, CurrentActionTarget target) {
-  stat::CurrentHp& hp = registry.get<stat::CurrentHp>(target.val);
-  if (damage.val < hp.val) {
-    hp.val -= damage.val;
+void applyDamage(types::handle pokemonHandle, types::damage damage) {
+  stat::CurrentHp& hp = pokemonHandle.get<stat::CurrentHp>();
+  if (damage < hp.val) {
+    hp.val -= damage;
   }
   else {
     hp.val = 0U;
@@ -280,6 +348,7 @@ void updateSpe(Simulation& simulation) {
   runModifySpe(simulation);
   // trick room
 
+  simulation.viewForSelectedPokemon<setSpeedSortNeeded, Tags<tags::SimulateTurn>>();
   simulation.registry.clear<tags::SpeStatUpdateRequired>();
 }
 }  // namespace pokesim

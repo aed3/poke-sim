@@ -1,7 +1,10 @@
 #include "RunEvent.hpp"
 
 #include <Battle/Helpers/IntegerModify.hpp>
+#include <Components/Accuracy.hpp>
+#include <Components/BasePower.hpp>
 #include <Components/Boosts.hpp>
+#include <Components/CalcDamage/TemporaryMoveProperties.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
@@ -14,6 +17,7 @@
 #include <Pokedex/Abilities/headers.hpp>
 #include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/Items/headers.hpp>
+#include <Pokedex/Moves/headers.hpp>
 #include <Simulation/RegistryContainer.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Utilities/SelectForView.hpp>
@@ -31,8 +35,8 @@
 namespace pokesim {
 namespace {
 template <typename ModifiedComponent>
-void applyEventModifier(ModifiedComponent& component, const EventModifier& eventModifier) {
-  applyChainedModifier(component.val, eventModifier.val);
+void applyEventModifier(ModifiedComponent& component, EventModifier eventModifier) {
+  component.val = applyChainedModifier(component.val, eventModifier.val);
 }
 
 template <typename... PokemonSpecifiers>
@@ -65,18 +69,57 @@ internal::RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
       return {entities.begin(), entities.end()};
     }};
 }
+
+void applyBasePowerEventModifier(types::handle moveHandle, BasePower basePower, EventModifier eventModifier) {
+  calc_damage::Power& power = moveHandle.emplace<calc_damage::Power>(basePower.val);
+  power.val = applyChainedModifier(power.val, eventModifier.val);
+}
 }  // namespace
 
 void runAccuracyEvent(Simulation&) {}
 
-void runModifyAccuracyEvent(Simulation&) {}
+void runModifyAccuracyEvent(Simulation& simulation) {
+  simulation.addToEntities<EventModifier, tags::SelectedForViewMove, Accuracy>();
+
+  dex::events::BrightPowder::onModifyAccuracy(simulation);
+
+  simulation.viewForSelectedMoves<applyEventModifier<Accuracy>>();
+  simulation.registry.clear<EventModifier>();
+}
 
 void runModifyCritBoostEvent(Simulation&) {}
 
-void runBasePowerEvent(Simulation&) {}
+void runBasePowerEvent(Simulation& simulation) {
+  simulation.addToEntities<EventModifier, tags::SelectedForViewMove, BasePower>();
+
+  dex::events::KnockOff::onBasePower(simulation);
+
+  simulation.viewForSelectedMoves<applyBasePowerEventModifier>();
+  simulation.registry.clear<EventModifier>();
+}
+
+void runModifyDamageEvent(Simulation& simulation) {
+  dex::events::LifeOrb::onModifyDamage(simulation);
+}
+
+void runAfterModifyDamageEvent(Simulation& simulation) {
+  dex::events::FocusSash::onAfterModifyDamage(simulation);
+}
+
+void runDamageEvent(Simulation& simulation) {
+  dex::events::FocusSash::onDamage(simulation);
+}
 
 void runDamagingHitEvent(Simulation& simulation) {
   dex::events::Static::onDamagingHit(simulation);
+}
+
+void runAfterHitEvent(Simulation& simulation) {
+  dex::events::KnockOff::onAfterHit(simulation);
+}
+
+void runAfterMoveUsedEvent(Simulation& simulation) {
+  dex::events::LifeOrb::onAfterMoveUsed(simulation);
 }
 
 void runModifySecondariesEvent(Simulation&) {}
@@ -161,5 +204,13 @@ void runModifySpe(Simulation& simulation) {
 void runStartSleep(Simulation&) {}
 void runStartFreeze(Simulation&) {
   // Just Shaymin
+}
+
+void runTryTakeItemEvent(Simulation&) {}
+void runAfterUseItemEvent(Simulation&) {}
+
+void runEndItemEvent(Simulation& simulation) {
+  dex::events::ChoiceScarf::onEnd(simulation);
+  dex::events::ChoiceSpecs::onEnd(simulation);
 }
 }  // namespace pokesim

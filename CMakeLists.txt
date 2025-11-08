@@ -69,6 +69,7 @@ set (SOURCES
   src/Pokedex/Abilities/AbilityEvents.cpp
   src/Pokedex/Effects/EffectEvents.cpp
   src/Pokedex/Items/ItemEvents.cpp
+  src/Pokedex/Moves/MoveEvents.cpp
   src/Pokedex/Pokedex.cpp
   src/Pokedex/Setup/AbilityDexDataSetup.cpp
   src/Pokedex/Setup/GetAbilityBuild.cpp
@@ -115,15 +116,16 @@ target_compile_options(PokeSim PRIVATE ${compiler_warning_options})
 
 if (ENABLE_TESTING)
   add_executable(PokeSimTests
+    external/Catch2/catch_amalgamated.cpp
     tests/AnalyzeEffectTest.cpp
     tests/BattleStateTest.cpp
-    tests/PokedexTest.cpp
     tests/CalcDamageTest.cpp
+    tests/Moves/FuryAttack.cpp
+    tests/PokedexTest.cpp
     tests/RegistryContainerTests.cpp
-    tests/SimulationSetupTest.cpp
     tests/SimulateTurnsTest.cpp
+    tests/SimulationSetupTest.cpp
     tests/Tests.cpp
-    external/Catch2/catch_amalgamated.cpp
   )
 
   if (CMAKE_BUILD_TYPE STREQUAL "Release")

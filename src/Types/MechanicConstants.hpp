@@ -86,6 +86,13 @@ struct MechanicConstants {
     static constexpr std::uint8_t MIN = 1U;
   };
 
+  struct MovePower {
+    // Last Respects (5050) user with Supreme Overlord (1.4x), boosted by ally's Power Spot (1.3x) and Helping Hand
+    // (1.5x), holding a Spell Tag (1.2x)
+    static constexpr std::uint16_t MAX = 16544U;
+    static constexpr std::uint16_t MIN = 1U;
+  };
+
   struct MoveBaseAccuracy {
     static constexpr std::uint8_t MAX = 100U;
     static constexpr std::uint8_t MIN = 1U;

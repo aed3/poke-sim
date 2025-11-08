@@ -14,6 +14,7 @@ namespace events {
 struct ChoiceScarf {
   static void onModifySpe(Simulation& simulation);
   static void onSourceModifyMove(Simulation& simulation);
+  static void onEnd(Simulation& simulation);
 };
 }  // namespace events
 

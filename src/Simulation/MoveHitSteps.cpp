@@ -12,7 +12,7 @@
 #include <Components/RandomEventOutputs.hpp>
 #include <Components/SimulateTurn/MoveHitStepTags.hpp>
 #include <Components/Tags/Current.hpp>
-#include <Components/Tags/MoveTags.hpp>
+#include <Components/Tags/MovePropertyTags.hpp>
 #include <Config/Require.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Types/Enums/BattleFormat.hpp>
@@ -128,7 +128,10 @@ void runMoveEffects(Simulation& simulation) {
 
   simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
 }
-}  // namespace
+
+void applyDamageToTarget(types::registry& registry, Damage damage, CurrentActionTarget target) {
+  pokesim::applyDamage({registry, target.val}, damage.val);
+}
 
 void setMoveHitCount(Simulation& simulation) {
   auto noAssignedHitCount =
@@ -148,7 +151,7 @@ void setMoveHitCount(Simulation& simulation) {
 }
 
 void applyDamage(Simulation& simulation) {
-  simulation.viewForSelectedMoves<applyDamageToHp>();
+  simulation.viewForSelectedMoves<applyDamageToTarget>();
 
   simulation.removeFromEntities<tags::internal::MoveHits, tags::SelectedForViewMove>(
     entt::exclude<Damage, move::tags::Status>);
@@ -167,8 +170,8 @@ void runSecondaryMoveEffects(Simulation& simulation) {
   runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::SelectedForViewMove>(
     simulation,
     [](Simulation& sim) {
-    sim.addToEntities<tags::internal::RunEffect, tags::SelectedForViewMove, tags::RandomEventCheckPassed>();
-  });
+      sim.addToEntities<tags::internal::RunEffect, tags::SelectedForViewMove, tags::RandomEventCheckPassed>();
+    });
 
   runMoveEffects(simulation);
   simulation.registry.clear<tags::internal::RunEffect>();
@@ -193,6 +196,7 @@ void moveHitLoop(Simulation& simulation) {
       "HitCount should only be present on active moves, meaning this loop should only be entered if there are moves to "
       "select.");
     calc_damage::run(simulation);  // 1. call to this.battle.getDamage
+    runDamageEvent(simulation);
 
     applyDamage(simulation);            // 2. call to this.battle.spreadDamage
     runPrimaryMoveEffects(simulation);  // 3. primary effects
@@ -201,12 +205,14 @@ void moveHitLoop(Simulation& simulation) {
     // 6. force switch
 
     runDamagingHitEvent(simulation);
+    runAfterHitEvent(simulation);
 
     updateAllStats(simulation);
     postMoveHitCheck(simulation);
     simulation.view<deductMoveHitCount>();
   }
 }
+}  // namespace
 
 void runMoveHitChecks(Simulation& simulation) {
   // invulnerabilityCheck
