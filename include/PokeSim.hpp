@@ -26176,7 +26176,7 @@ inline void setCurrentActionTarget(
 inline void setCurrentActionMove(
   types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
   const Pokedex& pokedex);
-inline void setFailedActionMove(types::handle moveHandle, Battle battle, CurrentActionSource source);
+inline void setFailedActionMove(types::handle moveHandle, Battle battle);
 inline void clearCurrentAction(Simulation& simulation);
 }  // namespace pokesim
 
@@ -26544,7 +26544,7 @@ inline void removeFailedHitTargets(
     registry.remove<tags::CurrentActionMoveSource>(source.val);
   }
 
-  setFailedActionMove(moveHandle, battle, source);
+  setFailedActionMove(moveHandle, battle);
 }
 
 inline void postMoveHitCheck(Simulation& simulation) {
@@ -29053,7 +29053,7 @@ inline void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat
 inline void paralysisOnBeforeMove(types::handle pokemonHandle, Battle battle, const CurrentActionMovesAsSource& moves) {
   types::registry& registry = *pokemonHandle.registry();
   for (types::entity move : moves.val) {
-    setFailedActionMove(types::handle{registry, move}, battle, {pokemonHandle.entity()});
+    setFailedActionMove(types::handle{registry, move}, battle);
   }
 }
 
@@ -31003,7 +31003,7 @@ inline void setCurrentActionMove(
   registry.emplace<tags::CurrentActionMoveSlot>(moveSlotEntity);
 }
 
-inline void setFailedActionMove(types::handle moveHandle, Battle battle, CurrentActionSource source) {
+inline void setFailedActionMove(types::handle moveHandle, Battle battle) {
   moveHandle.remove<tags::CurrentActionMove>();
   moveHandle.emplace<tags::FailedCurrentActionMove>();
 
