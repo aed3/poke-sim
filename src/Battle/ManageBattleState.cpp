@@ -74,7 +74,7 @@ void setCurrentActionMove(
   registry.emplace<tags::CurrentActionMoveSlot>(moveSlotEntity);
 }
 
-void setFailedActionMove(types::handle moveHandle, Battle battle, CurrentActionSource source) {
+void setFailedActionMove(types::handle moveHandle, Battle battle) {
   moveHandle.remove<tags::CurrentActionMove>();
   moveHandle.emplace<tags::FailedCurrentActionMove>();
 

@@ -70,7 +70,7 @@ void removeFailedHitTargets(
     registry.remove<tags::CurrentActionMoveSource>(source.val);
   }
 
-  setFailedActionMove(moveHandle, battle, source);
+  setFailedActionMove(moveHandle, battle);
 }
 
 void postMoveHitCheck(Simulation& simulation) {

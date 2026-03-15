@@ -32,7 +32,7 @@ void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedD
 void paralysisOnBeforeMove(types::handle pokemonHandle, Battle battle, const CurrentActionMovesAsSource& moves) {
   types::registry& registry = *pokemonHandle.registry();
   for (types::entity move : moves.val) {
-    setFailedActionMove(types::handle{registry, move}, battle, {pokemonHandle.entity()});
+    setFailedActionMove(types::handle{registry, move}, battle);
   }
 }
 
