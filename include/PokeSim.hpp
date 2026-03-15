@@ -226,10 +226,10 @@
  * src/Simulation/RunEvent.hpp
  * src/Utilities/SelectForView.hpp
  * src/Simulation/RunEvent.cpp
+ * src/Battle/ManageBattleState.hpp
  * src/SimulateTurn/RandomChance.hpp
  * src/Simulation/MoveHitSteps.hpp
  * src/Simulation/MoveHitSteps.cpp
- * src/Battle/ManageBattleState.hpp
  * src/SimulateTurn/ManageActionQueue.hpp
  * src/SimulateTurn/SimulateTurnDebugChecks.hpp
  * src/SimulateTurn/SimulateTurn.cpp
@@ -18659,6 +18659,7 @@ struct CurrentEffectsAsSource {
 namespace pokesim::tags {
 // Current Action Tag: The move that is being processed by the simulator
 struct CurrentActionMove {};
+struct FailedCurrentActionMove {};
 // Current Action Tag: The move slot the current action's move was chosen and will deduct PP from
 struct CurrentActionMoveSlot {};
 // Current Action Tag: The target of the active move
@@ -18867,6 +18868,7 @@ namespace tags {
 using Attacker = pokesim::tags::CurrentActionMoveSource;
 using Defender = pokesim::tags::CurrentActionMoveTarget;
 using UsedMove = pokesim::tags::CurrentActionMove;
+using FailedUsedMove = pokesim::tags::FailedCurrentActionMove;
 }  // namespace tags
 }  // namespace pokesim::calc_damage
 
@@ -24014,7 +24016,7 @@ struct Checks {
   const Simulation* simulation;
   const types::registry* registry;
   types::registry registryOnInput;
-  entt::dense_map<types::entity, types::entity> originalToCopy;
+  entt::dense_map<types::entity, types::entity> currentEntitiesToInitial;
   entt::dense_set<types::entity> specificallyChecked;
   types::entityIndex initialEntityCount = 0U;
 
@@ -24023,22 +24025,31 @@ struct Checks {
     return registry->all_of<T>(entity);
   }
 
+  types::entity getInitialEntity(types::entity entity) const {
+    types::entity parent = findCopyParent(currentEntitiesToInitial, *registry, entity);
+    return currentEntitiesToInitial.at(parent);
+  }
+
+  void copyEntity(types::entity entity) {
+    currentEntitiesToInitial[entity] = createEntityCopy(entity, *registry, registryOnInput);
+  }
+
   void copyRemainingEntities() {
     for (types::entity entity : registry->view<types::entity>()) {
       if (!registry->orphan(entity)) {
         initialEntityCount++;
-        if (originalToCopy.contains(entity)) {
+        if (currentEntitiesToInitial.contains(entity)) {
           specificallyChecked.emplace(entity);
         }
         else {
-          originalToCopy[entity] = createEntityCopy(entity, *registry, registryOnInput);
+          copyEntity(entity);
         }
       }
     }
   }
 
   void checkRemainingOutputs() const {
-    for (auto [original, copy] : originalToCopy) {
+    for (auto [original, copy] : currentEntitiesToInitial) {
       if (!specificallyChecked.contains(original)) {
         areEntitiesEqual(*registry, original, registryOnInput, copy);
       }
@@ -25386,6 +25397,7 @@ namespace pokesim::dex {
 namespace events {
 struct Paralysis {
   inline static void onModifySpe(Simulation& simulation);
+  inline static void onBeforeMove(Simulation& simulation);
 };
 }  // namespace events
 
@@ -25395,6 +25407,9 @@ struct Paralysis : events::Paralysis {
 
   static constexpr types::stat speedDividend = 50U;
   static constexpr types::stat speedDivisor = 100U;
+
+  static constexpr types::percentChance onBeforeMoveChance = 25U;
+
   struct Strings {
     static constexpr std::string_view name = "Paralysis";
     static constexpr std::string_view smogonId = "par";
@@ -25839,6 +25854,8 @@ using WillOWisp = dex::WillOWisp<GameMechanics::LATEST>;
 namespace pokesim {
 class Simulation;
 
+inline void runBeforeMove(Simulation& simulation);
+
 inline void runAccuracyEvent(Simulation& simulation);
 inline void runModifyAccuracyEvent(Simulation& simulation);
 inline void runModifyCritBoostEvent(Simulation& simulation);
@@ -25993,6 +26010,10 @@ inline void applyBasePowerEventModifier(types::handle moveHandle, BasePower base
 }
 }  // namespace
 
+inline void runBeforeMove(Simulation& simulation) {
+  dex::events::Paralysis::onBeforeMove(simulation);
+}
+
 inline void runAccuracyEvent(Simulation&) {}
 
 inline void runModifyAccuracyEvent(Simulation& simulation) {
@@ -26133,6 +26154,33 @@ inline void runEndItemEvent(Simulation& simulation) {
 }  // namespace pokesim
 
 ////////////////////// END OF src/Simulation/RunEvent.cpp //////////////////////
+
+////////////////// START OF src/Battle/ManageBattleState.hpp ///////////////////
+
+namespace pokesim {
+class Simulation;
+class Pokedex;
+struct Battle;
+struct Sides;
+struct CurrentAction;
+struct CurrentActionSource;
+struct CurrentActionTargets;
+struct RootBattle;
+
+inline void assignRootBattle(types::handle battleHandle);
+inline void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root);
+
+inline void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction action);
+inline void setCurrentActionTarget(
+  types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source);
+inline void setCurrentActionMove(
+  types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
+  const Pokedex& pokedex);
+inline void setFailedActionMove(types::handle moveHandle, Battle battle, CurrentActionSource source);
+inline void clearCurrentAction(Simulation& simulation);
+}  // namespace pokesim
+
+/////////////////// END OF src/Battle/ManageBattleState.hpp ////////////////////
 
 ////////////////// START OF src/SimulateTurn/RandomChance.hpp //////////////////
 
@@ -26476,26 +26524,33 @@ inline void updateCurrentActionTargets(types::registry& registry, CurrentActionT
   targets.val.pop_count(deleteCount);
 }
 
-inline void removeFailedHitTargets(types::handle moveHandle, CurrentActionTarget target, CurrentActionSource source) {
+inline void removeFailedHitTargets(
+  types::handle moveHandle, Battle battle, CurrentActionTarget target, CurrentActionSource source) {
   types::registry& registry = *moveHandle.registry();
-
-  registry.remove<tags::CurrentActionMoveTarget>(target.val);
 
   CurrentActionMovesAsTarget& targetedMoves = registry.get<CurrentActionMovesAsTarget>(target.val);
   auto newTargetedMoveEnd = std::remove(targetedMoves.val.begin(), targetedMoves.val.end(), moveHandle.entity());
   targetedMoves.val.erase(newTargetedMoveEnd, targetedMoves.val.end());
 
+  if (targetedMoves.val.empty()) {
+    registry.remove<tags::CurrentActionMoveTarget>(target.val);
+  }
+
   CurrentActionMovesAsSource& sourcedMoves = registry.get<CurrentActionMovesAsSource>(source.val);
   auto newSourcedMoveEnd = std::remove(sourcedMoves.val.begin(), sourcedMoves.val.end(), moveHandle.entity());
   sourcedMoves.val.erase(newSourcedMoveEnd, sourcedMoves.val.end());
+
+  if (sourcedMoves.val.empty()) {
+    registry.remove<tags::CurrentActionMoveSource>(source.val);
+  }
+
+  setFailedActionMove(moveHandle, battle, source);
 }
 
 inline void postMoveHitCheck(Simulation& simulation) {
-  auto removedMoves =
-    simulation.view<removeFailedHitTargets, Tags<tags::CurrentActionMove>, entt::exclude_t<tags::internal::MoveHits>>();
-  simulation.registry.destroy(removedMoves.begin(), removedMoves.end());
-  simulation.registry.clear<Damage>();
+  simulation.view<removeFailedHitTargets, Tags<tags::CurrentActionMove>, entt::exclude_t<tags::internal::MoveHits>>();
   simulation.view<updateCurrentActionTargets>();
+  simulation.registry.clear<Damage>();
 }
 
 template <auto Function>
@@ -26654,31 +26709,6 @@ inline void runMoveHitChecks(Simulation& simulation) {
 
 //////////////////// END OF src/Simulation/MoveHitSteps.cpp ////////////////////
 
-////////////////// START OF src/Battle/ManageBattleState.hpp ///////////////////
-
-namespace pokesim {
-class Simulation;
-class Pokedex;
-struct Sides;
-struct CurrentAction;
-struct CurrentActionSource;
-struct CurrentActionTargets;
-struct RootBattle;
-
-inline void assignRootBattle(types::handle battleHandle);
-inline void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root);
-
-inline void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction action);
-inline void setCurrentActionTarget(
-  types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source);
-inline void setCurrentActionMove(
-  types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
-  const Pokedex& pokedex);
-inline void clearCurrentAction(Simulation& simulation);
-}  // namespace pokesim
-
-/////////////////// END OF src/Battle/ManageBattleState.hpp ////////////////////
-
 /////////////// START OF src/SimulateTurn/ManageActionQueue.hpp ////////////////
 
 // Systems
@@ -26744,6 +26774,9 @@ struct Checks : pokesim::debug::Checks {
         }
       }
     }
+
+    POKESIM_REQUIRE_NM(registry->view<pokesim::tags::CurrentActionMove>().empty());
+    POKESIM_REQUIRE_NM(registry->view<pokesim::tags::FailedCurrentActionMove>().empty());
   }
 };
 }  // namespace pokesim::simulate_turn::debug
@@ -26841,6 +26874,8 @@ inline void runMoveAction(Simulation& simulation) {
   simulation.viewForSelectedBattles<setCurrentActionSource>();
   simulation.viewForSelectedBattles<setCurrentActionTarget>();
   simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex());
+
+  runBeforeMove(simulation);
 
   simulation.view<deductPp, Tags<pokesim::tags::CurrentActionMoveSlot>>();
   simulation.view<setLastMoveUsed>();
@@ -29015,6 +29050,13 @@ inline void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat
   effectiveSpe.val = effectiveSpe.val * speedDividend / dex::latest::Paralysis::speedDivisor;
 }
 
+inline void paralysisOnBeforeMove(types::handle pokemonHandle, Battle battle, const CurrentActionMovesAsSource& moves) {
+  types::registry& registry = *pokemonHandle.registry();
+  for (types::entity move : moves.val) {
+    setFailedActionMove(types::handle{registry, move}, battle, {pokemonHandle.entity()});
+  }
+}
+
 inline void choiceLockOnDisableMove(
   types::registry& registry, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
   POKESIM_REQUIRE(
@@ -29039,6 +29081,16 @@ inline void Paralysis::onModifySpe(Simulation& simulation) {
   simulation.viewForSelectedPokemon<
     paralysisOnModifySpeed,
     Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>(speedDividend);
+}
+
+inline void Paralysis::onBeforeMove(Simulation& simulation) {
+  constexpr auto chance = dex::latest::Paralysis::onBeforeMoveChance;
+  simulation.addToEntities<BaseEffectChance, tags::CurrentActionMoveSource, status::tags::Paralysis>(
+    BaseEffectChance{chance});
+  runRandomBinaryChance<BaseEffectChance, tags::CurrentActionMoveSource>(simulation, [](Simulation& sim) {
+    sim.viewForSelectedPokemon<paralysisOnBeforeMove, Tags<tags::RandomEventCheckPassed>>();
+  });
+  simulation.removeFromEntities<BaseEffectChance, tags::CurrentActionMoveSource, status::tags::Paralysis>();
 }
 
 inline void ChoiceLock::onDisableMove(Simulation& simulation) {
@@ -29223,7 +29275,7 @@ struct Checks : pokesim::debug::Checks {
     for (types::entity move : moves.val) {
       if (has<pokesim::move::tags::Status>(move)) continue;
 
-      originalToCopy[move] = pokesim::debug::createEntityCopy(move, *registry, registryOnInput);
+      copyEntity(move);
 
       bool hasSimulateTurn = has<pokesim::tags::SimulateTurn>(move);
       bool hasCalculateDamage = has<pokesim::tags::CalculateDamage>(move);
@@ -29250,7 +29302,7 @@ struct Checks : pokesim::debug::Checks {
   void checkPokemonInputs(bool forAttacker) {
     const types::entityVector pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
-      originalToCopy[pokemon] = pokesim::debug::createEntityCopy(pokemon, *registry, registryOnInput);
+      copyEntity(pokemon);
       checkPokemon(pokemon);
 
       types::entityVector moves;
@@ -29266,7 +29318,7 @@ struct Checks : pokesim::debug::Checks {
       bool needsPhy = false;
       bool needsSpc = false;
       for (types::entity move : moves) {
-        POKESIM_REQUIRE_NM(has<tags::UsedMove>(move));
+        POKESIM_REQUIRE_NM(has<tags::UsedMove>(move) || has<tags::FailedUsedMove>(move));
         needsPhy |= has<move::tags::Physical>(move);
         needsSpc |= has<move::tags::Special>(move);
       }
@@ -29298,7 +29350,7 @@ struct Checks : pokesim::debug::Checks {
 
   void checkBattleInputs() {
     for (types::entity battle : simulation->selectedBattleEntities()) {
-      originalToCopy[battle] = pokesim::debug::createEntityCopy(battle, *registry, registryOnInput);
+      copyEntity(battle);
       checkBattle(battle);
       checkSide(registry->get<Sides>(battle).p1());
       checkSide(registry->get<Sides>(battle).p2());
@@ -29444,13 +29496,8 @@ struct Checks : pokesim::debug::Checks {
         }
       }
 
-      types::entity originalMove = pokesim::debug::findCopyParent(originalToCopy, *registry, move);
-      pokesim::debug::areEntitiesEqual(
-        *registry,
-        move,
-        registryOnInput,
-        originalToCopy.at(originalMove),
-        typesToIgnore);
+      types::entity initialMove = getInitialEntity(move);
+      pokesim::debug::areEntitiesEqual(*registry, move, registryOnInput, initialMove, typesToIgnore);
     }
   }
 
@@ -29461,13 +29508,8 @@ struct Checks : pokesim::debug::Checks {
       if (has<pokesim::tags::SimulateTurn>(pokemon) && !forAttacker) {
         typesToIgnore.add<tags::RanAfterModifyDamage>();
       }
-      types::entity originalPokemon = pokesim::debug::findCopyParent(originalToCopy, *registry, pokemon);
-      pokesim::debug::areEntitiesEqual(
-        *registry,
-        pokemon,
-        registryOnInput,
-        originalToCopy.at(originalPokemon),
-        typesToIgnore);
+      types::entity initialPokemon = getInitialEntity(pokemon);
+      pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, initialPokemon, typesToIgnore);
     }
   }
 
@@ -29478,13 +29520,8 @@ struct Checks : pokesim::debug::Checks {
         typesToIgnore.add<Probability, RngSeed, ParentBattle>();
       }
       checkBattle(battle);
-      types::entity originalBattle = pokesim::debug::findCopyParent(originalToCopy, *registry, battle);
-      pokesim::debug::areEntitiesEqual(
-        *registry,
-        battle,
-        registryOnInput,
-        originalToCopy.at(originalBattle),
-        typesToIgnore);
+      types::entity initialBattle = getInitialEntity(battle);
+      pokesim::debug::areEntitiesEqual(*registry, battle, registryOnInput, initialBattle, typesToIgnore);
     }
   }
 };
@@ -30773,7 +30810,7 @@ inline void clearStatus(types::handle pokemonHandle) {
 
 inline void deductPp(Pp& pp) {
   if (pp.val) {
-    pp.val -= 1U;
+    pp.val -= 1U;  // TODO(aed3): Make this into a mechanic constant
   }
 }
 
@@ -30966,6 +31003,17 @@ inline void setCurrentActionMove(
   registry.emplace<tags::CurrentActionMoveSlot>(moveSlotEntity);
 }
 
+inline void setFailedActionMove(types::handle moveHandle, Battle battle, CurrentActionSource source) {
+  moveHandle.remove<tags::CurrentActionMove>();
+  moveHandle.emplace<tags::FailedCurrentActionMove>();
+
+  types::registry& registry = *moveHandle.registry();
+
+  types::entity moveSlotEntity = registry.get<CurrentActionMoveSlot>(battle.val).val;
+  registry.erase<CurrentActionMoveSlot>(battle.val);
+  registry.erase<tags::CurrentActionMoveSlot>(moveSlotEntity);
+}
+
 inline void clearCurrentAction(Simulation& simulation) {
   types::registry& registry = simulation.registry;
   registry.clear<CurrentAction>();
@@ -30982,6 +31030,8 @@ inline void clearCurrentAction(Simulation& simulation) {
 
   auto actionMoves = registry.view<tags::CurrentActionMove>();
   registry.destroy(actionMoves.begin(), actionMoves.end());
+  auto failedActionMoves = registry.view<tags::FailedCurrentActionMove>();
+  registry.destroy(failedActionMoves.begin(), failedActionMoves.end());
   auto currentActions = registry.view<action::tags::Current>();
   registry.destroy(currentActions.begin(), currentActions.end());
 
@@ -31551,7 +31601,7 @@ struct Checks : pokesim::debug::Checks {
     auto view = registry->view<tags::Input>();
     types::entityVector inputs{view.begin(), view.end()};
     for (types::entity input : inputs) {
-      originalToCopy[input] = pokesim::debug::createEntityCopy(input, *registry, registryOnInput);
+      copyEntity(input);
     }
     pokesim::debug::check(Inputs{inputs}, *registry);
 
@@ -31641,13 +31691,18 @@ struct Checks : pokesim::debug::Checks {
         typesToIgnore.add<MultipliedUsesUntilKo>();
       }
 
-      pokesim::debug::areEntitiesEqual(*registry, input, registryOnInput, originalToCopy.at(input), typesToIgnore);
+      pokesim::debug::areEntitiesEqual(
+        *registry,
+        input,
+        registryOnInput,
+        currentEntitiesToInitial.at(input),
+        typesToIgnore);
     }
   }
 
   void checkPokemonOutputs() const {
     for (types::entity pokemon : getPokemonList()) {
-      pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, originalToCopy.at(pokemon));
+      pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, currentEntitiesToInitial.at(pokemon));
     }
   }
 };

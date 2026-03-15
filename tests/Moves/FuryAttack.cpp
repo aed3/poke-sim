@@ -10,6 +10,7 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
   battleCreationInfo.p1 = {{createPredefinedPokemon(dex::Species::EMPOLEON)}};
   battleCreationInfo.p2 = {{createPredefinedPokemon(dex::Species::RIBOMBEE)}};
   battleCreationInfo.turn = 1U;
+  battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
   loadPokedexForBattleInfo(battleCreationInfo, pokedex);
 
   battleCreationInfo.runWithSimulateTurn = true;

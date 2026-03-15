@@ -74,6 +74,17 @@ void setCurrentActionMove(
   registry.emplace<tags::CurrentActionMoveSlot>(moveSlotEntity);
 }
 
+void setFailedActionMove(types::handle moveHandle, Battle battle, CurrentActionSource source) {
+  moveHandle.remove<tags::CurrentActionMove>();
+  moveHandle.emplace<tags::FailedCurrentActionMove>();
+
+  types::registry& registry = *moveHandle.registry();
+
+  types::entity moveSlotEntity = registry.get<CurrentActionMoveSlot>(battle.val).val;
+  registry.erase<CurrentActionMoveSlot>(battle.val);
+  registry.erase<tags::CurrentActionMoveSlot>(moveSlotEntity);
+}
+
 void clearCurrentAction(Simulation& simulation) {
   types::registry& registry = simulation.registry;
   registry.clear<CurrentAction>();
@@ -90,6 +101,8 @@ void clearCurrentAction(Simulation& simulation) {
 
   auto actionMoves = registry.view<tags::CurrentActionMove>();
   registry.destroy(actionMoves.begin(), actionMoves.end());
+  auto failedActionMoves = registry.view<tags::FailedCurrentActionMove>();
+  registry.destroy(failedActionMoves.begin(), failedActionMoves.end());
   auto currentActions = registry.view<action::tags::Current>();
   registry.destroy(currentActions.begin(), currentActions.end());
 

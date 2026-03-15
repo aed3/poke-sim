@@ -168,6 +168,39 @@ inline Simulation createDoubleBattleSimulation(Pokedex& pokedex, Simulation::Bat
   loadPokedexForBattleInfo(battleCreationInfo, pokedex);
   return simulation;
 }
+
+struct TestChecks : debug::Checks {
+  using debug::Checks::checkRemainingOutputs;
+
+  template <typename Selector, typename... TypesToIgnore>
+  void checkViewForChanges() const {
+    for (types::entity entity : registry->view<Selector>()) {
+      checkEntityForChanges<TypesToIgnore...>(entity);
+    }
+  }
+
+  template <typename... TypesToIgnore>
+  void checkEntityForChanges(types::entity entity) const {
+    debug::TypesToIgnore typesToIgnore;
+    typesToIgnore.add<TypesToIgnore...>();
+    types::entity initialEntity = getInitialEntity(entity);
+    debug::areEntitiesEqual(*registry, entity, registryOnInput, initialEntity, typesToIgnore);
+  }
+
+  template <typename T>
+  const T& getInitialComponent(types::entity entity) const {
+    return registryOnInput.get<T>(getInitialEntity(entity));
+  }
+
+  TestChecks(const Simulation& _simulation, const types::entityVector& specificallyCheckedEntities = {})
+      : debug::Checks(_simulation) {
+    for (types::entity entity : specificallyCheckedEntities) {
+      copyEntity(entity);
+    }
+
+    copyRemainingEntities();
+  }
+};
 }  // namespace pokesim
 
 namespace Catch {

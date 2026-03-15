@@ -76,6 +76,10 @@ void applyBasePowerEventModifier(types::handle moveHandle, BasePower basePower, 
 }
 }  // namespace
 
+void runBeforeMove(Simulation& simulation) {
+  dex::events::Paralysis::onBeforeMove(simulation);
+}
+
 void runAccuracyEvent(Simulation&) {}
 
 void runModifyAccuracyEvent(Simulation& simulation) {

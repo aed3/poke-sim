@@ -1,5 +1,6 @@
 #include "MoveHitSteps.hpp"
 
+#include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <CalcDamage/CalcDamage.hpp>
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
@@ -49,26 +50,33 @@ void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets&
   targets.val.pop_count(deleteCount);
 }
 
-void removeFailedHitTargets(types::handle moveHandle, CurrentActionTarget target, CurrentActionSource source) {
+void removeFailedHitTargets(
+  types::handle moveHandle, Battle battle, CurrentActionTarget target, CurrentActionSource source) {
   types::registry& registry = *moveHandle.registry();
-
-  registry.remove<tags::CurrentActionMoveTarget>(target.val);
 
   CurrentActionMovesAsTarget& targetedMoves = registry.get<CurrentActionMovesAsTarget>(target.val);
   auto newTargetedMoveEnd = std::remove(targetedMoves.val.begin(), targetedMoves.val.end(), moveHandle.entity());
   targetedMoves.val.erase(newTargetedMoveEnd, targetedMoves.val.end());
 
+  if (targetedMoves.val.empty()) {
+    registry.remove<tags::CurrentActionMoveTarget>(target.val);
+  }
+
   CurrentActionMovesAsSource& sourcedMoves = registry.get<CurrentActionMovesAsSource>(source.val);
   auto newSourcedMoveEnd = std::remove(sourcedMoves.val.begin(), sourcedMoves.val.end(), moveHandle.entity());
   sourcedMoves.val.erase(newSourcedMoveEnd, sourcedMoves.val.end());
+
+  if (sourcedMoves.val.empty()) {
+    registry.remove<tags::CurrentActionMoveSource>(source.val);
+  }
+
+  setFailedActionMove(moveHandle, battle, source);
 }
 
 void postMoveHitCheck(Simulation& simulation) {
-  auto removedMoves =
-    simulation.view<removeFailedHitTargets, Tags<tags::CurrentActionMove>, entt::exclude_t<tags::internal::MoveHits>>();
-  simulation.registry.destroy(removedMoves.begin(), removedMoves.end());
-  simulation.registry.clear<Damage>();
+  simulation.view<removeFailedHitTargets, Tags<tags::CurrentActionMove>, entt::exclude_t<tags::internal::MoveHits>>();
   simulation.view<updateCurrentActionTargets>();
+  simulation.registry.clear<Damage>();
 }
 
 template <auto Function>

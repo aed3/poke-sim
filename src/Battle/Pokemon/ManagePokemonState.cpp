@@ -217,7 +217,7 @@ void clearStatus(types::handle pokemonHandle) {
 
 void deductPp(Pp& pp) {
   if (pp.val) {
-    pp.val -= 1U;
+    pp.val -= 1U;  // TODO(aed3): Make this into a mechanic constant
   }
 }
 

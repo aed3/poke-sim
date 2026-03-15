@@ -44,7 +44,7 @@ struct Checks : pokesim::debug::Checks {
     auto view = registry->view<tags::Input>();
     types::entityVector inputs{view.begin(), view.end()};
     for (types::entity input : inputs) {
-      originalToCopy[input] = pokesim::debug::createEntityCopy(input, *registry, registryOnInput);
+      copyEntity(input);
     }
     pokesim::debug::check(Inputs{inputs}, *registry);
 
@@ -134,13 +134,18 @@ struct Checks : pokesim::debug::Checks {
         typesToIgnore.add<MultipliedUsesUntilKo>();
       }
 
-      pokesim::debug::areEntitiesEqual(*registry, input, registryOnInput, originalToCopy.at(input), typesToIgnore);
+      pokesim::debug::areEntitiesEqual(
+        *registry,
+        input,
+        registryOnInput,
+        currentEntitiesToInitial.at(input),
+        typesToIgnore);
     }
   }
 
   void checkPokemonOutputs() const {
     for (types::entity pokemon : getPokemonList()) {
-      pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, originalToCopy.at(pokemon));
+      pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, currentEntitiesToInitial.at(pokemon));
     }
   }
 };

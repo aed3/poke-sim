@@ -1,4 +1,7 @@
+#include <Battle/ManageBattleState.hpp>
+#include <Components/BaseEffectChance.hpp>
 #include <Components/Damage.hpp>
+#include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
@@ -6,6 +9,7 @@
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Config/Require.hpp>
+#include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/Simulation.hpp>
 #include <entt/entity/registry.hpp>
 
@@ -23,6 +27,13 @@ void applyBurnModifier(types::registry& registry, const CurrentActionMovesAsSour
 
 void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedDividend) {
   effectiveSpe.val = effectiveSpe.val * speedDividend / dex::latest::Paralysis::speedDivisor;
+}
+
+void paralysisOnBeforeMove(types::handle pokemonHandle, Battle battle, const CurrentActionMovesAsSource& moves) {
+  types::registry& registry = *pokemonHandle.registry();
+  for (types::entity move : moves.val) {
+    setFailedActionMove(types::handle{registry, move}, battle, {pokemonHandle.entity()});
+  }
 }
 
 void choiceLockOnDisableMove(
@@ -49,6 +60,16 @@ void Paralysis::onModifySpe(Simulation& simulation) {
   simulation.viewForSelectedPokemon<
     paralysisOnModifySpeed,
     Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>(speedDividend);
+}
+
+void Paralysis::onBeforeMove(Simulation& simulation) {
+  constexpr auto chance = dex::latest::Paralysis::onBeforeMoveChance;
+  simulation.addToEntities<BaseEffectChance, tags::CurrentActionMoveSource, status::tags::Paralysis>(
+    BaseEffectChance{chance});
+  runRandomBinaryChance<BaseEffectChance, tags::CurrentActionMoveSource>(simulation, [](Simulation& sim) {
+    sim.viewForSelectedPokemon<paralysisOnBeforeMove, Tags<tags::RandomEventCheckPassed>>();
+  });
+  simulation.removeFromEntities<BaseEffectChance, tags::CurrentActionMoveSource, status::tags::Paralysis>();
 }
 
 void ChoiceLock::onDisableMove(Simulation& simulation) {

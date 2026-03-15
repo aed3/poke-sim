@@ -5,6 +5,7 @@
 namespace pokesim {
 class Simulation;
 class Pokedex;
+struct Battle;
 struct Sides;
 struct CurrentAction;
 struct CurrentActionSource;
@@ -20,5 +21,6 @@ void setCurrentActionTarget(
 void setCurrentActionMove(
   types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
   const Pokedex& pokedex);
+void setFailedActionMove(types::handle moveHandle, Battle battle, CurrentActionSource source);
 void clearCurrentAction(Simulation& simulation);
 }  // namespace pokesim

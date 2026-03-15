@@ -125,6 +125,7 @@ if (ENABLE_TESTING)
     tests/RegistryContainerTests.cpp
     tests/SimulateTurnsTest.cpp
     tests/SimulationSetupTest.cpp
+    tests/Statuses/Paralysis.cpp
     tests/Tests.cpp
   )
 

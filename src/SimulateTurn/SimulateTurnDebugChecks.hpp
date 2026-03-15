@@ -54,6 +54,9 @@ struct Checks : pokesim::debug::Checks {
         }
       }
     }
+
+    POKESIM_REQUIRE_NM(registry->view<pokesim::tags::CurrentActionMove>().empty());
+    POKESIM_REQUIRE_NM(registry->view<pokesim::tags::FailedCurrentActionMove>().empty());
   }
 };
 }  // namespace pokesim::simulate_turn::debug

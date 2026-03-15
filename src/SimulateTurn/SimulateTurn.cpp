@@ -117,6 +117,8 @@ void runMoveAction(Simulation& simulation) {
   simulation.viewForSelectedBattles<setCurrentActionTarget>();
   simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex());
 
+  runBeforeMove(simulation);
+
   simulation.view<deductPp, Tags<pokesim::tags::CurrentActionMoveSlot>>();
   simulation.view<setLastMoveUsed>();
 

@@ -45,7 +45,7 @@ struct Checks {
   const Simulation* simulation;
   const types::registry* registry;
   types::registry registryOnInput;
-  entt::dense_map<types::entity, types::entity> originalToCopy;
+  entt::dense_map<types::entity, types::entity> currentEntitiesToInitial;
   entt::dense_set<types::entity> specificallyChecked;
   types::entityIndex initialEntityCount = 0U;
 
@@ -54,22 +54,31 @@ struct Checks {
     return registry->all_of<T>(entity);
   }
 
+  types::entity getInitialEntity(types::entity entity) const {
+    types::entity parent = findCopyParent(currentEntitiesToInitial, *registry, entity);
+    return currentEntitiesToInitial.at(parent);
+  }
+
+  void copyEntity(types::entity entity) {
+    currentEntitiesToInitial[entity] = createEntityCopy(entity, *registry, registryOnInput);
+  }
+
   void copyRemainingEntities() {
     for (types::entity entity : registry->view<types::entity>()) {
       if (!registry->orphan(entity)) {
         initialEntityCount++;
-        if (originalToCopy.contains(entity)) {
+        if (currentEntitiesToInitial.contains(entity)) {
           specificallyChecked.emplace(entity);
         }
         else {
-          originalToCopy[entity] = createEntityCopy(entity, *registry, registryOnInput);
+          copyEntity(entity);
         }
       }
     }
   }
 
   void checkRemainingOutputs() const {
-    for (auto [original, copy] : originalToCopy) {
+    for (auto [original, copy] : currentEntitiesToInitial) {
       if (!specificallyChecked.contains(original)) {
         areEntitiesEqual(*registry, original, registryOnInput, copy);
       }

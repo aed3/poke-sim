@@ -235,7 +235,7 @@ struct VerticalSlice1Checks : debug::Checks {
   void specificallyCheckEntities(
     const debug::TypesToIgnore& typesToIgnore, const debug::TypesToIgnore& typesIgnoredOnConstants = {}) const {
     for (types::entity entity : registry->view<Selector>()) {
-      types::entity original = debug::findCopyParent(originalToCopy, *registry, entity);
+      types::entity original = debug::findCopyParent(currentEntitiesToInitial, *registry, entity);
       if (!specificallyChecked.contains(original)) {
         continue;
       }
@@ -245,7 +245,7 @@ struct VerticalSlice1Checks : debug::Checks {
         *registry,
         entity,
         registryOnInput,
-        originalToCopy.at(original),
+        currentEntitiesToInitial.at(original),
         shouldNotChange ? typesIgnoredOnConstants : typesToIgnore);
     }
   }
@@ -289,20 +289,20 @@ struct VerticalSlice1Checks : debug::Checks {
   VerticalSlice1Checks(const Simulation& _simulation)
       : debug::Checks(_simulation), options(&_simulation.simulateTurnOptions) {
     for (types::entity battle : registry->view<tags::Battle>()) {
-      originalToCopy[battle] = debug::createEntityCopy(battle, *registry, registryOnInput);
+      copyEntity(battle);
     }
 
     for (types::entity side : registry->view<tags::Side>()) {
-      originalToCopy[side] = debug::createEntityCopy(side, *registry, registryOnInput);
+      copyEntity(side);
     }
 
     for (types::entity pokemon : registry->view<tags::Pokemon>()) {
-      originalToCopy[pokemon] = debug::createEntityCopy(pokemon, *registry, registryOnInput);
+      copyEntity(pokemon);
     }
 
     for (const auto& [entity, move] : registry->view<MoveName>().each()) {
       if (move.name == dex::Move::KNOCK_OFF || move.name == dex::Move::THUNDERBOLT) {
-        originalToCopy[entity] = debug::createEntityCopy(entity, *registry, registryOnInput);
+        copyEntity(entity);
       }
     }
 
@@ -327,18 +327,18 @@ struct VerticalSlice1Checks : debug::Checks {
     }
   }
 
-  types::stat originalSpeed(types::entity pokemon) const {
-    types::entity original = debug::findCopyParent(originalToCopy, *registry, pokemon);
-    return registryOnInput.get<stat::EffectiveSpe>(originalToCopy.at(original)).val;
+  types::stat initialSpeed(types::entity pokemon) const {
+    types::entity initial = getInitialEntity(pokemon);
+    return registryOnInput.get<stat::EffectiveSpe>(initial).val;
   }
 
-  const RngSeed& originalRngSeed(types::entity battle) const {
-    types::entity original = debug::findCopyParent(originalToCopy, *registry, battle);
-    return registryOnInput.get<RngSeed>(originalToCopy.at(original));
+  const RngSeed& initialRngSeed(types::entity battle) const {
+    types::entity initial = getInitialEntity(battle);
+    return registryOnInput.get<RngSeed>(initial);
   }
 
-  types::entity originalBattle(types::entity battle) const {
-    return debug::findCopyParent(originalToCopy, *registry, battle);
+  types::entity parentBattle(types::entity battle) const {
+    return debug::findCopyParent(currentEntitiesToInitial, *registry, battle);
   }
 };
 
@@ -655,23 +655,23 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
     const Pp& p1Pp = registry.get<Pp>(p1Move);
     const Pp& p2Pp = registry.get<Pp>(p2Move);
 
-    types::stat originalP1Speed = checks.originalSpeed(p1Pokemon);
-    types::stat originalP2Speed = checks.originalSpeed(p2Pokemon);
+    types::stat initialP1Speed = checks.initialSpeed(p1Pokemon);
+    types::stat initialP2Speed = checks.initialSpeed(p2Pokemon);
 
     if (!applyChangesToInputBattle) {
       REQUIRE_FALSE(registry.all_of<simulate_turn::TurnOutcomeBattles>(battle));
     }
 
-    types::entity originalRootBattle = checks.originalBattle(battle);
-    REQUIRE(rootBattle.val == originalRootBattle);
+    types::entity initialParentBattle = checks.parentBattle(battle);
+    REQUIRE(rootBattle.val == initialParentBattle);
 
     REQUIRE(turn.val == 2U);
-    const auto& originalRngSeed = checks.originalRngSeed(battle);
+    const auto& initialRngSeed = checks.initialRngSeed(battle);
     if (options.makeBranchesOnRandomEvents || totalPossibilities == 1U) {
-      REQUIRE(rngSeed.val == originalRngSeed.val);
+      REQUIRE(rngSeed.val == initialRngSeed.val);
     }
     else {
-      REQUIRE_FALSE(rngSeed.val == originalRngSeed.val);
+      REQUIRE_FALSE(rngSeed.val == initialRngSeed.val);
     }
 
     REQUIRE_FALSE(registry.all_of<SideDecision>(p1Side));
@@ -685,16 +685,16 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
     if (!p2DamageInfo.mightCauseParalysis() || !p1Paralyzed) {
       REQUIRE_FALSE(registry.all_of<StatusName>(p1Pokemon));
       REQUIRE_FALSE(p1Paralyzed);
-      REQUIRE(p1Speed.val == originalP1Speed);
+      REQUIRE(p1Speed.val == initialP1Speed);
     }
     if (p1Paralyzed) {
       REQUIRE(registry.get<StatusName>(p1Pokemon).name == dex::Status::PAR);
-      REQUIRE(p1Speed.val == (originalP1Speed / 2U));
+      REQUIRE(p1Speed.val == (initialP1Speed / 2U));
     }
 
     REQUIRE_FALSE(registry.all_of<StatusName>(p2Pokemon));
     REQUIRE_FALSE(registry.all_of<status::tags::Paralysis>(p2Pokemon));
-    REQUIRE(p2Speed.val == originalP2Speed);
+    REQUIRE(p2Speed.val == initialP2Speed);
 
     CAPTURE(p1Paralyzed, p1Hp.val, p2Hp.val, expectedP1Hp, expectedP2Hp);
 

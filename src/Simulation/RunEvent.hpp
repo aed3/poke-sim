@@ -3,6 +3,8 @@
 namespace pokesim {
 class Simulation;
 
+void runBeforeMove(Simulation& simulation);
+
 void runAccuracyEvent(Simulation& simulation);
 void runModifyAccuracyEvent(Simulation& simulation);
 void runModifyCritBoostEvent(Simulation& simulation);

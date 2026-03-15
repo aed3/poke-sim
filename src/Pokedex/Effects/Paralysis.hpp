@@ -2,6 +2,7 @@
 
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Status.hpp>
+#include <Types/Random.hpp>
 #include <Types/Stats.hpp>
 #include <string_view>
 
@@ -13,6 +14,7 @@ namespace pokesim::dex {
 namespace events {
 struct Paralysis {
   static void onModifySpe(Simulation& simulation);
+  static void onBeforeMove(Simulation& simulation);
 };
 }  // namespace events
 
@@ -22,6 +24,9 @@ struct Paralysis : events::Paralysis {
 
   static constexpr types::stat speedDividend = 50U;
   static constexpr types::stat speedDivisor = 100U;
+
+  static constexpr types::percentChance onBeforeMoveChance = 25U;
+
   struct Strings {
     static constexpr std::string_view name = "Paralysis";
     static constexpr std::string_view smogonId = "par";
