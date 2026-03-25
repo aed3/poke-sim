@@ -27,6 +27,7 @@ auto enumToTag(dex::Move move, RunFunctionArgs&&... args) {
     case dex::Move::KNOCK_OFF:    return RunStruct<KnockOff>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Move::MOONBLAST:    return RunStruct<Moonblast>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Move::QUIVER_DANCE: return RunStruct<QuiverDance>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Move::SPLASH:       return RunStruct<Splash>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Move::THUNDERBOLT:  return RunStruct<Thunderbolt>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Move::WILL_O_WISP:  return RunStruct<WillOWisp>::run(std::forward<RunFunctionArgs>(args)...);
 

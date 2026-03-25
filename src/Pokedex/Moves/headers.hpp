@@ -6,5 +6,6 @@
 #include "KnockOff.hpp"
 #include "Moonblast.hpp"
 #include "QuiverDance.hpp"
+#include "Splash.hpp"
 #include "Thunderbolt.hpp"
 #include "WillOWisp.hpp"

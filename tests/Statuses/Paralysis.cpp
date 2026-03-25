@@ -7,8 +7,8 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Statu
   const types::registry& registry = simulation.registry;
 
   Simulation::BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.p1 = {{createPredefinedPokemon(dex::Species::EMPOLEON)}};
-  battleCreationInfo.p2 = {{createPredefinedPokemon(dex::Species::RIBOMBEE)}};
+  battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}};
+  battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}};
   battleCreationInfo.p2.team[0].item = dex::Item::NO_ITEM;
   battleCreationInfo.turn = 1U;
   loadPokedexForBattleInfo(battleCreationInfo, pokedex);
@@ -20,7 +20,7 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Statu
   SlotDecision p2SlotDecision{Slot::P2A, Slot::P2A};
   p1SlotDecision.moveChoice = dex::Move::KNOCK_OFF;
   p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-  p2SlotDecision.moveChoice = dex::Move::QUIVER_DANCE;
+  p2SlotDecision.moveChoice = dex::Move::SPLASH;
   p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
 
   battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
@@ -46,7 +46,7 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Statu
   }
 
   for (const auto& [entity, move] : registry.view<MoveName>().each()) {
-    if (move.name == dex::Move::KNOCK_OFF || move.name == dex::Move::QUIVER_DANCE) {
+    if (move.name == dex::Move::KNOCK_OFF || move.name == dex::Move::SPLASH) {
       specificallyCheckEntities.push_back(entity);
     }
   }
@@ -97,29 +97,14 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Statu
       checks.checkEntityForChanges<>(p1Pokemon);
       checks.checkEntityForChanges<>(p1Move);
 
-      checks.checkEntityForChanges<
-        LastUsedMove,
-        stat::EffectiveSpe,
-        stat::EffectiveSpa,
-        stat::EffectiveSpd,
-        SpeBoost,
-        SpaBoost,
-        SpdBoost>(p2Pokemon);
+      checks.checkEntityForChanges<LastUsedMove>(p2Pokemon);
     }
 
     if (p1Moved) {
       checks.checkEntityForChanges<LastUsedMove>(p1Pokemon);
       checks.checkEntityForChanges<Pp>(p1Move);
 
-      checks.checkEntityForChanges<
-        stat::CurrentHp,
-        LastUsedMove,
-        stat::EffectiveSpe,
-        stat::EffectiveSpa,
-        stat::EffectiveSpd,
-        SpeBoost,
-        SpaBoost,
-        SpdBoost>(p2Pokemon);
+      checks.checkEntityForChanges<stat::CurrentHp, LastUsedMove>(p2Pokemon);
 
       auto p1PokemonLastUsedMove = registry.get<LastUsedMove>(p1Pokemon);
       REQUIRE(p1PokemonLastUsedMove.val == p1Move);

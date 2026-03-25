@@ -23,6 +23,7 @@
 #include "Moves/KnockOff.hpp"
 #include "Moves/Moonblast.hpp"
 #include "Moves/QuiverDance.hpp"
+#include "Moves/Splash.hpp"
 #include "Moves/Thunderbolt.hpp"
 #include "Moves/WillOWisp.hpp"
 #include "Names.hpp"

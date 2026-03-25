@@ -31,7 +31,17 @@ inline void loadPokedexForBattleInfo(const Simulation::BattleCreationInfo& battl
   pokedex.loadSpecies(speciesSet);
 }
 
-inline Simulation::PokemonCreationInfo createPredefinedPokemon(dex::Species species) {
+inline Simulation::MoveCreationInfo createMove(Pokedex& pokedex, dex::Move move) {
+  entt::dense_set<dex::Move> moveSet{};
+  moveSet.insert(move);
+  pokedex.loadMoves(moveSet);
+  types::pp pp = pokedex.getMoveData<Pp>(move).val;
+  return Simulation::MoveCreationInfo{move, pp, pp};
+}
+
+// TODO(aed3): Change how the `simple` parameter works once stat calculations are implement
+inline Simulation::PokemonCreationInfo createPredefinedPokemon(
+  Pokedex& pokedex, dex::Species species, bool simple = false) {
   Simulation::PokemonCreationInfo info;
   info.species = species;
 
@@ -45,15 +55,10 @@ inline Simulation::PokemonCreationInfo createPredefinedPokemon(dex::Species spec
       info.evs = {0U, 25U, 50U, 75U, 100U, 125U};
       info.stats = {275U, 181U, 191U, 242U, 229U, 154U};
 
-      auto& moveA = info.moves.emplace_back();
-      moveA.name = dex::Move::FURY_ATTACK;
-      moveA.maxPp = dex::FuryAttack<GameMechanics::SCARLET_VIOLET>::basePp;
-      moveA.pp = moveA.maxPp - 1U;
+      auto& moveA = info.moves.emplace_back(createMove(pokedex, dex::Move::FURY_ATTACK));
+      moveA.pp -= 1U;
 
-      auto& moveB = info.moves.emplace_back();
-      moveB.name = dex::Move::KNOCK_OFF;
-      moveB.maxPp = dex::KnockOff<GameMechanics::SCARLET_VIOLET>::basePp;
-      moveB.pp = moveB.maxPp;
+      info.moves.push_back(createMove(pokedex, dex::Move::KNOCK_OFF));
       break;
     }
     case dex::Species::AMPHAROS: {
@@ -65,10 +70,8 @@ inline Simulation::PokemonCreationInfo createPredefinedPokemon(dex::Species spec
       info.ivs = {5U, 10U, 15U, 20U, 25U, 30U};
       info.stats = {295U, 148U, 190U, 280U, 210U, 145U};
 
-      auto& move = info.moves.emplace_back();
-      move.name = dex::Move::THUNDERBOLT;
-      move.maxPp = dex::Thunderbolt<GameMechanics::SCARLET_VIOLET>::basePp;
-      move.pp = move.maxPp - 2U;
+      auto& move = info.moves.emplace_back(createMove(pokedex, dex::Move::THUNDERBOLT));
+      move.pp -= 2U;
       break;
     }
     case dex::Species::GARDEVOIR: {
@@ -80,10 +83,8 @@ inline Simulation::PokemonCreationInfo createPredefinedPokemon(dex::Species spec
       info.stats = {222U, 127U, 132U, 246U, 234U, 176U};
       info.evs = {0U, 25U, 50U, 75U, 100U, 125U};
 
-      auto& move = info.moves.emplace_back();
-      move.name = dex::Move::MOONBLAST;
-      move.maxPp = dex::Moonblast<GameMechanics::SCARLET_VIOLET>::basePp;
-      move.pp = move.maxPp - 4U;
+      auto& move = info.moves.emplace_back(createMove(pokedex, dex::Move::MOONBLAST));
+      move.pp -= 4U;
       break;
     }
     case dex::Species::PANGORO: {
@@ -94,10 +95,8 @@ inline Simulation::PokemonCreationInfo createPredefinedPokemon(dex::Species spec
       info.stats = {314U, 264U, 170U, 147U, 145U, 115U};
       info.evs = {125U, 100U, 75U, 50U, 25U, 0U};
 
-      auto& move = info.moves.emplace_back();
-      move.name = dex::Move::KNOCK_OFF;
-      move.maxPp = dex::KnockOff<GameMechanics::SCARLET_VIOLET>::basePp;
-      move.pp = move.maxPp - 3U;
+      auto& move = info.moves.emplace_back(createMove(pokedex, dex::Move::KNOCK_OFF));
+      move.pp -= 3U;
       break;
     }
     case dex::Species::DRAGAPULT: {
@@ -109,10 +108,8 @@ inline Simulation::PokemonCreationInfo createPredefinedPokemon(dex::Species spec
       info.stats = {291U, 255U, 153U, 225U, 180U, 350U};
       info.ivs = {5U, 10U, 15U, 20U, 25U, 30U};
 
-      auto& move = info.moves.emplace_back();
-      move.name = dex::Move::WILL_O_WISP;
-      move.maxPp = dex::WillOWisp<GameMechanics::SCARLET_VIOLET>::basePp;
-      move.pp = move.maxPp - 2U;
+      auto& move = info.moves.emplace_back(createMove(pokedex, dex::Move::WILL_O_WISP));
+      move.pp -= 2U;
       break;
     }
     case dex::Species::RIBOMBEE: {
@@ -123,10 +120,8 @@ inline Simulation::PokemonCreationInfo createPredefinedPokemon(dex::Species spec
       info.stats = {237U, 127U, 132U, 191U, 141U, 235U};
       info.ivs = {30U, 25U, 20U, 15U, 10U, 5U};
 
-      auto& move = info.moves.emplace_back();
-      move.name = dex::Move::QUIVER_DANCE;
-      move.maxPp = dex::QuiverDance<GameMechanics::SCARLET_VIOLET>::basePp;
-      move.pp = move.maxPp - 1U;
+      auto& move = info.moves.emplace_back(createMove(pokedex, dex::Move::QUIVER_DANCE));
+      move.pp -= 1U;
       break;
     }
     default: {
@@ -135,14 +130,19 @@ inline Simulation::PokemonCreationInfo createPredefinedPokemon(dex::Species spec
     }
   }
 
+  if (simple) {
+    info.item = dex::Item::NO_ITEM;
+    info.status = dex::Status::NO_STATUS;
+    info.moves = {createMove(pokedex, dex::Move::SPLASH)};
+  }
   return info;
 }
 
 inline Simulation createSingleBattleSimulation(Pokedex& pokedex, Simulation::BattleCreationInfo& battleCreationInfo) {
   Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
 
-  battleCreationInfo.p1 = {{createPredefinedPokemon(dex::Species::EMPOLEON)}};
-  battleCreationInfo.p2 = {{createPredefinedPokemon(dex::Species::AMPHAROS)}};
+  battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}};
+  battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::AMPHAROS)}};
   battleCreationInfo.turn = 1U;
 
   loadPokedexForBattleInfo(battleCreationInfo, pokedex);
@@ -153,12 +153,12 @@ inline Simulation createDoubleBattleSimulation(Pokedex& pokedex, Simulation::Bat
   Simulation simulation(pokedex, BattleFormat::DOUBLES_BATTLE_FORMAT);
 
   battleCreationInfo.p1 = {{
-    createPredefinedPokemon(dex::Species::GARDEVOIR),
-    createPredefinedPokemon(dex::Species::DRAGAPULT),
+    createPredefinedPokemon(pokedex, dex::Species::GARDEVOIR),
+    createPredefinedPokemon(pokedex, dex::Species::DRAGAPULT),
   }};
   battleCreationInfo.p2 = {{
-    createPredefinedPokemon(dex::Species::PANGORO),
-    createPredefinedPokemon(dex::Species::RIBOMBEE),
+    createPredefinedPokemon(pokedex, dex::Species::PANGORO),
+    createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE),
   }};
 
   battleCreationInfo.turn = 2U;

@@ -292,6 +292,7 @@ types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool
         case Move::KNOCK_OFF:    return buildMoveSV<KnockOff>(registry, forActiveMove);
         case Move::QUIVER_DANCE: return buildMoveSV<QuiverDance>(registry, forActiveMove);
         case Move::MOONBLAST:    return buildMoveSV<Moonblast>(registry, forActiveMove);
+        case Move::SPLASH:       return buildMoveSV<Splash>(registry, forActiveMove);
 
         default: break;
       }

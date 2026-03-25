@@ -7,8 +7,8 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
   const types::registry& registry = simulation.registry;
 
   Simulation::BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.p1 = {{createPredefinedPokemon(dex::Species::EMPOLEON)}};
-  battleCreationInfo.p2 = {{createPredefinedPokemon(dex::Species::RIBOMBEE)}};
+  battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}};
+  battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}};
   battleCreationInfo.turn = 1U;
   battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
   loadPokedexForBattleInfo(battleCreationInfo, pokedex);
@@ -20,7 +20,7 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
   SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
   p1SlotDecision.moveChoice = dex::Move::FURY_ATTACK;
   p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-  p2SlotDecision.moveChoice = dex::Move::QUIVER_DANCE;
+  p2SlotDecision.moveChoice = dex::Move::SPLASH;
   p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
 
   battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
@@ -47,13 +47,7 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
   const bool twoDamageOutcomesPerHit = !alwaysCrits;
 
   constexpr types::probability passesAccuracyProbability =
-    applyChainedModifier(
-      dex::FuryAttack<GameMechanics::SCARLET_VIOLET>::accuracy,
-      chainValueToModifier(
-        MechanicConstants::FIXED_POINT_SCALE,
-        dex::BrightPowder<GameMechanics::SCARLET_VIOLET>::onModifyAccuracyNumerator,
-        dex::BrightPowder<GameMechanics::SCARLET_VIOLET>::onModifyAccuracyDenominator)) /
-    100.0F;
+    dex::FuryAttack<GameMechanics::SCARLET_VIOLET>::accuracy / 100.0F;
 
   constexpr types::probability lowerMultiHitMoveChances = MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES[0] / 100.0F;
   constexpr types::probability upperMultiHitMoveChances =
@@ -64,7 +58,7 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
   const types::probability baseHitChance = 1.0F - critHitChance;
   const types::damage critDamage = 22U;
   const types::damage baseDamage = 15U;
-  const std::size_t damageOutcomesPerHit = 1U * (twoDamageOutcomesPerHit ? 2U : 1U);
+  const std::size_t damageOutcomesPerHit = twoDamageOutcomesPerHit ? 2U : 1U;
   const std::size_t idealTurnOutcomeCount = 1U +                                               // The move misses
                                             (std::size_t)std::pow(damageOutcomesPerHit, 2U) +  // 2 Hits
                                             (std::size_t)std::pow(damageOutcomesPerHit, 3U) +  // 3 Hits

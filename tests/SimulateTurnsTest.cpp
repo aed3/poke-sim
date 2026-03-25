@@ -227,26 +227,23 @@ constexpr std::array<DamageRollKind, 4U> fixedBranchDamageRollOptions = {
   DamageRollKind::MIN_DAMAGE | DamageRollKind::MAX_DAMAGE,
 };
 
-struct VerticalSlice1Checks : debug::Checks {
+struct VerticalSlice1Checks : TestChecks {
  private:
   const simulate_turn::Options* options;
 
-  template <typename Selector>
-  void specificallyCheckEntities(
-    const debug::TypesToIgnore& typesToIgnore, const debug::TypesToIgnore& typesIgnoredOnConstants = {}) const {
+  bool isSpecificallyChecked(types::entity entity) const {
+    types::entity original = debug::findCopyParent(currentEntitiesToInitial, *registry, entity);
+    return specificallyChecked.contains(original);
+  }
+
+  template <typename Selector, typename... TypesToIgnore>
+  void specificallyCheckEntities() const {
     for (types::entity entity : registry->view<Selector>()) {
-      types::entity original = debug::findCopyParent(currentEntitiesToInitial, *registry, entity);
-      if (!specificallyChecked.contains(original)) {
+      if (isSpecificallyChecked(entity)) {
         continue;
       }
 
-      bool shouldNotChange = !options->applyChangesToInputBattle && original == entity;
-      debug::areEntitiesEqual(
-        *registry,
-        entity,
-        registryOnInput,
-        currentEntitiesToInitial.at(original),
-        shouldNotChange ? typesIgnoredOnConstants : typesToIgnore);
+      checkEntityForChanges<TypesToIgnore...>(entity);
     }
   }
 
@@ -261,53 +258,38 @@ struct VerticalSlice1Checks : debug::Checks {
       typesToIgnore.add<RngSeed>();
     }
 
-    specificallyCheckEntities<tags::Battle>(typesToIgnore, typesIgnoredOnConstants);
+    for (types::entity entity : registry->view<tags::Battle>()) {
+      if (isSpecificallyChecked(entity)) {
+        continue;
+      }
+      types::entity original = debug::findCopyParent(currentEntitiesToInitial, *registry, entity);
+      bool shouldNotChange = !options->applyChangesToInputBattle && original == entity;
+      debug::areEntitiesEqual(
+        *registry,
+        entity,
+        registryOnInput,
+        getInitialEntity(entity),
+        shouldNotChange ? typesIgnoredOnConstants : typesToIgnore);
+    }
   }
 
-  void checkSides() const {
-    debug::TypesToIgnore typesToIgnore;
-    typesToIgnore.add<SideDecision>();
-
-    specificallyCheckEntities<tags::Side>(typesToIgnore);
-  }
+  void checkSides() const { specificallyCheckEntities<tags::Side, SideDecision>(); }
 
   void checkPokemon() const {
-    debug::TypesToIgnore typesToIgnore;
-    typesToIgnore.add<stat::CurrentHp, LastUsedMove, StatusName, status::tags::Paralysis, stat::EffectiveSpe>();
-
-    specificallyCheckEntities<tags::Pokemon>(typesToIgnore);
+    specificallyCheckEntities<
+      tags::Pokemon,
+      stat::CurrentHp,
+      LastUsedMove,
+      StatusName,
+      status::tags::Paralysis,
+      stat::EffectiveSpe>();
   }
 
-  void checkMoves() const {
-    debug::TypesToIgnore typesToIgnore;
-    typesToIgnore.add<Pp>();
-
-    specificallyCheckEntities<MoveName>(typesToIgnore);
-  }
+  void checkMoves() const { specificallyCheckEntities<MoveName, Pp>(); }
 
  public:
-  VerticalSlice1Checks(const Simulation& _simulation)
-      : debug::Checks(_simulation), options(&_simulation.simulateTurnOptions) {
-    for (types::entity battle : registry->view<tags::Battle>()) {
-      copyEntity(battle);
-    }
-
-    for (types::entity side : registry->view<tags::Side>()) {
-      copyEntity(side);
-    }
-
-    for (types::entity pokemon : registry->view<tags::Pokemon>()) {
-      copyEntity(pokemon);
-    }
-
-    for (const auto& [entity, move] : registry->view<MoveName>().each()) {
-      if (move.name == dex::Move::KNOCK_OFF || move.name == dex::Move::THUNDERBOLT) {
-        copyEntity(entity);
-      }
-    }
-
-    copyRemainingEntities();
-  }
+  VerticalSlice1Checks(const Simulation& _simulation, const types::entityVector& specificallyCheckedEntities)
+      : TestChecks(_simulation, specificallyCheckedEntities), options(&_simulation.simulateTurnOptions) {}
 
   void checkConstantEntities() const {
     checkBattle();
@@ -476,7 +458,7 @@ struct DamageValueInfo {
         probability /= CRIT_CHANCE;
       }
       else {
-        probability *= 1.0F - 1.0F / CRIT_CHANCE;
+        probability *= 1.0F - (1.0F / CRIT_CHANCE);
       }
     }
 
@@ -613,7 +595,28 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   updateAllStats(simulation);
   const auto originalBattles = simulation.selectedBattleEntities();
 
-  VerticalSlice1Checks checks{simulation};
+  const types::registry& registry = simulation.registry;
+
+  types::entityVector specificallyCheckedEntities;
+  for (types::entity battle : registry.view<tags::Battle>()) {
+    specificallyCheckedEntities.push_back(battle);
+  }
+
+  for (types::entity side : registry.view<tags::Side>()) {
+    specificallyCheckedEntities.push_back(side);
+  }
+
+  for (types::entity pokemon : registry.view<tags::Pokemon>()) {
+    specificallyCheckedEntities.push_back(pokemon);
+  }
+
+  for (const auto& [entity, move] : registry.view<MoveName>().each()) {
+    if (move.name == dex::Move::KNOCK_OFF || move.name == dex::Move::THUNDERBOLT) {
+      specificallyCheckedEntities.push_back(entity);
+    }
+  }
+
+  VerticalSlice1Checks checks{simulation, specificallyCheckedEntities};
   const auto result = simulation.simulateTurn();
   checks.checkConstantEntities();
 
@@ -635,7 +638,6 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
   entt::dense_set<types::stat> foundP1Hp;
   entt::dense_set<types::stat> foundP2Hp;
 
-  const types::registry& registry = simulation.registry;
   for (types::entity battle : allTurnOutcomes) {
     const auto& [turn, probability, rngSeed, rootBattle, sides] =
       registry.get<Turn, Probability, RngSeed, RootBattle, Sides>(battle);
@@ -662,8 +664,8 @@ TEST_CASE("Simulate Turn: Vertical Slice 1", "[Simulation][SimulateTurn]") {
       REQUIRE_FALSE(registry.all_of<simulate_turn::TurnOutcomeBattles>(battle));
     }
 
-    types::entity initialParentBattle = checks.parentBattle(battle);
-    REQUIRE(rootBattle.val == initialParentBattle);
+    types::entity parentBattle = checks.parentBattle(battle);
+    REQUIRE(rootBattle.val == parentBattle);
 
     REQUIRE(turn.val == 2U);
     const auto& initialRngSeed = checks.initialRngSeed(battle);
