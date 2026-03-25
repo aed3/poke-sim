@@ -221,6 +221,7 @@
  * src/Pokedex/Moves/KnockOff.hpp
  * src/Pokedex/Moves/Moonblast.hpp
  * src/Pokedex/Moves/QuiverDance.hpp
+ * src/Pokedex/Moves/Splash.hpp
  * src/Pokedex/Moves/Thunderbolt.hpp
  * src/Pokedex/Moves/WillOWisp.hpp
  * src/Simulation/RunEvent.hpp
@@ -20066,6 +20067,7 @@ struct FuryAttack {};
 struct KnockOff {};
 struct Moonblast {};
 struct QuiverDance {};
+struct Splash {};
 struct Thunderbolt {};
 struct WillOWisp {};
 }  // namespace pokesim::move::tags
@@ -25778,6 +25780,35 @@ using QuiverDance = dex::QuiverDance<GameMechanics::LATEST>;
 
 /////////////////// END OF src/Pokedex/Moves/QuiverDance.hpp ///////////////////
 
+//////////////////// START OF src/Pokedex/Moves/Splash.hpp /////////////////////
+
+#include <string_view>
+
+namespace pokesim::dex {
+template <GameMechanics>
+struct Splash {
+  static constexpr Move name = Move::SPLASH;
+  static constexpr Type type = Type::NORMAL;
+  static constexpr MoveCategory category = MoveCategory::STATUS;
+
+  static constexpr types::pp basePp = 40U;
+
+  static constexpr Tags<> moveTags{};
+  static constexpr MoveTarget target = MoveTarget::SELF;
+
+  struct Strings {
+    static constexpr std::string_view name = "Splash";
+    static constexpr std::string_view smogonId = "splash";
+  };
+};
+
+namespace latest {
+using Splash = dex::Splash<GameMechanics::LATEST>;
+}
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Moves/Splash.hpp //////////////////////
+
 ////////////////// START OF src/Pokedex/Moves/Thunderbolt.hpp //////////////////
 
 #include <string_view>
@@ -28647,6 +28678,7 @@ inline types::entity Pokedex::buildMove(dex::Move move, types::registry& registr
         case Move::KNOCK_OFF:    return buildMoveSV<KnockOff>(registry, forActiveMove);
         case Move::QUIVER_DANCE: return buildMoveSV<QuiverDance>(registry, forActiveMove);
         case Move::MOONBLAST:    return buildMoveSV<Moonblast>(registry, forActiveMove);
+        case Move::SPLASH:       return buildMoveSV<Splash>(registry, forActiveMove);
 
         default: break;
       }
@@ -30323,6 +30355,7 @@ auto enumToTag(dex::Move move, RunFunctionArgs&&... args) {
     case dex::Move::KNOCK_OFF:    return RunStruct<KnockOff>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Move::MOONBLAST:    return RunStruct<Moonblast>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Move::QUIVER_DANCE: return RunStruct<QuiverDance>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Move::SPLASH:       return RunStruct<Splash>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Move::THUNDERBOLT:  return RunStruct<Thunderbolt>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Move::WILL_O_WISP:  return RunStruct<WillOWisp>::run(std::forward<RunFunctionArgs>(args)...);
 
