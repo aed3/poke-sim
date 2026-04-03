@@ -27,6 +27,25 @@ namespace pokesim::debug {
 template <typename Registry>
 class EntityViewerHandle;
 
+template<typename T>
+struct TypeEntityPair {
+  types::entity entity;
+  T component;
+
+  TypeEntityPair() {}
+  TypeEntityPair(types::entity e, const T& t) : entity(e), component(t) {}
+};
+
+template <typename T>
+struct TypeEntityPairs : std::vector<TypeEntityPair<T>> {
+  TypeEntityPairs() {}
+  TypeEntityPairs(const TypeEntityPairs& other) {
+    for (const auto& pair : other) {
+      this->push_back(pair);
+    }
+  }
+};
+
 class EntityViewerRegistry : public entt::registry {
   template <typename Registry>
   friend class EntityViewerHandle;
@@ -135,9 +154,9 @@ std::size_t count_type(const EntityViewerRegistry* registry) {
 }
 
 template <typename T>
-std::vector<std::pair<entt::entity, T>> all(const EntityViewerRegistry* registry) {
+TypeEntityPairs<T> all(const EntityViewerRegistry* registry) {
   try {
-    std::vector<std::pair<entt::entity, T>> ret{};
+    TypeEntityPairs<T> ret{};
     for (const auto& pair : registry->view<T>().each()) {
       ret.emplace_back(std::get<0>(pair), std::get<1>(pair));
     }
@@ -188,7 +207,7 @@ const toVariableName = (component) => noBase(component).replace(/::/g, '_').repl
 const toFunctionName = (func, component) => func + '_' + toVariableName(component);
 const getReturnType = (component) => isTag(component) ? 'bool' : `const ${component}*`;
 const getAllReturnType = (component) =>
-  isTag(component) ? 'std::vector<entt::entity>' : `std::vector<std::pair<entt::entity, ${component}>>`;
+  isTag(component) ? 'std::vector<entt::entity>' : `TypeEntityPairs<${component}>`;
 
 const makeSizeDecl = (component) => `std::size_t ${toFunctionName('count', component)}() const;`;
 
