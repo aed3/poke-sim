@@ -14,8 +14,11 @@
 
 namespace pokesim::dex::events {
 namespace {
-void knockOffOnBasePowerCheckRemovableItem(types::registry& registry, CurrentActionTarget target) {
-  registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
+void knockOffOnBasePowerCheckRemovableItem(
+  types::registry& registry, CurrentActionSource source, CurrentActionTarget target) {
+  if (registry.get<stat::CurrentHp>(source.val).val) {
+    registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
+  }
 }
 
 void knockOffOnAfterHitCheckRemovableItem(types::registry& registry, CurrentActionTarget target) {

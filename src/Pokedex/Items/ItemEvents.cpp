@@ -107,6 +107,10 @@ void AssaultVest::onModifySpd(Simulation& simulation) {
     1U);
 }
 
+void AssaultVest::onEnd(Simulation& simulation) {
+  simulation.addToEntities<tags::SpdStatUpdateRequired, tags::SelectedForViewPokemon, item::tags::AssaultVest>();
+}
+
 void BrightPowder::onModifyAccuracy(Simulation& simulation) {
   static constexpr auto numerator = latest::BrightPowder::onModifyAccuracyNumerator;
   static constexpr auto denominator = latest::BrightPowder::onModifyAccuracyDenominator;

@@ -192,6 +192,13 @@ struct TestChecks : debug::Checks {
     return registryOnInput.get<T>(getInitialEntity(entity));
   }
 
+  void checkMovePpUsage(types::entity moveSlot) {
+    checkEntityForChanges<Pp>(moveSlot);
+    auto movePp = registry->get<Pp>(moveSlot);
+    auto initialMovePp = getInitialComponent<Pp>(moveSlot);
+    REQUIRE(movePp.val == initialMovePp.val - 1U);
+  }
+
   TestChecks(const Simulation& _simulation, const types::entityVector& specificallyCheckedEntities = {})
       : debug::Checks(_simulation) {
     for (types::entity entity : specificallyCheckedEntities) {

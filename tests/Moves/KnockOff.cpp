@@ -1,7 +1,7 @@
 #include "../Tests.hpp"
 
 namespace pokesim {
-TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Status][Paralysis]") {
+TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][KnockOff]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
   const types::registry& registry = simulation.registry;
@@ -9,6 +9,8 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Statu
   Simulation::BattleCreationInfo battleCreationInfo;
   battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}};
   battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}};
+  battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
+  battleCreationInfo.p2.team[0].item = dex::Item::ASSAULT_VEST;
   battleCreationInfo.turn = 1U;
   loadPokedexForBattleInfo(battleCreationInfo, pokedex);
 
@@ -58,12 +60,11 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Statu
 
   REQUIRE(result.turnOutcomeBattlesResults().size() == 1U);
   const auto& turnOutcomeBattles = std::get<1>(*result.turnOutcomeBattlesResults().each().begin()).val;
-  REQUIRE(turnOutcomeBattles.size() == 2U);
+  REQUIRE(turnOutcomeBattles.size() == 1U);
 
   checks.checkViewForChanges<
     tags::Battle,
     Turn,
-    Probability,
     simulate_turn::TurnOutcomeBattles,
     simulate_turn::tags::SpeedSortNeeded,
     ParentBattle,
@@ -71,55 +72,37 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Statu
 
   checks.checkViewForChanges<tags::Side, SideDecision>();
 
-  entt::dense_set<types::probability> foundProbabilities;
-  for (types::entity battle : turnOutcomeBattles) {
-    const auto& [turn, probability, rngSeed, rootBattle, sides] =
-      registry.get<Turn, Probability, RngSeed, RootBattle, Sides>(battle);
+  types::entity battle = turnOutcomeBattles[0];
+  const auto& [turn, rootBattle, sides] = registry.get<Turn, RootBattle, Sides>(battle);
 
-    types::entity p1Side = sides.p1();
-    types::entity p2Side = sides.p2();
-    types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
-    types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
-    types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[1];
-    types::entity p2Move = registry.get<MoveSlots>(p2Pokemon).val[0];
+  types::entity p1Side = sides.p1();
+  types::entity p2Side = sides.p2();
+  types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
+  types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
+  types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[1];
+  types::entity p2Move = registry.get<MoveSlots>(p2Pokemon).val[0];
 
-    REQUIRE(turn.val == 2U);
-    auto initialRngSeed = checks.getInitialComponent<RngSeed>(battle);
-    REQUIRE(rngSeed.val == initialRngSeed.val);
+  checks.checkEntityForChanges<LastUsedMove>(p1Pokemon);
+  checks.checkEntityForChanges<stat::CurrentHp, LastUsedMove, ItemName, item::tags::AssaultVest, stat::EffectiveSpd>(
+    p2Pokemon);
 
-    bool paralysisStoppedP1Move = probability.val == dex::latest::Paralysis::onBeforeMoveChance / 100.0F;
-    bool p1Moved = probability.val == 1.0F - (dex::latest::Paralysis::onBeforeMoveChance / 100.0F);
+  auto p1PokemonLastUsedMove = registry.get<LastUsedMove>(p1Pokemon);
+  REQUIRE(p1PokemonLastUsedMove.val == p1Move);
 
-    REQUIRE((paralysisStoppedP1Move || p1Moved));
+  auto p2PokemonLastUsedMove = registry.get<LastUsedMove>(p2Pokemon);
+  REQUIRE(p2PokemonLastUsedMove.val == p2Move);
 
-    if (paralysisStoppedP1Move) {
-      checks.checkEntityForChanges<>(p1Pokemon);
-      checks.checkEntityForChanges<>(p1Move);
+  auto p2PokemonHp = registry.get<stat::CurrentHp>(p2Pokemon);
+  auto initialP2PokemonHp = checks.getInitialComponent<stat::CurrentHp>(p2Pokemon);
+  REQUIRE(p2PokemonHp.val < initialP2PokemonHp.val);
 
-      checks.checkEntityForChanges<LastUsedMove>(p2Pokemon);
-    }
+  checks.checkMovePpUsage(p1Move);
+  checks.checkMovePpUsage(p2Move);
 
-    if (p1Moved) {
-      checks.checkEntityForChanges<LastUsedMove>(p1Pokemon);
-      checks.checkMovePpUsage(p1Move);
+  REQUIRE(!registry.any_of<ItemName, item::tags::AssaultVest>(p2Pokemon));
 
-      checks.checkEntityForChanges<stat::CurrentHp, LastUsedMove>(p2Pokemon);
-
-      auto p1PokemonLastUsedMove = registry.get<LastUsedMove>(p1Pokemon);
-      REQUIRE(p1PokemonLastUsedMove.val == p1Move);
-
-      auto p2PokemonHp = registry.get<stat::CurrentHp>(p2Pokemon);
-      auto initialP2PokemonHp = checks.getInitialComponent<stat::CurrentHp>(p2Pokemon);
-      REQUIRE(p2PokemonHp.val < initialP2PokemonHp.val);
-    }
-
-    auto p2PokemonLastUsedMove = registry.get<LastUsedMove>(p2Pokemon);
-    REQUIRE(p2PokemonLastUsedMove.val == p2Move);
-
-    checks.checkMovePpUsage(p2Move);
-    foundProbabilities.insert(probability.val);
-  }
-
-  REQUIRE(foundProbabilities.size() == 2U);
-}
+  auto p2Spd = registry.get<stat::EffectiveSpd>(p2Pokemon);
+  auto initialP2Spd = checks.getInitialComponent<stat::EffectiveSpd>(p2Pokemon);
+  REQUIRE(p2Spd.val < initialP2Spd.val);
+};
 }  // namespace pokesim

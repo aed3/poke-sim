@@ -13,6 +13,7 @@ namespace pokesim::dex {
 namespace events {
 struct AssaultVest {
   static void onModifySpd(Simulation& simulation);
+  static void onEnd(Simulation& simulation);
 };
 }  // namespace events
 

@@ -214,6 +214,7 @@ void runTryTakeItemEvent(Simulation&) {}
 void runAfterUseItemEvent(Simulation&) {}
 
 void runEndItemEvent(Simulation& simulation) {
+  dex::events::AssaultVest::onEnd(simulation);
   dex::events::ChoiceScarf::onEnd(simulation);
   dex::events::ChoiceSpecs::onEnd(simulation);
 }

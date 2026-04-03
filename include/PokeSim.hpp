@@ -25437,6 +25437,7 @@ namespace pokesim::dex {
 namespace events {
 struct AssaultVest {
   inline static void onModifySpd(Simulation& simulation);
+  inline static void onEnd(Simulation& simulation);
 };
 }  // namespace events
 
@@ -26179,6 +26180,7 @@ inline void runTryTakeItemEvent(Simulation&) {}
 inline void runAfterUseItemEvent(Simulation&) {}
 
 inline void runEndItemEvent(Simulation& simulation) {
+  dex::events::AssaultVest::onEnd(simulation);
   dex::events::ChoiceScarf::onEnd(simulation);
   dex::events::ChoiceSpecs::onEnd(simulation);
 }
@@ -28865,8 +28867,11 @@ inline types::entity Pokedex::buildActionMove(dex::Move move, types::registry& r
 
 namespace pokesim::dex::events {
 namespace {
-inline void knockOffOnBasePowerCheckRemovableItem(types::registry& registry, CurrentActionTarget target) {
-  registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
+inline void knockOffOnBasePowerCheckRemovableItem(
+  types::registry& registry, CurrentActionSource source, CurrentActionTarget target) {
+  if (registry.get<stat::CurrentHp>(source.val).val) {
+    registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
+  }
 }
 
 inline void knockOffOnAfterHitCheckRemovableItem(types::registry& registry, CurrentActionTarget target) {
@@ -28993,6 +28998,10 @@ inline void AssaultVest::onModifySpd(Simulation& simulation) {
   simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::AssaultVest>>(
     modifier,
     1U);
+}
+
+inline void AssaultVest::onEnd(Simulation& simulation) {
+  simulation.addToEntities<tags::SpdStatUpdateRequired, tags::SelectedForViewPokemon, item::tags::AssaultVest>();
 }
 
 inline void BrightPowder::onModifyAccuracy(Simulation& simulation) {
@@ -30655,9 +30664,9 @@ inline void BattleStateSetup::setProbability(types::probability probability) {
 
 namespace pokesim {
 namespace {
-template <typename Type>
+template <typename ItemTag>
 struct RemoveItem {
-  static void run(types::handle handle) { handle.remove<Type>(); }
+  static void run(types::handle handle) { handle.remove<ItemTag>(); }
 };
 
 inline void removeItemTags(types::handle handle, ItemName item) {

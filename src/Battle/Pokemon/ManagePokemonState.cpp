@@ -29,9 +29,9 @@
 
 namespace pokesim {
 namespace {
-template <typename Type>
+template <typename ItemTag>
 struct RemoveItem {
-  static void run(types::handle handle) { handle.remove<Type>(); }
+  static void run(types::handle handle) { handle.remove<ItemTag>(); }
 };
 
 void removeItemTags(types::handle handle, ItemName item) {

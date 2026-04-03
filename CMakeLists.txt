@@ -123,6 +123,7 @@ if (ENABLE_TESTING)
     tests/BattleStateTest.cpp
     tests/CalcDamageTest.cpp
     tests/Moves/FuryAttack.cpp
+    tests/Moves/KnockOff.cpp
     tests/PokedexTest.cpp
     tests/RegistryContainerTests.cpp
     tests/SimulateTurnsTest.cpp
