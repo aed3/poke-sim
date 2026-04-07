@@ -667,6 +667,13 @@ void check(const CurrentEffectsAsSource& effects, const types::registry& registr
 }
 
 template <>
+void check(const FaintQueue& faintQueue, const types::registry& registry) {
+  for (types::entity pokemon : faintQueue.val) {
+    checkPokemon(pokemon, registry);
+  }
+}
+
+template <>
 void check(const FoeSide& foeSide, const types::registry& registry) {
   checkSide(foeSide.val, registry);
 }

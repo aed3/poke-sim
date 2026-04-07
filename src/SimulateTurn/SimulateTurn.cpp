@@ -11,6 +11,7 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/FaintQueue.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/Names/SourceSlotName.hpp>
@@ -134,13 +135,58 @@ void runBeforeTurnAction(Simulation&) {
   // Barely used, will find different way of handling it
 }
 
+void setFainting(types::registry& registry, FaintQueue& faintQueue) {
+  types::entity pokemon = faintQueue.val.front();
+  faintQueue.val.erase(faintQueue.val.begin());
+  registry.emplace<pokesim::tags::Fainting>(pokemon);
+}
+
+void clearFaintQueue(types::handle battleHandle, const FaintQueue& faintQueue) {
+  if (faintQueue.val.empty()) {
+    battleHandle.remove<FaintQueue>();
+  }
+}
+
+void checkWin(Simulation& simulation) {}
+
+void faintPokemon(Simulation& simulation) {
+  using LoopLimits = MechanicConstants::ActivePokemon;
+  types::activePokemonIndex iterations = LoopLimits::MIN;
+  while (!simulation.registry.view<FaintQueue>().empty()) {
+    POKESIM_REQUIRE(
+      iterations < LoopLimits::MAX,
+      "More Pokemon were queued to faint in at least one battle than possible.");
+
+    simulation.viewForSelectedBattles<setFainting>();
+
+    pokesim::internal::SelectForPokemonView<pokesim::tags::Fainting> selectedPokemon{simulation};
+    POKESIM_REQUIRE(
+      !selectedPokemon.hasNoneSelected(),
+      "This loop should only be run if setFainting had Pokemon to set as fainting.");
+
+    runFaintEvent(simulation);
+    runEndAbilityEvent(simulation);
+    runEndItemEvent(simulation);
+    simulation.addToEntities<pokesim::tags::Fainted, pokesim::tags::Fainting>();
+    simulation.removeFromEntities<pokesim::tags::ActivePokemon, pokesim::tags::Fainting>();
+    simulation.removeFromEntities<pokesim::tags::Fainting>();
+
+    simulation.viewForSelectedBattles<clearFaintQueue>();
+    iterations++;
+  }
+
+  checkWin(simulation);
+
+  runAfterFaintEvent(simulation);
+}
+
 void runCurrentAction(Simulation& simulation) {
   runBeforeTurnAction(simulation);
   runMoveAction(simulation);
   runResidualAction(simulation);
 
   clearCurrentAction(simulation);
-  // faint pokemon
+  faintPokemon(simulation);
   // Update
   // Switch requests
 
@@ -207,9 +253,16 @@ void simulateTurn(Simulation& simulation) {
   simulation.addToEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SelectedForViewBattle>();
 
   simulation.viewForSelectedBattles<setCurrentAction>();
+  using ActionsLimit = MechanicConstants::ActionQueueLength;
+  types::actionQueueIndex actionsTaken = ActionsLimit::MIN;
   while (!simulation.registry.view<action::tags::Current>().empty()) {
+    POKESIM_REQUIRE(
+      actionsTaken < ActionsLimit::MAX,
+      "More actions in a turn were queued to be taken than in at least one battle than are possible.");
+
     runCurrentAction(simulation);
     simulation.viewForSelectedBattles<setCurrentAction>();
+    actionsTaken++;
   }
 
   nextTurn(simulation);

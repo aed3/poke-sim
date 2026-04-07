@@ -137,6 +137,8 @@ void runMoveEffects(Simulation& simulation) {
   simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
 }
 
+// TODO(aed3): When adding damage source, change this to accept the move's handle and CurrentActionSource to pass to
+// applyDamage.
 void applyDamageToTarget(types::registry& registry, Damage damage, CurrentActionTarget target) {
   pokesim::applyDamage({registry, target.val}, damage.val);
 }

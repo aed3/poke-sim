@@ -5,6 +5,7 @@
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/FaintQueue.hpp>
 #include <Components/EntityHolders/LastUsedMove.hpp>
 #include <Components/Names/ItemNames.hpp>
 #include <Components/Names/StatNames.hpp>
@@ -245,6 +246,12 @@ void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
   handle.emplace_or_replace<stat::EffectiveSpe>(spe.val);
 }
 
+void faint(types::handle pokemonHandle, Battle battle) {
+  types::registry& registry = *pokemonHandle.registry();
+  FaintQueue& faintQueue = registry.get_or_emplace<FaintQueue>(battle.val);
+  faintQueue.val.push_back(pokemonHandle.entity());
+}
+
 void applyDamage(types::handle pokemonHandle, types::damage damage) {
   stat::CurrentHp& hp = pokemonHandle.get<stat::CurrentHp>();
   if (damage < hp.val) {
@@ -252,7 +259,7 @@ void applyDamage(types::handle pokemonHandle, types::damage damage) {
   }
   else {
     hp.val = 0U;
-    // Faint
+    faint(pokemonHandle, pokemonHandle.get<Battle>());
   }
 }
 

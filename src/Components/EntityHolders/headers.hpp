@@ -7,6 +7,7 @@
 #include "BattleTree.hpp"
 #include "ChoiceLock.hpp"
 #include "Current.hpp"
+#include "FaintQueue.hpp"
 #include "FoeSide.hpp"
 #include "LastUsedMove.hpp"
 #include "MoveSlots.hpp"

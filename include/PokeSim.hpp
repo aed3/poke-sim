@@ -111,6 +111,7 @@
  * src/Components/EVsIVs.hpp
  * src/Components/EntityHolders/ActionQueue.hpp
  * src/Components/EntityHolders/ChoiceLock.hpp
+ * src/Components/EntityHolders/FaintQueue.hpp
  * src/Components/EntityHolders/FoeSide.hpp
  * src/Components/EntityHolders/LastUsedMove.hpp
  * src/Components/EntityHolders/MoveSlots.hpp
@@ -17994,6 +17995,8 @@ using sideSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::Act
 template <typename T>
 using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::Targets::MAX>;
 
+using actionQueueIndex = pokesim::internal::unsignedIntType<MechanicConstants::ActionQueueLength::MAX>;
+
 using callback = void (*)(Simulation&);
 using optionalCallback = std::optional<callback>;
 }  // namespace types
@@ -19107,8 +19110,6 @@ struct Ivs {
 
 //////////// START OF src/Components/EntityHolders/ActionQueue.hpp /////////////
 
-#include <vector>
-
 namespace pokesim {
 // Contains the list of action entities queued up to be simulated for a battle's current turn.
 struct ActionQueue {
@@ -19127,6 +19128,17 @@ struct ChoiceLock {
 }  // namespace pokesim
 
 ////////////// END OF src/Components/EntityHolders/ChoiceLock.hpp //////////////
+
+///////////// START OF src/Components/EntityHolders/FaintQueue.hpp /////////////
+
+namespace pokesim {
+// Contains the list of pokemon that will faint at the end of the current action.
+struct FaintQueue {
+  internal::maxSizedVector<types::entity, MechanicConstants::ActivePokemon::MAX> val{};
+};
+}  // namespace pokesim
+
+////////////// END OF src/Components/EntityHolders/FaintQueue.hpp //////////////
 
 ////////////// START OF src/Components/EntityHolders/FoeSide.hpp ///////////////
 
@@ -20125,7 +20137,7 @@ struct Timid {};
 namespace pokesim::tags {
 struct Pokemon {};
 
-// Indicates the Pokemon is currently in a battle
+// Indicates the Pokemon is currently in a battle.
 struct ActivePokemon {};
 
 struct AtkStatUpdateRequired {};
@@ -20134,6 +20146,9 @@ struct SpdStatUpdateRequired {};
 struct SpaStatUpdateRequired {};
 struct SpeStatUpdateRequired {};
 
+// Indicates the Pokemon has reached the front of the fainting queue and is running its various "on faint" and "after
+// faint" events.
+struct Fainting {};
 struct Fainted {};
 
 struct CanUseItem {};
@@ -20144,9 +20159,6 @@ struct CanSetStatus {};
 ////////////////// END OF src/Components/Tags/PokemonTags.hpp //////////////////
 
 ////////////////// START OF src/Components/Tags/Selection.hpp //////////////////
-
-#include <cstdint>
-#include <vector>
 
 namespace pokesim::tags {
 struct SelectedForViewBattle {};
@@ -20486,6 +20498,7 @@ struct CurrentEffectTarget;
 struct CurrentEffectSource;
 struct CurrentEffectsAsTarget;
 struct CurrentEffectsAsSource;
+struct FaintQueue;
 struct FoeSide;
 struct LastUsedMove;
 struct MoveSlots;
@@ -20742,6 +20755,9 @@ inline void check(const CurrentEffectsAsTarget&, const types::registry&);
 
 template <>
 inline void check(const CurrentEffectsAsSource&, const types::registry&);
+
+template <>
+inline void check(const FaintQueue&, const types::registry&);
 
 template <>
 inline void check(const FoeSide&, const types::registry&);
@@ -21636,6 +21652,13 @@ template <>
 inline void check(const CurrentEffectsAsSource& effects, const types::registry& registry) {
   for (types::entity effect : effects.val) {
     types::registry::checkEntity(effect, registry);
+  }
+}
+
+template <>
+inline void check(const FaintQueue& faintQueue, const types::registry& registry) {
+  for (types::entity pokemon : faintQueue.val) {
+    checkPokemon(pokemon, registry);
   }
 }
 
@@ -25016,6 +25039,7 @@ inline void run(Simulation& simulation);
 
 namespace pokesim {
 class Simulation;
+struct Battle;
 struct CurrentActionSource;
 struct CurrentActionTarget;
 struct CurrentActionMoveSlot;
@@ -25051,6 +25075,7 @@ inline void resetEffectiveSpa(types::handle handle, stat::Spa spa);
 inline void resetEffectiveSpd(types::handle handle, stat::Spd spd);
 inline void resetEffectiveSpe(types::handle handle, stat::Spe spe);
 
+inline void faint(types::handle pokemonHandle, Battle battle);
 inline void applyDamage(types::handle pokemonHandle, types::damage damage);
 inline void applyStatBoost(types::stat& stat, types::boost boost);
 
@@ -25953,6 +25978,11 @@ inline void runStartFreeze(Simulation& simulation);
 inline void runTryTakeItemEvent(Simulation& simulation);  // TakeItem
 inline void runAfterUseItemEvent(Simulation& simulation);
 inline void runEndItemEvent(Simulation& simulation);
+
+inline void runEndAbilityEvent(Simulation& simulation);
+
+inline void runFaintEvent(Simulation& simulation);
+inline void runAfterFaintEvent(Simulation& simulation);
 }  // namespace pokesim
 
 ////////////////////// END OF src/Simulation/RunEvent.hpp //////////////////////
@@ -26210,6 +26240,10 @@ inline void runEndItemEvent(Simulation& simulation) {
   dex::events::ChoiceScarf::onEnd(simulation);
   dex::events::ChoiceSpecs::onEnd(simulation);
 }
+
+inline void runEndAbilityEvent(Simulation& simulation) {}
+inline void runFaintEvent(Simulation& simulation) {}
+inline void runAfterFaintEvent(Simulation& simulation) {}
 }  // namespace pokesim
 
 ////////////////////// END OF src/Simulation/RunEvent.cpp //////////////////////
@@ -26670,6 +26704,8 @@ inline void runMoveEffects(Simulation& simulation) {
   simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
 }
 
+// TODO(aed3): When adding damage source, change this to accept the move's handle and CurrentActionSource to pass to
+// applyDamage.
 inline void applyDamageToTarget(types::registry& registry, Damage damage, CurrentActionTarget target) {
   pokesim::applyDamage({registry, target.val}, damage.val);
 }
@@ -26951,13 +26987,54 @@ inline void runBeforeTurnAction(Simulation&) {
   // Barely used, will find different way of handling it
 }
 
+inline void setFainting(types::registry& registry, FaintQueue& faintQueue) {
+  types::entity pokemon = faintQueue.val.front();
+  faintQueue.val.erase(faintQueue.val.begin());
+  registry.emplace<pokesim::tags::Fainting>(pokemon);
+}
+
+inline void clearFaintQueue(types::handle battleHandle, const FaintQueue& faintQueue) {
+  if (faintQueue.val.empty()) {
+    battleHandle.remove<FaintQueue>();
+  }
+}
+
+inline void faintPokemon(Simulation& simulation) {
+  using LoopLimits = MechanicConstants::ActivePokemon;
+  types::activePokemonIndex iterations = LoopLimits::MIN;
+  while (!simulation.registry.view<FaintQueue>().empty()) {
+    POKESIM_REQUIRE(
+      iterations < LoopLimits::MAX,
+      "More Pokemon were queued to faint in at least one battle than possible.");
+
+    simulation.viewForSelectedBattles<setFainting>();
+
+    pokesim::internal::SelectForPokemonView<pokesim::tags::Fainting> selectedPokemon{simulation};
+    POKESIM_REQUIRE(
+      !selectedPokemon.hasNoneSelected(),
+      "This loop should only be run if setFainting had Pokemon to set as fainting.");
+
+    runFaintEvent(simulation);
+    runEndAbilityEvent(simulation);
+    runEndItemEvent(simulation);
+    simulation.addToEntities<pokesim::tags::Fainted, pokesim::tags::Fainting>();
+    simulation.removeFromEntities<pokesim::tags::ActivePokemon, pokesim::tags::Fainting>();
+    simulation.removeFromEntities<pokesim::tags::Fainting>();
+
+    simulation.viewForSelectedBattles<clearFaintQueue>();
+    iterations++;
+  }
+
+  runAfterFaintEvent(simulation);
+}
+
 inline void runCurrentAction(Simulation& simulation) {
   runBeforeTurnAction(simulation);
   runMoveAction(simulation);
   runResidualAction(simulation);
 
   clearCurrentAction(simulation);
-  // faint pokemon
+  faintPokemon(simulation);
   // Update
   // Switch requests
 
@@ -27024,9 +27101,16 @@ inline void simulateTurn(Simulation& simulation) {
   simulation.addToEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SelectedForViewBattle>();
 
   simulation.viewForSelectedBattles<setCurrentAction>();
+  using ActionsLimit = MechanicConstants::ActionQueueLength;
+  types::actionQueueIndex actionsTaken = ActionsLimit::MIN;
   while (!simulation.registry.view<action::tags::Current>().empty()) {
+    POKESIM_REQUIRE(
+      actionsTaken < ActionsLimit::MAX,
+      "More actions in a turn were queued to be taken than in at least one battle than are possible.");
+
     runCurrentAction(simulation);
     simulation.viewForSelectedBattles<setCurrentAction>();
+    actionsTaken++;
   }
 
   nextTurn(simulation);
@@ -30926,6 +31010,12 @@ inline void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
   handle.emplace_or_replace<stat::EffectiveSpe>(spe.val);
 }
 
+inline void faint(types::handle pokemonHandle, Battle battle) {
+  types::registry& registry = *pokemonHandle.registry();
+  FaintQueue& faintQueue = registry.get_or_emplace<FaintQueue>(battle.val);
+  faintQueue.val.push_back(pokemonHandle.entity());
+}
+
 inline void applyDamage(types::handle pokemonHandle, types::damage damage) {
   stat::CurrentHp& hp = pokemonHandle.get<stat::CurrentHp>();
   if (damage < hp.val) {
@@ -30933,7 +31023,7 @@ inline void applyDamage(types::handle pokemonHandle, types::damage damage) {
   }
   else {
     hp.val = 0U;
-    // Faint
+    faint(pokemonHandle, pokemonHandle.get<Battle>());
   }
 }
 
@@ -31548,6 +31638,7 @@ inline types::ClonedEntityMap clone(types::registry& registry, std::optional<typ
   remapComponentEntities<CurrentEffectsAsTarget>(registry, entityMap);
   remapComponentEntities<CurrentEffectSource>(registry, entityMap);
   remapComponentEntities<CurrentEffectTarget>(registry, entityMap);
+  remapComponentEntities<FaintQueue>(registry, entityMap);
   remapComponentEntities<FoeSide>(registry, entityMap);
   remapComponentEntities<LastUsedMove>(registry, entityMap);
   remapComponentEntities<MoveSlots>(registry, entityMap);
