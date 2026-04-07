@@ -21,6 +21,8 @@ struct BuildItem {
 
     item.setName(T::name);
 
+    item.setProperties(T::itemTags);
+
     return item.entity();
   }
 };

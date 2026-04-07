@@ -593,7 +593,7 @@ void check(const ParentEntity& parentEntity, const types::registry& registry) {
 
 template <>
 void check(const ChoiceLock& choiceLock, const types::registry& registry) {
-  checkPokemon(choiceLock.val, registry);
+  checkMoveSlot(choiceLock.val, registry);
 }
 
 template <>

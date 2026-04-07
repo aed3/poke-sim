@@ -1,4 +1,5 @@
 #include "../Tests.hpp"
+#include "Catch2/catch_amalgamated.hpp"
 
 namespace pokesim {
 TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][KnockOff]") {
@@ -99,7 +100,8 @@ TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][Knoc
   checks.checkMovePpUsage(p1Move);
   checks.checkMovePpUsage(p2Move);
 
-  REQUIRE(!registry.any_of<ItemName, item::tags::AssaultVest>(p2Pokemon));
+  REQUIRE_FALSE(registry.all_of<ItemName>(p2Pokemon));
+  REQUIRE_FALSE(registry.all_of<item::tags::AssaultVest>(p2Pokemon));
 
   auto p2Spd = registry.get<stat::EffectiveSpd>(p2Pokemon);
   auto initialP2Spd = checks.getInitialComponent<stat::EffectiveSpd>(p2Pokemon);

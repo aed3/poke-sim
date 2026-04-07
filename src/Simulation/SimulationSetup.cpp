@@ -109,7 +109,7 @@ void Simulation::createInitialSide(
     bool inActiveSlot = (battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT ? 1U : 2U) > i;
     bool isFainted =
       pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN;
-    if (battleStarted && inActiveSlot && isFainted) {
+    if (battleStarted && inActiveSlot && !isFainted) {
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
 

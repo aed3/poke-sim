@@ -3,6 +3,7 @@
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Item.hpp>
 #include <Types/Event.hpp>
+#include <Utilities/Tags.hpp>
 #include <string_view>
 
 namespace pokesim {
@@ -22,6 +23,8 @@ struct BrightPowder {
 
   static constexpr types::eventModifier onModifyAccuracyNumerator = 3686U;
   static constexpr types::eventModifier onModifyAccuracyDenominator = 4096U;
+
+  static constexpr Tags<> itemTags{};
   struct Strings {
     static constexpr std::string_view name = "Bright Powder";
     static constexpr std::string_view smogonId = "brightpowder";

@@ -159,6 +159,7 @@
  * src/Components/Stats.hpp
  * src/Components/Tags/AbilityTags.hpp
  * src/Components/Tags/BattleTags.hpp
+ * src/Components/Tags/ItemPropertyTags.hpp
  * src/Components/Tags/ItemTags.hpp
  * src/Components/Tags/MovePropertyTags.hpp
  * src/Components/Tags/MoveTags.hpp
@@ -17430,7 +17431,7 @@ class AssertComponentsEqual {
   struct isList<std::array<T, N>> {};
 
 #ifdef _MSC_VER
-// The fails at the end of the following two methods are counted as unreachable, which in most cases is intended
+// The fails as the end of the following two methods are counted as unreachable, which in most cases is intended.
 #pragma warning(disable : 4702)
 #endif
   template <typename Member>
@@ -17456,7 +17457,7 @@ class AssertComponentsEqual {
       POKESIM_REQUIRE_NM(current == initial);
     }
     else {
-      // Not a static_assert so this only fails on types that actually get copied
+      // Not a static_assert so this only fails on types that actually get copied.
       POKESIM_REQUIRE_FAIL("There's a type that needs a dedicated equals function.");
     }
   }
@@ -17480,7 +17481,7 @@ class AssertComponentsEqual {
       }
     }
 
-    // Not a static_assert so this only fails on types that actually get copied
+    // Not a static_assert so this only fails on types that actually get copied.
     POKESIM_REQUIRE_FAIL("This component needs a dedicated equals function.");
   }
 #ifdef _MSC_VER
@@ -20004,6 +20005,17 @@ struct BattleEnded {};
 
 ////////////////// END OF src/Components/Tags/BattleTags.hpp ///////////////////
 
+////////////// START OF src/Components/Tags/ItemPropertyTags.hpp ///////////////
+
+namespace pokesim::item::tags {
+// Item Property Tag: Activates choice lock
+struct Choice {};
+// Item Property Tag: A consumable berry
+struct Berry {};
+}  // namespace pokesim::item::tags
+
+/////////////// END OF src/Components/Tags/ItemPropertyTags.hpp ////////////////
+
 ////////////////// START OF src/Components/Tags/ItemTags.hpp ///////////////////
 
 // TODO(aed3): Make this auto generated
@@ -21554,7 +21566,7 @@ inline void check(const ParentEntity& parentEntity, const types::registry& regis
 
 template <>
 inline void check(const ChoiceLock& choiceLock, const types::registry& registry) {
-  checkPokemon(choiceLock.val, registry);
+  checkMoveSlot(choiceLock.val, registry);
 }
 
 template <>
@@ -24681,7 +24693,7 @@ inline void Simulation::createInitialSide(
     bool inActiveSlot = (battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT ? 1U : 2U) > i;
     bool isFainted =
       pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN;
-    if (battleStarted && inActiveSlot && isFainted) {
+    if (battleStarted && inActiveSlot && !isFainted) {
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
 
@@ -25366,6 +25378,7 @@ class Simulation;
 namespace pokesim::dex {
 namespace events {
 struct ChoiceLock {
+  inline static void onBeforeMove(Simulation& simulation);
   inline static void onDisableMove(Simulation& simulation);
 };
 }  // namespace events
@@ -25446,6 +25459,8 @@ struct AssaultVest : events::AssaultVest {
   static constexpr dex::Item name = dex::Item::ASSAULT_VEST;
 
   static constexpr types::effectMultiplier onModifySpdModifier = 1.5F;
+
+  static constexpr Tags<> itemTags{};
   struct Strings {
     static constexpr std::string_view name = "Assault Vest";
     static constexpr std::string_view smogonId = "assaultvest";
@@ -25480,6 +25495,8 @@ struct BrightPowder {
 
   static constexpr types::eventModifier onModifyAccuracyNumerator = 3686U;
   static constexpr types::eventModifier onModifyAccuracyDenominator = 4096U;
+
+  static constexpr Tags<> itemTags{};
   struct Strings {
     static constexpr std::string_view name = "Bright Powder";
     static constexpr std::string_view smogonId = "brightpowder";
@@ -25515,6 +25532,8 @@ struct ChoiceScarf : events::ChoiceScarf {
   static constexpr dex::Item name = dex::Item::CHOICE_SCARF;
 
   static constexpr types::effectMultiplier onModifySpeModifier = 1.5F;
+
+  static constexpr Tags<item::tags::Choice> itemTags{};
   struct Strings {
     static constexpr std::string_view name = "Choice Scarf";
     static constexpr std::string_view smogonId = "choicescarf";
@@ -25550,6 +25569,8 @@ struct ChoiceSpecs : events::ChoiceSpecs {
   static constexpr dex::Item name = dex::Item::CHOICE_SPECS;
 
   static constexpr types::effectMultiplier onModifySpaModifier = 1.5F;
+
+  static constexpr Tags<item::tags::Choice> itemTags{};
   struct Strings {
     static constexpr std::string_view name = "Choice Specs";
     static constexpr std::string_view smogonId = "choicespecs";
@@ -25584,6 +25605,8 @@ struct FocusSash {
   static constexpr dex::Item name = dex::Item::FOCUS_SASH;
 
   static constexpr types::damage onAfterModifyDamageHpToKeep = 1U;
+
+  static constexpr Tags<> itemTags{};
   struct Strings {
     static constexpr std::string_view name = "Focus Sash";
     static constexpr std::string_view smogonId = "focussash";
@@ -25621,6 +25644,8 @@ struct LifeOrb {
   static constexpr types::eventModifier onModifyDamageDenominator = 4096U;
 
   static constexpr types::stat onAfterMoveUsedHpDecreaseDivisor = 10U;
+
+  static constexpr Tags<> itemTags{};
   struct Strings {
     static constexpr std::string_view name = "Life Orb";
     static constexpr std::string_view smogonId = "lifeorb";
@@ -26044,6 +26069,7 @@ inline void applyBasePowerEventModifier(types::handle moveHandle, BasePower base
 
 inline void runBeforeMove(Simulation& simulation) {
   dex::events::Paralysis::onBeforeMove(simulation);
+  dex::events::ChoiceLock::onBeforeMove(simulation);
 }
 
 inline void runAccuracyEvent(Simulation&) {}
@@ -28714,6 +28740,8 @@ struct BuildItem {
 
     item.setName(T::name);
 
+    item.setProperties(T::itemTags);
+
     return item.entity();
   }
 };
@@ -29037,7 +29065,7 @@ inline void ChoiceSpecs::onModifySpa(Simulation& simulation) {
 
 inline void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
   simulation
-    .view<setChoiceLock, Tags<item::tags::ChoiceScarf, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
+    .view<setChoiceLock, Tags<item::tags::ChoiceSpecs, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
 }
 
 inline void ChoiceSpecs::onEnd(Simulation& simulation) {
@@ -29098,6 +29126,17 @@ inline void paralysisOnBeforeMove(types::handle pokemonHandle, Battle battle, co
   }
 }
 
+inline void choiceLockRemoveWithoutItem(types::handle pokemonHandle, const pokesim::ChoiceLock&) {
+  pokemonHandle.remove<pokesim::ChoiceLock>();
+}
+
+inline void choiceLockRemoveWithItem(
+  types::handle pokemonHandle, const ItemName& itemName, const pokesim::ChoiceLock&, const Pokedex& pokedex) {
+  if (!pokedex.itemHas<item::tags::Choice>(itemName.name)) {
+    pokemonHandle.remove<pokesim::ChoiceLock>();
+  }
+}
+
 inline void choiceLockOnDisableMove(
   types::registry& registry, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
   POKESIM_REQUIRE(
@@ -29134,7 +29173,14 @@ inline void Paralysis::onBeforeMove(Simulation& simulation) {
   simulation.removeFromEntities<BaseEffectChance, tags::CurrentActionMoveSource, status::tags::Paralysis>();
 }
 
+inline void ChoiceLock::onBeforeMove(Simulation& simulation) {
+  simulation.viewForSelectedPokemon<choiceLockRemoveWithoutItem, Tags<>, entt::exclude_t<ItemName>>();
+  simulation.viewForSelectedPokemon<choiceLockRemoveWithItem>(simulation.pokedex());
+}
+
 inline void ChoiceLock::onDisableMove(Simulation& simulation) {
+  simulation.viewForSelectedPokemon<choiceLockRemoveWithoutItem, Tags<>, entt::exclude_t<ItemName>>();
+  simulation.viewForSelectedPokemon<choiceLockRemoveWithItem>(simulation.pokedex());
   simulation.viewForSelectedPokemon<choiceLockOnDisableMove>();
 }
 }  // namespace pokesim::dex::events

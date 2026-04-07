@@ -1,7 +1,7 @@
 #include "../Tests.hpp"
 
 namespace pokesim {
-TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Status][Paralysis]") {
+TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effect][Status][Paralysis]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
   const types::registry& registry = simulation.registry;

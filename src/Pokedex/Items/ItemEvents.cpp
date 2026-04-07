@@ -144,7 +144,7 @@ void ChoiceSpecs::onModifySpa(Simulation& simulation) {
 
 void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
   simulation
-    .view<setChoiceLock, Tags<item::tags::ChoiceScarf, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
+    .view<setChoiceLock, Tags<item::tags::ChoiceSpecs, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
 }
 
 void ChoiceSpecs::onEnd(Simulation& simulation) {

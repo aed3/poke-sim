@@ -3,6 +3,7 @@
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Item.hpp>
 #include <Types/Event.hpp>
+#include <Utilities/Tags.hpp>
 #include <string_view>
 
 namespace pokesim {
@@ -22,6 +23,8 @@ struct AssaultVest : events::AssaultVest {
   static constexpr dex::Item name = dex::Item::ASSAULT_VEST;
 
   static constexpr types::effectMultiplier onModifySpdModifier = 1.5F;
+
+  static constexpr Tags<> itemTags{};
   struct Strings {
     static constexpr std::string_view name = "Assault Vest";
     static constexpr std::string_view smogonId = "assaultvest";

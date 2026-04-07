@@ -5,6 +5,7 @@
 #include "AbilityTags.hpp"
 #include "BattleTags.hpp"
 #include "Current.hpp"
+#include "ItemPropertyTags.hpp"
 #include "ItemTags.hpp"
 #include "MovePropertyTags.hpp"
 #include "MoveTags.hpp"

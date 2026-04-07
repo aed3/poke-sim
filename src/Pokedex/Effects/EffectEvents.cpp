@@ -5,10 +5,13 @@
 #include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
+#include <Components/Names/ItemNames.hpp>
 #include <Components/Stats.hpp>
+#include <Components/Tags/ItemPropertyTags.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/Simulation.hpp>
 #include <entt/entity/registry.hpp>
@@ -33,6 +36,17 @@ void paralysisOnBeforeMove(types::handle pokemonHandle, Battle battle, const Cur
   types::registry& registry = *pokemonHandle.registry();
   for (types::entity move : moves.val) {
     setFailedActionMove(types::handle{registry, move}, battle);
+  }
+}
+
+void choiceLockRemoveWithoutItem(types::handle pokemonHandle, const pokesim::ChoiceLock&) {
+  pokemonHandle.remove<pokesim::ChoiceLock>();
+}
+
+void choiceLockRemoveWithItem(
+  types::handle pokemonHandle, const ItemName& itemName, const pokesim::ChoiceLock&, const Pokedex& pokedex) {
+  if (!pokedex.itemHas<item::tags::Choice>(itemName.name)) {
+    pokemonHandle.remove<pokesim::ChoiceLock>();
   }
 }
 
@@ -72,7 +86,14 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
   simulation.removeFromEntities<BaseEffectChance, tags::CurrentActionMoveSource, status::tags::Paralysis>();
 }
 
+void ChoiceLock::onBeforeMove(Simulation& simulation) {
+  simulation.viewForSelectedPokemon<choiceLockRemoveWithoutItem, Tags<>, entt::exclude_t<ItemName>>();
+  simulation.viewForSelectedPokemon<choiceLockRemoveWithItem>(simulation.pokedex());
+}
+
 void ChoiceLock::onDisableMove(Simulation& simulation) {
+  simulation.viewForSelectedPokemon<choiceLockRemoveWithoutItem, Tags<>, entt::exclude_t<ItemName>>();
+  simulation.viewForSelectedPokemon<choiceLockRemoveWithItem>(simulation.pokedex());
   simulation.viewForSelectedPokemon<choiceLockOnDisableMove>();
 }
 }  // namespace pokesim::dex::events

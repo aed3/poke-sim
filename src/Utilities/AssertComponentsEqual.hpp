@@ -85,7 +85,7 @@ class AssertComponentsEqual {
   struct isList<std::array<T, N>> {};
 
 #ifdef _MSC_VER
-// The fails at the end of the following two methods are counted as unreachable, which in most cases is intended
+// The fails as the end of the following two methods are counted as unreachable, which in most cases is intended.
 #pragma warning(disable : 4702)
 #endif
   template <typename Member>
@@ -111,7 +111,7 @@ class AssertComponentsEqual {
       POKESIM_REQUIRE_NM(current == initial);
     }
     else {
-      // Not a static_assert so this only fails on types that actually get copied
+      // Not a static_assert so this only fails on types that actually get copied.
       POKESIM_REQUIRE_FAIL("There's a type that needs a dedicated equals function.");
     }
   }
@@ -135,7 +135,7 @@ class AssertComponentsEqual {
       }
     }
 
-    // Not a static_assert so this only fails on types that actually get copied
+    // Not a static_assert so this only fails on types that actually get copied.
     POKESIM_REQUIRE_FAIL("This component needs a dedicated equals function.");
   }
 #ifdef _MSC_VER

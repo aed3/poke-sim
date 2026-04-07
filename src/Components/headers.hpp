@@ -75,6 +75,7 @@
 #include "Tags/AbilityTags.hpp"
 #include "Tags/BattleTags.hpp"
 #include "Tags/Current.hpp"
+#include "Tags/ItemPropertyTags.hpp"
 #include "Tags/ItemTags.hpp"
 #include "Tags/MovePropertyTags.hpp"
 #include "Tags/MoveTags.hpp"

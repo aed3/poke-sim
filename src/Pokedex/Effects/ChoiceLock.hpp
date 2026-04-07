@@ -11,6 +11,7 @@ class Simulation;
 namespace pokesim::dex {
 namespace events {
 struct ChoiceLock {
+  static void onBeforeMove(Simulation& simulation);
   static void onDisableMove(Simulation& simulation);
 };
 }  // namespace events

@@ -17,6 +17,7 @@ namespace pokesim {
 inline void loadPokedexForBattleInfo(const Simulation::BattleCreationInfo& battleCreationInfo, Pokedex& pokedex) {
   entt::dense_set<dex::Move> moveSet{};
   entt::dense_set<dex::Species> speciesSet{};
+  entt::dense_set<dex::Item> itemSet{};
 
   for (const auto& side : {battleCreationInfo.p1, battleCreationInfo.p2}) {
     for (const auto& pokemon : side.team) {
@@ -24,11 +25,15 @@ inline void loadPokedexForBattleInfo(const Simulation::BattleCreationInfo& battl
         moveSet.insert(moveSlot.name);
       }
       speciesSet.insert(pokemon.species);
+      if (pokemon.item != dex::Item::NO_ITEM) {
+        itemSet.insert(pokemon.item);
+      }
     }
   }
 
   pokedex.loadMoves(moveSet);
   pokedex.loadSpecies(speciesSet);
+  pokedex.loadItems(itemSet);
 }
 
 inline Simulation::MoveCreationInfo createMove(Pokedex& pokedex, dex::Move move) {

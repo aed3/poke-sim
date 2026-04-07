@@ -1,4 +1,6 @@
+#include "Catch2/catch_amalgamated.hpp"
 #include "Tests.hpp"
+#include "Types/Enums/Item.hpp"
 
 namespace pokesim {
 TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
@@ -97,16 +99,19 @@ TEST_CASE("Pokedex Data Building: Item", "[Pokedex]") {
   {
     auto item = pokedex.getItemData<ItemName>(dex::Item::CHOICE_SCARF);
     REQUIRE(item.name == dex::Item::CHOICE_SCARF);
+    REQUIRE(pokedex.itemHas<item::tags::Choice>(dex::Item::CHOICE_SCARF));
   }
 
   {
     auto item = pokedex.getItemData<ItemName>(dex::Item::CHOICE_SPECS);
     REQUIRE(item.name == dex::Item::CHOICE_SPECS);
+    REQUIRE(pokedex.itemHas<item::tags::Choice>(dex::Item::CHOICE_SPECS));
   }
 
   {
     auto item = pokedex.getItemData<ItemName>(dex::Item::ASSAULT_VEST);
     REQUIRE(item.name == dex::Item::ASSAULT_VEST);
+    REQUIRE_FALSE(pokedex.itemHas<item::tags::Choice>(dex::Item::ASSAULT_VEST));
   }
 }
 
