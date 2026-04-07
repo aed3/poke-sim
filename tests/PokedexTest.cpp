@@ -1,6 +1,4 @@
-#include "Catch2/catch_amalgamated.hpp"
 #include "Tests.hpp"
-#include "Types/Enums/Item.hpp"
 
 namespace pokesim {
 TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
