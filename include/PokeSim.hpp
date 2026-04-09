@@ -22124,7 +22124,7 @@ inline void check(const Turn& turn) {
 
 template <>
 inline void check(const Winner& winner) {
-  // No winner (aka a tie) is valid
+  // No winner (aka a tie) is valid.
   POKESIM_REQUIRE_NM(
     winner.val == PlayerSideId::P1 || winner.val == PlayerSideId::P2 || winner.val == PlayerSideId::NONE);
 }
@@ -26745,7 +26745,7 @@ void removeFaintedSecondaryEffectTarget(
   }
 }
 
-// Skipping secondary effects entirely for a fainted target is not something Showdown does. This is done hereto prevent
+// Skipping secondary effects entirely for a fainted target is not something Showdown does. This is done here to prevent
 // more random chance splits than needed and should not cause outcome deviations from Showdown. If, for example, a move
 // exists that has a random chance to add a side or field effect regardless of the target's HP, then this function will
 // need to be reworked.

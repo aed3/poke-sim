@@ -156,7 +156,7 @@ void removeFaintedSecondaryEffectTarget(
   }
 }
 
-// Skipping secondary effects entirely for a fainted target is not something Showdown does. This is done hereto prevent
+// Skipping secondary effects entirely for a fainted target is not something Showdown does. This is done here to prevent
 // more random chance splits than needed and should not cause outcome deviations from Showdown. If, for example, a move
 // exists that has a random chance to add a side or field effect regardless of the target's HP, then this function will
 // need to be reworked.
