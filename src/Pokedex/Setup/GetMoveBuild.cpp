@@ -283,22 +283,18 @@ types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics()) {
-    case GameMechanics::SCARLET_VIOLET: {
-      switch (move) {
-        case Move::FURY_ATTACK:  return buildMoveSV<FuryAttack>(registry, forActiveMove);
-        case Move::THUNDERBOLT:  return buildMoveSV<Thunderbolt>(registry, forActiveMove);
-        case Move::WILL_O_WISP:  return buildMoveSV<WillOWisp>(registry, forActiveMove);
-        case Move::KNOCK_OFF:    return buildMoveSV<KnockOff>(registry, forActiveMove);
-        case Move::QUIVER_DANCE: return buildMoveSV<QuiverDance>(registry, forActiveMove);
-        case Move::MOONBLAST:    return buildMoveSV<Moonblast>(registry, forActiveMove);
-        case Move::SPLASH:       return buildMoveSV<Splash>(registry, forActiveMove);
+  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+    switch (move) {
+      case Move::FURY_ATTACK:  return buildMoveSV<FuryAttack>(registry, forActiveMove);
+      case Move::THUNDERBOLT:  return buildMoveSV<Thunderbolt>(registry, forActiveMove);
+      case Move::WILL_O_WISP:  return buildMoveSV<WillOWisp>(registry, forActiveMove);
+      case Move::KNOCK_OFF:    return buildMoveSV<KnockOff>(registry, forActiveMove);
+      case Move::QUIVER_DANCE: return buildMoveSV<QuiverDance>(registry, forActiveMove);
+      case Move::MOONBLAST:    return buildMoveSV<Moonblast>(registry, forActiveMove);
+      case Move::SPLASH:       return buildMoveSV<Splash>(registry, forActiveMove);
 
-        default: break;
-      }
-      break;
+      default: break;
     }
-    default: break;
   }
 
   POKESIM_REQUIRE_FAIL("Building a move that does not exist.");

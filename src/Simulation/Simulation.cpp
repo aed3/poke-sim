@@ -14,7 +14,7 @@
 
 namespace pokesim {
 Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
-    : constantBattleFormat(battleFormat_), pokedexPointer(&pokedex_) {
+    : battleFormat(battleFormat_), pokedexPointer(&pokedex_) {
   Pokedex::attachSimulation(pokedexPointer, this);
 }
 
@@ -22,7 +22,7 @@ Simulation::~Simulation() {
   Pokedex::detachSimulation(pokedexPointer, this);
 }
 
-Simulation::Simulation(Simulation&& other) noexcept : Simulation(*other.pokedexPointer, other.constantBattleFormat) {
+Simulation::Simulation(Simulation&& other) noexcept : Simulation(*other.pokedexPointer, other.battleFormat) {
   registry = std::move(other.registry);
   analyzeEffectOptions = other.analyzeEffectOptions;
   calculateDamageOptions = other.calculateDamageOptions;

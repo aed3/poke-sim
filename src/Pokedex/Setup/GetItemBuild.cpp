@@ -38,21 +38,17 @@ types::entity Pokedex::buildItem(dex::Item item, types::registry& registry) cons
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics()) {
-    case GameMechanics::SCARLET_VIOLET: {
-      switch (item) {
-        case Item::ASSAULT_VEST:  return buildItemSV<AssaultVest>(registry);
-        case Item::BRIGHT_POWDER: return buildItemSV<BrightPowder>(registry);
-        case Item::CHOICE_SCARF:  return buildItemSV<ChoiceScarf>(registry);
-        case Item::CHOICE_SPECS:  return buildItemSV<ChoiceSpecs>(registry);
-        case Item::FOCUS_SASH:    return buildItemSV<FocusSash>(registry);
-        case Item::LIFE_ORB:      return buildItemSV<LifeOrb>(registry);
+  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+    switch (item) {
+      case Item::ASSAULT_VEST:  return buildItemSV<AssaultVest>(registry);
+      case Item::BRIGHT_POWDER: return buildItemSV<BrightPowder>(registry);
+      case Item::CHOICE_SCARF:  return buildItemSV<ChoiceScarf>(registry);
+      case Item::CHOICE_SPECS:  return buildItemSV<ChoiceSpecs>(registry);
+      case Item::FOCUS_SASH:    return buildItemSV<FocusSash>(registry);
+      case Item::LIFE_ORB:      return buildItemSV<LifeOrb>(registry);
 
-        default: break;
-      }
-      break;
+      default: break;
     }
-    default: break;
   }
 
   POKESIM_REQUIRE_FAIL("Building an item that does not exist.");

@@ -67,21 +67,17 @@ types::entity Pokedex::buildSpecies(dex::Species species, types::registry& regis
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics()) {
-    case GameMechanics::SCARLET_VIOLET: {
-      switch (species) {
-        case Species::AMPHAROS:  return buildSpeciesSV<Ampharos>(registry);
-        case Species::GARDEVOIR: return buildSpeciesSV<Gardevoir>(registry);
-        case Species::EMPOLEON:  return buildSpeciesSV<Empoleon>(registry);
-        case Species::PANGORO:   return buildSpeciesSV<Pangoro>(registry);
-        case Species::RIBOMBEE:  return buildSpeciesSV<Ribombee>(registry);
-        case Species::DRAGAPULT: return buildSpeciesSV<Dragapult>(registry);
+  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+    switch (species) {
+      case Species::AMPHAROS:  return buildSpeciesSV<Ampharos>(registry);
+      case Species::GARDEVOIR: return buildSpeciesSV<Gardevoir>(registry);
+      case Species::EMPOLEON:  return buildSpeciesSV<Empoleon>(registry);
+      case Species::PANGORO:   return buildSpeciesSV<Pangoro>(registry);
+      case Species::RIBOMBEE:  return buildSpeciesSV<Ribombee>(registry);
+      case Species::DRAGAPULT: return buildSpeciesSV<Dragapult>(registry);
 
-        default: break;
-      }
-      break;
+      default: break;
     }
-    default: break;
   }
 
   POKESIM_REQUIRE_FAIL("Building a species that does not exist.");

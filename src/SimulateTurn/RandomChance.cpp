@@ -231,7 +231,7 @@ void randomChanceEvent(
   Simulation& simulation, types::entityIndex cloneCount, types::callback applyChoices,
   void (*assignClonesToEvents)(types::registry&, const types::ClonedEntityMap&, const types::entityVector&),
   UpdateProbabilities updateProbabilities, const AssignArgs&... assignArgs) {
-  if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT)) {
     simulation.view<placeChanceFromStack<RandomStack, Random>>();
   }
 
@@ -292,7 +292,7 @@ void randomChanceEvent(
 
   registry.clear<Random>();
   clearRandomChanceResult(simulation);
-  if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT && !registry.view<RandomStack>().empty()) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT) && !registry.view<RandomStack>().empty()) {
     randomChanceEvent<Random, RandomStack, AssignRandomEvents, UpdateProbabilities, AssignRandomEventsTags...>(
       simulation,
       cloneCount,

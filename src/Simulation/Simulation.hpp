@@ -147,7 +147,7 @@ class Simulation : public internal::RegistryContainer {
   std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
 
-  BattleFormat constantBattleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
+  BattleFormat battleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
   const Pokedex* const pokedexPointer;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
  public:
@@ -160,7 +160,7 @@ class Simulation : public internal::RegistryContainer {
   ~Simulation();
 
   const Pokedex& pokedex() const;
-  constexpr BattleFormat battleFormat() const { return constantBattleFormat; }
+  constexpr bool isBattleFormat(BattleFormat checkedFormat) { return checkedFormat == battleFormat; }
 
   // Load information about any number of battle states into the simulation's registry.
   void createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList);

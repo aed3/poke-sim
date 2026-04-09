@@ -47,8 +47,8 @@ class Pokedex {
    * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but if
    * it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
    */
-  GameMechanics constantMechanics;
-  TypeChart constantTypeChart;
+  GameMechanics mechanics;
+  TypeChart mechanicsTypeChart;
 
  private:
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
@@ -96,10 +96,10 @@ class Pokedex {
 #endif
 
  public:
-  Pokedex(GameMechanics mechanics_) : constantMechanics(mechanics_), constantTypeChart(mechanics_) {}
+  Pokedex(GameMechanics mechanics_) : mechanics(mechanics_), mechanicsTypeChart(mechanics_) {}
   ~Pokedex() { Pokedex::checkIfDetached(this); }
 
-  constexpr GameMechanics mechanics() const { return constantMechanics; }
+  constexpr bool isMechanics(GameMechanics checkedMechanics) const { return mechanics == checkedMechanics; }
 
   /**
    * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.
@@ -202,7 +202,7 @@ class Pokedex {
     return dexRegistry.all_of<T...>(movesMap.at(move));
   }
 
-  constexpr const TypeChart& typeChart() const { return constantTypeChart; }
+  constexpr const TypeChart& typeChart() const { return mechanicsTypeChart; }
 
   types::entity buildActionMove(dex::Move move, types::registry& registry) const;
 };

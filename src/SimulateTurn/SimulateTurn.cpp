@@ -89,7 +89,7 @@ void createActionMoveForTargets(
 }
 
 void getMoveTargets(Simulation& simulation) {
-  if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT)) {
     simulation
       .view<addTargetAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
     simulation

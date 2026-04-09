@@ -23158,8 +23158,8 @@ class Pokedex {
    * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but if
    * it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
    */
-  GameMechanics constantMechanics;
-  TypeChart constantTypeChart;
+  GameMechanics mechanics;
+  TypeChart mechanicsTypeChart;
 
  private:
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
@@ -23207,10 +23207,10 @@ class Pokedex {
 #endif
 
  public:
-  Pokedex(GameMechanics mechanics_) : constantMechanics(mechanics_), constantTypeChart(mechanics_) {}
+  Pokedex(GameMechanics mechanics_) : mechanics(mechanics_), mechanicsTypeChart(mechanics_) {}
   ~Pokedex() { Pokedex::checkIfDetached(this); }
 
-  constexpr GameMechanics mechanics() const { return constantMechanics; }
+  constexpr bool isMechanics(GameMechanics checkedMechanics) const { return mechanics == checkedMechanics; }
 
   /**
    * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.
@@ -23313,7 +23313,7 @@ class Pokedex {
     return dexRegistry.all_of<T...>(movesMap.at(move));
   }
 
-  constexpr const TypeChart& typeChart() const { return constantTypeChart; }
+  constexpr const TypeChart& typeChart() const { return mechanicsTypeChart; }
 
   inline types::entity buildActionMove(dex::Move move, types::registry& registry) const;
 };
@@ -24005,7 +24005,7 @@ class Simulation : public internal::RegistryContainer {
   inline std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
 
-  BattleFormat constantBattleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
+  BattleFormat battleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
   const Pokedex* const pokedexPointer;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
  public:
@@ -24018,7 +24018,7 @@ class Simulation : public internal::RegistryContainer {
   inline ~Simulation();
 
   inline const Pokedex& pokedex() const;
-  constexpr BattleFormat battleFormat() const { return constantBattleFormat; }
+  constexpr bool isBattleFormat(BattleFormat checkedFormat) { return checkedFormat == battleFormat; }
 
   // Load information about any number of battle states into the simulation's registry.
   inline void createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList);
@@ -24735,7 +24735,7 @@ inline void Simulation::createInitialSide(
     const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];
     PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonInfo);
     bool battleStarted = battleInfo.turn > MechanicConstants::TurnCount::MIN;
-    bool inActiveSlot = (battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT ? 1U : 2U) > i;
+    bool inActiveSlot = (isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT) ? 1U : 2U) > i;
     bool isFainted =
       pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN;
     if (battleStarted && inActiveSlot && !isFainted) {
@@ -25148,7 +25148,7 @@ inline void run(Simulation& simulation);
 
 namespace pokesim {
 Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
-    : constantBattleFormat(battleFormat_), pokedexPointer(&pokedex_) {
+    : battleFormat(battleFormat_), pokedexPointer(&pokedex_) {
   Pokedex::attachSimulation(pokedexPointer, this);
 }
 
@@ -25156,7 +25156,7 @@ inline Simulation::~Simulation() {
   Pokedex::detachSimulation(pokedexPointer, this);
 }
 
-Simulation::Simulation(Simulation&& other) noexcept : Simulation(*other.pokedexPointer, other.constantBattleFormat) {
+Simulation::Simulation(Simulation&& other) noexcept : Simulation(*other.pokedexPointer, other.battleFormat) {
   registry = std::move(other.registry);
   analyzeEffectOptions = other.analyzeEffectOptions;
   calculateDamageOptions = other.calculateDamageOptions;
@@ -26471,7 +26471,7 @@ void setRandomChoice(
     }
   }
 
-  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
     simulation.view<setRandomChoice<POSSIBLE_EVENT_COUNT, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<SelectionTags...>>(
       chances);
   }
@@ -26485,7 +26485,7 @@ template <typename PercentChanceComponent, typename... SelectionTags>
 void setRandomBinaryChoice(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
 
-  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
     simulation
       .view<setRandomBinaryChoice<PercentChanceComponent, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<SelectionTags...>>(
         options);
@@ -26501,7 +26501,7 @@ template <typename PercentChanceComponent, typename... SelectionTags>
 void setReciprocalRandomBinaryChoice(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
 
-  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
     simulation.view<
       setReciprocalRandomBinaryChoice<PercentChanceComponent, BattleFormat::SINGLES_BATTLE_FORMAT>,
       Tags<SelectionTags...>>(options);
@@ -26515,7 +26515,7 @@ void setReciprocalRandomBinaryChoice(Simulation& simulation) {
 
 template <typename... SelectionTags>
 void setRandomEqualChoice(Simulation& simulation) {
-  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
     simulation.view<setRandomEqualChoice<BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<SelectionTags...>>();
   }
   else {
@@ -26527,7 +26527,7 @@ template <auto GetPossibleEventCount, typename... SelectionTags>
 void setRandomEventCounts(Simulation& simulation, bool forRequiredDamageRolls) {
   const auto& options = simulation.simulateTurnOptions;
 
-  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
     simulation
       .view<setRandomEventCounts<BattleFormat::SINGLES_BATTLE_FORMAT, GetPossibleEventCount>, Tags<SelectionTags...>>(
         options,
@@ -27011,7 +27011,7 @@ inline void createActionMoveForTargets(
 }
 
 inline void getMoveTargets(Simulation& simulation) {
-  if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT)) {
     simulation
       .view<addTargetAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
     simulation
@@ -27497,7 +27497,7 @@ void randomChanceEvent(
   Simulation& simulation, types::entityIndex cloneCount, types::callback applyChoices,
   void (*assignClonesToEvents)(types::registry&, const types::ClonedEntityMap&, const types::entityVector&),
   UpdateProbabilities updateProbabilities, const AssignArgs&... assignArgs) {
-  if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT)) {
     simulation.view<placeChanceFromStack<RandomStack, Random>>();
   }
 
@@ -27558,7 +27558,7 @@ void randomChanceEvent(
 
   registry.clear<Random>();
   clearRandomChanceResult(simulation);
-  if (simulation.battleFormat() == BattleFormat::DOUBLES_BATTLE_FORMAT && !registry.view<RandomStack>().empty()) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT) && !registry.view<RandomStack>().empty()) {
     randomChanceEvent<Random, RandomStack, AssignRandomEvents, UpdateProbabilities, AssignRandomEventsTags...>(
       simulation,
       cloneCount,
@@ -28579,21 +28579,17 @@ inline types::entity Pokedex::buildSpecies(dex::Species species, types::registry
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics()) {
-    case GameMechanics::SCARLET_VIOLET: {
-      switch (species) {
-        case Species::AMPHAROS:  return buildSpeciesSV<Ampharos>(registry);
-        case Species::GARDEVOIR: return buildSpeciesSV<Gardevoir>(registry);
-        case Species::EMPOLEON:  return buildSpeciesSV<Empoleon>(registry);
-        case Species::PANGORO:   return buildSpeciesSV<Pangoro>(registry);
-        case Species::RIBOMBEE:  return buildSpeciesSV<Ribombee>(registry);
-        case Species::DRAGAPULT: return buildSpeciesSV<Dragapult>(registry);
+  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+    switch (species) {
+      case Species::AMPHAROS:  return buildSpeciesSV<Ampharos>(registry);
+      case Species::GARDEVOIR: return buildSpeciesSV<Gardevoir>(registry);
+      case Species::EMPOLEON:  return buildSpeciesSV<Empoleon>(registry);
+      case Species::PANGORO:   return buildSpeciesSV<Pangoro>(registry);
+      case Species::RIBOMBEE:  return buildSpeciesSV<Ribombee>(registry);
+      case Species::DRAGAPULT: return buildSpeciesSV<Dragapult>(registry);
 
-        default: break;
-      }
-      break;
+      default: break;
     }
-    default: break;
   }
 
   POKESIM_REQUIRE_FAIL("Building a species that does not exist.");
@@ -28876,22 +28872,18 @@ inline types::entity Pokedex::buildMove(dex::Move move, types::registry& registr
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics()) {
-    case GameMechanics::SCARLET_VIOLET: {
-      switch (move) {
-        case Move::FURY_ATTACK:  return buildMoveSV<FuryAttack>(registry, forActiveMove);
-        case Move::THUNDERBOLT:  return buildMoveSV<Thunderbolt>(registry, forActiveMove);
-        case Move::WILL_O_WISP:  return buildMoveSV<WillOWisp>(registry, forActiveMove);
-        case Move::KNOCK_OFF:    return buildMoveSV<KnockOff>(registry, forActiveMove);
-        case Move::QUIVER_DANCE: return buildMoveSV<QuiverDance>(registry, forActiveMove);
-        case Move::MOONBLAST:    return buildMoveSV<Moonblast>(registry, forActiveMove);
-        case Move::SPLASH:       return buildMoveSV<Splash>(registry, forActiveMove);
+  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+    switch (move) {
+      case Move::FURY_ATTACK:  return buildMoveSV<FuryAttack>(registry, forActiveMove);
+      case Move::THUNDERBOLT:  return buildMoveSV<Thunderbolt>(registry, forActiveMove);
+      case Move::WILL_O_WISP:  return buildMoveSV<WillOWisp>(registry, forActiveMove);
+      case Move::KNOCK_OFF:    return buildMoveSV<KnockOff>(registry, forActiveMove);
+      case Move::QUIVER_DANCE: return buildMoveSV<QuiverDance>(registry, forActiveMove);
+      case Move::MOONBLAST:    return buildMoveSV<Moonblast>(registry, forActiveMove);
+      case Move::SPLASH:       return buildMoveSV<Splash>(registry, forActiveMove);
 
-        default: break;
-      }
-      break;
+      default: break;
     }
-    default: break;
   }
 
   POKESIM_REQUIRE_FAIL("Building a move that does not exist.");
@@ -28936,21 +28928,17 @@ inline types::entity Pokedex::buildItem(dex::Item item, types::registry& registr
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics()) {
-    case GameMechanics::SCARLET_VIOLET: {
-      switch (item) {
-        case Item::ASSAULT_VEST:  return buildItemSV<AssaultVest>(registry);
-        case Item::BRIGHT_POWDER: return buildItemSV<BrightPowder>(registry);
-        case Item::CHOICE_SCARF:  return buildItemSV<ChoiceScarf>(registry);
-        case Item::CHOICE_SPECS:  return buildItemSV<ChoiceSpecs>(registry);
-        case Item::FOCUS_SASH:    return buildItemSV<FocusSash>(registry);
-        case Item::LIFE_ORB:      return buildItemSV<LifeOrb>(registry);
+  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+    switch (item) {
+      case Item::ASSAULT_VEST:  return buildItemSV<AssaultVest>(registry);
+      case Item::BRIGHT_POWDER: return buildItemSV<BrightPowder>(registry);
+      case Item::CHOICE_SCARF:  return buildItemSV<ChoiceScarf>(registry);
+      case Item::CHOICE_SPECS:  return buildItemSV<ChoiceSpecs>(registry);
+      case Item::FOCUS_SASH:    return buildItemSV<FocusSash>(registry);
+      case Item::LIFE_ORB:      return buildItemSV<LifeOrb>(registry);
 
-        default: break;
-      }
-      break;
+      default: break;
     }
-    default: break;
   }
 
   POKESIM_REQUIRE_FAIL("Building an item that does not exist.");
@@ -29005,16 +28993,13 @@ inline types::entity Pokedex::buildAbility(dex::Ability ability, types::registry
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics()) {
-    case GameMechanics::SCARLET_VIOLET: {
-      switch (ability) {
-        case Ability::STATIC: return buildAbilitySV<Static>(registry);
+  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+    switch (ability) {
+      case Ability::PLUS:   return buildAbilitySV<Plus>(registry);
+      case Ability::STATIC: return buildAbilitySV<Static>(registry);
 
-        default: break;
-      }
-      break;
+      default: break;
     }
-    default: break;
   }
 
   POKESIM_REQUIRE_FAIL("Building an ability that does not exist.");
@@ -29399,7 +29384,7 @@ inline void staticOnDamagingHit(
 }  // namespace
 
 inline void Plus::onModifySpA(Simulation& simulation) {
-  if (simulation.battleFormat() == BattleFormat::SINGLES_BATTLE_FORMAT) {
+  if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
     return;
   }
   simulation.viewForSelectedPokemon<plusOnModifySpa, Tags<ability::tags::Plus>>();

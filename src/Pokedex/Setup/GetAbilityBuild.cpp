@@ -36,16 +36,13 @@ types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& regis
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  switch (mechanics()) {
-    case GameMechanics::SCARLET_VIOLET: {
-      switch (ability) {
-        case Ability::STATIC: return buildAbilitySV<Static>(registry);
+  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+    switch (ability) {
+      case Ability::PLUS:   return buildAbilitySV<Plus>(registry);
+      case Ability::STATIC: return buildAbilitySV<Static>(registry);
 
-        default: break;
-      }
-      break;
+      default: break;
     }
-    default: break;
   }
 
   POKESIM_REQUIRE_FAIL("Building an ability that does not exist.");
