@@ -45,4 +45,9 @@ void runStartFreeze(Simulation& simulation);
 void runTryTakeItemEvent(Simulation& simulation);  // TakeItem
 void runAfterUseItemEvent(Simulation& simulation);
 void runEndItemEvent(Simulation& simulation);
+
+void runEndAbilityEvent(Simulation& simulation);
+
+void runFaintEvent(Simulation& simulation);
+void runAfterFaintEvent(Simulation& simulation);
 }  // namespace pokesim

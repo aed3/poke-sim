@@ -25,6 +25,7 @@
 #include "EntityHolders/BattleTree.hpp"
 #include "EntityHolders/ChoiceLock.hpp"
 #include "EntityHolders/Current.hpp"
+#include "EntityHolders/FaintQueue.hpp"
 #include "EntityHolders/FoeSide.hpp"
 #include "EntityHolders/LastUsedMove.hpp"
 #include "EntityHolders/MoveSlots.hpp"
@@ -87,3 +88,4 @@
 #include "Tags/TargetTags.hpp"
 #include "Tags/TypeTags.hpp"
 #include "Turn.hpp"
+#include "Winner.hpp"

@@ -3,7 +3,6 @@
 #include <Utilities/MaxSizedVector.hpp>
 #include <entt/container/fwd.hpp>
 #include <entt/entity/fwd.hpp>
-#include <vector>
 
 namespace pokesim::types {
 template <typename T, typename... Other>

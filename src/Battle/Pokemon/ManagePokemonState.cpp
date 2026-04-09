@@ -4,7 +4,9 @@
 #include <Components/Boosts.hpp>
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Battle.hpp>
+#include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/FaintQueue.hpp>
 #include <Components/EntityHolders/LastUsedMove.hpp>
 #include <Components/Names/ItemNames.hpp>
 #include <Components/Names/StatNames.hpp>
@@ -215,6 +217,14 @@ void clearStatus(types::handle pokemonHandle) {
     status::tags::Toxic>();
 }
 
+void clearVolatiles(types::handle pokemonHandle) {
+  pokemonHandle.remove<AtkBoost, DefBoost, SpaBoost, SpdBoost, SpeBoost>();
+  pokemonHandle.remove<LastUsedMove>();
+
+  // TODO(aed3): Make auto-generated
+  pokemonHandle.remove<ChoiceLock>();
+}
+
 void deductPp(Pp& pp) {
   if (pp.val) {
     pp.val -= 1U;  // TODO(aed3): Make this into a mechanic constant
@@ -245,14 +255,20 @@ void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
   handle.emplace_or_replace<stat::EffectiveSpe>(spe.val);
 }
 
+void faint(types::handle pokemonHandle, Battle battle) {
+  types::registry& registry = *pokemonHandle.registry();
+  FaintQueue& faintQueue = registry.get_or_emplace<FaintQueue>(battle.val);
+  faintQueue.val.push_back(pokemonHandle.entity());
+}
+
 void applyDamage(types::handle pokemonHandle, types::damage damage) {
   stat::CurrentHp& hp = pokemonHandle.get<stat::CurrentHp>();
   if (damage < hp.val) {
     hp.val -= damage;
   }
   else {
-    hp.val = 0U;
-    // Faint
+    hp.val = MechanicConstants::PokemonCurrentHpStat::MIN;
+    faint(pokemonHandle, pokemonHandle.get<Battle>());
   }
 }
 

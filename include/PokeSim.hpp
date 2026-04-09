@@ -111,6 +111,7 @@
  * src/Components/EVsIVs.hpp
  * src/Components/EntityHolders/ActionQueue.hpp
  * src/Components/EntityHolders/ChoiceLock.hpp
+ * src/Components/EntityHolders/FaintQueue.hpp
  * src/Components/EntityHolders/FoeSide.hpp
  * src/Components/EntityHolders/LastUsedMove.hpp
  * src/Components/EntityHolders/MoveSlots.hpp
@@ -171,6 +172,7 @@
  * src/Components/Tags/TargetTags.hpp
  * src/Components/Tags/TypeTags.hpp
  * src/Components/Turn.hpp
+ * src/Components/Winner.hpp
  * src/Types/Enums/BattleFormat.hpp
  * src/Types/Enums/GameMechanics.hpp
  * src/Types/Enums/MoveCategory.hpp
@@ -232,6 +234,7 @@
  * src/SimulateTurn/RandomChance.hpp
  * src/Simulation/MoveHitSteps.hpp
  * src/Simulation/MoveHitSteps.cpp
+ * src/Battle/Side/ManageSideState.hpp
  * src/SimulateTurn/ManageActionQueue.hpp
  * src/SimulateTurn/SimulateTurnDebugChecks.hpp
  * src/SimulateTurn/SimulateTurn.cpp
@@ -268,6 +271,7 @@
  * src/Battle/Pokemon/PokemonDataChecks.hpp
  * src/CalcDamage/CalcDamageDebugChecks.hpp
  * src/CalcDamage/CalcDamage.cpp
+ * src/Battle/Side/ManageSideState.cpp
  * src/Battle/Setup/SideStateSetup.cpp
  * src/Battle/Setup/PokemonStateSetup.cpp
  * src/Battle/Setup/MoveStateSetup.cpp
@@ -16102,8 +16106,6 @@ class maxSizedVector : public std::vector<T> {
 
 //////////////////////// START OF src/Types/Entity.hpp /////////////////////////
 
-#include <vector>
-
 namespace pokesim::types {
 template <typename T, typename... Other>
 using view = entt::view<entt::get_t<const T, const Other...>>;
@@ -17994,6 +17996,8 @@ using sideSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::Act
 template <typename T>
 using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::Targets::MAX>;
 
+using actionQueueIndex = pokesim::internal::unsignedIntType<MechanicConstants::ActionQueueLength::MAX>;
+
 using callback = void (*)(Simulation&);
 using optionalCallback = std::optional<callback>;
 }  // namespace types
@@ -19107,8 +19111,6 @@ struct Ivs {
 
 //////////// START OF src/Components/EntityHolders/ActionQueue.hpp /////////////
 
-#include <vector>
-
 namespace pokesim {
 // Contains the list of action entities queued up to be simulated for a battle's current turn.
 struct ActionQueue {
@@ -19127,6 +19129,17 @@ struct ChoiceLock {
 }  // namespace pokesim
 
 ////////////// END OF src/Components/EntityHolders/ChoiceLock.hpp //////////////
+
+///////////// START OF src/Components/EntityHolders/FaintQueue.hpp /////////////
+
+namespace pokesim {
+// Contains the list of pokemon that will faint at the end of the current action.
+struct FaintQueue {
+  internal::maxSizedVector<types::entity, MechanicConstants::ActivePokemon::MAX> val{};
+};
+}  // namespace pokesim
+
+////////////// END OF src/Components/EntityHolders/FaintQueue.hpp //////////////
 
 ////////////// START OF src/Components/EntityHolders/FoeSide.hpp ///////////////
 
@@ -20125,7 +20138,7 @@ struct Timid {};
 namespace pokesim::tags {
 struct Pokemon {};
 
-// Indicates the Pokemon is currently in a battle
+// Indicates the Pokemon is currently in a battle.
 struct ActivePokemon {};
 
 struct AtkStatUpdateRequired {};
@@ -20134,6 +20147,9 @@ struct SpdStatUpdateRequired {};
 struct SpaStatUpdateRequired {};
 struct SpeStatUpdateRequired {};
 
+// Indicates the Pokemon has reached the front of the fainting queue and is running its various "on faint" and "after
+// faint" events.
+struct Fainting {};
 struct Fainted {};
 
 struct CanUseItem {};
@@ -20144,9 +20160,6 @@ struct CanSetStatus {};
 ////////////////// END OF src/Components/Tags/PokemonTags.hpp //////////////////
 
 ////////////////// START OF src/Components/Tags/Selection.hpp //////////////////
-
-#include <cstdint>
-#include <vector>
 
 namespace pokesim::tags {
 struct SelectedForViewBattle {};
@@ -20250,6 +20263,16 @@ struct Turn {
 }  // namespace pokesim
 
 //////////////////////// END OF src/Components/Turn.hpp ////////////////////////
+
+////////////////////// START OF src/Components/Winner.hpp //////////////////////
+
+namespace pokesim {
+struct Winner {
+  PlayerSideId val = PlayerSideId::NONE;
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Components/Winner.hpp ///////////////////////
 
 ////////////////// START OF src/Types/Enums/BattleFormat.hpp ///////////////////
 
@@ -20486,6 +20509,7 @@ struct CurrentEffectTarget;
 struct CurrentEffectSource;
 struct CurrentEffectsAsTarget;
 struct CurrentEffectsAsSource;
+struct FaintQueue;
 struct FoeSide;
 struct LastUsedMove;
 struct MoveSlots;
@@ -20538,6 +20562,7 @@ struct SpeedTieIndexes;
 struct SpeciesTypes;
 struct SpeedSort;
 struct Turn;
+struct Winner;
 namespace analyze_effect {
 struct EffectTarget;
 struct EffectMove;
@@ -20742,6 +20767,9 @@ inline void check(const CurrentEffectsAsTarget&, const types::registry&);
 
 template <>
 inline void check(const CurrentEffectsAsSource&, const types::registry&);
+
+template <>
+inline void check(const FaintQueue&, const types::registry&);
 
 template <>
 inline void check(const FoeSide&, const types::registry&);
@@ -20966,6 +20994,9 @@ inline void check(const stat::EffectiveSpe&);
 
 template <>
 inline void check(const Turn&);
+
+template <>
+inline void check(const Winner&);
 
 template <>
 inline void check(const DamageRollKind&);
@@ -21640,6 +21671,13 @@ inline void check(const CurrentEffectsAsSource& effects, const types::registry& 
 }
 
 template <>
+inline void check(const FaintQueue& faintQueue, const types::registry& registry) {
+  for (types::entity pokemon : faintQueue.val) {
+    checkPokemon(pokemon, registry);
+  }
+}
+
+template <>
 inline void check(const FoeSide& foeSide, const types::registry& registry) {
   checkSide(foeSide.val, registry);
 }
@@ -22082,6 +22120,13 @@ inline void check(const stat::EffectiveSpe& spe) {
 template <>
 inline void check(const Turn& turn) {
   checkBounds<MechanicConstants::TurnCount>(turn.val);
+}
+
+template <>
+inline void check(const Winner& winner) {
+  // No winner (aka a tie) is valid.
+  POKESIM_REQUIRE_NM(
+    winner.val == PlayerSideId::P1 || winner.val == PlayerSideId::P2 || winner.val == PlayerSideId::NONE);
 }
 
 template <>
@@ -25016,6 +25061,7 @@ inline void run(Simulation& simulation);
 
 namespace pokesim {
 class Simulation;
+struct Battle;
 struct CurrentActionSource;
 struct CurrentActionTarget;
 struct CurrentActionMoveSlot;
@@ -25043,6 +25089,8 @@ inline void setStatus(Simulation& simulation);
 inline void trySetStatus(Simulation& simulation);
 inline void clearStatus(types::handle pokemonHandle);
 
+inline void clearVolatiles(types::handle pokemonHandle);
+
 inline void deductPp(Pp& pp);
 inline void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move);
 inline void resetEffectiveAtk(types::handle handle, stat::Atk atk);
@@ -25051,6 +25099,7 @@ inline void resetEffectiveSpa(types::handle handle, stat::Spa spa);
 inline void resetEffectiveSpd(types::handle handle, stat::Spd spd);
 inline void resetEffectiveSpe(types::handle handle, stat::Spe spe);
 
+inline void faint(types::handle pokemonHandle, Battle battle);
 inline void applyDamage(types::handle pokemonHandle, types::damage damage);
 inline void applyStatBoost(types::stat& stat, types::boost boost);
 
@@ -25953,6 +26002,11 @@ inline void runStartFreeze(Simulation& simulation);
 inline void runTryTakeItemEvent(Simulation& simulation);  // TakeItem
 inline void runAfterUseItemEvent(Simulation& simulation);
 inline void runEndItemEvent(Simulation& simulation);
+
+inline void runEndAbilityEvent(Simulation& simulation);
+
+inline void runFaintEvent(Simulation& simulation);
+inline void runAfterFaintEvent(Simulation& simulation);
 }  // namespace pokesim
 
 ////////////////////// END OF src/Simulation/RunEvent.hpp //////////////////////
@@ -26210,6 +26264,10 @@ inline void runEndItemEvent(Simulation& simulation) {
   dex::events::ChoiceScarf::onEnd(simulation);
   dex::events::ChoiceSpecs::onEnd(simulation);
 }
+
+inline void runEndAbilityEvent(Simulation&) {}
+inline void runFaintEvent(Simulation&) {}
+inline void runAfterFaintEvent(Simulation&) {}
 }  // namespace pokesim
 
 ////////////////////// END OF src/Simulation/RunEvent.cpp //////////////////////
@@ -26670,6 +26728,43 @@ inline void runMoveEffects(Simulation& simulation) {
   simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
 }
 
+template <typename TargetEntityHolder>
+void removeFaintedSecondaryEffectTarget(
+  types::handle handle, TargetEntityHolder target, BaseEffectChance baseEffectChance, Battle battle,
+  const simulate_turn::Options& options) {
+  types::registry& registry = *handle.registry();
+  internal::PercentChanceLimitResult limitReached =
+    internal::checkPercentChanceLimits(baseEffectChance.val, registry.get<Probability>(battle.val).val, options);
+
+  if (limitReached == internal::PercentChanceLimitResult::REACHED_PASS_LIMIT) {
+    return;
+  }
+  types::stat hp = registry.get<stat::CurrentHp>(target.val).val;
+  if (hp == MechanicConstants::PokemonCurrentHpStat::MIN) {
+    handle.remove<move::effect::tags::Secondary>();
+  }
+}
+
+// Skipping secondary effects entirely for a fainted target is not something Showdown does. This is done here to prevent
+// more random chance splits than needed and should not cause outcome deviations from Showdown. If, for example, a move
+// exists that has a random chance to add a side or field effect regardless of the target's HP, then this function will
+// need to be reworked.
+inline void removeFaintedSecondaryEffectTargets(Simulation& simulation) {
+  internal::SelectForCurrentActionMoveView<move::effect::tags::Secondary> selectedMoves{simulation};
+  if (selectedMoves.hasNoneSelected()) {
+    return;
+  }
+
+  simulation.viewForSelectedMoves<
+    removeFaintedSecondaryEffectTarget<CurrentActionSource>,
+    Tags<move::effect::tags::MoveSource>>(simulation.simulateTurnOptions);
+  simulation.viewForSelectedMoves<
+    removeFaintedSecondaryEffectTarget<CurrentActionTarget>,
+    Tags<move::effect::tags::MoveTarget>>(simulation.simulateTurnOptions);
+}
+
+// TODO(aed3): When adding damage source, change this to accept the move's handle and CurrentActionSource to pass to
+// applyDamage.
 inline void applyDamageToTarget(types::registry& registry, Damage damage, CurrentActionTarget target) {
   pokesim::applyDamage({registry, target.val}, damage.val);
 }
@@ -26706,6 +26801,7 @@ inline void runPrimaryMoveEffects(Simulation& simulation) {
 }
 
 inline void runSecondaryMoveEffects(Simulation& simulation) {
+  removeFaintedSecondaryEffectTargets(simulation);
   runModifySecondariesEvent(simulation);
 
   runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::SelectedForViewMove>(
@@ -26768,6 +26864,17 @@ inline void runMoveHitChecks(Simulation& simulation) {
 
 //////////////////// END OF src/Simulation/MoveHitSteps.cpp ////////////////////
 
+///////////////// START OF src/Battle/Side/ManageSideState.hpp /////////////////
+
+namespace pokesim {
+class Simulation;
+
+inline types::teamPositionIndex sidePokemonLeft(const types::registry& registry, types::entity sideEntity);
+inline types::teamPositionIndex foeSidePokemonLeft(const types::registry& registry, types::entity sideEntity);
+}  // namespace pokesim
+
+////////////////// END OF src/Battle/Side/ManageSideState.hpp //////////////////
+
 /////////////// START OF src/SimulateTurn/ManageActionQueue.hpp ////////////////
 
 // Systems
@@ -26782,6 +26889,7 @@ inline void speedSort(types::handle handle, ActionQueue& actionQueue);
 inline void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue);
 inline void addResidualAction(types::registry& registry, ActionQueue& actionQueue);
 inline void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue);
+inline void clearActionQueue(types::handle battleHandle, ActionQueue& actionQueue);
 }  // namespace simulate_turn
 }  // namespace pokesim
 
@@ -26951,13 +27059,71 @@ inline void runBeforeTurnAction(Simulation&) {
   // Barely used, will find different way of handling it
 }
 
+inline void setFainting(types::registry& registry, FaintQueue& faintQueue) {
+  types::entity pokemon = faintQueue.val.front();
+  faintQueue.val.erase(faintQueue.val.begin());
+  registry.emplace<pokesim::tags::Fainting>(pokemon);
+}
+
+inline void clearFaintQueue(types::handle battleHandle, const FaintQueue& faintQueue) {
+  if (faintQueue.val.empty()) {
+    battleHandle.remove<FaintQueue>();
+  }
+}
+
+inline void checkWin(types::handle battleHandle, const Sides& sides) {
+  types::registry& registry = *battleHandle.registry();
+
+  for (types::entity sideEntity : sides.val) {
+    types::teamPositionIndex pokemonLeft = foeSidePokemonLeft(registry, sideEntity);
+    if (!pokemonLeft) {
+      battleHandle.emplace<Winner>(registry.get<PlayerSide>(sideEntity).val);
+      clearActionQueue(battleHandle, battleHandle.get<ActionQueue>());
+      return;
+    }
+  }
+}
+
+inline void faintPokemon(Simulation& simulation) {
+  using LoopLimits = MechanicConstants::ActivePokemon;
+  types::activePokemonIndex iterations = LoopLimits::MIN;
+  while (!simulation.registry.view<FaintQueue>().empty()) {
+    POKESIM_REQUIRE(
+      iterations < LoopLimits::MAX,
+      "More Pokemon were queued to faint in at least one battle than possible.");
+
+    simulation.viewForSelectedBattles<setFainting>();
+
+    pokesim::internal::SelectForPokemonView<pokesim::tags::Fainting> selectedPokemon{simulation};
+    POKESIM_REQUIRE(
+      !selectedPokemon.hasNoneSelected(),
+      "This loop should only be run if setFainting had Pokemon to set as fainting.");
+
+    runFaintEvent(simulation);
+    runEndAbilityEvent(simulation);
+    runEndItemEvent(simulation);
+    simulation.viewForSelectedPokemon<clearVolatiles>();
+
+    simulation.addToEntities<pokesim::tags::Fainted, pokesim::tags::Fainting>();
+    simulation.removeFromEntities<pokesim::tags::ActivePokemon, pokesim::tags::Fainting>();
+    simulation.removeFromEntities<pokesim::tags::Fainting>();
+
+    simulation.viewForSelectedBattles<clearFaintQueue>();
+    iterations++;
+  }
+
+  simulation.viewForSelectedBattles<checkWin, Tags<>, entt::exclude_t<Winner>>();
+
+  runAfterFaintEvent(simulation);
+}
+
 inline void runCurrentAction(Simulation& simulation) {
   runBeforeTurnAction(simulation);
   runMoveAction(simulation);
   runResidualAction(simulation);
 
   clearCurrentAction(simulation);
-  // faint pokemon
+  faintPokemon(simulation);
   // Update
   // Switch requests
 
@@ -27024,9 +27190,16 @@ inline void simulateTurn(Simulation& simulation) {
   simulation.addToEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SelectedForViewBattle>();
 
   simulation.viewForSelectedBattles<setCurrentAction>();
+  using ActionsLimit = MechanicConstants::ActionQueueLength;
+  types::actionQueueIndex actionsTaken = ActionsLimit::MIN;
   while (!simulation.registry.view<action::tags::Current>().empty()) {
+    POKESIM_REQUIRE(
+      actionsTaken < ActionsLimit::MAX,
+      "More actions in a turn were queued to be taken than in at least one battle than are possible.");
+
     runCurrentAction(simulation);
-    simulation.viewForSelectedBattles<setCurrentAction>();
+    simulation.viewForSelectedBattles<setCurrentAction, Tags<>, entt::exclude_t<Winner>>();
+    actionsTaken++;
   }
 
   nextTurn(simulation);
@@ -27781,11 +27954,17 @@ inline void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueu
 
   actionQueue.val.erase(actionQueue.val.begin());
 
-  registry.clear<NextAction>();
+  battleHandle.remove<NextAction>();
   battleHandle.emplace<CurrentAction>(newCurrentAction);
   if (!actionQueue.val.empty()) {
     battleHandle.emplace<NextAction>(actionQueue.val[0]);
   }
+}
+
+inline void clearActionQueue(types::handle battleHandle, ActionQueue& actionQueue) {
+  battleHandle.remove<NextAction>();
+  battleHandle.registry()->destroy(actionQueue.val.begin(), actionQueue.val.end());
+  actionQueue.val.clear();
 }
 }  // namespace pokesim::simulate_turn
 
@@ -30129,6 +30308,27 @@ inline void run(Simulation& simulation) {
 
 ///////////////////// END OF src/CalcDamage/CalcDamage.cpp /////////////////////
 
+///////////////// START OF src/Battle/Side/ManageSideState.cpp /////////////////
+
+namespace pokesim {
+inline types::teamPositionIndex sidePokemonLeft(const types::registry& registry, types::entity sideEntity) {
+  const Team& team = registry.get<Team>(sideEntity);
+  types::teamPositionIndex pokemonLeft = 0U;
+  for (types::entity pokemon : team.val) {
+    if (!registry.all_of<tags::Fainted>(pokemon)) {
+      pokemonLeft++;
+    }
+  }
+  return pokemonLeft;
+}
+
+inline types::teamPositionIndex foeSidePokemonLeft(const types::registry& registry, types::entity sideEntity) {
+  return sidePokemonLeft(registry, registry.get<FoeSide>(sideEntity).val);
+}
+}  // namespace pokesim
+
+////////////////// END OF src/Battle/Side/ManageSideState.cpp //////////////////
+
 ///////////////// START OF src/Battle/Setup/SideStateSetup.cpp /////////////////
 
 #include <cstddef>
@@ -30896,6 +31096,14 @@ inline void clearStatus(types::handle pokemonHandle) {
     status::tags::Toxic>();
 }
 
+inline void clearVolatiles(types::handle pokemonHandle) {
+  pokemonHandle.remove<AtkBoost, DefBoost, SpaBoost, SpdBoost, SpeBoost>();
+  pokemonHandle.remove<LastUsedMove>();
+
+  // TODO(aed3): Make auto-generated
+  pokemonHandle.remove<ChoiceLock>();
+}
+
 inline void deductPp(Pp& pp) {
   if (pp.val) {
     pp.val -= 1U;  // TODO(aed3): Make this into a mechanic constant
@@ -30926,14 +31134,20 @@ inline void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
   handle.emplace_or_replace<stat::EffectiveSpe>(spe.val);
 }
 
+inline void faint(types::handle pokemonHandle, Battle battle) {
+  types::registry& registry = *pokemonHandle.registry();
+  FaintQueue& faintQueue = registry.get_or_emplace<FaintQueue>(battle.val);
+  faintQueue.val.push_back(pokemonHandle.entity());
+}
+
 inline void applyDamage(types::handle pokemonHandle, types::damage damage) {
   stat::CurrentHp& hp = pokemonHandle.get<stat::CurrentHp>();
   if (damage < hp.val) {
     hp.val -= damage;
   }
   else {
-    hp.val = 0U;
-    // Faint
+    hp.val = MechanicConstants::PokemonCurrentHpStat::MIN;
+    faint(pokemonHandle, pokemonHandle.get<Battle>());
   }
 }
 
@@ -31150,7 +31364,6 @@ inline void clearCurrentAction(Simulation& simulation) {
 #include <cstdint>
 
 namespace pokesim {
-
 inline types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
   POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   types::entity sideEntity = sides.val[((types::teamPositionIndex)targetSlot - 1U) % 2U];
@@ -31158,6 +31371,7 @@ inline types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
 }
 
 inline types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot) {
+  POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   types::teamPositionIndex index = ((types::teamPositionIndex)targetSlot - 1U) / 2U;
 
   const Team& team = registry.get<Team>(sideEntity);
@@ -31548,6 +31762,7 @@ inline types::ClonedEntityMap clone(types::registry& registry, std::optional<typ
   remapComponentEntities<CurrentEffectsAsTarget>(registry, entityMap);
   remapComponentEntities<CurrentEffectSource>(registry, entityMap);
   remapComponentEntities<CurrentEffectTarget>(registry, entityMap);
+  remapComponentEntities<FaintQueue>(registry, entityMap);
   remapComponentEntities<FoeSide>(registry, entityMap);
   remapComponentEntities<LastUsedMove>(registry, entityMap);
   remapComponentEntities<MoveSlots>(registry, entityMap);

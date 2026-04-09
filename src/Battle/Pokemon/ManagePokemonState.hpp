@@ -7,6 +7,7 @@
 
 namespace pokesim {
 class Simulation;
+struct Battle;
 struct CurrentActionSource;
 struct CurrentActionTarget;
 struct CurrentActionMoveSlot;
@@ -34,6 +35,8 @@ void setStatus(Simulation& simulation);
 void trySetStatus(Simulation& simulation);
 void clearStatus(types::handle pokemonHandle);
 
+void clearVolatiles(types::handle pokemonHandle);
+
 void deductPp(Pp& pp);
 void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move);
 void resetEffectiveAtk(types::handle handle, stat::Atk atk);
@@ -42,6 +45,7 @@ void resetEffectiveSpa(types::handle handle, stat::Spa spa);
 void resetEffectiveSpd(types::handle handle, stat::Spd spd);
 void resetEffectiveSpe(types::handle handle, stat::Spe spe);
 
+void faint(types::handle pokemonHandle, Battle battle);
 void applyDamage(types::handle pokemonHandle, types::damage damage);
 void applyStatBoost(types::stat& stat, types::boost boost);
 

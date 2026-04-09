@@ -45,6 +45,7 @@ struct CurrentEffectTarget;
 struct CurrentEffectSource;
 struct CurrentEffectsAsTarget;
 struct CurrentEffectsAsSource;
+struct FaintQueue;
 struct FoeSide;
 struct LastUsedMove;
 struct MoveSlots;
@@ -97,6 +98,7 @@ struct SpeedTieIndexes;
 struct SpeciesTypes;
 struct SpeedSort;
 struct Turn;
+struct Winner;
 namespace analyze_effect {
 struct EffectTarget;
 struct EffectMove;
@@ -301,6 +303,9 @@ void check(const CurrentEffectsAsTarget&, const types::registry&);
 
 template <>
 void check(const CurrentEffectsAsSource&, const types::registry&);
+
+template <>
+void check(const FaintQueue&, const types::registry&);
 
 template <>
 void check(const FoeSide&, const types::registry&);
@@ -525,6 +530,9 @@ void check(const stat::EffectiveSpe&);
 
 template <>
 void check(const Turn&);
+
+template <>
+void check(const Winner&);
 
 template <>
 void check(const DamageRollKind&);

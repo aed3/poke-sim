@@ -667,6 +667,13 @@ void check(const CurrentEffectsAsSource& effects, const types::registry& registr
 }
 
 template <>
+void check(const FaintQueue& faintQueue, const types::registry& registry) {
+  for (types::entity pokemon : faintQueue.val) {
+    checkPokemon(pokemon, registry);
+  }
+}
+
+template <>
 void check(const FoeSide& foeSide, const types::registry& registry) {
   checkSide(foeSide.val, registry);
 }
@@ -1109,6 +1116,13 @@ void check(const stat::EffectiveSpe& spe) {
 template <>
 void check(const Turn& turn) {
   checkBounds<MechanicConstants::TurnCount>(turn.val);
+}
+
+template <>
+void check(const Winner& winner) {
+  // No winner (aka a tie) is valid.
+  POKESIM_REQUIRE_NM(
+    winner.val == PlayerSideId::P1 || winner.val == PlayerSideId::P2 || winner.val == PlayerSideId::NONE);
 }
 
 template <>

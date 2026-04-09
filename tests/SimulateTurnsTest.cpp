@@ -214,6 +214,101 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
   }
 }
 
+TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
+  Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
+  const types::registry& registry = simulation.registry;
+
+  Simulation::BattleCreationInfo battleCreationInfo;
+  battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON, true)}};
+  battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::AMPHAROS)}};
+  battleCreationInfo.p2.team[0].item = dex::Item::NO_ITEM;
+  battleCreationInfo.turn = 1U;
+  loadPokedexForBattleInfo(battleCreationInfo, pokedex);
+
+  battleCreationInfo.runWithSimulateTurn = true;
+  SideDecision p1Decision{PlayerSideId::P1};
+  SideDecision p2Decision{PlayerSideId::P2};
+  SlotDecision p1SlotDecision{Slot::P1A, Slot::P1A};
+  SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
+  p1SlotDecision.moveChoice = dex::Move::SPLASH;
+  p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
+  p2SlotDecision.moveChoice = dex::Move::THUNDERBOLT;
+  p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
+
+  battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
+  simulation.createInitialStates({battleCreationInfo});
+  auto& options = simulation.simulateTurnOptions;
+
+  options.damageRollsConsidered = {
+    DamageRollKind::MAX_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE,
+    DamageRollKind::MAX_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE,
+  };
+  options.applyChangesToInputBattle = true;
+  options.makeBranchesOnRandomEvents = true;
+
+  types::entityVector specificallyCheckEntities;
+  for (types::entity battle : registry.view<tags::Battle>()) {
+    specificallyCheckEntities.push_back(battle);
+  }
+  for (types::entity pokemon : registry.view<tags::Pokemon>()) {
+    specificallyCheckEntities.push_back(pokemon);
+  }
+  for (types::entity side : registry.view<tags::Side>()) {
+    specificallyCheckEntities.push_back(side);
+  }
+  for (types::entity move : registry.view<MoveName>()) {
+    specificallyCheckEntities.push_back(move);
+  }
+
+  updateAllStats(simulation);
+
+  TestChecks checks{simulation, specificallyCheckEntities};
+  auto result = simulation.simulateTurn();
+  checks.checkRemainingOutputs();
+
+  REQUIRE(result.turnOutcomeBattlesResults().size() == 1U);
+  const auto& turnOutcomeBattles = std::get<1>(*result.turnOutcomeBattlesResults().each().begin()).val;
+  REQUIRE(turnOutcomeBattles.size() == 1U);
+
+  checks.checkViewForChanges<
+    tags::Battle,
+    Turn,
+    simulate_turn::TurnOutcomeBattles,
+    simulate_turn::tags::SpeedSortNeeded,
+    ParentBattle,
+    Winner,
+    RootBattle>();
+
+  checks.checkViewForChanges<tags::Side, SideDecision>();
+
+  types::entity battle = turnOutcomeBattles[0];
+  const auto& [turn, rootBattle, sides, winner] = registry.get<Turn, RootBattle, Sides, Winner>(battle);
+
+  types::entity p1Side = sides.p1();
+  types::entity p2Side = sides.p2();
+  types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
+  types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
+  types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[0];
+  types::entity p2Move = registry.get<MoveSlots>(p2Pokemon).val[0];
+
+  checks.checkEntityForChanges<stat::CurrentHp, tags::Fainted, tags::ActivePokemon>(p1Pokemon);
+  checks.checkEntityForChanges<LastUsedMove>(p2Pokemon);
+
+  auto p2PokemonLastUsedMove = registry.get<LastUsedMove>(p2Pokemon);
+  REQUIRE(p2PokemonLastUsedMove.val == p2Move);
+
+  auto p1PokemonHp = registry.get<stat::CurrentHp>(p1Pokemon);
+  REQUIRE(p1PokemonHp.val == MechanicConstants::PokemonCurrentHpStat::MIN);
+  REQUIRE(registry.all_of<tags::Fainted>(p1Pokemon));
+  REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(p1Pokemon));
+
+  checks.checkMovePpUsage(p1Move);
+  checks.checkMovePpUsage(p2Move);
+
+  REQUIRE(winner.val == PlayerSideId::P2);
+}
+
 constexpr std::array<DamageRollKind, 3U> branchingDamageRollOptions = {
   DamageRollKind::AVERAGE_DAMAGE,
   DamageRollKind::AVERAGE_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE,

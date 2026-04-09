@@ -35,6 +35,8 @@ using sideSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::Act
 template <typename T>
 using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::Targets::MAX>;
 
+using actionQueueIndex = pokesim::internal::unsignedIntType<MechanicConstants::ActionQueueLength::MAX>;
+
 using callback = void (*)(Simulation&);
 using optionalCallback = std::optional<callback>;
 }  // namespace types

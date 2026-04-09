@@ -10,8 +10,10 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/HitCount.hpp>
+#include <Components/Priority.hpp>
 #include <Components/RandomEventOutputs.hpp>
 #include <Components/SimulateTurn/MoveHitStepTags.hpp>
+#include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Config/Require.hpp>
@@ -137,6 +139,43 @@ void runMoveEffects(Simulation& simulation) {
   simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
 }
 
+template <typename TargetEntityHolder>
+void removeFaintedSecondaryEffectTarget(
+  types::handle handle, TargetEntityHolder target, BaseEffectChance baseEffectChance, Battle battle,
+  const simulate_turn::Options& options) {
+  types::registry& registry = *handle.registry();
+  internal::PercentChanceLimitResult limitReached =
+    internal::checkPercentChanceLimits(baseEffectChance.val, registry.get<Probability>(battle.val).val, options);
+
+  if (limitReached == internal::PercentChanceLimitResult::REACHED_PASS_LIMIT) {
+    return;
+  }
+  types::stat hp = registry.get<stat::CurrentHp>(target.val).val;
+  if (hp == MechanicConstants::PokemonCurrentHpStat::MIN) {
+    handle.remove<move::effect::tags::Secondary>();
+  }
+}
+
+// Skipping secondary effects entirely for a fainted target is not something Showdown does. This is done here to prevent
+// more random chance splits than needed and should not cause outcome deviations from Showdown. If, for example, a move
+// exists that has a random chance to add a side or field effect regardless of the target's HP, then this function will
+// need to be reworked.
+void removeFaintedSecondaryEffectTargets(Simulation& simulation) {
+  internal::SelectForCurrentActionMoveView<move::effect::tags::Secondary> selectedMoves{simulation};
+  if (selectedMoves.hasNoneSelected()) {
+    return;
+  }
+
+  simulation.viewForSelectedMoves<
+    removeFaintedSecondaryEffectTarget<CurrentActionSource>,
+    Tags<move::effect::tags::MoveSource>>(simulation.simulateTurnOptions);
+  simulation.viewForSelectedMoves<
+    removeFaintedSecondaryEffectTarget<CurrentActionTarget>,
+    Tags<move::effect::tags::MoveTarget>>(simulation.simulateTurnOptions);
+}
+
+// TODO(aed3): When adding damage source, change this to accept the move's handle and CurrentActionSource to pass to
+// applyDamage.
 void applyDamageToTarget(types::registry& registry, Damage damage, CurrentActionTarget target) {
   pokesim::applyDamage({registry, target.val}, damage.val);
 }
@@ -173,6 +212,7 @@ void runPrimaryMoveEffects(Simulation& simulation) {
 }
 
 void runSecondaryMoveEffects(Simulation& simulation) {
+  removeFaintedSecondaryEffectTargets(simulation);
   runModifySecondariesEvent(simulation);
 
   runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::SelectedForViewMove>(

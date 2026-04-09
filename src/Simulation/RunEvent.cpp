@@ -219,4 +219,8 @@ void runEndItemEvent(Simulation& simulation) {
   dex::events::ChoiceScarf::onEnd(simulation);
   dex::events::ChoiceSpecs::onEnd(simulation);
 }
+
+void runEndAbilityEvent(Simulation&) {}
+void runFaintEvent(Simulation&) {}
+void runAfterFaintEvent(Simulation&) {}
 }  // namespace pokesim
