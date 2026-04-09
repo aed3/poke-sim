@@ -1119,6 +1119,13 @@ void check(const Turn& turn) {
 }
 
 template <>
+void check(const Winner& winner) {
+  // No winner (aka a tie) is valid
+  POKESIM_REQUIRE_NM(
+    winner.val == PlayerSideId::P1 || winner.val == PlayerSideId::P2 || winner.val == PlayerSideId::NONE);
+}
+
+template <>
 void check(const DamageRollKind& damageRollKind) {
   if (listContains(VALID_DAMAGE_ROLL_KINDS, damageRollKind)) {
     return;

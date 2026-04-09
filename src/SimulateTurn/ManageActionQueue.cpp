@@ -229,10 +229,16 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue) {
 
   actionQueue.val.erase(actionQueue.val.begin());
 
-  registry.clear<NextAction>();
+  battleHandle.remove<NextAction>();
   battleHandle.emplace<CurrentAction>(newCurrentAction);
   if (!actionQueue.val.empty()) {
     battleHandle.emplace<NextAction>(actionQueue.val[0]);
   }
+}
+
+void clearActionQueue(types::handle battleHandle, ActionQueue& actionQueue) {
+  battleHandle.remove<NextAction>();
+  battleHandle.registry()->destroy(actionQueue.val.begin(), actionQueue.val.end());
+  actionQueue.val.clear();
 }
 }  // namespace pokesim::simulate_turn

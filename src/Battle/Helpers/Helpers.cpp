@@ -21,7 +21,6 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
-
 types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
   POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   types::entity sideEntity = sides.val[((types::teamPositionIndex)targetSlot - 1U) % 2U];
@@ -29,6 +28,7 @@ types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
 }
 
 types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot) {
+  POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   types::teamPositionIndex index = ((types::teamPositionIndex)targetSlot - 1U) / 2U;
 
   const Team& team = registry.get<Team>(sideEntity);

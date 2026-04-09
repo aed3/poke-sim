@@ -98,6 +98,7 @@ struct SpeedTieIndexes;
 struct SpeciesTypes;
 struct SpeedSort;
 struct Turn;
+struct Winner;
 namespace analyze_effect {
 struct EffectTarget;
 struct EffectMove;
@@ -529,6 +530,9 @@ void check(const stat::EffectiveSpe&);
 
 template <>
 void check(const Turn&);
+
+template <>
+void check(const Winner&);
 
 template <>
 void check(const DamageRollKind&);

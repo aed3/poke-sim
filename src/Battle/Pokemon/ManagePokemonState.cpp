@@ -4,6 +4,7 @@
 #include <Components/Boosts.hpp>
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Battle.hpp>
+#include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/FaintQueue.hpp>
 #include <Components/EntityHolders/LastUsedMove.hpp>
@@ -216,6 +217,14 @@ void clearStatus(types::handle pokemonHandle) {
     status::tags::Toxic>();
 }
 
+void clearVolatiles(types::handle pokemonHandle) {
+  pokemonHandle.remove<AtkBoost, DefBoost, SpaBoost, SpdBoost, SpeBoost>();
+  pokemonHandle.remove<LastUsedMove>();
+
+  // TODO(aed3): Make auto-generated
+  pokemonHandle.remove<ChoiceLock>();
+}
+
 void deductPp(Pp& pp) {
   if (pp.val) {
     pp.val -= 1U;  // TODO(aed3): Make this into a mechanic constant
@@ -258,7 +267,7 @@ void applyDamage(types::handle pokemonHandle, types::damage damage) {
     hp.val -= damage;
   }
   else {
-    hp.val = 0U;
+    hp.val = MechanicConstants::PokemonCurrentHpStat::MIN;
     faint(pokemonHandle, pokemonHandle.get<Battle>());
   }
 }

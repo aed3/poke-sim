@@ -4,6 +4,7 @@
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
+#include <Battle/Side/ManageSideState.hpp>
 #include <CalcDamage/Helpers.hpp>
 #include <Components/AddedTargets.hpp>
 #include <Components/CloneFromCloneTo.hpp>
@@ -28,6 +29,7 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
 #include <Components/Turn.hpp>
+#include <Components/Winner.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/MoveHitSteps.hpp>
@@ -147,7 +149,18 @@ void clearFaintQueue(types::handle battleHandle, const FaintQueue& faintQueue) {
   }
 }
 
-void checkWin(Simulation& simulation) {}
+void checkWin(types::handle battleHandle, const Sides& sides) {
+  types::registry& registry = *battleHandle.registry();
+
+  for (types::entity sideEntity : sides.val) {
+    types::teamPositionIndex pokemonLeft = foeSidePokemonLeft(registry, sideEntity);
+    if (!pokemonLeft) {
+      battleHandle.emplace<Winner>(registry.get<PlayerSide>(sideEntity).val);
+      clearActionQueue(battleHandle, battleHandle.get<ActionQueue>());
+      return;
+    }
+  }
+}
 
 void faintPokemon(Simulation& simulation) {
   using LoopLimits = MechanicConstants::ActivePokemon;
@@ -167,6 +180,8 @@ void faintPokemon(Simulation& simulation) {
     runFaintEvent(simulation);
     runEndAbilityEvent(simulation);
     runEndItemEvent(simulation);
+    simulation.viewForSelectedPokemon<clearVolatiles>();
+
     simulation.addToEntities<pokesim::tags::Fainted, pokesim::tags::Fainting>();
     simulation.removeFromEntities<pokesim::tags::ActivePokemon, pokesim::tags::Fainting>();
     simulation.removeFromEntities<pokesim::tags::Fainting>();
@@ -175,7 +190,7 @@ void faintPokemon(Simulation& simulation) {
     iterations++;
   }
 
-  checkWin(simulation);
+  simulation.viewForSelectedBattles<checkWin, Tags<>, entt::exclude_t<Winner>>();
 
   runAfterFaintEvent(simulation);
 }
@@ -261,7 +276,7 @@ void simulateTurn(Simulation& simulation) {
       "More actions in a turn were queued to be taken than in at least one battle than are possible.");
 
     runCurrentAction(simulation);
-    simulation.viewForSelectedBattles<setCurrentAction>();
+    simulation.viewForSelectedBattles<setCurrentAction, Tags<>, entt::exclude_t<Winner>>();
     actionsTaken++;
   }
 

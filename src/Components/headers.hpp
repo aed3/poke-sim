@@ -88,3 +88,4 @@
 #include "Tags/TargetTags.hpp"
 #include "Tags/TypeTags.hpp"
 #include "Turn.hpp"
+#include "Winner.hpp"
