@@ -220,7 +220,7 @@ void runEndItemEvent(Simulation& simulation) {
   dex::events::ChoiceSpecs::onEnd(simulation);
 }
 
-void runEndAbilityEvent(Simulation& simulation) {}
-void runFaintEvent(Simulation& simulation) {}
-void runAfterFaintEvent(Simulation& simulation) {}
+void runEndAbilityEvent(Simulation&) {}
+void runFaintEvent(Simulation&) {}
+void runAfterFaintEvent(Simulation&) {}
 }  // namespace pokesim

@@ -26265,9 +26265,9 @@ inline void runEndItemEvent(Simulation& simulation) {
   dex::events::ChoiceSpecs::onEnd(simulation);
 }
 
-inline void runEndAbilityEvent(Simulation& simulation) {}
-inline void runFaintEvent(Simulation& simulation) {}
-inline void runAfterFaintEvent(Simulation& simulation) {}
+inline void runEndAbilityEvent(Simulation&) {}
+inline void runFaintEvent(Simulation&) {}
+inline void runAfterFaintEvent(Simulation&) {}
 }  // namespace pokesim
 
 ////////////////////// END OF src/Simulation/RunEvent.cpp //////////////////////
