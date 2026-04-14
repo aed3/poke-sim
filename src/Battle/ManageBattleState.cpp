@@ -5,9 +5,10 @@
 #include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
+#include <Components/Names/ItemNames.hpp>
+#include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
-#include <Components/SimulateTurn/ActionNames.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SimulationResults.hpp>
 #include <Components/Tags/Current.hpp>
@@ -62,7 +63,7 @@ void setCurrentActionMove(
   types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
   const Pokedex& pokedex) {
   types::registry& registry = *battleHandle.registry();
-  const action::Move& move = registry.get<action::Move>(action.val);
+  const MoveName& move = registry.get<MoveName>(action.val);
   const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
 
   for (types::entity target : targets.val) {
@@ -108,8 +109,10 @@ void clearCurrentAction(Simulation& simulation) {
 
   auto battles = simulation.selectedBattleEntities();
   registry.remove<
-    action::Item,
-    action::Move,
+    action::tags::Item,
+    ItemName,
+    action::tags::Move,
+    MoveName,
     action::tags::BeforeTurn,
     action::tags::Dynamax,
     action::tags::MegaEvolve,

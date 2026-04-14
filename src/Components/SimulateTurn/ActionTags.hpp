@@ -1,6 +1,9 @@
 #pragma once
 
 namespace pokesim::action::tags {
+struct Move {};
+struct Item {};
+
 struct BeforeTurn {};
 struct Residual {};
 

@@ -117,7 +117,7 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
                              const pokesim::SlotDecision& decision,
                              const Simulation::PokemonCreationInfo& pokemon) {
         if (decision.moveChoice) {
-          const auto [target, move, speedSort] = registry.get<TargetSlotName, action::Move, SpeedSort>(decisionEntity);
+          const auto [target, move, speedSort] = registry.get<TargetSlotName, MoveName, SpeedSort>(decisionEntity);
 
           REQUIRE(target.name == decision.targetSlot);
           REQUIRE(move.name == decision.moveChoice);

@@ -7,9 +7,10 @@
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
+#include <Components/Names/ItemNames.hpp>
+#include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
-#include <Components/SimulateTurn/ActionNames.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SimulateTurn/SpeedTieIndexes.hpp>
 #include <Components/SimulateTurn/TeamAction.hpp>
@@ -56,14 +57,16 @@ void resolveSlotDecisions(
     }
 
     if (decision.moveChoice.has_value()) {
-      actionHandle.emplace<action::Move>(decision.moveChoice.value());
+      actionHandle.emplace<action::tags::Move>();
+      actionHandle.emplace<MoveName>(decision.moveChoice.value());
 
       speedSort.order = ActionOrder::MOVE;
       speedSort.priority = MechanicConstants::MovePriority::BASE;  // TODO (aed3): Move priority + modify priority
       speedSort.fractionalPriority = false;                        // TODO (aed3): get fractionalPriority
     }
     else if (decision.itemChoice.has_value()) {
-      actionHandle.emplace<action::Item>(decision.itemChoice.value());
+      actionHandle.emplace<action::tags::Item>();
+      actionHandle.emplace<ItemName>(decision.itemChoice.value());
       speedSort.order = ActionOrder::ITEM;
     }
     else {
@@ -216,9 +219,9 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue) {
   types::entity newCurrentAction = actionQueue.val.front();
   registry.emplace<action::tags::Current>(newCurrentAction);
 
-  action::Move* moveAction = registry.try_get<action::Move>(newCurrentAction);
-  if (moveAction) {
-    battleHandle.emplace<action::Move>(*moveAction);
+  if (registry.all_of<action::tags::Move>(newCurrentAction)) {
+    battleHandle.emplace<action::tags::Move>();
+    battleHandle.emplace<MoveName>(registry.get<MoveName>(newCurrentAction));
   }
   else if (registry.all_of<action::tags::Residual>(newCurrentAction)) {
     battleHandle.emplace<action::tags::Residual>();

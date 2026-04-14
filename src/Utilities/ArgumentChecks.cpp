@@ -97,8 +97,8 @@ void checkTeamOrder(const types::teamOrder& teamOrder) {
 void checkAction(types::entity actionEntity, const types::registry& registry) {
   types::registry::checkEntity(actionEntity, registry);
   if (has<action::Team>(actionEntity, registry)) {
-    POKESIM_REQUIRE_NM(!has<action::Item>(actionEntity, registry));
-    POKESIM_REQUIRE_NM(!has<action::Move>(actionEntity, registry));
+    POKESIM_REQUIRE_NM(!has<action::tags::Item>(actionEntity, registry));
+    POKESIM_REQUIRE_NM(!has<action::tags::Move>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<action::tags::Switch>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<SourceSlotName>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<TargetSlotName>(actionEntity, registry));
@@ -110,7 +110,7 @@ void checkAction(types::entity actionEntity, const types::registry& registry) {
     POKESIM_REQUIRE_NM(has<SpeedSort>(actionEntity, registry));
   }
 
-  if (registry.any_of<action::Item, action::Move, action::tags::Switch>(actionEntity)) {
+  if (registry.any_of<action::tags::Item, action::tags::Move, action::tags::Switch>(actionEntity)) {
     POKESIM_REQUIRE_NM(has<SourceSlotName>(actionEntity, registry));
     POKESIM_REQUIRE_NM(has<TargetSlotName>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<action::Team>(actionEntity, registry));
@@ -120,11 +120,11 @@ void checkAction(types::entity actionEntity, const types::registry& registry) {
     check(target);
     check(speedSort);
 
-    if (has<action::Item>(actionEntity, registry)) {
-      check((ItemName)registry.get<action::Item>(actionEntity));
+    if (has<action::tags::Item>(actionEntity, registry)) {
+      check(registry.get<ItemName>(actionEntity));
     }
-    if (has<action::Move>(actionEntity, registry)) {
-      check((MoveName)registry.get<action::Move>(actionEntity));
+    if (has<action::tags::Move>(actionEntity, registry)) {
+      check(registry.get<MoveName>(actionEntity));
     }
   }
 }
@@ -966,16 +966,6 @@ void check(const RandomEqualChanceStack& randomEqualChanceStack, const types::re
   for (const auto& target : randomEqualChanceStack.val) {
     checkPokemon(target, registry);
   }
-}
-
-template <>
-void check(const action::Move& move) {
-  check(MoveName{move});
-}
-
-template <>
-void check(const action::Item& item) {
-  check(ItemName{item});
 }
 
 template <>

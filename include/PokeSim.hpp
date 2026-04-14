@@ -147,7 +147,6 @@
  * src/Components/RNGSeed.hpp
  * src/Components/RandomEventInputs.hpp
  * src/Components/RandomEventOutputs.hpp
- * src/Components/SimulateTurn/ActionNames.hpp
  * src/Components/SimulateTurn/ActionTags.hpp
  * src/Components/SimulateTurn/MoveHitStepTags.hpp
  * src/Components/SimulateTurn/SimulateTurnTags.hpp
@@ -19689,20 +19688,12 @@ struct RandomEventIndex {
 
 ///////////////// END OF src/Components/RandomEventOutputs.hpp /////////////////
 
-///////////// START OF src/Components/SimulateTurn/ActionNames.hpp /////////////
-
-namespace pokesim::action {
-// Component to make an action one where a Pokemon uses a move. Contains the name of the move being used.
-struct Move : MoveName {};
-// Component to make an action one where a player uses an item. Contains the name of the item being used.
-struct Item : ItemName {};
-}  // namespace pokesim::action
-
-////////////// END OF src/Components/SimulateTurn/ActionNames.hpp //////////////
-
 ///////////// START OF src/Components/SimulateTurn/ActionTags.hpp //////////////
 
 namespace pokesim::action::tags {
+struct Move {};
+struct Item {};
+
 struct BeforeTurn {};
 struct Residual {};
 
@@ -20587,8 +20578,6 @@ struct AttackerHpRecovered;
 struct AttackerHpLost;
 }  // namespace calc_damage
 namespace action {
-struct Move;
-struct Item;
 struct Team;
 }  // namespace action
 namespace simulate_turn {
@@ -20924,12 +20913,6 @@ inline void check(const RandomEqualChanceStack&, const types::registry&);
 // template <> void check(const RandomEventIndex&);
 
 template <>
-inline void check(const action::Move&);
-
-template <>
-inline void check(const action::Item&);
-
-template <>
 inline void check(const SpeedTieIndexes&);
 
 template <>
@@ -21101,8 +21084,8 @@ inline void checkTeamOrder(const types::teamOrder& teamOrder) {
 inline void checkAction(types::entity actionEntity, const types::registry& registry) {
   types::registry::checkEntity(actionEntity, registry);
   if (has<action::Team>(actionEntity, registry)) {
-    POKESIM_REQUIRE_NM(!has<action::Item>(actionEntity, registry));
-    POKESIM_REQUIRE_NM(!has<action::Move>(actionEntity, registry));
+    POKESIM_REQUIRE_NM(!has<action::tags::Item>(actionEntity, registry));
+    POKESIM_REQUIRE_NM(!has<action::tags::Move>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<action::tags::Switch>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<SourceSlotName>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<TargetSlotName>(actionEntity, registry));
@@ -21114,7 +21097,7 @@ inline void checkAction(types::entity actionEntity, const types::registry& regis
     POKESIM_REQUIRE_NM(has<SpeedSort>(actionEntity, registry));
   }
 
-  if (registry.any_of<action::Item, action::Move, action::tags::Switch>(actionEntity)) {
+  if (registry.any_of<action::tags::Item, action::tags::Move, action::tags::Switch>(actionEntity)) {
     POKESIM_REQUIRE_NM(has<SourceSlotName>(actionEntity, registry));
     POKESIM_REQUIRE_NM(has<TargetSlotName>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<action::Team>(actionEntity, registry));
@@ -21124,11 +21107,11 @@ inline void checkAction(types::entity actionEntity, const types::registry& regis
     check(target);
     check(speedSort);
 
-    if (has<action::Item>(actionEntity, registry)) {
-      check((ItemName)registry.get<action::Item>(actionEntity));
+    if (has<action::tags::Item>(actionEntity, registry)) {
+      check(registry.get<ItemName>(actionEntity));
     }
-    if (has<action::Move>(actionEntity, registry)) {
-      check((MoveName)registry.get<action::Move>(actionEntity));
+    if (has<action::tags::Move>(actionEntity, registry)) {
+      check(registry.get<MoveName>(actionEntity));
     }
   }
 }
@@ -21970,16 +21953,6 @@ inline void check(const RandomEqualChanceStack& randomEqualChanceStack, const ty
   for (const auto& target : randomEqualChanceStack.val) {
     checkPokemon(target, registry);
   }
-}
-
-template <>
-inline void check(const action::Move& move) {
-  check(MoveName{move});
-}
-
-template <>
-inline void check(const action::Item& item) {
-  check(ItemName{item});
 }
 
 template <>
@@ -26337,25 +26310,27 @@ enum class PercentChanceLimitResult : std::uint8_t {
 
 inline PercentChanceLimitResult checkPercentChanceLimits(
   types::percentChance percentChance, types::probability probability, const simulate_turn::Options& options) {
+  static constexpr auto PercentChanceMax = MechanicConstants::PercentChance::MAX;
+  static constexpr auto PercentChanceMin = MechanicConstants::PercentChance::MIN;
+  static constexpr types::percentChance PassFailBoundary = (PercentChanceMax - PercentChanceMin) / 2U;
+
   const auto& autoPassLimit = options.randomChanceUpperLimit;
   const auto& autoFailLimit = options.randomChanceLowerLimit;
   const auto& branchProbabilityLowerLimit = options.branchProbabilityLowerLimit;
 
   bool skipBranch = false;
   if (branchProbabilityLowerLimit.has_value()) {
-    skipBranch =
-      percentChance * probability <= branchProbabilityLowerLimit.value() * MechanicConstants::PercentChance::MAX;
-  }
-  const types::percentChance PASS_FAIL_BOUNDARY =
-    (MechanicConstants::PercentChance::MAX - MechanicConstants::PercentChance::MIN) / 2U;
+    types::percentChance lowestPercentChance =
+      percentChance > PassFailBoundary ? PercentChanceMax - std::min(PercentChanceMax, percentChance) : percentChance;
 
-  if (
-    percentChance >= autoPassLimit.value_or(MechanicConstants::PercentChance::MAX) ||
-    (skipBranch && percentChance >= PASS_FAIL_BOUNDARY)) {
+    skipBranch = lowestPercentChance * probability <= branchProbabilityLowerLimit.value() * PercentChanceMax;
+  }
+
+  if (percentChance >= autoPassLimit.value_or(PercentChanceMax) || (skipBranch && percentChance >= PassFailBoundary)) {
     return PercentChanceLimitResult::REACHED_PASS_LIMIT;
   }
 
-  if (percentChance <= autoFailLimit.value_or(MechanicConstants::PercentChance::MIN) || skipBranch) {
+  if (percentChance <= autoFailLimit.value_or(PercentChanceMin) || skipBranch) {
     return PercentChanceLimitResult::REACHED_FAIL_LIMIT;
   }
 
@@ -27004,7 +26979,7 @@ inline void createActionMoveForTargets(
   types::handle targetHandle, Battle battle, CurrentActionSource source, const Pokedex& pokedex) {
   types::registry& registry = *targetHandle.registry();
 
-  dex::Move move = registry.get<action::Move>(registry.get<CurrentAction>(battle.val).val).name;
+  dex::Move move = registry.get<MoveName>(registry.get<CurrentAction>(battle.val).val).name;
   types::entity moveEntity = createActionMoveForTarget(targetHandle, battle.val, source.val, move, pokedex);
 
   registry.emplace<pokesim::tags::SimulateTurn>(moveEntity);
@@ -27034,11 +27009,28 @@ inline void useMove(Simulation& simulation) {
   runAfterMoveUsedEvent(simulation);
 }
 
+template <typename ActionTag>
+void removeActionBySource(types::handle sourceHandle, Battle battle) {
+  types::registry& registry = *sourceHandle.registry();
+  registry.remove<ActionTag>(battle.val);
+  registry.remove<CurrentActionSource>(battle.val);
+  sourceHandle.remove<pokesim::tags::CurrentActionMoveSource>();
+}
+
 inline void runMoveAction(Simulation& simulation) {
-  pokesim::internal::SelectForBattleView<action::Move> selectedBattle{simulation};
+  simulation.viewForSelectedBattles<setCurrentActionSource, Tags<action::tags::Move>>();
+
+  simulation.view<
+    removeActionBySource<action::tags::Move>,
+    Tags<pokesim::tags::CurrentActionMoveSource, pokesim::tags::Fainted>>();
+  simulation.view<
+    removeActionBySource<action::tags::Move>,
+    Tags<pokesim::tags::CurrentActionMoveSource>,
+    entt::exclude_t<pokesim::tags::ActivePokemon>>();
+
+  pokesim::internal::SelectForBattleView<action::tags::Move> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 
-  simulation.viewForSelectedBattles<setCurrentActionSource>();
   simulation.viewForSelectedBattles<setCurrentActionTarget>();
   simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex());
 
@@ -27781,14 +27773,16 @@ inline void resolveSlotDecisions(
     }
 
     if (decision.moveChoice.has_value()) {
-      actionHandle.emplace<action::Move>(decision.moveChoice.value());
+      actionHandle.emplace<action::tags::Move>();
+      actionHandle.emplace<MoveName>(decision.moveChoice.value());
 
       speedSort.order = ActionOrder::MOVE;
       speedSort.priority = MechanicConstants::MovePriority::BASE;  // TODO (aed3): Move priority + modify priority
       speedSort.fractionalPriority = false;                        // TODO (aed3): get fractionalPriority
     }
     else if (decision.itemChoice.has_value()) {
-      actionHandle.emplace<action::Item>(decision.itemChoice.value());
+      actionHandle.emplace<action::tags::Item>();
+      actionHandle.emplace<ItemName>(decision.itemChoice.value());
       speedSort.order = ActionOrder::ITEM;
     }
     else {
@@ -27941,9 +27935,9 @@ inline void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueu
   types::entity newCurrentAction = actionQueue.val.front();
   registry.emplace<action::tags::Current>(newCurrentAction);
 
-  action::Move* moveAction = registry.try_get<action::Move>(newCurrentAction);
-  if (moveAction) {
-    battleHandle.emplace<action::Move>(*moveAction);
+  if (registry.all_of<action::tags::Move>(newCurrentAction)) {
+    battleHandle.emplace<action::tags::Move>();
+    battleHandle.emplace<MoveName>(registry.get<MoveName>(newCurrentAction));
   }
   else if (registry.all_of<action::tags::Residual>(newCurrentAction)) {
     battleHandle.emplace<action::tags::Residual>();
@@ -29556,6 +29550,17 @@ struct Checks : pokesim::debug::Checks {
       copyEntity(pokemon);
       checkPokemon(pokemon);
 
+      bool hasSimulateTurn = has<pokesim::tags::SimulateTurn>(pokemon);
+      bool hasCalculateDamage = has<pokesim::tags::CalculateDamage>(pokemon);
+      bool hasAnalyzeEffect = has<pokesim::tags::AnalyzeEffect>(pokemon);
+      POKESIM_REQUIRE_NM(hasSimulateTurn || hasCalculateDamage || hasAnalyzeEffect);
+
+      if (hasSimulateTurn) {
+        POKESIM_REQUIRE_NM(!has<pokesim::tags::Fainted>(pokemon));
+        POKESIM_REQUIRE_NM(!has<pokesim::tags::Fainting>(pokemon));
+        POKESIM_REQUIRE_NM(has<pokesim::tags::ActivePokemon>(pokemon));
+      }
+
       types::entityVector moves;
       if (forAttacker) {
         POKESIM_REQUIRE_NM(has<UsedMovesAsAttacker>(pokemon));
@@ -29591,11 +29596,6 @@ struct Checks : pokesim::debug::Checks {
           POKESIM_REQUIRE_NM(has<stat::EffectiveSpd>(pokemon));
         }
       }
-
-      bool hasSimulateTurn = has<pokesim::tags::SimulateTurn>(pokemon);
-      bool hasCalculateDamage = has<pokesim::tags::CalculateDamage>(pokemon);
-      bool hasAnalyzeEffect = has<pokesim::tags::AnalyzeEffect>(pokemon);
-      POKESIM_REQUIRE_NM(hasSimulateTurn || hasCalculateDamage || hasAnalyzeEffect);
     }
   }
 
@@ -31278,7 +31278,7 @@ inline void setCurrentActionMove(
   types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
   const Pokedex& pokedex) {
   types::registry& registry = *battleHandle.registry();
-  const action::Move& move = registry.get<action::Move>(action.val);
+  const MoveName& move = registry.get<MoveName>(action.val);
   const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
 
   for (types::entity target : targets.val) {
@@ -31324,8 +31324,10 @@ inline void clearCurrentAction(Simulation& simulation) {
 
   auto battles = simulation.selectedBattleEntities();
   registry.remove<
-    action::Item,
-    action::Move,
+    action::tags::Item,
+    ItemName,
+    action::tags::Move,
+    MoveName,
     action::tags::BeforeTurn,
     action::tags::Dynamax,
     action::tags::MegaEvolve,
