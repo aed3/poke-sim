@@ -123,8 +123,6 @@ struct AttackerHpRecovered;
 struct AttackerHpLost;
 }  // namespace calc_damage
 namespace action {
-struct Move;
-struct Item;
 struct Team;
 }  // namespace action
 namespace simulate_turn {
@@ -458,12 +456,6 @@ template <>
 void check(const RandomEqualChanceStack&, const types::registry&);
 
 // template <> void check(const RandomEventIndex&);
-
-template <>
-void check(const action::Move&);
-
-template <>
-void check(const action::Item&);
 
 template <>
 void check(const SpeedTieIndexes&);

@@ -123,15 +123,16 @@ if (ENABLE_TESTING)
     tests/AnalyzeEffectTest.cpp
     tests/BattleStateTest.cpp
     tests/CalcDamageTest.cpp
+    tests/Effects/ChoiceLock.cpp
+    tests/Effects/Paralysis.cpp
     tests/Moves/FuryAttack.cpp
     tests/Moves/KnockOff.cpp
     tests/PokedexTest.cpp
     tests/RegistryContainerTests.cpp
     tests/SimulateTurnsTest.cpp
     tests/SimulationSetupTest.cpp
-    tests/Effects/Paralysis.cpp
-    tests/Effects/ChoiceLock.cpp
     tests/Tests.cpp
+    tests/VerticalSlices.cpp
   )
 
   if (CMAKE_BUILD_TYPE STREQUAL "Release")

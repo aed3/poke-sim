@@ -120,6 +120,17 @@ struct Checks : pokesim::debug::Checks {
       copyEntity(pokemon);
       checkPokemon(pokemon);
 
+      bool hasSimulateTurn = has<pokesim::tags::SimulateTurn>(pokemon);
+      bool hasCalculateDamage = has<pokesim::tags::CalculateDamage>(pokemon);
+      bool hasAnalyzeEffect = has<pokesim::tags::AnalyzeEffect>(pokemon);
+      POKESIM_REQUIRE_NM(hasSimulateTurn || hasCalculateDamage || hasAnalyzeEffect);
+
+      if (hasSimulateTurn) {
+        POKESIM_REQUIRE_NM(!has<pokesim::tags::Fainted>(pokemon));
+        POKESIM_REQUIRE_NM(!has<pokesim::tags::Fainting>(pokemon));
+        POKESIM_REQUIRE_NM(has<pokesim::tags::ActivePokemon>(pokemon));
+      }
+
       types::entityVector moves;
       if (forAttacker) {
         POKESIM_REQUIRE_NM(has<UsedMovesAsAttacker>(pokemon));
@@ -155,11 +166,6 @@ struct Checks : pokesim::debug::Checks {
           POKESIM_REQUIRE_NM(has<stat::EffectiveSpd>(pokemon));
         }
       }
-
-      bool hasSimulateTurn = has<pokesim::tags::SimulateTurn>(pokemon);
-      bool hasCalculateDamage = has<pokesim::tags::CalculateDamage>(pokemon);
-      bool hasAnalyzeEffect = has<pokesim::tags::AnalyzeEffect>(pokemon);
-      POKESIM_REQUIRE_NM(hasSimulateTurn || hasCalculateDamage || hasAnalyzeEffect);
     }
   }
 

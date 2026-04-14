@@ -177,6 +177,22 @@ inline Simulation createDoubleBattleSimulation(Pokedex& pokedex, Simulation::Bat
 struct TestChecks : debug::Checks {
   using debug::Checks::checkRemainingOutputs;
 
+  bool isSpecificallyChecked(types::entity entity) const {
+    types::entity original = debug::findCopyParent(currentEntitiesToInitial, *registry, entity);
+    return specificallyChecked.contains(original);
+  }
+
+  template <typename Selector, typename... TypesToIgnore>
+  void specificallyCheckEntities() const {
+    for (types::entity entity : registry->view<Selector>()) {
+      if (!isSpecificallyChecked(entity)) {
+        continue;
+      }
+
+      checkEntityForChanges<TypesToIgnore...>(entity);
+    }
+  }
+
   template <typename Selector, typename... TypesToIgnore>
   void checkViewForChanges() const {
     for (types::entity entity : registry->view<Selector>()) {

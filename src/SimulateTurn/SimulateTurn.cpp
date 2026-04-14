@@ -18,7 +18,6 @@
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
 #include <Components/PP.hpp>
-#include <Components/SimulateTurn/ActionNames.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/SpeedSort.hpp>
@@ -82,7 +81,7 @@ void createActionMoveForTargets(
   types::handle targetHandle, Battle battle, CurrentActionSource source, const Pokedex& pokedex) {
   types::registry& registry = *targetHandle.registry();
 
-  dex::Move move = registry.get<action::Move>(registry.get<CurrentAction>(battle.val).val).name;
+  dex::Move move = registry.get<MoveName>(registry.get<CurrentAction>(battle.val).val).name;
   types::entity moveEntity = createActionMoveForTarget(targetHandle, battle.val, source.val, move, pokedex);
 
   registry.emplace<pokesim::tags::SimulateTurn>(moveEntity);
@@ -112,11 +111,28 @@ void useMove(Simulation& simulation) {
   runAfterMoveUsedEvent(simulation);
 }
 
+template <typename ActionTag>
+void removeActionBySource(types::handle sourceHandle, Battle battle) {
+  types::registry& registry = *sourceHandle.registry();
+  registry.remove<ActionTag>(battle.val);
+  registry.remove<CurrentActionSource>(battle.val);
+  sourceHandle.remove<pokesim::tags::CurrentActionMoveSource>();
+}
+
 void runMoveAction(Simulation& simulation) {
-  pokesim::internal::SelectForBattleView<action::Move> selectedBattle{simulation};
+  simulation.viewForSelectedBattles<setCurrentActionSource, Tags<action::tags::Move>>();
+
+  simulation.view<
+    removeActionBySource<action::tags::Move>,
+    Tags<pokesim::tags::CurrentActionMoveSource, pokesim::tags::Fainted>>();
+  simulation.view<
+    removeActionBySource<action::tags::Move>,
+    Tags<pokesim::tags::CurrentActionMoveSource>,
+    entt::exclude_t<pokesim::tags::ActivePokemon>>();
+
+  pokesim::internal::SelectForBattleView<action::tags::Move> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 
-  simulation.viewForSelectedBattles<setCurrentActionSource>();
   simulation.viewForSelectedBattles<setCurrentActionTarget>();
   simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex());
 

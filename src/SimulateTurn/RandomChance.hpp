@@ -47,25 +47,27 @@ enum class PercentChanceLimitResult : std::uint8_t {
 
 inline PercentChanceLimitResult checkPercentChanceLimits(
   types::percentChance percentChance, types::probability probability, const simulate_turn::Options& options) {
+  static constexpr auto PercentChanceMax = MechanicConstants::PercentChance::MAX;
+  static constexpr auto PercentChanceMin = MechanicConstants::PercentChance::MIN;
+  static constexpr types::percentChance PassFailBoundary = (PercentChanceMax - PercentChanceMin) / 2U;
+
   const auto& autoPassLimit = options.randomChanceUpperLimit;
   const auto& autoFailLimit = options.randomChanceLowerLimit;
   const auto& branchProbabilityLowerLimit = options.branchProbabilityLowerLimit;
 
   bool skipBranch = false;
   if (branchProbabilityLowerLimit.has_value()) {
-    skipBranch =
-      percentChance * probability <= branchProbabilityLowerLimit.value() * MechanicConstants::PercentChance::MAX;
-  }
-  const types::percentChance PASS_FAIL_BOUNDARY =
-    (MechanicConstants::PercentChance::MAX - MechanicConstants::PercentChance::MIN) / 2U;
+    types::percentChance lowestPercentChance =
+      percentChance > PassFailBoundary ? PercentChanceMax - std::min(PercentChanceMax, percentChance) : percentChance;
 
-  if (
-    percentChance >= autoPassLimit.value_or(MechanicConstants::PercentChance::MAX) ||
-    (skipBranch && percentChance >= PASS_FAIL_BOUNDARY)) {
+    skipBranch = lowestPercentChance * probability <= branchProbabilityLowerLimit.value() * PercentChanceMax;
+  }
+
+  if (percentChance >= autoPassLimit.value_or(PercentChanceMax) || (skipBranch && percentChance >= PassFailBoundary)) {
     return PercentChanceLimitResult::REACHED_PASS_LIMIT;
   }
 
-  if (percentChance <= autoFailLimit.value_or(MechanicConstants::PercentChance::MIN) || skipBranch) {
+  if (percentChance <= autoFailLimit.value_or(PercentChanceMin) || skipBranch) {
     return PercentChanceLimitResult::REACHED_FAIL_LIMIT;
   }
 
