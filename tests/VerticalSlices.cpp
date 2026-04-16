@@ -612,7 +612,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     bool checkMoveMissed;
     bool checkMoveDroppedSpa;
 
-    types::percentChance MOONBLAST_HIT_CHANCE = chainValueToModifier(
+    types::percentChance MOONBLAST_HIT_CHANCE = (types::percentChance)chainValueToModifier(
       Moonblast::accuracy, BrightPowder::onModifyAccuracyNumerator, BrightPowder::onModifyAccuracyDenominator);
     types::percentChance MOONBLAST_SPA_DROP_CHANCE = Moonblast::targetSecondaryEffect::chance;
 
@@ -660,7 +660,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
       return expectedHp;
     }
 
-    types::probability getProbability(types::stat afterTurnHp, bool p2ABurned, bool p2BSpaBoosted) const {
+    types::probability getProbability(types::stat afterTurnHp, bool p2BSpaBoosted) const {
       if (item == dex::Item::FOCUS_SASH && afterTurnHp == FocusSash::onAfterModifyDamageHpToKeep) {
         afterTurnHp = MIN_HP;
       }
@@ -945,7 +945,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     REQUIRE_FALSE(registry.all_of<ItemName>(p1BPokemon));
     if (p2ABurned) {
       REQUIRE(expectedP1BHalfHp.contains(p1BHp.val));
-      idealProbability *= p1BHalfDamageInfo.getProbability(p1BHp.val, p2ABurned, p2BSpaBoosted);
+      idealProbability *= p1BHalfDamageInfo.getProbability(p1BHp.val, p2BSpaBoosted);
     }
     else {
       REQUIRE(p1BHp.val == FocusSash::onAfterModifyDamageHpToKeep);
@@ -1022,7 +1022,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
         REQUIRE_FALSE(p2BHp.val == p2BInfo.stats.hp);
       }
     }
-    idealProbability *= p2BDamageInfo.getProbability(p2BHp.val, p2ABurned, p2BSpaBoosted);
+    idealProbability *= p2BDamageInfo.getProbability(p2BHp.val, p2BSpaBoosted);
     foundP2BHp.insert(p2BHp.val);
 
     if (!p2ABurned && p1BFullDamageInfo.mightCrit()) {
