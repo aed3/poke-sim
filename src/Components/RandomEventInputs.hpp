@@ -58,10 +58,8 @@ struct RandomBinaryChance {
 
   types::percentChance pass() const { return val; }
   types::percentChance fail() const { return MechanicConstants::PercentChance::MAX - pass(); }
-  types::probability reciprocalPass() const {
-    return MechanicConstants::PercentChance::MAX / (types::probability)pass();
-  }
-  types::probability reciprocalFail() const { return MechanicConstants::PercentChance::MAX - reciprocalPass(); }
+  types::probability reciprocalPass() const { return MechanicConstants::Probability::MAX / (types::probability)pass(); }
+  types::probability reciprocalFail() const { return MechanicConstants::Probability::MAX - reciprocalPass(); }
 };
 
 namespace tags {
