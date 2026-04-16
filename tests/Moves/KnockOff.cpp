@@ -94,7 +94,7 @@ TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][Knoc
   REQUIRE(p2PokemonLastUsedMove.val == p2Move);
 
   auto p2PokemonHp = registry.get<stat::CurrentHp>(p2Pokemon);
-  auto initialP2PokemonHp = checks.getInitialComponent<stat::CurrentHp>(p2Pokemon);
+  auto initialP2PokemonHp = checks.getInitialComponents<stat::CurrentHp>(p2Pokemon);
   REQUIRE(p2PokemonHp.val < initialP2PokemonHp.val);
 
   checks.checkMovePpUsage(p1Move);
@@ -104,7 +104,7 @@ TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][Knoc
   REQUIRE_FALSE(registry.all_of<item::tags::AssaultVest>(p2Pokemon));
 
   auto p2Spd = registry.get<stat::EffectiveSpd>(p2Pokemon);
-  auto initialP2Spd = checks.getInitialComponent<stat::EffectiveSpd>(p2Pokemon);
+  auto initialP2Spd = checks.getInitialComponents<stat::EffectiveSpd>(p2Pokemon);
   REQUIRE(p2Spd.val < initialP2Spd.val);
 };
 }  // namespace pokesim

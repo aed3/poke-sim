@@ -43,14 +43,16 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
   battleCreationInfo.runWithCalculateDamage = true;
   Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
 
+  auto& p2Info = battleCreationInfo.p2.team[0];
+
   bool useSpecsInsteadOfBoost = GENERATE(false, true);
   if (useSpecsInsteadOfBoost) {
-    battleCreationInfo.p2.team[0].item = dex::Item::CHOICE_SPECS;
-    battleCreationInfo.p2.team[0].currentBoosts.spa = (types::boost)0U;
+    p2Info.item = dex::Item::CHOICE_SPECS;
+    p2Info.currentBoosts.spa = (types::boost)0U;
   }
   else {
-    battleCreationInfo.p2.team[0].item = dex::Item::NO_ITEM;
-    battleCreationInfo.p2.team[0].currentBoosts.spa = (types::boost)1U;
+    p2Info.item = dex::Item::NO_ITEM;
+    p2Info.currentBoosts.spa = (types::boost)1U;
   }
 
   battleCreationInfo.damageCalculations = {
