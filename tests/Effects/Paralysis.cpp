@@ -84,7 +84,7 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effec
     types::entity p2Move = registry.get<MoveSlots>(p2Pokemon).val[0];
 
     REQUIRE(turn.val == 2U);
-    auto initialRngSeed = checks.getInitialComponent<RngSeed>(battle);
+    auto initialRngSeed = checks.getInitialComponents<RngSeed>(battle);
     REQUIRE(rngSeed.val == initialRngSeed.val);
 
     bool paralysisStoppedP1Move = probability.val == dex::latest::Paralysis::onBeforeMoveChance / 100.0F;
@@ -109,7 +109,7 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effec
       REQUIRE(p1PokemonLastUsedMove.val == p1Move);
 
       auto p2PokemonHp = registry.get<stat::CurrentHp>(p2Pokemon);
-      auto initialP2PokemonHp = checks.getInitialComponent<stat::CurrentHp>(p2Pokemon);
+      auto initialP2PokemonHp = checks.getInitialComponents<stat::CurrentHp>(p2Pokemon);
       REQUIRE(p2PokemonHp.val < initialP2PokemonHp.val);
     }
 

@@ -208,15 +208,15 @@ struct TestChecks : debug::Checks {
     debug::areEntitiesEqual(*registry, entity, registryOnInput, initialEntity, typesToIgnore);
   }
 
-  template <typename T>
-  const T& getInitialComponent(types::entity entity) const {
-    return registryOnInput.get<T>(getInitialEntity(entity));
+  template <typename... T>
+  auto getInitialComponents(types::entity entity) const {
+    return registryOnInput.get<T...>(getInitialEntity(entity));
   }
 
   void checkMovePpUsage(types::entity moveSlot) {
     checkEntityForChanges<Pp>(moveSlot);
     auto movePp = registry->get<Pp>(moveSlot);
-    auto initialMovePp = getInitialComponent<Pp>(moveSlot);
+    auto initialMovePp = getInitialComponents<Pp>(moveSlot);
     REQUIRE(movePp.val == initialMovePp.val - 1U);
   }
 
