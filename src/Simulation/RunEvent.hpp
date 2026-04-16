@@ -4,6 +4,7 @@ namespace pokesim {
 class Simulation;
 
 void runBeforeMove(Simulation& simulation);
+void runResidual(Simulation& simulation);
 
 void runAccuracyEvent(Simulation& simulation);
 void runModifyAccuracyEvent(Simulation& simulation);

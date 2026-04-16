@@ -25368,14 +25368,16 @@ namespace pokesim::dex {
 namespace events {
 struct Burn {
   inline static void onSetDamageRollModifiers(Simulation& simulation);
+  inline static void onResidual(Simulation& simulation);
 };
 }  // namespace events
 
 template <GameMechanics>
 struct Burn : events::Burn {
-  static constexpr dex::Status name = dex::Status::PAR;
+  static constexpr dex::Status name = dex::Status::BRN;
 
   static constexpr types::effectMultiplier physicalDamageMultiplier = 0.5F;
+  static constexpr types::stat onResidualHpDecreaseDivisor = 16U;
   struct Strings {
     static constexpr std::string_view name = "Burn";
     static constexpr std::string_view smogonId = "brn";
@@ -25934,6 +25936,7 @@ namespace pokesim {
 class Simulation;
 
 inline void runBeforeMove(Simulation& simulation);
+inline void runResidual(Simulation& simulation);
 
 inline void runAccuracyEvent(Simulation& simulation);
 inline void runModifyAccuracyEvent(Simulation& simulation);
@@ -26099,6 +26102,10 @@ inline void runBeforeMove(Simulation& simulation) {
   dex::events::ChoiceLock::onBeforeMove(simulation);
 }
 
+inline void runResidual(Simulation& simulation) {
+  dex::events::Burn::onResidual(simulation);
+}
+
 inline void runAccuracyEvent(Simulation&) {}
 
 inline void runModifyAccuracyEvent(Simulation& simulation) {
@@ -26131,6 +26138,8 @@ inline void runAfterModifyDamageEvent(Simulation& simulation) {
 
 inline void runDamageEvent(Simulation& simulation) {
   dex::events::FocusSash::onDamage(simulation);
+
+  simulation.registry.clear<calc_damage::tags::RanAfterModifyDamage>();
 }
 
 inline void runDamagingHitEvent(Simulation& simulation) {
@@ -27045,6 +27054,11 @@ inline void runMoveAction(Simulation& simulation) {
 inline void runResidualAction(Simulation& simulation) {
   pokesim::internal::SelectForBattleView<action::tags::Residual> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
+
+  simulation.viewForSelectedBattles<speedSort, Tags<tags::SpeedSortNeeded>>();
+  simulation.registry.clear<tags::SpeedSortNeeded>();
+
+  runResidual(simulation);
 }
 
 inline void runBeforeTurnAction(Simulation&) {
@@ -29265,6 +29279,11 @@ inline void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
 
 namespace pokesim::dex::events {
 namespace {
+
+inline void damageByHpDivisor(types::handle pokemonHandle, stat::Hp hp, types::stat hpDivisor) {
+  applyDamage(pokemonHandle, hp.val / hpDivisor);
+}
+
 inline void applyBurnModifier(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves.val) {
     if (registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
@@ -29312,6 +29331,11 @@ inline void choiceLockOnDisableMove(
 inline void Burn::onSetDamageRollModifiers(Simulation& simulation) {
   simulation
     .viewForSelectedPokemon<applyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<ability::tags::Guts> */>();
+}
+
+inline void Burn::onResidual(Simulation& simulation) {
+  static constexpr auto divisor = latest::Burn::onResidualHpDecreaseDivisor;
+  simulation.viewForSelectedPokemon<damageByHpDivisor, Tags<status::tags::Burn>>(divisor);
 }
 
 inline void Paralysis::onModifySpe(Simulation& simulation) {
@@ -30924,6 +30948,9 @@ void boostStat(types::registry& registry, CurrentEffectTarget target, BoostType&
   if (boost.val) {
     registry.emplace_or_replace<StatUpdateRequired>(target.val);
   }
+  if (currentBoost.val == MechanicConstants::PokemonStatBoost::BASE) {
+    registry.remove<BoostType>(target.val);
+  }
 }
 
 template <typename BoostType>
@@ -30933,10 +30960,15 @@ void clampBoost(types::registry& registry, CurrentEffectTarget target, BoostType
     return;
   }
 
+  using BoostLimits = MechanicConstants::PokemonStatBoost;
+
   types::boost combinedBoost = currentBoost->val + boost.val;
-  combinedBoost = std::max(combinedBoost, MechanicConstants::PokemonStatBoost::MIN);
-  combinedBoost = std::min(combinedBoost, MechanicConstants::PokemonStatBoost::MAX);
-  boost.val = combinedBoost - boost.val;
+  if (combinedBoost > BoostLimits::MAX) {
+    boost.val = BoostLimits::MAX - currentBoost->val;
+  }
+  else if (combinedBoost < BoostLimits::MIN) {
+    boost.val = BoostLimits::MIN - currentBoost->val;
+  }
 }
 
 template <typename BoostType, typename StatUpdateRequired>
