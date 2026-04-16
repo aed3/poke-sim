@@ -4,6 +4,7 @@
 #include <Components/Accuracy.hpp>
 #include <Components/BasePower.hpp>
 #include <Components/Boosts.hpp>
+#include <Components/CalcDamage/ModifyingEventRanTags.hpp>
 #include <Components/CalcDamage/TemporaryMoveProperties.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/ChoiceLock.hpp>
@@ -81,6 +82,10 @@ void runBeforeMove(Simulation& simulation) {
   dex::events::ChoiceLock::onBeforeMove(simulation);
 }
 
+void runResidual(Simulation& simulation) {
+  dex::events::Burn::onResidual(simulation);
+}
+
 void runAccuracyEvent(Simulation&) {}
 
 void runModifyAccuracyEvent(Simulation& simulation) {
@@ -113,6 +118,8 @@ void runAfterModifyDamageEvent(Simulation& simulation) {
 
 void runDamageEvent(Simulation& simulation) {
   dex::events::FocusSash::onDamage(simulation);
+
+  simulation.registry.clear<calc_damage::tags::RanAfterModifyDamage>();
 }
 
 void runDamagingHitEvent(Simulation& simulation) {

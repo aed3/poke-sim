@@ -1,4 +1,5 @@
 #include <Battle/ManageBattleState.hpp>
+#include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Components/BaseEffectChance.hpp>
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Battle.hpp>
@@ -20,6 +21,11 @@
 
 namespace pokesim::dex::events {
 namespace {
+
+void damageByHpDivisor(types::handle pokemonHandle, stat::Hp hp, types::stat hpDivisor) {
+  applyDamage(pokemonHandle, hp.val / hpDivisor);
+}
+
 void applyBurnModifier(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves.val) {
     if (registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
@@ -67,6 +73,11 @@ void choiceLockOnDisableMove(
 void Burn::onSetDamageRollModifiers(Simulation& simulation) {
   simulation
     .viewForSelectedPokemon<applyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<ability::tags::Guts> */>();
+}
+
+void Burn::onResidual(Simulation& simulation) {
+  static constexpr auto divisor = latest::Burn::onResidualHpDecreaseDivisor;
+  simulation.viewForSelectedPokemon<damageByHpDivisor, Tags<status::tags::Burn>>(divisor);
 }
 
 void Paralysis::onModifySpe(Simulation& simulation) {

@@ -60,6 +60,9 @@ void boostStat(types::registry& registry, CurrentEffectTarget target, BoostType&
   if (boost.val) {
     registry.emplace_or_replace<StatUpdateRequired>(target.val);
   }
+  if (currentBoost.val == MechanicConstants::PokemonStatBoost::BASE) {
+    registry.remove<BoostType>(target.val);
+  }
 }
 
 template <typename BoostType>
@@ -69,10 +72,15 @@ void clampBoost(types::registry& registry, CurrentEffectTarget target, BoostType
     return;
   }
 
+  using BoostLimits = MechanicConstants::PokemonStatBoost;
+
   types::boost combinedBoost = currentBoost->val + boost.val;
-  combinedBoost = std::max(combinedBoost, MechanicConstants::PokemonStatBoost::MIN);
-  combinedBoost = std::min(combinedBoost, MechanicConstants::PokemonStatBoost::MAX);
-  boost.val = combinedBoost - boost.val;
+  if (combinedBoost > BoostLimits::MAX) {
+    boost.val = BoostLimits::MAX - currentBoost->val;
+  }
+  else if (combinedBoost < BoostLimits::MIN) {
+    boost.val = BoostLimits::MIN - currentBoost->val;
+  }
 }
 
 template <typename BoostType, typename StatUpdateRequired>

@@ -147,6 +147,11 @@ void runMoveAction(Simulation& simulation) {
 void runResidualAction(Simulation& simulation) {
   pokesim::internal::SelectForBattleView<action::tags::Residual> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
+
+  simulation.viewForSelectedBattles<speedSort, Tags<tags::SpeedSortNeeded>>();
+  simulation.registry.clear<tags::SpeedSortNeeded>();
+
+  runResidual(simulation);
 }
 
 void runBeforeTurnAction(Simulation&) {
