@@ -26,8 +26,13 @@
 namespace pokesim::internal {
 namespace {
 template <typename Type>
-void updateProbability(Probability& currentProbability, Type percentChance) {
-  currentProbability.val *= (types::probability)percentChance / MechanicConstants::PercentChanceToProbability;
+void updateProbability(Probability& currentProbability, Type eventValue) {
+  if constexpr (std::is_same_v<types::probability, Type>) {
+    currentProbability.val *= eventValue;
+  }
+  else {
+    currentProbability.val *= (types::probability)eventValue * MechanicConstants::PercentChanceToProbability;
+  }
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename RandomEventTag>
@@ -100,16 +105,14 @@ void updateProbabilityFromRandomEqualChance(
   types::eventPossibilities possibleEventCount) {
   Probability& probability = registry.get<Probability>(battle.val);
 
-  updateProbability(
-    probability,
-    MechanicConstants::PercentChanceToProbability / (types::probability)possibleEventCount);
+  updateProbability(probability, MechanicConstants::Probability::MAX / (types::probability)possibleEventCount);
 }
 
 void updateProbabilityFromRandomEventCount(
   types::registry& registry, const RandomEventCount& eventChance, const Battle& battle) {
   Probability& probability = registry.get<Probability>(battle.val);
 
-  updateProbability(probability, MechanicConstants::PercentChanceToProbability / (types::probability)eventChance.val);
+  updateProbability(probability, MechanicConstants::Probability::MAX / (types::probability)eventChance.val);
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>

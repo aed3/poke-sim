@@ -17841,7 +17841,8 @@ struct MechanicConstants {
     static constexpr float MIN = 0.0F;
   };
 
-  static constexpr float PercentChanceToProbability = PercentChance::MAX / Probability::MAX;
+  static constexpr auto ProbabilityToPercentChance = PercentChance::MAX / Probability::MAX;
+  static constexpr auto PercentChanceToProbability = Probability::MAX / PercentChance::MAX;
 
   struct AnalyzeEffectMultiplier {
     static constexpr float MAX = PokemonHpStat::MAX;
@@ -19639,10 +19640,8 @@ struct RandomBinaryChance {
 
   types::percentChance pass() const { return val; }
   types::percentChance fail() const { return MechanicConstants::PercentChance::MAX - pass(); }
-  types::probability reciprocalPass() const {
-    return MechanicConstants::PercentChance::MAX / (types::probability)pass();
-  }
-  types::probability reciprocalFail() const { return MechanicConstants::PercentChance::MAX - reciprocalPass(); }
+  types::probability reciprocalPass() const { return MechanicConstants::Probability::MAX / (types::probability)pass(); }
+  types::probability reciprocalFail() const { return MechanicConstants::Probability::MAX - reciprocalPass(); }
 };
 
 namespace tags {
@@ -27298,8 +27297,13 @@ inline types::rngResult nextBoundedRandomValue(RngSeed& seed, types::rngResult u
 namespace pokesim::internal {
 namespace {
 template <typename Type>
-void updateProbability(Probability& currentProbability, Type percentChance) {
-  currentProbability.val *= (types::probability)percentChance / MechanicConstants::PercentChanceToProbability;
+void updateProbability(Probability& currentProbability, Type eventValue) {
+  if constexpr (std::is_same_v<types::probability, Type>) {
+    currentProbability.val *= eventValue;
+  }
+  else {
+    currentProbability.val *= (types::probability)eventValue * MechanicConstants::PercentChanceToProbability;
+  }
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename RandomEventTag>
@@ -27372,16 +27376,14 @@ inline void updateProbabilityFromRandomEqualChance(
   types::eventPossibilities possibleEventCount) {
   Probability& probability = registry.get<Probability>(battle.val);
 
-  updateProbability(
-    probability,
-    MechanicConstants::PercentChanceToProbability / (types::probability)possibleEventCount);
+  updateProbability(probability, MechanicConstants::Probability::MAX / (types::probability)possibleEventCount);
 }
 
 inline void updateProbabilityFromRandomEventCount(
   types::registry& registry, const RandomEventCount& eventChance, const Battle& battle) {
   Probability& probability = registry.get<Probability>(battle.val);
 
-  updateProbability(probability, MechanicConstants::PercentChanceToProbability / (types::probability)eventChance.val);
+  updateProbability(probability, MechanicConstants::Probability::MAX / (types::probability)eventChance.val);
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>

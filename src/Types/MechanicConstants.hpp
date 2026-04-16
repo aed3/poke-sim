@@ -172,7 +172,8 @@ struct MechanicConstants {
     static constexpr float MIN = 0.0F;
   };
 
-  static constexpr float PercentChanceToProbability = PercentChance::MAX / Probability::MAX;
+  static constexpr auto ProbabilityToPercentChance = PercentChance::MAX / Probability::MAX;
+  static constexpr auto PercentChanceToProbability = Probability::MAX / PercentChance::MAX;
 
   struct AnalyzeEffectMultiplier {
     static constexpr float MAX = PokemonHpStat::MAX;
