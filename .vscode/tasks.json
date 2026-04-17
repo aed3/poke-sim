@@ -1,78 +1,51 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "cmake",
-			"label": "CMake: build",
-			"command": "build",
-			"targets": [
-				"PokeSimTests"
-			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"problemMatcher": [],
-			"dependsOn": ["Create Auto-Generated Files"],
-			"detail": "CMake template build task"
-		},
-		{
-			"type": "cmake",
-			"label": "CMake: clean",
-			"command": "clean",
-			"problemMatcher": []
-		},
-		{
-			"type": "cmake",
-			"label": "CMake: clean rebuild",
-			"command": "cleanRebuild",
-			"targets": [
-				"PokeSimTests"
-			],
-			"group": "build",
-			"problemMatcher": []
-		},
-		{
-			"type": "shell",
-			"label": "Create Auto-Generated Files",
-			"command": "node ${workspaceFolder}/tools/create",
-			"dependsOn": ["clang-format"],
-			"detail": "Runs the tools that create all the auto-generated files",
-			"problemMatcher": []
-		},
-		{
-			"type": "shell",
-			"label": "Create Header Files",
-			"command": "node ${workspaceFolder}/tools/createHeaders",
-			"dependsOn": ["clang-format"],
-			"problemMatcher": []
-		},
-		{
-			"type": "shell",
-			"label": "Create Argument Checks",
-			"command": "node ${workspaceFolder}/tools/createArgumentChecks",
-			"dependsOn": ["clang-format"],
-			"problemMatcher": []
-		},
-		{
-			"type": "shell",
-			"label": "Create Entity Viewer",
-			"command": "node ${workspaceFolder}/tools/createEntityViewer",
-			"dependsOn": ["Create Header Files"],
-			"problemMatcher": []
-		},
-		{
-			"type": "shell",
-			"label": "clang-format",
-			"command": "find src tests tools -name *.hpp -o -name *.cpp -o -name *.js | xargs clang-format --style=file -i",
-			"problemMatcher": []
-		},
-		{
-			"type": "shell",
-			"label": "clang-tidy",
-			"command": "find src tests -name *.hpp -o -name *.cpp | parallel clang-tidy --quiet --use-color -p build 2>/dev/null",
-			"problemMatcher": [],
-			"dependsOn": ["Create Auto-Generated Files"]
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "Create Auto-Generated Files",
+      "command": "node ${workspaceFolder}/tools/create",
+      "dependsOn": [
+        "clang-format"
+      ],
+      "detail": "Runs the tools that create all the auto-generated files"
+    },
+    {
+      "type": "shell",
+      "label": "Create Header Files",
+      "command": "node ${workspaceFolder}/tools/createHeaders",
+      "dependsOn": [
+        "clang-format"
+      ]
+    },
+    {
+      "type": "shell",
+      "label": "Create Argument Checks",
+      "command": "node ${workspaceFolder}/tools/createArgumentChecks",
+      "dependsOn": [
+        "clang-format"
+      ]
+    },
+    {
+      "type": "shell",
+      "label": "Create Entity Viewer",
+      "command": "node ${workspaceFolder}/tools/createEntityViewer",
+      "dependsOn": [
+        "Create Header Files"
+      ]
+    },
+    {
+      "type": "shell",
+      "label": "clang-format",
+      "command": "find src tests tools -name *.hpp -o -name *.cpp -o -name *.js | xargs clang-format --style=file -i"
+    },
+    {
+      "type": "shell",
+      "label": "clang-tidy",
+      "command": "find src tests -name *.hpp -o -name *.cpp | parallel -j -2 clang-tidy --quiet --use-color -p build 2>/dev/null",
+      "dependsOn": [
+        "Create Auto-Generated Files"
+      ]
+    }
+  ]
 }

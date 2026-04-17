@@ -1,5 +1,5 @@
 on: [workflow_call]
 
 runs:
-  using: 'node16'
+  using: "node24"
   main: ../../../tools/createHeaders/index.js

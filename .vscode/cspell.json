@@ -10,7 +10,7 @@
   "dictionaryDefinitions": [
     {
       "name": "pokemon",
-      "path": ".vscode/pokemonDictonary.txt"
+      "path": ".vscode/pokemonDictionary.txt"
     }
   ],
   "dictionaries": [
@@ -25,7 +25,6 @@
   ],
   "words": [
     "copydoc",
-    "Crits",
     "entt",
     "FUNCSIG",
     "NOLINTBEGIN",
