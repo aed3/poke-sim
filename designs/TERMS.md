@@ -1,5 +1,5 @@
 # Terms & Definitions
-Talking about the parts of the simulator can be confusing when so many aspects are only slightly different or could easily go by the same name. This is a list of some terms used to discuss/name some of those aspects. Ideally, the terms listed here should not be used in a way other than referring to these definitions.
+Talking about the parts of the simulator can be confusing when so many aspects are only slightly different. This is a list of some terms used to discuss/name some of those aspects. Ideally, the terms listed here should not be used in a way other than referring to these definitions.
 
 ## Pokemon Related
 

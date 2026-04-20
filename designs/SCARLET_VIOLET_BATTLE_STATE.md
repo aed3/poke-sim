@@ -1,6 +1,6 @@
 # Scarlet & Violet Battle State Data
 
-This is a list of all the minimum data needed to keep track of a double battle's state when simulating a Scarlet & Violet battle. Each field is listed list the minimum number of bits needed to represent it and the minimum number of bytes if a byte is the minimum size allowed per field.
+This is a list of all the minimum data needed for keeping track of a double battle's state when simulating a Scarlet & Violet battle. Each field is listed with the minimum number of bits needed to represent it and the minimum number of bytes if a byte is the minimum size allowed per field.
 
 Because data will not be stored in an object-oriented way and much of this data will only be allocated if that battle state would use it, this does not reflect the size each battle state will take up in memory.
 
@@ -438,18 +438,18 @@ Because data will not be stored in an object-oriented way and much of this data 
 | **Stockpile Count**       | Type           | 0       | 3       | 4                 | 2        | 8                |
 
 ### Notes
-- `Wish`: Enough bits to store half the maximum HP stat. Is 0 when wish is inactive
-- `Pokemon Index`: 12 used for none
-- `Turn`: Turn 0 is team preview
-- `1 Turn Duration`: Set to 0 when condition is inactive
-- `2 Turn Duration`: Set to 0 when condition is inactive
-- `3 Turn Duration`: Set to 0 when condition is inactive
-- `4 Turn Duration`: Set to 0 when condition is inactive
-- `5 Turn Duration`: Set to 0 when condition is inactive
-- `6 Turn Duration`: Set to 0 when condition is inactive
-- `7 Turn Duration`: Set to 0 when condition is inactive
-- `8 Turn Duration`: Set to 0 when condition is inactive
-- `Species Name`: This is for every species and form. Could be reduced to only Pokemon supported in the simulated game, TBD
-- `Base Stat`: Max value needs to be confirmed
-- `Damage`: Max HP time 2 because of counter and mirror coat. Could be set to Max HP if needed
+- `Wish`: Enough bits to store half the maximum HP stat. Is 0 when wish is inactive.
+- `Pokemon Index`: 12 used for none.
+- `Turn`: Turn 0 is team preview.
+- `1 Turn Duration`: Set to 0 when condition is inactive.
+- `2 Turn Duration`: Set to 0 when condition is inactive.
+- `3 Turn Duration`: Set to 0 when condition is inactive.
+- `4 Turn Duration`: Set to 0 when condition is inactive.
+- `5 Turn Duration`: Set to 0 when condition is inactive.
+- `6 Turn Duration`: Set to 0 when condition is inactive.
+- `7 Turn Duration`: Set to 0 when condition is inactive.
+- `8 Turn Duration`: Set to 0 when condition is inactive.
+- `Species Name`: This is for every species and form. Could be reduced to only Pokemon supported in the simulated game, TBD.
+- `Base Stat`: Max value needs to be confirmed.
+- `Damage`: Max HP time 2 because of counter and mirror coat. Could be set to Max HP if needed.
 
