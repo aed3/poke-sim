@@ -97,6 +97,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
 
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
     for (const SlotDecision& decision : decisions) {
       if (sideDecision.sideId == PlayerSideId::P1) {
         POKESIM_REQUIRE(
@@ -109,6 +110,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
           "Source must be from a player 2 in battle slot.");
       }
     }
+#endif
 
     resolveSlotDecisions(sideHandle, decisions, battleActionQueue);
   }

@@ -10,6 +10,7 @@
 #include <Components/Names/WeatherNames.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
+#include <entt/entity/registry.hpp>
 
 namespace pokesim::analyze_effect {
 inline auto tryGetAllInputEffects(types::entity input, const types::registry& registry) {

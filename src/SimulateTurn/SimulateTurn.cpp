@@ -15,9 +15,11 @@
 #include <Components/EntityHolders/FaintQueue.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Sides.hpp>
+#include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
 #include <Components/PP.hpp>
+#include <Components/PlayerSide.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/SpeedSort.hpp>
