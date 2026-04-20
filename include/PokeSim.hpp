@@ -274,7 +274,7 @@
  * src/Battle/Setup/SideStateSetup.cpp
  * src/Battle/Setup/PokemonStateSetup.cpp
  * src/Battle/Setup/MoveStateSetup.cpp
- * src/Pokedex/EnumToTag/AbililtyEnumToTag.hpp
+ * src/Pokedex/EnumToTag/AbilityEnumToTag.hpp
  * src/Pokedex/EnumToTag/ItemEnumToTag.hpp
  * src/Pokedex/EnumToTag/MoveEnumToTag.hpp
  * src/Pokedex/EnumToTag/NatureEnumToTag.hpp
@@ -30520,7 +30520,7 @@ inline void MoveStateSetup::setMaxPP(types::pp maxPp) {
 
 ////////////////// END OF src/Battle/Setup/MoveStateSetup.cpp //////////////////
 
-///////////// START OF src/Pokedex/EnumToTag/AbililtyEnumToTag.hpp /////////////
+///////////// START OF src/Pokedex/EnumToTag/AbilityEnumToTag.hpp //////////////
 
 // TODO(aed3): Make this auto generated
 
@@ -30557,7 +30557,7 @@ auto enumToTag(dex::Ability ability, RunFunctionArgs&&... args) {
 }
 }  // namespace pokesim::ability::tags
 
-////////////// END OF src/Pokedex/EnumToTag/AbililtyEnumToTag.hpp //////////////
+////////////// END OF src/Pokedex/EnumToTag/AbilityEnumToTag.hpp ///////////////
 
 /////////////// START OF src/Pokedex/EnumToTag/ItemEnumToTag.hpp ///////////////
 

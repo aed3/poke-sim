@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "AbililtyEnumToTag.hpp"
+#include "AbilityEnumToTag.hpp"
 #include "ItemEnumToTag.hpp"
 #include "MoveEnumToTag.hpp"
 #include "NatureEnumToTag.hpp"
