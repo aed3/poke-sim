@@ -77,7 +77,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Add Clang Upstream
         if: startsWith(matrix.cxx, 'clang')
@@ -125,7 +125,7 @@ jobs:
         use_combined_files: ["TRUE", "FALSE"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.5
+        uses: actions/checkout@v6
 
       - name: Configure build
         working-directory: ${{runner.workspace}}
@@ -158,7 +158,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Configure build
         working-directory: ${{runner.workspace}}
