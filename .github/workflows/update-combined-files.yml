@@ -1,0 +1,37 @@
+name: Update Combined Files
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "external/**"
+      - "tools/createCombinedFiles.js"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "external/**"
+      - "tools/createCombinedFiles.js"
+
+jobs:
+  create-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Create Combined Files
+        uses: ./.github/actions/create-headers
+
+      - name: Commit include/PokeSim.hpp
+        uses: EndBug/add-and-commit@v4
+        with:
+          author_name: Milo[bot]
+          message: Updating Combined Files
+          author_email: 41898282+github-actions[bot]@users.noreply.github.com
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
