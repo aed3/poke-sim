@@ -72,7 +72,7 @@ void checkForAndApplyStab(
   types::handle moveHandle, const Attacker& attacker, TypeName type, DamageRollModifiers& modifier) {
   const SpeciesTypes& attackerTypes = moveHandle.registry()->get<SpeciesTypes>(attacker.val);
 
-  if (attackerTypes.has(type.name)) {
+  if (attackerTypes.has(type.val)) {
     modifier.stab = StabBoostKind::STANDARD;
   }
 }
@@ -81,7 +81,7 @@ void checkForAndApplyTypeEffectiveness(
   types::handle moveHandle, Defender defender, TypeName type, DamageRollModifiers& modifier, const Pokedex& pokedex) {
   const SpeciesTypes& defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defender.val);
 
-  modifier.typeEffectiveness = getAttackEffectiveness(defenderTypes, type.name, pokedex.typeChart());
+  modifier.typeEffectiveness = getAttackEffectiveness(defenderTypes, type.val, pokedex.typeChart());
 }
 
 void applyCritDamageIncrease(Damage& damage) {

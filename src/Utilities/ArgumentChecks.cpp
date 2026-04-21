@@ -421,8 +421,8 @@ void check(const analyze_effect::MovePair& movePair, const types::registry& regi
     POKESIM_REQUIRE_NM(parentBattle.val == childBattle.val);
   }
 
-  POKESIM_REQUIRE_NM(parentTypeName.name == childTypeName.name);
-  POKESIM_REQUIRE_NM(parentMoveName.name == childMoveName.name);
+  POKESIM_REQUIRE_NM(parentTypeName.val == childTypeName.val);
+  POKESIM_REQUIRE_NM(parentMoveName.val == childMoveName.val);
 
   POKESIM_REQUIRE_NM(
     has<move::tags::Physical>(parentBattleMove, registry) == has<move::tags::Physical>(childBattleMove, registry));
@@ -727,62 +727,62 @@ void check(const Level& level) {
 
 template <>
 void check(const AbilityName& abilityName) {
-  POKESIM_REQUIRE_NM(abilityName.name != dex::Ability::NO_ABILITY);
-  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Ability>)abilityName.name <= dex::TOTAL_ABILITY_COUNT);
+  POKESIM_REQUIRE_NM(abilityName.val != dex::Ability::NO_ABILITY);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Ability>)abilityName.val <= dex::TOTAL_ABILITY_COUNT);
 }
 
 template <>
 void check(const GenderName& genderName) {
-  POKESIM_REQUIRE_NM(genderName.name != dex::Gender::NO_GENDER);
-  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Gender>)genderName.name <= dex::TOTAL_GENDER_COUNT);
+  POKESIM_REQUIRE_NM(genderName.val != dex::Gender::NO_GENDER);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Gender>)genderName.val <= dex::TOTAL_GENDER_COUNT);
 }
 
 template <>
 void check(const ItemName& itemName) {
-  POKESIM_REQUIRE_NM(itemName.name != dex::Item::NO_ITEM);
-  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Item>)itemName.name <= dex::TOTAL_ITEM_COUNT);
+  POKESIM_REQUIRE_NM(itemName.val != dex::Item::NO_ITEM);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Item>)itemName.val <= dex::TOTAL_ITEM_COUNT);
 }
 
 template <>
 void check(const MoveName& moveName) {
-  POKESIM_REQUIRE_NM(moveName.name != dex::Move::NO_MOVE);
-  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Move>)moveName.name <= dex::TOTAL_MOVE_COUNT);
+  POKESIM_REQUIRE_NM(moveName.val != dex::Move::NO_MOVE);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Move>)moveName.val <= dex::TOTAL_MOVE_COUNT);
 }
 
 template <>
 void check(const NatureName& natureName) {
-  POKESIM_REQUIRE_NM(natureName.name != dex::Nature::NO_NATURE);
-  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Nature>)natureName.name <= dex::TOTAL_NATURE_COUNT);
+  POKESIM_REQUIRE_NM(natureName.val != dex::Nature::NO_NATURE);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Nature>)natureName.val <= dex::TOTAL_NATURE_COUNT);
 }
 
 template <>
 void check(const PseudoWeatherName& pseudoWeatherName) {
-  POKESIM_REQUIRE_NM(pseudoWeatherName.name != dex::PseudoWeather::NO_PSEUDO_WEATHER);
+  POKESIM_REQUIRE_NM(pseudoWeatherName.val != dex::PseudoWeather::NO_PSEUDO_WEATHER);
   POKESIM_REQUIRE_NM(
-    (std::underlying_type_t<dex::PseudoWeather>)pseudoWeatherName.name <= dex::TOTAL_PSEUDO_WEATHER_COUNT);
+    (std::underlying_type_t<dex::PseudoWeather>)pseudoWeatherName.val <= dex::TOTAL_PSEUDO_WEATHER_COUNT);
 }
 
 template <>
 void check(const SideConditionName& sideConditionName) {
-  POKESIM_REQUIRE_NM(sideConditionName.name != dex::SideCondition::NO_SIDE_CONDITION);
+  POKESIM_REQUIRE_NM(sideConditionName.val != dex::SideCondition::NO_SIDE_CONDITION);
   POKESIM_REQUIRE_NM(
-    (std::underlying_type_t<dex::SideCondition>)sideConditionName.name <= dex::TOTAL_SIDE_CONDITION_COUNT);
+    (std::underlying_type_t<dex::SideCondition>)sideConditionName.val <= dex::TOTAL_SIDE_CONDITION_COUNT);
 }
 
 template <>
 void check(const SourceSlotName& sourceSlotName) {
-  checkSlot(sourceSlotName.name);
+  checkSlot(sourceSlotName.val);
 }
 
 template <>
 void check(const SpeciesName& speciesName) {
-  POKESIM_REQUIRE_NM(speciesName.name != dex::Species::NO_SPECIES);
-  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Species>)speciesName.name <= dex::TOTAL_SPECIES_COUNT);
+  POKESIM_REQUIRE_NM(speciesName.val != dex::Species::NO_SPECIES);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Species>)speciesName.val <= dex::TOTAL_SPECIES_COUNT);
 }
 
 template <>
 void check(const StatName& statName) {
-  switch (statName.name) {
+  switch (statName.val) {
     case dex::Stat::HP:
     case dex::Stat::ATK:
     case dex::Stat::DEF:
@@ -791,42 +791,42 @@ void check(const StatName& statName) {
     case dex::Stat::SPE: return;
   }
 
-  POKESIM_REQUIRE_FAIL(std::to_string((std::underlying_type_t<dex::Stat>)statName.name) + " is not a valid Stat enum.");
+  POKESIM_REQUIRE_FAIL(std::to_string((std::underlying_type_t<dex::Stat>)statName.val) + " is not a valid Stat enum.");
 }
 
 template <>
 void check(const StatusName& statusName) {
-  POKESIM_REQUIRE_NM(statusName.name != dex::Status::NO_STATUS);
-  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Status>)statusName.name <= dex::TOTAL_STATUS_COUNT);
+  POKESIM_REQUIRE_NM(statusName.val != dex::Status::NO_STATUS);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Status>)statusName.val <= dex::TOTAL_STATUS_COUNT);
 }
 
 template <>
 void check(const TargetSlotName& targetSlotName) {
-  checkSlot(targetSlotName.name);
+  checkSlot(targetSlotName.val);
 }
 
 template <>
 void check(const TerrainName& terrainName) {
-  POKESIM_REQUIRE_NM(terrainName.name != dex::Terrain::NO_TERRAIN);
-  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Terrain>)terrainName.name <= dex::TOTAL_TERRAIN_COUNT);
+  POKESIM_REQUIRE_NM(terrainName.val != dex::Terrain::NO_TERRAIN);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Terrain>)terrainName.val <= dex::TOTAL_TERRAIN_COUNT);
 }
 
 template <>
 void check(const TypeName& typeName) {
-  POKESIM_REQUIRE_NM(typeName.name != dex::Type::NO_TYPE);
-  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Type>)typeName.name <= dex::TOTAL_TYPE_COUNT);
+  POKESIM_REQUIRE_NM(typeName.val != dex::Type::NO_TYPE);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Type>)typeName.val <= dex::TOTAL_TYPE_COUNT);
 }
 
 template <>
 void check(const VolatileName& volatileName) {
-  POKESIM_REQUIRE_NM(volatileName.name != dex::Volatile::NO_VOLATILE);
-  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Volatile>)volatileName.name <= dex::TOTAL_VOLATILE_COUNT);
+  POKESIM_REQUIRE_NM(volatileName.val != dex::Volatile::NO_VOLATILE);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Volatile>)volatileName.val <= dex::TOTAL_VOLATILE_COUNT);
 }
 
 template <>
 void check(const WeatherName& weatherName) {
-  POKESIM_REQUIRE_NM(weatherName.name != dex::Weather::NO_WEATHER);
-  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Weather>)weatherName.name <= dex::TOTAL_WEATHER_COUNT);
+  POKESIM_REQUIRE_NM(weatherName.val != dex::Weather::NO_WEATHER);
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Weather>)weatherName.val <= dex::TOTAL_WEATHER_COUNT);
 }
 
 template <>
@@ -846,17 +846,17 @@ void check(const PlayerSide& playerSide) {
 
 template <>
 void check(const PrimaryAbility& ability) {
-  check(AbilityName{ability.name});
+  check(AbilityName{ability.val});
 }
 
 template <>
 void check(const SecondaryAbility& ability) {
-  check(AbilityName{ability.name});
+  check(AbilityName{ability.val});
 }
 
 template <>
 void check(const HiddenAbility& ability) {
-  check(AbilityName{ability.name});
+  check(AbilityName{ability.val});
 }
 
 template <>

@@ -37,7 +37,7 @@ struct RemoveItem {
 };
 
 void removeItemTags(types::handle handle, ItemName item) {
-  item::tags::enumToTag<RemoveItem>(item.name, handle);
+  item::tags::enumToTag<RemoveItem>(item.val, handle);
 }
 
 template <typename SelectionTag>

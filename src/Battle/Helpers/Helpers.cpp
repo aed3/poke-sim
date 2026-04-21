@@ -92,7 +92,7 @@ types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sid
 
 types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move) {
   for (types::entity moveSlot : moveSlots.val) {
-    if (registry.get<MoveName>(moveSlot).name == move) {
+    if (registry.get<MoveName>(moveSlot).val == move) {
       return moveSlot;
     }
   }

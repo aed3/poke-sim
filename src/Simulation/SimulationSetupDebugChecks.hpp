@@ -135,36 +135,36 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(id.val != 0U);
     }
 
-    POKESIM_REQUIRE_NM(speciesName.name == creationInfo.species);
-    POKESIM_REQUIRE_NM(abilityName.name == creationInfo.ability);
+    POKESIM_REQUIRE_NM(speciesName.val == creationInfo.species);
+    POKESIM_REQUIRE_NM(abilityName.val == creationInfo.ability);
     POKESIM_REQUIRE_NM(level.val == creationInfo.level);
 
     if (creationInfo.item == dex::Item::NO_ITEM) {
       POKESIM_REQUIRE_NM(!registry->all_of<ItemName>(pokemonEntity));
     }
     else {
-      POKESIM_REQUIRE_NM(registry->get<ItemName>(pokemonEntity).name == creationInfo.item);
+      POKESIM_REQUIRE_NM(registry->get<ItemName>(pokemonEntity).val == creationInfo.item);
     }
 
     if (creationInfo.gender == dex::Gender::NO_GENDER) {
       POKESIM_REQUIRE_NM(!registry->all_of<GenderName>(pokemonEntity));
     }
     else {
-      POKESIM_REQUIRE_NM(registry->get<GenderName>(pokemonEntity).name == creationInfo.gender);
+      POKESIM_REQUIRE_NM(registry->get<GenderName>(pokemonEntity).val == creationInfo.gender);
     }
 
     if (creationInfo.status == dex::Status::NO_STATUS) {
       POKESIM_REQUIRE_NM(!registry->all_of<StatusName>(pokemonEntity));
     }
     else {
-      POKESIM_REQUIRE_NM(registry->get<StatusName>(pokemonEntity).name == creationInfo.status);
+      POKESIM_REQUIRE_NM(registry->get<StatusName>(pokemonEntity).val == creationInfo.status);
     }
 
     if (creationInfo.nature == dex::Nature::NO_NATURE) {
       POKESIM_REQUIRE_NM(!registry->all_of<NatureName>(pokemonEntity));
     }
     else {
-      POKESIM_REQUIRE_NM(registry->get<NatureName>(pokemonEntity).name == creationInfo.nature);
+      POKESIM_REQUIRE_NM(registry->get<NatureName>(pokemonEntity).val == creationInfo.nature);
     }
 
     POKESIM_REQUIRE_NM(hp.val == creationInfo.stats.hp);
@@ -194,7 +194,7 @@ struct SimulationSetupChecks {
       const Simulation::MoveCreationInfo& move = creationInfo.moves[i];
       types::entity moveEntity = moveSlots.val[(types::moveSlotIndex)i];
       POKESIM_REQUIRE_NM((registry->all_of<MoveName, Pp, MaxPp>(moveEntity)));
-      POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).name == move.name);
+      POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).val == move.name);
       POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == move.pp);
       POKESIM_REQUIRE_NM(registry->get<MaxPp>(moveEntity).val == move.maxPp);
       pokesim::debug::checkMoveSlot(moveEntity, *registry);
@@ -352,7 +352,7 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(attacker.val == setupInfoAttacker);
     POKESIM_REQUIRE_NM(defender.val == setupInfoDefender);
     POKESIM_REQUIRE_NM(
-      std::find(calcDamageInputInfo.moves.begin(), calcDamageInputInfo.moves.end(), moveName.name) !=
+      std::find(calcDamageInputInfo.moves.begin(), calcDamageInputInfo.moves.end(), moveName.val) !=
       calcDamageInputInfo.moves.end());
 
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::Attacker>(setupInfoAttacker));
@@ -405,28 +405,28 @@ struct SimulationSetupChecks {
       if (effect.holds<dex::PseudoWeather>()) {
         POKESIM_REQUIRE_NM(registry->all_of<PseudoWeatherName>(analyzeEffectEntity));
         POKESIM_REQUIRE_NM(
-          registry->get<PseudoWeatherName>(analyzeEffectEntity).name == effect.get<dex::PseudoWeather>());
+          registry->get<PseudoWeatherName>(analyzeEffectEntity).val == effect.get<dex::PseudoWeather>());
       }
       else if (effect.holds<dex::SideCondition>()) {
         POKESIM_REQUIRE_NM(registry->all_of<SideConditionName>(analyzeEffectEntity));
         POKESIM_REQUIRE_NM(
-          registry->get<SideConditionName>(analyzeEffectEntity).name == effect.get<dex::SideCondition>());
+          registry->get<SideConditionName>(analyzeEffectEntity).val == effect.get<dex::SideCondition>());
       }
       else if (effect.holds<dex::Status>()) {
         POKESIM_REQUIRE_NM(registry->all_of<StatusName>(analyzeEffectEntity));
-        POKESIM_REQUIRE_NM(registry->get<StatusName>(analyzeEffectEntity).name == effect.get<dex::Status>());
+        POKESIM_REQUIRE_NM(registry->get<StatusName>(analyzeEffectEntity).val == effect.get<dex::Status>());
       }
       else if (effect.holds<dex::Terrain>()) {
         POKESIM_REQUIRE_NM(registry->all_of<TerrainName>(analyzeEffectEntity));
-        POKESIM_REQUIRE_NM(registry->get<TerrainName>(analyzeEffectEntity).name == effect.get<dex::Terrain>());
+        POKESIM_REQUIRE_NM(registry->get<TerrainName>(analyzeEffectEntity).val == effect.get<dex::Terrain>());
       }
       else if (effect.holds<dex::Volatile>()) {
         POKESIM_REQUIRE_NM(registry->all_of<VolatileName>(analyzeEffectEntity));
-        POKESIM_REQUIRE_NM(registry->get<VolatileName>(analyzeEffectEntity).name == effect.get<dex::Volatile>());
+        POKESIM_REQUIRE_NM(registry->get<VolatileName>(analyzeEffectEntity).val == effect.get<dex::Volatile>());
       }
       else if (effect.holds<dex::Weather>()) {
         POKESIM_REQUIRE_NM(registry->all_of<WeatherName>(analyzeEffectEntity));
-        POKESIM_REQUIRE_NM(registry->get<WeatherName>(analyzeEffectEntity).name == effect.get<dex::Weather>());
+        POKESIM_REQUIRE_NM(registry->get<WeatherName>(analyzeEffectEntity).val == effect.get<dex::Weather>());
       }
       else {
         POKESIM_REQUIRE_FAIL("Effect does not contain a valid enum.");

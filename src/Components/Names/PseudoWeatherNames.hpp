@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct PseudoWeatherName {
-  dex::PseudoWeather name = dex::PseudoWeather::NO_PSEUDO_WEATHER;
+  dex::PseudoWeather val = dex::PseudoWeather::NO_PSEUDO_WEATHER;
 };
 }  // namespace pokesim

@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct SideConditionName {
-  dex::SideCondition name = dex::SideCondition::NO_SIDE_CONDITION;
+  dex::SideCondition val = dex::SideCondition::NO_SIDE_CONDITION;
 };
 }  // namespace pokesim

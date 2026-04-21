@@ -124,7 +124,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
         defenderSide,
         effectTargetSide,
         move.val,
-        effectStatus.name,
+        effectStatus.val,
         effectAtkBoost.val,
         effectDefBoost.val,
         effectSpaBoost.val,
@@ -211,7 +211,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
 
     simulation.registry.view<analyze_effect::tags::Input, StatusName>().each(
       [&](types::entity entity, StatusName status) {
-        if (status.name == dex::Status::BRN) {
+        if (status.val == dex::Status::BRN) {
           idealResults.emplace(
             entity,
             Ideals{reconsiderActiveEffects ? p1FuryAttack : p1FuryAttackBurn, p1FuryAttackBurn});
@@ -295,7 +295,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
 
     simulation.registry.view<analyze_effect::tags::Input, StatusName>().each(
       [&](types::entity entity, StatusName status) {
-        if (status.name == dex::Status::BRN) {
+        if (status.val == dex::Status::BRN) {
           idealResults.emplace(entity, Ideals{p1FuryAttack, p1FuryAttackBurn});
         }
         else {
@@ -415,7 +415,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
       auto effectSpeBoost = registry.all_of<SpeBoost>(input) ? registry.get<SpeBoost>(input) : SpeBoost{};
 
       Ideals pickedIdeals;
-      if (attackerIsP1 && effectTargetIsP1 && effectStatus.name == dex::Status::BRN) {
+      if (attackerIsP1 && effectTargetIsP1 && effectStatus.val == dex::Status::BRN) {
         switch (move.val) {
           case dex::Move::FURY_ATTACK: pickedIdeals = {p1FuryAttack, p1FuryAttackBurn}; break;
           case dex::Move::KNOCK_OFF:   pickedIdeals = {p1KnockOff, p1KnockOffBurn}; break;
@@ -437,13 +437,13 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
           default:                     FAIL("Test is missing damages for a move."); break;
         }
       }
-      else if (!attackerIsP1 && !effectTargetIsP1 && effectStatus.name == dex::Status::PSN) {
+      else if (!attackerIsP1 && !effectTargetIsP1 && effectStatus.val == dex::Status::PSN) {
         switch (move.val) {
           case dex::Move::FURY_ATTACK: pickedIdeals = {p2FuryAttack, p2FuryAttack}; break;
           default:                     FAIL("Test is missing damages for a move."); break;
         }
       }
-      else if (attackerIsP1 && !effectTargetIsP1 && effectStatus.name == dex::Status::BRN) {
+      else if (attackerIsP1 && !effectTargetIsP1 && effectStatus.val == dex::Status::BRN) {
         switch (move.val) {
           case dex::Move::KNOCK_OFF: pickedIdeals = {p1KnockOff, p1KnockOff}; break;
           default:                   FAIL("Test is missing damages for a move."); break;
@@ -462,7 +462,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
           default:                     FAIL("Test is missing damages for a move."); break;
         }
       }
-      else if (!attackerIsP1 && effectTargetIsP1 && effectStatus.name == dex::Status::TOX) {
+      else if (!attackerIsP1 && effectTargetIsP1 && effectStatus.val == dex::Status::TOX) {
         switch (move.val) {
           case dex::Move::FURY_ATTACK: pickedIdeals = {p2FuryAttack, p2FuryAttack}; break;
           case dex::Move::KNOCK_OFF:   pickedIdeals = {p2KnockOff, p2KnockOff}; break;

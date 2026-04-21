@@ -105,11 +105,11 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
       REQUIRE(queue.size() == 2U);
 
       auto p1DecisionEntity = *std::find_if(queue.begin(), queue.end(), [&](types::entity entity) {
-        return registry.get<SourceSlotName>(entity).name == Slot::P1A;
+        return registry.get<SourceSlotName>(entity).val == Slot::P1A;
       });
 
       auto p2DecisionEntity = *std::find_if(queue.begin(), queue.end(), [&](types::entity entity) {
-        return registry.get<SourceSlotName>(entity).name == Slot::P2A;
+        return registry.get<SourceSlotName>(entity).val == Slot::P2A;
       });
 
       auto checkDecision = [&](
@@ -119,8 +119,8 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
         if (decision.moveChoice) {
           const auto [target, move, speedSort] = registry.get<TargetSlotName, MoveName, SpeedSort>(decisionEntity);
 
-          REQUIRE(target.name == decision.targetSlot);
-          REQUIRE(move.name == decision.moveChoice);
+          REQUIRE(target.val == decision.targetSlot);
+          REQUIRE(move.val == decision.moveChoice);
           REQUIRE(speedSort.speed == pokemon.stats.spe);
           REQUIRE(speedSort.order == ActionOrder::MOVE);
           REQUIRE(speedSort.priority == 0);
@@ -130,7 +130,7 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
           REQUIRE(registry.all_of<action::tags::Switch, TargetSlotName, SpeedSort>(decisionEntity));
           const auto [target, speedSort] = registry.get<TargetSlotName, SpeedSort>(decisionEntity);
 
-          REQUIRE(target.name == decision.targetSlot);
+          REQUIRE(target.val == decision.targetSlot);
           REQUIRE(speedSort.speed == pokemon.stats.spe);
           REQUIRE(speedSort.order == ActionOrder::SWITCH);
           REQUIRE(speedSort.priority == 0);

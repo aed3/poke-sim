@@ -37,7 +37,7 @@ void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle&
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction action) {
   types::registry& registry = *battleHandle.registry();
   const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(action.val);
-  types::entity sourceEntity = slotToPokemonEntity(registry, sides, sourceSlotName.name);
+  types::entity sourceEntity = slotToPokemonEntity(registry, sides, sourceSlotName.val);
 
   battleHandle.emplace<CurrentActionSource>(sourceEntity);
   registry.emplace<tags::CurrentActionMoveSource>(sourceEntity);
@@ -47,7 +47,7 @@ void setCurrentActionTarget(
   types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source) {
   types::registry& registry = *battleHandle.registry();
   const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.val);
-  types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.name);
+  types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.val);
 
   if (!registry.any_of<tags::Fainted>(targetEntity)) {
     battleHandle.emplace<CurrentActionTargets>(types::targets<types::entity>{targetEntity});
@@ -67,10 +67,10 @@ void setCurrentActionMove(
   const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
 
   for (types::entity target : targets.val) {
-    createActionMoveForTarget({registry, target}, battleHandle.entity(), source.val, move.name, pokedex);
+    createActionMoveForTarget({registry, target}, battleHandle.entity(), source.val, move.val, pokedex);
   }
 
-  types::entity moveSlotEntity = moveToEntity(registry, moveSlots, move.name);
+  types::entity moveSlotEntity = moveToEntity(registry, moveSlots, move.val);
   battleHandle.emplace<CurrentActionMoveSlot>(moveSlotEntity);
   registry.emplace<tags::CurrentActionMoveSlot>(moveSlotEntity);
 }

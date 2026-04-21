@@ -58,7 +58,7 @@ EffectPresentCheck hasBattleEffect(types::registry& registry, Battle battle, Bat
     return EffectPresentCheck::NOT_PRESENT;
   }
 
-  if (currentEffect->name == battleEffect.name) {
+  if (currentEffect->val == battleEffect.val) {
     return EffectPresentCheck::PRESENT_AND_APPLIED;
   }
 
@@ -79,7 +79,7 @@ EffectPresentCheck hasStatusEffect(types::registry& registry, EffectTarget effec
     return EffectPresentCheck::NOT_PRESENT;
   }
 
-  if (currentStatus->name == status.name) {
+  if (currentStatus->val == status.val) {
     return EffectPresentCheck::PRESENT_AND_APPLIED;
   }
 
@@ -107,7 +107,7 @@ bool namedEffectPointerMatch(const EffectTuple& current, const EffectTuple& othe
 
   if ((currentProperty == nullptr) != (otherProperty == nullptr)) return false;
   if (currentProperty == nullptr) return true;
-  return currentProperty->name == otherProperty->name;
+  return currentProperty->val == otherProperty->val;
 }
 
 template <typename T, typename EffectTuple>
@@ -204,7 +204,7 @@ void ignoreWithSideConditionEffect(
   types::handle inputHandle, Battle battle, EffectTarget effectTarget, SideConditionName effect) {
   types::registry& registry = *inputHandle.registry();
 
-  EffectPresentCheck present = hasSideEffect(registry, effectTarget, effect.name);
+  EffectPresentCheck present = hasSideEffect(registry, effectTarget, effect.val);
   if (present == EffectPresentCheck::PRESENT_AND_APPLIED) {
     setRunOneCalculation(inputHandle, battle);
   }
@@ -223,7 +223,7 @@ void ignoreWithVolatileEffect(
   types::handle inputHandle, Battle battle, EffectTarget effectTarget, VolatileName effect) {
   types::registry& registry = *inputHandle.registry();
 
-  EffectPresentCheck present = hasVolatileEffect(registry, effectTarget, effect.name);
+  EffectPresentCheck present = hasVolatileEffect(registry, effectTarget, effect.val);
   if (present == EffectPresentCheck::PRESENT_AND_APPLIED) {
     setRunOneCalculation(inputHandle, battle);
   }
@@ -420,8 +420,8 @@ void applyStatusEffect(types::handle inputHandle, EffectTarget effectTarget, Sta
     setInvertFinalAnswer(inputHandle);
   }
   else {
-    pokemonHandle.emplace<StatusName>(effect.name);
-    status::tags::emplaceTagFromEnum(effect.name, pokemonHandle);
+    pokemonHandle.emplace<StatusName>(effect.val);
+    status::tags::emplaceTagFromEnum(effect.val, pokemonHandle);
   }
 }
 

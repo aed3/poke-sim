@@ -49,7 +49,7 @@ void addTargetAllyToTargets(types::registry& registry, const Battle& battle) {
   const Sides& sides = registry.get<Sides>(battle.val);
   const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).val);
 
-  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, targetSlotName.name);
+  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, targetSlotName.val);
   if (allyEntity == entt::null) {
     return;
   }
@@ -62,7 +62,7 @@ void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
   const Sides& sides = registry.get<Sides>(battle.val);
   const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(registry.get<CurrentAction>(battle.val).val);
 
-  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, sourceSlotName.name);
+  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, sourceSlotName.val);
   if (allyEntity == entt::null) {
     return;
   }
@@ -83,7 +83,7 @@ void createActionMoveForTargets(
   types::handle targetHandle, Battle battle, CurrentActionSource source, const Pokedex& pokedex) {
   types::registry& registry = *targetHandle.registry();
 
-  dex::Move move = registry.get<MoveName>(registry.get<CurrentAction>(battle.val).val).name;
+  dex::Move move = registry.get<MoveName>(registry.get<CurrentAction>(battle.val).val).val;
   types::entity moveEntity = createActionMoveForTarget(targetHandle, battle.val, source.val, move, pokedex);
 
   registry.emplace<pokesim::tags::SimulateTurn>(moveEntity);

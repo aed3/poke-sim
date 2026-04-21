@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct TerrainName {
-  dex::Terrain name = dex::Terrain::NO_TERRAIN;
+  dex::Terrain val = dex::Terrain::NO_TERRAIN;
 };
 }  // namespace pokesim

@@ -60,11 +60,6 @@ class AssertComponentsEqual {
   template <typename T>
   struct val<T, std::void_t<decltype(T::val)>> : std::true_type {};
 
-  template <typename, typename = void>
-  struct name : std::false_type {};
-  template <typename T>
-  struct name<T, std::void_t<decltype(T::name)>> : std::true_type {};
-
   template <class, class = void>
   struct equals : std::false_type {};
   template <class T>
@@ -125,12 +120,6 @@ class AssertComponentsEqual {
     else if constexpr (val<Type>::value) {
       compareMember(current.val, initial.val, registry);
       if constexpr (sizeof(current.val) == sizeof(current)) {
-        return;
-      }
-    }
-    else if constexpr (name<Type>::value) {
-      compareMember(current.name, initial.name, registry);
-      if constexpr (sizeof(current.name) == sizeof(current)) {
         return;
       }
     }

@@ -19,7 +19,7 @@ TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
       pokedex.getSpeciesData<SpeciesName, SpeciesTypes, BaseStats, PrimaryAbility, HiddenAbility>(
         dex::Species::EMPOLEON);
 
-    REQUIRE(species.name == Empoleon::name);
+    REQUIRE(species.val == Empoleon::name);
     REQUIRE(types.type1() == Empoleon::type.type1());
     REQUIRE(types.type2() == Empoleon::type.type2());
     REQUIRE(baseStats.hp == Empoleon::hp);
@@ -29,8 +29,8 @@ TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
     REQUIRE(baseStats.spd == Empoleon::spd);
     REQUIRE(baseStats.spe == Empoleon::spe);
 
-    REQUIRE(primaryAbility.name == Empoleon::primaryAbility);
-    REQUIRE(hiddenAbility.name == Empoleon::hiddenAbility);
+    REQUIRE(primaryAbility.val == Empoleon::primaryAbility);
+    REQUIRE(hiddenAbility.val == Empoleon::hiddenAbility);
 
     REQUIRE_FALSE(pokedex.speciesHas<SecondaryAbility>(dex::Species::EMPOLEON));
 
@@ -45,7 +45,7 @@ TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
       pokedex.getSpeciesData<SpeciesName, SpeciesTypes, BaseStats, PrimaryAbility, HiddenAbility>(
         dex::Species::AMPHAROS);
 
-    REQUIRE(species.name == Ampharos::name);
+    REQUIRE(species.val == Ampharos::name);
     REQUIRE(types.type1() == Ampharos::type.type1());
     REQUIRE(types.type2() == Ampharos::type.type2());
     REQUIRE(baseStats.hp == Ampharos::hp);
@@ -55,8 +55,8 @@ TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
     REQUIRE(baseStats.spd == Ampharos::spd);
     REQUIRE(baseStats.spe == Ampharos::spe);
 
-    REQUIRE(primaryAbility.name == Ampharos::primaryAbility);
-    REQUIRE(hiddenAbility.name == Ampharos::hiddenAbility);
+    REQUIRE(primaryAbility.val == Ampharos::primaryAbility);
+    REQUIRE(hiddenAbility.val == Ampharos::hiddenAbility);
 
     REQUIRE_FALSE(pokedex.speciesHas<SecondaryAbility>(dex::Species::AMPHAROS));
   }
@@ -69,7 +69,7 @@ TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
       pokedex.getSpeciesData<SpeciesName, SpeciesTypes, BaseStats, PrimaryAbility, SecondaryAbility, HiddenAbility>(
         dex::Species::GARDEVOIR);
 
-    REQUIRE(species.name == Gardevoir::name);
+    REQUIRE(species.val == Gardevoir::name);
     REQUIRE(types.type1() == Gardevoir::type.type1());
     REQUIRE(types.type2() == Gardevoir::type.type2());
     REQUIRE(baseStats.hp == Gardevoir::hp);
@@ -79,9 +79,9 @@ TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
     REQUIRE(baseStats.spd == Gardevoir::spd);
     REQUIRE(baseStats.spe == Gardevoir::spe);
 
-    REQUIRE(primaryAbility.name == Gardevoir::primaryAbility);
-    REQUIRE(secondaryAbility.name == Gardevoir::secondaryAbility);
-    REQUIRE(hiddenAbility.name == Gardevoir::hiddenAbility);
+    REQUIRE(primaryAbility.val == Gardevoir::primaryAbility);
+    REQUIRE(secondaryAbility.val == Gardevoir::secondaryAbility);
+    REQUIRE(hiddenAbility.val == Gardevoir::hiddenAbility);
   }
 }
 
@@ -96,19 +96,19 @@ TEST_CASE("Pokedex Data Building: Item", "[Pokedex]") {
 
   {
     auto item = pokedex.getItemData<ItemName>(dex::Item::CHOICE_SCARF);
-    REQUIRE(item.name == dex::Item::CHOICE_SCARF);
+    REQUIRE(item.val == dex::Item::CHOICE_SCARF);
     REQUIRE(pokedex.itemHas<item::tags::Choice>(dex::Item::CHOICE_SCARF));
   }
 
   {
     auto item = pokedex.getItemData<ItemName>(dex::Item::CHOICE_SPECS);
-    REQUIRE(item.name == dex::Item::CHOICE_SPECS);
+    REQUIRE(item.val == dex::Item::CHOICE_SPECS);
     REQUIRE(pokedex.itemHas<item::tags::Choice>(dex::Item::CHOICE_SPECS));
   }
 
   {
     auto item = pokedex.getItemData<ItemName>(dex::Item::ASSAULT_VEST);
-    REQUIRE(item.name == dex::Item::ASSAULT_VEST);
+    REQUIRE(item.val == dex::Item::ASSAULT_VEST);
     REQUIRE_FALSE(pokedex.itemHas<item::tags::Choice>(dex::Item::ASSAULT_VEST));
   }
 }
@@ -134,8 +134,8 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     auto [move, type, accuracy, power, pp] = pokedex.getMoveData<MoveName, TypeName, Accuracy, BasePower, Pp>(moveEnum);
 
-    REQUIRE(move.name == FuryAttack::name);
-    REQUIRE(type.name == FuryAttack::type);
+    REQUIRE(move.val == FuryAttack::name);
+    REQUIRE(type.val == FuryAttack::type);
     REQUIRE(pokedex.moveHas<move::tags::Physical>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Special>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Status>(moveEnum));
@@ -156,8 +156,8 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     auto [move, type, accuracy, power, pp] = pokedex.getMoveData<MoveName, TypeName, Accuracy, BasePower, Pp>(moveEnum);
 
-    REQUIRE(move.name == Thunderbolt::name);
-    REQUIRE(type.name == Thunderbolt::type);
+    REQUIRE(move.val == Thunderbolt::name);
+    REQUIRE(type.val == Thunderbolt::type);
     REQUIRE(pokedex.moveHas<move::tags::Special>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Physical>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Status>(moveEnum));
@@ -184,8 +184,8 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     auto [move, type, accuracy, power, pp] = pokedex.getMoveData<MoveName, TypeName, Accuracy, BasePower, Pp>(moveEnum);
 
-    REQUIRE(move.name == Moonblast::name);
-    REQUIRE(type.name == Moonblast::type);
+    REQUIRE(move.val == Moonblast::name);
+    REQUIRE(type.val == Moonblast::type);
     REQUIRE(pokedex.moveHas<move::tags::Special>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Physical>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Status>(moveEnum));
@@ -213,8 +213,8 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     auto [move, type, accuracy, pp] = pokedex.getMoveData<MoveName, TypeName, Accuracy, Pp>(moveEnum);
 
-    REQUIRE(move.name == WillOWisp::name);
-    REQUIRE(type.name == WillOWisp::type);
+    REQUIRE(move.val == WillOWisp::name);
+    REQUIRE(type.val == WillOWisp::type);
     REQUIRE(pokedex.moveHas<move::tags::Status>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Physical>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Special>(moveEnum));
@@ -242,8 +242,8 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     auto [move, type, pp] = pokedex.getMoveData<MoveName, TypeName, Pp>(moveEnum);
 
-    REQUIRE(move.name == QuiverDance::name);
-    REQUIRE(type.name == QuiverDance::type);
+    REQUIRE(move.val == QuiverDance::name);
+    REQUIRE(type.val == QuiverDance::type);
     REQUIRE(pokedex.moveHas<move::tags::Status>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Physical>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHas<move::tags::Special>(moveEnum));

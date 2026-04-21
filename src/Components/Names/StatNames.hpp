@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct StatName {
-  dex::Stat name;
+  dex::Stat val;
 };
 }  // namespace pokesim

@@ -136,7 +136,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
     PlayerSideId sideId = registry.get<PlayerSide>(registry.get<Side>(target).val).val;
     DamageRollKind damageRollKind = sideId == PlayerSideId::P1 ? damageRollOptions.p1 : damageRollOptions.p2;
 
-    dex::Move move = registry.get<MoveName>(entity).name;
+    dex::Move move = registry.get<MoveName>(entity).val;
     const IdealDamageValues& idealDamageValues = pickIdealDamageValues(move, damageRollKind);
 
     if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {

@@ -48,7 +48,7 @@ TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][Knoc
   }
 
   for (const auto& [entity, move] : registry.view<MoveName>().each()) {
-    if (move.name == dex::Move::KNOCK_OFF || move.name == dex::Move::SPLASH) {
+    if (move.val == dex::Move::KNOCK_OFF || move.val == dex::Move::SPLASH) {
       specificallyCheckEntities.push_back(entity);
     }
   }

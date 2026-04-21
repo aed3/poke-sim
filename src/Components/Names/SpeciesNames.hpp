@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct SpeciesName {
-  dex::Species name = dex::Species::NO_SPECIES;
+  dex::Species val = dex::Species::NO_SPECIES;
 };
 }  // namespace pokesim

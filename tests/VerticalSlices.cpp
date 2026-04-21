@@ -496,7 +496,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
   }
 
   for (const auto& [entity, move] : registry.view<MoveName>().each()) {
-    if (move.name == dex::Move::KNOCK_OFF || move.name == dex::Move::THUNDERBOLT) {
+    if (move.val == dex::Move::KNOCK_OFF || move.val == dex::Move::THUNDERBOLT) {
       specificallyCheckedEntities.push_back(entity);
     }
   }
@@ -573,7 +573,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
       REQUIRE(p1Speed.val == initialP1Speed);
     }
     if (p1Paralyzed) {
-      REQUIRE(registry.get<StatusName>(p1Pokemon).name == dex::Status::PAR);
+      REQUIRE(registry.get<StatusName>(p1Pokemon).val == dex::Status::PAR);
       REQUIRE(p1Speed.val == (initialP1Speed / 2U));
     }
 
@@ -956,7 +956,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     types::stat p2ALifeOrbHpDecrease = p2AInfo.stats.hp / LifeOrb::onAfterMoveUsedHpDecreaseDivisor;
     types::stat p2ABurnHpDecrease = p2AInfo.stats.hp / Burn::onResidualHpDecreaseDivisor;
     if (p2ABurned) {
-      REQUIRE(registry.get<StatusName>(p2APokemon).name == dex::Status::BRN);
+      REQUIRE(registry.get<StatusName>(p2APokemon).val == dex::Status::BRN);
       REQUIRE(p2AHp.val == p2AInfo.stats.hp - p2ALifeOrbHpDecrease - p2ABurnHpDecrease);
 
       if (willOWispMightMiss) {

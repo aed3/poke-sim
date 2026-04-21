@@ -4,6 +4,6 @@
 
 namespace pokesim {
 struct VolatileName {
-  dex::Volatile name = dex::Volatile::NO_VOLATILE;
+  dex::Volatile val = dex::Volatile::NO_VOLATILE;
 };
 }  // namespace pokesim

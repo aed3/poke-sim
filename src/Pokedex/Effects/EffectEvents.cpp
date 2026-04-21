@@ -51,7 +51,7 @@ void choiceLockRemoveWithoutItem(types::handle pokemonHandle, const pokesim::Cho
 
 void choiceLockRemoveWithItem(
   types::handle pokemonHandle, const ItemName& itemName, const pokesim::ChoiceLock&, const Pokedex& pokedex) {
-  if (!pokedex.itemHas<item::tags::Choice>(itemName.name)) {
+  if (!pokedex.itemHas<item::tags::Choice>(itemName.val)) {
     pokemonHandle.remove<pokesim::ChoiceLock>();
   }
 }
