@@ -3,17 +3,24 @@
   "tasks": [
     {
       "type": "shell",
-      "label": "Create Auto-Generated Files",
+      "label": "Create All Auto-Generated Files",
       "command": "node ${workspaceFolder}/tools/create",
       "dependsOn": [
         "clang-format"
-      ],
-      "detail": "Runs the tools that create all the auto-generated files"
+      ]
     },
     {
       "type": "shell",
-      "label": "Create Header Files",
-      "command": "node ${workspaceFolder}/tools/createHeaders",
+      "label": "Create Combined Files",
+      "command": "node ${workspaceFolder}/tools/createCombinedFiles",
+      "dependsOn": [
+        "clang-format"
+      ]
+    },
+    {
+      "type": "shell",
+      "label": "Create Entity Viewer",
+      "command": "node ${workspaceFolder}/tools/createEntityViewer",
       "dependsOn": [
         "clang-format"
       ]
@@ -28,10 +35,10 @@
     },
     {
       "type": "shell",
-      "label": "Create Entity Viewer",
-      "command": "node ${workspaceFolder}/tools/createEntityViewer",
+      "label": "Create Header Files",
+      "command": "node ${workspaceFolder}/tools/createFolderHeaderFiles",
       "dependsOn": [
-        "Create Header Files"
+        "clang-format"
       ]
     },
     {

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const {getFullPath, toRelative, ignoredFiles, writeCppFile} = require('../utils');
+const {getFullPath, toRelative, ignoredFiles, writeCppFile} = require('./utils');
 
 const headerFileName = 'headers.hpp';
 

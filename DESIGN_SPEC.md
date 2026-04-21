@@ -2,7 +2,7 @@
   - **Pokemon for any Application**. Provide an extensive Pokemon battling and analyzing codebase for building research projects, fan games, and more.
   - **Library for Speed.** Optimize for speed of its simulations above other performance metrics (memory usage, binary size, start-up time, etc.).
   - **Easy to understand.** Include a well-documented and intuitive API.
-  - **Easy to use.** Require 0 excluded dependencies, work across most C++ compilers and supported operating systems, and provide a single header file version for simple integration into any project.
+  - **Easy to use.** Require 0 excluded dependencies, work across most C++ compilers and supported operating systems, and provide a single header and source file version for simple integration into any project.
 
 This project will be based on the great work done by the Pokemon Showdown team by porting its simulation code from TypeScript to C++. A lot of the game mechanic logic will stay the same, with the "backbone" functions rewritten to achieve high performance and support research-focused features.
 

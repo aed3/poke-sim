@@ -1,7 +1,7 @@
 #pragma once
 
-#ifdef POKESIM_USE_SINGLE_HEADER_FILE
-#include "../include/PokeSim.hpp"
+#ifdef POKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES
+#include "../extras/PokeSim.hpp"
 #else
 #include <PokeSim.hpp>
 #endif

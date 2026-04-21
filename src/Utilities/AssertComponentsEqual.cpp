@@ -55,7 +55,7 @@ void hasSameComponents(
       POKESIM_REQUIRE(currStorage != nullptr, "The current registry never contained this component: " + typeName);
       POKESIM_REQUIRE(
         currStorage->contains(currEntity),
-        "The current registry doesn't contain the inital's component: " + typeName);
+        "The current registry doesn't contain the initial's component: " + typeName);
     }
   }
 }

@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const {getFullPath, toRelative, ignoredFiles, tempDir, runClangQuery, writeCppFile} = require('../utils')
+const {getFullPath, toRelative, ignoredFiles, writeCppFile} = require('./utils');
+
+require('./createFolderHeaderFiles.js');
+require('./createArgumentChecks.js');
 
 const srcFolder = getFullPath('src');
 const externalFolder = getFullPath('external');
@@ -15,7 +18,8 @@ const dependencies = {};
 const dependencyLines = {};
 const dependencyOrder = [];
 
-const singleFileHeader = ['#pragma once'];
+const combinedHeaderFile = ['#pragma once'];
+const combinedSourceFile = ['#include "PokeSim.hpp"'];
 
 const readSrcFiles = () => {
   const nextFiles = [srcFolder, externalFolder];
@@ -130,89 +134,49 @@ const pad = (str) => {
   return ' '.padStart(split, '/') + str + ' '.padEnd(split + (str.length % 2), '/');
 };
 
-const addToSingleFileHeader = (files) => {
-  files = files.filter(file => path.basename(file) !== 'headers.hpp');
+const addToCombinedFiles = (files, isSource) => {
+  const combinedFileLines = isSource ? combinedSourceFile : combinedHeaderFile;
+  files = files.filter(file => path.basename(file) !== 'headers.hpp' && (path.extname(file) === '.cpp') === isSource);
 
-  singleFileHeader.push('', '/**', ' * FILE ORDER');
+  combinedFileLines.push('', '/**', ' * FILE ORDER');
   for (const file of files) {
-    singleFileHeader.push(' * ' + toRelative(file));
+    combinedFileLines.push(' * ' + toRelative(file));
   }
-  singleFileHeader.push(' */', '');
+  combinedFileLines.push(' */', '');
 
+  const libraryIncludes = new Set();
   for (const file of files) {
     const normalizedFile = toRelative(file);
-    singleFileHeader.push('', pad(`START OF ${normalizedFile}`), '');
     const lines = fileText[file];
     const fileDependencyLines = dependencyLines[file];
 
-    let startOfFile = true;
+    const savedFileLines = [];
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      if ((!line && startOfFile) || fileDependencyLines.has(i) || pragmaOnceRegex.test(line)) continue;
+      if ((!line && !savedFileLines.at(-1)) || fileDependencyLines.has(i) || pragmaOnceRegex.test(line)) continue;
 
-      startOfFile = false;
-      singleFileHeader.push(line);
+      const includePath = includeRegex.exec(line)?.[1];
+      if (includePath) {
+        if (libraryIncludes.has(includePath)) continue;
+        libraryIncludes.add(includePath);
+      }
+
+      savedFileLines.push(line);
     }
 
-    singleFileHeader.push('', pad(`END OF ${normalizedFile}`));
+    if (savedFileLines.length) {
+      combinedFileLines.push(
+        '',
+        pad(`START OF ${normalizedFile}`),
+        '',
+        ...savedFileLines,
+        '',
+        pad(`END OF ${normalizedFile}`),
+      );
+    }
   }
-};
 
-const createSingleFileHeader = () => {
-  try {
-    const tempHeaderPath = path.join(tempDir, 'PokeSim.hpp');
-    fs.writeFileSync(tempHeaderPath, singleFileHeader.join('\n'));
-    const query = `
-    set bind-root false
-    l inline functionDecl(
-      unless(cxxConstructorDecl(isDefinition())),
-      unless(isDefinition()),
-      unless(isInline()),
-      unless(isImplicit())
-    ).bind("inline")
-    l method cxxMethodDecl(inline)
-    l functionTemplate functionDecl(inline)
-
-    m namespaceDecl(
-      isExpansionInMainFile(),
-      matchesName("pokesim"),
-      forEach(cxxRecordDecl(forEach(method)))
-    )
-    m namespaceDecl(
-      isExpansionInMainFile(),
-      matchesName("pokesim"),
-      forEach(cxxRecordDecl(
-        forEach(functionTemplateDecl(forEach(method)))
-      ))
-    )
-    m namespaceDecl(
-      isExpansionInMainFile(),
-      matchesName("pokesim"),
-      forEach(functionDecl(
-        unless(cxxConstructorDecl(isDefinition())),
-        unless(isInline()),
-        unless(isImplicit())
-      ).bind("inline"))
-    )
-    m namespaceDecl(
-      isExpansionInMainFile(),
-      matchesName("pokesim"),
-      forEach(functionTemplateDecl(forEach(inline)))
-    )`;
-
-    const inlineLocations = runClangQuery(query, tempHeaderPath, 'inline');
-
-    inlineLocations.forEach(({line, column}) => {
-      const headerLine = singleFileHeader[line];
-      const newLine = `${headerLine.substring(0, column)}inline ${headerLine.substring(column)}`;
-      singleFileHeader[line] = newLine;
-    });
-
-    writeCppFile('PokeSim.hpp', 'include', singleFileHeader.join('\n'), false);
-  }
-  catch (e) {
-    console.error(e);
-  }
+  writeCppFile('PokeSim.' + (isSource ? 'cpp' : 'hpp'), 'extras', combinedFileLines.join('\n'), false);
 };
 
 readSrcFiles();
@@ -220,5 +184,5 @@ findDependencies();
 checkDependencyCycles();
 findDependencyOrder();
 
-addToSingleFileHeader(dependencyOrder);
-createSingleFileHeader();
+addToCombinedFiles(dependencyOrder, false);
+addToCombinedFiles(dependencyOrder, true);

@@ -7354,7 +7354,7 @@ private:
 
 #include <cfloat>
 #include <cstdio>
-#ifdef POKESIM_USE_SINGLE_HEADER_FILE
+#ifdef POKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES
 namespace pokesim::debug {
 class require {
 public:

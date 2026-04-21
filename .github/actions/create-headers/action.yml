@@ -2,4 +2,4 @@ on: [workflow_call]
 
 runs:
   using: "node24"
-  main: ../../../tools/createHeaders/index.js
+  main: ../../../tools/createCombinedFiles.js

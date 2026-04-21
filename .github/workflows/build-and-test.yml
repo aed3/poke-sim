@@ -6,28 +6,28 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/build-and-test.yml'
-      - 'external/**'
-      - 'include/**'
-      - 'src/**'
-      - 'tests/**'
-      - 'tools/**'
-      - 'CMakeLists.txt'
+      - ".github/workflows/build-and-test.yml"
+      - "external/**"
+      - "extras/**"
+      - "src/**"
+      - "tests/**"
+      - "tools/**"
+      - "CMakeLists.txt"
   push:
     branches:
       - main
     paths:
-      - '.github/workflows/build-and-test.yml'
-      - 'external/**'
-      - 'include/**'
-      - 'src/**'
-      - 'tests/**'
-      - 'tools/**'
-      - 'CMakeLists.txt'
+      - ".github/workflows/build-and-test.yml"
+      - "external/**"
+      - "extras/**"
+      - "src/**"
+      - "tests/**"
+      - "tools/**"
+      - "CMakeLists.txt"
 
 jobs:
   linux:
-    name: 'Linux: ${{matrix.cxx}}, SHF ${{matrix.use_single_header}}, ${{matrix.build_type}}'
+    name: "Linux: ${{matrix.cxx}}, SHF ${{matrix.use_combined_files}}, ${{matrix.build_type}}"
     runs-on: ${{matrix.os}}
     strategy:
       fail-fast: false
@@ -45,7 +45,7 @@ jobs:
           - clang++-17
           - clang++-18
         build_type: [Debug, Release]
-        use_single_header: ['TRUE', 'FALSE']
+        use_combined_files: ["TRUE", "FALSE"]
         include:
           - cxx: g++-10
             other_pkgs: g++-10
@@ -103,7 +103,7 @@ jobs:
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-                -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
+                -DUSE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} \
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
                 -G "Unix Makefiles"
 
@@ -115,14 +115,14 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         run: bin/PokeSimTests
   windows:
-    name: '${{matrix.os}}: SHF ${{matrix.use_single_header}}, ${{matrix.build_type}}'
+    name: "${{matrix.os}}: SHF ${{matrix.use_combined_files}}, ${{matrix.build_type}}"
     runs-on: ${{matrix.os}}
     strategy:
       fail-fast: false
       matrix:
         os: [windows-2022, windows-2025]
         build_type: [Debug, Release]
-        use_single_header: ['TRUE', 'FALSE']
+        use_combined_files: ["TRUE", "FALSE"]
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.5
@@ -132,9 +132,9 @@ jobs:
         run: |
           cmake -S $Env:GITHUB_WORKSPACE                               `
                 -B ${{runner.workspace}}\build                         `
-                -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} `
+                -DUSE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} `
                 -A x64
-      
+
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
         run: cmake --build . --config ${{matrix.build_type}} --target PokeSimTests
@@ -143,7 +143,7 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         run: bin\${{matrix.build_type}}\PokeSimTests.exe
   mac:
-    name: 'Mac OS: ${{matrix.cxx}}, SHF ${{matrix.use_single_header}}, ${{matrix.build_type}}'
+    name: "Mac OS: ${{matrix.cxx}}, SHF ${{matrix.use_combined_files}}, ${{matrix.build_type}}"
     runs-on: macos-latest
     strategy:
       fail-fast: false
@@ -154,7 +154,7 @@ jobs:
           - g++-15
           - clang++
         build_type: [Debug, Release]
-        use_single_header: ['TRUE', 'FALSE']
+        use_combined_files: ["TRUE", "FALSE"]
 
     steps:
       - name: Checkout
@@ -167,7 +167,7 @@ jobs:
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-                -DUSE_SINGLE_HEADER_FILE=${{matrix.use_single_header}} \
+                -DUSE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} \
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
 
       - name: Build tests
