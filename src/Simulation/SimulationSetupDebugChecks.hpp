@@ -193,9 +193,11 @@ struct SimulationSetupChecks {
     for (std::size_t i = 0U; i < creationInfo.moves.size(); i++) {
       const Simulation::MoveCreationInfo& move = creationInfo.moves[i];
       types::entity moveEntity = moveSlots.val[(types::moveSlotIndex)i];
-      POKESIM_REQUIRE_NM((registry->all_of<MoveName, Pp, MaxPp>(moveEntity)));
+      POKESIM_REQUIRE_NM(registry->all_of<MoveName>(moveEntity));
       POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).val == move.name);
+      POKESIM_REQUIRE_NM(registry->all_of<Pp>(moveEntity));
       POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == move.pp);
+      POKESIM_REQUIRE_NM(registry->all_of<MaxPp>(moveEntity));
       POKESIM_REQUIRE_NM(registry->get<MaxPp>(moveEntity).val == move.maxPp);
       pokesim::debug::checkMoveSlot(moveEntity, *registry);
     }
@@ -239,7 +241,9 @@ struct SimulationSetupChecks {
   }
 
   void checkCreatedSide(types::entity sideEntity, const Simulation::SideCreationInfo& creationInfo) const {
-    POKESIM_REQUIRE_NM((registry->all_of<Team, FoeSide, Battle>(sideEntity)));
+    POKESIM_REQUIRE_NM(registry->all_of<Team>(sideEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<FoeSide>(sideEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<Battle>(sideEntity));
 
     const auto& team = registry->get<Team>(sideEntity).val;
     POKESIM_REQUIRE_NM(team.size() == creationInfo.team.size());
@@ -256,7 +260,11 @@ struct SimulationSetupChecks {
   }
 
   void checkBattle(types::entity battleEntity, const Simulation::BattleCreationInfo& creationInfo) const {
-    POKESIM_REQUIRE_NM((registry->all_of<Sides, ActionQueue, Turn, Probability, RngSeed>(battleEntity)));
+    POKESIM_REQUIRE_NM(registry->all_of<Sides>(battleEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<ActionQueue>(battleEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<Turn>(battleEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<Probability>(battleEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<RngSeed>(battleEntity));
     const auto& [sides, turn, probability, rngSeed] = registry->get<Sides, Turn, Probability, RngSeed>(battleEntity);
 
     POKESIM_REQUIRE_NM(turn.val == creationInfo.turn);

@@ -17240,7 +17240,8 @@ class AssertComponentsEqual {
 
       bool initialIsParent = checkIfCopyParent(current, initial, registry);
       bool currentIsParent = checkIfCopyParent(initial, current, registry);
-      POKESIM_REQUIRE_NM((initialIsParent && !currentIsParent));
+      POKESIM_REQUIRE_NM(initialIsParent);
+      POKESIM_REQUIRE_NM(!currentIsParent);
     }
     else if constexpr (entt::is_complete_v<isList<Member>>) {
       POKESIM_REQUIRE_NM(current.size() == initial.size());
@@ -21523,13 +21524,23 @@ class Pokedex {
   types::entity buildItem(dex::Item item, types::registry& registry) const;
   types::entity buildAbility(dex::Ability ability, types::registry& registry) const;
 
-  /**
-   * @brief The data for the Pokedex will be based the this game's data.
-   * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but if
-   * it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
-   */
-  GameMechanics mechanics;
-  TypeChart mechanicsTypeChart;
+ private:
+  struct Constants {
+    Constants(GameMechanics mechanics_) : gameMechanicsValue(mechanics_), typeChartValue(mechanics_) {}
+    constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
+      return gameMechanicsValue == checkedMechanics;
+    }
+    constexpr const TypeChart& typeChart() const { return typeChartValue; }
+
+   private:
+    /**
+     * @brief The data for the Pokedex will be based this game's data.
+     * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but
+     * if it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
+     */
+    GameMechanics gameMechanicsValue;
+    TypeChart typeChartValue;
+  } constants;
 
  private:
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
@@ -21577,10 +21588,13 @@ class Pokedex {
 #endif
 
  public:
-  Pokedex(GameMechanics mechanics_) : mechanics(mechanics_), mechanicsTypeChart(mechanics_) {}
+  Pokedex(GameMechanics mechanics_) : constants(mechanics_) {}
   ~Pokedex() { Pokedex::checkIfDetached(this); }
 
-  constexpr bool isMechanics(GameMechanics checkedMechanics) const { return mechanics == checkedMechanics; }
+  constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
+    return constants.isGameMechanic(checkedMechanics);
+  }
+  constexpr const TypeChart& typeChart() const { return constants.typeChart(); }
 
   /**
    * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.
@@ -21682,8 +21696,6 @@ class Pokedex {
   bool moveHas(dex::Move move) const {
     return dexRegistry.all_of<T...>(movesMap.at(move));
   }
-
-  constexpr const TypeChart& typeChart() const { return mechanicsTypeChart; }
 
   types::entity buildActionMove(dex::Move move, types::registry& registry) const;
 };
@@ -22359,8 +22371,18 @@ class Simulation : public internal::RegistryContainer {
   std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
 
-  BattleFormat battleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
-  const Pokedex* const pokedexPointer;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+ private:
+  struct Constants {
+    Constants(const Pokedex& pokedex_, BattleFormat battleFormat_)
+        : battleFormatValue(battleFormat_), pokedexValue(&pokedex_) {}
+    constexpr bool isBattleFormat(BattleFormat checkedFormat) const { return checkedFormat == battleFormatValue; }
+    constexpr const Pokedex& pokedex() const { return *pokedexValue; }
+
+   private:
+    BattleFormat battleFormatValue;
+    const Pokedex* pokedexValue;
+  } constants;
+  Simulation(const Constants& other);
 
  public:
   simulate_turn::Options simulateTurnOptions;
@@ -22372,7 +22394,7 @@ class Simulation : public internal::RegistryContainer {
   ~Simulation();
 
   const Pokedex& pokedex() const;
-  constexpr bool isBattleFormat(BattleFormat checkedFormat) { return checkedFormat == battleFormat; }
+  constexpr bool isBattleFormat(BattleFormat checkedFormat) { return constants.isBattleFormat(checkedFormat); }
 
   // Load information about any number of battle states into the simulation's registry.
   void createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList);
@@ -22630,9 +22652,11 @@ struct SimulationSetupChecks {
     for (std::size_t i = 0U; i < creationInfo.moves.size(); i++) {
       const Simulation::MoveCreationInfo& move = creationInfo.moves[i];
       types::entity moveEntity = moveSlots.val[(types::moveSlotIndex)i];
-      POKESIM_REQUIRE_NM((registry->all_of<MoveName, Pp, MaxPp>(moveEntity)));
+      POKESIM_REQUIRE_NM(registry->all_of<MoveName>(moveEntity));
       POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).val == move.name);
+      POKESIM_REQUIRE_NM(registry->all_of<Pp>(moveEntity));
       POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == move.pp);
+      POKESIM_REQUIRE_NM(registry->all_of<MaxPp>(moveEntity));
       POKESIM_REQUIRE_NM(registry->get<MaxPp>(moveEntity).val == move.maxPp);
       pokesim::debug::checkMoveSlot(moveEntity, *registry);
     }
@@ -22676,7 +22700,9 @@ struct SimulationSetupChecks {
   }
 
   void checkCreatedSide(types::entity sideEntity, const Simulation::SideCreationInfo& creationInfo) const {
-    POKESIM_REQUIRE_NM((registry->all_of<Team, FoeSide, Battle>(sideEntity)));
+    POKESIM_REQUIRE_NM(registry->all_of<Team>(sideEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<FoeSide>(sideEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<Battle>(sideEntity));
 
     const auto& team = registry->get<Team>(sideEntity).val;
     POKESIM_REQUIRE_NM(team.size() == creationInfo.team.size());
@@ -22693,7 +22719,11 @@ struct SimulationSetupChecks {
   }
 
   void checkBattle(types::entity battleEntity, const Simulation::BattleCreationInfo& creationInfo) const {
-    POKESIM_REQUIRE_NM((registry->all_of<Sides, ActionQueue, Turn, Probability, RngSeed>(battleEntity)));
+    POKESIM_REQUIRE_NM(registry->all_of<Sides>(battleEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<ActionQueue>(battleEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<Turn>(battleEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<Probability>(battleEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<RngSeed>(battleEntity));
     const auto& [sides, turn, probability, rngSeed] = registry->get<Sides, Turn, Probability, RngSeed>(battleEntity);
 
     POKESIM_REQUIRE_NM(turn.val == creationInfo.turn);

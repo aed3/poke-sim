@@ -92,7 +92,8 @@ class AssertComponentsEqual {
 
       bool initialIsParent = checkIfCopyParent(current, initial, registry);
       bool currentIsParent = checkIfCopyParent(initial, current, registry);
-      POKESIM_REQUIRE_NM((initialIsParent && !currentIsParent));
+      POKESIM_REQUIRE_NM(initialIsParent);
+      POKESIM_REQUIRE_NM(!currentIsParent);
     }
     else if constexpr (entt::is_complete_v<isList<Member>>) {
       POKESIM_REQUIRE_NM(current.size() == initial.size());

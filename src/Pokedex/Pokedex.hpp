@@ -42,13 +42,23 @@ class Pokedex {
   types::entity buildItem(dex::Item item, types::registry& registry) const;
   types::entity buildAbility(dex::Ability ability, types::registry& registry) const;
 
-  /**
-   * @brief The data for the Pokedex will be based the this game's data.
-   * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but if
-   * it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
-   */
-  GameMechanics mechanics;
-  TypeChart mechanicsTypeChart;
+ private:
+  struct Constants {
+    Constants(GameMechanics mechanics_) : gameMechanicsValue(mechanics_), typeChartValue(mechanics_) {}
+    constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
+      return gameMechanicsValue == checkedMechanics;
+    }
+    constexpr const TypeChart& typeChart() const { return typeChartValue; }
+
+   private:
+    /**
+     * @brief The data for the Pokedex will be based this game's data.
+     * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but
+     * if it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
+     */
+    GameMechanics gameMechanicsValue;
+    TypeChart typeChartValue;
+  } constants;
 
  private:
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
@@ -96,10 +106,13 @@ class Pokedex {
 #endif
 
  public:
-  Pokedex(GameMechanics mechanics_) : mechanics(mechanics_), mechanicsTypeChart(mechanics_) {}
+  Pokedex(GameMechanics mechanics_) : constants(mechanics_) {}
   ~Pokedex() { Pokedex::checkIfDetached(this); }
 
-  constexpr bool isMechanics(GameMechanics checkedMechanics) const { return mechanics == checkedMechanics; }
+  constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
+    return constants.isGameMechanic(checkedMechanics);
+  }
+  constexpr const TypeChart& typeChart() const { return constants.typeChart(); }
 
   /**
    * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.
@@ -201,8 +214,6 @@ class Pokedex {
   bool moveHas(dex::Move move) const {
     return dexRegistry.all_of<T...>(movesMap.at(move));
   }
-
-  constexpr const TypeChart& typeChart() const { return mechanicsTypeChart; }
 
   types::entity buildActionMove(dex::Move move, types::registry& registry) const;
 };

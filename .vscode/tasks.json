@@ -51,7 +51,7 @@
       "label": "clang-tidy",
       "command": "find src tests -name *.hpp -o -name *.cpp | parallel -j -2 clang-tidy --quiet --use-color -p build 2>/dev/null",
       "dependsOn": [
-        "Create Auto-Generated Files"
+        "Create All Auto-Generated Files"
       ]
     }
   ]

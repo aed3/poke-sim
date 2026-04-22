@@ -283,7 +283,7 @@ types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+  if (isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
     switch (move) {
       case Move::FURY_ATTACK:  return buildMoveSV<FuryAttack>(registry, forActiveMove);
       case Move::THUNDERBOLT:  return buildMoveSV<Thunderbolt>(registry, forActiveMove);

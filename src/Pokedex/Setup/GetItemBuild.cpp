@@ -38,7 +38,7 @@ types::entity Pokedex::buildItem(dex::Item item, types::registry& registry) cons
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+  if (isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
     switch (item) {
       case Item::ASSAULT_VEST:  return buildItemSV<AssaultVest>(registry);
       case Item::BRIGHT_POWDER: return buildItemSV<BrightPowder>(registry);

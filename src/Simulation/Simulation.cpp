@@ -14,15 +14,17 @@
 
 namespace pokesim {
 Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
-    : battleFormat(battleFormat_), pokedexPointer(&pokedex_) {
-  Pokedex::attachSimulation(pokedexPointer, this);
+    : Simulation(Constants{pokedex_, battleFormat_}) {}
+
+Simulation::Simulation(const Constants& other) : constants(other) {
+  Pokedex::attachSimulation(&constants.pokedex(), this);
 }
 
 Simulation::~Simulation() {
-  Pokedex::detachSimulation(pokedexPointer, this);
+  Pokedex::detachSimulation(&constants.pokedex(), this);
 }
 
-Simulation::Simulation(Simulation&& other) noexcept : Simulation(*other.pokedexPointer, other.battleFormat) {
+Simulation::Simulation(Simulation&& other) noexcept : Simulation(other.constants) {
   registry = std::move(other.registry);
   analyzeEffectOptions = other.analyzeEffectOptions;
   calculateDamageOptions = other.calculateDamageOptions;
@@ -31,9 +33,9 @@ Simulation::Simulation(Simulation&& other) noexcept : Simulation(*other.pokedexP
 
 const Pokedex& Simulation::pokedex() const {
   POKESIM_REQUIRE(
-    Pokedex::isPokedexAttachedToSimulation(pokedexPointer, this),
+    Pokedex::isPokedexAttachedToSimulation(&constants.pokedex(), this),
     "The Pokedex has changed since initialization.");
-  return *pokedexPointer;
+  return constants.pokedex();
 }
 
 void Simulation::clearAllResults() {

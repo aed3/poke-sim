@@ -1648,15 +1648,17 @@ types::view<MultipliedUsesUntilKo> Results::multipliedUsesUntilKoResults() const
 
 namespace pokesim {
 Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
-    : battleFormat(battleFormat_), pokedexPointer(&pokedex_) {
-  Pokedex::attachSimulation(pokedexPointer, this);
+    : Simulation(Constants{pokedex_, battleFormat_}) {}
+
+Simulation::Simulation(const Constants& other) : constants(other) {
+  Pokedex::attachSimulation(&constants.pokedex(), this);
 }
 
 Simulation::~Simulation() {
-  Pokedex::detachSimulation(pokedexPointer, this);
+  Pokedex::detachSimulation(&constants.pokedex(), this);
 }
 
-Simulation::Simulation(Simulation&& other) noexcept : Simulation(*other.pokedexPointer, other.battleFormat) {
+Simulation::Simulation(Simulation&& other) noexcept : Simulation(other.constants) {
   registry = std::move(other.registry);
   analyzeEffectOptions = other.analyzeEffectOptions;
   calculateDamageOptions = other.calculateDamageOptions;
@@ -1665,9 +1667,9 @@ Simulation::Simulation(Simulation&& other) noexcept : Simulation(*other.pokedexP
 
 const Pokedex& Simulation::pokedex() const {
   POKESIM_REQUIRE(
-    Pokedex::isPokedexAttachedToSimulation(pokedexPointer, this),
+    Pokedex::isPokedexAttachedToSimulation(&constants.pokedex(), this),
     "The Pokedex has changed since initialization.");
-  return *pokedexPointer;
+  return constants.pokedex();
 }
 
 void Simulation::clearAllResults() {
@@ -3503,7 +3505,7 @@ types::entity Pokedex::buildSpecies(dex::Species species, types::registry& regis
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+  if (isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
     switch (species) {
       case Species::AMPHAROS:  return buildSpeciesSV<Ampharos>(registry);
       case Species::GARDEVOIR: return buildSpeciesSV<Gardevoir>(registry);
@@ -3792,7 +3794,7 @@ types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+  if (isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
     switch (move) {
       case Move::FURY_ATTACK:  return buildMoveSV<FuryAttack>(registry, forActiveMove);
       case Move::THUNDERBOLT:  return buildMoveSV<Thunderbolt>(registry, forActiveMove);
@@ -3845,7 +3847,7 @@ types::entity Pokedex::buildItem(dex::Item item, types::registry& registry) cons
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+  if (isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
     switch (item) {
       case Item::ASSAULT_VEST:  return buildItemSV<AssaultVest>(registry);
       case Item::BRIGHT_POWDER: return buildItemSV<BrightPowder>(registry);
@@ -3895,7 +3897,7 @@ types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& regis
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+  if (isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
     switch (ability) {
       case Ability::PLUS:   return buildAbilitySV<Plus>(registry);
       case Ability::STATIC: return buildAbilitySV<Static>(registry);

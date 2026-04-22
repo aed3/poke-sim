@@ -67,7 +67,7 @@ types::entity Pokedex::buildSpecies(dex::Species species, types::registry& regis
   using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
   using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
 
-  if (isMechanics(GameMechanics::SCARLET_VIOLET)) {
+  if (isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
     switch (species) {
       case Species::AMPHAROS:  return buildSpeciesSV<Ampharos>(registry);
       case Species::GARDEVOIR: return buildSpeciesSV<Gardevoir>(registry);

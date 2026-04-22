@@ -147,8 +147,18 @@ class Simulation : public internal::RegistryContainer {
   std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
 
-  BattleFormat battleFormat = BattleFormat::SINGLES_BATTLE_FORMAT;
-  const Pokedex* const pokedexPointer;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+ private:
+  struct Constants {
+    Constants(const Pokedex& pokedex_, BattleFormat battleFormat_)
+        : battleFormatValue(battleFormat_), pokedexValue(&pokedex_) {}
+    constexpr bool isBattleFormat(BattleFormat checkedFormat) const { return checkedFormat == battleFormatValue; }
+    constexpr const Pokedex& pokedex() const { return *pokedexValue; }
+
+   private:
+    BattleFormat battleFormatValue;
+    const Pokedex* pokedexValue;
+  } constants;
+  Simulation(const Constants& other);
 
  public:
   simulate_turn::Options simulateTurnOptions;
@@ -160,7 +170,7 @@ class Simulation : public internal::RegistryContainer {
   ~Simulation();
 
   const Pokedex& pokedex() const;
-  constexpr bool isBattleFormat(BattleFormat checkedFormat) { return checkedFormat == battleFormat; }
+  constexpr bool isBattleFormat(BattleFormat checkedFormat) { return constants.isBattleFormat(checkedFormat); }
 
   // Load information about any number of battle states into the simulation's registry.
   void createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList);
