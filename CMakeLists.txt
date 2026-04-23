@@ -56,7 +56,7 @@ option(ENABLE_TESTING
   ON
 )
 
-option(ENABLE_BENCHMARKING "Build the benchmarks along with PokeSim." ON)
+option(ENABLE_BENCHMARKING "Build the benchmarks along with PokeSim." OFF)
 
 option(USE_COMBINED_SOURCE_AND_HEADER_FILES
   "Use the combined source and combined header file version of the library when running tests and benchmarks."
@@ -148,10 +148,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
 
   if(ipo_supported)
     cmake_host_system_information(RESULT
-        SystemMemory
-        QUERY
-        TOTAL_PHYSICAL_MEMORY
-      )
+      SystemMemory
+      QUERY
+      TOTAL_PHYSICAL_MEMORY
+    )
     if(SystemMemory GREATER 4000)
       message(STATUS "IPO / LTO enabled")
       set(ipo_enabled ON)

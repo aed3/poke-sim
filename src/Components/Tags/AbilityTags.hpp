@@ -3,6 +3,7 @@
 // TODO(aed3): Make this auto generated
 
 namespace pokesim::ability::tags {
+struct Competitive {};
 struct Defiant {};
 struct Infiltrator {};
 struct IronFist {};

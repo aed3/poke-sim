@@ -7,7 +7,7 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
 
   Simulation::PokemonCreationInfo p1aPokemonInfo{};
   p1aPokemonInfo.species = dex::Species::EMPOLEON;
-  p1aPokemonInfo.ability = dex::Ability::DEFIANT;
+  p1aPokemonInfo.ability = dex::Ability::COMPETITIVE;
   p1aPokemonInfo.gender = dex::Gender::MALE;
   p1aPokemonInfo.level = 100U;
   p1aPokemonInfo.stats = {309U, 208U, 212U, 258U, 238U, 156U};

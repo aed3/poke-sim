@@ -394,10 +394,6 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
   Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
   auto& p1Info = battleCreationInfo.p1.team[0];
   auto& p2Info = battleCreationInfo.p2.team[0];
-  p1Info.status = dex::Status::NO_STATUS;
-  p2Info.item = dex::Item::NO_ITEM;
-  p2Info.nature = dex::Nature::HARDY;
-  p2Info.stats = {295U, 165U, 190U, 255U, 210U, 145U};
   battleCreationInfo.runWithSimulateTurn = true;
 
   auto numberOfSamples = GENERATE(std::optional<types::entityIndex>{std::nullopt}, 1U, 5U);

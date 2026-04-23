@@ -10,6 +10,8 @@ TEST_CASE("Battle State: Single Battle", "[Simulation][Setup]") {
   Simulation::BattleCreationInfo battleCreationInfo;
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
+  battleCreationInfo.p1.team[0].status = dex::Status::FRZ;
+  battleCreationInfo.p2.team[0].item = dex::Item::CHOICE_SCARF;
 
   simulation.createInitialStates({battleCreationInfo});
 
@@ -21,12 +23,12 @@ TEST_CASE("Battle State: Single Battle", "[Simulation][Setup]") {
   auto [p1SideEntity, p2SideEntity] = registry.get<Sides>(battleEntity).val;
 
   types::entity p1Entity = registry.get<Team>(p1SideEntity).val[0];
-  REQUIRE(registry.all_of<ability::tags::Defiant>(p1Entity));
-  REQUIRE(registry.all_of<status::tags::Paralysis>(p1Entity));
+  REQUIRE(registry.all_of<ability::tags::Competitive>(p1Entity));
+  REQUIRE(registry.all_of<status::tags::Freeze>(p1Entity));
   types::entity p2Entity = registry.get<Team>(p2SideEntity).val[0];
   REQUIRE(registry.all_of<ability::tags::Plus>(p2Entity));
-  REQUIRE(registry.all_of<nature::tags::Modest>(p2Entity));
-  REQUIRE(registry.all_of<item::tags::ChoiceSpecs>(p2Entity));
+  REQUIRE(registry.all_of<nature::tags::Hardy>(p2Entity));
+  REQUIRE(registry.all_of<item::tags::ChoiceScarf>(p2Entity));
 }
 
 TEST_CASE("Battle State: Double Battle", "[Simulation][Setup]") {

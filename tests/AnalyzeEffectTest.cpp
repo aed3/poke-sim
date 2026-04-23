@@ -31,6 +31,12 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
   battleCreationInfo.runWithAnalyzeEffect = true;
   Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
   const types::registry& registry = simulation.registry;
+  auto& p1Info = battleCreationInfo.p1.team[0];
+  auto& p2Info = battleCreationInfo.p2.team[0];
+
+  p2Info.item = dex::Item::CHOICE_SPECS;
+  p2Info.nature = dex::Nature::MODEST;
+  p2Info.stats = {295U, 148U, 190U, 280U, 210U, 145U};
 
   bool getKoUses = GENERATE(false, true);
   bool reconsiderActiveEffects = GENERATE(false, true);
@@ -171,7 +177,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
   }
 
   SECTION("One Input, One Effect Applied") {
-    battleCreationInfo.p1.team[0].status = dex::Status::BRN;
+    p1Info.status = dex::Status::BRN;
 
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
@@ -188,7 +194,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
   }
 
   SECTION("One Input, No Effect Applied") {
-    battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
+    p1Info.status = dex::Status::NO_STATUS;
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
@@ -202,7 +208,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
   }
 
   SECTION("Multiple Inputs, One Effect Applied") {
-    battleCreationInfo.p1.team[0].status = dex::Status::BRN;
+    p1Info.status = dex::Status::BRN;
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::PAR},
@@ -226,7 +232,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
   }
 
   SECTION("One Input, No Effect Applied, Multiple Calculations") {
-    battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
+    p1Info.status = dex::Status::NO_STATUS;
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
@@ -241,7 +247,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
   }
 
   SECTION("One Input, One Effect Applied, Multiple Calculations") {
-    battleCreationInfo.p1.team[0].status = dex::Status::BRN;
+    p1Info.status = dex::Status::BRN;
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
@@ -257,7 +263,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
   }
 
   SECTION("One Input, No Effect Applied, Multiple Calculations, Multiple Attacks Per Input, Same Attack") {
-    battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
+    p1Info.status = dex::Status::NO_STATUS;
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK, dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
@@ -271,7 +277,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
   }
 
   SECTION("One Input, One Effect Applied, Multiple Calculations, Multiple Attacks Per Input, Same Attack") {
-    battleCreationInfo.p1.team[0].status = dex::Status::BRN;
+    p1Info.status = dex::Status::BRN;
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK, dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
@@ -286,7 +292,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
   }
 
   SECTION("One Input, Multiple Effects, No Effects Applied") {
-    battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
+    p1Info.status = dex::Status::NO_STATUS;
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::PAR},
@@ -308,7 +314,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
   }
 
   SECTION("One Input, Multiple Effects Per Input, No Effects Applied") {
-    battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
+    p1Info.status = dex::Status::NO_STATUS;
     battleCreationInfo.effectsToAnalyze = {
       {
         Slot::P1A,
@@ -329,9 +335,9 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
   }
 
   SECTION("Multiple Inputs, Multiple Effects") {
-    battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
-    battleCreationInfo.p1.team[0].item = dex::Item::NO_ITEM;
-    battleCreationInfo.p2.team[0].item = dex::Item::NO_ITEM;
+    p1Info.status = dex::Status::NO_STATUS;
+    p1Info.item = dex::Item::NO_ITEM;
+    p2Info.item = dex::Item::NO_ITEM;
 
     battleCreationInfo.effectsToAnalyze = {
       {

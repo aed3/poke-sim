@@ -23,6 +23,7 @@ namespace pokesim::ability::tags {
 template <template <typename> typename RunStruct, typename... RunFunctionArgs>
 auto enumToTag(dex::Ability ability, RunFunctionArgs&&... args) {
   switch (ability) {
+    case dex::Ability::COMPETITIVE: return RunStruct<Competitive>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Ability::DEFIANT:     return RunStruct<Defiant>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Ability::INFILTRATOR: return RunStruct<Infiltrator>::run(std::forward<RunFunctionArgs>(args)...);
     case dex::Ability::IRON_FIST:   return RunStruct<IronFist>::run(std::forward<RunFunctionArgs>(args)...);

@@ -10,6 +10,7 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effec
   battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}};
   battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}};
   battleCreationInfo.turn = 1U;
+  battleCreationInfo.p1.team[0].status = dex::Status::PAR;
   loadPokedexForBattleInfo(battleCreationInfo, pokedex);
 
   battleCreationInfo.runWithSimulateTurn = true;

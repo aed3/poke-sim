@@ -53,9 +53,9 @@ inline Simulation::PokemonCreationInfo createPredefinedPokemon(
   switch (species) {
     case dex::Species::EMPOLEON: {
       info.item = dex::Item::ASSAULT_VEST;
-      info.ability = dex::Ability::DEFIANT;
+      info.ability = dex::Ability::COMPETITIVE;
       info.gender = dex::Gender::MALE;
-      info.status = dex::Status::PAR;
+      info.status = dex::Status::NO_STATUS;
       info.level = 99U;
       info.evs = {0U, 25U, 50U, 75U, 100U, 125U};
       info.stats = {275U, 181U, 191U, 242U, 229U, 154U};
@@ -67,13 +67,13 @@ inline Simulation::PokemonCreationInfo createPredefinedPokemon(
       break;
     }
     case dex::Species::AMPHAROS: {
-      info.item = dex::Item::CHOICE_SPECS;
+      info.item = dex::Item::NO_ITEM;
       info.ability = dex::Ability::PLUS;
       info.gender = dex::Gender::FEMALE;
       info.level = 100U;
-      info.nature = dex::Nature::MODEST;
+      info.nature = dex::Nature::HARDY;
       info.ivs = {5U, 10U, 15U, 20U, 25U, 30U};
-      info.stats = {295U, 148U, 190U, 280U, 210U, 145U};
+      info.stats = {295U, 165U, 190U, 255U, 210U, 145U};
 
       auto& move = info.moves.emplace_back(createMove(pokedex, dex::Move::THUNDERBOLT));
       move.pp -= 2U;
