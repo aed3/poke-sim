@@ -5,13 +5,14 @@ on:
     branches:
       - main
     paths:
-      - 'src/**'
-      - 'include/**'
-      - 'tests/**'
+      - "src/**"
+      - "include/**"
+      - "benchmarks/**"
+      - "tests/**"
 
 jobs:
   one-review-bot:
-    name: 'One Review Bot'
+    name: "One Review Bot"
     runs-on: ubuntu-latest
 
     steps:
@@ -32,9 +33,9 @@ jobs:
       - name: Configure build
         working-directory: ${{runner.workspace}}
         run: |
-          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE \
-          -DCMAKE_BUILD_TYPE:STRING=Debug \
+          cmake -DCMAKE_BUILD_TYPE:STRING=Debug \
           -DENABLE_TESTING=ON \
+          -DENABLE_BENCHMARKING=ON \
           -S$GITHUB_WORKSPACE \
           -B$GITHUB_WORKSPACE/build \
           -G "Unix Makefiles"
@@ -47,4 +48,4 @@ jobs:
           incremental_files_only: true
           root: .
           build_path: build
-          clang_tidy_config: ''
+          clang_tidy_config: ""

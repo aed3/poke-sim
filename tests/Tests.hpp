@@ -9,7 +9,7 @@
 #include <Catch2/catch_amalgamated.hpp>
 #include <entt/entt.hpp>
 
-#ifndef POKESIM_TESTING
+#ifndef POKESIM_ENABLE_TESTING
 static_assert(false, "Rebuild PokeSim with the flag POKESIM_ENABLE_TESTING to enable testing.");
 #endif
 

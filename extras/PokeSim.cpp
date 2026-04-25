@@ -3955,6 +3955,14 @@ void Pokedex::loadAbilities(const entt::dense_set<dex::Ability>& abilitySet) {
 types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry) const {
   return buildMove(move, registry, true);
 }
+
+void Pokedex::unloadAllData() {
+  dexRegistry.clear();
+  speciesMap.clear();
+  itemsMap.clear();
+  movesMap.clear();
+  abilitiesMap.clear();
+}
 }  // namespace pokesim
 
 //////////////////////// END OF src/Pokedex/Pokedex.cpp ////////////////////////

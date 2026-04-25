@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.9)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(CheckCXXCompilerFlag)
 include(CheckIPOSupported)
@@ -250,5 +251,7 @@ if(ENABLE_BENCHMARKING)
     SOURCES
       external/Catch2/catch_amalgamated.cpp
       benchmarks/Benchmarks.cpp
+      benchmarks/VerticalSlices.cpp
   )
+  target_compile_definitions(PokeSimBenchmarks PRIVATE CATCH_CONFIG_DEFAULT_REPORTER="benchmark")
 endif()

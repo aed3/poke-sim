@@ -1,5 +1,11 @@
-#include <Catch2/catch_amalgamated.hpp>
+#include "Benchmarks.hpp"
+
+// NOLINTNEXTLINE (cppcoreguidelines-avoid-non-const-global-variables)
+CATCH_REGISTER_REPORTER("benchmark", BenchmarkReporter)
 
 int main(int argc, char* argv[]) {
-  return 0;
+  Catch::Session session;
+  if (session.applyCommandLine(argc, argv)) return 1;
+
+  return session.run();
 }

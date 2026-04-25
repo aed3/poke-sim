@@ -216,5 +216,7 @@ class Pokedex {
   }
 
   types::entity buildActionMove(dex::Move move, types::registry& registry) const;
+
+  void unloadAllData();
 };
 }  // namespace pokesim

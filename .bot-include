@@ -1,5 +1,7 @@
 src/**/*.hpp
 src/**/*.cpp
+benchmarks/**/*.hpp
+benchmarks/**/*.cpp
 tests/**/*.hpp
 tests/**/*.cpp
 !src/Utilities/EntityViewer.cpp

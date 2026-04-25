@@ -103,6 +103,8 @@ jobs:
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DENABLE_TESTING=ON \
+                -DENABLE_BENCHMARKING=ON \
                 -DUSE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} \
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
                 -G "Unix Makefiles"
@@ -132,6 +134,8 @@ jobs:
         run: |
           cmake -S $Env:GITHUB_WORKSPACE                               `
                 -B ${{runner.workspace}}\build                         `
+                -DENABLE_TESTING=ON                                    `
+                -DENABLE_BENCHMARKING=ON                                    `
                 -DUSE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} `
                 -A x64
 
@@ -167,6 +171,8 @@ jobs:
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DENABLE_TESTING=ON \
+                -DENABLE_BENCHMARKING=ON \
                 -DUSE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} \
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
 
