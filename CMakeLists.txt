@@ -244,13 +244,14 @@ if(ENABLE_TESTING)
       tests/Tests.cpp
       tests/VerticalSlices.cpp
   )
+
+  target_compile_definitions(PokeSimTests PRIVATE CATCH_AMALGAMATED_CUSTOM_MAIN)
 endif()
 
 if(ENABLE_BENCHMARKING)
   setup_target(NAME PokeSimBenchmarks
     SOURCES
       external/Catch2/catch_amalgamated.cpp
-      benchmarks/Benchmarks.cpp
       benchmarks/VerticalSlices.cpp
   )
   target_compile_definitions(PokeSimBenchmarks PRIVATE CATCH_CONFIG_DEFAULT_REPORTER="benchmark")

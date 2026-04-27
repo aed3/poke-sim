@@ -16,7 +16,7 @@
     };                                                              \
   }
 
-class BenchmarkReporter : public Catch::ConsoleReporter {
+class BenchmarkReporter : public Catch::StreamingReporterBase {
   bool hasABenchmarkRan = false;
   static inline const std::vector<std::string> TABLE_HEADER = {
     "Name", "Samples", "Iterations/Sample", "Estimated Completion Time", "Mean", "Mean Lower", "Mean Upper", "SD"};
@@ -26,16 +26,16 @@ class BenchmarkReporter : public Catch::ConsoleReporter {
 
   void addCells(const std::vector<std::string>& cells) {
     for (const std::string& cell : cells) {
-      m_config->stream() << "| " << cell << " ";
+      m_stream << "| " << cell << " ";
       currentCell++;
       if (currentCell == COLUMN_COUNT) {
-        m_config->stream() << "|\n";
+        m_stream << "|\n";
         currentCell = 0;
       }
     }
   }
 
-  void flush() { m_config->stream().flush(); }
+  void flush() { m_stream.flush(); }
 
   static std::string nanosecondsToString(double nanoseconds) {
     if (10e3 > nanoseconds) {
@@ -48,17 +48,17 @@ class BenchmarkReporter : public Catch::ConsoleReporter {
   }
 
  public:
-  using Catch::ConsoleReporter::ConsoleReporter;
+  using Catch::StreamingReporterBase::StreamingReporterBase;
 
   static std::string getDescription() { return "Reporter for showing benchmark results in a markdown format."; }
 
-  void benchmarkPreparing(std::string const& name) override {
+  void benchmarkPreparing(Catch::StringRef name) override {
     if (!hasABenchmarkRan) {
       addCells(BenchmarkReporter::TABLE_HEADER);
       addCells(std::vector<std::string>{BenchmarkReporter::COLUMN_COUNT, "---"});
       hasABenchmarkRan = true;
     }
-    addCells({name});
+    addCells({name.data()});
     flush();
   }
 
@@ -82,13 +82,20 @@ class BenchmarkReporter : public Catch::ConsoleReporter {
     flush();
   }
 
-  void assertionStarting(Catch::AssertionInfo const&) override {}
-  bool assertionEnded(Catch::AssertionStats const& stats) override {
-    if (!stats.assertionResult.isOk()) {
-      return Catch::ConsoleReporter::assertionEnded(stats);
+  void testRunStarting(Catch::TestRunInfo const& testRunInfo) override {
+    Catch::StreamingReporterBase::testRunStarting(testRunInfo);
+    if (m_config->testSpec().hasFilters()) {
+      m_stream << m_colour->guardColour(Catch::Colour::BrightYellow) << "Filters: " << m_config->testSpec() << '\n';
     }
-    return false;
+    flush();
   }
-  void sectionStarting(Catch::SectionInfo const&) override {}
-  void sectionEnded(Catch::SectionStats const&) override {}
+
+  void testRunEnded(Catch::TestRunStats const& testRunStats) override {
+    Catch::printTestRunTotals(m_stream, *m_colour, testRunStats.totals);
+    m_stream << "\n\n";
+    flush();
+    Catch::StreamingReporterBase::testRunEnded(testRunStats);
+  }
 };
+
+CATCH_REGISTER_REPORTER("benchmark", BenchmarkReporter)
