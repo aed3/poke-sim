@@ -111,7 +111,7 @@ jobs:
 
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
-        run: cmake --build . --config ${{matrix.build_type}} --target all
+        run: cmake --build . --config ${{matrix.build_type}}
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
@@ -132,16 +132,17 @@ jobs:
       - name: Configure build
         working-directory: ${{runner.workspace}}
         run: |
-          cmake -S $Env:GITHUB_WORKSPACE                               `
-                -B ${{runner.workspace}}\build                         `
-                -DENABLE_TESTING=ON                                    `
-                -DENABLE_BENCHMARKING=ON                                    `
+          cmake -S $Env:GITHUB_WORKSPACE                                              `
+                -B ${{runner.workspace}}\build                                        `
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}}                             `
+                -DENABLE_TESTING=ON                                                   `
+                -DENABLE_BENCHMARKING=ON                                              `
                 -DUSE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} `
                 -A x64
 
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
-        run: cmake --build . --config ${{matrix.build_type}} --target all
+        run: cmake --build . --config ${{matrix.build_type}}
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
@@ -178,7 +179,7 @@ jobs:
 
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
-        run: cmake --build . --config ${{matrix.build_type}} --target all
+        run: cmake --build . --config ${{matrix.build_type}}
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
