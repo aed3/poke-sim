@@ -39,7 +39,7 @@ struct IdealDamageValues {
 
 TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]") {
   static Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation::BattleCreationInfo battleCreationInfo;
+  BattleCreationInfo battleCreationInfo;
   battleCreationInfo.runWithCalculateDamage = true;
   Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
 

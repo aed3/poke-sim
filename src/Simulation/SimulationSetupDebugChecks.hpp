@@ -39,6 +39,7 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Turn.hpp>
 #include <Config/Require.hpp>
+#include <Simulation/BattleCreationInfo.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Item.hpp>
@@ -62,18 +63,18 @@ namespace pokesim::debug {
 struct SimulationSetupChecks {
  private:
   const types::registry* registry;
-  const std::vector<Simulation::BattleCreationInfo>* battleInfoList;
+  const std::vector<BattleCreationInfo>* battleInfoList;
 
   struct SetupEntities {
     types::entity battle;
     types::entity setup;
   };
 
-  entt::dense_map<const Simulation::BattleCreationInfo*, types::entityVector> createdBattles;
-  entt::dense_map<const Simulation::TurnDecisionInfo*, types::entity> createdTurnDecisions;
+  entt::dense_map<const BattleCreationInfo*, types::entityVector> createdBattles;
+  entt::dense_map<const TurnDecisionInfo*, types::entity> createdTurnDecisions;
 
-  entt::dense_map<const Simulation::CalcDamageInputInfo*, SetupEntities> createdCalcDamageInputs;
-  entt::dense_map<const Simulation::AnalyzeEffectInputInfo*, SetupEntities> createdAnalyzeEffectInputs;
+  entt::dense_map<const CalcDamageInputInfo*, SetupEntities> createdCalcDamageInputs;
+  entt::dense_map<const AnalyzeEffectInputInfo*, SetupEntities> createdAnalyzeEffectInputs;
 
   static types::entity targetSlotToEntity(
     Slot targetSlot, const types::teamPositions<types::entity>& p1Team,
@@ -122,7 +123,7 @@ struct SimulationSetupChecks {
     return entt::null;
   }
 
-  void checkCreatedPokemon(types::entity pokemonEntity, const Simulation::PokemonCreationInfo& creationInfo) const {
+  void checkCreatedPokemon(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
     const auto& [id, side, battle, speciesName, abilityName, level, moveSlots, evs, ivs] =
       registry->get<Id, Side, Battle, SpeciesName, AbilityName, Level, MoveSlots, Evs, Ivs>(pokemonEntity);
     const auto& [hp, atk, def, spa, spd, spe] =
@@ -191,7 +192,7 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(moveSlots.val.size() == creationInfo.moves.size());
 
     for (std::size_t i = 0U; i < creationInfo.moves.size(); i++) {
-      const Simulation::MoveCreationInfo& move = creationInfo.moves[i];
+      const MoveCreationInfo& move = creationInfo.moves[i];
       types::entity moveEntity = moveSlots.val[(types::moveSlotIndex)i];
       POKESIM_REQUIRE_NM(registry->all_of<MoveName>(moveEntity));
       POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).val == move.name);
@@ -240,7 +241,7 @@ struct SimulationSetupChecks {
     pokesim::debug::checkPokemon(pokemonEntity, *registry);
   }
 
-  void checkCreatedSide(types::entity sideEntity, const Simulation::SideCreationInfo& creationInfo) const {
+  void checkCreatedSide(types::entity sideEntity, const SideCreationInfo& creationInfo) const {
     POKESIM_REQUIRE_NM(registry->all_of<Team>(sideEntity));
     POKESIM_REQUIRE_NM(registry->all_of<FoeSide>(sideEntity));
     POKESIM_REQUIRE_NM(registry->all_of<Battle>(sideEntity));
@@ -259,7 +260,7 @@ struct SimulationSetupChecks {
     pokesim::debug::checkSide(sideEntity, *registry);
   }
 
-  void checkBattle(types::entity battleEntity, const Simulation::BattleCreationInfo& creationInfo) const {
+  void checkBattle(types::entity battleEntity, const BattleCreationInfo& creationInfo) const {
     POKESIM_REQUIRE_NM(registry->all_of<Sides>(battleEntity));
     POKESIM_REQUIRE_NM(registry->all_of<ActionQueue>(battleEntity));
     POKESIM_REQUIRE_NM(registry->all_of<Turn>(battleEntity));
@@ -291,7 +292,7 @@ struct SimulationSetupChecks {
     pokesim::debug::checkBattle(battleEntity, *registry);
   }
 
-  void checkTurnDecision(types::entity battleEntity, const Simulation::TurnDecisionInfo& turnDecisionInfo) const {
+  void checkTurnDecision(types::entity battleEntity, const TurnDecisionInfo& turnDecisionInfo) const {
     const auto& sides = registry->get<Sides>(battleEntity).val;
 
     POKESIM_REQUIRE(sides.size() == MechanicConstants::SIDE_COUNT, "Both sides should be have entities.");
@@ -344,8 +345,7 @@ struct SimulationSetupChecks {
   }
 
   void checkCalcDamage(
-    types::entity battleEntity, types::entity calcDamageEntity,
-    const Simulation::CalcDamageInputInfo& calcDamageInputInfo) const {
+    types::entity battleEntity, types::entity calcDamageEntity, const CalcDamageInputInfo& calcDamageInputInfo) const {
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::UsedMove>(calcDamageEntity));
     POKESIM_REQUIRE_NM(registry->all_of<tags::CalculateDamage>(calcDamageEntity));
 
@@ -377,7 +377,7 @@ struct SimulationSetupChecks {
 
   void checkAnalyzeEffect(
     types::entity battleEntity, types::entity analyzeEffectEntity,
-    const Simulation::AnalyzeEffectInputInfo& analyzeEffectInputInfo) const {
+    const AnalyzeEffectInputInfo& analyzeEffectInputInfo) const {
     POKESIM_REQUIRE_NM(registry->all_of<analyze_effect::tags::Input>(analyzeEffectEntity));
     POKESIM_REQUIRE(
       !registry->all_of<tags::AnalyzeEffect>(analyzeEffectEntity),
@@ -477,12 +477,11 @@ struct SimulationSetupChecks {
   }
 
  public:
-  SimulationSetupChecks(
-    const Simulation* simulation, const std::vector<Simulation::BattleCreationInfo>& _battleInfoList)
+  SimulationSetupChecks(const Simulation* simulation, const std::vector<BattleCreationInfo>& _battleInfoList)
       : registry(&simulation->registry), battleInfoList(&_battleInfoList) {}
 
   void checkOutputs() const {
-    POKESIM_REQUIRE_NM(battleInfoList->size() <= internal::maxSizedVector<Simulation::BattleCreationInfo>::max());
+    POKESIM_REQUIRE_NM(battleInfoList->size() <= internal::maxSizedVector<BattleCreationInfo>::max());
     for (const auto& battleInfo : *battleInfoList) {
       POKESIM_REQUIRE_NM(createdBattles.contains(&battleInfo));
       const types::entityVector& battleEntities = createdBattles.at(&battleInfo);
@@ -517,31 +516,28 @@ struct SimulationSetupChecks {
     }
   }
 
-  void addToBattleChecklist(
-    const BattleStateSetup& battleStateSetup, const Simulation::BattleCreationInfo& creationInfo) {
+  void addToBattleChecklist(const BattleStateSetup& battleStateSetup, const BattleCreationInfo& creationInfo) {
     createdBattles[&creationInfo].push_back(battleStateSetup.entity());
   }
 
-  void addToTurnDecisionChecklist(
-    const BattleStateSetup& battleStateSetup, const Simulation::TurnDecisionInfo& turnDecisionInfo) {
+  void addToTurnDecisionChecklist(const BattleStateSetup& battleStateSetup, const TurnDecisionInfo& turnDecisionInfo) {
     createdTurnDecisions[&turnDecisionInfo] = battleStateSetup.entity();
   }
 
   void addToCalcDamageChecklist(
     const BattleStateSetup& battleStateSetup, const calc_damage::InputSetup& inputSetup,
-    const Simulation::CalcDamageInputInfo& calcDamageInputInfo) {
+    const CalcDamageInputInfo& calcDamageInputInfo) {
     createdCalcDamageInputs[&calcDamageInputInfo] = {battleStateSetup.entity(), inputSetup.entity()};
   }
 
   void addToAnalyzeEffectChecklist(
     const BattleStateSetup& battleStateSetup, const analyze_effect::InputSetup& inputSetup,
-    const Simulation::AnalyzeEffectInputInfo& analyzeEffectInputInfo) {
+    const AnalyzeEffectInputInfo& analyzeEffectInputInfo) {
     createdAnalyzeEffectInputs[&analyzeEffectInputInfo] = {battleStateSetup.entity(), inputSetup.entity()};
   }
 
   static void checkBattle(
-    const Simulation& simulation, types::entity battleEntity,
-    const Simulation::BattleCreationInfo& battleCreationInfo) {
+    const Simulation& simulation, types::entity battleEntity, const BattleCreationInfo& battleCreationInfo) {
     SimulationSetupChecks(&simulation, {}).checkBattle(battleEntity, battleCreationInfo);
   }
 };
@@ -553,15 +549,15 @@ struct SimulationSetupChecks {
 namespace pokesim {
 namespace debug {
 struct SimulationSetupChecks {
-  SimulationSetupChecks(const Simulation*, const std::vector<Simulation::BattleCreationInfo>&) {}
+  SimulationSetupChecks(const Simulation*, const std::vector<BattleCreationInfo>&) {}
   void checkOutputs() const {}
-  void addToBattleChecklist(const BattleStateSetup&, const Simulation::BattleCreationInfo&) const {}
-  void addToTurnDecisionChecklist(const BattleStateSetup&, const Simulation::TurnDecisionInfo&) const {}
+  void addToBattleChecklist(const BattleStateSetup&, const BattleCreationInfo&) const {}
+  void addToTurnDecisionChecklist(const BattleStateSetup&, const TurnDecisionInfo&) const {}
   void addToCalcDamageChecklist(
-    const BattleStateSetup&, const calc_damage::InputSetup&, const Simulation::CalcDamageInputInfo&) const {}
+    const BattleStateSetup&, const calc_damage::InputSetup&, const CalcDamageInputInfo&) const {}
   void addToAnalyzeEffectChecklist(
-    const BattleStateSetup&, const analyze_effect::InputSetup&, const Simulation::AnalyzeEffectInputInfo&) const {}
-  static void checkBattle(const Simulation&, types::entity, const Simulation::BattleCreationInfo&) {}
+    const BattleStateSetup&, const analyze_effect::InputSetup&, const AnalyzeEffectInputInfo&) const {}
+  static void checkBattle(const Simulation&, types::entity, const BattleCreationInfo&) {}
 };
 }  // namespace debug
 }  // namespace pokesim

@@ -14,6 +14,7 @@
 
 namespace pokesim {
 class Simulation;
+struct BattleCreationInfo;
 /**
  * @brief Holds the data of each species, item, and move in a simulation.
  *
@@ -216,7 +217,6 @@ class Pokedex {
   }
 
   types::entity buildActionMove(dex::Move move, types::registry& registry) const;
-
-  void unloadAllData();
+  void loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInfoList);
 };
 }  // namespace pokesim

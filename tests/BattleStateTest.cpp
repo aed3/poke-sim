@@ -7,7 +7,7 @@ struct IdealPP_MaxPP {
 };
 
 TEST_CASE("Battle State: Single Battle", "[Simulation][Setup]") {
-  Simulation::BattleCreationInfo battleCreationInfo;
+  BattleCreationInfo battleCreationInfo;
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
   battleCreationInfo.p1.team[0].status = dex::Status::FRZ;
@@ -32,7 +32,7 @@ TEST_CASE("Battle State: Single Battle", "[Simulation][Setup]") {
 }
 
 TEST_CASE("Battle State: Double Battle", "[Simulation][Setup]") {
-  Simulation::BattleCreationInfo battleCreationInfo;
+  BattleCreationInfo battleCreationInfo;
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation simulation = createDoubleBattleSimulation(pokedex, battleCreationInfo);
   simulation.createInitialStates({battleCreationInfo});
@@ -62,11 +62,11 @@ TEST_CASE("Battle State: Double Battle", "[Simulation][Setup]") {
 }
 
 TEST_CASE("Battle State: Multiple Battles", "[Simulation][Setup]") {
-  Simulation::BattleCreationInfo battle1CreationInfo;
+  BattleCreationInfo battle1CreationInfo;
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation simulation = createSingleBattleSimulation(pokedex, battle1CreationInfo);
 
-  Simulation::BattleCreationInfo battle2CreationInfo = battle1CreationInfo;
+  BattleCreationInfo battle2CreationInfo = battle1CreationInfo;
 
   battle1CreationInfo.turn = 12U;
   battle1CreationInfo.probability = 0.1F;
@@ -83,7 +83,7 @@ TEST_CASE("Battle State: Multiple Battles", "[Simulation][Setup]") {
 }
 
 TEST_CASE("Clone Battles", "[Simulation][Setup]") {
-  Simulation::BattleCreationInfo battleCreationInfo;
+  BattleCreationInfo battleCreationInfo;
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   auto create = GENERATE(createSingleBattleSimulation, createDoubleBattleSimulation);
   types::entityIndex cloneCount = GENERATE(1U, 5U, 100U);

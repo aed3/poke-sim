@@ -191,6 +191,7 @@
  * src/CalcDamage/Setup/CalcDamageInputSetup.hpp
  * src/Pokedex/TypeChart.hpp
  * src/Pokedex/Pokedex.hpp
+ * src/Simulation/BattleCreationInfo.hpp
  * src/Utilities/Tags.hpp
  * src/Utilities/RegistryLoop.hpp
  * src/Simulation/RegistryContainer.hpp
@@ -21493,6 +21494,7 @@ struct TypeChart : private TypeChartBase {
 
 namespace pokesim {
 class Simulation;
+struct BattleCreationInfo;
 /**
  * @brief Holds the data of each species, item, and move in a simulation.
  *
@@ -21695,12 +21697,105 @@ class Pokedex {
   }
 
   types::entity buildActionMove(dex::Move move, types::registry& registry) const;
-
-  void unloadAllData();
+  void loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInfoList);
 };
 }  // namespace pokesim
 
 //////////////////////// END OF src/Pokedex/Pokedex.hpp ////////////////////////
+
+//////////////// START OF src/Simulation/BattleCreationInfo.hpp ////////////////
+
+namespace pokesim {
+struct MoveCreationInfo {
+  dex::Move name = dex::Move::NO_MOVE;
+  types::pp pp = MechanicConstants::MovePp::MIN;
+  types::pp maxPp = MechanicConstants::MoveMaxPp::MIN;
+};
+
+struct PokemonCreationInfo {
+  std::optional<types::stateId> id = std::nullopt;
+  dex::Species species = dex::Species::NO_SPECIES;
+  dex::Item item = dex::Item::NO_ITEM;
+  dex::Ability ability = dex::Ability::NO_ABILITY;
+  dex::Gender gender = dex::Gender::NO_GENDER;
+  types::level level = MechanicConstants::PokemonLevel::MIN;
+
+  dex::Nature nature = dex::Nature::NO_NATURE;
+  Evs evs;
+  Ivs ivs;
+  struct {
+    types::stat hp = MechanicConstants::PokemonHpStat::MIN;
+    types::stat atk = MechanicConstants::PokemonStat::MIN;
+    types::stat def = MechanicConstants::PokemonStat::MIN;
+    types::stat spa = MechanicConstants::PokemonStat::MIN;
+    types::stat spd = MechanicConstants::PokemonStat::MIN;
+    types::stat spe = MechanicConstants::PokemonStat::MIN;
+  } stats;
+
+  std::vector<MoveCreationInfo> moves{};
+
+  std::optional<types::stat> currentHp = std::nullopt;
+  std::optional<SpeciesTypes> currentTypes = std::nullopt;
+  dex::Status status = dex::Status::NO_STATUS;
+
+  struct {
+    std::optional<types::boost> atk = std::nullopt;
+    std::optional<types::boost> def = std::nullopt;
+    std::optional<types::boost> spa = std::nullopt;
+    std::optional<types::boost> spd = std::nullopt;
+    std::optional<types::boost> spe = std::nullopt;
+  } currentBoosts;
+};
+
+struct SideCreationInfo {
+  std::vector<PokemonCreationInfo> team;
+};
+
+struct TurnDecisionInfo {
+  SideDecision p1;
+  SideDecision p2;
+};
+
+struct CalcDamageInputInfo {
+  Slot attackerSlot = Slot::NONE;
+  Slot defenderSlot = Slot::NONE;
+  std::vector<dex::Move> moves;
+};
+
+struct AnalyzeEffectInputInfo {
+ private:
+  struct BoostInfo {
+    dex::Stat stat = dex::Stat::ATK;
+    types::boost boost = MechanicConstants::PokemonStatBoost::BASE;
+  };
+
+ public:
+  Slot attackerSlot = Slot::NONE;
+  Slot defenderSlot = Slot::NONE;
+  Slot effectTarget = Slot::NONE;
+  std::vector<dex::Move> moves;
+  std::optional<types::effectEnum> effect = std::nullopt;
+  std::optional<BoostInfo> boostEffect = std::nullopt;
+};
+
+struct BattleCreationInfo {
+  bool runWithSimulateTurn = false;
+  bool runWithCalculateDamage = false;
+  bool runWithAnalyzeEffect = false;
+  types::battleTurn turn = MechanicConstants::TurnCount::MIN;
+  std::optional<types::rngState> rngSeed = std::nullopt;
+  types::probability probability = MechanicConstants::Probability::MAX;
+
+  SideCreationInfo p1;
+  SideCreationInfo p2;
+
+  std::vector<TurnDecisionInfo> decisionsToSimulate;
+  std::vector<CalcDamageInputInfo> damageCalculations;
+  std::vector<AnalyzeEffectInputInfo> effectsToAnalyze;
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Simulation/BattleCreationInfo.hpp /////////////////
 
 /////////////////////// START OF src/Utilities/Tags.hpp ////////////////////////
 
@@ -22265,95 +22360,6 @@ struct SimulationSetupChecks;
  * for running multiple simulations of the same battle, where each battle state has completed the same number of turns.
  */
 class Simulation : public internal::RegistryContainer {
- public:
-  struct MoveCreationInfo {
-    dex::Move name = dex::Move::NO_MOVE;
-    types::pp pp = MechanicConstants::MovePp::MIN;
-    types::pp maxPp = MechanicConstants::MoveMaxPp::MIN;
-  };
-
-  struct PokemonCreationInfo {
-    std::optional<types::stateId> id = std::nullopt;
-    dex::Species species = dex::Species::NO_SPECIES;
-    dex::Item item = dex::Item::NO_ITEM;
-    dex::Ability ability = dex::Ability::NO_ABILITY;
-    dex::Gender gender = dex::Gender::NO_GENDER;
-    types::level level = MechanicConstants::PokemonLevel::MIN;
-
-    dex::Nature nature = dex::Nature::NO_NATURE;
-    Evs evs;
-    Ivs ivs;
-    struct {
-      types::stat hp = MechanicConstants::PokemonHpStat::MIN;
-      types::stat atk = MechanicConstants::PokemonStat::MIN;
-      types::stat def = MechanicConstants::PokemonStat::MIN;
-      types::stat spa = MechanicConstants::PokemonStat::MIN;
-      types::stat spd = MechanicConstants::PokemonStat::MIN;
-      types::stat spe = MechanicConstants::PokemonStat::MIN;
-    } stats;
-
-    std::vector<MoveCreationInfo> moves{};
-
-    std::optional<types::stat> currentHp = std::nullopt;
-    std::optional<SpeciesTypes> currentTypes = std::nullopt;
-    dex::Status status = dex::Status::NO_STATUS;
-
-    struct {
-      std::optional<types::boost> atk = std::nullopt;
-      std::optional<types::boost> def = std::nullopt;
-      std::optional<types::boost> spa = std::nullopt;
-      std::optional<types::boost> spd = std::nullopt;
-      std::optional<types::boost> spe = std::nullopt;
-    } currentBoosts;
-  };
-
-  struct SideCreationInfo {
-    std::vector<PokemonCreationInfo> team;
-  };
-
-  struct TurnDecisionInfo {
-    SideDecision p1;
-    SideDecision p2;
-  };
-
-  struct CalcDamageInputInfo {
-    Slot attackerSlot = Slot::NONE;
-    Slot defenderSlot = Slot::NONE;
-    std::vector<dex::Move> moves;
-  };
-
-  struct AnalyzeEffectInputInfo {
-   private:
-    struct BoostInfo {
-      dex::Stat stat = dex::Stat::ATK;
-      types::boost boost = MechanicConstants::PokemonStatBoost::BASE;
-    };
-
-   public:
-    Slot attackerSlot = Slot::NONE;
-    Slot defenderSlot = Slot::NONE;
-    Slot effectTarget = Slot::NONE;
-    std::vector<dex::Move> moves;
-    std::optional<types::effectEnum> effect = std::nullopt;
-    std::optional<BoostInfo> boostEffect = std::nullopt;
-  };
-
-  struct BattleCreationInfo {
-    bool runWithSimulateTurn = false;
-    bool runWithCalculateDamage = false;
-    bool runWithAnalyzeEffect = false;
-    types::battleTurn turn = MechanicConstants::TurnCount::MIN;
-    std::optional<types::rngState> rngSeed = std::nullopt;
-    types::probability probability = MechanicConstants::Probability::MAX;
-
-    SideCreationInfo p1;
-    SideCreationInfo p2;
-
-    std::vector<TurnDecisionInfo> decisionsToSimulate;
-    std::vector<CalcDamageInputInfo> damageCalculations;
-    std::vector<AnalyzeEffectInputInfo> effectsToAnalyze;
-  };
-
  private:
   types::entityVector createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList);
   PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonInfo);
@@ -22520,18 +22526,18 @@ namespace pokesim::debug {
 struct SimulationSetupChecks {
  private:
   const types::registry* registry;
-  const std::vector<Simulation::BattleCreationInfo>* battleInfoList;
+  const std::vector<BattleCreationInfo>* battleInfoList;
 
   struct SetupEntities {
     types::entity battle;
     types::entity setup;
   };
 
-  entt::dense_map<const Simulation::BattleCreationInfo*, types::entityVector> createdBattles;
-  entt::dense_map<const Simulation::TurnDecisionInfo*, types::entity> createdTurnDecisions;
+  entt::dense_map<const BattleCreationInfo*, types::entityVector> createdBattles;
+  entt::dense_map<const TurnDecisionInfo*, types::entity> createdTurnDecisions;
 
-  entt::dense_map<const Simulation::CalcDamageInputInfo*, SetupEntities> createdCalcDamageInputs;
-  entt::dense_map<const Simulation::AnalyzeEffectInputInfo*, SetupEntities> createdAnalyzeEffectInputs;
+  entt::dense_map<const CalcDamageInputInfo*, SetupEntities> createdCalcDamageInputs;
+  entt::dense_map<const AnalyzeEffectInputInfo*, SetupEntities> createdAnalyzeEffectInputs;
 
   static types::entity targetSlotToEntity(
     Slot targetSlot, const types::teamPositions<types::entity>& p1Team,
@@ -22580,7 +22586,7 @@ struct SimulationSetupChecks {
     return entt::null;
   }
 
-  void checkCreatedPokemon(types::entity pokemonEntity, const Simulation::PokemonCreationInfo& creationInfo) const {
+  void checkCreatedPokemon(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
     const auto& [id, side, battle, speciesName, abilityName, level, moveSlots, evs, ivs] =
       registry->get<Id, Side, Battle, SpeciesName, AbilityName, Level, MoveSlots, Evs, Ivs>(pokemonEntity);
     const auto& [hp, atk, def, spa, spd, spe] =
@@ -22649,7 +22655,7 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(moveSlots.val.size() == creationInfo.moves.size());
 
     for (std::size_t i = 0U; i < creationInfo.moves.size(); i++) {
-      const Simulation::MoveCreationInfo& move = creationInfo.moves[i];
+      const MoveCreationInfo& move = creationInfo.moves[i];
       types::entity moveEntity = moveSlots.val[(types::moveSlotIndex)i];
       POKESIM_REQUIRE_NM(registry->all_of<MoveName>(moveEntity));
       POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).val == move.name);
@@ -22698,7 +22704,7 @@ struct SimulationSetupChecks {
     pokesim::debug::checkPokemon(pokemonEntity, *registry);
   }
 
-  void checkCreatedSide(types::entity sideEntity, const Simulation::SideCreationInfo& creationInfo) const {
+  void checkCreatedSide(types::entity sideEntity, const SideCreationInfo& creationInfo) const {
     POKESIM_REQUIRE_NM(registry->all_of<Team>(sideEntity));
     POKESIM_REQUIRE_NM(registry->all_of<FoeSide>(sideEntity));
     POKESIM_REQUIRE_NM(registry->all_of<Battle>(sideEntity));
@@ -22717,7 +22723,7 @@ struct SimulationSetupChecks {
     pokesim::debug::checkSide(sideEntity, *registry);
   }
 
-  void checkBattle(types::entity battleEntity, const Simulation::BattleCreationInfo& creationInfo) const {
+  void checkBattle(types::entity battleEntity, const BattleCreationInfo& creationInfo) const {
     POKESIM_REQUIRE_NM(registry->all_of<Sides>(battleEntity));
     POKESIM_REQUIRE_NM(registry->all_of<ActionQueue>(battleEntity));
     POKESIM_REQUIRE_NM(registry->all_of<Turn>(battleEntity));
@@ -22749,7 +22755,7 @@ struct SimulationSetupChecks {
     pokesim::debug::checkBattle(battleEntity, *registry);
   }
 
-  void checkTurnDecision(types::entity battleEntity, const Simulation::TurnDecisionInfo& turnDecisionInfo) const {
+  void checkTurnDecision(types::entity battleEntity, const TurnDecisionInfo& turnDecisionInfo) const {
     const auto& sides = registry->get<Sides>(battleEntity).val;
 
     POKESIM_REQUIRE(sides.size() == MechanicConstants::SIDE_COUNT, "Both sides should be have entities.");
@@ -22802,8 +22808,7 @@ struct SimulationSetupChecks {
   }
 
   void checkCalcDamage(
-    types::entity battleEntity, types::entity calcDamageEntity,
-    const Simulation::CalcDamageInputInfo& calcDamageInputInfo) const {
+    types::entity battleEntity, types::entity calcDamageEntity, const CalcDamageInputInfo& calcDamageInputInfo) const {
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::UsedMove>(calcDamageEntity));
     POKESIM_REQUIRE_NM(registry->all_of<tags::CalculateDamage>(calcDamageEntity));
 
@@ -22835,7 +22840,7 @@ struct SimulationSetupChecks {
 
   void checkAnalyzeEffect(
     types::entity battleEntity, types::entity analyzeEffectEntity,
-    const Simulation::AnalyzeEffectInputInfo& analyzeEffectInputInfo) const {
+    const AnalyzeEffectInputInfo& analyzeEffectInputInfo) const {
     POKESIM_REQUIRE_NM(registry->all_of<analyze_effect::tags::Input>(analyzeEffectEntity));
     POKESIM_REQUIRE(
       !registry->all_of<tags::AnalyzeEffect>(analyzeEffectEntity),
@@ -22935,12 +22940,11 @@ struct SimulationSetupChecks {
   }
 
  public:
-  SimulationSetupChecks(
-    const Simulation* simulation, const std::vector<Simulation::BattleCreationInfo>& _battleInfoList)
+  SimulationSetupChecks(const Simulation* simulation, const std::vector<BattleCreationInfo>& _battleInfoList)
       : registry(&simulation->registry), battleInfoList(&_battleInfoList) {}
 
   void checkOutputs() const {
-    POKESIM_REQUIRE_NM(battleInfoList->size() <= internal::maxSizedVector<Simulation::BattleCreationInfo>::max());
+    POKESIM_REQUIRE_NM(battleInfoList->size() <= internal::maxSizedVector<BattleCreationInfo>::max());
     for (const auto& battleInfo : *battleInfoList) {
       POKESIM_REQUIRE_NM(createdBattles.contains(&battleInfo));
       const types::entityVector& battleEntities = createdBattles.at(&battleInfo);
@@ -22975,31 +22979,28 @@ struct SimulationSetupChecks {
     }
   }
 
-  void addToBattleChecklist(
-    const BattleStateSetup& battleStateSetup, const Simulation::BattleCreationInfo& creationInfo) {
+  void addToBattleChecklist(const BattleStateSetup& battleStateSetup, const BattleCreationInfo& creationInfo) {
     createdBattles[&creationInfo].push_back(battleStateSetup.entity());
   }
 
-  void addToTurnDecisionChecklist(
-    const BattleStateSetup& battleStateSetup, const Simulation::TurnDecisionInfo& turnDecisionInfo) {
+  void addToTurnDecisionChecklist(const BattleStateSetup& battleStateSetup, const TurnDecisionInfo& turnDecisionInfo) {
     createdTurnDecisions[&turnDecisionInfo] = battleStateSetup.entity();
   }
 
   void addToCalcDamageChecklist(
     const BattleStateSetup& battleStateSetup, const calc_damage::InputSetup& inputSetup,
-    const Simulation::CalcDamageInputInfo& calcDamageInputInfo) {
+    const CalcDamageInputInfo& calcDamageInputInfo) {
     createdCalcDamageInputs[&calcDamageInputInfo] = {battleStateSetup.entity(), inputSetup.entity()};
   }
 
   void addToAnalyzeEffectChecklist(
     const BattleStateSetup& battleStateSetup, const analyze_effect::InputSetup& inputSetup,
-    const Simulation::AnalyzeEffectInputInfo& analyzeEffectInputInfo) {
+    const AnalyzeEffectInputInfo& analyzeEffectInputInfo) {
     createdAnalyzeEffectInputs[&analyzeEffectInputInfo] = {battleStateSetup.entity(), inputSetup.entity()};
   }
 
   static void checkBattle(
-    const Simulation& simulation, types::entity battleEntity,
-    const Simulation::BattleCreationInfo& battleCreationInfo) {
+    const Simulation& simulation, types::entity battleEntity, const BattleCreationInfo& battleCreationInfo) {
     SimulationSetupChecks(&simulation, {}).checkBattle(battleEntity, battleCreationInfo);
   }
 };
@@ -23009,15 +23010,15 @@ struct SimulationSetupChecks {
 namespace pokesim {
 namespace debug {
 struct SimulationSetupChecks {
-  SimulationSetupChecks(const Simulation*, const std::vector<Simulation::BattleCreationInfo>&) {}
+  SimulationSetupChecks(const Simulation*, const std::vector<BattleCreationInfo>&) {}
   void checkOutputs() const {}
-  void addToBattleChecklist(const BattleStateSetup&, const Simulation::BattleCreationInfo&) const {}
-  void addToTurnDecisionChecklist(const BattleStateSetup&, const Simulation::TurnDecisionInfo&) const {}
+  void addToBattleChecklist(const BattleStateSetup&, const BattleCreationInfo&) const {}
+  void addToTurnDecisionChecklist(const BattleStateSetup&, const TurnDecisionInfo&) const {}
   void addToCalcDamageChecklist(
-    const BattleStateSetup&, const calc_damage::InputSetup&, const Simulation::CalcDamageInputInfo&) const {}
+    const BattleStateSetup&, const calc_damage::InputSetup&, const CalcDamageInputInfo&) const {}
   void addToAnalyzeEffectChecklist(
-    const BattleStateSetup&, const analyze_effect::InputSetup&, const Simulation::AnalyzeEffectInputInfo&) const {}
-  static void checkBattle(const Simulation&, types::entity, const Simulation::BattleCreationInfo&) {}
+    const BattleStateSetup&, const analyze_effect::InputSetup&, const AnalyzeEffectInputInfo&) const {}
+  static void checkBattle(const Simulation&, types::entity, const BattleCreationInfo&) {}
 };
 }  // namespace debug
 }  // namespace pokesim

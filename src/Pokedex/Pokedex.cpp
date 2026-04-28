@@ -1,6 +1,7 @@
 #include "Pokedex.hpp"
 
 #include <Config/Require.hpp>
+#include <Simulation/BattleCreationInfo.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/headers.hpp>
 #include <Types/Registry.hpp>
@@ -40,11 +41,28 @@ types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry
   return buildMove(move, registry, true);
 }
 
-void Pokedex::unloadAllData() {
-  dexRegistry.clear();
-  speciesMap.clear();
-  itemsMap.clear();
-  movesMap.clear();
-  abilitiesMap.clear();
+void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInfoList) {
+  entt::dense_set<dex::Move> moveSet{};
+  entt::dense_set<dex::Species> speciesSet{};
+  entt::dense_set<dex::Item> itemSet{};
+
+  for (const BattleCreationInfo& battleCreationInfo : battleInfoList) {
+    for (const auto& side : {battleCreationInfo.p1, battleCreationInfo.p2}) {
+      for (const auto& pokemon : side.team) {
+        for (const auto& moveSlot : pokemon.moves) {
+          moveSet.insert(moveSlot.name);
+        }
+        speciesSet.insert(pokemon.species);
+        if (pokemon.item != dex::Item::NO_ITEM) {
+          itemSet.insert(pokemon.item);
+        }
+      }
+    }
+  }
+
+  loadMoves(moveSet);
+  loadSpecies(speciesSet);
+  loadItems(itemSet);
 }
+
 }  // namespace pokesim

@@ -218,12 +218,12 @@ TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
   const types::registry& registry = simulation.registry;
 
-  Simulation::BattleCreationInfo battleCreationInfo;
+  BattleCreationInfo battleCreationInfo;
   battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON, true)}};
   battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::AMPHAROS)}};
   battleCreationInfo.p2.team[0].item = dex::Item::NO_ITEM;
   battleCreationInfo.turn = 1U;
-  loadPokedexForBattleInfo(battleCreationInfo, pokedex);
+  pokedex.loadForBattleInfo({battleCreationInfo});
 
   battleCreationInfo.runWithSimulateTurn = true;
   SideDecision p1Decision{PlayerSideId::P1};

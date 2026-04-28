@@ -6,12 +6,12 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effec
   Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
   const types::registry& registry = simulation.registry;
 
-  Simulation::BattleCreationInfo battleCreationInfo;
+  BattleCreationInfo battleCreationInfo;
   battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}};
   battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}};
   battleCreationInfo.turn = 1U;
   battleCreationInfo.p1.team[0].status = dex::Status::PAR;
-  loadPokedexForBattleInfo(battleCreationInfo, pokedex);
+  pokedex.loadForBattleInfo({battleCreationInfo});
 
   battleCreationInfo.runWithSimulateTurn = true;
   SideDecision p1Decision{PlayerSideId::P1};

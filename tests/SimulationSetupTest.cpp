@@ -2,10 +2,10 @@
 
 namespace pokesim {
 namespace {
-Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
-  Simulation::BattleCreationInfo battleCreationInfo;
+BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
+  BattleCreationInfo battleCreationInfo;
 
-  Simulation::PokemonCreationInfo p1aPokemonInfo{};
+  PokemonCreationInfo p1aPokemonInfo{};
   p1aPokemonInfo.species = dex::Species::EMPOLEON;
   p1aPokemonInfo.ability = dex::Ability::COMPETITIVE;
   p1aPokemonInfo.gender = dex::Gender::MALE;
@@ -13,7 +13,7 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   p1aPokemonInfo.stats = {309U, 208U, 212U, 258U, 238U, 156U};
   p1aPokemonInfo.moves.push_back(createMove(pokedex, dex::Move::FURY_ATTACK));
 
-  Simulation::PokemonCreationInfo p2aPokemonInfo{};
+  PokemonCreationInfo p2aPokemonInfo{};
   p2aPokemonInfo.species = dex::Species::AMPHAROS;
   p2aPokemonInfo.ability = dex::Ability::STATIC;
   p2aPokemonInfo.gender = dex::Gender::FEMALE;
@@ -21,7 +21,7 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   p2aPokemonInfo.stats = {321U, 186U, 206U, 266U, 216U, 146U};
   p2aPokemonInfo.moves.push_back(createMove(pokedex, dex::Move::THUNDERBOLT));
 
-  Simulation::PokemonCreationInfo p1bPokemonInfo{};
+  PokemonCreationInfo p1bPokemonInfo{};
   p1bPokemonInfo.species = dex::Species::GARDEVOIR;
   p1bPokemonInfo.ability = dex::Ability::TRACE;
   p1bPokemonInfo.gender = dex::Gender::FEMALE;
@@ -29,7 +29,7 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   p1bPokemonInfo.stats = {277U, 166U, 166U, 286U, 266U, 196U};
   p1bPokemonInfo.moves.push_back(createMove(pokedex, dex::Move::MOONBLAST));
 
-  Simulation::PokemonCreationInfo p2bPokemonInfo{};
+  PokemonCreationInfo p2bPokemonInfo{};
   p2bPokemonInfo.species = dex::Species::PANGORO;
   p2bPokemonInfo.ability = dex::Ability::IRON_FIST;
   p2bPokemonInfo.gender = dex::Gender::MALE;
@@ -37,7 +37,7 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   p2bPokemonInfo.stats = {331U, 284U, 192U, 174U, 178U, 152U};
   p2bPokemonInfo.moves.push_back(createMove(pokedex, dex::Move::KNOCK_OFF));
 
-  Simulation::PokemonCreationInfo p1cPokemonInfo{};
+  PokemonCreationInfo p1cPokemonInfo{};
   p1cPokemonInfo.species = dex::Species::DRAGAPULT;
   p1cPokemonInfo.ability = dex::Ability::INFILTRATOR;
   p1cPokemonInfo.gender = dex::Gender::FEMALE;
@@ -45,7 +45,7 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   p1cPokemonInfo.stats = {217U, 276U, 186U, 236U, 186U, 320U};
   p1cPokemonInfo.moves.push_back(createMove(pokedex, dex::Move::WILL_O_WISP));
 
-  Simulation::PokemonCreationInfo p2cPokemonInfo{};
+  PokemonCreationInfo p2cPokemonInfo{};
   p2cPokemonInfo.species = dex::Species::RIBOMBEE;
   p2cPokemonInfo.ability = dex::Ability::SWEET_VEIL;
   p2cPokemonInfo.gender = dex::Gender::MALE;
@@ -71,7 +71,7 @@ Simulation::BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
 
 TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
+  BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
   battleInfo.runWithSimulateTurn = true;
 
   SideDecision p1Decision{PlayerSideId::P1};
@@ -112,31 +112,29 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
         return registry.get<SourceSlotName>(entity).val == Slot::P2A;
       });
 
-      auto checkDecision = [&](
-                             types::entity decisionEntity,
-                             const pokesim::SlotDecision& decision,
-                             const Simulation::PokemonCreationInfo& pokemon) {
-        if (decision.moveChoice) {
-          const auto [target, move, speedSort] = registry.get<TargetSlotName, MoveName, SpeedSort>(decisionEntity);
+      auto checkDecision =
+        [&](types::entity decisionEntity, const pokesim::SlotDecision& decision, const PokemonCreationInfo& pokemon) {
+          if (decision.moveChoice) {
+            const auto [target, move, speedSort] = registry.get<TargetSlotName, MoveName, SpeedSort>(decisionEntity);
 
-          REQUIRE(target.val == decision.targetSlot);
-          REQUIRE(move.val == decision.moveChoice);
-          REQUIRE(speedSort.speed == pokemon.stats.spe);
-          REQUIRE(speedSort.order == ActionOrder::MOVE);
-          REQUIRE(speedSort.priority == 0);
-          REQUIRE(speedSort.fractionalPriority == false);
-        }
-        else {
-          REQUIRE(registry.all_of<action::tags::Switch, TargetSlotName, SpeedSort>(decisionEntity));
-          const auto [target, speedSort] = registry.get<TargetSlotName, SpeedSort>(decisionEntity);
+            REQUIRE(target.val == decision.targetSlot);
+            REQUIRE(move.val == decision.moveChoice);
+            REQUIRE(speedSort.speed == pokemon.stats.spe);
+            REQUIRE(speedSort.order == ActionOrder::MOVE);
+            REQUIRE(speedSort.priority == 0);
+            REQUIRE(speedSort.fractionalPriority == false);
+          }
+          else {
+            REQUIRE(registry.all_of<action::tags::Switch, TargetSlotName, SpeedSort>(decisionEntity));
+            const auto [target, speedSort] = registry.get<TargetSlotName, SpeedSort>(decisionEntity);
 
-          REQUIRE(target.val == decision.targetSlot);
-          REQUIRE(speedSort.speed == pokemon.stats.spe);
-          REQUIRE(speedSort.order == ActionOrder::SWITCH);
-          REQUIRE(speedSort.priority == 0);
-          REQUIRE(speedSort.fractionalPriority == false);
-        }
-      };
+            REQUIRE(target.val == decision.targetSlot);
+            REQUIRE(speedSort.speed == pokemon.stats.spe);
+            REQUIRE(speedSort.order == ActionOrder::SWITCH);
+            REQUIRE(speedSort.priority == 0);
+            REQUIRE(speedSort.fractionalPriority == false);
+          }
+        };
 
       {
         INFO("P1 Action");
@@ -220,7 +218,7 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
 
 TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalculateDamage][Setup]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
+  BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
 
   battleInfo.damageCalculations = {
     {
@@ -263,7 +261,7 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalculateDamage][Setup]
 
 TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation::BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
+  BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
 
   battleInfo.effectsToAnalyze = {
     {Slot::P1A, Slot::P1B, Slot::P1A, {dex::Move::FURY_ATTACK, dex::Move::KNOCK_OFF}, dex::Status::BRN},

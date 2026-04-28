@@ -7,13 +7,13 @@ TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][Knoc
   Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
   const types::registry& registry = simulation.registry;
 
-  Simulation::BattleCreationInfo battleCreationInfo;
+  BattleCreationInfo battleCreationInfo;
   battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}};
   battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}};
   battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
   battleCreationInfo.p2.team[0].item = dex::Item::ASSAULT_VEST;
   battleCreationInfo.turn = 1U;
-  loadPokedexForBattleInfo(battleCreationInfo, pokedex);
+  pokedex.loadForBattleInfo({battleCreationInfo});
 
   battleCreationInfo.runWithSimulateTurn = true;
   SideDecision p1Decision{PlayerSideId::P1};

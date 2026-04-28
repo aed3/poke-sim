@@ -379,7 +379,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
   };
 
   static Pokedex pokedex{TestMechanics};
-  Simulation::BattleCreationInfo battleCreationInfo;
+  BattleCreationInfo battleCreationInfo;
   SideDecision p1Decision{PlayerSideId::P1};
   SideDecision p2Decision{PlayerSideId::P2};
   SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
@@ -467,7 +467,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
   const auto expectedP1Hp = p1DamageInfo.possibleHpValues();
   const auto expectedP2Hp = p2DamageInfo.possibleHpValues();
 
-  std::vector<Simulation::BattleCreationInfo> battleCreationInfoList;
+  std::vector<BattleCreationInfo> battleCreationInfoList;
   for (types::entityIndex i = 0U; i < numberOfSamples.value_or(1U); i++) {
     battleCreationInfoList.push_back(battleCreationInfo);
   }
@@ -688,7 +688,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
   };
 
   static Pokedex pokedex{TestMechanics};
-  Simulation::BattleCreationInfo battleCreationInfo;
+  BattleCreationInfo battleCreationInfo;
 
   SideDecision p1Decision{PlayerSideId::P1};
   SideDecision p2Decision{PlayerSideId::P2};
@@ -787,7 +787,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     (!branchProbabilityLowerLimit.has_value() ||
      branchProbabilityLowerLimit < MAX_PROBABILITY / (MAX_PERCENT_CHANCE - willOWispHitChance));
 
-  std::vector<Simulation::BattleCreationInfo> battleCreationInfoList;
+  std::vector<BattleCreationInfo> battleCreationInfoList;
   for (types::entityIndex i = 0U; i < numberOfSamples.value_or(1U); i++) {
     battleCreationInfoList.push_back(battleCreationInfo);
   }

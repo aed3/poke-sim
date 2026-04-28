@@ -21,9 +21,9 @@
 #include <Utilities/Variant.hpp>
 #include <cstddef>
 #include <entt/entity/registry.hpp>
-#include <utility>
 #include <vector>
 
+#include "BattleCreationInfo.hpp"
 #include "Simulation.hpp"
 #include "SimulationSetupDebugChecks.hpp"
 

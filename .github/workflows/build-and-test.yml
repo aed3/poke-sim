@@ -111,7 +111,7 @@ jobs:
 
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
-        run: cmake --build . --config ${{matrix.build_type}}
+        run: cmake --build . --config ${{matrix.build_type}} --target PokeSimTests PokeSimBenchmarks
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
@@ -142,7 +142,7 @@ jobs:
 
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
-        run: cmake --build . --config ${{matrix.build_type}}
+        run: cmake --build . --config ${{matrix.build_type}} --target PokeSimTests PokeSimBenchmarks
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
@@ -179,7 +179,7 @@ jobs:
 
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
-        run: cmake --build . --config ${{matrix.build_type}}
+        run: cmake --build . --config ${{matrix.build_type}} --target PokeSimTests PokeSimBenchmarks
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build

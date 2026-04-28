@@ -14,40 +14,18 @@ static_assert(false, "Rebuild PokeSim with the flag POKESIM_ENABLE_TESTING to en
 #endif
 
 namespace pokesim {
-inline void loadPokedexForBattleInfo(const Simulation::BattleCreationInfo& battleCreationInfo, Pokedex& pokedex) {
-  entt::dense_set<dex::Move> moveSet{};
-  entt::dense_set<dex::Species> speciesSet{};
-  entt::dense_set<dex::Item> itemSet{};
 
-  for (const auto& side : {battleCreationInfo.p1, battleCreationInfo.p2}) {
-    for (const auto& pokemon : side.team) {
-      for (const auto& moveSlot : pokemon.moves) {
-        moveSet.insert(moveSlot.name);
-      }
-      speciesSet.insert(pokemon.species);
-      if (pokemon.item != dex::Item::NO_ITEM) {
-        itemSet.insert(pokemon.item);
-      }
-    }
-  }
-
-  pokedex.loadMoves(moveSet);
-  pokedex.loadSpecies(speciesSet);
-  pokedex.loadItems(itemSet);
-}
-
-inline Simulation::MoveCreationInfo createMove(Pokedex& pokedex, dex::Move move) {
+inline MoveCreationInfo createMove(Pokedex& pokedex, dex::Move move) {
   entt::dense_set<dex::Move> moveSet{};
   moveSet.insert(move);
   pokedex.loadMoves(moveSet);
   types::pp pp = pokedex.getMoveData<Pp>(move).val;
-  return Simulation::MoveCreationInfo{move, pp, pp};
+  return MoveCreationInfo{move, pp, pp};
 }
 
 // TODO(aed3): Change how the `simple` parameter works once stat calculations are implement
-inline Simulation::PokemonCreationInfo createPredefinedPokemon(
-  Pokedex& pokedex, dex::Species species, bool simple = false) {
-  Simulation::PokemonCreationInfo info;
+inline PokemonCreationInfo createPredefinedPokemon(Pokedex& pokedex, dex::Species species, bool simple = false) {
+  PokemonCreationInfo info;
   info.species = species;
 
   switch (species) {
@@ -143,18 +121,18 @@ inline Simulation::PokemonCreationInfo createPredefinedPokemon(
   return info;
 }
 
-inline Simulation createSingleBattleSimulation(Pokedex& pokedex, Simulation::BattleCreationInfo& battleCreationInfo) {
+inline Simulation createSingleBattleSimulation(Pokedex& pokedex, BattleCreationInfo& battleCreationInfo) {
   Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
 
   battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}};
   battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::AMPHAROS)}};
   battleCreationInfo.turn = 1U;
 
-  loadPokedexForBattleInfo(battleCreationInfo, pokedex);
+  pokedex.loadForBattleInfo({battleCreationInfo});
   return simulation;
 }
 
-inline Simulation createDoubleBattleSimulation(Pokedex& pokedex, Simulation::BattleCreationInfo& battleCreationInfo) {
+inline Simulation createDoubleBattleSimulation(Pokedex& pokedex, BattleCreationInfo& battleCreationInfo) {
   Simulation simulation(pokedex, BattleFormat::DOUBLES_BATTLE_FORMAT);
 
   battleCreationInfo.p1 = {{
@@ -170,7 +148,7 @@ inline Simulation createDoubleBattleSimulation(Pokedex& pokedex, Simulation::Bat
   battleCreationInfo.probability = 0.9F;
   battleCreationInfo.rngSeed = 0x12345678;
 
-  loadPokedexForBattleInfo(battleCreationInfo, pokedex);
+  pokedex.loadForBattleInfo({battleCreationInfo});
   return simulation;
 }
 
