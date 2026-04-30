@@ -124,8 +124,10 @@ inline PokemonCreationInfo createPredefinedPokemon(Pokedex& pokedex, dex::Specie
 inline Simulation createSingleBattleSimulation(Pokedex& pokedex, BattleCreationInfo& battleCreationInfo) {
   Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
 
-  battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}};
-  battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::AMPHAROS)}};
+  battleCreationInfo.sides = {
+    {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}},
+    {{createPredefinedPokemon(pokedex, dex::Species::AMPHAROS)}},
+  };
   battleCreationInfo.turn = 1U;
 
   pokedex.loadForBattleInfo({battleCreationInfo});
@@ -135,14 +137,16 @@ inline Simulation createSingleBattleSimulation(Pokedex& pokedex, BattleCreationI
 inline Simulation createDoubleBattleSimulation(Pokedex& pokedex, BattleCreationInfo& battleCreationInfo) {
   Simulation simulation(pokedex, BattleFormat::DOUBLES_BATTLE_FORMAT);
 
-  battleCreationInfo.p1 = {{
-    createPredefinedPokemon(pokedex, dex::Species::GARDEVOIR),
-    createPredefinedPokemon(pokedex, dex::Species::DRAGAPULT),
-  }};
-  battleCreationInfo.p2 = {{
-    createPredefinedPokemon(pokedex, dex::Species::PANGORO),
-    createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE),
-  }};
+  battleCreationInfo.sides = {
+    {{
+      createPredefinedPokemon(pokedex, dex::Species::GARDEVOIR),
+      createPredefinedPokemon(pokedex, dex::Species::DRAGAPULT),
+    }},
+    {{
+      createPredefinedPokemon(pokedex, dex::Species::PANGORO),
+      createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE),
+    }},
+  };
 
   battleCreationInfo.turn = 2U;
   battleCreationInfo.probability = 0.9F;

@@ -31,8 +31,8 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
   battleCreationInfo.runWithAnalyzeEffect = true;
   Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
   const types::registry& registry = simulation.registry;
-  auto& p1Info = battleCreationInfo.p1.team[0];
-  auto& p2Info = battleCreationInfo.p2.team[0];
+  auto& p1Info = battleCreationInfo.sides.p1().team[0];
+  auto& p2Info = battleCreationInfo.sides.p2().team[0];
 
   p2Info.item = dex::Item::CHOICE_SPECS;
   p2Info.nature = dex::Nature::MODEST;

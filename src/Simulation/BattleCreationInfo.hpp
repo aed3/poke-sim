@@ -13,6 +13,7 @@
 #include <Types/Enums/Status.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Move.hpp>
+#include <Types/State.hpp>
 #include <vector>
 
 namespace pokesim {
@@ -61,10 +62,7 @@ struct SideCreationInfo {
   std::vector<PokemonCreationInfo> team;
 };
 
-struct TurnDecisionInfo {
-  SideDecision p1;
-  SideDecision p2;
-};
+using TurnDecisionInfo = types::sides<SideDecision>;
 
 struct CalcDamageInputInfo {
   Slot attackerSlot = Slot::NONE;
@@ -96,8 +94,7 @@ struct BattleCreationInfo {
   std::optional<types::rngState> rngSeed = std::nullopt;
   types::probability probability = MechanicConstants::Probability::MAX;
 
-  SideCreationInfo p1;
-  SideCreationInfo p2;
+  types::sides<SideCreationInfo> sides;
 
   std::vector<TurnDecisionInfo> decisionsToSimulate;
   std::vector<CalcDamageInputInfo> damageCalculations;

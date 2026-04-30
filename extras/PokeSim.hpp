@@ -17749,6 +17749,34 @@ using stateId = std::underlying_type_t<entity>;
 
 using battleTurn = pokesim::internal::unsignedIntType<MechanicConstants::TurnCount::MAX>;
 
+using sideIndex = pokesim::internal::unsignedIntType<MechanicConstants::SIDE_COUNT>;
+template <typename T>
+struct sides : public std::array<T, MechanicConstants::SIDE_COUNT> {
+  constexpr T& p1() { return this->at(0); };
+  constexpr T& p2() { return this->at(1); };
+  constexpr const T& p1() const { return this->at(0); };
+  constexpr const T& p2() const { return this->at(1); };
+
+  template <std::size_t N>
+  decltype(auto) get() const {
+    return this->at(N);
+  }
+
+  sides() : std::array<T, MechanicConstants::SIDE_COUNT>() {}
+  sides(std::initializer_list<T> list) : sides() {
+    sideIndex side = 0U;
+    for (const T& value : list) {
+      this->at(side) = value;
+      side++;
+      if (side == size()) {
+        break;
+      }
+    }
+  }
+
+  constexpr sideIndex size() const noexcept { return MechanicConstants::SIDE_COUNT; }
+};
+
 using entityIndex = std::underlying_type_t<entity>;
 
 using teamPositionIndex = pokesim::internal::unsignedIntType<MechanicConstants::TeamSize::MAX>;
@@ -17774,6 +17802,15 @@ using callback = void (*)(Simulation&);
 using optionalCallback = std::optional<callback>;
 }  // namespace types
 }  // namespace pokesim
+
+template <typename T>
+struct std::tuple_size<pokesim::types::sides<T>>
+    : std::integral_constant<std::size_t, pokesim::MechanicConstants::SIDE_COUNT> {};
+
+template <std::size_t N, typename T>
+struct std::tuple_element<N, pokesim::types::sides<T>> {
+  using type = decltype(std::declval<pokesim::types::sides<T>>().template get<N>());
+};
 
 ////////////////////////// END OF src/Types/State.hpp //////////////////////////
 
@@ -18804,12 +18841,7 @@ struct Side {
 namespace pokesim {
 // Contains the entities pointing to the two sides of a battle.
 struct Sides {
-  std::array<types::entity, MechanicConstants::SIDE_COUNT> val{};
-
-  constexpr types::entity& p1() { return val[0]; };
-  constexpr types::entity& p2() { return val[1]; };
-  constexpr const types::entity& p1() const { return val[0]; };
-  constexpr const types::entity& p2() const { return val[1]; };
+  types::sides<types::entity> val{};
 };
 }  // namespace pokesim
 
@@ -21005,6 +21037,7 @@ struct StateSetupBase {
   types::handle handle;
 
  public:
+  StateSetupBase() {};
   StateSetupBase(types::registry& registry, types::entity entity) : handle(registry, entity) {}
 
   /**
@@ -21029,6 +21062,7 @@ struct StateSetupBase {
 namespace pokesim {
 // Tool to set properties of a Pokemon's state to an entity.
 struct PokemonStateSetup : internal::StateSetupBase {
+  PokemonStateSetup() : internal::StateSetupBase() {}
   PokemonStateSetup(types::registry& registry) : PokemonStateSetup(registry, registry.create()) {}
   PokemonStateSetup(types::registry& registry, types::entity entity);
 
@@ -21099,6 +21133,7 @@ struct AnalyzeEffectOptions;
 
 // Tool to set properties of a battle's state to an entity.
 struct BattleStateSetup : internal::StateSetupBase {
+  BattleStateSetup() : internal::StateSetupBase() {}
   BattleStateSetup(types::registry& registry) : BattleStateSetup(registry, registry.create()) {}
   BattleStateSetup(types::registry& registry, types::entity entity);
 
@@ -21172,6 +21207,7 @@ void emplaceTagFromEnum(dex::Move move, types::handle handle);
 namespace pokesim {
 // Tool to set properties of a move's state to an entity.
 struct MoveStateSetup : internal::StateSetupBase {
+  MoveStateSetup() : internal::StateSetupBase() {}
   MoveStateSetup(types::registry& registry) : MoveStateSetup(registry, registry.create()) {}
   MoveStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {}
 
@@ -21197,6 +21233,7 @@ struct PokemonStateSetup;
 
 // Tool to set properties of a player's side state to an entity.
 struct SideStateSetup : internal::StateSetupBase {
+  SideStateSetup() : internal::StateSetupBase() {}
   SideStateSetup(types::registry& registry, PlayerSideId playerSideId)
       : SideStateSetup(registry, registry.create(), playerSideId) {}
   SideStateSetup(types::registry& registry, types::entity entity, PlayerSideId playerSideId);
@@ -21751,10 +21788,7 @@ struct SideCreationInfo {
   std::vector<PokemonCreationInfo> team;
 };
 
-struct TurnDecisionInfo {
-  SideDecision p1;
-  SideDecision p2;
-};
+using TurnDecisionInfo = types::sides<SideDecision>;
 
 struct CalcDamageInputInfo {
   Slot attackerSlot = Slot::NONE;
@@ -21786,8 +21820,7 @@ struct BattleCreationInfo {
   std::optional<types::rngState> rngSeed = std::nullopt;
   types::probability probability = MechanicConstants::Probability::MAX;
 
-  SideCreationInfo p1;
-  SideCreationInfo p2;
+  types::sides<SideCreationInfo> sides;
 
   std::vector<TurnDecisionInfo> decisionsToSimulate;
   std::vector<CalcDamageInputInfo> damageCalculations;
@@ -22373,7 +22406,7 @@ class Simulation : public internal::RegistryContainer {
     BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& inputInfo,
     debug::SimulationSetupChecks& debugChecks);
 
-  std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
+  types::sides<SideStateSetup> createInitialBattle(
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
 
  private:
@@ -22741,14 +22774,13 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(rngSeed.val != 0U);
     }
 
-    POKESIM_REQUIRE(sides.val.size() == MechanicConstants::SIDE_COUNT, "Both sides should be have entities.");
+    POKESIM_REQUIRE_NM(sides.val.size() == MechanicConstants::SIDE_COUNT);
+    for (types::sideIndex i = 0U; i < sides.val.size(); i++) {
+      checkCreatedSide(sides.val[i], creationInfo.sides[i]);
+      POKESIM_REQUIRE_NM(registry->get<Battle>(sides.val[i]).val == battleEntity);
+    }
     auto [p1SideEntity, p2SideEntity] = sides.val;
 
-    checkCreatedSide(p1SideEntity, creationInfo.p1);
-    checkCreatedSide(p2SideEntity, creationInfo.p2);
-
-    POKESIM_REQUIRE_NM(registry->get<Battle>(p1SideEntity).val == battleEntity);
-    POKESIM_REQUIRE_NM(registry->get<Battle>(p2SideEntity).val == battleEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p1SideEntity).val == p2SideEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p2SideEntity).val == p1SideEntity);
 
@@ -22758,10 +22790,10 @@ struct SimulationSetupChecks {
   void checkTurnDecision(types::entity battleEntity, const TurnDecisionInfo& turnDecisionInfo) const {
     const auto& sides = registry->get<Sides>(battleEntity).val;
 
-    POKESIM_REQUIRE(sides.size() == MechanicConstants::SIDE_COUNT, "Both sides should be have entities.");
-    for (std::uint8_t side = 0U; side < MechanicConstants::SIDE_COUNT; side++) {
+    POKESIM_REQUIRE_NM(sides.size() == MechanicConstants::SIDE_COUNT);
+    for (types::sideIndex side = 0U; side < MechanicConstants::SIDE_COUNT; side++) {
       const auto& sideDecision = registry->get<SideDecision>(sides[side]);
-      const auto& sideDecisionInfo = side ? turnDecisionInfo.p2 : turnDecisionInfo.p1;
+      const auto& sideDecisionInfo = turnDecisionInfo[side];
 
       POKESIM_REQUIRE_NM(sideDecision.sideId == sideDecisionInfo.sideId);
 
@@ -22812,8 +22844,8 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::UsedMove>(calcDamageEntity));
     POKESIM_REQUIRE_NM(registry->all_of<tags::CalculateDamage>(calcDamageEntity));
 
-    const auto& p1Team = registry->get<Team>(registry->get<Sides>(battleEntity).p1()).val;
-    const auto& p2Team = registry->get<Team>(registry->get<Sides>(battleEntity).p2()).val;
+    const auto& p1Team = registry->get<Team>(registry->get<Sides>(battleEntity).val.p1()).val;
+    const auto& p2Team = registry->get<Team>(registry->get<Sides>(battleEntity).val.p2()).val;
     const auto& [battle, moveName, attacker, defender] =
       registry->get<Battle, MoveName, calc_damage::Attacker, calc_damage::Defender>(calcDamageEntity);
     types::entity setupInfoAttacker = targetSlotToEntity(calcDamageInputInfo.attackerSlot, p1Team, p2Team);
@@ -22846,8 +22878,8 @@ struct SimulationSetupChecks {
       !registry->all_of<tags::AnalyzeEffect>(analyzeEffectEntity),
       "This should not be set on the input entity as it's used for individual move calculations.");
 
-    const auto& p1Team = registry->get<Team>(registry->get<Sides>(battleEntity).p1()).val;
-    const auto& p2Team = registry->get<Team>(registry->get<Sides>(battleEntity).p2()).val;
+    const auto& p1Team = registry->get<Team>(registry->get<Sides>(battleEntity).val.p1()).val;
+    const auto& p2Team = registry->get<Team>(registry->get<Sides>(battleEntity).val.p2()).val;
     const auto& [battle, effectMove, attacker, defender, effectTarget] = registry->get<
       Battle,
       analyze_effect::EffectMove,
@@ -24912,8 +24944,9 @@ struct Checks : pokesim::debug::Checks {
     for (types::entity battle : simulation->selectedBattleEntities()) {
       copyEntity(battle);
       checkBattle(battle);
-      checkSide(registry->get<Sides>(battle).p1());
-      checkSide(registry->get<Sides>(battle).p2());
+      for (types::entity side : registry->get<Sides>(battle).val) {
+        checkSide(side);
+      }
     }
   }
 
@@ -25392,8 +25425,9 @@ struct Checks : pokesim::debug::Checks {
 
     for (types::entity battle : simulation->selectedBattleEntities()) {
       checkBattle(battle);
-      checkSide(registry->get<Sides>(battle).p1());
-      checkSide(registry->get<Sides>(battle).p2());
+      for (types::entity side : registry->get<Sides>(battle).val) {
+        checkSide(side);
+      }
     }
 
     for (types::entity pokemon : getPokemonList()) {

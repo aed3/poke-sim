@@ -47,7 +47,7 @@ void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInf
   entt::dense_set<dex::Item> itemSet{};
 
   for (const BattleCreationInfo& battleCreationInfo : battleInfoList) {
-    for (const auto& side : {battleCreationInfo.p1, battleCreationInfo.p2}) {
+    for (const auto& side : battleCreationInfo.sides) {
       for (const auto& pokemon : side.team) {
         for (const auto& moveSlot : pokemon.moves) {
           moveSet.insert(moveSlot.name);

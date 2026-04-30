@@ -10,8 +10,8 @@ TEST_CASE("Battle State: Single Battle", "[Simulation][Setup]") {
   BattleCreationInfo battleCreationInfo;
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
-  battleCreationInfo.p1.team[0].status = dex::Status::FRZ;
-  battleCreationInfo.p2.team[0].item = dex::Item::CHOICE_SCARF;
+  battleCreationInfo.sides.p1().team[0].status = dex::Status::FRZ;
+  battleCreationInfo.sides.p2().team[0].item = dex::Item::CHOICE_SCARF;
 
   simulation.createInitialStates({battleCreationInfo});
 
@@ -125,9 +125,6 @@ TEST_CASE("Clone Battles", "[Simulation][Setup]") {
     REQUIRE_FALSE(existingEntities.contains(battle));
     existingEntities.insert(battle);
     const auto cloneSides = cloneHandle.get<Sides>();
-    REQUIRE(baseSides.p1() != cloneSides.p1());
-    REQUIRE(baseSides.p2() != cloneSides.p2());
-
     auto checkSideEntities = [&](types::entity baseSide, types::entity cloneSide) {
       REQUIRE_FALSE(existingEntities.contains(cloneSide));
       existingEntities.insert(cloneSide);
@@ -136,8 +133,12 @@ TEST_CASE("Clone Battles", "[Simulation][Setup]") {
       const auto& [cloneTeam, cloneFoeSide, cloneSideBattle] = registry.get<Team, FoeSide, Battle>(cloneSide);
       REQUIRE(baseFoeSide.val != cloneFoeSide.val);
       REQUIRE(cloneSide != cloneFoeSide.val);
-      REQUIRE(
-        (cloneSide == cloneSides.p1() ? cloneSides.p2() == cloneFoeSide.val : cloneSides.p1() == cloneFoeSide.val));
+      if (cloneSide == cloneSides.val.p1()) {
+        REQUIRE(cloneSides.val.p2() == cloneFoeSide.val);
+      }
+      else if (cloneSide == cloneSides.val.p2()) {
+        REQUIRE(cloneSides.val.p1() == cloneFoeSide.val);
+      }
 
       REQUIRE(baseSideBattle.val != cloneSideBattle.val);
       REQUIRE(battle == cloneSideBattle.val);
@@ -174,8 +175,11 @@ TEST_CASE("Clone Battles", "[Simulation][Setup]") {
       }
     };
 
-    checkSideEntities(baseSides.p1(), cloneSides.p1());
-    checkSideEntities(baseSides.p2(), cloneSides.p2());
+    REQUIRE(baseSides.val.size() == cloneSides.val.size());
+    for (types::sideIndex i = 0U; i < baseSides.val.size(); i++) {
+      REQUIRE(baseSides.val[i] != cloneSides.val[i]);
+      checkSideEntities(baseSides.val[i], cloneSides.val[i]);
+    }
   }
 }
 }  // namespace pokesim

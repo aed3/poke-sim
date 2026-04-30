@@ -43,7 +43,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
   battleCreationInfo.runWithCalculateDamage = true;
   Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
 
-  auto& p2Info = battleCreationInfo.p2.team[0];
+  auto& p2Info = battleCreationInfo.sides.p2().team[0];
   p2Info.nature = dex::Nature::MODEST;
   p2Info.stats = {295U, 148U, 190U, 280U, 210U, 145U};
 

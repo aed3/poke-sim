@@ -53,8 +53,10 @@ BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   p2cPokemonInfo.stats = {261U, 146U, 156U, 226U, 176U, 284U};
   p2cPokemonInfo.moves.push_back(createMove(pokedex, dex::Move::QUIVER_DANCE));
 
-  battleCreationInfo.p1 = {{p1aPokemonInfo, p1bPokemonInfo, p1cPokemonInfo}};
-  battleCreationInfo.p2 = {{p2aPokemonInfo, p1bPokemonInfo, p2cPokemonInfo}};
+  battleCreationInfo.sides = {
+    {{p1aPokemonInfo, p1bPokemonInfo, p1cPokemonInfo}},
+    {{p2aPokemonInfo, p1bPokemonInfo, p2cPokemonInfo}},
+  };
 
   entt::dense_set<dex::Species> speciesSet{};
   speciesSet.insert(p1aPokemonInfo.species);
@@ -94,8 +96,8 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
 
     for (std::size_t i = 0U; i < battleInfo.decisionsToSimulate.size(); i++) {
       const auto sides = registry.get<Sides>(group[i]);
-      const types::handle p1Handle = {registry, sides.p1()};
-      const types::handle p2Handle = {registry, sides.p2()};
+      const types::handle p1Handle = {registry, sides.val.p1()};
+      const types::handle p2Handle = {registry, sides.val.p2()};
 
       simulate_turn::resolveDecision(p1Handle, p1Handle.get<SideDecision>());
       simulate_turn::resolveDecision(p2Handle, p2Handle.get<SideDecision>());
@@ -138,14 +140,14 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
 
       {
         INFO("P1 Action");
-        const auto& decision = battleInfo.decisionsToSimulate[id].p1.decisions.get<types::slotDecisions>()[0];
-        checkDecision(p1DecisionEntity, decision, battleInfo.p1.team[0]);
+        const auto& decision = battleInfo.decisionsToSimulate[id].p1().decisions.get<types::slotDecisions>()[0];
+        checkDecision(p1DecisionEntity, decision, battleInfo.sides.p1().team[0]);
       }
 
       {
         INFO("P2 Action");
-        const auto& decision = battleInfo.decisionsToSimulate[id].p2.decisions.get<types::slotDecisions>()[0];
-        checkDecision(p2DecisionEntity, decision, battleInfo.p2.team[0]);
+        const auto& decision = battleInfo.decisionsToSimulate[id].p2().decisions.get<types::slotDecisions>()[0];
+        checkDecision(p2DecisionEntity, decision, battleInfo.sides.p2().team[0]);
       }
     }
   };

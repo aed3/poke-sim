@@ -8,10 +8,12 @@ TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][Knoc
   const types::registry& registry = simulation.registry;
 
   BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}};
-  battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}};
-  battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
-  battleCreationInfo.p2.team[0].item = dex::Item::ASSAULT_VEST;
+  battleCreationInfo.sides = {
+    {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}},
+    {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}},
+  };
+  battleCreationInfo.sides.p1().team[0].status = dex::Status::NO_STATUS;
+  battleCreationInfo.sides.p2().team[0].item = dex::Item::ASSAULT_VEST;
   battleCreationInfo.turn = 1U;
   pokedex.loadForBattleInfo({battleCreationInfo});
 
@@ -76,8 +78,8 @@ TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][Knoc
   types::entity battle = turnOutcomeBattles[0];
   const auto& [turn, rootBattle, sides] = registry.get<Turn, RootBattle, Sides>(battle);
 
-  types::entity p1Side = sides.p1();
-  types::entity p2Side = sides.p2();
+  types::entity p1Side = sides.val.p1();
+  types::entity p2Side = sides.val.p2();
   types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
   types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
   types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[1];

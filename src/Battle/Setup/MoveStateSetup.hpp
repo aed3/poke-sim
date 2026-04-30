@@ -11,6 +11,7 @@
 namespace pokesim {
 // Tool to set properties of a move's state to an entity.
 struct MoveStateSetup : internal::StateSetupBase {
+  MoveStateSetup() : internal::StateSetupBase() {}
   MoveStateSetup(types::registry& registry) : MoveStateSetup(registry, registry.create()) {}
   MoveStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {}
 

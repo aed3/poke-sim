@@ -864,8 +864,9 @@ void check(const Side& side, const types::registry& registry) {
 template <>
 void check(const Sides& sides, const types::registry& registry) {
   POKESIM_REQUIRE_NM(sides.val.size() == MechanicConstants::SIDE_COUNT);
-  checkSide(sides.p1(), registry);
-  checkSide(sides.p2(), registry);
+  for (types::entity sideEntity : sides.val) {
+    checkSide(sideEntity, registry);
+  }
 }
 
 template <>
@@ -1428,7 +1429,7 @@ void Simulation::createInitialSide(
   sideSetup.setTeam(pokemonSetupList);
 }
 
-std::tuple<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(
+types::sides<SideStateSetup> Simulation::createInitialBattle(
   BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo) {
   battleStateSetup.setAutoID();
   battleStateSetup.setTurn(battleInfo.turn);
@@ -1469,8 +1470,9 @@ void Simulation::createInitialTurnDecision(
   types::handle battleHandle{registry, battleStateSetup.entity()};
   const Sides& sides = battleHandle.get<Sides>();
 
-  registry.emplace<SideDecision>(sides.p1(), turnDecisionInfo.p1);
-  registry.emplace<SideDecision>(sides.p2(), turnDecisionInfo.p2);
+  for (types::sideIndex i = 0U; i < sides.val.size(); i++) {
+    registry.emplace<SideDecision>(sides.val[i], turnDecisionInfo[i]);
+  }
 }
 
 void Simulation::createCalcDamageInput(
@@ -1535,10 +1537,11 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
 
   for (const BattleCreationInfo& battleInfo : battleInfoList) {
     BattleStateSetup battleStateSetup(registry);
-    auto [p1SideSetup, p2SideSetup] = createInitialBattle(battleStateSetup, battleInfo);
+    types::sides<SideStateSetup> sideSetup = createInitialBattle(battleStateSetup, battleInfo);
 
-    createInitialSide(p1SideSetup, battleInfo.p1, battleInfo);
-    createInitialSide(p2SideSetup, battleInfo.p2, battleInfo);
+    for (types::sideIndex i = 0U; i < sideSetup.size(); i++) {
+      createInitialSide(sideSetup[i], battleInfo.sides[i], battleInfo);
+    }
 
     debugChecks.addToBattleChecklist(battleStateSetup, battleInfo);
 
@@ -3960,7 +3963,7 @@ void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInf
   entt::dense_set<dex::Item> itemSet{};
 
   for (const BattleCreationInfo& battleCreationInfo : battleInfoList) {
-    for (const auto& side : {battleCreationInfo.p1, battleCreationInfo.p2}) {
+    for (const auto& side : battleCreationInfo.sides) {
       for (const auto& pokemon : side.team) {
         for (const auto& moveSlot : pokemon.moves) {
           moveSet.insert(moveSlot.name);
@@ -5125,8 +5128,8 @@ void BattleStateSetup::setSide(types::entity sideEntity) {
   auto& sides = handle.get_or_emplace<Sides>();
   PlayerSideId sideId = handle.registry()->get<PlayerSide>(sideEntity).val;
   switch (sideId) {
-    case PlayerSideId::P1: sides.p1() = sideEntity; break;
-    case PlayerSideId::P2: sides.p2() = sideEntity; break;
+    case PlayerSideId::P1: sides.val.p1() = sideEntity; break;
+    case PlayerSideId::P2: sides.val.p2() = sideEntity; break;
 
     default: POKESIM_REQUIRE_FAIL("sideID must be assigned P1 or P2."); break;
   }

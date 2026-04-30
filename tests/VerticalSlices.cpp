@@ -392,8 +392,8 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
   battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
 
   Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
-  auto& p1Info = battleCreationInfo.p1.team[0];
-  auto& p2Info = battleCreationInfo.p2.team[0];
+  auto& p1Info = battleCreationInfo.sides.p1().team[0];
+  auto& p2Info = battleCreationInfo.sides.p2().team[0];
   battleCreationInfo.runWithSimulateTurn = true;
 
   auto numberOfSamples = GENERATE(std::optional<types::entityIndex>{std::nullopt}, 1U, 5U);
@@ -523,8 +523,8 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
     const auto& [turn, probability, rngSeed, rootBattle, sides] =
       registry.get<Turn, Probability, RngSeed, RootBattle, Sides>(battle);
 
-    types::entity p1Side = sides.p1();
-    types::entity p2Side = sides.p2();
+    types::entity p1Side = sides.val.p1();
+    types::entity p2Side = sides.val.p2();
     types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
     types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
     types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[1];
@@ -706,10 +706,10 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
   battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
 
   auto simulation = createDoubleBattleSimulation(pokedex, battleCreationInfo);
-  auto& p1AInfo = battleCreationInfo.p1.team[0];
-  auto& p1BInfo = battleCreationInfo.p1.team[1];
-  auto& p2AInfo = battleCreationInfo.p2.team[0];
-  auto& p2BInfo = battleCreationInfo.p2.team[1];
+  auto& p1AInfo = battleCreationInfo.sides.p1().team[0];
+  auto& p1BInfo = battleCreationInfo.sides.p1().team[1];
+  auto& p2AInfo = battleCreationInfo.sides.p2().team[0];
+  auto& p2BInfo = battleCreationInfo.sides.p2().team[1];
   battleCreationInfo.runWithSimulateTurn = true;
 
   auto numberOfSamples = GENERATE(std::optional<types::entityIndex>{std::nullopt}, 1U, 5U);
@@ -867,8 +867,8 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
   for (types::entity battle : allTurnOutcomes) {
     const auto& [turn, probability, rngSeed, rootBattle, sides] =
       registry.get<Turn, Probability, RngSeed, RootBattle, Sides>(battle);
-    types::entity p1Side = sides.p1();
-    types::entity p2Side = sides.p2();
+    types::entity p1Side = sides.val.p1();
+    types::entity p2Side = sides.val.p2();
 
     if (!applyChangesToInputBattle) {
       REQUIRE_FALSE(registry.all_of<simulate_turn::TurnOutcomeBattles>(battle));

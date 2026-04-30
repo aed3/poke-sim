@@ -219,9 +219,11 @@ TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   const types::registry& registry = simulation.registry;
 
   BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON, true)}};
-  battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::AMPHAROS)}};
-  battleCreationInfo.p2.team[0].item = dex::Item::NO_ITEM;
+  battleCreationInfo.sides = {
+    {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON, true)}},
+    {{createPredefinedPokemon(pokedex, dex::Species::AMPHAROS)}},
+  };
+  battleCreationInfo.sides.p2().team[0].item = dex::Item::NO_ITEM;
   battleCreationInfo.turn = 1U;
   pokedex.loadForBattleInfo({battleCreationInfo});
 
@@ -284,8 +286,8 @@ TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   types::entity battle = turnOutcomeBattles[0];
   const auto& [turn, rootBattle, sides, winner] = registry.get<Turn, RootBattle, Sides, Winner>(battle);
 
-  types::entity p1Side = sides.p1();
-  types::entity p2Side = sides.p2();
+  types::entity p1Side = sides.val.p1();
+  types::entity p2Side = sides.val.p2();
   types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
   types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
   types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[0];

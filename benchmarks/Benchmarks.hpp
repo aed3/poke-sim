@@ -32,7 +32,7 @@ inline std::string createTestCaseTags(const std::initializer_list<std::vector<st
 }
 
 struct BenchmarkInputHolder {
-  static constexpr types::entityIndex MAX_INPUTS = 1U << 16U;
+  static constexpr types::entityIndex MAX_INPUTS = 1U << 17U;
 };
 
 using CreatePokedexFn = Pokedex(types::rngState&);
@@ -88,7 +88,7 @@ struct ChooseMonteCarloOptions : BenchmarkInputHolder {
 
 struct ChooseRandomBranchingOptions : BenchmarkInputHolder {
   inline static const std::vector<std::string> TAGS = {"Branching"};
-  static constexpr types::entityIndex MAX_INPUTS = 1U << 12U;
+  static constexpr types::entityIndex MAX_INPUTS = 1U << 16U;
   static void run(types::rngState&, Simulation& simulation) {
     simulation.simulateTurnOptions.makeBranchesOnRandomEvents = true;
     simulation.simulateTurnOptions.damageRollsConsidered.p1 = DamageRollKind::AVERAGE_DAMAGE;
@@ -115,9 +115,8 @@ struct ChooseRandomBranchingOptions : BenchmarkInputHolder {
 }  // namespace pokesim
 
 class BenchmarkReporter : public Catch::StreamingReporterBase {
-  bool hasABenchmarkRan = false;
   static inline const std::vector<std::string> TABLE_HEADER = {
-    "Name",
+    "Inputs",
     "Samples",
     "Iterations/Sample",
     "Estimated Completion Time",
@@ -144,13 +143,22 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
   void flush() { m_stream.flush(); }
 
   static std::string nanosecondsToString(double nanoseconds) {
+    std::string str;
     if (1e3 > nanoseconds) {
-      return Catch::getFormattedDuration(nanoseconds) + "ns";
+      str = Catch::getFormattedDuration(nanoseconds) + "ns";
     }
-    if (1e6 > nanoseconds) {
-      return Catch::getFormattedDuration(nanoseconds / 1e3) + "us";
+    else if (1e6 > nanoseconds) {
+      str = Catch::getFormattedDuration(nanoseconds / 1e3) + "us";
     }
-    return Catch::getFormattedDuration(nanoseconds / 1e6) + "ms";
+    else {
+      str = Catch::getFormattedDuration(nanoseconds / 1e6) + "ms";
+    }
+    return str.insert(0, 14U < str.size() ? 0U : 14U - str.size(), ' ');
+  }
+
+  static std::string inputSizeFromName(const std::string& name) {
+    auto numberStart = name.find_first_of('[') + 1U;
+    return name.substr(numberStart, name.size() - numberStart - 1U);
   }
 
  public:
@@ -158,17 +166,28 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
 
   static std::string getDescription() { return "Reporter for showing benchmark results in a markdown format."; }
 
+  void testCaseStarting(Catch::TestCaseInfo const& info) override {
+    Catch::StreamingReporterBase::testCaseStarting(info);
+    m_stream << "## " << info.name << "\n";
+    addCells(BenchmarkReporter::TABLE_HEADER);
+    addCells(std::vector<std::string>{BenchmarkReporter::COLUMN_COUNT, "---"});
+    flush();
+  }
+
+  void testCaseEnded(const Catch::TestCaseStats& stats) override {
+    Catch::StreamingReporterBase::testCaseEnded(stats);
+    m_stream << "\n\n";
+  }
+
   void benchmarkPreparing(Catch::StringRef name) override {
-    if (!hasABenchmarkRan) {
-      addCells(BenchmarkReporter::TABLE_HEADER);
-      addCells(std::vector<std::string>{BenchmarkReporter::COLUMN_COUNT, "---"});
-      hasABenchmarkRan = true;
-    }
-    addCells({name.data()});
+    Catch::StreamingReporterBase::benchmarkPreparing(name);
+    std::string inputSize = inputSizeFromName(name.data());
+    addCells({inputSize.append(6U - inputSize.size(), ' ')});
     flush();
   }
 
   void benchmarkStarting(Catch::BenchmarkInfo const& info) override {
+    Catch::StreamingReporterBase::benchmarkStarting(info);
     addCells({
       std::to_string(info.samples),
       std::to_string(info.iterations),
@@ -178,18 +197,15 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
   }
 
   void benchmarkEnded(Catch::BenchmarkStats<> const& stats) override {
-    const std::string& name = stats.info.name;
-    auto numberStart = name.find_first_of('[') + 1U;
-    std::string inputCount = name.substr(numberStart, name.size() - numberStart - 1U);
-    std::size_t currentBenchmarkInputSize = std::stoi(inputCount);
-
+    Catch::StreamingReporterBase::benchmarkEnded(stats);
+    std::string inputSize = inputSizeFromName(stats.info.name);
     const auto& mean = stats.mean;
     addCells({
       nanosecondsToString(mean.point.count()),
       nanosecondsToString(mean.lower_bound.count()),
       nanosecondsToString(mean.upper_bound.count()),
       nanosecondsToString(stats.standardDeviation.point.count()),
-      nanosecondsToString(mean.point.count() / currentBenchmarkInputSize),
+      nanosecondsToString(mean.point.count() / std::stoi(inputSize)),
     });
     flush();
   }

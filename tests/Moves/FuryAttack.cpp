@@ -7,10 +7,12 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
   const types::registry& registry = simulation.registry;
 
   BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}};
-  battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}};
+  battleCreationInfo.sides = {
+    {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}},
+    {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}},
+  };
   battleCreationInfo.turn = 1U;
-  battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
+  battleCreationInfo.sides.p1().team[0].status = dex::Status::NO_STATUS;
   pokedex.loadForBattleInfo({battleCreationInfo});
 
   battleCreationInfo.runWithSimulateTurn = true;
@@ -68,7 +70,7 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
   // The below strategy only works because all the damage outcomes from all the branches are unique
   entt::dense_map<types::stat, std::tuple<types::moveHits, types::moveHits, types::probability>>
     hitCombinationsFromP2Hp;
-  const types::stat p2MaxHp = battleCreationInfo.p2.team[0].stats.hp;
+  const types::stat p2MaxHp = battleCreationInfo.sides.p2().team[0].stats.hp;
 
   hitCombinationsFromP2Hp[p2MaxHp] = {(types::moveHits)0U, (types::moveHits)0U, 1.0F - passesAccuracyProbability};
 
@@ -101,7 +103,7 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
 
   for (types::entity battle : turnOutcomeBattles) {
     const auto& [probability, sides] = registry.get<Probability, Sides>(battle);
-    types::stat p2Hp = registry.get<stat::CurrentHp>(registry.get<Team>(sides.p2()).val[0]).val;
+    types::stat p2Hp = registry.get<stat::CurrentHp>(registry.get<Team>(sides.val.p2()).val[0]).val;
     CAPTURE(p2Hp);
     REQUIRE(hitCombinationsFromP2Hp.contains(p2Hp));
 

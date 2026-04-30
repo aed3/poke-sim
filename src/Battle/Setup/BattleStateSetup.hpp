@@ -17,6 +17,7 @@ struct AnalyzeEffectOptions;
 
 // Tool to set properties of a battle's state to an entity.
 struct BattleStateSetup : internal::StateSetupBase {
+  BattleStateSetup() : internal::StateSetupBase() {}
   BattleStateSetup(types::registry& registry) : BattleStateSetup(registry, registry.create()) {}
   BattleStateSetup(types::registry& registry, types::entity entity);
 

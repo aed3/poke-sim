@@ -8,10 +8,12 @@ TEST_CASE("Choice Lock: Choice lock starts", "[Simulation][SimulateTurn][Effect]
   const types::registry& registry = simulation.registry;
 
   BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON, true)}};
-  battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}};
+  battleCreationInfo.sides = {
+    {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON, true)}},
+    {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}},
+  };
   battleCreationInfo.turn = 1U;
-  battleCreationInfo.p2.team[0].item = dex::Item::CHOICE_SPECS;
+  battleCreationInfo.sides.p2().team[0].item = dex::Item::CHOICE_SPECS;
   pokedex.loadForBattleInfo({battleCreationInfo});
 
   battleCreationInfo.runWithSimulateTurn = true;
@@ -69,8 +71,8 @@ TEST_CASE("Choice Lock: Choice lock starts", "[Simulation][SimulateTurn][Effect]
   types::entity battle = turnOutcomeBattles[0];
   const auto& [turn, rootBattle, sides] = registry.get<Turn, RootBattle, Sides>(battle);
 
-  types::entity p1Side = sides.p1();
-  types::entity p2Side = sides.p2();
+  types::entity p1Side = sides.val.p1();
+  types::entity p2Side = sides.val.p2();
   types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
   types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
   types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[0];
@@ -96,11 +98,13 @@ TEST_CASE(
   const types::registry& registry = simulation.registry;
 
   BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}};
-  battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}};
+  battleCreationInfo.sides = {
+    {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}},
+    {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}},
+  };
   battleCreationInfo.turn = 1U;
-  battleCreationInfo.p1.team[0].status = dex::Status::NO_STATUS;
-  battleCreationInfo.p2.team[0].item = dex::Item::CHOICE_SCARF;
+  battleCreationInfo.sides.p1().team[0].status = dex::Status::NO_STATUS;
+  battleCreationInfo.sides.p2().team[0].item = dex::Item::CHOICE_SCARF;
   pokedex.loadForBattleInfo({battleCreationInfo});
 
   battleCreationInfo.runWithSimulateTurn = true;
@@ -162,8 +166,8 @@ TEST_CASE(
   types::entity battle = turnOutcomeBattles[0];
   const auto& [turn, rootBattle, sides] = registry.get<Turn, RootBattle, Sides>(battle);
 
-  types::entity p1Side = sides.p1();
-  types::entity p2Side = sides.p2();
+  types::entity p1Side = sides.val.p1();
+  types::entity p2Side = sides.val.p2();
   types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
   types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
   types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[1];

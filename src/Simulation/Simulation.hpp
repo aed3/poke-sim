@@ -2,9 +2,9 @@
 
 #include <Components/Tags/SimulationTags.hpp>
 #include <Types/Enums/BattleFormat.hpp>
+#include <Types/State.hpp>
 #include <entt/entity/registry.hpp>
 #include <optional>
-#include <tuple>
 #include <utility>
 
 #include "BattleCreationInfo.hpp"
@@ -50,7 +50,7 @@ class Simulation : public internal::RegistryContainer {
     BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& inputInfo,
     debug::SimulationSetupChecks& debugChecks);
 
-  std::tuple<SideStateSetup, SideStateSetup> createInitialBattle(
+  types::sides<SideStateSetup> createInitialBattle(
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
 
  private:

@@ -278,14 +278,13 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(rngSeed.val != 0U);
     }
 
-    POKESIM_REQUIRE(sides.val.size() == MechanicConstants::SIDE_COUNT, "Both sides should be have entities.");
+    POKESIM_REQUIRE_NM(sides.val.size() == MechanicConstants::SIDE_COUNT);
+    for (types::sideIndex i = 0U; i < sides.val.size(); i++) {
+      checkCreatedSide(sides.val[i], creationInfo.sides[i]);
+      POKESIM_REQUIRE_NM(registry->get<Battle>(sides.val[i]).val == battleEntity);
+    }
     auto [p1SideEntity, p2SideEntity] = sides.val;
 
-    checkCreatedSide(p1SideEntity, creationInfo.p1);
-    checkCreatedSide(p2SideEntity, creationInfo.p2);
-
-    POKESIM_REQUIRE_NM(registry->get<Battle>(p1SideEntity).val == battleEntity);
-    POKESIM_REQUIRE_NM(registry->get<Battle>(p2SideEntity).val == battleEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p1SideEntity).val == p2SideEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p2SideEntity).val == p1SideEntity);
 
@@ -295,10 +294,10 @@ struct SimulationSetupChecks {
   void checkTurnDecision(types::entity battleEntity, const TurnDecisionInfo& turnDecisionInfo) const {
     const auto& sides = registry->get<Sides>(battleEntity).val;
 
-    POKESIM_REQUIRE(sides.size() == MechanicConstants::SIDE_COUNT, "Both sides should be have entities.");
-    for (std::uint8_t side = 0U; side < MechanicConstants::SIDE_COUNT; side++) {
+    POKESIM_REQUIRE_NM(sides.size() == MechanicConstants::SIDE_COUNT);
+    for (types::sideIndex side = 0U; side < MechanicConstants::SIDE_COUNT; side++) {
       const auto& sideDecision = registry->get<SideDecision>(sides[side]);
-      const auto& sideDecisionInfo = side ? turnDecisionInfo.p2 : turnDecisionInfo.p1;
+      const auto& sideDecisionInfo = turnDecisionInfo[side];
 
       POKESIM_REQUIRE_NM(sideDecision.sideId == sideDecisionInfo.sideId);
 
@@ -349,8 +348,8 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::UsedMove>(calcDamageEntity));
     POKESIM_REQUIRE_NM(registry->all_of<tags::CalculateDamage>(calcDamageEntity));
 
-    const auto& p1Team = registry->get<Team>(registry->get<Sides>(battleEntity).p1()).val;
-    const auto& p2Team = registry->get<Team>(registry->get<Sides>(battleEntity).p2()).val;
+    const auto& p1Team = registry->get<Team>(registry->get<Sides>(battleEntity).val.p1()).val;
+    const auto& p2Team = registry->get<Team>(registry->get<Sides>(battleEntity).val.p2()).val;
     const auto& [battle, moveName, attacker, defender] =
       registry->get<Battle, MoveName, calc_damage::Attacker, calc_damage::Defender>(calcDamageEntity);
     types::entity setupInfoAttacker = targetSlotToEntity(calcDamageInputInfo.attackerSlot, p1Team, p2Team);
@@ -383,8 +382,8 @@ struct SimulationSetupChecks {
       !registry->all_of<tags::AnalyzeEffect>(analyzeEffectEntity),
       "This should not be set on the input entity as it's used for individual move calculations.");
 
-    const auto& p1Team = registry->get<Team>(registry->get<Sides>(battleEntity).p1()).val;
-    const auto& p2Team = registry->get<Team>(registry->get<Sides>(battleEntity).p2()).val;
+    const auto& p1Team = registry->get<Team>(registry->get<Sides>(battleEntity).val.p1()).val;
+    const auto& p2Team = registry->get<Team>(registry->get<Sides>(battleEntity).val.p2()).val;
     const auto& [battle, effectMove, attacker, defender, effectTarget] = registry->get<
       Battle,
       analyze_effect::EffectMove,

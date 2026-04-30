@@ -145,7 +145,7 @@ void Simulation::createInitialSide(
   sideSetup.setTeam(pokemonSetupList);
 }
 
-std::tuple<SideStateSetup, SideStateSetup> Simulation::createInitialBattle(
+types::sides<SideStateSetup> Simulation::createInitialBattle(
   BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo) {
   battleStateSetup.setAutoID();
   battleStateSetup.setTurn(battleInfo.turn);
@@ -186,8 +186,9 @@ void Simulation::createInitialTurnDecision(
   types::handle battleHandle{registry, battleStateSetup.entity()};
   const Sides& sides = battleHandle.get<Sides>();
 
-  registry.emplace<SideDecision>(sides.p1(), turnDecisionInfo.p1);
-  registry.emplace<SideDecision>(sides.p2(), turnDecisionInfo.p2);
+  for (types::sideIndex i = 0U; i < sides.val.size(); i++) {
+    registry.emplace<SideDecision>(sides.val[i], turnDecisionInfo[i]);
+  }
 }
 
 void Simulation::createCalcDamageInput(
@@ -252,10 +253,11 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
 
   for (const BattleCreationInfo& battleInfo : battleInfoList) {
     BattleStateSetup battleStateSetup(registry);
-    auto [p1SideSetup, p2SideSetup] = createInitialBattle(battleStateSetup, battleInfo);
+    types::sides<SideStateSetup> sideSetup = createInitialBattle(battleStateSetup, battleInfo);
 
-    createInitialSide(p1SideSetup, battleInfo.p1, battleInfo);
-    createInitialSide(p2SideSetup, battleInfo.p2, battleInfo);
+    for (types::sideIndex i = 0U; i < sideSetup.size(); i++) {
+      createInitialSide(sideSetup[i], battleInfo.sides[i], battleInfo);
+    }
 
     debugChecks.addToBattleChecklist(battleStateSetup, battleInfo);
 

@@ -7,10 +7,12 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effec
   const types::registry& registry = simulation.registry;
 
   BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.p1 = {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}};
-  battleCreationInfo.p2 = {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}};
+  battleCreationInfo.sides = {
+    {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}},
+    {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}},
+  };
   battleCreationInfo.turn = 1U;
-  battleCreationInfo.p1.team[0].status = dex::Status::PAR;
+  battleCreationInfo.sides.p1().team[0].status = dex::Status::PAR;
   pokedex.loadForBattleInfo({battleCreationInfo});
 
   battleCreationInfo.runWithSimulateTurn = true;
@@ -77,8 +79,8 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effec
     const auto& [turn, probability, rngSeed, rootBattle, sides] =
       registry.get<Turn, Probability, RngSeed, RootBattle, Sides>(battle);
 
-    types::entity p1Side = sides.p1();
-    types::entity p2Side = sides.p2();
+    types::entity p1Side = sides.val.p1();
+    types::entity p2Side = sides.val.p2();
     types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
     types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
     types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[1];

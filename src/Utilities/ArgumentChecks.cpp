@@ -704,8 +704,9 @@ void check(const Side& side, const types::registry& registry) {
 template <>
 void check(const Sides& sides, const types::registry& registry) {
   POKESIM_REQUIRE_NM(sides.val.size() == MechanicConstants::SIDE_COUNT);
-  checkSide(sides.p1(), registry);
-  checkSide(sides.p2(), registry);
+  for (types::entity sideEntity : sides.val) {
+    checkSide(sideEntity, registry);
+  }
 }
 
 template <>

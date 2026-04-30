@@ -173,8 +173,9 @@ struct Checks : pokesim::debug::Checks {
     for (types::entity battle : simulation->selectedBattleEntities()) {
       copyEntity(battle);
       checkBattle(battle);
-      checkSide(registry->get<Sides>(battle).p1());
-      checkSide(registry->get<Sides>(battle).p2());
+      for (types::entity side : registry->get<Sides>(battle).val) {
+        checkSide(side);
+      }
     }
   }
 
