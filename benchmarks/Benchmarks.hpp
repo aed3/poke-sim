@@ -48,11 +48,22 @@ inline void runBenchmark(
     DYNAMIC_SECTION(inputCount) {
       BENCHMARK_ADVANCED(name + " [" + std::to_string(inputCount) + "]")(Catch::Benchmark::Chronometer meter) {
         Pokedex pokedex = createPokedex(rngState);
-        Simulation simulation = createSimulation(rngState, pokedex);
-        chooseOptions(rngState, simulation);
-        assignInputs(rngState, inputCount, simulation, pokedex);
+        std::vector<Simulation> simulations;
+        simulations.reserve(meter.runs());
 
-        meter.measure([&simulation]() { simulation.run(); });
+        types::rngState rngStateAtSimulationCreation = rngState;
+        for (int iteration = 0; iteration < meter.runs(); iteration++) {
+          rngState = rngStateAtSimulationCreation;
+          Simulation& simulation = simulations.emplace_back(createSimulation(rngState, pokedex));
+          chooseOptions(rngState, simulation);
+          assignInputs(rngState, inputCount, simulation, pokedex);
+        }
+
+        meter.measure([&simulations](int iteration) { simulations[iteration].run(); });
+
+        for (Simulation& simulation : simulations) {
+          simulation.registry.clear();
+        }
       };
     }
   }

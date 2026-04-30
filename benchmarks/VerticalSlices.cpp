@@ -99,7 +99,8 @@ struct VerticalSlice {
   struct AssignSimulateTurnSingleBattleInputs : BenchmarkInputHolder {
     inline static const std::vector<std::string> TAGS = {"SimulateTurn", "VerticalSlice1"};
     static void run(types::rngState&, types::entityIndex inputCount, Simulation& simulation, Pokedex& pokedex) {
-      BattleCreationInfo battleCreationInfo = createSingleBattleTeam(pokedex);
+      static BattleCreationInfo battleCreationInfo = createSingleBattleTeam(pokedex);
+      pokedex.loadForBattleInfo({battleCreationInfo});
 
       battleCreationInfo.runWithSimulateTurn = true;
       SideDecision p1Decision{PlayerSideId::P1};
@@ -121,7 +122,8 @@ struct VerticalSlice {
   struct AssignSimulateTurnDoubleBattleInputs : BenchmarkInputHolder {
     inline static const std::vector<std::string> TAGS = {"SimulateTurn", "VerticalSlice1"};
     static void run(types::rngState&, types::entityIndex inputCount, Simulation& simulation, Pokedex& pokedex) {
-      BattleCreationInfo battleCreationInfo = createDoubleBattleTeam(pokedex);
+      static BattleCreationInfo battleCreationInfo = createDoubleBattleTeam(pokedex);
+      pokedex.loadForBattleInfo({battleCreationInfo});
 
       battleCreationInfo.runWithSimulateTurn = true;
       SideDecision p1Decision{PlayerSideId::P1};
