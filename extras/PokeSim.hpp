@@ -53,12 +53,12 @@
  * external/entt/meta/policy.hpp
  * external/entt/meta/utility.hpp
  * external/entt/meta/factory.hpp
- * src/Utilities/AssertComponentsEqual.hpp
- * src/Types/Registry.hpp
  * src/Types/Random.hpp
  * src/Types/MechanicConstants.hpp
  * src/Utilities/FixedMemoryVector.hpp
  * src/Types/State.hpp
+ * src/Utilities/AssertComponentsEqual.hpp
+ * src/Types/Registry.hpp
  * src/Types/Stats.hpp
  * src/Components/Boosts.hpp
  * src/Types/Enums/PseudoWeather.hpp
@@ -17153,291 +17153,6 @@ inline void meta_reset() noexcept {
 
 //////////////////// END OF external/entt/meta/factory.hpp /////////////////////
 
-/////////////// START OF src/Utilities/AssertComponentsEqual.hpp ///////////////
-
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
-
-namespace pokesim {
-struct ParentEntity;
-namespace types {
-class registry;
-}
-namespace internal {
-template <typename T, std::uint8_t N>
-class fixedMemoryVector;
-template <typename T, std::uint64_t N>
-class maxSizedVector;
-}  // namespace internal
-}  // namespace pokesim
-
-namespace pokesim::debug {
-struct TypesToIgnore : private entt::dense_set<entt::id_type> {
-  TypesToIgnore() : entt::dense_set<entt::id_type>() { add<ParentEntity>(); }
-
-  template <typename... Types>
-  void add() {
-    (emplace(entt::type_hash<Types>()), ...);
-  }
-
-  using entt::dense_set<entt::id_type>::contains;
-};
-
-types::entity createEntityCopy(types::entity entity, const types::registry& src, types::registry& dst);
-
-void hasSameComponents(
-  const types::registry& currReg, types::entity currEntity, const types::registry& initReg, types::entity initEntity,
-  const TypesToIgnore& typesToIgnore = {});
-
-void areEntitiesEqual(
-  const types::registry& currReg, types::entity currEntity, const types::registry& initReg, types::entity initEntity,
-  const TypesToIgnore& typesToIgnore = {});
-
-types::entity findCopyParent(
-  const entt::dense_map<types::entity, types::entity>& initialEntities, const types::registry& registry,
-  types::entity entity);
-
-bool checkIfCopyParent(types::entity potentialChild, types::entity potentialParent, const types::registry& registry);
-
-template <typename Type>
-class AssertComponentsEqual {
-  template <typename, typename = void>
-  struct val : std::false_type {};
-  template <typename T>
-  struct val<T, std::void_t<decltype(T::val)>> : std::true_type {};
-
-  template <class, class = void>
-  struct equals : std::false_type {};
-  template <class T>
-  struct equals<T, std::void_t<decltype(&T::operator==)>> : std::true_type {};
-
-  template <typename T>
-  using hasEqualTo = std::disjunction<equals<T>, std::is_scalar<T>>;
-
-  template <typename>
-  struct isList;
-  template <typename T, std::uint8_t N>
-  struct isList<internal::fixedMemoryVector<T, N>> {};
-  template <typename T, std::uint64_t N>
-  struct isList<internal::maxSizedVector<T, N>> {};
-  template <typename... Args>
-  struct isList<std::vector<Args...>> {};
-  template <typename T, auto N>
-  struct isList<std::array<T, N>> {};
-
-#ifdef _MSC_VER
-// The fails as the end of the following two methods are counted as unreachable, which in most cases is intended.
-#pragma warning(disable : 4702)
-#endif
-  template <typename Member>
-  static void compareMember(const Member& current, const Member& initial, const types::registry& registry) {
-    if constexpr (std::is_same_v<types::entity, Member>) {
-      if (current == initial) {
-        return;
-      }
-
-      bool initialIsParent = checkIfCopyParent(current, initial, registry);
-      bool currentIsParent = checkIfCopyParent(initial, current, registry);
-      POKESIM_REQUIRE_NM(initialIsParent);
-      POKESIM_REQUIRE_NM(!currentIsParent);
-    }
-    else if constexpr (entt::is_complete_v<isList<Member>>) {
-      POKESIM_REQUIRE_NM(current.size() == initial.size());
-      using size = std::invoke_result_t<decltype(&Member::size), Member>;
-
-      for (size i = 0; i < current.size(); i++) {
-        compareMember(current[i], initial[i], registry);
-      }
-    }
-    else if constexpr (hasEqualTo<Member>::value) {
-      POKESIM_REQUIRE_NM(current == initial);
-    }
-    else {
-      // Not a static_assert so this only fails on types that actually get copied.
-      POKESIM_REQUIRE_FAIL("There's a type that needs a dedicated equals function.");
-    }
-  }
-
- public:
-  static void check(const Type& current, const Type& initial, const types::registry& registry) {
-    if constexpr (hasEqualTo<Type>::value) {
-      compareMember(current, initial, registry);
-      return;
-    }
-    else if constexpr (val<Type>::value) {
-      compareMember(current.val, initial.val, registry);
-      if constexpr (sizeof(current.val) == sizeof(current)) {
-        return;
-      }
-    }
-
-    // Not a static_assert so this only fails on types that actually get copied.
-    POKESIM_REQUIRE_FAIL("This component needs a dedicated equals function.");
-  }
-#ifdef _MSC_VER
-#pragma warning(default : 4702)
-#endif
-};
-}  // namespace pokesim::debug
-
-#endif
-
-//////////////// END OF src/Utilities/AssertComponentsEqual.hpp ////////////////
-
-/////////////////////// START OF src/Types/Registry.hpp ////////////////////////
-
-#ifndef POKESIM_DEBUG_CHECK_UTILITIES
-
-namespace entt {
-enum class entity : ENTT_ID_TYPE;
-template <typename, typename>
-class basic_registry;
-using registry = basic_registry<entity, std::allocator<entity>>;
-
-template <typename, typename...>
-struct basic_handle;
-}  // namespace entt
-
-namespace pokesim::types {
-using registry = entt::registry;
-using handle = entt::basic_handle<registry>;
-}  // namespace pokesim::types
-#else
-
-#ifdef POKESIM_ENTITY_VIEWER
-#include <Utilities/EntityViewer.hpp>
-
-namespace pokesim::types::internal {
-using BackingRegistry = pokesim::debug::EntityViewerRegistry;
-template <typename Registry>
-using BackingHandle = pokesim::debug::EntityViewerHandle<Registry>;
-}  // namespace pokesim::types::internal
-#else
-namespace pokesim::types::internal {
-using BackingRegistry = entt::registry;
-template <typename Registry>
-using BackingHandle = entt::basic_handle<Registry>;
-}  // namespace pokesim::types::internal
-#endif
-
-namespace pokesim::types {
-class registry : public internal::BackingRegistry {
- public:
-  enum MetaFunctions : std::uint8_t {
-    COPY_TO_OTHER_REGISTRY,
-    ENTITY_COMPONENTS_EQUAL,
-  };
-
-  static void checkEntity(entity_type entt, const registry& registry) {
-    POKESIM_REQUIRE_NM(entt != entt::null);
-    POKESIM_REQUIRE_NM(registry.valid(entt));
-  }
-
- private:
-  using entt::registry::create;
-  using entt::registry::emplace;
-  using entt::registry::emplace_or_replace;
-  using entt::registry::get_or_emplace;
-  using entt::registry::insert;
-
-  static constexpr std::uint64_t maxEntityCount = std::numeric_limits<entt::id_type>::max();
-
-  template <typename Type>
-  static void copyToOtherRegistry(
-    const registry* srcReg, types::entity srcEntity, registry* dstReg, types::entity dstEntity) {
-    if constexpr (std::is_empty_v<Type>) {
-      dstReg->emplace<Type>(dstEntity);
-    }
-    else {
-      const Type& value = srcReg->get<Type>(srcEntity);
-      dstReg->emplace<Type>(dstEntity, value);
-    }
-  }
-
-  template <typename Type>
-  static void entityComponentsEqual(
-    const registry* currReg, types::entity currEntity, const registry* initReg, types::entity initEntity) {
-    if constexpr (!std::is_empty_v<Type>) {
-      const Type& currValue = currReg->get<Type>(currEntity);
-      const Type& initValue = initReg->get<Type>(initEntity);
-      debug::AssertComponentsEqual<Type>::check(currValue, initValue, *currReg);
-    }
-  }
-
-  template <typename Type>
-  void createMetaFunctions() const {
-    static_assert(std::is_class_v<Type>, "Only classes or structs should be added to an entity.");
-    entt::meta<Type>()
-      .template func<&registry::copyToOtherRegistry<Type>>(MetaFunctions::COPY_TO_OTHER_REGISTRY)
-      .template func<&registry::entityComponentsEqual<Type>>(MetaFunctions::ENTITY_COMPONENTS_EQUAL);
-  }
-
-  void checkEntity(entity_type entt) const { registry::checkEntity(entt, *this); }
-
- public:
-  template <typename Type, typename... Args>
-  decltype(auto) emplace(const entity_type entt, Args&&... args) {
-    checkEntity(entt);
-    createMetaFunctions<Type>();
-    return entt::registry::emplace<Type>(entt, std::forward<Args>(args)...);
-  }
-
-  template <typename Type, typename... Args>
-  decltype(auto) emplace_or_replace(const entity_type entt, Args&&... args) {
-    checkEntity(entt);
-    createMetaFunctions<Type>();
-    return entt::registry::emplace_or_replace<Type>(entt, std::forward<Args>(args)...);
-  }
-
-  template <typename Type, typename... Args>
-  [[nodiscard]] decltype(auto) get_or_emplace(const entity_type entt, Args&&... args) {
-    checkEntity(entt);
-    createMetaFunctions<Type>();
-    return entt::registry::get_or_emplace<Type>(entt, std::forward<Args>(args)...);
-  }
-
-  [[nodiscard]] entity_type create() {
-    POKESIM_REQUIRE(
-      storage<entity>().size() + 1U <= maxEntityCount,
-      "More entities are being created clone than allowed.");
-    return entt::registry::create();
-  }
-
-  [[nodiscard]] entity_type create(const entity_type hint) {
-    POKESIM_REQUIRE(
-      storage<entity>().size() + 1U <= maxEntityCount,
-      "More entities are being created clone than allowed.");
-    return entt::registry::create(hint);
-  }
-
-  template <typename It>
-  void create(It first, It last) {
-    POKESIM_REQUIRE(
-      storage<entity_type>().size() + (last - first) <= maxEntityCount,
-      "More entities are being created clone than allowed.");
-    entt::registry::create(std::move(first), std::move(last));
-  }
-
-  template <typename Type, typename It>
-  void insert(It first, It last, const Type& value = {}) {
-    createMetaFunctions<Type>();
-    entt::registry::insert<Type>(std::move(first), std::move(last), value);
-  }
-
-  template <
-    typename Type, typename EIt, typename CIt,
-    typename = std::enable_if_t<std::is_same_v<typename std::iterator_traits<CIt>::value_type, Type>>>
-  void insert(EIt first, EIt last, CIt from) {
-    createMetaFunctions<Type>();
-    entt::registry::insert<Type>(first, last, from);
-  }
-};
-
-using handle = internal::BackingHandle<registry>;
-}  // namespace pokesim::types
-#endif
-
-//////////////////////// END OF src/Types/Registry.hpp /////////////////////////
-
 //////////////////////// START OF src/Types/Random.hpp /////////////////////////
 
 namespace pokesim::types {
@@ -17813,6 +17528,293 @@ struct std::tuple_element<N, pokesim::types::sides<T>> {
 };
 
 ////////////////////////// END OF src/Types/State.hpp //////////////////////////
+
+/////////////// START OF src/Utilities/AssertComponentsEqual.hpp ///////////////
+
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+
+namespace pokesim {
+struct ParentEntity;
+namespace types {
+class registry;
+}
+namespace internal {
+template <typename T, std::uint8_t N>
+class fixedMemoryVector;
+template <typename T, std::uint64_t N>
+class maxSizedVector;
+}  // namespace internal
+}  // namespace pokesim
+
+namespace pokesim::debug {
+struct TypesToIgnore : private entt::dense_set<entt::id_type> {
+  TypesToIgnore() : entt::dense_set<entt::id_type>() { add<ParentEntity>(); }
+
+  template <typename... Types>
+  void add() {
+    (emplace(entt::type_hash<Types>()), ...);
+  }
+
+  using entt::dense_set<entt::id_type>::contains;
+};
+
+types::entity createEntityCopy(types::entity entity, const types::registry& src, types::registry& dst);
+
+void hasSameComponents(
+  const types::registry& currReg, types::entity currEntity, const types::registry& initReg, types::entity initEntity,
+  const TypesToIgnore& typesToIgnore = {});
+
+void areEntitiesEqual(
+  const types::registry& currReg, types::entity currEntity, const types::registry& initReg, types::entity initEntity,
+  const TypesToIgnore& typesToIgnore = {});
+
+types::entity findCopyParent(
+  const entt::dense_map<types::entity, types::entity>& initialEntities, const types::registry& registry,
+  types::entity entity);
+
+bool checkIfCopyParent(types::entity potentialChild, types::entity potentialParent, const types::registry& registry);
+
+template <typename Type>
+class AssertComponentsEqual {
+  template <typename, typename = void>
+  struct val : std::false_type {};
+  template <typename T>
+  struct val<T, std::void_t<decltype(T::val)>> : std::true_type {};
+
+  template <class, class = void>
+  struct equals : std::false_type {};
+  template <class T>
+  struct equals<T, std::void_t<decltype(&T::operator==)>> : std::true_type {};
+
+  template <typename T>
+  using hasEqualTo = std::disjunction<equals<T>, std::is_scalar<T>>;
+
+  template <typename>
+  struct isList;
+  template <typename T, std::uint8_t N>
+  struct isList<internal::fixedMemoryVector<T, N>> {};
+  template <typename T, std::uint64_t N>
+  struct isList<internal::maxSizedVector<T, N>> {};
+  template <typename T>
+  struct isList<types::sides<T>> {};
+  template <typename... Args>
+  struct isList<std::vector<Args...>> {};
+  template <typename T, auto N>
+  struct isList<std::array<T, N>> {};
+
+#ifdef _MSC_VER
+// The fails as the end of the following two methods are counted as unreachable, which in most cases is intended.
+#pragma warning(disable : 4702)
+#endif
+  template <typename Member>
+  static void compareMember(const Member& current, const Member& initial, const types::registry& registry) {
+    if constexpr (std::is_same_v<types::entity, Member>) {
+      if (current == initial) {
+        return;
+      }
+
+      bool initialIsParent = checkIfCopyParent(current, initial, registry);
+      bool currentIsParent = checkIfCopyParent(initial, current, registry);
+      POKESIM_REQUIRE_NM(initialIsParent);
+      POKESIM_REQUIRE_NM(!currentIsParent);
+    }
+    else if constexpr (entt::is_complete_v<isList<Member>>) {
+      POKESIM_REQUIRE_NM(current.size() == initial.size());
+      using size = std::invoke_result_t<decltype(&Member::size), Member>;
+
+      for (size i = 0; i < current.size(); i++) {
+        compareMember(current[i], initial[i], registry);
+      }
+    }
+    else if constexpr (hasEqualTo<Member>::value) {
+      POKESIM_REQUIRE_NM(current == initial);
+    }
+    else {
+      // Not a static_assert so this only fails on types that actually get copied.
+      POKESIM_REQUIRE_FAIL("There's a type that needs a dedicated equals function.");
+    }
+  }
+
+ public:
+  static void check(const Type& current, const Type& initial, const types::registry& registry) {
+    if constexpr (hasEqualTo<Type>::value) {
+      compareMember(current, initial, registry);
+      return;
+    }
+    else if constexpr (val<Type>::value) {
+      compareMember(current.val, initial.val, registry);
+      if constexpr (sizeof(current.val) == sizeof(current)) {
+        return;
+      }
+    }
+
+    // Not a static_assert so this only fails on types that actually get copied.
+    POKESIM_REQUIRE_FAIL("This component needs a dedicated equals function.");
+  }
+#ifdef _MSC_VER
+#pragma warning(default : 4702)
+#endif
+};
+}  // namespace pokesim::debug
+
+#endif
+
+//////////////// END OF src/Utilities/AssertComponentsEqual.hpp ////////////////
+
+/////////////////////// START OF src/Types/Registry.hpp ////////////////////////
+
+#ifndef POKESIM_DEBUG_CHECK_UTILITIES
+
+namespace entt {
+enum class entity : ENTT_ID_TYPE;
+template <typename, typename>
+class basic_registry;
+using registry = basic_registry<entity, std::allocator<entity>>;
+
+template <typename, typename...>
+struct basic_handle;
+}  // namespace entt
+
+namespace pokesim::types {
+using registry = entt::registry;
+using handle = entt::basic_handle<registry>;
+}  // namespace pokesim::types
+#else
+
+#ifdef POKESIM_ENTITY_VIEWER
+#include <Utilities/EntityViewer.hpp>
+
+namespace pokesim::types::internal {
+using BackingRegistry = pokesim::debug::EntityViewerRegistry;
+template <typename Registry>
+using BackingHandle = pokesim::debug::EntityViewerHandle<Registry>;
+}  // namespace pokesim::types::internal
+#else
+namespace pokesim::types::internal {
+using BackingRegistry = entt::registry;
+template <typename Registry>
+using BackingHandle = entt::basic_handle<Registry>;
+}  // namespace pokesim::types::internal
+#endif
+
+namespace pokesim::types {
+class registry : public internal::BackingRegistry {
+ public:
+  enum MetaFunctions : std::uint8_t {
+    COPY_TO_OTHER_REGISTRY,
+    ENTITY_COMPONENTS_EQUAL,
+  };
+
+  static void checkEntity(entity_type entt, const registry& registry) {
+    POKESIM_REQUIRE_NM(entt != entt::null);
+    POKESIM_REQUIRE_NM(registry.valid(entt));
+  }
+
+ private:
+  using entt::registry::create;
+  using entt::registry::emplace;
+  using entt::registry::emplace_or_replace;
+  using entt::registry::get_or_emplace;
+  using entt::registry::insert;
+
+  static constexpr std::uint64_t maxEntityCount = std::numeric_limits<entt::id_type>::max();
+
+  template <typename Type>
+  static void copyToOtherRegistry(
+    const registry* srcReg, types::entity srcEntity, registry* dstReg, types::entity dstEntity) {
+    if constexpr (std::is_empty_v<Type>) {
+      dstReg->emplace<Type>(dstEntity);
+    }
+    else {
+      const Type& value = srcReg->get<Type>(srcEntity);
+      dstReg->emplace<Type>(dstEntity, value);
+    }
+  }
+
+  template <typename Type>
+  static void entityComponentsEqual(
+    const registry* currReg, types::entity currEntity, const registry* initReg, types::entity initEntity) {
+    if constexpr (!std::is_empty_v<Type>) {
+      const Type& currValue = currReg->get<Type>(currEntity);
+      const Type& initValue = initReg->get<Type>(initEntity);
+      debug::AssertComponentsEqual<Type>::check(currValue, initValue, *currReg);
+    }
+  }
+
+  template <typename Type>
+  void createMetaFunctions() const {
+    static_assert(std::is_class_v<Type>, "Only classes or structs should be added to an entity.");
+    entt::meta<Type>()
+      .template func<&registry::copyToOtherRegistry<Type>>(MetaFunctions::COPY_TO_OTHER_REGISTRY)
+      .template func<&registry::entityComponentsEqual<Type>>(MetaFunctions::ENTITY_COMPONENTS_EQUAL);
+  }
+
+  void checkEntity(entity_type entt) const { registry::checkEntity(entt, *this); }
+
+ public:
+  template <typename Type, typename... Args>
+  decltype(auto) emplace(const entity_type entt, Args&&... args) {
+    checkEntity(entt);
+    createMetaFunctions<Type>();
+    return entt::registry::emplace<Type>(entt, std::forward<Args>(args)...);
+  }
+
+  template <typename Type, typename... Args>
+  decltype(auto) emplace_or_replace(const entity_type entt, Args&&... args) {
+    checkEntity(entt);
+    createMetaFunctions<Type>();
+    return entt::registry::emplace_or_replace<Type>(entt, std::forward<Args>(args)...);
+  }
+
+  template <typename Type, typename... Args>
+  [[nodiscard]] decltype(auto) get_or_emplace(const entity_type entt, Args&&... args) {
+    checkEntity(entt);
+    createMetaFunctions<Type>();
+    return entt::registry::get_or_emplace<Type>(entt, std::forward<Args>(args)...);
+  }
+
+  [[nodiscard]] entity_type create() {
+    POKESIM_REQUIRE(
+      storage<entity>().size() + 1U <= maxEntityCount,
+      "More entities are being created clone than allowed.");
+    return entt::registry::create();
+  }
+
+  [[nodiscard]] entity_type create(const entity_type hint) {
+    POKESIM_REQUIRE(
+      storage<entity>().size() + 1U <= maxEntityCount,
+      "More entities are being created clone than allowed.");
+    return entt::registry::create(hint);
+  }
+
+  template <typename It>
+  void create(It first, It last) {
+    POKESIM_REQUIRE(
+      storage<entity_type>().size() + (last - first) <= maxEntityCount,
+      "More entities are being created clone than allowed.");
+    entt::registry::create(std::move(first), std::move(last));
+  }
+
+  template <typename Type, typename It>
+  void insert(It first, It last, const Type& value = {}) {
+    createMetaFunctions<Type>();
+    entt::registry::insert<Type>(std::move(first), std::move(last), value);
+  }
+
+  template <
+    typename Type, typename EIt, typename CIt,
+    typename = std::enable_if_t<std::is_same_v<typename std::iterator_traits<CIt>::value_type, Type>>>
+  void insert(EIt first, EIt last, CIt from) {
+    createMetaFunctions<Type>();
+    entt::registry::insert<Type>(first, last, from);
+  }
+};
+
+using handle = internal::BackingHandle<registry>;
+}  // namespace pokesim::types
+#endif
+
+//////////////////////// END OF src/Types/Registry.hpp /////////////////////////
 
 ///////////////////////// START OF src/Types/Stats.hpp /////////////////////////
 

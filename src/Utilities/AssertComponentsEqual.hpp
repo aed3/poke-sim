@@ -6,7 +6,7 @@
 
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
-#include <cstddef>
+#include <Types/State.hpp>
 #include <entt/container/dense_set.hpp>
 #include <entt/container/fwd.hpp>
 #include <entt/core/type_info.hpp>
@@ -74,6 +74,8 @@ class AssertComponentsEqual {
   struct isList<internal::fixedMemoryVector<T, N>> {};
   template <typename T, std::uint64_t N>
   struct isList<internal::maxSizedVector<T, N>> {};
+  template <typename T>
+  struct isList<types::sides<T>> {};
   template <typename... Args>
   struct isList<std::vector<Args...>> {};
   template <typename T, auto N>
