@@ -145,6 +145,38 @@ struct VerticalSlice {
       updateAllStats(simulation);
     }
   };
+
+  struct AssignCalcDamageSingleBattleInputs : BenchmarkInputHolder {
+    inline static const std::vector<std::string> TAGS = {"CalcDamage", "VerticalSlice1"};
+    static void run(types::rngState&, types::entityIndex inputCount, Simulation& simulation, Pokedex& pokedex) {
+      static BattleCreationInfo battleCreationInfo = createSingleBattleTeam(pokedex);
+      pokedex.loadForBattleInfo({battleCreationInfo});
+
+      battleCreationInfo.runWithCalculateDamage = true;
+      battleCreationInfo.damageCalculations = {
+        {Slot::P2A, Slot::P1A, {dex::Move::THUNDERBOLT}},
+      };
+
+      simulation.createInitialStates({inputCount, battleCreationInfo});
+      updateAllStats(simulation);
+    }
+  };
+
+  struct AssignAnalyzeEffectSingleBattleInputs : BenchmarkInputHolder {
+    inline static const std::vector<std::string> TAGS = {"AnalyzeEffect", "VerticalSlice1"};
+    static void run(types::rngState&, types::entityIndex inputCount, Simulation& simulation, Pokedex& pokedex) {
+      static BattleCreationInfo battleCreationInfo = createSingleBattleTeam(pokedex);
+      pokedex.loadForBattleInfo({battleCreationInfo});
+
+      battleCreationInfo.runWithAnalyzeEffect = true;
+      battleCreationInfo.effectsToAnalyze = {
+        {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
+      };
+
+      simulation.createInitialStates({inputCount, battleCreationInfo});
+      updateAllStats(simulation);
+    }
+  };
 };
 }  // namespace
 
@@ -161,5 +193,13 @@ BENCHMARK_CASE(
 BENCHMARK_CASE(
   CreatePokedex, CreateDoubleBattleSimulation, ChooseRandomBranchingOptions,
   VerticalSlice::AssignSimulateTurnDoubleBattleInputs)
+
+BENCHMARK_CASE(
+  CreatePokedex, CreateSingleBattleSimulation, ChooseCalcDamageOptions,
+  VerticalSlice::AssignCalcDamageSingleBattleInputs)
+
+BENCHMARK_CASE(
+  CreatePokedex, CreateSingleBattleSimulation, ChooseAnalyzeEffectOptions,
+  VerticalSlice::AssignAnalyzeEffectSingleBattleInputs)
 
 }  // namespace pokesim

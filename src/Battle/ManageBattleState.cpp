@@ -101,10 +101,10 @@ void clearCurrentAction(Simulation& simulation) {
   registry.clear<tags::CurrentActionMoveSlot>();
 
   auto actionMoves = registry.view<tags::CurrentActionMove>();
-  registry.destroy(actionMoves.begin(), actionMoves.end());
   auto failedActionMoves = registry.view<tags::FailedCurrentActionMove>();
-  registry.destroy(failedActionMoves.begin(), failedActionMoves.end());
   auto currentActions = registry.view<action::tags::Current>();
+  registry.destroy(actionMoves.begin(), actionMoves.end());
+  registry.destroy(failedActionMoves.begin(), failedActionMoves.end());
   registry.destroy(currentActions.begin(), currentActions.end());
 
   auto battles = simulation.selectedBattleEntities();

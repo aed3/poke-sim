@@ -60,10 +60,6 @@ inline void runBenchmark(
         }
 
         meter.measure([&simulations](int iteration) { simulations[iteration].run(); });
-
-        for (Simulation& simulation : simulations) {
-          simulation.registry.clear();
-        }
       };
     }
   }
@@ -91,9 +87,15 @@ struct CreateDoubleBattleSimulation : BenchmarkInputHolder {
 struct ChooseMonteCarloOptions : BenchmarkInputHolder {
   inline static const std::vector<std::string> TAGS = {"MonteCarlo"};
   static void run(types::rngState&, Simulation& simulation) {
-    simulation.simulateTurnOptions.makeBranchesOnRandomEvents = false;
-    simulation.simulateTurnOptions.damageRollsConsidered.p1 = DamageRollKind::ALL_DAMAGE_ROLLS;
-    simulation.simulateTurnOptions.damageRollsConsidered.p2 = DamageRollKind::ALL_DAMAGE_ROLLS;
+    auto& options = simulation.simulateTurnOptions;
+    options.applyChangesToInputBattle = true;
+    options.damageRollsConsidered.p1 = DamageRollKind::ALL_DAMAGE_ROLLS;
+    options.damageRollsConsidered.p2 = DamageRollKind::ALL_DAMAGE_ROLLS;
+    options.branchProbabilityLowerLimit = std::nullopt;
+    options.randomChanceLowerLimit = std::nullopt;
+    options.randomChanceUpperLimit = std::nullopt;
+
+    options.makeBranchesOnRandomEvents = false;
   }
 };
 
@@ -101,9 +103,36 @@ struct ChooseRandomBranchingOptions : BenchmarkInputHolder {
   inline static const std::vector<std::string> TAGS = {"Branching"};
   static constexpr types::entityIndex MAX_INPUTS = 1U << 16U;
   static void run(types::rngState&, Simulation& simulation) {
-    simulation.simulateTurnOptions.makeBranchesOnRandomEvents = true;
-    simulation.simulateTurnOptions.damageRollsConsidered.p1 = DamageRollKind::AVERAGE_DAMAGE;
-    simulation.simulateTurnOptions.damageRollsConsidered.p2 = DamageRollKind::AVERAGE_DAMAGE;
+    auto& options = simulation.simulateTurnOptions;
+    options.applyChangesToInputBattle = true;
+    options.damageRollsConsidered.p1 = DamageRollKind::AVERAGE_DAMAGE;
+    options.damageRollsConsidered.p2 = DamageRollKind::AVERAGE_DAMAGE;
+    options.branchProbabilityLowerLimit = std::nullopt;
+    options.randomChanceLowerLimit = std::nullopt;
+    options.randomChanceUpperLimit = std::nullopt;
+
+    options.makeBranchesOnRandomEvents = true;
+  }
+};
+
+struct ChooseCalcDamageOptions : BenchmarkInputHolder {
+  inline static const std::vector<std::string> TAGS = {};
+  static void run(types::rngState&, Simulation& simulation) {
+    simulation.calculateDamageOptions.damageRollOptions.p1 = DamageRollKind::ALL_DAMAGE_ROLLS;
+    simulation.calculateDamageOptions.damageRollOptions.p2 = DamageRollKind::ALL_DAMAGE_ROLLS;
+    simulation.calculateDamageOptions.calculateUpToFoeHp = true;
+    simulation.calculateDamageOptions.noKoChanceCalculation = false;
+  }
+};
+
+struct ChooseAnalyzeEffectOptions : BenchmarkInputHolder {
+  inline static const std::vector<std::string> TAGS = {};
+  static void run(types::rngState&, Simulation& simulation) {
+    simulation.analyzeEffectOptions.damageRollOptions.p1 = DamageRollKind::ALL_DAMAGE_ROLLS;
+    simulation.analyzeEffectOptions.damageRollOptions.p2 = DamageRollKind::ALL_DAMAGE_ROLLS;
+    simulation.analyzeEffectOptions.calculateUpToFoeHp = true;
+    simulation.analyzeEffectOptions.noKoChanceCalculation = false;
+    simulation.analyzeEffectOptions.reconsiderActiveEffects = true;
   }
 };
 
