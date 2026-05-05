@@ -34,7 +34,7 @@ struct TypeChart : private TypeChartBase {
   }
 
  public:
-  constexpr TypeChart(GameMechanics gameMechanics) : TypeChart(TypeChart::pickForMechanics(gameMechanics)) {}
+  constexpr TypeChart(GameMechanics gameMechanic) : TypeChart(TypeChart::pickForMechanics(gameMechanic)) {}
 
   constexpr TypeEffectiveness effectiveness(dex::Type attacking, dex::Type defending) const {
     return at((enumType)attacking).at((enumType)defending);

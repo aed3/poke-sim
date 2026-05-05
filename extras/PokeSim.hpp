@@ -204,8 +204,14 @@
  * src/CalcDamage/CalcDamage.hpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Battle/Helpers/IntegerModify.hpp
+ * src/Pokedex/Abilities/Competitive.hpp
+ * src/Pokedex/Abilities/Defiant.hpp
+ * src/Pokedex/Abilities/Infiltrator.hpp
+ * src/Pokedex/Abilities/IronFist.hpp
  * src/Pokedex/Abilities/Plus.hpp
  * src/Pokedex/Abilities/Static.hpp
+ * src/Pokedex/Abilities/SweetVeil.hpp
+ * src/Pokedex/Abilities/Trace.hpp
  * src/Pokedex/Effects/Burn.hpp
  * src/Pokedex/Effects/ChoiceLock.hpp
  * src/Pokedex/Effects/Paralysis.hpp
@@ -21308,7 +21314,7 @@ struct TypeChart : private TypeChartBase {
   }
 
  public:
-  constexpr TypeChart(GameMechanics gameMechanics) : TypeChart(TypeChart::pickForMechanics(gameMechanics)) {}
+  constexpr TypeChart(GameMechanics gameMechanic) : TypeChart(TypeChart::pickForMechanics(gameMechanic)) {}
 
   constexpr TypeEffectiveness effectiveness(dex::Type attacking, dex::Type defending) const {
     return at((enumType)attacking).at((enumType)defending);
@@ -21564,11 +21570,16 @@ class Pokedex {
 
  private:
   struct Constants {
-    Constants(GameMechanics mechanics_) : gameMechanicsValue(mechanics_), typeChartValue(mechanics_) {}
+    Constants(GameMechanics gameMechanic) : gameMechanicValue(gameMechanic), typeChartValue(gameMechanic) {}
     constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
-      return gameMechanicsValue == checkedMechanics;
+      return gameMechanicValue == checkedMechanics;
     }
     constexpr const TypeChart& typeChart() const { return typeChartValue; }
+
+    template <auto DataFunction>
+    constexpr auto getStaticValue() const {
+      return DataFunction(gameMechanicValue);
+    }
 
    private:
     /**
@@ -21576,7 +21587,7 @@ class Pokedex {
      * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but
      * if it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
      */
-    GameMechanics gameMechanicsValue;
+    GameMechanics gameMechanicValue;
     TypeChart typeChartValue;
   } constants;
 
@@ -21633,6 +21644,10 @@ class Pokedex {
     return constants.isGameMechanic(checkedMechanics);
   }
   constexpr const TypeChart& typeChart() const { return constants.typeChart(); }
+  template <auto DataFunction>
+  constexpr auto getStaticValue() const {
+    return constants.getStaticValue<DataFunction>();
+  }
 
   /**
    * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.
@@ -23252,6 +23267,90 @@ void chainComponentToModifier(
 
 ///////////////// END OF src/Battle/Helpers/IntegerModify.hpp //////////////////
 
+//////////////// START OF src/Pokedex/Abilities/Competitive.hpp ////////////////
+
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
+
+namespace pokesim::dex {
+struct Competitive {
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::COMPETITIVE; }
+
+  struct Strings {
+    static constexpr std::string_view name(GameMechanics) { return "Competitive"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "competitive"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+///////////////// END OF src/Pokedex/Abilities/Competitive.hpp /////////////////
+
+////////////////// START OF src/Pokedex/Abilities/Defiant.hpp //////////////////
+
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
+
+namespace pokesim::dex {
+struct Defiant {
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::DEFIANT; }
+
+  struct Strings {
+    static constexpr std::string_view name(GameMechanics) { return "Defiant"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "defiant"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Abilities/Defiant.hpp ///////////////////
+
+//////////////// START OF src/Pokedex/Abilities/Infiltrator.hpp ////////////////
+
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
+
+namespace pokesim::dex {
+struct Infiltrator {
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::INFILTRATOR; }
+
+  struct Strings {
+    static constexpr std::string_view name(GameMechanics) { return "Infiltrator"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "infiltrator"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+///////////////// END OF src/Pokedex/Abilities/Infiltrator.hpp /////////////////
+
+///////////////// START OF src/Pokedex/Abilities/IronFist.hpp //////////////////
+
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
+
+namespace pokesim::dex {
+struct IronFist {
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::IRON_FIST; }
+
+  struct Strings {
+    static constexpr std::string_view name(GameMechanics) { return "Iron Fist"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "ironfist"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+////////////////// END OF src/Pokedex/Abilities/IronFist.hpp ///////////////////
+
 /////////////////// START OF src/Pokedex/Abilities/Plus.hpp ////////////////////
 
 namespace pokesim {
@@ -23259,26 +23358,19 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct Plus {
-  static void onModifySpA(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::PLUS; }
 
-template <GameMechanics>
-struct Plus : events::Plus {
-  static constexpr dex::Ability name = dex::Ability::PLUS;
-
-  static constexpr types::effectMultiplier onModifySpaModifier = 1.5F;
+  static constexpr types::effectMultiplier onModifySpaModifier(GameMechanics) { return 1.5F; }
   struct Strings {
-    static constexpr std::string_view name = "Plus";
-    static constexpr std::string_view smogonId = "plus";
+    static constexpr std::string_view name(GameMechanics) { return "Plus"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "plus"; }
   };
-};
 
-namespace latest {
-using Plus = dex::Plus<GameMechanics::LATEST>;
-}
+  static void onModifySpA(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 //////////////////// END OF src/Pokedex/Abilities/Plus.hpp /////////////////////
@@ -23290,29 +23382,64 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct Static {
-  static void onDamagingHit(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::STATIC; }
 
-template <GameMechanics>
-struct Static : events::Static {
-  static constexpr dex::Ability name = dex::Ability::STATIC;
-
-  static constexpr types::percentChance onDamagingHitChance = 30U;
+  static constexpr types::percentChance onDamagingHitChance(GameMechanics) { return 30U; }
   struct Strings {
-    static constexpr std::string_view name = "Static";
-    static constexpr std::string_view smogonId = "static";
+    static constexpr std::string_view name(GameMechanics) { return "Static"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "static"; }
   };
-};
 
-namespace latest {
-using Static = dex::Static<GameMechanics::LATEST>;
-}
+  static void onDamagingHit(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Abilities/Static.hpp ////////////////////
+
+///////////////// START OF src/Pokedex/Abilities/SweetVeil.hpp /////////////////
+
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
+
+namespace pokesim::dex {
+struct SweetVeil {
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::SWEET_VEIL; }
+
+  struct Strings {
+    static constexpr std::string_view name(GameMechanics) { return "Sweet Veil"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "sweetveil"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+////////////////// END OF src/Pokedex/Abilities/SweetVeil.hpp //////////////////
+
+/////////////////// START OF src/Pokedex/Abilities/Trace.hpp ///////////////////
+
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
+
+namespace pokesim::dex {
+struct Trace {
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::TRACE; }
+
+  struct Strings {
+    static constexpr std::string_view name(GameMechanics) { return "Trace"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "trace"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Abilities/Trace.hpp ////////////////////
 
 //////////////////// START OF src/Pokedex/Effects/Burn.hpp /////////////////////
 
@@ -23321,28 +23448,21 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct Burn {
+  static constexpr dex::Status name(GameMechanics) { return dex::Status::BRN; }
+
+  static constexpr types::effectMultiplier physicalDamageMultiplier(GameMechanics) { return 0.5F; }
+  static constexpr types::stat onResidualHpDecreaseDivisor(GameMechanics) { return 16U; }
+  struct Strings {
+    static constexpr std::string_view name(GameMechanics) { return "Burn"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "brn"; }
+  };
+
   static void onSetDamageRollModifiers(Simulation& simulation);
   static void onResidual(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
-}  // namespace events
-
-template <GameMechanics>
-struct Burn : events::Burn {
-  static constexpr dex::Status name = dex::Status::BRN;
-
-  static constexpr types::effectMultiplier physicalDamageMultiplier = 0.5F;
-  static constexpr types::stat onResidualHpDecreaseDivisor = 16U;
-  struct Strings {
-    static constexpr std::string_view name = "Burn";
-    static constexpr std::string_view smogonId = "brn";
-  };
-};
-
-namespace latest {
-using Burn = dex::Burn<GameMechanics::LATEST>;
-}
 }  // namespace pokesim::dex
 
 ///////////////////// END OF src/Pokedex/Effects/Burn.hpp //////////////////////
@@ -23354,26 +23474,19 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct ChoiceLock {
-  static void onBeforeMove(Simulation& simulation);
-  static void onDisableMove(Simulation& simulation);
-};
-}  // namespace events
-
-template <GameMechanics>
-struct ChoiceLock : events::ChoiceLock {
-  static constexpr dex::Volatile name = dex::Volatile::CHOICE_LOCK;
+  static constexpr dex::Volatile name(GameMechanics) { return dex::Volatile::CHOICE_LOCK; }
 
   struct Strings {
-    static constexpr std::string_view name = "Choice Lock";
-    static constexpr std::string_view smogonId = "choicelock";
+    static constexpr std::string_view name(GameMechanics) { return "Choice Lock"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "choicelock"; }
   };
-};
 
-namespace latest {
-using ChoiceLock = dex::ChoiceLock<GameMechanics::LATEST>;
-}
+  static void onBeforeMove(Simulation& simulation);
+  static void onDisableMove(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 ////////////////// END OF src/Pokedex/Effects/ChoiceLock.hpp ///////////////////
@@ -23385,31 +23498,24 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct Paralysis {
-  static void onModifySpe(Simulation& simulation);
-  static void onBeforeMove(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Status name(GameMechanics) { return dex::Status::PAR; }
 
-template <GameMechanics>
-struct Paralysis : events::Paralysis {
-  static constexpr dex::Status name = dex::Status::PAR;
+  static constexpr types::stat speedDividend(GameMechanics) { return 50U; }
+  static constexpr types::stat speedDivisor(GameMechanics) { return 100U; }
 
-  static constexpr types::stat speedDividend = 50U;
-  static constexpr types::stat speedDivisor = 100U;
-
-  static constexpr types::percentChance onBeforeMoveChance = 25U;
+  static constexpr types::percentChance onBeforeMoveChance(GameMechanics) { return 25U; }
 
   struct Strings {
-    static constexpr std::string_view name = "Paralysis";
-    static constexpr std::string_view smogonId = "par";
+    static constexpr std::string_view name(GameMechanics) { return "Paralysis"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "par"; }
   };
-};
 
-namespace latest {
-using Paralysis = dex::Paralysis<GameMechanics::LATEST>;
-}
+  static void onModifySpe(Simulation& simulation);
+  static void onBeforeMove(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Effects/Paralysis.hpp ///////////////////
@@ -23421,29 +23527,22 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct AssaultVest {
-  static void onModifySpd(Simulation& simulation);
-  static void onEnd(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Item name(GameMechanics) { return dex::Item::ASSAULT_VEST; }
 
-template <GameMechanics>
-struct AssaultVest : events::AssaultVest {
-  static constexpr dex::Item name = dex::Item::ASSAULT_VEST;
-
-  static constexpr types::effectMultiplier onModifySpdModifier = 1.5F;
+  static constexpr types::effectMultiplier onModifySpdModifier(GameMechanics) { return 1.5F; }
 
   static constexpr Tags<> itemTags{};
   struct Strings {
-    static constexpr std::string_view name = "Assault Vest";
-    static constexpr std::string_view smogonId = "assaultvest";
+    static constexpr std::string_view name(GameMechanics) { return "Assault Vest"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "assaultvest"; }
   };
-};
 
-namespace latest {
-using AssaultVest = dex::AssaultVest<GameMechanics::LATEST>;
-}
+  static void onModifySpd(Simulation& simulation);
+  static void onEnd(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Items/AssaultVest.hpp ///////////////////
@@ -23455,29 +23554,22 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct BrightPowder {
-  static void onModifyAccuracy(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Item name(GameMechanics) { return dex::Item::BRIGHT_POWDER; }
 
-template <GameMechanics>
-struct BrightPowder {
-  static constexpr dex::Item name = dex::Item::BRIGHT_POWDER;
-
-  static constexpr types::eventModifier onModifyAccuracyNumerator = 3686U;
-  static constexpr types::eventModifier onModifyAccuracyDenominator = 4096U;
+  static constexpr types::eventModifier onModifyAccuracyNumerator(GameMechanics) { return 3686U; }
+  static constexpr types::eventModifier onModifyAccuracyDenominator(GameMechanics) { return 4096U; }
 
   static constexpr Tags<> itemTags{};
   struct Strings {
-    static constexpr std::string_view name = "Bright Powder";
-    static constexpr std::string_view smogonId = "brightpowder";
+    static constexpr std::string_view name(GameMechanics) { return "Bright Powder"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "brightpowder"; }
   };
-};
 
-namespace latest {
-using BrightPowder = dex::BrightPowder<GameMechanics::LATEST>;
-}
+  static void onModifyAccuracy(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 ////////////////// END OF src/Pokedex/Items/BrightPowder.hpp ///////////////////
@@ -23489,30 +23581,23 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct ChoiceScarf {
-  static void onModifySpe(Simulation& simulation);
-  static void onSourceModifyMove(Simulation& simulation);
-  static void onEnd(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Item name(GameMechanics) { return dex::Item::CHOICE_SCARF; }
 
-template <GameMechanics>
-struct ChoiceScarf : events::ChoiceScarf {
-  static constexpr dex::Item name = dex::Item::CHOICE_SCARF;
-
-  static constexpr types::effectMultiplier onModifySpeModifier = 1.5F;
+  static constexpr types::effectMultiplier onModifySpeModifier(GameMechanics) { return 1.5F; }
 
   static constexpr Tags<item::tags::Choice> itemTags{};
   struct Strings {
-    static constexpr std::string_view name = "Choice Scarf";
-    static constexpr std::string_view smogonId = "choicescarf";
+    static constexpr std::string_view name(GameMechanics) { return "Choice Scarf"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "choicescarf"; }
   };
-};
 
-namespace latest {
-using ChoiceScarf = dex::ChoiceScarf<GameMechanics::LATEST>;
-}
+  static void onModifySpe(Simulation& simulation);
+  static void onSourceModifyMove(Simulation& simulation);
+  static void onEnd(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Items/ChoiceScarf.hpp ///////////////////
@@ -23524,30 +23609,23 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct ChoiceSpecs {
-  static void onModifySpa(Simulation& simulation);
-  static void onSourceModifyMove(Simulation& simulation);
-  static void onEnd(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Item name(GameMechanics) { return dex::Item::CHOICE_SPECS; }
 
-template <GameMechanics>
-struct ChoiceSpecs : events::ChoiceSpecs {
-  static constexpr dex::Item name = dex::Item::CHOICE_SPECS;
-
-  static constexpr types::effectMultiplier onModifySpaModifier = 1.5F;
+  static constexpr types::effectMultiplier onModifySpaModifier(GameMechanics) { return 1.5F; }
 
   static constexpr Tags<item::tags::Choice> itemTags{};
   struct Strings {
-    static constexpr std::string_view name = "Choice Specs";
-    static constexpr std::string_view smogonId = "choicespecs";
+    static constexpr std::string_view name(GameMechanics) { return "Choice Specs"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "choicespecs"; }
   };
-};
 
-namespace latest {
-using ChoiceSpecs = dex::ChoiceSpecs<GameMechanics::LATEST>;
-}
+  static void onModifySpa(Simulation& simulation);
+  static void onSourceModifyMove(Simulation& simulation);
+  static void onEnd(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Items/ChoiceSpecs.hpp ///////////////////
@@ -23559,29 +23637,22 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct FocusSash {
-  static void onAfterModifyDamage(Simulation& simulation);
-  static void onDamage(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Item name(GameMechanics) { return dex::Item::FOCUS_SASH; }
 
-template <GameMechanics>
-struct FocusSash {
-  static constexpr dex::Item name = dex::Item::FOCUS_SASH;
-
-  static constexpr types::damage onAfterModifyDamageHpToKeep = 1U;
+  static constexpr types::damage onAfterModifyDamageHpToKeep(GameMechanics) { return 1U; }
 
   static constexpr Tags<> itemTags{};
   struct Strings {
-    static constexpr std::string_view name = "Focus Sash";
-    static constexpr std::string_view smogonId = "focussash";
+    static constexpr std::string_view name(GameMechanics) { return "Focus Sash"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "focussash"; }
   };
-};
 
-namespace latest {
-using FocusSash = dex::FocusSash<GameMechanics::LATEST>;
-}
+  static void onAfterModifyDamage(Simulation& simulation);
+  static void onDamage(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 //////////////////// END OF src/Pokedex/Items/FocusSash.hpp ////////////////////
@@ -23593,32 +23664,25 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct LifeOrb {
-  static void onModifyDamage(Simulation& simulation);
-  static void onAfterMoveUsed(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Item name(GameMechanics) { return dex::Item::LIFE_ORB; }
 
-template <GameMechanics>
-struct LifeOrb {
-  static constexpr dex::Item name = dex::Item::LIFE_ORB;
+  static constexpr types::eventModifier onModifyDamageNumerator(GameMechanics) { return 5324U; }
+  static constexpr types::eventModifier onModifyDamageDenominator(GameMechanics) { return 4096U; }
 
-  static constexpr types::eventModifier onModifyDamageNumerator = 5324U;
-  static constexpr types::eventModifier onModifyDamageDenominator = 4096U;
-
-  static constexpr types::stat onAfterMoveUsedHpDecreaseDivisor = 10U;
+  static constexpr types::stat onAfterMoveUsedHpDecreaseDivisor(GameMechanics) { return 10U; }
 
   static constexpr Tags<> itemTags{};
   struct Strings {
-    static constexpr std::string_view name = "Life Orb";
-    static constexpr std::string_view smogonId = "lifeorb";
+    static constexpr std::string_view name(GameMechanics) { return "Life Orb"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "lifeorb"; }
   };
-};
 
-namespace latest {
-using LifeOrb = dex::LifeOrb<GameMechanics::LATEST>;
-}
+  static void onModifyDamage(Simulation& simulation);
+  static void onAfterMoveUsed(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 ///////////////////// END OF src/Pokedex/Items/LifeOrb.hpp /////////////////////
@@ -23626,28 +23690,25 @@ using LifeOrb = dex::LifeOrb<GameMechanics::LATEST>;
 ////////////////// START OF src/Pokedex/Moves/FuryAttack.hpp ///////////////////
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct FuryAttack {
-  static constexpr Move name = Move::FURY_ATTACK;
-  static constexpr Type type = Type::NORMAL;
-  static constexpr MoveCategory category = MoveCategory::PHYSICAL;
+  static constexpr Move name(GameMechanics) { return Move::FURY_ATTACK; }
+  static constexpr Type type(GameMechanics) { return Type::NORMAL; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
 
-  static constexpr types::baseAccuracy accuracy = 85U;
-  static constexpr types::basePower basePower = 15U;
-  static constexpr types::pp basePp = 20U;
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 85U; }
+  static constexpr types::basePower basePower(GameMechanics) { return 15U; }
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
   static constexpr Tags<move::tags::Contact, move::tags::VariableHitCount> moveTags{};
-  static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name = "Fury Attack";
-    static constexpr std::string_view smogonId = "furyattack";
+    static constexpr std::string_view name(GameMechanics) { return "Fury Attack"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "furyattack"; }
   };
-};
 
-namespace latest {
-using FuryAttack = dex::FuryAttack<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Moves/FuryAttack.hpp ////////////////////
@@ -23659,36 +23720,29 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct KnockOff {
-  static void onBasePower(Simulation& simulation);
-  static void onAfterHit(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr Move name(GameMechanics) { return Move::KNOCK_OFF; }
+  static constexpr Type type(GameMechanics) { return Type::DARK; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
 
-template <GameMechanics>
-struct KnockOff : events::KnockOff {
-  static constexpr Move name = Move::KNOCK_OFF;
-  static constexpr Type type = Type::DARK;
-  static constexpr MoveCategory category = MoveCategory::PHYSICAL;
-
-  static constexpr types::baseAccuracy accuracy = 100U;
-  static constexpr types::basePower basePower = 65U;
-  static constexpr types::pp basePp = 20U;
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
+  static constexpr types::basePower basePower(GameMechanics) { return 65U; }
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
   static constexpr Tags<move::tags::Contact> moveTags{};
-  static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
-  static constexpr types::effectMultiplier onBasePowerMultiplier = 1.5F;
+  static constexpr types::effectMultiplier onBasePowerMultiplier(GameMechanics) { return 1.5F; }
   struct Strings {
-    static constexpr std::string_view name = "Knock Off";
-    static constexpr std::string_view smogonId = "knockoff";
+    static constexpr std::string_view name(GameMechanics) { return "Knock Off"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "knockoff"; }
   };
-};
 
-namespace latest {
-using KnockOff = dex::KnockOff<GameMechanics::LATEST>;
-}
+  static void onBasePower(Simulation& simulation);
+  static void onAfterHit(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 //////////////////// END OF src/Pokedex/Moves/KnockOff.hpp /////////////////////
@@ -23696,35 +23750,32 @@ using KnockOff = dex::KnockOff<GameMechanics::LATEST>;
 /////////////////// START OF src/Pokedex/Moves/Moonblast.hpp ///////////////////
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct Moonblast {
-  static constexpr Move name = Move::MOONBLAST;
-  static constexpr Type type = Type::FAIRY;
-  static constexpr MoveCategory category = MoveCategory::SPECIAL;
+  static constexpr Move name(GameMechanics) { return Move::MOONBLAST; }
+  static constexpr Type type(GameMechanics) { return Type::FAIRY; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::SPECIAL; }
 
-  static constexpr types::baseAccuracy accuracy = 100U;
-  static constexpr types::basePower basePower = 95U;
-  static constexpr types::pp basePp = 15U;
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
+  static constexpr types::basePower basePower(GameMechanics) { return 95U; }
+  static constexpr types::pp basePp(GameMechanics) { return 15U; }
 
   struct targetSecondaryEffect {
-    static constexpr types::percentChance chance = 30U;
-    static constexpr types::boost spaBoost = -1;
+    static constexpr types::percentChance chance(GameMechanics) { return 30U; }
+    static constexpr types::boost spaBoost(GameMechanics) { return -1; }
 
     static constexpr Tags<> effectTags{};
   };
 
   static constexpr Tags<> moveTags{};
-  static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name = "Moonblast";
-    static constexpr std::string_view smogonId = "moonblast";
+    static constexpr std::string_view name(GameMechanics) { return "Moonblast"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "moonblast"; }
   };
-};
 
-namespace latest {
-using Moonblast = dex::Moonblast<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 //////////////////// END OF src/Pokedex/Moves/Moonblast.hpp ////////////////////
@@ -23732,32 +23783,31 @@ using Moonblast = dex::Moonblast<GameMechanics::LATEST>;
 ////////////////// START OF src/Pokedex/Moves/QuiverDance.hpp //////////////////
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct QuiverDance {
-  static constexpr Move name = Move::QUIVER_DANCE;
-  static constexpr Type type = Type::BUG;
-  static constexpr MoveCategory category = MoveCategory::STATUS;
+  static constexpr Move name(GameMechanics) { return Move::QUIVER_DANCE; }
+  static constexpr Type type(GameMechanics) { return Type::BUG; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 
-  static constexpr types::pp basePp = 20U;
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
   struct targetPrimaryEffect {
-    static constexpr types::boost spaBoost = 1, spdBoost = 1, speBoost = 1;
+    static constexpr types::boost spaBoost(GameMechanics) { return 1; }
+    static constexpr types::boost spdBoost(GameMechanics) { return 1; }
+    static constexpr types::boost speBoost(GameMechanics) { return 1; }
 
     static constexpr Tags<> effectTags{};
   };
 
   static constexpr Tags<> moveTags{};
-  static constexpr MoveTarget target = MoveTarget::SELF;
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name = "Quiver Dance";
-    static constexpr std::string_view smogonId = "quiverdance";
+    static constexpr std::string_view name(GameMechanics) { return "Quiver Dance"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "quiverdance"; }
   };
-};
 
-namespace latest {
-using QuiverDance = dex::QuiverDance<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Moves/QuiverDance.hpp ///////////////////
@@ -23765,26 +23815,23 @@ using QuiverDance = dex::QuiverDance<GameMechanics::LATEST>;
 //////////////////// START OF src/Pokedex/Moves/Splash.hpp /////////////////////
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct Splash {
-  static constexpr Move name = Move::SPLASH;
-  static constexpr Type type = Type::NORMAL;
-  static constexpr MoveCategory category = MoveCategory::STATUS;
+  static constexpr Move name(GameMechanics) { return Move::SPLASH; }
+  static constexpr Type type(GameMechanics) { return Type::NORMAL; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 
-  static constexpr types::pp basePp = 40U;
+  static constexpr types::pp basePp(GameMechanics) { return 40U; }
 
   static constexpr Tags<> moveTags{};
-  static constexpr MoveTarget target = MoveTarget::SELF;
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name = "Splash";
-    static constexpr std::string_view smogonId = "splash";
+    static constexpr std::string_view name(GameMechanics) { return "Splash"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "splash"; }
   };
-};
 
-namespace latest {
-using Splash = dex::Splash<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 ///////////////////// END OF src/Pokedex/Moves/Splash.hpp //////////////////////
@@ -23792,34 +23839,31 @@ using Splash = dex::Splash<GameMechanics::LATEST>;
 ////////////////// START OF src/Pokedex/Moves/Thunderbolt.hpp //////////////////
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct Thunderbolt {
-  static constexpr Move name = Move::THUNDERBOLT;
-  static constexpr Type type = Type::ELECTRIC;
-  static constexpr MoveCategory category = MoveCategory::SPECIAL;
+  static constexpr Move name(GameMechanics) { return Move::THUNDERBOLT; }
+  static constexpr Type type(GameMechanics) { return Type::ELECTRIC; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::SPECIAL; }
 
-  static constexpr types::baseAccuracy accuracy = 100U;
-  static constexpr types::basePower basePower = 90U;
-  static constexpr types::pp basePp = 15U;
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
+  static constexpr types::basePower basePower(GameMechanics) { return 90U; }
+  static constexpr types::pp basePp(GameMechanics) { return 15U; }
 
   struct targetSecondaryEffect {
-    static constexpr types::percentChance chance = 10U;
+    static constexpr types::percentChance chance(GameMechanics) { return 10U; }
 
     static constexpr Tags<status::tags::Paralysis> effectTags{};
   };
 
   static constexpr Tags<> moveTags{};
-  static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name = "Thunderbolt";
-    static constexpr std::string_view smogonId = "thunderbolt";
+    static constexpr std::string_view name(GameMechanics) { return "Thunderbolt"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "thunderbolt"; }
   };
-};
 
-namespace latest {
-using Thunderbolt = dex::Thunderbolt<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Moves/Thunderbolt.hpp ///////////////////
@@ -23827,31 +23871,28 @@ using Thunderbolt = dex::Thunderbolt<GameMechanics::LATEST>;
 /////////////////// START OF src/Pokedex/Moves/WillOWisp.hpp ///////////////////
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct WillOWisp {
-  static constexpr Move name = Move::WILL_O_WISP;
-  static constexpr Type type = Type::FIRE;
-  static constexpr MoveCategory category = MoveCategory::STATUS;
+  static constexpr Move name(GameMechanics) { return Move::WILL_O_WISP; }
+  static constexpr Type type(GameMechanics) { return Type::FIRE; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 
-  static constexpr types::baseAccuracy accuracy = 85U;
-  static constexpr types::pp basePp = 15U;
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 85U; }
+  static constexpr types::pp basePp(GameMechanics) { return 15U; }
 
   struct targetPrimaryEffect {
     static constexpr Tags<status::tags::Burn> effectTags{};
   };
 
   static constexpr Tags<> moveTags{};
-  static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name = "Will-O-Wisp";
-    static constexpr std::string_view smogonId = "willowisp";
+    static constexpr std::string_view name(GameMechanics) { return "Will-O-Wisp"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "willowisp"; }
   };
-};
 
-namespace latest {
-using WillOWisp = dex::WillOWisp<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 //////////////////// END OF src/Pokedex/Moves/WillOWisp.hpp ////////////////////
@@ -24587,26 +24628,28 @@ struct ItemDexDataSetup : DexDataSetup {
 ////////////////// START OF src/Pokedex/Species/Ampharos.hpp ///////////////////
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct Ampharos {
-  static constexpr Species name = Species::AMPHAROS;
-  static constexpr types::baseStat hp = 90U, atk = 75U, def = 85U, spa = 115U, spd = 90U, spe = 55U;
+  static constexpr Species name(GameMechanics) { return Species::AMPHAROS; }
+  static constexpr types::baseStat hp(GameMechanics) { return 90U; }
+  static constexpr types::baseStat atk(GameMechanics) { return 75U; }
+  static constexpr types::baseStat def(GameMechanics) { return 85U; }
+  static constexpr types::baseStat spa(GameMechanics) { return 115U; }
+  static constexpr types::baseStat spd(GameMechanics) { return 90U; }
+  static constexpr types::baseStat spe(GameMechanics) { return 55U; }
 
-  static constexpr SpeciesTypes type = {Type::ELECTRIC};
+  static constexpr SpeciesTypes type(GameMechanics) { return {Type::ELECTRIC}; }
 
-  static constexpr Ability primaryAbility = Ability::STATIC;
-  static constexpr Ability hiddenAbility = Ability::PLUS;
+  static constexpr Ability primaryAbility(GameMechanics) { return Ability::STATIC; }
+  static constexpr Ability hiddenAbility(GameMechanics) { return Ability::PLUS; }
 
   struct Strings {
-    static constexpr std::string_view name = "Ampharos";
-    static constexpr std::string_view smogonName = "Ampharos";
-    static constexpr std::string_view smogonId = "ampharos";
+    static constexpr std::string_view name(GameMechanics) { return "Ampharos"; }
+    static constexpr std::string_view smogonName(GameMechanics) { return "Ampharos"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "ampharos"; }
   };
-};
 
-namespace latest {
-using Ampharos = dex::Ampharos<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Species/Ampharos.hpp ////////////////////
@@ -24614,27 +24657,29 @@ using Ampharos = dex::Ampharos<GameMechanics::LATEST>;
 ////////////////// START OF src/Pokedex/Species/Dragapult.hpp //////////////////
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct Dragapult {
-  static constexpr Species name = Species::DRAGAPULT;
-  static constexpr types::baseStat hp = 88U, atk = 120U, def = 75U, spa = 100U, spd = 75U, spe = 142U;
+  static constexpr Species name(GameMechanics) { return Species::DRAGAPULT; }
+  static constexpr types::baseStat hp(GameMechanics) { return 88U; }
+  static constexpr types::baseStat atk(GameMechanics) { return 120U; }
+  static constexpr types::baseStat def(GameMechanics) { return 75U; }
+  static constexpr types::baseStat spa(GameMechanics) { return 100U; }
+  static constexpr types::baseStat spd(GameMechanics) { return 75U; }
+  static constexpr types::baseStat spe(GameMechanics) { return 142U; }
 
-  static constexpr SpeciesTypes type = {Type::DRAGON, Type::GHOST};
+  static constexpr SpeciesTypes type(GameMechanics) { return {Type::DRAGON, Type::GHOST}; }
 
-  static constexpr Ability primaryAbility = Ability::CLEAR_BODY;
-  static constexpr Ability secondaryAbility = Ability::INFILTRATOR;
-  static constexpr Ability hiddenAbility = Ability::CURSED_BODY;
+  static constexpr Ability primaryAbility(GameMechanics) { return Ability::CLEAR_BODY; }
+  static constexpr Ability secondaryAbility(GameMechanics) { return Ability::INFILTRATOR; }
+  static constexpr Ability hiddenAbility(GameMechanics) { return Ability::CURSED_BODY; }
 
   struct Strings {
-    static constexpr std::string_view name = "Dragapult";
-    static constexpr std::string_view smogonName = "Dragapult";
-    static constexpr std::string_view smogonId = "dragapult";
+    static constexpr std::string_view name(GameMechanics) { return "Dragapult"; }
+    static constexpr std::string_view smogonName(GameMechanics) { return "Dragapult"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "dragapult"; }
   };
-};
 
-namespace latest {
-using Dragapult = dex::Dragapult<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Species/Dragapult.hpp ///////////////////
@@ -24642,34 +24687,36 @@ using Dragapult = dex::Dragapult<GameMechanics::LATEST>;
 ////////////////// START OF src/Pokedex/Species/Empoleon.hpp ///////////////////
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct Empoleon {
-  static constexpr Species name = Species::EMPOLEON;
-  static constexpr types::baseStat hp = 84U, atk = 86U, def = 88U, spa = 111U, spd = 101U, spe = 60U;
+  static constexpr Species name(GameMechanics) { return dex::Species::EMPOLEON; }
+  static constexpr types::baseStat hp(GameMechanics) { return 84U; }
+  static constexpr types::baseStat atk(GameMechanics) { return 86U; }
+  static constexpr types::baseStat def(GameMechanics) { return 88U; }
+  static constexpr types::baseStat spa(GameMechanics) { return 111U; }
+  static constexpr types::baseStat spd(GameMechanics) { return 101U; }
+  static constexpr types::baseStat spe(GameMechanics) { return 60U; }
 
-  static constexpr SpeciesTypes type = {Type::WATER, Type::STEEL};
+  static constexpr SpeciesTypes type(GameMechanics) { return {Type::WATER, Type::STEEL}; }
 
-  static constexpr Ability primaryAbility = Ability::TORRENT;
-  static constexpr Ability hiddenAbility = Ability::COMPETITIVE;
+  static constexpr Ability primaryAbility(GameMechanics) { return Ability::TORRENT; }
+  static constexpr Ability hiddenAbility(GameMechanics gameMechanic) {
+    switch (gameMechanic) {
+      case GameMechanics::SWORD_SHIELD:
+      case GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL: return Ability::DEFIANT;
+      case GameMechanics::SCARLET_VIOLET:
+      default:                                             return Ability::COMPETITIVE;
+    }
+  }
 
   struct Strings {
-    static constexpr std::string_view name = "Empoleon";
-    static constexpr std::string_view smogonName = "Empoleon";
-    static constexpr std::string_view smogonId = "empoleon";
+    static constexpr std::string_view name(GameMechanics) { return "Empoleon"; }
+    static constexpr std::string_view smogonName(GameMechanics) { return "Empoleon"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "empoleon"; }
   };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
 
-template <>
-struct Empoleon<GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL> : Empoleon<GameMechanics::NONE> {
-  static constexpr Ability hiddenAbility = Ability::DEFIANT;
-};
-
-template <>
-struct Empoleon<GameMechanics::SWORD_SHIELD> : Empoleon<GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL> {};
-
-namespace latest {
-using Empoleon = dex::Empoleon<GameMechanics::LATEST>;
-}
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Species/Empoleon.hpp ////////////////////
@@ -24677,27 +24724,30 @@ using Empoleon = dex::Empoleon<GameMechanics::LATEST>;
 ////////////////// START OF src/Pokedex/Species/Gardevoir.hpp //////////////////
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct Gardevoir {
-  static constexpr Species name = Species::GARDEVOIR;
-  static constexpr types::baseStat hp = 68U, atk = 65U, def = 65U, spa = 125U, spd = 115U, spe = 80U;
+  static constexpr Species name(GameMechanics) { return Species::GARDEVOIR; }
+  static constexpr types::baseStat hp(GameMechanics) { return 68U; }
+  static constexpr types::baseStat atk(GameMechanics) { return 65U; }
+  static constexpr types::baseStat def(GameMechanics) { return 65U; }
+  static constexpr types::baseStat spa(GameMechanics) { return 125U; }
+  static constexpr types::baseStat spd(GameMechanics) { return 115U; }
+  static constexpr types::baseStat spe(GameMechanics) { return 80U; }
 
-  static constexpr SpeciesTypes type = {Type::PSYCHIC, Type::FAIRY};
+  static constexpr SpeciesTypes type(GameMechanics) { return {Type::PSYCHIC, Type::FAIRY}; }
 
-  static constexpr Ability primaryAbility = Ability::SYNCHRONIZE;
-  static constexpr Ability secondaryAbility = Ability::TRACE;
-  static constexpr Ability hiddenAbility = Ability::TELEPATHY;
+  static constexpr Ability primaryAbility(GameMechanics) { return Ability::SYNCHRONIZE; }
+  static constexpr Ability secondaryAbility(GameMechanics) { return Ability::TRACE; }
+  static constexpr Ability hiddenAbility(GameMechanics) { return Ability::TELEPATHY; }
 
   struct Strings {
-    static constexpr std::string_view name = "Gardevoir";
-    static constexpr std::string_view smogonName = "Gardevoir";
-    static constexpr std::string_view smogonId = "gardevoir";
+    static constexpr std::string_view name(GameMechanics) { return "Gardevoir"; }
+    static constexpr std::string_view smogonName(GameMechanics) { return "Gardevoir"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "gardevoir"; }
   };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
 
-namespace latest {
-using Gardevoir = dex::Gardevoir<GameMechanics::LATEST>;
-}
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Species/Gardevoir.hpp ///////////////////
@@ -24705,27 +24755,29 @@ using Gardevoir = dex::Gardevoir<GameMechanics::LATEST>;
 /////////////////// START OF src/Pokedex/Species/Pangoro.hpp ///////////////////
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct Pangoro {
-  static constexpr Species name = Species::PANGORO;
-  static constexpr types::baseStat hp = 95U, atk = 124U, def = 78U, spa = 69U, spd = 71U, spe = 58U;
+  static constexpr Species name(GameMechanics) { return Species::PANGORO; }
+  static constexpr types::baseStat hp(GameMechanics) { return 95U; }
+  static constexpr types::baseStat atk(GameMechanics) { return 124U; }
+  static constexpr types::baseStat def(GameMechanics) { return 78U; }
+  static constexpr types::baseStat spa(GameMechanics) { return 69U; }
+  static constexpr types::baseStat spd(GameMechanics) { return 71U; }
+  static constexpr types::baseStat spe(GameMechanics) { return 58U; }
 
-  static constexpr SpeciesTypes type = {Type::FIGHTING, Type::DARK};
+  static constexpr SpeciesTypes type(GameMechanics) { return {Type::FIGHTING, Type::DARK}; }
 
-  static constexpr Ability primaryAbility = Ability::IRON_FIST;
-  static constexpr Ability secondaryAbility = Ability::MOLD_BREAKER;
-  static constexpr Ability hiddenAbility = Ability::SCRAPPY;
+  static constexpr Ability primaryAbility(GameMechanics) { return Ability::IRON_FIST; }
+  static constexpr Ability secondaryAbility(GameMechanics) { return Ability::MOLD_BREAKER; }
+  static constexpr Ability hiddenAbility(GameMechanics) { return Ability::SCRAPPY; }
 
   struct Strings {
-    static constexpr std::string_view name = "Pangoro";
-    static constexpr std::string_view smogonName = "Pangoro";
-    static constexpr std::string_view smogonId = "pangoro";
+    static constexpr std::string_view name(GameMechanics) { return "Pangoro"; }
+    static constexpr std::string_view smogonName(GameMechanics) { return "Pangoro"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "pangoro"; }
   };
-};
 
-namespace latest {
-using Pangoro = dex::Pangoro<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SWORD_SHIELD; }
+};
 }  // namespace pokesim::dex
 
 //////////////////// END OF src/Pokedex/Species/Pangoro.hpp ////////////////////
@@ -24733,27 +24785,29 @@ using Pangoro = dex::Pangoro<GameMechanics::LATEST>;
 ////////////////// START OF src/Pokedex/Species/Ribombee.hpp ///////////////////
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct Ribombee {
-  static constexpr Species name = Species::RIBOMBEE;
-  static constexpr types::baseStat hp = 60U, atk = 55U, def = 60U, spa = 95U, spd = 70U, spe = 124U;
+  static constexpr Species name(GameMechanics) { return Species::RIBOMBEE; }
+  static constexpr types::baseStat hp(GameMechanics) { return 60U; }
+  static constexpr types::baseStat atk(GameMechanics) { return 55U; }
+  static constexpr types::baseStat def(GameMechanics) { return 60U; }
+  static constexpr types::baseStat spa(GameMechanics) { return 95U; }
+  static constexpr types::baseStat spd(GameMechanics) { return 70U; }
+  static constexpr types::baseStat spe(GameMechanics) { return 124U; }
 
-  static constexpr SpeciesTypes type = {Type::BUG, Type::FAIRY};
+  static constexpr SpeciesTypes type(GameMechanics) { return {Type::BUG, Type::FAIRY}; }
 
-  static constexpr Ability primaryAbility = Ability::HONEY_GATHER;
-  static constexpr Ability secondaryAbility = Ability::SHIELD_DUST;
-  static constexpr Ability hiddenAbility = Ability::SWEET_VEIL;
+  static constexpr Ability primaryAbility(GameMechanics) { return Ability::HONEY_GATHER; }
+  static constexpr Ability secondaryAbility(GameMechanics) { return Ability::SHIELD_DUST; }
+  static constexpr Ability hiddenAbility(GameMechanics) { return Ability::SWEET_VEIL; }
 
   struct Strings {
-    static constexpr std::string_view name = "Ribombee";
-    static constexpr std::string_view smogonName = "Ribombee";
-    static constexpr std::string_view smogonId = "Ribombee";
+    static constexpr std::string_view name(GameMechanics) { return "Ribombee"; }
+    static constexpr std::string_view smogonName(GameMechanics) { return "Ribombee"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "Ribombee"; }
   };
-};
 
-namespace latest {
-using Ribombee = dex::Ribombee<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Species/Ribombee.hpp ////////////////////

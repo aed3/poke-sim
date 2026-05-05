@@ -194,10 +194,10 @@ setup_target(
     src/Battle/Side/ManageSideState.cpp
     src/CalcDamage/CalcDamage.cpp
     src/CalcDamage/Setup/CalcDamageInputSetup.cpp
-    src/Pokedex/Abilities/AbilityEvents.cpp
-    src/Pokedex/Effects/EffectEvents.cpp
-    src/Pokedex/Items/ItemEvents.cpp
-    src/Pokedex/Moves/MoveEvents.cpp
+    src/Pokedex/Events/AbilityEvents.cpp
+    src/Pokedex/Events/EffectEvents.cpp
+    src/Pokedex/Events/ItemEvents.cpp
+    src/Pokedex/Events/MoveEvents.cpp
     src/Pokedex/Pokedex.cpp
     src/Pokedex/Setup/AbilityDexDataSetup.cpp
     src/Pokedex/Setup/GetAbilityBuild.cpp

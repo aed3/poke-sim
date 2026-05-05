@@ -10,24 +10,17 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct Static {
-  static void onDamagingHit(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::STATIC; }
 
-template <GameMechanics>
-struct Static : events::Static {
-  static constexpr dex::Ability name = dex::Ability::STATIC;
-
-  static constexpr types::percentChance onDamagingHitChance = 30U;
+  static constexpr types::percentChance onDamagingHitChance(GameMechanics) { return 30U; }
   struct Strings {
-    static constexpr std::string_view name = "Static";
-    static constexpr std::string_view smogonId = "static";
+    static constexpr std::string_view name(GameMechanics) { return "Static"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "static"; }
   };
-};
 
-namespace latest {
-using Static = dex::Static<GameMechanics::LATEST>;
-}
+  static void onDamagingHit(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

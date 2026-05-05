@@ -9,24 +9,17 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct ChoiceLock {
-  static void onBeforeMove(Simulation& simulation);
-  static void onDisableMove(Simulation& simulation);
-};
-}  // namespace events
-
-template <GameMechanics>
-struct ChoiceLock : events::ChoiceLock {
-  static constexpr dex::Volatile name = dex::Volatile::CHOICE_LOCK;
+  static constexpr dex::Volatile name(GameMechanics) { return dex::Volatile::CHOICE_LOCK; }
 
   struct Strings {
-    static constexpr std::string_view name = "Choice Lock";
-    static constexpr std::string_view smogonId = "choicelock";
+    static constexpr std::string_view name(GameMechanics) { return "Choice Lock"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "choicelock"; }
   };
-};
 
-namespace latest {
-using ChoiceLock = dex::ChoiceLock<GameMechanics::LATEST>;
-}
+  static void onBeforeMove(Simulation& simulation);
+  static void onDisableMove(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

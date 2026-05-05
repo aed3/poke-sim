@@ -81,7 +81,8 @@ struct BuildMove {
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
 
   template <typename EffectType, typename EffectData, MoveEffectKind moveEffectKind, typename... EffectValues>
-  static void setEffect(dex::internal::MoveDexDataSetup& move, const EffectValues&... effectValues) {
+  static void setEffect(
+    dex::internal::MoveDexDataSetup& move, GameMechanics gameMechanic, const EffectValues&... effectValues) {
     if constexpr (moveEffectKind == MoveEffectKind::primary) {
       static_assert(
         !has<Optional::chance, EffectData>::value,
@@ -91,14 +92,14 @@ struct BuildMove {
     else {
       types::percentChance chance = MechanicConstants::MoveBaseEffectChance::MAX;
       if constexpr (has<Optional::chance, EffectData>::value) {
-        chance = EffectData::chance;
+        chance = EffectData::chance(gameMechanic);
       }
       move.setSecondaryEffect<EffectType>(chance, effectValues...);
     }
   }
 
   template <typename EffectData, MoveEffectKind moveEffectKind, typename... EffectTypes>
-  static void setEffectTags(dex::internal::MoveDexDataSetup& move, Tags<EffectTypes...>) {
+  static void setEffectTags(dex::internal::MoveDexDataSetup& move, GameMechanics gameMechanic, Tags<EffectTypes...>) {
     if constexpr (moveEffectKind == MoveEffectKind::primary) {
       static_assert(
         !has<Optional::chance, EffectData>::value,
@@ -108,51 +109,51 @@ struct BuildMove {
     else {
       types::percentChance chance = MechanicConstants::MoveBaseEffectChance::MAX;
       if constexpr (has<Optional::chance, EffectData>::value) {
-        chance = EffectData::chance;
+        chance = EffectData::chance(gameMechanic);
       }
       (move.setSecondaryEffect<EffectTypes>(chance), ...);
     }
   }
 
   template <typename EffectData, MoveEffectKind moveEffectKind>
-  static void buildEffect(dex::internal::MoveDexDataSetup& move) {
+  static void buildEffect(dex::internal::MoveDexDataSetup& move, GameMechanics gameMechanic) {
     if constexpr (has<Optional::atkBoost, EffectData>::value) {
-      setEffect<AtkBoost, EffectData, moveEffectKind>(move, EffectData::atkBoost);
+      setEffect<AtkBoost, EffectData, moveEffectKind>(move, gameMechanic, EffectData::atkBoost(gameMechanic));
     }
 
     if constexpr (has<Optional::defBoost, EffectData>::value) {
-      setEffect<DefBoost, EffectData, moveEffectKind>(move, EffectData::defBoost);
+      setEffect<DefBoost, EffectData, moveEffectKind>(move, gameMechanic, EffectData::defBoost(gameMechanic));
     }
 
     if constexpr (has<Optional::spaBoost, EffectData>::value) {
-      setEffect<SpaBoost, EffectData, moveEffectKind>(move, EffectData::spaBoost);
+      setEffect<SpaBoost, EffectData, moveEffectKind>(move, gameMechanic, EffectData::spaBoost(gameMechanic));
     }
 
     if constexpr (has<Optional::spdBoost, EffectData>::value) {
-      setEffect<SpdBoost, EffectData, moveEffectKind>(move, EffectData::spdBoost);
+      setEffect<SpdBoost, EffectData, moveEffectKind>(move, gameMechanic, EffectData::spdBoost(gameMechanic));
     }
 
     if constexpr (has<Optional::speBoost, EffectData>::value) {
-      setEffect<SpeBoost, EffectData, moveEffectKind>(move, EffectData::speBoost);
+      setEffect<SpeBoost, EffectData, moveEffectKind>(move, gameMechanic, EffectData::speBoost(gameMechanic));
     }
 
-    setEffectTags<EffectData, moveEffectKind>(move, EffectData::effectTags);
+    setEffectTags<EffectData, moveEffectKind>(move, gameMechanic, EffectData::effectTags);
   }
 
  public:
-  static types::entity build(types::registry& registry, bool forActiveMove) {
+  static types::entity build(types::registry& registry, GameMechanics gameMechanic, bool forActiveMove) {
     dex::internal::MoveDexDataSetup move(registry);
 
     if (forActiveMove) {
-      move.setNameTag(T::name);
+      move.setNameTag(T::name(gameMechanic));
     }
     else {
-      move.setName(T::name);
-      move.setBasePp(T::basePp);
+      move.setName(T::name(gameMechanic));
+      move.setBasePp(T::basePp(gameMechanic));
     }
 
-    move.setType(T::type);
-    switch (T::category) {
+    move.setType(T::type(gameMechanic));
+    switch (T::category(gameMechanic)) {
       case dex::MoveCategory::PHYSICAL: {
         move.setCategoryPhysical();
         break;
@@ -168,13 +169,13 @@ struct BuildMove {
     }
 
     if constexpr (has<Optional::accuracy, T>::value) {
-      move.setAccuracy(T::accuracy);
+      move.setAccuracy(T::accuracy(gameMechanic));
     }
     if constexpr (has<Optional::basePower, T>::value) {
-      move.setBasePower(T::basePower);
+      move.setBasePower(T::basePower(gameMechanic));
     }
     if constexpr (has<Optional::hitCount, T>::value) {
-      move.setHitCount(T::hitCount);
+      move.setHitCount(T::hitCount(gameMechanic));
     }
 
     if constexpr (has<Optional::sourcePrimaryEffect, T>::value) {
@@ -183,23 +184,23 @@ struct BuildMove {
     }
 
     if constexpr (has<Optional::targetPrimaryEffect, T>::value) {
-      buildEffect<typename T::targetPrimaryEffect, MoveEffectKind::primary>(move);
+      buildEffect<typename T::targetPrimaryEffect, MoveEffectKind::primary>(move, gameMechanic);
       move.setEffectTargetsMoveTarget();
     }
 
     if constexpr (has<Optional::sourceSecondaryEffect, T>::value) {
-      buildEffect<typename T::sourceSecondaryEffect, MoveEffectKind::secondary>(move);
+      buildEffect<typename T::sourceSecondaryEffect, MoveEffectKind::secondary>(move, gameMechanic);
       move.setEffectTargetsMoveSource();
     }
 
     if constexpr (has<Optional::targetSecondaryEffect, T>::value) {
-      buildEffect<typename T::targetSecondaryEffect, MoveEffectKind::secondary>(move);
+      buildEffect<typename T::targetSecondaryEffect, MoveEffectKind::secondary>(move, gameMechanic);
       move.setEffectTargetsMoveTarget();
     }
 
     move.setProperties(T::moveTags);
 
-    switch (T::target) {
+    switch (T::target(gameMechanic)) {
       case MoveTarget::ANY_SINGLE_TARGET: {
         move.setProperty<move::tags::AnySingleTarget>();
         break;
@@ -271,33 +272,31 @@ struct BuildMove {
     return move.entity();
   }
 };
+types::entity buildByGameMechanic(
+  dex::Move move, types::registry& registry, bool forActiveMove, GameMechanics gameMechanic) {
+  // Tidy check ignored because "using namespace" is in function
+  using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
+  switch (move) {
+    case Move::FURY_ATTACK:  return BuildMove<FuryAttack>::build(registry, gameMechanic, forActiveMove);
+    case Move::THUNDERBOLT:  return BuildMove<Thunderbolt>::build(registry, gameMechanic, forActiveMove);
+    case Move::WILL_O_WISP:  return BuildMove<WillOWisp>::build(registry, gameMechanic, forActiveMove);
+    case Move::KNOCK_OFF:    return BuildMove<KnockOff>::build(registry, gameMechanic, forActiveMove);
+    case Move::QUIVER_DANCE: return BuildMove<QuiverDance>::build(registry, gameMechanic, forActiveMove);
+    case Move::MOONBLAST:    return BuildMove<Moonblast>::build(registry, gameMechanic, forActiveMove);
+    case Move::SPLASH:       return BuildMove<Splash>::build(registry, gameMechanic, forActiveMove);
 
-template <template <GameMechanics> class T>
-auto buildMoveSV(types::registry& registry, bool forActiveMove) {
-  return BuildMove<T<GameMechanics::SCARLET_VIOLET>>::build(registry, forActiveMove);
+    default: break;
+  }
+  POKESIM_REQUIRE_FAIL("Building a move that is not yet supported.");
 }
 }  // namespace
 
 types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const {
-  // Tidy check ignored because "using namespace" is in function
-  using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
-  using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
-
   if (isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
-    switch (move) {
-      case Move::FURY_ATTACK:  return buildMoveSV<FuryAttack>(registry, forActiveMove);
-      case Move::THUNDERBOLT:  return buildMoveSV<Thunderbolt>(registry, forActiveMove);
-      case Move::WILL_O_WISP:  return buildMoveSV<WillOWisp>(registry, forActiveMove);
-      case Move::KNOCK_OFF:    return buildMoveSV<KnockOff>(registry, forActiveMove);
-      case Move::QUIVER_DANCE: return buildMoveSV<QuiverDance>(registry, forActiveMove);
-      case Move::MOONBLAST:    return buildMoveSV<Moonblast>(registry, forActiveMove);
-      case Move::SPLASH:       return buildMoveSV<Splash>(registry, forActiveMove);
-
-      default: break;
-    }
+    return buildByGameMechanic(move, registry, forActiveMove, GameMechanics::SCARLET_VIOLET);
   }
 
-  POKESIM_REQUIRE_FAIL("Building a move that does not exist.");
+  POKESIM_REQUIRE_FAIL("Building for a game that is not yet supported.");
   return types::entity{};
 }
 }  // namespace pokesim

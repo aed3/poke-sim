@@ -12,30 +12,23 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct LifeOrb {
-  static void onModifyDamage(Simulation& simulation);
-  static void onAfterMoveUsed(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Item name(GameMechanics) { return dex::Item::LIFE_ORB; }
 
-template <GameMechanics>
-struct LifeOrb {
-  static constexpr dex::Item name = dex::Item::LIFE_ORB;
+  static constexpr types::eventModifier onModifyDamageNumerator(GameMechanics) { return 5324U; }
+  static constexpr types::eventModifier onModifyDamageDenominator(GameMechanics) { return 4096U; }
 
-  static constexpr types::eventModifier onModifyDamageNumerator = 5324U;
-  static constexpr types::eventModifier onModifyDamageDenominator = 4096U;
-
-  static constexpr types::stat onAfterMoveUsedHpDecreaseDivisor = 10U;
+  static constexpr types::stat onAfterMoveUsedHpDecreaseDivisor(GameMechanics) { return 10U; }
 
   static constexpr Tags<> itemTags{};
   struct Strings {
-    static constexpr std::string_view name = "Life Orb";
-    static constexpr std::string_view smogonId = "lifeorb";
+    static constexpr std::string_view name(GameMechanics) { return "Life Orb"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "lifeorb"; }
   };
-};
 
-namespace latest {
-using LifeOrb = dex::LifeOrb<GameMechanics::LATEST>;
-}
+  static void onModifyDamage(Simulation& simulation);
+  static void onAfterMoveUsed(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

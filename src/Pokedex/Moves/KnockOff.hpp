@@ -16,34 +16,27 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct KnockOff {
-  static void onBasePower(Simulation& simulation);
-  static void onAfterHit(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr Move name(GameMechanics) { return Move::KNOCK_OFF; }
+  static constexpr Type type(GameMechanics) { return Type::DARK; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
 
-template <GameMechanics>
-struct KnockOff : events::KnockOff {
-  static constexpr Move name = Move::KNOCK_OFF;
-  static constexpr Type type = Type::DARK;
-  static constexpr MoveCategory category = MoveCategory::PHYSICAL;
-
-  static constexpr types::baseAccuracy accuracy = 100U;
-  static constexpr types::basePower basePower = 65U;
-  static constexpr types::pp basePp = 20U;
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
+  static constexpr types::basePower basePower(GameMechanics) { return 65U; }
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
   static constexpr Tags<move::tags::Contact> moveTags{};
-  static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
-  static constexpr types::effectMultiplier onBasePowerMultiplier = 1.5F;
+  static constexpr types::effectMultiplier onBasePowerMultiplier(GameMechanics) { return 1.5F; }
   struct Strings {
-    static constexpr std::string_view name = "Knock Off";
-    static constexpr std::string_view smogonId = "knockoff";
+    static constexpr std::string_view name(GameMechanics) { return "Knock Off"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "knockoff"; }
   };
-};
 
-namespace latest {
-using KnockOff = dex::KnockOff<GameMechanics::LATEST>;
-}
+  static void onBasePower(Simulation& simulation);
+  static void onAfterHit(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

@@ -12,30 +12,29 @@
 #include <string_view>
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct QuiverDance {
-  static constexpr Move name = Move::QUIVER_DANCE;
-  static constexpr Type type = Type::BUG;
-  static constexpr MoveCategory category = MoveCategory::STATUS;
+  static constexpr Move name(GameMechanics) { return Move::QUIVER_DANCE; }
+  static constexpr Type type(GameMechanics) { return Type::BUG; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 
-  static constexpr types::pp basePp = 20U;
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
   struct targetPrimaryEffect {
-    static constexpr types::boost spaBoost = 1, spdBoost = 1, speBoost = 1;
+    static constexpr types::boost spaBoost(GameMechanics) { return 1; }
+    static constexpr types::boost spdBoost(GameMechanics) { return 1; }
+    static constexpr types::boost speBoost(GameMechanics) { return 1; }
 
     static constexpr Tags<> effectTags{};
   };
 
   static constexpr Tags<> moveTags{};
-  static constexpr MoveTarget target = MoveTarget::SELF;
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name = "Quiver Dance";
-    static constexpr std::string_view smogonId = "quiverdance";
+    static constexpr std::string_view name(GameMechanics) { return "Quiver Dance"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "quiverdance"; }
   };
-};
 
-namespace latest {
-using QuiverDance = dex::QuiverDance<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

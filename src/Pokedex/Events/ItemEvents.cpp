@@ -10,15 +10,16 @@
 #include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Registry.hpp>
 #include <cmath>
 #include <entt/entity/registry.hpp>
 
-#include "headers.hpp"
+#include "../Items/headers.hpp"
 
-namespace pokesim::dex::events {
+namespace pokesim::dex {
 namespace {
 void setChoiceLock(types::handle pokemonHandle, Battle battle) {
   types::entity moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val).val;
@@ -101,7 +102,7 @@ void lifeOrbOnAfterMove(
 }  // namespace
 
 void AssaultVest::onModifySpd(Simulation& simulation) {
-  static constexpr auto modifier = latest::AssaultVest::onModifySpdModifier;
+  const auto modifier = simulation.pokedex().getStaticValue<AssaultVest::onModifySpdModifier>();
   simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::AssaultVest>>(
     modifier,
     1U);
@@ -112,15 +113,15 @@ void AssaultVest::onEnd(Simulation& simulation) {
 }
 
 void BrightPowder::onModifyAccuracy(Simulation& simulation) {
-  static constexpr auto numerator = latest::BrightPowder::onModifyAccuracyNumerator;
-  static constexpr auto denominator = latest::BrightPowder::onModifyAccuracyDenominator;
+  const auto numerator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyNumerator>();
+  const auto denominator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyDenominator>();
   simulation.viewForSelectedPokemon<setMoveTargetModifier<types::eventModifier>, Tags<item::tags::BrightPowder>>(
     numerator,
     denominator);
 }
 
 void ChoiceScarf::onModifySpe(Simulation& simulation) {
-  static constexpr auto modifier = latest::ChoiceScarf::onModifySpeModifier;
+  const auto modifier = simulation.pokedex().getStaticValue<ChoiceScarf::onModifySpeModifier>();
   simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceScarf>>(
     modifier,
     1U);
@@ -136,7 +137,7 @@ void ChoiceScarf::onEnd(Simulation& simulation) {
 }
 
 void ChoiceSpecs::onModifySpa(Simulation& simulation) {
-  static constexpr auto modifier = latest::ChoiceSpecs::onModifySpaModifier;
+  const auto modifier = simulation.pokedex().getStaticValue<ChoiceSpecs::onModifySpaModifier>();
   simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceSpecs>>(
     modifier,
     1U);
@@ -152,7 +153,7 @@ void ChoiceSpecs::onEnd(Simulation& simulation) {
 }
 
 void FocusSash::onAfterModifyDamage(Simulation& simulation) {
-  static constexpr auto hpToKeep = latest::FocusSash::onAfterModifyDamageHpToKeep;
+  const auto hpToKeep = simulation.pokedex().getStaticValue<FocusSash::onAfterModifyDamageHpToKeep>();
   simulation.addToEntities<tags::CanUseItem, tags::CurrentActionMoveTarget, item::tags::FocusSash>();
   checkIfCanUseItem(simulation);
 
@@ -167,15 +168,15 @@ void FocusSash::onDamage(Simulation& simulation) {
 }
 
 void LifeOrb::onModifyDamage(Simulation& simulation) {
-  static constexpr auto numerator = latest::LifeOrb::onModifyDamageNumerator;
-  static constexpr auto denominator = latest::LifeOrb::onModifyDamageDenominator;
+  const auto numerator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageNumerator>();
+  const auto denominator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageDenominator>();
   simulation.viewForSelectedPokemon<sourceModifyDamage<types::eventModifier>, Tags<item::tags::LifeOrb>>(
     numerator,
     denominator);
 }
 
 void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
-  static constexpr auto divisor = latest::LifeOrb::onAfterMoveUsedHpDecreaseDivisor;
+  const auto divisor = simulation.pokedex().getStaticValue<LifeOrb::onAfterMoveUsedHpDecreaseDivisor>();
   simulation.viewForSelectedPokemon<lifeOrbOnAfterMove, Tags<item::tags::LifeOrb>>(divisor);
 }
-}  // namespace pokesim::dex::events
+}  // namespace pokesim::dex

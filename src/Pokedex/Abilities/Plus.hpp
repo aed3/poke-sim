@@ -10,24 +10,17 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct Plus {
-  static void onModifySpA(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::PLUS; }
 
-template <GameMechanics>
-struct Plus : events::Plus {
-  static constexpr dex::Ability name = dex::Ability::PLUS;
-
-  static constexpr types::effectMultiplier onModifySpaModifier = 1.5F;
+  static constexpr types::effectMultiplier onModifySpaModifier(GameMechanics) { return 1.5F; }
   struct Strings {
-    static constexpr std::string_view name = "Plus";
-    static constexpr std::string_view smogonId = "plus";
+    static constexpr std::string_view name(GameMechanics) { return "Plus"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "plus"; }
   };
-};
 
-namespace latest {
-using Plus = dex::Plus<GameMechanics::LATEST>;
-}
+  static void onModifySpA(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

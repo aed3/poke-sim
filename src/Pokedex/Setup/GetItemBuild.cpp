@@ -3,7 +3,6 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/Item.hpp>
 #include <Types/Registry.hpp>
-#include <type_traits>
 
 #include "../Items/headers.hpp"
 #include "ItemDexDataSetup.hpp"
@@ -16,42 +15,39 @@ template <typename T>
 struct BuildItem {
  private:
  public:
-  static types::entity build(types::registry& registry) {
+  static types::entity build(types::registry& registry, GameMechanics gameMechanic) {
     dex::internal::ItemDexDataSetup item(registry);
 
-    item.setName(T::name);
+    item.setName(T::name(gameMechanic));
 
     item.setProperties(T::itemTags);
 
     return item.entity();
   }
 };
+types::entity buildByGameMechanic(dex::Item item, types::registry& registry, GameMechanics gameMechanic) {
+  // Tidy check ignored because "using namespace" is in function
+  using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
+  switch (item) {
+    case Item::ASSAULT_VEST:  return BuildItem<AssaultVest>::build(registry, gameMechanic);
+    case Item::BRIGHT_POWDER: return BuildItem<BrightPowder>::build(registry, gameMechanic);
+    case Item::CHOICE_SCARF:  return BuildItem<ChoiceScarf>::build(registry, gameMechanic);
+    case Item::CHOICE_SPECS:  return BuildItem<ChoiceSpecs>::build(registry, gameMechanic);
+    case Item::FOCUS_SASH:    return BuildItem<FocusSash>::build(registry, gameMechanic);
+    case Item::LIFE_ORB:      return BuildItem<LifeOrb>::build(registry, gameMechanic);
 
-template <template <GameMechanics> class T>
-auto buildItemSV(types::registry& registry) {
-  return BuildItem<T<GameMechanics::SCARLET_VIOLET>>::build(registry);
+    default: break;
+  }
+  POKESIM_REQUIRE_FAIL("Building an item that is not yet supported.");
 }
 }  // namespace
 
 types::entity Pokedex::buildItem(dex::Item item, types::registry& registry) const {
-  // Tidy check ignored because "using namespace" is in function
-  using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
-  using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
-
   if (isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
-    switch (item) {
-      case Item::ASSAULT_VEST:  return buildItemSV<AssaultVest>(registry);
-      case Item::BRIGHT_POWDER: return buildItemSV<BrightPowder>(registry);
-      case Item::CHOICE_SCARF:  return buildItemSV<ChoiceScarf>(registry);
-      case Item::CHOICE_SPECS:  return buildItemSV<ChoiceSpecs>(registry);
-      case Item::FOCUS_SASH:    return buildItemSV<FocusSash>(registry);
-      case Item::LIFE_ORB:      return buildItemSV<LifeOrb>(registry);
-
-      default: break;
-    }
+    return buildByGameMechanic(item, registry, GameMechanics::SCARLET_VIOLET);
   }
 
-  POKESIM_REQUIRE_FAIL("Building an item that does not exist.");
+  POKESIM_REQUIRE_FAIL("Building for a game that is not yet supported.");
   return types::entity{};
 }
 }  // namespace pokesim

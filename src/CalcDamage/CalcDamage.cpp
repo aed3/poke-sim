@@ -111,7 +111,7 @@ void setDefendingSide(types::handle moveHandle, Defender defender) {
   }
 }
 
-void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
+void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Pokedex& pokedex) {
   types::effectMultiplier stab = ((std::underlying_type_t<StabBoostKind>)modifiers.stab) / 100.0F;
   damage.val = (types::damage)fixedPointMultiply(damage.val, stab);
 
@@ -127,35 +127,40 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers) {
   damage.val = applyChainedModifier(damage.val, modifiers.modifyDamageEvent);
 
   if (modifiers.burn) {
-    damage.val = (types::damage)fixedPointMultiply(damage.val, dex::latest::Burn::physicalDamageMultiplier);
+    const auto multiplier = pokedex.getStaticValue<dex::Burn::physicalDamageMultiplier>();
+    damage.val = (types::damage)fixedPointMultiply(damage.val, multiplier);
   }
 
   setDamageToMinimumPossible(damage);
 }
 
-void calculateAllDamageRolls(DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier) {
+void calculateAllDamageRolls(
+  DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
   damageRolls.val.reserve(MechanicConstants::DamageRollCount::MAX);
   for (types::damageRollIndex i = 0U; i < MechanicConstants::DamageRollCount::MAX; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
     applyDamageRoll(damageRoll.val, i);
-    modifyDamage(damageRoll, modifier);
+    modifyDamage(damageRoll, modifier, pokedex);
   }
 }
 
-void applyAverageDamageRollModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier) {
-  modifyDamage(damage, modifier);
+void applyAverageDamageRollModifier(
+  DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
+  modifyDamage(damage, modifier, pokedex);
   applyAverageDamageRoll(damage.val);
   damageRolls.val.emplace_back(damage);
 }
 
-void applyMinDamageRollModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier) {
+void applyMinDamageRollModifier(
+  DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
   applyMinDamageRoll(damage.val);
-  modifyDamage(damage, modifier);
+  modifyDamage(damage, modifier, pokedex);
   damageRolls.val.emplace_back(damage);
 }
 
-void applyDamageRollModifier(DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier) {
-  modifyDamage(damage, modifier);
+void applyDamageRollModifier(
+  DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
+  modifyDamage(damage, modifier, pokedex);
   damageRolls.val.emplace_back(damage);
 }
 
@@ -346,19 +351,19 @@ void applyDamageRollsAndModifiers(
 
   simulation.addToEntities<DamageRolls, DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
   if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
-    simulation.viewForSelectedMoves<calculateAllDamageRolls>();
+    simulation.viewForSelectedMoves<calculateAllDamageRolls>(simulation.pokedex());
   }
   else {
     if (damageRollKind & DamageRollKind::MAX_DAMAGE) {
-      simulation.viewForSelectedMoves<applyDamageRollModifier>();
+      simulation.viewForSelectedMoves<applyDamageRollModifier>(simulation.pokedex());
     }
 
     if (damageRollKind & DamageRollKind::AVERAGE_DAMAGE) {
-      simulation.viewForSelectedMoves<applyAverageDamageRollModifier>();
+      simulation.viewForSelectedMoves<applyAverageDamageRollModifier>(simulation.pokedex());
     }
 
     if (damageRollKind & DamageRollKind::MIN_DAMAGE) {
-      simulation.viewForSelectedMoves<applyMinDamageRollModifier>();
+      simulation.viewForSelectedMoves<applyMinDamageRollModifier>(simulation.pokedex());
     }
   }
 
@@ -369,7 +374,7 @@ void applyDamageRollsAndModifiers(
     simulate_turn::cloneFromDamageRolls(simulation, damageRollKind);
   }
   else {
-    simulation.viewForSelectedMoves<modifyDamage>();
+    simulation.viewForSelectedMoves<modifyDamage>(simulation.pokedex());
     if (calculateUpToFoeHp) {
       simulation.viewForSelectedMoves<reduceDamageRollsToDefenderHp>();
     }
@@ -526,7 +531,7 @@ void applyMinDamageRoll(types::damage& damage) {
 void setDamageRollModifiers(Simulation& simulation) {
   simulation.viewForSelectedMoves<checkForAndApplyStab>();
   simulation.viewForSelectedMoves<checkForAndApplyTypeEffectiveness>(simulation.pokedex());
-  dex::events::Burn::onSetDamageRollModifiers(simulation);
+  dex::Burn::onSetDamageRollModifiers(simulation);
   runModifyDamageEvent(simulation);
 }
 

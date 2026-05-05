@@ -12,28 +12,21 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct ChoiceSpecs {
-  static void onModifySpa(Simulation& simulation);
-  static void onSourceModifyMove(Simulation& simulation);
-  static void onEnd(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Item name(GameMechanics) { return dex::Item::CHOICE_SPECS; }
 
-template <GameMechanics>
-struct ChoiceSpecs : events::ChoiceSpecs {
-  static constexpr dex::Item name = dex::Item::CHOICE_SPECS;
-
-  static constexpr types::effectMultiplier onModifySpaModifier = 1.5F;
+  static constexpr types::effectMultiplier onModifySpaModifier(GameMechanics) { return 1.5F; }
 
   static constexpr Tags<item::tags::Choice> itemTags{};
   struct Strings {
-    static constexpr std::string_view name = "Choice Specs";
-    static constexpr std::string_view smogonId = "choicespecs";
+    static constexpr std::string_view name(GameMechanics) { return "Choice Specs"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "choicespecs"; }
   };
-};
 
-namespace latest {
-using ChoiceSpecs = dex::ChoiceSpecs<GameMechanics::LATEST>;
-}
+  static void onModifySpa(Simulation& simulation);
+  static void onSourceModifyMove(Simulation& simulation);
+  static void onEnd(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

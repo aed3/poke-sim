@@ -9,25 +9,27 @@
 #include <string_view>
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct Pangoro {
-  static constexpr Species name = Species::PANGORO;
-  static constexpr types::baseStat hp = 95U, atk = 124U, def = 78U, spa = 69U, spd = 71U, spe = 58U;
+  static constexpr Species name(GameMechanics) { return Species::PANGORO; }
+  static constexpr types::baseStat hp(GameMechanics) { return 95U; }
+  static constexpr types::baseStat atk(GameMechanics) { return 124U; }
+  static constexpr types::baseStat def(GameMechanics) { return 78U; }
+  static constexpr types::baseStat spa(GameMechanics) { return 69U; }
+  static constexpr types::baseStat spd(GameMechanics) { return 71U; }
+  static constexpr types::baseStat spe(GameMechanics) { return 58U; }
 
-  static constexpr SpeciesTypes type = {Type::FIGHTING, Type::DARK};
+  static constexpr SpeciesTypes type(GameMechanics) { return {Type::FIGHTING, Type::DARK}; }
 
-  static constexpr Ability primaryAbility = Ability::IRON_FIST;
-  static constexpr Ability secondaryAbility = Ability::MOLD_BREAKER;
-  static constexpr Ability hiddenAbility = Ability::SCRAPPY;
+  static constexpr Ability primaryAbility(GameMechanics) { return Ability::IRON_FIST; }
+  static constexpr Ability secondaryAbility(GameMechanics) { return Ability::MOLD_BREAKER; }
+  static constexpr Ability hiddenAbility(GameMechanics) { return Ability::SCRAPPY; }
 
   struct Strings {
-    static constexpr std::string_view name = "Pangoro";
-    static constexpr std::string_view smogonName = "Pangoro";
-    static constexpr std::string_view smogonId = "pangoro";
+    static constexpr std::string_view name(GameMechanics) { return "Pangoro"; }
+    static constexpr std::string_view smogonName(GameMechanics) { return "Pangoro"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "pangoro"; }
   };
-};
 
-namespace latest {
-using Pangoro = dex::Pangoro<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SWORD_SHIELD; }
+};
 }  // namespace pokesim::dex

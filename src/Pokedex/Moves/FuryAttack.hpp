@@ -11,26 +11,23 @@
 #include <string_view>
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct FuryAttack {
-  static constexpr Move name = Move::FURY_ATTACK;
-  static constexpr Type type = Type::NORMAL;
-  static constexpr MoveCategory category = MoveCategory::PHYSICAL;
+  static constexpr Move name(GameMechanics) { return Move::FURY_ATTACK; }
+  static constexpr Type type(GameMechanics) { return Type::NORMAL; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
 
-  static constexpr types::baseAccuracy accuracy = 85U;
-  static constexpr types::basePower basePower = 15U;
-  static constexpr types::pp basePp = 20U;
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 85U; }
+  static constexpr types::basePower basePower(GameMechanics) { return 15U; }
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
   static constexpr Tags<move::tags::Contact, move::tags::VariableHitCount> moveTags{};
-  static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name = "Fury Attack";
-    static constexpr std::string_view smogonId = "furyattack";
+    static constexpr std::string_view name(GameMechanics) { return "Fury Attack"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "furyattack"; }
   };
-};
 
-namespace latest {
-using FuryAttack = dex::FuryAttack<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

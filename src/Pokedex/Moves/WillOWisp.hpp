@@ -12,29 +12,26 @@
 #include <string_view>
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct WillOWisp {
-  static constexpr Move name = Move::WILL_O_WISP;
-  static constexpr Type type = Type::FIRE;
-  static constexpr MoveCategory category = MoveCategory::STATUS;
+  static constexpr Move name(GameMechanics) { return Move::WILL_O_WISP; }
+  static constexpr Type type(GameMechanics) { return Type::FIRE; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 
-  static constexpr types::baseAccuracy accuracy = 85U;
-  static constexpr types::pp basePp = 15U;
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 85U; }
+  static constexpr types::pp basePp(GameMechanics) { return 15U; }
 
   struct targetPrimaryEffect {
     static constexpr Tags<status::tags::Burn> effectTags{};
   };
 
   static constexpr Tags<> moveTags{};
-  static constexpr MoveTarget target = MoveTarget::ANY_SINGLE_TARGET;
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name = "Will-O-Wisp";
-    static constexpr std::string_view smogonId = "willowisp";
+    static constexpr std::string_view name(GameMechanics) { return "Will-O-Wisp"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "willowisp"; }
   };
-};
 
-namespace latest {
-using WillOWisp = dex::WillOWisp<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

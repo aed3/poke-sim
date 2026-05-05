@@ -3,7 +3,6 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Registry.hpp>
-#include <type_traits>
 
 #include "../Abilities/headers.hpp"
 #include "AbilityDexDataSetup.hpp"
@@ -16,36 +15,40 @@ template <typename T>
 struct BuildAbility {
  private:
  public:
-  static types::entity build(types::registry& registry) {
+  static types::entity build(types::registry& registry, GameMechanics gameMechanic) {
     dex::internal::AbilityDexDataSetup ability(registry);
 
-    ability.setName(T::name);
+    ability.setName(T::name(gameMechanic));
 
     return ability.entity();
   }
 };
 
-template <template <GameMechanics> class T>
-auto buildAbilitySV(types::registry& registry) {
-  return BuildAbility<T<GameMechanics::SCARLET_VIOLET>>::build(registry);
+types::entity buildByGameMechanic(dex::Ability ability, types::registry& registry, GameMechanics gameMechanic) {
+  // Tidy check ignored because "using namespace" is in function
+  using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
+  switch (ability) {
+    case Ability::COMPETITIVE: return BuildAbility<Competitive>::build(registry, gameMechanic);
+    case Ability::DEFIANT:     return BuildAbility<Defiant>::build(registry, gameMechanic);
+    case Ability::INFILTRATOR: return BuildAbility<Infiltrator>::build(registry, gameMechanic);
+    case Ability::IRON_FIST:   return BuildAbility<IronFist>::build(registry, gameMechanic);
+    case Ability::PLUS:        return BuildAbility<Plus>::build(registry, gameMechanic);
+    case Ability::SWEET_VEIL:  return BuildAbility<SweetVeil>::build(registry, gameMechanic);
+    case Ability::STATIC:      return BuildAbility<Static>::build(registry, gameMechanic);
+    case Ability::TRACE:       return BuildAbility<Trace>::build(registry, gameMechanic);
+
+    default: break;
+  }
+  POKESIM_REQUIRE_FAIL("Building an ability that is not yet supported.");
 }
 }  // namespace
 
 types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& registry) const {
-  // Tidy check ignored because "using namespace" is in function
-  using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
-  using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
-
   if (isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
-    switch (ability) {
-      case Ability::PLUS:   return buildAbilitySV<Plus>(registry);
-      case Ability::STATIC: return buildAbilitySV<Static>(registry);
-
-      default: break;
-    }
+    return buildByGameMechanic(ability, registry, GameMechanics::SCARLET_VIOLET);
   }
 
-  POKESIM_REQUIRE_FAIL("Building an ability that does not exist.");
+  POKESIM_REQUIRE_FAIL("Building for a game that is not yet supported.");
   return types::entity{};
 }
 }  // namespace pokesim

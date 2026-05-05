@@ -11,27 +11,20 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct AssaultVest {
-  static void onModifySpd(Simulation& simulation);
-  static void onEnd(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Item name(GameMechanics) { return dex::Item::ASSAULT_VEST; }
 
-template <GameMechanics>
-struct AssaultVest : events::AssaultVest {
-  static constexpr dex::Item name = dex::Item::ASSAULT_VEST;
-
-  static constexpr types::effectMultiplier onModifySpdModifier = 1.5F;
+  static constexpr types::effectMultiplier onModifySpdModifier(GameMechanics) { return 1.5F; }
 
   static constexpr Tags<> itemTags{};
   struct Strings {
-    static constexpr std::string_view name = "Assault Vest";
-    static constexpr std::string_view smogonId = "assaultvest";
+    static constexpr std::string_view name(GameMechanics) { return "Assault Vest"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "assaultvest"; }
   };
-};
 
-namespace latest {
-using AssaultVest = dex::AssaultVest<GameMechanics::LATEST>;
-}
+  static void onModifySpd(Simulation& simulation);
+  static void onEnd(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

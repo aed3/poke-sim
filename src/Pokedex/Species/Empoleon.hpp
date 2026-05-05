@@ -9,32 +9,34 @@
 #include <string_view>
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct Empoleon {
-  static constexpr Species name = Species::EMPOLEON;
-  static constexpr types::baseStat hp = 84U, atk = 86U, def = 88U, spa = 111U, spd = 101U, spe = 60U;
+  static constexpr Species name(GameMechanics) { return dex::Species::EMPOLEON; }
+  static constexpr types::baseStat hp(GameMechanics) { return 84U; }
+  static constexpr types::baseStat atk(GameMechanics) { return 86U; }
+  static constexpr types::baseStat def(GameMechanics) { return 88U; }
+  static constexpr types::baseStat spa(GameMechanics) { return 111U; }
+  static constexpr types::baseStat spd(GameMechanics) { return 101U; }
+  static constexpr types::baseStat spe(GameMechanics) { return 60U; }
 
-  static constexpr SpeciesTypes type = {Type::WATER, Type::STEEL};
+  static constexpr SpeciesTypes type(GameMechanics) { return {Type::WATER, Type::STEEL}; }
 
-  static constexpr Ability primaryAbility = Ability::TORRENT;
-  static constexpr Ability hiddenAbility = Ability::COMPETITIVE;
+  static constexpr Ability primaryAbility(GameMechanics) { return Ability::TORRENT; }
+  static constexpr Ability hiddenAbility(GameMechanics gameMechanic) {
+    switch (gameMechanic) {
+      case GameMechanics::SWORD_SHIELD:
+      case GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL: return Ability::DEFIANT;
+      case GameMechanics::SCARLET_VIOLET:
+      default:                                             return Ability::COMPETITIVE;
+    }
+  }
 
   struct Strings {
-    static constexpr std::string_view name = "Empoleon";
-    static constexpr std::string_view smogonName = "Empoleon";
-    static constexpr std::string_view smogonId = "empoleon";
+    static constexpr std::string_view name(GameMechanics) { return "Empoleon"; }
+    static constexpr std::string_view smogonName(GameMechanics) { return "Empoleon"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "empoleon"; }
   };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
 
-template <>
-struct Empoleon<GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL> : Empoleon<GameMechanics::NONE> {
-  static constexpr Ability hiddenAbility = Ability::DEFIANT;
-};
-
-template <>
-struct Empoleon<GameMechanics::SWORD_SHIELD> : Empoleon<GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL> {};
-
-namespace latest {
-using Empoleon = dex::Empoleon<GameMechanics::LATEST>;
-}
 }  // namespace pokesim::dex

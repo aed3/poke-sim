@@ -35,52 +35,56 @@ struct BuildSpecies {
   struct has<Optional::hiddenAbility, Type, void_t<Type::hiddenAbility>> : std::true_type {};
 
  public:
-  static types::entity build(types::registry& registry) {
+  static types::entity build(types::registry& registry, GameMechanics gameMechanic) {
     dex::internal::SpeciesDexDataSetup species(registry);
 
-    species.setName(T::name);
-    species.setBaseStats(T::hp, T::atk, T::def, T::spa, T::spd, T::spe);
-    species.setType(T::type.type1(), T::type.type2());
+    species.setName(T::name(gameMechanic));
+    species.setBaseStats(
+      T::hp(gameMechanic),
+      T::atk(gameMechanic),
+      T::def(gameMechanic),
+      T::spa(gameMechanic),
+      T::spd(gameMechanic),
+      T::spe(gameMechanic));
+    species.setType(T::type(gameMechanic).type1(), T::type(gameMechanic).type2());
 
     if constexpr (has<Optional::primaryAbility>::value) {
-      species.setPrimaryAbility(T::primaryAbility);
+      species.setPrimaryAbility(T::primaryAbility(gameMechanic));
     }
     if constexpr (has<Optional::secondaryAbility>::value) {
-      species.setSecondaryAbility(T::secondaryAbility);
+      species.setSecondaryAbility(T::secondaryAbility(gameMechanic));
     }
     if constexpr (has<Optional::hiddenAbility>::value) {
-      species.setHiddenAbility(T::hiddenAbility);
+      species.setHiddenAbility(T::hiddenAbility(gameMechanic));
     }
 
     return species.entity();
   }
 };
 
-template <template <GameMechanics> class T>
-auto buildSpeciesSV(types::registry& registry) {
-  return BuildSpecies<T<GameMechanics::SCARLET_VIOLET>>::build(registry);
+types::entity buildByGameMechanic(dex::Species species, types::registry& registry, GameMechanics gameMechanic) {
+  // Tidy check ignored because "using namespace" is in function
+  using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
+  switch (species) {
+    case Species::AMPHAROS:  return BuildSpecies<Ampharos>::build(registry, gameMechanic);
+    case Species::GARDEVOIR: return BuildSpecies<Gardevoir>::build(registry, gameMechanic);
+    case Species::EMPOLEON:  return BuildSpecies<Empoleon>::build(registry, gameMechanic);
+    case Species::PANGORO:   return BuildSpecies<Pangoro>::build(registry, gameMechanic);
+    case Species::RIBOMBEE:  return BuildSpecies<Ribombee>::build(registry, gameMechanic);
+    case Species::DRAGAPULT: return BuildSpecies<Dragapult>::build(registry, gameMechanic);
+
+    default: break;
+  }
+  POKESIM_REQUIRE_FAIL("Building a species that is not yet supported.");
 }
 }  // namespace
 
 types::entity Pokedex::buildSpecies(dex::Species species, types::registry& registry) const {
-  // Tidy check ignored because "using namespace" is in function
-  using namespace pokesim::dex;       // NOLINT(google-build-using-namespace)
-  using namespace pokesim::internal;  // NOLINT(google-build-using-namespace)
-
   if (isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
-    switch (species) {
-      case Species::AMPHAROS:  return buildSpeciesSV<Ampharos>(registry);
-      case Species::GARDEVOIR: return buildSpeciesSV<Gardevoir>(registry);
-      case Species::EMPOLEON:  return buildSpeciesSV<Empoleon>(registry);
-      case Species::PANGORO:   return buildSpeciesSV<Pangoro>(registry);
-      case Species::RIBOMBEE:  return buildSpeciesSV<Ribombee>(registry);
-      case Species::DRAGAPULT: return buildSpeciesSV<Dragapult>(registry);
-
-      default: break;
-    }
+    return buildByGameMechanic(species, registry, GameMechanics::SCARLET_VIOLET);
   }
 
-  POKESIM_REQUIRE_FAIL("Building a species that does not exist.");
+  POKESIM_REQUIRE_FAIL("Building for a game that is not yet supported.");
   return types::entity{};
 }
 }  // namespace pokesim

@@ -45,11 +45,16 @@ class Pokedex {
 
  private:
   struct Constants {
-    Constants(GameMechanics mechanics_) : gameMechanicsValue(mechanics_), typeChartValue(mechanics_) {}
+    Constants(GameMechanics gameMechanic) : gameMechanicValue(gameMechanic), typeChartValue(gameMechanic) {}
     constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
-      return gameMechanicsValue == checkedMechanics;
+      return gameMechanicValue == checkedMechanics;
     }
     constexpr const TypeChart& typeChart() const { return typeChartValue; }
+
+    template <auto DataFunction>
+    constexpr auto getStaticValue() const {
+      return DataFunction(gameMechanicValue);
+    }
 
    private:
     /**
@@ -57,7 +62,7 @@ class Pokedex {
      * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but
      * if it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
      */
-    GameMechanics gameMechanicsValue;
+    GameMechanics gameMechanicValue;
     TypeChart typeChartValue;
   } constants;
 
@@ -114,6 +119,10 @@ class Pokedex {
     return constants.isGameMechanic(checkedMechanics);
   }
   constexpr const TypeChart& typeChart() const { return constants.typeChart(); }
+  template <auto DataFunction>
+  constexpr auto getStaticValue() const {
+    return constants.getStaticValue<DataFunction>();
+  }
 
   /**
    * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.

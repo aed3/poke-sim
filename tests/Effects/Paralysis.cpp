@@ -90,8 +90,9 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effec
     auto initialRngSeed = checks.getInitialComponents<RngSeed>(battle);
     REQUIRE(rngSeed.val == initialRngSeed.val);
 
-    bool paralysisStoppedP1Move = probability.val == dex::latest::Paralysis::onBeforeMoveChance / 100.0F;
-    bool p1Moved = probability.val == 1.0F - (dex::latest::Paralysis::onBeforeMoveChance / 100.0F);
+    bool paralysisStoppedP1Move =
+      probability.val == pokedex.getStaticValue<dex::Paralysis::onBeforeMoveChance>() / 100.0F;
+    bool p1Moved = probability.val == 1.0F - (pokedex.getStaticValue<dex::Paralysis::onBeforeMoveChance>() / 100.0F);
 
     REQUIRE((paralysisStoppedP1Move || p1Moved));
 

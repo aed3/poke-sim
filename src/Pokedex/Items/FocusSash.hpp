@@ -11,27 +11,20 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct FocusSash {
-  static void onAfterModifyDamage(Simulation& simulation);
-  static void onDamage(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Item name(GameMechanics) { return dex::Item::FOCUS_SASH; }
 
-template <GameMechanics>
-struct FocusSash {
-  static constexpr dex::Item name = dex::Item::FOCUS_SASH;
-
-  static constexpr types::damage onAfterModifyDamageHpToKeep = 1U;
+  static constexpr types::damage onAfterModifyDamageHpToKeep(GameMechanics) { return 1U; }
 
   static constexpr Tags<> itemTags{};
   struct Strings {
-    static constexpr std::string_view name = "Focus Sash";
-    static constexpr std::string_view smogonId = "focussash";
+    static constexpr std::string_view name(GameMechanics) { return "Focus Sash"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "focussash"; }
   };
-};
 
-namespace latest {
-using FocusSash = dex::FocusSash<GameMechanics::LATEST>;
-}
+  static void onAfterModifyDamage(Simulation& simulation);
+  static void onDamage(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

@@ -78,12 +78,12 @@ void applyBasePowerEventModifier(types::handle moveHandle, BasePower basePower, 
 }  // namespace
 
 void runBeforeMove(Simulation& simulation) {
-  dex::events::Paralysis::onBeforeMove(simulation);
-  dex::events::ChoiceLock::onBeforeMove(simulation);
+  dex::Paralysis::onBeforeMove(simulation);
+  dex::ChoiceLock::onBeforeMove(simulation);
 }
 
 void runResidual(Simulation& simulation) {
-  dex::events::Burn::onResidual(simulation);
+  dex::Burn::onResidual(simulation);
 }
 
 void runAccuracyEvent(Simulation&) {}
@@ -91,7 +91,7 @@ void runAccuracyEvent(Simulation&) {}
 void runModifyAccuracyEvent(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewMove, Accuracy>();
 
-  dex::events::BrightPowder::onModifyAccuracy(simulation);
+  dex::BrightPowder::onModifyAccuracy(simulation);
 
   simulation.viewForSelectedMoves<applyEventModifier<Accuracy>>();
   simulation.registry.clear<EventModifier>();
@@ -102,42 +102,42 @@ void runModifyCritBoostEvent(Simulation&) {}
 void runBasePowerEvent(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewMove, BasePower>();
 
-  dex::events::KnockOff::onBasePower(simulation);
+  dex::KnockOff::onBasePower(simulation);
 
   simulation.viewForSelectedMoves<applyBasePowerEventModifier>();
   simulation.registry.clear<EventModifier>();
 }
 
 void runModifyDamageEvent(Simulation& simulation) {
-  dex::events::LifeOrb::onModifyDamage(simulation);
+  dex::LifeOrb::onModifyDamage(simulation);
 }
 
 void runAfterModifyDamageEvent(Simulation& simulation) {
-  dex::events::FocusSash::onAfterModifyDamage(simulation);
+  dex::FocusSash::onAfterModifyDamage(simulation);
 }
 
 void runDamageEvent(Simulation& simulation) {
-  dex::events::FocusSash::onDamage(simulation);
+  dex::FocusSash::onDamage(simulation);
 
   simulation.registry.clear<calc_damage::tags::RanAfterModifyDamage>();
 }
 
 void runDamagingHitEvent(Simulation& simulation) {
-  dex::events::Static::onDamagingHit(simulation);
+  dex::Static::onDamagingHit(simulation);
 }
 
 void runAfterHitEvent(Simulation& simulation) {
-  dex::events::KnockOff::onAfterHit(simulation);
+  dex::KnockOff::onAfterHit(simulation);
 }
 
 void runAfterMoveUsedEvent(Simulation& simulation) {
-  dex::events::LifeOrb::onAfterMoveUsed(simulation);
+  dex::LifeOrb::onAfterMoveUsed(simulation);
 }
 
 void runModifySecondariesEvent(Simulation&) {}
 template <typename StatusType>
 void runStatusImmunityEvent(Simulation&) {
-  // This is where Corrosion (will add CanSetStatus back), the `onSetStatus` events that only block status (i.e. Misty
+  // This is where Corrosion will add CanSetStatus back, the `onSetStatus` events that only block status (i.e. Misty
   // Terrain), and all the `onImmunity` events that relate to non-volatile status conditions will go
 }
 
@@ -168,12 +168,12 @@ void runModifyMove(Simulation& simulation) {
   //   simulation,
   //   getMoveEventPokemonSelector<tags::CurrentActionMoveSource>()};
 
-  dex::events::ChoiceScarf::onSourceModifyMove(simulation);
-  dex::events::ChoiceSpecs::onSourceModifyMove(simulation);
+  dex::ChoiceScarf::onSourceModifyMove(simulation);
+  dex::ChoiceSpecs::onSourceModifyMove(simulation);
 }
 
 void runDisableMove(Simulation& simulation) {
-  dex::events::ChoiceLock::onDisableMove(simulation);
+  dex::ChoiceLock::onDisableMove(simulation);
 }
 
 void runModifyAtk(Simulation&) {}
@@ -184,10 +184,10 @@ void runModifySpa(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
 
   // Priority 1
-  dex::events::ChoiceSpecs::onModifySpa(simulation);
+  dex::ChoiceSpecs::onModifySpa(simulation);
 
   // Priority 5
-  dex::events::Plus::onModifySpA(simulation);
+  dex::Plus::onModifySpA(simulation);
 
   simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpa>>();
   simulation.registry.clear<EventModifier>();
@@ -196,7 +196,7 @@ void runModifySpa(Simulation& simulation) {
 void runModifySpd(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
 
-  dex::events::AssaultVest::onModifySpd(simulation);
+  dex::AssaultVest::onModifySpd(simulation);
 
   simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpd>>();
   simulation.registry.clear<EventModifier>();
@@ -205,12 +205,12 @@ void runModifySpd(Simulation& simulation) {
 void runModifySpe(Simulation& simulation) {
   simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
 
-  dex::events::ChoiceScarf::onModifySpe(simulation);
+  dex::ChoiceScarf::onModifySpe(simulation);
 
   simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpe>>();
   simulation.registry.clear<EventModifier>();
 
-  dex::events::Paralysis::onModifySpe(simulation);
+  dex::Paralysis::onModifySpe(simulation);
 }
 
 void runStartSleep(Simulation&) {}
@@ -222,9 +222,9 @@ void runTryTakeItemEvent(Simulation&) {}
 void runAfterUseItemEvent(Simulation&) {}
 
 void runEndItemEvent(Simulation& simulation) {
-  dex::events::AssaultVest::onEnd(simulation);
-  dex::events::ChoiceScarf::onEnd(simulation);
-  dex::events::ChoiceSpecs::onEnd(simulation);
+  dex::AssaultVest::onEnd(simulation);
+  dex::ChoiceScarf::onEnd(simulation);
+  dex::ChoiceSpecs::onEnd(simulation);
 }
 
 void runEndAbilityEvent(Simulation&) {}

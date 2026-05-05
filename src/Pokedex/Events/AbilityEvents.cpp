@@ -5,6 +5,7 @@
 #include <Components/Tags/AbilityTags.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Enums/Ability.hpp>
@@ -13,9 +14,9 @@
 #include <Types/Registry.hpp>
 #include <entt/entity/registry.hpp>
 
-#include "headers.hpp"
+#include "../Abilities/headers.hpp"
 
-namespace pokesim::dex::events {
+namespace pokesim::dex {
 namespace {
 void plusOnModifySpa(types::handle, EventModifier&) {}
 
@@ -53,7 +54,7 @@ void Plus::onModifySpA(Simulation& simulation) {
 }
 
 void Static::onDamagingHit(Simulation& simulation) {
-  static constexpr auto chanceOfStatic = dex::latest::Static::onDamagingHitChance;
+  const auto chanceOfStatic = simulation.pokedex().getStaticValue<dex::Static::onDamagingHitChance>();
   simulation.viewForSelectedPokemon<staticOnDamagingHit, Tags<ability::tags::Static>>(chanceOfStatic);
   checkIfCanSetStatus(simulation);
   runRandomBinaryChance<BaseEffectChance, tags::CanSetStatus>(simulation, [](Simulation& sim) {
@@ -62,4 +63,4 @@ void Static::onDamagingHit(Simulation& simulation) {
   setStatus(simulation);
   simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
 }
-}  // namespace pokesim::dex::events
+}  // namespace pokesim::dex

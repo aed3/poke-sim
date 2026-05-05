@@ -9,24 +9,26 @@
 #include <string_view>
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct Ampharos {
-  static constexpr Species name = Species::AMPHAROS;
-  static constexpr types::baseStat hp = 90U, atk = 75U, def = 85U, spa = 115U, spd = 90U, spe = 55U;
+  static constexpr Species name(GameMechanics) { return Species::AMPHAROS; }
+  static constexpr types::baseStat hp(GameMechanics) { return 90U; }
+  static constexpr types::baseStat atk(GameMechanics) { return 75U; }
+  static constexpr types::baseStat def(GameMechanics) { return 85U; }
+  static constexpr types::baseStat spa(GameMechanics) { return 115U; }
+  static constexpr types::baseStat spd(GameMechanics) { return 90U; }
+  static constexpr types::baseStat spe(GameMechanics) { return 55U; }
 
-  static constexpr SpeciesTypes type = {Type::ELECTRIC};
+  static constexpr SpeciesTypes type(GameMechanics) { return {Type::ELECTRIC}; }
 
-  static constexpr Ability primaryAbility = Ability::STATIC;
-  static constexpr Ability hiddenAbility = Ability::PLUS;
+  static constexpr Ability primaryAbility(GameMechanics) { return Ability::STATIC; }
+  static constexpr Ability hiddenAbility(GameMechanics) { return Ability::PLUS; }
 
   struct Strings {
-    static constexpr std::string_view name = "Ampharos";
-    static constexpr std::string_view smogonName = "Ampharos";
-    static constexpr std::string_view smogonId = "ampharos";
+    static constexpr std::string_view name(GameMechanics) { return "Ampharos"; }
+    static constexpr std::string_view smogonName(GameMechanics) { return "Ampharos"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "ampharos"; }
   };
-};
 
-namespace latest {
-using Ampharos = dex::Ampharos<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

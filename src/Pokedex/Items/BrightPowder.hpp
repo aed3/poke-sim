@@ -11,27 +11,20 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct BrightPowder {
-  static void onModifyAccuracy(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Item name(GameMechanics) { return dex::Item::BRIGHT_POWDER; }
 
-template <GameMechanics>
-struct BrightPowder {
-  static constexpr dex::Item name = dex::Item::BRIGHT_POWDER;
-
-  static constexpr types::eventModifier onModifyAccuracyNumerator = 3686U;
-  static constexpr types::eventModifier onModifyAccuracyDenominator = 4096U;
+  static constexpr types::eventModifier onModifyAccuracyNumerator(GameMechanics) { return 3686U; }
+  static constexpr types::eventModifier onModifyAccuracyDenominator(GameMechanics) { return 4096U; }
 
   static constexpr Tags<> itemTags{};
   struct Strings {
-    static constexpr std::string_view name = "Bright Powder";
-    static constexpr std::string_view smogonId = "brightpowder";
+    static constexpr std::string_view name(GameMechanics) { return "Bright Powder"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "brightpowder"; }
   };
-};
 
-namespace latest {
-using BrightPowder = dex::BrightPowder<GameMechanics::LATEST>;
-}
+  static void onModifyAccuracy(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

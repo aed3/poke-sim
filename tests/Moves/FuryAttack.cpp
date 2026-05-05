@@ -48,8 +48,7 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
   const bool alwaysCrits = options.damageRollsConsidered.p2 & DamageRollKind::GUARANTEED_CRIT_CHANCE;
   const bool twoDamageOutcomesPerHit = !alwaysCrits;
 
-  constexpr types::probability passesAccuracyProbability =
-    dex::FuryAttack<GameMechanics::SCARLET_VIOLET>::accuracy / 100.0F;
+  const types::probability passesAccuracyProbability = pokedex.getStaticValue<dex::FuryAttack::accuracy>() / 100.0F;
 
   constexpr types::probability lowerMultiHitMoveChances = MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES[0] / 100.0F;
   constexpr types::probability upperMultiHitMoveChances =

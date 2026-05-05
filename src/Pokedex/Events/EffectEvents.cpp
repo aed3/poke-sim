@@ -17,9 +17,9 @@
 #include <Simulation/Simulation.hpp>
 #include <entt/entity/registry.hpp>
 
-#include "headers.hpp"
+#include "../Effects/headers.hpp"
 
-namespace pokesim::dex::events {
+namespace pokesim::dex {
 namespace {
 
 void damageByHpDivisor(types::handle pokemonHandle, stat::Hp hp, types::stat hpDivisor) {
@@ -34,8 +34,8 @@ void applyBurnModifier(types::registry& registry, const CurrentActionMovesAsSour
   }
 }
 
-void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedDividend) {
-  effectiveSpe.val = effectiveSpe.val * speedDividend / dex::latest::Paralysis::speedDivisor;
+void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedDivisor, types::stat speedDividend) {
+  effectiveSpe.val = effectiveSpe.val * speedDividend / speedDivisor;
 }
 
 void paralysisOnBeforeMove(types::handle pokemonHandle, Battle battle, const CurrentActionMovesAsSource& moves) {
@@ -76,19 +76,20 @@ void Burn::onSetDamageRollModifiers(Simulation& simulation) {
 }
 
 void Burn::onResidual(Simulation& simulation) {
-  static constexpr auto divisor = latest::Burn::onResidualHpDecreaseDivisor;
+  const auto divisor = simulation.pokedex().getStaticValue<Burn::onResidualHpDecreaseDivisor>();
   simulation.viewForSelectedPokemon<damageByHpDivisor, Tags<status::tags::Burn>>(divisor);
 }
 
 void Paralysis::onModifySpe(Simulation& simulation) {
-  constexpr auto speedDividend = dex::latest::Paralysis::speedDividend;
+  const auto speedDivisor = simulation.pokedex().getStaticValue<Paralysis::speedDivisor>();
+  const auto speedDividend = simulation.pokedex().getStaticValue<Paralysis::speedDividend>();
   simulation.viewForSelectedPokemon<
     paralysisOnModifySpeed,
-    Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>(speedDividend);
+    Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>(speedDivisor, speedDividend);
 }
 
 void Paralysis::onBeforeMove(Simulation& simulation) {
-  constexpr auto chance = dex::latest::Paralysis::onBeforeMoveChance;
+  const auto chance = simulation.pokedex().getStaticValue<Paralysis::onBeforeMoveChance>();
   simulation.addToEntities<BaseEffectChance, tags::CurrentActionMoveSource, status::tags::Paralysis>(
     BaseEffectChance{chance});
   runRandomBinaryChance<BaseEffectChance, tags::CurrentActionMoveSource>(simulation, [](Simulation& sim) {
@@ -107,4 +108,4 @@ void ChoiceLock::onDisableMove(Simulation& simulation) {
   simulation.viewForSelectedPokemon<choiceLockRemoveWithItem>(simulation.pokedex());
   simulation.viewForSelectedPokemon<choiceLockOnDisableMove>();
 }
-}  // namespace pokesim::dex::events
+}  // namespace pokesim::dex

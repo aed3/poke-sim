@@ -3,7 +3,7 @@
 #include "Tests.hpp"
 
 namespace pokesim {
-static GameMechanics constexpr TestMechanics = GameMechanics::SCARLET_VIOLET;
+static GameMechanics constexpr TestMechanic = GameMechanics::SCARLET_VIOLET;
 
 static auto constexpr MAX_PROBABILITY = MechanicConstants::Probability::MAX;
 static auto constexpr MIN_PROBABILITY = MechanicConstants::Probability::MIN;
@@ -14,18 +14,6 @@ static auto constexpr PROBABILITY_TO_CHANCE = MechanicConstants::ProbabilityToPe
 static auto constexpr CRIT_PROBABILITY = MAX_PROBABILITY / MechanicConstants::CRIT_CHANCE_DIVISORS[0];
 static auto constexpr STAT_BOOST_STAGES = MechanicConstants::STAT_BOOST_STAGES;
 static auto constexpr MIN_HP = MechanicConstants::PokemonCurrentHpStat::MIN;
-
-using Thunderbolt = dex::Thunderbolt<TestMechanics>;
-using Moonblast = dex::Moonblast<TestMechanics>;
-using WillOWisp = dex::WillOWisp<TestMechanics>;
-using QuiverDance = dex::QuiverDance<TestMechanics>;
-
-using ChoiceScarf = dex::ChoiceScarf<TestMechanics>;
-using LifeOrb = dex::LifeOrb<TestMechanics>;
-using FocusSash = dex::FocusSash<TestMechanics>;
-using BrightPowder = dex::BrightPowder<TestMechanics>;
-
-using Burn = dex::Burn<TestMechanics>;
 
 static auto constexpr ALL_DAMAGE = DamageRollKind::ALL_DAMAGE_ROLLS;
 static auto constexpr AVERAGE_DAMAGE = DamageRollKind::AVERAGE_DAMAGE;
@@ -337,7 +325,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
    private:
     bool checkWasParalyzed;
 
-    types::percentChance THUNDERBOLT_PAR_CHANCE = Thunderbolt::targetSecondaryEffect::chance;
+    types::percentChance THUNDERBOLT_PAR_CHANCE = dex::Thunderbolt::targetSecondaryEffect::chance(TestMechanic);
 
    public:
     DamageValueInfo(
@@ -378,7 +366,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
     bool mightCauseParalysis() const { return checkWasParalyzed; }
   };
 
-  static Pokedex pokedex{TestMechanics};
+  static Pokedex pokedex{TestMechanic};
   BattleCreationInfo battleCreationInfo;
   SideDecision p1Decision{PlayerSideId::P1};
   SideDecision p2Decision{PlayerSideId::P2};
@@ -609,8 +597,9 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     bool checkMoveDroppedSpa;
 
     types::percentChance MOONBLAST_HIT_CHANCE = (types::percentChance)chainValueToModifier(
-      Moonblast::accuracy, BrightPowder::onModifyAccuracyNumerator, BrightPowder::onModifyAccuracyDenominator);
-    types::percentChance MOONBLAST_SPA_DROP_CHANCE = Moonblast::targetSecondaryEffect::chance;
+      dex::Moonblast::accuracy(TestMechanic), dex::BrightPowder::onModifyAccuracyNumerator(TestMechanic),
+      dex::BrightPowder::onModifyAccuracyDenominator(TestMechanic));
+    types::percentChance MOONBLAST_SPA_DROP_CHANCE = dex::Moonblast::targetSecondaryEffect::chance(TestMechanic);
 
    public:
     DamageValueInfo(
@@ -647,7 +636,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     auto possibleHpValues() const {
       auto expectedHp = VerticalSliceDamageValueInfo::possibleHpValues();
       if (item == dex::Item::FOCUS_SASH && expectedHp.contains(MIN_HP)) {
-        expectedHp.insert(FocusSash::onAfterModifyDamageHpToKeep);
+        expectedHp.insert(dex::FocusSash::onAfterModifyDamageHpToKeep(TestMechanic));
         expectedHp.erase(MIN_HP);
       }
       if (moveMightMiss()) {
@@ -657,7 +646,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     }
 
     types::probability getProbability(types::stat afterTurnHp, bool p2BSpaBoosted) const {
-      if (item == dex::Item::FOCUS_SASH && afterTurnHp == FocusSash::onAfterModifyDamageHpToKeep) {
+      if (item == dex::Item::FOCUS_SASH && afterTurnHp == dex::FocusSash::onAfterModifyDamageHpToKeep(TestMechanic)) {
         afterTurnHp = MIN_HP;
       }
 
@@ -687,7 +676,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     bool moveMightDropSpa() const { return checkMoveDroppedSpa; }
   };
 
-  static Pokedex pokedex{TestMechanics};
+  static Pokedex pokedex{TestMechanic};
   BattleCreationInfo battleCreationInfo;
 
   SideDecision p1Decision{PlayerSideId::P1};
@@ -781,7 +770,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     damageRollOptions.p2,
     options);
 
-  const types::percentChance willOWispHitChance = WillOWisp::accuracy;
+  const types::percentChance willOWispHitChance = dex::WillOWisp::accuracy(TestMechanic);
   const bool willOWispMightMiss =
     (!randomChanceUpperLimit.has_value() || randomChanceUpperLimit > willOWispHitChance) &&
     (!branchProbabilityLowerLimit.has_value() ||
@@ -932,7 +921,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     REQUIRE(p2ALastUsedMove.val == p2AMove);
 
     // P1A (Gardevoir) Specific Checks
-    types::stat p1ABurnHpDecrease = p1AInfo.stats.hp / Burn::onResidualHpDecreaseDivisor;
+    types::stat p1ABurnHpDecrease = p1AInfo.stats.hp / dex::Burn::onResidualHpDecreaseDivisor(TestMechanic);
     REQUIRE(p1AHp.val == p1AInfo.stats.hp - p1ABurnHpDecrease);
     REQUIRE(p1AChoiceLock.val == p1AMove);
 
@@ -944,13 +933,13 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
       idealProbability *= p1BHalfDamageInfo.getProbability(p1BHp.val, p2BSpaBoosted);
     }
     else {
-      REQUIRE(p1BHp.val == FocusSash::onAfterModifyDamageHpToKeep);
+      REQUIRE(p1BHp.val == dex::FocusSash::onAfterModifyDamageHpToKeep(TestMechanic));
     }
     foundP1BHp.insert(p1BHp.val);
 
     // P2A (Pangoro) Specific Checks
-    types::stat p2ALifeOrbHpDecrease = p2AInfo.stats.hp / LifeOrb::onAfterMoveUsedHpDecreaseDivisor;
-    types::stat p2ABurnHpDecrease = p2AInfo.stats.hp / Burn::onResidualHpDecreaseDivisor;
+    types::stat p2ALifeOrbHpDecrease = p2AInfo.stats.hp / dex::LifeOrb::onAfterMoveUsedHpDecreaseDivisor(TestMechanic);
+    types::stat p2ABurnHpDecrease = p2AInfo.stats.hp / dex::Burn::onResidualHpDecreaseDivisor(TestMechanic);
     if (p2ABurned) {
       REQUIRE(registry.get<StatusName>(p2APokemon).val == dex::Status::BRN);
       REQUIRE(p2AHp.val == p2AInfo.stats.hp - p2ALifeOrbHpDecrease - p2ABurnHpDecrease);
@@ -998,14 +987,14 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
       checks.checkMovePpUsage(p2BMove);
       REQUIRE(p2BLastUsedMove.val == p2BMove);
 
-      using Effects = QuiverDance::targetPrimaryEffect;
-      REQUIRE(p2BSpdBoost.val == Effects::spdBoost);
-      REQUIRE(p2BSpd.val == (types::stat)(p2BInitialSpd.val * STAT_BOOST_STAGES[Effects::spdBoost]));
-      REQUIRE(p2BSpeBoost.val == Effects::speBoost);
-      REQUIRE(p2BSpe.val == (types::stat)(p2BInitialSpe.val * STAT_BOOST_STAGES[Effects::speBoost]));
+      using Effects = dex::QuiverDance::targetPrimaryEffect;
+      REQUIRE(p2BSpdBoost.val == Effects::spdBoost(TestMechanic));
+      REQUIRE(p2BSpd.val == (types::stat)(p2BInitialSpd.val * STAT_BOOST_STAGES[Effects::spdBoost(TestMechanic)]));
+      REQUIRE(p2BSpeBoost.val == Effects::speBoost(TestMechanic));
+      REQUIRE(p2BSpe.val == (types::stat)(p2BInitialSpe.val * STAT_BOOST_STAGES[Effects::speBoost(TestMechanic)]));
       if (p2BSpaBoosted) {
         const SpaBoost& p2BSpaBoost = registry.get<SpaBoost>(p2BPokemon);
-        REQUIRE(p2BSpaBoost.val == Effects::spaBoost);
+        REQUIRE(p2BSpaBoost.val == Effects::spaBoost(TestMechanic));
       }
       else {
         REQUIRE(p2BSpa.val == p2BInitialSpa.val);

@@ -12,28 +12,21 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct ChoiceScarf {
-  static void onModifySpe(Simulation& simulation);
-  static void onSourceModifyMove(Simulation& simulation);
-  static void onEnd(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Item name(GameMechanics) { return dex::Item::CHOICE_SCARF; }
 
-template <GameMechanics>
-struct ChoiceScarf : events::ChoiceScarf {
-  static constexpr dex::Item name = dex::Item::CHOICE_SCARF;
-
-  static constexpr types::effectMultiplier onModifySpeModifier = 1.5F;
+  static constexpr types::effectMultiplier onModifySpeModifier(GameMechanics) { return 1.5F; }
 
   static constexpr Tags<item::tags::Choice> itemTags{};
   struct Strings {
-    static constexpr std::string_view name = "Choice Scarf";
-    static constexpr std::string_view smogonId = "choicescarf";
+    static constexpr std::string_view name(GameMechanics) { return "Choice Scarf"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "choicescarf"; }
   };
-};
 
-namespace latest {
-using ChoiceScarf = dex::ChoiceScarf<GameMechanics::LATEST>;
-}
+  static void onModifySpe(Simulation& simulation);
+  static void onSourceModifyMove(Simulation& simulation);
+  static void onEnd(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

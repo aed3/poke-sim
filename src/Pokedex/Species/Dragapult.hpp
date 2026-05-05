@@ -9,25 +9,27 @@
 #include <string_view>
 
 namespace pokesim::dex {
-template <GameMechanics>
 struct Dragapult {
-  static constexpr Species name = Species::DRAGAPULT;
-  static constexpr types::baseStat hp = 88U, atk = 120U, def = 75U, spa = 100U, spd = 75U, spe = 142U;
+  static constexpr Species name(GameMechanics) { return Species::DRAGAPULT; }
+  static constexpr types::baseStat hp(GameMechanics) { return 88U; }
+  static constexpr types::baseStat atk(GameMechanics) { return 120U; }
+  static constexpr types::baseStat def(GameMechanics) { return 75U; }
+  static constexpr types::baseStat spa(GameMechanics) { return 100U; }
+  static constexpr types::baseStat spd(GameMechanics) { return 75U; }
+  static constexpr types::baseStat spe(GameMechanics) { return 142U; }
 
-  static constexpr SpeciesTypes type = {Type::DRAGON, Type::GHOST};
+  static constexpr SpeciesTypes type(GameMechanics) { return {Type::DRAGON, Type::GHOST}; }
 
-  static constexpr Ability primaryAbility = Ability::CLEAR_BODY;
-  static constexpr Ability secondaryAbility = Ability::INFILTRATOR;
-  static constexpr Ability hiddenAbility = Ability::CURSED_BODY;
+  static constexpr Ability primaryAbility(GameMechanics) { return Ability::CLEAR_BODY; }
+  static constexpr Ability secondaryAbility(GameMechanics) { return Ability::INFILTRATOR; }
+  static constexpr Ability hiddenAbility(GameMechanics) { return Ability::CURSED_BODY; }
 
   struct Strings {
-    static constexpr std::string_view name = "Dragapult";
-    static constexpr std::string_view smogonName = "Dragapult";
-    static constexpr std::string_view smogonId = "dragapult";
+    static constexpr std::string_view name(GameMechanics) { return "Dragapult"; }
+    static constexpr std::string_view smogonName(GameMechanics) { return "Dragapult"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "dragapult"; }
   };
-};
 
-namespace latest {
-using Dragapult = dex::Dragapult<GameMechanics::LATEST>;
-}
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

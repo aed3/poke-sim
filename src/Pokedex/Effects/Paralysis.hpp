@@ -11,29 +11,22 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
-namespace events {
 struct Paralysis {
-  static void onModifySpe(Simulation& simulation);
-  static void onBeforeMove(Simulation& simulation);
-};
-}  // namespace events
+  static constexpr dex::Status name(GameMechanics) { return dex::Status::PAR; }
 
-template <GameMechanics>
-struct Paralysis : events::Paralysis {
-  static constexpr dex::Status name = dex::Status::PAR;
+  static constexpr types::stat speedDividend(GameMechanics) { return 50U; }
+  static constexpr types::stat speedDivisor(GameMechanics) { return 100U; }
 
-  static constexpr types::stat speedDividend = 50U;
-  static constexpr types::stat speedDivisor = 100U;
-
-  static constexpr types::percentChance onBeforeMoveChance = 25U;
+  static constexpr types::percentChance onBeforeMoveChance(GameMechanics) { return 25U; }
 
   struct Strings {
-    static constexpr std::string_view name = "Paralysis";
-    static constexpr std::string_view smogonId = "par";
+    static constexpr std::string_view name(GameMechanics) { return "Paralysis"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "par"; }
   };
-};
 
-namespace latest {
-using Paralysis = dex::Paralysis<GameMechanics::LATEST>;
-}
+  static void onModifySpe(Simulation& simulation);
+  static void onBeforeMove(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
 }  // namespace pokesim::dex

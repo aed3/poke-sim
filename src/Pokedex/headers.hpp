@@ -2,8 +2,14 @@
 
 #pragma once
 
+#include "Abilities/Competitive.hpp"
+#include "Abilities/Defiant.hpp"
+#include "Abilities/Infiltrator.hpp"
+#include "Abilities/IronFist.hpp"
 #include "Abilities/Plus.hpp"
 #include "Abilities/Static.hpp"
+#include "Abilities/SweetVeil.hpp"
+#include "Abilities/Trace.hpp"
 #include "Effects/Burn.hpp"
 #include "Effects/ChoiceLock.hpp"
 #include "Effects/Paralysis.hpp"
