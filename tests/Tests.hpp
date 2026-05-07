@@ -13,8 +13,19 @@
 static_assert(false, "Rebuild PokeSim with the flag POKESIM_ENABLE_TESTING to enable testing.");
 #endif
 
-namespace pokesim {
+#ifdef _MSC_VER
+// In theory, disabling a warning about conversions is a bad idea. That warning, in theory, should also be triggered
+// regardless of whether a value is being assigned to an integer or an optional holding that integer. That second theory
+// isn't true, which means making the parameters to BattleCreationInfo optional reveals issues I hadn't previously
+// seen. I'm disabling this warning here for now until I decide on a better way to deal with that warning besides
+// writing "(std::uint8_t)" everywhere. I wouldn't mind that solution, but BattleCreationInfo is a public API and I
+// don't want library users to have to do that a bunch. Maybe a custom class like I did for variant, maybe a literal to
+// define an uint8 directly, or maybe something else.
+// TODO(aed3): Fix this properly.
+#pragma warning(disable : 4244)
+#endif
 
+namespace pokesim {
 inline MoveCreationInfo createMove(Pokedex& pokedex, dex::Move move) {
   entt::dense_set<dex::Move> moveSet{};
   moveSet.insert(move);
