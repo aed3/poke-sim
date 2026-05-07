@@ -45,7 +45,7 @@
  * external/entt/meta/resolve.hpp
  * src/Config/Config.hpp
  * src/Config/Require.hpp
- * src/Types/NumberToType.hpp
+ * src/Utilities/NumberToType.hpp
  * src/Utilities/MaxSizedVector.hpp
  * src/Types/Entity.hpp
  * src/Components/EntityHolders/Battle.hpp
@@ -176,6 +176,7 @@
  * src/Types/Enums/MoveCategory.hpp
  * src/Types/Enums/MoveTarget.hpp
  * src/Types/Enums/TypeEffectiveness.hpp
+ * src/Types/NaturesTable.hpp
  * src/Simulation/SimulationOptions.hpp
  * src/Utilities/ArgumentChecks.hpp
  * external/entt/entity/handle.hpp
@@ -192,6 +193,7 @@
  * src/Pokedex/TypeChart.hpp
  * src/Pokedex/Pokedex.hpp
  * src/Simulation/BattleCreationInfo.hpp
+ * src/Simulation/Formulas.hpp
  * src/Utilities/Tags.hpp
  * src/Utilities/RegistryLoop.hpp
  * src/Simulation/RegistryContainer.hpp
@@ -15828,7 +15830,7 @@ class require : public std::exception {
 
 //////////////////////// END OF src/Config/Require.hpp /////////////////////////
 
-///////////////////// START OF src/Types/NumberToType.hpp //////////////////////
+/////////////////// START OF src/Utilities/NumberToType.hpp ////////////////////
 
 namespace pokesim::internal {
 template <std::uint64_t MaxValue>
@@ -15852,7 +15854,7 @@ using signedIntType = std::conditional_t<
   std::int64_t>;
 }  // namespace pokesim::internal
 
-////////////////////// END OF src/Types/NumberToType.hpp ///////////////////////
+//////////////////// END OF src/Utilities/NumberToType.hpp /////////////////////
 
 ////////////////// START OF src/Utilities/MaxSizedVector.hpp ///////////////////
 
@@ -17922,6 +17924,7 @@ struct SideConditionName {
 namespace pokesim::dex {
 // Pokemon stat abbreviated name
 enum class Stat : std::uint8_t {
+  NONE = 0,
   HP = 0b000001,
   ATK = 0b000010,
   DEF = 0b000100,
@@ -18208,7 +18211,7 @@ inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, Damage
       "DamageRolls does not have all rolls yet.");
     return damageRolls.val[MechanicConstants::DamageRollCount::MAX / 2].val;
   }
-  POKESIM_REQUIRE(damageRollKind & DamageRollKind::AVERAGE_DAMAGE, "DamageRolls does not contain average");
+  POKESIM_REQUIRE(damageRollKind & DamageRollKind::AVERAGE_DAMAGE, "DamageRolls does not contain average.");
 
   if (damageRollKind & DamageRollKind::MAX_DAMAGE) {
     POKESIM_REQUIRE(damageRolls.val.size() > 1U, "DamageRolls may not have average roll yet.");
@@ -19475,8 +19478,8 @@ namespace pokesim {
 struct SpeciesTypes {
   std::array<dex::Type, MechanicConstants::TYPES_PER_POKEMON> val{};
 
-  dex::Type& type1() { return val[0]; };
-  dex::Type& type2() { return val[1]; };
+  constexpr dex::Type& type1() { return val[0]; };
+  constexpr dex::Type& type2() { return val[1]; };
   constexpr const dex::Type& type1() const { return val[0]; };
   constexpr const dex::Type& type2() const { return val[1]; };
   constexpr internal::unsignedIntType<MechanicConstants::TYPES_PER_POKEMON> size() const {
@@ -19994,6 +19997,74 @@ static constexpr inline std::array<TypeEffectiveness, 4U> VALID_TYPE_EFFECTIVENE
 }  // namespace pokesim
 
 ///////////////// END OF src/Types/Enums/TypeEffectiveness.hpp /////////////////
+
+///////////////////// START OF src/Types/NaturesTable.hpp //////////////////////
+
+namespace pokesim {
+namespace internal {
+struct NaturePlusMinus {
+ private:
+  using statEnumType = std::underlying_type_t<dex::Stat>;
+
+  static constexpr statEnumType NATURED_STATS = 5U;
+  static constexpr std::array<dex::Stat, NATURED_STATS> statIndexMapping = {
+    dex::Stat::ATK,
+    dex::Stat::DEF,
+    dex::Stat::SPA,
+    dex::Stat::SPD,
+    dex::Stat::SPE,
+  };
+
+  static constexpr std::array<std::array<dex::Nature, NATURED_STATS>, NATURED_STATS> table = {{
+    {dex::Nature::HARDY, dex::Nature::LONELY, dex::Nature::ADAMANT, dex::Nature::NAUGHTY, dex::Nature::BRAVE},
+    {dex::Nature::BOLD, dex::Nature::DOCILE, dex::Nature::IMPISH, dex::Nature::LAX, dex::Nature::RELAXED},
+    {dex::Nature::MODEST, dex::Nature::MILD, dex::Nature::BASHFUL, dex::Nature::RASH, dex::Nature::QUIET},
+    {dex::Nature::CALM, dex::Nature::GENTLE, dex::Nature::CAREFUL, dex::Nature::QUIRKY, dex::Nature::SASSY},
+    {dex::Nature::TIMID, dex::Nature::HASTY, dex::Nature::JOLLY, dex::Nature::NAIVE, dex::Nature::SERIOUS},
+  }};
+
+ public:
+  dex::Stat plus = dex::Stat::NONE;
+  dex::Stat minus = dex::Stat::NONE;
+
+  constexpr NaturePlusMinus() {}
+  constexpr NaturePlusMinus(dex::Nature nature) {
+    for (statEnumType plusIndex = 0U; plusIndex < NATURED_STATS; plusIndex++) {
+      for (statEnumType minusIndex = 0U; minusIndex < NATURED_STATS; minusIndex++) {
+        if (nature != table.at(plusIndex).at(minusIndex)) {
+          continue;
+        }
+
+        dex::Stat plusStat = statIndexMapping.at(plusIndex);
+        dex::Stat minusStat = statIndexMapping.at(minusIndex);
+        if (plusIndex != minusIndex) {
+          plus = plusStat;
+          minus = minusStat;
+        }
+        return;
+      }
+    }
+  }
+  constexpr NaturePlusMinus(std::underlying_type_t<dex::Nature> nature) : NaturePlusMinus((dex::Nature)nature) {}
+};
+}  // namespace internal
+
+struct NaturesTable {
+ private:
+  using natureEnumType = std::underlying_type_t<dex::Nature>;
+
+  static constexpr std::array<internal::NaturePlusMinus, dex::TOTAL_NATURE_COUNT + 1U> list = {
+    0U,  1U,  2U,  3U,  4U,  5U,  6U,  7U,  8U,  9U,  10U, 11U, 12U,
+    13U, 14U, 15U, 16U, 17U, 18U, 19U, 20U, 21U, 22U, 23U, 24U, 25U,
+  };
+
+ public:
+  static constexpr dex::Stat plus(dex::Nature nature) { return list.at((natureEnumType)nature).plus; }
+  static constexpr dex::Stat minus(dex::Nature nature) { return list.at((natureEnumType)nature).minus; }
+};
+}  // namespace pokesim
+
+////////////////////// END OF src/Types/NaturesTable.hpp ///////////////////////
 
 //////////////// START OF src/Simulation/SimulationOptions.hpp /////////////////
 
@@ -21297,17 +21368,19 @@ struct InputSetup {
 ////////////////////// START OF src/Pokedex/TypeChart.hpp //////////////////////
 
 namespace pokesim {
+namespace internal {
 // The extra array element is for NO_TYPE
 using TypeChartBase = std::array<std::array<TypeEffectiveness, dex::TOTAL_TYPE_COUNT + 1U>, dex::TOTAL_TYPE_COUNT + 1U>;
+}  // namespace internal
 
-struct TypeChart : private TypeChartBase {
+struct TypeChart : private internal::TypeChartBase {
  private:
   using constructorType =
     std::initializer_list<std::pair<dex::Type, std::initializer_list<std::pair<dex::Type, TypeEffectiveness>>>>;
 
   using enumType = std::underlying_type_t<dex::Type>;
 
-  constexpr TypeChart(const constructorType partialChart) : TypeChartBase() {
+  constexpr TypeChart(const constructorType partialChart) : internal::TypeChartBase() {
     for (auto& ratios : *this) {
       for (auto& effectiveness : ratios) {
         effectiveness = TypeEffectiveness::NEUTRAL;
@@ -21770,43 +21843,67 @@ class Pokedex {
 namespace pokesim {
 struct MoveCreationInfo {
   dex::Move name = dex::Move::NO_MOVE;
-  types::pp pp = MechanicConstants::MovePp::MIN;
-  types::pp maxPp = MechanicConstants::MoveMaxPp::MIN;
+  std::optional<types::pp> pp = std::nullopt;
+  std::optional<types::pp> maxPp = std::nullopt;
 };
 
 struct PokemonCreationInfo {
-  std::optional<types::stateId> id = std::nullopt;
-  dex::Species species = dex::Species::NO_SPECIES;
-  dex::Item item = dex::Item::NO_ITEM;
-  dex::Ability ability = dex::Ability::NO_ABILITY;
-  dex::Gender gender = dex::Gender::NO_GENDER;
-  types::level level = MechanicConstants::PokemonLevel::MIN;
+ private:
+  struct Evs {
+    std::optional<types::ev> hp = std::nullopt;
+    std::optional<types::ev> atk = std::nullopt;
+    std::optional<types::ev> def = std::nullopt;
+    std::optional<types::ev> spa = std::nullopt;
+    std::optional<types::ev> spd = std::nullopt;
+    std::optional<types::ev> spe = std::nullopt;
+  };
 
-  dex::Nature nature = dex::Nature::NO_NATURE;
-  Evs evs;
-  Ivs ivs;
-  struct {
-    types::stat hp = MechanicConstants::PokemonHpStat::MIN;
-    types::stat atk = MechanicConstants::PokemonStat::MIN;
-    types::stat def = MechanicConstants::PokemonStat::MIN;
-    types::stat spa = MechanicConstants::PokemonStat::MIN;
-    types::stat spd = MechanicConstants::PokemonStat::MIN;
-    types::stat spe = MechanicConstants::PokemonStat::MIN;
-  } stats;
+  struct Ivs {
+    std::optional<types::iv> hp = std::nullopt;
+    std::optional<types::iv> atk = std::nullopt;
+    std::optional<types::iv> def = std::nullopt;
+    std::optional<types::iv> spa = std::nullopt;
+    std::optional<types::iv> spd = std::nullopt;
+    std::optional<types::iv> spe = std::nullopt;
+  };
 
-  std::vector<MoveCreationInfo> moves{};
+  struct Stats {
+    std::optional<types::stat> hp = std::nullopt;
+    std::optional<types::stat> atk = std::nullopt;
+    std::optional<types::stat> def = std::nullopt;
+    std::optional<types::stat> spa = std::nullopt;
+    std::optional<types::stat> spd = std::nullopt;
+    std::optional<types::stat> spe = std::nullopt;
+  };
 
-  std::optional<types::stat> currentHp = std::nullopt;
-  std::optional<SpeciesTypes> currentTypes = std::nullopt;
-  dex::Status status = dex::Status::NO_STATUS;
-
-  struct {
+  struct Boosts {
     std::optional<types::boost> atk = std::nullopt;
     std::optional<types::boost> def = std::nullopt;
     std::optional<types::boost> spa = std::nullopt;
     std::optional<types::boost> spd = std::nullopt;
     std::optional<types::boost> spe = std::nullopt;
-  } currentBoosts;
+  };
+
+ public:
+  std::optional<types::stateId> id = std::nullopt;
+  dex::Species species = dex::Species::NO_SPECIES;
+  std::optional<dex::Item> item = std::nullopt;
+  std::optional<dex::Ability> ability = std::nullopt;
+  std::optional<dex::Gender> gender = std::nullopt;
+  std::optional<types::level> level = std::nullopt;
+  std::optional<dex::Nature> nature = std::nullopt;
+
+  Evs evs{};
+  Ivs ivs{};
+  Stats stats{};
+
+  std::vector<MoveCreationInfo> moves{};
+
+  std::optional<types::stat> currentHp = std::nullopt;
+  std::optional<SpeciesTypes> currentTypes = std::nullopt;
+  std::optional<dex::Status> status = std::nullopt;
+
+  Boosts currentBoosts{};
 };
 
 struct SideCreationInfo {
@@ -21841,9 +21938,9 @@ struct BattleCreationInfo {
   bool runWithSimulateTurn = false;
   bool runWithCalculateDamage = false;
   bool runWithAnalyzeEffect = false;
-  types::battleTurn turn = MechanicConstants::TurnCount::MIN;
+  std::optional<types::battleTurn> turn = std::nullopt;
   std::optional<types::rngState> rngSeed = std::nullopt;
-  types::probability probability = MechanicConstants::Probability::MAX;
+  std::optional<types::probability> probability = std::nullopt;
 
   types::sides<SideCreationInfo> sides;
 
@@ -21854,6 +21951,89 @@ struct BattleCreationInfo {
 }  // namespace pokesim
 
 ///////////////// END OF src/Simulation/BattleCreationInfo.hpp /////////////////
+
+///////////////////// START OF src/Simulation/Formulas.hpp /////////////////////
+
+// TODO(aed3): Add argument checks to these functions. That will likely only make them true constexpr when asserts are
+// turned off.
+
+// NOLINTBEGIN(readability-magic-numbers)
+namespace pokesim {
+constexpr types::damage computeDamageRoll(types::damage damage, types::damageRollIndex damageRoll) {
+  return (types::damage)(damage * ((100U - damageRoll) / 100.0F));
+}
+
+constexpr types::damage computeAverageDamageRoll(types::damage damage) {
+  return (types::damage)(damage * (100U - (MechanicConstants::DamageRollCount::MAX - 1U) / 2.0F) / 100.0F);
+}
+
+constexpr types::damage computeMinDamageRoll(types::damage damage) {
+  return computeDamageRoll(damage, MechanicConstants::DamageRollCount::MAX - 1U);
+}
+
+constexpr types::damage computeBaseDamage(
+  types::power power, types::level level, types::stat attack, types::stat defense) {
+  return ((((2U * level / 5U + 2U) * power * attack) / defense) / 50U) + 2U;
+}
+
+constexpr types::stat computeStatFromBaseStat(
+  dex::Stat statName, types::baseStat baseStat, types::level level, dex::Nature nature, const Evs& evs,
+  const Ivs& ivs) {
+  types::ev ev = MechanicConstants::PokemonEv::MIN;
+  types::iv iv = MechanicConstants::PokemonIv::MIN;
+
+  switch (statName) {
+    case dex::Stat::HP: {
+      ev = evs.hp;
+      iv = ivs.hp;
+      break;
+    }
+    case dex::Stat::ATK: {
+      ev = evs.atk;
+      iv = ivs.atk;
+      break;
+    }
+    case dex::Stat::DEF: {
+      ev = evs.def;
+      iv = ivs.def;
+      break;
+    }
+    case dex::Stat::SPA: {
+      ev = evs.spa;
+      iv = ivs.spa;
+      break;
+    }
+    case dex::Stat::SPD: {
+      ev = evs.spd;
+      iv = ivs.spd;
+      break;
+    }
+    case dex::Stat::SPE: {
+      ev = evs.spe;
+      iv = ivs.spe;
+      break;
+    }
+    default: POKESIM_REQUIRE_FAIL("Using a stat that does not have EVs and/or IVs.");
+  }
+
+  if (statName == dex::Stat::HP) {
+    return ((2U * baseStat + iv + (ev / 4U) + 100U) * level / 100U) + 10U;
+  }
+
+  types::stat stat = ((2U * baseStat + iv + (ev / 4U)) * level / 100U) + 5U;
+
+  if (NaturesTable::plus(nature) == statName) {
+    stat = (stat * 110U) / 100U;
+  }
+  else if (NaturesTable::minus(nature) == statName) {
+    stat = (stat * 90U) / 100U;
+  }
+  return stat;
+}
+}  // namespace pokesim
+// NOLINTEND(readability-magic-numbers)
+
+////////////////////// END OF src/Simulation/Formulas.hpp //////////////////////
 
 /////////////////////// START OF src/Utilities/Tags.hpp ////////////////////////
 
@@ -22644,11 +22824,95 @@ struct SimulationSetupChecks {
     return entt::null;
   }
 
-  void checkCreatedPokemon(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
-    const auto& [id, side, battle, speciesName, abilityName, level, moveSlots, evs, ivs] =
-      registry->get<Id, Side, Battle, SpeciesName, AbilityName, Level, MoveSlots, Evs, Ivs>(pokemonEntity);
+  void checkCreatedStats(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
     const auto& [hp, atk, def, spa, spd, spe] =
       registry->get<stat::Hp, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>(pokemonEntity);
+    if (creationInfo.stats.hp.has_value()) {
+      POKESIM_REQUIRE_NM(hp.val == creationInfo.stats.hp);
+    }
+    if (creationInfo.stats.atk.has_value()) {
+      POKESIM_REQUIRE_NM(atk.val == creationInfo.stats.atk);
+    }
+    if (creationInfo.stats.def.has_value()) {
+      POKESIM_REQUIRE_NM(def.val == creationInfo.stats.def);
+    }
+    if (creationInfo.stats.spa.has_value()) {
+      POKESIM_REQUIRE_NM(spa.val == creationInfo.stats.spa);
+    }
+    if (creationInfo.stats.spd.has_value()) {
+      POKESIM_REQUIRE_NM(spd.val == creationInfo.stats.spd);
+    }
+    if (creationInfo.stats.spe.has_value()) {
+      POKESIM_REQUIRE_NM(spe.val == creationInfo.stats.spe);
+    }
+  }
+
+  void checkCreatedEvs(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
+    const Evs& evs = registry->get<Evs>(pokemonEntity);
+    if (creationInfo.evs.hp.has_value()) {
+      POKESIM_REQUIRE_NM(evs.hp == creationInfo.evs.hp);
+    }
+    if (creationInfo.evs.atk.has_value()) {
+      POKESIM_REQUIRE_NM(evs.atk == creationInfo.evs.atk);
+    }
+    if (creationInfo.evs.def.has_value()) {
+      POKESIM_REQUIRE_NM(evs.def == creationInfo.evs.def);
+    }
+    if (creationInfo.evs.spa.has_value()) {
+      POKESIM_REQUIRE_NM(evs.spa == creationInfo.evs.spa);
+    }
+    if (creationInfo.evs.spd.has_value()) {
+      POKESIM_REQUIRE_NM(evs.spd == creationInfo.evs.spd);
+    }
+    if (creationInfo.evs.spe.has_value()) {
+      POKESIM_REQUIRE_NM(evs.spe == creationInfo.evs.spe);
+    }
+  }
+
+  void checkCreatedIvs(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
+    const Ivs& ivs = registry->get<Ivs>(pokemonEntity);
+    if (creationInfo.ivs.hp.has_value()) {
+      POKESIM_REQUIRE_NM(ivs.hp == creationInfo.ivs.hp);
+    }
+    if (creationInfo.ivs.atk.has_value()) {
+      POKESIM_REQUIRE_NM(ivs.atk == creationInfo.ivs.atk);
+    }
+    if (creationInfo.ivs.def.has_value()) {
+      POKESIM_REQUIRE_NM(ivs.def == creationInfo.ivs.def);
+    }
+    if (creationInfo.ivs.spa.has_value()) {
+      POKESIM_REQUIRE_NM(ivs.spa == creationInfo.ivs.spa);
+    }
+    if (creationInfo.ivs.spd.has_value()) {
+      POKESIM_REQUIRE_NM(ivs.spd == creationInfo.ivs.spd);
+    }
+    if (creationInfo.ivs.spe.has_value()) {
+      POKESIM_REQUIRE_NM(ivs.spe == creationInfo.ivs.spe);
+    }
+  }
+
+  void checkCreatedBoosts(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
+    const auto& currentBoosts = creationInfo.currentBoosts;
+    if (currentBoosts.atk.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<AtkBoost>(pokemonEntity).val == currentBoosts.atk.value());
+    }
+    if (currentBoosts.def.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<DefBoost>(pokemonEntity).val == currentBoosts.def.value());
+    }
+    if (currentBoosts.spa.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpaBoost>(pokemonEntity).val == currentBoosts.spa.value());
+    }
+    if (currentBoosts.spd.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpdBoost>(pokemonEntity).val == currentBoosts.spd.value());
+    }
+    if (currentBoosts.spe.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpeBoost>(pokemonEntity).val == currentBoosts.spe.value());
+    }
+  }
+
+  void checkCreatedPokemon(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
+    const auto& [id, side, battle, speciesName, abilityName, level, moveSlots] =
+      registry->get<Id, Side, Battle, SpeciesName, AbilityName, Level, MoveSlots>(pokemonEntity);
 
     if (creationInfo.id.has_value()) {
       POKESIM_REQUIRE_NM(id.val == creationInfo.id.value());
@@ -22661,55 +22925,37 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(abilityName.val == creationInfo.ability);
     POKESIM_REQUIRE_NM(level.val == creationInfo.level);
 
-    if (creationInfo.item == dex::Item::NO_ITEM) {
+    if (!creationInfo.item.has_value() || creationInfo.item == dex::Item::NO_ITEM) {
       POKESIM_REQUIRE_NM(!registry->all_of<ItemName>(pokemonEntity));
     }
     else {
       POKESIM_REQUIRE_NM(registry->get<ItemName>(pokemonEntity).val == creationInfo.item);
     }
 
-    if (creationInfo.gender == dex::Gender::NO_GENDER) {
+    if (!creationInfo.gender.has_value() || creationInfo.gender == dex::Gender::NO_GENDER) {
       POKESIM_REQUIRE_NM(!registry->all_of<GenderName>(pokemonEntity));
     }
     else {
       POKESIM_REQUIRE_NM(registry->get<GenderName>(pokemonEntity).val == creationInfo.gender);
     }
 
-    if (creationInfo.status == dex::Status::NO_STATUS) {
+    if (!creationInfo.status.has_value() || creationInfo.status == dex::Status::NO_STATUS) {
       POKESIM_REQUIRE_NM(!registry->all_of<StatusName>(pokemonEntity));
     }
     else {
       POKESIM_REQUIRE_NM(registry->get<StatusName>(pokemonEntity).val == creationInfo.status);
     }
 
-    if (creationInfo.nature == dex::Nature::NO_NATURE) {
+    if (!creationInfo.nature.has_value() || creationInfo.nature == dex::Nature::NO_NATURE) {
       POKESIM_REQUIRE_NM(!registry->all_of<NatureName>(pokemonEntity));
     }
     else {
       POKESIM_REQUIRE_NM(registry->get<NatureName>(pokemonEntity).val == creationInfo.nature);
     }
 
-    POKESIM_REQUIRE_NM(hp.val == creationInfo.stats.hp);
-    POKESIM_REQUIRE_NM(atk.val == creationInfo.stats.atk);
-    POKESIM_REQUIRE_NM(def.val == creationInfo.stats.def);
-    POKESIM_REQUIRE_NM(spa.val == creationInfo.stats.spa);
-    POKESIM_REQUIRE_NM(spd.val == creationInfo.stats.spd);
-    POKESIM_REQUIRE_NM(spe.val == creationInfo.stats.spe);
-
-    POKESIM_REQUIRE_NM(evs.hp == creationInfo.evs.hp);
-    POKESIM_REQUIRE_NM(evs.atk == creationInfo.evs.atk);
-    POKESIM_REQUIRE_NM(evs.def == creationInfo.evs.def);
-    POKESIM_REQUIRE_NM(evs.spa == creationInfo.evs.spa);
-    POKESIM_REQUIRE_NM(evs.spd == creationInfo.evs.spd);
-    POKESIM_REQUIRE_NM(evs.spe == creationInfo.evs.spe);
-
-    POKESIM_REQUIRE_NM(ivs.hp == creationInfo.ivs.hp);
-    POKESIM_REQUIRE_NM(ivs.atk == creationInfo.ivs.atk);
-    POKESIM_REQUIRE_NM(ivs.def == creationInfo.ivs.def);
-    POKESIM_REQUIRE_NM(ivs.spa == creationInfo.ivs.spa);
-    POKESIM_REQUIRE_NM(ivs.spd == creationInfo.ivs.spd);
-    POKESIM_REQUIRE_NM(ivs.spe == creationInfo.ivs.spe);
-
+    checkCreatedStats(pokemonEntity, creationInfo);
+    checkCreatedEvs(pokemonEntity, creationInfo);
+    checkCreatedIvs(pokemonEntity, creationInfo);
     POKESIM_REQUIRE_NM(moveSlots.val.size() == creationInfo.moves.size());
 
     for (std::size_t i = 0U; i < creationInfo.moves.size(); i++) {
@@ -22734,7 +22980,8 @@ struct SimulationSetupChecks {
       }
     }
     else {
-      POKESIM_REQUIRE_NM(registry->get<stat::CurrentHp>(pokemonEntity).val == hp.val);
+      POKESIM_REQUIRE_NM(
+        registry->get<stat::CurrentHp>(pokemonEntity).val == registry->get<stat::Hp>(pokemonEntity).val);
       POKESIM_REQUIRE_NM(!registry->all_of<tags::Fainted>(pokemonEntity));
     }
 
@@ -22742,23 +22989,7 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(registry->get<SpeciesTypes>(pokemonEntity) == creationInfo.currentTypes);
     }
 
-    const auto& currentBoosts = creationInfo.currentBoosts;
-    if (currentBoosts.atk.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<AtkBoost>(pokemonEntity).val == currentBoosts.atk.value());
-    }
-    if (currentBoosts.def.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<DefBoost>(pokemonEntity).val == currentBoosts.def.value());
-    }
-    if (currentBoosts.spa.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<SpaBoost>(pokemonEntity).val == currentBoosts.spa.value());
-    }
-    if (currentBoosts.spd.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<SpdBoost>(pokemonEntity).val == currentBoosts.spd.value());
-    }
-    if (currentBoosts.spe.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<SpeBoost>(pokemonEntity).val == currentBoosts.spe.value());
-    }
-
+    checkCreatedBoosts(pokemonEntity, creationInfo);
     pokesim::debug::checkPokemon(pokemonEntity, *registry);
   }
 
@@ -22789,8 +23020,8 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<RngSeed>(battleEntity));
     const auto& [sides, turn, probability, rngSeed] = registry->get<Sides, Turn, Probability, RngSeed>(battleEntity);
 
-    POKESIM_REQUIRE_NM(turn.val == creationInfo.turn);
-    POKESIM_REQUIRE_NM(probability.val == creationInfo.probability);
+    POKESIM_REQUIRE_NM(turn.val == creationInfo.turn.value_or(MechanicConstants::TurnCount::MIN));
+    POKESIM_REQUIRE_NM(probability.val == creationInfo.probability.value_or(MechanicConstants::Probability::MAX));
 
     if (creationInfo.rngSeed) {
       POKESIM_REQUIRE_NM(rngSeed.val == creationInfo.rngSeed);
@@ -23216,12 +23447,6 @@ namespace pokesim {
 class Simulation;
 namespace calc_damage {
 void run(Simulation& simulation);
-
-void applyDamageRoll(types::damage& damage, types::damageRollIndex damageRoll);
-void applyAverageDamageRoll(types::damage& damage);
-void applyMinDamageRoll(types::damage& damage);
-
-void setDamageRollModifiers(Simulation& simulation);
 }  // namespace calc_damage
 }  // namespace pokesim
 

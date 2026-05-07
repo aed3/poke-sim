@@ -1,7 +1,8 @@
 #pragma once
 
+#include <Utilities/NumberToType.hpp>
+
 #include "MechanicConstants.hpp"
-#include "NumberToType.hpp"
 
 namespace pokesim::types {
 using pp = pokesim::internal::unsignedIntType<MechanicConstants::MoveMaxPp::MAX>;

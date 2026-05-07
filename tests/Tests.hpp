@@ -36,10 +36,10 @@ inline PokemonCreationInfo createPredefinedPokemon(Pokedex& pokedex, dex::Specie
       info.status = dex::Status::NO_STATUS;
       info.level = 99U;
       info.evs = {0U, 25U, 50U, 75U, 100U, 125U};
-      info.stats = {275U, 181U, 191U, 242U, 229U, 154U};
+      info.stats = {275U};
 
       auto& moveA = info.moves.emplace_back(createMove(pokedex, dex::Move::FURY_ATTACK));
-      moveA.pp -= 1U;
+      moveA.pp.value() -= 1U;
 
       info.moves.push_back(createMove(pokedex, dex::Move::KNOCK_OFF));
       break;
@@ -51,10 +51,10 @@ inline PokemonCreationInfo createPredefinedPokemon(Pokedex& pokedex, dex::Specie
       info.level = 100U;
       info.nature = dex::Nature::HARDY;
       info.ivs = {5U, 10U, 15U, 20U, 25U, 30U};
-      info.stats = {295U, 165U, 190U, 255U, 210U, 145U};
+      info.stats = {295U};
 
       auto& move = info.moves.emplace_back(createMove(pokedex, dex::Move::THUNDERBOLT));
-      move.pp -= 2U;
+      move.pp.value() -= 2U;
       break;
     }
     case dex::Species::GARDEVOIR: {
@@ -63,11 +63,11 @@ inline PokemonCreationInfo createPredefinedPokemon(Pokedex& pokedex, dex::Specie
       info.item = dex::Item::CHOICE_SCARF;
       info.status = dex::Status::BRN;
       info.level = 90U;
-      info.stats = {222U, 127U, 132U, 246U, 234U, 176U};
+      info.stats = {222U};
       info.evs = {0U, 25U, 50U, 75U, 100U, 125U};
 
       auto& move = info.moves.emplace_back(createMove(pokedex, dex::Move::MOONBLAST));
-      move.pp -= 4U;
+      move.pp.value() -= 4U;
       break;
     }
     case dex::Species::PANGORO: {
@@ -75,11 +75,11 @@ inline PokemonCreationInfo createPredefinedPokemon(Pokedex& pokedex, dex::Specie
       info.gender = dex::Gender::MALE;
       info.item = dex::Item::LIFE_ORB;
       info.level = 95U;
-      info.stats = {314U, 264U, 170U, 147U, 145U, 115U};
+      info.stats = {314U};
       info.evs = {125U, 100U, 75U, 50U, 25U, 0U};
 
       auto& move = info.moves.emplace_back(createMove(pokedex, dex::Move::KNOCK_OFF));
-      move.pp -= 3U;
+      move.pp.value() -= 3U;
       break;
     }
     case dex::Species::DRAGAPULT: {
@@ -88,11 +88,11 @@ inline PokemonCreationInfo createPredefinedPokemon(Pokedex& pokedex, dex::Specie
       info.item = dex::Item::FOCUS_SASH;
       info.level = 100U;
       info.nature = dex::Nature::HASTY;
-      info.stats = {291U, 255U, 153U, 225U, 180U, 350U};
+      info.stats = {291U};
       info.ivs = {5U, 10U, 15U, 20U, 25U, 30U};
 
       auto& move = info.moves.emplace_back(createMove(pokedex, dex::Move::WILL_O_WISP));
-      move.pp -= 2U;
+      move.pp.value() -= 2U;
       break;
     }
     case dex::Species::RIBOMBEE: {
@@ -100,11 +100,11 @@ inline PokemonCreationInfo createPredefinedPokemon(Pokedex& pokedex, dex::Specie
       info.gender = dex::Gender::MALE;
       info.item = dex::Item::BRIGHT_POWDER;
       info.level = 91U;
-      info.stats = {237U, 127U, 132U, 191U, 141U, 235U};
+      info.stats = {237U};
       info.ivs = {30U, 25U, 20U, 15U, 10U, 5U};
 
       auto& move = info.moves.emplace_back(createMove(pokedex, dex::Move::QUIVER_DANCE));
-      move.pp -= 1U;
+      move.pp.value() -= 1U;
       break;
     }
     default: {
@@ -129,6 +129,7 @@ inline Simulation createSingleBattleSimulation(Pokedex& pokedex, BattleCreationI
     {{createPredefinedPokemon(pokedex, dex::Species::AMPHAROS)}},
   };
   battleCreationInfo.turn = 1U;
+  battleCreationInfo.probability = MechanicConstants::Probability::MAX;
 
   pokedex.loadForBattleInfo({battleCreationInfo});
   return simulation;

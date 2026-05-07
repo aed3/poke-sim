@@ -69,7 +69,7 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
   // The below strategy only works because all the damage outcomes from all the branches are unique
   entt::dense_map<types::stat, std::tuple<types::moveHits, types::moveHits, types::probability>>
     hitCombinationsFromP2Hp;
-  const types::stat p2MaxHp = battleCreationInfo.sides.p2().team[0].stats.hp;
+  const types::stat p2MaxHp = battleCreationInfo.sides.p2().team[0].stats.hp.value();
 
   hitCombinationsFromP2Hp[p2MaxHp] = {(types::moveHits)0U, (types::moveHits)0U, 1.0F - passesAccuracyProbability};
 

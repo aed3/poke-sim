@@ -950,6 +950,7 @@ void check(const StatName& statName) {
     case dex::Stat::SPA:
     case dex::Stat::SPD:
     case dex::Stat::SPE: return;
+    default:             break;
   }
 
   POKESIM_REQUIRE_FAIL(std::to_string((std::underlying_type_t<dex::Stat>)statName.val) + " is not a valid Stat enum.");
@@ -1312,6 +1313,117 @@ void check(const DamageRollOptions& damageRollOptions) {
 ///////////////// START OF src/Simulation/SimulationSetup.cpp //////////////////
 
 namespace pokesim {
+namespace {
+void setPokemonAbility(
+  const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pokemonSetup, const Pokedex& pokedex) {
+  if (pokemonInfo.ability != dex::Ability::NO_ABILITY) {
+    if (pokemonInfo.ability.has_value()) {
+      pokemonSetup.setAbility(pokemonInfo.ability.value());
+    }
+    else if (pokedex.speciesHas<PrimaryAbility>(pokemonInfo.species)) {
+      pokemonSetup.setAbility(pokedex.getSpeciesData<PrimaryAbility>(pokemonInfo.species).val);
+    }
+  }
+}
+
+Evs setPokemonEvs(const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pokemonSetup) {
+  Evs evs;
+  if (pokemonInfo.evs.hp.has_value()) evs.hp = pokemonInfo.evs.hp.value();
+  if (pokemonInfo.evs.atk.has_value()) evs.atk = pokemonInfo.evs.atk.value();
+  if (pokemonInfo.evs.def.has_value()) evs.def = pokemonInfo.evs.def.value();
+  if (pokemonInfo.evs.spa.has_value()) evs.spa = pokemonInfo.evs.spa.value();
+  if (pokemonInfo.evs.spd.has_value()) evs.spd = pokemonInfo.evs.spd.value();
+  if (pokemonInfo.evs.spe.has_value()) evs.spe = pokemonInfo.evs.spe.value();
+
+  pokemonSetup.setEVs(evs);
+  return evs;
+}
+
+Ivs setPokemonIvs(const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pokemonSetup) {
+  Ivs ivs;
+  if (pokemonInfo.ivs.hp.has_value()) ivs.hp = pokemonInfo.ivs.hp.value();
+  if (pokemonInfo.ivs.atk.has_value()) ivs.atk = pokemonInfo.ivs.atk.value();
+  if (pokemonInfo.ivs.def.has_value()) ivs.def = pokemonInfo.ivs.def.value();
+  if (pokemonInfo.ivs.spa.has_value()) ivs.spa = pokemonInfo.ivs.spa.value();
+  if (pokemonInfo.ivs.spd.has_value()) ivs.spd = pokemonInfo.ivs.spd.value();
+  if (pokemonInfo.ivs.spe.has_value()) ivs.spe = pokemonInfo.ivs.spe.value();
+
+  pokemonSetup.setIVs(ivs);
+  return ivs;
+}
+
+dex::Nature setPokemonNature(const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pokemonSetup) {
+  dex::Nature nature = dex::Nature::NO_NATURE;
+  if (pokemonInfo.nature.has_value() && pokemonInfo.nature != dex::Nature::NO_NATURE) {
+    nature = pokemonInfo.nature.value();
+    pokemonSetup.setNature(nature);
+  }
+
+  return nature;
+}
+
+types::stat setPokemonStats(
+  const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pokemonSetup, const Pokedex& pokedex, types::level level,
+  dex::Nature nature, const Evs& evs, const Ivs& ivs) {
+  const BaseStats& baseStats = pokedex.getSpeciesData<BaseStats>(pokemonInfo.species);
+
+  auto getStat = [&](dex::Stat statName) {
+    types::baseStat baseStat = MechanicConstants::PokemonBaseStat::MIN;
+    std::optional<types::stat> givenStat = std::nullopt;
+
+    if (statName == dex::Stat::HP) {
+      baseStat = baseStats.hp;
+      givenStat = pokemonInfo.stats.hp;
+    }
+    else if (statName == dex::Stat::ATK) {
+      baseStat = baseStats.atk;
+      givenStat = pokemonInfo.stats.atk;
+    }
+    else if (statName == dex::Stat::DEF) {
+      baseStat = baseStats.def;
+      givenStat = pokemonInfo.stats.def;
+    }
+    else if (statName == dex::Stat::SPA) {
+      baseStat = baseStats.spa;
+      givenStat = pokemonInfo.stats.spa;
+    }
+    else if (statName == dex::Stat::SPD) {
+      baseStat = baseStats.spd;
+      givenStat = pokemonInfo.stats.spd;
+    }
+    else if (statName == dex::Stat::SPE) {
+      baseStat = baseStats.spe;
+      givenStat = pokemonInfo.stats.spe;
+    }
+    else {
+      POKESIM_REQUIRE_FAIL("Using a stat that cannot be chosen or calculated.");
+    }
+
+    return givenStat.value_or(computeStatFromBaseStat(statName, baseStat, level, nature, evs, ivs));
+  };
+
+  types::stat hp = getStat(dex::Stat::HP);
+
+  pokemonSetup.setStat<stat::Hp>(hp);
+  pokemonSetup.setStat<stat::Atk>(getStat(dex::Stat::ATK));
+  pokemonSetup.setStat<stat::Def>(getStat(dex::Stat::DEF));
+  pokemonSetup.setStat<stat::Spa>(getStat(dex::Stat::SPA));
+  pokemonSetup.setStat<stat::Spd>(getStat(dex::Stat::SPD));
+  pokemonSetup.setStat<stat::Spe>(getStat(dex::Stat::SPE));
+
+  return hp;
+}
+
+void setPokemonCurrentBoosts(const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pokemonSetup) {
+  const auto& pokemonInfoBoosts = pokemonInfo.currentBoosts;
+  if (pokemonInfoBoosts.atk.has_value()) pokemonSetup.setBoost<AtkBoost>(pokemonInfoBoosts.atk.value());
+  if (pokemonInfoBoosts.def.has_value()) pokemonSetup.setBoost<DefBoost>(pokemonInfoBoosts.def.value());
+  if (pokemonInfoBoosts.spa.has_value()) pokemonSetup.setBoost<SpaBoost>(pokemonInfoBoosts.spa.value());
+  if (pokemonInfoBoosts.spd.has_value()) pokemonSetup.setBoost<SpdBoost>(pokemonInfoBoosts.spd.value());
+  if (pokemonInfoBoosts.spe.has_value()) pokemonSetup.setBoost<SpeBoost>(pokemonInfoBoosts.spe.value());
+}
+}  // namespace
+
 types::entityVector Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList) {
   types::entityVector moveEntities{};
   moveEntities.reserve((types::entityVector::size_type)moveInfoList.size());
@@ -1319,8 +1431,8 @@ types::entityVector Simulation::createInitialMoves(const std::vector<MoveCreatio
   for (const MoveCreationInfo& moveInfo : moveInfoList) {
     MoveStateSetup moveSetup(registry);
     moveSetup.setName(moveInfo.name);
-    moveSetup.setPP(moveInfo.pp);
-    moveSetup.setMaxPP(moveInfo.maxPp);
+    moveSetup.setPP(moveInfo.pp.value_or(pokedex().getMoveData<Pp>(moveInfo.name).val));
+    moveSetup.setMaxPP(moveInfo.maxPp.value_or(pokedex().getMoveData<Pp>(moveInfo.name).val));
     moveEntities.push_back(moveSetup.entity());
   }
 
@@ -1337,40 +1449,42 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
   }
 
   pokemonSetup.setSpecies(pokemonInfo.species);
-  pokemonSetup.setLevel(pokemonInfo.level);
+  setPokemonAbility(pokemonInfo, pokemonSetup, pokedex());
+
+  types::level level = pokemonInfo.level.value_or(MechanicConstants::PokemonLevel::MAX);
+  dex::Nature nature = setPokemonNature(pokemonInfo, pokemonSetup);
+  Evs evs = setPokemonEvs(pokemonInfo, pokemonSetup);
+  Ivs ivs = setPokemonIvs(pokemonInfo, pokemonSetup);
+  types::stat hp = setPokemonStats(pokemonInfo, pokemonSetup, pokedex(), level, nature, evs, ivs);
+
+  pokemonSetup.setLevel(level);
+
   if (pokemonInfo.currentTypes.has_value()) {
     pokemonSetup.setTypes(pokemonInfo.currentTypes.value());
   }
   else {
     pokemonSetup.setTypes(pokedex().getSpeciesData<SpeciesTypes>(pokemonInfo.species));
   }
-  if (pokemonInfo.gender != dex::Gender::NO_GENDER) pokemonSetup.setGender(pokemonInfo.gender);
-  if (pokemonInfo.ability != dex::Ability::NO_ABILITY) pokemonSetup.setAbility(pokemonInfo.ability);
-  if (pokemonInfo.item != dex::Item::NO_ITEM) pokemonSetup.setItem(pokemonInfo.item);
-  if (pokemonInfo.nature != dex::Nature::NO_NATURE) pokemonSetup.setNature(pokemonInfo.nature);
-  if (pokemonInfo.status != dex::Status::NO_STATUS) pokemonSetup.setStatus(pokemonInfo.status);
 
-  pokemonSetup.setEVs(pokemonInfo.evs);
-  pokemonSetup.setIVs(pokemonInfo.ivs);
-  pokemonSetup.setStat<stat::Hp>(pokemonInfo.stats.hp);
-  pokemonSetup.setStat<stat::Atk>(pokemonInfo.stats.atk);
-  pokemonSetup.setStat<stat::Def>(pokemonInfo.stats.def);
-  pokemonSetup.setStat<stat::Spa>(pokemonInfo.stats.spa);
-  pokemonSetup.setStat<stat::Spd>(pokemonInfo.stats.spd);
-  pokemonSetup.setStat<stat::Spe>(pokemonInfo.stats.spe);
+  if (pokemonInfo.gender.has_value() && pokemonInfo.gender != dex::Gender::NO_GENDER) {
+    pokemonSetup.setGender(pokemonInfo.gender.value());
+  }
 
-  pokemonSetup.setCurrentHp(pokemonInfo.currentHp.value_or(pokemonInfo.stats.hp));
+  if (pokemonInfo.item.has_value() && pokemonInfo.item != dex::Item::NO_ITEM) {
+    pokemonSetup.setItem(pokemonInfo.item.value());
+  }
+
+  if (pokemonInfo.status.has_value() && pokemonInfo.status != dex::Status::NO_STATUS) {
+    pokemonSetup.setStatus(pokemonInfo.status.value());
+  }
+
+  pokemonSetup.setCurrentHp(pokemonInfo.currentHp.value_or(hp));
 
   if (pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN) {
     pokemonSetup.setProperty<tags::Fainted>();
   }
 
-  const auto& currentBoosts = pokemonInfo.currentBoosts;
-  if (currentBoosts.atk.has_value()) pokemonSetup.setBoost<AtkBoost>(currentBoosts.atk.value());
-  if (currentBoosts.def.has_value()) pokemonSetup.setBoost<DefBoost>(currentBoosts.def.value());
-  if (currentBoosts.spa.has_value()) pokemonSetup.setBoost<SpaBoost>(currentBoosts.spa.value());
-  if (currentBoosts.spd.has_value()) pokemonSetup.setBoost<SpdBoost>(currentBoosts.spd.value());
-  if (currentBoosts.spe.has_value()) pokemonSetup.setBoost<SpeBoost>(currentBoosts.spe.value());
+  setPokemonCurrentBoosts(pokemonInfo, pokemonSetup);
 
   pokemonSetup.setProperty<tags::AtkStatUpdateRequired>();
   pokemonSetup.setProperty<tags::DefStatUpdateRequired>();
@@ -1432,9 +1546,9 @@ void Simulation::createInitialSide(
 types::sides<SideStateSetup> Simulation::createInitialBattle(
   BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo) {
   battleStateSetup.setAutoID();
-  battleStateSetup.setTurn(battleInfo.turn);
+  battleStateSetup.setTurn(battleInfo.turn.value_or(MechanicConstants::TurnCount::MIN));
   battleStateSetup.setRNGSeed(battleInfo.rngSeed);
-  battleStateSetup.setProbability(battleInfo.probability);
+  battleStateSetup.setProbability(battleInfo.probability.value_or(MechanicConstants::Probability::MAX));
 
   if (battleInfo.runWithSimulateTurn) {
     battleStateSetup.setProperty<tags::SimulateTurn>();
@@ -4484,7 +4598,7 @@ void calculateAllDamageRolls(
   damageRolls.val.reserve(MechanicConstants::DamageRollCount::MAX);
   for (types::damageRollIndex i = 0U; i < MechanicConstants::DamageRollCount::MAX; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
-    applyDamageRoll(damageRoll.val, i);
+    damageRoll.val = computeDamageRoll(damageRoll.val, i);
     modifyDamage(damageRoll, modifier, pokedex);
   }
 }
@@ -4492,13 +4606,13 @@ void calculateAllDamageRolls(
 void applyAverageDamageRollModifier(
   DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
   modifyDamage(damage, modifier, pokedex);
-  applyAverageDamageRoll(damage.val);
+  damage.val = computeAverageDamageRoll(damage.val);
   damageRolls.val.emplace_back(damage);
 }
 
 void applyMinDamageRollModifier(
   DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
-  applyMinDamageRoll(damage.val);
+  damage.val = computeMinDamageRoll(damage.val);
   modifyDamage(damage, modifier, pokedex);
   damageRolls.val.emplace_back(damage);
 }
@@ -4574,8 +4688,7 @@ void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, Defender defend
 
 void calculateBaseDamage(
   types::handle moveHandle, Power power, AttackingLevel level, AttackingStat attack, DefendingStat defense) {
-  // NOLINTNEXTLINE(readability-magic-numbers)
-  types::damage damage = ((((2U * level.val / 5U + 2U) * power.val * attack.val) / defense.val) / 50U) + 2U;
+  types::damage damage = computeBaseDamage(power.val, level.val, attack.val, defense.val);
   moveHandle.emplace_or_replace<Damage>(damage);
 }
 
@@ -4828,6 +4941,13 @@ void setDamageFormulaVariables(Simulation& simulation) {
   // setUnboostedStat<stat::EffectiveDef, tags::IgnoresAttackingBoost, tags::UsesDefAsOffense>(simulation);
 }
 
+void setDamageRollModifiers(Simulation& simulation) {
+  simulation.viewForSelectedMoves<checkForAndApplyStab>();
+  simulation.viewForSelectedMoves<checkForAndApplyTypeEffectiveness>(simulation.pokedex());
+  dex::Burn::onSetDamageRollModifiers(simulation);
+  runModifyDamageEvent(simulation);
+}
+
 void calcDamage(Simulation& simulation) {
   pokesim::internal::SelectForCurrentActionMoveView<> selectedMoves{simulation, entt::exclude<move::tags::Status>};
   if (selectedMoves.hasNoneSelected()) {
@@ -4860,25 +4980,6 @@ void calcDamage(Simulation& simulation) {
   clearRunVariables(simulation);
 }
 }  // namespace
-
-void applyDamageRoll(types::damage& damage, types::damageRollIndex damageRoll) {
-  damage = (types::damage)(damage * ((100U - damageRoll) / 100.0F));
-}
-
-void applyAverageDamageRoll(types::damage& damage) {
-  damage = (types::damage)(damage * (100U - (MechanicConstants::DamageRollCount::MAX - 1U) / 2.0F) / 100.0F);
-}
-
-void applyMinDamageRoll(types::damage& damage) {
-  applyDamageRoll(damage, MechanicConstants::DamageRollCount::MAX - 1U);
-}
-
-void setDamageRollModifiers(Simulation& simulation) {
-  simulation.viewForSelectedMoves<checkForAndApplyStab>();
-  simulation.viewForSelectedMoves<checkForAndApplyTypeEffectiveness>(simulation.pokedex());
-  dex::Burn::onSetDamageRollModifiers(simulation);
-  runModifyDamageEvent(simulation);
-}
 
 void run(Simulation& simulation) {
   debug::Checks debugChecks(simulation);

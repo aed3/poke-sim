@@ -7,6 +7,7 @@
 #include "DebugChecks.hpp"
 #include "FixedMemoryVector.hpp"
 #include "MaxSizedVector.hpp"
+#include "NumberToType.hpp"
 #include "RNG.hpp"
 #include "RegistryLoop.hpp"
 #include "SelectForView.hpp"

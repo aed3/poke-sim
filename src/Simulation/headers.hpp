@@ -3,6 +3,7 @@
 #pragma once
 
 #include "BattleCreationInfo.hpp"
+#include "Formulas.hpp"
 #include "MoveHitSteps.hpp"
 #include "RegistryContainer.hpp"
 #include "RunEvent.hpp"

@@ -790,6 +790,7 @@ void check(const StatName& statName) {
     case dex::Stat::SPA:
     case dex::Stat::SPD:
     case dex::Stat::SPE: return;
+    default:             break;
   }
 
   POKESIM_REQUIRE_FAIL(std::to_string((std::underlying_type_t<dex::Stat>)statName.val) + " is not a valid Stat enum.");

@@ -36,7 +36,6 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
 
   p2Info.item = dex::Item::CHOICE_SPECS;
   p2Info.nature = dex::Nature::MODEST;
-  p2Info.stats = {295U, 148U, 190U, 280U, 210U, 145U};
 
   bool getKoUses = GENERATE(false, true);
   bool reconsiderActiveEffects = GENERATE(false, true);

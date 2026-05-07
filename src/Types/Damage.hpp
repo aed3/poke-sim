@@ -1,7 +1,8 @@
 #pragma once
 
+#include <Utilities/NumberToType.hpp>
+
 #include "MechanicConstants.hpp"
-#include "NumberToType.hpp"
 
 namespace pokesim::types {
 using damage = pokesim::internal::unsignedIntType<MechanicConstants::Damage::MAX>;

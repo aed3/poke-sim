@@ -8,7 +8,6 @@
 #include <Types/Stats.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
-#include <vector>
 
 namespace pokesim::analyze_effect {
 struct InputSetup {

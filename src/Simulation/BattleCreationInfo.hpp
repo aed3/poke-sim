@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Components/Decisions.hpp>
-#include <Components/EVsIVs.hpp>
 #include <Components/SpeciesTypes.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Types/Effect.hpp>
@@ -14,48 +13,72 @@
 #include <Types/MechanicConstants.hpp>
 #include <Types/Move.hpp>
 #include <Types/State.hpp>
-#include <vector>
+#include <Types/Stats.hpp>
 
 namespace pokesim {
 struct MoveCreationInfo {
   dex::Move name = dex::Move::NO_MOVE;
-  types::pp pp = MechanicConstants::MovePp::MIN;
-  types::pp maxPp = MechanicConstants::MoveMaxPp::MIN;
+  std::optional<types::pp> pp = std::nullopt;
+  std::optional<types::pp> maxPp = std::nullopt;
 };
 
 struct PokemonCreationInfo {
-  std::optional<types::stateId> id = std::nullopt;
-  dex::Species species = dex::Species::NO_SPECIES;
-  dex::Item item = dex::Item::NO_ITEM;
-  dex::Ability ability = dex::Ability::NO_ABILITY;
-  dex::Gender gender = dex::Gender::NO_GENDER;
-  types::level level = MechanicConstants::PokemonLevel::MIN;
+ private:
+  struct Evs {
+    std::optional<types::ev> hp = std::nullopt;
+    std::optional<types::ev> atk = std::nullopt;
+    std::optional<types::ev> def = std::nullopt;
+    std::optional<types::ev> spa = std::nullopt;
+    std::optional<types::ev> spd = std::nullopt;
+    std::optional<types::ev> spe = std::nullopt;
+  };
 
-  dex::Nature nature = dex::Nature::NO_NATURE;
-  Evs evs;
-  Ivs ivs;
-  struct {
-    types::stat hp = MechanicConstants::PokemonHpStat::MIN;
-    types::stat atk = MechanicConstants::PokemonStat::MIN;
-    types::stat def = MechanicConstants::PokemonStat::MIN;
-    types::stat spa = MechanicConstants::PokemonStat::MIN;
-    types::stat spd = MechanicConstants::PokemonStat::MIN;
-    types::stat spe = MechanicConstants::PokemonStat::MIN;
-  } stats;
+  struct Ivs {
+    std::optional<types::iv> hp = std::nullopt;
+    std::optional<types::iv> atk = std::nullopt;
+    std::optional<types::iv> def = std::nullopt;
+    std::optional<types::iv> spa = std::nullopt;
+    std::optional<types::iv> spd = std::nullopt;
+    std::optional<types::iv> spe = std::nullopt;
+  };
 
-  std::vector<MoveCreationInfo> moves{};
+  struct Stats {
+    std::optional<types::stat> hp = std::nullopt;
+    std::optional<types::stat> atk = std::nullopt;
+    std::optional<types::stat> def = std::nullopt;
+    std::optional<types::stat> spa = std::nullopt;
+    std::optional<types::stat> spd = std::nullopt;
+    std::optional<types::stat> spe = std::nullopt;
+  };
 
-  std::optional<types::stat> currentHp = std::nullopt;
-  std::optional<SpeciesTypes> currentTypes = std::nullopt;
-  dex::Status status = dex::Status::NO_STATUS;
-
-  struct {
+  struct Boosts {
     std::optional<types::boost> atk = std::nullopt;
     std::optional<types::boost> def = std::nullopt;
     std::optional<types::boost> spa = std::nullopt;
     std::optional<types::boost> spd = std::nullopt;
     std::optional<types::boost> spe = std::nullopt;
-  } currentBoosts;
+  };
+
+ public:
+  std::optional<types::stateId> id = std::nullopt;
+  dex::Species species = dex::Species::NO_SPECIES;
+  std::optional<dex::Item> item = std::nullopt;
+  std::optional<dex::Ability> ability = std::nullopt;
+  std::optional<dex::Gender> gender = std::nullopt;
+  std::optional<types::level> level = std::nullopt;
+  std::optional<dex::Nature> nature = std::nullopt;
+
+  Evs evs{};
+  Ivs ivs{};
+  Stats stats{};
+
+  std::vector<MoveCreationInfo> moves{};
+
+  std::optional<types::stat> currentHp = std::nullopt;
+  std::optional<SpeciesTypes> currentTypes = std::nullopt;
+  std::optional<dex::Status> status = std::nullopt;
+
+  Boosts currentBoosts{};
 };
 
 struct SideCreationInfo {
@@ -90,9 +113,9 @@ struct BattleCreationInfo {
   bool runWithSimulateTurn = false;
   bool runWithCalculateDamage = false;
   bool runWithAnalyzeEffect = false;
-  types::battleTurn turn = MechanicConstants::TurnCount::MIN;
+  std::optional<types::battleTurn> turn = std::nullopt;
   std::optional<types::rngState> rngSeed = std::nullopt;
-  types::probability probability = MechanicConstants::Probability::MAX;
+  std::optional<types::probability> probability = std::nullopt;
 
   types::sides<SideCreationInfo> sides;
 

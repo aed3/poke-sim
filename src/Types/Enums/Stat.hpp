@@ -5,6 +5,7 @@
 namespace pokesim::dex {
 // Pokemon stat abbreviated name
 enum class Stat : std::uint8_t {
+  NONE = 0,
   HP = 0b000001,
   ATK = 0b000010,
   DEF = 0b000100,

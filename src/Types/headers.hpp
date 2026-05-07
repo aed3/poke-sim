@@ -33,7 +33,7 @@
 #include "Event.hpp"
 #include "MechanicConstants.hpp"
 #include "Move.hpp"
-#include "NumberToType.hpp"
+#include "NaturesTable.hpp"
 #include "Random.hpp"
 #include "Registry.hpp"
 #include "State.hpp"

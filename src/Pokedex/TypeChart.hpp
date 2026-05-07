@@ -4,22 +4,23 @@
 #include <Types/Enums/Type.hpp>
 #include <Types/Enums/TypeEffectiveness.hpp>
 #include <array>
-#include <cstdint>
 #include <initializer_list>
 #include <type_traits>
 
 namespace pokesim {
+namespace internal {
 // The extra array element is for NO_TYPE
 using TypeChartBase = std::array<std::array<TypeEffectiveness, dex::TOTAL_TYPE_COUNT + 1U>, dex::TOTAL_TYPE_COUNT + 1U>;
+}  // namespace internal
 
-struct TypeChart : private TypeChartBase {
+struct TypeChart : private internal::TypeChartBase {
  private:
   using constructorType =
     std::initializer_list<std::pair<dex::Type, std::initializer_list<std::pair<dex::Type, TypeEffectiveness>>>>;
 
   using enumType = std::underlying_type_t<dex::Type>;
 
-  constexpr TypeChart(const constructorType partialChart) : TypeChartBase() {
+  constexpr TypeChart(const constructorType partialChart) : internal::TypeChartBase() {
     for (auto& ratios : *this) {
       for (auto& effectiveness : ratios) {
         effectiveness = TypeEffectiveness::NEUTRAL;

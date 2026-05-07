@@ -30,6 +30,7 @@
 #include <Config/Require.hpp>
 #include <Pokedex/Effects/Burn.hpp>
 #include <SimulateTurn/CalcDamageSpecifics.hpp>
+#include <Simulation/Formulas.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Simulation/SimulationOptions.hpp>
@@ -46,7 +47,6 @@
 #include <type_traits>
 
 #include "CalcDamageDebugChecks.hpp"
-#include "Helpers.hpp"
 
 namespace pokesim::calc_damage {
 namespace {
@@ -139,7 +139,7 @@ void calculateAllDamageRolls(
   damageRolls.val.reserve(MechanicConstants::DamageRollCount::MAX);
   for (types::damageRollIndex i = 0U; i < MechanicConstants::DamageRollCount::MAX; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
-    applyDamageRoll(damageRoll.val, i);
+    damageRoll.val = computeDamageRoll(damageRoll.val, i);
     modifyDamage(damageRoll, modifier, pokedex);
   }
 }
@@ -147,13 +147,13 @@ void calculateAllDamageRolls(
 void applyAverageDamageRollModifier(
   DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
   modifyDamage(damage, modifier, pokedex);
-  applyAverageDamageRoll(damage.val);
+  damage.val = computeAverageDamageRoll(damage.val);
   damageRolls.val.emplace_back(damage);
 }
 
 void applyMinDamageRollModifier(
   DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
-  applyMinDamageRoll(damage.val);
+  damage.val = computeMinDamageRoll(damage.val);
   modifyDamage(damage, modifier, pokedex);
   damageRolls.val.emplace_back(damage);
 }
@@ -229,8 +229,7 @@ void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, Defender defend
 
 void calculateBaseDamage(
   types::handle moveHandle, Power power, AttackingLevel level, AttackingStat attack, DefendingStat defense) {
-  // NOLINTNEXTLINE(readability-magic-numbers)
-  types::damage damage = ((((2U * level.val / 5U + 2U) * power.val * attack.val) / defense.val) / 50U) + 2U;
+  types::damage damage = computeBaseDamage(power.val, level.val, attack.val, defense.val);
   moveHandle.emplace_or_replace<Damage>(damage);
 }
 
@@ -483,6 +482,13 @@ void setDamageFormulaVariables(Simulation& simulation) {
   // setUnboostedStat<stat::EffectiveDef, tags::IgnoresAttackingBoost, tags::UsesDefAsOffense>(simulation);
 }
 
+void setDamageRollModifiers(Simulation& simulation) {
+  simulation.viewForSelectedMoves<checkForAndApplyStab>();
+  simulation.viewForSelectedMoves<checkForAndApplyTypeEffectiveness>(simulation.pokedex());
+  dex::Burn::onSetDamageRollModifiers(simulation);
+  runModifyDamageEvent(simulation);
+}
+
 void calcDamage(Simulation& simulation) {
   pokesim::internal::SelectForCurrentActionMoveView<> selectedMoves{simulation, entt::exclude<move::tags::Status>};
   if (selectedMoves.hasNoneSelected()) {
@@ -515,25 +521,6 @@ void calcDamage(Simulation& simulation) {
   clearRunVariables(simulation);
 }
 }  // namespace
-
-void applyDamageRoll(types::damage& damage, types::damageRollIndex damageRoll) {
-  damage = (types::damage)(damage * ((100U - damageRoll) / 100.0F));
-}
-
-void applyAverageDamageRoll(types::damage& damage) {
-  damage = (types::damage)(damage * (100U - (MechanicConstants::DamageRollCount::MAX - 1U) / 2.0F) / 100.0F);
-}
-
-void applyMinDamageRoll(types::damage& damage) {
-  applyDamageRoll(damage, MechanicConstants::DamageRollCount::MAX - 1U);
-}
-
-void setDamageRollModifiers(Simulation& simulation) {
-  simulation.viewForSelectedMoves<checkForAndApplyStab>();
-  simulation.viewForSelectedMoves<checkForAndApplyTypeEffectiveness>(simulation.pokedex());
-  dex::Burn::onSetDamageRollModifiers(simulation);
-  runModifyDamageEvent(simulation);
-}
 
 void run(Simulation& simulation) {
   debug::Checks debugChecks(simulation);

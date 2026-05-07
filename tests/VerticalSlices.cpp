@@ -428,7 +428,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
     160U,
     {260U, 258U, 254U, 252U, 248U, 246U, 242U, 240U, 240U, 236U, 234U, 230U, 228U, 224U, 222U, 218U},  // 15
     240U,
-    p1Info.stats.hp,
+    p1Info.stats.hp.value(),
     damageRollOptions.p1,
     options);
 
@@ -438,7 +438,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
     48U,
     {78U, 77U, 76U, 75U, 74U, 74U, 73U, 72U, 71U, 70U, 70U, 69U, 68U, 67U, 67U, 66U},  // 13
     72U,
-    p2Info.stats.hp,
+    p2Info.stats.hp.value(),
     damageRollOptions.p2,
     options);
 
@@ -741,32 +741,32 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
 
   DamageValueInfo p1BHalfDamageInfo(
     Slot::P1B,
-    p1BInfo.item,
+    p1BInfo.item.value(),
     {262U, 259U, 257U, 253U, 251U, 250U, 246U, 243U, 242U, 238U, 235U, 234U, 230U, 227U, 226U, 222U},
     242U,
     {394U, 387U, 383U, 380U, 376U, 372U, 368U, 364U, 360U, 356U, 352U, 348U, 344U, 341U, 337U, 333U},
     364U,
-    p1BInfo.stats.hp,
+    p1BInfo.stats.hp.value(),
     damageRollOptions.p1,
     options);
   DamageValueInfo p1BFullDamageInfo(
     Slot::P1B,
-    p1BInfo.item,
+    p1BInfo.item.value(),
     {525U, 517U, 515U, 507U, 502U, 499U, 491U, 486U, 484U, 476U, 471U, 468U, 460U, 455U, 452U, 445U},
     485U,
     {788U, 775U, 767U, 759U, 751U, 743U, 736U, 728U, 720U, 712U, 704U, 697U, 689U, 681U, 673U, 665U},
     728U,
-    p1BInfo.stats.hp,
+    p1BInfo.stats.hp.value(),
     damageRollOptions.p1,
     options);
   DamageValueInfo p2BDamageInfo(
     Slot::P2B,
-    p2BInfo.item,
+    p2BInfo.item.value(),
     {190U, 187U, 186U, 184U, 181U, 180U, 178U, 177U, 174U, 172U, 171U, 169U, 166U, 165U, 163U, 160U},
     175U,
     {285U, 282U, 279U, 276U, 273U, 270U, 267U, 264U, 261U, 258U, 256U, 253U, 250U, 247U, 244U, 241U},
     263U,
-    p2BInfo.stats.hp,
+    p2BInfo.stats.hp.value(),
     damageRollOptions.p2,
     options);
 
@@ -866,7 +866,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     types::entity parentBattle = checks.parentBattle(battle);
     REQUIRE(rootBattle.val == parentBattle);
 
-    REQUIRE(turn.val == battleCreationInfo.turn + 1U);
+    REQUIRE(turn.val == battleCreationInfo.turn.value() + 1U);
     const auto& initialRngSeed = checks.initialRngSeed(battle);
     if (options.makeBranchesOnRandomEvents || totalPossibilities == 1U) {
       REQUIRE(rngSeed.val == initialRngSeed.val);
@@ -875,7 +875,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
       REQUIRE_FALSE(rngSeed.val == initialRngSeed.val);
     }
 
-    types::probability idealProbability = battleCreationInfo.probability;
+    types::probability idealProbability = battleCreationInfo.probability.value();
     if (totalPossibilities == 1U) {
       REQUIRE_THAT(probability.val, Catch::Matchers::WithinRel(idealProbability));
     }
@@ -921,8 +921,8 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     REQUIRE(p2ALastUsedMove.val == p2AMove);
 
     // P1A (Gardevoir) Specific Checks
-    types::stat p1ABurnHpDecrease = p1AInfo.stats.hp / dex::Burn::onResidualHpDecreaseDivisor(TestMechanic);
-    REQUIRE(p1AHp.val == p1AInfo.stats.hp - p1ABurnHpDecrease);
+    types::stat p1ABurnHpDecrease = p1AInfo.stats.hp.value() / dex::Burn::onResidualHpDecreaseDivisor(TestMechanic);
+    REQUIRE(p1AHp.val == p1AInfo.stats.hp.value() - p1ABurnHpDecrease);
     REQUIRE(p1AChoiceLock.val == p1AMove);
 
     // P1B (Dragapult) Specific Checks
@@ -938,11 +938,12 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     foundP1BHp.insert(p1BHp.val);
 
     // P2A (Pangoro) Specific Checks
-    types::stat p2ALifeOrbHpDecrease = p2AInfo.stats.hp / dex::LifeOrb::onAfterMoveUsedHpDecreaseDivisor(TestMechanic);
-    types::stat p2ABurnHpDecrease = p2AInfo.stats.hp / dex::Burn::onResidualHpDecreaseDivisor(TestMechanic);
+    types::stat p2ALifeOrbHpDecrease =
+      p2AInfo.stats.hp.value() / dex::LifeOrb::onAfterMoveUsedHpDecreaseDivisor(TestMechanic);
+    types::stat p2ABurnHpDecrease = p2AInfo.stats.hp.value() / dex::Burn::onResidualHpDecreaseDivisor(TestMechanic);
     if (p2ABurned) {
       REQUIRE(registry.get<StatusName>(p2APokemon).val == dex::Status::BRN);
-      REQUIRE(p2AHp.val == p2AInfo.stats.hp - p2ALifeOrbHpDecrease - p2ABurnHpDecrease);
+      REQUIRE(p2AHp.val == p2AInfo.stats.hp.value() - p2ALifeOrbHpDecrease - p2ABurnHpDecrease);
 
       if (willOWispMightMiss) {
         idealProbability *= willOWispHitChance * CHANCE_TO_PROBABILITY;
@@ -951,7 +952,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     else {
       REQUIRE(willOWispMightMiss);
       REQUIRE_FALSE(registry.all_of<StatusName>(p2APokemon));
-      REQUIRE(p2AHp.val == p2AInfo.stats.hp - p2ALifeOrbHpDecrease);
+      REQUIRE(p2AHp.val == p2AInfo.stats.hp.value() - p2ALifeOrbHpDecrease);
 
       idealProbability *= (MAX_PERCENT_CHANCE - willOWispHitChance) * CHANCE_TO_PROBABILITY;
     }
@@ -1004,7 +1005,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
         REQUIRE(p2BSpaBoosted);
       }
       if (!p2BDamageInfo.moveMightMiss()) {
-        REQUIRE_FALSE(p2BHp.val == p2BInfo.stats.hp);
+        REQUIRE_FALSE(p2BHp.val == p2BInfo.stats.hp.value());
       }
     }
     idealProbability *= p2BDamageInfo.getProbability(p2BHp.val, p2BSpaBoosted);
@@ -1036,7 +1037,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     }
     REQUIRE(foundP2BHp.size() == expectedP2BHp.size());
 
-    REQUIRE_THAT(sumOfProbability, Catch::Matchers::WithinRel(battleCreationInfo.probability));
+    REQUIRE_THAT(sumOfProbability, Catch::Matchers::WithinRel(battleCreationInfo.probability.value()));
     for (const auto& uncertainProbabilities : foundUncertainProbabilities) {
       REQUIRE(uncertainProbabilities.second.size() == 2U);
     }

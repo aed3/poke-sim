@@ -23,7 +23,6 @@ struct VerticalSlice {
     p1Info.gender = dex::Gender::MALE;
     p1Info.level = 99U;
     p1Info.evs = {0U, 25U, 50U, 75U, 100U, 125U};
-    p1Info.stats = {275U, 181U, 191U, 242U, 229U, 154U};
     p1Info.moves = {{dex::Move::FURY_ATTACK}, {dex::Move::KNOCK_OFF}};
 
     auto& p2Info = battleCreationInfo.sides.p2().team.emplace_back();
@@ -33,7 +32,6 @@ struct VerticalSlice {
     p2Info.level = 100U;
     p2Info.nature = dex::Nature::HARDY;
     p2Info.ivs = {5U, 10U, 15U, 20U, 25U, 30U};
-    p2Info.stats = {295U, 165U, 190U, 255U, 210U, 145U};
     p2Info.moves = {{dex::Move::THUNDERBOLT}};
 
     pokedex.loadForBattleInfo({battleCreationInfo});
@@ -54,7 +52,6 @@ struct VerticalSlice {
     p1AInfo.item = dex::Item::CHOICE_SCARF;
     p1AInfo.status = dex::Status::BRN;
     p1AInfo.level = 90U;
-    p1AInfo.stats = {222U, 127U, 132U, 246U, 234U, 176U};
     p1AInfo.evs = {0U, 25U, 50U, 75U, 100U, 125U};
     p1AInfo.moves = {{dex::Move::MOONBLAST}};
 
@@ -64,7 +61,6 @@ struct VerticalSlice {
     p2AInfo.gender = dex::Gender::MALE;
     p2AInfo.item = dex::Item::LIFE_ORB;
     p2AInfo.level = 95U;
-    p2AInfo.stats = {314U, 264U, 170U, 147U, 145U, 115U};
     p2AInfo.evs = {125U, 100U, 75U, 50U, 25U, 0U};
     p2AInfo.moves = {{dex::Move::KNOCK_OFF}};
 
@@ -75,7 +71,6 @@ struct VerticalSlice {
     p1BInfo.item = dex::Item::FOCUS_SASH;
     p1BInfo.level = 100U;
     p1BInfo.nature = dex::Nature::HASTY;
-    p1BInfo.stats = {291U, 255U, 153U, 225U, 180U, 350U};
     p1BInfo.ivs = {5U, 10U, 15U, 20U, 25U, 30U};
     p1BInfo.moves = {{dex::Move::WILL_O_WISP}};
 
@@ -85,7 +80,6 @@ struct VerticalSlice {
     p2BInfo.gender = dex::Gender::MALE;
     p2BInfo.item = dex::Item::BRIGHT_POWDER;
     p2BInfo.level = 91U;
-    p2BInfo.stats = {237U, 127U, 132U, 191U, 141U, 235U};
     p2BInfo.ivs = {30U, 25U, 20U, 15U, 10U, 5U};
     p2BInfo.moves = {{dex::Move::QUIVER_DANCE}};
 
@@ -164,6 +158,7 @@ struct VerticalSlice {
 
   struct AssignAnalyzeEffectSingleBattleInputs : BenchmarkInputHolder {
     inline static const std::vector<std::string> TAGS = {"AnalyzeEffect", "VerticalSlice1"};
+    static constexpr types::entityIndex MAX_INPUTS = 1U << 14U;
     static void run(types::rngState&, types::entityIndex inputCount, Simulation& simulation, Pokedex& pokedex) {
       static BattleCreationInfo battleCreationInfo = createSingleBattleTeam(pokedex);
       pokedex.loadForBattleInfo({battleCreationInfo});

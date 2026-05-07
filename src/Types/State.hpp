@@ -1,13 +1,13 @@
 #pragma once
 
 #include <Utilities/FixedMemoryVector.hpp>
+#include <Utilities/NumberToType.hpp>
 #include <array>
 #include <optional>
 #include <type_traits>
 
 #include "Entity.hpp"
 #include "MechanicConstants.hpp"
-#include "NumberToType.hpp"
 
 namespace pokesim {
 class Simulation;

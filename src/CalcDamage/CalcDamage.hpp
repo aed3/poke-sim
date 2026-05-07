@@ -9,11 +9,5 @@ namespace pokesim {
 class Simulation;
 namespace calc_damage {
 void run(Simulation& simulation);
-
-void applyDamageRoll(types::damage& damage, types::damageRollIndex damageRoll);
-void applyAverageDamageRoll(types::damage& damage);
-void applyMinDamageRoll(types::damage& damage);
-
-void setDamageRollModifiers(Simulation& simulation);
 }  // namespace calc_damage
 }  // namespace pokesim

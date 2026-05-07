@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Config/Require.hpp>
-#include <Types/NumberToType.hpp>
+#include <Utilities/NumberToType.hpp>
 #include <cstdint>
 #include <entt/core/fwd.hpp>
 #include <initializer_list>

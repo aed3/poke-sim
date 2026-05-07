@@ -2,7 +2,7 @@
 
 #include <Types/Enums/Type.hpp>
 #include <Types/MechanicConstants.hpp>
-#include <Types/NumberToType.hpp>
+#include <Utilities/NumberToType.hpp>
 #include <array>
 
 namespace pokesim {
@@ -10,8 +10,8 @@ namespace pokesim {
 struct SpeciesTypes {
   std::array<dex::Type, MechanicConstants::TYPES_PER_POKEMON> val{};
 
-  dex::Type& type1() { return val[0]; };
-  dex::Type& type2() { return val[1]; };
+  constexpr dex::Type& type1() { return val[0]; };
+  constexpr dex::Type& type2() { return val[1]; };
   constexpr const dex::Type& type1() const { return val[0]; };
   constexpr const dex::Type& type2() const { return val[1]; };
   constexpr internal::unsignedIntType<MechanicConstants::TYPES_PER_POKEMON> size() const {

@@ -123,11 +123,95 @@ struct SimulationSetupChecks {
     return entt::null;
   }
 
-  void checkCreatedPokemon(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
-    const auto& [id, side, battle, speciesName, abilityName, level, moveSlots, evs, ivs] =
-      registry->get<Id, Side, Battle, SpeciesName, AbilityName, Level, MoveSlots, Evs, Ivs>(pokemonEntity);
+  void checkCreatedStats(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
     const auto& [hp, atk, def, spa, spd, spe] =
       registry->get<stat::Hp, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>(pokemonEntity);
+    if (creationInfo.stats.hp.has_value()) {
+      POKESIM_REQUIRE_NM(hp.val == creationInfo.stats.hp);
+    }
+    if (creationInfo.stats.atk.has_value()) {
+      POKESIM_REQUIRE_NM(atk.val == creationInfo.stats.atk);
+    }
+    if (creationInfo.stats.def.has_value()) {
+      POKESIM_REQUIRE_NM(def.val == creationInfo.stats.def);
+    }
+    if (creationInfo.stats.spa.has_value()) {
+      POKESIM_REQUIRE_NM(spa.val == creationInfo.stats.spa);
+    }
+    if (creationInfo.stats.spd.has_value()) {
+      POKESIM_REQUIRE_NM(spd.val == creationInfo.stats.spd);
+    }
+    if (creationInfo.stats.spe.has_value()) {
+      POKESIM_REQUIRE_NM(spe.val == creationInfo.stats.spe);
+    }
+  }
+
+  void checkCreatedEvs(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
+    const Evs& evs = registry->get<Evs>(pokemonEntity);
+    if (creationInfo.evs.hp.has_value()) {
+      POKESIM_REQUIRE_NM(evs.hp == creationInfo.evs.hp);
+    }
+    if (creationInfo.evs.atk.has_value()) {
+      POKESIM_REQUIRE_NM(evs.atk == creationInfo.evs.atk);
+    }
+    if (creationInfo.evs.def.has_value()) {
+      POKESIM_REQUIRE_NM(evs.def == creationInfo.evs.def);
+    }
+    if (creationInfo.evs.spa.has_value()) {
+      POKESIM_REQUIRE_NM(evs.spa == creationInfo.evs.spa);
+    }
+    if (creationInfo.evs.spd.has_value()) {
+      POKESIM_REQUIRE_NM(evs.spd == creationInfo.evs.spd);
+    }
+    if (creationInfo.evs.spe.has_value()) {
+      POKESIM_REQUIRE_NM(evs.spe == creationInfo.evs.spe);
+    }
+  }
+
+  void checkCreatedIvs(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
+    const Ivs& ivs = registry->get<Ivs>(pokemonEntity);
+    if (creationInfo.ivs.hp.has_value()) {
+      POKESIM_REQUIRE_NM(ivs.hp == creationInfo.ivs.hp);
+    }
+    if (creationInfo.ivs.atk.has_value()) {
+      POKESIM_REQUIRE_NM(ivs.atk == creationInfo.ivs.atk);
+    }
+    if (creationInfo.ivs.def.has_value()) {
+      POKESIM_REQUIRE_NM(ivs.def == creationInfo.ivs.def);
+    }
+    if (creationInfo.ivs.spa.has_value()) {
+      POKESIM_REQUIRE_NM(ivs.spa == creationInfo.ivs.spa);
+    }
+    if (creationInfo.ivs.spd.has_value()) {
+      POKESIM_REQUIRE_NM(ivs.spd == creationInfo.ivs.spd);
+    }
+    if (creationInfo.ivs.spe.has_value()) {
+      POKESIM_REQUIRE_NM(ivs.spe == creationInfo.ivs.spe);
+    }
+  }
+
+  void checkCreatedBoosts(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
+    const auto& currentBoosts = creationInfo.currentBoosts;
+    if (currentBoosts.atk.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<AtkBoost>(pokemonEntity).val == currentBoosts.atk.value());
+    }
+    if (currentBoosts.def.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<DefBoost>(pokemonEntity).val == currentBoosts.def.value());
+    }
+    if (currentBoosts.spa.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpaBoost>(pokemonEntity).val == currentBoosts.spa.value());
+    }
+    if (currentBoosts.spd.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpdBoost>(pokemonEntity).val == currentBoosts.spd.value());
+    }
+    if (currentBoosts.spe.has_value()) {
+      POKESIM_REQUIRE_NM(registry->get<SpeBoost>(pokemonEntity).val == currentBoosts.spe.value());
+    }
+  }
+
+  void checkCreatedPokemon(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
+    const auto& [id, side, battle, speciesName, abilityName, level, moveSlots] =
+      registry->get<Id, Side, Battle, SpeciesName, AbilityName, Level, MoveSlots>(pokemonEntity);
 
     if (creationInfo.id.has_value()) {
       POKESIM_REQUIRE_NM(id.val == creationInfo.id.value());
@@ -140,55 +224,37 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(abilityName.val == creationInfo.ability);
     POKESIM_REQUIRE_NM(level.val == creationInfo.level);
 
-    if (creationInfo.item == dex::Item::NO_ITEM) {
+    if (!creationInfo.item.has_value() || creationInfo.item == dex::Item::NO_ITEM) {
       POKESIM_REQUIRE_NM(!registry->all_of<ItemName>(pokemonEntity));
     }
     else {
       POKESIM_REQUIRE_NM(registry->get<ItemName>(pokemonEntity).val == creationInfo.item);
     }
 
-    if (creationInfo.gender == dex::Gender::NO_GENDER) {
+    if (!creationInfo.gender.has_value() || creationInfo.gender == dex::Gender::NO_GENDER) {
       POKESIM_REQUIRE_NM(!registry->all_of<GenderName>(pokemonEntity));
     }
     else {
       POKESIM_REQUIRE_NM(registry->get<GenderName>(pokemonEntity).val == creationInfo.gender);
     }
 
-    if (creationInfo.status == dex::Status::NO_STATUS) {
+    if (!creationInfo.status.has_value() || creationInfo.status == dex::Status::NO_STATUS) {
       POKESIM_REQUIRE_NM(!registry->all_of<StatusName>(pokemonEntity));
     }
     else {
       POKESIM_REQUIRE_NM(registry->get<StatusName>(pokemonEntity).val == creationInfo.status);
     }
 
-    if (creationInfo.nature == dex::Nature::NO_NATURE) {
+    if (!creationInfo.nature.has_value() || creationInfo.nature == dex::Nature::NO_NATURE) {
       POKESIM_REQUIRE_NM(!registry->all_of<NatureName>(pokemonEntity));
     }
     else {
       POKESIM_REQUIRE_NM(registry->get<NatureName>(pokemonEntity).val == creationInfo.nature);
     }
 
-    POKESIM_REQUIRE_NM(hp.val == creationInfo.stats.hp);
-    POKESIM_REQUIRE_NM(atk.val == creationInfo.stats.atk);
-    POKESIM_REQUIRE_NM(def.val == creationInfo.stats.def);
-    POKESIM_REQUIRE_NM(spa.val == creationInfo.stats.spa);
-    POKESIM_REQUIRE_NM(spd.val == creationInfo.stats.spd);
-    POKESIM_REQUIRE_NM(spe.val == creationInfo.stats.spe);
-
-    POKESIM_REQUIRE_NM(evs.hp == creationInfo.evs.hp);
-    POKESIM_REQUIRE_NM(evs.atk == creationInfo.evs.atk);
-    POKESIM_REQUIRE_NM(evs.def == creationInfo.evs.def);
-    POKESIM_REQUIRE_NM(evs.spa == creationInfo.evs.spa);
-    POKESIM_REQUIRE_NM(evs.spd == creationInfo.evs.spd);
-    POKESIM_REQUIRE_NM(evs.spe == creationInfo.evs.spe);
-
-    POKESIM_REQUIRE_NM(ivs.hp == creationInfo.ivs.hp);
-    POKESIM_REQUIRE_NM(ivs.atk == creationInfo.ivs.atk);
-    POKESIM_REQUIRE_NM(ivs.def == creationInfo.ivs.def);
-    POKESIM_REQUIRE_NM(ivs.spa == creationInfo.ivs.spa);
-    POKESIM_REQUIRE_NM(ivs.spd == creationInfo.ivs.spd);
-    POKESIM_REQUIRE_NM(ivs.spe == creationInfo.ivs.spe);
-
+    checkCreatedStats(pokemonEntity, creationInfo);
+    checkCreatedEvs(pokemonEntity, creationInfo);
+    checkCreatedIvs(pokemonEntity, creationInfo);
     POKESIM_REQUIRE_NM(moveSlots.val.size() == creationInfo.moves.size());
 
     for (std::size_t i = 0U; i < creationInfo.moves.size(); i++) {
@@ -213,7 +279,8 @@ struct SimulationSetupChecks {
       }
     }
     else {
-      POKESIM_REQUIRE_NM(registry->get<stat::CurrentHp>(pokemonEntity).val == hp.val);
+      POKESIM_REQUIRE_NM(
+        registry->get<stat::CurrentHp>(pokemonEntity).val == registry->get<stat::Hp>(pokemonEntity).val);
       POKESIM_REQUIRE_NM(!registry->all_of<tags::Fainted>(pokemonEntity));
     }
 
@@ -221,23 +288,7 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(registry->get<SpeciesTypes>(pokemonEntity) == creationInfo.currentTypes);
     }
 
-    const auto& currentBoosts = creationInfo.currentBoosts;
-    if (currentBoosts.atk.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<AtkBoost>(pokemonEntity).val == currentBoosts.atk.value());
-    }
-    if (currentBoosts.def.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<DefBoost>(pokemonEntity).val == currentBoosts.def.value());
-    }
-    if (currentBoosts.spa.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<SpaBoost>(pokemonEntity).val == currentBoosts.spa.value());
-    }
-    if (currentBoosts.spd.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<SpdBoost>(pokemonEntity).val == currentBoosts.spd.value());
-    }
-    if (currentBoosts.spe.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<SpeBoost>(pokemonEntity).val == currentBoosts.spe.value());
-    }
-
+    checkCreatedBoosts(pokemonEntity, creationInfo);
     pokesim::debug::checkPokemon(pokemonEntity, *registry);
   }
 
@@ -268,8 +319,8 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<RngSeed>(battleEntity));
     const auto& [sides, turn, probability, rngSeed] = registry->get<Sides, Turn, Probability, RngSeed>(battleEntity);
 
-    POKESIM_REQUIRE_NM(turn.val == creationInfo.turn);
-    POKESIM_REQUIRE_NM(probability.val == creationInfo.probability);
+    POKESIM_REQUIRE_NM(turn.val == creationInfo.turn.value_or(MechanicConstants::TurnCount::MIN));
+    POKESIM_REQUIRE_NM(probability.val == creationInfo.probability.value_or(MechanicConstants::Probability::MAX));
 
     if (creationInfo.rngSeed) {
       POKESIM_REQUIRE_NM(rngSeed.val == creationInfo.rngSeed);

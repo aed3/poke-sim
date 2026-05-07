@@ -1,7 +1,8 @@
 #pragma once
 
+#include <Utilities/NumberToType.hpp>
+
 #include "MechanicConstants.hpp"
-#include "NumberToType.hpp"
 
 namespace pokesim::types {
 using level = pokesim::internal::unsignedIntType<MechanicConstants::PokemonLevel::MAX>;
