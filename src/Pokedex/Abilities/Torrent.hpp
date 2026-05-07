@@ -5,12 +5,12 @@
 #include <string_view>
 
 namespace pokesim::dex {
-struct Trace {
-  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::TRACE; }
+struct Torrent {
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::TORRENT; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Trace"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "trace"; }
+    static constexpr std::string_view name(GameMechanics) { return "Torrent"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "torrent"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

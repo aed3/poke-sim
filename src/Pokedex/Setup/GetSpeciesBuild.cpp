@@ -75,7 +75,9 @@ types::entity buildByGameMechanic(dex::Species species, types::registry& registr
 
     default: break;
   }
+
   POKESIM_REQUIRE_FAIL("Building a species that is not yet supported.");
+  return entt::entity{};
 }
 }  // namespace
 

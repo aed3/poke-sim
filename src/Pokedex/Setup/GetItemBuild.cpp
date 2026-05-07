@@ -38,7 +38,9 @@ types::entity buildByGameMechanic(dex::Item item, types::registry& registry, Gam
 
     default: break;
   }
+
   POKESIM_REQUIRE_FAIL("Building an item that is not yet supported.");
+  return types::entity{};
 }
 }  // namespace
 

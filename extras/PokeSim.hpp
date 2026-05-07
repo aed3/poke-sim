@@ -204,13 +204,17 @@
  * src/CalcDamage/CalcDamage.hpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Battle/Helpers/IntegerModify.hpp
+ * src/Pokedex/Abilities/ClearBody.hpp
  * src/Pokedex/Abilities/Competitive.hpp
  * src/Pokedex/Abilities/Defiant.hpp
+ * src/Pokedex/Abilities/HoneyGather.hpp
  * src/Pokedex/Abilities/Infiltrator.hpp
  * src/Pokedex/Abilities/IronFist.hpp
  * src/Pokedex/Abilities/Plus.hpp
  * src/Pokedex/Abilities/Static.hpp
  * src/Pokedex/Abilities/SweetVeil.hpp
+ * src/Pokedex/Abilities/Sychronize.hpp
+ * src/Pokedex/Abilities/Torrent.hpp
  * src/Pokedex/Abilities/Trace.hpp
  * src/Pokedex/Effects/Burn.hpp
  * src/Pokedex/Effects/ChoiceLock.hpp
@@ -19604,13 +19608,17 @@ struct EffectiveSpe {
 // TODO(aed3): Make this auto generated
 
 namespace pokesim::ability::tags {
+struct ClearBody {};
 struct Competitive {};
 struct Defiant {};
+struct HoneyGather {};
 struct Infiltrator {};
 struct IronFist {};
 struct Plus {};
 struct Static {};
 struct SweetVeil {};
+struct Synchronize {};
+struct Torrent {};
 struct Trace {};
 }  // namespace pokesim::ability::tags
 
@@ -23267,11 +23275,24 @@ void chainComponentToModifier(
 
 ///////////////// END OF src/Battle/Helpers/IntegerModify.hpp //////////////////
 
-//////////////// START OF src/Pokedex/Abilities/Competitive.hpp ////////////////
+///////////////// START OF src/Pokedex/Abilities/ClearBody.hpp /////////////////
 
-namespace pokesim {
-class Simulation;
-}  // namespace pokesim
+namespace pokesim::dex {
+struct ClearBody {
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::CLEAR_BODY; }
+
+  struct Strings {
+    static constexpr std::string_view name(GameMechanics) { return "Clear Body"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "clearbody"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+////////////////// END OF src/Pokedex/Abilities/ClearBody.hpp //////////////////
+
+//////////////// START OF src/Pokedex/Abilities/Competitive.hpp ////////////////
 
 namespace pokesim::dex {
 struct Competitive {
@@ -23309,11 +23330,24 @@ struct Defiant {
 
 /////////////////// END OF src/Pokedex/Abilities/Defiant.hpp ///////////////////
 
-//////////////// START OF src/Pokedex/Abilities/Infiltrator.hpp ////////////////
+//////////////// START OF src/Pokedex/Abilities/HoneyGather.hpp ////////////////
 
-namespace pokesim {
-class Simulation;
-}  // namespace pokesim
+namespace pokesim::dex {
+struct HoneyGather {
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::HONEY_GATHER; }
+
+  struct Strings {
+    static constexpr std::string_view name(GameMechanics) { return "Honey Gather"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "honeygather"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+///////////////// END OF src/Pokedex/Abilities/HoneyGather.hpp /////////////////
+
+//////////////// START OF src/Pokedex/Abilities/Infiltrator.hpp ////////////////
 
 namespace pokesim::dex {
 struct Infiltrator {
@@ -23331,10 +23365,6 @@ struct Infiltrator {
 ///////////////// END OF src/Pokedex/Abilities/Infiltrator.hpp /////////////////
 
 ///////////////// START OF src/Pokedex/Abilities/IronFist.hpp //////////////////
-
-namespace pokesim {
-class Simulation;
-}  // namespace pokesim
 
 namespace pokesim::dex {
 struct IronFist {
@@ -23401,10 +23431,6 @@ struct Static {
 
 ///////////////// START OF src/Pokedex/Abilities/SweetVeil.hpp /////////////////
 
-namespace pokesim {
-class Simulation;
-}  // namespace pokesim
-
 namespace pokesim::dex {
 struct SweetVeil {
   static constexpr dex::Ability name(GameMechanics) { return dex::Ability::SWEET_VEIL; }
@@ -23420,11 +23446,41 @@ struct SweetVeil {
 
 ////////////////// END OF src/Pokedex/Abilities/SweetVeil.hpp //////////////////
 
-/////////////////// START OF src/Pokedex/Abilities/Trace.hpp ///////////////////
+//////////////// START OF src/Pokedex/Abilities/Sychronize.hpp /////////////////
 
-namespace pokesim {
-class Simulation;
-}  // namespace pokesim
+namespace pokesim::dex {
+struct Synchronize {
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::SYNCHRONIZE; }
+
+  struct Strings {
+    static constexpr std::string_view name(GameMechanics) { return "Synchronize"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "synchronize"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+///////////////// END OF src/Pokedex/Abilities/Sychronize.hpp //////////////////
+
+////////////////// START OF src/Pokedex/Abilities/Torrent.hpp //////////////////
+
+namespace pokesim::dex {
+struct Torrent {
+  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::TORRENT; }
+
+  struct Strings {
+    static constexpr std::string_view name(GameMechanics) { return "Torrent"; }
+    static constexpr std::string_view smogonId(GameMechanics) { return "torrent"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Abilities/Torrent.hpp ///////////////////
+
+/////////////////// START OF src/Pokedex/Abilities/Trace.hpp ///////////////////
 
 namespace pokesim::dex {
 struct Trace {

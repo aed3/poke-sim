@@ -287,7 +287,9 @@ types::entity buildByGameMechanic(
 
     default: break;
   }
+
   POKESIM_REQUIRE_FAIL("Building a move that is not yet supported.");
+  return types::entity{};
 }
 }  // namespace
 

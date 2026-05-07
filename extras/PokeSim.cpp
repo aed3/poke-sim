@@ -3514,7 +3514,9 @@ types::entity buildByGameMechanic(dex::Species species, types::registry& registr
 
     default: break;
   }
+
   POKESIM_REQUIRE_FAIL("Building a species that is not yet supported.");
+  return entt::entity{};
 }
 }  // namespace
 
@@ -3803,7 +3805,9 @@ types::entity buildByGameMechanic(
 
     default: break;
   }
+
   POKESIM_REQUIRE_FAIL("Building a move that is not yet supported.");
+  return types::entity{};
 }
 }  // namespace
 
@@ -3852,7 +3856,9 @@ types::entity buildByGameMechanic(dex::Item item, types::registry& registry, Gam
 
     default: break;
   }
+
   POKESIM_REQUIRE_FAIL("Building an item that is not yet supported.");
+  return types::entity{};
 }
 }  // namespace
 
@@ -3891,18 +3897,24 @@ types::entity buildByGameMechanic(dex::Ability ability, types::registry& registr
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
   switch (ability) {
-    case Ability::COMPETITIVE: return BuildAbility<Competitive>::build(registry, gameMechanic);
-    case Ability::DEFIANT:     return BuildAbility<Defiant>::build(registry, gameMechanic);
-    case Ability::INFILTRATOR: return BuildAbility<Infiltrator>::build(registry, gameMechanic);
-    case Ability::IRON_FIST:   return BuildAbility<IronFist>::build(registry, gameMechanic);
-    case Ability::PLUS:        return BuildAbility<Plus>::build(registry, gameMechanic);
-    case Ability::SWEET_VEIL:  return BuildAbility<SweetVeil>::build(registry, gameMechanic);
-    case Ability::STATIC:      return BuildAbility<Static>::build(registry, gameMechanic);
-    case Ability::TRACE:       return BuildAbility<Trace>::build(registry, gameMechanic);
+    case Ability::CLEAR_BODY:   return BuildAbility<ClearBody>::build(registry, gameMechanic);
+    case Ability::COMPETITIVE:  return BuildAbility<Competitive>::build(registry, gameMechanic);
+    case Ability::HONEY_GATHER: return BuildAbility<HoneyGather>::build(registry, gameMechanic);
+    case Ability::DEFIANT:      return BuildAbility<Defiant>::build(registry, gameMechanic);
+    case Ability::INFILTRATOR:  return BuildAbility<Infiltrator>::build(registry, gameMechanic);
+    case Ability::IRON_FIST:    return BuildAbility<IronFist>::build(registry, gameMechanic);
+    case Ability::PLUS:         return BuildAbility<Plus>::build(registry, gameMechanic);
+    case Ability::SWEET_VEIL:   return BuildAbility<SweetVeil>::build(registry, gameMechanic);
+    case Ability::SYNCHRONIZE:  return BuildAbility<Synchronize>::build(registry, gameMechanic);
+    case Ability::TORRENT:      return BuildAbility<Torrent>::build(registry, gameMechanic);
+    case Ability::STATIC:       return BuildAbility<Static>::build(registry, gameMechanic);
+    case Ability::TRACE:        return BuildAbility<Trace>::build(registry, gameMechanic);
 
     default: break;
   }
+
   POKESIM_REQUIRE_FAIL("Building an ability that is not yet supported.");
+  return types::entity{};
 }
 }  // namespace
 
@@ -3962,27 +3974,32 @@ types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry
 }
 
 void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInfoList) {
-  entt::dense_set<dex::Move> moveSet{};
   entt::dense_set<dex::Species> speciesSet{};
   entt::dense_set<dex::Item> itemSet{};
+  entt::dense_set<dex::Move> moveSet{};
+  entt::dense_set<dex::Ability> abilitySet{};
 
   for (const BattleCreationInfo& battleCreationInfo : battleInfoList) {
     for (const auto& side : battleCreationInfo.sides) {
       for (const auto& pokemon : side.team) {
+        speciesSet.insert(pokemon.species);
         for (const auto& moveSlot : pokemon.moves) {
           moveSet.insert(moveSlot.name);
         }
-        speciesSet.insert(pokemon.species);
-        if (pokemon.item != dex::Item::NO_ITEM) {
-          itemSet.insert(pokemon.item);
+        if (pokemon.item.has_value() && pokemon.item != dex::Item::NO_ITEM) {
+          itemSet.insert(pokemon.item.value());
+        }
+        if (pokemon.ability.has_value() && pokemon.ability != dex::Ability::NO_ABILITY) {
+          abilitySet.insert(pokemon.ability.value());
         }
       }
     }
   }
 
-  loadMoves(moveSet);
   loadSpecies(speciesSet);
   loadItems(itemSet);
+  loadMoves(moveSet);
+  loadAbilities(abilitySet);
 }
 
 }  // namespace pokesim

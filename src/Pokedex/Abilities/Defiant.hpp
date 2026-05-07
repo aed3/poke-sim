@@ -2,7 +2,6 @@
 
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/GameMechanics.hpp>
-#include <Types/Random.hpp>
 #include <string_view>
 
 namespace pokesim {

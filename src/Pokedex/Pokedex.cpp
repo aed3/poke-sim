@@ -42,27 +42,32 @@ types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry
 }
 
 void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInfoList) {
-  entt::dense_set<dex::Move> moveSet{};
   entt::dense_set<dex::Species> speciesSet{};
   entt::dense_set<dex::Item> itemSet{};
+  entt::dense_set<dex::Move> moveSet{};
+  entt::dense_set<dex::Ability> abilitySet{};
 
   for (const BattleCreationInfo& battleCreationInfo : battleInfoList) {
     for (const auto& side : battleCreationInfo.sides) {
       for (const auto& pokemon : side.team) {
+        speciesSet.insert(pokemon.species);
         for (const auto& moveSlot : pokemon.moves) {
           moveSet.insert(moveSlot.name);
         }
-        speciesSet.insert(pokemon.species);
-        if (pokemon.item != dex::Item::NO_ITEM) {
-          itemSet.insert(pokemon.item);
+        if (pokemon.item.has_value() && pokemon.item != dex::Item::NO_ITEM) {
+          itemSet.insert(pokemon.item.value());
+        }
+        if (pokemon.ability.has_value() && pokemon.ability != dex::Ability::NO_ABILITY) {
+          abilitySet.insert(pokemon.ability.value());
         }
       }
     }
   }
 
-  loadMoves(moveSet);
   loadSpecies(speciesSet);
   loadItems(itemSet);
+  loadMoves(moveSet);
+  loadAbilities(abilitySet);
 }
 
 }  // namespace pokesim
