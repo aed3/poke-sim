@@ -8,7 +8,7 @@
 
 #include <Catch2/catch_amalgamated.hpp>
 
-ifdef _MSC_VER
+#ifdef _MSC_VER
 // In theory, disabling a warning about conversions is a bad idea. That warning, in theory, should also be triggered
 // regardless of whether a value is being assigned to an integer or an optional holding that integer. That second theory
 // isn't true, which means making the parameters to BattleCreationInfo optional reveals issues I hadn't previously
