@@ -5,6 +5,6 @@
 
 namespace pokesim {
 struct Accuracy {
-  types::percentChance val = MechanicConstants::MoveBaseAccuracy::MAX;
+  types::percentChance val = MechanicConstants::MoveBaseAccuracy::DEFAULT;
 };
 }  // namespace pokesim

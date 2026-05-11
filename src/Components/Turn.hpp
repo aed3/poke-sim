@@ -6,6 +6,6 @@
 namespace pokesim {
 // The current turn of a battle
 struct Turn {
-  types::battleTurn val = MechanicConstants::TurnCount::MIN;
+  types::battleTurn val = MechanicConstants::TurnCount::DEFAULT;
 };
 }  // namespace pokesim

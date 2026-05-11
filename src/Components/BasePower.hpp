@@ -5,6 +5,6 @@
 
 namespace pokesim {
 struct BasePower {
-  types::basePower val = MechanicConstants::MoveBasePower::MIN;
+  types::basePower val = MechanicConstants::MoveBasePower::DEFAULT;
 };
 }  // namespace pokesim

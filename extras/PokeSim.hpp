@@ -17202,63 +17202,74 @@ struct MechanicConstants {
   struct PokemonLevel {
     static constexpr std::uint8_t MAX = 100U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 100U;
   };
 
   struct PokemonBaseStat {
     static constexpr std::uint8_t MAX = 255U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
   };
 
   struct PokemonHpStat {
     static constexpr std::uint16_t MAX = 1428U;
     static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
   };
 
   struct PokemonCurrentHpStat {
     // TODO(aed3): Should this be doubled for dynamax or should that be a different value?
     static constexpr std::uint16_t MAX = 1428U;
     static constexpr std::uint16_t MIN = 0U;
+    static constexpr std::uint16_t DEFAULT = 0U;
   };
 
   struct PokemonStat {
     static constexpr std::uint16_t MAX = 633U;
     static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
   };
 
   struct PokemonEffectiveStat {
     static constexpr std::uint16_t MAX = 65535U;
     static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
   };
 
   struct PokemonEv {
     static constexpr std::uint8_t MAX = 255U;
     static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
   };
 
   struct PokemonIv {
     static constexpr std::uint8_t MAX = 31U;
     static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
   };
 
   struct PokemonStatBoost {
     static constexpr std::int8_t MAX = 6;
-    static constexpr std::int8_t BASE = 0;
     static constexpr std::int8_t MIN = -6;
+    static constexpr std::int8_t DEFAULT = 0;
   };
 
   struct MoveMaxPp {
     static constexpr std::uint8_t MAX = 64U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
   };
 
   struct MovePp {
     static constexpr std::uint8_t MAX = MoveMaxPp::MAX;
     static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
   };
 
   struct MoveBasePower {
     static constexpr std::uint8_t MAX = 255U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
   };
 
   struct MovePower {
@@ -17266,27 +17277,31 @@ struct MechanicConstants {
     // (1.5x), holding a Spell Tag (1.2x)
     static constexpr std::uint16_t MAX = 16544U;
     static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
   };
 
   struct MoveBaseAccuracy {
     static constexpr std::uint8_t MAX = 100U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 100U;
   };
 
   struct MoveHits {
     static constexpr std::uint8_t MAX = 10U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
   };
 
   struct MoveBaseEffectChance {
     static constexpr std::uint8_t MAX = 100U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 100U;
   };
 
   struct MovePriority {
     static constexpr std::int8_t MAX = 5;  // 8 is theoretically possible, but no existing move has more than 5
-    static constexpr std::int8_t BASE = 0;
     static constexpr std::int8_t MIN = -7;
+    static constexpr std::int8_t DEFAULT = 0;
   };
 
   struct CritBoost {
@@ -17294,22 +17309,25 @@ struct MechanicConstants {
     // as of now
     static constexpr std::uint8_t MAX = 7U;
     static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
   };
 
   struct Damage {
     static constexpr std::uint16_t MAX = 65535U;
     static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
   };
 
   struct DamageRollCount {
     static constexpr std::uint8_t MAX = 16U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 16U;
   };
 
   struct TypeEffectivenessShift {
     static constexpr std::int8_t MAX = 3;
-    static constexpr std::int8_t BASE = 0;
     static constexpr std::int8_t MIN = -7;
+    static constexpr std::int8_t DEFAULT = 0;
   };
 
   struct TeamSize {
@@ -17340,11 +17358,13 @@ struct MechanicConstants {
   struct PercentChance {
     static constexpr std::uint8_t MAX = 100U;
     static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 100U;
   };
 
   struct Probability {
     static constexpr float MAX = 1.0F;
     static constexpr float MIN = 0.0F;
+    static constexpr float DEFAULT = 1.0F;
   };
 
   static constexpr auto ProbabilityToPercentChance = PercentChance::MAX / Probability::MAX;
@@ -17352,8 +17372,8 @@ struct MechanicConstants {
 
   struct AnalyzeEffectMultiplier {
     static constexpr float MAX = PokemonHpStat::MAX;
-    static constexpr float BASE = 1.0F;
     static constexpr float MIN = 0.0F;
+    static constexpr float DEFAULT = 1.0F;
   };
 
   struct ActionQueueLength {
@@ -17366,6 +17386,7 @@ struct MechanicConstants {
     // Technically 65535, but battles over 1000 turns aren't usually supported on Showdown
     static constexpr std::uint16_t MAX = 1000U;
     static constexpr std::uint16_t MIN = 0U;
+    static constexpr std::uint16_t DEFAULT = 0U;
   };
 };
 }  // namespace pokesim
@@ -17849,23 +17870,23 @@ using boost =
 
 namespace pokesim {
 struct AtkBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
+  types::boost val = MechanicConstants::PokemonStatBoost::DEFAULT;
 };
 
 struct DefBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
+  types::boost val = MechanicConstants::PokemonStatBoost::DEFAULT;
 };
 
 struct SpaBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
+  types::boost val = MechanicConstants::PokemonStatBoost::DEFAULT;
 };
 
 struct SpdBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
+  types::boost val = MechanicConstants::PokemonStatBoost::DEFAULT;
 };
 
 struct SpeBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::BASE;
+  types::boost val = MechanicConstants::PokemonStatBoost::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -18121,12 +18142,12 @@ using effectMultiplier = float;
 
 namespace pokesim {
 struct Damage {
-  types::damage val = MechanicConstants::Damage::MIN;
+  types::damage val = MechanicConstants::Damage::DEFAULT;
 };
 
 struct DamageRollModifiers {
   StabBoostKind stab = StabBoostKind::NONE;
-  types::typeEffectiveness typeEffectiveness = MechanicConstants::TypeEffectivenessShift::BASE;
+  types::typeEffectiveness typeEffectiveness = MechanicConstants::TypeEffectivenessShift::DEFAULT;
   bool burn = false;
   bool zOrMaxBrokenProtect = false;
   types::eventModifier modifyDamageEvent = MechanicConstants::FIXED_POINT_SCALE;
@@ -18227,7 +18248,7 @@ inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, Damage
 
 namespace pokesim {
 struct Accuracy {
-  types::percentChance val = MechanicConstants::MoveBaseAccuracy::MAX;
+  types::percentChance val = MechanicConstants::MoveBaseAccuracy::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -18496,7 +18517,7 @@ namespace pokesim {
  * Examples: Air Slash has a 60% chance to flinch, Harvest has a 50% chance to restore a used berry.
  */
 struct BaseEffectChance {
-  types::percentChance val = MechanicConstants::MoveBaseEffectChance::MAX;
+  types::percentChance val = MechanicConstants::MoveBaseEffectChance::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -18522,7 +18543,7 @@ using fractionalPriority = bool;
 
 namespace pokesim {
 struct BasePower {
-  types::basePower val = MechanicConstants::MoveBasePower::MIN;
+  types::basePower val = MechanicConstants::MoveBasePower::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -18554,7 +18575,7 @@ struct CritChanceDivisor {
 };
 
 struct CritBoost {
-  types::critBoost val = pokesim::MechanicConstants::CritBoost::MIN;
+  types::critBoost val = pokesim::MechanicConstants::CritBoost::DEFAULT;
 };
 
 namespace tags {
@@ -18568,15 +18589,15 @@ struct Crit {};
 
 namespace pokesim::calc_damage {
 struct AttackingLevel {
-  types::level val = MechanicConstants::PokemonLevel::MIN;
+  types::level val = MechanicConstants::PokemonLevel::DEFAULT;
 };
 
 struct AttackingStat {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct DefendingStat {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
 };
 }  // namespace pokesim::calc_damage
 
@@ -18603,11 +18624,11 @@ struct RanAfterModifyDamage {};
 
 namespace pokesim::calc_damage {
 struct RealEffectiveStat {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct Power {
-  types::power val = MechanicConstants::MovePower::MIN;
+  types::power val = MechanicConstants::MovePower::DEFAULT;
 };
 
 namespace tags {
@@ -18735,12 +18756,12 @@ struct SideDecision {
 
 namespace pokesim {
 struct Evs {
-  types::ev hp = MechanicConstants::PokemonEv::MIN;
-  types::ev atk = MechanicConstants::PokemonEv::MIN;
-  types::ev def = MechanicConstants::PokemonEv::MIN;
-  types::ev spa = MechanicConstants::PokemonEv::MIN;
-  types::ev spd = MechanicConstants::PokemonEv::MIN;
-  types::ev spe = MechanicConstants::PokemonEv::MIN;
+  types::ev hp = MechanicConstants::PokemonEv::DEFAULT;
+  types::ev atk = MechanicConstants::PokemonEv::DEFAULT;
+  types::ev def = MechanicConstants::PokemonEv::DEFAULT;
+  types::ev spa = MechanicConstants::PokemonEv::DEFAULT;
+  types::ev spd = MechanicConstants::PokemonEv::DEFAULT;
+  types::ev spe = MechanicConstants::PokemonEv::DEFAULT;
 
   bool operator==(const Evs& other) const {
     return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
@@ -18749,12 +18770,12 @@ struct Evs {
 };
 
 struct Ivs {
-  types::iv hp = MechanicConstants::PokemonIv::MIN;
-  types::iv atk = MechanicConstants::PokemonIv::MIN;
-  types::iv def = MechanicConstants::PokemonIv::MIN;
-  types::iv spa = MechanicConstants::PokemonIv::MIN;
-  types::iv spd = MechanicConstants::PokemonIv::MIN;
-  types::iv spe = MechanicConstants::PokemonIv::MIN;
+  types::iv hp = MechanicConstants::PokemonIv::DEFAULT;
+  types::iv atk = MechanicConstants::PokemonIv::DEFAULT;
+  types::iv def = MechanicConstants::PokemonIv::DEFAULT;
+  types::iv spa = MechanicConstants::PokemonIv::DEFAULT;
+  types::iv spd = MechanicConstants::PokemonIv::DEFAULT;
+  types::iv spe = MechanicConstants::PokemonIv::DEFAULT;
 
   bool operator==(const Ivs& other) const {
     return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
@@ -18887,7 +18908,7 @@ struct EventModifier {
 
 namespace pokesim {
 struct HitCount {
-  types::moveHits val = MechanicConstants::MoveHits::MIN;
+  types::moveHits val = MechanicConstants::MoveHits::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -18908,7 +18929,7 @@ struct Id {
 namespace pokesim {
 // A Pokemon's level
 struct Level {
-  types::level val = MechanicConstants::PokemonLevel::MIN;
+  types::level val = MechanicConstants::PokemonLevel::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -19119,11 +19140,11 @@ struct TypeName {
 
 namespace pokesim {
 struct Pp {
-  types::pp val = MechanicConstants::MovePp::MIN;
+  types::pp val = MechanicConstants::MovePp::DEFAULT;
 };
 
 struct MaxPp {
-  types::pp val = MechanicConstants::MoveMaxPp::MIN;
+  types::pp val = MechanicConstants::MoveMaxPp::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -19165,12 +19186,12 @@ struct HiddenAbility {
 namespace pokesim {
 // Contains all of the base stats of a species
 struct BaseStats {
-  types::baseStat hp = MechanicConstants::PokemonBaseStat::MIN;
-  types::baseStat atk = MechanicConstants::PokemonBaseStat::MIN;
-  types::baseStat def = MechanicConstants::PokemonBaseStat::MIN;
-  types::baseStat spa = MechanicConstants::PokemonBaseStat::MIN;
-  types::baseStat spd = MechanicConstants::PokemonBaseStat::MIN;
-  types::baseStat spe = MechanicConstants::PokemonBaseStat::MIN;
+  types::baseStat hp = MechanicConstants::PokemonBaseStat::DEFAULT;
+  types::baseStat atk = MechanicConstants::PokemonBaseStat::DEFAULT;
+  types::baseStat def = MechanicConstants::PokemonBaseStat::DEFAULT;
+  types::baseStat spa = MechanicConstants::PokemonBaseStat::DEFAULT;
+  types::baseStat spd = MechanicConstants::PokemonBaseStat::DEFAULT;
+  types::baseStat spe = MechanicConstants::PokemonBaseStat::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -19191,7 +19212,7 @@ struct Position {
 
 namespace pokesim {
 struct MovePriority {
-  types::priority val = MechanicConstants::MovePriority::BASE;
+  types::priority val = MechanicConstants::MovePriority::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -19206,7 +19227,7 @@ namespace pokesim {
  * Calculated by multiplying the various Accuracy and Chance numbers of a battle state's events.
  */
 struct Probability {
-  types::probability val = MechanicConstants::Probability::MAX;
+  types::probability val = MechanicConstants::Probability::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -19273,7 +19294,7 @@ struct RandomEventChances {
 // Used for random events that always have two outcomes where the chance the events happens may not be equal (i.e. move
 // accuracy checks, secondary move effects)
 struct RandomBinaryChance {
-  types::percentChance val = MechanicConstants::PercentChance::MAX;
+  types::percentChance val = MechanicConstants::PercentChance::DEFAULT;
 
   types::percentChance pass() const { return val; }
   types::percentChance fail() const { return MechanicConstants::PercentChance::MAX - pass(); }
@@ -19457,7 +19478,7 @@ struct AttackerHpLost : DamageRolls {};
 
 namespace analyze_effect {
 struct EffectMultiplier {
-  types::effectMultiplier val = MechanicConstants::AnalyzeEffectMultiplier::BASE;
+  types::effectMultiplier val = MechanicConstants::AnalyzeEffectMultiplier::DEFAULT;
 };
 
 using MultipliedDamageRolls = DamageRolls;
@@ -19537,11 +19558,11 @@ struct SpeedSort {
   // Order of the types of actions (lower first)
   ActionOrder order = ActionOrder::NONE;
   // Priority of the action (higher first)
-  types::priority priority = MechanicConstants::MovePriority::BASE;
+  types::priority priority = MechanicConstants::MovePriority::DEFAULT;
   // Whether negative fractional priority is active for the action (false first)
   types::fractionalPriority fractionalPriority = false;
   // Speed of Pokemon using move (higher first if priority tie)
-  types::stat speed = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat speed = MechanicConstants::PokemonEffectiveStat::DEFAULT;
 
   bool operator==(const SpeedSort& other) const {
     return order == other.order && priority == other.priority && fractionalPriority == other.fractionalPriority &&
@@ -19556,51 +19577,51 @@ struct SpeedSort {
 
 namespace pokesim::stat {
 struct Hp {
-  types::stat val = MechanicConstants::PokemonHpStat::MIN;
+  types::stat val = MechanicConstants::PokemonHpStat::DEFAULT;
 };
 
 struct Atk {
-  types::stat val = MechanicConstants::PokemonStat::MIN;
+  types::stat val = MechanicConstants::PokemonStat::DEFAULT;
 };
 
 struct Def {
-  types::stat val = MechanicConstants::PokemonStat::MIN;
+  types::stat val = MechanicConstants::PokemonStat::DEFAULT;
 };
 
 struct Spa {
-  types::stat val = MechanicConstants::PokemonStat::MIN;
+  types::stat val = MechanicConstants::PokemonStat::DEFAULT;
 };
 
 struct Spd {
-  types::stat val = MechanicConstants::PokemonStat::MIN;
+  types::stat val = MechanicConstants::PokemonStat::DEFAULT;
 };
 
 struct Spe {
-  types::stat val = MechanicConstants::PokemonStat::MIN;
+  types::stat val = MechanicConstants::PokemonStat::DEFAULT;
 };
 
 struct CurrentHp {
-  types::stat val = MechanicConstants::PokemonCurrentHpStat::MIN;
+  types::stat val = MechanicConstants::PokemonCurrentHpStat::DEFAULT;
 };
 
 struct EffectiveAtk {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct EffectiveDef {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct EffectiveSpa {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct EffectiveSpd {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct EffectiveSpe {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
 };
 }  // namespace pokesim::stat
 
@@ -19881,7 +19902,7 @@ struct Fairy {};
 namespace pokesim {
 // The current turn of a battle
 struct Turn {
-  types::battleTurn val = MechanicConstants::TurnCount::MIN;
+  types::battleTurn val = MechanicConstants::TurnCount::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -21885,13 +21906,13 @@ struct PokemonCreationInfo {
   };
 
  public:
-  std::optional<types::stateId> id = std::nullopt;
   dex::Species species = dex::Species::NO_SPECIES;
+  std::optional<types::level> level = std::nullopt;
   std::optional<dex::Item> item = std::nullopt;
   std::optional<dex::Ability> ability = std::nullopt;
   std::optional<dex::Gender> gender = std::nullopt;
-  std::optional<types::level> level = std::nullopt;
   std::optional<dex::Nature> nature = std::nullopt;
+  std::optional<types::stateId> id = std::nullopt;
 
   Evs evs{};
   Ivs ivs{};
@@ -21921,8 +21942,8 @@ struct CalcDamageInputInfo {
 struct AnalyzeEffectInputInfo {
  private:
   struct BoostInfo {
-    dex::Stat stat = dex::Stat::ATK;
-    types::boost boost = MechanicConstants::PokemonStatBoost::BASE;
+    dex::Stat stat = dex::Stat::NONE;
+    types::boost boost = MechanicConstants::PokemonStatBoost::DEFAULT;
   };
 
  public:
@@ -21979,8 +22000,8 @@ constexpr types::damage computeBaseDamage(
 constexpr types::stat computeStatFromBaseStat(
   dex::Stat statName, types::baseStat baseStat, types::level level, dex::Nature nature, const Evs& evs,
   const Ivs& ivs) {
-  types::ev ev = MechanicConstants::PokemonEv::MIN;
-  types::iv iv = MechanicConstants::PokemonIv::MIN;
+  types::ev ev = MechanicConstants::PokemonEv::DEFAULT;
+  types::iv iv = MechanicConstants::PokemonIv::DEFAULT;
 
   switch (statName) {
     case dex::Stat::HP: {
@@ -22765,6 +22786,7 @@ struct SimulationSetupChecks {
  private:
   const types::registry* registry;
   const std::vector<BattleCreationInfo>* battleInfoList;
+  const Pokedex* pokedex;
 
   struct SetupEntities {
     types::entity battle;
@@ -22911,8 +22933,8 @@ struct SimulationSetupChecks {
   }
 
   void checkCreatedPokemon(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
-    const auto& [id, side, battle, speciesName, abilityName, level, moveSlots] =
-      registry->get<Id, Side, Battle, SpeciesName, AbilityName, Level, MoveSlots>(pokemonEntity);
+    const auto& [id, side, battle, speciesName, level, moveSlots] =
+      registry->get<Id, Side, Battle, SpeciesName, Level, MoveSlots>(pokemonEntity);
 
     if (creationInfo.id.has_value()) {
       POKESIM_REQUIRE_NM(id.val == creationInfo.id.value());
@@ -22922,8 +22944,21 @@ struct SimulationSetupChecks {
     }
 
     POKESIM_REQUIRE_NM(speciesName.val == creationInfo.species);
-    POKESIM_REQUIRE_NM(abilityName.val == creationInfo.ability);
-    POKESIM_REQUIRE_NM(level.val == creationInfo.level);
+
+    const AbilityName* abilityName = registry->try_get<AbilityName>(pokemonEntity);
+    if (creationInfo.ability.has_value()) {
+      POKESIM_REQUIRE_NM(abilityName != nullptr);
+      POKESIM_REQUIRE_NM(abilityName->val == creationInfo.ability);
+    }
+    else if (pokedex->speciesHas<PrimaryAbility>(creationInfo.species)) {
+      POKESIM_REQUIRE_NM(abilityName != nullptr);
+      POKESIM_REQUIRE_NM(abilityName->val == pokedex->getSpeciesData<PrimaryAbility>(creationInfo.species).val);
+    }
+    else {
+      POKESIM_REQUIRE_NM(abilityName == nullptr);
+    }
+
+    POKESIM_REQUIRE_NM(level.val == creationInfo.level.value_or(MechanicConstants::PokemonLevel::DEFAULT));
 
     if (!creationInfo.item.has_value() || creationInfo.item == dex::Item::NO_ITEM) {
       POKESIM_REQUIRE_NM(!registry->all_of<ItemName>(pokemonEntity));
@@ -22962,11 +22997,14 @@ struct SimulationSetupChecks {
       const MoveCreationInfo& move = creationInfo.moves[i];
       types::entity moveEntity = moveSlots.val[(types::moveSlotIndex)i];
       POKESIM_REQUIRE_NM(registry->all_of<MoveName>(moveEntity));
-      POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).val == move.name);
       POKESIM_REQUIRE_NM(registry->all_of<Pp>(moveEntity));
-      POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == move.pp);
       POKESIM_REQUIRE_NM(registry->all_of<MaxPp>(moveEntity));
-      POKESIM_REQUIRE_NM(registry->get<MaxPp>(moveEntity).val == move.maxPp);
+      POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).val == move.name);
+
+      types::pp idealMaxPp = move.maxPp.value_or(pokedex->getMoveData<Pp>(move.name).val);
+      types::pp idealPp = move.pp.value_or(idealMaxPp);
+      POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == idealPp);
+      POKESIM_REQUIRE_NM(registry->get<MaxPp>(moveEntity).val == idealMaxPp);
       pokesim::debug::checkMoveSlot(moveEntity, *registry);
     }
 
@@ -23020,8 +23058,8 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<RngSeed>(battleEntity));
     const auto& [sides, turn, probability, rngSeed] = registry->get<Sides, Turn, Probability, RngSeed>(battleEntity);
 
-    POKESIM_REQUIRE_NM(turn.val == creationInfo.turn.value_or(MechanicConstants::TurnCount::MIN));
-    POKESIM_REQUIRE_NM(probability.val == creationInfo.probability.value_or(MechanicConstants::Probability::MAX));
+    POKESIM_REQUIRE_NM(turn.val == creationInfo.turn.value_or(MechanicConstants::TurnCount::DEFAULT));
+    POKESIM_REQUIRE_NM(probability.val == creationInfo.probability.value_or(MechanicConstants::Probability::DEFAULT));
 
     if (creationInfo.rngSeed) {
       POKESIM_REQUIRE_NM(rngSeed.val == creationInfo.rngSeed);
@@ -23229,7 +23267,7 @@ struct SimulationSetupChecks {
 
  public:
   SimulationSetupChecks(const Simulation* simulation, const std::vector<BattleCreationInfo>& _battleInfoList)
-      : registry(&simulation->registry), battleInfoList(&_battleInfoList) {}
+      : registry(&simulation->registry), battleInfoList(&_battleInfoList), pokedex(&simulation->pokedex()) {}
 
   void checkOutputs() const {
     POKESIM_REQUIRE_NM(battleInfoList->size() <= internal::maxSizedVector<BattleCreationInfo>::max());
@@ -25493,14 +25531,18 @@ namespace pokesim::ability::tags {
 template <template <typename> typename RunStruct, typename... RunFunctionArgs>
 auto enumToTag(dex::Ability ability, RunFunctionArgs&&... args) {
   switch (ability) {
-    case dex::Ability::COMPETITIVE: return RunStruct<Competitive>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::DEFIANT:     return RunStruct<Defiant>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::INFILTRATOR: return RunStruct<Infiltrator>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::IRON_FIST:   return RunStruct<IronFist>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::PLUS:        return RunStruct<Plus>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::STATIC:      return RunStruct<Static>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::SWEET_VEIL:  return RunStruct<SweetVeil>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::TRACE:       return RunStruct<Trace>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::CLEAR_BODY:   return RunStruct<ClearBody>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::COMPETITIVE:  return RunStruct<Competitive>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::DEFIANT:      return RunStruct<Defiant>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::HONEY_GATHER: return RunStruct<HoneyGather>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::INFILTRATOR:  return RunStruct<Infiltrator>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::IRON_FIST:    return RunStruct<IronFist>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::PLUS:         return RunStruct<Plus>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::STATIC:       return RunStruct<Static>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::SWEET_VEIL:   return RunStruct<SweetVeil>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::SYNCHRONIZE:  return RunStruct<Synchronize>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::TORRENT:      return RunStruct<Torrent>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::TRACE:        return RunStruct<Trace>::run(std::forward<RunFunctionArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for ability that does not exist.");

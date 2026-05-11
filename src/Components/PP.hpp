@@ -5,10 +5,10 @@
 
 namespace pokesim {
 struct Pp {
-  types::pp val = MechanicConstants::MovePp::MIN;
+  types::pp val = MechanicConstants::MovePp::DEFAULT;
 };
 
 struct MaxPp {
-  types::pp val = MechanicConstants::MoveMaxPp::MIN;
+  types::pp val = MechanicConstants::MoveMaxPp::DEFAULT;
 };
 }  // namespace pokesim

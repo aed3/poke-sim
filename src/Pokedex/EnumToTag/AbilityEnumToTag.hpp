@@ -23,14 +23,18 @@ namespace pokesim::ability::tags {
 template <template <typename> typename RunStruct, typename... RunFunctionArgs>
 auto enumToTag(dex::Ability ability, RunFunctionArgs&&... args) {
   switch (ability) {
-    case dex::Ability::COMPETITIVE: return RunStruct<Competitive>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::DEFIANT:     return RunStruct<Defiant>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::INFILTRATOR: return RunStruct<Infiltrator>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::IRON_FIST:   return RunStruct<IronFist>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::PLUS:        return RunStruct<Plus>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::STATIC:      return RunStruct<Static>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::SWEET_VEIL:  return RunStruct<SweetVeil>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Ability::TRACE:       return RunStruct<Trace>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::CLEAR_BODY:   return RunStruct<ClearBody>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::COMPETITIVE:  return RunStruct<Competitive>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::DEFIANT:      return RunStruct<Defiant>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::HONEY_GATHER: return RunStruct<HoneyGather>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::INFILTRATOR:  return RunStruct<Infiltrator>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::IRON_FIST:    return RunStruct<IronFist>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::PLUS:         return RunStruct<Plus>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::STATIC:       return RunStruct<Static>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::SWEET_VEIL:   return RunStruct<SweetVeil>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::SYNCHRONIZE:  return RunStruct<Synchronize>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::TORRENT:      return RunStruct<Torrent>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Ability::TRACE:        return RunStruct<Trace>::run(std::forward<RunFunctionArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for ability that does not exist.");

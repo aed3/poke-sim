@@ -61,8 +61,8 @@ void resolveSlotDecisions(
       actionHandle.emplace<MoveName>(decision.moveChoice.value());
 
       speedSort.order = ActionOrder::MOVE;
-      speedSort.priority = MechanicConstants::MovePriority::BASE;  // TODO (aed3): Move priority + modify priority
-      speedSort.fractionalPriority = false;                        // TODO (aed3): get fractionalPriority
+      speedSort.priority = MechanicConstants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
+      speedSort.fractionalPriority = false;                           // TODO (aed3): get fractionalPriority
     }
     else if (decision.itemChoice.has_value()) {
       actionHandle.emplace<action::tags::Item>();

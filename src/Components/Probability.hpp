@@ -10,6 +10,6 @@ namespace pokesim {
  * Calculated by multiplying the various Accuracy and Chance numbers of a battle state's events.
  */
 struct Probability {
-  types::probability val = MechanicConstants::Probability::MAX;
+  types::probability val = MechanicConstants::Probability::DEFAULT;
 };
 }  // namespace pokesim

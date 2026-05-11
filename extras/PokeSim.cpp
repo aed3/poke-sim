@@ -1368,7 +1368,7 @@ types::stat setPokemonStats(
   const BaseStats& baseStats = pokedex.getSpeciesData<BaseStats>(pokemonInfo.species);
 
   auto getStat = [&](dex::Stat statName) {
-    types::baseStat baseStat = MechanicConstants::PokemonBaseStat::MIN;
+    types::baseStat baseStat = MechanicConstants::PokemonBaseStat::DEFAULT;
     std::optional<types::stat> givenStat = std::nullopt;
 
     if (statName == dex::Stat::HP) {
@@ -1399,7 +1399,11 @@ types::stat setPokemonStats(
       POKESIM_REQUIRE_FAIL("Using a stat that cannot be chosen or calculated.");
     }
 
-    return givenStat.value_or(computeStatFromBaseStat(statName, baseStat, level, nature, evs, ivs));
+    if (givenStat.has_value()) {
+      return givenStat.value();
+    }
+
+    return computeStatFromBaseStat(statName, baseStat, level, nature, evs, ivs);
   };
 
   types::stat hp = getStat(dex::Stat::HP);
@@ -1431,8 +1435,14 @@ types::entityVector Simulation::createInitialMoves(const std::vector<MoveCreatio
   for (const MoveCreationInfo& moveInfo : moveInfoList) {
     MoveStateSetup moveSetup(registry);
     moveSetup.setName(moveInfo.name);
-    moveSetup.setPP(moveInfo.pp.value_or(pokedex().getMoveData<Pp>(moveInfo.name).val));
-    moveSetup.setMaxPP(moveInfo.maxPp.value_or(pokedex().getMoveData<Pp>(moveInfo.name).val));
+    types::pp maxPp = MechanicConstants::MoveMaxPp::DEFAULT;
+    if (!moveInfo.pp.has_value() || !moveInfo.maxPp.has_value()) {
+      maxPp = pokedex().getMoveData<Pp>(moveInfo.name).val;
+    }
+    maxPp = moveInfo.maxPp.value_or(maxPp);
+
+    moveSetup.setPP(moveInfo.pp.value_or(maxPp));
+    moveSetup.setMaxPP(maxPp);
     moveEntities.push_back(moveSetup.entity());
   }
 
@@ -1451,7 +1461,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
   pokemonSetup.setSpecies(pokemonInfo.species);
   setPokemonAbility(pokemonInfo, pokemonSetup, pokedex());
 
-  types::level level = pokemonInfo.level.value_or(MechanicConstants::PokemonLevel::MAX);
+  types::level level = pokemonInfo.level.value_or(MechanicConstants::PokemonLevel::DEFAULT);
   dex::Nature nature = setPokemonNature(pokemonInfo, pokemonSetup);
   Evs evs = setPokemonEvs(pokemonInfo, pokemonSetup);
   Ivs ivs = setPokemonIvs(pokemonInfo, pokemonSetup);
@@ -1546,9 +1556,9 @@ void Simulation::createInitialSide(
 types::sides<SideStateSetup> Simulation::createInitialBattle(
   BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo) {
   battleStateSetup.setAutoID();
-  battleStateSetup.setTurn(battleInfo.turn.value_or(MechanicConstants::TurnCount::MIN));
+  battleStateSetup.setTurn(battleInfo.turn.value_or(MechanicConstants::TurnCount::DEFAULT));
   battleStateSetup.setRNGSeed(battleInfo.rngSeed);
-  battleStateSetup.setProbability(battleInfo.probability.value_or(MechanicConstants::Probability::MAX));
+  battleStateSetup.setProbability(battleInfo.probability.value_or(MechanicConstants::Probability::DEFAULT));
 
   if (battleInfo.runWithSimulateTurn) {
     battleStateSetup.setProperty<tags::SimulateTurn>();
@@ -3138,8 +3148,8 @@ void resolveSlotDecisions(
       actionHandle.emplace<MoveName>(decision.moveChoice.value());
 
       speedSort.order = ActionOrder::MOVE;
-      speedSort.priority = MechanicConstants::MovePriority::BASE;  // TODO (aed3): Move priority + modify priority
-      speedSort.fractionalPriority = false;                        // TODO (aed3): get fractionalPriority
+      speedSort.priority = MechanicConstants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
+      speedSort.fractionalPriority = false;                           // TODO (aed3): get fractionalPriority
     }
     else if (decision.itemChoice.has_value()) {
       actionHandle.emplace<action::tags::Item>();
@@ -3722,7 +3732,7 @@ struct BuildMove {
       move.setPrimaryEffect<EffectType>(effectValues...);
     }
     else {
-      types::percentChance chance = MechanicConstants::MoveBaseEffectChance::MAX;
+      types::percentChance chance = MechanicConstants::MoveBaseEffectChance::DEFAULT;
       if constexpr (has<Optional::chance, EffectData>::value) {
         chance = EffectData::chance(gameMechanic);
       }
@@ -3739,7 +3749,7 @@ struct BuildMove {
       (move.setPrimaryEffect<EffectTypes>(), ...);
     }
     else {
-      types::percentChance chance = MechanicConstants::MoveBaseEffectChance::MAX;
+      types::percentChance chance = MechanicConstants::MoveBaseEffectChance::DEFAULT;
       if constexpr (has<Optional::chance, EffectData>::value) {
         chance = EffectData::chance(gameMechanic);
       }
@@ -4013,15 +4023,15 @@ types::entity buildByGameMechanic(dex::Ability ability, types::registry& registr
   switch (ability) {
     case Ability::CLEAR_BODY:   return BuildAbility<ClearBody>::build(registry, gameMechanic);
     case Ability::COMPETITIVE:  return BuildAbility<Competitive>::build(registry, gameMechanic);
-    case Ability::HONEY_GATHER: return BuildAbility<HoneyGather>::build(registry, gameMechanic);
     case Ability::DEFIANT:      return BuildAbility<Defiant>::build(registry, gameMechanic);
+    case Ability::HONEY_GATHER: return BuildAbility<HoneyGather>::build(registry, gameMechanic);
     case Ability::INFILTRATOR:  return BuildAbility<Infiltrator>::build(registry, gameMechanic);
     case Ability::IRON_FIST:    return BuildAbility<IronFist>::build(registry, gameMechanic);
     case Ability::PLUS:         return BuildAbility<Plus>::build(registry, gameMechanic);
+    case Ability::STATIC:       return BuildAbility<Static>::build(registry, gameMechanic);
     case Ability::SWEET_VEIL:   return BuildAbility<SweetVeil>::build(registry, gameMechanic);
     case Ability::SYNCHRONIZE:  return BuildAbility<Synchronize>::build(registry, gameMechanic);
     case Ability::TORRENT:      return BuildAbility<Torrent>::build(registry, gameMechanic);
-    case Ability::STATIC:       return BuildAbility<Static>::build(registry, gameMechanic);
     case Ability::TRACE:        return BuildAbility<Trace>::build(registry, gameMechanic);
 
     default: break;
@@ -4644,7 +4654,7 @@ void setSourceLevel(types::handle moveHandle, Attacker attacker) {
 
 template <typename Category>
 void setUsedAttackStat(types::handle moveHandle, Attacker attacker) {
-  types::stat attackingStat = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat attackingStat = MechanicConstants::PokemonEffectiveStat::DEFAULT;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     attackingStat = moveHandle.registry()->get<stat::EffectiveAtk>(attacker.val).val;
     moveHandle.emplace<tags::UsesAtk>();
@@ -4658,7 +4668,7 @@ void setUsedAttackStat(types::handle moveHandle, Attacker attacker) {
 
 template <typename Category>
 void setUsedDefenseStat(types::handle moveHandle, Defender defender) {
-  types::stat defendingStat = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat defendingStat = MechanicConstants::PokemonEffectiveStat::DEFAULT;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     defendingStat = moveHandle.registry()->get<stat::EffectiveDef>(defender.val).val;
     moveHandle.emplace<tags::UsesDef>();
@@ -4673,7 +4683,7 @@ void setUsedDefenseStat(types::handle moveHandle, Defender defender) {
 template <typename BoostType>
 void setIgnoreAttackingBoostIfNegative(types::handle moveHandle, Attacker attacker) {
   BoostType* boost = moveHandle.registry()->try_get<BoostType>(attacker.val);
-  if (boost && boost->val < MechanicConstants::PokemonStatBoost::BASE) {
+  if (boost && boost->val < MechanicConstants::PokemonStatBoost::DEFAULT) {
     moveHandle.emplace<tags::IgnoresAttackingBoost>();
   }
 }
@@ -4681,7 +4691,7 @@ void setIgnoreAttackingBoostIfNegative(types::handle moveHandle, Attacker attack
 template <typename BoostType>
 void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, Defender defender) {
   BoostType* boost = moveHandle.registry()->try_get<BoostType>(defender.val);
-  if (boost && boost->val > MechanicConstants::PokemonStatBoost::BASE) {
+  if (boost && boost->val > MechanicConstants::PokemonStatBoost::DEFAULT) {
     moveHandle.emplace<tags::IgnoresDefendingBoost>();
   }
 }
@@ -5242,8 +5252,8 @@ void BattleStateSetup::initBlank() {
   handle.emplace<Sides>();
   handle.emplace<ActionQueue>();
   setAutoID();
-  setTurn(MechanicConstants::TurnCount::MIN);
-  setProbability(MechanicConstants::Probability::MAX);
+  setTurn(MechanicConstants::TurnCount::DEFAULT);
+  setProbability(MechanicConstants::Probability::DEFAULT);
 }
 
 void BattleStateSetup::setAutoID() {
@@ -5351,7 +5361,7 @@ void boostStat(types::registry& registry, CurrentEffectTarget target, BoostType&
   if (boost.val) {
     registry.emplace_or_replace<StatUpdateRequired>(target.val);
   }
-  if (currentBoost.val == MechanicConstants::PokemonStatBoost::BASE) {
+  if (currentBoost.val == MechanicConstants::PokemonStatBoost::DEFAULT) {
     registry.remove<BoostType>(target.val);
   }
 }

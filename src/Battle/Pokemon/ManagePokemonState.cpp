@@ -60,7 +60,7 @@ void boostStat(types::registry& registry, CurrentEffectTarget target, BoostType&
   if (boost.val) {
     registry.emplace_or_replace<StatUpdateRequired>(target.val);
   }
-  if (currentBoost.val == MechanicConstants::PokemonStatBoost::BASE) {
+  if (currentBoost.val == MechanicConstants::PokemonStatBoost::DEFAULT) {
     registry.remove<BoostType>(target.val);
   }
 }

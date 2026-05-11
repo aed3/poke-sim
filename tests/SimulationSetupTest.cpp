@@ -290,4 +290,216 @@ TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup
   auto view = registry.view<analyze_effect::tags::Input>();
   REQUIRE(view.size() == 6U);
 }
+
+TEST_CASE("Simulation Setup: Ignored Pokemon Options", "[Simulation][Setup]") {
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
+  std::vector<BattleCreationInfo> battleInfoList = {{}};
+  PokemonCreationInfo p1AInfo{dex::Species::EMPOLEON}, p1BInfo{dex::Species::GARDEVOIR},
+    p1CInfo{dex::Species::DRAGAPULT};
+  PokemonCreationInfo p2AInfo{dex::Species::AMPHAROS}, p2BInfo{dex::Species::PANGORO}, p2CInfo{dex::Species::RIBOMBEE};
+  Simulation simulation{pokedex, BattleFormat::SINGLES_BATTLE_FORMAT};
+  const types::registry& registry = simulation.registry;
+
+  using pokemonHandles = std::array<const types::handle, 6U>;
+  auto setAndLoad = [&]() {
+    p1AInfo.moves = {{dex::Move::FURY_ATTACK}};
+    p1BInfo.moves = {{dex::Move::MOONBLAST}};
+    p1CInfo.moves = {{dex::Move::WILL_O_WISP}};
+    p2AInfo.moves = {{dex::Move::THUNDERBOLT}};
+    p2BInfo.moves = {{dex::Move::KNOCK_OFF}};
+    p2CInfo.moves = {{dex::Move::QUIVER_DANCE}};
+
+    battleInfoList[0].sides.p1().team = {p1AInfo, p1BInfo, p1CInfo};
+    battleInfoList[0].sides.p2().team = {p2AInfo, p2BInfo, p2CInfo};
+    pokedex.loadForBattleInfo(battleInfoList);
+    simulation.createInitialStates(battleInfoList);
+
+    const Sides& sides = registry.get<Sides>(registry.view<Sides>()[0]);
+    const Team& p1Team = registry.get<Team>(sides.val.p1());
+    const Team& p2Team = registry.get<Team>(sides.val.p2());
+
+    return pokemonHandles{{
+      {simulation.registry, p1Team.val[0]},
+      {simulation.registry, p1Team.val[1]},
+      {simulation.registry, p1Team.val[2]},
+      {simulation.registry, p2Team.val[0]},
+      {simulation.registry, p2Team.val[1]},
+      {simulation.registry, p2Team.val[2]},
+    }};
+  };
+
+  auto checkForAllHandles = [&](const pokemonHandles& handles, void (*check)(const types::handle&)) {
+    for (const types::handle& handle : handles) {
+      INFO((int)handle.get<SpeciesName>().val);
+      check(handle);
+    }
+  };
+
+  auto checkDefaultLevels = [&](const pokemonHandles& handles) {
+    checkForAllHandles(handles, [](const types::handle& handle) {
+      REQUIRE(handle.get<Level>().val == MechanicConstants::PokemonLevel::DEFAULT);
+    });
+  };
+
+  auto checkDefaultNatures = [&](const pokemonHandles& handles) {
+    checkForAllHandles(handles, [](const types::handle& handle) { REQUIRE(!handle.all_of<NatureName>()); });
+  };
+
+  auto checkDefaultEvs = [&](const pokemonHandles& handles) {
+    checkForAllHandles(handles, [](const types::handle& handle) {
+      const Evs& evs = handle.get<Evs>();
+      REQUIRE(evs.hp == MechanicConstants::PokemonEv::DEFAULT);
+      REQUIRE(evs.atk == MechanicConstants::PokemonEv::DEFAULT);
+      REQUIRE(evs.def == MechanicConstants::PokemonEv::DEFAULT);
+      REQUIRE(evs.spa == MechanicConstants::PokemonEv::DEFAULT);
+      REQUIRE(evs.spd == MechanicConstants::PokemonEv::DEFAULT);
+      REQUIRE(evs.spe == MechanicConstants::PokemonEv::DEFAULT);
+    });
+  };
+
+  auto checkDefaultIvs = [&](const pokemonHandles& handles) {
+    checkForAllHandles(handles, [](const types::handle& handle) {
+      const Ivs& ivs = handle.get<Ivs>();
+      REQUIRE(ivs.hp == MechanicConstants::PokemonIv::DEFAULT);
+      REQUIRE(ivs.atk == MechanicConstants::PokemonIv::DEFAULT);
+      REQUIRE(ivs.def == MechanicConstants::PokemonIv::DEFAULT);
+      REQUIRE(ivs.spa == MechanicConstants::PokemonIv::DEFAULT);
+      REQUIRE(ivs.spd == MechanicConstants::PokemonIv::DEFAULT);
+      REQUIRE(ivs.spe == MechanicConstants::PokemonIv::DEFAULT);
+    });
+  };
+
+  auto checkDefaultAbilities = [&](const pokemonHandles& handles) {
+    auto [p1A, p1B, p1C, p2A, p2B, p2C] = handles;
+    REQUIRE(p1A.all_of<ability::tags::Torrent>());
+    REQUIRE(p1B.all_of<ability::tags::Synchronize>());
+    REQUIRE(p1C.all_of<ability::tags::ClearBody>());
+    REQUIRE(p2A.all_of<ability::tags::Static>());
+    REQUIRE(p2B.all_of<ability::tags::IronFist>());
+    REQUIRE(p2C.all_of<ability::tags::HoneyGather>());
+  };
+
+  auto checkStats = [&](
+                      const types::handle& handle,
+                      types::stat hp,
+                      types::stat atk,
+                      types::stat def,
+                      types::stat spa,
+                      types::stat spd,
+                      types::stat spe) {
+    INFO((int)handle.get<SpeciesName>().val);
+
+    REQUIRE(handle.get<stat::Hp>().val == hp);
+    REQUIRE(handle.get<stat::Atk>().val == atk);
+    REQUIRE(handle.get<stat::Def>().val == def);
+    REQUIRE(handle.get<stat::Spa>().val == spa);
+    REQUIRE(handle.get<stat::Spd>().val == spd);
+    REQUIRE(handle.get<stat::Spe>().val == spe);
+  };
+
+  SECTION("All Optionals Empty") {
+    auto handles = setAndLoad();
+    checkDefaultLevels(handles);
+    checkDefaultNatures(handles);
+    checkDefaultAbilities(handles);
+    checkDefaultEvs(handles);
+    checkDefaultIvs(handles);
+
+    auto [p1A, p1B, p1C, p2A, p2B, p2C] = handles;
+    checkStats(p1A, 278U, 177U, 181U, 227U, 207U, 125U);
+    checkStats(p1B, 246U, 135U, 135U, 255U, 235U, 165U);
+    checkStats(p1C, 286U, 245U, 155U, 205U, 155U, 289U);
+    checkStats(p2A, 290U, 155U, 175U, 235U, 185U, 115U);
+    checkStats(p2B, 300U, 253U, 161U, 143U, 147U, 121U);
+    checkStats(p2C, 230U, 115U, 125U, 195U, 145U, 253U);
+  }
+
+  SECTION("Set Level") {
+    p1AInfo.level = 40U;
+    p1BInfo.level = 50U;
+    p1CInfo.level = 60U;
+    p2AInfo.level = 70U;
+    p2BInfo.level = 80U;
+    p2CInfo.level = 90U;
+    auto handles = setAndLoad();
+    checkDefaultNatures(handles);
+    checkDefaultAbilities(handles);
+    checkDefaultEvs(handles);
+    checkDefaultIvs(handles);
+
+    auto [p1A, p1B, p1C, p2A, p2B, p2C] = handles;
+    checkStats(p1A, 117U, 73U, 75U, 93U, 85U, 53U);
+    checkStats(p1B, 128U, 70U, 70U, 130U, 120U, 85U);
+    checkStats(p1C, 175U, 149U, 95U, 125U, 95U, 175U);
+    checkStats(p2A, 206U, 110U, 124U, 166U, 131U, 82U);
+    checkStats(p2B, 242U, 203U, 129U, 115U, 118U, 97U);
+    checkStats(p2C, 208U, 104U, 113U, 176U, 131U, 228U);
+  }
+
+  SECTION("Set Nature") {
+    p1AInfo.nature = dex::Nature::TIMID;
+    p1BInfo.nature = dex::Nature::GENTLE;
+    p1CInfo.nature = dex::Nature::LAX;
+    p2AInfo.nature = dex::Nature::BRAVE;
+    p2BInfo.nature = dex::Nature::MILD;
+    p2CInfo.nature = dex::Nature::IMPISH;
+    auto handles = setAndLoad();
+    checkDefaultLevels(handles);
+    checkDefaultAbilities(handles);
+    checkDefaultEvs(handles);
+    checkDefaultIvs(handles);
+
+    auto [p1A, p1B, p1C, p2A, p2B, p2C] = handles;
+    checkStats(p1A, 278U, 159U, 181U, 227U, 207U, 137U);
+    checkStats(p1B, 246U, 135U, 121U, 255U, 258U, 165U);
+    checkStats(p1C, 286U, 245U, 170U, 205U, 139U, 289U);
+    checkStats(p2A, 290U, 170U, 175U, 235U, 185U, 103U);
+    checkStats(p2B, 300U, 253U, 144U, 157U, 147U, 121U);
+    checkStats(p2C, 230U, 115U, 137U, 175U, 145U, 253U);
+  }
+
+  SECTION("Set Evs") {
+    p1AInfo.evs.hp = 1U;
+    p1BInfo.evs.atk = 51U;
+    p1CInfo.evs.def = 101U;
+    p2AInfo.evs.spa = 151U;
+    p2BInfo.evs.spd = 201U;
+    p2CInfo.evs.spe = 251U;
+    auto handles = setAndLoad();
+    checkDefaultLevels(handles);
+    checkDefaultNatures(handles);
+    checkDefaultAbilities(handles);
+    checkDefaultIvs(handles);
+
+    auto [p1A, p1B, p1C, p2A, p2B, p2C] = handles;
+    checkStats(p1A, 278U, 177U, 181U, 227U, 207U, 125U);
+    checkStats(p1B, 246U, 147U, 135U, 255U, 235U, 165U);
+    checkStats(p1C, 286U, 245U, 180U, 205U, 155U, 289U);
+    checkStats(p2A, 290U, 155U, 175U, 272U, 185U, 115U);
+    checkStats(p2B, 300U, 253U, 161U, 143U, 197U, 121U);
+    checkStats(p2C, 230U, 115U, 125U, 195U, 145U, 315U);
+  }
+
+  SECTION("Set Ivs") {
+    p1AInfo.ivs.spe = 5U;
+    p1BInfo.ivs.spd = 10U;
+    p1CInfo.ivs.spa = 15U;
+    p2AInfo.ivs.def = 20U;
+    p2BInfo.ivs.atk = 25U;
+    p2CInfo.ivs.hp = 30U;
+    auto handles = setAndLoad();
+    checkDefaultLevels(handles);
+    checkDefaultNatures(handles);
+    checkDefaultAbilities(handles);
+    checkDefaultEvs(handles);
+
+    auto [p1A, p1B, p1C, p2A, p2B, p2C] = handles;
+    checkStats(p1A, 278U, 177U, 181U, 227U, 207U, 130U);
+    checkStats(p1B, 246U, 135U, 135U, 255U, 245U, 165U);
+    checkStats(p1C, 286U, 245U, 155U, 220U, 155U, 289U);
+    checkStats(p2A, 290U, 155U, 195U, 235U, 185U, 115U);
+    checkStats(p2B, 300U, 278U, 161U, 143U, 147U, 121U);
+    checkStats(p2C, 260U, 115U, 125U, 195U, 145U, 253U);
+  }
+}
 }  // namespace pokesim

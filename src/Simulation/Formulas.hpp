@@ -35,8 +35,8 @@ constexpr types::damage computeBaseDamage(
 constexpr types::stat computeStatFromBaseStat(
   dex::Stat statName, types::baseStat baseStat, types::level level, dex::Nature nature, const Evs& evs,
   const Ivs& ivs) {
-  types::ev ev = MechanicConstants::PokemonEv::MIN;
-  types::iv iv = MechanicConstants::PokemonIv::MIN;
+  types::ev ev = MechanicConstants::PokemonEv::DEFAULT;
+  types::iv iv = MechanicConstants::PokemonIv::DEFAULT;
 
   switch (statName) {
     case dex::Stat::HP: {

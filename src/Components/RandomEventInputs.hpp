@@ -54,7 +54,7 @@ struct RandomEventChances {
 // Used for random events that always have two outcomes where the chance the events happens may not be equal (i.e. move
 // accuracy checks, secondary move effects)
 struct RandomBinaryChance {
-  types::percentChance val = MechanicConstants::PercentChance::MAX;
+  types::percentChance val = MechanicConstants::PercentChance::DEFAULT;
 
   types::percentChance pass() const { return val; }
   types::percentChance fail() const { return MechanicConstants::PercentChance::MAX - pass(); }

@@ -33,12 +33,14 @@
 #include <Components/Names/VolatileNames.hpp>
 #include <Components/Names/WeatherNames.hpp>
 #include <Components/PP.hpp>
+#include <Components/Pokedex/Abilities.hpp>
 #include <Components/Probability.hpp>
 #include <Components/RNGSeed.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Turn.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <Simulation/BattleCreationInfo.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Ability.hpp>
@@ -64,6 +66,7 @@ struct SimulationSetupChecks {
  private:
   const types::registry* registry;
   const std::vector<BattleCreationInfo>* battleInfoList;
+  const Pokedex* pokedex;
 
   struct SetupEntities {
     types::entity battle;
@@ -210,8 +213,8 @@ struct SimulationSetupChecks {
   }
 
   void checkCreatedPokemon(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
-    const auto& [id, side, battle, speciesName, abilityName, level, moveSlots] =
-      registry->get<Id, Side, Battle, SpeciesName, AbilityName, Level, MoveSlots>(pokemonEntity);
+    const auto& [id, side, battle, speciesName, level, moveSlots] =
+      registry->get<Id, Side, Battle, SpeciesName, Level, MoveSlots>(pokemonEntity);
 
     if (creationInfo.id.has_value()) {
       POKESIM_REQUIRE_NM(id.val == creationInfo.id.value());
@@ -221,8 +224,21 @@ struct SimulationSetupChecks {
     }
 
     POKESIM_REQUIRE_NM(speciesName.val == creationInfo.species);
-    POKESIM_REQUIRE_NM(abilityName.val == creationInfo.ability);
-    POKESIM_REQUIRE_NM(level.val == creationInfo.level);
+
+    const AbilityName* abilityName = registry->try_get<AbilityName>(pokemonEntity);
+    if (creationInfo.ability.has_value()) {
+      POKESIM_REQUIRE_NM(abilityName != nullptr);
+      POKESIM_REQUIRE_NM(abilityName->val == creationInfo.ability);
+    }
+    else if (pokedex->speciesHas<PrimaryAbility>(creationInfo.species)) {
+      POKESIM_REQUIRE_NM(abilityName != nullptr);
+      POKESIM_REQUIRE_NM(abilityName->val == pokedex->getSpeciesData<PrimaryAbility>(creationInfo.species).val);
+    }
+    else {
+      POKESIM_REQUIRE_NM(abilityName == nullptr);
+    }
+
+    POKESIM_REQUIRE_NM(level.val == creationInfo.level.value_or(MechanicConstants::PokemonLevel::DEFAULT));
 
     if (!creationInfo.item.has_value() || creationInfo.item == dex::Item::NO_ITEM) {
       POKESIM_REQUIRE_NM(!registry->all_of<ItemName>(pokemonEntity));
@@ -261,11 +277,14 @@ struct SimulationSetupChecks {
       const MoveCreationInfo& move = creationInfo.moves[i];
       types::entity moveEntity = moveSlots.val[(types::moveSlotIndex)i];
       POKESIM_REQUIRE_NM(registry->all_of<MoveName>(moveEntity));
-      POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).val == move.name);
       POKESIM_REQUIRE_NM(registry->all_of<Pp>(moveEntity));
-      POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == move.pp);
       POKESIM_REQUIRE_NM(registry->all_of<MaxPp>(moveEntity));
-      POKESIM_REQUIRE_NM(registry->get<MaxPp>(moveEntity).val == move.maxPp);
+      POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).val == move.name);
+
+      types::pp idealMaxPp = move.maxPp.value_or(pokedex->getMoveData<Pp>(move.name).val);
+      types::pp idealPp = move.pp.value_or(idealMaxPp);
+      POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == idealPp);
+      POKESIM_REQUIRE_NM(registry->get<MaxPp>(moveEntity).val == idealMaxPp);
       pokesim::debug::checkMoveSlot(moveEntity, *registry);
     }
 
@@ -319,8 +338,8 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<RngSeed>(battleEntity));
     const auto& [sides, turn, probability, rngSeed] = registry->get<Sides, Turn, Probability, RngSeed>(battleEntity);
 
-    POKESIM_REQUIRE_NM(turn.val == creationInfo.turn.value_or(MechanicConstants::TurnCount::MIN));
-    POKESIM_REQUIRE_NM(probability.val == creationInfo.probability.value_or(MechanicConstants::Probability::MAX));
+    POKESIM_REQUIRE_NM(turn.val == creationInfo.turn.value_or(MechanicConstants::TurnCount::DEFAULT));
+    POKESIM_REQUIRE_NM(probability.val == creationInfo.probability.value_or(MechanicConstants::Probability::DEFAULT));
 
     if (creationInfo.rngSeed) {
       POKESIM_REQUIRE_NM(rngSeed.val == creationInfo.rngSeed);
@@ -528,7 +547,7 @@ struct SimulationSetupChecks {
 
  public:
   SimulationSetupChecks(const Simulation* simulation, const std::vector<BattleCreationInfo>& _battleInfoList)
-      : registry(&simulation->registry), battleInfoList(&_battleInfoList) {}
+      : registry(&simulation->registry), battleInfoList(&_battleInfoList), pokedex(&simulation->pokedex()) {}
 
   void checkOutputs() const {
     POKESIM_REQUIRE_NM(battleInfoList->size() <= internal::maxSizedVector<BattleCreationInfo>::max());

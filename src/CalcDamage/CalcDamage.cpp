@@ -185,7 +185,7 @@ void setSourceLevel(types::handle moveHandle, Attacker attacker) {
 
 template <typename Category>
 void setUsedAttackStat(types::handle moveHandle, Attacker attacker) {
-  types::stat attackingStat = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat attackingStat = MechanicConstants::PokemonEffectiveStat::DEFAULT;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     attackingStat = moveHandle.registry()->get<stat::EffectiveAtk>(attacker.val).val;
     moveHandle.emplace<tags::UsesAtk>();
@@ -199,7 +199,7 @@ void setUsedAttackStat(types::handle moveHandle, Attacker attacker) {
 
 template <typename Category>
 void setUsedDefenseStat(types::handle moveHandle, Defender defender) {
-  types::stat defendingStat = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat defendingStat = MechanicConstants::PokemonEffectiveStat::DEFAULT;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     defendingStat = moveHandle.registry()->get<stat::EffectiveDef>(defender.val).val;
     moveHandle.emplace<tags::UsesDef>();
@@ -214,7 +214,7 @@ void setUsedDefenseStat(types::handle moveHandle, Defender defender) {
 template <typename BoostType>
 void setIgnoreAttackingBoostIfNegative(types::handle moveHandle, Attacker attacker) {
   BoostType* boost = moveHandle.registry()->try_get<BoostType>(attacker.val);
-  if (boost && boost->val < MechanicConstants::PokemonStatBoost::BASE) {
+  if (boost && boost->val < MechanicConstants::PokemonStatBoost::DEFAULT) {
     moveHandle.emplace<tags::IgnoresAttackingBoost>();
   }
 }
@@ -222,7 +222,7 @@ void setIgnoreAttackingBoostIfNegative(types::handle moveHandle, Attacker attack
 template <typename BoostType>
 void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, Defender defender) {
   BoostType* boost = moveHandle.registry()->try_get<BoostType>(defender.val);
-  if (boost && boost->val > MechanicConstants::PokemonStatBoost::BASE) {
+  if (boost && boost->val > MechanicConstants::PokemonStatBoost::DEFAULT) {
     moveHandle.emplace<tags::IgnoresDefendingBoost>();
   }
 }

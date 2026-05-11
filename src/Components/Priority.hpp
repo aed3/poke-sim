@@ -5,6 +5,6 @@
 
 namespace pokesim {
 struct MovePriority {
-  types::priority val = MechanicConstants::MovePriority::BASE;
+  types::priority val = MechanicConstants::MovePriority::DEFAULT;
 };
 }  // namespace pokesim

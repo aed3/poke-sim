@@ -12,7 +12,7 @@ struct CritChanceDivisor {
 };
 
 struct CritBoost {
-  types::critBoost val = pokesim::MechanicConstants::CritBoost::MIN;
+  types::critBoost val = pokesim::MechanicConstants::CritBoost::DEFAULT;
 };
 
 namespace tags {

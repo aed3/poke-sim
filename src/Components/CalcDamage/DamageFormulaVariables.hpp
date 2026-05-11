@@ -5,14 +5,14 @@
 
 namespace pokesim::calc_damage {
 struct AttackingLevel {
-  types::level val = MechanicConstants::PokemonLevel::MIN;
+  types::level val = MechanicConstants::PokemonLevel::DEFAULT;
 };
 
 struct AttackingStat {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct DefendingStat {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::MIN;
+  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
 };
 }  // namespace pokesim::calc_damage

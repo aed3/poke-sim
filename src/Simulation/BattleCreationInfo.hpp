@@ -60,13 +60,13 @@ struct PokemonCreationInfo {
   };
 
  public:
-  std::optional<types::stateId> id = std::nullopt;
   dex::Species species = dex::Species::NO_SPECIES;
+  std::optional<types::level> level = std::nullopt;
   std::optional<dex::Item> item = std::nullopt;
   std::optional<dex::Ability> ability = std::nullopt;
   std::optional<dex::Gender> gender = std::nullopt;
-  std::optional<types::level> level = std::nullopt;
   std::optional<dex::Nature> nature = std::nullopt;
+  std::optional<types::stateId> id = std::nullopt;
 
   Evs evs{};
   Ivs ivs{};
@@ -96,8 +96,8 @@ struct CalcDamageInputInfo {
 struct AnalyzeEffectInputInfo {
  private:
   struct BoostInfo {
-    dex::Stat stat = dex::Stat::ATK;
-    types::boost boost = MechanicConstants::PokemonStatBoost::BASE;
+    dex::Stat stat = dex::Stat::NONE;
+    types::boost boost = MechanicConstants::PokemonStatBoost::DEFAULT;
   };
 
  public:

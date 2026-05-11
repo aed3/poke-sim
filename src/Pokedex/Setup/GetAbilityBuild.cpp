@@ -30,15 +30,15 @@ types::entity buildByGameMechanic(dex::Ability ability, types::registry& registr
   switch (ability) {
     case Ability::CLEAR_BODY:   return BuildAbility<ClearBody>::build(registry, gameMechanic);
     case Ability::COMPETITIVE:  return BuildAbility<Competitive>::build(registry, gameMechanic);
-    case Ability::HONEY_GATHER: return BuildAbility<HoneyGather>::build(registry, gameMechanic);
     case Ability::DEFIANT:      return BuildAbility<Defiant>::build(registry, gameMechanic);
+    case Ability::HONEY_GATHER: return BuildAbility<HoneyGather>::build(registry, gameMechanic);
     case Ability::INFILTRATOR:  return BuildAbility<Infiltrator>::build(registry, gameMechanic);
     case Ability::IRON_FIST:    return BuildAbility<IronFist>::build(registry, gameMechanic);
     case Ability::PLUS:         return BuildAbility<Plus>::build(registry, gameMechanic);
+    case Ability::STATIC:       return BuildAbility<Static>::build(registry, gameMechanic);
     case Ability::SWEET_VEIL:   return BuildAbility<SweetVeil>::build(registry, gameMechanic);
     case Ability::SYNCHRONIZE:  return BuildAbility<Synchronize>::build(registry, gameMechanic);
     case Ability::TORRENT:      return BuildAbility<Torrent>::build(registry, gameMechanic);
-    case Ability::STATIC:       return BuildAbility<Static>::build(registry, gameMechanic);
     case Ability::TRACE:        return BuildAbility<Trace>::build(registry, gameMechanic);
 
     default: break;

@@ -5,6 +5,6 @@
 
 namespace pokesim {
 struct HitCount {
-  types::moveHits val = MechanicConstants::MoveHits::MIN;
+  types::moveHits val = MechanicConstants::MoveHits::DEFAULT;
 };
 }  // namespace pokesim

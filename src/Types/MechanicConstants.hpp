@@ -27,63 +27,74 @@ struct MechanicConstants {
   struct PokemonLevel {
     static constexpr std::uint8_t MAX = 100U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 100U;
   };
 
   struct PokemonBaseStat {
     static constexpr std::uint8_t MAX = 255U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
   };
 
   struct PokemonHpStat {
     static constexpr std::uint16_t MAX = 1428U;
     static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
   };
 
   struct PokemonCurrentHpStat {
     // TODO(aed3): Should this be doubled for dynamax or should that be a different value?
     static constexpr std::uint16_t MAX = 1428U;
     static constexpr std::uint16_t MIN = 0U;
+    static constexpr std::uint16_t DEFAULT = 0U;
   };
 
   struct PokemonStat {
     static constexpr std::uint16_t MAX = 633U;
     static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
   };
 
   struct PokemonEffectiveStat {
     static constexpr std::uint16_t MAX = 65535U;
     static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
   };
 
   struct PokemonEv {
     static constexpr std::uint8_t MAX = 255U;
     static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
   };
 
   struct PokemonIv {
     static constexpr std::uint8_t MAX = 31U;
     static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
   };
 
   struct PokemonStatBoost {
     static constexpr std::int8_t MAX = 6;
-    static constexpr std::int8_t BASE = 0;
     static constexpr std::int8_t MIN = -6;
+    static constexpr std::int8_t DEFAULT = 0;
   };
 
   struct MoveMaxPp {
     static constexpr std::uint8_t MAX = 64U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
   };
 
   struct MovePp {
     static constexpr std::uint8_t MAX = MoveMaxPp::MAX;
     static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
   };
 
   struct MoveBasePower {
     static constexpr std::uint8_t MAX = 255U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
   };
 
   struct MovePower {
@@ -91,27 +102,31 @@ struct MechanicConstants {
     // (1.5x), holding a Spell Tag (1.2x)
     static constexpr std::uint16_t MAX = 16544U;
     static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
   };
 
   struct MoveBaseAccuracy {
     static constexpr std::uint8_t MAX = 100U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 100U;
   };
 
   struct MoveHits {
     static constexpr std::uint8_t MAX = 10U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
   };
 
   struct MoveBaseEffectChance {
     static constexpr std::uint8_t MAX = 100U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 100U;
   };
 
   struct MovePriority {
     static constexpr std::int8_t MAX = 5;  // 8 is theoretically possible, but no existing move has more than 5
-    static constexpr std::int8_t BASE = 0;
     static constexpr std::int8_t MIN = -7;
+    static constexpr std::int8_t DEFAULT = 0;
   };
 
   struct CritBoost {
@@ -119,22 +134,25 @@ struct MechanicConstants {
     // as of now
     static constexpr std::uint8_t MAX = 7U;
     static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
   };
 
   struct Damage {
     static constexpr std::uint16_t MAX = 65535U;
     static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
   };
 
   struct DamageRollCount {
     static constexpr std::uint8_t MAX = 16U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 16U;
   };
 
   struct TypeEffectivenessShift {
     static constexpr std::int8_t MAX = 3;
-    static constexpr std::int8_t BASE = 0;
     static constexpr std::int8_t MIN = -7;
+    static constexpr std::int8_t DEFAULT = 0;
   };
 
   struct TeamSize {
@@ -165,11 +183,13 @@ struct MechanicConstants {
   struct PercentChance {
     static constexpr std::uint8_t MAX = 100U;
     static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 100U;
   };
 
   struct Probability {
     static constexpr float MAX = 1.0F;
     static constexpr float MIN = 0.0F;
+    static constexpr float DEFAULT = 1.0F;
   };
 
   static constexpr auto ProbabilityToPercentChance = PercentChance::MAX / Probability::MAX;
@@ -177,8 +197,8 @@ struct MechanicConstants {
 
   struct AnalyzeEffectMultiplier {
     static constexpr float MAX = PokemonHpStat::MAX;
-    static constexpr float BASE = 1.0F;
     static constexpr float MIN = 0.0F;
+    static constexpr float DEFAULT = 1.0F;
   };
 
   struct ActionQueueLength {
@@ -191,6 +211,7 @@ struct MechanicConstants {
     // Technically 65535, but battles over 1000 turns aren't usually supported on Showdown
     static constexpr std::uint16_t MAX = 1000U;
     static constexpr std::uint16_t MIN = 0U;
+    static constexpr std::uint16_t DEFAULT = 0U;
   };
 };
 }  // namespace pokesim

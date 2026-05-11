@@ -87,7 +87,7 @@ types::stat setPokemonStats(
   const BaseStats& baseStats = pokedex.getSpeciesData<BaseStats>(pokemonInfo.species);
 
   auto getStat = [&](dex::Stat statName) {
-    types::baseStat baseStat = MechanicConstants::PokemonBaseStat::MIN;
+    types::baseStat baseStat = MechanicConstants::PokemonBaseStat::DEFAULT;
     std::optional<types::stat> givenStat = std::nullopt;
 
     if (statName == dex::Stat::HP) {
@@ -118,7 +118,11 @@ types::stat setPokemonStats(
       POKESIM_REQUIRE_FAIL("Using a stat that cannot be chosen or calculated.");
     }
 
-    return givenStat.value_or(computeStatFromBaseStat(statName, baseStat, level, nature, evs, ivs));
+    if (givenStat.has_value()) {
+      return givenStat.value();
+    }
+
+    return computeStatFromBaseStat(statName, baseStat, level, nature, evs, ivs);
   };
 
   types::stat hp = getStat(dex::Stat::HP);
@@ -150,8 +154,14 @@ types::entityVector Simulation::createInitialMoves(const std::vector<MoveCreatio
   for (const MoveCreationInfo& moveInfo : moveInfoList) {
     MoveStateSetup moveSetup(registry);
     moveSetup.setName(moveInfo.name);
-    moveSetup.setPP(moveInfo.pp.value_or(pokedex().getMoveData<Pp>(moveInfo.name).val));
-    moveSetup.setMaxPP(moveInfo.maxPp.value_or(pokedex().getMoveData<Pp>(moveInfo.name).val));
+    types::pp maxPp = MechanicConstants::MoveMaxPp::DEFAULT;
+    if (!moveInfo.pp.has_value() || !moveInfo.maxPp.has_value()) {
+      maxPp = pokedex().getMoveData<Pp>(moveInfo.name).val;
+    }
+    maxPp = moveInfo.maxPp.value_or(maxPp);
+
+    moveSetup.setPP(moveInfo.pp.value_or(maxPp));
+    moveSetup.setMaxPP(maxPp);
     moveEntities.push_back(moveSetup.entity());
   }
 
@@ -170,7 +180,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
   pokemonSetup.setSpecies(pokemonInfo.species);
   setPokemonAbility(pokemonInfo, pokemonSetup, pokedex());
 
-  types::level level = pokemonInfo.level.value_or(MechanicConstants::PokemonLevel::MAX);
+  types::level level = pokemonInfo.level.value_or(MechanicConstants::PokemonLevel::DEFAULT);
   dex::Nature nature = setPokemonNature(pokemonInfo, pokemonSetup);
   Evs evs = setPokemonEvs(pokemonInfo, pokemonSetup);
   Ivs ivs = setPokemonIvs(pokemonInfo, pokemonSetup);
@@ -265,9 +275,9 @@ void Simulation::createInitialSide(
 types::sides<SideStateSetup> Simulation::createInitialBattle(
   BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo) {
   battleStateSetup.setAutoID();
-  battleStateSetup.setTurn(battleInfo.turn.value_or(MechanicConstants::TurnCount::MIN));
+  battleStateSetup.setTurn(battleInfo.turn.value_or(MechanicConstants::TurnCount::DEFAULT));
   battleStateSetup.setRNGSeed(battleInfo.rngSeed);
-  battleStateSetup.setProbability(battleInfo.probability.value_or(MechanicConstants::Probability::MAX));
+  battleStateSetup.setProbability(battleInfo.probability.value_or(MechanicConstants::Probability::DEFAULT));
 
   if (battleInfo.runWithSimulateTurn) {
     battleStateSetup.setProperty<tags::SimulateTurn>();

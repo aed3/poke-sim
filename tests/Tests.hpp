@@ -140,7 +140,7 @@ inline Simulation createSingleBattleSimulation(Pokedex& pokedex, BattleCreationI
     {{createPredefinedPokemon(pokedex, dex::Species::AMPHAROS)}},
   };
   battleCreationInfo.turn = 1U;
-  battleCreationInfo.probability = MechanicConstants::Probability::MAX;
+  battleCreationInfo.probability = MechanicConstants::Probability::DEFAULT;
 
   pokedex.loadForBattleInfo({battleCreationInfo});
   return simulation;

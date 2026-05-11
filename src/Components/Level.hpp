@@ -6,6 +6,6 @@
 namespace pokesim {
 // A Pokemon's level
 struct Level {
-  types::level val = MechanicConstants::PokemonLevel::MIN;
+  types::level val = MechanicConstants::PokemonLevel::DEFAULT;
 };
 }  // namespace pokesim

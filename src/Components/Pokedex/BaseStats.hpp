@@ -6,11 +6,11 @@
 namespace pokesim {
 // Contains all of the base stats of a species
 struct BaseStats {
-  types::baseStat hp = MechanicConstants::PokemonBaseStat::MIN;
-  types::baseStat atk = MechanicConstants::PokemonBaseStat::MIN;
-  types::baseStat def = MechanicConstants::PokemonBaseStat::MIN;
-  types::baseStat spa = MechanicConstants::PokemonBaseStat::MIN;
-  types::baseStat spd = MechanicConstants::PokemonBaseStat::MIN;
-  types::baseStat spe = MechanicConstants::PokemonBaseStat::MIN;
+  types::baseStat hp = MechanicConstants::PokemonBaseStat::DEFAULT;
+  types::baseStat atk = MechanicConstants::PokemonBaseStat::DEFAULT;
+  types::baseStat def = MechanicConstants::PokemonBaseStat::DEFAULT;
+  types::baseStat spa = MechanicConstants::PokemonBaseStat::DEFAULT;
+  types::baseStat spd = MechanicConstants::PokemonBaseStat::DEFAULT;
+  types::baseStat spe = MechanicConstants::PokemonBaseStat::DEFAULT;
 };
 }  // namespace pokesim
