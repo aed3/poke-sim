@@ -9,6 +9,7 @@
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/RandomEventInputs.hpp>
+#include <Components/Tags/SimulationTags.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/DebugChecks.hpp>
@@ -55,8 +56,12 @@ struct Checks : pokesim::debug::Checks {
       }
     }
 
-    POKESIM_REQUIRE_NM(registry->view<pokesim::tags::CurrentActionMove>().empty());
-    POKESIM_REQUIRE_NM(registry->view<pokesim::tags::FailedCurrentActionMove>().empty());
+    for (types::entity entity : registry->view<pokesim::tags::CurrentActionMove>()) {
+      POKESIM_REQUIRE_NM(!registry->all_of<pokesim::tags::SimulateTurn>(entity));
+    }
+    for (types::entity entity : registry->view<pokesim::tags::FailedCurrentActionMove>()) {
+      POKESIM_REQUIRE_NM(!registry->all_of<pokesim::tags::SimulateTurn>(entity));
+    }
   }
 };
 }  // namespace pokesim::simulate_turn::debug

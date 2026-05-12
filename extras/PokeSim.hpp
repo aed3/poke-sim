@@ -17663,8 +17663,7 @@ class AssertComponentsEqual {
       POKESIM_REQUIRE_NM(current == initial);
     }
     else {
-      // Not a static_assert so this only fails on types that actually get copied.
-      POKESIM_REQUIRE_FAIL("There's a type that needs a dedicated equals function.");
+      AssertComponentsEqual<Member>::check(current, initial, registry);
     }
   }
 
@@ -17682,7 +17681,7 @@ class AssertComponentsEqual {
     }
 
     // Not a static_assert so this only fails on types that actually get copied.
-    POKESIM_REQUIRE_FAIL("This component needs a dedicated equals function.");
+    POKESIM_REQUIRE_FAIL("This component or type needs a dedicated equals function.");
   }
 #ifdef _MSC_VER
 #pragma warning(default : 4702)
@@ -24743,8 +24742,12 @@ struct Checks : pokesim::debug::Checks {
       }
     }
 
-    POKESIM_REQUIRE_NM(registry->view<pokesim::tags::CurrentActionMove>().empty());
-    POKESIM_REQUIRE_NM(registry->view<pokesim::tags::FailedCurrentActionMove>().empty());
+    for (types::entity entity : registry->view<pokesim::tags::CurrentActionMove>()) {
+      POKESIM_REQUIRE_NM(!registry->all_of<pokesim::tags::SimulateTurn>(entity));
+    }
+    for (types::entity entity : registry->view<pokesim::tags::FailedCurrentActionMove>()) {
+      POKESIM_REQUIRE_NM(!registry->all_of<pokesim::tags::SimulateTurn>(entity));
+    }
   }
 };
 }  // namespace pokesim::simulate_turn::debug
