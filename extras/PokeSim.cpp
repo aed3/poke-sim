@@ -4489,7 +4489,7 @@ void staticOnDamagingHit(
 
     types::entity effectSource = targetHandle.entity();
     types::entity effectTarget = source;
-    registry.emplace<internal::TempPercentChance>(move, chanceOfStatic);
+    registry.emplace<pokesim::internal::TempPercentChance>(move, chanceOfStatic);
     registry.emplace_or_replace<status::tags::Paralysis>(move);
     registry.emplace<CurrentEffectSource>(move, effectSource);
     registry.emplace<CurrentEffectsAsSource>(effectSource, types::entityVector{move});
@@ -4511,12 +4511,12 @@ void Static::onDamagingHit(Simulation& simulation) {
 
   simulation.viewForSelectedPokemon<staticOnDamagingHit, Tags<ability::tags::Static>>(chanceOfStatic);
   checkIfCanSetStatus(simulation);
-  runRandomBinaryChance<internal::TempPercentChance, tags::CanSetStatus>(simulation, [](Simulation& sim) {
+  runRandomBinaryChance<pokesim::internal::TempPercentChance, tags::CanSetStatus>(simulation, [](Simulation& sim) {
     sim.removeFromEntities<tags::CanSetStatus, tags::SelectedForViewMove, tags::RandomEventCheckFailed>();
   });
   setStatus(simulation);
   simulation.registry.clear<
-    internal::TempPercentChance,
+    pokesim::internal::TempPercentChance,
     CurrentEffectSource,
     CurrentEffectTarget,
     CurrentEffectsAsSource,
