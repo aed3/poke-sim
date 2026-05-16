@@ -278,12 +278,12 @@ types::entity buildByGameMechanic(
   using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
   switch (move) {
     case Move::FURY_ATTACK:  return BuildMove<FuryAttack>::build(registry, gameMechanic, forActiveMove);
+    case Move::KNOCK_OFF:    return BuildMove<KnockOff>::build(registry, gameMechanic, forActiveMove);
+    case Move::MOONBLAST:    return BuildMove<Moonblast>::build(registry, gameMechanic, forActiveMove);
+    case Move::QUIVER_DANCE: return BuildMove<QuiverDance>::build(registry, gameMechanic, forActiveMove);
+    case Move::SPLASH:       return BuildMove<Splash>::build(registry, gameMechanic, forActiveMove);
     case Move::THUNDERBOLT:  return BuildMove<Thunderbolt>::build(registry, gameMechanic, forActiveMove);
     case Move::WILL_O_WISP:  return BuildMove<WillOWisp>::build(registry, gameMechanic, forActiveMove);
-    case Move::KNOCK_OFF:    return BuildMove<KnockOff>::build(registry, gameMechanic, forActiveMove);
-    case Move::QUIVER_DANCE: return BuildMove<QuiverDance>::build(registry, gameMechanic, forActiveMove);
-    case Move::MOONBLAST:    return BuildMove<Moonblast>::build(registry, gameMechanic, forActiveMove);
-    case Move::SPLASH:       return BuildMove<Splash>::build(registry, gameMechanic, forActiveMove);
 
     default: break;
   }

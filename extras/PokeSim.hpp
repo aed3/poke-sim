@@ -19262,6 +19262,12 @@ template <typename T>
 struct RandomEventStack {
   types::targets<std::pair<decltype(T::val), types::entity>> val{};
 };
+
+// Temporary because it will get deleted after use and inputs for random chance will be reworked entirely.
+// TODO(aed3): Make every struct in this file internal and make the opening random chance functions not templates
+struct TempPercentChance {
+  types::percentChance val = MechanicConstants::PercentChance::DEFAULT;
+};
 }  // namespace internal
 
 // Used for random events that have a small number of outcomes that can happen and the chance each event can happen is
@@ -19412,6 +19418,8 @@ struct SpeedTieIndexes {
   struct Span {
     types::activePokemonIndex start = MechanicConstants::ActivePokemon::MIN;
     types::activePokemonIndex length = MechanicConstants::ActivePokemon::MIN;
+
+    bool operator==(const Span& other) const noexcept { return other.start == start && other.length == length; }
   };
 
   internal::fixedMemoryVector<Span, MechanicConstants::ActivePokemon::MAX> val{};
@@ -19485,6 +19493,7 @@ using MultipliedUsesUntilKo = calc_damage::UsesUntilKo;
 
 namespace tags {
 struct InfiniteMultiplier {};
+struct IgnoredInput {};
 }  // namespace tags
 }  // namespace analyze_effect
 }  // namespace pokesim
@@ -20280,6 +20289,9 @@ struct UsesUntilKo;
 struct AttackerHpRecovered;
 struct AttackerHpLost;
 }  // namespace calc_damage
+namespace internal {
+struct TempPercentChance;
+}  // namespace internal
 namespace action {
 struct Team;
 }  // namespace action
@@ -20574,6 +20586,9 @@ void check(const Probability&);
 
 template <>
 void check(const RngSeed&);
+
+template <>
+void check(const internal::TempPercentChance&);
 
 template <>
 void check(const RandomEventChances<2U>&);
@@ -22657,7 +22672,7 @@ class Simulation : public internal::RegistryContainer {
   ~Simulation();
 
   const Pokedex& pokedex() const;
-  constexpr bool isBattleFormat(BattleFormat checkedFormat) { return constants.isBattleFormat(checkedFormat); }
+  constexpr bool isBattleFormat(BattleFormat checkedFormat) const { return constants.isBattleFormat(checkedFormat); }
 
   // Load information about any number of battle states into the simulation's registry.
   void createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList);
@@ -24342,7 +24357,8 @@ void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle&
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction action);
 void setCurrentActionTarget(
-  types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source);
+  types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source,
+  const Simulation& simulation);
 void setCurrentActionMove(
   types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
   const Pokedex& pokedex);
@@ -24818,10 +24834,23 @@ inline types::rngResult nextBoundedRandomValue(types::rngState& state, types::rn
   }
 }
 
+// Generate a uniformly distributed number, r, where lower bound <= r < upper bound
+inline types::rngResult nextBoundedRandomValue(
+  types::rngState& state, types::rngResult upperBound, types::rngResult lowerBound) {
+  return nextBoundedRandomValue(state, upperBound - lowerBound) + lowerBound;
+}
+
 // Generate a uniformly distributed number, r, where 0 <= r < bound
 inline types::rngResult nextBoundedRandomValue(RngSeed& seed, types::rngResult upperBound) {
   return nextBoundedRandomValue(seed.val, upperBound);
 }
+
+// Generate a uniformly distributed number, r, where lower bound <= r < upper bound
+inline types::rngResult nextBoundedRandomValue(
+  RngSeed& seed, types::rngResult upperBound, types::rngResult lowerBound) {
+  return nextBoundedRandomValue(seed.val, upperBound, lowerBound);
+}
+
 }  // namespace pokesim::internal
 
 ///////////////////////// END OF src/Utilities/RNG.hpp /////////////////////////
@@ -25858,38 +25887,47 @@ struct Checks : pokesim::debug::Checks {
   void checkInputOutputs() const {
     for (types::entity input : registry->view<tags::Input>()) {
       pokesim::debug::TypesToIgnore typesToIgnore{};
-      typesToIgnore.add<MultipliedDamageRolls>();
-
-      POKESIM_REQUIRE_NM(has<MultipliedDamageRolls>(input));
-
-      if (has<tags::InfiniteMultiplier>(input)) {
-        POKESIM_REQUIRE_NM(!has<EffectMultiplier>(input));
-        typesToIgnore.add<tags::InfiniteMultiplier>();
-      }
-
-      bool zeroEffectMultiplier = false;
-      if (has<EffectMultiplier>(input)) {
+      if (has<tags::IgnoredInput>(input)) {
+        typesToIgnore.add<tags::IgnoredInput>();
+        POKESIM_REQUIRE_NM(!has<MultipliedDamageRolls>(input));
         POKESIM_REQUIRE_NM(!has<tags::InfiniteMultiplier>(input));
-        typesToIgnore.add<EffectMultiplier>();
-
-        const auto [effectMultiplier, multipliedDamageRolls] =
-          registry->get<EffectMultiplier, MultipliedDamageRolls>(input);
-        if (effectMultiplier.val == 0U) {
-          zeroEffectMultiplier = true;
-          for (const Damage& multipliedDamageRoll : multipliedDamageRolls.val) {
-            POKESIM_REQUIRE_NM(multipliedDamageRoll.val == 0U);
-          }
-        }
-      }
-
-      auto damageRollOptions = simulation->analyzeEffectOptions.damageRollOptions;
-      auto noKoChanceCalculation = simulation->analyzeEffectOptions.noKoChanceCalculation;
-      if (noKoChanceCalculation || zeroEffectMultiplier) {
+        POKESIM_REQUIRE_NM(!has<EffectMultiplier>(input));
         POKESIM_REQUIRE_NM(!has<MultipliedUsesUntilKo>(input));
       }
-      else if (DamageRollKind::ALL_DAMAGE_ROLLS & getDamageRollKind(input, damageRollOptions)) {
-        POKESIM_REQUIRE_NM(has<MultipliedUsesUntilKo>(input));
-        typesToIgnore.add<MultipliedUsesUntilKo>();
+      else {
+        typesToIgnore.add<MultipliedDamageRolls>();
+
+        POKESIM_REQUIRE_NM(has<MultipliedDamageRolls>(input));
+
+        if (has<tags::InfiniteMultiplier>(input)) {
+          POKESIM_REQUIRE_NM(!has<EffectMultiplier>(input));
+          typesToIgnore.add<tags::InfiniteMultiplier>();
+        }
+
+        bool zeroEffectMultiplier = false;
+        if (has<EffectMultiplier>(input)) {
+          POKESIM_REQUIRE_NM(!has<tags::InfiniteMultiplier>(input));
+          typesToIgnore.add<EffectMultiplier>();
+
+          const auto [effectMultiplier, multipliedDamageRolls] =
+            registry->get<EffectMultiplier, MultipliedDamageRolls>(input);
+          if (effectMultiplier.val == 0U) {
+            zeroEffectMultiplier = true;
+            for (const Damage& multipliedDamageRoll : multipliedDamageRolls.val) {
+              POKESIM_REQUIRE_NM(multipliedDamageRoll.val == 0U);
+            }
+          }
+        }
+
+        auto damageRollOptions = simulation->analyzeEffectOptions.damageRollOptions;
+        auto noKoChanceCalculation = simulation->analyzeEffectOptions.noKoChanceCalculation;
+        if (noKoChanceCalculation || zeroEffectMultiplier) {
+          POKESIM_REQUIRE_NM(!has<MultipliedUsesUntilKo>(input));
+        }
+        else if (DamageRollKind::ALL_DAMAGE_ROLLS & getDamageRollKind(input, damageRollOptions)) {
+          POKESIM_REQUIRE_NM(has<MultipliedUsesUntilKo>(input));
+          typesToIgnore.add<MultipliedUsesUntilKo>();
+        }
       }
 
       pokesim::debug::areEntitiesEqual(

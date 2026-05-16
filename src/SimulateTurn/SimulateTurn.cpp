@@ -135,7 +135,7 @@ void runMoveAction(Simulation& simulation) {
   pokesim::internal::SelectForBattleView<action::tags::Move> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 
-  simulation.viewForSelectedBattles<setCurrentActionTarget>();
+  simulation.viewForSelectedBattles<setCurrentActionTarget>(simulation);
   simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex());
 
   runBeforeMove(simulation);
@@ -190,7 +190,7 @@ void faintPokemon(Simulation& simulation) {
   types::activePokemonIndex iterations = LoopLimits::MIN;
   while (!simulation.registry.view<FaintQueue>().empty()) {
     POKESIM_REQUIRE(
-      iterations < LoopLimits::MAX,
+      iterations <= LoopLimits::MAX,
       "More Pokemon were queued to faint in at least one battle than possible.");
 
     simulation.viewForSelectedBattles<setFainting>();
@@ -295,7 +295,7 @@ void simulateTurn(Simulation& simulation) {
   types::actionQueueIndex actionsTaken = ActionsLimit::MIN;
   while (!simulation.registry.view<action::tags::Current>().empty()) {
     POKESIM_REQUIRE(
-      actionsTaken < ActionsLimit::MAX,
+      actionsTaken <= ActionsLimit::MAX,
       "More actions in a turn were queued to be taken than in at least one battle than are possible.");
 
     runCurrentAction(simulation);

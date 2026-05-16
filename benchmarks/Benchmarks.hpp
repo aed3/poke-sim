@@ -277,5 +277,3 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
     Catch::StreamingReporterBase::testRunEnded(testRunStats);
   }
 };
-
-CATCH_REGISTER_REPORTER("benchmark", BenchmarkReporter)

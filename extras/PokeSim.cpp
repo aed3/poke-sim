@@ -1052,6 +1052,11 @@ void check(const RngSeed& seed) {
 }
 
 template <>
+void check(const internal::TempPercentChance& chance) {
+  checkPercentChance(chance.val);
+}
+
+template <>
 void check(const RandomEventChances<2U>& randomEventChances) {
   checkRandomChanceEvents(randomEventChances);
 }
@@ -1965,6 +1970,10 @@ void runBeforeMove(Simulation& simulation) {
 }
 
 void runResidual(Simulation& simulation) {
+  pokesim::internal::SelectForPokemonView<tags::ActivePokemon> selectedPokemon{simulation};
+  if (selectedPokemon.hasNoneSelected()) {
+    return;
+  }
   dex::Burn::onResidual(simulation);
 }
 
@@ -2130,6 +2139,12 @@ void deductMoveHitCount(types::handle moveHandle, HitCount& hitCount) {
   }
 }
 
+void removeHitCountFromFaintedTargets(types::handle moveHandle, CurrentActionTarget target) {
+  if (moveHandle.registry()->get<stat::CurrentHp>(target.val).val == MechanicConstants::PokemonCurrentHpStat::MIN) {
+    moveHandle.remove<HitCount>();
+  }
+}
+
 void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets) {
   types::activePokemonIndex deleteCount = 0U;
   for (types::entity& target : targets.val) {
@@ -2250,7 +2265,7 @@ void removeFaintedSecondaryEffectTarget(
 
 // Skipping secondary effects entirely for a fainted target is not something Showdown does. This is done here to prevent
 // more random chance splits than needed and should not cause outcome deviations from Showdown. If, for example, a move
-// exists that has a random chance to add a side or field effect regardless of the target's HP, then this function will
+// exists that has a random chance to add a side or field affect regardless of the target's HP, then this function will
 // need to be reworked.
 void removeFaintedSecondaryEffectTargets(Simulation& simulation) {
   internal::SelectForCurrentActionMoveView<move::effect::tags::Secondary> selectedMoves{simulation};
@@ -2329,7 +2344,11 @@ void accuracyCheck(Simulation& simulation) {
 void moveHitLoop(Simulation& simulation) {
   setMoveHitCount(simulation);
 
+  using MoveHitLimits = MechanicConstants::MoveHits;
+  types::moveHits iterations = MoveHitLimits::MIN;
   while (!simulation.registry.view<HitCount>().empty()) {
+    POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran more than possible.");
+
     internal::SelectForCurrentActionMoveView<HitCount> selectedMoves{simulation};
     POKESIM_REQUIRE(
       !selectedMoves.hasNoneSelected(),
@@ -2350,6 +2369,8 @@ void moveHitLoop(Simulation& simulation) {
     updateAllStats(simulation);
     postMoveHitCheck(simulation);
     simulation.view<deductMoveHitCount>();
+    simulation.view<removeHitCountFromFaintedTargets, Tags<tags::CurrentActionMove>>();
+    iterations++;
   }
 }
 }  // namespace
@@ -2461,7 +2482,7 @@ void runMoveAction(Simulation& simulation) {
   pokesim::internal::SelectForBattleView<action::tags::Move> selectedBattle{simulation};
   if (selectedBattle.hasNoneSelected()) return;
 
-  simulation.viewForSelectedBattles<setCurrentActionTarget>();
+  simulation.viewForSelectedBattles<setCurrentActionTarget>(simulation);
   simulation.viewForSelectedBattles<setCurrentActionMove>(simulation.pokedex());
 
   runBeforeMove(simulation);
@@ -2516,7 +2537,7 @@ void faintPokemon(Simulation& simulation) {
   types::activePokemonIndex iterations = LoopLimits::MIN;
   while (!simulation.registry.view<FaintQueue>().empty()) {
     POKESIM_REQUIRE(
-      iterations < LoopLimits::MAX,
+      iterations <= LoopLimits::MAX,
       "More Pokemon were queued to faint in at least one battle than possible.");
 
     simulation.viewForSelectedBattles<setFainting>();
@@ -2621,7 +2642,7 @@ void simulateTurn(Simulation& simulation) {
   types::actionQueueIndex actionsTaken = ActionsLimit::MIN;
   while (!simulation.registry.view<action::tags::Current>().empty()) {
     POKESIM_REQUIRE(
-      actionsTaken < ActionsLimit::MAX,
+      actionsTaken <= ActionsLimit::MAX,
       "More actions in a turn were queued to be taken than in at least one battle than are possible.");
 
     runCurrentAction(simulation);
@@ -3920,12 +3941,12 @@ types::entity buildByGameMechanic(
   using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
   switch (move) {
     case Move::FURY_ATTACK:  return BuildMove<FuryAttack>::build(registry, gameMechanic, forActiveMove);
+    case Move::KNOCK_OFF:    return BuildMove<KnockOff>::build(registry, gameMechanic, forActiveMove);
+    case Move::MOONBLAST:    return BuildMove<Moonblast>::build(registry, gameMechanic, forActiveMove);
+    case Move::QUIVER_DANCE: return BuildMove<QuiverDance>::build(registry, gameMechanic, forActiveMove);
+    case Move::SPLASH:       return BuildMove<Splash>::build(registry, gameMechanic, forActiveMove);
     case Move::THUNDERBOLT:  return BuildMove<Thunderbolt>::build(registry, gameMechanic, forActiveMove);
     case Move::WILL_O_WISP:  return BuildMove<WillOWisp>::build(registry, gameMechanic, forActiveMove);
-    case Move::KNOCK_OFF:    return BuildMove<KnockOff>::build(registry, gameMechanic, forActiveMove);
-    case Move::QUIVER_DANCE: return BuildMove<QuiverDance>::build(registry, gameMechanic, forActiveMove);
-    case Move::MOONBLAST:    return BuildMove<Moonblast>::build(registry, gameMechanic, forActiveMove);
-    case Move::SPLASH:       return BuildMove<Splash>::build(registry, gameMechanic, forActiveMove);
 
     default: break;
   }
@@ -4136,13 +4157,13 @@ namespace pokesim::dex {
 namespace {
 void knockOffOnBasePowerCheckRemovableItem(
   types::registry& registry, CurrentActionSource source, CurrentActionTarget target) {
-  if (registry.get<stat::CurrentHp>(source.val).val) {
+  if (registry.get<stat::CurrentHp>(source.val).val > MechanicConstants::PokemonCurrentHpStat::MIN) {
     registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
   }
 }
 
 void knockOffOnAfterHitCheckRemovableItem(types::registry& registry, CurrentActionTarget target) {
-  if (registry.get<stat::CurrentHp>(target.val).val) {
+  if (registry.get<stat::CurrentHp>(target.val).val > MechanicConstants::PokemonCurrentHpStat::MIN) {
     registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
   }
 }
@@ -4182,8 +4203,10 @@ void KnockOff::onAfterHit(Simulation& simulation) {
 namespace pokesim::dex {
 namespace {
 void setChoiceLock(types::handle pokemonHandle, Battle battle) {
-  types::entity moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val).val;
-  pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot);
+  const CurrentActionMoveSlot* moveSlot = pokemonHandle.registry()->try_get<CurrentActionMoveSlot>(battle.val);
+  if (moveSlot) {
+    pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot->val);
+  }
 }
 
 template <typename Numerator>
@@ -4203,8 +4226,10 @@ void sourceModifyDamage(
   types::registry& registry, const CurrentActionMovesAsSource& moves, Numerator numerator,
   types::eventModifier denominator) {
   for (types::entity move : moves.val) {
-    DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
-    modifier.modifyDamageEvent = chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
+    DamageRollModifiers* modifier = registry.try_get<DamageRollModifiers>(move);
+    if (modifier) {
+      modifier->modifyDamageEvent = chainValueToModifier(modifier->modifyDamageEvent, numerator, denominator);
+    }
   }
 }
 
@@ -4354,7 +4379,8 @@ void damageByHpDivisor(types::handle pokemonHandle, stat::Hp hp, types::stat hpD
 
 void applyBurnModifier(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves.val) {
-    if (registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
+    if (registry.all_of<move::tags::Physical, pokesim::tags::SelectedForViewMove>(
+          move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
       registry.get<DamageRollModifiers>(move).burn = true;
     }
   }
@@ -4451,6 +4477,9 @@ void staticOnDamagingHit(
     if (!registry.all_of<move::tags::Contact>(move)) {
       continue;
     }
+    if (!registry.all_of<tags::SelectedForViewMove>(move)) {
+      continue;
+    }
     types::entity source = registry.get<CurrentActionSource>(move).val;
     /*
     if (registry.all_of<item::tags::ProtectivePads>(source)) {
@@ -4460,7 +4489,7 @@ void staticOnDamagingHit(
 
     types::entity effectSource = targetHandle.entity();
     types::entity effectTarget = source;
-    registry.emplace<BaseEffectChance>(move, chanceOfStatic);
+    registry.emplace<internal::TempPercentChance>(move, chanceOfStatic);
     registry.emplace_or_replace<status::tags::Paralysis>(move);
     registry.emplace<CurrentEffectSource>(move, effectSource);
     registry.emplace<CurrentEffectsAsSource>(effectSource, types::entityVector{move});
@@ -4479,13 +4508,19 @@ void Plus::onModifySpA(Simulation& simulation) {
 
 void Static::onDamagingHit(Simulation& simulation) {
   const auto chanceOfStatic = simulation.pokedex().getStaticValue<dex::Static::onDamagingHitChance>();
+
   simulation.viewForSelectedPokemon<staticOnDamagingHit, Tags<ability::tags::Static>>(chanceOfStatic);
   checkIfCanSetStatus(simulation);
-  runRandomBinaryChance<BaseEffectChance, tags::CanSetStatus>(simulation, [](Simulation& sim) {
+  runRandomBinaryChance<internal::TempPercentChance, tags::CanSetStatus>(simulation, [](Simulation& sim) {
     sim.removeFromEntities<tags::CanSetStatus, tags::SelectedForViewMove, tags::RandomEventCheckFailed>();
   });
   setStatus(simulation);
-  simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
+  simulation.registry.clear<
+    internal::TempPercentChance,
+    CurrentEffectSource,
+    CurrentEffectTarget,
+    CurrentEffectsAsSource,
+    CurrentEffectsAsTarget>();
 }
 }  // namespace pokesim::dex
 
@@ -5704,18 +5739,29 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, Curr
 }
 
 void setCurrentActionTarget(
-  types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source) {
+  types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source,
+  const Simulation& simulation) {
   types::registry& registry = *battleHandle.registry();
   const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.val);
   types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.val);
 
+  bool pickedTarget = false;
   if (!registry.any_of<tags::Fainted>(targetEntity)) {
+    pickedTarget = true;
+  }
+  else if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT)) {
+    // Set tag to get random target after this function exits
+  }
+
+  if (pickedTarget) {
     battleHandle.emplace<CurrentActionTargets>(types::targets<types::entity>{targetEntity});
     registry.emplace<tags::CurrentActionMoveTarget>(targetEntity);
     registry.emplace<CurrentActionSource>(targetEntity, source);
   }
   else {
-    // Set tag to get random target after this function exits
+    types::entity sourceEntity = battleHandle.get<CurrentActionSource>().val;
+    battleHandle.remove<CurrentActionSource>();
+    registry.remove<tags::CurrentActionMoveSource>(sourceEntity);
   }
 }
 
@@ -6324,6 +6370,13 @@ enum class EffectPresentCheck : std::uint8_t {
   PRESENT_AND_APPLIED,
 };
 
+void ignoreStatusMoves(types::handle inputHandle, EffectMove move, Battle battle, const Pokedex& pokedex) {
+  if (pokedex.moveHas<move::tags::Status>(move.val)) {
+    inputHandle.emplace<tags::IgnoredInput>();
+    inputHandle.registry()->get_or_emplace<SkippedInputCount>(battle.val).val++;
+  }
+}
+
 template <typename BattleEffectType>
 EffectPresentCheck hasBattleEffect(types::registry& registry, Battle battle, BattleEffectType battleEffect) {
   BattleEffectType* currentEffect = registry.try_get<BattleEffectType>(battle.val);
@@ -6428,6 +6481,10 @@ void groupSimilarInputs(types::handle battleHandle, const Inputs& inputs) {
     if (checkedIndexes[currentIndex]) continue;
 
     types::entity currentInput = inputs.val[currentIndex];
+    if (registry.all_of<tags::IgnoredInput>(currentInput)) {
+      continue;
+    }
+
     GroupedInputs& groupedInputs = registry.emplace<GroupedInputs>(currentInput);
 
     const auto currentEffects = tryGetAllInputEffects(currentInput, registry);
@@ -6439,6 +6496,10 @@ void groupSimilarInputs(types::handle battleHandle, const Inputs& inputs) {
       if (checkedIndexes[otherIndex]) continue;
 
       types::entity otherInput = inputs.val[otherIndex];
+      if (registry.all_of<tags::IgnoredInput>(otherInput)) {
+        continue;
+      }
+
       if (!canInputsShareABattle(currentEffects, currentEffectTarget, otherInput, registry)) continue;
 
       groupedInputs.val.push_back(otherInput);
@@ -6598,7 +6659,7 @@ void assignInputsToClones(
       continue;
     }
 
-    if (registry.all_of<tags::RunOneCalculation>(input)) {
+    if (registry.any_of<tags::RunOneCalculation, tags::IgnoredInput>(input)) {
       continue;
     }
 
@@ -6671,7 +6732,8 @@ void createAppliedEffectBattles(Simulation& simulation) {
     }
   }
 
-  simulation.view<createOneCalculationMovePair, Tags<>, entt::exclude_t<OriginalInputEntities>>(simulation.pokedex());
+  simulation.view<createOneCalculationMovePair, Tags<>, entt::exclude_t<OriginalInputEntities, tags::IgnoredInput>>(
+    simulation.pokedex());
   simulation.view<createTwoCalculationsMovePair>(simulation.pokedex());
 }
 
@@ -6832,6 +6894,7 @@ void analyzeEffect(Simulation& simulation) {
     return;
   }
 
+  simulation.view<ignoreStatusMoves>(simulation.pokedex());
   simulation.viewForSelectedBattles<groupSimilarInputs>();
 
   if (!simulation.analyzeEffectOptions.reconsiderActiveEffects) {
@@ -6841,7 +6904,7 @@ void analyzeEffect(Simulation& simulation) {
   createAppliedEffectBattles(simulation);
 
   using Included = Tags<tags::Input>;
-  using Excluded = entt::exclude_t<tags::RunOneCalculation, tags::GroupedWithOtherInput>;
+  using Excluded = entt::exclude_t<tags::RunOneCalculation, tags::IgnoredInput, tags::GroupedWithOtherInput>;
   simulation.view<applyPseudoWeatherEffect, Included, Excluded>();
   simulation.view<applyTerrainEffect, Included, Excluded>();
   simulation.view<applyWeatherEffect, Included, Excluded>();

@@ -24,6 +24,7 @@
 #include <Components/Names/WeatherNames.hpp>
 #include <Components/PlayerSide.hpp>
 #include <Components/SimulationResults.hpp>
+#include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
@@ -34,10 +35,8 @@
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
-#include <cstddef>
 #include <cstdint>
 #include <entt/container/dense_map.hpp>
-#include <limits>
 #include <vector>
 
 #include "AnalyzeEffectDebugChecks.hpp"
@@ -50,6 +49,13 @@ enum class EffectPresentCheck : std::uint8_t {
   PRESENT_AND_NOT_APPLIED,
   PRESENT_AND_APPLIED,
 };
+
+void ignoreStatusMoves(types::handle inputHandle, EffectMove move, Battle battle, const Pokedex& pokedex) {
+  if (pokedex.moveHas<move::tags::Status>(move.val)) {
+    inputHandle.emplace<tags::IgnoredInput>();
+    inputHandle.registry()->get_or_emplace<SkippedInputCount>(battle.val).val++;
+  }
+}
 
 template <typename BattleEffectType>
 EffectPresentCheck hasBattleEffect(types::registry& registry, Battle battle, BattleEffectType battleEffect) {
@@ -155,6 +161,10 @@ void groupSimilarInputs(types::handle battleHandle, const Inputs& inputs) {
     if (checkedIndexes[currentIndex]) continue;
 
     types::entity currentInput = inputs.val[currentIndex];
+    if (registry.all_of<tags::IgnoredInput>(currentInput)) {
+      continue;
+    }
+
     GroupedInputs& groupedInputs = registry.emplace<GroupedInputs>(currentInput);
 
     const auto currentEffects = tryGetAllInputEffects(currentInput, registry);
@@ -166,6 +176,10 @@ void groupSimilarInputs(types::handle battleHandle, const Inputs& inputs) {
       if (checkedIndexes[otherIndex]) continue;
 
       types::entity otherInput = inputs.val[otherIndex];
+      if (registry.all_of<tags::IgnoredInput>(otherInput)) {
+        continue;
+      }
+
       if (!canInputsShareABattle(currentEffects, currentEffectTarget, otherInput, registry)) continue;
 
       groupedInputs.val.push_back(otherInput);
@@ -325,7 +339,7 @@ void assignInputsToClones(
       continue;
     }
 
-    if (registry.all_of<tags::RunOneCalculation>(input)) {
+    if (registry.any_of<tags::RunOneCalculation, tags::IgnoredInput>(input)) {
       continue;
     }
 
@@ -398,7 +412,8 @@ void createAppliedEffectBattles(Simulation& simulation) {
     }
   }
 
-  simulation.view<createOneCalculationMovePair, Tags<>, entt::exclude_t<OriginalInputEntities>>(simulation.pokedex());
+  simulation.view<createOneCalculationMovePair, Tags<>, entt::exclude_t<OriginalInputEntities, tags::IgnoredInput>>(
+    simulation.pokedex());
   simulation.view<createTwoCalculationsMovePair>(simulation.pokedex());
 }
 
@@ -559,6 +574,7 @@ void analyzeEffect(Simulation& simulation) {
     return;
   }
 
+  simulation.view<ignoreStatusMoves>(simulation.pokedex());
   simulation.viewForSelectedBattles<groupSimilarInputs>();
 
   if (!simulation.analyzeEffectOptions.reconsiderActiveEffects) {
@@ -568,7 +584,7 @@ void analyzeEffect(Simulation& simulation) {
   createAppliedEffectBattles(simulation);
 
   using Included = Tags<tags::Input>;
-  using Excluded = entt::exclude_t<tags::RunOneCalculation, tags::GroupedWithOtherInput>;
+  using Excluded = entt::exclude_t<tags::RunOneCalculation, tags::IgnoredInput, tags::GroupedWithOtherInput>;
   simulation.view<applyPseudoWeatherEffect, Included, Excluded>();
   simulation.view<applyTerrainEffect, Included, Excluded>();
   simulation.view<applyWeatherEffect, Included, Excluded>();

@@ -122,6 +122,9 @@ struct UsesUntilKo;
 struct AttackerHpRecovered;
 struct AttackerHpLost;
 }  // namespace calc_damage
+namespace internal {
+struct TempPercentChance;
+}  // namespace internal
 namespace action {
 struct Team;
 }  // namespace action
@@ -416,6 +419,9 @@ void check(const Probability&);
 
 template <>
 void check(const RngSeed&);
+
+template <>
+void check(const internal::TempPercentChance&);
 
 template <>
 void check(const RandomEventChances<2U>&);

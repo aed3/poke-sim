@@ -28,7 +28,8 @@ void damageByHpDivisor(types::handle pokemonHandle, stat::Hp hp, types::stat hpD
 
 void applyBurnModifier(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves.val) {
-    if (registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
+    if (registry.all_of<move::tags::Physical, pokesim::tags::SelectedForViewMove>(
+          move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
       registry.get<DamageRollModifiers>(move).burn = true;
     }
   }

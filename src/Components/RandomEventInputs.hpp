@@ -23,6 +23,12 @@ template <typename T>
 struct RandomEventStack {
   types::targets<std::pair<decltype(T::val), types::entity>> val{};
 };
+
+// Temporary because it will get deleted after use and inputs for random chance will be reworked entirely.
+// TODO(aed3): Make every struct in this file internal and make the opening random chance functions not templates
+struct TempPercentChance {
+  types::percentChance val = MechanicConstants::PercentChance::DEFAULT;
+};
 }  // namespace internal
 
 // Used for random events that have a small number of outcomes that can happen and the chance each event can happen is

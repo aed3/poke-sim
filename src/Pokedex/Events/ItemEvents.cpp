@@ -22,8 +22,10 @@
 namespace pokesim::dex {
 namespace {
 void setChoiceLock(types::handle pokemonHandle, Battle battle) {
-  types::entity moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val).val;
-  pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot);
+  const CurrentActionMoveSlot* moveSlot = pokemonHandle.registry()->try_get<CurrentActionMoveSlot>(battle.val);
+  if (moveSlot) {
+    pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot->val);
+  }
 }
 
 template <typename Numerator>
@@ -43,8 +45,10 @@ void sourceModifyDamage(
   types::registry& registry, const CurrentActionMovesAsSource& moves, Numerator numerator,
   types::eventModifier denominator) {
   for (types::entity move : moves.val) {
-    DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
-    modifier.modifyDamageEvent = chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
+    DamageRollModifiers* modifier = registry.try_get<DamageRollModifiers>(move);
+    if (modifier) {
+      modifier->modifyDamageEvent = chainValueToModifier(modifier->modifyDamageEvent, numerator, denominator);
+    }
   }
 }
 
