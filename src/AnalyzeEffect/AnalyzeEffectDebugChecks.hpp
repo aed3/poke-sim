@@ -100,38 +100,47 @@ struct Checks : pokesim::debug::Checks {
   void checkInputOutputs() const {
     for (types::entity input : registry->view<tags::Input>()) {
       pokesim::debug::TypesToIgnore typesToIgnore{};
-      typesToIgnore.add<MultipliedDamageRolls>();
-
-      POKESIM_REQUIRE_NM(has<MultipliedDamageRolls>(input));
-
-      if (has<tags::InfiniteMultiplier>(input)) {
-        POKESIM_REQUIRE_NM(!has<EffectMultiplier>(input));
-        typesToIgnore.add<tags::InfiniteMultiplier>();
-      }
-
-      bool zeroEffectMultiplier = false;
-      if (has<EffectMultiplier>(input)) {
+      if (has<tags::IgnoredInput>(input)) {
+        typesToIgnore.add<tags::IgnoredInput>();
+        POKESIM_REQUIRE_NM(!has<MultipliedDamageRolls>(input));
         POKESIM_REQUIRE_NM(!has<tags::InfiniteMultiplier>(input));
-        typesToIgnore.add<EffectMultiplier>();
-
-        const auto [effectMultiplier, multipliedDamageRolls] =
-          registry->get<EffectMultiplier, MultipliedDamageRolls>(input);
-        if (effectMultiplier.val == 0U) {
-          zeroEffectMultiplier = true;
-          for (const Damage& multipliedDamageRoll : multipliedDamageRolls.val) {
-            POKESIM_REQUIRE_NM(multipliedDamageRoll.val == 0U);
-          }
-        }
-      }
-
-      auto damageRollOptions = simulation->analyzeEffectOptions.damageRollOptions;
-      auto noKoChanceCalculation = simulation->analyzeEffectOptions.noKoChanceCalculation;
-      if (noKoChanceCalculation || zeroEffectMultiplier) {
+        POKESIM_REQUIRE_NM(!has<EffectMultiplier>(input));
         POKESIM_REQUIRE_NM(!has<MultipliedUsesUntilKo>(input));
       }
-      else if (DamageRollKind::ALL_DAMAGE_ROLLS & getDamageRollKind(input, damageRollOptions)) {
-        POKESIM_REQUIRE_NM(has<MultipliedUsesUntilKo>(input));
-        typesToIgnore.add<MultipliedUsesUntilKo>();
+      else {
+        typesToIgnore.add<MultipliedDamageRolls>();
+
+        POKESIM_REQUIRE_NM(has<MultipliedDamageRolls>(input));
+
+        if (has<tags::InfiniteMultiplier>(input)) {
+          POKESIM_REQUIRE_NM(!has<EffectMultiplier>(input));
+          typesToIgnore.add<tags::InfiniteMultiplier>();
+        }
+
+        bool zeroEffectMultiplier = false;
+        if (has<EffectMultiplier>(input)) {
+          POKESIM_REQUIRE_NM(!has<tags::InfiniteMultiplier>(input));
+          typesToIgnore.add<EffectMultiplier>();
+
+          const auto [effectMultiplier, multipliedDamageRolls] =
+            registry->get<EffectMultiplier, MultipliedDamageRolls>(input);
+          if (effectMultiplier.val == 0U) {
+            zeroEffectMultiplier = true;
+            for (const Damage& multipliedDamageRoll : multipliedDamageRolls.val) {
+              POKESIM_REQUIRE_NM(multipliedDamageRoll.val == 0U);
+            }
+          }
+        }
+
+        auto damageRollOptions = simulation->analyzeEffectOptions.damageRollOptions;
+        auto noKoChanceCalculation = simulation->analyzeEffectOptions.noKoChanceCalculation;
+        if (noKoChanceCalculation || zeroEffectMultiplier) {
+          POKESIM_REQUIRE_NM(!has<MultipliedUsesUntilKo>(input));
+        }
+        else if (DamageRollKind::ALL_DAMAGE_ROLLS & getDamageRollKind(input, damageRollOptions)) {
+          POKESIM_REQUIRE_NM(has<MultipliedUsesUntilKo>(input));
+          typesToIgnore.add<MultipliedUsesUntilKo>();
+        }
       }
 
       pokesim::debug::areEntitiesEqual(

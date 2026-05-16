@@ -76,7 +76,7 @@ class Simulation : public internal::RegistryContainer {
   ~Simulation();
 
   const Pokedex& pokedex() const;
-  constexpr bool isBattleFormat(BattleFormat checkedFormat) { return constants.isBattleFormat(checkedFormat); }
+  constexpr bool isBattleFormat(BattleFormat checkedFormat) const { return constants.isBattleFormat(checkedFormat); }
 
   // Load information about any number of battle states into the simulation's registry.
   void createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList);

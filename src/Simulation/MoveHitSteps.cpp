@@ -38,6 +38,12 @@ void deductMoveHitCount(types::handle moveHandle, HitCount& hitCount) {
   }
 }
 
+void removeHitCountFromFaintedTargets(types::handle moveHandle, CurrentActionTarget target) {
+  if (moveHandle.registry()->get<stat::CurrentHp>(target.val).val == MechanicConstants::PokemonCurrentHpStat::MIN) {
+    moveHandle.remove<HitCount>();
+  }
+}
+
 void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets) {
   types::activePokemonIndex deleteCount = 0U;
   for (types::entity& target : targets.val) {
@@ -158,7 +164,7 @@ void removeFaintedSecondaryEffectTarget(
 
 // Skipping secondary effects entirely for a fainted target is not something Showdown does. This is done here to prevent
 // more random chance splits than needed and should not cause outcome deviations from Showdown. If, for example, a move
-// exists that has a random chance to add a side or field effect regardless of the target's HP, then this function will
+// exists that has a random chance to add a side or field affect regardless of the target's HP, then this function will
 // need to be reworked.
 void removeFaintedSecondaryEffectTargets(Simulation& simulation) {
   internal::SelectForCurrentActionMoveView<move::effect::tags::Secondary> selectedMoves{simulation};
@@ -237,7 +243,11 @@ void accuracyCheck(Simulation& simulation) {
 void moveHitLoop(Simulation& simulation) {
   setMoveHitCount(simulation);
 
+  using MoveHitLimits = MechanicConstants::MoveHits;
+  types::moveHits iterations = MoveHitLimits::MIN;
   while (!simulation.registry.view<HitCount>().empty()) {
+    POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran more than possible.");
+
     internal::SelectForCurrentActionMoveView<HitCount> selectedMoves{simulation};
     POKESIM_REQUIRE(
       !selectedMoves.hasNoneSelected(),
@@ -258,6 +268,8 @@ void moveHitLoop(Simulation& simulation) {
     updateAllStats(simulation);
     postMoveHitCheck(simulation);
     simulation.view<deductMoveHitCount>();
+    simulation.view<removeHitCountFromFaintedTargets, Tags<tags::CurrentActionMove>>();
+    iterations++;
   }
 }
 }  // namespace

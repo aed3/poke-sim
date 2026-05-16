@@ -3,7 +3,6 @@
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/State.hpp>
-#include <vector>
 
 namespace pokesim {
 struct CurrentAction {

@@ -892,6 +892,11 @@ void check(const RngSeed& seed) {
 }
 
 template <>
+void check(const internal::TempPercentChance& chance) {
+  checkPercentChance(chance.val);
+}
+
+template <>
 void check(const RandomEventChances<2U>& randomEventChances) {
   checkRandomChanceEvents(randomEventChances);
 }

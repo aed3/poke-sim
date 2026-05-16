@@ -44,18 +44,29 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, Curr
 }
 
 void setCurrentActionTarget(
-  types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source) {
+  types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source,
+  const Simulation& simulation) {
   types::registry& registry = *battleHandle.registry();
   const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.val);
   types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.val);
 
+  bool pickedTarget = false;
   if (!registry.any_of<tags::Fainted>(targetEntity)) {
+    pickedTarget = true;
+  }
+  else if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT)) {
+    // Set tag to get random target after this function exits
+  }
+
+  if (pickedTarget) {
     battleHandle.emplace<CurrentActionTargets>(types::targets<types::entity>{targetEntity});
     registry.emplace<tags::CurrentActionMoveTarget>(targetEntity);
     registry.emplace<CurrentActionSource>(targetEntity, source);
   }
   else {
-    // Set tag to get random target after this function exits
+    types::entity sourceEntity = battleHandle.get<CurrentActionSource>().val;
+    battleHandle.remove<CurrentActionSource>();
+    registry.remove<tags::CurrentActionMoveSource>(sourceEntity);
   }
 }
 

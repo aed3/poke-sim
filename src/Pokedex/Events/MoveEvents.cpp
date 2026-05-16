@@ -17,13 +17,13 @@ namespace pokesim::dex {
 namespace {
 void knockOffOnBasePowerCheckRemovableItem(
   types::registry& registry, CurrentActionSource source, CurrentActionTarget target) {
-  if (registry.get<stat::CurrentHp>(source.val).val) {
+  if (registry.get<stat::CurrentHp>(source.val).val > MechanicConstants::PokemonCurrentHpStat::MIN) {
     registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
   }
 }
 
 void knockOffOnAfterHitCheckRemovableItem(types::registry& registry, CurrentActionTarget target) {
-  if (registry.get<stat::CurrentHp>(target.val).val) {
+  if (registry.get<stat::CurrentHp>(target.val).val > MechanicConstants::PokemonCurrentHpStat::MIN) {
     registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
   }
 }

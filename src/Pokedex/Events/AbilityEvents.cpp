@@ -2,6 +2,7 @@
 #include <Components/BaseEffectChance.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EventModifier.hpp>
+#include <Components/RandomEventInputs.hpp>
 #include <Components/Tags/AbilityTags.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
@@ -27,6 +28,9 @@ void staticOnDamagingHit(
     if (!registry.all_of<move::tags::Contact>(move)) {
       continue;
     }
+    if (!registry.all_of<tags::SelectedForViewMove>(move)) {
+      continue;
+    }
     types::entity source = registry.get<CurrentActionSource>(move).val;
     /*
     if (registry.all_of<item::tags::ProtectivePads>(source)) {
@@ -36,7 +40,7 @@ void staticOnDamagingHit(
 
     types::entity effectSource = targetHandle.entity();
     types::entity effectTarget = source;
-    registry.emplace<BaseEffectChance>(move, chanceOfStatic);
+    registry.emplace<internal::TempPercentChance>(move, chanceOfStatic);
     registry.emplace_or_replace<status::tags::Paralysis>(move);
     registry.emplace<CurrentEffectSource>(move, effectSource);
     registry.emplace<CurrentEffectsAsSource>(effectSource, types::entityVector{move});
@@ -55,12 +59,18 @@ void Plus::onModifySpA(Simulation& simulation) {
 
 void Static::onDamagingHit(Simulation& simulation) {
   const auto chanceOfStatic = simulation.pokedex().getStaticValue<dex::Static::onDamagingHitChance>();
+
   simulation.viewForSelectedPokemon<staticOnDamagingHit, Tags<ability::tags::Static>>(chanceOfStatic);
   checkIfCanSetStatus(simulation);
-  runRandomBinaryChance<BaseEffectChance, tags::CanSetStatus>(simulation, [](Simulation& sim) {
+  runRandomBinaryChance<internal::TempPercentChance, tags::CanSetStatus>(simulation, [](Simulation& sim) {
     sim.removeFromEntities<tags::CanSetStatus, tags::SelectedForViewMove, tags::RandomEventCheckFailed>();
   });
   setStatus(simulation);
-  simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
+  simulation.registry.clear<
+    internal::TempPercentChance,
+    CurrentEffectSource,
+    CurrentEffectTarget,
+    CurrentEffectsAsSource,
+    CurrentEffectsAsTarget>();
 }
 }  // namespace pokesim::dex

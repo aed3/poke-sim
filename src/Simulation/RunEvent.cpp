@@ -83,6 +83,10 @@ void runBeforeMove(Simulation& simulation) {
 }
 
 void runResidual(Simulation& simulation) {
+  pokesim::internal::SelectForPokemonView<tags::ActivePokemon> selectedPokemon{simulation};
+  if (selectedPokemon.hasNoneSelected()) {
+    return;
+  }
   dex::Burn::onResidual(simulation);
 }
 

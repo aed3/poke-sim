@@ -62,6 +62,7 @@ using MultipliedUsesUntilKo = calc_damage::UsesUntilKo;
 
 namespace tags {
 struct InfiniteMultiplier {};
+struct IgnoredInput {};
 }  // namespace tags
 }  // namespace analyze_effect
 }  // namespace pokesim
