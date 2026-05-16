@@ -16,7 +16,7 @@ struct StateSetupBase {
   types::handle handle;
 
  public:
-  StateSetupBase() {};
+  StateSetupBase() {}
   StateSetupBase(types::registry& registry, types::entity entity) : handle(registry, entity) {}
 
   /**
