@@ -50,7 +50,7 @@ struct Random {
 
   template <typename T>
   static auto pickFromList(const T& list, types::rngState rngState) {
-    return list[internal::nextBoundedRandomValue(rngState, list.size())];
+    return list[internal::nextBoundedRandomValue(rngState, (types::rngResult)list.size())];
   }
 
   template <typename MinMaxStruct>
@@ -62,7 +62,8 @@ struct Random {
     std::vector<dex::Move> movesPicked{listLength};
     std::vector<dex::Move> unusedMoves{availableMoves.begin(), availableMoves.end()};
     for (std::size_t i = 0; i < movesPicked.size(); i++) {
-      dex::Move move = unusedMoves[internal::nextBoundedRandomValue(rngState, unusedMoves.size() - i)];
+      dex::Move move =
+        unusedMoves[internal::nextBoundedRandomValue(rngState, (types::rngResult)(unusedMoves.size() - i))];
       movesPicked[i] = move;
       auto end = std::remove(unusedMoves.begin(), unusedMoves.end(), move);
       (void)end;
@@ -183,20 +184,20 @@ struct Random {
     return turnDecision;
   }
 
-  static CalcDamageInputInfo createRandomCalcDamageInput(types::rngState& rngState, const BattleCreationInfo& battle) {
+  static CalcDamageInputInfo createRandomCalcDamageInput(types::rngState& rngState) {
     CalcDamageInputInfo inputInfo{
       (Slot)internal::nextBoundedRandomValue(rngState, TOTAL_SLOT_COUNT + 1U, 1U),
       (Slot)internal::nextBoundedRandomValue(rngState, TOTAL_SLOT_COUNT + 1U, 1U),
     };
 
-    std::size_t movesCalculated = internal::nextBoundedRandomValue(rngState, availableMoves.size(), 1U);
+    std::size_t movesCalculated =
+      internal::nextBoundedRandomValue(rngState, (types::rngResult)availableMoves.size(), 1U);
     inputInfo.moves = pickUniqueMoveList(rngState, movesCalculated);
 
     return inputInfo;
   }
 
-  static AnalyzeEffectInputInfo createRandomAnalyzeEffectInput(
-    types::rngState& rngState, const BattleCreationInfo& battle) {
+  static AnalyzeEffectInputInfo createRandomAnalyzeEffectInput(types::rngState& rngState) {
     AnalyzeEffectInputInfo inputInfo{
       (Slot)internal::nextBoundedRandomValue(rngState, TOTAL_SLOT_COUNT + 1U, 1U),
       (Slot)internal::nextBoundedRandomValue(rngState, TOTAL_SLOT_COUNT + 1U, 1U),
@@ -205,12 +206,18 @@ struct Random {
     inputInfo.effectTarget =
       internal::nextBoundedRandomValue(rngState, 2U) == 0U ? inputInfo.attackerSlot : inputInfo.defenderSlot;
 
+    types::boost boost = (types::boost)internal::nextBoundedRandomValue(
+      rngState,
+      (types::rngResult)(MechanicConstants::PokemonStatBoost::MAX - MechanicConstants::PokemonStatBoost::MIN + 1U));
+    boost -= MechanicConstants::PokemonStatBoost::MIN;
+
     inputInfo.boostEffect = {{
       (dex::Stat)(1 << internal::nextBoundedRandomValue(rngState, dex::TOTAL_STAT_COUNT, 1U)),
-      (types::boost)pickFromBounds<MechanicConstants::PokemonStatBoost>(rngState),
+      boost,
     }};
 
-    std::size_t movesCalculated = internal::nextBoundedRandomValue(rngState, availableMoves.size(), 1U);
+    std::size_t movesCalculated =
+      internal::nextBoundedRandomValue(rngState, (types::rngResult)availableMoves.size(), 1U);
     inputInfo.moves = pickUniqueMoveList(rngState, movesCalculated);
 
     return inputInfo;
@@ -252,10 +259,10 @@ struct Random {
         return createRandomTurnDecision(rngState, battle, simulation);
       }
       else if constexpr (std::is_same_v<SimulationTag, tags::CalculateDamage>) {
-        return createRandomCalcDamageInput(rngState, battle);
+        return createRandomCalcDamageInput(rngState);
       }
       else {
-        return createRandomAnalyzeEffectInput(rngState, battle);
+        return createRandomAnalyzeEffectInput(rngState);
       }
     }
 
