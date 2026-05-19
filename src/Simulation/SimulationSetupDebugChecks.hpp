@@ -616,6 +616,14 @@ struct SimulationSetupChecks {
 #include "Simulation.hpp"
 
 namespace pokesim {
+namespace calc_damage {
+struct InputSetup;
+}
+
+namespace analyze_effect {
+struct InputSetup;
+}
+
 namespace debug {
 struct SimulationSetupChecks {
   SimulationSetupChecks(const Simulation*, const std::vector<BattleCreationInfo>&) {}

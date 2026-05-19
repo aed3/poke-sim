@@ -3,7 +3,6 @@
 #include <cstdint>
 
 namespace pokesim::dex {
-
 /**
  * @brief Pokemon and Pokemon form name.
  *

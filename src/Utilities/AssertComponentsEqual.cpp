@@ -8,13 +8,11 @@
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
-#include <cstddef>
 #include <entt/container/dense_map.hpp>
 #include <entt/container/dense_set.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/meta/resolve.hpp>
 #include <limits>
-#include <vector>
 
 #include "AssertComponentsEqual.hpp"
 

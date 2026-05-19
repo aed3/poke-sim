@@ -24,14 +24,13 @@
 #include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>
 #include <cstddef>
-#include <cstdint>
 #include <entt/container/dense_set.hpp>
 #include <entt/entity/registry.hpp>
 #include <type_traits>
 
 #include "Simulation.hpp"
 
-// TODO(aed3) Auto generate?
+// TODO(aed3) Autogenerate?
 
 namespace pokesim {
 namespace {

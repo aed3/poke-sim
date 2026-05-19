@@ -4,7 +4,7 @@
 #include <Types/Stats.hpp>
 
 namespace pokesim {
-// Contains all of the base stats of a species
+// Contains all the base stats of a species
 struct BaseStats {
   types::baseStat hp = MechanicConstants::PokemonBaseStat::DEFAULT;
   types::baseStat atk = MechanicConstants::PokemonBaseStat::DEFAULT;

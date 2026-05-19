@@ -69,5 +69,4 @@ void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInf
   loadMoves(moveSet);
   loadAbilities(abilitySet);
 }
-
 }  // namespace pokesim

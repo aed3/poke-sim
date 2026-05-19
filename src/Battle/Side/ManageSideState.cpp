@@ -4,6 +4,7 @@
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Types/Entity.hpp>
+#include <Types/State.hpp>
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {

@@ -3,6 +3,7 @@
 #include <Components/Tags/StatusTags.hpp>
 #include <Config/Require.hpp>
 #include <Types/Enums/Status.hpp>
+#include <utility>
 
 namespace pokesim::status::tags {
 /*

@@ -12,7 +12,6 @@
 #include <Types/Registry.hpp>
 #include <Types/Stats.hpp>
 #include <entt/entity/handle.hpp>
-#include <type_traits>
 
 #include "DexDataSetup.hpp"
 

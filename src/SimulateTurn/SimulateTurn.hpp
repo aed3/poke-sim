@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Types/Registry.hpp>
-
 namespace pokesim {
 class Simulation;
 

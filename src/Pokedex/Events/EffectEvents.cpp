@@ -21,7 +21,6 @@
 
 namespace pokesim::dex {
 namespace {
-
 void damageByHpDivisor(types::handle pokemonHandle, stat::Hp hp, types::stat hpDivisor) {
   applyDamage(pokemonHandle, hp.val / hpDivisor);
 }

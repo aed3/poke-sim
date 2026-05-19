@@ -5,7 +5,6 @@
 
 // Adapted from https://github.com/imneme/pcg-c-basic/blob/master/pcg_basic.c
 namespace pokesim::internal {
-
 // Generate a uniformly distributed 32-bit random number
 constexpr types::rngResult nextRandomValue(types::rngState& state) {
   // NOLINTBEGIN
@@ -69,5 +68,4 @@ inline types::rngResult nextBoundedRandomValue(
   RngSeed& seed, types::rngResult upperBound, types::rngResult lowerBound) {
   return nextBoundedRandomValue(seed.val, upperBound, lowerBound);
 }
-
 }  // namespace pokesim::internal

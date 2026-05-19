@@ -16,7 +16,6 @@
 #include <Types/Move.hpp>
 #include <Types/Stats.hpp>
 #include <entt/entity/handle.hpp>
-#include <type_traits>
 
 namespace pokesim::dex::internal {
 void MoveDexDataSetup::setName(Move move) {

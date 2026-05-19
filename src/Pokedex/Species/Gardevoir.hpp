@@ -32,5 +32,4 @@ struct Gardevoir {
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
-
 }  // namespace pokesim::dex

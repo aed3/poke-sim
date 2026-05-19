@@ -3,6 +3,7 @@
 #include <Components/Tags/NatureTags.hpp>
 #include <Config/Require.hpp>
 #include <Types/Enums/Nature.hpp>
+#include <utility>
 
 namespace pokesim::nature::tags {
 /*

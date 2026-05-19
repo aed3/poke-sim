@@ -5,8 +5,6 @@
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
 #include <cstddef>
-#include <cstdint>
-#include <stdexcept>
 #include <string>
 
 namespace pokesim::debug {

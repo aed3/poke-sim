@@ -31,5 +31,4 @@ struct StateSetupBase {
 
   types::entity entity() const { return handle.entity(); }
 };
-
 }  // namespace pokesim::internal

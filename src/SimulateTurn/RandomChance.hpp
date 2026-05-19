@@ -61,8 +61,6 @@ void randomEqualChance(
   types::optionalCallback updateProbabilities);
 void randomEventCount(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities);
-
-void clearRandomChanceResult(Simulation& simulation);
 }  // namespace internal
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename... SelectionTags>

@@ -196,5 +196,4 @@ BENCHMARK_CASE(
 BENCHMARK_CASE(
   CreatePokedex, CreateSingleBattleSimulation, ChooseAnalyzeEffectOptions,
   VerticalSlice::AssignAnalyzeEffectSingleBattleInputs)
-
 }  // namespace pokesim

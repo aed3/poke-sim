@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Types/Entity.hpp>
-#include <Types/MechanicConstants.hpp>
 #include <Types/State.hpp>
 
 namespace pokesim {

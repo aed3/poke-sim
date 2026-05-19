@@ -200,6 +200,15 @@ void placeChanceFromStack(types::handle battleHandle, Stack& stack) {
   }
 }
 
+void clearRandomChanceResult(Simulation& simulation) {
+  simulation.registry.clear<tags::RandomEventA>();
+  simulation.registry.clear<tags::RandomEventB>();
+  simulation.registry.clear<tags::RandomEventC>();
+  simulation.registry.clear<tags::RandomEventD>();
+  simulation.registry.clear<tags::RandomEventE>();
+  simulation.registry.clear<RandomEventIndex>();
+}
+
 template <
   typename Random, typename RandomStack, auto AssignRandomEvents, typename UpdateProbabilities,
   typename... AssignRandomEventsTags, typename... AssignArgs>
@@ -546,15 +555,6 @@ void randomBinaryChance(
     applyChoices,
     assignClonesToEvents,
     updateProbabilities.value_or(defaultUpdateProbabilities));
-}
-
-void clearRandomChanceResult(Simulation& simulation) {
-  simulation.registry.clear<tags::RandomEventA>();
-  simulation.registry.clear<tags::RandomEventB>();
-  simulation.registry.clear<tags::RandomEventC>();
-  simulation.registry.clear<tags::RandomEventD>();
-  simulation.registry.clear<tags::RandomEventE>();
-  simulation.registry.clear<RandomEventIndex>();
 }
 
 template void randomEventChances<2U>(Simulation&, types::callback, types::optionalCallback);

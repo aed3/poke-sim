@@ -4,10 +4,6 @@
 #include <Types/Enums/GameMechanics.hpp>
 #include <string_view>
 
-namespace pokesim {
-class Simulation;
-}  // namespace pokesim
-
 namespace pokesim::dex {
 struct Defiant {
   static constexpr dex::Ability name(GameMechanics) { return dex::Ability::DEFIANT; }

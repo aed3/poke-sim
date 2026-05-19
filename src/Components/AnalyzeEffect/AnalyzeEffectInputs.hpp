@@ -5,7 +5,6 @@
 #include <Types/Random.hpp>
 #include <Types/State.hpp>
 #include <Utilities/MaxSizedVector.hpp>
-#include <vector>
 
 namespace pokesim::analyze_effect {
 struct EffectTarget {

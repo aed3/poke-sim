@@ -16,7 +16,6 @@
 #include <Types/Enums/Slot.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
-#include <cstdint>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 

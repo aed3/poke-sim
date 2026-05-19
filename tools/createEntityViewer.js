@@ -49,8 +49,8 @@ struct TypeEntityPairs : std::vector<TypeEntityPair<T>> {
 class EntityViewerRegistry : public entt::registry {
   template <typename Registry>
   friend class EntityViewerHandle;
-  std::vector<std::string_view> components(types::entity entity) const;
-  std::vector<std::string_view> components(std::uint64_t entity) const {
+  std::vector<std::string> components(types::entity entity) const;
+  std::vector<std::string> components(std::uint64_t entity) const {
     return components((types::entity)entity);
   };
   std::size_t count() const;
@@ -78,7 +78,7 @@ class EntityViewerHandle : public entt::basic_handle<Registry> {
 
  private:
   void test() const;
-  std::vector<std::string_view> components() const;
+  std::vector<std::string> components() const;
   ${getComponentDeclarations.map(decl => decl.replace('types::entity entity', '')).join('')}
   ${getSizeDeclarations.join('')}
   ${getAllDeclarations.join('')}
@@ -103,11 +103,11 @@ const implText = (getComponentDefinitions,
 #include <string>
 
 namespace pokesim::debug {
-std::vector<std::string_view> EntityViewerRegistry::components(types::entity entity) const {
-  std::vector<std::string_view> list;
+std::vector<std::string> EntityViewerRegistry::components(types::entity entity) const {
+  std::vector<std::string> list;
   for (auto [id, store] : storage()) {
     if (store.contains(entity)) {
-      list.push_back(store.type().name());
+      list.emplace_back(store.type().name());
     }
   }
   return list;
@@ -194,7 +194,7 @@ void EntityViewerHandle<Registry>::test() const {
 }
 
 template <typename Registry>
-std::vector<std::string_view> EntityViewerHandle<Registry>::components() const {
+std::vector<std::string> EntityViewerHandle<Registry>::components() const {
   return registry()->components(entity());
 }
 ${handleAdapters.join('\n')}

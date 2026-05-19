@@ -52,5 +52,4 @@ struct CurrentEffectsAsTarget {
 struct CurrentEffectsAsSource {
   types::entityVector val{};
 };
-
 }  // namespace pokesim

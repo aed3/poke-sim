@@ -3,6 +3,7 @@
 #include <Components/Tags/TypeTags.hpp>
 #include <Config/Require.hpp>
 #include <Types/Enums/Type.hpp>
+#include <utility>
 
 namespace pokesim::type::tags {
 /*
