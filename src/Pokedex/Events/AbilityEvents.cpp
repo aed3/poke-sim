@@ -39,7 +39,7 @@ void staticOnDamagingHit(
     }
     */
 
-    internal::setRandomBinaryChance({registry, move}, BaseEffectChance{chanceOfStatic}, battle, simulation);
+    pokesim::internal::setRandomBinaryChance({registry, move}, BaseEffectChance{chanceOfStatic}, battle, simulation);
 
     types::entity effectSource = targetHandle.entity();
     types::entity effectTarget = source;
@@ -67,7 +67,7 @@ void Static::onDamagingHit(Simulation& simulation) {
   // TODO(aed3): This is now inefficient since the random chance will happen for move sources that cannot have their
   // status changed.
   checkIfCanSetStatus(simulation);
-  internal::randomBinaryChance(
+  pokesim::internal::randomBinaryChance(
     simulation,
     [](Simulation& sim) {
       sim.removeFromEntities<
