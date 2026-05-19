@@ -35,17 +35,17 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
     GENERATE(minCritDamageKind, minDamageKind),
     GENERATE(minCritDamageKind, minDamageKind),
   };
-  CAPTURE(damageRollOptions.p1, damageRollOptions.p2);
+  CAPTURE(damageRollOptions.getP1(), damageRollOptions.getP2());
 
   auto& options = simulation.simulateTurnOptions;
-  options.damageRollsConsidered = {
+  options.setDamageRollsConsidered({
     GENERATE(minCritDamageKind, minDamageKind),
     GENERATE(minCritDamageKind, minDamageKind),
-  };
-  options.applyChangesToInputBattle = true;
-  options.makeBranchesOnRandomEvents = true;
+  });
+  options.setApplyChangesToInputBattle(true);
+  options.setMakeBranchesOnRandomEvents(true);
 
-  const bool alwaysCrits = options.damageRollsConsidered.p2 & DamageRollKind::GUARANTEED_CRIT_CHANCE;
+  const bool alwaysCrits = options.getDamageRollsConsidered().getP2() & DamageRollKind::GUARANTEED_CRIT_CHANCE;
   const bool twoDamageOutcomesPerHit = !alwaysCrits;
 
   const types::probability passesAccuracyProbability = pokedex.getStaticValue<dex::FuryAttack::accuracy>() / 100.0F;

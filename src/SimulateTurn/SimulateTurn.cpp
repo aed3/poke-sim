@@ -256,13 +256,14 @@ void simulateTurn(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
 #ifndef POKESIM_ALL_DAMAGE_ALL_BRANCHES
   POKESIM_REQUIRE(
-    !options.makeBranchesOnRandomEvents || !(options.damageRollsConsidered.p1 & DamageRollKind::ALL_DAMAGE_ROLLS ||
-                                             options.damageRollsConsidered.p2 & DamageRollKind::ALL_DAMAGE_ROLLS),
+    !options.getMakeBranchesOnRandomEvents() ||
+      !(options.getDamageRollsConsidered().getP1() & DamageRollKind::ALL_DAMAGE_ROLLS ||
+        options.getDamageRollsConsidered().getP2() & DamageRollKind::ALL_DAMAGE_ROLLS),
     "Creating a branch for every damage roll is disabled by default to prevent easily reaching the battle count limit. "
     "Rebuild PokeSim with the flag POKESIM_ALL_DAMAGE_ALL_BRANCHES to enable this option combination.");
 #endif
 
-  if (!options.applyChangesToInputBattle) {
+  if (!options.getApplyChangesToInputBattle()) {
     simulation.addToEntities<pokesim::tags::CloneFrom, pokesim::tags::Battle, pokesim::tags::SimulateTurn>();
     const auto entityMap = clone(simulation.registry, 1U);
     for (const auto& inputBattleMapping : entityMap) {

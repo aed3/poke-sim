@@ -7,9 +7,7 @@
 #include <Simulation/RegistryContainer.hpp>
 #include <Types/Entity.hpp>
 #include <cstddef>
-#include <cstdint>
 #include <entt/container/dense_set.hpp>
-#include <vector>
 
 namespace pokesim::internal {
 template <typename Selection, typename Required, typename... ComponentsToSelect>
@@ -50,12 +48,14 @@ struct SelectForView {
 };
 
 template <typename... ComponentsToSelect>
-using SelectForBattleView = SelectForView<tags::SelectedForViewBattle, tags::Battle, ComponentsToSelect...>;
+using SelectForBattleView =
+  SelectForView<pokesim::tags::SelectedForViewBattle, pokesim::tags::Battle, ComponentsToSelect...>;
 template <typename... ComponentsToSelect>
-using SelectForSideView = SelectForView<tags::SelectedForViewSide, tags::Side, ComponentsToSelect...>;
+using SelectForSideView = SelectForView<pokesim::tags::SelectedForViewSide, pokesim::tags::Side, ComponentsToSelect...>;
 template <typename... ComponentsToSelect>
-using SelectForPokemonView = SelectForView<tags::SelectedForViewPokemon, tags::Pokemon, ComponentsToSelect...>;
+using SelectForPokemonView =
+  SelectForView<pokesim::tags::SelectedForViewPokemon, pokesim::tags::Pokemon, ComponentsToSelect...>;
 template <typename... ComponentsToSelect>
 using SelectForCurrentActionMoveView =
-  SelectForView<tags::SelectedForViewMove, tags::CurrentActionMove, ComponentsToSelect...>;
+  SelectForView<pokesim::tags::SelectedForViewMove, pokesim::tags::CurrentActionMove, ComponentsToSelect...>;
 }  // namespace pokesim::internal

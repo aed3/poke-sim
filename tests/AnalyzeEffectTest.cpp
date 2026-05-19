@@ -165,14 +165,13 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
 
   auto& options = simulation.analyzeEffectOptions;
 
-  options.reconsiderActiveEffects = reconsiderActiveEffects;
+  options.setReconsiderActiveEffects(reconsiderActiveEffects);
   if (getKoUses) {
-    options.damageRollOptions.p1 = DamageRollKind::ALL_DAMAGE_ROLLS;
-    options.damageRollOptions.p2 = DamageRollKind::ALL_DAMAGE_ROLLS;
-    options.noKoChanceCalculation = false;
+    options.setDamageRollOptions({DamageRollKind::ALL_DAMAGE_ROLLS});
+    options.setNoKoChanceCalculation(false);
   }
   else {
-    options.noKoChanceCalculation = true;
+    options.setNoKoChanceCalculation(true);
   }
 
   SECTION("One Input, One Effect Applied") {

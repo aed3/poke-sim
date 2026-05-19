@@ -38,7 +38,7 @@ struct Checks : pokesim::debug::Checks {
       : pokesim::debug::Checks(_simulation), options(_simulation.analyzeEffectOptions) {}
 
   void checkInputs() {
-    pokesim::debug::check(options.damageRollOptions);
+    pokesim::debug::check(options.getDamageRollOptions());
 
     auto view = registry->view<tags::Input>();
     types::entityVector inputs{view.begin(), view.end()};
@@ -83,11 +83,11 @@ struct Checks : pokesim::debug::Checks {
     PlayerSideId playerSide = registry->get<PlayerSide>(side.val).val;
     switch (playerSide) {
       case PlayerSideId::P1: {
-        return damageRollOptions.p1;
+        return damageRollOptions.getP1();
         break;
       }
       case PlayerSideId::P2: {
-        return damageRollOptions.p2;
+        return damageRollOptions.getP2();
         break;
       }
       default: break;
@@ -132,8 +132,8 @@ struct Checks : pokesim::debug::Checks {
           }
         }
 
-        auto damageRollOptions = simulation->analyzeEffectOptions.damageRollOptions;
-        auto noKoChanceCalculation = simulation->analyzeEffectOptions.noKoChanceCalculation;
+        auto damageRollOptions = simulation->analyzeEffectOptions.getDamageRollOptions();
+        auto noKoChanceCalculation = simulation->analyzeEffectOptions.getNoKoChanceCalculation();
         if (noKoChanceCalculation || zeroEffectMultiplier) {
           POKESIM_REQUIRE_NM(!has<MultipliedUsesUntilKo>(input));
         }

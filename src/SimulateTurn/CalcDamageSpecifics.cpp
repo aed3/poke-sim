@@ -21,7 +21,8 @@
 
 namespace pokesim::simulate_turn {
 namespace {
-void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls, const RandomEventIndex& randomRollIndex) {
+void applyDamageRollIndex(
+  Damage& damage, const DamageRolls& damageRolls, const pokesim::internal::RandomEventIndex& randomRollIndex) {
   types::eventPossibilities damageRollIndex = 0U;
   for (types::damageRollIndex i = 0U; i < damageRolls.val.size(); i++) {
     if (randomRollIndex.val == damageRollIndex) {
@@ -38,10 +39,10 @@ void applyDamageRollIndex(Damage& damage, const DamageRolls& damageRolls, const 
 }
 
 void assignPartialProbability(
-  types::registry& registry, const Battle& battle, const RandomEventCount& randomEventCount) {
+  types::registry& registry, const Battle& battle, const pokesim::internal::RandomEventCount& randomEventCount) {
   if (randomEventCount.val != 1U) {
     Probability& probability = registry.get<Probability>(battle.val);
-    probability.val *= MechanicConstants::Probability::MAX / (types::probability)randomEventCount.val;
+    probability.val *= randomEventCount.probability();
   }
 }
 
@@ -85,15 +86,16 @@ void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind)
   if (selectedMoves.hasNoneSelected()) return;
 
   bool forAllDamageRolls = damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS;
-  bool forRequiredDamageRolls = simulation.simulateTurnOptions.makeBranchesOnRandomEvents || forAllDamageRolls;
+  bool forRequiredDamageRolls = simulation.simulateTurnOptions.getMakeBranchesOnRandomEvents() || forAllDamageRolls;
   auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<applyDamageRollIndex>(); };
   auto updateProbabilities = forAllDamageRolls ? updateAllDamageRollProbabilities : updatePartialProbabilities;
 
-  runRandomEventCount<countUniqueDamageRolls, pokesim::tags::SelectedForViewMove>(
+  runRandomEventCount<pokesim::tags::SelectedForViewMove>(
     simulation,
-    forRequiredDamageRolls,
+    countUniqueDamageRolls,
     applyChoices,
-    updateProbabilities);
+    updateProbabilities,
+    forRequiredDamageRolls);
 
   simulation.removeFromEntities<DamageRolls, pokesim::tags::SelectedForViewMove>();
 }
@@ -104,7 +106,9 @@ void setIfMoveCrits(Simulation& simulation) {
 
   runReciprocalRandomBinaryChance<calc_damage::CritChanceDivisor, pokesim::tags::SelectedForViewMove>(
     simulation,
-    [](Simulation& sim) { sim.addToEntities<calc_damage::tags::Crit, pokesim::tags::RandomEventCheckPassed>(); });
+    [](Simulation& sim) {
+      sim.addToEntities<calc_damage::tags::Crit, pokesim::internal::tags::RandomEventCheckPassed>();
+    });
 
   simulation.registry.clear<calc_damage::CritChanceDivisor>();
 }

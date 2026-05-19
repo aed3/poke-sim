@@ -41,7 +41,7 @@ struct Checks : pokesim::debug::Checks {
       : pokesim::debug::Checks(_simulation), options(_simulation.calculateDamageOptions) {}
 
   void checkInputs() {
-    pokesim::debug::check(options.damageRollOptions);
+    pokesim::debug::check(options.getDamageRollOptions());
 
     checkMoveInputs();
     checkPokemonInputs(true);
@@ -65,7 +65,7 @@ struct Checks : pokesim::debug::Checks {
 
     std::size_t finalEntityCount = getFinalEntityCount();
 
-    if (!simulation->simulateTurnOptions.makeBranchesOnRandomEvents) {
+    if (!simulation->simulateTurnOptions.getMakeBranchesOnRandomEvents()) {
       std::size_t finalSimulationTurnCount = registry->view<pokesim::tags::SimulateTurn>().size();
       POKESIM_REQUIRE_NM(simulateTurnCount == finalSimulationTurnCount);
       POKESIM_REQUIRE_NM(initialEntityCount == finalEntityCount);
@@ -185,11 +185,11 @@ struct Checks : pokesim::debug::Checks {
     PlayerSideId playerSide = registry->get<PlayerSide>(side.val).val;
     switch (playerSide) {
       case PlayerSideId::P1: {
-        return damageRollOptions.p1;
+        return damageRollOptions.getP1();
         break;
       }
       case PlayerSideId::P2: {
-        return damageRollOptions.p2;
+        return damageRollOptions.getP2();
         break;
       }
 
@@ -207,14 +207,14 @@ struct Checks : pokesim::debug::Checks {
     bool noKoChanceCalculation;
     bool calculateUpToFoeHp;
     if (has<pokesim::tags::CalculateDamage>(move)) {
-      damageRollOptions = simulation->calculateDamageOptions.damageRollOptions;
-      calculateUpToFoeHp = simulation->calculateDamageOptions.calculateUpToFoeHp;
-      noKoChanceCalculation = simulation->calculateDamageOptions.noKoChanceCalculation;
+      damageRollOptions = simulation->calculateDamageOptions.getDamageRollOptions();
+      calculateUpToFoeHp = simulation->calculateDamageOptions.getCalculateUpToFoeHp();
+      noKoChanceCalculation = simulation->calculateDamageOptions.getNoKoChanceCalculation();
     }
     else if (has<pokesim::tags::AnalyzeEffect>(move)) {
-      damageRollOptions = simulation->analyzeEffectOptions.damageRollOptions;
-      calculateUpToFoeHp = simulation->analyzeEffectOptions.calculateUpToFoeHp;
-      noKoChanceCalculation = simulation->analyzeEffectOptions.noKoChanceCalculation;
+      damageRollOptions = simulation->analyzeEffectOptions.getDamageRollOptions();
+      calculateUpToFoeHp = simulation->analyzeEffectOptions.getCalculateUpToFoeHp();
+      noKoChanceCalculation = simulation->analyzeEffectOptions.getNoKoChanceCalculation();
     }
     else {
       POKESIM_REQUIRE_FAIL("Where'd the simulation type go? It was checked in the inputs.");

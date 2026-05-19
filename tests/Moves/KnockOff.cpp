@@ -31,12 +31,11 @@ TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][Knoc
   simulation.createInitialStates({battleCreationInfo});
   auto& options = simulation.simulateTurnOptions;
 
-  options.damageRollsConsidered = {
+  options.setDamageRollsConsidered({
     DamageRollKind::AVERAGE_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE,
-    DamageRollKind::AVERAGE_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE,
-  };
-  options.applyChangesToInputBattle = true;
-  options.makeBranchesOnRandomEvents = true;
+  });
+  options.setApplyChangesToInputBattle(true);
+  options.setMakeBranchesOnRandomEvents(true);
 
   types::entityVector specificallyCheckEntities;
   for (types::entity battle : registry.view<tags::Battle>()) {

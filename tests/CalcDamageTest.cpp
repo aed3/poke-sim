@@ -82,15 +82,15 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
   DamageRollOptions damageRollOptions;
   bool getKoUses = GENERATE(false, true);
   bool calculateUpToFoeHp = GENERATE(false, true);
-  damageRollOptions.p1 = GENERATE(from_range(damageRollKindCombinations));
-  damageRollOptions.p2 = GENERATE(from_range(damageRollKindCombinations));
+  damageRollOptions.setP1(GENERATE(from_range(damageRollKindCombinations)));
+  damageRollOptions.setP2(GENERATE(from_range(damageRollKindCombinations)));
 
-  CAPTURE(useSpecsInsteadOfBoost, getKoUses, calculateUpToFoeHp, damageRollOptions.p1, damageRollOptions.p2);
+  CAPTURE(useSpecsInsteadOfBoost, getKoUses, calculateUpToFoeHp, damageRollOptions.getP1(), damageRollOptions.getP2());
 
   auto& options = simulation.calculateDamageOptions;
-  options.calculateUpToFoeHp = calculateUpToFoeHp;
-  options.noKoChanceCalculation = !getKoUses;
-  options.damageRollOptions = damageRollOptions;
+  options.setCalculateUpToFoeHp(calculateUpToFoeHp);
+  options.setNoKoChanceCalculation(!getKoUses);
+  options.setDamageRollOptions(damageRollOptions);
 
   simulation.createInitialStates({battleCreationInfo});
   auto result = simulation.calculateDamage();
@@ -104,15 +104,15 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
   REQUIRE(hpLost.empty());
   REQUIRE(hpRecovered.empty());
 
-  if (options.noKoChanceCalculation) {
+  if (options.getNoKoChanceCalculation()) {
     REQUIRE(koUses.empty());
   }
   else {
     types::damageRollIndex idealKoUsesSize = 0U;
-    if (damageRollOptions.p1 & DamageRollKind::ALL_DAMAGE_ROLLS) {
+    if (damageRollOptions.getP1() & DamageRollKind::ALL_DAMAGE_ROLLS) {
       idealKoUsesSize++;
     }
-    if (damageRollOptions.p2 & DamageRollKind::ALL_DAMAGE_ROLLS) {
+    if (damageRollOptions.getP2() & DamageRollKind::ALL_DAMAGE_ROLLS) {
       idealKoUsesSize++;
     }
     REQUIRE(koUses.size() == idealKoUsesSize);
@@ -135,7 +135,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
     types::stat targetHp = registry.get<stat::CurrentHp>(target).val;
 
     PlayerSideId sideId = registry.get<PlayerSide>(registry.get<Side>(target).val).val;
-    DamageRollKind damageRollKind = sideId == PlayerSideId::P1 ? damageRollOptions.p1 : damageRollOptions.p2;
+    DamageRollKind damageRollKind = sideId == PlayerSideId::P1 ? damageRollOptions.getP1() : damageRollOptions.getP2();
 
     dex::Move move = registry.get<MoveName>(entity).val;
     const IdealDamageValues& idealDamageValues = pickIdealDamageValues(move, damageRollKind);

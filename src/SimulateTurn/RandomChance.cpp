@@ -18,21 +18,18 @@
 #include <Types/State.hpp>
 #include <Utilities/RNG.hpp>
 #include <Utilities/Tags.hpp>
-#include <cstddef>
-#include <cstdint>
 #include <optional>
 #include <type_traits>
 
 namespace pokesim::internal {
 namespace {
-template <typename Type>
-void updateProbability(Probability& currentProbability, Type eventValue) {
-  if constexpr (std::is_same_v<types::probability, Type>) {
-    currentProbability.val *= eventValue;
-  }
-  else {
-    currentProbability.val *= (types::probability)eventValue * MechanicConstants::PercentChanceToProbability;
-  }
+bool constexpr useChanceStack(const Simulation& simulation) {
+  return simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT) &&
+         simulation.simulateTurnOptions.getMakeBranchesOnRandomEvents();
+}
+
+void updateProbability(Probability& currentProbability, types::probability eventProbability) {
+  currentProbability.val *= eventProbability;
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename RandomEventTag>
@@ -51,19 +48,19 @@ void updateProbabilityFromRandomEventChance(
   Probability& probability = registry.get<Probability>(battle.val);
 
   if constexpr (isEventA) {
-    updateProbability(probability, eventChances.chanceA());
+    updateProbability(probability, eventChances.probabilityA());
   }
   else if constexpr (isEventB) {
-    updateProbability(probability, eventChances.chanceB());
+    updateProbability(probability, eventChances.probabilityB());
   }
   else if constexpr (isEventC) {
-    updateProbability(probability, eventChances.chanceC());
+    updateProbability(probability, eventChances.probabilityC());
   }
   else if constexpr (isEventD) {
-    updateProbability(probability, eventChances.chanceD());
+    updateProbability(probability, eventChances.probabilityD());
   }
   else if constexpr (isEventE) {
-    updateProbability(probability, eventChances.chanceE());
+    updateProbability(probability, eventChances.probabilityE());
   }
 }
 
@@ -72,9 +69,9 @@ void viewUpdateProbabilityFromRandomEventChance(Simulation& simulation) {
   simulation.view<updateProbabilityFromRandomEventChance<POSSIBLE_EVENT_COUNT, RandomEventTag>, Tags<RandomEventTag>>();
 }
 
-template <bool Reciprocal, typename RandomEventTag>
+template <typename RandomEventTag>
 void updateProbabilityFromRandomBinaryChance(
-  types::registry& registry, const RandomBinaryChance& eventChance, const Battle& battle) {
+  types::registry& registry, const RandomBinaryProbability& eventChance, const Battle& battle) {
   static constexpr bool hasEventPassed = std::is_same_v<RandomEventTag, tags::RandomEventCheckPassed>;
   static constexpr bool hasEventFailed = std::is_same_v<RandomEventTag, tags::RandomEventCheckFailed>;
 
@@ -83,20 +80,10 @@ void updateProbabilityFromRandomBinaryChance(
   Probability& probability = registry.get<Probability>(battle.val);
 
   if constexpr (hasEventPassed) {
-    if constexpr (Reciprocal) {
-      updateProbability(probability, eventChance.reciprocalPass());
-    }
-    else {
-      updateProbability(probability, eventChance.pass());
-    }
+    updateProbability(probability, eventChance.pass());
   }
   else if constexpr (hasEventFailed) {
-    if constexpr (Reciprocal) {
-      updateProbability(probability, eventChance.reciprocalFail());
-    }
-    else {
-      updateProbability(probability, eventChance.fail());
-    }
+    updateProbability(probability, eventChance.fail());
   }
 }
 
@@ -112,7 +99,7 @@ void updateProbabilityFromRandomEventCount(
   types::registry& registry, const RandomEventCount& eventChance, const Battle& battle) {
   Probability& probability = registry.get<Probability>(battle.val);
 
-  updateProbability(probability, MechanicConstants::Probability::MAX / (types::probability)eventChance.val);
+  updateProbability(probability, eventChance.probability());
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
@@ -152,25 +139,11 @@ void assignRandomEvent(
   }
 }
 
-void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
+void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const RandomBinaryProbability& eventChance) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::percentChance rng =
-    (types::percentChance)nextBoundedRandomValue(rngSeed, MechanicConstants::PercentChance::MAX);
+  types::probability rng = nextRandomValue(rngSeed) / (types::probability)std::numeric_limits<types::rngResult>::max();
 
   if (rng <= eventChance.pass()) {
-    handle.emplace<tags::RandomEventCheckPassed>();
-  }
-  else {
-    handle.emplace<tags::RandomEventCheckFailed>();
-  }
-}
-
-void assignReciprocalRandomBinaryEvent(
-  types::handle handle, const Battle& battle, const RandomBinaryChance& eventChance) {
-  RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, eventChance.val);
-
-  if (rng == 0U) {
     handle.emplace<tags::RandomEventCheckPassed>();
   }
   else {
@@ -239,7 +212,7 @@ void randomChanceEvent(
   }
 
   types::registry& registry = simulation.registry;
-  if (simulation.simulateTurnOptions.makeBranchesOnRandomEvents) {
+  if (simulation.simulateTurnOptions.getMakeBranchesOnRandomEvents()) {
     auto chanceEntityView = registry.view<Random>();
     if (chanceEntityView.empty()) {
       applyChoices(simulation);
@@ -266,7 +239,7 @@ void randomChanceEvent(
           continue;
         }
 
-        registry.insert<tags::CloneFrom>(battleEntities.begin(), battleEntities.end());
+        registry.insert<pokesim::tags::CloneFrom>(battleEntities.begin(), battleEntities.end());
         auto clonedEntityMap = clone(registry, eventCount - 1U);
 
         assignClonesToEvents(registry, clonedEntityMap, chanceEntities);
@@ -274,7 +247,7 @@ void randomChanceEvent(
     }
     else {
       auto assignCloneTags = [&registry](const Battle& battle, auto&&...) {
-        registry.emplace<tags::CloneFrom>(battle.val);
+        registry.emplace<pokesim::tags::CloneFrom>(battle.val);
       };
       registry.view<Battle, Random>().each(assignCloneTags);
 
@@ -305,50 +278,140 @@ void randomChanceEvent(
       assignArgs...);
   }
 }
+}  // namespace
 
-template <bool Reciprocal>
-void randomBinaryChance(
-  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities) {
-  auto assignClonesToEvents =
-    [](types::registry& registry, const types::ClonedEntityMap& clonedEntityMap, const types::entityVector& originals) {
-      for (types::entity original : originals) {
-        const auto& cloned = clonedEntityMap.at(original);
-        registry.emplace<tags::RandomEventCheckPassed>(original);
-        registry.emplace<tags::RandomEventCheckFailed>(cloned[0]);
-      }
-    };
+PercentChanceLimitResult checkPercentChanceLimits(
+  types::probability eventProbability, types::probability probability, const simulate_turn::Options& options) {
+  static constexpr auto ProbabilityMax = MechanicConstants::Probability::MAX;
+  static constexpr auto ProbabilityMin = MechanicConstants::Probability::MIN;
+  static constexpr types::probability PassFailBoundary = (ProbabilityMax - ProbabilityMin) / 2U;
 
-  auto defaultUpdateProbabilities = [](Simulation& sim) {
-    sim.view<
-      updateProbabilityFromRandomBinaryChance<Reciprocal, tags::RandomEventCheckPassed>,
-      Tags<tags::RandomEventCheckPassed>>();
-    sim.view<
-      updateProbabilityFromRandomBinaryChance<Reciprocal, tags::RandomEventCheckFailed>,
-      Tags<tags::RandomEventCheckFailed>>();
-  };
+  bool skipBranch = false;
+  if (options.hasBranchProbabilityLowerLimit()) {
+    types::probability lowestProbability = eventProbability > PassFailBoundary
+                                             ? ProbabilityMax - std::min(ProbabilityMax, eventProbability)
+                                             : eventProbability;
 
-  if constexpr (Reciprocal) {
-    return randomChanceEvent<
-      RandomBinaryChance,
-      RandomBinaryChanceStack,
-      assignReciprocalRandomBinaryEvent,
-      types::callback>(
-      simulation,
-      1U,
-      applyChoices,
-      assignClonesToEvents,
-      updateProbabilities.value_or(defaultUpdateProbabilities));
+    skipBranch = lowestProbability * probability <= options.getBranchProbabilityLowerLimit();
+  }
+
+  if (
+    eventProbability >= options.getRandomChanceUpperLimit() * MechanicConstants::PercentChanceToProbability ||
+    (skipBranch && eventProbability >= PassFailBoundary)) {
+    return PercentChanceLimitResult::REACHED_PASS_LIMIT;
+  }
+
+  if (
+    eventProbability <= options.getRandomChanceLowerLimit() * MechanicConstants::PercentChanceToProbability ||
+    skipBranch) {
+    return PercentChanceLimitResult::REACHED_FAIL_LIMIT;
+  }
+
+  return PercentChanceLimitResult::NO_LIMIT_REACHED;
+}
+
+template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
+void setRandomEventChances(
+  types::handle handle, const Simulation& simulation,
+  const std::array<types::percentChance, POSSIBLE_EVENT_COUNT>& chances) {
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+  if (chances.back() == MechanicConstants::PercentChance::MAX) {
+    for (types::eventPossibilities i = 1U; i < POSSIBLE_EVENT_COUNT; i++) {
+      POKESIM_REQUIRE(
+        chances[i - 1] <= chances[i],
+        "Chances should be a cumulative sum where each value is greater than the last.");
+    }
   }
   else {
-    return randomChanceEvent<RandomBinaryChance, RandomBinaryChanceStack, assignRandomBinaryEvent, types::callback>(
-      simulation,
-      1U,
-      applyChoices,
-      assignClonesToEvents,
-      updateProbabilities.value_or(defaultUpdateProbabilities));
+    types::percentChance chanceSum = 0U;
+    for (types::percentChance chance : chances) {
+      chanceSum += chance;
+      chance = chanceSum;
+    }
+
+    POKESIM_REQUIRE(
+      chanceSum == MechanicConstants::PercentChance::MAX,
+      "The total probability of all possible outcomes should add up to " +
+        std::to_string(MechanicConstants::PercentChance::MAX) + "%.");
+  }
+#endif
+
+  if (useChanceStack(simulation)) {
+    handle.registry()
+      ->get_or_emplace<RandomEventChancesStack<POSSIBLE_EVENT_COUNT>>(handle.get<Battle>().val)
+      .val.emplace_back(chances, handle.entity());
+  }
+  else {
+    handle.emplace<RandomEventChances<POSSIBLE_EVENT_COUNT>>(chances);
   }
 }
-}  // namespace
+void setBinaryChanceFromChanceLimit(
+  types::handle handle, Battle battle, types::probability eventProbability, const Simulation& simulation) {
+  types::probability probability = handle.registry()->get<Probability>(battle.val).val;
+
+  PercentChanceLimitResult limitReached =
+    checkPercentChanceLimits(eventProbability, probability, simulation.simulateTurnOptions);
+
+  switch (limitReached) {
+    case PercentChanceLimitResult::REACHED_PASS_LIMIT: {
+      handle.emplace<tags::RandomEventCheckPassed>();
+      return;
+    }
+    case PercentChanceLimitResult::REACHED_FAIL_LIMIT: {
+      handle.emplace<tags::RandomEventCheckFailed>();
+      return;
+    }
+    default: {
+      if (useChanceStack(simulation)) {
+        handle.registry()
+          ->get_or_emplace<RandomBinaryProbabilityStack>(battle.val)
+          .val.emplace_back(eventProbability, handle.entity());
+      }
+      else {
+        handle.emplace<RandomBinaryProbability>(eventProbability);
+      }
+      return;
+    };
+  }
+}
+
+void setRandomEqualChance(types::handle handle, const Simulation& simulation) {
+  if (useChanceStack(simulation)) {
+    handle.registry()
+      ->get_or_emplace<RandomEqualChanceStack>(handle.get<Battle>().val)
+      .val.emplace_back(handle.entity());
+  }
+  else {
+    handle.emplace<tags::RandomEqualChance>();
+  }
+}
+
+void setRandomEventCounts(
+  types::handle handle, Battle battle, const Simulation& simulation,
+  types::eventPossibilities (*getPossibleEventCount)(types::handle), bool forRequiredDamageRolls) {
+  types::eventPossibilities eventPossibilities = getPossibleEventCount(handle);
+
+  PercentChanceLimitResult limitReached = PercentChanceLimitResult::NO_LIMIT_REACHED;
+  if (!forRequiredDamageRolls) {
+    types::probability eventProbability = MechanicConstants::Probability::MAX / eventPossibilities;
+    types::probability probability = handle.registry()->get<Probability>(battle.val).val;
+    limitReached = checkPercentChanceLimits(eventProbability, probability, simulation.simulateTurnOptions);
+  }
+
+  if (limitReached == PercentChanceLimitResult::NO_LIMIT_REACHED) {
+    if (useChanceStack(simulation)) {
+      handle.registry()
+        ->get_or_emplace<RandomEventCountStack>(battle.val)
+        .val.emplace_back(eventPossibilities, handle.entity());
+    }
+    else {
+      handle.emplace<RandomEventCount>(eventPossibilities);
+    }
+  }
+  else {
+    handle.emplace<RandomEventIndex>((types::eventPossibilities)(eventPossibilities / 2U));
+  }
+}
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void randomEventChances(
@@ -459,12 +522,30 @@ void randomEventCount(
 
 void randomBinaryChance(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities) {
-  randomBinaryChance<false>(simulation, applyChoices, updateProbabilities);
-}
+  auto assignClonesToEvents =
+    [](types::registry& registry, const types::ClonedEntityMap& clonedEntityMap, const types::entityVector& originals) {
+      for (types::entity original : originals) {
+        const auto& cloned = clonedEntityMap.at(original);
+        registry.emplace<tags::RandomEventCheckPassed>(original);
+        registry.emplace<tags::RandomEventCheckFailed>(cloned[0]);
+      }
+    };
 
-void reciprocalRandomBinaryChance(
-  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities) {
-  randomBinaryChance<true>(simulation, applyChoices, updateProbabilities);
+  auto defaultUpdateProbabilities = [](Simulation& sim) {
+    sim.view<
+      updateProbabilityFromRandomBinaryChance<tags::RandomEventCheckPassed>,
+      Tags<tags::RandomEventCheckPassed>>();
+    sim.view<
+      updateProbabilityFromRandomBinaryChance<tags::RandomEventCheckFailed>,
+      Tags<tags::RandomEventCheckFailed>>();
+  };
+
+  randomChanceEvent<RandomBinaryProbability, RandomBinaryProbabilityStack, assignRandomBinaryEvent, types::callback>(
+    simulation,
+    1U,
+    applyChoices,
+    assignClonesToEvents,
+    updateProbabilities.value_or(defaultUpdateProbabilities));
 }
 
 void clearRandomChanceResult(Simulation& simulation) {
@@ -480,4 +561,9 @@ template void randomEventChances<2U>(Simulation&, types::callback, types::option
 template void randomEventChances<3U>(Simulation&, types::callback, types::optionalCallback);
 template void randomEventChances<4U>(Simulation&, types::callback, types::optionalCallback);
 template void randomEventChances<5U>(Simulation&, types::callback, types::optionalCallback);
+
+template void setRandomEventChances<2U>(types::handle, const Simulation&, const std::array<types::percentChance, 2U>&);
+template void setRandomEventChances<3U>(types::handle, const Simulation&, const std::array<types::percentChance, 3U>&);
+template void setRandomEventChances<4U>(types::handle, const Simulation&, const std::array<types::percentChance, 4U>&);
+template void setRandomEventChances<5U>(types::handle, const Simulation&, const std::array<types::percentChance, 5U>&);
 }  // namespace pokesim::internal

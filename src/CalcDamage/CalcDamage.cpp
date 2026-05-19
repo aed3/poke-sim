@@ -272,26 +272,26 @@ void applySideDamageRollOptions(Simulation& simulation) {
   bool noKoChanceCalculation = false;
   bool calculateUpToFoeHp = false;
   if constexpr (isSimulateTurn) {
-    damageRollOptions = simulation.simulateTurnOptions.damageRollsConsidered;
+    damageRollOptions = simulation.simulateTurnOptions.getDamageRollsConsidered();
     calculateUpToFoeHp = true;
   }
   else if constexpr (isCalculateDamage) {
-    damageRollOptions = simulation.calculateDamageOptions.damageRollOptions;
-    calculateUpToFoeHp = simulation.calculateDamageOptions.calculateUpToFoeHp;
-    noKoChanceCalculation = simulation.calculateDamageOptions.noKoChanceCalculation;
+    damageRollOptions = simulation.calculateDamageOptions.getDamageRollOptions();
+    calculateUpToFoeHp = simulation.calculateDamageOptions.getCalculateUpToFoeHp();
+    noKoChanceCalculation = simulation.calculateDamageOptions.getNoKoChanceCalculation();
   }
   else if constexpr (isAnalyzeEffect) {
-    damageRollOptions = simulation.analyzeEffectOptions.damageRollOptions;
-    calculateUpToFoeHp = simulation.analyzeEffectOptions.calculateUpToFoeHp;
-    noKoChanceCalculation = simulation.calculateDamageOptions.noKoChanceCalculation;
+    damageRollOptions = simulation.analyzeEffectOptions.getDamageRollOptions();
+    calculateUpToFoeHp = simulation.analyzeEffectOptions.getCalculateUpToFoeHp();
+    noKoChanceCalculation = simulation.calculateDamageOptions.getNoKoChanceCalculation();
   }
 
   if (damageRollOptions.sidesMatch()) {
     if constexpr (onlyPassDamageRoll) {
-      ApplyDamageRollKind(simulation, damageRollOptions.p1);
+      ApplyDamageRollKind(simulation, damageRollOptions.getP1());
     }
     else {
-      ApplyDamageRollKind(simulation, damageRollOptions.p1, calculateUpToFoeHp, noKoChanceCalculation);
+      ApplyDamageRollKind(simulation, damageRollOptions.getP1(), calculateUpToFoeHp, noKoChanceCalculation);
     }
   }
   else {
@@ -299,10 +299,10 @@ void applySideDamageRollOptions(Simulation& simulation) {
     pokesim::internal::SelectForCurrentActionMoveView<tags::P1Defending> p1DefendingMoves{simulation};
     if (!p1DefendingMoves.hasNoneSelected()) {
       if constexpr (onlyPassDamageRoll) {
-        ApplyDamageRollKind(simulation, damageRollOptions.p1);
+        ApplyDamageRollKind(simulation, damageRollOptions.getP1());
       }
       else {
-        ApplyDamageRollKind(simulation, damageRollOptions.p1, calculateUpToFoeHp, noKoChanceCalculation);
+        ApplyDamageRollKind(simulation, damageRollOptions.getP1(), calculateUpToFoeHp, noKoChanceCalculation);
       }
     }
     p1DefendingMoves.deselect();
@@ -310,10 +310,10 @@ void applySideDamageRollOptions(Simulation& simulation) {
     pokesim::internal::SelectForCurrentActionMoveView<tags::P2Defending> p2DefendingMoves{simulation};
     if (!p2DefendingMoves.hasNoneSelected()) {
       if constexpr (onlyPassDamageRoll) {
-        ApplyDamageRollKind(simulation, damageRollOptions.p2);
+        ApplyDamageRollKind(simulation, damageRollOptions.getP2());
       }
       else {
-        ApplyDamageRollKind(simulation, damageRollOptions.p2, calculateUpToFoeHp, noKoChanceCalculation);
+        ApplyDamageRollKind(simulation, damageRollOptions.getP2(), calculateUpToFoeHp, noKoChanceCalculation);
       }
     }
 

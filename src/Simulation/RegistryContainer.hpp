@@ -11,9 +11,7 @@
 #include <Utilities/RegistryLoop.hpp>
 #include <Utilities/Tags.hpp>
 #include <cstddef>
-#include <cstdint>
 #include <entt/signal/delegate.hpp>
-#include <iterator>
 #include <type_traits>
 #include <vector>
 
@@ -34,13 +32,13 @@ class RegistryContainer {
 
   template <typename Selection>
   SelectionFunctionList& selectedFunctions() {
-    if constexpr (std::is_same_v<tags::SelectedForViewBattle, Selection>) {
+    if constexpr (std::is_same_v<pokesim::tags::SelectedForViewBattle, Selection>) {
       return battleSelection;
     }
-    else if constexpr (std::is_same_v<tags::SelectedForViewSide, Selection>) {
+    else if constexpr (std::is_same_v<pokesim::tags::SelectedForViewSide, Selection>) {
       return sideSelection;
     }
-    else if constexpr (std::is_same_v<tags::SelectedForViewPokemon, Selection>) {
+    else if constexpr (std::is_same_v<pokesim::tags::SelectedForViewPokemon, Selection>) {
       return pokemonSelection;
     }
     else {
@@ -50,13 +48,13 @@ class RegistryContainer {
 
   template <typename Selection>
   const SelectionFunctionList& selectedFunctions() const {
-    if constexpr (std::is_same_v<tags::SelectedForViewBattle, Selection>) {
+    if constexpr (std::is_same_v<pokesim::tags::SelectedForViewBattle, Selection>) {
       return battleSelection;
     }
-    else if constexpr (std::is_same_v<tags::SelectedForViewSide, Selection>) {
+    else if constexpr (std::is_same_v<pokesim::tags::SelectedForViewSide, Selection>) {
       return sideSelection;
     }
-    else if constexpr (std::is_same_v<tags::SelectedForViewPokemon, Selection>) {
+    else if constexpr (std::is_same_v<pokesim::tags::SelectedForViewPokemon, Selection>) {
       return pokemonSelection;
     }
     else {
@@ -208,32 +206,52 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewBattle, tags::Battle, Function, TagContainer, ExcludeContainer, IncludeContainer>::
-      view(this, passedInArgs...);
+    ForSelected<
+      pokesim::tags::SelectedForViewBattle,
+      pokesim::tags::Battle,
+      Function,
+      TagContainer,
+      ExcludeContainer,
+      IncludeContainer>::view(this, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewBattle, tags::Battle, Function, TagContainer, ExcludeContainer, IncludeContainer>::
-      group(this, passedInArgs...);
+    ForSelected<
+      pokesim::tags::SelectedForViewBattle,
+      pokesim::tags::Battle,
+      Function,
+      TagContainer,
+      ExcludeContainer,
+      IncludeContainer>::group(this, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewSide, tags::Side, Function, TagContainer, ExcludeContainer, IncludeContainer>::
-      view(this, passedInArgs...);
+    ForSelected<
+      pokesim::tags::SelectedForViewSide,
+      pokesim::tags::Side,
+      Function,
+      TagContainer,
+      ExcludeContainer,
+      IncludeContainer>::view(this, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewSide, tags::Side, Function, TagContainer, ExcludeContainer, IncludeContainer>::
-      group(this, passedInArgs...);
+    ForSelected<
+      pokesim::tags::SelectedForViewSide,
+      pokesim::tags::Side,
+      Function,
+      TagContainer,
+      ExcludeContainer,
+      IncludeContainer>::group(this, passedInArgs...);
   }
 
   template <
@@ -241,8 +259,8 @@ class RegistryContainer {
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedPokemon(const PassedInArgs&... passedInArgs) {
     ForSelected<
-      tags::SelectedForViewPokemon,
-      tags::Pokemon,
+      pokesim::tags::SelectedForViewPokemon,
+      pokesim::tags::Pokemon,
       Function,
       TagContainer,
       ExcludeContainer,
@@ -254,8 +272,8 @@ class RegistryContainer {
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedPokemon(const PassedInArgs&... passedInArgs) {
     ForSelected<
-      tags::SelectedForViewPokemon,
-      tags::Pokemon,
+      pokesim::tags::SelectedForViewPokemon,
+      pokesim::tags::Pokemon,
       Function,
       TagContainer,
       ExcludeContainer,
@@ -267,8 +285,8 @@ class RegistryContainer {
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedMoves(const PassedInArgs&... passedInArgs) {
     ForSelected<
-      tags::SelectedForViewMove,
-      tags::CurrentActionMove,
+      pokesim::tags::SelectedForViewMove,
+      pokesim::tags::CurrentActionMove,
       Function,
       TagContainer,
       ExcludeContainer,
@@ -280,8 +298,8 @@ class RegistryContainer {
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedMoves(const PassedInArgs&... passedInArgs) {
     ForSelected<
-      tags::SelectedForViewMove,
-      tags::CurrentActionMove,
+      pokesim::tags::SelectedForViewMove,
+      pokesim::tags::CurrentActionMove,
       Function,
       TagContainer,
       ExcludeContainer,

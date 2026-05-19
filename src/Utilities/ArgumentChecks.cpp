@@ -80,10 +80,6 @@ void checkIv(types::iv iv) {
   checkBounds<MechanicConstants::PokemonIv>(iv);
 }
 
-void checkPercentChance(types::percentChance chance) {
-  checkBounds<MechanicConstants::PercentChance>(chance);
-}
-
 void checkProbability(types::probability probability) {
   checkBounds<MechanicConstants::Probability>(probability);
 }
@@ -130,7 +126,7 @@ void checkAction(types::entity actionEntity, const types::registry& registry) {
 }
 
 template <types::eventPossibilities RANDOM_OPTIONS>
-void checkRandomChanceEvents(const RandomEventChances<RANDOM_OPTIONS>& randomEventChances) {
+void checkRandomChanceEvents(const internal::RandomEventChances<RANDOM_OPTIONS>& randomEventChances) {
   for (types::percentChance chance : randomEventChances.val) {
     checkPercentChance(chance);
   }
@@ -311,6 +307,10 @@ void checkActionMove(types::entity moveEntity, const types::registry& registry) 
   if (realEffectiveStat) check(*realEffectiveStat);
   if (critBoost) check(*critBoost);
   if (critChanceDivisor) check(*critChanceDivisor);
+}
+
+void checkPercentChance(types::percentChance chance) {
+  checkBounds<MechanicConstants::PercentChance>(chance);
 }
 
 template <>
@@ -892,86 +892,86 @@ void check(const RngSeed& seed) {
 }
 
 template <>
-void check(const internal::TempPercentChance& chance) {
-  checkPercentChance(chance.val);
-}
-
-template <>
-void check(const RandomEventChances<2U>& randomEventChances) {
+void check(const internal::RandomEventChances<2U>& randomEventChances) {
   checkRandomChanceEvents(randomEventChances);
 }
 
 template <>
-void check(const RandomEventChances<3U>& randomEventChances) {
+void check(const internal::RandomEventChances<3U>& randomEventChances) {
   checkRandomChanceEvents(randomEventChances);
 }
 
 template <>
-void check(const RandomEventChances<4U>& randomEventChances) {
+void check(const internal::RandomEventChances<4U>& randomEventChances) {
   checkRandomChanceEvents(randomEventChances);
 }
 
 template <>
-void check(const RandomEventChances<5U>& randomEventChances) {
+void check(const internal::RandomEventChances<5U>& randomEventChances) {
   checkRandomChanceEvents(randomEventChances);
 }
 
 template <>
-void check(const RandomBinaryChance& randomBinaryChance) {
-  checkPercentChance(randomBinaryChance.val);
+void check(const internal::RandomBinaryProbability& randomBinaryChance) {
+  checkProbability(randomBinaryChance.val);
 }
 
 template <>
-void check(const RandomEventChancesStack<2U>& randomEventChancesStack, const types::registry& registry) {
+void check(const internal::RandomEventCount& randomEventCount) {
+  checkPercentChance(randomEventCount.val);
+}
+
+template <>
+void check(const internal::RandomEventChancesStack<2U>& randomEventChancesStack, const types::registry& registry) {
   for (const auto& [chances, target] : randomEventChancesStack.val) {
-    checkPokemon(target, registry);
-    check(RandomEventChances<2U>{chances});
+    types::registry::checkEntity(target, registry);
+    check(internal::RandomEventChances<2U>{chances});
   }
 }
 
 template <>
-void check(const RandomEventChancesStack<3U>& randomEventChancesStack, const types::registry& registry) {
+void check(const internal::RandomEventChancesStack<3U>& randomEventChancesStack, const types::registry& registry) {
   for (const auto& [chances, target] : randomEventChancesStack.val) {
-    checkPokemon(target, registry);
-    check(RandomEventChances<3U>{chances});
+    types::registry::checkEntity(target, registry);
+    check(internal::RandomEventChances<3U>{chances});
   }
 }
 
 template <>
-void check(const RandomEventChancesStack<4U>& randomEventChancesStack, const types::registry& registry) {
+void check(const internal::RandomEventChancesStack<4U>& randomEventChancesStack, const types::registry& registry) {
   for (const auto& [chances, target] : randomEventChancesStack.val) {
-    checkPokemon(target, registry);
-    check(RandomEventChances<4U>{chances});
+    types::registry::checkEntity(target, registry);
+    check(internal::RandomEventChances<4U>{chances});
   }
 }
 
 template <>
-void check(const RandomEventChancesStack<5U>& randomEventChancesStack, const types::registry& registry) {
+void check(const internal::RandomEventChancesStack<5U>& randomEventChancesStack, const types::registry& registry) {
   for (const auto& [chances, target] : randomEventChancesStack.val) {
     checkPokemon(target, registry);
-    check(RandomEventChances<5U>{chances});
+    check(internal::RandomEventChances<5U>{chances});
   }
 }
 
 template <>
-void check(const RandomBinaryChanceStack& randomBinaryChanceStack, const types::registry& registry) {
+void check(const internal::RandomBinaryProbabilityStack& randomBinaryChanceStack, const types::registry& registry) {
   for (const auto& [chance, target] : randomBinaryChanceStack.val) {
-    checkPokemon(target, registry);
-    check(RandomBinaryChance{chance});
+    types::registry::checkEntity(target, registry);
+    check(internal::RandomBinaryProbability{chance});
   }
 }
 
 template <>
-void check(const RandomEventCountStack& randomEventCountStack, const types::registry& registry) {
+void check(const internal::RandomEventCountStack& randomEventCountStack, const types::registry& registry) {
   for (const auto& [chance, target] : randomEventCountStack.val) {
-    checkPokemon(target, registry);
+    types::registry::checkEntity(target, registry);
   }
 }
 
 template <>
-void check(const RandomEqualChanceStack& randomEqualChanceStack, const types::registry& registry) {
+void check(const internal::RandomEqualChanceStack& randomEqualChanceStack, const types::registry& registry) {
   for (const auto& target : randomEqualChanceStack.val) {
-    checkPokemon(target, registry);
+    types::registry::checkEntity(target, registry);
   }
 }
 
@@ -1146,8 +1146,8 @@ void check(const DamageRollKind& damageRollKind) {
 
 template <>
 void check(const DamageRollOptions& damageRollOptions) {
-  check(damageRollOptions.p1);
-  check(damageRollOptions.p2);
+  check(damageRollOptions.getP1());
+  check(damageRollOptions.getP2());
 }
 }  // namespace pokesim::debug
 

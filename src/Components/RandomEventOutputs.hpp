@@ -2,7 +2,7 @@
 
 #include <Types/Random.hpp>
 
-namespace pokesim {
+namespace pokesim::internal {
 namespace tags {
 struct RandomEventA {};
 struct RandomEventB {};
@@ -18,4 +18,4 @@ using RandomEventCheckFailed = RandomEventB;
 struct RandomEventIndex {
   types::eventPossibilities val = 0U;
 };
-}  // namespace pokesim
+}  // namespace pokesim::internal

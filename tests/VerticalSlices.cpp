@@ -6,8 +6,6 @@ namespace pokesim {
 static GameMechanics constexpr TestMechanic = GameMechanics::SCARLET_VIOLET;
 
 static auto constexpr MAX_PROBABILITY = MechanicConstants::Probability::MAX;
-static auto constexpr MIN_PROBABILITY = MechanicConstants::Probability::MIN;
-static auto constexpr MIN_PERCENT_CHANCE = MechanicConstants::PercentChance::MIN;
 static auto constexpr MAX_PERCENT_CHANCE = MechanicConstants::PercentChance::MAX;
 static auto constexpr CHANCE_TO_PROBABILITY = MechanicConstants::PercentChanceToProbability;
 static auto constexpr PROBABILITY_TO_CHANCE = MechanicConstants::ProbabilityToPercentChance;
@@ -45,7 +43,7 @@ struct VerticalSliceChecks : TestChecks {
     debug::TypesToIgnore typesIgnoredOnConstants = typesToIgnore;
     typesToIgnore.add<Probability, ParentBattle, Turn, RootBattle>();
 
-    if (!options->makeBranchesOnRandomEvents) {
+    if (!options->getMakeBranchesOnRandomEvents()) {
       typesToIgnore.add<RngSeed>();
     }
 
@@ -54,7 +52,7 @@ struct VerticalSliceChecks : TestChecks {
         continue;
       }
       types::entity original = debug::findCopyParent(currentEntitiesToInitial, *registry, entity);
-      bool shouldNotChange = !options->applyChangesToInputBattle && original == entity;
+      bool shouldNotChange = !options->getApplyChangesToInputBattle() && original == entity;
       debug::areEntitiesEqual(
         *registry,
         entity,
@@ -85,9 +83,9 @@ struct VerticalSliceChecks : TestChecks {
     checkMoves();
     checkRemainingOutputs();
 
-    if (!options->makeBranchesOnRandomEvents) {
+    if (!options->getMakeBranchesOnRandomEvents()) {
       types::entityIndex finalEntityCount = getFinalEntityCount();
-      if (options->applyChangesToInputBattle) {
+      if (options->getApplyChangesToInputBattle()) {
         REQUIRE(finalEntityCount == initialEntityCount);
       }
       else {
@@ -240,11 +238,11 @@ struct VerticalSliceDamageValueInfo {
         checkWasCrit(true),
         willCrit(damageRollKind == AVERAGE_CRIT_DAMAGE),
         willChooseAverageDamage(damageRollKind & AVERAGE_DAMAGE),
-        willChooseMinOrMaxDamage(options.makeBranchesOnRandomEvents),
+        willChooseMinOrMaxDamage(options.getMakeBranchesOnRandomEvents()),
 
-        lowerLimit(options.randomChanceLowerLimit.value_or(MIN_PERCENT_CHANCE)),
-        upperLimit(options.randomChanceUpperLimit.value_or(MAX_PERCENT_CHANCE)),
-        branchProbabilityLowerLimit(options.branchProbabilityLowerLimit.value_or(MIN_PROBABILITY)) {
+        lowerLimit(options.getRandomChanceLowerLimit()),
+        upperLimit(options.getRandomChanceUpperLimit()),
+        branchProbabilityLowerLimit(options.getBranchProbabilityLowerLimit()) {
     checkWasCrit &= chanceWithinSimulationBounds((types::percentChance)(PROBABILITY_TO_CHANCE * CRIT_PROBABILITY));
     checkWasCrit &= damageRollKind != AVERAGE_CRIT_DAMAGE;
 
@@ -401,26 +399,27 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
 
   DamageRollOptions damageRollOptions;
   if (numberOfSamples.has_value()) {
-    damageRollOptions.p1 = GENERATE(from_range(fixedBranchDamageRollOptions));
-    damageRollOptions.p2 = GENERATE(from_range(fixedBranchDamageRollOptions));
+    damageRollOptions.setP1(GENERATE(from_range(fixedBranchDamageRollOptions)));
+    damageRollOptions.setP2(GENERATE(from_range(fixedBranchDamageRollOptions)));
   }
   else {
-    damageRollOptions.p1 = GENERATE(from_range(branchingDamageRollOptions));
-    damageRollOptions.p2 = GENERATE(from_range(branchingDamageRollOptions));
+    damageRollOptions.setP1(GENERATE(from_range(branchingDamageRollOptions)));
+    damageRollOptions.setP2(GENERATE(from_range(branchingDamageRollOptions)));
   }
 
   CAPTURE(applyChangesToInputBattle, branchProbabilityLowerLimit, numberOfSamples);
   INFO("randomChanceLowerLimit := " + Catch::StringMaker<std::optional<int>>::convert(randomChanceLowerLimit));
   INFO("randomChanceUpperLimit := " + Catch::StringMaker<std::optional<int>>::convert(randomChanceUpperLimit));
-  CAPTURE(damageRollOptions.p1, damageRollOptions.p2);
+  CAPTURE(damageRollOptions.getP1(), damageRollOptions.getP2());
 
   auto& options = simulation.simulateTurnOptions;
-  options.applyChangesToInputBattle = applyChangesToInputBattle;
-  options.branchProbabilityLowerLimit = branchProbabilityLowerLimit;
-  options.makeBranchesOnRandomEvents = !numberOfSamples.has_value();
-  options.randomChanceLowerLimit = randomChanceLowerLimit;
-  options.randomChanceUpperLimit = randomChanceUpperLimit;
-  options.damageRollsConsidered = damageRollOptions;
+  options.setApplyChangesToInputBattle(applyChangesToInputBattle);
+  if (branchProbabilityLowerLimit.has_value())
+    options.setBranchProbabilityLowerLimit(branchProbabilityLowerLimit.value());
+  options.setMakeBranchesOnRandomEvents(!numberOfSamples.has_value());
+  if (randomChanceUpperLimit.has_value()) options.setRandomChanceUpperLimit(randomChanceUpperLimit.value());
+  if (randomChanceLowerLimit.has_value()) options.setRandomChanceLowerLimit(randomChanceLowerLimit.value());
+  options.setDamageRollsConsidered(damageRollOptions);
 
   const DamageValueInfo p1DamageInfo(
     PlayerSideId::P1,
@@ -429,7 +428,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
     {260U, 258U, 254U, 252U, 248U, 246U, 242U, 240U, 240U, 236U, 234U, 230U, 228U, 224U, 222U, 218U},  // 15
     240U,
     p1Info.stats.hp.value(),
-    damageRollOptions.p1,
+    damageRollOptions.getP1(),
     options);
 
   const DamageValueInfo p2DamageInfo(
@@ -439,13 +438,13 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
     {78U, 77U, 76U, 75U, 74U, 74U, 73U, 72U, 71U, 70U, 70U, 69U, 68U, 67U, 67U, 66U},  // 13
     72U,
     p2Info.stats.hp.value(),
-    damageRollOptions.p2,
+    damageRollOptions.getP2(),
     options);
 
   std::size_t idealTurnOutcomeCount = 0U;
   std::size_t totalPossibilities = p1DamageInfo.possibilities() * p2DamageInfo.possibilities();
 
-  if (options.makeBranchesOnRandomEvents) {
+  if (options.getMakeBranchesOnRandomEvents()) {
     idealTurnOutcomeCount = totalPossibilities;
   }
   else {
@@ -536,7 +535,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
 
     REQUIRE(turn.val == 2U);
     const auto& initialRngSeed = checks.initialRngSeed(battle);
-    if (options.makeBranchesOnRandomEvents || totalPossibilities == 1U) {
+    if (options.getMakeBranchesOnRandomEvents() || totalPossibilities == 1U) {
       REQUIRE(rngSeed.val == initialRngSeed.val);
     }
     else {
@@ -578,7 +577,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
     REQUIRE_THAT(probability.val, Catch::Matchers::WithinRel(idealProbability));
   }
 
-  if (options.makeBranchesOnRandomEvents) {
+  if (options.getMakeBranchesOnRandomEvents()) {
     REQUIRE(foundP1Hp.size() == expectedP1Hp.size());
     REQUIRE(foundP2Hp.size() == expectedP2Hp.size());
   }
@@ -718,26 +717,27 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
 
   DamageRollOptions damageRollOptions;
   if (numberOfSamples.has_value()) {
-    damageRollOptions.p1 = GENERATE(from_range(fixedBranchDamageRollOptions));
-    damageRollOptions.p2 = GENERATE(from_range(fixedBranchDamageRollOptions));
+    damageRollOptions.setP1(GENERATE(from_range(fixedBranchDamageRollOptions)));
+    damageRollOptions.setP2(GENERATE(from_range(fixedBranchDamageRollOptions)));
   }
   else {
-    damageRollOptions.p1 = GENERATE(from_range(branchingDamageRollOptions));
-    damageRollOptions.p2 = GENERATE(from_range(branchingDamageRollOptions));
+    damageRollOptions.setP1(GENERATE(from_range(branchingDamageRollOptions)));
+    damageRollOptions.setP2(GENERATE(from_range(branchingDamageRollOptions)));
   }
 
   CAPTURE(applyChangesToInputBattle, branchProbabilityLowerLimit, numberOfSamples);
   INFO("randomChanceLowerLimit := " + Catch::StringMaker<std::optional<int>>::convert(randomChanceLowerLimit));
   INFO("randomChanceUpperLimit := " + Catch::StringMaker<std::optional<int>>::convert(randomChanceUpperLimit));
-  CAPTURE(damageRollOptions.p1, damageRollOptions.p2);
+  CAPTURE(damageRollOptions.getP1(), damageRollOptions.getP2());
 
   auto& options = simulation.simulateTurnOptions;
-  options.applyChangesToInputBattle = applyChangesToInputBattle;
-  options.branchProbabilityLowerLimit = branchProbabilityLowerLimit;
-  options.makeBranchesOnRandomEvents = !numberOfSamples.has_value();
-  options.randomChanceLowerLimit = randomChanceLowerLimit;
-  options.randomChanceUpperLimit = randomChanceUpperLimit;
-  options.damageRollsConsidered = damageRollOptions;
+  options.setApplyChangesToInputBattle(applyChangesToInputBattle);
+  if (branchProbabilityLowerLimit.has_value())
+    options.setBranchProbabilityLowerLimit(branchProbabilityLowerLimit.value());
+  if (randomChanceUpperLimit.has_value()) options.setRandomChanceUpperLimit(randomChanceUpperLimit.value());
+  if (randomChanceLowerLimit.has_value()) options.setRandomChanceLowerLimit(randomChanceLowerLimit.value());
+  options.setMakeBranchesOnRandomEvents(!numberOfSamples.has_value());
+  options.setDamageRollsConsidered(damageRollOptions);
 
   DamageValueInfo p1BHalfDamageInfo(
     Slot::P1B,
@@ -747,7 +747,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     {394U, 387U, 383U, 380U, 376U, 372U, 368U, 364U, 360U, 356U, 352U, 348U, 344U, 341U, 337U, 333U},
     364U,
     p1BInfo.stats.hp.value(),
-    damageRollOptions.p1,
+    damageRollOptions.getP1(),
     options);
   DamageValueInfo p1BFullDamageInfo(
     Slot::P1B,
@@ -757,7 +757,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     {788U, 775U, 767U, 759U, 751U, 743U, 736U, 728U, 720U, 712U, 704U, 697U, 689U, 681U, 673U, 665U},
     728U,
     p1BInfo.stats.hp.value(),
-    damageRollOptions.p1,
+    damageRollOptions.getP1(),
     options);
   DamageValueInfo p2BDamageInfo(
     Slot::P2B,
@@ -767,7 +767,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     {285U, 282U, 279U, 276U, 273U, 270U, 267U, 264U, 261U, 258U, 256U, 253U, 250U, 247U, 244U, 241U},
     263U,
     p2BInfo.stats.hp.value(),
-    damageRollOptions.p2,
+    damageRollOptions.getP2(),
     options);
 
   const types::percentChance willOWispHitChance = dex::WillOWisp::accuracy(TestMechanic);
@@ -786,7 +786,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     (willOWispMightMiss ? (p2BDamageInfo.possibilities() * p1BFullDamageInfo.possibilities()) : 0U) +
     (p2BDamageInfo.possibilities() * p1BHalfDamageInfo.possibilities());
 
-  if (options.makeBranchesOnRandomEvents) {
+  if (options.getMakeBranchesOnRandomEvents()) {
     idealTurnOutcomeCount = totalPossibilities;
   }
   else {
@@ -868,7 +868,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
 
     REQUIRE(turn.val == battleCreationInfo.turn.value() + 1U);
     const auto& initialRngSeed = checks.initialRngSeed(battle);
-    if (options.makeBranchesOnRandomEvents || totalPossibilities == 1U) {
+    if (options.getMakeBranchesOnRandomEvents() || totalPossibilities == 1U) {
       REQUIRE(rngSeed.val == initialRngSeed.val);
     }
     else {
@@ -1027,7 +1027,7 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][Simula
     }
   }
 
-  if (options.makeBranchesOnRandomEvents) {
+  if (options.getMakeBranchesOnRandomEvents()) {
     if (willOWispMightMiss) {
       REQUIRE(foundP1BHp.size() == expectedP1BAllHp.size());
     }

@@ -150,8 +150,10 @@ void removeFaintedSecondaryEffectTarget(
   types::handle handle, TargetEntityHolder target, BaseEffectChance baseEffectChance, Battle battle,
   const simulate_turn::Options& options) {
   types::registry& registry = *handle.registry();
-  internal::PercentChanceLimitResult limitReached =
-    internal::checkPercentChanceLimits(baseEffectChance.val, registry.get<Probability>(battle.val).val, options);
+  internal::PercentChanceLimitResult limitReached = internal::checkPercentChanceLimits(
+    baseEffectChance.val * MechanicConstants::PercentChanceToProbability,
+    registry.get<Probability>(battle.val).val,
+    options);
 
   if (limitReached == internal::PercentChanceLimitResult::REACHED_PASS_LIMIT) {
     return;
@@ -194,12 +196,11 @@ void setMoveHitCount(Simulation& simulation) {
   runRandomEventChances<4U, tags::SelectedForViewMove, move::tags::VariableHitCount>(
     simulation,
     MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES,
-    false,
     [](Simulation& sim) {
-      sim.addToEntities<HitCount, tags::RandomEventA>(HitCount{2U});
-      sim.addToEntities<HitCount, tags::RandomEventB>(HitCount{3U});
-      sim.addToEntities<HitCount, tags::RandomEventC>(HitCount{4U});
-      sim.addToEntities<HitCount, tags::RandomEventD>(HitCount{5U});
+      sim.addToEntities<HitCount, pokesim::internal::tags::RandomEventA>(HitCount{2U});
+      sim.addToEntities<HitCount, pokesim::internal::tags::RandomEventB>(HitCount{3U});
+      sim.addToEntities<HitCount, pokesim::internal::tags::RandomEventC>(HitCount{4U});
+      sim.addToEntities<HitCount, pokesim::internal::tags::RandomEventD>(HitCount{5U});
     });
 }
 
@@ -224,7 +225,10 @@ void runSecondaryMoveEffects(Simulation& simulation) {
   runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::SelectedForViewMove>(
     simulation,
     [](Simulation& sim) {
-      sim.addToEntities<tags::internal::RunEffect, tags::SelectedForViewMove, tags::RandomEventCheckPassed>();
+      sim.addToEntities<
+        tags::internal::RunEffect,
+        tags::SelectedForViewMove,
+        pokesim::internal::tags::RandomEventCheckPassed>();
     });
 
   runMoveEffects(simulation);
@@ -236,7 +240,10 @@ void accuracyCheck(Simulation& simulation) {
   runAccuracyEvent(simulation);
 
   runRandomBinaryChance<Accuracy, tags::SelectedForViewMove>(simulation, [](Simulation& sim) {
-    sim.removeFromEntities<tags::internal::MoveHits, tags::SelectedForViewMove, tags::RandomEventCheckFailed>();
+    sim.removeFromEntities<
+      tags::internal::MoveHits,
+      tags::SelectedForViewMove,
+      pokesim::internal::tags::RandomEventCheckFailed>();
   });
 }
 

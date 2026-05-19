@@ -8,7 +8,6 @@
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
-#include <Components/RandomEventInputs.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Registry.hpp>
@@ -21,15 +20,11 @@ struct Checks : pokesim::debug::Checks {
       : pokesim::debug::Checks(_simulation), options(_simulation.simulateTurnOptions) {}
 
   void checkInputs() const {
-    pokesim::debug::check(options.damageRollsConsidered);
-    if (options.randomChanceLowerLimit.has_value()) {
-      pokesim::debug::check(RandomBinaryChance{options.randomChanceLowerLimit.value()});
-    }
-    if (options.randomChanceUpperLimit.has_value()) {
-      pokesim::debug::check(RandomBinaryChance{options.randomChanceUpperLimit.value()});
-    }
-    if (options.branchProbabilityLowerLimit.has_value()) {
-      pokesim::debug::check(Probability{options.branchProbabilityLowerLimit.value()});
+    pokesim::debug::check(options.getDamageRollsConsidered());
+    pokesim::debug::checkPercentChance(options.getRandomChanceLowerLimit());
+    pokesim::debug::checkPercentChance(options.getRandomChanceUpperLimit());
+    if (options.hasBranchProbabilityLowerLimit()) {
+      pokesim::debug::check(Probability{options.getBranchProbabilityLowerLimit()});
     }
 
     check();

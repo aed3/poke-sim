@@ -577,7 +577,7 @@ void analyzeEffect(Simulation& simulation) {
   simulation.view<ignoreStatusMoves>(simulation.pokedex());
   simulation.viewForSelectedBattles<groupSimilarInputs>();
 
-  if (!simulation.analyzeEffectOptions.reconsiderActiveEffects) {
+  if (!simulation.analyzeEffectOptions.getReconsiderActiveEffects()) {
     ignoreBattlesWithEffectActive(simulation);
   }
 

@@ -5,8 +5,7 @@
 #include <Types/State.hpp>
 #include <array>
 
-namespace pokesim {
-namespace internal {
+namespace pokesim::internal {
 // Moves such as Metronome and Psywave, the Forewarn ability, and damage rolls have more random options than this, but
 // those cases will be handled separately
 const types::eventPossibilities MAX_TYPICAL_RANDOM_OPTIONS = 5U;
@@ -24,13 +23,6 @@ struct RandomEventStack {
   types::targets<std::pair<decltype(T::val), types::entity>> val{};
 };
 
-// Temporary because it will get deleted after use and inputs for random chance will be reworked entirely.
-// TODO(aed3): Make every struct in this file internal and make the opening random chance functions not templates
-struct TempPercentChance {
-  types::percentChance val = MechanicConstants::PercentChance::DEFAULT;
-};
-}  // namespace internal
-
 // Used for random events that have a small number of outcomes that can happen and the chance each event can happen is
 // not equal (i.e. how many times a multi-hit move hits, Effect Spore)
 template <types::eventPossibilities RANDOM_OPTIONS>
@@ -41,31 +33,29 @@ struct RandomEventChances {
     RANDOM_OPTIONS <= internal::MAX_TYPICAL_RANDOM_OPTIONS,
     "Random events with more options than this should use RandomEqualChance or RandomEventCount");
 
-  types::percentChance chanceA() const { return val[0]; }
-  types::percentChance chanceB() const { return val[1] - val[0]; }
-  types::percentChance chanceC() const {
+  types::probability probabilityA() const { return MechanicConstants::PercentChanceToProbability * val[0]; }
+  types::probability probabilityB() const { return MechanicConstants::PercentChanceToProbability * (val[1] - val[0]); }
+  types::probability probabilityC() const {
     static_assert(RANDOM_OPTIONS >= 3U, "This function is only for events with more than 2 outcomes.");
-    return val[2] - val[1];
+    return MechanicConstants::PercentChanceToProbability * (val[2] - val[1]);
   }
-  types::percentChance chanceD() const {
+  types::probability probabilityD() const {
     static_assert(RANDOM_OPTIONS >= 4U, "This function is only for events with more than 3 outcomes.");
-    return val[3] - val[2];
+    return MechanicConstants::PercentChanceToProbability * (val[3] - val[2]);
   }
-  types::percentChance chanceE() const {
+  types::probability probabilityE() const {
     static_assert(RANDOM_OPTIONS == 5U, "This function is only for events with 5 outcomes.");
-    return val[4] - val[3];
+    return MechanicConstants::PercentChanceToProbability * (val[4] - val[3]);
   }
 };
 
 // Used for random events that always have two outcomes where the chance the events happens may not be equal (i.e. move
 // accuracy checks, secondary move effects)
-struct RandomBinaryChance {
-  types::percentChance val = MechanicConstants::PercentChance::DEFAULT;
+struct RandomBinaryProbability {
+  types::probability val = MechanicConstants::Probability::DEFAULT;
 
-  types::percentChance pass() const { return val; }
-  types::percentChance fail() const { return MechanicConstants::PercentChance::MAX - pass(); }
-  types::probability reciprocalPass() const { return MechanicConstants::Probability::MAX / (types::probability)pass(); }
-  types::probability reciprocalFail() const { return MechanicConstants::Probability::MAX - reciprocalPass(); }
+  types::probability pass() const { return val; }
+  types::probability fail() const { return MechanicConstants::Probability::MAX - pass(); }
 };
 
 namespace tags {
@@ -78,11 +68,13 @@ struct RandomEqualChance {};
 // the chance each of those events can happen is equal
 struct RandomEventCount {
   types::eventPossibilities val = 0U;
+
+  types::probability probability() const { return MechanicConstants::Probability::MAX / val; }
 };
 
 template <types::eventPossibilities RANDOM_OPTIONS>
 struct RandomEventChancesStack : internal::RandomEventStack<RandomEventChances<RANDOM_OPTIONS>> {};
-struct RandomBinaryChanceStack : internal::RandomEventStack<RandomBinaryChance> {};
+struct RandomBinaryProbabilityStack : internal::RandomEventStack<RandomBinaryProbability> {};
 struct RandomEventCountStack : internal::RandomEventStack<RandomEventCount> {};
 struct RandomEqualChanceStack : internal::RandomEventStack<> {};
-}  // namespace pokesim
+}  // namespace pokesim::internal

@@ -19244,8 +19244,7 @@ struct RngSeed {
 
 //////////////// START OF src/Components/RandomEventInputs.hpp /////////////////
 
-namespace pokesim {
-namespace internal {
+namespace pokesim::internal {
 // Moves such as Metronome and Psywave, the Forewarn ability, and damage rolls have more random options than this, but
 // those cases will be handled separately
 const types::eventPossibilities MAX_TYPICAL_RANDOM_OPTIONS = 5U;
@@ -19263,13 +19262,6 @@ struct RandomEventStack {
   types::targets<std::pair<decltype(T::val), types::entity>> val{};
 };
 
-// Temporary because it will get deleted after use and inputs for random chance will be reworked entirely.
-// TODO(aed3): Make every struct in this file internal and make the opening random chance functions not templates
-struct TempPercentChance {
-  types::percentChance val = MechanicConstants::PercentChance::DEFAULT;
-};
-}  // namespace internal
-
 // Used for random events that have a small number of outcomes that can happen and the chance each event can happen is
 // not equal (i.e. how many times a multi-hit move hits, Effect Spore)
 template <types::eventPossibilities RANDOM_OPTIONS>
@@ -19280,31 +19272,29 @@ struct RandomEventChances {
     RANDOM_OPTIONS <= internal::MAX_TYPICAL_RANDOM_OPTIONS,
     "Random events with more options than this should use RandomEqualChance or RandomEventCount");
 
-  types::percentChance chanceA() const { return val[0]; }
-  types::percentChance chanceB() const { return val[1] - val[0]; }
-  types::percentChance chanceC() const {
+  types::probability probabilityA() const { return MechanicConstants::PercentChanceToProbability * val[0]; }
+  types::probability probabilityB() const { return MechanicConstants::PercentChanceToProbability * (val[1] - val[0]); }
+  types::probability probabilityC() const {
     static_assert(RANDOM_OPTIONS >= 3U, "This function is only for events with more than 2 outcomes.");
-    return val[2] - val[1];
+    return MechanicConstants::PercentChanceToProbability * (val[2] - val[1]);
   }
-  types::percentChance chanceD() const {
+  types::probability probabilityD() const {
     static_assert(RANDOM_OPTIONS >= 4U, "This function is only for events with more than 3 outcomes.");
-    return val[3] - val[2];
+    return MechanicConstants::PercentChanceToProbability * (val[3] - val[2]);
   }
-  types::percentChance chanceE() const {
+  types::probability probabilityE() const {
     static_assert(RANDOM_OPTIONS == 5U, "This function is only for events with 5 outcomes.");
-    return val[4] - val[3];
+    return MechanicConstants::PercentChanceToProbability * (val[4] - val[3]);
   }
 };
 
 // Used for random events that always have two outcomes where the chance the events happens may not be equal (i.e. move
 // accuracy checks, secondary move effects)
-struct RandomBinaryChance {
-  types::percentChance val = MechanicConstants::PercentChance::DEFAULT;
+struct RandomBinaryProbability {
+  types::probability val = MechanicConstants::Probability::DEFAULT;
 
-  types::percentChance pass() const { return val; }
-  types::percentChance fail() const { return MechanicConstants::PercentChance::MAX - pass(); }
-  types::probability reciprocalPass() const { return MechanicConstants::Probability::MAX / (types::probability)pass(); }
-  types::probability reciprocalFail() const { return MechanicConstants::Probability::MAX - reciprocalPass(); }
+  types::probability pass() const { return val; }
+  types::probability fail() const { return MechanicConstants::Probability::MAX - pass(); }
 };
 
 namespace tags {
@@ -19317,20 +19307,22 @@ struct RandomEqualChance {};
 // the chance each of those events can happen is equal
 struct RandomEventCount {
   types::eventPossibilities val = 0U;
+
+  types::probability probability() const { return MechanicConstants::Probability::MAX / val; }
 };
 
 template <types::eventPossibilities RANDOM_OPTIONS>
 struct RandomEventChancesStack : internal::RandomEventStack<RandomEventChances<RANDOM_OPTIONS>> {};
-struct RandomBinaryChanceStack : internal::RandomEventStack<RandomBinaryChance> {};
+struct RandomBinaryProbabilityStack : internal::RandomEventStack<RandomBinaryProbability> {};
 struct RandomEventCountStack : internal::RandomEventStack<RandomEventCount> {};
 struct RandomEqualChanceStack : internal::RandomEventStack<> {};
-}  // namespace pokesim
+}  // namespace pokesim::internal
 
 ///////////////// END OF src/Components/RandomEventInputs.hpp //////////////////
 
 //////////////// START OF src/Components/RandomEventOutputs.hpp ////////////////
 
-namespace pokesim {
+namespace pokesim::internal {
 namespace tags {
 struct RandomEventA {};
 struct RandomEventB {};
@@ -19346,7 +19338,7 @@ using RandomEventCheckFailed = RandomEventB;
 struct RandomEventIndex {
   types::eventPossibilities val = 0U;
 };
-}  // namespace pokesim
+}  // namespace pokesim::internal
 
 ///////////////// END OF src/Components/RandomEventOutputs.hpp /////////////////
 
@@ -20101,15 +20093,33 @@ namespace pokesim {
 class Simulation;
 
 struct DamageRollOptions {
+ private:
   DamageRollKind p1 = DamageRollKind::AVERAGE_DAMAGE;
   DamageRollKind p2 = DamageRollKind::AVERAGE_DAMAGE;
-  bool sidesMatch() const { return p1 == p2; }
 
+ public:
+  DamageRollOptions() {}
+  DamageRollOptions(DamageRollKind p1AndP2) : p1(p1AndP2), p2(p1AndP2) {}
+  DamageRollOptions(DamageRollKind p1_, DamageRollKind p2_) : p1(p1_), p2(p2_) {}
+
+  constexpr DamageRollKind getP1() const { return p1; }
+  constexpr DamageRollKind getP2() const { return p2; }
+
+  DamageRollOptions& setP1(DamageRollKind newValue) {
+    p1 = newValue;
+    return *this;
+  }
+  DamageRollOptions& setP2(DamageRollKind newValue) {
+    p2 = newValue;
+    return *this;
+  }
+  bool sidesMatch() const { return p1 == p2; }
   bool operator==(const DamageRollOptions& other) const { return p1 == other.p1 && p2 == other.p2; }
 };
 
 namespace simulate_turn {
 struct Options {
+ private:
   DamageRollOptions damageRollsConsidered;
   bool applyChangesToInputBattle = true;
   std::optional<types::percentChance> randomChanceUpperLimit = std::nullopt;
@@ -20120,6 +20130,46 @@ struct Options {
   // happen in the turn. When false, the number of output battles is the same as the number in input battles as each
   // battle picks a random outcome for each random event without branching.
   bool makeBranchesOnRandomEvents = true;
+
+ public:
+  constexpr const DamageRollOptions& getDamageRollsConsidered() const { return damageRollsConsidered; }
+  constexpr bool getApplyChangesToInputBattle() const { return applyChangesToInputBattle; }
+  constexpr types::percentChance getRandomChanceUpperLimit() const {
+    return randomChanceUpperLimit.value_or(MechanicConstants::PercentChance::MAX);
+  }
+  constexpr types::percentChance getRandomChanceLowerLimit() const {
+    return randomChanceLowerLimit.value_or(MechanicConstants::PercentChance::MIN);
+  }
+  constexpr types::probability getBranchProbabilityLowerLimit() const {
+    return branchProbabilityLowerLimit.value_or(MechanicConstants::Probability::MIN);
+  }
+  constexpr bool hasBranchProbabilityLowerLimit() const { return branchProbabilityLowerLimit.has_value(); }
+  constexpr bool getMakeBranchesOnRandomEvents() const { return makeBranchesOnRandomEvents; }
+
+  Options& setDamageRollsConsidered(const DamageRollOptions& newValue) {
+    damageRollsConsidered = newValue;
+    return *this;
+  }
+  Options& setApplyChangesToInputBattle(bool newValue) {
+    applyChangesToInputBattle = newValue;
+    return *this;
+  }
+  Options& setRandomChanceUpperLimit(types::percentChance newValue) {
+    randomChanceUpperLimit = newValue;
+    return *this;
+  }
+  Options& setRandomChanceLowerLimit(types::percentChance newValue) {
+    randomChanceLowerLimit = newValue;
+    return *this;
+  }
+  Options& setBranchProbabilityLowerLimit(types::probability newValue) {
+    branchProbabilityLowerLimit = newValue;
+    return *this;
+  }
+  Options& setMakeBranchesOnRandomEvents(bool newValue) {
+    makeBranchesOnRandomEvents = newValue;
+    return *this;
+  }
 
   entt::delegate<std::remove_pointer_t<types::callback>> decisionCallback{};
   entt::delegate<std::remove_pointer_t<types::callback>> faintCallback{};
@@ -20138,11 +20188,30 @@ struct Options {
 
 namespace calc_damage {
 struct Options {
+ private:
   bool calculateUpToFoeHp = false;
   // KO chance is otherwise calculated if DamageRollKind::ALL_DAMAGE_ROLLS is set as the damage roll option
   bool noKoChanceCalculation = false;
 
   DamageRollOptions damageRollOptions;
+
+ public:
+  constexpr bool getCalculateUpToFoeHp() const { return calculateUpToFoeHp; }
+  constexpr bool getNoKoChanceCalculation() const { return noKoChanceCalculation; }
+  constexpr const DamageRollOptions& getDamageRollOptions() const { return damageRollOptions; }
+
+  Options& setCalculateUpToFoeHp(bool newValue) {
+    calculateUpToFoeHp = newValue;
+    return *this;
+  }
+  Options& setNoKoChanceCalculation(bool newValue) {
+    noKoChanceCalculation = newValue;
+    return *this;
+  }
+  Options& setDamageRollOptions(const DamageRollOptions& newValue) {
+    damageRollOptions = newValue;
+    return *this;
+  }
 
   bool operator==(const Options& other) const {
     return calculateUpToFoeHp == other.calculateUpToFoeHp && noKoChanceCalculation == other.noKoChanceCalculation &&
@@ -20153,6 +20222,7 @@ struct Options {
 
 namespace analyze_effect {
 struct Options {
+ private:
   // Whether to consider the multiplier even if the effect is already active (i.e. Rain will return a 1x multiplier
   // instead of 1.5x multiplier for Surf if this option is true and it's already raining)
   bool reconsiderActiveEffects = false;
@@ -20161,6 +20231,29 @@ struct Options {
   bool noKoChanceCalculation = false;
 
   DamageRollOptions damageRollOptions;
+
+ public:
+  constexpr bool getReconsiderActiveEffects() const { return reconsiderActiveEffects; }
+  constexpr bool getCalculateUpToFoeHp() const { return calculateUpToFoeHp; }
+  constexpr bool getNoKoChanceCalculation() const { return noKoChanceCalculation; }
+  constexpr const DamageRollOptions& getDamageRollOptions() const { return damageRollOptions; }
+
+  Options& setReconsiderActiveEffects(bool newValue) {
+    reconsiderActiveEffects = newValue;
+    return *this;
+  }
+  Options& setCalculateUpToFoeHp(bool newValue) {
+    calculateUpToFoeHp = newValue;
+    return *this;
+  }
+  Options& setNoKoChanceCalculation(bool newValue) {
+    noKoChanceCalculation = newValue;
+    return *this;
+  }
+  Options& setDamageRollOptions(const DamageRollOptions& newValue) {
+    damageRollOptions = newValue;
+    return *this;
+  }
 
   bool operator==(const Options& other) const {
     return reconsiderActiveEffects == other.reconsiderActiveEffects && calculateUpToFoeHp == other.calculateUpToFoeHp &&
@@ -20251,16 +20344,6 @@ struct Position;
 struct MovePriority;
 struct Probability;
 struct RngSeed;
-template <types::eventPossibilities>
-struct RandomEventChances;
-struct RandomBinaryChance;
-struct RandomEventCount;
-template <types::eventPossibilities>
-struct RandomEventChancesStack;
-struct RandomBinaryChanceStack;
-struct RandomEventCountStack;
-struct RandomEqualChanceStack;
-struct RandomEventIndex;
 struct SpeedTieIndexes;
 struct SpeciesTypes;
 struct SpeedSort;
@@ -20290,7 +20373,16 @@ struct AttackerHpRecovered;
 struct AttackerHpLost;
 }  // namespace calc_damage
 namespace internal {
-struct TempPercentChance;
+template <types::eventPossibilities>
+struct RandomEventChances;
+struct RandomBinaryProbability;
+struct RandomEventCount;
+template <types::eventPossibilities>
+struct RandomEventChancesStack;
+struct RandomBinaryProbabilityStack;
+struct RandomEventCountStack;
+struct RandomEqualChanceStack;
+struct RandomEventIndex;
 }  // namespace internal
 namespace action {
 struct Team;
@@ -20325,6 +20417,7 @@ void checkSide(types::entity, const types::registry&);
 void checkPokemon(types::entity, const types::registry&);
 void checkMoveSlot(types::entity, const types::registry&);
 void checkActionMove(types::entity, const types::registry&);
+void checkPercentChance(types::percentChance);
 
 template <>
 void check(const Accuracy&);
@@ -20588,47 +20681,45 @@ template <>
 void check(const RngSeed&);
 
 template <>
-void check(const internal::TempPercentChance&);
+void check(const internal::RandomEventChances<2U>&);
 
 template <>
-void check(const RandomEventChances<2U>&);
+void check(const internal::RandomEventChances<3U>&);
 
 template <>
-void check(const RandomEventChances<3U>&);
+void check(const internal::RandomEventChances<4U>&);
 
 template <>
-void check(const RandomEventChances<4U>&);
+void check(const internal::RandomEventChances<5U>&);
 
 template <>
-void check(const RandomEventChances<5U>&);
+void check(const internal::RandomBinaryProbability&);
 
 template <>
-void check(const RandomBinaryChance&);
-
-// template <> void check(const RandomEventCount&);
+void check(const internal::RandomEventCount&);
 
 template <>
-void check(const RandomEventChancesStack<2U>&, const types::registry&);
+void check(const internal::RandomEventChancesStack<2U>&, const types::registry&);
 
 template <>
-void check(const RandomEventChancesStack<3U>&, const types::registry&);
+void check(const internal::RandomEventChancesStack<3U>&, const types::registry&);
 
 template <>
-void check(const RandomEventChancesStack<4U>&, const types::registry&);
+void check(const internal::RandomEventChancesStack<4U>&, const types::registry&);
 
 template <>
-void check(const RandomEventChancesStack<5U>&, const types::registry&);
+void check(const internal::RandomEventChancesStack<5U>&, const types::registry&);
 
 template <>
-void check(const RandomBinaryChanceStack&, const types::registry&);
+void check(const internal::RandomBinaryProbabilityStack&, const types::registry&);
 
 template <>
-void check(const RandomEventCountStack&, const types::registry&);
+void check(const internal::RandomEventCountStack&, const types::registry&);
 
 template <>
-void check(const RandomEqualChanceStack&, const types::registry&);
+void check(const internal::RandomEqualChanceStack&, const types::registry&);
 
-// template <> void check(const RandomEventIndex&);
+// template <> void check(const internal::RandomEventIndex&);
 
 template <>
 void check(const SpeedTieIndexes&);
@@ -22314,13 +22405,13 @@ class RegistryContainer {
 
   template <typename Selection>
   SelectionFunctionList& selectedFunctions() {
-    if constexpr (std::is_same_v<tags::SelectedForViewBattle, Selection>) {
+    if constexpr (std::is_same_v<pokesim::tags::SelectedForViewBattle, Selection>) {
       return battleSelection;
     }
-    else if constexpr (std::is_same_v<tags::SelectedForViewSide, Selection>) {
+    else if constexpr (std::is_same_v<pokesim::tags::SelectedForViewSide, Selection>) {
       return sideSelection;
     }
-    else if constexpr (std::is_same_v<tags::SelectedForViewPokemon, Selection>) {
+    else if constexpr (std::is_same_v<pokesim::tags::SelectedForViewPokemon, Selection>) {
       return pokemonSelection;
     }
     else {
@@ -22330,13 +22421,13 @@ class RegistryContainer {
 
   template <typename Selection>
   const SelectionFunctionList& selectedFunctions() const {
-    if constexpr (std::is_same_v<tags::SelectedForViewBattle, Selection>) {
+    if constexpr (std::is_same_v<pokesim::tags::SelectedForViewBattle, Selection>) {
       return battleSelection;
     }
-    else if constexpr (std::is_same_v<tags::SelectedForViewSide, Selection>) {
+    else if constexpr (std::is_same_v<pokesim::tags::SelectedForViewSide, Selection>) {
       return sideSelection;
     }
-    else if constexpr (std::is_same_v<tags::SelectedForViewPokemon, Selection>) {
+    else if constexpr (std::is_same_v<pokesim::tags::SelectedForViewPokemon, Selection>) {
       return pokemonSelection;
     }
     else {
@@ -22488,32 +22579,52 @@ class RegistryContainer {
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewBattle, tags::Battle, Function, TagContainer, ExcludeContainer, IncludeContainer>::
-      view(this, passedInArgs...);
+    ForSelected<
+      pokesim::tags::SelectedForViewBattle,
+      pokesim::tags::Battle,
+      Function,
+      TagContainer,
+      ExcludeContainer,
+      IncludeContainer>::view(this, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewBattle, tags::Battle, Function, TagContainer, ExcludeContainer, IncludeContainer>::
-      group(this, passedInArgs...);
+    ForSelected<
+      pokesim::tags::SelectedForViewBattle,
+      pokesim::tags::Battle,
+      Function,
+      TagContainer,
+      ExcludeContainer,
+      IncludeContainer>::group(this, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewSide, tags::Side, Function, TagContainer, ExcludeContainer, IncludeContainer>::
-      view(this, passedInArgs...);
+    ForSelected<
+      pokesim::tags::SelectedForViewSide,
+      pokesim::tags::Side,
+      Function,
+      TagContainer,
+      ExcludeContainer,
+      IncludeContainer>::view(this, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<tags::SelectedForViewSide, tags::Side, Function, TagContainer, ExcludeContainer, IncludeContainer>::
-      group(this, passedInArgs...);
+    ForSelected<
+      pokesim::tags::SelectedForViewSide,
+      pokesim::tags::Side,
+      Function,
+      TagContainer,
+      ExcludeContainer,
+      IncludeContainer>::group(this, passedInArgs...);
   }
 
   template <
@@ -22521,8 +22632,8 @@ class RegistryContainer {
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedPokemon(const PassedInArgs&... passedInArgs) {
     ForSelected<
-      tags::SelectedForViewPokemon,
-      tags::Pokemon,
+      pokesim::tags::SelectedForViewPokemon,
+      pokesim::tags::Pokemon,
       Function,
       TagContainer,
       ExcludeContainer,
@@ -22534,8 +22645,8 @@ class RegistryContainer {
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedPokemon(const PassedInArgs&... passedInArgs) {
     ForSelected<
-      tags::SelectedForViewPokemon,
-      tags::Pokemon,
+      pokesim::tags::SelectedForViewPokemon,
+      pokesim::tags::Pokemon,
       Function,
       TagContainer,
       ExcludeContainer,
@@ -22547,8 +22658,8 @@ class RegistryContainer {
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void viewForSelectedMoves(const PassedInArgs&... passedInArgs) {
     ForSelected<
-      tags::SelectedForViewMove,
-      tags::CurrentActionMove,
+      pokesim::tags::SelectedForViewMove,
+      pokesim::tags::CurrentActionMove,
       Function,
       TagContainer,
       ExcludeContainer,
@@ -22560,8 +22671,8 @@ class RegistryContainer {
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   void groupForSelectedMoves(const PassedInArgs&... passedInArgs) {
     ForSelected<
-      tags::SelectedForViewMove,
-      tags::CurrentActionMove,
+      pokesim::tags::SelectedForViewMove,
+      pokesim::tags::CurrentActionMove,
       Function,
       TagContainer,
       ExcludeContainer,
@@ -24328,14 +24439,16 @@ struct SelectForView {
 };
 
 template <typename... ComponentsToSelect>
-using SelectForBattleView = SelectForView<tags::SelectedForViewBattle, tags::Battle, ComponentsToSelect...>;
+using SelectForBattleView =
+  SelectForView<pokesim::tags::SelectedForViewBattle, pokesim::tags::Battle, ComponentsToSelect...>;
 template <typename... ComponentsToSelect>
-using SelectForSideView = SelectForView<tags::SelectedForViewSide, tags::Side, ComponentsToSelect...>;
+using SelectForSideView = SelectForView<pokesim::tags::SelectedForViewSide, pokesim::tags::Side, ComponentsToSelect...>;
 template <typename... ComponentsToSelect>
-using SelectForPokemonView = SelectForView<tags::SelectedForViewPokemon, tags::Pokemon, ComponentsToSelect...>;
+using SelectForPokemonView =
+  SelectForView<pokesim::tags::SelectedForViewPokemon, pokesim::tags::Pokemon, ComponentsToSelect...>;
 template <typename... ComponentsToSelect>
 using SelectForCurrentActionMoveView =
-  SelectForView<tags::SelectedForViewMove, tags::CurrentActionMove, ComponentsToSelect...>;
+  SelectForView<pokesim::tags::SelectedForViewMove, pokesim::tags::CurrentActionMove, ComponentsToSelect...>;
 }  // namespace pokesim::internal
 
 //////////////////// END OF src/Utilities/SelectForView.hpp ////////////////////
@@ -24372,29 +24485,10 @@ void clearCurrentAction(Simulation& simulation);
 
 namespace pokesim {
 namespace internal {
-template <types::eventPossibilities POSSIBLE_EVENT_COUNT, BattleFormat Format>
-void setRandomChoice(types::handle handle, const std::array<types::percentChance, POSSIBLE_EVENT_COUNT>& chances) {
-  if constexpr (Format == BattleFormat::SINGLES_BATTLE_FORMAT) {
-    handle.emplace<RandomEventChances<POSSIBLE_EVENT_COUNT>>(chances);
-  }
-  else {
-    handle.registry()
-      ->get_or_emplace<RandomEventChancesStack<POSSIBLE_EVENT_COUNT>>(handle.get<Battle>().val)
-      .val.emplace_back(chances, handle.entity());
-  }
-}
-
-template <BattleFormat Format>
-void setBinaryChanceByFormat(types::handle handle, types::percentChance percentChance) {
-  if constexpr (Format == BattleFormat::SINGLES_BATTLE_FORMAT) {
-    handle.emplace<RandomBinaryChance>(percentChance);
-  }
-  else {
-    handle.registry()
-      ->get_or_emplace<RandomBinaryChanceStack>(handle.get<Battle>().val)
-      .val.emplace_back(percentChance, handle.entity());
-  }
-}
+template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
+void setRandomEventChances(
+  types::handle handle, const Simulation& simulation,
+  const std::array<types::percentChance, POSSIBLE_EVENT_COUNT>& chances);
 
 enum class PercentChanceLimitResult : std::uint8_t {
   NO_LIMIT_REACHED = 0U,
@@ -24402,220 +24496,37 @@ enum class PercentChanceLimitResult : std::uint8_t {
   REACHED_FAIL_LIMIT,
 };
 
-inline PercentChanceLimitResult checkPercentChanceLimits(
-  types::percentChance percentChance, types::probability probability, const simulate_turn::Options& options) {
-  static constexpr auto PercentChanceMax = MechanicConstants::PercentChance::MAX;
-  static constexpr auto PercentChanceMin = MechanicConstants::PercentChance::MIN;
-  static constexpr types::percentChance PassFailBoundary = (PercentChanceMax - PercentChanceMin) / 2U;
+PercentChanceLimitResult checkPercentChanceLimits(
+  types::probability eventProbability, types::probability probability, const simulate_turn::Options& options);
 
-  const auto& autoPassLimit = options.randomChanceUpperLimit;
-  const auto& autoFailLimit = options.randomChanceLowerLimit;
-  const auto& branchProbabilityLowerLimit = options.branchProbabilityLowerLimit;
-
-  bool skipBranch = false;
-  if (branchProbabilityLowerLimit.has_value()) {
-    types::percentChance lowestPercentChance =
-      percentChance > PassFailBoundary ? PercentChanceMax - std::min(PercentChanceMax, percentChance) : percentChance;
-
-    skipBranch = lowestPercentChance * probability <= branchProbabilityLowerLimit.value() * PercentChanceMax;
-  }
-
-  if (percentChance >= autoPassLimit.value_or(PercentChanceMax) || (skipBranch && percentChance >= PassFailBoundary)) {
-    return PercentChanceLimitResult::REACHED_PASS_LIMIT;
-  }
-
-  if (percentChance <= autoFailLimit.value_or(PercentChanceMin) || skipBranch) {
-    return PercentChanceLimitResult::REACHED_FAIL_LIMIT;
-  }
-
-  return PercentChanceLimitResult::NO_LIMIT_REACHED;
-}
-
-template <BattleFormat Format>
 void setBinaryChanceFromChanceLimit(
-  types::handle handle, types::percentChance passChance, types::percentChance percentChance,
-  types::probability probability, const simulate_turn::Options& options) {
-  PercentChanceLimitResult limitReached = checkPercentChanceLimits(passChance, probability, options);
+  types::handle handle, Battle battle, types::probability eventProbability, const Simulation& simulation);
 
-  switch (limitReached) {
-    case PercentChanceLimitResult::REACHED_PASS_LIMIT: {
-      handle.emplace<tags::RandomEventCheckPassed>();
-      return;
-    }
-    case PercentChanceLimitResult::REACHED_FAIL_LIMIT: {
-      handle.emplace<tags::RandomEventCheckFailed>();
-      return;
-    }
-    default: {
-      setBinaryChanceByFormat<Format>(handle, percentChance);
-      return;
-    };
-  }
+template <typename PercentChanceComponent>
+void setRandomBinaryChance(
+  types::handle handle, PercentChanceComponent percentChance, Battle battle, const Simulation& simulation) {
+  setBinaryChanceFromChanceLimit(
+    handle,
+    battle,
+    MechanicConstants::PercentChanceToProbability * percentChance.val,
+    simulation);
 }
 
-template <typename PercentChanceComponent, BattleFormat Format>
-void setRandomBinaryChoice(
-  types::handle handle, const PercentChanceComponent& percentChance, const Battle& battle,
-  const simulate_turn::Options& options) {
-  types::probability probability = handle.registry()->get<Probability>(battle.val).val;
-
-  setBinaryChanceFromChanceLimit<Format>(handle, percentChance.val, percentChance.val, probability, options);
+template <typename PercentChanceComponent>
+void setReciprocalRandomBinaryChance(
+  types::handle handle, PercentChanceComponent percentChance, Battle battle, const Simulation& simulation) {
+  setBinaryChanceFromChanceLimit(handle, battle, MechanicConstants::Probability::MAX / percentChance.val, simulation);
 }
 
-template <typename PercentChanceComponent, BattleFormat Format>
-void setReciprocalRandomBinaryChoice(
-  types::handle handle, const PercentChanceComponent& percentChance, const Battle& battle,
-  const simulate_turn::Options& options) {
-  types::percentChance passChance = MechanicConstants::PercentChance::MAX / percentChance.val;
-  types::probability probability = handle.registry()->get<Probability>(battle.val).val;
-
-  setBinaryChanceFromChanceLimit<Format>(handle, passChance, percentChance.val, probability, options);
-}
-
-template <BattleFormat Format>
-void setRandomEqualChoice(types::handle handle) {
-  if constexpr (Format == BattleFormat::SINGLES_BATTLE_FORMAT) {
-    handle.emplace<tags::RandomEqualChance>();
-  }
-  else {
-    handle.registry()
-      ->get_or_emplace<RandomEqualChanceStack>(handle.get<Battle>().val)
-      .val.emplace_back(handle.entity());
-  }
-}
-
-template <BattleFormat Format, auto GetPossibleEventCount>
+void setRandomEqualChance(types::handle handle, const Simulation& simulation);
 void setRandomEventCounts(
-  types::handle handle, const Battle& battle, const simulate_turn::Options& options, bool forRequiredDamageRolls) {
-  auto eventCount = GetPossibleEventCount(handle);
-
-  PercentChanceLimitResult limitReached = PercentChanceLimitResult::NO_LIMIT_REACHED;
-  if (!forRequiredDamageRolls) {
-    types::percentChance passChance =
-      types::percentChance((types::probability)MechanicConstants::PercentChance::MAX / eventCount);
-    types::probability probability = handle.registry()->get<Probability>(battle.val).val;
-    limitReached = checkPercentChanceLimits(passChance, probability, options);
-  }
-
-  if (limitReached == PercentChanceLimitResult::NO_LIMIT_REACHED) {
-    if constexpr (Format == BattleFormat::SINGLES_BATTLE_FORMAT) {
-      handle.emplace<RandomEventCount>(eventCount);
-    }
-    else {
-      handle.registry()
-        ->get_or_emplace<RandomEventCountStack>(handle.get<Battle>().val)
-        .val.emplace_back(eventCount, handle.entity());
-    }
-  }
-  else {
-    handle.emplace<RandomEventIndex>((types::eventPossibilities)(eventCount / 2U));
-  }
-}
-
-template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename... SelectionTags>
-void setRandomChoice(
-  Simulation& simulation, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances,
-  const bool cumulativeSumChances) {
-  if (cumulativeSumChances) {
-    types::percentChance chanceSum = 0U;
-    for (types::percentChance& chance : chances) {
-      chanceSum += chance;
-      chance = chanceSum;
-    }
-
-    POKESIM_REQUIRE(
-      chanceSum == MechanicConstants::PercentChance::MAX,
-      "The total probability of all possible outcomes should add up to " +
-        std::to_string(MechanicConstants::PercentChance::MAX) + "%.");
-  }
-  else {
-    POKESIM_REQUIRE(
-      chances.back() == MechanicConstants::PercentChance::MAX,
-      "The total probability of all possible outcomes should add up to " +
-        std::to_string(MechanicConstants::PercentChance::MAX) + "%.");
-    for (types::eventPossibilities i = 1U; i < POSSIBLE_EVENT_COUNT; i++) {
-      POKESIM_REQUIRE(
-        chances[i - 1] <= chances[i],
-        "Chances should be a cumulative sum where each value is greater than the last.");
-    }
-  }
-
-  if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
-    simulation.view<setRandomChoice<POSSIBLE_EVENT_COUNT, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<SelectionTags...>>(
-      chances);
-  }
-  else {
-    simulation.view<setRandomChoice<POSSIBLE_EVENT_COUNT, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<SelectionTags...>>(
-      chances);
-  }
-}
-
-template <typename PercentChanceComponent, typename... SelectionTags>
-void setRandomBinaryChoice(Simulation& simulation) {
-  const auto& options = simulation.simulateTurnOptions;
-
-  if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
-    simulation
-      .view<setRandomBinaryChoice<PercentChanceComponent, BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<SelectionTags...>>(
-        options);
-  }
-  else {
-    simulation
-      .view<setRandomBinaryChoice<PercentChanceComponent, BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<SelectionTags...>>(
-        options);
-  }
-}
-
-template <typename PercentChanceComponent, typename... SelectionTags>
-void setReciprocalRandomBinaryChoice(Simulation& simulation) {
-  const auto& options = simulation.simulateTurnOptions;
-
-  if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
-    simulation.view<
-      setReciprocalRandomBinaryChoice<PercentChanceComponent, BattleFormat::SINGLES_BATTLE_FORMAT>,
-      Tags<SelectionTags...>>(options);
-  }
-  else {
-    simulation.view<
-      setReciprocalRandomBinaryChoice<PercentChanceComponent, BattleFormat::DOUBLES_BATTLE_FORMAT>,
-      Tags<SelectionTags...>>(options);
-  }
-}
-
-template <typename... SelectionTags>
-void setRandomEqualChoice(Simulation& simulation) {
-  if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
-    simulation.view<setRandomEqualChoice<BattleFormat::SINGLES_BATTLE_FORMAT>, Tags<SelectionTags...>>();
-  }
-  else {
-    simulation.view<setRandomEqualChoice<BattleFormat::DOUBLES_BATTLE_FORMAT>, Tags<SelectionTags...>>();
-  }
-}
-
-template <auto GetPossibleEventCount, typename... SelectionTags>
-void setRandomEventCounts(Simulation& simulation, bool forRequiredDamageRolls) {
-  const auto& options = simulation.simulateTurnOptions;
-
-  if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
-    simulation
-      .view<setRandomEventCounts<BattleFormat::SINGLES_BATTLE_FORMAT, GetPossibleEventCount>, Tags<SelectionTags...>>(
-        options,
-        forRequiredDamageRolls);
-  }
-  else {
-    simulation
-      .view<setRandomEventCounts<BattleFormat::DOUBLES_BATTLE_FORMAT, GetPossibleEventCount>, Tags<SelectionTags...>>(
-        options,
-        forRequiredDamageRolls);
-  }
-}
+  types::handle handle, Battle battle, const Simulation& simulation,
+  types::eventPossibilities (*getPossibleEventCount)(types::handle), bool forRequiredDamageRolls);
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void randomEventChances(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities);
 void randomBinaryChance(
-  Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities);
-void reciprocalRandomBinaryChance(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities);
 void randomEqualChance(
   Simulation& simulation, types::eventPossibilities possibleEventCount, types::callback applyChoices,
@@ -24628,12 +24539,11 @@ void clearRandomChanceResult(Simulation& simulation);
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename... SelectionTags>
 void runRandomEventChances(
-  Simulation& simulation, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances,
-  const bool cumulativeSumChances, types::callback applyChoices,
+  Simulation& simulation, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances, types::callback applyChoices,
   types::optionalCallback updateProbabilities = std::nullopt) {
-  internal::setRandomChoice<POSSIBLE_EVENT_COUNT, SelectionTags...>(simulation, chances, cumulativeSumChances);
+  simulation.view<internal::setRandomEventChances<POSSIBLE_EVENT_COUNT>, Tags<SelectionTags...>>(simulation, chances);
 
-  if (!simulation.registry.view<RandomEventChances<POSSIBLE_EVENT_COUNT>>().empty()) {
+  if (!simulation.registry.view<internal::RandomEventChances<POSSIBLE_EVENT_COUNT>>().empty()) {
     internal::randomEventChances<POSSIBLE_EVENT_COUNT>(simulation, applyChoices, updateProbabilities);
   }
 }
@@ -24641,30 +24551,39 @@ void runRandomEventChances(
 template <typename PercentChanceComponent, typename... SelectionTags>
 void runRandomBinaryChance(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt) {
-  internal::setRandomBinaryChoice<PercentChanceComponent, SelectionTags...>(simulation);
+  simulation.view<internal::setRandomBinaryChance<PercentChanceComponent>, Tags<SelectionTags...>>(simulation);
+
   internal::randomBinaryChance(simulation, applyChoices, updateProbabilities);
 }
 
 template <typename PercentChanceComponent, typename... SelectionTags>
 void runReciprocalRandomBinaryChance(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt) {
-  internal::setReciprocalRandomBinaryChoice<PercentChanceComponent, SelectionTags...>(simulation);
-  internal::reciprocalRandomBinaryChance(simulation, applyChoices, updateProbabilities);
+  simulation.view<internal::setReciprocalRandomBinaryChance<PercentChanceComponent>, Tags<SelectionTags...>>(
+    simulation);
+
+  internal::randomBinaryChance(simulation, applyChoices, updateProbabilities);
 }
 
 template <typename... SelectionTags>
 void runRandomEqualChance(
   Simulation& simulation, types::eventPossibilities possibleEventCount, types::callback applyChoices,
   types::optionalCallback updateProbabilities = std::nullopt) {
-  internal::setRandomEqualChoice<SelectionTags...>(simulation);
+  simulation.view<internal::setRandomEqualChance, Tags<SelectionTags...>>();
+
   internal::randomEqualChance(simulation, possibleEventCount, applyChoices, updateProbabilities);
 }
 
-template <auto GetPossibleEventCount, typename... SelectionTags>
+template <typename... SelectionTags>
 void runRandomEventCount(
-  Simulation& simulation, bool forRequiredDamageRolls, types::callback applyChoices,
-  types::optionalCallback updateProbabilities = std::nullopt) {
-  internal::setRandomEventCounts<GetPossibleEventCount, SelectionTags...>(simulation, forRequiredDamageRolls);
+  Simulation& simulation, types::eventPossibilities (*getPossibleEventCount)(types::handle),
+  types::callback applyChoices, types::optionalCallback updateProbabilities = std::nullopt,
+  bool forRequiredDamageRolls = false) {
+  simulation.view<internal::setRandomEventCounts, Tags<SelectionTags...>>(
+    simulation,
+    getPossibleEventCount,
+    forRequiredDamageRolls);
+
   internal::randomEventCount(simulation, applyChoices, updateProbabilities);
 }
 }  // namespace pokesim
@@ -24723,15 +24642,11 @@ struct Checks : pokesim::debug::Checks {
       : pokesim::debug::Checks(_simulation), options(_simulation.simulateTurnOptions) {}
 
   void checkInputs() const {
-    pokesim::debug::check(options.damageRollsConsidered);
-    if (options.randomChanceLowerLimit.has_value()) {
-      pokesim::debug::check(RandomBinaryChance{options.randomChanceLowerLimit.value()});
-    }
-    if (options.randomChanceUpperLimit.has_value()) {
-      pokesim::debug::check(RandomBinaryChance{options.randomChanceUpperLimit.value()});
-    }
-    if (options.branchProbabilityLowerLimit.has_value()) {
-      pokesim::debug::check(Probability{options.branchProbabilityLowerLimit.value()});
+    pokesim::debug::check(options.getDamageRollsConsidered());
+    pokesim::debug::checkPercentChance(options.getRandomChanceLowerLimit());
+    pokesim::debug::checkPercentChance(options.getRandomChanceUpperLimit());
+    if (options.hasBranchProbabilityLowerLimit()) {
+      pokesim::debug::check(Probability{options.getBranchProbabilityLowerLimit()});
     }
 
     check();
@@ -25219,7 +25134,7 @@ struct Checks : pokesim::debug::Checks {
       : pokesim::debug::Checks(_simulation), options(_simulation.calculateDamageOptions) {}
 
   void checkInputs() {
-    pokesim::debug::check(options.damageRollOptions);
+    pokesim::debug::check(options.getDamageRollOptions());
 
     checkMoveInputs();
     checkPokemonInputs(true);
@@ -25243,7 +25158,7 @@ struct Checks : pokesim::debug::Checks {
 
     std::size_t finalEntityCount = getFinalEntityCount();
 
-    if (!simulation->simulateTurnOptions.makeBranchesOnRandomEvents) {
+    if (!simulation->simulateTurnOptions.getMakeBranchesOnRandomEvents()) {
       std::size_t finalSimulationTurnCount = registry->view<pokesim::tags::SimulateTurn>().size();
       POKESIM_REQUIRE_NM(simulateTurnCount == finalSimulationTurnCount);
       POKESIM_REQUIRE_NM(initialEntityCount == finalEntityCount);
@@ -25363,11 +25278,11 @@ struct Checks : pokesim::debug::Checks {
     PlayerSideId playerSide = registry->get<PlayerSide>(side.val).val;
     switch (playerSide) {
       case PlayerSideId::P1: {
-        return damageRollOptions.p1;
+        return damageRollOptions.getP1();
         break;
       }
       case PlayerSideId::P2: {
-        return damageRollOptions.p2;
+        return damageRollOptions.getP2();
         break;
       }
 
@@ -25385,14 +25300,14 @@ struct Checks : pokesim::debug::Checks {
     bool noKoChanceCalculation;
     bool calculateUpToFoeHp;
     if (has<pokesim::tags::CalculateDamage>(move)) {
-      damageRollOptions = simulation->calculateDamageOptions.damageRollOptions;
-      calculateUpToFoeHp = simulation->calculateDamageOptions.calculateUpToFoeHp;
-      noKoChanceCalculation = simulation->calculateDamageOptions.noKoChanceCalculation;
+      damageRollOptions = simulation->calculateDamageOptions.getDamageRollOptions();
+      calculateUpToFoeHp = simulation->calculateDamageOptions.getCalculateUpToFoeHp();
+      noKoChanceCalculation = simulation->calculateDamageOptions.getNoKoChanceCalculation();
     }
     else if (has<pokesim::tags::AnalyzeEffect>(move)) {
-      damageRollOptions = simulation->analyzeEffectOptions.damageRollOptions;
-      calculateUpToFoeHp = simulation->analyzeEffectOptions.calculateUpToFoeHp;
-      noKoChanceCalculation = simulation->analyzeEffectOptions.noKoChanceCalculation;
+      damageRollOptions = simulation->analyzeEffectOptions.getDamageRollOptions();
+      calculateUpToFoeHp = simulation->analyzeEffectOptions.getCalculateUpToFoeHp();
+      noKoChanceCalculation = simulation->analyzeEffectOptions.getNoKoChanceCalculation();
     }
     else {
       POKESIM_REQUIRE_FAIL("Where'd the simulation type go? It was checked in the inputs.");
@@ -25825,7 +25740,7 @@ struct Checks : pokesim::debug::Checks {
       : pokesim::debug::Checks(_simulation), options(_simulation.analyzeEffectOptions) {}
 
   void checkInputs() {
-    pokesim::debug::check(options.damageRollOptions);
+    pokesim::debug::check(options.getDamageRollOptions());
 
     auto view = registry->view<tags::Input>();
     types::entityVector inputs{view.begin(), view.end()};
@@ -25870,11 +25785,11 @@ struct Checks : pokesim::debug::Checks {
     PlayerSideId playerSide = registry->get<PlayerSide>(side.val).val;
     switch (playerSide) {
       case PlayerSideId::P1: {
-        return damageRollOptions.p1;
+        return damageRollOptions.getP1();
         break;
       }
       case PlayerSideId::P2: {
-        return damageRollOptions.p2;
+        return damageRollOptions.getP2();
         break;
       }
       default: break;
@@ -25919,8 +25834,8 @@ struct Checks : pokesim::debug::Checks {
           }
         }
 
-        auto damageRollOptions = simulation->analyzeEffectOptions.damageRollOptions;
-        auto noKoChanceCalculation = simulation->analyzeEffectOptions.noKoChanceCalculation;
+        auto damageRollOptions = simulation->analyzeEffectOptions.getDamageRollOptions();
+        auto noKoChanceCalculation = simulation->analyzeEffectOptions.getNoKoChanceCalculation();
         if (noKoChanceCalculation || zeroEffectMultiplier) {
           POKESIM_REQUIRE_NM(!has<MultipliedUsesUntilKo>(input));
         }

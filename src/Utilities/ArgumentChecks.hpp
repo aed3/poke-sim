@@ -84,16 +84,6 @@ struct Position;
 struct MovePriority;
 struct Probability;
 struct RngSeed;
-template <types::eventPossibilities>
-struct RandomEventChances;
-struct RandomBinaryChance;
-struct RandomEventCount;
-template <types::eventPossibilities>
-struct RandomEventChancesStack;
-struct RandomBinaryChanceStack;
-struct RandomEventCountStack;
-struct RandomEqualChanceStack;
-struct RandomEventIndex;
 struct SpeedTieIndexes;
 struct SpeciesTypes;
 struct SpeedSort;
@@ -123,7 +113,16 @@ struct AttackerHpRecovered;
 struct AttackerHpLost;
 }  // namespace calc_damage
 namespace internal {
-struct TempPercentChance;
+template <types::eventPossibilities>
+struct RandomEventChances;
+struct RandomBinaryProbability;
+struct RandomEventCount;
+template <types::eventPossibilities>
+struct RandomEventChancesStack;
+struct RandomBinaryProbabilityStack;
+struct RandomEventCountStack;
+struct RandomEqualChanceStack;
+struct RandomEventIndex;
 }  // namespace internal
 namespace action {
 struct Team;
@@ -158,6 +157,7 @@ void checkSide(types::entity, const types::registry&);
 void checkPokemon(types::entity, const types::registry&);
 void checkMoveSlot(types::entity, const types::registry&);
 void checkActionMove(types::entity, const types::registry&);
+void checkPercentChance(types::percentChance);
 
 template <>
 void check(const Accuracy&);
@@ -421,47 +421,45 @@ template <>
 void check(const RngSeed&);
 
 template <>
-void check(const internal::TempPercentChance&);
+void check(const internal::RandomEventChances<2U>&);
 
 template <>
-void check(const RandomEventChances<2U>&);
+void check(const internal::RandomEventChances<3U>&);
 
 template <>
-void check(const RandomEventChances<3U>&);
+void check(const internal::RandomEventChances<4U>&);
 
 template <>
-void check(const RandomEventChances<4U>&);
+void check(const internal::RandomEventChances<5U>&);
 
 template <>
-void check(const RandomEventChances<5U>&);
+void check(const internal::RandomBinaryProbability&);
 
 template <>
-void check(const RandomBinaryChance&);
-
-// template <> void check(const RandomEventCount&);
+void check(const internal::RandomEventCount&);
 
 template <>
-void check(const RandomEventChancesStack<2U>&, const types::registry&);
+void check(const internal::RandomEventChancesStack<2U>&, const types::registry&);
 
 template <>
-void check(const RandomEventChancesStack<3U>&, const types::registry&);
+void check(const internal::RandomEventChancesStack<3U>&, const types::registry&);
 
 template <>
-void check(const RandomEventChancesStack<4U>&, const types::registry&);
+void check(const internal::RandomEventChancesStack<4U>&, const types::registry&);
 
 template <>
-void check(const RandomEventChancesStack<5U>&, const types::registry&);
+void check(const internal::RandomEventChancesStack<5U>&, const types::registry&);
 
 template <>
-void check(const RandomBinaryChanceStack&, const types::registry&);
+void check(const internal::RandomBinaryProbabilityStack&, const types::registry&);
 
 template <>
-void check(const RandomEventCountStack&, const types::registry&);
+void check(const internal::RandomEventCountStack&, const types::registry&);
 
 template <>
-void check(const RandomEqualChanceStack&, const types::registry&);
+void check(const internal::RandomEqualChanceStack&, const types::registry&);
 
-// template <> void check(const RandomEventIndex&);
+// template <> void check(const internal::RandomEventIndex&);
 
 template <>
 void check(const SpeedTieIndexes&);

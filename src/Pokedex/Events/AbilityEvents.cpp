@@ -22,7 +22,8 @@ namespace {
 void plusOnModifySpa(types::handle, EventModifier&) {}
 
 void staticOnDamagingHit(
-  types::handle targetHandle, const CurrentActionMovesAsTarget& moves, types::percentChance chanceOfStatic) {
+  types::handle targetHandle, const CurrentActionMovesAsTarget& moves, Battle battle,
+  types::percentChance chanceOfStatic, const Simulation& simulation) {
   types::registry& registry = *targetHandle.registry();
   for (types::entity move : moves.val) {
     if (!registry.all_of<move::tags::Contact>(move)) {
@@ -38,9 +39,10 @@ void staticOnDamagingHit(
     }
     */
 
+    internal::setRandomBinaryChance({registry, move}, BaseEffectChance{chanceOfStatic}, battle, simulation);
+
     types::entity effectSource = targetHandle.entity();
     types::entity effectTarget = source;
-    registry.emplace<pokesim::internal::TempPercentChance>(move, chanceOfStatic);
     registry.emplace_or_replace<status::tags::Paralysis>(move);
     registry.emplace<CurrentEffectSource>(move, effectSource);
     registry.emplace<CurrentEffectsAsSource>(effectSource, types::entityVector{move});
@@ -60,17 +62,22 @@ void Plus::onModifySpA(Simulation& simulation) {
 void Static::onDamagingHit(Simulation& simulation) {
   const auto chanceOfStatic = simulation.pokedex().getStaticValue<dex::Static::onDamagingHitChance>();
 
-  simulation.viewForSelectedPokemon<staticOnDamagingHit, Tags<ability::tags::Static>>(chanceOfStatic);
+  simulation.viewForSelectedPokemon<staticOnDamagingHit, Tags<ability::tags::Static>>(chanceOfStatic, simulation);
+
+  // TODO(aed3): This is now inefficient since the random chance will happen for move sources that cannot have their
+  // status changed.
   checkIfCanSetStatus(simulation);
-  runRandomBinaryChance<pokesim::internal::TempPercentChance, tags::CanSetStatus>(simulation, [](Simulation& sim) {
-    sim.removeFromEntities<tags::CanSetStatus, tags::SelectedForViewMove, tags::RandomEventCheckFailed>();
-  });
+  internal::randomBinaryChance(
+    simulation,
+    [](Simulation& sim) {
+      sim.removeFromEntities<
+        tags::CanSetStatus,
+        tags::SelectedForViewMove,
+        pokesim::internal::tags::RandomEventCheckFailed>();
+    },
+    std::nullopt);
+
   setStatus(simulation);
-  simulation.registry.clear<
-    pokesim::internal::TempPercentChance,
-    CurrentEffectSource,
-    CurrentEffectTarget,
-    CurrentEffectsAsSource,
-    CurrentEffectsAsTarget>();
+  simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
 }
 }  // namespace pokesim::dex
