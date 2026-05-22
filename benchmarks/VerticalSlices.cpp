@@ -36,6 +36,7 @@ struct VerticalSlice {
 
     pokedex.loadForBattleInfo({battleCreationInfo});
     setAllMovePp(pokedex, battleCreationInfo);
+    battleCreationInfo.turn = 1U;
 
     return battleCreationInfo;
   }
@@ -85,6 +86,7 @@ struct VerticalSlice {
 
     pokedex.loadForBattleInfo({battleCreationInfo});
     setAllMovePp(pokedex, battleCreationInfo);
+    battleCreationInfo.turn = 1U;
 
     return battleCreationInfo;
   }

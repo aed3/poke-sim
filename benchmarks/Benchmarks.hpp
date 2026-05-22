@@ -109,7 +109,7 @@ struct ChooseMonteCarloOptions : BenchmarkInputHolder {
 
 struct ChooseRandomBranchingOptions : BenchmarkInputHolder {
   inline static const std::vector<std::string> TAGS = {"Branching"};
-  static constexpr types::entityIndex MAX_INPUTS = 1U << 16U;
+  static constexpr types::entityIndex MAX_INPUTS = 1U << 14U;
   static void run(types::rngState&, Simulation& simulation) {
     simulation.simulateTurnOptions.setApplyChangesToInputBattle(true)
       .setDamageRollsConsidered({DamageRollKind::AVERAGE_DAMAGE})
@@ -159,40 +159,49 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
     "Samples",
     "Iterations/Sample",
     "Estimated Completion Time",
-    "Found Mean",
+    "Mean of Samples",
     "Mean Lower Bound",
     "Mean Upper Bound",
     "Standard Deviation",
     "Mean/InputCount",
   };
   static inline const std::size_t COLUMN_COUNT = BenchmarkReporter::TABLE_HEADER.size();
+
   std::size_t currentCell = 0U;
+  std::vector<std::pair<std::string, std::string>> failedBenchmarks;
+  std::string currentInputSize;
 
   void addCells(const std::vector<std::string>& cells) {
-    for (const std::string& cell : cells) {
+    for (std::string cell : cells) {
+      int cellSizeDiff = (int)(TABLE_HEADER[currentCell].size() - cell.size());
+      if (cellSizeDiff > 0) {
+        cell.append(cellSizeDiff, ' ');
+      }
       m_stream << "| " << cell << " ";
       currentCell++;
       if (currentCell == COLUMN_COUNT) {
-        m_stream << "|\n";
-        currentCell = 0;
+        nextTableLine();
       }
+    }
+  }
+
+  void nextTableLine() {
+    if (currentCell) {
+      m_stream << "|\n";
+      currentCell = 0;
     }
   }
 
   void flush() { m_stream.flush(); }
 
   static std::string nanosecondsToString(double nanoseconds) {
-    std::string str;
     if (1e3 > nanoseconds) {
-      str = Catch::getFormattedDuration(nanoseconds) + "ns";
+      return Catch::getFormattedDuration(nanoseconds) + "ns";
     }
-    else if (1e6 > nanoseconds) {
-      str = Catch::getFormattedDuration(nanoseconds / 1e3) + "us";
+    if (1e6 > nanoseconds) {
+      return Catch::getFormattedDuration(nanoseconds / 1e3) + "us";
     }
-    else {
-      str = Catch::getFormattedDuration(nanoseconds / 1e6) + "ms";
-    }
-    return str.insert(0, 14U < str.size() ? 0U : 14U - str.size(), ' ');
+    return Catch::getFormattedDuration(nanoseconds / 1e6) + "ms";
   }
 
   static std::string inputSizeFromName(const std::string& name) {
@@ -205,7 +214,7 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
 
   static std::string getDescription() { return "Reporter for showing benchmark results in a markdown format."; }
 
-  void testCaseStarting(Catch::TestCaseInfo const& info) override {
+  void testCaseStarting(const Catch::TestCaseInfo& info) override {
     Catch::StreamingReporterBase::testCaseStarting(info);
     m_stream << "## " << info.name << "\n";
     addCells(BenchmarkReporter::TABLE_HEADER);
@@ -215,17 +224,24 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
 
   void testCaseEnded(const Catch::TestCaseStats& stats) override {
     Catch::StreamingReporterBase::testCaseEnded(stats);
+    if (!failedBenchmarks.empty()) {
+      m_stream << "\n### Failed Benchmarks:\n";
+      for (auto& [inputSize, error] : failedBenchmarks) {
+        m_stream << "- Input Size " << inputSize << ": " << error << "\n";
+      }
+      failedBenchmarks.clear();
+    }
     m_stream << "\n\n";
   }
 
   void benchmarkPreparing(Catch::StringRef name) override {
     Catch::StreamingReporterBase::benchmarkPreparing(name);
-    std::string inputSize = inputSizeFromName(name.data());
-    addCells({inputSize.append(6U - inputSize.size(), ' ')});
+    currentInputSize = inputSizeFromName(name.data());
+    addCells({currentInputSize});
     flush();
   }
 
-  void benchmarkStarting(Catch::BenchmarkInfo const& info) override {
+  void benchmarkStarting(const Catch::BenchmarkInfo& info) override {
     Catch::StreamingReporterBase::benchmarkStarting(info);
     addCells({
       std::to_string(info.samples),
@@ -235,7 +251,12 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
     flush();
   }
 
-  void benchmarkEnded(Catch::BenchmarkStats<> const& stats) override {
+  void benchmarkFailed(Catch::StringRef error) override {
+    failedBenchmarks.push_back({currentInputSize, error.data()});
+    nextTableLine();
+  }
+
+  void benchmarkEnded(const Catch::BenchmarkStats<>& stats) override {
     Catch::StreamingReporterBase::benchmarkEnded(stats);
     std::string inputSize = inputSizeFromName(stats.info.name);
     const auto& mean = stats.mean;
@@ -246,10 +267,11 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
       nanosecondsToString(stats.standardDeviation.point.count()),
       nanosecondsToString(mean.point.count() / std::stoi(inputSize)),
     });
+    nextTableLine();
     flush();
   }
 
-  void testRunStarting(Catch::TestRunInfo const& testRunInfo) override {
+  void testRunStarting(const Catch::TestRunInfo& testRunInfo) override {
     Catch::StreamingReporterBase::testRunStarting(testRunInfo);
     if (m_config->testSpec().hasFilters()) {
       m_stream << m_colour->guardColour(Catch::Colour::BrightYellow) << "Filters: " << m_config->testSpec() << '\n';
@@ -257,10 +279,59 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
     flush();
   }
 
-  void testRunEnded(Catch::TestRunStats const& testRunStats) override {
+  void testRunEnded(const Catch::TestRunStats& testRunStats) override {
     Catch::printTestRunTotals(m_stream, *m_colour, testRunStats.totals);
     m_stream << "\n\n";
     flush();
     Catch::StreamingReporterBase::testRunEnded(testRunStats);
+  }
+
+  void assertionEnded(const Catch::AssertionStats& stats) override {
+    const Catch::AssertionResult& result = stats.assertionResult;
+    Catch::ResultWas::OfType resultType = result.getResultType();
+
+    if (result.isOk() && resultType != Catch::ResultWas::Warning) {
+      return;
+    }
+
+    nextTableLine();
+
+    m_stream << "\n### Assertion ";
+    switch (resultType) {
+      case Catch::ResultWas::ThrewException: {
+        m_stream << "Threw an Exception";
+        break;
+      }
+      case Catch::ResultWas::FatalErrorCondition: {
+        m_stream << "Fatally Failed";
+        break;
+      }
+      case Catch::ResultWas::Warning: {
+        m_stream << "Warned";
+        break;
+      }
+      case Catch::ResultWas::ExplicitFailure: {
+        m_stream << "Failed Intentionally";
+        break;
+      }
+      default: {
+        m_stream << "Failed";
+        break;
+      }
+    }
+    m_stream << ":\n" << result.getSourceInfo();
+    if (result.hasExpression()) {
+      m_stream << "\n" << result.getExpressionInMacro();
+    }
+    if (result.hasExpandedExpression()) {
+      m_stream << "\n  " << result.getExpandedExpression();
+    }
+    for (const auto& message : stats.infoMessages) {
+      if (message.type != Catch::ResultWas::Info) {
+        m_stream << "\n- " << message.message;
+      }
+    }
+
+    m_stream << "\n\n";
   }
 };

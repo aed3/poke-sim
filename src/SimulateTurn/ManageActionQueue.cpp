@@ -16,6 +16,7 @@
 #include <Components/SimulateTurn/TeamAction.hpp>
 #include <Components/SpeedSort.hpp>
 #include <Components/Stats.hpp>
+#include <Components/Turn.hpp>
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/ActionOrder.hpp>
@@ -91,9 +92,15 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
   POKESIM_REQUIRE(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player.");
   POKESIM_REQUIRE(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
 
-  ActionQueue& battleActionQueue = sideHandle.registry()->get<ActionQueue>(sideHandle.get<Battle>().val);
+  const Battle& battle = sideHandle.get<Battle>();
+  types::registry& registry = *sideHandle.registry();
+  ActionQueue& battleActionQueue = registry.get<ActionQueue>(battle.val);
 
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
+    POKESIM_REQUIRE(
+      registry.get<Turn>(battle.val).val != MechanicConstants::TurnCount::MIN,
+      "Slot decisions only have an effect after a battle starts. Make sure to pass a `teamOrder` decision at the start "
+      "of a battle (aka team preview).");
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
@@ -114,6 +121,10 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
     resolveSlotDecisions(sideHandle, decisions, battleActionQueue);
   }
   else if (sideDecision.decisions.holds<types::teamOrder>()) {
+    POKESIM_REQUIRE(
+      registry.get<Turn>(battle.val).val == MechanicConstants::TurnCount::MIN,
+      "Team order decisions only have an effect at the start of a battle (aka team preview). Make sure to pass a "
+      "`slotDecisions` decision for battles in progress.");
     const auto& teamOrder = sideDecision.decisions.get<types::teamOrder>();
 
     POKESIM_REQUIRE(

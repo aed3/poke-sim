@@ -302,7 +302,8 @@ struct VerticalSliceDamageValueInfo {
   bool guaranteedCrit() const { return willCrit; }
 };
 
-TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][SimulateTurn][SingleBattle]") {
+TEST_CASE(
+  "Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][SimulateTurn][VerticalSlice1][SingleBattle]") {
   struct Checks : VerticalSliceChecks {
     Checks(const Simulation& _simulation, const types::entityVector& specificallyCheckedEntities)
         : VerticalSliceChecks(
@@ -583,7 +584,8 @@ TEST_CASE("Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][Simula
   }
 }
 
-TEST_CASE("Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][SimulateTurn][DoubleBattle]") {
+TEST_CASE(
+  "Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][SimulateTurn][VerticalSlice1][DoubleBattle]") {
   struct Checks : VerticalSliceChecks {
     Checks(const Simulation& _simulation, const types::entityVector& specificallyCheckedEntities)
         : VerticalSliceChecks(_simulation, specificallyCheckedEntities, {}) {}
