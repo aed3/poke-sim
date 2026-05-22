@@ -66,6 +66,7 @@ BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   speciesSet.insert(p2bPokemonInfo.species);
   speciesSet.insert(p2cPokemonInfo.species);
   pokedex.loadSpecies(speciesSet);
+  battleCreationInfo.turn = 1;
 
   return battleCreationInfo;
 }
