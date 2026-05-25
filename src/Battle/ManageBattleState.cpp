@@ -23,6 +23,26 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
+namespace {
+template <typename CurrentActionTag>
+bool removeFailedMove(types::registry& registry, types::entity moveEntity, types::entity entity) {
+  using CurrentActionMoves = std::conditional_t<
+    std::is_same_v<CurrentActionTag, tags::CurrentActionMoveSource>,
+    CurrentActionMovesAsSource,
+    CurrentActionMovesAsTarget>;
+
+  CurrentActionMoves& moves = registry.get<CurrentActionMoves>(entity);
+  auto newMovesEnd = std::remove(moves.val.begin(), moves.val.end(), moveEntity);
+  moves.val.erase(newMovesEnd, moves.val.end());
+
+  if (moves.val.empty()) {
+    registry.remove<CurrentActionTag, tags::CurrentActionMoveSource>(entity);
+    return true;
+  }
+  return false;
+}
+}  // namespace
+
 void assignRootBattle(types::handle battleHandle) {
   const ParentBattle* parentBattle = battleHandle.try_get<ParentBattle>();
   types::entity rootBattle = parentBattle == nullptr ? battleHandle.entity() : parentBattle->val;
@@ -86,11 +106,26 @@ void setCurrentActionMove(
   registry.emplace<tags::CurrentActionMoveSlot>(moveSlotEntity);
 }
 
-void setFailedActionMove(types::handle moveHandle, Battle battle) {
-  moveHandle.remove<tags::CurrentActionMove>();
-  moveHandle.emplace<tags::FailedCurrentActionMove>();
-
+void setFailedActionMove(
+  types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target) {
   types::registry& registry = *moveHandle.registry();
+
+  bool removedAllMoves = true;
+  removedAllMoves =
+    removeFailedMove<tags::CurrentActionMoveTarget>(registry, moveHandle.entity(), target.val) && removedAllMoves;
+  removedAllMoves =
+    removeFailedMove<tags::CurrentActionMoveSource>(registry, moveHandle.entity(), source.val) && removedAllMoves;
+
+  moveHandle.remove<tags::CurrentActionMove, CurrentActionSource, CurrentActionTarget>();
+  moveHandle.emplace<tags::FailedCurrentActionMove>();
+  moveHandle.emplace<FailedCurrentActionSource>(source.val);
+  moveHandle.emplace<FailedCurrentActionTarget>(target.val);
+
+  if (removedAllMoves) {
+    registry.remove<CurrentActionSource, CurrentActionTarget>(battle.val);
+    registry.emplace<FailedCurrentActionSource>(battle.val, source.val);
+    registry.emplace<FailedCurrentActionTarget>(battle.val, target.val);
+  }
 
   types::entity moveSlotEntity = registry.get<CurrentActionMoveSlot>(battle.val).val;
   registry.erase<CurrentActionMoveSlot>(battle.val);
@@ -101,14 +136,16 @@ void clearCurrentAction(Simulation& simulation) {
   types::registry& registry = simulation.registry;
   registry.clear<CurrentAction>();
   registry.clear<CurrentActionTargets>();
-  registry.clear<CurrentActionTarget>();
   registry.clear<CurrentActionSource>();
+  registry.clear<CurrentActionTarget>();
+  registry.clear<FailedCurrentActionSource>();
+  registry.clear<FailedCurrentActionTarget>();
   registry.clear<CurrentActionMovesAsSource>();
   registry.clear<CurrentActionMovesAsTarget>();
   registry.clear<CurrentActionMoveSlot>();
 
-  registry.clear<tags::CurrentActionMoveTarget>();
   registry.clear<tags::CurrentActionMoveSource>();
+  registry.clear<tags::CurrentActionMoveTarget>();
   registry.clear<tags::CurrentActionMoveSlot>();
 
   auto actionMoves = registry.view<tags::CurrentActionMove>();

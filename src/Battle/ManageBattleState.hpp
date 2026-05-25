@@ -9,6 +9,7 @@ struct Battle;
 struct Sides;
 struct CurrentAction;
 struct CurrentActionSource;
+struct CurrentActionTarget;
 struct CurrentActionTargets;
 struct RootBattle;
 
@@ -22,6 +23,7 @@ void setCurrentActionTarget(
 void setCurrentActionMove(
   types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
   const Pokedex& pokedex);
-void setFailedActionMove(types::handle moveHandle, Battle battle);
+void setFailedActionMove(
+  types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target);
 void clearCurrentAction(Simulation& simulation);
 }  // namespace pokesim

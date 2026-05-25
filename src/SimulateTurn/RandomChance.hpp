@@ -27,23 +27,26 @@ enum class PercentChanceLimitResult : std::uint8_t {
 PercentChanceLimitResult checkPercentChanceLimits(
   types::probability eventProbability, types::probability probability, const simulate_turn::Options& options);
 
-void setBinaryChanceFromChanceLimit(
-  types::handle handle, Battle battle, types::probability eventProbability, const Simulation& simulation);
+void setRandomBinaryChanceFromProbability(
+  types::handle handle, Battle battle, const Simulation& simulation, types::probability eventProbability);
+
+void setRandomBinaryChanceFromPercentChance(
+  types::handle handle, Battle battle, const Simulation& simulation, types::percentChance percentChance);
 
 template <typename PercentChanceComponent>
 void setRandomBinaryChance(
   types::handle handle, PercentChanceComponent percentChance, Battle battle, const Simulation& simulation) {
-  setBinaryChanceFromChanceLimit(
-    handle,
-    battle,
-    MechanicConstants::PercentChanceToProbability * percentChance.val,
-    simulation);
+  setRandomBinaryChanceFromPercentChance(handle, battle, simulation, percentChance.val);
 }
 
 template <typename PercentChanceComponent>
 void setReciprocalRandomBinaryChance(
   types::handle handle, PercentChanceComponent percentChance, Battle battle, const Simulation& simulation) {
-  setBinaryChanceFromChanceLimit(handle, battle, MechanicConstants::Probability::MAX / percentChance.val, simulation);
+  setRandomBinaryChanceFromProbability(
+    handle,
+    battle,
+    simulation,
+    MechanicConstants::Probability::MAX / percentChance.val);
 }
 
 void setRandomEqualChance(types::handle handle, const Simulation& simulation);

@@ -22,10 +22,8 @@
 namespace pokesim::dex {
 namespace {
 void setChoiceLock(types::handle pokemonHandle, Battle battle) {
-  const CurrentActionMoveSlot* moveSlot = pokemonHandle.registry()->try_get<CurrentActionMoveSlot>(battle.val);
-  if (moveSlot) {
-    pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot->val);
-  }
+  CurrentActionMoveSlot moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val);
+  pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot.val);
 }
 
 template <typename Numerator>

@@ -354,8 +354,9 @@ void setRandomEventChances(
     handle.emplace<RandomEventChances<POSSIBLE_EVENT_COUNT>>(chances);
   }
 }
-void setBinaryChanceFromChanceLimit(
-  types::handle handle, Battle battle, types::probability eventProbability, const Simulation& simulation) {
+
+void setRandomBinaryChanceFromProbability(
+  types::handle handle, Battle battle, const Simulation& simulation, types::probability eventProbability) {
   types::probability probability = handle.registry()->get<Probability>(battle.val).val;
 
   PercentChanceLimitResult limitReached =
@@ -382,6 +383,15 @@ void setBinaryChanceFromChanceLimit(
       return;
     };
   }
+}
+
+void setRandomBinaryChanceFromPercentChance(
+  types::handle handle, Battle battle, const Simulation& simulation, types::percentChance percentChance) {
+  setRandomBinaryChanceFromProbability(
+    handle,
+    battle,
+    simulation,
+    MechanicConstants::PercentChanceToProbability * percentChance);
 }
 
 void setRandomEqualChance(types::handle handle, const Simulation& simulation) {

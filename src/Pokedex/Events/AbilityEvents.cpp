@@ -4,6 +4,7 @@
 #include <Components/EventModifier.hpp>
 #include <Components/RandomEventInputs.hpp>
 #include <Components/Tags/AbilityTags.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Pokedex.hpp>
@@ -26,12 +27,13 @@ void staticOnDamagingHit(
   types::percentChance chanceOfStatic, const Simulation& simulation) {
   types::registry& registry = *targetHandle.registry();
   for (types::entity move : moves.val) {
+    if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
+      continue;
+    }
     if (!registry.all_of<move::tags::Contact>(move)) {
       continue;
     }
-    if (!registry.all_of<tags::SelectedForViewMove>(move)) {
-      continue;
-    }
+
     types::entity source = registry.get<CurrentActionSource>(move).val;
     /*
     if (registry.all_of<item::tags::ProtectivePads>(source)) {
@@ -39,7 +41,7 @@ void staticOnDamagingHit(
     }
     */
 
-    pokesim::internal::setRandomBinaryChance({registry, move}, BaseEffectChance{chanceOfStatic}, battle, simulation);
+    pokesim::internal::setRandomBinaryChanceFromPercentChance({registry, move}, battle, simulation, chanceOfStatic);
 
     types::entity effectSource = targetHandle.entity();
     types::entity effectTarget = source;
@@ -70,10 +72,7 @@ void Static::onDamagingHit(Simulation& simulation) {
   pokesim::internal::randomBinaryChance(
     simulation,
     [](Simulation& sim) {
-      sim.removeFromEntities<
-        tags::CanSetStatus,
-        tags::SelectedForViewMove,
-        pokesim::internal::tags::RandomEventCheckFailed>();
+      sim.removeFromEntities<tags::CanSetStatus, pokesim::internal::tags::RandomEventCheckFailed>();
     },
     std::nullopt);
 

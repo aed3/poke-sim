@@ -8,6 +8,7 @@
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/Names/ItemNames.hpp>
 #include <Components/Stats.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Components/Tags/ItemPropertyTags.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
@@ -27,7 +28,7 @@ void damageByHpDivisor(types::handle pokemonHandle, stat::Hp hp, types::stat hpD
 
 void applyBurnModifier(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves.val) {
-    if (registry.all_of<move::tags::Physical, pokesim::tags::SelectedForViewMove>(
+    if (registry.all_of<move::tags::Physical, tags::CurrentMoveHit>(
           move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
       registry.get<DamageRollModifiers>(move).burn = true;
     }
@@ -41,7 +42,8 @@ void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedD
 void paralysisOnBeforeMove(types::handle pokemonHandle, Battle battle, const CurrentActionMovesAsSource& moves) {
   types::registry& registry = *pokemonHandle.registry();
   for (types::entity move : moves.val) {
-    setFailedActionMove(types::handle{registry, move}, battle);
+    types::handle moveHandle{registry, move};
+    setFailedActionMove(moveHandle, battle, {pokemonHandle.entity()}, moveHandle.get<CurrentActionTarget>());
   }
 }
 
@@ -90,12 +92,17 @@ void Paralysis::onModifySpe(Simulation& simulation) {
 
 void Paralysis::onBeforeMove(Simulation& simulation) {
   const auto chance = simulation.pokedex().getStaticValue<Paralysis::onBeforeMoveChance>();
-  simulation.addToEntities<BaseEffectChance, tags::CurrentActionMoveSource, status::tags::Paralysis>(
-    BaseEffectChance{chance});
-  runRandomBinaryChance<BaseEffectChance, tags::CurrentActionMoveSource>(simulation, [](Simulation& sim) {
-    sim.viewForSelectedPokemon<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>();
-  });
-  simulation.removeFromEntities<BaseEffectChance, tags::CurrentActionMoveSource, status::tags::Paralysis>();
+
+  simulation.view<
+    pokesim::internal::setRandomBinaryChanceFromPercentChance,
+    Tags<tags::CurrentActionMoveSource, status::tags::Paralysis>>(simulation, chance);
+
+  pokesim::internal::randomBinaryChance(
+    simulation,
+    [](Simulation& sim) {
+      sim.viewForSelectedPokemon<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>();
+    },
+    std::nullopt);
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {

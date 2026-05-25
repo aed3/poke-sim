@@ -24,6 +24,7 @@
 #include <Components/Names/WeatherNames.hpp>
 #include <Components/PlayerSide.hpp>
 #include <Components/SimulationResults.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
@@ -276,6 +277,7 @@ types::entity createAnalyzeEffectMove(
   types::entity moveEntity =
     createActionMoveForTarget({registry, defenderEntity}, battleEntity, attackerEntity, move, pokedex);
   registry.emplace<MoveName>(moveEntity, move);
+  registry.emplace<pokesim::tags::CurrentMoveHit>(moveEntity);
   registry.emplace_or_replace<tags::Attacker>(attackerEntity);
   registry.emplace_or_replace<tags::Defender>(defenderEntity);
 

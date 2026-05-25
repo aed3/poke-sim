@@ -58,40 +58,17 @@ void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets&
   targets.val.pop_count(deleteCount);
 }
 
-void removeFailedHitTargets(
-  types::handle moveHandle, Battle battle, CurrentActionTarget target, CurrentActionSource source) {
-  types::registry& registry = *moveHandle.registry();
-
-  CurrentActionMovesAsTarget& targetedMoves = registry.get<CurrentActionMovesAsTarget>(target.val);
-  auto newTargetedMoveEnd = std::remove(targetedMoves.val.begin(), targetedMoves.val.end(), moveHandle.entity());
-  targetedMoves.val.erase(newTargetedMoveEnd, targetedMoves.val.end());
-
-  if (targetedMoves.val.empty()) {
-    registry.remove<tags::CurrentActionMoveTarget>(target.val);
-  }
-
-  CurrentActionMovesAsSource& sourcedMoves = registry.get<CurrentActionMovesAsSource>(source.val);
-  auto newSourcedMoveEnd = std::remove(sourcedMoves.val.begin(), sourcedMoves.val.end(), moveHandle.entity());
-  sourcedMoves.val.erase(newSourcedMoveEnd, sourcedMoves.val.end());
-
-  if (sourcedMoves.val.empty()) {
-    registry.remove<tags::CurrentActionMoveSource>(source.val);
-  }
-
-  setFailedActionMove(moveHandle, battle);
-}
-
 void postMoveHitCheck(Simulation& simulation) {
-  simulation.view<removeFailedHitTargets, Tags<tags::CurrentActionMove>, entt::exclude_t<tags::internal::MoveHits>>();
+  simulation.view<setFailedActionMove, Tags<tags::CurrentActionMove>, entt::exclude_t<tags::CurrentMoveHit>>();
   simulation.view<updateCurrentActionTargets>();
   simulation.registry.clear<Damage>();
 }
 
 template <auto Function>
 void runMoveHitCheck(Simulation& simulation) {
-  simulation.addToEntities<tags::internal::MoveHits, tags::CurrentActionMove>();
+  simulation.addToEntities<tags::CurrentMoveHit, tags::CurrentActionMove>();
 
-  internal::SelectForCurrentActionMoveView<tags::internal::MoveHits> selectedMoves{simulation};
+  internal::SelectForCurrentActionMoveView<tags::CurrentMoveHit> selectedMoves{simulation};
   if (selectedMoves.hasNoneSelected()) {
     return;
   }
@@ -100,7 +77,7 @@ void runMoveHitCheck(Simulation& simulation) {
   selectedMoves.deselect();
 
   postMoveHitCheck(simulation);
-  simulation.registry.clear<tags::internal::MoveHits>();
+  simulation.registry.clear<tags::CurrentMoveHit>();
 }
 
 void trySetStatusFromEffect(Simulation&) {}
@@ -123,7 +100,7 @@ void setEffectTarget(types::handle handle, TargetEntityHolder target) {
 }
 
 void runMoveEffects(Simulation& simulation) {
-  internal::SelectForCurrentActionMoveView<tags::internal::RunEffect> selectedMoves{simulation};
+  internal::SelectForCurrentActionMoveView<internal::tags::RunEffect> selectedMoves{simulation};
   if (selectedMoves.hasNoneSelected()) {
     return;
   }
@@ -190,10 +167,10 @@ void applyDamageToTarget(types::registry& registry, Damage damage, CurrentAction
 
 void setMoveHitCount(Simulation& simulation) {
   auto noAssignedHitCount =
-    simulation.registry.view<tags::SelectedForViewMove>(entt::exclude<move::tags::VariableHitCount, HitCount>);
+    simulation.registry.view<tags::CurrentMoveHit>(entt::exclude<move::tags::VariableHitCount, HitCount>);
   simulation.registry.insert<HitCount>(noAssignedHitCount.begin(), noAssignedHitCount.end(), {(types::moveHits)1U});
 
-  runRandomEventChances<4U, tags::SelectedForViewMove, move::tags::VariableHitCount>(
+  runRandomEventChances<4U, tags::CurrentMoveHit, move::tags::VariableHitCount>(
     simulation,
     MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES,
     [](Simulation& sim) {
@@ -207,43 +184,35 @@ void setMoveHitCount(Simulation& simulation) {
 void applyDamage(Simulation& simulation) {
   simulation.viewForSelectedMoves<applyDamageToTarget>();
 
-  simulation.removeFromEntities<tags::internal::MoveHits, tags::SelectedForViewMove>(
-    entt::exclude<Damage, move::tags::Status>);
-  simulation.removeFromEntities<tags::SelectedForViewMove>(entt::exclude<tags::internal::MoveHits>);
+  simulation.removeFromEntities<tags::CurrentMoveHit>(entt::exclude<Damage, move::tags::Status>);
 }
 
 void runPrimaryMoveEffects(Simulation& simulation) {
-  simulation.addToEntities<tags::internal::RunEffect, move::effect::tags::Primary, tags::SelectedForViewMove>();
+  simulation.addToEntities<internal::tags::RunEffect, move::effect::tags::Primary, tags::CurrentMoveHit>();
   runMoveEffects(simulation);
-  simulation.registry.clear<tags::internal::RunEffect>();
+  simulation.registry.clear<internal::tags::RunEffect>();
 }
 
 void runSecondaryMoveEffects(Simulation& simulation) {
   removeFaintedSecondaryEffectTargets(simulation);
   runModifySecondariesEvent(simulation);
 
-  runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::SelectedForViewMove>(
+  runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::CurrentMoveHit>(
     simulation,
     [](Simulation& sim) {
-      sim.addToEntities<
-        tags::internal::RunEffect,
-        tags::SelectedForViewMove,
-        pokesim::internal::tags::RandomEventCheckPassed>();
+      sim.addToEntities<internal::tags::RunEffect, pokesim::internal::tags::RandomEventCheckPassed>();
     });
 
   runMoveEffects(simulation);
-  simulation.registry.clear<tags::internal::RunEffect>();
+  simulation.registry.clear<internal::tags::RunEffect>();
 }
 
 void accuracyCheck(Simulation& simulation) {
   runModifyAccuracyEvent(simulation);
   runAccuracyEvent(simulation);
 
-  runRandomBinaryChance<Accuracy, tags::SelectedForViewMove>(simulation, [](Simulation& sim) {
-    sim.removeFromEntities<
-      tags::internal::MoveHits,
-      tags::SelectedForViewMove,
-      pokesim::internal::tags::RandomEventCheckFailed>();
+  runRandomBinaryChance<Accuracy, tags::CurrentMoveHit>(simulation, [](Simulation& sim) {
+    sim.removeFromEntities<tags::CurrentMoveHit, pokesim::internal::tags::RandomEventCheckFailed>();
   });
 }
 

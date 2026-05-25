@@ -17,19 +17,27 @@ struct CurrentActionTargets {
   types::targets<types::entity> val{};
 };
 
-struct CurrentActionTarget {
-  types::entity val{};
-};
-
 struct CurrentActionSource {
   types::entity val{};
 };
 
-struct CurrentActionMovesAsTarget {
-  types::entityVector val{};
+struct CurrentActionTarget {
+  types::entity val{};
+};
+
+struct FailedCurrentActionSource {
+  types::entity val{};
+};
+
+struct FailedCurrentActionTarget {
+  types::entity val{};
 };
 
 struct CurrentActionMovesAsSource {
+  types::entityVector val{};
+};
+
+struct CurrentActionMovesAsTarget {
   types::entityVector val{};
 };
 
@@ -37,19 +45,19 @@ struct CurrentActionMoveSlot {
   types::entity val{};
 };
 
-struct CurrentEffectTarget {
-  types::entity val{};
-};
-
 struct CurrentEffectSource {
   types::entity val{};
 };
 
-struct CurrentEffectsAsTarget {
-  types::entityVector val{};
+struct CurrentEffectTarget {
+  types::entity val{};
 };
 
 struct CurrentEffectsAsSource {
+  types::entityVector val{};
+};
+
+struct CurrentEffectsAsTarget {
   types::entityVector val{};
 };
 }  // namespace pokesim

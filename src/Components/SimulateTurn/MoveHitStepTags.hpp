@@ -1,6 +1,5 @@
 #pragma once
 
-namespace pokesim::tags::internal {
-struct MoveHits {};
+namespace pokesim::internal::tags {
 struct RunEffect {};
-}  // namespace pokesim::tags::internal
+}  // namespace pokesim::internal::tags

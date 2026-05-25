@@ -614,24 +614,34 @@ void check(const CurrentActionTargets& targets, const types::registry& registry)
 }
 
 template <>
-void check(const CurrentActionTarget& target, const types::registry& registry) {
-  checkPokemon(target.val, registry);
-}
-
-template <>
 void check(const CurrentActionSource& source, const types::registry& registry) {
   checkPokemon(source.val, registry);
 }
 
 template <>
-void check(const CurrentActionMovesAsTarget& moves, const types::registry& registry) {
+void check(const CurrentActionTarget& target, const types::registry& registry) {
+  checkPokemon(target.val, registry);
+}
+
+template <>
+void check(const FailedCurrentActionSource& failedSource, const types::registry& registry) {
+  checkPokemon(failedSource.val, registry);
+}
+
+template <>
+void check(const FailedCurrentActionTarget& failedTarget, const types::registry& registry) {
+  checkPokemon(failedTarget.val, registry);
+}
+
+template <>
+void check(const CurrentActionMovesAsSource& moves, const types::registry& registry) {
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }
 }
 
 template <>
-void check(const CurrentActionMovesAsSource& moves, const types::registry& registry) {
+void check(const CurrentActionMovesAsTarget& moves, const types::registry& registry) {
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }
@@ -643,24 +653,24 @@ void check(const CurrentActionMoveSlot& move, const types::registry& registry) {
 }
 
 template <>
-void check(const CurrentEffectTarget& target, const types::registry& registry) {
-  checkPokemon(target.val, registry);
-}
-
-template <>
 void check(const CurrentEffectSource& source, const types::registry& registry) {
   checkPokemon(source.val, registry);
 }
 
 template <>
-void check(const CurrentEffectsAsTarget& effects, const types::registry& registry) {
+void check(const CurrentEffectTarget& target, const types::registry& registry) {
+  checkPokemon(target.val, registry);
+}
+
+template <>
+void check(const CurrentEffectsAsSource& effects, const types::registry& registry) {
   for (types::entity effect : effects.val) {
     types::registry::checkEntity(effect, registry);
   }
 }
 
 template <>
-void check(const CurrentEffectsAsSource& effects, const types::registry& registry) {
+void check(const CurrentEffectsAsTarget& effects, const types::registry& registry) {
   for (types::entity effect : effects.val) {
     types::registry::checkEntity(effect, registry);
   }

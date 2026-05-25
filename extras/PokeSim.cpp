@@ -772,24 +772,30 @@ void check(const CurrentActionTargets& targets, const types::registry& registry)
 }
 
 template <>
-void check(const CurrentActionTarget& target, const types::registry& registry) {
-  checkPokemon(target.val, registry);
-}
-
-template <>
 void check(const CurrentActionSource& source, const types::registry& registry) {
   checkPokemon(source.val, registry);
 }
 
 template <>
-void check(const CurrentActionMovesAsTarget& moves, const types::registry& registry) {
+void check(const CurrentActionTarget& target, const types::registry& registry) {
+  checkPokemon(target.val, registry);
+}
+
+template <>
+void check(const FailedCurrentActionSource&, const types::registry&) {}
+
+template <>
+void check(const FailedCurrentActionTarget&, const types::registry&) {}
+
+template <>
+void check(const CurrentActionMovesAsSource& moves, const types::registry& registry) {
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }
 }
 
 template <>
-void check(const CurrentActionMovesAsSource& moves, const types::registry& registry) {
+void check(const CurrentActionMovesAsTarget& moves, const types::registry& registry) {
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }
@@ -801,24 +807,24 @@ void check(const CurrentActionMoveSlot& move, const types::registry& registry) {
 }
 
 template <>
-void check(const CurrentEffectTarget& target, const types::registry& registry) {
-  checkPokemon(target.val, registry);
-}
-
-template <>
 void check(const CurrentEffectSource& source, const types::registry& registry) {
   checkPokemon(source.val, registry);
 }
 
 template <>
-void check(const CurrentEffectsAsTarget& effects, const types::registry& registry) {
+void check(const CurrentEffectTarget& target, const types::registry& registry) {
+  checkPokemon(target.val, registry);
+}
+
+template <>
+void check(const CurrentEffectsAsSource& effects, const types::registry& registry) {
   for (types::entity effect : effects.val) {
     types::registry::checkEntity(effect, registry);
   }
 }
 
 template <>
-void check(const CurrentEffectsAsSource& effects, const types::registry& registry) {
+void check(const CurrentEffectsAsTarget& effects, const types::registry& registry) {
   for (types::entity effect : effects.val) {
     types::registry::checkEntity(effect, registry);
   }
@@ -1796,12 +1802,14 @@ Simulation::Simulation(Simulation&& other) noexcept : Simulation(other.constants
   simulateTurnOptions = other.simulateTurnOptions;
 }
 
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
 const Pokedex& Simulation::pokedex() const {
   POKESIM_REQUIRE(
     Pokedex::isPokedexAttachedToSimulation(&constants.pokedex(), this),
     "The Pokedex has changed since initialization.");
   return constants.pokedex();
 }
+#endif
 
 void Simulation::clearAllResults() {
   clearSimulateTurnResults();
@@ -2159,40 +2167,17 @@ void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets&
   targets.val.pop_count(deleteCount);
 }
 
-void removeFailedHitTargets(
-  types::handle moveHandle, Battle battle, CurrentActionTarget target, CurrentActionSource source) {
-  types::registry& registry = *moveHandle.registry();
-
-  CurrentActionMovesAsTarget& targetedMoves = registry.get<CurrentActionMovesAsTarget>(target.val);
-  auto newTargetedMoveEnd = std::remove(targetedMoves.val.begin(), targetedMoves.val.end(), moveHandle.entity());
-  targetedMoves.val.erase(newTargetedMoveEnd, targetedMoves.val.end());
-
-  if (targetedMoves.val.empty()) {
-    registry.remove<tags::CurrentActionMoveTarget>(target.val);
-  }
-
-  CurrentActionMovesAsSource& sourcedMoves = registry.get<CurrentActionMovesAsSource>(source.val);
-  auto newSourcedMoveEnd = std::remove(sourcedMoves.val.begin(), sourcedMoves.val.end(), moveHandle.entity());
-  sourcedMoves.val.erase(newSourcedMoveEnd, sourcedMoves.val.end());
-
-  if (sourcedMoves.val.empty()) {
-    registry.remove<tags::CurrentActionMoveSource>(source.val);
-  }
-
-  setFailedActionMove(moveHandle, battle);
-}
-
 void postMoveHitCheck(Simulation& simulation) {
-  simulation.view<removeFailedHitTargets, Tags<tags::CurrentActionMove>, entt::exclude_t<tags::internal::MoveHits>>();
+  simulation.view<setFailedActionMove, Tags<tags::CurrentActionMove>, entt::exclude_t<tags::CurrentMoveHit>>();
   simulation.view<updateCurrentActionTargets>();
   simulation.registry.clear<Damage>();
 }
 
 template <auto Function>
 void runMoveHitCheck(Simulation& simulation) {
-  simulation.addToEntities<tags::internal::MoveHits, tags::CurrentActionMove>();
+  simulation.addToEntities<tags::CurrentMoveHit, tags::CurrentActionMove>();
 
-  internal::SelectForCurrentActionMoveView<tags::internal::MoveHits> selectedMoves{simulation};
+  internal::SelectForCurrentActionMoveView<tags::CurrentMoveHit> selectedMoves{simulation};
   if (selectedMoves.hasNoneSelected()) {
     return;
   }
@@ -2201,7 +2186,7 @@ void runMoveHitCheck(Simulation& simulation) {
   selectedMoves.deselect();
 
   postMoveHitCheck(simulation);
-  simulation.registry.clear<tags::internal::MoveHits>();
+  simulation.registry.clear<tags::CurrentMoveHit>();
 }
 
 void trySetStatusFromEffect(Simulation&) {}
@@ -2224,7 +2209,7 @@ void setEffectTarget(types::handle handle, TargetEntityHolder target) {
 }
 
 void runMoveEffects(Simulation& simulation) {
-  internal::SelectForCurrentActionMoveView<tags::internal::RunEffect> selectedMoves{simulation};
+  internal::SelectForCurrentActionMoveView<internal::tags::RunEffect> selectedMoves{simulation};
   if (selectedMoves.hasNoneSelected()) {
     return;
   }
@@ -2291,10 +2276,10 @@ void applyDamageToTarget(types::registry& registry, Damage damage, CurrentAction
 
 void setMoveHitCount(Simulation& simulation) {
   auto noAssignedHitCount =
-    simulation.registry.view<tags::SelectedForViewMove>(entt::exclude<move::tags::VariableHitCount, HitCount>);
+    simulation.registry.view<tags::CurrentMoveHit>(entt::exclude<move::tags::VariableHitCount, HitCount>);
   simulation.registry.insert<HitCount>(noAssignedHitCount.begin(), noAssignedHitCount.end(), {(types::moveHits)1U});
 
-  runRandomEventChances<4U, tags::SelectedForViewMove, move::tags::VariableHitCount>(
+  runRandomEventChances<4U, tags::CurrentMoveHit, move::tags::VariableHitCount>(
     simulation,
     MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES,
     [](Simulation& sim) {
@@ -2308,43 +2293,35 @@ void setMoveHitCount(Simulation& simulation) {
 void applyDamage(Simulation& simulation) {
   simulation.viewForSelectedMoves<applyDamageToTarget>();
 
-  simulation.removeFromEntities<tags::internal::MoveHits, tags::SelectedForViewMove>(
-    entt::exclude<Damage, move::tags::Status>);
-  simulation.removeFromEntities<tags::SelectedForViewMove>(entt::exclude<tags::internal::MoveHits>);
+  simulation.removeFromEntities<tags::CurrentMoveHit>(entt::exclude<Damage, move::tags::Status>);
 }
 
 void runPrimaryMoveEffects(Simulation& simulation) {
-  simulation.addToEntities<tags::internal::RunEffect, move::effect::tags::Primary, tags::SelectedForViewMove>();
+  simulation.addToEntities<internal::tags::RunEffect, move::effect::tags::Primary, tags::CurrentMoveHit>();
   runMoveEffects(simulation);
-  simulation.registry.clear<tags::internal::RunEffect>();
+  simulation.registry.clear<internal::tags::RunEffect>();
 }
 
 void runSecondaryMoveEffects(Simulation& simulation) {
   removeFaintedSecondaryEffectTargets(simulation);
   runModifySecondariesEvent(simulation);
 
-  runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::SelectedForViewMove>(
+  runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::CurrentMoveHit>(
     simulation,
     [](Simulation& sim) {
-      sim.addToEntities<
-        tags::internal::RunEffect,
-        tags::SelectedForViewMove,
-        pokesim::internal::tags::RandomEventCheckPassed>();
+      sim.addToEntities<internal::tags::RunEffect, pokesim::internal::tags::RandomEventCheckPassed>();
     });
 
   runMoveEffects(simulation);
-  simulation.registry.clear<tags::internal::RunEffect>();
+  simulation.registry.clear<internal::tags::RunEffect>();
 }
 
 void accuracyCheck(Simulation& simulation) {
   runModifyAccuracyEvent(simulation);
   runAccuracyEvent(simulation);
 
-  runRandomBinaryChance<Accuracy, tags::SelectedForViewMove>(simulation, [](Simulation& sim) {
-    sim.removeFromEntities<
-      tags::internal::MoveHits,
-      tags::SelectedForViewMove,
-      pokesim::internal::tags::RandomEventCheckFailed>();
+  runRandomBinaryChance<Accuracy, tags::CurrentMoveHit>(simulation, [](Simulation& sim) {
+    sim.removeFromEntities<tags::CurrentMoveHit, pokesim::internal::tags::RandomEventCheckFailed>();
   });
 }
 
@@ -3015,8 +2992,9 @@ void setRandomEventChances(
     handle.emplace<RandomEventChances<POSSIBLE_EVENT_COUNT>>(chances);
   }
 }
-void setBinaryChanceFromChanceLimit(
-  types::handle handle, Battle battle, types::probability eventProbability, const Simulation& simulation) {
+
+void setRandomBinaryChanceFromProbability(
+  types::handle handle, Battle battle, const Simulation& simulation, types::probability eventProbability) {
   types::probability probability = handle.registry()->get<Probability>(battle.val).val;
 
   PercentChanceLimitResult limitReached =
@@ -3043,6 +3021,15 @@ void setBinaryChanceFromChanceLimit(
       return;
     };
   }
+}
+
+void setRandomBinaryChanceFromPercentChance(
+  types::handle handle, Battle battle, const Simulation& simulation, types::percentChance percentChance) {
+  setRandomBinaryChanceFromProbability(
+    handle,
+    battle,
+    simulation,
+    MechanicConstants::PercentChanceToProbability * percentChance);
 }
 
 void setRandomEqualChance(types::handle handle, const Simulation& simulation) {
@@ -4314,10 +4301,8 @@ void KnockOff::onAfterHit(Simulation& simulation) {
 namespace pokesim::dex {
 namespace {
 void setChoiceLock(types::handle pokemonHandle, Battle battle) {
-  const CurrentActionMoveSlot* moveSlot = pokemonHandle.registry()->try_get<CurrentActionMoveSlot>(battle.val);
-  if (moveSlot) {
-    pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot->val);
-  }
+  CurrentActionMoveSlot moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val);
+  pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot.val);
 }
 
 template <typename Numerator>
@@ -4489,7 +4474,7 @@ void damageByHpDivisor(types::handle pokemonHandle, stat::Hp hp, types::stat hpD
 
 void applyBurnModifier(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves.val) {
-    if (registry.all_of<move::tags::Physical, pokesim::tags::SelectedForViewMove>(
+    if (registry.all_of<move::tags::Physical, tags::CurrentMoveHit>(
           move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
       registry.get<DamageRollModifiers>(move).burn = true;
     }
@@ -4503,7 +4488,8 @@ void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedD
 void paralysisOnBeforeMove(types::handle pokemonHandle, Battle battle, const CurrentActionMovesAsSource& moves) {
   types::registry& registry = *pokemonHandle.registry();
   for (types::entity move : moves.val) {
-    setFailedActionMove(types::handle{registry, move}, battle);
+    types::handle moveHandle{registry, move};
+    setFailedActionMove(moveHandle, battle, {pokemonHandle.entity()}, moveHandle.get<CurrentActionTarget>());
   }
 }
 
@@ -4552,12 +4538,17 @@ void Paralysis::onModifySpe(Simulation& simulation) {
 
 void Paralysis::onBeforeMove(Simulation& simulation) {
   const auto chance = simulation.pokedex().getStaticValue<Paralysis::onBeforeMoveChance>();
-  simulation.addToEntities<BaseEffectChance, tags::CurrentActionMoveSource, status::tags::Paralysis>(
-    BaseEffectChance{chance});
-  runRandomBinaryChance<BaseEffectChance, tags::CurrentActionMoveSource>(simulation, [](Simulation& sim) {
-    sim.viewForSelectedPokemon<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>();
-  });
-  simulation.removeFromEntities<BaseEffectChance, tags::CurrentActionMoveSource, status::tags::Paralysis>();
+
+  simulation.view<
+    pokesim::internal::setRandomBinaryChanceFromPercentChance,
+    Tags<tags::CurrentActionMoveSource, status::tags::Paralysis>>(simulation, chance);
+
+  pokesim::internal::randomBinaryChance(
+    simulation,
+    [](Simulation& sim) {
+      sim.viewForSelectedPokemon<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>();
+    },
+    std::nullopt);
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {
@@ -4585,12 +4576,13 @@ void staticOnDamagingHit(
   types::percentChance chanceOfStatic, const Simulation& simulation) {
   types::registry& registry = *targetHandle.registry();
   for (types::entity move : moves.val) {
+    if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
+      continue;
+    }
     if (!registry.all_of<move::tags::Contact>(move)) {
       continue;
     }
-    if (!registry.all_of<tags::SelectedForViewMove>(move)) {
-      continue;
-    }
+
     types::entity source = registry.get<CurrentActionSource>(move).val;
     /*
     if (registry.all_of<item::tags::ProtectivePads>(source)) {
@@ -4598,7 +4590,7 @@ void staticOnDamagingHit(
     }
     */
 
-    pokesim::internal::setRandomBinaryChance({registry, move}, BaseEffectChance{chanceOfStatic}, battle, simulation);
+    pokesim::internal::setRandomBinaryChanceFromPercentChance({registry, move}, battle, simulation, chanceOfStatic);
 
     types::entity effectSource = targetHandle.entity();
     types::entity effectTarget = source;
@@ -4629,10 +4621,7 @@ void Static::onDamagingHit(Simulation& simulation) {
   pokesim::internal::randomBinaryChance(
     simulation,
     [](Simulation& sim) {
-      sim.removeFromEntities<
-        tags::CanSetStatus,
-        tags::SelectedForViewMove,
-        pokesim::internal::tags::RandomEventCheckFailed>();
+      sim.removeFromEntities<tags::CanSetStatus, pokesim::internal::tags::RandomEventCheckFailed>();
     },
     std::nullopt);
 
@@ -4655,6 +4644,7 @@ void InputSetup::setup(
   types::handle handle{*registry, moveEntity};
 
   handle.emplace<MoveName>(move);
+  handle.emplace<pokesim::tags::CurrentMoveHit>();
   registry->emplace_or_replace<tags::Attacker>(sourceEntity);
   registry->emplace_or_replace<tags::Defender>(targetEntity);
 }
@@ -5835,6 +5825,26 @@ void updateSpe(Simulation& simulation) {
 ////////////////// START OF src/Battle/ManageBattleState.cpp ///////////////////
 
 namespace pokesim {
+namespace {
+template <typename CurrentActionTag>
+bool removeFailedMove(types::registry& registry, types::entity moveEntity, types::entity entity) {
+  using CurrentActionMoves = std::conditional_t<
+    std::is_same_v<CurrentActionTag, tags::CurrentActionMoveSource>,
+    CurrentActionMovesAsSource,
+    CurrentActionMovesAsTarget>;
+
+  CurrentActionMoves& moves = registry.get<CurrentActionMoves>(entity);
+  auto newMovesEnd = std::remove(moves.val.begin(), moves.val.end(), moveEntity);
+  moves.val.erase(newMovesEnd, moves.val.end());
+
+  if (moves.val.empty()) {
+    registry.remove<CurrentActionTag, tags::CurrentActionMoveSource>(entity);
+    return true;
+  }
+  return false;
+}
+}  // namespace
+
 void assignRootBattle(types::handle battleHandle) {
   const ParentBattle* parentBattle = battleHandle.try_get<ParentBattle>();
   types::entity rootBattle = parentBattle == nullptr ? battleHandle.entity() : parentBattle->val;
@@ -5898,11 +5908,26 @@ void setCurrentActionMove(
   registry.emplace<tags::CurrentActionMoveSlot>(moveSlotEntity);
 }
 
-void setFailedActionMove(types::handle moveHandle, Battle battle) {
-  moveHandle.remove<tags::CurrentActionMove>();
-  moveHandle.emplace<tags::FailedCurrentActionMove>();
-
+void setFailedActionMove(
+  types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target) {
   types::registry& registry = *moveHandle.registry();
+
+  bool removedAllMoves = true;
+  removedAllMoves =
+    removeFailedMove<tags::CurrentActionMoveTarget>(registry, moveHandle.entity(), target.val) && removedAllMoves;
+  removedAllMoves =
+    removeFailedMove<tags::CurrentActionMoveSource>(registry, moveHandle.entity(), source.val) && removedAllMoves;
+
+  moveHandle.remove<tags::CurrentActionMove, CurrentActionSource, CurrentActionTarget>();
+  moveHandle.emplace<tags::FailedCurrentActionMove>();
+  moveHandle.emplace<FailedCurrentActionSource>(source.val);
+  moveHandle.emplace<FailedCurrentActionTarget>(target.val);
+
+  if (removedAllMoves) {
+    registry.remove<CurrentActionSource, CurrentActionTarget>(battle.val);
+    registry.emplace<FailedCurrentActionSource>(battle.val, source.val);
+    registry.emplace<FailedCurrentActionTarget>(battle.val, target.val);
+  }
 
   types::entity moveSlotEntity = registry.get<CurrentActionMoveSlot>(battle.val).val;
   registry.erase<CurrentActionMoveSlot>(battle.val);
@@ -5913,14 +5938,16 @@ void clearCurrentAction(Simulation& simulation) {
   types::registry& registry = simulation.registry;
   registry.clear<CurrentAction>();
   registry.clear<CurrentActionTargets>();
-  registry.clear<CurrentActionTarget>();
   registry.clear<CurrentActionSource>();
+  registry.clear<CurrentActionTarget>();
+  registry.clear<FailedCurrentActionSource>();
+  registry.clear<FailedCurrentActionTarget>();
   registry.clear<CurrentActionMovesAsSource>();
   registry.clear<CurrentActionMovesAsTarget>();
   registry.clear<CurrentActionMoveSlot>();
 
-  registry.clear<tags::CurrentActionMoveTarget>();
   registry.clear<tags::CurrentActionMoveSource>();
+  registry.clear<tags::CurrentActionMoveTarget>();
   registry.clear<tags::CurrentActionMoveSlot>();
 
   auto actionMoves = registry.view<tags::CurrentActionMove>();
@@ -6348,6 +6375,8 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<CurrentActionMoveSlot>(registry, entityMap);
   remapComponentEntities<CurrentActionSource>(registry, entityMap);
   remapComponentEntities<CurrentActionTarget>(registry, entityMap);
+  remapComponentEntities<FailedCurrentActionSource>(registry, entityMap);
+  remapComponentEntities<FailedCurrentActionTarget>(registry, entityMap);
   remapComponentEntities<CurrentActionTargets>(registry, entityMap);
   remapComponentEntities<CurrentEffectsAsSource>(registry, entityMap);
   remapComponentEntities<CurrentEffectsAsTarget>(registry, entityMap);
@@ -6713,6 +6742,7 @@ types::entity createAnalyzeEffectMove(
   types::entity moveEntity =
     createActionMoveForTarget({registry, defenderEntity}, battleEntity, attackerEntity, move, pokedex);
   registry.emplace<MoveName>(moveEntity, move);
+  registry.emplace<pokesim::tags::CurrentMoveHit>(moveEntity);
   registry.emplace_or_replace<tags::Attacker>(attackerEntity);
   registry.emplace_or_replace<tags::Defender>(defenderEntity);
 

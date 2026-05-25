@@ -298,6 +298,8 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<CurrentActionMoveSlot>(registry, entityMap);
   remapComponentEntities<CurrentActionSource>(registry, entityMap);
   remapComponentEntities<CurrentActionTarget>(registry, entityMap);
+  remapComponentEntities<FailedCurrentActionSource>(registry, entityMap);
+  remapComponentEntities<FailedCurrentActionTarget>(registry, entityMap);
   remapComponentEntities<CurrentActionTargets>(registry, entityMap);
   remapComponentEntities<CurrentEffectsAsSource>(registry, entityMap);
   remapComponentEntities<CurrentEffectsAsTarget>(registry, entityMap);

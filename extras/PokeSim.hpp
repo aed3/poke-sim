@@ -18308,19 +18308,27 @@ struct CurrentActionTargets {
   types::targets<types::entity> val{};
 };
 
-struct CurrentActionTarget {
-  types::entity val{};
-};
-
 struct CurrentActionSource {
   types::entity val{};
 };
 
-struct CurrentActionMovesAsTarget {
-  types::entityVector val{};
+struct CurrentActionTarget {
+  types::entity val{};
+};
+
+struct FailedCurrentActionSource {
+  types::entity val{};
+};
+
+struct FailedCurrentActionTarget {
+  types::entity val{};
 };
 
 struct CurrentActionMovesAsSource {
+  types::entityVector val{};
+};
+
+struct CurrentActionMovesAsTarget {
   types::entityVector val{};
 };
 
@@ -18328,19 +18336,19 @@ struct CurrentActionMoveSlot {
   types::entity val{};
 };
 
-struct CurrentEffectTarget {
-  types::entity val{};
-};
-
 struct CurrentEffectSource {
   types::entity val{};
 };
 
-struct CurrentEffectsAsTarget {
-  types::entityVector val{};
+struct CurrentEffectTarget {
+  types::entity val{};
 };
 
 struct CurrentEffectsAsSource {
+  types::entityVector val{};
+};
+
+struct CurrentEffectsAsTarget {
   types::entityVector val{};
 };
 }  // namespace pokesim
@@ -18350,9 +18358,13 @@ struct CurrentEffectsAsSource {
 /////////////////// START OF src/Components/Tags/Current.hpp ///////////////////
 
 namespace pokesim::tags {
-// Current Action Tag: The move that is being processed by the simulator
+// Current Action Tag: The move action being processed by the simulator
 struct CurrentActionMove {};
+// Current Action Tag: The move action that was being processed but failed
 struct FailedCurrentActionMove {};
+// A move that actively hitting a target and is or will be processed by calcDamage
+struct CurrentMoveHit {};
+
 // Current Action Tag: The move slot the current action's move was chosen and will deduct PP from
 struct CurrentActionMoveSlot {};
 // Current Action Tag: The target of the active move
@@ -19383,10 +19395,9 @@ struct Terastallize {};
 
 /////////// START OF src/Components/SimulateTurn/MoveHitStepTags.hpp ///////////
 
-namespace pokesim::tags::internal {
-struct MoveHits {};
+namespace pokesim::internal::tags {
 struct RunEffect {};
-}  // namespace pokesim::tags::internal
+}  // namespace pokesim::internal::tags
 
 //////////// END OF src/Components/SimulateTurn/MoveHitStepTags.hpp ////////////
 
@@ -20291,15 +20302,17 @@ struct ChoiceLock;
 struct CurrentAction;
 struct NextAction;
 struct CurrentActionTargets;
-struct CurrentActionTarget;
 struct CurrentActionSource;
-struct CurrentActionMovesAsTarget;
+struct CurrentActionTarget;
+struct FailedCurrentActionSource;
+struct FailedCurrentActionTarget;
 struct CurrentActionMovesAsSource;
+struct CurrentActionMovesAsTarget;
 struct CurrentActionMoveSlot;
-struct CurrentEffectTarget;
 struct CurrentEffectSource;
-struct CurrentEffectsAsTarget;
+struct CurrentEffectTarget;
 struct CurrentEffectsAsSource;
+struct CurrentEffectsAsTarget;
 struct FaintQueue;
 struct FoeSide;
 struct LastUsedMove;
@@ -20534,31 +20547,37 @@ template <>
 void check(const CurrentActionTargets&, const types::registry&);
 
 template <>
-void check(const CurrentActionTarget&, const types::registry&);
-
-template <>
 void check(const CurrentActionSource&, const types::registry&);
 
 template <>
-void check(const CurrentActionMovesAsTarget&, const types::registry&);
+void check(const CurrentActionTarget&, const types::registry&);
+
+template <>
+void check(const FailedCurrentActionSource&, const types::registry&);
+
+template <>
+void check(const FailedCurrentActionTarget&, const types::registry&);
 
 template <>
 void check(const CurrentActionMovesAsSource&, const types::registry&);
 
 template <>
-void check(const CurrentActionMoveSlot&, const types::registry&);
+void check(const CurrentActionMovesAsTarget&, const types::registry&);
 
 template <>
-void check(const CurrentEffectTarget&, const types::registry&);
+void check(const CurrentActionMoveSlot&, const types::registry&);
 
 template <>
 void check(const CurrentEffectSource&, const types::registry&);
 
 template <>
-void check(const CurrentEffectsAsTarget&, const types::registry&);
+void check(const CurrentEffectTarget&, const types::registry&);
 
 template <>
 void check(const CurrentEffectsAsSource&, const types::registry&);
+
+template <>
+void check(const CurrentEffectsAsTarget&, const types::registry&);
 
 template <>
 void check(const FaintQueue&, const types::registry&);
@@ -22776,7 +22795,11 @@ class Simulation : public internal::RegistryContainer {
   Simulation(Simulation&& other) noexcept;
   ~Simulation();
 
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
   const Pokedex& pokedex() const;
+#else
+  constexpr const Pokedex& pokedex() const { return constants.pokedex(); }
+#endif
   constexpr bool isBattleFormat(BattleFormat checkedFormat) const { return constants.isBattleFormat(checkedFormat); }
 
   // Load information about any number of battle states into the simulation's registry.
@@ -24461,6 +24484,7 @@ struct Battle;
 struct Sides;
 struct CurrentAction;
 struct CurrentActionSource;
+struct CurrentActionTarget;
 struct CurrentActionTargets;
 struct RootBattle;
 
@@ -24474,7 +24498,8 @@ void setCurrentActionTarget(
 void setCurrentActionMove(
   types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
   const Pokedex& pokedex);
-void setFailedActionMove(types::handle moveHandle, Battle battle);
+void setFailedActionMove(
+  types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target);
 void clearCurrentAction(Simulation& simulation);
 }  // namespace pokesim
 
@@ -24498,23 +24523,26 @@ enum class PercentChanceLimitResult : std::uint8_t {
 PercentChanceLimitResult checkPercentChanceLimits(
   types::probability eventProbability, types::probability probability, const simulate_turn::Options& options);
 
-void setBinaryChanceFromChanceLimit(
-  types::handle handle, Battle battle, types::probability eventProbability, const Simulation& simulation);
+void setRandomBinaryChanceFromProbability(
+  types::handle handle, Battle battle, const Simulation& simulation, types::probability eventProbability);
+
+void setRandomBinaryChanceFromPercentChance(
+  types::handle handle, Battle battle, const Simulation& simulation, types::percentChance percentChance);
 
 template <typename PercentChanceComponent>
 void setRandomBinaryChance(
   types::handle handle, PercentChanceComponent percentChance, Battle battle, const Simulation& simulation) {
-  setBinaryChanceFromChanceLimit(
-    handle,
-    battle,
-    MechanicConstants::PercentChanceToProbability * percentChance.val,
-    simulation);
+  setRandomBinaryChanceFromPercentChance(handle, battle, simulation, percentChance.val);
 }
 
 template <typename PercentChanceComponent>
 void setReciprocalRandomBinaryChance(
   types::handle handle, PercentChanceComponent percentChance, Battle battle, const Simulation& simulation) {
-  setBinaryChanceFromChanceLimit(handle, battle, MechanicConstants::Probability::MAX / percentChance.val, simulation);
+  setRandomBinaryChanceFromProbability(
+    handle,
+    battle,
+    simulation,
+    MechanicConstants::Probability::MAX / percentChance.val);
 }
 
 void setRandomEqualChance(types::handle handle, const Simulation& simulation);

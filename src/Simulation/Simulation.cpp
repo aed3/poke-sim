@@ -31,12 +31,14 @@ Simulation::Simulation(Simulation&& other) noexcept : Simulation(other.constants
   simulateTurnOptions = other.simulateTurnOptions;
 }
 
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
 const Pokedex& Simulation::pokedex() const {
   POKESIM_REQUIRE(
     Pokedex::isPokedexAttachedToSimulation(&constants.pokedex(), this),
     "The Pokedex has changed since initialization.");
   return constants.pokedex();
 }
+#endif
 
 void Simulation::clearAllResults() {
   clearSimulateTurnResults();

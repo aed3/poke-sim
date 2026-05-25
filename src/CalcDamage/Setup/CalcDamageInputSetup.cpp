@@ -3,6 +3,7 @@
 #include <Battle/Helpers/Helpers.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/Names/MoveNames.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
@@ -21,6 +22,7 @@ void InputSetup::setup(
   types::handle handle{*registry, moveEntity};
 
   handle.emplace<MoveName>(move);
+  handle.emplace<pokesim::tags::CurrentMoveHit>();
   registry->emplace_or_replace<tags::Attacker>(sourceEntity);
   registry->emplace_or_replace<tags::Defender>(targetEntity);
 }

@@ -36,15 +36,17 @@ struct ChoiceLock;
 struct CurrentAction;
 struct NextAction;
 struct CurrentActionTargets;
-struct CurrentActionTarget;
 struct CurrentActionSource;
-struct CurrentActionMovesAsTarget;
+struct CurrentActionTarget;
+struct FailedCurrentActionSource;
+struct FailedCurrentActionTarget;
 struct CurrentActionMovesAsSource;
+struct CurrentActionMovesAsTarget;
 struct CurrentActionMoveSlot;
-struct CurrentEffectTarget;
 struct CurrentEffectSource;
-struct CurrentEffectsAsTarget;
+struct CurrentEffectTarget;
 struct CurrentEffectsAsSource;
+struct CurrentEffectsAsTarget;
 struct FaintQueue;
 struct FoeSide;
 struct LastUsedMove;
@@ -279,31 +281,37 @@ template <>
 void check(const CurrentActionTargets&, const types::registry&);
 
 template <>
-void check(const CurrentActionTarget&, const types::registry&);
-
-template <>
 void check(const CurrentActionSource&, const types::registry&);
 
 template <>
-void check(const CurrentActionMovesAsTarget&, const types::registry&);
+void check(const CurrentActionTarget&, const types::registry&);
+
+template <>
+void check(const FailedCurrentActionSource&, const types::registry&);
+
+template <>
+void check(const FailedCurrentActionTarget&, const types::registry&);
 
 template <>
 void check(const CurrentActionMovesAsSource&, const types::registry&);
 
 template <>
-void check(const CurrentActionMoveSlot&, const types::registry&);
+void check(const CurrentActionMovesAsTarget&, const types::registry&);
 
 template <>
-void check(const CurrentEffectTarget&, const types::registry&);
+void check(const CurrentActionMoveSlot&, const types::registry&);
 
 template <>
 void check(const CurrentEffectSource&, const types::registry&);
 
 template <>
-void check(const CurrentEffectsAsTarget&, const types::registry&);
+void check(const CurrentEffectTarget&, const types::registry&);
 
 template <>
 void check(const CurrentEffectsAsSource&, const types::registry&);
+
+template <>
+void check(const CurrentEffectsAsTarget&, const types::registry&);
 
 template <>
 void check(const FaintQueue&, const types::registry&);

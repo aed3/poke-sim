@@ -17,7 +17,6 @@
 #include <Components/Level.hpp>
 #include <Components/Names/TypeNames.hpp>
 #include <Components/PlayerSide.hpp>
-#include <Components/Probability.hpp>
 #include <Components/RNGSeed.hpp>
 #include <Components/RandomEventOutputs.hpp>
 #include <Components/SimulationResults.hpp>

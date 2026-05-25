@@ -75,7 +75,11 @@ class Simulation : public internal::RegistryContainer {
   Simulation(Simulation&& other) noexcept;
   ~Simulation();
 
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
   const Pokedex& pokedex() const;
+#else
+  constexpr const Pokedex& pokedex() const { return constants.pokedex(); }
+#endif
   constexpr bool isBattleFormat(BattleFormat checkedFormat) const { return constants.isBattleFormat(checkedFormat); }
 
   // Load information about any number of battle states into the simulation's registry.
