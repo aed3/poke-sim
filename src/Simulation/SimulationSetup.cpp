@@ -233,7 +233,7 @@ void Simulation::createInitialSide(
     const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];
     PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonInfo);
     bool battleStarted = battleInfo.turn > MechanicConstants::TurnCount::MIN;
-    bool inActiveSlot = (isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT) ? 1U : 2U) > i;
+    bool inActiveSlot = (isBattleFormat(BattleFormat::SINGLES) ? 1U : 2U) > i;
     bool isFainted =
       pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN;
     if (battleStarted && inActiveSlot && !isFainted) {

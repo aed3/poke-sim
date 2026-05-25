@@ -148,7 +148,7 @@ struct Random {
     types::rngState& rngState, const BattleCreationInfo& battle, const Simulation& simulation) {
     SideDecision p1Decision{PlayerSideId::P1};
     SideDecision p2Decision{PlayerSideId::P2};
-    if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
+    if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
       SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
       SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
       p1SlotDecision.moveChoice = pickFromList(battle.sides.p1().team[0].moves, rngState).name;

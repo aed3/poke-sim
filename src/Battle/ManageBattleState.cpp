@@ -74,7 +74,7 @@ void setCurrentActionTarget(
   if (!registry.any_of<tags::Fainted>(targetEntity)) {
     pickedTarget = true;
   }
-  else if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT)) {
+  else if (simulation.isBattleFormat(BattleFormat::DOUBLES)) {
     // Set tag to get random target after this function exits
   }
 

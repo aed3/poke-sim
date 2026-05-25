@@ -88,7 +88,7 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
   p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
 
   auto check = [&]() {
-    Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
+    Simulation simulation(pokedex, BattleFormat::SINGLES);
     simulation.createInitialStates({battleInfo});
 
     types::registry& registry = simulation.registry;
@@ -251,7 +251,7 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalculateDamage][Setup]
     },
   };
 
-  Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
+  Simulation simulation(pokedex, BattleFormat::SINGLES);
   simulation.createInitialStates({battleInfo});
 
   const types::registry& registry = simulation.registry;
@@ -281,7 +281,7 @@ TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup
     {Slot::P2B, Slot::P1B, Slot::P2B, {dex::Move::MOONBLAST}, dex::Status::TOX, {{dex::Stat::SPE, 6}}},
   };
 
-  Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
+  Simulation simulation(pokedex, BattleFormat::SINGLES);
   simulation.createInitialStates({battleInfo});
 
   const types::registry& registry = simulation.registry;
@@ -298,7 +298,7 @@ TEST_CASE("Simulation Setup: Ignored Pokemon Options", "[Simulation][Setup]") {
   PokemonCreationInfo p1AInfo{dex::Species::EMPOLEON}, p1BInfo{dex::Species::GARDEVOIR},
     p1CInfo{dex::Species::DRAGAPULT};
   PokemonCreationInfo p2AInfo{dex::Species::AMPHAROS}, p2BInfo{dex::Species::PANGORO}, p2CInfo{dex::Species::RIBOMBEE};
-  Simulation simulation{pokedex, BattleFormat::SINGLES_BATTLE_FORMAT};
+  Simulation simulation{pokedex, BattleFormat::SINGLES};
   const types::registry& registry = simulation.registry;
 
   using pokemonHandles = std::array<const types::handle, 6U>;

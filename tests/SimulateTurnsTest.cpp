@@ -215,7 +215,7 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
 
 TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
+  Simulation simulation(pokedex, BattleFormat::SINGLES);
   const types::registry& registry = simulation.registry;
 
   BattleCreationInfo battleCreationInfo;

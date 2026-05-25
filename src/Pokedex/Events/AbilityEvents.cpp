@@ -55,7 +55,7 @@ void staticOnDamagingHit(
 }  // namespace
 
 void Plus::onModifySpA(Simulation& simulation) {
-  if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
     return;
   }
   simulation.viewForSelectedPokemon<plusOnModifySpa, Tags<ability::tags::Plus>>();

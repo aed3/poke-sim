@@ -782,10 +782,14 @@ void check(const CurrentActionTarget& target, const types::registry& registry) {
 }
 
 template <>
-void check(const FailedCurrentActionSource&, const types::registry&) {}
+void check(const FailedCurrentActionSource& failedSource, const types::registry& registry) {
+  checkPokemon(failedSource.val, registry);
+}
 
 template <>
-void check(const FailedCurrentActionTarget&, const types::registry&) {}
+void check(const FailedCurrentActionTarget& failedTarget, const types::registry& registry) {
+  checkPokemon(failedTarget.val, registry);
+}
 
 template <>
 void check(const CurrentActionMovesAsSource& moves, const types::registry& registry) {
@@ -1526,7 +1530,7 @@ void Simulation::createInitialSide(
     const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];
     PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonInfo);
     bool battleStarted = battleInfo.turn > MechanicConstants::TurnCount::MIN;
-    bool inActiveSlot = (isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT) ? 1U : 2U) > i;
+    bool inActiveSlot = (isBattleFormat(BattleFormat::SINGLES) ? 1U : 2U) > i;
     bool isFainted =
       pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN;
     if (battleStarted && inActiveSlot && !isFainted) {
@@ -2421,7 +2425,7 @@ void createActionMoveForTargets(
 }
 
 void getMoveTargets(Simulation& simulation) {
-  if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT)) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES)) {
     simulation
       .view<addTargetAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
     simulation
@@ -2662,7 +2666,7 @@ void run(Simulation& simulation) {
 namespace pokesim::internal {
 namespace {
 bool constexpr useChanceStack(const Simulation& simulation) {
-  return simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT) &&
+  return simulation.isBattleFormat(BattleFormat::DOUBLES) &&
          simulation.simulateTurnOptions.getMakeBranchesOnRandomEvents();
 }
 
@@ -2854,7 +2858,7 @@ void randomChanceEvent(
   Simulation& simulation, types::entityIndex cloneCount, types::callback applyChoices,
   void (*assignClonesToEvents)(types::registry&, const types::ClonedEntityMap&, const types::entityVector&),
   UpdateProbabilities updateProbabilities, const AssignArgs&... assignArgs) {
-  if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT)) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES)) {
     simulation.view<placeChanceFromStack<RandomStack, Random>>();
   }
 
@@ -2915,7 +2919,7 @@ void randomChanceEvent(
 
   registry.clear<Random>();
   clearRandomChanceResult(simulation);
-  if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT) && !registry.view<RandomStack>().empty()) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES) && !registry.view<RandomStack>().empty()) {
     randomChanceEvent<Random, RandomStack, AssignRandomEvents, UpdateProbabilities, AssignRandomEventsTags...>(
       simulation,
       cloneCount,
@@ -4604,7 +4608,7 @@ void staticOnDamagingHit(
 }  // namespace
 
 void Plus::onModifySpA(Simulation& simulation) {
-  if (simulation.isBattleFormat(BattleFormat::SINGLES_BATTLE_FORMAT)) {
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
     return;
   }
   simulation.viewForSelectedPokemon<plusOnModifySpa, Tags<ability::tags::Plus>>();
@@ -5876,7 +5880,7 @@ void setCurrentActionTarget(
   if (!registry.any_of<tags::Fainted>(targetEntity)) {
     pickedTarget = true;
   }
-  else if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT)) {
+  else if (simulation.isBattleFormat(BattleFormat::DOUBLES)) {
     // Set tag to get random target after this function exits
   }
 

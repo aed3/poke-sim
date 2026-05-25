@@ -24,7 +24,7 @@
 namespace pokesim::internal {
 namespace {
 bool constexpr useChanceStack(const Simulation& simulation) {
-  return simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT) &&
+  return simulation.isBattleFormat(BattleFormat::DOUBLES) &&
          simulation.simulateTurnOptions.getMakeBranchesOnRandomEvents();
 }
 
@@ -216,7 +216,7 @@ void randomChanceEvent(
   Simulation& simulation, types::entityIndex cloneCount, types::callback applyChoices,
   void (*assignClonesToEvents)(types::registry&, const types::ClonedEntityMap&, const types::entityVector&),
   UpdateProbabilities updateProbabilities, const AssignArgs&... assignArgs) {
-  if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT)) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES)) {
     simulation.view<placeChanceFromStack<RandomStack, Random>>();
   }
 
@@ -277,7 +277,7 @@ void randomChanceEvent(
 
   registry.clear<Random>();
   clearRandomChanceResult(simulation);
-  if (simulation.isBattleFormat(BattleFormat::DOUBLES_BATTLE_FORMAT) && !registry.view<RandomStack>().empty()) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES) && !registry.view<RandomStack>().empty()) {
     randomChanceEvent<Random, RandomStack, AssignRandomEvents, UpdateProbabilities, AssignRandomEventsTags...>(
       simulation,
       cloneCount,

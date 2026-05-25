@@ -133,7 +133,7 @@ inline PokemonCreationInfo createPredefinedPokemon(Pokedex& pokedex, dex::Specie
 }
 
 inline Simulation createSingleBattleSimulation(Pokedex& pokedex, BattleCreationInfo& battleCreationInfo) {
-  Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
+  Simulation simulation(pokedex, BattleFormat::SINGLES);
 
   battleCreationInfo.sides = {
     {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}},
@@ -147,7 +147,7 @@ inline Simulation createSingleBattleSimulation(Pokedex& pokedex, BattleCreationI
 }
 
 inline Simulation createDoubleBattleSimulation(Pokedex& pokedex, BattleCreationInfo& battleCreationInfo) {
-  Simulation simulation(pokedex, BattleFormat::DOUBLES_BATTLE_FORMAT);
+  Simulation simulation(pokedex, BattleFormat::DOUBLES);
 
   battleCreationInfo.sides = {
     {{

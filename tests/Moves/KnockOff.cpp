@@ -4,7 +4,7 @@
 namespace pokesim {
 TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][KnockOff]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
+  Simulation simulation(pokedex, BattleFormat::SINGLES);
   const types::registry& registry = simulation.registry;
 
   BattleCreationInfo battleCreationInfo;

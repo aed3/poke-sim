@@ -84,16 +84,12 @@ struct CreatePokedex : BenchmarkInputHolder {
 
 struct CreateSingleBattleSimulation : BenchmarkInputHolder {
   inline static const std::vector<std::string> TAGS = {"SingleBattle"};
-  static Simulation run(types::rngState&, Pokedex& pokedex) {
-    return Simulation{pokedex, BattleFormat::SINGLES_BATTLE_FORMAT};
-  }
+  static Simulation run(types::rngState&, Pokedex& pokedex) { return Simulation{pokedex, BattleFormat::SINGLES}; }
 };
 
 struct CreateDoubleBattleSimulation : BenchmarkInputHolder {
   inline static const std::vector<std::string> TAGS = {"DoubleBattle"};
-  static Simulation run(types::rngState&, Pokedex& pokedex) {
-    return Simulation{pokedex, BattleFormat::DOUBLES_BATTLE_FORMAT};
-  }
+  static Simulation run(types::rngState&, Pokedex& pokedex) { return Simulation{pokedex, BattleFormat::DOUBLES}; }
 };
 
 struct ChooseMonteCarloOptions : BenchmarkInputHolder {

@@ -3,7 +3,7 @@
 namespace pokesim {
 TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][FuryAttack]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation simulation(pokedex, BattleFormat::SINGLES_BATTLE_FORMAT);
+  Simulation simulation(pokedex, BattleFormat::SINGLES);
   const types::registry& registry = simulation.registry;
 
   BattleCreationInfo battleCreationInfo;
