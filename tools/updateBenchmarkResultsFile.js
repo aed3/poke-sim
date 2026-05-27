@@ -7,7 +7,7 @@ const currentOsType = os.type();
 const currentCpus = os.cpus();
 const currentMemory = Math.floor(os.totalmem() / 1e6);
 
-const benchmarkFilePath = getFullPath('extras', 'RecentResults.md');
+const benchmarkFilePath = getFullPath('extras', 'RecentBenchmarkResults.md');
 
 const parseBenchmarksLines = (lines, current, results = {}) => {
   const newInfoPerLine = new Array(lines.length);
@@ -17,7 +17,7 @@ const parseBenchmarksLines = (lines, current, results = {}) => {
     const line = lines[i];
     if (line.startsWith('## ')) {
       current.test = {name: line.substring(3)};
-      current.columns = splitToColumns(line[i + 1]);
+      current.columns = splitToColumns(lines[i + 1]);
       results[current.test.name] = current.test;
 
       i += 2;
@@ -32,9 +32,9 @@ const parseBenchmarksLines = (lines, current, results = {}) => {
       continue;
     }
 
-    const row = current.test[inputs] = {inputs};
+    const row = current.test[inputs] = {Inputs: parseInt(inputs)};
     for (let column = 0; column < columns.length; column++) {
-      let columnValue = columns[i];
+      let columnValue = columns[column];
       const columnName = current.columns[column + 1];
       if (columnValue.endsWith('ms')) {
         columnValue = 1e6 * parseFloat(columnValue);
@@ -49,7 +49,7 @@ const parseBenchmarksLines = (lines, current, results = {}) => {
       row[columnName] = columnValue;
     }
 
-    newInfoPerLine[i] = {row, test: current.test.name};
+    newInfoPerLine[i] = {...row, test: current.test.name};
   }
 
   return newInfoPerLine;
@@ -61,18 +61,19 @@ const parseExistingBenchmarkFile = () => {
   const benchmarkFile = fs.readFileSync(benchmarkFilePath, 'utf8');
   const [/*Title*/, /*System*/, osType, cpu, totalMemory, /*Results Title*/, ...resultLines] =
     benchmarkFile.split('\n');
+  const parseSystemLine = (line) => line.substring(line.indexOf(':') + 2);
 
   if (!currentCpus.every(cpu => cpu.model === currentCpus[0].model)) {
     return null;
   }
 
-  if (currentOsType != osType.split(' ').at(-1)) {
+  if (currentOsType !== parseSystemLine(osType)) {
     return null;
   }
-  if (currentCpus[0].model != cpu.split(' ').at(-1)) {
+  if (currentCpus[0].model !== parseSystemLine(cpu)) {
     return null;
   }
-  if (currentMemory != parseInt(totalMemory.split(' ').at(-1))) {
+  if (currentMemory !== parseInt(parseSystemLine(totalMemory))) {
     return null;
   }
 
@@ -93,9 +94,9 @@ const previousTest = parseExistingBenchmarkFile();
 buildBenchmarks();
 let newFile = `# Benchmarks
 ## System Info
-OS: ${currentOsType}
-CPU: ${currentCpus[0].model}
-Memory: ${currentMemory}MB
+- OS: ${currentOsType}
+- CPU: ${currentCpus[0].model}
+- Memory: ${currentMemory}MB
 # Results
 `;
 
@@ -111,6 +112,8 @@ const current = {
   text: '',
 };
 
+process.stdout.write(newFile);
+
 benchmarkProcess.stdout.on('data', (chunk) => {
   const lastLineLength = current.text.length;
   current.text += chunk;
@@ -123,27 +126,26 @@ benchmarkProcess.stdout.on('data', (chunk) => {
       const line = lines[i];
       process.stdout.write(i == 0 ? line.substring(lastLineLength) : line);
 
-      const newInfo = newInfoPerLine[i]?.['Mean / Input Count'];
-      const previousInfo = previousTest?.[newInfo?.name]?.[newInfo?.row?.inputs]?.['Mean / Input Count'];
-      if (newInfo && previousInfo) {
-        let diff = newInfo - previousInfo;
-        let unit = 'ms';
-        if (1e3 > diff) {
-          unit = 'ns';
+      const newInfo = newInfoPerLine[i];
+      const previousInfo = previousTest?.[newInfo?.test]?.[newInfo?.Inputs];
+      if (newInfo?.['Mean / Input Count'] && previousInfo?.['Mean / Input Count']) {
+        let diff = newInfo?.['Mean / Input Count'] - previousInfo?.['Mean / Input Count'];
+        let unit = 'ns';
+        if (diff >= 1e6) {
+          diff /= 1e6;
+          unit = 'ms';
         }
-        else if (1e6 > diff) {
+        else if (diff >= 1e3) {
           diff /= 1e3;
           unit = 'us';
         }
-        else {
-          diff /= 1e6;
-        }
 
+        diff = diff.toFixed(6);
         if (diff > 0) {
           diff = '+' + diff;
         }
 
-        process.stdout.write(diff + unit);
+        process.stdout.write('    ' + diff + unit);
       }
       process.stdout.write('\n');
     }

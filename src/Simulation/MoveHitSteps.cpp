@@ -23,7 +23,6 @@
 #include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>
-#include <algorithm>
 
 #include "RunEvent.hpp"
 #include "Simulation.hpp"
@@ -34,34 +33,14 @@ void deductMoveHitCount(types::handle moveHandle, HitCount& hitCount) {
   POKESIM_REQUIRE(hitCount.val > 0U, "A hit count shouldn't be decremented if it's already 0.");
   hitCount.val--;
   if (!hitCount.val) {
-    moveHandle.remove<HitCount>();
+    moveHandle.remove<HitCount, tags::CurrentMoveHit>();
   }
 }
 
 void removeHitCountFromFaintedTargets(types::handle moveHandle, CurrentActionTarget target) {
   if (moveHandle.registry()->get<stat::CurrentHp>(target.val).val == MechanicConstants::PokemonCurrentHpStat::MIN) {
-    moveHandle.remove<HitCount>();
+    moveHandle.remove<HitCount, tags::CurrentMoveHit>();
   }
-}
-
-void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets) {
-  types::activePokemonIndex deleteCount = 0U;
-  for (types::entity& target : targets.val) {
-    if (!registry.all_of<tags::CurrentActionMoveTarget>(target)) {
-      types::activePokemonIndex swapIndex = targets.val.size() - 1 - deleteCount;
-      POKESIM_REQUIRE(swapIndex < targets.val.size(), "Swap index out of bounds.");
-      std::swap(target, targets.val[swapIndex]);
-      deleteCount++;
-    }
-  }
-
-  targets.val.pop_count(deleteCount);
-}
-
-void postMoveHitCheck(Simulation& simulation) {
-  simulation.view<setFailedActionMove, Tags<tags::CurrentActionMove>, entt::exclude_t<tags::CurrentMoveHit>>();
-  simulation.view<updateCurrentActionTargets>();
-  simulation.registry.clear<Damage>();
 }
 
 template <auto Function>
@@ -76,7 +55,7 @@ void runMoveHitCheck(Simulation& simulation) {
   Function(simulation);
   selectedMoves.deselect();
 
-  postMoveHitCheck(simulation);
+  simulation.view<setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
   simulation.registry.clear<tags::CurrentMoveHit>();
 }
 
@@ -184,7 +163,10 @@ void setMoveHitCount(Simulation& simulation) {
 void applyDamage(Simulation& simulation) {
   simulation.viewForSelectedMoves<applyDamageToTarget>();
 
-  simulation.removeFromEntities<tags::CurrentMoveHit>(entt::exclude<Damage, move::tags::Status>);
+  auto view = simulation.registry.view<tags::CurrentMoveHit>(entt::exclude<Damage, move::tags::Status>);
+  simulation.registry.insert<tags::FailedCurrentMoveHit>(view.begin(), view.end());
+  simulation.removeFromEntities<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
+  simulation.registry.clear<Damage>();
 }
 
 void runPrimaryMoveEffects(Simulation& simulation) {
@@ -212,7 +194,8 @@ void accuracyCheck(Simulation& simulation) {
   runAccuracyEvent(simulation);
 
   runRandomBinaryChance<Accuracy, tags::CurrentMoveHit>(simulation, [](Simulation& sim) {
-    sim.removeFromEntities<tags::CurrentMoveHit, pokesim::internal::tags::RandomEventCheckFailed>();
+    sim.addToEntities<tags::FailedCurrentMoveHit, pokesim::internal::tags::RandomEventCheckFailed>();
+    sim.removeFromEntities<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
   });
 }
 
@@ -242,7 +225,6 @@ void moveHitLoop(Simulation& simulation) {
     runAfterHitEvent(simulation);
 
     updateAllStats(simulation);
-    postMoveHitCheck(simulation);
     simulation.view<deductMoveHitCount>();
     simulation.view<removeHitCountFromFaintedTargets, Tags<tags::CurrentActionMove>>();
     iterations++;

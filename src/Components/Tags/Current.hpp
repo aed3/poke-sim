@@ -7,6 +7,7 @@ struct CurrentActionMove {};
 struct FailedCurrentActionMove {};
 // A move that actively hitting a target and is or will be processed by calcDamage
 struct CurrentMoveHit {};
+struct FailedCurrentMoveHit {};
 
 // Current Action Tag: The move slot the current action's move was chosen and will deduct PP from
 struct CurrentActionMoveSlot {};

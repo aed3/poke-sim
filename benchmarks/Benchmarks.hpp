@@ -192,13 +192,20 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
   void flush() { m_stream.flush(); }
 
   static std::string nanosecondsToString(double nanoseconds) {
-    if (1e3 > nanoseconds) {
-      return Catch::getFormattedDuration(nanoseconds) + "ns";
+    double value = nanoseconds;
+    std::string units = "ns";
+    if (nanoseconds >= 1e6) {
+      value = nanoseconds / 1e6;
+      units = "ms";
     }
-    if (1e6 > nanoseconds) {
-      return Catch::getFormattedDuration(nanoseconds / 1e3) + "us";
+    else if (nanoseconds >= 1e3) {
+      value = nanoseconds / 1e3;
+      units = "us";
     }
-    return Catch::getFormattedDuration(nanoseconds / 1e6) + "ms";
+
+    std::stringstream stream;
+    stream << std::fixed << value << units;
+    return stream.str();
   }
 
   static std::string inputSizeFromName(const std::string& name) {
@@ -274,13 +281,6 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
       m_stream << m_colour->guardColour(Catch::Colour::BrightYellow) << "Filters: " << m_config->testSpec() << '\n';
     }
     flush();
-  }
-
-  void testRunEnded(const Catch::TestRunStats& testRunStats) override {
-    Catch::printTestRunTotals(m_stream, *m_colour, testRunStats.totals);
-    m_stream << "\n\n";
-    flush();
-    Catch::StreamingReporterBase::testRunEnded(testRunStats);
   }
 
   void assertionEnded(const Catch::AssertionStats& stats) override {

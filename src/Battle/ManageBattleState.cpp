@@ -19,6 +19,7 @@
 #include <Simulation/SimulationResults.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
+#include <algorithm>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
@@ -40,6 +41,20 @@ bool removeFailedMove(types::registry& registry, types::entity moveEntity, types
     return true;
   }
   return false;
+}
+
+void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets) {
+  types::activePokemonIndex deleteCount = 0U;
+  for (types::entity& target : targets.val) {
+    if (!registry.all_of<tags::CurrentActionMoveTarget>(target)) {
+      types::activePokemonIndex swapIndex = targets.val.size() - 1 - deleteCount;
+      POKESIM_REQUIRE(swapIndex < targets.val.size(), "Swap index out of bounds.");
+      std::swap(target, targets.val[swapIndex]);
+      deleteCount++;
+    }
+  }
+
+  targets.val.pop_count(deleteCount);
 }
 }  // namespace
 
@@ -130,6 +145,8 @@ void setFailedActionMove(
   types::entity moveSlotEntity = registry.get<CurrentActionMoveSlot>(battle.val).val;
   registry.erase<CurrentActionMoveSlot>(battle.val);
   registry.erase<tags::CurrentActionMoveSlot>(moveSlotEntity);
+
+  updateCurrentActionTargets(registry, registry.get<CurrentActionTargets>(battle.val));
 }
 
 void clearCurrentAction(Simulation& simulation) {

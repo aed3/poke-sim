@@ -209,7 +209,7 @@ struct Random {
     types::boost boost = (types::boost)internal::nextBoundedRandomValue(
       rngState,
       (types::rngResult)(MechanicConstants::PokemonStatBoost::MAX - MechanicConstants::PokemonStatBoost::MIN + 1U));
-    boost -= MechanicConstants::PokemonStatBoost::MIN;
+    boost += MechanicConstants::PokemonStatBoost::MIN;
 
     inputInfo.boostEffect = {{
       (dex::Stat)(1 << internal::nextBoundedRandomValue(rngState, dex::TOTAL_STAT_COUNT, 1U)),
