@@ -89,6 +89,7 @@ struct CreateSingleBattleSimulation : BenchmarkInputHolder {
 
 struct CreateDoubleBattleSimulation : BenchmarkInputHolder {
   inline static const std::vector<std::string> TAGS = {"DoubleBattle"};
+  static constexpr types::entityIndex MAX_INPUTS = 1U << 13U;
   static Simulation run(types::rngState&, Pokedex& pokedex) { return Simulation{pokedex, BattleFormat::DOUBLES}; }
 };
 
@@ -153,13 +154,13 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
   static inline const std::vector<std::string> TABLE_HEADER = {
     "Inputs",
     "Samples",
-    "Iterations/Sample",
+    "Iterations / Sample",
     "Estimated Completion Time",
     "Mean of Samples",
-    "Mean Lower Bound",
-    "Mean Upper Bound",
     "Standard Deviation",
-    "Mean/InputCount",
+    "Mean / Input Count",
+    "Mean Lower Bound / Input Count",
+    "Mean Upper Bound / Input Count",
   };
   static inline const std::size_t COLUMN_COUNT = BenchmarkReporter::TABLE_HEADER.size();
 
@@ -254,14 +255,14 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
 
   void benchmarkEnded(const Catch::BenchmarkStats<>& stats) override {
     Catch::StreamingReporterBase::benchmarkEnded(stats);
-    std::string inputSize = inputSizeFromName(stats.info.name);
+    int inputSize = std::stoi(inputSizeFromName(stats.info.name));
     const auto& mean = stats.mean;
     addCells({
       nanosecondsToString(mean.point.count()),
-      nanosecondsToString(mean.lower_bound.count()),
-      nanosecondsToString(mean.upper_bound.count()),
       nanosecondsToString(stats.standardDeviation.point.count()),
-      nanosecondsToString(mean.point.count() / std::stoi(inputSize)),
+      nanosecondsToString(mean.point.count() / inputSize),
+      nanosecondsToString(mean.lower_bound.count() / inputSize),
+      nanosecondsToString(mean.upper_bound.count() / inputSize),
     });
     nextTableLine();
     flush();

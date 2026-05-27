@@ -54,7 +54,7 @@ project(PokeSim)
 
 option(ENABLE_TESTING
   "Build the tests along with PokeSim. This will negatively effect the library's performance."
-  ON
+  OFF
 )
 
 option(ENABLE_BENCHMARKING "Build the benchmarks along with PokeSim." OFF)

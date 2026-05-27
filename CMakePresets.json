@@ -1,0 +1,132 @@
+{
+  "version": 8,
+  "configurePresets": [
+    {
+      "name": "default",
+      "hidden": true,
+      "binaryDir": "build",
+      "cacheVariables": {
+        "ENABLE_TESTING": "OFF",
+        "ENABLE_BENCHMARKING": "OFF",
+        "ENTITY_VIEWER": "OFF"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "default",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "default",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "test",
+      "inherits": "default",
+      "cacheVariables": {
+        "ENABLE_TESTING": "ON"
+      }
+    },
+    {
+      "name": "benchmark",
+      "hidden": true,
+      "cacheVariables": {
+        "ENABLE_BENCHMARKING": "ON"
+      }
+    },
+    {
+      "name": "entity-viewer",
+      "cacheVariables": {
+        "ENTITY_VIEWER": "ON"
+      }
+    },
+    {
+      "name": "test-debug",
+      "inherits": [
+        "entity-viewer",
+        "test",
+        "debug"
+      ]
+    },
+    {
+      "name": "test-release",
+      "inherits": [
+        "test",
+        "release"
+      ]
+    },
+    {
+      "name": "benchmark-debug",
+      "inherits": [
+        "entity-viewer",
+        "benchmark",
+        "debug"
+      ]
+    },
+    {
+      "name": "benchmark-release",
+      "inherits": [
+        "benchmark",
+        "release"
+      ]
+    },
+    {
+      "name": "benchmark-release-with-checks",
+      "inherits": [
+        "test",
+        "benchmark-release"
+      ]
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "hidden": true,
+      "jobs": 0
+    },
+    {
+      "name": "test",
+      "hidden": true,
+      "inherits": "default",
+      "targets": "PokeSimTests"
+    },
+    {
+      "name": "benchmark",
+      "hidden": true,
+      "inherits": "default",
+      "targets": "PokeSimBenchmarks"
+    },
+    {
+      "name": "test-debug",
+      "inherits": "test",
+      "configurePreset": "test-debug"
+    },
+    {
+      "name": "test-release",
+      "inherits": "test",
+      "configurePreset": "test-release"
+    },
+    {
+      "name": "benchmark-debug",
+      "inherits": "benchmark",
+      "configurePreset": "benchmark-debug"
+    },
+    {
+      "name": "benchmark-release",
+      "inherits": "benchmark",
+      "configurePreset": "benchmark-release"
+    },
+    {
+      "name": "benchmark-release-with-checks",
+      "inherits": "benchmark",
+      "configurePreset": "benchmark-release-with-checks"
+    }
+  ]
+}
