@@ -197,29 +197,29 @@ void checkBounds(const T& value) {
 }
 
 void checkBoost(types::boost boost) {
-  checkBounds<MechanicConstants::PokemonStatBoost>(boost);
+  checkBounds<Constants::PokemonStatBoost>(boost);
 }
 
 void checkStat(types::stat stat, bool hp = false) {
   if (hp) {
-    checkBounds<MechanicConstants::PokemonHpStat>(stat);
+    checkBounds<Constants::PokemonHpStat>(stat);
   }
   else {
-    checkBounds<MechanicConstants::PokemonStat>(stat);
+    checkBounds<Constants::PokemonStat>(stat);
   }
 }
 
 void checkEffectiveStat(types::stat stat, bool hp = false) {
   if (hp) {
-    checkBounds<MechanicConstants::PokemonHpStat>(stat);
+    checkBounds<Constants::PokemonHpStat>(stat);
   }
   else {
-    checkBounds<MechanicConstants::PokemonEffectiveStat>(stat);
+    checkBounds<Constants::PokemonEffectiveStat>(stat);
   }
 }
 
 void checkBaseStat(types::baseStat stat) {
-  checkBounds<MechanicConstants::PokemonBaseStat>(stat);
+  checkBounds<Constants::PokemonBaseStat>(stat);
 }
 
 void checkSlot(Slot slot) {
@@ -231,20 +231,20 @@ void checkPlayerSideId(PlayerSideId sideId) {
 }
 
 void checkEv(types::ev ev) {
-  checkBounds<MechanicConstants::PokemonEv>(ev);
+  checkBounds<Constants::PokemonEv>(ev);
 }
 
 void checkIv(types::iv iv) {
-  checkBounds<MechanicConstants::PokemonIv>(iv);
+  checkBounds<Constants::PokemonIv>(iv);
 }
 
 void checkProbability(types::probability probability) {
-  checkBounds<MechanicConstants::Probability>(probability);
+  checkBounds<Constants::Probability>(probability);
 }
 
 void checkTeamOrder(const types::teamOrder& teamOrder) {
   for (types::teamPositionIndex position : teamOrder) {
-    checkBounds<MechanicConstants::TeamSize>(position);
+    checkBounds<Constants::TeamSize>(position);
   }
 }
 
@@ -301,7 +301,7 @@ void checkBattle(types::entity battleEntity, const types::registry& registry) {
 
   check(probability);
 
-  POKESIM_REQUIRE_NM(sides.val.size() == MechanicConstants::SIDE_COUNT);
+  POKESIM_REQUIRE_NM(sides.val.size() == Constants::SIDE_COUNT);
   auto [p1SideEntity, p2SideEntity] = sides.val;
 
   POKESIM_REQUIRE_NM(registry.get<Battle>(p1SideEntity).val == battleEntity);
@@ -325,7 +325,7 @@ void checkSide(types::entity sideEntity, const types::registry& registry) {
   POKESIM_REQUIRE_NM(has<PlayerSide>(sideEntity, registry));
 
   const auto& [battle, team, foeSide] = registry.get<Battle, Team, FoeSide>(sideEntity);
-  checkBounds<MechanicConstants::TeamSize>(team.val.size());
+  checkBounds<Constants::TeamSize>(team.val.size());
 
   POKESIM_REQUIRE_NM(registry.get<FoeSide>(foeSide.val).val == sideEntity);
 
@@ -396,7 +396,7 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
   if (effectiveSpd) check(*effectiveSpd);
   if (effectiveSpe) check(*effectiveSpe);
 
-  checkBounds<MechanicConstants::MoveSlots>(moveSlots.val.size());
+  checkBounds<Constants::MoveSlots>(moveSlots.val.size());
 }
 
 void checkMoveSlot(types::entity moveSlotEntity, const types::registry& registry) {
@@ -468,12 +468,12 @@ void checkActionMove(types::entity moveEntity, const types::registry& registry) 
 }
 
 void checkPercentChance(types::percentChance chance) {
-  checkBounds<MechanicConstants::PercentChance>(chance);
+  checkBounds<Constants::PercentChance>(chance);
 }
 
 template <>
 void check(const Accuracy& accuracy) {
-  checkBounds<MechanicConstants::MoveBaseAccuracy>(accuracy.val);
+  checkBounds<Constants::MoveBaseAccuracy>(accuracy.val);
 }
 
 template <>
@@ -592,12 +592,12 @@ void check(const analyze_effect::MovePair& movePair, const types::registry& regi
 
 template <>
 void check(const BaseEffectChance& chance) {
-  checkBounds<MechanicConstants::MoveBaseEffectChance>(chance.val);
+  checkBounds<Constants::MoveBaseEffectChance>(chance.val);
 }
 
 template <>
 void check(const BasePower& basePower) {
-  checkBounds<MechanicConstants::MoveBasePower>(basePower.val);
+  checkBounds<Constants::MoveBasePower>(basePower.val);
 }
 
 template <>
@@ -627,17 +627,18 @@ void check(const SpeBoost& speBoost) {
 
 template <>
 void check(const calc_damage::CritChanceDivisor& critChanceDivisor) {
-  POKESIM_REQUIRE_NM(listContains(MechanicConstants::CRIT_CHANCE_DIVISORS, critChanceDivisor.val));
+  POKESIM_REQUIRE_NM(
+    listContains(MechanicConstants::CRIT_CHANCE_DIVISORS(GameMechanics::LATEST), critChanceDivisor.val));
 }
 
 template <>
 void check(const calc_damage::CritBoost& critBoost) {
-  checkBounds<MechanicConstants::CritBoost>(critBoost.val);
+  checkBounds<Constants::CritBoost>(critBoost.val);
 }
 
 template <>
 void check(const calc_damage::AttackingLevel& attackingLevel) {
-  checkBounds<MechanicConstants::PokemonLevel>(attackingLevel.val);
+  checkBounds<Constants::PokemonLevel>(attackingLevel.val);
 }
 
 template <>
@@ -657,23 +658,23 @@ void check(const calc_damage::RealEffectiveStat& realEffectiveStat) {
 
 template <>
 void check(const calc_damage::Power& power) {
-  checkBounds<MechanicConstants::MovePower>(power.val);
+  checkBounds<Constants::MovePower>(power.val);
 }
 
 template <>
 void check(const Damage& damage) {
-  POKESIM_REQUIRE_NM(damage.val <= MechanicConstants::Damage::MAX);
+  POKESIM_REQUIRE_NM(damage.val <= Constants::Damage::MAX);
 }
 
 template <>
 void check(const DamageRollModifiers& modifiers) {
   POKESIM_REQUIRE_NM(listContains(VALID_STAB_BOOST_KINDS, modifiers.stab));
-  checkBounds<MechanicConstants::TypeEffectivenessShift>(modifiers.typeEffectiveness);
+  checkBounds<Constants::TypeEffectivenessShift>(modifiers.typeEffectiveness);
 }
 
 template <>
 void check(const DamageRolls& damageRolls) {
-  POKESIM_REQUIRE_NM(damageRolls.val.size() <= MechanicConstants::DamageRollCount::MAX);
+  POKESIM_REQUIRE_NM(damageRolls.val.size() <= Constants::DamageRollCount::MAX);
   for (const Damage& damage : damageRolls.val) {
     check(damage);
   }
@@ -723,7 +724,7 @@ void check(const Ivs& ivs) {
 
 template <>
 void check(const ActionQueue& actionQueue, const types::registry& registry) {
-  checkBounds<MechanicConstants::ActionQueueLength>(actionQueue.val.size());
+  checkBounds<Constants::ActionQueueLength>(actionQueue.val.size());
   for (types::entity entity : actionQueue.val) {
     checkAction(entity, registry);
   }
@@ -853,7 +854,7 @@ void check(const LastUsedMove& lastUsedMove, const types::registry& registry) {
 
 template <>
 void check(const MoveSlots& moveSlots, const types::registry& registry) {
-  checkBounds<MechanicConstants::MoveSlots>(moveSlots.val.size());
+  checkBounds<Constants::MoveSlots>(moveSlots.val.size());
   for (types::entity moveEntity : moveSlots.val) {
     checkMoveSlot(moveEntity, registry);
   }
@@ -871,7 +872,7 @@ void check(const Side& side, const types::registry& registry) {
 
 template <>
 void check(const Sides& sides, const types::registry& registry) {
-  POKESIM_REQUIRE_NM(sides.val.size() == MechanicConstants::SIDE_COUNT);
+  POKESIM_REQUIRE_NM(sides.val.size() == Constants::SIDE_COUNT);
   for (types::entity sideEntity : sides.val) {
     checkSide(sideEntity, registry);
   }
@@ -886,12 +887,12 @@ void check(const Team& team, const types::registry& registry) {
 
 template <>
 void check(const HitCount& hitCount) {
-  checkBounds<MechanicConstants::MoveHits>(hitCount.val);
+  checkBounds<Constants::MoveHits>(hitCount.val);
 }
 
 template <>
 void check(const Level& level) {
-  checkBounds<MechanicConstants::PokemonLevel>(level.val);
+  checkBounds<Constants::PokemonLevel>(level.val);
 }
 
 template <>
@@ -1001,12 +1002,12 @@ void check(const WeatherName& weatherName) {
 
 template <>
 void check(const Pp& pp) {
-  checkBounds<MechanicConstants::MovePp>(pp.val);
+  checkBounds<Constants::MovePp>(pp.val);
 }
 
 template <>
 void check(const MaxPp& maxPp) {
-  checkBounds<MechanicConstants::MoveMaxPp>(maxPp.val);
+  checkBounds<Constants::MoveMaxPp>(maxPp.val);
 }
 
 template <>
@@ -1041,12 +1042,12 @@ void check(const BaseStats& baseStats) {
 
 template <>
 void check(const Position& position) {
-  checkBounds<MechanicConstants::TeamSize>(position.val);
+  checkBounds<Constants::TeamSize>(position.val);
 }
 
 template <>
 void check(const MovePriority& movePriority) {
-  checkBounds<MechanicConstants::MovePriority>(movePriority.val);
+  checkBounds<Constants::MovePriority>(movePriority.val);
 }
 
 template <>
@@ -1147,12 +1148,12 @@ template <>
 void check(const SpeedTieIndexes& speedTieIndexes) {
   types::activePokemonIndex total = 0U;
   for (const auto& span : speedTieIndexes.val) {
-    checkBounds<MechanicConstants::ActivePokemon>(span.start);
-    checkBounds<MechanicConstants::ActivePokemon>(span.length);
-    checkBounds<MechanicConstants::ActivePokemon>(span.start + span.length);
+    checkBounds<Constants::ActivePokemon>(span.start);
+    checkBounds<Constants::ActivePokemon>(span.length);
+    checkBounds<Constants::ActivePokemon>(span.start + span.length);
     total += span.length;
   }
-  checkBounds<MechanicConstants::ActivePokemon>(total);
+  checkBounds<Constants::ActivePokemon>(total);
 }
 
 template <>
@@ -1169,13 +1170,13 @@ void check(const simulate_turn::TurnOutcomeBattles& teamOutcomeBattles, const ty
 
 template <>
 void check(const calc_damage::UsesUntilKo& usesUntilKo) {
-  checkBounds<MechanicConstants::DamageRollCount>(usesUntilKo.val.size());
+  checkBounds<Constants::DamageRollCount>(usesUntilKo.val.size());
 
   types::moveHits lastHits = 0U;
   types::damageRollIndex totalDamageRollsIncluded = 0U;
   for (const auto& useUntilKo : usesUntilKo.val) {
-    checkBounds<MechanicConstants::PokemonHpStat>(useUntilKo.hits);  // TODO(aed3): What if a move does no damage?
-    checkBounds<MechanicConstants::DamageRollCount>(useUntilKo.damageRollsIncluded);
+    checkBounds<Constants::PokemonHpStat>(useUntilKo.hits);  // TODO(aed3): What if a move does no damage?
+    checkBounds<Constants::DamageRollCount>(useUntilKo.damageRollsIncluded);
     POKESIM_REQUIRE(lastHits < useUntilKo.hits, "The list should be in order from least to most hits.");
     totalDamageRollsIncluded += useUntilKo.damageRollsIncluded;
     lastHits = useUntilKo.hits;
@@ -1184,7 +1185,7 @@ void check(const calc_damage::UsesUntilKo& usesUntilKo) {
   POKESIM_REQUIRE_NM(usesUntilKo.minUses() == usesUntilKo.val.front());
   POKESIM_REQUIRE_NM(usesUntilKo.maxUses() == usesUntilKo.val.back());
 
-  POKESIM_REQUIRE_NM(totalDamageRollsIncluded == MechanicConstants::DamageRollCount::MAX);
+  POKESIM_REQUIRE_NM(totalDamageRollsIncluded == Constants::DamageRollCount::MAX);
 }
 
 template <>
@@ -1199,7 +1200,7 @@ void check(const calc_damage::AttackerHpLost& attackerHpLost) {
 
 template <>
 void check(const analyze_effect::EffectMultiplier& effectiveMultiplier) {
-  checkBounds<MechanicConstants::AnalyzeEffectMultiplier>(effectiveMultiplier.val);
+  checkBounds<Constants::AnalyzeEffectMultiplier>(effectiveMultiplier.val);
 }
 
 template <>
@@ -1214,7 +1215,7 @@ void check(const SpeciesTypes& speciesTypes) {
 template <>
 void check(const SpeedSort& speedSort) {
   POKESIM_REQUIRE_NM(listContains(VALID_ACTION_ORDERS, speedSort.order));
-  checkBounds<MechanicConstants::MovePriority>(speedSort.priority);
+  checkBounds<Constants::MovePriority>(speedSort.priority);
   checkStat(speedSort.speed);
 }
 
@@ -1250,7 +1251,7 @@ void check(const stat::Spe& spe) {
 
 template <>
 void check(const stat::CurrentHp& hp) {
-  checkBounds<MechanicConstants::PokemonCurrentHpStat>(hp.val);
+  checkBounds<Constants::PokemonCurrentHpStat>(hp.val);
 }
 
 template <>
@@ -1280,7 +1281,7 @@ void check(const stat::EffectiveSpe& spe) {
 
 template <>
 void check(const Turn& turn) {
-  checkBounds<MechanicConstants::TurnCount>(turn.val);
+  checkBounds<Constants::TurnCount>(turn.val);
 }
 
 template <>
@@ -1384,7 +1385,7 @@ types::stat setPokemonStats(
   const BaseStats& baseStats = pokedex.getSpeciesData<BaseStats>(pokemonInfo.species);
 
   auto getStat = [&](dex::Stat statName) {
-    types::baseStat baseStat = MechanicConstants::PokemonBaseStat::DEFAULT;
+    types::baseStat baseStat = Constants::PokemonBaseStat::DEFAULT;
     std::optional<types::stat> givenStat = std::nullopt;
 
     if (statName == dex::Stat::HP) {
@@ -1451,7 +1452,7 @@ types::entityVector Simulation::createInitialMoves(const std::vector<MoveCreatio
   for (const MoveCreationInfo& moveInfo : moveInfoList) {
     MoveStateSetup moveSetup(registry);
     moveSetup.setName(moveInfo.name);
-    types::pp maxPp = MechanicConstants::MoveMaxPp::DEFAULT;
+    types::pp maxPp = Constants::MoveMaxPp::DEFAULT;
     if (!moveInfo.pp.has_value() || !moveInfo.maxPp.has_value()) {
       maxPp = pokedex().getMoveData<Pp>(moveInfo.name).val;
     }
@@ -1477,7 +1478,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
   pokemonSetup.setSpecies(pokemonInfo.species);
   setPokemonAbility(pokemonInfo, pokemonSetup, pokedex());
 
-  types::level level = pokemonInfo.level.value_or(MechanicConstants::PokemonLevel::DEFAULT);
+  types::level level = pokemonInfo.level.value_or(Constants::PokemonLevel::DEFAULT);
   dex::Nature nature = setPokemonNature(pokemonInfo, pokemonSetup);
   Evs evs = setPokemonEvs(pokemonInfo, pokemonSetup);
   Ivs ivs = setPokemonIvs(pokemonInfo, pokemonSetup);
@@ -1506,7 +1507,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
 
   pokemonSetup.setCurrentHp(pokemonInfo.currentHp.value_or(hp));
 
-  if (pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN) {
+  if (pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == Constants::PokemonCurrentHpStat::MIN) {
     pokemonSetup.setProperty<tags::Fainted>();
   }
 
@@ -1523,16 +1524,15 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
 
 void Simulation::createInitialSide(
   SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo) {
-  internal::maxSizedVector<PokemonStateSetup, MechanicConstants::TeamSize::MAX> pokemonSetupList;
+  internal::maxSizedVector<PokemonStateSetup, Constants::TeamSize::MAX> pokemonSetupList;
   pokemonSetupList.reserve(sideInfo.team.size());
 
   for (std::size_t i = 0U; i < sideInfo.team.size(); i++) {
     const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];
     PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonInfo);
-    bool battleStarted = battleInfo.turn > MechanicConstants::TurnCount::MIN;
+    bool battleStarted = battleInfo.turn > Constants::TurnCount::MIN;
     bool inActiveSlot = (isBattleFormat(BattleFormat::SINGLES) ? 1U : 2U) > i;
-    bool isFainted =
-      pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN;
+    bool isFainted = pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == Constants::PokemonCurrentHpStat::MIN;
     if (battleStarted && inActiveSlot && !isFainted) {
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
@@ -1572,9 +1572,9 @@ void Simulation::createInitialSide(
 types::sides<SideStateSetup> Simulation::createInitialBattle(
   BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo) {
   battleStateSetup.setAutoID();
-  battleStateSetup.setTurn(battleInfo.turn.value_or(MechanicConstants::TurnCount::DEFAULT));
+  battleStateSetup.setTurn(battleInfo.turn.value_or(Constants::TurnCount::DEFAULT));
   battleStateSetup.setRNGSeed(battleInfo.rngSeed);
-  battleStateSetup.setProbability(battleInfo.probability.value_or(MechanicConstants::Probability::DEFAULT));
+  battleStateSetup.setProbability(battleInfo.probability.value_or(Constants::Probability::DEFAULT));
 
   if (battleInfo.runWithSimulateTurn) {
     battleStateSetup.setProperty<tags::SimulateTurn>();
@@ -1789,9 +1789,9 @@ types::view<MultipliedUsesUntilKo> Results::multipliedUsesUntilKoResults() const
 
 namespace pokesim {
 Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
-    : Simulation(Constants{pokedex_, battleFormat_}) {}
+    : Simulation(ConstantValues{pokedex_, battleFormat_}) {}
 
-Simulation::Simulation(const Constants& other) : constants(other) {
+Simulation::Simulation(const ConstantValues& other) : constants(other) {
   Pokedex::attachSimulation(&constants.pokedex(), this);
 }
 
@@ -2150,7 +2150,7 @@ void deductMoveHitCount(types::handle moveHandle, HitCount& hitCount) {
 }
 
 void removeHitCountFromFaintedTargets(types::handle moveHandle, CurrentActionTarget target) {
-  if (moveHandle.registry()->get<stat::CurrentHp>(target.val).val == MechanicConstants::PokemonCurrentHpStat::MIN) {
+  if (moveHandle.registry()->get<stat::CurrentHp>(target.val).val == Constants::PokemonCurrentHpStat::MIN) {
     moveHandle.remove<HitCount, tags::CurrentMoveHit>();
   }
 }
@@ -2219,7 +2219,7 @@ void removeFaintedSecondaryEffectTarget(
   const simulate_turn::Options& options) {
   types::registry& registry = *handle.registry();
   internal::PercentChanceLimitResult limitReached = internal::checkPercentChanceLimits(
-    baseEffectChance.val * MechanicConstants::PercentChanceToProbability,
+    baseEffectChance.val * Constants::PercentChanceToProbability,
     registry.get<Probability>(battle.val).val,
     options);
 
@@ -2227,7 +2227,7 @@ void removeFaintedSecondaryEffectTarget(
     return;
   }
   types::stat hp = registry.get<stat::CurrentHp>(target.val).val;
-  if (hp == MechanicConstants::PokemonCurrentHpStat::MIN) {
+  if (hp == Constants::PokemonCurrentHpStat::MIN) {
     handle.remove<move::effect::tags::Secondary>();
   }
 }
@@ -2263,7 +2263,7 @@ void setMoveHitCount(Simulation& simulation) {
 
   runRandomEventChances<4U, tags::CurrentMoveHit, move::tags::VariableHitCount>(
     simulation,
-    MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES,
+    Constants::PROGRESSIVE_MULTI_HIT_CHANCES,
     [](Simulation& sim) {
       sim.addToEntities<HitCount, pokesim::internal::tags::RandomEventA>(HitCount{2U});
       sim.addToEntities<HitCount, pokesim::internal::tags::RandomEventB>(HitCount{3U});
@@ -2314,7 +2314,7 @@ void accuracyCheck(Simulation& simulation) {
 void moveHitLoop(Simulation& simulation) {
   setMoveHitCount(simulation);
 
-  using MoveHitLimits = MechanicConstants::MoveHits;
+  using MoveHitLimits = Constants::MoveHits;
   types::moveHits iterations = MoveHitLimits::MIN;
   while (!simulation.registry.view<HitCount>().empty()) {
     POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran more than possible.");
@@ -2502,7 +2502,7 @@ void checkWin(types::handle battleHandle, const Sides& sides) {
 }
 
 void faintPokemon(Simulation& simulation) {
-  using LoopLimits = MechanicConstants::ActivePokemon;
+  using LoopLimits = Constants::ActivePokemon;
   types::activePokemonIndex iterations = LoopLimits::MIN;
   while (!simulation.registry.view<FaintQueue>().empty()) {
     POKESIM_REQUIRE(
@@ -2608,7 +2608,7 @@ void simulateTurn(Simulation& simulation) {
   simulation.addToEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SelectedForViewBattle>();
 
   simulation.viewForSelectedBattles<setCurrentAction>();
-  using ActionsLimit = MechanicConstants::ActionQueueLength;
+  using ActionsLimit = Constants::ActionQueueLength;
   types::actionQueueIndex actionsTaken = ActionsLimit::MIN;
   while (!simulation.registry.view<action::tags::Current>().empty()) {
     POKESIM_REQUIRE(
@@ -2715,7 +2715,7 @@ void updateProbabilityFromRandomEqualChance(
   types::eventPossibilities possibleEventCount) {
   Probability& probability = registry.get<Probability>(battle.val);
 
-  updateProbability(probability, MechanicConstants::Probability::MAX / (types::probability)possibleEventCount);
+  updateProbability(probability, Constants::Probability::MAX / (types::probability)possibleEventCount);
 }
 
 void updateProbabilityFromRandomEventCount(
@@ -2729,8 +2729,7 @@ template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void assignRandomEvent(
   types::handle handle, const Battle& battle, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::percentChance rng =
-    (types::percentChance)nextBoundedRandomValue(rngSeed, MechanicConstants::PercentChance::MAX);
+  types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, Constants::PercentChance::MAX);
 
   if (rng <= eventChances.val[0]) {
     handle.emplace<tags::RandomEventA>();
@@ -2914,8 +2913,8 @@ void randomChanceEvent(
 
 PercentChanceLimitResult checkPercentChanceLimits(
   types::probability eventProbability, types::probability probability, const simulate_turn::Options& options) {
-  static constexpr auto ProbabilityMax = MechanicConstants::Probability::MAX;
-  static constexpr auto ProbabilityMin = MechanicConstants::Probability::MIN;
+  static constexpr auto ProbabilityMax = Constants::Probability::MAX;
+  static constexpr auto ProbabilityMin = Constants::Probability::MIN;
   static constexpr types::probability PassFailBoundary = (ProbabilityMax - ProbabilityMin) / 2U;
 
   bool skipBranch = false;
@@ -2928,14 +2927,12 @@ PercentChanceLimitResult checkPercentChanceLimits(
   }
 
   if (
-    eventProbability >= options.getRandomChanceUpperLimit() * MechanicConstants::PercentChanceToProbability ||
+    eventProbability >= options.getRandomChanceUpperLimit() * Constants::PercentChanceToProbability ||
     (skipBranch && eventProbability >= PassFailBoundary)) {
     return PercentChanceLimitResult::REACHED_PASS_LIMIT;
   }
 
-  if (
-    eventProbability <= options.getRandomChanceLowerLimit() * MechanicConstants::PercentChanceToProbability ||
-    skipBranch) {
+  if (eventProbability <= options.getRandomChanceLowerLimit() * Constants::PercentChanceToProbability || skipBranch) {
     return PercentChanceLimitResult::REACHED_FAIL_LIMIT;
   }
 
@@ -2947,7 +2944,7 @@ void setRandomEventChances(
   types::handle handle, const Simulation& simulation,
   const std::array<types::percentChance, POSSIBLE_EVENT_COUNT>& chances) {
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
-  if (chances.back() == MechanicConstants::PercentChance::MAX) {
+  if (chances.back() == Constants::PercentChance::MAX) {
     for (types::eventPossibilities i = 1U; i < POSSIBLE_EVENT_COUNT; i++) {
       POKESIM_REQUIRE(
         chances[i - 1] <= chances[i],
@@ -2962,9 +2959,9 @@ void setRandomEventChances(
     }
 
     POKESIM_REQUIRE(
-      chanceSum == MechanicConstants::PercentChance::MAX,
+      chanceSum == Constants::PercentChance::MAX,
       "The total probability of all possible outcomes should add up to " +
-        std::to_string(MechanicConstants::PercentChance::MAX) + "%.");
+        std::to_string(Constants::PercentChance::MAX) + "%.");
   }
 #endif
 
@@ -3014,7 +3011,7 @@ void setRandomBinaryChanceFromPercentChance(
     handle,
     battle,
     simulation,
-    MechanicConstants::PercentChanceToProbability * percentChance);
+    Constants::PercentChanceToProbability * percentChance);
 }
 
 void setRandomEqualChance(types::handle handle, const Simulation& simulation) {
@@ -3035,7 +3032,7 @@ void setRandomEventCounts(
 
   PercentChanceLimitResult limitReached = PercentChanceLimitResult::NO_LIMIT_REACHED;
   if (!forRequiredDamageRolls) {
-    types::probability eventProbability = MechanicConstants::Probability::MAX / eventPossibilities;
+    types::probability eventProbability = Constants::Probability::MAX / eventPossibilities;
     types::probability probability = handle.registry()->get<Probability>(battle.val).val;
     limitReached = checkPercentChanceLimits(eventProbability, probability, simulation.simulateTurnOptions);
   }
@@ -3117,8 +3114,7 @@ void randomEqualChance(
     sim.view<updateProbabilityFromRandomEqualChance>(possibleEventCount);
   };
 
-  types::entityIndex cloneCount =
-    possibleEventCount > MechanicConstants::DamageRollCount::MAX ? 0U : possibleEventCount - 1U;
+  types::entityIndex cloneCount = possibleEventCount > Constants::DamageRollCount::MAX ? 0U : possibleEventCount - 1U;
 
   if (updateProbabilities.has_value()) {
     randomChanceEvent<
@@ -3239,8 +3235,8 @@ void resolveSlotDecisions(
       actionHandle.emplace<MoveName>(decision.moveChoice.value());
 
       speedSort.order = ActionOrder::MOVE;
-      speedSort.priority = MechanicConstants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
-      speedSort.fractionalPriority = false;                           // TODO (aed3): get fractionalPriority
+      speedSort.priority = Constants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
+      speedSort.fractionalPriority = false;                   // TODO (aed3): get fractionalPriority
     }
     else if (decision.itemChoice.has_value()) {
       actionHandle.emplace<action::tags::Item>();
@@ -3276,7 +3272,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
 
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     POKESIM_REQUIRE(
-      registry.get<Turn>(battle.val).val != MechanicConstants::TurnCount::MIN,
+      registry.get<Turn>(battle.val).val != Constants::TurnCount::MIN,
       "Slot decisions only have an effect after a battle starts. Make sure to pass a `teamOrder` decision at the start "
       "of a battle (aka team preview).");
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
@@ -3300,7 +3296,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
   }
   else if (sideDecision.decisions.holds<types::teamOrder>()) {
     POKESIM_REQUIRE(
-      registry.get<Turn>(battle.val).val == MechanicConstants::TurnCount::MIN,
+      registry.get<Turn>(battle.val).val == Constants::TurnCount::MIN,
       "Team order decisions only have an effect at the start of a battle (aka team preview). Make sure to pass a "
       "`slotDecisions` decision for battles in progress.");
     const auto& teamOrder = sideDecision.decisions.get<types::teamOrder>();
@@ -3322,8 +3318,7 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   if (entityList.size() == 1U) return;
   const types::registry* registry = handle.registry();
 
-  internal::maxSizedVector<std::pair<SpeedSort, types::entity>, MechanicConstants::ActionQueueLength::MAX>
-    speedSortList;
+  internal::maxSizedVector<std::pair<SpeedSort, types::entity>, Constants::ActionQueueLength::MAX> speedSortList;
   speedSortList.reserve(entityList.size());
 
   for (types::entity entity : entityList) {
@@ -3479,7 +3474,7 @@ void assignAllDamageRollProbability(
   POKESIM_REQUIRE(damageCount > 0U, "How was a damage roll not found that matched the damage dealt?");
 
   Probability& probability = registry.get<Probability>(battle.val);
-  probability.val *= damageCount / (types::probability)MechanicConstants::DamageRollCount::MAX;
+  probability.val *= damageCount / (types::probability)Constants::DamageRollCount::MAX;
 }
 
 types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {
@@ -3839,7 +3834,7 @@ struct BuildMove {
       move.setPrimaryEffect<EffectType>(effectValues...);
     }
     else {
-      types::percentChance chance = MechanicConstants::MoveBaseEffectChance::DEFAULT;
+      types::percentChance chance = Constants::MoveBaseEffectChance::DEFAULT;
       if constexpr (has<Optional::chance, EffectData>::value) {
         chance = EffectData::chance(gameMechanic);
       }
@@ -3856,7 +3851,7 @@ struct BuildMove {
       (move.setPrimaryEffect<EffectTypes>(), ...);
     }
     else {
-      types::percentChance chance = MechanicConstants::MoveBaseEffectChance::DEFAULT;
+      types::percentChance chance = Constants::MoveBaseEffectChance::DEFAULT;
       if constexpr (has<Optional::chance, EffectData>::value) {
         chance = EffectData::chance(gameMechanic);
       }
@@ -4242,13 +4237,13 @@ namespace pokesim::dex {
 namespace {
 void knockOffOnBasePowerCheckRemovableItem(
   types::registry& registry, CurrentActionSource source, CurrentActionTarget target) {
-  if (registry.get<stat::CurrentHp>(source.val).val > MechanicConstants::PokemonCurrentHpStat::MIN) {
+  if (registry.get<stat::CurrentHp>(source.val).val > Constants::PokemonCurrentHpStat::MIN) {
     registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
   }
 }
 
 void knockOffOnAfterHitCheckRemovableItem(types::registry& registry, CurrentActionTarget target) {
-  if (registry.get<stat::CurrentHp>(target.val).val > MechanicConstants::PokemonCurrentHpStat::MIN) {
+  if (registry.get<stat::CurrentHp>(target.val).val > Constants::PokemonCurrentHpStat::MIN) {
     registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
   }
 }
@@ -4682,12 +4677,12 @@ void checkForAndApplyTypeEffectiveness(
   modifier.typeEffectiveness = getAttackEffectiveness(defenderTypes, type.val, pokedex.typeChart());
 }
 
-void applyCritDamageIncrease(Damage& damage) {
-  damage.val = (types::damage)(damage.val * MechanicConstants::CRIT_MULTIPLIER);
+void applyCritDamageIncrease(Damage& damage, types::effectMultiplier critMultiplier) {
+  damage.val = (types::damage)(damage.val * critMultiplier);
 }
 
 void setDamageToMinimumPossible(Damage& damage) {
-  damage.val = std::max(damage.val, MechanicConstants::Damage::MIN);
+  damage.val = std::max(damage.val, Constants::Damage::MIN);
 }
 
 void setDefendingSide(types::handle moveHandle, Defender defender) {
@@ -4713,7 +4708,7 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Po
   types::effectMultiplier stab = ((std::underlying_type_t<StabBoostKind>)modifiers.stab) / 100.0F;
   damage.val = (types::damage)fixedPointMultiply(damage.val, stab);
 
-  types::eventModifier typeEffectivenessModifier = MechanicConstants::FIXED_POINT_SCALE;
+  types::eventModifier typeEffectivenessModifier = Constants::FIXED_POINT_SCALE;
   if (modifiers.typeEffectiveness < 0) {
     typeEffectivenessModifier = typeEffectivenessModifier >> -modifiers.typeEffectiveness;
   }
@@ -4734,8 +4729,8 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Po
 
 void calculateAllDamageRolls(
   DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
-  damageRolls.val.reserve(MechanicConstants::DamageRollCount::MAX);
-  for (types::damageRollIndex i = 0U; i < MechanicConstants::DamageRollCount::MAX; i++) {
+  damageRolls.val.reserve(Constants::DamageRollCount::MAX);
+  for (types::damageRollIndex i = 0U; i < Constants::DamageRollCount::MAX; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
     damageRoll.val = computeDamageRoll(damageRoll.val, i);
     modifyDamage(damageRoll, modifier, pokedex);
@@ -4771,10 +4766,10 @@ void reduceDamageRollsToDefenderHp(
   damage.val = std::min(defenderHp.val, damage.val);
 }
 
-void assignCritChanceDivisor(types::handle moveHandle, CritBoost critBoost) {
-  std::size_t index =
-    std::min((std::size_t)critBoost.val, pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS.size() - 1U);
-  moveHandle.emplace<CritChanceDivisor>(pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS[index]);
+void assignCritChanceDivisor(
+  types::handle moveHandle, CritBoost critBoost, const std::array<types::percentChance, 4U>& critChanceDivisors) {
+  std::size_t index = std::min((std::size_t)critBoost.val, critChanceDivisors.size() - 1U);
+  moveHandle.emplace<CritChanceDivisor>(critChanceDivisors[index]);
 }
 
 void setSourceLevel(types::handle moveHandle, Attacker attacker) {
@@ -4783,7 +4778,7 @@ void setSourceLevel(types::handle moveHandle, Attacker attacker) {
 
 template <typename Category>
 void setUsedAttackStat(types::handle moveHandle, Attacker attacker) {
-  types::stat attackingStat = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat attackingStat = Constants::PokemonEffectiveStat::DEFAULT;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     attackingStat = moveHandle.registry()->get<stat::EffectiveAtk>(attacker.val).val;
     moveHandle.emplace<tags::UsesAtk>();
@@ -4797,7 +4792,7 @@ void setUsedAttackStat(types::handle moveHandle, Attacker attacker) {
 
 template <typename Category>
 void setUsedDefenseStat(types::handle moveHandle, Defender defender) {
-  types::stat defendingStat = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat defendingStat = Constants::PokemonEffectiveStat::DEFAULT;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     defendingStat = moveHandle.registry()->get<stat::EffectiveDef>(defender.val).val;
     moveHandle.emplace<tags::UsesDef>();
@@ -4812,7 +4807,7 @@ void setUsedDefenseStat(types::handle moveHandle, Defender defender) {
 template <typename BoostType>
 void setIgnoreAttackingBoostIfNegative(types::handle moveHandle, Attacker attacker) {
   BoostType* boost = moveHandle.registry()->try_get<BoostType>(attacker.val);
-  if (boost && boost->val < MechanicConstants::PokemonStatBoost::DEFAULT) {
+  if (boost && boost->val < Constants::PokemonStatBoost::DEFAULT) {
     moveHandle.emplace<tags::IgnoresAttackingBoost>();
   }
 }
@@ -4820,7 +4815,7 @@ void setIgnoreAttackingBoostIfNegative(types::handle moveHandle, Attacker attack
 template <typename BoostType>
 void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, Defender defender) {
   BoostType* boost = moveHandle.registry()->try_get<BoostType>(defender.val);
-  if (boost && boost->val > MechanicConstants::PokemonStatBoost::DEFAULT) {
+  if (boost && boost->val > Constants::PokemonStatBoost::DEFAULT) {
     moveHandle.emplace<tags::IgnoresDefendingBoost>();
   }
 }
@@ -4835,7 +4830,7 @@ void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, 
   const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
   UsesUntilKo usesUntilKo;
   POKESIM_REQUIRE(
-    damageRolls.val.size() == MechanicConstants::DamageRollCount::MAX,
+    damageRolls.val.size() == Constants::DamageRollCount::MAX,
     "All the damage rolls are needed to calculate this correctly.");
 
   for (const Damage& damageRoll : damageRolls.val) {
@@ -4929,7 +4924,8 @@ void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
   if constexpr (std::is_same_v<SimulationTag, pokesim::tags::SimulateTurn>) {
     simulation.addToEntities<calc_damage::CritBoost, pokesim::tags::SelectedForViewMove, pokesim::tags::SimulateTurn>();
     runModifyCritBoostEvent(simulation);
-    simulation.viewForSelectedMoves<assignCritChanceDivisor>();
+    simulation.viewForSelectedMoves<assignCritChanceDivisor>(
+      simulation.pokedex().getStaticValue<MechanicConstants::CRIT_CHANCE_DIVISORS>());
     simulation.registry.clear<CritBoost>();
 
     simulate_turn::setIfMoveCrits(simulation);
@@ -5105,7 +5101,8 @@ void calcDamage(Simulation& simulation) {
   setDamageFormulaVariables(simulation);
 
   simulation.viewForSelectedMoves<calculateBaseDamage>();
-  simulation.viewForSelectedMoves<applyCritDamageIncrease, Tags<tags::Crit>>();
+  simulation.viewForSelectedMoves<applyCritDamageIncrease, Tags<tags::Crit>>(
+    simulation.pokedex().getStaticValue<MechanicConstants::CRIT_MULTIPLIER>());
 
   simulation.addToEntities<DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
   setDamageRollModifiers(simulation);
@@ -5381,8 +5378,8 @@ void BattleStateSetup::initBlank() {
   handle.emplace<Sides>();
   handle.emplace<ActionQueue>();
   setAutoID();
-  setTurn(MechanicConstants::TurnCount::DEFAULT);
-  setProbability(MechanicConstants::Probability::DEFAULT);
+  setTurn(Constants::TurnCount::DEFAULT);
+  setProbability(Constants::Probability::DEFAULT);
 }
 
 void BattleStateSetup::setAutoID() {
@@ -5490,7 +5487,7 @@ void boostStat(types::registry& registry, CurrentEffectTarget target, BoostType&
   if (boost.val) {
     registry.emplace_or_replace<StatUpdateRequired>(target.val);
   }
-  if (currentBoost.val == MechanicConstants::PokemonStatBoost::DEFAULT) {
+  if (currentBoost.val == Constants::PokemonStatBoost::DEFAULT) {
     registry.remove<BoostType>(target.val);
   }
 }
@@ -5502,7 +5499,7 @@ void clampBoost(types::registry& registry, CurrentEffectTarget target, BoostType
     return;
   }
 
-  using BoostLimits = MechanicConstants::PokemonStatBoost;
+  using BoostLimits = Constants::PokemonStatBoost;
 
   types::boost combinedBoost = currentBoost->val + boost.val;
   if (combinedBoost > BoostLimits::MAX) {
@@ -5705,17 +5702,17 @@ void applyDamage(types::handle pokemonHandle, types::damage damage) {
     hp.val -= damage;
   }
   else {
-    hp.val = MechanicConstants::PokemonCurrentHpStat::MIN;
+    hp.val = Constants::PokemonCurrentHpStat::MIN;
     faint(pokemonHandle, pokemonHandle.get<Battle>());
   }
 }
 
 void applyStatBoost(types::stat& stat, types::boost boost) {
   if (boost >= 0) {
-    stat = types::stat(stat * MechanicConstants::STAT_BOOST_STAGES[boost]);
+    stat = types::stat(stat * Constants::STAT_BOOST_STAGES[boost]);
   }
   else {
-    stat = types::stat(stat / MechanicConstants::STAT_BOOST_STAGES[-boost]);
+    stat = types::stat(stat / Constants::STAT_BOOST_STAGES[-boost]);
   }
 }
 

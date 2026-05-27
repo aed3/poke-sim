@@ -238,7 +238,7 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(abilityName == nullptr);
     }
 
-    POKESIM_REQUIRE_NM(level.val == creationInfo.level.value_or(MechanicConstants::PokemonLevel::DEFAULT));
+    POKESIM_REQUIRE_NM(level.val == creationInfo.level.value_or(Constants::PokemonLevel::DEFAULT));
 
     if (!creationInfo.item.has_value() || creationInfo.item == dex::Item::NO_ITEM) {
       POKESIM_REQUIRE_NM(!registry->all_of<ItemName>(pokemonEntity));
@@ -290,7 +290,7 @@ struct SimulationSetupChecks {
 
     if (creationInfo.currentHp.has_value()) {
       POKESIM_REQUIRE_NM(registry->get<stat::CurrentHp>(pokemonEntity).val == creationInfo.currentHp);
-      if (creationInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN) {
+      if (creationInfo.currentHp == Constants::PokemonCurrentHpStat::MIN) {
         POKESIM_REQUIRE_NM(registry->all_of<tags::Fainted>(pokemonEntity));
       }
       else {
@@ -338,8 +338,8 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<RngSeed>(battleEntity));
     const auto& [sides, turn, probability, rngSeed] = registry->get<Sides, Turn, Probability, RngSeed>(battleEntity);
 
-    POKESIM_REQUIRE_NM(turn.val == creationInfo.turn.value_or(MechanicConstants::TurnCount::DEFAULT));
-    POKESIM_REQUIRE_NM(probability.val == creationInfo.probability.value_or(MechanicConstants::Probability::DEFAULT));
+    POKESIM_REQUIRE_NM(turn.val == creationInfo.turn.value_or(Constants::TurnCount::DEFAULT));
+    POKESIM_REQUIRE_NM(probability.val == creationInfo.probability.value_or(Constants::Probability::DEFAULT));
 
     if (creationInfo.rngSeed) {
       POKESIM_REQUIRE_NM(rngSeed.val == creationInfo.rngSeed);
@@ -348,7 +348,7 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(rngSeed.val != 0U);
     }
 
-    POKESIM_REQUIRE_NM(sides.val.size() == MechanicConstants::SIDE_COUNT);
+    POKESIM_REQUIRE_NM(sides.val.size() == Constants::SIDE_COUNT);
     for (types::sideIndex i = 0U; i < sides.val.size(); i++) {
       checkCreatedSide(sides.val[i], creationInfo.sides[i]);
       POKESIM_REQUIRE_NM(registry->get<Battle>(sides.val[i]).val == battleEntity);
@@ -364,8 +364,8 @@ struct SimulationSetupChecks {
   void checkTurnDecision(types::entity battleEntity, const TurnDecisionInfo& turnDecisionInfo) const {
     const auto& sides = registry->get<Sides>(battleEntity).val;
 
-    POKESIM_REQUIRE_NM(sides.size() == MechanicConstants::SIDE_COUNT);
-    for (types::sideIndex side = 0U; side < MechanicConstants::SIDE_COUNT; side++) {
+    POKESIM_REQUIRE_NM(sides.size() == Constants::SIDE_COUNT);
+    for (types::sideIndex side = 0U; side < Constants::SIDE_COUNT; side++) {
       const auto& sideDecision = registry->get<SideDecision>(sides[side]);
       const auto& sideDecisionInfo = turnDecisionInfo[side];
 

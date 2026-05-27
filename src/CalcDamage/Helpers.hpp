@@ -2,8 +2,8 @@
 
 #include <Components/Damage.hpp>
 #include <Config/Require.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Enums/DamageRollKind.hpp>
-#include <Types/MechanicConstants.hpp>
 
 namespace pokesim::calc_damage {
 inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, DamageRollKind damageRollKind) {
@@ -11,9 +11,9 @@ inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, Damage
 
   if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
     POKESIM_REQUIRE(
-      damageRolls.val.size() == MechanicConstants::DamageRollCount::MAX,
+      damageRolls.val.size() == Constants::DamageRollCount::MAX,
       "DamageRolls does not have all rolls yet.");
-    return damageRolls.val[MechanicConstants::DamageRollCount::MAX / 2].val;
+    return damageRolls.val[Constants::DamageRollCount::MAX / 2].val;
   }
   POKESIM_REQUIRE(damageRollKind & DamageRollKind::AVERAGE_DAMAGE, "DamageRolls does not contain average.");
 

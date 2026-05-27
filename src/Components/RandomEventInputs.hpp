@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Types/MechanicConstants.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Random.hpp>
 #include <Types/State.hpp>
 #include <array>
@@ -33,29 +33,29 @@ struct RandomEventChances {
     RANDOM_OPTIONS <= internal::MAX_TYPICAL_RANDOM_OPTIONS,
     "Random events with more options than this should use RandomEqualChance or RandomEventCount");
 
-  types::probability probabilityA() const { return MechanicConstants::PercentChanceToProbability * val[0]; }
-  types::probability probabilityB() const { return MechanicConstants::PercentChanceToProbability * (val[1] - val[0]); }
+  types::probability probabilityA() const { return Constants::PercentChanceToProbability * val[0]; }
+  types::probability probabilityB() const { return Constants::PercentChanceToProbability * (val[1] - val[0]); }
   types::probability probabilityC() const {
     static_assert(RANDOM_OPTIONS >= 3U, "This function is only for events with more than 2 outcomes.");
-    return MechanicConstants::PercentChanceToProbability * (val[2] - val[1]);
+    return Constants::PercentChanceToProbability * (val[2] - val[1]);
   }
   types::probability probabilityD() const {
     static_assert(RANDOM_OPTIONS >= 4U, "This function is only for events with more than 3 outcomes.");
-    return MechanicConstants::PercentChanceToProbability * (val[3] - val[2]);
+    return Constants::PercentChanceToProbability * (val[3] - val[2]);
   }
   types::probability probabilityE() const {
     static_assert(RANDOM_OPTIONS == 5U, "This function is only for events with 5 outcomes.");
-    return MechanicConstants::PercentChanceToProbability * (val[4] - val[3]);
+    return Constants::PercentChanceToProbability * (val[4] - val[3]);
   }
 };
 
 // Used for random events that always have two outcomes where the chance the events happens may not be equal (i.e. move
 // accuracy checks, secondary move effects)
 struct RandomBinaryProbability {
-  types::probability val = MechanicConstants::Probability::DEFAULT;
+  types::probability val = Constants::Probability::DEFAULT;
 
   types::probability pass() const { return val; }
-  types::probability fail() const { return MechanicConstants::Probability::MAX - pass(); }
+  types::probability fail() const { return Constants::Probability::MAX - pass(); }
 };
 
 namespace tags {
@@ -69,7 +69,7 @@ struct RandomEqualChance {};
 struct RandomEventCount {
   types::eventPossibilities val = 0U;
 
-  types::probability probability() const { return MechanicConstants::Probability::MAX / val; }
+  types::probability probability() const { return Constants::Probability::MAX / val; }
 };
 
 template <types::eventPossibilities RANDOM_OPTIONS>

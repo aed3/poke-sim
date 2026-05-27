@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Types/MechanicConstants.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Random.hpp>
 
 namespace pokesim {
@@ -10,6 +10,6 @@ namespace pokesim {
  * Calculated by multiplying the various Accuracy and Chance numbers of a battle state's events.
  */
 struct Probability {
-  types::probability val = MechanicConstants::Probability::DEFAULT;
+  types::probability val = Constants::Probability::DEFAULT;
 };
 }  // namespace pokesim

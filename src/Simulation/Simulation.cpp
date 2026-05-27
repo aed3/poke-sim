@@ -14,9 +14,9 @@
 
 namespace pokesim {
 Simulation::Simulation(const Pokedex& pokedex_, BattleFormat battleFormat_)
-    : Simulation(Constants{pokedex_, battleFormat_}) {}
+    : Simulation(ConstantValues{pokedex_, battleFormat_}) {}
 
-Simulation::Simulation(const Constants& other) : constants(other) {
+Simulation::Simulation(const ConstantValues& other) : constants(other) {
   Pokedex::attachSimulation(&constants.pokedex(), this);
 }
 

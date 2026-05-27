@@ -1,10 +1,10 @@
 #pragma once
 
-#include <Types/MechanicConstants.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Move.hpp>
 
 namespace pokesim {
 struct MovePriority {
-  types::priority val = MechanicConstants::MovePriority::DEFAULT;
+  types::priority val = Constants::MovePriority::DEFAULT;
 };
 }  // namespace pokesim

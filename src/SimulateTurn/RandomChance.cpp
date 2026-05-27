@@ -11,8 +11,8 @@
 #include <Components/Tags/Current.hpp>
 #include <Config/Require.hpp>
 #include <Simulation/Simulation.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Damage.hpp>
-#include <Types/MechanicConstants.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
@@ -92,7 +92,7 @@ void updateProbabilityFromRandomEqualChance(
   types::eventPossibilities possibleEventCount) {
   Probability& probability = registry.get<Probability>(battle.val);
 
-  updateProbability(probability, MechanicConstants::Probability::MAX / (types::probability)possibleEventCount);
+  updateProbability(probability, Constants::Probability::MAX / (types::probability)possibleEventCount);
 }
 
 void updateProbabilityFromRandomEventCount(
@@ -106,8 +106,7 @@ template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void assignRandomEvent(
   types::handle handle, const Battle& battle, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
-  types::percentChance rng =
-    (types::percentChance)nextBoundedRandomValue(rngSeed, MechanicConstants::PercentChance::MAX);
+  types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, Constants::PercentChance::MAX);
 
   if (rng <= eventChances.val[0]) {
     handle.emplace<tags::RandomEventA>();
@@ -291,8 +290,8 @@ void randomChanceEvent(
 
 PercentChanceLimitResult checkPercentChanceLimits(
   types::probability eventProbability, types::probability probability, const simulate_turn::Options& options) {
-  static constexpr auto ProbabilityMax = MechanicConstants::Probability::MAX;
-  static constexpr auto ProbabilityMin = MechanicConstants::Probability::MIN;
+  static constexpr auto ProbabilityMax = Constants::Probability::MAX;
+  static constexpr auto ProbabilityMin = Constants::Probability::MIN;
   static constexpr types::probability PassFailBoundary = (ProbabilityMax - ProbabilityMin) / 2U;
 
   bool skipBranch = false;
@@ -305,14 +304,12 @@ PercentChanceLimitResult checkPercentChanceLimits(
   }
 
   if (
-    eventProbability >= options.getRandomChanceUpperLimit() * MechanicConstants::PercentChanceToProbability ||
+    eventProbability >= options.getRandomChanceUpperLimit() * Constants::PercentChanceToProbability ||
     (skipBranch && eventProbability >= PassFailBoundary)) {
     return PercentChanceLimitResult::REACHED_PASS_LIMIT;
   }
 
-  if (
-    eventProbability <= options.getRandomChanceLowerLimit() * MechanicConstants::PercentChanceToProbability ||
-    skipBranch) {
+  if (eventProbability <= options.getRandomChanceLowerLimit() * Constants::PercentChanceToProbability || skipBranch) {
     return PercentChanceLimitResult::REACHED_FAIL_LIMIT;
   }
 
@@ -324,7 +321,7 @@ void setRandomEventChances(
   types::handle handle, const Simulation& simulation,
   const std::array<types::percentChance, POSSIBLE_EVENT_COUNT>& chances) {
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
-  if (chances.back() == MechanicConstants::PercentChance::MAX) {
+  if (chances.back() == Constants::PercentChance::MAX) {
     for (types::eventPossibilities i = 1U; i < POSSIBLE_EVENT_COUNT; i++) {
       POKESIM_REQUIRE(
         chances[i - 1] <= chances[i],
@@ -339,9 +336,9 @@ void setRandomEventChances(
     }
 
     POKESIM_REQUIRE(
-      chanceSum == MechanicConstants::PercentChance::MAX,
+      chanceSum == Constants::PercentChance::MAX,
       "The total probability of all possible outcomes should add up to " +
-        std::to_string(MechanicConstants::PercentChance::MAX) + "%.");
+        std::to_string(Constants::PercentChance::MAX) + "%.");
   }
 #endif
 
@@ -391,7 +388,7 @@ void setRandomBinaryChanceFromPercentChance(
     handle,
     battle,
     simulation,
-    MechanicConstants::PercentChanceToProbability * percentChance);
+    Constants::PercentChanceToProbability * percentChance);
 }
 
 void setRandomEqualChance(types::handle handle, const Simulation& simulation) {
@@ -412,7 +409,7 @@ void setRandomEventCounts(
 
   PercentChanceLimitResult limitReached = PercentChanceLimitResult::NO_LIMIT_REACHED;
   if (!forRequiredDamageRolls) {
-    types::probability eventProbability = MechanicConstants::Probability::MAX / eventPossibilities;
+    types::probability eventProbability = Constants::Probability::MAX / eventPossibilities;
     types::probability probability = handle.registry()->get<Probability>(battle.val).val;
     limitReached = checkPercentChanceLimits(eventProbability, probability, simulation.simulateTurnOptions);
   }
@@ -494,8 +491,7 @@ void randomEqualChance(
     sim.view<updateProbabilityFromRandomEqualChance>(possibleEventCount);
   };
 
-  types::entityIndex cloneCount =
-    possibleEventCount > MechanicConstants::DamageRollCount::MAX ? 0U : possibleEventCount - 1U;
+  types::entityIndex cloneCount = possibleEventCount > Constants::DamageRollCount::MAX ? 0U : possibleEventCount - 1U;
 
   if (updateProbabilities.has_value()) {
     randomChanceEvent<

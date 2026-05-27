@@ -299,7 +299,7 @@ TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   REQUIRE(p2PokemonLastUsedMove.val == p2Move);
 
   auto p1PokemonHp = registry.get<stat::CurrentHp>(p1Pokemon);
-  REQUIRE(p1PokemonHp.val == MechanicConstants::PokemonCurrentHpStat::MIN);
+  REQUIRE(p1PokemonHp.val == Constants::PokemonCurrentHpStat::MIN);
   REQUIRE(registry.all_of<tags::Fainted>(p1Pokemon));
   REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(p1Pokemon));
 

@@ -35,8 +35,8 @@ void BattleStateSetup::initBlank() {
   handle.emplace<Sides>();
   handle.emplace<ActionQueue>();
   setAutoID();
-  setTurn(MechanicConstants::TurnCount::DEFAULT);
-  setProbability(MechanicConstants::Probability::DEFAULT);
+  setTurn(Constants::TurnCount::DEFAULT);
+  setProbability(Constants::Probability::DEFAULT);
 }
 
 void BattleStateSetup::setAutoID() {

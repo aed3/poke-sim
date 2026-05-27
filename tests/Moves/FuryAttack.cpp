@@ -50,12 +50,12 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
 
   const types::probability passesAccuracyProbability = pokedex.getStaticValue<dex::FuryAttack::accuracy>() / 100.0F;
 
-  constexpr types::probability lowerMultiHitMoveChances = MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES[0] / 100.0F;
+  constexpr types::probability lowerMultiHitMoveChances = Constants::PROGRESSIVE_MULTI_HIT_CHANCES[0] / 100.0F;
   constexpr types::probability upperMultiHitMoveChances =
-    (MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES[2] - MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES[1]) /
-    100.0F;
+    (Constants::PROGRESSIVE_MULTI_HIT_CHANCES[2] - Constants::PROGRESSIVE_MULTI_HIT_CHANCES[1]) / 100.0F;
 
-  const types::probability critHitChance = alwaysCrits ? 1.0F : 1.0F / MechanicConstants::CRIT_CHANCE_DIVISORS[0];
+  const types::probability critHitChance =
+    alwaysCrits ? 1.0F : 1.0F / pokedex.getStaticValue<MechanicConstants::CRIT_CHANCE_DIVISORS>()[0];
   const types::probability baseHitChance = 1.0F - critHitChance;
   const types::damage critDamage = 22U;
   const types::damage baseDamage = 15U;

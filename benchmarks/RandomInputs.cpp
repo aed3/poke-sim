@@ -75,27 +75,27 @@ struct Random {
   static PokemonCreationInfo createRandomPokemon(types::rngState& rngState, Pokedex& pokedex) {
     PokemonCreationInfo info;
     info.species = pickFromList(availableSpecies, rngState);
-    info.level = pickFromBounds<MechanicConstants::PokemonLevel>(rngState);
+    info.level = pickFromBounds<Constants::PokemonLevel>(rngState);
     info.item = pickFromList(availableItems, rngState);
     info.ability = pickFromList(availableAbilities, rngState);
     info.gender = (dex::Gender)internal::nextBoundedRandomValue(rngState, dex::TOTAL_GENDER_COUNT);
     info.nature = (dex::Nature)internal::nextBoundedRandomValue(rngState, dex::TOTAL_NATURE_COUNT + 1U);
 
-    info.evs.hp = pickFromBounds<MechanicConstants::PokemonEv>(rngState);
-    info.evs.atk = pickFromBounds<MechanicConstants::PokemonEv>(rngState);
-    info.evs.def = pickFromBounds<MechanicConstants::PokemonEv>(rngState);
-    info.evs.spa = pickFromBounds<MechanicConstants::PokemonEv>(rngState);
-    info.evs.spd = pickFromBounds<MechanicConstants::PokemonEv>(rngState);
-    info.evs.spe = pickFromBounds<MechanicConstants::PokemonEv>(rngState);
+    info.evs.hp = pickFromBounds<Constants::PokemonEv>(rngState);
+    info.evs.atk = pickFromBounds<Constants::PokemonEv>(rngState);
+    info.evs.def = pickFromBounds<Constants::PokemonEv>(rngState);
+    info.evs.spa = pickFromBounds<Constants::PokemonEv>(rngState);
+    info.evs.spd = pickFromBounds<Constants::PokemonEv>(rngState);
+    info.evs.spe = pickFromBounds<Constants::PokemonEv>(rngState);
 
-    info.ivs.hp = pickFromBounds<MechanicConstants::PokemonIv>(rngState);
-    info.ivs.atk = pickFromBounds<MechanicConstants::PokemonIv>(rngState);
-    info.ivs.def = pickFromBounds<MechanicConstants::PokemonIv>(rngState);
-    info.ivs.spa = pickFromBounds<MechanicConstants::PokemonIv>(rngState);
-    info.ivs.spd = pickFromBounds<MechanicConstants::PokemonIv>(rngState);
-    info.ivs.spe = pickFromBounds<MechanicConstants::PokemonIv>(rngState);
+    info.ivs.hp = pickFromBounds<Constants::PokemonIv>(rngState);
+    info.ivs.atk = pickFromBounds<Constants::PokemonIv>(rngState);
+    info.ivs.def = pickFromBounds<Constants::PokemonIv>(rngState);
+    info.ivs.spa = pickFromBounds<Constants::PokemonIv>(rngState);
+    info.ivs.spd = pickFromBounds<Constants::PokemonIv>(rngState);
+    info.ivs.spe = pickFromBounds<Constants::PokemonIv>(rngState);
 
-    auto moves = pickUniqueMoveList(rngState, MechanicConstants::MoveSlots::MAX);
+    auto moves = pickUniqueMoveList(rngState, Constants::MoveSlots::MAX);
     for (dex::Move move : moves) {
       info.moves.push_back({move});
     }
@@ -113,7 +113,7 @@ struct Random {
         info.nature.value(),
         {info.evs.hp.value()},
         {info.ivs.hp.value()}),
-      MechanicConstants::PokemonCurrentHpStat::MIN + 1U);
+      Constants::PokemonCurrentHpStat::MIN + 1U);
 
     info.status = (dex::Status)internal::nextBoundedRandomValue(rngState, dex::TOTAL_STATUS_COUNT + 1U);
 
@@ -122,7 +122,7 @@ struct Random {
 
   static SideCreationInfo createRandomSide(types::rngState& rngState, Pokedex& pokedex) {
     SideCreationInfo side;
-    for (types::teamPositionIndex i = 0U; i < MechanicConstants::TeamSize::MAX; i++) {
+    for (types::teamPositionIndex i = 0U; i < Constants::TeamSize::MAX; i++) {
       side.team.emplace_back(createRandomPokemon(rngState, pokedex));
     }
     return side;
@@ -136,10 +136,10 @@ struct Random {
       createRandomSide(rngState, pokedex),
     };
 
-    battle.turn = (pickFromBounds<MechanicConstants::TurnCount>(rngState) / 2U) + 1U;
+    battle.turn = (pickFromBounds<Constants::TurnCount>(rngState) / 2U) + 1U;
     battle.rngSeed = rngState;
-    battle.probability = pickFromBounds<MechanicConstants::PercentChance>(rngState) /
-                         (types::probability)MechanicConstants::PercentChance::MAX;
+    battle.probability =
+      pickFromBounds<Constants::PercentChance>(rngState) / (types::probability)Constants::PercentChance::MAX;
 
     return battle;
   }
@@ -208,8 +208,8 @@ struct Random {
 
     types::boost boost = (types::boost)internal::nextBoundedRandomValue(
       rngState,
-      (types::rngResult)(MechanicConstants::PokemonStatBoost::MAX - MechanicConstants::PokemonStatBoost::MIN + 1U));
-    boost += MechanicConstants::PokemonStatBoost::MIN;
+      (types::rngResult)(Constants::PokemonStatBoost::MAX - Constants::PokemonStatBoost::MIN + 1U));
+    boost += Constants::PokemonStatBoost::MIN;
 
     inputInfo.boostEffect = {{
       (dex::Stat)(1 << internal::nextBoundedRandomValue(rngState, dex::TOTAL_STAT_COUNT, 1U)),

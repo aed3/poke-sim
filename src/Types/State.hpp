@@ -6,8 +6,8 @@
 #include <optional>
 #include <type_traits>
 
+#include "Constants.hpp"
 #include "Entity.hpp"
-#include "MechanicConstants.hpp"
 
 namespace pokesim {
 class Simulation;
@@ -15,11 +15,11 @@ class Simulation;
 namespace types {
 using stateId = std::underlying_type_t<entity>;
 
-using battleTurn = pokesim::internal::unsignedIntType<MechanicConstants::TurnCount::MAX>;
+using battleTurn = pokesim::internal::unsignedIntType<Constants::TurnCount::MAX>;
 
-using sideIndex = pokesim::internal::unsignedIntType<MechanicConstants::SIDE_COUNT>;
+using sideIndex = pokesim::internal::unsignedIntType<Constants::SIDE_COUNT>;
 template <typename T>
-struct sides : public std::array<T, MechanicConstants::SIDE_COUNT> {
+struct sides : public std::array<T, Constants::SIDE_COUNT> {
   constexpr T& p1() { return this->at(0); };
   constexpr T& p2() { return this->at(1); };
   constexpr const T& p1() const { return this->at(0); };
@@ -30,7 +30,7 @@ struct sides : public std::array<T, MechanicConstants::SIDE_COUNT> {
     return this->at(N);
   }
 
-  sides() : std::array<T, MechanicConstants::SIDE_COUNT>() {}
+  sides() : std::array<T, Constants::SIDE_COUNT>() {}
   sides(std::initializer_list<T> list) : sides() {
     sideIndex side = 0U;
     for (const T& value : list) {
@@ -42,29 +42,29 @@ struct sides : public std::array<T, MechanicConstants::SIDE_COUNT> {
     }
   }
 
-  constexpr sideIndex size() const noexcept { return MechanicConstants::SIDE_COUNT; }
+  constexpr sideIndex size() const noexcept { return Constants::SIDE_COUNT; }
 };
 
 using entityIndex = std::underlying_type_t<entity>;
 
-using teamPositionIndex = pokesim::internal::unsignedIntType<MechanicConstants::TeamSize::MAX>;
-using moveSlotIndex = pokesim::internal::unsignedIntType<MechanicConstants::MoveSlots::MAX>;
-using activePokemonIndex = pokesim::internal::unsignedIntType<MechanicConstants::ActivePokemon::MAX>;
+using teamPositionIndex = pokesim::internal::unsignedIntType<Constants::TeamSize::MAX>;
+using moveSlotIndex = pokesim::internal::unsignedIntType<Constants::MoveSlots::MAX>;
+using activePokemonIndex = pokesim::internal::unsignedIntType<Constants::ActivePokemon::MAX>;
 
 template <typename T>
-using teamPositions = pokesim::internal::fixedMemoryVector<T, MechanicConstants::TeamSize::MAX>;
+using teamPositions = pokesim::internal::fixedMemoryVector<T, Constants::TeamSize::MAX>;
 using teamOrder = types::teamPositions<types::teamPositionIndex>;
 
 template <typename T>
-using moveSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MoveSlots::MAX>;
+using moveSlots = pokesim::internal::fixedMemoryVector<T, Constants::MoveSlots::MAX>;
 
 template <typename T>
-using sideSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::ActivePokemonSlotsPerSide::MAX>;
+using sideSlots = pokesim::internal::fixedMemoryVector<T, Constants::ActivePokemonSlotsPerSide::MAX>;
 
 template <typename T>
-using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::Targets::MAX>;
+using targets = pokesim::internal::fixedMemoryVector<T, Constants::Targets::MAX>;
 
-using actionQueueIndex = pokesim::internal::unsignedIntType<MechanicConstants::ActionQueueLength::MAX>;
+using actionQueueIndex = pokesim::internal::unsignedIntType<Constants::ActionQueueLength::MAX>;
 
 using callback = void (*)(Simulation&);
 using optionalCallback = std::optional<callback>;
@@ -72,8 +72,8 @@ using optionalCallback = std::optional<callback>;
 }  // namespace pokesim
 
 template <typename T>
-struct std::tuple_size<pokesim::types::sides<T>>
-    : std::integral_constant<std::size_t, pokesim::MechanicConstants::SIDE_COUNT> {};
+struct std::tuple_size<pokesim::types::sides<T>> : std::integral_constant<std::size_t, pokesim::Constants::SIDE_COUNT> {
+};
 
 template <std::size_t N, typename T>
 struct std::tuple_element<N, pokesim::types::sides<T>> {

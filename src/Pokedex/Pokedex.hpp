@@ -44,8 +44,8 @@ class Pokedex {
   types::entity buildAbility(dex::Ability ability, types::registry& registry) const;
 
  private:
-  struct Constants {
-    Constants(GameMechanics gameMechanic) : gameMechanicValue(gameMechanic), typeChartValue(gameMechanic) {}
+  struct ConstantValues {
+    ConstantValues(GameMechanics gameMechanic) : gameMechanicValue(gameMechanic), typeChartValue(gameMechanic) {}
     constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
       return gameMechanicValue == checkedMechanics;
     }

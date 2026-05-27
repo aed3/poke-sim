@@ -19,6 +19,7 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
 #include <Utilities/Variant.hpp>
@@ -87,7 +88,7 @@ types::stat setPokemonStats(
   const BaseStats& baseStats = pokedex.getSpeciesData<BaseStats>(pokemonInfo.species);
 
   auto getStat = [&](dex::Stat statName) {
-    types::baseStat baseStat = MechanicConstants::PokemonBaseStat::DEFAULT;
+    types::baseStat baseStat = Constants::PokemonBaseStat::DEFAULT;
     std::optional<types::stat> givenStat = std::nullopt;
 
     if (statName == dex::Stat::HP) {
@@ -154,7 +155,7 @@ types::entityVector Simulation::createInitialMoves(const std::vector<MoveCreatio
   for (const MoveCreationInfo& moveInfo : moveInfoList) {
     MoveStateSetup moveSetup(registry);
     moveSetup.setName(moveInfo.name);
-    types::pp maxPp = MechanicConstants::MoveMaxPp::DEFAULT;
+    types::pp maxPp = Constants::MoveMaxPp::DEFAULT;
     if (!moveInfo.pp.has_value() || !moveInfo.maxPp.has_value()) {
       maxPp = pokedex().getMoveData<Pp>(moveInfo.name).val;
     }
@@ -180,7 +181,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
   pokemonSetup.setSpecies(pokemonInfo.species);
   setPokemonAbility(pokemonInfo, pokemonSetup, pokedex());
 
-  types::level level = pokemonInfo.level.value_or(MechanicConstants::PokemonLevel::DEFAULT);
+  types::level level = pokemonInfo.level.value_or(Constants::PokemonLevel::DEFAULT);
   dex::Nature nature = setPokemonNature(pokemonInfo, pokemonSetup);
   Evs evs = setPokemonEvs(pokemonInfo, pokemonSetup);
   Ivs ivs = setPokemonIvs(pokemonInfo, pokemonSetup);
@@ -209,7 +210,7 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
 
   pokemonSetup.setCurrentHp(pokemonInfo.currentHp.value_or(hp));
 
-  if (pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN) {
+  if (pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == Constants::PokemonCurrentHpStat::MIN) {
     pokemonSetup.setProperty<tags::Fainted>();
   }
 
@@ -226,16 +227,15 @@ PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& po
 
 void Simulation::createInitialSide(
   SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo) {
-  internal::maxSizedVector<PokemonStateSetup, MechanicConstants::TeamSize::MAX> pokemonSetupList;
+  internal::maxSizedVector<PokemonStateSetup, Constants::TeamSize::MAX> pokemonSetupList;
   pokemonSetupList.reserve(sideInfo.team.size());
 
   for (std::size_t i = 0U; i < sideInfo.team.size(); i++) {
     const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];
     PokemonStateSetup pokemonSetup = createInitialPokemon(pokemonInfo);
-    bool battleStarted = battleInfo.turn > MechanicConstants::TurnCount::MIN;
+    bool battleStarted = battleInfo.turn > Constants::TurnCount::MIN;
     bool inActiveSlot = (isBattleFormat(BattleFormat::SINGLES) ? 1U : 2U) > i;
-    bool isFainted =
-      pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN;
+    bool isFainted = pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == Constants::PokemonCurrentHpStat::MIN;
     if (battleStarted && inActiveSlot && !isFainted) {
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
@@ -275,9 +275,9 @@ void Simulation::createInitialSide(
 types::sides<SideStateSetup> Simulation::createInitialBattle(
   BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo) {
   battleStateSetup.setAutoID();
-  battleStateSetup.setTurn(battleInfo.turn.value_or(MechanicConstants::TurnCount::DEFAULT));
+  battleStateSetup.setTurn(battleInfo.turn.value_or(Constants::TurnCount::DEFAULT));
   battleStateSetup.setRNGSeed(battleInfo.rngSeed);
-  battleStateSetup.setProbability(battleInfo.probability.value_or(MechanicConstants::Probability::DEFAULT));
+  battleStateSetup.setProbability(battleInfo.probability.value_or(Constants::Probability::DEFAULT));
 
   if (battleInfo.runWithSimulateTurn) {
     battleStateSetup.setProperty<tags::SimulateTurn>();

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <Types/MechanicConstants.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Move.hpp>
 
 namespace pokesim {
 struct BasePower {
-  types::basePower val = MechanicConstants::MoveBasePower::DEFAULT;
+  types::basePower val = Constants::MoveBasePower::DEFAULT;
 };
 }  // namespace pokesim

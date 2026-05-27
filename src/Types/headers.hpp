@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Constants.hpp"
 #include "Damage.hpp"
 #include "Effect.hpp"
 #include "Entity.hpp"

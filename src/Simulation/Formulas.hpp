@@ -2,10 +2,10 @@
 
 #include <Components/EVsIVs.hpp>
 #include <Config/Require.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Enums/Nature.hpp>
 #include <Types/Enums/Stat.hpp>
-#include <Types/MechanicConstants.hpp>
 #include <Types/Move.hpp>
 #include <Types/NaturesTable.hpp>
 #include <Types/Stats.hpp>
@@ -20,11 +20,11 @@ constexpr types::damage computeDamageRoll(types::damage damage, types::damageRol
 }
 
 constexpr types::damage computeAverageDamageRoll(types::damage damage) {
-  return (types::damage)(damage * (100U - (MechanicConstants::DamageRollCount::MAX - 1U) / 2.0F) / 100.0F);
+  return (types::damage)(damage * (100U - (Constants::DamageRollCount::MAX - 1U) / 2.0F) / 100.0F);
 }
 
 constexpr types::damage computeMinDamageRoll(types::damage damage) {
-  return computeDamageRoll(damage, MechanicConstants::DamageRollCount::MAX - 1U);
+  return computeDamageRoll(damage, Constants::DamageRollCount::MAX - 1U);
 }
 
 constexpr types::damage computeBaseDamage(
@@ -35,8 +35,8 @@ constexpr types::damage computeBaseDamage(
 constexpr types::stat computeStatFromBaseStat(
   dex::Stat statName, types::baseStat baseStat, types::level level, dex::Nature nature, const Evs& evs,
   const Ivs& ivs) {
-  types::ev ev = MechanicConstants::PokemonEv::DEFAULT;
-  types::iv iv = MechanicConstants::PokemonIv::DEFAULT;
+  types::ev ev = Constants::PokemonEv::DEFAULT;
+  types::iv iv = Constants::PokemonIv::DEFAULT;
 
   switch (statName) {
     case dex::Stat::HP: {

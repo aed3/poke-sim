@@ -1,20 +1,20 @@
 #pragma once
 
+#include <Types/Constants.hpp>
 #include <Types/Enums/Type.hpp>
-#include <Types/MechanicConstants.hpp>
 #include <Utilities/NumberToType.hpp>
 #include <array>
 
 namespace pokesim {
 // Contains the types a species has
 struct SpeciesTypes {
-  std::array<dex::Type, MechanicConstants::TYPES_PER_POKEMON> val{};
+  std::array<dex::Type, Constants::TYPES_PER_POKEMON> val{};
 
   constexpr dex::Type& type1() { return val[0]; };
   constexpr dex::Type& type2() { return val[1]; };
   constexpr const dex::Type& type1() const { return val[0]; };
   constexpr const dex::Type& type2() const { return val[1]; };
-  constexpr internal::unsignedIntType<MechanicConstants::TYPES_PER_POKEMON> size() const {
+  constexpr internal::unsignedIntType<Constants::TYPES_PER_POKEMON> size() const {
     if (type2() == dex::Type::NO_TYPE) {
       return type1() == dex::Type::NO_TYPE ? 0U : 1U;
     }

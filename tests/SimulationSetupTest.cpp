@@ -338,7 +338,7 @@ TEST_CASE("Simulation Setup: Ignored Pokemon Options", "[Simulation][Setup]") {
 
   auto checkDefaultLevels = [&](const pokemonHandles& handles) {
     checkForAllHandles(handles, [](const types::handle& handle) {
-      REQUIRE(handle.get<Level>().val == MechanicConstants::PokemonLevel::DEFAULT);
+      REQUIRE(handle.get<Level>().val == Constants::PokemonLevel::DEFAULT);
     });
   };
 
@@ -349,24 +349,24 @@ TEST_CASE("Simulation Setup: Ignored Pokemon Options", "[Simulation][Setup]") {
   auto checkDefaultEvs = [&](const pokemonHandles& handles) {
     checkForAllHandles(handles, [](const types::handle& handle) {
       const Evs& evs = handle.get<Evs>();
-      REQUIRE(evs.hp == MechanicConstants::PokemonEv::DEFAULT);
-      REQUIRE(evs.atk == MechanicConstants::PokemonEv::DEFAULT);
-      REQUIRE(evs.def == MechanicConstants::PokemonEv::DEFAULT);
-      REQUIRE(evs.spa == MechanicConstants::PokemonEv::DEFAULT);
-      REQUIRE(evs.spd == MechanicConstants::PokemonEv::DEFAULT);
-      REQUIRE(evs.spe == MechanicConstants::PokemonEv::DEFAULT);
+      REQUIRE(evs.hp == Constants::PokemonEv::DEFAULT);
+      REQUIRE(evs.atk == Constants::PokemonEv::DEFAULT);
+      REQUIRE(evs.def == Constants::PokemonEv::DEFAULT);
+      REQUIRE(evs.spa == Constants::PokemonEv::DEFAULT);
+      REQUIRE(evs.spd == Constants::PokemonEv::DEFAULT);
+      REQUIRE(evs.spe == Constants::PokemonEv::DEFAULT);
     });
   };
 
   auto checkDefaultIvs = [&](const pokemonHandles& handles) {
     checkForAllHandles(handles, [](const types::handle& handle) {
       const Ivs& ivs = handle.get<Ivs>();
-      REQUIRE(ivs.hp == MechanicConstants::PokemonIv::DEFAULT);
-      REQUIRE(ivs.atk == MechanicConstants::PokemonIv::DEFAULT);
-      REQUIRE(ivs.def == MechanicConstants::PokemonIv::DEFAULT);
-      REQUIRE(ivs.spa == MechanicConstants::PokemonIv::DEFAULT);
-      REQUIRE(ivs.spd == MechanicConstants::PokemonIv::DEFAULT);
-      REQUIRE(ivs.spe == MechanicConstants::PokemonIv::DEFAULT);
+      REQUIRE(ivs.hp == Constants::PokemonIv::DEFAULT);
+      REQUIRE(ivs.atk == Constants::PokemonIv::DEFAULT);
+      REQUIRE(ivs.def == Constants::PokemonIv::DEFAULT);
+      REQUIRE(ivs.spa == Constants::PokemonIv::DEFAULT);
+      REQUIRE(ivs.spd == Constants::PokemonIv::DEFAULT);
+      REQUIRE(ivs.spe == Constants::PokemonIv::DEFAULT);
     });
   };
 

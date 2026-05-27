@@ -1,7 +1,7 @@
 #pragma once
 
+#include <Types/Constants.hpp>
 #include <Types/Enums/DamageRollKind.hpp>
-#include <Types/MechanicConstants.hpp>
 #include <Types/Random.hpp>
 #include <Types/State.hpp>
 #include <entt/signal/delegate.hpp>
@@ -54,13 +54,13 @@ struct Options {
   constexpr const DamageRollOptions& getDamageRollsConsidered() const { return damageRollsConsidered; }
   constexpr bool getApplyChangesToInputBattle() const { return applyChangesToInputBattle; }
   constexpr types::percentChance getRandomChanceUpperLimit() const {
-    return randomChanceUpperLimit.value_or(MechanicConstants::PercentChance::MAX);
+    return randomChanceUpperLimit.value_or(Constants::PercentChance::MAX);
   }
   constexpr types::percentChance getRandomChanceLowerLimit() const {
-    return randomChanceLowerLimit.value_or(MechanicConstants::PercentChance::MIN);
+    return randomChanceLowerLimit.value_or(Constants::PercentChance::MIN);
   }
   constexpr types::probability getBranchProbabilityLowerLimit() const {
-    return branchProbabilityLowerLimit.value_or(MechanicConstants::Probability::MIN);
+    return branchProbabilityLowerLimit.value_or(Constants::Probability::MIN);
   }
   constexpr bool hasBranchProbabilityLowerLimit() const { return branchProbabilityLowerLimit.has_value(); }
   constexpr bool getMakeBranchesOnRandomEvents() const { return makeBranchesOnRandomEvents; }

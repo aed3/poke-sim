@@ -53,8 +53,7 @@
  * external/entt/meta/policy.hpp
  * external/entt/meta/utility.hpp
  * external/entt/meta/factory.hpp
- * src/Types/Random.hpp
- * src/Types/MechanicConstants.hpp
+ * src/Types/Constants.hpp
  * src/Utilities/FixedMemoryVector.hpp
  * src/Types/State.hpp
  * src/Utilities/AssertComponentsEqual.hpp
@@ -82,6 +81,7 @@
  * src/Components/Damage.hpp
  * src/Types/Enums/DamageRollKind.hpp
  * src/CalcDamage/Helpers.hpp
+ * src/Types/Random.hpp
  * src/Components/Accuracy.hpp
  * src/Types/Enums/AddedTargets.hpp
  * src/Components/AddedTargets.hpp
@@ -97,6 +97,8 @@
  * src/Types/Move.hpp
  * src/Components/BasePower.hpp
  * src/Components/CalcDamage/Aliases.hpp
+ * src/Types/Enums/GameMechanics.hpp
+ * src/Types/MechanicConstants.hpp
  * src/Components/CalcDamage/CriticalHit.hpp
  * src/Components/CalcDamage/DamageFormulaVariables.hpp
  * src/Components/CalcDamage/DamageRollSides.hpp
@@ -172,7 +174,6 @@
  * src/Components/Turn.hpp
  * src/Components/Winner.hpp
  * src/Types/Enums/BattleFormat.hpp
- * src/Types/Enums/GameMechanics.hpp
  * src/Types/Enums/MoveCategory.hpp
  * src/Types/Enums/MoveTarget.hpp
  * src/Types/Enums/TypeEffectiveness.hpp
@@ -17163,33 +17164,17 @@ inline void meta_reset() noexcept {
 
 //////////////////// END OF external/entt/meta/factory.hpp /////////////////////
 
-//////////////////////// START OF src/Types/Random.hpp /////////////////////////
-
-namespace pokesim::types {
-using probability = float;
-using rngState = std::uint64_t;
-using rngResult = std::uint32_t;
-using percentChance = std::uint8_t;
-using eventPossibilities = std::uint8_t;
-}  // namespace pokesim::types
-
-///////////////////////// END OF src/Types/Random.hpp //////////////////////////
-
-/////////////////// START OF src/Types/MechanicConstants.hpp ///////////////////
+/////////////////////// START OF src/Types/Constants.hpp ///////////////////////
 
 namespace pokesim {
-struct MechanicConstants {
+struct Constants {
   static constexpr std::uint8_t TYPES_PER_POKEMON = 2U;
 
-  static constexpr std::array<types::percentChance, 4U> CRIT_CHANCE_DIVISORS{24U, 8U, 2U, 1U};
   static constexpr std::array<float, 7U> STAT_BOOST_STAGES{1.0F, 1.5F, 2.0F, 2.5F, 3.0F, 3.5F, 4.0F};
 
   // The 35%-35%-15%-15% out of 100 for 2-3-4-5 hits added so each index is the sum of the chance of its hit count and
   // the hit counts less than it so it works with the randomEventChances function
-  static constexpr std::array<types::percentChance, 4U> PROGRESSIVE_MULTI_HIT_CHANCES{35U, 70U, 85U, 100U};
-
-  // TODO(aed3): Should change based on simulation's game mechanics
-  static constexpr float CRIT_MULTIPLIER = 1.5F;
+  static constexpr std::array<std::uint8_t, 4U> PROGRESSIVE_MULTI_HIT_CHANCES{35U, 70U, 85U, 100U};
 
   static constexpr std::uint8_t FIXED_POINT_SCALING_FACTOR = 12U;
   static constexpr std::uint16_t FIXED_POINT_SCALE = 1U << FIXED_POINT_SCALING_FACTOR;
@@ -17389,7 +17374,7 @@ struct MechanicConstants {
 };
 }  // namespace pokesim
 
-//////////////////// END OF src/Types/MechanicConstants.hpp ////////////////////
+//////////////////////// END OF src/Types/Constants.hpp ////////////////////////
 
 ///////////////// START OF src/Utilities/FixedMemoryVector.hpp /////////////////
 
@@ -17493,11 +17478,11 @@ class Simulation;
 namespace types {
 using stateId = std::underlying_type_t<entity>;
 
-using battleTurn = pokesim::internal::unsignedIntType<MechanicConstants::TurnCount::MAX>;
+using battleTurn = pokesim::internal::unsignedIntType<Constants::TurnCount::MAX>;
 
-using sideIndex = pokesim::internal::unsignedIntType<MechanicConstants::SIDE_COUNT>;
+using sideIndex = pokesim::internal::unsignedIntType<Constants::SIDE_COUNT>;
 template <typename T>
-struct sides : public std::array<T, MechanicConstants::SIDE_COUNT> {
+struct sides : public std::array<T, Constants::SIDE_COUNT> {
   constexpr T& p1() { return this->at(0); };
   constexpr T& p2() { return this->at(1); };
   constexpr const T& p1() const { return this->at(0); };
@@ -17508,7 +17493,7 @@ struct sides : public std::array<T, MechanicConstants::SIDE_COUNT> {
     return this->at(N);
   }
 
-  sides() : std::array<T, MechanicConstants::SIDE_COUNT>() {}
+  sides() : std::array<T, Constants::SIDE_COUNT>() {}
   sides(std::initializer_list<T> list) : sides() {
     sideIndex side = 0U;
     for (const T& value : list) {
@@ -17520,29 +17505,29 @@ struct sides : public std::array<T, MechanicConstants::SIDE_COUNT> {
     }
   }
 
-  constexpr sideIndex size() const noexcept { return MechanicConstants::SIDE_COUNT; }
+  constexpr sideIndex size() const noexcept { return Constants::SIDE_COUNT; }
 };
 
 using entityIndex = std::underlying_type_t<entity>;
 
-using teamPositionIndex = pokesim::internal::unsignedIntType<MechanicConstants::TeamSize::MAX>;
-using moveSlotIndex = pokesim::internal::unsignedIntType<MechanicConstants::MoveSlots::MAX>;
-using activePokemonIndex = pokesim::internal::unsignedIntType<MechanicConstants::ActivePokemon::MAX>;
+using teamPositionIndex = pokesim::internal::unsignedIntType<Constants::TeamSize::MAX>;
+using moveSlotIndex = pokesim::internal::unsignedIntType<Constants::MoveSlots::MAX>;
+using activePokemonIndex = pokesim::internal::unsignedIntType<Constants::ActivePokemon::MAX>;
 
 template <typename T>
-using teamPositions = pokesim::internal::fixedMemoryVector<T, MechanicConstants::TeamSize::MAX>;
+using teamPositions = pokesim::internal::fixedMemoryVector<T, Constants::TeamSize::MAX>;
 using teamOrder = types::teamPositions<types::teamPositionIndex>;
 
 template <typename T>
-using moveSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::MoveSlots::MAX>;
+using moveSlots = pokesim::internal::fixedMemoryVector<T, Constants::MoveSlots::MAX>;
 
 template <typename T>
-using sideSlots = pokesim::internal::fixedMemoryVector<T, MechanicConstants::ActivePokemonSlotsPerSide::MAX>;
+using sideSlots = pokesim::internal::fixedMemoryVector<T, Constants::ActivePokemonSlotsPerSide::MAX>;
 
 template <typename T>
-using targets = pokesim::internal::fixedMemoryVector<T, MechanicConstants::Targets::MAX>;
+using targets = pokesim::internal::fixedMemoryVector<T, Constants::Targets::MAX>;
 
-using actionQueueIndex = pokesim::internal::unsignedIntType<MechanicConstants::ActionQueueLength::MAX>;
+using actionQueueIndex = pokesim::internal::unsignedIntType<Constants::ActionQueueLength::MAX>;
 
 using callback = void (*)(Simulation&);
 using optionalCallback = std::optional<callback>;
@@ -17550,8 +17535,8 @@ using optionalCallback = std::optional<callback>;
 }  // namespace pokesim
 
 template <typename T>
-struct std::tuple_size<pokesim::types::sides<T>>
-    : std::integral_constant<std::size_t, pokesim::MechanicConstants::SIDE_COUNT> {};
+struct std::tuple_size<pokesim::types::sides<T>> : std::integral_constant<std::size_t, pokesim::Constants::SIDE_COUNT> {
+};
 
 template <std::size_t N, typename T>
 struct std::tuple_element<N, pokesim::types::sides<T>> {
@@ -17849,16 +17834,15 @@ using handle = internal::BackingHandle<registry>;
 ///////////////////////// START OF src/Types/Stats.hpp /////////////////////////
 
 namespace pokesim::types {
-using level = pokesim::internal::unsignedIntType<MechanicConstants::PokemonLevel::MAX>;
+using level = pokesim::internal::unsignedIntType<Constants::PokemonLevel::MAX>;
 
-using stat = pokesim::internal::unsignedIntType<MechanicConstants::PokemonEffectiveStat::MAX>;
-using baseStat = pokesim::internal::unsignedIntType<MechanicConstants::PokemonBaseStat::MAX>;
+using stat = pokesim::internal::unsignedIntType<Constants::PokemonEffectiveStat::MAX>;
+using baseStat = pokesim::internal::unsignedIntType<Constants::PokemonBaseStat::MAX>;
 
-using ev = pokesim::internal::unsignedIntType<MechanicConstants::PokemonEv::MAX>;
-using iv = pokesim::internal::unsignedIntType<MechanicConstants::PokemonIv::MAX>;
+using ev = pokesim::internal::unsignedIntType<Constants::PokemonEv::MAX>;
+using iv = pokesim::internal::unsignedIntType<Constants::PokemonIv::MAX>;
 
-using boost =
-  pokesim::internal::signedIntType<MechanicConstants::PokemonStatBoost::MAX, MechanicConstants::PokemonStatBoost::MIN>;
+using boost = pokesim::internal::signedIntType<Constants::PokemonStatBoost::MAX, Constants::PokemonStatBoost::MIN>;
 }  // namespace pokesim::types
 
 ////////////////////////// END OF src/Types/Stats.hpp //////////////////////////
@@ -17867,23 +17851,23 @@ using boost =
 
 namespace pokesim {
 struct AtkBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::DEFAULT;
+  types::boost val = Constants::PokemonStatBoost::DEFAULT;
 };
 
 struct DefBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::DEFAULT;
+  types::boost val = Constants::PokemonStatBoost::DEFAULT;
 };
 
 struct SpaBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::DEFAULT;
+  types::boost val = Constants::PokemonStatBoost::DEFAULT;
 };
 
 struct SpdBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::DEFAULT;
+  types::boost val = Constants::PokemonStatBoost::DEFAULT;
 };
 
 struct SpeBoost {
-  types::boost val = MechanicConstants::PokemonStatBoost::DEFAULT;
+  types::boost val = Constants::PokemonStatBoost::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -18095,11 +18079,11 @@ inline auto tryGetAllInputEffects(types::entity input, const types::registry& re
 //////////////////////// START OF src/Types/Damage.hpp /////////////////////////
 
 namespace pokesim::types {
-using damage = pokesim::internal::unsignedIntType<MechanicConstants::Damage::MAX>;
-using damageRollIndex = pokesim::internal::unsignedIntType<MechanicConstants::DamageRollCount::MAX>;
-using critBoost = pokesim::internal::unsignedIntType<MechanicConstants::CritBoost::MAX>;
-using typeEffectiveness = pokesim::internal::signedIntType<
-  MechanicConstants::TypeEffectivenessShift::MAX, MechanicConstants::TypeEffectivenessShift::MIN>;
+using damage = pokesim::internal::unsignedIntType<Constants::Damage::MAX>;
+using damageRollIndex = pokesim::internal::unsignedIntType<Constants::DamageRollCount::MAX>;
+using critBoost = pokesim::internal::unsignedIntType<Constants::CritBoost::MAX>;
+using typeEffectiveness =
+  pokesim::internal::signedIntType<Constants::TypeEffectivenessShift::MAX, Constants::TypeEffectivenessShift::MIN>;
 }  // namespace pokesim::types
 
 ///////////////////////// END OF src/Types/Damage.hpp //////////////////////////
@@ -18139,15 +18123,15 @@ using effectMultiplier = float;
 
 namespace pokesim {
 struct Damage {
-  types::damage val = MechanicConstants::Damage::DEFAULT;
+  types::damage val = Constants::Damage::DEFAULT;
 };
 
 struct DamageRollModifiers {
   StabBoostKind stab = StabBoostKind::NONE;
-  types::typeEffectiveness typeEffectiveness = MechanicConstants::TypeEffectivenessShift::DEFAULT;
+  types::typeEffectiveness typeEffectiveness = Constants::TypeEffectivenessShift::DEFAULT;
   bool burn = false;
   bool zOrMaxBrokenProtect = false;
-  types::eventModifier modifyDamageEvent = MechanicConstants::FIXED_POINT_SCALE;
+  types::eventModifier modifyDamageEvent = Constants::FIXED_POINT_SCALE;
 
   bool operator==(const DamageRollModifiers& other) const {
     return stab == other.stab && typeEffectiveness == other.typeEffectiveness && burn == other.burn &&
@@ -18156,15 +18140,13 @@ struct DamageRollModifiers {
 };
 
 struct DamageRolls {
-  internal::maxSizedVector<Damage, MechanicConstants::DamageRollCount::MAX> val{};
+  internal::maxSizedVector<Damage, Constants::DamageRollCount::MAX> val{};
 
   DamageRolls() {}
   DamageRolls(const DamageRolls& other) : val(other.val) {}
 
   DamageRolls(const std::vector<types::damage>& list) {
-    POKESIM_REQUIRE(
-      list.size() <= MechanicConstants::DamageRollCount::MAX,
-      "More damage rolls are being added than allowed.");
+    POKESIM_REQUIRE(list.size() <= Constants::DamageRollCount::MAX, "More damage rolls are being added than allowed.");
     val.reserve((types::damageRollIndex)list.size());
     for (types::damage damage : list) {
       val.push_back({damage});
@@ -18225,9 +18207,9 @@ inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, Damage
 
   if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
     POKESIM_REQUIRE(
-      damageRolls.val.size() == MechanicConstants::DamageRollCount::MAX,
+      damageRolls.val.size() == Constants::DamageRollCount::MAX,
       "DamageRolls does not have all rolls yet.");
-    return damageRolls.val[MechanicConstants::DamageRollCount::MAX / 2].val;
+    return damageRolls.val[Constants::DamageRollCount::MAX / 2].val;
   }
   POKESIM_REQUIRE(damageRollKind & DamageRollKind::AVERAGE_DAMAGE, "DamageRolls does not contain average.");
 
@@ -18241,11 +18223,23 @@ inline types::damage averageOfDamageRolls(const DamageRolls& damageRolls, Damage
 
 ////////////////////// END OF src/CalcDamage/Helpers.hpp ///////////////////////
 
+//////////////////////// START OF src/Types/Random.hpp /////////////////////////
+
+namespace pokesim::types {
+using probability = float;
+using rngState = std::uint64_t;
+using rngResult = std::uint32_t;
+using percentChance = std::uint8_t;
+using eventPossibilities = std::uint8_t;
+}  // namespace pokesim::types
+
+///////////////////////// END OF src/Types/Random.hpp //////////////////////////
+
 ///////////////////// START OF src/Components/Accuracy.hpp /////////////////////
 
 namespace pokesim {
 struct Accuracy {
-  types::percentChance val = MechanicConstants::MoveBaseAccuracy::DEFAULT;
+  types::percentChance val = Constants::MoveBaseAccuracy::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -18526,7 +18520,7 @@ namespace pokesim {
  * Examples: Air Slash has a 60% chance to flinch, Harvest has a 50% chance to restore a used berry.
  */
 struct BaseEffectChance {
-  types::percentChance val = MechanicConstants::MoveBaseEffectChance::DEFAULT;
+  types::percentChance val = Constants::MoveBaseEffectChance::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -18535,14 +18529,13 @@ struct BaseEffectChance {
 ///////////////////////// START OF src/Types/Move.hpp //////////////////////////
 
 namespace pokesim::types {
-using pp = pokesim::internal::unsignedIntType<MechanicConstants::MoveMaxPp::MAX>;
-using basePower = pokesim::internal::unsignedIntType<MechanicConstants::MoveBasePower::MAX>;
-using power = pokesim::internal::unsignedIntType<MechanicConstants::MovePower::MAX>;
-using baseAccuracy = pokesim::internal::unsignedIntType<MechanicConstants::MoveBaseAccuracy::MAX>;
-using moveHits = pokesim::internal::unsignedIntType<MechanicConstants::PokemonHpStat::MAX>;
+using pp = pokesim::internal::unsignedIntType<Constants::MoveMaxPp::MAX>;
+using basePower = pokesim::internal::unsignedIntType<Constants::MoveBasePower::MAX>;
+using power = pokesim::internal::unsignedIntType<Constants::MovePower::MAX>;
+using baseAccuracy = pokesim::internal::unsignedIntType<Constants::MoveBaseAccuracy::MAX>;
+using moveHits = pokesim::internal::unsignedIntType<Constants::PokemonHpStat::MAX>;
 
-using priority =
-  pokesim::internal::signedIntType<MechanicConstants::MovePriority::MAX, MechanicConstants::MovePriority::MIN>;
+using priority = pokesim::internal::signedIntType<Constants::MovePriority::MAX, Constants::MovePriority::MIN>;
 using fractionalPriority = bool;
 }  // namespace pokesim::types
 
@@ -18552,7 +18545,7 @@ using fractionalPriority = bool;
 
 namespace pokesim {
 struct BasePower {
-  types::basePower val = MechanicConstants::MoveBasePower::DEFAULT;
+  types::basePower val = Constants::MoveBasePower::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -18576,15 +18569,49 @@ using FailedUsedMove = pokesim::tags::FailedCurrentActionMove;
 
 ///////////////// END OF src/Components/CalcDamage/Aliases.hpp /////////////////
 
+////////////////// START OF src/Types/Enums/GameMechanics.hpp //////////////////
+
+namespace pokesim {
+// Game the simulator is imitating the mechanics of
+enum class GameMechanics : std::uint8_t {
+  NONE = 0U,
+  SWORD_SHIELD = 80U,
+  BRILLIANT_DIAMOND_SHINING_PEARL = 83U,
+  SCARLET_VIOLET = 90U,
+
+  LATEST = SCARLET_VIOLET,
+};
+
+static constexpr std::uint8_t TOTAL_GAME_MECHANICS_COUNT = 3U;
+}  // namespace pokesim
+
+/////////////////// END OF src/Types/Enums/GameMechanics.hpp ///////////////////
+
+/////////////////// START OF src/Types/MechanicConstants.hpp ///////////////////
+
+// NOLINTBEGIN(readability-magic-numbers)
+namespace pokesim {
+struct MechanicConstants {
+  static constexpr std::array<types::percentChance, 4U> CRIT_CHANCE_DIVISORS(GameMechanics) {
+    return {24U, 8U, 2U, 1U};
+  }
+
+  static constexpr types::effectMultiplier CRIT_MULTIPLIER(GameMechanics) { return 1.5F; }
+};
+}  // namespace pokesim
+// NOLINTEND(readability-magic-numbers)
+
+//////////////////// END OF src/Types/MechanicConstants.hpp ////////////////////
+
 ////////////// START OF src/Components/CalcDamage/CriticalHit.hpp //////////////
 
 namespace pokesim::calc_damage {
 struct CritChanceDivisor {
-  types::percentChance val = pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS[0];
+  types::percentChance val = 1U;
 };
 
 struct CritBoost {
-  types::critBoost val = pokesim::MechanicConstants::CritBoost::DEFAULT;
+  types::critBoost val = pokesim::Constants::CritBoost::DEFAULT;
 };
 
 namespace tags {
@@ -18598,15 +18625,15 @@ struct Crit {};
 
 namespace pokesim::calc_damage {
 struct AttackingLevel {
-  types::level val = MechanicConstants::PokemonLevel::DEFAULT;
+  types::level val = Constants::PokemonLevel::DEFAULT;
 };
 
 struct AttackingStat {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct DefendingStat {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
 }  // namespace pokesim::calc_damage
 
@@ -18633,11 +18660,11 @@ struct RanAfterModifyDamage {};
 
 namespace pokesim::calc_damage {
 struct RealEffectiveStat {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct Power {
-  types::power val = MechanicConstants::MovePower::DEFAULT;
+  types::power val = Constants::MovePower::DEFAULT;
 };
 
 namespace tags {
@@ -18765,12 +18792,12 @@ struct SideDecision {
 
 namespace pokesim {
 struct Evs {
-  types::ev hp = MechanicConstants::PokemonEv::DEFAULT;
-  types::ev atk = MechanicConstants::PokemonEv::DEFAULT;
-  types::ev def = MechanicConstants::PokemonEv::DEFAULT;
-  types::ev spa = MechanicConstants::PokemonEv::DEFAULT;
-  types::ev spd = MechanicConstants::PokemonEv::DEFAULT;
-  types::ev spe = MechanicConstants::PokemonEv::DEFAULT;
+  types::ev hp = Constants::PokemonEv::DEFAULT;
+  types::ev atk = Constants::PokemonEv::DEFAULT;
+  types::ev def = Constants::PokemonEv::DEFAULT;
+  types::ev spa = Constants::PokemonEv::DEFAULT;
+  types::ev spd = Constants::PokemonEv::DEFAULT;
+  types::ev spe = Constants::PokemonEv::DEFAULT;
 
   bool operator==(const Evs& other) const {
     return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
@@ -18779,12 +18806,12 @@ struct Evs {
 };
 
 struct Ivs {
-  types::iv hp = MechanicConstants::PokemonIv::DEFAULT;
-  types::iv atk = MechanicConstants::PokemonIv::DEFAULT;
-  types::iv def = MechanicConstants::PokemonIv::DEFAULT;
-  types::iv spa = MechanicConstants::PokemonIv::DEFAULT;
-  types::iv spd = MechanicConstants::PokemonIv::DEFAULT;
-  types::iv spe = MechanicConstants::PokemonIv::DEFAULT;
+  types::iv hp = Constants::PokemonIv::DEFAULT;
+  types::iv atk = Constants::PokemonIv::DEFAULT;
+  types::iv def = Constants::PokemonIv::DEFAULT;
+  types::iv spa = Constants::PokemonIv::DEFAULT;
+  types::iv spd = Constants::PokemonIv::DEFAULT;
+  types::iv spe = Constants::PokemonIv::DEFAULT;
 
   bool operator==(const Ivs& other) const {
     return hp == other.hp && atk == other.atk && def == other.def && spa == other.spa && spd == other.spd &&
@@ -18800,7 +18827,7 @@ struct Ivs {
 namespace pokesim {
 // Contains the list of action entities queued up to be simulated for a battle's current turn.
 struct ActionQueue {
-  internal::maxSizedVector<types::entity, MechanicConstants::ActionQueueLength::MAX> val{};
+  internal::maxSizedVector<types::entity, Constants::ActionQueueLength::MAX> val{};
 };
 }  // namespace pokesim
 
@@ -18821,7 +18848,7 @@ struct ChoiceLock {
 namespace pokesim {
 // Contains the list of pokemon that will faint at the end of the current action.
 struct FaintQueue {
-  internal::maxSizedVector<types::entity, MechanicConstants::ActivePokemon::MAX> val{};
+  internal::maxSizedVector<types::entity, Constants::ActivePokemon::MAX> val{};
 };
 }  // namespace pokesim
 
@@ -18907,7 +18934,7 @@ struct Team {
 
 namespace pokesim {
 struct EventModifier {
-  types::eventModifier val = MechanicConstants::FIXED_POINT_SCALE;
+  types::eventModifier val = Constants::FIXED_POINT_SCALE;
 };
 }  // namespace pokesim
 
@@ -18917,7 +18944,7 @@ struct EventModifier {
 
 namespace pokesim {
 struct HitCount {
-  types::moveHits val = MechanicConstants::MoveHits::DEFAULT;
+  types::moveHits val = Constants::MoveHits::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -18938,7 +18965,7 @@ struct Id {
 namespace pokesim {
 // A Pokemon's level
 struct Level {
-  types::level val = MechanicConstants::PokemonLevel::DEFAULT;
+  types::level val = Constants::PokemonLevel::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -19148,11 +19175,11 @@ struct TypeName {
 
 namespace pokesim {
 struct Pp {
-  types::pp val = MechanicConstants::MovePp::DEFAULT;
+  types::pp val = Constants::MovePp::DEFAULT;
 };
 
 struct MaxPp {
-  types::pp val = MechanicConstants::MoveMaxPp::DEFAULT;
+  types::pp val = Constants::MoveMaxPp::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -19194,12 +19221,12 @@ struct HiddenAbility {
 namespace pokesim {
 // Contains all the base stats of a species
 struct BaseStats {
-  types::baseStat hp = MechanicConstants::PokemonBaseStat::DEFAULT;
-  types::baseStat atk = MechanicConstants::PokemonBaseStat::DEFAULT;
-  types::baseStat def = MechanicConstants::PokemonBaseStat::DEFAULT;
-  types::baseStat spa = MechanicConstants::PokemonBaseStat::DEFAULT;
-  types::baseStat spd = MechanicConstants::PokemonBaseStat::DEFAULT;
-  types::baseStat spe = MechanicConstants::PokemonBaseStat::DEFAULT;
+  types::baseStat hp = Constants::PokemonBaseStat::DEFAULT;
+  types::baseStat atk = Constants::PokemonBaseStat::DEFAULT;
+  types::baseStat def = Constants::PokemonBaseStat::DEFAULT;
+  types::baseStat spa = Constants::PokemonBaseStat::DEFAULT;
+  types::baseStat spd = Constants::PokemonBaseStat::DEFAULT;
+  types::baseStat spe = Constants::PokemonBaseStat::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -19210,7 +19237,7 @@ struct BaseStats {
 namespace pokesim {
 // The position of a Pokemon in its team's order (starts at 1)
 struct Position {
-  types::teamPositionIndex val = MechanicConstants::TeamSize::MIN;
+  types::teamPositionIndex val = Constants::TeamSize::MIN;
 };
 }  // namespace pokesim
 
@@ -19220,7 +19247,7 @@ struct Position {
 
 namespace pokesim {
 struct MovePriority {
-  types::priority val = MechanicConstants::MovePriority::DEFAULT;
+  types::priority val = Constants::MovePriority::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -19235,7 +19262,7 @@ namespace pokesim {
  * Calculated by multiplying the various Accuracy and Chance numbers of a battle state's events.
  */
 struct Probability {
-  types::probability val = MechanicConstants::Probability::DEFAULT;
+  types::probability val = Constants::Probability::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -19281,29 +19308,29 @@ struct RandomEventChances {
     RANDOM_OPTIONS <= internal::MAX_TYPICAL_RANDOM_OPTIONS,
     "Random events with more options than this should use RandomEqualChance or RandomEventCount");
 
-  types::probability probabilityA() const { return MechanicConstants::PercentChanceToProbability * val[0]; }
-  types::probability probabilityB() const { return MechanicConstants::PercentChanceToProbability * (val[1] - val[0]); }
+  types::probability probabilityA() const { return Constants::PercentChanceToProbability * val[0]; }
+  types::probability probabilityB() const { return Constants::PercentChanceToProbability * (val[1] - val[0]); }
   types::probability probabilityC() const {
     static_assert(RANDOM_OPTIONS >= 3U, "This function is only for events with more than 2 outcomes.");
-    return MechanicConstants::PercentChanceToProbability * (val[2] - val[1]);
+    return Constants::PercentChanceToProbability * (val[2] - val[1]);
   }
   types::probability probabilityD() const {
     static_assert(RANDOM_OPTIONS >= 4U, "This function is only for events with more than 3 outcomes.");
-    return MechanicConstants::PercentChanceToProbability * (val[3] - val[2]);
+    return Constants::PercentChanceToProbability * (val[3] - val[2]);
   }
   types::probability probabilityE() const {
     static_assert(RANDOM_OPTIONS == 5U, "This function is only for events with 5 outcomes.");
-    return MechanicConstants::PercentChanceToProbability * (val[4] - val[3]);
+    return Constants::PercentChanceToProbability * (val[4] - val[3]);
   }
 };
 
 // Used for random events that always have two outcomes where the chance the events happens may not be equal (i.e. move
 // accuracy checks, secondary move effects)
 struct RandomBinaryProbability {
-  types::probability val = MechanicConstants::Probability::DEFAULT;
+  types::probability val = Constants::Probability::DEFAULT;
 
   types::probability pass() const { return val; }
-  types::probability fail() const { return MechanicConstants::Probability::MAX - pass(); }
+  types::probability fail() const { return Constants::Probability::MAX - pass(); }
 };
 
 namespace tags {
@@ -19317,7 +19344,7 @@ struct RandomEqualChance {};
 struct RandomEventCount {
   types::eventPossibilities val = 0U;
 
-  types::probability probability() const { return MechanicConstants::Probability::MAX / val; }
+  types::probability probability() const { return Constants::Probability::MAX / val; }
 };
 
 template <types::eventPossibilities RANDOM_OPTIONS>
@@ -19416,13 +19443,13 @@ struct SpeedSortNeeded {};
 namespace pokesim {
 struct SpeedTieIndexes {
   struct Span {
-    types::activePokemonIndex start = MechanicConstants::ActivePokemon::MIN;
-    types::activePokemonIndex length = MechanicConstants::ActivePokemon::MIN;
+    types::activePokemonIndex start = Constants::ActivePokemon::MIN;
+    types::activePokemonIndex length = Constants::ActivePokemon::MIN;
 
     bool operator==(const Span& other) const noexcept { return other.start == start && other.length == length; }
   };
 
-  internal::fixedMemoryVector<Span, MechanicConstants::ActivePokemon::MAX> val{};
+  internal::fixedMemoryVector<Span, Constants::ActivePokemon::MAX> val{};
 };
 }  // namespace pokesim
 
@@ -19461,7 +19488,7 @@ struct UsesUntilKo {
   };
 
  public:
-  internal::maxSizedVector<Uses, MechanicConstants::DamageRollCount::MAX> val{};
+  internal::maxSizedVector<Uses, Constants::DamageRollCount::MAX> val{};
 
   const Uses& minUses() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
@@ -19475,7 +19502,7 @@ struct UsesUntilKo {
 
   bool guaranteedKo() const {
     const Uses& min = minUses();
-    return min.hits == 1U && min.damageRollsIncluded == MechanicConstants::DamageRollCount::MAX;
+    return min.hits == 1U && min.damageRollsIncluded == Constants::DamageRollCount::MAX;
   }
 };
 
@@ -19485,7 +19512,7 @@ struct AttackerHpLost : DamageRolls {};
 
 namespace analyze_effect {
 struct EffectMultiplier {
-  types::effectMultiplier val = MechanicConstants::AnalyzeEffectMultiplier::DEFAULT;
+  types::effectMultiplier val = Constants::AnalyzeEffectMultiplier::DEFAULT;
 };
 
 using MultipliedDamageRolls = DamageRolls;
@@ -19505,13 +19532,13 @@ struct IgnoredInput {};
 namespace pokesim {
 // Contains the types a species has
 struct SpeciesTypes {
-  std::array<dex::Type, MechanicConstants::TYPES_PER_POKEMON> val{};
+  std::array<dex::Type, Constants::TYPES_PER_POKEMON> val{};
 
   constexpr dex::Type& type1() { return val[0]; };
   constexpr dex::Type& type2() { return val[1]; };
   constexpr const dex::Type& type1() const { return val[0]; };
   constexpr const dex::Type& type2() const { return val[1]; };
-  constexpr internal::unsignedIntType<MechanicConstants::TYPES_PER_POKEMON> size() const {
+  constexpr internal::unsignedIntType<Constants::TYPES_PER_POKEMON> size() const {
     if (type2() == dex::Type::NO_TYPE) {
       return type1() == dex::Type::NO_TYPE ? 0U : 1U;
     }
@@ -19566,11 +19593,11 @@ struct SpeedSort {
   // Order of the types of actions (lower first)
   ActionOrder order = ActionOrder::NONE;
   // Priority of the action (higher first)
-  types::priority priority = MechanicConstants::MovePriority::DEFAULT;
+  types::priority priority = Constants::MovePriority::DEFAULT;
   // Whether negative fractional priority is active for the action (false first)
   types::fractionalPriority fractionalPriority = false;
   // Speed of Pokemon using move (higher first if priority tie)
-  types::stat speed = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat speed = Constants::PokemonEffectiveStat::DEFAULT;
 
   bool operator==(const SpeedSort& other) const {
     return order == other.order && priority == other.priority && fractionalPriority == other.fractionalPriority &&
@@ -19585,51 +19612,51 @@ struct SpeedSort {
 
 namespace pokesim::stat {
 struct Hp {
-  types::stat val = MechanicConstants::PokemonHpStat::DEFAULT;
+  types::stat val = Constants::PokemonHpStat::DEFAULT;
 };
 
 struct Atk {
-  types::stat val = MechanicConstants::PokemonStat::DEFAULT;
+  types::stat val = Constants::PokemonStat::DEFAULT;
 };
 
 struct Def {
-  types::stat val = MechanicConstants::PokemonStat::DEFAULT;
+  types::stat val = Constants::PokemonStat::DEFAULT;
 };
 
 struct Spa {
-  types::stat val = MechanicConstants::PokemonStat::DEFAULT;
+  types::stat val = Constants::PokemonStat::DEFAULT;
 };
 
 struct Spd {
-  types::stat val = MechanicConstants::PokemonStat::DEFAULT;
+  types::stat val = Constants::PokemonStat::DEFAULT;
 };
 
 struct Spe {
-  types::stat val = MechanicConstants::PokemonStat::DEFAULT;
+  types::stat val = Constants::PokemonStat::DEFAULT;
 };
 
 struct CurrentHp {
-  types::stat val = MechanicConstants::PokemonCurrentHpStat::DEFAULT;
+  types::stat val = Constants::PokemonCurrentHpStat::DEFAULT;
 };
 
 struct EffectiveAtk {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct EffectiveDef {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct EffectiveSpa {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct EffectiveSpd {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct EffectiveSpe {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
 }  // namespace pokesim::stat
 
@@ -19910,7 +19937,7 @@ struct Fairy {};
 namespace pokesim {
 // The current turn of a battle
 struct Turn {
-  types::battleTurn val = MechanicConstants::TurnCount::DEFAULT;
+  types::battleTurn val = Constants::TurnCount::DEFAULT;
 };
 }  // namespace pokesim
 
@@ -19942,24 +19969,6 @@ static constexpr inline std::array<BattleFormat, 2U> VALID_BATTLE_FORMATS = {
 }  // namespace pokesim
 
 /////////////////// END OF src/Types/Enums/BattleFormat.hpp ////////////////////
-
-////////////////// START OF src/Types/Enums/GameMechanics.hpp //////////////////
-
-namespace pokesim {
-// Game the simulator is imitating the mechanics of
-enum class GameMechanics : std::uint8_t {
-  NONE = 0U,
-  SWORD_SHIELD = 80U,
-  BRILLIANT_DIAMOND_SHINING_PEARL = 83U,
-  SCARLET_VIOLET = 90U,
-
-  LATEST = SCARLET_VIOLET,
-};
-
-static constexpr std::uint8_t TOTAL_GAME_MECHANICS_COUNT = 3U;
-}  // namespace pokesim
-
-/////////////////// END OF src/Types/Enums/GameMechanics.hpp ///////////////////
 
 ////////////////// START OF src/Types/Enums/MoveCategory.hpp ///////////////////
 
@@ -20142,13 +20151,13 @@ struct Options {
   constexpr const DamageRollOptions& getDamageRollsConsidered() const { return damageRollsConsidered; }
   constexpr bool getApplyChangesToInputBattle() const { return applyChangesToInputBattle; }
   constexpr types::percentChance getRandomChanceUpperLimit() const {
-    return randomChanceUpperLimit.value_or(MechanicConstants::PercentChance::MAX);
+    return randomChanceUpperLimit.value_or(Constants::PercentChance::MAX);
   }
   constexpr types::percentChance getRandomChanceLowerLimit() const {
-    return randomChanceLowerLimit.value_or(MechanicConstants::PercentChance::MIN);
+    return randomChanceLowerLimit.value_or(Constants::PercentChance::MIN);
   }
   constexpr types::probability getBranchProbabilityLowerLimit() const {
-    return branchProbabilityLowerLimit.value_or(MechanicConstants::Probability::MIN);
+    return branchProbabilityLowerLimit.value_or(Constants::Probability::MIN);
   }
   constexpr bool hasBranchProbabilityLowerLimit() const { return branchProbabilityLowerLimit.has_value(); }
   constexpr bool getMakeBranchesOnRandomEvents() const { return makeBranchesOnRandomEvents; }
@@ -21790,8 +21799,8 @@ class Pokedex {
   types::entity buildAbility(dex::Ability ability, types::registry& registry) const;
 
  private:
-  struct Constants {
-    Constants(GameMechanics gameMechanic) : gameMechanicValue(gameMechanic), typeChartValue(gameMechanic) {}
+  struct ConstantValues {
+    ConstantValues(GameMechanics gameMechanic) : gameMechanicValue(gameMechanic), typeChartValue(gameMechanic) {}
     constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
       return gameMechanicValue == checkedMechanics;
     }
@@ -22062,7 +22071,7 @@ struct AnalyzeEffectInputInfo {
  private:
   struct BoostInfo {
     dex::Stat stat = dex::Stat::NONE;
-    types::boost boost = MechanicConstants::PokemonStatBoost::DEFAULT;
+    types::boost boost = Constants::PokemonStatBoost::DEFAULT;
   };
 
  public:
@@ -22104,11 +22113,11 @@ constexpr types::damage computeDamageRoll(types::damage damage, types::damageRol
 }
 
 constexpr types::damage computeAverageDamageRoll(types::damage damage) {
-  return (types::damage)(damage * (100U - (MechanicConstants::DamageRollCount::MAX - 1U) / 2.0F) / 100.0F);
+  return (types::damage)(damage * (100U - (Constants::DamageRollCount::MAX - 1U) / 2.0F) / 100.0F);
 }
 
 constexpr types::damage computeMinDamageRoll(types::damage damage) {
-  return computeDamageRoll(damage, MechanicConstants::DamageRollCount::MAX - 1U);
+  return computeDamageRoll(damage, Constants::DamageRollCount::MAX - 1U);
 }
 
 constexpr types::damage computeBaseDamage(
@@ -22119,8 +22128,8 @@ constexpr types::damage computeBaseDamage(
 constexpr types::stat computeStatFromBaseStat(
   dex::Stat statName, types::baseStat baseStat, types::level level, dex::Nature nature, const Evs& evs,
   const Ivs& ivs) {
-  types::ev ev = MechanicConstants::PokemonEv::DEFAULT;
-  types::iv iv = MechanicConstants::PokemonIv::DEFAULT;
+  types::ev ev = Constants::PokemonEv::DEFAULT;
+  types::iv iv = Constants::PokemonIv::DEFAULT;
 
   switch (statName) {
     case dex::Stat::HP: {
@@ -22775,8 +22784,8 @@ class Simulation : public internal::RegistryContainer {
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
 
  private:
-  struct Constants {
-    Constants(const Pokedex& pokedex_, BattleFormat battleFormat_)
+  struct ConstantValues {
+    ConstantValues(const Pokedex& pokedex_, BattleFormat battleFormat_)
         : battleFormatValue(battleFormat_), pokedexValue(&pokedex_) {}
     constexpr bool isBattleFormat(BattleFormat checkedFormat) const { return checkedFormat == battleFormatValue; }
     constexpr const Pokedex& pokedex() const { return *pokedexValue; }
@@ -22785,7 +22794,7 @@ class Simulation : public internal::RegistryContainer {
     BattleFormat battleFormatValue;
     const Pokedex* pokedexValue;
   } constants;
-  Simulation(const Constants& other);
+  Simulation(const ConstantValues& other);
 
  public:
   simulate_turn::Options simulateTurnOptions;
@@ -23101,7 +23110,7 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(abilityName == nullptr);
     }
 
-    POKESIM_REQUIRE_NM(level.val == creationInfo.level.value_or(MechanicConstants::PokemonLevel::DEFAULT));
+    POKESIM_REQUIRE_NM(level.val == creationInfo.level.value_or(Constants::PokemonLevel::DEFAULT));
 
     if (!creationInfo.item.has_value() || creationInfo.item == dex::Item::NO_ITEM) {
       POKESIM_REQUIRE_NM(!registry->all_of<ItemName>(pokemonEntity));
@@ -23153,7 +23162,7 @@ struct SimulationSetupChecks {
 
     if (creationInfo.currentHp.has_value()) {
       POKESIM_REQUIRE_NM(registry->get<stat::CurrentHp>(pokemonEntity).val == creationInfo.currentHp);
-      if (creationInfo.currentHp == MechanicConstants::PokemonCurrentHpStat::MIN) {
+      if (creationInfo.currentHp == Constants::PokemonCurrentHpStat::MIN) {
         POKESIM_REQUIRE_NM(registry->all_of<tags::Fainted>(pokemonEntity));
       }
       else {
@@ -23201,8 +23210,8 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<RngSeed>(battleEntity));
     const auto& [sides, turn, probability, rngSeed] = registry->get<Sides, Turn, Probability, RngSeed>(battleEntity);
 
-    POKESIM_REQUIRE_NM(turn.val == creationInfo.turn.value_or(MechanicConstants::TurnCount::DEFAULT));
-    POKESIM_REQUIRE_NM(probability.val == creationInfo.probability.value_or(MechanicConstants::Probability::DEFAULT));
+    POKESIM_REQUIRE_NM(turn.val == creationInfo.turn.value_or(Constants::TurnCount::DEFAULT));
+    POKESIM_REQUIRE_NM(probability.val == creationInfo.probability.value_or(Constants::Probability::DEFAULT));
 
     if (creationInfo.rngSeed) {
       POKESIM_REQUIRE_NM(rngSeed.val == creationInfo.rngSeed);
@@ -23211,7 +23220,7 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(rngSeed.val != 0U);
     }
 
-    POKESIM_REQUIRE_NM(sides.val.size() == MechanicConstants::SIDE_COUNT);
+    POKESIM_REQUIRE_NM(sides.val.size() == Constants::SIDE_COUNT);
     for (types::sideIndex i = 0U; i < sides.val.size(); i++) {
       checkCreatedSide(sides.val[i], creationInfo.sides[i]);
       POKESIM_REQUIRE_NM(registry->get<Battle>(sides.val[i]).val == battleEntity);
@@ -23227,8 +23236,8 @@ struct SimulationSetupChecks {
   void checkTurnDecision(types::entity battleEntity, const TurnDecisionInfo& turnDecisionInfo) const {
     const auto& sides = registry->get<Sides>(battleEntity).val;
 
-    POKESIM_REQUIRE_NM(sides.size() == MechanicConstants::SIDE_COUNT);
-    for (types::sideIndex side = 0U; side < MechanicConstants::SIDE_COUNT; side++) {
+    POKESIM_REQUIRE_NM(sides.size() == Constants::SIDE_COUNT);
+    for (types::sideIndex side = 0U; side < Constants::SIDE_COUNT; side++) {
       const auto& sideDecision = registry->get<SideDecision>(sides[side]);
       const auto& sideDecisionInfo = turnDecisionInfo[side];
 
@@ -23659,26 +23668,24 @@ void run(Simulation& simulation);
 namespace pokesim {
 template <typename Number1, typename Number2>
 constexpr types::eventModifier fixedPointMultiply(Number1 value, Number2 multiplier) {
-  types::eventModifier modifier = (types::eventModifier)(multiplier * MechanicConstants::FIXED_POINT_SCALE);
+  types::eventModifier modifier = (types::eventModifier)(multiplier * Constants::FIXED_POINT_SCALE);
   types::eventModifier modified = value * modifier;
-  types::eventModifier scaled = modified + MechanicConstants::FIXED_POINT_HALF_SCALE - 1U;
-  return scaled / MechanicConstants::FIXED_POINT_SCALE;
+  types::eventModifier scaled = modified + Constants::FIXED_POINT_HALF_SCALE - 1U;
+  return scaled / Constants::FIXED_POINT_SCALE;
 }
 
 template <typename Number>
 constexpr Number applyChainedModifier(Number value, types::eventModifier eventModifier) {
   types::eventModifier modified = value * eventModifier;
-  types::eventModifier scaled = modified + MechanicConstants::FIXED_POINT_HALF_SCALE - 1U;
-  return (Number)(scaled / MechanicConstants::FIXED_POINT_SCALE);
+  types::eventModifier scaled = modified + Constants::FIXED_POINT_HALF_SCALE - 1U;
+  return (Number)(scaled / Constants::FIXED_POINT_SCALE);
 }
 
 template <typename Numerator>
 constexpr types::eventModifier chainValueToModifier(
   types::eventModifier eventModifier, Numerator numerator, types::eventModifier denominator = 1U) {
-  types::eventModifier newModifier =
-    (types::eventModifier)(numerator * MechanicConstants::FIXED_POINT_SCALE / denominator);
-  return (eventModifier * newModifier + MechanicConstants::FIXED_POINT_HALF_SCALE) /
-         MechanicConstants::FIXED_POINT_SCALE;
+  types::eventModifier newModifier = (types::eventModifier)(numerator * Constants::FIXED_POINT_SCALE / denominator);
+  return (eventModifier * newModifier + Constants::FIXED_POINT_HALF_SCALE) / Constants::FIXED_POINT_SCALE;
 }
 
 template <typename Numerator>
@@ -24539,11 +24546,7 @@ void setRandomBinaryChance(
 template <typename PercentChanceComponent>
 void setReciprocalRandomBinaryChance(
   types::handle handle, PercentChanceComponent percentChance, Battle battle, const Simulation& simulation) {
-  setRandomBinaryChanceFromProbability(
-    handle,
-    battle,
-    simulation,
-    MechanicConstants::Probability::MAX / percentChance.val);
+  setRandomBinaryChanceFromProbability(handle, battle, simulation, Constants::Probability::MAX / percentChance.val);
 }
 
 void setRandomEqualChance(types::handle handle, const Simulation& simulation);
@@ -25343,7 +25346,7 @@ struct Checks : pokesim::debug::Checks {
 
     for (const Damage& damageRoll : damageRolls.val) {
       POKESIM_REQUIRE_NM(lastDamage >= damageRoll.val);
-      POKESIM_REQUIRE_NM(damageRoll.val >= MechanicConstants::Damage::MIN);
+      POKESIM_REQUIRE_NM(damageRoll.val >= Constants::Damage::MIN);
       if (calculateUpToFoeHp) {
         POKESIM_REQUIRE_NM(damageRoll.val <= defenderHp.val);
       }
@@ -25359,7 +25362,7 @@ struct Checks : pokesim::debug::Checks {
 
     std::size_t idealDamageRollCount = 0U;
     if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
-      idealDamageRollCount = MechanicConstants::DamageRollCount::MAX;
+      idealDamageRollCount = Constants::DamageRollCount::MAX;
     }
     else {
       if (damageRollKind & DamageRollKind::MAX_DAMAGE) {
@@ -25419,7 +25422,7 @@ struct Checks : pokesim::debug::Checks {
       if (has<pokesim::tags::SimulateTurn>(move)) {
         typesToIgnore.add<Damage>();
         POKESIM_REQUIRE_NM(has<Damage>(move));
-        POKESIM_REQUIRE_NM(registry->get<Damage>(move).val >= MechanicConstants::Damage::MIN);
+        POKESIM_REQUIRE_NM(registry->get<Damage>(move).val >= Constants::Damage::MIN);
         POKESIM_REQUIRE_NM(!has<DamageRolls>(move));
         POKESIM_REQUIRE_NM(!has<UsesUntilKo>(move));
       }

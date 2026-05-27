@@ -1,18 +1,18 @@
 #pragma once
 
+#include <Types/Constants.hpp>
 #include <Types/Damage.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Random.hpp>
 #include <Types/Stats.hpp>
-#include <array>
 
 namespace pokesim::calc_damage {
 struct CritChanceDivisor {
-  types::percentChance val = pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS[0];
+  types::percentChance val = 1U;
 };
 
 struct CritBoost {
-  types::critBoost val = pokesim::MechanicConstants::CritBoost::DEFAULT;
+  types::critBoost val = pokesim::Constants::CritBoost::DEFAULT;
 };
 
 namespace tags {

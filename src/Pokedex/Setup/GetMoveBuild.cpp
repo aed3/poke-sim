@@ -90,7 +90,7 @@ struct BuildMove {
       move.setPrimaryEffect<EffectType>(effectValues...);
     }
     else {
-      types::percentChance chance = MechanicConstants::MoveBaseEffectChance::DEFAULT;
+      types::percentChance chance = Constants::MoveBaseEffectChance::DEFAULT;
       if constexpr (has<Optional::chance, EffectData>::value) {
         chance = EffectData::chance(gameMechanic);
       }
@@ -107,7 +107,7 @@ struct BuildMove {
       (move.setPrimaryEffect<EffectTypes>(), ...);
     }
     else {
-      types::percentChance chance = MechanicConstants::MoveBaseEffectChance::DEFAULT;
+      types::percentChance chance = Constants::MoveBaseEffectChance::DEFAULT;
       if constexpr (has<Optional::chance, EffectData>::value) {
         chance = EffectData::chance(gameMechanic);
       }

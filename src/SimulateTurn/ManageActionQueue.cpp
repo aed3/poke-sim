@@ -61,8 +61,8 @@ void resolveSlotDecisions(
       actionHandle.emplace<MoveName>(decision.moveChoice.value());
 
       speedSort.order = ActionOrder::MOVE;
-      speedSort.priority = MechanicConstants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
-      speedSort.fractionalPriority = false;                           // TODO (aed3): get fractionalPriority
+      speedSort.priority = Constants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
+      speedSort.fractionalPriority = false;                   // TODO (aed3): get fractionalPriority
     }
     else if (decision.itemChoice.has_value()) {
       actionHandle.emplace<action::tags::Item>();
@@ -98,7 +98,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
 
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     POKESIM_REQUIRE(
-      registry.get<Turn>(battle.val).val != MechanicConstants::TurnCount::MIN,
+      registry.get<Turn>(battle.val).val != Constants::TurnCount::MIN,
       "Slot decisions only have an effect after a battle starts. Make sure to pass a `teamOrder` decision at the start "
       "of a battle (aka team preview).");
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
@@ -122,7 +122,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
   }
   else if (sideDecision.decisions.holds<types::teamOrder>()) {
     POKESIM_REQUIRE(
-      registry.get<Turn>(battle.val).val == MechanicConstants::TurnCount::MIN,
+      registry.get<Turn>(battle.val).val == Constants::TurnCount::MIN,
       "Team order decisions only have an effect at the start of a battle (aka team preview). Make sure to pass a "
       "`slotDecisions` decision for battles in progress.");
     const auto& teamOrder = sideDecision.decisions.get<types::teamOrder>();
@@ -144,8 +144,7 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   if (entityList.size() == 1U) return;
   const types::registry* registry = handle.registry();
 
-  internal::maxSizedVector<std::pair<SpeedSort, types::entity>, MechanicConstants::ActionQueueLength::MAX>
-    speedSortList;
+  internal::maxSizedVector<std::pair<SpeedSort, types::entity>, Constants::ActionQueueLength::MAX> speedSortList;
   speedSortList.reserve(entityList.size());
 
   for (types::entity entity : entityList) {

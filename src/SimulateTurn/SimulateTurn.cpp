@@ -186,7 +186,7 @@ void checkWin(types::handle battleHandle, const Sides& sides) {
 }
 
 void faintPokemon(Simulation& simulation) {
-  using LoopLimits = MechanicConstants::ActivePokemon;
+  using LoopLimits = Constants::ActivePokemon;
   types::activePokemonIndex iterations = LoopLimits::MIN;
   while (!simulation.registry.view<FaintQueue>().empty()) {
     POKESIM_REQUIRE(
@@ -292,7 +292,7 @@ void simulateTurn(Simulation& simulation) {
   simulation.addToEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SelectedForViewBattle>();
 
   simulation.viewForSelectedBattles<setCurrentAction>();
-  using ActionsLimit = MechanicConstants::ActionQueueLength;
+  using ActionsLimit = Constants::ActionQueueLength;
   types::actionQueueIndex actionsTaken = ActionsLimit::MIN;
   while (!simulation.registry.view<action::tags::Current>().empty()) {
     POKESIM_REQUIRE(

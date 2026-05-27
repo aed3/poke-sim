@@ -1,11 +1,11 @@
 #pragma once
 
-#include <Types/MechanicConstants.hpp>
+#include <Types/Constants.hpp>
 #include <Types/State.hpp>
 
 namespace pokesim {
 // The current turn of a battle
 struct Turn {
-  types::battleTurn val = MechanicConstants::TurnCount::DEFAULT;
+  types::battleTurn val = Constants::TurnCount::DEFAULT;
 };
 }  // namespace pokesim

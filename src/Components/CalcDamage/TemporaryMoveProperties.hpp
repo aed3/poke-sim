@@ -1,16 +1,16 @@
 #pragma once
 
-#include <Types/MechanicConstants.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Move.hpp>
 #include <Types/Stats.hpp>
 
 namespace pokesim::calc_damage {
 struct RealEffectiveStat {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct Power {
-  types::power val = MechanicConstants::MovePower::DEFAULT;
+  types::power val = Constants::MovePower::DEFAULT;
 };
 
 namespace tags {

@@ -33,6 +33,7 @@
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Simulation/SimulationOptions.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Enums/DamageRollKind.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
@@ -83,12 +84,12 @@ void checkForAndApplyTypeEffectiveness(
   modifier.typeEffectiveness = getAttackEffectiveness(defenderTypes, type.val, pokedex.typeChart());
 }
 
-void applyCritDamageIncrease(Damage& damage) {
-  damage.val = (types::damage)(damage.val * MechanicConstants::CRIT_MULTIPLIER);
+void applyCritDamageIncrease(Damage& damage, types::effectMultiplier critMultiplier) {
+  damage.val = (types::damage)(damage.val * critMultiplier);
 }
 
 void setDamageToMinimumPossible(Damage& damage) {
-  damage.val = std::max(damage.val, MechanicConstants::Damage::MIN);
+  damage.val = std::max(damage.val, Constants::Damage::MIN);
 }
 
 void setDefendingSide(types::handle moveHandle, Defender defender) {
@@ -114,7 +115,7 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Po
   types::effectMultiplier stab = ((std::underlying_type_t<StabBoostKind>)modifiers.stab) / 100.0F;
   damage.val = (types::damage)fixedPointMultiply(damage.val, stab);
 
-  types::eventModifier typeEffectivenessModifier = MechanicConstants::FIXED_POINT_SCALE;
+  types::eventModifier typeEffectivenessModifier = Constants::FIXED_POINT_SCALE;
   if (modifiers.typeEffectiveness < 0) {
     typeEffectivenessModifier = typeEffectivenessModifier >> -modifiers.typeEffectiveness;
   }
@@ -135,8 +136,8 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Po
 
 void calculateAllDamageRolls(
   DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
-  damageRolls.val.reserve(MechanicConstants::DamageRollCount::MAX);
-  for (types::damageRollIndex i = 0U; i < MechanicConstants::DamageRollCount::MAX; i++) {
+  damageRolls.val.reserve(Constants::DamageRollCount::MAX);
+  for (types::damageRollIndex i = 0U; i < Constants::DamageRollCount::MAX; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
     damageRoll.val = computeDamageRoll(damageRoll.val, i);
     modifyDamage(damageRoll, modifier, pokedex);
@@ -172,10 +173,10 @@ void reduceDamageRollsToDefenderHp(
   damage.val = std::min(defenderHp.val, damage.val);
 }
 
-void assignCritChanceDivisor(types::handle moveHandle, CritBoost critBoost) {
-  std::size_t index =
-    std::min((std::size_t)critBoost.val, pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS.size() - 1U);
-  moveHandle.emplace<CritChanceDivisor>(pokesim::MechanicConstants::CRIT_CHANCE_DIVISORS[index]);
+void assignCritChanceDivisor(
+  types::handle moveHandle, CritBoost critBoost, const std::array<types::percentChance, 4U>& critChanceDivisors) {
+  std::size_t index = std::min((std::size_t)critBoost.val, critChanceDivisors.size() - 1U);
+  moveHandle.emplace<CritChanceDivisor>(critChanceDivisors[index]);
 }
 
 void setSourceLevel(types::handle moveHandle, Attacker attacker) {
@@ -184,7 +185,7 @@ void setSourceLevel(types::handle moveHandle, Attacker attacker) {
 
 template <typename Category>
 void setUsedAttackStat(types::handle moveHandle, Attacker attacker) {
-  types::stat attackingStat = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat attackingStat = Constants::PokemonEffectiveStat::DEFAULT;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     attackingStat = moveHandle.registry()->get<stat::EffectiveAtk>(attacker.val).val;
     moveHandle.emplace<tags::UsesAtk>();
@@ -198,7 +199,7 @@ void setUsedAttackStat(types::handle moveHandle, Attacker attacker) {
 
 template <typename Category>
 void setUsedDefenseStat(types::handle moveHandle, Defender defender) {
-  types::stat defendingStat = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat defendingStat = Constants::PokemonEffectiveStat::DEFAULT;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     defendingStat = moveHandle.registry()->get<stat::EffectiveDef>(defender.val).val;
     moveHandle.emplace<tags::UsesDef>();
@@ -213,7 +214,7 @@ void setUsedDefenseStat(types::handle moveHandle, Defender defender) {
 template <typename BoostType>
 void setIgnoreAttackingBoostIfNegative(types::handle moveHandle, Attacker attacker) {
   BoostType* boost = moveHandle.registry()->try_get<BoostType>(attacker.val);
-  if (boost && boost->val < MechanicConstants::PokemonStatBoost::DEFAULT) {
+  if (boost && boost->val < Constants::PokemonStatBoost::DEFAULT) {
     moveHandle.emplace<tags::IgnoresAttackingBoost>();
   }
 }
@@ -221,7 +222,7 @@ void setIgnoreAttackingBoostIfNegative(types::handle moveHandle, Attacker attack
 template <typename BoostType>
 void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, Defender defender) {
   BoostType* boost = moveHandle.registry()->try_get<BoostType>(defender.val);
-  if (boost && boost->val > MechanicConstants::PokemonStatBoost::DEFAULT) {
+  if (boost && boost->val > Constants::PokemonStatBoost::DEFAULT) {
     moveHandle.emplace<tags::IgnoresDefendingBoost>();
   }
 }
@@ -236,7 +237,7 @@ void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, 
   const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
   UsesUntilKo usesUntilKo;
   POKESIM_REQUIRE(
-    damageRolls.val.size() == MechanicConstants::DamageRollCount::MAX,
+    damageRolls.val.size() == Constants::DamageRollCount::MAX,
     "All the damage rolls are needed to calculate this correctly.");
 
   for (const Damage& damageRoll : damageRolls.val) {
@@ -330,7 +331,8 @@ void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
   if constexpr (std::is_same_v<SimulationTag, pokesim::tags::SimulateTurn>) {
     simulation.addToEntities<calc_damage::CritBoost, pokesim::tags::SelectedForViewMove, pokesim::tags::SimulateTurn>();
     runModifyCritBoostEvent(simulation);
-    simulation.viewForSelectedMoves<assignCritChanceDivisor>();
+    simulation.viewForSelectedMoves<assignCritChanceDivisor>(
+      simulation.pokedex().getStaticValue<MechanicConstants::CRIT_CHANCE_DIVISORS>());
     simulation.registry.clear<CritBoost>();
 
     simulate_turn::setIfMoveCrits(simulation);
@@ -506,7 +508,8 @@ void calcDamage(Simulation& simulation) {
   setDamageFormulaVariables(simulation);
 
   simulation.viewForSelectedMoves<calculateBaseDamage>();
-  simulation.viewForSelectedMoves<applyCritDamageIncrease, Tags<tags::Crit>>();
+  simulation.viewForSelectedMoves<applyCritDamageIncrease, Tags<tags::Crit>>(
+    simulation.pokedex().getStaticValue<MechanicConstants::CRIT_MULTIPLIER>());
 
   simulation.addToEntities<DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
   setDamageRollModifiers(simulation);

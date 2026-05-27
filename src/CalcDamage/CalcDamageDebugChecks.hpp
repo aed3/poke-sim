@@ -23,11 +23,11 @@
 #include <Config/Require.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Simulation/SimulationOptions.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/DamageRollKind.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
-#include <Types/MechanicConstants.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/DebugChecks.hpp>
 #include <cstddef>
@@ -228,7 +228,7 @@ struct Checks : pokesim::debug::Checks {
 
     for (const Damage& damageRoll : damageRolls.val) {
       POKESIM_REQUIRE_NM(lastDamage >= damageRoll.val);
-      POKESIM_REQUIRE_NM(damageRoll.val >= MechanicConstants::Damage::MIN);
+      POKESIM_REQUIRE_NM(damageRoll.val >= Constants::Damage::MIN);
       if (calculateUpToFoeHp) {
         POKESIM_REQUIRE_NM(damageRoll.val <= defenderHp.val);
       }
@@ -244,7 +244,7 @@ struct Checks : pokesim::debug::Checks {
 
     std::size_t idealDamageRollCount = 0U;
     if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
-      idealDamageRollCount = MechanicConstants::DamageRollCount::MAX;
+      idealDamageRollCount = Constants::DamageRollCount::MAX;
     }
     else {
       if (damageRollKind & DamageRollKind::MAX_DAMAGE) {
@@ -304,7 +304,7 @@ struct Checks : pokesim::debug::Checks {
       if (has<pokesim::tags::SimulateTurn>(move)) {
         typesToIgnore.add<Damage>();
         POKESIM_REQUIRE_NM(has<Damage>(move));
-        POKESIM_REQUIRE_NM(registry->get<Damage>(move).val >= MechanicConstants::Damage::MIN);
+        POKESIM_REQUIRE_NM(registry->get<Damage>(move).val >= Constants::Damage::MIN);
         POKESIM_REQUIRE_NM(!has<DamageRolls>(move));
         POKESIM_REQUIRE_NM(!has<UsesUntilKo>(move));
       }

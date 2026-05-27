@@ -13,9 +13,9 @@
 #include <Config/Require.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/Simulation.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Enums/DamageRollKind.hpp>
-#include <Types/MechanicConstants.hpp>
 #include <Types/Random.hpp>
 #include <Utilities/SelectForView.hpp>
 
@@ -58,7 +58,7 @@ void assignAllDamageRollProbability(
   POKESIM_REQUIRE(damageCount > 0U, "How was a damage roll not found that matched the damage dealt?");
 
   Probability& probability = registry.get<Probability>(battle.val);
-  probability.val *= damageCount / (types::probability)MechanicConstants::DamageRollCount::MAX;
+  probability.val *= damageCount / (types::probability)Constants::DamageRollCount::MAX;
 }
 
 types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {

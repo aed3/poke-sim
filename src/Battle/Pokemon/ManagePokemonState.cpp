@@ -60,7 +60,7 @@ void boostStat(types::registry& registry, CurrentEffectTarget target, BoostType&
   if (boost.val) {
     registry.emplace_or_replace<StatUpdateRequired>(target.val);
   }
-  if (currentBoost.val == MechanicConstants::PokemonStatBoost::DEFAULT) {
+  if (currentBoost.val == Constants::PokemonStatBoost::DEFAULT) {
     registry.remove<BoostType>(target.val);
   }
 }
@@ -72,7 +72,7 @@ void clampBoost(types::registry& registry, CurrentEffectTarget target, BoostType
     return;
   }
 
-  using BoostLimits = MechanicConstants::PokemonStatBoost;
+  using BoostLimits = Constants::PokemonStatBoost;
 
   types::boost combinedBoost = currentBoost->val + boost.val;
   if (combinedBoost > BoostLimits::MAX) {
@@ -275,17 +275,17 @@ void applyDamage(types::handle pokemonHandle, types::damage damage) {
     hp.val -= damage;
   }
   else {
-    hp.val = MechanicConstants::PokemonCurrentHpStat::MIN;
+    hp.val = Constants::PokemonCurrentHpStat::MIN;
     faint(pokemonHandle, pokemonHandle.get<Battle>());
   }
 }
 
 void applyStatBoost(types::stat& stat, types::boost boost) {
   if (boost >= 0) {
-    stat = types::stat(stat * MechanicConstants::STAT_BOOST_STAGES[boost]);
+    stat = types::stat(stat * Constants::STAT_BOOST_STAGES[boost]);
   }
   else {
-    stat = types::stat(stat / MechanicConstants::STAT_BOOST_STAGES[-boost]);
+    stat = types::stat(stat / Constants::STAT_BOOST_STAGES[-boost]);
   }
 }
 

@@ -18,8 +18,8 @@
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Config/Require.hpp>
 #include <SimulateTurn/RandomChance.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Enums/BattleFormat.hpp>
-#include <Types/MechanicConstants.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>
@@ -38,7 +38,7 @@ void deductMoveHitCount(types::handle moveHandle, HitCount& hitCount) {
 }
 
 void removeHitCountFromFaintedTargets(types::handle moveHandle, CurrentActionTarget target) {
-  if (moveHandle.registry()->get<stat::CurrentHp>(target.val).val == MechanicConstants::PokemonCurrentHpStat::MIN) {
+  if (moveHandle.registry()->get<stat::CurrentHp>(target.val).val == Constants::PokemonCurrentHpStat::MIN) {
     moveHandle.remove<HitCount, tags::CurrentMoveHit>();
   }
 }
@@ -107,7 +107,7 @@ void removeFaintedSecondaryEffectTarget(
   const simulate_turn::Options& options) {
   types::registry& registry = *handle.registry();
   internal::PercentChanceLimitResult limitReached = internal::checkPercentChanceLimits(
-    baseEffectChance.val * MechanicConstants::PercentChanceToProbability,
+    baseEffectChance.val * Constants::PercentChanceToProbability,
     registry.get<Probability>(battle.val).val,
     options);
 
@@ -115,7 +115,7 @@ void removeFaintedSecondaryEffectTarget(
     return;
   }
   types::stat hp = registry.get<stat::CurrentHp>(target.val).val;
-  if (hp == MechanicConstants::PokemonCurrentHpStat::MIN) {
+  if (hp == Constants::PokemonCurrentHpStat::MIN) {
     handle.remove<move::effect::tags::Secondary>();
   }
 }
@@ -151,7 +151,7 @@ void setMoveHitCount(Simulation& simulation) {
 
   runRandomEventChances<4U, tags::CurrentMoveHit, move::tags::VariableHitCount>(
     simulation,
-    MechanicConstants::PROGRESSIVE_MULTI_HIT_CHANCES,
+    Constants::PROGRESSIVE_MULTI_HIT_CHANCES,
     [](Simulation& sim) {
       sim.addToEntities<HitCount, pokesim::internal::tags::RandomEventA>(HitCount{2U});
       sim.addToEntities<HitCount, pokesim::internal::tags::RandomEventB>(HitCount{3U});
@@ -202,7 +202,7 @@ void accuracyCheck(Simulation& simulation) {
 void moveHitLoop(Simulation& simulation) {
   setMoveHitCount(simulation);
 
-  using MoveHitLimits = MechanicConstants::MoveHits;
+  using MoveHitLimits = Constants::MoveHits;
   types::moveHits iterations = MoveHitLimits::MIN;
   while (!simulation.registry.view<HitCount>().empty()) {
     POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran more than possible.");

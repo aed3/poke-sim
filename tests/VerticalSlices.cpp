@@ -5,13 +5,13 @@
 namespace pokesim {
 static GameMechanics constexpr TestMechanic = GameMechanics::SCARLET_VIOLET;
 
-static auto constexpr MAX_PROBABILITY = MechanicConstants::Probability::MAX;
-static auto constexpr MAX_PERCENT_CHANCE = MechanicConstants::PercentChance::MAX;
-static auto constexpr CHANCE_TO_PROBABILITY = MechanicConstants::PercentChanceToProbability;
-static auto constexpr PROBABILITY_TO_CHANCE = MechanicConstants::ProbabilityToPercentChance;
-static auto constexpr CRIT_PROBABILITY = MAX_PROBABILITY / MechanicConstants::CRIT_CHANCE_DIVISORS[0];
-static auto constexpr STAT_BOOST_STAGES = MechanicConstants::STAT_BOOST_STAGES;
-static auto constexpr MIN_HP = MechanicConstants::PokemonCurrentHpStat::MIN;
+static auto constexpr MAX_PROBABILITY = Constants::Probability::MAX;
+static auto constexpr MAX_PERCENT_CHANCE = Constants::PercentChance::MAX;
+static auto constexpr CHANCE_TO_PROBABILITY = Constants::PercentChanceToProbability;
+static auto constexpr PROBABILITY_TO_CHANCE = Constants::ProbabilityToPercentChance;
+static auto constexpr CRIT_PROBABILITY = MAX_PROBABILITY / MechanicConstants::CRIT_CHANCE_DIVISORS(TestMechanic)[0];
+static auto constexpr STAT_BOOST_STAGES = Constants::STAT_BOOST_STAGES;
+static auto constexpr MIN_HP = Constants::PokemonCurrentHpStat::MIN;
 
 static auto constexpr ALL_DAMAGE = DamageRollKind::ALL_DAMAGE_ROLLS;
 static auto constexpr AVERAGE_DAMAGE = DamageRollKind::AVERAGE_DAMAGE;
@@ -213,10 +213,10 @@ struct VerticalSliceDamageValueInfo {
       REQUIRE(!!(baseDamageRollInstances || critDamageRollInstances));
 
       if (wasCrit) {
-        probability *= critDamageRollInstances / MechanicConstants::DamageRollCount::MAX;
+        probability *= critDamageRollInstances / Constants::DamageRollCount::MAX;
       }
       else {
-        probability *= baseDamageRollInstances / MechanicConstants::DamageRollCount::MAX;
+        probability *= baseDamageRollInstances / Constants::DamageRollCount::MAX;
       }
     }
 

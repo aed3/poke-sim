@@ -1,18 +1,18 @@
 #pragma once
 
-#include <Types/MechanicConstants.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Stats.hpp>
 
 namespace pokesim::calc_damage {
 struct AttackingLevel {
-  types::level val = MechanicConstants::PokemonLevel::DEFAULT;
+  types::level val = Constants::PokemonLevel::DEFAULT;
 };
 
 struct AttackingStat {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
 
 struct DefendingStat {
-  types::stat val = MechanicConstants::PokemonEffectiveStat::DEFAULT;
+  types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
 }  // namespace pokesim::calc_damage

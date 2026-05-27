@@ -2,16 +2,15 @@
 
 #include <Utilities/NumberToType.hpp>
 
-#include "MechanicConstants.hpp"
+#include "Constants.hpp"
 
 namespace pokesim::types {
-using pp = pokesim::internal::unsignedIntType<MechanicConstants::MoveMaxPp::MAX>;
-using basePower = pokesim::internal::unsignedIntType<MechanicConstants::MoveBasePower::MAX>;
-using power = pokesim::internal::unsignedIntType<MechanicConstants::MovePower::MAX>;
-using baseAccuracy = pokesim::internal::unsignedIntType<MechanicConstants::MoveBaseAccuracy::MAX>;
-using moveHits = pokesim::internal::unsignedIntType<MechanicConstants::PokemonHpStat::MAX>;
+using pp = pokesim::internal::unsignedIntType<Constants::MoveMaxPp::MAX>;
+using basePower = pokesim::internal::unsignedIntType<Constants::MoveBasePower::MAX>;
+using power = pokesim::internal::unsignedIntType<Constants::MovePower::MAX>;
+using baseAccuracy = pokesim::internal::unsignedIntType<Constants::MoveBaseAccuracy::MAX>;
+using moveHits = pokesim::internal::unsignedIntType<Constants::PokemonHpStat::MAX>;
 
-using priority =
-  pokesim::internal::signedIntType<MechanicConstants::MovePriority::MAX, MechanicConstants::MovePriority::MIN>;
+using priority = pokesim::internal::signedIntType<Constants::MovePriority::MAX, Constants::MovePriority::MIN>;
 using fractionalPriority = bool;
 }  // namespace pokesim::types

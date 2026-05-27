@@ -2,10 +2,10 @@
 
 #include <Components/Damage.hpp>
 #include <Config/Require.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Event.hpp>
-#include <Types/MechanicConstants.hpp>
 #include <Types/Move.hpp>
 #include <Types/Random.hpp>
 #include <Utilities/MaxSizedVector.hpp>
@@ -30,7 +30,7 @@ struct UsesUntilKo {
   };
 
  public:
-  internal::maxSizedVector<Uses, MechanicConstants::DamageRollCount::MAX> val{};
+  internal::maxSizedVector<Uses, Constants::DamageRollCount::MAX> val{};
 
   const Uses& minUses() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
@@ -44,7 +44,7 @@ struct UsesUntilKo {
 
   bool guaranteedKo() const {
     const Uses& min = minUses();
-    return min.hits == 1U && min.damageRollsIncluded == MechanicConstants::DamageRollCount::MAX;
+    return min.hits == 1U && min.damageRollsIncluded == Constants::DamageRollCount::MAX;
   }
 };
 
@@ -54,7 +54,7 @@ struct AttackerHpLost : DamageRolls {};
 
 namespace analyze_effect {
 struct EffectMultiplier {
-  types::effectMultiplier val = MechanicConstants::AnalyzeEffectMultiplier::DEFAULT;
+  types::effectMultiplier val = Constants::AnalyzeEffectMultiplier::DEFAULT;
 };
 
 using MultipliedDamageRolls = DamageRolls;

@@ -54,8 +54,8 @@ class Simulation : public internal::RegistryContainer {
     BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
 
  private:
-  struct Constants {
-    Constants(const Pokedex& pokedex_, BattleFormat battleFormat_)
+  struct ConstantValues {
+    ConstantValues(const Pokedex& pokedex_, BattleFormat battleFormat_)
         : battleFormatValue(battleFormat_), pokedexValue(&pokedex_) {}
     constexpr bool isBattleFormat(BattleFormat checkedFormat) const { return checkedFormat == battleFormatValue; }
     constexpr const Pokedex& pokedex() const { return *pokedexValue; }
@@ -64,7 +64,7 @@ class Simulation : public internal::RegistryContainer {
     BattleFormat battleFormatValue;
     const Pokedex* pokedexValue;
   } constants;
-  Simulation(const Constants& other);
+  Simulation(const ConstantValues& other);
 
  public:
   simulate_turn::Options simulateTurnOptions;

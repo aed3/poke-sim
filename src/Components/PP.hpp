@@ -1,14 +1,14 @@
 #pragma once
 
-#include <Types/MechanicConstants.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Move.hpp>
 
 namespace pokesim {
 struct Pp {
-  types::pp val = MechanicConstants::MovePp::DEFAULT;
+  types::pp val = Constants::MovePp::DEFAULT;
 };
 
 struct MaxPp {
-  types::pp val = MechanicConstants::MoveMaxPp::DEFAULT;
+  types::pp val = Constants::MoveMaxPp::DEFAULT;
 };
 }  // namespace pokesim

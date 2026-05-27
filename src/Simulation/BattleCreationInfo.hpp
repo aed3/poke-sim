@@ -3,6 +3,7 @@
 #include <Components/Decisions.hpp>
 #include <Components/SpeciesTypes.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Effect.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Gender.hpp>
@@ -10,8 +11,8 @@
 #include <Types/Enums/Species.hpp>
 #include <Types/Enums/Stat.hpp>
 #include <Types/Enums/Status.hpp>
-#include <Types/MechanicConstants.hpp>
 #include <Types/Move.hpp>
+#include <Types/Random.hpp>
 #include <Types/State.hpp>
 #include <Types/Stats.hpp>
 
@@ -97,7 +98,7 @@ struct AnalyzeEffectInputInfo {
  private:
   struct BoostInfo {
     dex::Stat stat = dex::Stat::NONE;
-    types::boost boost = MechanicConstants::PokemonStatBoost::DEFAULT;
+    types::boost boost = Constants::PokemonStatBoost::DEFAULT;
   };
 
  public:
