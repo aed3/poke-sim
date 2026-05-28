@@ -56,7 +56,7 @@ void runMoveHitCheck(Simulation& simulation) {
   selectedMoves.deselect();
 
   simulation.view<setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
-  simulation.registry.clear<tags::CurrentMoveHit>();
+  simulation.registry.clear<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
 }
 
 void trySetStatusFromEffect(Simulation&) {}
@@ -195,7 +195,6 @@ void accuracyCheck(Simulation& simulation) {
 
   runRandomBinaryChance<Accuracy, tags::CurrentMoveHit>(simulation, [](Simulation& sim) {
     sim.addToEntities<tags::FailedCurrentMoveHit, pokesim::internal::tags::RandomEventCheckFailed>();
-    sim.removeFromEntities<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
   });
 }
 

@@ -39,11 +39,9 @@ void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedD
   effectiveSpe.val = effectiveSpe.val * speedDividend / speedDivisor;
 }
 
-void paralysisOnBeforeMove(types::handle pokemonHandle, Battle battle, const CurrentActionMovesAsSource& moves) {
-  types::registry& registry = *pokemonHandle.registry();
+void paralysisOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves.val) {
-    types::handle moveHandle{registry, move};
-    setFailedActionMove(moveHandle, battle, {pokemonHandle.entity()}, moveHandle.get<CurrentActionTarget>());
+    registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
   }
 }
 
@@ -103,6 +101,8 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
       sim.viewForSelectedPokemon<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>();
     },
     std::nullopt);
+  simulation.view<setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
+  simulation.registry.clear<tags::FailedCurrentMoveHit>();
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {

@@ -243,6 +243,7 @@ void checkProbability(types::probability probability) {
 }
 
 void checkTeamOrder(const types::teamOrder& teamOrder) {
+  checkBounds<Constants::TeamSize>(teamOrder.size());
   for (types::teamPositionIndex position : teamOrder) {
     checkBounds<Constants::TeamSize>(position);
   }
@@ -767,6 +768,7 @@ void check(const NextAction& nextAction, const types::registry& registry) {
 
 template <>
 void check(const CurrentActionTargets& targets, const types::registry& registry) {
+  checkBounds<Constants::Targets>(targets.val.size());
   for (types::entity target : targets.val) {
     checkPokemon(target, registry);
   }
@@ -794,6 +796,7 @@ void check(const FailedCurrentActionTarget& failedTarget, const types::registry&
 
 template <>
 void check(const CurrentActionMovesAsSource& moves, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(!moves.val.empty());
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }
@@ -801,6 +804,7 @@ void check(const CurrentActionMovesAsSource& moves, const types::registry& regis
 
 template <>
 void check(const CurrentActionMovesAsTarget& moves, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(!moves.val.empty());
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }
@@ -823,6 +827,7 @@ void check(const CurrentEffectTarget& target, const types::registry& registry) {
 
 template <>
 void check(const CurrentEffectsAsSource& effects, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(!effects.val.empty());
   for (types::entity effect : effects.val) {
     types::registry::checkEntity(effect, registry);
   }
@@ -830,6 +835,7 @@ void check(const CurrentEffectsAsSource& effects, const types::registry& registr
 
 template <>
 void check(const CurrentEffectsAsTarget& effects, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(!effects.val.empty());
   for (types::entity effect : effects.val) {
     types::registry::checkEntity(effect, registry);
   }
@@ -880,6 +886,7 @@ void check(const Sides& sides, const types::registry& registry) {
 
 template <>
 void check(const Team& team, const types::registry& registry) {
+  checkBounds<Constants::TeamSize>(team.val.size());
   for (types::entity pokemonEntity : team.val) {
     checkPokemon(pokemonEntity, registry);
   }
@@ -1146,6 +1153,7 @@ void check(const internal::RandomEqualChanceStack& randomEqualChanceStack, const
 
 template <>
 void check(const SpeedTieIndexes& speedTieIndexes) {
+  checkBounds<Constants::ActivePokemon>(speedTieIndexes.val.size());
   types::activePokemonIndex total = 0U;
   for (const auto& span : speedTieIndexes.val) {
     checkBounds<Constants::ActivePokemon>(span.start);
@@ -2168,7 +2176,7 @@ void runMoveHitCheck(Simulation& simulation) {
   selectedMoves.deselect();
 
   simulation.view<setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
-  simulation.registry.clear<tags::CurrentMoveHit>();
+  simulation.registry.clear<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
 }
 
 void trySetStatusFromEffect(Simulation&) {}
@@ -2307,7 +2315,6 @@ void accuracyCheck(Simulation& simulation) {
 
   runRandomBinaryChance<Accuracy, tags::CurrentMoveHit>(simulation, [](Simulation& sim) {
     sim.addToEntities<tags::FailedCurrentMoveHit, pokesim::internal::tags::RandomEventCheckFailed>();
-    sim.removeFromEntities<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
   });
 }
 
@@ -4467,11 +4474,9 @@ void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedD
   effectiveSpe.val = effectiveSpe.val * speedDividend / speedDivisor;
 }
 
-void paralysisOnBeforeMove(types::handle pokemonHandle, Battle battle, const CurrentActionMovesAsSource& moves) {
-  types::registry& registry = *pokemonHandle.registry();
+void paralysisOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves.val) {
-    types::handle moveHandle{registry, move};
-    setFailedActionMove(moveHandle, battle, {pokemonHandle.entity()}, moveHandle.get<CurrentActionTarget>());
+    registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
   }
 }
 
@@ -4531,6 +4536,8 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
       sim.viewForSelectedPokemon<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>();
     },
     std::nullopt);
+  simulation.view<setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
+  simulation.registry.clear<tags::FailedCurrentMoveHit>();
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {
@@ -5817,12 +5824,15 @@ bool removeFailedMove(types::registry& registry, types::entity moveEntity, types
     CurrentActionMovesAsSource,
     CurrentActionMovesAsTarget>;
 
-  CurrentActionMoves& moves = registry.get<CurrentActionMoves>(entity);
-  auto newMovesEnd = std::remove(moves.val.begin(), moves.val.end(), moveEntity);
-  moves.val.erase(newMovesEnd, moves.val.end());
+  CurrentActionMoves* moves = registry.try_get<CurrentActionMoves>(entity);
+  if (!moves) {
+    return true;
+  }
+  auto newMovesEnd = std::remove(moves->val.begin(), moves->val.end(), moveEntity);
+  moves->val.erase(newMovesEnd, moves->val.end());
 
-  if (moves.val.empty()) {
-    registry.remove<CurrentActionTag, tags::CurrentActionMoveSource>(entity);
+  if (moves->val.empty()) {
+    registry.remove<CurrentActionTag, CurrentActionMoves>(entity);
     return true;
   }
   return false;
@@ -5916,7 +5926,7 @@ void setFailedActionMove(
   removedAllMoves =
     removeFailedMove<tags::CurrentActionMoveSource>(registry, moveHandle.entity(), source.val) && removedAllMoves;
 
-  moveHandle.remove<tags::CurrentActionMove, CurrentActionSource, CurrentActionTarget>();
+  moveHandle.remove<tags::CurrentActionMove, tags::CurrentMoveHit, CurrentActionSource, CurrentActionTarget>();
   moveHandle.emplace<tags::FailedCurrentActionMove>();
   moveHandle.emplace<FailedCurrentActionSource>(source.val);
   moveHandle.emplace<FailedCurrentActionTarget>(target.val);
@@ -5949,6 +5959,8 @@ void clearCurrentAction(Simulation& simulation) {
   registry.clear<tags::CurrentActionMoveSource>();
   registry.clear<tags::CurrentActionMoveTarget>();
   registry.clear<tags::CurrentActionMoveSlot>();
+  registry.clear<tags::CurrentMoveHit>();
+  registry.clear<tags::FailedCurrentMoveHit>();
 
   auto actionMoves = registry.view<tags::CurrentActionMove>();
   auto failedActionMoves = registry.view<tags::FailedCurrentActionMove>();

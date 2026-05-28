@@ -32,12 +32,15 @@ bool removeFailedMove(types::registry& registry, types::entity moveEntity, types
     CurrentActionMovesAsSource,
     CurrentActionMovesAsTarget>;
 
-  CurrentActionMoves& moves = registry.get<CurrentActionMoves>(entity);
-  auto newMovesEnd = std::remove(moves.val.begin(), moves.val.end(), moveEntity);
-  moves.val.erase(newMovesEnd, moves.val.end());
+  CurrentActionMoves* moves = registry.try_get<CurrentActionMoves>(entity);
+  if (!moves) {
+    return true;
+  }
+  auto newMovesEnd = std::remove(moves->val.begin(), moves->val.end(), moveEntity);
+  moves->val.erase(newMovesEnd, moves->val.end());
 
-  if (moves.val.empty()) {
-    registry.remove<CurrentActionTag, tags::CurrentActionMoveSource>(entity);
+  if (moves->val.empty()) {
+    registry.remove<CurrentActionTag, CurrentActionMoves>(entity);
     return true;
   }
   return false;
@@ -131,7 +134,7 @@ void setFailedActionMove(
   removedAllMoves =
     removeFailedMove<tags::CurrentActionMoveSource>(registry, moveHandle.entity(), source.val) && removedAllMoves;
 
-  moveHandle.remove<tags::CurrentActionMove, CurrentActionSource, CurrentActionTarget>();
+  moveHandle.remove<tags::CurrentActionMove, tags::CurrentMoveHit, CurrentActionSource, CurrentActionTarget>();
   moveHandle.emplace<tags::FailedCurrentActionMove>();
   moveHandle.emplace<FailedCurrentActionSource>(source.val);
   moveHandle.emplace<FailedCurrentActionTarget>(target.val);
@@ -164,6 +167,8 @@ void clearCurrentAction(Simulation& simulation) {
   registry.clear<tags::CurrentActionMoveSource>();
   registry.clear<tags::CurrentActionMoveTarget>();
   registry.clear<tags::CurrentActionMoveSlot>();
+  registry.clear<tags::CurrentMoveHit>();
+  registry.clear<tags::FailedCurrentMoveHit>();
 
   auto actionMoves = registry.view<tags::CurrentActionMove>();
   auto failedActionMoves = registry.view<tags::FailedCurrentActionMove>();

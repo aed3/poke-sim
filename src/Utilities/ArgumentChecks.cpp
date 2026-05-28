@@ -85,6 +85,7 @@ void checkProbability(types::probability probability) {
 }
 
 void checkTeamOrder(const types::teamOrder& teamOrder) {
+  checkBounds<Constants::TeamSize>(teamOrder.size());
   for (types::teamPositionIndex position : teamOrder) {
     checkBounds<Constants::TeamSize>(position);
   }
@@ -609,6 +610,7 @@ void check(const NextAction& nextAction, const types::registry& registry) {
 
 template <>
 void check(const CurrentActionTargets& targets, const types::registry& registry) {
+  checkBounds<Constants::Targets>(targets.val.size());
   for (types::entity target : targets.val) {
     checkPokemon(target, registry);
   }
@@ -636,6 +638,7 @@ void check(const FailedCurrentActionTarget& failedTarget, const types::registry&
 
 template <>
 void check(const CurrentActionMovesAsSource& moves, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(!moves.val.empty());
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }
@@ -643,6 +646,7 @@ void check(const CurrentActionMovesAsSource& moves, const types::registry& regis
 
 template <>
 void check(const CurrentActionMovesAsTarget& moves, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(!moves.val.empty());
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }
@@ -665,6 +669,7 @@ void check(const CurrentEffectTarget& target, const types::registry& registry) {
 
 template <>
 void check(const CurrentEffectsAsSource& effects, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(!effects.val.empty());
   for (types::entity effect : effects.val) {
     types::registry::checkEntity(effect, registry);
   }
@@ -672,6 +677,7 @@ void check(const CurrentEffectsAsSource& effects, const types::registry& registr
 
 template <>
 void check(const CurrentEffectsAsTarget& effects, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(!effects.val.empty());
   for (types::entity effect : effects.val) {
     types::registry::checkEntity(effect, registry);
   }
@@ -722,6 +728,7 @@ void check(const Sides& sides, const types::registry& registry) {
 
 template <>
 void check(const Team& team, const types::registry& registry) {
+  checkBounds<Constants::TeamSize>(team.val.size());
   for (types::entity pokemonEntity : team.val) {
     checkPokemon(pokemonEntity, registry);
   }
@@ -988,6 +995,7 @@ void check(const internal::RandomEqualChanceStack& randomEqualChanceStack, const
 
 template <>
 void check(const SpeedTieIndexes& speedTieIndexes) {
+  checkBounds<Constants::ActivePokemon>(speedTieIndexes.val.size());
   types::activePokemonIndex total = 0U;
   for (const auto& span : speedTieIndexes.val) {
     checkBounds<Constants::ActivePokemon>(span.start);

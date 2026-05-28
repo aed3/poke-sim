@@ -173,6 +173,7 @@ struct Constants {
   struct Targets {
     static constexpr std::uint8_t MAX = 3U;
     static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
   };
 
   struct PercentChance {

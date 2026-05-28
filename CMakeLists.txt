@@ -166,7 +166,7 @@ endif()
 
 if(MSVC)
   set(compiler_warning_options /W4 /WX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+  add_compile_options(/MP /bigobj)
 else()
   set(compiler_warning_options -Wshadow -Wall)
   if(CMAKE_BUILD_TYPE STREQUAL "Release")
