@@ -336,6 +336,7 @@ void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
     simulation.registry.clear<CritBoost>();
 
     simulate_turn::setIfMoveCrits(simulation);
+    simulation.registry.clear<CritChanceDivisor>();
   }
 }
 

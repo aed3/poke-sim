@@ -3505,35 +3505,30 @@ void updatePartialProbabilities(Simulation& simulation) {
 }  // namespace
 
 void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind) {
-  pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn, DamageRolls> selectedMoves{simulation};
-  if (selectedMoves.hasNoneSelected()) return;
+  pokesim::internal::EntityFilter<pokesim::internal::tags::CloneFromDamageRolls> moveFilter{simulation};
+  moveFilter.applySelectionTags<pokesim::tags::SimulateTurn, DamageRolls>();
+  if (moveFilter.hasNoneSelected()) return;
 
   bool forAllDamageRolls = damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS;
   bool forRequiredDamageRolls = simulation.simulateTurnOptions.getMakeBranchesOnRandomEvents() || forAllDamageRolls;
   auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<applyDamageRollIndex>(); };
   auto updateProbabilities = forAllDamageRolls ? updateAllDamageRollProbabilities : updatePartialProbabilities;
 
-  runRandomEventCount<pokesim::tags::SelectedForViewMove>(
+  runRandomEventCount<pokesim::internal::tags::CloneFromDamageRolls>(
     simulation,
     countUniqueDamageRolls,
     applyChoices,
     updateProbabilities,
     forRequiredDamageRolls);
 
-  simulation.removeFromEntities<DamageRolls, pokesim::tags::SelectedForViewMove>();
+  simulation.removeFromEntities<DamageRolls, pokesim::internal::tags::CloneFromDamageRolls>();
+  moveFilter.clearSelectionTags();
 }
 
 void setIfMoveCrits(Simulation& simulation) {
-  pokesim::internal::SelectForCurrentActionMoveView<pokesim::tags::SimulateTurn> selectedMoves{simulation};
-  if (selectedMoves.hasNoneSelected()) return;
-
-  runReciprocalRandomBinaryChance<calc_damage::CritChanceDivisor, pokesim::tags::SelectedForViewMove>(
-    simulation,
-    [](Simulation& sim) {
-      sim.addToEntities<calc_damage::tags::Crit, pokesim::internal::tags::RandomEventCheckPassed>();
-    });
-
-  simulation.registry.clear<calc_damage::CritChanceDivisor>();
+  runReciprocalRandomBinaryChance<calc_damage::CritChanceDivisor>(simulation, [](Simulation& sim) {
+    sim.addToEntities<calc_damage::tags::Crit, pokesim::internal::tags::RandomEventCheckPassed>();
+  });
 }
 }  // namespace pokesim::simulate_turn
 
@@ -4936,6 +4931,7 @@ void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
     simulation.registry.clear<CritBoost>();
 
     simulate_turn::setIfMoveCrits(simulation);
+    simulation.registry.clear<CritChanceDivisor>();
   }
 }
 

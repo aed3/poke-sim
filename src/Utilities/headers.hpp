@@ -5,6 +5,7 @@
 #include "ArgumentChecks.hpp"
 #include "AssertComponentsEqual.hpp"
 #include "DebugChecks.hpp"
+#include "EntityFilter.hpp"
 #include "FixedMemoryVector.hpp"
 #include "MaxSizedVector.hpp"
 #include "NumberToType.hpp"
