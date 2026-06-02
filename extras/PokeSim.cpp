@@ -5016,27 +5016,26 @@ void setUnboostedStat(Simulation& simulation) {
     simulation.viewForSelectedMoves<saveRealEffectiveDefenderStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
 
-  internal::SelectForPokemonView<RealEffectiveStat> selectedPokemon{simulation};
-  if (selectedPokemon.hasNoneSelected()) {
+  if (simulation.registry.view<RealEffectiveStat>().empty()) {
     return;
   }
 
   if constexpr (std::is_same_v<UsesStatTag, tags::UsesAtk>) {
-    simulation.viewForSelectedPokemon<resetEffectiveAtk>();
-    runModifyAtk(simulation);
+    simulation.addToEntities<pokesim::tags::AtkStatUpdateRequired, RealEffectiveStat>();
+    updateAtk(simulation, true);
   }
   else if constexpr (
     std::is_same_v<UsesStatTag, tags::UsesDef> || std::is_same_v<UsesStatTag, tags::UsesDefAsOffense>) {
-    simulation.viewForSelectedPokemon<resetEffectiveDef>();
-    runModifyDef(simulation);
+    simulation.addToEntities<pokesim::tags::DefStatUpdateRequired, RealEffectiveStat>();
+    updateDef(simulation, true);
   }
   else if constexpr (std::is_same_v<UsesStatTag, tags::UsesSpa>) {
-    simulation.viewForSelectedPokemon<resetEffectiveSpa>();
-    runModifySpa(simulation);
+    simulation.addToEntities<pokesim::tags::SpaStatUpdateRequired, RealEffectiveStat>();
+    updateSpa(simulation, true);
   }
   else if constexpr (std::is_same_v<UsesStatTag, tags::UsesSpd>) {
-    simulation.viewForSelectedPokemon<resetEffectiveSpd>();
-    runModifySpd(simulation);
+    simulation.addToEntities<pokesim::tags::SpdStatUpdateRequired, RealEffectiveStat>();
+    updateSpd(simulation, true);
   }
   else {
     static_assert("No other stat is used as the attacking or defending stat.");
@@ -5737,68 +5736,77 @@ void tryBoost(Simulation& simulation) {
 }
 
 void updateAllStats(Simulation& simulation) {
-  updateAtk(simulation);
-  updateDef(simulation);
-  updateSpa(simulation);
-  updateSpd(simulation);
-  updateSpe(simulation);
+  updateAtk(simulation, false);
+  updateDef(simulation, false);
+  updateSpa(simulation, false);
+  updateSpd(simulation, false);
+  updateSpe(simulation, false);
 }
 
-void updateAtk(Simulation& simulation) {
+void updateAtk(Simulation& simulation, bool ignoreBoosts) {
   internal::SelectForPokemonView<tags::AtkStatUpdateRequired> selectedAtkUpdateRequired{simulation};
   if (selectedAtkUpdateRequired.hasNoneSelected()) return;
 
   simulation.viewForSelectedPokemon<resetEffectiveAtk>();
 
-  simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveAtk, AtkBoost>>();
+  if (!ignoreBoosts) {
+    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveAtk, AtkBoost>>();
+  }
   runModifyAtk(simulation);
 
   simulation.registry.clear<tags::AtkStatUpdateRequired>();
 }
 
-void updateDef(Simulation& simulation) {
+void updateDef(Simulation& simulation, bool ignoreBoosts) {
   internal::SelectForPokemonView<tags::DefStatUpdateRequired> selectedDefUpdateRequired{simulation};
   if (selectedDefUpdateRequired.hasNoneSelected()) return;
 
   simulation.viewForSelectedPokemon<resetEffectiveDef>();
 
-  simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveDef, DefBoost>>();
+  if (!ignoreBoosts) {
+    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveDef, DefBoost>>();
+  }
   runModifyDef(simulation);
 
   simulation.registry.clear<tags::DefStatUpdateRequired>();
 }
 
-void updateSpa(Simulation& simulation) {
+void updateSpa(Simulation& simulation, bool ignoreBoosts) {
   internal::SelectForPokemonView<tags::SpaStatUpdateRequired> selectedSpaUpdateRequired{simulation};
   if (selectedSpaUpdateRequired.hasNoneSelected()) return;
 
   simulation.viewForSelectedPokemon<resetEffectiveSpa>();
-
-  simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpa, SpaBoost>>();
+  if (!ignoreBoosts) {
+    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpa, SpaBoost>>();
+  }
   runModifySpa(simulation);
 
   simulation.registry.clear<tags::SpaStatUpdateRequired>();
 }
 
-void updateSpd(Simulation& simulation) {
+void updateSpd(Simulation& simulation, bool ignoreBoosts) {
   internal::SelectForPokemonView<tags::SpdStatUpdateRequired> selectedSpdUpdateRequired{simulation};
   if (selectedSpdUpdateRequired.hasNoneSelected()) return;
 
   simulation.viewForSelectedPokemon<resetEffectiveSpd>();
 
-  simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpd, SpdBoost>>();
+  if (!ignoreBoosts) {
+    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpd, SpdBoost>>();
+  }
   runModifySpd(simulation);
 
   simulation.registry.clear<tags::SpdStatUpdateRequired>();
 }
 
-void updateSpe(Simulation& simulation) {
+void updateSpe(Simulation& simulation, bool ignoreBoosts) {
   internal::SelectForPokemonView<tags::SpeStatUpdateRequired> selectedSpeUpdateRequired{simulation};
   if (selectedSpeUpdateRequired.hasNoneSelected()) return;
 
   simulation.viewForSelectedPokemon<resetEffectiveSpe>();
 
-  simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpe, SpeBoost>>();
+  if (!ignoreBoosts) {
+    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpe, SpeBoost>>();
+  }
   runModifySpe(simulation);
   // trick room
 
