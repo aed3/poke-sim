@@ -24,6 +24,7 @@
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/EntityFilter.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <cmath>
 #include <entt/entity/handle.hpp>
@@ -315,40 +316,41 @@ void updateAllStats(Simulation& simulation) {
 }
 
 void updateAtk(Simulation& simulation, bool ignoreBoosts) {
-  internal::SelectForPokemonView<tags::AtkStatUpdateRequired> selectedAtkUpdateRequired{simulation};
-  if (selectedAtkUpdateRequired.hasNoneSelected()) return;
+  internal::EntityFilter<tags::AtkStatUpdateRequired> filter{simulation};
+  if (filter.hasNoneSelected()) return;
 
-  simulation.viewForSelectedPokemon<resetEffectiveAtk>();
+  filter.view<resetEffectiveAtk>();
 
   if (!ignoreBoosts) {
-    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveAtk, AtkBoost>>();
+    filter.view<applyBoostToEffectiveStat<stat::EffectiveAtk, AtkBoost>>();
   }
   runModifyAtk(simulation);
 
-  simulation.registry.clear<tags::AtkStatUpdateRequired>();
+  filter.clearSelectionTags();
 }
 
 void updateDef(Simulation& simulation, bool ignoreBoosts) {
-  internal::SelectForPokemonView<tags::DefStatUpdateRequired> selectedDefUpdateRequired{simulation};
-  if (selectedDefUpdateRequired.hasNoneSelected()) return;
+  internal::EntityFilter<tags::DefStatUpdateRequired> filter{simulation};
+  if (filter.hasNoneSelected()) return;
 
-  simulation.viewForSelectedPokemon<resetEffectiveDef>();
+  filter.view<resetEffectiveDef>();
 
   if (!ignoreBoosts) {
-    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveDef, DefBoost>>();
+    filter.view<applyBoostToEffectiveStat<stat::EffectiveDef, DefBoost>>();
   }
   runModifyDef(simulation);
 
-  simulation.registry.clear<tags::DefStatUpdateRequired>();
+  filter.clearSelectionTags();
 }
 
 void updateSpa(Simulation& simulation, bool ignoreBoosts) {
-  internal::SelectForPokemonView<tags::SpaStatUpdateRequired> selectedSpaUpdateRequired{simulation};
-  if (selectedSpaUpdateRequired.hasNoneSelected()) return;
+  internal::EntityFilter<tags::SpaStatUpdateRequired> filter{simulation};
+  if (filter.hasNoneSelected()) return;
 
-  simulation.viewForSelectedPokemon<resetEffectiveSpa>();
+  filter.view<resetEffectiveSpa>();
+
   if (!ignoreBoosts) {
-    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpa, SpaBoost>>();
+    filter.view<applyBoostToEffectiveStat<stat::EffectiveSpa, SpaBoost>>();
   }
   runModifySpa(simulation);
 
@@ -356,13 +358,13 @@ void updateSpa(Simulation& simulation, bool ignoreBoosts) {
 }
 
 void updateSpd(Simulation& simulation, bool ignoreBoosts) {
-  internal::SelectForPokemonView<tags::SpdStatUpdateRequired> selectedSpdUpdateRequired{simulation};
-  if (selectedSpdUpdateRequired.hasNoneSelected()) return;
+  internal::EntityFilter<tags::SpdStatUpdateRequired> filter{simulation};
+  if (filter.hasNoneSelected()) return;
 
-  simulation.viewForSelectedPokemon<resetEffectiveSpd>();
+  filter.view<resetEffectiveSpd>();
 
   if (!ignoreBoosts) {
-    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpd, SpdBoost>>();
+    filter.view<applyBoostToEffectiveStat<stat::EffectiveSpd, SpdBoost>>();
   }
   runModifySpd(simulation);
 
@@ -370,13 +372,13 @@ void updateSpd(Simulation& simulation, bool ignoreBoosts) {
 }
 
 void updateSpe(Simulation& simulation, bool ignoreBoosts) {
-  internal::SelectForPokemonView<tags::SpeStatUpdateRequired> selectedSpeUpdateRequired{simulation};
-  if (selectedSpeUpdateRequired.hasNoneSelected()) return;
+  internal::EntityFilter<tags::SpeStatUpdateRequired> filter{simulation};
+  if (filter.hasNoneSelected()) return;
 
-  simulation.viewForSelectedPokemon<resetEffectiveSpe>();
+  filter.view<resetEffectiveSpe>();
 
   if (!ignoreBoosts) {
-    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpe, SpeBoost>>();
+    filter.view<applyBoostToEffectiveStat<stat::EffectiveSpe, SpeBoost>>();
   }
   runModifySpe(simulation);
   // trick room

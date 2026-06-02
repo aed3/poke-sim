@@ -11,6 +11,7 @@
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/ItemPropertyTags.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
@@ -83,9 +84,11 @@ void Burn::onResidual(Simulation& simulation) {
 void Paralysis::onModifySpe(Simulation& simulation) {
   const auto speedDivisor = simulation.pokedex().getStaticValue<Paralysis::speedDivisor>();
   const auto speedDividend = simulation.pokedex().getStaticValue<Paralysis::speedDividend>();
-  simulation.viewForSelectedPokemon<
+  simulation.view<
     paralysisOnModifySpeed,
-    Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>(speedDivisor, speedDividend);
+    Tags<status::tags::Paralysis, tags::SpeStatUpdateRequired> /*, entt::exclude_t<ability::tags::QuickFeet>*/>(
+    speedDivisor,
+    speedDividend);
 }
 
 void Paralysis::onBeforeMove(Simulation& simulation) {

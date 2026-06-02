@@ -105,9 +105,7 @@ void lifeOrbOnAfterMove(
 
 void AssaultVest::onModifySpd(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<AssaultVest::onModifySpdModifier>();
-  simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::AssaultVest>>(
-    modifier,
-    1U);
+  simulation.view<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::AssaultVest>>(modifier, 1U);
 }
 
 void AssaultVest::onEnd(Simulation& simulation) {
@@ -124,9 +122,7 @@ void BrightPowder::onModifyAccuracy(Simulation& simulation) {
 
 void ChoiceScarf::onModifySpe(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<ChoiceScarf::onModifySpeModifier>();
-  simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceScarf>>(
-    modifier,
-    1U);
+  simulation.view<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceScarf>>(modifier, 1U);
 }
 
 void ChoiceScarf::onSourceModifyMove(Simulation& simulation) {
@@ -140,9 +136,7 @@ void ChoiceScarf::onEnd(Simulation& simulation) {
 
 void ChoiceSpecs::onModifySpa(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<ChoiceSpecs::onModifySpaModifier>();
-  simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceSpecs>>(
-    modifier,
-    1U);
+  simulation.view<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceSpecs>>(modifier, 1U);
 }
 
 void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
