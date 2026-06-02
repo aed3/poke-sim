@@ -41,6 +41,7 @@
 #include <Types/Event.hpp>
 #include <Types/MechanicConstants.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/EntityFilter.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <cmath>
 #include <cstddef>
@@ -421,27 +422,26 @@ void setUnboostedStat(Simulation& simulation) {
     simulation.viewForSelectedMoves<saveRealEffectiveDefenderStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
 
-  internal::SelectForPokemonView<RealEffectiveStat> selectedPokemon{simulation};
-  if (selectedPokemon.hasNoneSelected()) {
+  if (simulation.registry.view<RealEffectiveStat>().empty()) {
     return;
   }
 
   if constexpr (std::is_same_v<UsesStatTag, tags::UsesAtk>) {
-    simulation.viewForSelectedPokemon<resetEffectiveAtk>();
-    runModifyAtk(simulation);
+    simulation.addToEntities<pokesim::tags::AtkStatUpdateRequired, RealEffectiveStat>();
+    updateAtk(simulation, true);
   }
   else if constexpr (
     std::is_same_v<UsesStatTag, tags::UsesDef> || std::is_same_v<UsesStatTag, tags::UsesDefAsOffense>) {
-    simulation.viewForSelectedPokemon<resetEffectiveDef>();
-    runModifyDef(simulation);
+    simulation.addToEntities<pokesim::tags::DefStatUpdateRequired, RealEffectiveStat>();
+    updateDef(simulation, true);
   }
   else if constexpr (std::is_same_v<UsesStatTag, tags::UsesSpa>) {
-    simulation.viewForSelectedPokemon<resetEffectiveSpa>();
-    runModifySpa(simulation);
+    simulation.addToEntities<pokesim::tags::SpaStatUpdateRequired, RealEffectiveStat>();
+    updateSpa(simulation, true);
   }
   else if constexpr (std::is_same_v<UsesStatTag, tags::UsesSpd>) {
-    simulation.viewForSelectedPokemon<resetEffectiveSpd>();
-    runModifySpd(simulation);
+    simulation.addToEntities<pokesim::tags::SpdStatUpdateRequired, RealEffectiveStat>();
+    updateSpd(simulation, true);
   }
   else {
     static_assert("No other stat is used as the attacking or defending stat.");

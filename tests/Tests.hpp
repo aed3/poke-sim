@@ -239,19 +239,19 @@ struct StringMaker<pokesim::DamageRollKind> {
 
   static std::string convert(const pokesim::DamageRollKind& value) {
     std::string fullName;
-    if ((int)value & (int)pokesim::DamageRollKind::AVERAGE_DAMAGE) {
+    if (value & pokesim::DamageRollKind::AVERAGE_DAMAGE) {
       append(fullName, "AVERAGE_DAMAGE");
     }
-    if ((int)value & (int)pokesim::DamageRollKind::MIN_DAMAGE) {
+    if (value & pokesim::DamageRollKind::MIN_DAMAGE) {
       append(fullName, "MIN_DAMAGE");
     }
-    if ((int)value & (int)pokesim::DamageRollKind::MAX_DAMAGE) {
+    if (value & pokesim::DamageRollKind::MAX_DAMAGE) {
       append(fullName, "MAX_DAMAGE");
     }
-    if ((int)value & (int)pokesim::DamageRollKind::GUARANTEED_CRIT_CHANCE) {
+    if (value & pokesim::DamageRollKind::GUARANTEED_CRIT_CHANCE) {
       append(fullName, "GUARANTEED_CRIT_CHANCE");
     }
-    if ((int)value & (int)pokesim::DamageRollKind::ALL_DAMAGE_ROLLS) {
+    if (value & pokesim::DamageRollKind::ALL_DAMAGE_ROLLS) {
       append(fullName, "ALL_DAMAGE_ROLLS");
     }
 

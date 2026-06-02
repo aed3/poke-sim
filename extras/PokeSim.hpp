@@ -23636,11 +23636,11 @@ void applyStatBoost(types::stat& stat, types::boost boost);
 void tryBoost(Simulation& simulation);
 
 void updateAllStats(Simulation& simulation);
-void updateAtk(Simulation& simulation);
-void updateDef(Simulation& simulation);
-void updateSpa(Simulation& simulation);
-void updateSpd(Simulation& simulation);
-void updateSpe(Simulation& simulation);
+void updateAtk(Simulation& simulation, bool ignoreBoosts);
+void updateDef(Simulation& simulation, bool ignoreBoosts);
+void updateSpa(Simulation& simulation, bool ignoreBoosts);
+void updateSpd(Simulation& simulation, bool ignoreBoosts);
+void updateSpe(Simulation& simulation, bool ignoreBoosts);
 }  // namespace pokesim
 
 /////////////// END OF src/Battle/Pokemon/ManagePokemonState.hpp ///////////////
@@ -24827,35 +24827,35 @@ struct EntityFilter {
   template <auto Function, typename ExcludeContainer, typename IncludeContainer, typename... ExtraTags>
   struct Filter<Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer> {
     template <typename... PassedInArgs>
-    static void view(Simulation* container, const PassedInArgs&... passedInArgs) {
-      container
+    static void view(Simulation* simulation, const PassedInArgs&... passedInArgs) {
+      simulation
         ->view<Function, Tags<SelectionTag, OtherSelectionTags..., ExtraTags...>, ExcludeContainer, IncludeContainer>(
           passedInArgs...);
     }
 
     template <typename... PassedInArgs>
-    static void group(Simulation* container, const PassedInArgs&... passedInArgs) {
-      container
+    static void group(Simulation* simulation, const PassedInArgs&... passedInArgs) {
+      simulation
         ->group<Function, Tags<SelectionTag, OtherSelectionTags..., ExtraTags...>, ExcludeContainer, IncludeContainer>(
           passedInArgs...);
     }
   };
 
  public:
-  EntityFilter(Simulation& registryContainer_) : simulation(&registryContainer_) {}
+  EntityFilter(Simulation& simulation_) : simulation(&simulation_) {}
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   auto view(const PassedInArgs&... passedInArgs) {
-    Filter<Function, TagContainer, ExcludeContainer, IncludeContainer>::view(this, passedInArgs...);
+    Filter<Function, TagContainer, ExcludeContainer, IncludeContainer>::view(simulation, passedInArgs...);
   }
 
   template <
     auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
     typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
   auto group(const PassedInArgs&... passedInArgs) {
-    Filter<Function, TagContainer, ExcludeContainer, IncludeContainer>::group(this, passedInArgs...);
+    Filter<Function, TagContainer, ExcludeContainer, IncludeContainer>::group(simulation, passedInArgs...);
   }
 
   template <typename... IncludeComponents, typename... ExcludeComponents>

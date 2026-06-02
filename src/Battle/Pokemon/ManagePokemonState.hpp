@@ -52,9 +52,9 @@ void applyStatBoost(types::stat& stat, types::boost boost);
 void tryBoost(Simulation& simulation);
 
 void updateAllStats(Simulation& simulation);
-void updateAtk(Simulation& simulation);
-void updateDef(Simulation& simulation);
-void updateSpa(Simulation& simulation);
-void updateSpd(Simulation& simulation);
-void updateSpe(Simulation& simulation);
+void updateAtk(Simulation& simulation, bool ignoreBoosts);
+void updateDef(Simulation& simulation, bool ignoreBoosts);
+void updateSpa(Simulation& simulation, bool ignoreBoosts);
+void updateSpd(Simulation& simulation, bool ignoreBoosts);
+void updateSpe(Simulation& simulation, bool ignoreBoosts);
 }  // namespace pokesim
