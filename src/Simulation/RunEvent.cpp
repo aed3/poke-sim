@@ -14,6 +14,7 @@
 #include <Components/Stats.hpp>
 #include <Components/Tags/AbilityTags.hpp>
 #include <Components/Tags/ItemTags.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Abilities/headers.hpp>
 #include <Pokedex/Effects/headers.hpp>
@@ -23,10 +24,8 @@
 #include <Types/Enums/GameMechanics.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>
-#include <cstddef>
 #include <entt/container/dense_set.hpp>
 #include <entt/entity/registry.hpp>
-#include <type_traits>
 
 #include "Simulation.hpp"
 
@@ -37,37 +36,6 @@ namespace {
 template <typename ModifiedComponent>
 void applyEventModifier(ModifiedComponent& component, EventModifier eventModifier) {
   component.val = applyChainedModifier(component.val, eventModifier.val);
-}
-
-template <typename... PokemonSpecifiers>
-internal::RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
-  static const size_t SelectAnyPokemon = sizeof...(PokemonSpecifiers) == 0U;
-  return internal::RegistryContainer::SelectionFunction{
-    [](const void*, const types::registry& registry) -> types::entityVector {
-      entt::dense_set<types::entity> entities;
-      auto selectedMoveView = registry.view<tags::SelectedForViewMove>();
-      auto begin = selectedMoveView.begin();
-      auto end = selectedMoveView.end();
-      if (selectedMoveView.empty()) {
-        auto anyMoveView = registry.view<tags::CurrentActionMove>();
-        begin = anyMoveView.begin();
-        end = anyMoveView.end();
-      }
-
-      std::for_each(begin, end, [&registry, &entities](types::entity entity) {
-        if constexpr (
-          SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveSource>...>) {
-          entities.insert(registry.get<CurrentActionSource>(entity).val);
-        }
-
-        if constexpr (
-          SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveTarget>...>) {
-          entities.insert(registry.get<CurrentActionTarget>(entity).val);
-        }
-      });
-
-      return {entities.begin(), entities.end()};
-    }};
 }
 
 void applyBasePowerEventModifier(types::handle moveHandle, BasePower basePower, EventModifier eventModifier) {
@@ -184,7 +152,7 @@ void runModifyAtk(Simulation&) {}
 void runModifyDef(Simulation&) {}
 
 void runModifySpa(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
+  simulation.addToEntities<EventModifier, tags::SpaStatUpdateRequired>();
 
   // Priority 1
   dex::ChoiceSpecs::onModifySpa(simulation);
@@ -192,25 +160,25 @@ void runModifySpa(Simulation& simulation) {
   // Priority 5
   dex::Plus::onModifySpA(simulation);
 
-  simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpa>>();
+  simulation.view<applyEventModifier<stat::EffectiveSpa>>();
   simulation.registry.clear<EventModifier>();
 }
 
 void runModifySpd(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
+  simulation.addToEntities<EventModifier, tags::SpdStatUpdateRequired>();
 
   dex::AssaultVest::onModifySpd(simulation);
 
-  simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpd>>();
+  simulation.view<applyEventModifier<stat::EffectiveSpd>>();
   simulation.registry.clear<EventModifier>();
 }
 
 void runModifySpe(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
+  simulation.addToEntities<EventModifier, tags::SpeStatUpdateRequired>();
 
   dex::ChoiceScarf::onModifySpe(simulation);
 
-  simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpe>>();
+  simulation.view<applyEventModifier<stat::EffectiveSpe>>();
   simulation.registry.clear<EventModifier>();
 
   dex::Paralysis::onModifySpe(simulation);

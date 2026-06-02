@@ -1936,8 +1936,6 @@ types::entityVector Simulation::selectedPokemonEntities() const {
 
 ///////////////////// START OF src/Simulation/RunEvent.cpp /////////////////////
 
-#include <type_traits>
-
 // TODO(aed3) Autogenerate?
 
 namespace pokesim {
@@ -1945,37 +1943,6 @@ namespace {
 template <typename ModifiedComponent>
 void applyEventModifier(ModifiedComponent& component, EventModifier eventModifier) {
   component.val = applyChainedModifier(component.val, eventModifier.val);
-}
-
-template <typename... PokemonSpecifiers>
-internal::RegistryContainer::SelectionFunction getMoveEventPokemonSelector() {
-  static const size_t SelectAnyPokemon = sizeof...(PokemonSpecifiers) == 0U;
-  return internal::RegistryContainer::SelectionFunction{
-    [](const void*, const types::registry& registry) -> types::entityVector {
-      entt::dense_set<types::entity> entities;
-      auto selectedMoveView = registry.view<tags::SelectedForViewMove>();
-      auto begin = selectedMoveView.begin();
-      auto end = selectedMoveView.end();
-      if (selectedMoveView.empty()) {
-        auto anyMoveView = registry.view<tags::CurrentActionMove>();
-        begin = anyMoveView.begin();
-        end = anyMoveView.end();
-      }
-
-      std::for_each(begin, end, [&registry, &entities](types::entity entity) {
-        if constexpr (
-          SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveSource>...>) {
-          entities.insert(registry.get<CurrentActionSource>(entity).val);
-        }
-
-        if constexpr (
-          SelectAnyPokemon || std::disjunction_v<std::is_same<PokemonSpecifiers, tags::CurrentActionMoveTarget>...>) {
-          entities.insert(registry.get<CurrentActionTarget>(entity).val);
-        }
-      });
-
-      return {entities.begin(), entities.end()};
-    }};
 }
 
 void applyBasePowerEventModifier(types::handle moveHandle, BasePower basePower, EventModifier eventModifier) {
@@ -2092,7 +2059,7 @@ void runModifyAtk(Simulation&) {}
 void runModifyDef(Simulation&) {}
 
 void runModifySpa(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
+  simulation.addToEntities<EventModifier, tags::SpaStatUpdateRequired>();
 
   // Priority 1
   dex::ChoiceSpecs::onModifySpa(simulation);
@@ -2100,25 +2067,25 @@ void runModifySpa(Simulation& simulation) {
   // Priority 5
   dex::Plus::onModifySpA(simulation);
 
-  simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpa>>();
+  simulation.view<applyEventModifier<stat::EffectiveSpa>>();
   simulation.registry.clear<EventModifier>();
 }
 
 void runModifySpd(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
+  simulation.addToEntities<EventModifier, tags::SpdStatUpdateRequired>();
 
   dex::AssaultVest::onModifySpd(simulation);
 
-  simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpd>>();
+  simulation.view<applyEventModifier<stat::EffectiveSpd>>();
   simulation.registry.clear<EventModifier>();
 }
 
 void runModifySpe(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::SelectedForViewPokemon>();
+  simulation.addToEntities<EventModifier, tags::SpeStatUpdateRequired>();
 
   dex::ChoiceScarf::onModifySpe(simulation);
 
-  simulation.viewForSelectedPokemon<applyEventModifier<stat::EffectiveSpe>>();
+  simulation.view<applyEventModifier<stat::EffectiveSpe>>();
   simulation.registry.clear<EventModifier>();
 
   dex::Paralysis::onModifySpe(simulation);
@@ -2650,6 +2617,7 @@ void run(Simulation& simulation) {
 ////////////////// START OF src/SimulateTurn/RandomChance.cpp //////////////////
 
 #include <optional>
+#include <type_traits>
 
 namespace pokesim::internal {
 namespace {
@@ -4368,9 +4336,7 @@ void lifeOrbOnAfterMove(
 
 void AssaultVest::onModifySpd(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<AssaultVest::onModifySpdModifier>();
-  simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::AssaultVest>>(
-    modifier,
-    1U);
+  simulation.view<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::AssaultVest>>(modifier, 1U);
 }
 
 void AssaultVest::onEnd(Simulation& simulation) {
@@ -4387,9 +4353,7 @@ void BrightPowder::onModifyAccuracy(Simulation& simulation) {
 
 void ChoiceScarf::onModifySpe(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<ChoiceScarf::onModifySpeModifier>();
-  simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceScarf>>(
-    modifier,
-    1U);
+  simulation.view<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceScarf>>(modifier, 1U);
 }
 
 void ChoiceScarf::onSourceModifyMove(Simulation& simulation) {
@@ -4403,9 +4367,7 @@ void ChoiceScarf::onEnd(Simulation& simulation) {
 
 void ChoiceSpecs::onModifySpa(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<ChoiceSpecs::onModifySpaModifier>();
-  simulation.viewForSelectedPokemon<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceSpecs>>(
-    modifier,
-    1U);
+  simulation.view<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceSpecs>>(modifier, 1U);
 }
 
 void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
@@ -4513,9 +4475,11 @@ void Burn::onResidual(Simulation& simulation) {
 void Paralysis::onModifySpe(Simulation& simulation) {
   const auto speedDivisor = simulation.pokedex().getStaticValue<Paralysis::speedDivisor>();
   const auto speedDividend = simulation.pokedex().getStaticValue<Paralysis::speedDividend>();
-  simulation.viewForSelectedPokemon<
+  simulation.view<
     paralysisOnModifySpeed,
-    Tags<status::tags::Paralysis> /*, entt::exclude_t<ability::tags::QuickFeet>*/>(speedDivisor, speedDividend);
+    Tags<status::tags::Paralysis, tags::SpeStatUpdateRequired> /*, entt::exclude_t<ability::tags::QuickFeet>*/>(
+    speedDivisor,
+    speedDividend);
 }
 
 void Paralysis::onBeforeMove(Simulation& simulation) {
@@ -5744,40 +5708,41 @@ void updateAllStats(Simulation& simulation) {
 }
 
 void updateAtk(Simulation& simulation, bool ignoreBoosts) {
-  internal::SelectForPokemonView<tags::AtkStatUpdateRequired> selectedAtkUpdateRequired{simulation};
-  if (selectedAtkUpdateRequired.hasNoneSelected()) return;
+  internal::EntityFilter<tags::AtkStatUpdateRequired> filter{simulation};
+  if (filter.hasNoneSelected()) return;
 
-  simulation.viewForSelectedPokemon<resetEffectiveAtk>();
+  filter.view<resetEffectiveAtk>();
 
   if (!ignoreBoosts) {
-    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveAtk, AtkBoost>>();
+    filter.view<applyBoostToEffectiveStat<stat::EffectiveAtk, AtkBoost>>();
   }
   runModifyAtk(simulation);
 
-  simulation.registry.clear<tags::AtkStatUpdateRequired>();
+  filter.clearSelectionTags();
 }
 
 void updateDef(Simulation& simulation, bool ignoreBoosts) {
-  internal::SelectForPokemonView<tags::DefStatUpdateRequired> selectedDefUpdateRequired{simulation};
-  if (selectedDefUpdateRequired.hasNoneSelected()) return;
+  internal::EntityFilter<tags::DefStatUpdateRequired> filter{simulation};
+  if (filter.hasNoneSelected()) return;
 
-  simulation.viewForSelectedPokemon<resetEffectiveDef>();
+  filter.view<resetEffectiveDef>();
 
   if (!ignoreBoosts) {
-    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveDef, DefBoost>>();
+    filter.view<applyBoostToEffectiveStat<stat::EffectiveDef, DefBoost>>();
   }
   runModifyDef(simulation);
 
-  simulation.registry.clear<tags::DefStatUpdateRequired>();
+  filter.clearSelectionTags();
 }
 
 void updateSpa(Simulation& simulation, bool ignoreBoosts) {
-  internal::SelectForPokemonView<tags::SpaStatUpdateRequired> selectedSpaUpdateRequired{simulation};
-  if (selectedSpaUpdateRequired.hasNoneSelected()) return;
+  internal::EntityFilter<tags::SpaStatUpdateRequired> filter{simulation};
+  if (filter.hasNoneSelected()) return;
 
-  simulation.viewForSelectedPokemon<resetEffectiveSpa>();
+  filter.view<resetEffectiveSpa>();
+
   if (!ignoreBoosts) {
-    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpa, SpaBoost>>();
+    filter.view<applyBoostToEffectiveStat<stat::EffectiveSpa, SpaBoost>>();
   }
   runModifySpa(simulation);
 
@@ -5785,13 +5750,13 @@ void updateSpa(Simulation& simulation, bool ignoreBoosts) {
 }
 
 void updateSpd(Simulation& simulation, bool ignoreBoosts) {
-  internal::SelectForPokemonView<tags::SpdStatUpdateRequired> selectedSpdUpdateRequired{simulation};
-  if (selectedSpdUpdateRequired.hasNoneSelected()) return;
+  internal::EntityFilter<tags::SpdStatUpdateRequired> filter{simulation};
+  if (filter.hasNoneSelected()) return;
 
-  simulation.viewForSelectedPokemon<resetEffectiveSpd>();
+  filter.view<resetEffectiveSpd>();
 
   if (!ignoreBoosts) {
-    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpd, SpdBoost>>();
+    filter.view<applyBoostToEffectiveStat<stat::EffectiveSpd, SpdBoost>>();
   }
   runModifySpd(simulation);
 
@@ -5799,13 +5764,13 @@ void updateSpd(Simulation& simulation, bool ignoreBoosts) {
 }
 
 void updateSpe(Simulation& simulation, bool ignoreBoosts) {
-  internal::SelectForPokemonView<tags::SpeStatUpdateRequired> selectedSpeUpdateRequired{simulation};
-  if (selectedSpeUpdateRequired.hasNoneSelected()) return;
+  internal::EntityFilter<tags::SpeStatUpdateRequired> filter{simulation};
+  if (filter.hasNoneSelected()) return;
 
-  simulation.viewForSelectedPokemon<resetEffectiveSpe>();
+  filter.view<resetEffectiveSpe>();
 
   if (!ignoreBoosts) {
-    simulation.viewForSelectedPokemon<applyBoostToEffectiveStat<stat::EffectiveSpe, SpeBoost>>();
+    filter.view<applyBoostToEffectiveStat<stat::EffectiveSpe, SpeBoost>>();
   }
   runModifySpe(simulation);
   // trick room
