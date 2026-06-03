@@ -42,7 +42,6 @@
 #include <Types/MechanicConstants.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/EntityFilter.hpp>
-#include <Utilities/SelectForView.hpp>
 #include <cmath>
 #include <cstddef>
 #include <type_traits>
