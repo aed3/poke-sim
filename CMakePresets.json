@@ -83,6 +83,16 @@
         "test",
         "benchmark-release"
       ]
+    },
+    {
+      "name": "profile",
+      "inherits": [
+        "benchmark",
+        "default"
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
     }
   ],
   "buildPresets": [
@@ -127,6 +137,11 @@
       "name": "benchmark-release-with-checks",
       "inherits": "benchmark",
       "configurePreset": "benchmark-release-with-checks"
+    },
+    {
+      "name": "profile",
+      "inherits": "benchmark",
+      "configurePreset": "profile"
     }
   ]
 }

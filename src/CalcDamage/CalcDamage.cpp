@@ -51,6 +51,10 @@
 
 namespace pokesim::calc_damage {
 namespace {
+auto getMoveFilter(Simulation& simulation) {
+  return pokesim::internal::EntityFilter<pokesim::tags::CurrentMoveHit>{simulation};
+}
+
 void clearRunVariables(Simulation& simulation) {
   simulation.registry.clear<
     tags::Crit,
@@ -262,7 +266,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
     isSimulateTurn || isCalculateDamage || isAnalyzeEffect,
     "Using a type that isn't a valid simulation tag.");
 
-  pokesim::internal::EntityFilter<SimulationTag, pokesim::tags::SelectedForViewMove> moveFilter{simulation};
+  pokesim::internal::EntityFilter<SimulationTag, pokesim::tags::CurrentMoveHit> moveFilter{simulation};
   if (moveFilter.hasNoneSelected()) {
     return;
   }
@@ -289,6 +293,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
 
   if (damageRollOptions.sidesMatch()) {
     moveFilter.template addToSelected<internal::tags::ApplySideDamageRollOptions>();
+    simulation.removeFromEntities<internal::tags::ApplySideDamageRollOptions, move::tags::Status>();
     if constexpr (onlyPassDamageRoll) {
       ApplyDamageRollKind(simulation, damageRollOptions.getP1());
     }
@@ -301,6 +306,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
     moveFilter.template view<setDefendingSide>();
 
     simulation.addToEntities<internal::tags::ApplySideDamageRollOptions, tags::P1Defending>();
+    simulation.removeFromEntities<internal::tags::ApplySideDamageRollOptions, move::tags::Status>();
     if constexpr (onlyPassDamageRoll) {
       ApplyDamageRollKind(simulation, damageRollOptions.getP1());
     }
@@ -310,6 +316,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
     simulation.registry.clear<internal::tags::ApplySideDamageRollOptions, tags::P1Defending>();
 
     simulation.addToEntities<internal::tags::ApplySideDamageRollOptions, tags::P2Defending>();
+    simulation.removeFromEntities<internal::tags::ApplySideDamageRollOptions, move::tags::Status>();
     if constexpr (onlyPassDamageRoll) {
       ApplyDamageRollKind(simulation, damageRollOptions.getP2());
     }
@@ -419,11 +426,13 @@ void resetEffectiveAndDefendingStat(types::registry& registry, Defender defender
 template <typename EffectiveStat, typename IgnoresBoostTag, typename UsesStatTag>
 void setUnboostedStat(Simulation& simulation) {
   static constexpr bool forAttacker = std::is_same_v<IgnoresBoostTag, tags::IgnoresAttackingBoost>;
+  auto moveFilter = getMoveFilter(simulation);
+
   if constexpr (forAttacker) {
-    simulation.viewForSelectedMoves<saveRealEffectiveAttackerStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
+    moveFilter.view<saveRealEffectiveAttackerStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
   else {
-    simulation.viewForSelectedMoves<saveRealEffectiveDefenderStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
+    moveFilter.view<saveRealEffectiveDefenderStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
 
   if (simulation.registry.view<RealEffectiveStat>().empty()) {
@@ -452,34 +461,31 @@ void setUnboostedStat(Simulation& simulation) {
   }
 
   if constexpr (forAttacker) {
-    simulation
-      .viewForSelectedMoves<resetEffectiveAndAttackingStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
+    moveFilter.view<resetEffectiveAndAttackingStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
   else {
-    simulation
-      .viewForSelectedMoves<resetEffectiveAndDefendingStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
+    moveFilter.view<resetEffectiveAndDefendingStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
 
   simulation.registry.clear<RealEffectiveStat>();
 }
 
 void setDamageFormulaVariables(Simulation& simulation) {
-  simulation.viewForSelectedMoves<setSourceLevel>();
+  auto moveFilter = getMoveFilter(simulation);
+  moveFilter.view<setSourceLevel>();
 
-  simulation.viewForSelectedMoves<setUsedAttackStat<move::tags::Physical>, Tags<move::tags::Physical>>();
-  simulation.viewForSelectedMoves<setUsedAttackStat<move::tags::Special>, Tags<move::tags::Special>>();
-  simulation.viewForSelectedMoves<setUsedDefenseStat<move::tags::Physical>, Tags<move::tags::Physical>>();
-  simulation.viewForSelectedMoves<setUsedDefenseStat<move::tags::Special>, Tags<move::tags::Special>>();
+  moveFilter.view<setUsedAttackStat<move::tags::Physical>, Tags<move::tags::Physical>>();
+  moveFilter.view<setUsedAttackStat<move::tags::Special>, Tags<move::tags::Special>>();
+  moveFilter.view<setUsedDefenseStat<move::tags::Physical>, Tags<move::tags::Physical>>();
+  moveFilter.view<setUsedDefenseStat<move::tags::Special>, Tags<move::tags::Special>>();
 
-  simulation.viewForSelectedMoves<setIgnoreAttackingBoostIfNegative<AtkBoost>, Tags<tags::Crit, tags::UsesAtk>>();
-  simulation.viewForSelectedMoves<setIgnoreAttackingBoostIfNegative<SpaBoost>, Tags<tags::Crit, tags::UsesSpa>>();
-  simulation.viewForSelectedMoves<setIgnoreDefendingBoostIfPositive<DefBoost>, Tags<tags::Crit, tags::UsesDef>>();
-  simulation.viewForSelectedMoves<setIgnoreDefendingBoostIfPositive<SpdBoost>, Tags<tags::Crit, tags::UsesSpd>>();
-  // simulation.viewForSelectedMoves<setIgnoreAttackingBoostIfNegative<DefBoost>, Tags<tags::Crit,
-  // tags::UsesDefAsOffense>>();
+  moveFilter.view<setIgnoreAttackingBoostIfNegative<AtkBoost>, Tags<tags::Crit, tags::UsesAtk>>();
+  moveFilter.view<setIgnoreAttackingBoostIfNegative<SpaBoost>, Tags<tags::Crit, tags::UsesSpa>>();
+  moveFilter.view<setIgnoreDefendingBoostIfPositive<DefBoost>, Tags<tags::Crit, tags::UsesDef>>();
+  moveFilter.view<setIgnoreDefendingBoostIfPositive<SpdBoost>, Tags<tags::Crit, tags::UsesSpd>>();
+  // moveFilter.view<setIgnoreAttackingBoostIfNegative<DefBoost>, Tags<tags::Crit, tags::UsesDefAsOffense>>();
 
-  // simulation.viewForSelectedPokemon<dex::latest::Unaware::onUsesBoost, Tags<ability::tags::Unaware,
-  // tags::Attacker>>();
+  // moveFilter.view<dex::latest::Unaware::onUsesBoost, Tags<ability::tags::Unaware, tags::Attacker>>();
 
   setUnboostedStat<stat::EffectiveAtk, tags::IgnoresAttackingBoost, tags::UsesAtk>(simulation);
   setUnboostedStat<stat::EffectiveSpa, tags::IgnoresAttackingBoost, tags::UsesSpa>(simulation);
@@ -489,15 +495,16 @@ void setDamageFormulaVariables(Simulation& simulation) {
 }
 
 void setDamageRollModifiers(Simulation& simulation) {
-  simulation.viewForSelectedMoves<checkForAndApplyStab>();
-  simulation.viewForSelectedMoves<checkForAndApplyTypeEffectiveness>(simulation.pokedex());
+  auto moveFilter = getMoveFilter(simulation);
+  moveFilter.view<checkForAndApplyStab>();
+  moveFilter.view<checkForAndApplyTypeEffectiveness>(simulation.pokedex());
   dex::Burn::onSetDamageRollModifiers(simulation);
   runModifyDamageEvent(simulation);
 }
 
 void calcDamage(Simulation& simulation) {
-  pokesim::internal::SelectForCurrentActionMoveView<> selectedMoves{simulation, entt::exclude<move::tags::Status>};
-  if (selectedMoves.hasNoneSelected()) {
+  auto moveFilter = getMoveFilter(simulation);
+  if (moveFilter.hasNoneSelected()) {
     return;
   }
 
@@ -512,11 +519,11 @@ void calcDamage(Simulation& simulation) {
   runBasePowerEvent(simulation);
   setDamageFormulaVariables(simulation);
 
-  simulation.viewForSelectedMoves<calculateBaseDamage>();
-  simulation.viewForSelectedMoves<applyCritDamageIncrease, Tags<tags::Crit>>(
+  moveFilter.view<calculateBaseDamage>();
+  moveFilter.view<applyCritDamageIncrease, Tags<tags::Crit>>(
     simulation.pokedex().getStaticValue<MechanicConstants::CRIT_MULTIPLIER>());
 
-  simulation.addToEntities<DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
+  simulation.addToEntities<DamageRollModifiers, Damage, pokesim::tags::CurrentMoveHit>();
   setDamageRollModifiers(simulation);
 
   applySideDamageRollOptions<SimulateTurn, applyDamageRollsAndModifiers<SimulateTurn>>(simulation);

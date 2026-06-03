@@ -240,12 +240,12 @@
  * src/Battle/ManageBattleState.hpp
  * src/SimulateTurn/RandomChance.hpp
  * src/Simulation/MoveHitSteps.hpp
+ * src/Utilities/EntityFilter.hpp
  * src/Battle/Side/ManageSideState.hpp
  * src/SimulateTurn/ManageActionQueue.hpp
  * src/SimulateTurn/SimulateTurnDebugChecks.hpp
  * src/Utilities/RNG.hpp
  * src/SimulateTurn/CalcDamageSpecifics.hpp
- * src/Utilities/EntityFilter.hpp
  * src/Pokedex/Setup/DexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.hpp
  * src/Pokedex/Setup/MoveDexDataSetup.hpp
@@ -24636,6 +24636,77 @@ void runMoveHitChecks(Simulation& simulation);
 
 //////////////////// END OF src/Simulation/MoveHitSteps.hpp ////////////////////
 
+/////////////////// START OF src/Utilities/EntityFilter.hpp ////////////////////
+
+namespace pokesim::internal {
+template <typename SelectionTag, typename... OtherSelectionTags>
+struct EntityFilter {
+ private:
+  template <auto Function, typename...>
+  struct Filter;
+
+  template <auto Function, typename ExcludeContainer, typename IncludeContainer, typename... ExtraTags>
+  struct Filter<Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer> {
+    template <typename... PassedInArgs>
+    static void view(Simulation* simulation, const PassedInArgs&... passedInArgs) {
+      simulation
+        ->view<Function, Tags<SelectionTag, OtherSelectionTags..., ExtraTags...>, ExcludeContainer, IncludeContainer>(
+          passedInArgs...);
+    }
+
+    template <typename... PassedInArgs>
+    static void group(Simulation* simulation, const PassedInArgs&... passedInArgs) {
+      simulation
+        ->group<Function, Tags<SelectionTag, OtherSelectionTags..., ExtraTags...>, ExcludeContainer, IncludeContainer>(
+          passedInArgs...);
+    }
+  };
+
+ public:
+  EntityFilter(Simulation& simulation_) : simulation(&simulation_) {}
+
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  auto view(const PassedInArgs&... passedInArgs) {
+    Filter<Function, TagContainer, ExcludeContainer, IncludeContainer>::view(simulation, passedInArgs...);
+  }
+
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  auto group(const PassedInArgs&... passedInArgs) {
+    Filter<Function, TagContainer, ExcludeContainer, IncludeContainer>::group(simulation, passedInArgs...);
+  }
+
+  template <typename... IncludeComponents, typename... ExcludeComponents>
+  void applySelectionTags(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
+    static_assert(
+      !(sizeof...(ExcludeComponents) == 0U && std::conjunction_v<std::is_empty<IncludeComponents>...>),
+      "If there are no excludes and all included components are tags, use those tags as the SelectionTags directly.");
+    auto view = simulation->registry.view<IncludeComponents...>(exclude);
+    simulation->registry.insert<SelectionTag, OtherSelectionTags...>(view.begin(), view.end());
+  }
+
+  bool hasNoneSelected() {
+    auto view = simulation->registry.view<SelectionTag, OtherSelectionTags...>();
+    return view.begin() == view.end();
+  }
+
+  void clearSelectionTags() { simulation->registry.clear<SelectionTag, OtherSelectionTags...>(); }
+
+  template <typename Type, typename... ViewComponents, typename... Args>
+  void addToSelected(const Args&... args) {
+    simulation->addToEntities<Type, SelectionTag, OtherSelectionTags..., ViewComponents...>(args...);
+  }
+
+ private:
+  Simulation* simulation = nullptr;
+};
+}  // namespace pokesim::internal
+
+//////////////////// END OF src/Utilities/EntityFilter.hpp /////////////////////
+
 ///////////////// START OF src/Battle/Side/ManageSideState.hpp /////////////////
 
 namespace pokesim {
@@ -24815,77 +24886,6 @@ void setIfMoveCrits(Simulation& simulation);
 }  // namespace pokesim
 
 /////////////// END OF src/SimulateTurn/CalcDamageSpecifics.hpp ////////////////
-
-/////////////////// START OF src/Utilities/EntityFilter.hpp ////////////////////
-
-namespace pokesim::internal {
-template <typename SelectionTag, typename... OtherSelectionTags>
-struct EntityFilter {
- private:
-  template <auto Function, typename...>
-  struct Filter;
-
-  template <auto Function, typename ExcludeContainer, typename IncludeContainer, typename... ExtraTags>
-  struct Filter<Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer> {
-    template <typename... PassedInArgs>
-    static void view(Simulation* simulation, const PassedInArgs&... passedInArgs) {
-      simulation
-        ->view<Function, Tags<SelectionTag, OtherSelectionTags..., ExtraTags...>, ExcludeContainer, IncludeContainer>(
-          passedInArgs...);
-    }
-
-    template <typename... PassedInArgs>
-    static void group(Simulation* simulation, const PassedInArgs&... passedInArgs) {
-      simulation
-        ->group<Function, Tags<SelectionTag, OtherSelectionTags..., ExtraTags...>, ExcludeContainer, IncludeContainer>(
-          passedInArgs...);
-    }
-  };
-
- public:
-  EntityFilter(Simulation& simulation_) : simulation(&simulation_) {}
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  auto view(const PassedInArgs&... passedInArgs) {
-    Filter<Function, TagContainer, ExcludeContainer, IncludeContainer>::view(simulation, passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  auto group(const PassedInArgs&... passedInArgs) {
-    Filter<Function, TagContainer, ExcludeContainer, IncludeContainer>::group(simulation, passedInArgs...);
-  }
-
-  template <typename... IncludeComponents, typename... ExcludeComponents>
-  void applySelectionTags(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
-    static_assert(
-      !(sizeof...(ExcludeComponents) == 0U && std::conjunction_v<std::is_empty<IncludeComponents>...>),
-      "If there are no excludes and all included components are tags, use those tags as the SelectionTags directly.");
-    auto view = simulation->registry.view<IncludeComponents...>(exclude);
-    simulation->registry.insert<SelectionTag, OtherSelectionTags...>(view.begin(), view.end());
-  }
-
-  bool hasNoneSelected() {
-    auto view = simulation->registry.view<SelectionTag, OtherSelectionTags...>();
-    return view.begin() == view.end();
-  }
-
-  void clearSelectionTags() { simulation->registry.clear<SelectionTag, OtherSelectionTags...>(); }
-
-  template <typename Type, typename... ViewComponents, typename... Args>
-  void addToSelected(const Args&... args) {
-    simulation->addToEntities<Type, SelectionTag, OtherSelectionTags..., ViewComponents...>(args...);
-  }
-
- private:
-  Simulation* simulation = nullptr;
-};
-}  // namespace pokesim::internal
-
-//////////////////// END OF src/Utilities/EntityFilter.hpp /////////////////////
 
 ///////////////// START OF src/Pokedex/Setup/DexDataSetup.hpp //////////////////
 
@@ -25281,8 +25281,13 @@ struct Checks : pokesim::debug::Checks {
   std::size_t calcDamageCount = 0U;
   std::size_t analyzeEffectCount = 0U;
 
+  types::entityVector getMoveList() const {
+    auto view = registry->view<pokesim::tags::CurrentMoveHit>();
+    return {view.begin(), view.end()};
+  }
+
   void checkMoveInputs() {
-    CurrentActionMovesAsSource moves{simulation->selectedMoveEntities()};
+    CurrentActionMovesAsSource moves{getMoveList()};
     for (types::entity move : moves.val) {
       if (has<pokesim::move::tags::Status>(move)) continue;
 
@@ -25488,7 +25493,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkMoveOutputs() const {
-    for (types::entity move : simulation->selectedMoveEntities()) {
+    for (types::entity move : getMoveList()) {
       if (has<pokesim::move::tags::Status>(move)) continue;
 
       pokesim::debug::TypesToIgnore typesToIgnore{};

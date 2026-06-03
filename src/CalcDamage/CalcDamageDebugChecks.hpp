@@ -85,8 +85,13 @@ struct Checks : pokesim::debug::Checks {
   std::size_t calcDamageCount = 0U;
   std::size_t analyzeEffectCount = 0U;
 
+  types::entityVector getMoveList() const {
+    auto view = registry->view<pokesim::tags::CurrentMoveHit>();
+    return {view.begin(), view.end()};
+  }
+
   void checkMoveInputs() {
-    CurrentActionMovesAsSource moves{simulation->selectedMoveEntities()};
+    CurrentActionMovesAsSource moves{getMoveList()};
     for (types::entity move : moves.val) {
       if (has<pokesim::move::tags::Status>(move)) continue;
 
@@ -292,7 +297,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkMoveOutputs() const {
-    for (types::entity move : simulation->selectedMoveEntities()) {
+    for (types::entity move : getMoveList()) {
       if (has<pokesim::move::tags::Status>(move)) continue;
 
       pokesim::debug::TypesToIgnore typesToIgnore{};

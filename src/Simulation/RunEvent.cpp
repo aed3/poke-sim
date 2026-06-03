@@ -60,22 +60,22 @@ void runResidual(Simulation& simulation) {
 void runAccuracyEvent(Simulation&) {}
 
 void runModifyAccuracyEvent(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::SelectedForViewMove, Accuracy>();
+  simulation.addToEntities<EventModifier, tags::CurrentMoveHit, Accuracy>();
 
   dex::BrightPowder::onModifyAccuracy(simulation);
 
-  simulation.viewForSelectedMoves<applyEventModifier<Accuracy>>();
+  simulation.view<applyEventModifier<Accuracy>>();
   simulation.registry.clear<EventModifier>();
 }
 
 void runModifyCritBoostEvent(Simulation&) {}
 
 void runBasePowerEvent(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::SelectedForViewMove, BasePower>();
+  simulation.addToEntities<EventModifier, tags::CurrentMoveHit, BasePower>();
 
   dex::KnockOff::onBasePower(simulation);
 
-  simulation.viewForSelectedMoves<applyBasePowerEventModifier>();
+  simulation.view<applyBasePowerEventModifier>();
   simulation.registry.clear<EventModifier>();
 }
 
