@@ -19851,6 +19851,7 @@ struct SelectedForViewMove {};
 
 namespace pokesim::internal::tags {
 struct CloneFromDamageRolls {};
+struct ApplySideDamageRollOptions {};
 }  // namespace pokesim::internal::tags
 
 /////////////////// END OF src/Components/Tags/Selection.hpp ///////////////////
@@ -24873,6 +24874,11 @@ struct EntityFilter {
   }
 
   void clearSelectionTags() { simulation->registry.clear<SelectionTag, OtherSelectionTags...>(); }
+
+  template <typename Type, typename... ViewComponents, typename... Args>
+  void addToSelected(const Args&... args) {
+    simulation->addToEntities<Type, SelectionTag, OtherSelectionTags..., ViewComponents...>(args...);
+  }
 
  private:
   Simulation* simulation = nullptr;

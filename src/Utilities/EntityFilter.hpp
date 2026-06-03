@@ -60,6 +60,11 @@ struct EntityFilter {
 
   void clearSelectionTags() { simulation->registry.clear<SelectionTag, OtherSelectionTags...>(); }
 
+  template <typename Type, typename... ViewComponents, typename... Args>
+  void addToSelected(const Args&... args) {
+    simulation->addToEntities<Type, SelectionTag, OtherSelectionTags..., ViewComponents...>(args...);
+  }
+
  private:
   Simulation* simulation = nullptr;
 };

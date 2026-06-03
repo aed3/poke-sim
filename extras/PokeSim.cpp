@@ -4820,8 +4820,8 @@ void applySideDamageRollOptions(Simulation& simulation) {
     isSimulateTurn || isCalculateDamage || isAnalyzeEffect,
     "Using a type that isn't a valid simulation tag.");
 
-  pokesim::internal::SelectForCurrentActionMoveView<SimulationTag> selectedMoves{simulation};
-  if (selectedMoves.hasNoneSelected()) {
+  pokesim::internal::EntityFilter<SimulationTag, pokesim::tags::SelectedForViewMove> moveFilter{simulation};
+  if (moveFilter.hasNoneSelected()) {
     return;
   }
 
@@ -4846,51 +4846,50 @@ void applySideDamageRollOptions(Simulation& simulation) {
   }
 
   if (damageRollOptions.sidesMatch()) {
+    moveFilter.template addToSelected<internal::tags::ApplySideDamageRollOptions>();
     if constexpr (onlyPassDamageRoll) {
       ApplyDamageRollKind(simulation, damageRollOptions.getP1());
     }
     else {
       ApplyDamageRollKind(simulation, damageRollOptions.getP1(), calculateUpToFoeHp, noKoChanceCalculation);
     }
+    simulation.registry.clear<internal::tags::ApplySideDamageRollOptions>();
   }
   else {
-    simulation.viewForSelectedMoves<setDefendingSide>();
-    pokesim::internal::SelectForCurrentActionMoveView<tags::P1Defending> p1DefendingMoves{simulation};
-    if (!p1DefendingMoves.hasNoneSelected()) {
-      if constexpr (onlyPassDamageRoll) {
-        ApplyDamageRollKind(simulation, damageRollOptions.getP1());
-      }
-      else {
-        ApplyDamageRollKind(simulation, damageRollOptions.getP1(), calculateUpToFoeHp, noKoChanceCalculation);
-      }
-    }
-    p1DefendingMoves.deselect();
+    moveFilter.template view<setDefendingSide>();
 
-    pokesim::internal::SelectForCurrentActionMoveView<tags::P2Defending> p2DefendingMoves{simulation};
-    if (!p2DefendingMoves.hasNoneSelected()) {
-      if constexpr (onlyPassDamageRoll) {
-        ApplyDamageRollKind(simulation, damageRollOptions.getP2());
-      }
-      else {
-        ApplyDamageRollKind(simulation, damageRollOptions.getP2(), calculateUpToFoeHp, noKoChanceCalculation);
-      }
+    simulation.addToEntities<internal::tags::ApplySideDamageRollOptions, tags::P1Defending>();
+    if constexpr (onlyPassDamageRoll) {
+      ApplyDamageRollKind(simulation, damageRollOptions.getP1());
+    }
+    else {
+      ApplyDamageRollKind(simulation, damageRollOptions.getP1(), calculateUpToFoeHp, noKoChanceCalculation);
+    }
+    simulation.registry.clear<internal::tags::ApplySideDamageRollOptions, tags::P1Defending>();
+
+    simulation.addToEntities<internal::tags::ApplySideDamageRollOptions, tags::P2Defending>();
+    if constexpr (onlyPassDamageRoll) {
+      ApplyDamageRollKind(simulation, damageRollOptions.getP2());
+    }
+    else {
+      ApplyDamageRollKind(simulation, damageRollOptions.getP2(), calculateUpToFoeHp, noKoChanceCalculation);
     }
 
-    simulation.registry.clear<tags::P1Defending, tags::P2Defending>();
+    simulation.registry.clear<internal::tags::ApplySideDamageRollOptions, tags::P2Defending>();
   }
 }
 
 template <typename SimulationTag>
 void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
   if (damageRollKind & DamageRollKind::GUARANTEED_CRIT_CHANCE) {
-    simulation.addToEntities<tags::Crit, pokesim::tags::SelectedForViewMove>();
+    simulation.addToEntities<tags::Crit, internal::tags::ApplySideDamageRollOptions>();
     return;
   }
 
   if constexpr (std::is_same_v<SimulationTag, pokesim::tags::SimulateTurn>) {
-    simulation.addToEntities<calc_damage::CritBoost, pokesim::tags::SelectedForViewMove, pokesim::tags::SimulateTurn>();
+    simulation.addToEntities<calc_damage::CritBoost, internal::tags::ApplySideDamageRollOptions>();
     runModifyCritBoostEvent(simulation);
-    simulation.viewForSelectedMoves<assignCritChanceDivisor>(
+    simulation.view<assignCritChanceDivisor>(
       simulation.pokedex().getStaticValue<MechanicConstants::CRIT_CHANCE_DIVISORS>());
     simulation.registry.clear<CritBoost>();
 
@@ -4909,37 +4908,42 @@ void applyDamageRollsAndModifiers(
     damageRollKind != DamageRollKind::GUARANTEED_CRIT_CHANCE,
     "Must pick a damage roll kind to go along with crits.");
 
-  simulation.addToEntities<DamageRolls, DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
+  pokesim::internal::EntityFilter<internal::tags::ApplySideDamageRollOptions> moveFilter{simulation};
+  if (moveFilter.hasNoneSelected()) {
+    return;
+  }
+
+  simulation.addToEntities<DamageRolls, DamageRollModifiers, internal::tags::ApplySideDamageRollOptions>();
   if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
-    simulation.viewForSelectedMoves<calculateAllDamageRolls>(simulation.pokedex());
+    moveFilter.view<calculateAllDamageRolls>(simulation.pokedex());
   }
   else {
     if (damageRollKind & DamageRollKind::MAX_DAMAGE) {
-      simulation.viewForSelectedMoves<applyDamageRollModifier>(simulation.pokedex());
+      moveFilter.view<applyDamageRollModifier>(simulation.pokedex());
     }
 
     if (damageRollKind & DamageRollKind::AVERAGE_DAMAGE) {
-      simulation.viewForSelectedMoves<applyAverageDamageRollModifier>(simulation.pokedex());
+      moveFilter.view<applyAverageDamageRollModifier>(simulation.pokedex());
     }
 
     if (damageRollKind & DamageRollKind::MIN_DAMAGE) {
-      simulation.viewForSelectedMoves<applyMinDamageRollModifier>(simulation.pokedex());
+      moveFilter.view<applyMinDamageRollModifier>(simulation.pokedex());
     }
   }
 
   if constexpr (std::is_same_v<pokesim::tags::SimulateTurn, SimulationTag>) {
     if (calculateUpToFoeHp) {
-      simulation.viewForSelectedMoves<reduceDamageRollsToDefenderHp>();
+      moveFilter.view<reduceDamageRollsToDefenderHp>();
     }
     simulate_turn::cloneFromDamageRolls(simulation, damageRollKind);
   }
   else {
-    simulation.viewForSelectedMoves<modifyDamage>(simulation.pokedex());
+    moveFilter.view<modifyDamage>(simulation.pokedex());
     if (calculateUpToFoeHp) {
-      simulation.viewForSelectedMoves<reduceDamageRollsToDefenderHp>();
+      moveFilter.view<reduceDamageRollsToDefenderHp>();
     }
     if (!noKoChanceCalculation && damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
-      simulation.viewForSelectedMoves<applyUsesUntilKo, Tags<SimulationTag>>();
+      moveFilter.view<applyUsesUntilKo, Tags<SimulationTag>>();
     }
   }
 }
