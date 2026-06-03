@@ -22,7 +22,6 @@
 #include <Types/Enums/BattleFormat.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/EntityFilter.hpp>
-#include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>
 
 #include "RunEvent.hpp"

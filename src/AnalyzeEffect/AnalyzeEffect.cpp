@@ -35,7 +35,7 @@
 #include <Types/Event.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
-#include <Utilities/SelectForView.hpp>
+#include <Utilities/EntityFilter.hpp>
 #include <cstdint>
 #include <entt/container/dense_map.hpp>
 #include <vector>
@@ -569,15 +569,14 @@ void clearRunVariables(Simulation& simulation) {
 }
 
 void analyzeEffect(Simulation& simulation) {
-  pokesim::internal::SelectForPokemonView<pokesim::tags::AnalyzeEffect> selectedPokemon(simulation);
-  pokesim::internal::SelectForBattleView<pokesim::tags::AnalyzeEffect> selectedBattle(simulation);
+  pokesim::internal::EntityFilter<pokesim::tags::AnalyzeEffect> battleFilter(simulation);
 
-  if (selectedPokemon.hasNoneSelected() || selectedBattle.hasNoneSelected()) {
+  if (battleFilter.hasNoneSelected()) {
     return;
   }
 
   simulation.view<ignoreStatusMoves>(simulation.pokedex());
-  simulation.viewForSelectedBattles<groupSimilarInputs>();
+  battleFilter.view<groupSimilarInputs>();
 
   if (!simulation.analyzeEffectOptions.getReconsiderActiveEffects()) {
     ignoreBattlesWithEffectActive(simulation);

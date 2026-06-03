@@ -1,8 +1,10 @@
 const fs = require('fs');
 const os = require('os');
+const util = require('util');
 const {execSync, exec} = require('child_process');
 const {getFullPath} = require('./utils.js');
 
+console.time('Total Time');
 const currentOsType = os.type();
 const currentCpus = os.cpus();
 const currentMemory = Math.floor(os.totalmem() / 1e6);
@@ -86,8 +88,10 @@ const parseExistingBenchmarkFile = () => {
 };
 
 const buildBenchmarks = () => {
+  console.time('Build Time');
   execSync('cmake --preset benchmark-release', {cwd: getFullPath(), stdio: 'inherit'});
   execSync('cmake --build --preset benchmark-release', {cwd: getFullPath(), stdio: 'inherit'});
+  console.timeEnd('Build Time');
 };
 
 const previousTest = parseExistingBenchmarkFile();
@@ -100,10 +104,13 @@ let newFile = `# Benchmarks
 # Results
 `;
 
+console.time('Benchmark Time');
 const benchmarkProcess = exec('./build/bin/release/PokeSimBenchmarks', {cwd: getFullPath()}, (error) => {
+  console.timeEnd('Benchmark Time');
   if (!error) {
     fs.writeFileSync(benchmarkFilePath, newFile);
   }
+  console.timeEnd('Total Time');
 });
 
 const current = {
@@ -129,23 +136,42 @@ benchmarkProcess.stdout.on('data', (chunk) => {
       const newInfo = newInfoPerLine[i];
       const previousInfo = previousTest?.[newInfo?.test]?.[newInfo?.Inputs];
       if (newInfo?.['Mean / Input Count'] && previousInfo?.['Mean / Input Count']) {
-        let diff = newInfo?.['Mean / Input Count'] - previousInfo?.['Mean / Input Count'];
+        const diff = newInfo['Mean / Input Count'] - previousInfo['Mean / Input Count'];
+        const percentDiff = Math.abs(diff / previousInfo['Mean / Input Count']);
+        let valueDiff = diff;
+
         let unit = 'ns';
-        if (diff >= 1e6) {
-          diff /= 1e6;
+        if (Math.abs(valueDiff) >= 1e6) {
+          valueDiff /= 1e6;
           unit = 'ms';
         }
-        else if (diff >= 1e3) {
-          diff /= 1e3;
+        else if (Math.abs(valueDiff) >= 1e3) {
+          valueDiff /= 1e3;
           unit = 'us';
         }
 
-        diff = diff.toFixed(6);
-        if (diff > 0) {
-          diff = '+' + diff;
+        valueDiff = valueDiff.toFixed(3);
+        let timesDiff = '';
+        let color = '';
+        let suffix = '';
+        if (valueDiff > 0) {
+          valueDiff = '+' + valueDiff;
+          timesDiff = (1 / percentDiff).toFixed(3);
+          suffix = '% slower';
+          color = 'red';
+        }
+        else {
+          timesDiff = (1 / (1 - percentDiff)).toFixed(3);
+          suffix = '% faster';
+          color = 'green';
         }
 
-        process.stdout.write('    ' + diff + unit);
+        if (percentDiff <= 0.05) {
+          color = 'reset';
+        }
+
+        process.stdout.write(
+          util.styleText(color, (100 * percentDiff).toFixed(3).padStart(10) + suffix + ', ' + valueDiff + unit));
       }
       process.stdout.write('\n');
     }
