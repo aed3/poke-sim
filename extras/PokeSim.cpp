@@ -1967,22 +1967,22 @@ void runResidual(Simulation& simulation) {
 void runAccuracyEvent(Simulation&) {}
 
 void runModifyAccuracyEvent(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::SelectedForViewMove, Accuracy>();
+  simulation.addToEntities<EventModifier, tags::CurrentMoveHit, Accuracy>();
 
   dex::BrightPowder::onModifyAccuracy(simulation);
 
-  simulation.viewForSelectedMoves<applyEventModifier<Accuracy>>();
+  simulation.view<applyEventModifier<Accuracy>>();
   simulation.registry.clear<EventModifier>();
 }
 
 void runModifyCritBoostEvent(Simulation&) {}
 
 void runBasePowerEvent(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::SelectedForViewMove, BasePower>();
+  simulation.addToEntities<EventModifier, tags::CurrentMoveHit, BasePower>();
 
   dex::KnockOff::onBasePower(simulation);
 
-  simulation.viewForSelectedMoves<applyBasePowerEventModifier>();
+  simulation.view<applyBasePowerEventModifier>();
   simulation.registry.clear<EventModifier>();
 }
 
@@ -2132,15 +2132,13 @@ void removeHitCountFromFaintedTargets(types::handle moveHandle, CurrentActionTar
 
 template <auto Function>
 void runMoveHitCheck(Simulation& simulation) {
-  simulation.addToEntities<tags::CurrentMoveHit, tags::CurrentActionMove>();
-
-  internal::SelectForCurrentActionMoveView<tags::CurrentMoveHit> selectedMoves{simulation};
-  if (selectedMoves.hasNoneSelected()) {
+  if (simulation.registry.view<tags::CurrentActionMove>().empty()) {
     return;
   }
 
+  simulation.addToEntities<tags::CurrentMoveHit, tags::CurrentActionMove>();
+
   Function(simulation);
-  selectedMoves.deselect();
 
   simulation.view<setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
   simulation.registry.clear<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
@@ -2166,14 +2164,14 @@ void setEffectTarget(types::handle handle, TargetEntityHolder target) {
 }
 
 void runMoveEffects(Simulation& simulation) {
-  internal::SelectForCurrentActionMoveView<internal::tags::RunEffect> selectedMoves{simulation};
-  if (selectedMoves.hasNoneSelected()) {
+  internal::EntityFilter<internal::tags::RunEffect> moveFilter{simulation};
+  if (moveFilter.hasNoneSelected()) {
     return;
   }
 
-  simulation.viewForSelectedMoves<setEffectSource>();
-  simulation.viewForSelectedMoves<setEffectTarget<CurrentActionSource>, Tags<move::effect::tags::MoveSource>>();
-  simulation.viewForSelectedMoves<setEffectTarget<CurrentActionTarget>, Tags<move::effect::tags::MoveTarget>>();
+  moveFilter.view<setEffectSource>();
+  moveFilter.view<setEffectTarget<CurrentActionSource>, Tags<move::effect::tags::MoveSource>>();
+  moveFilter.view<setEffectTarget<CurrentActionTarget>, Tags<move::effect::tags::MoveTarget>>();
 
   tryBoost(simulation);
   trySetStatus(simulation);
@@ -2212,17 +2210,15 @@ void removeFaintedSecondaryEffectTarget(
 // exists that has a random chance to add a side or field affect regardless of the target's HP, then this function will
 // need to be reworked.
 void removeFaintedSecondaryEffectTargets(Simulation& simulation) {
-  internal::SelectForCurrentActionMoveView<move::effect::tags::Secondary> selectedMoves{simulation};
-  if (selectedMoves.hasNoneSelected()) {
+  internal::EntityFilter<move::effect::tags::Secondary> moveFilter{simulation};
+  if (moveFilter.hasNoneSelected()) {
     return;
   }
 
-  simulation.viewForSelectedMoves<
-    removeFaintedSecondaryEffectTarget<CurrentActionSource>,
-    Tags<move::effect::tags::MoveSource>>(simulation.simulateTurnOptions);
-  simulation.viewForSelectedMoves<
-    removeFaintedSecondaryEffectTarget<CurrentActionTarget>,
-    Tags<move::effect::tags::MoveTarget>>(simulation.simulateTurnOptions);
+  moveFilter.view<removeFaintedSecondaryEffectTarget<CurrentActionSource>, Tags<move::effect::tags::MoveSource>>(
+    simulation.simulateTurnOptions);
+  moveFilter.view<removeFaintedSecondaryEffectTarget<CurrentActionTarget>, Tags<move::effect::tags::MoveTarget>>(
+    simulation.simulateTurnOptions);
 }
 
 // TODO(aed3): When adding damage source, change this to accept the move's handle and CurrentActionSource to pass to
@@ -2248,7 +2244,7 @@ void setMoveHitCount(Simulation& simulation) {
 }
 
 void applyDamage(Simulation& simulation) {
-  simulation.viewForSelectedMoves<applyDamageToTarget>();
+  simulation.view<applyDamageToTarget>();
 
   auto view = simulation.registry.view<tags::CurrentMoveHit>(entt::exclude<Damage, move::tags::Status>);
   simulation.registry.insert<tags::FailedCurrentMoveHit>(view.begin(), view.end());
@@ -2293,11 +2289,6 @@ void moveHitLoop(Simulation& simulation) {
   while (!simulation.registry.view<HitCount>().empty()) {
     POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran more than possible.");
 
-    internal::SelectForCurrentActionMoveView<HitCount> selectedMoves{simulation};
-    POKESIM_REQUIRE(
-      !selectedMoves.hasNoneSelected(),
-      "HitCount should only be present on active moves, meaning this loop should only be entered if there are moves to "
-      "select.");
     calc_damage::run(simulation);  // 1. call to this.battle.getDamage
     runDamageEvent(simulation);
 
@@ -4206,7 +4197,7 @@ void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInf
 namespace pokesim::dex {
 namespace {
 void knockOffOnBasePowerCheckRemovableItem(
-  types::registry& registry, CurrentActionSource source, CurrentActionTarget target) {
+  types::registry& registry, CurrentActionSource source, CurrentActionTarget target, EventModifier&) {
   if (registry.get<stat::CurrentHp>(source.val).val > Constants::PokemonCurrentHpStat::MIN) {
     registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
   }
@@ -4230,9 +4221,9 @@ void knockOffOnBasePower(
 
 void KnockOff::onBasePower(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<KnockOff::onBasePowerMultiplier>();
-  simulation.viewForSelectedMoves<knockOffOnBasePowerCheckRemovableItem, Tags<move::tags::KnockOff>>();
+  simulation.view<knockOffOnBasePowerCheckRemovableItem, Tags<move::tags::KnockOff>>();
   checkIfCanRemoveItem(simulation);
-  simulation.viewForSelectedMoves<knockOffOnBasePower, Tags<move::tags::KnockOff>>(modifier);
+  simulation.view<knockOffOnBasePower, Tags<move::tags::KnockOff>>(modifier);
 
   simulation.registry.clear<tags::CanRemoveItem>();
 }
@@ -4346,9 +4337,7 @@ void AssaultVest::onEnd(Simulation& simulation) {
 void BrightPowder::onModifyAccuracy(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyDenominator>();
-  simulation.viewForSelectedPokemon<setMoveTargetModifier<types::eventModifier>, Tags<item::tags::BrightPowder>>(
-    numerator,
-    denominator);
+  simulation.view<setMoveTargetModifier<types::eventModifier>, Tags<item::tags::BrightPowder>>(numerator, denominator);
 }
 
 void ChoiceScarf::onModifySpe(Simulation& simulation) {
@@ -4397,9 +4386,7 @@ void FocusSash::onDamage(Simulation& simulation) {
 void LifeOrb::onModifyDamage(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageDenominator>();
-  simulation.viewForSelectedPokemon<sourceModifyDamage<types::eventModifier>, Tags<item::tags::LifeOrb>>(
-    numerator,
-    denominator);
+  simulation.view<sourceModifyDamage<types::eventModifier>, Tags<item::tags::LifeOrb>>(numerator, denominator);
 }
 
 void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
@@ -4463,8 +4450,7 @@ void choiceLockOnDisableMove(
 }  // namespace
 
 void Burn::onSetDamageRollModifiers(Simulation& simulation) {
-  simulation
-    .viewForSelectedPokemon<applyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<ability::tags::Guts> */>();
+  simulation.view<applyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<ability::tags::Guts> */>();
 }
 
 void Burn::onResidual(Simulation& simulation) {
@@ -4609,6 +4595,10 @@ types::entity InputSetup::entity() const {
 
 namespace pokesim::calc_damage {
 namespace {
+auto getMoveFilter(Simulation& simulation) {
+  return pokesim::internal::EntityFilter<pokesim::tags::CurrentMoveHit>{simulation};
+}
+
 void clearRunVariables(Simulation& simulation) {
   simulation.registry.clear<
     tags::Crit,
@@ -4820,7 +4810,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
     isSimulateTurn || isCalculateDamage || isAnalyzeEffect,
     "Using a type that isn't a valid simulation tag.");
 
-  pokesim::internal::EntityFilter<SimulationTag, pokesim::tags::SelectedForViewMove> moveFilter{simulation};
+  pokesim::internal::EntityFilter<SimulationTag, pokesim::tags::CurrentMoveHit> moveFilter{simulation};
   if (moveFilter.hasNoneSelected()) {
     return;
   }
@@ -4847,6 +4837,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
 
   if (damageRollOptions.sidesMatch()) {
     moveFilter.template addToSelected<internal::tags::ApplySideDamageRollOptions>();
+    simulation.removeFromEntities<internal::tags::ApplySideDamageRollOptions, move::tags::Status>();
     if constexpr (onlyPassDamageRoll) {
       ApplyDamageRollKind(simulation, damageRollOptions.getP1());
     }
@@ -4859,6 +4850,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
     moveFilter.template view<setDefendingSide>();
 
     simulation.addToEntities<internal::tags::ApplySideDamageRollOptions, tags::P1Defending>();
+    simulation.removeFromEntities<internal::tags::ApplySideDamageRollOptions, move::tags::Status>();
     if constexpr (onlyPassDamageRoll) {
       ApplyDamageRollKind(simulation, damageRollOptions.getP1());
     }
@@ -4868,6 +4860,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
     simulation.registry.clear<internal::tags::ApplySideDamageRollOptions, tags::P1Defending>();
 
     simulation.addToEntities<internal::tags::ApplySideDamageRollOptions, tags::P2Defending>();
+    simulation.removeFromEntities<internal::tags::ApplySideDamageRollOptions, move::tags::Status>();
     if constexpr (onlyPassDamageRoll) {
       ApplyDamageRollKind(simulation, damageRollOptions.getP2());
     }
@@ -4977,11 +4970,13 @@ void resetEffectiveAndDefendingStat(types::registry& registry, Defender defender
 template <typename EffectiveStat, typename IgnoresBoostTag, typename UsesStatTag>
 void setUnboostedStat(Simulation& simulation) {
   static constexpr bool forAttacker = std::is_same_v<IgnoresBoostTag, tags::IgnoresAttackingBoost>;
+  auto moveFilter = getMoveFilter(simulation);
+
   if constexpr (forAttacker) {
-    simulation.viewForSelectedMoves<saveRealEffectiveAttackerStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
+    moveFilter.view<saveRealEffectiveAttackerStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
   else {
-    simulation.viewForSelectedMoves<saveRealEffectiveDefenderStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
+    moveFilter.view<saveRealEffectiveDefenderStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
 
   if (simulation.registry.view<RealEffectiveStat>().empty()) {
@@ -5010,34 +5005,31 @@ void setUnboostedStat(Simulation& simulation) {
   }
 
   if constexpr (forAttacker) {
-    simulation
-      .viewForSelectedMoves<resetEffectiveAndAttackingStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
+    moveFilter.view<resetEffectiveAndAttackingStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
   else {
-    simulation
-      .viewForSelectedMoves<resetEffectiveAndDefendingStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
+    moveFilter.view<resetEffectiveAndDefendingStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
 
   simulation.registry.clear<RealEffectiveStat>();
 }
 
 void setDamageFormulaVariables(Simulation& simulation) {
-  simulation.viewForSelectedMoves<setSourceLevel>();
+  auto moveFilter = getMoveFilter(simulation);
+  moveFilter.view<setSourceLevel>();
 
-  simulation.viewForSelectedMoves<setUsedAttackStat<move::tags::Physical>, Tags<move::tags::Physical>>();
-  simulation.viewForSelectedMoves<setUsedAttackStat<move::tags::Special>, Tags<move::tags::Special>>();
-  simulation.viewForSelectedMoves<setUsedDefenseStat<move::tags::Physical>, Tags<move::tags::Physical>>();
-  simulation.viewForSelectedMoves<setUsedDefenseStat<move::tags::Special>, Tags<move::tags::Special>>();
+  moveFilter.view<setUsedAttackStat<move::tags::Physical>, Tags<move::tags::Physical>>();
+  moveFilter.view<setUsedAttackStat<move::tags::Special>, Tags<move::tags::Special>>();
+  moveFilter.view<setUsedDefenseStat<move::tags::Physical>, Tags<move::tags::Physical>>();
+  moveFilter.view<setUsedDefenseStat<move::tags::Special>, Tags<move::tags::Special>>();
 
-  simulation.viewForSelectedMoves<setIgnoreAttackingBoostIfNegative<AtkBoost>, Tags<tags::Crit, tags::UsesAtk>>();
-  simulation.viewForSelectedMoves<setIgnoreAttackingBoostIfNegative<SpaBoost>, Tags<tags::Crit, tags::UsesSpa>>();
-  simulation.viewForSelectedMoves<setIgnoreDefendingBoostIfPositive<DefBoost>, Tags<tags::Crit, tags::UsesDef>>();
-  simulation.viewForSelectedMoves<setIgnoreDefendingBoostIfPositive<SpdBoost>, Tags<tags::Crit, tags::UsesSpd>>();
-  // simulation.viewForSelectedMoves<setIgnoreAttackingBoostIfNegative<DefBoost>, Tags<tags::Crit,
-  // tags::UsesDefAsOffense>>();
+  moveFilter.view<setIgnoreAttackingBoostIfNegative<AtkBoost>, Tags<tags::Crit, tags::UsesAtk>>();
+  moveFilter.view<setIgnoreAttackingBoostIfNegative<SpaBoost>, Tags<tags::Crit, tags::UsesSpa>>();
+  moveFilter.view<setIgnoreDefendingBoostIfPositive<DefBoost>, Tags<tags::Crit, tags::UsesDef>>();
+  moveFilter.view<setIgnoreDefendingBoostIfPositive<SpdBoost>, Tags<tags::Crit, tags::UsesSpd>>();
+  // moveFilter.view<setIgnoreAttackingBoostIfNegative<DefBoost>, Tags<tags::Crit, tags::UsesDefAsOffense>>();
 
-  // simulation.viewForSelectedPokemon<dex::latest::Unaware::onUsesBoost, Tags<ability::tags::Unaware,
-  // tags::Attacker>>();
+  // moveFilter.view<dex::latest::Unaware::onUsesBoost, Tags<ability::tags::Unaware, tags::Attacker>>();
 
   setUnboostedStat<stat::EffectiveAtk, tags::IgnoresAttackingBoost, tags::UsesAtk>(simulation);
   setUnboostedStat<stat::EffectiveSpa, tags::IgnoresAttackingBoost, tags::UsesSpa>(simulation);
@@ -5047,15 +5039,16 @@ void setDamageFormulaVariables(Simulation& simulation) {
 }
 
 void setDamageRollModifiers(Simulation& simulation) {
-  simulation.viewForSelectedMoves<checkForAndApplyStab>();
-  simulation.viewForSelectedMoves<checkForAndApplyTypeEffectiveness>(simulation.pokedex());
+  auto moveFilter = getMoveFilter(simulation);
+  moveFilter.view<checkForAndApplyStab>();
+  moveFilter.view<checkForAndApplyTypeEffectiveness>(simulation.pokedex());
   dex::Burn::onSetDamageRollModifiers(simulation);
   runModifyDamageEvent(simulation);
 }
 
 void calcDamage(Simulation& simulation) {
-  pokesim::internal::SelectForCurrentActionMoveView<> selectedMoves{simulation, entt::exclude<move::tags::Status>};
-  if (selectedMoves.hasNoneSelected()) {
+  auto moveFilter = getMoveFilter(simulation);
+  if (moveFilter.hasNoneSelected()) {
     return;
   }
 
@@ -5070,11 +5063,11 @@ void calcDamage(Simulation& simulation) {
   runBasePowerEvent(simulation);
   setDamageFormulaVariables(simulation);
 
-  simulation.viewForSelectedMoves<calculateBaseDamage>();
-  simulation.viewForSelectedMoves<applyCritDamageIncrease, Tags<tags::Crit>>(
+  moveFilter.view<calculateBaseDamage>();
+  moveFilter.view<applyCritDamageIncrease, Tags<tags::Crit>>(
     simulation.pokedex().getStaticValue<MechanicConstants::CRIT_MULTIPLIER>());
 
-  simulation.addToEntities<DamageRollModifiers, pokesim::tags::SelectedForViewMove>();
+  simulation.addToEntities<DamageRollModifiers, Damage, pokesim::tags::CurrentMoveHit>();
   setDamageRollModifiers(simulation);
 
   applySideDamageRollOptions<SimulateTurn, applyDamageRollsAndModifiers<SimulateTurn>>(simulation);

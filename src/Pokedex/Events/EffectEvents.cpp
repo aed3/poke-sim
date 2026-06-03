@@ -72,8 +72,7 @@ void choiceLockOnDisableMove(
 }  // namespace
 
 void Burn::onSetDamageRollModifiers(Simulation& simulation) {
-  simulation
-    .viewForSelectedPokemon<applyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<ability::tags::Guts> */>();
+  simulation.view<applyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<ability::tags::Guts> */>();
 }
 
 void Burn::onResidual(Simulation& simulation) {

@@ -115,9 +115,7 @@ void AssaultVest::onEnd(Simulation& simulation) {
 void BrightPowder::onModifyAccuracy(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyDenominator>();
-  simulation.viewForSelectedPokemon<setMoveTargetModifier<types::eventModifier>, Tags<item::tags::BrightPowder>>(
-    numerator,
-    denominator);
+  simulation.view<setMoveTargetModifier<types::eventModifier>, Tags<item::tags::BrightPowder>>(numerator, denominator);
 }
 
 void ChoiceScarf::onModifySpe(Simulation& simulation) {
@@ -166,9 +164,7 @@ void FocusSash::onDamage(Simulation& simulation) {
 void LifeOrb::onModifyDamage(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageDenominator>();
-  simulation.viewForSelectedPokemon<sourceModifyDamage<types::eventModifier>, Tags<item::tags::LifeOrb>>(
-    numerator,
-    denominator);
+  simulation.view<sourceModifyDamage<types::eventModifier>, Tags<item::tags::LifeOrb>>(numerator, denominator);
 }
 
 void LifeOrb::onAfterMoveUsed(Simulation& simulation) {

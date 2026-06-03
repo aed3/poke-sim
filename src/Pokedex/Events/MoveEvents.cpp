@@ -16,7 +16,7 @@
 namespace pokesim::dex {
 namespace {
 void knockOffOnBasePowerCheckRemovableItem(
-  types::registry& registry, CurrentActionSource source, CurrentActionTarget target) {
+  types::registry& registry, CurrentActionSource source, CurrentActionTarget target, EventModifier&) {
   if (registry.get<stat::CurrentHp>(source.val).val > Constants::PokemonCurrentHpStat::MIN) {
     registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
   }
@@ -40,9 +40,9 @@ void knockOffOnBasePower(
 
 void KnockOff::onBasePower(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<KnockOff::onBasePowerMultiplier>();
-  simulation.viewForSelectedMoves<knockOffOnBasePowerCheckRemovableItem, Tags<move::tags::KnockOff>>();
+  simulation.view<knockOffOnBasePowerCheckRemovableItem, Tags<move::tags::KnockOff>>();
   checkIfCanRemoveItem(simulation);
-  simulation.viewForSelectedMoves<knockOffOnBasePower, Tags<move::tags::KnockOff>>(modifier);
+  simulation.view<knockOffOnBasePower, Tags<move::tags::KnockOff>>(modifier);
 
   simulation.registry.clear<tags::CanRemoveItem>();
 }

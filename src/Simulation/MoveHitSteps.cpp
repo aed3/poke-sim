@@ -21,6 +21,7 @@
 #include <Types/Constants.hpp>
 #include <Types/Enums/BattleFormat.hpp>
 #include <Types/Registry.hpp>
+#include <Utilities/EntityFilter.hpp>
 #include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>
 
@@ -45,15 +46,13 @@ void removeHitCountFromFaintedTargets(types::handle moveHandle, CurrentActionTar
 
 template <auto Function>
 void runMoveHitCheck(Simulation& simulation) {
-  simulation.addToEntities<tags::CurrentMoveHit, tags::CurrentActionMove>();
-
-  internal::SelectForCurrentActionMoveView<tags::CurrentMoveHit> selectedMoves{simulation};
-  if (selectedMoves.hasNoneSelected()) {
+  if (simulation.registry.view<tags::CurrentActionMove>().empty()) {
     return;
   }
 
+  simulation.addToEntities<tags::CurrentMoveHit, tags::CurrentActionMove>();
+
   Function(simulation);
-  selectedMoves.deselect();
 
   simulation.view<setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
   simulation.registry.clear<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
@@ -79,14 +78,14 @@ void setEffectTarget(types::handle handle, TargetEntityHolder target) {
 }
 
 void runMoveEffects(Simulation& simulation) {
-  internal::SelectForCurrentActionMoveView<internal::tags::RunEffect> selectedMoves{simulation};
-  if (selectedMoves.hasNoneSelected()) {
+  internal::EntityFilter<internal::tags::RunEffect> moveFilter{simulation};
+  if (moveFilter.hasNoneSelected()) {
     return;
   }
 
-  simulation.viewForSelectedMoves<setEffectSource>();
-  simulation.viewForSelectedMoves<setEffectTarget<CurrentActionSource>, Tags<move::effect::tags::MoveSource>>();
-  simulation.viewForSelectedMoves<setEffectTarget<CurrentActionTarget>, Tags<move::effect::tags::MoveTarget>>();
+  moveFilter.view<setEffectSource>();
+  moveFilter.view<setEffectTarget<CurrentActionSource>, Tags<move::effect::tags::MoveSource>>();
+  moveFilter.view<setEffectTarget<CurrentActionTarget>, Tags<move::effect::tags::MoveTarget>>();
 
   tryBoost(simulation);
   trySetStatus(simulation);
@@ -125,17 +124,15 @@ void removeFaintedSecondaryEffectTarget(
 // exists that has a random chance to add a side or field affect regardless of the target's HP, then this function will
 // need to be reworked.
 void removeFaintedSecondaryEffectTargets(Simulation& simulation) {
-  internal::SelectForCurrentActionMoveView<move::effect::tags::Secondary> selectedMoves{simulation};
-  if (selectedMoves.hasNoneSelected()) {
+  internal::EntityFilter<move::effect::tags::Secondary> moveFilter{simulation};
+  if (moveFilter.hasNoneSelected()) {
     return;
   }
 
-  simulation.viewForSelectedMoves<
-    removeFaintedSecondaryEffectTarget<CurrentActionSource>,
-    Tags<move::effect::tags::MoveSource>>(simulation.simulateTurnOptions);
-  simulation.viewForSelectedMoves<
-    removeFaintedSecondaryEffectTarget<CurrentActionTarget>,
-    Tags<move::effect::tags::MoveTarget>>(simulation.simulateTurnOptions);
+  moveFilter.view<removeFaintedSecondaryEffectTarget<CurrentActionSource>, Tags<move::effect::tags::MoveSource>>(
+    simulation.simulateTurnOptions);
+  moveFilter.view<removeFaintedSecondaryEffectTarget<CurrentActionTarget>, Tags<move::effect::tags::MoveTarget>>(
+    simulation.simulateTurnOptions);
 }
 
 // TODO(aed3): When adding damage source, change this to accept the move's handle and CurrentActionSource to pass to
@@ -161,7 +158,7 @@ void setMoveHitCount(Simulation& simulation) {
 }
 
 void applyDamage(Simulation& simulation) {
-  simulation.viewForSelectedMoves<applyDamageToTarget>();
+  simulation.view<applyDamageToTarget>();
 
   auto view = simulation.registry.view<tags::CurrentMoveHit>(entt::exclude<Damage, move::tags::Status>);
   simulation.registry.insert<tags::FailedCurrentMoveHit>(view.begin(), view.end());
@@ -206,11 +203,6 @@ void moveHitLoop(Simulation& simulation) {
   while (!simulation.registry.view<HitCount>().empty()) {
     POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran more than possible.");
 
-    internal::SelectForCurrentActionMoveView<HitCount> selectedMoves{simulation};
-    POKESIM_REQUIRE(
-      !selectedMoves.hasNoneSelected(),
-      "HitCount should only be present on active moves, meaning this loop should only be entered if there are moves to "
-      "select.");
     calc_damage::run(simulation);  // 1. call to this.battle.getDamage
     runDamageEvent(simulation);
 
