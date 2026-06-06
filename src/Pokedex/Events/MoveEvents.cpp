@@ -3,6 +3,7 @@
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/Names/ItemNames.hpp>
 #include <Components/Stats.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Pokedex/Pokedex.hpp>
@@ -48,7 +49,7 @@ void KnockOff::onBasePower(Simulation& simulation) {
 }
 
 void KnockOff::onAfterHit(Simulation& simulation) {
-  simulation.viewForSelectedMoves<knockOffOnAfterHitCheckRemovableItem, Tags<move::tags::KnockOff>>();
+  simulation.view<knockOffOnAfterHitCheckRemovableItem, Tags<move::tags::KnockOff, tags::CurrentMoveHit>>();
   tryRemoveItem(simulation);
   simulation.registry.clear<tags::CanRemoveItem>();
 }

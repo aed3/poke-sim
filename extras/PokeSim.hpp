@@ -166,6 +166,7 @@
  * src/Components/Tags/MoveTags.hpp
  * src/Components/Tags/NatureTags.hpp
  * src/Components/Tags/PokemonTags.hpp
+ * src/Components/Tags/RunEventTags.hpp
  * src/Components/Tags/Selection.hpp
  * src/Components/Tags/SimulationTags.hpp
  * src/Components/Tags/StatusTags.hpp
@@ -197,7 +198,6 @@
  * src/Simulation/Formulas.hpp
  * src/Utilities/Tags.hpp
  * src/Utilities/RegistryLoop.hpp
- * src/Simulation/RegistryContainer.hpp
  * src/Simulation/Simulation.hpp
  * src/Utilities/DebugChecks.hpp
  * src/Simulation/SimulationSetupDebugChecks.hpp
@@ -236,7 +236,6 @@
  * src/Pokedex/Moves/Thunderbolt.hpp
  * src/Pokedex/Moves/WillOWisp.hpp
  * src/Simulation/RunEvent.hpp
- * src/Utilities/SelectForView.hpp
  * src/Battle/ManageBattleState.hpp
  * src/SimulateTurn/RandomChance.hpp
  * src/Simulation/MoveHitSteps.hpp
@@ -18443,7 +18442,7 @@ struct MovePair {
 };
 
 struct SkippedInputCount {
-  types::eventPossibilities val = 0U;
+  types::entityIndex val = 0U;
 };
 
 namespace tags {
@@ -19840,14 +19839,16 @@ struct CanSetStatus {};
 
 ////////////////// END OF src/Components/Tags/PokemonTags.hpp //////////////////
 
-////////////////// START OF src/Components/Tags/Selection.hpp //////////////////
+//////////////// START OF src/Components/Tags/RunEventTags.hpp /////////////////
 
 namespace pokesim::tags {
-struct SelectedForViewBattle {};
-struct SelectedForViewSide {};
-struct SelectedForViewPokemon {};
-struct SelectedForViewMove {};
+struct DisableMove {};
+struct EndItem {};
 }  // namespace pokesim::tags
+
+///////////////// END OF src/Components/Tags/RunEventTags.hpp //////////////////
+
+////////////////// START OF src/Components/Tags/Selection.hpp //////////////////
 
 namespace pokesim::internal::tags {
 struct CloneFromDamageRolls {};
@@ -22416,336 +22417,6 @@ struct RegistryLoop<
 
 //////////////////// END OF src/Utilities/RegistryLoop.hpp /////////////////////
 
-//////////////// START OF src/Simulation/RegistryContainer.hpp /////////////////
-
-namespace pokesim::internal {
-class RegistryContainer {
- public:
-  using SelectionFunction = entt::delegate<types::entityVector(const types::registry&)>;
-
- private:
-  template <typename, typename, typename...>
-  friend struct SelectForView;
-
-  using SelectionFunctionList = internal::maxSizedVector<SelectionFunction>;
-  SelectionFunctionList battleSelection{};
-  SelectionFunctionList sideSelection{};
-  SelectionFunctionList pokemonSelection{};
-  SelectionFunctionList moveSelection{};
-
-  template <typename Selection>
-  SelectionFunctionList& selectedFunctions() {
-    if constexpr (std::is_same_v<pokesim::tags::SelectedForViewBattle, Selection>) {
-      return battleSelection;
-    }
-    else if constexpr (std::is_same_v<pokesim::tags::SelectedForViewSide, Selection>) {
-      return sideSelection;
-    }
-    else if constexpr (std::is_same_v<pokesim::tags::SelectedForViewPokemon, Selection>) {
-      return pokemonSelection;
-    }
-    else {
-      return moveSelection;
-    }
-  }
-
-  template <typename Selection>
-  const SelectionFunctionList& selectedFunctions() const {
-    if constexpr (std::is_same_v<pokesim::tags::SelectedForViewBattle, Selection>) {
-      return battleSelection;
-    }
-    else if constexpr (std::is_same_v<pokesim::tags::SelectedForViewSide, Selection>) {
-      return sideSelection;
-    }
-    else if constexpr (std::is_same_v<pokesim::tags::SelectedForViewPokemon, Selection>) {
-      return pokemonSelection;
-    }
-    else {
-      return moveSelection;
-    }
-  }
-
-  template <typename Selection, typename GetNewSelection, typename GetUnmatchedSelection>
-  std::size_t select(
-    GetNewSelection getNewSelection, GetUnmatchedSelection getUnmatchedSelection, SelectionFunction selectionFunction,
-    bool isEmptySelection = false) {
-    auto list = getNewSelection(registry);
-    if (list.empty()) {
-      return 0U;
-    }
-
-    bool narrowSelection = hasActiveSelection<Selection>();
-    std::size_t finalSelectionSize = 0U;
-
-    if (narrowSelection && isEmptySelection) {
-      selectedFunctions<Selection>().push_back(selectionFunction);
-      return registry.view<Selection>().size();
-    }
-    if (narrowSelection) {
-      auto unmatchedSelections = getUnmatchedSelection(registry);
-      std::size_t totalSelected = registry.view<Selection>().size();
-      std::size_t unmatchedSelectionSize = unmatchedSelections.size();
-      if (unmatchedSelectionSize == totalSelected) {
-        return 0U;
-      }
-
-      registry.remove<Selection>(unmatchedSelections.begin(), unmatchedSelections.end());
-
-      POKESIM_REQUIRE(
-        unmatchedSelectionSize < totalSelected,
-        "The number of elements removed from the active selection must be less than the number of elements selected.");
-      finalSelectionSize = totalSelected - unmatchedSelectionSize;
-    }
-    else {
-      registry.clear<Selection>();
-      registry.insert<Selection>(list.begin(), list.end());
-      finalSelectionSize = list.size();
-    }
-
-    selectedFunctions<Selection>().push_back(selectionFunction);
-
-    return finalSelectionSize;
-  }
-
-  template <typename Selection, typename Required, typename... ComponentsToSelect, typename... ComponentsToExclude>
-  std::size_t select(entt::exclude_t<ComponentsToExclude...> exclude) {
-    auto getNewSelection = [&exclude](types::registry& reg) {
-      auto view = reg.view<Required, ComponentsToSelect...>(exclude);
-      return types::entityVector{view.begin(), view.end()};
-    };
-    auto getUnmatchedSelection = [](types::registry& reg) {
-      auto view = reg.view<Selection, ComponentsToExclude...>(entt::exclude<ComponentsToSelect...>);
-      return types::entityVector{view.begin(), view.end()};
-    };
-    SelectionFunction selectionFunction{[](const void*, const types::registry& reg) {
-      auto view = reg.view<Required, ComponentsToSelect...>(entt::exclude<ComponentsToExclude...>);
-      return types::entityVector{view.begin(), view.end()};
-    }};
-
-    return select<Selection>(
-      getNewSelection,
-      getUnmatchedSelection,
-      selectionFunction,
-      sizeof...(ComponentsToSelect) == 0U);
-  }
-
-  template <typename Selection>
-  std::size_t select(SelectionFunction selectionFunction) {
-    auto getUnmatchedSelections = [&selectionFunction](const types::registry& reg) -> types::entityVector {
-      auto upcomingSelection = selectionFunction(reg);
-      auto currentSelection = reg.view<Selection>();
-      auto end =
-        std::remove_if(upcomingSelection.begin(), upcomingSelection.end(), [&currentSelection](types::entity entity) {
-          return !currentSelection.contains(entity);
-        });
-      return {upcomingSelection.begin(), end};
-    };
-
-    return select<Selection>(selectionFunction, getUnmatchedSelections, selectionFunction);
-  }
-
-  template <typename Selection>
-  void deselect() {
-    POKESIM_REQUIRE(hasActiveSelection<Selection>(), "Selections must be present to deselect.");
-
-    registry.clear<Selection>();
-    SelectionFunctionList& functions = selectedFunctions<Selection>();
-    functions.pop_back();
-
-    if (functions.empty()) {
-      return;
-    }
-
-    types::entityVector filteredEntityList = functions[0](registry);
-    auto end = filteredEntityList.end();
-    for (std::size_t i = 1U; i < functions.size(); i++) {
-      types::entityVector previouslySelected = functions[i](registry);
-      end = std::remove_if(filteredEntityList.begin(), end, [&previouslySelected](types::entity entity) {
-        return std::find(previouslySelected.begin(), previouslySelected.end(), entity) == previouslySelected.end();
-      });
-    }
-
-    registry.insert<Selection>(filteredEntityList.begin(), end);
-  }
-
- protected:
-  template <typename Selection>
-  bool hasActiveSelection() const {
-    return !selectedFunctions<Selection>().empty();
-  }
-
- private:
-  template <typename Selected, typename Required, auto Function, typename...>
-  struct ForSelected;
-
-  template <
-    typename Selected, typename Required, auto Function, typename ExcludeContainer, typename IncludeContainer,
-    typename... ExtraTags>
-  struct ForSelected<Selected, Required, Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer> {
-    template <typename... PassedInArgs>
-    static void view(RegistryContainer* container, const PassedInArgs&... passedInArgs) {
-      if (container->hasActiveSelection<Selected>()) {
-        container->view<Function, Tags<Selected, Required, ExtraTags...>, ExcludeContainer, IncludeContainer>(
-          passedInArgs...);
-      }
-      else {
-        container->view<Function, Tags<Required, ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
-      }
-    }
-
-    template <typename... PassedInArgs>
-    static void group(RegistryContainer* container, const PassedInArgs&... passedInArgs) {
-      if (container->hasActiveSelection<Selected>()) {
-        container->view<Function, Tags<Selected, ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
-      }
-      else {
-        container->group<Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer>(passedInArgs...);
-      }
-    }
-  };
-
- public:
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void viewForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<
-      pokesim::tags::SelectedForViewBattle,
-      pokesim::tags::Battle,
-      Function,
-      TagContainer,
-      ExcludeContainer,
-      IncludeContainer>::view(this, passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void groupForSelectedBattles(const PassedInArgs&... passedInArgs) {
-    ForSelected<
-      pokesim::tags::SelectedForViewBattle,
-      pokesim::tags::Battle,
-      Function,
-      TagContainer,
-      ExcludeContainer,
-      IncludeContainer>::group(this, passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void viewForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<
-      pokesim::tags::SelectedForViewSide,
-      pokesim::tags::Side,
-      Function,
-      TagContainer,
-      ExcludeContainer,
-      IncludeContainer>::view(this, passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void groupForSelectedSides(const PassedInArgs&... passedInArgs) {
-    ForSelected<
-      pokesim::tags::SelectedForViewSide,
-      pokesim::tags::Side,
-      Function,
-      TagContainer,
-      ExcludeContainer,
-      IncludeContainer>::group(this, passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void viewForSelectedPokemon(const PassedInArgs&... passedInArgs) {
-    ForSelected<
-      pokesim::tags::SelectedForViewPokemon,
-      pokesim::tags::Pokemon,
-      Function,
-      TagContainer,
-      ExcludeContainer,
-      IncludeContainer>::view(this, passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void groupForSelectedPokemon(const PassedInArgs&... passedInArgs) {
-    ForSelected<
-      pokesim::tags::SelectedForViewPokemon,
-      pokesim::tags::Pokemon,
-      Function,
-      TagContainer,
-      ExcludeContainer,
-      IncludeContainer>::group(this, passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void viewForSelectedMoves(const PassedInArgs&... passedInArgs) {
-    ForSelected<
-      pokesim::tags::SelectedForViewMove,
-      pokesim::tags::CurrentActionMove,
-      Function,
-      TagContainer,
-      ExcludeContainer,
-      IncludeContainer>::view(this, passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  void groupForSelectedMoves(const PassedInArgs&... passedInArgs) {
-    ForSelected<
-      pokesim::tags::SelectedForViewMove,
-      pokesim::tags::CurrentActionMove,
-      Function,
-      TagContainer,
-      ExcludeContainer,
-      IncludeContainer>::group(this, passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  auto view(const PassedInArgs&... passedInArgs) {
-    return internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::view(
-      registry,
-      passedInArgs...);
-  }
-
-  template <
-    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
-  auto group(const PassedInArgs&... passedInArgs) {
-    return internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::group(
-      registry,
-      passedInArgs...);
-  }
-
- public:
-  types::registry registry{};
-
-  template <typename Type, typename... ViewComponents, typename... Args>
-  void addToEntities(const Args&... args) {
-    auto view = registry.view<ViewComponents...>();
-    registry.insert<Type>(view.begin(), view.end(), args...);
-  }
-
-  template <typename Type, typename... ViewComponents, typename... ExcludeComponents>
-  void removeFromEntities(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
-    auto view = registry.view<Type, ViewComponents...>(exclude);
-    registry.remove<Type>(view.begin(), view.end());
-  }
-};
-}  // namespace pokesim::internal
-
-///////////////// END OF src/Simulation/RegistryContainer.hpp //////////////////
-
 //////////////////// START OF src/Simulation/Simulation.hpp ////////////////////
 
 namespace pokesim {
@@ -22773,7 +22444,7 @@ struct SimulationSetupChecks;
  * @details Each `Simulation` instance will only simulate for either single or double battles. This class is optimized
  * for running multiple simulations of the same battle, where each battle state has completed the same number of turns.
  */
-class Simulation : public internal::RegistryContainer {
+class Simulation {
  private:
   types::entityVector createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList);
   PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonInfo);
@@ -22844,15 +22515,47 @@ class Simulation : public internal::RegistryContainer {
   void clearCalculateDamageResults();
   void clearAnalyzeEffectResults();
 
-  types::entityVector selectedBattleEntities() const;
-  types::entityVector selectedMoveEntities() const;
-  types::entityVector selectedPokemonEntities() const;
+  types::entityVector battleEntities() const;
+  types::entityVector moveEntities() const;
+  types::entityVector pokemonEntities() const;
 
   template <template <typename> typename RunStruct, typename... RunFunctionArgs>
   static void forEachSimulationTag(RunFunctionArgs&&... args) {
     RunStruct<tags::SimulateTurn>::run(std::forward<RunFunctionArgs>(args)...);
     RunStruct<tags::CalculateDamage>::run(std::forward<RunFunctionArgs>(args)...);
     RunStruct<tags::AnalyzeEffect>::run(std::forward<RunFunctionArgs>(args)...);
+  }
+
+ public:
+  types::registry registry{};
+
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  auto view(const PassedInArgs&... passedInArgs) {
+    return internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::view(
+      registry,
+      passedInArgs...);
+  }
+
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  auto group(const PassedInArgs&... passedInArgs) {
+    return internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::group(
+      registry,
+      passedInArgs...);
+  }
+  template <typename Type, typename... ViewComponents, typename... Args>
+  void addToEntities(const Args&... args) {
+    auto view = registry.view<ViewComponents...>();
+    registry.insert<Type>(view.begin(), view.end(), args...);
+  }
+
+  template <typename Type, typename... ViewComponents, typename... ExcludeComponents>
+  void removeFromEntities(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
+    auto view = registry.view<Type, ViewComponents...>(exclude);
+    registry.remove<Type>(view.begin(), view.end());
   }
 };
 }  // namespace pokesim
@@ -24435,61 +24138,6 @@ void runAfterFaintEvent(Simulation& simulation);
 
 ////////////////////// END OF src/Simulation/RunEvent.hpp //////////////////////
 
-/////////////////// START OF src/Utilities/SelectForView.hpp ///////////////////
-
-namespace pokesim::internal {
-template <typename Selection, typename Required, typename... ComponentsToSelect>
-struct SelectForView {
-  template <typename... ComponentsToExclude>
-  SelectForView(
-    RegistryContainer& registryContainer_,
-    entt::exclude_t<ComponentsToExclude...> exclude = entt::exclude<ComponentsToExclude...>)
-      : registryContainer(&registryContainer_),
-        constantSelectedCount(registryContainer->select<Selection, Required, ComponentsToSelect...>(exclude)) {
-    if (hasNoneSelected()) {
-      registryContainer = nullptr;
-    }
-  }
-
-  SelectForView(RegistryContainer& registryContainer_, RegistryContainer::SelectionFunction selectionFunction)
-      : registryContainer(&registryContainer_),
-        constantSelectedCount(registryContainer->select<Selection>(selectionFunction)) {
-    if (hasNoneSelected()) {
-      registryContainer = nullptr;
-    }
-  }
-
-  ~SelectForView() { deselect(); }
-
-  void deselect() {
-    if (registryContainer) {
-      registryContainer->deselect<Selection>();
-      registryContainer = nullptr;
-    }
-  }
-
-  bool hasNoneSelected() const { return constantSelectedCount == 0U; }
-
- private:
-  RegistryContainer* registryContainer = nullptr;
-  std::size_t constantSelectedCount = 0U;
-};
-
-template <typename... ComponentsToSelect>
-using SelectForBattleView =
-  SelectForView<pokesim::tags::SelectedForViewBattle, pokesim::tags::Battle, ComponentsToSelect...>;
-template <typename... ComponentsToSelect>
-using SelectForSideView = SelectForView<pokesim::tags::SelectedForViewSide, pokesim::tags::Side, ComponentsToSelect...>;
-template <typename... ComponentsToSelect>
-using SelectForPokemonView =
-  SelectForView<pokesim::tags::SelectedForViewPokemon, pokesim::tags::Pokemon, ComponentsToSelect...>;
-template <typename... ComponentsToSelect>
-using SelectForCurrentActionMoveView =
-  SelectForView<pokesim::tags::SelectedForViewMove, pokesim::tags::CurrentActionMove, ComponentsToSelect...>;
-}  // namespace pokesim::internal
-
-//////////////////// END OF src/Utilities/SelectForView.hpp ////////////////////
-
 ////////////////// START OF src/Battle/ManageBattleState.hpp ///////////////////
 
 namespace pokesim {
@@ -24767,7 +24415,7 @@ struct Checks : pokesim::debug::Checks {
 
  private:
   void check() const {
-    for (types::entity battleEntity : simulation->selectedBattleEntities()) {
+    for (types::entity battleEntity : simulation->battleEntities()) {
       checkBattle(battleEntity);
       for (types::entity sideEntity : registry->get<Sides>(battleEntity).val) {
         checkSide(sideEntity);
@@ -25288,6 +24936,10 @@ struct Checks : pokesim::debug::Checks {
 
   void checkMoveInputs() {
     CurrentActionMovesAsSource moves{getMoveList()};
+    if (moves.val.empty()) {
+      return;
+    }
+
     for (types::entity move : moves.val) {
       if (has<pokesim::move::tags::Status>(move)) continue;
 
@@ -25303,7 +24955,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   types::entityVector getPokemonList(bool forAttacker) const {
-    types::entityVector selectedPokemon = simulation->selectedPokemonEntities();
+    types::entityVector selectedPokemon = simulation->pokemonEntities();
     auto end = std::remove_if(selectedPokemon.begin(), selectedPokemon.end(), [&](types::entity entity) {
       if (forAttacker) {
         return !this->has<tags::Attacker>(entity);
@@ -25371,7 +25023,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkBattleInputs() {
-    for (types::entity battle : simulation->selectedBattleEntities()) {
+    for (types::entity battle : simulation->battleEntities()) {
       copyEntity(battle);
       checkBattle(battle);
       for (types::entity side : registry->get<Sides>(battle).val) {
@@ -25537,7 +25189,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkBattleOutputs() const {
-    for (types::entity battle : simulation->selectedBattleEntities()) {
+    for (types::entity battle : simulation->battleEntities()) {
       pokesim::debug::TypesToIgnore typesToIgnore;
       if (has<pokesim::tags::SimulateTurn>(battle)) {
         typesToIgnore.add<Probability, RngSeed, ParentBattle>();
@@ -25857,7 +25509,7 @@ struct Checks : pokesim::debug::Checks {
     }
     pokesim::debug::check(Inputs{inputs}, *registry);
 
-    for (types::entity battle : simulation->selectedBattleEntities()) {
+    for (types::entity battle : simulation->battleEntities()) {
       checkBattle(battle);
       for (types::entity side : registry->get<Sides>(battle).val) {
         checkSide(side);

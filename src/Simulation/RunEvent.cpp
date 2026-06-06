@@ -13,16 +13,16 @@
 #include <Components/EventModifier.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/AbilityTags.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Abilities/headers.hpp>
 #include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/Items/headers.hpp>
 #include <Pokedex/Moves/headers.hpp>
-#include <Simulation/RegistryContainer.hpp>
 #include <Types/Enums/GameMechanics.hpp>
-#include <Utilities/SelectForView.hpp>
 #include <Utilities/Tags.hpp>
 #include <entt/container/dense_set.hpp>
 #include <entt/entity/registry.hpp>
@@ -50,10 +50,6 @@ void runBeforeMove(Simulation& simulation) {
 }
 
 void runResidual(Simulation& simulation) {
-  pokesim::internal::SelectForPokemonView<tags::ActivePokemon> selectedPokemon{simulation};
-  if (selectedPokemon.hasNoneSelected()) {
-    return;
-  }
   dex::Burn::onResidual(simulation);
 }
 
@@ -135,10 +131,6 @@ template void runAfterEachBoostEvent<SpeBoost>(Simulation&);
 void runAfterBoostEvent(Simulation&) {}
 
 void runModifyMove(Simulation& simulation) {
-  // internal::SelectForPokemonView<> selectedPokemon{
-  //   simulation,
-  //   getMoveEventPokemonSelector<tags::CurrentActionMoveSource>()};
-
   dex::ChoiceScarf::onSourceModifyMove(simulation);
   dex::ChoiceSpecs::onSourceModifyMove(simulation);
 }

@@ -177,7 +177,7 @@ void clearCurrentAction(Simulation& simulation) {
   registry.destroy(failedActionMoves.begin(), failedActionMoves.end());
   registry.destroy(currentActions.begin(), currentActions.end());
 
-  auto battles = simulation.selectedBattleEntities();
+  auto battles = simulation.battleEntities();
   registry.remove<
     action::tags::Item,
     ItemName,

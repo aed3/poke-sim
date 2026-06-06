@@ -2,7 +2,6 @@
 
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
-#include <Types/Random.hpp>
 #include <Types/State.hpp>
 #include <Utilities/MaxSizedVector.hpp>
 
@@ -43,7 +42,7 @@ struct MovePair {
 };
 
 struct SkippedInputCount {
-  types::eventPossibilities val = 0U;
+  types::entityIndex val = 0U;
 };
 
 namespace tags {

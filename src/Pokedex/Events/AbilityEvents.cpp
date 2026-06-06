@@ -6,6 +6,7 @@
 #include <Components/Tags/AbilityTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/RandomChance.hpp>
@@ -58,13 +59,13 @@ void Plus::onModifySpA(Simulation& simulation) {
   if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
     return;
   }
-  simulation.viewForSelectedPokemon<plusOnModifySpa, Tags<ability::tags::Plus>>();
+  simulation.view<plusOnModifySpa, Tags<ability::tags::Plus>>();
 }
 
 void Static::onDamagingHit(Simulation& simulation) {
   const auto chanceOfStatic = simulation.pokedex().getStaticValue<dex::Static::onDamagingHitChance>();
 
-  simulation.viewForSelectedPokemon<staticOnDamagingHit, Tags<ability::tags::Static>>(chanceOfStatic, simulation);
+  simulation.view<staticOnDamagingHit, Tags<ability::tags::Static>>(chanceOfStatic, simulation);
 
   // TODO(aed3): This is now inefficient since the random chance will happen for move sources that cannot have their
   // status changed.

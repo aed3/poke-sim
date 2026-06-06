@@ -81,6 +81,7 @@
 #include "Tags/MoveTags.hpp"
 #include "Tags/NatureTags.hpp"
 #include "Tags/PokemonTags.hpp"
+#include "Tags/RunEventTags.hpp"
 #include "Tags/Selection.hpp"
 #include "Tags/SimulationTags.hpp"
 #include "Tags/StatusTags.hpp"

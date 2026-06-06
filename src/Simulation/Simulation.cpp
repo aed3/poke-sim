@@ -6,6 +6,9 @@
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/HitCount.hpp>
 #include <Components/SimulationResults.hpp>
+#include <Components/Tags/BattleTags.hpp>
+#include <Components/Tags/Current.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/SimulateTurn.hpp>
 
@@ -118,32 +121,17 @@ void Simulation::run() {
   analyzeEffect();
 }
 
-types::entityVector Simulation::selectedBattleEntities() const {
-  if (hasActiveSelection<tags::SelectedForViewBattle>()) {
-    auto view = registry.view<tags::SelectedForViewBattle, tags::Battle>();
-    return {view.begin(), view.end()};
-  }
-
+types::entityVector Simulation::battleEntities() const {
   auto view = registry.view<tags::Battle>();
   return {view.begin(), view.end()};
 }
 
-types::entityVector Simulation::selectedMoveEntities() const {
-  if (hasActiveSelection<tags::SelectedForViewMove>()) {
-    auto view = registry.view<tags::SelectedForViewMove, tags::CurrentActionMove>();
-    return {view.begin(), view.end()};
-  }
-
+types::entityVector Simulation::moveEntities() const {
   auto view = registry.view<tags::CurrentActionMove>();
   return {view.begin(), view.end()};
 }
 
-types::entityVector Simulation::selectedPokemonEntities() const {
-  if (hasActiveSelection<tags::SelectedForViewPokemon>()) {
-    auto view = registry.view<tags::SelectedForViewPokemon, tags::Pokemon>();
-    return {view.begin(), view.end()};
-  }
-
+types::entityVector Simulation::pokemonEntities() const {
   auto view = registry.view<tags::Pokemon>();
   return {view.begin(), view.end()};
 }

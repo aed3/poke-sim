@@ -70,11 +70,11 @@ types::eventPossibilities countUniqueDamageRolls(types::handle moveHandle) {
 }
 
 void updateAllDamageRollProbabilities(Simulation& simulation) {
-  simulation.viewForSelectedMoves<assignAllDamageRollProbability>();
+  simulation.view<assignAllDamageRollProbability>();
 }
 
 void updatePartialProbabilities(Simulation& simulation) {
-  simulation.viewForSelectedMoves<assignPartialProbability>();
+  simulation.view<assignPartialProbability>();
 }
 }  // namespace
 
@@ -85,7 +85,7 @@ void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind)
 
   bool forAllDamageRolls = damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS;
   bool forRequiredDamageRolls = simulation.simulateTurnOptions.getMakeBranchesOnRandomEvents() || forAllDamageRolls;
-  auto applyChoices = [](Simulation& sim) { sim.viewForSelectedMoves<applyDamageRollIndex>(); };
+  auto applyChoices = [](Simulation& sim) { sim.view<applyDamageRollIndex>(); };
   auto updateProbabilities = forAllDamageRolls ? updateAllDamageRollProbabilities : updatePartialProbabilities;
 
   runRandomEventCount<pokesim::internal::tags::CloneFromDamageRolls>(
