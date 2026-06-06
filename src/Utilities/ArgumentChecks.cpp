@@ -51,12 +51,20 @@ void checkStat(types::stat stat, bool hp = false) {
   }
 }
 
-void checkEffectiveStat(types::stat stat, bool hp = false) {
-  if (hp) {
-    checkBounds<Constants::PokemonHpStat>(stat);
-  }
-  else {
-    checkBounds<Constants::PokemonEffectiveStat>(stat);
+void checkEffectiveStat(types::stat stat, dex::Stat name = dex::Stat::NONE) {
+  switch (name) {
+    case dex::Stat::HP: {
+      checkBounds<Constants::PokemonCurrentHpStat>(stat);
+      break;
+    }
+    case dex::Stat::SPE: {
+      checkBounds<Constants::PokemonEffectiveSpeStat>(stat);
+      break;
+    }
+    default: {
+      checkBounds<Constants::PokemonEffectiveStat>(stat);
+      break;
+    }
   }
 }
 
@@ -1101,32 +1109,32 @@ void check(const stat::Spe& spe) {
 
 template <>
 void check(const stat::CurrentHp& hp) {
-  checkBounds<Constants::PokemonCurrentHpStat>(hp.val);
+  checkEffectiveStat(hp.val, dex::Stat::HP);
 }
 
 template <>
 void check(const stat::EffectiveAtk& atk) {
-  checkEffectiveStat(atk.val);
+  checkEffectiveStat(atk.val, dex::Stat::ATK);
 }
 
 template <>
 void check(const stat::EffectiveDef& def) {
-  checkEffectiveStat(def.val);
+  checkEffectiveStat(def.val, dex::Stat::DEF);
 }
 
 template <>
 void check(const stat::EffectiveSpa& spa) {
-  checkEffectiveStat(spa.val);
+  checkEffectiveStat(spa.val, dex::Stat::SPA);
 }
 
 template <>
 void check(const stat::EffectiveSpd& spd) {
-  checkEffectiveStat(spd.val);
+  checkEffectiveStat(spd.val, dex::Stat::SPD);
 }
 
 template <>
 void check(const stat::EffectiveSpe& spe) {
-  checkEffectiveStat(spe.val);
+  checkEffectiveStat(spe.val, dex::Stat::SPE);
 }
 
 template <>

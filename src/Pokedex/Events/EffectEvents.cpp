@@ -113,7 +113,7 @@ void ChoiceLock::onBeforeMove(Simulation& simulation) {
 }
 
 void ChoiceLock::onDisableMove(Simulation& simulation) {
-  internal::EntityFilter<tags::DisableMove> filter{simulation};
+  pokesim::internal::EntityFilter<tags::DisableMove> filter{simulation};
   if (filter.hasNoneSelected()) {
     return;
   }
