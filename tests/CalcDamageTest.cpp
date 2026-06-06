@@ -138,7 +138,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
     REQUIRE(koUses.empty());
   }
   else {
-    types::damageRollIndex idealKoUsesSize = 0U;
+    std::size_t idealKoUsesSize = 0U;
     if (damageRollOptions.getP1() & DamageRollKind::ALL_DAMAGE_ROLLS) {
       idealKoUsesSize += battleInfoList.size();
     }

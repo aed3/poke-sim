@@ -56,6 +56,14 @@ struct Constants {
     static constexpr std::uint16_t DEFAULT = 1U;
   };
 
+  struct PokemonEffectiveSpeStat {
+    static constexpr std::uint16_t MAX = 65535U;
+    // A Pokemon with a speed stat of 7 or less (i.e. level 1 Shuckle) that is paralyzed with -6 speed boosts can have
+    // no speed.
+    static constexpr std::uint16_t MIN = 0U;
+    static constexpr std::uint16_t DEFAULT = 1U;
+  };
+
   struct PokemonEv {
     static constexpr std::uint8_t MAX = 255U;
     static constexpr std::uint8_t MIN = 0U;
