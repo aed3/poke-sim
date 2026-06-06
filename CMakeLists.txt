@@ -238,7 +238,6 @@ if(ENABLE_TESTING)
       tests/Moves/FuryAttack.cpp
       tests/Moves/KnockOff.cpp
       tests/PokedexTest.cpp
-      tests/RegistryContainerTests.cpp
       tests/SimulateTurnsTest.cpp
       tests/SimulationSetupTest.cpp
       tests/Tests.cpp

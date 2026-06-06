@@ -88,6 +88,7 @@ void resolveTeamDecision(types::registry& registry, const types::teamOrder& team
   battleActionQueue.val.push_back(actionHandle.entity());
 }
 }  // namespace
+
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
   POKESIM_REQUIRE(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player.");
   POKESIM_REQUIRE(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");

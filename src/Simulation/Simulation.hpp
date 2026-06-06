@@ -2,13 +2,14 @@
 
 #include <Components/Tags/SimulationTags.hpp>
 #include <Types/Enums/BattleFormat.hpp>
+#include <Types/Registry.hpp>
 #include <Types/State.hpp>
+#include <Utilities/RegistryLoop.hpp>
 #include <entt/entity/registry.hpp>
 #include <optional>
 #include <utility>
 
 #include "BattleCreationInfo.hpp"
-#include "RegistryContainer.hpp"
 #include "SimulationOptions.hpp"
 
 namespace pokesim {
@@ -36,7 +37,7 @@ struct SimulationSetupChecks;
  * @details Each `Simulation` instance will only simulate for either single or double battles. This class is optimized
  * for running multiple simulations of the same battle, where each battle state has completed the same number of turns.
  */
-class Simulation : public internal::RegistryContainer {
+class Simulation {
  private:
   types::entityVector createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList);
   PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonInfo);
@@ -107,15 +108,47 @@ class Simulation : public internal::RegistryContainer {
   void clearCalculateDamageResults();
   void clearAnalyzeEffectResults();
 
-  types::entityVector selectedBattleEntities() const;
-  types::entityVector selectedMoveEntities() const;
-  types::entityVector selectedPokemonEntities() const;
+  types::entityVector battleEntities() const;
+  types::entityVector moveEntities() const;
+  types::entityVector pokemonEntities() const;
 
   template <template <typename> typename RunStruct, typename... RunFunctionArgs>
   static void forEachSimulationTag(RunFunctionArgs&&... args) {
     RunStruct<tags::SimulateTurn>::run(std::forward<RunFunctionArgs>(args)...);
     RunStruct<tags::CalculateDamage>::run(std::forward<RunFunctionArgs>(args)...);
     RunStruct<tags::AnalyzeEffect>::run(std::forward<RunFunctionArgs>(args)...);
+  }
+
+ public:
+  types::registry registry{};
+
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  auto view(const PassedInArgs&... passedInArgs) {
+    return internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::view(
+      registry,
+      passedInArgs...);
+  }
+
+  template <
+    auto Function, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+    typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  auto group(const PassedInArgs&... passedInArgs) {
+    return internal::RegistryLoop<Function, TagContainer, ExcludeContainer, IncludeContainer, PassedInArgs...>::group(
+      registry,
+      passedInArgs...);
+  }
+  template <typename Type, typename... ViewComponents, typename... Args>
+  void addToEntities(const Args&... args) {
+    auto view = registry.view<ViewComponents...>();
+    registry.insert<Type>(view.begin(), view.end(), args...);
+  }
+
+  template <typename Type, typename... ViewComponents, typename... ExcludeComponents>
+  void removeFromEntities(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
+    auto view = registry.view<Type, ViewComponents...>(exclude);
+    registry.remove<Type>(view.begin(), view.end());
   }
 };
 }  // namespace pokesim

@@ -80,9 +80,12 @@
     {
       "name": "benchmark-release-with-checks",
       "inherits": [
-        "test",
         "benchmark-release"
-      ]
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "ENABLE_TESTING": "ON"
+      }
     },
     {
       "name": "profile",

@@ -15,6 +15,7 @@
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Components/Tags/TypeTags.hpp>
@@ -25,7 +26,6 @@
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/EntityFilter.hpp>
-#include <Utilities/SelectForView.hpp>
 #include <cmath>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
@@ -43,7 +43,7 @@ void removeItemTags(types::handle handle, ItemName item) {
 
 template <typename SelectionTag>
 void removeItemComponents(Simulation& simulation) {
-  simulation.viewForSelectedPokemon<removeItemTags>();
+  simulation.view<removeItemTags, Tags<SelectionTag>>();
   simulation.removeFromEntities<ItemName, SelectionTag>();
   simulation.registry.clear<SelectionTag>();
 }
@@ -155,11 +155,6 @@ void checkIfCanUseItem(Simulation& simulation) {
 }
 
 void useItem(Simulation& simulation) {
-  pokesim::internal::SelectForPokemonView<tags::CanUseItem> selectedPokemon{simulation};
-  if (selectedPokemon.hasNoneSelected()) {
-    return;
-  }
-
   runAfterUseItemEvent(simulation);
   removeItemComponents<tags::CanUseItem>(simulation);
 }
@@ -175,12 +170,10 @@ void checkIfCanRemoveItem(Simulation& simulation) {
 }
 
 void removeItem(Simulation& simulation) {
-  pokesim::internal::SelectForPokemonView<tags::CanRemoveItem> selectedPokemon{simulation};
-  if (selectedPokemon.hasNoneSelected()) {
-    return;
-  }
-
+  simulation.addToEntities<tags::EndItem, tags::CanRemoveItem>();
   runEndItemEvent(simulation);
+  simulation.registry.clear<tags::EndItem>();
+
   removeItemComponents<tags::CanRemoveItem>(simulation);
 }
 
@@ -354,7 +347,7 @@ void updateSpa(Simulation& simulation, bool ignoreBoosts) {
   }
   runModifySpa(simulation);
 
-  simulation.registry.clear<tags::SpaStatUpdateRequired>();
+  filter.clearSelectionTags();
 }
 
 void updateSpd(Simulation& simulation, bool ignoreBoosts) {
@@ -368,7 +361,7 @@ void updateSpd(Simulation& simulation, bool ignoreBoosts) {
   }
   runModifySpd(simulation);
 
-  simulation.registry.clear<tags::SpdStatUpdateRequired>();
+  filter.clearSelectionTags();
 }
 
 void updateSpe(Simulation& simulation, bool ignoreBoosts) {
@@ -383,7 +376,7 @@ void updateSpe(Simulation& simulation, bool ignoreBoosts) {
   runModifySpe(simulation);
   // trick room
 
-  simulation.viewForSelectedPokemon<setSpeedSortNeeded, Tags<tags::SimulateTurn>>();
-  simulation.registry.clear<tags::SpeStatUpdateRequired>();
+  filter.view<setSpeedSortNeeded, Tags<tags::SimulateTurn>>();
+  filter.clearSelectionTags();
 }
 }  // namespace pokesim

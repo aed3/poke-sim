@@ -12,11 +12,13 @@
 #include <Components/Tags/ItemPropertyTags.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/Simulation.hpp>
+#include <Utilities/EntityFilter.hpp>
 #include <entt/entity/registry.hpp>
 
 #include "../Effects/headers.hpp"
@@ -77,7 +79,7 @@ void Burn::onSetDamageRollModifiers(Simulation& simulation) {
 
 void Burn::onResidual(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<Burn::onResidualHpDecreaseDivisor>();
-  simulation.viewForSelectedPokemon<damageByHpDivisor, Tags<status::tags::Burn>>(divisor);
+  simulation.view<damageByHpDivisor, Tags<status::tags::Burn, tags::ActivePokemon>>(divisor);
 }
 
 void Paralysis::onModifySpe(Simulation& simulation) {
@@ -99,22 +101,25 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
 
   pokesim::internal::randomBinaryChance(
     simulation,
-    [](Simulation& sim) {
-      sim.viewForSelectedPokemon<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>();
-    },
+    [](Simulation& sim) { sim.view<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
     std::nullopt);
   simulation.view<setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
   simulation.registry.clear<tags::FailedCurrentMoveHit>();
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {
-  simulation.viewForSelectedPokemon<choiceLockRemoveWithoutItem, Tags<>, entt::exclude_t<ItemName>>();
-  simulation.viewForSelectedPokemon<choiceLockRemoveWithItem>(simulation.pokedex());
+  simulation.view<choiceLockRemoveWithoutItem, Tags<>, entt::exclude_t<ItemName>>();
+  simulation.view<choiceLockRemoveWithItem>(simulation.pokedex());
 }
 
 void ChoiceLock::onDisableMove(Simulation& simulation) {
-  simulation.viewForSelectedPokemon<choiceLockRemoveWithoutItem, Tags<>, entt::exclude_t<ItemName>>();
-  simulation.viewForSelectedPokemon<choiceLockRemoveWithItem>(simulation.pokedex());
-  simulation.viewForSelectedPokemon<choiceLockOnDisableMove>();
+  internal::EntityFilter<tags::DisableMove> filter{simulation};
+  if (filter.hasNoneSelected()) {
+    return;
+  }
+
+  filter.view<choiceLockRemoveWithoutItem, Tags<>, entt::exclude_t<ItemName>>();
+  filter.view<choiceLockRemoveWithItem>(simulation.pokedex());
+  filter.view<choiceLockOnDisableMove>();
 }
 }  // namespace pokesim::dex

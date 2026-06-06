@@ -23,6 +23,7 @@
 #include <Components/SpeciesTypes.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/StatusTags.hpp>

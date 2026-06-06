@@ -11,6 +11,7 @@
 #include "MoveTags.hpp"
 #include "NatureTags.hpp"
 #include "PokemonTags.hpp"
+#include "RunEventTags.hpp"
 #include "Selection.hpp"
 #include "SimulationTags.hpp"
 #include "StatusTags.hpp"

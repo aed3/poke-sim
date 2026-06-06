@@ -8,6 +8,7 @@
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Registry.hpp>
@@ -38,7 +39,7 @@ struct Checks : pokesim::debug::Checks {
 
  private:
   void check() const {
-    for (types::entity battleEntity : simulation->selectedBattleEntities()) {
+    for (types::entity battleEntity : simulation->battleEntities()) {
       checkBattle(battleEntity);
       for (types::entity sideEntity : registry->get<Sides>(battleEntity).val) {
         checkSide(sideEntity);

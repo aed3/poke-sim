@@ -462,7 +462,7 @@ TEST_CASE(
 
   simulation.createInitialStates(battleCreationInfoList);
   updateAllStats(simulation);
-  const auto originalBattles = simulation.selectedBattleEntities();
+  const auto originalBattles = simulation.battleEntities();
 
   const types::registry& registry = simulation.registry;
 
@@ -810,7 +810,7 @@ TEST_CASE(
   simulation.createInitialStates(battleCreationInfoList);
   updateAllStats(simulation);
 
-  const auto originalBattles = simulation.selectedBattleEntities();
+  const auto originalBattles = simulation.battleEntities();
   const types::registry& registry = simulation.registry;
 
   types::entityVector specificallyCheckedEntities;

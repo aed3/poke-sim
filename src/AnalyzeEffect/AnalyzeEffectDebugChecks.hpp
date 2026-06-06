@@ -47,7 +47,7 @@ struct Checks : pokesim::debug::Checks {
     }
     pokesim::debug::check(Inputs{inputs}, *registry);
 
-    for (types::entity battle : simulation->selectedBattleEntities()) {
+    for (types::entity battle : simulation->battleEntities()) {
       checkBattle(battle);
       for (types::entity side : registry->get<Sides>(battle).val) {
         checkSide(side);

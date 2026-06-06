@@ -7,8 +7,11 @@
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EventModifier.hpp>
 #include <Components/Stats.hpp>
+#include <Components/Tags/Current.hpp>
 #include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
+#include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
@@ -53,8 +56,7 @@ void sourceModifyDamage(
 template <typename SimulationTag>
 struct FocusSashOnAfterModifyDamage {
   static void run(Simulation& simulation, types::damage hpToKeep) {
-    simulation.viewForSelectedPokemon<modifyDamage, Tags<item::tags::FocusSash, SimulationTag, tags::CanUseItem>>(
-      hpToKeep);
+    simulation.view<modifyDamage, Tags<item::tags::FocusSash, SimulationTag, tags::CanUseItem>>(hpToKeep);
   }
 
   static void modifyDamage(
@@ -109,7 +111,7 @@ void AssaultVest::onModifySpd(Simulation& simulation) {
 }
 
 void AssaultVest::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpdStatUpdateRequired, tags::SelectedForViewPokemon, item::tags::AssaultVest>();
+  simulation.addToEntities<tags::SpdStatUpdateRequired, tags::EndItem, item::tags::AssaultVest>();
 }
 
 void BrightPowder::onModifyAccuracy(Simulation& simulation) {
@@ -129,7 +131,7 @@ void ChoiceScarf::onSourceModifyMove(Simulation& simulation) {
 }
 
 void ChoiceScarf::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpeStatUpdateRequired, tags::SelectedForViewPokemon, item::tags::ChoiceScarf>();
+  simulation.addToEntities<tags::SpeStatUpdateRequired, tags::EndItem, item::tags::ChoiceScarf>();
 }
 
 void ChoiceSpecs::onModifySpa(Simulation& simulation) {
@@ -143,7 +145,7 @@ void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
 }
 
 void ChoiceSpecs::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpaStatUpdateRequired, tags::SelectedForViewPokemon, item::tags::ChoiceSpecs>();
+  simulation.addToEntities<tags::SpaStatUpdateRequired, tags::EndItem, item::tags::ChoiceSpecs>();
 }
 
 void FocusSash::onAfterModifyDamage(Simulation& simulation) {
@@ -169,6 +171,6 @@ void LifeOrb::onModifyDamage(Simulation& simulation) {
 
 void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<LifeOrb::onAfterMoveUsedHpDecreaseDivisor>();
-  simulation.viewForSelectedPokemon<lifeOrbOnAfterMove, Tags<item::tags::LifeOrb>>(divisor);
+  simulation.view<lifeOrbOnAfterMove, Tags<item::tags::LifeOrb>>(divisor);
 }
 }  // namespace pokesim::dex

@@ -92,6 +92,10 @@ struct Checks : pokesim::debug::Checks {
 
   void checkMoveInputs() {
     CurrentActionMovesAsSource moves{getMoveList()};
+    if (moves.val.empty()) {
+      return;
+    }
+
     for (types::entity move : moves.val) {
       if (has<pokesim::move::tags::Status>(move)) continue;
 
@@ -107,7 +111,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   types::entityVector getPokemonList(bool forAttacker) const {
-    types::entityVector selectedPokemon = simulation->selectedPokemonEntities();
+    types::entityVector selectedPokemon = simulation->pokemonEntities();
     auto end = std::remove_if(selectedPokemon.begin(), selectedPokemon.end(), [&](types::entity entity) {
       if (forAttacker) {
         return !this->has<tags::Attacker>(entity);
@@ -175,7 +179,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkBattleInputs() {
-    for (types::entity battle : simulation->selectedBattleEntities()) {
+    for (types::entity battle : simulation->battleEntities()) {
       copyEntity(battle);
       checkBattle(battle);
       for (types::entity side : registry->get<Sides>(battle).val) {
@@ -341,7 +345,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkBattleOutputs() const {
-    for (types::entity battle : simulation->selectedBattleEntities()) {
+    for (types::entity battle : simulation->battleEntities()) {
       pokesim::debug::TypesToIgnore typesToIgnore;
       if (has<pokesim::tags::SimulateTurn>(battle)) {
         typesToIgnore.add<Probability, RngSeed, ParentBattle>();
