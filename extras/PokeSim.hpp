@@ -24423,7 +24423,7 @@ struct Checks : pokesim::debug::Checks {
 
  private:
   void check() const {
-    for (types::entity battleEntity : simulation->battleEntities()) {
+    for (types::entity battleEntity : registry->view<pokesim::tags::Battle, pokesim::tags::SimulateTurn>()) {
       checkBattle(battleEntity);
       for (types::entity sideEntity : registry->get<Sides>(battleEntity).val) {
         checkSide(sideEntity);

@@ -282,10 +282,10 @@ types::sides<SideStateSetup> Simulation::createInitialBattle(
   if (battleInfo.runWithSimulateTurn) {
     battleStateSetup.setProperty<tags::SimulateTurn>();
   }
-  if (battleInfo.runWithCalculateDamage || !battleInfo.damageCalculations.empty()) {
+  if (battleInfo.runWithCalculateDamage) {
     battleStateSetup.setProperty<tags::CalculateDamage>();
   }
-  if (battleInfo.runWithAnalyzeEffect || !battleInfo.effectsToAnalyze.empty()) {
+  if (battleInfo.runWithAnalyzeEffect) {
     battleStateSetup.setProperty<tags::AnalyzeEffect>();
   }
 

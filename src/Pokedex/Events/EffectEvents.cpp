@@ -79,12 +79,14 @@ void Burn::onSetDamageRollModifiers(Simulation& simulation) {
 
 void Burn::onResidual(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<Burn::onResidualHpDecreaseDivisor>();
+
   simulation.view<damageByHpDivisor, Tags<status::tags::Burn, tags::ActivePokemon>>(divisor);
 }
 
 void Paralysis::onModifySpe(Simulation& simulation) {
   const auto speedDivisor = simulation.pokedex().getStaticValue<Paralysis::speedDivisor>();
   const auto speedDividend = simulation.pokedex().getStaticValue<Paralysis::speedDividend>();
+
   simulation.view<
     paralysisOnModifySpeed,
     Tags<status::tags::Paralysis, tags::SpeStatUpdateRequired> /*, entt::exclude_t<ability::tags::QuickFeet>*/>(
@@ -104,7 +106,7 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
     [](Simulation& sim) { sim.view<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
     std::nullopt);
   simulation.view<setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
-  simulation.registry.clear<tags::FailedCurrentMoveHit>();
+  simulation.registry.clear<pokesim::tags::FailedCurrentMoveHit>();
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {

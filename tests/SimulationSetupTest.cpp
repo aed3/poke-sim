@@ -223,6 +223,7 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalculateDamage][Setup]
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
 
+  battleInfo.runWithCalculateDamage = true;
   battleInfo.damageCalculations = {
     {
       Slot::P1A,
@@ -258,14 +259,21 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalculateDamage][Setup]
   auto battles = registry.view<Sides>();
   REQUIRE(battles.size() == 1U);
 
-  auto view = registry.view<tags::CalculateDamage>();
-  REQUIRE(view.size() == 7U);
+  std::size_t calcDamageTagCount = registry.view<tags::CalculateDamage>().size();
+  std::size_t idealCalcDamageTagCount = 1U +  // Battle
+                                        2U +  // Sides
+                                        6U +  // Pokemon
+                                        6U +  // Moves
+                                        6U;   // Damage calculation move inputs
+
+  REQUIRE(calcDamageTagCount == idealCalcDamageTagCount);
 }
 
 TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
 
+  battleInfo.runWithAnalyzeEffect = true;
   battleInfo.effectsToAnalyze = {
     {Slot::P1A, Slot::P1B, Slot::P1A, {dex::Move::FURY_ATTACK, dex::Move::KNOCK_OFF}, dex::Status::BRN},
     {Slot::P1B, Slot::P1A, Slot::P1A, {dex::Move::FURY_ATTACK}, std::nullopt, {{dex::Stat::DEF, 2}}},
@@ -290,6 +298,13 @@ TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup
 
   auto view = registry.view<analyze_effect::tags::Input>();
   REQUIRE(view.size() == 6U);
+
+  std::size_t analyzeEffectTagCount = registry.view<tags::AnalyzeEffect>().size();
+  std::size_t idealAnalyzeEffectTagCount = 1U +  // Battle
+                                           2U +  // Sides
+                                           6U +  // Pokemon
+                                           6U;   // Moves
+  REQUIRE(analyzeEffectTagCount == idealAnalyzeEffectTagCount);
 }
 
 TEST_CASE("Simulation Setup: Ignored Pokemon Options", "[Simulation][Setup]") {
