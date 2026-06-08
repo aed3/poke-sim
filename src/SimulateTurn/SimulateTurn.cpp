@@ -101,6 +101,7 @@ void getMoveTargets(Simulation& simulation) {
     simulation
       .view<addUserAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::UserAlly>>();
   }
+
   simulation.view<resolveMoveTargets, Tags<pokesim::tags::CurrentActionMove>, entt::exclude_t<AddedTargets>>();
   simulation.view<
     createActionMoveForTargets,
@@ -265,6 +266,7 @@ void nextTurn(Simulation& simulation) {
   pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon> pokemonFilter{simulation};
   if (!pokemonFilter.hasNoneSelected()) {
     pokemonFilter.view<updateActivePokemonPostTurn>();
+
     pokemonFilter.addToSelected<pokesim::tags::DisableMove>();
     runDisableMove(simulation);
     simulation.registry.clear<pokesim::tags::DisableMove>();

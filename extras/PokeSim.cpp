@@ -1595,10 +1595,10 @@ types::sides<SideStateSetup> Simulation::createInitialBattle(
   if (battleInfo.runWithSimulateTurn) {
     battleStateSetup.setProperty<tags::SimulateTurn>();
   }
-  if (battleInfo.runWithCalculateDamage || !battleInfo.damageCalculations.empty()) {
+  if (battleInfo.runWithCalculateDamage) {
     battleStateSetup.setProperty<tags::CalculateDamage>();
   }
-  if (battleInfo.runWithAnalyzeEffect || !battleInfo.effectsToAnalyze.empty()) {
+  if (battleInfo.runWithAnalyzeEffect) {
     battleStateSetup.setProperty<tags::AnalyzeEffect>();
   }
 
@@ -2366,6 +2366,7 @@ void getMoveTargets(Simulation& simulation) {
     simulation
       .view<addUserAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::UserAlly>>();
   }
+
   simulation.view<resolveMoveTargets, Tags<pokesim::tags::CurrentActionMove>, entt::exclude_t<AddedTargets>>();
   simulation.view<
     createActionMoveForTargets,
@@ -2530,6 +2531,7 @@ void nextTurn(Simulation& simulation) {
   pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon> pokemonFilter{simulation};
   if (!pokemonFilter.hasNoneSelected()) {
     pokemonFilter.view<updateActivePokemonPostTurn>();
+
     pokemonFilter.addToSelected<pokesim::tags::DisableMove>();
     runDisableMove(simulation);
     simulation.registry.clear<pokesim::tags::DisableMove>();
@@ -3296,7 +3298,7 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
     speedSortList.push_back({registry->get<SpeedSort>(entity), entity});
   }
 
-  // TODO (aed3): Test how different sorting algorithms affect speed
+  // TODO(aed3): Test how different sorting algorithms affect speed
   std::sort(speedSortList.begin(), speedSortList.end(), [](const auto& pairA, const auto& pairB) {
     if (pairA.first.order != pairB.first.order) {
       return pairA.first.order < pairB.first.order;
@@ -4292,6 +4294,10 @@ struct FocusSashOnAfterModifyDamage {
 
     types::registry& registry = *pokemonHandle.registry();
     for (types::entity move : moves.val) {
+      if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
+        continue;
+      }
+
       if constexpr (std::is_same_v<tags::SimulateTurn, SimulationTag>) {
         Damage& damage = registry.get<Damage>(move);
         if (damage.val < hp.val) {
@@ -4320,7 +4326,9 @@ void lifeOrbOnAfterMove(
   bool onlyStatusMoves = true;
   types::registry& registry = *pokemonHandle.registry();
   for (types::entity move : moves.val) {
-    onlyStatusMoves &= registry.all_of<move::tags::Status>(move);
+    if (registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
+      onlyStatusMoves &= registry.all_of<move::tags::Status>(move);
+    }
   }
 
   if (!onlyStatusMoves) {
@@ -4331,6 +4339,7 @@ void lifeOrbOnAfterMove(
 
 void AssaultVest::onModifySpd(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<AssaultVest::onModifySpdModifier>();
+
   simulation.view<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::AssaultVest>>(modifier, 1U);
 }
 
@@ -4341,11 +4350,13 @@ void AssaultVest::onEnd(Simulation& simulation) {
 void BrightPowder::onModifyAccuracy(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyDenominator>();
+
   simulation.view<setMoveTargetModifier<types::eventModifier>, Tags<item::tags::BrightPowder>>(numerator, denominator);
 }
 
 void ChoiceScarf::onModifySpe(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<ChoiceScarf::onModifySpeModifier>();
+
   simulation.view<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceScarf>>(modifier, 1U);
 }
 
@@ -4360,6 +4371,7 @@ void ChoiceScarf::onEnd(Simulation& simulation) {
 
 void ChoiceSpecs::onModifySpa(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<ChoiceSpecs::onModifySpaModifier>();
+
   simulation.view<chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceSpecs>>(modifier, 1U);
 }
 
@@ -4374,6 +4386,7 @@ void ChoiceSpecs::onEnd(Simulation& simulation) {
 
 void FocusSash::onAfterModifyDamage(Simulation& simulation) {
   const auto hpToKeep = simulation.pokedex().getStaticValue<FocusSash::onAfterModifyDamageHpToKeep>();
+
   simulation.addToEntities<tags::CanUseItem, tags::CurrentActionMoveTarget, item::tags::FocusSash>();
   checkIfCanUseItem(simulation);
 
@@ -4390,11 +4403,13 @@ void FocusSash::onDamage(Simulation& simulation) {
 void LifeOrb::onModifyDamage(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageDenominator>();
+
   simulation.view<sourceModifyDamage<types::eventModifier>, Tags<item::tags::LifeOrb>>(numerator, denominator);
 }
 
 void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<LifeOrb::onAfterMoveUsedHpDecreaseDivisor>();
+
   simulation.view<lifeOrbOnAfterMove, Tags<item::tags::LifeOrb>>(divisor);
 }
 }  // namespace pokesim::dex
@@ -4459,12 +4474,14 @@ void Burn::onSetDamageRollModifiers(Simulation& simulation) {
 
 void Burn::onResidual(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<Burn::onResidualHpDecreaseDivisor>();
+
   simulation.view<damageByHpDivisor, Tags<status::tags::Burn, tags::ActivePokemon>>(divisor);
 }
 
 void Paralysis::onModifySpe(Simulation& simulation) {
   const auto speedDivisor = simulation.pokedex().getStaticValue<Paralysis::speedDivisor>();
   const auto speedDividend = simulation.pokedex().getStaticValue<Paralysis::speedDividend>();
+
   simulation.view<
     paralysisOnModifySpeed,
     Tags<status::tags::Paralysis, tags::SpeStatUpdateRequired> /*, entt::exclude_t<ability::tags::QuickFeet>*/>(
@@ -4484,7 +4501,7 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
     [](Simulation& sim) { sim.view<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
     std::nullopt);
   simulation.view<setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
-  simulation.registry.clear<tags::FailedCurrentMoveHit>();
+  simulation.registry.clear<pokesim::tags::FailedCurrentMoveHit>();
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {
@@ -4652,16 +4669,16 @@ void setDefendingSide(types::handle moveHandle, Defender defender) {
   types::registry& registry = *moveHandle.registry();
   PlayerSideId playerSide = registry.get<PlayerSide>(registry.get<Side>(defender.val).val).val;
   switch (playerSide) {
-    case PlayerSideId::NONE: {
-      POKESIM_REQUIRE_FAIL("Player side wasn't set properly.");
-      break;
-    }
     case PlayerSideId::P1: {
       moveHandle.emplace<tags::P1Defending>();
       break;
     }
     case PlayerSideId::P2: {
       moveHandle.emplace<tags::P2Defending>();
+      break;
+    }
+    default: {
+      POKESIM_REQUIRE_FAIL("Player side wasn't set properly.");
       break;
     }
   }
@@ -4684,6 +4701,7 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Po
 
   if (modifiers.burn) {
     const auto multiplier = pokedex.getStaticValue<dex::Burn::physicalDamageMultiplier>();
+
     damage.val = (types::damage)fixedPointMultiply(damage.val, multiplier);
   }
 
@@ -4786,7 +4804,7 @@ void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, Defender defend
 void calculateBaseDamage(
   types::handle moveHandle, Power power, AttackingLevel level, AttackingStat attack, DefendingStat defense) {
   types::damage damage = computeBaseDamage(power.val, level.val, attack.val, defense.val);
-  moveHandle.emplace_or_replace<Damage>(damage);
+  moveHandle.emplace<Damage>(damage);
 }
 
 void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, Defender defender) {
@@ -4874,7 +4892,6 @@ void applySideDamageRollOptions(Simulation& simulation) {
     else {
       ApplyDamageRollKind(simulation, damageRollOptions.getP2(), calculateUpToFoeHp, noKoChanceCalculation);
     }
-
     simulation.registry.clear<internal::tags::ApplySideDamageRollOptions, tags::P2Defending>();
   }
 }

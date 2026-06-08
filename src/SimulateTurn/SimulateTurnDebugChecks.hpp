@@ -8,6 +8,7 @@
 #include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
+#include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Simulation/Simulation.hpp>
@@ -39,7 +40,7 @@ struct Checks : pokesim::debug::Checks {
 
  private:
   void check() const {
-    for (types::entity battleEntity : simulation->battleEntities()) {
+    for (types::entity battleEntity : registry->view<pokesim::tags::Battle, pokesim::tags::SimulateTurn>()) {
       checkBattle(battleEntity);
       for (types::entity sideEntity : registry->get<Sides>(battleEntity).val) {
         checkSide(sideEntity);

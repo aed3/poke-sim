@@ -101,16 +101,16 @@ void setDefendingSide(types::handle moveHandle, Defender defender) {
   types::registry& registry = *moveHandle.registry();
   PlayerSideId playerSide = registry.get<PlayerSide>(registry.get<Side>(defender.val).val).val;
   switch (playerSide) {
-    case PlayerSideId::NONE: {
-      POKESIM_REQUIRE_FAIL("Player side wasn't set properly.");
-      break;
-    }
     case PlayerSideId::P1: {
       moveHandle.emplace<tags::P1Defending>();
       break;
     }
     case PlayerSideId::P2: {
       moveHandle.emplace<tags::P2Defending>();
+      break;
+    }
+    default: {
+      POKESIM_REQUIRE_FAIL("Player side wasn't set properly.");
       break;
     }
   }
@@ -133,6 +133,7 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Po
 
   if (modifiers.burn) {
     const auto multiplier = pokedex.getStaticValue<dex::Burn::physicalDamageMultiplier>();
+
     damage.val = (types::damage)fixedPointMultiply(damage.val, multiplier);
   }
 
@@ -235,7 +236,7 @@ void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, Defender defend
 void calculateBaseDamage(
   types::handle moveHandle, Power power, AttackingLevel level, AttackingStat attack, DefendingStat defense) {
   types::damage damage = computeBaseDamage(power.val, level.val, attack.val, defense.val);
-  moveHandle.emplace_or_replace<Damage>(damage);
+  moveHandle.emplace<Damage>(damage);
 }
 
 void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, Defender defender) {
@@ -323,7 +324,6 @@ void applySideDamageRollOptions(Simulation& simulation) {
     else {
       ApplyDamageRollKind(simulation, damageRollOptions.getP2(), calculateUpToFoeHp, noKoChanceCalculation);
     }
-
     simulation.registry.clear<internal::tags::ApplySideDamageRollOptions, tags::P2Defending>();
   }
 }
