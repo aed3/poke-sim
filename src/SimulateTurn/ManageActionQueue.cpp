@@ -1,7 +1,6 @@
 #include "ManageActionQueue.hpp"
 
 #include <Battle/Helpers/Helpers.hpp>
-#include <Components/Decisions.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
@@ -11,6 +10,7 @@
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
+#include <Components/SideDecisions.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SimulateTurn/SpeedTieIndexes.hpp>
 #include <Components/SimulateTurn/TeamAction.hpp>
@@ -18,6 +18,7 @@
 #include <Components/Stats.hpp>
 #include <Components/Turn.hpp>
 #include <Config/Require.hpp>
+#include <Types/Decisions.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/ActionOrder.hpp>
 #include <Types/Registry.hpp>
@@ -37,9 +38,6 @@ void resolveSlotDecisions(
   for (const SlotDecision& decision : decisions) {
     POKESIM_REQUIRE(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
     POKESIM_REQUIRE(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
-    POKESIM_REQUIRE(
-      !(decision.moveChoice.has_value() && decision.itemChoice.has_value()),
-      "Decisions can't have a move and an item choice.");
 
     types::handle actionHandle = {registry, registry.create()};
     actionHandle.emplace<SourceSlotName>(decision.sourceSlot);
@@ -48,25 +46,19 @@ void resolveSlotDecisions(
     SpeedSort speedSort;
     types::entity sourceEntity = slotToPokemonEntity(registry, sideHandle.entity(), decision.sourceSlot);
 
-    stat::EffectiveSpe* effectiveSpe = registry.try_get<stat::EffectiveSpe>(sourceEntity);
-    if (effectiveSpe != nullptr) {
-      speedSort.speed = effectiveSpe->val;
-    }
-    else {
-      speedSort.speed = registry.get<stat::Spe>(sourceEntity).val;
-    }
+    speedSort.speed = registry.get<stat::EffectiveSpe>(sourceEntity).val;
 
-    if (decision.moveChoice.has_value()) {
+    if (decision.moveOrItem.holds<dex::Move>()) {
       actionHandle.emplace<action::tags::Move>();
-      actionHandle.emplace<MoveName>(decision.moveChoice.value());
+      actionHandle.emplace<MoveName>(decision.moveOrItem.get<dex::Move>());
 
       speedSort.order = ActionOrder::MOVE;
       speedSort.priority = Constants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
       speedSort.fractionalPriority = false;                   // TODO (aed3): get fractionalPriority
     }
-    else if (decision.itemChoice.has_value()) {
+    else if (decision.moveOrItem.holds<dex::Item>()) {
       actionHandle.emplace<action::tags::Item>();
-      actionHandle.emplace<ItemName>(decision.itemChoice.value());
+      actionHandle.emplace<ItemName>(decision.moveOrItem.get<dex::Item>());
       speedSort.order = ActionOrder::ITEM;
     }
     else {
@@ -233,7 +225,6 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue) {
 
   if (registry.all_of<action::tags::Move>(newCurrentAction)) {
     battleHandle.emplace<action::tags::Move>();
-    battleHandle.emplace<MoveName>(registry.get<MoveName>(newCurrentAction));
   }
   else if (registry.all_of<action::tags::Residual>(newCurrentAction)) {
     battleHandle.emplace<action::tags::Residual>();

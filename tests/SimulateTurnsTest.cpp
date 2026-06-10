@@ -232,9 +232,9 @@ TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   SideDecision p2Decision{PlayerSideId::P2};
   SlotDecision p1SlotDecision{Slot::P1A, Slot::P1A};
   SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
-  p1SlotDecision.moveChoice = dex::Move::SPLASH;
+  p1SlotDecision.moveOrItem = dex::Move::SPLASH;
   p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-  p2SlotDecision.moveChoice = dex::Move::THUNDERBOLT;
+  p2SlotDecision.moveOrItem = dex::Move::THUNDERBOLT;
   p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
 
   battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};

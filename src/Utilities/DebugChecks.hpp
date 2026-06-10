@@ -38,12 +38,21 @@
 
 namespace pokesim::debug {
 struct Checks {
-  Checks(const Simulation& _simulation) : simulation(&_simulation), registry(&_simulation.registry) {}
+  Checks(const Simulation& _simulation)
+      : simulation(&_simulation),
+        registry(&_simulation.registry),
+        simulateTurnOptionsOnInput(simulation->simulateTurnOptions),
+        calcDamageOptionsOnInput(simulation->calculateDamageOptions),
+        analyzeEffectOptionsOnInput(simulation->analyzeEffectOptions) {}
 
  protected:
   const Simulation* simulation;
   const types::registry* registry;
   types::registry registryOnInput;
+  simulate_turn::Options simulateTurnOptionsOnInput;
+  calc_damage::Options calcDamageOptionsOnInput;
+  analyze_effect::Options analyzeEffectOptionsOnInput;
+
   entt::dense_map<types::entity, types::entity> currentEntitiesToInitial;
   entt::dense_set<types::entity> specificallyChecked;
   types::entityIndex initialEntityCount = 0U;
@@ -74,6 +83,12 @@ struct Checks {
         }
       }
     }
+  }
+
+  void checkOptions() const {
+    POKESIM_REQUIRE_NM(simulateTurnOptionsOnInput == simulation->simulateTurnOptions);
+    POKESIM_REQUIRE_NM(calcDamageOptionsOnInput == simulation->calculateDamageOptions);
+    POKESIM_REQUIRE_NM(analyzeEffectOptionsOnInput == simulation->analyzeEffectOptions);
   }
 
   void checkRemainingOutputs() const {

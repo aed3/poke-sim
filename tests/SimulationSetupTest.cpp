@@ -82,14 +82,15 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
   SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
   SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
 
-  p1SlotDecision.moveChoice = dex::Move::FURY_ATTACK;
+  p1SlotDecision.moveOrItem = dex::Move::FURY_ATTACK;
   p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-  p2SlotDecision.moveChoice = dex::Move::THUNDERBOLT;
+  p2SlotDecision.moveOrItem = dex::Move::THUNDERBOLT;
   p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
 
   auto check = [&]() {
     Simulation simulation(pokedex, BattleFormat::SINGLES);
     simulation.createInitialStates({battleInfo});
+    updateAllStats(simulation);
 
     types::registry& registry = simulation.registry;
     auto group = registry.group<ActionQueue, Id, Sides>();
@@ -117,11 +118,11 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
 
       auto checkDecision =
         [&](types::entity decisionEntity, const pokesim::SlotDecision& decision, const PokemonCreationInfo& pokemon) {
-          if (decision.moveChoice) {
+          if (decision.moveOrItem.holds<dex::Move>()) {
             const auto [target, move, speedSort] = registry.get<TargetSlotName, MoveName, SpeedSort>(decisionEntity);
 
             REQUIRE(target.val == decision.targetSlot);
-            REQUIRE(move.val == decision.moveChoice);
+            REQUIRE(move.val == decision.moveOrItem.get<dex::Move>());
             REQUIRE(speedSort.speed == pokemon.stats.spe);
             REQUIRE(speedSort.order == ActionOrder::MOVE);
             REQUIRE(speedSort.priority == 0);
@@ -175,17 +176,17 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
 
         switch (i) {
           case 0U: {
-            newP1SlotDecision.moveChoice = p1SlotDecision.moveChoice;
+            newP1SlotDecision.moveOrItem = p1SlotDecision.moveOrItem;
             newP1SlotDecision.targetSlot = Slot::P2A;
             break;
           }
           case 1U: {
-            newP1SlotDecision.moveChoice = std::nullopt;
+            newP1SlotDecision.moveOrItem = std::monostate{};
             newP1SlotDecision.targetSlot = Slot::P1B;
             break;
           }
           case 2U: {
-            newP1SlotDecision.moveChoice = std::nullopt;
+            newP1SlotDecision.moveOrItem = std::monostate{};
             newP1SlotDecision.targetSlot = Slot::P1C;
             break;
           }
@@ -194,17 +195,17 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
 
         switch (j) {
           case 0U: {
-            newP2SlotDecision.moveChoice = p2SlotDecision.moveChoice;
+            newP2SlotDecision.moveOrItem = p2SlotDecision.moveOrItem;
             newP2SlotDecision.targetSlot = Slot::P1A;
             break;
           }
           case 1U: {
-            newP2SlotDecision.moveChoice = std::nullopt;
+            newP2SlotDecision.moveOrItem = std::monostate{};
             newP2SlotDecision.targetSlot = Slot::P2B;
             break;
           }
           case 2U: {
-            newP2SlotDecision.moveChoice = std::nullopt;
+            newP2SlotDecision.moveOrItem = std::monostate{};
             newP2SlotDecision.targetSlot = Slot::P2C;
             break;
           }

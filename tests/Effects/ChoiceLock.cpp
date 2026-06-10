@@ -21,9 +21,9 @@ TEST_CASE("Choice Lock: Choice lock starts", "[Simulation][SimulateTurn][Effect]
   SideDecision p2Decision{PlayerSideId::P2};
   SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
   SlotDecision p2SlotDecision{Slot::P2A, Slot::P2A};
-  p1SlotDecision.moveChoice = dex::Move::SPLASH;
+  p1SlotDecision.moveOrItem = dex::Move::SPLASH;
   p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-  p2SlotDecision.moveChoice = dex::Move::SPLASH;
+  p2SlotDecision.moveOrItem = dex::Move::SPLASH;
   p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
 
   battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
@@ -112,9 +112,9 @@ TEST_CASE(
   SideDecision p2Decision{PlayerSideId::P2};
   SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
   SlotDecision p2SlotDecision{Slot::P2A, Slot::P2A};
-  p1SlotDecision.moveChoice = dex::Move::KNOCK_OFF;
+  p1SlotDecision.moveOrItem = dex::Move::KNOCK_OFF;
   p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-  p2SlotDecision.moveChoice = dex::Move::SPLASH;
+  p2SlotDecision.moveOrItem = dex::Move::SPLASH;
   p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
 
   battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};

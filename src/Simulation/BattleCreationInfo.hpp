@@ -1,9 +1,10 @@
 #pragma once
 
-#include <Components/Decisions.hpp>
+#include <Components/SideDecisions.hpp>
 #include <Components/SpeciesTypes.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Types/Constants.hpp>
+#include <Types/Decisions.hpp>
 #include <Types/Effect.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Gender.hpp>

@@ -690,28 +690,6 @@ void check(const DamageRolls& damageRolls) {
 }
 
 template <>
-void check(const SlotDecision& slotDecision) {
-  checkSlot(slotDecision.sourceSlot);
-  checkSlot(slotDecision.targetSlot);
-  POKESIM_REQUIRE_NM(!(slotDecision.moveChoice.has_value() && slotDecision.itemChoice.has_value()));
-  POKESIM_REQUIRE_NM(!(slotDecision.megaEvolve && slotDecision.primalRevert));
-}
-
-template <>
-void check(const SideDecision& sideDecision) {
-  checkPlayerSideId(sideDecision.sideId);
-  if (sideDecision.decisions.holds<types::slotDecisions>()) {
-    const types::slotDecisions& decisions = sideDecision.decisions.get<types::slotDecisions>();
-    for (const SlotDecision& decision : decisions) {
-      check(decision);
-    }
-  }
-  else {
-    checkTeamOrder(sideDecision.decisions.get<types::teamOrder>());
-  }
-}
-
-template <>
 void check(const Evs& evs) {
   checkEv(evs.hp);
   checkEv(evs.atk);
@@ -1160,6 +1138,20 @@ void check(const internal::RandomEqualChanceStack& randomEqualChanceStack, const
 }
 
 template <>
+void check(const SideDecision& sideDecision) {
+  checkPlayerSideId(sideDecision.sideId);
+  if (sideDecision.decisions.holds<types::slotDecisions>()) {
+    const types::slotDecisions& decisions = sideDecision.decisions.get<types::slotDecisions>();
+    for (const SlotDecision& decision : decisions) {
+      check(decision);
+    }
+  }
+  else {
+    checkTeamOrder(sideDecision.decisions.get<types::teamOrder>());
+  }
+}
+
+template <>
 void check(const SpeedTieIndexes& speedTieIndexes) {
   checkBounds<Constants::ActivePokemon>(speedTieIndexes.val.size());
   types::activePokemonIndex total = 0U;
@@ -1305,6 +1297,13 @@ void check(const Winner& winner) {
   // No winner (aka a tie) is valid.
   POKESIM_REQUIRE_NM(
     winner.val == PlayerSideId::P1 || winner.val == PlayerSideId::P2 || winner.val == PlayerSideId::NONE);
+}
+
+template <>
+void check(const SlotDecision& slotDecision) {
+  checkSlot(slotDecision.sourceSlot);
+  checkSlot(slotDecision.targetSlot);
+  POKESIM_REQUIRE_NM(!(slotDecision.megaEvolve && slotDecision.primalRevert));
 }
 
 template <>
@@ -3183,9 +3182,6 @@ void resolveSlotDecisions(
   for (const SlotDecision& decision : decisions) {
     POKESIM_REQUIRE(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
     POKESIM_REQUIRE(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
-    POKESIM_REQUIRE(
-      !(decision.moveChoice.has_value() && decision.itemChoice.has_value()),
-      "Decisions can't have a move and an item choice.");
 
     types::handle actionHandle = {registry, registry.create()};
     actionHandle.emplace<SourceSlotName>(decision.sourceSlot);
@@ -3194,25 +3190,19 @@ void resolveSlotDecisions(
     SpeedSort speedSort;
     types::entity sourceEntity = slotToPokemonEntity(registry, sideHandle.entity(), decision.sourceSlot);
 
-    stat::EffectiveSpe* effectiveSpe = registry.try_get<stat::EffectiveSpe>(sourceEntity);
-    if (effectiveSpe != nullptr) {
-      speedSort.speed = effectiveSpe->val;
-    }
-    else {
-      speedSort.speed = registry.get<stat::Spe>(sourceEntity).val;
-    }
+    speedSort.speed = registry.get<stat::EffectiveSpe>(sourceEntity).val;
 
-    if (decision.moveChoice.has_value()) {
+    if (decision.choice.holds<dex::Move>()) {
       actionHandle.emplace<action::tags::Move>();
-      actionHandle.emplace<MoveName>(decision.moveChoice.value());
+      actionHandle.emplace<MoveName>(decision.choice.get<dex::Move>());
 
       speedSort.order = ActionOrder::MOVE;
       speedSort.priority = Constants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
       speedSort.fractionalPriority = false;                   // TODO (aed3): get fractionalPriority
     }
-    else if (decision.itemChoice.has_value()) {
+    else if (decision.choice.holds<dex::Item>()) {
       actionHandle.emplace<action::tags::Item>();
-      actionHandle.emplace<ItemName>(decision.itemChoice.value());
+      actionHandle.emplace<ItemName>(decision.choice.get<dex::Item>());
       speedSort.order = ActionOrder::ITEM;
     }
     else {
@@ -3379,7 +3369,6 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue) {
 
   if (registry.all_of<action::tags::Move>(newCurrentAction)) {
     battleHandle.emplace<action::tags::Move>();
-    battleHandle.emplace<MoveName>(registry.get<MoveName>(newCurrentAction));
   }
   else if (registry.all_of<action::tags::Residual>(newCurrentAction)) {
     battleHandle.emplace<action::tags::Residual>();

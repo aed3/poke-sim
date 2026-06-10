@@ -18,6 +18,7 @@ using stateId = std::underlying_type_t<entity>;
 using battleTurn = pokesim::internal::unsignedIntType<Constants::TurnCount::MAX>;
 
 using sideIndex = pokesim::internal::unsignedIntType<Constants::SIDE_COUNT>;
+
 template <typename T>
 struct sides : public std::array<T, Constants::SIDE_COUNT> {
   constexpr T& p1() { return this->at(0); };
@@ -27,6 +28,7 @@ struct sides : public std::array<T, Constants::SIDE_COUNT> {
 
   template <std::size_t N>
   decltype(auto) get() const {
+    static_assert(N < Constants::SIDE_COUNT);
     return this->at(N);
   }
 

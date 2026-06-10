@@ -532,28 +532,6 @@ void check(const DamageRolls& damageRolls) {
 }
 
 template <>
-void check(const SlotDecision& slotDecision) {
-  checkSlot(slotDecision.sourceSlot);
-  checkSlot(slotDecision.targetSlot);
-  POKESIM_REQUIRE_NM(!(slotDecision.moveChoice.has_value() && slotDecision.itemChoice.has_value()));
-  POKESIM_REQUIRE_NM(!(slotDecision.megaEvolve && slotDecision.primalRevert));
-}
-
-template <>
-void check(const SideDecision& sideDecision) {
-  checkPlayerSideId(sideDecision.sideId);
-  if (sideDecision.decisions.holds<types::slotDecisions>()) {
-    const types::slotDecisions& decisions = sideDecision.decisions.get<types::slotDecisions>();
-    for (const SlotDecision& decision : decisions) {
-      check(decision);
-    }
-  }
-  else {
-    checkTeamOrder(sideDecision.decisions.get<types::teamOrder>());
-  }
-}
-
-template <>
 void check(const Evs& evs) {
   checkEv(evs.hp);
   checkEv(evs.atk);
@@ -1002,6 +980,20 @@ void check(const internal::RandomEqualChanceStack& randomEqualChanceStack, const
 }
 
 template <>
+void check(const SideDecision& sideDecision) {
+  checkPlayerSideId(sideDecision.sideId);
+  if (sideDecision.decisions.holds<types::slotDecisions>()) {
+    const types::slotDecisions& decisions = sideDecision.decisions.get<types::slotDecisions>();
+    for (const SlotDecision& decision : decisions) {
+      check(decision);
+    }
+  }
+  else {
+    checkTeamOrder(sideDecision.decisions.get<types::teamOrder>());
+  }
+}
+
+template <>
 void check(const SpeedTieIndexes& speedTieIndexes) {
   checkBounds<Constants::ActivePokemon>(speedTieIndexes.val.size());
   types::activePokemonIndex total = 0U;
@@ -1147,6 +1139,13 @@ void check(const Winner& winner) {
   // No winner (aka a tie) is valid.
   POKESIM_REQUIRE_NM(
     winner.val == PlayerSideId::P1 || winner.val == PlayerSideId::P2 || winner.val == PlayerSideId::NONE);
+}
+
+template <>
+void check(const SlotDecision& slotDecision) {
+  checkSlot(slotDecision.sourceSlot);
+  checkSlot(slotDecision.targetSlot);
+  POKESIM_REQUIRE_NM(!(slotDecision.megaEvolve && slotDecision.primalRevert));
 }
 
 template <>

@@ -5,6 +5,7 @@
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
 #include <Simulation/SimulationOptions.hpp>
+#include <Types/Decisions.hpp>
 #include <Types/Enums/DamageRollKind.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
@@ -23,8 +24,6 @@ struct CloneTo;
 struct Damage;
 struct DamageRollModifiers;
 struct DamageRolls;
-struct SlotDecision;
-struct SideDecision;
 struct Evs;
 struct Ivs;
 struct ActionQueue;
@@ -86,6 +85,7 @@ struct Position;
 struct MovePriority;
 struct Probability;
 struct RngSeed;
+struct SideDecision;
 struct SpeedTieIndexes;
 struct SpeciesTypes;
 struct SpeedSort;
@@ -240,12 +240,6 @@ void check(const DamageRollModifiers&);
 
 template <>
 void check(const DamageRolls&);
-
-template <>
-void check(const SlotDecision&);
-
-template <>
-void check(const SideDecision&);
 
 template <>
 void check(const Evs&);
@@ -470,6 +464,9 @@ void check(const internal::RandomEqualChanceStack&, const types::registry&);
 // template <> void check(const internal::RandomEventIndex&);
 
 template <>
+void check(const SideDecision&);
+
+template <>
 void check(const SpeedTieIndexes&);
 
 template <>
@@ -537,6 +534,9 @@ void check(const Turn&);
 
 template <>
 void check(const Winner&);
+
+template <>
+void check(const SlotDecision&);
 
 template <>
 void check(const DamageRollKind&);

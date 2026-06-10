@@ -36,12 +36,10 @@
 
 namespace pokesim::calc_damage::debug {
 struct Checks : pokesim::debug::Checks {
-  Options options;
-  Checks(const Simulation& _simulation)
-      : pokesim::debug::Checks(_simulation), options(_simulation.calculateDamageOptions) {}
+  Checks(const Simulation& _simulation) : pokesim::debug::Checks(_simulation) {}
 
   void checkInputs() {
-    pokesim::debug::check(options.getDamageRollOptions());
+    pokesim::debug::check(calcDamageOptionsOnInput.getDamageRollOptions());
 
     checkMoveInputs();
     checkPokemonInputs(true);
@@ -55,8 +53,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkOutputs() const {
-    POKESIM_REQUIRE_NM(options == simulation->calculateDamageOptions);
-
+    checkOptions();
     checkMoveOutputs();
     checkPokemonOutputs(true);
     checkPokemonOutputs(false);

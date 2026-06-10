@@ -151,8 +151,8 @@ struct Random {
     if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
       SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
       SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
-      p1SlotDecision.moveChoice = pickFromList(battle.sides.p1().team[0].moves, rngState).name;
-      p2SlotDecision.moveChoice = pickFromList(battle.sides.p2().team[0].moves, rngState).name;
+      p1SlotDecision.moveOrItem = pickFromList(battle.sides.p1().team[0].moves, rngState).name;
+      p2SlotDecision.moveOrItem = pickFromList(battle.sides.p2().team[0].moves, rngState).name;
 
       p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
       p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
@@ -162,10 +162,10 @@ struct Random {
       SlotDecision p1BSlotDecision{Slot::P1B, pickFromList(std::vector{Slot::P1A, Slot::P2A, Slot::P2B}, rngState)};
       SlotDecision p2ASlotDecision{Slot::P2A, pickFromList(std::vector{Slot::P2B, Slot::P1A, Slot::P1B}, rngState)};
       SlotDecision p2BSlotDecision{Slot::P2B, pickFromList(std::vector{Slot::P2A, Slot::P1A, Slot::P1B}, rngState)};
-      p1ASlotDecision.moveChoice = pickFromList(battle.sides.p1().team[0].moves, rngState).name;
-      p1BSlotDecision.moveChoice = pickFromList(battle.sides.p1().team[1].moves, rngState).name;
-      p2ASlotDecision.moveChoice = pickFromList(battle.sides.p2().team[0].moves, rngState).name;
-      p2BSlotDecision.moveChoice = pickFromList(battle.sides.p2().team[1].moves, rngState).name;
+      p1ASlotDecision.moveOrItem = pickFromList(battle.sides.p1().team[0].moves, rngState).name;
+      p1BSlotDecision.moveOrItem = pickFromList(battle.sides.p1().team[1].moves, rngState).name;
+      p2ASlotDecision.moveOrItem = pickFromList(battle.sides.p2().team[0].moves, rngState).name;
+      p2BSlotDecision.moveOrItem = pickFromList(battle.sides.p2().team[1].moves, rngState).name;
 
       p1Decision.decisions = types::slotDecisions{p1ASlotDecision, p1BSlotDecision};
       p2Decision.decisions = types::slotDecisions{p2ASlotDecision, p2BSlotDecision};
@@ -175,7 +175,7 @@ struct Random {
 
     for (auto& sideDecision : turnDecision) {
       for (auto& slotDecision : sideDecision.decisions.get<types::slotDecisions>()) {
-        if (simulation.pokedex().moveHas<move::tags::Self>(slotDecision.moveChoice.value())) {
+        if (simulation.pokedex().moveHas<move::tags::Self>(slotDecision.moveOrItem.get<dex::Move>())) {
           slotDecision.targetSlot = slotDecision.sourceSlot;
         }
       }

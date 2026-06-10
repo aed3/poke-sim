@@ -33,12 +33,10 @@
 
 namespace pokesim::analyze_effect::debug {
 struct Checks : pokesim::debug::Checks {
-  Options options;
-  Checks(const Simulation& _simulation)
-      : pokesim::debug::Checks(_simulation), options(_simulation.analyzeEffectOptions) {}
+  Checks(const Simulation& _simulation) : pokesim::debug::Checks(_simulation) {}
 
   void checkInputs() {
-    pokesim::debug::check(options.getDamageRollOptions());
+    pokesim::debug::check(analyzeEffectOptionsOnInput.getDamageRollOptions());
 
     auto view = registry->view<tags::Input>();
     types::entityVector inputs{view.begin(), view.end()};
@@ -62,8 +60,7 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkOutputs() const {
-    POKESIM_REQUIRE_NM(options == simulation->analyzeEffectOptions);
-
+    checkOptions();
     types::entityIndex finalEntityCount = getFinalEntityCount();
     POKESIM_REQUIRE_NM(initialEntityCount == finalEntityCount);
     checkInputOutputs();

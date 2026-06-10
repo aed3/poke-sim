@@ -372,9 +372,9 @@ TEST_CASE(
   SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
   SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
 
-  p1SlotDecision.moveChoice = dex::Move::KNOCK_OFF;
+  p1SlotDecision.moveOrItem = dex::Move::KNOCK_OFF;
   p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-  p2SlotDecision.moveChoice = dex::Move::THUNDERBOLT;
+  p2SlotDecision.moveOrItem = dex::Move::THUNDERBOLT;
   p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
   battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
 
@@ -687,11 +687,11 @@ TEST_CASE(
   SlotDecision p2ASlotDecision{Slot::P2A, Slot::P1B};
   SlotDecision p2BSlotDecision{Slot::P2B, Slot::P2B};
 
-  p1ASlotDecision.moveChoice = dex::Move::MOONBLAST;
-  p1BSlotDecision.moveChoice = dex::Move::WILL_O_WISP;
+  p1ASlotDecision.moveOrItem = dex::Move::MOONBLAST;
+  p1BSlotDecision.moveOrItem = dex::Move::WILL_O_WISP;
   p1Decision.decisions = types::sideSlots<SlotDecision>{p1ASlotDecision, p1BSlotDecision};
-  p2ASlotDecision.moveChoice = dex::Move::KNOCK_OFF;
-  p2BSlotDecision.moveChoice = dex::Move::QUIVER_DANCE;
+  p2ASlotDecision.moveOrItem = dex::Move::KNOCK_OFF;
+  p2BSlotDecision.moveOrItem = dex::Move::QUIVER_DANCE;
   p2Decision.decisions = types::sideSlots<SlotDecision>{p2ASlotDecision, p2BSlotDecision};
   battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
 
