@@ -388,8 +388,7 @@ struct SimulationSetupChecks {
           POKESIM_REQUIRE_NM(slotDecision.primalRevert == slotDecisionInfo.primalRevert);
           POKESIM_REQUIRE_NM(slotDecision.dynamax == slotDecisionInfo.dynamax);
           POKESIM_REQUIRE_NM(slotDecision.terastallize == slotDecisionInfo.terastallize);
-          POKESIM_REQUIRE_NM(slotDecision.moveChoice == slotDecisionInfo.moveChoice);
-          POKESIM_REQUIRE_NM(slotDecision.itemChoice == slotDecisionInfo.itemChoice);
+          POKESIM_REQUIRE_NM(slotDecision.moveOrItem == slotDecisionInfo.moveOrItem);
         }
       }
       else if (sideDecisionInfo.decisions.holds<types::teamOrder>()) {

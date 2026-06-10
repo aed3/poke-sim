@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Accuracy.hpp"
+#include "ActionQueue.hpp"
 #include "AddedTargets.hpp"
 #include "AnalyzeEffect/Aliases.hpp"
 #include "AnalyzeEffect/AnalyzeEffectInputs.hpp"
@@ -18,7 +19,6 @@
 #include "CalcDamage/TemporaryMoveProperties.hpp"
 #include "CloneFromCloneTo.hpp"
 #include "Damage.hpp"
-#include "Decisions.hpp"
 #include "EVsIVs.hpp"
 #include "EntityHolders/ActionQueue.hpp"
 #include "EntityHolders/Battle.hpp"
@@ -63,6 +63,7 @@
 #include "RNGSeed.hpp"
 #include "RandomEventInputs.hpp"
 #include "RandomEventOutputs.hpp"
+#include "SideDecisions.hpp"
 #include "SimulateTurn/ActionTags.hpp"
 #include "SimulateTurn/MoveHitStepTags.hpp"
 #include "SimulateTurn/SimulateTurnTags.hpp"

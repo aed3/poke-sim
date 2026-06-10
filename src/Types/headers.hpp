@@ -4,6 +4,7 @@
 
 #include "Constants.hpp"
 #include "Damage.hpp"
+#include "Decisions.hpp"
 #include "Effect.hpp"
 #include "Entity.hpp"
 #include "Enums/Ability.hpp"

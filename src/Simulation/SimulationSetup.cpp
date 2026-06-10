@@ -6,7 +6,6 @@
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/CloneFromCloneTo.hpp>
-#include <Components/Decisions.hpp>
 #include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Side.hpp>
@@ -14,12 +13,14 @@
 #include <Components/PP.hpp>
 #include <Components/Pokedex/Abilities.hpp>
 #include <Components/Pokedex/BaseStats.hpp>
+#include <Components/SideDecisions.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Constants.hpp>
+#include <Types/Decisions.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
 #include <Utilities/Variant.hpp>
