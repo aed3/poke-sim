@@ -83,8 +83,6 @@
  * src/CalcDamage/Helpers.hpp
  * src/Types/Random.hpp
  * src/Components/Accuracy.hpp
- * src/Types/Enums/ActionOrder.hpp
- * src/Types/Move.hpp
  * src/Types/Enums/AddedTargets.hpp
  * src/Components/AddedTargets.hpp
  * src/Components/EntityHolders/Current.hpp
@@ -96,6 +94,7 @@
  * src/Types/Effect.hpp
  * src/Components/AnalyzeEffect/RemovedEffect.hpp
  * src/Components/BaseEffectChance.hpp
+ * src/Types/Move.hpp
  * src/Components/BasePower.hpp
  * src/Components/CalcDamage/Aliases.hpp
  * src/Types/Enums/GameMechanics.hpp
@@ -157,6 +156,7 @@
  * src/Components/SimulateTurn/TeamAction.hpp
  * src/Components/SimulationResults.hpp
  * src/Components/SpeciesTypes.hpp
+ * src/Types/Enums/ActionOrder.hpp
  * src/Components/SpeedSort.hpp
  * src/Components/Stats.hpp
  * src/Components/Tags/AbilityTags.hpp
@@ -18257,74 +18257,6 @@ struct Accuracy {
 
 ////////////////////// END OF src/Components/Accuracy.hpp //////////////////////
 
-/////////////////// START OF src/Types/Enums/ActionOrder.hpp ///////////////////
-
-namespace pokesim {
-enum class ActionOrder : std::uint8_t {
-  NONE = std::numeric_limits<std::underlying_type_t<ActionOrder>>::max(),
-  TEAM = 1U,
-  START = 2U,
-  BEFORE_TURN = 4U,
-  ITEM = BEFORE_TURN,
-
-  SWITCH = 103U,
-
-  MOVE = 200U,
-
-  RESIDUAL = 254U,
-};
-
-static constexpr inline std::array<ActionOrder, 8U> VALID_ACTION_ORDERS = {
-  ActionOrder::NONE,
-  ActionOrder::TEAM,
-  ActionOrder::START,
-  ActionOrder::BEFORE_TURN,
-  ActionOrder::ITEM,
-  ActionOrder::SWITCH,
-  ActionOrder::MOVE,
-  ActionOrder::RESIDUAL,
-};
-}  // namespace pokesim
-
-//////////////////// END OF src/Types/Enums/ActionOrder.hpp ////////////////////
-
-///////////////////////// START OF src/Types/Move.hpp //////////////////////////
-
-namespace pokesim::types {
-using pp = pokesim::internal::unsignedIntType<Constants::MoveMaxPp::MAX>;
-using basePower = pokesim::internal::unsignedIntType<Constants::MoveBasePower::MAX>;
-using power = pokesim::internal::unsignedIntType<Constants::MovePower::MAX>;
-using baseAccuracy = pokesim::internal::unsignedIntType<Constants::MoveBaseAccuracy::MAX>;
-using moveHits = pokesim::internal::unsignedIntType<Constants::PokemonHpStat::MAX>;
-
-using priority = pokesim::internal::signedIntType<Constants::MovePriority::MAX, Constants::MovePriority::MIN>;
-using fractionalPriority = bool;
-}  // namespace pokesim::types
-
-////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
-
-/////////////////// START OF src/Components/ActionQueue.hpp ////////////////////
-
-namespace pokesim {
-struct ActionQueue2 {
-  // Order of the types of actions (lower first)
-  ActionOrder order = ActionOrder::NONE;
-  // Priority of the action (higher first)
-  types::priority priority = Constants::MovePriority::DEFAULT;
-  // Whether negative fractional priority is active for the action (false first)
-  types::fractionalPriority fractionalPriority = false;
-  // Speed of Pokemon using move (higher first if priority tie)
-  types::stat speed = Constants::PokemonEffectiveStat::DEFAULT;
-
-  bool operator==(const ActionQueue2& other) const {
-    return order == other.order && priority == other.priority && fractionalPriority == other.fractionalPriority &&
-           speed == other.speed;
-  }
-};
-}  // namespace pokesim
-
-//////////////////// END OF src/Components/ActionQueue.hpp /////////////////////
-
 ////////////////// START OF src/Types/Enums/AddedTargets.hpp ///////////////////
 
 namespace pokesim {
@@ -18551,21 +18483,31 @@ class variant : public std::variant<Types...> {
     return *this;
   }
 
-  bool empty() const { return holds<std::monostate>(); }
+  constexpr bool empty() const { return holds<std::monostate>(); }
 
   template <typename Type>
-  bool holds() const {
+  constexpr bool holds() const {
     return std::holds_alternative<Type>(*this);
   }
 
   template <typename Type>
-  auto& get() const {
+  constexpr auto& get() const {
     return std::get<Type>(*this);
   }
 
   template <typename Type>
-  auto& get() {
+  constexpr auto& get() {
     return std::get<Type>(*this);
+  }
+
+  template <typename... Type>
+  constexpr auto get_if() const {
+    return std::forward_as_tuple(std::get_if<Type>(this)...);
+  }
+
+  template <typename... Type>
+  constexpr auto get_if() {
+    return std::forward_as_tuple(std::get_if<Type>(this)...);
   }
 };
 }  // namespace pokesim::internal
@@ -18605,6 +18547,21 @@ struct BaseEffectChance {
 }  // namespace pokesim
 
 ////////////////// END OF src/Components/BaseEffectChance.hpp //////////////////
+
+///////////////////////// START OF src/Types/Move.hpp //////////////////////////
+
+namespace pokesim::types {
+using pp = pokesim::internal::unsignedIntType<Constants::MoveMaxPp::MAX>;
+using basePower = pokesim::internal::unsignedIntType<Constants::MoveBasePower::MAX>;
+using power = pokesim::internal::unsignedIntType<Constants::MovePower::MAX>;
+using baseAccuracy = pokesim::internal::unsignedIntType<Constants::MoveBaseAccuracy::MAX>;
+using moveHits = pokesim::internal::unsignedIntType<Constants::PokemonHpStat::MAX>;
+
+using priority = pokesim::internal::signedIntType<Constants::MovePriority::MAX, Constants::MovePriority::MIN>;
+using fractionalPriority = bool;
+}  // namespace pokesim::types
+
+////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
 
 //////////////////// START OF src/Components/BasePower.hpp /////////////////////
 
@@ -19410,28 +19367,61 @@ struct RandomEventIndex {
 /////////////////////// START OF src/Types/Decisions.hpp ///////////////////////
 
 namespace pokesim {
-struct SlotDecision {
+struct MoveDecision {
   Slot sourceSlot = Slot::NONE;
   Slot targetSlot = Slot::NONE;
 
-  bool megaEvolve = false;
-  bool primalRevert = false;
-  bool dynamax = false;
-  bool terastallize = false;
+  dex::Move move = dex::Move::NO_MOVE;
 
-  internal::variant<std::monostate, dex::Move, dex::Item> choice;
+  bool operator==(const MoveDecision& other) const {
+    return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot && move == other.move;
+  }
+};
 
-  bool operator==(const SlotDecision& other) const {
-    return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot && megaEvolve == other.megaEvolve &&
-           primalRevert == other.primalRevert && dynamax == other.dynamax && terastallize == other.terastallize &&
-           choice == other.choice;
+struct MegaEvolveAndMoveDecision : MoveDecision {};
+struct ZMoveDecision : MoveDecision {};
+struct DynamaxAndMoveDecision : MoveDecision {};
+struct TerastallizeAndMoveDecision : MoveDecision {};
+
+struct SwitchDecision {
+  Slot sourceSlot = Slot::NONE;
+  Slot targetSlot = Slot::NONE;
+
+  bool operator==(const SwitchDecision& other) const {
+    return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot;
+  }
+};
+
+struct ItemDecision {
+  Slot sourceSlot = Slot::NONE;
+  Slot targetSlot = Slot::NONE;
+
+  dex::Item item = dex::Item::NO_ITEM;
+
+  bool operator==(const ItemDecision& other) const {
+    return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot && item == other.item;
   }
 };
 
 namespace types {
-using slotDecisions = types::sideSlots<SlotDecision>;
-}
+struct slotDecision : pokesim::internal::variant<
+                        MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision,
+                        ZMoveDecision, SwitchDecision, ItemDecision> {
+  using pokesim::internal::variant<
+    MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision, ZMoveDecision,
+    SwitchDecision, ItemDecision>::variant;
 
+  constexpr Slot sourceSlot() const {
+    return std::visit([](auto&& decision) { return decision.sourceSlot; }, *this);
+  }
+
+  constexpr Slot targetSlot() const {
+    return std::visit([](auto&& decision) { return decision.targetSlot; }, *this);
+  }
+};
+
+using slotDecisions = types::sideSlots<slotDecision>;
+}  // namespace types
 }  // namespace pokesim
 
 //////////////////////// END OF src/Types/Decisions.hpp ////////////////////////
@@ -19624,6 +19614,37 @@ struct SpeciesTypes {
 }  // namespace pokesim
 
 //////////////////// END OF src/Components/SpeciesTypes.hpp ////////////////////
+
+/////////////////// START OF src/Types/Enums/ActionOrder.hpp ///////////////////
+
+namespace pokesim {
+enum class ActionOrder : std::uint8_t {
+  NONE = std::numeric_limits<std::underlying_type_t<ActionOrder>>::max(),
+  TEAM = 1U,
+  START = 2U,
+  BEFORE_TURN = 4U,
+  ITEM = BEFORE_TURN,
+
+  SWITCH = 103U,
+
+  MOVE = 200U,
+
+  RESIDUAL = 254U,
+};
+
+static constexpr inline std::array<ActionOrder, 8U> VALID_ACTION_ORDERS = {
+  ActionOrder::NONE,
+  ActionOrder::TEAM,
+  ActionOrder::START,
+  ActionOrder::BEFORE_TURN,
+  ActionOrder::ITEM,
+  ActionOrder::SWITCH,
+  ActionOrder::MOVE,
+  ActionOrder::RESIDUAL,
+};
+}  // namespace pokesim
+
+//////////////////// END OF src/Types/Enums/ActionOrder.hpp ////////////////////
 
 //////////////////// START OF src/Components/SpeedSort.hpp /////////////////////
 
@@ -20858,7 +20879,7 @@ template <>
 void check(const Winner&);
 
 template <>
-void check(const SlotDecision&);
+void check(const types::slotDecision&);
 
 template <>
 void check(const DamageRollKind&);
@@ -23017,13 +23038,7 @@ struct SimulationSetupChecks {
           const auto& slotDecision = slotDecisions[slot];
           const auto& slotDecisionInfo = slotDecisionsInfo[slot];
 
-          POKESIM_REQUIRE_NM(slotDecision.sourceSlot == slotDecisionInfo.sourceSlot);
-          POKESIM_REQUIRE_NM(slotDecision.targetSlot == slotDecisionInfo.targetSlot);
-          POKESIM_REQUIRE_NM(slotDecision.megaEvolve == slotDecisionInfo.megaEvolve);
-          POKESIM_REQUIRE_NM(slotDecision.primalRevert == slotDecisionInfo.primalRevert);
-          POKESIM_REQUIRE_NM(slotDecision.dynamax == slotDecisionInfo.dynamax);
-          POKESIM_REQUIRE_NM(slotDecision.terastallize == slotDecisionInfo.terastallize);
-          POKESIM_REQUIRE_NM(slotDecision.choice == slotDecisionInfo.choice);
+          POKESIM_REQUIRE_NM(slotDecision == slotDecisionInfo);
         }
       }
       else if (sideDecisionInfo.decisions.holds<types::teamOrder>()) {

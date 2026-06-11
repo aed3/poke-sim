@@ -230,14 +230,13 @@ TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   battleCreationInfo.runWithSimulateTurn = true;
   SideDecision p1Decision{PlayerSideId::P1};
   SideDecision p2Decision{PlayerSideId::P2};
-  SlotDecision p1SlotDecision{Slot::P1A, Slot::P1A};
-  SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
-  p1SlotDecision.moveOrItem = dex::Move::SPLASH;
-  p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-  p2SlotDecision.moveOrItem = dex::Move::THUNDERBOLT;
-  p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
+  MoveDecision p1MoveDecision{Slot::P1A, Slot::P1A, dex::Move::SPLASH};
+  MoveDecision p2MoveDecision{Slot::P2A, Slot::P1A, dex::Move::THUNDERBOLT};
+  p1Decision.decisions = types::slotDecisions{p1MoveDecision};
+  p2Decision.decisions = types::slotDecisions{p2MoveDecision};
+  sizeof(types::slotDecision)
 
-  battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
+    battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
   simulation.createInitialStates({battleCreationInfo});
   auto& options = simulation.simulateTurnOptions;
 

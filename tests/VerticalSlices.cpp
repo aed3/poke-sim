@@ -369,13 +369,11 @@ TEST_CASE(
   BattleCreationInfo battleCreationInfo;
   SideDecision p1Decision{PlayerSideId::P1};
   SideDecision p2Decision{PlayerSideId::P2};
-  SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
-  SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
+  MoveDecision p1MoveDecision{Slot::P1A, Slot::P2A, dex::Move::KNOCK_OFF};
+  MoveDecision p2MoveDecision{Slot::P2A, Slot::P1A, dex::Move::THUNDERBOLT};
 
-  p1SlotDecision.moveOrItem = dex::Move::KNOCK_OFF;
-  p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-  p2SlotDecision.moveOrItem = dex::Move::THUNDERBOLT;
-  p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
+  p1Decision.decisions = types::slotDecisions{p1MoveDecision};
+  p2Decision.decisions = types::slotDecisions{p2MoveDecision};
   battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
 
   Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
@@ -682,17 +680,13 @@ TEST_CASE(
 
   SideDecision p1Decision{PlayerSideId::P1};
   SideDecision p2Decision{PlayerSideId::P2};
-  SlotDecision p1ASlotDecision{Slot::P1A, Slot::P2B};
-  SlotDecision p1BSlotDecision{Slot::P1B, Slot::P2A};
-  SlotDecision p2ASlotDecision{Slot::P2A, Slot::P1B};
-  SlotDecision p2BSlotDecision{Slot::P2B, Slot::P2B};
+  MoveDecision p1AMoveDecision{Slot::P1A, Slot::P2B, dex::Move::MOONBLAST};
+  MoveDecision p1BMoveDecision{Slot::P1B, Slot::P2A, dex::Move::WILL_O_WISP};
+  MoveDecision p2AMoveDecision{Slot::P2A, Slot::P1B, dex::Move::KNOCK_OFF};
+  MoveDecision p2BMoveDecision{Slot::P2B, Slot::P2B, dex::Move::QUIVER_DANCE};
 
-  p1ASlotDecision.moveOrItem = dex::Move::MOONBLAST;
-  p1BSlotDecision.moveOrItem = dex::Move::WILL_O_WISP;
-  p1Decision.decisions = types::sideSlots<SlotDecision>{p1ASlotDecision, p1BSlotDecision};
-  p2ASlotDecision.moveOrItem = dex::Move::KNOCK_OFF;
-  p2BSlotDecision.moveOrItem = dex::Move::QUIVER_DANCE;
-  p2Decision.decisions = types::sideSlots<SlotDecision>{p2ASlotDecision, p2BSlotDecision};
+  p1Decision.decisions = types::slotDecisions{p1AMoveDecision, p1BMoveDecision};
+  p2Decision.decisions = types::slotDecisions{p2AMoveDecision, p2BMoveDecision};
   battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
 
   auto simulation = createDoubleBattleSimulation(pokedex, battleCreationInfo);

@@ -18,12 +18,10 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effec
   battleCreationInfo.runWithSimulateTurn = true;
   SideDecision p1Decision{PlayerSideId::P1};
   SideDecision p2Decision{PlayerSideId::P2};
-  SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
-  SlotDecision p2SlotDecision{Slot::P2A, Slot::P2A};
-  p1SlotDecision.moveOrItem = dex::Move::KNOCK_OFF;
-  p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-  p2SlotDecision.moveOrItem = dex::Move::SPLASH;
-  p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
+  MoveDecision p1MoveDecision{Slot::P1A, Slot::P2A, dex::Move::KNOCK_OFF};
+  MoveDecision p2MoveDecision{Slot::P2A, Slot::P2A, dex::Move::SPLASH};
+  p1Decision.decisions = types::slotDecisions{p1MoveDecision};
+  p2Decision.decisions = types::slotDecisions{p2MoveDecision};
 
   battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
   simulation.createInitialStates({battleCreationInfo});

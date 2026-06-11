@@ -7,25 +7,59 @@
 #include <Utilities/Variant.hpp>
 
 namespace pokesim {
-struct SlotDecision {
+struct MoveDecision {
   Slot sourceSlot = Slot::NONE;
   Slot targetSlot = Slot::NONE;
 
-  bool megaEvolve = false;
-  bool primalRevert = false;
-  bool dynamax = false;
-  bool terastallize = false;
+  dex::Move move = dex::Move::NO_MOVE;
 
-  internal::variant<std::monostate, dex::Move, dex::Item> moveOrItem;
+  bool operator==(const MoveDecision& other) const {
+    return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot && move == other.move;
+  }
+};
 
-  bool operator==(const SlotDecision& other) const {
-    return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot && megaEvolve == other.megaEvolve &&
-           primalRevert == other.primalRevert && dynamax == other.dynamax && terastallize == other.terastallize &&
-           moveOrItem == other.moveOrItem;
+struct MegaEvolveAndMoveDecision : MoveDecision {};
+struct ZMoveDecision : MoveDecision {};
+struct DynamaxAndMoveDecision : MoveDecision {};
+struct TerastallizeAndMoveDecision : MoveDecision {};
+
+struct SwitchDecision {
+  Slot sourceSlot = Slot::NONE;
+  Slot targetSlot = Slot::NONE;
+
+  bool operator==(const SwitchDecision& other) const {
+    return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot;
+  }
+};
+
+struct ItemDecision {
+  Slot sourceSlot = Slot::NONE;
+  Slot targetSlot = Slot::NONE;
+
+  dex::Item item = dex::Item::NO_ITEM;
+
+  bool operator==(const ItemDecision& other) const {
+    return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot && item == other.item;
   }
 };
 
 namespace types {
-using slotDecisions = types::sideSlots<SlotDecision>;
-}
+struct slotDecision : pokesim::internal::variant<
+                        MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision,
+                        ZMoveDecision, SwitchDecision, ItemDecision> {
+  using pokesim::internal::variant<
+    MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision, ZMoveDecision,
+    SwitchDecision, ItemDecision>::variant;
+
+  constexpr Slot sourceSlot() const {
+    return std::visit([](auto&& decision) { return decision.sourceSlot; }, *this);
+  }
+
+  constexpr Slot targetSlot() const {
+    return std::visit([](auto&& decision) { return decision.targetSlot; }, *this);
+  }
+};
+
+using slotDecisions = types::sideSlots<slotDecision>;
+}  // namespace types
 }  // namespace pokesim

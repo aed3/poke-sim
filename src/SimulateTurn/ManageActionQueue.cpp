@@ -32,43 +32,70 @@
 
 namespace pokesim::simulate_turn {
 namespace {
-void resolveSlotDecisions(
-  types::handle sideHandle, const types::slotDecisions& decisions, ActionQueue& battleActionQueue) {
+template <typename Decision>
+void resolveSlotDecision(
+  types::handle actionHandle, types::entity sideEntity, const types::slotDecision& slotDecision,
+  ActionQueue& actionQueue) {
+  if (!slotDecision.holds<Decision>()) {
+    return;
+  }
+
+  types::registry& registry = *actionHandle.registry();
+  const auto& decision = slotDecision.get<Decision>();
+
+  POKESIM_REQUIRE(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
+  POKESIM_REQUIRE(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
+
+  actionHandle.emplace<SourceSlotName>(decision.sourceSlot);
+  actionHandle.emplace<TargetSlotName>(decision.targetSlot);
+
+  SpeedSort speedSort;
+  types::entity sourceEntity = slotToPokemonEntity(registry, sideEntity, decision.sourceSlot);
+  speedSort.speed = registry.get<stat::EffectiveSpe>(sourceEntity).val;
+
+  if constexpr (std::is_base_of_v<MoveDecision, Decision>) {
+    speedSort.order = ActionOrder::MOVE;
+    speedSort.priority = Constants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
+    speedSort.fractionalPriority = false;                   // TODO (aed3): get fractionalPriority
+
+    actionHandle.emplace<action::tags::Move>();
+    actionHandle.emplace<MoveName>(decision.move);
+
+    if constexpr (!std::is_same_v<MoveDecision, Decision>) {
+      POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");
+    }
+  }
+  else if constexpr (std::is_same_v<SwitchDecision, Decision>) {
+    speedSort.order = ActionOrder::SWITCH;
+
+    actionHandle.emplace<action::tags::Switch>();
+  }
+  else if constexpr (std::is_same_v<ItemDecision, Decision>) {
+    speedSort.order = ActionOrder::ITEM;
+
+    actionHandle.emplace<action::tags::Item>();
+    actionHandle.emplace<ItemName>(decision.item);
+  }
+  else {
+    POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");
+  }
+
+  actionHandle.emplace<SpeedSort>(speedSort);
+  actionQueue.val.push_back(actionHandle.entity());
+}
+
+void resolveSlotDecisions(types::handle sideHandle, const types::slotDecisions& decisions, ActionQueue& actionQueue) {
   types::registry& registry = *sideHandle.registry();
-  for (const SlotDecision& decision : decisions) {
-    POKESIM_REQUIRE(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
-    POKESIM_REQUIRE(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
-
+  for (const types::slotDecision& decision : decisions) {
     types::handle actionHandle = {registry, registry.create()};
-    actionHandle.emplace<SourceSlotName>(decision.sourceSlot);
-    actionHandle.emplace<TargetSlotName>(decision.targetSlot);
 
-    SpeedSort speedSort;
-    types::entity sourceEntity = slotToPokemonEntity(registry, sideHandle.entity(), decision.sourceSlot);
-
-    speedSort.speed = registry.get<stat::EffectiveSpe>(sourceEntity).val;
-
-    if (decision.moveOrItem.holds<dex::Move>()) {
-      actionHandle.emplace<action::tags::Move>();
-      actionHandle.emplace<MoveName>(decision.moveOrItem.get<dex::Move>());
-
-      speedSort.order = ActionOrder::MOVE;
-      speedSort.priority = Constants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
-      speedSort.fractionalPriority = false;                   // TODO (aed3): get fractionalPriority
-    }
-    else if (decision.moveOrItem.holds<dex::Item>()) {
-      actionHandle.emplace<action::tags::Item>();
-      actionHandle.emplace<ItemName>(decision.moveOrItem.get<dex::Item>());
-      speedSort.order = ActionOrder::ITEM;
-    }
-    else {
-      actionHandle.emplace<action::tags::Switch>();
-      speedSort.order = ActionOrder::SWITCH;
-    }
-
-    actionHandle.emplace<SpeedSort>(speedSort);
-
-    battleActionQueue.val.push_back(actionHandle.entity());
+    resolveSlotDecision<MoveDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
+    resolveSlotDecision<MegaEvolveAndMoveDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
+    resolveSlotDecision<ZMoveDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
+    resolveSlotDecision<DynamaxAndMoveDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
+    resolveSlotDecision<TerastallizeAndMoveDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
+    resolveSlotDecision<SwitchDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
+    resolveSlotDecision<ItemDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
   }
 }
 
@@ -97,15 +124,15 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
-    for (const SlotDecision& decision : decisions) {
+    for (const auto& decision : decisions) {
       if (sideDecision.sideId == PlayerSideId::P1) {
         POKESIM_REQUIRE(
-          (decision.sourceSlot == Slot::P1A || decision.sourceSlot == Slot::P1B),
+          (decision.sourceSlot() == Slot::P1A || decision.sourceSlot() == Slot::P1B),
           "Source must be from a player 1 in battle slot.");
       }
       else {
         POKESIM_REQUIRE(
-          (decision.sourceSlot == Slot::P2A || decision.sourceSlot == Slot::P2B),
+          (decision.sourceSlot() == Slot::P2A || decision.sourceSlot() == Slot::P2B),
           "Source must be from a player 2 in battle slot.");
       }
     }

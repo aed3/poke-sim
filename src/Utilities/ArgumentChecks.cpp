@@ -984,7 +984,7 @@ void check(const SideDecision& sideDecision) {
   checkPlayerSideId(sideDecision.sideId);
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     const types::slotDecisions& decisions = sideDecision.decisions.get<types::slotDecisions>();
-    for (const SlotDecision& decision : decisions) {
+    for (const auto& decision : decisions) {
       check(decision);
     }
   }
@@ -1142,10 +1142,26 @@ void check(const Winner& winner) {
 }
 
 template <>
-void check(const SlotDecision& slotDecision) {
-  checkSlot(slotDecision.sourceSlot);
-  checkSlot(slotDecision.targetSlot);
-  POKESIM_REQUIRE_NM(!(slotDecision.megaEvolve && slotDecision.primalRevert));
+void check(const ActionQueue2&) {}
+
+template <>
+void check(const types::slotDecision& slotDecision) {
+  checkSlot(slotDecision.sourceSlot());
+  checkSlot(slotDecision.targetSlot());
+  auto [moveDecision, megaDecision, zMoveDecision, dynamaxDecision, teraDecision, itemDecision] = slotDecision.get_if<
+    MoveDecision,
+    MegaEvolveAndMoveDecision,
+    ZMoveDecision,
+    DynamaxAndMoveDecision,
+    TerastallizeAndMoveDecision,
+    ItemDecision>();
+
+  if (moveDecision) check(MoveName{moveDecision->move});
+  if (megaDecision) check(MoveName{megaDecision->move});
+  if (zMoveDecision) check(MoveName{zMoveDecision->move});
+  if (dynamaxDecision) check(MoveName{dynamaxDecision->move});
+  if (teraDecision) check(MoveName{teraDecision->move});
+  if (itemDecision) check(ItemName{itemDecision->item});
 }
 
 template <>
