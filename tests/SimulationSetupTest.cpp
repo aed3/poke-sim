@@ -79,13 +79,11 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
 
   SideDecision p1Decision{PlayerSideId::P1};
   SideDecision p2Decision{PlayerSideId::P2};
-  SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
-  SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
+  MoveDecision p1MoveDecision{Slot::P1A, Slot::P2A, dex::Move::FURY_ATTACK};
+  MoveDecision p2MoveDecision{Slot::P2A, Slot::P1A, dex::Move::THUNDERBOLT};
 
-  p1SlotDecision.moveOrItem = dex::Move::FURY_ATTACK;
-  p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-  p2SlotDecision.moveOrItem = dex::Move::THUNDERBOLT;
-  p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
+  p1Decision.decisions = types::slotDecisions{p1MoveDecision};
+  p2Decision.decisions = types::slotDecisions{p2MoveDecision};
 
   auto check = [&]() {
     Simulation simulation(pokedex, BattleFormat::SINGLES);
@@ -117,22 +115,24 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
       });
 
       auto checkDecision =
-        [&](types::entity decisionEntity, const pokesim::SlotDecision& decision, const PokemonCreationInfo& pokemon) {
-          if (decision.moveOrItem.holds<dex::Move>()) {
+        [&](types::entity decisionEntity, const types::slotDecision& decision, const PokemonCreationInfo& pokemon) {
+          if (decision.holds<MoveDecision>()) {
             const auto [target, move, speedSort] = registry.get<TargetSlotName, MoveName, SpeedSort>(decisionEntity);
+            const auto& moveDecision = decision.get<MoveDecision>();
 
-            REQUIRE(target.val == decision.targetSlot);
-            REQUIRE(move.val == decision.moveOrItem.get<dex::Move>());
+            REQUIRE(target.val == moveDecision.targetSlot);
+            REQUIRE(move.val == moveDecision.move);
             REQUIRE(speedSort.speed == pokemon.stats.spe);
             REQUIRE(speedSort.order == ActionOrder::MOVE);
             REQUIRE(speedSort.priority == 0);
             REQUIRE(speedSort.fractionalPriority == false);
           }
-          else {
+          else if (decision.holds<SwitchDecision>()) {
             REQUIRE(registry.all_of<action::tags::Switch, TargetSlotName, SpeedSort>(decisionEntity));
             const auto [target, speedSort] = registry.get<TargetSlotName, SpeedSort>(decisionEntity);
+            const auto& switchDecision = decision.get<SwitchDecision>();
 
-            REQUIRE(target.val == decision.targetSlot);
+            REQUIRE(target.val == switchDecision.targetSlot);
             REQUIRE(speedSort.speed == pokemon.stats.spe);
             REQUIRE(speedSort.order == ActionOrder::SWITCH);
             REQUIRE(speedSort.priority == 0);
@@ -176,18 +176,15 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
 
         switch (i) {
           case 0U: {
-            newP1SlotDecision.moveOrItem = p1SlotDecision.moveOrItem;
-            newP1SlotDecision.targetSlot = Slot::P2A;
+            newP1SlotDecision = MoveDecision{p1MoveDecision.sourceSlot, Slot::P2A, p1MoveDecision.move};
             break;
           }
           case 1U: {
-            newP1SlotDecision.moveOrItem = std::monostate{};
-            newP1SlotDecision.targetSlot = Slot::P1B;
+            newP1SlotDecision = SwitchDecision{p1MoveDecision.sourceSlot, Slot::P1B};
             break;
           }
           case 2U: {
-            newP1SlotDecision.moveOrItem = std::monostate{};
-            newP1SlotDecision.targetSlot = Slot::P1C;
+            newP1SlotDecision = SwitchDecision{p1MoveDecision.sourceSlot, Slot::P1C};
             break;
           }
           default: break;
@@ -195,18 +192,15 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
 
         switch (j) {
           case 0U: {
-            newP2SlotDecision.moveOrItem = p2SlotDecision.moveOrItem;
-            newP2SlotDecision.targetSlot = Slot::P1A;
+            newP2SlotDecision = MoveDecision{p2MoveDecision.sourceSlot, Slot::P2A, p2MoveDecision.move};
             break;
           }
           case 1U: {
-            newP2SlotDecision.moveOrItem = std::monostate{};
-            newP2SlotDecision.targetSlot = Slot::P2B;
+            newP2SlotDecision = SwitchDecision{p2MoveDecision.sourceSlot, Slot::P2B};
             break;
           }
           case 2U: {
-            newP2SlotDecision.moveOrItem = std::monostate{};
-            newP2SlotDecision.targetSlot = Slot::P2C;
+            newP2SlotDecision = SwitchDecision{p2MoveDecision.sourceSlot, Slot::P2C};
             break;
           }
           default: break;

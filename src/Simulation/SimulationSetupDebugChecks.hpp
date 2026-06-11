@@ -382,13 +382,7 @@ struct SimulationSetupChecks {
           const auto& slotDecision = slotDecisions[slot];
           const auto& slotDecisionInfo = slotDecisionsInfo[slot];
 
-          POKESIM_REQUIRE_NM(slotDecision.sourceSlot == slotDecisionInfo.sourceSlot);
-          POKESIM_REQUIRE_NM(slotDecision.targetSlot == slotDecisionInfo.targetSlot);
-          POKESIM_REQUIRE_NM(slotDecision.megaEvolve == slotDecisionInfo.megaEvolve);
-          POKESIM_REQUIRE_NM(slotDecision.primalRevert == slotDecisionInfo.primalRevert);
-          POKESIM_REQUIRE_NM(slotDecision.dynamax == slotDecisionInfo.dynamax);
-          POKESIM_REQUIRE_NM(slotDecision.terastallize == slotDecisionInfo.terastallize);
-          POKESIM_REQUIRE_NM(slotDecision.moveOrItem == slotDecisionInfo.moveOrItem);
+          POKESIM_REQUIRE_NM(slotDecision == slotDecisionInfo);
         }
       }
       else if (sideDecisionInfo.decisions.holds<types::teamOrder>()) {

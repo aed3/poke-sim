@@ -149,34 +149,34 @@ struct Random {
     SideDecision p1Decision{PlayerSideId::P1};
     SideDecision p2Decision{PlayerSideId::P2};
     if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
-      SlotDecision p1SlotDecision{Slot::P1A, Slot::P2A};
-      SlotDecision p2SlotDecision{Slot::P2A, Slot::P1A};
-      p1SlotDecision.moveOrItem = pickFromList(battle.sides.p1().team[0].moves, rngState).name;
-      p2SlotDecision.moveOrItem = pickFromList(battle.sides.p2().team[0].moves, rngState).name;
+      MoveDecision p1MoveDecision{Slot::P1A, Slot::P2A};
+      MoveDecision p2MoveDecision{Slot::P2A, Slot::P1A};
+      p1MoveDecision.move = pickFromList(battle.sides.p1().team[0].moves, rngState).name;
+      p2MoveDecision.move = pickFromList(battle.sides.p2().team[0].moves, rngState).name;
 
-      p1Decision.decisions = types::sideSlots<SlotDecision>{p1SlotDecision};
-      p2Decision.decisions = types::sideSlots<SlotDecision>{p2SlotDecision};
+      p1Decision.decisions = types::slotDecisions{p1MoveDecision};
+      p2Decision.decisions = types::slotDecisions{p2MoveDecision};
     }
     else {
-      SlotDecision p1ASlotDecision{Slot::P1A, pickFromList(std::vector{Slot::P1B, Slot::P2A, Slot::P2B}, rngState)};
-      SlotDecision p1BSlotDecision{Slot::P1B, pickFromList(std::vector{Slot::P1A, Slot::P2A, Slot::P2B}, rngState)};
-      SlotDecision p2ASlotDecision{Slot::P2A, pickFromList(std::vector{Slot::P2B, Slot::P1A, Slot::P1B}, rngState)};
-      SlotDecision p2BSlotDecision{Slot::P2B, pickFromList(std::vector{Slot::P2A, Slot::P1A, Slot::P1B}, rngState)};
-      p1ASlotDecision.moveOrItem = pickFromList(battle.sides.p1().team[0].moves, rngState).name;
-      p1BSlotDecision.moveOrItem = pickFromList(battle.sides.p1().team[1].moves, rngState).name;
-      p2ASlotDecision.moveOrItem = pickFromList(battle.sides.p2().team[0].moves, rngState).name;
-      p2BSlotDecision.moveOrItem = pickFromList(battle.sides.p2().team[1].moves, rngState).name;
+      MoveDecision p1AMoveDecision{Slot::P1A, pickFromList(std::vector{Slot::P1B, Slot::P2A, Slot::P2B}, rngState)};
+      MoveDecision p1BMoveDecision{Slot::P1B, pickFromList(std::vector{Slot::P1A, Slot::P2A, Slot::P2B}, rngState)};
+      MoveDecision p2AMoveDecision{Slot::P2A, pickFromList(std::vector{Slot::P2B, Slot::P1A, Slot::P1B}, rngState)};
+      MoveDecision p2BMoveDecision{Slot::P2B, pickFromList(std::vector{Slot::P2A, Slot::P1A, Slot::P1B}, rngState)};
+      p1AMoveDecision.move = pickFromList(battle.sides.p1().team[0].moves, rngState).name;
+      p1BMoveDecision.move = pickFromList(battle.sides.p1().team[1].moves, rngState).name;
+      p2AMoveDecision.move = pickFromList(battle.sides.p2().team[0].moves, rngState).name;
+      p2BMoveDecision.move = pickFromList(battle.sides.p2().team[1].moves, rngState).name;
 
-      p1Decision.decisions = types::slotDecisions{p1ASlotDecision, p1BSlotDecision};
-      p2Decision.decisions = types::slotDecisions{p2ASlotDecision, p2BSlotDecision};
+      p1Decision.decisions = types::slotDecisions{p1AMoveDecision, p1BMoveDecision};
+      p2Decision.decisions = types::slotDecisions{p2AMoveDecision, p2BMoveDecision};
     }
 
     TurnDecisionInfo turnDecision{p1Decision, p2Decision};
 
     for (auto& sideDecision : turnDecision) {
       for (auto& slotDecision : sideDecision.decisions.get<types::slotDecisions>()) {
-        if (simulation.pokedex().moveHas<move::tags::Self>(slotDecision.moveOrItem.get<dex::Move>())) {
-          slotDecision.targetSlot = slotDecision.sourceSlot;
+        if (simulation.pokedex().moveHas<move::tags::Self>(slotDecision.get<MoveDecision>().move)) {
+          slotDecision.get<MoveDecision>().targetSlot = slotDecision.sourceSlot();
         }
       }
     }

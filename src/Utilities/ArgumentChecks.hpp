@@ -536,7 +536,7 @@ template <>
 void check(const Winner&);
 
 template <>
-void check(const SlotDecision&);
+void check(const types::slotDecision&);
 
 template <>
 void check(const DamageRollKind&);
