@@ -6,14 +6,15 @@
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Battle/Side/ManageSideState.hpp>
 #include <CalcDamage/Helpers.hpp>
+#include <Components/ActionQueue.hpp>
 #include <Components/AddedTargets.hpp>
 #include <Components/CloneFromCloneTo.hpp>
-#include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/FaintQueue.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
+#include <Components/EntityHolders/RecycledEntities.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SourceSlotName.hpp>
@@ -22,7 +23,6 @@
 #include <Components/PlayerSide.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
-#include <Components/SpeedSort.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
@@ -189,7 +189,7 @@ void checkWin(types::handle battleHandle, const Sides& sides) {
     types::teamPositionIndex pokemonLeft = foeSidePokemonLeft(registry, sideEntity);
     if (!pokemonLeft) {
       battleHandle.emplace<Winner>(registry.get<PlayerSide>(sideEntity).val);
-      clearActionQueue(battleHandle, battleHandle.get<ActionQueue>());
+      clearActionQueue(battleHandle.get<ActionQueue>());
       return;
     }
   }
@@ -293,8 +293,11 @@ void simulateTurn(Simulation& simulation) {
     simulation.addToEntities<pokesim::tags::CloneFrom, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
     const auto entityMap = clone(simulation.registry, 1U);
     for (const auto& inputBattleMapping : entityMap) {
-      simulation.registry.emplace<tags::Input>(inputBattleMapping.first);
-      simulation.registry.remove<pokesim::tags::SimulateTurn>(inputBattleMapping.first);
+      types::entity original = inputBattleMapping.first;
+      if (simulation.registry.all_of<pokesim::tags::SimulateTurn>(original)) {
+        simulation.registry.emplace<tags::Input>(original);
+        simulation.registry.remove<pokesim::tags::SimulateTurn>(original);
+      }
     }
   }
 

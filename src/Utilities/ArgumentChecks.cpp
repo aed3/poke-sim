@@ -107,12 +107,8 @@ void checkAction(types::entity actionEntity, const types::registry& registry) {
     POKESIM_REQUIRE_NM(!has<action::tags::Switch>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<SourceSlotName>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<TargetSlotName>(actionEntity, registry));
-    POKESIM_REQUIRE_NM(!has<SpeedSort>(actionEntity, registry));
 
     checkTeamOrder(registry.get<action::Team>(actionEntity).val);
-  }
-  else {
-    POKESIM_REQUIRE_NM(has<SpeedSort>(actionEntity, registry));
   }
 
   if (registry.any_of<action::tags::Item, action::tags::Move, action::tags::Switch>(actionEntity)) {
@@ -120,10 +116,9 @@ void checkAction(types::entity actionEntity, const types::registry& registry) {
     POKESIM_REQUIRE_NM(has<TargetSlotName>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<action::Team>(actionEntity, registry));
 
-    const auto& [source, target, speedSort] = registry.get<SourceSlotName, TargetSlotName, SpeedSort>(actionEntity);
+    const auto& [source, target] = registry.get<SourceSlotName, TargetSlotName>(actionEntity);
     check(source);
     check(target);
-    check(speedSort);
 
     if (has<action::tags::Item>(actionEntity, registry)) {
       check(registry.get<ItemName>(actionEntity));
@@ -325,6 +320,25 @@ void checkPercentChance(types::percentChance chance) {
 template <>
 void check(const Accuracy& accuracy) {
   checkBounds<Constants::MoveBaseAccuracy>(accuracy.val);
+}
+
+template <>
+void check(const ActionQueueItem& actionQueueItem) {
+  POKESIM_REQUIRE_NM(listContains(VALID_ACTION_ORDERS, actionQueueItem.order));
+  checkBounds<Constants::MovePriority>(actionQueueItem.priority);
+  checkStat(actionQueueItem.speed);
+
+  if (actionQueueItem.order == ActionOrder::MOVE || actionQueueItem.order == ActionOrder::SWITCH) {
+    check(actionQueueItem.decision);
+  }
+}
+
+template <>
+void check(const ActionQueue& actionQueue) {
+  checkBounds<Constants::ActionQueueLength>(actionQueue.val.size());
+  for (const ActionQueueItem& actionQueueItem : actionQueue.val) {
+    check(actionQueueItem);
+  }
 }
 
 template <>
@@ -552,14 +566,6 @@ void check(const Ivs& ivs) {
 }
 
 template <>
-void check(const ActionQueue& actionQueue, const types::registry& registry) {
-  checkBounds<Constants::ActionQueueLength>(actionQueue.val.size());
-  for (types::entity entity : actionQueue.val) {
-    checkAction(entity, registry);
-  }
-}
-
-template <>
 void check(const Battle& battle, const types::registry& registry) {
   checkBattle(battle.val, registry);
 }
@@ -587,11 +593,6 @@ void check(const ChoiceLock& choiceLock, const types::registry& registry) {
 template <>
 void check(const CurrentAction& currentAction, const types::registry& registry) {
   checkAction(currentAction.val, registry);
-}
-
-template <>
-void check(const NextAction& nextAction, const types::registry& registry) {
-  checkAction(nextAction.val, registry);
 }
 
 template <>
@@ -697,6 +698,12 @@ void check(const MoveSlots& moveSlots, const types::registry& registry) {
 template <>
 void check(const Pokemon& pokemon, const types::registry& registry) {
   checkPokemon(pokemon.val, registry);
+}
+
+template <>
+void check(const RecycledAction& recycledAction, const types::registry& registry) {
+  types::registry::checkEntity(recycledAction.val, registry);
+  POKESIM_REQUIRE_NM(has<tags::RecycledAction>(recycledAction.val, registry));
 }
 
 template <>
@@ -1063,13 +1070,6 @@ void check(const SpeciesTypes& speciesTypes) {
 }
 
 template <>
-void check(const SpeedSort& speedSort) {
-  POKESIM_REQUIRE_NM(listContains(VALID_ACTION_ORDERS, speedSort.order));
-  checkBounds<Constants::MovePriority>(speedSort.priority);
-  checkStat(speedSort.speed);
-}
-
-template <>
 void check(const stat::Hp& hp) {
   checkStat(hp.val, true);
 }
@@ -1140,9 +1140,6 @@ void check(const Winner& winner) {
   POKESIM_REQUIRE_NM(
     winner.val == PlayerSideId::P1 || winner.val == PlayerSideId::P2 || winner.val == PlayerSideId::NONE);
 }
-
-template <>
-void check(const ActionQueue2&) {}
 
 template <>
 void check(const types::slotDecision& slotDecision) {

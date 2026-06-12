@@ -106,50 +106,49 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
       const auto id = registry.get<Id>(group[i]).val;
       REQUIRE(queue.size() == 2U);
 
-      auto p1DecisionEntity = *std::find_if(queue.begin(), queue.end(), [&](types::entity entity) {
-        return registry.get<SourceSlotName>(entity).val == Slot::P1A;
+      auto p1DecisionItem = *std::find_if(queue.begin(), queue.end(), [&](const ActionQueueItem& item) {
+        return item.decision.sourceSlot() == Slot::P1A;
       });
 
-      auto p2DecisionEntity = *std::find_if(queue.begin(), queue.end(), [&](types::entity entity) {
-        return registry.get<SourceSlotName>(entity).val == Slot::P2A;
+      auto p2DecisionItem = *std::find_if(queue.begin(), queue.end(), [&](const ActionQueueItem& item) {
+        return item.decision.sourceSlot() == Slot::P2A;
       });
 
       auto checkDecision =
-        [&](types::entity decisionEntity, const types::slotDecision& decision, const PokemonCreationInfo& pokemon) {
+        [&](ActionQueueItem actionQueueItem, const types::slotDecision& decision, const PokemonCreationInfo& pokemon) {
           if (decision.holds<MoveDecision>()) {
-            const auto [target, move, speedSort] = registry.get<TargetSlotName, MoveName, SpeedSort>(decisionEntity);
-            const auto& moveDecision = decision.get<MoveDecision>();
+            const auto& trueMoveDecision = actionQueueItem.decision.get<MoveDecision>();
+            const auto& idealMoveDecision = decision.get<MoveDecision>();
 
-            REQUIRE(target.val == moveDecision.targetSlot);
-            REQUIRE(move.val == moveDecision.move);
-            REQUIRE(speedSort.speed == pokemon.stats.spe);
-            REQUIRE(speedSort.order == ActionOrder::MOVE);
-            REQUIRE(speedSort.priority == 0);
-            REQUIRE(speedSort.fractionalPriority == false);
+            REQUIRE(trueMoveDecision == idealMoveDecision);
+
+            REQUIRE(actionQueueItem.speed == pokemon.stats.spe);
+            REQUIRE(actionQueueItem.order == ActionOrder::MOVE);
+            REQUIRE(actionQueueItem.priority == 0);
+            REQUIRE(actionQueueItem.fractionalPriority == false);
           }
           else if (decision.holds<SwitchDecision>()) {
-            REQUIRE(registry.all_of<action::tags::Switch, TargetSlotName, SpeedSort>(decisionEntity));
-            const auto [target, speedSort] = registry.get<TargetSlotName, SpeedSort>(decisionEntity);
-            const auto& switchDecision = decision.get<SwitchDecision>();
+            const auto& trueSwitchDecision = actionQueueItem.decision.get<SwitchDecision>();
+            const auto& idealSwitchDecision = decision.get<SwitchDecision>();
 
-            REQUIRE(target.val == switchDecision.targetSlot);
-            REQUIRE(speedSort.speed == pokemon.stats.spe);
-            REQUIRE(speedSort.order == ActionOrder::SWITCH);
-            REQUIRE(speedSort.priority == 0);
-            REQUIRE(speedSort.fractionalPriority == false);
+            REQUIRE(trueSwitchDecision == idealSwitchDecision);
+            REQUIRE(actionQueueItem.speed == pokemon.stats.spe);
+            REQUIRE(actionQueueItem.order == ActionOrder::SWITCH);
+            REQUIRE(actionQueueItem.priority == 0);
+            REQUIRE(actionQueueItem.fractionalPriority == false);
           }
         };
 
       {
         INFO("P1 Action");
         const auto& decision = battleInfo.decisionsToSimulate[id].p1().decisions.get<types::slotDecisions>()[0];
-        checkDecision(p1DecisionEntity, decision, battleInfo.sides.p1().team[0]);
+        checkDecision(p1DecisionItem, decision, battleInfo.sides.p1().team[0]);
       }
 
       {
         INFO("P2 Action");
         const auto& decision = battleInfo.decisionsToSimulate[id].p2().decisions.get<types::slotDecisions>()[0];
-        checkDecision(p2DecisionEntity, decision, battleInfo.sides.p2().team[0]);
+        checkDecision(p2DecisionItem, decision, battleInfo.sides.p2().team[0]);
       }
     }
   };

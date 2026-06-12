@@ -9,10 +9,6 @@ struct CurrentAction {
   types::entity val{};
 };
 
-struct NextAction {
-  types::entity val{};
-};
-
 struct CurrentActionTargets {
   types::targets<types::entity> val{};
 };

@@ -6,7 +6,6 @@
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/CloneFromCloneTo.hpp>
-#include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>

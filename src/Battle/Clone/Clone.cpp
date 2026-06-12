@@ -5,10 +5,10 @@
 #include <Components/Names/MoveNames.hpp>
 #include <Components/PP.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
-#include <Components/SpeedSort.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/RecycledEntities.hpp>
 #include <Config/Config.hpp>
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
@@ -42,20 +42,18 @@ void traverseBattle(types::registry& registry, VisitEntity visitEntity = nullptr
   const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
   using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
 
-  for (const auto [entity, sides, actionQueue] : registry.view<Tag, tags::Battle, Sides, ActionQueue>().each()) {
+  for (const auto [entity, sides] : registry.view<Tag, tags::Battle, Sides>().each()) {
     for (auto side : sides.val) {
       registry.emplace<Tag>(side);
-    }
-    for (auto queueItem : actionQueue.val) {
-      registry.emplace<Tag>(queueItem);
     }
 
     if constexpr (ForCloning) {
       visitEntity(entity);
     }
   }
-  for (const auto [entity, currentAction] : registry.view<Tag, tags::Battle, CurrentAction>().each()) {
-    registry.emplace<Tag>(currentAction.val);
+
+  for (const auto [entity, recycledAction] : registry.view<Tag, tags::Battle, RecycledAction>().each()) {
+    registry.emplace<Tag>(recycledAction.val);
   }
 }
 
@@ -80,8 +78,8 @@ void traverseAction(types::registry& registry, VisitEntity visitEntity = nullptr
   const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
   using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
 
-  if constexpr (ForCloning) {
-    for (types::entity entity : registry.view<Tag, SpeedSort>()) {
+  for (types::entity entity : registry.view<Tag, tags::RecycledAction>()) {
+    if constexpr (ForCloning) {
       visitEntity(entity);
     }
   }
@@ -289,7 +287,6 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   }
 
   // Not simplified further to a, for example, packed template type list, to make debugging what type went wrong easier
-  remapComponentEntities<ActionQueue>(registry, entityMap);
   remapComponentEntities<Battle>(registry, entityMap);
   remapComponentEntities<ChoiceLock>(registry, entityMap);
   remapComponentEntities<CurrentAction>(registry, entityMap);
@@ -309,8 +306,8 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<FoeSide>(registry, entityMap);
   remapComponentEntities<LastUsedMove>(registry, entityMap);
   remapComponentEntities<MoveSlots>(registry, entityMap);
-  remapComponentEntities<NextAction>(registry, entityMap);
   remapComponentEntities<Pokemon>(registry, entityMap);
+  remapComponentEntities<RecycledAction>(registry, entityMap);
   remapComponentEntities<Side>(registry, entityMap);
   remapComponentEntities<Sides>(registry, entityMap);
   remapComponentEntities<Team>(registry, entityMap);
