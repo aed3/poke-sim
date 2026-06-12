@@ -7,11 +7,11 @@
 #include <AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp>
 #include <Battle/Setup/BattleStateSetup.hpp>
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
+#include <Components/ActionQueue.hpp>
 #include <Components/AnalyzeEffect/Aliases.hpp>
 #include <Components/AnalyzeEffect/AnalyzeEffectInputs.hpp>
 #include <Components/Boosts.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
-#include <Components/EntityHolders/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>

@@ -34,12 +34,12 @@ class variant : public std::variant<Types...> {
 
   template <typename... Type>
   constexpr auto get_if() const {
-    return std::forward_as_tuple(std::get_if<Type>(this)...);
+    return std::make_tuple(std::get_if<Type>(this)...);
   }
 
   template <typename... Type>
   constexpr auto get_if() {
-    return std::forward_as_tuple(std::get_if<Type>(this)...);
+    return std::make_tuple(std::get_if<Type>(this)...);
   }
 };
 }  // namespace pokesim::internal

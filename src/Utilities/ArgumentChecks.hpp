@@ -12,6 +12,8 @@
 
 namespace pokesim {
 struct Accuracy;
+struct ActionQueueItem;
+struct ActionQueue;
 struct AddedTargets;
 struct BaseEffectChance;
 struct BasePower;
@@ -26,14 +28,12 @@ struct DamageRollModifiers;
 struct DamageRolls;
 struct Evs;
 struct Ivs;
-struct ActionQueue;
 struct Battle;
 struct ParentBattle;
 struct RootBattle;
 struct ParentEntity;
 struct ChoiceLock;
 struct CurrentAction;
-struct NextAction;
 struct CurrentActionTargets;
 struct CurrentActionSource;
 struct CurrentActionTarget;
@@ -51,6 +51,7 @@ struct FoeSide;
 struct LastUsedMove;
 struct MoveSlots;
 struct Pokemon;
+struct RecycledAction;
 struct Side;
 struct Sides;
 struct Team;
@@ -88,7 +89,6 @@ struct RngSeed;
 struct SideDecision;
 struct SpeedTieIndexes;
 struct SpeciesTypes;
-struct SpeedSort;
 struct Turn;
 struct Winner;
 namespace analyze_effect {
@@ -163,6 +163,12 @@ void checkPercentChance(types::percentChance);
 
 template <>
 void check(const Accuracy&);
+
+template <>
+void check(const ActionQueueItem&);
+
+template <>
+void check(const ActionQueue&);
 
 template <>
 void check(const AddedTargets&);
@@ -248,9 +254,6 @@ template <>
 void check(const Ivs&);
 
 template <>
-void check(const ActionQueue&, const types::registry&);
-
-template <>
 void check(const Battle&, const types::registry&);
 
 template <>
@@ -267,9 +270,6 @@ void check(const ChoiceLock&, const types::registry&);
 
 template <>
 void check(const CurrentAction&, const types::registry&);
-
-template <>
-void check(const NextAction&, const types::registry&);
 
 template <>
 void check(const CurrentActionTargets&, const types::registry&);
@@ -321,6 +321,9 @@ void check(const MoveSlots&, const types::registry&);
 
 template <>
 void check(const Pokemon&, const types::registry&);
+
+template <>
+void check(const RecycledAction&, const types::registry&);
 
 template <>
 void check(const Side&, const types::registry&);
@@ -489,9 +492,6 @@ void check(const analyze_effect::EffectMultiplier&);
 
 template <>
 void check(const SpeciesTypes&);
-
-template <>
-void check(const SpeedSort&);
 
 template <>
 void check(const stat::Hp&);

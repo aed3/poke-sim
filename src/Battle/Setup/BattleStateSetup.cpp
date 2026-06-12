@@ -1,7 +1,8 @@
 #include "BattleStateSetup.hpp"
 
-#include <Components/EntityHolders/ActionQueue.hpp>
+#include <Components/ActionQueue.hpp>
 #include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/RecycledEntities.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/ID.hpp>
 #include <Components/PlayerSide.hpp>
@@ -9,6 +10,7 @@
 #include <Components/RNGSeed.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
+#include <Components/Tags/RecycledEntities.hpp>
 #include <Components/Turn.hpp>
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
@@ -28,6 +30,9 @@ BattleStateSetup::BattleStateSetup(types::registry& registry, types::entity enti
   if (!handle.any_of<ActionQueue, tags::Battle>()) {
     handle.emplace<ActionQueue>();
     handle.emplace<tags::Battle>();
+
+    types::entity recycledAction = handle.emplace<RecycledAction>(registry.create()).val;
+    registry.emplace<tags::RecycledAction>(recycledAction);
   }
 }
 
@@ -70,7 +75,7 @@ void BattleStateSetup::setRNGSeed(std::optional<types::rngState> seed) {
   handle.emplace<RngSeed>(seed.value());
 }
 
-void BattleStateSetup::setActionQueue(const std::vector<types::entity>& queue) {
+void BattleStateSetup::setActionQueue(const std::vector<ActionQueueItem>& queue) {
   handle.emplace<ActionQueue>(queue);
 }
 

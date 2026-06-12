@@ -265,12 +265,8 @@ void checkAction(types::entity actionEntity, const types::registry& registry) {
     POKESIM_REQUIRE_NM(!has<action::tags::Switch>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<SourceSlotName>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<TargetSlotName>(actionEntity, registry));
-    POKESIM_REQUIRE_NM(!has<SpeedSort>(actionEntity, registry));
 
     checkTeamOrder(registry.get<action::Team>(actionEntity).val);
-  }
-  else {
-    POKESIM_REQUIRE_NM(has<SpeedSort>(actionEntity, registry));
   }
 
   if (registry.any_of<action::tags::Item, action::tags::Move, action::tags::Switch>(actionEntity)) {
@@ -278,10 +274,9 @@ void checkAction(types::entity actionEntity, const types::registry& registry) {
     POKESIM_REQUIRE_NM(has<TargetSlotName>(actionEntity, registry));
     POKESIM_REQUIRE_NM(!has<action::Team>(actionEntity, registry));
 
-    const auto& [source, target, speedSort] = registry.get<SourceSlotName, TargetSlotName, SpeedSort>(actionEntity);
+    const auto& [source, target] = registry.get<SourceSlotName, TargetSlotName>(actionEntity);
     check(source);
     check(target);
-    check(speedSort);
 
     if (has<action::tags::Item>(actionEntity, registry)) {
       check(registry.get<ItemName>(actionEntity));
@@ -483,6 +478,25 @@ void checkPercentChance(types::percentChance chance) {
 template <>
 void check(const Accuracy& accuracy) {
   checkBounds<Constants::MoveBaseAccuracy>(accuracy.val);
+}
+
+template <>
+void check(const ActionQueueItem& actionQueueItem) {
+  POKESIM_REQUIRE_NM(listContains(VALID_ACTION_ORDERS, actionQueueItem.order));
+  checkBounds<Constants::MovePriority>(actionQueueItem.priority);
+  checkStat(actionQueueItem.speed);
+
+  if (actionQueueItem.order == ActionOrder::MOVE || actionQueueItem.order == ActionOrder::SWITCH) {
+    check(actionQueueItem.decision);
+  }
+}
+
+template <>
+void check(const ActionQueue& actionQueue) {
+  checkBounds<Constants::ActionQueueLength>(actionQueue.val.size());
+  for (const ActionQueueItem& actionQueueItem : actionQueue.val) {
+    check(actionQueueItem);
+  }
 }
 
 template <>
@@ -710,14 +724,6 @@ void check(const Ivs& ivs) {
 }
 
 template <>
-void check(const ActionQueue& actionQueue, const types::registry& registry) {
-  checkBounds<Constants::ActionQueueLength>(actionQueue.val.size());
-  for (types::entity entity : actionQueue.val) {
-    checkAction(entity, registry);
-  }
-}
-
-template <>
 void check(const Battle& battle, const types::registry& registry) {
   checkBattle(battle.val, registry);
 }
@@ -745,11 +751,6 @@ void check(const ChoiceLock& choiceLock, const types::registry& registry) {
 template <>
 void check(const CurrentAction& currentAction, const types::registry& registry) {
   checkAction(currentAction.val, registry);
-}
-
-template <>
-void check(const NextAction& nextAction, const types::registry& registry) {
-  checkAction(nextAction.val, registry);
 }
 
 template <>
@@ -855,6 +856,12 @@ void check(const MoveSlots& moveSlots, const types::registry& registry) {
 template <>
 void check(const Pokemon& pokemon, const types::registry& registry) {
   checkPokemon(pokemon.val, registry);
+}
+
+template <>
+void check(const RecycledAction& recycledAction, const types::registry& registry) {
+  types::registry::checkEntity(recycledAction.val, registry);
+  POKESIM_REQUIRE_NM(has<tags::RecycledAction>(recycledAction.val, registry));
 }
 
 template <>
@@ -1221,13 +1228,6 @@ void check(const SpeciesTypes& speciesTypes) {
 }
 
 template <>
-void check(const SpeedSort& speedSort) {
-  POKESIM_REQUIRE_NM(listContains(VALID_ACTION_ORDERS, speedSort.order));
-  checkBounds<Constants::MovePriority>(speedSort.priority);
-  checkStat(speedSort.speed);
-}
-
-template <>
 void check(const stat::Hp& hp) {
   checkStat(hp.val, true);
 }
@@ -1298,9 +1298,6 @@ void check(const Winner& winner) {
   POKESIM_REQUIRE_NM(
     winner.val == PlayerSideId::P1 || winner.val == PlayerSideId::P2 || winner.val == PlayerSideId::NONE);
 }
-
-template <>
-void check(const ActionQueue2&) {}
 
 template <>
 void check(const types::slotDecision& slotDecision) {
@@ -2469,7 +2466,7 @@ void checkWin(types::handle battleHandle, const Sides& sides) {
     types::teamPositionIndex pokemonLeft = foeSidePokemonLeft(registry, sideEntity);
     if (!pokemonLeft) {
       battleHandle.emplace<Winner>(registry.get<PlayerSide>(sideEntity).val);
-      clearActionQueue(battleHandle, battleHandle.get<ActionQueue>());
+      clearActionQueue(battleHandle.get<ActionQueue>());
       return;
     }
   }
@@ -2573,8 +2570,11 @@ void simulateTurn(Simulation& simulation) {
     simulation.addToEntities<pokesim::tags::CloneFrom, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
     const auto entityMap = clone(simulation.registry, 1U);
     for (const auto& inputBattleMapping : entityMap) {
-      simulation.registry.emplace<tags::Input>(inputBattleMapping.first);
-      simulation.registry.remove<pokesim::tags::SimulateTurn>(inputBattleMapping.first);
+      types::entity original = inputBattleMapping.first;
+      if (simulation.registry.all_of<pokesim::tags::SimulateTurn>(original)) {
+        simulation.registry.emplace<tags::Input>(original);
+        simulation.registry.remove<pokesim::tags::SimulateTurn>(original);
+      }
     }
   }
 
@@ -3193,78 +3193,59 @@ template void setRandomEventChances<5U>(types::handle, const Simulation&, const 
 namespace pokesim::simulate_turn {
 namespace {
 template <typename Decision>
-void resolveSlotDecision(
-  types::handle actionHandle, types::entity sideEntity, const types::slotDecision& slotDecision,
-  ActionQueue& actionQueue) {
+void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& slotDecision, ActionQueue& actionQueue) {
   if (!slotDecision.holds<Decision>()) {
     return;
   }
 
-  types::registry& registry = *actionHandle.registry();
+  types::registry& registry = *sideHandle.registry();
   const auto& decision = slotDecision.get<Decision>();
 
   POKESIM_REQUIRE(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
   POKESIM_REQUIRE(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
 
-  actionHandle.emplace<SourceSlotName>(decision.sourceSlot);
-  actionHandle.emplace<TargetSlotName>(decision.targetSlot);
+  ActionQueueItem actionQueueItem;
+  actionQueueItem.decision = decision;
 
-  SpeedSort speedSort;
-  types::entity sourceEntity = slotToPokemonEntity(registry, sideEntity, decision.sourceSlot);
-  speedSort.speed = registry.get<stat::EffectiveSpe>(sourceEntity).val;
+  types::entity sourceEntity = slotToPokemonEntity(registry, sideHandle.entity(), decision.sourceSlot);
+  actionQueueItem.speed = registry.get<stat::EffectiveSpe>(sourceEntity).val;
 
   if constexpr (std::is_base_of_v<MoveDecision, Decision>) {
-    speedSort.order = ActionOrder::MOVE;
-    speedSort.priority = Constants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
-    speedSort.fractionalPriority = false;                   // TODO (aed3): get fractionalPriority
-
-    actionHandle.emplace<action::tags::Move>();
-    actionHandle.emplace<MoveName>(decision.move);
+    actionQueueItem.order = ActionOrder::MOVE;
+    actionQueueItem.priority = Constants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
+    actionQueueItem.fractionalPriority = false;                   // TODO (aed3): get fractionalPriority
 
     if constexpr (!std::is_same_v<MoveDecision, Decision>) {
       POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");
     }
   }
   else if constexpr (std::is_same_v<SwitchDecision, Decision>) {
-    speedSort.order = ActionOrder::SWITCH;
-
-    actionHandle.emplace<action::tags::Switch>();
+    actionQueueItem.order = ActionOrder::SWITCH;
   }
   else if constexpr (std::is_same_v<ItemDecision, Decision>) {
-    speedSort.order = ActionOrder::ITEM;
-
-    actionHandle.emplace<action::tags::Item>();
-    actionHandle.emplace<ItemName>(decision.item);
+    actionQueueItem.order = ActionOrder::ITEM;
   }
   else {
     POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");
   }
 
-  actionHandle.emplace<SpeedSort>(speedSort);
-  actionQueue.val.push_back(actionHandle.entity());
+  actionQueue.val.push_back(actionQueueItem);
 }
 
 void resolveSlotDecisions(types::handle sideHandle, const types::slotDecisions& decisions, ActionQueue& actionQueue) {
-  types::registry& registry = *sideHandle.registry();
   for (const types::slotDecision& decision : decisions) {
-    types::handle actionHandle = {registry, registry.create()};
-
-    resolveSlotDecision<MoveDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
-    resolveSlotDecision<MegaEvolveAndMoveDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
-    resolveSlotDecision<ZMoveDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
-    resolveSlotDecision<DynamaxAndMoveDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
-    resolveSlotDecision<TerastallizeAndMoveDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
-    resolveSlotDecision<SwitchDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
-    resolveSlotDecision<ItemDecision>(actionHandle, sideHandle.entity(), decision, actionQueue);
+    resolveSlotDecision<MoveDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<MegaEvolveAndMoveDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<ZMoveDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<DynamaxAndMoveDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<TerastallizeAndMoveDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<SwitchDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<ItemDecision>(sideHandle, decision, actionQueue);
   }
 }
 
 void resolveTeamDecision(types::registry& registry, const types::teamOrder& teamOrder, ActionQueue& battleActionQueue) {
-  types::handle actionHandle = {registry, registry.create()};
 
-  actionHandle.emplace<action::Team>(teamOrder);
-
-  battleActionQueue.val.push_back(actionHandle.entity());
 }
 }  // namespace
 
@@ -3274,7 +3255,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
 
   const Battle& battle = sideHandle.get<Battle>();
   types::registry& registry = *sideHandle.registry();
-  ActionQueue& battleActionQueue = registry.get<ActionQueue>(battle.val);
+  ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
 
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     POKESIM_REQUIRE(
@@ -3298,7 +3279,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
     }
 #endif
 
-    resolveSlotDecisions(sideHandle, decisions, battleActionQueue);
+    resolveSlotDecisions(sideHandle, decisions, actionQueue);
   }
   else if (sideDecision.decisions.holds<types::teamOrder>()) {
     POKESIM_REQUIRE(
@@ -3310,7 +3291,7 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
     POKESIM_REQUIRE(
       sideHandle.get<Team>().val.size() == teamOrder.size(),
       "Must pick a placement for each Pokemon on the team.");
-    resolveTeamDecision(*sideHandle.registry(), teamOrder, battleActionQueue);
+    resolveTeamDecision(*sideHandle.registry(), teamOrder, actionQueue);
   }
   else {
     POKESIM_REQUIRE_FAIL(
@@ -3319,51 +3300,23 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
 }
 
 void speedSort(types::handle handle, ActionQueue& actionQueue) {
-  auto& entityList = actionQueue.val;
+  auto& actionQueueItems = actionQueue.val;
 
-  if (entityList.size() == 1U) return;
-  const types::registry* registry = handle.registry();
-
-  internal::maxSizedVector<std::pair<SpeedSort, types::entity>, Constants::ActionQueueLength::MAX> speedSortList;
-  speedSortList.reserve(entityList.size());
-
-  for (types::entity entity : entityList) {
-    speedSortList.push_back({registry->get<SpeedSort>(entity), entity});
+  if (actionQueueItems.size() == 1U) {
+    return;
   }
 
   // TODO(aed3): Test how different sorting algorithms affect speed
-  std::sort(speedSortList.begin(), speedSortList.end(), [](const auto& pairA, const auto& pairB) {
-    if (pairA.first.order != pairB.first.order) {
-      return pairA.first.order < pairB.first.order;
-    }
-
-    if (pairA.first.priority != pairB.first.priority) {
-      return pairB.first.priority < pairA.first.priority;
-    }
-
-    if (pairA.first.fractionalPriority != pairB.first.fractionalPriority) {
-      return pairB.first.fractionalPriority;
-    }
-
-    if (pairA.first.speed != pairB.first.speed) {
-      return pairB.first.speed < pairA.first.speed;
-    }
-
-    return false;
-  });
+  std::sort(
+    actionQueueItems.begin(),
+    actionQueueItems.end(),
+    [](const ActionQueueItem& itemA, const ActionQueueItem& itemB) { return itemA.isFasterThan(itemB); });
 
   SpeedTieIndexes speedTies;
   types::activePokemonIndex lastEqual = 0U, tieCount = 1U;
 
-  auto speedSortEqual = [](const SpeedSort& speedSortA, const SpeedSort& speedSortB) {
-    return speedSortA.order == speedSortB.order && speedSortA.priority == speedSortB.priority &&
-           speedSortA.speed == speedSortB.speed && speedSortA.fractionalPriority == speedSortB.fractionalPriority;
-  };
-
-  for (types::activePokemonIndex i = 0U; i < speedSortList.size(); i++) {
-    entityList[i] = speedSortList[i].second;
-
-    if (i > 0U && speedSortEqual(speedSortList[i].first, speedSortList[i - 1].first)) {
+  for (types::activePokemonIndex i = 1U; i < actionQueueItems.size(); i++) {
+    if (actionQueueItems[i].isSameSpeed(actionQueueItems[i - 1U])) {
       tieCount++;
     }
     else {
@@ -3384,54 +3337,51 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   }
 }
 
-void addBeforeTurnAction(types::registry& registry, ActionQueue& actionQueue) {
-  types::handle actionHandle{registry, registry.create()};
-  SpeedSort speedSort{ActionOrder::BEFORE_TURN};
-
-  actionHandle.emplace<action::tags::BeforeTurn>();
-  actionHandle.emplace<SpeedSort>(speedSort);
-  actionQueue.val.push_back(actionHandle.entity());
+void addBeforeTurnAction(ActionQueue& actionQueue) {
+  actionQueue.val.push_back({ActionOrder::BEFORE_TURN});
 }
 
-void addResidualAction(types::registry& registry, ActionQueue& actionQueue) {
-  types::handle actionHandle{registry, registry.create()};
-  SpeedSort speedSort{ActionOrder::RESIDUAL};
-
-  actionHandle.emplace<action::tags::Residual>();
-  actionHandle.emplace<SpeedSort>(speedSort);
-  actionQueue.val.push_back(actionHandle.entity());
+void addResidualAction(ActionQueue& actionQueue) {
+  actionQueue.val.push_back({ActionOrder::RESIDUAL});
 }
 
-void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue) {
+void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction& action) {
   types::registry& registry = *battleHandle.registry();
 
   if (actionQueue.val.empty()) return;
 
-  types::entity newCurrentAction = actionQueue.val.front();
-  registry.emplace<action::tags::Current>(newCurrentAction);
+  ActionQueueItem nextActon = actionQueue.val.front();
+  registry.emplace<action::tags::Current>(action.val);
 
-  if (registry.all_of<action::tags::Move>(newCurrentAction)) {
-    battleHandle.emplace<action::tags::Move>();
-  }
-  else if (registry.all_of<action::tags::Residual>(newCurrentAction)) {
-    battleHandle.emplace<action::tags::Residual>();
-  }
-  else {
-    POKESIM_REQUIRE_FAIL("Action kind not implemented yet.");
+  switch (nextActon.order) {
+    case ActionOrder::MOVE: {
+      battleHandle.emplace<action::tags::Move>();
+      const MoveDecision& decision = nextActon.decision.get<MoveDecision>();
+      registry.emplace<SourceSlotName>(action.val, decision.sourceSlot);
+      registry.emplace<TargetSlotName>(action.val, decision.targetSlot);
+      registry.emplace<MoveName>(action.val, decision.move);
+      break;
+    }
+    case ActionOrder::RESIDUAL: {
+      battleHandle.emplace<action::tags::Residual>();
+      break;
+    }
+    case ActionOrder::BEFORE_TURN: {
+      battleHandle.emplace<action::tags::BeforeTurn>();
+      break;
+    }
+    default: {
+      POKESIM_REQUIRE_FAIL("Action kind not implemented yet.");
+      break;
+    }
   }
 
   actionQueue.val.erase(actionQueue.val.begin());
 
-  battleHandle.remove<NextAction>();
-  battleHandle.emplace<CurrentAction>(newCurrentAction);
-  if (!actionQueue.val.empty()) {
-    battleHandle.emplace<NextAction>(actionQueue.val[0]);
-  }
+  battleHandle.emplace<CurrentAction>(action.val);
 }
 
-void clearActionQueue(types::handle battleHandle, ActionQueue& actionQueue) {
-  battleHandle.remove<NextAction>();
-  battleHandle.registry()->destroy(actionQueue.val.begin(), actionQueue.val.end());
+void clearActionQueue(ActionQueue& actionQueue) {
   actionQueue.val.clear();
 }
 }  // namespace pokesim::simulate_turn
@@ -5390,6 +5340,9 @@ BattleStateSetup::BattleStateSetup(types::registry& registry, types::entity enti
   if (!handle.any_of<ActionQueue, tags::Battle>()) {
     handle.emplace<ActionQueue>();
     handle.emplace<tags::Battle>();
+
+    types::entity recycledAction = handle.emplace<RecycledAction>(registry.create()).val;
+    registry.emplace<tags::RecycledAction>(recycledAction);
   }
 }
 
@@ -5432,7 +5385,7 @@ void BattleStateSetup::setRNGSeed(std::optional<types::rngState> seed) {
   handle.emplace<RngSeed>(seed.value());
 }
 
-void BattleStateSetup::setActionQueue(const std::vector<types::entity>& queue) {
+void BattleStateSetup::setActionQueue(const std::vector<ActionQueueItem>& queue) {
   handle.emplace<ActionQueue>(queue);
 }
 
@@ -5982,7 +5935,10 @@ void clearCurrentAction(Simulation& simulation) {
   auto currentActions = registry.view<action::tags::Current>();
   registry.destroy(actionMoves.begin(), actionMoves.end());
   registry.destroy(failedActionMoves.begin(), failedActionMoves.end());
-  registry.destroy(currentActions.begin(), currentActions.end());
+
+  registry.remove<action::tags::Current, SourceSlotName, TargetSlotName, MoveName>(
+    currentActions.begin(),
+    currentActions.end());
 
   auto battles = simulation.battleEntities();
   registry.remove<
@@ -6146,20 +6102,18 @@ void traverseBattle(types::registry& registry, VisitEntity visitEntity = nullptr
   const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
   using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
 
-  for (const auto [entity, sides, actionQueue] : registry.view<Tag, tags::Battle, Sides, ActionQueue>().each()) {
+  for (const auto [entity, sides] : registry.view<Tag, tags::Battle, Sides>().each()) {
     for (auto side : sides.val) {
       registry.emplace<Tag>(side);
-    }
-    for (auto queueItem : actionQueue.val) {
-      registry.emplace<Tag>(queueItem);
     }
 
     if constexpr (ForCloning) {
       visitEntity(entity);
     }
   }
-  for (const auto [entity, currentAction] : registry.view<Tag, tags::Battle, CurrentAction>().each()) {
-    registry.emplace<Tag>(currentAction.val);
+
+  for (const auto [entity, recycledAction] : registry.view<Tag, tags::Battle, RecycledAction>().each()) {
+    registry.emplace<Tag>(recycledAction.val);
   }
 }
 
@@ -6184,8 +6138,8 @@ void traverseAction(types::registry& registry, VisitEntity visitEntity = nullptr
   const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
   using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
 
-  if constexpr (ForCloning) {
-    for (types::entity entity : registry.view<Tag, SpeedSort>()) {
+  for (types::entity entity : registry.view<Tag, tags::RecycledAction>()) {
+    if constexpr (ForCloning) {
       visitEntity(entity);
     }
   }
@@ -6393,7 +6347,6 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   }
 
   // Not simplified further to a, for example, packed template type list, to make debugging what type went wrong easier
-  remapComponentEntities<ActionQueue>(registry, entityMap);
   remapComponentEntities<Battle>(registry, entityMap);
   remapComponentEntities<ChoiceLock>(registry, entityMap);
   remapComponentEntities<CurrentAction>(registry, entityMap);
@@ -6413,8 +6366,8 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<FoeSide>(registry, entityMap);
   remapComponentEntities<LastUsedMove>(registry, entityMap);
   remapComponentEntities<MoveSlots>(registry, entityMap);
-  remapComponentEntities<NextAction>(registry, entityMap);
   remapComponentEntities<Pokemon>(registry, entityMap);
+  remapComponentEntities<RecycledAction>(registry, entityMap);
   remapComponentEntities<Side>(registry, entityMap);
   remapComponentEntities<Sides>(registry, entityMap);
   remapComponentEntities<Team>(registry, entityMap);

@@ -6,12 +6,15 @@
 
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/MoveSlots.hpp>
+#include <Components/EntityHolders/RecycledEntities.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
+#include <Components/Tags/RecycledEntities.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Components/Winner.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/DebugChecks.hpp>
@@ -45,6 +48,7 @@ struct Checks : pokesim::debug::Checks {
   void copyBattles() {
     for (types::entity entity : getBattleView()) {
       copyEntity(entity);
+      copyEntity(registry->get<RecycledAction>(entity).val);
     }
   }
 
@@ -53,25 +57,40 @@ struct Checks : pokesim::debug::Checks {
     typesToIgnore.add<simulate_turn::TurnOutcomeBattles, simulate_turn::tags::SpeedSortNeeded>();
 
     pokesim::debug::TypesToIgnore typesIgnoredOnConstants = typesToIgnore;
-    typesToIgnore.add<Probability, ParentBattle, Turn, RootBattle>();
+    typesToIgnore.add<Probability, ParentBattle, Turn, RootBattle, pokesim::tags::BattleMidTurn>();
 
     if (!simulateTurnOptionsOnInput.getMakeBranchesOnRandomEvents()) {
       typesToIgnore.add<RngSeed>();
     }
 
-    for (types::entity entity : getBattleView()) {
-      types::entity original = pokesim::debug::findCopyParent(currentEntitiesToInitial, *registry, entity);
-      bool shouldNotChange = !simulateTurnOptionsOnInput.getApplyChangesToInputBattle() && original == entity;
+    for (types::entity currentEntity : getBattleView()) {
+      types::entity original = pokesim::debug::findCopyParent(currentEntitiesToInitial, *registry, currentEntity);
+      bool shouldNotChange = !simulateTurnOptionsOnInput.getApplyChangesToInputBattle() && original == currentEntity;
       if (!registryOnInput.all_of<Winner>(original)) {
         typesToIgnore.add<Winner>();
       }
 
+      types::entity initialEntity = getInitialEntity(currentEntity);
       pokesim::debug::areEntitiesEqual(
         *registry,
-        entity,
+        currentEntity,
         registryOnInput,
-        getInitialEntity(entity),
+        initialEntity,
         shouldNotChange ? typesIgnoredOnConstants : typesToIgnore);
+
+      bool initialIsMidTurn = registryOnInput.all_of<pokesim::tags::BattleMidTurn>(initialEntity);
+      bool currentIsMidTurn = registry->all_of<pokesim::tags::BattleMidTurn>(currentEntity);
+      types::entity currAction = registry->get<RecycledAction>(currentEntity).val;
+      if (!initialIsMidTurn && !currentIsMidTurn) {
+        pokesim::debug::areEntitiesEqual(*registry, currAction, registryOnInput, getInitialEntity(currAction));
+      }
+
+      if (!currentIsMidTurn) {
+        types::registry blankRegistry;
+        types::entity idealRecycledAction = blankRegistry.create();
+        blankRegistry.emplace<pokesim::tags::RecycledAction>(idealRecycledAction);
+        pokesim::debug::hasSameComponents(*registry, currAction, blankRegistry, idealRecycledAction);
+      }
     }
   }
 

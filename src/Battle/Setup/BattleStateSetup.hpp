@@ -14,6 +14,7 @@ namespace pokesim {
 struct SimulateTurnOptions;
 struct CalculateDamageOptions;
 struct AnalyzeEffectOptions;
+struct ActionQueueItem;
 
 // Tool to set properties of a battle's state to an entity.
 struct BattleStateSetup : internal::StateSetupBase {
@@ -39,7 +40,7 @@ struct BattleStateSetup : internal::StateSetupBase {
 
   // If a seed is not provided, the seed is set to a random number based on the current time in nanoseconds.
   void setRNGSeed(std::optional<types::rngState> seed = std::nullopt);
-  void setActionQueue(const std::vector<types::entity>& queue);
+  void setActionQueue(const std::vector<ActionQueueItem>& queue);
   void setTurn(types::battleTurn turn);
   void setCurrentActionTarget(types::targets<types::entity> actionTargets);
   void setCurrentActionSource(types::entity actionSource);

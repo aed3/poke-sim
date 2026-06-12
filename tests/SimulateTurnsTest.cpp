@@ -2,47 +2,41 @@
 
 namespace pokesim {
 namespace {
-using SpeedSortList = std::vector<SpeedSort>;
+using ActionQueueList = std::vector<ActionQueueItem>;
 
-void runSpeedSortTest(
-  const SpeedSortList& speedSortList, const SpeedSortList& idealSortedList,
+void runQueueOrderTest(
+  const ActionQueueList& actionQueueList, const ActionQueueList& idealActionQueueList,
   const SpeedTieIndexes& idealSpeedTies = {}) {
+  ActionQueue initialQueue{actionQueueList};
+
   types::registry registry;
-  ActionQueue initialQueue;
-
-  for (const SpeedSort& speedSort : speedSortList) {
-    types::entity entity = registry.create();
-    registry.emplace<SpeedSort>(entity, speedSort);
-    initialQueue.val.push_back(entity);
-  }
-
   types::handle handle{registry, registry.create()};
   ActionQueue sortedQueue = initialQueue;
 
   simulate_turn::speedSort(handle, sortedQueue);
 
   REQUIRE(initialQueue.val.size() == sortedQueue.val.size());
-  for (types::entity entity : initialQueue.val) {
-    bool entityFound = false;
-    for (types::entity sortedEntity : sortedQueue.val) {
-      if (sortedEntity == entity) {
-        entityFound = true;
+  for (const ActionQueueItem& initialItem : initialQueue.val) {
+    bool itemFound = false;
+    for (const ActionQueueItem& sortedItem : sortedQueue.val) {
+      if (sortedItem == initialItem) {
+        itemFound = true;
         break;
       }
     }
 
-    REQUIRE(entityFound);
+    REQUIRE(itemFound);
   }
 
-  for (std::size_t i = 0U; i < idealSortedList.size(); i++) {
+  for (std::size_t i = 0U; i < idealActionQueueList.size(); i++) {
     INFO(std::to_string(i));
-    const SpeedSort& idealSpeedSort = idealSortedList[i];
-    const SpeedSort& trueSpeedSort = registry.get<SpeedSort>(sortedQueue.val[i]);
+    const ActionQueueItem& idealQueueItem = idealActionQueueList[i];
+    const ActionQueueItem& trueQueueItem = sortedQueue.val[i];
 
-    REQUIRE(trueSpeedSort.order == idealSpeedSort.order);
-    REQUIRE(trueSpeedSort.priority == idealSpeedSort.priority);
-    REQUIRE(trueSpeedSort.fractionalPriority == idealSpeedSort.fractionalPriority);
-    REQUIRE(trueSpeedSort.speed == idealSpeedSort.speed);
+    REQUIRE(trueQueueItem.order == idealQueueItem.order);
+    REQUIRE(trueQueueItem.priority == idealQueueItem.priority);
+    REQUIRE(trueQueueItem.fractionalPriority == idealQueueItem.fractionalPriority);
+    REQUIRE(trueQueueItem.speed == idealQueueItem.speed);
   }
 
   if (idealSpeedTies.val.empty()) {
@@ -65,33 +59,33 @@ void runSpeedSortTest(
 };
 }  // namespace
 
-TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
+TEST_CASE("Simulate Turn: Action Queue Order", "[Simulation][SimulateTurn]") {
   SECTION("One Queue Item") {
-    SpeedSort emptySpeedSort{};
-    runSpeedSortTest({emptySpeedSort}, {emptySpeedSort});
+    ActionQueueItem emptyQueueItem{};
+    runQueueOrderTest({emptyQueueItem}, {emptyQueueItem});
   }
 
   SECTION("Two Identical Items") {
-    SpeedSort emptySpeedSort{};
-    runSpeedSortTest(
-      {emptySpeedSort, emptySpeedSort},
-      {emptySpeedSort, emptySpeedSort},
+    ActionQueueItem emptyQueueItem{};
+    runQueueOrderTest(
+      {emptyQueueItem, emptyQueueItem},
+      {emptyQueueItem, emptyQueueItem},
       SpeedTieIndexes{
         {SpeedTieIndexes::Span{0U, 2U}},
       });
   }
 
   SECTION("Sort By Order") {
-    SpeedSortList idealList = {
-      SpeedSort{ActionOrder::TEAM},
-      SpeedSort{ActionOrder::START},
-      SpeedSort{ActionOrder::BEFORE_TURN},
-      SpeedSort{ActionOrder::SWITCH},
-      SpeedSort{ActionOrder::MOVE},
-      SpeedSort{ActionOrder::NONE},
+    ActionQueueList idealList = {
+      ActionQueueItem{ActionOrder::TEAM},
+      ActionQueueItem{ActionOrder::START},
+      ActionQueueItem{ActionOrder::BEFORE_TURN},
+      ActionQueueItem{ActionOrder::SWITCH},
+      ActionQueueItem{ActionOrder::MOVE},
+      ActionQueueItem{ActionOrder::NONE},
     };
 
-    runSpeedSortTest(
+    runQueueOrderTest(
       {
         idealList[2],
         idealList[0],
@@ -104,17 +98,17 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
   }
 
   SECTION("Sort By Priority") {
-    SpeedSortList idealList = {
-      SpeedSort{ActionOrder::MOVE, 5},
-      SpeedSort{ActionOrder::MOVE, 3},
-      SpeedSort{ActionOrder::MOVE, 1},
-      SpeedSort{ActionOrder::MOVE, 0},
-      SpeedSort{ActionOrder::MOVE, -2},
-      SpeedSort{ActionOrder::MOVE, -3},
-      SpeedSort{ActionOrder::MOVE, -7},
+    ActionQueueList idealList = {
+      ActionQueueItem{ActionOrder::MOVE, 5},
+      ActionQueueItem{ActionOrder::MOVE, 3},
+      ActionQueueItem{ActionOrder::MOVE, 1},
+      ActionQueueItem{ActionOrder::MOVE, 0},
+      ActionQueueItem{ActionOrder::MOVE, -2},
+      ActionQueueItem{ActionOrder::MOVE, -3},
+      ActionQueueItem{ActionOrder::MOVE, -7},
     };
 
-    runSpeedSortTest(
+    runQueueOrderTest(
       {
         idealList[1],
         idealList[0],
@@ -128,16 +122,16 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
   }
 
   SECTION("Sort By Priority and Fractional Priority") {
-    SpeedSortList idealList = {
-      SpeedSort{ActionOrder::MOVE, 5, false},
-      SpeedSort{ActionOrder::MOVE, 3, true},
-      SpeedSort{ActionOrder::MOVE, 0, false},
-      SpeedSort{ActionOrder::MOVE, 0, true},
-      SpeedSort{ActionOrder::MOVE, -3, false},
-      SpeedSort{ActionOrder::MOVE, -7, true},
+    ActionQueueList idealList = {
+      ActionQueueItem{ActionOrder::MOVE, 5, false},
+      ActionQueueItem{ActionOrder::MOVE, 3, true},
+      ActionQueueItem{ActionOrder::MOVE, 0, false},
+      ActionQueueItem{ActionOrder::MOVE, 0, true},
+      ActionQueueItem{ActionOrder::MOVE, -3, false},
+      ActionQueueItem{ActionOrder::MOVE, -7, true},
     };
 
-    runSpeedSortTest(
+    runQueueOrderTest(
       {
         idealList[5],
         idealList[4],
@@ -150,27 +144,27 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
   }
 
   SECTION("Sort By Fractional Priority") {
-    SpeedSortList idealList = {
-      SpeedSort{ActionOrder::MOVE, 0, false},
-      SpeedSort{ActionOrder::MOVE, 0, true},
+    ActionQueueList idealList = {
+      ActionQueueItem{ActionOrder::MOVE, 0, false},
+      ActionQueueItem{ActionOrder::MOVE, 0, true},
     };
 
-    runSpeedSortTest({idealList[1], idealList[0]}, idealList);
+    runQueueOrderTest({idealList[1], idealList[0]}, idealList);
   }
 
   SECTION("Sort By Speed") {
-    SpeedSortList idealList = {
-      SpeedSort{ActionOrder::MOVE, 0, false, 772U},
-      SpeedSort{ActionOrder::MOVE, 0, false, 621U},
-      SpeedSort{ActionOrder::MOVE, 0, false, 584U},
-      SpeedSort{ActionOrder::MOVE, 0, false, 444U},
-      SpeedSort{ActionOrder::MOVE, 0, false, 305U},
-      SpeedSort{ActionOrder::MOVE, 0, false, 152U},
-      SpeedSort{ActionOrder::MOVE, 0, false, 90U},
-      SpeedSort{ActionOrder::MOVE, 0, false, 11U},
+    ActionQueueList idealList = {
+      ActionQueueItem{ActionOrder::MOVE, 0, false, 772U},
+      ActionQueueItem{ActionOrder::MOVE, 0, false, 621U},
+      ActionQueueItem{ActionOrder::MOVE, 0, false, 584U},
+      ActionQueueItem{ActionOrder::MOVE, 0, false, 444U},
+      ActionQueueItem{ActionOrder::MOVE, 0, false, 305U},
+      ActionQueueItem{ActionOrder::MOVE, 0, false, 152U},
+      ActionQueueItem{ActionOrder::MOVE, 0, false, 90U},
+      ActionQueueItem{ActionOrder::MOVE, 0, false, 11U},
     };
 
-    runSpeedSortTest(
+    runQueueOrderTest(
       {
         idealList[1],
         idealList[0],
@@ -185,19 +179,19 @@ TEST_CASE("Simulate Turn: SpeedSort", "[Simulation][SimulateTurn]") {
   }
 
   SECTION("Sort Combination") {
-    SpeedSortList idealList = {
-      SpeedSort{ActionOrder::TEAM},
-      SpeedSort{ActionOrder::START},
-      SpeedSort{ActionOrder::BEFORE_TURN, 0, false, 584U},
-      SpeedSort{ActionOrder::BEFORE_TURN, 0, false, 444U},
-      SpeedSort{ActionOrder::SWITCH, 0, false, 52U},
-      SpeedSort{ActionOrder::SWITCH, 0, false, 40U},
-      SpeedSort{ActionOrder::MOVE, 1, false, 152U},
-      SpeedSort{ActionOrder::MOVE, 0, false, 315U},
-      SpeedSort{ActionOrder::MOVE, -3, true, 700U},
+    ActionQueueList idealList = {
+      ActionQueueItem{ActionOrder::TEAM},
+      ActionQueueItem{ActionOrder::START},
+      ActionQueueItem{ActionOrder::BEFORE_TURN, 0, false, 584U},
+      ActionQueueItem{ActionOrder::BEFORE_TURN, 0, false, 444U},
+      ActionQueueItem{ActionOrder::SWITCH, 0, false, 52U},
+      ActionQueueItem{ActionOrder::SWITCH, 0, false, 40U},
+      ActionQueueItem{ActionOrder::MOVE, 1, false, 152U},
+      ActionQueueItem{ActionOrder::MOVE, 0, false, 315U},
+      ActionQueueItem{ActionOrder::MOVE, -3, true, 700U},
     };
 
-    runSpeedSortTest(
+    runQueueOrderTest(
       {
         idealList[8],
         idealList[7],
@@ -234,9 +228,8 @@ TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   MoveDecision p2MoveDecision{Slot::P2A, Slot::P1A, dex::Move::THUNDERBOLT};
   p1Decision.decisions = types::slotDecisions{p1MoveDecision};
   p2Decision.decisions = types::slotDecisions{p2MoveDecision};
-  sizeof(types::slotDecision)
 
-    battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
+  battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
   simulation.createInitialStates({battleCreationInfo});
   auto& options = simulation.simulateTurnOptions;
 
