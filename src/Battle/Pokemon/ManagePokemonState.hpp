@@ -12,7 +12,8 @@ struct CurrentActionSource;
 struct CurrentActionTarget;
 struct CurrentActionMoveSlot;
 struct Damage;
-struct Pp;
+struct LastUsedMove;
+struct MoveSlots;
 
 namespace stat {
 struct Atk;
@@ -37,7 +38,7 @@ void clearStatus(types::handle pokemonHandle);
 
 void clearVolatiles(types::handle pokemonHandle);
 
-void deductPp(Pp& pp);
+void deductPp(types::handle handle, MoveSlots& moveSlots, LastUsedMove lastUsedMove);
 void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move);
 void resetEffectiveAtk(types::handle handle, stat::Atk atk);
 void resetEffectiveDef(types::handle handle, stat::Def def);

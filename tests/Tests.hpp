@@ -207,11 +207,10 @@ struct TestChecks : debug::Checks {
     return registryOnInput.get<T...>(getInitialEntity(entity));
   }
 
-  void checkMovePpUsage(types::entity moveSlot) {
-    checkEntityForChanges<Pp>(moveSlot);
-    auto movePp = registry->get<Pp>(moveSlot);
-    auto initialMovePp = getInitialComponents<Pp>(moveSlot);
-    REQUIRE(movePp.val == initialMovePp.val - 1U);
+  void checkMovePpUsage(types::entity entity, types::moveSlotIndex moveSlotIndex) {
+    auto movePp = registry->get<MoveSlots>(entity).val[moveSlotIndex].pp;
+    auto initialMovePp = getInitialComponents<MoveSlots>(entity).val[moveSlotIndex].pp;
+    REQUIRE(movePp == initialMovePp - Constants::PP_USE_DEDUCTION);
   }
 
   TestChecks(const Simulation& _simulation, const types::entityVector& specificallyCheckedEntities = {})

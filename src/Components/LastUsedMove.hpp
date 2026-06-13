@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Types/Entity.hpp>
+#include <Types/State.hpp>
 
 namespace pokesim {
 struct LastUsedMove {
-  types::entity val{};
+  types::moveSlotIndex val{};
 };
 }  // namespace pokesim

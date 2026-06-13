@@ -1,8 +1,6 @@
 #pragma once
 
 #include <Components/Boosts.hpp>
-#include <Components/EVsIVs.hpp>
-#include <Components/SpeciesTypes.hpp>
 #include <Components/Stats.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Ability.hpp>
@@ -21,6 +19,11 @@
 #include "StateSetupBase.hpp"
 
 namespace pokesim {
+struct Evs;
+struct Ivs;
+struct SpeciesTypes;
+struct MoveSlot;
+
 // Tool to set properties of a Pokemon's state to an entity.
 struct PokemonStateSetup : internal::StateSetupBase {
   PokemonStateSetup() : internal::StateSetupBase() {}
@@ -50,7 +53,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   void setGender(dex::Gender gender);
   void setAbility(dex::Ability ability);
   void setItem(dex::Item item);
-  void setMoves(const std::vector<types::entity>& moveSlots);
+  void setMoves(const std::vector<MoveSlot>& moveSlots);
 
   void setPostion(types::teamPositionIndex position);
   void setStatus(dex::Status status);

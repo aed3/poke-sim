@@ -3,7 +3,7 @@
 #include <Components/CloneFromCloneTo.hpp>
 #include <Components/EntityHolders/headers.hpp>
 #include <Components/Names/MoveNames.hpp>
-#include <Components/PP.hpp>
+#include <Components/Pokedex/PP.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
@@ -102,11 +102,7 @@ void traversePokemon(types::registry& registry, VisitEntity visitEntity = nullpt
   const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
   using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
 
-  for (const auto [entity, moveSlots] : registry.view<Tag, tags::Pokemon, MoveSlots>().each()) {
-    for (auto move : moveSlots.val) {
-      registry.emplace<Tag>(move);
-    }
-
+  for (types::entity entity : registry.view<Tag, tags::Pokemon>()) {
     if constexpr (ForCloning) {
       visitEntity(entity);
     }
@@ -117,21 +113,10 @@ void traversePokemon(types::registry& registry, VisitEntity visitEntity = nullpt
       registry.emplace_or_replace<Tag>(move);
     }
   }
+
   for (const auto [entity, moves] : registry.view<Tag, CurrentActionMovesAsTarget>().each()) {
     for (types::entity move : moves.val) {
       registry.emplace_or_replace<Tag>(move);
-    }
-  }
-}
-
-template <typename VisitEntity = void*>
-void traverseMove(types::registry& registry, VisitEntity visitEntity = nullptr) {
-  const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
-  using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
-
-  if constexpr (ForCloning) {
-    for (types::entity entity : registry.view<Tag, MoveName, Pp>()) {
-      visitEntity(entity);
     }
   }
 }
@@ -176,14 +161,6 @@ void clonePokemon(
   });
 }
 
-void cloneMove(
-  types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::entityIndex cloneCount) {
-  traverseMove(registry, [&](types::entity entity) {
-    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
-  });
-}
-
 void deleteBattle(types::registry& registry) {
   traverseBattle(registry);
 }
@@ -202,10 +179,6 @@ void deleteCurrentActionMove(types::registry& registry) {
 
 void deletePokemon(types::registry& registry) {
   traversePokemon(registry);
-}
-
-void deleteMove(types::registry& registry) {
-  traverseMove(registry);
 }
 
 void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
@@ -258,7 +231,6 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   cloneAction(registry, entityMap, srcEntityStorages, count);
   clonePokemon(registry, entityMap, srcEntityStorages, count);
   cloneCurrentActionMove(registry, entityMap, srcEntityStorages, count);
-  cloneMove(registry, entityMap, srcEntityStorages, count);
 
   for (auto [id, storage] : registry.storage()) {
     if (srcEntityStorages.contains(id)) {
@@ -288,11 +260,9 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
 
   // Not simplified further to a, for example, packed template type list, to make debugging what type went wrong easier
   remapComponentEntities<Battle>(registry, entityMap);
-  remapComponentEntities<ChoiceLock>(registry, entityMap);
   remapComponentEntities<CurrentAction>(registry, entityMap);
   remapComponentEntities<CurrentActionMovesAsSource>(registry, entityMap);
   remapComponentEntities<CurrentActionMovesAsTarget>(registry, entityMap);
-  remapComponentEntities<CurrentActionMoveSlot>(registry, entityMap);
   remapComponentEntities<CurrentActionSource>(registry, entityMap);
   remapComponentEntities<CurrentActionTarget>(registry, entityMap);
   remapComponentEntities<FailedCurrentActionSource>(registry, entityMap);
@@ -304,8 +274,6 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<CurrentEffectTarget>(registry, entityMap);
   remapComponentEntities<FaintQueue>(registry, entityMap);
   remapComponentEntities<FoeSide>(registry, entityMap);
-  remapComponentEntities<LastUsedMove>(registry, entityMap);
-  remapComponentEntities<MoveSlots>(registry, entityMap);
   remapComponentEntities<Pokemon>(registry, entityMap);
   remapComponentEntities<RecycledAction>(registry, entityMap);
   remapComponentEntities<Side>(registry, entityMap);
@@ -335,7 +303,6 @@ void deleteClones(types::registry& registry) {
   deleteAction(registry);
   deletePokemon(registry);
   deleteCurrentActionMove(registry);
-  deleteMove(registry);
   auto remove = registry.view<tags::CloneToRemove>();
   registry.destroy(remove.begin(), remove.end());
 }

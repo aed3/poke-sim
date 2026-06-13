@@ -4,12 +4,9 @@
 
 #include "Battle.hpp"
 #include "BattleTree.hpp"
-#include "ChoiceLock.hpp"
 #include "Current.hpp"
 #include "FaintQueue.hpp"
 #include "FoeSide.hpp"
-#include "LastUsedMove.hpp"
-#include "MoveSlots.hpp"
 #include "Pokemon.hpp"
 #include "RecycledEntities.hpp"
 #include "Side.hpp"

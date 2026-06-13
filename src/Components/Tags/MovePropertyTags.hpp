@@ -20,8 +20,6 @@ struct Punch {};
 struct VariableHitCount {};
 // Move Property Tag: A multi-hit move where each hit checks accuracy (i.e. Triple Kick)
 struct AccuracyDependentHitCount {};
-
-struct Disabled {};
 }  // namespace tags
 
 namespace effect::tags {

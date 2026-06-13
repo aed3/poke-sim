@@ -22,17 +22,19 @@ struct DefBoost;
 struct SpaBoost;
 struct SpdBoost;
 struct SpeBoost;
+struct ChoiceLock;
 struct CloneTo;
+struct CurrentActionMoveSlot;
 struct Damage;
 struct DamageRollModifiers;
 struct DamageRolls;
+struct DisabledMoveSlots;
 struct Evs;
 struct Ivs;
 struct Battle;
 struct ParentBattle;
 struct RootBattle;
 struct ParentEntity;
-struct ChoiceLock;
 struct CurrentAction;
 struct CurrentActionTargets;
 struct CurrentActionSource;
@@ -41,15 +43,12 @@ struct FailedCurrentActionSource;
 struct FailedCurrentActionTarget;
 struct CurrentActionMovesAsSource;
 struct CurrentActionMovesAsTarget;
-struct CurrentActionMoveSlot;
 struct CurrentEffectSource;
 struct CurrentEffectTarget;
 struct CurrentEffectsAsSource;
 struct CurrentEffectsAsTarget;
 struct FaintQueue;
 struct FoeSide;
-struct LastUsedMove;
-struct MoveSlots;
 struct Pokemon;
 struct RecycledAction;
 struct Side;
@@ -58,7 +57,10 @@ struct Team;
 struct EventModifier;
 struct HitCount;
 struct Id;
+struct LastUsedMove;
 struct Level;
+struct MoveSlot;
+struct MoveSlots;
 struct AbilityName;
 struct GenderName;
 struct ItemName;
@@ -75,13 +77,12 @@ struct TerrainName;
 struct TypeName;
 struct VolatileName;
 struct WeatherName;
-struct Pp;
-struct MaxPp;
 struct PlayerSide;
 struct PrimaryAbility;
 struct SecondaryAbility;
 struct HiddenAbility;
 struct BaseStats;
+struct Pp;
 struct Position;
 struct MovePriority;
 struct Probability;
@@ -157,7 +158,6 @@ void check(const T&) {}
 void checkBattle(types::entity, const types::registry&);
 void checkSide(types::entity, const types::registry&);
 void checkPokemon(types::entity, const types::registry&);
-void checkMoveSlot(types::entity, const types::registry&);
 void checkActionMove(types::entity, const types::registry&);
 void checkPercentChance(types::percentChance);
 
@@ -236,7 +236,13 @@ void check(const calc_damage::RealEffectiveStat&);
 template <>
 void check(const calc_damage::Power&);
 
+template <>
+void check(const ChoiceLock&);
+
 // template <> void check(const CloneTo&);
+
+template <>
+void check(const CurrentActionMoveSlot&);
 
 template <>
 void check(const Damage&);
@@ -246,6 +252,9 @@ void check(const DamageRollModifiers&);
 
 template <>
 void check(const DamageRolls&);
+
+template <>
+void check(const DisabledMoveSlots&);
 
 template <>
 void check(const Evs&);
@@ -264,9 +273,6 @@ void check(const RootBattle&, const types::registry&);
 
 template <>
 void check(const ParentEntity&, const types::registry&);
-
-template <>
-void check(const ChoiceLock&, const types::registry&);
 
 template <>
 void check(const CurrentAction&, const types::registry&);
@@ -293,9 +299,6 @@ template <>
 void check(const CurrentActionMovesAsTarget&, const types::registry&);
 
 template <>
-void check(const CurrentActionMoveSlot&, const types::registry&);
-
-template <>
 void check(const CurrentEffectSource&, const types::registry&);
 
 template <>
@@ -312,12 +315,6 @@ void check(const FaintQueue&, const types::registry&);
 
 template <>
 void check(const FoeSide&, const types::registry&);
-
-template <>
-void check(const LastUsedMove&, const types::registry&);
-
-template <>
-void check(const MoveSlots&, const types::registry&);
 
 template <>
 void check(const Pokemon&, const types::registry&);
@@ -342,7 +339,16 @@ void check(const HitCount&);
 // template <> void check(const Id&);
 
 template <>
+void check(const LastUsedMove&);
+
+template <>
 void check(const Level&);
+
+template <>
+void check(const MoveSlot&);
+
+template <>
+void check(const MoveSlots&);
 
 template <>
 void check(const AbilityName&);
@@ -393,12 +399,6 @@ template <>
 void check(const WeatherName&);
 
 template <>
-void check(const Pp&);
-
-template <>
-void check(const MaxPp&);
-
-template <>
 void check(const PlayerSide&);
 
 template <>
@@ -412,6 +412,9 @@ void check(const HiddenAbility&);
 
 template <>
 void check(const BaseStats&);
+
+template <>
+void check(const Pp&);
 
 template <>
 void check(const Position&);

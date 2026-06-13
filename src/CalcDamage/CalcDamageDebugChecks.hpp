@@ -32,8 +32,6 @@
 #include <Utilities/DebugChecks.hpp>
 #include <cstddef>
 
-#include "Helpers.hpp"
-
 namespace pokesim::calc_damage::debug {
 struct Checks : pokesim::debug::Checks {
   Checks(const Simulation& _simulation) : pokesim::debug::Checks(_simulation) {}

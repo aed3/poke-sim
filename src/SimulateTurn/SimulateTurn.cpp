@@ -9,18 +9,21 @@
 #include <Components/ActionQueue.hpp>
 #include <Components/AddedTargets.hpp>
 #include <Components/CloneFromCloneTo.hpp>
+#include <Components/Current.hpp>
+#include <Components/DisabledMoveSlots.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/FaintQueue.hpp>
-#include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/RecycledEntities.hpp>
 #include <Components/EntityHolders/Sides.hpp>
+#include <Components/LastUsedMove.hpp>
+#include <Components/MoveSlots.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
-#include <Components/PP.hpp>
 #include <Components/PlayerSide.hpp>
+#include <Components/Pokedex/PP.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/Tags/BattleTags.hpp>
@@ -148,8 +151,8 @@ void runMoveAction(Simulation& simulation) {
 
   runBeforeMove(simulation);
 
-  simulation.view<deductPp, Tags<pokesim::tags::CurrentActionMoveSlot>>();
   simulation.view<setLastMoveUsed>();
+  simulation.view<deductPp, Tags<pokesim::tags::CurrentActionMoveSource>>();
 
   useMove(simulation);
 }
@@ -256,16 +259,12 @@ void incrementTurn(Turn& turn) {
   turn.val++;
 }
 
-void updateActivePokemonPostTurn(types::registry& registry, const pokesim::MoveSlots& moveSlots) {
-  registry.remove<pokesim::move::tags::Disabled>(moveSlots.val.begin(), moveSlots.val.end());
-}
-
 void nextTurn(Simulation& simulation) {
   getBattleFilter(simulation).view<incrementTurn>();
 
   pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon> pokemonFilter{simulation};
   if (!pokemonFilter.hasNoneSelected()) {
-    pokemonFilter.view<updateActivePokemonPostTurn>();
+    simulation.removeFromEntities<DisabledMoveSlots, pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>();
 
     pokemonFilter.addToSelected<pokesim::tags::DisableMove>();
     runDisableMove(simulation);

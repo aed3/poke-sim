@@ -24,6 +24,12 @@ class fixedMemoryVector : private std::array<T, N> {
       "A std::vector for this type and size would be smaller.");
   }
 
+  fixedMemoryVector(std::uint8_t size, const T& value) : fixedMemoryVector() {
+    for (std::uint8_t i = 0; i < size; i++) {
+      push_back(value);
+    }
+  }
+
   fixedMemoryVector(std::initializer_list<T> list) : fixedMemoryVector() {
     for (const T& item : list) {
       push_back(item);

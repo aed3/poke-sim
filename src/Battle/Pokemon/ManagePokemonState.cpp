@@ -2,16 +2,18 @@
 
 #include <Battle/Setup/EmplaceTagFromEnum.hpp>
 #include <Components/Boosts.hpp>
+#include <Components/ChoiceLock.hpp>
+#include <Components/Current.hpp>
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Battle.hpp>
-#include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/FaintQueue.hpp>
-#include <Components/EntityHolders/LastUsedMove.hpp>
+#include <Components/LastUsedMove.hpp>
+#include <Components/MoveSlots.hpp>
 #include <Components/Names/ItemNames.hpp>
 #include <Components/Names/StatNames.hpp>
 #include <Components/Names/StatusNames.hpp>
-#include <Components/PP.hpp>
+#include <Components/Pokedex/PP.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/PokemonTags.hpp>
@@ -227,9 +229,13 @@ void clearVolatiles(types::handle pokemonHandle) {
   pokemonHandle.remove<ChoiceLock>();
 }
 
-void deductPp(Pp& pp) {
-  if (pp.val) {
-    pp.val -= 1U;  // TODO(aed3): Make this into a mechanic constant
+void deductPp(types::handle handle, MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
+  MoveSlot& moveSlot = moveSlots.val[lastUsedMove.val];
+  if (moveSlot.pp >= Constants::PP_USE_DEDUCTION) {
+    moveSlot.pp -= Constants::PP_USE_DEDUCTION;
+  }
+  else {
+    moveSlot.pp = 0U;
   }
 }
 

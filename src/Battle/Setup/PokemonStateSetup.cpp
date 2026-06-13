@@ -3,10 +3,10 @@
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Components/EVsIVs.hpp>
 #include <Components/EntityHolders/Battle.hpp>
-#include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/ID.hpp>
 #include <Components/Level.hpp>
+#include <Components/MoveSlots.hpp>
 #include <Components/Names/AbilityNames.hpp>
 #include <Components/Names/GenderNames.hpp>
 #include <Components/Names/ItemNames.hpp>
@@ -14,6 +14,7 @@
 #include <Components/Names/SpeciesNames.hpp>
 #include <Components/Names/StatusNames.hpp>
 #include <Components/Position.hpp>
+#include <Components/SpeciesTypes.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Gender.hpp>
@@ -90,13 +91,14 @@ void PokemonStateSetup::setItem(dex::Item item) {
   item::tags::emplaceTagFromEnum(item, handle);
 }
 
-void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
-  MoveSlots& moveEntities = handle.emplace<MoveSlots>();
+void PokemonStateSetup::setMoves(const std::vector<MoveSlot>& moveSlots) {
+  MoveSlots& newMoveSlots = handle.emplace<MoveSlots>();
   POKESIM_REQUIRE(
-    moveSlots.size() <= moveEntities.val.max_size(),
+    moveSlots.size() <= newMoveSlots.val.max_size(),
     "Cannot add more moves to a Pokemon than MAX_MOVE_SLOTS.");
-  for (types::entity moveSlot : moveSlots) {
-    moveEntities.val.push_back(moveSlot);
+
+  for (MoveSlot moveSlot : moveSlots) {
+    newMoveSlots.val.push_back(moveSlot);
   }
 }
 

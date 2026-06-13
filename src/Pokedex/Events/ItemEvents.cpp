@@ -1,9 +1,10 @@
 #include <Battle/Helpers/IntegerModify.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Components/CalcDamage/ModifyingEventRanTags.hpp>
+#include <Components/ChoiceLock.hpp>
+#include <Components/Current.hpp>
 #include <Components/Damage.hpp>
 #include <Components/EntityHolders/Battle.hpp>
-#include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EventModifier.hpp>
 #include <Components/Stats.hpp>

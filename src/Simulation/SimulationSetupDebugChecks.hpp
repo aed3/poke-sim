@@ -14,12 +14,12 @@
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
-#include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/ID.hpp>
 #include <Components/Level.hpp>
+#include <Components/MoveSlots.hpp>
 #include <Components/Names/AbilityNames.hpp>
 #include <Components/Names/GenderNames.hpp>
 #include <Components/Names/ItemNames.hpp>
@@ -32,8 +32,8 @@
 #include <Components/Names/TerrainNames.hpp>
 #include <Components/Names/VolatileNames.hpp>
 #include <Components/Names/WeatherNames.hpp>
-#include <Components/PP.hpp>
 #include <Components/Pokedex/Abilities.hpp>
+#include <Components/Pokedex/PP.hpp>
 #include <Components/Probability.hpp>
 #include <Components/RNGSeed.hpp>
 #include <Components/Stats.hpp>
@@ -274,18 +274,15 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(moveSlots.val.size() == creationInfo.moves.size());
 
     for (std::size_t i = 0U; i < creationInfo.moves.size(); i++) {
-      const MoveCreationInfo& move = creationInfo.moves[i];
-      types::entity moveEntity = moveSlots.val[(types::moveSlotIndex)i];
-      POKESIM_REQUIRE_NM(registry->all_of<MoveName>(moveEntity));
-      POKESIM_REQUIRE_NM(registry->all_of<Pp>(moveEntity));
-      POKESIM_REQUIRE_NM(registry->all_of<MaxPp>(moveEntity));
-      POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).val == move.name);
+      const MoveCreationInfo& moveInfo = creationInfo.moves[i];
+      MoveSlot moveSlot = moveSlots.val[(types::moveSlotIndex)i];
+      types::pp idealMaxPp = moveInfo.maxPp.value_or(pokedex->getMoveData<Pp>(moveInfo.name).val);
+      types::pp idealPp = moveInfo.pp.value_or(idealMaxPp);
 
-      types::pp idealMaxPp = move.maxPp.value_or(pokedex->getMoveData<Pp>(move.name).val);
-      types::pp idealPp = move.pp.value_or(idealMaxPp);
-      POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == idealPp);
-      POKESIM_REQUIRE_NM(registry->get<MaxPp>(moveEntity).val == idealMaxPp);
-      pokesim::debug::checkMoveSlot(moveEntity, *registry);
+      POKESIM_REQUIRE_NM(moveSlot.move == moveInfo.name);
+      POKESIM_REQUIRE_NM(moveSlot.pp == idealPp);
+      POKESIM_REQUIRE_NM(moveSlot.maxPp == idealMaxPp);
+      pokesim::debug::check(moveSlot);
     }
 
     if (creationInfo.currentHp.has_value()) {

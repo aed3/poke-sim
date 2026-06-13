@@ -9,9 +9,10 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
-#include <Components/PP.hpp>
+#include <Components/MoveSlots.hpp>
 #include <Components/Pokedex/Abilities.hpp>
 #include <Components/Pokedex/BaseStats.hpp>
+#include <Components/Pokedex/PP.hpp>
 #include <Components/SideDecisions.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/PokemonTags.hpp>
@@ -148,27 +149,6 @@ void setPokemonCurrentBoosts(const PokemonCreationInfo& pokemonInfo, PokemonStat
 }
 }  // namespace
 
-types::entityVector Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList) {
-  types::entityVector moveEntities{};
-  moveEntities.reserve((types::entityVector::size_type)moveInfoList.size());
-
-  for (const MoveCreationInfo& moveInfo : moveInfoList) {
-    MoveStateSetup moveSetup(registry);
-    moveSetup.setName(moveInfo.name);
-    types::pp maxPp = Constants::MoveMaxPp::DEFAULT;
-    if (!moveInfo.pp.has_value() || !moveInfo.maxPp.has_value()) {
-      maxPp = pokedex().getMoveData<Pp>(moveInfo.name).val;
-    }
-    maxPp = moveInfo.maxPp.value_or(maxPp);
-
-    moveSetup.setPP(moveInfo.pp.value_or(maxPp));
-    moveSetup.setMaxPP(maxPp);
-    moveEntities.push_back(moveSetup.entity());
-  }
-
-  return moveEntities;
-}
-
 PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& pokemonInfo) {
   PokemonStateSetup pokemonSetup(registry);
   if (pokemonInfo.id.has_value()) {
@@ -240,19 +220,18 @@ void Simulation::createInitialSide(
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
 
-    types::entityVector moveEntities = createInitialMoves(pokemonInfo.moves);
+    std::vector<MoveSlot> moveSlots;
+    for (const MoveCreationInfo& moveInfo : pokemonInfo.moves) {
+      types::pp maxPp = Constants::MoveMaxPp::DEFAULT;
+      if (!moveInfo.pp.has_value() || !moveInfo.maxPp.has_value()) {
+        maxPp = pokedex().getMoveData<Pp>(moveInfo.name).val;
+      }
+      maxPp = moveInfo.maxPp.value_or(maxPp);
 
-    if (battleInfo.runWithSimulateTurn) {
-      registry.insert<tags::SimulateTurn>(moveEntities.begin(), moveEntities.end());
-    }
-    if (battleInfo.runWithCalculateDamage) {
-      registry.insert<tags::CalculateDamage>(moveEntities.begin(), moveEntities.end());
-    }
-    if (battleInfo.runWithAnalyzeEffect) {
-      registry.insert<tags::AnalyzeEffect>(moveEntities.begin(), moveEntities.end());
+      moveSlots.push_back({moveInfo.name, moveInfo.pp.value_or(maxPp), maxPp});
     }
 
-    pokemonSetup.setMoves(moveEntities);
+    pokemonSetup.setMoves(moveSlots);
     pokemonSetupList.push_back(pokemonSetup);
   }
 

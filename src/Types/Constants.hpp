@@ -19,6 +19,8 @@ struct Constants {
 
   static constexpr std::uint8_t SIDE_COUNT = 2U;
 
+  static constexpr std::uint8_t PP_USE_DEDUCTION = 1U;
+
   struct PokemonLevel {
     static constexpr std::uint8_t MAX = 100U;
     static constexpr std::uint8_t MIN = 1U;

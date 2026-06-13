@@ -8,18 +8,18 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
-#include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Pokemon.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/ID.hpp>
 #include <Components/Level.hpp>
+#include <Components/MoveSlots.hpp>
 #include <Components/Names/AbilityNames.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SpeciesNames.hpp>
-#include <Components/PP.hpp>
 #include <Components/PlayerSide.hpp>
+#include <Components/Pokedex/PP.hpp>
 #include <Components/Probability.hpp>
 #include <Components/RNGSeed.hpp>
 #include <Components/SpeciesTypes.hpp>
@@ -109,7 +109,6 @@ struct Checks {
     return finalEntityCount;
   }
 
-  void checkMoveSlot(types::entity moveEntity) const { pokesim::debug::checkMoveSlot(moveEntity, *registry); }
   void checkPokemon(types::entity pokemonEntity) const { pokesim::debug::checkPokemon(pokemonEntity, *registry); }
   void checkSide(types::entity sideEntity) const { pokesim::debug::checkSide(sideEntity, *registry); }
   void checkBattle(types::entity battleEntity) const { pokesim::debug::checkBattle(battleEntity, *registry); }

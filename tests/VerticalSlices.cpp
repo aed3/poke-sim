@@ -314,6 +314,7 @@ TEST_CASE(
         tags::Pokemon,
         stat::CurrentHp,
         LastUsedMove,
+        MoveSlots,
         StatusName,
         status::tags::Paralysis,
         stat::EffectiveSpe>();
@@ -513,8 +514,8 @@ TEST_CASE(
     types::entity p2Side = sides.val.p2();
     types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
     types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
-    types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[1];
-    types::entity p2Move = registry.get<MoveSlots>(p2Pokemon).val[0];
+    types::moveSlotIndex p1MoveIndex = 1U;
+    types::moveSlotIndex p2MoveIndex = 0U;
 
     bool p1Paralyzed = registry.all_of<status::tags::Paralysis>(p1Pokemon);
     const auto& [p1Hp, p1LastUsedMove, p1Speed] =
@@ -544,10 +545,10 @@ TEST_CASE(
     REQUIRE_FALSE(registry.all_of<SideDecision>(p1Side));
     REQUIRE_FALSE(registry.all_of<SideDecision>(p2Side));
 
-    REQUIRE(p1LastUsedMove.val == p1Move);
-    REQUIRE(p2LastUsedMove.val == p2Move);
-    checks.checkMovePpUsage(p1Move);
-    checks.checkMovePpUsage(p2Move);
+    REQUIRE(p1LastUsedMove.val == p1MoveIndex);
+    REQUIRE(p2LastUsedMove.val == p2MoveIndex);
+    checks.checkMovePpUsage(p1Pokemon, p1MoveIndex);
+    checks.checkMovePpUsage(p2Pokemon, p2MoveIndex);
 
     if (!p2DamageInfo.mightCauseParalysis() || !p1Paralyzed) {
       REQUIRE_FALSE(registry.all_of<StatusName>(p1Pokemon));
@@ -885,17 +886,17 @@ TEST_CASE(
     types::entity p1BPokemon = registry.get<Team>(p1Side).val[1];
     types::entity p2APokemon = registry.get<Team>(p2Side).val[0];
     types::entity p2BPokemon = registry.get<Team>(p2Side).val[1];
-    types::entity p1AMove = registry.get<MoveSlots>(p1APokemon).val[0];
-    types::entity p1BMove = registry.get<MoveSlots>(p1BPokemon).val[0];
-    types::entity p2AMove = registry.get<MoveSlots>(p2APokemon).val[0];
-    types::entity p2BMove = registry.get<MoveSlots>(p2BPokemon).val[0];
+    types::moveSlotIndex p1AMoveIndex = 0U;
+    types::moveSlotIndex p1BMoveIndex = 0U;
+    types::moveSlotIndex p2AMoveIndex = 0U;
+    types::moveSlotIndex p2BMoveIndex = 0U;
 
     bool p2ABurned = registry.all_of<status::tags::Burn>(p2APokemon);
     bool p2BFainted = registry.all_of<tags::Fainted>(p2BPokemon);
     bool p2BSpaBoosted = registry.all_of<SpaBoost>(p2BPokemon);
 
-    const auto& [p1AHp, p1AChoiceLock, p1ALastUsedMove] =
-      registry.get<stat::CurrentHp, ChoiceLock, LastUsedMove>(p1APokemon);
+    const auto& [p1AHp, p1AChoiceLock, p1ALastUsedMove, p1ADisabledMoveSlots] =
+      registry.get<stat::CurrentHp, ChoiceLock, LastUsedMove, DisabledMoveSlots>(p1APokemon);
     const auto& [p1BHp, p1BLastUsedMove] = registry.get<stat::CurrentHp, LastUsedMove>(p1BPokemon);
     const auto& [p2AHp, p2ALastUsedMove, effectiveAtk] =
       registry.get<stat::CurrentHp, LastUsedMove, stat::EffectiveAtk>(p2APokemon);
@@ -904,22 +905,23 @@ TEST_CASE(
 
     CAPTURE(p1AHp.val, p1BHp.val, p2AHp.val, p2BHp.val, p2ABurned, p2BFainted, p2BSpaBoosted, probability.val);
 
-    checks.checkEntityForChanges<stat::CurrentHp, ChoiceLock, LastUsedMove>(p1APokemon);
-    checks.checkEntityForChanges<stat::CurrentHp, item::tags::FocusSash, ItemName, LastUsedMove>(p1BPokemon);
-    checks.checkEntityForChanges<stat::CurrentHp, StatusName, status::tags::Burn, LastUsedMove>(p2APokemon);
+    checks.checkEntityForChanges<stat::CurrentHp, ChoiceLock, LastUsedMove, MoveSlots, DisabledMoveSlots>(p1APokemon);
+    checks.checkEntityForChanges<stat::CurrentHp, item::tags::FocusSash, ItemName, LastUsedMove, MoveSlots>(p1BPokemon);
+    checks.checkEntityForChanges<stat::CurrentHp, StatusName, status::tags::Burn, LastUsedMove, MoveSlots>(p2APokemon);
 
-    checks.checkMovePpUsage(p1AMove);
-    checks.checkMovePpUsage(p1BMove);
-    checks.checkMovePpUsage(p2AMove);
+    checks.checkMovePpUsage(p1APokemon, p1AMoveIndex);
+    checks.checkMovePpUsage(p1BPokemon, p1BMoveIndex);
+    checks.checkMovePpUsage(p2APokemon, p2AMoveIndex);
 
-    REQUIRE(p1ALastUsedMove.val == p1AMove);
-    REQUIRE(p1BLastUsedMove.val == p1BMove);
-    REQUIRE(p2ALastUsedMove.val == p2AMove);
+    REQUIRE(p1ALastUsedMove.val == p1AMoveIndex);
+    REQUIRE(p1BLastUsedMove.val == p1BMoveIndex);
+    REQUIRE(p2ALastUsedMove.val == p2AMoveIndex);
 
     // P1A (Gardevoir) Specific Checks
     types::stat p1ABurnHpDecrease = p1AInfo.stats.hp.value() / dex::Burn::onResidualHpDecreaseDivisor(TestMechanic);
     REQUIRE(p1AHp.val == p1AInfo.stats.hp.value() - p1ABurnHpDecrease);
-    REQUIRE(p1AChoiceLock.val == p1AMove);
+    REQUIRE(p1AChoiceLock.val == p1AMoveIndex);
+    REQUIRE(p1ADisabledMoveSlots.val[p1AMoveIndex] == true);
 
     // P1B (Dragapult) Specific Checks
     REQUIRE_FALSE(registry.all_of<item::tags::FocusSash>(p1BPokemon));
@@ -958,7 +960,6 @@ TEST_CASE(
     REQUIRE(expectedP2BHp.contains(p2BHp.val));
     if (p2BFainted) {
       checks.checkEntityForChanges<tags::ActivePokemon, tags::Fainted, stat::CurrentHp>(p2BPokemon);
-      checks.checkEntityForChanges<>(p2BMove);
       REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(p2BPokemon));
       REQUIRE_FALSE(p2BSpaBoosted);
       REQUIRE(p2BHp.val == MIN_HP);
@@ -973,7 +974,8 @@ TEST_CASE(
         stat::EffectiveSpa,
         stat::EffectiveSpd,
         stat::EffectiveSpe,
-        LastUsedMove>(p2BPokemon);
+        LastUsedMove,
+        MoveSlots>(p2BPokemon);
       const auto& [p2BLastUsedMove, p2BSpdBoost, p2BSpeBoost] =
         registry.get<LastUsedMove, SpdBoost, SpeBoost>(p2BPokemon);
       const auto& [p2BInitialSpa, p2BInitialSpd, p2BInitialSpe] =
@@ -981,8 +983,8 @@ TEST_CASE(
 
       REQUIRE_FALSE(p2BHp.val == MIN_HP);
 
-      checks.checkMovePpUsage(p2BMove);
-      REQUIRE(p2BLastUsedMove.val == p2BMove);
+      checks.checkMovePpUsage(p2BPokemon, p2BMoveIndex);
+      REQUIRE(p2BLastUsedMove.val == p2BMoveIndex);
 
       using Effects = dex::QuiverDance::targetPrimaryEffect;
       REQUIRE(p2BSpdBoost.val == Effects::spdBoost(TestMechanic));

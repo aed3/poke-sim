@@ -73,20 +73,26 @@ TEST_CASE("Choice Lock: Choice lock starts", "[Simulation][SimulateTurn][Effect]
   types::entity p2Side = sides.val.p2();
   types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
   types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
-  types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[0];
-  types::entity p2Move = registry.get<MoveSlots>(p2Pokemon).val[0];
+  types::moveSlotIndex p1MoveIndex = 0U;
+  types::moveSlotIndex p2MoveIndex = 0U;
 
-  checks.checkEntityForChanges<LastUsedMove>(p1Pokemon);
-  checks.checkEntityForChanges<LastUsedMove, ChoiceLock>(p2Pokemon);
+  checks.checkEntityForChanges<LastUsedMove, MoveSlots>(p1Pokemon);
+  checks.checkEntityForChanges<LastUsedMove, ChoiceLock, MoveSlots, DisabledMoveSlots>(p2Pokemon);
 
   auto p1PokemonLastUsedMove = registry.get<LastUsedMove>(p1Pokemon);
-  REQUIRE(p1PokemonLastUsedMove.val == p1Move);
+  REQUIRE(p1PokemonLastUsedMove.val == p1MoveIndex);
 
   auto p2PokemonLastUsedMove = registry.get<LastUsedMove>(p2Pokemon);
-  REQUIRE(p2PokemonLastUsedMove.val == p2Move);
+  REQUIRE(p2PokemonLastUsedMove.val == p2MoveIndex);
 
   auto choiceLock = registry.get<ChoiceLock>(p2Pokemon);
-  REQUIRE(choiceLock.val == p2Move);
+  REQUIRE(choiceLock.val == p2MoveIndex);
+
+  auto disabledMoveSlots = registry.get<DisabledMoveSlots>(p2Pokemon);
+  REQUIRE(disabledMoveSlots.val[p2MoveIndex] == true);
+
+  checks.checkMovePpUsage(p1Pokemon, p1MoveIndex);
+  checks.checkMovePpUsage(p2Pokemon, p2MoveIndex);
 }
 
 TEST_CASE(
@@ -165,20 +171,28 @@ TEST_CASE(
   types::entity p2Side = sides.val.p2();
   types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
   types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
-  types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[1];
-  types::entity p2Move = registry.get<MoveSlots>(p2Pokemon).val[0];
+  types::moveSlotIndex p1MoveIndex = 1U;
+  types::moveSlotIndex p2MoveIndex = 0U;
 
-  checks.checkEntityForChanges<LastUsedMove>(p1Pokemon);
-  checks.checkEntityForChanges<LastUsedMove, ItemName, item::tags::ChoiceScarf, stat::EffectiveSpe, stat::CurrentHp>(
-    p2Pokemon);
+  checks.checkEntityForChanges<LastUsedMove, MoveSlots>(p1Pokemon);
+  checks.checkEntityForChanges<
+    LastUsedMove,
+    ItemName,
+    item::tags::ChoiceScarf,
+    stat::EffectiveSpe,
+    stat::CurrentHp,
+    MoveSlots>(p2Pokemon);
 
   auto p1PokemonLastUsedMove = registry.get<LastUsedMove>(p1Pokemon);
-  REQUIRE(p1PokemonLastUsedMove.val == p1Move);
+  REQUIRE(p1PokemonLastUsedMove.val == p1MoveIndex);
 
   auto p2PokemonLastUsedMove = registry.get<LastUsedMove>(p2Pokemon);
-  REQUIRE(p2PokemonLastUsedMove.val == p2Move);
+  REQUIRE(p2PokemonLastUsedMove.val == p2MoveIndex);
 
   REQUIRE_FALSE(registry.all_of<ItemName>(p2Pokemon));
   REQUIRE_FALSE(registry.all_of<item::tags::ChoiceScarf>(p2Pokemon));
+
+  checks.checkMovePpUsage(p1Pokemon, p1MoveIndex);
+  checks.checkMovePpUsage(p2Pokemon, p2MoveIndex);
 }
 }  // namespace pokesim

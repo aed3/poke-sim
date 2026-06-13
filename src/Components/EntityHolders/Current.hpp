@@ -37,10 +37,6 @@ struct CurrentActionMovesAsTarget {
   types::entityVector val{};
 };
 
-struct CurrentActionMoveSlot {
-  types::entity val{};
-};
-
 struct CurrentEffectSource {
   types::entity val{};
 };

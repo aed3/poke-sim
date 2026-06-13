@@ -4,7 +4,6 @@
 
 #include "BattleStateSetup.hpp"
 #include "EmplaceTagFromEnum.hpp"
-#include "MoveStateSetup.hpp"
 #include "PokemonStateSetup.hpp"
 #include "SideStateSetup.hpp"
 #include "StateSetupBase.hpp"

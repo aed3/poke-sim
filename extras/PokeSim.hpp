@@ -109,13 +109,13 @@
  * src/Components/CalcDamage/DamageRollSides.hpp
  * src/Components/CalcDamage/ModifyingEventRanTags.hpp
  * src/Components/CalcDamage/TemporaryMoveProperties.hpp
+ * src/Components/ChoiceLock.hpp
  * src/Components/CloneFromCloneTo.hpp
+ * src/Components/Current.hpp
+ * src/Components/DisabledMoveSlots.hpp
  * src/Components/EVsIVs.hpp
- * src/Components/EntityHolders/ChoiceLock.hpp
  * src/Components/EntityHolders/FaintQueue.hpp
  * src/Components/EntityHolders/FoeSide.hpp
- * src/Components/EntityHolders/LastUsedMove.hpp
- * src/Components/EntityHolders/MoveSlots.hpp
  * src/Components/EntityHolders/Pokemon.hpp
  * src/Components/EntityHolders/RecycledEntities.hpp
  * src/Components/EntityHolders/Side.hpp
@@ -124,7 +124,9 @@
  * src/Components/EventModifier.hpp
  * src/Components/HitCount.hpp
  * src/Components/ID.hpp
+ * src/Components/LastUsedMove.hpp
  * src/Components/Level.hpp
+ * src/Components/MoveSlots.hpp
  * src/Types/Enums/Ability.hpp
  * src/Components/Names/AbilityNames.hpp
  * src/Types/Enums/Gender.hpp
@@ -139,11 +141,11 @@
  * src/Components/Names/TargetSlotName.hpp
  * src/Types/Enums/Type.hpp
  * src/Components/Names/TypeNames.hpp
- * src/Components/PP.hpp
  * src/Types/Enums/PlayerSideId.hpp
  * src/Components/PlayerSide.hpp
  * src/Components/Pokedex/Abilities.hpp
  * src/Components/Pokedex/BaseStats.hpp
+ * src/Components/Pokedex/PP.hpp
  * src/Components/Position.hpp
  * src/Components/Priority.hpp
  * src/Components/Probability.hpp
@@ -191,7 +193,6 @@
  * src/Battle/Setup/PokemonStateSetup.hpp
  * src/Battle/Setup/BattleStateSetup.hpp
  * src/Battle/Setup/EmplaceTagFromEnum.hpp
- * src/Battle/Setup/MoveStateSetup.hpp
  * src/Battle/Setup/SideStateSetup.hpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.hpp
  * src/Pokedex/TypeChart.hpp
@@ -17184,6 +17185,8 @@ struct Constants {
 
   static constexpr std::uint8_t SIDE_COUNT = 2U;
 
+  static constexpr std::uint8_t PP_USE_DEDUCTION = 1U;
+
   struct PokemonLevel {
     static constexpr std::uint8_t MAX = 100U;
     static constexpr std::uint8_t MIN = 1U;
@@ -17405,6 +17408,12 @@ class fixedMemoryVector : private std::array<T, N> {
     static_assert(
       sizeof(fixedMemoryVector<T, N>) <= sizeof(std::vector<T>) + (sizeof(T) * N / 2U),
       "A std::vector for this type and size would be smaller.");
+  }
+
+  fixedMemoryVector(std::uint8_t size, const T& value) : fixedMemoryVector() {
+    for (std::uint8_t i = 0; i < size; i++) {
+      push_back(value);
+    }
   }
 
   fixedMemoryVector(std::initializer_list<T> list) : fixedMemoryVector() {
@@ -18600,10 +18609,6 @@ struct CurrentActionMovesAsTarget {
   types::entityVector val{};
 };
 
-struct CurrentActionMoveSlot {
-  types::entity val{};
-};
-
 struct CurrentEffectSource {
   types::entity val{};
 };
@@ -18888,6 +18893,16 @@ struct IgnoresDefendingBoost {};
 
 ///////// END OF src/Components/CalcDamage/TemporaryMoveProperties.hpp /////////
 
+//////////////////// START OF src/Components/ChoiceLock.hpp ////////////////////
+
+namespace pokesim {
+struct ChoiceLock {
+  types::moveSlotIndex val{};
+};
+}  // namespace pokesim
+
+///////////////////// END OF src/Components/ChoiceLock.hpp /////////////////////
+
 ///////////////// START OF src/Components/CloneFromCloneTo.hpp /////////////////
 
 namespace pokesim {
@@ -18902,6 +18917,27 @@ struct CloneTo {
 }  // namespace pokesim
 
 ////////////////// END OF src/Components/CloneFromCloneTo.hpp //////////////////
+
+///////////////////// START OF src/Components/Current.hpp //////////////////////
+
+namespace pokesim {
+struct CurrentActionMoveSlot {
+  types::moveSlotIndex val{};
+};
+
+}  // namespace pokesim
+
+////////////////////// END OF src/Components/Current.hpp ///////////////////////
+
+//////////////// START OF src/Components/DisabledMoveSlots.hpp /////////////////
+
+namespace pokesim {
+struct DisabledMoveSlots {
+  types::moveSlots<bool> val{};
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/DisabledMoveSlots.hpp //////////////////
 
 ////////////////////// START OF src/Components/EVsIVs.hpp //////////////////////
 
@@ -18937,16 +18973,6 @@ struct Ivs {
 
 /////////////////////// END OF src/Components/EVsIVs.hpp ///////////////////////
 
-///////////// START OF src/Components/EntityHolders/ChoiceLock.hpp /////////////
-
-namespace pokesim {
-struct ChoiceLock {
-  types::entity val{};
-};
-}  // namespace pokesim
-
-////////////// END OF src/Components/EntityHolders/ChoiceLock.hpp //////////////
-
 ///////////// START OF src/Components/EntityHolders/FaintQueue.hpp /////////////
 
 namespace pokesim {
@@ -18968,27 +18994,6 @@ struct FoeSide {
 }  // namespace pokesim
 
 /////////////// END OF src/Components/EntityHolders/FoeSide.hpp ////////////////
-
-//////////// START OF src/Components/EntityHolders/LastUsedMove.hpp ////////////
-
-namespace pokesim {
-struct LastUsedMove {
-  types::entity val{};
-};
-}  // namespace pokesim
-
-///////////// END OF src/Components/EntityHolders/LastUsedMove.hpp /////////////
-
-///////////// START OF src/Components/EntityHolders/MoveSlots.hpp //////////////
-
-namespace pokesim {
-// Contains a list of entities of the moves a Pokemon known.
-struct MoveSlots {
-  types::moveSlots<types::entity> val{};
-};
-}  // namespace pokesim
-
-////////////// END OF src/Components/EntityHolders/MoveSlots.hpp ///////////////
 
 ////////////// START OF src/Components/EntityHolders/Pokemon.hpp ///////////////
 
@@ -19074,6 +19079,16 @@ struct Id {
 
 ///////////////////////// END OF src/Components/ID.hpp /////////////////////////
 
+/////////////////// START OF src/Components/LastUsedMove.hpp ///////////////////
+
+namespace pokesim {
+struct LastUsedMove {
+  types::moveSlotIndex val{};
+};
+}  // namespace pokesim
+
+//////////////////// END OF src/Components/LastUsedMove.hpp ////////////////////
+
 ////////////////////// START OF src/Components/Level.hpp ///////////////////////
 
 namespace pokesim {
@@ -19084,6 +19099,26 @@ struct Level {
 }  // namespace pokesim
 
 /////////////////////// END OF src/Components/Level.hpp ////////////////////////
+
+//////////////////// START OF src/Components/MoveSlots.hpp /////////////////////
+
+namespace pokesim {
+struct MoveSlot {
+  dex::Move move = dex::Move::NO_MOVE;
+  types::pp pp = Constants::MovePp::DEFAULT;
+  types::pp maxPp = Constants::MovePp::DEFAULT;
+
+  constexpr bool operator==(const MoveSlot& other) const {
+    return move == other.move && pp == other.pp && maxPp == other.maxPp;
+  }
+};
+
+struct MoveSlots {
+  types::moveSlots<MoveSlot> val{};
+};
+}  // namespace pokesim
+
+///////////////////// END OF src/Components/MoveSlots.hpp //////////////////////
 
 ///////////////////// START OF src/Types/Enums/Ability.hpp /////////////////////
 
@@ -19285,20 +19320,6 @@ struct TypeName {
 
 ////////////////// END OF src/Components/Names/TypeNames.hpp ///////////////////
 
-//////////////////////// START OF src/Components/PP.hpp ////////////////////////
-
-namespace pokesim {
-struct Pp {
-  types::pp val = Constants::MovePp::DEFAULT;
-};
-
-struct MaxPp {
-  types::pp val = Constants::MoveMaxPp::DEFAULT;
-};
-}  // namespace pokesim
-
-///////////////////////// END OF src/Components/PP.hpp /////////////////////////
-
 ////////////////// START OF src/Types/Enums/PlayerSideId.hpp ///////////////////
 
 namespace pokesim {
@@ -19359,6 +19380,16 @@ struct BaseStats {
 }  // namespace pokesim
 
 ///////////////// END OF src/Components/Pokedex/BaseStats.hpp //////////////////
+
+//////////////////// START OF src/Components/Pokedex/PP.hpp ////////////////////
+
+namespace pokesim {
+struct Pp {
+  types::pp val = Constants::MovePp::DEFAULT;
+};
+}  // namespace pokesim
+
+///////////////////// END OF src/Components/Pokedex/PP.hpp /////////////////////
 
 ///////////////////// START OF src/Components/Position.hpp /////////////////////
 
@@ -19832,8 +19863,6 @@ struct Punch {};
 struct VariableHitCount {};
 // Move Property Tag: A multi-hit move where each hit checks accuracy (i.e. Triple Kick)
 struct AccuracyDependentHitCount {};
-
-struct Disabled {};
 }  // namespace tags
 
 namespace effect::tags {
@@ -20399,17 +20428,19 @@ struct DefBoost;
 struct SpaBoost;
 struct SpdBoost;
 struct SpeBoost;
+struct ChoiceLock;
 struct CloneTo;
+struct CurrentActionMoveSlot;
 struct Damage;
 struct DamageRollModifiers;
 struct DamageRolls;
+struct DisabledMoveSlots;
 struct Evs;
 struct Ivs;
 struct Battle;
 struct ParentBattle;
 struct RootBattle;
 struct ParentEntity;
-struct ChoiceLock;
 struct CurrentAction;
 struct CurrentActionTargets;
 struct CurrentActionSource;
@@ -20418,15 +20449,12 @@ struct FailedCurrentActionSource;
 struct FailedCurrentActionTarget;
 struct CurrentActionMovesAsSource;
 struct CurrentActionMovesAsTarget;
-struct CurrentActionMoveSlot;
 struct CurrentEffectSource;
 struct CurrentEffectTarget;
 struct CurrentEffectsAsSource;
 struct CurrentEffectsAsTarget;
 struct FaintQueue;
 struct FoeSide;
-struct LastUsedMove;
-struct MoveSlots;
 struct Pokemon;
 struct RecycledAction;
 struct Side;
@@ -20435,7 +20463,10 @@ struct Team;
 struct EventModifier;
 struct HitCount;
 struct Id;
+struct LastUsedMove;
 struct Level;
+struct MoveSlot;
+struct MoveSlots;
 struct AbilityName;
 struct GenderName;
 struct ItemName;
@@ -20452,13 +20483,12 @@ struct TerrainName;
 struct TypeName;
 struct VolatileName;
 struct WeatherName;
-struct Pp;
-struct MaxPp;
 struct PlayerSide;
 struct PrimaryAbility;
 struct SecondaryAbility;
 struct HiddenAbility;
 struct BaseStats;
+struct Pp;
 struct Position;
 struct MovePriority;
 struct Probability;
@@ -20534,7 +20564,6 @@ void check(const T&) {}
 void checkBattle(types::entity, const types::registry&);
 void checkSide(types::entity, const types::registry&);
 void checkPokemon(types::entity, const types::registry&);
-void checkMoveSlot(types::entity, const types::registry&);
 void checkActionMove(types::entity, const types::registry&);
 void checkPercentChance(types::percentChance);
 
@@ -20613,7 +20642,13 @@ void check(const calc_damage::RealEffectiveStat&);
 template <>
 void check(const calc_damage::Power&);
 
+template <>
+void check(const ChoiceLock&);
+
 // template <> void check(const CloneTo&);
+
+template <>
+void check(const CurrentActionMoveSlot&);
 
 template <>
 void check(const Damage&);
@@ -20623,6 +20658,9 @@ void check(const DamageRollModifiers&);
 
 template <>
 void check(const DamageRolls&);
+
+template <>
+void check(const DisabledMoveSlots&);
 
 template <>
 void check(const Evs&);
@@ -20641,9 +20679,6 @@ void check(const RootBattle&, const types::registry&);
 
 template <>
 void check(const ParentEntity&, const types::registry&);
-
-template <>
-void check(const ChoiceLock&, const types::registry&);
 
 template <>
 void check(const CurrentAction&, const types::registry&);
@@ -20670,9 +20705,6 @@ template <>
 void check(const CurrentActionMovesAsTarget&, const types::registry&);
 
 template <>
-void check(const CurrentActionMoveSlot&, const types::registry&);
-
-template <>
 void check(const CurrentEffectSource&, const types::registry&);
 
 template <>
@@ -20689,12 +20721,6 @@ void check(const FaintQueue&, const types::registry&);
 
 template <>
 void check(const FoeSide&, const types::registry&);
-
-template <>
-void check(const LastUsedMove&, const types::registry&);
-
-template <>
-void check(const MoveSlots&, const types::registry&);
 
 template <>
 void check(const Pokemon&, const types::registry&);
@@ -20719,7 +20745,16 @@ void check(const HitCount&);
 // template <> void check(const Id&);
 
 template <>
+void check(const LastUsedMove&);
+
+template <>
 void check(const Level&);
+
+template <>
+void check(const MoveSlot&);
+
+template <>
+void check(const MoveSlots&);
 
 template <>
 void check(const AbilityName&);
@@ -20770,12 +20805,6 @@ template <>
 void check(const WeatherName&);
 
 template <>
-void check(const Pp&);
-
-template <>
-void check(const MaxPp&);
-
-template <>
 void check(const PlayerSide&);
 
 template <>
@@ -20789,6 +20818,9 @@ void check(const HiddenAbility&);
 
 template <>
 void check(const BaseStats&);
+
+template <>
+void check(const Pp&);
 
 template <>
 void check(const Position&);
@@ -21353,7 +21385,7 @@ types::entity slotToSideEntity(const Sides& sides, Slot targetSlot);
 types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot);
 types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
-types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move);
+types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
 
 types::entity createActionMoveForTarget(
   types::handle targetHandle, types::entity battleEntity, types::entity sourceEntity, dex::Move move,
@@ -21397,6 +21429,11 @@ struct StateSetupBase {
 /////////////// START OF src/Battle/Setup/PokemonStateSetup.hpp ////////////////
 
 namespace pokesim {
+struct Evs;
+struct Ivs;
+struct SpeciesTypes;
+struct MoveSlot;
+
 // Tool to set properties of a Pokemon's state to an entity.
 struct PokemonStateSetup : internal::StateSetupBase {
   PokemonStateSetup() : internal::StateSetupBase() {}
@@ -21426,7 +21463,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   void setGender(dex::Gender gender);
   void setAbility(dex::Ability ability);
   void setItem(dex::Item item);
-  void setMoves(const std::vector<types::entity>& moveSlots);
+  void setMoves(const std::vector<MoveSlot>& moveSlots);
 
   void setPostion(types::teamPositionIndex position);
   void setStatus(dex::Status status);
@@ -21539,30 +21576,6 @@ void emplaceTagFromEnum(dex::Move move, types::handle handle);
 }  // namespace pokesim
 
 //////////////// END OF src/Battle/Setup/EmplaceTagFromEnum.hpp ////////////////
-
-///////////////// START OF src/Battle/Setup/MoveStateSetup.hpp /////////////////
-
-namespace pokesim {
-// Tool to set properties of a move's state to an entity.
-struct MoveStateSetup : internal::StateSetupBase {
-  MoveStateSetup() : internal::StateSetupBase() {}
-  MoveStateSetup(types::registry& registry) : MoveStateSetup(registry, registry.create()) {}
-  MoveStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {}
-
-  /**
-   * @brief Applies the defaults to the required properties for a move state.
-   *
-   * Some of the required properties are a blank `MoveName`, `Pp`, and `MaxPp` component.
-   */
-  void initBlank();
-
-  void setName(dex::Move moveName);
-  void setPP(types::pp pp);
-  void setMaxPP(types::pp maxPp);
-};
-}  // namespace pokesim
-
-////////////////// END OF src/Battle/Setup/MoveStateSetup.hpp //////////////////
 
 ///////////////// START OF src/Battle/Setup/SideStateSetup.hpp /////////////////
 
@@ -22540,7 +22553,6 @@ struct SimulationSetupChecks;
  */
 class Simulation {
  private:
-  types::entityVector createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList);
   PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonInfo);
   void createInitialSide(
     SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo);
@@ -22733,7 +22745,6 @@ struct Checks {
     return finalEntityCount;
   }
 
-  void checkMoveSlot(types::entity moveEntity) const { pokesim::debug::checkMoveSlot(moveEntity, *registry); }
   void checkPokemon(types::entity pokemonEntity) const { pokesim::debug::checkPokemon(pokemonEntity, *registry); }
   void checkSide(types::entity sideEntity) const { pokesim::debug::checkSide(sideEntity, *registry); }
   void checkBattle(types::entity battleEntity) const { pokesim::debug::checkBattle(battleEntity, *registry); }
@@ -22965,18 +22976,15 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(moveSlots.val.size() == creationInfo.moves.size());
 
     for (std::size_t i = 0U; i < creationInfo.moves.size(); i++) {
-      const MoveCreationInfo& move = creationInfo.moves[i];
-      types::entity moveEntity = moveSlots.val[(types::moveSlotIndex)i];
-      POKESIM_REQUIRE_NM(registry->all_of<MoveName>(moveEntity));
-      POKESIM_REQUIRE_NM(registry->all_of<Pp>(moveEntity));
-      POKESIM_REQUIRE_NM(registry->all_of<MaxPp>(moveEntity));
-      POKESIM_REQUIRE_NM(registry->get<MoveName>(moveEntity).val == move.name);
+      const MoveCreationInfo& moveInfo = creationInfo.moves[i];
+      MoveSlot moveSlot = moveSlots.val[(types::moveSlotIndex)i];
+      types::pp idealMaxPp = moveInfo.maxPp.value_or(pokedex->getMoveData<Pp>(moveInfo.name).val);
+      types::pp idealPp = moveInfo.pp.value_or(idealMaxPp);
 
-      types::pp idealMaxPp = move.maxPp.value_or(pokedex->getMoveData<Pp>(move.name).val);
-      types::pp idealPp = move.pp.value_or(idealMaxPp);
-      POKESIM_REQUIRE_NM(registry->get<Pp>(moveEntity).val == idealPp);
-      POKESIM_REQUIRE_NM(registry->get<MaxPp>(moveEntity).val == idealMaxPp);
-      pokesim::debug::checkMoveSlot(moveEntity, *registry);
+      POKESIM_REQUIRE_NM(moveSlot.move == moveInfo.name);
+      POKESIM_REQUIRE_NM(moveSlot.pp == idealPp);
+      POKESIM_REQUIRE_NM(moveSlot.maxPp == idealMaxPp);
+      pokesim::debug::check(moveSlot);
     }
 
     if (creationInfo.currentHp.has_value()) {
@@ -23402,7 +23410,8 @@ struct CurrentActionSource;
 struct CurrentActionTarget;
 struct CurrentActionMoveSlot;
 struct Damage;
-struct Pp;
+struct LastUsedMove;
+struct MoveSlots;
 
 namespace stat {
 struct Atk;
@@ -23427,7 +23436,7 @@ void clearStatus(types::handle pokemonHandle);
 
 void clearVolatiles(types::handle pokemonHandle);
 
-void deductPp(Pp& pp);
+void deductPp(types::handle handle, MoveSlots& moveSlots, LastUsedMove lastUsedMove);
 void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move);
 void resetEffectiveAtk(types::handle handle, stat::Atk atk);
 void resetEffectiveDef(types::handle handle, stat::Def def);
@@ -24575,9 +24584,6 @@ struct Checks : pokesim::debug::Checks {
         checkSide(sideEntity);
         for (types::entity pokemonEntity : registry->get<Team>(sideEntity).val) {
           checkPokemon(pokemonEntity);
-          for (types::entity moveEntity : registry->get<MoveSlots>(pokemonEntity).val) {
-            checkMoveSlot(moveEntity);
-          }
         }
       }
     }

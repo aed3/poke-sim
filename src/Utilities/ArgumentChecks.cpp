@@ -242,20 +242,7 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
   if (effectiveSpd) check(*effectiveSpd);
   if (effectiveSpe) check(*effectiveSpe);
 
-  checkBounds<Constants::MoveSlots>(moveSlots.val.size());
-}
-
-void checkMoveSlot(types::entity moveSlotEntity, const types::registry& registry) {
-  types::registry::checkEntity(moveSlotEntity, registry);
-  POKESIM_REQUIRE_NM(has<MoveName>(moveSlotEntity, registry));
-  POKESIM_REQUIRE_NM(has<Pp>(moveSlotEntity, registry));
-  POKESIM_REQUIRE_NM(has<MaxPp>(moveSlotEntity, registry));
-
-  const auto& [move, pp, maxPp] = registry.get<MoveName, Pp, MaxPp>(moveSlotEntity);
-
-  check(move);
-  check(pp);
-  check(maxPp);
+  check(moveSlots);
 }
 
 void checkActionMove(types::entity moveEntity, const types::registry& registry) {
@@ -527,6 +514,16 @@ void check(const calc_damage::Power& power) {
 }
 
 template <>
+void check(const ChoiceLock& choiceLock) {
+  POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
+}
+
+template <>
+void check(const CurrentActionMoveSlot& currentActionMoveSlot) {
+  POKESIM_REQUIRE_NM(currentActionMoveSlot.val < Constants::MoveSlots::MAX);
+}
+
+template <>
 void check(const Damage& damage) {
   POKESIM_REQUIRE_NM(damage.val <= Constants::Damage::MAX);
 }
@@ -543,6 +540,14 @@ void check(const DamageRolls& damageRolls) {
   for (const Damage& damage : damageRolls.val) {
     check(damage);
   }
+}
+
+template <>
+void check(const DisabledMoveSlots& disabledMoveSlots) {
+  checkBounds<Constants::MoveSlots>(disabledMoveSlots.val.size());
+  POKESIM_REQUIRE(
+    listContains(disabledMoveSlots.val, true),
+    "The component should be removed if no moves are disabled.");
 }
 
 template <>
@@ -583,11 +588,6 @@ void check(const RootBattle& battle, const types::registry& registry) {
 template <>
 void check(const ParentEntity& parentEntity, const types::registry& registry) {
   types::registry::checkEntity(parentEntity.val, registry);
-}
-
-template <>
-void check(const ChoiceLock& choiceLock, const types::registry& registry) {
-  checkMoveSlot(choiceLock.val, registry);
 }
 
 template <>
@@ -640,11 +640,6 @@ void check(const CurrentActionMovesAsTarget& moves, const types::registry& regis
 }
 
 template <>
-void check(const CurrentActionMoveSlot& move, const types::registry& registry) {
-  checkMoveSlot(move.val, registry);
-}
-
-template <>
 void check(const CurrentEffectSource& source, const types::registry& registry) {
   checkPokemon(source.val, registry);
 }
@@ -680,19 +675,6 @@ void check(const FaintQueue& faintQueue, const types::registry& registry) {
 template <>
 void check(const FoeSide& foeSide, const types::registry& registry) {
   checkSide(foeSide.val, registry);
-}
-
-template <>
-void check(const LastUsedMove& lastUsedMove, const types::registry& registry) {
-  checkMoveSlot(lastUsedMove.val, registry);
-}
-
-template <>
-void check(const MoveSlots& moveSlots, const types::registry& registry) {
-  checkBounds<Constants::MoveSlots>(moveSlots.val.size());
-  for (types::entity moveEntity : moveSlots.val) {
-    checkMoveSlot(moveEntity, registry);
-  }
 }
 
 template <>
@@ -733,8 +715,28 @@ void check(const HitCount& hitCount) {
 }
 
 template <>
+void check(const LastUsedMove& lastUsedMove) {
+  POKESIM_REQUIRE_NM(lastUsedMove.val < Constants::MoveSlots::MAX);
+}
+
+template <>
 void check(const Level& level) {
   checkBounds<Constants::PokemonLevel>(level.val);
+}
+
+template <>
+void check(const MoveSlot& moveSlot) {
+  check(MoveName{moveSlot.move});
+  check(Pp{moveSlot.pp});
+  checkBounds<Constants::MoveMaxPp>(moveSlot.maxPp);
+}
+
+template <>
+void check(const MoveSlots& moveSlots) {
+  checkBounds<Constants::MoveSlots>(moveSlots.val.size());
+  for (MoveSlot moveSlot : moveSlots.val) {
+    check(moveSlot);
+  }
 }
 
 template <>
@@ -843,16 +845,6 @@ void check(const WeatherName& weatherName) {
 }
 
 template <>
-void check(const Pp& pp) {
-  checkBounds<Constants::MovePp>(pp.val);
-}
-
-template <>
-void check(const MaxPp& maxPp) {
-  checkBounds<Constants::MoveMaxPp>(maxPp.val);
-}
-
-template <>
 void check(const PlayerSide& playerSide) {
   checkPlayerSideId(playerSide.val);
 }
@@ -880,6 +872,11 @@ void check(const BaseStats& baseStats) {
   checkBaseStat(baseStats.spa);
   checkBaseStat(baseStats.spd);
   checkBaseStat(baseStats.spe);
+}
+
+template <>
+void check(const Pp& pp) {
+  checkBounds<Constants::MovePp>(pp.val);
 }
 
 template <>
