@@ -33,7 +33,6 @@
  * src/Battle/Side/ManageSideState.cpp
  * src/Battle/Setup/SideStateSetup.cpp
  * src/Battle/Setup/PokemonStateSetup.cpp
- * src/Battle/Setup/MoveStateSetup.cpp
  * src/Battle/Setup/EmplaceTagFromEnum.cpp
  * src/Battle/Setup/BattleStateSetup.cpp
  * src/Battle/Pokemon/ManagePokemonState.cpp
@@ -400,20 +399,7 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
   if (effectiveSpd) check(*effectiveSpd);
   if (effectiveSpe) check(*effectiveSpe);
 
-  checkBounds<Constants::MoveSlots>(moveSlots.val.size());
-}
-
-void checkMoveSlot(types::entity moveSlotEntity, const types::registry& registry) {
-  types::registry::checkEntity(moveSlotEntity, registry);
-  POKESIM_REQUIRE_NM(has<MoveName>(moveSlotEntity, registry));
-  POKESIM_REQUIRE_NM(has<Pp>(moveSlotEntity, registry));
-  POKESIM_REQUIRE_NM(has<MaxPp>(moveSlotEntity, registry));
-
-  const auto& [move, pp, maxPp] = registry.get<MoveName, Pp, MaxPp>(moveSlotEntity);
-
-  check(move);
-  check(pp);
-  check(maxPp);
+  check(moveSlots);
 }
 
 void checkActionMove(types::entity moveEntity, const types::registry& registry) {
@@ -685,6 +671,16 @@ void check(const calc_damage::Power& power) {
 }
 
 template <>
+void check(const ChoiceLock& choiceLock) {
+  POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
+}
+
+template <>
+void check(const CurrentActionMoveSlot& currentActionMoveSlot) {
+  POKESIM_REQUIRE_NM(currentActionMoveSlot.val < Constants::MoveSlots::MAX);
+}
+
+template <>
 void check(const Damage& damage) {
   POKESIM_REQUIRE_NM(damage.val <= Constants::Damage::MAX);
 }
@@ -701,6 +697,14 @@ void check(const DamageRolls& damageRolls) {
   for (const Damage& damage : damageRolls.val) {
     check(damage);
   }
+}
+
+template <>
+void check(const DisabledMoveSlots& disabledMoveSlots) {
+  checkBounds<Constants::MoveSlots>(disabledMoveSlots.val.size());
+  POKESIM_REQUIRE(
+    listContains(disabledMoveSlots.val, true),
+    "The component should be removed if no moves are disabled.");
 }
 
 template <>
@@ -741,11 +745,6 @@ void check(const RootBattle& battle, const types::registry& registry) {
 template <>
 void check(const ParentEntity& parentEntity, const types::registry& registry) {
   types::registry::checkEntity(parentEntity.val, registry);
-}
-
-template <>
-void check(const ChoiceLock& choiceLock, const types::registry& registry) {
-  checkMoveSlot(choiceLock.val, registry);
 }
 
 template <>
@@ -798,11 +797,6 @@ void check(const CurrentActionMovesAsTarget& moves, const types::registry& regis
 }
 
 template <>
-void check(const CurrentActionMoveSlot& move, const types::registry& registry) {
-  checkMoveSlot(move.val, registry);
-}
-
-template <>
 void check(const CurrentEffectSource& source, const types::registry& registry) {
   checkPokemon(source.val, registry);
 }
@@ -838,19 +832,6 @@ void check(const FaintQueue& faintQueue, const types::registry& registry) {
 template <>
 void check(const FoeSide& foeSide, const types::registry& registry) {
   checkSide(foeSide.val, registry);
-}
-
-template <>
-void check(const LastUsedMove& lastUsedMove, const types::registry& registry) {
-  checkMoveSlot(lastUsedMove.val, registry);
-}
-
-template <>
-void check(const MoveSlots& moveSlots, const types::registry& registry) {
-  checkBounds<Constants::MoveSlots>(moveSlots.val.size());
-  for (types::entity moveEntity : moveSlots.val) {
-    checkMoveSlot(moveEntity, registry);
-  }
 }
 
 template <>
@@ -891,8 +872,28 @@ void check(const HitCount& hitCount) {
 }
 
 template <>
+void check(const LastUsedMove& lastUsedMove) {
+  POKESIM_REQUIRE_NM(lastUsedMove.val < Constants::MoveSlots::MAX);
+}
+
+template <>
 void check(const Level& level) {
   checkBounds<Constants::PokemonLevel>(level.val);
+}
+
+template <>
+void check(const MoveSlot& moveSlot) {
+  check(MoveName{moveSlot.move});
+  check(Pp{moveSlot.pp});
+  checkBounds<Constants::MoveMaxPp>(moveSlot.maxPp);
+}
+
+template <>
+void check(const MoveSlots& moveSlots) {
+  checkBounds<Constants::MoveSlots>(moveSlots.val.size());
+  for (MoveSlot moveSlot : moveSlots.val) {
+    check(moveSlot);
+  }
 }
 
 template <>
@@ -1001,16 +1002,6 @@ void check(const WeatherName& weatherName) {
 }
 
 template <>
-void check(const Pp& pp) {
-  checkBounds<Constants::MovePp>(pp.val);
-}
-
-template <>
-void check(const MaxPp& maxPp) {
-  checkBounds<Constants::MoveMaxPp>(maxPp.val);
-}
-
-template <>
 void check(const PlayerSide& playerSide) {
   checkPlayerSideId(playerSide.val);
 }
@@ -1038,6 +1029,11 @@ void check(const BaseStats& baseStats) {
   checkBaseStat(baseStats.spa);
   checkBaseStat(baseStats.spd);
   checkBaseStat(baseStats.spe);
+}
+
+template <>
+void check(const Pp& pp) {
+  checkBounds<Constants::MovePp>(pp.val);
 }
 
 template <>
@@ -1473,27 +1469,6 @@ void setPokemonCurrentBoosts(const PokemonCreationInfo& pokemonInfo, PokemonStat
 }
 }  // namespace
 
-types::entityVector Simulation::createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList) {
-  types::entityVector moveEntities{};
-  moveEntities.reserve((types::entityVector::size_type)moveInfoList.size());
-
-  for (const MoveCreationInfo& moveInfo : moveInfoList) {
-    MoveStateSetup moveSetup(registry);
-    moveSetup.setName(moveInfo.name);
-    types::pp maxPp = Constants::MoveMaxPp::DEFAULT;
-    if (!moveInfo.pp.has_value() || !moveInfo.maxPp.has_value()) {
-      maxPp = pokedex().getMoveData<Pp>(moveInfo.name).val;
-    }
-    maxPp = moveInfo.maxPp.value_or(maxPp);
-
-    moveSetup.setPP(moveInfo.pp.value_or(maxPp));
-    moveSetup.setMaxPP(maxPp);
-    moveEntities.push_back(moveSetup.entity());
-  }
-
-  return moveEntities;
-}
-
 PokemonStateSetup Simulation::createInitialPokemon(const PokemonCreationInfo& pokemonInfo) {
   PokemonStateSetup pokemonSetup(registry);
   if (pokemonInfo.id.has_value()) {
@@ -1565,19 +1540,18 @@ void Simulation::createInitialSide(
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
 
-    types::entityVector moveEntities = createInitialMoves(pokemonInfo.moves);
+    std::vector<MoveSlot> moveSlots;
+    for (const MoveCreationInfo& moveInfo : pokemonInfo.moves) {
+      types::pp maxPp = Constants::MoveMaxPp::DEFAULT;
+      if (!moveInfo.pp.has_value() || !moveInfo.maxPp.has_value()) {
+        maxPp = pokedex().getMoveData<Pp>(moveInfo.name).val;
+      }
+      maxPp = moveInfo.maxPp.value_or(maxPp);
 
-    if (battleInfo.runWithSimulateTurn) {
-      registry.insert<tags::SimulateTurn>(moveEntities.begin(), moveEntities.end());
-    }
-    if (battleInfo.runWithCalculateDamage) {
-      registry.insert<tags::CalculateDamage>(moveEntities.begin(), moveEntities.end());
-    }
-    if (battleInfo.runWithAnalyzeEffect) {
-      registry.insert<tags::AnalyzeEffect>(moveEntities.begin(), moveEntities.end());
+      moveSlots.push_back({moveInfo.name, moveInfo.pp.value_or(maxPp), maxPp});
     }
 
-    pokemonSetup.setMoves(moveEntities);
+    pokemonSetup.setMoves(moveSlots);
     pokemonSetupList.push_back(pokemonSetup);
   }
 
@@ -2425,8 +2399,8 @@ void runMoveAction(Simulation& simulation) {
 
   runBeforeMove(simulation);
 
-  simulation.view<deductPp, Tags<pokesim::tags::CurrentActionMoveSlot>>();
   simulation.view<setLastMoveUsed>();
+  simulation.view<deductPp, Tags<pokesim::tags::CurrentActionMoveSource>>();
 
   useMove(simulation);
 }
@@ -2533,16 +2507,12 @@ void incrementTurn(Turn& turn) {
   turn.val++;
 }
 
-void updateActivePokemonPostTurn(types::registry& registry, const pokesim::MoveSlots& moveSlots) {
-  registry.remove<pokesim::move::tags::Disabled>(moveSlots.val.begin(), moveSlots.val.end());
-}
-
 void nextTurn(Simulation& simulation) {
   getBattleFilter(simulation).view<incrementTurn>();
 
   pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon> pokemonFilter{simulation};
   if (!pokemonFilter.hasNoneSelected()) {
-    pokemonFilter.view<updateActivePokemonPostTurn>();
+    simulation.removeFromEntities<DisabledMoveSlots, pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>();
 
     pokemonFilter.addToSelected<pokesim::tags::DisableMove>();
     runDisableMove(simulation);
@@ -4437,16 +4407,12 @@ void choiceLockRemoveWithItem(
 }
 
 void choiceLockOnDisableMove(
-  types::registry& registry, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
-  POKESIM_REQUIRE(
-    std::find(moveSlots.val.begin(), moveSlots.val.end(), choiceLocked.val) != moveSlots.val.end(),
-    "Should skip if the move is no longer present, but when does that happen?");
-
-  for (types::entity entity : moveSlots.val) {
-    if (entity != choiceLocked.val) {
-      registry.emplace<move::tags::Disabled>(entity);
-    }
+  types::handle handle, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
+  if (!handle.all_of<DisabledMoveSlots>()) {
+    handle.emplace<DisabledMoveSlots>(types::moveSlots<bool>(moveSlots.val.size(), false));
   }
+
+  handle.get<DisabledMoveSlots>().val[choiceLocked.val] = true;
 }
 }  // namespace
 
@@ -5225,13 +5191,14 @@ void PokemonStateSetup::setItem(dex::Item item) {
   item::tags::emplaceTagFromEnum(item, handle);
 }
 
-void PokemonStateSetup::setMoves(const std::vector<types::entity>& moveSlots) {
-  MoveSlots& moveEntities = handle.emplace<MoveSlots>();
+void PokemonStateSetup::setMoves(const std::vector<MoveSlot>& moveSlots) {
+  MoveSlots& newMoveSlots = handle.emplace<MoveSlots>();
   POKESIM_REQUIRE(
-    moveSlots.size() <= moveEntities.val.max_size(),
+    moveSlots.size() <= newMoveSlots.val.max_size(),
     "Cannot add more moves to a Pokemon than MAX_MOVE_SLOTS.");
-  for (types::entity moveSlot : moveSlots) {
-    moveEntities.val.push_back(moveSlot);
+
+  for (MoveSlot moveSlot : moveSlots) {
+    newMoveSlots.val.push_back(moveSlot);
   }
 }
 
@@ -5269,30 +5236,6 @@ void PokemonStateSetup::setIVs(const Ivs& ivs) {
 }  // namespace pokesim
 
 //////////////// END OF src/Battle/Setup/PokemonStateSetup.cpp /////////////////
-
-///////////////// START OF src/Battle/Setup/MoveStateSetup.cpp /////////////////
-
-namespace pokesim {
-void MoveStateSetup::initBlank() {
-  handle.emplace<MoveName>();
-  handle.emplace<Pp>();
-  handle.emplace<MaxPp>();
-}
-
-void MoveStateSetup::setName(dex::Move moveName) {
-  handle.emplace<MoveName>(moveName);
-}
-
-void MoveStateSetup::setPP(types::pp pp) {
-  handle.emplace<Pp>(pp);
-}
-
-void MoveStateSetup::setMaxPP(types::pp maxPp) {
-  handle.emplace<MaxPp>(maxPp);
-}
-}  // namespace pokesim
-
-////////////////// END OF src/Battle/Setup/MoveStateSetup.cpp //////////////////
 
 /////////////// START OF src/Battle/Setup/EmplaceTagFromEnum.cpp ///////////////
 
@@ -5625,9 +5568,13 @@ void clearVolatiles(types::handle pokemonHandle) {
   pokemonHandle.remove<ChoiceLock>();
 }
 
-void deductPp(Pp& pp) {
-  if (pp.val) {
-    pp.val -= 1U;  // TODO(aed3): Make this into a mechanic constant
+void deductPp(types::handle handle, MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
+  MoveSlot& moveSlot = moveSlots.val[lastUsedMove.val];
+  if (moveSlot.pp >= Constants::PP_USE_DEDUCTION) {
+    moveSlot.pp -= Constants::PP_USE_DEDUCTION;
+  }
+  else {
+    moveSlot.pp = 0U;
   }
 }
 
@@ -5879,9 +5826,8 @@ void setCurrentActionMove(
     createActionMoveForTarget({registry, target}, battleHandle.entity(), source.val, move.val, pokedex);
   }
 
-  types::entity moveSlotEntity = moveToEntity(registry, moveSlots, move.val);
-  battleHandle.emplace<CurrentActionMoveSlot>(moveSlotEntity);
-  registry.emplace<tags::CurrentActionMoveSlot>(moveSlotEntity);
+  types::moveSlotIndex moveSlotIndex = moveToMoveSlot(moveSlots, move.val);
+  battleHandle.emplace<CurrentActionMoveSlot>(moveSlotIndex);
 }
 
 void setFailedActionMove(
@@ -5905,9 +5851,7 @@ void setFailedActionMove(
     registry.emplace<FailedCurrentActionTarget>(battle.val, target.val);
   }
 
-  types::entity moveSlotEntity = registry.get<CurrentActionMoveSlot>(battle.val).val;
   registry.erase<CurrentActionMoveSlot>(battle.val);
-  registry.erase<tags::CurrentActionMoveSlot>(moveSlotEntity);
 
   updateCurrentActionTargets(registry, registry.get<CurrentActionTargets>(battle.val));
 }
@@ -6036,15 +5980,15 @@ types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sid
   return allyEntity;
 }
 
-types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move) {
-  for (types::entity moveSlot : moveSlots.val) {
-    if (registry.get<MoveName>(moveSlot).val == move) {
-      return moveSlot;
+types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move) {
+  for (types::moveSlotIndex i = 0; i < moveSlots.val.size(); i++) {
+    if (moveSlots.val[i].move == move) {
+      return i;
     }
   }
 
-  POKESIM_REQUIRE_FAIL("No move of entity found.");
-  return entt::null;
+  POKESIM_REQUIRE_FAIL("No move found.");
+  return 0U;
 }
 
 types::entity createActionMoveForTarget(
@@ -6162,11 +6106,7 @@ void traversePokemon(types::registry& registry, VisitEntity visitEntity = nullpt
   const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
   using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
 
-  for (const auto [entity, moveSlots] : registry.view<Tag, tags::Pokemon, MoveSlots>().each()) {
-    for (auto move : moveSlots.val) {
-      registry.emplace<Tag>(move);
-    }
-
+  for (types::entity entity : registry.view<Tag, tags::Pokemon>()) {
     if constexpr (ForCloning) {
       visitEntity(entity);
     }
@@ -6177,21 +6117,10 @@ void traversePokemon(types::registry& registry, VisitEntity visitEntity = nullpt
       registry.emplace_or_replace<Tag>(move);
     }
   }
+
   for (const auto [entity, moves] : registry.view<Tag, CurrentActionMovesAsTarget>().each()) {
     for (types::entity move : moves.val) {
       registry.emplace_or_replace<Tag>(move);
-    }
-  }
-}
-
-template <typename VisitEntity = void*>
-void traverseMove(types::registry& registry, VisitEntity visitEntity = nullptr) {
-  const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
-  using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
-
-  if constexpr (ForCloning) {
-    for (types::entity entity : registry.view<Tag, MoveName, Pp>()) {
-      visitEntity(entity);
     }
   }
 }
@@ -6236,14 +6165,6 @@ void clonePokemon(
   });
 }
 
-void cloneMove(
-  types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::entityIndex cloneCount) {
-  traverseMove(registry, [&](types::entity entity) {
-    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
-  });
-}
-
 void deleteBattle(types::registry& registry) {
   traverseBattle(registry);
 }
@@ -6262,10 +6183,6 @@ void deleteCurrentActionMove(types::registry& registry) {
 
 void deletePokemon(types::registry& registry) {
   traversePokemon(registry);
-}
-
-void deleteMove(types::registry& registry) {
-  traverseMove(registry);
 }
 
 void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
@@ -6318,7 +6235,6 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   cloneAction(registry, entityMap, srcEntityStorages, count);
   clonePokemon(registry, entityMap, srcEntityStorages, count);
   cloneCurrentActionMove(registry, entityMap, srcEntityStorages, count);
-  cloneMove(registry, entityMap, srcEntityStorages, count);
 
   for (auto [id, storage] : registry.storage()) {
     if (srcEntityStorages.contains(id)) {
@@ -6348,11 +6264,9 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
 
   // Not simplified further to a, for example, packed template type list, to make debugging what type went wrong easier
   remapComponentEntities<Battle>(registry, entityMap);
-  remapComponentEntities<ChoiceLock>(registry, entityMap);
   remapComponentEntities<CurrentAction>(registry, entityMap);
   remapComponentEntities<CurrentActionMovesAsSource>(registry, entityMap);
   remapComponentEntities<CurrentActionMovesAsTarget>(registry, entityMap);
-  remapComponentEntities<CurrentActionMoveSlot>(registry, entityMap);
   remapComponentEntities<CurrentActionSource>(registry, entityMap);
   remapComponentEntities<CurrentActionTarget>(registry, entityMap);
   remapComponentEntities<FailedCurrentActionSource>(registry, entityMap);
@@ -6364,8 +6278,6 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<CurrentEffectTarget>(registry, entityMap);
   remapComponentEntities<FaintQueue>(registry, entityMap);
   remapComponentEntities<FoeSide>(registry, entityMap);
-  remapComponentEntities<LastUsedMove>(registry, entityMap);
-  remapComponentEntities<MoveSlots>(registry, entityMap);
   remapComponentEntities<Pokemon>(registry, entityMap);
   remapComponentEntities<RecycledAction>(registry, entityMap);
   remapComponentEntities<Side>(registry, entityMap);
@@ -6395,7 +6307,6 @@ void deleteClones(types::registry& registry) {
   deleteAction(registry);
   deletePokemon(registry);
   deleteCurrentActionMove(registry);
-  deleteMove(registry);
   auto remove = registry.view<tags::CloneToRemove>();
   registry.destroy(remove.begin(), remove.end());
 }

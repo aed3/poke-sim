@@ -1,10 +1,11 @@
 #include "ManageBattleState.hpp"
 
 #include <Battle/Helpers/Helpers.hpp>
+#include <Components/Current.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/EntityHolders/Current.hpp>
-#include <Components/EntityHolders/MoveSlots.hpp>
+#include <Components/MoveSlots.hpp>
 #include <Components/Names/ItemNames.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SourceSlotName.hpp>
@@ -119,9 +120,8 @@ void setCurrentActionMove(
     createActionMoveForTarget({registry, target}, battleHandle.entity(), source.val, move.val, pokedex);
   }
 
-  types::entity moveSlotEntity = moveToEntity(registry, moveSlots, move.val);
-  battleHandle.emplace<CurrentActionMoveSlot>(moveSlotEntity);
-  registry.emplace<tags::CurrentActionMoveSlot>(moveSlotEntity);
+  types::moveSlotIndex moveSlotIndex = moveToMoveSlot(moveSlots, move.val);
+  battleHandle.emplace<CurrentActionMoveSlot>(moveSlotIndex);
 }
 
 void setFailedActionMove(
@@ -145,9 +145,7 @@ void setFailedActionMove(
     registry.emplace<FailedCurrentActionTarget>(battle.val, target.val);
   }
 
-  types::entity moveSlotEntity = registry.get<CurrentActionMoveSlot>(battle.val).val;
   registry.erase<CurrentActionMoveSlot>(battle.val);
-  registry.erase<tags::CurrentActionMoveSlot>(moveSlotEntity);
 
   updateCurrentActionTargets(registry, registry.get<CurrentActionTargets>(battle.val));
 }

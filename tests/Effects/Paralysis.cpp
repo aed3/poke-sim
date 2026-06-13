@@ -80,8 +80,8 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effec
     types::entity p2Side = sides.val.p2();
     types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
     types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
-    types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[1];
-    types::entity p2Move = registry.get<MoveSlots>(p2Pokemon).val[0];
+    types::moveSlotIndex p1MoveIndex = 1U;
+    types::moveSlotIndex p2MoveIndex = 0U;
 
     REQUIRE(turn.val == 2U);
     auto initialRngSeed = checks.getInitialComponents<RngSeed>(battle);
@@ -95,19 +95,18 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effec
 
     if (paralysisStoppedP1Move) {
       checks.checkEntityForChanges<>(p1Pokemon);
-      checks.checkEntityForChanges<>(p1Move);
 
-      checks.checkEntityForChanges<LastUsedMove>(p2Pokemon);
+      checks.checkEntityForChanges<LastUsedMove, MoveSlots>(p2Pokemon);
     }
 
     if (p1Moved) {
-      checks.checkEntityForChanges<LastUsedMove>(p1Pokemon);
-      checks.checkMovePpUsage(p1Move);
+      checks.checkEntityForChanges<LastUsedMove, MoveSlots>(p1Pokemon);
+      checks.checkMovePpUsage(p1Pokemon, p1MoveIndex);
 
-      checks.checkEntityForChanges<stat::CurrentHp, LastUsedMove>(p2Pokemon);
+      checks.checkEntityForChanges<stat::CurrentHp, LastUsedMove, MoveSlots>(p2Pokemon);
 
       auto p1PokemonLastUsedMove = registry.get<LastUsedMove>(p1Pokemon);
-      REQUIRE(p1PokemonLastUsedMove.val == p1Move);
+      REQUIRE(p1PokemonLastUsedMove.val == p1MoveIndex);
 
       auto p2PokemonHp = registry.get<stat::CurrentHp>(p2Pokemon);
       auto initialP2PokemonHp = checks.getInitialComponents<stat::CurrentHp>(p2Pokemon);
@@ -115,9 +114,9 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effec
     }
 
     auto p2PokemonLastUsedMove = registry.get<LastUsedMove>(p2Pokemon);
-    REQUIRE(p2PokemonLastUsedMove.val == p2Move);
+    REQUIRE(p2PokemonLastUsedMove.val == p2MoveIndex);
 
-    checks.checkMovePpUsage(p2Move);
+    checks.checkMovePpUsage(p2Pokemon, p2MoveIndex);
     foundProbabilities.insert(probability.val);
   }
 

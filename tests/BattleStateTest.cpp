@@ -152,26 +152,14 @@ TEST_CASE("Clone Battles", "[Simulation][Setup]") {
         REQUIRE_FALSE(existingEntities.contains(clonePokemon));
         existingEntities.insert(clonePokemon);
 
-        const auto& [baseMoveSlots, basePokemonSide, basePokemonBattle] =
-          registry.get<MoveSlots, Side, Battle>(basePokemon);
-        const auto& [cloneMoveSlots, clonePokemonSide, clonePokemonBattle] =
-          registry.get<MoveSlots, Side, Battle>(clonePokemon);
+        const auto& [basePokemonSide, basePokemonBattle] = registry.get<Side, Battle>(basePokemon);
+        const auto& [clonePokemonSide, clonePokemonBattle] = registry.get<Side, Battle>(clonePokemon);
 
         REQUIRE(basePokemonSide.val != clonePokemonSide.val);
         REQUIRE(cloneSide == clonePokemonSide.val);
 
         REQUIRE(basePokemonBattle.val != clonePokemonBattle.val);
         REQUIRE(battle == clonePokemonBattle.val);
-
-        REQUIRE(baseMoveSlots.val.size() == cloneMoveSlots.val.size());
-
-        for (types::moveSlotIndex j = 0U; j < baseMoveSlots.val.size(); j++) {
-          types::entity baseMoveSlot = baseMoveSlots.val[j];
-          types::entity cloneMoveSlot = cloneMoveSlots.val[j];
-          existingEntities.insert(baseMoveSlot);
-          REQUIRE_FALSE(existingEntities.contains(cloneMoveSlot));
-          existingEntities.insert(cloneMoveSlot);
-        }
       }
     };
 

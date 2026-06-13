@@ -314,33 +314,33 @@ struct Random {
 
  public:
   struct AssignSimulateTurnOneBattleOneInput : Assign<tags::SimulateTurn, true, true> {
-    static constexpr types::entityIndex MAX_INPUTS = 1U << 14U;
+    static constexpr types::entityIndex MAX_INPUTS = 1U << 16U;
   };
   struct AssignSimulateTurnOneBattleManyInputs : Assign<tags::SimulateTurn, true, false> {
-    static constexpr types::entityIndex MAX_INPUTS = 1U << 14U;
+    static constexpr types::entityIndex MAX_INPUTS = 1U << 16U;
   };
   struct AssignSimulateTurnManyBattlesManyInputs : Assign<tags::SimulateTurn, false, false> {
-    static constexpr types::entityIndex MAX_INPUTS = 1U << 14U;
+    static constexpr types::entityIndex MAX_INPUTS = 1U << 16U;
   };
 
   struct AssignCalcDamageOneBattleOneInput : Assign<tags::CalculateDamage, true, true> {
-    static constexpr types::entityIndex MAX_INPUTS = 1U << 14U;
+    static constexpr types::entityIndex MAX_INPUTS = 1U << 16U;
   };
   struct AssignCalcDamageOneBattleManyInputs : Assign<tags::CalculateDamage, true, false> {
-    static constexpr types::entityIndex MAX_INPUTS = 1U << 14U;
+    static constexpr types::entityIndex MAX_INPUTS = 1U << 16U;
   };
   struct AssignCalcDamageManyBattlesManyInputs : Assign<tags::CalculateDamage, false, false> {
-    static constexpr types::entityIndex MAX_INPUTS = 1U << 14U;
+    static constexpr types::entityIndex MAX_INPUTS = 1U << 16U;
   };
 
   struct AssignAnalyzeEffectOneBattleOneInput : Assign<tags::AnalyzeEffect, true, true> {
-    static constexpr types::entityIndex MAX_INPUTS = 1U << 13U;
+    static constexpr types::entityIndex MAX_INPUTS = 1U << 15U;
   };
   struct AssignAnalyzeEffectOneBattleManyInputs : Assign<tags::AnalyzeEffect, true, false> {
-    static constexpr types::entityIndex MAX_INPUTS = 1U << 13U;
+    static constexpr types::entityIndex MAX_INPUTS = 1U << 15U;
   };
   struct AssignAnalyzeEffectManyBattlesManyInputs : Assign<tags::AnalyzeEffect, false, false> {
-    static constexpr types::entityIndex MAX_INPUTS = 1U << 13U;
+    static constexpr types::entityIndex MAX_INPUTS = 1U << 15U;
   };
 };
 }  // namespace

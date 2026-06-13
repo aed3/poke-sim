@@ -6,11 +6,11 @@
 #include <Components/Boosts.hpp>
 #include <Components/CalcDamage/ModifyingEventRanTags.hpp>
 #include <Components/CalcDamage/TemporaryMoveProperties.hpp>
+#include <Components/ChoiceLock.hpp>
 #include <Components/EntityHolders/Battle.hpp>
-#include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
-#include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EventModifier.hpp>
+#include <Components/MoveSlots.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/AbilityTags.hpp>
 #include <Components/Tags/Current.hpp>

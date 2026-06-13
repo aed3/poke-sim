@@ -8,7 +8,7 @@
 #include <Components/HitCount.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/TypeNames.hpp>
-#include <Components/PP.hpp>
+#include <Components/Pokedex/PP.hpp>
 #include <Components/Priority.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/TargetTags.hpp>

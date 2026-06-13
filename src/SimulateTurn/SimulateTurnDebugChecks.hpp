@@ -5,10 +5,10 @@
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
 #include <Components/EntityHolders/Battle.hpp>
-#include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/RecycledEntities.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
+#include <Components/MoveSlots.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
@@ -101,9 +101,6 @@ struct Checks : pokesim::debug::Checks {
         checkSide(sideEntity);
         for (types::entity pokemonEntity : registry->get<Team>(sideEntity).val) {
           checkPokemon(pokemonEntity);
-          for (types::entity moveEntity : registry->get<MoveSlots>(pokemonEntity).val) {
-            checkMoveSlot(moveEntity);
-          }
         }
       }
     }

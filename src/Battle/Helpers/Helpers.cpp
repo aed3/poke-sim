@@ -2,9 +2,9 @@
 
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
-#include <Components/EntityHolders/MoveSlots.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
+#include <Components/MoveSlots.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
@@ -89,15 +89,15 @@ types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sid
   return allyEntity;
 }
 
-types::entity moveToEntity(const types::registry& registry, const MoveSlots& moveSlots, dex::Move move) {
-  for (types::entity moveSlot : moveSlots.val) {
-    if (registry.get<MoveName>(moveSlot).val == move) {
-      return moveSlot;
+types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move) {
+  for (types::moveSlotIndex i = 0; i < moveSlots.val.size(); i++) {
+    if (moveSlots.val[i].move == move) {
+      return i;
     }
   }
 
-  POKESIM_REQUIRE_FAIL("No move of entity found.");
-  return entt::null;
+  POKESIM_REQUIRE_FAIL("No move found.");
+  return 0U;
 }
 
 types::entity createActionMoveForTarget(

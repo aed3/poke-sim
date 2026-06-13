@@ -281,22 +281,22 @@ TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   types::entity p2Side = sides.val.p2();
   types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
   types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
-  types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[0];
-  types::entity p2Move = registry.get<MoveSlots>(p2Pokemon).val[0];
+  types::moveSlotIndex p1MoveIndex = 0U;
+  types::moveSlotIndex p2MoveIndex = 0U;
 
-  checks.checkEntityForChanges<stat::CurrentHp, tags::Fainted, tags::ActivePokemon>(p1Pokemon);
-  checks.checkEntityForChanges<LastUsedMove>(p2Pokemon);
+  checks.checkEntityForChanges<stat::CurrentHp, tags::Fainted, tags::ActivePokemon, MoveSlots>(p1Pokemon);
+  checks.checkEntityForChanges<LastUsedMove, MoveSlots>(p2Pokemon);
 
   auto p2PokemonLastUsedMove = registry.get<LastUsedMove>(p2Pokemon);
-  REQUIRE(p2PokemonLastUsedMove.val == p2Move);
+  REQUIRE(p2PokemonLastUsedMove.val == p2MoveIndex);
 
   auto p1PokemonHp = registry.get<stat::CurrentHp>(p1Pokemon);
   REQUIRE(p1PokemonHp.val == Constants::PokemonCurrentHpStat::MIN);
   REQUIRE(registry.all_of<tags::Fainted>(p1Pokemon));
   REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(p1Pokemon));
 
-  checks.checkMovePpUsage(p1Move);
-  checks.checkMovePpUsage(p2Move);
+  checks.checkMovePpUsage(p1Pokemon, p1MoveIndex);
+  checks.checkMovePpUsage(p1Pokemon, p2MoveIndex);
 
   REQUIRE(winner.val == PlayerSideId::P2);
 }

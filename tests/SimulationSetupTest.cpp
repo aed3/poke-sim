@@ -257,7 +257,6 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalculateDamage][Setup]
   std::size_t idealCalcDamageTagCount = 1U +  // Battle
                                         2U +  // Sides
                                         6U +  // Pokemon
-                                        6U +  // Moves
                                         6U;   // Damage calculation move inputs
 
   REQUIRE(calcDamageTagCount == idealCalcDamageTagCount);
@@ -296,8 +295,7 @@ TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup
   std::size_t analyzeEffectTagCount = registry.view<tags::AnalyzeEffect>().size();
   std::size_t idealAnalyzeEffectTagCount = 1U +  // Battle
                                            2U +  // Sides
-                                           6U +  // Pokemon
-                                           6U;   // Moves
+                                           6U;   // Pokemon
   REQUIRE(analyzeEffectTagCount == idealAnalyzeEffectTagCount);
 }
 

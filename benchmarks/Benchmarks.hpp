@@ -89,7 +89,6 @@ struct CreateSingleBattleSimulation : BenchmarkInputHolder {
 
 struct CreateDoubleBattleSimulation : BenchmarkInputHolder {
   inline static const std::vector<std::string> TAGS = {"DoubleBattle"};
-  static constexpr types::entityIndex MAX_INPUTS = 1U << 13U;
   static Simulation run(types::rngState&, Pokedex& pokedex) { return Simulation{pokedex, BattleFormat::DOUBLES}; }
 };
 

@@ -1,11 +1,12 @@
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Components/BaseEffectChance.hpp>
+#include <Components/ChoiceLock.hpp>
 #include <Components/Damage.hpp>
+#include <Components/DisabledMoveSlots.hpp>
 #include <Components/EntityHolders/Battle.hpp>
-#include <Components/EntityHolders/ChoiceLock.hpp>
 #include <Components/EntityHolders/Current.hpp>
-#include <Components/EntityHolders/MoveSlots.hpp>
+#include <Components/MoveSlots.hpp>
 #include <Components/Names/ItemNames.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
@@ -60,16 +61,12 @@ void choiceLockRemoveWithItem(
 }
 
 void choiceLockOnDisableMove(
-  types::registry& registry, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
-  POKESIM_REQUIRE(
-    std::find(moveSlots.val.begin(), moveSlots.val.end(), choiceLocked.val) != moveSlots.val.end(),
-    "Should skip if the move is no longer present, but when does that happen?");
-
-  for (types::entity entity : moveSlots.val) {
-    if (entity != choiceLocked.val) {
-      registry.emplace<move::tags::Disabled>(entity);
-    }
+  types::handle handle, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
+  if (!handle.all_of<DisabledMoveSlots>()) {
+    handle.emplace<DisabledMoveSlots>(types::moveSlots<bool>(moveSlots.val.size(), false));
   }
+
+  handle.get<DisabledMoveSlots>().val[choiceLocked.val] = true;
 }
 }  // namespace
 

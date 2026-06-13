@@ -188,7 +188,6 @@ setup_target(
     src/Battle/Pokemon/ManagePokemonState.cpp
     src/Battle/Setup/BattleStateSetup.cpp
     src/Battle/Setup/EmplaceTagFromEnum.cpp
-    src/Battle/Setup/MoveStateSetup.cpp
     src/Battle/Setup/PokemonStateSetup.cpp
     src/Battle/Setup/SideStateSetup.cpp
     src/Battle/Side/ManageSideState.cpp

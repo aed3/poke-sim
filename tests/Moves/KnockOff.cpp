@@ -79,25 +79,30 @@ TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][Knoc
   types::entity p2Side = sides.val.p2();
   types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
   types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
-  types::entity p1Move = registry.get<MoveSlots>(p1Pokemon).val[1];
-  types::entity p2Move = registry.get<MoveSlots>(p2Pokemon).val[0];
+  types::moveSlotIndex p1MoveIndex = 1U;
+  types::moveSlotIndex p2MoveIndex = 0U;
 
-  checks.checkEntityForChanges<LastUsedMove>(p1Pokemon);
-  checks.checkEntityForChanges<stat::CurrentHp, LastUsedMove, ItemName, item::tags::AssaultVest, stat::EffectiveSpd>(
-    p2Pokemon);
+  checks.checkEntityForChanges<LastUsedMove, MoveSlots>(p1Pokemon);
+  checks.checkEntityForChanges<
+    stat::CurrentHp,
+    LastUsedMove,
+    ItemName,
+    item::tags::AssaultVest,
+    stat::EffectiveSpd,
+    MoveSlots>(p2Pokemon);
 
   auto p1PokemonLastUsedMove = registry.get<LastUsedMove>(p1Pokemon);
-  REQUIRE(p1PokemonLastUsedMove.val == p1Move);
+  REQUIRE(p1PokemonLastUsedMove.val == p1MoveIndex);
 
   auto p2PokemonLastUsedMove = registry.get<LastUsedMove>(p2Pokemon);
-  REQUIRE(p2PokemonLastUsedMove.val == p2Move);
+  REQUIRE(p2PokemonLastUsedMove.val == p2MoveIndex);
 
   auto p2PokemonHp = registry.get<stat::CurrentHp>(p2Pokemon);
   auto initialP2PokemonHp = checks.getInitialComponents<stat::CurrentHp>(p2Pokemon);
   REQUIRE(p2PokemonHp.val < initialP2PokemonHp.val);
 
-  checks.checkMovePpUsage(p1Move);
-  checks.checkMovePpUsage(p2Move);
+  checks.checkMovePpUsage(p1Pokemon, p1MoveIndex);
+  checks.checkMovePpUsage(p2Pokemon, p2MoveIndex);
 
   REQUIRE_FALSE(registry.all_of<ItemName>(p2Pokemon));
   REQUIRE_FALSE(registry.all_of<item::tags::AssaultVest>(p2Pokemon));

@@ -154,7 +154,6 @@ struct VerticalSlice {
 
   struct AssignAnalyzeEffectSingleBattleInputs : BenchmarkInputHolder {
     inline static const std::vector<std::string> TAGS = {"AnalyzeEffect", "VerticalSlice1"};
-    static constexpr types::entityIndex MAX_INPUTS = 1U << 14U;
     static void run(types::rngState&, types::entityIndex inputCount, Simulation& simulation, Pokedex& pokedex) {
       static BattleCreationInfo battleCreationInfo = createSingleBattleTeam(pokedex);
       pokedex.loadForBattleInfo({battleCreationInfo});
@@ -181,8 +180,11 @@ BENCHMARK_CASE(
 BENCHMARK_CASE(
   CreatePokedex, CreateDoubleBattleSimulation, ChooseMonteCarloOptions,
   VerticalSlice::AssignSimulateTurnDoubleBattleInputs)
+struct ChooseRandomDoublesBranchingOptions : ChooseRandomBranchingOptions {
+  static constexpr types::entityIndex MAX_INPUTS = 1U << 13U;
+};
 BENCHMARK_CASE(
-  CreatePokedex, CreateDoubleBattleSimulation, ChooseRandomBranchingOptions,
+  CreatePokedex, CreateDoubleBattleSimulation, ChooseRandomDoublesBranchingOptions,
   VerticalSlice::AssignSimulateTurnDoubleBattleInputs)
 
 BENCHMARK_CASE(

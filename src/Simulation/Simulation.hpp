@@ -39,7 +39,6 @@ struct SimulationSetupChecks;
  */
 class Simulation {
  private:
-  types::entityVector createInitialMoves(const std::vector<MoveCreationInfo>& moveInfoList);
   PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonInfo);
   void createInitialSide(
     SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo);
