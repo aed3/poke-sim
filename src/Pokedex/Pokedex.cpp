@@ -62,6 +62,14 @@ void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInf
         }
       }
     }
+
+    for (const auto& damageCalculation : battleCreationInfo.damageCalculations) {
+      moveSet.insert(damageCalculation.moves.begin(), damageCalculation.moves.end());
+    }
+
+    for (const auto& effectToAnalyze : battleCreationInfo.effectsToAnalyze) {
+      moveSet.insert(effectToAnalyze.moves.begin(), effectToAnalyze.moves.end());
+    }
   }
 
   loadSpecies(speciesSet);
