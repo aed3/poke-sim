@@ -49,7 +49,7 @@ struct Random {
   };
 
   template <typename T>
-  static auto pickFromList(const T& list, types::rngState rngState) {
+  static auto pickFromList(const T& list, types::rngState& rngState) {
     return list[internal::nextBoundedRandomValue(rngState, (types::rngResult)list.size())];
   }
 
@@ -307,6 +307,7 @@ struct Random {
         }
       }
 
+      pokedex.loadForBattleInfo(battleInfoList);
       simulation.createInitialStates(battleInfoList);
       updateAllStats(simulation);
     }
