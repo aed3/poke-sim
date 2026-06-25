@@ -13,9 +13,6 @@
 #include "SimulationOptions.hpp"
 
 namespace pokesim {
-struct SideStateSetup;
-struct PokemonStateSetup;
-struct BattleStateSetup;
 class Pokedex;
 
 namespace simulate_turn {
@@ -27,9 +24,6 @@ struct Results;
 namespace analyze_effect {
 struct Results;
 }  // namespace analyze_effect
-namespace debug {
-struct SimulationSetupChecks;
-}
 
 /**
  * @brief The entry point for creating and running simulations.
@@ -38,21 +32,6 @@ struct SimulationSetupChecks;
  * for running multiple simulations of the same battle, where each battle state has completed the same number of turns.
  */
 class Simulation {
- private:
-  PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonInfo);
-  void createInitialSide(
-    SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo);
-
-  void createInitialTurnDecision(BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionInfo);
-  void createCalcDamageInput(
-    BattleStateSetup battleStateSetup, const CalcDamageInputInfo& inputInfo, debug::SimulationSetupChecks& debugChecks);
-  void createAnalyzeEffectInput(
-    BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& inputInfo,
-    debug::SimulationSetupChecks& debugChecks);
-
-  types::sides<SideStateSetup> createInitialBattle(
-    BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
-
  private:
   struct ConstantValues {
     ConstantValues(const Pokedex& pokedex_, BattleFormat battleFormat_)

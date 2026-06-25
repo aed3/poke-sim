@@ -117,7 +117,13 @@ void setCurrentActionMove(
   const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
 
   for (types::entity target : targets.val) {
-    createActionMoveForTarget({registry, target}, battleHandle.entity(), source.val, move.val, pokedex);
+    createActionMoveForTarget(
+      {registry, target},
+      battleHandle.entity(),
+      source.val,
+      move.val,
+      pokedex,
+      registry.create());
   }
 
   types::moveSlotIndex moveSlotIndex = moveToMoveSlot(moveSlots, move.val);

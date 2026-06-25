@@ -17,7 +17,7 @@
 
 namespace pokesim::dex::internal {
 struct MoveDexDataSetup : DexDataSetup {
-  MoveDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
+  MoveDexDataSetup(types::registry& registry, types::entity entity) : DexDataSetup(registry, entity) {}
 
   void setName(Move move);
   void setNameTag(Move move);

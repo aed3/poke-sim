@@ -92,7 +92,8 @@ void createActionMoveForTargets(
   types::registry& registry = *targetHandle.registry();
 
   dex::Move move = registry.get<MoveName>(registry.get<CurrentAction>(battle.val).val).val;
-  types::entity moveEntity = createActionMoveForTarget(targetHandle, battle.val, source.val, move, pokedex);
+  types::entity moveEntity =
+    createActionMoveForTarget(targetHandle, battle.val, source.val, move, pokedex, registry.create());
 
   registry.emplace<pokesim::tags::SimulateTurn>(moveEntity);
 }

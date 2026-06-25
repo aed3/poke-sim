@@ -11,13 +11,12 @@
 
 namespace pokesim {
 struct PokemonStateSetup;
+struct SideDecision;
 
 // Tool to set properties of a player's side state to an entity.
 struct SideStateSetup : internal::StateSetupBase {
   SideStateSetup() : internal::StateSetupBase() {}
-  SideStateSetup(types::registry& registry, PlayerSideId playerSideId)
-      : SideStateSetup(registry, registry.create(), playerSideId) {}
-  SideStateSetup(types::registry& registry, types::entity entity, PlayerSideId playerSideId);
+  SideStateSetup(types::registry& registry, types::entity entity);
   /**
    * @brief Applies the defaults to the required properties for a player side's state.
    *
@@ -29,5 +28,6 @@ struct SideStateSetup : internal::StateSetupBase {
   void setOpponent(types::entity entity);
   void setBattle(types::entity entity);
   void setPlayerSide(PlayerSideId playerSideId);
+  void setSideDecision(const SideDecision& sideDecision);
 };
 }  // namespace pokesim

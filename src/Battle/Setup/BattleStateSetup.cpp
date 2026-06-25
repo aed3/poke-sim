@@ -30,9 +30,6 @@ BattleStateSetup::BattleStateSetup(types::registry& registry, types::entity enti
   if (!handle.any_of<ActionQueue, tags::Battle>()) {
     handle.emplace<ActionQueue>();
     handle.emplace<tags::Battle>();
-
-    types::entity recycledAction = handle.emplace<RecycledAction>(registry.create()).val;
-    registry.emplace<tags::RecycledAction>(recycledAction);
   }
 }
 
@@ -44,12 +41,19 @@ void BattleStateSetup::initBlank() {
   setProbability(Constants::Probability::DEFAULT);
 }
 
+void BattleStateSetup::setRecycledAction(types::entity recycledAction) {
+  types::registry& registry = *handle.registry();
+
+  handle.emplace<RecycledAction>(recycledAction);
+  registry.emplace<tags::RecycledAction>(recycledAction);
+}
+
 void BattleStateSetup::setAutoID() {
   setID((types::stateId)handle.registry()->view<Sides>().size());
 }
 
 void BattleStateSetup::setID(types::stateId id) {
-  handle.emplace_or_replace<Id>(id);
+  handle.emplace<Id>(id);
 }
 
 void BattleStateSetup::setSide(types::entity sideEntity) {
@@ -81,32 +85,6 @@ void BattleStateSetup::setActionQueue(const std::vector<ActionQueueItem>& queue)
 
 void BattleStateSetup::setTurn(types::battleTurn turn) {
   handle.emplace<Turn>(turn);
-}
-
-void BattleStateSetup::setCurrentActionTarget(types::targets<types::entity> actionTargets) {
-  handle.emplace<CurrentActionTargets>(actionTargets);
-  for (types::entity entity : actionTargets) {
-    handle.registry()->emplace<tags::CurrentActionMoveTarget>(entity);
-  }
-}
-
-void BattleStateSetup::setCurrentActionSource(types::entity actionSource) {
-  handle.emplace<CurrentActionSource>(actionSource);
-  handle.registry()->emplace<tags::CurrentActionMoveSource>(actionSource);
-}
-
-void BattleStateSetup::setCurrentActionMove(types::entity actionMove) {
-  handle.registry()->emplace<tags::CurrentActionMove>(actionMove);
-  const auto* source = handle.try_get<CurrentActionSource>();
-  const auto* targets = handle.try_get<CurrentActionTargets>();
-  if (source) {
-    handle.registry()->emplace<CurrentActionMovesAsSource>(source->val).val.push_back(actionMove);
-  }
-  if (targets) {
-    for (types::entity target : targets->val) {
-      handle.registry()->emplace<CurrentActionMovesAsTarget>(target).val.push_back(actionMove);
-    }
-  }
 }
 
 void BattleStateSetup::setProbability(types::probability probability) {

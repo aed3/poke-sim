@@ -39,7 +39,8 @@ class Pokedex {
   void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
 
   types::entity buildSpecies(dex::Species species, types::registry& registry) const;
-  types::entity buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const;
+  types::entity buildMove(
+    dex::Move move, types::registry& registry, bool forActiveMove, types::entity entityToUse) const;
   types::entity buildItem(dex::Item item, types::registry& registry) const;
   types::entity buildAbility(dex::Ability ability, types::registry& registry) const;
 
@@ -225,7 +226,7 @@ class Pokedex {
     return dexRegistry.all_of<T...>(movesMap.at(move));
   }
 
-  types::entity buildActionMove(dex::Move move, types::registry& registry) const;
+  types::entity buildActionMove(dex::Move move, types::registry& registry, types::entity entityToUse) const;
   void loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInfoList);
 };
 }  // namespace pokesim

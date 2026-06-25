@@ -141,8 +141,9 @@ struct BuildMove {
   }
 
  public:
-  static types::entity build(types::registry& registry, GameMechanics gameMechanic, bool forActiveMove) {
-    dex::internal::MoveDexDataSetup move(registry);
+  static types::entity build(
+    types::registry& registry, GameMechanics gameMechanic, bool forActiveMove, types::entity entityToUse) {
+    dex::internal::MoveDexDataSetup move(registry, entityToUse);
 
     if (forActiveMove) {
       move.setNameTag(T::name(gameMechanic));
@@ -273,17 +274,18 @@ struct BuildMove {
   }
 };
 types::entity buildByGameMechanic(
-  dex::Move move, types::registry& registry, bool forActiveMove, GameMechanics gameMechanic) {
+  dex::Move move, types::registry& registry, bool forActiveMove, GameMechanics gameMechanic,
+  types::entity entityToUse) {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
   switch (move) {
-    case Move::FURY_ATTACK:  return BuildMove<FuryAttack>::build(registry, gameMechanic, forActiveMove);
-    case Move::KNOCK_OFF:    return BuildMove<KnockOff>::build(registry, gameMechanic, forActiveMove);
-    case Move::MOONBLAST:    return BuildMove<Moonblast>::build(registry, gameMechanic, forActiveMove);
-    case Move::QUIVER_DANCE: return BuildMove<QuiverDance>::build(registry, gameMechanic, forActiveMove);
-    case Move::SPLASH:       return BuildMove<Splash>::build(registry, gameMechanic, forActiveMove);
-    case Move::THUNDERBOLT:  return BuildMove<Thunderbolt>::build(registry, gameMechanic, forActiveMove);
-    case Move::WILL_O_WISP:  return BuildMove<WillOWisp>::build(registry, gameMechanic, forActiveMove);
+    case Move::FURY_ATTACK:  return BuildMove<FuryAttack>::build(registry, gameMechanic, forActiveMove, entityToUse);
+    case Move::KNOCK_OFF:    return BuildMove<KnockOff>::build(registry, gameMechanic, forActiveMove, entityToUse);
+    case Move::MOONBLAST:    return BuildMove<Moonblast>::build(registry, gameMechanic, forActiveMove, entityToUse);
+    case Move::QUIVER_DANCE: return BuildMove<QuiverDance>::build(registry, gameMechanic, forActiveMove, entityToUse);
+    case Move::SPLASH:       return BuildMove<Splash>::build(registry, gameMechanic, forActiveMove, entityToUse);
+    case Move::THUNDERBOLT:  return BuildMove<Thunderbolt>::build(registry, gameMechanic, forActiveMove, entityToUse);
+    case Move::WILL_O_WISP:  return BuildMove<WillOWisp>::build(registry, gameMechanic, forActiveMove, entityToUse);
 
     default: break;
   }
@@ -293,9 +295,10 @@ types::entity buildByGameMechanic(
 }
 }  // namespace
 
-types::entity Pokedex::buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const {
+types::entity Pokedex::buildMove(
+  dex::Move move, types::registry& registry, bool forActiveMove, types::entity entityToUse) const {
   if (isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
-    return buildByGameMechanic(move, registry, forActiveMove, GameMechanics::SCARLET_VIOLET);
+    return buildByGameMechanic(move, registry, forActiveMove, GameMechanics::SCARLET_VIOLET, entityToUse);
   }
 
   POKESIM_REQUIRE_FAIL("Building for a game that is not yet supported.");

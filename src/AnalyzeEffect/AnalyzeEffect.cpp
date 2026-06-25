@@ -275,8 +275,13 @@ void ignoreBattlesWithEffectActive(Simulation& simulation) {
 types::entity createAnalyzeEffectMove(
   types::registry& registry, dex::Move move, types::entity battleEntity, types::entity attackerEntity,
   types::entity defenderEntity, const Pokedex& pokedex) {
-  types::entity moveEntity =
-    createActionMoveForTarget({registry, defenderEntity}, battleEntity, attackerEntity, move, pokedex);
+  types::entity moveEntity = createActionMoveForTarget(
+    {registry, defenderEntity},
+    battleEntity,
+    attackerEntity,
+    move,
+    pokedex,
+    registry.create());
   registry.emplace<MoveName>(moveEntity, move);
   registry.emplace<pokesim::tags::CurrentMoveHit>(moveEntity);
   registry.emplace_or_replace<tags::Attacker>(attackerEntity);

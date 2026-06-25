@@ -12,17 +12,16 @@ class Pokedex;
 namespace calc_damage {
 struct InputSetup {
  protected:
-  types::registry* registry;
-  types::entity moveEntity = entt::null;
+  types::handle handle;
 
  public:
-  InputSetup(types::registry& registry);
+  InputSetup(types::registry& registry, types::entity moveEntity);
 
   void setup(
     types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move,
     const Pokedex& pokedex);
 
-  types::entity entity() const;
+  types::entity entity() const { return handle.entity(); }
 };
 }  // namespace calc_damage
 }  // namespace pokesim

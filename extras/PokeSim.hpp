@@ -18380,7 +18380,7 @@ struct MoveDecision {
 
   dex::Move move = dex::Move::NO_MOVE;
 
-  bool operator==(const MoveDecision& other) const {
+  constexpr bool operator==(const MoveDecision& other) const {
     return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot && move == other.move;
   }
 };
@@ -18394,7 +18394,7 @@ struct SwitchDecision {
   Slot sourceSlot = Slot::NONE;
   Slot targetSlot = Slot::NONE;
 
-  bool operator==(const SwitchDecision& other) const {
+  constexpr bool operator==(const SwitchDecision& other) const {
     return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot;
   }
 };
@@ -18405,7 +18405,7 @@ struct ItemDecision {
 
   dex::Item item = dex::Item::NO_ITEM;
 
-  bool operator==(const ItemDecision& other) const {
+  constexpr bool operator==(const ItemDecision& other) const {
     return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot && item == other.item;
   }
 };
@@ -21347,7 +21347,6 @@ struct InputSetup {
 
  public:
   InputSetup(types::registry& registry, types::entity entity);
-  InputSetup(types::registry& registry) : InputSetup(registry, registry.create()) {}
 
   void setAttacker(types::entity entity);
   void setEffectTarget(types::entity entity);
@@ -21389,7 +21388,7 @@ types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
 
 types::entity createActionMoveForTarget(
   types::handle targetHandle, types::entity battleEntity, types::entity sourceEntity, dex::Move move,
-  const Pokedex& pokedex);
+  const Pokedex& pokedex, types::entity entityToUse);
 }  // namespace pokesim
 
 //////////////////// END OF src/Battle/Helpers/Helpers.hpp /////////////////////
@@ -21437,7 +21436,6 @@ struct MoveSlot;
 // Tool to set properties of a Pokemon's state to an entity.
 struct PokemonStateSetup : internal::StateSetupBase {
   PokemonStateSetup() : internal::StateSetupBase() {}
-  PokemonStateSetup(types::registry& registry) : PokemonStateSetup(registry, registry.create()) {}
   PokemonStateSetup(types::registry& registry, types::entity entity);
 
   operator types::entity() const { return entity(); }
@@ -21509,7 +21507,6 @@ struct ActionQueueItem;
 // Tool to set properties of a battle's state to an entity.
 struct BattleStateSetup : internal::StateSetupBase {
   BattleStateSetup() : internal::StateSetupBase() {}
-  BattleStateSetup(types::registry& registry) : BattleStateSetup(registry, registry.create()) {}
   BattleStateSetup(types::registry& registry, types::entity entity);
 
   /**
@@ -21524,6 +21521,7 @@ struct BattleStateSetup : internal::StateSetupBase {
    */
   void initBlank();
 
+  void setRecycledAction(types::entity recycledAction);
   void setAutoID();
   void setID(types::stateId id);
   void setSide(types::entity sideEntity);
@@ -21532,9 +21530,6 @@ struct BattleStateSetup : internal::StateSetupBase {
   void setRNGSeed(std::optional<types::rngState> seed = std::nullopt);
   void setActionQueue(const std::vector<ActionQueueItem>& queue);
   void setTurn(types::battleTurn turn);
-  void setCurrentActionTarget(types::targets<types::entity> actionTargets);
-  void setCurrentActionSource(types::entity actionSource);
-  void setCurrentActionMove(types::entity actionMove);
   void setProbability(types::probability probability);
 };
 }  // namespace pokesim
@@ -21581,13 +21576,12 @@ void emplaceTagFromEnum(dex::Move move, types::handle handle);
 
 namespace pokesim {
 struct PokemonStateSetup;
+struct SideDecision;
 
 // Tool to set properties of a player's side state to an entity.
 struct SideStateSetup : internal::StateSetupBase {
   SideStateSetup() : internal::StateSetupBase() {}
-  SideStateSetup(types::registry& registry, PlayerSideId playerSideId)
-      : SideStateSetup(registry, registry.create(), playerSideId) {}
-  SideStateSetup(types::registry& registry, types::entity entity, PlayerSideId playerSideId);
+  SideStateSetup(types::registry& registry, types::entity entity);
   /**
    * @brief Applies the defaults to the required properties for a player side's state.
    *
@@ -21599,6 +21593,7 @@ struct SideStateSetup : internal::StateSetupBase {
   void setOpponent(types::entity entity);
   void setBattle(types::entity entity);
   void setPlayerSide(PlayerSideId playerSideId);
+  void setSideDecision(const SideDecision& sideDecision);
 };
 }  // namespace pokesim
 
@@ -21612,17 +21607,16 @@ class Pokedex;
 namespace calc_damage {
 struct InputSetup {
  protected:
-  types::registry* registry;
-  types::entity moveEntity = entt::null;
+  types::handle handle;
 
  public:
-  InputSetup(types::registry& registry);
+  InputSetup(types::registry& registry, types::entity moveEntity);
 
   void setup(
     types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move,
     const Pokedex& pokedex);
 
-  types::entity entity() const;
+  types::entity entity() const { return handle.entity(); }
 };
 }  // namespace calc_damage
 }  // namespace pokesim
@@ -21909,7 +21903,8 @@ class Pokedex {
   void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
 
   types::entity buildSpecies(dex::Species species, types::registry& registry) const;
-  types::entity buildMove(dex::Move move, types::registry& registry, bool forActiveMove) const;
+  types::entity buildMove(
+    dex::Move move, types::registry& registry, bool forActiveMove, types::entity entityToUse) const;
   types::entity buildItem(dex::Item item, types::registry& registry) const;
   types::entity buildAbility(dex::Ability ability, types::registry& registry) const;
 
@@ -22095,7 +22090,7 @@ class Pokedex {
     return dexRegistry.all_of<T...>(movesMap.at(move));
   }
 
-  types::entity buildActionMove(dex::Move move, types::registry& registry) const;
+  types::entity buildActionMove(dex::Move move, types::registry& registry, types::entity entityToUse) const;
   void loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInfoList);
 };
 }  // namespace pokesim
@@ -22527,9 +22522,6 @@ struct RegistryLoop<
 //////////////////// START OF src/Simulation/Simulation.hpp ////////////////////
 
 namespace pokesim {
-struct SideStateSetup;
-struct PokemonStateSetup;
-struct BattleStateSetup;
 class Pokedex;
 
 namespace simulate_turn {
@@ -22541,9 +22533,6 @@ struct Results;
 namespace analyze_effect {
 struct Results;
 }  // namespace analyze_effect
-namespace debug {
-struct SimulationSetupChecks;
-}
 
 /**
  * @brief The entry point for creating and running simulations.
@@ -22552,21 +22541,6 @@ struct SimulationSetupChecks;
  * for running multiple simulations of the same battle, where each battle state has completed the same number of turns.
  */
 class Simulation {
- private:
-  PokemonStateSetup createInitialPokemon(const PokemonCreationInfo& pokemonInfo);
-  void createInitialSide(
-    SideStateSetup sideSetup, const SideCreationInfo& sideInfo, const BattleCreationInfo& battleInfo);
-
-  void createInitialTurnDecision(BattleStateSetup battleStateSetup, const TurnDecisionInfo& turnDecisionInfo);
-  void createCalcDamageInput(
-    BattleStateSetup battleStateSetup, const CalcDamageInputInfo& inputInfo, debug::SimulationSetupChecks& debugChecks);
-  void createAnalyzeEffectInput(
-    BattleStateSetup battleStateSetup, const AnalyzeEffectInputInfo& inputInfo,
-    debug::SimulationSetupChecks& debugChecks);
-
-  types::sides<SideStateSetup> createInitialBattle(
-    BattleStateSetup battleStateSetup, const BattleCreationInfo& battleInfo);
-
  private:
   struct ConstantValues {
     ConstantValues(const Pokedex& pokedex_, BattleFormat battleFormat_)
@@ -24704,6 +24678,7 @@ struct DexDataSetup {
 
  public:
   DexDataSetup(types::registry& registry) : handle(registry, registry.create()) {}
+  DexDataSetup(types::registry& registry, types::entity entity) : handle(registry, entity) {}
 
   template <typename Tag>
   void setProperty() {
@@ -24748,7 +24723,7 @@ struct SpeciesDexDataSetup : DexDataSetup {
 
 namespace pokesim::dex::internal {
 struct MoveDexDataSetup : DexDataSetup {
-  MoveDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
+  MoveDexDataSetup(types::registry& registry, types::entity entity) : DexDataSetup(registry, entity) {}
 
   void setName(Move move);
   void setNameTag(Move move);
