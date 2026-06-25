@@ -20,9 +20,6 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, Curr
 void setCurrentActionTarget(
   types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source,
   const Simulation& simulation);
-void setCurrentActionMove(
-  types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
-  const Pokedex& pokedex);
 void setFailedActionMove(
   types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target);
 void clearCurrentAction(Simulation& simulation);

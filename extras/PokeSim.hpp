@@ -250,7 +250,6 @@
  * src/SimulateTurn/CalcDamageSpecifics.hpp
  * src/Pokedex/Setup/DexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.hpp
- * src/Pokedex/Setup/MoveDexDataSetup.hpp
  * src/Pokedex/Setup/ItemDexDataSetup.hpp
  * src/Pokedex/Species/Ampharos.hpp
  * src/Pokedex/Species/Dragapult.hpp
@@ -19012,6 +19011,18 @@ namespace pokesim {
 struct RecycledAction {
   types::entity val{};
 };
+
+struct RecycledActionMove {
+  types::entity val{};
+};
+
+struct AddedRecycledActionMove1 {
+  types::entity val{};
+};
+
+struct AddedRecycledActionMove2 {
+  types::entity val{};
+};
 }  // namespace pokesim
 
 /////////// END OF src/Components/EntityHolders/RecycledEntities.hpp ///////////
@@ -19958,6 +19969,9 @@ struct CanSetStatus {};
 
 namespace pokesim::tags {
 struct RecycledAction {};
+struct RecycledActionMove {};
+struct AddedRecycledActionMove1 {};
+struct AddedRecycledActionMove2 {};
 }  // namespace pokesim::tags
 
 /////////////// END OF src/Components/Tags/RecycledEntities.hpp ////////////////
@@ -19974,6 +19988,8 @@ struct EndItem {};
 ////////////////// START OF src/Components/Tags/Selection.hpp //////////////////
 
 namespace pokesim::internal::tags {
+struct BuildPokedexMove {};
+struct BuildActionMove {};
 struct CloneFromDamageRolls {};
 struct ApplySideDamageRollOptions {};
 }  // namespace pokesim::internal::tags
@@ -20457,6 +20473,9 @@ struct FaintQueue;
 struct FoeSide;
 struct Pokemon;
 struct RecycledAction;
+struct RecycledActionMove;
+struct AddedRecycledActionMove1;
+struct AddedRecycledActionMove2;
 struct Side;
 struct Sides;
 struct Team;
@@ -20727,6 +20746,15 @@ void check(const Pokemon&, const types::registry&);
 
 template <>
 void check(const RecycledAction&, const types::registry&);
+
+template <>
+void check(const RecycledActionMove&, const types::registry&);
+
+template <>
+void check(const AddedRecycledActionMove1&, const types::registry&);
+
+template <>
+void check(const AddedRecycledActionMove2&, const types::registry&);
 
 template <>
 void check(const Side&, const types::registry&);
@@ -21386,9 +21414,9 @@ types::entity slotToPokemonEntity(const types::registry& registry, const Sides& 
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
 types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
 
-types::entity createActionMoveForTarget(
-  types::handle targetHandle, types::entity battleEntity, types::entity sourceEntity, dex::Move move,
-  const Pokedex& pokedex, types::entity entityToUse);
+void setupActionMoveBuild(
+  types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
+  types::entity actionMoveEntity, dex::Move move);
 }  // namespace pokesim
 
 //////////////////// END OF src/Battle/Helpers/Helpers.hpp /////////////////////
@@ -21521,7 +21549,8 @@ struct BattleStateSetup : internal::StateSetupBase {
    */
   void initBlank();
 
-  void setRecycledAction(types::entity recycledAction);
+  void setRecycledAction(types::entity recycledAction, types::entity recycledActionMove);
+  void setAddedRecycledActionMoves(types::entity addedRecycledActionMove1, types::entity addedRecycledActionMove2);
   void setAutoID();
   void setID(types::stateId id);
   void setSide(types::entity sideEntity);
@@ -21612,9 +21641,7 @@ struct InputSetup {
  public:
   InputSetup(types::registry& registry, types::entity moveEntity);
 
-  void setup(
-    types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move,
-    const Pokedex& pokedex);
+  void setup(types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move);
 
   types::entity entity() const { return handle.entity(); }
 };
@@ -21903,8 +21930,6 @@ class Pokedex {
   void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
 
   types::entity buildSpecies(dex::Species species, types::registry& registry) const;
-  types::entity buildMove(
-    dex::Move move, types::registry& registry, bool forActiveMove, types::entity entityToUse) const;
   types::entity buildItem(dex::Item item, types::registry& registry) const;
   types::entity buildAbility(dex::Ability ability, types::registry& registry) const;
 
@@ -22090,7 +22115,7 @@ class Pokedex {
     return dexRegistry.all_of<T...>(movesMap.at(move));
   }
 
-  types::entity buildActionMove(dex::Move move, types::registry& registry, types::entity entityToUse) const;
+  void buildMoves(types::registry& registry) const;
   void loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInfoList);
 };
 }  // namespace pokesim
@@ -24199,6 +24224,7 @@ void runTryBoostEvent(Simulation& simulation);
 template <typename BoostType>
 void runAfterEachBoostEvent(Simulation& simulation);
 void runAfterBoostEvent(Simulation& simulation);
+void runModifyTarget(Simulation& simulation);  // onModifyMove for Curse and Expanding force should go here
 void runModifyMove(Simulation& simulation);
 void runDisableMove(Simulation& simulation);
 
@@ -24243,9 +24269,6 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, Curr
 void setCurrentActionTarget(
   types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source,
   const Simulation& simulation);
-void setCurrentActionMove(
-  types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
-  const Pokedex& pokedex);
 void setFailedActionMove(
   types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target);
 void clearCurrentAction(Simulation& simulation);
@@ -24718,54 +24741,6 @@ struct SpeciesDexDataSetup : DexDataSetup {
 }  // namespace pokesim::dex::internal
 
 /////////////// END OF src/Pokedex/Setup/SpeciesDexDataSetup.hpp ///////////////
-
-/////////////// START OF src/Pokedex/Setup/MoveDexDataSetup.hpp ////////////////
-
-namespace pokesim::dex::internal {
-struct MoveDexDataSetup : DexDataSetup {
-  MoveDexDataSetup(types::registry& registry, types::entity entity) : DexDataSetup(registry, entity) {}
-
-  void setName(Move move);
-  void setNameTag(Move move);
-  void setType(Type type);
-  void setAccuracy(types::baseAccuracy accuracy);
-  void setBasePower(types::basePower basePower);
-
-  void setCategoryPhysical();
-  void setCategorySpecial();
-  void setCategoryStatus();
-
-  void setBasePp(types::pp pp);
-  void setPriority(types::priority priority);
-  void setHitCount(types::moveHits hitCount);
-
-  void addAddedTargets(AddedTargetOptions addedTargets);
-
-  void setEffectTargetsMoveSource();
-  void setEffectTargetsMoveTarget();
-
-  template <typename EffectType, typename... EffectValues>
-  void setPrimaryEffect(const EffectValues&... effectValues) {
-    POKESIM_REQUIRE(
-      !handle.all_of<move::effect::tags::Secondary>(),
-      "Moves can only have primary or secondary effects, not both.");
-    handle.emplace_or_replace<move::effect::tags::Primary>();
-    handle.emplace<EffectType>(effectValues...);
-  }
-
-  template <typename EffectType, typename... EffectValues>
-  void setSecondaryEffect(types::percentChance chance, const EffectValues&... effectValues) {
-    POKESIM_REQUIRE(
-      !handle.all_of<move::effect::tags::Primary>(),
-      "Moves can only have secondary or primary effects, not both.");
-    handle.emplace_or_replace<move::effect::tags::Secondary>();
-    handle.emplace<EffectType>(effectValues...);
-    handle.emplace<BaseEffectChance>(chance);
-  }
-};
-}  // namespace pokesim::dex::internal
-
-//////////////// END OF src/Pokedex/Setup/MoveDexDataSetup.hpp /////////////////
 
 /////////////// START OF src/Pokedex/Setup/ItemDexDataSetup.hpp ////////////////
 

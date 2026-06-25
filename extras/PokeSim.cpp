@@ -16,7 +16,6 @@
  * src/SimulateTurn/ManageActionQueue.cpp
  * src/SimulateTurn/CalcDamageSpecifics.cpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.cpp
- * src/Pokedex/Setup/MoveDexDataSetup.cpp
  * src/Pokedex/Setup/ItemDexDataSetup.cpp
  * src/Pokedex/Setup/GetSpeciesBuild.cpp
  * src/Pokedex/Setup/GetMoveBuild.cpp
@@ -846,6 +845,15 @@ void check(const RecycledAction& recycledAction, const types::registry& registry
 }
 
 template <>
+void check(const RecycledActionMove&, const types::registry&) {}
+
+template <>
+void check(const AddedRecycledActionMove1&, const types::registry&) {}
+
+template <>
+void check(const AddedRecycledActionMove2&, const types::registry&) {}
+
+template <>
 void check(const Side& side, const types::registry& registry) {
   checkSide(side.val, registry);
 }
@@ -1384,6 +1392,8 @@ struct EntityLists {
   EntityList sides;
   EntityList pokemon;
   EntityList recycledActions;
+  EntityList recycledActionMoves;
+  EntityList addedRecycledActionMoves;
   EntityList calcDamageInputs;
   EntityList analyzeEffectInputs;
 
@@ -1410,6 +1420,9 @@ struct EntityLists {
 
     types::entityIndex sideCount = battleCount * 2;
     types::entityIndex recycledActionCount = battleCount;
+    types::entityIndex recycledActionMoveCount = battleCount;
+    types::entityIndex addedRecycledActionMoveCount =
+      simulation->isBattleFormat(BattleFormat::DOUBLES) ? battleCount * 2 : 0;
 
     POKESIM_REQUIRE(
       battleCount + sideCount + recycledActionCount + pokemonCount + calcDamageInputCount + analyzeEffectInputCount <
@@ -1421,6 +1434,8 @@ struct EntityLists {
     sides = {registry, sideCount};
     pokemon = {registry, pokemonCount};
     recycledActions = {registry, recycledActionCount};
+    recycledActionMoves = {registry, recycledActionMoveCount};
+    addedRecycledActionMoves = {registry, addedRecycledActionMoveCount};
     calcDamageInputs = {registry, calcDamageInputCount};
     analyzeEffectInputs = {registry, analyzeEffectInputCount};
   }
@@ -1595,7 +1610,7 @@ void createInitialPokemon(
 
 void createCalcDamageInput(
   const CalcDamageInputInfo& inputInfo, BattleStateSetup& battleSetup, types::registry& registry,
-  const Pokedex& pokedex, EntityLists& entityLists, debug::SimulationSetupChecks& debugChecks) {
+  EntityLists& entityLists, debug::SimulationSetupChecks& debugChecks) {
   POKESIM_REQUIRE(inputInfo.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
   POKESIM_REQUIRE(inputInfo.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
   POKESIM_REQUIRE(!inputInfo.moves.empty(), "A damage calculation must have a move.");
@@ -1608,7 +1623,7 @@ void createCalcDamageInput(
     calc_damage::InputSetup inputSetup{registry, entityLists.calcDamageInputs.getNext()};
     POKESIM_REQUIRE(move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
 
-    inputSetup.setup(battleSetup.entity(), attackerEntity, defenderEntity, move, pokedex);
+    inputSetup.setup(battleSetup.entity(), attackerEntity, defenderEntity, move);
     debugChecks.addToCalcDamageChecklist(battleSetup, inputSetup, inputInfo);
   }
 }
@@ -1766,7 +1781,12 @@ void createInitialState(
   for (types::entityIndex battleIndex = 0; battleIndex < battleSetupList.size(); battleIndex++) {
     BattleStateSetup& battleSetup = battleSetupList[battleIndex];
     createInitialBattle(battleInfo, battleSetup, sideSetupLists[battleIndex]);
-    battleSetup.setRecycledAction(entityLists.recycledActions.getNext());
+    battleSetup.setRecycledAction(entityLists.recycledActions.getNext(), entityLists.recycledActionMoves.getNext());
+    if (simulation->isBattleFormat(BattleFormat::DOUBLES)) {
+      battleSetup.setAddedRecycledActionMoves(
+        entityLists.addedRecycledActionMoves.getNext(),
+        entityLists.addedRecycledActionMoves.getNext());
+    }
   }
 
   for (types::sideIndex sideIndex = 0; sideIndex < battleInfo.sides.size(); sideIndex++) {
@@ -1802,7 +1822,7 @@ void createInitialState(
 
   BattleStateSetup& battleSetup = battleSetupList[0];
   for (const CalcDamageInputInfo& calcDamageInputInfo : battleInfo.damageCalculations) {
-    createCalcDamageInput(calcDamageInputInfo, battleSetup, registry, pokedex, entityLists, debugChecks);
+    createCalcDamageInput(calcDamageInputInfo, battleSetup, registry, entityLists, debugChecks);
   }
 
   for (const AnalyzeEffectInputInfo& analyzeEffectInputInfo : battleInfo.effectsToAnalyze) {
@@ -1819,6 +1839,9 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
   for (const BattleCreationInfo& battleInfo : battleInfoList) {
     createInitialState(battleInfo, this, entityLists, debugChecks);
   }
+
+  pokedex().buildMoves(registry);
+  registry.clear<internal::tags::BuildActionMove>();
 
   debugChecks.checkOutputs();
 }
@@ -2105,6 +2128,8 @@ template void runAfterEachBoostEvent<SpeBoost>(Simulation&);
 
 void runAfterBoostEvent(Simulation&) {}
 
+void runModifyTarget(Simulation& simulation) {}
+
 void runModifyMove(Simulation& simulation) {
   dex::ChoiceScarf::onSourceModifyMove(simulation);
   dex::ChoiceSpecs::onSourceModifyMove(simulation);
@@ -2390,64 +2415,116 @@ auto getBattleFilter(Simulation& simulation) {
   return pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::Battle>{simulation};
 }
 
-void addTargetAllyToTargets(types::registry& registry, const Battle& battle) {
+void addAddedTarget(types::registry& registry, Battle battle, Slot allySlot) {
   const Sides& sides = registry.get<Sides>(battle.val);
-  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).val);
-
-  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, targetSlotName.val);
+  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, allySlot);
   if (allyEntity == entt::null) {
     return;
   }
 
   CurrentActionTargets& targets = registry.get<CurrentActionTargets>(battle.val);
+
+  POKESIM_REQUIRE(!targets.val.empty(), "Added targets should not be the first in the list of targets.");
+
+  if (targets.val.size() == 1U) {
+    registry.emplace<pokesim::tags::AddedRecycledActionMove1>(battle.val);
+  }
+  else {
+    registry.emplace<pokesim::tags::AddedRecycledActionMove2>(battle.val);
+  }
+
   targets.val.push_back(allyEntity);
+}
+
+void addTargetAllyToTargets(types::registry& registry, Battle battle) {
+  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).val);
+  addAddedTarget(registry, battle, targetSlotName.val);
 }
 
 void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
-  const Sides& sides = registry.get<Sides>(battle.val);
   const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(registry.get<CurrentAction>(battle.val).val);
+  addAddedTarget(registry, battle, sourceSlotName.val);
+}
 
-  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, sourceSlotName.val);
-  if (allyEntity == entt::null) {
+void setTargetReferenceComponents(
+  types::registry& registry, const CurrentActionTargets& targets, CurrentActionSource source) {
+  for (types::entity target : targets.val) {
+    registry.emplace<pokesim::tags::CurrentActionMoveTarget>(target);
+    registry.emplace<CurrentActionSource>(target, source.val);
+  }
+}
+
+template <typename RecycledActionMoveType>
+void setActionMoveReferenceComponents(
+  types::handle battleHandle, CurrentActionSource source, CurrentActionTargets targets, CurrentAction action,
+  RecycledActionMoveType actionMove) {
+  types::registry& registry = *battleHandle.registry();
+  types::handle actionMoveHandle{registry, actionMove.val};
+  types::entity target;
+
+  if constexpr (std::is_same_v<RecycledActionMoveType, RecycledActionMove>) {
+    target = targets.val[0];
+  }
+  else if constexpr (std::is_same_v<RecycledActionMoveType, AddedRecycledActionMove1>) {
+    target = targets.val[1];
+  }
+  else if constexpr (std::is_same_v<RecycledActionMoveType, AddedRecycledActionMove2>) {
+    target = targets.val[2];
+  }
+  else {
+    static_assert(false, "Using a RecycledActionMoveType that isn't associated with a target.");
+  }
+
+  MoveName move = registry.get<MoveName>(action.val);
+  setupActionMoveBuild(registry, battleHandle.entity(), source.val, target, actionMove.val, move.val);
+}
+
+void setActionMoveData(Simulation& simulation) {
+  simulation.addToEntities<pokesim::tags::SimulateTurn, pokesim::internal::tags::BuildActionMove>();
+  simulation.pokedex().buildMoves(simulation.registry);
+}
+
+void setCurrentActionMoveSlot(types::handle handle, CurrentActionSource source, CurrentAction action) {
+  types::registry& registry = *handle.registry();
+  const MoveName& move = registry.get<MoveName>(action.val);
+  const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
+
+  types::moveSlotIndex moveSlotIndex = moveToMoveSlot(moveSlots, move.val);
+  handle.emplace<CurrentActionMoveSlot>(moveSlotIndex);
+}
+
+void setMoveTargets(Simulation& simulation) {
+  pokesim::internal::EntityFilter<action::tags::Move, pokesim::tags::Battle> battleFilter{simulation};
+  if (battleFilter.hasNoneSelected()) {
     return;
   }
 
-  CurrentActionTargets& targets = registry.get<CurrentActionTargets>(battle.val);
-  targets.val.push_back(allyEntity);
-}
+  battleFilter.view<setCurrentActionTarget>(simulation);
 
-void resolveMoveTargets(types::registry& registry, CurrentActionTargets& targets) {
-  for (types::entity target : targets.val) {
-    registry.emplace_or_replace<pokesim::tags::CurrentActionMoveTarget>(target);
-  }
+  battleFilter.view<setActionMoveReferenceComponents<RecycledActionMove>>();
+  setActionMoveData(simulation);
+  simulation.removeFromEntities<pokesim::internal::tags::BuildActionMove>();
 
-  // More to do...
-}
-
-void createActionMoveForTargets(
-  types::handle targetHandle, Battle battle, CurrentActionSource source, const Pokedex& pokedex) {
-  types::registry& registry = *targetHandle.registry();
-
-  dex::Move move = registry.get<MoveName>(registry.get<CurrentAction>(battle.val).val).val;
-  types::entity moveEntity =
-    createActionMoveForTarget(targetHandle, battle.val, source.val, move, pokedex, registry.create());
-
-  registry.emplace<pokesim::tags::SimulateTurn>(moveEntity);
-}
-
-void getMoveTargets(Simulation& simulation) {
+  runModifyTarget(simulation);
   if (simulation.isBattleFormat(BattleFormat::DOUBLES)) {
     simulation
       .view<addTargetAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
     simulation
       .view<addUserAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::UserAlly>>();
+
+    battleFilter.view<
+      setActionMoveReferenceComponents<AddedRecycledActionMove1>,
+      Tags<pokesim::tags::AddedRecycledActionMove1>>();
+    battleFilter.view<
+      setActionMoveReferenceComponents<AddedRecycledActionMove2>,
+      Tags<pokesim::tags::AddedRecycledActionMove2>>();
+    setActionMoveData(simulation);
+    simulation.removeFromEntities<pokesim::tags::AddedRecycledActionMove1, pokesim::tags::Battle>();
+    simulation.removeFromEntities<pokesim::tags::AddedRecycledActionMove2, pokesim::tags::Battle>();
+    simulation.removeFromEntities<pokesim::internal::tags::BuildActionMove>();
   }
 
-  simulation.view<resolveMoveTargets, Tags<pokesim::tags::CurrentActionMove>, entt::exclude_t<AddedTargets>>();
-  simulation.view<
-    createActionMoveForTargets,
-    Tags<pokesim::tags::CurrentActionMoveTarget>,
-    entt::exclude_t<CurrentActionMovesAsTarget>>(simulation.pokedex());
+  battleFilter.view<setTargetReferenceComponents>();
 }
 
 void useMove(Simulation& simulation) {
@@ -2455,7 +2532,6 @@ void useMove(Simulation& simulation) {
   // ModifyType
   runModifyMove(simulation);
 
-  getMoveTargets(simulation);
   runMoveHitChecks(simulation);
   runAfterMoveUsedEvent(simulation);
 }
@@ -2484,8 +2560,8 @@ void runMoveAction(Simulation& simulation) {
     return;
   }
 
-  battleFilter.view<setCurrentActionTarget>(simulation);
-  battleFilter.view<setCurrentActionMove>(simulation.pokedex());
+  setMoveTargets(simulation);
+  battleFilter.view<setCurrentActionMoveSlot>();
 
   runBeforeMove(simulation);
 
@@ -2648,7 +2724,7 @@ void simulateTurn(Simulation& simulation) {
   battleFilter.view<speedSort>();
   battleFilter.view<addResidualAction, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn>>();
 
-  simulation.addToEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
+  simulation.addToEntities<pokesim::tags::BattleMidTurn, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
 
   battleFilter.view<setCurrentAction>();
   using ActionsLimit = Constants::ActionQueueLength;
@@ -2665,8 +2741,7 @@ void simulateTurn(Simulation& simulation) {
 
   nextTurn(simulation);
 
-  simulation
-    .removeFromEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
+  simulation.removeFromEntities<pokesim::tags::BattleMidTurn, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
   battleFilter.view<collectTurnOutcomeBattles>();
 
   simulation.addToEntities<pokesim::tags::SimulateTurn, tags::Input>();
@@ -3574,102 +3649,6 @@ void SpeciesDexDataSetup::setHiddenAbility(Ability ability) {
 
 /////////////// END OF src/Pokedex/Setup/SpeciesDexDataSetup.cpp ///////////////
 
-/////////////// START OF src/Pokedex/Setup/MoveDexDataSetup.cpp ////////////////
-
-namespace pokesim::dex::internal {
-void MoveDexDataSetup::setName(Move move) {
-  handle.emplace<MoveName>(move);
-}
-
-void MoveDexDataSetup::setNameTag(Move move) {
-  move::tags::emplaceTagFromEnum(move, handle);
-}
-
-void MoveDexDataSetup::setType(Type type) {
-  handle.emplace<TypeName>(type);
-}
-
-void MoveDexDataSetup::addAddedTargets(AddedTargetOptions addedTargets) {
-  AddedTargets& existingTargets = handle.get_or_emplace<AddedTargets>();
-  existingTargets.val = existingTargets.val | addedTargets;
-
-  switch (addedTargets) {
-    case AddedTargetOptions::TARGET_ALLY: {
-      setProperty<move::added_targets::tags::TargetAlly>();
-      break;
-    }
-    case AddedTargetOptions::USER_ALLY: {
-      setProperty<move::added_targets::tags::UserAlly>();
-      break;
-    }
-    case AddedTargetOptions::TARGET_SIDE: {
-      setProperty<move::added_targets::tags::TargetSide>();
-      break;
-    }
-    case AddedTargetOptions::USER_SIDE: {
-      setProperty<move::added_targets::tags::UserSide>();
-      break;
-    }
-    case AddedTargetOptions::FIELD: {
-      setProperty<move::added_targets::tags::Field>();
-      break;
-    }
-    default: break;
-  }
-}
-
-void MoveDexDataSetup::setAccuracy(types::baseAccuracy accuracy) {
-  handle.emplace<Accuracy>(accuracy);
-}
-
-void MoveDexDataSetup::setBasePower(types::basePower basePower) {
-  handle.emplace<BasePower>(basePower);
-}
-
-void MoveDexDataSetup::setCategoryPhysical() {
-  POKESIM_REQUIRE(!(handle.any_of<move::tags::Special, move::tags::Status>()), "A move can only have one category.");
-  setProperty<move::tags::Physical>();
-}
-
-void MoveDexDataSetup::setCategorySpecial() {
-  POKESIM_REQUIRE(!(handle.any_of<move::tags::Physical, move::tags::Status>()), "A move can only have one category.");
-  setProperty<move::tags::Special>();
-}
-
-void MoveDexDataSetup::setCategoryStatus() {
-  POKESIM_REQUIRE(!(handle.any_of<move::tags::Physical, move::tags::Special>()), "A move can only have one category.");
-  setProperty<move::tags::Status>();
-}
-
-void MoveDexDataSetup::setBasePp(types::pp pp) {
-  handle.emplace<Pp>(pp);
-}
-
-void MoveDexDataSetup::setPriority(types::priority priority) {
-  handle.emplace<MovePriority>(priority);
-}
-
-void MoveDexDataSetup::setHitCount(types::moveHits hitCount) {
-  handle.emplace<HitCount>(hitCount);
-}
-
-void MoveDexDataSetup::setEffectTargetsMoveSource() {
-  POKESIM_REQUIRE(
-    !handle.all_of<move::effect::tags::MoveTarget>(),
-    "Moves effects can only affect the target or source, not both.");
-  handle.emplace<move::effect::tags::MoveSource>();
-}
-
-void MoveDexDataSetup::setEffectTargetsMoveTarget() {
-  POKESIM_REQUIRE(
-    !handle.all_of<move::effect::tags::MoveSource>(),
-    "Moves effects can only affect the source or target, not both.");
-  handle.emplace<move::effect::tags::MoveTarget>();
-}
-}  // namespace pokesim::dex::internal
-
-//////////////// END OF src/Pokedex/Setup/MoveDexDataSetup.cpp /////////////////
-
 /////////////// START OF src/Pokedex/Setup/ItemDexDataSetup.cpp ////////////////
 
 namespace pokesim::dex::internal {
@@ -3774,7 +3753,7 @@ types::entity Pokedex::buildSpecies(dex::Species species, types::registry& regis
 
 namespace pokesim {
 namespace {
-template <typename T>
+template <typename BuildMoveTag, typename Move, typename MoveTag>
 struct BuildMove {
  private:
   enum class Optional : std::uint8_t {
@@ -3834,229 +3813,283 @@ struct BuildMove {
   template <typename Type>
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
 
-  template <typename EffectType, typename EffectData, MoveEffectKind moveEffectKind, typename... EffectValues>
-  static void setEffect(
-    dex::internal::MoveDexDataSetup& move, GameMechanics gameMechanic, const EffectValues&... effectValues) {
-    if constexpr (moveEffectKind == MoveEffectKind::primary) {
-      static_assert(
-        !has<Optional::chance, EffectData>::value,
-        "Primary effects cannot have a chance to happen because they always happen if the move is successful.");
-      move.setPrimaryEffect<EffectType>(effectValues...);
-    }
-    else {
-      types::percentChance chance = Constants::MoveBaseEffectChance::DEFAULT;
-      if constexpr (has<Optional::chance, EffectData>::value) {
-        chance = EffectData::chance(gameMechanic);
-      }
-      move.setSecondaryEffect<EffectType>(chance, effectValues...);
-    }
-  }
+  struct EntitySetup {
+    using EntityList = entt::view<entt::get_t<BuildMoveTag, MoveTag>>;
+    types::registry* registry;
+    const EntityList* list;
+    std::size_t size;
 
-  template <typename EffectData, MoveEffectKind moveEffectKind, typename... EffectTypes>
-  static void setEffectTags(dex::internal::MoveDexDataSetup& move, GameMechanics gameMechanic, Tags<EffectTypes...>) {
-    if constexpr (moveEffectKind == MoveEffectKind::primary) {
-      static_assert(
-        !has<Optional::chance, EffectData>::value,
-        "Primary effects cannot have a chance to happen because they always happen if the move is successful.");
-      (move.setPrimaryEffect<EffectTypes>(), ...);
+    EntitySetup(types::registry& registry_, const EntityList& list_)
+        : registry(&registry_), list(&list_), size(list->size_hint()) {}
+
+    template <typename Component>
+    void add(const Component& component) {
+      registry->storage<Component>().reserve(size);
+      registry->insert(list->begin(), list->end(), component);
     }
-    else {
-      types::percentChance chance = Constants::MoveBaseEffectChance::DEFAULT;
-      if constexpr (has<Optional::chance, EffectData>::value) {
-        chance = EffectData::chance(gameMechanic);
-      }
-      (move.setSecondaryEffect<EffectTypes>(chance), ...);
+
+    template <typename... Types>
+    void setProperties(Tags<Types...>) {
+      (add(Types{}), ...);
     }
-  }
+
+    template <typename... Types>
+    bool any_of() {
+      return std::any_of(list->begin(), list->end(), [&](types::entity entity) {
+        return registry->template any_of<Types...>(entity);
+      });
+    }
+  };
 
   template <typename EffectData, MoveEffectKind moveEffectKind>
-  static void buildEffect(dex::internal::MoveDexDataSetup& move, GameMechanics gameMechanic) {
+  static void buildEffect(EntitySetup& setup, GameMechanics gameMechanic) {
+    if constexpr (moveEffectKind == MoveEffectKind::primary) {
+      static_assert(
+        !has<Optional::chance, EffectData>::value,
+        "Primary effects cannot have a chance to happen because they always happen if the move is successful.");
+
+      POKESIM_REQUIRE(
+        !setup.template any_of<move::effect::tags::Secondary>(),
+        "Moves can only have primary or secondary effects, not both.");
+
+      setup.add(move::effect::tags::Primary{});
+    }
+    else {
+      POKESIM_REQUIRE(
+        !setup.template any_of<move::effect::tags::Primary>(),
+        "Moves can only have secondary or primary effects, not both.");
+
+      types::percentChance chance = Constants::MoveBaseEffectChance::DEFAULT;
+      if constexpr (has<Optional::chance, EffectData>::value) {
+        chance = EffectData::chance(gameMechanic);
+      }
+      setup.add(move::effect::tags::Secondary{});
+      setup.add(BaseEffectChance{chance});
+    }
+
     if constexpr (has<Optional::atkBoost, EffectData>::value) {
-      setEffect<AtkBoost, EffectData, moveEffectKind>(move, gameMechanic, EffectData::atkBoost(gameMechanic));
+      setup.add(AtkBoost{EffectData::atkBoost(gameMechanic)});
     }
 
     if constexpr (has<Optional::defBoost, EffectData>::value) {
-      setEffect<DefBoost, EffectData, moveEffectKind>(move, gameMechanic, EffectData::defBoost(gameMechanic));
+      setup.add(DefBoost{EffectData::defBoost(gameMechanic)});
     }
 
     if constexpr (has<Optional::spaBoost, EffectData>::value) {
-      setEffect<SpaBoost, EffectData, moveEffectKind>(move, gameMechanic, EffectData::spaBoost(gameMechanic));
+      setup.add(SpaBoost{EffectData::spaBoost(gameMechanic)});
     }
 
     if constexpr (has<Optional::spdBoost, EffectData>::value) {
-      setEffect<SpdBoost, EffectData, moveEffectKind>(move, gameMechanic, EffectData::spdBoost(gameMechanic));
+      setup.add(SpdBoost{EffectData::spdBoost(gameMechanic)});
     }
 
     if constexpr (has<Optional::speBoost, EffectData>::value) {
-      setEffect<SpeBoost, EffectData, moveEffectKind>(move, gameMechanic, EffectData::speBoost(gameMechanic));
+      setup.add(SpeBoost{EffectData::speBoost(gameMechanic)});
     }
 
-    setEffectTags<EffectData, moveEffectKind>(move, gameMechanic, EffectData::effectTags);
+    setup.setProperties(EffectData::effectTags);
   }
 
  public:
-  static types::entity build(
-    types::registry& registry, GameMechanics gameMechanic, bool forActiveMove, types::entity entityToUse) {
-    dex::internal::MoveDexDataSetup move(registry, entityToUse);
-
-    if (forActiveMove) {
-      move.setNameTag(T::name(gameMechanic));
-    }
-    else {
-      move.setName(T::name(gameMechanic));
-      move.setBasePp(T::basePp(gameMechanic));
+  static void build(types::registry& registry, GameMechanics gameMechanic) {
+    auto list = registry.view<BuildMoveTag, MoveTag>();
+    if (list.begin() == list.end()) {
+      return;
     }
 
-    move.setType(T::type(gameMechanic));
-    switch (T::category(gameMechanic)) {
+    EntitySetup setup{registry, list};
+
+    if (std::is_same_v<BuildMoveTag, internal::tags::BuildPokedexMove>) {
+      setup.add(MoveName{Move::name(gameMechanic)});
+      setup.add(Pp{Move::basePp(gameMechanic)});
+    }
+
+    setup.add(TypeName{Move::type(gameMechanic)});
+    switch (Move::category(gameMechanic)) {
       case dex::MoveCategory::PHYSICAL: {
-        move.setCategoryPhysical();
+        POKESIM_REQUIRE(
+          !(setup.template any_of<move::tags::Special, move::tags::Status>()),
+          "A move can only have one category.");
+
+        setup.add(move::tags::Physical{});
         break;
       }
       case dex::MoveCategory::SPECIAL: {
-        move.setCategorySpecial();
+        POKESIM_REQUIRE(
+          !(setup.template any_of<move::tags::Physical, move::tags::Status>()),
+          "A move can only have one category.");
+
+        setup.add(move::tags::Special{});
         break;
       }
       case dex::MoveCategory::STATUS: {
-        move.setCategoryStatus();
+        POKESIM_REQUIRE(
+          !(setup.template any_of<move::tags::Physical, move::tags::Special>()),
+          "A move can only have one category.");
+        setup.add(move::tags::Status{});
         break;
       }
     }
 
-    if constexpr (has<Optional::accuracy, T>::value) {
-      move.setAccuracy(T::accuracy(gameMechanic));
+    if constexpr (has<Optional::accuracy, Move>::value) {
+      setup.add(Accuracy{Move::accuracy(gameMechanic)});
     }
-    if constexpr (has<Optional::basePower, T>::value) {
-      move.setBasePower(T::basePower(gameMechanic));
+    if constexpr (has<Optional::basePower, Move>::value) {
+      setup.add(BasePower{Move::basePower(gameMechanic)});
     }
-    if constexpr (has<Optional::hitCount, T>::value) {
-      move.setHitCount(T::hitCount(gameMechanic));
-    }
-
-    if constexpr (has<Optional::sourcePrimaryEffect, T>::value) {
-      buildEffect<typename T::sourcePrimaryEffect, MoveEffectKind::primary>(move);
-      move.setEffectTargetsMoveSource();
+    if constexpr (has<Optional::hitCount, Move>::value) {
+      setup.add(HitCount{Move::hitCount(gameMechanic)});
     }
 
-    if constexpr (has<Optional::targetPrimaryEffect, T>::value) {
-      buildEffect<typename T::targetPrimaryEffect, MoveEffectKind::primary>(move, gameMechanic);
-      move.setEffectTargetsMoveTarget();
+    if constexpr (has<Optional::sourcePrimaryEffect, Move>::value) {
+      buildEffect<typename Move::sourcePrimaryEffect, MoveEffectKind::primary>(setup);
+      POKESIM_REQUIRE(
+        !(setup.template any_of<move::effect::tags::MoveTarget>()),
+        "Moves effects can only affect the target or source, not both.");
+      setup.add(move::effect::tags::MoveSource{});
     }
 
-    if constexpr (has<Optional::sourceSecondaryEffect, T>::value) {
-      buildEffect<typename T::sourceSecondaryEffect, MoveEffectKind::secondary>(move, gameMechanic);
-      move.setEffectTargetsMoveSource();
+    if constexpr (has<Optional::targetPrimaryEffect, Move>::value) {
+      POKESIM_REQUIRE(
+        !(setup.template any_of<move::effect::tags::MoveSource>()),
+        "Moves effects can only affect the target or source, not both.");
+      buildEffect<typename Move::targetPrimaryEffect, MoveEffectKind::primary>(setup, gameMechanic);
+      setup.add(move::effect::tags::MoveTarget{});
     }
 
-    if constexpr (has<Optional::targetSecondaryEffect, T>::value) {
-      buildEffect<typename T::targetSecondaryEffect, MoveEffectKind::secondary>(move, gameMechanic);
-      move.setEffectTargetsMoveTarget();
+    if constexpr (has<Optional::sourceSecondaryEffect, Move>::value) {
+      POKESIM_REQUIRE(
+        !(setup.template any_of<move::effect::tags::MoveTarget>()),
+        "Moves effects can only affect the target or source, not both.");
+      buildEffect<typename Move::sourceSecondaryEffect, MoveEffectKind::secondary>(setup, gameMechanic);
+      setup.add(move::effect::tags::MoveSource{});
     }
 
-    move.setProperties(T::moveTags);
+    if constexpr (has<Optional::targetSecondaryEffect, Move>::value) {
+      POKESIM_REQUIRE(
+        !(setup.template any_of<move::effect::tags::MoveSource>()),
+        "Moves effects can only affect the target or source, not both.");
+      buildEffect<typename Move::targetSecondaryEffect, MoveEffectKind::secondary>(setup, gameMechanic);
+      setup.add(move::effect::tags::MoveTarget{});
+    }
 
-    switch (T::target(gameMechanic)) {
+    setup.setProperties(Move::moveTags);
+
+    switch (Move::target(gameMechanic)) {
       case MoveTarget::ANY_SINGLE_TARGET: {
-        move.setProperty<move::tags::AnySingleTarget>();
+        setup.add(move::tags::AnySingleTarget{});
         break;
       }
       case MoveTarget::ANY_SINGLE_FOE: {
-        move.setProperty<move::tags::AnySingleFoe>();
+        setup.add(move::tags::AnySingleFoe{});
         break;
       }
       case MoveTarget::ANY_SINGLE_ALLY: {
-        move.setProperty<move::tags::AnySingleAlly>();
+        setup.add(move::tags::AnySingleAlly{});
         break;
       }
       case MoveTarget::ALLY_OR_SELF: {
-        move.setProperty<move::tags::AllyOrSelf>();
+        setup.add(move::tags::AllyOrSelf{});
         break;
       }
       case MoveTarget::SELF: {
-        move.setProperty<move::tags::Self>();
+        setup.add(move::tags::Self{});
         break;
       }
       case MoveTarget::ALL_FOES: {
-        move.setProperty<move::tags::AllFoes>();
-        move.addAddedTargets(AddedTargetOptions::TARGET_ALLY);
+        setup.add(move::tags::AllFoes{});
+        setup.add(move::added_targets::tags::TargetAlly{});
         break;
       }
       case MoveTarget::ALLIES_AND_FOES: {
-        move.setProperty<move::tags::AlliesAndFoes>();
-        move.addAddedTargets(AddedTargetOptions::TARGET_ALLY);
-        move.addAddedTargets(AddedTargetOptions::USER_ALLY);
+        setup.add(move::tags::AlliesAndFoes{});
+        setup.add(move::added_targets::tags::TargetAlly{});
+        setup.add(move::added_targets::tags::UserAlly{});
         break;
       }
       case MoveTarget::ALLIES_AND_SELF: {
-        move.setProperty<move::tags::AlliesAndSelf>();
+        setup.add(move::tags::AlliesAndSelf{});
         // Deliberately not USER_ALLY as the target of AlliesAndSelf moves is the user
-        move.addAddedTargets(AddedTargetOptions::TARGET_ALLY);
+        setup.add(move::added_targets::tags::TargetAlly{});
         break;
       }
       case MoveTarget::FOE_SIDE: {
-        move.setProperty<move::tags::FoeSide>();
-        move.addAddedTargets(AddedTargetOptions::TARGET_SIDE);
+        setup.add(move::tags::FoeSide{});
+        setup.add(move::added_targets::tags::TargetSide{});
         break;
       }
       case MoveTarget::ALLY_SIDE: {
-        move.setProperty<move::tags::AllySide>();
-        move.addAddedTargets(AddedTargetOptions::USER_SIDE);
+        setup.add(move::tags::AllySide{});
+        setup.add(move::added_targets::tags::UserSide{});
         break;
       }
       case MoveTarget::FIELD: {
-        move.setProperty<move::tags::Field>();
-        move.addAddedTargets(AddedTargetOptions::FIELD);
+        setup.add(move::tags::Field{});
+        setup.add(move::added_targets::tags::Field{});
         break;
       }
       case MoveTarget::ALLY_TEAM: {
-        move.setProperty<move::tags::AllyTeam>();
-        move.addAddedTargets(AddedTargetOptions::USER_SIDE);
+        setup.add(move::tags::AllyTeam{});
+        setup.add(move::added_targets::tags::UserSide{});
         break;
       }
       case MoveTarget::RETALIATION: {
-        move.setProperty<move::tags::Retaliation>();
+        setup.add(move::tags::Retaliation{});
         break;
       }
       case MoveTarget::RANDOM_FOE: {
-        move.setProperty<move::tags::RandomFoe>();
+        setup.add(move::tags::RandomFoe{});
         break;
       }
       default: break;
     }
 
-    return move.entity();
+    if (std::is_same_v<BuildMoveTag, internal::tags::BuildPokedexMove>) {
+      registry.remove<MoveTag>(list.begin(), list.end());
+    }
   }
 };
-types::entity buildByGameMechanic(
-  dex::Move move, types::registry& registry, bool forActiveMove, GameMechanics gameMechanic,
-  types::entity entityToUse) {
-  // Tidy check ignored because "using namespace" is in function
-  using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
-  switch (move) {
-    case Move::FURY_ATTACK:  return BuildMove<FuryAttack>::build(registry, gameMechanic, forActiveMove, entityToUse);
-    case Move::KNOCK_OFF:    return BuildMove<KnockOff>::build(registry, gameMechanic, forActiveMove, entityToUse);
-    case Move::MOONBLAST:    return BuildMove<Moonblast>::build(registry, gameMechanic, forActiveMove, entityToUse);
-    case Move::QUIVER_DANCE: return BuildMove<QuiverDance>::build(registry, gameMechanic, forActiveMove, entityToUse);
-    case Move::SPLASH:       return BuildMove<Splash>::build(registry, gameMechanic, forActiveMove, entityToUse);
-    case Move::THUNDERBOLT:  return BuildMove<Thunderbolt>::build(registry, gameMechanic, forActiveMove, entityToUse);
-    case Move::WILL_O_WISP:  return BuildMove<WillOWisp>::build(registry, gameMechanic, forActiveMove, entityToUse);
 
-    default: break;
+template <typename BuildMoveTag>
+struct BuildMoves {
+ private:
+  template <typename Move, typename MoveTag>
+  static void buildActionMoveFromView(types::registry& registry, GameMechanics gameMechanics) {
+    BuildMove<BuildMoveTag, Move, MoveTag>::build(registry, gameMechanics);
   }
 
-  POKESIM_REQUIRE_FAIL("Building a move that is not yet supported.");
-  return types::entity{};
-}
+  static void buildActionMoveByGameMechanic(types::registry& registry, GameMechanics gameMechanic) {
+    using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
+
+    buildActionMoveFromView<FuryAttack, move::tags::FuryAttack>(registry, gameMechanic);
+    buildActionMoveFromView<KnockOff, move::tags::KnockOff>(registry, gameMechanic);
+    buildActionMoveFromView<Moonblast, move::tags::Moonblast>(registry, gameMechanic);
+    buildActionMoveFromView<QuiverDance, move::tags::QuiverDance>(registry, gameMechanic);
+    buildActionMoveFromView<Splash, move::tags::Splash>(registry, gameMechanic);
+    buildActionMoveFromView<Thunderbolt, move::tags::Thunderbolt>(registry, gameMechanic);
+    buildActionMoveFromView<WillOWisp, move::tags::WillOWisp>(registry, gameMechanic);
+  }
+
+ public:
+  static void build(const Pokedex& pokedex, types::registry& registry) {
+    if (pokedex.isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
+      buildActionMoveByGameMechanic(registry, GameMechanics::SCARLET_VIOLET);
+      return;
+    }
+
+    POKESIM_REQUIRE_FAIL("Building for a game that is not yet supported.");
+  }
+};
 }  // namespace
 
-types::entity Pokedex::buildMove(
-  dex::Move move, types::registry& registry, bool forActiveMove, types::entity entityToUse) const {
-  if (isGameMechanic(GameMechanics::SCARLET_VIOLET)) {
-    return buildByGameMechanic(move, registry, forActiveMove, GameMechanics::SCARLET_VIOLET, entityToUse);
+void Pokedex::buildMoves(types::registry& registry) const {
+  if (!registry.view<internal::tags::BuildActionMove>().empty()) {
+    BuildMoves<internal::tags::BuildActionMove>::build(*this, registry);
   }
 
-  POKESIM_REQUIRE_FAIL("Building for a game that is not yet supported.");
-  return types::entity{};
+  if (!registry.view<internal::tags::BuildPokedexMove>().empty()) {
+    BuildMoves<internal::tags::BuildPokedexMove>::build(*this, registry);
+  }
 }
 }  // namespace pokesim
 
@@ -4200,16 +4233,24 @@ void Pokedex::loadItems(const entt::dense_set<dex::Item>& itemSet) {
   load(itemsMap, itemSet, [this](dex::Item item) { return buildItem(item, dexRegistry); });
 }
 
-void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
-  load(movesMap, moveSet, [this](dex::Move move) { return buildMove(move, dexRegistry, false, dexRegistry.create()); });
-}
-
 void Pokedex::loadAbilities(const entt::dense_set<dex::Ability>& abilitySet) {
   load(abilitiesMap, abilitySet, [this](dex::Ability ability) { return buildAbility(ability, dexRegistry); });
 }
 
-types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry, types::entity entityToUse) const {
-  return buildMove(move, registry, true, entityToUse);
+void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
+  for (dex::Move move : moveSet) {
+    if (movesMap.contains(move)) {
+      continue;
+    }
+
+    types::entity moveEntity = dexRegistry.create();
+    movesMap[move] = moveEntity;
+    move::tags::emplaceTagFromEnum(move, {dexRegistry, moveEntity});
+    dexRegistry.emplace<internal::tags::BuildPokedexMove>(moveEntity);
+  }
+
+  buildMoves(dexRegistry);
+  dexRegistry.clear<internal::tags::BuildPokedexMove>();
 }
 
 void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInfoList) {
@@ -4643,14 +4684,14 @@ namespace pokesim::calc_damage {
 InputSetup::InputSetup(types::registry& registry, types::entity moveEntity) : handle(registry, moveEntity) {}
 
 void InputSetup::setup(
-  types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move,
-  const Pokedex& pokedex) {
+  types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move) {
   types::registry& registry = *handle.registry();
 
-  createActionMoveForTarget({registry, targetEntity}, battleEntity, sourceEntity, move, pokedex, entity());
+  setupActionMoveBuild(registry, battleEntity, sourceEntity, targetEntity, entity(), move);
 
   handle.emplace<MoveName>(move);
   handle.emplace<pokesim::tags::CurrentMoveHit>();
+  handle.emplace<pokesim::tags::CalculateDamage>();
   registry.emplace_or_replace<tags::Attacker>(sourceEntity);
   registry.emplace_or_replace<tags::Defender>(targetEntity);
 }
@@ -5391,11 +5432,25 @@ void BattleStateSetup::initBlank() {
   setProbability(Constants::Probability::DEFAULT);
 }
 
-void BattleStateSetup::setRecycledAction(types::entity recycledAction) {
+void BattleStateSetup::setRecycledAction(types::entity recycledAction, types::entity recycledActionMove) {
   types::registry& registry = *handle.registry();
 
   handle.emplace<RecycledAction>(recycledAction);
   registry.emplace<tags::RecycledAction>(recycledAction);
+
+  handle.emplace<RecycledActionMove>(recycledActionMove);
+  registry.emplace<tags::RecycledActionMove>(recycledActionMove);
+}
+
+void BattleStateSetup::setAddedRecycledActionMoves(
+  types::entity addedRecycledActionMove1, types::entity addedRecycledActionMove2) {
+  types::registry& registry = *handle.registry();
+
+  handle.emplace<AddedRecycledActionMove1>(addedRecycledActionMove1);
+  registry.emplace<tags::AddedRecycledActionMove1>(addedRecycledActionMove1);
+
+  handle.emplace<AddedRecycledActionMove2>(addedRecycledActionMove2);
+  registry.emplace<tags::AddedRecycledActionMove2>(addedRecycledActionMove2);
 }
 
 void BattleStateSetup::setAutoID() {
@@ -5841,6 +5896,23 @@ void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets&
 
   targets.val.pop_count(deleteCount);
 }
+
+template <typename View>
+void clearActionMoveComponents(types::registry& registry, const View& view) {
+  registry.remove<
+    tags::SimulateTurn,
+    tags::CalculateDamage,
+    tags::AnalyzeEffect,
+    Battle,
+    TypeName,
+    AtkBoost,
+    DefBoost,
+    SpaBoost,
+    SpdBoost,
+    SpeBoost,
+    status::tags::Paralysis,
+    status::tags::Burn>(view.begin(), view.end());
+}
 }  // namespace
 
 void assignRootBattle(types::handle battleHandle) {
@@ -5880,35 +5952,12 @@ void setCurrentActionTarget(
 
   if (pickedTarget) {
     battleHandle.emplace<CurrentActionTargets>(types::targets<types::entity>{targetEntity});
-    registry.emplace<tags::CurrentActionMoveTarget>(targetEntity);
-    registry.emplace<CurrentActionSource>(targetEntity, source);
   }
   else {
     types::entity sourceEntity = battleHandle.get<CurrentActionSource>().val;
     battleHandle.remove<CurrentActionSource>();
     registry.remove<tags::CurrentActionMoveSource>(sourceEntity);
   }
-}
-
-void setCurrentActionMove(
-  types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
-  const Pokedex& pokedex) {
-  types::registry& registry = *battleHandle.registry();
-  const MoveName& move = registry.get<MoveName>(action.val);
-  const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
-
-  for (types::entity target : targets.val) {
-    createActionMoveForTarget(
-      {registry, target},
-      battleHandle.entity(),
-      source.val,
-      move.val,
-      pokedex,
-      registry.create());
-  }
-
-  types::moveSlotIndex moveSlotIndex = moveToMoveSlot(moveSlots, move.val);
-  battleHandle.emplace<CurrentActionMoveSlot>(moveSlotIndex);
 }
 
 void setFailedActionMove(
@@ -5939,38 +5988,55 @@ void setFailedActionMove(
 
 void clearCurrentAction(Simulation& simulation) {
   types::registry& registry = simulation.registry;
-  registry.clear<CurrentAction>();
-  registry.clear<CurrentActionTargets>();
-  registry.clear<CurrentActionSource>();
-  registry.clear<CurrentActionTarget>();
-  registry.clear<FailedCurrentActionSource>();
-  registry.clear<FailedCurrentActionTarget>();
-  registry.clear<CurrentActionMovesAsSource>();
-  registry.clear<CurrentActionMovesAsTarget>();
-  registry.clear<CurrentActionMoveSlot>();
+  registry.clear<
+    CurrentAction,
+    CurrentActionTargets,
+    CurrentActionSource,
+    CurrentActionTarget,
+    FailedCurrentActionSource,
+    FailedCurrentActionTarget,
+    CurrentActionMovesAsSource,
+    CurrentActionMovesAsTarget,
+    CurrentActionMoveSlot,
+    tags::CurrentActionMoveSource,
+    tags::CurrentActionMoveTarget,
+    tags::CurrentActionMoveSlot,
+    tags::CurrentMoveHit,
+    tags::FailedCurrentMoveHit>();
 
-  registry.clear<tags::CurrentActionMoveSource>();
-  registry.clear<tags::CurrentActionMoveTarget>();
-  registry.clear<tags::CurrentActionMoveSlot>();
-  registry.clear<tags::CurrentMoveHit>();
-  registry.clear<tags::FailedCurrentMoveHit>();
+  registry.clear<
+    move::effect::tags::Primary,
+    move::effect::tags::Secondary,
+    move::effect::tags::MoveSource,
+    move::effect::tags::MoveTarget,
+    move::tags::FuryAttack,
+    move::tags::KnockOff,
+    move::tags::Moonblast,
+    move::tags::QuiverDance,
+    move::tags::Splash,
+    move::tags::Thunderbolt,
+    move::tags::WillOWisp,
+    move::tags::Physical,
+    move::tags::Special,
+    move::tags::Status,
+    move::tags::Contact,
+    move::tags::BypassSubstitute,
+    move::tags::Punch,
+    move::tags::VariableHitCount,
+    BaseEffectChance,
+    Accuracy,
+    BasePower,
+    HitCount,
+    move::tags::AccuracyDependentHitCount,
+    move::tags::Self,
+    move::tags::AnySingleTarget,
+    move::tags::AnySingleAlly>();
 
-  auto actionMoves = registry.view<tags::CurrentActionMove>();
-  auto failedActionMoves = registry.view<tags::FailedCurrentActionMove>();
-  auto currentActions = registry.view<action::tags::Current>();
-  registry.destroy(actionMoves.begin(), actionMoves.end());
-  registry.destroy(failedActionMoves.begin(), failedActionMoves.end());
+  registry.clear<SourceSlotName, TargetSlotName>();
 
-  registry.remove<action::tags::Current, SourceSlotName, TargetSlotName, MoveName>(
-    currentActions.begin(),
-    currentActions.end());
-
-  auto battles = simulation.battleEntities();
-  registry.remove<
+  registry.clear<
     action::tags::Item,
-    ItemName,
     action::tags::Move,
-    MoveName,
     action::tags::BeforeTurn,
     action::tags::Dynamax,
     action::tags::MegaEvolve,
@@ -5983,7 +6049,19 @@ void clearCurrentAction(Simulation& simulation) {
     action::tags::RevivalBlessing,
     action::tags::Switch,
     action::tags::SwitchOut,
-    action::tags::Terastallize>(battles.begin(), battles.end());
+    action::tags::Terastallize>();
+
+  auto actionMoves = registry.view<tags::CurrentActionMove>();
+  auto failedActionMoves = registry.view<tags::FailedCurrentActionMove>();
+  clearActionMoveComponents(registry, actionMoves);
+  clearActionMoveComponents(registry, failedActionMoves);
+  registry.clear<tags::CurrentActionMove, tags::FailedCurrentActionMove>();
+
+  simulation.removeFromEntities<MoveName, action::tags::Current>();
+  registry.clear<action::tags::Current>();
+
+  auto battles = registry.view<tags::Battle>();
+  registry.remove<ItemName, MoveName>(battles.begin(), battles.end());
 }
 }  // namespace pokesim
 
@@ -6072,31 +6150,20 @@ types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move) 
   return 0U;
 }
 
-types::entity createActionMoveForTarget(
-  types::handle targetHandle, types::entity battleEntity, types::entity sourceEntity, dex::Move move,
-  const Pokedex& pokedex, types::entity entityToUse) {
-  types::registry& registry = *targetHandle.registry();
-  types::entity moveEntity = pokedex.buildActionMove(move, registry, entityToUse);
+void setupActionMoveBuild(
+  types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
+  types::entity actionMoveEntity, dex::Move move) {
+  types::handle actionMoveHandle{registry, actionMoveEntity};
 
-  registry.emplace<tags::CurrentActionMove>(moveEntity);
-  registry.emplace<Battle>(moveEntity, battleEntity);
-  registry.emplace<CurrentActionSource>(moveEntity, sourceEntity);
-  registry.emplace<CurrentActionTarget>(moveEntity, targetHandle.entity());
+  move::tags::emplaceTagFromEnum(move, actionMoveHandle);
+  actionMoveHandle.emplace<Battle>(battleEntity);
+  actionMoveHandle.emplace<CurrentActionSource>(sourceEntity);
+  actionMoveHandle.emplace<CurrentActionTarget>(targetEntity);
+  actionMoveHandle.emplace<pokesim::internal::tags::BuildActionMove>();
+  actionMoveHandle.emplace<tags::CurrentActionMove>();
 
-  targetHandle.get_or_emplace<CurrentActionMovesAsTarget>().val.push_back(moveEntity);
-  registry.get_or_emplace<CurrentActionMovesAsSource>(sourceEntity).val.push_back(moveEntity);
-
-  if (registry.all_of<tags::SimulateTurn>(battleEntity)) {
-    registry.emplace<tags::SimulateTurn>(moveEntity);
-  }
-  if (registry.all_of<tags::CalculateDamage>(battleEntity)) {
-    registry.emplace<tags::CalculateDamage>(moveEntity);
-  }
-  if (registry.all_of<tags::AnalyzeEffect>(battleEntity)) {
-    registry.emplace<tags::AnalyzeEffect>(moveEntity);
-  }
-
-  return moveEntity;
+  registry.get_or_emplace<CurrentActionMovesAsTarget>(targetEntity).val.push_back(actionMoveEntity);
+  registry.get_or_emplace<CurrentActionMovesAsSource>(sourceEntity).val.push_back(actionMoveEntity);
 }
 }  // namespace pokesim
 
@@ -6137,8 +6204,16 @@ void traverseBattle(types::registry& registry, VisitEntity visitEntity = nullptr
     }
   }
 
-  for (const auto [entity, recycledAction] : registry.view<Tag, tags::Battle, RecycledAction>().each()) {
+  for (const auto [entity, recycledAction, recycledActionMove] :
+       registry.view<Tag, tags::Battle, RecycledAction, RecycledActionMove>().each()) {
     registry.emplace<Tag>(recycledAction.val);
+    registry.emplace<Tag>(recycledActionMove.val);
+  }
+
+  for (const auto [entity, addedRecycledActionMove1, addedRecycledActionMove2] :
+       registry.view<Tag, tags::Battle, AddedRecycledActionMove1, AddedRecycledActionMove2>().each()) {
+    registry.emplace<Tag>(addedRecycledActionMove1.val);
+    registry.emplace<Tag>(addedRecycledActionMove2.val);
   }
 }
 
@@ -6168,15 +6243,21 @@ void traverseAction(types::registry& registry, VisitEntity visitEntity = nullptr
       visitEntity(entity);
     }
   }
-}
 
-template <typename VisitEntity = void*>
-void traverseCurrentActionMove(types::registry& registry, VisitEntity visitEntity = nullptr) {
-  const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
-  using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
+  for (types::entity entity : registry.view<Tag, tags::RecycledActionMove>()) {
+    if constexpr (ForCloning) {
+      visitEntity(entity);
+    }
+  }
 
-  if constexpr (ForCloning) {
-    for (types::entity entity : registry.view<Tag, tags::CurrentActionMove>()) {
+  for (types::entity entity : registry.view<Tag, tags::AddedRecycledActionMove1>()) {
+    if constexpr (ForCloning) {
+      visitEntity(entity);
+    }
+  }
+
+  for (types::entity entity : registry.view<Tag, tags::AddedRecycledActionMove2>()) {
+    if constexpr (ForCloning) {
       visitEntity(entity);
     }
   }
@@ -6230,14 +6311,6 @@ void cloneAction(
   });
 }
 
-void cloneCurrentActionMove(
-  types::registry& registry, types::ClonedEntityMap& entityMap,
-  entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::entityIndex cloneCount) {
-  traverseCurrentActionMove(registry, [&](types::entity entity) {
-    cloneEntity(entity, registry, entityMap, srcEntityStorages, cloneCount);
-  });
-}
-
 void clonePokemon(
   types::registry& registry, types::ClonedEntityMap& entityMap,
   entt::dense_map<entt::id_type, types::entityVector>& srcEntityStorages, types::entityIndex cloneCount) {
@@ -6256,10 +6329,6 @@ void deleteSide(types::registry& registry) {
 
 void deleteAction(types::registry& registry) {
   traverseAction(registry);
-}
-
-void deleteCurrentActionMove(types::registry& registry) {
-  traverseCurrentActionMove(registry);
 }
 
 void deletePokemon(types::registry& registry) {
@@ -6315,7 +6384,6 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   cloneSide(registry, entityMap, srcEntityStorages, count);
   cloneAction(registry, entityMap, srcEntityStorages, count);
   clonePokemon(registry, entityMap, srcEntityStorages, count);
-  cloneCurrentActionMove(registry, entityMap, srcEntityStorages, count);
 
   for (auto [id, storage] : registry.storage()) {
     if (srcEntityStorages.contains(id)) {
@@ -6344,23 +6412,26 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   }
 
   // Not simplified further to a, for example, packed template type list, to make debugging what type went wrong easier
+  remapComponentEntities<AddedRecycledActionMove1>(registry, entityMap);
+  remapComponentEntities<AddedRecycledActionMove2>(registry, entityMap);
   remapComponentEntities<Battle>(registry, entityMap);
   remapComponentEntities<CurrentAction>(registry, entityMap);
   remapComponentEntities<CurrentActionMovesAsSource>(registry, entityMap);
   remapComponentEntities<CurrentActionMovesAsTarget>(registry, entityMap);
   remapComponentEntities<CurrentActionSource>(registry, entityMap);
   remapComponentEntities<CurrentActionTarget>(registry, entityMap);
-  remapComponentEntities<FailedCurrentActionSource>(registry, entityMap);
-  remapComponentEntities<FailedCurrentActionTarget>(registry, entityMap);
   remapComponentEntities<CurrentActionTargets>(registry, entityMap);
-  remapComponentEntities<CurrentEffectsAsSource>(registry, entityMap);
-  remapComponentEntities<CurrentEffectsAsTarget>(registry, entityMap);
   remapComponentEntities<CurrentEffectSource>(registry, entityMap);
   remapComponentEntities<CurrentEffectTarget>(registry, entityMap);
+  remapComponentEntities<CurrentEffectsAsSource>(registry, entityMap);
+  remapComponentEntities<CurrentEffectsAsTarget>(registry, entityMap);
+  remapComponentEntities<FailedCurrentActionSource>(registry, entityMap);
+  remapComponentEntities<FailedCurrentActionTarget>(registry, entityMap);
   remapComponentEntities<FaintQueue>(registry, entityMap);
   remapComponentEntities<FoeSide>(registry, entityMap);
   remapComponentEntities<Pokemon>(registry, entityMap);
   remapComponentEntities<RecycledAction>(registry, entityMap);
+  remapComponentEntities<RecycledActionMove>(registry, entityMap);
   remapComponentEntities<Side>(registry, entityMap);
   remapComponentEntities<Sides>(registry, entityMap);
   remapComponentEntities<Team>(registry, entityMap);
@@ -6387,7 +6458,6 @@ void deleteClones(types::registry& registry) {
   deleteSide(registry);
   deleteAction(registry);
   deletePokemon(registry);
-  deleteCurrentActionMove(registry);
   auto remove = registry.view<tags::CloneToRemove>();
   registry.destroy(remove.begin(), remove.end());
 }
@@ -6710,16 +6780,14 @@ void ignoreBattlesWithEffectActive(Simulation& simulation) {
 
 types::entity createAnalyzeEffectMove(
   types::registry& registry, dex::Move move, types::entity battleEntity, types::entity attackerEntity,
-  types::entity defenderEntity, const Pokedex& pokedex) {
-  types::entity moveEntity = createActionMoveForTarget(
-    {registry, defenderEntity},
-    battleEntity,
-    attackerEntity,
-    move,
-    pokedex,
-    registry.create());
+  types::entity defenderEntity) {
+  types::entity moveEntity = registry.create();
+
+  setupActionMoveBuild(registry, battleEntity, attackerEntity, defenderEntity, moveEntity, move);
+
   registry.emplace<MoveName>(moveEntity, move);
   registry.emplace<pokesim::tags::CurrentMoveHit>(moveEntity);
+  registry.emplace<pokesim::tags::AnalyzeEffect>(moveEntity);
   registry.emplace_or_replace<tags::Attacker>(attackerEntity);
   registry.emplace_or_replace<tags::Defender>(defenderEntity);
 
@@ -6727,22 +6795,20 @@ types::entity createAnalyzeEffectMove(
 }
 
 void createOneCalculationMovePair(
-  types::handle inputHandle, Battle battle, EffectMove move, Attacker attacker, Defender defender,
-  const Pokedex& pokedex) {
+  types::handle inputHandle, Battle battle, EffectMove move, Attacker attacker, Defender defender) {
   entt::entity moveEntity =
-    createAnalyzeEffectMove(*inputHandle.registry(), move.val, battle.val, attacker.val, defender.val, pokedex);
+    createAnalyzeEffectMove(*inputHandle.registry(), move.val, battle.val, attacker.val, defender.val);
   inputHandle.emplace<MovePair>(moveEntity, moveEntity);
 }
 
 void createTwoCalculationsMovePair(
   types::handle inputHandle, Battle battle, EffectMove move, Attacker attacker, Defender defender,
-  const OriginalInputEntities& originals, const Pokedex& pokedex) {
+  const OriginalInputEntities& originals) {
   types::registry& registry = *inputHandle.registry();
 
   entt::entity originalEntity =
-    createAnalyzeEffectMove(registry, move.val, originals.battle, originals.attacker, originals.defender, pokedex);
-  entt::entity copyEntity =
-    createAnalyzeEffectMove(registry, move.val, battle.val, attacker.val, defender.val, pokedex);
+    createAnalyzeEffectMove(registry, move.val, originals.battle, originals.attacker, originals.defender);
+  entt::entity copyEntity = createAnalyzeEffectMove(registry, move.val, battle.val, attacker.val, defender.val);
 
   // All active pokemon in should have their stats refreshed in doubles for moves like Beat Up which rely on the stats
   // of Pokemon outside of the attacker and defender
@@ -6856,9 +6922,10 @@ void createAppliedEffectBattles(Simulation& simulation) {
     }
   }
 
-  simulation.view<createOneCalculationMovePair, Tags<>, entt::exclude_t<OriginalInputEntities, tags::IgnoredInput>>(
-    simulation.pokedex());
-  simulation.view<createTwoCalculationsMovePair>(simulation.pokedex());
+  simulation.view<createOneCalculationMovePair, Tags<>, entt::exclude_t<OriginalInputEntities, tags::IgnoredInput>>();
+  simulation.view<createTwoCalculationsMovePair>();
+  simulation.pokedex().buildMoves(simulation.registry);
+  simulation.registry.clear<pokesim::internal::tags::BuildActionMove>();
 }
 
 void applyPseudoWeatherEffect(types::handle, Battle, PseudoWeatherName) {}

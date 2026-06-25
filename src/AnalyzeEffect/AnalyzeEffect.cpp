@@ -27,6 +27,7 @@
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
@@ -274,16 +275,14 @@ void ignoreBattlesWithEffectActive(Simulation& simulation) {
 
 types::entity createAnalyzeEffectMove(
   types::registry& registry, dex::Move move, types::entity battleEntity, types::entity attackerEntity,
-  types::entity defenderEntity, const Pokedex& pokedex) {
-  types::entity moveEntity = createActionMoveForTarget(
-    {registry, defenderEntity},
-    battleEntity,
-    attackerEntity,
-    move,
-    pokedex,
-    registry.create());
+  types::entity defenderEntity) {
+  types::entity moveEntity = registry.create();
+
+  setupActionMoveBuild(registry, battleEntity, attackerEntity, defenderEntity, moveEntity, move);
+
   registry.emplace<MoveName>(moveEntity, move);
   registry.emplace<pokesim::tags::CurrentMoveHit>(moveEntity);
+  registry.emplace<pokesim::tags::AnalyzeEffect>(moveEntity);
   registry.emplace_or_replace<tags::Attacker>(attackerEntity);
   registry.emplace_or_replace<tags::Defender>(defenderEntity);
 
@@ -291,22 +290,20 @@ types::entity createAnalyzeEffectMove(
 }
 
 void createOneCalculationMovePair(
-  types::handle inputHandle, Battle battle, EffectMove move, Attacker attacker, Defender defender,
-  const Pokedex& pokedex) {
+  types::handle inputHandle, Battle battle, EffectMove move, Attacker attacker, Defender defender) {
   entt::entity moveEntity =
-    createAnalyzeEffectMove(*inputHandle.registry(), move.val, battle.val, attacker.val, defender.val, pokedex);
+    createAnalyzeEffectMove(*inputHandle.registry(), move.val, battle.val, attacker.val, defender.val);
   inputHandle.emplace<MovePair>(moveEntity, moveEntity);
 }
 
 void createTwoCalculationsMovePair(
   types::handle inputHandle, Battle battle, EffectMove move, Attacker attacker, Defender defender,
-  const OriginalInputEntities& originals, const Pokedex& pokedex) {
+  const OriginalInputEntities& originals) {
   types::registry& registry = *inputHandle.registry();
 
   entt::entity originalEntity =
-    createAnalyzeEffectMove(registry, move.val, originals.battle, originals.attacker, originals.defender, pokedex);
-  entt::entity copyEntity =
-    createAnalyzeEffectMove(registry, move.val, battle.val, attacker.val, defender.val, pokedex);
+    createAnalyzeEffectMove(registry, move.val, originals.battle, originals.attacker, originals.defender);
+  entt::entity copyEntity = createAnalyzeEffectMove(registry, move.val, battle.val, attacker.val, defender.val);
 
   // All active pokemon in should have their stats refreshed in doubles for moves like Beat Up which rely on the stats
   // of Pokemon outside of the attacker and defender
@@ -420,9 +417,10 @@ void createAppliedEffectBattles(Simulation& simulation) {
     }
   }
 
-  simulation.view<createOneCalculationMovePair, Tags<>, entt::exclude_t<OriginalInputEntities, tags::IgnoredInput>>(
-    simulation.pokedex());
-  simulation.view<createTwoCalculationsMovePair>(simulation.pokedex());
+  simulation.view<createOneCalculationMovePair, Tags<>, entt::exclude_t<OriginalInputEntities, tags::IgnoredInput>>();
+  simulation.view<createTwoCalculationsMovePair>();
+  simulation.pokedex().buildMoves(simulation.registry);
+  simulation.registry.clear<pokesim::internal::tags::BuildActionMove>();
 }
 
 void applyPseudoWeatherEffect(types::handle, Battle, PseudoWeatherName) {}

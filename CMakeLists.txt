@@ -204,7 +204,6 @@ setup_target(
     src/Pokedex/Setup/GetMoveBuild.cpp
     src/Pokedex/Setup/GetSpeciesBuild.cpp
     src/Pokedex/Setup/ItemDexDataSetup.cpp
-    src/Pokedex/Setup/MoveDexDataSetup.cpp
     src/Pokedex/Setup/SpeciesDexDataSetup.cpp
     src/SimulateTurn/CalcDamageSpecifics.cpp
     src/SimulateTurn/ManageActionQueue.cpp

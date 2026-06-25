@@ -130,6 +130,8 @@ template void runAfterEachBoostEvent<SpeBoost>(Simulation&);
 
 void runAfterBoostEvent(Simulation&) {}
 
+void runModifyTarget(Simulation& simulation) {}
+
 void runModifyMove(Simulation& simulation) {
   dex::ChoiceScarf::onSourceModifyMove(simulation);
   dex::ChoiceSpecs::onSourceModifyMove(simulation);

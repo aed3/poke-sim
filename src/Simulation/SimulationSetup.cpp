@@ -16,6 +16,7 @@
 #include <Components/SideDecisions.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
@@ -64,6 +65,8 @@ struct EntityLists {
   EntityList sides;
   EntityList pokemon;
   EntityList recycledActions;
+  EntityList recycledActionMoves;
+  EntityList addedRecycledActionMoves;
   EntityList calcDamageInputs;
   EntityList analyzeEffectInputs;
 
@@ -90,6 +93,9 @@ struct EntityLists {
 
     types::entityIndex sideCount = battleCount * 2;
     types::entityIndex recycledActionCount = battleCount;
+    types::entityIndex recycledActionMoveCount = battleCount;
+    types::entityIndex addedRecycledActionMoveCount =
+      simulation->isBattleFormat(BattleFormat::DOUBLES) ? battleCount * 2 : 0;
 
     POKESIM_REQUIRE(
       battleCount + sideCount + recycledActionCount + pokemonCount + calcDamageInputCount + analyzeEffectInputCount <
@@ -101,6 +107,8 @@ struct EntityLists {
     sides = {registry, sideCount};
     pokemon = {registry, pokemonCount};
     recycledActions = {registry, recycledActionCount};
+    recycledActionMoves = {registry, recycledActionMoveCount};
+    addedRecycledActionMoves = {registry, addedRecycledActionMoveCount};
     calcDamageInputs = {registry, calcDamageInputCount};
     analyzeEffectInputs = {registry, analyzeEffectInputCount};
   }
@@ -275,7 +283,7 @@ void createInitialPokemon(
 
 void createCalcDamageInput(
   const CalcDamageInputInfo& inputInfo, BattleStateSetup& battleSetup, types::registry& registry,
-  const Pokedex& pokedex, EntityLists& entityLists, debug::SimulationSetupChecks& debugChecks) {
+  EntityLists& entityLists, debug::SimulationSetupChecks& debugChecks) {
   POKESIM_REQUIRE(inputInfo.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
   POKESIM_REQUIRE(inputInfo.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
   POKESIM_REQUIRE(!inputInfo.moves.empty(), "A damage calculation must have a move.");
@@ -288,7 +296,7 @@ void createCalcDamageInput(
     calc_damage::InputSetup inputSetup{registry, entityLists.calcDamageInputs.getNext()};
     POKESIM_REQUIRE(move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
 
-    inputSetup.setup(battleSetup.entity(), attackerEntity, defenderEntity, move, pokedex);
+    inputSetup.setup(battleSetup.entity(), attackerEntity, defenderEntity, move);
     debugChecks.addToCalcDamageChecklist(battleSetup, inputSetup, inputInfo);
   }
 }
@@ -446,7 +454,12 @@ void createInitialState(
   for (types::entityIndex battleIndex = 0; battleIndex < battleSetupList.size(); battleIndex++) {
     BattleStateSetup& battleSetup = battleSetupList[battleIndex];
     createInitialBattle(battleInfo, battleSetup, sideSetupLists[battleIndex]);
-    battleSetup.setRecycledAction(entityLists.recycledActions.getNext());
+    battleSetup.setRecycledAction(entityLists.recycledActions.getNext(), entityLists.recycledActionMoves.getNext());
+    if (simulation->isBattleFormat(BattleFormat::DOUBLES)) {
+      battleSetup.setAddedRecycledActionMoves(
+        entityLists.addedRecycledActionMoves.getNext(),
+        entityLists.addedRecycledActionMoves.getNext());
+    }
   }
 
   for (types::sideIndex sideIndex = 0; sideIndex < battleInfo.sides.size(); sideIndex++) {
@@ -482,7 +495,7 @@ void createInitialState(
 
   BattleStateSetup& battleSetup = battleSetupList[0];
   for (const CalcDamageInputInfo& calcDamageInputInfo : battleInfo.damageCalculations) {
-    createCalcDamageInput(calcDamageInputInfo, battleSetup, registry, pokedex, entityLists, debugChecks);
+    createCalcDamageInput(calcDamageInputInfo, battleSetup, registry, entityLists, debugChecks);
   }
 
   for (const AnalyzeEffectInputInfo& analyzeEffectInputInfo : battleInfo.effectsToAnalyze) {
@@ -499,6 +512,9 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
   for (const BattleCreationInfo& battleInfo : battleInfoList) {
     createInitialState(battleInfo, this, entityLists, debugChecks);
   }
+
+  pokedex().buildMoves(registry);
+  registry.clear<internal::tags::BuildActionMove>();
 
   debugChecks.checkOutputs();
 }
