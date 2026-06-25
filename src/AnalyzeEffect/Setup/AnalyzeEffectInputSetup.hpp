@@ -16,7 +16,6 @@ struct InputSetup {
 
  public:
   InputSetup(types::registry& registry, types::entity entity);
-  InputSetup(types::registry& registry) : InputSetup(registry, registry.create()) {}
 
   void setAttacker(types::entity entity);
   void setEffectTarget(types::entity entity);

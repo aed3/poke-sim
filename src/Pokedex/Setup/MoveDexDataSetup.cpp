@@ -103,7 +103,7 @@ void MoveDexDataSetup::setEffectTargetsMoveSource() {
 
 void MoveDexDataSetup::setEffectTargetsMoveTarget() {
   POKESIM_REQUIRE(
-    !handle.all_of<move::effect::tags::MoveTarget>(),
+    !handle.all_of<move::effect::tags::MoveSource>(),
     "Moves effects can only affect the source or target, not both.");
   handle.emplace<move::effect::tags::MoveTarget>();
 }

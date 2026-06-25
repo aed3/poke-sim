@@ -30,15 +30,15 @@ void Pokedex::loadItems(const entt::dense_set<dex::Item>& itemSet) {
 }
 
 void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
-  load(movesMap, moveSet, [this](dex::Move move) { return buildMove(move, dexRegistry, false); });
+  load(movesMap, moveSet, [this](dex::Move move) { return buildMove(move, dexRegistry, false, dexRegistry.create()); });
 }
 
 void Pokedex::loadAbilities(const entt::dense_set<dex::Ability>& abilitySet) {
   load(abilitiesMap, abilitySet, [this](dex::Ability ability) { return buildAbility(ability, dexRegistry); });
 }
 
-types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry) const {
-  return buildMove(move, registry, true);
+types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry, types::entity entityToUse) const {
+  return buildMove(move, registry, true, entityToUse);
 }
 
 void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInfoList) {

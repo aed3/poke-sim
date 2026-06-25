@@ -19,5 +19,5 @@ types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
 
 types::entity createActionMoveForTarget(
   types::handle targetHandle, types::entity battleEntity, types::entity sourceEntity, dex::Move move,
-  const Pokedex& pokedex);
+  const Pokedex& pokedex, types::entity entityToUse);
 }  // namespace pokesim

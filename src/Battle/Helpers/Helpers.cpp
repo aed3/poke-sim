@@ -102,9 +102,9 @@ types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move) 
 
 types::entity createActionMoveForTarget(
   types::handle targetHandle, types::entity battleEntity, types::entity sourceEntity, dex::Move move,
-  const Pokedex& pokedex) {
+  const Pokedex& pokedex, types::entity entityToUse) {
   types::registry& registry = *targetHandle.registry();
-  types::entity moveEntity = pokedex.buildActionMove(move, registry);
+  types::entity moveEntity = pokedex.buildActionMove(move, registry, entityToUse);
 
   registry.emplace<tags::CurrentActionMove>(moveEntity);
   registry.emplace<Battle>(moveEntity, battleEntity);

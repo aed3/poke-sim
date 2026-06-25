@@ -13,7 +13,7 @@ struct MoveDecision {
 
   dex::Move move = dex::Move::NO_MOVE;
 
-  bool operator==(const MoveDecision& other) const {
+  constexpr bool operator==(const MoveDecision& other) const {
     return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot && move == other.move;
   }
 };
@@ -27,7 +27,7 @@ struct SwitchDecision {
   Slot sourceSlot = Slot::NONE;
   Slot targetSlot = Slot::NONE;
 
-  bool operator==(const SwitchDecision& other) const {
+  constexpr bool operator==(const SwitchDecision& other) const {
     return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot;
   }
 };
@@ -38,7 +38,7 @@ struct ItemDecision {
 
   dex::Item item = dex::Item::NO_ITEM;
 
-  bool operator==(const ItemDecision& other) const {
+  constexpr bool operator==(const ItemDecision& other) const {
     return sourceSlot == other.sourceSlot && targetSlot == other.targetSlot && item == other.item;
   }
 };

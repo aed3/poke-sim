@@ -27,7 +27,6 @@ struct MoveSlot;
 // Tool to set properties of a Pokemon's state to an entity.
 struct PokemonStateSetup : internal::StateSetupBase {
   PokemonStateSetup() : internal::StateSetupBase() {}
-  PokemonStateSetup(types::registry& registry) : PokemonStateSetup(registry, registry.create()) {}
   PokemonStateSetup(types::registry& registry, types::entity entity);
 
   operator types::entity() const { return entity(); }

@@ -19,7 +19,6 @@ struct ActionQueueItem;
 // Tool to set properties of a battle's state to an entity.
 struct BattleStateSetup : internal::StateSetupBase {
   BattleStateSetup() : internal::StateSetupBase() {}
-  BattleStateSetup(types::registry& registry) : BattleStateSetup(registry, registry.create()) {}
   BattleStateSetup(types::registry& registry, types::entity entity);
 
   /**
@@ -34,6 +33,7 @@ struct BattleStateSetup : internal::StateSetupBase {
    */
   void initBlank();
 
+  void setRecycledAction(types::entity recycledAction);
   void setAutoID();
   void setID(types::stateId id);
   void setSide(types::entity sideEntity);
@@ -42,9 +42,6 @@ struct BattleStateSetup : internal::StateSetupBase {
   void setRNGSeed(std::optional<types::rngState> seed = std::nullopt);
   void setActionQueue(const std::vector<ActionQueueItem>& queue);
   void setTurn(types::battleTurn turn);
-  void setCurrentActionTarget(types::targets<types::entity> actionTargets);
-  void setCurrentActionSource(types::entity actionSource);
-  void setCurrentActionMove(types::entity actionMove);
   void setProbability(types::probability probability);
 };
 }  // namespace pokesim

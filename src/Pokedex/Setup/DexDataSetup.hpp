@@ -13,6 +13,7 @@ struct DexDataSetup {
 
  public:
   DexDataSetup(types::registry& registry) : handle(registry, registry.create()) {}
+  DexDataSetup(types::registry& registry, types::entity entity) : handle(registry, entity) {}
 
   template <typename Tag>
   void setProperty() {
