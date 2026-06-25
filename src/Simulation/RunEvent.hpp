@@ -31,6 +31,7 @@ void runTryBoostEvent(Simulation& simulation);
 template <typename BoostType>
 void runAfterEachBoostEvent(Simulation& simulation);
 void runAfterBoostEvent(Simulation& simulation);
+void runModifyTarget(Simulation& simulation);  // onModifyMove for Curse and Expanding force should go here
 void runModifyMove(Simulation& simulation);
 void runDisableMove(Simulation& simulation);
 

@@ -40,7 +40,6 @@
 #include "Setup/AbilityDexDataSetup.hpp"
 #include "Setup/DexDataSetup.hpp"
 #include "Setup/ItemDexDataSetup.hpp"
-#include "Setup/MoveDexDataSetup.hpp"
 #include "Setup/SpeciesDexDataSetup.hpp"
 #include "Species/Ampharos.hpp"
 #include "Species/Dragapult.hpp"

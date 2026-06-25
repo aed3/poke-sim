@@ -17,7 +17,7 @@ types::entity slotToPokemonEntity(const types::registry& registry, const Sides& 
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
 types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
 
-types::entity createActionMoveForTarget(
-  types::handle targetHandle, types::entity battleEntity, types::entity sourceEntity, dex::Move move,
-  const Pokedex& pokedex, types::entity entityToUse);
+void setupActionMoveBuild(
+  types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
+  types::entity actionMoveEntity, dex::Move move);
 }  // namespace pokesim

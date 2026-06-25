@@ -41,11 +41,25 @@ void BattleStateSetup::initBlank() {
   setProbability(Constants::Probability::DEFAULT);
 }
 
-void BattleStateSetup::setRecycledAction(types::entity recycledAction) {
+void BattleStateSetup::setRecycledAction(types::entity recycledAction, types::entity recycledActionMove) {
   types::registry& registry = *handle.registry();
 
   handle.emplace<RecycledAction>(recycledAction);
   registry.emplace<tags::RecycledAction>(recycledAction);
+
+  handle.emplace<RecycledActionMove>(recycledActionMove);
+  registry.emplace<tags::RecycledActionMove>(recycledActionMove);
+}
+
+void BattleStateSetup::setAddedRecycledActionMoves(
+  types::entity addedRecycledActionMove1, types::entity addedRecycledActionMove2) {
+  types::registry& registry = *handle.registry();
+
+  handle.emplace<AddedRecycledActionMove1>(addedRecycledActionMove1);
+  registry.emplace<tags::AddedRecycledActionMove1>(addedRecycledActionMove1);
+
+  handle.emplace<AddedRecycledActionMove2>(addedRecycledActionMove2);
+  registry.emplace<tags::AddedRecycledActionMove2>(addedRecycledActionMove2);
 }
 
 void BattleStateSetup::setAutoID() {

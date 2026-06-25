@@ -1,5 +1,6 @@
 #include "Helpers.hpp"
 
+#include <Battle/Setup/EmplaceTagFromEnum.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/Sides.hpp>
@@ -8,6 +9,7 @@
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
@@ -100,30 +102,19 @@ types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move) 
   return 0U;
 }
 
-types::entity createActionMoveForTarget(
-  types::handle targetHandle, types::entity battleEntity, types::entity sourceEntity, dex::Move move,
-  const Pokedex& pokedex, types::entity entityToUse) {
-  types::registry& registry = *targetHandle.registry();
-  types::entity moveEntity = pokedex.buildActionMove(move, registry, entityToUse);
+void setupActionMoveBuild(
+  types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
+  types::entity actionMoveEntity, dex::Move move) {
+  types::handle actionMoveHandle{registry, actionMoveEntity};
 
-  registry.emplace<tags::CurrentActionMove>(moveEntity);
-  registry.emplace<Battle>(moveEntity, battleEntity);
-  registry.emplace<CurrentActionSource>(moveEntity, sourceEntity);
-  registry.emplace<CurrentActionTarget>(moveEntity, targetHandle.entity());
+  move::tags::emplaceTagFromEnum(move, actionMoveHandle);
+  actionMoveHandle.emplace<Battle>(battleEntity);
+  actionMoveHandle.emplace<CurrentActionSource>(sourceEntity);
+  actionMoveHandle.emplace<CurrentActionTarget>(targetEntity);
+  actionMoveHandle.emplace<pokesim::internal::tags::BuildActionMove>();
+  actionMoveHandle.emplace<tags::CurrentActionMove>();
 
-  targetHandle.get_or_emplace<CurrentActionMovesAsTarget>().val.push_back(moveEntity);
-  registry.get_or_emplace<CurrentActionMovesAsSource>(sourceEntity).val.push_back(moveEntity);
-
-  if (registry.all_of<tags::SimulateTurn>(battleEntity)) {
-    registry.emplace<tags::SimulateTurn>(moveEntity);
-  }
-  if (registry.all_of<tags::CalculateDamage>(battleEntity)) {
-    registry.emplace<tags::CalculateDamage>(moveEntity);
-  }
-  if (registry.all_of<tags::AnalyzeEffect>(battleEntity)) {
-    registry.emplace<tags::AnalyzeEffect>(moveEntity);
-  }
-
-  return moveEntity;
+  registry.get_or_emplace<CurrentActionMovesAsTarget>(targetEntity).val.push_back(actionMoveEntity);
+  registry.get_or_emplace<CurrentActionMovesAsSource>(sourceEntity).val.push_back(actionMoveEntity);
 }
 }  // namespace pokesim

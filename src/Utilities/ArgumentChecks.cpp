@@ -689,6 +689,15 @@ void check(const RecycledAction& recycledAction, const types::registry& registry
 }
 
 template <>
+void check(const RecycledActionMove&, const types::registry&) {}
+
+template <>
+void check(const AddedRecycledActionMove1&, const types::registry&) {}
+
+template <>
+void check(const AddedRecycledActionMove2&, const types::registry&) {}
+
+template <>
 void check(const Side& side, const types::registry& registry) {
   checkSide(side.val, registry);
 }

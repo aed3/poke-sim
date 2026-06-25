@@ -51,6 +51,9 @@ struct FaintQueue;
 struct FoeSide;
 struct Pokemon;
 struct RecycledAction;
+struct RecycledActionMove;
+struct AddedRecycledActionMove1;
+struct AddedRecycledActionMove2;
 struct Side;
 struct Sides;
 struct Team;
@@ -321,6 +324,15 @@ void check(const Pokemon&, const types::registry&);
 
 template <>
 void check(const RecycledAction&, const types::registry&);
+
+template <>
+void check(const RecycledActionMove&, const types::registry&);
+
+template <>
+void check(const AddedRecycledActionMove1&, const types::registry&);
+
+template <>
+void check(const AddedRecycledActionMove2&, const types::registry&);
 
 template <>
 void check(const Side&, const types::registry&);

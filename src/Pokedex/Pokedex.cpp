@@ -1,5 +1,7 @@
 #include "Pokedex.hpp"
 
+#include <Battle/Setup/EmplaceTagFromEnum.hpp>
+#include <Components/Tags/Selection.hpp>
 #include <Config/Require.hpp>
 #include <Simulation/BattleCreationInfo.hpp>
 #include <Types/Entity.hpp>
@@ -29,16 +31,24 @@ void Pokedex::loadItems(const entt::dense_set<dex::Item>& itemSet) {
   load(itemsMap, itemSet, [this](dex::Item item) { return buildItem(item, dexRegistry); });
 }
 
-void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
-  load(movesMap, moveSet, [this](dex::Move move) { return buildMove(move, dexRegistry, false, dexRegistry.create()); });
-}
-
 void Pokedex::loadAbilities(const entt::dense_set<dex::Ability>& abilitySet) {
   load(abilitiesMap, abilitySet, [this](dex::Ability ability) { return buildAbility(ability, dexRegistry); });
 }
 
-types::entity Pokedex::buildActionMove(dex::Move move, types::registry& registry, types::entity entityToUse) const {
-  return buildMove(move, registry, true, entityToUse);
+void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
+  for (dex::Move move : moveSet) {
+    if (movesMap.contains(move)) {
+      continue;
+    }
+
+    types::entity moveEntity = dexRegistry.create();
+    movesMap[move] = moveEntity;
+    move::tags::emplaceTagFromEnum(move, {dexRegistry, moveEntity});
+    dexRegistry.emplace<internal::tags::BuildPokedexMove>(moveEntity);
+  }
+
+  buildMoves(dexRegistry);
+  dexRegistry.clear<internal::tags::BuildPokedexMove>();
 }
 
 void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInfoList) {

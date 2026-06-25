@@ -4,6 +4,7 @@
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
+#include <Battle/Setup/EmplaceTagFromEnum.hpp>
 #include <Battle/Side/ManageSideState.hpp>
 #include <CalcDamage/Helpers.hpp>
 #include <Components/ActionQueue.hpp>
@@ -30,7 +31,9 @@
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/RecycledEntities.hpp>
 #include <Components/Tags/RunEventTags.hpp>
+#include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
 #include <Components/Turn.hpp>
@@ -53,64 +56,116 @@ auto getBattleFilter(Simulation& simulation) {
   return pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::Battle>{simulation};
 }
 
-void addTargetAllyToTargets(types::registry& registry, const Battle& battle) {
+void addAddedTarget(types::registry& registry, Battle battle, Slot allySlot) {
   const Sides& sides = registry.get<Sides>(battle.val);
-  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).val);
-
-  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, targetSlotName.val);
+  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, allySlot);
   if (allyEntity == entt::null) {
     return;
   }
 
   CurrentActionTargets& targets = registry.get<CurrentActionTargets>(battle.val);
+
+  POKESIM_REQUIRE(!targets.val.empty(), "Added targets should not be the first in the list of targets.");
+
+  if (targets.val.size() == 1U) {
+    registry.emplace<pokesim::tags::AddedRecycledActionMove1>(battle.val);
+  }
+  else {
+    registry.emplace<pokesim::tags::AddedRecycledActionMove2>(battle.val);
+  }
+
   targets.val.push_back(allyEntity);
+}
+
+void addTargetAllyToTargets(types::registry& registry, Battle battle) {
+  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).val);
+  addAddedTarget(registry, battle, targetSlotName.val);
 }
 
 void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
-  const Sides& sides = registry.get<Sides>(battle.val);
   const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(registry.get<CurrentAction>(battle.val).val);
+  addAddedTarget(registry, battle, sourceSlotName.val);
+}
 
-  types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, sourceSlotName.val);
-  if (allyEntity == entt::null) {
+void setTargetReferenceComponents(
+  types::registry& registry, const CurrentActionTargets& targets, CurrentActionSource source) {
+  for (types::entity target : targets.val) {
+    registry.emplace<pokesim::tags::CurrentActionMoveTarget>(target);
+    registry.emplace<CurrentActionSource>(target, source.val);
+  }
+}
+
+template <typename RecycledActionMoveType>
+void setActionMoveReferenceComponents(
+  types::handle battleHandle, CurrentActionSource source, CurrentActionTargets targets, CurrentAction action,
+  RecycledActionMoveType actionMove) {
+  types::registry& registry = *battleHandle.registry();
+  types::handle actionMoveHandle{registry, actionMove.val};
+  types::entity target;
+
+  if constexpr (std::is_same_v<RecycledActionMoveType, RecycledActionMove>) {
+    target = targets.val[0];
+  }
+  else if constexpr (std::is_same_v<RecycledActionMoveType, AddedRecycledActionMove1>) {
+    target = targets.val[1];
+  }
+  else if constexpr (std::is_same_v<RecycledActionMoveType, AddedRecycledActionMove2>) {
+    target = targets.val[2];
+  }
+  else {
+    static_assert(false, "Using a RecycledActionMoveType that isn't associated with a target.");
+  }
+
+  MoveName move = registry.get<MoveName>(action.val);
+  setupActionMoveBuild(registry, battleHandle.entity(), source.val, target, actionMove.val, move.val);
+}
+
+void setActionMoveData(Simulation& simulation) {
+  simulation.addToEntities<pokesim::tags::SimulateTurn, pokesim::internal::tags::BuildActionMove>();
+  simulation.pokedex().buildMoves(simulation.registry);
+}
+
+void setCurrentActionMoveSlot(types::handle handle, CurrentActionSource source, CurrentAction action) {
+  types::registry& registry = *handle.registry();
+  const MoveName& move = registry.get<MoveName>(action.val);
+  const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
+
+  types::moveSlotIndex moveSlotIndex = moveToMoveSlot(moveSlots, move.val);
+  handle.emplace<CurrentActionMoveSlot>(moveSlotIndex);
+}
+
+void setMoveTargets(Simulation& simulation) {
+  pokesim::internal::EntityFilter<action::tags::Move, pokesim::tags::Battle> battleFilter{simulation};
+  if (battleFilter.hasNoneSelected()) {
     return;
   }
 
-  CurrentActionTargets& targets = registry.get<CurrentActionTargets>(battle.val);
-  targets.val.push_back(allyEntity);
-}
+  battleFilter.view<setCurrentActionTarget>(simulation);
 
-void resolveMoveTargets(types::registry& registry, CurrentActionTargets& targets) {
-  for (types::entity target : targets.val) {
-    registry.emplace_or_replace<pokesim::tags::CurrentActionMoveTarget>(target);
-  }
+  battleFilter.view<setActionMoveReferenceComponents<RecycledActionMove>>();
+  setActionMoveData(simulation);
+  simulation.removeFromEntities<pokesim::internal::tags::BuildActionMove>();
 
-  // More to do...
-}
-
-void createActionMoveForTargets(
-  types::handle targetHandle, Battle battle, CurrentActionSource source, const Pokedex& pokedex) {
-  types::registry& registry = *targetHandle.registry();
-
-  dex::Move move = registry.get<MoveName>(registry.get<CurrentAction>(battle.val).val).val;
-  types::entity moveEntity =
-    createActionMoveForTarget(targetHandle, battle.val, source.val, move, pokedex, registry.create());
-
-  registry.emplace<pokesim::tags::SimulateTurn>(moveEntity);
-}
-
-void getMoveTargets(Simulation& simulation) {
+  runModifyTarget(simulation);
   if (simulation.isBattleFormat(BattleFormat::DOUBLES)) {
     simulation
       .view<addTargetAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
     simulation
       .view<addUserAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::UserAlly>>();
+
+    battleFilter.view<
+      setActionMoveReferenceComponents<AddedRecycledActionMove1>,
+      Tags<pokesim::tags::AddedRecycledActionMove1>>();
+    battleFilter.view<
+      setActionMoveReferenceComponents<AddedRecycledActionMove2>,
+      Tags<pokesim::tags::AddedRecycledActionMove2>>();
+    setActionMoveData(simulation);
+    simulation.removeFromEntities<pokesim::tags::AddedRecycledActionMove1, pokesim::tags::Battle>();
+    simulation.removeFromEntities<pokesim::tags::AddedRecycledActionMove2, pokesim::tags::Battle>();
+    simulation.removeFromEntities<pokesim::internal::tags::BuildActionMove>();
   }
 
-  simulation.view<resolveMoveTargets, Tags<pokesim::tags::CurrentActionMove>, entt::exclude_t<AddedTargets>>();
-  simulation.view<
-    createActionMoveForTargets,
-    Tags<pokesim::tags::CurrentActionMoveTarget>,
-    entt::exclude_t<CurrentActionMovesAsTarget>>(simulation.pokedex());
+  battleFilter.view<setTargetReferenceComponents>();
 }
 
 void useMove(Simulation& simulation) {
@@ -118,7 +173,6 @@ void useMove(Simulation& simulation) {
   // ModifyType
   runModifyMove(simulation);
 
-  getMoveTargets(simulation);
   runMoveHitChecks(simulation);
   runAfterMoveUsedEvent(simulation);
 }
@@ -147,8 +201,8 @@ void runMoveAction(Simulation& simulation) {
     return;
   }
 
-  battleFilter.view<setCurrentActionTarget>(simulation);
-  battleFilter.view<setCurrentActionMove>(simulation.pokedex());
+  setMoveTargets(simulation);
+  battleFilter.view<setCurrentActionMoveSlot>();
 
   runBeforeMove(simulation);
 
@@ -311,7 +365,7 @@ void simulateTurn(Simulation& simulation) {
   battleFilter.view<speedSort>();
   battleFilter.view<addResidualAction, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn>>();
 
-  simulation.addToEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
+  simulation.addToEntities<pokesim::tags::BattleMidTurn, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
 
   battleFilter.view<setCurrentAction>();
   using ActionsLimit = Constants::ActionQueueLength;
@@ -328,8 +382,7 @@ void simulateTurn(Simulation& simulation) {
 
   nextTurn(simulation);
 
-  simulation
-    .removeFromEntities<pokesim::tags::BattleMidTurn, Turn, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
+  simulation.removeFromEntities<pokesim::tags::BattleMidTurn, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
   battleFilter.view<collectTurnOutcomeBattles>();
 
   simulation.addToEntities<pokesim::tags::SimulateTurn, tags::Input>();

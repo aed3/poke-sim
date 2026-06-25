@@ -33,7 +33,8 @@ struct BattleStateSetup : internal::StateSetupBase {
    */
   void initBlank();
 
-  void setRecycledAction(types::entity recycledAction);
+  void setRecycledAction(types::entity recycledAction, types::entity recycledActionMove);
+  void setAddedRecycledActionMoves(types::entity addedRecycledActionMove1, types::entity addedRecycledActionMove2);
   void setAutoID();
   void setID(types::stateId id);
   void setSide(types::entity sideEntity);

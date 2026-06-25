@@ -1,20 +1,37 @@
 #include "ManageBattleState.hpp"
 
 #include <Battle/Helpers/Helpers.hpp>
+#include <Components/Accuracy.hpp>
+#include <Components/AddedTargets.hpp>
+#include <Components/BaseEffectChance.hpp>
+#include <Components/BasePower.hpp>
+#include <Components/Boosts.hpp>
 #include <Components/Current.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/RecycledEntities.hpp>
+#include <Components/HitCount.hpp>
 #include <Components/MoveSlots.hpp>
 #include <Components/Names/ItemNames.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
+#include <Components/Names/TypeNames.hpp>
+#include <Components/Pokedex/PP.hpp>
+#include <Components/Priority.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SimulationResults.hpp>
+#include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
+#include <Components/Tags/MovePropertyTags.hpp>
+#include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/RecycledEntities.hpp>
+#include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Components/Tags/StatusTags.hpp>
+#include <Components/Tags/TargetTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Simulation/SimulationResults.hpp>
@@ -60,6 +77,23 @@ void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets&
 
   targets.val.pop_count(deleteCount);
 }
+
+template <typename View>
+void clearActionMoveComponents(types::registry& registry, const View& view) {
+  registry.remove<
+    tags::SimulateTurn,
+    tags::CalculateDamage,
+    tags::AnalyzeEffect,
+    Battle,
+    TypeName,
+    AtkBoost,
+    DefBoost,
+    SpaBoost,
+    SpdBoost,
+    SpeBoost,
+    status::tags::Paralysis,
+    status::tags::Burn>(view.begin(), view.end());
+}
 }  // namespace
 
 void assignRootBattle(types::handle battleHandle) {
@@ -99,35 +133,12 @@ void setCurrentActionTarget(
 
   if (pickedTarget) {
     battleHandle.emplace<CurrentActionTargets>(types::targets<types::entity>{targetEntity});
-    registry.emplace<tags::CurrentActionMoveTarget>(targetEntity);
-    registry.emplace<CurrentActionSource>(targetEntity, source);
   }
   else {
     types::entity sourceEntity = battleHandle.get<CurrentActionSource>().val;
     battleHandle.remove<CurrentActionSource>();
     registry.remove<tags::CurrentActionMoveSource>(sourceEntity);
   }
-}
-
-void setCurrentActionMove(
-  types::handle battleHandle, CurrentActionSource source, const CurrentActionTargets& targets, CurrentAction action,
-  const Pokedex& pokedex) {
-  types::registry& registry = *battleHandle.registry();
-  const MoveName& move = registry.get<MoveName>(action.val);
-  const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
-
-  for (types::entity target : targets.val) {
-    createActionMoveForTarget(
-      {registry, target},
-      battleHandle.entity(),
-      source.val,
-      move.val,
-      pokedex,
-      registry.create());
-  }
-
-  types::moveSlotIndex moveSlotIndex = moveToMoveSlot(moveSlots, move.val);
-  battleHandle.emplace<CurrentActionMoveSlot>(moveSlotIndex);
 }
 
 void setFailedActionMove(
@@ -158,38 +169,55 @@ void setFailedActionMove(
 
 void clearCurrentAction(Simulation& simulation) {
   types::registry& registry = simulation.registry;
-  registry.clear<CurrentAction>();
-  registry.clear<CurrentActionTargets>();
-  registry.clear<CurrentActionSource>();
-  registry.clear<CurrentActionTarget>();
-  registry.clear<FailedCurrentActionSource>();
-  registry.clear<FailedCurrentActionTarget>();
-  registry.clear<CurrentActionMovesAsSource>();
-  registry.clear<CurrentActionMovesAsTarget>();
-  registry.clear<CurrentActionMoveSlot>();
+  registry.clear<
+    CurrentAction,
+    CurrentActionTargets,
+    CurrentActionSource,
+    CurrentActionTarget,
+    FailedCurrentActionSource,
+    FailedCurrentActionTarget,
+    CurrentActionMovesAsSource,
+    CurrentActionMovesAsTarget,
+    CurrentActionMoveSlot,
+    tags::CurrentActionMoveSource,
+    tags::CurrentActionMoveTarget,
+    tags::CurrentActionMoveSlot,
+    tags::CurrentMoveHit,
+    tags::FailedCurrentMoveHit>();
 
-  registry.clear<tags::CurrentActionMoveSource>();
-  registry.clear<tags::CurrentActionMoveTarget>();
-  registry.clear<tags::CurrentActionMoveSlot>();
-  registry.clear<tags::CurrentMoveHit>();
-  registry.clear<tags::FailedCurrentMoveHit>();
+  registry.clear<
+    move::effect::tags::Primary,
+    move::effect::tags::Secondary,
+    move::effect::tags::MoveSource,
+    move::effect::tags::MoveTarget,
+    move::tags::FuryAttack,
+    move::tags::KnockOff,
+    move::tags::Moonblast,
+    move::tags::QuiverDance,
+    move::tags::Splash,
+    move::tags::Thunderbolt,
+    move::tags::WillOWisp,
+    move::tags::Physical,
+    move::tags::Special,
+    move::tags::Status,
+    move::tags::Contact,
+    move::tags::BypassSubstitute,
+    move::tags::Punch,
+    move::tags::VariableHitCount,
+    BaseEffectChance,
+    Accuracy,
+    BasePower,
+    HitCount,
+    move::tags::AccuracyDependentHitCount,
+    move::tags::Self,
+    move::tags::AnySingleTarget,
+    move::tags::AnySingleAlly>();
 
-  auto actionMoves = registry.view<tags::CurrentActionMove>();
-  auto failedActionMoves = registry.view<tags::FailedCurrentActionMove>();
-  auto currentActions = registry.view<action::tags::Current>();
-  registry.destroy(actionMoves.begin(), actionMoves.end());
-  registry.destroy(failedActionMoves.begin(), failedActionMoves.end());
+  registry.clear<SourceSlotName, TargetSlotName>();
 
-  registry.remove<action::tags::Current, SourceSlotName, TargetSlotName, MoveName>(
-    currentActions.begin(),
-    currentActions.end());
-
-  auto battles = simulation.battleEntities();
-  registry.remove<
+  registry.clear<
     action::tags::Item,
-    ItemName,
     action::tags::Move,
-    MoveName,
     action::tags::BeforeTurn,
     action::tags::Dynamax,
     action::tags::MegaEvolve,
@@ -202,6 +230,18 @@ void clearCurrentAction(Simulation& simulation) {
     action::tags::RevivalBlessing,
     action::tags::Switch,
     action::tags::SwitchOut,
-    action::tags::Terastallize>(battles.begin(), battles.end());
+    action::tags::Terastallize>();
+
+  auto actionMoves = registry.view<tags::CurrentActionMove>();
+  auto failedActionMoves = registry.view<tags::FailedCurrentActionMove>();
+  clearActionMoveComponents(registry, actionMoves);
+  clearActionMoveComponents(registry, failedActionMoves);
+  registry.clear<tags::CurrentActionMove, tags::FailedCurrentActionMove>();
+
+  simulation.removeFromEntities<MoveName, action::tags::Current>();
+  registry.clear<action::tags::Current>();
+
+  auto battles = registry.view<tags::Battle>();
+  registry.remove<ItemName, MoveName>(battles.begin(), battles.end());
 }
 }  // namespace pokesim
