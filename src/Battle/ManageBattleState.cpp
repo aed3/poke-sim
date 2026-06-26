@@ -117,8 +117,7 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, Curr
 }
 
 void setCurrentActionTarget(
-  types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source,
-  const Simulation& simulation) {
+  types::handle battleHandle, const Sides& sides, CurrentAction action, const Simulation& simulation) {
   types::registry& registry = *battleHandle.registry();
   const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.val);
   types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.val);

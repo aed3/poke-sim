@@ -47,17 +47,17 @@ namespace types {
 struct slotDecision : pokesim::internal::variant<
                         MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision,
                         ZMoveDecision, SwitchDecision, ItemDecision> {
-  using base = pokesim::internal::variant<
+  using variant = pokesim::internal::variant<
     MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision, ZMoveDecision,
     SwitchDecision, ItemDecision>;
-  using base::variant;
+  using variant::variant;
 
   constexpr Slot sourceSlot() const {
-    return std::visit([](auto&& decision) { return decision.sourceSlot; }, (base) * this);
+    return std::visit([](auto&& decision) { return decision.sourceSlot; }, (variant::base) * this);
   }
 
   constexpr Slot targetSlot() const {
-    return std::visit([](auto&& decision) { return decision.targetSlot; }, (base) * this);
+    return std::visit([](auto&& decision) { return decision.targetSlot; }, (variant::base) * this);
   }
 };
 

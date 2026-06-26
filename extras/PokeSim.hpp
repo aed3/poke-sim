@@ -18329,8 +18329,11 @@ static constexpr std::uint8_t TOTAL_SLOT_COUNT = (std::uint8_t)Slot::TOTAL_SLOT 
 namespace pokesim::internal {
 template <typename... Types>
 class variant : public std::variant<Types...> {
+ protected:
+  using base = std::variant<Types...>;
+
  public:
-  using std::variant<Types...>::variant;
+  using base::variant;
 
   template <typename T>
   variant& operator=(const T& rhs) {
@@ -18412,17 +18415,17 @@ namespace types {
 struct slotDecision : pokesim::internal::variant<
                         MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision,
                         ZMoveDecision, SwitchDecision, ItemDecision> {
-  using base = pokesim::internal::variant<
+  using variant = pokesim::internal::variant<
     MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision, ZMoveDecision,
     SwitchDecision, ItemDecision>;
-  using base::variant;
+  using variant::variant;
 
   constexpr Slot sourceSlot() const {
-    return std::visit([](auto&& decision) { return decision.sourceSlot; }, (base) * this);
+    return std::visit([](auto&& decision) { return decision.sourceSlot; }, (variant::base) * this);
   }
 
   constexpr Slot targetSlot() const {
-    return std::visit([](auto&& decision) { return decision.targetSlot; }, (base) * this);
+    return std::visit([](auto&& decision) { return decision.targetSlot; }, (variant::base) * this);
   }
 };
 
@@ -23430,7 +23433,7 @@ void clearStatus(types::handle pokemonHandle);
 
 void clearVolatiles(types::handle pokemonHandle);
 
-void deductPp(types::handle handle, MoveSlots& moveSlots, LastUsedMove lastUsedMove);
+void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
 void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move);
 void resetEffectiveAtk(types::handle handle, stat::Atk atk);
 void resetEffectiveDef(types::handle handle, stat::Def def);
@@ -24262,8 +24265,7 @@ void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle&
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction action);
 void setCurrentActionTarget(
-  types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source,
-  const Simulation& simulation);
+  types::handle battleHandle, const Sides& sides, CurrentAction action, const Simulation& simulation);
 void setFailedActionMove(
   types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target);
 void clearCurrentAction(Simulation& simulation);

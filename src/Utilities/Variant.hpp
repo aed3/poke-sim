@@ -6,8 +6,11 @@
 namespace pokesim::internal {
 template <typename... Types>
 class variant : public std::variant<Types...> {
+ protected:
+  using base = std::variant<Types...>;
+
  public:
-  using std::variant<Types...>::variant;
+  using base::variant;
 
   template <typename T>
   variant& operator=(const T& rhs) {
