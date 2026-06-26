@@ -84,9 +84,7 @@ void resolveSlotDecisions(types::handle sideHandle, const types::slotDecisions& 
   }
 }
 
-void resolveTeamDecision(types::registry& registry, const types::teamOrder& teamOrder, ActionQueue& battleActionQueue) {
-
-}
+void resolveTeamDecision(types::registry&, const types::teamOrder&, ActionQueue&) {}
 }  // namespace
 
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
