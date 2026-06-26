@@ -18,8 +18,7 @@ void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle&
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction action);
 void setCurrentActionTarget(
-  types::handle battleHandle, const Sides& sides, CurrentAction action, CurrentActionSource source,
-  const Simulation& simulation);
+  types::handle battleHandle, const Sides& sides, CurrentAction action, const Simulation& simulation);
 void setFailedActionMove(
   types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target);
 void clearCurrentAction(Simulation& simulation);

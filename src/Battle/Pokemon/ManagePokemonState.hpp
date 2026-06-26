@@ -38,7 +38,7 @@ void clearStatus(types::handle pokemonHandle);
 
 void clearVolatiles(types::handle pokemonHandle);
 
-void deductPp(types::handle handle, MoveSlots& moveSlots, LastUsedMove lastUsedMove);
+void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
 void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move);
 void resetEffectiveAtk(types::handle handle, stat::Atk atk);
 void resetEffectiveDef(types::handle handle, stat::Def def);
