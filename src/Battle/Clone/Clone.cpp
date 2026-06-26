@@ -86,26 +86,20 @@ void traverseAction(types::registry& registry, VisitEntity visitEntity = nullptr
   const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
   using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
 
-  for (types::entity entity : registry.view<Tag, tags::RecycledAction>()) {
-    if constexpr (ForCloning) {
+  if constexpr (ForCloning) {
+    for (types::entity entity : registry.view<Tag, tags::RecycledAction>()) {
       visitEntity(entity);
     }
-  }
 
-  for (types::entity entity : registry.view<Tag, tags::RecycledActionMove>()) {
-    if constexpr (ForCloning) {
+    for (types::entity entity : registry.view<Tag, tags::RecycledActionMove>()) {
       visitEntity(entity);
     }
-  }
 
-  for (types::entity entity : registry.view<Tag, tags::AddedRecycledActionMove1>()) {
-    if constexpr (ForCloning) {
+    for (types::entity entity : registry.view<Tag, tags::AddedRecycledActionMove1>()) {
       visitEntity(entity);
     }
-  }
 
-  for (types::entity entity : registry.view<Tag, tags::AddedRecycledActionMove2>()) {
-    if constexpr (ForCloning) {
+    for (types::entity entity : registry.view<Tag, tags::AddedRecycledActionMove2>()) {
       visitEntity(entity);
     }
   }
@@ -116,8 +110,8 @@ void traversePokemon(types::registry& registry, VisitEntity visitEntity = nullpt
   const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
   using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
 
-  for (types::entity entity : registry.view<Tag, tags::Pokemon>()) {
-    if constexpr (ForCloning) {
+  if constexpr (ForCloning) {
+    for (types::entity entity : registry.view<Tag, tags::Pokemon>()) {
       visitEntity(entity);
     }
   }
@@ -277,7 +271,6 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<FailedCurrentActionTarget>(registry, entityMap);
   remapComponentEntities<FaintQueue>(registry, entityMap);
   remapComponentEntities<FoeSide>(registry, entityMap);
-  remapComponentEntities<Pokemon>(registry, entityMap);
   remapComponentEntities<RecycledAction>(registry, entityMap);
   remapComponentEntities<RecycledActionMove>(registry, entityMap);
   remapComponentEntities<Side>(registry, entityMap);

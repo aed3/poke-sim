@@ -119,14 +119,22 @@ class Simulation {
   }
   template <typename Type, typename... ViewComponents, typename... Args>
   void addToEntities(const Args&... args) {
+    static_assert(
+      sizeof...(ViewComponents) != 0,
+      "Using this function without view components will cause Type to be added to every entity.");
     auto view = registry.view<ViewComponents...>();
     registry.insert<Type>(view.begin(), view.end(), args...);
   }
 
   template <typename Type, typename... ViewComponents, typename... ExcludeComponents>
   void removeFromEntities(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
-    auto view = registry.view<Type, ViewComponents...>(exclude);
-    registry.remove<Type>(view.begin(), view.end());
+    if constexpr (sizeof...(ViewComponents) == 0 && sizeof...(ExcludeComponents) == 0) {
+      registry.clear<Type>();
+    }
+    else {
+      auto view = registry.view<Type, ViewComponents...>(exclude);
+      registry.remove<Type>(view.begin(), view.end());
+    }
   }
 };
 }  // namespace pokesim

@@ -8,7 +8,6 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
-#include <Components/EntityHolders/Pokemon.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>

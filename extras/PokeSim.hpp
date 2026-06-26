@@ -116,7 +116,6 @@
  * src/Components/EVsIVs.hpp
  * src/Components/EntityHolders/FaintQueue.hpp
  * src/Components/EntityHolders/FoeSide.hpp
- * src/Components/EntityHolders/Pokemon.hpp
  * src/Components/EntityHolders/RecycledEntities.hpp
  * src/Components/EntityHolders/Side.hpp
  * src/Components/EntityHolders/Sides.hpp
@@ -18994,17 +18993,6 @@ struct FoeSide {
 
 /////////////// END OF src/Components/EntityHolders/FoeSide.hpp ////////////////
 
-////////////// START OF src/Components/EntityHolders/Pokemon.hpp ///////////////
-
-namespace pokesim {
-// Contains the entity pointing to a Pokemon.
-struct Pokemon {
-  types::entity val{};
-};
-}  // namespace pokesim
-
-/////////////// END OF src/Components/EntityHolders/Pokemon.hpp ////////////////
-
 ////////// START OF src/Components/EntityHolders/RecycledEntities.hpp //////////
 
 namespace pokesim {
@@ -20471,7 +20459,6 @@ struct CurrentEffectsAsSource;
 struct CurrentEffectsAsTarget;
 struct FaintQueue;
 struct FoeSide;
-struct Pokemon;
 struct RecycledAction;
 struct RecycledActionMove;
 struct AddedRecycledActionMove1;
@@ -20740,9 +20727,6 @@ void check(const FaintQueue&, const types::registry&);
 
 template <>
 void check(const FoeSide&, const types::registry&);
-
-template <>
-void check(const Pokemon&, const types::registry&);
 
 template <>
 void check(const RecycledAction&, const types::registry&);
@@ -22653,14 +22637,22 @@ class Simulation {
   }
   template <typename Type, typename... ViewComponents, typename... Args>
   void addToEntities(const Args&... args) {
+    static_assert(
+      sizeof...(ViewComponents) != 0,
+      "Using this function without view components will cause Type to be added to every entity.");
     auto view = registry.view<ViewComponents...>();
     registry.insert<Type>(view.begin(), view.end(), args...);
   }
 
   template <typename Type, typename... ViewComponents, typename... ExcludeComponents>
   void removeFromEntities(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
-    auto view = registry.view<Type, ViewComponents...>(exclude);
-    registry.remove<Type>(view.begin(), view.end());
+    if constexpr (sizeof...(ViewComponents) == 0 && sizeof...(ExcludeComponents) == 0) {
+      registry.clear<Type>();
+    }
+    else {
+      auto view = registry.view<Type, ViewComponents...>(exclude);
+      registry.remove<Type>(view.begin(), view.end());
+    }
   }
 };
 }  // namespace pokesim

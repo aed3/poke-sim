@@ -834,24 +834,28 @@ void check(const FoeSide& foeSide, const types::registry& registry) {
 }
 
 template <>
-void check(const Pokemon& pokemon, const types::registry& registry) {
-  checkPokemon(pokemon.val, registry);
-}
-
-template <>
 void check(const RecycledAction& recycledAction, const types::registry& registry) {
   types::registry::checkEntity(recycledAction.val, registry);
   POKESIM_REQUIRE_NM(has<tags::RecycledAction>(recycledAction.val, registry));
 }
 
 template <>
-void check(const RecycledActionMove&, const types::registry&) {}
+void check(const RecycledActionMove& recycledActionMove, const types::registry& registry) {
+  types::registry::checkEntity(recycledActionMove.val, registry);
+  POKESIM_REQUIRE_NM(has<tags::RecycledActionMove>(recycledActionMove.val, registry));
+}
 
 template <>
-void check(const AddedRecycledActionMove1&, const types::registry&) {}
+void check(const AddedRecycledActionMove1& addedRecycledActionMove1, const types::registry& registry) {
+  types::registry::checkEntity(addedRecycledActionMove1.val, registry);
+  POKESIM_REQUIRE_NM(has<tags::AddedRecycledActionMove1>(addedRecycledActionMove1.val, registry));
+}
 
 template <>
-void check(const AddedRecycledActionMove2&, const types::registry&) {}
+void check(const AddedRecycledActionMove2& addedRecycledActionMove2, const types::registry& registry) {
+  types::registry::checkEntity(addedRecycledActionMove2.val, registry);
+  POKESIM_REQUIRE_NM(has<tags::AddedRecycledActionMove2>(addedRecycledActionMove2.val, registry));
+}
 
 template <>
 void check(const Side& side, const types::registry& registry) {
@@ -1398,10 +1402,10 @@ struct EntityLists {
   EntityList analyzeEffectInputs;
 
   EntityLists(Simulation* simulation, const std::vector<BattleCreationInfo>& battleInfoList) {
-    types::entityIndex battleCount = 0;
-    types::entityIndex pokemonCount = 0;
-    types::entityIndex calcDamageInputCount = 0;
-    types::entityIndex analyzeEffectInputCount = 0;
+    types::entityIndex battleCount = 0U;
+    types::entityIndex pokemonCount = 0U;
+    types::entityIndex calcDamageInputCount = 0U;
+    types::entityIndex analyzeEffectInputCount = 0U;
     for (const BattleCreationInfo& battleInfo : battleInfoList) {
       types::entityIndex battleCountIncrease = getBattleCreationCount(battleInfo);
       battleCount += battleCountIncrease;
@@ -1418,11 +1422,11 @@ struct EntityLists {
       }
     }
 
-    types::entityIndex sideCount = battleCount * 2;
+    types::entityIndex sideCount = battleCount * 2U;
     types::entityIndex recycledActionCount = battleCount;
     types::entityIndex recycledActionMoveCount = battleCount;
     types::entityIndex addedRecycledActionMoveCount =
-      simulation->isBattleFormat(BattleFormat::DOUBLES) ? battleCount * 2 : 0;
+      simulation->isBattleFormat(BattleFormat::DOUBLES) ? battleCount * 2U : 0U;
 
     POKESIM_REQUIRE(
       battleCount + sideCount + recycledActionCount + pokemonCount + calcDamageInputCount + analyzeEffectInputCount <
@@ -5700,11 +5704,11 @@ void clearVolatiles(types::handle pokemonHandle) {
 
 void deductPp(types::handle handle, MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
   MoveSlot& moveSlot = moveSlots.val[lastUsedMove.val];
-  if (moveSlot.pp >= Constants::PP_USE_DEDUCTION) {
+  if (moveSlot.pp >= Constants::PP_USE_DEDUCTION + Constants::MovePp::MIN) {
     moveSlot.pp -= Constants::PP_USE_DEDUCTION;
   }
   else {
-    moveSlot.pp = 0U;
+    moveSlot.pp = Constants::MovePp::MIN;
   }
 }
 
@@ -6238,26 +6242,20 @@ void traverseAction(types::registry& registry, VisitEntity visitEntity = nullptr
   const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
   using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
 
-  for (types::entity entity : registry.view<Tag, tags::RecycledAction>()) {
-    if constexpr (ForCloning) {
+  if constexpr (ForCloning) {
+    for (types::entity entity : registry.view<Tag, tags::RecycledAction>()) {
       visitEntity(entity);
     }
-  }
 
-  for (types::entity entity : registry.view<Tag, tags::RecycledActionMove>()) {
-    if constexpr (ForCloning) {
+    for (types::entity entity : registry.view<Tag, tags::RecycledActionMove>()) {
       visitEntity(entity);
     }
-  }
 
-  for (types::entity entity : registry.view<Tag, tags::AddedRecycledActionMove1>()) {
-    if constexpr (ForCloning) {
+    for (types::entity entity : registry.view<Tag, tags::AddedRecycledActionMove1>()) {
       visitEntity(entity);
     }
-  }
 
-  for (types::entity entity : registry.view<Tag, tags::AddedRecycledActionMove2>()) {
-    if constexpr (ForCloning) {
+    for (types::entity entity : registry.view<Tag, tags::AddedRecycledActionMove2>()) {
       visitEntity(entity);
     }
   }
@@ -6268,8 +6266,8 @@ void traversePokemon(types::registry& registry, VisitEntity visitEntity = nullpt
   const static bool ForCloning = !std::is_same_v<void*, VisitEntity>;
   using Tag = std::conditional_t<ForCloning, tags::CloneFrom, tags::CloneToRemove>;
 
-  for (types::entity entity : registry.view<Tag, tags::Pokemon>()) {
-    if constexpr (ForCloning) {
+  if constexpr (ForCloning) {
+    for (types::entity entity : registry.view<Tag, tags::Pokemon>()) {
       visitEntity(entity);
     }
   }
@@ -6429,7 +6427,6 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<FailedCurrentActionTarget>(registry, entityMap);
   remapComponentEntities<FaintQueue>(registry, entityMap);
   remapComponentEntities<FoeSide>(registry, entityMap);
-  remapComponentEntities<Pokemon>(registry, entityMap);
   remapComponentEntities<RecycledAction>(registry, entityMap);
   remapComponentEntities<RecycledActionMove>(registry, entityMap);
   remapComponentEntities<Side>(registry, entityMap);

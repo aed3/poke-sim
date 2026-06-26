@@ -151,17 +151,14 @@ benchmarkProcess.stdout.on('data', (chunk) => {
         }
 
         valueDiff = valueDiff.toFixed(3);
-        let timesDiff = '';
         let color = '';
         let suffix = '';
         if (valueDiff > 0) {
           valueDiff = '+' + valueDiff;
-          timesDiff = (1 / percentDiff).toFixed(3);
           suffix = '% slower';
           color = 'red';
         }
         else {
-          timesDiff = (1 / (1 - percentDiff)).toFixed(3);
           suffix = '% faster';
           color = 'green';
         }

@@ -678,24 +678,28 @@ void check(const FoeSide& foeSide, const types::registry& registry) {
 }
 
 template <>
-void check(const Pokemon& pokemon, const types::registry& registry) {
-  checkPokemon(pokemon.val, registry);
-}
-
-template <>
 void check(const RecycledAction& recycledAction, const types::registry& registry) {
   types::registry::checkEntity(recycledAction.val, registry);
   POKESIM_REQUIRE_NM(has<tags::RecycledAction>(recycledAction.val, registry));
 }
 
 template <>
-void check(const RecycledActionMove&, const types::registry&) {}
+void check(const RecycledActionMove& recycledActionMove, const types::registry& registry) {
+  types::registry::checkEntity(recycledActionMove.val, registry);
+  POKESIM_REQUIRE_NM(has<tags::RecycledActionMove>(recycledActionMove.val, registry));
+}
 
 template <>
-void check(const AddedRecycledActionMove1&, const types::registry&) {}
+void check(const AddedRecycledActionMove1& addedRecycledActionMove1, const types::registry& registry) {
+  types::registry::checkEntity(addedRecycledActionMove1.val, registry);
+  POKESIM_REQUIRE_NM(has<tags::AddedRecycledActionMove1>(addedRecycledActionMove1.val, registry));
+}
 
 template <>
-void check(const AddedRecycledActionMove2&, const types::registry&) {}
+void check(const AddedRecycledActionMove2& addedRecycledActionMove2, const types::registry& registry) {
+  types::registry::checkEntity(addedRecycledActionMove2.val, registry);
+  POKESIM_REQUIRE_NM(has<tags::AddedRecycledActionMove2>(addedRecycledActionMove2.val, registry));
+}
 
 template <>
 void check(const Side& side, const types::registry& registry) {

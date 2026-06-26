@@ -7,7 +7,6 @@
 #include "Current.hpp"
 #include "FaintQueue.hpp"
 #include "FoeSide.hpp"
-#include "Pokemon.hpp"
 #include "RecycledEntities.hpp"
 #include "Side.hpp"
 #include "Sides.hpp"
