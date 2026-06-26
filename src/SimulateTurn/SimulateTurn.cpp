@@ -112,7 +112,7 @@ void setActionMoveReferenceComponents(
     target = targets.val[2];
   }
   else {
-    static_assert(false, "Using a RecycledActionMoveType that isn't associated with a target.");
+    POKESIM_REQUIRE_FAIL("Using a RecycledActionMoveType that isn't associated with a target.");
   }
 
   MoveName move = registry.get<MoveName>(action.val);

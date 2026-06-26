@@ -18412,16 +18412,17 @@ namespace types {
 struct slotDecision : pokesim::internal::variant<
                         MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision,
                         ZMoveDecision, SwitchDecision, ItemDecision> {
-  using pokesim::internal::variant<
+  using base = pokesim::internal::variant<
     MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision, ZMoveDecision,
-    SwitchDecision, ItemDecision>::variant;
+    SwitchDecision, ItemDecision>;
+  using base::variant;
 
   constexpr Slot sourceSlot() const {
-    return std::visit([](auto&& decision) { return decision.sourceSlot; }, *this);
+    return std::visit([](auto&& decision) { return decision.sourceSlot; }, (base) * this);
   }
 
   constexpr Slot targetSlot() const {
-    return std::visit([](auto&& decision) { return decision.targetSlot; }, *this);
+    return std::visit([](auto&& decision) { return decision.targetSlot; }, (base) * this);
   }
 };
 
@@ -23297,6 +23298,8 @@ struct SimulationSetupChecks {
 #else
 
 namespace pokesim {
+struct BattleStateSetup;
+
 namespace calc_damage {
 struct InputSetup;
 }

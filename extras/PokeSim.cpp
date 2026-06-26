@@ -1369,7 +1369,7 @@ void check(const DamageRollOptions& damageRollOptions) {
 namespace pokesim {
 namespace {
 types::entityIndex getBattleCreationCount(const BattleCreationInfo& battleInfo) {
-  return std::max(1UL, battleInfo.decisionsToSimulate.size());
+  return std::max((std::size_t)1UL, battleInfo.decisionsToSimulate.size());
 }
 
 struct EntityLists {
@@ -1411,14 +1411,14 @@ struct EntityLists {
       battleCount += battleCountIncrease;
 
       for (const SideCreationInfo& side : battleInfo.sides) {
-        pokemonCount += side.team.size() * battleCountIncrease;
+        pokemonCount += (types::teamPositionIndex)side.team.size() * battleCountIncrease;
       }
 
       for (const CalcDamageInputInfo& calcDamageInputInfo : battleInfo.damageCalculations) {
-        calcDamageInputCount += calcDamageInputInfo.moves.size();
+        calcDamageInputCount += (types::entityIndex)calcDamageInputInfo.moves.size();
       }
       for (const AnalyzeEffectInputInfo& analyzeEffectInputInfo : battleInfo.effectsToAnalyze) {
-        analyzeEffectInputCount += analyzeEffectInputInfo.moves.size();
+        analyzeEffectInputCount += (types::entityIndex)analyzeEffectInputInfo.moves.size();
       }
     }
 
@@ -2132,7 +2132,7 @@ template void runAfterEachBoostEvent<SpeBoost>(Simulation&);
 
 void runAfterBoostEvent(Simulation&) {}
 
-void runModifyTarget(Simulation& simulation) {}
+void runModifyTarget(Simulation&) {}
 
 void runModifyMove(Simulation& simulation) {
   dex::ChoiceScarf::onSourceModifyMove(simulation);
@@ -2476,7 +2476,7 @@ void setActionMoveReferenceComponents(
     target = targets.val[2];
   }
   else {
-    static_assert(false, "Using a RecycledActionMoveType that isn't associated with a target.");
+    POKESIM_REQUIRE_FAIL("Using a RecycledActionMoveType that isn't associated with a target.");
   }
 
   MoveName move = registry.get<MoveName>(action.val);
@@ -3383,9 +3383,7 @@ void resolveSlotDecisions(types::handle sideHandle, const types::slotDecisions& 
   }
 }
 
-void resolveTeamDecision(types::registry& registry, const types::teamOrder& teamOrder, ActionQueue& battleActionQueue) {
-
-}
+void resolveTeamDecision(types::registry&, const types::teamOrder&, ActionQueue&) {}
 }  // namespace
 
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
@@ -5113,7 +5111,7 @@ void setUnboostedStat(Simulation& simulation) {
     updateSpd(simulation, true);
   }
   else {
-    static_assert("No other stat is used as the attacking or defending stat.");
+    POKESIM_REQUIRE_FAIL("No other stat is used as the attacking or defending stat.");
   }
 
   if constexpr (forAttacker) {

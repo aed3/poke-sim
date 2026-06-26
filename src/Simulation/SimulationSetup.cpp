@@ -38,7 +38,7 @@
 namespace pokesim {
 namespace {
 types::entityIndex getBattleCreationCount(const BattleCreationInfo& battleInfo) {
-  return std::max(1UL, battleInfo.decisionsToSimulate.size());
+  return std::max((std::size_t)1UL, battleInfo.decisionsToSimulate.size());
 }
 
 struct EntityLists {
@@ -80,14 +80,14 @@ struct EntityLists {
       battleCount += battleCountIncrease;
 
       for (const SideCreationInfo& side : battleInfo.sides) {
-        pokemonCount += side.team.size() * battleCountIncrease;
+        pokemonCount += (types::teamPositionIndex)side.team.size() * battleCountIncrease;
       }
 
       for (const CalcDamageInputInfo& calcDamageInputInfo : battleInfo.damageCalculations) {
-        calcDamageInputCount += calcDamageInputInfo.moves.size();
+        calcDamageInputCount += (types::entityIndex)calcDamageInputInfo.moves.size();
       }
       for (const AnalyzeEffectInputInfo& analyzeEffectInputInfo : battleInfo.effectsToAnalyze) {
-        analyzeEffectInputCount += analyzeEffectInputInfo.moves.size();
+        analyzeEffectInputCount += (types::entityIndex)analyzeEffectInputInfo.moves.size();
       }
     }
 

@@ -457,7 +457,7 @@ void setUnboostedStat(Simulation& simulation) {
     updateSpd(simulation, true);
   }
   else {
-    static_assert("No other stat is used as the attacking or defending stat.");
+    POKESIM_REQUIRE_FAIL("No other stat is used as the attacking or defending stat.");
   }
 
   if constexpr (forAttacker) {

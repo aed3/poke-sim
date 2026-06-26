@@ -606,6 +606,8 @@ struct SimulationSetupChecks {
 #include "Simulation.hpp"
 
 namespace pokesim {
+struct BattleStateSetup;
+
 namespace calc_damage {
 struct InputSetup;
 }
