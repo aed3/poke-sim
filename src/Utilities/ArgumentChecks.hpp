@@ -49,7 +49,6 @@ struct CurrentEffectsAsSource;
 struct CurrentEffectsAsTarget;
 struct FaintQueue;
 struct FoeSide;
-struct Pokemon;
 struct RecycledAction;
 struct RecycledActionMove;
 struct AddedRecycledActionMove1;
@@ -318,9 +317,6 @@ void check(const FaintQueue&, const types::registry&);
 
 template <>
 void check(const FoeSide&, const types::registry&);
-
-template <>
-void check(const Pokemon&, const types::registry&);
 
 template <>
 void check(const RecycledAction&, const types::registry&);

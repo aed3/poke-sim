@@ -231,11 +231,11 @@ void clearVolatiles(types::handle pokemonHandle) {
 
 void deductPp(types::handle handle, MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
   MoveSlot& moveSlot = moveSlots.val[lastUsedMove.val];
-  if (moveSlot.pp >= Constants::PP_USE_DEDUCTION) {
+  if (moveSlot.pp >= Constants::PP_USE_DEDUCTION + Constants::MovePp::MIN) {
     moveSlot.pp -= Constants::PP_USE_DEDUCTION;
   }
   else {
-    moveSlot.pp = 0U;
+    moveSlot.pp = Constants::MovePp::MIN;
   }
 }
 

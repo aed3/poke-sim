@@ -28,7 +28,6 @@
 #include "EntityHolders/Current.hpp"
 #include "EntityHolders/FaintQueue.hpp"
 #include "EntityHolders/FoeSide.hpp"
-#include "EntityHolders/Pokemon.hpp"
 #include "EntityHolders/RecycledEntities.hpp"
 #include "EntityHolders/Side.hpp"
 #include "EntityHolders/Sides.hpp"

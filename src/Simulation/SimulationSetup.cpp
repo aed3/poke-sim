@@ -71,10 +71,10 @@ struct EntityLists {
   EntityList analyzeEffectInputs;
 
   EntityLists(Simulation* simulation, const std::vector<BattleCreationInfo>& battleInfoList) {
-    types::entityIndex battleCount = 0;
-    types::entityIndex pokemonCount = 0;
-    types::entityIndex calcDamageInputCount = 0;
-    types::entityIndex analyzeEffectInputCount = 0;
+    types::entityIndex battleCount = 0U;
+    types::entityIndex pokemonCount = 0U;
+    types::entityIndex calcDamageInputCount = 0U;
+    types::entityIndex analyzeEffectInputCount = 0U;
     for (const BattleCreationInfo& battleInfo : battleInfoList) {
       types::entityIndex battleCountIncrease = getBattleCreationCount(battleInfo);
       battleCount += battleCountIncrease;
@@ -91,11 +91,11 @@ struct EntityLists {
       }
     }
 
-    types::entityIndex sideCount = battleCount * 2;
+    types::entityIndex sideCount = battleCount * 2U;
     types::entityIndex recycledActionCount = battleCount;
     types::entityIndex recycledActionMoveCount = battleCount;
     types::entityIndex addedRecycledActionMoveCount =
-      simulation->isBattleFormat(BattleFormat::DOUBLES) ? battleCount * 2 : 0;
+      simulation->isBattleFormat(BattleFormat::DOUBLES) ? battleCount * 2U : 0U;
 
     POKESIM_REQUIRE(
       battleCount + sideCount + recycledActionCount + pokemonCount + calcDamageInputCount + analyzeEffectInputCount <

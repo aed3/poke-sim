@@ -4,7 +4,6 @@
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
-#include <Battle/Setup/EmplaceTagFromEnum.hpp>
 #include <Battle/Side/ManageSideState.hpp>
 #include <CalcDamage/Helpers.hpp>
 #include <Components/ActionQueue.hpp>
