@@ -4,11 +4,15 @@
     {
       "name": "default",
       "hidden": true,
-      "binaryDir": "build",
+      "binaryDir": "build/${presetName}",
       "cacheVariables": {
         "ENABLE_TESTING": "OFF",
         "ENABLE_BENCHMARKING": "OFF",
-        "ENTITY_VIEWER": "OFF"
+        "ENTITY_VIEWER": "OFF",
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": {
+          "type": "FILEPATH",
+          "value": "bin"
+        }
       }
     },
     {

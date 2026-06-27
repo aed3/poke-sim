@@ -257,3 +257,8 @@ if(ENABLE_BENCHMARKING)
   target_compile_definitions(PokeSimBenchmarks PRIVATE CATCH_AMALGAMATED_CUSTOM_MAIN)
   target_compile_definitions(PokeSimBenchmarks PRIVATE CATCH_CONFIG_DEFAULT_REPORTER="benchmark")
 endif()
+
+file(REAL_PATH ${CMAKE_BINARY_DIR}/.. BINARY_DIR_PARENT)
+if (NOT BINARY_DIR_PARENT STREQUAL CMAKE_SOURCE_DIR)
+  file(CREATE_LINK ${PROJECT_BINARY_DIR}/compile_commands.json ${PROJECT_BINARY_DIR}/../compile_commands.json SYMBOLIC)
+endif()
