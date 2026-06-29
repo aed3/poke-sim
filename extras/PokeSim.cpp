@@ -1768,8 +1768,8 @@ void createInitialBattle(
   battleSetup.setSide(p1Entity);
   battleSetup.setSide(p2Entity);
 
-  p1SideSetup.setOpponent(p2Entity, battleInfo.sides.p2().team.size());
-  p2SideSetup.setOpponent(p1Entity, battleInfo.sides.p1().team.size());
+  p1SideSetup.setOpponent(p2Entity, (types::teamPositionIndex)battleInfo.sides.p2().team.size());
+  p2SideSetup.setOpponent(p1Entity, (types::teamPositionIndex)battleInfo.sides.p1().team.size());
 
   p1SideSetup.setBattle(battleEntity);
   p2SideSetup.setBattle(battleEntity);
