@@ -52,22 +52,22 @@ endif()
 
 project(PokeSim)
 
-option(ENABLE_TESTING
+option(POKESIM_ENABLE_TESTING
   "Build the tests along with PokeSim. This will negatively effect the library's performance."
   OFF
 )
 
-option(ENABLE_BENCHMARKING "Build the benchmarks along with PokeSim." OFF)
+option(POKESIM_ENABLE_BENCHMARKING "Build the benchmarks along with PokeSim." OFF)
 
-option(USE_COMBINED_SOURCE_AND_HEADER_FILES
+option(POKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES
   "Use the combined source and combined header file version of the library when running tests and benchmarks."
   OFF
 )
 
-if(USE_COMBINED_SOURCE_AND_HEADER_FILES)
-  set(ENTITY_VIEWER OFF)
+if(POKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES)
+  set(POKESIM_ENTITY_VIEWER OFF)
 else()
-  option(ENTITY_VIEWER "Build the registry with component debugging tools" OFF)
+  option(POKESIM_ENTITY_VIEWER "Build the registry with component debugging tools" OFF)
 endif()
 
 function(setup_target)
@@ -108,7 +108,7 @@ function(setup_target)
   endif()
 
   if(NOT is_library_target)
-    if(USE_COMBINED_SOURCE_AND_HEADER_FILES)
+    if(POKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES)
       message(STATUS
         "Using combined source and header files instead of library for ${CUR_TARGET_NAME}"
       )
@@ -127,22 +127,22 @@ endfunction()
 check_ipo_supported(RESULT ipo_supported OUTPUT error)
 set(ipo_enabled OFF)
 
-if(ENABLE_TESTING)
+if(POKESIM_ENABLE_TESTING)
   add_compile_definitions(POKESIM_ENABLE_TESTING)
 endif()
 
-if(ENTITY_VIEWER AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(POKESIM_ENTITY_VIEWER AND CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_compile_definitions(POKESIM_ENTITY_VIEWER)
-  set(ENTITY_VIEWER src/Utilities/EntityViewer.cpp)
+  set(POKESIM_ENTITY_VIEWER src/Utilities/EntityViewer.cpp)
 else()
-  set(ENTITY_VIEWER "")
+  set(POKESIM_ENTITY_VIEWER "")
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  CHECK_CXX_COMPILER_FLAG("-march=native" arch_native_supported)
-  if(arch_native_supported)
-    option(OPTIMIZE_FOR_NATIVE "Build code that uses all of your computer's feature. Resulting program may not run on other computers." OFF)
-    if(OPTIMIZE_FOR_NATIVE)
+  CHECK_CXX_COMPILER_FLAG("-march=native" ARCH_NATIVE_SUPPORTED)
+  if(ARCH_NATIVE_SUPPORTED)
+    option(POKESIM_OPTIMIZE_FOR_NATIVE "Build code that uses all of your computer's feature. Resulting program may not run on other computers." OFF)
+    if(POKESIM_OPTIMIZE_FOR_NATIVE)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
     endif()
   endif()
@@ -216,7 +216,7 @@ setup_target(
     src/Simulation/SimulationSetup.cpp
     src/Utilities/ArgumentChecks.cpp
     src/Utilities/AssertComponentsEqual.cpp
-    ${ENTITY_VIEWER}
+    ${POKESIM_ENTITY_VIEWER}
 )
 
 target_include_directories(PokeSim PUBLIC
@@ -224,7 +224,7 @@ target_include_directories(PokeSim PUBLIC
   ${PROJECT_SOURCE_DIR}/external
 )
 
-if(ENABLE_TESTING)
+if(POKESIM_ENABLE_TESTING)
   setup_target(NAME PokeSimTests
     SOURCES
       external/Catch2/catch_amalgamated.cpp
@@ -245,7 +245,7 @@ if(ENABLE_TESTING)
   target_compile_definitions(PokeSimTests PRIVATE CATCH_AMALGAMATED_CUSTOM_MAIN)
 endif()
 
-if(ENABLE_BENCHMARKING)
+if(POKESIM_ENABLE_BENCHMARKING)
   setup_target(NAME PokeSimBenchmarks
     SOURCES
       external/Catch2/catch_amalgamated.cpp
@@ -258,7 +258,6 @@ if(ENABLE_BENCHMARKING)
   target_compile_definitions(PokeSimBenchmarks PRIVATE CATCH_CONFIG_DEFAULT_REPORTER="benchmark")
 endif()
 
-file(REAL_PATH ${CMAKE_BINARY_DIR}/.. BINARY_DIR_PARENT)
-if (NOT BINARY_DIR_PARENT STREQUAL CMAKE_SOURCE_DIR)
+if(POKESIM_USING_PRESET)
   file(CREATE_LINK ${PROJECT_BINARY_DIR}/compile_commands.json ${PROJECT_BINARY_DIR}/../compile_commands.json SYMBOLIC)
 endif()

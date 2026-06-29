@@ -105,9 +105,9 @@ jobs:
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-                -DENABLE_TESTING=ON \
-                -DENABLE_BENCHMARKING=ON \
-                -DUSE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} \
+                -DPOKESIM_ENABLE_TESTING=ON \
+                -DPOKESIM_ENABLE_BENCHMARKING=ON \
+                -DPOKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} \
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
                 -G "Unix Makefiles"
 
@@ -137,9 +137,9 @@ jobs:
           cmake -S $Env:GITHUB_WORKSPACE                                              `
                 -B ${{runner.workspace}}\build                                        `
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}}                             `
-                -DENABLE_TESTING=ON                                                   `
-                -DENABLE_BENCHMARKING=ON                                              `
-                -DUSE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} `
+                -DPOKESIM_ENABLE_TESTING=ON                                                   `
+                -DPOKESIM_ENABLE_BENCHMARKING=ON                                              `
+                -DPOKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} `
                 -A x64
 
       - name: Build tests
@@ -174,9 +174,9 @@ jobs:
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-                -DENABLE_TESTING=ON \
-                -DENABLE_BENCHMARKING=ON \
-                -DUSE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} \
+                -DPOKESIM_ENABLE_TESTING=ON \
+                -DPOKESIM_ENABLE_BENCHMARKING=ON \
+                -DPOKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} \
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:FILEPATH=${{runner.workspace}}/build/bin \
 
       - name: Build tests

@@ -6,9 +6,10 @@
       "hidden": true,
       "binaryDir": "build/${presetName}",
       "cacheVariables": {
-        "ENABLE_TESTING": "OFF",
-        "ENABLE_BENCHMARKING": "OFF",
-        "ENTITY_VIEWER": "OFF",
+        "POKESIM_ENABLE_TESTING": "OFF",
+        "POKESIM_ENABLE_BENCHMARKING": "OFF",
+        "POKESIM_ENTITY_VIEWER": "OFF",
+        "POKESIM_USING_PRESET": "ON",
         "CMAKE_RUNTIME_OUTPUT_DIRECTORY": {
           "type": "FILEPATH",
           "value": "bin"
@@ -28,27 +29,28 @@
       "inherits": "default",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "POKESIM_OPTIMIZE_FOR_NATIVE": "ON"
       }
     },
     {
       "name": "test",
       "inherits": "default",
       "cacheVariables": {
-        "ENABLE_TESTING": "ON"
+        "POKESIM_ENABLE_TESTING": "ON"
       }
     },
     {
       "name": "benchmark",
       "hidden": true,
       "cacheVariables": {
-        "ENABLE_BENCHMARKING": "ON"
+        "POKESIM_ENABLE_BENCHMARKING": "ON"
       }
     },
     {
       "name": "entity-viewer",
       "cacheVariables": {
-        "ENTITY_VIEWER": "ON"
+        "POKESIM_ENTITY_VIEWER": "ON"
       }
     },
     {
@@ -88,7 +90,8 @@
       ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "ENABLE_TESTING": "ON"
+        "POKESIM_ENABLE_TESTING": "ON",
+        "POKESIM_OPTIMIZE_FOR_NATIVE": null
       }
     },
     {
