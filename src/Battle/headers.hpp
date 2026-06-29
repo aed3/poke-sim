@@ -13,4 +13,3 @@
 #include "Setup/PokemonStateSetup.hpp"
 #include "Setup/SideStateSetup.hpp"
 #include "Setup/StateSetupBase.hpp"
-#include "Side/ManageSideState.hpp"

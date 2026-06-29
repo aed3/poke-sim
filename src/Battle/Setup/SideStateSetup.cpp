@@ -3,6 +3,7 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/Team.hpp>
+#include <Components/FoesRemaining.hpp>
 #include <Components/PlayerSide.hpp>
 #include <Components/SideDecisions.hpp>
 #include <Components/Tags/BattleTags.hpp>
@@ -37,8 +38,9 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
   }
 }
 
-void SideStateSetup::setOpponent(types::entity entity) {
+void SideStateSetup::setOpponent(types::entity entity, types::teamPositionIndex opponentTeamSize) {
   handle.emplace<FoeSide>(entity);
+  handle.emplace<FoesRemaining>(opponentTeamSize);
 }
 
 void SideStateSetup::setBattle(types::entity entity) {

@@ -33,6 +33,7 @@
 #include "EntityHolders/Sides.hpp"
 #include "EntityHolders/Team.hpp"
 #include "EventModifier.hpp"
+#include "FoesRemaining.hpp"
 #include "HitCount.hpp"
 #include "ID.hpp"
 #include "LastUsedMove.hpp"

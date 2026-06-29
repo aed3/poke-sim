@@ -34,7 +34,7 @@ constexpr std::array<DamageRollKind, 4U> fixedBranchDamageRollOptions = {
 struct VerticalSliceChecks : TestChecks {
  private:
   const simulate_turn::Options* options;
-  entt::delegate<void()> checkPokemon;
+  bool doPokemonAndSidesChecks = false;
 
   void checkBattle() const {
     debug::TypesToIgnore typesToIgnore;
@@ -62,6 +62,17 @@ struct VerticalSliceChecks : TestChecks {
     }
   }
 
+  void checkPokemon() const {
+    specificallyCheckEntities<
+      tags::Pokemon,
+      stat::CurrentHp,
+      LastUsedMove,
+      MoveSlots,
+      StatusName,
+      status::tags::Paralysis,
+      stat::EffectiveSpe>();
+  }
+
   void checkSides() const { specificallyCheckEntities<tags::Side, SideDecision>(); }
 
   void checkMoves() const { specificallyCheckEntities<MoveName, Pp>(); }
@@ -69,15 +80,15 @@ struct VerticalSliceChecks : TestChecks {
  public:
   VerticalSliceChecks(
     const Simulation& _simulation, const types::entityVector& specificallyCheckedEntities,
-    entt::delegate<void()> _checkPokemon)
+    bool _doPokemonAndSidesChecks)
       : TestChecks(_simulation, specificallyCheckedEntities),
         options(&_simulation.simulateTurnOptions),
-        checkPokemon(_checkPokemon) {}
+        doPokemonAndSidesChecks(_doPokemonAndSidesChecks) {}
 
   void checkEntities() const {
     checkBattle();
-    checkSides();
-    if (checkPokemon) {
+    if (doPokemonAndSidesChecks) {
+      checkSides();
       checkPokemon();
     }
     checkMoves();
@@ -306,19 +317,7 @@ TEST_CASE(
   "Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][SimulateTurn][VerticalSlice1][SingleBattle]") {
   struct Checks : VerticalSliceChecks {
     Checks(const Simulation& _simulation, const types::entityVector& specificallyCheckedEntities)
-        : VerticalSliceChecks(
-            _simulation, specificallyCheckedEntities, {entt::connect_arg<&Checks::checkPokemon>, this}) {}
-
-    void checkPokemon() const {
-      specificallyCheckEntities<
-        tags::Pokemon,
-        stat::CurrentHp,
-        LastUsedMove,
-        MoveSlots,
-        StatusName,
-        status::tags::Paralysis,
-        stat::EffectiveSpe>();
-    }
+        : VerticalSliceChecks(_simulation, specificallyCheckedEntities, true) {}
   };
 
   struct DamageValueInfo : VerticalSliceDamageValueInfo {
@@ -587,7 +586,7 @@ TEST_CASE(
   "Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][SimulateTurn][VerticalSlice1][DoubleBattle]") {
   struct Checks : VerticalSliceChecks {
     Checks(const Simulation& _simulation, const types::entityVector& specificallyCheckedEntities)
-        : VerticalSliceChecks(_simulation, specificallyCheckedEntities, {}) {}
+        : VerticalSliceChecks(_simulation, specificallyCheckedEntities, false) {}
   };
 
   struct DamageValueInfo : VerticalSliceDamageValueInfo {
@@ -905,6 +904,7 @@ TEST_CASE(
 
     CAPTURE(p1AHp.val, p1BHp.val, p2AHp.val, p2BHp.val, p2ABurned, p2BFainted, p2BSpaBoosted, probability.val);
 
+    checks.checkEntityForChanges<SideDecision>(p2Side);
     checks.checkEntityForChanges<stat::CurrentHp, ChoiceLock, LastUsedMove, MoveSlots, DisabledMoveSlots>(p1APokemon);
     checks.checkEntityForChanges<stat::CurrentHp, item::tags::FocusSash, ItemName, LastUsedMove, MoveSlots>(p1BPokemon);
     checks.checkEntityForChanges<stat::CurrentHp, StatusName, status::tags::Burn, LastUsedMove, MoveSlots>(p2APokemon);
@@ -959,6 +959,9 @@ TEST_CASE(
     // P2B (Ribombee) Specific Checks
     REQUIRE(expectedP2BHp.contains(p2BHp.val));
     if (p2BFainted) {
+      checks.checkEntityForChanges<SideDecision, FoesRemaining>(p1Side);
+      REQUIRE(registry.get<FoesRemaining>(p1Side).val == 1U);
+
       checks.checkEntityForChanges<tags::ActivePokemon, tags::Fainted, stat::CurrentHp>(p2BPokemon);
       REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(p2BPokemon));
       REQUIRE_FALSE(p2BSpaBoosted);
@@ -966,6 +969,7 @@ TEST_CASE(
       REQUIRE((p2BDamageInfo.mightCrit() || p2BDamageInfo.guaranteedCrit()));
     }
     else {
+      checks.checkEntityForChanges<SideDecision>(p1Side);
       checks.checkEntityForChanges<
         stat::CurrentHp,
         SpaBoost,

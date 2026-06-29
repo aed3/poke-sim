@@ -272,7 +272,7 @@ TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
     Winner,
     RootBattle>();
 
-  checks.checkViewForChanges<tags::Side, SideDecision>();
+  checks.checkViewForChanges<tags::Side, SideDecision, FoesRemaining>();
 
   types::entity battle = turnOutcomeBattles[0];
   const auto& [turn, rootBattle, sides, winner] = registry.get<Turn, RootBattle, Sides, Winner>(battle);
@@ -283,6 +283,11 @@ TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
   types::moveSlotIndex p1MoveIndex = 0U;
   types::moveSlotIndex p2MoveIndex = 0U;
+
+  const FoesRemaining& p2Remaining = registry.get<FoesRemaining>(p1Side);
+  const FoesRemaining& p1Remaining = registry.get<FoesRemaining>(p2Side);
+  REQUIRE(p2Remaining.val == 1U);
+  REQUIRE(p1Remaining.val == 0U);
 
   checks.checkEntityForChanges<stat::CurrentHp, tags::Fainted, tags::ActivePokemon, MoveSlots>(p1Pokemon);
   checks.checkEntityForChanges<LastUsedMove, MoveSlots>(p2Pokemon);

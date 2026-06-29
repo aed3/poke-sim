@@ -17,6 +17,7 @@
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
+#include <Components/FoesRemaining.hpp>
 #include <Components/ID.hpp>
 #include <Components/Level.hpp>
 #include <Components/MoveSlots.hpp>
@@ -312,6 +313,7 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<Team>(sideEntity));
     POKESIM_REQUIRE_NM(registry->all_of<FoeSide>(sideEntity));
     POKESIM_REQUIRE_NM(registry->all_of<Battle>(sideEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<FoesRemaining>(sideEntity));
 
     const auto& team = registry->get<Team>(sideEntity).val;
     POKESIM_REQUIRE_NM(team.size() == creationInfo.team.size());
@@ -351,9 +353,12 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(registry->get<Battle>(sides.val[i]).val == battleEntity);
     }
     auto [p1SideEntity, p2SideEntity] = sides.val;
+    auto [p1SideInfo, p2SideInfo] = creationInfo.sides;
 
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p1SideEntity).val == p2SideEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p2SideEntity).val == p1SideEntity);
+    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p1SideEntity).val == p2SideInfo.team.size());
+    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p2SideEntity).val == p1SideInfo.team.size());
 
     pokesim::debug::checkBattle(battleEntity, *registry);
   }

@@ -190,7 +190,6 @@ setup_target(
     src/Battle/Setup/EmplaceTagFromEnum.cpp
     src/Battle/Setup/PokemonStateSetup.cpp
     src/Battle/Setup/SideStateSetup.cpp
-    src/Battle/Side/ManageSideState.cpp
     src/CalcDamage/CalcDamage.cpp
     src/CalcDamage/Setup/CalcDamageInputSetup.cpp
     src/Pokedex/Events/AbilityEvents.cpp

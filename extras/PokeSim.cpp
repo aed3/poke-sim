@@ -29,7 +29,6 @@
  * src/Pokedex/Events/AbilityEvents.cpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.cpp
  * src/CalcDamage/CalcDamage.cpp
- * src/Battle/Side/ManageSideState.cpp
  * src/Battle/Setup/SideStateSetup.cpp
  * src/Battle/Setup/PokemonStateSetup.cpp
  * src/Battle/Setup/EmplaceTagFromEnum.cpp
@@ -324,10 +323,12 @@ void checkSide(types::entity sideEntity, const types::registry& registry) {
   POKESIM_REQUIRE_NM(has<Team>(sideEntity, registry));
   POKESIM_REQUIRE_NM(has<FoeSide>(sideEntity, registry));
   POKESIM_REQUIRE_NM(has<Battle>(sideEntity, registry));
+  POKESIM_REQUIRE_NM(has<FoesRemaining>(sideEntity, registry));
   POKESIM_REQUIRE_NM(has<PlayerSide>(sideEntity, registry));
 
-  const auto& [battle, team, foeSide] = registry.get<Battle, Team, FoeSide>(sideEntity);
+  const auto& [battle, team, foeSide, foesRemaining] = registry.get<Battle, Team, FoeSide, FoesRemaining>(sideEntity);
   checkBounds<Constants::TeamSize>(team.val.size());
+  check(foesRemaining);
 
   POKESIM_REQUIRE_NM(registry.get<FoeSide>(foeSide.val).val == sideEntity);
 
@@ -339,6 +340,17 @@ void checkSide(types::entity sideEntity, const types::registry& registry) {
     POKESIM_REQUIRE_NM(registry.get<Battle>(pokemonEntity).val == battle.val);
     POKESIM_REQUIRE_NM(registry.get<Side>(pokemonEntity).val == sideEntity);
   }
+
+  const Team& foeTeam = registry.get<Team>(registry.get<FoeSide>(sideEntity).val);
+  POKESIM_REQUIRE_NM(foesRemaining.val <= foeTeam.val.size());
+
+  types::teamPositionIndex foePokemonLeft = 0U;
+  for (types::entity foeEntity : foeTeam.val) {
+    if (!registry.all_of<tags::Fainted>(foeEntity)) {
+      foePokemonLeft++;
+    }
+  }
+  POKESIM_REQUIRE_NM(foesRemaining.val == foePokemonLeft);
 }
 
 void checkPokemon(types::entity pokemonEntity, const types::registry& registry) {
@@ -876,6 +888,11 @@ void check(const Team& team, const types::registry& registry) {
   for (types::entity pokemonEntity : team.val) {
     checkPokemon(pokemonEntity, registry);
   }
+}
+
+template <>
+void check(const FoesRemaining& teamMembersAvailable) {
+  POKESIM_REQUIRE_NM(teamMembersAvailable.val <= Constants::TeamSize::MAX);
 }
 
 template <>
@@ -1751,8 +1768,8 @@ void createInitialBattle(
   battleSetup.setSide(p1Entity);
   battleSetup.setSide(p2Entity);
 
-  p1SideSetup.setOpponent(p2Entity);
-  p2SideSetup.setOpponent(p1Entity);
+  p1SideSetup.setOpponent(p2Entity, battleInfo.sides.p2().team.size());
+  p2SideSetup.setOpponent(p1Entity, battleInfo.sides.p1().team.size());
 
   p1SideSetup.setBattle(battleEntity);
   p2SideSetup.setBattle(battleEntity);
@@ -2595,6 +2612,7 @@ void setFainting(types::registry& registry, FaintQueue& faintQueue) {
   types::entity pokemon = faintQueue.val.front();
   faintQueue.val.erase(faintQueue.val.begin());
   registry.emplace<pokesim::tags::Fainting>(pokemon);
+  registry.get<FoesRemaining>(registry.get<FoeSide>(registry.get<Side>(pokemon).val).val).val--;
 }
 
 void clearFaintQueue(types::handle battleHandle, const FaintQueue& faintQueue) {
@@ -2607,8 +2625,8 @@ void checkWin(types::handle battleHandle, const Sides& sides) {
   types::registry& registry = *battleHandle.registry();
 
   for (types::entity sideEntity : sides.val) {
-    types::teamPositionIndex pokemonLeft = foeSidePokemonLeft(registry, sideEntity);
-    if (!pokemonLeft) {
+    types::teamPositionIndex foesRemaining = registry.get<FoesRemaining>(sideEntity).val;
+    if (!foesRemaining) {
       battleHandle.emplace<Winner>(registry.get<PlayerSide>(sideEntity).val);
       clearActionQueue(battleHandle.get<ActionQueue>());
       return;
@@ -2653,7 +2671,9 @@ void faintPokemon(Simulation& simulation) {
     iterations++;
   }
 
-  battleFilter.view<checkWin, Tags<>, entt::exclude_t<Winner>>();
+  if (iterations != LoopLimits::MIN) {
+    battleFilter.view<checkWin, Tags<>, entt::exclude_t<Winner>>();
+  }
 
   runAfterFaintEvent(simulation);
 }
@@ -5202,27 +5222,6 @@ void run(Simulation& simulation) {
 
 ///////////////////// END OF src/CalcDamage/CalcDamage.cpp /////////////////////
 
-///////////////// START OF src/Battle/Side/ManageSideState.cpp /////////////////
-
-namespace pokesim {
-types::teamPositionIndex sidePokemonLeft(const types::registry& registry, types::entity sideEntity) {
-  const Team& team = registry.get<Team>(sideEntity);
-  types::teamPositionIndex pokemonLeft = 0U;
-  for (types::entity pokemon : team.val) {
-    if (!registry.all_of<tags::Fainted>(pokemon)) {
-      pokemonLeft++;
-    }
-  }
-  return pokemonLeft;
-}
-
-types::teamPositionIndex foeSidePokemonLeft(const types::registry& registry, types::entity sideEntity) {
-  return sidePokemonLeft(registry, registry.get<FoeSide>(sideEntity).val);
-}
-}  // namespace pokesim
-
-////////////////// END OF src/Battle/Side/ManageSideState.cpp //////////////////
-
 ///////////////// START OF src/Battle/Setup/SideStateSetup.cpp /////////////////
 
 namespace pokesim {
@@ -5249,8 +5248,9 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
   }
 }
 
-void SideStateSetup::setOpponent(types::entity entity) {
+void SideStateSetup::setOpponent(types::entity entity, types::teamPositionIndex opponentTeamSize) {
   handle.emplace<FoeSide>(entity);
+  handle.emplace<FoesRemaining>(opponentTeamSize);
 }
 
 void SideStateSetup::setBattle(types::entity entity) {

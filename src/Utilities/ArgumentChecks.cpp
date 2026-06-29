@@ -168,10 +168,12 @@ void checkSide(types::entity sideEntity, const types::registry& registry) {
   POKESIM_REQUIRE_NM(has<Team>(sideEntity, registry));
   POKESIM_REQUIRE_NM(has<FoeSide>(sideEntity, registry));
   POKESIM_REQUIRE_NM(has<Battle>(sideEntity, registry));
+  POKESIM_REQUIRE_NM(has<FoesRemaining>(sideEntity, registry));
   POKESIM_REQUIRE_NM(has<PlayerSide>(sideEntity, registry));
 
-  const auto& [battle, team, foeSide] = registry.get<Battle, Team, FoeSide>(sideEntity);
+  const auto& [battle, team, foeSide, foesRemaining] = registry.get<Battle, Team, FoeSide, FoesRemaining>(sideEntity);
   checkBounds<Constants::TeamSize>(team.val.size());
+  check(foesRemaining);
 
   POKESIM_REQUIRE_NM(registry.get<FoeSide>(foeSide.val).val == sideEntity);
 
@@ -183,6 +185,17 @@ void checkSide(types::entity sideEntity, const types::registry& registry) {
     POKESIM_REQUIRE_NM(registry.get<Battle>(pokemonEntity).val == battle.val);
     POKESIM_REQUIRE_NM(registry.get<Side>(pokemonEntity).val == sideEntity);
   }
+
+  const Team& foeTeam = registry.get<Team>(registry.get<FoeSide>(sideEntity).val);
+  POKESIM_REQUIRE_NM(foesRemaining.val <= foeTeam.val.size());
+
+  types::teamPositionIndex foePokemonLeft = 0U;
+  for (types::entity foeEntity : foeTeam.val) {
+    if (!registry.all_of<tags::Fainted>(foeEntity)) {
+      foePokemonLeft++;
+    }
+  }
+  POKESIM_REQUIRE_NM(foesRemaining.val == foePokemonLeft);
 }
 
 void checkPokemon(types::entity pokemonEntity, const types::registry& registry) {
@@ -720,6 +733,11 @@ void check(const Team& team, const types::registry& registry) {
   for (types::entity pokemonEntity : team.val) {
     checkPokemon(pokemonEntity, registry);
   }
+}
+
+template <>
+void check(const FoesRemaining& teamMembersAvailable) {
+  POKESIM_REQUIRE_NM(teamMembersAvailable.val <= Constants::TeamSize::MAX);
 }
 
 template <>

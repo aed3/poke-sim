@@ -57,6 +57,7 @@ struct Side;
 struct Sides;
 struct Team;
 struct EventModifier;
+struct FoesRemaining;
 struct HitCount;
 struct Id;
 struct LastUsedMove;
@@ -340,6 +341,9 @@ template <>
 void check(const Team&, const types::registry&);
 
 // template <> void check(const EventModifier&);
+
+template <>
+void check(const FoesRemaining&);
 
 template <>
 void check(const HitCount&);

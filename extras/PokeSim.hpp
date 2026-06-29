@@ -121,6 +121,7 @@
  * src/Components/EntityHolders/Sides.hpp
  * src/Components/EntityHolders/Team.hpp
  * src/Components/EventModifier.hpp
+ * src/Components/FoesRemaining.hpp
  * src/Components/HitCount.hpp
  * src/Components/ID.hpp
  * src/Components/LastUsedMove.hpp
@@ -242,7 +243,6 @@
  * src/SimulateTurn/RandomChance.hpp
  * src/Simulation/MoveHitSteps.hpp
  * src/Utilities/EntityFilter.hpp
- * src/Battle/Side/ManageSideState.hpp
  * src/SimulateTurn/ManageActionQueue.hpp
  * src/SimulateTurn/SimulateTurnDebugChecks.hpp
  * src/Utilities/RNG.hpp
@@ -19062,6 +19062,16 @@ struct EventModifier {
 
 /////////////////// END OF src/Components/EventModifier.hpp ////////////////////
 
+////////////////// START OF src/Components/FoesRemaining.hpp ///////////////////
+
+namespace pokesim {
+struct FoesRemaining {
+  types::teamPositionIndex val{};
+};
+}  // namespace pokesim
+
+/////////////////// END OF src/Components/FoesRemaining.hpp ////////////////////
+
 ///////////////////// START OF src/Components/HitCount.hpp /////////////////////
 
 namespace pokesim {
@@ -20471,6 +20481,7 @@ struct Side;
 struct Sides;
 struct Team;
 struct EventModifier;
+struct FoesRemaining;
 struct HitCount;
 struct Id;
 struct LastUsedMove;
@@ -20754,6 +20765,9 @@ template <>
 void check(const Team&, const types::registry&);
 
 // template <> void check(const EventModifier&);
+
+template <>
+void check(const FoesRemaining&);
 
 template <>
 void check(const HitCount&);
@@ -21607,7 +21621,7 @@ struct SideStateSetup : internal::StateSetupBase {
   void initBlank();
 
   void setTeam(std::vector<PokemonStateSetup>& team);
-  void setOpponent(types::entity entity);
+  void setOpponent(types::entity entity, types::teamPositionIndex opponentTeamSize);
   void setBattle(types::entity entity);
   void setPlayerSide(PlayerSideId playerSideId);
   void setSideDecision(const SideDecision& sideDecision);
@@ -23009,6 +23023,7 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<Team>(sideEntity));
     POKESIM_REQUIRE_NM(registry->all_of<FoeSide>(sideEntity));
     POKESIM_REQUIRE_NM(registry->all_of<Battle>(sideEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<FoesRemaining>(sideEntity));
 
     const auto& team = registry->get<Team>(sideEntity).val;
     POKESIM_REQUIRE_NM(team.size() == creationInfo.team.size());
@@ -23048,9 +23063,12 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(registry->get<Battle>(sides.val[i]).val == battleEntity);
     }
     auto [p1SideEntity, p2SideEntity] = sides.val;
+    auto [p1SideInfo, p2SideInfo] = creationInfo.sides;
 
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p1SideEntity).val == p2SideEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p2SideEntity).val == p1SideEntity);
+    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p1SideEntity).val == p2SideInfo.team.size());
+    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p2SideEntity).val == p1SideInfo.team.size());
 
     pokesim::debug::checkBattle(battleEntity, *registry);
   }
@@ -24459,17 +24477,6 @@ struct EntityFilter {
 }  // namespace pokesim::internal
 
 //////////////////// END OF src/Utilities/EntityFilter.hpp /////////////////////
-
-///////////////// START OF src/Battle/Side/ManageSideState.hpp /////////////////
-
-namespace pokesim {
-class Simulation;
-
-types::teamPositionIndex sidePokemonLeft(const types::registry& registry, types::entity sideEntity);
-types::teamPositionIndex foeSidePokemonLeft(const types::registry& registry, types::entity sideEntity);
-}  // namespace pokesim
-
-////////////////// END OF src/Battle/Side/ManageSideState.hpp //////////////////
 
 /////////////// START OF src/SimulateTurn/ManageActionQueue.hpp ////////////////
 

@@ -4,7 +4,6 @@
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
-#include <Battle/Side/ManageSideState.hpp>
 #include <CalcDamage/Helpers.hpp>
 #include <Components/ActionQueue.hpp>
 #include <Components/AddedTargets.hpp>
@@ -15,8 +14,11 @@
 #include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/FaintQueue.hpp>
+#include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/RecycledEntities.hpp>
+#include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
+#include <Components/FoesRemaining.hpp>
 #include <Components/LastUsedMove.hpp>
 #include <Components/MoveSlots.hpp>
 #include <Components/Names/MoveNames.hpp>
@@ -231,6 +233,7 @@ void setFainting(types::registry& registry, FaintQueue& faintQueue) {
   types::entity pokemon = faintQueue.val.front();
   faintQueue.val.erase(faintQueue.val.begin());
   registry.emplace<pokesim::tags::Fainting>(pokemon);
+  registry.get<FoesRemaining>(registry.get<FoeSide>(registry.get<Side>(pokemon).val).val).val--;
 }
 
 void clearFaintQueue(types::handle battleHandle, const FaintQueue& faintQueue) {
@@ -243,8 +246,8 @@ void checkWin(types::handle battleHandle, const Sides& sides) {
   types::registry& registry = *battleHandle.registry();
 
   for (types::entity sideEntity : sides.val) {
-    types::teamPositionIndex pokemonLeft = foeSidePokemonLeft(registry, sideEntity);
-    if (!pokemonLeft) {
+    types::teamPositionIndex foesRemaining = registry.get<FoesRemaining>(sideEntity).val;
+    if (!foesRemaining) {
       battleHandle.emplace<Winner>(registry.get<PlayerSide>(sideEntity).val);
       clearActionQueue(battleHandle.get<ActionQueue>());
       return;
@@ -289,7 +292,9 @@ void faintPokemon(Simulation& simulation) {
     iterations++;
   }
 
-  battleFilter.view<checkWin, Tags<>, entt::exclude_t<Winner>>();
+  if (iterations != LoopLimits::MIN) {
+    battleFilter.view<checkWin, Tags<>, entt::exclude_t<Winner>>();
+  }
 
   runAfterFaintEvent(simulation);
 }
