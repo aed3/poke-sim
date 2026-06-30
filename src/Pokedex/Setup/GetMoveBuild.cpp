@@ -105,7 +105,12 @@ struct BuildMove {
     template <typename Component>
     void add(const Component& component) {
       registry->storage<Component>().reserve(size);
-      registry->insert(list->begin(), list->end(), component);
+      if constexpr (std::is_empty_v<Component>) {
+        registry->insert<Component>(list->begin(), list->end());
+      }
+      else {
+        registry->insert(list->begin(), list->end(), component);
+      }
     }
 
     template <typename... Types>

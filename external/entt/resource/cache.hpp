@@ -19,11 +19,7 @@
 
 namespace entt {
 
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
+/*! @cond TURN_OFF_DOXYGEN */
 namespace internal {
 
 template<typename Type, typename It>
@@ -37,6 +33,7 @@ public:
     using reference = value_type;
     using difference_type = std::ptrdiff_t;
     using iterator_category = std::input_iterator_tag;
+    using iterator_concept = std::random_access_iterator_tag;
 
     constexpr resource_cache_iterator() noexcept = default;
 
@@ -88,7 +85,7 @@ public:
     }
 
     [[nodiscard]] constexpr reference operator*() const noexcept {
-        return (*this)[0];
+        return operator[](0);
     }
 
     [[nodiscard]] constexpr pointer operator->() const noexcept {
@@ -144,11 +141,7 @@ template<typename... Lhs, typename... Rhs>
 }
 
 } // namespace internal
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
+/*! @endcond */
 
 /**
  * @brief Basic cache for resources of any type.
@@ -161,17 +154,17 @@ class resource_cache {
     using alloc_traits = std::allocator_traits<Allocator>;
     static_assert(std::is_same_v<typename alloc_traits::value_type, Type>, "Invalid value type");
     using container_allocator = typename alloc_traits::template rebind_alloc<std::pair<const id_type, typename Loader::result_type>>;
-    using container_type = dense_map<id_type, typename Loader::result_type, identity, std::equal_to<id_type>, container_allocator>;
+    using container_type = dense_map<id_type, typename Loader::result_type, identity, std::equal_to<>, container_allocator>;
 
 public:
+    /*! @brief Allocator type. */
+    using allocator_type = Allocator;
     /*! @brief Resource type. */
     using value_type = Type;
     /*! @brief Unsigned integer type. */
     using size_type = std::size_t;
     /*! @brief Loader type. */
     using loader_type = Loader;
-    /*! @brief Allocator type. */
-    using allocator_type = Allocator;
     /*! @brief Input iterator type. */
     using iterator = internal::resource_cache_iterator<Type, typename container_type::iterator>;
     /*! @brief Constant input iterator type. */
@@ -208,7 +201,7 @@ public:
         : pool{std::piecewise_construct, std::forward_as_tuple(other.pool.first(), allocator), std::forward_as_tuple(other.pool.second())} {}
 
     /*! @brief Default move constructor. */
-    resource_cache(resource_cache &&) = default;
+    resource_cache(resource_cache &&) noexcept = default;
 
     /**
      * @brief Allocator-extended move constructor.
@@ -217,6 +210,9 @@ public:
      */
     resource_cache(resource_cache &&other, const allocator_type &allocator)
         : pool{std::piecewise_construct, std::forward_as_tuple(std::move(other.pool.first()), allocator), std::forward_as_tuple(std::move(other.pool.second()))} {}
+
+    /*! @brief Default destructor. */
+    ~resource_cache() = default;
 
     /**
      * @brief Default copy assignment operator.
@@ -228,7 +224,7 @@ public:
      * @brief Default move assignment operator.
      * @return This cache.
      */
-    resource_cache &operator=(resource_cache &&) = default;
+    resource_cache &operator=(resource_cache &&) noexcept = default;
 
     /**
      * @brief Returns the associated allocator.

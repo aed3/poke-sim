@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 #include "../config/config.h"
+#include "../core/bit.hpp"
 #include "../core/iterator.hpp"
 #include "../core/memory.hpp"
 #include "../core/type_info.hpp"
@@ -19,16 +20,12 @@
 
 namespace entt {
 
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
+/*! @cond TURN_OFF_DOXYGEN */
 namespace internal {
 
-template<typename Container, std::size_t Size>
+template<typename Container>
 class storage_iterator final {
-    friend storage_iterator<const Container, Size>;
+    friend storage_iterator<const Container>;
 
     using container_type = std::remove_const_t<Container>;
     using alloc_traits = std::allocator_traits<typename container_type::allocator_type>;
@@ -52,7 +49,7 @@ public:
           offset{idx} {}
 
     template<bool Const = std::is_const_v<Container>, typename = std::enable_if_t<Const>>
-    constexpr storage_iterator(const storage_iterator<std::remove_const_t<Container>, Size> &other) noexcept
+    constexpr storage_iterator(const storage_iterator<std::remove_const_t<Container>> &other) noexcept
         : storage_iterator{other.payload, other.offset} {}
 
     constexpr storage_iterator &operator++() noexcept {
@@ -93,16 +90,16 @@ public:
 
     [[nodiscard]] constexpr reference operator[](const difference_type value) const noexcept {
         const auto pos = index() - value;
-        return (*payload)[pos / Size][fast_mod(pos, Size)];
+        constexpr auto page_size = component_traits<value_type>::page_size;
+        return (*payload)[pos / page_size][fast_mod(static_cast<std::size_t>(pos), page_size)];
     }
 
     [[nodiscard]] constexpr pointer operator->() const noexcept {
-        const auto pos = index();
-        return (*payload)[pos / Size] + fast_mod(pos, Size);
+        return std::addressof(operator[](0));
     }
 
     [[nodiscard]] constexpr reference operator*() const noexcept {
-        return *operator->();
+        return operator[](0);
     }
 
     [[nodiscard]] constexpr difference_type index() const noexcept {
@@ -114,38 +111,38 @@ private:
     difference_type offset;
 };
 
-template<typename Lhs, typename Rhs, std::size_t Size>
-[[nodiscard]] constexpr std::ptrdiff_t operator-(const storage_iterator<Lhs, Size> &lhs, const storage_iterator<Rhs, Size> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr std::ptrdiff_t operator-(const storage_iterator<Lhs> &lhs, const storage_iterator<Rhs> &rhs) noexcept {
     return rhs.index() - lhs.index();
 }
 
-template<typename Lhs, typename Rhs, std::size_t Size>
-[[nodiscard]] constexpr bool operator==(const storage_iterator<Lhs, Size> &lhs, const storage_iterator<Rhs, Size> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator==(const storage_iterator<Lhs> &lhs, const storage_iterator<Rhs> &rhs) noexcept {
     return lhs.index() == rhs.index();
 }
 
-template<typename Lhs, typename Rhs, std::size_t Size>
-[[nodiscard]] constexpr bool operator!=(const storage_iterator<Lhs, Size> &lhs, const storage_iterator<Rhs, Size> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator!=(const storage_iterator<Lhs> &lhs, const storage_iterator<Rhs> &rhs) noexcept {
     return !(lhs == rhs);
 }
 
-template<typename Lhs, typename Rhs, std::size_t Size>
-[[nodiscard]] constexpr bool operator<(const storage_iterator<Lhs, Size> &lhs, const storage_iterator<Rhs, Size> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator<(const storage_iterator<Lhs> &lhs, const storage_iterator<Rhs> &rhs) noexcept {
     return lhs.index() > rhs.index();
 }
 
-template<typename Lhs, typename Rhs, std::size_t Size>
-[[nodiscard]] constexpr bool operator>(const storage_iterator<Lhs, Size> &lhs, const storage_iterator<Rhs, Size> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator>(const storage_iterator<Lhs> &lhs, const storage_iterator<Rhs> &rhs) noexcept {
     return rhs < lhs;
 }
 
-template<typename Lhs, typename Rhs, std::size_t Size>
-[[nodiscard]] constexpr bool operator<=(const storage_iterator<Lhs, Size> &lhs, const storage_iterator<Rhs, Size> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator<=(const storage_iterator<Lhs> &lhs, const storage_iterator<Rhs> &rhs) noexcept {
     return !(lhs > rhs);
 }
 
-template<typename Lhs, typename Rhs, std::size_t Size>
-[[nodiscard]] constexpr bool operator>=(const storage_iterator<Lhs, Size> &lhs, const storage_iterator<Rhs, Size> &rhs) noexcept {
+template<typename Lhs, typename Rhs>
+[[nodiscard]] constexpr bool operator>=(const storage_iterator<Lhs> &lhs, const storage_iterator<Rhs> &rhs) noexcept {
     return !(lhs < rhs);
 }
 
@@ -156,16 +153,17 @@ class extended_storage_iterator final {
 
 public:
     using iterator_type = It;
-    using difference_type = std::ptrdiff_t;
     using value_type = decltype(std::tuple_cat(std::make_tuple(*std::declval<It>()), std::forward_as_tuple(*std::declval<Other>()...)));
     using pointer = input_iterator_pointer<value_type>;
     using reference = value_type;
+    using difference_type = std::ptrdiff_t;
     using iterator_category = std::input_iterator_tag;
+    using iterator_concept = std::forward_iterator_tag;
 
     constexpr extended_storage_iterator()
         : it{} {}
 
-    constexpr extended_storage_iterator(It base, Other... other)
+    constexpr extended_storage_iterator(iterator_type base, Other... other)
         : it{base, other...} {}
 
     template<typename... Args, typename = std::enable_if_t<(!std::is_same_v<Other, Args> && ...) && (std::is_constructible_v<Other, Args> && ...)>>
@@ -211,14 +209,10 @@ template<typename... Lhs, typename... Rhs>
 }
 
 } // namespace internal
+/*! @endcond */
 
 /**
- * Internal details not to be documented.
- * @endcond
- */
-
-/**
- * @brief Basic storage implementation.
+ * @brief Storage implementation.
  *
  * Internal data structures arrange elements to maximize performance. There are
  * no guarantees that objects are returned in the insertion order when iterate
@@ -228,7 +222,7 @@ template<typename... Lhs, typename... Rhs>
  * Empty types aren't explicitly instantiated. Therefore, many of the functions
  * normally available for non-empty types will not be available for empty ones.
  *
- * @tparam Type Type of objects assigned to the entities.
+ * @tparam Type Element type.
  * @tparam Entity A valid entity type.
  * @tparam Allocator Type of allocator used to manage memory and elements.
  */
@@ -239,8 +233,7 @@ class basic_storage: public basic_sparse_set<Entity, typename std::allocator_tra
     using container_type = std::vector<typename alloc_traits::pointer, typename alloc_traits::template rebind_alloc<typename alloc_traits::pointer>>;
     using underlying_type = basic_sparse_set<Entity, typename alloc_traits::template rebind_alloc<Entity>>;
     using underlying_iterator = typename underlying_type::basic_iterator;
-
-    static constexpr bool is_pinned_type_v = !(std::is_move_constructible_v<Type> && std::is_move_assignable_v<Type>);
+    using traits_type = component_traits<Type>;
 
     [[nodiscard]] auto &element_at(const std::size_t pos) const {
         return payload[pos / traits_type::page_size][fast_mod(pos, traits_type::page_size)];
@@ -273,8 +266,8 @@ class basic_storage: public basic_sparse_set<Entity, typename std::allocator_tra
         const auto it = base_type::try_emplace(entt, force_back);
 
         ENTT_TRY {
-            auto elem = assure_at_least(static_cast<size_type>(it.index()));
-            entt::uninitialized_construct_using_allocator(to_address(elem), get_allocator(), std::forward<Args>(args)...);
+            auto *elem = to_address(assure_at_least(static_cast<size_type>(it.index())));
+            entt::uninitialized_construct_using_allocator(elem, get_allocator(), std::forward<Args>(args)...);
         }
         ENTT_CATCH {
             base_type::pop(it, it + 1u);
@@ -290,7 +283,7 @@ class basic_storage: public basic_sparse_set<Entity, typename std::allocator_tra
 
         for(auto pos = sz, length = base_type::size(); pos < length; ++pos) {
             if constexpr(traits_type::in_place_delete) {
-                if(base_type::at(pos) != tombstone) {
+                if(base_type::data()[pos] != tombstone) {
                     alloc_traits::destroy(allocator, std::addressof(element_at(pos)));
                 }
             } else {
@@ -306,11 +299,12 @@ class basic_storage: public basic_sparse_set<Entity, typename std::allocator_tra
     }
 
 private:
-    const void *get_at(const std::size_t pos) const final {
+    [[nodiscard]] const void *get_at(const std::size_t pos) const final {
         return std::addressof(element_at(pos));
     }
 
     void swap_or_move([[maybe_unused]] const std::size_t from, [[maybe_unused]] const std::size_t to) override {
+        static constexpr bool is_pinned_type_v = !(std::is_move_constructible_v<Type> && std::is_move_assignable_v<Type>);
         // use a runtime value to avoid compile-time suppression that drives the code coverage tool crazy
         ENTT_ASSERT((from + 1u) && !is_pinned_type_v, "Pinned type");
 
@@ -380,14 +374,14 @@ protected:
      * @return Iterator pointing to the emplaced element.
      */
     underlying_iterator try_emplace([[maybe_unused]] const Entity entt, [[maybe_unused]] const bool force_back, const void *value) override {
-        if(value) {
-            if constexpr(std::is_copy_constructible_v<value_type>) {
-                return emplace_element(entt, force_back, *static_cast<const value_type *>(value));
+        if(value != nullptr) {
+            if constexpr(std::is_copy_constructible_v<element_type>) {
+                return emplace_element(entt, force_back, *static_cast<const element_type *>(value));
             } else {
                 return base_type::end();
             }
         } else {
-            if constexpr(std::is_default_constructible_v<value_type>) {
+            if constexpr(std::is_default_constructible_v<element_type>) {
                 return emplace_element(entt, force_back);
             } else {
                 return base_type::end();
@@ -396,26 +390,26 @@ protected:
     }
 
 public:
+    /*! @brief Allocator type. */
+    using allocator_type = Allocator;
     /*! @brief Base type. */
     using base_type = underlying_type;
+    /*! @brief Element type. */
+    using element_type = Type;
     /*! @brief Type of the objects assigned to entities. */
-    using value_type = Type;
-    /*! @brief Component traits. */
-    using traits_type = component_traits<value_type>;
+    using value_type = element_type;
     /*! @brief Underlying entity identifier. */
     using entity_type = Entity;
     /*! @brief Unsigned integer type. */
     using size_type = std::size_t;
-    /*! @brief Allocator type. */
-    using allocator_type = Allocator;
     /*! @brief Pointer type to contained elements. */
     using pointer = typename container_type::pointer;
     /*! @brief Constant pointer type to contained elements. */
     using const_pointer = typename alloc_traits::template rebind_traits<typename alloc_traits::const_pointer>::const_pointer;
     /*! @brief Random access iterator type. */
-    using iterator = internal::storage_iterator<container_type, traits_type::page_size>;
+    using iterator = internal::storage_iterator<container_type>;
     /*! @brief Constant random access iterator type. */
-    using const_iterator = internal::storage_iterator<const container_type, traits_type::page_size>;
+    using const_iterator = internal::storage_iterator<const container_type>;
     /*! @brief Reverse iterator type. */
     using reverse_iterator = std::reverse_iterator<iterator>;
     /*! @brief Constant reverse iterator type. */
@@ -428,6 +422,8 @@ public:
     using reverse_iterable = iterable_adaptor<internal::extended_storage_iterator<typename base_type::reverse_iterator, reverse_iterator>>;
     /*! @brief Constant extended reverse iterable storage proxy. */
     using const_reverse_iterable = iterable_adaptor<internal::extended_storage_iterator<typename base_type::const_reverse_iterator, const_reverse_iterator>>;
+    /*! @brief Storage deletion policy. */
+    static constexpr deletion_policy storage_policy{traits_type::in_place_delete};
 
     /*! @brief Default constructor. */
     basic_storage()
@@ -438,8 +434,11 @@ public:
      * @param allocator The allocator to use.
      */
     explicit basic_storage(const allocator_type &allocator)
-        : base_type{type_id<value_type>(), deletion_policy{traits_type::in_place_delete}, allocator},
+        : base_type{type_id<element_type>(), storage_policy, allocator},
           payload{allocator} {}
+
+    /*! @brief Default copy constructor, deleted on purpose. */
+    basic_storage(const basic_storage &) = delete;
 
     /**
      * @brief Move constructor.
@@ -454,16 +453,24 @@ public:
      * @param other The instance to move from.
      * @param allocator The allocator to use.
      */
-    basic_storage(basic_storage &&other, const allocator_type &allocator) noexcept
+    basic_storage(basic_storage &&other, const allocator_type &allocator)
         : base_type{std::move(other), allocator},
           payload{std::move(other.payload), allocator} {
-        ENTT_ASSERT(alloc_traits::is_always_equal::value || payload.get_allocator() == other.payload.get_allocator(), "Copying a storage is not allowed");
+        // NOLINTNEXTLINE(bugprone-use-after-move)
+        ENTT_ASSERT(alloc_traits::is_always_equal::value || get_allocator() == other.get_allocator(), "Copying a storage is not allowed");
     }
 
     /*! @brief Default destructor. */
+    // NOLINTNEXTLINE(bugprone-exception-escape)
     ~basic_storage() override {
         shrink_to_size(0u);
     }
+
+    /**
+     * @brief Default copy assignment operator, deleted on purpose.
+     * @return This storage.
+     */
+    basic_storage &operator=(const basic_storage &) = delete;
 
     /**
      * @brief Move assignment operator.
@@ -471,11 +478,8 @@ public:
      * @return This storage.
      */
     basic_storage &operator=(basic_storage &&other) noexcept {
-        ENTT_ASSERT(alloc_traits::is_always_equal::value || payload.get_allocator() == other.payload.get_allocator(), "Copying a storage is not allowed");
-
-        shrink_to_size(0u);
-        base_type::operator=(std::move(other));
-        payload = std::move(other.payload);
+        ENTT_ASSERT(alloc_traits::is_always_equal::value || get_allocator() == other.get_allocator(), "Copying a storage is not allowed");
+        swap(other);
         return *this;
     }
 
@@ -483,10 +487,10 @@ public:
      * @brief Exchanges the contents with those of a given storage.
      * @param other Storage to exchange the content with.
      */
-    void swap(basic_storage &other) {
+    void swap(basic_storage &other) noexcept {
         using std::swap;
-        base_type::swap(other);
         swap(payload, other.payload);
+        base_type::swap(other);
     }
 
     /**
@@ -705,7 +709,7 @@ public:
      * @param first An iterator to the first element of the range of entities.
      * @param last An iterator past the last element of the range of entities.
      * @param value An instance of the object to construct.
-     * @return Iterator pointing to the last element inserted, if any.
+     * @return Iterator pointing to the first element inserted, if any.
      */
     template<typename It>
     iterator insert(It first, It last, const value_type &value = {}) {
@@ -742,17 +746,17 @@ public:
      * @brief Returns an iterable object to use to _visit_ a storage.
      *
      * The iterable object returns a tuple that contains the current entity and
-     * a reference to its component.
+     * a reference to its element.
      *
      * @return An iterable object to use to _visit_ the storage.
      */
     [[nodiscard]] iterable each() noexcept {
-        return {internal::extended_storage_iterator{base_type::begin(), begin()}, internal::extended_storage_iterator{base_type::end(), end()}};
+        return iterable{{base_type::begin(), begin()}, {base_type::end(), end()}};
     }
 
     /*! @copydoc each */
     [[nodiscard]] const_iterable each() const noexcept {
-        return {internal::extended_storage_iterator{base_type::cbegin(), cbegin()}, internal::extended_storage_iterator{base_type::cend(), cend()}};
+        return const_iterable{{base_type::cbegin(), cbegin()}, {base_type::cend(), cend()}};
     }
 
     /**
@@ -763,12 +767,12 @@ public:
      * @return A reverse iterable object to use to _visit_ the storage.
      */
     [[nodiscard]] reverse_iterable reach() noexcept {
-        return {internal::extended_storage_iterator{base_type::rbegin(), rbegin()}, internal::extended_storage_iterator{base_type::rend(), rend()}};
+        return reverse_iterable{{base_type::rbegin(), rbegin()}, {base_type::rend(), rend()}};
     }
 
     /*! @copydoc reach */
     [[nodiscard]] const_reverse_iterable reach() const noexcept {
-        return {internal::extended_storage_iterator{base_type::crbegin(), crbegin()}, internal::extended_storage_iterator{base_type::crend(), crend()}};
+        return const_reverse_iterable{{base_type::crbegin(), crbegin()}, {base_type::crend(), crend()}};
     }
 
 private:
@@ -781,20 +785,21 @@ class basic_storage<Type, Entity, Allocator, std::enable_if_t<component_traits<T
     : public basic_sparse_set<Entity, typename std::allocator_traits<Allocator>::template rebind_alloc<Entity>> {
     using alloc_traits = std::allocator_traits<Allocator>;
     static_assert(std::is_same_v<typename alloc_traits::value_type, Type>, "Invalid value type");
+    using traits_type = component_traits<Type>;
 
 public:
+    /*! @brief Allocator type. */
+    using allocator_type = Allocator;
     /*! @brief Base type. */
     using base_type = basic_sparse_set<Entity, typename alloc_traits::template rebind_alloc<Entity>>;
+    /*! @brief Element type. */
+    using element_type = Type;
     /*! @brief Type of the objects assigned to entities. */
-    using value_type = Type;
-    /*! @brief Component traits. */
-    using traits_type = component_traits<value_type>;
+    using value_type = void;
     /*! @brief Underlying entity identifier. */
     using entity_type = Entity;
     /*! @brief Unsigned integer type. */
     using size_type = std::size_t;
-    /*! @brief Allocator type. */
-    using allocator_type = Allocator;
     /*! @brief Extended iterable storage proxy. */
     using iterable = iterable_adaptor<internal::extended_storage_iterator<typename base_type::iterator>>;
     /*! @brief Constant extended iterable storage proxy. */
@@ -803,6 +808,8 @@ public:
     using reverse_iterable = iterable_adaptor<internal::extended_storage_iterator<typename base_type::reverse_iterator>>;
     /*! @brief Constant extended reverse iterable storage proxy. */
     using const_reverse_iterable = iterable_adaptor<internal::extended_storage_iterator<typename base_type::const_reverse_iterator>>;
+    /*! @brief Storage deletion policy. */
+    static constexpr deletion_policy storage_policy{traits_type::in_place_delete};
 
     /*! @brief Default constructor. */
     basic_storage()
@@ -813,7 +820,10 @@ public:
      * @param allocator The allocator to use.
      */
     explicit basic_storage(const allocator_type &allocator)
-        : base_type{type_id<value_type>(), deletion_policy{traits_type::in_place_delete}, allocator} {}
+        : base_type{type_id<element_type>(), storage_policy, allocator} {}
+
+    /*! @brief Default copy constructor, deleted on purpose. */
+    basic_storage(const basic_storage &) = delete;
 
     /**
      * @brief Move constructor.
@@ -826,8 +836,17 @@ public:
      * @param other The instance to move from.
      * @param allocator The allocator to use.
      */
-    basic_storage(basic_storage &&other, const allocator_type &allocator) noexcept
+    basic_storage(basic_storage &&other, const allocator_type &allocator)
         : base_type{std::move(other), allocator} {}
+
+    /*! @brief Default destructor. */
+    ~basic_storage() override = default;
+
+    /**
+     * @brief Default copy assignment operator, deleted on purpose.
+     * @return This storage.
+     */
+    basic_storage &operator=(const basic_storage &) = delete;
 
     /**
      * @brief Move assignment operator.
@@ -841,7 +860,12 @@ public:
      * @return The associated allocator.
      */
     [[nodiscard]] constexpr allocator_type get_allocator() const noexcept {
-        return allocator_type{base_type::get_allocator()};
+        // std::allocator<void> has no cross constructors (waiting for C++20)
+        if constexpr(std::is_void_v<element_type> && !std::is_constructible_v<allocator_type, typename base_type::allocator_type>) {
+            return allocator_type{};
+        } else {
+            return allocator_type{base_type::get_allocator()};
+        }
     }
 
     /**
@@ -854,21 +878,16 @@ public:
      * @param entt A valid identifier.
      */
     void get([[maybe_unused]] const entity_type entt) const noexcept {
-        ENTT_ASSERT(base_type::contains(entt), "Storage does not contain entity");
+        ENTT_ASSERT(base_type::contains(entt), "Invalid entity");
     }
 
     /**
      * @brief Returns an empty tuple.
-     *
-     * @warning
-     * Attempting to use an entity that doesn't belong to the storage results in
-     * undefined behavior.
-     *
      * @param entt A valid identifier.
      * @return Returns an empty tuple.
      */
     [[nodiscard]] std::tuple<> get_as_tuple([[maybe_unused]] const entity_type entt) const noexcept {
-        ENTT_ASSERT(base_type::contains(entt), "Storage does not contain entity");
+        ENTT_ASSERT(base_type::contains(entt), "Invalid entity");
         return std::tuple{};
     }
 
@@ -895,7 +914,7 @@ public:
      */
     template<typename... Func>
     void patch([[maybe_unused]] const entity_type entt, Func &&...func) {
-        ENTT_ASSERT(base_type::contains(entt), "Storage does not contain entity");
+        ENTT_ASSERT(base_type::contains(entt), "Invalid entity");
         (std::forward<Func>(func)(), ...);
     }
 
@@ -921,12 +940,12 @@ public:
      * @return An iterable object to use to _visit_ the storage.
      */
     [[nodiscard]] iterable each() noexcept {
-        return {internal::extended_storage_iterator{base_type::begin()}, internal::extended_storage_iterator{base_type::end()}};
+        return iterable{base_type::begin(), base_type::end()};
     }
 
     /*! @copydoc each */
     [[nodiscard]] const_iterable each() const noexcept {
-        return {internal::extended_storage_iterator{base_type::cbegin()}, internal::extended_storage_iterator{base_type::cend()}};
+        return const_iterable{base_type::cbegin(), base_type::cend()};
     }
 
     /**
@@ -937,12 +956,12 @@ public:
      * @return A reverse iterable object to use to _visit_ the storage.
      */
     [[nodiscard]] reverse_iterable reach() noexcept {
-        return {internal::extended_storage_iterator{base_type::rbegin()}, internal::extended_storage_iterator{base_type::rend()}};
+        return reverse_iterable{{base_type::rbegin()}, {base_type::rend()}};
     }
 
     /*! @copydoc reach */
     [[nodiscard]] const_reverse_iterable reach() const noexcept {
-        return {internal::extended_storage_iterator{base_type::crbegin()}, internal::extended_storage_iterator{base_type::crend()}};
+        return const_reverse_iterable{{base_type::crbegin()}, {base_type::crend()}};
     }
 };
 
@@ -956,42 +975,25 @@ class basic_storage<Entity, Entity, Allocator>
     : public basic_sparse_set<Entity, Allocator> {
     using alloc_traits = std::allocator_traits<Allocator>;
     static_assert(std::is_same_v<typename alloc_traits::value_type, Entity>, "Invalid value type");
-    using underlying_type = basic_sparse_set<Entity, typename alloc_traits::template rebind_alloc<Entity>>;
-    using underlying_iterator = typename underlying_type::basic_iterator;
-    using local_traits_type = entt_traits<Entity>;
+    using underlying_iterator = typename basic_sparse_set<Entity, Allocator>::basic_iterator;
+    using traits_type = entt_traits<Entity>;
 
-    auto entity_at(const std::size_t pos) const noexcept {
-        ENTT_ASSERT(pos < local_traits_type::to_entity(null), "Invalid element");
-        return local_traits_type::combine(static_cast<typename local_traits_type::entity_type>(pos), {});
-    }
+    auto next() noexcept {
+        entity_type entt = null;
 
-private:
-    void swap_or_move([[maybe_unused]] const std::size_t lhs, [[maybe_unused]] const std::size_t rhs) override {
-        ENTT_ASSERT(((lhs < length) + (rhs < length)) != 1u, "Cross swapping is not supported");
+        do {
+            ENTT_ASSERT(placeholder < traits_type::to_entity(null), "No more entities available");
+            entt = traits_type::combine(static_cast<typename traits_type::entity_type>(placeholder++), {});
+        } while(base_type::current(entt) != traits_type::to_version(tombstone) && entt != null);
+
+        return entt;
     }
 
 protected:
-    /**
-     * @brief Erases entities from a storage.
-     * @param first An iterator to the first element of the range of entities.
-     * @param last An iterator past the last element of the range of entities.
-     */
-    void pop(underlying_iterator first, underlying_iterator last) override {
-        for(; first != last; ++first) {
-            if(const auto pos = base_type::index(*first); pos < length) {
-                base_type::bump(local_traits_type::next(*first));
-
-                if(pos != --length) {
-                    base_type::swap_at(pos, length);
-                }
-            }
-        }
-    }
-
-    /*! @brief Erases all entities of a sparse set. */
+    /*! @brief Erases all entities of a storage. */
     void pop_all() override {
-        length = 0u;
         base_type::pop_all();
+        placeholder = {};
     }
 
     /**
@@ -1004,18 +1006,18 @@ protected:
     }
 
 public:
+    /*! @brief Allocator type. */
+    using allocator_type = Allocator;
     /*! @brief Base type. */
     using base_type = basic_sparse_set<Entity, Allocator>;
+    /*! @brief Element type. */
+    using element_type = Entity;
     /*! @brief Type of the objects assigned to entities. */
-    using value_type = Entity;
-    /*! @brief Component traits. */
-    using traits_type = component_traits<value_type>;
+    using value_type = void;
     /*! @brief Underlying entity identifier. */
     using entity_type = Entity;
     /*! @brief Unsigned integer type. */
     using size_type = std::size_t;
-    /*! @brief Allocator type. */
-    using allocator_type = Allocator;
     /*! @brief Extended iterable storage proxy. */
     using iterable = iterable_adaptor<internal::extended_storage_iterator<typename base_type::iterator>>;
     /*! @brief Constant extended iterable storage proxy. */
@@ -1024,6 +1026,8 @@ public:
     using reverse_iterable = iterable_adaptor<internal::extended_storage_iterator<typename base_type::reverse_iterator>>;
     /*! @brief Constant extended reverse iterable storage proxy. */
     using const_reverse_iterable = iterable_adaptor<internal::extended_storage_iterator<typename base_type::const_reverse_iterator>>;
+    /*! @brief Storage deletion policy. */
+    static constexpr deletion_policy storage_policy = deletion_policy::swap_only;
 
     /*! @brief Default constructor. */
     basic_storage()
@@ -1035,8 +1039,10 @@ public:
      * @param allocator The allocator to use.
      */
     explicit basic_storage(const allocator_type &allocator)
-        : base_type{type_id<value_type>(), deletion_policy::swap_and_pop, allocator},
-          length{} {}
+        : base_type{type_id<void>(), storage_policy, allocator} {}
+
+    /*! @brief Default copy constructor, deleted on purpose. */
+    basic_storage(const basic_storage &) = delete;
 
     /**
      * @brief Move constructor.
@@ -1044,16 +1050,25 @@ public:
      */
     basic_storage(basic_storage &&other) noexcept
         : base_type{std::move(other)},
-          length{std::exchange(other.length, size_type{})} {}
+          placeholder{other.placeholder} {}
 
     /**
      * @brief Allocator-extended move constructor.
      * @param other The instance to move from.
      * @param allocator The allocator to use.
      */
-    basic_storage(basic_storage &&other, const allocator_type &allocator) noexcept
+    basic_storage(basic_storage &&other, const allocator_type &allocator)
         : base_type{std::move(other), allocator},
-          length{std::exchange(other.length, size_type{})} {}
+          placeholder{other.placeholder} {}
+
+    /*! @brief Default destructor. */
+    ~basic_storage() override = default;
+
+    /**
+     * @brief Default copy assignment operator, deleted on purpose.
+     * @return This storage.
+     */
+    basic_storage &operator=(const basic_storage &) = delete;
 
     /**
      * @brief Move assignment operator.
@@ -1061,8 +1076,8 @@ public:
      * @return This storage.
      */
     basic_storage &operator=(basic_storage &&other) noexcept {
+        placeholder = other.placeholder;
         base_type::operator=(std::move(other));
-        length = std::exchange(other.length, size_type{});
         return *this;
     }
 
@@ -1076,32 +1091,17 @@ public:
      * @param entt A valid identifier.
      */
     void get([[maybe_unused]] const entity_type entt) const noexcept {
-        ENTT_ASSERT(base_type::index(entt) < length, "The requested entity is not a live one");
+        ENTT_ASSERT(base_type::index(entt) < base_type::free_list(), "The requested entity is not a live one");
     }
 
     /**
      * @brief Returns an empty tuple.
-     *
-     * @warning
-     * Attempting to use an entity that doesn't belong to the storage results in
-     * undefined behavior.
-     *
      * @param entt A valid identifier.
      * @return Returns an empty tuple.
      */
     [[nodiscard]] std::tuple<> get_as_tuple([[maybe_unused]] const entity_type entt) const noexcept {
-        ENTT_ASSERT(base_type::index(entt) < length, "The requested entity is not a live one");
+        ENTT_ASSERT(base_type::index(entt) < base_type::free_list(), "The requested entity is not a live one");
         return std::tuple{};
-    }
-
-    /**
-     * @brief Exchanges the contents with those of a given storage.
-     * @param other Storage to exchange the content with.
-     */
-    void swap(basic_storage &other) {
-        using std::swap;
-        base_type::swap(other);
-        swap(length, other.length);
     }
 
     /**
@@ -1109,11 +1109,9 @@ public:
      * @return A valid identifier.
      */
     entity_type emplace() {
-        if(length == base_type::size()) {
-            return *base_type::try_emplace(entity_at(length++), true);
-        }
-
-        return base_type::operator[](length++);
+        const auto len = base_type::free_list();
+        const auto entt = (len == base_type::size()) ? next() : base_type::data()[len];
+        return *base_type::try_emplace(entt, true);
     }
 
     /**
@@ -1126,25 +1124,13 @@ public:
      * @return A valid identifier.
      */
     entity_type emplace(const entity_type hint) {
-        if(hint == null || hint == tombstone) {
-            return emplace();
-        } else if(const auto curr = local_traits_type::construct(local_traits_type::to_entity(hint), base_type::current(hint)); curr == tombstone) {
-            const auto pos = static_cast<size_type>(local_traits_type::to_entity(hint));
-
-            while(!(pos < base_type::size())) {
-                base_type::try_emplace(entity_at(base_type::size()), true);
+        if(hint != null && hint != tombstone) {
+            if(const auto curr = traits_type::construct(traits_type::to_entity(hint), base_type::current(hint)); curr == tombstone || !(base_type::index(curr) < base_type::free_list())) {
+                return *base_type::try_emplace(hint, true);
             }
-
-            base_type::swap_at(pos, length++);
-        } else if(const auto idx = base_type::index(curr); idx < length) {
-            return emplace();
-        } else {
-            base_type::swap_at(idx, length++);
         }
 
-        base_type::bump(hint);
-
-        return hint;
+        return emplace();
     }
 
     /**
@@ -1155,7 +1141,7 @@ public:
      */
     template<typename... Func>
     void patch([[maybe_unused]] const entity_type entt, Func &&...func) {
-        ENTT_ASSERT(base_type::contains(entt), "Storage does not contain entity");
+        ENTT_ASSERT(base_type::index(entt) < base_type::free_list(), "The requested entity is not a live one");
         (std::forward<Func>(func)(), ...);
     }
 
@@ -1167,50 +1153,13 @@ public:
      */
     template<typename It>
     void insert(It first, It last) {
-        for(const auto sz = base_type::size(); first != last && length != sz; ++first, ++length) {
-            *first = base_type::operator[](length);
+        for(const auto sz = base_type::size(); first != last && base_type::free_list() != sz; ++first) {
+            *first = *base_type::try_emplace(base_type::data()[base_type::free_list()], true);
         }
 
         for(; first != last; ++first) {
-            *first = *base_type::try_emplace(entity_at(length++), true);
+            *first = *base_type::try_emplace(next(), true);
         }
-    }
-
-    /**
-     * @brief Makes all elements in a range contiguous.
-     * @tparam It Type of forward iterator.
-     * @param first An iterator to the first element of the range to pack.
-     * @param last An iterator past the last element of the range to pack.
-     * @return The number of elements within the newly created range.
-     */
-    template<typename It>
-    size_type pack(It first, It last) {
-        size_type len = length;
-
-        for(; first != last; ++first, --len) {
-            const auto pos = base_type::index(*first);
-            ENTT_ASSERT(pos < length, "Invalid element");
-            base_type::swap_at(pos, static_cast<size_type>(len - 1u));
-        }
-
-        return (length - len);
-    }
-
-    /**
-     * @brief Returns the number of elements considered still in use.
-     * @return The number of elements considered still in use.
-     */
-    [[nodiscard]] size_type in_use() const noexcept {
-        return length;
-    }
-
-    /**
-     * @brief Sets the number of elements considered still in use.
-     * @param len The number of elements considered still in use.
-     */
-    void in_use(const size_type len) noexcept {
-        ENTT_ASSERT(!(len > base_type::size()), "Invalid length");
-        length = len;
     }
 
     /**
@@ -1221,12 +1170,13 @@ public:
      * @return An iterable object to use to _visit_ the storage.
      */
     [[nodiscard]] iterable each() noexcept {
-        return {internal::extended_storage_iterator{base_type::end() - length}, internal::extended_storage_iterator{base_type::end()}};
+        return std::as_const(*this).each();
     }
 
     /*! @copydoc each */
     [[nodiscard]] const_iterable each() const noexcept {
-        return {internal::extended_storage_iterator{base_type::cend() - length}, internal::extended_storage_iterator{base_type::cend()}};
+        const auto it = base_type::cend();
+        return const_iterable{it - base_type::free_list(), it};
     }
 
     /**
@@ -1237,16 +1187,17 @@ public:
      * @return A reverse iterable object to use to _visit_ the storage.
      */
     [[nodiscard]] reverse_iterable reach() noexcept {
-        return {internal::extended_storage_iterator{base_type::rbegin()}, internal::extended_storage_iterator{base_type::rbegin() + length}};
+        return std::as_const(*this).reach();
     }
 
     /*! @copydoc reach */
     [[nodiscard]] const_reverse_iterable reach() const noexcept {
-        return {internal::extended_storage_iterator{base_type::crbegin()}, internal::extended_storage_iterator{base_type::crbegin() + length}};
+        const auto it = base_type::crbegin();
+        return const_reverse_iterable{it, it + base_type::free_list()};
     }
 
 private:
-    size_type length;
+    size_type placeholder{};
 };
 
 } // namespace entt
