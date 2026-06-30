@@ -6,9 +6,10 @@
 #include <utility>
 #include "../core/fwd.hpp"
 #include "../core/type_traits.hpp"
-#include "../signal/delegate.hpp"
+#include "component.hpp"
 #include "fwd.hpp"
 #include "group.hpp"
+#include "storage.hpp"
 #include "view.hpp"
 
 namespace entt {
@@ -20,8 +21,8 @@ namespace entt {
 template<typename Registry>
 class as_view {
     template<typename... Get, typename... Exclude>
-    auto dispatch(get_t<Get...>, exclude_t<Exclude...>) const {
-        return reg.template view<constness_as_t<typename Get::value_type, Get>...>(exclude_t<constness_as_t<typename Exclude::value_type, Exclude>...>{});
+    [[nodiscard]] auto dispatch(get_t<Get...>, exclude_t<Exclude...>) const {
+        return reg.template view<constness_as_t<typename Get::element_type, Get>...>(exclude_t<constness_as_t<typename Exclude::element_type, Exclude>...>{});
     }
 
 public:
@@ -59,11 +60,11 @@ private:
 template<typename Registry>
 class as_group {
     template<typename... Owned, typename... Get, typename... Exclude>
-    auto dispatch(owned_t<Owned...>, get_t<Get...>, exclude_t<Exclude...>) const {
+    [[nodiscard]] auto dispatch(owned_t<Owned...>, get_t<Get...>, exclude_t<Exclude...>) const {
         if constexpr(std::is_const_v<registry_type>) {
-            return reg.template group_if_exists<typename Owned::value_type...>(get_t<typename Get::value_type...>{}, exclude_t<typename Exclude::value_type...>{});
+            return reg.template group_if_exists<typename Owned::element_type...>(get_t<typename Get::element_type...>{}, exclude_t<typename Exclude::element_type...>{});
         } else {
-            return reg.template group<constness_as_t<typename Owned::value_type, Owned>...>(get_t<constness_as_t<typename Get::value_type, Get>...>{}, exclude_t<constness_as_t<typename Exclude::value_type, Exclude>...>{});
+            return reg.template group<constness_as_t<typename Owned::element_type, Owned>...>(get_t<constness_as_t<typename Get::element_type, Get>...>{}, exclude_t<constness_as_t<typename Exclude::element_type, Exclude>...>{});
         }
     }
 
@@ -98,43 +99,39 @@ private:
 
 /**
  * @brief Helper to create a listener that directly invokes a member function.
- * @tparam Member Member function to invoke on a component of the given type.
+ * @tparam Member Member function to invoke on an element of the given type.
  * @tparam Registry Basic registry type.
- * @param reg A registry that contains the given entity and its components.
- * @param entt Entity from which to get the component.
+ * @param reg A registry that contains the given entity and its elements.
+ * @param entt Entity from which to get the element.
  */
-template<auto Member, typename Registry = std::decay_t<nth_argument_t<0u, Member>>>
+template<auto Member, typename Registry = std::decay_t<nth_argument_t<0u, decltype(Member)>>>
 void invoke(Registry &reg, const typename Registry::entity_type entt) {
     static_assert(std::is_member_function_pointer_v<decltype(Member)>, "Invalid pointer to non-static member function");
-    delegate<void(Registry &, const typename Registry::entity_type)> func;
-    func.template connect<Member>(reg.template get<member_class_t<decltype(Member)>>(entt));
-    func(reg, entt);
+    (reg.template get<member_class_t<decltype(Member)>>(entt).*Member)(reg, entt);
 }
 
 /**
- * @brief Returns the entity associated with a given component.
+ * @brief Returns the entity associated with a given element.
  *
  * @warning
- * Currently, this function only works correctly with the default pool as it
- * makes assumptions about how the components are laid out.
+ * Currently, this function only works correctly with the default storage as it
+ * makes assumptions about how the elements are laid out.
  *
- * @tparam Registry Basic registry type.
- * @tparam Component Type of component.
- * @param reg A registry that contains the given entity and its components.
- * @param instance A valid component instance.
- * @return The entity associated with the given component.
+ * @tparam Args Storage type template parameters.
+ * @param storage A storage that contains the given element.
+ * @param instance A valid element instance.
+ * @return The entity associated with the given element.
  */
-template<typename Registry, typename Component>
-typename Registry::entity_type to_entity(const Registry &reg, const Component &instance) {
-    if(const auto *storage = reg.template storage<Component>(); storage) {
-        constexpr auto page_size = std::remove_const_t<std::remove_pointer_t<decltype(storage)>>::traits_type::page_size;
-        const typename Registry::common_type &base = *storage;
-        const auto *addr = std::addressof(instance);
+template<typename... Args>
+typename basic_storage<Args...>::entity_type to_entity(const basic_storage<Args...> &storage, const typename basic_storage<Args...>::value_type &instance) {
+    using traits_type = component_traits<typename basic_storage<Args...>::value_type>;
+    static_assert(traits_type::page_size != 0u, "Unexpected page size");
+    const typename basic_storage<Args...>::base_type &base = storage;
+    const auto *addr = std::addressof(instance);
 
-        for(auto it = base.rbegin(), last = base.rend(); it < last; it += page_size) {
-            if(const auto dist = (addr - std::addressof(storage->get(*it))); dist >= 0 && dist < static_cast<decltype(dist)>(page_size)) {
-                return *(it + dist);
-            }
+    for(auto it = base.rbegin(), last = base.rend(); it < last; it += traits_type::page_size) {
+        if(const auto dist = (addr - std::addressof(storage.get(*it))); dist >= 0 && dist < static_cast<decltype(dist)>(traits_type::page_size)) {
+            return *(it + dist);
         }
     }
 

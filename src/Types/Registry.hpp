@@ -146,7 +146,12 @@ class registry : public internal::BackingRegistry {
   template <typename Type, typename It>
   void insert(It first, It last, const Type& value = {}) {
     createMetaFunctions<Type>();
-    entt::registry::insert<Type>(std::move(first), std::move(last), value);
+    if constexpr (std::is_empty_v<Type>) {
+      entt::registry::insert<Type>(std::move(first), std::move(last));
+    }
+    else {
+      entt::registry::insert<Type>(std::move(first), std::move(last), value);
+    }
   }
 
   template <

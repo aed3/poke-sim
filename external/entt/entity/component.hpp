@@ -8,11 +8,7 @@
 
 namespace entt {
 
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
+/*! @cond TURN_OFF_DOXYGEN */
 namespace internal {
 
 template<typename Type, typename = void>
@@ -32,15 +28,11 @@ template<>
 struct page_size<void>: std::integral_constant<std::size_t, 0u> {};
 
 template<typename Type>
-struct page_size<Type, std::enable_if_t<std::is_convertible_v<decltype(Type::page_size), std::size_t>>>
+struct page_size<Type, std::void_t<decltype(Type::page_size)>>
     : std::integral_constant<std::size_t, Type::page_size> {};
 
 } // namespace internal
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
+/*! @endcond */
 
 /**
  * @brief Common way to access various properties of components.

@@ -123,6 +123,7 @@ struct ChooseCalcDamageOptions : BenchmarkInputHolder {
 
 struct ChooseAnalyzeEffectOptions : BenchmarkInputHolder {
   inline static const std::vector<std::string> TAGS = {};
+  static constexpr types::entityIndex MAX_INPUTS = 1U << 15U;
   static void run(types::rngState&, Simulation& simulation) {
     simulation.analyzeEffectOptions.setCalculateUpToFoeHp(true)
       .setNoKoChanceCalculation(false)

@@ -50,7 +50,7 @@ struct EntityFilter {
       !(sizeof...(ExcludeComponents) == 0U && std::conjunction_v<std::is_empty<IncludeComponents>...>),
       "If there are no excludes and all included components are tags, use those tags as the SelectionTags directly.");
     auto view = simulation->registry.view<IncludeComponents...>(exclude);
-    simulation->registry.insert<SelectionTag, OtherSelectionTags...>(view.begin(), view.end());
+    simulation->registry.insert<SelectionTag>(view.begin(), view.end());
   }
 
   bool hasNoneSelected() {

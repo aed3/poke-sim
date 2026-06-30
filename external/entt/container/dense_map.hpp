@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 #include "../config/config.h"
+#include "../core/bit.hpp"
 #include "../core/compressed_pair.hpp"
 #include "../core/iterator.hpp"
 #include "../core/memory.hpp"
@@ -20,11 +21,7 @@
 
 namespace entt {
 
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
+/*! @cond TURN_OFF_DOXYGEN */
 namespace internal {
 
 template<typename Key, typename Type>
@@ -69,6 +66,7 @@ public:
     using reference = value_type;
     using difference_type = std::ptrdiff_t;
     using iterator_category = std::input_iterator_tag;
+    using iterator_concept = std::random_access_iterator_tag;
 
     constexpr dense_map_iterator() noexcept
         : it{} {}
@@ -125,7 +123,7 @@ public:
     }
 
     [[nodiscard]] constexpr reference operator*() const noexcept {
-        return {it->element.first, it->element.second};
+        return operator[](0);
     }
 
     template<typename Lhs, typename Rhs>
@@ -190,6 +188,7 @@ public:
     using reference = value_type;
     using difference_type = std::ptrdiff_t;
     using iterator_category = std::input_iterator_tag;
+    using iterator_concept = std::forward_iterator_tag;
 
     constexpr dense_map_local_iterator() noexcept
         : it{},
@@ -241,11 +240,7 @@ template<typename Lhs, typename Rhs>
 }
 
 } // namespace internal
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
+/*! @endcond */
 
 /**
  * @brief Associative container for key-value pairs with unique keys.
@@ -273,6 +268,7 @@ class dense_map {
 
     template<typename Other>
     [[nodiscard]] std::size_t key_to_bucket(const Other &key) const noexcept {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
         return fast_mod(static_cast<size_type>(sparse.second()(key)), bucket_count());
     }
 
@@ -331,7 +327,7 @@ class dense_map {
 
     void move_and_pop(const std::size_t pos) {
         if(const auto last = size() - 1u; pos != last) {
-            size_type *curr = sparse.first().data() + key_to_bucket(packed.first().back().element.first);
+            size_type *curr = &sparse.first()[key_to_bucket(packed.first().back().element.first)];
             packed.first()[pos] = std::move(packed.first().back());
             for(; *curr != last; curr = &packed.first()[*curr].next) {}
             *curr = pos;
@@ -347,6 +343,8 @@ class dense_map {
     }
 
 public:
+    /*! @brief Allocator type. */
+    using allocator_type = Allocator;
     /*! @brief Key type of the container. */
     using key_type = Key;
     /*! @brief Mapped type of the container. */
@@ -359,8 +357,6 @@ public:
     using hasher = Hash;
     /*! @brief Type of function to use to compare the keys for equality. */
     using key_equal = KeyEqual;
-    /*! @brief Allocator type. */
-    using allocator_type = Allocator;
     /*! @brief Input iterator type. */
     using iterator = internal::dense_map_iterator<typename packed_container_type::iterator>;
     /*! @brief Constant input iterator type. */
@@ -410,8 +406,7 @@ public:
      */
     explicit dense_map(const size_type cnt, const hasher &hash = hasher{}, const key_equal &equal = key_equal{}, const allocator_type &allocator = allocator_type{})
         : sparse{allocator, hash},
-          packed{allocator, equal},
-          threshold{default_threshold} {
+          packed{allocator, equal} {
         rehash(cnt);
     }
 
@@ -429,7 +424,7 @@ public:
           threshold{other.threshold} {}
 
     /*! @brief Default move constructor. */
-    dense_map(dense_map &&) noexcept(std::is_nothrow_move_constructible_v<compressed_pair<sparse_container_type, hasher>> &&std::is_nothrow_move_constructible_v<compressed_pair<packed_container_type, key_equal>>) = default;
+    dense_map(dense_map &&) noexcept = default;
 
     /**
      * @brief Allocator-extended move constructor.
@@ -441,6 +436,9 @@ public:
           packed{std::piecewise_construct, std::forward_as_tuple(std::move(other.packed.first()), allocator), std::forward_as_tuple(std::move(other.packed.second()))},
           threshold{other.threshold} {}
 
+    /*! @brief Default destructor. */
+    ~dense_map() = default;
+
     /**
      * @brief Default copy assignment operator.
      * @return This container.
@@ -451,7 +449,7 @@ public:
      * @brief Default move assignment operator.
      * @return This container.
      */
-    dense_map &operator=(dense_map &&) noexcept(std::is_nothrow_move_assignable_v<compressed_pair<sparse_container_type, hasher>> &&std::is_nothrow_move_assignable_v<compressed_pair<packed_container_type, key_equal>>) = default;
+    dense_map &operator=(dense_map &&) noexcept = default;
 
     /**
      * @brief Returns the associated allocator.
@@ -683,7 +681,7 @@ public:
      * @return Number of elements removed (either 0 or 1).
      */
     size_type erase(const key_type &key) {
-        for(size_type *curr = sparse.first().data() + key_to_bucket(key); *curr != (std::numeric_limits<size_type>::max)(); curr = &packed.first()[*curr].next) {
+        for(size_type *curr = &sparse.first()[key_to_bucket(key)]; *curr != (std::numeric_limits<size_type>::max)(); curr = &packed.first()[*curr].next) {
             if(packed.second()(packed.first()[*curr].element.first, key)) {
                 const auto index = *curr;
                 *curr = packed.first()[*curr].next;
@@ -699,7 +697,7 @@ public:
      * @brief Exchanges the contents with those of a given container.
      * @param other Container to exchange the content with.
      */
-    void swap(dense_map &other) {
+    void swap(dense_map &other) noexcept {
         using std::swap;
         swap(sparse, other.sparse);
         swap(packed, other.packed);
@@ -989,7 +987,7 @@ public:
             sparse.first().resize(sz);
 
             for(auto &&elem: sparse.first()) {
-                elem = std::numeric_limits<size_type>::max();
+                elem = (std::numeric_limits<size_type>::max)();
             }
 
             for(size_type pos{}, last = size(); pos < last; ++pos) {
@@ -1028,16 +1026,12 @@ public:
 private:
     compressed_pair<sparse_container_type, hasher> sparse;
     compressed_pair<packed_container_type, key_equal> packed;
-    float threshold;
+    float threshold{default_threshold};
 };
 
 } // namespace entt
 
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
+/*! @cond TURN_OFF_DOXYGEN */
 namespace std {
 
 template<typename Key, typename Value, typename Allocator>
@@ -1045,10 +1039,6 @@ struct uses_allocator<entt::internal::dense_map_node<Key, Value>, Allocator>
     : std::true_type {};
 
 } // namespace std
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
+/*! @endcond */
 
 #endif

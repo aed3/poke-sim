@@ -18,7 +18,7 @@ TEST_CASE("Battle State: Single Battle", "[Simulation][Setup]") {
   const types::registry& registry = simulation.registry;
   auto battles = registry.view<tags::Battle>();
   REQUIRE(battles.size() == 1U);
-  types::entity battleEntity = battles[0];
+  types::entity battleEntity = battles.front();
 
   auto [p1SideEntity, p2SideEntity] = registry.get<Sides>(battleEntity).val;
 
@@ -40,7 +40,7 @@ TEST_CASE("Battle State: Double Battle", "[Simulation][Setup]") {
   const types::registry& registry = simulation.registry;
   auto battles = registry.view<tags::Battle>();
   REQUIRE(battles.size() == 1U);
-  types::entity battleEntity = battles[0];
+  types::entity battleEntity = battles.front();
 
   auto [p1SideEntity, p2SideEntity] = registry.get<Sides>(battleEntity).val;
 
@@ -104,7 +104,7 @@ TEST_CASE("Clone Battles", "[Simulation][Setup]") {
   }
   existingEntities.reserve(existingEntities.size() * (cloneCount + 1U));
 
-  types::handle baseHandle(registry, registry.view<tags::Battle>()[0]);
+  types::handle baseHandle(registry, registry.view<tags::Battle>().front());
   baseHandle.emplace<tags::CloneFrom>();
 
   clone(registry, cloneCount);

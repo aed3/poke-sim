@@ -12,18 +12,14 @@
 #include <utility>
 #include <vector>
 #include "../config/config.h"
+#include "../core/bit.hpp"
 #include "../core/compressed_pair.hpp"
-#include "../core/memory.hpp"
 #include "../core/type_traits.hpp"
 #include "fwd.hpp"
 
 namespace entt {
 
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
+/*! @cond TURN_OFF_DOXYGEN */
 namespace internal {
 
 template<typename It>
@@ -89,11 +85,11 @@ public:
     }
 
     [[nodiscard]] constexpr pointer operator->() const noexcept {
-        return std::addressof(it->second);
+        return std::addressof(operator[](0));
     }
 
     [[nodiscard]] constexpr reference operator*() const noexcept {
-        return *operator->();
+        return operator[](0);
     }
 
     template<typename Lhs, typename Rhs>
@@ -206,11 +202,7 @@ template<typename Lhs, typename Rhs>
 }
 
 } // namespace internal
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
+/*! @endcond */
 
 /**
  * @brief Associative container for unique objects of a given type.
@@ -279,7 +271,7 @@ class dense_set {
 
     void move_and_pop(const std::size_t pos) {
         if(const auto last = size() - 1u; pos != last) {
-            size_type *curr = sparse.first().data() + value_to_bucket(packed.first().back().second);
+            size_type *curr = &sparse.first()[value_to_bucket(packed.first().back().second)];
             packed.first()[pos] = std::move(packed.first().back());
             for(; *curr != last; curr = &packed.first()[*curr].first) {}
             *curr = pos;
@@ -295,6 +287,8 @@ class dense_set {
     }
 
 public:
+    /*! @brief Allocator type. */
+    using allocator_type = Allocator;
     /*! @brief Key type of the container. */
     using key_type = Type;
     /*! @brief Value type of the container. */
@@ -305,12 +299,14 @@ public:
     using hasher = Hash;
     /*! @brief Type of function to use to compare the elements for equality. */
     using key_equal = KeyEqual;
-    /*! @brief Allocator type. */
-    using allocator_type = Allocator;
     /*! @brief Random access iterator type. */
     using iterator = internal::dense_set_iterator<typename packed_container_type::iterator>;
     /*! @brief Constant random access iterator type. */
     using const_iterator = internal::dense_set_iterator<typename packed_container_type::const_iterator>;
+    /*! @brief Reverse iterator type. */
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    /*! @brief Constant reverse iterator type. */
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
     /*! @brief Forward iterator type. */
     using local_iterator = internal::dense_set_local_iterator<typename packed_container_type::iterator>;
     /*! @brief Constant forward iterator type. */
@@ -356,8 +352,7 @@ public:
      */
     explicit dense_set(const size_type cnt, const hasher &hash = hasher{}, const key_equal &equal = key_equal{}, const allocator_type &allocator = allocator_type{})
         : sparse{allocator, hash},
-          packed{allocator, equal},
-          threshold{default_threshold} {
+          packed{allocator, equal} {
         rehash(cnt);
     }
 
@@ -375,7 +370,7 @@ public:
           threshold{other.threshold} {}
 
     /*! @brief Default move constructor. */
-    dense_set(dense_set &&) noexcept(std::is_nothrow_move_constructible_v<compressed_pair<sparse_container_type, hasher>> &&std::is_nothrow_move_constructible_v<compressed_pair<packed_container_type, key_equal>>) = default;
+    dense_set(dense_set &&) noexcept = default;
 
     /**
      * @brief Allocator-extended move constructor.
@@ -387,6 +382,9 @@ public:
           packed{std::piecewise_construct, std::forward_as_tuple(std::move(other.packed.first()), allocator), std::forward_as_tuple(std::move(other.packed.second()))},
           threshold{other.threshold} {}
 
+    /*! @brief Default destructor. */
+    ~dense_set() = default;
+
     /**
      * @brief Default copy assignment operator.
      * @return This container.
@@ -397,7 +395,7 @@ public:
      * @brief Default move assignment operator.
      * @return This container.
      */
-    dense_set &operator=(dense_set &&) noexcept(std::is_nothrow_move_assignable_v<compressed_pair<sparse_container_type, hasher>> &&std::is_nothrow_move_assignable_v<compressed_pair<packed_container_type, key_equal>>) = default;
+    dense_set &operator=(dense_set &&) noexcept = default;
 
     /**
      * @brief Returns the associated allocator.
@@ -445,6 +443,46 @@ public:
     /*! @copydoc end */
     [[nodiscard]] iterator end() noexcept {
         return packed.first().end();
+    }
+
+    /**
+     * @brief Returns a reverse iterator to the beginning.
+     *
+     * If the array is empty, the returned iterator will be equal to `rend()`.
+     *
+     * @return An iterator to the first instance of the reversed internal array.
+     */
+    [[nodiscard]] const_reverse_iterator crbegin() const noexcept {
+        return std::make_reverse_iterator(cend());
+    }
+
+    /*! @copydoc crbegin */
+    [[nodiscard]] const_reverse_iterator rbegin() const noexcept {
+        return crbegin();
+    }
+
+    /*! @copydoc rbegin */
+    [[nodiscard]] reverse_iterator rbegin() noexcept {
+        return std::make_reverse_iterator(end());
+    }
+
+    /**
+     * @brief Returns a reverse iterator to the end.
+     * @return An iterator to the element following the last instance of the
+     * reversed internal array.
+     */
+    [[nodiscard]] const_reverse_iterator crend() const noexcept {
+        return std::make_reverse_iterator(cbegin());
+    }
+
+    /*! @copydoc crend */
+    [[nodiscard]] const_reverse_iterator rend() const noexcept {
+        return crend();
+    }
+
+    /*! @copydoc rend */
+    [[nodiscard]] reverse_iterator rend() noexcept {
+        return std::make_reverse_iterator(begin());
     }
 
     /**
@@ -573,7 +611,7 @@ public:
      * @return Number of elements removed (either 0 or 1).
      */
     size_type erase(const value_type &value) {
-        for(size_type *curr = sparse.first().data() + value_to_bucket(value); *curr != (std::numeric_limits<size_type>::max)(); curr = &packed.first()[*curr].first) {
+        for(size_type *curr = &sparse.first()[value_to_bucket(value)]; *curr != (std::numeric_limits<size_type>::max)(); curr = &packed.first()[*curr].first) {
             if(packed.second()(packed.first()[*curr].second, value)) {
                 const auto index = *curr;
                 *curr = packed.first()[*curr].first;
@@ -589,7 +627,7 @@ public:
      * @brief Exchanges the contents with those of a given container.
      * @param other Container to exchange the content with.
      */
-    void swap(dense_set &other) {
+    void swap(dense_set &other) noexcept {
         using std::swap;
         swap(sparse, other.sparse);
         swap(packed, other.packed);
@@ -842,7 +880,7 @@ public:
             sparse.first().resize(sz);
 
             for(auto &&elem: sparse.first()) {
-                elem = std::numeric_limits<size_type>::max();
+                elem = (std::numeric_limits<size_type>::max)();
             }
 
             for(size_type pos{}, last = size(); pos < last; ++pos) {
@@ -881,7 +919,7 @@ public:
 private:
     compressed_pair<sparse_container_type, hasher> sparse;
     compressed_pair<packed_container_type, key_equal> packed;
-    float threshold;
+    float threshold{default_threshold};
 };
 
 } // namespace entt

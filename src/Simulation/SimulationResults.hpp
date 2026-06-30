@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Components/SimulationResults.hpp>
 #include <Types/Entity.hpp>
 
 namespace pokesim {
@@ -8,7 +9,6 @@ struct Damage;
 struct DamageRolls;
 
 namespace simulate_turn {
-struct TurnOutcomeBattles;
 struct Results {
   types::view<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
 
@@ -20,10 +20,6 @@ struct Results {
 }  // namespace simulate_turn
 
 namespace calc_damage {
-struct UsesUntilKo;
-struct AttackerHpRecovered;
-struct AttackerHpLost;
-
 struct Results {
   types::view<DamageRolls> damageRollResults() const;
   types::view<UsesUntilKo> usesUntilKoResults() const;
@@ -38,7 +34,6 @@ struct Results {
 }  // namespace calc_damage
 
 namespace analyze_effect {
-struct EffectMultiplier;
 using MultipliedDamageRolls = DamageRolls;
 using MultipliedUsesUntilKo = calc_damage::UsesUntilKo;
 

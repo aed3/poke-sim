@@ -182,7 +182,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     };
     simulation.createInitialStates({battleCreationInfo});
 
-    types::entity inputEntity = simulation.registry.view<analyze_effect::tags::Input>()[0];
+    types::entity inputEntity = simulation.registry.view<analyze_effect::tags::Input>().front();
     idealResults.emplace(
       inputEntity,
       Ideals{reconsiderActiveEffects ? p1FuryAttack : p1FuryAttackBurn, p1FuryAttackBurn});
@@ -198,7 +198,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     };
     simulation.createInitialStates({battleCreationInfo});
 
-    types::entity inputEntity = simulation.registry.view<analyze_effect::tags::Input>()[0];
+    types::entity inputEntity = simulation.registry.view<analyze_effect::tags::Input>().front();
     idealResults.emplace(inputEntity, Ideals{p1FuryAttack, p1FuryAttackBurn});
 
     auto results = simulation.analyzeEffect();
@@ -325,7 +325,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     };
     simulation.createInitialStates({battleCreationInfo});
 
-    types::entity inputEntity = simulation.registry.view<analyze_effect::tags::Input>()[0];
+    types::entity inputEntity = simulation.registry.view<analyze_effect::tags::Input>().front();
     idealResults.emplace(inputEntity, Ideals{p1FuryAttack, p1FuryAttackBurnPlus2Atk});
 
     auto results = simulation.analyzeEffect();

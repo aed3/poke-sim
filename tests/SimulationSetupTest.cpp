@@ -322,7 +322,7 @@ TEST_CASE("Simulation Setup: Ignored Pokemon Options", "[Simulation][Setup]") {
     pokedex.loadForBattleInfo(battleInfoList);
     simulation.createInitialStates(battleInfoList);
 
-    const Sides& sides = registry.get<Sides>(registry.view<Sides>()[0]);
+    const Sides& sides = registry.get<Sides>(registry.view<Sides>().front());
     const Team& p1Team = registry.get<Team>(sides.val.p1());
     const Team& p2Team = registry.get<Team>(sides.val.p2());
 
