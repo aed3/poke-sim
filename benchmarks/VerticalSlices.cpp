@@ -137,7 +137,7 @@ struct VerticalSlice {
   };
 
   struct AssignCalcDamageSingleBattleInputs : BenchmarkInputHolder {
-    inline static const std::vector<std::string> TAGS = {"CalcDamage", "VerticalSlice1"};
+    inline static const std::vector<std::string> TAGS = {"CalculateDamage", "VerticalSlice1"};
     static void run(types::rngState&, types::entityIndex inputCount, Simulation& simulation, Pokedex& pokedex) {
       static BattleCreationInfo battleCreationInfo = createSingleBattleTeam(pokedex);
       pokedex.loadForBattleInfo({battleCreationInfo});
