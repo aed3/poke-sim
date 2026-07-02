@@ -3,13 +3,11 @@
 #include <Config/Require.hpp>
 #include <Utilities/NumberToType.hpp>
 #include <cstdint>
-#include <entt/core/fwd.hpp>
 #include <initializer_list>
-#include <limits>
 #include <vector>
 
 namespace pokesim::internal {
-template <typename T, std::uint64_t N = std::numeric_limits<entt::id_type>::max()>
+template <typename T, std::uint64_t N>
 class maxSizedVector : public std::vector<T> {
   using base = std::vector<T>;
 
@@ -42,6 +40,11 @@ class maxSizedVector : public std::vector<T> {
   constexpr size_type max_size() const { return max(); }
 
   size_type size() const { return (size_type)base::size(); }
+
+  void resize(std::uint64_t newSize) {
+    checkSize(newSize);
+    base::resize(newSize);
+  }
 
   void reserve(std::uint64_t newSize) {
     checkSize(newSize);

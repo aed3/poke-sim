@@ -44,6 +44,7 @@
  * external/entt/meta/range.hpp
  * external/entt/meta/meta.hpp
  * external/entt/meta/resolve.hpp
+ * src/Types/Constants.hpp
  * src/Config/Config.hpp
  * src/Config/Require.hpp
  * src/Utilities/NumberToType.hpp
@@ -54,7 +55,6 @@
  * external/entt/meta/policy.hpp
  * external/entt/meta/utility.hpp
  * external/entt/meta/factory.hpp
- * src/Types/Constants.hpp
  * src/Utilities/FixedMemoryVector.hpp
  * src/Types/State.hpp
  * src/Utilities/AssertComponentsEqual.hpp
@@ -16272,6 +16272,231 @@ template<typename Type>
 
 //////////////////// END OF external/entt/meta/resolve.hpp /////////////////////
 
+/////////////////////// START OF src/Types/Constants.hpp ///////////////////////
+
+namespace pokesim {
+struct Constants {
+  static constexpr std::uint64_t MAX_ENTITIES = entt::entt_traits<entt::id_type>::entity_mask;
+
+  static constexpr std::uint8_t TYPES_PER_POKEMON = 2U;
+
+  static constexpr std::array<float, 7U> STAT_BOOST_STAGES{1.0F, 1.5F, 2.0F, 2.5F, 3.0F, 3.5F, 4.0F};
+
+  // The 35%-35%-15%-15% out of 100 for 2-3-4-5 hits added so each index is the sum of the chance of its hit count and
+  // the hit counts less than it so it works with the randomEventChances function
+  static constexpr std::array<std::uint8_t, 4U> PROGRESSIVE_MULTI_HIT_CHANCES{35U, 70U, 85U, 100U};
+
+  static constexpr std::uint8_t FIXED_POINT_SCALING_FACTOR = 12U;
+  static constexpr std::uint16_t FIXED_POINT_SCALE = 1U << FIXED_POINT_SCALING_FACTOR;
+  static constexpr std::uint16_t FIXED_POINT_HALF_SCALE = FIXED_POINT_SCALE / 2U;
+
+  static constexpr std::uint8_t SIDE_COUNT = 2U;
+
+  static constexpr std::uint8_t PP_USE_DEDUCTION = 1U;
+
+  struct PokemonLevel {
+    static constexpr std::uint8_t MAX = 100U;
+    static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 100U;
+  };
+
+  struct PokemonBaseStat {
+    static constexpr std::uint8_t MAX = 255U;
+    static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
+  };
+
+  struct PokemonHpStat {
+    static constexpr std::uint16_t MAX = 1428U;
+    static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
+  };
+
+  struct PokemonCurrentHpStat {
+    // TODO(aed3): Should this be doubled for dynamax or should that be a different value?
+    static constexpr std::uint16_t MAX = 1428U;
+    static constexpr std::uint16_t MIN = 0U;
+    static constexpr std::uint16_t DEFAULT = 0U;
+  };
+
+  struct PokemonStat {
+    static constexpr std::uint16_t MAX = 633U;
+    static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
+  };
+
+  struct PokemonEffectiveStat {
+    static constexpr std::uint16_t MAX = 65535U;
+    static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
+  };
+
+  struct PokemonEffectiveSpeStat {
+    static constexpr std::uint16_t MAX = 65535U;
+    // A Pokemon with a speed stat of 7 or less (i.e. level 1 Shuckle) that is paralyzed with -6 speed boosts can have
+    // no speed.
+    static constexpr std::uint16_t MIN = 0U;
+    static constexpr std::uint16_t DEFAULT = 1U;
+  };
+
+  struct PokemonEv {
+    static constexpr std::uint8_t MAX = 255U;
+    static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
+  };
+
+  struct PokemonIv {
+    static constexpr std::uint8_t MAX = 31U;
+    static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
+  };
+
+  struct PokemonStatBoost {
+    static constexpr std::int8_t MAX = 6;
+    static constexpr std::int8_t MIN = -6;
+    static constexpr std::int8_t DEFAULT = 0;
+  };
+
+  struct MoveMaxPp {
+    static constexpr std::uint8_t MAX = 64U;
+    static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
+  };
+
+  struct MovePp {
+    static constexpr std::uint8_t MAX = MoveMaxPp::MAX;
+    static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
+  };
+
+  struct MoveBasePower {
+    static constexpr std::uint8_t MAX = 255U;
+    static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
+  };
+
+  struct MovePower {
+    // Last Respects (5050) user with Supreme Overlord (1.4x), boosted by ally's Power Spot (1.3x) and Helping Hand
+    // (1.5x), holding a Spell Tag (1.2x)
+    static constexpr std::uint16_t MAX = 16544U;
+    static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
+  };
+
+  struct MoveBaseAccuracy {
+    static constexpr std::uint8_t MAX = 100U;
+    static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 100U;
+  };
+
+  struct MoveHits {
+    static constexpr std::uint8_t MAX = 10U;
+    static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
+  };
+
+  struct MoveBaseEffectChance {
+    static constexpr std::uint8_t MAX = 100U;
+    static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 100U;
+  };
+
+  struct MovePriority {
+    static constexpr std::int8_t MAX = 5;  // 8 is theoretically possible, but no existing move has more than 5
+    static constexpr std::int8_t MIN = -7;
+    static constexpr std::int8_t DEFAULT = 0;
+  };
+
+  struct CritBoost {
+    // 255 is theoretically possible, but the various effects that can increase crit chance can be added up to 7 at most
+    // as of now
+    static constexpr std::uint8_t MAX = 7U;
+    static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
+  };
+
+  struct Damage {
+    static constexpr std::uint16_t MAX = 65535U;
+    static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 1U;
+  };
+
+  struct DamageRollCount {
+    static constexpr std::uint8_t MAX = 16U;
+    static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 16U;
+  };
+
+  struct TypeEffectivenessShift {
+    static constexpr std::int8_t MAX = 3;
+    static constexpr std::int8_t MIN = -7;
+    static constexpr std::int8_t DEFAULT = 0;
+  };
+
+  struct TeamSize {
+    static constexpr std::uint8_t MAX = 6U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct ActivePokemonSlotsPerSide {
+    static constexpr std::uint8_t MAX = 2U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct ActivePokemon {
+    static constexpr std::uint8_t MAX = ActivePokemonSlotsPerSide::MAX * SIDE_COUNT;
+    static constexpr std::uint8_t MIN = 0U;
+  };
+
+  struct MoveSlots {
+    static constexpr std::uint8_t MAX = 4U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
+  struct Targets {
+    static constexpr std::uint8_t MAX = 3U;
+    static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
+  };
+
+  struct PercentChance {
+    static constexpr std::uint8_t MAX = 100U;
+    static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 100U;
+  };
+
+  struct Probability {
+    static constexpr float MAX = 1.0F;
+    static constexpr float MIN = 0.0F;
+    static constexpr float DEFAULT = 1.0F;
+  };
+
+  static constexpr auto ProbabilityToPercentChance = PercentChance::MAX / Probability::MAX;
+  static constexpr auto PercentChanceToProbability = Probability::MAX / PercentChance::MAX;
+
+  struct AnalyzeEffectMultiplier {
+    static constexpr float MAX = PokemonHpStat::MAX;
+    static constexpr float MIN = 0.0F;
+    static constexpr float DEFAULT = 1.0F;
+  };
+
+  struct ActionQueueLength {
+    // TODO(aed3): 64 is a guess, so find out what the actual number is
+    static constexpr std::uint8_t MAX = 64U;
+    static constexpr std::uint8_t MIN = 0U;
+  };
+
+  struct TurnCount {
+    // Technically 65535, but battles over 1000 turns aren't usually supported on Showdown
+    static constexpr std::uint16_t MAX = 1000U;
+    static constexpr std::uint16_t MIN = 0U;
+    static constexpr std::uint16_t DEFAULT = 0U;
+  };
+};
+}  // namespace pokesim
+
+//////////////////////// END OF src/Types/Constants.hpp ////////////////////////
+
 //////////////////////// START OF src/Config/Config.hpp ////////////////////////
 
 #if !defined(NDEBUG) || defined(POKESIM_ENABLE_TESTING)
@@ -16371,7 +16596,7 @@ using signedIntType = std::conditional_t<
 #include <initializer_list>
 
 namespace pokesim::internal {
-template <typename T, std::uint64_t N = std::numeric_limits<entt::id_type>::max()>
+template <typename T, std::uint64_t N>
 class maxSizedVector : public std::vector<T> {
   using base = std::vector<T>;
 
@@ -16404,6 +16629,11 @@ class maxSizedVector : public std::vector<T> {
   constexpr size_type max_size() const { return max(); }
 
   size_type size() const { return (size_type)base::size(); }
+
+  void resize(std::uint64_t newSize) {
+    checkSize(newSize);
+    base::resize(newSize);
+  }
 
   void reserve(std::uint64_t newSize) {
     checkSize(newSize);
@@ -16447,7 +16677,7 @@ template <typename T, typename... Other>
 using view = entt::view<entt::get_t<const T, const Other...>>;
 
 using entity = entt::entity;
-using entityVector = pokesim::internal::maxSizedVector<entity>;
+using entityVector = pokesim::internal::maxSizedVector<entity, Constants::MAX_ENTITIES>;
 
 using ClonedEntityMap = entt::dense_map<entity, entityVector>;
 }  // namespace pokesim::types
@@ -17726,229 +17956,6 @@ inline void meta_reset() noexcept {
 #endif
 
 //////////////////// END OF external/entt/meta/factory.hpp /////////////////////
-
-/////////////////////// START OF src/Types/Constants.hpp ///////////////////////
-
-namespace pokesim {
-struct Constants {
-  static constexpr std::uint8_t TYPES_PER_POKEMON = 2U;
-
-  static constexpr std::array<float, 7U> STAT_BOOST_STAGES{1.0F, 1.5F, 2.0F, 2.5F, 3.0F, 3.5F, 4.0F};
-
-  // The 35%-35%-15%-15% out of 100 for 2-3-4-5 hits added so each index is the sum of the chance of its hit count and
-  // the hit counts less than it so it works with the randomEventChances function
-  static constexpr std::array<std::uint8_t, 4U> PROGRESSIVE_MULTI_HIT_CHANCES{35U, 70U, 85U, 100U};
-
-  static constexpr std::uint8_t FIXED_POINT_SCALING_FACTOR = 12U;
-  static constexpr std::uint16_t FIXED_POINT_SCALE = 1U << FIXED_POINT_SCALING_FACTOR;
-  static constexpr std::uint16_t FIXED_POINT_HALF_SCALE = FIXED_POINT_SCALE / 2U;
-
-  static constexpr std::uint8_t SIDE_COUNT = 2U;
-
-  static constexpr std::uint8_t PP_USE_DEDUCTION = 1U;
-
-  struct PokemonLevel {
-    static constexpr std::uint8_t MAX = 100U;
-    static constexpr std::uint8_t MIN = 1U;
-    static constexpr std::uint8_t DEFAULT = 100U;
-  };
-
-  struct PokemonBaseStat {
-    static constexpr std::uint8_t MAX = 255U;
-    static constexpr std::uint8_t MIN = 1U;
-    static constexpr std::uint8_t DEFAULT = 1U;
-  };
-
-  struct PokemonHpStat {
-    static constexpr std::uint16_t MAX = 1428U;
-    static constexpr std::uint16_t MIN = 1U;
-    static constexpr std::uint16_t DEFAULT = 1U;
-  };
-
-  struct PokemonCurrentHpStat {
-    // TODO(aed3): Should this be doubled for dynamax or should that be a different value?
-    static constexpr std::uint16_t MAX = 1428U;
-    static constexpr std::uint16_t MIN = 0U;
-    static constexpr std::uint16_t DEFAULT = 0U;
-  };
-
-  struct PokemonStat {
-    static constexpr std::uint16_t MAX = 633U;
-    static constexpr std::uint16_t MIN = 1U;
-    static constexpr std::uint16_t DEFAULT = 1U;
-  };
-
-  struct PokemonEffectiveStat {
-    static constexpr std::uint16_t MAX = 65535U;
-    static constexpr std::uint16_t MIN = 1U;
-    static constexpr std::uint16_t DEFAULT = 1U;
-  };
-
-  struct PokemonEffectiveSpeStat {
-    static constexpr std::uint16_t MAX = 65535U;
-    // A Pokemon with a speed stat of 7 or less (i.e. level 1 Shuckle) that is paralyzed with -6 speed boosts can have
-    // no speed.
-    static constexpr std::uint16_t MIN = 0U;
-    static constexpr std::uint16_t DEFAULT = 1U;
-  };
-
-  struct PokemonEv {
-    static constexpr std::uint8_t MAX = 255U;
-    static constexpr std::uint8_t MIN = 0U;
-    static constexpr std::uint8_t DEFAULT = 0U;
-  };
-
-  struct PokemonIv {
-    static constexpr std::uint8_t MAX = 31U;
-    static constexpr std::uint8_t MIN = 0U;
-    static constexpr std::uint8_t DEFAULT = 0U;
-  };
-
-  struct PokemonStatBoost {
-    static constexpr std::int8_t MAX = 6;
-    static constexpr std::int8_t MIN = -6;
-    static constexpr std::int8_t DEFAULT = 0;
-  };
-
-  struct MoveMaxPp {
-    static constexpr std::uint8_t MAX = 64U;
-    static constexpr std::uint8_t MIN = 1U;
-    static constexpr std::uint8_t DEFAULT = 1U;
-  };
-
-  struct MovePp {
-    static constexpr std::uint8_t MAX = MoveMaxPp::MAX;
-    static constexpr std::uint8_t MIN = 0U;
-    static constexpr std::uint8_t DEFAULT = 0U;
-  };
-
-  struct MoveBasePower {
-    static constexpr std::uint8_t MAX = 255U;
-    static constexpr std::uint8_t MIN = 1U;
-    static constexpr std::uint8_t DEFAULT = 1U;
-  };
-
-  struct MovePower {
-    // Last Respects (5050) user with Supreme Overlord (1.4x), boosted by ally's Power Spot (1.3x) and Helping Hand
-    // (1.5x), holding a Spell Tag (1.2x)
-    static constexpr std::uint16_t MAX = 16544U;
-    static constexpr std::uint16_t MIN = 1U;
-    static constexpr std::uint16_t DEFAULT = 1U;
-  };
-
-  struct MoveBaseAccuracy {
-    static constexpr std::uint8_t MAX = 100U;
-    static constexpr std::uint8_t MIN = 1U;
-    static constexpr std::uint8_t DEFAULT = 100U;
-  };
-
-  struct MoveHits {
-    static constexpr std::uint8_t MAX = 10U;
-    static constexpr std::uint8_t MIN = 1U;
-    static constexpr std::uint8_t DEFAULT = 1U;
-  };
-
-  struct MoveBaseEffectChance {
-    static constexpr std::uint8_t MAX = 100U;
-    static constexpr std::uint8_t MIN = 1U;
-    static constexpr std::uint8_t DEFAULT = 100U;
-  };
-
-  struct MovePriority {
-    static constexpr std::int8_t MAX = 5;  // 8 is theoretically possible, but no existing move has more than 5
-    static constexpr std::int8_t MIN = -7;
-    static constexpr std::int8_t DEFAULT = 0;
-  };
-
-  struct CritBoost {
-    // 255 is theoretically possible, but the various effects that can increase crit chance can be added up to 7 at most
-    // as of now
-    static constexpr std::uint8_t MAX = 7U;
-    static constexpr std::uint8_t MIN = 0U;
-    static constexpr std::uint8_t DEFAULT = 0U;
-  };
-
-  struct Damage {
-    static constexpr std::uint16_t MAX = 65535U;
-    static constexpr std::uint16_t MIN = 1U;
-    static constexpr std::uint16_t DEFAULT = 1U;
-  };
-
-  struct DamageRollCount {
-    static constexpr std::uint8_t MAX = 16U;
-    static constexpr std::uint8_t MIN = 1U;
-    static constexpr std::uint8_t DEFAULT = 16U;
-  };
-
-  struct TypeEffectivenessShift {
-    static constexpr std::int8_t MAX = 3;
-    static constexpr std::int8_t MIN = -7;
-    static constexpr std::int8_t DEFAULT = 0;
-  };
-
-  struct TeamSize {
-    static constexpr std::uint8_t MAX = 6U;
-    static constexpr std::uint8_t MIN = 1U;
-  };
-
-  struct ActivePokemonSlotsPerSide {
-    static constexpr std::uint8_t MAX = 2U;
-    static constexpr std::uint8_t MIN = 1U;
-  };
-
-  struct ActivePokemon {
-    static constexpr std::uint8_t MAX = ActivePokemonSlotsPerSide::MAX * SIDE_COUNT;
-    static constexpr std::uint8_t MIN = 0U;
-  };
-
-  struct MoveSlots {
-    static constexpr std::uint8_t MAX = 4U;
-    static constexpr std::uint8_t MIN = 1U;
-  };
-
-  struct Targets {
-    static constexpr std::uint8_t MAX = 3U;
-    static constexpr std::uint8_t MIN = 1U;
-    static constexpr std::uint8_t DEFAULT = 1U;
-  };
-
-  struct PercentChance {
-    static constexpr std::uint8_t MAX = 100U;
-    static constexpr std::uint8_t MIN = 0U;
-    static constexpr std::uint8_t DEFAULT = 100U;
-  };
-
-  struct Probability {
-    static constexpr float MAX = 1.0F;
-    static constexpr float MIN = 0.0F;
-    static constexpr float DEFAULT = 1.0F;
-  };
-
-  static constexpr auto ProbabilityToPercentChance = PercentChance::MAX / Probability::MAX;
-  static constexpr auto PercentChanceToProbability = Probability::MAX / PercentChance::MAX;
-
-  struct AnalyzeEffectMultiplier {
-    static constexpr float MAX = PokemonHpStat::MAX;
-    static constexpr float MIN = 0.0F;
-    static constexpr float DEFAULT = 1.0F;
-  };
-
-  struct ActionQueueLength {
-    // TODO(aed3): 64 is a guess, so find out what the actual number is
-    static constexpr std::uint8_t MAX = 64U;
-    static constexpr std::uint8_t MIN = 0U;
-  };
-
-  struct TurnCount {
-    // Technically 65535, but battles over 1000 turns aren't usually supported on Showdown
-    static constexpr std::uint16_t MAX = 1000U;
-    static constexpr std::uint16_t MIN = 0U;
-    static constexpr std::uint16_t DEFAULT = 0U;
-  };
-};
-}  // namespace pokesim
-
-//////////////////////// END OF src/Types/Constants.hpp ////////////////////////
 
 ///////////////// START OF src/Utilities/FixedMemoryVector.hpp /////////////////
 
@@ -19247,7 +19254,7 @@ struct EffectMove {
 };
 
 struct GroupedInputs {
-  internal::maxSizedVector<types::entity> val{};
+  types::entityVector val{};
 };
 
 struct Inputs {
@@ -23266,6 +23273,7 @@ class Simulation {
       registry,
       passedInArgs...);
   }
+
   template <typename Type, typename... ViewComponents, typename... Args>
   void addToEntities(const Args&... args) {
     static_assert(
@@ -23868,7 +23876,7 @@ struct SimulationSetupChecks {
       : registry(&simulation->registry), battleInfoList(&_battleInfoList), pokedex(&simulation->pokedex()) {}
 
   void checkOutputs() const {
-    POKESIM_REQUIRE_NM(battleInfoList->size() <= internal::maxSizedVector<BattleCreationInfo>::max());
+    POKESIM_REQUIRE_NM(battleInfoList->size() <= Constants::MAX_ENTITIES);
     for (const auto& battleInfo : *battleInfoList) {
       POKESIM_REQUIRE_NM(createdBattles.contains(&battleInfo));
       const types::entityVector& battleEntities = createdBattles.at(&battleInfo);
@@ -25023,20 +25031,24 @@ struct EntityFilter {
   template <auto Function, typename...>
   struct Filter;
 
-  template <auto Function, typename ExcludeContainer, typename IncludeContainer, typename... ExtraTags>
-  struct Filter<Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer> {
+  template <auto Function, typename ExcludeContainer, typename... ExtraTags, typename... ExtraIncludes>
+  struct Filter<Function, Tags<ExtraTags...>, ExcludeContainer, entt::get_t<ExtraIncludes...>> {
     template <typename... PassedInArgs>
     static void view(Simulation* simulation, const PassedInArgs&... passedInArgs) {
-      simulation
-        ->view<Function, Tags<SelectionTag, OtherSelectionTags..., ExtraTags...>, ExcludeContainer, IncludeContainer>(
-          passedInArgs...);
+      simulation->view<
+        Function,
+        Tags<SelectionTag, OtherSelectionTags..., ExtraTags...>,
+        ExcludeContainer,
+        entt::get_t<ExtraIncludes...>>(passedInArgs...);
     }
 
     template <typename... PassedInArgs>
     static void group(Simulation* simulation, const PassedInArgs&... passedInArgs) {
-      simulation
-        ->group<Function, Tags<SelectionTag, OtherSelectionTags..., ExtraTags...>, ExcludeContainer, IncludeContainer>(
-          passedInArgs...);
+      simulation->group<
+        Function,
+        Tags<ExtraTags...>,
+        ExcludeContainer,
+        entt::get_t<SelectionTag, OtherSelectionTags..., ExtraIncludes...>>(passedInArgs...);
     }
   };
 

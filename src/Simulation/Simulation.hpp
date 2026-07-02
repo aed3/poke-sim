@@ -117,6 +117,7 @@ class Simulation {
       registry,
       passedInArgs...);
   }
+
   template <typename Type, typename... ViewComponents, typename... Args>
   void addToEntities(const Args&... args) {
     static_assert(

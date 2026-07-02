@@ -87,9 +87,7 @@ types::entity findCopyParent(
 
   const ParentEntity* parentEntity = registry.try_get<ParentEntity>(entity);
   for (types::entityIndex i = 0U; parentEntity != nullptr; i++) {
-    if (
-      i >= registry.storage<types::registry::entity_type>()->size() ||
-      i == std::numeric_limits<types::entityIndex>::max()) {
+    if (i >= registry.storage<types::registry::entity_type>()->size() || i == Constants::MAX_ENTITIES) {
       POKESIM_REQUIRE_FAIL("A loop in the battle tree caused an infinite loop.");
       break;
     }

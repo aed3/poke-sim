@@ -99,7 +99,7 @@ struct EntityLists {
 
     POKESIM_REQUIRE(
       battleCount + sideCount + recycledActionCount + pokemonCount + calcDamageInputCount + analyzeEffectInputCount <
-        std::numeric_limits<types::entityIndex>::max(),
+        Constants::MAX_ENTITIES,
       "More entities than can be created would be made for this input.");
 
     types::registry& registry = simulation->registry;
@@ -430,10 +430,13 @@ void createInitialBattle(
 void createInitialState(
   const BattleCreationInfo& battleInfo, Simulation* simulation, EntityLists& entityLists,
   debug::SimulationSetupChecks& debugChecks) {
-  internal::maxSizedVector<BattleStateSetup> battleSetupList;
-  internal::maxSizedVector<types::sides<SideStateSetup>> sideSetupLists;
-  internal::maxSizedVector<types::sides<internal::maxSizedVector<PokemonStateSetup, Constants::TeamSize::MAX>>>
+  internal::maxSizedVector<BattleStateSetup, Constants::MAX_ENTITIES> battleSetupList;
+  internal::maxSizedVector<types::sides<SideStateSetup>, Constants::MAX_ENTITIES> sideSetupLists;
+  internal::maxSizedVector<
+    types::sides<internal::maxSizedVector<PokemonStateSetup, Constants::TeamSize::MAX>>,
+    Constants::MAX_ENTITIES>
     pokemonSetupLists;
+
   battleSetupList.resize(getBattleCreationCount(battleInfo));
   sideSetupLists.resize(battleSetupList.size());
   pokemonSetupLists.resize(battleSetupList.size());
