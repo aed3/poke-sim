@@ -231,7 +231,7 @@ struct Random {
         return "SimulateTurn";
       }
       else if constexpr (std::is_same_v<SimulationTag, tags::CalculateDamage>) {
-        return "CalcDamage";
+        return "CalculateDamage";
       }
       else {
         return "AnalyzeEffect";

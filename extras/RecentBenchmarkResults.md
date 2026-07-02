@@ -85,7 +85,7 @@
 | 4096   | 100     | 1                   | 64958.380700ms            | 649.281802ms    | 2.752583ms         | 158.516065us       | 158.396417us                   | 158.661401us                   |
 
 
-## SV-SingleBattle-CalcDamage-VerticalSlice1
+## SV-SingleBattle-CalculateDamage-VerticalSlice1
 | Inputs | Samples | Iterations / Sample | Estimated Completion Time | Mean of Samples | Standard Deviation | Mean / Input Count | Mean Lower Bound / Input Count | Mean Upper Bound / Input Count |
 | ---    | ---     | ---                 | ---                       | ---             | ---                | ---                | ---                            | ---                            |
 | 1      | 100     | 1                   | 8.786400ms                | 10.625820us     | 3.769170us         | 10.625820us        | 10.117270us                    | 11.804550us                    |
@@ -192,7 +192,7 @@
 | 32768  | 100     | 1                   | 17456.245900ms            | 174.221767ms    | 1.860711ms         | 5.316826us         | 5.306428us                     | 5.328814us                     |
 
 
-## SV-SingleBattle-CalcDamage-RandomInputs-OneRandomBattle-OneRandomInput
+## SV-SingleBattle-CalculateDamage-RandomInputs-OneRandomBattle-OneRandomInput
 | Inputs | Samples | Iterations / Sample | Estimated Completion Time | Mean of Samples | Standard Deviation | Mean / Input Count | Mean Lower Bound / Input Count | Mean Upper Bound / Input Count |
 | ---    | ---     | ---                 | ---                       | ---             | ---                | ---                | ---                            | ---                            |
 | 1      | 100     | 1                   | 10.313700ms               | 12.977780us     | 4.674052us         | 12.977780us        | 12.261890us                    | 14.205740us                    |
@@ -213,7 +213,7 @@
 | 32768  | 100     | 1                   | 4876.585600ms             | 27.469005ms     | 15.039156ms        | 838.287519ns       | 749.443763ns                   | 928.805623ns                   |
 
 
-## SV-SingleBattle-CalcDamage-RandomInputs-OneRandomBattle-ManyRandomInputs
+## SV-SingleBattle-CalculateDamage-RandomInputs-OneRandomBattle-ManyRandomInputs
 | Inputs | Samples | Iterations / Sample | Estimated Completion Time | Mean of Samples | Standard Deviation | Mean / Input Count | Mean Lower Bound / Input Count | Mean Upper Bound / Input Count |
 | ---    | ---     | ---                 | ---                       | ---             | ---                | ---                | ---                            | ---                            |
 | 1      | 100     | 1                   | 10.842500ms               | 12.810450us     | 4.063155us         | 12.810450us        | 12.163580us                    | 13.836770us                    |
@@ -234,7 +234,7 @@
 | 32768  | 100     | 1                   | 2781.698700ms             | 27.440989ms     | 379.014521us       | 837.432528ns       | 835.419377ns                   | 839.983817ns                   |
 
 
-## SV-SingleBattle-CalcDamage-RandomInputs-ManyRandomBattles-ManyRandomInputs
+## SV-SingleBattle-CalculateDamage-RandomInputs-ManyRandomBattles-ManyRandomInputs
 | Inputs | Samples | Iterations / Sample | Estimated Completion Time | Mean of Samples | Standard Deviation | Mean / Input Count | Mean Lower Bound / Input Count | Mean Upper Bound / Input Count |
 | ---    | ---     | ---                 | ---                       | ---             | ---                | ---                | ---                            | ---                            |
 | 1      | 100     | 1                   | 10.869000ms               | 12.405990us     | 3.852924us         | 12.405990us        | 11.820100us                    | 13.424380us                    |
