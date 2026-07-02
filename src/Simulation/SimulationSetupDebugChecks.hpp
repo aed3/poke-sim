@@ -545,7 +545,7 @@ struct SimulationSetupChecks {
       : registry(&simulation->registry), battleInfoList(&_battleInfoList), pokedex(&simulation->pokedex()) {}
 
   void checkOutputs() const {
-    POKESIM_REQUIRE_NM(battleInfoList->size() <= internal::maxSizedVector<BattleCreationInfo>::max());
+    POKESIM_REQUIRE_NM(battleInfoList->size() <= Constants::MAX_ENTITIES);
     for (const auto& battleInfo : *battleInfoList) {
       POKESIM_REQUIRE_NM(createdBattles.contains(&battleInfo));
       const types::entityVector& battleEntities = createdBattles.at(&battleInfo);

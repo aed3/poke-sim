@@ -2,9 +2,12 @@
 
 #include <array>
 #include <cstdint>
+#include <entt/entity/entity.hpp>
 
 namespace pokesim {
 struct Constants {
+  static constexpr std::uint64_t MAX_ENTITIES = entt::entt_traits<entt::id_type>::entity_mask;
+
   static constexpr std::uint8_t TYPES_PER_POKEMON = 2U;
 
   static constexpr std::array<float, 7U> STAT_BOOST_STAGES{1.0F, 1.5F, 2.0F, 2.5F, 3.0F, 3.5F, 4.0F};

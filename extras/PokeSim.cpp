@@ -119,9 +119,7 @@ types::entity findCopyParent(
 
   const ParentEntity* parentEntity = registry.try_get<ParentEntity>(entity);
   for (types::entityIndex i = 0U; parentEntity != nullptr; i++) {
-    if (
-      i >= registry.storage<types::registry::entity_type>()->size() ||
-      i == std::numeric_limits<types::entityIndex>::max()) {
+    if (i >= registry.storage<types::registry::entity_type>()->size() || i == Constants::MAX_ENTITIES) {
       POKESIM_REQUIRE_FAIL("A loop in the battle tree caused an infinite loop.");
       break;
     }
@@ -1447,7 +1445,7 @@ struct EntityLists {
 
     POKESIM_REQUIRE(
       battleCount + sideCount + recycledActionCount + pokemonCount + calcDamageInputCount + analyzeEffectInputCount <
-        std::numeric_limits<types::entityIndex>::max(),
+        Constants::MAX_ENTITIES,
       "More entities than can be created would be made for this input.");
 
     types::registry& registry = simulation->registry;
@@ -1778,10 +1776,13 @@ void createInitialBattle(
 void createInitialState(
   const BattleCreationInfo& battleInfo, Simulation* simulation, EntityLists& entityLists,
   debug::SimulationSetupChecks& debugChecks) {
-  internal::maxSizedVector<BattleStateSetup> battleSetupList;
-  internal::maxSizedVector<types::sides<SideStateSetup>> sideSetupLists;
-  internal::maxSizedVector<types::sides<internal::maxSizedVector<PokemonStateSetup, Constants::TeamSize::MAX>>>
+  internal::maxSizedVector<BattleStateSetup, Constants::MAX_ENTITIES> battleSetupList;
+  internal::maxSizedVector<types::sides<SideStateSetup>, Constants::MAX_ENTITIES> sideSetupLists;
+  internal::maxSizedVector<
+    types::sides<internal::maxSizedVector<PokemonStateSetup, Constants::TeamSize::MAX>>,
+    Constants::MAX_ENTITIES>
     pokemonSetupLists;
+
   battleSetupList.resize(getBattleCreationCount(battleInfo));
   sideSetupLists.resize(battleSetupList.size());
   pokemonSetupLists.resize(battleSetupList.size());

@@ -10,20 +10,24 @@ struct EntityFilter {
   template <auto Function, typename...>
   struct Filter;
 
-  template <auto Function, typename ExcludeContainer, typename IncludeContainer, typename... ExtraTags>
-  struct Filter<Function, Tags<ExtraTags...>, ExcludeContainer, IncludeContainer> {
+  template <auto Function, typename ExcludeContainer, typename... ExtraTags, typename... ExtraIncludes>
+  struct Filter<Function, Tags<ExtraTags...>, ExcludeContainer, entt::get_t<ExtraIncludes...>> {
     template <typename... PassedInArgs>
     static void view(Simulation* simulation, const PassedInArgs&... passedInArgs) {
-      simulation
-        ->view<Function, Tags<SelectionTag, OtherSelectionTags..., ExtraTags...>, ExcludeContainer, IncludeContainer>(
-          passedInArgs...);
+      simulation->view<
+        Function,
+        Tags<SelectionTag, OtherSelectionTags..., ExtraTags...>,
+        ExcludeContainer,
+        entt::get_t<ExtraIncludes...>>(passedInArgs...);
     }
 
     template <typename... PassedInArgs>
     static void group(Simulation* simulation, const PassedInArgs&... passedInArgs) {
-      simulation
-        ->group<Function, Tags<SelectionTag, OtherSelectionTags..., ExtraTags...>, ExcludeContainer, IncludeContainer>(
-          passedInArgs...);
+      simulation->group<
+        Function,
+        Tags<ExtraTags...>,
+        ExcludeContainer,
+        entt::get_t<SelectionTag, OtherSelectionTags..., ExtraIncludes...>>(passedInArgs...);
     }
   };
 

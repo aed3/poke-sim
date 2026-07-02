@@ -15,7 +15,7 @@ struct EffectMove {
 };
 
 struct GroupedInputs {
-  internal::maxSizedVector<types::entity> val{};
+  types::entityVector val{};
 };
 
 struct Inputs {
