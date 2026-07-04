@@ -34,8 +34,8 @@ jobs:
         working-directory: ${{runner.workspace}}
         run: |
           cmake -DCMAKE_BUILD_TYPE:STRING=Debug \
-          -DENABLE_TESTING=ON \
-          -DENABLE_BENCHMARKING=ON \
+          -DPOKESIM_ENABLE_TESTING=ON \
+          -DPOKESIM_ENABLE_BENCHMARKING=ON \
           -S$GITHUB_WORKSPACE \
           -B$GITHUB_WORKSPACE/build \
           -G "Unix Makefiles"
