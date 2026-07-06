@@ -50,23 +50,23 @@ void removeItemComponents(Simulation& simulation) {
   simulation.registry.clear<SelectionTag>();
 }
 
-void resetEffectiveAtk(types::handle handle, stat::Atk atk, stat::EffectiveAtk& effectiveAtk) {
+void resetEffectiveAtk(stat::Atk atk, stat::EffectiveAtk& effectiveAtk) {
   effectiveAtk.val = atk.val;
 }
 
-void resetEffectiveDef(types::handle handle, stat::Def def, stat::EffectiveDef& effectiveDef) {
+void resetEffectiveDef(stat::Def def, stat::EffectiveDef& effectiveDef) {
   effectiveDef.val = def.val;
 }
 
-void resetEffectiveSpa(types::handle handle, stat::Spa spa, stat::EffectiveSpa& effectiveSpa) {
+void resetEffectiveSpa(stat::Spa spa, stat::EffectiveSpa& effectiveSpa) {
   effectiveSpa.val = spa.val;
 }
 
-void resetEffectiveSpd(types::handle handle, stat::Spd spd, stat::EffectiveSpd& effectiveSpd) {
+void resetEffectiveSpd(stat::Spd spd, stat::EffectiveSpd& effectiveSpd) {
   effectiveSpd.val = spd.val;
 }
 
-void resetEffectiveSpe(types::handle handle, stat::Spe spe, stat::EffectiveSpe& effectiveSpe) {
+void resetEffectiveSpe(stat::Spe spe, stat::EffectiveSpe& effectiveSpe) {
   effectiveSpe.val = spe.val;
 }
 
