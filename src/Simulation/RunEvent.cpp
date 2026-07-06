@@ -38,9 +38,10 @@ void applyEventModifier(ModifiedComponent& component, EventModifier eventModifie
   component.val = applyChainedModifier(component.val, eventModifier.val);
 }
 
-void applyBasePowerEventModifier(types::handle moveHandle, BasePower basePower, EventModifier eventModifier) {
-  calc_damage::Power& power = moveHandle.emplace<calc_damage::Power>(basePower.val);
-  power.val = applyChainedModifier(power.val, eventModifier.val);
+void applyBasePowerEventModifier(
+  types::handle moveHandle, BasePower basePower, calc_damage::DamageFormulaVariables& damageFormulaVariables,
+  EventModifier eventModifier) {
+  damageFormulaVariables.power = applyChainedModifier(basePower.val, eventModifier.val);
 }
 }  // namespace
 

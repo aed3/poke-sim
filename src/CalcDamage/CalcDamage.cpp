@@ -7,7 +7,6 @@
 #include <Components/Boosts.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/CalcDamage/CriticalHit.hpp>
-#include <Components/CalcDamage/DamageFormulaVariables.hpp>
 #include <Components/CalcDamage/DamageRollSides.hpp>
 #include <Components/CalcDamage/TemporaryMoveProperties.hpp>
 #include <Components/Damage.hpp>
@@ -58,11 +57,8 @@ auto getMoveFilter(Simulation& simulation) {
 void clearRunVariables(Simulation& simulation) {
   simulation.registry.clear<
     tags::Crit,
-    AttackingLevel,
-    AttackingStat,
-    DefendingStat,
     DamageRollModifiers,
-    Power,
+    DamageFormulaVariables,
     tags::UsesAtk,
     tags::UsesDef,
     tags::UsesSpa,
@@ -185,12 +181,12 @@ void assignCritChanceDivisor(
   moveHandle.emplace<CritChanceDivisor>(critChanceDivisors[index]);
 }
 
-void setSourceLevel(types::handle moveHandle, Attacker attacker) {
-  moveHandle.emplace<AttackingLevel>(moveHandle.registry()->get<Level>(attacker.val).val);
+void setSourceLevel(types::handle moveHandle, Attacker attacker, DamageFormulaVariables& damageFormulaVariables) {
+  damageFormulaVariables.attackingLevel = moveHandle.registry()->get<Level>(attacker.val).val;
 }
 
 template <typename Category>
-void setUsedAttackStat(types::handle moveHandle, Attacker attacker) {
+void setUsedAttackStat(types::handle moveHandle, Attacker attacker, DamageFormulaVariables& damageFormulaVariables) {
   types::stat attackingStat = Constants::PokemonEffectiveStat::DEFAULT;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     attackingStat = moveHandle.registry()->get<stat::EffectiveAtk>(attacker.val).val;
@@ -200,11 +196,11 @@ void setUsedAttackStat(types::handle moveHandle, Attacker attacker) {
     attackingStat = moveHandle.registry()->get<stat::EffectiveSpa>(attacker.val).val;
     moveHandle.emplace<tags::UsesSpa>();
   }
-  moveHandle.emplace<AttackingStat>(attackingStat);
+  damageFormulaVariables.attackingStat = attackingStat;
 }
 
 template <typename Category>
-void setUsedDefenseStat(types::handle moveHandle, Defender defender) {
+void setUsedDefenseStat(types::handle moveHandle, Defender defender, DamageFormulaVariables& damageFormulaVariables) {
   types::stat defendingStat = Constants::PokemonEffectiveStat::DEFAULT;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     defendingStat = moveHandle.registry()->get<stat::EffectiveDef>(defender.val).val;
@@ -214,7 +210,7 @@ void setUsedDefenseStat(types::handle moveHandle, Defender defender) {
     defendingStat = moveHandle.registry()->get<stat::EffectiveSpd>(defender.val).val;
     moveHandle.emplace<tags::UsesSpd>();
   }
-  moveHandle.emplace<DefendingStat>(defendingStat);
+  damageFormulaVariables.defendingStat = defendingStat;
 }
 
 template <typename BoostType>
@@ -233,9 +229,12 @@ void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, Defender defend
   }
 }
 
-void calculateBaseDamage(
-  types::handle moveHandle, Power power, AttackingLevel level, AttackingStat attack, DefendingStat defense) {
-  types::damage damage = computeBaseDamage(power.val, level.val, attack.val, defense.val);
+void calculateBaseDamage(types::handle moveHandle, const DamageFormulaVariables& damageFormulaVariables) {
+  types::damage damage = computeBaseDamage(
+    damageFormulaVariables.power,
+    damageFormulaVariables.attackingLevel,
+    damageFormulaVariables.attackingStat,
+    damageFormulaVariables.defendingStat);
   moveHandle.emplace<Damage>(damage);
 }
 
@@ -410,16 +409,18 @@ void saveRealEffectiveDefenderStat(types::registry& registry, Defender defender)
 }
 
 template <typename EffectiveStat>
-void resetEffectiveAndAttackingStat(types::registry& registry, Attacker attacker, AttackingStat& attackingStat) {
+void resetEffectiveAndAttackingStat(
+  types::registry& registry, Attacker attacker, DamageFormulaVariables& damageFormulaVariables) {
   auto [effectiveStat, realEffectiveStat] = registry.get<EffectiveStat, RealEffectiveStat>(attacker.val);
-  attackingStat.val = effectiveStat.val;
+  damageFormulaVariables.attackingStat = effectiveStat.val;
   effectiveStat.val = realEffectiveStat.val;
 }
 
 template <typename EffectiveStat>
-void resetEffectiveAndDefendingStat(types::registry& registry, Defender defender, DefendingStat& defendingStat) {
+void resetEffectiveAndDefendingStat(
+  types::registry& registry, Defender defender, DamageFormulaVariables& damageFormulaVariables) {
   auto [effectiveStat, realEffectiveStat] = registry.get<EffectiveStat, RealEffectiveStat>(defender.val);
-  defendingStat.val = effectiveStat.val;
+  damageFormulaVariables.defendingStat = effectiveStat.val;
   effectiveStat.val = realEffectiveStat.val;
 }
 
@@ -516,6 +517,8 @@ void calcDamage(Simulation& simulation) {
   applySideDamageRollOptions<CalculateDamage, setIfMoveCrits<CalculateDamage>>(simulation);
   applySideDamageRollOptions<AnalyzeEffect, setIfMoveCrits<AnalyzeEffect>>(simulation);
 
+  auto moveView = simulation.registry.view<pokesim::tags::CurrentMoveHit>(entt::exclude_t<move::tags::Status>{});
+  simulation.registry.insert<DamageFormulaVariables>(moveView.begin(), moveView.end());
   runBasePowerEvent(simulation);
   setDamageFormulaVariables(simulation);
 

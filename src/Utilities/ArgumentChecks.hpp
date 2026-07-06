@@ -109,11 +109,8 @@ struct EffectMultiplier;
 namespace calc_damage {
 struct CritChanceDivisor;
 struct CritBoost;
-struct AttackingLevel;
-struct AttackingStat;
-struct DefendingStat;
 struct RealEffectiveStat;
-struct Power;
+struct DamageFormulaVariables;
 struct UsesUntilKo;
 struct AttackerHpRecovered;
 struct AttackerHpLost;
@@ -225,19 +222,10 @@ template <>
 void check(const calc_damage::CritBoost&);
 
 template <>
-void check(const calc_damage::AttackingLevel&);
-
-template <>
-void check(const calc_damage::AttackingStat&);
-
-template <>
-void check(const calc_damage::DefendingStat&);
-
-template <>
 void check(const calc_damage::RealEffectiveStat&);
 
 template <>
-void check(const calc_damage::Power&);
+void check(const calc_damage::DamageFormulaVariables&);
 
 template <>
 void check(const ChoiceLock&);

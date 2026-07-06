@@ -106,7 +106,6 @@
  * src/Types/Enums/GameMechanics.hpp
  * src/Types/MechanicConstants.hpp
  * src/Components/CalcDamage/CriticalHit.hpp
- * src/Components/CalcDamage/DamageFormulaVariables.hpp
  * src/Components/CalcDamage/DamageRollSides.hpp
  * src/Components/CalcDamage/ModifyingEventRanTags.hpp
  * src/Components/CalcDamage/TemporaryMoveProperties.hpp
@@ -19409,24 +19408,6 @@ struct Crit {};
 
 /////////////// END OF src/Components/CalcDamage/CriticalHit.hpp ///////////////
 
-//////// START OF src/Components/CalcDamage/DamageFormulaVariables.hpp /////////
-
-namespace pokesim::calc_damage {
-struct AttackingLevel {
-  types::level val = Constants::PokemonLevel::DEFAULT;
-};
-
-struct AttackingStat {
-  types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
-};
-
-struct DefendingStat {
-  types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
-};
-}  // namespace pokesim::calc_damage
-
-///////// END OF src/Components/CalcDamage/DamageFormulaVariables.hpp //////////
-
 //////////// START OF src/Components/CalcDamage/DamageRollSides.hpp ////////////
 
 namespace pokesim::calc_damage::tags {
@@ -19451,8 +19432,16 @@ struct RealEffectiveStat {
   types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
 
-struct Power {
-  types::power val = Constants::MovePower::DEFAULT;
+struct DamageFormulaVariables {
+  types::level attackingLevel = Constants::PokemonLevel::DEFAULT;
+  types::power power = Constants::MovePower::DEFAULT;
+  types::stat attackingStat = Constants::PokemonEffectiveStat::DEFAULT;
+  types::stat defendingStat = Constants::PokemonEffectiveStat::DEFAULT;
+
+  constexpr bool operator==(const DamageFormulaVariables& other) const {
+    return attackingLevel == other.attackingLevel && power == other.power && attackingStat == other.attackingStat &&
+           defendingStat == other.defendingStat;
+  }
 };
 
 namespace tags {
@@ -21107,11 +21096,8 @@ struct EffectMultiplier;
 namespace calc_damage {
 struct CritChanceDivisor;
 struct CritBoost;
-struct AttackingLevel;
-struct AttackingStat;
-struct DefendingStat;
 struct RealEffectiveStat;
-struct Power;
+struct DamageFormulaVariables;
 struct UsesUntilKo;
 struct AttackerHpRecovered;
 struct AttackerHpLost;
@@ -21223,19 +21209,10 @@ template <>
 void check(const calc_damage::CritBoost&);
 
 template <>
-void check(const calc_damage::AttackingLevel&);
-
-template <>
-void check(const calc_damage::AttackingStat&);
-
-template <>
-void check(const calc_damage::DefendingStat&);
-
-template <>
 void check(const calc_damage::RealEffectiveStat&);
 
 template <>
-void check(const calc_damage::Power&);
+void check(const calc_damage::DamageFormulaVariables&);
 
 template <>
 void check(const ChoiceLock&);

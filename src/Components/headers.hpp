@@ -13,7 +13,6 @@
 #include "Boosts.hpp"
 #include "CalcDamage/Aliases.hpp"
 #include "CalcDamage/CriticalHit.hpp"
-#include "CalcDamage/DamageFormulaVariables.hpp"
 #include "CalcDamage/DamageRollSides.hpp"
 #include "CalcDamage/ModifyingEventRanTags.hpp"
 #include "CalcDamage/TemporaryMoveProperties.hpp"

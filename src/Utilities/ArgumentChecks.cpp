@@ -296,18 +296,13 @@ void checkActionMove(types::entity moveEntity, const types::registry& registry) 
   POKESIM_REQUIRE_NM(totalOUsesOffenseTags <= 1U);
   POKESIM_REQUIRE_NM(totalOUsesDefenseTags <= 1U);
 
-  const auto [attackingLevel, attackingStat, defendingStat, realEffectiveStat, critBoost, critChanceDivisor] =
-    registry.try_get<
-      calc_damage::AttackingLevel,
-      calc_damage::AttackingStat,
-      calc_damage::DefendingStat,
-      calc_damage::RealEffectiveStat,
-      calc_damage::CritBoost,
-      calc_damage::CritChanceDivisor>(moveEntity);
+  const auto [damageFormulaVariables, realEffectiveStat, critBoost, critChanceDivisor] = registry.try_get<
+    calc_damage::DamageFormulaVariables,
+    calc_damage::RealEffectiveStat,
+    calc_damage::CritBoost,
+    calc_damage::CritChanceDivisor>(moveEntity);
 
-  if (attackingLevel) check(*attackingLevel);
-  if (attackingStat) check(*attackingStat);
-  if (defendingStat) check(*defendingStat);
+  if (damageFormulaVariables) check(*damageFormulaVariables);
   if (realEffectiveStat) check(*realEffectiveStat);
   if (critBoost) check(*critBoost);
   if (critChanceDivisor) check(*critChanceDivisor);
@@ -502,28 +497,16 @@ void check(const calc_damage::CritBoost& critBoost) {
 }
 
 template <>
-void check(const calc_damage::AttackingLevel& attackingLevel) {
-  checkBounds<Constants::PokemonLevel>(attackingLevel.val);
-}
-
-template <>
-void check(const calc_damage::AttackingStat& attackingStat) {
-  checkEffectiveStat(attackingStat.val);
-}
-
-template <>
-void check(const calc_damage::DefendingStat& defendingStat) {
-  checkEffectiveStat(defendingStat.val);
-}
-
-template <>
 void check(const calc_damage::RealEffectiveStat& realEffectiveStat) {
   checkEffectiveStat(realEffectiveStat.val);
 }
 
 template <>
-void check(const calc_damage::Power& power) {
-  checkBounds<Constants::MovePower>(power.val);
+void check(const calc_damage::DamageFormulaVariables& damageFormulaVariables) {
+  checkBounds<Constants::PokemonLevel>(damageFormulaVariables.attackingLevel);
+  checkBounds<Constants::MovePower>(damageFormulaVariables.power);
+  checkEffectiveStat(damageFormulaVariables.attackingLevel);
+  checkEffectiveStat(damageFormulaVariables.defendingStat);
 }
 
 template <>
