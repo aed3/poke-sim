@@ -40,11 +40,6 @@ void clearVolatiles(types::handle pokemonHandle);
 
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
 void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move);
-void resetEffectiveAtk(types::handle handle, stat::Atk atk);
-void resetEffectiveDef(types::handle handle, stat::Def def);
-void resetEffectiveSpa(types::handle handle, stat::Spa spa);
-void resetEffectiveSpd(types::handle handle, stat::Spd spd);
-void resetEffectiveSpe(types::handle handle, stat::Spe spe);
 
 void faint(types::handle pokemonHandle, Battle battle);
 void applyDamage(types::handle pokemonHandle, types::damage damage);

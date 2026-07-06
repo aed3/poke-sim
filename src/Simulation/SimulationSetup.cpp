@@ -1,6 +1,7 @@
 #include <AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp>
 #include <Battle/Clone/Clone.hpp>
 #include <Battle/Helpers/Helpers.hpp>
+#include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Battle/Setup/PokemonStateSetup.hpp>
 #include <Battle/Setup/headers.hpp>
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
@@ -208,12 +209,12 @@ types::stat setPokemonStats(
 
   types::stat hp = getStat(dex::Stat::HP);
 
-  pokemonSetup.setStat<stat::Hp>(hp);
-  pokemonSetup.setStat<stat::Atk>(getStat(dex::Stat::ATK));
-  pokemonSetup.setStat<stat::Def>(getStat(dex::Stat::DEF));
-  pokemonSetup.setStat<stat::Spa>(getStat(dex::Stat::SPA));
-  pokemonSetup.setStat<stat::Spd>(getStat(dex::Stat::SPD));
-  pokemonSetup.setStat<stat::Spe>(getStat(dex::Stat::SPE));
+  pokemonSetup.setHp(hp);
+  pokemonSetup.setStat<stat::Atk, stat::EffectiveAtk>(getStat(dex::Stat::ATK));
+  pokemonSetup.setStat<stat::Def, stat::EffectiveDef>(getStat(dex::Stat::DEF));
+  pokemonSetup.setStat<stat::Spa, stat::EffectiveSpa>(getStat(dex::Stat::SPA));
+  pokemonSetup.setStat<stat::Spd, stat::EffectiveSpd>(getStat(dex::Stat::SPD));
+  pokemonSetup.setStat<stat::Spe, stat::EffectiveSpe>(getStat(dex::Stat::SPE));
 
   return hp;
 }
@@ -518,6 +519,8 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
 
   pokedex().buildMoves(registry);
   registry.clear<internal::tags::BuildActionMove>();
+
+  updateAllStats(*this);
 
   debugChecks.checkOutputs();
 }

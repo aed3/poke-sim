@@ -50,6 +50,26 @@ void removeItemComponents(Simulation& simulation) {
   simulation.registry.clear<SelectionTag>();
 }
 
+void resetEffectiveAtk(types::handle handle, stat::Atk atk, stat::EffectiveAtk& effectiveAtk) {
+  effectiveAtk.val = atk.val;
+}
+
+void resetEffectiveDef(types::handle handle, stat::Def def, stat::EffectiveDef& effectiveDef) {
+  effectiveDef.val = def.val;
+}
+
+void resetEffectiveSpa(types::handle handle, stat::Spa spa, stat::EffectiveSpa& effectiveSpa) {
+  effectiveSpa.val = spa.val;
+}
+
+void resetEffectiveSpd(types::handle handle, stat::Spd spd, stat::EffectiveSpd& effectiveSpd) {
+  effectiveSpd.val = spd.val;
+}
+
+void resetEffectiveSpe(types::handle handle, stat::Spe spe, stat::EffectiveSpe& effectiveSpe) {
+  effectiveSpe.val = spe.val;
+}
+
 template <typename EffectiveStat, typename BoostType>
 void applyBoostToEffectiveStat(EffectiveStat& effectiveStat, BoostType boost) {
   applyStatBoost(effectiveStat.val, boost.val);
@@ -241,26 +261,6 @@ void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
 
 void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move) {
   registry.emplace<LastUsedMove>(source.val, move.val);
-}
-
-void resetEffectiveAtk(types::handle handle, stat::Atk atk) {
-  handle.emplace_or_replace<stat::EffectiveAtk>(atk.val);
-}
-
-void resetEffectiveDef(types::handle handle, stat::Def def) {
-  handle.emplace_or_replace<stat::EffectiveDef>(def.val);
-}
-
-void resetEffectiveSpa(types::handle handle, stat::Spa spa) {
-  handle.emplace_or_replace<stat::EffectiveSpa>(spa.val);
-}
-
-void resetEffectiveSpd(types::handle handle, stat::Spd spd) {
-  handle.emplace_or_replace<stat::EffectiveSpd>(spd.val);
-}
-
-void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
-  handle.emplace_or_replace<stat::EffectiveSpe>(spe.val);
 }
 
 void faint(types::handle pokemonHandle, Battle battle) {

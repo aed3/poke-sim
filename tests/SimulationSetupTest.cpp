@@ -88,7 +88,6 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
   auto check = [&]() {
     Simulation simulation(pokedex, BattleFormat::SINGLES);
     simulation.createInitialStates({battleInfo});
-    updateAllStats(simulation);
 
     types::registry& registry = simulation.registry;
     auto group = registry.group<ActionQueue, Id, Sides>();

@@ -1,7 +1,6 @@
 #include "Simulation.hpp"
 
 #include <AnalyzeEffect/AnalyzeEffect.hpp>
-#include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <CalcDamage/CalcDamage.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/HitCount.hpp>
@@ -79,7 +78,6 @@ calc_damage::Results Simulation::calculateDamage(std::optional<calc_damage::Opti
     calculateDamageOptions = options.value();
   }
 
-  updateAllStats(*this);
   calc_damage::run(*this);
 
   return {*this};
@@ -90,7 +88,6 @@ analyze_effect::Results Simulation::analyzeEffect(std::optional<analyze_effect::
     analyzeEffectOptions = options.value();
   }
 
-  updateAllStats(*this);
   analyze_effect::run(*this);
 
   return {*this};

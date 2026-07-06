@@ -1537,12 +1537,12 @@ types::stat setPokemonStats(
 
   types::stat hp = getStat(dex::Stat::HP);
 
-  pokemonSetup.setStat<stat::Hp>(hp);
-  pokemonSetup.setStat<stat::Atk>(getStat(dex::Stat::ATK));
-  pokemonSetup.setStat<stat::Def>(getStat(dex::Stat::DEF));
-  pokemonSetup.setStat<stat::Spa>(getStat(dex::Stat::SPA));
-  pokemonSetup.setStat<stat::Spd>(getStat(dex::Stat::SPD));
-  pokemonSetup.setStat<stat::Spe>(getStat(dex::Stat::SPE));
+  pokemonSetup.setHp(hp);
+  pokemonSetup.setStat<stat::Atk, stat::EffectiveAtk>(getStat(dex::Stat::ATK));
+  pokemonSetup.setStat<stat::Def, stat::EffectiveDef>(getStat(dex::Stat::DEF));
+  pokemonSetup.setStat<stat::Spa, stat::EffectiveSpa>(getStat(dex::Stat::SPA));
+  pokemonSetup.setStat<stat::Spd, stat::EffectiveSpd>(getStat(dex::Stat::SPD));
+  pokemonSetup.setStat<stat::Spe, stat::EffectiveSpe>(getStat(dex::Stat::SPE));
 
   return hp;
 }
@@ -1848,6 +1848,8 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
   pokedex().buildMoves(registry);
   registry.clear<internal::tags::BuildActionMove>();
 
+  updateAllStats(*this);
+
   debugChecks.checkOutputs();
 }
 }  // namespace pokesim
@@ -1970,7 +1972,6 @@ calc_damage::Results Simulation::calculateDamage(std::optional<calc_damage::Opti
     calculateDamageOptions = options.value();
   }
 
-  updateAllStats(*this);
   calc_damage::run(*this);
 
   return {*this};
@@ -1981,7 +1982,6 @@ analyze_effect::Results Simulation::analyzeEffect(std::optional<analyze_effect::
     analyzeEffectOptions = options.value();
   }
 
-  updateAllStats(*this);
   analyze_effect::run(*this);
 
   return {*this};
@@ -2042,8 +2042,7 @@ void applyEventModifier(ModifiedComponent& component, EventModifier eventModifie
 }
 
 void applyBasePowerEventModifier(
-  types::handle moveHandle, BasePower basePower, calc_damage::DamageFormulaVariables& damageFormulaVariables,
-  EventModifier eventModifier) {
+  BasePower basePower, calc_damage::DamageFormulaVariables& damageFormulaVariables, EventModifier eventModifier) {
   damageFormulaVariables.power = applyChainedModifier(basePower.val, eventModifier.val);
 }
 }  // namespace
@@ -5297,6 +5296,10 @@ void PokemonStateSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
 }
 
+void PokemonStateSetup::setHp(types::stat hp) {
+  handle.emplace<stat::Hp>(hp);
+}
+
 void PokemonStateSetup::setCurrentHp(types::stat hp) {
   handle.emplace<stat::CurrentHp>(hp);
 }
@@ -5515,6 +5518,26 @@ void removeItemComponents(Simulation& simulation) {
   simulation.registry.clear<SelectionTag>();
 }
 
+void resetEffectiveAtk(types::handle handle, stat::Atk atk, stat::EffectiveAtk& effectiveAtk) {
+  effectiveAtk.val = atk.val;
+}
+
+void resetEffectiveDef(types::handle handle, stat::Def def, stat::EffectiveDef& effectiveDef) {
+  effectiveDef.val = def.val;
+}
+
+void resetEffectiveSpa(types::handle handle, stat::Spa spa, stat::EffectiveSpa& effectiveSpa) {
+  effectiveSpa.val = spa.val;
+}
+
+void resetEffectiveSpd(types::handle handle, stat::Spd spd, stat::EffectiveSpd& effectiveSpd) {
+  effectiveSpd.val = spd.val;
+}
+
+void resetEffectiveSpe(types::handle handle, stat::Spe spe, stat::EffectiveSpe& effectiveSpe) {
+  effectiveSpe.val = spe.val;
+}
+
 template <typename EffectiveStat, typename BoostType>
 void applyBoostToEffectiveStat(EffectiveStat& effectiveStat, BoostType boost) {
   applyStatBoost(effectiveStat.val, boost.val);
@@ -5706,26 +5729,6 @@ void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
 
 void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move) {
   registry.emplace<LastUsedMove>(source.val, move.val);
-}
-
-void resetEffectiveAtk(types::handle handle, stat::Atk atk) {
-  handle.emplace_or_replace<stat::EffectiveAtk>(atk.val);
-}
-
-void resetEffectiveDef(types::handle handle, stat::Def def) {
-  handle.emplace_or_replace<stat::EffectiveDef>(def.val);
-}
-
-void resetEffectiveSpa(types::handle handle, stat::Spa spa) {
-  handle.emplace_or_replace<stat::EffectiveSpa>(spa.val);
-}
-
-void resetEffectiveSpd(types::handle handle, stat::Spd spd) {
-  handle.emplace_or_replace<stat::EffectiveSpd>(spd.val);
-}
-
-void resetEffectiveSpe(types::handle handle, stat::Spe spe) {
-  handle.emplace_or_replace<stat::EffectiveSpe>(spe.val);
 }
 
 void faint(types::handle pokemonHandle, Battle battle) {

@@ -52,8 +52,6 @@ TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][Knoc
     }
   }
 
-  updateAllStats(simulation);
-
   TestChecks checks{simulation, specificallyCheckEntities};
   auto result = simulation.simulateTurn();
   checks.checkRemainingOutputs();

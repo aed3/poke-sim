@@ -109,7 +109,6 @@ struct VerticalSlice {
       battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
 
       simulation.createInitialStates({inputCount, battleCreationInfo});
-      updateAllStats(simulation);
     }
   };
 
@@ -132,7 +131,6 @@ struct VerticalSlice {
       battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
 
       simulation.createInitialStates({inputCount, battleCreationInfo});
-      updateAllStats(simulation);
     }
   };
 
@@ -148,7 +146,6 @@ struct VerticalSlice {
       };
 
       simulation.createInitialStates({inputCount, battleCreationInfo});
-      updateAllStats(simulation);
     }
   };
 
@@ -164,7 +161,6 @@ struct VerticalSlice {
       };
 
       simulation.createInitialStates({inputCount, battleCreationInfo});
-      updateAllStats(simulation);
     }
   };
 };

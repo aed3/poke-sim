@@ -45,8 +45,6 @@ TEST_CASE("Choice Lock: Choice lock starts", "[Simulation][SimulateTurn][Effect]
     specificallyCheckEntities.push_back(move);
   }
 
-  updateAllStats(simulation);
-
   TestChecks checks{simulation, specificallyCheckEntities};
   auto result = simulation.simulateTurn();
   checks.checkRemainingOutputs();
@@ -142,8 +140,6 @@ TEST_CASE(
   for (types::entity move : registry.view<MoveName>()) {
     specificallyCheckEntities.push_back(move);
   }
-
-  updateAllStats(simulation);
 
   TestChecks checks{simulation, specificallyCheckEntities};
   auto result = simulation.simulateTurn();

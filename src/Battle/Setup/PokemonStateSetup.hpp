@@ -46,6 +46,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   void setSide(types::entity entity);
   void setBattle(types::entity entity);
 
+  void setHp(types::stat hp);
   void setCurrentHp(types::stat hp);
   void setTypes(SpeciesTypes types);
   void setLevel(types::level level);
@@ -73,14 +74,20 @@ struct PokemonStateSetup : internal::StateSetupBase {
     handle.emplace<BoostType>(boost);
   };
 
-  template <typename StatType>
+  template <typename StatType, typename EffectiveStatType>
   void setStat(types::stat stat) {
     static_assert(
-      std::is_same<stat::Hp, StatType>() || std::is_same<stat::Atk, StatType>() ||
-        std::is_same<stat::Def, StatType>() || std::is_same<stat::Spa, StatType>() ||
-        std::is_same<stat::Spd, StatType>() || std::is_same<stat::Spe, StatType>(),
+      std::is_same<stat::Atk, StatType>() || std::is_same<stat::Def, StatType>() ||
+        std::is_same<stat::Spa, StatType>() || std::is_same<stat::Spd, StatType>() ||
+        std::is_same<stat::Spe, StatType>(),
       "Stats can only be applied to a Pokemon stat struct.");
+    static_assert(
+      std::is_same<stat::EffectiveAtk, EffectiveStatType>() || std::is_same<stat::EffectiveDef, EffectiveStatType>() ||
+        std::is_same<stat::EffectiveSpa, EffectiveStatType>() ||
+        std::is_same<stat::EffectiveSpd, EffectiveStatType>() || std::is_same<stat::EffectiveSpe, EffectiveStatType>(),
+      "Effective stats can only be applied to an effective Pokemon stat struct.");
     handle.emplace<StatType>(stat);
+    handle.emplace<EffectiveStatType>(stat);
   };
 };
 }  // namespace pokesim

@@ -130,23 +130,33 @@ struct SimulationSetupChecks {
   void checkCreatedStats(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
     const auto& [hp, atk, def, spa, spd, spe] =
       registry->get<stat::Hp, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>(pokemonEntity);
+
+    const auto& [effectiveAtk, effectiveDef, effectiveSpa, effectiveSpd, effectiveSpe] =
+      registry->get<stat::EffectiveAtk, stat::EffectiveDef, stat::EffectiveSpa, stat::EffectiveSpd, stat::EffectiveSpe>(
+        pokemonEntity);
+
     if (creationInfo.stats.hp.has_value()) {
       POKESIM_REQUIRE_NM(hp.val == creationInfo.stats.hp);
     }
     if (creationInfo.stats.atk.has_value()) {
       POKESIM_REQUIRE_NM(atk.val == creationInfo.stats.atk);
+      POKESIM_REQUIRE_NM(effectiveAtk.val == creationInfo.stats.atk);
     }
     if (creationInfo.stats.def.has_value()) {
       POKESIM_REQUIRE_NM(def.val == creationInfo.stats.def);
+      POKESIM_REQUIRE_NM(effectiveDef.val == creationInfo.stats.def);
     }
     if (creationInfo.stats.spa.has_value()) {
       POKESIM_REQUIRE_NM(spa.val == creationInfo.stats.spa);
+      POKESIM_REQUIRE_NM(effectiveSpa.val == creationInfo.stats.spa);
     }
     if (creationInfo.stats.spd.has_value()) {
       POKESIM_REQUIRE_NM(spd.val == creationInfo.stats.spd);
+      POKESIM_REQUIRE_NM(effectiveSpd.val == creationInfo.stats.spd);
     }
     if (creationInfo.stats.spe.has_value()) {
       POKESIM_REQUIRE_NM(spe.val == creationInfo.stats.spe);
+      POKESIM_REQUIRE_NM(effectiveSpe.val == creationInfo.stats.spe);
     }
   }
 

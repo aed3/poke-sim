@@ -50,8 +50,6 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effec
     }
   }
 
-  updateAllStats(simulation);
-
   TestChecks checks{simulation, specificallyCheckEntities};
   auto result = simulation.simulateTurn();
   checks.checkRemainingOutputs();

@@ -309,7 +309,6 @@ struct Random {
 
       pokedex.loadForBattleInfo(battleInfoList);
       simulation.createInitialStates(battleInfoList);
-      updateAllStats(simulation);
     }
   };
 

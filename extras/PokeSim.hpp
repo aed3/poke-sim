@@ -189,6 +189,7 @@
  * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp
  * src/Battle/Clone/Clone.hpp
  * src/Battle/Helpers/Helpers.hpp
+ * src/Battle/Pokemon/ManagePokemonState.hpp
  * src/Battle/Setup/StateSetupBase.hpp
  * src/Battle/Setup/PokemonStateSetup.hpp
  * src/Battle/Setup/BattleStateSetup.hpp
@@ -206,7 +207,6 @@
  * src/Simulation/SimulationSetupDebugChecks.hpp
  * src/Simulation/SimulationResults.hpp
  * src/AnalyzeEffect/AnalyzeEffect.hpp
- * src/Battle/Pokemon/ManagePokemonState.hpp
  * src/CalcDamage/CalcDamage.hpp
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Battle/Helpers/IntegerModify.hpp
@@ -22020,6 +22020,60 @@ void setupActionMoveBuild(
 
 //////////////////// END OF src/Battle/Helpers/Helpers.hpp /////////////////////
 
+////////////// START OF src/Battle/Pokemon/ManagePokemonState.hpp //////////////
+
+namespace pokesim {
+class Simulation;
+struct Battle;
+struct CurrentActionSource;
+struct CurrentActionTarget;
+struct CurrentActionMoveSlot;
+struct Damage;
+struct LastUsedMove;
+struct MoveSlots;
+
+namespace stat {
+struct Atk;
+struct Def;
+struct Spa;
+struct Spd;
+struct Spe;
+struct CurrentHp;
+}  // namespace stat
+
+void checkIfCanUseItem(Simulation& simulation);
+void useItem(Simulation& simulation);
+void tryUseItem(Simulation& simulation);
+void checkIfCanRemoveItem(Simulation& simulation);
+void removeItem(Simulation& simulation);
+void tryRemoveItem(Simulation& simulation);
+
+void checkIfCanSetStatus(Simulation& simulation);
+void setStatus(Simulation& simulation);
+void trySetStatus(Simulation& simulation);
+void clearStatus(types::handle pokemonHandle);
+
+void clearVolatiles(types::handle pokemonHandle);
+
+void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
+void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move);
+
+void faint(types::handle pokemonHandle, Battle battle);
+void applyDamage(types::handle pokemonHandle, types::damage damage);
+void applyStatBoost(types::stat& stat, types::boost boost);
+
+void tryBoost(Simulation& simulation);
+
+void updateAllStats(Simulation& simulation);
+void updateAtk(Simulation& simulation, bool ignoreBoosts);
+void updateDef(Simulation& simulation, bool ignoreBoosts);
+void updateSpa(Simulation& simulation, bool ignoreBoosts);
+void updateSpd(Simulation& simulation, bool ignoreBoosts);
+void updateSpe(Simulation& simulation, bool ignoreBoosts);
+}  // namespace pokesim
+
+/////////////// END OF src/Battle/Pokemon/ManagePokemonState.hpp ///////////////
+
 ///////////////// START OF src/Battle/Setup/StateSetupBase.hpp /////////////////
 
 namespace pokesim::internal {
@@ -22082,6 +22136,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
   void setSide(types::entity entity);
   void setBattle(types::entity entity);
 
+  void setHp(types::stat hp);
   void setCurrentHp(types::stat hp);
   void setTypes(SpeciesTypes types);
   void setLevel(types::level level);
@@ -22109,14 +22164,20 @@ struct PokemonStateSetup : internal::StateSetupBase {
     handle.emplace<BoostType>(boost);
   };
 
-  template <typename StatType>
+  template <typename StatType, typename EffectiveStatType>
   void setStat(types::stat stat) {
     static_assert(
-      std::is_same<stat::Hp, StatType>() || std::is_same<stat::Atk, StatType>() ||
-        std::is_same<stat::Def, StatType>() || std::is_same<stat::Spa, StatType>() ||
-        std::is_same<stat::Spd, StatType>() || std::is_same<stat::Spe, StatType>(),
+      std::is_same<stat::Atk, StatType>() || std::is_same<stat::Def, StatType>() ||
+        std::is_same<stat::Spa, StatType>() || std::is_same<stat::Spd, StatType>() ||
+        std::is_same<stat::Spe, StatType>(),
       "Stats can only be applied to a Pokemon stat struct.");
+    static_assert(
+      std::is_same<stat::EffectiveAtk, EffectiveStatType>() || std::is_same<stat::EffectiveDef, EffectiveStatType>() ||
+        std::is_same<stat::EffectiveSpa, EffectiveStatType>() ||
+        std::is_same<stat::EffectiveSpd, EffectiveStatType>() || std::is_same<stat::EffectiveSpe, EffectiveStatType>(),
+      "Effective stats can only be applied to an effective Pokemon stat struct.");
     handle.emplace<StatType>(stat);
+    handle.emplace<EffectiveStatType>(stat);
   };
 };
 }  // namespace pokesim
@@ -23438,23 +23499,33 @@ struct SimulationSetupChecks {
   void checkCreatedStats(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
     const auto& [hp, atk, def, spa, spd, spe] =
       registry->get<stat::Hp, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>(pokemonEntity);
+
+    const auto& [effectiveAtk, effectiveDef, effectiveSpa, effectiveSpd, effectiveSpe] =
+      registry->get<stat::EffectiveAtk, stat::EffectiveDef, stat::EffectiveSpa, stat::EffectiveSpd, stat::EffectiveSpe>(
+        pokemonEntity);
+
     if (creationInfo.stats.hp.has_value()) {
       POKESIM_REQUIRE_NM(hp.val == creationInfo.stats.hp);
     }
     if (creationInfo.stats.atk.has_value()) {
       POKESIM_REQUIRE_NM(atk.val == creationInfo.stats.atk);
+      POKESIM_REQUIRE_NM(effectiveAtk.val == creationInfo.stats.atk);
     }
     if (creationInfo.stats.def.has_value()) {
       POKESIM_REQUIRE_NM(def.val == creationInfo.stats.def);
+      POKESIM_REQUIRE_NM(effectiveDef.val == creationInfo.stats.def);
     }
     if (creationInfo.stats.spa.has_value()) {
       POKESIM_REQUIRE_NM(spa.val == creationInfo.stats.spa);
+      POKESIM_REQUIRE_NM(effectiveSpa.val == creationInfo.stats.spa);
     }
     if (creationInfo.stats.spd.has_value()) {
       POKESIM_REQUIRE_NM(spd.val == creationInfo.stats.spd);
+      POKESIM_REQUIRE_NM(effectiveSpd.val == creationInfo.stats.spd);
     }
     if (creationInfo.stats.spe.has_value()) {
       POKESIM_REQUIRE_NM(spe.val == creationInfo.stats.spe);
+      POKESIM_REQUIRE_NM(effectiveSpe.val == creationInfo.stats.spe);
     }
   }
 
@@ -24007,65 +24078,6 @@ void run(Simulation& simulation);
 }  // namespace pokesim
 
 ////////////////// END OF src/AnalyzeEffect/AnalyzeEffect.hpp //////////////////
-
-////////////// START OF src/Battle/Pokemon/ManagePokemonState.hpp //////////////
-
-namespace pokesim {
-class Simulation;
-struct Battle;
-struct CurrentActionSource;
-struct CurrentActionTarget;
-struct CurrentActionMoveSlot;
-struct Damage;
-struct LastUsedMove;
-struct MoveSlots;
-
-namespace stat {
-struct Atk;
-struct Def;
-struct Spa;
-struct Spd;
-struct Spe;
-struct CurrentHp;
-}  // namespace stat
-
-void checkIfCanUseItem(Simulation& simulation);
-void useItem(Simulation& simulation);
-void tryUseItem(Simulation& simulation);
-void checkIfCanRemoveItem(Simulation& simulation);
-void removeItem(Simulation& simulation);
-void tryRemoveItem(Simulation& simulation);
-
-void checkIfCanSetStatus(Simulation& simulation);
-void setStatus(Simulation& simulation);
-void trySetStatus(Simulation& simulation);
-void clearStatus(types::handle pokemonHandle);
-
-void clearVolatiles(types::handle pokemonHandle);
-
-void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
-void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move);
-void resetEffectiveAtk(types::handle handle, stat::Atk atk);
-void resetEffectiveDef(types::handle handle, stat::Def def);
-void resetEffectiveSpa(types::handle handle, stat::Spa spa);
-void resetEffectiveSpd(types::handle handle, stat::Spd spd);
-void resetEffectiveSpe(types::handle handle, stat::Spe spe);
-
-void faint(types::handle pokemonHandle, Battle battle);
-void applyDamage(types::handle pokemonHandle, types::damage damage);
-void applyStatBoost(types::stat& stat, types::boost boost);
-
-void tryBoost(Simulation& simulation);
-
-void updateAllStats(Simulation& simulation);
-void updateAtk(Simulation& simulation, bool ignoreBoosts);
-void updateDef(Simulation& simulation, bool ignoreBoosts);
-void updateSpa(Simulation& simulation, bool ignoreBoosts);
-void updateSpd(Simulation& simulation, bool ignoreBoosts);
-void updateSpe(Simulation& simulation, bool ignoreBoosts);
-}  // namespace pokesim
-
-/////////////// END OF src/Battle/Pokemon/ManagePokemonState.hpp ///////////////
 
 //////////////////// START OF src/CalcDamage/CalcDamage.hpp ////////////////////
 

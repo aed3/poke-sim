@@ -253,8 +253,6 @@ TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
     specificallyCheckEntities.push_back(move);
   }
 
-  updateAllStats(simulation);
-
   TestChecks checks{simulation, specificallyCheckEntities};
   auto result = simulation.simulateTurn();
   checks.checkRemainingOutputs();
