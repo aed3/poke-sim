@@ -19,27 +19,27 @@ struct EmplaceTag {
 };
 }  // namespace
 
-void ability::tags::emplaceTagFromEnum(dex::Ability ability, types::handle handle) {
+void ability::tags::emplaceTagFromEnum(pokesim::dex::Ability ability, types::handle handle) {
   pokesim::ability::tags::enumToTag<EmplaceTag>(ability, handle);
 }
 
-void item::tags::emplaceTagFromEnum(dex::Item item, types::handle handle) {
+void item::tags::emplaceTagFromEnum(pokesim::dex::Item item, types::handle handle) {
   pokesim::item::tags::enumToTag<EmplaceTag>(item, handle);
 }
 
-void nature::tags::emplaceTagFromEnum(dex::Nature nature, types::handle handle) {
+void nature::tags::emplaceTagFromEnum(pokesim::dex::Nature nature, types::handle handle) {
   pokesim::nature::tags::enumToTag<EmplaceTag>(nature, handle);
 }
 
-void status::tags::emplaceTagFromEnum(dex::Status status, types::handle handle) {
+void status::tags::emplaceTagFromEnum(pokesim::dex::Status status, types::handle handle) {
   pokesim::status::tags::enumToTag<EmplaceTag>(status, handle);
 }
 
-void type::tags::emplaceTagFromEnum(dex::Type type, types::handle handle) {
+void type::tags::emplaceTagFromEnum(pokesim::dex::Type type, types::handle handle) {
   pokesim::type::tags::enumToTag<EmplaceTag>(type, handle);
 }
 
-void move::tags::emplaceTagFromEnum(dex::Move move, types::handle handle) {
+void move::tags::emplaceTagFromEnum(pokesim::dex::Move move, types::handle handle) {
   pokesim::move::tags::enumToTag<EmplaceTag>(move, handle);
 }
 }  // namespace pokesim::internal

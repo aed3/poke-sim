@@ -17,7 +17,8 @@ struct InputSetup {
  public:
   InputSetup(types::registry& registry, types::entity moveEntity);
 
-  void setup(types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move);
+  void setup(
+    types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, pokesim::dex::Move move);
 
   types::entity entity() const { return handle.entity(); }
 };

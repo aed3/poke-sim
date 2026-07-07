@@ -16,7 +16,7 @@ namespace pokesim::internal::calc_damage {
 InputSetup::InputSetup(types::registry& registry, types::entity moveEntity) : handle(registry, moveEntity) {}
 
 void InputSetup::setup(
-  types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move) {
+  types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, pokesim::dex::Move move) {
   types::registry& registry = *handle.registry();
 
   setupActionMoveBuild(registry, battleEntity, sourceEntity, targetEntity, entity(), move);

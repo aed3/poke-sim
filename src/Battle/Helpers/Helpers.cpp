@@ -104,7 +104,7 @@ types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move) 
 
 void internal::setupActionMoveBuild(
   types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
-  types::entity actionMoveEntity, dex::Move move) {
+  types::entity actionMoveEntity, pokesim::dex::Move move) {
   types::handle actionMoveHandle{registry, actionMoveEntity};
 
   move::tags::emplaceTagFromEnum(move, actionMoveHandle);

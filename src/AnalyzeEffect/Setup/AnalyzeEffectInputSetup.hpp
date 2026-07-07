@@ -20,9 +20,9 @@ struct InputSetup {
   void setAttacker(types::entity entity);
   void setEffectTarget(types::entity entity);
   void setDefender(types::entity entity);
-  void setEffectMove(dex::Move move);
+  void setEffectMove(pokesim::dex::Move move);
   void setEffect(types::effectEnum effect);
-  void setBoostEffect(dex::Stat stat, types::boost boost);
+  void setBoostEffect(pokesim::dex::Stat stat, types::boost boost);
   void setBattle(types::entity entity);
 
   types::entity entity() const { return handle.entity(); }

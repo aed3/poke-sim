@@ -91,8 +91,8 @@ void clearActionMoveComponents(types::registry& registry, const View& view) {
     SpaBoost,
     SpdBoost,
     SpeBoost,
-    status::tags::Paralysis,
-    status::tags::Burn>(view.begin(), view.end());
+    pokesim::status::tags::Paralysis,
+    pokesim::status::tags::Burn>(view.begin(), view.end());
 }
 }  // namespace
 
@@ -191,32 +191,32 @@ void clearCurrentAction(Simulation& simulation) {
     pokesim::tags::FailedCurrentMoveHit>();
 
   registry.clear<
-    move::effect::tags::Primary,
-    move::effect::tags::Secondary,
-    move::effect::tags::MoveSource,
-    move::effect::tags::MoveTarget,
-    move::tags::FuryAttack,
-    move::tags::KnockOff,
-    move::tags::Moonblast,
-    move::tags::QuiverDance,
-    move::tags::Splash,
-    move::tags::Thunderbolt,
-    move::tags::WillOWisp,
-    move::tags::Physical,
-    move::tags::Special,
-    move::tags::Status,
-    move::tags::Contact,
-    move::tags::BypassSubstitute,
-    move::tags::Punch,
-    move::tags::VariableHitCount,
+    pokesim::move::effect::tags::Primary,
+    pokesim::move::effect::tags::Secondary,
+    pokesim::move::effect::tags::MoveSource,
+    pokesim::move::effect::tags::MoveTarget,
+    pokesim::move::tags::FuryAttack,
+    pokesim::move::tags::KnockOff,
+    pokesim::move::tags::Moonblast,
+    pokesim::move::tags::QuiverDance,
+    pokesim::move::tags::Splash,
+    pokesim::move::tags::Thunderbolt,
+    pokesim::move::tags::WillOWisp,
+    pokesim::move::tags::Physical,
+    pokesim::move::tags::Special,
+    pokesim::move::tags::Status,
+    pokesim::move::tags::Contact,
+    pokesim::move::tags::BypassSubstitute,
+    pokesim::move::tags::Punch,
+    pokesim::move::tags::VariableHitCount,
     BaseEffectChance,
     Accuracy,
     BasePower,
     HitCount,
-    move::tags::AccuracyDependentHitCount,
-    move::tags::Self,
-    move::tags::AnySingleTarget,
-    move::tags::AnySingleAlly>();
+    pokesim::move::tags::AccuracyDependentHitCount,
+    pokesim::move::tags::Self,
+    pokesim::move::tags::AnySingleTarget,
+    pokesim::move::tags::AnySingleAlly>();
 
   registry.clear<SourceSlotName, TargetSlotName>();
 

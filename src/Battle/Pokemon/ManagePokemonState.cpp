@@ -162,7 +162,7 @@ struct RemoveNotSettableStatus {
 };
 
 template <typename StatusType>
-void setStatus(types::registry& registry, CurrentEffectTarget target, dex::Status status) {
+void setStatus(types::registry& registry, CurrentEffectTarget target, pokesim::dex::Status status) {
   registry.emplace<StatusName>(target.val, status);
   registry.emplace<StatusType>(target.val);
   if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Paralysis>) {
@@ -215,13 +215,17 @@ void setStatus(Simulation& simulation) {
   pokesim::status::tags::forEach<RemoveNotSettableStatus>(simulation);
   simulation.registry.clear<pokesim::tags::CanSetStatus>();
 
-  simulation.view<setStatus<pokesim::status::tags::Burn>, Tags<pokesim::status::tags::Burn>>(dex::Status::BRN);
-  simulation.view<setStatus<pokesim::status::tags::Freeze>, Tags<pokesim::status::tags::Freeze>>(dex::Status::FRZ);
+  simulation.view<setStatus<pokesim::status::tags::Burn>, Tags<pokesim::status::tags::Burn>>(pokesim::dex::Status::BRN);
+  simulation.view<setStatus<pokesim::status::tags::Freeze>, Tags<pokesim::status::tags::Freeze>>(
+    pokesim::dex::Status::FRZ);
   simulation.view<setStatus<pokesim::status::tags::Paralysis>, Tags<pokesim::status::tags::Paralysis>>(
-    dex::Status::PAR);
-  simulation.view<setStatus<pokesim::status::tags::Poison>, Tags<pokesim::status::tags::Poison>>(dex::Status::PSN);
-  simulation.view<setStatus<pokesim::status::tags::Sleep>, Tags<pokesim::status::tags::Sleep>>(dex::Status::SLP);
-  simulation.view<setStatus<pokesim::status::tags::Toxic>, Tags<pokesim::status::tags::Toxic>>(dex::Status::TOX);
+    pokesim::dex::Status::PAR);
+  simulation.view<setStatus<pokesim::status::tags::Poison>, Tags<pokesim::status::tags::Poison>>(
+    pokesim::dex::Status::PSN);
+  simulation.view<setStatus<pokesim::status::tags::Sleep>, Tags<pokesim::status::tags::Sleep>>(
+    pokesim::dex::Status::SLP);
+  simulation.view<setStatus<pokesim::status::tags::Toxic>, Tags<pokesim::status::tags::Toxic>>(
+    pokesim::dex::Status::TOX);
 
   runStartSleep(simulation);
   runStartFreeze(simulation);

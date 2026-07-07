@@ -2053,12 +2053,12 @@ void applyBasePowerEventModifier(
 }  // namespace
 
 void runBeforeMove(Simulation& simulation) {
-  dex::Paralysis::onBeforeMove(simulation);
-  dex::ChoiceLock::onBeforeMove(simulation);
+  pokesim::dex::Paralysis::onBeforeMove(simulation);
+  pokesim::dex::ChoiceLock::onBeforeMove(simulation);
 }
 
 void runResidual(Simulation& simulation) {
-  dex::Burn::onResidual(simulation);
+  pokesim::dex::Burn::onResidual(simulation);
 }
 
 void runAccuracyEvent(Simulation&) {}
@@ -2066,7 +2066,7 @@ void runAccuracyEvent(Simulation&) {}
 void runModifyAccuracyEvent(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::CurrentMoveHit, Accuracy>();
 
-  dex::BrightPowder::onModifyAccuracy(simulation);
+  pokesim::dex::BrightPowder::onModifyAccuracy(simulation);
 
   simulation.view<applyEventModifier<Accuracy>>();
   simulation.registry.clear<EventModifier>();
@@ -2077,36 +2077,36 @@ void runModifyCritBoostEvent(Simulation&) {}
 void runBasePowerEvent(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::CurrentMoveHit, BasePower>();
 
-  dex::KnockOff::onBasePower(simulation);
+  pokesim::dex::KnockOff::onBasePower(simulation);
 
   simulation.view<applyBasePowerEventModifier>();
   simulation.registry.clear<EventModifier>();
 }
 
 void runModifyDamageEvent(Simulation& simulation) {
-  dex::LifeOrb::onModifyDamage(simulation);
+  pokesim::dex::LifeOrb::onModifyDamage(simulation);
 }
 
 void runAfterModifyDamageEvent(Simulation& simulation) {
-  dex::FocusSash::onAfterModifyDamage(simulation);
+  pokesim::dex::FocusSash::onAfterModifyDamage(simulation);
 }
 
 void runDamageEvent(Simulation& simulation) {
-  dex::FocusSash::onDamage(simulation);
+  pokesim::dex::FocusSash::onDamage(simulation);
 
   simulation.registry.clear<calc_damage::tags::RanAfterModifyDamage>();
 }
 
 void runDamagingHitEvent(Simulation& simulation) {
-  dex::Static::onDamagingHit(simulation);
+  pokesim::dex::Static::onDamagingHit(simulation);
 }
 
 void runAfterHitEvent(Simulation& simulation) {
-  dex::KnockOff::onAfterHit(simulation);
+  pokesim::dex::KnockOff::onAfterHit(simulation);
 }
 
 void runAfterMoveUsedEvent(Simulation& simulation) {
-  dex::LifeOrb::onAfterMoveUsed(simulation);
+  pokesim::dex::LifeOrb::onAfterMoveUsed(simulation);
 }
 
 void runModifySecondariesEvent(Simulation&) {}
@@ -2116,12 +2116,12 @@ void runStatusImmunityEvent(Simulation&) {
   // Terrain), and all the `onImmunity` events that relate to non-volatile status conditions will go
 }
 
-template void runStatusImmunityEvent<status::tags::Burn>(Simulation&);
-template void runStatusImmunityEvent<status::tags::Freeze>(Simulation&);
-template void runStatusImmunityEvent<status::tags::Paralysis>(Simulation&);
-template void runStatusImmunityEvent<status::tags::Poison>(Simulation&);
-template void runStatusImmunityEvent<status::tags::Sleep>(Simulation&);
-template void runStatusImmunityEvent<status::tags::Toxic>(Simulation&);
+template void runStatusImmunityEvent<pokesim::status::tags::Burn>(Simulation&);
+template void runStatusImmunityEvent<pokesim::status::tags::Freeze>(Simulation&);
+template void runStatusImmunityEvent<pokesim::status::tags::Paralysis>(Simulation&);
+template void runStatusImmunityEvent<pokesim::status::tags::Poison>(Simulation&);
+template void runStatusImmunityEvent<pokesim::status::tags::Sleep>(Simulation&);
+template void runStatusImmunityEvent<pokesim::status::tags::Toxic>(Simulation&);
 
 void runAfterSetStatusEvent(Simulation&) {}
 
@@ -2141,12 +2141,12 @@ void runAfterBoostEvent(Simulation&) {}
 void runModifyTarget(Simulation&) {}
 
 void runModifyMove(Simulation& simulation) {
-  dex::ChoiceScarf::onSourceModifyMove(simulation);
-  dex::ChoiceSpecs::onSourceModifyMove(simulation);
+  pokesim::dex::ChoiceScarf::onSourceModifyMove(simulation);
+  pokesim::dex::ChoiceSpecs::onSourceModifyMove(simulation);
 }
 
 void runDisableMove(Simulation& simulation) {
-  dex::ChoiceLock::onDisableMove(simulation);
+  pokesim::dex::ChoiceLock::onDisableMove(simulation);
 }
 
 void runModifyAtk(Simulation&) {}
@@ -2157,10 +2157,10 @@ void runModifySpa(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::SpaStatUpdateRequired>();
 
   // Priority 1
-  dex::ChoiceSpecs::onModifySpa(simulation);
+  pokesim::dex::ChoiceSpecs::onModifySpa(simulation);
 
   // Priority 5
-  dex::Plus::onModifySpA(simulation);
+  pokesim::dex::Plus::onModifySpA(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpa>>();
   simulation.registry.clear<EventModifier>();
@@ -2169,7 +2169,7 @@ void runModifySpa(Simulation& simulation) {
 void runModifySpd(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::SpdStatUpdateRequired>();
 
-  dex::AssaultVest::onModifySpd(simulation);
+  pokesim::dex::AssaultVest::onModifySpd(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpd>>();
   simulation.registry.clear<EventModifier>();
@@ -2178,12 +2178,12 @@ void runModifySpd(Simulation& simulation) {
 void runModifySpe(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::SpeStatUpdateRequired>();
 
-  dex::ChoiceScarf::onModifySpe(simulation);
+  pokesim::dex::ChoiceScarf::onModifySpe(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpe>>();
   simulation.registry.clear<EventModifier>();
 
-  dex::Paralysis::onModifySpe(simulation);
+  pokesim::dex::Paralysis::onModifySpe(simulation);
 }
 
 void runStartSleep(Simulation&) {}
@@ -2195,9 +2195,9 @@ void runTryTakeItemEvent(Simulation&) {}
 void runAfterUseItemEvent(Simulation&) {}
 
 void runEndItemEvent(Simulation& simulation) {
-  dex::AssaultVest::onEnd(simulation);
-  dex::ChoiceScarf::onEnd(simulation);
-  dex::ChoiceSpecs::onEnd(simulation);
+  pokesim::dex::AssaultVest::onEnd(simulation);
+  pokesim::dex::ChoiceScarf::onEnd(simulation);
+  pokesim::dex::ChoiceSpecs::onEnd(simulation);
 }
 
 void runEndAbilityEvent(Simulation&) {}
@@ -4707,7 +4707,7 @@ namespace pokesim::internal::calc_damage {
 InputSetup::InputSetup(types::registry& registry, types::entity moveEntity) : handle(registry, moveEntity) {}
 
 void InputSetup::setup(
-  types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move) {
+  types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, pokesim::dex::Move move) {
   types::registry& registry = *handle.registry();
 
   setupActionMoveBuild(registry, battleEntity, sourceEntity, targetEntity, entity(), move);
@@ -5320,7 +5320,7 @@ void PokemonStateSetup::setID(types::stateId id) {
   handle.emplace<Id>(id);
 }
 
-void PokemonStateSetup::setSpecies(dex::Species speciesName) {
+void PokemonStateSetup::setSpecies(pokesim::dex::Species speciesName) {
   handle.emplace<SpeciesName>(speciesName);
 }
 
@@ -5350,16 +5350,16 @@ void PokemonStateSetup::setLevel(types::level level) {
   handle.emplace<Level>(level);
 }
 
-void PokemonStateSetup::setGender(dex::Gender gender) {
+void PokemonStateSetup::setGender(pokesim::dex::Gender gender) {
   handle.emplace<GenderName>(gender);
 }
 
-void PokemonStateSetup::setAbility(dex::Ability ability) {
+void PokemonStateSetup::setAbility(pokesim::dex::Ability ability) {
   handle.emplace<AbilityName>(ability);
   ability::tags::emplaceTagFromEnum(ability, handle);
 }
 
-void PokemonStateSetup::setItem(dex::Item item) {
+void PokemonStateSetup::setItem(pokesim::dex::Item item) {
   handle.emplace<ItemName>(item);
   item::tags::emplaceTagFromEnum(item, handle);
 }
@@ -5379,12 +5379,12 @@ void PokemonStateSetup::setPostion(types::teamPositionIndex position) {
   handle.emplace<Position>(position);
 }
 
-void PokemonStateSetup::setStatus(dex::Status status) {
+void PokemonStateSetup::setStatus(pokesim::dex::Status status) {
   handle.emplace<StatusName>(status);
   status::tags::emplaceTagFromEnum(status, handle);
 }
 
-void PokemonStateSetup::setNature(dex::Nature nature) {
+void PokemonStateSetup::setNature(pokesim::dex::Nature nature) {
   handle.emplace<NatureName>(nature);
   nature::tags::emplaceTagFromEnum(nature, handle);
 }
@@ -5420,27 +5420,27 @@ struct EmplaceTag {
 };
 }  // namespace
 
-void ability::tags::emplaceTagFromEnum(dex::Ability ability, types::handle handle) {
+void ability::tags::emplaceTagFromEnum(pokesim::dex::Ability ability, types::handle handle) {
   pokesim::ability::tags::enumToTag<EmplaceTag>(ability, handle);
 }
 
-void item::tags::emplaceTagFromEnum(dex::Item item, types::handle handle) {
+void item::tags::emplaceTagFromEnum(pokesim::dex::Item item, types::handle handle) {
   pokesim::item::tags::enumToTag<EmplaceTag>(item, handle);
 }
 
-void nature::tags::emplaceTagFromEnum(dex::Nature nature, types::handle handle) {
+void nature::tags::emplaceTagFromEnum(pokesim::dex::Nature nature, types::handle handle) {
   pokesim::nature::tags::enumToTag<EmplaceTag>(nature, handle);
 }
 
-void status::tags::emplaceTagFromEnum(dex::Status status, types::handle handle) {
+void status::tags::emplaceTagFromEnum(pokesim::dex::Status status, types::handle handle) {
   pokesim::status::tags::enumToTag<EmplaceTag>(status, handle);
 }
 
-void type::tags::emplaceTagFromEnum(dex::Type type, types::handle handle) {
+void type::tags::emplaceTagFromEnum(pokesim::dex::Type type, types::handle handle) {
   pokesim::type::tags::enumToTag<EmplaceTag>(type, handle);
 }
 
-void move::tags::emplaceTagFromEnum(dex::Move move, types::handle handle) {
+void move::tags::emplaceTagFromEnum(pokesim::dex::Move move, types::handle handle) {
   pokesim::move::tags::enumToTag<EmplaceTag>(move, handle);
 }
 }  // namespace pokesim::internal
@@ -5666,7 +5666,7 @@ struct RemoveNotSettableStatus {
 };
 
 template <typename StatusType>
-void setStatus(types::registry& registry, CurrentEffectTarget target, dex::Status status) {
+void setStatus(types::registry& registry, CurrentEffectTarget target, pokesim::dex::Status status) {
   registry.emplace<StatusName>(target.val, status);
   registry.emplace<StatusType>(target.val);
   if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Paralysis>) {
@@ -5719,13 +5719,17 @@ void setStatus(Simulation& simulation) {
   pokesim::status::tags::forEach<RemoveNotSettableStatus>(simulation);
   simulation.registry.clear<pokesim::tags::CanSetStatus>();
 
-  simulation.view<setStatus<pokesim::status::tags::Burn>, Tags<pokesim::status::tags::Burn>>(dex::Status::BRN);
-  simulation.view<setStatus<pokesim::status::tags::Freeze>, Tags<pokesim::status::tags::Freeze>>(dex::Status::FRZ);
+  simulation.view<setStatus<pokesim::status::tags::Burn>, Tags<pokesim::status::tags::Burn>>(pokesim::dex::Status::BRN);
+  simulation.view<setStatus<pokesim::status::tags::Freeze>, Tags<pokesim::status::tags::Freeze>>(
+    pokesim::dex::Status::FRZ);
   simulation.view<setStatus<pokesim::status::tags::Paralysis>, Tags<pokesim::status::tags::Paralysis>>(
-    dex::Status::PAR);
-  simulation.view<setStatus<pokesim::status::tags::Poison>, Tags<pokesim::status::tags::Poison>>(dex::Status::PSN);
-  simulation.view<setStatus<pokesim::status::tags::Sleep>, Tags<pokesim::status::tags::Sleep>>(dex::Status::SLP);
-  simulation.view<setStatus<pokesim::status::tags::Toxic>, Tags<pokesim::status::tags::Toxic>>(dex::Status::TOX);
+    pokesim::dex::Status::PAR);
+  simulation.view<setStatus<pokesim::status::tags::Poison>, Tags<pokesim::status::tags::Poison>>(
+    pokesim::dex::Status::PSN);
+  simulation.view<setStatus<pokesim::status::tags::Sleep>, Tags<pokesim::status::tags::Sleep>>(
+    pokesim::dex::Status::SLP);
+  simulation.view<setStatus<pokesim::status::tags::Toxic>, Tags<pokesim::status::tags::Toxic>>(
+    pokesim::dex::Status::TOX);
 
   runStartSleep(simulation);
   runStartFreeze(simulation);
@@ -5949,8 +5953,8 @@ void clearActionMoveComponents(types::registry& registry, const View& view) {
     SpaBoost,
     SpdBoost,
     SpeBoost,
-    status::tags::Paralysis,
-    status::tags::Burn>(view.begin(), view.end());
+    pokesim::status::tags::Paralysis,
+    pokesim::status::tags::Burn>(view.begin(), view.end());
 }
 }  // namespace
 
@@ -6049,32 +6053,32 @@ void clearCurrentAction(Simulation& simulation) {
     pokesim::tags::FailedCurrentMoveHit>();
 
   registry.clear<
-    move::effect::tags::Primary,
-    move::effect::tags::Secondary,
-    move::effect::tags::MoveSource,
-    move::effect::tags::MoveTarget,
-    move::tags::FuryAttack,
-    move::tags::KnockOff,
-    move::tags::Moonblast,
-    move::tags::QuiverDance,
-    move::tags::Splash,
-    move::tags::Thunderbolt,
-    move::tags::WillOWisp,
-    move::tags::Physical,
-    move::tags::Special,
-    move::tags::Status,
-    move::tags::Contact,
-    move::tags::BypassSubstitute,
-    move::tags::Punch,
-    move::tags::VariableHitCount,
+    pokesim::move::effect::tags::Primary,
+    pokesim::move::effect::tags::Secondary,
+    pokesim::move::effect::tags::MoveSource,
+    pokesim::move::effect::tags::MoveTarget,
+    pokesim::move::tags::FuryAttack,
+    pokesim::move::tags::KnockOff,
+    pokesim::move::tags::Moonblast,
+    pokesim::move::tags::QuiverDance,
+    pokesim::move::tags::Splash,
+    pokesim::move::tags::Thunderbolt,
+    pokesim::move::tags::WillOWisp,
+    pokesim::move::tags::Physical,
+    pokesim::move::tags::Special,
+    pokesim::move::tags::Status,
+    pokesim::move::tags::Contact,
+    pokesim::move::tags::BypassSubstitute,
+    pokesim::move::tags::Punch,
+    pokesim::move::tags::VariableHitCount,
     BaseEffectChance,
     Accuracy,
     BasePower,
     HitCount,
-    move::tags::AccuracyDependentHitCount,
-    move::tags::Self,
-    move::tags::AnySingleTarget,
-    move::tags::AnySingleAlly>();
+    pokesim::move::tags::AccuracyDependentHitCount,
+    pokesim::move::tags::Self,
+    pokesim::move::tags::AnySingleTarget,
+    pokesim::move::tags::AnySingleAlly>();
 
   registry.clear<SourceSlotName, TargetSlotName>();
 
@@ -6196,7 +6200,7 @@ types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move) 
 
 void internal::setupActionMoveBuild(
   types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
-  types::entity actionMoveEntity, dex::Move move) {
+  types::entity actionMoveEntity, pokesim::dex::Move move) {
   types::handle actionMoveHandle{registry, actionMoveEntity};
 
   move::tags::emplaceTagFromEnum(move, actionMoveHandle);
@@ -6521,53 +6525,53 @@ void InputSetup::setDefender(types::entity entity) {
   handle.emplace<pokesim::analyze_effect::Defender>(entity);
 }
 
-void InputSetup::setEffectMove(dex::Move move) {
+void InputSetup::setEffectMove(pokesim::dex::Move move) {
   handle.emplace<pokesim::analyze_effect::EffectMove>(move);
 }
 
 void InputSetup::setEffect(types::effectEnum effect) {
-  if (effect.holds<dex::PseudoWeather>()) {
-    handle.emplace<PseudoWeatherName>(effect.get<dex::PseudoWeather>());
+  if (effect.holds<pokesim::dex::PseudoWeather>()) {
+    handle.emplace<PseudoWeatherName>(effect.get<pokesim::dex::PseudoWeather>());
   }
-  else if (effect.holds<dex::SideCondition>()) {
-    handle.emplace<SideConditionName>(effect.get<dex::SideCondition>());
+  else if (effect.holds<pokesim::dex::SideCondition>()) {
+    handle.emplace<SideConditionName>(effect.get<pokesim::dex::SideCondition>());
   }
-  else if (effect.holds<dex::Status>()) {
-    handle.emplace<StatusName>(effect.get<dex::Status>());
+  else if (effect.holds<pokesim::dex::Status>()) {
+    handle.emplace<StatusName>(effect.get<pokesim::dex::Status>());
   }
-  else if (effect.holds<dex::Terrain>()) {
-    handle.emplace<TerrainName>(effect.get<dex::Terrain>());
+  else if (effect.holds<pokesim::dex::Terrain>()) {
+    handle.emplace<TerrainName>(effect.get<pokesim::dex::Terrain>());
   }
-  else if (effect.holds<dex::Volatile>()) {
-    handle.emplace<VolatileName>(effect.get<dex::Volatile>());
+  else if (effect.holds<pokesim::dex::Volatile>()) {
+    handle.emplace<VolatileName>(effect.get<pokesim::dex::Volatile>());
   }
-  else if (effect.holds<dex::Weather>()) {
-    handle.emplace<WeatherName>(effect.get<dex::Weather>());
+  else if (effect.holds<pokesim::dex::Weather>()) {
+    handle.emplace<WeatherName>(effect.get<pokesim::dex::Weather>());
   }
   else {
     POKESIM_REQUIRE_FAIL("Effect does not contain a valid enum.");
   }
 }
 
-void InputSetup::setBoostEffect(dex::Stat stat, types::boost boost) {
+void InputSetup::setBoostEffect(pokesim::dex::Stat stat, types::boost boost) {
   switch (stat) {
-    case dex::Stat::ATK: {
+    case pokesim::dex::Stat::ATK: {
       handle.emplace<AtkBoost>(boost);
       break;
     }
-    case dex::Stat::DEF: {
+    case pokesim::dex::Stat::DEF: {
       handle.emplace<DefBoost>(boost);
       break;
     }
-    case dex::Stat::SPA: {
+    case pokesim::dex::Stat::SPA: {
       handle.emplace<SpaBoost>(boost);
       break;
     }
-    case dex::Stat::SPD: {
+    case pokesim::dex::Stat::SPD: {
       handle.emplace<SpdBoost>(boost);
       break;
     }
-    case dex::Stat::SPE: {
+    case pokesim::dex::Stat::SPE: {
       handle.emplace<SpeBoost>(boost);
       break;
     }

@@ -43,53 +43,53 @@ void InputSetup::setDefender(types::entity entity) {
   handle.emplace<pokesim::analyze_effect::Defender>(entity);
 }
 
-void InputSetup::setEffectMove(dex::Move move) {
+void InputSetup::setEffectMove(pokesim::dex::Move move) {
   handle.emplace<pokesim::analyze_effect::EffectMove>(move);
 }
 
 void InputSetup::setEffect(types::effectEnum effect) {
-  if (effect.holds<dex::PseudoWeather>()) {
-    handle.emplace<PseudoWeatherName>(effect.get<dex::PseudoWeather>());
+  if (effect.holds<pokesim::dex::PseudoWeather>()) {
+    handle.emplace<PseudoWeatherName>(effect.get<pokesim::dex::PseudoWeather>());
   }
-  else if (effect.holds<dex::SideCondition>()) {
-    handle.emplace<SideConditionName>(effect.get<dex::SideCondition>());
+  else if (effect.holds<pokesim::dex::SideCondition>()) {
+    handle.emplace<SideConditionName>(effect.get<pokesim::dex::SideCondition>());
   }
-  else if (effect.holds<dex::Status>()) {
-    handle.emplace<StatusName>(effect.get<dex::Status>());
+  else if (effect.holds<pokesim::dex::Status>()) {
+    handle.emplace<StatusName>(effect.get<pokesim::dex::Status>());
   }
-  else if (effect.holds<dex::Terrain>()) {
-    handle.emplace<TerrainName>(effect.get<dex::Terrain>());
+  else if (effect.holds<pokesim::dex::Terrain>()) {
+    handle.emplace<TerrainName>(effect.get<pokesim::dex::Terrain>());
   }
-  else if (effect.holds<dex::Volatile>()) {
-    handle.emplace<VolatileName>(effect.get<dex::Volatile>());
+  else if (effect.holds<pokesim::dex::Volatile>()) {
+    handle.emplace<VolatileName>(effect.get<pokesim::dex::Volatile>());
   }
-  else if (effect.holds<dex::Weather>()) {
-    handle.emplace<WeatherName>(effect.get<dex::Weather>());
+  else if (effect.holds<pokesim::dex::Weather>()) {
+    handle.emplace<WeatherName>(effect.get<pokesim::dex::Weather>());
   }
   else {
     POKESIM_REQUIRE_FAIL("Effect does not contain a valid enum.");
   }
 }
 
-void InputSetup::setBoostEffect(dex::Stat stat, types::boost boost) {
+void InputSetup::setBoostEffect(pokesim::dex::Stat stat, types::boost boost) {
   switch (stat) {
-    case dex::Stat::ATK: {
+    case pokesim::dex::Stat::ATK: {
       handle.emplace<AtkBoost>(boost);
       break;
     }
-    case dex::Stat::DEF: {
+    case pokesim::dex::Stat::DEF: {
       handle.emplace<DefBoost>(boost);
       break;
     }
-    case dex::Stat::SPA: {
+    case pokesim::dex::Stat::SPA: {
       handle.emplace<SpaBoost>(boost);
       break;
     }
-    case dex::Stat::SPD: {
+    case pokesim::dex::Stat::SPD: {
       handle.emplace<SpdBoost>(boost);
       break;
     }
-    case dex::Stat::SPE: {
+    case pokesim::dex::Stat::SPE: {
       handle.emplace<SpeBoost>(boost);
       break;
     }

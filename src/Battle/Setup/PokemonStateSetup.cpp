@@ -51,7 +51,7 @@ void PokemonStateSetup::setID(types::stateId id) {
   handle.emplace<Id>(id);
 }
 
-void PokemonStateSetup::setSpecies(dex::Species speciesName) {
+void PokemonStateSetup::setSpecies(pokesim::dex::Species speciesName) {
   handle.emplace<SpeciesName>(speciesName);
 }
 
@@ -81,16 +81,16 @@ void PokemonStateSetup::setLevel(types::level level) {
   handle.emplace<Level>(level);
 }
 
-void PokemonStateSetup::setGender(dex::Gender gender) {
+void PokemonStateSetup::setGender(pokesim::dex::Gender gender) {
   handle.emplace<GenderName>(gender);
 }
 
-void PokemonStateSetup::setAbility(dex::Ability ability) {
+void PokemonStateSetup::setAbility(pokesim::dex::Ability ability) {
   handle.emplace<AbilityName>(ability);
   ability::tags::emplaceTagFromEnum(ability, handle);
 }
 
-void PokemonStateSetup::setItem(dex::Item item) {
+void PokemonStateSetup::setItem(pokesim::dex::Item item) {
   handle.emplace<ItemName>(item);
   item::tags::emplaceTagFromEnum(item, handle);
 }
@@ -110,12 +110,12 @@ void PokemonStateSetup::setPostion(types::teamPositionIndex position) {
   handle.emplace<Position>(position);
 }
 
-void PokemonStateSetup::setStatus(dex::Status status) {
+void PokemonStateSetup::setStatus(pokesim::dex::Status status) {
   handle.emplace<StatusName>(status);
   status::tags::emplaceTagFromEnum(status, handle);
 }
 
-void PokemonStateSetup::setNature(dex::Nature nature) {
+void PokemonStateSetup::setNature(pokesim::dex::Nature nature) {
   handle.emplace<NatureName>(nature);
   nature::tags::emplaceTagFromEnum(nature, handle);
 }

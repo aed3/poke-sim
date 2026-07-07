@@ -21987,9 +21987,9 @@ struct InputSetup {
   void setAttacker(types::entity entity);
   void setEffectTarget(types::entity entity);
   void setDefender(types::entity entity);
-  void setEffectMove(dex::Move move);
+  void setEffectMove(pokesim::dex::Move move);
   void setEffect(types::effectEnum effect);
-  void setBoostEffect(dex::Stat stat, types::boost boost);
+  void setBoostEffect(pokesim::dex::Stat stat, types::boost boost);
   void setBattle(types::entity entity);
 
   types::entity entity() const { return handle.entity(); }
@@ -22025,7 +22025,7 @@ types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
 namespace internal {
 void setupActionMoveBuild(
   types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
-  types::entity actionMoveEntity, dex::Move move);
+  types::entity actionMoveEntity, pokesim::dex::Move move);
 }
 }  // namespace pokesim
 
@@ -22146,7 +22146,7 @@ struct PokemonStateSetup : StateSetupBase {
 
   void setAutoID();
   void setID(types::stateId id);
-  void setSpecies(dex::Species speciesName);
+  void setSpecies(pokesim::dex::Species speciesName);
 
   void setSide(types::entity entity);
   void setBattle(types::entity entity);
@@ -22155,15 +22155,15 @@ struct PokemonStateSetup : StateSetupBase {
   void setCurrentHp(types::stat hp);
   void setTypes(SpeciesTypes types);
   void setLevel(types::level level);
-  void setGender(dex::Gender gender);
-  void setAbility(dex::Ability ability);
-  void setItem(dex::Item item);
+  void setGender(pokesim::dex::Gender gender);
+  void setAbility(pokesim::dex::Ability ability);
+  void setItem(pokesim::dex::Item item);
   void setMoves(const std::vector<MoveSlot>& moveSlots);
 
   void setPostion(types::teamPositionIndex position);
-  void setStatus(dex::Status status);
+  void setStatus(pokesim::dex::Status status);
 
-  void setNature(dex::Nature nature);
+  void setNature(pokesim::dex::Nature nature);
   void setEVs(types::ev hp, types::ev atk, types::ev def, types::ev spa, types::ev spd, types::ev spe);
   void setEVs(const Evs& evs);
   void setIVs(types::iv hp, types::iv atk, types::iv def, types::iv spa, types::iv spd, types::iv spe);
@@ -22248,32 +22248,32 @@ struct BattleStateSetup : StateSetupBase {
 namespace pokesim::internal {
 namespace ability::tags {
 // Assigns an ability's tag to a handle
-void emplaceTagFromEnum(dex::Ability ability, types::handle handle);
+void emplaceTagFromEnum(pokesim::dex::Ability ability, types::handle handle);
 }  // namespace ability::tags
 
 namespace item::tags {
 // Assigns an item's tag to a handle
-void emplaceTagFromEnum(dex::Item item, types::handle handle);
+void emplaceTagFromEnum(pokesim::dex::Item item, types::handle handle);
 }  // namespace item::tags
 
 namespace nature::tags {
 // Assigns a nature's tag to a handle
-void emplaceTagFromEnum(dex::Nature nature, types::handle handle);
+void emplaceTagFromEnum(pokesim::dex::Nature nature, types::handle handle);
 }  // namespace nature::tags
 
 namespace status::tags {
 // Assigns a status' tag to a handle
-void emplaceTagFromEnum(dex::Status status, types::handle handle);
+void emplaceTagFromEnum(pokesim::dex::Status status, types::handle handle);
 }  // namespace status::tags
 
 namespace type::tags {
 // Assigns a type's tag to a handle
-void emplaceTagFromEnum(dex::Type type, types::handle handle);
+void emplaceTagFromEnum(pokesim::dex::Type type, types::handle handle);
 }  // namespace type::tags
 
 namespace move::tags {
 // Assigns a move's tag to a handle
-void emplaceTagFromEnum(dex::Move move, types::handle handle);
+void emplaceTagFromEnum(pokesim::dex::Move move, types::handle handle);
 }  // namespace move::tags
 }  // namespace pokesim::internal
 
@@ -22321,7 +22321,8 @@ struct InputSetup {
  public:
   InputSetup(types::registry& registry, types::entity moveEntity);
 
-  void setup(types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, dex::Move move);
+  void setup(
+    types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, pokesim::dex::Move move);
 
   types::entity entity() const { return handle.entity(); }
 };

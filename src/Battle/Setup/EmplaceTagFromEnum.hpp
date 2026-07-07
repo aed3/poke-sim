@@ -11,31 +11,31 @@
 namespace pokesim::internal {
 namespace ability::tags {
 // Assigns an ability's tag to a handle
-void emplaceTagFromEnum(dex::Ability ability, types::handle handle);
+void emplaceTagFromEnum(pokesim::dex::Ability ability, types::handle handle);
 }  // namespace ability::tags
 
 namespace item::tags {
 // Assigns an item's tag to a handle
-void emplaceTagFromEnum(dex::Item item, types::handle handle);
+void emplaceTagFromEnum(pokesim::dex::Item item, types::handle handle);
 }  // namespace item::tags
 
 namespace nature::tags {
 // Assigns a nature's tag to a handle
-void emplaceTagFromEnum(dex::Nature nature, types::handle handle);
+void emplaceTagFromEnum(pokesim::dex::Nature nature, types::handle handle);
 }  // namespace nature::tags
 
 namespace status::tags {
 // Assigns a status' tag to a handle
-void emplaceTagFromEnum(dex::Status status, types::handle handle);
+void emplaceTagFromEnum(pokesim::dex::Status status, types::handle handle);
 }  // namespace status::tags
 
 namespace type::tags {
 // Assigns a type's tag to a handle
-void emplaceTagFromEnum(dex::Type type, types::handle handle);
+void emplaceTagFromEnum(pokesim::dex::Type type, types::handle handle);
 }  // namespace type::tags
 
 namespace move::tags {
 // Assigns a move's tag to a handle
-void emplaceTagFromEnum(dex::Move move, types::handle handle);
+void emplaceTagFromEnum(pokesim::dex::Move move, types::handle handle);
 }  // namespace move::tags
 }  // namespace pokesim::internal
