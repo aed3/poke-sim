@@ -13,7 +13,7 @@ void runQueueOrderTest(
   types::handle handle{registry, registry.create()};
   ActionQueue sortedQueue = initialQueue;
 
-  simulate_turn::speedSort(handle, sortedQueue);
+  internal::simulate_turn::speedSort(handle, sortedQueue);
 
   REQUIRE(initialQueue.val.size() == sortedQueue.val.size());
   for (const ActionQueueItem& initialItem : initialQueue.val) {

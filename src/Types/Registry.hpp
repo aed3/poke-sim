@@ -32,17 +32,17 @@ using handle = entt::basic_handle<registry>;
 #ifdef POKESIM_ENTITY_VIEWER
 #include <Utilities/EntityViewer.hpp>
 
-namespace pokesim::types::internal {
+namespace pokesim::internal {
 using BackingRegistry = pokesim::debug::EntityViewerRegistry;
 template <typename Registry>
 using BackingHandle = pokesim::debug::EntityViewerHandle<Registry>;
-}  // namespace pokesim::types::internal
+}  // namespace pokesim::internal
 #else
-namespace pokesim::types::internal {
+namespace pokesim::internal {
 using BackingRegistry = entt::registry;
 template <typename Registry>
 using BackingHandle = entt::basic_handle<Registry>;
-}  // namespace pokesim::types::internal
+}  // namespace pokesim::internal
 #endif
 
 namespace pokesim::types {

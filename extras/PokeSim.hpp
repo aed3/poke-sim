@@ -48,14 +48,14 @@
  * src/Config/Config.hpp
  * src/Config/Require.hpp
  * src/Utilities/NumberToType.hpp
- * src/Utilities/MaxSizedVector.hpp
+ * src/Types/MaxSizedVector.hpp
  * src/Types/Entity.hpp
  * src/Components/EntityHolders/Battle.hpp
  * src/Components/EntityHolders/BattleTree.hpp
  * external/entt/meta/policy.hpp
  * external/entt/meta/utility.hpp
  * external/entt/meta/factory.hpp
- * src/Utilities/FixedMemoryVector.hpp
+ * src/Types/FixedMemoryVector.hpp
  * src/Types/State.hpp
  * src/Utilities/AssertComponentsEqual.hpp
  * src/Types/Registry.hpp
@@ -87,7 +87,7 @@
  * src/Types/Enums/Item.hpp
  * src/Types/Enums/Move.hpp
  * src/Types/Enums/Slot.hpp
- * src/Utilities/Variant.hpp
+ * src/Types/Variant.hpp
  * src/Types/Decisions.hpp
  * src/Types/Enums/ActionOrder.hpp
  * src/Types/Move.hpp
@@ -16590,11 +16590,11 @@ using signedIntType = std::conditional_t<
 
 //////////////////// END OF src/Utilities/NumberToType.hpp /////////////////////
 
-////////////////// START OF src/Utilities/MaxSizedVector.hpp ///////////////////
+//////////////////// START OF src/Types/MaxSizedVector.hpp /////////////////////
 
 #include <initializer_list>
 
-namespace pokesim::internal {
+namespace pokesim::types {
 template <typename T, std::uint64_t N>
 class maxSizedVector : public std::vector<T> {
   using base = std::vector<T>;
@@ -16604,7 +16604,7 @@ class maxSizedVector : public std::vector<T> {
   }
 
  public:
-  using size_type = unsignedIntType<N>;
+  using size_type = internal::unsignedIntType<N>;
 
   template <typename... Args>
   maxSizedVector(Args&&... args) : base(std::forward<Args>(args)...) {
@@ -16665,9 +16665,9 @@ class maxSizedVector : public std::vector<T> {
     return result;
   }
 };
-}  // namespace pokesim::internal
+}  // namespace pokesim::types
 
-/////////////////// END OF src/Utilities/MaxSizedVector.hpp ////////////////////
+///////////////////// END OF src/Types/MaxSizedVector.hpp //////////////////////
 
 //////////////////////// START OF src/Types/Entity.hpp /////////////////////////
 
@@ -16676,7 +16676,7 @@ template <typename T, typename... Other>
 using view = entt::view<entt::get_t<const T, const Other...>>;
 
 using entity = entt::entity;
-using entityVector = pokesim::internal::maxSizedVector<entity, Constants::MAX_ENTITIES>;
+using entityVector = maxSizedVector<entity, Constants::MAX_ENTITIES>;
 
 using ClonedEntityMap = entt::dense_map<entity, entityVector>;
 }  // namespace pokesim::types
@@ -17956,9 +17956,9 @@ inline void meta_reset() noexcept {
 
 //////////////////// END OF external/entt/meta/factory.hpp /////////////////////
 
-///////////////// START OF src/Utilities/FixedMemoryVector.hpp /////////////////
+/////////////////// START OF src/Types/FixedMemoryVector.hpp ///////////////////
 
-namespace pokesim::internal {
+namespace pokesim::types {
 template <typename T, std::uint8_t N>
 class fixedMemoryVector : private std::array<T, N> {
   using base = std::array<T, N>;
@@ -18050,9 +18050,9 @@ class fixedMemoryVector : private std::array<T, N> {
   typename base::const_reverse_iterator rend() const noexcept { return const_reverse_iterator(end()); }
   typename base::const_reverse_iterator crend() const noexcept { return rend(); }
 };
-}  // namespace pokesim::internal
+}  // namespace pokesim::types
 
-////////////////// END OF src/Utilities/FixedMemoryVector.hpp //////////////////
+//////////////////// END OF src/Types/FixedMemoryVector.hpp ////////////////////
 
 ///////////////////////// START OF src/Types/State.hpp /////////////////////////
 
@@ -18103,17 +18103,17 @@ using moveSlotIndex = pokesim::internal::unsignedIntType<Constants::MoveSlots::M
 using activePokemonIndex = pokesim::internal::unsignedIntType<Constants::ActivePokemon::MAX>;
 
 template <typename T>
-using teamPositions = pokesim::internal::fixedMemoryVector<T, Constants::TeamSize::MAX>;
-using teamOrder = types::teamPositions<types::teamPositionIndex>;
+using teamPositions = fixedMemoryVector<T, Constants::TeamSize::MAX>;
+using teamOrder = teamPositions<teamPositionIndex>;
 
 template <typename T>
-using moveSlots = pokesim::internal::fixedMemoryVector<T, Constants::MoveSlots::MAX>;
+using moveSlots = fixedMemoryVector<T, Constants::MoveSlots::MAX>;
 
 template <typename T>
-using sideSlots = pokesim::internal::fixedMemoryVector<T, Constants::ActivePokemonSlotsPerSide::MAX>;
+using sideSlots = fixedMemoryVector<T, Constants::ActivePokemonSlotsPerSide::MAX>;
 
 template <typename T>
-using targets = pokesim::internal::fixedMemoryVector<T, Constants::Targets::MAX>;
+using targets = fixedMemoryVector<T, Constants::Targets::MAX>;
 
 using actionQueueIndex = pokesim::internal::unsignedIntType<Constants::ActionQueueLength::MAX>;
 
@@ -18196,9 +18196,9 @@ class AssertComponentsEqual {
   template <typename>
   struct isList;
   template <typename T, std::uint8_t N>
-  struct isList<internal::fixedMemoryVector<T, N>> {};
+  struct isList<types::fixedMemoryVector<T, N>> {};
   template <typename T, std::uint64_t N>
-  struct isList<internal::maxSizedVector<T, N>> {};
+  struct isList<types::maxSizedVector<T, N>> {};
   template <typename T>
   struct isList<types::sides<T>> {};
   template <typename... Args>
@@ -18287,17 +18287,17 @@ using handle = entt::basic_handle<registry>;
 #ifdef POKESIM_ENTITY_VIEWER
 #include <Utilities/EntityViewer.hpp>
 
-namespace pokesim::types::internal {
+namespace pokesim::internal {
 using BackingRegistry = pokesim::debug::EntityViewerRegistry;
 template <typename Registry>
 using BackingHandle = pokesim::debug::EntityViewerHandle<Registry>;
-}  // namespace pokesim::types::internal
+}  // namespace pokesim::internal
 #else
-namespace pokesim::types::internal {
+namespace pokesim::internal {
 using BackingRegistry = entt::registry;
 template <typename Registry>
 using BackingHandle = entt::basic_handle<Registry>;
-}  // namespace pokesim::types::internal
+}  // namespace pokesim::internal
 #endif
 
 namespace pokesim::types {
@@ -18650,7 +18650,7 @@ struct WeatherName {
 
 //////////////////// START OF src/AnalyzeEffect/Helpers.hpp ////////////////////
 
-namespace pokesim::analyze_effect {
+namespace pokesim::internal::analyze_effect {
 inline auto tryGetAllInputEffects(types::entity input, const types::registry& registry) {
   return registry.try_get<
     PseudoWeatherName,
@@ -18665,7 +18665,7 @@ inline auto tryGetAllInputEffects(types::entity input, const types::registry& re
     SpdBoost,
     SpeBoost>(input);
 }
-}  // namespace pokesim::analyze_effect
+}  // namespace pokesim::internal::analyze_effect
 
 ///////////////////// END OF src/AnalyzeEffect/Helpers.hpp /////////////////////
 
@@ -18733,7 +18733,7 @@ struct DamageRollModifiers {
 };
 
 struct DamageRolls {
-  internal::maxSizedVector<Damage, Constants::DamageRollCount::MAX> val{};
+  types::maxSizedVector<Damage, Constants::DamageRollCount::MAX> val{};
 
   DamageRolls() {}
   DamageRolls(const DamageRolls& other) : val(other.val) {}
@@ -18895,11 +18895,11 @@ static constexpr std::uint8_t TOTAL_SLOT_COUNT = (std::uint8_t)Slot::TOTAL_SLOT 
 
 /////////////////////// END OF src/Types/Enums/Slot.hpp ////////////////////////
 
-////////////////////// START OF src/Utilities/Variant.hpp //////////////////////
+//////////////////////// START OF src/Types/Variant.hpp ////////////////////////
 
 #include <variant>
 
-namespace pokesim::internal {
+namespace pokesim::types {
 template <typename... Types>
 class variant : public std::variant<Types...> {
  protected:
@@ -18941,9 +18941,9 @@ class variant : public std::variant<Types...> {
     return std::make_tuple(std::get_if<Type>(this)...);
   }
 };
-}  // namespace pokesim::internal
+}  // namespace pokesim::types
 
-/////////////////////// END OF src/Utilities/Variant.hpp ///////////////////////
+///////////////////////// END OF src/Types/Variant.hpp /////////////////////////
 
 /////////////////////// START OF src/Types/Decisions.hpp ///////////////////////
 
@@ -18985,10 +18985,10 @@ struct ItemDecision {
 };
 
 namespace types {
-struct slotDecision : pokesim::internal::variant<
+struct slotDecision : variant<
                         MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision,
                         ZMoveDecision, SwitchDecision, ItemDecision> {
-  using variant = pokesim::internal::variant<
+  using variant = variant<
     MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision, ZMoveDecision,
     SwitchDecision, ItemDecision>;
   using variant::variant;
@@ -19002,7 +19002,7 @@ struct slotDecision : pokesim::internal::variant<
   }
 };
 
-using slotDecisions = types::sideSlots<slotDecision>;
+using slotDecisions = sideSlots<slotDecision>;
 }  // namespace types
 }  // namespace pokesim
 
@@ -19101,7 +19101,7 @@ struct ActionQueueItem {
 };
 
 struct ActionQueue {
-  internal::maxSizedVector<ActionQueueItem, Constants::ActionQueueLength::MAX> val{};
+  types::maxSizedVector<ActionQueueItem, Constants::ActionQueueLength::MAX> val{};
 };
 }  // namespace pokesim
 
@@ -19297,7 +19297,7 @@ struct InvertFinalAnswer {};
 //////////////////////// START OF src/Types/Effect.hpp /////////////////////////
 
 namespace pokesim::types {
-using effectEnum = pokesim::internal::variant<
+using effectEnum = variant<
   std::monostate, dex::PseudoWeather, dex::SideCondition, dex::Status, dex::Terrain, dex::Volatile, dex::Weather>;
 }  // namespace pokesim::types
 
@@ -19410,24 +19410,24 @@ struct Crit {};
 
 //////////// START OF src/Components/CalcDamage/DamageRollSides.hpp ////////////
 
-namespace pokesim::calc_damage::tags {
+namespace pokesim::internal::calc_damage::tags {
 struct P1Defending {};
 struct P2Defending {};
-}  // namespace pokesim::calc_damage::tags
+}  // namespace pokesim::internal::calc_damage::tags
 
 ///////////// END OF src/Components/CalcDamage/DamageRollSides.hpp /////////////
 
 ///////// START OF src/Components/CalcDamage/ModifyingEventRanTags.hpp /////////
 
-namespace pokesim::calc_damage::tags {
+namespace pokesim::internal::calc_damage::tags {
 struct RanAfterModifyDamage {};
-}  // namespace pokesim::calc_damage::tags
+}  // namespace pokesim::internal::calc_damage::tags
 
 ////////// END OF src/Components/CalcDamage/ModifyingEventRanTags.hpp //////////
 
 //////// START OF src/Components/CalcDamage/TemporaryMoveProperties.hpp ////////
 
-namespace pokesim::calc_damage {
+namespace pokesim::internal::calc_damage {
 struct RealEffectiveStat {
   types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
@@ -19454,7 +19454,7 @@ struct UsesDefAsOffense {};  // For Body Press
 struct IgnoresAttackingBoost {};
 struct IgnoresDefendingBoost {};
 }  // namespace tags
-}  // namespace pokesim::calc_damage
+}  // namespace pokesim::internal::calc_damage
 
 ///////// END OF src/Components/CalcDamage/TemporaryMoveProperties.hpp /////////
 
@@ -19543,7 +19543,7 @@ struct Ivs {
 namespace pokesim {
 // Contains the list of pokemon that will faint at the end of the current action.
 struct FaintQueue {
-  internal::maxSizedVector<types::entity, Constants::ActivePokemon::MAX> val{};
+  types::maxSizedVector<types::entity, Constants::ActivePokemon::MAX> val{};
 };
 }  // namespace pokesim
 
@@ -20118,7 +20118,7 @@ struct RandomEventIndex {
 namespace pokesim {
 struct SideDecision {
   PlayerSideId sideId = PlayerSideId::NONE;
-  internal::variant<types::slotDecisions, types::teamOrder> decisions{};
+  types::variant<types::slotDecisions, types::teamOrder> decisions{};
 
   bool operator==(const SideDecision other) const { return sideId == other.sideId && decisions == other.decisions; }
 };
@@ -20179,10 +20179,15 @@ struct RunEffect {};
 
 ////////// START OF src/Components/SimulateTurn/SimulateTurnTags.hpp ///////////
 
-namespace pokesim::simulate_turn::tags {
-struct Input {};
+namespace pokesim {
+namespace simulate_turn::tags {
 struct SpeedSortNeeded {};
-}  // namespace pokesim::simulate_turn::tags
+}  // namespace simulate_turn::tags
+
+namespace internal::simulate_turn::tags {
+struct Input {};
+}  // namespace internal::simulate_turn::tags
+}  // namespace pokesim
 
 /////////// END OF src/Components/SimulateTurn/SimulateTurnTags.hpp ////////////
 
@@ -20197,7 +20202,7 @@ struct SpeedTieIndexes {
     bool operator==(const Span& other) const noexcept { return other.start == start && other.length == length; }
   };
 
-  internal::fixedMemoryVector<Span, Constants::ActivePokemon::MAX> val{};
+  types::fixedMemoryVector<Span, Constants::ActivePokemon::MAX> val{};
 };
 }  // namespace pokesim
 
@@ -20236,7 +20241,7 @@ struct UsesUntilKo {
   };
 
  public:
-  internal::maxSizedVector<Uses, Constants::DamageRollCount::MAX> val{};
+  types::maxSizedVector<Uses, Constants::DamageRollCount::MAX> val{};
 
   const Uses& minUses() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
@@ -20543,10 +20548,10 @@ struct AddedRecycledActionMove2 {};
 
 //////////////// START OF src/Components/Tags/RunEventTags.hpp /////////////////
 
-namespace pokesim::tags {
+namespace pokesim::internal::tags {
 struct DisableMove {};
 struct EndItem {};
-}  // namespace pokesim::tags
+}  // namespace pokesim::internal::tags
 
 ///////////////// END OF src/Components/Tags/RunEventTags.hpp //////////////////
 
@@ -20753,39 +20758,41 @@ namespace pokesim {
 namespace internal {
 struct NaturePlusMinus {
  private:
-  using statEnumType = std::underlying_type_t<dex::Stat>;
+  using Stat = pokesim::dex::Stat;
+  using Nature = pokesim::dex::Nature;
+  using statEnumType = std::underlying_type_t<Stat>;
 
   static constexpr statEnumType NATURED_STATS = 5U;
-  static constexpr std::array<dex::Stat, NATURED_STATS> statIndexMapping = {
-    dex::Stat::ATK,
-    dex::Stat::DEF,
-    dex::Stat::SPA,
-    dex::Stat::SPD,
-    dex::Stat::SPE,
+  static constexpr std::array<Stat, NATURED_STATS> statIndexMapping = {
+    Stat::ATK,
+    Stat::DEF,
+    Stat::SPA,
+    Stat::SPD,
+    Stat::SPE,
   };
 
-  static constexpr std::array<std::array<dex::Nature, NATURED_STATS>, NATURED_STATS> table = {{
-    {dex::Nature::HARDY, dex::Nature::LONELY, dex::Nature::ADAMANT, dex::Nature::NAUGHTY, dex::Nature::BRAVE},
-    {dex::Nature::BOLD, dex::Nature::DOCILE, dex::Nature::IMPISH, dex::Nature::LAX, dex::Nature::RELAXED},
-    {dex::Nature::MODEST, dex::Nature::MILD, dex::Nature::BASHFUL, dex::Nature::RASH, dex::Nature::QUIET},
-    {dex::Nature::CALM, dex::Nature::GENTLE, dex::Nature::CAREFUL, dex::Nature::QUIRKY, dex::Nature::SASSY},
-    {dex::Nature::TIMID, dex::Nature::HASTY, dex::Nature::JOLLY, dex::Nature::NAIVE, dex::Nature::SERIOUS},
+  static constexpr std::array<std::array<Nature, NATURED_STATS>, NATURED_STATS> table = {{
+    {Nature::HARDY, Nature::LONELY, Nature::ADAMANT, Nature::NAUGHTY, Nature::BRAVE},
+    {Nature::BOLD, Nature::DOCILE, Nature::IMPISH, Nature::LAX, Nature::RELAXED},
+    {Nature::MODEST, Nature::MILD, Nature::BASHFUL, Nature::RASH, Nature::QUIET},
+    {Nature::CALM, Nature::GENTLE, Nature::CAREFUL, Nature::QUIRKY, Nature::SASSY},
+    {Nature::TIMID, Nature::HASTY, Nature::JOLLY, Nature::NAIVE, Nature::SERIOUS},
   }};
 
  public:
-  dex::Stat plus = dex::Stat::NONE;
-  dex::Stat minus = dex::Stat::NONE;
+  Stat plus = Stat::NONE;
+  Stat minus = Stat::NONE;
 
   constexpr NaturePlusMinus() {}
-  constexpr NaturePlusMinus(dex::Nature nature) {
+  constexpr NaturePlusMinus(Nature nature) {
     for (statEnumType plusIndex = 0U; plusIndex < NATURED_STATS; plusIndex++) {
       for (statEnumType minusIndex = 0U; minusIndex < NATURED_STATS; minusIndex++) {
         if (nature != table.at(plusIndex).at(minusIndex)) {
           continue;
         }
 
-        dex::Stat plusStat = statIndexMapping.at(plusIndex);
-        dex::Stat minusStat = statIndexMapping.at(minusIndex);
+        Stat plusStat = statIndexMapping.at(plusIndex);
+        Stat minusStat = statIndexMapping.at(minusIndex);
         if (plusIndex != minusIndex) {
           plus = plusStat;
           minus = minusStat;
@@ -20794,7 +20801,7 @@ struct NaturePlusMinus {
       }
     }
   }
-  constexpr NaturePlusMinus(std::underlying_type_t<dex::Nature> nature) : NaturePlusMinus((dex::Nature)nature) {}
+  constexpr NaturePlusMinus(std::underlying_type_t<Nature> nature) : NaturePlusMinus((Nature)nature) {}
 };
 }  // namespace internal
 
@@ -21096,8 +21103,6 @@ struct EffectMultiplier;
 namespace calc_damage {
 struct CritChanceDivisor;
 struct CritBoost;
-struct RealEffectiveStat;
-struct DamageFormulaVariables;
 struct UsesUntilKo;
 struct AttackerHpRecovered;
 struct AttackerHpLost;
@@ -21113,6 +21118,10 @@ struct RandomBinaryProbabilityStack;
 struct RandomEventCountStack;
 struct RandomEqualChanceStack;
 struct RandomEventIndex;
+namespace calc_damage {
+struct RealEffectiveStat;
+struct DamageFormulaVariables;
+}  // namespace calc_damage
 }  // namespace internal
 namespace action {
 struct Team;
@@ -21209,10 +21218,10 @@ template <>
 void check(const calc_damage::CritBoost&);
 
 template <>
-void check(const calc_damage::RealEffectiveStat&);
+void check(const internal::calc_damage::RealEffectiveStat&);
 
 template <>
-void check(const calc_damage::DamageFormulaVariables&);
+void check(const internal::calc_damage::DamageFormulaVariables&);
 
 template <>
 void check(const ChoiceLock&);
@@ -21967,9 +21976,9 @@ template<typename... Args>
 
 ///////// START OF src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp /////////
 
-namespace pokesim::analyze_effect {
+namespace pokesim::internal::analyze_effect {
 struct InputSetup {
- protected:
+ private:
   types::handle handle;
 
  public:
@@ -21985,7 +21994,7 @@ struct InputSetup {
 
   types::entity entity() const { return handle.entity(); }
 };
-}  // namespace pokesim::analyze_effect
+}  // namespace pokesim::internal::analyze_effect
 
 ////////// END OF src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp //////////
 
@@ -22013,9 +22022,11 @@ types::entity slotToPokemonEntity(const types::registry& registry, const Sides& 
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
 types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
 
+namespace internal {
 void setupActionMoveBuild(
   types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
   types::entity actionMoveEntity, dex::Move move);
+}
 }  // namespace pokesim
 
 //////////////////// END OF src/Battle/Helpers/Helpers.hpp /////////////////////
@@ -22041,6 +22052,7 @@ struct Spe;
 struct CurrentHp;
 }  // namespace stat
 
+namespace internal {
 void checkIfCanUseItem(Simulation& simulation);
 void useItem(Simulation& simulation);
 void tryUseItem(Simulation& simulation);
@@ -22070,6 +22082,7 @@ void updateDef(Simulation& simulation, bool ignoreBoosts);
 void updateSpa(Simulation& simulation, bool ignoreBoosts);
 void updateSpd(Simulation& simulation, bool ignoreBoosts);
 void updateSpe(Simulation& simulation, bool ignoreBoosts);
+}  // namespace internal
 }  // namespace pokesim
 
 /////////////// END OF src/Battle/Pokemon/ManagePokemonState.hpp ///////////////
@@ -22114,9 +22127,11 @@ struct Ivs;
 struct SpeciesTypes;
 struct MoveSlot;
 
+namespace internal {
+
 // Tool to set properties of a Pokemon's state to an entity.
-struct PokemonStateSetup : internal::StateSetupBase {
-  PokemonStateSetup() : internal::StateSetupBase() {}
+struct PokemonStateSetup : StateSetupBase {
+  PokemonStateSetup() : StateSetupBase() {}
   PokemonStateSetup(types::registry& registry, types::entity entity);
 
   operator types::entity() const { return entity(); }
@@ -22180,6 +22195,7 @@ struct PokemonStateSetup : internal::StateSetupBase {
     handle.emplace<EffectiveStatType>(stat);
   };
 };
+}  // namespace internal
 }  // namespace pokesim
 
 //////////////// END OF src/Battle/Setup/PokemonStateSetup.hpp /////////////////
@@ -22192,9 +22208,10 @@ struct CalculateDamageOptions;
 struct AnalyzeEffectOptions;
 struct ActionQueueItem;
 
+namespace internal {
 // Tool to set properties of a battle's state to an entity.
-struct BattleStateSetup : internal::StateSetupBase {
-  BattleStateSetup() : internal::StateSetupBase() {}
+struct BattleStateSetup : StateSetupBase {
+  BattleStateSetup() : StateSetupBase() {}
   BattleStateSetup(types::registry& registry, types::entity entity);
 
   /**
@@ -22221,13 +22238,14 @@ struct BattleStateSetup : internal::StateSetupBase {
   void setTurn(types::battleTurn turn);
   void setProbability(types::probability probability);
 };
+}  // namespace internal
 }  // namespace pokesim
 
 ///////////////// END OF src/Battle/Setup/BattleStateSetup.hpp /////////////////
 
 /////////////// START OF src/Battle/Setup/EmplaceTagFromEnum.hpp ///////////////
 
-namespace pokesim {
+namespace pokesim::internal {
 namespace ability::tags {
 // Assigns an ability's tag to a handle
 void emplaceTagFromEnum(dex::Ability ability, types::handle handle);
@@ -22257,19 +22275,20 @@ namespace move::tags {
 // Assigns a move's tag to a handle
 void emplaceTagFromEnum(dex::Move move, types::handle handle);
 }  // namespace move::tags
-}  // namespace pokesim
+}  // namespace pokesim::internal
 
 //////////////// END OF src/Battle/Setup/EmplaceTagFromEnum.hpp ////////////////
 
 ///////////////// START OF src/Battle/Setup/SideStateSetup.hpp /////////////////
 
 namespace pokesim {
-struct PokemonStateSetup;
 struct SideDecision;
 
+namespace internal {
+struct PokemonStateSetup;
 // Tool to set properties of a player's side state to an entity.
-struct SideStateSetup : internal::StateSetupBase {
-  SideStateSetup() : internal::StateSetupBase() {}
+struct SideStateSetup : StateSetupBase {
+  SideStateSetup() : StateSetupBase() {}
   SideStateSetup(types::registry& registry, types::entity entity);
   /**
    * @brief Applies the defaults to the required properties for a player side's state.
@@ -22284,6 +22303,7 @@ struct SideStateSetup : internal::StateSetupBase {
   void setPlayerSide(PlayerSideId playerSideId);
   void setSideDecision(const SideDecision& sideDecision);
 };
+}  // namespace internal
 }  // namespace pokesim
 
 ////////////////// END OF src/Battle/Setup/SideStateSetup.hpp //////////////////
@@ -22293,9 +22313,9 @@ struct SideStateSetup : internal::StateSetupBase {
 namespace pokesim {
 class Pokedex;
 
-namespace calc_damage {
+namespace internal::calc_damage {
 struct InputSetup {
- protected:
+ private:
   types::handle handle;
 
  public:
@@ -22305,7 +22325,7 @@ struct InputSetup {
 
   types::entity entity() const { return handle.entity(); }
 };
-}  // namespace calc_damage
+}  // namespace internal::calc_damage
 }  // namespace pokesim
 
 ///////////// END OF src/CalcDamage/Setup/CalcDamageInputSetup.hpp /////////////
@@ -22908,7 +22928,7 @@ constexpr types::damage computeDamageRoll(types::damage damage, types::damageRol
 }
 
 constexpr types::damage computeAverageDamageRoll(types::damage damage) {
-  return (types::damage)(damage * (100U - (Constants::DamageRollCount::MAX - 1U) / 2.0F) / 100.0F);
+  return (types::damage)(damage * (100U - ((Constants::DamageRollCount::MAX - 1U) / 2.0F)) / 100.0F);
 }
 
 constexpr types::damage computeMinDamageRoll(types::damage damage) {
@@ -22917,7 +22937,7 @@ constexpr types::damage computeMinDamageRoll(types::damage damage) {
 
 constexpr types::damage computeBaseDamage(
   types::power power, types::level level, types::stat attack, types::stat defense) {
-  return ((((2U * level / 5U + 2U) * power * attack) / defense) / 50U) + 2U;
+  return (((((2U * level / 5U) + 2U) * power * attack) / defense) / 50U) + 2U;
 }
 
 constexpr types::stat computeStatFromBaseStat(
@@ -22961,10 +22981,10 @@ constexpr types::stat computeStatFromBaseStat(
   }
 
   if (statName == dex::Stat::HP) {
-    return ((2U * baseStat + iv + (ev / 4U) + 100U) * level / 100U) + 10U;
+    return (((2U * baseStat) + iv + (ev / 4U) + 100U) * level / 100U) + 10U;
   }
 
-  types::stat stat = ((2U * baseStat + iv + (ev / 4U)) * level / 100U) + 5U;
+  types::stat stat = (((2U * baseStat) + iv + (ev / 4U)) * level / 100U) + 5U;
 
   if (NaturesTable::plus(nature) == statName) {
     stat = (stat * 110U) / 100U;
@@ -23959,22 +23979,24 @@ struct SimulationSetupChecks {
     }
   }
 
-  void addToBattleChecklist(const BattleStateSetup& battleStateSetup, const BattleCreationInfo& creationInfo) {
+  void addToBattleChecklist(
+    const internal::BattleStateSetup& battleStateSetup, const BattleCreationInfo& creationInfo) {
     createdBattles[&creationInfo].push_back(battleStateSetup.entity());
   }
 
-  void addToTurnDecisionChecklist(const BattleStateSetup& battleStateSetup, const TurnDecisionInfo& turnDecisionInfo) {
+  void addToTurnDecisionChecklist(
+    const internal::BattleStateSetup& battleStateSetup, const TurnDecisionInfo& turnDecisionInfo) {
     createdTurnDecisions[&turnDecisionInfo] = battleStateSetup.entity();
   }
 
   void addToCalcDamageChecklist(
-    const BattleStateSetup& battleStateSetup, const calc_damage::InputSetup& inputSetup,
+    const internal::BattleStateSetup& battleStateSetup, const internal::calc_damage::InputSetup& inputSetup,
     const CalcDamageInputInfo& calcDamageInputInfo) {
     createdCalcDamageInputs[&calcDamageInputInfo] = {battleStateSetup.entity(), inputSetup.entity()};
   }
 
   void addToAnalyzeEffectChecklist(
-    const BattleStateSetup& battleStateSetup, const analyze_effect::InputSetup& inputSetup,
+    const internal::BattleStateSetup& battleStateSetup, const internal::analyze_effect::InputSetup& inputSetup,
     const AnalyzeEffectInputInfo& analyzeEffectInputInfo) {
     createdAnalyzeEffectInputs[&analyzeEffectInputInfo] = {battleStateSetup.entity(), inputSetup.entity()};
   }
@@ -23988,6 +24010,7 @@ struct SimulationSetupChecks {
 #else
 
 namespace pokesim {
+namespace internal {
 struct BattleStateSetup;
 
 namespace calc_damage {
@@ -23997,17 +24020,19 @@ struct InputSetup;
 namespace analyze_effect {
 struct InputSetup;
 }
+}  // namespace internal
 
 namespace debug {
 struct SimulationSetupChecks {
   SimulationSetupChecks(const Simulation*, const std::vector<BattleCreationInfo>&) {}
   void checkOutputs() const {}
-  void addToBattleChecklist(const BattleStateSetup&, const BattleCreationInfo&) const {}
-  void addToTurnDecisionChecklist(const BattleStateSetup&, const TurnDecisionInfo&) const {}
+  void addToBattleChecklist(const internal::BattleStateSetup&, const BattleCreationInfo&) const {}
+  void addToTurnDecisionChecklist(const internal::BattleStateSetup&, const TurnDecisionInfo&) const {}
   void addToCalcDamageChecklist(
-    const BattleStateSetup&, const calc_damage::InputSetup&, const CalcDamageInputInfo&) const {}
+    const internal::BattleStateSetup&, const internal::calc_damage::InputSetup&, const CalcDamageInputInfo&) const {}
   void addToAnalyzeEffectChecklist(
-    const BattleStateSetup&, const analyze_effect::InputSetup&, const AnalyzeEffectInputInfo&) const {}
+    const internal::BattleStateSetup&, const internal::analyze_effect::InputSetup&,
+    const AnalyzeEffectInputInfo&) const {}
   static void checkBattle(const Simulation&, types::entity, const BattleCreationInfo&) {}
 };
 }  // namespace debug
@@ -24105,7 +24130,7 @@ void run(Simulation& simulation);
 
 //////////////// START OF src/Battle/Helpers/IntegerModify.hpp /////////////////
 
-namespace pokesim {
+namespace pokesim::internal {
 template <typename Number1, typename Number2>
 constexpr types::eventModifier fixedPointMultiply(Number1 value, Number2 multiplier) {
   types::eventModifier modifier = (types::eventModifier)(multiplier * Constants::FIXED_POINT_SCALE);
@@ -24125,7 +24150,7 @@ template <typename Numerator>
 constexpr types::eventModifier chainValueToModifier(
   types::eventModifier eventModifier, Numerator numerator, types::eventModifier denominator = 1U) {
   types::eventModifier newModifier = (types::eventModifier)(numerator * Constants::FIXED_POINT_SCALE / denominator);
-  return (eventModifier * newModifier + Constants::FIXED_POINT_HALF_SCALE) / Constants::FIXED_POINT_SCALE;
+  return ((eventModifier * newModifier) + Constants::FIXED_POINT_HALF_SCALE) / Constants::FIXED_POINT_SCALE;
 }
 
 template <typename Numerator>
@@ -24133,7 +24158,7 @@ void chainComponentToModifier(
   EventModifier& eventModifier, Numerator numerator, types::eventModifier denominator = 1U) {
   eventModifier.val = chainValueToModifier(eventModifier.val, numerator, denominator);
 }
-}  // namespace pokesim
+}  // namespace pokesim::internal
 
 ///////////////// END OF src/Battle/Helpers/IntegerModify.hpp //////////////////
 
@@ -24816,6 +24841,7 @@ struct WillOWisp {
 namespace pokesim {
 class Simulation;
 
+namespace internal {
 void runBeforeMove(Simulation& simulation);
 void runResidual(Simulation& simulation);
 
@@ -24865,6 +24891,7 @@ void runEndAbilityEvent(Simulation& simulation);
 
 void runFaintEvent(Simulation& simulation);
 void runAfterFaintEvent(Simulation& simulation);
+}  // namespace internal
 }  // namespace pokesim
 
 ////////////////////// END OF src/Simulation/RunEvent.hpp //////////////////////
@@ -24882,6 +24909,7 @@ struct CurrentActionTarget;
 struct CurrentActionTargets;
 struct RootBattle;
 
+namespace internal {
 void assignRootBattle(types::handle battleHandle);
 void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root);
 
@@ -24891,14 +24919,14 @@ void setCurrentActionTarget(
 void setFailedActionMove(
   types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target);
 void clearCurrentAction(Simulation& simulation);
+}  // namespace internal
 }  // namespace pokesim
 
 /////////////////// END OF src/Battle/ManageBattleState.hpp ////////////////////
 
 ////////////////// START OF src/SimulateTurn/RandomChance.hpp //////////////////
 
-namespace pokesim {
-namespace internal {
+namespace pokesim::internal {
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void setRandomEventChances(
   types::handle handle, const Simulation& simulation,
@@ -24911,7 +24939,7 @@ enum class PercentChanceLimitResult : std::uint8_t {
 };
 
 PercentChanceLimitResult checkPercentChanceLimits(
-  types::probability eventProbability, types::probability probability, const simulate_turn::Options& options);
+  types::probability eventProbability, types::probability probability, const pokesim::simulate_turn::Options& options);
 
 void setRandomBinaryChanceFromProbability(
   types::handle handle, Battle battle, const Simulation& simulation, types::probability eventProbability);
@@ -24946,7 +24974,6 @@ void randomEqualChance(
   types::optionalCallback updateProbabilities);
 void randomEventCount(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities);
-}  // namespace internal
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename... SelectionTags>
 void runRandomEventChances(
@@ -24997,7 +25024,7 @@ void runRandomEventCount(
 
   internal::randomEventCount(simulation, applyChoices, updateProbabilities);
 }
-}  // namespace pokesim
+}  // namespace pokesim::internal
 
 /////////////////// END OF src/SimulateTurn/RandomChance.hpp ///////////////////
 
@@ -25006,7 +25033,9 @@ void runRandomEventCount(
 namespace pokesim {
 class Simulation;
 
+namespace internal {
 void runMoveHitChecks(Simulation& simulation);
+}
 }  // namespace pokesim
 
 //////////////////// END OF src/Simulation/MoveHitSteps.hpp ////////////////////
@@ -25094,7 +25123,7 @@ struct SideDecision;
 struct ActionQueue;
 struct RecycledAction;
 
-namespace simulate_turn {
+namespace internal::simulate_turn {
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision);
 void speedSort(types::handle handle, ActionQueue& actionQueue);
 
@@ -25102,7 +25131,7 @@ void addBeforeTurnAction(ActionQueue& actionQueue);
 void addResidualAction(ActionQueue& actionQueue);
 void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction& action);
 void clearActionQueue(ActionQueue& actionQueue);
-}  // namespace simulate_turn
+}  // namespace internal::simulate_turn
 }  // namespace pokesim
 
 //////////////// END OF src/SimulateTurn/ManageActionQueue.hpp /////////////////
@@ -25296,17 +25325,17 @@ inline types::rngResult nextBoundedRandomValue(
 
 namespace pokesim {
 class Simulation;
-namespace simulate_turn {
+namespace internal::simulate_turn {
 void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind);
 void setIfMoveCrits(Simulation& simulation);
-}  // namespace simulate_turn
+}  // namespace internal::simulate_turn
 }  // namespace pokesim
 
 /////////////// END OF src/SimulateTurn/CalcDamageSpecifics.hpp ////////////////
 
 ///////////////// START OF src/Pokedex/Setup/DexDataSetup.hpp //////////////////
 
-namespace pokesim::dex::internal {
+namespace pokesim::internal::dex {
 struct DexDataSetup {
  protected:
   types::handle handle;
@@ -25327,7 +25356,7 @@ struct DexDataSetup {
 
   types::entity entity() { return handle.entity(); }
 };
-}  // namespace pokesim::dex::internal
+}  // namespace pokesim::internal::dex
 
 ////////////////// END OF src/Pokedex/Setup/DexDataSetup.hpp ///////////////////
 
@@ -25337,32 +25366,32 @@ namespace pokesim {
 class Pokedex;
 }
 
-namespace pokesim::dex::internal {
+namespace pokesim::internal::dex {
 struct SpeciesDexDataSetup : DexDataSetup {
   SpeciesDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
 
-  void setName(Species species);
-  void setType(Type type1, Type type2 = Type::NO_TYPE);
+  void setName(pokesim::dex::Species species);
+  void setType(pokesim::dex::Type type1, pokesim::dex::Type type2 = pokesim::dex::Type::NO_TYPE);
   void setBaseStats(
     types::baseStat hp, types::baseStat atk, types::baseStat def, types::baseStat spa, types::baseStat spd,
     types::baseStat spe);
-  void setPrimaryAbility(Ability ability);
-  void setSecondaryAbility(Ability ability);
-  void setHiddenAbility(Ability ability);
+  void setPrimaryAbility(pokesim::dex::Ability ability);
+  void setSecondaryAbility(pokesim::dex::Ability ability);
+  void setHiddenAbility(pokesim::dex::Ability ability);
 };
-}  // namespace pokesim::dex::internal
+}  // namespace pokesim::internal::dex
 
 /////////////// END OF src/Pokedex/Setup/SpeciesDexDataSetup.hpp ///////////////
 
 /////////////// START OF src/Pokedex/Setup/ItemDexDataSetup.hpp ////////////////
 
-namespace pokesim::dex::internal {
+namespace pokesim::internal::dex {
 struct ItemDexDataSetup : DexDataSetup {
   ItemDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
 
-  void setName(Item item);
+  void setName(pokesim::dex::Item item);
 };
-}  // namespace pokesim::dex::internal
+}  // namespace pokesim::internal::dex
 
 //////////////// END OF src/Pokedex/Setup/ItemDexDataSetup.hpp /////////////////
 
@@ -25553,13 +25582,13 @@ struct Ribombee {
 
 ////////////// START OF src/Pokedex/Setup/AbilityDexDataSetup.hpp //////////////
 
-namespace pokesim::dex::internal {
+namespace pokesim::internal::dex {
 struct AbilityDexDataSetup : DexDataSetup {
   AbilityDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
 
-  void setName(Ability ability);
+  void setName(pokesim::dex::Ability ability);
 };
-}  // namespace pokesim::dex::internal
+}  // namespace pokesim::internal::dex
 
 /////////////// END OF src/Pokedex/Setup/AbilityDexDataSetup.hpp ///////////////
 
@@ -25900,7 +25929,7 @@ struct Checks : pokesim::debug::Checks {
     for (types::entity pokemon : pokemonList) {
       pokesim::debug::TypesToIgnore typesToIgnore;
       if (has<pokesim::tags::SimulateTurn>(pokemon) && !forAttacker) {
-        typesToIgnore.add<tags::RanAfterModifyDamage>();
+        typesToIgnore.add<internal::calc_damage::tags::RanAfterModifyDamage>();
       }
       types::entity initialPokemon = getInitialEntity(pokemon);
       pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, initialPokemon, typesToIgnore);

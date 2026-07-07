@@ -3,7 +3,7 @@
 #include <tuple>
 #include <variant>
 
-namespace pokesim::internal {
+namespace pokesim::types {
 template <typename... Types>
 class variant : public std::variant<Types...> {
  protected:
@@ -45,4 +45,4 @@ class variant : public std::variant<Types...> {
     return std::make_tuple(std::get_if<Type>(this)...);
   }
 };
-}  // namespace pokesim::internal
+}  // namespace pokesim::types

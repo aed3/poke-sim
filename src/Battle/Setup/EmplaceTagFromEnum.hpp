@@ -8,7 +8,7 @@
 #include <Types/Enums/Type.hpp>
 #include <Types/Registry.hpp>
 
-namespace pokesim {
+namespace pokesim::internal {
 namespace ability::tags {
 // Assigns an ability's tag to a handle
 void emplaceTagFromEnum(dex::Ability ability, types::handle handle);
@@ -38,4 +38,4 @@ namespace move::tags {
 // Assigns a move's tag to a handle
 void emplaceTagFromEnum(dex::Move move, types::handle handle);
 }  // namespace move::tags
-}  // namespace pokesim
+}  // namespace pokesim::internal

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <Types/Constants.hpp>
+#include <Types/FixedMemoryVector.hpp>
 #include <Types/State.hpp>
-#include <Utilities/FixedMemoryVector.hpp>
 
 namespace pokesim {
 struct SpeedTieIndexes {
@@ -13,6 +13,6 @@ struct SpeedTieIndexes {
     bool operator==(const Span& other) const noexcept { return other.start == start && other.length == length; }
   };
 
-  internal::fixedMemoryVector<Span, Constants::ActivePokemon::MAX> val{};
+  types::fixedMemoryVector<Span, Constants::ActivePokemon::MAX> val{};
 };
 }  // namespace pokesim

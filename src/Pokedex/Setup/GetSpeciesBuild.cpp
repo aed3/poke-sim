@@ -36,7 +36,7 @@ struct BuildSpecies {
 
  public:
   static types::entity build(types::registry& registry, GameMechanics gameMechanic) {
-    dex::internal::SpeciesDexDataSetup species(registry);
+    internal::dex::SpeciesDexDataSetup species(registry);
 
     species.setName(T::name(gameMechanic));
     species.setBaseStats(

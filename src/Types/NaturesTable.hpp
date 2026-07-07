@@ -9,39 +9,41 @@ namespace pokesim {
 namespace internal {
 struct NaturePlusMinus {
  private:
-  using statEnumType = std::underlying_type_t<dex::Stat>;
+  using Stat = pokesim::dex::Stat;
+  using Nature = pokesim::dex::Nature;
+  using statEnumType = std::underlying_type_t<Stat>;
 
   static constexpr statEnumType NATURED_STATS = 5U;
-  static constexpr std::array<dex::Stat, NATURED_STATS> statIndexMapping = {
-    dex::Stat::ATK,
-    dex::Stat::DEF,
-    dex::Stat::SPA,
-    dex::Stat::SPD,
-    dex::Stat::SPE,
+  static constexpr std::array<Stat, NATURED_STATS> statIndexMapping = {
+    Stat::ATK,
+    Stat::DEF,
+    Stat::SPA,
+    Stat::SPD,
+    Stat::SPE,
   };
 
-  static constexpr std::array<std::array<dex::Nature, NATURED_STATS>, NATURED_STATS> table = {{
-    {dex::Nature::HARDY, dex::Nature::LONELY, dex::Nature::ADAMANT, dex::Nature::NAUGHTY, dex::Nature::BRAVE},
-    {dex::Nature::BOLD, dex::Nature::DOCILE, dex::Nature::IMPISH, dex::Nature::LAX, dex::Nature::RELAXED},
-    {dex::Nature::MODEST, dex::Nature::MILD, dex::Nature::BASHFUL, dex::Nature::RASH, dex::Nature::QUIET},
-    {dex::Nature::CALM, dex::Nature::GENTLE, dex::Nature::CAREFUL, dex::Nature::QUIRKY, dex::Nature::SASSY},
-    {dex::Nature::TIMID, dex::Nature::HASTY, dex::Nature::JOLLY, dex::Nature::NAIVE, dex::Nature::SERIOUS},
+  static constexpr std::array<std::array<Nature, NATURED_STATS>, NATURED_STATS> table = {{
+    {Nature::HARDY, Nature::LONELY, Nature::ADAMANT, Nature::NAUGHTY, Nature::BRAVE},
+    {Nature::BOLD, Nature::DOCILE, Nature::IMPISH, Nature::LAX, Nature::RELAXED},
+    {Nature::MODEST, Nature::MILD, Nature::BASHFUL, Nature::RASH, Nature::QUIET},
+    {Nature::CALM, Nature::GENTLE, Nature::CAREFUL, Nature::QUIRKY, Nature::SASSY},
+    {Nature::TIMID, Nature::HASTY, Nature::JOLLY, Nature::NAIVE, Nature::SERIOUS},
   }};
 
  public:
-  dex::Stat plus = dex::Stat::NONE;
-  dex::Stat minus = dex::Stat::NONE;
+  Stat plus = Stat::NONE;
+  Stat minus = Stat::NONE;
 
   constexpr NaturePlusMinus() {}
-  constexpr NaturePlusMinus(dex::Nature nature) {
+  constexpr NaturePlusMinus(Nature nature) {
     for (statEnumType plusIndex = 0U; plusIndex < NATURED_STATS; plusIndex++) {
       for (statEnumType minusIndex = 0U; minusIndex < NATURED_STATS; minusIndex++) {
         if (nature != table.at(plusIndex).at(minusIndex)) {
           continue;
         }
 
-        dex::Stat plusStat = statIndexMapping.at(plusIndex);
-        dex::Stat minusStat = statIndexMapping.at(minusIndex);
+        Stat plusStat = statIndexMapping.at(plusIndex);
+        Stat minusStat = statIndexMapping.at(minusIndex);
         if (plusIndex != minusIndex) {
           plus = plusStat;
           minus = minusStat;
@@ -50,7 +52,7 @@ struct NaturePlusMinus {
       }
     }
   }
-  constexpr NaturePlusMinus(std::underlying_type_t<dex::Nature> nature) : NaturePlusMinus((dex::Nature)nature) {}
+  constexpr NaturePlusMinus(std::underlying_type_t<Nature> nature) : NaturePlusMinus((Nature)nature) {}
 };
 }  // namespace internal
 

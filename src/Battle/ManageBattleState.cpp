@@ -41,12 +41,12 @@
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
-namespace pokesim {
+namespace pokesim::internal {
 namespace {
 template <typename CurrentActionTag>
 bool removeFailedMove(types::registry& registry, types::entity moveEntity, types::entity entity) {
   using CurrentActionMoves = std::conditional_t<
-    std::is_same_v<CurrentActionTag, tags::CurrentActionMoveSource>,
+    std::is_same_v<CurrentActionTag, pokesim::tags::CurrentActionMoveSource>,
     CurrentActionMovesAsSource,
     CurrentActionMovesAsTarget>;
 
@@ -67,7 +67,7 @@ bool removeFailedMove(types::registry& registry, types::entity moveEntity, types
 void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets) {
   types::activePokemonIndex deleteCount = 0U;
   for (types::entity& target : targets.val) {
-    if (!registry.all_of<tags::CurrentActionMoveTarget>(target)) {
+    if (!registry.all_of<pokesim::tags::CurrentActionMoveTarget>(target)) {
       types::activePokemonIndex swapIndex = targets.val.size() - 1 - deleteCount;
       POKESIM_REQUIRE(swapIndex < targets.val.size(), "Swap index out of bounds.");
       std::swap(target, targets.val[swapIndex]);
@@ -81,9 +81,9 @@ void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets&
 template <typename View>
 void clearActionMoveComponents(types::registry& registry, const View& view) {
   registry.remove<
-    tags::SimulateTurn,
-    tags::CalculateDamage,
-    tags::AnalyzeEffect,
+    pokesim::tags::SimulateTurn,
+    pokesim::tags::CalculateDamage,
+    pokesim::tags::AnalyzeEffect,
     Battle,
     TypeName,
     AtkBoost,
@@ -103,7 +103,7 @@ void assignRootBattle(types::handle battleHandle) {
 }
 
 void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root) {
-  leafBattleHandle.registry()->get_or_emplace<simulate_turn::TurnOutcomeBattles>(root.val).val.push_back(
+  leafBattleHandle.registry()->get_or_emplace<pokesim::simulate_turn::TurnOutcomeBattles>(root.val).val.push_back(
     leafBattleHandle.entity());
 }
 
@@ -113,7 +113,7 @@ void setCurrentActionSource(types::handle battleHandle, const Sides& sides, Curr
   types::entity sourceEntity = slotToPokemonEntity(registry, sides, sourceSlotName.val);
 
   battleHandle.emplace<CurrentActionSource>(sourceEntity);
-  registry.emplace<tags::CurrentActionMoveSource>(sourceEntity);
+  registry.emplace<pokesim::tags::CurrentActionMoveSource>(sourceEntity);
 }
 
 void setCurrentActionTarget(
@@ -123,7 +123,7 @@ void setCurrentActionTarget(
   types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.val);
 
   bool pickedTarget = false;
-  if (!registry.any_of<tags::Fainted>(targetEntity)) {
+  if (!registry.any_of<pokesim::tags::Fainted>(targetEntity)) {
     pickedTarget = true;
   }
   else if (simulation.isBattleFormat(BattleFormat::DOUBLES)) {
@@ -136,7 +136,7 @@ void setCurrentActionTarget(
   else {
     types::entity sourceEntity = battleHandle.get<CurrentActionSource>().val;
     battleHandle.remove<CurrentActionSource>();
-    registry.remove<tags::CurrentActionMoveSource>(sourceEntity);
+    registry.remove<pokesim::tags::CurrentActionMoveSource>(sourceEntity);
   }
 }
 
@@ -146,12 +146,18 @@ void setFailedActionMove(
 
   bool removedAllMoves = true;
   removedAllMoves =
-    removeFailedMove<tags::CurrentActionMoveTarget>(registry, moveHandle.entity(), target.val) && removedAllMoves;
+    removeFailedMove<pokesim::tags::CurrentActionMoveTarget>(registry, moveHandle.entity(), target.val) &&
+    removedAllMoves;
   removedAllMoves =
-    removeFailedMove<tags::CurrentActionMoveSource>(registry, moveHandle.entity(), source.val) && removedAllMoves;
+    removeFailedMove<pokesim::tags::CurrentActionMoveSource>(registry, moveHandle.entity(), source.val) &&
+    removedAllMoves;
 
-  moveHandle.remove<tags::CurrentActionMove, tags::CurrentMoveHit, CurrentActionSource, CurrentActionTarget>();
-  moveHandle.emplace<tags::FailedCurrentActionMove>();
+  moveHandle.remove<
+    pokesim::tags::CurrentActionMove,
+    pokesim::tags::CurrentMoveHit,
+    CurrentActionSource,
+    CurrentActionTarget>();
+  moveHandle.emplace<pokesim::tags::FailedCurrentActionMove>();
   moveHandle.emplace<FailedCurrentActionSource>(source.val);
   moveHandle.emplace<FailedCurrentActionTarget>(target.val);
 
@@ -178,11 +184,11 @@ void clearCurrentAction(Simulation& simulation) {
     CurrentActionMovesAsSource,
     CurrentActionMovesAsTarget,
     CurrentActionMoveSlot,
-    tags::CurrentActionMoveSource,
-    tags::CurrentActionMoveTarget,
-    tags::CurrentActionMoveSlot,
-    tags::CurrentMoveHit,
-    tags::FailedCurrentMoveHit>();
+    pokesim::tags::CurrentActionMoveSource,
+    pokesim::tags::CurrentActionMoveTarget,
+    pokesim::tags::CurrentActionMoveSlot,
+    pokesim::tags::CurrentMoveHit,
+    pokesim::tags::FailedCurrentMoveHit>();
 
   registry.clear<
     move::effect::tags::Primary,
@@ -231,16 +237,16 @@ void clearCurrentAction(Simulation& simulation) {
     action::tags::SwitchOut,
     action::tags::Terastallize>();
 
-  auto actionMoves = registry.view<tags::CurrentActionMove>();
-  auto failedActionMoves = registry.view<tags::FailedCurrentActionMove>();
+  auto actionMoves = registry.view<pokesim::tags::CurrentActionMove>();
+  auto failedActionMoves = registry.view<pokesim::tags::FailedCurrentActionMove>();
   clearActionMoveComponents(registry, actionMoves);
   clearActionMoveComponents(registry, failedActionMoves);
-  registry.clear<tags::CurrentActionMove, tags::FailedCurrentActionMove>();
+  registry.clear<pokesim::tags::CurrentActionMove, pokesim::tags::FailedCurrentActionMove>();
 
   simulation.removeFromEntities<MoveName, action::tags::Current>();
   registry.clear<action::tags::Current>();
 
-  auto battles = registry.view<tags::Battle>();
+  auto battles = registry.view<pokesim::tags::Battle>();
   registry.remove<ItemName, MoveName>(battles.begin(), battles.end());
 }
-}  // namespace pokesim
+}  // namespace pokesim::internal

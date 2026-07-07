@@ -71,9 +71,9 @@ class AssertComponentsEqual {
   template <typename>
   struct isList;
   template <typename T, std::uint8_t N>
-  struct isList<internal::fixedMemoryVector<T, N>> {};
+  struct isList<types::fixedMemoryVector<T, N>> {};
   template <typename T, std::uint64_t N>
-  struct isList<internal::maxSizedVector<T, N>> {};
+  struct isList<types::maxSizedVector<T, N>> {};
   template <typename T>
   struct isList<types::sides<T>> {};
   template <typename... Args>

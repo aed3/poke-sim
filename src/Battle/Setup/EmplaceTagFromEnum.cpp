@@ -11,7 +11,7 @@
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
-namespace pokesim {
+namespace pokesim::internal {
 namespace {
 template <typename Tag>
 struct EmplaceTag {
@@ -20,26 +20,26 @@ struct EmplaceTag {
 }  // namespace
 
 void ability::tags::emplaceTagFromEnum(dex::Ability ability, types::handle handle) {
-  enumToTag<EmplaceTag>(ability, handle);
+  pokesim::ability::tags::enumToTag<EmplaceTag>(ability, handle);
 }
 
 void item::tags::emplaceTagFromEnum(dex::Item item, types::handle handle) {
-  enumToTag<EmplaceTag>(item, handle);
+  pokesim::item::tags::enumToTag<EmplaceTag>(item, handle);
 }
 
 void nature::tags::emplaceTagFromEnum(dex::Nature nature, types::handle handle) {
-  enumToTag<EmplaceTag>(nature, handle);
+  pokesim::nature::tags::enumToTag<EmplaceTag>(nature, handle);
 }
 
 void status::tags::emplaceTagFromEnum(dex::Status status, types::handle handle) {
-  enumToTag<EmplaceTag>(status, handle);
+  pokesim::status::tags::enumToTag<EmplaceTag>(status, handle);
 }
 
 void type::tags::emplaceTagFromEnum(dex::Type type, types::handle handle) {
-  enumToTag<EmplaceTag>(type, handle);
+  pokesim::type::tags::enumToTag<EmplaceTag>(type, handle);
 }
 
 void move::tags::emplaceTagFromEnum(dex::Move move, types::handle handle) {
-  enumToTag<EmplaceTag>(move, handle);
+  pokesim::move::tags::enumToTag<EmplaceTag>(move, handle);
 }
-}  // namespace pokesim
+}  // namespace pokesim::internal

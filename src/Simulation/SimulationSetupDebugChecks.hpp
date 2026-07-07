@@ -590,22 +590,24 @@ struct SimulationSetupChecks {
     }
   }
 
-  void addToBattleChecklist(const BattleStateSetup& battleStateSetup, const BattleCreationInfo& creationInfo) {
+  void addToBattleChecklist(
+    const internal::BattleStateSetup& battleStateSetup, const BattleCreationInfo& creationInfo) {
     createdBattles[&creationInfo].push_back(battleStateSetup.entity());
   }
 
-  void addToTurnDecisionChecklist(const BattleStateSetup& battleStateSetup, const TurnDecisionInfo& turnDecisionInfo) {
+  void addToTurnDecisionChecklist(
+    const internal::BattleStateSetup& battleStateSetup, const TurnDecisionInfo& turnDecisionInfo) {
     createdTurnDecisions[&turnDecisionInfo] = battleStateSetup.entity();
   }
 
   void addToCalcDamageChecklist(
-    const BattleStateSetup& battleStateSetup, const calc_damage::InputSetup& inputSetup,
+    const internal::BattleStateSetup& battleStateSetup, const internal::calc_damage::InputSetup& inputSetup,
     const CalcDamageInputInfo& calcDamageInputInfo) {
     createdCalcDamageInputs[&calcDamageInputInfo] = {battleStateSetup.entity(), inputSetup.entity()};
   }
 
   void addToAnalyzeEffectChecklist(
-    const BattleStateSetup& battleStateSetup, const analyze_effect::InputSetup& inputSetup,
+    const internal::BattleStateSetup& battleStateSetup, const internal::analyze_effect::InputSetup& inputSetup,
     const AnalyzeEffectInputInfo& analyzeEffectInputInfo) {
     createdAnalyzeEffectInputs[&analyzeEffectInputInfo] = {battleStateSetup.entity(), inputSetup.entity()};
   }
@@ -621,6 +623,7 @@ struct SimulationSetupChecks {
 #include "Simulation.hpp"
 
 namespace pokesim {
+namespace internal {
 struct BattleStateSetup;
 
 namespace calc_damage {
@@ -630,17 +633,19 @@ struct InputSetup;
 namespace analyze_effect {
 struct InputSetup;
 }
+}  // namespace internal
 
 namespace debug {
 struct SimulationSetupChecks {
   SimulationSetupChecks(const Simulation*, const std::vector<BattleCreationInfo>&) {}
   void checkOutputs() const {}
-  void addToBattleChecklist(const BattleStateSetup&, const BattleCreationInfo&) const {}
-  void addToTurnDecisionChecklist(const BattleStateSetup&, const TurnDecisionInfo&) const {}
+  void addToBattleChecklist(const internal::BattleStateSetup&, const BattleCreationInfo&) const {}
+  void addToTurnDecisionChecklist(const internal::BattleStateSetup&, const TurnDecisionInfo&) const {}
   void addToCalcDamageChecklist(
-    const BattleStateSetup&, const calc_damage::InputSetup&, const CalcDamageInputInfo&) const {}
+    const internal::BattleStateSetup&, const internal::calc_damage::InputSetup&, const CalcDamageInputInfo&) const {}
   void addToAnalyzeEffectChecklist(
-    const BattleStateSetup&, const analyze_effect::InputSetup&, const AnalyzeEffectInputInfo&) const {}
+    const internal::BattleStateSetup&, const internal::analyze_effect::InputSetup&,
+    const AnalyzeEffectInputInfo&) const {}
   static void checkBattle(const Simulation&, types::entity, const BattleCreationInfo&) {}
 };
 }  // namespace debug

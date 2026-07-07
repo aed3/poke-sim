@@ -6,7 +6,7 @@
 #include <initializer_list>
 #include <vector>
 
-namespace pokesim::internal {
+namespace pokesim::types {
 template <typename T, std::uint64_t N>
 class maxSizedVector : public std::vector<T> {
   using base = std::vector<T>;
@@ -16,7 +16,7 @@ class maxSizedVector : public std::vector<T> {
   }
 
  public:
-  using size_type = unsignedIntType<N>;
+  using size_type = internal::unsignedIntType<N>;
 
   template <typename... Args>
   maxSizedVector(Args&&... args) : base(std::forward<Args>(args)...) {
@@ -77,4 +77,4 @@ class maxSizedVector : public std::vector<T> {
     return result;
   }
 };
-}  // namespace pokesim::internal
+}  // namespace pokesim::types

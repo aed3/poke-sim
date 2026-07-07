@@ -6,7 +6,7 @@
 #include <initializer_list>
 #include <vector>
 
-namespace pokesim::internal {
+namespace pokesim::types {
 template <typename T, std::uint8_t N>
 class fixedMemoryVector : private std::array<T, N> {
   using base = std::array<T, N>;
@@ -98,4 +98,4 @@ class fixedMemoryVector : private std::array<T, N> {
   typename base::const_reverse_iterator rend() const noexcept { return const_reverse_iterator(end()); }
   typename base::const_reverse_iterator crend() const noexcept { return rend(); }
 };
-}  // namespace pokesim::internal
+}  // namespace pokesim::types

@@ -3,6 +3,7 @@
 namespace pokesim {
 class Simulation;
 
+namespace internal {
 void runBeforeMove(Simulation& simulation);
 void runResidual(Simulation& simulation);
 
@@ -52,4 +53,5 @@ void runEndAbilityEvent(Simulation& simulation);
 
 void runFaintEvent(Simulation& simulation);
 void runAfterFaintEvent(Simulation& simulation);
+}  // namespace internal
 }  // namespace pokesim

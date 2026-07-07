@@ -9,12 +9,12 @@
 #include <Types/Stats.hpp>
 #include <entt/entity/handle.hpp>
 
-namespace pokesim::dex::internal {
-void SpeciesDexDataSetup::setName(Species species) {
+namespace pokesim::internal::dex {
+void SpeciesDexDataSetup::setName(pokesim::dex::Species species) {
   handle.emplace<SpeciesName>(species);
 }
 
-void SpeciesDexDataSetup::setType(Type type1, Type type2) {
+void SpeciesDexDataSetup::setType(pokesim::dex::Type type1, pokesim::dex::Type type2) {
   handle.emplace<SpeciesTypes>(type1, type2);
 }
 
@@ -24,15 +24,15 @@ void SpeciesDexDataSetup::setBaseStats(
   handle.emplace<BaseStats>(hp, atk, def, spa, spd, spe);
 }
 
-void SpeciesDexDataSetup::setPrimaryAbility(Ability ability) {
+void SpeciesDexDataSetup::setPrimaryAbility(pokesim::dex::Ability ability) {
   handle.emplace<PrimaryAbility>(ability);
 }
 
-void SpeciesDexDataSetup::setSecondaryAbility(Ability ability) {
+void SpeciesDexDataSetup::setSecondaryAbility(pokesim::dex::Ability ability) {
   handle.emplace<SecondaryAbility>(ability);
 }
 
-void SpeciesDexDataSetup::setHiddenAbility(Ability ability) {
+void SpeciesDexDataSetup::setHiddenAbility(pokesim::dex::Ability ability) {
   handle.emplace<HiddenAbility>(ability);
 }
-}  // namespace pokesim::dex::internal
+}  // namespace pokesim::internal::dex

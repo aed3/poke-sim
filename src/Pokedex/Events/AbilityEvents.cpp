@@ -69,7 +69,7 @@ void Static::onDamagingHit(Simulation& simulation) {
 
   // TODO(aed3): This is now inefficient since the random chance will happen for move sources that cannot have their
   // status changed.
-  checkIfCanSetStatus(simulation);
+  internal::checkIfCanSetStatus(simulation);
   pokesim::internal::randomBinaryChance(
     simulation,
     [](Simulation& sim) {
@@ -77,7 +77,7 @@ void Static::onDamagingHit(Simulation& simulation) {
     },
     std::nullopt);
 
-  setStatus(simulation);
+  internal::setStatus(simulation);
   simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
 }
 }  // namespace pokesim::dex

@@ -53,6 +53,6 @@ struct ActionQueueItem {
 };
 
 struct ActionQueue {
-  internal::maxSizedVector<ActionQueueItem, Constants::ActionQueueLength::MAX> val{};
+  types::maxSizedVector<ActionQueueItem, Constants::ActionQueueLength::MAX> val{};
 };
 }  // namespace pokesim

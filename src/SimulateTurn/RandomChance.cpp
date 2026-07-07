@@ -289,7 +289,7 @@ void randomChanceEvent(
 }  // namespace
 
 PercentChanceLimitResult checkPercentChanceLimits(
-  types::probability eventProbability, types::probability probability, const simulate_turn::Options& options) {
+  types::probability eventProbability, types::probability probability, const pokesim::simulate_turn::Options& options) {
   static constexpr auto ProbabilityMax = Constants::Probability::MAX;
   static constexpr auto ProbabilityMin = Constants::Probability::MIN;
   static constexpr types::probability PassFailBoundary = (ProbabilityMax - ProbabilityMin) / 2U;

@@ -2,8 +2,8 @@
 
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
+#include <Types/MaxSizedVector.hpp>
 #include <Types/State.hpp>
-#include <Utilities/MaxSizedVector.hpp>
 
 namespace pokesim::analyze_effect {
 struct EffectTarget {

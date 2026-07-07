@@ -35,14 +35,14 @@ void knockOffOnBasePower(
   if (!registry.all_of<tags::CanRemoveItem>(target.val)) {
     return;
   }
-  chainComponentToModifier(eventModifier, modifier);
+  internal::chainComponentToModifier(eventModifier, modifier);
 }
 }  // namespace
 
 void KnockOff::onBasePower(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<KnockOff::onBasePowerMultiplier>();
   simulation.view<knockOffOnBasePowerCheckRemovableItem, Tags<move::tags::KnockOff>>();
-  checkIfCanRemoveItem(simulation);
+  internal::checkIfCanRemoveItem(simulation);
   simulation.view<knockOffOnBasePower, Tags<move::tags::KnockOff>>(modifier);
 
   simulation.registry.clear<tags::CanRemoveItem>();
@@ -50,7 +50,7 @@ void KnockOff::onBasePower(Simulation& simulation) {
 
 void KnockOff::onAfterHit(Simulation& simulation) {
   simulation.view<knockOffOnAfterHitCheckRemovableItem, Tags<move::tags::KnockOff, tags::CurrentMoveHit>>();
-  tryRemoveItem(simulation);
+  internal::tryRemoveItem(simulation);
   simulation.registry.clear<tags::CanRemoveItem>();
 }
 }  // namespace pokesim::dex

@@ -20,7 +20,7 @@ constexpr types::damage computeDamageRoll(types::damage damage, types::damageRol
 }
 
 constexpr types::damage computeAverageDamageRoll(types::damage damage) {
-  return (types::damage)(damage * (100U - (Constants::DamageRollCount::MAX - 1U) / 2.0F) / 100.0F);
+  return (types::damage)(damage * (100U - ((Constants::DamageRollCount::MAX - 1U) / 2.0F)) / 100.0F);
 }
 
 constexpr types::damage computeMinDamageRoll(types::damage damage) {
@@ -29,7 +29,7 @@ constexpr types::damage computeMinDamageRoll(types::damage damage) {
 
 constexpr types::damage computeBaseDamage(
   types::power power, types::level level, types::stat attack, types::stat defense) {
-  return ((((2U * level / 5U + 2U) * power * attack) / defense) / 50U) + 2U;
+  return (((((2U * level / 5U) + 2U) * power * attack) / defense) / 50U) + 2U;
 }
 
 constexpr types::stat computeStatFromBaseStat(
@@ -73,10 +73,10 @@ constexpr types::stat computeStatFromBaseStat(
   }
 
   if (statName == dex::Stat::HP) {
-    return ((2U * baseStat + iv + (ev / 4U) + 100U) * level / 100U) + 10U;
+    return (((2U * baseStat) + iv + (ev / 4U) + 100U) * level / 100U) + 10U;
   }
 
-  types::stat stat = ((2U * baseStat + iv + (ev / 4U)) * level / 100U) + 5U;
+  types::stat stat = (((2U * baseStat) + iv + (ev / 4U)) * level / 100U) + 5U;
 
   if (NaturesTable::plus(nature) == statName) {
     stat = (stat * 110U) / 100U;

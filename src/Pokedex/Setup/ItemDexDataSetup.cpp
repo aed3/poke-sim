@@ -3,8 +3,8 @@
 #include <Components/Names/ItemNames.hpp>
 #include <entt/entity/handle.hpp>
 
-namespace pokesim::dex::internal {
-void ItemDexDataSetup::setName(Item item) {
+namespace pokesim::internal::dex {
+void ItemDexDataSetup::setName(pokesim::dex::Item item) {
   handle.emplace<ItemName>(item);
 }
-}  // namespace pokesim::dex::internal
+}  // namespace pokesim::internal::dex

@@ -58,14 +58,14 @@ void clearRunVariables(Simulation& simulation) {
   simulation.registry.clear<
     tags::Crit,
     DamageRollModifiers,
-    DamageFormulaVariables,
-    tags::UsesAtk,
-    tags::UsesDef,
-    tags::UsesSpa,
-    tags::UsesSpd,
-    tags::UsesDefAsOffense,
-    tags::IgnoresAttackingBoost,
-    tags::IgnoresDefendingBoost>();
+    internal::calc_damage::DamageFormulaVariables,
+    internal::calc_damage::tags::UsesAtk,
+    internal::calc_damage::tags::UsesDef,
+    internal::calc_damage::tags::UsesSpa,
+    internal::calc_damage::tags::UsesSpd,
+    internal::calc_damage::tags::UsesDefAsOffense,
+    internal::calc_damage::tags::IgnoresAttackingBoost,
+    internal::calc_damage::tags::IgnoresDefendingBoost>();
   simulation.removeFromEntities<Damage, pokesim::tags::CalculateDamage>();
 }
 
@@ -98,11 +98,11 @@ void setDefendingSide(types::handle moveHandle, Defender defender) {
   PlayerSideId playerSide = registry.get<PlayerSide>(registry.get<Side>(defender.val).val).val;
   switch (playerSide) {
     case PlayerSideId::P1: {
-      moveHandle.emplace<tags::P1Defending>();
+      moveHandle.emplace<internal::calc_damage::tags::P1Defending>();
       break;
     }
     case PlayerSideId::P2: {
-      moveHandle.emplace<tags::P2Defending>();
+      moveHandle.emplace<internal::calc_damage::tags::P2Defending>();
       break;
     }
     default: {
@@ -114,7 +114,7 @@ void setDefendingSide(types::handle moveHandle, Defender defender) {
 
 void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Pokedex& pokedex) {
   types::effectMultiplier stab = ((std::underlying_type_t<StabBoostKind>)modifiers.stab) / 100.0F;
-  damage.val = (types::damage)fixedPointMultiply(damage.val, stab);
+  damage.val = (types::damage)internal::fixedPointMultiply(damage.val, stab);
 
   types::eventModifier typeEffectivenessModifier = Constants::FIXED_POINT_SCALE;
   if (modifiers.typeEffectiveness < 0) {
@@ -124,13 +124,13 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Po
     typeEffectivenessModifier = typeEffectivenessModifier << modifiers.typeEffectiveness;
   }
 
-  damage.val = applyChainedModifier(damage.val, typeEffectivenessModifier);
-  damage.val = applyChainedModifier(damage.val, modifiers.modifyDamageEvent);
+  damage.val = internal::applyChainedModifier(damage.val, typeEffectivenessModifier);
+  damage.val = internal::applyChainedModifier(damage.val, modifiers.modifyDamageEvent);
 
   if (modifiers.burn) {
     const auto multiplier = pokedex.getStaticValue<dex::Burn::physicalDamageMultiplier>();
 
-    damage.val = (types::damage)fixedPointMultiply(damage.val, multiplier);
+    damage.val = (types::damage)internal::fixedPointMultiply(damage.val, multiplier);
   }
 
   setDamageToMinimumPossible(damage);
@@ -181,34 +181,37 @@ void assignCritChanceDivisor(
   moveHandle.emplace<CritChanceDivisor>(critChanceDivisors[index]);
 }
 
-void setSourceLevel(types::handle moveHandle, Attacker attacker, DamageFormulaVariables& damageFormulaVariables) {
+void setSourceLevel(
+  types::handle moveHandle, Attacker attacker, internal::calc_damage::DamageFormulaVariables& damageFormulaVariables) {
   damageFormulaVariables.attackingLevel = moveHandle.registry()->get<Level>(attacker.val).val;
 }
 
 template <typename Category>
-void setUsedAttackStat(types::handle moveHandle, Attacker attacker, DamageFormulaVariables& damageFormulaVariables) {
+void setUsedAttackStat(
+  types::handle moveHandle, Attacker attacker, internal::calc_damage::DamageFormulaVariables& damageFormulaVariables) {
   types::stat attackingStat = Constants::PokemonEffectiveStat::DEFAULT;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     attackingStat = moveHandle.registry()->get<stat::EffectiveAtk>(attacker.val).val;
-    moveHandle.emplace<tags::UsesAtk>();
+    moveHandle.emplace<internal::calc_damage::tags::UsesAtk>();
   }
   else {
     attackingStat = moveHandle.registry()->get<stat::EffectiveSpa>(attacker.val).val;
-    moveHandle.emplace<tags::UsesSpa>();
+    moveHandle.emplace<internal::calc_damage::tags::UsesSpa>();
   }
   damageFormulaVariables.attackingStat = attackingStat;
 }
 
 template <typename Category>
-void setUsedDefenseStat(types::handle moveHandle, Defender defender, DamageFormulaVariables& damageFormulaVariables) {
+void setUsedDefenseStat(
+  types::handle moveHandle, Defender defender, internal::calc_damage::DamageFormulaVariables& damageFormulaVariables) {
   types::stat defendingStat = Constants::PokemonEffectiveStat::DEFAULT;
   if constexpr (std::is_same_v<Category, move::tags::Physical>) {
     defendingStat = moveHandle.registry()->get<stat::EffectiveDef>(defender.val).val;
-    moveHandle.emplace<tags::UsesDef>();
+    moveHandle.emplace<internal::calc_damage::tags::UsesDef>();
   }
   else {
     defendingStat = moveHandle.registry()->get<stat::EffectiveSpd>(defender.val).val;
-    moveHandle.emplace<tags::UsesSpd>();
+    moveHandle.emplace<internal::calc_damage::tags::UsesSpd>();
   }
   damageFormulaVariables.defendingStat = defendingStat;
 }
@@ -217,7 +220,7 @@ template <typename BoostType>
 void setIgnoreAttackingBoostIfNegative(types::handle moveHandle, Attacker attacker) {
   BoostType* boost = moveHandle.registry()->try_get<BoostType>(attacker.val);
   if (boost && boost->val < Constants::PokemonStatBoost::DEFAULT) {
-    moveHandle.emplace<tags::IgnoresAttackingBoost>();
+    moveHandle.emplace<internal::calc_damage::tags::IgnoresAttackingBoost>();
   }
 }
 
@@ -225,11 +228,12 @@ template <typename BoostType>
 void setIgnoreDefendingBoostIfPositive(types::handle moveHandle, Defender defender) {
   BoostType* boost = moveHandle.registry()->try_get<BoostType>(defender.val);
   if (boost && boost->val > Constants::PokemonStatBoost::DEFAULT) {
-    moveHandle.emplace<tags::IgnoresDefendingBoost>();
+    moveHandle.emplace<internal::calc_damage::tags::IgnoresDefendingBoost>();
   }
 }
 
-void calculateBaseDamage(types::handle moveHandle, const DamageFormulaVariables& damageFormulaVariables) {
+void calculateBaseDamage(
+  types::handle moveHandle, const internal::calc_damage::DamageFormulaVariables& damageFormulaVariables) {
   types::damage damage = computeBaseDamage(
     damageFormulaVariables.power,
     damageFormulaVariables.attackingLevel,
@@ -305,7 +309,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
   else {
     moveFilter.template view<setDefendingSide>();
 
-    simulation.addToEntities<internal::tags::ApplySideDamageRollOptions, tags::P1Defending>();
+    simulation.addToEntities<internal::tags::ApplySideDamageRollOptions, internal::calc_damage::tags::P1Defending>();
     simulation.removeFromEntities<internal::tags::ApplySideDamageRollOptions, move::tags::Status>();
     if constexpr (onlyPassDamageRoll) {
       ApplyDamageRollKind(simulation, damageRollOptions.getP1());
@@ -313,9 +317,9 @@ void applySideDamageRollOptions(Simulation& simulation) {
     else {
       ApplyDamageRollKind(simulation, damageRollOptions.getP1(), calculateUpToFoeHp, noKoChanceCalculation);
     }
-    simulation.registry.clear<internal::tags::ApplySideDamageRollOptions, tags::P1Defending>();
+    simulation.registry.clear<internal::tags::ApplySideDamageRollOptions, internal::calc_damage::tags::P1Defending>();
 
-    simulation.addToEntities<internal::tags::ApplySideDamageRollOptions, tags::P2Defending>();
+    simulation.addToEntities<internal::tags::ApplySideDamageRollOptions, internal::calc_damage::tags::P2Defending>();
     simulation.removeFromEntities<internal::tags::ApplySideDamageRollOptions, move::tags::Status>();
     if constexpr (onlyPassDamageRoll) {
       ApplyDamageRollKind(simulation, damageRollOptions.getP2());
@@ -323,7 +327,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
     else {
       ApplyDamageRollKind(simulation, damageRollOptions.getP2(), calculateUpToFoeHp, noKoChanceCalculation);
     }
-    simulation.registry.clear<internal::tags::ApplySideDamageRollOptions, tags::P2Defending>();
+    simulation.registry.clear<internal::tags::ApplySideDamageRollOptions, internal::calc_damage::tags::P2Defending>();
   }
 }
 
@@ -336,12 +340,12 @@ void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
 
   if constexpr (std::is_same_v<SimulationTag, pokesim::tags::SimulateTurn>) {
     simulation.addToEntities<calc_damage::CritBoost, internal::tags::ApplySideDamageRollOptions>();
-    runModifyCritBoostEvent(simulation);
+    internal::runModifyCritBoostEvent(simulation);
     simulation.view<assignCritChanceDivisor>(
       simulation.pokedex().getStaticValue<MechanicConstants::CRIT_CHANCE_DIVISORS>());
     simulation.registry.clear<CritBoost>();
 
-    simulate_turn::setIfMoveCrits(simulation);
+    internal::simulate_turn::setIfMoveCrits(simulation);
     simulation.registry.clear<CritChanceDivisor>();
   }
 }
@@ -383,7 +387,7 @@ void applyDamageRollsAndModifiers(
     if (calculateUpToFoeHp) {
       moveFilter.view<reduceDamageRollsToDefenderHp>();
     }
-    simulate_turn::cloneFromDamageRolls(simulation, damageRollKind);
+    internal::simulate_turn::cloneFromDamageRolls(simulation, damageRollKind);
   }
   else {
     moveFilter.view<modifyDamage>(simulation.pokedex());
@@ -399,34 +403,37 @@ void applyDamageRollsAndModifiers(
 template <typename EffectiveStat>
 void saveRealEffectiveAttackerStat(types::registry& registry, Attacker attacker) {
   EffectiveStat effectiveStat = registry.get<EffectiveStat>(attacker.val);
-  registry.emplace<RealEffectiveStat>(attacker.val, effectiveStat.val);
+  registry.emplace<internal::calc_damage::RealEffectiveStat>(attacker.val, effectiveStat.val);
 }
 
 template <typename EffectiveStat>
 void saveRealEffectiveDefenderStat(types::registry& registry, Defender defender) {
   EffectiveStat effectiveStat = registry.get<EffectiveStat>(defender.val);
-  registry.emplace<RealEffectiveStat>(defender.val, effectiveStat.val);
+  registry.emplace<internal::calc_damage::RealEffectiveStat>(defender.val, effectiveStat.val);
 }
 
 template <typename EffectiveStat>
 void resetEffectiveAndAttackingStat(
-  types::registry& registry, Attacker attacker, DamageFormulaVariables& damageFormulaVariables) {
-  auto [effectiveStat, realEffectiveStat] = registry.get<EffectiveStat, RealEffectiveStat>(attacker.val);
+  types::registry& registry, Attacker attacker, internal::calc_damage::DamageFormulaVariables& damageFormulaVariables) {
+  auto [effectiveStat, realEffectiveStat] =
+    registry.get<EffectiveStat, internal::calc_damage::RealEffectiveStat>(attacker.val);
   damageFormulaVariables.attackingStat = effectiveStat.val;
   effectiveStat.val = realEffectiveStat.val;
 }
 
 template <typename EffectiveStat>
 void resetEffectiveAndDefendingStat(
-  types::registry& registry, Defender defender, DamageFormulaVariables& damageFormulaVariables) {
-  auto [effectiveStat, realEffectiveStat] = registry.get<EffectiveStat, RealEffectiveStat>(defender.val);
+  types::registry& registry, Defender defender, internal::calc_damage::DamageFormulaVariables& damageFormulaVariables) {
+  auto [effectiveStat, realEffectiveStat] =
+    registry.get<EffectiveStat, internal::calc_damage::RealEffectiveStat>(defender.val);
   damageFormulaVariables.defendingStat = effectiveStat.val;
   effectiveStat.val = realEffectiveStat.val;
 }
 
 template <typename EffectiveStat, typename IgnoresBoostTag, typename UsesStatTag>
 void setUnboostedStat(Simulation& simulation) {
-  static constexpr bool forAttacker = std::is_same_v<IgnoresBoostTag, tags::IgnoresAttackingBoost>;
+  static constexpr bool forAttacker =
+    std::is_same_v<IgnoresBoostTag, internal::calc_damage::tags::IgnoresAttackingBoost>;
   auto moveFilter = getMoveFilter(simulation);
 
   if constexpr (forAttacker) {
@@ -436,26 +443,27 @@ void setUnboostedStat(Simulation& simulation) {
     moveFilter.view<saveRealEffectiveDefenderStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
 
-  if (simulation.registry.view<RealEffectiveStat>().empty()) {
+  if (simulation.registry.view<internal::calc_damage::RealEffectiveStat>().empty()) {
     return;
   }
 
-  if constexpr (std::is_same_v<UsesStatTag, tags::UsesAtk>) {
-    simulation.addToEntities<pokesim::tags::AtkStatUpdateRequired, RealEffectiveStat>();
-    updateAtk(simulation, true);
+  if constexpr (std::is_same_v<UsesStatTag, internal::calc_damage::tags::UsesAtk>) {
+    simulation.addToEntities<pokesim::tags::AtkStatUpdateRequired, internal::calc_damage::RealEffectiveStat>();
+    internal::updateAtk(simulation, true);
   }
   else if constexpr (
-    std::is_same_v<UsesStatTag, tags::UsesDef> || std::is_same_v<UsesStatTag, tags::UsesDefAsOffense>) {
-    simulation.addToEntities<pokesim::tags::DefStatUpdateRequired, RealEffectiveStat>();
-    updateDef(simulation, true);
+    std::is_same_v<UsesStatTag, internal::calc_damage::tags::UsesDef> ||
+    std::is_same_v<UsesStatTag, internal::calc_damage::tags::UsesDefAsOffense>) {
+    simulation.addToEntities<pokesim::tags::DefStatUpdateRequired, internal::calc_damage::RealEffectiveStat>();
+    internal::updateDef(simulation, true);
   }
-  else if constexpr (std::is_same_v<UsesStatTag, tags::UsesSpa>) {
-    simulation.addToEntities<pokesim::tags::SpaStatUpdateRequired, RealEffectiveStat>();
-    updateSpa(simulation, true);
+  else if constexpr (std::is_same_v<UsesStatTag, internal::calc_damage::tags::UsesSpa>) {
+    simulation.addToEntities<pokesim::tags::SpaStatUpdateRequired, internal::calc_damage::RealEffectiveStat>();
+    internal::updateSpa(simulation, true);
   }
-  else if constexpr (std::is_same_v<UsesStatTag, tags::UsesSpd>) {
-    simulation.addToEntities<pokesim::tags::SpdStatUpdateRequired, RealEffectiveStat>();
-    updateSpd(simulation, true);
+  else if constexpr (std::is_same_v<UsesStatTag, internal::calc_damage::tags::UsesSpd>) {
+    simulation.addToEntities<pokesim::tags::SpdStatUpdateRequired, internal::calc_damage::RealEffectiveStat>();
+    internal::updateSpd(simulation, true);
   }
   else {
     POKESIM_REQUIRE_FAIL("No other stat is used as the attacking or defending stat.");
@@ -468,7 +476,7 @@ void setUnboostedStat(Simulation& simulation) {
     moveFilter.view<resetEffectiveAndDefendingStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
 
-  simulation.registry.clear<RealEffectiveStat>();
+  simulation.registry.clear<internal::calc_damage::RealEffectiveStat>();
 }
 
 void setDamageFormulaVariables(Simulation& simulation) {
@@ -480,18 +488,34 @@ void setDamageFormulaVariables(Simulation& simulation) {
   moveFilter.view<setUsedDefenseStat<move::tags::Physical>, Tags<move::tags::Physical>>();
   moveFilter.view<setUsedDefenseStat<move::tags::Special>, Tags<move::tags::Special>>();
 
-  moveFilter.view<setIgnoreAttackingBoostIfNegative<AtkBoost>, Tags<tags::Crit, tags::UsesAtk>>();
-  moveFilter.view<setIgnoreAttackingBoostIfNegative<SpaBoost>, Tags<tags::Crit, tags::UsesSpa>>();
-  moveFilter.view<setIgnoreDefendingBoostIfPositive<DefBoost>, Tags<tags::Crit, tags::UsesDef>>();
-  moveFilter.view<setIgnoreDefendingBoostIfPositive<SpdBoost>, Tags<tags::Crit, tags::UsesSpd>>();
+  moveFilter
+    .view<setIgnoreAttackingBoostIfNegative<AtkBoost>, Tags<tags::Crit, internal::calc_damage::tags::UsesAtk>>();
+  moveFilter
+    .view<setIgnoreAttackingBoostIfNegative<SpaBoost>, Tags<tags::Crit, internal::calc_damage::tags::UsesSpa>>();
+  moveFilter
+    .view<setIgnoreDefendingBoostIfPositive<DefBoost>, Tags<tags::Crit, internal::calc_damage::tags::UsesDef>>();
+  moveFilter
+    .view<setIgnoreDefendingBoostIfPositive<SpdBoost>, Tags<tags::Crit, internal::calc_damage::tags::UsesSpd>>();
   // moveFilter.view<setIgnoreAttackingBoostIfNegative<DefBoost>, Tags<tags::Crit, tags::UsesDefAsOffense>>();
 
   // moveFilter.view<dex::latest::Unaware::onUsesBoost, Tags<ability::tags::Unaware, tags::Attacker>>();
 
-  setUnboostedStat<stat::EffectiveAtk, tags::IgnoresAttackingBoost, tags::UsesAtk>(simulation);
-  setUnboostedStat<stat::EffectiveSpa, tags::IgnoresAttackingBoost, tags::UsesSpa>(simulation);
-  setUnboostedStat<stat::EffectiveDef, tags::IgnoresDefendingBoost, tags::UsesDef>(simulation);
-  setUnboostedStat<stat::EffectiveSpd, tags::IgnoresDefendingBoost, tags::UsesSpd>(simulation);
+  setUnboostedStat<
+    stat::EffectiveAtk,
+    internal::calc_damage::tags::IgnoresAttackingBoost,
+    internal::calc_damage::tags::UsesAtk>(simulation);
+  setUnboostedStat<
+    stat::EffectiveSpa,
+    internal::calc_damage::tags::IgnoresAttackingBoost,
+    internal::calc_damage::tags::UsesSpa>(simulation);
+  setUnboostedStat<
+    stat::EffectiveDef,
+    internal::calc_damage::tags::IgnoresDefendingBoost,
+    internal::calc_damage::tags::UsesDef>(simulation);
+  setUnboostedStat<
+    stat::EffectiveSpd,
+    internal::calc_damage::tags::IgnoresDefendingBoost,
+    internal::calc_damage::tags::UsesSpd>(simulation);
   // setUnboostedStat<stat::EffectiveDef, tags::IgnoresAttackingBoost, tags::UsesDefAsOffense>(simulation);
 }
 
@@ -500,7 +524,7 @@ void setDamageRollModifiers(Simulation& simulation) {
   moveFilter.view<checkForAndApplyStab>();
   moveFilter.view<checkForAndApplyTypeEffectiveness>(simulation.pokedex());
   dex::Burn::onSetDamageRollModifiers(simulation);
-  runModifyDamageEvent(simulation);
+  internal::runModifyDamageEvent(simulation);
 }
 
 void calcDamage(Simulation& simulation) {
@@ -518,8 +542,8 @@ void calcDamage(Simulation& simulation) {
   applySideDamageRollOptions<AnalyzeEffect, setIfMoveCrits<AnalyzeEffect>>(simulation);
 
   auto moveView = simulation.registry.view<pokesim::tags::CurrentMoveHit>(entt::exclude_t<move::tags::Status>{});
-  simulation.registry.insert<DamageFormulaVariables>(moveView.begin(), moveView.end());
-  runBasePowerEvent(simulation);
+  simulation.registry.insert<internal::calc_damage::DamageFormulaVariables>(moveView.begin(), moveView.end());
+  internal::runBasePowerEvent(simulation);
   setDamageFormulaVariables(simulation);
 
   moveFilter.view<calculateBaseDamage>();
@@ -533,7 +557,7 @@ void calcDamage(Simulation& simulation) {
   applySideDamageRollOptions<CalculateDamage, applyDamageRollsAndModifiers<CalculateDamage>>(simulation);
   applySideDamageRollOptions<AnalyzeEffect, applyDamageRollsAndModifiers<AnalyzeEffect>>(simulation);
 
-  runAfterModifyDamageEvent(simulation);
+  internal::runAfterModifyDamageEvent(simulation);
 
   clearRunVariables(simulation);
 }

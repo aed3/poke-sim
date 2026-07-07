@@ -31,7 +31,7 @@
 
 // TODO(aed3) Autogenerate?
 
-namespace pokesim {
+namespace pokesim::internal {
 namespace {
 template <typename ModifiedComponent>
 void applyEventModifier(ModifiedComponent& component, EventModifier eventModifier) {
@@ -56,7 +56,7 @@ void runResidual(Simulation& simulation) {
 void runAccuracyEvent(Simulation&) {}
 
 void runModifyAccuracyEvent(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::CurrentMoveHit, Accuracy>();
+  simulation.addToEntities<EventModifier, pokesim::tags::CurrentMoveHit, Accuracy>();
 
   dex::BrightPowder::onModifyAccuracy(simulation);
 
@@ -67,7 +67,7 @@ void runModifyAccuracyEvent(Simulation& simulation) {
 void runModifyCritBoostEvent(Simulation&) {}
 
 void runBasePowerEvent(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::CurrentMoveHit, BasePower>();
+  simulation.addToEntities<EventModifier, pokesim::tags::CurrentMoveHit, BasePower>();
 
   dex::KnockOff::onBasePower(simulation);
 
@@ -146,7 +146,7 @@ void runModifyAtk(Simulation&) {}
 void runModifyDef(Simulation&) {}
 
 void runModifySpa(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::SpaStatUpdateRequired>();
+  simulation.addToEntities<EventModifier, pokesim::tags::SpaStatUpdateRequired>();
 
   // Priority 1
   dex::ChoiceSpecs::onModifySpa(simulation);
@@ -159,7 +159,7 @@ void runModifySpa(Simulation& simulation) {
 }
 
 void runModifySpd(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::SpdStatUpdateRequired>();
+  simulation.addToEntities<EventModifier, pokesim::tags::SpdStatUpdateRequired>();
 
   dex::AssaultVest::onModifySpd(simulation);
 
@@ -168,7 +168,7 @@ void runModifySpd(Simulation& simulation) {
 }
 
 void runModifySpe(Simulation& simulation) {
-  simulation.addToEntities<EventModifier, tags::SpeStatUpdateRequired>();
+  simulation.addToEntities<EventModifier, pokesim::tags::SpeStatUpdateRequired>();
 
   dex::ChoiceScarf::onModifySpe(simulation);
 
@@ -195,4 +195,4 @@ void runEndItemEvent(Simulation& simulation) {
 void runEndAbilityEvent(Simulation&) {}
 void runFaintEvent(Simulation&) {}
 void runAfterFaintEvent(Simulation&) {}
-}  // namespace pokesim
+}  // namespace pokesim::internal

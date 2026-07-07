@@ -12,7 +12,7 @@
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
-namespace pokesim::calc_damage {
+namespace pokesim::internal::calc_damage {
 InputSetup::InputSetup(types::registry& registry, types::entity moveEntity) : handle(registry, moveEntity) {}
 
 void InputSetup::setup(
@@ -24,7 +24,7 @@ void InputSetup::setup(
   handle.emplace<MoveName>(move);
   handle.emplace<pokesim::tags::CurrentMoveHit>();
   handle.emplace<pokesim::tags::CalculateDamage>();
-  registry.emplace_or_replace<tags::Attacker>(sourceEntity);
-  registry.emplace_or_replace<tags::Defender>(targetEntity);
+  registry.emplace_or_replace<pokesim::calc_damage::tags::Attacker>(sourceEntity);
+  registry.emplace_or_replace<pokesim::calc_damage::tags::Defender>(targetEntity);
 }
-}  // namespace pokesim::calc_damage
+}  // namespace pokesim::internal::calc_damage

@@ -4,7 +4,7 @@
 #include <Types/Move.hpp>
 #include <Types/Stats.hpp>
 
-namespace pokesim::calc_damage {
+namespace pokesim::internal::calc_damage {
 struct RealEffectiveStat {
   types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
 };
@@ -31,4 +31,4 @@ struct UsesDefAsOffense {};  // For Body Press
 struct IgnoresAttackingBoost {};
 struct IgnoresDefendingBoost {};
 }  // namespace tags
-}  // namespace pokesim::calc_damage
+}  // namespace pokesim::internal::calc_damage

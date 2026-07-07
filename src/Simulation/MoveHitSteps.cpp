@@ -53,7 +53,7 @@ void runMoveHitCheck(Simulation& simulation) {
 
   Function(simulation);
 
-  simulation.view<setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
+  simulation.view<internal::setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
   simulation.registry.clear<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
 }
 
@@ -86,8 +86,8 @@ void runMoveEffects(Simulation& simulation) {
   moveFilter.view<setEffectTarget<CurrentActionSource>, Tags<move::effect::tags::MoveSource>>();
   moveFilter.view<setEffectTarget<CurrentActionTarget>, Tags<move::effect::tags::MoveTarget>>();
 
-  tryBoost(simulation);
-  trySetStatus(simulation);
+  internal::tryBoost(simulation);
+  internal::trySetStatus(simulation);
   trySetStatusFromEffect(simulation);
   trySetVolatileFromEffect(simulation);
   trySetSideConditionFromEffect(simulation);
@@ -137,7 +137,7 @@ void removeFaintedSecondaryEffectTargets(Simulation& simulation) {
 // TODO(aed3): When adding damage source, change this to accept the move's handle and CurrentActionSource to pass to
 // applyDamage.
 void applyDamageToTarget(types::registry& registry, Damage damage, CurrentActionTarget target) {
-  pokesim::applyDamage({registry, target.val}, damage.val);
+  internal::applyDamage({registry, target.val}, damage.val);
 }
 
 void setMoveHitCount(Simulation& simulation) {
@@ -145,14 +145,14 @@ void setMoveHitCount(Simulation& simulation) {
     simulation.registry.view<tags::CurrentMoveHit>(entt::exclude<move::tags::VariableHitCount, HitCount>);
   simulation.registry.insert<HitCount>(noAssignedHitCount.begin(), noAssignedHitCount.end(), {(types::moveHits)1U});
 
-  runRandomEventChances<4U, tags::CurrentMoveHit, move::tags::VariableHitCount>(
+  internal::runRandomEventChances<4U, tags::CurrentMoveHit, move::tags::VariableHitCount>(
     simulation,
     Constants::PROGRESSIVE_MULTI_HIT_CHANCES,
     [](Simulation& sim) {
-      sim.addToEntities<HitCount, pokesim::internal::tags::RandomEventA>(HitCount{2U});
-      sim.addToEntities<HitCount, pokesim::internal::tags::RandomEventB>(HitCount{3U});
-      sim.addToEntities<HitCount, pokesim::internal::tags::RandomEventC>(HitCount{4U});
-      sim.addToEntities<HitCount, pokesim::internal::tags::RandomEventD>(HitCount{5U});
+      sim.addToEntities<HitCount, internal::tags::RandomEventA>(HitCount{2U});
+      sim.addToEntities<HitCount, internal::tags::RandomEventB>(HitCount{3U});
+      sim.addToEntities<HitCount, internal::tags::RandomEventC>(HitCount{4U});
+      sim.addToEntities<HitCount, internal::tags::RandomEventD>(HitCount{5U});
     });
 }
 
@@ -173,24 +173,22 @@ void runPrimaryMoveEffects(Simulation& simulation) {
 
 void runSecondaryMoveEffects(Simulation& simulation) {
   removeFaintedSecondaryEffectTargets(simulation);
-  runModifySecondariesEvent(simulation);
+  internal::runModifySecondariesEvent(simulation);
 
-  runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::CurrentMoveHit>(
+  internal::runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::CurrentMoveHit>(
     simulation,
-    [](Simulation& sim) {
-      sim.addToEntities<internal::tags::RunEffect, pokesim::internal::tags::RandomEventCheckPassed>();
-    });
+    [](Simulation& sim) { sim.addToEntities<internal::tags::RunEffect, internal::tags::RandomEventCheckPassed>(); });
 
   runMoveEffects(simulation);
   simulation.registry.clear<internal::tags::RunEffect>();
 }
 
 void accuracyCheck(Simulation& simulation) {
-  runModifyAccuracyEvent(simulation);
-  runAccuracyEvent(simulation);
+  internal::runModifyAccuracyEvent(simulation);
+  internal::runAccuracyEvent(simulation);
 
-  runRandomBinaryChance<Accuracy, tags::CurrentMoveHit>(simulation, [](Simulation& sim) {
-    sim.addToEntities<tags::FailedCurrentMoveHit, pokesim::internal::tags::RandomEventCheckFailed>();
+  internal::runRandomBinaryChance<Accuracy, tags::CurrentMoveHit>(simulation, [](Simulation& sim) {
+    sim.addToEntities<tags::FailedCurrentMoveHit, internal::tags::RandomEventCheckFailed>();
   });
 }
 
@@ -203,7 +201,7 @@ void moveHitLoop(Simulation& simulation) {
     POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran more than possible.");
 
     calc_damage::run(simulation);  // 1. call to this.battle.getDamage
-    runDamageEvent(simulation);
+    internal::runDamageEvent(simulation);
 
     applyDamage(simulation);            // 2. call to this.battle.spreadDamage
     runPrimaryMoveEffects(simulation);  // 3. primary effects
@@ -211,10 +209,10 @@ void moveHitLoop(Simulation& simulation) {
     runSecondaryMoveEffects(simulation);  // 5. secondary effects
     // 6. force switch
 
-    runDamagingHitEvent(simulation);
-    runAfterHitEvent(simulation);
+    internal::runDamagingHitEvent(simulation);
+    internal::runAfterHitEvent(simulation);
 
-    updateAllStats(simulation);
+    internal::updateAllStats(simulation);
     simulation.view<deductMoveHitCount>();
     simulation.view<removeHitCountFromFaintedTargets, Tags<tags::CurrentActionMove>>();
     iterations++;
@@ -222,7 +220,7 @@ void moveHitLoop(Simulation& simulation) {
 }
 }  // namespace
 
-void runMoveHitChecks(Simulation& simulation) {
+void internal::runMoveHitChecks(Simulation& simulation) {
   // invulnerabilityCheck
   // hitCheck
   // immunityCheck

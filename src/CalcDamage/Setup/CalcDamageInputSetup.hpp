@@ -9,9 +9,9 @@
 namespace pokesim {
 class Pokedex;
 
-namespace calc_damage {
+namespace internal::calc_damage {
 struct InputSetup {
- protected:
+ private:
   types::handle handle;
 
  public:
@@ -21,5 +21,5 @@ struct InputSetup {
 
   types::entity entity() const { return handle.entity(); }
 };
-}  // namespace calc_damage
+}  // namespace internal::calc_damage
 }  // namespace pokesim

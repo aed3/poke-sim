@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Utilities/Variant.hpp>
+#include <Types/Variant.hpp>
 
 #include "Enums/PseudoWeather.hpp"
 #include "Enums/SideCondition.hpp"
@@ -10,6 +10,6 @@
 #include "Enums/Weather.hpp"
 
 namespace pokesim::types {
-using effectEnum = pokesim::internal::variant<
+using effectEnum = variant<
   std::monostate, dex::PseudoWeather, dex::SideCondition, dex::Status, dex::Terrain, dex::Volatile, dex::Weather>;
 }  // namespace pokesim::types

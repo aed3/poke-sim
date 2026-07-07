@@ -4,7 +4,7 @@
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/Slot.hpp>
 #include <Types/State.hpp>
-#include <Utilities/Variant.hpp>
+#include <Types/Variant.hpp>
 
 namespace pokesim {
 struct MoveDecision {
@@ -44,10 +44,10 @@ struct ItemDecision {
 };
 
 namespace types {
-struct slotDecision : pokesim::internal::variant<
+struct slotDecision : variant<
                         MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision,
                         ZMoveDecision, SwitchDecision, ItemDecision> {
-  using variant = pokesim::internal::variant<
+  using variant = variant<
     MoveDecision, MegaEvolveAndMoveDecision, TerastallizeAndMoveDecision, DynamaxAndMoveDecision, ZMoveDecision,
     SwitchDecision, ItemDecision>;
   using variant::variant;
@@ -61,6 +61,6 @@ struct slotDecision : pokesim::internal::variant<
   }
 };
 
-using slotDecisions = types::sideSlots<slotDecision>;
+using slotDecisions = sideSlots<slotDecision>;
 }  // namespace types
 }  // namespace pokesim

@@ -30,10 +30,10 @@
 
 #include "EmplaceTagFromEnum.hpp"
 
-namespace pokesim {
+namespace pokesim::internal {
 PokemonStateSetup::PokemonStateSetup(types::registry& registry, types::entity entity)
     : StateSetupBase(registry, entity) {
-  handle.emplace<tags::Pokemon>();
+  handle.emplace<pokesim::tags::Pokemon>();
 }
 
 void PokemonStateSetup::initBlank() {
@@ -137,4 +137,4 @@ void PokemonStateSetup::setIVs(
 void PokemonStateSetup::setIVs(const Ivs& ivs) {
   handle.emplace<Ivs>(ivs);
 }
-}  // namespace pokesim
+}  // namespace pokesim::internal

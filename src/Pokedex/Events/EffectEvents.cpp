@@ -27,7 +27,7 @@
 namespace pokesim::dex {
 namespace {
 void damageByHpDivisor(types::handle pokemonHandle, stat::Hp hp, types::stat hpDivisor) {
-  applyDamage(pokemonHandle, hp.val / hpDivisor);
+  internal::applyDamage(pokemonHandle, hp.val / hpDivisor);
 }
 
 void applyBurnModifier(types::registry& registry, const CurrentActionMovesAsSource& moves) {
@@ -102,7 +102,7 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
     simulation,
     [](Simulation& sim) { sim.view<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
     std::nullopt);
-  simulation.view<setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
+  simulation.view<internal::setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
   simulation.registry.clear<pokesim::tags::FailedCurrentMoveHit>();
 }
 
@@ -112,7 +112,7 @@ void ChoiceLock::onBeforeMove(Simulation& simulation) {
 }
 
 void ChoiceLock::onDisableMove(Simulation& simulation) {
-  pokesim::internal::EntityFilter<tags::DisableMove> filter{simulation};
+  pokesim::internal::EntityFilter<internal::tags::DisableMove> filter{simulation};
   if (filter.hasNoneSelected()) {
     return;
   }

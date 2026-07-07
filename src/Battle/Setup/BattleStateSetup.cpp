@@ -15,21 +15,21 @@
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
+#include <Types/MaxSizedVector.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
-#include <Utilities/MaxSizedVector.hpp>
 #include <Utilities/RNG.hpp>
 #include <atomic>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/entity/view.hpp>
 
-namespace pokesim {
+namespace pokesim::internal {
 BattleStateSetup::BattleStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {
-  if (!handle.any_of<ActionQueue, tags::Battle>()) {
+  if (!handle.any_of<ActionQueue, pokesim::tags::Battle>()) {
     handle.emplace<ActionQueue>();
-    handle.emplace<tags::Battle>();
+    handle.emplace<pokesim::tags::Battle>();
   }
 }
 
@@ -45,10 +45,10 @@ void BattleStateSetup::setRecycledAction(types::entity recycledAction, types::en
   types::registry& registry = *handle.registry();
 
   handle.emplace<RecycledAction>(recycledAction);
-  registry.emplace<tags::RecycledAction>(recycledAction);
+  registry.emplace<pokesim::tags::RecycledAction>(recycledAction);
 
   handle.emplace<RecycledActionMove>(recycledActionMove);
-  registry.emplace<tags::RecycledActionMove>(recycledActionMove);
+  registry.emplace<pokesim::tags::RecycledActionMove>(recycledActionMove);
 }
 
 void BattleStateSetup::setAddedRecycledActionMoves(
@@ -56,10 +56,10 @@ void BattleStateSetup::setAddedRecycledActionMoves(
   types::registry& registry = *handle.registry();
 
   handle.emplace<AddedRecycledActionMove1>(addedRecycledActionMove1);
-  registry.emplace<tags::AddedRecycledActionMove1>(addedRecycledActionMove1);
+  registry.emplace<pokesim::tags::AddedRecycledActionMove1>(addedRecycledActionMove1);
 
   handle.emplace<AddedRecycledActionMove2>(addedRecycledActionMove2);
-  registry.emplace<tags::AddedRecycledActionMove2>(addedRecycledActionMove2);
+  registry.emplace<pokesim::tags::AddedRecycledActionMove2>(addedRecycledActionMove2);
 }
 
 void BattleStateSetup::setAutoID() {
@@ -104,4 +104,4 @@ void BattleStateSetup::setTurn(types::battleTurn turn) {
 void BattleStateSetup::setProbability(types::probability probability) {
   handle.emplace<Probability>(probability);
 }
-}  // namespace pokesim
+}  // namespace pokesim::internal

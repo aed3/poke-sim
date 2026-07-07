@@ -11,17 +11,17 @@ namespace pokesim {
 class Pokedex;
 }
 
-namespace pokesim::dex::internal {
+namespace pokesim::internal::dex {
 struct SpeciesDexDataSetup : DexDataSetup {
   SpeciesDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
 
-  void setName(Species species);
-  void setType(Type type1, Type type2 = Type::NO_TYPE);
+  void setName(pokesim::dex::Species species);
+  void setType(pokesim::dex::Type type1, pokesim::dex::Type type2 = pokesim::dex::Type::NO_TYPE);
   void setBaseStats(
     types::baseStat hp, types::baseStat atk, types::baseStat def, types::baseStat spa, types::baseStat spd,
     types::baseStat spe);
-  void setPrimaryAbility(Ability ability);
-  void setSecondaryAbility(Ability ability);
-  void setHiddenAbility(Ability ability);
+  void setPrimaryAbility(pokesim::dex::Ability ability);
+  void setSecondaryAbility(pokesim::dex::Ability ability);
+  void setHiddenAbility(pokesim::dex::Ability ability);
 };
-}  // namespace pokesim::dex::internal
+}  // namespace pokesim::internal::dex

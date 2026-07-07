@@ -14,9 +14,9 @@
 
 #include "PokemonStateSetup.hpp"
 
-namespace pokesim {
+namespace pokesim::internal {
 SideStateSetup::SideStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {
-  handle.emplace<tags::Side>();
+  handle.emplace<pokesim::tags::Side>();
 }
 
 void SideStateSetup::initBlank() {
@@ -54,4 +54,4 @@ void SideStateSetup::setPlayerSide(PlayerSideId playerSideId) {
 void SideStateSetup::setSideDecision(const SideDecision& sideDecision) {
   handle.emplace<SideDecision>(sideDecision);
 }
-}  // namespace pokesim
+}  // namespace pokesim::internal

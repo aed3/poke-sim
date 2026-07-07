@@ -16,7 +16,7 @@
 #include <Types/Random.hpp>
 #include <Utilities/EntityFilter.hpp>
 
-namespace pokesim::simulate_turn {
+namespace pokesim::internal::simulate_turn {
 namespace {
 void applyDamageRollIndex(
   Damage& damage, const DamageRolls& damageRolls, const pokesim::internal::RandomEventIndex& randomRollIndex) {
@@ -100,8 +100,8 @@ void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind)
 }
 
 void setIfMoveCrits(Simulation& simulation) {
-  runReciprocalRandomBinaryChance<calc_damage::CritChanceDivisor>(simulation, [](Simulation& sim) {
-    sim.addToEntities<calc_damage::tags::Crit, pokesim::internal::tags::RandomEventCheckPassed>();
+  runReciprocalRandomBinaryChance<pokesim::calc_damage::CritChanceDivisor>(simulation, [](Simulation& sim) {
+    sim.addToEntities<pokesim::calc_damage::tags::Crit, pokesim::internal::tags::RandomEventCheckPassed>();
   });
 }
-}  // namespace pokesim::simulate_turn
+}  // namespace pokesim::internal::simulate_turn

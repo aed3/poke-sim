@@ -24,6 +24,7 @@ struct Spe;
 struct CurrentHp;
 }  // namespace stat
 
+namespace internal {
 void checkIfCanUseItem(Simulation& simulation);
 void useItem(Simulation& simulation);
 void tryUseItem(Simulation& simulation);
@@ -53,4 +54,5 @@ void updateDef(Simulation& simulation, bool ignoreBoosts);
 void updateSpa(Simulation& simulation, bool ignoreBoosts);
 void updateSpd(Simulation& simulation, bool ignoreBoosts);
 void updateSpe(Simulation& simulation, bool ignoreBoosts);
+}  // namespace internal
 }  // namespace pokesim

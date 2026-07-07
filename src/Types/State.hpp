@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Utilities/FixedMemoryVector.hpp>
 #include <Utilities/NumberToType.hpp>
 #include <array>
 #include <optional>
@@ -8,6 +7,7 @@
 
 #include "Constants.hpp"
 #include "Entity.hpp"
+#include "FixedMemoryVector.hpp"
 
 namespace pokesim {
 class Simulation;
@@ -54,17 +54,17 @@ using moveSlotIndex = pokesim::internal::unsignedIntType<Constants::MoveSlots::M
 using activePokemonIndex = pokesim::internal::unsignedIntType<Constants::ActivePokemon::MAX>;
 
 template <typename T>
-using teamPositions = pokesim::internal::fixedMemoryVector<T, Constants::TeamSize::MAX>;
-using teamOrder = types::teamPositions<types::teamPositionIndex>;
+using teamPositions = fixedMemoryVector<T, Constants::TeamSize::MAX>;
+using teamOrder = teamPositions<teamPositionIndex>;
 
 template <typename T>
-using moveSlots = pokesim::internal::fixedMemoryVector<T, Constants::MoveSlots::MAX>;
+using moveSlots = fixedMemoryVector<T, Constants::MoveSlots::MAX>;
 
 template <typename T>
-using sideSlots = pokesim::internal::fixedMemoryVector<T, Constants::ActivePokemonSlotsPerSide::MAX>;
+using sideSlots = fixedMemoryVector<T, Constants::ActivePokemonSlotsPerSide::MAX>;
 
 template <typename T>
-using targets = pokesim::internal::fixedMemoryVector<T, Constants::Targets::MAX>;
+using targets = fixedMemoryVector<T, Constants::Targets::MAX>;
 
 using actionQueueIndex = pokesim::internal::unsignedIntType<Constants::ActionQueueLength::MAX>;
 

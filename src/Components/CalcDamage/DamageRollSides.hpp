@@ -1,6 +1,6 @@
 #pragma once
 
-namespace pokesim::calc_damage::tags {
+namespace pokesim::internal::calc_damage::tags {
 struct P1Defending {};
 struct P2Defending {};
-}  // namespace pokesim::calc_damage::tags
+}  // namespace pokesim::internal::calc_damage::tags

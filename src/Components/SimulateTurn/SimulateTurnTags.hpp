@@ -1,6 +1,11 @@
 #pragma once
 
-namespace pokesim::simulate_turn::tags {
-struct Input {};
+namespace pokesim {
+namespace simulate_turn::tags {
 struct SpeedSortNeeded {};
-}  // namespace pokesim::simulate_turn::tags
+}  // namespace simulate_turn::tags
+
+namespace internal::simulate_turn::tags {
+struct Input {};
+}  // namespace internal::simulate_turn::tags
+}  // namespace pokesim

@@ -24,9 +24,11 @@ struct Ivs;
 struct SpeciesTypes;
 struct MoveSlot;
 
+namespace internal {
+
 // Tool to set properties of a Pokemon's state to an entity.
-struct PokemonStateSetup : internal::StateSetupBase {
-  PokemonStateSetup() : internal::StateSetupBase() {}
+struct PokemonStateSetup : StateSetupBase {
+  PokemonStateSetup() : StateSetupBase() {}
   PokemonStateSetup(types::registry& registry, types::entity entity);
 
   operator types::entity() const { return entity(); }
@@ -90,4 +92,5 @@ struct PokemonStateSetup : internal::StateSetupBase {
     handle.emplace<EffectiveStatType>(stat);
   };
 };
+}  // namespace internal
 }  // namespace pokesim

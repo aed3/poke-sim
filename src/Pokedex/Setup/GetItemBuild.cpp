@@ -16,7 +16,7 @@ struct BuildItem {
  private:
  public:
   static types::entity build(types::registry& registry, GameMechanics gameMechanic) {
-    dex::internal::ItemDexDataSetup item(registry);
+    internal::dex::ItemDexDataSetup item(registry);
 
     item.setName(T::name(gameMechanic));
 

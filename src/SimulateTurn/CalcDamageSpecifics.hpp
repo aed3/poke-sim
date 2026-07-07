@@ -4,8 +4,8 @@
 
 namespace pokesim {
 class Simulation;
-namespace simulate_turn {
+namespace internal::simulate_turn {
 void cloneFromDamageRolls(Simulation& simulation, DamageRollKind damageRollKind);
 void setIfMoveCrits(Simulation& simulation);
-}  // namespace simulate_turn
+}  // namespace internal::simulate_turn
 }  // namespace pokesim

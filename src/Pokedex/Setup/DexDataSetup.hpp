@@ -6,7 +6,7 @@
 #include <Utilities/Tags.hpp>
 #include <entt/entity/handle.hpp>
 
-namespace pokesim::dex::internal {
+namespace pokesim::internal::dex {
 struct DexDataSetup {
  protected:
   types::handle handle;
@@ -27,4 +27,4 @@ struct DexDataSetup {
 
   types::entity entity() { return handle.entity(); }
 };
-}  // namespace pokesim::dex::internal
+}  // namespace pokesim::internal::dex

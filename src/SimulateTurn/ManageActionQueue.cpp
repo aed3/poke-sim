@@ -21,16 +21,16 @@
 #include <Types/Decisions.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/ActionOrder.hpp>
+#include <Types/MaxSizedVector.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
-#include <Utilities/MaxSizedVector.hpp>
-#include <Utilities/Variant.hpp>
+#include <Types/Variant.hpp>
 #include <algorithm>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <vector>
 
-namespace pokesim::simulate_turn {
+namespace pokesim::internal::simulate_turn {
 namespace {
 template <typename Decision>
 void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& slotDecision, ActionQueue& actionQueue) {
@@ -222,4 +222,4 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, Recy
 void clearActionQueue(ActionQueue& actionQueue) {
   actionQueue.val.clear();
 }
-}  // namespace pokesim::simulate_turn
+}  // namespace pokesim::internal::simulate_turn

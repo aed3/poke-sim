@@ -5,7 +5,7 @@
 #include <Types/Damage.hpp>
 #include <Types/Enums/StabBoostKind.hpp>
 #include <Types/Event.hpp>
-#include <Utilities/MaxSizedVector.hpp>
+#include <Types/MaxSizedVector.hpp>
 #include <vector>
 
 namespace pokesim {
@@ -27,7 +27,7 @@ struct DamageRollModifiers {
 };
 
 struct DamageRolls {
-  internal::maxSizedVector<Damage, Constants::DamageRollCount::MAX> val{};
+  types::maxSizedVector<Damage, Constants::DamageRollCount::MAX> val{};
 
   DamageRolls() {}
   DamageRolls(const DamageRolls& other) : val(other.val) {}

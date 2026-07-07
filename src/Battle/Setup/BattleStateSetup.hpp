@@ -16,9 +16,10 @@ struct CalculateDamageOptions;
 struct AnalyzeEffectOptions;
 struct ActionQueueItem;
 
+namespace internal {
 // Tool to set properties of a battle's state to an entity.
-struct BattleStateSetup : internal::StateSetupBase {
-  BattleStateSetup() : internal::StateSetupBase() {}
+struct BattleStateSetup : StateSetupBase {
+  BattleStateSetup() : StateSetupBase() {}
   BattleStateSetup(types::registry& registry, types::entity entity);
 
   /**
@@ -45,4 +46,5 @@ struct BattleStateSetup : internal::StateSetupBase {
   void setTurn(types::battleTurn turn);
   void setProbability(types::probability probability);
 };
+}  // namespace internal
 }  // namespace pokesim

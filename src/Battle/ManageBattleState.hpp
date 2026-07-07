@@ -13,6 +13,7 @@ struct CurrentActionTarget;
 struct CurrentActionTargets;
 struct RootBattle;
 
+namespace internal {
 void assignRootBattle(types::handle battleHandle);
 void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root);
 
@@ -22,4 +23,5 @@ void setCurrentActionTarget(
 void setFailedActionMove(
   types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target);
 void clearCurrentAction(Simulation& simulation);
+}  // namespace internal
 }  // namespace pokesim

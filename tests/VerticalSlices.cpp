@@ -594,7 +594,7 @@ TEST_CASE(
     bool checkMoveMissed;
     bool checkMoveDroppedSpa;
 
-    types::percentChance MOONBLAST_HIT_CHANCE = (types::percentChance)chainValueToModifier(
+    types::percentChance MOONBLAST_HIT_CHANCE = (types::percentChance)internal::chainValueToModifier(
       dex::Moonblast::accuracy(TestMechanic), dex::BrightPowder::onModifyAccuracyNumerator(TestMechanic),
       dex::BrightPowder::onModifyAccuracyDenominator(TestMechanic));
     types::percentChance MOONBLAST_SPA_DROP_CHANCE = dex::Moonblast::targetSecondaryEffect::chance(TestMechanic);

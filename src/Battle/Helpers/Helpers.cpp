@@ -102,7 +102,7 @@ types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move) 
   return 0U;
 }
 
-void setupActionMoveBuild(
+void internal::setupActionMoveBuild(
   types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
   types::entity actionMoveEntity, dex::Move move) {
   types::handle actionMoveHandle{registry, actionMoveEntity};
@@ -112,7 +112,7 @@ void setupActionMoveBuild(
   actionMoveHandle.emplace<CurrentActionSource>(sourceEntity);
   actionMoveHandle.emplace<CurrentActionTarget>(targetEntity);
   actionMoveHandle.emplace<pokesim::internal::tags::BuildActionMove>();
-  actionMoveHandle.emplace<tags::CurrentActionMove>();
+  actionMoveHandle.emplace<pokesim::tags::CurrentActionMove>();
 
   registry.get_or_emplace<CurrentActionMovesAsTarget>(targetEntity).val.push_back(actionMoveEntity);
   registry.get_or_emplace<CurrentActionMovesAsSource>(sourceEntity).val.push_back(actionMoveEntity);

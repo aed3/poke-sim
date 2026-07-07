@@ -3,8 +3,8 @@
 #include <Components/Names/AbilityNames.hpp>
 #include <entt/entity/handle.hpp>
 
-namespace pokesim::dex::internal {
-void AbilityDexDataSetup::setName(Ability ability) {
+namespace pokesim::internal::dex {
+void AbilityDexDataSetup::setName(pokesim::dex::Ability ability) {
   handle.emplace<AbilityName>(ability);
 }
-}  // namespace pokesim::dex::internal
+}  // namespace pokesim::internal::dex

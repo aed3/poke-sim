@@ -16,7 +16,7 @@ struct BuildAbility {
  private:
  public:
   static types::entity build(types::registry& registry, GameMechanics gameMechanic) {
-    dex::internal::AbilityDexDataSetup ability(registry);
+    internal::dex::AbilityDexDataSetup ability(registry);
 
     ability.setName(T::name(gameMechanic));
 

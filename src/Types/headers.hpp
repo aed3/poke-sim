@@ -33,6 +33,8 @@
 #include "Enums/Volatile.hpp"
 #include "Enums/Weather.hpp"
 #include "Event.hpp"
+#include "FixedMemoryVector.hpp"
+#include "MaxSizedVector.hpp"
 #include "MechanicConstants.hpp"
 #include "Move.hpp"
 #include "NaturesTable.hpp"
@@ -40,3 +42,4 @@
 #include "Registry.hpp"
 #include "State.hpp"
 #include "Stats.hpp"
+#include "Variant.hpp"

@@ -9,9 +9,9 @@
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
-namespace pokesim::analyze_effect {
+namespace pokesim::internal::analyze_effect {
 struct InputSetup {
- protected:
+ private:
   types::handle handle;
 
  public:
@@ -27,4 +27,4 @@ struct InputSetup {
 
   types::entity entity() const { return handle.entity(); }
 };
-}  // namespace pokesim::analyze_effect
+}  // namespace pokesim::internal::analyze_effect

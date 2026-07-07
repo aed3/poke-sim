@@ -22,29 +22,29 @@
 #include <Types/Enums/Terrain.hpp>
 #include <Types/Enums/Volatile.hpp>
 #include <Types/Enums/Weather.hpp>
-#include <Utilities/Variant.hpp>
+#include <Types/Variant.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
-namespace pokesim::analyze_effect {
+namespace pokesim::internal::analyze_effect {
 InputSetup::InputSetup(types::registry& registry, types::entity entity) : handle(registry, entity) {
-  handle.emplace<tags::Input>();
+  handle.emplace<pokesim::analyze_effect::tags::Input>();
 }
 
 void InputSetup::setAttacker(types::entity entity) {
-  handle.emplace<Attacker>(entity);
+  handle.emplace<pokesim::analyze_effect::Attacker>(entity);
 }
 
 void InputSetup::setEffectTarget(types::entity entity) {
-  handle.emplace<EffectTarget>(entity);
+  handle.emplace<pokesim::analyze_effect::EffectTarget>(entity);
 }
 
 void InputSetup::setDefender(types::entity entity) {
-  handle.emplace<Defender>(entity);
+  handle.emplace<pokesim::analyze_effect::Defender>(entity);
 }
 
 void InputSetup::setEffectMove(dex::Move move) {
-  handle.emplace<EffectMove>(move);
+  handle.emplace<pokesim::analyze_effect::EffectMove>(move);
 }
 
 void InputSetup::setEffect(types::effectEnum effect) {
@@ -101,6 +101,6 @@ void InputSetup::setBoostEffect(dex::Stat stat, types::boost boost) {
 
 void InputSetup::setBattle(types::entity entity) {
   handle.emplace<Battle>(entity);
-  handle.registry()->get_or_emplace<Inputs>(entity).val.push_back(handle.entity());
+  handle.registry()->get_or_emplace<pokesim::analyze_effect::Inputs>(entity).val.push_back(handle.entity());
 }
-}  // namespace pokesim::analyze_effect
+}  // namespace pokesim::internal::analyze_effect

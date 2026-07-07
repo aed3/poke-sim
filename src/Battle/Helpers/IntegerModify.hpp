@@ -4,7 +4,7 @@
 #include <Types/Constants.hpp>
 #include <Types/Event.hpp>
 
-namespace pokesim {
+namespace pokesim::internal {
 template <typename Number1, typename Number2>
 constexpr types::eventModifier fixedPointMultiply(Number1 value, Number2 multiplier) {
   types::eventModifier modifier = (types::eventModifier)(multiplier * Constants::FIXED_POINT_SCALE);
@@ -24,7 +24,7 @@ template <typename Numerator>
 constexpr types::eventModifier chainValueToModifier(
   types::eventModifier eventModifier, Numerator numerator, types::eventModifier denominator = 1U) {
   types::eventModifier newModifier = (types::eventModifier)(numerator * Constants::FIXED_POINT_SCALE / denominator);
-  return (eventModifier * newModifier + Constants::FIXED_POINT_HALF_SCALE) / Constants::FIXED_POINT_SCALE;
+  return ((eventModifier * newModifier) + Constants::FIXED_POINT_HALF_SCALE) / Constants::FIXED_POINT_SCALE;
 }
 
 template <typename Numerator>
@@ -32,4 +32,4 @@ void chainComponentToModifier(
   EventModifier& eventModifier, Numerator numerator, types::eventModifier denominator = 1U) {
   eventModifier.val = chainValueToModifier(eventModifier.val, numerator, denominator);
 }
-}  // namespace pokesim
+}  // namespace pokesim::internal

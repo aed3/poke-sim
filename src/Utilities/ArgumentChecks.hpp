@@ -109,8 +109,6 @@ struct EffectMultiplier;
 namespace calc_damage {
 struct CritChanceDivisor;
 struct CritBoost;
-struct RealEffectiveStat;
-struct DamageFormulaVariables;
 struct UsesUntilKo;
 struct AttackerHpRecovered;
 struct AttackerHpLost;
@@ -126,6 +124,10 @@ struct RandomBinaryProbabilityStack;
 struct RandomEventCountStack;
 struct RandomEqualChanceStack;
 struct RandomEventIndex;
+namespace calc_damage {
+struct RealEffectiveStat;
+struct DamageFormulaVariables;
+}  // namespace calc_damage
 }  // namespace internal
 namespace action {
 struct Team;
@@ -222,10 +224,10 @@ template <>
 void check(const calc_damage::CritBoost&);
 
 template <>
-void check(const calc_damage::RealEffectiveStat&);
+void check(const internal::calc_damage::RealEffectiveStat&);
 
 template <>
-void check(const calc_damage::DamageFormulaVariables&);
+void check(const internal::calc_damage::DamageFormulaVariables&);
 
 template <>
 void check(const ChoiceLock&);

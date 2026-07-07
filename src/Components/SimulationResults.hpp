@@ -6,9 +6,9 @@
 #include <Types/Damage.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Event.hpp>
+#include <Types/MaxSizedVector.hpp>
 #include <Types/Move.hpp>
 #include <Types/Random.hpp>
-#include <Utilities/MaxSizedVector.hpp>
 
 namespace pokesim {
 namespace simulate_turn {
@@ -30,7 +30,7 @@ struct UsesUntilKo {
   };
 
  public:
-  internal::maxSizedVector<Uses, Constants::DamageRollCount::MAX> val{};
+  types::maxSizedVector<Uses, Constants::DamageRollCount::MAX> val{};
 
   const Uses& minUses() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");

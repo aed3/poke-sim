@@ -133,7 +133,7 @@ template <typename EffectTuple>
 bool canInputsShareABattle(
   const EffectTuple& currentEffects, const EffectTarget& currentEffectTarget, types::entity otherInput,
   const types::registry& registry) {
-  const auto otherEffects = tryGetAllInputEffects(otherInput, registry);
+  const auto otherEffects = internal::analyze_effect::tryGetAllInputEffects(otherInput, registry);
 
   if (!namedEffectPointerMatch<PseudoWeatherName>(currentEffects, otherEffects)) return false;
   if (!namedEffectPointerMatch<TerrainName>(currentEffects, otherEffects)) return false;
@@ -170,7 +170,7 @@ void groupSimilarInputs(types::handle battleHandle, const Inputs& inputs) {
 
     GroupedInputs& groupedInputs = registry.emplace<GroupedInputs>(currentInput);
 
-    const auto currentEffects = tryGetAllInputEffects(currentInput, registry);
+    const auto currentEffects = internal::analyze_effect::tryGetAllInputEffects(currentInput, registry);
     EffectTarget currentEffectTarget = registry.get<EffectTarget>(currentInput);
 
     groupedInputs.val.push_back(currentInput);
@@ -278,7 +278,7 @@ types::entity createAnalyzeEffectMove(
   types::entity defenderEntity) {
   types::entity moveEntity = registry.create();
 
-  setupActionMoveBuild(registry, battleEntity, attackerEntity, defenderEntity, moveEntity, move);
+  internal::setupActionMoveBuild(registry, battleEntity, attackerEntity, defenderEntity, moveEntity, move);
 
   registry.emplace<MoveName>(moveEntity, move);
   registry.emplace<pokesim::tags::CurrentMoveHit>(moveEntity);
@@ -436,13 +436,13 @@ void applyStatusEffect(types::handle inputHandle, EffectTarget effectTarget, Sta
 
   EffectPresentCheck statusCheck = hasStatusEffect(registry, effectTarget, effect);
   types::handle pokemonHandle{registry, effectTarget.val};
-  clearStatus(pokemonHandle);
+  internal::clearStatus(pokemonHandle);
   if (statusCheck == EffectPresentCheck::PRESENT_AND_APPLIED) {
     setInvertFinalAnswer(inputHandle);
   }
   else {
     pokemonHandle.emplace<StatusName>(effect.val);
-    status::tags::emplaceTagFromEnum(effect.val, pokemonHandle);
+    internal::status::tags::emplaceTagFromEnum(effect.val, pokemonHandle);
   }
 }
 
@@ -603,7 +603,7 @@ void analyzeEffect(Simulation& simulation) {
   simulation.view<applyBoostEffect<SpdBoost>, Included, Excluded>();
   simulation.view<applyBoostEffect<SpeBoost>, Included, Excluded>();
 
-  updateAllStats(simulation);
+  internal::updateAllStats(simulation);
 
   calc_damage::run(simulation);
 

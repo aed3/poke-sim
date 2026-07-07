@@ -286,19 +286,21 @@ void checkActionMove(types::entity moveEntity, const types::registry& registry) 
   POKESIM_REQUIRE_NM(isSpecial == !(isPhysical || isStatus));
   POKESIM_REQUIRE_NM(isStatus == !(isPhysical || isSpecial));
 
-  std::size_t totalOUsesOffenseTags =
-    totalComponentsPresent<calc_damage::tags::UsesAtk, calc_damage::tags::UsesSpa, calc_damage::tags::UsesDefAsOffense>(
+  std::size_t totalOUsesOffenseTags = totalComponentsPresent<
+    internal::calc_damage::tags::UsesAtk,
+    internal::calc_damage::tags::UsesSpa,
+    internal::calc_damage::tags::UsesDefAsOffense>(moveEntity, registry);
+  std::size_t totalOUsesDefenseTags =
+    totalComponentsPresent<internal::calc_damage::tags::UsesDef, internal::calc_damage::tags::UsesSpa>(
       moveEntity,
       registry);
-  std::size_t totalOUsesDefenseTags =
-    totalComponentsPresent<calc_damage::tags::UsesDef, calc_damage::tags::UsesSpa>(moveEntity, registry);
 
   POKESIM_REQUIRE_NM(totalOUsesOffenseTags <= 1U);
   POKESIM_REQUIRE_NM(totalOUsesDefenseTags <= 1U);
 
   const auto [damageFormulaVariables, realEffectiveStat, critBoost, critChanceDivisor] = registry.try_get<
-    calc_damage::DamageFormulaVariables,
-    calc_damage::RealEffectiveStat,
+    internal::calc_damage::DamageFormulaVariables,
+    internal::calc_damage::RealEffectiveStat,
     calc_damage::CritBoost,
     calc_damage::CritChanceDivisor>(moveEntity);
 
@@ -379,7 +381,7 @@ void check(const analyze_effect::Inputs& inputs, const types::registry& registry
        defBoost,
        spaBoost,
        spdBoost,
-       speBoost] = analyze_effect::tryGetAllInputEffects(input, registry);
+       speBoost] = internal::analyze_effect::tryGetAllInputEffects(input, registry);
     POKESIM_REQUIRE_NM(
       pseudoWeather || sideCondition || status || terrain || volatileCondition || weather || atkBoost || defBoost ||
       spaBoost || spdBoost || speBoost);
@@ -497,12 +499,12 @@ void check(const calc_damage::CritBoost& critBoost) {
 }
 
 template <>
-void check(const calc_damage::RealEffectiveStat& realEffectiveStat) {
+void check(const internal::calc_damage::RealEffectiveStat& realEffectiveStat) {
   checkEffectiveStat(realEffectiveStat.val);
 }
 
 template <>
-void check(const calc_damage::DamageFormulaVariables& damageFormulaVariables) {
+void check(const internal::calc_damage::DamageFormulaVariables& damageFormulaVariables) {
   checkBounds<Constants::PokemonLevel>(damageFormulaVariables.attackingLevel);
   checkBounds<Constants::MovePower>(damageFormulaVariables.power);
   checkEffectiveStat(damageFormulaVariables.attackingLevel);

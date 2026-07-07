@@ -25,7 +25,7 @@
 #include <Types/Decisions.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
 #include <Types/State.hpp>
-#include <Utilities/Variant.hpp>
+#include <Types/Variant.hpp>
 #include <cmath>
 #include <cstddef>
 #include <entt/entity/registry.hpp>
@@ -116,7 +116,7 @@ struct EntityLists {
 };
 
 void setPokemonAbility(
-  const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pokemonSetup, const Pokedex& pokedex) {
+  const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup, const Pokedex& pokedex) {
   if (pokemonInfo.ability != dex::Ability::NO_ABILITY) {
     if (pokemonInfo.ability.has_value()) {
       pokemonSetup.setAbility(pokemonInfo.ability.value());
@@ -127,7 +127,7 @@ void setPokemonAbility(
   }
 }
 
-Evs setPokemonEvs(const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pokemonSetup) {
+Evs setPokemonEvs(const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup) {
   Evs evs;
   if (pokemonInfo.evs.hp.has_value()) evs.hp = pokemonInfo.evs.hp.value();
   if (pokemonInfo.evs.atk.has_value()) evs.atk = pokemonInfo.evs.atk.value();
@@ -140,7 +140,7 @@ Evs setPokemonEvs(const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pok
   return evs;
 }
 
-Ivs setPokemonIvs(const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pokemonSetup) {
+Ivs setPokemonIvs(const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup) {
   Ivs ivs;
   if (pokemonInfo.ivs.hp.has_value()) ivs.hp = pokemonInfo.ivs.hp.value();
   if (pokemonInfo.ivs.atk.has_value()) ivs.atk = pokemonInfo.ivs.atk.value();
@@ -153,7 +153,7 @@ Ivs setPokemonIvs(const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pok
   return ivs;
 }
 
-dex::Nature setPokemonNature(const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pokemonSetup) {
+dex::Nature setPokemonNature(const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup) {
   dex::Nature nature = dex::Nature::NO_NATURE;
   if (pokemonInfo.nature.has_value() && pokemonInfo.nature != dex::Nature::NO_NATURE) {
     nature = pokemonInfo.nature.value();
@@ -164,8 +164,8 @@ dex::Nature setPokemonNature(const PokemonCreationInfo& pokemonInfo, PokemonStat
 }
 
 types::stat setPokemonStats(
-  const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pokemonSetup, const Pokedex& pokedex, types::level level,
-  dex::Nature nature, const Evs& evs, const Ivs& ivs) {
+  const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup, const Pokedex& pokedex,
+  types::level level, dex::Nature nature, const Evs& evs, const Ivs& ivs) {
   const BaseStats& baseStats = pokedex.getSpeciesData<BaseStats>(pokemonInfo.species);
 
   auto getStat = [&](dex::Stat statName) {
@@ -219,7 +219,7 @@ types::stat setPokemonStats(
   return hp;
 }
 
-void setPokemonCurrentBoosts(const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pokemonSetup) {
+void setPokemonCurrentBoosts(const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup) {
   const auto& pokemonInfoBoosts = pokemonInfo.currentBoosts;
   if (pokemonInfoBoosts.atk.has_value()) pokemonSetup.setBoost<AtkBoost>(pokemonInfoBoosts.atk.value());
   if (pokemonInfoBoosts.def.has_value()) pokemonSetup.setBoost<DefBoost>(pokemonInfoBoosts.def.value());
@@ -229,7 +229,7 @@ void setPokemonCurrentBoosts(const PokemonCreationInfo& pokemonInfo, PokemonStat
 }
 
 void createInitialPokemon(
-  const PokemonCreationInfo& pokemonInfo, PokemonStateSetup& pokemonSetup, const Pokedex& pokedex) {
+  const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup, const Pokedex& pokedex) {
   if (pokemonInfo.id.has_value()) {
     pokemonSetup.setID(pokemonInfo.id.value());
   }
@@ -283,7 +283,7 @@ void createInitialPokemon(
 }
 
 void createCalcDamageInput(
-  const CalcDamageInputInfo& inputInfo, BattleStateSetup& battleSetup, types::registry& registry,
+  const CalcDamageInputInfo& inputInfo, internal::BattleStateSetup& battleSetup, types::registry& registry,
   EntityLists& entityLists, debug::SimulationSetupChecks& debugChecks) {
   POKESIM_REQUIRE(inputInfo.attackerSlot != Slot::NONE, "A damage calculation must have a attacker.");
   POKESIM_REQUIRE(inputInfo.defenderSlot != Slot::NONE, "A damage calculation must have a defender.");
@@ -294,7 +294,7 @@ void createCalcDamageInput(
   types::entity defenderEntity = slotToPokemonEntity(registry, sides, inputInfo.defenderSlot);
 
   for (dex::Move move : inputInfo.moves) {
-    calc_damage::InputSetup inputSetup{registry, entityLists.calcDamageInputs.getNext()};
+    internal::calc_damage::InputSetup inputSetup{registry, entityLists.calcDamageInputs.getNext()};
     POKESIM_REQUIRE(move != dex::Move::NO_MOVE, "A damage calculation must have a move.");
 
     inputSetup.setup(battleSetup.entity(), attackerEntity, defenderEntity, move);
@@ -303,7 +303,7 @@ void createCalcDamageInput(
 }
 
 void createAnalyzeEffectInput(
-  const AnalyzeEffectInputInfo& inputInfo, BattleStateSetup& battleSetup, types::registry& registry,
+  const AnalyzeEffectInputInfo& inputInfo, internal::BattleStateSetup& battleSetup, types::registry& registry,
   EntityLists& entityLists, debug::SimulationSetupChecks& debugChecks) {
   POKESIM_REQUIRE(inputInfo.attackerSlot != Slot::NONE, "An effect analysis must have a attacker.");
   POKESIM_REQUIRE(inputInfo.defenderSlot != Slot::NONE, "An effect analysis must have a defender.");
@@ -322,7 +322,7 @@ void createAnalyzeEffectInput(
   types::entity effectTargetEntity = slotToPokemonEntity(registry, sides, inputInfo.effectTarget);
 
   for (dex::Move move : inputInfo.moves) {
-    analyze_effect::InputSetup inputSetup{registry, entityLists.analyzeEffectInputs.getNext()};
+    internal::analyze_effect::InputSetup inputSetup{registry, entityLists.analyzeEffectInputs.getNext()};
 
     inputSetup.setAttacker(attackerEntity);
     inputSetup.setDefender(defenderEntity);
@@ -341,17 +341,19 @@ void createAnalyzeEffectInput(
   }
 }
 
-void createInitialTurnDecision(const TurnDecisionInfo& turnDecisionInfo, types::sides<SideStateSetup>& sideSetupList) {
+void createInitialTurnDecision(
+  const TurnDecisionInfo& turnDecisionInfo, types::sides<internal::SideStateSetup>& sideSetupList) {
   for (types::sideIndex i = 0U; i < sideSetupList.size(); i++) {
     sideSetupList[i].setSideDecision(turnDecisionInfo[i]);
   }
 }
 
 void createInitialSide(
-  const SideCreationInfo& sideInfo, SideStateSetup& sideSetup, const BattleCreationInfo& battleInfo,
-  Simulation* simulation, internal::maxSizedVector<PokemonStateSetup, Constants::TeamSize::MAX>& pokemonSetupList) {
+  const SideCreationInfo& sideInfo, internal::SideStateSetup& sideSetup, const BattleCreationInfo& battleInfo,
+  Simulation* simulation,
+  types::maxSizedVector<internal::PokemonStateSetup, Constants::TeamSize::MAX>& pokemonSetupList) {
   for (std::size_t i = 0U; i < sideInfo.team.size(); i++) {
-    PokemonStateSetup& pokemonSetup = pokemonSetupList[i];
+    internal::PokemonStateSetup& pokemonSetup = pokemonSetupList[i];
     const PokemonCreationInfo& pokemonInfo = sideInfo.team[i];
 
     bool battleStarted = battleInfo.turn > Constants::TurnCount::MIN;
@@ -393,7 +395,8 @@ void createInitialSide(
 }
 
 void createInitialBattle(
-  const BattleCreationInfo& battleInfo, BattleStateSetup& battleSetup, types::sides<SideStateSetup>& sideSetupList) {
+  const BattleCreationInfo& battleInfo, internal::BattleStateSetup& battleSetup,
+  types::sides<internal::SideStateSetup>& sideSetupList) {
   battleSetup.setTurn(battleInfo.turn.value_or(Constants::TurnCount::DEFAULT));
   battleSetup.setRNGSeed(battleInfo.rngSeed);
   battleSetup.setProbability(battleInfo.probability.value_or(Constants::Probability::DEFAULT));
@@ -408,8 +411,8 @@ void createInitialBattle(
     battleSetup.setProperty<tags::AnalyzeEffect>();
   }
 
-  SideStateSetup& p1SideSetup = sideSetupList.p1();
-  SideStateSetup& p2SideSetup = sideSetupList.p2();
+  internal::SideStateSetup& p1SideSetup = sideSetupList.p1();
+  internal::SideStateSetup& p2SideSetup = sideSetupList.p2();
 
   p1SideSetup.setPlayerSide(PlayerSideId::P1);
   p2SideSetup.setPlayerSide(PlayerSideId::P2);
@@ -431,10 +434,10 @@ void createInitialBattle(
 void createInitialState(
   const BattleCreationInfo& battleInfo, Simulation* simulation, EntityLists& entityLists,
   debug::SimulationSetupChecks& debugChecks) {
-  internal::maxSizedVector<BattleStateSetup, Constants::MAX_ENTITIES> battleSetupList;
-  internal::maxSizedVector<types::sides<SideStateSetup>, Constants::MAX_ENTITIES> sideSetupLists;
-  internal::maxSizedVector<
-    types::sides<internal::maxSizedVector<PokemonStateSetup, Constants::TeamSize::MAX>>,
+  types::maxSizedVector<internal::BattleStateSetup, Constants::MAX_ENTITIES> battleSetupList;
+  types::maxSizedVector<types::sides<internal::SideStateSetup>, Constants::MAX_ENTITIES> sideSetupLists;
+  types::maxSizedVector<
+    types::sides<types::maxSizedVector<internal::PokemonStateSetup, Constants::TeamSize::MAX>>,
     Constants::MAX_ENTITIES>
     pokemonSetupLists;
 
@@ -445,7 +448,7 @@ void createInitialState(
   const Pokedex& pokedex = simulation->pokedex();
   types::registry& registry = simulation->registry;
 
-  for (BattleStateSetup& battleSetup : battleSetupList) {
+  for (internal::BattleStateSetup& battleSetup : battleSetupList) {
     battleSetup = {registry, entityLists.battles.getNext()};
   }
 
@@ -456,7 +459,7 @@ void createInitialState(
   }
 
   for (types::entityIndex battleIndex = 0; battleIndex < battleSetupList.size(); battleIndex++) {
-    BattleStateSetup& battleSetup = battleSetupList[battleIndex];
+    internal::BattleStateSetup& battleSetup = battleSetupList[battleIndex];
     createInitialBattle(battleInfo, battleSetup, sideSetupLists[battleIndex]);
     battleSetup.setRecycledAction(entityLists.recycledActions.getNext(), entityLists.recycledActionMoves.getNext());
     if (simulation->isBattleFormat(BattleFormat::DOUBLES)) {
@@ -469,7 +472,7 @@ void createInitialState(
   for (types::sideIndex sideIndex = 0; sideIndex < battleInfo.sides.size(); sideIndex++) {
     for (const PokemonCreationInfo& pokemonInfo : battleInfo.sides[sideIndex].team) {
       for (auto& pokemonSetupList : pokemonSetupLists) {
-        PokemonStateSetup& pokemonSetup =
+        internal::PokemonStateSetup& pokemonSetup =
           pokemonSetupList[sideIndex].emplace_back(registry, entityLists.pokemon.getNext());
         createInitialPokemon(pokemonInfo, pokemonSetup, pokedex);
       }
@@ -477,7 +480,7 @@ void createInitialState(
   }
 
   for (types::entityIndex battleIndex = 0; battleIndex < battleSetupList.size(); battleIndex++) {
-    BattleStateSetup& battleSetup = battleSetupList[battleIndex];
+    internal::BattleStateSetup& battleSetup = battleSetupList[battleIndex];
     auto& sideSetupList = sideSetupLists[battleIndex];
     for (types::sideIndex sideIndex = 0; sideIndex < battleInfo.sides.size(); sideIndex++) {
       createInitialSide(
@@ -497,7 +500,7 @@ void createInitialState(
     debugChecks.addToBattleChecklist(battleSetup, battleInfo);
   }
 
-  BattleStateSetup& battleSetup = battleSetupList[0];
+  internal::BattleStateSetup& battleSetup = battleSetupList[0];
   for (const CalcDamageInputInfo& calcDamageInputInfo : battleInfo.damageCalculations) {
     createCalcDamageInput(calcDamageInputInfo, battleSetup, registry, entityLists, debugChecks);
   }
@@ -520,7 +523,7 @@ void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& batt
   pokedex().buildMoves(registry);
   registry.clear<internal::tags::BuildActionMove>();
 
-  updateAllStats(*this);
+  internal::updateAllStats(*this);
 
   debugChecks.checkOutputs();
 }

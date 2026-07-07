@@ -332,7 +332,7 @@ struct Checks : pokesim::debug::Checks {
     for (types::entity pokemon : pokemonList) {
       pokesim::debug::TypesToIgnore typesToIgnore;
       if (has<pokesim::tags::SimulateTurn>(pokemon) && !forAttacker) {
-        typesToIgnore.add<tags::RanAfterModifyDamage>();
+        typesToIgnore.add<internal::calc_damage::tags::RanAfterModifyDamage>();
       }
       types::entity initialPokemon = getInitialEntity(pokemon);
       pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, initialPokemon, typesToIgnore);

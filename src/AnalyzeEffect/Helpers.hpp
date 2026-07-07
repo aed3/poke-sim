@@ -12,7 +12,7 @@
 #include <Types/Registry.hpp>
 #include <entt/entity/registry.hpp>
 
-namespace pokesim::analyze_effect {
+namespace pokesim::internal::analyze_effect {
 inline auto tryGetAllInputEffects(types::entity input, const types::registry& registry) {
   return registry.try_get<
     PseudoWeatherName,
@@ -27,4 +27,4 @@ inline auto tryGetAllInputEffects(types::entity input, const types::registry& re
     SpdBoost,
     SpeBoost>(input);
 }
-}  // namespace pokesim::analyze_effect
+}  // namespace pokesim::internal::analyze_effect

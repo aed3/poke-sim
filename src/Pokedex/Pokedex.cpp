@@ -43,7 +43,7 @@ void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
 
     types::entity moveEntity = dexRegistry.create();
     movesMap[move] = moveEntity;
-    move::tags::emplaceTagFromEnum(move, {dexRegistry, moveEntity});
+    internal::move::tags::emplaceTagFromEnum(move, {dexRegistry, moveEntity});
     dexRegistry.emplace<internal::tags::BuildPokedexMove>(moveEntity);
   }
 

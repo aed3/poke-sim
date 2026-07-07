@@ -11,8 +11,7 @@
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
 
-namespace pokesim {
-namespace internal {
+namespace pokesim::internal {
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void setRandomEventChances(
   types::handle handle, const Simulation& simulation,
@@ -25,7 +24,7 @@ enum class PercentChanceLimitResult : std::uint8_t {
 };
 
 PercentChanceLimitResult checkPercentChanceLimits(
-  types::probability eventProbability, types::probability probability, const simulate_turn::Options& options);
+  types::probability eventProbability, types::probability probability, const pokesim::simulate_turn::Options& options);
 
 void setRandomBinaryChanceFromProbability(
   types::handle handle, Battle battle, const Simulation& simulation, types::probability eventProbability);
@@ -60,7 +59,6 @@ void randomEqualChance(
   types::optionalCallback updateProbabilities);
 void randomEventCount(
   Simulation& simulation, types::callback applyChoices, types::optionalCallback updateProbabilities);
-}  // namespace internal
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename... SelectionTags>
 void runRandomEventChances(
@@ -111,4 +109,4 @@ void runRandomEventCount(
 
   internal::randomEventCount(simulation, applyChoices, updateProbabilities);
 }
-}  // namespace pokesim
+}  // namespace pokesim::internal

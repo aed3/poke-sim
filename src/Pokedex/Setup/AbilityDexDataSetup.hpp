@@ -6,10 +6,10 @@
 
 #include "DexDataSetup.hpp"
 
-namespace pokesim::dex::internal {
+namespace pokesim::internal::dex {
 struct AbilityDexDataSetup : DexDataSetup {
   AbilityDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
 
-  void setName(Ability ability);
+  void setName(pokesim::dex::Ability ability);
 };
-}  // namespace pokesim::dex::internal
+}  // namespace pokesim::internal::dex
