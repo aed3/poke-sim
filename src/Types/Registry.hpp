@@ -22,11 +22,11 @@ using handle = entt::basic_handle<registry>;
 }  // namespace pokesim::types
 #else
 
+#include <Types/Constants.hpp>
 #include <Types/Entity.hpp>
 #include <Utilities/AssertComponentsEqual.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/meta/factory.hpp>
-#include <limits>
 #include <type_traits>
 
 #ifdef POKESIM_ENTITY_VIEWER
@@ -64,8 +64,6 @@ class registry : public internal::BackingRegistry {
   using entt::registry::emplace_or_replace;
   using entt::registry::get_or_emplace;
   using entt::registry::insert;
-
-  static constexpr std::uint64_t maxEntityCount = std::numeric_limits<entt::id_type>::max();
 
   template <typename Type>
   static void copyToOtherRegistry(
@@ -123,14 +121,14 @@ class registry : public internal::BackingRegistry {
 
   [[nodiscard]] entity_type create() {
     POKESIM_REQUIRE(
-      storage<entity>().size() + 1U <= maxEntityCount,
+      storage<entity>().size() + 1U <= Constants::MAX_ENTITIES,
       "More entities are being created clone than allowed.");
     return entt::registry::create();
   }
 
   [[nodiscard]] entity_type create(const entity_type hint) {
     POKESIM_REQUIRE(
-      storage<entity>().size() + 1U <= maxEntityCount,
+      storage<entity>().size() + 1U <= Constants::MAX_ENTITIES,
       "More entities are being created clone than allowed.");
     return entt::registry::create(hint);
   }
@@ -138,7 +136,7 @@ class registry : public internal::BackingRegistry {
   template <typename It>
   void create(It first, It last) {
     POKESIM_REQUIRE(
-      storage<entity_type>().size() + (last - first) <= maxEntityCount,
+      storage<entity_type>().size() + (last - first) <= Constants::MAX_ENTITIES,
       "More entities are being created clone than allowed.");
     entt::registry::create(std::move(first), std::move(last));
   }

@@ -36,7 +36,6 @@ struct ParentBattle;
 struct RootBattle;
 struct ParentEntity;
 struct CurrentAction;
-struct CurrentActionTargets;
 struct CurrentActionSource;
 struct CurrentActionTarget;
 struct FailedCurrentActionSource;
@@ -269,9 +268,6 @@ void check(const ParentEntity&, const types::registry&);
 
 template <>
 void check(const CurrentAction&, const types::registry&);
-
-template <>
-void check(const CurrentActionTargets&, const types::registry&);
 
 template <>
 void check(const CurrentActionSource&, const types::registry&);

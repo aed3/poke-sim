@@ -18190,6 +18190,11 @@ class AssertComponentsEqual {
   template <class T>
   struct equals<T, std::void_t<decltype(&T::operator==)>> : std::true_type {};
 
+  template <class, class = void>
+  struct hasToList : std::false_type {};
+  template <class T>
+  struct hasToList<T, std::void_t<decltype(&T::toList)>> : std::true_type {};
+
   template <typename T>
   using hasEqualTo = std::disjunction<equals<T>, std::is_scalar<T>>;
 
@@ -18247,6 +18252,12 @@ class AssertComponentsEqual {
     else if constexpr (val<Type>::value) {
       compareMember(current.val, initial.val, registry);
       if constexpr (sizeof(current.val) == sizeof(current)) {
+        return;
+      }
+    }
+    else if constexpr (hasToList<Type>::value) {
+      compareMember(current.toList(), initial.toList(), registry);
+      if constexpr (sizeof(std::invoke_result_t<decltype(&Type::toList), Type>) == sizeof(current)) {
         return;
       }
     }
@@ -18320,8 +18331,6 @@ class registry : public internal::BackingRegistry {
   using entt::registry::get_or_emplace;
   using entt::registry::insert;
 
-  static constexpr std::uint64_t maxEntityCount = std::numeric_limits<entt::id_type>::max();
-
   template <typename Type>
   static void copyToOtherRegistry(
     const registry* srcReg, types::entity srcEntity, registry* dstReg, types::entity dstEntity) {
@@ -18378,14 +18387,14 @@ class registry : public internal::BackingRegistry {
 
   [[nodiscard]] entity_type create() {
     POKESIM_REQUIRE(
-      storage<entity>().size() + 1U <= maxEntityCount,
+      storage<entity>().size() + 1U <= Constants::MAX_ENTITIES,
       "More entities are being created clone than allowed.");
     return entt::registry::create();
   }
 
   [[nodiscard]] entity_type create(const entity_type hint) {
     POKESIM_REQUIRE(
-      storage<entity>().size() + 1U <= maxEntityCount,
+      storage<entity>().size() + 1U <= Constants::MAX_ENTITIES,
       "More entities are being created clone than allowed.");
     return entt::registry::create(hint);
   }
@@ -18393,7 +18402,7 @@ class registry : public internal::BackingRegistry {
   template <typename It>
   void create(It first, It last) {
     POKESIM_REQUIRE(
-      storage<entity_type>().size() + (last - first) <= maxEntityCount,
+      storage<entity_type>().size() + (last - first) <= Constants::MAX_ENTITIES,
       "More entities are being created clone than allowed.");
     entt::registry::create(std::move(first), std::move(last));
   }
@@ -19153,11 +19162,17 @@ struct AddedTargets {
 
 namespace pokesim {
 struct CurrentAction {
-  types::entity val{};
-};
+  types::entity action{};
+  types::entity source{};
+  types::targets<types::entity> targets{};
 
-struct CurrentActionTargets {
-  types::targets<types::entity> val{};
+  auto toList() const {
+    types::fixedMemoryVector<types::entity, 2U + Constants::Targets::MAX> list{action, source};
+    for (types::entity target : targets) {
+      list.push_back(target);
+    }
+    return list;
+  }
 };
 
 struct CurrentActionSource {
@@ -21030,7 +21045,6 @@ struct ParentBattle;
 struct RootBattle;
 struct ParentEntity;
 struct CurrentAction;
-struct CurrentActionTargets;
 struct CurrentActionSource;
 struct CurrentActionTarget;
 struct FailedCurrentActionSource;
@@ -21263,9 +21277,6 @@ void check(const ParentEntity&, const types::registry&);
 
 template <>
 void check(const CurrentAction&, const types::registry&);
-
-template <>
-void check(const CurrentActionTargets&, const types::registry&);
 
 template <>
 void check(const CurrentActionSource&, const types::registry&);
@@ -22036,8 +22047,7 @@ void setupActionMoveBuild(
 namespace pokesim {
 class Simulation;
 struct Battle;
-struct CurrentActionSource;
-struct CurrentActionTarget;
+struct CurrentAction;
 struct CurrentActionMoveSlot;
 struct Damage;
 struct LastUsedMove;
@@ -22068,7 +22078,7 @@ void clearStatus(types::handle pokemonHandle);
 void clearVolatiles(types::handle pokemonHandle);
 
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
-void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move);
+void setLastMoveUsed(types::registry& registry, CurrentAction& source, const CurrentActionMoveSlot& move);
 
 void faint(types::handle pokemonHandle, Battle battle);
 void applyDamage(types::handle pokemonHandle, types::damage damage);
@@ -24901,22 +24911,20 @@ void runAfterFaintEvent(Simulation& simulation);
 
 namespace pokesim {
 class Simulation;
-class Pokedex;
 struct Battle;
 struct Sides;
 struct CurrentAction;
 struct CurrentActionSource;
 struct CurrentActionTarget;
-struct CurrentActionTargets;
 struct RootBattle;
 
 namespace internal {
 void assignRootBattle(types::handle battleHandle);
 void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root);
 
-void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction action);
+void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action);
 void setCurrentActionTarget(
-  types::handle battleHandle, const Sides& sides, CurrentAction action, const Simulation& simulation);
+  types::handle battleHandle, const Sides& sides, CurrentAction& action, const Simulation& simulation);
 void setFailedActionMove(
   types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target);
 void clearCurrentAction(Simulation& simulation);

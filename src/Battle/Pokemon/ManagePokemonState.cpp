@@ -267,8 +267,8 @@ void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
   }
 }
 
-void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move) {
-  registry.emplace<LastUsedMove>(source.val, move.val);
+void setLastMoveUsed(types::registry& registry, CurrentAction& source, const CurrentActionMoveSlot& move) {
+  registry.emplace<LastUsedMove>(source.source, move.val);
 }
 
 void faint(types::handle pokemonHandle, Battle battle) {

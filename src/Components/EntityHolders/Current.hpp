@@ -1,16 +1,21 @@
 #pragma once
 
-#include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/State.hpp>
 
 namespace pokesim {
 struct CurrentAction {
-  types::entity val{};
-};
+  types::entity action{};
+  types::entity source{};
+  types::targets<types::entity> targets{};
 
-struct CurrentActionTargets {
-  types::targets<types::entity> val{};
+  auto toList() const {
+    types::fixedMemoryVector<types::entity, 2U + Constants::Targets::MAX> list{action, source};
+    for (types::entity target : targets) {
+      list.push_back(target);
+    }
+    return list;
+  }
 };
 
 struct CurrentActionSource {

@@ -64,61 +64,63 @@ void addAddedTarget(types::registry& registry, Battle battle, Slot allySlot) {
     return;
   }
 
-  CurrentActionTargets& targets = registry.get<CurrentActionTargets>(battle.val);
+  CurrentAction& action = registry.get<CurrentAction>(battle.val);
 
-  POKESIM_REQUIRE(!targets.val.empty(), "Added targets should not be the first in the list of targets.");
+  POKESIM_REQUIRE(!action.targets.empty(), "Added targets should not be the first in the list of targets.");
 
-  if (targets.val.size() == 1U) {
+  if (action.targets.size() == 1U) {
     registry.emplace<pokesim::tags::AddedRecycledActionMove1>(battle.val);
   }
   else {
     registry.emplace<pokesim::tags::AddedRecycledActionMove2>(battle.val);
   }
 
-  targets.val.push_back(allyEntity);
+  action.targets.push_back(allyEntity);
 }
 
 void addTargetAllyToTargets(types::registry& registry, Battle battle) {
-  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).val);
+  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).action);
   addAddedTarget(registry, battle, targetSlotName.val);
 }
 
 void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
-  const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(registry.get<CurrentAction>(battle.val).val);
+  const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(registry.get<CurrentAction>(battle.val).action);
   addAddedTarget(registry, battle, sourceSlotName.val);
 }
 
-void setTargetReferenceComponents(
-  types::registry& registry, const CurrentActionTargets& targets, CurrentActionSource source) {
-  for (types::entity target : targets.val) {
+void setTargetReferenceComponents(types::registry& registry, CurrentAction& action) {
+  for (types::entity target : action.targets) {
     registry.emplace<pokesim::tags::CurrentActionMoveTarget>(target);
-    registry.emplace<CurrentActionSource>(target, source.val);
+    registry.emplace<CurrentActionSource>(target, action.source);
   }
 }
 
 template <typename RecycledActionMoveType>
 void setActionMoveReferenceComponents(
-  types::handle battleHandle, CurrentActionSource source, CurrentActionTargets targets, CurrentAction action,
-  RecycledActionMoveType actionMove) {
+  types::handle battleHandle, CurrentAction& action, RecycledActionMoveType actionMove) {
   types::registry& registry = *battleHandle.registry();
   types::handle actionMoveHandle{registry, actionMove.val};
   types::entity target;
 
+  if (action.targets.empty()) {
+    return;
+  }
+
   if constexpr (std::is_same_v<RecycledActionMoveType, RecycledActionMove>) {
-    target = targets.val[0];
+    target = action.targets[0];
   }
   else if constexpr (std::is_same_v<RecycledActionMoveType, AddedRecycledActionMove1>) {
-    target = targets.val[1];
+    target = action.targets[1];
   }
   else if constexpr (std::is_same_v<RecycledActionMoveType, AddedRecycledActionMove2>) {
-    target = targets.val[2];
+    target = action.targets[2];
   }
   else {
     POKESIM_REQUIRE_FAIL("Using a RecycledActionMoveType that isn't associated with a target.");
   }
 
-  MoveName move = registry.get<MoveName>(action.val);
-  internal::setupActionMoveBuild(registry, battleHandle.entity(), source.val, target, actionMove.val, move.val);
+  MoveName move = registry.get<MoveName>(action.action);
+  internal::setupActionMoveBuild(registry, battleHandle.entity(), action.source, target, actionMove.val, move.val);
 }
 
 void setActionMoveData(Simulation& simulation) {
@@ -126,10 +128,10 @@ void setActionMoveData(Simulation& simulation) {
   simulation.pokedex().buildMoves(simulation.registry);
 }
 
-void setCurrentActionMoveSlot(types::handle handle, CurrentActionSource source, CurrentAction action) {
+void setCurrentActionMoveSlot(types::handle handle, CurrentAction& action) {
   types::registry& registry = *handle.registry();
-  const MoveName& move = registry.get<MoveName>(action.val);
-  const MoveSlots& moveSlots = registry.get<MoveSlots>(source.val);
+  const MoveName& move = registry.get<MoveName>(action.action);
+  const MoveSlots& moveSlots = registry.get<MoveSlots>(action.source);
 
   types::moveSlotIndex moveSlotIndex = moveToMoveSlot(moveSlots, move.val);
   handle.emplace<CurrentActionMoveSlot>(moveSlotIndex);

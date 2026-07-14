@@ -64,18 +64,18 @@ bool removeFailedMove(types::registry& registry, types::entity moveEntity, types
   return false;
 }
 
-void updateCurrentActionTargets(types::registry& registry, CurrentActionTargets& targets) {
+void updateCurrentActionTargets(types::registry& registry, CurrentAction& action) {
   types::activePokemonIndex deleteCount = 0U;
-  for (types::entity& target : targets.val) {
+  for (types::entity& target : action.targets) {
     if (!registry.all_of<pokesim::tags::CurrentActionMoveTarget>(target)) {
-      types::activePokemonIndex swapIndex = targets.val.size() - 1 - deleteCount;
-      POKESIM_REQUIRE(swapIndex < targets.val.size(), "Swap index out of bounds.");
-      std::swap(target, targets.val[swapIndex]);
+      types::activePokemonIndex swapIndex = action.targets.size() - 1 - deleteCount;
+      POKESIM_REQUIRE(swapIndex < action.targets.size(), "Swap index out of bounds.");
+      std::swap(target, action.targets[swapIndex]);
       deleteCount++;
     }
   }
 
-  targets.val.pop_count(deleteCount);
+  action.targets.pop_count(deleteCount);
 }
 
 template <typename View>
@@ -107,19 +107,19 @@ void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle&
     leafBattleHandle.entity());
 }
 
-void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction action) {
+void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
-  const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(action.val);
+  const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(action.action);
   types::entity sourceEntity = slotToPokemonEntity(registry, sides, sourceSlotName.val);
 
-  battleHandle.emplace<CurrentActionSource>(sourceEntity);
+  action.source = sourceEntity;
   registry.emplace<pokesim::tags::CurrentActionMoveSource>(sourceEntity);
 }
 
 void setCurrentActionTarget(
-  types::handle battleHandle, const Sides& sides, CurrentAction action, const Simulation& simulation) {
+  types::handle battleHandle, const Sides& sides, CurrentAction& action, const Simulation& simulation) {
   types::registry& registry = *battleHandle.registry();
-  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.val);
+  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.action);
   types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.val);
 
   bool pickedTarget = false;
@@ -131,12 +131,10 @@ void setCurrentActionTarget(
   }
 
   if (pickedTarget) {
-    battleHandle.emplace<CurrentActionTargets>(types::targets<types::entity>{targetEntity});
+    action.targets.push_back(targetEntity);
   }
   else {
-    types::entity sourceEntity = battleHandle.get<CurrentActionSource>().val;
-    battleHandle.remove<CurrentActionSource>();
-    registry.remove<pokesim::tags::CurrentActionMoveSource>(sourceEntity);
+    registry.remove<pokesim::tags::CurrentActionMoveSource>(action.source);
   }
 }
 
@@ -162,21 +160,20 @@ void setFailedActionMove(
   moveHandle.emplace<FailedCurrentActionTarget>(target.val);
 
   if (removedAllMoves) {
-    registry.remove<CurrentActionSource, CurrentActionTarget>(battle.val);
+    registry.remove<CurrentActionTarget>(battle.val);
     registry.emplace<FailedCurrentActionSource>(battle.val, source.val);
     registry.emplace<FailedCurrentActionTarget>(battle.val, target.val);
   }
 
   registry.erase<CurrentActionMoveSlot>(battle.val);
 
-  updateCurrentActionTargets(registry, registry.get<CurrentActionTargets>(battle.val));
+  updateCurrentActionTargets(registry, registry.get<CurrentAction>(battle.val));
 }
 
 void clearCurrentAction(Simulation& simulation) {
   types::registry& registry = simulation.registry;
   registry.clear<
     CurrentAction,
-    CurrentActionTargets,
     CurrentActionSource,
     CurrentActionTarget,
     FailedCurrentActionSource,

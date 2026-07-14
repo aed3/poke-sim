@@ -8,8 +8,7 @@
 namespace pokesim {
 class Simulation;
 struct Battle;
-struct CurrentActionSource;
-struct CurrentActionTarget;
+struct CurrentAction;
 struct CurrentActionMoveSlot;
 struct Damage;
 struct LastUsedMove;
@@ -40,7 +39,7 @@ void clearStatus(types::handle pokemonHandle);
 void clearVolatiles(types::handle pokemonHandle);
 
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
-void setLastMoveUsed(types::registry& registry, CurrentActionSource source, const CurrentActionMoveSlot& move);
+void setLastMoveUsed(types::registry& registry, CurrentAction& source, const CurrentActionMoveSlot& move);
 
 void faint(types::handle pokemonHandle, Battle battle);
 void applyDamage(types::handle pokemonHandle, types::damage damage);

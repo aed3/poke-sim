@@ -590,13 +590,11 @@ void check(const ParentEntity& parentEntity, const types::registry& registry) {
 
 template <>
 void check(const CurrentAction& currentAction, const types::registry& registry) {
-  checkAction(currentAction.val, registry);
-}
-
-template <>
-void check(const CurrentActionTargets& targets, const types::registry& registry) {
-  checkBounds<Constants::Targets>(targets.val.size());
-  for (types::entity target : targets.val) {
+  checkAction(currentAction.action, registry);
+  if (currentAction.source != entt::null) {
+    checkPokemon(currentAction.source, registry);
+  }
+  for (types::entity target : currentAction.targets) {
     checkPokemon(target, registry);
   }
 }

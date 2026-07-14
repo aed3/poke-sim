@@ -65,6 +65,11 @@ class AssertComponentsEqual {
   template <class T>
   struct equals<T, std::void_t<decltype(&T::operator==)>> : std::true_type {};
 
+  template <class, class = void>
+  struct hasToList : std::false_type {};
+  template <class T>
+  struct hasToList<T, std::void_t<decltype(&T::toList)>> : std::true_type {};
+
   template <typename T>
   using hasEqualTo = std::disjunction<equals<T>, std::is_scalar<T>>;
 
@@ -122,6 +127,12 @@ class AssertComponentsEqual {
     else if constexpr (val<Type>::value) {
       compareMember(current.val, initial.val, registry);
       if constexpr (sizeof(current.val) == sizeof(current)) {
+        return;
+      }
+    }
+    else if constexpr (hasToList<Type>::value) {
+      compareMember(current.toList(), initial.toList(), registry);
+      if constexpr (sizeof(std::invoke_result_t<decltype(&Type::toList), Type>) == sizeof(current)) {
         return;
       }
     }

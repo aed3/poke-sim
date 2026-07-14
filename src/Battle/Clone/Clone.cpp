@@ -201,6 +201,16 @@ void remapEntityListMembers(types::registry& registry, const types::ClonedEntity
   }
 }
 
+void remapCurrentAction(types::registry& registry, const types::ClonedEntityMap& entityMap) {
+  for (auto [clonedEntity, cloneTo, currentAction] : registry.view<CloneTo, CurrentAction>().each()) {
+    remapEntity(currentAction.action, cloneTo, entityMap);
+    remapEntity(currentAction.source, cloneTo, entityMap);
+    for (types::entity& target : currentAction.targets) {
+      remapEntity(target, cloneTo, entityMap);
+    }
+  }
+}
+
 template <typename Component>
 void remapComponentEntities(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   if constexpr (std::is_same_v<decltype(Component::val), types::entity>) {
@@ -257,12 +267,10 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<AddedRecycledActionMove1>(registry, entityMap);
   remapComponentEntities<AddedRecycledActionMove2>(registry, entityMap);
   remapComponentEntities<Battle>(registry, entityMap);
-  remapComponentEntities<CurrentAction>(registry, entityMap);
   remapComponentEntities<CurrentActionMovesAsSource>(registry, entityMap);
   remapComponentEntities<CurrentActionMovesAsTarget>(registry, entityMap);
   remapComponentEntities<CurrentActionSource>(registry, entityMap);
   remapComponentEntities<CurrentActionTarget>(registry, entityMap);
-  remapComponentEntities<CurrentActionTargets>(registry, entityMap);
   remapComponentEntities<CurrentEffectSource>(registry, entityMap);
   remapComponentEntities<CurrentEffectTarget>(registry, entityMap);
   remapComponentEntities<CurrentEffectsAsSource>(registry, entityMap);
@@ -276,6 +284,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<Side>(registry, entityMap);
   remapComponentEntities<Sides>(registry, entityMap);
   remapComponentEntities<Team>(registry, entityMap);
+  remapCurrentAction(registry, entityMap);
 
   registry.clear<CloneTo, tags::CloneFrom>();
 
