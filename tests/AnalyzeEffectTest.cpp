@@ -180,6 +180,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
+    pokedex.loadForBattleInfo({battleCreationInfo});
     simulation.createInitialStates({battleCreationInfo});
 
     types::entity inputEntity = simulation.registry.view<analyze_effect::tags::Input>().front();
@@ -196,6 +197,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
+    pokedex.loadForBattleInfo({battleCreationInfo});
     simulation.createInitialStates({battleCreationInfo});
 
     types::entity inputEntity = simulation.registry.view<analyze_effect::tags::Input>().front();
@@ -211,6 +213,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::PAR},
     };
+    pokedex.loadForBattleInfo({battleCreationInfo});
     simulation.createInitialStates({battleCreationInfo});
 
     simulation.registry.view<analyze_effect::tags::Input, StatusName>().each(
@@ -235,6 +238,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
+    pokedex.loadForBattleInfo({battleCreationInfo});
     simulation.createInitialStates({battleCreationInfo});
 
     simulation.registry.view<analyze_effect::tags::Input>().each(
@@ -250,6 +254,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
+    pokedex.loadForBattleInfo({battleCreationInfo});
     simulation.createInitialStates({battleCreationInfo});
 
     simulation.registry.view<analyze_effect::tags::Input>().each([&](types::entity entity) {
@@ -265,6 +270,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK, dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
+    pokedex.loadForBattleInfo({battleCreationInfo});
     simulation.createInitialStates({battleCreationInfo});
 
     simulation.registry.view<analyze_effect::tags::Input>().each(
@@ -279,6 +285,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK, dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
+    pokedex.loadForBattleInfo({battleCreationInfo});
     simulation.createInitialStates({battleCreationInfo});
 
     simulation.registry.view<analyze_effect::tags::Input>().each([&](types::entity entity) {
@@ -295,6 +302,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::PAR},
     };
+    pokedex.loadForBattleInfo({battleCreationInfo});
     simulation.createInitialStates({battleCreationInfo});
 
     simulation.registry.view<analyze_effect::tags::Input, StatusName>().each(
@@ -323,6 +331,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
         {{dex::Stat::ATK, 2}},
       },
     };
+    pokedex.loadForBattleInfo({battleCreationInfo});
     simulation.createInitialStates({battleCreationInfo});
 
     types::entity inputEntity = simulation.registry.view<analyze_effect::tags::Input>().front();
@@ -399,6 +408,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
         dex::Status::TOX,
       },
     };
+    pokedex.loadForBattleInfo({battleCreationInfo});
     simulation.createInitialStates({battleCreationInfo});
 
     auto inputs = registry.view<analyze_effect::tags::Input>();

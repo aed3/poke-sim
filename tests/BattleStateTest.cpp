@@ -13,6 +13,7 @@ TEST_CASE("Battle State: Single Battle", "[Simulation][Setup]") {
   battleCreationInfo.sides.p1().team[0].status = dex::Status::FRZ;
   battleCreationInfo.sides.p2().team[0].item = dex::Item::CHOICE_SCARF;
 
+  pokedex.loadForBattleInfo({battleCreationInfo});
   simulation.createInitialStates({battleCreationInfo});
 
   const types::registry& registry = simulation.registry;

@@ -122,6 +122,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
   options.setNoKoChanceCalculation(!getKoUses);
   options.setDamageRollOptions(damageRollOptions);
 
+  pokedex.loadForBattleInfo({battleCreationInfo});
   simulation.createInitialStates(battleInfoList);
   auto result = simulation.calculateDamage();
 
