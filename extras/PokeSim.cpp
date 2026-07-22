@@ -16,12 +16,10 @@
  * src/SimulateTurn/ManageActionQueue.cpp
  * src/SimulateTurn/CalcDamageSpecifics.cpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.cpp
- * src/Pokedex/Setup/ItemDexDataSetup.cpp
  * src/Pokedex/Setup/GetSpeciesBuild.cpp
  * src/Pokedex/Setup/GetMoveBuild.cpp
  * src/Pokedex/Setup/GetItemBuild.cpp
  * src/Pokedex/Setup/GetAbilityBuild.cpp
- * src/Pokedex/Setup/AbilityDexDataSetup.cpp
  * src/Pokedex/Pokedex.cpp
  * src/Pokedex/Events/MoveEvents.cpp
  * src/Pokedex/Events/ItemEvents.cpp
@@ -3686,16 +3684,6 @@ void SpeciesDexDataSetup::setHiddenAbility(pokesim::dex::Ability ability) {
 
 /////////////// END OF src/Pokedex/Setup/SpeciesDexDataSetup.cpp ///////////////
 
-/////////////// START OF src/Pokedex/Setup/ItemDexDataSetup.cpp ////////////////
-
-namespace pokesim::internal::dex {
-void ItemDexDataSetup::setName(pokesim::dex::Item item) {
-  handle.emplace<ItemName>(item);
-}
-}  // namespace pokesim::internal::dex
-
-//////////////// END OF src/Pokedex/Setup/ItemDexDataSetup.cpp /////////////////
-
 //////////////// START OF src/Pokedex/Setup/GetSpeciesBuild.cpp ////////////////
 
 #include <cstdint>
@@ -3801,14 +3789,15 @@ struct BuildMove {
     targetSecondaryEffect,
     sourcePrimaryEffect,
     sourceSecondaryEffect,
+    moveProperties,
+
     chance,
     atkBoost,
     defBoost,
     spaBoost,
     spdBoost,
     speBoost,
-
-    // moveTags and effectTags are not optional because setting them as optional does not work with clang
+    status,
   };
 
   enum class MoveEffectKind : std::uint8_t {
@@ -3838,6 +3827,8 @@ struct BuildMove {
   struct has<Optional::sourceSecondaryEffect, Type, std::void_t<typename Type::sourceSecondaryEffect>>
       : std::true_type {};
   template <typename Type>
+  struct has<Optional::moveProperties, Type, void_t<Type::moveProperties>> : std::true_type {};
+  template <typename Type>
   struct has<Optional::chance, Type, void_t<Type::chance>> : std::true_type {};
   template <typename Type>
   struct has<Optional::atkBoost, Type, void_t<Type::atkBoost>> : std::true_type {};
@@ -3849,6 +3840,8 @@ struct BuildMove {
   struct has<Optional::spdBoost, Type, void_t<Type::spdBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::status, Type, void_t<Type::status>> : std::true_type {};
 
   struct EntitySetup {
     using EntityList = entt::view<entt::get_t<BuildMoveTag, MoveTag>>;
@@ -3871,16 +3864,16 @@ struct BuildMove {
     }
 
     template <typename... Types>
-    void setProperties(Tags<Types...>) {
-      (add(Types{}), ...);
-    }
-
-    template <typename... Types>
     bool any_of() {
       return std::any_of(list->begin(), list->end(), [&](types::entity entity) {
         return registry->template any_of<Types...>(entity);
       });
     }
+  };
+
+  template <typename Tag>
+  struct AddFromEnum {
+    static void run(EntitySetup& setup) { setup.add(Tag{}); }
   };
 
   template <typename EffectData, MoveEffectKind moveEffectKind>
@@ -3929,7 +3922,9 @@ struct BuildMove {
       setup.add(SpeBoost{EffectData::speBoost(gameMechanic)});
     }
 
-    setup.setProperties(EffectData::effectTags);
+    if constexpr (has<Optional::status, EffectData>::value) {
+      status::tags::enumToTag<AddFromEnum>(EffectData::status(gameMechanic), setup);
+    }
   }
 
  public:
@@ -4015,7 +4010,9 @@ struct BuildMove {
       setup.add(move::effect::tags::MoveTarget{});
     }
 
-    setup.setProperties(Move::moveTags);
+    if constexpr (has<Optional::moveProperties, Move>::value) {
+      move::tags::enumToTag<AddFromEnum>(Move::moveProperties(gameMechanic), setup);
+    }
 
     switch (Move::target(gameMechanic)) {
       case MoveTarget::ANY_SINGLE_TARGET: {
@@ -4143,16 +4140,35 @@ void Pokedex::buildMoves(types::registry& registry) const {
 
 namespace pokesim {
 namespace {
-template <typename T>
+template <typename Tag>
+struct EmplaceTag {
+  static void run(types::handle handle) { handle.emplace<Tag>(); }
+};
+
+template <typename Item>
 struct BuildItem {
  private:
+  enum class Optional : std::uint8_t {
+    itemProperties,
+  };
+
+  template <auto Member>
+  using void_t = std::void_t<decltype(Member)>;
+
+  template <Optional, typename, typename V = void>
+  struct has : std::false_type {};
+  template <typename Type>
+  struct has<Optional::itemProperties, Type, void_t<Type::itemProperties>> : std::true_type {};
+
  public:
   static types::entity build(types::registry& registry, GameMechanics gameMechanic) {
-    internal::dex::ItemDexDataSetup item(registry);
+    types::handle item{registry, registry.create()};
 
-    item.setName(T::name(gameMechanic));
+    item.emplace<ItemName>(Item::name(gameMechanic));
 
-    item.setProperties(T::itemTags);
+    if constexpr (has<Optional::itemProperties, Item>::value) {
+      item::tags::enumToTag<EmplaceTag>(Item::itemProperties(gameMechanic), item);
+    }
 
     return item.entity();
   }
@@ -4199,9 +4215,9 @@ struct BuildAbility {
  private:
  public:
   static types::entity build(types::registry& registry, GameMechanics gameMechanic) {
-    internal::dex::AbilityDexDataSetup ability(registry);
+    types::handle ability{registry, registry.create()};
 
-    ability.setName(T::name(gameMechanic));
+    ability.emplace<AbilityName>(T::name(gameMechanic));
 
     return ability.entity();
   }
@@ -4243,16 +4259,6 @@ types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& regis
 }  // namespace pokesim
 
 ///////////////// END OF src/Pokedex/Setup/GetAbilityBuild.cpp /////////////////
-
-////////////// START OF src/Pokedex/Setup/AbilityDexDataSetup.cpp //////////////
-
-namespace pokesim::internal::dex {
-void AbilityDexDataSetup::setName(pokesim::dex::Ability ability) {
-  handle.emplace<AbilityName>(ability);
-}
-}  // namespace pokesim::internal::dex
-
-/////////////// END OF src/Pokedex/Setup/AbilityDexDataSetup.cpp ///////////////
 
 /////////////////////// START OF src/Pokedex/Pokedex.cpp ///////////////////////
 

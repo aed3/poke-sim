@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <Types/Enums/GameMechanics.hpp>
@@ -7,7 +6,6 @@
 #include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
-#include <Utilities/Tags.hpp>
 #include <string_view>
 
 namespace pokesim::dex {
@@ -18,7 +16,6 @@ struct Splash {
 
   static constexpr types::pp basePp(GameMechanics) { return 40U; }
 
-  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {

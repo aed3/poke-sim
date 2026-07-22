@@ -4,10 +4,10 @@
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
+#include <Types/Enums/MoveProperty.hpp>
 #include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
-#include <Utilities/Tags.hpp>
 #include <string_view>
 
 namespace pokesim::dex {
@@ -20,7 +20,9 @@ struct FuryAttack {
   static constexpr types::basePower basePower(GameMechanics) { return 15U; }
   static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
-  static constexpr Tags<move::tags::Contact, move::tags::VariableHitCount> moveTags{};
+  static constexpr MoveProperty moveProperties(GameMechanics) {
+    return MoveProperty::CONTACT | MoveProperty::VARIABLE_HIT_COUNT;
+  }
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {

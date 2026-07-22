@@ -9,7 +9,6 @@
 #include <Types/Move.hpp>
 #include <Types/Random.hpp>
 #include <Types/Stats.hpp>
-#include <Utilities/Tags.hpp>
 #include <string_view>
 
 namespace pokesim::dex {
@@ -25,11 +24,8 @@ struct Moonblast {
   struct targetSecondaryEffect {
     static constexpr types::percentChance chance(GameMechanics) { return 30U; }
     static constexpr types::boost spaBoost(GameMechanics) { return -1; }
-
-    static constexpr Tags<> effectTags{};
   };
 
-  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {

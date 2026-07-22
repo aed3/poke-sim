@@ -3,7 +3,6 @@
 #include <Types/Damage.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Item.hpp>
-#include <Utilities/Tags.hpp>
 #include <string_view>
 
 namespace pokesim {
@@ -16,7 +15,6 @@ struct FocusSash {
 
   static constexpr types::damage onAfterModifyDamageHpToKeep(GameMechanics) { return 1U; }
 
-  static constexpr Tags<> itemTags{};
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Focus Sash"; }
     static constexpr std::string_view smogonId(GameMechanics) { return "focussash"; }

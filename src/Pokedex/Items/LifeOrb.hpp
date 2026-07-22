@@ -4,7 +4,6 @@
 #include <Types/Enums/Item.hpp>
 #include <Types/Event.hpp>
 #include <Types/Stats.hpp>
-#include <Utilities/Tags.hpp>
 #include <string_view>
 
 namespace pokesim {
@@ -20,7 +19,6 @@ struct LifeOrb {
 
   static constexpr types::stat onAfterMoveUsedHpDecreaseDivisor(GameMechanics) { return 10U; }
 
-  static constexpr Tags<> itemTags{};
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Life Orb"; }
     static constexpr std::string_view smogonId(GameMechanics) { return "lifeorb"; }

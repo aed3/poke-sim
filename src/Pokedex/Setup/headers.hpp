@@ -2,7 +2,5 @@
 
 #pragma once
 
-#include "AbilityDexDataSetup.hpp"
 #include "DexDataSetup.hpp"
-#include "ItemDexDataSetup.hpp"
 #include "SpeciesDexDataSetup.hpp"

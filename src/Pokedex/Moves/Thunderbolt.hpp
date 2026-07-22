@@ -6,10 +6,10 @@
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
 #include <Types/Enums/MoveTarget.hpp>
+#include <Types/Enums/Status.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
 #include <Types/Random.hpp>
-#include <Utilities/Tags.hpp>
 #include <string_view>
 
 namespace pokesim::dex {
@@ -25,10 +25,9 @@ struct Thunderbolt {
   struct targetSecondaryEffect {
     static constexpr types::percentChance chance(GameMechanics) { return 10U; }
 
-    static constexpr Tags<status::tags::Paralysis> effectTags{};
+    static constexpr Status status(GameMechanics) { return Status::PAR; }
   };
 
-  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {

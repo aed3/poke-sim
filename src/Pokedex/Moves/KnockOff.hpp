@@ -4,11 +4,11 @@
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
+#include <Types/Enums/MoveProperty.hpp>
 #include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Event.hpp>
 #include <Types/Move.hpp>
-#include <Utilities/Tags.hpp>
 #include <string_view>
 
 namespace pokesim {
@@ -25,7 +25,7 @@ struct KnockOff {
   static constexpr types::basePower basePower(GameMechanics) { return 65U; }
   static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
-  static constexpr Tags<move::tags::Contact> moveTags{};
+  static constexpr MoveProperty moveProperties(GameMechanics) { return MoveProperty::CONTACT; }
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   static constexpr types::effectMultiplier onBasePowerMultiplier(GameMechanics) { return 1.5F; }

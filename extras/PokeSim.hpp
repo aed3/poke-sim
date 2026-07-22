@@ -182,7 +182,9 @@
  * src/Pokedex/EnumToTag/EnumToTag.hpp
  * src/Pokedex/EnumToTag/StatusEnumToTag.hpp
  * src/Types/Enums/BattleFormat.hpp
+ * src/Types/Enums/ItemProperty.hpp
  * src/Types/Enums/MoveCategory.hpp
+ * src/Types/Enums/MoveProperty.hpp
  * src/Types/Enums/MoveTarget.hpp
  * src/Types/Enums/TypeEffectiveness.hpp
  * src/Types/NaturesTable.hpp
@@ -251,14 +253,14 @@
  * src/SimulateTurn/CalcDamageSpecifics.hpp
  * src/Pokedex/Setup/DexDataSetup.hpp
  * src/Pokedex/Setup/SpeciesDexDataSetup.hpp
- * src/Pokedex/Setup/ItemDexDataSetup.hpp
  * src/Pokedex/Species/Ampharos.hpp
  * src/Pokedex/Species/Dragapult.hpp
  * src/Pokedex/Species/Empoleon.hpp
  * src/Pokedex/Species/Gardevoir.hpp
  * src/Pokedex/Species/Pangoro.hpp
  * src/Pokedex/Species/Ribombee.hpp
- * src/Pokedex/Setup/AbilityDexDataSetup.hpp
+ * src/Pokedex/EnumToTag/MovePropertyEnumToTag.hpp
+ * src/Pokedex/EnumToTag/ItemPropertyEnumToTag.hpp
  * src/Pokedex/EnumToTag/AbilityEnumToTag.hpp
  * src/Pokedex/EnumToTag/ItemEnumToTag.hpp
  * src/Pokedex/EnumToTag/MoveEnumToTag.hpp
@@ -18532,13 +18534,13 @@ struct SideConditionName {
 namespace pokesim::dex {
 // Pokemon stat abbreviated name
 enum class Stat : std::uint8_t {
-  NONE = 0,
-  HP = 0b000001,
-  ATK = 0b000010,
-  DEF = 0b000100,
-  SPA = 0b001000,
-  SPD = 0b010000,
-  SPE = 0b100000,
+  NONE = 0U,
+  HP = 1U << 0U,
+  ATK = 1U << 1U,
+  DEF = 1U << 2U,
+  SPA = 1U << 3U,
+  SPD = 1U << 4U,
+  SPE = 1U << 5U,
   // SPC = SPA | SPD,
 };
 
@@ -18777,12 +18779,12 @@ struct DamageRolls {
 
 namespace pokesim {
 enum class DamageRollKind : std::uint8_t {
-  NONE = 0b00000000,
-  AVERAGE_DAMAGE = 0b000000001,
-  MAX_DAMAGE = 0b00000010,
-  MIN_DAMAGE = 0b00000100,
-  GUARANTEED_CRIT_CHANCE = 0b00001000,
-  ALL_DAMAGE_ROLLS = 0b00010000,
+  NONE = 0U,
+  AVERAGE_DAMAGE = 1U << 0U,
+  MAX_DAMAGE = 1U << 1U,
+  MIN_DAMAGE = 1U << 2U,
+  GUARANTEED_CRIT_CHANCE = 1U << 3U,
+  ALL_DAMAGE_ROLLS = 1U << 4U,
 };
 
 constexpr DamageRollKind operator|(DamageRollKind kindA, DamageRollKind kindB) {
@@ -19124,12 +19126,12 @@ struct ActionQueue {
 
 namespace pokesim {
 enum class AddedTargetOptions : std::uint8_t {
-  NONE = 0b00000000,
-  TARGET_ALLY = 0b00000001,
-  USER_ALLY = 0b00000010,
-  TARGET_SIDE = 0b00000100,
-  USER_SIDE = 0b00001000,
-  FIELD = 0b00010000,
+  NONE = 0U,
+  TARGET_ALLY = 1U << 0U,
+  USER_ALLY = 1U << 1U,
+  TARGET_SIDE = 1U << 2U,
+  USER_SIDE = 1U << 3U,
+  FIELD = 1U << 4U,
 };
 
 constexpr AddedTargetOptions operator|(AddedTargetOptions optionA, AddedTargetOptions optionB) {
@@ -20434,10 +20436,13 @@ struct BattleEnded {};
 ////////////// START OF src/Components/Tags/ItemPropertyTags.hpp ///////////////
 
 namespace pokesim::item::tags {
+struct Berry {};
 // Item Property Tag: Activates choice lock
 struct Choice {};
-// Item Property Tag: A consumable berry
-struct Berry {};
+struct Gem {};
+// Item Property Tag: Is usable even when holder's ability is Klutz
+struct IgnoresKlutz {};
+struct Pokeball {};
 }  // namespace pokesim::item::tags
 
 /////////////// END OF src/Components/Tags/ItemPropertyTags.hpp ////////////////
@@ -20839,6 +20844,28 @@ static constexpr inline std::array<BattleFormat, 2U> VALID_BATTLE_FORMATS = {
 
 /////////////////// END OF src/Types/Enums/BattleFormat.hpp ////////////////////
 
+////////////////// START OF src/Types/Enums/ItemProperty.hpp ///////////////////
+
+namespace pokesim::dex {
+enum class ItemProperty : std::uint8_t {
+  BERRY = 1U << 0U,
+  CHOICE = 1U << 1U,
+  GEM = 1U << 2U,
+  IGNORES_KLUTZ = 1U << 3U,
+  POKEBALL = 1U << 4U,
+};
+
+constexpr ItemProperty operator|(ItemProperty kindA, ItemProperty kindB) {
+  return static_cast<ItemProperty>(static_cast<std::uint8_t>(kindA) | static_cast<std::uint8_t>(kindB));
+}
+
+constexpr bool operator&(ItemProperty kindA, ItemProperty kindB) {
+  return (static_cast<std::uint8_t>(kindA) & static_cast<std::uint8_t>(kindB)) != 0U;
+}
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Types/Enums/ItemProperty.hpp ////////////////////
+
 ////////////////// START OF src/Types/Enums/MoveCategory.hpp ///////////////////
 
 namespace pokesim::dex {
@@ -20852,6 +20879,60 @@ static constexpr std::uint8_t TOTAL_MOVE_CATEGORY_COUNT = 3U;
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Types/Enums/MoveCategory.hpp ////////////////////
+
+////////////////// START OF src/Types/Enums/MoveProperty.hpp ///////////////////
+
+namespace pokesim::dex {
+enum class MoveProperty : std::uint64_t {
+  ACCURACY_DEPENDENT_HIT_COUNT = 1UL << 0U,
+  BITE = 1UL << 1U,
+  BULLET = 1UL << 2U,
+  BYPASS_PROTECT = 1UL << 3U,
+  BYPASS_SUBSTITUTE = 1UL << 4U,
+  CAN_REFLECT = 1UL << 5U,
+  CAN_SNATCH = 1UL << 6U,
+  CANNOT_USE_TWICE = 1UL << 7U,
+  CHARGE = 1UL << 8U,
+  CONTACT = 1UL << 9U,
+  DANCE = 1UL << 10U,
+  DEFROST = 1UL << 11U,
+  FAIL_WITH_GRAVITY = 1UL << 12U,
+  FUTURE_MOVE = 1UL << 13U,
+  HEAL = 1UL << 14U,
+  MUST_PRESSURE = 1UL << 15U,
+  NO_ASSIST = 1UL << 16U,
+  NO_COPYCAT = 1UL << 17U,
+  NO_ENCORE = 1UL << 18U,
+  NO_INSTRUCT = 1UL << 19U,
+  NO_ME_FIRST = 1UL << 20U,
+  NO_METRONOME = 1UL << 21U,
+  NO_MIMIC = 1UL << 22U,
+  NO_MIRROR_MOVE = 1UL << 23U,
+  NO_PARENTAL_BOND = 1UL << 24U,
+  NO_SKETCH = 1UL << 25U,
+  NO_SLEEP_TALK = 1UL << 26U,
+  PLEDGE = 1UL << 27U,
+  POWDER = 1UL << 28U,
+  PULSE = 1UL << 29U,
+  PUNCH = 1UL << 30U,
+  RECHARGE = 1UL << 31U,
+  SLICING = 1UL << 32U,
+  SOUND = 1UL << 33U,
+  STRENGTHEN_ON_MINIMIZED = 1UL << 34U,
+  VARIABLE_HIT_COUNT = 1UL << 35U,
+  WIND = 1UL << 36U,
+};
+
+constexpr MoveProperty operator|(MoveProperty kindA, MoveProperty kindB) {
+  return static_cast<MoveProperty>(static_cast<std::uint64_t>(kindA) | static_cast<std::uint64_t>(kindB));
+}
+
+constexpr bool operator&(MoveProperty kindA, MoveProperty kindB) {
+  return (static_cast<std::uint64_t>(kindA) & static_cast<std::uint64_t>(kindB)) != 0U;
+}
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Types/Enums/MoveProperty.hpp ////////////////////
 
 /////////////////// START OF src/Types/Enums/MoveTarget.hpp ////////////////////
 
@@ -24624,7 +24705,6 @@ struct AssaultVest {
 
   static constexpr types::effectMultiplier onModifySpdModifier(GameMechanics) { return 1.5F; }
 
-  static constexpr Tags<> itemTags{};
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Assault Vest"; }
     static constexpr std::string_view smogonId(GameMechanics) { return "assaultvest"; }
@@ -24652,7 +24732,6 @@ struct BrightPowder {
   static constexpr types::eventModifier onModifyAccuracyNumerator(GameMechanics) { return 3686U; }
   static constexpr types::eventModifier onModifyAccuracyDenominator(GameMechanics) { return 4096U; }
 
-  static constexpr Tags<> itemTags{};
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Bright Powder"; }
     static constexpr std::string_view smogonId(GameMechanics) { return "brightpowder"; }
@@ -24678,7 +24757,7 @@ struct ChoiceScarf {
 
   static constexpr types::effectMultiplier onModifySpeModifier(GameMechanics) { return 1.5F; }
 
-  static constexpr Tags<item::tags::Choice> itemTags{};
+  static constexpr ItemProperty itemProperties(GameMechanics) { return ItemProperty::CHOICE; }
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Choice Scarf"; }
     static constexpr std::string_view smogonId(GameMechanics) { return "choicescarf"; }
@@ -24706,7 +24785,7 @@ struct ChoiceSpecs {
 
   static constexpr types::effectMultiplier onModifySpaModifier(GameMechanics) { return 1.5F; }
 
-  static constexpr Tags<item::tags::Choice> itemTags{};
+  static constexpr ItemProperty itemProperties(GameMechanics) { return ItemProperty::CHOICE; }
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Choice Specs"; }
     static constexpr std::string_view smogonId(GameMechanics) { return "choicespecs"; }
@@ -24734,7 +24813,6 @@ struct FocusSash {
 
   static constexpr types::damage onAfterModifyDamageHpToKeep(GameMechanics) { return 1U; }
 
-  static constexpr Tags<> itemTags{};
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Focus Sash"; }
     static constexpr std::string_view smogonId(GameMechanics) { return "focussash"; }
@@ -24764,7 +24842,6 @@ struct LifeOrb {
 
   static constexpr types::stat onAfterMoveUsedHpDecreaseDivisor(GameMechanics) { return 10U; }
 
-  static constexpr Tags<> itemTags{};
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Life Orb"; }
     static constexpr std::string_view smogonId(GameMechanics) { return "lifeorb"; }
@@ -24791,7 +24868,9 @@ struct FuryAttack {
   static constexpr types::basePower basePower(GameMechanics) { return 15U; }
   static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
-  static constexpr Tags<move::tags::Contact, move::tags::VariableHitCount> moveTags{};
+  static constexpr MoveProperty moveProperties(GameMechanics) {
+    return MoveProperty::CONTACT | MoveProperty::VARIABLE_HIT_COUNT;
+  }
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
@@ -24821,7 +24900,7 @@ struct KnockOff {
   static constexpr types::basePower basePower(GameMechanics) { return 65U; }
   static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
-  static constexpr Tags<move::tags::Contact> moveTags{};
+  static constexpr MoveProperty moveProperties(GameMechanics) { return MoveProperty::CONTACT; }
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   static constexpr types::effectMultiplier onBasePowerMultiplier(GameMechanics) { return 1.5F; }
@@ -24854,11 +24933,8 @@ struct Moonblast {
   struct targetSecondaryEffect {
     static constexpr types::percentChance chance(GameMechanics) { return 30U; }
     static constexpr types::boost spaBoost(GameMechanics) { return -1; }
-
-    static constexpr Tags<> effectTags{};
   };
 
-  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
@@ -24886,11 +24962,8 @@ struct QuiverDance {
     static constexpr types::boost spaBoost(GameMechanics) { return 1; }
     static constexpr types::boost spdBoost(GameMechanics) { return 1; }
     static constexpr types::boost speBoost(GameMechanics) { return 1; }
-
-    static constexpr Tags<> effectTags{};
   };
 
-  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
@@ -24914,7 +24987,6 @@ struct Splash {
 
   static constexpr types::pp basePp(GameMechanics) { return 40U; }
 
-  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
@@ -24943,10 +25015,9 @@ struct Thunderbolt {
   struct targetSecondaryEffect {
     static constexpr types::percentChance chance(GameMechanics) { return 10U; }
 
-    static constexpr Tags<status::tags::Paralysis> effectTags{};
+    static constexpr Status status(GameMechanics) { return Status::PAR; }
   };
 
-  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
@@ -24972,10 +25043,9 @@ struct WillOWisp {
   static constexpr types::pp basePp(GameMechanics) { return 15U; }
 
   struct targetPrimaryEffect {
-    static constexpr Tags<status::tags::Burn> effectTags{};
+    static constexpr Status status(GameMechanics) { return Status::BRN; }
   };
 
-  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
@@ -25534,18 +25604,6 @@ struct SpeciesDexDataSetup : DexDataSetup {
 
 /////////////// END OF src/Pokedex/Setup/SpeciesDexDataSetup.hpp ///////////////
 
-/////////////// START OF src/Pokedex/Setup/ItemDexDataSetup.hpp ////////////////
-
-namespace pokesim::internal::dex {
-struct ItemDexDataSetup : DexDataSetup {
-  ItemDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
-
-  void setName(pokesim::dex::Item item);
-};
-}  // namespace pokesim::internal::dex
-
-//////////////// END OF src/Pokedex/Setup/ItemDexDataSetup.hpp /////////////////
-
 ////////////////// START OF src/Pokedex/Species/Ampharos.hpp ///////////////////
 
 namespace pokesim::dex {
@@ -25731,17 +25789,79 @@ struct Ribombee {
 
 /////////////////// END OF src/Pokedex/Species/Ribombee.hpp ////////////////////
 
-////////////// START OF src/Pokedex/Setup/AbilityDexDataSetup.hpp //////////////
+/////////// START OF src/Pokedex/EnumToTag/MovePropertyEnumToTag.hpp ///////////
 
-namespace pokesim::internal::dex {
-struct AbilityDexDataSetup : DexDataSetup {
-  AbilityDexDataSetup(types::registry& registry) : DexDataSetup(registry) {}
+namespace pokesim::move::tags {
+/*
+ * Runs a function with a certain move property tag based on the passed in enum.
+ * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the move property
+ * tags with a static `run` function.
+ *
+ * @code
+ * template <typename Tag>
+ * struct EmplaceTag {
+ *   static void run(types::handle handle) { handle.emplace<Tag>(); }
+ * };
+ *
+ * enumToTag<EmplaceTag>(dex::MoveProperty::CONTACT, handle);
+ * @endcode
+ */
+template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
+void enumToTag(dex::MoveProperty item, RunArgs&&... args) {
+  if (item & dex::MoveProperty::CONTACT) {
+    RunStruct<Contact, T...>::run(std::forward<RunArgs>(args)...);
+  }
 
-  void setName(pokesim::dex::Ability ability);
-};
-}  // namespace pokesim::internal::dex
+  if (item & dex::MoveProperty::VARIABLE_HIT_COUNT) {
+    RunStruct<VariableHitCount, T...>::run(std::forward<RunArgs>(args)...);
+  }
+}
+}  // namespace pokesim::move::tags
 
-/////////////// END OF src/Pokedex/Setup/AbilityDexDataSetup.hpp ///////////////
+//////////// END OF src/Pokedex/EnumToTag/MovePropertyEnumToTag.hpp ////////////
+
+/////////// START OF src/Pokedex/EnumToTag/ItemPropertyEnumToTag.hpp ///////////
+
+namespace pokesim::item::tags {
+/*
+ * Runs a function with a certain item property tag based on the passed in enum.
+ * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the item property
+ * tags with a static `run` function.
+ *
+ * @code
+ * template <typename Tag>
+ * struct EmplaceTag {
+ *   static void run(types::handle handle) { handle.emplace<Tag>(); }
+ * };
+ *
+ * enumToTag<EmplaceTag>(dex::ItemProperty::BERRY, handle);
+ * @endcode
+ */
+template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
+void enumToTag(dex::ItemProperty item, RunArgs&&... args) {
+  if (item & dex::ItemProperty::BERRY) {
+    RunStruct<Berry, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
+  if (item & dex::ItemProperty::CHOICE) {
+    RunStruct<Choice, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
+  if (item & dex::ItemProperty::GEM) {
+    RunStruct<Gem, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
+  if (item & dex::ItemProperty::IGNORES_KLUTZ) {
+    RunStruct<IgnoresKlutz, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
+  if (item & dex::ItemProperty::POKEBALL) {
+    RunStruct<Pokeball, T...>::run(std::forward<RunArgs>(args)...);
+  }
+}
+}  // namespace pokesim::item::tags
+
+//////////// END OF src/Pokedex/EnumToTag/ItemPropertyEnumToTag.hpp ////////////
 
 ///////////// START OF src/Pokedex/EnumToTag/AbilityEnumToTag.hpp //////////////
 

@@ -197,12 +197,10 @@ setup_target(
     src/Pokedex/Events/ItemEvents.cpp
     src/Pokedex/Events/MoveEvents.cpp
     src/Pokedex/Pokedex.cpp
-    src/Pokedex/Setup/AbilityDexDataSetup.cpp
     src/Pokedex/Setup/GetAbilityBuild.cpp
     src/Pokedex/Setup/GetItemBuild.cpp
     src/Pokedex/Setup/GetMoveBuild.cpp
     src/Pokedex/Setup/GetSpeciesBuild.cpp
-    src/Pokedex/Setup/ItemDexDataSetup.cpp
     src/Pokedex/Setup/SpeciesDexDataSetup.cpp
     src/SimulateTurn/CalcDamageSpecifics.cpp
     src/SimulateTurn/ManageActionQueue.cpp

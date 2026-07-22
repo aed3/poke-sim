@@ -6,9 +6,9 @@
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
 #include <Types/Enums/MoveTarget.hpp>
+#include <Types/Enums/Status.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Move.hpp>
-#include <Utilities/Tags.hpp>
 #include <string_view>
 
 namespace pokesim::dex {
@@ -21,10 +21,9 @@ struct WillOWisp {
   static constexpr types::pp basePp(GameMechanics) { return 15U; }
 
   struct targetPrimaryEffect {
-    static constexpr Tags<status::tags::Burn> effectTags{};
+    static constexpr Status status(GameMechanics) { return Status::BRN; }
   };
 
-  static constexpr Tags<> moveTags{};
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {

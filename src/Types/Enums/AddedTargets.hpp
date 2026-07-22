@@ -5,12 +5,12 @@
 
 namespace pokesim {
 enum class AddedTargetOptions : std::uint8_t {
-  NONE = 0b00000000,
-  TARGET_ALLY = 0b00000001,
-  USER_ALLY = 0b00000010,
-  TARGET_SIDE = 0b00000100,
-  USER_SIDE = 0b00001000,
-  FIELD = 0b00010000,
+  NONE = 0U,
+  TARGET_ALLY = 1U << 0U,
+  USER_ALLY = 1U << 1U,
+  TARGET_SIDE = 1U << 2U,
+  USER_SIDE = 1U << 3U,
+  FIELD = 1U << 4U,
 };
 
 constexpr AddedTargetOptions operator|(AddedTargetOptions optionA, AddedTargetOptions optionB) {

@@ -13,6 +13,8 @@
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/TargetTags.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/EnumToTag/MovePropertyEnumToTag.hpp>
+#include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
@@ -25,6 +27,7 @@
 #include <Types/Registry.hpp>
 #include <Types/Stats.hpp>
 #include <cstdint>
+#include <entt/entity/registry.hpp>
 #include <type_traits>
 
 #include "../Moves/headers.hpp"
@@ -44,14 +47,15 @@ struct BuildMove {
     targetSecondaryEffect,
     sourcePrimaryEffect,
     sourceSecondaryEffect,
+    moveProperties,
+
     chance,
     atkBoost,
     defBoost,
     spaBoost,
     spdBoost,
     speBoost,
-
-    // moveTags and effectTags are not optional because setting them as optional does not work with clang
+    status,
   };
 
   enum class MoveEffectKind : std::uint8_t {
@@ -81,6 +85,8 @@ struct BuildMove {
   struct has<Optional::sourceSecondaryEffect, Type, std::void_t<typename Type::sourceSecondaryEffect>>
       : std::true_type {};
   template <typename Type>
+  struct has<Optional::moveProperties, Type, void_t<Type::moveProperties>> : std::true_type {};
+  template <typename Type>
   struct has<Optional::chance, Type, void_t<Type::chance>> : std::true_type {};
   template <typename Type>
   struct has<Optional::atkBoost, Type, void_t<Type::atkBoost>> : std::true_type {};
@@ -92,6 +98,8 @@ struct BuildMove {
   struct has<Optional::spdBoost, Type, void_t<Type::spdBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::status, Type, void_t<Type::status>> : std::true_type {};
 
   struct EntitySetup {
     using EntityList = entt::view<entt::get_t<BuildMoveTag, MoveTag>>;
@@ -114,16 +122,16 @@ struct BuildMove {
     }
 
     template <typename... Types>
-    void setProperties(Tags<Types...>) {
-      (add(Types{}), ...);
-    }
-
-    template <typename... Types>
     bool any_of() {
       return std::any_of(list->begin(), list->end(), [&](types::entity entity) {
         return registry->template any_of<Types...>(entity);
       });
     }
+  };
+
+  template <typename Tag>
+  struct AddFromEnum {
+    static void run(EntitySetup& setup) { setup.add(Tag{}); }
   };
 
   template <typename EffectData, MoveEffectKind moveEffectKind>
@@ -172,7 +180,9 @@ struct BuildMove {
       setup.add(SpeBoost{EffectData::speBoost(gameMechanic)});
     }
 
-    setup.setProperties(EffectData::effectTags);
+    if constexpr (has<Optional::status, EffectData>::value) {
+      status::tags::enumToTag<AddFromEnum>(EffectData::status(gameMechanic), setup);
+    }
   }
 
  public:
@@ -258,7 +268,9 @@ struct BuildMove {
       setup.add(move::effect::tags::MoveTarget{});
     }
 
-    setup.setProperties(Move::moveTags);
+    if constexpr (has<Optional::moveProperties, Move>::value) {
+      move::tags::enumToTag<AddFromEnum>(Move::moveProperties(gameMechanic), setup);
+    }
 
     switch (Move::target(gameMechanic)) {
       case MoveTarget::ANY_SINGLE_TARGET: {

@@ -5,12 +5,12 @@
 
 namespace pokesim {
 enum class DamageRollKind : std::uint8_t {
-  NONE = 0b00000000,
-  AVERAGE_DAMAGE = 0b000000001,
-  MAX_DAMAGE = 0b00000010,
-  MIN_DAMAGE = 0b00000100,
-  GUARANTEED_CRIT_CHANCE = 0b00001000,
-  ALL_DAMAGE_ROLLS = 0b00010000,
+  NONE = 0U,
+  AVERAGE_DAMAGE = 1U << 0U,
+  MAX_DAMAGE = 1U << 1U,
+  MIN_DAMAGE = 1U << 2U,
+  GUARANTEED_CRIT_CHANCE = 1U << 3U,
+  ALL_DAMAGE_ROLLS = 1U << 4U,
 };
 
 constexpr DamageRollKind operator|(DamageRollKind kindA, DamageRollKind kindB) {
