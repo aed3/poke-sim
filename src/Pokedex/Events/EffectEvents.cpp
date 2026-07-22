@@ -11,6 +11,7 @@
 #include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/ItemPropertyTags.hpp>
+#include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
@@ -49,15 +50,9 @@ void paralysisOnBeforeMove(types::registry& registry, const CurrentActionMovesAs
   }
 }
 
-void choiceLockRemoveWithoutItem(types::handle pokemonHandle, const pokesim::ChoiceLock&) {
-  pokemonHandle.remove<pokesim::ChoiceLock>();
-}
-
-void choiceLockRemoveWithItem(
-  types::handle pokemonHandle, const ItemName& itemName, const pokesim::ChoiceLock&, const Pokedex& pokedex) {
-  if (!pokedex.itemHas<item::tags::Choice>(itemName.val)) {
-    pokemonHandle.remove<pokesim::ChoiceLock>();
-  }
+template <typename... Tags>
+void choiceLockRemove(Simulation& simulation) {
+  simulation.removeFromEntities<pokesim::ChoiceLock, Tags...>(entt::exclude<item::tags::Choice>);
 }
 
 void choiceLockOnDisableMove(
@@ -107,8 +102,7 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {
-  simulation.view<choiceLockRemoveWithoutItem, Tags<>, entt::exclude_t<ItemName>>();
-  simulation.view<choiceLockRemoveWithItem>(simulation.pokedex());
+  choiceLockRemove(simulation);
 }
 
 void ChoiceLock::onDisableMove(Simulation& simulation) {
@@ -117,8 +111,7 @@ void ChoiceLock::onDisableMove(Simulation& simulation) {
     return;
   }
 
-  filter.view<choiceLockRemoveWithoutItem, Tags<>, entt::exclude_t<ItemName>>();
-  filter.view<choiceLockRemoveWithItem>(simulation.pokedex());
+  choiceLockRemove<internal::tags::DisableMove>(simulation);
   filter.view<choiceLockOnDisableMove>();
 }
 }  // namespace pokesim::dex

@@ -3,7 +3,6 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <Types/Enums/BattleFormat.hpp>
 #include <Types/Registry.hpp>
-#include <Types/State.hpp>
 #include <Utilities/RegistryLoop.hpp>
 #include <entt/entity/registry.hpp>
 #include <optional>
@@ -90,11 +89,11 @@ class Simulation {
   types::entityVector moveEntities() const;
   types::entityVector pokemonEntities() const;
 
-  template <template <typename> typename RunStruct, typename... RunFunctionArgs>
-  static void forEachSimulationTag(RunFunctionArgs&&... args) {
-    RunStruct<tags::SimulateTurn>::run(std::forward<RunFunctionArgs>(args)...);
-    RunStruct<tags::CalculateDamage>::run(std::forward<RunFunctionArgs>(args)...);
-    RunStruct<tags::AnalyzeEffect>::run(std::forward<RunFunctionArgs>(args)...);
+  template <template <typename> typename RunStruct, typename... RunArgs>
+  static void forEachSimulationTag(RunArgs&&... args) {
+    RunStruct<tags::SimulateTurn>::run(std::forward<RunArgs>(args)...);
+    RunStruct<tags::CalculateDamage>::run(std::forward<RunArgs>(args)...);
+    RunStruct<tags::AnalyzeEffect>::run(std::forward<RunArgs>(args)...);
   }
 
  public:

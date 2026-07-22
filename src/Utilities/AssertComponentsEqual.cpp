@@ -6,8 +6,8 @@
 #include <Components/EntityHolders/BattleTree.hpp>
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Indexes.hpp>
 #include <Types/Registry.hpp>
-#include <Types/State.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/container/dense_set.hpp>
 #include <entt/entity/registry.hpp>

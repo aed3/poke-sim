@@ -13,7 +13,6 @@
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
-#include <Types/State.hpp>
 #include <entt/container/dense_map.hpp>
 #include <entt/core/fwd.hpp>
 #include <entt/entity/registry.hpp>

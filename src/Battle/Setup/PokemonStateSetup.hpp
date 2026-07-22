@@ -9,6 +9,7 @@
 #include <Types/Enums/Nature.hpp>
 #include <Types/Enums/Species.hpp>
 #include <Types/Enums/Status.hpp>
+#include <Types/Indexes.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
 #include <Types/Stats.hpp>
@@ -19,6 +20,7 @@
 #include "StateSetupBase.hpp"
 
 namespace pokesim {
+class Pokedex;
 struct Evs;
 struct Ivs;
 struct SpeciesTypes;
@@ -53,8 +55,8 @@ struct PokemonStateSetup : StateSetupBase {
   void setTypes(SpeciesTypes types);
   void setLevel(types::level level);
   void setGender(pokesim::dex::Gender gender);
-  void setAbility(pokesim::dex::Ability ability);
-  void setItem(pokesim::dex::Item item);
+  void setAbility(pokesim::dex::Ability ability, const Pokedex& pokedex);
+  void setItem(pokesim::dex::Item item, const Pokedex& pokedex);
   void setMoves(const std::vector<MoveSlot>& moveSlots);
 
   void setPostion(types::teamPositionIndex position);

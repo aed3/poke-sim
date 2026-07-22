@@ -38,9 +38,11 @@
 #include <Components/Probability.hpp>
 #include <Components/RNGSeed.hpp>
 #include <Components/Stats.hpp>
+#include <Components/Tags/ItemPropertyTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Turn.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/EnumToTag/EnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/BattleCreationInfo.hpp>
 #include <Types/Entity.hpp>
@@ -55,6 +57,7 @@
 #include <Types/Enums/Terrain.hpp>
 #include <Types/Enums/Volatile.hpp>
 #include <Types/Enums/Weather.hpp>
+#include <Types/Indexes.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
 #include <Utilities/DebugChecks.hpp>
@@ -235,27 +238,38 @@ struct SimulationSetupChecks {
     }
 
     POKESIM_REQUIRE_NM(speciesName.val == creationInfo.species);
-
-    const AbilityName* abilityName = registry->try_get<AbilityName>(pokemonEntity);
-    if (creationInfo.ability.has_value()) {
-      POKESIM_REQUIRE_NM(abilityName != nullptr);
-      POKESIM_REQUIRE_NM(abilityName->val == creationInfo.ability);
-    }
-    else if (pokedex->speciesHas<PrimaryAbility>(creationInfo.species)) {
-      POKESIM_REQUIRE_NM(abilityName != nullptr);
-      POKESIM_REQUIRE_NM(abilityName->val == pokedex->getSpeciesData<PrimaryAbility>(creationInfo.species).val);
-    }
-    else {
-      POKESIM_REQUIRE_NM(abilityName == nullptr);
-    }
-
     POKESIM_REQUIRE_NM(level.val == creationInfo.level.value_or(Constants::PokemonLevel::DEFAULT));
 
-    if (!creationInfo.item.has_value() || creationInfo.item == dex::Item::NO_ITEM) {
-      POKESIM_REQUIRE_NM(!registry->all_of<ItemName>(pokemonEntity));
+    POKESIM_REQUIRE_NM(!registry->all_of<AbilityName>(pokemonEntity));
+    if (creationInfo.ability.has_value() && creationInfo.ability.value() != dex::Ability::NO_ABILITY) {
+      POKESIM_REQUIRE_NM(registry->all_of<tags::HasAbility>(pokemonEntity));
+      POKESIM_REQUIRE_NM(ability::tags::hasTag(creationInfo.ability.value(), *registry, pokemonEntity));
+    }
+    else if (pokedex->speciesHas<PrimaryAbility>(creationInfo.species)) {
+      dex::Ability primaryAbility = pokedex->getSpeciesData<PrimaryAbility>(creationInfo.species).val;
+      POKESIM_REQUIRE_NM(registry->all_of<tags::HasAbility>(pokemonEntity));
+      POKESIM_REQUIRE_NM(ability::tags::hasTag(primaryAbility, *registry, pokemonEntity));
     }
     else {
-      POKESIM_REQUIRE_NM(registry->get<ItemName>(pokemonEntity).val == creationInfo.item);
+      POKESIM_REQUIRE_NM(!registry->all_of<tags::HasAbility>(pokemonEntity));
+    }
+
+    POKESIM_REQUIRE_NM(!registry->all_of<ItemName>(pokemonEntity));
+    if (creationInfo.item.has_value() && creationInfo.item != dex::Item::NO_ITEM) {
+      dex::Item item = creationInfo.item.value();
+      POKESIM_REQUIRE_NM(registry->all_of<tags::HasItem>(pokemonEntity));
+      POKESIM_REQUIRE_NM(item::tags::hasTag(item, *registry, pokemonEntity));
+
+      POKESIM_REQUIRE_NM(
+        pokedex->itemHas<item::tags::Choice>(item) == registry->all_of<item::tags::Choice>(pokemonEntity));
+
+      POKESIM_REQUIRE_NM(
+        pokedex->itemHas<item::tags::Berry>(item) == registry->all_of<item::tags::Berry>(pokemonEntity));
+    }
+    else {
+      POKESIM_REQUIRE_NM(!registry->all_of<tags::HasItem>(pokemonEntity));
+      POKESIM_REQUIRE_NM(!registry->all_of<item::tags::Choice>(pokemonEntity));
+      POKESIM_REQUIRE_NM(!registry->all_of<item::tags::Berry>(pokemonEntity));
     }
 
     if (!creationInfo.gender.has_value() || creationInfo.gender == dex::Gender::NO_GENDER) {
@@ -265,18 +279,18 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(registry->get<GenderName>(pokemonEntity).val == creationInfo.gender);
     }
 
-    if (!creationInfo.status.has_value() || creationInfo.status == dex::Status::NO_STATUS) {
-      POKESIM_REQUIRE_NM(!registry->all_of<StatusName>(pokemonEntity));
+    POKESIM_REQUIRE_NM(!registry->all_of<StatusName>(pokemonEntity));
+    if (creationInfo.status.has_value() && creationInfo.status != dex::Status::NO_STATUS) {
+      POKESIM_REQUIRE_NM(registry->all_of<tags::HasStatus>(pokemonEntity));
+      POKESIM_REQUIRE_NM(status::tags::hasTag(creationInfo.status.value(), *registry, pokemonEntity));
     }
     else {
-      POKESIM_REQUIRE_NM(registry->get<StatusName>(pokemonEntity).val == creationInfo.status);
+      POKESIM_REQUIRE_NM(!registry->all_of<tags::HasStatus>(pokemonEntity));
     }
 
-    if (!creationInfo.nature.has_value() || creationInfo.nature == dex::Nature::NO_NATURE) {
-      POKESIM_REQUIRE_NM(!registry->all_of<NatureName>(pokemonEntity));
-    }
-    else {
-      POKESIM_REQUIRE_NM(registry->get<NatureName>(pokemonEntity).val == creationInfo.nature);
+    POKESIM_REQUIRE_NM(!registry->all_of<NatureName>(pokemonEntity));
+    if (creationInfo.nature.has_value() && creationInfo.nature != dex::Nature::NO_NATURE) {
+      POKESIM_REQUIRE_NM(nature::tags::hasTag(creationInfo.nature.value(), *registry, pokemonEntity));
     }
 
     checkCreatedStats(pokemonEntity, creationInfo);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Types/Constants.hpp>
-#include <Types/State.hpp>
+#include <Types/Indexes.hpp>
 
 namespace pokesim {
 // The position of a Pokemon in its team's order (starts at 1)

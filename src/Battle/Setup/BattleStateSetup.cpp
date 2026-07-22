@@ -15,6 +15,7 @@
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
+#include <Types/Indexes.hpp>
 #include <Types/MaxSizedVector.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>

@@ -34,6 +34,7 @@
 #include "Enums/Weather.hpp"
 #include "Event.hpp"
 #include "FixedMemoryVector.hpp"
+#include "Indexes.hpp"
 #include "MaxSizedVector.hpp"
 #include "MechanicConstants.hpp"
 #include "Move.hpp"

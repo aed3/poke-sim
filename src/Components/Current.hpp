@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Types/State.hpp>
+#include <Types/Indexes.hpp>
 
 namespace pokesim {
 struct CurrentActionMoveSlot {

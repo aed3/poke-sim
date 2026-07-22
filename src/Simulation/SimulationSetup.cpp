@@ -24,6 +24,7 @@
 #include <Types/Constants.hpp>
 #include <Types/Decisions.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
+#include <Types/Indexes.hpp>
 #include <Types/State.hpp>
 #include <Types/Variant.hpp>
 #include <cmath>
@@ -119,10 +120,10 @@ void setPokemonAbility(
   const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup, const Pokedex& pokedex) {
   if (pokemonInfo.ability != dex::Ability::NO_ABILITY) {
     if (pokemonInfo.ability.has_value()) {
-      pokemonSetup.setAbility(pokemonInfo.ability.value());
+      pokemonSetup.setAbility(pokemonInfo.ability.value(), pokedex);
     }
     else if (pokedex.speciesHas<PrimaryAbility>(pokemonInfo.species)) {
-      pokemonSetup.setAbility(pokedex.getSpeciesData<PrimaryAbility>(pokemonInfo.species).val);
+      pokemonSetup.setAbility(pokedex.getSpeciesData<PrimaryAbility>(pokemonInfo.species).val, pokedex);
     }
   }
 }
@@ -260,7 +261,7 @@ void createInitialPokemon(
   }
 
   if (pokemonInfo.item.has_value() && pokemonInfo.item != dex::Item::NO_ITEM) {
-    pokemonSetup.setItem(pokemonInfo.item.value());
+    pokemonSetup.setItem(pokemonInfo.item.value(), pokedex);
   }
 
   if (pokemonInfo.status.has_value() && pokemonInfo.status != dex::Status::NO_STATUS) {

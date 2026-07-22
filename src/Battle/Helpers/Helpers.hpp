@@ -3,8 +3,8 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/Slot.hpp>
+#include <Types/Indexes.hpp>
 #include <Types/Registry.hpp>
-#include <Types/State.hpp>
 
 namespace pokesim {
 struct Sides;

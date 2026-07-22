@@ -8,16 +8,13 @@
 #include "Constants.hpp"
 #include "Entity.hpp"
 #include "FixedMemoryVector.hpp"
+#include "Indexes.hpp"
 
 namespace pokesim {
 class Simulation;
 
 namespace types {
 using stateId = std::underlying_type_t<entity>;
-
-using battleTurn = pokesim::internal::unsignedIntType<Constants::TurnCount::MAX>;
-
-using sideIndex = pokesim::internal::unsignedIntType<Constants::SIDE_COUNT>;
 
 template <typename T>
 struct sides : public std::array<T, Constants::SIDE_COUNT> {
@@ -47,12 +44,6 @@ struct sides : public std::array<T, Constants::SIDE_COUNT> {
   constexpr sideIndex size() const noexcept { return Constants::SIDE_COUNT; }
 };
 
-using entityIndex = std::underlying_type_t<entity>;
-
-using teamPositionIndex = pokesim::internal::unsignedIntType<Constants::TeamSize::MAX>;
-using moveSlotIndex = pokesim::internal::unsignedIntType<Constants::MoveSlots::MAX>;
-using activePokemonIndex = pokesim::internal::unsignedIntType<Constants::ActivePokemon::MAX>;
-
 template <typename T>
 using teamPositions = fixedMemoryVector<T, Constants::TeamSize::MAX>;
 using teamOrder = teamPositions<teamPositionIndex>;
@@ -65,8 +56,6 @@ using sideSlots = fixedMemoryVector<T, Constants::ActivePokemonSlotsPerSide::MAX
 
 template <typename T>
 using targets = fixedMemoryVector<T, Constants::Targets::MAX>;
-
-using actionQueueIndex = pokesim::internal::unsignedIntType<Constants::ActionQueueLength::MAX>;
 
 using callback = void (*)(Simulation&);
 using optionalCallback = std::optional<callback>;

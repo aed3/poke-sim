@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Types/Constants.hpp>
-#include <Types/State.hpp>
+#include <Types/Indexes.hpp>
 
 namespace pokesim {
 // The current turn of a battle

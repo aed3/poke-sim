@@ -2,7 +2,6 @@
 
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
-#include <Types/State.hpp>
 #include <optional>
 
 namespace pokesim {

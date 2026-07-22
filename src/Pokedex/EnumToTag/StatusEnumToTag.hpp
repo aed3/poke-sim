@@ -20,29 +20,36 @@ namespace pokesim::status::tags {
  * enumToTag<EmplaceTag>(dex::Status::BRN, handle);
  * @endcode
  */
-template <template <typename> typename RunStruct, typename... RunFunctionArgs>
-auto enumToTag(dex::Status status, RunFunctionArgs&&... args) {
+template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
+auto enumToTag(dex::Status status, RunArgs&&... args) {
   switch (status) {
-    case dex::Status::BRN: return RunStruct<Burn>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Status::FRZ: return RunStruct<Freeze>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Status::PAR: return RunStruct<Paralysis>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Status::PSN: return RunStruct<Poison>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Status::SLP: return RunStruct<Sleep>::run(std::forward<RunFunctionArgs>(args)...);
-    case dex::Status::TOX: return RunStruct<Toxic>::run(std::forward<RunFunctionArgs>(args)...);
+    case dex::Status::BRN: return RunStruct<Burn, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Status::FRZ: return RunStruct<Freeze, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Status::PAR: return RunStruct<Paralysis, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Status::PSN: return RunStruct<Poison, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Status::SLP: return RunStruct<Sleep, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Status::TOX: return RunStruct<Toxic, T...>::run(std::forward<RunArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for status that does not exist.");
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
+      if constexpr (std::is_void_v<ReturnType>) {
+        return;
+      }
+      else {
+        return ReturnType{};
+      }
     }
   }
 }
 
-template <template <typename> typename RunStruct, typename... RunFunctionArgs>
-void forEach(RunFunctionArgs&&... args) {
-  enumToTag<RunStruct>(dex::Status::BRN, std::forward<RunFunctionArgs>(args)...);
-  enumToTag<RunStruct>(dex::Status::FRZ, std::forward<RunFunctionArgs>(args)...);
-  enumToTag<RunStruct>(dex::Status::PAR, std::forward<RunFunctionArgs>(args)...);
-  enumToTag<RunStruct>(dex::Status::PSN, std::forward<RunFunctionArgs>(args)...);
-  enumToTag<RunStruct>(dex::Status::SLP, std::forward<RunFunctionArgs>(args)...);
-  enumToTag<RunStruct>(dex::Status::TOX, std::forward<RunFunctionArgs>(args)...);
+template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
+void forEach(RunArgs&&... args) {
+  enumToTag<RunStruct, T...>(dex::Status::BRN, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(dex::Status::FRZ, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(dex::Status::PAR, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(dex::Status::PSN, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(dex::Status::SLP, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(dex::Status::TOX, std::forward<RunArgs>(args)...);
 }
 }  // namespace pokesim::status::tags

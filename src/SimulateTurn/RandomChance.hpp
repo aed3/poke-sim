@@ -9,7 +9,6 @@
 #include <Types/Entity.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
-#include <Types/State.hpp>
 
 namespace pokesim::internal {
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>

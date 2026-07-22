@@ -9,6 +9,7 @@
 #include <Components/Tags/BattleTags.hpp>
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
+#include <Types/Indexes.hpp>
 #include <Types/State.hpp>
 #include <entt/entity/handle.hpp>
 

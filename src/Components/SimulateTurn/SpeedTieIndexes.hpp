@@ -2,7 +2,7 @@
 
 #include <Types/Constants.hpp>
 #include <Types/FixedMemoryVector.hpp>
-#include <Types/State.hpp>
+#include <Types/Indexes.hpp>
 
 namespace pokesim {
 struct SpeedTieIndexes {

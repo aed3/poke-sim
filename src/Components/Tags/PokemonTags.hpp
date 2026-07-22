@@ -3,6 +3,10 @@
 namespace pokesim::tags {
 struct Pokemon {};
 
+struct HasItem {};
+struct HasAbility {};
+struct HasStatus {};
+
 // Indicates the Pokemon is currently in a battle.
 struct ActivePokemon {};
 

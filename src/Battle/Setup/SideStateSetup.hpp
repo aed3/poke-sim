@@ -2,8 +2,8 @@
 
 #include <Types/Entity.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
+#include <Types/Indexes.hpp>
 #include <Types/Registry.hpp>
-#include <Types/State.hpp>
 #include <entt/entity/registry.hpp>
 #include <vector>
 

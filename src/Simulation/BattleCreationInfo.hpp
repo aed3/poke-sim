@@ -12,9 +12,9 @@
 #include <Types/Enums/Species.hpp>
 #include <Types/Enums/Stat.hpp>
 #include <Types/Enums/Status.hpp>
+#include <Types/Indexes.hpp>
 #include <Types/Move.hpp>
 #include <Types/Random.hpp>
-#include <Types/State.hpp>
 #include <Types/Stats.hpp>
 
 namespace pokesim {

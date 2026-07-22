@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Types/State.hpp>
+#include <Types/Entity.hpp>
 
 namespace pokesim {
 namespace tags {

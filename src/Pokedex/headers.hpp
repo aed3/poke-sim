@@ -18,6 +18,7 @@
 #include "Effects/ChoiceLock.hpp"
 #include "Effects/Paralysis.hpp"
 #include "EnumToTag/AbilityEnumToTag.hpp"
+#include "EnumToTag/EnumToTag.hpp"
 #include "EnumToTag/ItemEnumToTag.hpp"
 #include "EnumToTag/MoveEnumToTag.hpp"
 #include "EnumToTag/NatureEnumToTag.hpp"

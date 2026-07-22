@@ -15,7 +15,6 @@
 #include <Types/Damage.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
-#include <Types/State.hpp>
 #include <Utilities/RNG.hpp>
 #include <Utilities/Tags.hpp>
 #include <optional>

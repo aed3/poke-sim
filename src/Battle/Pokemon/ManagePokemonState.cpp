@@ -1,6 +1,5 @@
 #include "ManagePokemonState.hpp"
 
-#include <Battle/Setup/EmplaceTagFromEnum.hpp>
 #include <Components/Boosts.hpp>
 #include <Components/ChoiceLock.hpp>
 #include <Components/Current.hpp>
@@ -16,13 +15,16 @@
 #include <Components/Pokedex/PP.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/Stats.hpp>
+#include <Components/Tags/ItemPropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Components/Tags/TypeTags.hpp>
+#include <Pokedex/EnumToTag/EnumToTag.hpp>
 #include <Pokedex/EnumToTag/ItemEnumToTag.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
@@ -34,19 +36,16 @@
 
 namespace pokesim::internal {
 namespace {
-template <typename ItemTag>
+template <typename ItemTag, typename SelectionTag>
 struct RemoveItem {
-  static void run(types::handle handle) { handle.remove<ItemTag>(); }
+  static void run(Simulation& simulation) { simulation.removeFromEntities<ItemTag, SelectionTag>(); }
 };
-
-void removeItemTags(types::handle handle, ItemName item) {
-  pokesim::item::tags::enumToTag<RemoveItem>(item.val, handle);
-}
 
 template <typename SelectionTag>
 void removeItemComponents(Simulation& simulation) {
-  simulation.view<removeItemTags, Tags<SelectionTag>>();
-  simulation.removeFromEntities<ItemName, SelectionTag>();
+  pokesim::item::tags::forEach<RemoveItem, SelectionTag>(simulation.pokedex(), simulation);
+  auto view = simulation.registry.view<SelectionTag>();
+  simulation.registry.remove<pokesim::tags::HasItem, item::tags::Choice, item::tags::Berry>(view.begin(), view.end());
   simulation.registry.clear<SelectionTag>();
 }
 
@@ -147,7 +146,7 @@ struct CheckIfStatusIsSettable {
   }
 
   static void checkIfTargetHasStatus(types::handle handle, CurrentEffectTarget target) {
-    if (handle.registry()->all_of<StatusName>(target.val)) {
+    if (handle.registry()->all_of<pokesim::tags::HasStatus>(target.val)) {
       handle.remove<pokesim::tags::CanSetStatus>();
     }
   };
@@ -161,11 +160,9 @@ struct RemoveNotSettableStatus {
   }
 };
 
-template <typename StatusType>
-void setStatus(types::registry& registry, CurrentEffectTarget target, pokesim::dex::Status status) {
-  registry.emplace<StatusName>(target.val, status);
-  registry.emplace<StatusType>(target.val);
-  if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Paralysis>) {
+void setEffectTargetStatus(types::registry& registry, CurrentEffectTarget target, pokesim::dex::Status status) {
+  setStatus(status, registry, target.val);
+  if (status == pokesim::dex::Status::PAR) {
     registry.emplace<pokesim::tags::SpeStatUpdateRequired>(target.val);
   }
 }
@@ -175,9 +172,29 @@ void setSpeedSortNeeded(types::registry& registry, Battle battle) {
 }
 }  // namespace
 
-void checkIfCanUseItem(Simulation& simulation) {
-  simulation.removeFromEntities<pokesim::tags::CanUseItem>(entt::exclude<ItemName>);
+void setItem(pokesim::dex::Item item, const Pokedex& pokedex, types::registry& registry, types::entity entity) {
+  registry.emplace<pokesim::tags::HasItem>(entity);
+  item::tags::emplaceTagFromEnum(item, registry, entity);
+
+  if (pokedex.itemHas<item::tags::Choice>(item)) {
+    registry.emplace<item::tags::Choice>(entity);
+  }
+  if (pokedex.itemHas<item::tags::Berry>(item)) {
+    registry.emplace<item::tags::Berry>(entity);
+  }
 }
+
+void setAbility(pokesim::dex::Ability ability, const Pokedex&, types::registry& registry, types::entity entity) {
+  registry.emplace<pokesim::tags::HasAbility>(entity);
+  ability::tags::emplaceTagFromEnum(ability, registry, entity);
+}
+
+void setStatus(pokesim::dex::Status status, types::registry& registry, types::entity entity) {
+  registry.emplace<pokesim::tags::HasStatus>(entity);
+  status::tags::emplaceTagFromEnum(status, registry, entity);
+}
+
+void checkIfCanUseItem(Simulation&) {}
 
 void useItem(Simulation& simulation) {
   runAfterUseItemEvent(simulation);
@@ -190,7 +207,6 @@ void tryUseItem(Simulation& simulation) {
 }
 
 void checkIfCanRemoveItem(Simulation& simulation) {
-  simulation.removeFromEntities<pokesim::tags::CanRemoveItem>(entt::exclude<ItemName>);
   runTryTakeItemEvent(simulation);
 }
 
@@ -215,17 +231,12 @@ void setStatus(Simulation& simulation) {
   pokesim::status::tags::forEach<RemoveNotSettableStatus>(simulation);
   simulation.registry.clear<pokesim::tags::CanSetStatus>();
 
-  simulation.view<setStatus<pokesim::status::tags::Burn>, Tags<pokesim::status::tags::Burn>>(pokesim::dex::Status::BRN);
-  simulation.view<setStatus<pokesim::status::tags::Freeze>, Tags<pokesim::status::tags::Freeze>>(
-    pokesim::dex::Status::FRZ);
-  simulation.view<setStatus<pokesim::status::tags::Paralysis>, Tags<pokesim::status::tags::Paralysis>>(
-    pokesim::dex::Status::PAR);
-  simulation.view<setStatus<pokesim::status::tags::Poison>, Tags<pokesim::status::tags::Poison>>(
-    pokesim::dex::Status::PSN);
-  simulation.view<setStatus<pokesim::status::tags::Sleep>, Tags<pokesim::status::tags::Sleep>>(
-    pokesim::dex::Status::SLP);
-  simulation.view<setStatus<pokesim::status::tags::Toxic>, Tags<pokesim::status::tags::Toxic>>(
-    pokesim::dex::Status::TOX);
+  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Burn>>(pokesim::dex::Status::BRN);
+  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Freeze>>(pokesim::dex::Status::FRZ);
+  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Paralysis>>(pokesim::dex::Status::PAR);
+  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Poison>>(pokesim::dex::Status::PSN);
+  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Sleep>>(pokesim::dex::Status::SLP);
+  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Toxic>>(pokesim::dex::Status::TOX);
 
   runStartSleep(simulation);
   runStartFreeze(simulation);
@@ -240,7 +251,7 @@ void trySetStatus(Simulation& simulation) {
 
 void clearStatus(types::handle pokemonHandle) {
   pokemonHandle.remove<
-    StatusName,
+    pokesim::tags::HasStatus,
     pokesim::status::tags::Burn,
     pokesim::status::tags::Freeze,
     pokesim::status::tags::Paralysis,

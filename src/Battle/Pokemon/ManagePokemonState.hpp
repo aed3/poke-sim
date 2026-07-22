@@ -1,12 +1,16 @@
 #pragma once
 
 #include <Types/Damage.hpp>
+#include <Types/Entity.hpp>
+#include <Types/Enums/Ability.hpp>
+#include <Types/Enums/Item.hpp>
 #include <Types/Enums/Status.hpp>
 #include <Types/Registry.hpp>
 #include <Types/Stats.hpp>
 
 namespace pokesim {
 class Simulation;
+class Pokedex;
 struct Battle;
 struct CurrentAction;
 struct CurrentActionMoveSlot;
@@ -24,6 +28,10 @@ struct CurrentHp;
 }  // namespace stat
 
 namespace internal {
+void setItem(pokesim::dex::Item item, const Pokedex& pokedex, types::registry& registry, types::entity entity);
+void setAbility(pokesim::dex::Ability ability, const Pokedex& pokedex, types::registry& registry, types::entity entity);
+void setStatus(pokesim::dex::Status status, types::registry& registry, types::entity entity);
+
 void checkIfCanUseItem(Simulation& simulation);
 void useItem(Simulation& simulation);
 void tryUseItem(Simulation& simulation);

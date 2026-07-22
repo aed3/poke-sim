@@ -27,11 +27,11 @@
  * src/Pokedex/Events/ItemEvents.cpp
  * src/Pokedex/Events/EffectEvents.cpp
  * src/Pokedex/Events/AbilityEvents.cpp
+ * src/Pokedex/EnumToTag/EnumToTag.cpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.cpp
  * src/CalcDamage/CalcDamage.cpp
  * src/Battle/Setup/SideStateSetup.cpp
  * src/Battle/Setup/PokemonStateSetup.cpp
- * src/Battle/Setup/EmplaceTagFromEnum.cpp
  * src/Battle/Setup/BattleStateSetup.cpp
  * src/Battle/Pokemon/ManagePokemonState.cpp
  * src/Battle/ManageBattleState.cpp
@@ -180,6 +180,12 @@ template <typename List, typename Value>
 bool listContains(const List& list, const Value& value) {
   return std::find(list.begin(), list.end(), value) != list.end();
 }
+template <typename Tag>
+struct HasTagFromEnum {
+  static void run(types::entity entity, const types::registry& registry, bool& entityHasTag) {
+    entityHasTag = entityHasTag || has<Tag>(entity, registry);
+  }
+};
 
 template <typename MaxMinStruct, typename T>
 void checkBounds(const T& value) {
@@ -358,7 +364,6 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
   POKESIM_REQUIRE_NM(has<Side>(pokemonEntity, registry));
   POKESIM_REQUIRE_NM(has<Battle>(pokemonEntity, registry));
   POKESIM_REQUIRE_NM(has<SpeciesName>(pokemonEntity, registry));
-  POKESIM_REQUIRE_NM(has<AbilityName>(pokemonEntity, registry));
   POKESIM_REQUIRE_NM(has<Level>(pokemonEntity, registry));
   POKESIM_REQUIRE_NM(has<MoveSlots>(pokemonEntity, registry));
   POKESIM_REQUIRE_NM(has<Evs>(pokemonEntity, registry));
@@ -371,8 +376,8 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
   POKESIM_REQUIRE_NM(has<stat::Spd>(pokemonEntity, registry));
   POKESIM_REQUIRE_NM(has<stat::Spe>(pokemonEntity, registry));
 
-  const auto& [side, battle, speciesName, speciesTypes, abilityName, level, moveSlots, evs, ivs] =
-    registry.get<Side, Battle, SpeciesName, SpeciesTypes, AbilityName, Level, MoveSlots, Evs, Ivs>(pokemonEntity);
+  const auto& [side, battle, speciesName, speciesTypes, level, moveSlots, evs, ivs] =
+    registry.get<Side, Battle, SpeciesName, SpeciesTypes, Level, MoveSlots, Evs, Ivs>(pokemonEntity);
 
   const auto& [hp, atk, def, spa, spd, spe] =
     registry.get<stat::Hp, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>(pokemonEntity);
@@ -390,7 +395,6 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
 
   check(speciesName);
   check(speciesTypes);
-  check(abilityName);
   check(level);
   check(hp);
   check(atk);
@@ -407,6 +411,28 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
   if (effectiveSpa) check(*effectiveSpa);
   if (effectiveSpd) check(*effectiveSpd);
   if (effectiveSpe) check(*effectiveSpe);
+
+  // bool hasItem = false;
+  // for (std::underlying_type_t<dex::Item> i = 0; i < dex::TOTAL_ITEM_COUNT; i++) {
+  //   if (item::tags::hasTag((dex::Item)i, registry, pokemonEntity)) {
+  //     hasItem = true;
+  //     break;
+  //   }
+  // }
+  // POKESIM_REQUIRE_NM(hasItem == has<tags::HasItem>(pokemonEntity, registry));
+  //
+  // bool hasAbility = false;
+  // for (std::underlying_type_t<dex::Ability> i = 0; i < dex::TOTAL_ABILITY_COUNT; i++) {
+  //   if (ability::tags::hasTag((dex::Ability)i, registry, pokemonEntity)) {
+  //     hasAbility = true;
+  //     break;
+  //   }
+  // }
+  // POKESIM_REQUIRE_NM(hasAbility == has<tags::HasAbility>(pokemonEntity, registry));
+
+  bool hasStatus = false;
+  status::tags::forEach<HasTagFromEnum>(pokemonEntity, registry, hasStatus);
+  POKESIM_REQUIRE_NM(hasStatus == has<tags::HasStatus>(pokemonEntity, registry));
 
   check(moveSlots);
 }
@@ -1447,10 +1473,10 @@ void setPokemonAbility(
   const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup, const Pokedex& pokedex) {
   if (pokemonInfo.ability != dex::Ability::NO_ABILITY) {
     if (pokemonInfo.ability.has_value()) {
-      pokemonSetup.setAbility(pokemonInfo.ability.value());
+      pokemonSetup.setAbility(pokemonInfo.ability.value(), pokedex);
     }
     else if (pokedex.speciesHas<PrimaryAbility>(pokemonInfo.species)) {
-      pokemonSetup.setAbility(pokedex.getSpeciesData<PrimaryAbility>(pokemonInfo.species).val);
+      pokemonSetup.setAbility(pokedex.getSpeciesData<PrimaryAbility>(pokemonInfo.species).val, pokedex);
     }
   }
 }
@@ -1588,7 +1614,7 @@ void createInitialPokemon(
   }
 
   if (pokemonInfo.item.has_value() && pokemonInfo.item != dex::Item::NO_ITEM) {
-    pokemonSetup.setItem(pokemonInfo.item.value());
+    pokemonSetup.setItem(pokemonInfo.item.value(), pokedex);
   }
 
   if (pokemonInfo.status.has_value() && pokemonInfo.status != dex::Status::NO_STATUS) {
@@ -4261,7 +4287,7 @@ void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
 
     types::entity moveEntity = dexRegistry.create();
     movesMap[move] = moveEntity;
-    internal::move::tags::emplaceTagFromEnum(move, {dexRegistry, moveEntity});
+    move::tags::emplaceTagFromEnum(move, dexRegistry, moveEntity);
     dexRegistry.emplace<internal::tags::BuildPokedexMove>(moveEntity);
   }
 
@@ -4315,13 +4341,17 @@ namespace pokesim::dex {
 namespace {
 void knockOffOnBasePowerCheckRemovableItem(
   types::registry& registry, CurrentActionSource source, CurrentActionTarget target, EventModifier&) {
-  if (registry.get<stat::CurrentHp>(source.val).val > Constants::PokemonCurrentHpStat::MIN) {
+  if (
+    registry.all_of<pokesim::tags::HasItem>(target.val) &&
+    registry.get<stat::CurrentHp>(source.val).val > Constants::PokemonCurrentHpStat::MIN) {
     registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
   }
 }
 
 void knockOffOnAfterHitCheckRemovableItem(types::registry& registry, CurrentActionTarget target) {
-  if (registry.get<stat::CurrentHp>(target.val).val > Constants::PokemonCurrentHpStat::MIN) {
+  if (
+    registry.all_of<pokesim::tags::HasItem>(target.val) &&
+    registry.get<stat::CurrentHp>(target.val).val > Constants::PokemonCurrentHpStat::MIN) {
     registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
   }
 }
@@ -4558,15 +4588,9 @@ void paralysisOnBeforeMove(types::registry& registry, const CurrentActionMovesAs
   }
 }
 
-void choiceLockRemoveWithoutItem(types::handle pokemonHandle, const pokesim::ChoiceLock&) {
-  pokemonHandle.remove<pokesim::ChoiceLock>();
-}
-
-void choiceLockRemoveWithItem(
-  types::handle pokemonHandle, const ItemName& itemName, const pokesim::ChoiceLock&, const Pokedex& pokedex) {
-  if (!pokedex.itemHas<item::tags::Choice>(itemName.val)) {
-    pokemonHandle.remove<pokesim::ChoiceLock>();
-  }
+template <typename... Tags>
+void choiceLockRemove(Simulation& simulation) {
+  simulation.removeFromEntities<pokesim::ChoiceLock, Tags...>(entt::exclude<item::tags::Choice>);
 }
 
 void choiceLockOnDisableMove(
@@ -4616,8 +4640,7 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {
-  simulation.view<choiceLockRemoveWithoutItem, Tags<>, entt::exclude_t<ItemName>>();
-  simulation.view<choiceLockRemoveWithItem>(simulation.pokedex());
+  choiceLockRemove(simulation);
 }
 
 void ChoiceLock::onDisableMove(Simulation& simulation) {
@@ -4626,8 +4649,7 @@ void ChoiceLock::onDisableMove(Simulation& simulation) {
     return;
   }
 
-  filter.view<choiceLockRemoveWithoutItem, Tags<>, entt::exclude_t<ItemName>>();
-  filter.view<choiceLockRemoveWithItem>(simulation.pokedex());
+  choiceLockRemove<internal::tags::DisableMove>(simulation);
   filter.view<choiceLockOnDisableMove>();
 }
 }  // namespace pokesim::dex
@@ -4700,6 +4722,120 @@ void Static::onDamagingHit(Simulation& simulation) {
 }  // namespace pokesim::dex
 
 ///////////////// END OF src/Pokedex/Events/AbilityEvents.cpp //////////////////
+
+///////////////// START OF src/Pokedex/EnumToTag/EnumToTag.cpp /////////////////
+
+namespace pokesim {
+namespace {
+template <typename Tag>
+struct EmplaceTag {
+  static void run(types::registry& registry, types::entity entity) { registry.emplace<Tag>(entity); }
+};
+
+template <typename Tag>
+struct HasTag {
+  static bool run(const types::registry& registry, types::entity entity) { return registry.all_of<Tag>(entity); }
+};
+}  // namespace
+
+namespace ability::tags {
+void emplaceTagFromEnum(pokesim::dex::Ability ability, types::handle handle) {
+  emplaceTagFromEnum(ability, *handle.registry(), handle.entity());
+}
+void emplaceTagFromEnum(dex::Ability ability, types::registry& registry, types::entity entity) {
+  enumToTag<EmplaceTag>(ability, registry, entity);
+}
+
+bool hasTag(dex::Ability ability, types::handle handle) {
+  return hasTag(ability, *handle.registry(), handle.entity());
+}
+bool hasTag(dex::Ability ability, const types::registry& registry, types::entity entity) {
+  return enumToTag<HasTag>(ability, registry, entity);
+}
+}  // namespace ability::tags
+
+namespace item::tags {
+void emplaceTagFromEnum(dex::Item item, types::handle handle) {
+  emplaceTagFromEnum(item, *handle.registry(), handle.entity());
+}
+void emplaceTagFromEnum(dex::Item item, types::registry& registry, types::entity entity) {
+  enumToTag<EmplaceTag>(item, registry, entity);
+}
+
+bool hasTag(dex::Item item, types::handle handle) {
+  return hasTag(item, *handle.registry(), handle.entity());
+}
+bool hasTag(dex::Item item, const types::registry& registry, types::entity entity) {
+  return enumToTag<HasTag>(item, registry, entity);
+}
+}  // namespace item::tags
+
+namespace nature::tags {
+void emplaceTagFromEnum(dex::Nature nature, types::handle handle) {
+  emplaceTagFromEnum(nature, *handle.registry(), handle.entity());
+}
+void emplaceTagFromEnum(dex::Nature nature, types::registry& registry, types::entity entity) {
+  enumToTag<EmplaceTag>(nature, registry, entity);
+}
+
+bool hasTag(dex::Nature nature, types::handle handle) {
+  return hasTag(nature, *handle.registry(), handle.entity());
+}
+bool hasTag(dex::Nature nature, const types::registry& registry, types::entity entity) {
+  return enumToTag<HasTag>(nature, registry, entity);
+}
+}  // namespace nature::tags
+
+namespace status::tags {
+void emplaceTagFromEnum(dex::Status status, types::handle handle) {
+  emplaceTagFromEnum(status, *handle.registry(), handle.entity());
+}
+void emplaceTagFromEnum(dex::Status status, types::registry& registry, types::entity entity) {
+  enumToTag<EmplaceTag>(status, registry, entity);
+}
+
+bool hasTag(dex::Status status, types::handle handle) {
+  return hasTag(status, *handle.registry(), handle.entity());
+}
+bool hasTag(dex::Status status, const types::registry& registry, types::entity entity) {
+  return enumToTag<HasTag>(status, registry, entity);
+}
+}  // namespace status::tags
+
+namespace type::tags {
+void emplaceTagFromEnum(dex::Type type, types::handle handle) {
+  emplaceTagFromEnum(type, *handle.registry(), handle.entity());
+}
+void emplaceTagFromEnum(dex::Type type, types::registry& registry, types::entity entity) {
+  enumToTag<EmplaceTag>(type, registry, entity);
+}
+
+bool hasTag(dex::Type type, types::handle handle) {
+  return hasTag(type, *handle.registry(), handle.entity());
+}
+bool hasTag(dex::Type type, const types::registry& registry, types::entity entity) {
+  return enumToTag<HasTag>(type, registry, entity);
+}
+}  // namespace type::tags
+
+namespace move::tags {
+void emplaceTagFromEnum(dex::Move move, types::handle handle) {
+  emplaceTagFromEnum(move, *handle.registry(), handle.entity());
+}
+void emplaceTagFromEnum(dex::Move move, types::registry& registry, types::entity entity) {
+  enumToTag<EmplaceTag>(move, registry, entity);
+}
+
+bool hasTag(dex::Move move, types::handle handle) {
+  return hasTag(move, *handle.registry(), handle.entity());
+}
+bool hasTag(dex::Move move, const types::registry& registry, types::entity entity) {
+  return enumToTag<HasTag>(move, registry, entity);
+}
+}  // namespace move::tags
+}  // namespace pokesim
+
+////////////////// END OF src/Pokedex/EnumToTag/EnumToTag.cpp //////////////////
 
 //////////// START OF src/CalcDamage/Setup/CalcDamageInputSetup.cpp ////////////
 
@@ -5342,8 +5478,9 @@ void PokemonStateSetup::setCurrentHp(types::stat hp) {
 
 void PokemonStateSetup::setTypes(SpeciesTypes types) {
   handle.emplace<SpeciesTypes>(types);
-  type::tags::emplaceTagFromEnum(types.type1(), handle);
-  type::tags::emplaceTagFromEnum(types.type2(), handle);
+  for (pokesim::dex::Type speciesType : types.val) {
+    type::tags::emplaceTagFromEnum(speciesType, handle);
+  }
 }
 
 void PokemonStateSetup::setLevel(types::level level) {
@@ -5354,14 +5491,12 @@ void PokemonStateSetup::setGender(pokesim::dex::Gender gender) {
   handle.emplace<GenderName>(gender);
 }
 
-void PokemonStateSetup::setAbility(pokesim::dex::Ability ability) {
-  handle.emplace<AbilityName>(ability);
-  ability::tags::emplaceTagFromEnum(ability, handle);
+void PokemonStateSetup::setAbility(pokesim::dex::Ability ability, const Pokedex& pokedex) {
+  pokesim::internal::setAbility(ability, pokedex, *handle.registry(), entity());
 }
 
-void PokemonStateSetup::setItem(pokesim::dex::Item item) {
-  handle.emplace<ItemName>(item);
-  item::tags::emplaceTagFromEnum(item, handle);
+void PokemonStateSetup::setItem(pokesim::dex::Item item, const Pokedex& pokedex) {
+  pokesim::internal::setItem(item, pokedex, *handle.registry(), entity());
 }
 
 void PokemonStateSetup::setMoves(const std::vector<MoveSlot>& moveSlots) {
@@ -5380,12 +5515,10 @@ void PokemonStateSetup::setPostion(types::teamPositionIndex position) {
 }
 
 void PokemonStateSetup::setStatus(pokesim::dex::Status status) {
-  handle.emplace<StatusName>(status);
-  status::tags::emplaceTagFromEnum(status, handle);
+  pokesim::internal::setStatus(status, *handle.registry(), entity());
 }
 
 void PokemonStateSetup::setNature(pokesim::dex::Nature nature) {
-  handle.emplace<NatureName>(nature);
   nature::tags::emplaceTagFromEnum(nature, handle);
 }
 
@@ -5409,43 +5542,6 @@ void PokemonStateSetup::setIVs(const Ivs& ivs) {
 }  // namespace pokesim::internal
 
 //////////////// END OF src/Battle/Setup/PokemonStateSetup.cpp /////////////////
-
-/////////////// START OF src/Battle/Setup/EmplaceTagFromEnum.cpp ///////////////
-
-namespace pokesim::internal {
-namespace {
-template <typename Tag>
-struct EmplaceTag {
-  static void run(types::handle handle) { handle.emplace<Tag>(); }
-};
-}  // namespace
-
-void ability::tags::emplaceTagFromEnum(pokesim::dex::Ability ability, types::handle handle) {
-  pokesim::ability::tags::enumToTag<EmplaceTag>(ability, handle);
-}
-
-void item::tags::emplaceTagFromEnum(pokesim::dex::Item item, types::handle handle) {
-  pokesim::item::tags::enumToTag<EmplaceTag>(item, handle);
-}
-
-void nature::tags::emplaceTagFromEnum(pokesim::dex::Nature nature, types::handle handle) {
-  pokesim::nature::tags::enumToTag<EmplaceTag>(nature, handle);
-}
-
-void status::tags::emplaceTagFromEnum(pokesim::dex::Status status, types::handle handle) {
-  pokesim::status::tags::enumToTag<EmplaceTag>(status, handle);
-}
-
-void type::tags::emplaceTagFromEnum(pokesim::dex::Type type, types::handle handle) {
-  pokesim::type::tags::enumToTag<EmplaceTag>(type, handle);
-}
-
-void move::tags::emplaceTagFromEnum(pokesim::dex::Move move, types::handle handle) {
-  pokesim::move::tags::enumToTag<EmplaceTag>(move, handle);
-}
-}  // namespace pokesim::internal
-
-//////////////// END OF src/Battle/Setup/EmplaceTagFromEnum.cpp ////////////////
 
 //////////////// START OF src/Battle/Setup/BattleStateSetup.cpp ////////////////
 
@@ -5538,19 +5634,16 @@ void BattleStateSetup::setProbability(types::probability probability) {
 
 namespace pokesim::internal {
 namespace {
-template <typename ItemTag>
+template <typename ItemTag, typename SelectionTag>
 struct RemoveItem {
-  static void run(types::handle handle) { handle.remove<ItemTag>(); }
+  static void run(Simulation& simulation) { simulation.removeFromEntities<ItemTag, SelectionTag>(); }
 };
-
-void removeItemTags(types::handle handle, ItemName item) {
-  pokesim::item::tags::enumToTag<RemoveItem>(item.val, handle);
-}
 
 template <typename SelectionTag>
 void removeItemComponents(Simulation& simulation) {
-  simulation.view<removeItemTags, Tags<SelectionTag>>();
-  simulation.removeFromEntities<ItemName, SelectionTag>();
+  pokesim::item::tags::forEach<RemoveItem, SelectionTag>(simulation.pokedex(), simulation);
+  auto view = simulation.registry.view<SelectionTag>();
+  simulation.registry.remove<pokesim::tags::HasItem, item::tags::Choice, item::tags::Berry>(view.begin(), view.end());
   simulation.registry.clear<SelectionTag>();
 }
 
@@ -5651,7 +5744,7 @@ struct CheckIfStatusIsSettable {
   }
 
   static void checkIfTargetHasStatus(types::handle handle, CurrentEffectTarget target) {
-    if (handle.registry()->all_of<StatusName>(target.val)) {
+    if (handle.registry()->all_of<pokesim::tags::HasStatus>(target.val)) {
       handle.remove<pokesim::tags::CanSetStatus>();
     }
   };
@@ -5665,11 +5758,9 @@ struct RemoveNotSettableStatus {
   }
 };
 
-template <typename StatusType>
-void setStatus(types::registry& registry, CurrentEffectTarget target, pokesim::dex::Status status) {
-  registry.emplace<StatusName>(target.val, status);
-  registry.emplace<StatusType>(target.val);
-  if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Paralysis>) {
+void setEffectTargetStatus(types::registry& registry, CurrentEffectTarget target, pokesim::dex::Status status) {
+  setStatus(status, registry, target.val);
+  if (status == pokesim::dex::Status::PAR) {
     registry.emplace<pokesim::tags::SpeStatUpdateRequired>(target.val);
   }
 }
@@ -5679,9 +5770,29 @@ void setSpeedSortNeeded(types::registry& registry, Battle battle) {
 }
 }  // namespace
 
-void checkIfCanUseItem(Simulation& simulation) {
-  simulation.removeFromEntities<pokesim::tags::CanUseItem>(entt::exclude<ItemName>);
+void setItem(pokesim::dex::Item item, const Pokedex& pokedex, types::registry& registry, types::entity entity) {
+  registry.emplace<pokesim::tags::HasItem>(entity);
+  item::tags::emplaceTagFromEnum(item, registry, entity);
+
+  if (pokedex.itemHas<item::tags::Choice>(item)) {
+    registry.emplace<item::tags::Choice>(entity);
+  }
+  if (pokedex.itemHas<item::tags::Berry>(item)) {
+    registry.emplace<item::tags::Berry>(entity);
+  }
 }
+
+void setAbility(pokesim::dex::Ability ability, const Pokedex&, types::registry& registry, types::entity entity) {
+  registry.emplace<pokesim::tags::HasAbility>(entity);
+  ability::tags::emplaceTagFromEnum(ability, registry, entity);
+}
+
+void setStatus(pokesim::dex::Status status, types::registry& registry, types::entity entity) {
+  registry.emplace<pokesim::tags::HasStatus>(entity);
+  status::tags::emplaceTagFromEnum(status, registry, entity);
+}
+
+void checkIfCanUseItem(Simulation&) {}
 
 void useItem(Simulation& simulation) {
   runAfterUseItemEvent(simulation);
@@ -5694,7 +5805,6 @@ void tryUseItem(Simulation& simulation) {
 }
 
 void checkIfCanRemoveItem(Simulation& simulation) {
-  simulation.removeFromEntities<pokesim::tags::CanRemoveItem>(entt::exclude<ItemName>);
   runTryTakeItemEvent(simulation);
 }
 
@@ -5719,17 +5829,12 @@ void setStatus(Simulation& simulation) {
   pokesim::status::tags::forEach<RemoveNotSettableStatus>(simulation);
   simulation.registry.clear<pokesim::tags::CanSetStatus>();
 
-  simulation.view<setStatus<pokesim::status::tags::Burn>, Tags<pokesim::status::tags::Burn>>(pokesim::dex::Status::BRN);
-  simulation.view<setStatus<pokesim::status::tags::Freeze>, Tags<pokesim::status::tags::Freeze>>(
-    pokesim::dex::Status::FRZ);
-  simulation.view<setStatus<pokesim::status::tags::Paralysis>, Tags<pokesim::status::tags::Paralysis>>(
-    pokesim::dex::Status::PAR);
-  simulation.view<setStatus<pokesim::status::tags::Poison>, Tags<pokesim::status::tags::Poison>>(
-    pokesim::dex::Status::PSN);
-  simulation.view<setStatus<pokesim::status::tags::Sleep>, Tags<pokesim::status::tags::Sleep>>(
-    pokesim::dex::Status::SLP);
-  simulation.view<setStatus<pokesim::status::tags::Toxic>, Tags<pokesim::status::tags::Toxic>>(
-    pokesim::dex::Status::TOX);
+  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Burn>>(pokesim::dex::Status::BRN);
+  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Freeze>>(pokesim::dex::Status::FRZ);
+  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Paralysis>>(pokesim::dex::Status::PAR);
+  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Poison>>(pokesim::dex::Status::PSN);
+  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Sleep>>(pokesim::dex::Status::SLP);
+  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Toxic>>(pokesim::dex::Status::TOX);
 
   runStartSleep(simulation);
   runStartFreeze(simulation);
@@ -5744,7 +5849,7 @@ void trySetStatus(Simulation& simulation) {
 
 void clearStatus(types::handle pokemonHandle) {
   pokemonHandle.remove<
-    StatusName,
+    pokesim::tags::HasStatus,
     pokesim::status::tags::Burn,
     pokesim::status::tags::Freeze,
     pokesim::status::tags::Paralysis,
@@ -6635,12 +6740,11 @@ EffectPresentCheck hasVolatileEffect(types::registry&, EffectTarget, dex::Volati
 }
 
 EffectPresentCheck hasStatusEffect(types::registry& registry, EffectTarget effectTarget, StatusName status) {
-  StatusName* currentStatus = registry.try_get<StatusName>(effectTarget.val);
-  if (!currentStatus) {
+  if (!registry.all_of<pokesim::tags::HasStatus>(effectTarget.val)) {
     return EffectPresentCheck::NOT_PRESENT;
   }
 
-  if (currentStatus->val == status.val) {
+  if (status::tags::hasTag(status.val, registry, effectTarget.val)) {
     return EffectPresentCheck::PRESENT_AND_APPLIED;
   }
 
@@ -6993,8 +7097,7 @@ void applyStatusEffect(types::handle inputHandle, EffectTarget effectTarget, Sta
     setInvertFinalAnswer(inputHandle);
   }
   else {
-    pokemonHandle.emplace<StatusName>(effect.val);
-    internal::status::tags::emplaceTagFromEnum(effect.val, pokemonHandle);
+    pokesim::internal::setStatus(effect.val, registry, effectTarget.val);
   }
 }
 

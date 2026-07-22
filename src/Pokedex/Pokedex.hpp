@@ -167,6 +167,30 @@ class Pokedex {
    */
   void loadAbilities(const entt::dense_set<dex::Ability>& abilitySet);
 
+  void forEachLoadedSpecies(const std::function<void(dex::Species)>& function) const {
+    for (const auto& pair : speciesMap) {
+      function(pair.first);
+    }
+  }
+
+  void forEachLoadedItem(const std::function<void(dex::Item)>& function) const {
+    for (const auto& pair : itemsMap) {
+      function(pair.first);
+    }
+  }
+
+  void forEachLoadedMove(const std::function<void(dex::Move)>& function) const {
+    for (const auto& pair : movesMap) {
+      function(pair.first);
+    }
+  }
+
+  void forEachLoadedAbility(const std::function<void(dex::Ability)>& function) const {
+    for (const auto& pair : abilitiesMap) {
+      function(pair.first);
+    }
+  }
+
   /**
    * @brief Returns references to the given dex data components for a species
    *

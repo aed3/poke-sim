@@ -187,11 +187,11 @@ setup_target(
     src/Battle/ManageBattleState.cpp
     src/Battle/Pokemon/ManagePokemonState.cpp
     src/Battle/Setup/BattleStateSetup.cpp
-    src/Battle/Setup/EmplaceTagFromEnum.cpp
     src/Battle/Setup/PokemonStateSetup.cpp
     src/Battle/Setup/SideStateSetup.cpp
     src/CalcDamage/CalcDamage.cpp
     src/CalcDamage/Setup/CalcDamageInputSetup.cpp
+    src/Pokedex/EnumToTag/EnumToTag.cpp
     src/Pokedex/Events/AbilityEvents.cpp
     src/Pokedex/Events/EffectEvents.cpp
     src/Pokedex/Events/ItemEvents.cpp

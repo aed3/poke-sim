@@ -2,7 +2,7 @@
 
 #include <Types/Constants.hpp>
 #include <Types/Enums/Type.hpp>
-#include <Utilities/NumberToType.hpp>
+#include <Types/Indexes.hpp>
 #include <array>
 
 namespace pokesim {
@@ -14,16 +14,32 @@ struct SpeciesTypes {
   constexpr dex::Type& type2() { return val[1]; };
   constexpr const dex::Type& type1() const { return val[0]; };
   constexpr const dex::Type& type2() const { return val[1]; };
-  constexpr internal::unsignedIntType<Constants::TYPES_PER_POKEMON> size() const {
-    if (type2() == dex::Type::NO_TYPE) {
-      return type1() == dex::Type::NO_TYPE ? 0U : 1U;
+
+  constexpr bool has(dex::Type type) const {
+    for (dex::Type speciesType : val) {
+      if (type == speciesType) {
+        return true;
+      }
     }
-    return 2U;
+    return false;
   }
-  constexpr bool has(dex::Type type) const { return type1() == type || type2() == type; }
+
+  constexpr types::speciesTypeIndex size() const {
+    for (types::speciesTypeIndex i = 0; i < Constants::TYPES_PER_POKEMON; i++) {
+      if (val[i] == dex::Type::NO_TYPE) {
+        return i;
+      }
+    }
+    return Constants::TYPES_PER_POKEMON;
+  }
 
   constexpr bool operator==(const SpeciesTypes& other) const {
-    return type1() == other.type1() && type2() == other.type2();
+    for (types::speciesTypeIndex i = 0; i < Constants::TYPES_PER_POKEMON; i++) {
+      if (val[i] != other.val[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 };
 }  // namespace pokesim

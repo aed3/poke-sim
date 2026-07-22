@@ -173,8 +173,9 @@ TEST_CASE(
   checks.checkEntityForChanges<LastUsedMove, MoveSlots>(p1Pokemon);
   checks.checkEntityForChanges<
     LastUsedMove,
-    ItemName,
+    tags::HasItem,
     item::tags::ChoiceScarf,
+    item::tags::Choice,
     stat::EffectiveSpe,
     stat::CurrentHp,
     MoveSlots>(p2Pokemon);
@@ -185,8 +186,9 @@ TEST_CASE(
   auto p2PokemonLastUsedMove = registry.get<LastUsedMove>(p2Pokemon);
   REQUIRE(p2PokemonLastUsedMove.val == p2MoveIndex);
 
-  REQUIRE_FALSE(registry.all_of<ItemName>(p2Pokemon));
+  REQUIRE_FALSE(registry.all_of<tags::HasItem>(p2Pokemon));
   REQUIRE_FALSE(registry.all_of<item::tags::ChoiceScarf>(p2Pokemon));
+  REQUIRE_FALSE(registry.all_of<item::tags::Choice>(p2Pokemon));
 
   checks.checkMovePpUsage(p1Pokemon, p1MoveIndex);
   checks.checkMovePpUsage(p2Pokemon, p2MoveIndex);

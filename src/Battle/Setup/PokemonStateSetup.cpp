@@ -16,19 +16,19 @@
 #include <Components/Position.hpp>
 #include <Components/SpeciesTypes.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Pokedex/EnumToTag/EnumToTag.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Gender.hpp>
 #include <Types/Enums/Item.hpp>
 #include <Types/Enums/Nature.hpp>
 #include <Types/Enums/Species.hpp>
 #include <Types/Enums/Status.hpp>
+#include <Types/Indexes.hpp>
 #include <Types/State.hpp>
 #include <Types/Stats.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 #include <entt/entity/view.hpp>
-
-#include "EmplaceTagFromEnum.hpp"
 
 namespace pokesim::internal {
 PokemonStateSetup::PokemonStateSetup(types::registry& registry, types::entity entity)
@@ -73,8 +73,9 @@ void PokemonStateSetup::setCurrentHp(types::stat hp) {
 
 void PokemonStateSetup::setTypes(SpeciesTypes types) {
   handle.emplace<SpeciesTypes>(types);
-  type::tags::emplaceTagFromEnum(types.type1(), handle);
-  type::tags::emplaceTagFromEnum(types.type2(), handle);
+  for (pokesim::dex::Type speciesType : types.val) {
+    type::tags::emplaceTagFromEnum(speciesType, handle);
+  }
 }
 
 void PokemonStateSetup::setLevel(types::level level) {
@@ -85,14 +86,12 @@ void PokemonStateSetup::setGender(pokesim::dex::Gender gender) {
   handle.emplace<GenderName>(gender);
 }
 
-void PokemonStateSetup::setAbility(pokesim::dex::Ability ability) {
-  handle.emplace<AbilityName>(ability);
-  ability::tags::emplaceTagFromEnum(ability, handle);
+void PokemonStateSetup::setAbility(pokesim::dex::Ability ability, const Pokedex& pokedex) {
+  pokesim::internal::setAbility(ability, pokedex, *handle.registry(), entity());
 }
 
-void PokemonStateSetup::setItem(pokesim::dex::Item item) {
-  handle.emplace<ItemName>(item);
-  item::tags::emplaceTagFromEnum(item, handle);
+void PokemonStateSetup::setItem(pokesim::dex::Item item, const Pokedex& pokedex) {
+  pokesim::internal::setItem(item, pokedex, *handle.registry(), entity());
 }
 
 void PokemonStateSetup::setMoves(const std::vector<MoveSlot>& moveSlots) {
@@ -111,12 +110,10 @@ void PokemonStateSetup::setPostion(types::teamPositionIndex position) {
 }
 
 void PokemonStateSetup::setStatus(pokesim::dex::Status status) {
-  handle.emplace<StatusName>(status);
-  status::tags::emplaceTagFromEnum(status, handle);
+  pokesim::internal::setStatus(status, *handle.registry(), entity());
 }
 
 void PokemonStateSetup::setNature(pokesim::dex::Nature nature) {
-  handle.emplace<NatureName>(nature);
   nature::tags::emplaceTagFromEnum(nature, handle);
 }
 

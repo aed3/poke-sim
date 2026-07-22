@@ -3,7 +3,6 @@
 #include <Battle/Clone/Clone.hpp>
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
-#include <Battle/Setup/EmplaceTagFromEnum.hpp>
 #include <CalcDamage/CalcDamage.hpp>
 #include <CalcDamage/Helpers.hpp>
 #include <Components/AnalyzeEffect/Aliases.hpp>
@@ -30,6 +29,7 @@
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/EnumToTag/EnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
@@ -83,12 +83,11 @@ EffectPresentCheck hasVolatileEffect(types::registry&, EffectTarget, dex::Volati
 }
 
 EffectPresentCheck hasStatusEffect(types::registry& registry, EffectTarget effectTarget, StatusName status) {
-  StatusName* currentStatus = registry.try_get<StatusName>(effectTarget.val);
-  if (!currentStatus) {
+  if (!registry.all_of<pokesim::tags::HasStatus>(effectTarget.val)) {
     return EffectPresentCheck::NOT_PRESENT;
   }
 
-  if (currentStatus->val == status.val) {
+  if (status::tags::hasTag(status.val, registry, effectTarget.val)) {
     return EffectPresentCheck::PRESENT_AND_APPLIED;
   }
 
@@ -441,8 +440,7 @@ void applyStatusEffect(types::handle inputHandle, EffectTarget effectTarget, Sta
     setInvertFinalAnswer(inputHandle);
   }
   else {
-    pokemonHandle.emplace<StatusName>(effect.val);
-    internal::status::tags::emplaceTagFromEnum(effect.val, pokemonHandle);
+    pokesim::internal::setStatus(effect.val, registry, effectTarget.val);
   }
 }
 

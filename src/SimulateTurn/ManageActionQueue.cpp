@@ -21,6 +21,7 @@
 #include <Types/Decisions.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/ActionOrder.hpp>
+#include <Types/Indexes.hpp>
 #include <Types/MaxSizedVector.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>

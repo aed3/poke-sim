@@ -68,7 +68,7 @@ struct VerticalSliceChecks : TestChecks {
       stat::CurrentHp,
       LastUsedMove,
       MoveSlots,
-      StatusName,
+      tags::HasStatus,
       status::tags::Paralysis,
       stat::EffectiveSpe>();
   }
@@ -549,16 +549,16 @@ TEST_CASE(
     checks.checkMovePpUsage(p2Pokemon, p2MoveIndex);
 
     if (!p2DamageInfo.mightCauseParalysis() || !p1Paralyzed) {
-      REQUIRE_FALSE(registry.all_of<StatusName>(p1Pokemon));
+      REQUIRE_FALSE(registry.all_of<tags::HasStatus>(p1Pokemon));
       REQUIRE_FALSE(p1Paralyzed);
       REQUIRE(p1Speed.val == initialP1Speed);
     }
     if (p1Paralyzed) {
-      REQUIRE(registry.get<StatusName>(p1Pokemon).val == dex::Status::PAR);
+      REQUIRE(registry.all_of<tags::HasStatus>(p1Pokemon));
       REQUIRE(p1Speed.val == (initialP1Speed / 2U));
     }
 
-    REQUIRE_FALSE(registry.all_of<StatusName>(p2Pokemon));
+    REQUIRE_FALSE(registry.all_of<tags::HasStatus>(p2Pokemon));
     REQUIRE_FALSE(registry.all_of<status::tags::Paralysis>(p2Pokemon));
     REQUIRE(p2Speed.val == initialP2Speed);
 
@@ -904,8 +904,10 @@ TEST_CASE(
 
     checks.checkEntityForChanges<SideDecision>(p2Side);
     checks.checkEntityForChanges<stat::CurrentHp, ChoiceLock, LastUsedMove, MoveSlots, DisabledMoveSlots>(p1APokemon);
-    checks.checkEntityForChanges<stat::CurrentHp, item::tags::FocusSash, ItemName, LastUsedMove, MoveSlots>(p1BPokemon);
-    checks.checkEntityForChanges<stat::CurrentHp, StatusName, status::tags::Burn, LastUsedMove, MoveSlots>(p2APokemon);
+    checks.checkEntityForChanges<stat::CurrentHp, item::tags::FocusSash, tags::HasItem, LastUsedMove, MoveSlots>(
+      p1BPokemon);
+    checks.checkEntityForChanges<stat::CurrentHp, tags::HasStatus, status::tags::Burn, LastUsedMove, MoveSlots>(
+      p2APokemon);
 
     checks.checkMovePpUsage(p1APokemon, p1AMoveIndex);
     checks.checkMovePpUsage(p1BPokemon, p1BMoveIndex);
@@ -923,7 +925,7 @@ TEST_CASE(
 
     // P1B (Dragapult) Specific Checks
     REQUIRE_FALSE(registry.all_of<item::tags::FocusSash>(p1BPokemon));
-    REQUIRE_FALSE(registry.all_of<ItemName>(p1BPokemon));
+    REQUIRE_FALSE(registry.all_of<tags::HasItem>(p1BPokemon));
     if (p2ABurned) {
       REQUIRE(expectedP1BHalfHp.contains(p1BHp.val));
       idealProbability *= p1BHalfDamageInfo.getProbability(p1BHp.val, p2BSpaBoosted);
@@ -938,7 +940,7 @@ TEST_CASE(
       p2AInfo.stats.hp.value() / dex::LifeOrb::onAfterMoveUsedHpDecreaseDivisor(TestMechanic);
     types::stat p2ABurnHpDecrease = p2AInfo.stats.hp.value() / dex::Burn::onResidualHpDecreaseDivisor(TestMechanic);
     if (p2ABurned) {
-      REQUIRE(registry.get<StatusName>(p2APokemon).val == dex::Status::BRN);
+      REQUIRE(registry.all_of<tags::HasStatus>(p2APokemon));
       REQUIRE(p2AHp.val == p2AInfo.stats.hp.value() - p2ALifeOrbHpDecrease - p2ABurnHpDecrease);
 
       if (willOWispMightMiss) {
@@ -947,7 +949,7 @@ TEST_CASE(
     }
     else {
       REQUIRE(willOWispMightMiss);
-      REQUIRE_FALSE(registry.all_of<StatusName>(p2APokemon));
+      REQUIRE_FALSE(registry.all_of<tags::HasStatus>(p2APokemon));
       REQUIRE(p2AHp.val == p2AInfo.stats.hp.value() - p2ALifeOrbHpDecrease);
 
       idealProbability *= (MAX_PERCENT_CHANCE - willOWispHitChance) * CHANCE_TO_PROBABILITY;

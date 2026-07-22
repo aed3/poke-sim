@@ -3,7 +3,6 @@
 #pragma once
 
 #include "BattleStateSetup.hpp"
-#include "EmplaceTagFromEnum.hpp"
 #include "PokemonStateSetup.hpp"
 #include "SideStateSetup.hpp"
 #include "StateSetupBase.hpp"

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Types/Entity.hpp>
+#include <Types/Indexes.hpp>
 #include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>

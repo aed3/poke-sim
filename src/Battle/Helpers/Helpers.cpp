@@ -1,6 +1,5 @@
 #include "Helpers.hpp"
 
-#include <Battle/Setup/EmplaceTagFromEnum.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/Sides.hpp>
@@ -12,10 +11,12 @@
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/EnumToTag/EnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/Slot.hpp>
+#include <Types/Indexes.hpp>
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
 #include <entt/entity/handle.hpp>
