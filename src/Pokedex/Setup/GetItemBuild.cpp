@@ -15,7 +15,7 @@
 namespace pokesim {
 namespace {
 template <typename Tag>
-struct EmplaceTag {
+struct EmplaceItemTag {
   static void run(types::handle handle) { handle.emplace<Tag>(); }
 };
 
@@ -41,7 +41,7 @@ struct BuildItem {
     item.emplace<ItemName>(Item::name(gameMechanic));
 
     if constexpr (has<Optional::itemProperties, Item>::value) {
-      item::tags::enumToTag<EmplaceTag>(Item::itemProperties(gameMechanic), item);
+      item::tags::enumToTag<EmplaceItemTag>(Item::itemProperties(gameMechanic), item);
     }
 
     return item.entity();
