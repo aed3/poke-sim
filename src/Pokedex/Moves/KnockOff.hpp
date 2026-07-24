@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Components/Tags/MovePropertyTags.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
@@ -25,7 +24,7 @@ struct KnockOff {
   static constexpr types::basePower basePower(GameMechanics) { return 65U; }
   static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
-  static constexpr MoveProperty moveProperties(GameMechanics) { return MoveProperty::CONTACT; }
+  static constexpr MoveProperty properties(GameMechanics) { return MoveProperty::CONTACT; }
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   static constexpr types::effectMultiplier onBasePowerMultiplier(GameMechanics) { return 1.5F; }

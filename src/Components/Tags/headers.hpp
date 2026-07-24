@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "AbilityPropertyTags.hpp"
 #include "AbilityTags.hpp"
 #include "BattleTags.hpp"
 #include "Current.hpp"

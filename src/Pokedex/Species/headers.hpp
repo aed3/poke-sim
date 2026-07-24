@@ -2,9 +2,16 @@
 
 #pragma once
 
+#include "Aegislash.hpp"
 #include "Ampharos.hpp"
+#include "Braviary.hpp"
+#include "Claydol.hpp"
+#include "Decidueye.hpp"
+#include "Ditto.hpp"
 #include "Dragapult.hpp"
 #include "Empoleon.hpp"
 #include "Gardevoir.hpp"
+#include "Grimmsnarl.hpp"
+#include "Magnezone.hpp"
 #include "Pangoro.hpp"
 #include "Ribombee.hpp"

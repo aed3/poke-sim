@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct AssaultVest {
-  static constexpr dex::Item name(GameMechanics) { return dex::Item::ASSAULT_VEST; }
+  static constexpr Item name(GameMechanics) { return dex::Item::ASSAULT_VEST; }
 
   static constexpr types::effectMultiplier onModifySpdModifier(GameMechanics) { return 1.5F; }
 

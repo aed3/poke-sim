@@ -2,10 +2,18 @@
 
 #pragma once
 
+#include "AllySwitch.hpp"
+#include "FlashCannon.hpp"
 #include "FuryAttack.hpp"
 #include "KnockOff.hpp"
 #include "Moonblast.hpp"
 #include "QuiverDance.hpp"
+#include "Reflect.hpp"
+#include "Reversal.hpp"
+#include "SpiritShackle.hpp"
 #include "Splash.hpp"
 #include "Thunderbolt.hpp"
+#include "Transform.hpp"
+#include "TripleArrows.hpp"
+#include "VoltSwitch.hpp"
 #include "WillOWisp.hpp"

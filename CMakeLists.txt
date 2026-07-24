@@ -201,7 +201,6 @@ setup_target(
     src/Pokedex/Setup/BuildItem.cpp
     src/Pokedex/Setup/BuildMove.cpp
     src/Pokedex/Setup/BuildSpecies.cpp
-    src/Pokedex/Setup/SpeciesDexDataSetup.cpp
     src/SimulateTurn/CalcDamageSpecifics.cpp
     src/SimulateTurn/ManageActionQueue.cpp
     src/SimulateTurn/RandomChance.cpp

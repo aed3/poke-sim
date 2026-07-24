@@ -73,6 +73,7 @@
 #include "SimulationResults.hpp"
 #include "SpeciesTypes.hpp"
 #include "Stats.hpp"
+#include "Tags/AbilityPropertyTags.hpp"
 #include "Tags/AbilityTags.hpp"
 #include "Tags/BattleTags.hpp"
 #include "Tags/Current.hpp"

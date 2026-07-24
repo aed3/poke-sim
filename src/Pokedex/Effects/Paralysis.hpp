@@ -12,7 +12,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Paralysis {
-  static constexpr dex::Status name(GameMechanics) { return dex::Status::PAR; }
+  static constexpr Status name(GameMechanics) { return dex::Status::PAR; }
 
   static constexpr types::stat speedDividend(GameMechanics) { return 50U; }
   static constexpr types::stat speedDivisor(GameMechanics) { return 100U; }

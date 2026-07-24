@@ -6,7 +6,7 @@
 
 namespace pokesim::dex {
 struct ClearBody {
-  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::CLEAR_BODY; }
+  static constexpr Ability name(GameMechanics) { return dex::Ability::CLEAR_BODY; }
 
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Clear Body"; }

@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Plus {
-  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::PLUS; }
+  static constexpr Ability name(GameMechanics) { return dex::Ability::PLUS; }
 
   static constexpr types::effectMultiplier onModifySpaModifier(GameMechanics) { return 1.5F; }
   struct Strings {

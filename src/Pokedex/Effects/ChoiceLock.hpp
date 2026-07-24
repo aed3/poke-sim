@@ -10,7 +10,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct ChoiceLock {
-  static constexpr dex::Volatile name(GameMechanics) { return dex::Volatile::CHOICE_LOCK; }
+  static constexpr Volatile name(GameMechanics) { return dex::Volatile::CHOICE_LOCK; }
 
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Choice Lock"; }

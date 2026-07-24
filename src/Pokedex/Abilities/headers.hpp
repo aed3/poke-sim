@@ -2,15 +2,22 @@
 
 #pragma once
 
+#include "Analytic.hpp"
 #include "ClearBody.hpp"
 #include "Competitive.hpp"
 #include "Defiant.hpp"
 #include "HoneyGather.hpp"
+#include "Imposter.hpp"
 #include "Infiltrator.hpp"
 #include "IronFist.hpp"
+#include "Levitate.hpp"
+#include "LongReach.hpp"
 #include "Plus.hpp"
+#include "Prankster.hpp"
+#include "Scrappy.hpp"
+#include "StanceChange.hpp"
 #include "Static.hpp"
 #include "SweetVeil.hpp"
-#include "Sychronize.hpp"
+#include "Synchronize.hpp"
 #include "Torrent.hpp"
 #include "Trace.hpp"

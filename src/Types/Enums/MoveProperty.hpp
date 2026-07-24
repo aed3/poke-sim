@@ -36,11 +36,12 @@ enum class MoveProperty : std::uint64_t {
   PULSE = 1ULL << 29U,
   PUNCH = 1ULL << 30U,
   RECHARGE = 1ULL << 31U,
-  SLICING = 1ULL << 32U,
-  SOUND = 1ULL << 33U,
-  STRENGTHEN_ON_MINIMIZED = 1ULL << 34U,
-  VARIABLE_HIT_COUNT = 1ULL << 35U,
-  WIND = 1ULL << 36U,
+  SELF_SWITCH = 1ULL << 32U,
+  SLICING = 1ULL << 33U,
+  SOUND = 1ULL << 34U,
+  STRENGTHEN_ON_MINIMIZED = 1ULL << 35U,
+  VARIABLE_HIT_COUNT = 1ULL << 36U,
+  WIND = 1ULL << 37U,
 };
 
 constexpr MoveProperty operator|(MoveProperty kindA, MoveProperty kindB) {

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "AbilityEnumToTag.hpp"
+#include "AbilityPropertyEnumToTag.hpp"
 #include "EnumToTag.hpp"
 #include "ItemEnumToTag.hpp"
 #include "ItemPropertyEnumToTag.hpp"

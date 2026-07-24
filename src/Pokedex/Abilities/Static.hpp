@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Static {
-  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::STATIC; }
+  static constexpr Ability name(GameMechanics) { return dex::Ability::STATIC; }
 
   static constexpr types::percentChance onDamagingHitChance(GameMechanics) { return 30U; }
   struct Strings {

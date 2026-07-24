@@ -6,7 +6,7 @@
 
 namespace pokesim::dex {
 struct SweetVeil {
-  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::SWEET_VEIL; }
+  static constexpr Ability name(GameMechanics) { return dex::Ability::SWEET_VEIL; }
 
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Sweet Veil"; }

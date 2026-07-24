@@ -8,6 +8,7 @@
 #include "Effect.hpp"
 #include "Entity.hpp"
 #include "Enums/Ability.hpp"
+#include "Enums/AbilityProperty.hpp"
 #include "Enums/ActionOrder.hpp"
 #include "Enums/AddedTargets.hpp"
 #include "Enums/BattleFormat.hpp"

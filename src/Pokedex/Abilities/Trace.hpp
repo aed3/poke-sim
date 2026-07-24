@@ -6,7 +6,7 @@
 
 namespace pokesim::dex {
 struct Trace {
-  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::TRACE; }
+  static constexpr Ability name(GameMechanics) { return dex::Ability::TRACE; }
 
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Trace"; }

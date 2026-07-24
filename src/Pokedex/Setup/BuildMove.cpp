@@ -47,7 +47,7 @@ struct BuildMove {
     targetSecondaryEffect,
     sourcePrimaryEffect,
     sourceSecondaryEffect,
-    moveProperties,
+    properties,
 
     chance,
     atkBoost,
@@ -85,7 +85,7 @@ struct BuildMove {
   struct has<Optional::sourceSecondaryEffect, Type, std::void_t<typename Type::sourceSecondaryEffect>>
       : std::true_type {};
   template <typename Type>
-  struct has<Optional::moveProperties, Type, void_t<Type::moveProperties>> : std::true_type {};
+  struct has<Optional::properties, Type, void_t<Type::properties>> : std::true_type {};
   template <typename Type>
   struct has<Optional::chance, Type, void_t<Type::chance>> : std::true_type {};
   template <typename Type>
@@ -268,8 +268,8 @@ struct BuildMove {
       setup.add(move::effect::tags::MoveTarget{});
     }
 
-    if constexpr (has<Optional::moveProperties, Move>::value) {
-      move::tags::enumToTag<AddFromEnum>(Move::moveProperties(gameMechanic), setup);
+    if constexpr (has<Optional::properties, Move>::value) {
+      move::tags::enumToTag<AddFromEnum>(Move::properties(gameMechanic), setup);
     }
 
     switch (Move::target(gameMechanic)) {
@@ -358,12 +358,20 @@ struct BuildMoves {
   static void buildActionMoveByGameMechanic(types::registry& registry, GameMechanics gameMechanic) {
     using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
 
+    buildActionMoveFromView<AllySwitch, move::tags::AllySwitch>(registry, gameMechanic);
+    buildActionMoveFromView<FlashCannon, move::tags::FlashCannon>(registry, gameMechanic);
     buildActionMoveFromView<FuryAttack, move::tags::FuryAttack>(registry, gameMechanic);
     buildActionMoveFromView<KnockOff, move::tags::KnockOff>(registry, gameMechanic);
     buildActionMoveFromView<Moonblast, move::tags::Moonblast>(registry, gameMechanic);
     buildActionMoveFromView<QuiverDance, move::tags::QuiverDance>(registry, gameMechanic);
+    buildActionMoveFromView<Reflect, move::tags::Reflect>(registry, gameMechanic);
+    buildActionMoveFromView<Reversal, move::tags::Reversal>(registry, gameMechanic);
+    buildActionMoveFromView<SpiritShackle, move::tags::SpiritShackle>(registry, gameMechanic);
     buildActionMoveFromView<Splash, move::tags::Splash>(registry, gameMechanic);
     buildActionMoveFromView<Thunderbolt, move::tags::Thunderbolt>(registry, gameMechanic);
+    buildActionMoveFromView<Transform, move::tags::Transform>(registry, gameMechanic);
+    buildActionMoveFromView<TripleArrows, move::tags::TripleArrows>(registry, gameMechanic);
+    buildActionMoveFromView<VoltSwitch, move::tags::VoltSwitch>(registry, gameMechanic);
     buildActionMoveFromView<WillOWisp, move::tags::WillOWisp>(registry, gameMechanic);
   }
 

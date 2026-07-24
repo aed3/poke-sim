@@ -12,7 +12,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct LifeOrb {
-  static constexpr dex::Item name(GameMechanics) { return dex::Item::LIFE_ORB; }
+  static constexpr Item name(GameMechanics) { return dex::Item::LIFE_ORB; }
 
   static constexpr types::eventModifier onModifyDamageNumerator(GameMechanics) { return 5324U; }
   static constexpr types::eventModifier onModifyDamageDenominator(GameMechanics) { return 4096U; }

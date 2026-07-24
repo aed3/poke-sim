@@ -25,13 +25,21 @@ namespace pokesim::move::tags {
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
 auto enumToTag(dex::Move move, RunArgs&&... args) {
   switch (move) {
-    case dex::Move::FURY_ATTACK:  return RunStruct<FuryAttack, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Move::KNOCK_OFF:    return RunStruct<KnockOff, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Move::MOONBLAST:    return RunStruct<Moonblast, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Move::QUIVER_DANCE: return RunStruct<QuiverDance, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Move::SPLASH:       return RunStruct<Splash, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Move::THUNDERBOLT:  return RunStruct<Thunderbolt, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Move::WILL_O_WISP:  return RunStruct<WillOWisp, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::ALLY_SWITCH:    return RunStruct<AllySwitch, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::FLASH_CANNON:   return RunStruct<FlashCannon, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::FURY_ATTACK:    return RunStruct<FuryAttack, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::KNOCK_OFF:      return RunStruct<KnockOff, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::MOONBLAST:      return RunStruct<Moonblast, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::QUIVER_DANCE:   return RunStruct<QuiverDance, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::REFLECT:        return RunStruct<Reflect, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::REVERSAL:       return RunStruct<Reversal, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::SPIRIT_SHACKLE: return RunStruct<SpiritShackle, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::SPLASH:         return RunStruct<Splash, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::THUNDERBOLT:    return RunStruct<Thunderbolt, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::TRANSFORM:      return RunStruct<Transform, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::TRIPLE_ARROWS:  return RunStruct<TripleArrows, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::VOLT_SWITCH:    return RunStruct<VoltSwitch, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Move::WILL_O_WISP:    return RunStruct<WillOWisp, T...>::run(std::forward<RunArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for move that does not exist.");

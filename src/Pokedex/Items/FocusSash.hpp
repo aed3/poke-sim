@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct FocusSash {
-  static constexpr dex::Item name(GameMechanics) { return dex::Item::FOCUS_SASH; }
+  static constexpr Item name(GameMechanics) { return dex::Item::FOCUS_SASH; }
 
   static constexpr types::damage onAfterModifyDamageHpToKeep(GameMechanics) { return 1U; }
 

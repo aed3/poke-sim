@@ -11,10 +11,10 @@ namespace pokesim::dex {
  * changed during battle, and no true base form exists, then the Pokemon's species name without a form specifier is
  * omitted. For example:
  *  - `VENUSAUR`, `MEGA_VENUSAUR`, and `GIGANTAMAX_VENUSAUR` are all listed because Venusaur changes into the other
- * forms mid-battle
+ * forms mid-battle.
  *  - `GASTRODON`, `WEST_SEA_GASTRODON`, and `EAST_SEA_GASTRODON` are all listed because although Gastrodon's forms
- * are permanent, their only difference is how they look
- *  - `PLANT_CLOAK_WORMADAM`, `SANDY_CLOAK_WORMADAM`, and `TRASH_CLOAK_WORMADAM` listed while `WORMADAM` is not
+ * are permanent, their only difference is how they look.
+ *  - `PLANT_CLOAK_WORMADAM`, `SANDY_CLOAK_WORMADAM`, and `TRASH_CLOAK_WORMADAM` are listed while `WORMADAM` is not
  * because the Wormadam forms have different types, stats, and moves; their forms are permanent; and there is no base
  * Wormadam.
  */

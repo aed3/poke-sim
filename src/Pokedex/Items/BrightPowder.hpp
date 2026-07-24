@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct BrightPowder {
-  static constexpr dex::Item name(GameMechanics) { return dex::Item::BRIGHT_POWDER; }
+  static constexpr Item name(GameMechanics) { return dex::Item::BRIGHT_POWDER; }
 
   static constexpr types::eventModifier onModifyAccuracyNumerator(GameMechanics) { return 3686U; }
   static constexpr types::eventModifier onModifyAccuracyDenominator(GameMechanics) { return 4096U; }

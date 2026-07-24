@@ -1,5 +1,6 @@
 #include <Components/Names/AbilityNames.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/EnumToTag/AbilityPropertyEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Ability.hpp>
@@ -12,14 +13,35 @@
 
 namespace pokesim {
 namespace {
-template <typename T>
+template <typename Tag>
+struct EmplaceAbilityTag {
+  static void run(types::handle handle) { handle.emplace<Tag>(); }
+};
+
+template <typename Ability>
 struct BuildAbility {
  private:
+  enum class Optional : std::uint8_t {
+    properties,
+  };
+
+  template <auto Member>
+  using void_t = std::void_t<decltype(Member)>;
+
+  template <Optional, typename, typename V = void>
+  struct has : std::false_type {};
+  template <typename Type>
+  struct has<Optional::properties, Type, void_t<Type::properties>> : std::true_type {};
+
  public:
   static types::entity build(types::registry& registry, GameMechanics gameMechanic) {
     types::handle ability{registry, registry.create()};
 
-    ability.emplace<AbilityName>(T::name(gameMechanic));
+    ability.emplace<AbilityName>(Ability::name(gameMechanic));
+
+    if constexpr (has<Optional::properties, Ability>::value) {
+      ability::tags::enumToTag<EmplaceAbilityTag>(Ability::properties(gameMechanic), ability);
+    }
 
     return ability.entity();
   }
@@ -29,18 +51,25 @@ types::entity buildByGameMechanic(dex::Ability ability, types::registry& registr
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
   switch (ability) {
-    case Ability::CLEAR_BODY:   return BuildAbility<ClearBody>::build(registry, gameMechanic);
-    case Ability::COMPETITIVE:  return BuildAbility<Competitive>::build(registry, gameMechanic);
-    case Ability::DEFIANT:      return BuildAbility<Defiant>::build(registry, gameMechanic);
-    case Ability::HONEY_GATHER: return BuildAbility<HoneyGather>::build(registry, gameMechanic);
-    case Ability::INFILTRATOR:  return BuildAbility<Infiltrator>::build(registry, gameMechanic);
-    case Ability::IRON_FIST:    return BuildAbility<IronFist>::build(registry, gameMechanic);
-    case Ability::PLUS:         return BuildAbility<Plus>::build(registry, gameMechanic);
-    case Ability::STATIC:       return BuildAbility<Static>::build(registry, gameMechanic);
-    case Ability::SWEET_VEIL:   return BuildAbility<SweetVeil>::build(registry, gameMechanic);
-    case Ability::SYNCHRONIZE:  return BuildAbility<Synchronize>::build(registry, gameMechanic);
-    case Ability::TORRENT:      return BuildAbility<Torrent>::build(registry, gameMechanic);
-    case Ability::TRACE:        return BuildAbility<Trace>::build(registry, gameMechanic);
+    case Ability::ANALYTIC:      return BuildAbility<Analytic>::build(registry, gameMechanic);
+    case Ability::CLEAR_BODY:    return BuildAbility<ClearBody>::build(registry, gameMechanic);
+    case Ability::COMPETITIVE:   return BuildAbility<Competitive>::build(registry, gameMechanic);
+    case Ability::DEFIANT:       return BuildAbility<Defiant>::build(registry, gameMechanic);
+    case Ability::HONEY_GATHER:  return BuildAbility<HoneyGather>::build(registry, gameMechanic);
+    case Ability::IMPOSTER:      return BuildAbility<Imposter>::build(registry, gameMechanic);
+    case Ability::INFILTRATOR:   return BuildAbility<Infiltrator>::build(registry, gameMechanic);
+    case Ability::IRON_FIST:     return BuildAbility<IronFist>::build(registry, gameMechanic);
+    case Ability::LEVITATE:      return BuildAbility<Levitate>::build(registry, gameMechanic);
+    case Ability::LONG_REACH:    return BuildAbility<LongReach>::build(registry, gameMechanic);
+    case Ability::PLUS:          return BuildAbility<Plus>::build(registry, gameMechanic);
+    case Ability::PRANKSTER:     return BuildAbility<Prankster>::build(registry, gameMechanic);
+    case Ability::SCRAPPY:       return BuildAbility<Scrappy>::build(registry, gameMechanic);
+    case Ability::STANCE_CHANGE: return BuildAbility<StanceChange>::build(registry, gameMechanic);
+    case Ability::STATIC:        return BuildAbility<Static>::build(registry, gameMechanic);
+    case Ability::SWEET_VEIL:    return BuildAbility<SweetVeil>::build(registry, gameMechanic);
+    case Ability::SYNCHRONIZE:   return BuildAbility<Synchronize>::build(registry, gameMechanic);
+    case Ability::TORRENT:       return BuildAbility<Torrent>::build(registry, gameMechanic);
+    case Ability::TRACE:         return BuildAbility<Trace>::build(registry, gameMechanic);
 
     default: break;
   }

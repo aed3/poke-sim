@@ -15,7 +15,6 @@
  * src/SimulateTurn/RandomChance.cpp
  * src/SimulateTurn/ManageActionQueue.cpp
  * src/SimulateTurn/CalcDamageSpecifics.cpp
- * src/Pokedex/Setup/SpeciesDexDataSetup.cpp
  * src/Pokedex/Setup/BuildSpecies.cpp
  * src/Pokedex/Setup/BuildMove.cpp
  * src/Pokedex/Setup/BuildItem.cpp
@@ -3652,38 +3651,6 @@ void setIfMoveCrits(Simulation& simulation) {
 
 /////////////// END OF src/SimulateTurn/CalcDamageSpecifics.cpp ////////////////
 
-////////////// START OF src/Pokedex/Setup/SpeciesDexDataSetup.cpp //////////////
-
-namespace pokesim::internal::dex {
-void SpeciesDexDataSetup::setName(pokesim::dex::Species species) {
-  handle.emplace<SpeciesName>(species);
-}
-
-void SpeciesDexDataSetup::setType(pokesim::dex::Type type1, pokesim::dex::Type type2) {
-  handle.emplace<SpeciesTypes>(type1, type2);
-}
-
-void SpeciesDexDataSetup::setBaseStats(
-  types::baseStat hp, types::baseStat atk, types::baseStat def, types::baseStat spa, types::baseStat spd,
-  types::baseStat spe) {
-  handle.emplace<BaseStats>(hp, atk, def, spa, spd, spe);
-}
-
-void SpeciesDexDataSetup::setPrimaryAbility(pokesim::dex::Ability ability) {
-  handle.emplace<PrimaryAbility>(ability);
-}
-
-void SpeciesDexDataSetup::setSecondaryAbility(pokesim::dex::Ability ability) {
-  handle.emplace<SecondaryAbility>(ability);
-}
-
-void SpeciesDexDataSetup::setHiddenAbility(pokesim::dex::Ability ability) {
-  handle.emplace<HiddenAbility>(ability);
-}
-}  // namespace pokesim::internal::dex
-
-/////////////// END OF src/Pokedex/Setup/SpeciesDexDataSetup.cpp ///////////////
-
 ///////////////// START OF src/Pokedex/Setup/BuildSpecies.cpp //////////////////
 
 #include <cstdint>
@@ -3715,26 +3682,26 @@ struct BuildSpecies {
 
  public:
   static types::entity build(types::registry& registry, GameMechanics gameMechanic) {
-    internal::dex::SpeciesDexDataSetup species(registry);
+    types::handle species{registry, registry.create()};
 
-    species.setName(T::name(gameMechanic));
-    species.setBaseStats(
+    species.emplace<SpeciesName>(T::name(gameMechanic));
+    species.emplace<BaseStats>(
       T::hp(gameMechanic),
       T::atk(gameMechanic),
       T::def(gameMechanic),
       T::spa(gameMechanic),
       T::spd(gameMechanic),
       T::spe(gameMechanic));
-    species.setType(T::type(gameMechanic).type1(), T::type(gameMechanic).type2());
+    species.emplace<SpeciesTypes>(T::type(gameMechanic).type1(), T::type(gameMechanic).type2());
 
     if constexpr (has<Optional::primaryAbility>::value) {
-      species.setPrimaryAbility(T::primaryAbility(gameMechanic));
+      species.emplace<PrimaryAbility>(T::primaryAbility(gameMechanic));
     }
     if constexpr (has<Optional::secondaryAbility>::value) {
-      species.setSecondaryAbility(T::secondaryAbility(gameMechanic));
+      species.emplace<SecondaryAbility>(T::secondaryAbility(gameMechanic));
     }
     if constexpr (has<Optional::hiddenAbility>::value) {
-      species.setHiddenAbility(T::hiddenAbility(gameMechanic));
+      species.emplace<HiddenAbility>(T::hiddenAbility(gameMechanic));
     }
 
     return species.entity();
@@ -3745,12 +3712,22 @@ types::entity buildByGameMechanic(dex::Species species, types::registry& registr
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
   switch (species) {
-    case Species::AMPHAROS:  return BuildSpecies<Ampharos>::build(registry, gameMechanic);
-    case Species::GARDEVOIR: return BuildSpecies<Gardevoir>::build(registry, gameMechanic);
-    case Species::EMPOLEON:  return BuildSpecies<Empoleon>::build(registry, gameMechanic);
-    case Species::PANGORO:   return BuildSpecies<Pangoro>::build(registry, gameMechanic);
-    case Species::RIBOMBEE:  return BuildSpecies<Ribombee>::build(registry, gameMechanic);
-    case Species::DRAGAPULT: return BuildSpecies<Dragapult>::build(registry, gameMechanic);
+    case Species::DITTO:             return BuildSpecies<Ditto>::build(registry, gameMechanic);
+    case Species::AMPHAROS:          return BuildSpecies<Ampharos>::build(registry, gameMechanic);
+    case Species::GARDEVOIR:         return BuildSpecies<Gardevoir>::build(registry, gameMechanic);
+    case Species::CLAYDOL:           return BuildSpecies<Claydol>::build(registry, gameMechanic);
+    case Species::EMPOLEON:          return BuildSpecies<Empoleon>::build(registry, gameMechanic);
+    case Species::MAGNEZONE:         return BuildSpecies<Magnezone>::build(registry, gameMechanic);
+    case Species::BRAVIARY:          return BuildSpecies<Braviary>::build(registry, gameMechanic);
+    case Species::PANGORO:           return BuildSpecies<Pangoro>::build(registry, gameMechanic);
+    case Species::AEGISLASH:         return BuildSpecies<Aegislash>::build(registry, gameMechanic);
+    case Species::SHIELD_AEGISLASH:  return BuildSpecies<ShieldAegislash>::build(registry, gameMechanic);
+    case Species::BLADE_AEGISLASH:   return BuildSpecies<BladeAegislash>::build(registry, gameMechanic);
+    case Species::DECIDUEYE:         return BuildSpecies<Decidueye>::build(registry, gameMechanic);
+    case Species::HISUIAN_DECIDUEYE: return BuildSpecies<HisuianDecidueye>::build(registry, gameMechanic);
+    case Species::RIBOMBEE:          return BuildSpecies<Ribombee>::build(registry, gameMechanic);
+    case Species::GRIMMSNARL:        return BuildSpecies<Grimmsnarl>::build(registry, gameMechanic);
+    case Species::DRAGAPULT:         return BuildSpecies<Dragapult>::build(registry, gameMechanic);
 
     default: break;
   }
@@ -3789,7 +3766,7 @@ struct BuildMove {
     targetSecondaryEffect,
     sourcePrimaryEffect,
     sourceSecondaryEffect,
-    moveProperties,
+    properties,
 
     chance,
     atkBoost,
@@ -3827,7 +3804,7 @@ struct BuildMove {
   struct has<Optional::sourceSecondaryEffect, Type, std::void_t<typename Type::sourceSecondaryEffect>>
       : std::true_type {};
   template <typename Type>
-  struct has<Optional::moveProperties, Type, void_t<Type::moveProperties>> : std::true_type {};
+  struct has<Optional::properties, Type, void_t<Type::properties>> : std::true_type {};
   template <typename Type>
   struct has<Optional::chance, Type, void_t<Type::chance>> : std::true_type {};
   template <typename Type>
@@ -4010,8 +3987,8 @@ struct BuildMove {
       setup.add(move::effect::tags::MoveTarget{});
     }
 
-    if constexpr (has<Optional::moveProperties, Move>::value) {
-      move::tags::enumToTag<AddFromEnum>(Move::moveProperties(gameMechanic), setup);
+    if constexpr (has<Optional::properties, Move>::value) {
+      move::tags::enumToTag<AddFromEnum>(Move::properties(gameMechanic), setup);
     }
 
     switch (Move::target(gameMechanic)) {
@@ -4100,12 +4077,20 @@ struct BuildMoves {
   static void buildActionMoveByGameMechanic(types::registry& registry, GameMechanics gameMechanic) {
     using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
 
+    buildActionMoveFromView<AllySwitch, move::tags::AllySwitch>(registry, gameMechanic);
+    buildActionMoveFromView<FlashCannon, move::tags::FlashCannon>(registry, gameMechanic);
     buildActionMoveFromView<FuryAttack, move::tags::FuryAttack>(registry, gameMechanic);
     buildActionMoveFromView<KnockOff, move::tags::KnockOff>(registry, gameMechanic);
     buildActionMoveFromView<Moonblast, move::tags::Moonblast>(registry, gameMechanic);
     buildActionMoveFromView<QuiverDance, move::tags::QuiverDance>(registry, gameMechanic);
+    buildActionMoveFromView<Reflect, move::tags::Reflect>(registry, gameMechanic);
+    buildActionMoveFromView<Reversal, move::tags::Reversal>(registry, gameMechanic);
+    buildActionMoveFromView<SpiritShackle, move::tags::SpiritShackle>(registry, gameMechanic);
     buildActionMoveFromView<Splash, move::tags::Splash>(registry, gameMechanic);
     buildActionMoveFromView<Thunderbolt, move::tags::Thunderbolt>(registry, gameMechanic);
+    buildActionMoveFromView<Transform, move::tags::Transform>(registry, gameMechanic);
+    buildActionMoveFromView<TripleArrows, move::tags::TripleArrows>(registry, gameMechanic);
+    buildActionMoveFromView<VoltSwitch, move::tags::VoltSwitch>(registry, gameMechanic);
     buildActionMoveFromView<WillOWisp, move::tags::WillOWisp>(registry, gameMechanic);
   }
 
@@ -4149,7 +4134,7 @@ template <typename Item>
 struct BuildItem {
  private:
   enum class Optional : std::uint8_t {
-    itemProperties,
+    properties,
   };
 
   template <auto Member>
@@ -4158,7 +4143,7 @@ struct BuildItem {
   template <Optional, typename, typename V = void>
   struct has : std::false_type {};
   template <typename Type>
-  struct has<Optional::itemProperties, Type, void_t<Type::itemProperties>> : std::true_type {};
+  struct has<Optional::properties, Type, void_t<Type::properties>> : std::true_type {};
 
  public:
   static types::entity build(types::registry& registry, GameMechanics gameMechanic) {
@@ -4166,13 +4151,14 @@ struct BuildItem {
 
     item.emplace<ItemName>(Item::name(gameMechanic));
 
-    if constexpr (has<Optional::itemProperties, Item>::value) {
-      item::tags::enumToTag<EmplaceItemTag>(Item::itemProperties(gameMechanic), item);
+    if constexpr (has<Optional::properties, Item>::value) {
+      item::tags::enumToTag<EmplaceItemTag>(Item::properties(gameMechanic), item);
     }
 
     return item.entity();
   }
 };
+
 types::entity buildByGameMechanic(dex::Item item, types::registry& registry, GameMechanics gameMechanic) {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
@@ -4182,7 +4168,14 @@ types::entity buildByGameMechanic(dex::Item item, types::registry& registry, Gam
     case Item::CHOICE_SCARF:  return BuildItem<ChoiceScarf>::build(registry, gameMechanic);
     case Item::CHOICE_SPECS:  return BuildItem<ChoiceSpecs>::build(registry, gameMechanic);
     case Item::FOCUS_SASH:    return BuildItem<FocusSash>::build(registry, gameMechanic);
+    case Item::KINGS_ROCK:    return BuildItem<KingsRock>::build(registry, gameMechanic);
     case Item::LIFE_ORB:      return BuildItem<LifeOrb>::build(registry, gameMechanic);
+    case Item::LUM_BERRY:     return BuildItem<LumBerry>::build(registry, gameMechanic);
+    case Item::METRONOME:     return BuildItem<MetronomeItem>::build(registry, gameMechanic);
+    case Item::MIRROR_HERB:   return BuildItem<MirrorHerb>::build(registry, gameMechanic);
+    case Item::QUICK_CLAW:    return BuildItem<QuickClaw>::build(registry, gameMechanic);
+    case Item::QUICK_POWDER:  return BuildItem<QuickPowder>::build(registry, gameMechanic);
+    case Item::ROCKY_HELMET:  return BuildItem<RockyHelmet>::build(registry, gameMechanic);
 
     default: break;
   }
@@ -4210,14 +4203,35 @@ types::entity Pokedex::buildItem(dex::Item item, types::registry& registry) cons
 
 namespace pokesim {
 namespace {
-template <typename T>
+template <typename Tag>
+struct EmplaceAbilityTag {
+  static void run(types::handle handle) { handle.emplace<Tag>(); }
+};
+
+template <typename Ability>
 struct BuildAbility {
  private:
+  enum class Optional : std::uint8_t {
+    properties,
+  };
+
+  template <auto Member>
+  using void_t = std::void_t<decltype(Member)>;
+
+  template <Optional, typename, typename V = void>
+  struct has : std::false_type {};
+  template <typename Type>
+  struct has<Optional::properties, Type, void_t<Type::properties>> : std::true_type {};
+
  public:
   static types::entity build(types::registry& registry, GameMechanics gameMechanic) {
     types::handle ability{registry, registry.create()};
 
-    ability.emplace<AbilityName>(T::name(gameMechanic));
+    ability.emplace<AbilityName>(Ability::name(gameMechanic));
+
+    if constexpr (has<Optional::properties, Ability>::value) {
+      ability::tags::enumToTag<EmplaceAbilityTag>(Ability::properties(gameMechanic), ability);
+    }
 
     return ability.entity();
   }
@@ -4227,18 +4241,25 @@ types::entity buildByGameMechanic(dex::Ability ability, types::registry& registr
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
   switch (ability) {
-    case Ability::CLEAR_BODY:   return BuildAbility<ClearBody>::build(registry, gameMechanic);
-    case Ability::COMPETITIVE:  return BuildAbility<Competitive>::build(registry, gameMechanic);
-    case Ability::DEFIANT:      return BuildAbility<Defiant>::build(registry, gameMechanic);
-    case Ability::HONEY_GATHER: return BuildAbility<HoneyGather>::build(registry, gameMechanic);
-    case Ability::INFILTRATOR:  return BuildAbility<Infiltrator>::build(registry, gameMechanic);
-    case Ability::IRON_FIST:    return BuildAbility<IronFist>::build(registry, gameMechanic);
-    case Ability::PLUS:         return BuildAbility<Plus>::build(registry, gameMechanic);
-    case Ability::STATIC:       return BuildAbility<Static>::build(registry, gameMechanic);
-    case Ability::SWEET_VEIL:   return BuildAbility<SweetVeil>::build(registry, gameMechanic);
-    case Ability::SYNCHRONIZE:  return BuildAbility<Synchronize>::build(registry, gameMechanic);
-    case Ability::TORRENT:      return BuildAbility<Torrent>::build(registry, gameMechanic);
-    case Ability::TRACE:        return BuildAbility<Trace>::build(registry, gameMechanic);
+    case Ability::ANALYTIC:      return BuildAbility<Analytic>::build(registry, gameMechanic);
+    case Ability::CLEAR_BODY:    return BuildAbility<ClearBody>::build(registry, gameMechanic);
+    case Ability::COMPETITIVE:   return BuildAbility<Competitive>::build(registry, gameMechanic);
+    case Ability::DEFIANT:       return BuildAbility<Defiant>::build(registry, gameMechanic);
+    case Ability::HONEY_GATHER:  return BuildAbility<HoneyGather>::build(registry, gameMechanic);
+    case Ability::IMPOSTER:      return BuildAbility<Imposter>::build(registry, gameMechanic);
+    case Ability::INFILTRATOR:   return BuildAbility<Infiltrator>::build(registry, gameMechanic);
+    case Ability::IRON_FIST:     return BuildAbility<IronFist>::build(registry, gameMechanic);
+    case Ability::LEVITATE:      return BuildAbility<Levitate>::build(registry, gameMechanic);
+    case Ability::LONG_REACH:    return BuildAbility<LongReach>::build(registry, gameMechanic);
+    case Ability::PLUS:          return BuildAbility<Plus>::build(registry, gameMechanic);
+    case Ability::PRANKSTER:     return BuildAbility<Prankster>::build(registry, gameMechanic);
+    case Ability::SCRAPPY:       return BuildAbility<Scrappy>::build(registry, gameMechanic);
+    case Ability::STANCE_CHANGE: return BuildAbility<StanceChange>::build(registry, gameMechanic);
+    case Ability::STATIC:        return BuildAbility<Static>::build(registry, gameMechanic);
+    case Ability::SWEET_VEIL:    return BuildAbility<SweetVeil>::build(registry, gameMechanic);
+    case Ability::SYNCHRONIZE:   return BuildAbility<Synchronize>::build(registry, gameMechanic);
+    case Ability::TORRENT:       return BuildAbility<Torrent>::build(registry, gameMechanic);
+    case Ability::TRACE:         return BuildAbility<Trace>::build(registry, gameMechanic);
 
     default: break;
   }

@@ -25,18 +25,25 @@ namespace pokesim::ability::tags {
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
 auto enumToTag(dex::Ability ability, RunArgs&&... args) {
   switch (ability) {
-    case dex::Ability::CLEAR_BODY:   return RunStruct<ClearBody, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Ability::COMPETITIVE:  return RunStruct<Competitive, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Ability::DEFIANT:      return RunStruct<Defiant, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Ability::HONEY_GATHER: return RunStruct<HoneyGather, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Ability::INFILTRATOR:  return RunStruct<Infiltrator, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Ability::IRON_FIST:    return RunStruct<IronFist, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Ability::PLUS:         return RunStruct<Plus, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Ability::STATIC:       return RunStruct<Static, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Ability::SWEET_VEIL:   return RunStruct<SweetVeil, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Ability::SYNCHRONIZE:  return RunStruct<Synchronize, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Ability::TORRENT:      return RunStruct<Torrent, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Ability::TRACE:        return RunStruct<Trace, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::ANALYTIC:      return RunStruct<Analytic, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::CLEAR_BODY:    return RunStruct<ClearBody, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::COMPETITIVE:   return RunStruct<Competitive, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::DEFIANT:       return RunStruct<Defiant, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::HONEY_GATHER:  return RunStruct<HoneyGather, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::IMPOSTER:      return RunStruct<Imposter, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::INFILTRATOR:   return RunStruct<Infiltrator, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::IRON_FIST:     return RunStruct<IronFist, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::LEVITATE:      return RunStruct<Levitate, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::LONG_REACH:    return RunStruct<LongReach, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::PLUS:          return RunStruct<Plus, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::PRANKSTER:     return RunStruct<Prankster, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::SCRAPPY:       return RunStruct<Scrappy, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::STANCE_CHANGE: return RunStruct<StanceChange, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::STATIC:        return RunStruct<Static, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::SWEET_VEIL:    return RunStruct<SweetVeil, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::SYNCHRONIZE:   return RunStruct<Synchronize, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::TORRENT:       return RunStruct<Torrent, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Ability::TRACE:         return RunStruct<Trace, T...>::run(std::forward<RunArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for ability that does not exist.");

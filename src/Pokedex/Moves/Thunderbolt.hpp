@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Components/Tags/MovePropertyTags.hpp>
-#include <Components/Tags/StatusTags.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>

@@ -8,5 +8,12 @@ struct BrightPowder {};
 struct ChoiceScarf {};
 struct ChoiceSpecs {};
 struct FocusSash {};
+struct KingsRock {};
 struct LifeOrb {};
+struct LumBerry {};
+struct MetronomeItem {};
+struct MirrorHerb {};
+struct QuickClaw {};
+struct QuickPowder {};
+struct RockyHelmet {};
 }  // namespace pokesim::item::tags

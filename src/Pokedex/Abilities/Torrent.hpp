@@ -6,7 +6,7 @@
 
 namespace pokesim::dex {
 struct Torrent {
-  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::TORRENT; }
+  static constexpr Ability name(GameMechanics) { return dex::Ability::TORRENT; }
 
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Torrent"; }

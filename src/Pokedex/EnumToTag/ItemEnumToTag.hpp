@@ -30,7 +30,14 @@ auto enumToTag(dex::Item item, RunArgs&&... args) {
     case dex::Item::CHOICE_SCARF:  return RunStruct<ChoiceScarf, T...>::run(std::forward<RunArgs>(args)...);
     case dex::Item::CHOICE_SPECS:  return RunStruct<ChoiceSpecs, T...>::run(std::forward<RunArgs>(args)...);
     case dex::Item::FOCUS_SASH:    return RunStruct<FocusSash, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Item::KINGS_ROCK:    return RunStruct<KingsRock, T...>::run(std::forward<RunArgs>(args)...);
     case dex::Item::LIFE_ORB:      return RunStruct<LifeOrb, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Item::LUM_BERRY:     return RunStruct<LumBerry, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Item::METRONOME:     return RunStruct<MetronomeItem, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Item::MIRROR_HERB:   return RunStruct<MirrorHerb, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Item::QUICK_CLAW:    return RunStruct<QuickClaw, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Item::QUICK_POWDER:  return RunStruct<QuickPowder, T...>::run(std::forward<RunArgs>(args)...);
+    case dex::Item::ROCKY_HELMET:  return RunStruct<RockyHelmet, T...>::run(std::forward<RunArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for item that does not exist.");

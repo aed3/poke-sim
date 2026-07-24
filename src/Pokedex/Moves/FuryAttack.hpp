@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Components/Tags/MovePropertyTags.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
@@ -20,7 +19,7 @@ struct FuryAttack {
   static constexpr types::basePower basePower(GameMechanics) { return 15U; }
   static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
-  static constexpr MoveProperty moveProperties(GameMechanics) {
+  static constexpr MoveProperty properties(GameMechanics) {
     return MoveProperty::CONTACT | MoveProperty::VARIABLE_HIT_COUNT;
   }
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }

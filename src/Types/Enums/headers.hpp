@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Ability.hpp"
+#include "AbilityProperty.hpp"
 #include "ActionOrder.hpp"
 #include "AddedTargets.hpp"
 #include "BattleFormat.hpp"

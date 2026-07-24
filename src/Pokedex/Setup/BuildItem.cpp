@@ -23,7 +23,7 @@ template <typename Item>
 struct BuildItem {
  private:
   enum class Optional : std::uint8_t {
-    itemProperties,
+    properties,
   };
 
   template <auto Member>
@@ -32,7 +32,7 @@ struct BuildItem {
   template <Optional, typename, typename V = void>
   struct has : std::false_type {};
   template <typename Type>
-  struct has<Optional::itemProperties, Type, void_t<Type::itemProperties>> : std::true_type {};
+  struct has<Optional::properties, Type, void_t<Type::properties>> : std::true_type {};
 
  public:
   static types::entity build(types::registry& registry, GameMechanics gameMechanic) {
@@ -40,13 +40,14 @@ struct BuildItem {
 
     item.emplace<ItemName>(Item::name(gameMechanic));
 
-    if constexpr (has<Optional::itemProperties, Item>::value) {
-      item::tags::enumToTag<EmplaceItemTag>(Item::itemProperties(gameMechanic), item);
+    if constexpr (has<Optional::properties, Item>::value) {
+      item::tags::enumToTag<EmplaceItemTag>(Item::properties(gameMechanic), item);
     }
 
     return item.entity();
   }
 };
+
 types::entity buildByGameMechanic(dex::Item item, types::registry& registry, GameMechanics gameMechanic) {
   // Tidy check ignored because "using namespace" is in function
   using namespace pokesim::dex;  // NOLINT(google-build-using-namespace)
@@ -56,7 +57,14 @@ types::entity buildByGameMechanic(dex::Item item, types::registry& registry, Gam
     case Item::CHOICE_SCARF:  return BuildItem<ChoiceScarf>::build(registry, gameMechanic);
     case Item::CHOICE_SPECS:  return BuildItem<ChoiceSpecs>::build(registry, gameMechanic);
     case Item::FOCUS_SASH:    return BuildItem<FocusSash>::build(registry, gameMechanic);
+    case Item::KINGS_ROCK:    return BuildItem<KingsRock>::build(registry, gameMechanic);
     case Item::LIFE_ORB:      return BuildItem<LifeOrb>::build(registry, gameMechanic);
+    case Item::LUM_BERRY:     return BuildItem<LumBerry>::build(registry, gameMechanic);
+    case Item::METRONOME:     return BuildItem<MetronomeItem>::build(registry, gameMechanic);
+    case Item::MIRROR_HERB:   return BuildItem<MirrorHerb>::build(registry, gameMechanic);
+    case Item::QUICK_CLAW:    return BuildItem<QuickClaw>::build(registry, gameMechanic);
+    case Item::QUICK_POWDER:  return BuildItem<QuickPowder>::build(registry, gameMechanic);
+    case Item::ROCKY_HELMET:  return BuildItem<RockyHelmet>::build(registry, gameMechanic);
 
     default: break;
   }

@@ -12,11 +12,11 @@ class Simulation;
 
 namespace pokesim::dex {
 struct ChoiceScarf {
-  static constexpr dex::Item name(GameMechanics) { return dex::Item::CHOICE_SCARF; }
+  static constexpr Item name(GameMechanics) { return dex::Item::CHOICE_SCARF; }
 
   static constexpr types::effectMultiplier onModifySpeModifier(GameMechanics) { return 1.5F; }
 
-  static constexpr ItemProperty itemProperties(GameMechanics) { return ItemProperty::CHOICE; }
+  static constexpr ItemProperty properties(GameMechanics) { return ItemProperty::CHOICE; }
   struct Strings {
     static constexpr std::string_view name(GameMechanics) { return "Choice Scarf"; }
     static constexpr std::string_view smogonId(GameMechanics) { return "choicescarf"; }
