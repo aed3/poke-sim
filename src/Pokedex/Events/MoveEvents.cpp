@@ -4,7 +4,6 @@
 #include <Components/Names/ItemNames.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
-#include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
@@ -45,15 +44,15 @@ void knockOffOnBasePower(
 
 void KnockOff::onBasePower(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<KnockOff::onBasePowerMultiplier>();
-  simulation.view<knockOffOnBasePowerCheckRemovableItem, Tags<move::tags::KnockOff>>();
+  simulation.view<knockOffOnBasePowerCheckRemovableItem, Tags<KnockOff>>();
   internal::checkIfCanRemoveItem(simulation);
-  simulation.view<knockOffOnBasePower, Tags<move::tags::KnockOff>>(modifier);
+  simulation.view<knockOffOnBasePower, Tags<KnockOff>>(modifier);
 
   simulation.registry.clear<tags::CanRemoveItem>();
 }
 
 void KnockOff::onAfterHit(Simulation& simulation) {
-  simulation.view<knockOffOnAfterHitCheckRemovableItem, Tags<move::tags::KnockOff, tags::CurrentMoveHit>>();
+  simulation.view<knockOffOnAfterHitCheckRemovableItem, Tags<KnockOff, tags::CurrentMoveHit>>();
   internal::tryRemoveItem(simulation);
   simulation.registry.clear<tags::CanRemoveItem>();
 }

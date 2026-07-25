@@ -180,9 +180,9 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
     PlayerSideId sideId = registry.get<PlayerSide>(registry.get<Side>(target).val).val;
     DamageRollKind damageRollKind = sideId == PlayerSideId::P1 ? damageRollOptions.getP1() : damageRollOptions.getP2();
 
-    bool sourceHasChoiceSpecs = registry.all_of<item::tags::ChoiceSpecs>(source);
+    bool sourceHasChoiceSpecs = registry.all_of<dex::ChoiceSpecs>(source);
     bool sourceHasSpaBoost = registry.all_of<SpaBoost>(source);
-    bool targetHasAssaultVest = registry.all_of<item::tags::AssaultVest>(target);
+    bool targetHasAssaultVest = registry.all_of<dex::AssaultVest>(target);
     bool targetHasSpdBoost = registry.all_of<SpdBoost>(target);
 
     CAPTURE(move, damageRollKind, sourceHasChoiceSpecs, sourceHasSpaBoost, targetHasAssaultVest, targetHasSpdBoost);

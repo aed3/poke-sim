@@ -9,7 +9,6 @@
 #include <Components/EventModifier.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
-#include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
@@ -57,7 +56,7 @@ void sourceModifyDamage(
 template <typename SimulationTag>
 struct FocusSashOnAfterModifyDamage {
   static void run(Simulation& simulation, types::damage hpToKeep) {
-    simulation.view<modifyDamage, Tags<item::tags::FocusSash, SimulationTag, tags::CanUseItem>>(hpToKeep);
+    simulation.view<modifyDamage, Tags<dex::FocusSash, SimulationTag, tags::CanUseItem>>(hpToKeep);
   }
 
   static void modifyDamage(
@@ -115,60 +114,52 @@ void lifeOrbOnAfterMove(
 void AssaultVest::onModifySpd(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<AssaultVest::onModifySpdModifier>();
 
-  simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::AssaultVest>>(
-    modifier,
-    1U);
+  simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<dex::AssaultVest>>(modifier, 1U);
 }
 
 void AssaultVest::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpdStatUpdateRequired, internal::tags::EndItem, item::tags::AssaultVest>();
+  simulation.addToEntities<tags::SpdStatUpdateRequired, internal::tags::EndItem, dex::AssaultVest>();
 }
 
 void BrightPowder::onModifyAccuracy(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyDenominator>();
 
-  simulation.view<setMoveTargetModifier<types::eventModifier>, Tags<item::tags::BrightPowder>>(numerator, denominator);
+  simulation.view<setMoveTargetModifier<types::eventModifier>, Tags<dex::BrightPowder>>(numerator, denominator);
 }
 
 void ChoiceScarf::onModifySpe(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<ChoiceScarf::onModifySpeModifier>();
 
-  simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceScarf>>(
-    modifier,
-    1U);
+  simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<dex::ChoiceScarf>>(modifier, 1U);
 }
 
 void ChoiceScarf::onSourceModifyMove(Simulation& simulation) {
-  simulation
-    .view<setChoiceLock, Tags<item::tags::ChoiceScarf, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
+  simulation.view<setChoiceLock, Tags<dex::ChoiceScarf, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
 }
 
 void ChoiceScarf::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpeStatUpdateRequired, internal::tags::EndItem, item::tags::ChoiceScarf>();
+  simulation.addToEntities<tags::SpeStatUpdateRequired, internal::tags::EndItem, dex::ChoiceScarf>();
 }
 
 void ChoiceSpecs::onModifySpa(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<ChoiceSpecs::onModifySpaModifier>();
 
-  simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<item::tags::ChoiceSpecs>>(
-    modifier,
-    1U);
+  simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<dex::ChoiceSpecs>>(modifier, 1U);
 }
 
 void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
-  simulation
-    .view<setChoiceLock, Tags<item::tags::ChoiceSpecs, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
+  simulation.view<setChoiceLock, Tags<dex::ChoiceSpecs, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
 }
 
 void ChoiceSpecs::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpaStatUpdateRequired, internal::tags::EndItem, item::tags::ChoiceSpecs>();
+  simulation.addToEntities<tags::SpaStatUpdateRequired, internal::tags::EndItem, dex::ChoiceSpecs>();
 }
 
 void FocusSash::onAfterModifyDamage(Simulation& simulation) {
   const auto hpToKeep = simulation.pokedex().getStaticValue<FocusSash::onAfterModifyDamageHpToKeep>();
 
-  simulation.addToEntities<tags::CanUseItem, tags::CurrentActionMoveTarget, item::tags::FocusSash>();
+  simulation.addToEntities<tags::CanUseItem, tags::CurrentActionMoveTarget, dex::FocusSash>();
   internal::checkIfCanUseItem(simulation);
 
   Simulation::forEachSimulationTag<FocusSashOnAfterModifyDamage>(simulation, hpToKeep);
@@ -177,8 +168,7 @@ void FocusSash::onAfterModifyDamage(Simulation& simulation) {
 }
 
 void FocusSash::onDamage(Simulation& simulation) {
-  simulation
-    .addToEntities<tags::CanUseItem, internal::calc_damage::tags::RanAfterModifyDamage, item::tags::FocusSash>();
+  simulation.addToEntities<tags::CanUseItem, internal::calc_damage::tags::RanAfterModifyDamage, dex::FocusSash>();
   internal::tryUseItem(simulation);
 }
 
@@ -186,12 +176,12 @@ void LifeOrb::onModifyDamage(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageDenominator>();
 
-  simulation.view<sourceModifyDamage<types::eventModifier>, Tags<item::tags::LifeOrb>>(numerator, denominator);
+  simulation.view<sourceModifyDamage<types::eventModifier>, Tags<dex::LifeOrb>>(numerator, denominator);
 }
 
 void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<LifeOrb::onAfterMoveUsedHpDecreaseDivisor>();
 
-  simulation.view<lifeOrbOnAfterMove, Tags<item::tags::LifeOrb>>(divisor);
+  simulation.view<lifeOrbOnAfterMove, Tags<dex::LifeOrb>>(divisor);
 }
 }  // namespace pokesim::dex

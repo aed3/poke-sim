@@ -7,11 +7,9 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/MoveSlots.hpp>
-#include <Components/Names/ItemNames.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/ItemPropertyTags.hpp>
-#include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
@@ -66,7 +64,7 @@ void choiceLockOnDisableMove(
 }  // namespace
 
 void Burn::onSetDamageRollModifiers(Simulation& simulation) {
-  simulation.view<applyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<ability::tags::Guts> */>();
+  simulation.view<applyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<dex::Guts> */>();
 }
 
 void Burn::onResidual(Simulation& simulation) {
@@ -81,7 +79,7 @@ void Paralysis::onModifySpe(Simulation& simulation) {
 
   simulation.view<
     paralysisOnModifySpeed,
-    Tags<status::tags::Paralysis, tags::SpeStatUpdateRequired> /*, entt::exclude_t<ability::tags::QuickFeet>*/>(
+    Tags<status::tags::Paralysis, tags::SpeStatUpdateRequired> /*, entt::exclude_t<dex::QuickFeet>*/>(
     speedDivisor,
     speedDividend);
 }

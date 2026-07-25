@@ -85,7 +85,7 @@ TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][Knoc
     stat::CurrentHp,
     LastUsedMove,
     tags::HasItem,
-    item::tags::AssaultVest,
+    dex::AssaultVest,
     stat::EffectiveSpd,
     MoveSlots>(p2Pokemon);
 
@@ -103,7 +103,7 @@ TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][Knoc
   checks.checkMovePpUsage(p2Pokemon, p2MoveIndex);
 
   REQUIRE_FALSE(registry.all_of<tags::HasItem>(p2Pokemon));
-  REQUIRE_FALSE(registry.all_of<item::tags::AssaultVest>(p2Pokemon));
+  REQUIRE_FALSE(registry.all_of<dex::AssaultVest>(p2Pokemon));
 
   auto p2Spd = registry.get<stat::EffectiveSpd>(p2Pokemon);
   auto initialP2Spd = checks.getInitialComponents<stat::EffectiveSpd>(p2Pokemon);

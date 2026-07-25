@@ -25,13 +25,13 @@
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
-#include <Components/Tags/MoveTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RecycledEntities.hpp>
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
+#include <Pokedex/EnumToTag/MoveEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Simulation/SimulationResults.hpp>
@@ -94,6 +94,11 @@ void clearActionMoveComponents(types::registry& registry, const View& view) {
     pokesim::status::tags::Paralysis,
     pokesim::status::tags::Burn>(view.begin(), view.end());
 }
+
+template <typename MoveTag>
+struct ClearMoveTag {
+  static void run(types::registry& registry) { registry.clear<MoveTag>(); }
+};
 }  // namespace
 
 void assignRootBattle(types::handle battleHandle) {
@@ -192,13 +197,6 @@ void clearCurrentAction(Simulation& simulation) {
     pokesim::move::effect::tags::Secondary,
     pokesim::move::effect::tags::MoveSource,
     pokesim::move::effect::tags::MoveTarget,
-    pokesim::move::tags::FuryAttack,
-    pokesim::move::tags::KnockOff,
-    pokesim::move::tags::Moonblast,
-    pokesim::move::tags::QuiverDance,
-    pokesim::move::tags::Splash,
-    pokesim::move::tags::Thunderbolt,
-    pokesim::move::tags::WillOWisp,
     pokesim::move::tags::Physical,
     pokesim::move::tags::Special,
     pokesim::move::tags::Status,
@@ -214,6 +212,8 @@ void clearCurrentAction(Simulation& simulation) {
     pokesim::move::tags::Self,
     pokesim::move::tags::AnySingleTarget,
     pokesim::move::tags::AnySingleAlly>();
+
+  pokesim::dex::forEachMove<ClearMoveTag>(simulation.pokedex(), registry);
 
   registry.clear<SourceSlotName, TargetSlotName>();
 

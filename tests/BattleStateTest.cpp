@@ -24,12 +24,12 @@ TEST_CASE("Battle State: Single Battle", "[Simulation][Setup]") {
   auto [p1SideEntity, p2SideEntity] = registry.get<Sides>(battleEntity).val;
 
   types::entity p1Entity = registry.get<Team>(p1SideEntity).val[0];
-  REQUIRE(registry.all_of<ability::tags::Competitive>(p1Entity));
+  REQUIRE(registry.all_of<dex::Competitive>(p1Entity));
   REQUIRE(registry.all_of<status::tags::Freeze>(p1Entity));
   types::entity p2Entity = registry.get<Team>(p2SideEntity).val[0];
-  REQUIRE(registry.all_of<ability::tags::Plus>(p2Entity));
+  REQUIRE(registry.all_of<dex::Plus>(p2Entity));
   REQUIRE(registry.all_of<nature::tags::Hardy>(p2Entity));
-  REQUIRE(registry.all_of<item::tags::ChoiceScarf>(p2Entity));
+  REQUIRE(registry.all_of<dex::ChoiceScarf>(p2Entity));
 }
 
 TEST_CASE("Battle State: Double Battle", "[Simulation][Setup]") {
@@ -46,20 +46,20 @@ TEST_CASE("Battle State: Double Battle", "[Simulation][Setup]") {
   auto [p1SideEntity, p2SideEntity] = registry.get<Sides>(battleEntity).val;
 
   types::entity p1aEntity = registry.get<Team>(p1SideEntity).val[0];
-  REQUIRE(registry.all_of<ability::tags::Trace>(p1aEntity));
+  REQUIRE(registry.all_of<dex::Trace>(p1aEntity));
   REQUIRE(registry.all_of<status::tags::Burn>(p1aEntity));
-  REQUIRE(registry.all_of<item::tags::ChoiceScarf>(p1aEntity));
+  REQUIRE(registry.all_of<dex::ChoiceScarf>(p1aEntity));
   types::entity p2aEntity = registry.get<Team>(p2SideEntity).val[0];
-  REQUIRE(registry.all_of<ability::tags::IronFist>(p2aEntity));
-  REQUIRE(registry.all_of<item::tags::LifeOrb>(p2aEntity));
+  REQUIRE(registry.all_of<dex::IronFist>(p2aEntity));
+  REQUIRE(registry.all_of<dex::LifeOrb>(p2aEntity));
 
   types::entity p1bEntity = registry.get<Team>(p1SideEntity).val[1];
-  REQUIRE(registry.all_of<ability::tags::Infiltrator>(p1bEntity));
+  REQUIRE(registry.all_of<dex::Infiltrator>(p1bEntity));
   REQUIRE(registry.all_of<nature::tags::Hasty>(p1bEntity));
-  REQUIRE(registry.all_of<item::tags::FocusSash>(p1bEntity));
+  REQUIRE(registry.all_of<dex::FocusSash>(p1bEntity));
   types::entity p2bEntity = registry.get<Team>(p2SideEntity).val[1];
-  REQUIRE(registry.all_of<ability::tags::SweetVeil>(p2bEntity));
-  REQUIRE(registry.all_of<item::tags::BrightPowder>(p2bEntity));
+  REQUIRE(registry.all_of<dex::SweetVeil>(p2bEntity));
+  REQUIRE(registry.all_of<dex::BrightPowder>(p2bEntity));
 }
 
 TEST_CASE("Battle State: Multiple Battles", "[Simulation][Setup]") {

@@ -2,10 +2,12 @@
 
 #include <Components/Tags/NatureTags.hpp>
 #include <Config/Require.hpp>
+#include <Types/Entity.hpp>
 #include <Types/Enums/Nature.hpp>
+#include <Types/Registry.hpp>
 #include <utility>
 
-namespace pokesim::nature::tags {
+namespace pokesim::dex {
 /*
  * Runs a function with a certain nature tag based on the passed in enum.
  * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the nature tags with
@@ -21,33 +23,33 @@ namespace pokesim::nature::tags {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-auto enumToTag(dex::Nature nature, RunArgs&&... args) {
+auto enumToTag(Nature nature, RunArgs&&... args) {
   switch (nature) {
-    case dex::Nature::ADAMANT: return RunStruct<Adamant, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::BASHFUL: return RunStruct<Bashful, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::BOLD:    return RunStruct<Bold, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::BRAVE:   return RunStruct<Brave, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::CALM:    return RunStruct<Calm, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::CAREFUL: return RunStruct<Careful, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::DOCILE:  return RunStruct<Docile, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::GENTLE:  return RunStruct<Gentle, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::HARDY:   return RunStruct<Hardy, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::HASTY:   return RunStruct<Hasty, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::IMPISH:  return RunStruct<Impish, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::JOLLY:   return RunStruct<Jolly, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::LAX:     return RunStruct<Lax, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::LONELY:  return RunStruct<Lonely, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::MILD:    return RunStruct<Mild, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::MODEST:  return RunStruct<Modest, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::NAIVE:   return RunStruct<Naive, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::NAUGHTY: return RunStruct<Naughty, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::QUIET:   return RunStruct<Quiet, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::QUIRKY:  return RunStruct<Quirky, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::RASH:    return RunStruct<Rash, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::RELAXED: return RunStruct<Relaxed, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::SASSY:   return RunStruct<Sassy, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::SERIOUS: return RunStruct<Serious, T...>::run(std::forward<RunArgs>(args)...);
-    case dex::Nature::TIMID:   return RunStruct<Timid, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::ADAMANT: return RunStruct<nature::tags::Adamant, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::BASHFUL: return RunStruct<nature::tags::Bashful, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::BOLD:    return RunStruct<nature::tags::Bold, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::BRAVE:   return RunStruct<nature::tags::Brave, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::CALM:    return RunStruct<nature::tags::Calm, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::CAREFUL: return RunStruct<nature::tags::Careful, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::DOCILE:  return RunStruct<nature::tags::Docile, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::GENTLE:  return RunStruct<nature::tags::Gentle, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::HARDY:   return RunStruct<nature::tags::Hardy, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::HASTY:   return RunStruct<nature::tags::Hasty, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::IMPISH:  return RunStruct<nature::tags::Impish, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::JOLLY:   return RunStruct<nature::tags::Jolly, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::LAX:     return RunStruct<nature::tags::Lax, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::LONELY:  return RunStruct<nature::tags::Lonely, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::MILD:    return RunStruct<nature::tags::Mild, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::MODEST:  return RunStruct<nature::tags::Modest, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::NAIVE:   return RunStruct<nature::tags::Naive, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::NAUGHTY: return RunStruct<nature::tags::Naughty, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::QUIET:   return RunStruct<nature::tags::Quiet, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::QUIRKY:  return RunStruct<nature::tags::Quirky, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::RASH:    return RunStruct<nature::tags::Rash, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::RELAXED: return RunStruct<nature::tags::Relaxed, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::SASSY:   return RunStruct<nature::tags::Sassy, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::SERIOUS: return RunStruct<nature::tags::Serious, T...>::run(std::forward<RunArgs>(args)...);
+    case Nature::TIMID:   return RunStruct<nature::tags::Timid, T...>::run(std::forward<RunArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for nature that does not exist.");
@@ -61,4 +63,12 @@ auto enumToTag(dex::Nature nature, RunArgs&&... args) {
     }
   }
 }
-}  // namespace pokesim::nature::tags
+
+// Assigns a move's tag to a handle
+void emplaceTagFromEnum(Nature nature, types::handle handle);
+void emplaceTagFromEnum(Nature nature, types::registry& registry, types::entity entity);
+
+// Checks if the handle has the move's tag
+bool hasTag(Nature nature, types::handle handle);
+bool hasTag(Nature nature, const types::registry& registry, types::entity entity);
+}  // namespace pokesim::dex

@@ -2,10 +2,12 @@
 
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Config/Require.hpp>
+#include <Types/Entity.hpp>
 #include <Types/Enums/MoveProperty.hpp>
+#include <Types/Registry.hpp>
 #include <utility>
 
-namespace pokesim::move::tags {
+namespace pokesim::dex {
 /*
  * Runs a function with a certain move property tag based on the passed in enum.
  * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the move property
@@ -21,13 +23,17 @@ namespace pokesim::move::tags {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-void enumToTag(dex::MoveProperty item, RunArgs&&... args) {
-  if (item & dex::MoveProperty::CONTACT) {
-    RunStruct<Contact, T...>::run(std::forward<RunArgs>(args)...);
+void enumToTag(MoveProperty item, RunArgs&&... args) {
+  if (item & MoveProperty::CONTACT) {
+    RunStruct<move::tags::Contact, T...>::run(std::forward<RunArgs>(args)...);
   }
 
-  if (item & dex::MoveProperty::VARIABLE_HIT_COUNT) {
-    RunStruct<VariableHitCount, T...>::run(std::forward<RunArgs>(args)...);
+  if (item & MoveProperty::VARIABLE_HIT_COUNT) {
+    RunStruct<move::tags::VariableHitCount, T...>::run(std::forward<RunArgs>(args)...);
   }
 }
-}  // namespace pokesim::move::tags
+
+// Assigns a move's tag to a handle
+void emplaceTagFromEnum(MoveProperty property, types::handle handle);
+void emplaceTagFromEnum(MoveProperty property, types::registry& registry, types::entity entity);
+}  // namespace pokesim::dex

@@ -498,7 +498,7 @@ void setDamageFormulaVariables(Simulation& simulation) {
     .view<setIgnoreDefendingBoostIfPositive<SpdBoost>, Tags<tags::Crit, internal::calc_damage::tags::UsesSpd>>();
   // moveFilter.view<setIgnoreAttackingBoostIfNegative<DefBoost>, Tags<tags::Crit, tags::UsesDefAsOffense>>();
 
-  // moveFilter.view<dex::latest::Unaware::onUsesBoost, Tags<ability::tags::Unaware, tags::Attacker>>();
+  // moveFilter.view<dex::latest::Unaware::onUsesBoost, Tags<dex::Unaware, tags::Attacker>>();
 
   setUnboostedStat<
     stat::EffectiveAtk,

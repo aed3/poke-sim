@@ -4,11 +4,11 @@
 
 #include "AbilityEnumToTag.hpp"
 #include "AbilityPropertyEnumToTag.hpp"
-#include "EnumToTag.hpp"
 #include "ItemEnumToTag.hpp"
 #include "ItemPropertyEnumToTag.hpp"
 #include "MoveEnumToTag.hpp"
 #include "MovePropertyEnumToTag.hpp"
 #include "NatureEnumToTag.hpp"
+#include "SpeciesEnumToTag.hpp"
 #include "StatusEnumToTag.hpp"
 #include "TypeEnumToTag.hpp"

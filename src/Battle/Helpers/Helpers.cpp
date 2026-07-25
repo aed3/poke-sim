@@ -11,7 +11,7 @@
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
-#include <Pokedex/EnumToTag/EnumToTag.hpp>
+#include <Pokedex/EnumToTag/MoveEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Move.hpp>
@@ -108,7 +108,7 @@ void internal::setupActionMoveBuild(
   types::entity actionMoveEntity, pokesim::dex::Move move) {
   types::handle actionMoveHandle{registry, actionMoveEntity};
 
-  move::tags::emplaceTagFromEnum(move, actionMoveHandle);
+  dex::emplaceTagFromEnum(move, actionMoveHandle);
   actionMoveHandle.emplace<Battle>(battleEntity);
   actionMoveHandle.emplace<CurrentActionSource>(sourceEntity);
   actionMoveHandle.emplace<CurrentActionTarget>(targetEntity);

@@ -12,9 +12,7 @@
 #include <Components/EventModifier.hpp>
 #include <Components/MoveSlots.hpp>
 #include <Components/Stats.hpp>
-#include <Components/Tags/AbilityTags.hpp>
 #include <Components/Tags/Current.hpp>
-#include <Components/Tags/ItemTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/StatusTags.hpp>

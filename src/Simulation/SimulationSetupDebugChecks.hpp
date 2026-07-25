@@ -42,7 +42,10 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Turn.hpp>
 #include <Config/Require.hpp>
-#include <Pokedex/EnumToTag/EnumToTag.hpp>
+#include <Pokedex/EnumToTag/AbilityEnumToTag.hpp>
+#include <Pokedex/EnumToTag/ItemEnumToTag.hpp>
+#include <Pokedex/EnumToTag/NatureEnumToTag.hpp>
+#include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/BattleCreationInfo.hpp>
 #include <Types/Entity.hpp>
@@ -243,12 +246,12 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(!registry->all_of<AbilityName>(pokemonEntity));
     if (creationInfo.ability.has_value() && creationInfo.ability.value() != dex::Ability::NO_ABILITY) {
       POKESIM_REQUIRE_NM(registry->all_of<tags::HasAbility>(pokemonEntity));
-      POKESIM_REQUIRE_NM(ability::tags::hasTag(creationInfo.ability.value(), *registry, pokemonEntity));
+      POKESIM_REQUIRE_NM(dex::hasTag(creationInfo.ability.value(), *registry, pokemonEntity));
     }
     else if (pokedex->speciesHas<PrimaryAbility>(creationInfo.species)) {
       dex::Ability primaryAbility = pokedex->getSpeciesData<PrimaryAbility>(creationInfo.species).val;
       POKESIM_REQUIRE_NM(registry->all_of<tags::HasAbility>(pokemonEntity));
-      POKESIM_REQUIRE_NM(ability::tags::hasTag(primaryAbility, *registry, pokemonEntity));
+      POKESIM_REQUIRE_NM(dex::hasTag(primaryAbility, *registry, pokemonEntity));
     }
     else {
       POKESIM_REQUIRE_NM(!registry->all_of<tags::HasAbility>(pokemonEntity));
@@ -258,7 +261,7 @@ struct SimulationSetupChecks {
     if (creationInfo.item.has_value() && creationInfo.item != dex::Item::NO_ITEM) {
       dex::Item item = creationInfo.item.value();
       POKESIM_REQUIRE_NM(registry->all_of<tags::HasItem>(pokemonEntity));
-      POKESIM_REQUIRE_NM(item::tags::hasTag(item, *registry, pokemonEntity));
+      POKESIM_REQUIRE_NM(dex::hasTag(item, *registry, pokemonEntity));
 
       POKESIM_REQUIRE_NM(
         pokedex->itemHas<item::tags::Choice>(item) == registry->all_of<item::tags::Choice>(pokemonEntity));
@@ -282,7 +285,7 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(!registry->all_of<StatusName>(pokemonEntity));
     if (creationInfo.status.has_value() && creationInfo.status != dex::Status::NO_STATUS) {
       POKESIM_REQUIRE_NM(registry->all_of<tags::HasStatus>(pokemonEntity));
-      POKESIM_REQUIRE_NM(status::tags::hasTag(creationInfo.status.value(), *registry, pokemonEntity));
+      POKESIM_REQUIRE_NM(dex::hasTag(creationInfo.status.value(), *registry, pokemonEntity));
     }
     else {
       POKESIM_REQUIRE_NM(!registry->all_of<tags::HasStatus>(pokemonEntity));
@@ -290,7 +293,7 @@ struct SimulationSetupChecks {
 
     POKESIM_REQUIRE_NM(!registry->all_of<NatureName>(pokemonEntity));
     if (creationInfo.nature.has_value() && creationInfo.nature != dex::Nature::NO_NATURE) {
-      POKESIM_REQUIRE_NM(nature::tags::hasTag(creationInfo.nature.value(), *registry, pokemonEntity));
+      POKESIM_REQUIRE_NM(dex::hasTag(creationInfo.nature.value(), *registry, pokemonEntity));
     }
 
     checkCreatedStats(pokemonEntity, creationInfo);

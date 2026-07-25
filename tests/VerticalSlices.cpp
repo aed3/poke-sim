@@ -904,8 +904,7 @@ TEST_CASE(
 
     checks.checkEntityForChanges<SideDecision>(p2Side);
     checks.checkEntityForChanges<stat::CurrentHp, ChoiceLock, LastUsedMove, MoveSlots, DisabledMoveSlots>(p1APokemon);
-    checks.checkEntityForChanges<stat::CurrentHp, item::tags::FocusSash, tags::HasItem, LastUsedMove, MoveSlots>(
-      p1BPokemon);
+    checks.checkEntityForChanges<stat::CurrentHp, dex::FocusSash, tags::HasItem, LastUsedMove, MoveSlots>(p1BPokemon);
     checks.checkEntityForChanges<stat::CurrentHp, tags::HasStatus, status::tags::Burn, LastUsedMove, MoveSlots>(
       p2APokemon);
 
@@ -924,7 +923,7 @@ TEST_CASE(
     REQUIRE(p1ADisabledMoveSlots.val[p1AMoveIndex] == true);
 
     // P1B (Dragapult) Specific Checks
-    REQUIRE_FALSE(registry.all_of<item::tags::FocusSash>(p1BPokemon));
+    REQUIRE_FALSE(registry.all_of<dex::FocusSash>(p1BPokemon));
     REQUIRE_FALSE(registry.all_of<tags::HasItem>(p1BPokemon));
     if (p2ABurned) {
       REQUIRE(expectedP1BHalfHp.contains(p1BHp.val));

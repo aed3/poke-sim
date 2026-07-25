@@ -29,7 +29,7 @@
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
-#include <Pokedex/EnumToTag/EnumToTag.hpp>
+#include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
@@ -87,7 +87,7 @@ EffectPresentCheck hasStatusEffect(types::registry& registry, EffectTarget effec
     return EffectPresentCheck::NOT_PRESENT;
   }
 
-  if (status::tags::hasTag(status.val, registry, effectTarget.val)) {
+  if (dex::hasTag(status.val, registry, effectTarget.val)) {
     return EffectPresentCheck::PRESENT_AND_APPLIED;
   }
 

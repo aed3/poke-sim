@@ -378,12 +378,12 @@ TEST_CASE("Simulation Setup: Ignored Pokemon Options", "[Simulation][Setup]") {
 
   auto checkDefaultAbilities = [&](const pokemonHandles& handles) {
     auto [p1A, p1B, p1C, p2A, p2B, p2C] = handles;
-    REQUIRE(p1A.all_of<ability::tags::Torrent>());
-    REQUIRE(p1B.all_of<ability::tags::Synchronize>());
-    REQUIRE(p1C.all_of<ability::tags::ClearBody>());
-    REQUIRE(p2A.all_of<ability::tags::Static>());
-    REQUIRE(p2B.all_of<ability::tags::IronFist>());
-    REQUIRE(p2C.all_of<ability::tags::HoneyGather>());
+    REQUIRE(p1A.all_of<dex::Torrent>());
+    REQUIRE(p1B.all_of<dex::Synchronize>());
+    REQUIRE(p1C.all_of<dex::ClearBody>());
+    REQUIRE(p2A.all_of<dex::Static>());
+    REQUIRE(p2B.all_of<dex::IronFist>());
+    REQUIRE(p2C.all_of<dex::HoneyGather>());
   };
 
   auto checkStats = [&](

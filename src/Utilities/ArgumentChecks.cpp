@@ -6,7 +6,6 @@
 #include <CalcDamage/Helpers.hpp>
 #include <Components/headers.hpp>
 #include <Config/Require.hpp>
-#include <Pokedex/EnumToTag/EnumToTag.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
 #include <Types/headers.hpp>
 #include <entt/core/type_info.hpp>
@@ -263,7 +262,7 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
 
   // bool hasItem = false;
   // for (std::underlying_type_t<dex::Item> i = 0; i < dex::TOTAL_ITEM_COUNT; i++) {
-  //   if (item::tags::hasTag((dex::Item)i, registry, pokemonEntity)) {
+  //   if (dex::hasTag((dex::Item)i, registry, pokemonEntity)) {
   //     hasItem = true;
   //     break;
   //   }
@@ -272,7 +271,7 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
   //
   // bool hasAbility = false;
   // for (std::underlying_type_t<dex::Ability> i = 0; i < dex::TOTAL_ABILITY_COUNT; i++) {
-  //   if (ability::tags::hasTag((dex::Ability)i, registry, pokemonEntity)) {
+  //   if (dex::hasTag((dex::Ability)i, registry, pokemonEntity)) {
   //     hasAbility = true;
   //     break;
   //   }
@@ -280,7 +279,7 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
   // POKESIM_REQUIRE_NM(hasAbility == has<tags::HasAbility>(pokemonEntity, registry));
 
   bool hasStatus = false;
-  status::tags::forEach<HasTagFromEnum>(pokemonEntity, registry, hasStatus);
+  dex::forEachStatus<HasTagFromEnum>(pokemonEntity, registry, hasStatus);
   POKESIM_REQUIRE_NM(hasStatus == has<tags::HasStatus>(pokemonEntity, registry));
 
   check(moveSlots);

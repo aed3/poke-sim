@@ -2,7 +2,7 @@
 
 #include <Components/Tags/Selection.hpp>
 #include <Config/Require.hpp>
-#include <Pokedex/EnumToTag/EnumToTag.hpp>
+#include <Pokedex/EnumToTag/MoveEnumToTag.hpp>
 #include <Simulation/BattleCreationInfo.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/headers.hpp>
@@ -43,7 +43,7 @@ void Pokedex::loadMoves(const entt::dense_set<dex::Move>& moveSet) {
 
     types::entity moveEntity = dexRegistry.create();
     movesMap[move] = moveEntity;
-    move::tags::emplaceTagFromEnum(move, dexRegistry, moveEntity);
+    dex::emplaceTagFromEnum(move, dexRegistry, moveEntity);
     dexRegistry.emplace<internal::tags::BuildPokedexMove>(moveEntity);
   }
 

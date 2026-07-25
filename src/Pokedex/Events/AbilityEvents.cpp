@@ -3,7 +3,6 @@
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EventModifier.hpp>
 #include <Components/RandomEventInputs.hpp>
-#include <Components/Tags/AbilityTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
@@ -37,7 +36,7 @@ void staticOnDamagingHit(
 
     types::entity source = registry.get<CurrentActionSource>(move).val;
     /*
-    if (registry.all_of<item::tags::ProtectivePads>(source)) {
+    if (registry.all_of<dex::ProtectivePads>(source)) {
       continue;
     }
     */
@@ -59,13 +58,13 @@ void Plus::onModifySpA(Simulation& simulation) {
   if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
     return;
   }
-  simulation.view<plusOnModifySpa, Tags<ability::tags::Plus>>();
+  simulation.view<plusOnModifySpa, Tags<dex::Plus>>();
 }
 
 void Static::onDamagingHit(Simulation& simulation) {
   const auto chanceOfStatic = simulation.pokedex().getStaticValue<dex::Static::onDamagingHitChance>();
 
-  simulation.view<staticOnDamagingHit, Tags<ability::tags::Static>>(chanceOfStatic, simulation);
+  simulation.view<staticOnDamagingHit, Tags<dex::Static>>(chanceOfStatic, simulation);
 
   // TODO(aed3): This is now inefficient since the random chance will happen for move sources that cannot have their
   // status changed.
