@@ -9,8 +9,8 @@ struct Levitate {
   static constexpr Ability name(GameMechanics) { return dex::Ability::LEVITATE; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Levitate"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "levitate"; }
+    static constexpr std::string_view name() { return "Levitate"; }
+    static constexpr std::string_view smogonId() { return "levitate"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

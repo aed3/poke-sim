@@ -17,8 +17,8 @@ struct Analytic {
   static constexpr types::eventModifier onBasePowerDenominator(GameMechanics) { return 4096U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Analytic"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "analytic"; }
+    static constexpr std::string_view name() { return "Analytic"; }
+    static constexpr std::string_view smogonId() { return "analytic"; }
   };
 
   static void onBasePower(Simulation& simulation);

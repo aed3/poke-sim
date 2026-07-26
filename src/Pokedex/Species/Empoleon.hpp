@@ -31,9 +31,9 @@ struct Empoleon {
   }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Empoleon"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Empoleon"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "empoleon"; }
+    static constexpr std::string_view name() { return "Empoleon"; }
+    static constexpr std::string_view smogonName() { return "Empoleon"; }
+    static constexpr std::string_view smogonId() { return "empoleon"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

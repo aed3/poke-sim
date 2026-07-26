@@ -15,8 +15,8 @@ struct Static {
 
   static constexpr types::percentChance onDamagingHitChance(GameMechanics) { return 30U; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Static"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "static"; }
+    static constexpr std::string_view name() { return "Static"; }
+    static constexpr std::string_view smogonId() { return "static"; }
   };
 
   static void onDamagingHit(Simulation& simulation);

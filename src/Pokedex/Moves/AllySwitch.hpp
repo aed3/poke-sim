@@ -26,8 +26,8 @@ struct AllySwitch {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Ally Switch"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "allyswitch"; }
+    static constexpr std::string_view name() { return "Ally Switch"; }
+    static constexpr std::string_view smogonId() { return "allyswitch"; }
   };
 
   static void onPrepareHit(Simulation& simulation);

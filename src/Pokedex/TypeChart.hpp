@@ -1,10 +1,10 @@
 #pragma once
 
+#include <Pokedex/Types/headers.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Enums/TypeEffectiveness.hpp>
 #include <array>
-#include <initializer_list>
 #include <type_traits>
 
 namespace pokesim {
@@ -15,241 +15,40 @@ using TypeChartBase = std::array<std::array<TypeEffectiveness, dex::TOTAL_TYPE_C
 
 struct TypeChart : private internal::TypeChartBase {
  private:
-  using constructorType =
-    std::initializer_list<std::pair<dex::Type, std::initializer_list<std::pair<dex::Type, TypeEffectiveness>>>>;
-
   using enumType = std::underlying_type_t<dex::Type>;
 
-  constexpr TypeChart(const constructorType partialChart) : internal::TypeChartBase() {
-    for (auto& ratios : *this) {
-      for (auto& effectiveness : ratios) {
-        effectiveness = TypeEffectiveness::NEUTRAL;
-      }
-    }
-
-    for (const auto& [defending, ratios] : partialChart) {
-      for (const auto& [attacking, effectiveness] : ratios) {
-        at((enumType)attacking).at((enumType)defending) = effectiveness;
-      }
+  template <typename Type>
+  constexpr void setSetData(GameMechanics gameMechanic) {
+    auto& attacking = at((enumType)Type::name(gameMechanic));
+    for (enumType defending = 0U; defending <= dex::TOTAL_TYPE_COUNT; defending++) {
+      attacking.at(defending) = Type::attacking(gameMechanic, (dex::Type)defending);
     }
   }
 
  public:
-  constexpr TypeChart(GameMechanics gameMechanic) : TypeChart(TypeChart::pickForMechanics(gameMechanic)) {}
+  constexpr TypeChart(GameMechanics gameMechanic) : internal::TypeChartBase() {
+    setSetData<dex::Normal>(gameMechanic);
+    setSetData<dex::Grass>(gameMechanic);
+    setSetData<dex::Water>(gameMechanic);
+    setSetData<dex::Fire>(gameMechanic);
+    setSetData<dex::Bug>(gameMechanic);
+    setSetData<dex::Flying>(gameMechanic);
+    setSetData<dex::Poison>(gameMechanic);
+    setSetData<dex::Electric>(gameMechanic);
+    setSetData<dex::Ground>(gameMechanic);
+    setSetData<dex::Fighting>(gameMechanic);
+    setSetData<dex::Psychic>(gameMechanic);
+    setSetData<dex::Rock>(gameMechanic);
+    setSetData<dex::Ice>(gameMechanic);
+    setSetData<dex::Ghost>(gameMechanic);
+    setSetData<dex::Dragon>(gameMechanic);
+    setSetData<dex::Dark>(gameMechanic);
+    setSetData<dex::Steel>(gameMechanic);
+    setSetData<dex::Fairy>(gameMechanic);
+  }
 
   constexpr TypeEffectiveness effectiveness(dex::Type attacking, dex::Type defending) const {
     return at((enumType)attacking).at((enumType)defending);
-  }
-
- private:
-  static constexpr TypeChart pickForMechanics(GameMechanics mechanics) {
-    switch (mechanics) {
-      case GameMechanics::SWORD_SHIELD:
-      case GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL:
-      case GameMechanics::SCARLET_VIOLET:
-      default:
-        // X_Y
-        return TypeChart{
-          {dex::Type::NORMAL,
-           {
-             {dex::Type::GHOST, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::FIGHTING, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::GRASS,
-           {
-             {dex::Type::WATER, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ELECTRIC, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::GROUND, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::FIRE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ICE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::POISON, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FLYING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::WATER,
-           {
-             {dex::Type::FIRE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::WATER, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ICE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::ELECTRIC, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::FIRE,
-           {
-             {dex::Type::FIRE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ICE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FAIRY, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::WATER, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GROUND, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::BUG,
-           {
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::GROUND, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::FIRE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FLYING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::FLYING,
-           {
-             {dex::Type::GROUND, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::ELECTRIC, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ICE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::POISON,
-           {
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::POISON, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FAIRY, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::GROUND, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::PSYCHIC, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::ELECTRIC,
-           {
-             {dex::Type::ELECTRIC, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FLYING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::GROUND, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::GROUND,
-           {
-             {dex::Type::ELECTRIC, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::POISON, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::WATER, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ICE, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::FIGHTING,
-           {
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::DARK, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::FLYING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::PSYCHIC, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FAIRY, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::PSYCHIC,
-           {
-             {dex::Type::FIGHTING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::PSYCHIC, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::BUG, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GHOST, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::DARK, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::ROCK,
-           {
-             {dex::Type::NORMAL, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::POISON, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FLYING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::WATER, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GROUND, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::ICE,
-           {
-             {dex::Type::ICE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::FIRE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::GHOST,
-           {
-             {dex::Type::NORMAL, TypeEffectiveness::IMMUNE},
-             {dex::Type::FIGHTING, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::POISON, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::GHOST, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::DARK, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::DRAGON,
-           {
-             {dex::Type::FIRE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::WATER, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ELECTRIC, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::ICE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::DRAGON, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FAIRY, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::DARK,
-           {
-             {dex::Type::PSYCHIC, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::GHOST, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::DARK, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::FIGHTING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FAIRY, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::STEEL,
-           {
-             {dex::Type::POISON, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::NORMAL, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ICE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FLYING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::PSYCHIC, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::DRAGON, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FAIRY, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::FIRE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GROUND, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::FAIRY,
-           {
-             {dex::Type::DRAGON, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::FIGHTING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::DARK, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::POISON, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-        };
-    }
   }
 };
 }  // namespace pokesim

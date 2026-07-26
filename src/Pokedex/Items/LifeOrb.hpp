@@ -20,8 +20,8 @@ struct LifeOrb {
   static constexpr types::stat onAfterMoveUsedHpDecreaseDivisor(GameMechanics) { return 10U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Life Orb"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "lifeorb"; }
+    static constexpr std::string_view name() { return "Life Orb"; }
+    static constexpr std::string_view smogonId() { return "lifeorb"; }
   };
 
   static void onModifyDamage(Simulation& simulation);

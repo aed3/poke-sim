@@ -30,8 +30,8 @@ struct Transform {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Transform"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "transform"; }
+    static constexpr std::string_view name() { return "Transform"; }
+    static constexpr std::string_view smogonId() { return "transform"; }
   };
 
   static void onHit(Simulation& Simulation);

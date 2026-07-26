@@ -1,11 +1,12 @@
 #pragma once
 
-#include <Components/Tags/TypeTags.hpp>
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Registry.hpp>
 #include <utility>
+
+#include "../Types/headers.hpp"
 
 namespace pokesim::dex {
 /*
@@ -25,24 +26,24 @@ namespace pokesim::dex {
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
 auto enumToTag(Type type, RunArgs&&... args) {
   switch (type) {
-    case Type::NORMAL:   return RunStruct<type::tags::Normal, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::FIGHTING: return RunStruct<type::tags::Fighting, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::FLYING:   return RunStruct<type::tags::Flying, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::POISON:   return RunStruct<type::tags::Poison, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::GROUND:   return RunStruct<type::tags::Ground, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::ROCK:     return RunStruct<type::tags::Rock, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::BUG:      return RunStruct<type::tags::Bug, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::GHOST:    return RunStruct<type::tags::Ghost, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::STEEL:    return RunStruct<type::tags::Steel, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::FIRE:     return RunStruct<type::tags::Fire, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::WATER:    return RunStruct<type::tags::Water, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::GRASS:    return RunStruct<type::tags::Grass, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::ELECTRIC: return RunStruct<type::tags::Electric, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::PSYCHIC:  return RunStruct<type::tags::Psychic, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::ICE:      return RunStruct<type::tags::Ice, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::DRAGON:   return RunStruct<type::tags::Dragon, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::DARK:     return RunStruct<type::tags::Dark, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::FAIRY:    return RunStruct<type::tags::Fairy, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::NORMAL:   return RunStruct<dex::Normal, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::FIGHTING: return RunStruct<dex::Fighting, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::FLYING:   return RunStruct<dex::Flying, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::POISON:   return RunStruct<dex::Poison, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::GROUND:   return RunStruct<dex::Ground, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::ROCK:     return RunStruct<dex::Rock, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::BUG:      return RunStruct<dex::Bug, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::GHOST:    return RunStruct<dex::Ghost, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::STEEL:    return RunStruct<dex::Steel, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::FIRE:     return RunStruct<dex::Fire, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::WATER:    return RunStruct<dex::Water, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::GRASS:    return RunStruct<dex::Grass, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::ELECTRIC: return RunStruct<dex::Electric, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::PSYCHIC:  return RunStruct<dex::Psychic, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::ICE:      return RunStruct<dex::Ice, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::DRAGON:   return RunStruct<dex::Dragon, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::DARK:     return RunStruct<dex::Dark, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::FAIRY:    return RunStruct<dex::Fairy, T...>::run(std::forward<RunArgs>(args)...);
     // Type::NO_TYPE will pass through here often, but should do nothing
     case Type::NO_TYPE: break;
 

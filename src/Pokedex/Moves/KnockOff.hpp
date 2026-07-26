@@ -29,8 +29,8 @@ struct KnockOff {
 
   static constexpr types::effectMultiplier onBasePowerMultiplier(GameMechanics) { return 1.5F; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Knock Off"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "knockoff"; }
+    static constexpr std::string_view name() { return "Knock Off"; }
+    static constexpr std::string_view smogonId() { return "knockoff"; }
   };
 
   static void onBasePower(Simulation& simulation);

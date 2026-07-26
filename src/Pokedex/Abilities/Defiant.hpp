@@ -16,8 +16,8 @@ struct Defiant {
   static constexpr types::boost onAfterEachBoostAtkBoost(GameMechanics) { return 2; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Defiant"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "defiant"; }
+    static constexpr std::string_view name() { return "Defiant"; }
+    static constexpr std::string_view smogonId() { return "defiant"; }
   };
 
   static void onAfterEachBoost(Simulation& simulation);

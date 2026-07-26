@@ -16,8 +16,8 @@ struct Prankster {
   static constexpr types::priority onModifyPriorityIncrease(GameMechanics) { return 1U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Prankster"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "prankster"; }
+    static constexpr std::string_view name() { return "Prankster"; }
+    static constexpr std::string_view smogonId() { return "prankster"; }
   };
 
   static void onAfterEachBoost(Simulation& simulation);

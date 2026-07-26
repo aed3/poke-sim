@@ -9,8 +9,8 @@ struct ClearBody {
   static constexpr Ability name(GameMechanics) { return dex::Ability::CLEAR_BODY; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Clear Body"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "clearbody"; }
+    static constexpr std::string_view name() { return "Clear Body"; }
+    static constexpr std::string_view smogonId() { return "clearbody"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

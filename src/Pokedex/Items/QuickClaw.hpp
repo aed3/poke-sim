@@ -15,8 +15,8 @@ struct QuickClaw {
 
   static constexpr types::percentChance onFractionalPriorityChance(GameMechanics) { return 20U; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Quick Claw"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "quickclaw"; }
+    static constexpr std::string_view name() { return "Quick Claw"; }
+    static constexpr std::string_view smogonId() { return "quickclaw"; }
   };
 
   static void onFractionalPriority(Simulation& simulation);

@@ -25,9 +25,9 @@ struct Braviary {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::DEFIANT; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Braviary"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Braviary"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "braviary"; }
+    static constexpr std::string_view name() { return "Braviary"; }
+    static constexpr std::string_view smogonName() { return "Braviary"; }
+    static constexpr std::string_view smogonId() { return "braviary"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

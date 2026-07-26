@@ -23,9 +23,9 @@ struct Claydol {
   static constexpr Ability primaryAbility(GameMechanics) { return Ability::LEVITATE; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Claydol"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Claydol"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "claydol"; }
+    static constexpr std::string_view name() { return "Claydol"; }
+    static constexpr std::string_view smogonName() { return "Claydol"; }
+    static constexpr std::string_view smogonId() { return "claydol"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL; }

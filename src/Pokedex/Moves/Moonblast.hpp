@@ -28,8 +28,8 @@ struct Moonblast {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Moonblast"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "moonblast"; }
+    static constexpr std::string_view name() { return "Moonblast"; }
+    static constexpr std::string_view smogonId() { return "moonblast"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

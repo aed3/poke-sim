@@ -9,8 +9,8 @@ struct SweetVeil {
   static constexpr Ability name(GameMechanics) { return dex::Ability::SWEET_VEIL; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Sweet Veil"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "sweetveil"; }
+    static constexpr std::string_view name() { return "Sweet Veil"; }
+    static constexpr std::string_view smogonId() { return "sweetveil"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

@@ -13,8 +13,8 @@ struct Scrappy {
   static constexpr Ability name(GameMechanics) { return dex::Ability::SCRAPPY; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Scrappy"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "scrappy"; }
+    static constexpr std::string_view name() { return "Scrappy"; }
+    static constexpr std::string_view smogonId() { return "scrappy"; }
   };
 
   static void onModifyMove(Simulation& simulation);

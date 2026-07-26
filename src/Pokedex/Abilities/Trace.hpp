@@ -9,8 +9,8 @@ struct Trace {
   static constexpr Ability name(GameMechanics) { return dex::Ability::TRACE; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Trace"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "trace"; }
+    static constexpr std::string_view name() { return "Trace"; }
+    static constexpr std::string_view smogonId() { return "trace"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

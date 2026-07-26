@@ -15,8 +15,8 @@ struct QuickPowder {
 
   static constexpr types::stat speedDividend(GameMechanics) { return 2U; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Quick Powder"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "quickpowder"; }
+    static constexpr std::string_view name() { return "Quick Powder"; }
+    static constexpr std::string_view smogonId() { return "quickpowder"; }
   };
 
   static void onModifySpe(Simulation& simulation);

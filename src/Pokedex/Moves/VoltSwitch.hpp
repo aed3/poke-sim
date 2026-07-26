@@ -23,8 +23,8 @@ struct VoltSwitch {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Volt Switch"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "voltswitch"; }
+    static constexpr std::string_view name() { return "Volt Switch"; }
+    static constexpr std::string_view smogonId() { return "voltswitch"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

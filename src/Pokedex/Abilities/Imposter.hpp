@@ -19,8 +19,8 @@ struct Imposter {
   }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Imposter"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "imposter"; }
+    static constexpr std::string_view name() { return "Imposter"; }
+    static constexpr std::string_view smogonId() { return "imposter"; }
   };
 
   static void onSwitchIn(Simulation& simulation);

@@ -19,8 +19,8 @@ struct Splash {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Splash"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "splash"; }
+    static constexpr std::string_view name() { return "Splash"; }
+    static constexpr std::string_view smogonId() { return "splash"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

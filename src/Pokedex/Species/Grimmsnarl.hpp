@@ -25,9 +25,9 @@ struct Grimmsnarl {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::PICKPOCKET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Grimmsnarl"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Grimmsnarl"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "grimmsnarl"; }
+    static constexpr std::string_view name() { return "Grimmsnarl"; }
+    static constexpr std::string_view smogonName() { return "Grimmsnarl"; }
+    static constexpr std::string_view smogonId() { return "grimmsnarl"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

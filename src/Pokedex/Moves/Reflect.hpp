@@ -27,8 +27,8 @@ struct Reflect {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ALLY_SIDE; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Reflect"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "reflect"; }
+    static constexpr std::string_view name() { return "Reflect"; }
+    static constexpr std::string_view smogonId() { return "reflect"; }
   };
 
   struct Effect {

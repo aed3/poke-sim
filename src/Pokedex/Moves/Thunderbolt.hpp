@@ -29,8 +29,8 @@ struct Thunderbolt {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Thunderbolt"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "thunderbolt"; }
+    static constexpr std::string_view name() { return "Thunderbolt"; }
+    static constexpr std::string_view smogonId() { return "thunderbolt"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

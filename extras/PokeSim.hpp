@@ -198,6 +198,24 @@
  * src/Battle/Setup/BattleStateSetup.hpp
  * src/Battle/Setup/SideStateSetup.hpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.hpp
+ * src/Pokedex/Types/Bug.hpp
+ * src/Pokedex/Types/Dark.hpp
+ * src/Pokedex/Types/Dragon.hpp
+ * src/Pokedex/Types/Electric.hpp
+ * src/Pokedex/Types/Fairy.hpp
+ * src/Pokedex/Types/Fighting.hpp
+ * src/Pokedex/Types/Fire.hpp
+ * src/Pokedex/Types/Flying.hpp
+ * src/Pokedex/Types/Ghost.hpp
+ * src/Pokedex/Types/Grass.hpp
+ * src/Pokedex/Types/Ground.hpp
+ * src/Pokedex/Types/Ice.hpp
+ * src/Pokedex/Types/Normal.hpp
+ * src/Pokedex/Types/Poison.hpp
+ * src/Pokedex/Types/Psychic.hpp
+ * src/Pokedex/Types/Rock.hpp
+ * src/Pokedex/Types/Steel.hpp
+ * src/Pokedex/Types/Water.hpp
  * src/Pokedex/TypeChart.hpp
  * src/Pokedex/Pokedex.hpp
  * src/Simulation/BattleCreationInfo.hpp
@@ -288,11 +306,11 @@
  * src/Pokedex/Species/Pangoro.hpp
  * src/Pokedex/Species/Ribombee.hpp
  * src/Pokedex/EnumToTag/SpeciesEnumToTag.hpp
+ * src/Pokedex/EnumToTag/TypeEnumToTag.hpp
  * src/Pokedex/EnumToTag/MoveEnumToTag.hpp
  * src/Pokedex/EnumToTag/MovePropertyEnumToTag.hpp
  * src/Pokedex/EnumToTag/ItemPropertyEnumToTag.hpp
  * src/Pokedex/EnumToTag/AbilityPropertyEnumToTag.hpp
- * src/Pokedex/EnumToTag/TypeEnumToTag.hpp
  * src/Battle/Pokemon/PokemonDataChecks.hpp
  * src/CalcDamage/CalcDamageDebugChecks.hpp
  * src/AnalyzeEffect/AnalyzeEffectDebugChecks.hpp
@@ -22495,6 +22513,799 @@ struct InputSetup {
 
 ///////////// END OF src/CalcDamage/Setup/CalcDamageInputSetup.hpp /////////////
 
+////////////////////// START OF src/Pokedex/Types/Bug.hpp //////////////////////
+
+namespace pokesim::dex {
+struct Bug {
+  static constexpr Type name(GameMechanics) { return Type::BUG; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::GRASS:
+      case Type::GROUND:
+      case Type::FIGHTING: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::FLYING:
+      case Type::ROCK:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::FIRE:
+      case Type::FLYING:
+      case Type::POISON:
+      case Type::FIGHTING:
+      case Type::GHOST:
+      case Type::STEEL:
+      case Type::FAIRY:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::PSYCHIC:
+      case Type::DARK:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Bug"; }
+  };
+};
+}  // namespace pokesim::dex
+
+/////////////////////// END OF src/Pokedex/Types/Bug.hpp ///////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Dark.hpp //////////////////////
+
+namespace pokesim::dex {
+struct Dark {
+  static constexpr Type name(GameMechanics) { return Type::DARK; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::PSYCHIC: return TypeEffectiveness::IMMUNE;
+
+      case Type::GHOST:
+      case Type::DARK:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::BUG:
+      case Type::FIGHTING:
+      case Type::FAIRY:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::FIGHTING:
+      case Type::DARK:
+      case Type::FAIRY:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::PSYCHIC:
+      case Type::GHOST:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Dark"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Dark.hpp ///////////////////////
+
+//////////////////// START OF src/Pokedex/Types/Dragon.hpp /////////////////////
+
+namespace pokesim::dex {
+struct Dragon {
+  static constexpr Type name(GameMechanics) { return Type::DRAGON; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::GRASS:
+      case Type::WATER:
+      case Type::FIRE:
+      case Type::ELECTRIC: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::ICE:
+      case Type::DRAGON:
+      case Type::FAIRY:  return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::FAIRY: return TypeEffectiveness::IMMUNE;
+
+      case Type::STEEL: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::DRAGON: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Dragon"; }
+  };
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Types/Dragon.hpp //////////////////////
+
+/////////////////// START OF src/Pokedex/Types/Electric.hpp ////////////////////
+
+namespace pokesim::dex {
+struct Electric {
+  static constexpr Type name(GameMechanics) { return Type::ELECTRIC; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::ELECTRIC:
+      case Type::FLYING:
+      case Type::STEEL:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GROUND: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::GROUND: return TypeEffectiveness::IMMUNE;
+
+      case Type::GRASS:
+      case Type::ELECTRIC:
+      case Type::DRAGON:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::WATER:
+      case Type::FLYING: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Electric"; }
+  };
+};
+}  // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Types/Electric.hpp /////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Fairy.hpp /////////////////////
+
+namespace pokesim::dex {
+struct Fairy {
+  static constexpr Type name(GameMechanics) { return Type::FAIRY; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::DRAGON: return TypeEffectiveness::IMMUNE;
+
+      case Type::BUG:
+      case Type::FIGHTING:
+      case Type::DARK:     return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::POISON:
+      case Type::STEEL:  return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::FIRE:
+      case Type::POISON:
+      case Type::STEEL:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIGHTING:
+      case Type::DRAGON:
+      case Type::DARK:     return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Fairy"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Fairy.hpp //////////////////////
+
+/////////////////// START OF src/Pokedex/Types/Fighting.hpp ////////////////////
+
+namespace pokesim::dex {
+struct Fighting {
+  static constexpr Type name(GameMechanics) { return Type::FIGHTING; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::BUG:
+      case Type::ROCK:
+      case Type::DARK: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FLYING:
+      case Type::PSYCHIC:
+      case Type::FAIRY:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::GHOST: return TypeEffectiveness::IMMUNE;
+
+      case Type::BUG:
+      case Type::FLYING:
+      case Type::POISON:
+      case Type::PSYCHIC:
+      case Type::FAIRY:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::NORMAL:
+      case Type::ROCK:
+      case Type::ICE:
+      case Type::DARK:
+      case Type::STEEL:  return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Fighting"; }
+  };
+};
+}  // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Types/Fighting.hpp /////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Fire.hpp //////////////////////
+
+namespace pokesim::dex {
+struct Fire {
+  static constexpr Type name(GameMechanics) { return Type::FIRE; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::WATER:
+      case Type::GROUND:
+      case Type::ROCK:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::FIRE:
+      case Type::BUG:
+      case Type::ICE:
+      case Type::STEEL:
+      case Type::FAIRY: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::WATER:
+      case Type::FIRE:
+      case Type::ROCK:
+      case Type::DRAGON: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::BUG:
+      case Type::ICE:
+      case Type::STEEL: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Fire"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Fire.hpp ///////////////////////
+
+//////////////////// START OF src/Pokedex/Types/Flying.hpp /////////////////////
+
+namespace pokesim::dex {
+struct Flying {
+  static constexpr Type name(GameMechanics) { return Type::FLYING; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::GROUND: return TypeEffectiveness::IMMUNE;
+
+      case Type::GRASS:
+      case Type::BUG:
+      case Type::FIGHTING: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::ELECTRIC:
+      case Type::ROCK:
+      case Type::ICE:      return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::ELECTRIC:
+      case Type::ROCK:
+      case Type::STEEL:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::BUG:
+      case Type::FIGHTING: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Flying"; }
+  };
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Types/Flying.hpp //////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Ghost.hpp /////////////////////
+
+namespace pokesim::dex {
+struct Ghost {
+  static constexpr Type name(GameMechanics) { return Type::GHOST; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::NORMAL:
+      case Type::FIGHTING: return TypeEffectiveness::IMMUNE;
+
+      case Type::BUG:
+      case Type::POISON: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GHOST:
+      case Type::DARK:  return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::NORMAL: return TypeEffectiveness::IMMUNE;
+
+      case Type::DARK: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::PSYCHIC:
+      case Type::GHOST:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Ghost"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Ghost.hpp //////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Grass.hpp /////////////////////
+
+namespace pokesim::dex {
+struct Grass {
+  static constexpr Type name(GameMechanics) { return Type::GRASS; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::GRASS:
+      case Type::WATER:
+      case Type::ELECTRIC:
+      case Type::GROUND:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::BUG:
+      case Type::FLYING:
+      case Type::POISON:
+      case Type::ICE:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::GRASS:
+      case Type::FIRE:
+      case Type::BUG:
+      case Type::FLYING:
+      case Type::POISON:
+      case Type::DRAGON:
+      case Type::STEEL:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::WATER:
+      case Type::GROUND:
+      case Type::ROCK:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Grass"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Grass.hpp //////////////////////
+
+//////////////////// START OF src/Pokedex/Types/Ground.hpp /////////////////////
+
+namespace pokesim::dex {
+struct Ground {
+  static constexpr Type name(GameMechanics) { return Type::GROUND; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::ELECTRIC: return TypeEffectiveness::IMMUNE;
+
+      case Type::POISON:
+      case Type::ROCK:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::WATER:
+      case Type::ICE:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::FLYING: return TypeEffectiveness::IMMUNE;
+
+      case Type::GRASS:
+      case Type::BUG:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::ELECTRIC:
+      case Type::POISON:
+      case Type::ROCK:
+      case Type::STEEL:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Ground"; }
+  };
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Types/Ground.hpp //////////////////////
+
+////////////////////// START OF src/Pokedex/Types/Ice.hpp //////////////////////
+
+namespace pokesim::dex {
+struct Ice {
+  static constexpr Type name(GameMechanics) { return Type::ICE; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::ICE: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::FIGHTING:
+      case Type::ROCK:
+      case Type::STEEL:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::WATER:
+      case Type::FIRE:
+      case Type::ICE:
+      case Type::STEEL: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::FLYING:
+      case Type::GROUND:
+      case Type::DRAGON: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Ice"; }
+  };
+};
+}  // namespace pokesim::dex
+
+/////////////////////// END OF src/Pokedex/Types/Ice.hpp ///////////////////////
+
+//////////////////// START OF src/Pokedex/Types/Normal.hpp /////////////////////
+
+namespace pokesim::dex {
+struct Normal {
+  static constexpr Type name(GameMechanics) { return Type::NORMAL; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::GHOST: return TypeEffectiveness::IMMUNE;
+
+      case Type::FIGHTING: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::GHOST: return TypeEffectiveness::IMMUNE;
+
+      case Type::ROCK:
+      case Type::STEEL: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Normal"; }
+  };
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Types/Normal.hpp //////////////////////
+
+//////////////////// START OF src/Pokedex/Types/Poison.hpp /////////////////////
+
+namespace pokesim::dex {
+struct Poison {
+  static constexpr Type name(GameMechanics) { return Type::POISON; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::GRASS:
+      case Type::BUG:
+      case Type::POISON:
+      case Type::FIGHTING:
+      case Type::FAIRY:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GROUND:
+      case Type::PSYCHIC: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::STEEL: return TypeEffectiveness::IMMUNE;
+
+      case Type::POISON:
+      case Type::GROUND:
+      case Type::ROCK:
+      case Type::GHOST:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::FAIRY: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Poison"; }
+  };
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Types/Poison.hpp //////////////////////
+
+//////////////////// START OF src/Pokedex/Types/Psychic.hpp ////////////////////
+
+namespace pokesim::dex {
+struct Psychic {
+  static constexpr Type name(GameMechanics) { return Type::PSYCHIC; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::FIGHTING:
+      case Type::PSYCHIC:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::BUG:
+      case Type::GHOST:
+      case Type::DARK:  return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::DARK: return TypeEffectiveness::IMMUNE;
+
+      case Type::PSYCHIC:
+      case Type::STEEL:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::POISON:
+      case Type::FIGHTING: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Psychic"; }
+  };
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Types/Psychic.hpp /////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Rock.hpp //////////////////////
+
+namespace pokesim::dex {
+struct Rock {
+  static constexpr Type name(GameMechanics) { return Type::ROCK; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::NORMAL:
+      case Type::FIRE:
+      case Type::FLYING:
+      case Type::POISON: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::WATER:
+      case Type::GROUND:
+      case Type::FIGHTING:
+      case Type::STEEL:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::GROUND:
+      case Type::FIGHTING:
+      case Type::STEEL:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::BUG:
+      case Type::FLYING:
+      case Type::ICE:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Rock"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Rock.hpp ///////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Steel.hpp /////////////////////
+
+namespace pokesim::dex {
+struct Steel {
+  static constexpr Type name(GameMechanics) { return Type::STEEL; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::POISON: return TypeEffectiveness::IMMUNE;
+
+      case Type::NORMAL:
+      case Type::GRASS:
+      case Type::BUG:
+      case Type::FLYING:
+      case Type::PSYCHIC:
+      case Type::ROCK:
+      case Type::ICE:
+      case Type::DRAGON:
+      case Type::STEEL:
+      case Type::FAIRY:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::GROUND:
+      case Type::FIGHTING: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::WATER:
+      case Type::FIRE:
+      case Type::ELECTRIC:
+      case Type::STEEL:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::ROCK:
+      case Type::ICE:
+      case Type::FAIRY: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Steel"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Steel.hpp //////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Water.hpp /////////////////////
+
+namespace pokesim::dex {
+struct Water {
+  static constexpr Type name(GameMechanics) { return Type::WATER; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::WATER:
+      case Type::FIRE:
+      case Type::ICE:
+      case Type::STEEL: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::ELECTRIC: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::GRASS:
+      case Type::WATER:
+      case Type::DRAGON: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::GROUND:
+      case Type::ROCK:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Water"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Water.hpp //////////////////////
+
 ////////////////////// START OF src/Pokedex/TypeChart.hpp //////////////////////
 
 namespace pokesim {
@@ -22505,241 +23316,40 @@ using TypeChartBase = std::array<std::array<TypeEffectiveness, dex::TOTAL_TYPE_C
 
 struct TypeChart : private internal::TypeChartBase {
  private:
-  using constructorType =
-    std::initializer_list<std::pair<dex::Type, std::initializer_list<std::pair<dex::Type, TypeEffectiveness>>>>;
-
   using enumType = std::underlying_type_t<dex::Type>;
 
-  constexpr TypeChart(const constructorType partialChart) : internal::TypeChartBase() {
-    for (auto& ratios : *this) {
-      for (auto& effectiveness : ratios) {
-        effectiveness = TypeEffectiveness::NEUTRAL;
-      }
-    }
-
-    for (const auto& [defending, ratios] : partialChart) {
-      for (const auto& [attacking, effectiveness] : ratios) {
-        at((enumType)attacking).at((enumType)defending) = effectiveness;
-      }
+  template <typename Type>
+  constexpr void setSetData(GameMechanics gameMechanic) {
+    auto& attacking = at((enumType)Type::name(gameMechanic));
+    for (enumType defending = 0U; defending <= dex::TOTAL_TYPE_COUNT; defending++) {
+      attacking.at(defending) = Type::attacking(gameMechanic, (dex::Type)defending);
     }
   }
 
  public:
-  constexpr TypeChart(GameMechanics gameMechanic) : TypeChart(TypeChart::pickForMechanics(gameMechanic)) {}
+  constexpr TypeChart(GameMechanics gameMechanic) : internal::TypeChartBase() {
+    setSetData<dex::Normal>(gameMechanic);
+    setSetData<dex::Grass>(gameMechanic);
+    setSetData<dex::Water>(gameMechanic);
+    setSetData<dex::Fire>(gameMechanic);
+    setSetData<dex::Bug>(gameMechanic);
+    setSetData<dex::Flying>(gameMechanic);
+    setSetData<dex::Poison>(gameMechanic);
+    setSetData<dex::Electric>(gameMechanic);
+    setSetData<dex::Ground>(gameMechanic);
+    setSetData<dex::Fighting>(gameMechanic);
+    setSetData<dex::Psychic>(gameMechanic);
+    setSetData<dex::Rock>(gameMechanic);
+    setSetData<dex::Ice>(gameMechanic);
+    setSetData<dex::Ghost>(gameMechanic);
+    setSetData<dex::Dragon>(gameMechanic);
+    setSetData<dex::Dark>(gameMechanic);
+    setSetData<dex::Steel>(gameMechanic);
+    setSetData<dex::Fairy>(gameMechanic);
+  }
 
   constexpr TypeEffectiveness effectiveness(dex::Type attacking, dex::Type defending) const {
     return at((enumType)attacking).at((enumType)defending);
-  }
-
- private:
-  static constexpr TypeChart pickForMechanics(GameMechanics mechanics) {
-    switch (mechanics) {
-      case GameMechanics::SWORD_SHIELD:
-      case GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL:
-      case GameMechanics::SCARLET_VIOLET:
-      default:
-        // X_Y
-        return TypeChart{
-          {dex::Type::NORMAL,
-           {
-             {dex::Type::GHOST, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::FIGHTING, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::GRASS,
-           {
-             {dex::Type::WATER, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ELECTRIC, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::GROUND, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::FIRE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ICE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::POISON, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FLYING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::WATER,
-           {
-             {dex::Type::FIRE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::WATER, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ICE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::ELECTRIC, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::FIRE,
-           {
-             {dex::Type::FIRE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ICE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FAIRY, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::WATER, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GROUND, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::BUG,
-           {
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::GROUND, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::FIRE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FLYING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::FLYING,
-           {
-             {dex::Type::GROUND, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::ELECTRIC, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ICE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::POISON,
-           {
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::POISON, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FAIRY, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::GROUND, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::PSYCHIC, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::ELECTRIC,
-           {
-             {dex::Type::ELECTRIC, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FLYING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::GROUND, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::GROUND,
-           {
-             {dex::Type::ELECTRIC, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::POISON, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::WATER, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ICE, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::FIGHTING,
-           {
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::DARK, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::FLYING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::PSYCHIC, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FAIRY, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::PSYCHIC,
-           {
-             {dex::Type::FIGHTING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::PSYCHIC, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::BUG, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GHOST, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::DARK, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::ROCK,
-           {
-             {dex::Type::NORMAL, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::POISON, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FLYING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::WATER, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GROUND, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::ICE,
-           {
-             {dex::Type::ICE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::FIRE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::GHOST,
-           {
-             {dex::Type::NORMAL, TypeEffectiveness::IMMUNE},
-             {dex::Type::FIGHTING, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::POISON, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::GHOST, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::DARK, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::DRAGON,
-           {
-             {dex::Type::FIRE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::WATER, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ELECTRIC, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::ICE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::DRAGON, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FAIRY, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::DARK,
-           {
-             {dex::Type::PSYCHIC, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::GHOST, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::DARK, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::FIGHTING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FAIRY, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::STEEL,
-           {
-             {dex::Type::POISON, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::NORMAL, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::GRASS, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ICE, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FLYING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::PSYCHIC, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::ROCK, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::DRAGON, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::FAIRY, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::FIRE, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::FIGHTING, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::GROUND, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-          {dex::Type::FAIRY,
-           {
-             {dex::Type::DRAGON, TypeEffectiveness::IMMUNE},
-
-             {dex::Type::FIGHTING, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::BUG, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-             {dex::Type::DARK, TypeEffectiveness::NOT_VERY_EFFECTIVE},
-
-             {dex::Type::POISON, TypeEffectiveness::SUPER_EFFECTIVE},
-             {dex::Type::STEEL, TypeEffectiveness::SUPER_EFFECTIVE},
-           }},
-        };
-    }
   }
 };
 }  // namespace pokesim
@@ -23559,8 +24169,8 @@ struct Analytic {
   static constexpr types::eventModifier onBasePowerDenominator(GameMechanics) { return 4096U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Analytic"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "analytic"; }
+    static constexpr std::string_view name() { return "Analytic"; }
+    static constexpr std::string_view smogonId() { return "analytic"; }
   };
 
   static void onBasePower(Simulation& simulation);
@@ -23578,8 +24188,8 @@ struct ClearBody {
   static constexpr Ability name(GameMechanics) { return dex::Ability::CLEAR_BODY; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Clear Body"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "clearbody"; }
+    static constexpr std::string_view name() { return "Clear Body"; }
+    static constexpr std::string_view smogonId() { return "clearbody"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -23601,8 +24211,8 @@ struct Competitive {
   static constexpr types::boost onAfterEachBoostSpaBoost(GameMechanics) { return 2; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Competitive"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "competitive"; }
+    static constexpr std::string_view name() { return "Competitive"; }
+    static constexpr std::string_view smogonId() { return "competitive"; }
   };
 
   static void onAfterEachBoost(Simulation& simulation);
@@ -23626,8 +24236,8 @@ struct Defiant {
   static constexpr types::boost onAfterEachBoostAtkBoost(GameMechanics) { return 2; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Defiant"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "defiant"; }
+    static constexpr std::string_view name() { return "Defiant"; }
+    static constexpr std::string_view smogonId() { return "defiant"; }
   };
 
   static void onAfterEachBoost(Simulation& simulation);
@@ -23645,8 +24255,8 @@ struct HoneyGather {
   static constexpr Ability name(GameMechanics) { return dex::Ability::HONEY_GATHER; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Honey Gather"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "honeygather"; }
+    static constexpr std::string_view name() { return "Honey Gather"; }
+    static constexpr std::string_view smogonId() { return "honeygather"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -23671,8 +24281,8 @@ struct Imposter {
   }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Imposter"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "imposter"; }
+    static constexpr std::string_view name() { return "Imposter"; }
+    static constexpr std::string_view smogonId() { return "imposter"; }
   };
 
   static void onSwitchIn(Simulation& simulation);
@@ -23690,8 +24300,8 @@ struct Infiltrator {
   static constexpr Ability name(GameMechanics) { return dex::Ability::INFILTRATOR; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Infiltrator"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "infiltrator"; }
+    static constexpr std::string_view name() { return "Infiltrator"; }
+    static constexpr std::string_view smogonId() { return "infiltrator"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -23707,8 +24317,8 @@ struct IronFist {
   static constexpr Ability name(GameMechanics) { return dex::Ability::IRON_FIST; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Iron Fist"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "ironfist"; }
+    static constexpr std::string_view name() { return "Iron Fist"; }
+    static constexpr std::string_view smogonId() { return "ironfist"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -23724,8 +24334,8 @@ struct Levitate {
   static constexpr Ability name(GameMechanics) { return dex::Ability::LEVITATE; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Levitate"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "levitate"; }
+    static constexpr std::string_view name() { return "Levitate"; }
+    static constexpr std::string_view smogonId() { return "levitate"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -23745,8 +24355,8 @@ struct LongReach {
   static constexpr Ability name(GameMechanics) { return dex::Ability::LONG_REACH; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Long Reach"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "longreach"; }
+    static constexpr std::string_view name() { return "Long Reach"; }
+    static constexpr std::string_view smogonId() { return "longreach"; }
   };
 
   static void onModifyMove(Simulation& simulation);
@@ -23769,8 +24379,8 @@ struct Plus {
 
   static constexpr types::effectMultiplier onModifySpaModifier(GameMechanics) { return 1.5F; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Plus"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "plus"; }
+    static constexpr std::string_view name() { return "Plus"; }
+    static constexpr std::string_view smogonId() { return "plus"; }
   };
 
   static void onModifySpA(Simulation& simulation);
@@ -23794,8 +24404,8 @@ struct Prankster {
   static constexpr types::priority onModifyPriorityIncrease(GameMechanics) { return 1U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Prankster"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "prankster"; }
+    static constexpr std::string_view name() { return "Prankster"; }
+    static constexpr std::string_view smogonId() { return "prankster"; }
   };
 
   static void onAfterEachBoost(Simulation& simulation);
@@ -23817,8 +24427,8 @@ struct Scrappy {
   static constexpr Ability name(GameMechanics) { return dex::Ability::SCRAPPY; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Scrappy"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "scrappy"; }
+    static constexpr std::string_view name() { return "Scrappy"; }
+    static constexpr std::string_view smogonId() { return "scrappy"; }
   };
 
   static void onModifyMove(Simulation& simulation);
@@ -23847,8 +24457,8 @@ struct StanceChange {
   }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Stance Change"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "stancechange"; }
+    static constexpr std::string_view name() { return "Stance Change"; }
+    static constexpr std::string_view smogonId() { return "stancechange"; }
   };
 
   static void onModifyMove(Simulation& simulation);
@@ -23871,8 +24481,8 @@ struct Static {
 
   static constexpr types::percentChance onDamagingHitChance(GameMechanics) { return 30U; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Static"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "static"; }
+    static constexpr std::string_view name() { return "Static"; }
+    static constexpr std::string_view smogonId() { return "static"; }
   };
 
   static void onDamagingHit(Simulation& simulation);
@@ -23890,8 +24500,8 @@ struct SweetVeil {
   static constexpr Ability name(GameMechanics) { return dex::Ability::SWEET_VEIL; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Sweet Veil"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "sweetveil"; }
+    static constexpr std::string_view name() { return "Sweet Veil"; }
+    static constexpr std::string_view smogonId() { return "sweetveil"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -23907,8 +24517,8 @@ struct Synchronize {
   static constexpr dex::Ability name(GameMechanics) { return dex::Ability::SYNCHRONIZE; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Synchronize"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "synchronize"; }
+    static constexpr std::string_view name() { return "Synchronize"; }
+    static constexpr std::string_view smogonId() { return "synchronize"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -23924,8 +24534,8 @@ struct Torrent {
   static constexpr Ability name(GameMechanics) { return dex::Ability::TORRENT; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Torrent"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "torrent"; }
+    static constexpr std::string_view name() { return "Torrent"; }
+    static constexpr std::string_view smogonId() { return "torrent"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -23941,8 +24551,8 @@ struct Trace {
   static constexpr Ability name(GameMechanics) { return dex::Ability::TRACE; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Trace"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "trace"; }
+    static constexpr std::string_view name() { return "Trace"; }
+    static constexpr std::string_view smogonId() { return "trace"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -24036,8 +24646,8 @@ struct AssaultVest {
   static constexpr types::effectMultiplier onModifySpdModifier(GameMechanics) { return 1.5F; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Assault Vest"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "assaultvest"; }
+    static constexpr std::string_view name() { return "Assault Vest"; }
+    static constexpr std::string_view smogonId() { return "assaultvest"; }
   };
 
   static void onModifySpd(Simulation& simulation);
@@ -24063,8 +24673,8 @@ struct BrightPowder {
   static constexpr types::eventModifier onModifyAccuracyDenominator(GameMechanics) { return 4096U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Bright Powder"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "brightpowder"; }
+    static constexpr std::string_view name() { return "Bright Powder"; }
+    static constexpr std::string_view smogonId() { return "brightpowder"; }
   };
 
   static void onModifyAccuracy(Simulation& simulation);
@@ -24089,8 +24699,8 @@ struct ChoiceScarf {
 
   static constexpr ItemProperty properties(GameMechanics) { return ItemProperty::CHOICE; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Choice Scarf"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "choicescarf"; }
+    static constexpr std::string_view name() { return "Choice Scarf"; }
+    static constexpr std::string_view smogonId() { return "choicescarf"; }
   };
 
   static void onModifySpe(Simulation& simulation);
@@ -24117,8 +24727,8 @@ struct ChoiceSpecs {
 
   static constexpr ItemProperty properties(GameMechanics) { return ItemProperty::CHOICE; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Choice Specs"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "choicespecs"; }
+    static constexpr std::string_view name() { return "Choice Specs"; }
+    static constexpr std::string_view smogonId() { return "choicespecs"; }
   };
 
   static void onModifySpa(Simulation& simulation);
@@ -24144,8 +24754,8 @@ struct FocusSash {
   static constexpr types::damage onAfterModifyDamageHpToKeep(GameMechanics) { return 1U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Focus Sash"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "focussash"; }
+    static constexpr std::string_view name() { return "Focus Sash"; }
+    static constexpr std::string_view smogonId() { return "focussash"; }
   };
 
   static void onAfterModifyDamage(Simulation& simulation);
@@ -24168,8 +24778,8 @@ struct KingsRock {
   static constexpr Item name(GameMechanics) { return dex::Item::KINGS_ROCK; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "King's Rock"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "kingsrock"; }
+    static constexpr std::string_view name() { return "King's Rock"; }
+    static constexpr std::string_view smogonId() { return "kingsrock"; }
   };
 
   static void onModifyMove(Simulation& simulation);
@@ -24196,8 +24806,8 @@ struct LifeOrb {
   static constexpr types::stat onAfterMoveUsedHpDecreaseDivisor(GameMechanics) { return 10U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Life Orb"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "lifeorb"; }
+    static constexpr std::string_view name() { return "Life Orb"; }
+    static constexpr std::string_view smogonId() { return "lifeorb"; }
   };
 
   static void onModifyDamage(Simulation& simulation);
@@ -24221,8 +24831,8 @@ struct LumBerry {
 
   static constexpr ItemProperty properties(GameMechanics) { return ItemProperty::BERRY; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Lum Berry"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "lumberry"; }
+    static constexpr std::string_view name() { return "Lum Berry"; }
+    static constexpr std::string_view smogonId() { return "lumberry"; }
   };
 
   static void onAfterSetStatus(Simulation& simulation);
@@ -24246,8 +24856,8 @@ struct MetronomeItem {
   static constexpr Item name(GameMechanics) { return dex::Item::METRONOME; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Metronome"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "metronome"; }
+    static constexpr std::string_view name() { return "Metronome"; }
+    static constexpr std::string_view smogonId() { return "metronome"; }
   };
 
   static void onStart(Simulation& simulation);
@@ -24278,8 +24888,8 @@ struct MirrorHerb {
   static constexpr Item name(GameMechanics) { return dex::Item::MIRROR_HERB; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Mirror Herb"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "mirrorherb"; }
+    static constexpr std::string_view name() { return "Mirror Herb"; }
+    static constexpr std::string_view smogonId() { return "mirrorherb"; }
   };
 
   static void onFoeAfterBoost(Simulation& simulation);
@@ -24309,8 +24919,8 @@ struct QuickClaw {
 
   static constexpr types::percentChance onFractionalPriorityChance(GameMechanics) { return 20U; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Quick Claw"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "quickclaw"; }
+    static constexpr std::string_view name() { return "Quick Claw"; }
+    static constexpr std::string_view smogonId() { return "quickclaw"; }
   };
 
   static void onFractionalPriority(Simulation& simulation);
@@ -24333,8 +24943,8 @@ struct QuickPowder {
 
   static constexpr types::stat speedDividend(GameMechanics) { return 2U; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Quick Powder"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "quickpowder"; }
+    static constexpr std::string_view name() { return "Quick Powder"; }
+    static constexpr std::string_view smogonId() { return "quickpowder"; }
   };
 
   static void onModifySpe(Simulation& simulation);
@@ -24356,8 +24966,8 @@ struct RockyHelmet {
   static constexpr Item name(GameMechanics) { return dex::Item::ROCKY_HELMET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Rocky Helmet"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "rockyhelmet"; }
+    static constexpr std::string_view name() { return "Rocky Helmet"; }
+    static constexpr std::string_view smogonId() { return "rockyhelmet"; }
   };
 
   static void onDamagingHit(Simulation& simulation);
@@ -25333,8 +25943,8 @@ struct Burn {
   static constexpr types::effectMultiplier physicalDamageMultiplier(GameMechanics) { return 0.5F; }
   static constexpr types::stat onResidualHpDecreaseDivisor(GameMechanics) { return 16U; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Burn"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "brn"; }
+    static constexpr std::string_view name() { return "Burn"; }
+    static constexpr std::string_view smogonId() { return "brn"; }
   };
 
   static void onSetDamageRollModifiers(Simulation& simulation);
@@ -25357,8 +25967,8 @@ struct ChoiceLock {
   static constexpr Volatile name(GameMechanics) { return dex::Volatile::CHOICE_LOCK; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Choice Lock"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "choicelock"; }
+    static constexpr std::string_view name() { return "Choice Lock"; }
+    static constexpr std::string_view smogonId() { return "choicelock"; }
   };
 
   static void onBeforeMove(Simulation& simulation);
@@ -25386,8 +25996,8 @@ struct Paralysis {
   static constexpr types::percentChance onBeforeMoveChance(GameMechanics) { return 25U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Paralysis"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "par"; }
+    static constexpr std::string_view name() { return "Paralysis"; }
+    static constexpr std::string_view smogonId() { return "par"; }
   };
 
   static void onModifySpe(Simulation& simulation);
@@ -25417,8 +26027,8 @@ struct AllySwitch {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Ally Switch"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "allyswitch"; }
+    static constexpr std::string_view name() { return "Ally Switch"; }
+    static constexpr std::string_view smogonId() { return "allyswitch"; }
   };
 
   static void onPrepareHit(Simulation& simulation);
@@ -25454,8 +26064,8 @@ struct FlashCannon {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Flash Cannon"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "flashcannon"; }
+    static constexpr std::string_view name() { return "Flash Cannon"; }
+    static constexpr std::string_view smogonId() { return "flashcannon"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -25482,8 +26092,8 @@ struct FuryAttack {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Fury Attack"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "furyattack"; }
+    static constexpr std::string_view name() { return "Fury Attack"; }
+    static constexpr std::string_view smogonId() { return "furyattack"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -25513,8 +26123,8 @@ struct KnockOff {
 
   static constexpr types::effectMultiplier onBasePowerMultiplier(GameMechanics) { return 1.5F; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Knock Off"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "knockoff"; }
+    static constexpr std::string_view name() { return "Knock Off"; }
+    static constexpr std::string_view smogonId() { return "knockoff"; }
   };
 
   static void onBasePower(Simulation& simulation);
@@ -25546,8 +26156,8 @@ struct Moonblast {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Moonblast"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "moonblast"; }
+    static constexpr std::string_view name() { return "Moonblast"; }
+    static constexpr std::string_view smogonId() { return "moonblast"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -25575,8 +26185,8 @@ struct QuiverDance {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Quiver Dance"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "quiverdance"; }
+    static constexpr std::string_view name() { return "Quiver Dance"; }
+    static constexpr std::string_view smogonId() { return "quiverdance"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -25603,8 +26213,8 @@ struct Reflect {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ALLY_SIDE; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Reflect"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "reflect"; }
+    static constexpr std::string_view name() { return "Reflect"; }
+    static constexpr std::string_view smogonId() { return "reflect"; }
   };
 
   struct Effect {
@@ -25637,8 +26247,8 @@ struct Reversal {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Reversal"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "reversal"; }
+    static constexpr std::string_view name() { return "Reversal"; }
+    static constexpr std::string_view smogonId() { return "reversal"; }
   };
 
   static void onBasePower(Simulation& simulation);
@@ -25673,8 +26283,8 @@ struct SpiritShackle {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Spirit Shackle"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "spiritshackle"; }
+    static constexpr std::string_view name() { return "Spirit Shackle"; }
+    static constexpr std::string_view smogonId() { return "spiritshackle"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -25696,8 +26306,8 @@ struct Splash {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Splash"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "splash"; }
+    static constexpr std::string_view name() { return "Splash"; }
+    static constexpr std::string_view smogonId() { return "splash"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -25727,8 +26337,8 @@ struct Thunderbolt {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Thunderbolt"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "thunderbolt"; }
+    static constexpr std::string_view name() { return "Thunderbolt"; }
+    static constexpr std::string_view smogonId() { return "thunderbolt"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -25758,8 +26368,8 @@ struct Transform {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Transform"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "transform"; }
+    static constexpr std::string_view name() { return "Transform"; }
+    static constexpr std::string_view smogonId() { return "transform"; }
   };
 
   static void onHit(Simulation& Simulation);
@@ -25804,8 +26414,8 @@ struct TripleArrows {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Triple Arrows"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "triplearrows"; }
+    static constexpr std::string_view name() { return "Triple Arrows"; }
+    static constexpr std::string_view smogonId() { return "triplearrows"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -25830,8 +26440,8 @@ struct VoltSwitch {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Volt Switch"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "voltswitch"; }
+    static constexpr std::string_view name() { return "Volt Switch"; }
+    static constexpr std::string_view smogonId() { return "voltswitch"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -25858,8 +26468,8 @@ struct WillOWisp {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Will-O-Wisp"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "willowisp"; }
+    static constexpr std::string_view name() { return "Will-O-Wisp"; }
+    static constexpr std::string_view smogonId() { return "willowisp"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -26380,9 +26990,9 @@ struct Aegislash {
   static constexpr Ability primaryAbility(GameMechanics) { return Ability::STANCE_CHANGE; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Aegislash"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Aegislash"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "aegislash"; }
+    static constexpr std::string_view name() { return "Aegislash"; }
+    static constexpr std::string_view smogonName() { return "Aegislash"; }
+    static constexpr std::string_view smogonId() { return "aegislash"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -26392,9 +27002,9 @@ struct ShieldAegislash : Aegislash {
   static constexpr Species name(GameMechanics) { return Species::SHIELD_AEGISLASH; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Shield Form Aegislash"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Aegislash"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "aegislash"; }
+    static constexpr std::string_view name() { return "Shield Form Aegislash"; }
+    static constexpr std::string_view smogonName() { return "Aegislash"; }
+    static constexpr std::string_view smogonId() { return "aegislash"; }
   };
 };
 
@@ -26407,9 +27017,9 @@ struct BladeAegislash : Aegislash {
   static constexpr types::baseStat spd(GameMechanics) { return 50U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Blade Form Aegislash"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Aegislash-Blade"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "aegislashblade"; }
+    static constexpr std::string_view name() { return "Blade Form Aegislash"; }
+    static constexpr std::string_view smogonName() { return "Aegislash-Blade"; }
+    static constexpr std::string_view smogonId() { return "aegislashblade"; }
   };
 };
 
@@ -26435,9 +27045,9 @@ struct Ampharos {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::PLUS; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Ampharos"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Ampharos"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "ampharos"; }
+    static constexpr std::string_view name() { return "Ampharos"; }
+    static constexpr std::string_view smogonName() { return "Ampharos"; }
+    static constexpr std::string_view smogonId() { return "ampharos"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -26465,9 +27075,9 @@ struct Braviary {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::DEFIANT; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Braviary"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Braviary"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "braviary"; }
+    static constexpr std::string_view name() { return "Braviary"; }
+    static constexpr std::string_view smogonName() { return "Braviary"; }
+    static constexpr std::string_view smogonId() { return "braviary"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -26493,9 +27103,9 @@ struct Claydol {
   static constexpr Ability primaryAbility(GameMechanics) { return Ability::LEVITATE; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Claydol"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Claydol"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "claydol"; }
+    static constexpr std::string_view name() { return "Claydol"; }
+    static constexpr std::string_view smogonName() { return "Claydol"; }
+    static constexpr std::string_view smogonId() { return "claydol"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::BRILLIANT_DIAMOND_SHINING_PEARL; }
@@ -26522,9 +27132,9 @@ struct Decidueye {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::LONG_REACH; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Decidueye"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Decidueye"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "decidueye"; }
+    static constexpr std::string_view name() { return "Decidueye"; }
+    static constexpr std::string_view smogonName() { return "Decidueye"; }
+    static constexpr std::string_view smogonId() { return "decidueye"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -26545,9 +27155,9 @@ struct HisuianDecidueye {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::SCRAPPY; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Hisuian Decidueye"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Decidueye-Hisui"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "decidueyehisui"; }
+    static constexpr std::string_view name() { return "Hisuian Decidueye"; }
+    static constexpr std::string_view smogonName() { return "Decidueye-Hisui"; }
+    static constexpr std::string_view smogonId() { return "decidueyehisui"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -26574,9 +27184,9 @@ struct Ditto {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::IMPOSTER; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Ditto"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Ditto"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "ditto"; }
+    static constexpr std::string_view name() { return "Ditto"; }
+    static constexpr std::string_view smogonName() { return "Ditto"; }
+    static constexpr std::string_view smogonId() { return "ditto"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -26604,9 +27214,9 @@ struct Dragapult {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::CURSED_BODY; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Dragapult"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Dragapult"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "dragapult"; }
+    static constexpr std::string_view name() { return "Dragapult"; }
+    static constexpr std::string_view smogonName() { return "Dragapult"; }
+    static constexpr std::string_view smogonId() { return "dragapult"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -26640,9 +27250,9 @@ struct Empoleon {
   }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Empoleon"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Empoleon"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "empoleon"; }
+    static constexpr std::string_view name() { return "Empoleon"; }
+    static constexpr std::string_view smogonName() { return "Empoleon"; }
+    static constexpr std::string_view smogonId() { return "empoleon"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -26670,9 +27280,9 @@ struct Gardevoir {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::TELEPATHY; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Gardevoir"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Gardevoir"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "gardevoir"; }
+    static constexpr std::string_view name() { return "Gardevoir"; }
+    static constexpr std::string_view smogonName() { return "Gardevoir"; }
+    static constexpr std::string_view smogonId() { return "gardevoir"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -26700,9 +27310,9 @@ struct Grimmsnarl {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::PICKPOCKET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Grimmsnarl"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Grimmsnarl"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "grimmsnarl"; }
+    static constexpr std::string_view name() { return "Grimmsnarl"; }
+    static constexpr std::string_view smogonName() { return "Grimmsnarl"; }
+    static constexpr std::string_view smogonId() { return "grimmsnarl"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -26730,9 +27340,9 @@ struct Magnezone {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::ANALYTIC; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Magnezone"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Magnezone"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "magnezone"; }
+    static constexpr std::string_view name() { return "Magnezone"; }
+    static constexpr std::string_view smogonName() { return "Magnezone"; }
+    static constexpr std::string_view smogonId() { return "magnezone"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -26760,9 +27370,9 @@ struct Pangoro {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::SCRAPPY; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Pangoro"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Pangoro"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "pangoro"; }
+    static constexpr std::string_view name() { return "Pangoro"; }
+    static constexpr std::string_view smogonName() { return "Pangoro"; }
+    static constexpr std::string_view smogonId() { return "pangoro"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SWORD_SHIELD; }
@@ -26790,9 +27400,9 @@ struct Ribombee {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::SWEET_VEIL; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Ribombee"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Ribombee"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "Ribombee"; }
+    static constexpr std::string_view name() { return "Ribombee"; }
+    static constexpr std::string_view smogonName() { return "Ribombee"; }
+    static constexpr std::string_view smogonId() { return "Ribombee"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -26855,6 +27465,70 @@ auto enumToTag(Species species, RunArgs&&... args) {
 }  // namespace pokesim::dex
 
 ////////////// END OF src/Pokedex/EnumToTag/SpeciesEnumToTag.hpp ///////////////
+
+/////////////// START OF src/Pokedex/EnumToTag/TypeEnumToTag.hpp ///////////////
+
+namespace pokesim::dex {
+/*
+ * Runs a function with a certain type tag based on the passed in enum.
+ * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the type tags with
+ * a static `run` function.
+ *
+ * @code
+ * template <typename Tag>
+ * struct EmplaceTag {
+ *   static void run(types::handle handle) { handle.emplace<Tag>(); }
+ * };
+ *
+ * enumToTag<EmplaceTag>(dex::Type::WATER, handle);
+ * @endcode
+ */
+template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
+auto enumToTag(Type type, RunArgs&&... args) {
+  switch (type) {
+    case Type::NORMAL:   return RunStruct<dex::Normal, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::FIGHTING: return RunStruct<dex::Fighting, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::FLYING:   return RunStruct<dex::Flying, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::POISON:   return RunStruct<dex::Poison, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::GROUND:   return RunStruct<dex::Ground, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::ROCK:     return RunStruct<dex::Rock, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::BUG:      return RunStruct<dex::Bug, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::GHOST:    return RunStruct<dex::Ghost, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::STEEL:    return RunStruct<dex::Steel, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::FIRE:     return RunStruct<dex::Fire, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::WATER:    return RunStruct<dex::Water, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::GRASS:    return RunStruct<dex::Grass, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::ELECTRIC: return RunStruct<dex::Electric, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::PSYCHIC:  return RunStruct<dex::Psychic, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::ICE:      return RunStruct<dex::Ice, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::DRAGON:   return RunStruct<dex::Dragon, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::DARK:     return RunStruct<dex::Dark, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::FAIRY:    return RunStruct<dex::Fairy, T...>::run(std::forward<RunArgs>(args)...);
+    // Type::NO_TYPE will pass through here often, but should do nothing
+    case Type::NO_TYPE: break;
+
+    default: POKESIM_REQUIRE_FAIL("Using a tag for type that does not exist.");
+  }
+
+  using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
+  if constexpr (std::is_void_v<ReturnType>) {
+    return;
+  }
+  else {
+    return ReturnType{};
+  }
+}
+
+// Assigns a type's tag to a handle
+void emplaceTagFromEnum(Type type, types::handle handle);
+void emplaceTagFromEnum(Type type, types::registry& registry, types::entity entity);
+
+// Checks if the handle has the type's tag
+bool hasTag(Type type, types::handle handle);
+bool hasTag(Type type, const types::registry& registry, types::entity entity);
+}  // namespace pokesim::dex
+
+//////////////// END OF src/Pokedex/EnumToTag/TypeEnumToTag.hpp ////////////////
 
 /////////////// START OF src/Pokedex/EnumToTag/MoveEnumToTag.hpp ///////////////
 
@@ -27063,70 +27737,6 @@ void emplaceTagFromEnum(AbilityProperty property, types::registry& registry, typ
 }  // namespace pokesim::dex
 
 ////////// END OF src/Pokedex/EnumToTag/AbilityPropertyEnumToTag.hpp ///////////
-
-/////////////// START OF src/Pokedex/EnumToTag/TypeEnumToTag.hpp ///////////////
-
-namespace pokesim::dex {
-/*
- * Runs a function with a certain type tag based on the passed in enum.
- * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the type tags with
- * a static `run` function.
- *
- * @code
- * template <typename Tag>
- * struct EmplaceTag {
- *   static void run(types::handle handle) { handle.emplace<Tag>(); }
- * };
- *
- * enumToTag<EmplaceTag>(dex::Type::WATER, handle);
- * @endcode
- */
-template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-auto enumToTag(Type type, RunArgs&&... args) {
-  switch (type) {
-    case Type::NORMAL:   return RunStruct<type::tags::Normal, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::FIGHTING: return RunStruct<type::tags::Fighting, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::FLYING:   return RunStruct<type::tags::Flying, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::POISON:   return RunStruct<type::tags::Poison, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::GROUND:   return RunStruct<type::tags::Ground, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::ROCK:     return RunStruct<type::tags::Rock, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::BUG:      return RunStruct<type::tags::Bug, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::GHOST:    return RunStruct<type::tags::Ghost, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::STEEL:    return RunStruct<type::tags::Steel, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::FIRE:     return RunStruct<type::tags::Fire, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::WATER:    return RunStruct<type::tags::Water, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::GRASS:    return RunStruct<type::tags::Grass, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::ELECTRIC: return RunStruct<type::tags::Electric, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::PSYCHIC:  return RunStruct<type::tags::Psychic, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::ICE:      return RunStruct<type::tags::Ice, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::DRAGON:   return RunStruct<type::tags::Dragon, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::DARK:     return RunStruct<type::tags::Dark, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::FAIRY:    return RunStruct<type::tags::Fairy, T...>::run(std::forward<RunArgs>(args)...);
-    // Type::NO_TYPE will pass through here often, but should do nothing
-    case Type::NO_TYPE: break;
-
-    default: POKESIM_REQUIRE_FAIL("Using a tag for type that does not exist.");
-  }
-
-  using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
-  if constexpr (std::is_void_v<ReturnType>) {
-    return;
-  }
-  else {
-    return ReturnType{};
-  }
-}
-
-// Assigns a type's tag to a handle
-void emplaceTagFromEnum(Type type, types::handle handle);
-void emplaceTagFromEnum(Type type, types::registry& registry, types::entity entity);
-
-// Checks if the handle has the type's tag
-bool hasTag(Type type, types::handle handle);
-bool hasTag(Type type, const types::registry& registry, types::entity entity);
-}  // namespace pokesim::dex
-
-//////////////// END OF src/Pokedex/EnumToTag/TypeEnumToTag.hpp ////////////////
 
 ////////////// START OF src/Battle/Pokemon/PokemonDataChecks.hpp ///////////////
 

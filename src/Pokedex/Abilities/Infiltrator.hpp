@@ -9,8 +9,8 @@ struct Infiltrator {
   static constexpr Ability name(GameMechanics) { return dex::Ability::INFILTRATOR; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Infiltrator"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "infiltrator"; }
+    static constexpr std::string_view name() { return "Infiltrator"; }
+    static constexpr std::string_view smogonId() { return "infiltrator"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

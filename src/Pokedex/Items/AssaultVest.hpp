@@ -16,8 +16,8 @@ struct AssaultVest {
   static constexpr types::effectMultiplier onModifySpdModifier(GameMechanics) { return 1.5F; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Assault Vest"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "assaultvest"; }
+    static constexpr std::string_view name() { return "Assault Vest"; }
+    static constexpr std::string_view smogonId() { return "assaultvest"; }
   };
 
   static void onModifySpd(Simulation& simulation);

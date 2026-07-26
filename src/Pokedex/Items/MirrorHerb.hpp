@@ -14,8 +14,8 @@ struct MirrorHerb {
   static constexpr Item name(GameMechanics) { return dex::Item::MIRROR_HERB; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Mirror Herb"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "mirrorherb"; }
+    static constexpr std::string_view name() { return "Mirror Herb"; }
+    static constexpr std::string_view smogonId() { return "mirrorherb"; }
   };
 
   static void onFoeAfterBoost(Simulation& simulation);

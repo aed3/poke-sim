@@ -20,8 +20,8 @@ struct Paralysis {
   static constexpr types::percentChance onBeforeMoveChance(GameMechanics) { return 25U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Paralysis"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "par"; }
+    static constexpr std::string_view name() { return "Paralysis"; }
+    static constexpr std::string_view smogonId() { return "par"; }
   };
 
   static void onModifySpe(Simulation& simulation);

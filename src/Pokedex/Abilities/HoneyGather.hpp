@@ -9,8 +9,8 @@ struct HoneyGather {
   static constexpr Ability name(GameMechanics) { return dex::Ability::HONEY_GATHER; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Honey Gather"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "honeygather"; }
+    static constexpr std::string_view name() { return "Honey Gather"; }
+    static constexpr std::string_view smogonId() { return "honeygather"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

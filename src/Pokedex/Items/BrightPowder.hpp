@@ -17,8 +17,8 @@ struct BrightPowder {
   static constexpr types::eventModifier onModifyAccuracyDenominator(GameMechanics) { return 4096U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Bright Powder"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "brightpowder"; }
+    static constexpr std::string_view name() { return "Bright Powder"; }
+    static constexpr std::string_view smogonId() { return "brightpowder"; }
   };
 
   static void onModifyAccuracy(Simulation& simulation);

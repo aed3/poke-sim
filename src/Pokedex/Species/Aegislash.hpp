@@ -23,9 +23,9 @@ struct Aegislash {
   static constexpr Ability primaryAbility(GameMechanics) { return Ability::STANCE_CHANGE; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Aegislash"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Aegislash"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "aegislash"; }
+    static constexpr std::string_view name() { return "Aegislash"; }
+    static constexpr std::string_view smogonName() { return "Aegislash"; }
+    static constexpr std::string_view smogonId() { return "aegislash"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -35,9 +35,9 @@ struct ShieldAegislash : Aegislash {
   static constexpr Species name(GameMechanics) { return Species::SHIELD_AEGISLASH; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Shield Form Aegislash"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Aegislash"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "aegislash"; }
+    static constexpr std::string_view name() { return "Shield Form Aegislash"; }
+    static constexpr std::string_view smogonName() { return "Aegislash"; }
+    static constexpr std::string_view smogonId() { return "aegislash"; }
   };
 };
 
@@ -50,9 +50,9 @@ struct BladeAegislash : Aegislash {
   static constexpr types::baseStat spd(GameMechanics) { return 50U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Blade Form Aegislash"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Aegislash-Blade"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "aegislashblade"; }
+    static constexpr std::string_view name() { return "Blade Form Aegislash"; }
+    static constexpr std::string_view smogonName() { return "Aegislash-Blade"; }
+    static constexpr std::string_view smogonId() { return "aegislashblade"; }
   };
 };
 

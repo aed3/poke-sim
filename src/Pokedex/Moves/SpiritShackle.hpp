@@ -32,8 +32,8 @@ struct SpiritShackle {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Spirit Shackle"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "spiritshackle"; }
+    static constexpr std::string_view name() { return "Spirit Shackle"; }
+    static constexpr std::string_view smogonId() { return "spiritshackle"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

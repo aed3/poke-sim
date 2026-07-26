@@ -25,9 +25,9 @@ struct Magnezone {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::ANALYTIC; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Magnezone"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Magnezone"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "magnezone"; }
+    static constexpr std::string_view name() { return "Magnezone"; }
+    static constexpr std::string_view smogonName() { return "Magnezone"; }
+    static constexpr std::string_view smogonId() { return "magnezone"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

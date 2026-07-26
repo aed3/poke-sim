@@ -25,9 +25,9 @@ struct Gardevoir {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::TELEPATHY; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Gardevoir"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Gardevoir"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "gardevoir"; }
+    static constexpr std::string_view name() { return "Gardevoir"; }
+    static constexpr std::string_view smogonName() { return "Gardevoir"; }
+    static constexpr std::string_view smogonId() { return "gardevoir"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

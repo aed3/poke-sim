@@ -13,8 +13,8 @@ struct LongReach {
   static constexpr Ability name(GameMechanics) { return dex::Ability::LONG_REACH; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Long Reach"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "longreach"; }
+    static constexpr std::string_view name() { return "Long Reach"; }
+    static constexpr std::string_view smogonId() { return "longreach"; }
   };
 
   static void onModifyMove(Simulation& simulation);

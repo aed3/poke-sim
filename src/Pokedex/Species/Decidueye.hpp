@@ -24,9 +24,9 @@ struct Decidueye {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::LONG_REACH; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Decidueye"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Decidueye"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "decidueye"; }
+    static constexpr std::string_view name() { return "Decidueye"; }
+    static constexpr std::string_view smogonName() { return "Decidueye"; }
+    static constexpr std::string_view smogonId() { return "decidueye"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -47,9 +47,9 @@ struct HisuianDecidueye {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::SCRAPPY; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Hisuian Decidueye"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Decidueye-Hisui"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "decidueyehisui"; }
+    static constexpr std::string_view name() { return "Hisuian Decidueye"; }
+    static constexpr std::string_view smogonName() { return "Decidueye-Hisui"; }
+    static constexpr std::string_view smogonId() { return "decidueyehisui"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

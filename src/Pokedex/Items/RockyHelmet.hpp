@@ -13,8 +13,8 @@ struct RockyHelmet {
   static constexpr Item name(GameMechanics) { return dex::Item::ROCKY_HELMET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Rocky Helmet"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "rockyhelmet"; }
+    static constexpr std::string_view name() { return "Rocky Helmet"; }
+    static constexpr std::string_view smogonId() { return "rockyhelmet"; }
   };
 
   static void onDamagingHit(Simulation& simulation);

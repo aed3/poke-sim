@@ -3657,7 +3657,7 @@ void setIfMoveCrits(Simulation& simulation) {
 
 namespace pokesim {
 namespace {
-template <typename T>
+template <typename Species>
 struct BuildSpecies {
  private:
   enum class Optional : std::uint8_t {
@@ -3669,7 +3669,7 @@ struct BuildSpecies {
   template <auto Member>
   using void_t = std::void_t<decltype(Member)>;
 
-  template <Optional, typename = T, typename V = void>
+  template <Optional, typename = Species, typename V = void>
   struct has : std::false_type {};
   template <typename Type>
   struct has<Optional::primaryAbility, Type, void_t<Type::primaryAbility>> : std::true_type {};
@@ -3682,24 +3682,27 @@ struct BuildSpecies {
   static types::entity run(types::registry& registry, GameMechanics gameMechanic) {
     types::handle species{registry, registry.create()};
 
-    species.emplace<SpeciesName>(T::name(gameMechanic));
+    species.emplace<SpeciesName>(Species::name(gameMechanic));
+    SpeciesTypes types = Species::type(gameMechanic);
     species.emplace<BaseStats>(
-      T::hp(gameMechanic),
-      T::atk(gameMechanic),
-      T::def(gameMechanic),
-      T::spa(gameMechanic),
-      T::spd(gameMechanic),
-      T::spe(gameMechanic));
-    species.emplace<SpeciesTypes>(T::type(gameMechanic).type1(), T::type(gameMechanic).type2());
+      Species::hp(gameMechanic),
+      Species::atk(gameMechanic),
+      Species::def(gameMechanic),
+      Species::spa(gameMechanic),
+      Species::spd(gameMechanic),
+      Species::spe(gameMechanic));
+    species.emplace<SpeciesTypes>(types);
+    dex::emplaceTagFromEnum(types.type1(), species);
+    dex::emplaceTagFromEnum(types.type2(), species);
 
     if constexpr (has<Optional::primaryAbility>::value) {
-      species.emplace<PrimaryAbility>(T::primaryAbility(gameMechanic));
+      species.emplace<PrimaryAbility>(Species::primaryAbility(gameMechanic));
     }
     if constexpr (has<Optional::secondaryAbility>::value) {
-      species.emplace<SecondaryAbility>(T::secondaryAbility(gameMechanic));
+      species.emplace<SecondaryAbility>(Species::secondaryAbility(gameMechanic));
     }
     if constexpr (has<Optional::hiddenAbility>::value) {
-      species.emplace<HiddenAbility>(T::hiddenAbility(gameMechanic));
+      species.emplace<HiddenAbility>(Species::hiddenAbility(gameMechanic));
     }
 
     return species.entity();
@@ -5568,22 +5571,22 @@ struct CheckIfStatusIsSettable {
     simulation.addToEntities<pokesim::tags::CanSetStatus, StatusType, CurrentEffectSource, CurrentEffectTarget>();
     simulation.view<checkIfTargetHasStatus, Tags<StatusType>>();
     if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Burn>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::type::tags::Fire>, Tags<StatusType>>();
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::Fire>, Tags<StatusType>>();
     }
     if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Freeze>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::type::tags::Ice>, Tags<StatusType>>();
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::Ice>, Tags<StatusType>>();
     }
     if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Paralysis>) {  // And simulation is using a mechanic
                                                                                    // where
                                                                                    // electric types cannot be paralyzed
-      simulation.view<checkTypeStatusImmunity<pokesim::type::tags::Electric>, Tags<StatusType>>();
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::Electric>, Tags<StatusType>>();
     }
 
     if constexpr (
       std::is_same_v<StatusType, pokesim::status::tags::Poison> ||
       std::is_same_v<StatusType, pokesim::status::tags::Toxic>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::type::tags::Poison>, Tags<StatusType>>();
-      simulation.view<checkTypeStatusImmunity<pokesim::type::tags::Steel>, Tags<StatusType>>();
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::Poison>, Tags<StatusType>>();
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::Steel>, Tags<StatusType>>();
     }
 
     runStatusImmunityEvent<StatusType>(simulation);

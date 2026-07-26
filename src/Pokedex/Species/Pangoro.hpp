@@ -25,9 +25,9 @@ struct Pangoro {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::SCRAPPY; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Pangoro"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Pangoro"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "pangoro"; }
+    static constexpr std::string_view name() { return "Pangoro"; }
+    static constexpr std::string_view smogonName() { return "Pangoro"; }
+    static constexpr std::string_view smogonId() { return "pangoro"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SWORD_SHIELD; }

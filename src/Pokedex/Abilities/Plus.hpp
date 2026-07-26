@@ -15,8 +15,8 @@ struct Plus {
 
   static constexpr types::effectMultiplier onModifySpaModifier(GameMechanics) { return 1.5F; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Plus"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "plus"; }
+    static constexpr std::string_view name() { return "Plus"; }
+    static constexpr std::string_view smogonId() { return "plus"; }
   };
 
   static void onModifySpA(Simulation& simulation);

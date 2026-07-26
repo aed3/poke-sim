@@ -25,9 +25,9 @@ struct Dragapult {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::CURSED_BODY; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Dragapult"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Dragapult"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "dragapult"; }
+    static constexpr std::string_view name() { return "Dragapult"; }
+    static constexpr std::string_view smogonName() { return "Dragapult"; }
+    static constexpr std::string_view smogonId() { return "dragapult"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

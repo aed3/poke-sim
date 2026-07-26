@@ -26,8 +26,8 @@ struct QuiverDance {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Quiver Dance"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "quiverdance"; }
+    static constexpr std::string_view name() { return "Quiver Dance"; }
+    static constexpr std::string_view smogonId() { return "quiverdance"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

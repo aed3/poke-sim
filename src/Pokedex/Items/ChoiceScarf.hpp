@@ -18,8 +18,8 @@ struct ChoiceScarf {
 
   static constexpr ItemProperty properties(GameMechanics) { return ItemProperty::CHOICE; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Choice Scarf"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "choicescarf"; }
+    static constexpr std::string_view name() { return "Choice Scarf"; }
+    static constexpr std::string_view smogonId() { return "choicescarf"; }
   };
 
   static void onModifySpe(Simulation& simulation);

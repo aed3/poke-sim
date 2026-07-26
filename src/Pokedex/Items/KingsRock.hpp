@@ -13,8 +13,8 @@ struct KingsRock {
   static constexpr Item name(GameMechanics) { return dex::Item::KINGS_ROCK; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "King's Rock"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "kingsrock"; }
+    static constexpr std::string_view name() { return "King's Rock"; }
+    static constexpr std::string_view smogonId() { return "kingsrock"; }
   };
 
   static void onModifyMove(Simulation& simulation);

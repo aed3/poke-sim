@@ -20,11 +20,11 @@
 #include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
-#include <Components/Tags/TypeTags.hpp>
 #include <Pokedex/EnumToTag/AbilityEnumToTag.hpp>
 #include <Pokedex/EnumToTag/ItemEnumToTag.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
+#include <Pokedex/Types/headers.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
@@ -124,22 +124,22 @@ struct CheckIfStatusIsSettable {
     simulation.addToEntities<pokesim::tags::CanSetStatus, StatusType, CurrentEffectSource, CurrentEffectTarget>();
     simulation.view<checkIfTargetHasStatus, Tags<StatusType>>();
     if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Burn>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::type::tags::Fire>, Tags<StatusType>>();
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::Fire>, Tags<StatusType>>();
     }
     if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Freeze>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::type::tags::Ice>, Tags<StatusType>>();
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::Ice>, Tags<StatusType>>();
     }
     if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Paralysis>) {  // And simulation is using a mechanic
                                                                                    // where
                                                                                    // electric types cannot be paralyzed
-      simulation.view<checkTypeStatusImmunity<pokesim::type::tags::Electric>, Tags<StatusType>>();
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::Electric>, Tags<StatusType>>();
     }
 
     if constexpr (
       std::is_same_v<StatusType, pokesim::status::tags::Poison> ||
       std::is_same_v<StatusType, pokesim::status::tags::Toxic>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::type::tags::Poison>, Tags<StatusType>>();
-      simulation.view<checkTypeStatusImmunity<pokesim::type::tags::Steel>, Tags<StatusType>>();
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::Poison>, Tags<StatusType>>();
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::Steel>, Tags<StatusType>>();
     }
 
     runStatusImmunityEvent<StatusType>(simulation);

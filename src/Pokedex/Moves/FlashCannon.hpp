@@ -28,8 +28,8 @@ struct FlashCannon {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Flash Cannon"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "flashcannon"; }
+    static constexpr std::string_view name() { return "Flash Cannon"; }
+    static constexpr std::string_view smogonId() { return "flashcannon"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

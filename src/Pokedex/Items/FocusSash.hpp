@@ -16,8 +16,8 @@ struct FocusSash {
   static constexpr types::damage onAfterModifyDamageHpToKeep(GameMechanics) { return 1U; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Focus Sash"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "focussash"; }
+    static constexpr std::string_view name() { return "Focus Sash"; }
+    static constexpr std::string_view smogonId() { return "focussash"; }
   };
 
   static void onAfterModifyDamage(Simulation& simulation);

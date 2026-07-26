@@ -20,8 +20,8 @@ struct StanceChange {
   }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Stance Change"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "stancechange"; }
+    static constexpr std::string_view name() { return "Stance Change"; }
+    static constexpr std::string_view smogonId() { return "stancechange"; }
   };
 
   static void onModifyMove(Simulation& simulation);

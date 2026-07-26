@@ -27,8 +27,8 @@ struct Reversal {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Reversal"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "reversal"; }
+    static constexpr std::string_view name() { return "Reversal"; }
+    static constexpr std::string_view smogonId() { return "reversal"; }
   };
 
   static void onBasePower(Simulation& simulation);

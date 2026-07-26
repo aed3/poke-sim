@@ -24,9 +24,9 @@ struct Ampharos {
   static constexpr Ability hiddenAbility(GameMechanics) { return Ability::PLUS; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Ampharos"; }
-    static constexpr std::string_view smogonName(GameMechanics) { return "Ampharos"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "ampharos"; }
+    static constexpr std::string_view name() { return "Ampharos"; }
+    static constexpr std::string_view smogonName() { return "Ampharos"; }
+    static constexpr std::string_view smogonId() { return "ampharos"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

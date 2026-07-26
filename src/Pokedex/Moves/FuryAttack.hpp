@@ -25,8 +25,8 @@ struct FuryAttack {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Fury Attack"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "furyattack"; }
+    static constexpr std::string_view name() { return "Fury Attack"; }
+    static constexpr std::string_view smogonId() { return "furyattack"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }

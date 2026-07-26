@@ -15,8 +15,8 @@ struct LumBerry {
 
   static constexpr ItemProperty properties(GameMechanics) { return ItemProperty::BERRY; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Lum Berry"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "lumberry"; }
+    static constexpr std::string_view name() { return "Lum Berry"; }
+    static constexpr std::string_view smogonId() { return "lumberry"; }
   };
 
   static void onAfterSetStatus(Simulation& simulation);

@@ -16,8 +16,8 @@ struct Competitive {
   static constexpr types::boost onAfterEachBoostSpaBoost(GameMechanics) { return 2; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Competitive"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "competitive"; }
+    static constexpr std::string_view name() { return "Competitive"; }
+    static constexpr std::string_view smogonId() { return "competitive"; }
   };
 
   static void onAfterEachBoost(Simulation& simulation);

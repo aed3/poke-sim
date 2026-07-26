@@ -15,8 +15,8 @@ struct MetronomeItem {
   static constexpr Item name(GameMechanics) { return dex::Item::METRONOME; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Metronome"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "metronome"; }
+    static constexpr std::string_view name() { return "Metronome"; }
+    static constexpr std::string_view smogonId() { return "metronome"; }
   };
 
   static void onStart(Simulation& simulation);

@@ -17,8 +17,8 @@ struct Burn {
   static constexpr types::effectMultiplier physicalDamageMultiplier(GameMechanics) { return 0.5F; }
   static constexpr types::stat onResidualHpDecreaseDivisor(GameMechanics) { return 16U; }
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Burn"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "brn"; }
+    static constexpr std::string_view name() { return "Burn"; }
+    static constexpr std::string_view smogonId() { return "brn"; }
   };
 
   static void onSetDamageRollModifiers(Simulation& simulation);

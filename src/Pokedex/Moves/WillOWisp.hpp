@@ -25,8 +25,8 @@ struct WillOWisp {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
-    static constexpr std::string_view name(GameMechanics) { return "Will-O-Wisp"; }
-    static constexpr std::string_view smogonId(GameMechanics) { return "willowisp"; }
+    static constexpr std::string_view name() { return "Will-O-Wisp"; }
+    static constexpr std::string_view smogonId() { return "willowisp"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
