@@ -564,7 +564,7 @@ void calcDamage(Simulation& simulation) {
 }  // namespace
 
 void run(Simulation& simulation) {
-  debug::Checks debugChecks(simulation);
+  debug::Checks debugChecks{simulation};
   debugChecks.checkInputs();
 
   calcDamage(simulation);

@@ -209,7 +209,7 @@ TEST_CASE("Simulate Turn: Action Queue Order", "[Simulation][SimulateTurn]") {
 
 TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation simulation(pokedex, BattleFormat::SINGLES);
+  Simulation simulation{pokedex, BattleFormat::SINGLES};
   const types::registry& registry = simulation.registry;
 
   BattleCreationInfo battleCreationInfo;
@@ -248,9 +248,6 @@ TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   }
   for (types::entity side : registry.view<tags::Side>()) {
     specificallyCheckEntities.push_back(side);
-  }
-  for (types::entity move : registry.view<MoveName>()) {
-    specificallyCheckEntities.push_back(move);
   }
 
   TestChecks checks{simulation, specificallyCheckEntities};

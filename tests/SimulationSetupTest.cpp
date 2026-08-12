@@ -86,7 +86,7 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
   p2Decision.decisions = types::slotDecisions{p2MoveDecision};
 
   auto check = [&]() {
-    Simulation simulation(pokedex, BattleFormat::SINGLES);
+    Simulation simulation{pokedex, BattleFormat::SINGLES};
     simulation.createInitialStates({battleInfo});
 
     types::registry& registry = simulation.registry;
@@ -245,7 +245,7 @@ TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalculateDamage][Setup]
     },
   };
 
-  Simulation simulation(pokedex, BattleFormat::SINGLES);
+  Simulation simulation{pokedex, BattleFormat::SINGLES};
   simulation.createInitialStates({battleInfo});
 
   const types::registry& registry = simulation.registry;
@@ -281,7 +281,7 @@ TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup
     {Slot::P2B, Slot::P1B, Slot::P2B, {dex::Move::MOONBLAST}, dex::Status::TOX, {{dex::Stat::SPE, 6}}},
   };
 
-  Simulation simulation(pokedex, BattleFormat::SINGLES);
+  Simulation simulation{pokedex, BattleFormat::SINGLES};
   simulation.createInitialStates({battleInfo});
 
   const types::registry& registry = simulation.registry;

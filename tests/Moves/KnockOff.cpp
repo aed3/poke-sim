@@ -4,7 +4,7 @@
 namespace pokesim {
 TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][KnockOff]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation simulation(pokedex, BattleFormat::SINGLES);
+  Simulation simulation{pokedex, BattleFormat::SINGLES};
   const types::registry& registry = simulation.registry;
 
   BattleCreationInfo battleCreationInfo;
@@ -44,12 +44,6 @@ TEST_CASE("Knock Off: Remove Most Items", "[Simulation][SimulateTurn][Move][Knoc
   }
   for (types::entity side : registry.view<tags::Side>()) {
     specificallyCheckEntities.push_back(side);
-  }
-
-  for (const auto& [entity, move] : registry.view<MoveName>().each()) {
-    if (move.val == dex::Move::KNOCK_OFF || move.val == dex::Move::SPLASH) {
-      specificallyCheckEntities.push_back(entity);
-    }
   }
 
   TestChecks checks{simulation, specificallyCheckEntities};

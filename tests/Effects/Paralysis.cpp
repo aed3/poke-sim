@@ -3,7 +3,7 @@
 namespace pokesim {
 TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effect][Status][Paralysis]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation simulation(pokedex, BattleFormat::SINGLES);
+  Simulation simulation{pokedex, BattleFormat::SINGLES};
   const types::registry& registry = simulation.registry;
 
   BattleCreationInfo battleCreationInfo;
@@ -42,12 +42,6 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Effec
   }
   for (types::entity side : registry.view<tags::Side>()) {
     specificallyCheckEntities.push_back(side);
-  }
-
-  for (const auto& [entity, move] : registry.view<MoveName>().each()) {
-    if (move.val == dex::Move::KNOCK_OFF || move.val == dex::Move::SPLASH) {
-      specificallyCheckEntities.push_back(entity);
-    }
   }
 
   TestChecks checks{simulation, specificallyCheckEntities};

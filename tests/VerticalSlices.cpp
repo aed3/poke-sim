@@ -75,8 +75,6 @@ struct VerticalSliceChecks : TestChecks {
 
   void checkSides() const { specificallyCheckEntities<tags::Side, SideDecision>(); }
 
-  void checkMoves() const { specificallyCheckEntities<MoveName, Pp>(); }
-
  public:
   VerticalSliceChecks(
     const Simulation& _simulation, const types::entityVector& specificallyCheckedEntities,
@@ -91,7 +89,6 @@ struct VerticalSliceChecks : TestChecks {
       checkSides();
       checkPokemon();
     }
-    checkMoves();
     checkRemainingOutputs();
 
     if (!options->getMakeBranchesOnRandomEvents()) {
@@ -476,12 +473,6 @@ TEST_CASE(
     specificallyCheckedEntities.push_back(pokemon);
   }
 
-  for (const auto& [entity, move] : registry.view<MoveName>().each()) {
-    if (move.val == dex::Move::KNOCK_OFF || move.val == dex::Move::THUNDERBOLT) {
-      specificallyCheckedEntities.push_back(entity);
-    }
-  }
-
   Checks checks{simulation, specificallyCheckedEntities};
   const auto result = simulation.simulateTurn();
   checks.checkEntities();
@@ -816,10 +807,6 @@ TEST_CASE(
 
   for (types::entity pokemon : registry.view<tags::Pokemon>()) {
     specificallyCheckedEntities.push_back(pokemon);
-  }
-
-  for (types::entity move : registry.view<MoveName>()) {
-    specificallyCheckedEntities.push_back(move);
   }
 
   Checks checks{simulation, specificallyCheckedEntities};
