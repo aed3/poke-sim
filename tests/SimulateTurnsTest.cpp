@@ -207,6 +207,64 @@ TEST_CASE("Simulate Turn: Action Queue Order", "[Simulation][SimulateTurn]") {
   }
 }
 
+TEST_CASE("Simulate Turn: Basic Switching", "[Simulation][SimulateTurn]") {
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
+  Simulation simulation{pokedex, BattleFormat::SINGLES};
+  const types::registry& registry = simulation.registry;
+
+  BattleCreationInfo battleCreationInfo;
+  battleCreationInfo.runWithSimulateTurn = true;
+  battleCreationInfo.turn = 1U;
+  PokemonCreationInfo p1A{dex::Species::EMPOLEON}, p2A{dex::Species::AMPHAROS}, p1B{dex::Species::GARDEVOIR},
+    p2B{dex::Species::PANGORO};
+  p1A.moves = p1B.moves = p2A.moves = p2B.moves = {{dex::Move::SPLASH}};
+  battleCreationInfo.sides.p1().team = {p1A, p1B};
+  battleCreationInfo.sides.p2().team = {p2A, p2B};
+  battleCreationInfo.decisionsToSimulate = {{
+    {PlayerSideId::P1, types::slotDecisions{SwitchDecision{Slot::P1A, Slot::P1B}}},
+    {PlayerSideId::P2, types::slotDecisions{SwitchDecision{Slot::P2A, Slot::P2B}}},
+  }};
+
+  pokedex.loadForBattleInfo({battleCreationInfo});
+  simulation.createInitialStates({battleCreationInfo});
+  simulation.simulateTurnOptions.setApplyChangesToInputBattle(true);
+
+  types::entityVector specificallyCheckEntities;
+  for (types::entity entity : registry.view<types::entity>()) {
+    specificallyCheckEntities.push_back(entity);
+  }
+
+  TestChecks checks{simulation, specificallyCheckEntities};
+  auto result = simulation.simulateTurn();
+  checks.checkRemainingOutputs();
+
+  REQUIRE(result.turnOutcomeBattlesResults().size() == 1U);
+  const auto& turnOutcomeBattles = std::get<1>(*result.turnOutcomeBattlesResults().each().begin()).val;
+  REQUIRE(turnOutcomeBattles.size() == 1U);
+
+  checks.checkViewForChanges<
+    tags::Battle,
+    Turn,
+    simulate_turn::TurnOutcomeBattles,
+    simulate_turn::tags::SpeedSortNeeded,
+    ParentBattle,
+    RootBattle>();
+
+  checks.checkViewForChanges<tags::Side, SideDecision, Team>();
+
+  checks.checkViewForChanges<tags::Pokemon, tags::ActivePokemon>();
+
+  for (types::entity side : registry.view<tags::Side>()) {
+    const Team& currentTeam = registry.get<Team>(side);
+    const Team& initialTeam = checks.getInitialComponents<Team>(side);
+
+    REQUIRE(currentTeam.val[0] == initialTeam.val[1]);
+    REQUIRE(currentTeam.val[1] == initialTeam.val[0]);
+    REQUIRE(registry.all_of<tags::ActivePokemon>(currentTeam.val[0]));
+    REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(currentTeam.val[1]));
+  }
+}
+
 TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   Simulation simulation{pokedex, BattleFormat::SINGLES};

@@ -4,6 +4,7 @@
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
+#include <Battle/Helpers/Helpers.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/RecycledEntities.hpp>
 #include <Components/EntityHolders/Sides.hpp>
@@ -33,6 +34,7 @@ struct Checks : pokesim::debug::Checks {
     }
 
     copyBattles();
+    checkDecisions();
     check();
   }
 
@@ -49,6 +51,45 @@ struct Checks : pokesim::debug::Checks {
     for (types::entity entity : getBattleView()) {
       copyEntity(entity);
       copyEntity(registry->get<RecycledAction>(entity).val);
+    }
+  }
+
+  void checkDecisions() const {
+    for (types::entity entity : getBattleView()) {
+      const SideDecision* sideDecision = registry->try_get<SideDecision>(entity);
+      if (!sideDecision) {
+        return;
+      }
+      pokesim::debug::check(*sideDecision);
+      if (!sideDecision->decisions.holds<types::slotDecisions>()) {
+        return;
+      }
+
+      for (const auto& decision : sideDecision->decisions.get<types::slotDecisions>()) {
+        if (!decision.holds<SwitchDecision>()) {
+          continue;
+        }
+
+        Slot target = decision.targetSlot();
+        Slot source = decision.sourceSlot();
+        PlayerSideId sourceSide = slotToSideId(source);
+        PlayerSideId targetSide = slotToSideId(target);
+        types::entity targetEntity = slotToPokemonEntity(*registry, registry->get<Sides>(entity), target);
+
+        POKESIM_REQUIRE_NM(sourceSide == targetSide);
+        POKESIM_REQUIRE_NM(!has<pokesim::tags::Fainted>(targetEntity));
+        if (simulation->isBattleFormat(BattleFormat::SINGLES)) {
+          POKESIM_REQUIRE_NM(sourceSide == PlayerSideId::P1 ? source == Slot::P1A : source == Slot::P2A);
+          POKESIM_REQUIRE_NM(targetSide == PlayerSideId::P1 ? target != Slot::P1A : target != Slot::P2A);
+        }
+        else {
+          POKESIM_REQUIRE_NM(
+            sourceSide == PlayerSideId::P1 ? (source == Slot::P1A || source == Slot::P2A)
+                                           : (source == Slot::P2A || source == Slot::P2B));
+          POKESIM_REQUIRE_NM(targetSide == PlayerSideId::P1 ? target != Slot::P1A : target != Slot::P2A);
+          POKESIM_REQUIRE_NM(targetSide == PlayerSideId::P1 ? target != Slot::P1B : target != Slot::P2B);
+        }
+      }
     }
   }
 

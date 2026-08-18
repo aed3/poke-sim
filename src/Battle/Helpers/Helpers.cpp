@@ -23,15 +23,24 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
-types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
+namespace {
+types::teamPositionIndex slotToIndex(Slot targetSlot) {
   POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
-  types::entity sideEntity = sides.val[((types::teamPositionIndex)targetSlot - 1U) % 2U];
+  return ((types::teamPositionIndex)targetSlot - 1U) / 2U;
+}
+}  // namespace
+
+PlayerSideId slotToSideId(Slot targetSlot) {
+  return ((types::teamPositionIndex)targetSlot - 1U) % 2U ? PlayerSideId::P2 : PlayerSideId::P1;
+}
+
+types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
+  types::entity sideEntity = sides.val[slotToSideId(targetSlot) == PlayerSideId::P1 ? 0U : 1U];
   return sideEntity;
 }
 
 types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot) {
-  POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
-  types::teamPositionIndex index = ((types::teamPositionIndex)targetSlot - 1U) / 2U;
+  types::teamPositionIndex index = slotToIndex(targetSlot);
 
   const Team& team = registry.get<Team>(sideEntity);
   POKESIM_REQUIRE(team.val.size() > index, "Choosing a target slot for team member that does not exist.");
@@ -39,8 +48,23 @@ types::entity slotToPokemonEntity(const types::registry& registry, types::entity
 }
 
 types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
-  POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   return slotToPokemonEntity(registry, slotToSideEntity(sides, targetSlot), targetSlot);
+}
+
+void swapEntitySlots(types::registry& registry, types::entity sideEntity, Slot slot1, Slot slot2) {
+  POKESIM_REQUIRE(slotToSideId(slot1) == slotToSideId(slot2), "Swapped slots must be from the same side");
+  types::teamPositionIndex index1 = slotToIndex(slot1);
+  types::teamPositionIndex index2 = slotToIndex(slot2);
+
+  Team& team = registry.get<Team>(sideEntity);
+  POKESIM_REQUIRE(team.val.size() > index1, "Choosing a target slot for team member that does not exist.");
+  POKESIM_REQUIRE(team.val.size() > index2, "Choosing a target slot for team member that does not exist.");
+
+  std::swap(team.val[index1], team.val[index2]);
+}
+
+void swapEntitySlots(types::registry& registry, const Sides& sides, Slot slot1, Slot slot2) {
+  swapEntitySlots(registry, slotToSideEntity(sides, slot1), slot1, slot2);
 }
 
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {

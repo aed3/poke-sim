@@ -513,7 +513,7 @@ void createInitialState(
 }  // namespace
 
 void Simulation::createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList) {
-  debug::SimulationSetupChecks debugChecks(this, battleInfoList);
+  debug::SimulationSetupChecks debugChecks{this, battleInfoList};
 
   EntityLists entityLists{this, battleInfoList};
 

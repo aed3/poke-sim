@@ -4,6 +4,8 @@ namespace pokesim {
 class Simulation;
 
 namespace internal {
+void runEachUpdate(Simulation& simulation);
+
 void runBeforeMove(Simulation& simulation);
 void runResidual(Simulation& simulation);
 
@@ -51,6 +53,9 @@ void runEndItemEvent(Simulation& simulation);
 
 void runEndAbilityEvent(Simulation& simulation);
 
+void runBeforeSwitchOutEvent(Simulation& simulation);  // Pursuit and Dynamax, only for UnFaintedActiveSwitch
+void runSwitchInEvent(Simulation& simulation);
+void runSwitchOutEvent(Simulation& simulation);  // Only for UnFaintedActiveSwitch
 void runFaintEvent(Simulation& simulation);
 void runAfterFaintEvent(Simulation& simulation);
 }  // namespace internal

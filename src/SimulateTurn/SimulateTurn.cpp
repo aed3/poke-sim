@@ -57,6 +57,27 @@ auto getBattleFilter(Simulation& simulation) {
   return pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::Battle>{simulation};
 }
 
+template <typename ActionTag>
+void removeActionBySource(types::handle sourceHandle, Battle battle) {
+  types::registry& registry = *sourceHandle.registry();
+  registry.remove<ActionTag>(battle.val);
+  registry.remove<CurrentActionSource>(battle.val);
+  sourceHandle.remove<pokesim::tags::CurrentActionSource>();
+}
+
+template <typename ActionTag>
+auto setSourceForAction(Simulation& simulation) {
+  getBattleFilter(simulation).view<internal::setCurrentActionSource, Tags<ActionTag>>();
+
+  simulation.view<removeActionBySource<ActionTag>, Tags<pokesim::tags::CurrentActionSource, pokesim::tags::Fainted>>();
+  simulation.view<
+    removeActionBySource<ActionTag>,
+    Tags<pokesim::tags::CurrentActionSource>,
+    entt::exclude_t<pokesim::tags::ActivePokemon>>();
+
+  return pokesim::internal::EntityFilter<ActionTag, pokesim::tags::Battle>{simulation};
+}
+
 void addAddedTarget(types::registry& registry, Battle battle, Slot allySlot) {
   const Sides& sides = registry.get<Sides>(battle.val);
   types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, allySlot);
@@ -90,7 +111,7 @@ void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
 
 void setTargetReferenceComponents(types::registry& registry, CurrentAction& action) {
   for (types::entity target : action.targets) {
-    registry.emplace<pokesim::tags::CurrentActionMoveTarget>(target);
+    registry.emplace<pokesim::tags::CurrentActionTarget>(target);
     registry.emplace<CurrentActionSource>(target, action.source);
   }
 }
@@ -143,7 +164,7 @@ void setMoveTargets(Simulation& simulation) {
     return;
   }
 
-  battleFilter.view<internal::setCurrentActionTarget>(simulation);
+  battleFilter.view<internal::setCurrentActionMoveTarget>(simulation);
 
   battleFilter.view<setActionMoveReferenceComponents<RecycledActionMove>>();
   setActionMoveData(simulation);
@@ -171,6 +192,12 @@ void setMoveTargets(Simulation& simulation) {
   battleFilter.view<setTargetReferenceComponents>();
 }
 
+void swapPokemonSlots(types::registry& registry, const CurrentAction& action, const Sides& sides) {
+  auto [sourceSlot, targetSlot] = registry.get<SourceSlotName, TargetSlotName>(action.action);
+
+  swapEntitySlots(registry, sides, sourceSlot.val, targetSlot.val);
+}
+
 void useMove(Simulation& simulation) {
   // ModifyTarget
   // ModifyType
@@ -180,26 +207,8 @@ void useMove(Simulation& simulation) {
   internal::runAfterMoveUsedEvent(simulation);
 }
 
-template <typename ActionTag>
-void removeActionBySource(types::handle sourceHandle, Battle battle) {
-  types::registry& registry = *sourceHandle.registry();
-  registry.remove<ActionTag>(battle.val);
-  registry.remove<CurrentActionSource>(battle.val);
-  sourceHandle.remove<pokesim::tags::CurrentActionMoveSource>();
-}
-
 void runMoveAction(Simulation& simulation) {
-  getBattleFilter(simulation).view<internal::setCurrentActionSource, Tags<action::tags::Move>>();
-
-  simulation.view<
-    removeActionBySource<action::tags::Move>,
-    Tags<pokesim::tags::CurrentActionMoveSource, pokesim::tags::Fainted>>();
-  simulation.view<
-    removeActionBySource<action::tags::Move>,
-    Tags<pokesim::tags::CurrentActionMoveSource>,
-    entt::exclude_t<pokesim::tags::ActivePokemon>>();
-
-  pokesim::internal::EntityFilter<action::tags::Move, pokesim::tags::Battle> battleFilter{simulation};
+  auto battleFilter = setSourceForAction<action::tags::Move>(simulation);
   if (battleFilter.hasNoneSelected()) {
     return;
   }
@@ -210,9 +219,41 @@ void runMoveAction(Simulation& simulation) {
   internal::runBeforeMove(simulation);
 
   simulation.view<internal::setLastMoveUsed>();
-  simulation.view<internal::deductPp, Tags<pokesim::tags::CurrentActionMoveSource>>();
+  simulation.view<internal::deductPp, Tags<pokesim::tags::CurrentActionSource>>();
 
   useMove(simulation);
+
+  internal::clearMoveAction(simulation);
+}
+
+void runSwitchAction(Simulation& simulation) {
+  auto battleFilter = internal::EntityFilter<action::tags::Switch, pokesim::tags::Battle>{simulation};
+  if (battleFilter.hasNoneSelected()) {
+    return;
+  }
+
+  battleFilter.view<internal::setCurrentActionSwitchSource>();
+  battleFilter.view<internal::setCurrentActionSwitchTarget>();
+  internal::runBeforeSwitchOutEvent(simulation);
+  internal::runEachUpdate(simulation);
+  internal::runSwitchOutEvent(simulation);
+
+  internal::runEndAbilityEvent(simulation);
+
+  simulation.addToEntities<pokesim::internal::tags::EndItem, action::tags::NotFaintedActiveSwitch>();
+  internal::runEndItemEvent(simulation);
+  simulation.removeFromEntities<pokesim::internal::tags::EndItem>();
+
+  simulation
+    .view<internal::clearVolatiles, Tags<pokesim::tags::CurrentActionSource, action::tags::NotFaintedActiveSwitch>>();
+
+  simulation.removeFromEntities<pokesim::tags::ActivePokemon, pokesim::tags::CurrentActionSource>();
+  simulation.addToEntities<pokesim::tags::ActivePokemon, pokesim::tags::CurrentActionTarget>();
+  battleFilter.view<swapPokemonSlots>();
+
+  internal::runSwitchInEvent(simulation);
+
+  internal::clearSwitchAction(simulation);
 }
 
 void runResidualAction(Simulation& simulation) {
@@ -225,10 +266,13 @@ void runResidualAction(Simulation& simulation) {
   simulation.registry.clear<tags::SpeedSortNeeded>();
 
   internal::runResidual(simulation);
+
+  simulation.registry.clear<action::tags::Residual>();
 }
 
 void runBeforeTurnAction(Simulation&) {
   // Barely used, will find different way of handling it
+  // simulation.registry.clear<action::tags::BeforeTurn>();
 }
 
 void setFainting(types::registry& registry, FaintQueue& faintQueue) {
@@ -304,9 +348,12 @@ void faintPokemon(Simulation& simulation) {
 void runCurrentAction(Simulation& simulation) {
   runBeforeTurnAction(simulation);
   runMoveAction(simulation);
+  runSwitchAction(simulation);
   runResidualAction(simulation);
 
-  internal::clearCurrentAction(simulation);
+  simulation.removeFromEntities<MoveName, action::tags::Current>();
+  simulation.registry.clear<CurrentAction, SourceSlotName, TargetSlotName, action::tags::Current>();
+
   faintPokemon(simulation);
   // Update
   // Switch requests

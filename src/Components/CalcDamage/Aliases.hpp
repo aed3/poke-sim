@@ -10,8 +10,8 @@ using UsedMovesAsAttacker = CurrentActionMovesAsSource;
 using UsedMovesAsDefender = CurrentActionMovesAsTarget;
 
 namespace tags {
-using Attacker = pokesim::tags::CurrentActionMoveSource;
-using Defender = pokesim::tags::CurrentActionMoveTarget;
+using Attacker = pokesim::tags::CurrentActionSource;
+using Defender = pokesim::tags::CurrentActionTarget;
 using UsedMove = pokesim::tags::CurrentActionMove;
 using FailedUsedMove = pokesim::tags::FailedCurrentActionMove;
 }  // namespace tags

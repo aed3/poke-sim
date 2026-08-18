@@ -42,9 +42,6 @@ void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& sl
   types::registry& registry = *sideHandle.registry();
   const auto& decision = slotDecision.get<Decision>();
 
-  POKESIM_REQUIRE(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
-  POKESIM_REQUIRE(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
-
   ActionQueueItem actionQueueItem;
   actionQueueItem.decision = decision;
 
@@ -89,9 +86,6 @@ void resolveTeamDecision(types::registry&, const types::teamOrder&, ActionQueue&
 }  // namespace
 
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
-  POKESIM_REQUIRE(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player.");
-  POKESIM_REQUIRE(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
-
   const Battle& battle = sideHandle.get<Battle>();
   types::registry& registry = *sideHandle.registry();
   ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
@@ -102,21 +96,6 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
       "Slot decisions only have an effect after a battle starts. Make sure to pass a `teamOrder` decision at the start "
       "of a battle (aka team preview).");
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
-
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
-    for (const auto& decision : decisions) {
-      if (sideDecision.sideId == PlayerSideId::P1) {
-        POKESIM_REQUIRE(
-          (decision.sourceSlot() == Slot::P1A || decision.sourceSlot() == Slot::P1B),
-          "Source must be from a player 1 in battle slot.");
-      }
-      else {
-        POKESIM_REQUIRE(
-          (decision.sourceSlot() == Slot::P2A || decision.sourceSlot() == Slot::P2B),
-          "Source must be from a player 2 in battle slot.");
-      }
-    }
-#endif
 
     resolveSlotDecisions(sideHandle, decisions, actionQueue);
   }
@@ -193,6 +172,13 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, Recy
   registry.emplace<action::tags::Current>(action.val);
 
   switch (nextActon.order) {
+    case ActionOrder::SWITCH: {
+      battleHandle.emplace<action::tags::Switch>();
+      const SwitchDecision& decision = nextActon.decision.get<SwitchDecision>();
+      registry.emplace<SourceSlotName>(action.val, decision.sourceSlot);
+      registry.emplace<TargetSlotName>(action.val, decision.targetSlot);
+      break;
+    }
     case ActionOrder::MOVE: {
       battleHandle.emplace<action::tags::Move>();
       const MoveDecision& decision = nextActon.decision.get<MoveDecision>();

@@ -445,8 +445,8 @@ void checkActionMove(types::entity moveEntity, const types::registry& registry) 
   const auto& [attacker, defender, battle, typeName] =
     registry.get<CurrentActionSource, CurrentActionTarget, Battle, TypeName>(moveEntity);
 
-  POKESIM_REQUIRE_NM(has<tags::CurrentActionMoveSource>(attacker.val, registry));
-  POKESIM_REQUIRE_NM(has<tags::CurrentActionMoveTarget>(defender.val, registry));
+  POKESIM_REQUIRE_NM(has<tags::CurrentActionSource>(attacker.val, registry));
+  POKESIM_REQUIRE_NM(has<tags::CurrentActionTarget>(defender.val, registry));
   POKESIM_REQUIRE_NM(has<tags::Battle>(battle.val, registry));
   check(typeName);
 
@@ -1176,9 +1176,20 @@ void check(const internal::RandomEqualChanceStack& randomEqualChanceStack, const
 template <>
 void check(const SideDecision& sideDecision) {
   checkPlayerSideId(sideDecision.sideId);
+  POKESIM_REQUIRE(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     const types::slotDecisions& decisions = sideDecision.decisions.get<types::slotDecisions>();
     for (const auto& decision : decisions) {
+      if (sideDecision.sideId == PlayerSideId::P1) {
+        POKESIM_REQUIRE(
+          (decision.sourceSlot() == Slot::P1A || decision.sourceSlot() == Slot::P1B),
+          "Source must be from a player 1 in battle slot.");
+      }
+      else {
+        POKESIM_REQUIRE(
+          (decision.sourceSlot() == Slot::P2A || decision.sourceSlot() == Slot::P2B),
+          "Source must be from a player 2 in battle slot.");
+      }
       check(decision);
     }
   }
@@ -1332,13 +1343,15 @@ template <>
 void check(const types::slotDecision& slotDecision) {
   checkSlot(slotDecision.sourceSlot());
   checkSlot(slotDecision.targetSlot());
-  auto [moveDecision, megaDecision, zMoveDecision, dynamaxDecision, teraDecision, itemDecision] = slotDecision.get_if<
-    MoveDecision,
-    MegaEvolveAndMoveDecision,
-    ZMoveDecision,
-    DynamaxAndMoveDecision,
-    TerastallizeAndMoveDecision,
-    ItemDecision>();
+  auto [moveDecision, megaDecision, zMoveDecision, dynamaxDecision, teraDecision, switchDecision, itemDecision] =
+    slotDecision.get_if<
+      MoveDecision,
+      MegaEvolveAndMoveDecision,
+      ZMoveDecision,
+      DynamaxAndMoveDecision,
+      TerastallizeAndMoveDecision,
+      SwitchDecision,
+      ItemDecision>();
 
   if (moveDecision) check(MoveName{moveDecision->move});
   if (megaDecision) check(MoveName{megaDecision->move});
@@ -1346,6 +1359,13 @@ void check(const types::slotDecision& slotDecision) {
   if (dynamaxDecision) check(MoveName{dynamaxDecision->move});
   if (teraDecision) check(MoveName{teraDecision->move});
   if (itemDecision) check(ItemName{itemDecision->item});
+
+  if (switchDecision) {
+    Slot source = switchDecision->sourceSlot;
+    Slot target = switchDecision->targetSlot;
+    POKESIM_REQUIRE(slotToSideId(source) == slotToSideId(target), "Must switch to a slot on the same side.");
+    POKESIM_REQUIRE(target != Slot::P1A && target != Slot::P2A, "Cannot switch to an active slot.");
+  }
 }
 
 template <>
@@ -2073,6 +2093,8 @@ void applyBasePowerEventModifier(
 }
 }  // namespace
 
+void runEachUpdate(Simulation&) {}
+
 void runBeforeMove(Simulation& simulation) {
   pokesim::dex::Paralysis::onBeforeMove(simulation);
   pokesim::dex::ChoiceLock::onBeforeMove(simulation);
@@ -2222,6 +2244,9 @@ void runEndItemEvent(Simulation& simulation) {
 }
 
 void runEndAbilityEvent(Simulation&) {}
+void runBeforeSwitchOutEvent(Simulation&) {}
+void runSwitchInEvent(Simulation&) {}
+void runSwitchOutEvent(Simulation&) {}
 void runFaintEvent(Simulation&) {}
 void runAfterFaintEvent(Simulation&) {}
 }  // namespace pokesim::internal
@@ -2444,6 +2469,27 @@ auto getBattleFilter(Simulation& simulation) {
   return pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::Battle>{simulation};
 }
 
+template <typename ActionTag>
+void removeActionBySource(types::handle sourceHandle, Battle battle) {
+  types::registry& registry = *sourceHandle.registry();
+  registry.remove<ActionTag>(battle.val);
+  registry.remove<CurrentActionSource>(battle.val);
+  sourceHandle.remove<pokesim::tags::CurrentActionSource>();
+}
+
+template <typename ActionTag>
+auto setSourceForAction(Simulation& simulation) {
+  getBattleFilter(simulation).view<internal::setCurrentActionSource, Tags<ActionTag>>();
+
+  simulation.view<removeActionBySource<ActionTag>, Tags<pokesim::tags::CurrentActionSource, pokesim::tags::Fainted>>();
+  simulation.view<
+    removeActionBySource<ActionTag>,
+    Tags<pokesim::tags::CurrentActionSource>,
+    entt::exclude_t<pokesim::tags::ActivePokemon>>();
+
+  return pokesim::internal::EntityFilter<ActionTag, pokesim::tags::Battle>{simulation};
+}
+
 void addAddedTarget(types::registry& registry, Battle battle, Slot allySlot) {
   const Sides& sides = registry.get<Sides>(battle.val);
   types::entity allyEntity = slotToAllyPokemonEntity(registry, sides, allySlot);
@@ -2477,7 +2523,7 @@ void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
 
 void setTargetReferenceComponents(types::registry& registry, CurrentAction& action) {
   for (types::entity target : action.targets) {
-    registry.emplace<pokesim::tags::CurrentActionMoveTarget>(target);
+    registry.emplace<pokesim::tags::CurrentActionTarget>(target);
     registry.emplace<CurrentActionSource>(target, action.source);
   }
 }
@@ -2530,7 +2576,7 @@ void setMoveTargets(Simulation& simulation) {
     return;
   }
 
-  battleFilter.view<internal::setCurrentActionTarget>(simulation);
+  battleFilter.view<internal::setCurrentActionMoveTarget>(simulation);
 
   battleFilter.view<setActionMoveReferenceComponents<RecycledActionMove>>();
   setActionMoveData(simulation);
@@ -2558,6 +2604,12 @@ void setMoveTargets(Simulation& simulation) {
   battleFilter.view<setTargetReferenceComponents>();
 }
 
+void swapPokemonSlots(types::registry& registry, const CurrentAction& action, const Sides& sides) {
+  auto [sourceSlot, targetSlot] = registry.get<SourceSlotName, TargetSlotName>(action.action);
+
+  swapEntitySlots(registry, sides, sourceSlot.val, targetSlot.val);
+}
+
 void useMove(Simulation& simulation) {
   // ModifyTarget
   // ModifyType
@@ -2567,26 +2619,8 @@ void useMove(Simulation& simulation) {
   internal::runAfterMoveUsedEvent(simulation);
 }
 
-template <typename ActionTag>
-void removeActionBySource(types::handle sourceHandle, Battle battle) {
-  types::registry& registry = *sourceHandle.registry();
-  registry.remove<ActionTag>(battle.val);
-  registry.remove<CurrentActionSource>(battle.val);
-  sourceHandle.remove<pokesim::tags::CurrentActionMoveSource>();
-}
-
 void runMoveAction(Simulation& simulation) {
-  getBattleFilter(simulation).view<internal::setCurrentActionSource, Tags<action::tags::Move>>();
-
-  simulation.view<
-    removeActionBySource<action::tags::Move>,
-    Tags<pokesim::tags::CurrentActionMoveSource, pokesim::tags::Fainted>>();
-  simulation.view<
-    removeActionBySource<action::tags::Move>,
-    Tags<pokesim::tags::CurrentActionMoveSource>,
-    entt::exclude_t<pokesim::tags::ActivePokemon>>();
-
-  pokesim::internal::EntityFilter<action::tags::Move, pokesim::tags::Battle> battleFilter{simulation};
+  auto battleFilter = setSourceForAction<action::tags::Move>(simulation);
   if (battleFilter.hasNoneSelected()) {
     return;
   }
@@ -2597,9 +2631,41 @@ void runMoveAction(Simulation& simulation) {
   internal::runBeforeMove(simulation);
 
   simulation.view<internal::setLastMoveUsed>();
-  simulation.view<internal::deductPp, Tags<pokesim::tags::CurrentActionMoveSource>>();
+  simulation.view<internal::deductPp, Tags<pokesim::tags::CurrentActionSource>>();
 
   useMove(simulation);
+
+  internal::clearMoveAction(simulation);
+}
+
+void runSwitchAction(Simulation& simulation) {
+  auto battleFilter = internal::EntityFilter<action::tags::Switch, pokesim::tags::Battle>{simulation};
+  if (battleFilter.hasNoneSelected()) {
+    return;
+  }
+
+  battleFilter.view<internal::setCurrentActionSwitchSource>();
+  battleFilter.view<internal::setCurrentActionSwitchTarget>();
+  internal::runBeforeSwitchOutEvent(simulation);
+  internal::runEachUpdate(simulation);
+  internal::runSwitchOutEvent(simulation);
+
+  internal::runEndAbilityEvent(simulation);
+
+  simulation.addToEntities<pokesim::internal::tags::EndItem, action::tags::NotFaintedActiveSwitch>();
+  internal::runEndItemEvent(simulation);
+  simulation.removeFromEntities<pokesim::internal::tags::EndItem>();
+
+  simulation
+    .view<internal::clearVolatiles, Tags<pokesim::tags::CurrentActionSource, action::tags::NotFaintedActiveSwitch>>();
+
+  simulation.removeFromEntities<pokesim::tags::ActivePokemon, pokesim::tags::CurrentActionSource>();
+  simulation.addToEntities<pokesim::tags::ActivePokemon, pokesim::tags::CurrentActionTarget>();
+  battleFilter.view<swapPokemonSlots>();
+
+  internal::runSwitchInEvent(simulation);
+
+  internal::clearSwitchAction(simulation);
 }
 
 void runResidualAction(Simulation& simulation) {
@@ -2612,10 +2678,13 @@ void runResidualAction(Simulation& simulation) {
   simulation.registry.clear<tags::SpeedSortNeeded>();
 
   internal::runResidual(simulation);
+
+  simulation.registry.clear<action::tags::Residual>();
 }
 
 void runBeforeTurnAction(Simulation&) {
   // Barely used, will find different way of handling it
+  // simulation.registry.clear<action::tags::BeforeTurn>();
 }
 
 void setFainting(types::registry& registry, FaintQueue& faintQueue) {
@@ -2691,9 +2760,12 @@ void faintPokemon(Simulation& simulation) {
 void runCurrentAction(Simulation& simulation) {
   runBeforeTurnAction(simulation);
   runMoveAction(simulation);
+  runSwitchAction(simulation);
   runResidualAction(simulation);
 
-  internal::clearCurrentAction(simulation);
+  simulation.removeFromEntities<MoveName, action::tags::Current>();
+  simulation.registry.clear<CurrentAction, SourceSlotName, TargetSlotName, action::tags::Current>();
+
   faintPokemon(simulation);
   // Update
   // Switch requests
@@ -3372,9 +3444,6 @@ void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& sl
   types::registry& registry = *sideHandle.registry();
   const auto& decision = slotDecision.get<Decision>();
 
-  POKESIM_REQUIRE(decision.sourceSlot != Slot::NONE, "Source slot must be assigned.");
-  POKESIM_REQUIRE(decision.targetSlot != Slot::NONE, "Target slot must be assigned.");
-
   ActionQueueItem actionQueueItem;
   actionQueueItem.decision = decision;
 
@@ -3419,9 +3488,6 @@ void resolveTeamDecision(types::registry&, const types::teamOrder&, ActionQueue&
 }  // namespace
 
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
-  POKESIM_REQUIRE(sideDecision.sideId != PlayerSideId::NONE, "Decisions must be assigned to a player.");
-  POKESIM_REQUIRE(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
-
   const Battle& battle = sideHandle.get<Battle>();
   types::registry& registry = *sideHandle.registry();
   ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
@@ -3432,21 +3498,6 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
       "Slot decisions only have an effect after a battle starts. Make sure to pass a `teamOrder` decision at the start "
       "of a battle (aka team preview).");
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
-
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
-    for (const auto& decision : decisions) {
-      if (sideDecision.sideId == PlayerSideId::P1) {
-        POKESIM_REQUIRE(
-          (decision.sourceSlot() == Slot::P1A || decision.sourceSlot() == Slot::P1B),
-          "Source must be from a player 1 in battle slot.");
-      }
-      else {
-        POKESIM_REQUIRE(
-          (decision.sourceSlot() == Slot::P2A || decision.sourceSlot() == Slot::P2B),
-          "Source must be from a player 2 in battle slot.");
-      }
-    }
-#endif
 
     resolveSlotDecisions(sideHandle, decisions, actionQueue);
   }
@@ -3523,6 +3574,13 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, Recy
   registry.emplace<action::tags::Current>(action.val);
 
   switch (nextActon.order) {
+    case ActionOrder::SWITCH: {
+      battleHandle.emplace<action::tags::Switch>();
+      const SwitchDecision& decision = nextActon.decision.get<SwitchDecision>();
+      registry.emplace<SourceSlotName>(action.val, decision.sourceSlot);
+      registry.emplace<TargetSlotName>(action.val, decision.targetSlot);
+      break;
+    }
     case ActionOrder::MOVE: {
       battleHandle.emplace<action::tags::Move>();
       const MoveDecision& decision = nextActon.decision.get<MoveDecision>();
@@ -4397,7 +4455,7 @@ void ChoiceScarf::onModifySpe(Simulation& simulation) {
 }
 
 void ChoiceScarf::onSourceModifyMove(Simulation& simulation) {
-  simulation.view<setChoiceLock, Tags<dex::ChoiceScarf, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
+  simulation.view<setChoiceLock, Tags<dex::ChoiceScarf, tags::CurrentActionSource>, entt::exclude_t<ChoiceLock>>();
 }
 
 void ChoiceScarf::onEnd(Simulation& simulation) {
@@ -4411,7 +4469,7 @@ void ChoiceSpecs::onModifySpa(Simulation& simulation) {
 }
 
 void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
-  simulation.view<setChoiceLock, Tags<dex::ChoiceSpecs, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
+  simulation.view<setChoiceLock, Tags<dex::ChoiceSpecs, tags::CurrentActionSource>, entt::exclude_t<ChoiceLock>>();
 }
 
 void ChoiceSpecs::onEnd(Simulation& simulation) {
@@ -4421,7 +4479,7 @@ void ChoiceSpecs::onEnd(Simulation& simulation) {
 void FocusSash::onAfterModifyDamage(Simulation& simulation) {
   const auto hpToKeep = simulation.pokedex().getStaticValue<FocusSash::onAfterModifyDamageHpToKeep>();
 
-  simulation.addToEntities<tags::CanUseItem, tags::CurrentActionMoveTarget, dex::FocusSash>();
+  simulation.addToEntities<tags::CanUseItem, tags::CurrentActionTarget, dex::FocusSash>();
   internal::checkIfCanUseItem(simulation);
 
   Simulation::forEachSimulationTag<FocusSashOnAfterModifyDamage>(simulation, hpToKeep);
@@ -4518,7 +4576,7 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
 
   simulation.view<
     pokesim::internal::setRandomBinaryChanceFromPercentChance,
-    Tags<tags::CurrentActionMoveSource, status::tags::Paralysis>>(simulation, chance);
+    Tags<tags::CurrentActionSource, status::tags::Paralysis>>(simulation, chance);
 
   pokesim::internal::randomBinaryChance(
     simulation,
@@ -5859,10 +5917,16 @@ void updateSpe(Simulation& simulation, bool ignoreBoosts) {
 
 namespace pokesim::internal {
 namespace {
+template <typename SlotName>
+types::entity getActionEntity(const types::registry& registry, const Sides& sides, CurrentAction& action) {
+  SlotName slotName = registry.get<SlotName>(action.action);
+  return slotToPokemonEntity(registry, sides, slotName.val);
+}
+
 template <typename CurrentActionTag>
 bool removeFailedMove(types::registry& registry, types::entity moveEntity, types::entity entity) {
   using CurrentActionMoves = std::conditional_t<
-    std::is_same_v<CurrentActionTag, pokesim::tags::CurrentActionMoveSource>,
+    std::is_same_v<CurrentActionTag, pokesim::tags::CurrentActionSource>,
     CurrentActionMovesAsSource,
     CurrentActionMovesAsTarget>;
 
@@ -5883,7 +5947,7 @@ bool removeFailedMove(types::registry& registry, types::entity moveEntity, types
 void updateCurrentActionTargets(types::registry& registry, CurrentAction& action) {
   types::activePokemonIndex deleteCount = 0U;
   for (types::entity& target : action.targets) {
-    if (!registry.all_of<pokesim::tags::CurrentActionMoveTarget>(target)) {
+    if (!registry.all_of<pokesim::tags::CurrentActionTarget>(target)) {
       types::activePokemonIndex swapIndex = action.targets.size() - 1 - deleteCount;
       POKESIM_REQUIRE(swapIndex < action.targets.size(), "Swap index out of bounds.");
       std::swap(target, action.targets[swapIndex]);
@@ -5915,6 +5979,16 @@ template <typename MoveTag>
 struct ClearMoveTag {
   static void run(types::registry& registry) { registry.clear<MoveTag>(); }
 };
+
+void clearAction(Simulation& simulation) {
+  simulation.registry.clear<
+    CurrentActionSource,
+    CurrentActionTarget,
+    FailedCurrentActionSource,
+    FailedCurrentActionTarget,
+    pokesim::tags::CurrentActionSource,
+    pokesim::tags::CurrentActionTarget>();
+}
 }  // namespace
 
 void assignRootBattle(types::handle battleHandle) {
@@ -5930,18 +6004,41 @@ void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle&
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
-  const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(action.action);
-  types::entity sourceEntity = slotToPokemonEntity(registry, sides, sourceSlotName.val);
+  types::entity sourceEntity = getActionEntity<SourceSlotName>(registry, sides, action);
 
   action.source = sourceEntity;
-  registry.emplace<pokesim::tags::CurrentActionMoveSource>(sourceEntity);
+  registry.emplace<pokesim::tags::CurrentActionSource>(sourceEntity);
 }
 
-void setCurrentActionTarget(
+void setCurrentActionSwitchSource(types::handle battleHandle, const Sides& sides, CurrentAction& action) {
+  types::registry& registry = *battleHandle.registry();
+  types::entity sourceEntity = getActionEntity<SourceSlotName>(registry, sides, action);
+  setCurrentActionSource(battleHandle, sides, action);
+
+  bool sourceIsActive = registry.all_of<pokesim::tags::ActivePokemon>(sourceEntity);
+  bool sourceIsFainted = registry.all_of<pokesim::tags::Fainted>(sourceEntity);
+  if (sourceIsActive || sourceIsFainted) {
+    registry.emplace<action::tags::ActiveSwitch>(sourceEntity);
+    battleHandle.emplace<action::tags::ActiveSwitch>();
+  }
+  if (!sourceIsFainted) {
+    registry.emplace<action::tags::NotFaintedActiveSwitch>(sourceEntity);
+    battleHandle.emplace<action::tags::NotFaintedActiveSwitch>();
+  }
+}
+
+void setCurrentActionSwitchTarget(types::handle battleHandle, const Sides& sides, CurrentAction& action) {
+  types::registry& registry = *battleHandle.registry();
+  types::entity targetEntity = getActionEntity<TargetSlotName>(registry, sides, action);
+
+  registry.emplace<pokesim::tags::CurrentActionTarget>(targetEntity);
+  action.targets = {targetEntity};
+}
+
+void setCurrentActionMoveTarget(
   types::handle battleHandle, const Sides& sides, CurrentAction& action, const Simulation& simulation) {
   types::registry& registry = *battleHandle.registry();
-  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(action.action);
-  types::entity targetEntity = slotToPokemonEntity(registry, sides, targetSlotName.val);
+  types::entity targetEntity = getActionEntity<TargetSlotName>(registry, sides, action);
 
   bool pickedTarget = false;
   if (!registry.any_of<pokesim::tags::Fainted>(targetEntity)) {
@@ -5955,7 +6052,7 @@ void setCurrentActionTarget(
     action.targets.push_back(targetEntity);
   }
   else {
-    registry.remove<pokesim::tags::CurrentActionMoveSource>(action.source);
+    registry.remove<pokesim::tags::CurrentActionSource>(action.source);
   }
 }
 
@@ -5965,11 +6062,9 @@ void setFailedActionMove(
 
   bool removedAllMoves = true;
   removedAllMoves =
-    removeFailedMove<pokesim::tags::CurrentActionMoveTarget>(registry, moveHandle.entity(), target.val) &&
-    removedAllMoves;
+    removeFailedMove<pokesim::tags::CurrentActionTarget>(registry, moveHandle.entity(), target.val) && removedAllMoves;
   removedAllMoves =
-    removeFailedMove<pokesim::tags::CurrentActionMoveSource>(registry, moveHandle.entity(), source.val) &&
-    removedAllMoves;
+    removeFailedMove<pokesim::tags::CurrentActionSource>(registry, moveHandle.entity(), source.val) && removedAllMoves;
 
   moveHandle.remove<
     pokesim::tags::CurrentActionMove,
@@ -5991,19 +6086,15 @@ void setFailedActionMove(
   updateCurrentActionTargets(registry, registry.get<CurrentAction>(battle.val));
 }
 
-void clearCurrentAction(Simulation& simulation) {
+void clearMoveAction(Simulation& simulation) {
+  clearAction(simulation);
+
   types::registry& registry = simulation.registry;
   registry.clear<
-    CurrentAction,
-    CurrentActionSource,
-    CurrentActionTarget,
-    FailedCurrentActionSource,
-    FailedCurrentActionTarget,
+    action::tags::Move,
     CurrentActionMovesAsSource,
     CurrentActionMovesAsTarget,
     CurrentActionMoveSlot,
-    pokesim::tags::CurrentActionMoveSource,
-    pokesim::tags::CurrentActionMoveTarget,
     pokesim::tags::CurrentActionMoveSlot,
     pokesim::tags::CurrentMoveHit,
     pokesim::tags::FailedCurrentMoveHit>();
@@ -6031,36 +6122,19 @@ void clearCurrentAction(Simulation& simulation) {
 
   pokesim::dex::forEachMove<ClearMoveTag>(simulation.pokedex(), registry);
 
-  registry.clear<SourceSlotName, TargetSlotName>();
-
-  registry.clear<
-    action::tags::Item,
-    action::tags::Move,
-    action::tags::BeforeTurn,
-    action::tags::Dynamax,
-    action::tags::MegaEvolve,
-    action::tags::MidTurnSwitchIn,
-    action::tags::PostFoeFaintSwitchIn,
-    action::tags::PreSwitchOut,
-    action::tags::PreTurnSwitchIn,
-    action::tags::PrimalRevert,
-    action::tags::Residual,
-    action::tags::RevivalBlessing,
-    action::tags::Switch,
-    action::tags::SwitchOut,
-    action::tags::Terastallize>();
-
   auto actionMoves = registry.view<pokesim::tags::CurrentActionMove>();
   auto failedActionMoves = registry.view<pokesim::tags::FailedCurrentActionMove>();
   clearActionMoveComponents(registry, actionMoves);
   clearActionMoveComponents(registry, failedActionMoves);
   registry.clear<pokesim::tags::CurrentActionMove, pokesim::tags::FailedCurrentActionMove>();
 
-  simulation.removeFromEntities<MoveName, action::tags::Current>();
-  registry.clear<action::tags::Current>();
-
   auto battles = registry.view<pokesim::tags::Battle>();
-  registry.remove<ItemName, MoveName>(battles.begin(), battles.end());
+  registry.remove<MoveName>(battles.begin(), battles.end());
+}
+
+void clearSwitchAction(Simulation& simulation) {
+  clearAction(simulation);
+  simulation.registry.clear<action::tags::Switch, action::tags::ActiveSwitch, action::tags::NotFaintedActiveSwitch>();
 }
 }  // namespace pokesim::internal
 
@@ -6069,15 +6143,24 @@ void clearCurrentAction(Simulation& simulation) {
 /////////////////// START OF src/Battle/Helpers/Helpers.cpp ////////////////////
 
 namespace pokesim {
-types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
+namespace {
+types::teamPositionIndex slotToIndex(Slot targetSlot) {
   POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
-  types::entity sideEntity = sides.val[((types::teamPositionIndex)targetSlot - 1U) % 2U];
+  return ((types::teamPositionIndex)targetSlot - 1U) / 2U;
+}
+}  // namespace
+
+PlayerSideId slotToSideId(Slot targetSlot) {
+  return ((types::teamPositionIndex)targetSlot - 1U) % 2U ? PlayerSideId::P2 : PlayerSideId::P1;
+}
+
+types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
+  types::entity sideEntity = sides.val[slotToSideId(targetSlot) == PlayerSideId::P1 ? 0U : 1U];
   return sideEntity;
 }
 
 types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot) {
-  POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
-  types::teamPositionIndex index = ((types::teamPositionIndex)targetSlot - 1U) / 2U;
+  types::teamPositionIndex index = slotToIndex(targetSlot);
 
   const Team& team = registry.get<Team>(sideEntity);
   POKESIM_REQUIRE(team.val.size() > index, "Choosing a target slot for team member that does not exist.");
@@ -6085,8 +6168,23 @@ types::entity slotToPokemonEntity(const types::registry& registry, types::entity
 }
 
 types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
-  POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
   return slotToPokemonEntity(registry, slotToSideEntity(sides, targetSlot), targetSlot);
+}
+
+void swapEntitySlots(types::registry& registry, types::entity sideEntity, Slot slot1, Slot slot2) {
+  POKESIM_REQUIRE(slotToSideId(slot1) == slotToSideId(slot2), "Swapped slots must be from the same side");
+  types::teamPositionIndex index1 = slotToIndex(slot1);
+  types::teamPositionIndex index2 = slotToIndex(slot2);
+
+  Team& team = registry.get<Team>(sideEntity);
+  POKESIM_REQUIRE(team.val.size() > index1, "Choosing a target slot for team member that does not exist.");
+  POKESIM_REQUIRE(team.val.size() > index2, "Choosing a target slot for team member that does not exist.");
+
+  std::swap(team.val[index1], team.val[index2]);
+}
+
+void swapEntitySlots(types::registry& registry, const Sides& sides, Slot slot1, Slot slot2) {
+  swapEntitySlots(registry, slotToSideEntity(sides, slot1), slot1, slot2);
 }
 
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {

@@ -135,7 +135,7 @@ void ChoiceScarf::onModifySpe(Simulation& simulation) {
 }
 
 void ChoiceScarf::onSourceModifyMove(Simulation& simulation) {
-  simulation.view<setChoiceLock, Tags<dex::ChoiceScarf, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
+  simulation.view<setChoiceLock, Tags<dex::ChoiceScarf, tags::CurrentActionSource>, entt::exclude_t<ChoiceLock>>();
 }
 
 void ChoiceScarf::onEnd(Simulation& simulation) {
@@ -149,7 +149,7 @@ void ChoiceSpecs::onModifySpa(Simulation& simulation) {
 }
 
 void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
-  simulation.view<setChoiceLock, Tags<dex::ChoiceSpecs, tags::CurrentActionMoveSource>, entt::exclude_t<ChoiceLock>>();
+  simulation.view<setChoiceLock, Tags<dex::ChoiceSpecs, tags::CurrentActionSource>, entt::exclude_t<ChoiceLock>>();
 }
 
 void ChoiceSpecs::onEnd(Simulation& simulation) {
@@ -159,7 +159,7 @@ void ChoiceSpecs::onEnd(Simulation& simulation) {
 void FocusSash::onAfterModifyDamage(Simulation& simulation) {
   const auto hpToKeep = simulation.pokedex().getStaticValue<FocusSash::onAfterModifyDamageHpToKeep>();
 
-  simulation.addToEntities<tags::CanUseItem, tags::CurrentActionMoveTarget, dex::FocusSash>();
+  simulation.addToEntities<tags::CanUseItem, tags::CurrentActionTarget, dex::FocusSash>();
   internal::checkIfCanUseItem(simulation);
 
   Simulation::forEachSimulationTag<FocusSashOnAfterModifyDamage>(simulation, hpToKeep);

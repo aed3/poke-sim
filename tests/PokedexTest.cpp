@@ -2,7 +2,7 @@
 
 namespace pokesim {
 TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
-  Pokedex pokedex(GameMechanics::SCARLET_VIOLET);
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
 
   entt::dense_set<dex::Species> speciesList{};
   for (dex::Species species : {dex::Species::EMPOLEON, dex::Species::AMPHAROS, dex::Species::GARDEVOIR}) {
@@ -81,7 +81,7 @@ TEST_CASE("Pokedex Data Building: Species", "[Pokedex]") {
 }
 
 TEST_CASE("Pokedex Data Building: Item", "[Pokedex]") {
-  Pokedex pokedex(GameMechanics::SCARLET_VIOLET);
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
 
   entt::dense_set<dex::Item> itemList{};
   for (dex::Item item : {dex::Item::CHOICE_SCARF, dex::Item::CHOICE_SPECS, dex::Item::ASSAULT_VEST}) {
@@ -109,7 +109,7 @@ TEST_CASE("Pokedex Data Building: Item", "[Pokedex]") {
 }
 
 TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
-  Pokedex pokedex(GameMechanics::SCARLET_VIOLET);
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
 
   entt::dense_set<dex::Move> moveList{};
   for (dex::Move move :

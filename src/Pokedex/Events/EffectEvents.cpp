@@ -89,7 +89,7 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
 
   simulation.view<
     pokesim::internal::setRandomBinaryChanceFromPercentChance,
-    Tags<tags::CurrentActionMoveSource, status::tags::Paralysis>>(simulation, chance);
+    Tags<tags::CurrentActionSource, status::tags::Paralysis>>(simulation, chance);
 
   pokesim::internal::randomBinaryChance(
     simulation,

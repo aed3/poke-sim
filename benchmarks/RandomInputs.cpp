@@ -144,37 +144,80 @@ struct Random {
     return battle;
   }
 
+  static MoveDecision createMoveDecision(
+    types::rngState& rngState, const PokemonCreationInfo& pokemon, Slot pokemonSlot, const Simulation& simulation) {
+    MoveDecision decision{pokemonSlot};
+
+    if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+      decision.targetSlot = pokemonSlot == Slot::P1A ? Slot::P2A : Slot::P1A;
+    }
+    else {
+      std::vector<Slot> targetOptions{Slot::P1A, Slot::P2A, Slot::P1B, Slot::P2B};
+
+      auto end = std::remove(targetOptions.begin(), targetOptions.begin(), pokemonSlot);
+      (void)end;
+      targetOptions.pop_back();
+      decision.targetSlot = pickFromList(targetOptions, rngState);
+    }
+
+    decision.move = pickFromList(pokemon.moves, rngState).name;
+    return decision;
+  }
+
+  static SwitchDecision createSwitchDecision(
+    types::rngState& rngState, Slot pokemonSlot, const Simulation& simulation) {
+    SwitchDecision decision{pokemonSlot};
+    bool isP1 = slotToSideId(pokemonSlot) == PlayerSideId::P1;
+    std::vector<Slot> targetOptions = isP1 ? std::vector{Slot::P1C, Slot::P1D, Slot::P1E, Slot::P1F}
+                                           : std::vector{Slot::P2C, Slot::P2D, Slot::P2E, Slot::P2F};
+
+    if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+      targetOptions.push_back(isP1 ? Slot::P1B : Slot::P2B);
+    }
+
+    decision.targetSlot = pickFromList(targetOptions, rngState);
+
+    return decision;
+  }
+
+  static types::slotDecision createSlotDecision(
+    types::rngState& rngState, const PokemonCreationInfo& pokemon, Slot pokemonSlot, const Simulation& simulation) {
+    // Generally, moves are used twice as often as pokemon are switched out in a game.
+    if (internal::nextBoundedRandomValue(rngState, 3U) == 0U) {
+      return createSwitchDecision(rngState, pokemonSlot, simulation);
+    }
+    return createMoveDecision(rngState, pokemon, pokemonSlot, simulation);
+  }
+
   static TurnDecisionInfo createRandomTurnDecision(
     types::rngState& rngState, const BattleCreationInfo& battle, const Simulation& simulation) {
     SideDecision p1Decision{PlayerSideId::P1};
     SideDecision p2Decision{PlayerSideId::P2};
     if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
-      MoveDecision p1MoveDecision{Slot::P1A, Slot::P2A};
-      MoveDecision p2MoveDecision{Slot::P2A, Slot::P1A};
-      p1MoveDecision.move = pickFromList(battle.sides.p1().team[0].moves, rngState).name;
-      p2MoveDecision.move = pickFromList(battle.sides.p2().team[0].moves, rngState).name;
-
-      p1Decision.decisions = types::slotDecisions{p1MoveDecision};
-      p2Decision.decisions = types::slotDecisions{p2MoveDecision};
+      p1Decision.decisions =
+        types::slotDecisions{createSlotDecision(rngState, battle.sides.p1().team[0], Slot::P1A, simulation)};
+      p2Decision.decisions =
+        types::slotDecisions{createSlotDecision(rngState, battle.sides.p2().team[0], Slot::P2A, simulation)};
     }
     else {
-      MoveDecision p1AMoveDecision{Slot::P1A, pickFromList(std::vector{Slot::P1B, Slot::P2A, Slot::P2B}, rngState)};
-      MoveDecision p1BMoveDecision{Slot::P1B, pickFromList(std::vector{Slot::P1A, Slot::P2A, Slot::P2B}, rngState)};
-      MoveDecision p2AMoveDecision{Slot::P2A, pickFromList(std::vector{Slot::P2B, Slot::P1A, Slot::P1B}, rngState)};
-      MoveDecision p2BMoveDecision{Slot::P2B, pickFromList(std::vector{Slot::P2A, Slot::P1A, Slot::P1B}, rngState)};
-      p1AMoveDecision.move = pickFromList(battle.sides.p1().team[0].moves, rngState).name;
-      p1BMoveDecision.move = pickFromList(battle.sides.p1().team[1].moves, rngState).name;
-      p2AMoveDecision.move = pickFromList(battle.sides.p2().team[0].moves, rngState).name;
-      p2BMoveDecision.move = pickFromList(battle.sides.p2().team[1].moves, rngState).name;
-
-      p1Decision.decisions = types::slotDecisions{p1AMoveDecision, p1BMoveDecision};
-      p2Decision.decisions = types::slotDecisions{p2AMoveDecision, p2BMoveDecision};
+      p1Decision.decisions = types::slotDecisions{
+        createSlotDecision(rngState, battle.sides.p1().team[0], Slot::P1A, simulation),
+        createSlotDecision(rngState, battle.sides.p1().team[1], Slot::P1B, simulation),
+      };
+      p2Decision.decisions = types::slotDecisions{
+        createSlotDecision(rngState, battle.sides.p2().team[0], Slot::P2A, simulation),
+        createSlotDecision(rngState, battle.sides.p2().team[1], Slot::P2B, simulation),
+      };
     }
 
     TurnDecisionInfo turnDecision{p1Decision, p2Decision};
 
     for (auto& sideDecision : turnDecision) {
       for (auto& slotDecision : sideDecision.decisions.get<types::slotDecisions>()) {
+        if (!slotDecision.holds<MoveDecision>()) {
+          continue;
+        }
+
         if (simulation.pokedex().moveHas<move::tags::Self>(slotDecision.get<MoveDecision>().move)) {
           slotDecision.get<MoveDecision>().targetSlot = slotDecision.sourceSlot();
         }

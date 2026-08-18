@@ -42,6 +42,8 @@ void applyBasePowerEventModifier(
 }
 }  // namespace
 
+void runEachUpdate(Simulation&) {}
+
 void runBeforeMove(Simulation& simulation) {
   pokesim::dex::Paralysis::onBeforeMove(simulation);
   pokesim::dex::ChoiceLock::onBeforeMove(simulation);
@@ -191,6 +193,9 @@ void runEndItemEvent(Simulation& simulation) {
 }
 
 void runEndAbilityEvent(Simulation&) {}
+void runBeforeSwitchOutEvent(Simulation&) {}
+void runSwitchInEvent(Simulation&) {}
+void runSwitchOutEvent(Simulation&) {}
 void runFaintEvent(Simulation&) {}
 void runAfterFaintEvent(Simulation&) {}
 }  // namespace pokesim::internal

@@ -3,6 +3,7 @@
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
 #include <AnalyzeEffect/Helpers.hpp>
+#include <Battle/Helpers/Helpers.hpp>
 #include <CalcDamage/Helpers.hpp>
 #include <Components/headers.hpp>
 #include <Config/Require.hpp>
@@ -296,8 +297,8 @@ void checkActionMove(types::entity moveEntity, const types::registry& registry) 
   const auto& [attacker, defender, battle, typeName] =
     registry.get<CurrentActionSource, CurrentActionTarget, Battle, TypeName>(moveEntity);
 
-  POKESIM_REQUIRE_NM(has<tags::CurrentActionMoveSource>(attacker.val, registry));
-  POKESIM_REQUIRE_NM(has<tags::CurrentActionMoveTarget>(defender.val, registry));
+  POKESIM_REQUIRE_NM(has<tags::CurrentActionSource>(attacker.val, registry));
+  POKESIM_REQUIRE_NM(has<tags::CurrentActionTarget>(defender.val, registry));
   POKESIM_REQUIRE_NM(has<tags::Battle>(battle.val, registry));
   check(typeName);
 
@@ -1027,9 +1028,20 @@ void check(const internal::RandomEqualChanceStack& randomEqualChanceStack, const
 template <>
 void check(const SideDecision& sideDecision) {
   checkPlayerSideId(sideDecision.sideId);
+  POKESIM_REQUIRE(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
   if (sideDecision.decisions.holds<types::slotDecisions>()) {
     const types::slotDecisions& decisions = sideDecision.decisions.get<types::slotDecisions>();
     for (const auto& decision : decisions) {
+      if (sideDecision.sideId == PlayerSideId::P1) {
+        POKESIM_REQUIRE(
+          (decision.sourceSlot() == Slot::P1A || decision.sourceSlot() == Slot::P1B),
+          "Source must be from a player 1 in battle slot.");
+      }
+      else {
+        POKESIM_REQUIRE(
+          (decision.sourceSlot() == Slot::P2A || decision.sourceSlot() == Slot::P2B),
+          "Source must be from a player 2 in battle slot.");
+      }
       check(decision);
     }
   }
@@ -1183,13 +1195,15 @@ template <>
 void check(const types::slotDecision& slotDecision) {
   checkSlot(slotDecision.sourceSlot());
   checkSlot(slotDecision.targetSlot());
-  auto [moveDecision, megaDecision, zMoveDecision, dynamaxDecision, teraDecision, itemDecision] = slotDecision.get_if<
-    MoveDecision,
-    MegaEvolveAndMoveDecision,
-    ZMoveDecision,
-    DynamaxAndMoveDecision,
-    TerastallizeAndMoveDecision,
-    ItemDecision>();
+  auto [moveDecision, megaDecision, zMoveDecision, dynamaxDecision, teraDecision, switchDecision, itemDecision] =
+    slotDecision.get_if<
+      MoveDecision,
+      MegaEvolveAndMoveDecision,
+      ZMoveDecision,
+      DynamaxAndMoveDecision,
+      TerastallizeAndMoveDecision,
+      SwitchDecision,
+      ItemDecision>();
 
   if (moveDecision) check(MoveName{moveDecision->move});
   if (megaDecision) check(MoveName{megaDecision->move});
@@ -1197,6 +1211,13 @@ void check(const types::slotDecision& slotDecision) {
   if (dynamaxDecision) check(MoveName{dynamaxDecision->move});
   if (teraDecision) check(MoveName{teraDecision->move});
   if (itemDecision) check(ItemName{itemDecision->item});
+
+  if (switchDecision) {
+    Slot source = switchDecision->sourceSlot;
+    Slot target = switchDecision->targetSlot;
+    POKESIM_REQUIRE(slotToSideId(source) == slotToSideId(target), "Must switch to a slot on the same side.");
+    POKESIM_REQUIRE(target != Slot::P1A && target != Slot::P2A, "Cannot switch to an active slot.");
+  }
 }
 
 template <>
