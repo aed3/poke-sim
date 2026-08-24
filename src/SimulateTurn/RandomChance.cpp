@@ -214,7 +214,7 @@ void randomChanceEvent(
   Simulation& simulation, types::entityIndex cloneCount, types::callback applyChoices,
   void (*assignClonesToEvents)(types::registry&, const types::ClonedEntityMap&, const types::entityVector&),
   UpdateProbabilities updateProbabilities, const AssignArgs&... assignArgs) {
-  if (simulation.isBattleFormat(BattleFormat::DOUBLES)) {
+  if (useChanceStack(simulation)) {
     simulation.view<placeChanceFromStack<RandomStack, Random>>();
   }
 
@@ -401,11 +401,9 @@ void setRandomEqualChance(types::handle handle, const Simulation& simulation) {
   }
 }
 
-void setRandomEventCounts(
-  types::handle handle, Battle battle, const Simulation& simulation,
-  types::eventPossibilities (*getPossibleEventCount)(types::handle), bool forRequiredDamageRolls) {
-  types::eventPossibilities eventPossibilities = getPossibleEventCount(handle);
-
+void setRandomEventCountsFromPossibilities(
+  types::handle handle, Battle battle, const Simulation& simulation, types::eventPossibilities eventPossibilities,
+  bool forRequiredDamageRolls) {
   PercentChanceLimitResult limitReached = PercentChanceLimitResult::NO_LIMIT_REACHED;
   if (!forRequiredDamageRolls) {
     types::probability eventProbability = Constants::Probability::MAX / eventPossibilities;
@@ -426,6 +424,17 @@ void setRandomEventCounts(
   else {
     handle.emplace<RandomEventIndex>((types::eventPossibilities)(eventPossibilities / 2U));
   }
+}
+
+void setRandomEventCounts(
+  types::handle handle, Battle battle, const Simulation& simulation,
+  types::eventPossibilities (*getPossibleEventCount)(types::handle), bool forRequiredDamageRolls) {
+  setRandomEventCountsFromPossibilities(
+    handle,
+    battle,
+    simulation,
+    getPossibleEventCount(handle),
+    forRequiredDamageRolls);
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>

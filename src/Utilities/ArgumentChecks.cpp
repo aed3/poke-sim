@@ -1056,6 +1056,8 @@ void check(const SpeedTieIndexes& speedTieIndexes) {
   types::activePokemonIndex total = 0U;
   for (const auto& span : speedTieIndexes.val) {
     checkBounds<Constants::ActivePokemon>(span.start);
+    POKESIM_REQUIRE(span.length > 1U, "A tie requires more than one Pokemon to tie with.");
+    POKESIM_REQUIRE_NM(span.length <= Constants::ActivePokemon::MAX);
     checkBounds<Constants::ActivePokemon>(span.length);
     checkBounds<Constants::ActivePokemon>(span.start + span.length);
     total += span.length;

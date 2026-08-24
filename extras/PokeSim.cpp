@@ -1204,6 +1204,8 @@ void check(const SpeedTieIndexes& speedTieIndexes) {
   types::activePokemonIndex total = 0U;
   for (const auto& span : speedTieIndexes.val) {
     checkBounds<Constants::ActivePokemon>(span.start);
+    POKESIM_REQUIRE(span.length > 1U, "A tie requires more than one Pokemon to tie with.");
+    POKESIM_REQUIRE_NM(span.length <= Constants::ActivePokemon::MAX);
     checkBounds<Constants::ActivePokemon>(span.length);
     checkBounds<Constants::ActivePokemon>(span.start + span.length);
     total += span.length;
@@ -2469,6 +2471,13 @@ auto getBattleFilter(Simulation& simulation) {
   return pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::Battle>{simulation};
 }
 
+template <typename Filter>
+void speedSort(Filter battleFilter, Simulation& simulation) {
+  battleFilter.template view<internal::simulate_turn::speedSort, Tags<tags::SpeedSortNeeded>>();
+  battleFilter.template removeFromSelected<tags::SpeedSortNeeded>();
+  internal::simulate_turn::resolveSpeedTies(simulation);
+}
+
 template <typename ActionTag>
 void removeActionBySource(types::handle sourceHandle, Battle battle) {
   types::registry& registry = *sourceHandle.registry();
@@ -2674,9 +2683,6 @@ void runResidualAction(Simulation& simulation) {
     return;
   }
 
-  battleFilter.view<internal::simulate_turn::speedSort, Tags<tags::SpeedSortNeeded>>();
-  simulation.registry.clear<tags::SpeedSortNeeded>();
-
   internal::runResidual(simulation);
 
   simulation.registry.clear<action::tags::Residual>();
@@ -2771,8 +2777,7 @@ void runCurrentAction(Simulation& simulation) {
   // Switch requests
 
   internal::updateAllStats(simulation);
-  getBattleFilter(simulation).view<internal::simulate_turn::speedSort, Tags<tags::SpeedSortNeeded>>();
-  simulation.registry.clear<tags::SpeedSortNeeded>();
+  speedSort(getBattleFilter(simulation), simulation);
 }
 
 void incrementTurn(Turn& turn) {
@@ -2828,7 +2833,7 @@ void simulateTurn(Simulation& simulation) {
 
   // battleFilter.view<internal::simulate_turn::addBeforeTurnAction, Tags<>,
   // entt::exclude_t<pokesim::tags::BattleMidTurn>>();
-  battleFilter.view<internal::simulate_turn::speedSort>();
+  speedSort(battleFilter, simulation);
   battleFilter
     .view<internal::simulate_turn::addResidualAction, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn>>();
 
@@ -2840,7 +2845,7 @@ void simulateTurn(Simulation& simulation) {
   while (!simulation.registry.view<action::tags::Current>().empty()) {
     POKESIM_REQUIRE(
       actionsTaken <= ActionsLimit::MAX,
-      "More actions in a turn were queued to be taken than in at least one battle than are possible.");
+      "More actions in a turn were queued to be taken than are possible in at least one battle.");
 
     runCurrentAction(simulation);
     battleFilter.view<internal::simulate_turn::setCurrentAction, Tags<>, entt::exclude_t<Winner>>();
@@ -3068,7 +3073,7 @@ void randomChanceEvent(
   Simulation& simulation, types::entityIndex cloneCount, types::callback applyChoices,
   void (*assignClonesToEvents)(types::registry&, const types::ClonedEntityMap&, const types::entityVector&),
   UpdateProbabilities updateProbabilities, const AssignArgs&... assignArgs) {
-  if (simulation.isBattleFormat(BattleFormat::DOUBLES)) {
+  if (useChanceStack(simulation)) {
     simulation.view<placeChanceFromStack<RandomStack, Random>>();
   }
 
@@ -3255,11 +3260,9 @@ void setRandomEqualChance(types::handle handle, const Simulation& simulation) {
   }
 }
 
-void setRandomEventCounts(
-  types::handle handle, Battle battle, const Simulation& simulation,
-  types::eventPossibilities (*getPossibleEventCount)(types::handle), bool forRequiredDamageRolls) {
-  types::eventPossibilities eventPossibilities = getPossibleEventCount(handle);
-
+void setRandomEventCountsFromPossibilities(
+  types::handle handle, Battle battle, const Simulation& simulation, types::eventPossibilities eventPossibilities,
+  bool forRequiredDamageRolls) {
   PercentChanceLimitResult limitReached = PercentChanceLimitResult::NO_LIMIT_REACHED;
   if (!forRequiredDamageRolls) {
     types::probability eventProbability = Constants::Probability::MAX / eventPossibilities;
@@ -3280,6 +3283,17 @@ void setRandomEventCounts(
   else {
     handle.emplace<RandomEventIndex>((types::eventPossibilities)(eventPossibilities / 2U));
   }
+}
+
+void setRandomEventCounts(
+  types::handle handle, Battle battle, const Simulation& simulation,
+  types::eventPossibilities (*getPossibleEventCount)(types::handle), bool forRequiredDamageRolls) {
+  setRandomEventCountsFromPossibilities(
+    handle,
+    battle,
+    simulation,
+    getPossibleEventCount(handle),
+    forRequiredDamageRolls);
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
@@ -3485,6 +3499,35 @@ void resolveSlotDecisions(types::handle sideHandle, const types::slotDecisions& 
 }
 
 void resolveTeamDecision(types::registry&, const types::teamOrder&, ActionQueue&) {}
+
+void setBattleOnSpeedTyingEntities(types::handle battleHandle, const SpeedTieIndexes&) {
+  battleHandle.emplace<Battle>(battleHandle.entity());
+}
+
+void setSpeedTieRandomEventCount(types::handle handle, const SpeedTieIndexes& speedTies, const Simulation& simulation) {
+  POKESIM_REQUIRE(
+    !speedTies.val.empty(),
+    "SpeedTieIndexes shouldn't exist if there are no speed ties left to resolve.");
+
+  types::activePokemonIndex length = speedTies.val.back().length;
+  if constexpr (Constants::ActivePokemon::MAX > 4U) {
+    POKESIM_REQUIRE(
+      length <= 4U,
+      "The below array doesn't contain the precomputed factorial value for the amount of Pokemon speed tying. Update "
+      "the array and this assert with the correct values.");
+  }
+  static constexpr std::array<types::eventPossibilities, Constants::ActivePokemon::MAX - 1U> factorials = {2U, 6U, 24U};
+
+  types::eventPossibilities eventPossibilities = factorials[length - 2U];
+  setRandomEventCountsFromPossibilities(handle, Battle{handle.entity()}, simulation, eventPossibilities, false);
+}
+
+void removeEmptySpeedTieIndexes(types::handle handle, SpeedTieIndexes& speedTies) {
+  speedTies.val.pop_back();
+  if (speedTies.val.empty()) {
+    handle.remove<SpeedTieIndexes>();
+  }
+}
 }  // namespace
 
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
@@ -3554,6 +3597,61 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
 
   if (!speedTies.val.empty()) {
     handle.emplace<SpeedTieIndexes>(speedTies);
+  }
+}
+
+void setSpeedTieOrder(
+  ActionQueue& actionQueue, const SpeedTieIndexes& speedTies, const RandomEventIndex& randomEventIndex) {
+  const auto& speedTie = speedTies.val.back();
+
+  // This loop shuffles a list based on one random number where each possible shuffling has an equal chance. The main
+  // idea is to choose where each action should be placed in that new ordering by using the ranges the random number
+  // belongs to. For example, let's say there are 3 actions that speed tied, the random number (randomEventIndex) is 2,
+  // and we want to find where the third action in the original ordering should move to. There are 6 different ways to
+  // order those actions (3 factorial = 6), meaning the randomEventIndex could include any value from 0 to 5. The code
+  // below first separates the 0 to 5 range into 3 equally sized sections (so 2 values per section) and then calculates
+  // that the randomEventIndex of 2 is in the second section. That section's index is used as where the third action
+  // will go as there will be as many sections as there are places to move that action.
+  types::eventPossibilities valuesPerSection = 1U;
+  for (types::actionQueueIndex sections = 1U; sections < speedTie.length; sections++) {
+    types::eventPossibilities totalValues = (sections + 1U) * valuesPerSection;
+    types::eventPossibilities eventIndexInAllValues = randomEventIndex.val % totalValues;
+    types::eventPossibilities sectionOfEventIndex = eventIndexInAllValues / valuesPerSection;
+
+    types::activePokemonIndex oldIndex = speedTie.start + sections;
+    types::activePokemonIndex newIndex = speedTie.start + sectionOfEventIndex;
+
+    POKESIM_REQUIRE(
+      newIndex < speedTie.start + speedTie.length,
+      "newIndex would be out of bounds for the current speed tie.");
+
+    std::swap(actionQueue.val[oldIndex], actionQueue.val[newIndex]);
+    valuesPerSection = totalValues;
+  }
+}
+
+void resolveSpeedTies(Simulation& simulation) {
+  using Limit = Constants::ActivePokemon;
+  types::activePokemonIndex speedTiesResolved = Limit::MIN;
+  while (!simulation.registry.view<SpeedTieIndexes>().empty()) {
+    POKESIM_REQUIRE(
+      speedTiesResolved <= Limit::MAX,
+      "More speed ties were resolved than are possible in at least one battle.");
+    // The random chance functions require Battle components and this is the only case of battle entities using random
+    // chance functions.
+    if (!speedTiesResolved) {
+      simulation.view<setBattleOnSpeedTyingEntities>();
+    }
+
+    simulation.view<setSpeedTieRandomEventCount>(simulation);
+    randomEventCount(simulation, [](Simulation& sim) { sim.view<setSpeedTieOrder>(); }, {});
+
+    simulation.view<removeEmptySpeedTieIndexes>();
+    speedTiesResolved++;
+  }
+
+  if (speedTiesResolved) {
+    simulation.removeFromEntities<Battle, pokesim::tags::Battle>();
   }
 }
 

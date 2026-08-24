@@ -26596,6 +26596,10 @@ void setReciprocalRandomBinaryChance(
 }
 
 void setRandomEqualChance(types::handle handle, const Simulation& simulation);
+
+void setRandomEventCountsFromPossibilities(
+  types::handle handle, Battle battle, const Simulation& simulation, types::eventPossibilities eventPossibilities,
+  bool forRequiredDamageRolls);
 void setRandomEventCounts(
   types::handle handle, Battle battle, const Simulation& simulation,
   types::eventPossibilities (*getPossibleEventCount)(types::handle), bool forRequiredDamageRolls);
@@ -26744,6 +26748,11 @@ struct EntityFilter {
     simulation->addToEntities<Type, SelectionTag, OtherSelectionTags..., ViewComponents...>(args...);
   }
 
+  template <typename Type, typename... ViewComponents, typename... ExcludeComponents>
+  void removeFromSelected(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
+    simulation->removeFromEntities<Type, SelectionTag, OtherSelectionTags..., ViewComponents...>(exclude);
+  }
+
  private:
   Simulation* simulation = nullptr;
 };
@@ -26755,13 +26764,22 @@ struct EntityFilter {
 
 // Systems
 namespace pokesim {
+class Simulation;
 struct SideDecision;
 struct ActionQueue;
 struct RecycledAction;
+struct SpeedTieIndexes;
+
+namespace internal {
+struct RandomEventIndex;
+}
 
 namespace internal::simulate_turn {
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision);
 void speedSort(types::handle handle, ActionQueue& actionQueue);
+void resolveSpeedTies(Simulation& simulation);
+void setSpeedTieOrder(
+  ActionQueue& actionQueue, const SpeedTieIndexes& speedTies, const RandomEventIndex& randomEventIndex);
 
 void addBeforeTurnAction(ActionQueue& actionQueue);
 void addResidualAction(ActionQueue& actionQueue);

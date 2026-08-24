@@ -205,6 +205,44 @@ TEST_CASE("Simulate Turn: Action Queue Order", "[Simulation][SimulateTurn]") {
       },
       idealList);
   }
+
+  SECTION("Speed Tie Order Uniqueness") {
+    static constexpr types::activePokemonIndex MAX_ACTIVE = Constants::ActivePokemon::MAX;
+    types::activePokemonIndex speedTieCount = GENERATE(range(2U, MAX_ACTIVE + 1U));
+    types::activePokemonIndex speedTieStart = MAX_ACTIVE - speedTieCount;
+    SpeedTieIndexes speedTies{{{speedTieStart, speedTieCount}}};
+    ActionQueue originalQueue;
+
+    for (types::activePokemonIndex i = 0U; i < MAX_ACTIVE; i++) {
+      ActionQueueItem& item = originalQueue.val.emplace_back(ActionQueueItem{ActionOrder::MOVE});
+      item.decision = MoveDecision{Slot::P1A, Slot::P1A, (dex::Move)i};
+    }
+
+    types::eventPossibilities possibleOrders = 1U;
+    for (types::eventPossibilities i = 2U; i <= speedTieCount; i++) {
+      possibleOrders *= i;
+    }
+
+    entt::dense_set<std::uint32_t> foundOrders;
+    for (types::eventPossibilities randomEventIndex = 0U; randomEventIndex < possibleOrders; randomEventIndex++) {
+      CAPTURE(speedTieCount, possibleOrders, randomEventIndex);
+
+      ActionQueue queue = originalQueue;
+      internal::simulate_turn::setSpeedTieOrder(queue, speedTies, {randomEventIndex});
+
+      std::uint32_t foundOrder = 0;
+      for (types::activePokemonIndex i = 0U; i < MAX_ACTIVE; i++) {
+        auto originalIndex = (types::activePokemonIndex)queue.val[i].decision.get<MoveDecision>().move;
+        if (i < speedTieStart) {
+          REQUIRE(i == originalIndex);
+        }
+        foundOrder += originalIndex << i * 8U;
+      }
+
+      REQUIRE_FALSE(foundOrders.contains(foundOrder));
+      foundOrders.insert(foundOrder);
+    }
+  }
 }
 
 TEST_CASE("Simulate Turn: Basic Switching", "[Simulation][SimulateTurn]") {
@@ -357,5 +395,102 @@ TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
   checks.checkMovePpUsage(p1Pokemon, p2MoveIndex);
 
   REQUIRE(winner.val == PlayerSideId::P2);
+}
+
+TEST_CASE("Simulate Turn: Speed Ties", "[Simulation][SimulateTurn]") {
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
+  Simulation simulation{pokedex, BattleFormat::DOUBLES};
+  const types::registry& registry = simulation.registry;
+
+  types::activePokemonIndex speedTieCount = GENERATE(range(2U, 5U));
+  types::probability branchProbabilityLimit = GENERATE(0.0F, 0.05F, 0.2F, 0.5F, 1.0F);
+
+  BattleCreationInfo battleCreationInfo;
+  battleCreationInfo.runWithSimulateTurn = true;
+  battleCreationInfo.turn = 1U;
+  PokemonCreationInfo p1A{dex::Species::EMPOLEON}, p2A{dex::Species::EMPOLEON}, p1B{dex::Species::EMPOLEON},
+    p2B{dex::Species::EMPOLEON};
+  p1A.moves = p1B.moves = p2A.moves = p2B.moves = {{dex::Move::SPLASH}};
+  p1A.ivs.spe = p1B.ivs.spe = p2A.ivs.spe = p2B.ivs.spe = 31U;
+
+  if (speedTieCount < 4U) {
+    p2B.ivs.spe = 20U;
+  }
+  if (speedTieCount < 3U) {
+    p1B.ivs.spe = 10U;
+  }
+
+  battleCreationInfo.sides.p1().team = {p1A, p1B};
+  battleCreationInfo.sides.p2().team = {p2A, p2B};
+  battleCreationInfo.decisionsToSimulate = {{
+    {PlayerSideId::P1,
+     types::slotDecisions{
+       MoveDecision{Slot::P1A, Slot::P1A, dex::Move::SPLASH},
+       MoveDecision{Slot::P1B, Slot::P1B, dex::Move::SPLASH},
+     }},
+    {PlayerSideId::P2,
+     types::slotDecisions{
+       MoveDecision{Slot::P2A, Slot::P2A, dex::Move::SPLASH},
+       MoveDecision{Slot::P2B, Slot::P2B, dex::Move::SPLASH},
+     }},
+  }};
+
+  types::eventPossibilities idealCloneCount = 1U;
+  for (types::eventPossibilities i = speedTieCount; i > 1U; i--) {
+    idealCloneCount *= i;
+  }
+
+  if (branchProbabilityLimit >= 1.0F / idealCloneCount) {
+    idealCloneCount = 1U;
+  }
+
+  pokedex.loadForBattleInfo({battleCreationInfo});
+  simulation.createInitialStates({battleCreationInfo});
+  simulation.simulateTurnOptions.setApplyChangesToInputBattle(true);
+  simulation.simulateTurnOptions.setMakeBranchesOnRandomEvents(true);
+  simulation.simulateTurnOptions.setBranchProbabilityLowerLimit(branchProbabilityLimit);
+  CAPTURE(speedTieCount, branchProbabilityLimit, idealCloneCount);
+
+  SECTION("Check Action Queue Orders") {
+    simulation.view<internal::simulate_turn::resolveDecision>();
+    simulation.view<internal::simulate_turn::speedSort>();
+    internal::simulate_turn::resolveSpeedTies(simulation);
+
+    auto trueCloneCount = registry.view<tags::Battle>()->size();
+    REQUIRE(trueCloneCount == idealCloneCount);
+    auto actionQueueView = registry.view<ActionQueue>();
+
+    entt::dense_set<std::uint32_t> foundOrders;
+    for (types::entity entity : actionQueueView) {
+      const auto& [queue] = actionQueueView.get(entity);
+
+      std::uint32_t foundOrder = 0U;
+      types::stat lastSpeed = Constants::PokemonStat::MAX;
+      for (types::activePokemonIndex i = 0U; i < queue.val.size(); i++) {
+        const ActionQueueItem& item = queue.val[i];
+        if (i != 0U && i < speedTieCount) {
+          REQUIRE(lastSpeed == item.speed);
+        }
+        else {
+          REQUIRE(lastSpeed > item.speed);
+        }
+
+        foundOrder += (std::uint8_t)item.decision.sourceSlot() << i * 8U;
+        lastSpeed = item.speed;
+      }
+
+      REQUIRE_FALSE(foundOrders.contains(foundOrder));
+      foundOrders.insert(foundOrder);
+    }
+  }
+
+  SECTION("Check Entire Simulation Branching") {
+    auto result = simulation.simulateTurn();
+    REQUIRE(result.turnOutcomeBattlesResults()->size() == 1U);
+
+    const auto& turnOutcomeBattles = std::get<1>(*result.turnOutcomeBattlesResults().each().begin()).val;
+    auto trueCloneCount = turnOutcomeBattles.size();
+    REQUIRE(trueCloneCount == idealCloneCount);
+  }
 }
 }  // namespace pokesim

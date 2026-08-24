@@ -4,13 +4,22 @@
 
 // Systems
 namespace pokesim {
+class Simulation;
 struct SideDecision;
 struct ActionQueue;
 struct RecycledAction;
+struct SpeedTieIndexes;
+
+namespace internal {
+struct RandomEventIndex;
+}
 
 namespace internal::simulate_turn {
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision);
 void speedSort(types::handle handle, ActionQueue& actionQueue);
+void resolveSpeedTies(Simulation& simulation);
+void setSpeedTieOrder(
+  ActionQueue& actionQueue, const SpeedTieIndexes& speedTies, const RandomEventIndex& randomEventIndex);
 
 void addBeforeTurnAction(ActionQueue& actionQueue);
 void addResidualAction(ActionQueue& actionQueue);

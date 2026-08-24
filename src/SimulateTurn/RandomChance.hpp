@@ -44,6 +44,10 @@ void setReciprocalRandomBinaryChance(
 }
 
 void setRandomEqualChance(types::handle handle, const Simulation& simulation);
+
+void setRandomEventCountsFromPossibilities(
+  types::handle handle, Battle battle, const Simulation& simulation, types::eventPossibilities eventPossibilities,
+  bool forRequiredDamageRolls);
 void setRandomEventCounts(
   types::handle handle, Battle battle, const Simulation& simulation,
   types::eventPossibilities (*getPossibleEventCount)(types::handle), bool forRequiredDamageRolls);

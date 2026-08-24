@@ -57,6 +57,13 @@ auto getBattleFilter(Simulation& simulation) {
   return pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::Battle>{simulation};
 }
 
+template <typename Filter>
+void speedSort(Filter battleFilter, Simulation& simulation) {
+  battleFilter.template view<internal::simulate_turn::speedSort, Tags<tags::SpeedSortNeeded>>();
+  battleFilter.template removeFromSelected<tags::SpeedSortNeeded>();
+  internal::simulate_turn::resolveSpeedTies(simulation);
+}
+
 template <typename ActionTag>
 void removeActionBySource(types::handle sourceHandle, Battle battle) {
   types::registry& registry = *sourceHandle.registry();
@@ -262,9 +269,6 @@ void runResidualAction(Simulation& simulation) {
     return;
   }
 
-  battleFilter.view<internal::simulate_turn::speedSort, Tags<tags::SpeedSortNeeded>>();
-  simulation.registry.clear<tags::SpeedSortNeeded>();
-
   internal::runResidual(simulation);
 
   simulation.registry.clear<action::tags::Residual>();
@@ -359,8 +363,7 @@ void runCurrentAction(Simulation& simulation) {
   // Switch requests
 
   internal::updateAllStats(simulation);
-  getBattleFilter(simulation).view<internal::simulate_turn::speedSort, Tags<tags::SpeedSortNeeded>>();
-  simulation.registry.clear<tags::SpeedSortNeeded>();
+  speedSort(getBattleFilter(simulation), simulation);
 }
 
 void incrementTurn(Turn& turn) {
@@ -416,7 +419,7 @@ void simulateTurn(Simulation& simulation) {
 
   // battleFilter.view<internal::simulate_turn::addBeforeTurnAction, Tags<>,
   // entt::exclude_t<pokesim::tags::BattleMidTurn>>();
-  battleFilter.view<internal::simulate_turn::speedSort>();
+  speedSort(battleFilter, simulation);
   battleFilter
     .view<internal::simulate_turn::addResidualAction, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn>>();
 
@@ -428,7 +431,7 @@ void simulateTurn(Simulation& simulation) {
   while (!simulation.registry.view<action::tags::Current>().empty()) {
     POKESIM_REQUIRE(
       actionsTaken <= ActionsLimit::MAX,
-      "More actions in a turn were queued to be taken than in at least one battle than are possible.");
+      "More actions in a turn were queued to be taken than are possible in at least one battle.");
 
     runCurrentAction(simulation);
     battleFilter.view<internal::simulate_turn::setCurrentAction, Tags<>, entt::exclude_t<Winner>>();
