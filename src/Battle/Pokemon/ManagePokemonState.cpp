@@ -130,8 +130,8 @@ struct CheckIfStatusIsSettable {
       simulation.view<checkTypeStatusImmunity<pokesim::dex::Ice>, Tags<StatusType>>();
     }
     if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Paralysis>) {  // And simulation is using a mechanic
-                                                                                   // where
-                                                                                   // electric types cannot be paralyzed
+                                                                                   // where electric types cannot be
+                                                                                   // paralyzed.
       simulation.view<checkTypeStatusImmunity<pokesim::dex::Electric>, Tags<StatusType>>();
     }
 
@@ -278,7 +278,7 @@ void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
   }
 }
 
-void setLastMoveUsed(types::registry& registry, CurrentAction& source, const CurrentActionMoveSlot& move) {
+void setLastMoveUsed(types::registry& registry, CurrentAction& source, CurrentActionMoveSlot move) {
   registry.emplace<LastUsedMove>(source.source, move.val);
 }
 

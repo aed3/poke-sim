@@ -13,8 +13,7 @@
 namespace pokesim::internal {
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void setRandomEventChances(
-  types::handle handle, const Simulation& simulation,
-  const std::array<types::percentChance, POSSIBLE_EVENT_COUNT>& chances);
+  types::handle handle, const Simulation& simulation, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances);
 
 enum class PercentChanceLimitResult : std::uint8_t {
   NO_LIMIT_REACHED = 0U,

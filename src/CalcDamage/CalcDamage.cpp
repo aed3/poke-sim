@@ -69,9 +69,8 @@ void clearRunVariables(Simulation& simulation) {
   simulation.removeFromEntities<Damage, pokesim::tags::CalculateDamage>();
 }
 
-void checkForAndApplyStab(
-  types::handle moveHandle, const Attacker& attacker, TypeName type, DamageRollModifiers& modifier) {
-  const SpeciesTypes& attackerTypes = moveHandle.registry()->get<SpeciesTypes>(attacker.val);
+void checkForAndApplyStab(types::handle moveHandle, Attacker attacker, TypeName type, DamageRollModifiers& modifier) {
+  SpeciesTypes attackerTypes = moveHandle.registry()->get<SpeciesTypes>(attacker.val);
 
   if (attackerTypes.has(type.val)) {
     modifier.stab = StabBoostKind::STANDARD;
@@ -80,7 +79,7 @@ void checkForAndApplyStab(
 
 void checkForAndApplyTypeEffectiveness(
   types::handle moveHandle, Defender defender, TypeName type, DamageRollModifiers& modifier, const Pokedex& pokedex) {
-  const SpeciesTypes& defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defender.val);
+  SpeciesTypes defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defender.val);
 
   modifier.typeEffectiveness = getAttackEffectiveness(defenderTypes, type.val, pokedex.typeChart());
 }
@@ -128,7 +127,7 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Po
   damage.val = internal::applyChainedModifier(damage.val, modifiers.modifyDamageEvent);
 
   if (modifiers.burn) {
-    const auto multiplier = pokedex.getStaticValue<dex::Burn::physicalDamageMultiplier>();
+    types::effectMultiplier multiplier = pokedex.getStaticValue<dex::Burn::physicalDamageMultiplier>();
 
     damage.val = (types::damage)internal::fixedPointMultiply(damage.val, multiplier);
   }
@@ -168,7 +167,7 @@ void applyDamageRollModifier(
 
 void reduceDamageRollsToDefenderHp(
   types::handle moveHandle, DamageRolls& damageRolls, Damage& damage, Defender defender) {
-  const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
+  stat::CurrentHp defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
   for (auto& damageRoll : damageRolls.val) {
     damageRoll.val = std::min(defenderHp.val, damageRoll.val);
   }
@@ -176,7 +175,7 @@ void reduceDamageRollsToDefenderHp(
 }
 
 void assignCritChanceDivisor(
-  types::handle moveHandle, CritBoost critBoost, const std::array<types::percentChance, 4U>& critChanceDivisors) {
+  types::handle moveHandle, CritBoost critBoost, std::array<types::percentChance, 4U> critChanceDivisors) {
   std::size_t index = std::min((std::size_t)critBoost.val, critChanceDivisors.size() - 1U);
   moveHandle.emplace<CritChanceDivisor>(critChanceDivisors[index]);
 }
@@ -243,13 +242,13 @@ void calculateBaseDamage(
 }
 
 void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, Defender defender) {
-  const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
+  stat::CurrentHp defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
   UsesUntilKo usesUntilKo;
   POKESIM_REQUIRE(
     damageRolls.val.size() == Constants::DamageRollCount::MAX,
     "All the damage rolls are needed to calculate this correctly.");
 
-  for (const Damage& damageRoll : damageRolls.val) {
+  for (Damage damageRoll : damageRolls.val) {
     types::moveHits hits = (types::moveHits)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
     if (usesUntilKo.val.empty() || usesUntilKo.val.back().hits != hits) {
       usesUntilKo.val.push_back({hits});

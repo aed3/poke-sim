@@ -107,12 +107,12 @@ void addAddedTarget(types::registry& registry, Battle battle, Slot allySlot) {
 }
 
 void addTargetAllyToTargets(types::registry& registry, Battle battle) {
-  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).action);
+  TargetSlotName targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).action);
   addAddedTarget(registry, battle, targetSlotName.val);
 }
 
-void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
-  const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(registry.get<CurrentAction>(battle.val).action);
+void addUserAllyToTargets(types::registry& registry, Battle battle) {
+  SourceSlotName sourceSlotName = registry.get<SourceSlotName>(registry.get<CurrentAction>(battle.val).action);
   addAddedTarget(registry, battle, sourceSlotName.val);
 }
 
@@ -158,7 +158,7 @@ void setActionMoveData(Simulation& simulation) {
 
 void setCurrentActionMoveSlot(types::handle handle, CurrentAction& action) {
   types::registry& registry = *handle.registry();
-  const MoveName& move = registry.get<MoveName>(action.action);
+  MoveName move = registry.get<MoveName>(action.action);
   const MoveSlots& moveSlots = registry.get<MoveSlots>(action.source);
 
   types::moveSlotIndex moveSlotIndex = moveToMoveSlot(moveSlots, move.val);

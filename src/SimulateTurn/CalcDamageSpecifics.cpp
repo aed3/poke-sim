@@ -19,7 +19,7 @@
 namespace pokesim::internal::simulate_turn {
 namespace {
 void applyDamageRollIndex(
-  Damage& damage, const DamageRolls& damageRolls, const pokesim::internal::RandomEventIndex& randomRollIndex) {
+  Damage& damage, const DamageRolls& damageRolls, pokesim::internal::RandomEventIndex randomRollIndex) {
   types::eventPossibilities damageRollIndex = 0U;
   for (types::damageRollIndex i = 0U; i < damageRolls.val.size(); i++) {
     if (randomRollIndex.val == damageRollIndex) {
@@ -36,7 +36,7 @@ void applyDamageRollIndex(
 }
 
 void assignPartialProbability(
-  types::registry& registry, const Battle& battle, const pokesim::internal::RandomEventCount& randomEventCount) {
+  types::registry& registry, Battle battle, pokesim::internal::RandomEventCount randomEventCount) {
   if (randomEventCount.val != 1U) {
     Probability& probability = registry.get<Probability>(battle.val);
     probability.val *= randomEventCount.probability();
@@ -44,9 +44,9 @@ void assignPartialProbability(
 }
 
 void assignAllDamageRollProbability(
-  types::registry& registry, const Damage& damage, DamageRolls& damageRolls, const Battle& battle) {
+  types::registry& registry, Damage damage, const DamageRolls& damageRolls, Battle battle) {
   types::eventPossibilities damageCount = 0U;
-  for (const Damage damageRoll : damageRolls.val) {
+  for (Damage damageRoll : damageRolls.val) {
     if (damageRoll.val == damage.val) {
       damageCount++;
     }

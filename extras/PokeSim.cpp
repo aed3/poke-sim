@@ -2521,12 +2521,12 @@ void addAddedTarget(types::registry& registry, Battle battle, Slot allySlot) {
 }
 
 void addTargetAllyToTargets(types::registry& registry, Battle battle) {
-  const TargetSlotName& targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).action);
+  TargetSlotName targetSlotName = registry.get<TargetSlotName>(registry.get<CurrentAction>(battle.val).action);
   addAddedTarget(registry, battle, targetSlotName.val);
 }
 
-void addUserAllyToTargets(types::registry& registry, const Battle& battle) {
-  const SourceSlotName& sourceSlotName = registry.get<SourceSlotName>(registry.get<CurrentAction>(battle.val).action);
+void addUserAllyToTargets(types::registry& registry, Battle battle) {
+  SourceSlotName sourceSlotName = registry.get<SourceSlotName>(registry.get<CurrentAction>(battle.val).action);
   addAddedTarget(registry, battle, sourceSlotName.val);
 }
 
@@ -2572,7 +2572,7 @@ void setActionMoveData(Simulation& simulation) {
 
 void setCurrentActionMoveSlot(types::handle handle, CurrentAction& action) {
   types::registry& registry = *handle.registry();
-  const MoveName& move = registry.get<MoveName>(action.action);
+  MoveName move = registry.get<MoveName>(action.action);
   const MoveSlots& moveSlots = registry.get<MoveSlots>(action.source);
 
   types::moveSlotIndex moveSlotIndex = moveToMoveSlot(moveSlots, move.val);
@@ -2892,7 +2892,7 @@ void updateProbability(Probability& currentProbability, types::probability event
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename RandomEventTag>
 void updateProbabilityFromRandomEventChance(
-  types::registry& registry, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, const Battle& battle) {
+  types::registry& registry, RandomEventChances<POSSIBLE_EVENT_COUNT> eventChances, Battle battle) {
   static constexpr bool isEventA = std::is_same_v<RandomEventTag, tags::RandomEventA>;
   static constexpr bool isEventB = std::is_same_v<RandomEventTag, tags::RandomEventB>;
   static constexpr bool isEventC = std::is_same_v<RandomEventTag, tags::RandomEventC>;
@@ -2929,7 +2929,7 @@ void viewUpdateProbabilityFromRandomEventChance(Simulation& simulation) {
 
 template <typename RandomEventTag>
 void updateProbabilityFromRandomBinaryChance(
-  types::registry& registry, const RandomBinaryProbability& eventChance, const Battle& battle) {
+  types::registry& registry, RandomBinaryProbability eventChance, Battle battle) {
   static constexpr bool hasEventPassed = std::is_same_v<RandomEventTag, tags::RandomEventCheckPassed>;
   static constexpr bool hasEventFailed = std::is_same_v<RandomEventTag, tags::RandomEventCheckFailed>;
 
@@ -2946,23 +2946,20 @@ void updateProbabilityFromRandomBinaryChance(
 }
 
 void updateProbabilityFromRandomEqualChance(
-  types::registry& registry, const Battle& battle, const RandomEventIndex&,
-  types::eventPossibilities possibleEventCount) {
+  types::registry& registry, Battle battle, RandomEventIndex, types::eventPossibilities possibleEventCount) {
   Probability& probability = registry.get<Probability>(battle.val);
 
   updateProbability(probability, Constants::Probability::MAX / (types::probability)possibleEventCount);
 }
 
-void updateProbabilityFromRandomEventCount(
-  types::registry& registry, const RandomEventCount& eventChance, const Battle& battle) {
+void updateProbabilityFromRandomEventCount(types::registry& registry, RandomEventCount eventChance, Battle battle) {
   Probability& probability = registry.get<Probability>(battle.val);
 
   updateProbability(probability, eventChance.probability());
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
-void assignRandomEvent(
-  types::handle handle, const Battle& battle, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances) {
+void assignRandomEvent(types::handle handle, Battle battle, RandomEventChances<POSSIBLE_EVENT_COUNT> eventChances) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, Constants::PercentChance::MAX);
 
@@ -2996,7 +2993,7 @@ void assignRandomEvent(
   }
 }
 
-void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const RandomBinaryProbability& eventChance) {
+void assignRandomBinaryEvent(types::handle handle, Battle battle, RandomBinaryProbability eventChance) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::probability rng = nextRandomValue(rngSeed) / (types::probability)std::numeric_limits<types::rngResult>::max();
 
@@ -3008,14 +3005,14 @@ void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const R
   }
 }
 
-void assignRandomEqualChance(types::handle handle, const Battle& battle, types::eventPossibilities possibleEventCount) {
+void assignRandomEqualChance(types::handle handle, Battle battle, types::eventPossibilities possibleEventCount) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::eventPossibilities rng = (types::eventPossibilities)nextBoundedRandomValue(rngSeed, possibleEventCount);
 
   handle.emplace<RandomEventIndex>(rng);
 }
 
-void assignRandomEventCount(types::handle handle, const Battle& battle, const RandomEventCount& eventCount) {
+void assignRandomEventCount(types::handle handle, Battle battle, RandomEventCount eventCount) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::eventPossibilities rng = (types::eventPossibilities)nextBoundedRandomValue(rngSeed, eventCount.val);
 
@@ -3027,7 +3024,7 @@ void assignIndexToClones(
   for (types::entity original : originals) {
     registry.emplace<RandomEventIndex>(original, (types::eventPossibilities)0U);
 
-    const auto clonedPointer = clonedEntityMap.find(original);
+    auto clonedPointer = clonedEntityMap.find(original);
     if (clonedPointer == clonedEntityMap.end()) continue;
     const auto& cloned = clonedPointer->second;
 
@@ -3091,7 +3088,7 @@ void randomChanceEvent(
         entitiesByEventCount{};
 
       auto collectEntityEventCounts =
-        [&entitiesByEventCount](types::entity chanceEntity, const Battle& battle, const RandomEventCount& eventCount) {
+        [&entitiesByEventCount](types::entity chanceEntity, Battle battle, RandomEventCount eventCount) {
           entitiesByEventCount[eventCount.val].first.push_back(chanceEntity);
           entitiesByEventCount[eventCount.val].second.push_back(battle.val);
         };
@@ -3099,7 +3096,7 @@ void randomChanceEvent(
       registry.view<Battle, RandomEventCount>().each(collectEntityEventCounts);
 
       for (const auto& [eventCount, entities] : entitiesByEventCount) {
-        const auto [chanceEntities, battleEntities] = entities;
+        const auto& [chanceEntities, battleEntities] = entities;
         if (eventCount == 1U) {
           assignClonesToEvents(registry, {}, chanceEntities);
           continue;
@@ -3112,7 +3109,7 @@ void randomChanceEvent(
       }
     }
     else {
-      auto assignCloneTags = [&registry](const Battle& battle, auto&&...) {
+      auto assignCloneTags = [&registry](Battle battle, auto&&...) {
         registry.emplace<pokesim::tags::CloneFrom>(battle.val);
       };
       registry.view<Battle, Random>().each(assignCloneTags);
@@ -3176,8 +3173,7 @@ PercentChanceLimitResult checkPercentChanceLimits(
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void setRandomEventChances(
-  types::handle handle, const Simulation& simulation,
-  const std::array<types::percentChance, POSSIBLE_EVENT_COUNT>& chances) {
+  types::handle handle, const Simulation& simulation, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances) {
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
   if (chances.back() == Constants::PercentChance::MAX) {
     for (types::eventPossibilities i = 1U; i < POSSIBLE_EVENT_COUNT; i++) {
@@ -3352,7 +3348,7 @@ void randomEventChances(
 }
 
 void randomEqualChance(
-  Simulation& simulation, const types::eventPossibilities possibleEventCount, types::callback applyChoices,
+  Simulation& simulation, types::eventPossibilities possibleEventCount, types::callback applyChoices,
   types::optionalCallback updateProbabilities) {
   auto defaultUpdateProbabilities = [possibleEventCount](Simulation& sim) {
     sim.view<updateProbabilityFromRandomEqualChance>(possibleEventCount);
@@ -3435,10 +3431,10 @@ template void randomEventChances<3U>(Simulation&, types::callback, types::option
 template void randomEventChances<4U>(Simulation&, types::callback, types::optionalCallback);
 template void randomEventChances<5U>(Simulation&, types::callback, types::optionalCallback);
 
-template void setRandomEventChances<2U>(types::handle, const Simulation&, const std::array<types::percentChance, 2U>&);
-template void setRandomEventChances<3U>(types::handle, const Simulation&, const std::array<types::percentChance, 3U>&);
-template void setRandomEventChances<4U>(types::handle, const Simulation&, const std::array<types::percentChance, 4U>&);
-template void setRandomEventChances<5U>(types::handle, const Simulation&, const std::array<types::percentChance, 5U>&);
+template void setRandomEventChances<2U>(types::handle, const Simulation&, std::array<types::percentChance, 2U>);
+template void setRandomEventChances<3U>(types::handle, const Simulation&, std::array<types::percentChance, 3U>);
+template void setRandomEventChances<4U>(types::handle, const Simulation&, std::array<types::percentChance, 4U>);
+template void setRandomEventChances<5U>(types::handle, const Simulation&, std::array<types::percentChance, 5U>);
 }  // namespace pokesim::internal
 
 /////////////////// END OF src/SimulateTurn/RandomChance.cpp ///////////////////
@@ -3531,7 +3527,7 @@ void removeEmptySpeedTieIndexes(types::handle handle, SpeedTieIndexes& speedTies
 }  // namespace
 
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
-  const Battle& battle = sideHandle.get<Battle>();
+  Battle battle = sideHandle.get<Battle>();
   types::registry& registry = *sideHandle.registry();
   ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
 
@@ -3600,8 +3596,7 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   }
 }
 
-void setSpeedTieOrder(
-  ActionQueue& actionQueue, const SpeedTieIndexes& speedTies, const RandomEventIndex& randomEventIndex) {
+void setSpeedTieOrder(ActionQueue& actionQueue, const SpeedTieIndexes& speedTies, RandomEventIndex randomEventIndex) {
   const auto& speedTie = speedTies.val.back();
 
   // This loop shuffles a list based on one random number where each possible shuffling has an equal chance. The main
@@ -3663,7 +3658,7 @@ void addResidualAction(ActionQueue& actionQueue) {
   actionQueue.val.push_back({ActionOrder::RESIDUAL});
 }
 
-void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction& action) {
+void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction action) {
   types::registry& registry = *battleHandle.registry();
 
   if (actionQueue.val.empty()) return;
@@ -3718,7 +3713,7 @@ void clearActionQueue(ActionQueue& actionQueue) {
 namespace pokesim::internal::simulate_turn {
 namespace {
 void applyDamageRollIndex(
-  Damage& damage, const DamageRolls& damageRolls, const pokesim::internal::RandomEventIndex& randomRollIndex) {
+  Damage& damage, const DamageRolls& damageRolls, pokesim::internal::RandomEventIndex randomRollIndex) {
   types::eventPossibilities damageRollIndex = 0U;
   for (types::damageRollIndex i = 0U; i < damageRolls.val.size(); i++) {
     if (randomRollIndex.val == damageRollIndex) {
@@ -3735,7 +3730,7 @@ void applyDamageRollIndex(
 }
 
 void assignPartialProbability(
-  types::registry& registry, const Battle& battle, const pokesim::internal::RandomEventCount& randomEventCount) {
+  types::registry& registry, Battle battle, pokesim::internal::RandomEventCount randomEventCount) {
   if (randomEventCount.val != 1U) {
     Probability& probability = registry.get<Probability>(battle.val);
     probability.val *= randomEventCount.probability();
@@ -3743,9 +3738,9 @@ void assignPartialProbability(
 }
 
 void assignAllDamageRollProbability(
-  types::registry& registry, const Damage& damage, DamageRolls& damageRolls, const Battle& battle) {
+  types::registry& registry, Damage damage, const DamageRolls& damageRolls, Battle battle) {
   types::eventPossibilities damageCount = 0U;
-  for (const Damage damageRoll : damageRolls.val) {
+  for (Damage damageRoll : damageRolls.val) {
     if (damageRoll.val == damage.val) {
       damageCount++;
     }
@@ -4886,9 +4881,8 @@ void clearRunVariables(Simulation& simulation) {
   simulation.removeFromEntities<Damage, pokesim::tags::CalculateDamage>();
 }
 
-void checkForAndApplyStab(
-  types::handle moveHandle, const Attacker& attacker, TypeName type, DamageRollModifiers& modifier) {
-  const SpeciesTypes& attackerTypes = moveHandle.registry()->get<SpeciesTypes>(attacker.val);
+void checkForAndApplyStab(types::handle moveHandle, Attacker attacker, TypeName type, DamageRollModifiers& modifier) {
+  SpeciesTypes attackerTypes = moveHandle.registry()->get<SpeciesTypes>(attacker.val);
 
   if (attackerTypes.has(type.val)) {
     modifier.stab = StabBoostKind::STANDARD;
@@ -4897,7 +4891,7 @@ void checkForAndApplyStab(
 
 void checkForAndApplyTypeEffectiveness(
   types::handle moveHandle, Defender defender, TypeName type, DamageRollModifiers& modifier, const Pokedex& pokedex) {
-  const SpeciesTypes& defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defender.val);
+  SpeciesTypes defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defender.val);
 
   modifier.typeEffectiveness = getAttackEffectiveness(defenderTypes, type.val, pokedex.typeChart());
 }
@@ -4945,7 +4939,7 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Po
   damage.val = internal::applyChainedModifier(damage.val, modifiers.modifyDamageEvent);
 
   if (modifiers.burn) {
-    const auto multiplier = pokedex.getStaticValue<dex::Burn::physicalDamageMultiplier>();
+    types::effectMultiplier multiplier = pokedex.getStaticValue<dex::Burn::physicalDamageMultiplier>();
 
     damage.val = (types::damage)internal::fixedPointMultiply(damage.val, multiplier);
   }
@@ -4985,7 +4979,7 @@ void applyDamageRollModifier(
 
 void reduceDamageRollsToDefenderHp(
   types::handle moveHandle, DamageRolls& damageRolls, Damage& damage, Defender defender) {
-  const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
+  stat::CurrentHp defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
   for (auto& damageRoll : damageRolls.val) {
     damageRoll.val = std::min(defenderHp.val, damageRoll.val);
   }
@@ -4993,7 +4987,7 @@ void reduceDamageRollsToDefenderHp(
 }
 
 void assignCritChanceDivisor(
-  types::handle moveHandle, CritBoost critBoost, const std::array<types::percentChance, 4U>& critChanceDivisors) {
+  types::handle moveHandle, CritBoost critBoost, std::array<types::percentChance, 4U> critChanceDivisors) {
   std::size_t index = std::min((std::size_t)critBoost.val, critChanceDivisors.size() - 1U);
   moveHandle.emplace<CritChanceDivisor>(critChanceDivisors[index]);
 }
@@ -5060,13 +5054,13 @@ void calculateBaseDamage(
 }
 
 void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, Defender defender) {
-  const stat::CurrentHp& defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
+  stat::CurrentHp defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
   UsesUntilKo usesUntilKo;
   POKESIM_REQUIRE(
     damageRolls.val.size() == Constants::DamageRollCount::MAX,
     "All the damage rolls are needed to calculate this correctly.");
 
-  for (const Damage& damageRoll : damageRolls.val) {
+  for (Damage damageRoll : damageRolls.val) {
     types::moveHits hits = (types::moveHits)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
     if (usesUntilKo.val.empty() || usesUntilKo.val.back().hits != hits) {
       usesUntilKo.val.push_back({hits});
@@ -5733,8 +5727,8 @@ struct CheckIfStatusIsSettable {
       simulation.view<checkTypeStatusImmunity<pokesim::dex::Ice>, Tags<StatusType>>();
     }
     if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Paralysis>) {  // And simulation is using a mechanic
-                                                                                   // where
-                                                                                   // electric types cannot be paralyzed
+                                                                                   // where electric types cannot be
+                                                                                   // paralyzed.
       simulation.view<checkTypeStatusImmunity<pokesim::dex::Electric>, Tags<StatusType>>();
     }
 
@@ -5881,7 +5875,7 @@ void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
   }
 }
 
-void setLastMoveUsed(types::registry& registry, CurrentAction& source, const CurrentActionMoveSlot& move) {
+void setLastMoveUsed(types::registry& registry, CurrentAction& source, CurrentActionMoveSlot move) {
   registry.emplace<LastUsedMove>(source.source, move.val);
 }
 
@@ -6095,7 +6089,7 @@ void assignRootBattle(types::handle battleHandle) {
   battleHandle.emplace<RootBattle>(rootBattle);
 }
 
-void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root) {
+void collectTurnOutcomeBattles(types::handle leafBattleHandle, RootBattle root) {
   leafBattleHandle.registry()->get_or_emplace<pokesim::simulate_turn::TurnOutcomeBattles>(root.val).val.push_back(
     leafBattleHandle.entity());
 }
@@ -6524,7 +6518,7 @@ void deletePokemon(types::registry& registry) {
   traversePokemon(registry);
 }
 
-void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
+void remapEntity(types::entity& entity, CloneTo cloneTo, const types::ClonedEntityMap& entityMap) {
   POKESIM_REQUIRE(entityMap.contains(entity), "Source node was not loaded into the map.");
   POKESIM_REQUIRE(
     entityMap.at(entity).size() > cloneTo.val,
@@ -6832,9 +6826,9 @@ bool valuedEffectPointerMatch(const EffectTuple& current, const EffectTuple& oth
 
 template <typename EffectTuple>
 bool canInputsShareABattle(
-  const EffectTuple& currentEffects, const EffectTarget& currentEffectTarget, types::entity otherInput,
+  const EffectTuple& currentEffects, EffectTarget currentEffectTarget, types::entity otherInput,
   const types::registry& registry) {
-  const auto otherEffects = internal::analyze_effect::tryGetAllInputEffects(otherInput, registry);
+  const auto& otherEffects = internal::analyze_effect::tryGetAllInputEffects(otherInput, registry);
 
   if (!namedEffectPointerMatch<PseudoWeatherName>(currentEffects, otherEffects)) return false;
   if (!namedEffectPointerMatch<TerrainName>(currentEffects, otherEffects)) return false;
@@ -6871,7 +6865,7 @@ void groupSimilarInputs(types::handle battleHandle, const Inputs& inputs) {
 
     GroupedInputs& groupedInputs = registry.emplace<GroupedInputs>(currentInput);
 
-    const auto currentEffects = internal::analyze_effect::tryGetAllInputEffects(currentInput, registry);
+    const auto& currentEffects = internal::analyze_effect::tryGetAllInputEffects(currentInput, registry);
     EffectTarget currentEffectTarget = registry.get<EffectTarget>(currentInput);
 
     groupedInputs.val.push_back(currentInput);
@@ -7167,7 +7161,7 @@ void createOutput(types::handle inputHandle, const MovePair& movePairs) {
   types::registry& registry = *inputHandle.registry();
 
   auto [parentBattleMove, childBattleMove] = movePairs;
-  const auto [childDamage, childDamageRolls] = registry.get<Damage, DamageRolls>(childBattleMove);
+  const auto& [childDamage, childDamageRolls] = registry.get<Damage, DamageRolls>(childBattleMove);
   auto [parentDamage, parentDamageRolls] = registry.get<Damage, DamageRolls>(parentBattleMove);
 
   if (invert) {
@@ -7179,7 +7173,7 @@ void createOutput(types::handle inputHandle, const MovePair& movePairs) {
     }
 
     inputHandle.emplace<MultipliedDamageRolls>(parentDamageRolls);
-    auto* const parentKoChances = registry.try_get<calc_damage::UsesUntilKo>(parentBattleMove);
+    const auto* parentKoChances = registry.try_get<calc_damage::UsesUntilKo>(parentBattleMove);
     if (parentKoChances != nullptr) {
       inputHandle.emplace<MultipliedUsesUntilKo>(*parentKoChances);
     }
@@ -7193,7 +7187,7 @@ void createOutput(types::handle inputHandle, const MovePair& movePairs) {
     }
 
     inputHandle.emplace<MultipliedDamageRolls>(childDamageRolls);
-    auto* const childKoChances = registry.try_get<calc_damage::UsesUntilKo>(childBattleMove);
+    const auto* childKoChances = registry.try_get<calc_damage::UsesUntilKo>(childBattleMove);
     if (childKoChances != nullptr) {
       inputHandle.emplace<MultipliedUsesUntilKo>(*childKoChances);
     }

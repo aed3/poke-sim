@@ -123,7 +123,7 @@ void assignRootBattle(types::handle battleHandle) {
   battleHandle.emplace<RootBattle>(rootBattle);
 }
 
-void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root) {
+void collectTurnOutcomeBattles(types::handle leafBattleHandle, RootBattle root) {
   leafBattleHandle.registry()->get_or_emplace<pokesim::simulate_turn::TurnOutcomeBattles>(root.val).val.push_back(
     leafBattleHandle.entity());
 }

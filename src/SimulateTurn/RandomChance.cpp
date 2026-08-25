@@ -33,7 +33,7 @@ void updateProbability(Probability& currentProbability, types::probability event
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT, typename RandomEventTag>
 void updateProbabilityFromRandomEventChance(
-  types::registry& registry, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances, const Battle& battle) {
+  types::registry& registry, RandomEventChances<POSSIBLE_EVENT_COUNT> eventChances, Battle battle) {
   static constexpr bool isEventA = std::is_same_v<RandomEventTag, tags::RandomEventA>;
   static constexpr bool isEventB = std::is_same_v<RandomEventTag, tags::RandomEventB>;
   static constexpr bool isEventC = std::is_same_v<RandomEventTag, tags::RandomEventC>;
@@ -70,7 +70,7 @@ void viewUpdateProbabilityFromRandomEventChance(Simulation& simulation) {
 
 template <typename RandomEventTag>
 void updateProbabilityFromRandomBinaryChance(
-  types::registry& registry, const RandomBinaryProbability& eventChance, const Battle& battle) {
+  types::registry& registry, RandomBinaryProbability eventChance, Battle battle) {
   static constexpr bool hasEventPassed = std::is_same_v<RandomEventTag, tags::RandomEventCheckPassed>;
   static constexpr bool hasEventFailed = std::is_same_v<RandomEventTag, tags::RandomEventCheckFailed>;
 
@@ -87,23 +87,20 @@ void updateProbabilityFromRandomBinaryChance(
 }
 
 void updateProbabilityFromRandomEqualChance(
-  types::registry& registry, const Battle& battle, const RandomEventIndex&,
-  types::eventPossibilities possibleEventCount) {
+  types::registry& registry, Battle battle, RandomEventIndex, types::eventPossibilities possibleEventCount) {
   Probability& probability = registry.get<Probability>(battle.val);
 
   updateProbability(probability, Constants::Probability::MAX / (types::probability)possibleEventCount);
 }
 
-void updateProbabilityFromRandomEventCount(
-  types::registry& registry, const RandomEventCount& eventChance, const Battle& battle) {
+void updateProbabilityFromRandomEventCount(types::registry& registry, RandomEventCount eventChance, Battle battle) {
   Probability& probability = registry.get<Probability>(battle.val);
 
   updateProbability(probability, eventChance.probability());
 }
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
-void assignRandomEvent(
-  types::handle handle, const Battle& battle, const RandomEventChances<POSSIBLE_EVENT_COUNT>& eventChances) {
+void assignRandomEvent(types::handle handle, Battle battle, RandomEventChances<POSSIBLE_EVENT_COUNT> eventChances) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::percentChance rng = (types::percentChance)nextBoundedRandomValue(rngSeed, Constants::PercentChance::MAX);
 
@@ -137,7 +134,7 @@ void assignRandomEvent(
   }
 }
 
-void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const RandomBinaryProbability& eventChance) {
+void assignRandomBinaryEvent(types::handle handle, Battle battle, RandomBinaryProbability eventChance) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::probability rng = nextRandomValue(rngSeed) / (types::probability)std::numeric_limits<types::rngResult>::max();
 
@@ -149,14 +146,14 @@ void assignRandomBinaryEvent(types::handle handle, const Battle& battle, const R
   }
 }
 
-void assignRandomEqualChance(types::handle handle, const Battle& battle, types::eventPossibilities possibleEventCount) {
+void assignRandomEqualChance(types::handle handle, Battle battle, types::eventPossibilities possibleEventCount) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::eventPossibilities rng = (types::eventPossibilities)nextBoundedRandomValue(rngSeed, possibleEventCount);
 
   handle.emplace<RandomEventIndex>(rng);
 }
 
-void assignRandomEventCount(types::handle handle, const Battle& battle, const RandomEventCount& eventCount) {
+void assignRandomEventCount(types::handle handle, Battle battle, RandomEventCount eventCount) {
   RngSeed& rngSeed = handle.registry()->get<RngSeed>(battle.val);
   types::eventPossibilities rng = (types::eventPossibilities)nextBoundedRandomValue(rngSeed, eventCount.val);
 
@@ -168,7 +165,7 @@ void assignIndexToClones(
   for (types::entity original : originals) {
     registry.emplace<RandomEventIndex>(original, (types::eventPossibilities)0U);
 
-    const auto clonedPointer = clonedEntityMap.find(original);
+    auto clonedPointer = clonedEntityMap.find(original);
     if (clonedPointer == clonedEntityMap.end()) continue;
     const auto& cloned = clonedPointer->second;
 
@@ -232,7 +229,7 @@ void randomChanceEvent(
         entitiesByEventCount{};
 
       auto collectEntityEventCounts =
-        [&entitiesByEventCount](types::entity chanceEntity, const Battle& battle, const RandomEventCount& eventCount) {
+        [&entitiesByEventCount](types::entity chanceEntity, Battle battle, RandomEventCount eventCount) {
           entitiesByEventCount[eventCount.val].first.push_back(chanceEntity);
           entitiesByEventCount[eventCount.val].second.push_back(battle.val);
         };
@@ -240,7 +237,7 @@ void randomChanceEvent(
       registry.view<Battle, RandomEventCount>().each(collectEntityEventCounts);
 
       for (const auto& [eventCount, entities] : entitiesByEventCount) {
-        const auto [chanceEntities, battleEntities] = entities;
+        const auto& [chanceEntities, battleEntities] = entities;
         if (eventCount == 1U) {
           assignClonesToEvents(registry, {}, chanceEntities);
           continue;
@@ -253,7 +250,7 @@ void randomChanceEvent(
       }
     }
     else {
-      auto assignCloneTags = [&registry](const Battle& battle, auto&&...) {
+      auto assignCloneTags = [&registry](Battle battle, auto&&...) {
         registry.emplace<pokesim::tags::CloneFrom>(battle.val);
       };
       registry.view<Battle, Random>().each(assignCloneTags);
@@ -317,8 +314,7 @@ PercentChanceLimitResult checkPercentChanceLimits(
 
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void setRandomEventChances(
-  types::handle handle, const Simulation& simulation,
-  const std::array<types::percentChance, POSSIBLE_EVENT_COUNT>& chances) {
+  types::handle handle, const Simulation& simulation, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances) {
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
   if (chances.back() == Constants::PercentChance::MAX) {
     for (types::eventPossibilities i = 1U; i < POSSIBLE_EVENT_COUNT; i++) {
@@ -493,7 +489,7 @@ void randomEventChances(
 }
 
 void randomEqualChance(
-  Simulation& simulation, const types::eventPossibilities possibleEventCount, types::callback applyChoices,
+  Simulation& simulation, types::eventPossibilities possibleEventCount, types::callback applyChoices,
   types::optionalCallback updateProbabilities) {
   auto defaultUpdateProbabilities = [possibleEventCount](Simulation& sim) {
     sim.view<updateProbabilityFromRandomEqualChance>(possibleEventCount);
@@ -576,8 +572,8 @@ template void randomEventChances<3U>(Simulation&, types::callback, types::option
 template void randomEventChances<4U>(Simulation&, types::callback, types::optionalCallback);
 template void randomEventChances<5U>(Simulation&, types::callback, types::optionalCallback);
 
-template void setRandomEventChances<2U>(types::handle, const Simulation&, const std::array<types::percentChance, 2U>&);
-template void setRandomEventChances<3U>(types::handle, const Simulation&, const std::array<types::percentChance, 3U>&);
-template void setRandomEventChances<4U>(types::handle, const Simulation&, const std::array<types::percentChance, 4U>&);
-template void setRandomEventChances<5U>(types::handle, const Simulation&, const std::array<types::percentChance, 5U>&);
+template void setRandomEventChances<2U>(types::handle, const Simulation&, std::array<types::percentChance, 2U>);
+template void setRandomEventChances<3U>(types::handle, const Simulation&, std::array<types::percentChance, 3U>);
+template void setRandomEventChances<4U>(types::handle, const Simulation&, std::array<types::percentChance, 4U>);
+template void setRandomEventChances<5U>(types::handle, const Simulation&, std::array<types::percentChance, 5U>);
 }  // namespace pokesim::internal

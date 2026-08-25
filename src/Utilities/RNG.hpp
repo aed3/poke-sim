@@ -57,7 +57,9 @@ inline types::rngResult nextBoundedRandomValue(
   types::rngState& state, types::rngResult upperBound, types::rngResult lowerBound) {
   return nextBoundedRandomValue(state, upperBound - lowerBound) + lowerBound;
 }
+}  // namespace pokesim::internal
 
+namespace pokesim::internal {
 // Generate a uniformly distributed number, r, where 0 <= r < bound
 inline types::rngResult nextBoundedRandomValue(RngSeed& seed, types::rngResult upperBound) {
   return nextBoundedRandomValue(seed.val, upperBound);

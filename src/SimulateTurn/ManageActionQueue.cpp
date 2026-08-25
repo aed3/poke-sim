@@ -118,7 +118,7 @@ void removeEmptySpeedTieIndexes(types::handle handle, SpeedTieIndexes& speedTies
 }  // namespace
 
 void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
-  const Battle& battle = sideHandle.get<Battle>();
+  Battle battle = sideHandle.get<Battle>();
   types::registry& registry = *sideHandle.registry();
   ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
 
@@ -187,8 +187,7 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
   }
 }
 
-void setSpeedTieOrder(
-  ActionQueue& actionQueue, const SpeedTieIndexes& speedTies, const RandomEventIndex& randomEventIndex) {
+void setSpeedTieOrder(ActionQueue& actionQueue, const SpeedTieIndexes& speedTies, RandomEventIndex randomEventIndex) {
   const auto& speedTie = speedTies.val.back();
 
   // This loop shuffles a list based on one random number where each possible shuffling has an equal chance. The main
@@ -250,7 +249,7 @@ void addResidualAction(ActionQueue& actionQueue) {
   actionQueue.val.push_back({ActionOrder::RESIDUAL});
 }
 
-void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction& action) {
+void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction action) {
   types::registry& registry = *battleHandle.registry();
 
   if (actionQueue.val.empty()) return;

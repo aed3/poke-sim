@@ -130,9 +130,9 @@ bool valuedEffectPointerMatch(const EffectTuple& current, const EffectTuple& oth
 
 template <typename EffectTuple>
 bool canInputsShareABattle(
-  const EffectTuple& currentEffects, const EffectTarget& currentEffectTarget, types::entity otherInput,
+  const EffectTuple& currentEffects, EffectTarget currentEffectTarget, types::entity otherInput,
   const types::registry& registry) {
-  const auto otherEffects = internal::analyze_effect::tryGetAllInputEffects(otherInput, registry);
+  const auto& otherEffects = internal::analyze_effect::tryGetAllInputEffects(otherInput, registry);
 
   if (!namedEffectPointerMatch<PseudoWeatherName>(currentEffects, otherEffects)) return false;
   if (!namedEffectPointerMatch<TerrainName>(currentEffects, otherEffects)) return false;
@@ -169,7 +169,7 @@ void groupSimilarInputs(types::handle battleHandle, const Inputs& inputs) {
 
     GroupedInputs& groupedInputs = registry.emplace<GroupedInputs>(currentInput);
 
-    const auto currentEffects = internal::analyze_effect::tryGetAllInputEffects(currentInput, registry);
+    const auto& currentEffects = internal::analyze_effect::tryGetAllInputEffects(currentInput, registry);
     EffectTarget currentEffectTarget = registry.get<EffectTarget>(currentInput);
 
     groupedInputs.val.push_back(currentInput);
@@ -465,7 +465,7 @@ void createOutput(types::handle inputHandle, const MovePair& movePairs) {
   types::registry& registry = *inputHandle.registry();
 
   auto [parentBattleMove, childBattleMove] = movePairs;
-  const auto [childDamage, childDamageRolls] = registry.get<Damage, DamageRolls>(childBattleMove);
+  const auto& [childDamage, childDamageRolls] = registry.get<Damage, DamageRolls>(childBattleMove);
   auto [parentDamage, parentDamageRolls] = registry.get<Damage, DamageRolls>(parentBattleMove);
 
   if (invert) {
@@ -477,7 +477,7 @@ void createOutput(types::handle inputHandle, const MovePair& movePairs) {
     }
 
     inputHandle.emplace<MultipliedDamageRolls>(parentDamageRolls);
-    auto* const parentKoChances = registry.try_get<calc_damage::UsesUntilKo>(parentBattleMove);
+    const auto* parentKoChances = registry.try_get<calc_damage::UsesUntilKo>(parentBattleMove);
     if (parentKoChances != nullptr) {
       inputHandle.emplace<MultipliedUsesUntilKo>(*parentKoChances);
     }
@@ -491,7 +491,7 @@ void createOutput(types::handle inputHandle, const MovePair& movePairs) {
     }
 
     inputHandle.emplace<MultipliedDamageRolls>(childDamageRolls);
-    auto* const childKoChances = registry.try_get<calc_damage::UsesUntilKo>(childBattleMove);
+    const auto* childKoChances = registry.try_get<calc_damage::UsesUntilKo>(childBattleMove);
     if (childKoChances != nullptr) {
       inputHandle.emplace<MultipliedUsesUntilKo>(*childKoChances);
     }

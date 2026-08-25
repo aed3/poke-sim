@@ -47,7 +47,7 @@ void clearStatus(types::handle pokemonHandle);
 void clearVolatiles(types::handle pokemonHandle);
 
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
-void setLastMoveUsed(types::registry& registry, CurrentAction& source, const CurrentActionMoveSlot& move);
+void setLastMoveUsed(types::registry& registry, CurrentAction& source, CurrentActionMoveSlot move);
 
 void faint(types::handle pokemonHandle, Battle battle);
 void applyDamage(types::handle pokemonHandle, types::damage damage);

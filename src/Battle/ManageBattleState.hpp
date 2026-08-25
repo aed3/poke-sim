@@ -13,7 +13,7 @@ struct RootBattle;
 
 namespace internal {
 void assignRootBattle(types::handle battleHandle);
-void collectTurnOutcomeBattles(types::handle leafBattleHandle, const RootBattle& root);
+void collectTurnOutcomeBattles(types::handle leafBattleHandle, RootBattle root);
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action);
 void setCurrentActionSwitchSource(types::handle battleHandle, const Sides& sides, CurrentAction& action);

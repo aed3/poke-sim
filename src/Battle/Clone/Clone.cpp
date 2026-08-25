@@ -176,7 +176,7 @@ void deletePokemon(types::registry& registry) {
   traversePokemon(registry);
 }
 
-void remapEntity(types::entity& entity, const CloneTo& cloneTo, const types::ClonedEntityMap& entityMap) {
+void remapEntity(types::entity& entity, CloneTo cloneTo, const types::ClonedEntityMap& entityMap) {
   POKESIM_REQUIRE(entityMap.contains(entity), "Source node was not loaded into the map.");
   POKESIM_REQUIRE(
     entityMap.at(entity).size() > cloneTo.val,
