@@ -1105,11 +1105,6 @@ void check(const Pp& pp) {
 }
 
 template <>
-void check(const Position& position) {
-  checkBounds<Constants::TeamSize>(position.val);
-}
-
-template <>
 void check(const MovePriority& movePriority) {
   checkBounds<Constants::MovePriority>(movePriority.val);
 }
@@ -2263,7 +2258,7 @@ void runModifyAccuracyEvent(Simulation& simulation) {
   pokesim::dex::BrightPowder::onModifyAccuracy(simulation);
 
   simulation.view<applyEventModifier<Accuracy>>();
-  simulation.registry.clear<EventModifier>();
+  simulation.removeFromEntities<EventModifier>();
 }
 
 void runModifyCritBoostEvent(Simulation&) {}
@@ -2274,7 +2269,7 @@ void runBasePowerEvent(Simulation& simulation) {
   pokesim::dex::KnockOff::onBasePower(simulation);
 
   simulation.view<applyBasePowerEventModifier>();
-  simulation.registry.clear<EventModifier>();
+  simulation.removeFromEntities<EventModifier>();
 }
 
 void runModifyDamageEvent(Simulation& simulation) {
@@ -2288,7 +2283,7 @@ void runAfterModifyDamageEvent(Simulation& simulation) {
 void runDamageEvent(Simulation& simulation) {
   pokesim::dex::FocusSash::onDamage(simulation);
 
-  simulation.registry.clear<calc_damage::tags::RanAfterModifyDamage>();
+  simulation.removeFromEntities<calc_damage::tags::RanAfterModifyDamage>();
 }
 
 void runDamagingHitEvent(Simulation& simulation) {
@@ -2357,7 +2352,7 @@ void runModifySpa(Simulation& simulation) {
   pokesim::dex::Plus::onModifySpA(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpa>>();
-  simulation.registry.clear<EventModifier>();
+  simulation.removeFromEntities<EventModifier>();
 }
 
 void runModifySpd(Simulation& simulation) {
@@ -2366,7 +2361,7 @@ void runModifySpd(Simulation& simulation) {
   pokesim::dex::AssaultVest::onModifySpd(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpd>>();
-  simulation.registry.clear<EventModifier>();
+  simulation.removeFromEntities<EventModifier>();
 }
 
 void runModifySpe(Simulation& simulation) {
@@ -2375,7 +2370,7 @@ void runModifySpe(Simulation& simulation) {
   pokesim::dex::ChoiceScarf::onModifySpe(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpe>>();
-  simulation.registry.clear<EventModifier>();
+  simulation.removeFromEntities<EventModifier>();
 
   pokesim::dex::Paralysis::onModifySpe(simulation);
 }
@@ -2541,13 +2536,13 @@ void applyDamage(Simulation& simulation) {
   auto view = simulation.registry.view<tags::CurrentMoveHit>(entt::exclude<Damage, move::tags::Status>);
   simulation.registry.insert<tags::FailedCurrentMoveHit>(view.begin(), view.end());
   simulation.removeFromEntities<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
-  simulation.registry.clear<Damage>();
+  simulation.removeFromEntities<Damage>();
 }
 
 void runPrimaryMoveEffects(Simulation& simulation) {
   simulation.addToEntities<internal::tags::RunEffect, move::effect::tags::Primary, tags::CurrentMoveHit>();
   runMoveEffects(simulation);
-  simulation.registry.clear<internal::tags::RunEffect>();
+  simulation.removeFromEntities<internal::tags::RunEffect>();
 }
 
 void runSecondaryMoveEffects(Simulation& simulation) {
@@ -2559,7 +2554,7 @@ void runSecondaryMoveEffects(Simulation& simulation) {
     [](Simulation& sim) { sim.addToEntities<internal::tags::RunEffect, internal::tags::RandomEventCheckPassed>(); });
 
   runMoveEffects(simulation);
-  simulation.registry.clear<internal::tags::RunEffect>();
+  simulation.removeFromEntities<internal::tags::RunEffect>();
 }
 
 void accuracyCheck(Simulation& simulation) {
@@ -2846,12 +2841,12 @@ void runResidualAction(Simulation& simulation) {
 
   internal::runResidual(simulation);
 
-  simulation.registry.clear<action::tags::Residual>();
+  simulation.removeFromEntities<action::tags::Residual>();
 }
 
 void runBeforeTurnAction(Simulation&) {
   // Barely used, will find different way of handling it
-  // simulation.registry.clear<action::tags::BeforeTurn>();
+  // simulation.removeFromEntities<action::tags::BeforeTurn>();
 }
 
 void setFainting(types::registry& registry, FaintQueue& faintQueue) {
@@ -2908,7 +2903,7 @@ void faintPokemon(Simulation& simulation) {
 
     pokemonFilter.addToSelected<pokesim::internal::tags::EndItem>();
     internal::runEndItemEvent(simulation);
-    simulation.registry.clear<pokesim::internal::tags::EndItem>();
+    simulation.removeFromEntities<pokesim::internal::tags::EndItem>();
 
     pokemonFilter.view<internal::clearVolatiles>();
 
@@ -2970,9 +2965,9 @@ void nextTurn(Simulation& simulation) {
 
     pokemonFilter.addToSelected<pokesim::internal::tags::DisableMove>();
     internal::runDisableMove(simulation);
-    simulation.registry.clear<pokesim::internal::tags::DisableMove>();
+    simulation.removeFromEntities<pokesim::internal::tags::DisableMove>();
 
-    simulation.registry.clear<pokesim::internal::tags::ActiveAtTurnEnd>();
+    simulation.removeFromEntities<pokesim::internal::tags::ActiveAtTurnEnd>();
   }
 }
 
@@ -3044,7 +3039,7 @@ void simulateTurn(Simulation& simulation) {
   battleFilter.view<internal::collectTurnOutcomeBattles>();
 
   simulation.addToEntities<pokesim::tags::SimulateTurn, internal::simulate_turn::tags::Input>();
-  simulation.registry.clear<internal::simulate_turn::tags::Input>();
+  simulation.removeFromEntities<internal::simulate_turn::tags::Input>();
 }
 }  // namespace
 
@@ -3241,12 +3236,12 @@ void placeChanceFromStack(types::handle battleHandle, Stack& stack) {
 }
 
 void clearRandomChanceResult(Simulation& simulation) {
-  simulation.registry.clear<tags::RandomEventA>();
-  simulation.registry.clear<tags::RandomEventB>();
-  simulation.registry.clear<tags::RandomEventC>();
-  simulation.registry.clear<tags::RandomEventD>();
-  simulation.registry.clear<tags::RandomEventE>();
-  simulation.registry.clear<RandomEventIndex>();
+  simulation.removeFromEntities<tags::RandomEventA>();
+  simulation.removeFromEntities<tags::RandomEventB>();
+  simulation.removeFromEntities<tags::RandomEventC>();
+  simulation.removeFromEntities<tags::RandomEventD>();
+  simulation.removeFromEntities<tags::RandomEventE>();
+  simulation.removeFromEntities<RandomEventIndex>();
 }
 
 template <
@@ -4369,6 +4364,8 @@ struct BuildMove {
   template <typename Type>
   struct has<Optional::status, Type, void_t<Type::status>> : std::true_type {};
 
+  static constexpr bool forPokedex = std::is_same_v<BuildMoveTag, internal::tags::BuildPokedexMove>;
+
   struct EntitySetup {
     using EntityList = entt::view<entt::get_t<BuildMoveTag, Move>>;
     types::registry* registry;
@@ -4453,6 +4450,137 @@ struct BuildMove {
     }
   }
 
+  static void setPokedexTargetData(EntitySetup& setup, GameMechanics gameMechanic) {
+    bool addSinglesSelfTag = false;
+    bool addSinglesFoeTag = false;
+
+    switch (Move::target(gameMechanic)) {
+      case MoveTarget::ANY_SINGLE_TARGET: {
+        setup.add(move::tags::AnySingleTarget{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      case MoveTarget::ANY_SINGLE_FOE: {
+        setup.add(move::tags::AnySingleFoe{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      case MoveTarget::ANY_SINGLE_ALLY: {
+        setup.add(move::tags::AnySingleAlly{});
+        // These moves fail in single battles
+        break;
+      }
+      case MoveTarget::ALLY_OR_SELF: {
+        setup.add(move::tags::AllyOrSelf{});
+        addSinglesSelfTag = true;
+        break;
+      }
+      case MoveTarget::SELF: {
+        setup.add(move::tags::Self{});
+        addSinglesSelfTag = true;
+        break;
+      }
+      case MoveTarget::ALL_FOES: {
+        setup.add(move::tags::AllFoes{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      case MoveTarget::ALLIES_AND_FOES: {
+        setup.add(move::tags::AlliesAndFoes{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      case MoveTarget::ALLIES_AND_SELF: {
+        setup.add(move::tags::AlliesAndSelf{});
+        addSinglesSelfTag = true;
+        break;
+      }
+      case MoveTarget::FOE_SIDE: {
+        setup.add(move::tags::FoeSide{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      case MoveTarget::ALLY_SIDE: {
+        setup.add(move::tags::AllySide{});
+        addSinglesSelfTag = true;
+        break;
+      }
+      case MoveTarget::FIELD: {
+        setup.add(move::tags::Field{});
+        addSinglesSelfTag = true;
+        break;
+      }
+      case MoveTarget::ALLY_TEAM: {
+        setup.add(move::tags::AllyTeam{});
+        addSinglesSelfTag = true;
+        break;
+      }
+      case MoveTarget::RETALIATION: {
+        setup.add(move::tags::Retaliation{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      case MoveTarget::RANDOM_FOE: {
+        setup.add(move::tags::RandomFoe{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      default: break;
+    }
+
+    POKESIM_REQUIRE(
+      !(addSinglesSelfTag && addSinglesFoeTag),
+      "Moves in a single battle can only target the foe or the user, not both.");
+
+    if (addSinglesSelfTag) {
+      setup.add(move::singles_target::tags::Self{});
+    }
+    if (addSinglesFoeTag) {
+      setup.add(move::singles_target::tags::Foe{});
+    }
+  }
+
+  static void setActionTargetData(EntitySetup& setup, GameMechanics gameMechanic) {
+    switch (Move::target(gameMechanic)) {
+      case MoveTarget::ALL_FOES: {
+        setup.add(move::added_targets::tags::TargetAlly{});
+        break;
+      }
+      case MoveTarget::ALLIES_AND_FOES: {
+        setup.add(move::added_targets::tags::TargetAlly{});
+        setup.add(move::added_targets::tags::SourceAlly{});
+        break;
+      }
+      case MoveTarget::ALLIES_AND_SELF: {
+        // Deliberately not SourceAlly as the target of AlliesAndSelf moves is the user
+        setup.add(move::added_targets::tags::TargetAlly{});
+        break;
+      }
+      case MoveTarget::FOE_SIDE: {
+        setup.add(move::added_targets::tags::TargetSide{});
+        break;
+      }
+      case MoveTarget::ALLY_SIDE:
+      case MoveTarget::ALLY_TEAM: {
+        setup.add(move::added_targets::tags::SourceSide{});
+        break;
+      }
+      case MoveTarget::FIELD: {
+        setup.add(move::added_targets::tags::Field{});
+        break;
+      }
+      case MoveTarget::RETALIATION: {
+        setup.add(move::tags::Retaliation{});
+        break;
+      }
+      case MoveTarget::RANDOM_FOE: {
+        setup.add(move::tags::RandomFoe{});
+        break;
+      }
+      default: break;
+    }
+  }
+
  public:
   static void run(types::registry& registry, GameMechanics gameMechanic) {
     auto list = registry.view<BuildMoveTag, Move>();
@@ -4461,9 +4589,8 @@ struct BuildMove {
     }
 
     EntitySetup setup{registry, list};
-    static constexpr bool forPokedexBuild = std::is_same_v<BuildMoveTag, internal::tags::BuildPokedexMove>;
 
-    if constexpr (forPokedexBuild) {
+    if constexpr (forPokedex) {
       setup.add(MoveName{Move::name(gameMechanic)});
       setup.add(Pp{Move::basePp(gameMechanic)});
     }
@@ -4541,116 +4668,12 @@ struct BuildMove {
       dex::enumToTag<AddFromEnum>(Move::properties(gameMechanic), setup);
     }
 
-    bool addSinglesSelfTag = false;
-    bool addSinglesFoeTag = false;
-    switch (Move::target(gameMechanic)) {
-      case MoveTarget::ANY_SINGLE_TARGET: {
-        setup.add(move::tags::AnySingleTarget{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      case MoveTarget::ANY_SINGLE_FOE: {
-        setup.add(move::tags::AnySingleFoe{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      case MoveTarget::ANY_SINGLE_ALLY: {
-        setup.add(move::tags::AnySingleAlly{});
-        // These moves fail in single battles
-        break;
-      }
-      case MoveTarget::ALLY_OR_SELF: {
-        setup.add(move::tags::AllyOrSelf{});
-
-        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
-        break;
-      }
-      case MoveTarget::SELF: {
-        setup.add(move::tags::Self{});
-
-        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
-        break;
-      }
-      case MoveTarget::ALL_FOES: {
-        setup.add(move::tags::AllFoes{});
-        setup.add(move::added_targets::tags::TargetAlly{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      case MoveTarget::ALLIES_AND_FOES: {
-        setup.add(move::tags::AlliesAndFoes{});
-        setup.add(move::added_targets::tags::TargetAlly{});
-        setup.add(move::added_targets::tags::SourceAlly{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      case MoveTarget::ALLIES_AND_SELF: {
-        setup.add(move::tags::AlliesAndSelf{});
-        // Deliberately not SourceAlly as the target of AlliesAndSelf moves is the user
-        setup.add(move::added_targets::tags::TargetAlly{});
-
-        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
-        break;
-      }
-      case MoveTarget::FOE_SIDE: {
-        setup.add(move::tags::FoeSide{});
-        setup.add(move::added_targets::tags::TargetSide{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      case MoveTarget::ALLY_SIDE: {
-        setup.add(move::tags::AllySide{});
-        setup.add(move::added_targets::tags::SourceSide{});
-
-        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
-        break;
-      }
-      case MoveTarget::FIELD: {
-        setup.add(move::tags::Field{});
-        setup.add(move::added_targets::tags::Field{});
-
-        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
-        break;
-      }
-      case MoveTarget::ALLY_TEAM: {
-        setup.add(move::tags::AllyTeam{});
-        setup.add(move::added_targets::tags::SourceSide{});
-
-        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
-        break;
-      }
-      case MoveTarget::RETALIATION: {
-        setup.add(move::tags::Retaliation{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      case MoveTarget::RANDOM_FOE: {
-        setup.add(move::tags::RandomFoe{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      default: break;
-    }
-
-    if constexpr (forPokedexBuild) {
-      POKESIM_REQUIRE(
-        !(addSinglesSelfTag && addSinglesFoeTag),
-        "Moves in a single battle can only target the foe or the user, not both.");
-
-      if (addSinglesSelfTag) {
-        setup.add(move::singles_target::tags::Self{});
-      }
-      if (addSinglesFoeTag) {
-        setup.add(move::singles_target::tags::Foe{});
-      }
+    if constexpr (forPokedex) {
+      setPokedexTargetData(setup, gameMechanic);
       registry.remove<Move>(list.begin(), list.end());
+    }
+    else {
+      setActionTargetData(setup, gameMechanic);
     }
   }
 };
@@ -4888,13 +4911,13 @@ void KnockOff::onBasePower(Simulation& simulation) {
   internal::checkIfCanRemoveItem(simulation);
   simulation.view<knockOffOnBasePower, Tags<KnockOff>>(modifier);
 
-  simulation.registry.clear<tags::CanRemoveItem>();
+  simulation.removeFromEntities<tags::CanRemoveItem>();
 }
 
 void KnockOff::onAfterHit(Simulation& simulation) {
   simulation.view<knockOffOnAfterHitCheckRemovableItem, Tags<KnockOff, tags::CurrentMoveHit>>();
   internal::tryRemoveItem(simulation);
-  simulation.registry.clear<tags::CanRemoveItem>();
+  simulation.removeFromEntities<tags::CanRemoveItem>();
 }
 }  // namespace pokesim::dex
 
@@ -5044,7 +5067,7 @@ void FocusSash::onAfterModifyDamage(Simulation& simulation) {
 
   Simulation::forEachSimulationTag<FocusSashOnAfterModifyDamage>(simulation, hpToKeep);
 
-  simulation.registry.clear<tags::CanUseItem>();
+  simulation.removeFromEntities<tags::CanUseItem>();
 }
 
 void FocusSash::onDamage(Simulation& simulation) {
@@ -5143,7 +5166,7 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
     [](Simulation& sim) { sim.view<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
     std::nullopt);
   simulation.view<internal::setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
-  simulation.registry.clear<pokesim::tags::FailedCurrentMoveHit>();
+  simulation.removeFromEntities<pokesim::tags::FailedCurrentMoveHit>();
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {
@@ -5582,7 +5605,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
     else {
       ApplyDamageRollKind(simulation, damageRollOptions.getP1(), calculateUpToFoeHp, noKoChanceCalculation);
     }
-    simulation.registry.clear<internal::tags::ApplySideDamageRollOptions>();
+    simulation.removeFromEntities<internal::tags::ApplySideDamageRollOptions>();
   }
   else {
     moveFilter.template view<setDefendingSide>();
@@ -5621,10 +5644,10 @@ void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
     internal::runModifyCritBoostEvent(simulation);
     simulation.view<assignCritChanceDivisor>(
       simulation.pokedex().getStaticValue<MechanicConstants::CRIT_CHANCE_DIVISORS>());
-    simulation.registry.clear<CritBoost>();
+    simulation.removeFromEntities<CritBoost>();
 
     internal::simulate_turn::setIfMoveCrits(simulation);
-    simulation.registry.clear<CritChanceDivisor>();
+    simulation.removeFromEntities<CritChanceDivisor>();
   }
 }
 
@@ -5754,7 +5777,7 @@ void setUnboostedStat(Simulation& simulation) {
     moveFilter.view<resetEffectiveAndDefendingStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
 
-  simulation.registry.clear<internal::calc_damage::RealEffectiveStat>();
+  simulation.removeFromEntities<internal::calc_damage::RealEffectiveStat>();
 }
 
 void setDamageFormulaVariables(Simulation& simulation) {
@@ -5873,7 +5896,6 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
 
   for (PokemonStateSetup& pokemonSetup : team) {
     teamEntities.val.push_back(pokemonSetup.entity());
-    pokemonSetup.setPostion(teamEntities.val.size());
     pokemonSetup.setSide(entity());
     pokemonSetup.setBattle(battle.val);
     if (pokemonSetup.isFainted()) {
@@ -5977,10 +5999,6 @@ void PokemonStateSetup::setMoves(const std::vector<MoveSlot>& moveSlots) {
   for (MoveSlot moveSlot : moveSlots) {
     newMoveSlots.val.push_back(moveSlot);
   }
-}
-
-void PokemonStateSetup::setPostion(types::teamPositionIndex position) {
-  handle.emplace<Position>(position);
 }
 
 void PokemonStateSetup::setStatus(pokesim::dex::Status status) {
@@ -6117,7 +6135,7 @@ void removeItemComponents(Simulation& simulation) {
   dex::forEachItem<RemoveItem, SelectionTag>(simulation.pokedex(), simulation);
   auto view = simulation.registry.view<SelectionTag>();
   simulation.registry.remove<pokesim::tags::HasItem, item::tags::Choice, item::tags::Berry>(view.begin(), view.end());
-  simulation.registry.clear<SelectionTag>();
+  simulation.removeFromEntities<SelectionTag>();
 }
 
 void resetEffectiveAtk(stat::Atk atk, stat::EffectiveAtk& effectiveAtk) {
@@ -6284,7 +6302,7 @@ void checkIfCanRemoveItem(Simulation& simulation) {
 void removeItem(Simulation& simulation) {
   simulation.addToEntities<tags::EndItem, pokesim::tags::CanRemoveItem>();
   runEndItemEvent(simulation);
-  simulation.registry.clear<tags::EndItem>();
+  simulation.removeFromEntities<tags::EndItem>();
 
   removeItemComponents<pokesim::tags::CanRemoveItem>(simulation);
 }
@@ -6300,7 +6318,7 @@ void checkIfCanSetStatus(Simulation& simulation) {
 
 void setStatus(Simulation& simulation) {
   pokesim::dex::forEachStatus<RemoveNotSettableStatus>(simulation);
-  simulation.registry.clear<pokesim::tags::CanSetStatus>();
+  simulation.removeFromEntities<pokesim::tags::CanSetStatus>();
 
   simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Burn>>(pokesim::dex::Status::BRN);
   simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Freeze>>(pokesim::dex::Status::FRZ);
@@ -7602,7 +7620,7 @@ void createAppliedEffectBattles(Simulation& simulation) {
   simulation.view<createOneCalculationMovePair, Tags<>, entt::exclude_t<OriginalInputEntities, tags::IgnoredInput>>();
   simulation.view<createTwoCalculationsMovePair>();
   simulation.pokedex().buildMoves(simulation.registry);
-  simulation.registry.clear<pokesim::internal::tags::BuildActionMove>();
+  simulation.removeFromEntities<pokesim::internal::tags::BuildActionMove>();
 }
 
 void applyPseudoWeatherEffect(types::handle, Battle, PseudoWeatherName) {}

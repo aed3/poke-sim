@@ -61,7 +61,7 @@ void runModifyAccuracyEvent(Simulation& simulation) {
   pokesim::dex::BrightPowder::onModifyAccuracy(simulation);
 
   simulation.view<applyEventModifier<Accuracy>>();
-  simulation.registry.clear<EventModifier>();
+  simulation.removeFromEntities<EventModifier>();
 }
 
 void runModifyCritBoostEvent(Simulation&) {}
@@ -72,7 +72,7 @@ void runBasePowerEvent(Simulation& simulation) {
   pokesim::dex::KnockOff::onBasePower(simulation);
 
   simulation.view<applyBasePowerEventModifier>();
-  simulation.registry.clear<EventModifier>();
+  simulation.removeFromEntities<EventModifier>();
 }
 
 void runModifyDamageEvent(Simulation& simulation) {
@@ -86,7 +86,7 @@ void runAfterModifyDamageEvent(Simulation& simulation) {
 void runDamageEvent(Simulation& simulation) {
   pokesim::dex::FocusSash::onDamage(simulation);
 
-  simulation.registry.clear<calc_damage::tags::RanAfterModifyDamage>();
+  simulation.removeFromEntities<calc_damage::tags::RanAfterModifyDamage>();
 }
 
 void runDamagingHitEvent(Simulation& simulation) {
@@ -155,7 +155,7 @@ void runModifySpa(Simulation& simulation) {
   pokesim::dex::Plus::onModifySpA(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpa>>();
-  simulation.registry.clear<EventModifier>();
+  simulation.removeFromEntities<EventModifier>();
 }
 
 void runModifySpd(Simulation& simulation) {
@@ -164,7 +164,7 @@ void runModifySpd(Simulation& simulation) {
   pokesim::dex::AssaultVest::onModifySpd(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpd>>();
-  simulation.registry.clear<EventModifier>();
+  simulation.removeFromEntities<EventModifier>();
 }
 
 void runModifySpe(Simulation& simulation) {
@@ -173,7 +173,7 @@ void runModifySpe(Simulation& simulation) {
   pokesim::dex::ChoiceScarf::onModifySpe(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpe>>();
-  simulation.registry.clear<EventModifier>();
+  simulation.removeFromEntities<EventModifier>();
 
   pokesim::dex::Paralysis::onModifySpe(simulation);
 }

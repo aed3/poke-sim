@@ -148,7 +148,6 @@
  * src/Components/Pokedex/Abilities.hpp
  * src/Components/Pokedex/BaseStats.hpp
  * src/Components/Pokedex/PP.hpp
- * src/Components/Position.hpp
  * src/Components/Priority.hpp
  * src/Components/Probability.hpp
  * src/Components/RNGSeed.hpp
@@ -20112,17 +20111,6 @@ struct Pp {
 
 ///////////////////// END OF src/Components/Pokedex/PP.hpp /////////////////////
 
-///////////////////// START OF src/Components/Position.hpp /////////////////////
-
-namespace pokesim {
-// The position of a Pokemon in its team's order (starts at 1)
-struct Position {
-  types::teamPositionIndex val = Constants::TeamSize::MIN;
-};
-}  // namespace pokesim
-
-////////////////////// END OF src/Components/Position.hpp //////////////////////
-
 ///////////////////// START OF src/Components/Priority.hpp /////////////////////
 
 namespace pokesim {
@@ -21438,7 +21426,6 @@ struct SecondaryAbility;
 struct HiddenAbility;
 struct BaseStats;
 struct Pp;
-struct Position;
 struct MovePriority;
 struct Probability;
 struct RngSeed;
@@ -21777,9 +21764,6 @@ void check(const BaseStats&);
 
 template <>
 void check(const Pp&);
-
-template <>
-void check(const Position&);
 
 template <>
 void check(const MovePriority&);
@@ -22545,7 +22529,6 @@ struct PokemonStateSetup : StateSetupBase {
   void setItem(pokesim::dex::Item item, const Pokedex& pokedex);
   void setMoves(const std::vector<MoveSlot>& moveSlots);
 
-  void setPostion(types::teamPositionIndex position);
   void setStatus(pokesim::dex::Status status);
 
   void setNature(pokesim::dex::Nature nature);

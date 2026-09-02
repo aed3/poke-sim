@@ -956,11 +956,6 @@ void check(const Pp& pp) {
 }
 
 template <>
-void check(const Position& position) {
-  checkBounds<Constants::TeamSize>(position.val);
-}
-
-template <>
 void check(const MovePriority& movePriority) {
   checkBounds<Constants::MovePriority>(movePriority.val);
 }

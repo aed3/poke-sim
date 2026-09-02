@@ -13,7 +13,6 @@
 #include <Components/Names/NatureNames.hpp>
 #include <Components/Names/SpeciesNames.hpp>
 #include <Components/Names/StatusNames.hpp>
-#include <Components/Position.hpp>
 #include <Components/SpeciesTypes.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Pokedex/EnumToTag/NatureEnumToTag.hpp>
@@ -104,10 +103,6 @@ void PokemonStateSetup::setMoves(const std::vector<MoveSlot>& moveSlots) {
   for (MoveSlot moveSlot : moveSlots) {
     newMoveSlots.val.push_back(moveSlot);
   }
-}
-
-void PokemonStateSetup::setPostion(types::teamPositionIndex position) {
-  handle.emplace<Position>(position);
 }
 
 void PokemonStateSetup::setStatus(pokesim::dex::Status status) {

@@ -58,7 +58,6 @@
 #include "Pokedex/Abilities.hpp"
 #include "Pokedex/BaseStats.hpp"
 #include "Pokedex/PP.hpp"
-#include "Position.hpp"
 #include "Priority.hpp"
 #include "Probability.hpp"
 #include "RNGSeed.hpp"

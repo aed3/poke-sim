@@ -85,7 +85,6 @@ struct SecondaryAbility;
 struct HiddenAbility;
 struct BaseStats;
 struct Pp;
-struct Position;
 struct MovePriority;
 struct Probability;
 struct RngSeed;
@@ -424,9 +423,6 @@ void check(const BaseStats&);
 
 template <>
 void check(const Pp&);
-
-template <>
-void check(const Position&);
 
 template <>
 void check(const MovePriority&);

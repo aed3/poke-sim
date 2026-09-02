@@ -59,7 +59,6 @@ struct PokemonStateSetup : StateSetupBase {
   void setItem(pokesim::dex::Item item, const Pokedex& pokedex);
   void setMoves(const std::vector<MoveSlot>& moveSlots);
 
-  void setPostion(types::teamPositionIndex position);
   void setStatus(pokesim::dex::Status status);
 
   void setNature(pokesim::dex::Nature nature);

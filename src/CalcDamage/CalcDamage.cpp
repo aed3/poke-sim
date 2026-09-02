@@ -303,7 +303,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
     else {
       ApplyDamageRollKind(simulation, damageRollOptions.getP1(), calculateUpToFoeHp, noKoChanceCalculation);
     }
-    simulation.registry.clear<internal::tags::ApplySideDamageRollOptions>();
+    simulation.removeFromEntities<internal::tags::ApplySideDamageRollOptions>();
   }
   else {
     moveFilter.template view<setDefendingSide>();
@@ -342,10 +342,10 @@ void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
     internal::runModifyCritBoostEvent(simulation);
     simulation.view<assignCritChanceDivisor>(
       simulation.pokedex().getStaticValue<MechanicConstants::CRIT_CHANCE_DIVISORS>());
-    simulation.registry.clear<CritBoost>();
+    simulation.removeFromEntities<CritBoost>();
 
     internal::simulate_turn::setIfMoveCrits(simulation);
-    simulation.registry.clear<CritChanceDivisor>();
+    simulation.removeFromEntities<CritChanceDivisor>();
   }
 }
 
@@ -475,7 +475,7 @@ void setUnboostedStat(Simulation& simulation) {
     moveFilter.view<resetEffectiveAndDefendingStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
 
-  simulation.registry.clear<internal::calc_damage::RealEffectiveStat>();
+  simulation.removeFromEntities<internal::calc_damage::RealEffectiveStat>();
 }
 
 void setDamageFormulaVariables(Simulation& simulation) {

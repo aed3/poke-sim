@@ -48,12 +48,12 @@ void KnockOff::onBasePower(Simulation& simulation) {
   internal::checkIfCanRemoveItem(simulation);
   simulation.view<knockOffOnBasePower, Tags<KnockOff>>(modifier);
 
-  simulation.registry.clear<tags::CanRemoveItem>();
+  simulation.removeFromEntities<tags::CanRemoveItem>();
 }
 
 void KnockOff::onAfterHit(Simulation& simulation) {
   simulation.view<knockOffOnAfterHitCheckRemovableItem, Tags<KnockOff, tags::CurrentMoveHit>>();
   internal::tryRemoveItem(simulation);
-  simulation.registry.clear<tags::CanRemoveItem>();
+  simulation.removeFromEntities<tags::CanRemoveItem>();
 }
 }  // namespace pokesim::dex

@@ -96,7 +96,7 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
     [](Simulation& sim) { sim.view<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
     std::nullopt);
   simulation.view<internal::setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
-  simulation.registry.clear<pokesim::tags::FailedCurrentMoveHit>();
+  simulation.removeFromEntities<pokesim::tags::FailedCurrentMoveHit>();
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {

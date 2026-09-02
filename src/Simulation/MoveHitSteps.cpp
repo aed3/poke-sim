@@ -162,13 +162,13 @@ void applyDamage(Simulation& simulation) {
   auto view = simulation.registry.view<tags::CurrentMoveHit>(entt::exclude<Damage, move::tags::Status>);
   simulation.registry.insert<tags::FailedCurrentMoveHit>(view.begin(), view.end());
   simulation.removeFromEntities<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
-  simulation.registry.clear<Damage>();
+  simulation.removeFromEntities<Damage>();
 }
 
 void runPrimaryMoveEffects(Simulation& simulation) {
   simulation.addToEntities<internal::tags::RunEffect, move::effect::tags::Primary, tags::CurrentMoveHit>();
   runMoveEffects(simulation);
-  simulation.registry.clear<internal::tags::RunEffect>();
+  simulation.removeFromEntities<internal::tags::RunEffect>();
 }
 
 void runSecondaryMoveEffects(Simulation& simulation) {
@@ -180,7 +180,7 @@ void runSecondaryMoveEffects(Simulation& simulation) {
     [](Simulation& sim) { sim.addToEntities<internal::tags::RunEffect, internal::tags::RandomEventCheckPassed>(); });
 
   runMoveEffects(simulation);
-  simulation.registry.clear<internal::tags::RunEffect>();
+  simulation.removeFromEntities<internal::tags::RunEffect>();
 }
 
 void accuracyCheck(Simulation& simulation) {

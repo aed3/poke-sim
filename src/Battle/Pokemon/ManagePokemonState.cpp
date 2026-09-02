@@ -46,7 +46,7 @@ void removeItemComponents(Simulation& simulation) {
   dex::forEachItem<RemoveItem, SelectionTag>(simulation.pokedex(), simulation);
   auto view = simulation.registry.view<SelectionTag>();
   simulation.registry.remove<pokesim::tags::HasItem, item::tags::Choice, item::tags::Berry>(view.begin(), view.end());
-  simulation.registry.clear<SelectionTag>();
+  simulation.removeFromEntities<SelectionTag>();
 }
 
 void resetEffectiveAtk(stat::Atk atk, stat::EffectiveAtk& effectiveAtk) {
@@ -213,7 +213,7 @@ void checkIfCanRemoveItem(Simulation& simulation) {
 void removeItem(Simulation& simulation) {
   simulation.addToEntities<tags::EndItem, pokesim::tags::CanRemoveItem>();
   runEndItemEvent(simulation);
-  simulation.registry.clear<tags::EndItem>();
+  simulation.removeFromEntities<tags::EndItem>();
 
   removeItemComponents<pokesim::tags::CanRemoveItem>(simulation);
 }
@@ -229,7 +229,7 @@ void checkIfCanSetStatus(Simulation& simulation) {
 
 void setStatus(Simulation& simulation) {
   pokesim::dex::forEachStatus<RemoveNotSettableStatus>(simulation);
-  simulation.registry.clear<pokesim::tags::CanSetStatus>();
+  simulation.removeFromEntities<pokesim::tags::CanSetStatus>();
 
   simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Burn>>(pokesim::dex::Status::BRN);
   simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Freeze>>(pokesim::dex::Status::FRZ);

@@ -97,6 +97,8 @@ struct BuildMove {
   template <typename Type>
   struct has<Optional::status, Type, void_t<Type::status>> : std::true_type {};
 
+  static constexpr bool forPokedex = std::is_same_v<BuildMoveTag, internal::tags::BuildPokedexMove>;
+
   struct EntitySetup {
     using EntityList = entt::view<entt::get_t<BuildMoveTag, Move>>;
     types::registry* registry;
@@ -181,6 +183,137 @@ struct BuildMove {
     }
   }
 
+  static void setPokedexTargetData(EntitySetup& setup, GameMechanics gameMechanic) {
+    bool addSinglesSelfTag = false;
+    bool addSinglesFoeTag = false;
+
+    switch (Move::target(gameMechanic)) {
+      case MoveTarget::ANY_SINGLE_TARGET: {
+        setup.add(move::tags::AnySingleTarget{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      case MoveTarget::ANY_SINGLE_FOE: {
+        setup.add(move::tags::AnySingleFoe{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      case MoveTarget::ANY_SINGLE_ALLY: {
+        setup.add(move::tags::AnySingleAlly{});
+        // These moves fail in single battles
+        break;
+      }
+      case MoveTarget::ALLY_OR_SELF: {
+        setup.add(move::tags::AllyOrSelf{});
+        addSinglesSelfTag = true;
+        break;
+      }
+      case MoveTarget::SELF: {
+        setup.add(move::tags::Self{});
+        addSinglesSelfTag = true;
+        break;
+      }
+      case MoveTarget::ALL_FOES: {
+        setup.add(move::tags::AllFoes{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      case MoveTarget::ALLIES_AND_FOES: {
+        setup.add(move::tags::AlliesAndFoes{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      case MoveTarget::ALLIES_AND_SELF: {
+        setup.add(move::tags::AlliesAndSelf{});
+        addSinglesSelfTag = true;
+        break;
+      }
+      case MoveTarget::FOE_SIDE: {
+        setup.add(move::tags::FoeSide{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      case MoveTarget::ALLY_SIDE: {
+        setup.add(move::tags::AllySide{});
+        addSinglesSelfTag = true;
+        break;
+      }
+      case MoveTarget::FIELD: {
+        setup.add(move::tags::Field{});
+        addSinglesSelfTag = true;
+        break;
+      }
+      case MoveTarget::ALLY_TEAM: {
+        setup.add(move::tags::AllyTeam{});
+        addSinglesSelfTag = true;
+        break;
+      }
+      case MoveTarget::RETALIATION: {
+        setup.add(move::tags::Retaliation{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      case MoveTarget::RANDOM_FOE: {
+        setup.add(move::tags::RandomFoe{});
+        addSinglesFoeTag = true;
+        break;
+      }
+      default: break;
+    }
+
+    POKESIM_REQUIRE(
+      !(addSinglesSelfTag && addSinglesFoeTag),
+      "Moves in a single battle can only target the foe or the user, not both.");
+
+    if (addSinglesSelfTag) {
+      setup.add(move::singles_target::tags::Self{});
+    }
+    if (addSinglesFoeTag) {
+      setup.add(move::singles_target::tags::Foe{});
+    }
+  }
+
+  static void setActionTargetData(EntitySetup& setup, GameMechanics gameMechanic) {
+    switch (Move::target(gameMechanic)) {
+      case MoveTarget::ALL_FOES: {
+        setup.add(move::added_targets::tags::TargetAlly{});
+        break;
+      }
+      case MoveTarget::ALLIES_AND_FOES: {
+        setup.add(move::added_targets::tags::TargetAlly{});
+        setup.add(move::added_targets::tags::SourceAlly{});
+        break;
+      }
+      case MoveTarget::ALLIES_AND_SELF: {
+        // Deliberately not SourceAlly as the target of AlliesAndSelf moves is the user
+        setup.add(move::added_targets::tags::TargetAlly{});
+        break;
+      }
+      case MoveTarget::FOE_SIDE: {
+        setup.add(move::added_targets::tags::TargetSide{});
+        break;
+      }
+      case MoveTarget::ALLY_SIDE:
+      case MoveTarget::ALLY_TEAM: {
+        setup.add(move::added_targets::tags::SourceSide{});
+        break;
+      }
+      case MoveTarget::FIELD: {
+        setup.add(move::added_targets::tags::Field{});
+        break;
+      }
+      case MoveTarget::RETALIATION: {
+        setup.add(move::tags::Retaliation{});
+        break;
+      }
+      case MoveTarget::RANDOM_FOE: {
+        setup.add(move::tags::RandomFoe{});
+        break;
+      }
+      default: break;
+    }
+  }
+
  public:
   static void run(types::registry& registry, GameMechanics gameMechanic) {
     auto list = registry.view<BuildMoveTag, Move>();
@@ -189,9 +322,8 @@ struct BuildMove {
     }
 
     EntitySetup setup{registry, list};
-    static constexpr bool forPokedexBuild = std::is_same_v<BuildMoveTag, internal::tags::BuildPokedexMove>;
 
-    if constexpr (forPokedexBuild) {
+    if constexpr (forPokedex) {
       setup.add(MoveName{Move::name(gameMechanic)});
       setup.add(Pp{Move::basePp(gameMechanic)});
     }
@@ -269,116 +401,12 @@ struct BuildMove {
       dex::enumToTag<AddFromEnum>(Move::properties(gameMechanic), setup);
     }
 
-    bool addSinglesSelfTag = false;
-    bool addSinglesFoeTag = false;
-    switch (Move::target(gameMechanic)) {
-      case MoveTarget::ANY_SINGLE_TARGET: {
-        setup.add(move::tags::AnySingleTarget{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      case MoveTarget::ANY_SINGLE_FOE: {
-        setup.add(move::tags::AnySingleFoe{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      case MoveTarget::ANY_SINGLE_ALLY: {
-        setup.add(move::tags::AnySingleAlly{});
-        // These moves fail in single battles
-        break;
-      }
-      case MoveTarget::ALLY_OR_SELF: {
-        setup.add(move::tags::AllyOrSelf{});
-
-        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
-        break;
-      }
-      case MoveTarget::SELF: {
-        setup.add(move::tags::Self{});
-
-        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
-        break;
-      }
-      case MoveTarget::ALL_FOES: {
-        setup.add(move::tags::AllFoes{});
-        setup.add(move::added_targets::tags::TargetAlly{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      case MoveTarget::ALLIES_AND_FOES: {
-        setup.add(move::tags::AlliesAndFoes{});
-        setup.add(move::added_targets::tags::TargetAlly{});
-        setup.add(move::added_targets::tags::SourceAlly{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      case MoveTarget::ALLIES_AND_SELF: {
-        setup.add(move::tags::AlliesAndSelf{});
-        // Deliberately not SourceAlly as the target of AlliesAndSelf moves is the user
-        setup.add(move::added_targets::tags::TargetAlly{});
-
-        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
-        break;
-      }
-      case MoveTarget::FOE_SIDE: {
-        setup.add(move::tags::FoeSide{});
-        setup.add(move::added_targets::tags::TargetSide{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      case MoveTarget::ALLY_SIDE: {
-        setup.add(move::tags::AllySide{});
-        setup.add(move::added_targets::tags::SourceSide{});
-
-        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
-        break;
-      }
-      case MoveTarget::FIELD: {
-        setup.add(move::tags::Field{});
-        setup.add(move::added_targets::tags::Field{});
-
-        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
-        break;
-      }
-      case MoveTarget::ALLY_TEAM: {
-        setup.add(move::tags::AllyTeam{});
-        setup.add(move::added_targets::tags::SourceSide{});
-
-        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
-        break;
-      }
-      case MoveTarget::RETALIATION: {
-        setup.add(move::tags::Retaliation{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      case MoveTarget::RANDOM_FOE: {
-        setup.add(move::tags::RandomFoe{});
-
-        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
-        break;
-      }
-      default: break;
-    }
-
-    if constexpr (forPokedexBuild) {
-      POKESIM_REQUIRE(
-        !(addSinglesSelfTag && addSinglesFoeTag),
-        "Moves in a single battle can only target the foe or the user, not both.");
-
-      if (addSinglesSelfTag) {
-        setup.add(move::singles_target::tags::Self{});
-      }
-      if (addSinglesFoeTag) {
-        setup.add(move::singles_target::tags::Foe{});
-      }
+    if constexpr (forPokedex) {
+      setPokedexTargetData(setup, gameMechanic);
       registry.remove<Move>(list.begin(), list.end());
+    }
+    else {
+      setActionTargetData(setup, gameMechanic);
     }
   }
 };

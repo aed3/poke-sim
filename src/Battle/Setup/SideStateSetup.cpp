@@ -33,7 +33,6 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
 
   for (PokemonStateSetup& pokemonSetup : team) {
     teamEntities.val.push_back(pokemonSetup.entity());
-    pokemonSetup.setPostion(teamEntities.val.size());
     pokemonSetup.setSide(entity());
     pokemonSetup.setBattle(battle.val);
     if (pokemonSetup.isFainted()) {

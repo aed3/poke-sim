@@ -164,7 +164,7 @@ void FocusSash::onAfterModifyDamage(Simulation& simulation) {
 
   Simulation::forEachSimulationTag<FocusSashOnAfterModifyDamage>(simulation, hpToKeep);
 
-  simulation.registry.clear<tags::CanUseItem>();
+  simulation.removeFromEntities<tags::CanUseItem>();
 }
 
 void FocusSash::onDamage(Simulation& simulation) {

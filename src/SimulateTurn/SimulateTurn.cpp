@@ -284,12 +284,12 @@ void runResidualAction(Simulation& simulation) {
 
   internal::runResidual(simulation);
 
-  simulation.registry.clear<action::tags::Residual>();
+  simulation.removeFromEntities<action::tags::Residual>();
 }
 
 void runBeforeTurnAction(Simulation&) {
   // Barely used, will find different way of handling it
-  // simulation.registry.clear<action::tags::BeforeTurn>();
+  // simulation.removeFromEntities<action::tags::BeforeTurn>();
 }
 
 void setFainting(types::registry& registry, FaintQueue& faintQueue) {
@@ -346,7 +346,7 @@ void faintPokemon(Simulation& simulation) {
 
     pokemonFilter.addToSelected<pokesim::internal::tags::EndItem>();
     internal::runEndItemEvent(simulation);
-    simulation.registry.clear<pokesim::internal::tags::EndItem>();
+    simulation.removeFromEntities<pokesim::internal::tags::EndItem>();
 
     pokemonFilter.view<internal::clearVolatiles>();
 
@@ -408,9 +408,9 @@ void nextTurn(Simulation& simulation) {
 
     pokemonFilter.addToSelected<pokesim::internal::tags::DisableMove>();
     internal::runDisableMove(simulation);
-    simulation.registry.clear<pokesim::internal::tags::DisableMove>();
+    simulation.removeFromEntities<pokesim::internal::tags::DisableMove>();
 
-    simulation.registry.clear<pokesim::internal::tags::ActiveAtTurnEnd>();
+    simulation.removeFromEntities<pokesim::internal::tags::ActiveAtTurnEnd>();
   }
 }
 
@@ -482,7 +482,7 @@ void simulateTurn(Simulation& simulation) {
   battleFilter.view<internal::collectTurnOutcomeBattles>();
 
   simulation.addToEntities<pokesim::tags::SimulateTurn, internal::simulate_turn::tags::Input>();
-  simulation.registry.clear<internal::simulate_turn::tags::Input>();
+  simulation.removeFromEntities<internal::simulate_turn::tags::Input>();
 }
 }  // namespace
 

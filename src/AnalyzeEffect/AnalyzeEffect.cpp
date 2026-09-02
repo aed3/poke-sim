@@ -419,7 +419,7 @@ void createAppliedEffectBattles(Simulation& simulation) {
   simulation.view<createOneCalculationMovePair, Tags<>, entt::exclude_t<OriginalInputEntities, tags::IgnoredInput>>();
   simulation.view<createTwoCalculationsMovePair>();
   simulation.pokedex().buildMoves(simulation.registry);
-  simulation.registry.clear<pokesim::internal::tags::BuildActionMove>();
+  simulation.removeFromEntities<pokesim::internal::tags::BuildActionMove>();
 }
 
 void applyPseudoWeatherEffect(types::handle, Battle, PseudoWeatherName) {}

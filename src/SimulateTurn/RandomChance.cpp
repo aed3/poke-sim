@@ -196,12 +196,12 @@ void placeChanceFromStack(types::handle battleHandle, Stack& stack) {
 }
 
 void clearRandomChanceResult(Simulation& simulation) {
-  simulation.registry.clear<tags::RandomEventA>();
-  simulation.registry.clear<tags::RandomEventB>();
-  simulation.registry.clear<tags::RandomEventC>();
-  simulation.registry.clear<tags::RandomEventD>();
-  simulation.registry.clear<tags::RandomEventE>();
-  simulation.registry.clear<RandomEventIndex>();
+  simulation.removeFromEntities<tags::RandomEventA>();
+  simulation.removeFromEntities<tags::RandomEventB>();
+  simulation.removeFromEntities<tags::RandomEventC>();
+  simulation.removeFromEntities<tags::RandomEventD>();
+  simulation.removeFromEntities<tags::RandomEventE>();
+  simulation.removeFromEntities<RandomEventIndex>();
 }
 
 template <
