@@ -218,7 +218,7 @@ struct Random {
           continue;
         }
 
-        if (simulation.pokedex().moveHas<move::tags::Self>(slotDecision.get<MoveDecision>().move)) {
+        if (simulation.pokedex().moveHasAll<move::tags::Self>(slotDecision.get<MoveDecision>().move)) {
           slotDecision.get<MoveDecision>().targetSlot = slotDecision.sourceSlot();
         }
       }
@@ -229,8 +229,8 @@ struct Random {
 
   static CalcDamageInputInfo createRandomCalcDamageInput(types::rngState& rngState) {
     CalcDamageInputInfo inputInfo{
-      (Slot)internal::nextBoundedRandomValue(rngState, TOTAL_SLOT_COUNT + 1U, 1U),
-      (Slot)internal::nextBoundedRandomValue(rngState, TOTAL_SLOT_COUNT + 1U, 1U),
+      pickFromList(internal::VALID_SLOTS, rngState),
+      pickFromList(internal::VALID_SLOTS, rngState),
     };
 
     std::size_t movesCalculated =
@@ -242,8 +242,8 @@ struct Random {
 
   static AnalyzeEffectInputInfo createRandomAnalyzeEffectInput(types::rngState& rngState) {
     AnalyzeEffectInputInfo inputInfo{
-      (Slot)internal::nextBoundedRandomValue(rngState, TOTAL_SLOT_COUNT + 1U, 1U),
-      (Slot)internal::nextBoundedRandomValue(rngState, TOTAL_SLOT_COUNT + 1U, 1U),
+      pickFromList(internal::VALID_SLOTS, rngState),
+      pickFromList(internal::VALID_SLOTS, rngState),
     };
 
     inputInfo.effectTarget =

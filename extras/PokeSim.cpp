@@ -14,6 +14,7 @@
  * src/SimulateTurn/SimulateTurn.cpp
  * src/SimulateTurn/RandomChance.cpp
  * src/SimulateTurn/ManageActionQueue.cpp
+ * src/SimulateTurn/Decisions.cpp
  * src/SimulateTurn/CalcDamageSpecifics.cpp
  * src/Pokedex/Setup/BuildSpecies.cpp
  * src/Pokedex/Setup/BuildMove.cpp
@@ -177,6 +178,22 @@ template <typename List, typename Value>
 bool listContains(const List& list, const Value& value) {
   return std::find(list.begin(), list.end(), value) != list.end();
 }
+
+template <typename List>
+bool listHasUniqueValues(const List& list) {
+  using size = std::invoke_result_t<decltype(&List::size), List>;
+  for (size i = 1U; i < list.size(); i++) {
+    const auto& value = list[i - 1U];
+    for (size j = i; j < list.size(); j++) {
+      if (value == list[j]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 template <typename Tag>
 struct HasTagFromEnum {
   static void run(types::entity entity, const types::registry& registry, bool& entityHasTag) {
@@ -229,7 +246,17 @@ void checkBaseStat(types::baseStat stat) {
 }
 
 void checkSlot(Slot slot) {
-  POKESIM_REQUIRE_NM(slot != Slot::NONE);
+  POKESIM_REQUIRE_NM(listContains(internal::VALID_SLOTS, slot));
+}
+
+void checkActiveSlot(Slot slot) {
+  POKESIM_REQUIRE_NM(slot == Slot::P1A || slot == Slot::P1B || slot == Slot::P2A || slot == Slot::P2B);
+}
+
+void checkInactiveSlot(Slot slot) {
+  checkSlot(slot);
+  POKESIM_REQUIRE_NM(slot != Slot::P1A);
+  POKESIM_REQUIRE_NM(slot != Slot::P2A);
 }
 
 void checkPlayerSideId(PlayerSideId sideId) {
@@ -251,8 +278,9 @@ void checkProbability(types::probability probability) {
 void checkTeamOrder(const types::teamOrder& teamOrder) {
   checkBounds<Constants::TeamSize>(teamOrder.size());
   for (types::teamPositionIndex position : teamOrder) {
-    checkBounds<Constants::TeamSize>(position);
+    POKESIM_REQUIRE_NM(position < teamOrder.size());
   }
+  listHasUniqueValues(teamOrder);
 }
 
 void checkAction(types::entity actionEntity, const types::registry& registry) {
@@ -497,7 +525,7 @@ void check(const Accuracy& accuracy) {
 
 template <>
 void check(const ActionQueueItem& actionQueueItem) {
-  POKESIM_REQUIRE_NM(listContains(VALID_ACTION_ORDERS, actionQueueItem.order));
+  POKESIM_REQUIRE_NM(listContains(internal::VALID_ACTION_ORDERS, actionQueueItem.order));
   checkBounds<Constants::MovePriority>(actionQueueItem.priority);
   checkStat(actionQueueItem.speed);
 
@@ -516,7 +544,7 @@ void check(const ActionQueue& actionQueue) {
 
 template <>
 void check(const AddedTargets& addedTargets) {
-  POKESIM_REQUIRE_NM(listContains(VALID_ADDED_TARGET_OPTIONS, addedTargets.val));
+  POKESIM_REQUIRE_NM(listContains(internal::VALID_ADDED_TARGET_OPTIONS, addedTargets.val));
 }
 
 template <>
@@ -704,7 +732,7 @@ void check(const Damage& damage) {
 
 template <>
 void check(const DamageRollModifiers& modifiers) {
-  POKESIM_REQUIRE_NM(listContains(VALID_STAB_BOOST_KINDS, modifiers.stab));
+  POKESIM_REQUIRE_NM(listContains(internal::VALID_STAB_BOOST_KINDS, modifiers.stab));
   checkBounds<Constants::TypeEffectivenessShift>(modifiers.typeEffectiveness);
 }
 
@@ -801,6 +829,7 @@ void check(const CurrentActionMovesAsSource& moves, const types::registry& regis
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }
+  listHasUniqueValues(moves.val);
 }
 
 template <>
@@ -809,6 +838,7 @@ void check(const CurrentActionMovesAsTarget& moves, const types::registry& regis
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }
+  listHasUniqueValues(moves.val);
 }
 
 template <>
@@ -827,6 +857,7 @@ void check(const CurrentEffectsAsSource& effects, const types::registry& registr
   for (types::entity effect : effects.val) {
     types::registry::checkEntity(effect, registry);
   }
+  listHasUniqueValues(effects.val);
 }
 
 template <>
@@ -835,6 +866,7 @@ void check(const CurrentEffectsAsTarget& effects, const types::registry& registr
   for (types::entity effect : effects.val) {
     types::registry::checkEntity(effect, registry);
   }
+  listHasUniqueValues(effects.val);
 }
 
 template <>
@@ -842,6 +874,7 @@ void check(const FaintQueue& faintQueue, const types::registry& registry) {
   for (types::entity pokemon : faintQueue.val) {
     checkPokemon(pokemon, registry);
   }
+  listHasUniqueValues(faintQueue.val);
 }
 
 template <>
@@ -884,6 +917,7 @@ void check(const Sides& sides, const types::registry& registry) {
   for (types::entity sideEntity : sides.val) {
     checkSide(sideEntity, registry);
   }
+  listHasUniqueValues(sides.val);
 }
 
 template <>
@@ -892,6 +926,7 @@ void check(const Team& team, const types::registry& registry) {
   for (types::entity pokemonEntity : team.val) {
     checkPokemon(pokemonEntity, registry);
   }
+  listHasUniqueValues(team.val);
 }
 
 template <>
@@ -1174,6 +1209,96 @@ void check(const internal::RandomEqualChanceStack& randomEqualChanceStack, const
 }
 
 template <>
+void check(const SinglesMoveOption& singlesMoveOption) {
+  check(MoveName{singlesMoveOption.move});
+  checkActiveSlot(singlesMoveOption.target);
+}
+
+template <>
+void check(const DoublesMoveOption& doublesMoveOption) {
+  check(MoveName{doublesMoveOption.move});
+  const types::targets<Slot>& targets = doublesMoveOption.possibleTargets;
+  POKESIM_REQUIRE_NM(!targets.empty());
+  for (Slot slot : targets) {
+    checkActiveSlot(slot);
+  }
+  POKESIM_REQUIRE_NM(listHasUniqueValues(targets));
+}
+
+template <>
+void check(const SwitchOptions& switchOptions) {
+  POKESIM_REQUIRE_NM(!switchOptions.val.empty());
+  for (Slot slot : switchOptions.val) {
+    checkInactiveSlot(slot);
+  }
+}
+
+template <>
+void check(const SinglesSideOptions& singlesSlotOptions) {
+  POKESIM_REQUIRE_NM(!singlesSlotOptions.moves.empty());
+  for (const SinglesMoveOption& moveDecision : singlesSlotOptions.moves) {
+    check(moveDecision);
+  }
+
+  // Not using the type's check function as that requires there to be a switch option.
+  for (Slot slot : singlesSlotOptions.switches.val) {
+    checkInactiveSlot(slot);
+  }
+}
+
+template <>
+void check(const DoublesSideOptions& doublesSideOptions) {
+  POKESIM_REQUIRE_NM(!doublesSideOptions.moves.empty());
+  for (const auto& slotMoveOptions : doublesSideOptions.moves) {
+    for (const DoublesMoveOption& moveDecision : slotMoveOptions) {
+      check(moveDecision);
+    }
+  }
+
+  // Not using the type's check function as that requires there to be a switch option.
+  for (Slot slot : doublesSideOptions.switches.val) {
+    checkInactiveSlot(slot);
+  }
+}
+
+template <>
+void check(const TeamPreviewOptions& teamPreviewOptions) {
+  checkTeamOrder(teamPreviewOptions.val);
+}
+
+template <>
+void check(const DoublesMegaEvolutionOptions& options) {
+  POKESIM_REQUIRE_NM(!options.val.empty());
+  for (Slot slot : options.val) {
+    checkActiveSlot(slot);
+  }
+}
+
+template <>
+void check(const DoublesZMoveOptions& options) {
+  POKESIM_REQUIRE_NM(!options.val.empty());
+  for (Slot slot : options.val) {
+    checkActiveSlot(slot);
+  }
+}
+
+template <>
+void check(const DoublesDynamaxOptions& options) {
+  POKESIM_REQUIRE_NM(!options.val.empty());
+  for (Slot slot : options.val) {
+    checkActiveSlot(slot);
+  }
+}
+
+template <>
+void check(const SinglesTerastallizeOptions& options) {
+  POKESIM_REQUIRE_NM(!options.val.empty());
+  for (Slot slot : options.val) {
+    checkActiveSlot(slot);
+  }
+}
+
+template <>
 void check(const SideDecision& sideDecision) {
   checkPlayerSideId(sideDecision.sideId);
   POKESIM_REQUIRE(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
@@ -1199,6 +1324,20 @@ void check(const SideDecision& sideDecision) {
 }
 
 template <>
+void check(const MidTurnSideDecision& midTurnSideDecision) {
+  POKESIM_REQUIRE_NM(!midTurnSideDecision.val.empty());
+
+  types::fixedMemoryVector<Slot, Constants::ActivePokemon::MAX> foundSlots;
+  for (const SwitchDecision& decision : midTurnSideDecision.val) {
+    check(decision);
+    POKESIM_REQUIRE_NM(!listContains(foundSlots, decision.sourceSlot));
+    POKESIM_REQUIRE_NM(!listContains(foundSlots, decision.targetSlot));
+    foundSlots.push_back(decision.sourceSlot);
+    foundSlots.push_back(decision.targetSlot);
+  }
+}
+
+template <>
 void check(const SpeedTieIndexes& speedTieIndexes) {
   checkBounds<Constants::ActivePokemon>(speedTieIndexes.val.size());
   types::activePokemonIndex total = 0U;
@@ -1211,6 +1350,7 @@ void check(const SpeedTieIndexes& speedTieIndexes) {
     total += span.length;
   }
   checkBounds<Constants::ActivePokemon>(total);
+  listHasUniqueValues(speedTieIndexes.val);
 }
 
 template <>
@@ -1223,6 +1363,7 @@ void check(const simulate_turn::TurnOutcomeBattles& teamOutcomeBattles, const ty
   for (types::entity entity : teamOutcomeBattles.val) {
     checkBattle(entity, registry);
   }
+  listHasUniqueValues(teamOutcomeBattles.val);
 }
 
 template <>
@@ -1238,6 +1379,7 @@ void check(const calc_damage::UsesUntilKo& usesUntilKo) {
     totalDamageRollsIncluded += useUntilKo.damageRollsIncluded;
     lastHits = useUntilKo.hits;
   }
+  listHasUniqueValues(usesUntilKo.val);
 
   POKESIM_REQUIRE_NM(usesUntilKo.minUses() == usesUntilKo.val.front());
   POKESIM_REQUIRE_NM(usesUntilKo.maxUses() == usesUntilKo.val.back());
@@ -1342,6 +1484,16 @@ void check(const Winner& winner) {
 }
 
 template <>
+void check(const SwitchDecision& switchDecision) {
+  Slot source = switchDecision.sourceSlot;
+  Slot target = switchDecision.targetSlot;
+  checkActiveSlot(source);
+  checkInactiveSlot(target);
+  POKESIM_REQUIRE_NM(source != target);
+  POKESIM_REQUIRE(slotToSideId(source) == slotToSideId(target), "Must switch to a slot on the same side.");
+}
+
+template <>
 void check(const types::slotDecision& slotDecision) {
   checkSlot(slotDecision.sourceSlot());
   checkSlot(slotDecision.targetSlot());
@@ -1363,16 +1515,13 @@ void check(const types::slotDecision& slotDecision) {
   if (itemDecision) check(ItemName{itemDecision->item});
 
   if (switchDecision) {
-    Slot source = switchDecision->sourceSlot;
-    Slot target = switchDecision->targetSlot;
-    POKESIM_REQUIRE(slotToSideId(source) == slotToSideId(target), "Must switch to a slot on the same side.");
-    POKESIM_REQUIRE(target != Slot::P1A && target != Slot::P2A, "Cannot switch to an active slot.");
+    check(*switchDecision);
   }
 }
 
 template <>
 void check(const DamageRollKind& damageRollKind) {
-  if (listContains(VALID_DAMAGE_ROLL_KINDS, damageRollKind)) {
+  if (listContains(internal::VALID_DAMAGE_ROLL_KINDS, damageRollKind)) {
     return;
   }
 
@@ -1385,7 +1534,7 @@ void check(const DamageRollKind& damageRollKind) {
   POKESIM_REQUIRE_NM(hasAverage || hasMax || hasMin || hasAll);
   using DamageRollKindBase = std::underlying_type_t<DamageRollKind>;
   DamageRollKindBase binaryValue = 0U;
-  for (DamageRollKind kind : VALID_DAMAGE_ROLL_KINDS) {
+  for (DamageRollKind kind : internal::VALID_DAMAGE_ROLL_KINDS) {
     binaryValue |= (DamageRollKindBase)kind;
   }
 
@@ -1642,7 +1791,7 @@ void createInitialPokemon(
 
   pokemonSetup.setCurrentHp(pokemonInfo.currentHp.value_or(hp));
 
-  if (pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == Constants::PokemonCurrentHpStat::MIN) {
+  if (pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp <= Constants::PokemonCurrentHpStat::MIN) {
     pokemonSetup.setProperty<tags::Fainted>();
   }
 
@@ -1731,7 +1880,7 @@ void createInitialSide(
 
     bool battleStarted = battleInfo.turn > Constants::TurnCount::MIN;
     bool inActiveSlot = (simulation->isBattleFormat(BattleFormat::SINGLES) ? 1U : 2U) > i;
-    bool isFainted = pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == Constants::PokemonCurrentHpStat::MIN;
+    bool isFainted = pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp <= Constants::PokemonCurrentHpStat::MIN;
     if (battleStarted && inActiveSlot && !isFainted) {
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
@@ -2478,6 +2627,18 @@ void speedSort(Filter battleFilter, Simulation& simulation) {
   internal::simulate_turn::resolveSpeedTies(simulation);
 }
 
+void midTurnSwitch(Simulation& simulation) {
+  simulation.simulateTurnOptions.decisionCallback(simulation);
+  if (simulation.registry.view<MidTurnSideDecision>().empty()) {
+    return;
+  }
+
+  simulation.view<internal::simulate_turn::resolveMidTurnDecisions>();
+  simulation.removeFromEntities<MidTurnSideDecision>();
+  getBattleFilter(simulation).view<internal::simulate_turn::speedSortMidTurnSwitches>();
+  internal::simulate_turn::resolveSpeedTies(simulation);
+}
+
 template <typename ActionTag>
 void removeActionBySource(types::handle sourceHandle, Battle battle) {
   types::registry& registry = *sourceHandle.registry();
@@ -2596,7 +2757,7 @@ void setMoveTargets(Simulation& simulation) {
     simulation
       .view<addTargetAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::TargetAlly>>();
     simulation
-      .view<addUserAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::UserAlly>>();
+      .view<addUserAllyToTargets, Tags<pokesim::tags::CurrentActionMove, move::added_targets::tags::SourceAlly>>();
 
     battleFilter.view<
       setActionMoveReferenceComponents<AddedRecycledActionMove1>,
@@ -2713,7 +2874,7 @@ void checkWin(types::handle battleHandle, const Sides& sides) {
     types::teamPositionIndex foesRemaining = registry.get<FoesRemaining>(sideEntity).val;
     if (!foesRemaining) {
       battleHandle.emplace<Winner>(registry.get<PlayerSide>(sideEntity).val);
-      internal::simulate_turn::clearActionQueue(battleHandle.get<ActionQueue>());
+      internal::simulate_turn::clearActionQueue(battleHandle, battleHandle.get<ActionQueue>());
       return;
     }
   }
@@ -2724,6 +2885,9 @@ void faintPokemon(Simulation& simulation) {
   if (battleFilter.hasNoneSelected()) {
     return;
   }
+
+  auto faintCallback = simulation.simulateTurnOptions.faintCallback;
+  bool useFaintCallback = (bool)faintCallback;
 
   using LoopLimits = Constants::ActivePokemon;
   types::activePokemonIndex iterations = LoopLimits::MIN;
@@ -2750,8 +2914,12 @@ void faintPokemon(Simulation& simulation) {
 
     simulation.addToEntities<pokesim::tags::Fainted, pokesim::tags::Fainting>();
     simulation.removeFromEntities<pokesim::tags::ActivePokemon, pokesim::tags::Fainting>();
-    simulation.removeFromEntities<pokesim::tags::Fainting>();
 
+    if (useFaintCallback) {
+      faintCallback(simulation);
+    }
+
+    simulation.removeFromEntities<pokesim::tags::Fainting>();
     battleFilter.view<clearFaintQueue>();
     iterations++;
   }
@@ -2784,16 +2952,27 @@ void incrementTurn(Turn& turn) {
   turn.val++;
 }
 
-void nextTurn(Simulation& simulation) {
-  getBattleFilter(simulation).view<incrementTurn>();
+void setActiveAtTurnEnd(types::handle handle, Battle battle) {
+  if (handle.registry()->all_of<pokesim::tags::BattleMidTurn, Winner>(battle.val)) {
+    return;
+  }
 
-  pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon> pokemonFilter{simulation};
+  handle.emplace<pokesim::internal::tags::ActiveAtTurnEnd>();
+}
+
+void nextTurn(Simulation& simulation) {
+  getBattleFilter(simulation).view<incrementTurn, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn, Winner>>();
+
+  simulation.view<setActiveAtTurnEnd, Tags<pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>>();
+  pokesim::internal::EntityFilter<pokesim::internal::tags::ActiveAtTurnEnd> pokemonFilter{simulation};
   if (!pokemonFilter.hasNoneSelected()) {
-    simulation.removeFromEntities<DisabledMoveSlots, pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>();
+    pokemonFilter.removeFromSelected<DisabledMoveSlots>();
 
     pokemonFilter.addToSelected<pokesim::internal::tags::DisableMove>();
     internal::runDisableMove(simulation);
     simulation.registry.clear<pokesim::internal::tags::DisableMove>();
+
+    simulation.registry.clear<pokesim::internal::tags::ActiveAtTurnEnd>();
   }
 }
 
@@ -2839,22 +3018,29 @@ void simulateTurn(Simulation& simulation) {
 
   simulation.addToEntities<pokesim::tags::BattleMidTurn, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
 
-  battleFilter.view<internal::simulate_turn::setCurrentAction>();
   using ActionsLimit = Constants::ActionQueueLength;
   types::actionQueueIndex actionsTaken = ActionsLimit::MIN;
+
+  battleFilter.view<internal::simulate_turn::setCurrentAction>();
   while (!simulation.registry.view<action::tags::Current>().empty()) {
     POKESIM_REQUIRE(
       actionsTaken <= ActionsLimit::MAX,
       "More actions in a turn were queued to be taken than are possible in at least one battle.");
 
     runCurrentAction(simulation);
-    battleFilter.view<internal::simulate_turn::setCurrentAction, Tags<>, entt::exclude_t<Winner>>();
+    battleFilter.view<
+      internal::simulate_turn::setCurrentAction,
+      Tags<>,
+      entt::exclude_t<Winner, pokesim::tags::BattleRequestingDecision>>();
     actionsTaken++;
+
+    if (options.decisionCallback && !simulation.registry.view<pokesim::tags::BattleRequestingDecision>()->empty()) {
+      midTurnSwitch(simulation);
+    }
   }
 
   nextTurn(simulation);
 
-  simulation.removeFromEntities<pokesim::tags::BattleMidTurn, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
   battleFilter.view<internal::collectTurnOutcomeBattles>();
 
   simulation.addToEntities<pokesim::tags::SimulateTurn, internal::simulate_turn::tags::Input>();
@@ -3445,56 +3631,41 @@ template void setRandomEventChances<5U>(types::handle, const Simulation&, std::a
 
 namespace pokesim::internal::simulate_turn {
 namespace {
-template <typename Decision>
-void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& slotDecision, ActionQueue& actionQueue) {
-  if (!slotDecision.holds<Decision>()) {
-    return;
-  }
+void sortAndSetSpeedTies(
+  types::handle handle, ActionQueue& actionQueue, types::actionQueueIndex first, types::actionQueueIndex size) {
+  POKESIM_REQUIRE(first + size <= actionQueue.val.size(), "The last index would have been out of bounds.");
+  auto& actionQueueItems = actionQueue.val;
 
-  types::registry& registry = *sideHandle.registry();
-  const auto& decision = slotDecision.get<Decision>();
+  // TODO(aed3): Test how different sorting algorithms affect speed
+  std::sort(
+    &actionQueueItems[first],
+    &actionQueueItems[first + size],
+    [](const ActionQueueItem& itemA, const ActionQueueItem& itemB) { return itemA.isFasterThan(itemB); });
 
-  ActionQueueItem actionQueueItem;
-  actionQueueItem.decision = decision;
+  SpeedTieIndexes speedTies;
+  types::actionQueueIndex lastEqual = first, tieCount = 1U;
 
-  types::entity sourceEntity = slotToPokemonEntity(registry, sideHandle.entity(), decision.sourceSlot);
-  actionQueueItem.speed = registry.get<stat::EffectiveSpe>(sourceEntity).val;
-
-  if constexpr (std::is_base_of_v<MoveDecision, Decision>) {
-    actionQueueItem.order = ActionOrder::MOVE;
-    actionQueueItem.priority = Constants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
-    actionQueueItem.fractionalPriority = false;                   // TODO (aed3): get fractionalPriority
-
-    if constexpr (!std::is_same_v<MoveDecision, Decision>) {
-      POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");
+  for (types::actionQueueIndex i = first + 1U; i < first + size; i++) {
+    if (actionQueueItems[i].isSameSpeed(actionQueueItems[i - 1U])) {
+      tieCount++;
+    }
+    else {
+      if (tieCount > 1U) {
+        speedTies.val.push_back({lastEqual, tieCount});
+      }
+      lastEqual = i;
+      tieCount = 1U;
     }
   }
-  else if constexpr (std::is_same_v<SwitchDecision, Decision>) {
-    actionQueueItem.order = ActionOrder::SWITCH;
-  }
-  else if constexpr (std::is_same_v<ItemDecision, Decision>) {
-    actionQueueItem.order = ActionOrder::ITEM;
-  }
-  else {
-    POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");
+
+  if (tieCount > 1U) {
+    speedTies.val.push_back({lastEqual, tieCount});
   }
 
-  actionQueue.val.push_back(actionQueueItem);
-}
-
-void resolveSlotDecisions(types::handle sideHandle, const types::slotDecisions& decisions, ActionQueue& actionQueue) {
-  for (const types::slotDecision& decision : decisions) {
-    resolveSlotDecision<MoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<MegaEvolveAndMoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<ZMoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<DynamaxAndMoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<TerastallizeAndMoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<SwitchDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<ItemDecision>(sideHandle, decision, actionQueue);
+  if (!speedTies.val.empty()) {
+    handle.emplace<SpeedTieIndexes>(speedTies);
   }
 }
-
-void resolveTeamDecision(types::registry&, const types::teamOrder&, ActionQueue&) {}
 
 void setBattleOnSpeedTyingEntities(types::handle battleHandle, const SpeedTieIndexes&) {
   battleHandle.emplace<Battle>(battleHandle.entity());
@@ -3526,74 +3697,27 @@ void removeEmptySpeedTieIndexes(types::handle handle, SpeedTieIndexes& speedTies
 }
 }  // namespace
 
-void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
-  Battle battle = sideHandle.get<Battle>();
-  types::registry& registry = *sideHandle.registry();
-  ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
-
-  if (sideDecision.decisions.holds<types::slotDecisions>()) {
-    POKESIM_REQUIRE(
-      registry.get<Turn>(battle.val).val != Constants::TurnCount::MIN,
-      "Slot decisions only have an effect after a battle starts. Make sure to pass a `teamOrder` decision at the start "
-      "of a battle (aka team preview).");
-    const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
-
-    resolveSlotDecisions(sideHandle, decisions, actionQueue);
-  }
-  else if (sideDecision.decisions.holds<types::teamOrder>()) {
-    POKESIM_REQUIRE(
-      registry.get<Turn>(battle.val).val == Constants::TurnCount::MIN,
-      "Team order decisions only have an effect at the start of a battle (aka team preview). Make sure to pass a "
-      "`slotDecisions` decision for battles in progress.");
-    const auto& teamOrder = sideDecision.decisions.get<types::teamOrder>();
-
-    POKESIM_REQUIRE(
-      sideHandle.get<Team>().val.size() == teamOrder.size(),
-      "Must pick a placement for each Pokemon on the team.");
-    resolveTeamDecision(*sideHandle.registry(), teamOrder, actionQueue);
-  }
-  else {
-    POKESIM_REQUIRE_FAIL(
-      "Decision kind of index " + std::to_string(sideDecision.decisions.index()) + "not implemented yet.");
-  }
-}
-
 void speedSort(types::handle handle, ActionQueue& actionQueue) {
-  auto& actionQueueItems = actionQueue.val;
-
-  if (actionQueueItems.size() == 1U) {
+  if (actionQueue.val.size() == 1U) {
     return;
   }
 
-  // TODO(aed3): Test how different sorting algorithms affect speed
-  std::sort(
-    actionQueueItems.begin(),
-    actionQueueItems.end(),
-    [](const ActionQueueItem& itemA, const ActionQueueItem& itemB) { return itemA.isFasterThan(itemB); });
+  sortAndSetSpeedTies(handle, actionQueue, 0U, actionQueue.val.size());
+}
 
-  SpeedTieIndexes speedTies;
-  types::activePokemonIndex lastEqual = 0U, tieCount = 1U;
-
-  for (types::activePokemonIndex i = 1U; i < actionQueueItems.size(); i++) {
-    if (actionQueueItems[i].isSameSpeed(actionQueueItems[i - 1U])) {
-      tieCount++;
-    }
-    else {
-      if (tieCount > 1U) {
-        speedTies.val.push_back({lastEqual, tieCount});
-      }
-      lastEqual = i;
-      tieCount = 1U;
+void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue) {
+  types::activePokemonIndex midTurnSwitches = 0U;
+  for (; midTurnSwitches < Constants::ActivePokemon::MAX; midTurnSwitches++) {
+    if (actionQueue.val[midTurnSwitches].order != ActionOrder::MID_TURN_SWITCH) {
+      break;
     }
   }
 
-  if (tieCount > 1U) {
-    speedTies.val.push_back({lastEqual, tieCount});
+  if (midTurnSwitches <= 1U) {
+    return;
   }
 
-  if (!speedTies.val.empty()) {
-    handle.emplace<SpeedTieIndexes>(speedTies);
-  }
+  sortAndSetSpeedTies(handle, actionQueue, 0U, midTurnSwitches);
 }
 
 void setSpeedTieOrder(ActionQueue& actionQueue, const SpeedTieIndexes& speedTies, RandomEventIndex randomEventIndex) {
@@ -3645,7 +3769,7 @@ void resolveSpeedTies(Simulation& simulation) {
     speedTiesResolved++;
   }
 
-  if (speedTiesResolved) {
+  if (speedTiesResolved != Limit::MIN) {
     simulation.removeFromEntities<Battle, pokesim::tags::Battle>();
   }
 }
@@ -3661,7 +3785,10 @@ void addResidualAction(ActionQueue& actionQueue) {
 void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction action) {
   types::registry& registry = *battleHandle.registry();
 
-  if (actionQueue.val.empty()) return;
+  if (actionQueue.val.empty()) {
+    battleHandle.remove<pokesim::tags::BattleMidTurn>();
+    return;
+  }
 
   ActionQueueItem nextActon = actionQueue.val.front();
   registry.emplace<action::tags::Current>(action.val);
@@ -3701,12 +3828,311 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, Recy
   battleHandle.emplace<CurrentAction>(action.val);
 }
 
-void clearActionQueue(ActionQueue& actionQueue) {
+void clearActionQueue(types::handle handle, ActionQueue& actionQueue) {
+  handle.remove<pokesim::tags::BattleMidTurn>();
   actionQueue.val.clear();
 }
 }  // namespace pokesim::internal::simulate_turn
 
 //////////////// END OF src/SimulateTurn/ManageActionQueue.cpp /////////////////
+
+/////////////////// START OF src/SimulateTurn/Decisions.cpp ////////////////////
+
+namespace pokesim {
+namespace {
+bool canSwitchIn(const types::registry& registry, types::entity entity) {
+  return !registry.all_of<tags::Fainted>(entity);
+}
+
+void setSwitchOptions(
+  SwitchOptions& switchOptions, const types::registry& registry, PlayerSide playerSide, const Team& team,
+  types::teamPositionIndex totalActive) {
+  for (types::teamPositionIndex i = totalActive; i < team.val.size(); i++) {
+    if (canSwitchIn(registry, team.val[i])) {
+      Slot slot = sideIdAndPositionToSlot(playerSide.val, i);
+      switchOptions.val.push_back(slot);
+    }
+  }
+}
+
+void setDoublesMoveTargets(
+  types::targets<Slot>& possibleTargets, const Pokedex& pokedex, dex::Move move, Slot sourceSlot, Slot allySlot,
+  types::sideSlots<Slot> foeSlots) {
+  if (pokedex.moveHasAll<move::singles_target::tags::Self>(move)) {
+    possibleTargets.push_back(sourceSlot);
+  }
+
+  if (pokedex.moveHasAll<move::singles_target::tags::Foe>(move)) {
+    for (Slot foe : foeSlots) {
+      possibleTargets.push_back(foe);
+    }
+  }
+
+  if (allySlot != Slot::NONE) {
+    bool canTargetAlly = pokedex.moveHasAny<
+      move::tags::AnySingleTarget,
+      move::tags::AnySingleAlly,
+      move::tags::AllyOrSelf,
+      move::tags::AlliesAndSelf,
+      move::added_targets::tags::SourceAlly>(move);
+    if (canTargetAlly) {
+      possibleTargets.push_back(allySlot);
+    }
+  }
+}
+
+template <typename MoveOption, typename... DoublesArguments>
+void setMoveOptions(
+  types::moveSlots<MoveOption>& moveOptions, types::handle handle, const MoveSlots& moveSlots, Slot slot,
+  const Pokedex& pokedex, DoublesArguments... doublesArguments) {
+  const DisabledMoveSlots* disabledMoveSlots = handle.try_get<DisabledMoveSlots>();
+
+  for (types::moveSlotIndex i = 0U; i < moveSlots.val.size(); i++) {
+    if (disabledMoveSlots && disabledMoveSlots->val[i]) {
+      continue;
+    }
+
+    MoveSlot moveSlot = moveSlots.val[i];
+    if (moveSlot.pp == Constants::MovePp::MIN) {
+      continue;
+    }
+
+    MoveOption moveOption{moveSlot.move};
+
+    if constexpr (std::is_same_v<MoveOption, SinglesMoveOption>) {
+      if (pokedex.moveHasAll<move::singles_target::tags::Self>(moveOption.move)) {
+        moveOption.target = slot;
+      }
+      else {
+        moveOption.target = slot == Slot::P1A ? Slot::P2A : Slot::P1A;
+      }
+    }
+    else {
+      setDoublesMoveTargets(moveOption.possibleTargets, pokedex, moveOption.move, slot, doublesArguments...);
+    }
+
+    moveOptions.push_back(moveOption);
+  }
+}
+
+void setSinglesMidTurnSideOptions(
+  types::registry& registry, PlayerSide playerSide, const Team& team, SwitchOptions& switchOptions) {
+  setSwitchOptions(switchOptions, registry, playerSide, team, Constants::ActivePokemonSlotsPerSide::SINGLES);
+}
+
+void setDoublesMidTurnSideOptions(
+  types::registry& registry, PlayerSide playerSide, const Team& team, SwitchOptions& switchOptions) {
+  setSwitchOptions(switchOptions, registry, playerSide, team, Constants::ActivePokemonSlotsPerSide::DOUBLES);
+}
+
+void setSinglesSwitchOptions(
+  types::registry& registry, PlayerSide playerSide, const Team& team, SinglesSideOptions& sideOptions) {
+  setSinglesMidTurnSideOptions(registry, playerSide, team, sideOptions.switches);
+}
+
+void setDoublesSwitchOptions(
+  types::registry& registry, PlayerSide playerSide, const Team& team, DoublesSideOptions& sideOptions) {
+  setDoublesMidTurnSideOptions(registry, playerSide, team, sideOptions.switches);
+}
+
+void setSinglesMoveOptions(types::handle handle, Side side, const MoveSlots& moveSlots, const Pokedex& pokedex) {
+  types::registry& registry = *handle.registry();
+  SinglesSideOptions& sideOptions = registry.get<SinglesSideOptions>(side.val);
+  PlayerSide playerSide = registry.get<PlayerSide>(side.val);
+
+  setMoveOptions<SinglesMoveOption>(
+    sideOptions.moves,
+    handle,
+    moveSlots,
+    sideIdAndPositionToSlot(playerSide.val, 0U),
+    pokedex);
+}
+
+void setDoublesMoveOptions(types::handle handle, Side side, const MoveSlots& moveSlots, const Pokedex& pokedex) {
+  types::registry& registry = *handle.registry();
+  DoublesSideOptions& sideOptions = registry.get<DoublesSideOptions>(side.val);
+  const auto& [team, playerSide] = registry.get<Team, PlayerSide>(side.val);
+
+  POKESIM_REQUIRE(
+    handle.entity() == team.val[0U] || handle.entity() == team.val[1U],
+    "This entity must be in a valid active team slot.");
+  types::teamPositionIndex slotPosition = handle.entity() == team.val[0U] ? 0U : 1U;
+  Slot sourceSlot = sideIdAndPositionToSlot(playerSide.val, slotPosition);
+  Slot allySlot = Slot::NONE;
+  types::sideSlots<Slot> foeSlots;
+
+  if (registry.all_of<tags::ActivePokemon>(team.val[slotPosition ? 1U : 0U])) {
+    allySlot = sideIdAndPositionToSlot(playerSide.val, slotPosition ? 1U : 0U);
+  }
+
+  PlayerSideId foeSide = playerSide.val == PlayerSideId::P1 ? PlayerSideId::P2 : PlayerSideId::P1;
+  const Team& foeTeam = registry.get<Team>(registry.get<FoeSide>(side.val).val);
+  for (types::teamPositionIndex i = 0U; i < Constants::ActivePokemonSlotsPerSide::DOUBLES; i++) {
+    if (registry.all_of<tags::ActivePokemon>(foeTeam.val[i])) {
+      foeSlots.push_back(sideIdAndPositionToSlot(foeSide, i));
+    }
+  }
+
+  setMoveOptions<DoublesMoveOption>(
+    sideOptions.moves[slotPosition],
+    handle,
+    moveSlots,
+    sourceSlot,
+    pokedex,
+    allySlot,
+    foeSlots);
+}
+
+void setTeamPreviewOptionsFromBattle(types::registry& registry, Turn turn, const Sides& sides) {
+  if (turn.val != Constants::TurnCount::MIN) {
+    return;
+  }
+
+  for (types::entity side : sides.val) {
+    const Team& team = registry.get<Team>(side);
+    TeamPreviewOptions& options = registry.emplace<TeamPreviewOptions>(side);
+
+    for (types::teamPositionIndex i = 0U; i < team.val.size(); i++) {
+      if (canSwitchIn(registry, team.val[i])) {
+        options.val.push_back(i);
+      }
+    }
+  }
+}
+
+template <typename Decision>
+void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& slotDecision, ActionQueue& actionQueue) {
+  if (!slotDecision.holds<Decision>()) {
+    return;
+  }
+
+  types::registry& registry = *sideHandle.registry();
+  const auto& decision = slotDecision.get<Decision>();
+
+  ActionQueueItem actionQueueItem;
+  actionQueueItem.decision = decision;
+
+  types::entity sourceEntity = slotToPokemonEntity(registry, sideHandle.entity(), decision.sourceSlot);
+  actionQueueItem.speed = registry.get<stat::EffectiveSpe>(sourceEntity).val;
+
+  if constexpr (std::is_base_of_v<MoveDecision, Decision>) {
+    actionQueueItem.order = ActionOrder::MOVE;
+    actionQueueItem.priority = Constants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
+    actionQueueItem.fractionalPriority = false;                   // TODO (aed3): get fractionalPriority
+
+    if constexpr (!std::is_same_v<MoveDecision, Decision>) {
+      POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");
+    }
+  }
+  else if constexpr (std::is_same_v<SwitchDecision, Decision>) {
+    actionQueueItem.order = ActionOrder::SWITCH;
+  }
+  else if constexpr (std::is_same_v<ItemDecision, Decision>) {
+    actionQueueItem.order = ActionOrder::ITEM;
+  }
+  else {
+    POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");
+  }
+
+  actionQueue.val.push_back(actionQueueItem);
+}
+
+void resolveSlotDecisions(types::handle sideHandle, const types::slotDecisions& decisions, ActionQueue& actionQueue) {
+  for (const types::slotDecision& decision : decisions) {
+    resolveSlotDecision<MoveDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<MegaEvolveAndMoveDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<ZMoveDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<DynamaxAndMoveDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<TerastallizeAndMoveDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<SwitchDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<ItemDecision>(sideHandle, decision, actionQueue);
+  }
+}
+
+void resolveTeamDecision(types::registry&, const types::teamOrder&, ActionQueue&) {}
+}  // namespace
+
+namespace simulate_turn {
+void setSideOptions(Simulation& simulation) {
+  const Pokedex& pokedex = simulation.pokedex();
+  using WantsMidTurnOptions = pokesim::tags::BattleRequestingDecision;
+  auto wantsRegularOptionsView = simulation.registry.view<pokesim::tags::Side>(entt::exclude_t<WantsMidTurnOptions>());
+
+  simulation.addToEntities<SwitchOptions, WantsMidTurnOptions>();
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    simulation.view<setSinglesMidTurnSideOptions, Tags<WantsMidTurnOptions>>();
+
+    simulation.registry.insert<SinglesSideOptions>(wantsRegularOptionsView.begin(), wantsRegularOptionsView.end());
+    simulation.view<setSinglesMoveOptions, Tags<pokesim::tags::ActivePokemon>, entt::exclude_t<WantsMidTurnOptions>>(
+      pokedex);
+    simulation.view<setSinglesSwitchOptions, Tags<pokesim::tags::Side>, entt::exclude_t<WantsMidTurnOptions>>();
+  }
+  else {
+    simulation.view<setDoublesMidTurnSideOptions, Tags<WantsMidTurnOptions>>();
+
+    simulation.registry.insert<DoublesSideOptions>(wantsRegularOptionsView.begin(), wantsRegularOptionsView.end());
+    simulation.view<setDoublesMoveOptions, Tags<pokesim::tags::ActivePokemon>, entt::exclude_t<WantsMidTurnOptions>>(
+      pokedex);
+    simulation.view<setDoublesSwitchOptions, Tags<pokesim::tags::Side>, entt::exclude_t<WantsMidTurnOptions>>();
+  }
+}
+
+void setTeamPreviewOptions(Simulation& simulation) {
+  simulation.view<setTeamPreviewOptionsFromBattle>();
+}
+}  // namespace simulate_turn
+
+namespace internal::simulate_turn {
+void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
+  Battle battle = sideHandle.get<Battle>();
+  types::registry& registry = *sideHandle.registry();
+  ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
+
+  if (sideDecision.decisions.holds<types::slotDecisions>()) {
+    POKESIM_REQUIRE(
+      registry.get<Turn>(battle.val).val != Constants::TurnCount::MIN,
+      "Slot decisions only have an effect after a battle starts. Make sure to pass a `teamOrder` decision at the start "
+      "of a battle (aka team preview).");
+    const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
+
+    resolveSlotDecisions(sideHandle, decisions, actionQueue);
+  }
+  else if (sideDecision.decisions.holds<types::teamOrder>()) {
+    POKESIM_REQUIRE(
+      registry.get<Turn>(battle.val).val == Constants::TurnCount::MIN,
+      "Team order decisions only have an effect at the start of a battle (aka team preview). Make sure to pass a "
+      "`slotDecisions` decision for battles in progress.");
+    const auto& teamOrder = sideDecision.decisions.get<types::teamOrder>();
+
+    POKESIM_REQUIRE(
+      sideHandle.get<Team>().val.size() == teamOrder.size(),
+      "Must pick a placement for each Pokemon on the team.");
+    resolveTeamDecision(*sideHandle.registry(), teamOrder, actionQueue);
+  }
+  else {
+    POKESIM_REQUIRE_FAIL(
+      "Decision kind of index " + std::to_string(sideDecision.decisions.index()) + "not implemented yet.");
+  }
+}
+
+void resolveMidTurnDecisions(types::handle sideHandle, const MidTurnSideDecision& switchDecisions) {
+  Battle battle = sideHandle.get<Battle>();
+  types::registry& registry = *sideHandle.registry();
+  ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
+
+  for (SwitchDecision switchDecision : switchDecisions.val) {
+    ActionQueueItem actionQueueItem{ActionOrder::MID_TURN_SWITCH};
+    actionQueueItem.decision = switchDecision;
+
+    types::entity sourceEntity = slotToPokemonEntity(registry, sideHandle.entity(), switchDecision.sourceSlot);
+    actionQueueItem.speed = registry.get<stat::EffectiveSpe>(sourceEntity).val;
+    actionQueue.val.insert(actionQueue.val.begin(), actionQueueItem);
+  }
+}
+}  // namespace internal::simulate_turn
+}  // namespace pokesim
+
+//////////////////// END OF src/SimulateTurn/Decisions.cpp /////////////////////
 
 ////////////// START OF src/SimulateTurn/CalcDamageSpecifics.cpp ///////////////
 
@@ -4034,8 +4460,9 @@ struct BuildMove {
     }
 
     EntitySetup setup{registry, list};
+    static constexpr bool forPokedexBuild = std::is_same_v<BuildMoveTag, internal::tags::BuildPokedexMove>;
 
-    if constexpr (std::is_same_v<BuildMoveTag, internal::tags::BuildPokedexMove>) {
+    if constexpr (forPokedexBuild) {
       setup.add(MoveName{Move::name(gameMechanic)});
       setup.add(Pp{Move::basePp(gameMechanic)});
     }
@@ -4113,76 +4540,115 @@ struct BuildMove {
       dex::enumToTag<AddFromEnum>(Move::properties(gameMechanic), setup);
     }
 
+    bool addSinglesSelfTag = false;
+    bool addSinglesFoeTag = false;
     switch (Move::target(gameMechanic)) {
       case MoveTarget::ANY_SINGLE_TARGET: {
         setup.add(move::tags::AnySingleTarget{});
+
+        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
         break;
       }
       case MoveTarget::ANY_SINGLE_FOE: {
         setup.add(move::tags::AnySingleFoe{});
+
+        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
         break;
       }
       case MoveTarget::ANY_SINGLE_ALLY: {
         setup.add(move::tags::AnySingleAlly{});
+        // These moves fail in single battles
         break;
       }
       case MoveTarget::ALLY_OR_SELF: {
         setup.add(move::tags::AllyOrSelf{});
+
+        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
         break;
       }
       case MoveTarget::SELF: {
         setup.add(move::tags::Self{});
+
+        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
         break;
       }
       case MoveTarget::ALL_FOES: {
         setup.add(move::tags::AllFoes{});
         setup.add(move::added_targets::tags::TargetAlly{});
+
+        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
         break;
       }
       case MoveTarget::ALLIES_AND_FOES: {
         setup.add(move::tags::AlliesAndFoes{});
         setup.add(move::added_targets::tags::TargetAlly{});
-        setup.add(move::added_targets::tags::UserAlly{});
+        setup.add(move::added_targets::tags::SourceAlly{});
+
+        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
         break;
       }
       case MoveTarget::ALLIES_AND_SELF: {
         setup.add(move::tags::AlliesAndSelf{});
-        // Deliberately not USER_ALLY as the target of AlliesAndSelf moves is the user
+        // Deliberately not SourceAlly as the target of AlliesAndSelf moves is the user
         setup.add(move::added_targets::tags::TargetAlly{});
+
+        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
         break;
       }
       case MoveTarget::FOE_SIDE: {
         setup.add(move::tags::FoeSide{});
         setup.add(move::added_targets::tags::TargetSide{});
+
+        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
         break;
       }
       case MoveTarget::ALLY_SIDE: {
         setup.add(move::tags::AllySide{});
-        setup.add(move::added_targets::tags::UserSide{});
+        setup.add(move::added_targets::tags::SourceSide{});
+
+        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
         break;
       }
       case MoveTarget::FIELD: {
         setup.add(move::tags::Field{});
         setup.add(move::added_targets::tags::Field{});
+
+        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
         break;
       }
       case MoveTarget::ALLY_TEAM: {
         setup.add(move::tags::AllyTeam{});
-        setup.add(move::added_targets::tags::UserSide{});
+        setup.add(move::added_targets::tags::SourceSide{});
+
+        if constexpr (forPokedexBuild) addSinglesSelfTag = true;
         break;
       }
       case MoveTarget::RETALIATION: {
         setup.add(move::tags::Retaliation{});
+
+        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
         break;
       }
       case MoveTarget::RANDOM_FOE: {
         setup.add(move::tags::RandomFoe{});
+
+        if constexpr (forPokedexBuild) addSinglesFoeTag = true;
         break;
       }
       default: break;
     }
 
-    if constexpr (std::is_same_v<BuildMoveTag, internal::tags::BuildPokedexMove>) {
+    if constexpr (forPokedexBuild) {
+      POKESIM_REQUIRE(
+        !(addSinglesSelfTag && addSinglesFoeTag),
+        "Moves in a single battle can only target the foe or the user, not both.");
+
+      if (addSinglesSelfTag) {
+        setup.add(move::singles_target::tags::Self{});
+      }
+      if (addSinglesFoeTag) {
+        setup.add(move::singles_target::tags::Foe{});
+      }
       registry.remove<Move>(list.begin(), list.end());
     }
   }
@@ -5409,6 +5875,9 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
     pokemonSetup.setPostion(teamEntities.val.size());
     pokemonSetup.setSide(entity());
     pokemonSetup.setBattle(battle.val);
+    if (pokemonSetup.isFainted()) {
+      handle.registry()->get<FoesRemaining>(handle.get<FoeSide>().val).val--;
+    }
   }
 }
 
@@ -5537,6 +6006,10 @@ void PokemonStateSetup::setIVs(
 
 void PokemonStateSetup::setIVs(const Ivs& ivs) {
   handle.emplace<Ivs>(ivs);
+}
+
+bool PokemonStateSetup::isFainted() {
+  return handle.all_of<pokesim::tags::Fainted>();
 }
 }  // namespace pokesim::internal
 
@@ -6236,31 +6709,44 @@ void clearSwitchAction(Simulation& simulation) {
 
 namespace pokesim {
 namespace {
-types::teamPositionIndex slotToIndex(Slot targetSlot) {
-  POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
-  return ((types::teamPositionIndex)targetSlot - 1U) / 2U;
+void checkSlot(Slot slot) {
+  POKESIM_REQUIRE(
+    std::find(internal::VALID_SLOTS.begin(), internal::VALID_SLOTS.end(), slot) != internal::VALID_SLOTS.end(),
+    "Invalid slot found.");
+}
+
+types::teamPositionIndex slotToIndex(Slot slot) {
+  checkSlot(slot);
+  return (types::teamPositionIndex)slot & internal::SLOT_LETTER_MASK;
 }
 }  // namespace
 
-PlayerSideId slotToSideId(Slot targetSlot) {
-  return ((types::teamPositionIndex)targetSlot - 1U) % 2U ? PlayerSideId::P2 : PlayerSideId::P1;
+Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position) {
+  Slot slot = (Slot)(((types::teamPositionIndex)sideId << 4U) + position);
+  checkSlot(slot);
+  return slot;
 }
 
-types::entity slotToSideEntity(const Sides& sides, Slot targetSlot) {
-  types::entity sideEntity = sides.val[slotToSideId(targetSlot) == PlayerSideId::P1 ? 0U : 1U];
+PlayerSideId slotToSideId(Slot slot) {
+  checkSlot(slot);
+  return (types::teamPositionIndex)slot >= (types::teamPositionIndex)Slot::P2A ? PlayerSideId::P2 : PlayerSideId::P1;
+}
+
+types::entity slotToSideEntity(const Sides& sides, Slot slot) {
+  types::entity sideEntity = sides.val[slotToSideId(slot) == PlayerSideId::P1 ? 0U : 1U];
   return sideEntity;
 }
 
-types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot) {
-  types::teamPositionIndex index = slotToIndex(targetSlot);
+types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot slot) {
+  types::teamPositionIndex index = slotToIndex(slot);
 
   const Team& team = registry.get<Team>(sideEntity);
-  POKESIM_REQUIRE(team.val.size() > index, "Choosing a target slot for team member that does not exist.");
+  POKESIM_REQUIRE(team.val.size() > index, "Choosing a slot for team member that does not exist.");
   return team.val[index];
 }
 
-types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
-  return slotToPokemonEntity(registry, slotToSideEntity(sides, targetSlot), targetSlot);
+types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot slot) {
+  return slotToPokemonEntity(registry, slotToSideEntity(sides, slot), slot);
 }
 
 void swapEntitySlots(types::registry& registry, types::entity sideEntity, Slot slot1, Slot slot2) {
@@ -6269,8 +6755,8 @@ void swapEntitySlots(types::registry& registry, types::entity sideEntity, Slot s
   types::teamPositionIndex index2 = slotToIndex(slot2);
 
   Team& team = registry.get<Team>(sideEntity);
-  POKESIM_REQUIRE(team.val.size() > index1, "Choosing a target slot for team member that does not exist.");
-  POKESIM_REQUIRE(team.val.size() > index2, "Choosing a target slot for team member that does not exist.");
+  POKESIM_REQUIRE(team.val.size() > index1, "Choosing a slot for team member that does not exist.");
+  POKESIM_REQUIRE(team.val.size() > index2, "Choosing a slot for team member that does not exist.");
 
   std::swap(team.val[index1], team.val[index2]);
 }
@@ -6279,12 +6765,12 @@ void swapEntitySlots(types::registry& registry, const Sides& sides, Slot slot1, 
   swapEntitySlots(registry, slotToSideEntity(sides, slot1), slot1, slot2);
 }
 
-types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot) {
-  POKESIM_REQUIRE(targetSlot != Slot::NONE, "Can only get entity from valid target slot.");
+types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot slot) {
+  checkSlot(slot);
   Slot allySlot = Slot::NONE;
   types::teamPositionIndex index = 0U;
 
-  switch (targetSlot) {
+  switch (slot) {
     case Slot::P1A: {
       allySlot = Slot::P1B;
       index = 1U;
@@ -6750,7 +7236,7 @@ enum class EffectPresentCheck : std::uint8_t {
 };
 
 void ignoreStatusMoves(types::handle inputHandle, EffectMove move, Battle battle, const Pokedex& pokedex) {
-  if (pokedex.moveHas<move::tags::Status>(move.val)) {
+  if (pokedex.moveHasAll<move::tags::Status>(move.val)) {
     inputHandle.emplace<tags::IgnoredInput>();
     inputHandle.registry()->get_or_emplace<SkippedInputCount>(battle.val).val++;
   }

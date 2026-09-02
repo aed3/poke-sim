@@ -21,6 +21,7 @@ constexpr bool operator&(AddedTargetOptions optionA, AddedTargetOptions optionB)
   return (static_cast<std::uint8_t>(optionA) & static_cast<std::uint8_t>(optionB)) != 0U;
 }
 
+namespace internal {
 static constexpr inline std::array<AddedTargetOptions, 6U> VALID_ADDED_TARGET_OPTIONS = {
   AddedTargetOptions::NONE,
   AddedTargetOptions::TARGET_ALLY,
@@ -29,4 +30,5 @@ static constexpr inline std::array<AddedTargetOptions, 6U> VALID_ADDED_TARGET_OP
   AddedTargetOptions::USER_SIDE,
   AddedTargetOptions::FIELD,
 };
+}  // namespace internal
 }  // namespace pokesim

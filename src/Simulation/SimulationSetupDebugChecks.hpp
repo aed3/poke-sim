@@ -384,8 +384,8 @@ struct SimulationSetupChecks {
 
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p1SideEntity).val == p2SideEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p2SideEntity).val == p1SideEntity);
-    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p1SideEntity).val == p2SideInfo.team.size());
-    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p2SideEntity).val == p1SideInfo.team.size());
+    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p1SideEntity).val <= p2SideInfo.team.size());
+    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p2SideEntity).val <= p1SideInfo.team.size());
 
     pokesim::debug::checkBattle(battleEntity, *registry);
   }

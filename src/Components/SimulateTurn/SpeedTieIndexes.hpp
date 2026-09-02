@@ -13,6 +13,6 @@ struct SpeedTieIndexes {
     bool operator==(const Span& other) const noexcept { return other.start == start && other.length == length; }
   };
 
-  types::fixedMemoryVector<Span, Constants::ActivePokemon::MAX> val{};
+  types::fixedMemoryVector<Span, Constants::ActivePokemon::MAX, Constants::ActivePokemon::MAX / 2U> val{};
 };
 }  // namespace pokesim

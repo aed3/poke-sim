@@ -11,10 +11,12 @@ enum class TypeEffectiveness : std::uint8_t {
   SUPER_EFFECTIVE,
 };
 
+namespace internal {
 static constexpr inline std::array<TypeEffectiveness, 4U> VALID_TYPE_EFFECTIVENESS = {
   TypeEffectiveness::IMMUNE,
   TypeEffectiveness::NOT_VERY_EFFECTIVE,
   TypeEffectiveness::NEUTRAL,
   TypeEffectiveness::SUPER_EFFECTIVE,
 };
+}  // namespace internal
 }  // namespace pokesim

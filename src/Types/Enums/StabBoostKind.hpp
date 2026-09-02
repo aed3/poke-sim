@@ -12,6 +12,7 @@ enum class StabBoostKind : std::uint8_t {
   ADAPTABILITY_AND_TERA_STAB = 225U,
 };
 
+namespace internal {
 static constexpr inline std::array<StabBoostKind, 5U> VALID_STAB_BOOST_KINDS = {
   StabBoostKind::NONE,
   StabBoostKind::STANDARD,
@@ -19,4 +20,5 @@ static constexpr inline std::array<StabBoostKind, 5U> VALID_STAB_BOOST_KINDS = {
   StabBoostKind::ADAPTABILITY_OR_STELLAR_STAB_OR_TERA_STAB,
   StabBoostKind::ADAPTABILITY_AND_TERA_STAB,
 };
+}  // namespace internal
 }  // namespace pokesim

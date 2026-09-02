@@ -171,6 +171,9 @@ struct Constants {
   struct ActivePokemonSlotsPerSide {
     static constexpr std::uint8_t MAX = 2U;
     static constexpr std::uint8_t MIN = 1U;
+
+    static constexpr std::uint8_t DOUBLES = 2U;
+    static constexpr std::uint8_t SINGLES = 1U;
   };
 
   struct ActivePokemon {

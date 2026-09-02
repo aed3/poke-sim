@@ -21,6 +21,7 @@ constexpr bool operator&(DamageRollKind kindA, DamageRollKind kindB) {
   return (static_cast<std::uint8_t>(kindA) & static_cast<std::uint8_t>(kindB)) != 0U;
 }
 
+namespace internal {
 static constexpr inline std::array<DamageRollKind, 6U> VALID_DAMAGE_ROLL_KINDS = {
   DamageRollKind::NONE,
   DamageRollKind::AVERAGE_DAMAGE,
@@ -29,4 +30,5 @@ static constexpr inline std::array<DamageRollKind, 6U> VALID_DAMAGE_ROLL_KINDS =
   DamageRollKind::GUARANTEED_CRIT_CHANCE,
   DamageRollKind::ALL_DAMAGE_ROLLS,
 };
+}  // namespace internal
 }  // namespace pokesim

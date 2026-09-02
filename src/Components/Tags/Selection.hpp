@@ -1,8 +1,9 @@
 #pragma once
 
 namespace pokesim::internal::tags {
-struct BuildPokedexMove {};
-struct BuildActionMove {};
-struct CloneFromDamageRolls {};
+struct ActiveAtTurnEnd {};
 struct ApplySideDamageRollOptions {};
+struct BuildActionMove {};
+struct BuildPokedexMove {};
+struct CloneFromDamageRolls {};
 }  // namespace pokesim::internal::tags

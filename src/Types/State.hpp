@@ -49,13 +49,14 @@ using teamPositions = fixedMemoryVector<T, Constants::TeamSize::MAX>;
 using teamOrder = teamPositions<teamPositionIndex>;
 
 template <typename T>
-using moveSlots = fixedMemoryVector<T, Constants::MoveSlots::MAX>;
+using moveSlots = fixedMemoryVector<T, Constants::MoveSlots::MAX, Constants::MoveSlots::MAX>;
 
 template <typename T>
-using sideSlots = fixedMemoryVector<T, Constants::ActivePokemonSlotsPerSide::MAX>;
+using sideSlots =
+  fixedMemoryVector<T, Constants::ActivePokemonSlotsPerSide::MAX, Constants::ActivePokemonSlotsPerSide::MAX>;
 
 template <typename T>
-using targets = fixedMemoryVector<T, Constants::Targets::MAX>;
+using targets = fixedMemoryVector<T, Constants::Targets::MAX, (Constants::Targets::MAX + Constants::Targets::MIN) / 2U>;
 
 using callback = void (*)(Simulation&);
 using optionalCallback = std::optional<callback>;

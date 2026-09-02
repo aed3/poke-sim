@@ -20,9 +20,14 @@ struct RandomFoe {};
 
 namespace added_targets::tags {
 struct TargetAlly {};
-struct UserAlly {};
+struct SourceAlly {};
 struct TargetSide {};
-struct UserSide {};
+struct SourceSide {};
 struct Field {};
 }  // namespace added_targets::tags
+
+namespace singles_target::tags {
+struct Self {};
+struct Foe {};
+}  // namespace singles_target::tags
 }  // namespace pokesim::move

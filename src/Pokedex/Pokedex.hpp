@@ -244,7 +244,12 @@ class Pokedex {
   }
 
   template <typename... T>
-  bool moveHas(dex::Move move) const {
+  bool moveHasAny(dex::Move move) const {
+    return dexRegistry.all_of<T...>(movesMap.at(move));
+  }
+
+  template <typename... T>
+  bool moveHasAll(dex::Move move) const {
     return dexRegistry.all_of<T...>(movesMap.at(move));
   }
 

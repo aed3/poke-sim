@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CalcDamageSpecifics.hpp"
+#include "Decisions.hpp"
 #include "ManageActionQueue.hpp"
 #include "RandomChance.hpp"
 #include "SimulateTurn.hpp"

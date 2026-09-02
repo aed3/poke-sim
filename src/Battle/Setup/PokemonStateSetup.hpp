@@ -93,6 +93,8 @@ struct PokemonStateSetup : StateSetupBase {
     handle.emplace<StatType>(stat);
     handle.emplace<EffectiveStatType>(stat);
   };
+
+  bool isFainted();
 };
 }  // namespace internal
 }  // namespace pokesim

@@ -154,6 +154,7 @@
  * src/Components/RNGSeed.hpp
  * src/Components/RandomEventInputs.hpp
  * src/Components/RandomEventOutputs.hpp
+ * src/Components/SideDecisionOptions.hpp
  * src/Components/SideDecisions.hpp
  * src/Components/SimulateTurn/ActionTags.hpp
  * src/Components/SimulateTurn/MoveHitStepTags.hpp
@@ -288,6 +289,7 @@
  * src/SimulateTurn/RandomChance.hpp
  * src/Simulation/MoveHitSteps.hpp
  * src/Utilities/EntityFilter.hpp
+ * src/SimulateTurn/Decisions.hpp
  * src/SimulateTurn/ManageActionQueue.hpp
  * src/SimulateTurn/SimulateTurnDebugChecks.hpp
  * src/Utilities/RNG.hpp
@@ -16488,6 +16490,9 @@ struct Constants {
   struct ActivePokemonSlotsPerSide {
     static constexpr std::uint8_t MAX = 2U;
     static constexpr std::uint8_t MIN = 1U;
+
+    static constexpr std::uint8_t DOUBLES = 2U;
+    static constexpr std::uint8_t SINGLES = 1U;
   };
 
   struct ActivePokemon {
@@ -18022,9 +18027,9 @@ inline void meta_reset() noexcept {
 /////////////////// START OF src/Types/FixedMemoryVector.hpp ///////////////////
 
 namespace pokesim::types {
-template <typename T, std::uint8_t N>
-class fixedMemoryVector : private std::array<T, N> {
-  using base = std::array<T, N>;
+template <typename Type, std::uint8_t Size, std::uint8_t AverageSize = Size>
+class fixedMemoryVector : private std::array<Type, Size> {
+  using base = std::array<Type, Size>;
   std::uint8_t used = 0U;
 
  public:
@@ -18035,31 +18040,31 @@ class fixedMemoryVector : private std::array<T, N> {
 
   fixedMemoryVector() : base() {
     static_assert(
-      sizeof(fixedMemoryVector<T, N>) <= sizeof(std::vector<T>) + (sizeof(T) * N / 2U),
+      sizeof(fixedMemoryVector<Type, Size, AverageSize>) <= sizeof(std::vector<Type>) + (sizeof(Type) * AverageSize),
       "A std::vector for this type and size would be smaller.");
   }
 
-  fixedMemoryVector(std::uint8_t size, const T& value) : fixedMemoryVector() {
+  fixedMemoryVector(std::uint8_t size, const Type& value) : fixedMemoryVector() {
     for (std::uint8_t i = 0; i < size; i++) {
       push_back(value);
     }
   }
 
-  fixedMemoryVector(std::initializer_list<T> list) : fixedMemoryVector() {
-    for (const T& item : list) {
+  fixedMemoryVector(std::initializer_list<Type> list) : fixedMemoryVector() {
+    for (const Type& item : list) {
       push_back(item);
     }
   }
 
   constexpr std::uint8_t size() const noexcept { return used; }
-  constexpr std::uint8_t max_size() const noexcept { return N; }
+  constexpr std::uint8_t max_size() const noexcept { return Size; }
   constexpr bool empty() const noexcept { return used == 0U; }
 
   constexpr typename base::const_reference front() const noexcept { return *base::begin(); }
-  constexpr typename base::const_reference back() const noexcept { return N ? *(end() - 1) : *end(); }
+  constexpr typename base::const_reference back() const noexcept { return Size ? *(end() - 1) : *end(); }
 
   constexpr typename base::reference front() noexcept { return *base::begin(); }
-  constexpr typename base::reference back() noexcept { return N ? *(end() - 1) : *end(); }
+  constexpr typename base::reference back() noexcept { return Size ? *(end() - 1) : *end(); }
 
   constexpr typename base::const_reference at(std::uint8_t pos) const {
     POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
@@ -18081,7 +18086,7 @@ class fixedMemoryVector : private std::array<T, N> {
     return base::operator[](pos);
   }
 
-  void push_back(const T& value) {
+  void push_back(const Type& value) {
     base::at(used) = value;
     used++;
   }
@@ -18102,7 +18107,7 @@ class fixedMemoryVector : private std::array<T, N> {
     used++;
   }
 
-  bool operator==(const fixedMemoryVector<T, N>& other) const noexcept {
+  constexpr bool operator==(const fixedMemoryVector<Type, Size, AverageSize>& other) const noexcept {
     return used == other.used && std::equal(begin(), end(), other.begin());
   }
 
@@ -18160,13 +18165,14 @@ using teamPositions = fixedMemoryVector<T, Constants::TeamSize::MAX>;
 using teamOrder = teamPositions<teamPositionIndex>;
 
 template <typename T>
-using moveSlots = fixedMemoryVector<T, Constants::MoveSlots::MAX>;
+using moveSlots = fixedMemoryVector<T, Constants::MoveSlots::MAX, Constants::MoveSlots::MAX>;
 
 template <typename T>
-using sideSlots = fixedMemoryVector<T, Constants::ActivePokemonSlotsPerSide::MAX>;
+using sideSlots =
+  fixedMemoryVector<T, Constants::ActivePokemonSlotsPerSide::MAX, Constants::ActivePokemonSlotsPerSide::MAX>;
 
 template <typename T>
-using targets = fixedMemoryVector<T, Constants::Targets::MAX>;
+using targets = fixedMemoryVector<T, Constants::Targets::MAX, (Constants::Targets::MAX + Constants::Targets::MIN) / 2U>;
 
 using callback = void (*)(Simulation&);
 using optionalCallback = std::optional<callback>;
@@ -18251,8 +18257,8 @@ class AssertComponentsEqual {
 
   template <typename>
   struct isList;
-  template <typename T, std::uint8_t N>
-  struct isList<types::fixedMemoryVector<T, N>> {};
+  template <typename T, std::uint8_t N, std::uint8_t A>
+  struct isList<types::fixedMemoryVector<T, N, A>> {};
   template <typename T, std::uint64_t N>
   struct isList<types::maxSizedVector<T, N>> {};
   template <typename T>
@@ -18765,24 +18771,41 @@ static constexpr std::uint8_t TOTAL_PLAYER_SIDE_ID_COUNT = 2U;
 namespace pokesim {
 enum class Slot : std::uint8_t {
   NONE = 0U,
-  P1A,
-  P2A,
-  P1B,
-  P2B,
+  P1A = 0x10,
+  P1B = 0x11,
+  P1C = 0x12,
+  P1D = 0x13,
+  P1E = 0x14,
+  P1F = 0x15,
 
-  P1C,
-  P2C,
-  P1D,
-  P2D,
-  P1E,
-  P2E,
-  P1F,
-  P2F,
-
-  TOTAL_SLOT,
+  P2A = 0x20,
+  P2B = 0x21,
+  P2C = 0x22,
+  P2D = 0x23,
+  P2E = 0x24,
+  P2F = 0x25,
 };
 
-static constexpr std::uint8_t TOTAL_SLOT_COUNT = (std::uint8_t)Slot::TOTAL_SLOT - 1U;
+namespace internal {
+static constexpr inline std::array<Slot, 13U> VALID_SLOTS = {
+  Slot::P1A,
+  Slot::P1B,
+  Slot::P1C,
+  Slot::P1D,
+  Slot::P1E,
+  Slot::P1F,
+
+  Slot::P2A,
+  Slot::P2B,
+  Slot::P2C,
+  Slot::P2D,
+  Slot::P2E,
+  Slot::P2F,
+};
+
+static constexpr std::uint8_t SLOT_SIDE_MASK = 0xF0;
+static constexpr std::uint8_t SLOT_LETTER_MASK = 0x0F;
+}  // namespace internal
 }  // namespace pokesim
 
 /////////////////////// END OF src/Types/Enums/Slot.hpp ////////////////////////
@@ -18794,13 +18817,14 @@ struct Sides;
 struct MoveSlots;
 class Pokedex;
 
-PlayerSideId slotToSideId(Slot targetSlot);
-types::entity slotToSideEntity(const Sides& sides, Slot targetSlot);
-types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot targetSlot);
-types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
+Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position);
+PlayerSideId slotToSideId(Slot slot);
+types::entity slotToSideEntity(const Sides& sides, Slot slot);
+types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot slot);
+types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot slot);
 void swapEntitySlots(types::registry& registry, types::entity sideEntity, Slot slot1, Slot slot2);
 void swapEntitySlots(types::registry& registry, const Sides& sides, Slot slot1, Slot slot2);
-types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot targetSlot);
+types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot slot);
 types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
 
 namespace internal {
@@ -18835,6 +18859,7 @@ enum class StabBoostKind : std::uint8_t {
   ADAPTABILITY_AND_TERA_STAB = 225U,
 };
 
+namespace internal {
 static constexpr inline std::array<StabBoostKind, 5U> VALID_STAB_BOOST_KINDS = {
   StabBoostKind::NONE,
   StabBoostKind::STANDARD,
@@ -18842,6 +18867,7 @@ static constexpr inline std::array<StabBoostKind, 5U> VALID_STAB_BOOST_KINDS = {
   StabBoostKind::ADAPTABILITY_OR_STELLAR_STAB_OR_TERA_STAB,
   StabBoostKind::ADAPTABILITY_AND_TERA_STAB,
 };
+}  // namespace internal
 }  // namespace pokesim
 
 /////////////////// END OF src/Types/Enums/StabBoostKind.hpp ///////////////////
@@ -18923,6 +18949,7 @@ constexpr bool operator&(DamageRollKind kindA, DamageRollKind kindB) {
   return (static_cast<std::uint8_t>(kindA) & static_cast<std::uint8_t>(kindB)) != 0U;
 }
 
+namespace internal {
 static constexpr inline std::array<DamageRollKind, 6U> VALID_DAMAGE_ROLL_KINDS = {
   DamageRollKind::NONE,
   DamageRollKind::AVERAGE_DAMAGE,
@@ -18931,6 +18958,7 @@ static constexpr inline std::array<DamageRollKind, 6U> VALID_DAMAGE_ROLL_KINDS =
   DamageRollKind::GUARANTEED_CRIT_CHANCE,
   DamageRollKind::ALL_DAMAGE_ROLLS,
 };
+}  // namespace internal
 }  // namespace pokesim
 
 ////////////////// END OF src/Types/Enums/DamageRollKind.hpp ///////////////////
@@ -19116,6 +19144,7 @@ enum class ActionOrder : std::uint8_t {
   NONE = std::numeric_limits<std::underlying_type_t<ActionOrder>>::max(),
   TEAM = 1U,
   START = 2U,
+  MID_TURN_SWITCH = 3U,
   BEFORE_TURN = 4U,
   ITEM = BEFORE_TURN,
 
@@ -19126,16 +19155,19 @@ enum class ActionOrder : std::uint8_t {
   RESIDUAL = 254U,
 };
 
-static constexpr inline std::array<ActionOrder, 8U> VALID_ACTION_ORDERS = {
+namespace internal {
+static constexpr inline std::array<ActionOrder, 9U> VALID_ACTION_ORDERS = {
   ActionOrder::NONE,
   ActionOrder::TEAM,
   ActionOrder::START,
+  ActionOrder::MID_TURN_SWITCH,
   ActionOrder::BEFORE_TURN,
   ActionOrder::ITEM,
   ActionOrder::SWITCH,
   ActionOrder::MOVE,
   ActionOrder::RESIDUAL,
 };
+}  // namespace internal
 }  // namespace pokesim
 
 //////////////////// END OF src/Types/Enums/ActionOrder.hpp ////////////////////
@@ -19228,6 +19260,7 @@ constexpr bool operator&(AddedTargetOptions optionA, AddedTargetOptions optionB)
   return (static_cast<std::uint8_t>(optionA) & static_cast<std::uint8_t>(optionB)) != 0U;
 }
 
+namespace internal {
 static constexpr inline std::array<AddedTargetOptions, 6U> VALID_ADDED_TARGET_OPTIONS = {
   AddedTargetOptions::NONE,
   AddedTargetOptions::TARGET_ALLY,
@@ -19236,6 +19269,7 @@ static constexpr inline std::array<AddedTargetOptions, 6U> VALID_ADDED_TARGET_OP
   AddedTargetOptions::USER_SIDE,
   AddedTargetOptions::FIELD,
 };
+}  // namespace internal
 }  // namespace pokesim
 
 /////////////////// END OF src/Types/Enums/AddedTargets.hpp ////////////////////
@@ -20204,6 +20238,72 @@ struct RandomEventIndex {
 
 ///////////////// END OF src/Components/RandomEventOutputs.hpp /////////////////
 
+/////////////// START OF src/Components/SideDecisionOptions.hpp ////////////////
+
+namespace pokesim {
+struct SinglesMoveOption {
+  dex::Move move = dex::Move::NO_MOVE;
+  Slot target = Slot::NONE;
+
+  bool operator==(const SinglesMoveOption& other) const { return move == other.move && target == other.target; }
+};
+
+struct DoublesMoveOption {
+  dex::Move move = dex::Move::NO_MOVE;
+  types::targets<Slot> possibleTargets{};
+
+  bool operator==(const DoublesMoveOption& other) const {
+    return move == other.move && possibleTargets == other.possibleTargets;
+  }
+};
+
+struct SwitchOptions {
+  types::teamPositions<Slot> val{};
+
+  bool operator==(const SwitchOptions& other) const { return val == other.val; }
+};
+
+struct SinglesSideOptions {
+  types::moveSlots<SinglesMoveOption> moves;
+  SwitchOptions switches;
+
+  bool operator==(const SinglesSideOptions& other) const { return moves == other.moves && switches == other.switches; }
+};
+
+struct DoublesSideOptions {
+  types::sideSlots<types::moveSlots<DoublesMoveOption>> moves{moves.max_size(), {}};
+  SwitchOptions switches;
+
+  bool operator==(const DoublesSideOptions& other) const { return moves == other.moves && switches == other.switches; }
+};
+
+struct TeamPreviewOptions {
+  types::teamOrder val{};
+};
+
+namespace tags {
+struct SinglesMegaEvolutionOption {};
+struct SinglesZMoveOption {};
+struct SinglesDynamaxOption {};
+struct SinglesTerastallizeOption {};
+}  // namespace tags
+
+struct DoublesMegaEvolutionOptions {
+  types::sideSlots<Slot> val{};
+};
+struct DoublesZMoveOptions {
+  types::sideSlots<Slot> val{};
+};
+struct DoublesDynamaxOptions {
+  types::sideSlots<Slot> val{};
+};
+struct SinglesTerastallizeOptions {
+  types::sideSlots<Slot> val{};
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/SideDecisionOptions.hpp /////////////////
+
 ////////////////// START OF src/Components/SideDecisions.hpp ///////////////////
 
 namespace pokesim {
@@ -20212,6 +20312,10 @@ struct SideDecision {
   types::variant<types::slotDecisions, types::teamOrder> decisions{};
 
   bool operator==(const SideDecision other) const { return sideId == other.sideId && decisions == other.decisions; }
+};
+
+struct MidTurnSideDecision {
+  types::sideSlots<SwitchDecision> val{};
 };
 }  // namespace pokesim
 
@@ -20280,7 +20384,7 @@ struct SpeedTieIndexes {
     bool operator==(const Span& other) const noexcept { return other.start == start && other.length == length; }
   };
 
-  types::fixedMemoryVector<Span, Constants::ActivePokemon::MAX> val{};
+  types::fixedMemoryVector<Span, Constants::ActivePokemon::MAX, Constants::ActivePokemon::MAX / 2U> val{};
 };
 }  // namespace pokesim
 
@@ -20476,10 +20580,8 @@ namespace pokesim::tags {
 struct Battle {};
 struct Side {};
 
-// Battle Turn State Tag: When a battle is in the middle of a turn
 struct BattleMidTurn {};
-// Battle Turn State Tag: When a battle has ended
-struct BattleEnded {};
+struct BattleRequestingDecision {};
 }  // namespace pokesim::tags
 
 ////////////////// END OF src/Components/Tags/BattleTags.hpp ///////////////////
@@ -20622,10 +20724,11 @@ struct EndItem {};
 ////////////////// START OF src/Components/Tags/Selection.hpp //////////////////
 
 namespace pokesim::internal::tags {
-struct BuildPokedexMove {};
-struct BuildActionMove {};
-struct CloneFromDamageRolls {};
+struct ActiveAtTurnEnd {};
 struct ApplySideDamageRollOptions {};
+struct BuildActionMove {};
+struct BuildPokedexMove {};
+struct CloneFromDamageRolls {};
 }  // namespace pokesim::internal::tags
 
 /////////////////// END OF src/Components/Tags/Selection.hpp ///////////////////
@@ -20677,11 +20780,16 @@ struct RandomFoe {};
 
 namespace added_targets::tags {
 struct TargetAlly {};
-struct UserAlly {};
+struct SourceAlly {};
 struct TargetSide {};
-struct UserSide {};
+struct SourceSide {};
 struct Field {};
 }  // namespace added_targets::tags
+
+namespace singles_target::tags {
+struct Self {};
+struct Foe {};
+}  // namespace singles_target::tags
 }  // namespace pokesim::move
 
 ////////////////// END OF src/Components/Tags/TargetTags.hpp ///////////////////
@@ -20829,10 +20937,12 @@ enum class BattleFormat : std::uint8_t {
   DOUBLES = 2U,
 };
 
+namespace internal {
 static constexpr inline std::array<BattleFormat, 2U> VALID_BATTLE_FORMATS = {
   BattleFormat::SINGLES,
   BattleFormat::DOUBLES,
 };
+}  // namespace internal
 }  // namespace pokesim
 
 /////////////////// END OF src/Types/Enums/BattleFormat.hpp ////////////////////
@@ -20969,12 +21079,14 @@ enum class TypeEffectiveness : std::uint8_t {
   SUPER_EFFECTIVE,
 };
 
+namespace internal {
 static constexpr inline std::array<TypeEffectiveness, 4U> VALID_TYPE_EFFECTIVENESS = {
   TypeEffectiveness::IMMUNE,
   TypeEffectiveness::NOT_VERY_EFFECTIVE,
   TypeEffectiveness::NEUTRAL,
   TypeEffectiveness::SUPER_EFFECTIVE,
 };
+}  // namespace internal
 }  // namespace pokesim
 
 ///////////////// END OF src/Types/Enums/TypeEffectiveness.hpp /////////////////
@@ -21310,7 +21422,18 @@ struct Position;
 struct MovePriority;
 struct Probability;
 struct RngSeed;
+struct SinglesMoveOption;
+struct DoublesMoveOption;
+struct SwitchOptions;
+struct SinglesSideOptions;
+struct DoublesSideOptions;
+struct TeamPreviewOptions;
+struct DoublesMegaEvolutionOptions;
+struct DoublesZMoveOptions;
+struct DoublesDynamaxOptions;
+struct SinglesTerastallizeOptions;
 struct SideDecision;
+struct MidTurnSideDecision;
 struct SpeedTieIndexes;
 struct SpeciesTypes;
 struct Turn;
@@ -21689,7 +21812,40 @@ void check(const internal::RandomEqualChanceStack&, const types::registry&);
 // template <> void check(const internal::RandomEventIndex&);
 
 template <>
+void check(const SinglesMoveOption&);
+
+template <>
+void check(const DoublesMoveOption&);
+
+template <>
+void check(const SwitchOptions&);
+
+template <>
+void check(const SinglesSideOptions&);
+
+template <>
+void check(const DoublesSideOptions&);
+
+template <>
+void check(const TeamPreviewOptions&);
+
+template <>
+void check(const DoublesMegaEvolutionOptions&);
+
+template <>
+void check(const DoublesZMoveOptions&);
+
+template <>
+void check(const DoublesDynamaxOptions&);
+
+template <>
+void check(const SinglesTerastallizeOptions&);
+
+template <>
 void check(const SideDecision&);
+
+template <>
+void check(const MidTurnSideDecision&);
 
 template <>
 void check(const SpeedTieIndexes&);
@@ -21756,6 +21912,9 @@ void check(const Turn&);
 
 template <>
 void check(const Winner&);
+
+template <>
+void check(const SwitchDecision&);
 
 template <>
 void check(const types::slotDecision&);
@@ -22400,6 +22559,8 @@ struct PokemonStateSetup : StateSetupBase {
     handle.emplace<StatType>(stat);
     handle.emplace<EffectiveStatType>(stat);
   };
+
+  bool isFainted();
 };
 }  // namespace internal
 }  // namespace pokesim
@@ -23579,7 +23740,12 @@ class Pokedex {
   }
 
   template <typename... T>
-  bool moveHas(dex::Move move) const {
+  bool moveHasAny(dex::Move move) const {
+    return dexRegistry.all_of<T...>(movesMap.at(move));
+  }
+
+  template <typename... T>
+  bool moveHasAll(dex::Move move) const {
     return dexRegistry.all_of<T...>(movesMap.at(move));
   }
 
@@ -25513,8 +25679,8 @@ struct SimulationSetupChecks {
 
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p1SideEntity).val == p2SideEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p2SideEntity).val == p1SideEntity);
-    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p1SideEntity).val == p2SideInfo.team.size());
-    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p2SideEntity).val == p1SideInfo.team.size());
+    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p1SideEntity).val <= p2SideInfo.team.size());
+    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p2SideEntity).val <= p1SideInfo.team.size());
 
     pokesim::debug::checkBattle(battleEntity, *registry);
   }
@@ -26760,12 +26926,30 @@ struct EntityFilter {
 
 //////////////////// END OF src/Utilities/EntityFilter.hpp /////////////////////
 
-/////////////// START OF src/SimulateTurn/ManageActionQueue.hpp ////////////////
+/////////////////// START OF src/SimulateTurn/Decisions.hpp ////////////////////
 
-// Systems
 namespace pokesim {
 class Simulation;
 struct SideDecision;
+struct MidTurnSideDecision;
+
+namespace simulate_turn {
+void setSideOptions(Simulation& simulation);
+void setTeamPreviewOptions(Simulation& simulation);
+}  // namespace simulate_turn
+
+namespace internal::simulate_turn {
+void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision);
+void resolveMidTurnDecisions(types::handle sideHandle, const MidTurnSideDecision& switchDecisions);
+}  // namespace internal::simulate_turn
+}  // namespace pokesim
+
+//////////////////// END OF src/SimulateTurn/Decisions.hpp /////////////////////
+
+/////////////// START OF src/SimulateTurn/ManageActionQueue.hpp ////////////////
+
+namespace pokesim {
+class Simulation;
 struct ActionQueue;
 struct RecycledAction;
 struct SpeedTieIndexes;
@@ -26775,15 +26959,15 @@ struct RandomEventIndex;
 }
 
 namespace internal::simulate_turn {
-void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision);
 void speedSort(types::handle handle, ActionQueue& actionQueue);
+void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue);
 void resolveSpeedTies(Simulation& simulation);
 void setSpeedTieOrder(ActionQueue& actionQueue, const SpeedTieIndexes& speedTies, RandomEventIndex randomEventIndex);
 
 void addBeforeTurnAction(ActionQueue& actionQueue);
 void addResidualAction(ActionQueue& actionQueue);
 void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction action);
-void clearActionQueue(ActionQueue& actionQueue);
+void clearActionQueue(types::handle handle, ActionQueue& actionQueue);
 }  // namespace internal::simulate_turn
 }  // namespace pokesim
 

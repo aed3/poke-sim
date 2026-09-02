@@ -64,6 +64,7 @@
 #include "RNGSeed.hpp"
 #include "RandomEventInputs.hpp"
 #include "RandomEventOutputs.hpp"
+#include "SideDecisionOptions.hpp"
 #include "SideDecisions.hpp"
 #include "SimulateTurn/ActionTags.hpp"
 #include "SimulateTurn/MoveHitStepTags.hpp"

@@ -36,6 +36,9 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
     pokemonSetup.setPostion(teamEntities.val.size());
     pokemonSetup.setSide(entity());
     pokemonSetup.setBattle(battle.val);
+    if (pokemonSetup.isFainted()) {
+      handle.registry()->get<FoesRemaining>(handle.get<FoeSide>().val).val--;
+    }
   }
 }
 

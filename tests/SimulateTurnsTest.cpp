@@ -493,4 +493,171 @@ TEST_CASE("Simulate Turn: Speed Ties", "[Simulation][SimulateTurn]") {
     REQUIRE(trueCloneCount == idealCloneCount);
   }
 }
+
+TEST_CASE("Simulate Turn: Decisions", "[Simulation][SimulateTurn]") {
+  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
+  BattleCreationInfo battleCreationInfo;
+  auto& p1Team = battleCreationInfo.sides.p1().team;
+  auto& p2Team = battleCreationInfo.sides.p2().team;
+
+  p1Team = {
+    createPredefinedPokemon(pokedex, dex::Species::EMPOLEON),
+    createPredefinedPokemon(pokedex, dex::Species::GARDEVOIR),
+    createPredefinedPokemon(pokedex, dex::Species::DRAGAPULT),
+  };
+  p2Team = {
+    createPredefinedPokemon(pokedex, dex::Species::AMPHAROS),
+    createPredefinedPokemon(pokedex, dex::Species::PANGORO),
+    createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE),
+  };
+
+  pokedex.loadForBattleInfo({battleCreationInfo});
+  BattleFormat battleFormat = GENERATE(BattleFormat::SINGLES, BattleFormat::DOUBLES);
+  bool teamPreview = GENERATE(false, true);
+  CAPTURE(battleFormat, teamPreview);
+
+  Simulation simulation{pokedex, battleFormat};
+  types::registry& registry = simulation.registry;
+
+  battleCreationInfo.turn = teamPreview ? 0U : 1U;
+  types::handle p1Side, p2Side;
+  auto setSideHandles = [&]() {
+    registry.clear();
+    simulation.createInitialStates({battleCreationInfo});
+
+    types::entity battleEntity = *registry.view<tags::Battle>().each().begin().base();
+    auto sides = registry.view<Sides>();
+    p1Side = {registry, sides.get<Sides>(battleEntity).val.p1()};
+    p2Side = {registry, sides.get<Sides>(battleEntity).val.p2()};
+  };
+
+  setSideHandles();
+
+  if (teamPreview) {
+    simulate_turn::setTeamPreviewOptions(simulation);
+    REQUIRE(p1Side.get<TeamPreviewOptions>().val == types::teamOrder{0U, 1U, 2U});
+    REQUIRE(p2Side.get<TeamPreviewOptions>().val == types::teamOrder{0U, 1U, 2U});
+
+    p1Team[0U].currentHp = Constants::PokemonCurrentHpStat::MIN;
+    p2Team[2U].currentHp = Constants::PokemonCurrentHpStat::MIN;
+
+    setSideHandles();
+
+    simulate_turn::setTeamPreviewOptions(simulation);
+    REQUIRE(p1Side.get<TeamPreviewOptions>().val == types::teamOrder{1U, 2U});
+    REQUIRE(p2Side.get<TeamPreviewOptions>().val == types::teamOrder{0U, 1U});
+  }
+  else {
+    simulate_turn::setSideOptions(simulation);
+
+    if (battleFormat == BattleFormat::SINGLES) {
+      SinglesSideOptions p1Options = p1Side.get<SinglesSideOptions>();
+      SinglesSideOptions p2Options = p2Side.get<SinglesSideOptions>();
+
+      REQUIRE(p1Options.switches.val == types::teamPositions<Slot>{Slot::P1B, Slot::P1C});
+      REQUIRE_THAT(
+        p1Options.moves,
+        Catch::Matchers::UnorderedRangeEquals(
+          types::moveSlots<SinglesMoveOption>{
+            {dex::Move::KNOCK_OFF, Slot::P2A},
+            {dex::Move::FURY_ATTACK, Slot::P2A},
+          }));
+
+      REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2B, Slot::P2C});
+      REQUIRE_THAT(
+        p2Options.moves,
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<SinglesMoveOption>{
+            {dex::Move::THUNDERBOLT, Slot::P1A},
+          }));
+    }
+    else {
+      DoublesSideOptions p1Options = p1Side.get<DoublesSideOptions>();
+      DoublesSideOptions p2Options = p2Side.get<DoublesSideOptions>();
+      REQUIRE(p1Options.switches.val == types::teamPositions<Slot>{Slot::P1C});
+      REQUIRE_THAT(
+        p1Options.moves[0U],
+        Catch::Matchers::UnorderedRangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::KNOCK_OFF, {Slot::P2A, Slot::P2B}},
+            {dex::Move::FURY_ATTACK, {Slot::P2A, Slot::P2B}},
+          }));
+      REQUIRE_THAT(
+        p1Options.moves[1U],
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::MOONBLAST, {Slot::P2A, Slot::P2B}},
+          }));
+
+      REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2C});
+      REQUIRE_THAT(
+        p2Options.moves[0U],
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::THUNDERBOLT, {Slot::P1A, Slot::P1B}},
+          }));
+      REQUIRE_THAT(
+        p2Options.moves[1U],
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::KNOCK_OFF, {Slot::P1A, Slot::P1B}},
+          }));
+    }
+
+    std::swap(p2Team[2U], p2Team[0U]);
+    p1Team[0U].moves[1U].pp = Constants::MovePp::MIN;
+    p1Team[1U].currentHp = Constants::PokemonCurrentHpStat::MIN;
+    p1Team[2U].currentHp = Constants::PokemonCurrentHpStat::MIN;
+
+    setSideHandles();
+    simulate_turn::setSideOptions(simulation);
+
+    if (battleFormat == BattleFormat::SINGLES) {
+      SinglesSideOptions p1Options = p1Side.get<SinglesSideOptions>();
+      SinglesSideOptions p2Options = p2Side.get<SinglesSideOptions>();
+
+      REQUIRE(p1Options.switches.val.empty());
+      REQUIRE_THAT(
+        p1Options.moves,
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<SinglesMoveOption>{
+            {dex::Move::FURY_ATTACK, Slot::P2A},
+          }));
+
+      REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2B, Slot::P2C});
+      REQUIRE_THAT(
+        p2Options.moves,
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<SinglesMoveOption>{
+            {dex::Move::QUIVER_DANCE, Slot::P2A},
+          }));
+    }
+    else {
+      DoublesSideOptions p1Options = p1Side.get<DoublesSideOptions>();
+      DoublesSideOptions p2Options = p2Side.get<DoublesSideOptions>();
+      REQUIRE(p1Options.switches.val.empty());
+      REQUIRE_THAT(
+        p1Options.moves[0U],
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::FURY_ATTACK, {Slot::P2A, Slot::P2B}},
+          }));
+      REQUIRE(p1Options.moves[1U].empty());
+
+      REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2C});
+      REQUIRE_THAT(
+        p2Options.moves[0U],
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::QUIVER_DANCE, {Slot::P2A}},
+          }));
+      REQUIRE_THAT(
+        p2Options.moves[1U],
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::KNOCK_OFF, {Slot::P1A}},
+          }));
+    }
+  }
+}
 }  // namespace pokesim

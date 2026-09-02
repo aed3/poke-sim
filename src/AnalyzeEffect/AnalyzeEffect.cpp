@@ -54,7 +54,7 @@ enum class EffectPresentCheck : std::uint8_t {
 };
 
 void ignoreStatusMoves(types::handle inputHandle, EffectMove move, Battle battle, const Pokedex& pokedex) {
-  if (pokedex.moveHas<move::tags::Status>(move.val)) {
+  if (pokedex.moveHasAll<move::tags::Status>(move.val)) {
     inputHandle.emplace<tags::IgnoredInput>();
     inputHandle.registry()->get_or_emplace<SkippedInputCount>(battle.val).val++;
   }

@@ -130,17 +130,17 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     REQUIRE(move.val == pokedex.getStaticValue<dex::FuryAttack::name>());
     REQUIRE(type.val == pokedex.getStaticValue<dex::FuryAttack::type>());
-    REQUIRE(pokedex.moveHas<move::tags::Physical>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::tags::Special>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::tags::Status>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::tags::Physical>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::tags::Special>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::tags::Status>(moveEnum));
     REQUIRE(accuracy.val == pokedex.getStaticValue<dex::FuryAttack::accuracy>());
     REQUIRE(power.val == pokedex.getStaticValue<dex::FuryAttack::basePower>());
     REQUIRE(pp.val == pokedex.getStaticValue<dex::FuryAttack::basePp>());
 
-    REQUIRE(pokedex.moveHas<move::tags::AnySingleTarget>(moveEnum));
-    REQUIRE(pokedex.moveHas<move::tags::Contact>(moveEnum));
-    REQUIRE(pokedex.moveHas<move::tags::VariableHitCount>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<AddedTargets>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::tags::AnySingleTarget>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::tags::Contact>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::tags::VariableHitCount>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<AddedTargets>(moveEnum));
   }
 
   {
@@ -151,25 +151,25 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     REQUIRE(move.val == pokedex.getStaticValue<dex::Thunderbolt::name>());
     REQUIRE(type.val == pokedex.getStaticValue<dex::Thunderbolt::type>());
-    REQUIRE(pokedex.moveHas<move::tags::Special>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::tags::Physical>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::tags::Status>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::tags::Special>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::tags::Physical>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::tags::Status>(moveEnum));
     REQUIRE(accuracy.val == pokedex.getStaticValue<dex::Thunderbolt::accuracy>());
     REQUIRE(power.val == pokedex.getStaticValue<dex::Thunderbolt::basePower>());
     REQUIRE(pp.val == pokedex.getStaticValue<dex::Thunderbolt::basePp>());
 
-    REQUIRE(pokedex.moveHas<move::effect::tags::Secondary>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::effect::tags::Primary>(moveEnum));
-    REQUIRE(pokedex.moveHas<move::effect::tags::MoveTarget>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::effect::tags::MoveSource>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::effect::tags::Secondary>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::effect::tags::Primary>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::effect::tags::MoveTarget>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::effect::tags::MoveSource>(moveEnum));
 
-    REQUIRE(pokedex.moveHas<status::tags::Paralysis>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<status::tags::Paralysis>(moveEnum));
     REQUIRE(
       pokedex.getMoveData<BaseEffectChance>(moveEnum).val ==
       pokedex.getStaticValue<dex::Thunderbolt::targetSecondaryEffect::chance>());
 
-    REQUIRE(pokedex.moveHas<move::tags::AnySingleTarget>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<AddedTargets>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::tags::AnySingleTarget>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<AddedTargets>(moveEnum));
   }
 
   {
@@ -180,24 +180,24 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     REQUIRE(move.val == pokedex.getStaticValue<dex::Moonblast::name>());
     REQUIRE(type.val == pokedex.getStaticValue<dex::Moonblast::type>());
-    REQUIRE(pokedex.moveHas<move::tags::Special>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::tags::Physical>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::tags::Status>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::tags::Special>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::tags::Physical>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::tags::Status>(moveEnum));
     REQUIRE(accuracy.val == pokedex.getStaticValue<dex::Moonblast::accuracy>());
     REQUIRE(power.val == pokedex.getStaticValue<dex::Moonblast::basePower>());
     REQUIRE(pp.val == pokedex.getStaticValue<dex::Moonblast::basePp>());
 
-    REQUIRE(pokedex.moveHas<move::effect::tags::Secondary>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::effect::tags::Primary>(moveEnum));
-    REQUIRE(pokedex.moveHas<move::effect::tags::MoveTarget>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::effect::tags::MoveSource>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::effect::tags::Secondary>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::effect::tags::Primary>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::effect::tags::MoveTarget>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::effect::tags::MoveSource>(moveEnum));
 
     auto [chance, spaBoost] = pokedex.getMoveData<BaseEffectChance, SpaBoost>(moveEnum);
     REQUIRE(chance.val == pokedex.getStaticValue<dex::Moonblast::targetSecondaryEffect::chance>());
     REQUIRE(spaBoost.val == pokedex.getStaticValue<dex::Moonblast::targetSecondaryEffect::spaBoost>());
 
-    REQUIRE(pokedex.moveHas<move::tags::AnySingleTarget>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<AddedTargets>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::tags::AnySingleTarget>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<AddedTargets>(moveEnum));
   }
 
   {
@@ -208,24 +208,24 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     REQUIRE(move.val == pokedex.getStaticValue<dex::WillOWisp::name>());
     REQUIRE(type.val == pokedex.getStaticValue<dex::WillOWisp::type>());
-    REQUIRE(pokedex.moveHas<move::tags::Status>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::tags::Physical>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::tags::Special>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::tags::Status>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::tags::Physical>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::tags::Special>(moveEnum));
     REQUIRE(accuracy.val == pokedex.getStaticValue<dex::WillOWisp::accuracy>());
     REQUIRE(pp.val == pokedex.getStaticValue<dex::WillOWisp::basePp>());
 
-    REQUIRE_FALSE(pokedex.moveHas<BasePower>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<BasePower>(moveEnum));
 
-    REQUIRE(pokedex.moveHas<move::effect::tags::Primary>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::effect::tags::Secondary>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<BaseEffectChance>(moveEnum));
-    REQUIRE(pokedex.moveHas<move::effect::tags::MoveTarget>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::effect::tags::MoveSource>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::effect::tags::Primary>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::effect::tags::Secondary>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<BaseEffectChance>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::effect::tags::MoveTarget>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::effect::tags::MoveSource>(moveEnum));
 
-    REQUIRE(pokedex.moveHas<status::tags::Burn>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<status::tags::Burn>(moveEnum));
 
-    REQUIRE(pokedex.moveHas<move::tags::AnySingleTarget>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<AddedTargets>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::tags::AnySingleTarget>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<AddedTargets>(moveEnum));
   }
 
   {
@@ -236,27 +236,27 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
 
     REQUIRE(move.val == pokedex.getStaticValue<dex::QuiverDance::name>());
     REQUIRE(type.val == pokedex.getStaticValue<dex::QuiverDance::type>());
-    REQUIRE(pokedex.moveHas<move::tags::Status>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::tags::Physical>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::tags::Special>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::tags::Status>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::tags::Physical>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::tags::Special>(moveEnum));
     REQUIRE(pp.val == pokedex.getStaticValue<dex::QuiverDance::basePp>());
 
-    REQUIRE_FALSE(pokedex.moveHas<BasePower>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<Accuracy>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<BasePower>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<Accuracy>(moveEnum));
 
-    REQUIRE(pokedex.moveHas<move::effect::tags::Primary>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::effect::tags::Secondary>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<BaseEffectChance>(moveEnum));
-    REQUIRE(pokedex.moveHas<move::effect::tags::MoveTarget>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<move::effect::tags::MoveSource>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::effect::tags::Primary>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::effect::tags::Secondary>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<BaseEffectChance>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::effect::tags::MoveTarget>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<move::effect::tags::MoveSource>(moveEnum));
 
     auto [spaBoost, spdBoost, speBoost] = pokedex.getMoveData<SpaBoost, SpdBoost, SpeBoost>(moveEnum);
     REQUIRE(spaBoost.val == pokedex.getStaticValue<dex::QuiverDance::targetPrimaryEffect::spaBoost>());
     REQUIRE(spdBoost.val == pokedex.getStaticValue<dex::QuiverDance::targetPrimaryEffect::spdBoost>());
     REQUIRE(speBoost.val == pokedex.getStaticValue<dex::QuiverDance::targetPrimaryEffect::speBoost>());
 
-    REQUIRE(pokedex.moveHas<move::tags::Self>(moveEnum));
-    REQUIRE_FALSE(pokedex.moveHas<AddedTargets>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<move::tags::Self>(moveEnum));
+    REQUIRE_FALSE(pokedex.moveHasAll<AddedTargets>(moveEnum));
   }
 }
 }  // namespace pokesim

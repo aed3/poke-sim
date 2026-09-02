@@ -2,14 +2,15 @@
 
 #include <Config/Require.hpp>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <initializer_list>
 #include <vector>
 
 namespace pokesim::types {
-template <typename T, std::uint8_t N>
-class fixedMemoryVector : private std::array<T, N> {
-  using base = std::array<T, N>;
+template <typename Type, std::uint8_t Size, std::uint8_t AverageSize = Size>
+class fixedMemoryVector : private std::array<Type, Size> {
+  using base = std::array<Type, Size>;
   std::uint8_t used = 0U;
 
  public:
@@ -20,31 +21,31 @@ class fixedMemoryVector : private std::array<T, N> {
 
   fixedMemoryVector() : base() {
     static_assert(
-      sizeof(fixedMemoryVector<T, N>) <= sizeof(std::vector<T>) + (sizeof(T) * N / 2U),
+      sizeof(fixedMemoryVector<Type, Size, AverageSize>) <= sizeof(std::vector<Type>) + (sizeof(Type) * AverageSize),
       "A std::vector for this type and size would be smaller.");
   }
 
-  fixedMemoryVector(std::uint8_t size, const T& value) : fixedMemoryVector() {
+  fixedMemoryVector(std::uint8_t size, const Type& value) : fixedMemoryVector() {
     for (std::uint8_t i = 0; i < size; i++) {
       push_back(value);
     }
   }
 
-  fixedMemoryVector(std::initializer_list<T> list) : fixedMemoryVector() {
-    for (const T& item : list) {
+  fixedMemoryVector(std::initializer_list<Type> list) : fixedMemoryVector() {
+    for (const Type& item : list) {
       push_back(item);
     }
   }
 
   constexpr std::uint8_t size() const noexcept { return used; }
-  constexpr std::uint8_t max_size() const noexcept { return N; }
+  constexpr std::uint8_t max_size() const noexcept { return Size; }
   constexpr bool empty() const noexcept { return used == 0U; }
 
   constexpr typename base::const_reference front() const noexcept { return *base::begin(); }
-  constexpr typename base::const_reference back() const noexcept { return N ? *(end() - 1) : *end(); }
+  constexpr typename base::const_reference back() const noexcept { return Size ? *(end() - 1) : *end(); }
 
   constexpr typename base::reference front() noexcept { return *base::begin(); }
-  constexpr typename base::reference back() noexcept { return N ? *(end() - 1) : *end(); }
+  constexpr typename base::reference back() noexcept { return Size ? *(end() - 1) : *end(); }
 
   constexpr typename base::const_reference at(std::uint8_t pos) const {
     POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
@@ -66,7 +67,7 @@ class fixedMemoryVector : private std::array<T, N> {
     return base::operator[](pos);
   }
 
-  void push_back(const T& value) {
+  void push_back(const Type& value) {
     base::at(used) = value;
     used++;
   }
@@ -87,7 +88,7 @@ class fixedMemoryVector : private std::array<T, N> {
     used++;
   }
 
-  bool operator==(const fixedMemoryVector<T, N>& other) const noexcept {
+  constexpr bool operator==(const fixedMemoryVector<Type, Size, AverageSize>& other) const noexcept {
     return used == other.used && std::equal(begin(), end(), other.begin());
   }
 

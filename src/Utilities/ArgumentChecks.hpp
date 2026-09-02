@@ -89,7 +89,18 @@ struct Position;
 struct MovePriority;
 struct Probability;
 struct RngSeed;
+struct SinglesMoveOption;
+struct DoublesMoveOption;
+struct SwitchOptions;
+struct SinglesSideOptions;
+struct DoublesSideOptions;
+struct TeamPreviewOptions;
+struct DoublesMegaEvolutionOptions;
+struct DoublesZMoveOptions;
+struct DoublesDynamaxOptions;
+struct SinglesTerastallizeOptions;
 struct SideDecision;
+struct MidTurnSideDecision;
 struct SpeedTieIndexes;
 struct SpeciesTypes;
 struct Turn;
@@ -468,7 +479,40 @@ void check(const internal::RandomEqualChanceStack&, const types::registry&);
 // template <> void check(const internal::RandomEventIndex&);
 
 template <>
+void check(const SinglesMoveOption&);
+
+template <>
+void check(const DoublesMoveOption&);
+
+template <>
+void check(const SwitchOptions&);
+
+template <>
+void check(const SinglesSideOptions&);
+
+template <>
+void check(const DoublesSideOptions&);
+
+template <>
+void check(const TeamPreviewOptions&);
+
+template <>
+void check(const DoublesMegaEvolutionOptions&);
+
+template <>
+void check(const DoublesZMoveOptions&);
+
+template <>
+void check(const DoublesDynamaxOptions&);
+
+template <>
+void check(const SinglesTerastallizeOptions&);
+
+template <>
 void check(const SideDecision&);
+
+template <>
+void check(const MidTurnSideDecision&);
 
 template <>
 void check(const SpeedTieIndexes&);
@@ -535,6 +579,9 @@ void check(const Turn&);
 
 template <>
 void check(const Winner&);
+
+template <>
+void check(const SwitchDecision&);
 
 template <>
 void check(const types::slotDecision&);

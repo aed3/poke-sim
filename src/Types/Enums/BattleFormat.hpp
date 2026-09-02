@@ -10,8 +10,10 @@ enum class BattleFormat : std::uint8_t {
   DOUBLES = 2U,
 };
 
+namespace internal {
 static constexpr inline std::array<BattleFormat, 2U> VALID_BATTLE_FORMATS = {
   BattleFormat::SINGLES,
   BattleFormat::DOUBLES,
 };
+}  // namespace internal
 }  // namespace pokesim

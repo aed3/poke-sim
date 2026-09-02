@@ -135,4 +135,8 @@ void PokemonStateSetup::setIVs(
 void PokemonStateSetup::setIVs(const Ivs& ivs) {
   handle.emplace<Ivs>(ivs);
 }
+
+bool PokemonStateSetup::isFainted() {
+  return handle.all_of<pokesim::tags::Fainted>();
+}
 }  // namespace pokesim::internal

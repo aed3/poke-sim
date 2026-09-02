@@ -29,6 +29,22 @@ template <typename List, typename Value>
 bool listContains(const List& list, const Value& value) {
   return std::find(list.begin(), list.end(), value) != list.end();
 }
+
+template <typename List>
+bool listHasUniqueValues(const List& list) {
+  using size = std::invoke_result_t<decltype(&List::size), List>;
+  for (size i = 1U; i < list.size(); i++) {
+    const auto& value = list[i - 1U];
+    for (size j = i; j < list.size(); j++) {
+      if (value == list[j]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 template <typename Tag>
 struct HasTagFromEnum {
   static void run(types::entity entity, const types::registry& registry, bool& entityHasTag) {
@@ -81,7 +97,17 @@ void checkBaseStat(types::baseStat stat) {
 }
 
 void checkSlot(Slot slot) {
-  POKESIM_REQUIRE_NM(slot != Slot::NONE);
+  POKESIM_REQUIRE_NM(listContains(internal::VALID_SLOTS, slot));
+}
+
+void checkActiveSlot(Slot slot) {
+  POKESIM_REQUIRE_NM(slot == Slot::P1A || slot == Slot::P1B || slot == Slot::P2A || slot == Slot::P2B);
+}
+
+void checkInactiveSlot(Slot slot) {
+  checkSlot(slot);
+  POKESIM_REQUIRE_NM(slot != Slot::P1A);
+  POKESIM_REQUIRE_NM(slot != Slot::P2A);
 }
 
 void checkPlayerSideId(PlayerSideId sideId) {
@@ -103,8 +129,9 @@ void checkProbability(types::probability probability) {
 void checkTeamOrder(const types::teamOrder& teamOrder) {
   checkBounds<Constants::TeamSize>(teamOrder.size());
   for (types::teamPositionIndex position : teamOrder) {
-    checkBounds<Constants::TeamSize>(position);
+    POKESIM_REQUIRE_NM(position < teamOrder.size());
   }
+  listHasUniqueValues(teamOrder);
 }
 
 void checkAction(types::entity actionEntity, const types::registry& registry) {
@@ -349,7 +376,7 @@ void check(const Accuracy& accuracy) {
 
 template <>
 void check(const ActionQueueItem& actionQueueItem) {
-  POKESIM_REQUIRE_NM(listContains(VALID_ACTION_ORDERS, actionQueueItem.order));
+  POKESIM_REQUIRE_NM(listContains(internal::VALID_ACTION_ORDERS, actionQueueItem.order));
   checkBounds<Constants::MovePriority>(actionQueueItem.priority);
   checkStat(actionQueueItem.speed);
 
@@ -368,7 +395,7 @@ void check(const ActionQueue& actionQueue) {
 
 template <>
 void check(const AddedTargets& addedTargets) {
-  POKESIM_REQUIRE_NM(listContains(VALID_ADDED_TARGET_OPTIONS, addedTargets.val));
+  POKESIM_REQUIRE_NM(listContains(internal::VALID_ADDED_TARGET_OPTIONS, addedTargets.val));
 }
 
 template <>
@@ -556,7 +583,7 @@ void check(const Damage& damage) {
 
 template <>
 void check(const DamageRollModifiers& modifiers) {
-  POKESIM_REQUIRE_NM(listContains(VALID_STAB_BOOST_KINDS, modifiers.stab));
+  POKESIM_REQUIRE_NM(listContains(internal::VALID_STAB_BOOST_KINDS, modifiers.stab));
   checkBounds<Constants::TypeEffectivenessShift>(modifiers.typeEffectiveness);
 }
 
@@ -653,6 +680,7 @@ void check(const CurrentActionMovesAsSource& moves, const types::registry& regis
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }
+  listHasUniqueValues(moves.val);
 }
 
 template <>
@@ -661,6 +689,7 @@ void check(const CurrentActionMovesAsTarget& moves, const types::registry& regis
   for (types::entity moveEntity : moves.val) {
     checkActionMove(moveEntity, registry);
   }
+  listHasUniqueValues(moves.val);
 }
 
 template <>
@@ -679,6 +708,7 @@ void check(const CurrentEffectsAsSource& effects, const types::registry& registr
   for (types::entity effect : effects.val) {
     types::registry::checkEntity(effect, registry);
   }
+  listHasUniqueValues(effects.val);
 }
 
 template <>
@@ -687,6 +717,7 @@ void check(const CurrentEffectsAsTarget& effects, const types::registry& registr
   for (types::entity effect : effects.val) {
     types::registry::checkEntity(effect, registry);
   }
+  listHasUniqueValues(effects.val);
 }
 
 template <>
@@ -694,6 +725,7 @@ void check(const FaintQueue& faintQueue, const types::registry& registry) {
   for (types::entity pokemon : faintQueue.val) {
     checkPokemon(pokemon, registry);
   }
+  listHasUniqueValues(faintQueue.val);
 }
 
 template <>
@@ -736,6 +768,7 @@ void check(const Sides& sides, const types::registry& registry) {
   for (types::entity sideEntity : sides.val) {
     checkSide(sideEntity, registry);
   }
+  listHasUniqueValues(sides.val);
 }
 
 template <>
@@ -744,6 +777,7 @@ void check(const Team& team, const types::registry& registry) {
   for (types::entity pokemonEntity : team.val) {
     checkPokemon(pokemonEntity, registry);
   }
+  listHasUniqueValues(team.val);
 }
 
 template <>
@@ -1026,6 +1060,96 @@ void check(const internal::RandomEqualChanceStack& randomEqualChanceStack, const
 }
 
 template <>
+void check(const SinglesMoveOption& singlesMoveOption) {
+  check(MoveName{singlesMoveOption.move});
+  checkActiveSlot(singlesMoveOption.target);
+}
+
+template <>
+void check(const DoublesMoveOption& doublesMoveOption) {
+  check(MoveName{doublesMoveOption.move});
+  const types::targets<Slot>& targets = doublesMoveOption.possibleTargets;
+  POKESIM_REQUIRE_NM(!targets.empty());
+  for (Slot slot : targets) {
+    checkActiveSlot(slot);
+  }
+  POKESIM_REQUIRE_NM(listHasUniqueValues(targets));
+}
+
+template <>
+void check(const SwitchOptions& switchOptions) {
+  POKESIM_REQUIRE_NM(!switchOptions.val.empty());
+  for (Slot slot : switchOptions.val) {
+    checkInactiveSlot(slot);
+  }
+}
+
+template <>
+void check(const SinglesSideOptions& singlesSlotOptions) {
+  POKESIM_REQUIRE_NM(!singlesSlotOptions.moves.empty());
+  for (const SinglesMoveOption& moveDecision : singlesSlotOptions.moves) {
+    check(moveDecision);
+  }
+
+  // Not using the type's check function as that requires there to be a switch option.
+  for (Slot slot : singlesSlotOptions.switches.val) {
+    checkInactiveSlot(slot);
+  }
+}
+
+template <>
+void check(const DoublesSideOptions& doublesSideOptions) {
+  POKESIM_REQUIRE_NM(!doublesSideOptions.moves.empty());
+  for (const auto& slotMoveOptions : doublesSideOptions.moves) {
+    for (const DoublesMoveOption& moveDecision : slotMoveOptions) {
+      check(moveDecision);
+    }
+  }
+
+  // Not using the type's check function as that requires there to be a switch option.
+  for (Slot slot : doublesSideOptions.switches.val) {
+    checkInactiveSlot(slot);
+  }
+}
+
+template <>
+void check(const TeamPreviewOptions& teamPreviewOptions) {
+  checkTeamOrder(teamPreviewOptions.val);
+}
+
+template <>
+void check(const DoublesMegaEvolutionOptions& options) {
+  POKESIM_REQUIRE_NM(!options.val.empty());
+  for (Slot slot : options.val) {
+    checkActiveSlot(slot);
+  }
+}
+
+template <>
+void check(const DoublesZMoveOptions& options) {
+  POKESIM_REQUIRE_NM(!options.val.empty());
+  for (Slot slot : options.val) {
+    checkActiveSlot(slot);
+  }
+}
+
+template <>
+void check(const DoublesDynamaxOptions& options) {
+  POKESIM_REQUIRE_NM(!options.val.empty());
+  for (Slot slot : options.val) {
+    checkActiveSlot(slot);
+  }
+}
+
+template <>
+void check(const SinglesTerastallizeOptions& options) {
+  POKESIM_REQUIRE_NM(!options.val.empty());
+  for (Slot slot : options.val) {
+    checkActiveSlot(slot);
+  }
+}
+
+template <>
 void check(const SideDecision& sideDecision) {
   checkPlayerSideId(sideDecision.sideId);
   POKESIM_REQUIRE(!sideDecision.decisions.valueless_by_exception(), "Decisions must be non-empty.");
@@ -1051,6 +1175,20 @@ void check(const SideDecision& sideDecision) {
 }
 
 template <>
+void check(const MidTurnSideDecision& midTurnSideDecision) {
+  POKESIM_REQUIRE_NM(!midTurnSideDecision.val.empty());
+
+  types::fixedMemoryVector<Slot, Constants::ActivePokemon::MAX> foundSlots;
+  for (const SwitchDecision& decision : midTurnSideDecision.val) {
+    check(decision);
+    POKESIM_REQUIRE_NM(!listContains(foundSlots, decision.sourceSlot));
+    POKESIM_REQUIRE_NM(!listContains(foundSlots, decision.targetSlot));
+    foundSlots.push_back(decision.sourceSlot);
+    foundSlots.push_back(decision.targetSlot);
+  }
+}
+
+template <>
 void check(const SpeedTieIndexes& speedTieIndexes) {
   checkBounds<Constants::ActivePokemon>(speedTieIndexes.val.size());
   types::activePokemonIndex total = 0U;
@@ -1063,6 +1201,7 @@ void check(const SpeedTieIndexes& speedTieIndexes) {
     total += span.length;
   }
   checkBounds<Constants::ActivePokemon>(total);
+  listHasUniqueValues(speedTieIndexes.val);
 }
 
 template <>
@@ -1075,6 +1214,7 @@ void check(const simulate_turn::TurnOutcomeBattles& teamOutcomeBattles, const ty
   for (types::entity entity : teamOutcomeBattles.val) {
     checkBattle(entity, registry);
   }
+  listHasUniqueValues(teamOutcomeBattles.val);
 }
 
 template <>
@@ -1090,6 +1230,7 @@ void check(const calc_damage::UsesUntilKo& usesUntilKo) {
     totalDamageRollsIncluded += useUntilKo.damageRollsIncluded;
     lastHits = useUntilKo.hits;
   }
+  listHasUniqueValues(usesUntilKo.val);
 
   POKESIM_REQUIRE_NM(usesUntilKo.minUses() == usesUntilKo.val.front());
   POKESIM_REQUIRE_NM(usesUntilKo.maxUses() == usesUntilKo.val.back());
@@ -1194,6 +1335,16 @@ void check(const Winner& winner) {
 }
 
 template <>
+void check(const SwitchDecision& switchDecision) {
+  Slot source = switchDecision.sourceSlot;
+  Slot target = switchDecision.targetSlot;
+  checkActiveSlot(source);
+  checkInactiveSlot(target);
+  POKESIM_REQUIRE_NM(source != target);
+  POKESIM_REQUIRE(slotToSideId(source) == slotToSideId(target), "Must switch to a slot on the same side.");
+}
+
+template <>
 void check(const types::slotDecision& slotDecision) {
   checkSlot(slotDecision.sourceSlot());
   checkSlot(slotDecision.targetSlot());
@@ -1215,16 +1366,13 @@ void check(const types::slotDecision& slotDecision) {
   if (itemDecision) check(ItemName{itemDecision->item});
 
   if (switchDecision) {
-    Slot source = switchDecision->sourceSlot;
-    Slot target = switchDecision->targetSlot;
-    POKESIM_REQUIRE(slotToSideId(source) == slotToSideId(target), "Must switch to a slot on the same side.");
-    POKESIM_REQUIRE(target != Slot::P1A && target != Slot::P2A, "Cannot switch to an active slot.");
+    check(*switchDecision);
   }
 }
 
 template <>
 void check(const DamageRollKind& damageRollKind) {
-  if (listContains(VALID_DAMAGE_ROLL_KINDS, damageRollKind)) {
+  if (listContains(internal::VALID_DAMAGE_ROLL_KINDS, damageRollKind)) {
     return;
   }
 
@@ -1237,7 +1385,7 @@ void check(const DamageRollKind& damageRollKind) {
   POKESIM_REQUIRE_NM(hasAverage || hasMax || hasMin || hasAll);
   using DamageRollKindBase = std::underlying_type_t<DamageRollKind>;
   DamageRollKindBase binaryValue = 0U;
-  for (DamageRollKind kind : VALID_DAMAGE_ROLL_KINDS) {
+  for (DamageRollKind kind : internal::VALID_DAMAGE_ROLL_KINDS) {
     binaryValue |= (DamageRollKindBase)kind;
   }
 

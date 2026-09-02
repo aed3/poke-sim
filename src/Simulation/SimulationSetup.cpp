@@ -270,7 +270,7 @@ void createInitialPokemon(
 
   pokemonSetup.setCurrentHp(pokemonInfo.currentHp.value_or(hp));
 
-  if (pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == Constants::PokemonCurrentHpStat::MIN) {
+  if (pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp <= Constants::PokemonCurrentHpStat::MIN) {
     pokemonSetup.setProperty<tags::Fainted>();
   }
 
@@ -359,7 +359,7 @@ void createInitialSide(
 
     bool battleStarted = battleInfo.turn > Constants::TurnCount::MIN;
     bool inActiveSlot = (simulation->isBattleFormat(BattleFormat::SINGLES) ? 1U : 2U) > i;
-    bool isFainted = pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp == Constants::PokemonCurrentHpStat::MIN;
+    bool isFainted = pokemonInfo.currentHp.has_value() && pokemonInfo.currentHp <= Constants::PokemonCurrentHpStat::MIN;
     if (battleStarted && inActiveSlot && !isFainted) {
       pokemonSetup.setProperty<tags::ActivePokemon>();
     }
