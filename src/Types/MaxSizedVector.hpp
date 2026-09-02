@@ -31,6 +31,26 @@ class maxSizedVector : public std::vector<T> {
     }
   }
 
+  constexpr typename base::const_reference at(size_type pos) const {
+    POKESIM_REQUIRE(pos < size(), "Accessing out of bounds element.");
+    return base::at(pos);
+  }
+
+  constexpr typename base::const_reference operator[](size_type pos) const {
+    POKESIM_REQUIRE(pos < size(), "Accessing out of bounds element.");
+    return base::operator[](pos);
+  }
+
+  typename base::reference at(size_type pos) {
+    POKESIM_REQUIRE(pos < size(), "Accessing out of bounds element.");
+    return base::at(pos);
+  }
+
+  typename base::reference operator[](size_type pos) {
+    POKESIM_REQUIRE(pos < size(), "Accessing out of bounds element.");
+    return base::operator[](pos);
+  }
+
   void push_back(const T& value) {
     checkSize(base::size() + 1U);
     base::push_back(value);

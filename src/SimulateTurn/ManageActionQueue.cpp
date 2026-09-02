@@ -32,13 +32,14 @@ namespace pokesim::internal::simulate_turn {
 namespace {
 void sortAndSetSpeedTies(
   types::handle handle, ActionQueue& actionQueue, types::actionQueueIndex first, types::actionQueueIndex size) {
+  POKESIM_REQUIRE(!actionQueue.val.empty(), "The action queue cannot be empty when sorting.");
   POKESIM_REQUIRE(first + size <= actionQueue.val.size(), "The last index would have been out of bounds.");
   auto& actionQueueItems = actionQueue.val;
 
   // TODO(aed3): Test how different sorting algorithms affect speed
   std::sort(
-    &actionQueueItems[first],
-    &actionQueueItems[first + size],
+    actionQueueItems.begin() + first,
+    actionQueueItems.begin() + (first + size),
     [](const ActionQueueItem& itemA, const ActionQueueItem& itemB) { return itemA.isFasterThan(itemB); });
 
   SpeedTieIndexes speedTies;
@@ -97,7 +98,7 @@ void removeEmptySpeedTieIndexes(types::handle handle, SpeedTieIndexes& speedTies
 }  // namespace
 
 void speedSort(types::handle handle, ActionQueue& actionQueue) {
-  if (actionQueue.val.size() == 1U) {
+  if (actionQueue.val.size() <= 1U) {
     return;
   }
 

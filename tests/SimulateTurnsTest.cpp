@@ -557,19 +557,17 @@ TEST_CASE("Simulate Turn: Decisions", "[Simulation][SimulateTurn]") {
       REQUIRE(p1Options.switches.val == types::teamPositions<Slot>{Slot::P1B, Slot::P1C});
       REQUIRE_THAT(
         p1Options.moves,
-        Catch::Matchers::UnorderedRangeEquals(
-          types::moveSlots<SinglesMoveOption>{
-            {dex::Move::KNOCK_OFF, Slot::P2A},
-            {dex::Move::FURY_ATTACK, Slot::P2A},
-          }));
+        Catch::Matchers::UnorderedRangeEquals(types::moveSlots<SinglesMoveOption>{
+          {dex::Move::KNOCK_OFF, Slot::P2A},
+          {dex::Move::FURY_ATTACK, Slot::P2A},
+        }));
 
       REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2B, Slot::P2C});
       REQUIRE_THAT(
         p2Options.moves,
-        Catch::Matchers::RangeEquals(
-          types::moveSlots<SinglesMoveOption>{
-            {dex::Move::THUNDERBOLT, Slot::P1A},
-          }));
+        Catch::Matchers::RangeEquals(types::moveSlots<SinglesMoveOption>{
+          {dex::Move::THUNDERBOLT, Slot::P1A},
+        }));
     }
     else {
       DoublesSideOptions p1Options = p1Side.get<DoublesSideOptions>();
@@ -577,31 +575,27 @@ TEST_CASE("Simulate Turn: Decisions", "[Simulation][SimulateTurn]") {
       REQUIRE(p1Options.switches.val == types::teamPositions<Slot>{Slot::P1C});
       REQUIRE_THAT(
         p1Options.moves[0U],
-        Catch::Matchers::UnorderedRangeEquals(
-          types::moveSlots<DoublesMoveOption>{
-            {dex::Move::KNOCK_OFF, {Slot::P2A, Slot::P2B}},
-            {dex::Move::FURY_ATTACK, {Slot::P2A, Slot::P2B}},
-          }));
+        Catch::Matchers::UnorderedRangeEquals(types::moveSlots<DoublesMoveOption>{
+          {dex::Move::KNOCK_OFF, {Slot::P2A, Slot::P2B}},
+          {dex::Move::FURY_ATTACK, {Slot::P2A, Slot::P2B}},
+        }));
       REQUIRE_THAT(
         p1Options.moves[1U],
-        Catch::Matchers::RangeEquals(
-          types::moveSlots<DoublesMoveOption>{
-            {dex::Move::MOONBLAST, {Slot::P2A, Slot::P2B}},
-          }));
+        Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
+          {dex::Move::MOONBLAST, {Slot::P2A, Slot::P2B}},
+        }));
 
       REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2C});
       REQUIRE_THAT(
         p2Options.moves[0U],
-        Catch::Matchers::RangeEquals(
-          types::moveSlots<DoublesMoveOption>{
-            {dex::Move::THUNDERBOLT, {Slot::P1A, Slot::P1B}},
-          }));
+        Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
+          {dex::Move::THUNDERBOLT, {Slot::P1A, Slot::P1B}},
+        }));
       REQUIRE_THAT(
         p2Options.moves[1U],
-        Catch::Matchers::RangeEquals(
-          types::moveSlots<DoublesMoveOption>{
-            {dex::Move::KNOCK_OFF, {Slot::P1A, Slot::P1B}},
-          }));
+        Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
+          {dex::Move::KNOCK_OFF, {Slot::P1A, Slot::P1B}},
+        }));
     }
 
     std::swap(p2Team[2U], p2Team[0U]);
@@ -619,18 +613,16 @@ TEST_CASE("Simulate Turn: Decisions", "[Simulation][SimulateTurn]") {
       REQUIRE(p1Options.switches.val.empty());
       REQUIRE_THAT(
         p1Options.moves,
-        Catch::Matchers::RangeEquals(
-          types::moveSlots<SinglesMoveOption>{
-            {dex::Move::FURY_ATTACK, Slot::P2A},
-          }));
+        Catch::Matchers::RangeEquals(types::moveSlots<SinglesMoveOption>{
+          {dex::Move::FURY_ATTACK, Slot::P2A},
+        }));
 
       REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2B, Slot::P2C});
       REQUIRE_THAT(
         p2Options.moves,
-        Catch::Matchers::RangeEquals(
-          types::moveSlots<SinglesMoveOption>{
-            {dex::Move::QUIVER_DANCE, Slot::P2A},
-          }));
+        Catch::Matchers::RangeEquals(types::moveSlots<SinglesMoveOption>{
+          {dex::Move::QUIVER_DANCE, Slot::P2A},
+        }));
     }
     else {
       DoublesSideOptions p1Options = p1Side.get<DoublesSideOptions>();
@@ -638,25 +630,22 @@ TEST_CASE("Simulate Turn: Decisions", "[Simulation][SimulateTurn]") {
       REQUIRE(p1Options.switches.val.empty());
       REQUIRE_THAT(
         p1Options.moves[0U],
-        Catch::Matchers::RangeEquals(
-          types::moveSlots<DoublesMoveOption>{
-            {dex::Move::FURY_ATTACK, {Slot::P2A, Slot::P2B}},
-          }));
+        Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
+          {dex::Move::FURY_ATTACK, {Slot::P2A, Slot::P2B}},
+        }));
       REQUIRE(p1Options.moves[1U].empty());
 
       REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2C});
       REQUIRE_THAT(
         p2Options.moves[0U],
-        Catch::Matchers::RangeEquals(
-          types::moveSlots<DoublesMoveOption>{
-            {dex::Move::QUIVER_DANCE, {Slot::P2A}},
-          }));
+        Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
+          {dex::Move::QUIVER_DANCE, {Slot::P2A}},
+        }));
       REQUIRE_THAT(
         p2Options.moves[1U],
-        Catch::Matchers::RangeEquals(
-          types::moveSlots<DoublesMoveOption>{
-            {dex::Move::KNOCK_OFF, {Slot::P1A}},
-          }));
+        Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
+          {dex::Move::KNOCK_OFF, {Slot::P1A}},
+        }));
     }
   }
 }
