@@ -6551,7 +6551,8 @@ bool removeFailedMoveFromSource(types::registry& registry, types::entity moveEnt
   if (!moves) {
     return true;
   }
-  entt::entity* newMovesEnd = std::remove(moves->val.begin(), moves->val.end(), moveEntity);
+
+  auto* newMovesEnd = std::remove(moves->val.begin(), moves->val.end(), moveEntity);
   moves->val.pop_count(std::distance(newMovesEnd, moves->val.end()));
 
   if (moves->val.empty()) {
@@ -7818,7 +7819,7 @@ void removeUsedMoves(types::registry& registry, const MovePair& movePair, types:
     }
   }
 
-  types::entityIndex amountToRemove = 0U;
+  types::activePokemonIndex amountToRemove = 0U;
   for (types::entity move : *moves) {
     if (isEntityInMovePair(move)) {
       amountToRemove++;

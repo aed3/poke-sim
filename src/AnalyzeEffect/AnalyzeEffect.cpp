@@ -538,7 +538,7 @@ void removeUsedMoves(types::registry& registry, const MovePair& movePair, types:
     }
   }
 
-  types::entityIndex amountToRemove = 0U;
+  types::activePokemonIndex amountToRemove = 0U;
   for (types::entity move : *moves) {
     if (isEntityInMovePair(move)) {
       amountToRemove++;

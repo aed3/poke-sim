@@ -58,7 +58,8 @@ bool removeFailedMoveFromSource(types::registry& registry, types::entity moveEnt
   if (!moves) {
     return true;
   }
-  entt::entity* newMovesEnd = std::remove(moves->val.begin(), moves->val.end(), moveEntity);
+
+  auto* newMovesEnd = std::remove(moves->val.begin(), moves->val.end(), moveEntity);
   moves->val.pop_count(std::distance(newMovesEnd, moves->val.end()));
 
   if (moves->val.empty()) {
