@@ -288,6 +288,7 @@
  * src/SimulateTurn/RandomChance.hpp
  * src/Simulation/MoveHitSteps.hpp
  * src/Utilities/EntityFilter.hpp
+ * src/Battle/Helpers/InternalHelpers.hpp
  * src/SimulateTurn/Decisions.hpp
  * src/SimulateTurn/ManageActionQueue.hpp
  * src/SimulateTurn/SimulateTurnDebugChecks.hpp
@@ -18121,9 +18122,10 @@ class fixedMemoryVector : private std::array<Type, Size> {
   }
 
   template <class... Args>
-  void emplace_back(const Args&... args) {
-    base::at(used) = {args...};
+  Type& emplace_back(const Args&... args) {
+    Type& newValue = base::at(used) = {args...};
     used++;
+    return newValue;
   }
 
   constexpr bool operator==(const fixedMemoryVector<Type, Size, AverageSize>& other) const noexcept {
@@ -18845,12 +18847,6 @@ void swapEntitySlots(types::registry& registry, types::entity sideEntity, Slot s
 void swapEntitySlots(types::registry& registry, const Sides& sides, Slot slot1, Slot slot2);
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot slot);
 types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
-
-namespace internal {
-void setupActionMoveBuild(
-  types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
-  types::entity actionMoveEntity, pokesim::dex::Move move);
-}
 }  // namespace pokesim
 
 //////////////////// END OF src/Battle/Helpers/Helpers.hpp /////////////////////
@@ -18921,14 +18917,13 @@ struct DamageRollModifiers {
 };
 
 struct DamageRolls {
-  types::maxSizedVector<Damage, Constants::DamageRollCount::MAX> val{};
+  types::fixedMemoryVector<Damage, Constants::DamageRollCount::MAX> val{};
 
   DamageRolls() {}
   DamageRolls(const DamageRolls& other) : val(other.val) {}
 
   DamageRolls(const std::vector<types::damage>& list) {
     POKESIM_REQUIRE(list.size() <= Constants::DamageRollCount::MAX, "More damage rolls are being added than allowed.");
-    val.reserve((types::damageRollIndex)list.size());
     for (types::damage damage : list) {
       val.push_back({damage});
     }
@@ -19337,11 +19332,31 @@ struct FailedCurrentActionTarget {
 };
 
 struct CurrentActionMovesAsSource {
-  types::entityVector val{};
+  types::targets<types::entity> val{};
+
+  const types::entity* begin() const noexcept { return val.cbegin(); }
+  const types::entity* end() const noexcept { return val.cend(); }
 };
 
 struct CurrentActionMovesAsTarget {
+  types::entity val{};
+
+  const types::entity* begin() const noexcept { return &val; }
+  const types::entity* end() const noexcept { return std::next(begin(), 1U); }
+};
+
+struct CurrentActionMovesAsSourceExtended {
   types::entityVector val{};
+
+  auto begin() const noexcept { return val.cbegin(); }
+  auto end() const noexcept { return val.cend(); }
+};
+
+struct CurrentActionMovesAsTargetExtended {
+  types::entityVector val{};
+
+  auto begin() const noexcept { return val.cbegin(); }
+  auto end() const noexcept { return val.cend(); }
 };
 
 struct CurrentEffectSource {
@@ -19353,11 +19368,11 @@ struct CurrentEffectTarget {
 };
 
 struct CurrentEffectsAsSource {
-  types::entityVector val{};
+  types::targets<types::entity> val{};
 };
 
 struct CurrentEffectsAsTarget {
-  types::entityVector val{};
+  types::entity val{};
 };
 }  // namespace pokesim
 
@@ -19387,8 +19402,6 @@ struct CurrentActionSource {};
 namespace pokesim::analyze_effect {
 using Attacker = CurrentActionSource;
 using Defender = CurrentActionTarget;
-using UsedMovesAsAttacker = CurrentActionMovesAsSource;
-using UsedMovesAsDefender = CurrentActionMovesAsTarget;
 
 namespace tags {
 using Attacker = pokesim::tags::CurrentActionSource;
@@ -19501,8 +19514,6 @@ struct BasePower {
 namespace pokesim::calc_damage {
 using Attacker = CurrentActionSource;
 using Defender = CurrentActionTarget;
-using UsedMovesAsAttacker = CurrentActionMovesAsSource;
-using UsedMovesAsDefender = CurrentActionMovesAsTarget;
 
 namespace tags {
 using Attacker = pokesim::tags::CurrentActionSource;
@@ -19701,7 +19712,7 @@ struct Ivs {
 namespace pokesim {
 // Contains the list of pokemon that will faint at the end of the current action.
 struct FaintQueue {
-  types::maxSizedVector<types::entity, Constants::ActivePokemon::MAX> val{};
+  types::fixedMemoryVector<types::entity, Constants::ActivePokemon::MAX> val{};
 };
 }  // namespace pokesim
 
@@ -20431,7 +20442,7 @@ struct UsesUntilKo {
   };
 
  public:
-  types::maxSizedVector<Uses, Constants::DamageRollCount::MAX> val{};
+  types::fixedMemoryVector<Uses, Constants::DamageRollCount::MAX> val{};
 
   const Uses& minUses() const {
     POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
@@ -21383,6 +21394,8 @@ struct FailedCurrentActionSource;
 struct FailedCurrentActionTarget;
 struct CurrentActionMovesAsSource;
 struct CurrentActionMovesAsTarget;
+struct CurrentActionMovesAsSourceExtended;
+struct CurrentActionMovesAsTargetExtended;
 struct CurrentEffectSource;
 struct CurrentEffectTarget;
 struct CurrentEffectsAsSource;
@@ -21637,6 +21650,12 @@ void check(const CurrentActionMovesAsSource&, const types::registry&);
 
 template <>
 void check(const CurrentActionMovesAsTarget&, const types::registry&);
+
+template <>
+void check(const CurrentActionMovesAsSourceExtended&, const types::registry&);
+
+template <>
+void check(const CurrentActionMovesAsTargetExtended&, const types::registry&);
 
 template <>
 void check(const CurrentEffectSource&, const types::registry&);
@@ -25284,6 +25303,28 @@ struct Checks {
         calcDamageOptionsOnInput(simulation->calculateDamageOptions),
         analyzeEffectOptionsOnInput(simulation->analyzeEffectOptions) {}
 
+  template <typename CurrentActionMoves>
+  static types::entityVector getAllCurrentActionMovesForEntity(const types::registry* registry, types::entity entity) {
+    static constexpr bool ForSource = std::is_same_v<CurrentActionMoves, CurrentActionMovesAsSource>;
+    using CurrentActionMovesExtended =
+      std::conditional_t<ForSource, CurrentActionMovesAsSourceExtended, CurrentActionMovesAsTargetExtended>;
+
+    types::entityVector allMoves;
+    POKESIM_REQUIRE_NM(registry->all_of<CurrentActionMoves>(entity));
+    const auto& baseMoves = registry->get<CurrentActionMoves>(entity);
+    allMoves.insert(allMoves.end(), baseMoves.begin(), baseMoves.end());
+
+    const auto* extendedMoves = registry->try_get<CurrentActionMovesExtended>(entity);
+    if (extendedMoves) {
+      if constexpr (ForSource) {
+        POKESIM_REQUIRE_NM(baseMoves.val.size() == baseMoves.val.max_size());
+      }
+      allMoves.insert(allMoves.end(), extendedMoves->begin(), extendedMoves->end());
+    }
+
+    return allMoves;
+  }
+
  protected:
   const Simulation* simulation;
   const types::registry* registry;
@@ -25346,6 +25387,11 @@ struct Checks {
       }
     }
     return finalEntityCount;
+  }
+
+  template <typename CurrentActionMoves>
+  auto getAllCurrentActionMovesForEntity(types::entity entity) {
+    return getAllCurrentActionMovesForEntity<CurrentActionMoves>(registry, entity);
   }
 
   void checkPokemon(types::entity pokemonEntity) const { pokesim::debug::checkPokemon(pokemonEntity, *registry); }
@@ -25755,8 +25801,10 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::Attacker>(setupInfoAttacker));
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::Defender>(setupInfoDefender));
 
-    const auto& attackerMoves = registry->get<calc_damage::UsedMovesAsAttacker>(setupInfoAttacker).val;
-    const auto& defenderMoves = registry->get<calc_damage::UsedMovesAsDefender>(setupInfoDefender).val;
+    const auto& attackerMoves =
+      Checks::getAllCurrentActionMovesForEntity<CurrentActionMovesAsSource>(registry, setupInfoAttacker);
+    const auto& defenderMoves =
+      Checks::getAllCurrentActionMovesForEntity<CurrentActionMovesAsTarget>(registry, setupInfoDefender);
 
     POKESIM_REQUIRE_NM(std::find(attackerMoves.begin(), attackerMoves.end(), calcDamageEntity) != attackerMoves.end());
     POKESIM_REQUIRE_NM(std::find(defenderMoves.begin(), defenderMoves.end(), calcDamageEntity) != defenderMoves.end());
@@ -26929,6 +26977,38 @@ struct EntityFilter {
 
 //////////////////// END OF src/Utilities/EntityFilter.hpp /////////////////////
 
+/////////////// START OF src/Battle/Helpers/InternalHelpers.hpp ////////////////
+
+namespace pokesim::internal {
+void setupActionMoveBuild(
+  types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
+  types::entity actionMoveEntity, pokesim::dex::Move move, bool useExtended);
+
+template <
+  template <typename> typename RunStruct, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+  typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+void currentActionMovesAsSourceView(Simulation& simulation, const PassedInArgs&... passedInArgs) {
+  simulation.view<RunStruct<CurrentActionMovesAsSource>::run, TagContainer, ExcludeContainer, IncludeContainer>(
+    passedInArgs...);
+
+  simulation.view<RunStruct<CurrentActionMovesAsSourceExtended>::run, TagContainer, ExcludeContainer, IncludeContainer>(
+    passedInArgs...);
+}
+
+template <
+  template <typename> typename RunStruct, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
+  typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+void currentActionMovesAsTargetView(Simulation& simulation, const PassedInArgs&... passedInArgs) {
+  simulation.view<RunStruct<CurrentActionMovesAsTarget>::run, TagContainer, ExcludeContainer, IncludeContainer>(
+    passedInArgs...);
+
+  simulation.view<RunStruct<CurrentActionMovesAsTargetExtended>::run, TagContainer, ExcludeContainer, IncludeContainer>(
+    passedInArgs...);
+}
+}  // namespace pokesim::internal
+
+//////////////// END OF src/Battle/Helpers/InternalHelpers.hpp /////////////////
+
 /////////////////// START OF src/SimulateTurn/Decisions.hpp ////////////////////
 
 namespace pokesim {
@@ -28071,12 +28151,12 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkMoveInputs() {
-    CurrentActionMovesAsSource moves{getMoveList()};
-    if (moves.val.empty()) {
+    types::entityVector moves = getMoveList();
+    if (moves.empty()) {
       return;
     }
 
-    for (types::entity move : moves.val) {
+    for (types::entity move : moves) {
       if (has<pokesim::move::tags::Status>(move)) continue;
 
       copyEntity(move);
@@ -28085,9 +28165,8 @@ struct Checks : pokesim::debug::Checks {
       bool hasCalculateDamage = has<pokesim::tags::CalculateDamage>(move);
       bool hasAnalyzeEffect = has<pokesim::tags::AnalyzeEffect>(move);
       POKESIM_REQUIRE_NM(hasSimulateTurn || hasCalculateDamage || hasAnalyzeEffect);
+      pokesim::debug::checkActionMove(move, *registry);
     }
-
-    pokesim::debug::check(moves, *registry);
   }
 
   types::entityVector getPokemonList(bool forAttacker) const {
@@ -28120,15 +28199,8 @@ struct Checks : pokesim::debug::Checks {
         POKESIM_REQUIRE_NM(has<pokesim::tags::ActivePokemon>(pokemon));
       }
 
-      types::entityVector moves;
-      if (forAttacker) {
-        POKESIM_REQUIRE_NM(has<UsedMovesAsAttacker>(pokemon));
-        moves = registry->get<UsedMovesAsAttacker>(pokemon).val;
-      }
-      else {
-        POKESIM_REQUIRE_NM(has<UsedMovesAsDefender>(pokemon));
-        moves = registry->get<UsedMovesAsDefender>(pokemon).val;
-      }
+      types::entityVector moves = forAttacker ? getAllCurrentActionMovesForEntity<CurrentActionMovesAsSource>(pokemon)
+                                              : getAllCurrentActionMovesForEntity<CurrentActionMovesAsTarget>(pokemon);
 
       bool needsPhy = false;
       bool needsSpc = false;

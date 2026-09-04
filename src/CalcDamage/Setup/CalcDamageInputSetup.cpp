@@ -1,6 +1,6 @@
 #include "CalcDamageInputSetup.hpp"
 
-#include <Battle/Helpers/Helpers.hpp>
+#include <Battle/Helpers/InternalHelpers.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Tags/Current.hpp>
@@ -19,7 +19,7 @@ void InputSetup::setup(
   types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity, pokesim::dex::Move move) {
   types::registry& registry = *handle.registry();
 
-  setupActionMoveBuild(registry, battleEntity, sourceEntity, targetEntity, entity(), move);
+  setupActionMoveBuild(registry, battleEntity, sourceEntity, targetEntity, entity(), move, true);
 
   handle.emplace<MoveName>(move);
   handle.emplace<pokesim::tags::CurrentMoveHit>();

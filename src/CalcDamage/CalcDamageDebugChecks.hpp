@@ -86,12 +86,12 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkMoveInputs() {
-    CurrentActionMovesAsSource moves{getMoveList()};
-    if (moves.val.empty()) {
+    types::entityVector moves = getMoveList();
+    if (moves.empty()) {
       return;
     }
 
-    for (types::entity move : moves.val) {
+    for (types::entity move : moves) {
       if (has<pokesim::move::tags::Status>(move)) continue;
 
       copyEntity(move);
@@ -100,9 +100,8 @@ struct Checks : pokesim::debug::Checks {
       bool hasCalculateDamage = has<pokesim::tags::CalculateDamage>(move);
       bool hasAnalyzeEffect = has<pokesim::tags::AnalyzeEffect>(move);
       POKESIM_REQUIRE_NM(hasSimulateTurn || hasCalculateDamage || hasAnalyzeEffect);
+      pokesim::debug::checkActionMove(move, *registry);
     }
-
-    pokesim::debug::check(moves, *registry);
   }
 
   types::entityVector getPokemonList(bool forAttacker) const {
@@ -135,15 +134,8 @@ struct Checks : pokesim::debug::Checks {
         POKESIM_REQUIRE_NM(has<pokesim::tags::ActivePokemon>(pokemon));
       }
 
-      types::entityVector moves;
-      if (forAttacker) {
-        POKESIM_REQUIRE_NM(has<UsedMovesAsAttacker>(pokemon));
-        moves = registry->get<UsedMovesAsAttacker>(pokemon).val;
-      }
-      else {
-        POKESIM_REQUIRE_NM(has<UsedMovesAsDefender>(pokemon));
-        moves = registry->get<UsedMovesAsDefender>(pokemon).val;
-      }
+      types::entityVector moves = forAttacker ? getAllCurrentActionMovesForEntity<CurrentActionMovesAsSource>(pokemon)
+                                              : getAllCurrentActionMovesForEntity<CurrentActionMovesAsTarget>(pokemon);
 
       bool needsPhy = false;
       bool needsSpc = false;

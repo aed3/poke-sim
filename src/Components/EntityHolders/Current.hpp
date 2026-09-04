@@ -1,6 +1,8 @@
 #pragma once
 
+#include <Types/Constants.hpp>
 #include <Types/Entity.hpp>
+#include <Types/FixedMemoryVector.hpp>
 #include <Types/State.hpp>
 
 namespace pokesim {
@@ -35,11 +37,31 @@ struct FailedCurrentActionTarget {
 };
 
 struct CurrentActionMovesAsSource {
-  types::entityVector val{};
+  types::targets<types::entity> val{};
+
+  const types::entity* begin() const noexcept { return val.cbegin(); }
+  const types::entity* end() const noexcept { return val.cend(); }
 };
 
 struct CurrentActionMovesAsTarget {
+  types::entity val{};
+
+  const types::entity* begin() const noexcept { return &val; }
+  const types::entity* end() const noexcept { return std::next(begin(), 1U); }
+};
+
+struct CurrentActionMovesAsSourceExtended {
   types::entityVector val{};
+
+  auto begin() const noexcept { return val.cbegin(); }
+  auto end() const noexcept { return val.cend(); }
+};
+
+struct CurrentActionMovesAsTargetExtended {
+  types::entityVector val{};
+
+  auto begin() const noexcept { return val.cbegin(); }
+  auto end() const noexcept { return val.cend(); }
 };
 
 struct CurrentEffectSource {
@@ -51,10 +73,10 @@ struct CurrentEffectTarget {
 };
 
 struct CurrentEffectsAsSource {
-  types::entityVector val{};
+  types::targets<types::entity> val{};
 };
 
 struct CurrentEffectsAsTarget {
-  types::entityVector val{};
+  types::entity val{};
 };
 }  // namespace pokesim

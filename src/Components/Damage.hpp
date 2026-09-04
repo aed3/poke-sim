@@ -5,7 +5,7 @@
 #include <Types/Damage.hpp>
 #include <Types/Enums/StabBoostKind.hpp>
 #include <Types/Event.hpp>
-#include <Types/MaxSizedVector.hpp>
+#include <Types/FixedMemoryVector.hpp>
 #include <vector>
 
 namespace pokesim {
@@ -27,14 +27,13 @@ struct DamageRollModifiers {
 };
 
 struct DamageRolls {
-  types::maxSizedVector<Damage, Constants::DamageRollCount::MAX> val{};
+  types::fixedMemoryVector<Damage, Constants::DamageRollCount::MAX> val{};
 
   DamageRolls() {}
   DamageRolls(const DamageRolls& other) : val(other.val) {}
 
   DamageRolls(const std::vector<types::damage>& list) {
     POKESIM_REQUIRE(list.size() <= Constants::DamageRollCount::MAX, "More damage rolls are being added than allowed.");
-    val.reserve((types::damageRollIndex)list.size());
     for (types::damage damage : list) {
       val.push_back({damage});
     }

@@ -42,6 +42,8 @@ struct FailedCurrentActionSource;
 struct FailedCurrentActionTarget;
 struct CurrentActionMovesAsSource;
 struct CurrentActionMovesAsTarget;
+struct CurrentActionMovesAsSourceExtended;
+struct CurrentActionMovesAsTargetExtended;
 struct CurrentEffectSource;
 struct CurrentEffectTarget;
 struct CurrentEffectsAsSource;
@@ -296,6 +298,12 @@ void check(const CurrentActionMovesAsSource&, const types::registry&);
 
 template <>
 void check(const CurrentActionMovesAsTarget&, const types::registry&);
+
+template <>
+void check(const CurrentActionMovesAsSourceExtended&, const types::registry&);
+
+template <>
+void check(const CurrentActionMovesAsTargetExtended&, const types::registry&);
 
 template <>
 void check(const CurrentEffectSource&, const types::registry&);

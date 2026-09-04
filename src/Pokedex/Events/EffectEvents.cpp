@@ -1,3 +1,4 @@
+#include <Battle/Helpers/InternalHelpers.hpp>
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Components/BaseEffectChance.hpp>
@@ -25,18 +26,22 @@
 
 namespace pokesim::dex {
 namespace {
-void damageByHpDivisor(types::handle pokemonHandle, stat::Hp hp, types::stat hpDivisor) {
-  internal::applyDamage(pokemonHandle, hp.val / hpDivisor);
+void damageByHpDivisor(types::handle handle, stat::Hp hp, types::stat hpDivisor) {
+  internal::applyDamage(handle, hp.val / hpDivisor);
 }
 
-void applyBurnModifier(types::registry& registry, const CurrentActionMovesAsSource& moves) {
-  for (types::entity move : moves.val) {
-    if (registry.all_of<move::tags::Physical, tags::CurrentMoveHit>(
-          move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
-      registry.get<DamageRollModifiers>(move).burn = true;
+template <typename CurrentActionMovesAsSourceType>
+struct ApplyBurnModifier {
+  static void run(types::handle handle, const CurrentActionMovesAsSourceType& moves) {
+    types::registry& registry = *handle.registry();
+    for (types::entity move : moves) {
+      if (registry.all_of<move::tags::Physical, tags::CurrentMoveHit>(
+            move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
+        registry.get<DamageRollModifiers>(move).burn = true;
+      }
     }
   }
-}
+};
 
 void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedDivisor, types::stat speedDividend) {
   effectiveSpe.val = effectiveSpe.val * speedDividend / speedDivisor;
@@ -64,7 +69,8 @@ void choiceLockOnDisableMove(
 }  // namespace
 
 void Burn::onSetDamageRollModifiers(Simulation& simulation) {
-  simulation.view<applyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<dex::Guts> */>();
+  internal::currentActionMovesAsSourceView<ApplyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<dex::Guts> */>(
+    simulation);
 }
 
 void Burn::onResidual(Simulation& simulation) {

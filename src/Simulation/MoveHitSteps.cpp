@@ -73,7 +73,7 @@ void setEffectSource(types::handle handle, CurrentActionSource source) {
 template <typename TargetEntityHolder>
 void setEffectTarget(types::handle handle, TargetEntityHolder target) {
   handle.emplace<CurrentEffectTarget>(target.val);
-  handle.registry()->get_or_emplace<CurrentEffectsAsTarget>(target.val).val.push_back(handle.entity());
+  handle.registry()->emplace<CurrentEffectsAsTarget>(target.val, handle.entity());
 }
 
 void runMoveEffects(Simulation& simulation) {

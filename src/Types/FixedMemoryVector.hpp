@@ -83,9 +83,10 @@ class fixedMemoryVector : private std::array<Type, Size> {
   }
 
   template <class... Args>
-  void emplace_back(const Args&... args) {
-    base::at(used) = {args...};
+  Type& emplace_back(const Args&... args) {
+    Type& newValue = base::at(used) = {args...};
     used++;
+    return newValue;
   }
 
   constexpr bool operator==(const fixedMemoryVector<Type, Size, AverageSize>& other) const noexcept {

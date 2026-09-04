@@ -44,6 +44,28 @@ struct Checks {
         calcDamageOptionsOnInput(simulation->calculateDamageOptions),
         analyzeEffectOptionsOnInput(simulation->analyzeEffectOptions) {}
 
+  template <typename CurrentActionMoves>
+  static types::entityVector getAllCurrentActionMovesForEntity(const types::registry* registry, types::entity entity) {
+    static constexpr bool ForSource = std::is_same_v<CurrentActionMoves, CurrentActionMovesAsSource>;
+    using CurrentActionMovesExtended =
+      std::conditional_t<ForSource, CurrentActionMovesAsSourceExtended, CurrentActionMovesAsTargetExtended>;
+
+    types::entityVector allMoves;
+    POKESIM_REQUIRE_NM(registry->all_of<CurrentActionMoves>(entity));
+    const auto& baseMoves = registry->get<CurrentActionMoves>(entity);
+    allMoves.insert(allMoves.end(), baseMoves.begin(), baseMoves.end());
+
+    const auto* extendedMoves = registry->try_get<CurrentActionMovesExtended>(entity);
+    if (extendedMoves) {
+      if constexpr (ForSource) {
+        POKESIM_REQUIRE_NM(baseMoves.val.size() == baseMoves.val.max_size());
+      }
+      allMoves.insert(allMoves.end(), extendedMoves->begin(), extendedMoves->end());
+    }
+
+    return allMoves;
+  }
+
  protected:
   const Simulation* simulation;
   const types::registry* registry;
@@ -106,6 +128,11 @@ struct Checks {
       }
     }
     return finalEntityCount;
+  }
+
+  template <typename CurrentActionMoves>
+  auto getAllCurrentActionMovesForEntity(types::entity entity) {
+    return getAllCurrentActionMovesForEntity<CurrentActionMoves>(registry, entity);
   }
 
   void checkPokemon(types::entity pokemonEntity) const { pokesim::debug::checkPokemon(pokemonEntity, *registry); }

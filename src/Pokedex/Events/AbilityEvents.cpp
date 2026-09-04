@@ -26,31 +26,31 @@ void staticOnDamagingHit(
   types::handle targetHandle, const CurrentActionMovesAsTarget& moves, Battle battle,
   types::percentChance chanceOfStatic, const Simulation& simulation) {
   types::registry& registry = *targetHandle.registry();
-  for (types::entity move : moves.val) {
-    if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
-      continue;
-    }
-    if (!registry.all_of<move::tags::Contact>(move)) {
-      continue;
-    }
+  types::entity move = moves.val;
 
-    types::entity source = registry.get<CurrentActionSource>(move).val;
-    /*
-    if (registry.all_of<dex::ProtectivePads>(source)) {
-      continue;
-    }
-    */
-
-    pokesim::internal::setRandomBinaryChanceFromPercentChance({registry, move}, battle, simulation, chanceOfStatic);
-
-    types::entity effectSource = targetHandle.entity();
-    types::entity effectTarget = source;
-    registry.emplace_or_replace<status::tags::Paralysis>(move);
-    registry.emplace<CurrentEffectSource>(move, effectSource);
-    registry.emplace<CurrentEffectsAsSource>(effectSource, types::entityVector{move});
-    registry.emplace<CurrentEffectTarget>(move, effectTarget);
-    registry.emplace<CurrentEffectsAsTarget>(effectTarget, types::entityVector{move});
+  if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
+    return;
   }
+  if (!registry.all_of<move::tags::Contact>(move)) {
+    return;
+  }
+
+  types::entity source = registry.get<CurrentActionSource>(move).val;
+  /*
+  if (registry.all_of<dex::ProtectivePads>(source)) {
+    return;
+  }
+  */
+
+  pokesim::internal::setRandomBinaryChanceFromPercentChance({registry, move}, battle, simulation, chanceOfStatic);
+
+  types::entity effectSource = targetHandle.entity();
+  types::entity effectTarget = source;
+  registry.emplace_or_replace<status::tags::Paralysis>(move);
+  registry.emplace<CurrentEffectSource>(move, effectSource);
+  registry.emplace<CurrentEffectsAsSource>(effectSource, decltype(CurrentEffectsAsSource::val){move});
+  registry.emplace<CurrentEffectTarget>(move, effectTarget);
+  registry.emplace<CurrentEffectsAsTarget>(effectTarget, move);
 }
 }  // namespace
 

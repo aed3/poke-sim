@@ -137,7 +137,6 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Po
 
 void calculateAllDamageRolls(
   DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
-  damageRolls.val.reserve(Constants::DamageRollCount::MAX);
   for (types::damageRollIndex i = 0U; i < Constants::DamageRollCount::MAX; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
     damageRoll.val = computeDamageRoll(damageRoll.val, i);

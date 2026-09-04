@@ -21,10 +21,4 @@ void swapEntitySlots(types::registry& registry, types::entity sideEntity, Slot s
 void swapEntitySlots(types::registry& registry, const Sides& sides, Slot slot1, Slot slot2);
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot slot);
 types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
-
-namespace internal {
-void setupActionMoveBuild(
-  types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
-  types::entity actionMoveEntity, pokesim::dex::Move move);
-}
 }  // namespace pokesim

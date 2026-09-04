@@ -12,7 +12,9 @@
 #include <Components/AnalyzeEffect/AnalyzeEffectInputs.hpp>
 #include <Components/Boosts.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
+#include <Components/EVsIVs.hpp>
 #include <Components/EntityHolders/Battle.hpp>
+#include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
@@ -39,6 +41,7 @@
 #include <Components/RNGSeed.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/ItemPropertyTags.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Turn.hpp>
 #include <Config/Require.hpp>
@@ -457,8 +460,10 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::Attacker>(setupInfoAttacker));
     POKESIM_REQUIRE_NM(registry->all_of<calc_damage::tags::Defender>(setupInfoDefender));
 
-    const auto& attackerMoves = registry->get<calc_damage::UsedMovesAsAttacker>(setupInfoAttacker).val;
-    const auto& defenderMoves = registry->get<calc_damage::UsedMovesAsDefender>(setupInfoDefender).val;
+    const auto& attackerMoves =
+      Checks::getAllCurrentActionMovesForEntity<CurrentActionMovesAsSource>(registry, setupInfoAttacker);
+    const auto& defenderMoves =
+      Checks::getAllCurrentActionMovesForEntity<CurrentActionMovesAsTarget>(registry, setupInfoDefender);
 
     POKESIM_REQUIRE_NM(std::find(attackerMoves.begin(), attackerMoves.end(), calcDamageEntity) != attackerMoves.end());
     POKESIM_REQUIRE_NM(std::find(defenderMoves.begin(), defenderMoves.end(), calcDamageEntity) != defenderMoves.end());

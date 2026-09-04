@@ -170,6 +170,15 @@ void checkRandomChanceEvents(const internal::RandomEventChances<RANDOM_OPTIONS>&
     checkPercentChance(chance);
   }
 }
+
+template <typename ActionMoveList>
+void checkActionMoveList(const ActionMoveList& actionMoveList, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(!actionMoveList.empty());
+  for (types::entity moveEntity : actionMoveList) {
+    checkActionMove(moveEntity, registry);
+  }
+  listHasUniqueValues(actionMoveList);
+}
 }  // namespace
 
 void checkBattle(types::entity battleEntity, const types::registry& registry) {
@@ -309,6 +318,11 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
   bool hasStatus = false;
   dex::forEachStatus<HasTagFromEnum>(pokemonEntity, registry, hasStatus);
   POKESIM_REQUIRE_NM(hasStatus == has<tags::HasStatus>(pokemonEntity, registry));
+
+  if (has<tags::SimulateTurn>(pokemonEntity, registry)) {
+    POKESIM_REQUIRE_NM(!has<CurrentActionMovesAsSourceExtended>(pokemonEntity, registry));
+    POKESIM_REQUIRE_NM(!has<CurrentActionMovesAsTargetExtended>(pokemonEntity, registry));
+  }
 
   check(moveSlots);
 }
@@ -676,20 +690,22 @@ void check(const FailedCurrentActionTarget& failedTarget, const types::registry&
 
 template <>
 void check(const CurrentActionMovesAsSource& moves, const types::registry& registry) {
-  POKESIM_REQUIRE_NM(!moves.val.empty());
-  for (types::entity moveEntity : moves.val) {
-    checkActionMove(moveEntity, registry);
-  }
-  listHasUniqueValues(moves.val);
+  checkActionMoveList(moves.val, registry);
 }
 
 template <>
 void check(const CurrentActionMovesAsTarget& moves, const types::registry& registry) {
-  POKESIM_REQUIRE_NM(!moves.val.empty());
-  for (types::entity moveEntity : moves.val) {
-    checkActionMove(moveEntity, registry);
-  }
-  listHasUniqueValues(moves.val);
+  checkActionMove(moves.val, registry);
+}
+
+template <>
+void check(const CurrentActionMovesAsSourceExtended& moves, const types::registry& registry) {
+  checkActionMoveList(moves.val, registry);
+}
+
+template <>
+void check(const CurrentActionMovesAsTargetExtended& moves, const types::registry& registry) {
+  checkActionMoveList(moves.val, registry);
 }
 
 template <>
@@ -713,11 +729,7 @@ void check(const CurrentEffectsAsSource& effects, const types::registry& registr
 
 template <>
 void check(const CurrentEffectsAsTarget& effects, const types::registry& registry) {
-  POKESIM_REQUIRE_NM(!effects.val.empty());
-  for (types::entity effect : effects.val) {
-    types::registry::checkEntity(effect, registry);
-  }
-  listHasUniqueValues(effects.val);
+  types::registry::checkEntity(effects.val, registry);
 }
 
 template <>

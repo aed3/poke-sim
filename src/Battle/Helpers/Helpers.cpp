@@ -22,6 +22,8 @@
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
 
+#include "InternalHelpers.hpp"
+
 namespace pokesim {
 namespace {
 void checkSlot(Slot slot) {
@@ -140,9 +142,10 @@ types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move) 
   return 0U;
 }
 
-void internal::setupActionMoveBuild(
+namespace internal {
+void setupActionMoveBuild(
   types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
-  types::entity actionMoveEntity, pokesim::dex::Move move) {
+  types::entity actionMoveEntity, pokesim::dex::Move move, bool useExtended) {
   types::handle actionMoveHandle{registry, actionMoveEntity};
 
   dex::emplaceTagFromEnum(move, actionMoveHandle);
@@ -152,7 +155,31 @@ void internal::setupActionMoveBuild(
   actionMoveHandle.emplace<pokesim::internal::tags::BuildActionMove>();
   actionMoveHandle.emplace<pokesim::tags::CurrentActionMove>();
 
-  registry.get_or_emplace<CurrentActionMovesAsTarget>(targetEntity).val.push_back(actionMoveEntity);
-  registry.get_or_emplace<CurrentActionMovesAsSource>(sourceEntity).val.push_back(actionMoveEntity);
+  bool addBaseTargetMoves = !useExtended;
+  bool addBaseSourceMoves = !useExtended;
+  if (useExtended) {
+    if (registry.all_of<CurrentActionMovesAsTarget>(targetEntity)) {
+      registry.get_or_emplace<CurrentActionMovesAsTargetExtended>(targetEntity).val.push_back(actionMoveEntity);
+    }
+    else {
+      addBaseTargetMoves = true;
+    }
+
+    auto& currentMoves = registry.get_or_emplace<CurrentActionMovesAsSource>(sourceEntity);
+    if (currentMoves.val.size() == currentMoves.val.max_size()) {
+      registry.get_or_emplace<CurrentActionMovesAsSourceExtended>(sourceEntity).val.push_back(actionMoveEntity);
+    }
+    else {
+      currentMoves.val.push_back(actionMoveEntity);
+    }
+  }
+
+  if (addBaseTargetMoves) {
+    registry.emplace<CurrentActionMovesAsTarget>(targetEntity, actionMoveEntity);
+  }
+  if (addBaseSourceMoves) {
+    registry.get_or_emplace<CurrentActionMovesAsSource>(sourceEntity).val.push_back(actionMoveEntity);
+  }
 }
+}  // namespace internal
 }  // namespace pokesim

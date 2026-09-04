@@ -2,6 +2,7 @@
 
 #include <Battle/Clone/Clone.hpp>
 #include <Battle/Helpers/Helpers.hpp>
+#include <Battle/Helpers/InternalHelpers.hpp>
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <CalcDamage/Helpers.hpp>
@@ -161,7 +162,14 @@ void setActionMoveReferenceComponents(
   }
 
   MoveName move = registry.get<MoveName>(action.action);
-  internal::setupActionMoveBuild(registry, battleHandle.entity(), action.source, target, actionMove.val, move.val);
+  internal::setupActionMoveBuild(
+    registry,
+    battleHandle.entity(),
+    action.source,
+    target,
+    actionMove.val,
+    move.val,
+    false);
 }
 
 void setActionMoveData(Simulation& simulation) {
@@ -294,7 +302,10 @@ void runBeforeTurnAction(Simulation&) {
 
 void setFainting(types::registry& registry, FaintQueue& faintQueue) {
   types::entity pokemon = faintQueue.val.front();
-  faintQueue.val.erase(faintQueue.val.begin());
+  for (types::activePokemonIndex i = 1U; i < faintQueue.val.size(); i++) {
+    faintQueue.val[i - 1U] = faintQueue.val[i];
+  }
+  faintQueue.val.pop_back();
   registry.emplace<pokesim::tags::Fainting>(pokemon);
   registry.get<FoesRemaining>(registry.get<FoeSide>(registry.get<Side>(pokemon).val).val).val--;
 }

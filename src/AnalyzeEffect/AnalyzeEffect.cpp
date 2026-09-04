@@ -2,6 +2,7 @@
 
 #include <Battle/Clone/Clone.hpp>
 #include <Battle/Helpers/Helpers.hpp>
+#include <Battle/Helpers/InternalHelpers.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <CalcDamage/CalcDamage.hpp>
 #include <CalcDamage/Helpers.hpp>
@@ -277,7 +278,7 @@ types::entity createAnalyzeEffectMove(
   types::entity defenderEntity) {
   types::entity moveEntity = registry.create();
 
-  internal::setupActionMoveBuild(registry, battleEntity, attackerEntity, defenderEntity, moveEntity, move);
+  internal::setupActionMoveBuild(registry, battleEntity, attackerEntity, defenderEntity, moveEntity, move, true);
 
   registry.emplace<MoveName>(moveEntity, move);
   registry.emplace<pokesim::tags::CurrentMoveHit>(moveEntity);
@@ -507,40 +508,66 @@ void restoreInputs(
   effectTarget.val = originalEntities.effectTarget;
 }
 
-template <typename UsedMovesType>
+template <typename UsedMoves>
 void removeUsedMoves(types::registry& registry, const MovePair& movePair, types::entity pokemon) {
-  UsedMovesType* moves = registry.try_get<UsedMovesType>(pokemon);
+  static constexpr bool ForAttacker = std::is_same_v<UsedMoves, CurrentActionMovesAsSource>;
+  using UsedMovesExtended =
+    std::conditional_t<ForAttacker, CurrentActionMovesAsSourceExtended, CurrentActionMovesAsTargetExtended>;
+  UsedMoves* moves = registry.try_get<UsedMoves>(pokemon);
+  UsedMovesExtended* movesExtended = registry.try_get<UsedMovesExtended>(pokemon);
+
+  POKESIM_REQUIRE(
+    movesExtended != nullptr ? moves != nullptr : true,
+    "The extended version of the list should only exist if the shorter ones does too");
 
   if (moves == nullptr) {
     return;
   }
 
-  auto end = moves->val.end();
-  end = std::remove_if(moves->val.begin(), end, [&movePair](types::entity entity) {
+  auto isEntityInMovePair = [&movePair](types::entity entity) {
     return entity == movePair.original || entity == movePair.copy;
-  });
+  };
 
-  moves->val.resize(end - moves->val.begin());
-  if (moves->val.empty()) {
-    registry.remove<UsedMovesType>(pokemon);
-    if constexpr (std::is_same_v<UsedMovesType, UsedMovesAsAttacker>) {
+  if (movesExtended) {
+    auto end = movesExtended->val.end();
+    end = std::remove_if(movesExtended->val.begin(), end, isEntityInMovePair);
+
+    movesExtended->val.resize(std::distance(movesExtended->val.begin(), end));
+    if (movesExtended->val.empty()) {
+      registry.remove<UsedMovesExtended>(pokemon);
+    }
+  }
+
+  types::entityIndex amountToRemove = 0U;
+  for (types::entity move : *moves) {
+    if (isEntityInMovePair(move)) {
+      amountToRemove++;
+    }
+  }
+
+  if (amountToRemove == std::distance(moves->begin(), moves->end())) {
+    registry.remove<UsedMoves>(pokemon);
+    if constexpr (ForAttacker) {
       registry.remove<tags::Attacker>(pokemon);
     }
     else {
       registry.remove<tags::Defender>(pokemon);
     }
   }
+  else if constexpr (ForAttacker) {
+    moves->val.pop_count(amountToRemove);
+  }
 }
 
 void removeMovePairs(types::handle inputHandle, MovePair& movePair, Attacker& attacker, Defender& defender) {
   types::registry& registry = *inputHandle.registry();
-  removeUsedMoves<UsedMovesAsAttacker>(registry, movePair, attacker.val);
-  removeUsedMoves<UsedMovesAsDefender>(registry, movePair, defender.val);
+  removeUsedMoves<CurrentActionMovesAsSource>(registry, movePair, attacker.val);
+  removeUsedMoves<CurrentActionMovesAsTarget>(registry, movePair, defender.val);
 
   const OriginalInputEntities* original = inputHandle.try_get<OriginalInputEntities>();
   if (original) {
-    removeUsedMoves<UsedMovesAsAttacker>(registry, movePair, original->attacker);
-    removeUsedMoves<UsedMovesAsDefender>(registry, movePair, original->defender);
+    removeUsedMoves<CurrentActionMovesAsSource>(registry, movePair, original->attacker);
+    removeUsedMoves<CurrentActionMovesAsTarget>(registry, movePair, original->defender);
   }
 
   registry.destroy(movePair.original);
