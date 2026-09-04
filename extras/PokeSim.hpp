@@ -19334,15 +19334,15 @@ struct FailedCurrentActionTarget {
 struct CurrentActionMovesAsSource {
   types::targets<types::entity> val{};
 
-  const types::entity* begin() const noexcept { return val.cbegin(); }
-  const types::entity* end() const noexcept { return val.cend(); }
+  auto begin() const noexcept { return val.cbegin(); }
+  auto end() const noexcept { return val.cend(); }
 };
 
 struct CurrentActionMovesAsTarget {
   types::entity val{};
 
-  const types::entity* begin() const noexcept { return &val; }
-  const types::entity* end() const noexcept { return std::next(begin(), 1U); }
+  auto begin() const noexcept { return &val; }
+  auto end() const noexcept { return std::next(begin(), 1U); }
 };
 
 struct CurrentActionMovesAsSourceExtended {
