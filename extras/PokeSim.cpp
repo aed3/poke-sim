@@ -6552,8 +6552,13 @@ bool removeFailedMoveFromSource(types::registry& registry, types::entity moveEnt
     return true;
   }
 
-  auto* newMovesEnd = std::remove(moves->val.begin(), moves->val.end(), moveEntity);
-  moves->val.pop_count(std::distance(newMovesEnd, moves->val.end()));
+  for (types::activePokemonIndex i = 0U; i < moves->val.size() - 1U; i++) {
+    if (moves->val[i] == moveEntity) {
+      std::swap(moves->val[i], moves->val.back());
+      break;
+    }
+  }
+  moves->val.pop_back();
 
   if (moves->val.empty()) {
     registry.remove<pokesim::tags::CurrentActionSource, CurrentActionMovesAsSource>(source);
@@ -6562,18 +6567,12 @@ bool removeFailedMoveFromSource(types::registry& registry, types::entity moveEnt
   return false;
 }
 
-bool removeFailedMoveFromTarget(types::registry& registry, types::entity moveEntity, types::entity target) {
+void removeFailedMoveFromTarget(types::registry& registry, types::entity target) {
   POKESIM_REQUIRE(
     !registry.all_of<CurrentActionMovesAsTargetExtended>(target),
     "This function is only meant for simulate turn and the non-extended version of target moves.");
 
-  CurrentActionMovesAsTarget* move = registry.try_get<CurrentActionMovesAsTarget>(target);
-  if (!move) {
-    return true;
-  }
-
   registry.remove<pokesim::tags::CurrentActionTarget, CurrentActionMovesAsTarget>(target);
-  return true;
 }
 
 void updateCurrentActionTargets(types::registry& registry, CurrentAction& action) {
@@ -6692,9 +6691,8 @@ void setFailedActionMove(
   types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target) {
   types::registry& registry = *moveHandle.registry();
 
-  bool removedAllMoves = true;
-  removedAllMoves = removeFailedMoveFromTarget(registry, moveHandle.entity(), target.val) && removedAllMoves;
-  removedAllMoves = removeFailedMoveFromSource(registry, moveHandle.entity(), source.val) && removedAllMoves;
+  bool removedAllMoves = removeFailedMoveFromSource(registry, moveHandle.entity(), source.val);
+  removeFailedMoveFromTarget(registry, target.val);
 
   moveHandle.remove<
     pokesim::tags::CurrentActionMove,
