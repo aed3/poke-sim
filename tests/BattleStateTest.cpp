@@ -1,104 +1,123 @@
 #include "Tests.hpp"
 
 namespace pokesim {
+namespace {
 struct IdealPP_MaxPP {
   types::pp pp;
   types::pp maxPp;
 };
+}  // namespace
 
-TEST_CASE("Battle State: Single Battle", "[Simulation][Setup]") {
-  BattleCreationInfo battleCreationInfo;
-  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
-  battleCreationInfo.sides.p1().team[0].status = dex::Status::FRZ;
-  battleCreationInfo.sides.p2().team[0].item = dex::Item::CHOICE_SCARF;
+TEST_CASE("Battle State: Single Battle", "[Simulation][Setup][SingleBattle]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    test.side(
+      test.pokemon(dex::Species::EMPOLEON, dex::Ability::COMPETITIVE, dex::Status::FRZ, dex::Move::FURY_ATTACK)),
+    test.side(test.pokemon(
+      dex::Species::AMPHAROS,
+      dex::Ability::PLUS,
+      dex::Nature::HARDY,
+      dex::Item::CHOICE_SPECS,
+      dex::Move::THUNDERBOLT)));
 
-  pokedex.loadForBattleInfo({battleCreationInfo});
-  simulation.createInitialStates({battleCreationInfo});
+  test.initializeSimulation();
 
-  const types::registry& registry = simulation.registry;
+  const types::registry& registry = test.registry();
   auto battles = registry.view<tags::Battle>();
   REQUIRE(battles.size() == 1U);
-  types::entity battleEntity = battles.front();
+  auto entities = test.getBattleEntities(battles.front());
 
-  auto [p1SideEntity, p2SideEntity] = registry.get<Sides>(battleEntity).val;
-
-  types::entity p1Entity = registry.get<Team>(p1SideEntity).val[0];
-  REQUIRE(registry.all_of<dex::Competitive>(p1Entity));
-  REQUIRE(registry.all_of<status::tags::Freeze>(p1Entity));
-  types::entity p2Entity = registry.get<Team>(p2SideEntity).val[0];
-  REQUIRE(registry.all_of<dex::Plus>(p2Entity));
-  REQUIRE(registry.all_of<nature::tags::Hardy>(p2Entity));
-  REQUIRE(registry.all_of<dex::ChoiceScarf>(p2Entity));
+  REQUIRE(registry.all_of<dex::Competitive>(entities.p1A));
+  REQUIRE(registry.all_of<status::tags::Freeze>(entities.p1A));
+  REQUIRE(registry.all_of<dex::Plus>(entities.p2A));
+  REQUIRE(registry.all_of<nature::tags::Hardy>(entities.p2A));
+  REQUIRE(registry.all_of<dex::ChoiceSpecs>(entities.p2A));
+  REQUIRE(registry.all_of<item::tags::Choice>(entities.p2A));
 }
 
-TEST_CASE("Battle State: Double Battle", "[Simulation][Setup]") {
-  BattleCreationInfo battleCreationInfo;
-  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation simulation = createDoubleBattleSimulation(pokedex, battleCreationInfo);
-  simulation.createInitialStates({battleCreationInfo});
+TEST_CASE("Battle State: Double Battle", "[Simulation][Setup][DoubleBattle]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::DOUBLES};
+  test.setupBattle(
+    test.side(
+      test.pokemon(
+        dex::Species::GARDEVOIR,
+        dex::Ability::TRACE,
+        dex::Status::BRN,
+        dex::Item::CHOICE_SCARF,
+        dex::Move::MOONBLAST),
+      test.pokemon(
+        dex::Species::DRAGAPULT,
+        dex::Ability::INFILTRATOR,
+        dex::Nature::HASTY,
+        dex::Item::FOCUS_SASH,
+        dex::Move::WILL_O_WISP)),
+    test.side(
+      test.pokemon(dex::Species::PANGORO, dex::Ability::IRON_FIST, dex::Item::LIFE_ORB, dex::Move::KNOCK_OFF),
+      test
+        .pokemon(dex::Species::RIBOMBEE, dex::Ability::SWEET_VEIL, dex::Item::BRIGHT_POWDER, dex::Move::QUIVER_DANCE)));
 
-  const types::registry& registry = simulation.registry;
+  test.initializeSimulation();
+
+  const types::registry& registry = test.registry();
   auto battles = registry.view<tags::Battle>();
   REQUIRE(battles.size() == 1U);
-  types::entity battleEntity = battles.front();
+  auto entities = test.getBattleEntities(battles.front());
 
-  auto [p1SideEntity, p2SideEntity] = registry.get<Sides>(battleEntity).val;
+  REQUIRE(registry.all_of<dex::Trace>(entities.p1A));
+  REQUIRE(registry.all_of<status::tags::Burn>(entities.p1A));
+  REQUIRE(registry.all_of<dex::ChoiceScarf>(entities.p1A));
+  REQUIRE(registry.all_of<dex::IronFist>(entities.p2A));
+  REQUIRE(registry.all_of<dex::LifeOrb>(entities.p2A));
 
-  types::entity p1aEntity = registry.get<Team>(p1SideEntity).val[0];
-  REQUIRE(registry.all_of<dex::Trace>(p1aEntity));
-  REQUIRE(registry.all_of<status::tags::Burn>(p1aEntity));
-  REQUIRE(registry.all_of<dex::ChoiceScarf>(p1aEntity));
-  types::entity p2aEntity = registry.get<Team>(p2SideEntity).val[0];
-  REQUIRE(registry.all_of<dex::IronFist>(p2aEntity));
-  REQUIRE(registry.all_of<dex::LifeOrb>(p2aEntity));
-
-  types::entity p1bEntity = registry.get<Team>(p1SideEntity).val[1];
-  REQUIRE(registry.all_of<dex::Infiltrator>(p1bEntity));
-  REQUIRE(registry.all_of<nature::tags::Hasty>(p1bEntity));
-  REQUIRE(registry.all_of<dex::FocusSash>(p1bEntity));
-  types::entity p2bEntity = registry.get<Team>(p2SideEntity).val[1];
-  REQUIRE(registry.all_of<dex::SweetVeil>(p2bEntity));
-  REQUIRE(registry.all_of<dex::BrightPowder>(p2bEntity));
+  REQUIRE(registry.all_of<dex::Infiltrator>(entities.p1B));
+  REQUIRE(registry.all_of<nature::tags::Hasty>(entities.p1B));
+  REQUIRE(registry.all_of<dex::FocusSash>(entities.p1B));
+  REQUIRE(registry.all_of<dex::SweetVeil>(entities.p2B));
+  REQUIRE(registry.all_of<dex::BrightPowder>(entities.p2B));
 }
 
-TEST_CASE("Battle State: Multiple Battles", "[Simulation][Setup]") {
-  BattleCreationInfo battle1CreationInfo;
-  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation simulation = createSingleBattleSimulation(pokedex, battle1CreationInfo);
+TEST_CASE("Battle State: Multiple Battles", "[Simulation][Setup][SingleBattle]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  auto side1 = test.side(test.pokemon(dex::Species::EMPOLEON, dex::Move::FURY_ATTACK));
+  auto side2 = test.side(test.pokemon(dex::Species::AMPHAROS, dex::Move::THUNDERBOLT));
 
-  BattleCreationInfo battle2CreationInfo = battle1CreationInfo;
+  test.setupBattle(Turn{12U}, Probability{0.1F}, RngSeed{0xFFFFFFFF}, side1, side2);
+  test.setupBattle(Turn{7U}, Probability{0.75F}, RngSeed{9826U}, side1, side2);
+  test.initializeSimulation();
 
-  battle1CreationInfo.turn = 12U;
-  battle1CreationInfo.probability = 0.1F;
-  battle1CreationInfo.rngSeed = 0xFFFFFFFF;
-
-  battle2CreationInfo.turn = 7U;
-  battle2CreationInfo.probability = 1.0F;
-  battle2CreationInfo.rngSeed = 9826U;
-  simulation.createInitialStates({battle1CreationInfo, battle2CreationInfo});
-
-  const types::registry& registry = simulation.registry;
+  const types::registry& registry = test.registry();
   auto battles = registry.view<tags::Battle>();
   REQUIRE(battles.size() == 2U);
+
+  for (types::entity battle : battles) {
+    if (registry.get<Turn>(battle).val == 12U) {
+      REQUIRE(registry.get<Probability>(battle).val == 0.1F);
+      REQUIRE(registry.get<RngSeed>(battle).val == 0xFFFFFFFF);
+    }
+    else {
+      REQUIRE(registry.get<Turn>(battle).val == 7U);
+      REQUIRE(registry.get<Probability>(battle).val == 0.75F);
+      REQUIRE(registry.get<RngSeed>(battle).val == 9826U);
+    }
+  }
 }
 
 TEST_CASE("Clone Battles", "[Simulation][Setup]") {
-  BattleCreationInfo battleCreationInfo;
-  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  auto create = GENERATE(createSingleBattleSimulation, createDoubleBattleSimulation);
+  BattleFormat battleFormat = GENERATE(BattleFormat::SINGLES, BattleFormat::DOUBLES);
   types::entityIndex cloneCount = GENERATE(1U, 5U, 100U);
+  CAPTURE(battleFormat, cloneCount);
 
-  CAPTURE(cloneCount);
-  INFO(
-    "create := " +
-    std::string(
-      create == createSingleBattleSimulation ? "createSingleBattleSimulation" : "createDoubleBattleSimulation"));
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, battleFormat};
+  BattleCreationInfo& battleCreationInfo = test.setupBattle(
+    test.side(
+      test.pokemon(dex::Species::GARDEVOIR, dex::Move::MOONBLAST),
+      test.pokemon(dex::Species::DRAGAPULT, dex::Move::WILL_O_WISP)),
+    test.side(
+      test.pokemon(dex::Species::PANGORO, dex::Move::KNOCK_OFF),
+      test.pokemon(dex::Species::RIBOMBEE, dex::Move::QUIVER_DANCE)));
+  test.initializeSimulation();
 
-  Simulation simulation = create(pokedex, battleCreationInfo);
-  simulation.createInitialStates({battleCreationInfo});
-
-  types::registry& registry = simulation.registry;
+  types::registry& registry = test.registry();
   entt::dense_set<types::entity> existingEntities;
   for (types::entity existingEntity : registry.view<types::entity>()) {
     existingEntities.insert(existingEntity);
@@ -119,7 +138,7 @@ TEST_CASE("Clone Battles", "[Simulation][Setup]") {
 
   for (auto battle : battles) {
     const types::handle cloneHandle{registry, battle};
-    debug::SimulationSetupChecks::checkBattle(simulation, battle, battleCreationInfo);
+    debug::SimulationSetupChecks::checkBattle(test.simulation, battle, battleCreationInfo);
 
     if (battle == baseHandle.entity()) continue;
 

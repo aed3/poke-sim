@@ -12,6 +12,11 @@ class variant : public std::variant<Types...> {
  public:
   using base::variant;
 
+  template <typename Type>
+  static constexpr bool canHoldType() {
+    return std::disjunction_v<std::is_same<Type, Types>...>;
+  }
+
   template <typename T>
   variant& operator=(const T& rhs) {
     std::variant<Types...>::operator=(rhs);

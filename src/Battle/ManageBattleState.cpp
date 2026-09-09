@@ -61,7 +61,7 @@ bool removeFailedMoveFromSource(types::registry& registry, types::entity moveEnt
 
   for (types::activePokemonIndex i = 0U; i < moves->val.size() - 1U; i++) {
     if (moves->val[i] == moveEntity) {
-      std::swap(moves->val[i], moves->val.back());
+      moves->val[i] = moves->val.back();
       break;
     }
   }

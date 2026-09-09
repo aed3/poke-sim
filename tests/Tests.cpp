@@ -5,6 +5,7 @@
 int main(int argc, char* argv[]) {
   Catch::Session session;
   if (session.applyCommandLine(argc, argv)) return 1;
+  session.configData().runOrder = Catch::TestRunOrder::Declared;
 
   auto result = session.run();
   if (result == Catch::ResultWas::Ok) {

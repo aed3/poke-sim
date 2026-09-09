@@ -1,6 +1,7 @@
 #include "Tests.hpp"
 
 namespace pokesim {
+namespace {
 const DamageRollKind AVERAGE_DAMAGE = DamageRollKind::AVERAGE_DAMAGE;
 const DamageRollKind MIN_DAMAGE = DamageRollKind::MIN_DAMAGE;
 const DamageRollKind MAX_DAMAGE = DamageRollKind::MAX_DAMAGE;
@@ -37,21 +38,55 @@ struct IdealDamageValues {
       : rolls(_rolls), average({_average}), minDamage({_rolls[15]}), maxDamage({_rolls[0]}), koUses(_koUses) {}
 };
 
-TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]") {
-  static Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.runWithCalculateDamage = true;
-  battleCreationInfo.damageCalculations = {
-    {Slot::P1A, Slot::P2A, {dex::Move::FURY_ATTACK}},
-    {Slot::P2A, Slot::P1A, {dex::Move::THUNDERBOLT}},
-  };
+const IdealDamageValues furyAttackBaseDamage{
+  {14U, 13U, 13U, 13U, 13U, 13U, 13U, 13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U},
+  {{{21U, 1U}, {23U, 7U}, {25U, 7U}, {27U, 1U}}},
+  12U,
+};
 
-  Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
-  std::vector<BattleCreationInfo> battleInfoList{8, battleCreationInfo};
+const IdealDamageValues thunderboltBaseDamage{
+  {434U, 428U, 426U, 420U, 416U, 410U, 408U, 402U, 398U, 392U, 390U, 386U, 380U, 378U, 372U, 368U},
+  {{{1U, 16U}}},
+  401U,
+};
 
-  for (std::size_t i = 0; i < battleInfoList.size(); i++) {
-    auto& p1Info = battleInfoList[i].sides.p1().team[0];
-    auto& p2Info = battleInfoList[i].sides.p2().team[0];
+const IdealDamageValues thunderboltAVDamage{
+  {290U, 288U, 284U, 282U, 278U, 276U, 272U, 270U, 266U, 264U, 260U, 258U, 254U, 252U, 248U, 246U},
+  {{{1U, 6U}, {2U, 10U}}},
+  268U,
+};
+
+const IdealDamageValues furyAttackCritDamage{
+  {21U, 20U, 20U, 20U, 20U, 19U, 19U, 19U, 19U, 19U, 18U, 18U, 18U, 18U, 18U, 17U},
+  {{{14U, 1U}, {15U, 4U}, {16U, 5U}, {17U, 5U}, {18U, 1U}}},
+  19U,
+};
+
+const IdealDamageValues thunderboltCritDamage{
+  {650U, 642U, 636U, 630U, 624U, 618U, 608U, 602U, 596U, 590U, 584U, 578U, 570U, 564U, 558U, 552U},
+  {{{1U, 16U}}},
+  601U,
+};
+
+const IdealDamageValues thunderboltCritAVDamage{
+  {434U, 428U, 426U, 420U, 416U, 410U, 408U, 402U, 398U, 392U, 390U, 386U, 380U, 378U, 372U, 368U},
+  {{{1U, 16U}}},
+  401U,
+};
+
+const IdealDamageValues thunderboltSpdBoostAVDamage{
+  {194U, 192U, 188U, 188U, 186U, 182U, 182U, 180U, 176U, 176U, 174U, 170U, 170U, 168U, 164U, 164U},
+  {{{2U, 16U}}},
+  179U,
+};
+}  // namespace
+
+TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage][SingleBattle]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+
+  for (std::size_t i = 0; i < 8U; i++) {
+    auto p1Info = test.pokemon(dex::Species::EMPOLEON, Level{99U}, dex::Move::FURY_ATTACK);
+    auto p2Info = test.pokemon(dex::Species::AMPHAROS, dex::Nature::MODEST, dex::Move::THUNDERBOLT);
 
     if (i & 1U) {
       p1Info.item = dex::Item::ASSAULT_VEST;
@@ -64,7 +99,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
       p1Info.currentBoosts.spd = std::nullopt;
     }
     else {
-      p1Info.currentBoosts.spd = (types::boost)1U;
+      p1Info.currentBoosts.spd = 1;
     }
 
     p2Info.nature = dex::Nature::MODEST;
@@ -74,40 +109,15 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
     }
     else {
       p2Info.item = std::nullopt;
-      p2Info.currentBoosts.spa = (types::boost)1U;
+      p2Info.currentBoosts.spa = 1;
     }
+
+    test.setupBattle(
+      test.side(p1Info),
+      test.side(p2Info),
+      CalcDamageInputInfo{Slot::P1A, Slot::P2A, {dex::Move::FURY_ATTACK}},
+      CalcDamageInputInfo{Slot::P2A, Slot::P1A, {dex::Move::THUNDERBOLT}});
   }
-
-  const IdealDamageValues furyAttackBaseDamage(
-    {13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U, 11U, 11U, 11U, 11U, 11U, 11U, 11U},
-    {{{23U, 1U}, {25U, 7U}, {27U, 8U}}},
-    12U);
-  const IdealDamageValues thunderboltBaseDamage(
-    {420U, 414U, 410U, 404U, 402U, 398U, 392U, 390U, 384U, 380U, 378U, 372U, 368U, 362U, 360U, 356U},
-    {{{1U, 16U}}},
-    388U);
-  const IdealDamageValues thunderboltAVDamage(
-    {282U, 278U, 276U, 272U, 270U, 266U, 264U, 260U, 258U, 254U, 252U, 248U, 246U, 242U, 240U, 236U},
-    {{{1U, 3U}, {2U, 13U}}},
-    260U);
-
-  const IdealDamageValues furyAttackCritDamage(
-    {19U, 18U, 18U, 18U, 18U, 18U, 17U, 17U, 17U, 17U, 17U, 16U, 16U, 16U, 16U, 16U},
-    {{{16U, 1U}, {17U, 5U}, {18U, 5U}, {19U, 5U}}},
-    17U);
-  const IdealDamageValues thunderboltCritDamage(
-    {630U, 620U, 614U, 608U, 602U, 596U, 590U, 584U, 578U, 572U, 566U, 558U, 552U, 546U, 540U, 534U},
-    {{{1U, 16U}}},
-    582U);
-  const IdealDamageValues thunderboltCritAVDamage(
-    {422U, 416U, 414U, 408U, 404U, 398U, 396U, 392U, 386U, 384U, 378U, 374U, 372U, 366U, 362U, 356U},
-    {{{1U, 16U}}},
-    390U);
-
-  const IdealDamageValues thunderboltSpdBoostAVDamage(
-    {188U, 186U, 182U, 182U, 180U, 176U, 176U, 174U, 170U, 170U, 168U, 168U, 164U, 162U, 162U, 158U},
-    {{{2U, 16U}}},
-    173U);
 
   DamageRollOptions damageRollOptions;
   bool getKoUses = GENERATE(false, true);
@@ -117,20 +127,19 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
 
   CAPTURE(getKoUses, calculateUpToFoeHp);
 
-  auto& options = simulation.calculateDamageOptions;
-  options.setCalculateUpToFoeHp(calculateUpToFoeHp);
-  options.setNoKoChanceCalculation(!getKoUses);
-  options.setDamageRollOptions(damageRollOptions);
+  auto& options = test.calcDamageOptions();
+  options.setCalculateUpToFoeHp(calculateUpToFoeHp)
+    .setNoKoChanceCalculation(!getKoUses)
+    .setDamageRollOptions(damageRollOptions);
 
-  pokedex.loadForBattleInfo(battleInfoList);
-  simulation.createInitialStates(battleInfoList);
-  auto result = simulation.calculateDamage();
+  auto results = test.calculateDamage();
 
-  const auto damageRolls = result.damageRollResults();
-  const auto hpLost = result.hpLostResults();
-  const auto hpRecovered = result.hpRecoveredResults();
-  const auto koUses = result.usesUntilKoResults();
+  const auto damageRolls = results.damageRollResults();
+  const auto hpLost = results.hpLostResults();
+  const auto hpRecovered = results.hpRecoveredResults();
+  const auto koUses = results.usesUntilKoResults();
 
+  auto& battleInfoList = test.battleInfoList;
   REQUIRE(damageRolls.size() == battleInfoList.size() * 2U);
   REQUIRE(hpLost.empty());
   REQUIRE(hpRecovered.empty());
@@ -170,7 +179,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage]")
     return targetHasAssaultVest ? thunderboltAVDamage : thunderboltBaseDamage;
   };
 
-  const types::registry& registry = simulation.registry;
+  const types::registry& registry = test.registry();
   damageRolls.each([&](types::entity entity, const DamageRolls& trueDamageRolls) {
     types::entity source = registry.get<CurrentActionSource>(entity).val;
     types::entity target = registry.get<CurrentActionTarget>(entity).val;

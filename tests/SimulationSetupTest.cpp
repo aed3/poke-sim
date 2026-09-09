@@ -11,7 +11,7 @@ BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   p1aPokemonInfo.gender = dex::Gender::MALE;
   p1aPokemonInfo.level = 100U;
   p1aPokemonInfo.stats = {309U, 208U, 212U, 258U, 238U, 156U};
-  p1aPokemonInfo.moves.push_back(createMove(pokedex, dex::Move::FURY_ATTACK));
+  p1aPokemonInfo.moves.push_back({dex::Move::FURY_ATTACK});
 
   PokemonCreationInfo p2aPokemonInfo{};
   p2aPokemonInfo.species = dex::Species::AMPHAROS;
@@ -19,7 +19,7 @@ BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   p2aPokemonInfo.gender = dex::Gender::FEMALE;
   p2aPokemonInfo.level = 100U;
   p2aPokemonInfo.stats = {321U, 186U, 206U, 266U, 216U, 146U};
-  p2aPokemonInfo.moves.push_back(createMove(pokedex, dex::Move::THUNDERBOLT));
+  p2aPokemonInfo.moves.push_back({dex::Move::THUNDERBOLT});
 
   PokemonCreationInfo p1bPokemonInfo{};
   p1bPokemonInfo.species = dex::Species::GARDEVOIR;
@@ -27,7 +27,7 @@ BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   p1bPokemonInfo.gender = dex::Gender::FEMALE;
   p1bPokemonInfo.level = 100U;
   p1bPokemonInfo.stats = {277U, 166U, 166U, 286U, 266U, 196U};
-  p1bPokemonInfo.moves.push_back(createMove(pokedex, dex::Move::MOONBLAST));
+  p1bPokemonInfo.moves.push_back({dex::Move::MOONBLAST});
 
   PokemonCreationInfo p2bPokemonInfo{};
   p2bPokemonInfo.species = dex::Species::PANGORO;
@@ -35,7 +35,7 @@ BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   p2bPokemonInfo.gender = dex::Gender::MALE;
   p2bPokemonInfo.level = 100U;
   p2bPokemonInfo.stats = {331U, 284U, 192U, 174U, 178U, 152U};
-  p2bPokemonInfo.moves.push_back(createMove(pokedex, dex::Move::KNOCK_OFF));
+  p2bPokemonInfo.moves.push_back({dex::Move::KNOCK_OFF});
 
   PokemonCreationInfo p1cPokemonInfo{};
   p1cPokemonInfo.species = dex::Species::DRAGAPULT;
@@ -43,7 +43,7 @@ BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   p1cPokemonInfo.gender = dex::Gender::FEMALE;
   p1cPokemonInfo.level = 100U;
   p1cPokemonInfo.stats = {217U, 276U, 186U, 236U, 186U, 320U};
-  p1cPokemonInfo.moves.push_back(createMove(pokedex, dex::Move::WILL_O_WISP));
+  p1cPokemonInfo.moves.push_back({dex::Move::WILL_O_WISP});
 
   PokemonCreationInfo p2cPokemonInfo{};
   p2cPokemonInfo.species = dex::Species::RIBOMBEE;
@@ -51,22 +51,15 @@ BattleCreationInfo createBaseBattleInfo(Pokedex& pokedex) {
   p2cPokemonInfo.gender = dex::Gender::MALE;
   p2cPokemonInfo.level = 100U;
   p2cPokemonInfo.stats = {261U, 146U, 156U, 226U, 176U, 284U};
-  p2cPokemonInfo.moves.push_back(createMove(pokedex, dex::Move::QUIVER_DANCE));
+  p2cPokemonInfo.moves.push_back({dex::Move::QUIVER_DANCE});
 
   battleCreationInfo.sides = {
     {{p1aPokemonInfo, p1bPokemonInfo, p1cPokemonInfo}},
-    {{p2aPokemonInfo, p1bPokemonInfo, p2cPokemonInfo}},
+    {{p2aPokemonInfo, p2bPokemonInfo, p2cPokemonInfo}},
   };
 
-  entt::dense_set<dex::Species> speciesSet{};
-  speciesSet.insert(p1aPokemonInfo.species);
-  speciesSet.insert(p1bPokemonInfo.species);
-  speciesSet.insert(p1cPokemonInfo.species);
-  speciesSet.insert(p2aPokemonInfo.species);
-  speciesSet.insert(p2bPokemonInfo.species);
-  speciesSet.insert(p2cPokemonInfo.species);
-  pokedex.loadSpecies(speciesSet);
-  battleCreationInfo.turn = 1;
+  pokedex.loadForBattleInfo({battleCreationInfo});
+  battleCreationInfo.turn = 1U;
 
   return battleCreationInfo;
 }
@@ -212,7 +205,7 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
   }
 }
 
-TEST_CASE("Simulation Setup: Calc Damage", "[Simulation][CalculateDamage][Setup]") {
+TEST_CASE("Simulation Setup: Calculate Damage", "[Simulation][CalculateDamage][Setup]") {
   Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
   BattleCreationInfo battleInfo = createBaseBattleInfo(pokedex);
 

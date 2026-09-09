@@ -14,11 +14,11 @@ enum class AbilityProperty : std::uint8_t {
   NO_TRANSFORM = 1U << 7U,
 };
 
-constexpr AbilityProperty operator|(AbilityProperty kindA, AbilityProperty kindB) {
-  return static_cast<AbilityProperty>(static_cast<std::uint8_t>(kindA) | static_cast<std::uint8_t>(kindB));
+constexpr AbilityProperty operator|(AbilityProperty propertyA, AbilityProperty propertyB) {
+  return static_cast<AbilityProperty>(static_cast<std::uint8_t>(propertyA) | static_cast<std::uint8_t>(propertyB));
 }
 
-constexpr bool operator&(AbilityProperty kindA, AbilityProperty kindB) {
-  return (static_cast<std::uint8_t>(kindA) & static_cast<std::uint8_t>(kindB)) != 0U;
+constexpr bool operator&(AbilityProperty propertyA, AbilityProperty propertyB) {
+  return (static_cast<std::uint8_t>(propertyA) & static_cast<std::uint8_t>(propertyB)) != 0U;
 }
 }  // namespace pokesim::dex

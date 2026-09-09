@@ -11,11 +11,11 @@ enum class ItemProperty : std::uint8_t {
   POKEBALL = 1U << 4U,
 };
 
-constexpr ItemProperty operator|(ItemProperty kindA, ItemProperty kindB) {
-  return static_cast<ItemProperty>(static_cast<std::uint8_t>(kindA) | static_cast<std::uint8_t>(kindB));
+constexpr ItemProperty operator|(ItemProperty propertyA, ItemProperty propertyB) {
+  return static_cast<ItemProperty>(static_cast<std::uint8_t>(propertyA) | static_cast<std::uint8_t>(propertyB));
 }
 
-constexpr bool operator&(ItemProperty kindA, ItemProperty kindB) {
-  return (static_cast<std::uint8_t>(kindA) & static_cast<std::uint8_t>(kindB)) != 0U;
+constexpr bool operator&(ItemProperty propertyA, ItemProperty propertyB) {
+  return (static_cast<std::uint8_t>(propertyA) & static_cast<std::uint8_t>(propertyB)) != 0U;
 }
 }  // namespace pokesim::dex

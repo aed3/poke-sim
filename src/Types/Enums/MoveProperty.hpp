@@ -44,11 +44,11 @@ enum class MoveProperty : std::uint64_t {
   WIND = 1ULL << 37U,
 };
 
-constexpr MoveProperty operator|(MoveProperty kindA, MoveProperty kindB) {
-  return static_cast<MoveProperty>(static_cast<std::uint64_t>(kindA) | static_cast<std::uint64_t>(kindB));
+constexpr MoveProperty operator|(MoveProperty propertyA, MoveProperty propertyB) {
+  return static_cast<MoveProperty>(static_cast<std::uint64_t>(propertyA) | static_cast<std::uint64_t>(propertyB));
 }
 
-constexpr bool operator&(MoveProperty kindA, MoveProperty kindB) {
-  return (static_cast<std::uint64_t>(kindA) & static_cast<std::uint64_t>(kindB)) != 0U;
+constexpr bool operator&(MoveProperty propertyA, MoveProperty propertyB) {
+  return (static_cast<std::uint64_t>(propertyA) & static_cast<std::uint64_t>(propertyB)) != 0U;
 }
 }  // namespace pokesim::dex

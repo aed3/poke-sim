@@ -163,7 +163,7 @@ void setDoublesMoveOptions(types::handle handle, Side side, const MoveSlots& mov
     allySlot = sideIdAndPositionToSlot(playerSide.val, slotPosition ? 1U : 0U);
   }
 
-  PlayerSideId foeSide = playerSide.val == PlayerSideId::P1 ? PlayerSideId::P2 : PlayerSideId::P1;
+  PlayerSideId foeSide = sideIdToFoeSideId(playerSide.val);
   const Team& foeTeam = registry.get<Team>(registry.get<FoeSide>(side.val).val);
   for (types::teamPositionIndex i = 0U; i < Constants::ActivePokemonSlotsPerSide::DOUBLES; i++) {
     if (registry.all_of<tags::ActivePokemon>(foeTeam.val[i])) {

@@ -59,7 +59,7 @@ void runQueueOrderTest(
 };
 }  // namespace
 
-TEST_CASE("Simulate Turn: Action Queue Order", "[Simulation][SimulateTurn]") {
+TEST_CASE("Action Queue Order", "[Simulation][SimulateTurn][ActionQueue]") {
   SECTION("One Queue Item") {
     ActionQueueItem emptyQueueItem{};
     runQueueOrderTest({emptyQueueItem}, {emptyQueueItem});
@@ -245,220 +245,114 @@ TEST_CASE("Simulate Turn: Action Queue Order", "[Simulation][SimulateTurn]") {
   }
 }
 
-TEST_CASE("Simulate Turn: Basic Switching", "[Simulation][SimulateTurn]") {
-  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation simulation{pokedex, BattleFormat::SINGLES};
-  const types::registry& registry = simulation.registry;
+TEST_CASE("Basic Switching", "[Simulation][SimulateTurn][SingleBattle][Switching]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(
+      test.pokemon(dex::Species::EMPOLEON, dex::Move::SPLASH),
+      test.pokemon(dex::Species::GARDEVOIR, dex::Move::SPLASH)),
+    test.side(
+      test.pokemon(dex::Species::AMPHAROS, dex::Move::SPLASH),
+      test.pokemon(dex::Species::PANGORO, dex::Move::SPLASH)),
+    test.turnDecision(Slot::P1B, Slot::P2B));
 
-  BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.runWithSimulateTurn = true;
-  battleCreationInfo.turn = 1U;
-  PokemonCreationInfo p1A{dex::Species::EMPOLEON}, p2A{dex::Species::AMPHAROS}, p1B{dex::Species::GARDEVOIR},
-    p2B{dex::Species::PANGORO};
-  p1A.moves = p1B.moves = p2A.moves = p2B.moves = {{dex::Move::SPLASH}};
-  battleCreationInfo.sides.p1().team = {p1A, p1B};
-  battleCreationInfo.sides.p2().team = {p2A, p2B};
-  battleCreationInfo.decisionsToSimulate = {{
-    {PlayerSideId::P1, types::slotDecisions{SwitchDecision{Slot::P1A, Slot::P1B}}},
-    {PlayerSideId::P2, types::slotDecisions{SwitchDecision{Slot::P2A, Slot::P2B}}},
-  }};
+  auto entities = test.simulateOneNonBranchingBattle({}, Tags<Team>{});
 
-  pokedex.loadForBattleInfo({battleCreationInfo});
-  simulation.createInitialStates({battleCreationInfo});
-  simulation.simulateTurnOptions.setApplyChangesToInputBattle(true);
+  test.checks.checkViewForChanges<tags::Pokemon, tags::ActivePokemon>();
 
-  types::entityVector specificallyCheckEntities;
-  for (types::entity entity : registry.view<types::entity>()) {
-    specificallyCheckEntities.push_back(entity);
-  }
-
-  TestChecks checks{simulation, specificallyCheckEntities};
-  auto result = simulation.simulateTurn();
-  checks.checkRemainingOutputs();
-
-  REQUIRE(result.turnOutcomeBattlesResults().size() == 1U);
-  const auto& turnOutcomeBattles = std::get<1>(*result.turnOutcomeBattlesResults().each().begin()).val;
-  REQUIRE(turnOutcomeBattles.size() == 1U);
-
-  checks.checkViewForChanges<
-    tags::Battle,
-    Turn,
-    simulate_turn::TurnOutcomeBattles,
-    simulate_turn::tags::SpeedSortNeeded,
-    ParentBattle,
-    RootBattle>();
-
-  checks.checkViewForChanges<tags::Side, SideDecision, Team>();
-
-  checks.checkViewForChanges<tags::Pokemon, tags::ActivePokemon>();
-
-  for (types::entity side : registry.view<tags::Side>()) {
-    const Team& currentTeam = registry.get<Team>(side);
-    const Team& initialTeam = checks.getInitialComponents<Team>(side);
+  for (types::entity side : {entities.p1Side, entities.p2Side}) {
+    const auto& [initialTeam, currentTeam] = test.checks.getInitialAndCurrent<Team>(side);
 
     REQUIRE(currentTeam.val[0] == initialTeam.val[1]);
     REQUIRE(currentTeam.val[1] == initialTeam.val[0]);
-    REQUIRE(registry.all_of<tags::ActivePokemon>(currentTeam.val[0]));
-    REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(currentTeam.val[1]));
+    REQUIRE(test.registry().all_of<tags::ActivePokemon>(currentTeam.val[0]));
+    REQUIRE_FALSE(test.registry().all_of<tags::ActivePokemon>(currentTeam.val[1]));
   }
 }
 
-TEST_CASE("Simulate Turn: Battle ends on faint", "[Simulation][SimulateTurn]") {
-  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation simulation{pokedex, BattleFormat::SINGLES};
-  const types::registry& registry = simulation.registry;
+TEST_CASE("Battle ends on faint", "[Simulation][SimulateTurn][SingleBattle][Fainting]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(test.pokemon(dex::Species::EMPOLEON, dex::Move::SPLASH)),
+    test.side(test.pokemon(dex::Species::AMPHAROS, dex::Move::THUNDERBOLT)),
+    test.turnDecision(dex::Move::SPLASH, dex::Move::THUNDERBOLT));
 
-  BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.sides = {
-    {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON, true)}},
-    {{createPredefinedPokemon(pokedex, dex::Species::AMPHAROS)}},
-  };
-  battleCreationInfo.sides.p2().team[0].item = dex::Item::NO_ITEM;
-  battleCreationInfo.turn = 1U;
-  pokedex.loadForBattleInfo({battleCreationInfo});
+  test.simulateTurnOptions()
+    .setDamageRollsConsidered({
+      DamageRollKind::MAX_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE,
+    })
+    .setMakeBranchesOnRandomEvents(true);
 
-  battleCreationInfo.runWithSimulateTurn = true;
-  SideDecision p1Decision{PlayerSideId::P1};
-  SideDecision p2Decision{PlayerSideId::P2};
-  MoveDecision p1MoveDecision{Slot::P1A, Slot::P1A, dex::Move::SPLASH};
-  MoveDecision p2MoveDecision{Slot::P2A, Slot::P1A, dex::Move::THUNDERBOLT};
-  p1Decision.decisions = types::slotDecisions{p1MoveDecision};
-  p2Decision.decisions = types::slotDecisions{p2MoveDecision};
+  auto entities = test.simulateOneNonBranchingBattle(Tags<Winner>{}, Tags<FoesRemaining>{});
+  const types::registry& registry = test.registry();
 
-  battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
-  simulation.createInitialStates({battleCreationInfo});
-  auto& options = simulation.simulateTurnOptions;
+  const auto& [turn, winner] = registry.get<Turn, Winner>(entities.battle);
 
-  options.setDamageRollsConsidered({
-    DamageRollKind::MAX_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE,
-  });
-  options.setApplyChangesToInputBattle(true);
-  options.setMakeBranchesOnRandomEvents(true);
-
-  types::entityVector specificallyCheckEntities;
-  for (types::entity battle : registry.view<tags::Battle>()) {
-    specificallyCheckEntities.push_back(battle);
-  }
-  for (types::entity pokemon : registry.view<tags::Pokemon>()) {
-    specificallyCheckEntities.push_back(pokemon);
-  }
-  for (types::entity side : registry.view<tags::Side>()) {
-    specificallyCheckEntities.push_back(side);
-  }
-
-  TestChecks checks{simulation, specificallyCheckEntities};
-  auto result = simulation.simulateTurn();
-  checks.checkRemainingOutputs();
-
-  REQUIRE(result.turnOutcomeBattlesResults().size() == 1U);
-  const auto& turnOutcomeBattles = std::get<1>(*result.turnOutcomeBattlesResults().each().begin()).val;
-  REQUIRE(turnOutcomeBattles.size() == 1U);
-
-  checks.checkViewForChanges<
-    tags::Battle,
-    Turn,
-    simulate_turn::TurnOutcomeBattles,
-    simulate_turn::tags::SpeedSortNeeded,
-    ParentBattle,
-    Winner,
-    RootBattle>();
-
-  checks.checkViewForChanges<tags::Side, SideDecision, FoesRemaining>();
-
-  types::entity battle = turnOutcomeBattles[0];
-  const auto& [turn, rootBattle, sides, winner] = registry.get<Turn, RootBattle, Sides, Winner>(battle);
-
-  types::entity p1Side = sides.val.p1();
-  types::entity p2Side = sides.val.p2();
-  types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
-  types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
-  types::moveSlotIndex p1MoveIndex = 0U;
-  types::moveSlotIndex p2MoveIndex = 0U;
-
-  const FoesRemaining& p2Remaining = registry.get<FoesRemaining>(p1Side);
-  const FoesRemaining& p1Remaining = registry.get<FoesRemaining>(p2Side);
+  const FoesRemaining& p2Remaining = registry.get<FoesRemaining>(entities.p1Side);
+  const FoesRemaining& p1Remaining = registry.get<FoesRemaining>(entities.p2Side);
   REQUIRE(p2Remaining.val == 1U);
   REQUIRE(p1Remaining.val == 0U);
 
-  checks.checkEntityForChanges<stat::CurrentHp, tags::Fainted, tags::ActivePokemon, MoveSlots>(p1Pokemon);
-  checks.checkEntityForChanges<LastUsedMove, MoveSlots>(p2Pokemon);
+  test.checks.checkEntityForChanges<stat::CurrentHp, tags::Fainted, tags::ActivePokemon, MoveSlots>(entities.p1A);
+  test.checks.checkMovePpUsage(entities.p1A);
+  test.checks.checkUsedMovePokemon(entities.p2A);
 
-  auto p2PokemonLastUsedMove = registry.get<LastUsedMove>(p2Pokemon);
-  REQUIRE(p2PokemonLastUsedMove.val == p2MoveIndex);
-
-  auto p1PokemonHp = registry.get<stat::CurrentHp>(p1Pokemon);
+  auto p1PokemonHp = registry.get<stat::CurrentHp>(entities.p1A);
   REQUIRE(p1PokemonHp.val == Constants::PokemonCurrentHpStat::MIN);
-  REQUIRE(registry.all_of<tags::Fainted>(p1Pokemon));
-  REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(p1Pokemon));
-
-  checks.checkMovePpUsage(p1Pokemon, p1MoveIndex);
-  checks.checkMovePpUsage(p1Pokemon, p2MoveIndex);
+  REQUIRE(registry.all_of<tags::Fainted>(entities.p1A));
+  REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(entities.p1A));
 
   REQUIRE(winner.val == PlayerSideId::P2);
+  REQUIRE(turn.val == 1U);
 }
 
-TEST_CASE("Simulate Turn: Speed Ties", "[Simulation][SimulateTurn]") {
-  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation simulation{pokedex, BattleFormat::DOUBLES};
-  const types::registry& registry = simulation.registry;
-
+TEST_CASE("Speed Ties", "[Simulation][SimulateTurn][DoubleBattle][ActionQueue]") {
   types::activePokemonIndex speedTieCount = GENERATE(range(2U, 5U));
   types::probability branchProbabilityLimit = GENERATE(0.0F, 0.05F, 0.2F, 0.5F, 1.0F);
 
-  BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.runWithSimulateTurn = true;
-  battleCreationInfo.turn = 1U;
-  PokemonCreationInfo p1A{dex::Species::EMPOLEON}, p2A{dex::Species::EMPOLEON}, p1B{dex::Species::EMPOLEON},
-    p2B{dex::Species::EMPOLEON};
-  p1A.moves = p1B.moves = p2A.moves = p2B.moves = {{dex::Move::SPLASH}};
-  p1A.ivs.spe = p1B.ivs.spe = p2A.ivs.spe = p2B.ivs.spe = 31U;
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::DOUBLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(
+      test.pokemon(dex::Species::EMPOLEON, dex::Move::SPLASH, test.ivs({{dex::Stat::SPE, 31U}})),
+      test.pokemon(dex::Species::EMPOLEON, dex::Move::SPLASH, test.ivs({{dex::Stat::SPE, 31U}}))),
+    test.side(
+      test.pokemon(dex::Species::EMPOLEON, dex::Move::SPLASH, test.ivs({{dex::Stat::SPE, 31U}})),
+      test.pokemon(dex::Species::EMPOLEON, dex::Move::SPLASH, test.ivs({{dex::Stat::SPE, 31U}}))),
+    test.turnDecision(dex::Move::SPLASH, dex::Move::SPLASH, dex::Move::SPLASH, dex::Move::SPLASH));
 
   if (speedTieCount < 4U) {
-    p2B.ivs.spe = 20U;
+    test.getPokemonCreationInfo(Slot::P2B).ivs.spe = 20U;
   }
   if (speedTieCount < 3U) {
-    p1B.ivs.spe = 10U;
+    test.getPokemonCreationInfo(Slot::P1B).ivs.spe = 10U;
   }
 
-  battleCreationInfo.sides.p1().team = {p1A, p1B};
-  battleCreationInfo.sides.p2().team = {p2A, p2B};
-  battleCreationInfo.decisionsToSimulate = {{
-    {PlayerSideId::P1,
-     types::slotDecisions{
-       MoveDecision{Slot::P1A, Slot::P1A, dex::Move::SPLASH},
-       MoveDecision{Slot::P1B, Slot::P1B, dex::Move::SPLASH},
-     }},
-    {PlayerSideId::P2,
-     types::slotDecisions{
-       MoveDecision{Slot::P2A, Slot::P2A, dex::Move::SPLASH},
-       MoveDecision{Slot::P2B, Slot::P2B, dex::Move::SPLASH},
-     }},
-  }};
+  test.simulateTurnOptions()
+    .setApplyChangesToInputBattle(true)
+    .setMakeBranchesOnRandomEvents(true)
+    .setBranchProbabilityLowerLimit(branchProbabilityLimit);
 
   types::eventPossibilities idealCloneCount = 1U;
   for (types::eventPossibilities i = speedTieCount; i > 1U; i--) {
     idealCloneCount *= i;
   }
-
   if (branchProbabilityLimit >= 1.0F / idealCloneCount) {
     idealCloneCount = 1U;
   }
-
-  pokedex.loadForBattleInfo({battleCreationInfo});
-  simulation.createInitialStates({battleCreationInfo});
-  simulation.simulateTurnOptions.setApplyChangesToInputBattle(true);
-  simulation.simulateTurnOptions.setMakeBranchesOnRandomEvents(true);
-  simulation.simulateTurnOptions.setBranchProbabilityLowerLimit(branchProbabilityLimit);
   CAPTURE(speedTieCount, branchProbabilityLimit, idealCloneCount);
 
+  test.initializeSimulation();
   SECTION("Check Action Queue Orders") {
-    simulation.view<internal::simulate_turn::resolveDecision>();
-    simulation.view<internal::simulate_turn::speedSort>();
-    internal::simulate_turn::resolveSpeedTies(simulation);
+    test.simulation.view<internal::simulate_turn::resolveDecision>();
+    test.simulation.view<internal::simulate_turn::speedSort>();
+    internal::simulate_turn::resolveSpeedTies(test.simulation);
 
-    auto trueCloneCount = registry.view<tags::Battle>()->size();
+    auto trueCloneCount = test.registry().view<tags::Battle>()->size();
     REQUIRE(trueCloneCount == idealCloneCount);
-    auto actionQueueView = registry.view<ActionQueue>();
+    auto actionQueueView = test.registry().view<ActionQueue>();
 
     entt::dense_set<std::uint32_t> foundOrders;
     for (types::entity entity : actionQueueView) {
@@ -485,70 +379,61 @@ TEST_CASE("Simulate Turn: Speed Ties", "[Simulation][SimulateTurn]") {
   }
 
   SECTION("Check Entire Simulation Branching") {
-    auto result = simulation.simulateTurn();
-    REQUIRE(result.turnOutcomeBattlesResults()->size() == 1U);
-
-    const auto& turnOutcomeBattles = std::get<1>(*result.turnOutcomeBattlesResults().each().begin()).val;
+    auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{});
     auto trueCloneCount = turnOutcomeBattles.size();
     REQUIRE(trueCloneCount == idealCloneCount);
   }
 }
 
-TEST_CASE("Simulate Turn: Decisions", "[Simulation][SimulateTurn]") {
-  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  BattleCreationInfo battleCreationInfo;
-  auto& p1Team = battleCreationInfo.sides.p1().team;
-  auto& p2Team = battleCreationInfo.sides.p2().team;
-
-  p1Team = {
-    createPredefinedPokemon(pokedex, dex::Species::EMPOLEON),
-    createPredefinedPokemon(pokedex, dex::Species::GARDEVOIR),
-    createPredefinedPokemon(pokedex, dex::Species::DRAGAPULT),
-  };
-  p2Team = {
-    createPredefinedPokemon(pokedex, dex::Species::AMPHAROS),
-    createPredefinedPokemon(pokedex, dex::Species::PANGORO),
-    createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE),
-  };
-
-  pokedex.loadForBattleInfo({battleCreationInfo});
+TEST_CASE("Decisions", "[Simulation][SimulateTurn][ActionQueue]") {
   BattleFormat battleFormat = GENERATE(BattleFormat::SINGLES, BattleFormat::DOUBLES);
   bool teamPreview = GENERATE(false, true);
   CAPTURE(battleFormat, teamPreview);
 
-  Simulation simulation{pokedex, battleFormat};
-  types::registry& registry = simulation.registry;
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, battleFormat};
+  test.setupBattle(
+    Turn{(types::battleTurn)(teamPreview ? 0U : 1U)},
+    test.side(
+      test.pokemon(dex::Species::EMPOLEON, dex::Move::FURY_ATTACK, dex::Move::FLASH_CANNON),
+      test.pokemon(dex::Species::GARDEVOIR, dex::Move::MOONBLAST),
+      test.pokemon(dex::Species::DRAGAPULT, dex::Move::WILL_O_WISP)),
+    test.side(
+      test.pokemon(dex::Species::AMPHAROS, dex::Move::THUNDERBOLT),
+      test.pokemon(dex::Species::PANGORO, dex::Move::KNOCK_OFF),
+      test.pokemon(dex::Species::RIBOMBEE, dex::Move::QUIVER_DANCE)));
 
-  battleCreationInfo.turn = teamPreview ? 0U : 1U;
+  auto [p1A, p1B, p1C, p2A, p2B, p2C] =
+    test.getPokemonCreationInfo(Slot::P1A, Slot::P1B, Slot::P1C, Slot::P2A, Slot::P2B, Slot::P2C);
+
   types::handle p1Side, p2Side;
   auto setSideHandles = [&]() {
-    registry.clear();
-    simulation.createInitialStates({battleCreationInfo});
+    test.initializeSimulation();
+    types::registry& registry = test.registry();
 
     types::entity battleEntity = *registry.view<tags::Battle>().each().begin().base();
-    auto sides = registry.view<Sides>();
-    p1Side = {registry, sides.get<Sides>(battleEntity).val.p1()};
-    p2Side = {registry, sides.get<Sides>(battleEntity).val.p2()};
+    auto sides = registry.view<Sides>().get<Sides>(battleEntity).val;
+    p1Side = {registry, sides.p1()};
+    p2Side = {registry, sides.p2()};
   };
 
   setSideHandles();
 
   if (teamPreview) {
-    simulate_turn::setTeamPreviewOptions(simulation);
+    simulate_turn::setTeamPreviewOptions(test.simulation);
     REQUIRE(p1Side.get<TeamPreviewOptions>().val == types::teamOrder{0U, 1U, 2U});
     REQUIRE(p2Side.get<TeamPreviewOptions>().val == types::teamOrder{0U, 1U, 2U});
 
-    p1Team[0U].currentHp = Constants::PokemonCurrentHpStat::MIN;
-    p2Team[2U].currentHp = Constants::PokemonCurrentHpStat::MIN;
+    p1A.currentHp = Constants::PokemonCurrentHpStat::MIN;
+    p2B.currentHp = Constants::PokemonCurrentHpStat::MIN;
 
     setSideHandles();
 
-    simulate_turn::setTeamPreviewOptions(simulation);
+    simulate_turn::setTeamPreviewOptions(test.simulation);
     REQUIRE(p1Side.get<TeamPreviewOptions>().val == types::teamOrder{1U, 2U});
-    REQUIRE(p2Side.get<TeamPreviewOptions>().val == types::teamOrder{0U, 1U});
+    REQUIRE(p2Side.get<TeamPreviewOptions>().val == types::teamOrder{0U, 2U});
   }
   else {
-    simulate_turn::setSideOptions(simulation);
+    simulate_turn::setSideOptions(test.simulation);
 
     if (battleFormat == BattleFormat::SINGLES) {
       SinglesSideOptions p1Options = p1Side.get<SinglesSideOptions>();
@@ -557,17 +442,19 @@ TEST_CASE("Simulate Turn: Decisions", "[Simulation][SimulateTurn]") {
       REQUIRE(p1Options.switches.val == types::teamPositions<Slot>{Slot::P1B, Slot::P1C});
       REQUIRE_THAT(
         p1Options.moves,
-        Catch::Matchers::UnorderedRangeEquals(types::moveSlots<SinglesMoveOption>{
-          {dex::Move::KNOCK_OFF, Slot::P2A},
-          {dex::Move::FURY_ATTACK, Slot::P2A},
-        }));
+        Catch::Matchers::UnorderedRangeEquals(
+          types::moveSlots<SinglesMoveOption>{
+            {dex::Move::FLASH_CANNON, Slot::P2A},
+            {dex::Move::FURY_ATTACK, Slot::P2A},
+          }));
 
       REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2B, Slot::P2C});
       REQUIRE_THAT(
         p2Options.moves,
-        Catch::Matchers::RangeEquals(types::moveSlots<SinglesMoveOption>{
-          {dex::Move::THUNDERBOLT, Slot::P1A},
-        }));
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<SinglesMoveOption>{
+            {dex::Move::THUNDERBOLT, Slot::P1A},
+          }));
     }
     else {
       DoublesSideOptions p1Options = p1Side.get<DoublesSideOptions>();
@@ -575,36 +462,40 @@ TEST_CASE("Simulate Turn: Decisions", "[Simulation][SimulateTurn]") {
       REQUIRE(p1Options.switches.val == types::teamPositions<Slot>{Slot::P1C});
       REQUIRE_THAT(
         p1Options.moves[0U],
-        Catch::Matchers::UnorderedRangeEquals(types::moveSlots<DoublesMoveOption>{
-          {dex::Move::KNOCK_OFF, {Slot::P2A, Slot::P2B}},
-          {dex::Move::FURY_ATTACK, {Slot::P2A, Slot::P2B}},
-        }));
+        Catch::Matchers::UnorderedRangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::FURY_ATTACK, {Slot::P2A, Slot::P2B}},
+            {dex::Move::FLASH_CANNON, {Slot::P2A, Slot::P2B}},
+          }));
       REQUIRE_THAT(
         p1Options.moves[1U],
-        Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
-          {dex::Move::MOONBLAST, {Slot::P2A, Slot::P2B}},
-        }));
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::MOONBLAST, {Slot::P2A, Slot::P2B}},
+          }));
 
       REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2C});
       REQUIRE_THAT(
         p2Options.moves[0U],
-        Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
-          {dex::Move::THUNDERBOLT, {Slot::P1A, Slot::P1B}},
-        }));
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::THUNDERBOLT, {Slot::P1A, Slot::P1B}},
+          }));
       REQUIRE_THAT(
         p2Options.moves[1U],
-        Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
-          {dex::Move::KNOCK_OFF, {Slot::P1A, Slot::P1B}},
-        }));
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::KNOCK_OFF, {Slot::P1A, Slot::P1B}},
+          }));
     }
 
-    std::swap(p2Team[2U], p2Team[0U]);
-    p1Team[0U].moves[1U].pp = Constants::MovePp::MIN;
-    p1Team[1U].currentHp = Constants::PokemonCurrentHpStat::MIN;
-    p1Team[2U].currentHp = Constants::PokemonCurrentHpStat::MIN;
+    std::swap(p2C, p2A);
+    p1A.moves[1U].pp = Constants::MovePp::MIN;
+    p1B.currentHp = Constants::PokemonCurrentHpStat::MIN;
+    p1C.currentHp = Constants::PokemonCurrentHpStat::MIN;
 
     setSideHandles();
-    simulate_turn::setSideOptions(simulation);
+    simulate_turn::setSideOptions(test.simulation);
 
     if (battleFormat == BattleFormat::SINGLES) {
       SinglesSideOptions p1Options = p1Side.get<SinglesSideOptions>();
@@ -613,16 +504,18 @@ TEST_CASE("Simulate Turn: Decisions", "[Simulation][SimulateTurn]") {
       REQUIRE(p1Options.switches.val.empty());
       REQUIRE_THAT(
         p1Options.moves,
-        Catch::Matchers::RangeEquals(types::moveSlots<SinglesMoveOption>{
-          {dex::Move::FURY_ATTACK, Slot::P2A},
-        }));
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<SinglesMoveOption>{
+            {dex::Move::FURY_ATTACK, Slot::P2A},
+          }));
 
       REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2B, Slot::P2C});
       REQUIRE_THAT(
         p2Options.moves,
-        Catch::Matchers::RangeEquals(types::moveSlots<SinglesMoveOption>{
-          {dex::Move::QUIVER_DANCE, Slot::P2A},
-        }));
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<SinglesMoveOption>{
+            {dex::Move::QUIVER_DANCE, Slot::P2A},
+          }));
     }
     else {
       DoublesSideOptions p1Options = p1Side.get<DoublesSideOptions>();
@@ -630,22 +523,25 @@ TEST_CASE("Simulate Turn: Decisions", "[Simulation][SimulateTurn]") {
       REQUIRE(p1Options.switches.val.empty());
       REQUIRE_THAT(
         p1Options.moves[0U],
-        Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
-          {dex::Move::FURY_ATTACK, {Slot::P2A, Slot::P2B}},
-        }));
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::FURY_ATTACK, {Slot::P2A, Slot::P2B}},
+          }));
       REQUIRE(p1Options.moves[1U].empty());
 
       REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2C});
       REQUIRE_THAT(
         p2Options.moves[0U],
-        Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
-          {dex::Move::QUIVER_DANCE, {Slot::P2A}},
-        }));
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::QUIVER_DANCE, {Slot::P2A}},
+          }));
       REQUIRE_THAT(
         p2Options.moves[1U],
-        Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
-          {dex::Move::KNOCK_OFF, {Slot::P1A}},
-        }));
+        Catch::Matchers::RangeEquals(
+          types::moveSlots<DoublesMoveOption>{
+            {dex::Move::KNOCK_OFF, {Slot::P1A}},
+          }));
     }
   }
 }

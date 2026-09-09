@@ -1,6 +1,7 @@
 #include "Tests.hpp"
 
 namespace pokesim {
+namespace {
 struct IdealDamageResults {
   DamageRolls rolls;
   calc_damage::UsesUntilKo koUses;
@@ -25,77 +26,98 @@ struct Ideals {
   auto multiplier() const { return (types::effectMultiplier)after.rolls.max() / before.rolls.max(); }
 };
 
-TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
-  static Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.runWithAnalyzeEffect = true;
-  Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
-  const types::registry& registry = simulation.registry;
-  auto& p1Info = battleCreationInfo.sides.p1().team[0];
-  auto& p2Info = battleCreationInfo.sides.p2().team[0];
+const IdealDamageResults p1FuryAttack{
+  {14U, 13U, 13U, 13U, 13U, 13U, 13U, 13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U},
+  {{{21U, 1U}, {23U, 7U}, {25U, 7U}, {27U, 1U}}},
+};
 
-  p2Info.item = dex::Item::CHOICE_SPECS;
-  p2Info.nature = dex::Nature::MODEST;
+const IdealDamageResults p1FuryAttackBurn{
+  {7U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 5U},
+  {{{42U, 1U}, {49U, 14U}, {58U, 1U}}},
+};
+
+const IdealDamageResults p1FuryAttackBurnPlus2Atk{
+  {13U, 13U, 13U, 13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U, 11U, 11U, 11U},
+  {{{23U, 4U}, {25U, 8U}, {27U, 4U}}},
+};
+
+const IdealDamageResults p1KnockOff{
+  {84U, 83U, 82U, 81U, 80U, 79U, 78U, 78U, 77U, 76U, 75U, 74U, 73U, 73U, 72U, 71U},
+  {{{4U, 14U}, {5U, 2U}}},
+};
+
+const IdealDamageResults p1KnockOffBurn{
+  {42U, 41U, 41U, 40U, 40U, 39U, 39U, 39U, 38U, 38U, 37U, 37U, 36U, 36U, 36U, 35U},
+  {{{7U, 1U}, {8U, 11U}, {9U, 4U}}},
+};
+
+const IdealDamageResults p1KnockOffMinus1Atk{
+  {56U, 55U, 54U, 54U, 53U, 53U, 52U, 52U, 51U, 50U, 50U, 49U, 49U, 48U, 48U, 47U},
+  {{{6U, 13U}, {7U, 3U}}},
+};
+
+const IdealDamageResults p1Thunderbolt{
+  {47U, 46U, 46U, 45U, 45U, 44U, 44U, 43U, 43U, 42U, 42U, 41U, 41U, 40U, 40U, 39U},
+  {{{7U, 11U}, {8U, 5U}}},
+};
+
+const IdealDamageResults p2FuryAttack{
+  {5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 4U, 4U, 4U, 4U, 4U, 4U},
+  {{{56U, 10U}, {70U, 6U}}},
+};
+
+const IdealDamageResults p2KnockOff{
+  {64U, 63U, 62U, 62U, 61U, 60U, 60U, 59U, 58U, 58U, 57U, 56U, 56U, 55U, 55U, 54U},
+  {{{5U, 13U}, {6U, 3U}}},
+};
+
+const IdealDamageResults p2KnockOffBurnPlus2Atk{
+  {63U, 62U, 62U, 61U, 60U, 60U, 59U, 59U, 58U, 57U, 57U, 56U, 55U, 55U, 54U, 53U},
+  {{{5U, 12U}, {6U, 4U}}},
+};
+
+const IdealDamageResults p2KnockOffP1Plus2Def{
+  {33U, 32U, 32U, 32U, 31U, 31U, 31U, 30U, 30U, 30U, 29U, 29U, 29U, 28U, 28U, 28U},
+  {{{9U, 7U}, {10U, 9U}}},
+};
+
+const IdealDamageResults p2Thunderbolt{
+  {288U, 284U, 282U, 278U, 276U, 272U, 270U, 266U, 264U, 260U, 258U, 254U, 252U, 248U, 246U, 242U},
+  {{{1U, 4U}, {2U, 12U}}},
+};
+
+const IdealDamageResults p2ThunderboltPlus3Spa{
+  {710U, 702U, 696U, 686U, 680U, 674U, 666U, 660U, 654U, 644U, 638U, 630U, 624U, 618U, 608U, 602U},
+  {{{1U, 16U}}},
+};
+}  // namespace
+
+TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect][SingleBattle]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    test.side(test.pokemon(
+      dex::Species::EMPOLEON,
+      dex::Item::ASSAULT_VEST,
+      dex::Move::FURY_ATTACK,
+      dex::Move::KNOCK_OFF,
+      dex::Move::THUNDERBOLT)),
+    test.side(test.pokemon(
+      dex::Species::AMPHAROS,
+      dex::Item::CHOICE_SPECS,
+      dex::Nature::MODEST,
+      dex::Move::FURY_ATTACK,
+      dex::Move::KNOCK_OFF,
+      dex::Move::THUNDERBOLT)));
+
+  BattleCreationInfo& battleCreationInfo = test.battleInfoList.front();
+  battleCreationInfo.runWithAnalyzeEffect = true;
+  auto [p1Info, p2Info] = test.getPokemonCreationInfo(Slot::P1A, Slot::P2A);
+  types::registry& registry = test.registry();
 
   bool getKoUses = GENERATE(false, true);
   bool reconsiderActiveEffects = GENERATE(false, true);
 
   CAPTURE(getKoUses, reconsiderActiveEffects);
-
-  IdealDamageResults p1FuryAttack = {
-    {13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U, 11U, 11U, 11U, 11U, 11U, 11U, 11U},
-    {{{23U, 1U}, {25U, 7U}, {27U, 8U}}},
-  };
-  IdealDamageResults p1FuryAttackBurn = {
-    {6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U},
-    {{{50U, 8U}, {59U, 8U}}},
-  };
-  IdealDamageResults p1FuryAttackBurnPlus2Atk = {
-    {12U, 12U, 12U, 12U, 12U, 11U, 11U, 11U, 11U, 11U, 11U, 11U, 11U, 10U, 10U, 10U},
-    {{{25U, 5U}, {27U, 8U}, {30U, 3U}}},
-  };
-  IdealDamageResults p1KnockOff = {
-    {52U, 51U, 50U, 50U, 49U, 49U, 48U, 48U, 47U, 47U, 46U, 46U, 45U, 45U, 44U, 44U},
-    {{{6U, 4U}, {7U, 12U}}},
-  };
-  IdealDamageResults p1KnockOffBurn = {
-    {26U, 25U, 25U, 25U, 24U, 24U, 24U, 24U, 23U, 23U, 23U, 23U, 22U, 22U, 22U, 22U},
-    {{{12U, 4U}, {13U, 8U}, {14U, 4U}}},
-  };
-  IdealDamageResults p1KnockOffMinus1Atk = {
-    {35U, 34U, 34U, 33U, 33U, 33U, 32U, 32U, 32U, 31U, 31U, 31U, 30U, 30U, 30U, 29U},
-    {{{9U, 6U}, {10U, 9U}, {11U, 1U}}},
-  };
-  IdealDamageResults p1Thunderbolt = {
-    {43U, 43U, 42U, 42U, 41U, 41U, 40U, 40U, 40U, 39U, 39U, 38U, 38U, 37U, 37U, 36U},
-    {{{7U, 2U}, {8U, 13U}, {9U, 1U}}},
-  };
-
-  IdealDamageResults p2FuryAttack = {
-    {5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 4U, 4U, 4U, 4U, 4U, 4U},
-    {{{55U, 10U}, {69U, 6U}}},
-  };
-  IdealDamageResults p2KnockOff = {
-    {44U, 43U, 43U, 42U, 42U, 41U, 41U, 40U, 40U, 40U, 39U, 39U, 38U, 38U, 37U, 37U},
-    {{{7U, 10U}, {8U, 6U}}},
-  };
-  IdealDamageResults p2KnockOffBurnPlus2Atk = {
-    {43U, 42U, 42U, 41U, 41U, 40U, 40U, 39U, 39U, 39U, 38U, 38U, 37U, 37U, 36U, 36U},
-    {{{7U, 7U}, {8U, 9U}}},
-  };
-  IdealDamageResults p2KnockOffP1Plus2Def = {
-    {23U, 22U, 22U, 22U, 22U, 21U, 21U, 21U, 21U, 20U, 20U, 20U, 20U, 20U, 19U, 19U},
-    {{{12U, 1U}, {13U, 4U}, {14U, 9U}, {15U, 2U}}},
-  };
-  IdealDamageResults p2Thunderbolt = {
-    {282U, 278U, 276U, 272U, 270U, 266U, 264U, 260U, 258U, 254U, 252U, 248U, 246U, 242U, 240U, 236U},
-    {{{1U, 3U}, {2U, 13U}}},
-  };
-
-  IdealDamageResults p2ThunderboltPlus3Spa = {
-    {698U, 690U, 684U, 678U, 668U, 662U, 656U, 648U, 642U, 636U, 626U, 620U, 614U, 606U, 600U, 594U},
-    {{{1U, 16U}}},
-  };
 
   entt::dense_map<types::entity, Ideals> idealResults;
   auto checkResults = [&](const analyze_effect::Results& results) {
@@ -163,8 +185,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     });
   };
 
-  auto& options = simulation.analyzeEffectOptions;
-
+  auto& options = test.analyzeEffectOptions();
   options.setReconsiderActiveEffects(reconsiderActiveEffects);
   if (getKoUses) {
     options.setDamageRollOptions({DamageRollKind::ALL_DAMAGE_ROLLS});
@@ -180,15 +201,13 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
-    pokedex.loadForBattleInfo({battleCreationInfo});
-    simulation.createInitialStates({battleCreationInfo});
 
-    types::entity inputEntity = simulation.registry.view<analyze_effect::tags::Input>().front();
+    auto results = test.analyzeEffect();
+    types::entity inputEntity = registry.view<analyze_effect::tags::Input>().front();
     idealResults.emplace(
       inputEntity,
       Ideals{reconsiderActiveEffects ? p1FuryAttack : p1FuryAttackBurn, p1FuryAttackBurn});
 
-    auto results = simulation.analyzeEffect();
     checkResults(results);
   }
 
@@ -197,13 +216,11 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
-    pokedex.loadForBattleInfo({battleCreationInfo});
-    simulation.createInitialStates({battleCreationInfo});
 
-    types::entity inputEntity = simulation.registry.view<analyze_effect::tags::Input>().front();
+    auto results = test.analyzeEffect();
+    types::entity inputEntity = registry.view<analyze_effect::tags::Input>().front();
     idealResults.emplace(inputEntity, Ideals{p1FuryAttack, p1FuryAttackBurn});
 
-    auto results = simulation.analyzeEffect();
     checkResults(results);
   }
 
@@ -213,22 +230,19 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::PAR},
     };
-    pokedex.loadForBattleInfo({battleCreationInfo});
-    simulation.createInitialStates({battleCreationInfo});
 
-    simulation.registry.view<analyze_effect::tags::Input, StatusName>().each(
-      [&](types::entity entity, StatusName status) {
-        if (status.val == dex::Status::BRN) {
-          idealResults.emplace(
-            entity,
-            Ideals{reconsiderActiveEffects ? p1FuryAttack : p1FuryAttackBurn, p1FuryAttackBurn});
-        }
-        else {
-          idealResults.emplace(entity, Ideals{p1FuryAttackBurn, p1FuryAttack});
-        }
-      });
+    auto results = test.analyzeEffect();
+    registry.view<analyze_effect::tags::Input, StatusName>().each([&](types::entity entity, StatusName status) {
+      if (status.val == dex::Status::BRN) {
+        idealResults.emplace(
+          entity,
+          Ideals{reconsiderActiveEffects ? p1FuryAttack : p1FuryAttackBurn, p1FuryAttackBurn});
+      }
+      else {
+        idealResults.emplace(entity, Ideals{p1FuryAttackBurn, p1FuryAttack});
+      }
+    });
 
-    auto results = simulation.analyzeEffect();
     checkResults(results);
   }
 
@@ -238,13 +252,11 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
-    pokedex.loadForBattleInfo({battleCreationInfo});
-    simulation.createInitialStates({battleCreationInfo});
 
-    simulation.registry.view<analyze_effect::tags::Input>().each(
+    auto results = test.analyzeEffect();
+    registry.view<analyze_effect::tags::Input>().each(
       [&](types::entity entity) { idealResults.emplace(entity, Ideals{p1FuryAttack, p1FuryAttackBurn}); });
 
-    auto results = simulation.analyzeEffect();
     checkResults(results);
   }
 
@@ -254,14 +266,12 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
-    pokedex.loadForBattleInfo({battleCreationInfo});
-    simulation.createInitialStates({battleCreationInfo});
 
-    simulation.registry.view<analyze_effect::tags::Input>().each([&](types::entity entity) {
+    auto results = test.analyzeEffect();
+    registry.view<analyze_effect::tags::Input>().each([&](types::entity entity) {
       idealResults.emplace(entity, Ideals{reconsiderActiveEffects ? p1FuryAttack : p1FuryAttackBurn, p1FuryAttackBurn});
     });
 
-    auto results = simulation.analyzeEffect();
     checkResults(results);
   }
 
@@ -270,13 +280,11 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK, dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
-    pokedex.loadForBattleInfo({battleCreationInfo});
-    simulation.createInitialStates({battleCreationInfo});
 
-    simulation.registry.view<analyze_effect::tags::Input>().each(
+    auto results = test.analyzeEffect();
+    registry.view<analyze_effect::tags::Input>().each(
       [&](types::entity entity) { idealResults.emplace(entity, Ideals{p1FuryAttack, p1FuryAttackBurn}); });
 
-    auto results = simulation.analyzeEffect();
     checkResults(results);
   }
 
@@ -285,14 +293,12 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
     battleCreationInfo.effectsToAnalyze = {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK, dex::Move::FURY_ATTACK}, dex::Status::BRN},
     };
-    pokedex.loadForBattleInfo({battleCreationInfo});
-    simulation.createInitialStates({battleCreationInfo});
 
-    simulation.registry.view<analyze_effect::tags::Input>().each([&](types::entity entity) {
+    auto results = test.analyzeEffect();
+    registry.view<analyze_effect::tags::Input>().each([&](types::entity entity) {
       idealResults.emplace(entity, Ideals{reconsiderActiveEffects ? p1FuryAttack : p1FuryAttackBurn, p1FuryAttackBurn});
     });
 
-    auto results = simulation.analyzeEffect();
     checkResults(results);
   }
 
@@ -302,20 +308,17 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::BRN},
       {Slot::P1A, Slot::P2A, Slot::P1A, {dex::Move::FURY_ATTACK}, dex::Status::PAR},
     };
-    pokedex.loadForBattleInfo({battleCreationInfo});
-    simulation.createInitialStates({battleCreationInfo});
 
-    simulation.registry.view<analyze_effect::tags::Input, StatusName>().each(
-      [&](types::entity entity, StatusName status) {
-        if (status.val == dex::Status::BRN) {
-          idealResults.emplace(entity, Ideals{p1FuryAttack, p1FuryAttackBurn});
-        }
-        else {
-          idealResults.emplace(entity, Ideals{p1FuryAttack, p1FuryAttack});
-        }
-      });
+    auto results = test.analyzeEffect();
+    registry.view<analyze_effect::tags::Input, StatusName>().each([&](types::entity entity, StatusName status) {
+      if (status.val == dex::Status::BRN) {
+        idealResults.emplace(entity, Ideals{p1FuryAttack, p1FuryAttackBurn});
+      }
+      else {
+        idealResults.emplace(entity, Ideals{p1FuryAttack, p1FuryAttack});
+      }
+    });
 
-    auto results = simulation.analyzeEffect();
     checkResults(results);
   }
 
@@ -331,21 +334,15 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
         {{dex::Stat::ATK, 2}},
       },
     };
-    pokedex.loadForBattleInfo({battleCreationInfo});
-    simulation.createInitialStates({battleCreationInfo});
 
-    types::entity inputEntity = simulation.registry.view<analyze_effect::tags::Input>().front();
+    auto results = test.analyzeEffect();
+    types::entity inputEntity = registry.view<analyze_effect::tags::Input>().front();
     idealResults.emplace(inputEntity, Ideals{p1FuryAttack, p1FuryAttackBurnPlus2Atk});
 
-    auto results = simulation.analyzeEffect();
     checkResults(results);
   }
 
   SECTION("Multiple Inputs, Multiple Effects") {
-    p1Info.status = dex::Status::NO_STATUS;
-    p1Info.item = dex::Item::NO_ITEM;
-    p2Info.item = dex::Item::NO_ITEM;
-
     battleCreationInfo.effectsToAnalyze = {
       {
         Slot::P1A,
@@ -388,6 +385,14 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
         Slot::P2A,
         Slot::P1A,
         Slot::P2A,
+        {dex::Move::KNOCK_OFF},
+        dex::Status::BRN,
+        {{dex::Stat::ATK, 2}},
+      },
+      {
+        Slot::P2A,
+        Slot::P1A,
+        Slot::P2A,
         {dex::Move::THUNDERBOLT},
         std::nullopt,
         {{dex::Stat::SPA, 3}},
@@ -408,11 +413,10 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
         dex::Status::TOX,
       },
     };
-    pokedex.loadForBattleInfo({battleCreationInfo});
-    simulation.createInitialStates({battleCreationInfo});
 
+    auto results = test.analyzeEffect();
     auto inputs = registry.view<analyze_effect::tags::Input>();
-    REQUIRE(inputs.size() == 15U);
+    REQUIRE(inputs.size() == 16U);
 
     inputs.each([&](types::entity input) {
       auto [attacker, effectTarget, move] =
@@ -463,6 +467,12 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
           default:                   FAIL("Test is missing damages for a move."); break;
         }
       }
+      else if (!attackerIsP1 && !effectTargetIsP1 && effectStatus.val == dex::Status::BRN && effectAtkBoost.val == 2) {
+        switch (move.val) {
+          case dex::Move::KNOCK_OFF: pickedIdeals = {p2KnockOff, p2KnockOffBurnPlus2Atk}; break;
+          default:                   FAIL("Test is missing damages for a move."); break;
+        }
+      }
       else if (!attackerIsP1 && !effectTargetIsP1 && effectSpaBoost.val == 3) {
         switch (move.val) {
           case dex::Move::THUNDERBOLT: pickedIdeals = {p2Thunderbolt, p2ThunderboltPlus3Spa}; break;
@@ -491,7 +501,6 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect]") {
       idealResults.emplace(input, pickedIdeals);
     });
 
-    auto results = simulation.analyzeEffect();
     checkResults(results);
   }
 }

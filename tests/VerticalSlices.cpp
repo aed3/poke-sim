@@ -3,20 +3,21 @@
 #include "Tests.hpp"
 
 namespace pokesim {
-static GameMechanics constexpr TestMechanic = GameMechanics::SCARLET_VIOLET;
+namespace {
+GameMechanics constexpr TestMechanic = GameMechanics::SCARLET_VIOLET;
 
-static auto constexpr MAX_PROBABILITY = Constants::Probability::MAX;
-static auto constexpr MAX_PERCENT_CHANCE = Constants::PercentChance::MAX;
-static auto constexpr CHANCE_TO_PROBABILITY = Constants::PercentChanceToProbability;
-static auto constexpr PROBABILITY_TO_CHANCE = Constants::ProbabilityToPercentChance;
-static auto constexpr CRIT_PROBABILITY = MAX_PROBABILITY / MechanicConstants::CRIT_CHANCE_DIVISORS(TestMechanic)[0];
-static auto constexpr STAT_BOOST_STAGES = Constants::STAT_BOOST_STAGES;
-static auto constexpr MIN_HP = Constants::PokemonCurrentHpStat::MIN;
+auto constexpr MAX_PROBABILITY = Constants::Probability::MAX;
+auto constexpr MAX_PERCENT_CHANCE = Constants::PercentChance::MAX;
+auto constexpr CHANCE_TO_PROBABILITY = Constants::PercentChanceToProbability;
+auto constexpr PROBABILITY_TO_CHANCE = Constants::ProbabilityToPercentChance;
+auto constexpr CRIT_PROBABILITY = MAX_PROBABILITY / MechanicConstants::CRIT_CHANCE_DIVISORS(TestMechanic)[0];
+auto constexpr STAT_BOOST_STAGES = Constants::STAT_BOOST_STAGES;
+auto constexpr MIN_HP = Constants::PokemonCurrentHpStat::MIN;
 
-static auto constexpr ALL_DAMAGE = DamageRollKind::ALL_DAMAGE_ROLLS;
-static auto constexpr AVERAGE_DAMAGE = DamageRollKind::AVERAGE_DAMAGE;
-static auto constexpr AVERAGE_CRIT_DAMAGE = DamageRollKind::AVERAGE_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE;
-static auto constexpr MIN_AND_MAX_DAMAGE = DamageRollKind::MIN_DAMAGE | DamageRollKind::MAX_DAMAGE;
+auto constexpr ALL_DAMAGE = DamageRollKind::ALL_DAMAGE_ROLLS;
+auto constexpr AVERAGE_DAMAGE = DamageRollKind::AVERAGE_DAMAGE;
+auto constexpr AVERAGE_CRIT_DAMAGE = DamageRollKind::AVERAGE_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE;
+auto constexpr MIN_AND_MAX_DAMAGE = DamageRollKind::MIN_DAMAGE | DamageRollKind::MAX_DAMAGE;
 
 constexpr std::array<DamageRollKind, 3U> branchingDamageRollOptions = {
   AVERAGE_DAMAGE,
@@ -31,91 +32,77 @@ constexpr std::array<DamageRollKind, 4U> fixedBranchDamageRollOptions = {
   MIN_AND_MAX_DAMAGE,
 };
 
-struct VerticalSliceChecks : TestChecks {
- private:
-  const simulate_turn::Options* options;
-  bool doPokemonAndSidesChecks = false;
+auto runAndCheckSimulation(TestSimulation& test, std::size_t idealTurnOutcomeCount, std::size_t totalPossibilities) {
+  test.initializeSimulation();
+  auto originalBattles = test.simulation.battleEntities();
 
-  void checkBattle() const {
-    debug::TypesToIgnore typesToIgnore;
-    typesToIgnore.add<simulate_turn::TurnOutcomeBattles, simulate_turn::tags::SpeedSortNeeded>();
+  auto results = test.simulateTurn(Tags<Probability, RngSeed>{}, Tags<FoesRemaining>{});
+  auto& options = test.simulateTurnOptions();
+  types::registry& registry = test.registry();
 
-    debug::TypesToIgnore typesIgnoredOnConstants = typesToIgnore;
-    typesToIgnore.add<Probability, ParentBattle, Turn, RootBattle>();
+  debug::TypesToIgnore typesToIgnore;
+  typesToIgnore.add<simulate_turn::TurnOutcomeBattles, simulate_turn::tags::SpeedSortNeeded>();
 
-    if (!options->getMakeBranchesOnRandomEvents()) {
-      typesToIgnore.add<RngSeed>();
+  debug::TypesToIgnore typesIgnoredOnConstants = typesToIgnore;
+  typesToIgnore.add<Probability, ParentBattle, Turn, RootBattle>();
+
+  if (!options.getMakeBranchesOnRandomEvents()) {
+    typesToIgnore.add<RngSeed>();
+  }
+
+  for (types::entity battle : registry.view<tags::Battle>()) {
+    types::entity initialEntity = test.checks.getInitialEntity(battle);
+    bool shouldNotChange = !options.getApplyChangesToInputBattle() && initialEntity == battle;
+    test.checks.checkEntityForChanges(battle, shouldNotChange ? typesIgnoredOnConstants : typesToIgnore);
+  }
+
+  if (!options.getMakeBranchesOnRandomEvents()) {
+    types::entityIndex finalEntityCount = test.checks.getFinalEntityCount();
+    if (options.getApplyChangesToInputBattle()) {
+      REQUIRE(finalEntityCount == test.checks.initialEntityCount);
     }
+    else {
+      REQUIRE(finalEntityCount == (test.checks.initialEntityCount * 2U));
+    }
+  }
 
-    for (types::entity entity : registry->view<tags::Battle>()) {
-      if (!isSpecificallyChecked(entity)) {
-        continue;
+  REQUIRE(results.turnOutcomeBattlesResults().size() == test.battleInfoList.size());
+  types::entityVector allTurnOutcomes;
+  results.turnOutcomeBattlesResults().each([&](const auto& turnOutcomes) {
+    allTurnOutcomes.insert(allTurnOutcomes.end(), turnOutcomes.val.begin(), turnOutcomes.val.end());
+    for (types::entity battle : turnOutcomes.val) {
+      if (!options.getApplyChangesToInputBattle()) {
+        REQUIRE_FALSE(registry.all_of<simulate_turn::TurnOutcomeBattles>(battle));
       }
-      types::entity original = debug::findCopyParent(currentEntitiesToInitial, *registry, entity);
-      bool shouldNotChange = !options->getApplyChangesToInputBattle() && original == entity;
-      debug::areEntitiesEqual(
-        *registry,
-        entity,
-        registryOnInput,
-        getInitialEntity(entity),
-        shouldNotChange ? typesIgnoredOnConstants : typesToIgnore);
-    }
-  }
 
-  void checkPokemon() const {
-    specificallyCheckEntities<
-      tags::Pokemon,
-      stat::CurrentHp,
-      LastUsedMove,
-      MoveSlots,
-      tags::HasStatus,
-      status::tags::Paralysis,
-      stat::EffectiveSpe>();
-  }
+      types::entity parentBattle = test.checks.getParentEntity(battle);
+      REQUIRE(registry.get<RootBattle>(battle).val == parentBattle);
 
-  void checkSides() const { specificallyCheckEntities<tags::Side, SideDecision>(); }
+      Sides sides = registry.get<Sides>(battle);
+      REQUIRE_FALSE(registry.all_of<SideDecision>(sides.val.p1()));
+      REQUIRE_FALSE(registry.all_of<SideDecision>(sides.val.p2()));
 
- public:
-  VerticalSliceChecks(
-    const Simulation& _simulation, const types::entityVector& specificallyCheckedEntities,
-    bool _doPokemonAndSidesChecks)
-      : TestChecks(_simulation, specificallyCheckedEntities),
-        options(&_simulation.simulateTurnOptions),
-        doPokemonAndSidesChecks(_doPokemonAndSidesChecks) {}
-
-  void checkEntities() const {
-    checkBattle();
-    if (doPokemonAndSidesChecks) {
-      checkSides();
-      checkPokemon();
-    }
-    checkRemainingOutputs();
-
-    if (!options->getMakeBranchesOnRandomEvents()) {
-      types::entityIndex finalEntityCount = getFinalEntityCount();
-      if (options->getApplyChangesToInputBattle()) {
-        REQUIRE(finalEntityCount == initialEntityCount);
+      auto [initialRngSeed, currentRngSeed] = test.checks.getInitialAndCurrent<RngSeed>(battle);
+      if (options.getMakeBranchesOnRandomEvents() || totalPossibilities == 1U) {
+        REQUIRE(currentRngSeed.val == initialRngSeed.val);
       }
       else {
-        REQUIRE(finalEntityCount == (initialEntityCount * 2U));
+        REQUIRE_FALSE(currentRngSeed.val == initialRngSeed.val);
       }
+    }
+  });
+  REQUIRE(allTurnOutcomes.size() == idealTurnOutcomeCount);
+
+  if (!options.getApplyChangesToInputBattle()) {
+    for (types::entity originalBattle : originalBattles) {
+      bool originalInOutcome =
+        std::find(allTurnOutcomes.begin(), allTurnOutcomes.end(), originalBattle) != allTurnOutcomes.end();
+      REQUIRE_FALSE(originalInOutcome);
     }
   }
 
-  types::stat initialSpeed(types::entity pokemon) const {
-    types::entity initial = getInitialEntity(pokemon);
-    return registryOnInput.get<stat::EffectiveSpe>(initial).val;
-  }
-
-  const RngSeed& initialRngSeed(types::entity battle) const {
-    types::entity initial = getInitialEntity(battle);
-    return registryOnInput.get<RngSeed>(initial);
-  }
-
-  types::entity parentBattle(types::entity battle) const {
-    return debug::findCopyParent(currentEntitiesToInitial, *registry, battle);
-  }
-};
+  return allTurnOutcomes;
+}
 
 struct VerticalSliceDamageValueInfo {
  protected:
@@ -309,19 +296,17 @@ struct VerticalSliceDamageValueInfo {
   bool mightCrit() const { return checkWasCrit; }
   bool guaranteedCrit() const { return willCrit; }
 };
+}  // namespace
 
 TEST_CASE(
   "Simulate Turn: Vertical Slice 1, Single Battle", "[Simulation][SimulateTurn][VerticalSlice1][SingleBattle]") {
-  struct Checks : VerticalSliceChecks {
-    Checks(const Simulation& _simulation, const types::entityVector& specificallyCheckedEntities)
-        : VerticalSliceChecks(_simulation, specificallyCheckedEntities, true) {}
-  };
+  static constexpr auto THUNDERBOLT_PAR_CHANCE = dex::Thunderbolt::targetSecondaryEffect::chance(TestMechanic);
+  static constexpr auto PARALYSIS_SPEED_DIVISOR =
+    dex::Paralysis::speedDivisor(TestMechanic) / dex::Paralysis::speedDividend(TestMechanic);
 
   struct DamageValueInfo : VerticalSliceDamageValueInfo {
    private:
     bool checkWasParalyzed;
-
-    types::percentChance THUNDERBOLT_PAR_CHANCE = dex::Thunderbolt::targetSecondaryEffect::chance(TestMechanic);
 
    public:
     DamageValueInfo(
@@ -362,22 +347,6 @@ TEST_CASE(
     bool mightCauseParalysis() const { return checkWasParalyzed; }
   };
 
-  static Pokedex pokedex{TestMechanic};
-  BattleCreationInfo battleCreationInfo;
-  SideDecision p1Decision{PlayerSideId::P1};
-  SideDecision p2Decision{PlayerSideId::P2};
-  MoveDecision p1MoveDecision{Slot::P1A, Slot::P2A, dex::Move::KNOCK_OFF};
-  MoveDecision p2MoveDecision{Slot::P2A, Slot::P1A, dex::Move::THUNDERBOLT};
-
-  p1Decision.decisions = types::slotDecisions{p1MoveDecision};
-  p2Decision.decisions = types::slotDecisions{p2MoveDecision};
-  battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
-
-  Simulation simulation = createSingleBattleSimulation(pokedex, battleCreationInfo);
-  auto& p1Info = battleCreationInfo.sides.p1().team[0];
-  auto& p2Info = battleCreationInfo.sides.p2().team[0];
-  battleCreationInfo.runWithSimulateTurn = true;
-
   auto numberOfSamples = GENERATE(std::optional<types::entityIndex>{std::nullopt}, 1U, 5U);
 
   bool applyChangesToInputBattle = GENERATE(true, false);
@@ -408,7 +377,30 @@ TEST_CASE(
   INFO("randomChanceUpperLimit := " + Catch::StringMaker<std::optional<int>>::convert(randomChanceUpperLimit));
   CAPTURE(damageRollOptions.getP1(), damageRollOptions.getP2());
 
-  auto& options = simulation.simulateTurnOptions;
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  for (types::entityIndex i = 0U; i < numberOfSamples.value_or(1U); i++) {
+    test.setupBattle(
+      Turn{1U},
+      test.side(test.pokemon(
+        dex::Species::EMPOLEON,
+        dex::Item::ASSAULT_VEST,
+        dex::Ability::COMPETITIVE,
+        dex::Gender::MALE,
+        Level{99U},
+        Evs{0U, 25U, 50U, 75U, 100U, 125U},
+        dex::Move::FURY_ATTACK,
+        dex::Move::KNOCK_OFF)),
+      test.side(test.pokemon(
+        dex::Species::AMPHAROS,
+        dex::Ability::PLUS,
+        dex::Gender::FEMALE,
+        dex::Nature::HARDY,
+        Ivs{5U, 10U, 15U, 20U, 25U, 30U},
+        dex::Move::THUNDERBOLT)),
+      test.turnDecision(dex::Move::KNOCK_OFF, dex::Move::THUNDERBOLT));
+  }
+
+  auto& options = test.simulateTurnOptions();
   options.setApplyChangesToInputBattle(applyChangesToInputBattle);
   if (branchProbabilityLowerLimit.has_value())
     options.setBranchProbabilityLowerLimit(branchProbabilityLowerLimit.value());
@@ -423,7 +415,7 @@ TEST_CASE(
     160U,
     {260U, 258U, 254U, 252U, 248U, 246U, 242U, 240U, 240U, 236U, 234U, 230U, 228U, 224U, 222U, 218U},  // 15
     240U,
-    p1Info.stats.hp.value(),
+    275U,
     damageRollOptions.getP1(),
     options);
 
@@ -433,7 +425,7 @@ TEST_CASE(
     48U,
     {78U, 77U, 76U, 75U, 74U, 74U, 73U, 72U, 71U, 70U, 70U, 69U, 68U, 67U, 67U, 66U},  // 13
     72U,
-    p2Info.stats.hp.value(),
+    295U,
     damageRollOptions.getP2(),
     options);
 
@@ -447,113 +439,43 @@ TEST_CASE(
     idealTurnOutcomeCount = numberOfSamples.value();
   }
 
-  const auto expectedP1Hp = p1DamageInfo.possibleHpValues();
-  const auto expectedP2Hp = p2DamageInfo.possibleHpValues();
+  auto expectedP1Hp = p1DamageInfo.possibleHpValues();
+  auto expectedP2Hp = p2DamageInfo.possibleHpValues();
 
-  std::vector<BattleCreationInfo> battleCreationInfoList;
-  for (types::entityIndex i = 0U; i < numberOfSamples.value_or(1U); i++) {
-    battleCreationInfoList.push_back(battleCreationInfo);
-  }
-
-  simulation.createInitialStates(battleCreationInfoList);
-  const auto originalBattles = simulation.battleEntities();
-
-  const types::registry& registry = simulation.registry;
-
-  types::entityVector specificallyCheckedEntities;
-  for (types::entity battle : registry.view<tags::Battle>()) {
-    specificallyCheckedEntities.push_back(battle);
-  }
-
-  for (types::entity side : registry.view<tags::Side>()) {
-    specificallyCheckedEntities.push_back(side);
-  }
-
-  for (types::entity pokemon : registry.view<tags::Pokemon>()) {
-    specificallyCheckedEntities.push_back(pokemon);
-  }
-
-  Checks checks{simulation, specificallyCheckedEntities};
-  const auto result = simulation.simulateTurn();
-  checks.checkEntities();
-
-  REQUIRE(result.turnOutcomeBattlesResults().size() == battleCreationInfoList.size());
-  types::entityVector allTurnOutcomes;
-  result.turnOutcomeBattlesResults().each([&allTurnOutcomes](const auto& turnOutcomes) {
-    allTurnOutcomes.insert(allTurnOutcomes.end(), turnOutcomes.val.begin(), turnOutcomes.val.end());
-  });
-  REQUIRE(allTurnOutcomes.size() == idealTurnOutcomeCount);
-
-  if (!applyChangesToInputBattle) {
-    for (types::entity originalBattle : originalBattles) {
-      bool originalInOutcome =
-        std::find(allTurnOutcomes.begin(), allTurnOutcomes.end(), originalBattle) != allTurnOutcomes.end();
-      REQUIRE_FALSE(originalInOutcome);
-    }
-  }
+  auto allTurnOutcomes = runAndCheckSimulation(test, idealTurnOutcomeCount, totalPossibilities);
 
   entt::dense_set<types::stat> foundP1Hp;
   entt::dense_set<types::stat> foundP2Hp;
 
+  const types::registry& registry = test.registry();
   for (types::entity battle : allTurnOutcomes) {
-    const auto& [turn, probability, rngSeed, rootBattle, sides] =
-      registry.get<Turn, Probability, RngSeed, RootBattle, Sides>(battle);
-
-    types::entity p1Side = sides.val.p1();
-    types::entity p2Side = sides.val.p2();
-    types::entity p1Pokemon = registry.get<Team>(p1Side).val[0];
-    types::entity p2Pokemon = registry.get<Team>(p2Side).val[0];
     types::moveSlotIndex p1MoveIndex = 1U;
-    types::moveSlotIndex p2MoveIndex = 0U;
+    auto entities = test.getBattleEntities(battle);
 
-    bool p1Paralyzed = registry.all_of<status::tags::Paralysis>(p1Pokemon);
-    const auto& [p1Hp, p1LastUsedMove, p1Speed] =
-      registry.get<stat::CurrentHp, LastUsedMove, stat::EffectiveSpe>(p1Pokemon);
-    const auto& [p2Hp, p2LastUsedMove, p2Speed] =
-      registry.get<stat::CurrentHp, LastUsedMove, stat::EffectiveSpe>(p2Pokemon);
+    bool p1Paralyzed = registry.all_of<status::tags::Paralysis>(entities.p1A);
+    stat::CurrentHp p1Hp = registry.get<stat::CurrentHp>(entities.p1A);
+    stat::CurrentHp p2Hp = registry.get<stat::CurrentHp>(entities.p2A);
+    CAPTURE(p1Paralyzed, p1Hp.val, p2Hp.val, expectedP1Hp, expectedP2Hp);
 
-    types::stat initialP1Speed = checks.initialSpeed(p1Pokemon);
-    types::stat initialP2Speed = checks.initialSpeed(p2Pokemon);
+    Probability probability = registry.get<Probability>(battle);
+    REQUIRE(registry.get<Turn>(battle).val == 2U);
 
-    if (!applyChangesToInputBattle) {
-      REQUIRE_FALSE(registry.all_of<simulate_turn::TurnOutcomeBattles>(battle));
-    }
-
-    types::entity parentBattle = checks.parentBattle(battle);
-    REQUIRE(rootBattle.val == parentBattle);
-
-    REQUIRE(turn.val == 2U);
-    const auto& initialRngSeed = checks.initialRngSeed(battle);
-    if (options.getMakeBranchesOnRandomEvents() || totalPossibilities == 1U) {
-      REQUIRE(rngSeed.val == initialRngSeed.val);
-    }
-    else {
-      REQUIRE_FALSE(rngSeed.val == initialRngSeed.val);
-    }
-
-    REQUIRE_FALSE(registry.all_of<SideDecision>(p1Side));
-    REQUIRE_FALSE(registry.all_of<SideDecision>(p2Side));
-
-    REQUIRE(p1LastUsedMove.val == p1MoveIndex);
-    REQUIRE(p2LastUsedMove.val == p2MoveIndex);
-    checks.checkMovePpUsage(p1Pokemon, p1MoveIndex);
-    checks.checkMovePpUsage(p2Pokemon, p2MoveIndex);
+    REQUIRE(registry.get<FoesRemaining>(entities.p1Side).val == 1U);
+    REQUIRE(registry.get<FoesRemaining>(entities.p2Side).val == 1U);
 
     if (!p2DamageInfo.mightCauseParalysis() || !p1Paralyzed) {
-      REQUIRE_FALSE(registry.all_of<tags::HasStatus>(p1Pokemon));
-      REQUIRE_FALSE(p1Paralyzed);
-      REQUIRE(p1Speed.val == initialP1Speed);
+      test.checks.checkUsedMovePokemon<stat::CurrentHp>(entities.p1A, p1MoveIndex);
     }
     if (p1Paralyzed) {
-      REQUIRE(registry.all_of<tags::HasStatus>(p1Pokemon));
-      REQUIRE(p1Speed.val == (initialP1Speed / 2U));
+      auto [initialP1Speed, currentP1Speed] = test.checks.getInitialAndCurrent<stat::EffectiveSpe>(entities.p1A);
+      REQUIRE(registry.all_of<tags::HasStatus>(entities.p1A));
+      REQUIRE(currentP1Speed.val == initialP1Speed.val / PARALYSIS_SPEED_DIVISOR);
+      test.checks.checkUsedMovePokemon<stat::CurrentHp, tags::HasStatus, status::tags::Paralysis, stat::EffectiveSpe>(
+        entities.p1A,
+        p1MoveIndex);
     }
 
-    REQUIRE_FALSE(registry.all_of<tags::HasStatus>(p2Pokemon));
-    REQUIRE_FALSE(registry.all_of<status::tags::Paralysis>(p2Pokemon));
-    REQUIRE(p2Speed.val == initialP2Speed);
-
-    CAPTURE(p1Paralyzed, p1Hp.val, p2Hp.val, expectedP1Hp, expectedP2Hp);
+    test.checks.checkUsedMovePokemon<stat::CurrentHp>(entities.p2A);
 
     REQUIRE(expectedP1Hp.contains(p1Hp.val));
     REQUIRE(expectedP2Hp.contains(p2Hp.val));
@@ -574,21 +496,29 @@ TEST_CASE(
 
 TEST_CASE(
   "Simulate Turn: Vertical Slice 1, Double Battle", "[Simulation][SimulateTurn][VerticalSlice1][DoubleBattle]") {
-  struct Checks : VerticalSliceChecks {
-    Checks(const Simulation& _simulation, const types::entityVector& specificallyCheckedEntities)
-        : VerticalSliceChecks(_simulation, specificallyCheckedEntities, false) {}
-  };
+  static constexpr auto MOONBLAST_HIT_CHANCE = (types::percentChance)internal::chainValueToModifier(
+    dex::Moonblast::accuracy(TestMechanic),
+    dex::BrightPowder::onModifyAccuracyNumerator(TestMechanic),
+    dex::BrightPowder::onModifyAccuracyDenominator(TestMechanic));
+  static constexpr auto MOONBLAST_SPA_DROP_CHANCE = dex::Moonblast::targetSecondaryEffect::chance(TestMechanic);
+  static constexpr auto WILL_O_WISP_ACCURACY = dex::WillOWisp::accuracy(TestMechanic);
+  static constexpr auto BURN_HP_DIVISOR = dex::Burn::onResidualHpDecreaseDivisor(TestMechanic);
+  static constexpr auto FOCUS_SASH_HP_TO_KEEP = dex::FocusSash::onAfterModifyDamageHpToKeep(TestMechanic);
+  static constexpr auto LIFE_ORB_HP_DIVISOR = dex::LifeOrb::onAfterMoveUsedHpDecreaseDivisor(TestMechanic);
+  static constexpr auto QUIVER_DANCE_SPA_BOOST = dex::QuiverDance::targetPrimaryEffect::spaBoost(TestMechanic);
+  static constexpr auto QUIVER_DANCE_SPD_BOOST = dex::QuiverDance::targetPrimaryEffect::spdBoost(TestMechanic);
+  static constexpr auto QUIVER_DANCE_SPE_BOOST = dex::QuiverDance::targetPrimaryEffect::speBoost(TestMechanic);
+
+  static constexpr types::stat P1A_MAX_HP = 222U;
+  static constexpr types::stat P2A_MAX_HP = 314U;
+  static constexpr types::stat P1B_MAX_HP = 291U;
+  static constexpr types::stat P2B_MAX_HP = 237U;
 
   struct DamageValueInfo : VerticalSliceDamageValueInfo {
    private:
     dex::Item item;
     bool checkMoveMissed;
     bool checkMoveDroppedSpa;
-
-    types::percentChance MOONBLAST_HIT_CHANCE = (types::percentChance)internal::chainValueToModifier(
-      dex::Moonblast::accuracy(TestMechanic), dex::BrightPowder::onModifyAccuracyNumerator(TestMechanic),
-      dex::BrightPowder::onModifyAccuracyDenominator(TestMechanic));
-    types::percentChance MOONBLAST_SPA_DROP_CHANCE = dex::Moonblast::targetSecondaryEffect::chance(TestMechanic);
 
    public:
     DamageValueInfo(
@@ -665,27 +595,6 @@ TEST_CASE(
     bool moveMightDropSpa() const { return checkMoveDroppedSpa; }
   };
 
-  static Pokedex pokedex{TestMechanic};
-  BattleCreationInfo battleCreationInfo;
-
-  SideDecision p1Decision{PlayerSideId::P1};
-  SideDecision p2Decision{PlayerSideId::P2};
-  MoveDecision p1AMoveDecision{Slot::P1A, Slot::P2B, dex::Move::MOONBLAST};
-  MoveDecision p1BMoveDecision{Slot::P1B, Slot::P2A, dex::Move::WILL_O_WISP};
-  MoveDecision p2AMoveDecision{Slot::P2A, Slot::P1B, dex::Move::KNOCK_OFF};
-  MoveDecision p2BMoveDecision{Slot::P2B, Slot::P2B, dex::Move::QUIVER_DANCE};
-
-  p1Decision.decisions = types::slotDecisions{p1AMoveDecision, p1BMoveDecision};
-  p2Decision.decisions = types::slotDecisions{p2AMoveDecision, p2BMoveDecision};
-  battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
-
-  auto simulation = createDoubleBattleSimulation(pokedex, battleCreationInfo);
-  auto& p1AInfo = battleCreationInfo.sides.p1().team[0];
-  auto& p1BInfo = battleCreationInfo.sides.p1().team[1];
-  auto& p2AInfo = battleCreationInfo.sides.p2().team[0];
-  auto& p2BInfo = battleCreationInfo.sides.p2().team[1];
-  battleCreationInfo.runWithSimulateTurn = true;
-
   auto numberOfSamples = GENERATE(std::optional<types::entityIndex>{std::nullopt}, 1U, 5U);
 
   bool applyChangesToInputBattle = GENERATE(true, false);
@@ -716,7 +625,56 @@ TEST_CASE(
   INFO("randomChanceUpperLimit := " + Catch::StringMaker<std::optional<int>>::convert(randomChanceUpperLimit));
   CAPTURE(damageRollOptions.getP1(), damageRollOptions.getP2());
 
-  auto& options = simulation.simulateTurnOptions;
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::DOUBLES};
+  auto p1AInfo = test.pokemon(
+    dex::Species::GARDEVOIR,
+    dex::Ability::TRACE,
+    dex::Gender::FEMALE,
+    dex::Item::CHOICE_SCARF,
+    dex::Status::BRN,
+    Level{90U},
+    Evs{0U, 25U, 50U, 75U, 100U, 125U},
+    dex::Move::MOONBLAST);
+  auto p2AInfo = test.pokemon(
+    dex::Species::PANGORO,
+    dex::Ability::IRON_FIST,
+    dex::Gender::MALE,
+    dex::Item::LIFE_ORB,
+    Level{95U},
+    Evs{125U, 100U, 75U, 50U, 25U, 0U},
+    dex::Move::KNOCK_OFF);
+  auto p1BInfo = test.pokemon(
+    dex::Species::DRAGAPULT,
+    dex::Ability::INFILTRATOR,
+    dex::Gender::FEMALE,
+    dex::Item::FOCUS_SASH,
+    dex::Nature::HASTY,
+    Ivs{5U, 10U, 15U, 20U, 25U, 30U},
+    dex::Move::WILL_O_WISP);
+  auto p2BInfo = test.pokemon(
+    dex::Species::RIBOMBEE,
+    dex::Ability::SWEET_VEIL,
+    dex::Gender::MALE,
+    dex::Item::BRIGHT_POWDER,
+    Level{91U},
+    Ivs{30U, 25U, 20U, 15U, 10U, 5U},
+    dex::Move::QUIVER_DANCE);
+
+  for (types::entityIndex i = 0U; i < numberOfSamples.value_or(1U); i++) {
+    test.setupBattle(
+      Turn{2U},
+      Probability{0.9F},
+      RngSeed{0x12345678},
+      test.side(p1AInfo, p1BInfo),
+      test.side(p2AInfo, p2BInfo),
+      test.turnDecision(
+        MoveDecision{Slot::P1A, Slot::P2B, dex::Move::MOONBLAST},
+        MoveDecision{Slot::P1B, Slot::P2A, dex::Move::WILL_O_WISP},
+        MoveDecision{Slot::P2A, Slot::P1B, dex::Move::KNOCK_OFF},
+        MoveDecision{Slot::P2B, Slot::P2B, dex::Move::QUIVER_DANCE}));
+  }
+
+  auto& options = test.simulateTurnOptions();
   options.setApplyChangesToInputBattle(applyChangesToInputBattle);
   if (branchProbabilityLowerLimit.has_value())
     options.setBranchProbabilityLowerLimit(branchProbabilityLowerLimit.value());
@@ -732,7 +690,7 @@ TEST_CASE(
     242U,
     {394U, 387U, 383U, 380U, 376U, 372U, 368U, 364U, 360U, 356U, 352U, 348U, 344U, 341U, 337U, 333U},
     364U,
-    p1BInfo.stats.hp.value(),
+    P1B_MAX_HP,
     damageRollOptions.getP1(),
     options);
   DamageValueInfo p1BFullDamageInfo(
@@ -742,7 +700,7 @@ TEST_CASE(
     485U,
     {788U, 775U, 767U, 759U, 751U, 743U, 736U, 728U, 720U, 712U, 704U, 697U, 689U, 681U, 673U, 665U},
     728U,
-    p1BInfo.stats.hp.value(),
+    P1B_MAX_HP,
     damageRollOptions.getP1(),
     options);
   DamageValueInfo p2BDamageInfo(
@@ -752,20 +710,14 @@ TEST_CASE(
     175U,
     {285U, 282U, 279U, 276U, 273U, 270U, 267U, 264U, 261U, 258U, 256U, 253U, 250U, 247U, 244U, 241U},
     263U,
-    p2BInfo.stats.hp.value(),
+    P2B_MAX_HP,
     damageRollOptions.getP2(),
     options);
 
-  const types::percentChance willOWispHitChance = dex::WillOWisp::accuracy(TestMechanic);
-  const bool willOWispMightMiss =
-    (!randomChanceUpperLimit.has_value() || randomChanceUpperLimit > willOWispHitChance) &&
+  bool willOWispMightMiss =
+    (!randomChanceUpperLimit.has_value() || randomChanceUpperLimit > WILL_O_WISP_ACCURACY) &&
     (!branchProbabilityLowerLimit.has_value() ||
-     branchProbabilityLowerLimit < MAX_PROBABILITY / (MAX_PERCENT_CHANCE - willOWispHitChance));
-
-  std::vector<BattleCreationInfo> battleCreationInfoList;
-  for (types::entityIndex i = 0U; i < numberOfSamples.value_or(1U); i++) {
-    battleCreationInfoList.push_back(battleCreationInfo);
-  }
+     branchProbabilityLowerLimit < MAX_PROBABILITY / (MAX_PERCENT_CHANCE - WILL_O_WISP_ACCURACY));
 
   std::size_t idealTurnOutcomeCount = 0U;
   std::size_t totalPossibilities =
@@ -779,8 +731,8 @@ TEST_CASE(
     idealTurnOutcomeCount = numberOfSamples.value();
   }
 
-  const auto expectedP1BHalfHp = p1BHalfDamageInfo.possibleHpValues();
-  const auto expectedP2BHp = p2BDamageInfo.possibleHpValues();
+  auto expectedP1BHalfHp = p1BHalfDamageInfo.possibleHpValues();
+  auto expectedP2BHp = p2BDamageInfo.possibleHpValues();
   auto expectedP1BAllHp = p1BFullDamageInfo.possibleHpValues();
   expectedP1BAllHp.insert(expectedP1BHalfHp.begin(), expectedP1BHalfHp.end());
   CAPTURE(
@@ -791,213 +743,148 @@ TEST_CASE(
     expectedP1BAllHp,
     expectedP2BHp);
 
-  simulation.createInitialStates(battleCreationInfoList);
-
-  const auto originalBattles = simulation.battleEntities();
-  const types::registry& registry = simulation.registry;
-
-  types::entityVector specificallyCheckedEntities;
-  for (types::entity battle : registry.view<tags::Battle>()) {
-    specificallyCheckedEntities.push_back(battle);
-  }
-
-  for (types::entity side : registry.view<tags::Side>()) {
-    specificallyCheckedEntities.push_back(side);
-  }
-
-  for (types::entity pokemon : registry.view<tags::Pokemon>()) {
-    specificallyCheckedEntities.push_back(pokemon);
-  }
-
-  Checks checks{simulation, specificallyCheckedEntities};
-  const auto result = simulation.simulateTurn();
-  checks.checkEntities();
-
-  REQUIRE(result.turnOutcomeBattlesResults().size() == battleCreationInfoList.size());
-  types::entityVector allTurnOutcomes;
-  result.turnOutcomeBattlesResults().each([&allTurnOutcomes](const auto& turnOutcomes) {
-    allTurnOutcomes.insert(allTurnOutcomes.end(), turnOutcomes.val.begin(), turnOutcomes.val.end());
-  });
-  REQUIRE(allTurnOutcomes.size() == idealTurnOutcomeCount);
-
-  if (!applyChangesToInputBattle) {
-    for (types::entity originalBattle : originalBattles) {
-      bool originalInOutcome =
-        std::find(allTurnOutcomes.begin(), allTurnOutcomes.end(), originalBattle) != allTurnOutcomes.end();
-      REQUIRE_FALSE(originalInOutcome);
-    }
-  }
+  auto allTurnOutcomes = runAndCheckSimulation(test, idealTurnOutcomeCount, totalPossibilities);
 
   entt::dense_set<types::stat> foundP1BHp;
   entt::dense_set<types::stat> foundP2AHp;
   entt::dense_set<types::stat> foundP2BHp;
   entt::dense_map<types::probability, entt::dense_set<types::probability>> foundUncertainProbabilities;
+  types::probability startingProbability = test.battleInfoList[0].probability.value();
   types::probability sumOfProbability = 0.0F;
 
+  const types::registry& registry = test.registry();
   for (types::entity battle : allTurnOutcomes) {
-    const auto& [turn, probability, rngSeed, rootBattle, sides] =
-      registry.get<Turn, Probability, RngSeed, RootBattle, Sides>(battle);
-    types::entity p1Side = sides.val.p1();
-    types::entity p2Side = sides.val.p2();
+    auto entities = test.getBattleEntities(battle);
 
-    if (!applyChangesToInputBattle) {
-      REQUIRE_FALSE(registry.all_of<simulate_turn::TurnOutcomeBattles>(battle));
-    }
+    bool p2ABurned = registry.all_of<status::tags::Burn>(entities.p2A);
+    bool p2BFainted = registry.all_of<tags::Fainted>(entities.p2B);
+    bool p2BSpaBoosted = registry.all_of<SpaBoost>(entities.p2B);
 
-    types::entity parentBattle = checks.parentBattle(battle);
-    REQUIRE(rootBattle.val == parentBattle);
+    const auto& [turn, probability] = registry.get<Turn, Probability>(battle);
+    const auto& [initialP1AHp, currentP1AHp] = test.checks.getInitialAndCurrent<stat::CurrentHp>(entities.p1A);
+    const auto& [initialP1BHp, currentP1BHp] = test.checks.getInitialAndCurrent<stat::CurrentHp>(entities.p1B);
+    const auto& [initialP2AHp, currentP2AHp] = test.checks.getInitialAndCurrent<stat::CurrentHp>(entities.p2A);
+    const auto& [initialP2BHp, currentP2BHp] = test.checks.getInitialAndCurrent<stat::CurrentHp>(entities.p2B);
 
-    REQUIRE(turn.val == battleCreationInfo.turn.value() + 1U);
-    const auto& initialRngSeed = checks.initialRngSeed(battle);
-    if (options.getMakeBranchesOnRandomEvents() || totalPossibilities == 1U) {
-      REQUIRE(rngSeed.val == initialRngSeed.val);
-    }
-    else {
-      REQUIRE_FALSE(rngSeed.val == initialRngSeed.val);
-    }
+    CAPTURE(
+      currentP1AHp.val,
+      currentP1BHp.val,
+      currentP2AHp.val,
+      currentP2BHp.val,
+      p2ABurned,
+      p2BFainted,
+      p2BSpaBoosted,
+      probability.val);
 
-    types::probability idealProbability = battleCreationInfo.probability.value();
+    REQUIRE(initialP1AHp.val == P1A_MAX_HP);
+    REQUIRE(initialP1BHp.val == P1B_MAX_HP);
+    REQUIRE(initialP2AHp.val == P2A_MAX_HP);
+    REQUIRE(initialP2BHp.val == P2B_MAX_HP);
+
+    REQUIRE(turn.val == 3U);
+    REQUIRE(registry.get<FoesRemaining>(entities.p2Side).val == 2U);
+
+    types::probability idealProbability = startingProbability;
     if (totalPossibilities == 1U) {
       REQUIRE_THAT(probability.val, Catch::Matchers::WithinRel(idealProbability));
     }
 
     sumOfProbability += probability.val;
 
-    REQUIRE_FALSE(registry.all_of<SideDecision>(p1Side));
-    REQUIRE_FALSE(registry.all_of<SideDecision>(p2Side));
-
-    types::entity p1APokemon = registry.get<Team>(p1Side).val[0];
-    types::entity p1BPokemon = registry.get<Team>(p1Side).val[1];
-    types::entity p2APokemon = registry.get<Team>(p2Side).val[0];
-    types::entity p2BPokemon = registry.get<Team>(p2Side).val[1];
-    types::moveSlotIndex p1AMoveIndex = 0U;
-    types::moveSlotIndex p1BMoveIndex = 0U;
-    types::moveSlotIndex p2AMoveIndex = 0U;
-    types::moveSlotIndex p2BMoveIndex = 0U;
-
-    bool p2ABurned = registry.all_of<status::tags::Burn>(p2APokemon);
-    bool p2BFainted = registry.all_of<tags::Fainted>(p2BPokemon);
-    bool p2BSpaBoosted = registry.all_of<SpaBoost>(p2BPokemon);
-
-    const auto& [p1AHp, p1AChoiceLock, p1ALastUsedMove, p1ADisabledMoveSlots] =
-      registry.get<stat::CurrentHp, ChoiceLock, LastUsedMove, DisabledMoveSlots>(p1APokemon);
-    const auto& [p1BHp, p1BLastUsedMove] = registry.get<stat::CurrentHp, LastUsedMove>(p1BPokemon);
-    const auto& [p2AHp, p2ALastUsedMove, effectiveAtk] =
-      registry.get<stat::CurrentHp, LastUsedMove, stat::EffectiveAtk>(p2APokemon);
-    const auto& [p2BHp, p2BSpa, p2BSpd, p2BSpe] =
-      registry.get<stat::CurrentHp, stat::EffectiveSpa, stat::EffectiveSpd, stat::EffectiveSpe>(p2BPokemon);
-
-    CAPTURE(p1AHp.val, p1BHp.val, p2AHp.val, p2BHp.val, p2ABurned, p2BFainted, p2BSpaBoosted, probability.val);
-
-    checks.checkEntityForChanges<SideDecision>(p2Side);
-    checks.checkEntityForChanges<stat::CurrentHp, ChoiceLock, LastUsedMove, MoveSlots, DisabledMoveSlots>(p1APokemon);
-    checks.checkEntityForChanges<stat::CurrentHp, dex::FocusSash, tags::HasItem, LastUsedMove, MoveSlots>(p1BPokemon);
-    checks.checkEntityForChanges<stat::CurrentHp, tags::HasStatus, status::tags::Burn, LastUsedMove, MoveSlots>(
-      p2APokemon);
-
-    checks.checkMovePpUsage(p1APokemon, p1AMoveIndex);
-    checks.checkMovePpUsage(p1BPokemon, p1BMoveIndex);
-    checks.checkMovePpUsage(p2APokemon, p2AMoveIndex);
-
-    REQUIRE(p1ALastUsedMove.val == p1AMoveIndex);
-    REQUIRE(p1BLastUsedMove.val == p1BMoveIndex);
-    REQUIRE(p2ALastUsedMove.val == p2AMoveIndex);
+    test.checks.checkUsedMovePokemon<stat::CurrentHp, ChoiceLock, DisabledMoveSlots>(entities.p1A);
+    test.checks.checkUsedMovePokemon<stat::CurrentHp, dex::FocusSash, tags::HasItem>(entities.p1B);
+    test.checks.checkUsedMovePokemon<stat::CurrentHp, tags::HasStatus, status::tags::Burn>(entities.p2A);
 
     // P1A (Gardevoir) Specific Checks
-    types::stat p1ABurnHpDecrease = p1AInfo.stats.hp.value() / dex::Burn::onResidualHpDecreaseDivisor(TestMechanic);
-    REQUIRE(p1AHp.val == p1AInfo.stats.hp.value() - p1ABurnHpDecrease);
-    REQUIRE(p1AChoiceLock.val == p1AMoveIndex);
-    REQUIRE(p1ADisabledMoveSlots.val[p1AMoveIndex] == true);
+    const auto& [p1AChoiceLock, p1ADisabledMoveSlots] = registry.get<ChoiceLock, DisabledMoveSlots>(entities.p1A);
+    types::stat p1ABurnHpDecrease = P1A_MAX_HP / BURN_HP_DIVISOR;
+    REQUIRE(currentP1AHp.val == P1A_MAX_HP - p1ABurnHpDecrease);
+    REQUIRE(p1AChoiceLock.val == 0U);
+    REQUIRE(p1ADisabledMoveSlots.val[p1AChoiceLock.val] == true);
 
     // P1B (Dragapult) Specific Checks
-    REQUIRE_FALSE(registry.all_of<dex::FocusSash>(p1BPokemon));
-    REQUIRE_FALSE(registry.all_of<tags::HasItem>(p1BPokemon));
+    REQUIRE_FALSE(registry.all_of<dex::FocusSash>(entities.p1B));
+    REQUIRE_FALSE(registry.all_of<tags::HasItem>(entities.p1B));
     if (p2ABurned) {
-      REQUIRE(expectedP1BHalfHp.contains(p1BHp.val));
-      idealProbability *= p1BHalfDamageInfo.getProbability(p1BHp.val, p2BSpaBoosted);
+      REQUIRE(expectedP1BHalfHp.contains(currentP1BHp.val));
+      idealProbability *= p1BHalfDamageInfo.getProbability(currentP1BHp.val, p2BSpaBoosted);
     }
     else {
-      REQUIRE(p1BHp.val == dex::FocusSash::onAfterModifyDamageHpToKeep(TestMechanic));
+      REQUIRE(currentP1BHp.val == FOCUS_SASH_HP_TO_KEEP);
     }
-    foundP1BHp.insert(p1BHp.val);
+    foundP1BHp.insert(currentP1BHp.val);
 
     // P2A (Pangoro) Specific Checks
-    types::stat p2ALifeOrbHpDecrease =
-      p2AInfo.stats.hp.value() / dex::LifeOrb::onAfterMoveUsedHpDecreaseDivisor(TestMechanic);
-    types::stat p2ABurnHpDecrease = p2AInfo.stats.hp.value() / dex::Burn::onResidualHpDecreaseDivisor(TestMechanic);
+    types::stat p2ALifeOrbHpDecrease = P2A_MAX_HP / LIFE_ORB_HP_DIVISOR;
+    types::stat p2ABurnHpDecrease = P2A_MAX_HP / BURN_HP_DIVISOR;
     if (p2ABurned) {
-      REQUIRE(registry.all_of<tags::HasStatus>(p2APokemon));
-      REQUIRE(p2AHp.val == p2AInfo.stats.hp.value() - p2ALifeOrbHpDecrease - p2ABurnHpDecrease);
+      REQUIRE(registry.all_of<tags::HasStatus>(entities.p2A));
+      REQUIRE(currentP2AHp.val == P2A_MAX_HP - p2ALifeOrbHpDecrease - p2ABurnHpDecrease);
 
       if (willOWispMightMiss) {
-        idealProbability *= willOWispHitChance * CHANCE_TO_PROBABILITY;
+        idealProbability *= WILL_O_WISP_ACCURACY * CHANCE_TO_PROBABILITY;
       }
     }
     else {
       REQUIRE(willOWispMightMiss);
-      REQUIRE_FALSE(registry.all_of<tags::HasStatus>(p2APokemon));
-      REQUIRE(p2AHp.val == p2AInfo.stats.hp.value() - p2ALifeOrbHpDecrease);
+      REQUIRE_FALSE(registry.all_of<tags::HasStatus>(entities.p2A));
+      REQUIRE(currentP2AHp.val == P2A_MAX_HP - p2ALifeOrbHpDecrease);
 
-      idealProbability *= (MAX_PERCENT_CHANCE - willOWispHitChance) * CHANCE_TO_PROBABILITY;
+      idealProbability *= (MAX_PERCENT_CHANCE - WILL_O_WISP_ACCURACY) * CHANCE_TO_PROBABILITY;
     }
-    foundP2AHp.insert(p2AHp.val);
+    foundP2AHp.insert(currentP2AHp.val);
 
     // P2B (Ribombee) Specific Checks
-    REQUIRE(expectedP2BHp.contains(p2BHp.val));
+    REQUIRE(expectedP2BHp.contains(currentP2BHp.val));
     if (p2BFainted) {
-      checks.checkEntityForChanges<SideDecision, FoesRemaining>(p1Side);
-      REQUIRE(registry.get<FoesRemaining>(p1Side).val == 1U);
+      REQUIRE(registry.get<FoesRemaining>(entities.p1Side).val == 1U);
 
-      checks.checkEntityForChanges<tags::ActivePokemon, tags::Fainted, stat::CurrentHp>(p2BPokemon);
-      REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(p2BPokemon));
+      test.checks.checkEntityForChanges<tags::ActivePokemon, tags::Fainted, stat::CurrentHp>(entities.p2B);
+      REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(entities.p2B));
       REQUIRE_FALSE(p2BSpaBoosted);
-      REQUIRE(p2BHp.val == MIN_HP);
+      REQUIRE(currentP2BHp.val == MIN_HP);
       REQUIRE((p2BDamageInfo.mightCrit() || p2BDamageInfo.guaranteedCrit()));
     }
     else {
-      checks.checkEntityForChanges<SideDecision>(p1Side);
-      checks.checkEntityForChanges<
+      REQUIRE(registry.get<FoesRemaining>(entities.p1Side).val == 2U);
+      test.checks.checkUsedMovePokemon<
         stat::CurrentHp,
         SpaBoost,
         SpdBoost,
         SpeBoost,
         stat::EffectiveSpa,
         stat::EffectiveSpd,
-        stat::EffectiveSpe,
-        LastUsedMove,
-        MoveSlots>(p2BPokemon);
-      const auto& [p2BLastUsedMove, p2BSpdBoost, p2BSpeBoost] =
-        registry.get<LastUsedMove, SpdBoost, SpeBoost>(p2BPokemon);
-      const auto& [p2BInitialSpa, p2BInitialSpd, p2BInitialSpe] =
-        checks.getInitialComponents<stat::EffectiveSpa, stat::EffectiveSpd, stat::EffectiveSpe>(p2BPokemon);
+        stat::EffectiveSpe>(entities.p2B);
 
-      REQUIRE_FALSE(p2BHp.val == MIN_HP);
+      const auto& [p2BSpdBoost, p2BSpeBoost] = registry.get<SpdBoost, SpeBoost>(entities.p2B);
+      const auto& [p2BInitialSpa, p2BCurrentSpa] = test.checks.getInitialAndCurrent<stat::EffectiveSpa>(entities.p2B);
+      const auto& [p2BInitialSpd, p2BCurrentSpd] = test.checks.getInitialAndCurrent<stat::EffectiveSpd>(entities.p2B);
+      const auto& [p2BInitialSpe, p2BCurrentSpe] = test.checks.getInitialAndCurrent<stat::EffectiveSpe>(entities.p2B);
 
-      checks.checkMovePpUsage(p2BPokemon, p2BMoveIndex);
-      REQUIRE(p2BLastUsedMove.val == p2BMoveIndex);
+      REQUIRE_FALSE(currentP2BHp.val == MIN_HP);
 
-      using Effects = dex::QuiverDance::targetPrimaryEffect;
-      REQUIRE(p2BSpdBoost.val == Effects::spdBoost(TestMechanic));
-      REQUIRE(p2BSpd.val == (types::stat)(p2BInitialSpd.val * STAT_BOOST_STAGES[Effects::spdBoost(TestMechanic)]));
-      REQUIRE(p2BSpeBoost.val == Effects::speBoost(TestMechanic));
-      REQUIRE(p2BSpe.val == (types::stat)(p2BInitialSpe.val * STAT_BOOST_STAGES[Effects::speBoost(TestMechanic)]));
+      REQUIRE(p2BSpdBoost.val == QUIVER_DANCE_SPD_BOOST);
+      REQUIRE(p2BCurrentSpd.val == (types::stat)(p2BInitialSpd.val * STAT_BOOST_STAGES[QUIVER_DANCE_SPD_BOOST]));
+      REQUIRE(p2BSpeBoost.val == QUIVER_DANCE_SPE_BOOST);
+      REQUIRE(p2BCurrentSpe.val == (types::stat)(p2BInitialSpe.val * STAT_BOOST_STAGES[QUIVER_DANCE_SPE_BOOST]));
       if (p2BSpaBoosted) {
-        const SpaBoost& p2BSpaBoost = registry.get<SpaBoost>(p2BPokemon);
-        REQUIRE(p2BSpaBoost.val == Effects::spaBoost(TestMechanic));
+        const SpaBoost& p2BSpaBoost = registry.get<SpaBoost>(entities.p2B);
+        REQUIRE(p2BSpaBoost.val == QUIVER_DANCE_SPA_BOOST);
+        REQUIRE(p2BCurrentSpa.val == (types::stat)(p2BInitialSpa.val * STAT_BOOST_STAGES[QUIVER_DANCE_SPA_BOOST]));
       }
       else {
-        REQUIRE(p2BSpa.val == p2BInitialSpa.val);
+        REQUIRE(p2BCurrentSpa.val == p2BInitialSpa.val);
       }
 
       if (!p2BDamageInfo.moveMightDropSpa()) {
         REQUIRE(p2BSpaBoosted);
       }
       if (!p2BDamageInfo.moveMightMiss()) {
-        REQUIRE_FALSE(p2BHp.val == p2BInfo.stats.hp.value());
+        REQUIRE_FALSE(currentP2BHp.val == P2B_MAX_HP);
       }
     }
-    idealProbability *= p2BDamageInfo.getProbability(p2BHp.val, p2BSpaBoosted);
-    foundP2BHp.insert(p2BHp.val);
+    idealProbability *= p2BDamageInfo.getProbability(currentP2BHp.val, p2BSpaBoosted);
+    foundP2BHp.insert(currentP2BHp.val);
 
     if (!p2ABurned && p1BFullDamageInfo.mightCrit()) {
       types::probability withP1BCritProbability = idealProbability * CRIT_PROBABILITY;
@@ -1025,7 +912,7 @@ TEST_CASE(
     }
     REQUIRE(foundP2BHp.size() == expectedP2BHp.size());
 
-    REQUIRE_THAT(sumOfProbability, Catch::Matchers::WithinRel(battleCreationInfo.probability.value()));
+    REQUIRE_THAT(sumOfProbability, Catch::Matchers::WithinRel(startingProbability));
     for (const auto& uncertainProbabilities : foundUncertainProbabilities) {
       REQUIRE(uncertainProbabilities.second.size() == 2U);
     }

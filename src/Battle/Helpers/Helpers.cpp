@@ -31,12 +31,14 @@ void checkSlot(Slot slot) {
     std::find(internal::VALID_SLOTS.begin(), internal::VALID_SLOTS.end(), slot) != internal::VALID_SLOTS.end(),
     "Invalid slot found.");
 }
+}  // namespace
 
+namespace internal {
 types::teamPositionIndex slotToIndex(Slot slot) {
   checkSlot(slot);
   return (types::teamPositionIndex)slot & internal::SLOT_LETTER_MASK;
 }
-}  // namespace
+}  // namespace internal
 
 Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position) {
   Slot slot = (Slot)(((types::teamPositionIndex)sideId << 4U) + position);
@@ -49,13 +51,17 @@ PlayerSideId slotToSideId(Slot slot) {
   return (types::teamPositionIndex)slot >= (types::teamPositionIndex)Slot::P2A ? PlayerSideId::P2 : PlayerSideId::P1;
 }
 
+PlayerSideId sideIdToFoeSideId(PlayerSideId sideId) {
+  return sideId == PlayerSideId::P1 ? PlayerSideId::P2 : PlayerSideId::P1;
+}
+
 types::entity slotToSideEntity(const Sides& sides, Slot slot) {
-  types::entity sideEntity = sides.val[slotToSideId(slot) == PlayerSideId::P1 ? 0U : 1U];
+  types::entity sideEntity = sides.val.at(slotToSideId(slot));
   return sideEntity;
 }
 
 types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot slot) {
-  types::teamPositionIndex index = slotToIndex(slot);
+  types::teamPositionIndex index = internal::slotToIndex(slot);
 
   const Team& team = registry.get<Team>(sideEntity);
   POKESIM_REQUIRE(team.val.size() > index, "Choosing a slot for team member that does not exist.");
@@ -68,8 +74,8 @@ types::entity slotToPokemonEntity(const types::registry& registry, const Sides& 
 
 void swapEntitySlots(types::registry& registry, types::entity sideEntity, Slot slot1, Slot slot2) {
   POKESIM_REQUIRE(slotToSideId(slot1) == slotToSideId(slot2), "Swapped slots must be from the same side");
-  types::teamPositionIndex index1 = slotToIndex(slot1);
-  types::teamPositionIndex index2 = slotToIndex(slot2);
+  types::teamPositionIndex index1 = internal::slotToIndex(slot1);
+  types::teamPositionIndex index2 = internal::slotToIndex(slot2);
 
   Team& team = registry.get<Team>(sideEntity);
   POKESIM_REQUIRE(team.val.size() > index1, "Choosing a slot for team member that does not exist.");

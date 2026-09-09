@@ -56,6 +56,7 @@
  * external/entt/meta/policy.hpp
  * external/entt/meta/utility.hpp
  * external/entt/meta/factory.hpp
+ * src/Types/Enums/PlayerSideId.hpp
  * src/Types/FixedMemoryVector.hpp
  * src/Types/State.hpp
  * src/Utilities/AssertComponentsEqual.hpp
@@ -78,7 +79,6 @@
  * src/Components/Names/WeatherNames.hpp
  * src/AnalyzeEffect/Helpers.hpp
  * src/Types/Enums/Move.hpp
- * src/Types/Enums/PlayerSideId.hpp
  * src/Types/Enums/Slot.hpp
  * src/Battle/Helpers/Helpers.hpp
  * src/Types/Damage.hpp
@@ -18044,6 +18044,20 @@ inline void meta_reset() noexcept {
 
 //////////////////// END OF external/entt/meta/factory.hpp /////////////////////
 
+////////////////// START OF src/Types/Enums/PlayerSideId.hpp ///////////////////
+
+namespace pokesim {
+enum class PlayerSideId : std::uint8_t {
+  NONE = 0U,
+  P1 = 1U,
+  P2 = 2U,
+};
+
+static constexpr std::uint8_t TOTAL_PLAYER_SIDE_ID_COUNT = 2U;
+}  // namespace pokesim
+
+/////////////////// END OF src/Types/Enums/PlayerSideId.hpp ////////////////////
+
 /////////////////// START OF src/Types/FixedMemoryVector.hpp ///////////////////
 
 namespace pokesim::types {
@@ -18159,6 +18173,10 @@ struct sides : public std::array<T, Constants::SIDE_COUNT> {
   constexpr T& p2() { return this->at(1); };
   constexpr const T& p1() const { return this->at(0); };
   constexpr const T& p2() const { return this->at(1); };
+
+  constexpr T& at(PlayerSideId sideId) { return sideId == PlayerSideId::P1 ? p1() : p2(); }
+  constexpr const T& at(PlayerSideId sideId) const { return sideId == PlayerSideId::P1 ? p1() : p2(); }
+  using std::array<T, Constants::SIDE_COUNT>::at;
 
   template <std::size_t N>
   decltype(auto) get() const {
@@ -18773,20 +18791,6 @@ static constexpr std::uint16_t TOTAL_MOVE_COUNT = (std::uint16_t)Move::MOVE_TOTA
 
 /////////////////////// END OF src/Types/Enums/Move.hpp ////////////////////////
 
-////////////////// START OF src/Types/Enums/PlayerSideId.hpp ///////////////////
-
-namespace pokesim {
-enum class PlayerSideId : std::uint8_t {
-  NONE = 0U,
-  P1 = 1U,
-  P2 = 2U,
-};
-
-static constexpr std::uint8_t TOTAL_PLAYER_SIDE_ID_COUNT = 2U;
-}  // namespace pokesim
-
-/////////////////// END OF src/Types/Enums/PlayerSideId.hpp ////////////////////
-
 ////////////////////// START OF src/Types/Enums/Slot.hpp ///////////////////////
 
 namespace pokesim {
@@ -18838,8 +18842,13 @@ struct Sides;
 struct MoveSlots;
 class Pokedex;
 
+namespace internal {
+types::teamPositionIndex slotToIndex(Slot slot);
+}
+
 Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position);
 PlayerSideId slotToSideId(Slot slot);
+PlayerSideId sideIdToFoeSideId(PlayerSideId sideId);
 types::entity slotToSideEntity(const Sides& sides, Slot slot);
 types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot slot);
 types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot slot);
@@ -19050,6 +19059,11 @@ class variant : public std::variant<Types...> {
 
  public:
   using base::variant;
+
+  template <typename Type>
+  static constexpr bool canHoldType() {
+    return std::disjunction_v<std::is_same<Type, Types>...>;
+  }
 
   template <typename T>
   variant& operator=(const T& rhs) {
@@ -20936,12 +20950,12 @@ enum class AbilityProperty : std::uint8_t {
   NO_TRANSFORM = 1U << 7U,
 };
 
-constexpr AbilityProperty operator|(AbilityProperty kindA, AbilityProperty kindB) {
-  return static_cast<AbilityProperty>(static_cast<std::uint8_t>(kindA) | static_cast<std::uint8_t>(kindB));
+constexpr AbilityProperty operator|(AbilityProperty propertyA, AbilityProperty propertyB) {
+  return static_cast<AbilityProperty>(static_cast<std::uint8_t>(propertyA) | static_cast<std::uint8_t>(propertyB));
 }
 
-constexpr bool operator&(AbilityProperty kindA, AbilityProperty kindB) {
-  return (static_cast<std::uint8_t>(kindA) & static_cast<std::uint8_t>(kindB)) != 0U;
+constexpr bool operator&(AbilityProperty propertyA, AbilityProperty propertyB) {
+  return (static_cast<std::uint8_t>(propertyA) & static_cast<std::uint8_t>(propertyB)) != 0U;
 }
 }  // namespace pokesim::dex
 
@@ -20977,12 +20991,12 @@ enum class ItemProperty : std::uint8_t {
   POKEBALL = 1U << 4U,
 };
 
-constexpr ItemProperty operator|(ItemProperty kindA, ItemProperty kindB) {
-  return static_cast<ItemProperty>(static_cast<std::uint8_t>(kindA) | static_cast<std::uint8_t>(kindB));
+constexpr ItemProperty operator|(ItemProperty propertyA, ItemProperty propertyB) {
+  return static_cast<ItemProperty>(static_cast<std::uint8_t>(propertyA) | static_cast<std::uint8_t>(propertyB));
 }
 
-constexpr bool operator&(ItemProperty kindA, ItemProperty kindB) {
-  return (static_cast<std::uint8_t>(kindA) & static_cast<std::uint8_t>(kindB)) != 0U;
+constexpr bool operator&(ItemProperty propertyA, ItemProperty propertyB) {
+  return (static_cast<std::uint8_t>(propertyA) & static_cast<std::uint8_t>(propertyB)) != 0U;
 }
 }  // namespace pokesim::dex
 
@@ -21046,12 +21060,12 @@ enum class MoveProperty : std::uint64_t {
   WIND = 1ULL << 37U,
 };
 
-constexpr MoveProperty operator|(MoveProperty kindA, MoveProperty kindB) {
-  return static_cast<MoveProperty>(static_cast<std::uint64_t>(kindA) | static_cast<std::uint64_t>(kindB));
+constexpr MoveProperty operator|(MoveProperty propertyA, MoveProperty propertyB) {
+  return static_cast<MoveProperty>(static_cast<std::uint64_t>(propertyA) | static_cast<std::uint64_t>(propertyB));
 }
 
-constexpr bool operator&(MoveProperty kindA, MoveProperty kindB) {
-  return (static_cast<std::uint64_t>(kindA) & static_cast<std::uint64_t>(kindB)) != 0U;
+constexpr bool operator&(MoveProperty propertyA, MoveProperty propertyB) {
+  return (static_cast<std::uint64_t>(propertyA) & static_cast<std::uint64_t>(propertyB)) != 0U;
 }
 }  // namespace pokesim::dex
 

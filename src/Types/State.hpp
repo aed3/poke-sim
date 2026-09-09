@@ -7,6 +7,7 @@
 
 #include "Constants.hpp"
 #include "Entity.hpp"
+#include "Enums/PlayerSideId.hpp"
 #include "FixedMemoryVector.hpp"
 #include "Indexes.hpp"
 
@@ -22,6 +23,10 @@ struct sides : public std::array<T, Constants::SIDE_COUNT> {
   constexpr T& p2() { return this->at(1); };
   constexpr const T& p1() const { return this->at(0); };
   constexpr const T& p2() const { return this->at(1); };
+
+  constexpr T& at(PlayerSideId sideId) { return sideId == PlayerSideId::P1 ? p1() : p2(); }
+  constexpr const T& at(PlayerSideId sideId) const { return sideId == PlayerSideId::P1 ? p1() : p2(); }
+  using std::array<T, Constants::SIDE_COUNT>::at;
 
   template <std::size_t N>
   decltype(auto) get() const {

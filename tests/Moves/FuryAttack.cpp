@@ -1,33 +1,22 @@
 #include "../Tests.hpp"
 
 namespace pokesim {
-TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][FuryAttack]") {
-  Pokedex pokedex{GameMechanics::SCARLET_VIOLET};
-  Simulation simulation{pokedex, BattleFormat::SINGLES};
-  const types::registry& registry = simulation.registry;
+TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][SingleBattle][Move][FuryAttack]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(test.pokemon(dex::Species::EMPOLEON, dex::Move::FURY_ATTACK)),
+    test.side(test.pokemon(dex::Species::RIBOMBEE, dex::Move::SPLASH)),
+    test.turnDecision(dex::Move::FURY_ATTACK, dex::Move::SPLASH));
 
-  BattleCreationInfo battleCreationInfo;
-  battleCreationInfo.sides = {
-    {{createPredefinedPokemon(pokedex, dex::Species::EMPOLEON)}},
-    {{createPredefinedPokemon(pokedex, dex::Species::RIBOMBEE, true)}},
-  };
-  battleCreationInfo.turn = 1U;
-  battleCreationInfo.sides.p1().team[0].status = dex::Status::NO_STATUS;
-  pokedex.loadForBattleInfo({battleCreationInfo});
-
-  battleCreationInfo.runWithSimulateTurn = true;
-  SideDecision p1Decision{PlayerSideId::P1};
-  SideDecision p2Decision{PlayerSideId::P2};
-  MoveDecision p1MoveDecision{Slot::P1A, Slot::P2A, dex::Move::FURY_ATTACK};
-  MoveDecision p2MoveDecision{Slot::P2A, Slot::P1A, dex::Move::SPLASH};
-  p1Decision.decisions = types::slotDecisions{p1MoveDecision};
-  p2Decision.decisions = types::slotDecisions{p2MoveDecision};
-
-  battleCreationInfo.decisionsToSimulate = {{p1Decision, p2Decision}};
-  simulation.createInitialStates({battleCreationInfo});
+  const Pokedex& pokedex = test.pokedex;
+  auto& options = test.simulateTurnOptions();
 
   static constexpr auto minDamageKind = DamageRollKind::MIN_DAMAGE;
   static constexpr auto minCritDamageKind = DamageRollKind::MIN_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE;
+  constexpr types::probability lowerMultiHitMoveChances = Constants::PROGRESSIVE_MULTI_HIT_CHANCES[0] / 100.0F;
+  constexpr types::probability upperMultiHitMoveChances =
+    (Constants::PROGRESSIVE_MULTI_HIT_CHANCES[2] - Constants::PROGRESSIVE_MULTI_HIT_CHANCES[1]) / 100.0F;
 
   DamageRollOptions damageRollOptions{
     GENERATE(minCritDamageKind, minDamageKind),
@@ -35,39 +24,39 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
   };
   CAPTURE(damageRollOptions.getP1(), damageRollOptions.getP2());
 
-  auto& options = simulation.simulateTurnOptions;
-  options.setDamageRollsConsidered({
-    GENERATE(minCritDamageKind, minDamageKind),
-    GENERATE(minCritDamageKind, minDamageKind),
-  });
-  options.setApplyChangesToInputBattle(true);
-  options.setMakeBranchesOnRandomEvents(true);
+  options
+    .setDamageRollsConsidered({
+      GENERATE(minCritDamageKind, minDamageKind),
+      GENERATE(minCritDamageKind, minDamageKind),
+    })
+    .setMakeBranchesOnRandomEvents(true);
 
-  const bool alwaysCrits = options.getDamageRollsConsidered().getP2() & DamageRollKind::GUARANTEED_CRIT_CHANCE;
-  const bool twoDamageOutcomesPerHit = !alwaysCrits;
+  bool alwaysCrits = options.getDamageRollsConsidered().getP2() & DamageRollKind::GUARANTEED_CRIT_CHANCE;
+  bool twoDamageOutcomesPerHit = !alwaysCrits;
+  types::probability passesAccuracyProbability = pokedex.getStaticValue<dex::FuryAttack::accuracy>() / 100.0F;
 
-  const types::probability passesAccuracyProbability = pokedex.getStaticValue<dex::FuryAttack::accuracy>() / 100.0F;
-
-  constexpr types::probability lowerMultiHitMoveChances = Constants::PROGRESSIVE_MULTI_HIT_CHANCES[0] / 100.0F;
-  constexpr types::probability upperMultiHitMoveChances =
-    (Constants::PROGRESSIVE_MULTI_HIT_CHANCES[2] - Constants::PROGRESSIVE_MULTI_HIT_CHANCES[1]) / 100.0F;
-
-  const types::probability critHitChance =
+  types::probability critHitChance =
     alwaysCrits ? 1.0F : 1.0F / pokedex.getStaticValue<MechanicConstants::CRIT_CHANCE_DIVISORS>()[0];
-  const types::probability baseHitChance = 1.0F - critHitChance;
-  const types::damage critDamage = 22U;
-  const types::damage baseDamage = 15U;
-  const std::size_t damageOutcomesPerHit = twoDamageOutcomesPerHit ? 2U : 1U;
-  const std::size_t idealTurnOutcomeCount = 1U +                                               // The move misses
-                                            (std::size_t)std::pow(damageOutcomesPerHit, 2U) +  // 2 Hits
-                                            (std::size_t)std::pow(damageOutcomesPerHit, 3U) +  // 3 Hits
-                                            (std::size_t)std::pow(damageOutcomesPerHit, 4U) +  // 4 Hits
-                                            (std::size_t)std::pow(damageOutcomesPerHit, 5U);   // 5 Hits
+  types::probability baseHitChance = 1.0F - critHitChance;
+  types::damage critDamage = 23U;
+  types::damage baseDamage = 16U;
+  types::stat p2MaxHp = computeStatFromBaseStat(
+    dex::Stat::HP,
+    pokedex.getStaticValue<dex::Ribombee::hp>(),
+    Constants::PokemonLevel::DEFAULT,
+    dex::Nature::NO_NATURE,
+    {},
+    {});
+  std::size_t damageOutcomesPerHit = twoDamageOutcomesPerHit ? 2U : 1U;
+  std::size_t idealTurnOutcomeCount = 1U +                                               // The move misses
+                                      (std::size_t)std::pow(damageOutcomesPerHit, 2U) +  // 2 Hits
+                                      (std::size_t)std::pow(damageOutcomesPerHit, 3U) +  // 3 Hits
+                                      (std::size_t)std::pow(damageOutcomesPerHit, 4U) +  // 4 Hits
+                                      (std::size_t)std::pow(damageOutcomesPerHit, 5U);   // 5 Hits
 
   // The below strategy only works because all the damage outcomes from all the branches are unique
   entt::dense_map<types::stat, std::tuple<types::moveHits, types::moveHits, types::probability>>
     hitCombinationsFromP2Hp;
-  const types::stat p2MaxHp = battleCreationInfo.sides.p2().team[0].stats.hp.value();
 
   hitCombinationsFromP2Hp[p2MaxHp] = {(types::moveHits)0U, (types::moveHits)0U, 1.0F - passesAccuracyProbability};
 
@@ -92,15 +81,13 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][Move][F
     }
   }
 
-  auto result = simulation.simulateTurn();
-
-  REQUIRE(result.turnOutcomeBattlesResults().size() == 1U);
-  const auto& turnOutcomeBattles = std::get<1>(*result.turnOutcomeBattlesResults().each().begin()).val;
+  auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{});
   REQUIRE(turnOutcomeBattles.size() == idealTurnOutcomeCount);
 
   for (types::entity battle : turnOutcomeBattles) {
-    const auto& [probability, sides] = registry.get<Probability, Sides>(battle);
-    types::stat p2Hp = registry.get<stat::CurrentHp>(registry.get<Team>(sides.val.p2()).val[0]).val;
+    Probability probability = test.registry().get<Probability>(battle);
+    auto entities = test.getBattleEntities(battle);
+    types::stat p2Hp = test.registry().get<stat::CurrentHp>(entities.p2A).val;
     CAPTURE(p2Hp);
     REQUIRE(hitCombinationsFromP2Hp.contains(p2Hp));
 

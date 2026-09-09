@@ -12,8 +12,13 @@ struct Sides;
 struct MoveSlots;
 class Pokedex;
 
+namespace internal {
+types::teamPositionIndex slotToIndex(Slot slot);
+}
+
 Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position);
 PlayerSideId slotToSideId(Slot slot);
+PlayerSideId sideIdToFoeSideId(PlayerSideId sideId);
 types::entity slotToSideEntity(const Sides& sides, Slot slot);
 types::entity slotToPokemonEntity(const types::registry& registry, types::entity sideEntity, Slot slot);
 types::entity slotToPokemonEntity(const types::registry& registry, const Sides& sides, Slot slot);
