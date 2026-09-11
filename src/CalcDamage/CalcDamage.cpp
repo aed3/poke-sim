@@ -331,14 +331,25 @@ void applySideDamageRollOptions(Simulation& simulation) {
 
 template <typename SimulationTag>
 void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
+  if (damageRollKind & DamageRollKind::NO_CRIT_CHANCE) {
+    internal::runRemoveCriticalHitEvent(simulation);
+    return;
+  }
+
   if (damageRollKind & DamageRollKind::GUARANTEED_CRIT_CHANCE) {
     simulation.addToEntities<tags::Crit, internal::tags::ApplySideDamageRollOptions>();
+    internal::runRemoveCriticalHitEvent(simulation);
     return;
   }
 
   if constexpr (std::is_same_v<SimulationTag, pokesim::tags::SimulateTurn>) {
-    simulation.addToEntities<calc_damage::CritBoost, internal::tags::ApplySideDamageRollOptions>();
+    auto needsCritBoostView =
+      simulation.registry.view<internal::tags::ApplySideDamageRollOptions>(entt::exclude_t<tags::Crit>{});
+    simulation.registry.insert<calc_damage::CritBoost>(needsCritBoostView.begin(), needsCritBoostView.end());
+
+    internal::runRemoveCriticalHitEvent(simulation);
     internal::runModifyCritBoostEvent(simulation);
+
     simulation.view<assignCritChanceDivisor>(
       simulation.pokedex().getStaticValue<MechanicConstants::CRIT_CHANCE_DIVISORS>());
     simulation.removeFromEntities<CritBoost>();
@@ -357,6 +368,9 @@ void applyDamageRollsAndModifiers(
   POKESIM_REQUIRE(
     damageRollKind != DamageRollKind::GUARANTEED_CRIT_CHANCE,
     "Must pick a damage roll kind to go along with crits.");
+  POKESIM_REQUIRE(
+    damageRollKind != DamageRollKind::NO_CRIT_CHANCE,
+    "Must pick a damage roll kind to go along with no crits.");
 
   pokesim::internal::EntityFilter<internal::tags::ApplySideDamageRollOptions> moveFilter{simulation};
   if (moveFilter.hasNoneSelected()) {

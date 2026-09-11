@@ -11,7 +11,8 @@ void runResidual(Simulation& simulation);
 
 void runAccuracyEvent(Simulation& simulation);
 void runModifyAccuracyEvent(Simulation& simulation);
-void runModifyCritBoostEvent(Simulation& simulation);
+void runModifyCritBoostEvent(Simulation& simulation);  // onCriticalHit
+void runRemoveCriticalHitEvent(Simulation& simulation);
 void runBasePowerEvent(Simulation& simulation);
 void runModifyDamageEvent(Simulation& simulation);
 

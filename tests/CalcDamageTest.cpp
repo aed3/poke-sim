@@ -6,25 +6,35 @@ const DamageRollKind AVERAGE_DAMAGE = DamageRollKind::AVERAGE_DAMAGE;
 const DamageRollKind MIN_DAMAGE = DamageRollKind::MIN_DAMAGE;
 const DamageRollKind MAX_DAMAGE = DamageRollKind::MAX_DAMAGE;
 const DamageRollKind GUARANTEED_CRIT_CHANCE = DamageRollKind::GUARANTEED_CRIT_CHANCE;
+const DamageRollKind NO_CRIT_CHANCE = DamageRollKind::NO_CRIT_CHANCE;
 const DamageRollKind ALL_DAMAGE_ROLLS = DamageRollKind::ALL_DAMAGE_ROLLS;
 
-const std::array<DamageRollKind, 16U> damageRollKindCombinations = {
+const std::array<DamageRollKind, 25U> damageRollKindCombinations = {
   AVERAGE_DAMAGE,
   MIN_DAMAGE,
   MAX_DAMAGE,
   AVERAGE_DAMAGE | MIN_DAMAGE,
   AVERAGE_DAMAGE | MAX_DAMAGE,
   AVERAGE_DAMAGE | GUARANTEED_CRIT_CHANCE,
+  AVERAGE_DAMAGE | NO_CRIT_CHANCE,
   MIN_DAMAGE | MAX_DAMAGE,
   MIN_DAMAGE | GUARANTEED_CRIT_CHANCE,
   MAX_DAMAGE | GUARANTEED_CRIT_CHANCE,
+  MIN_DAMAGE | NO_CRIT_CHANCE,
+  MAX_DAMAGE | NO_CRIT_CHANCE,
   AVERAGE_DAMAGE | MIN_DAMAGE | MAX_DAMAGE,
   AVERAGE_DAMAGE | MIN_DAMAGE | GUARANTEED_CRIT_CHANCE,
   AVERAGE_DAMAGE | MAX_DAMAGE | GUARANTEED_CRIT_CHANCE,
   MIN_DAMAGE | MAX_DAMAGE | GUARANTEED_CRIT_CHANCE,
   AVERAGE_DAMAGE | MIN_DAMAGE | MAX_DAMAGE | GUARANTEED_CRIT_CHANCE,
+  AVERAGE_DAMAGE | MIN_DAMAGE | NO_CRIT_CHANCE,
+  AVERAGE_DAMAGE | MAX_DAMAGE | NO_CRIT_CHANCE,
+  MIN_DAMAGE | MAX_DAMAGE | NO_CRIT_CHANCE,
+  AVERAGE_DAMAGE | MIN_DAMAGE | MAX_DAMAGE | NO_CRIT_CHANCE,
+  AVERAGE_DAMAGE | MIN_DAMAGE | MAX_DAMAGE | GUARANTEED_CRIT_CHANCE | NO_CRIT_CHANCE,
   ALL_DAMAGE_ROLLS,
   ALL_DAMAGE_ROLLS | GUARANTEED_CRIT_CHANCE,
+  ALL_DAMAGE_ROLLS | NO_CRIT_CHANCE,
 };
 
 struct IdealDamageValues {
@@ -149,10 +159,10 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage][S
   }
   else {
     std::size_t idealKoUsesSize = 0U;
-    if (damageRollOptions.getP1() & DamageRollKind::ALL_DAMAGE_ROLLS) {
+    if (damageRollOptions.getP1() & ALL_DAMAGE_ROLLS) {
       idealKoUsesSize += battleInfoList.size();
     }
-    if (damageRollOptions.getP2() & DamageRollKind::ALL_DAMAGE_ROLLS) {
+    if (damageRollOptions.getP2() & ALL_DAMAGE_ROLLS) {
       idealKoUsesSize += battleInfoList.size();
     }
     REQUIRE(koUses.size() == idealKoUsesSize);
@@ -164,7 +174,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage][S
                                  bool targetHasAssaultVest,
                                  bool targetHasSpdBoost) -> const IdealDamageValues& {
     REQUIRE((move == dex::Move::FURY_ATTACK || move == dex::Move::THUNDERBOLT));
-    bool isCrit = damageRollKind & DamageRollKind::GUARANTEED_CRIT_CHANCE;
+    bool isCrit = (damageRollKind & GUARANTEED_CRIT_CHANCE) && !(damageRollKind & NO_CRIT_CHANCE);
 
     if (move == dex::Move::FURY_ATTACK) {
       return isCrit ? furyAttackCritDamage : furyAttackBaseDamage;

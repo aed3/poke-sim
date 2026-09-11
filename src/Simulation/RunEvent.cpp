@@ -65,6 +65,7 @@ void runModifyAccuracyEvent(Simulation& simulation) {
 }
 
 void runModifyCritBoostEvent(Simulation&) {}
+void runRemoveCriticalHitEvent(Simulation&) {}
 
 void runBasePowerEvent(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::CurrentMoveHit, BasePower>();

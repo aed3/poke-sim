@@ -8,8 +8,6 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Singl
     test.side(test.pokemon(dex::Species::EMPOLEON, dex::Move::SPLASH, dex::Status::PAR)),
     test.side(test.pokemon(dex::Species::RIBOMBEE, dex::Move::SPLASH)),
     test.turnDecision(dex::Move::SPLASH, dex::Move::SPLASH));
-  test.simulateTurnOptions().setDamageRollsConsidered(
-    {DamageRollKind::AVERAGE_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE});
 
   auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{});
   const types::registry& registry = test.registry();

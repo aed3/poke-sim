@@ -192,6 +192,7 @@ TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect][Singl
     options.setNoKoChanceCalculation(false);
   }
   else {
+    options.setDamageRollOptions({DamageRollKind::AVERAGE_DAMAGE});
     options.setNoKoChanceCalculation(true);
   }
 

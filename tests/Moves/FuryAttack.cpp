@@ -14,8 +14,8 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][SingleB
 
   static constexpr auto minDamageKind = DamageRollKind::MIN_DAMAGE;
   static constexpr auto minCritDamageKind = DamageRollKind::MIN_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE;
-  constexpr types::probability lowerMultiHitMoveChances = Constants::PROGRESSIVE_MULTI_HIT_CHANCES[0] / 100.0F;
-  constexpr types::probability upperMultiHitMoveChances =
+  static constexpr types::probability lowerMultiHitMoveChances = Constants::PROGRESSIVE_MULTI_HIT_CHANCES[0] / 100.0F;
+  static constexpr types::probability upperMultiHitMoveChances =
     (Constants::PROGRESSIVE_MULTI_HIT_CHANCES[2] - Constants::PROGRESSIVE_MULTI_HIT_CHANCES[1]) / 100.0F;
 
   DamageRollOptions damageRollOptions{

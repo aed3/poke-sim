@@ -125,7 +125,12 @@ struct TestSimulation {
   TestChecks checks;
 
   TestSimulation(GameMechanics mechanics, BattleFormat battleFormat)
-      : pokedex(mechanics), simulation(pokedex, battleFormat), checks(simulation) {}
+      : pokedex(mechanics), simulation(pokedex, battleFormat), checks(simulation) {
+    DamageRollKind simplestDamageRoll = DamageRollKind::MAX_DAMAGE | DamageRollKind::NO_CRIT_CHANCE;
+    simulateTurnOptions().setDamageRollsConsidered({simplestDamageRoll});
+    calcDamageOptions().setDamageRollOptions({simplestDamageRoll});
+    analyzeEffectOptions().setDamageRollOptions({simplestDamageRoll});
+  }
 
   types::registry& registry() { return simulation.registry; }
   simulate_turn::Options& simulateTurnOptions() { return simulation.simulateTurnOptions; }
@@ -537,6 +542,9 @@ struct StringMaker<pokesim::DamageRollKind> {
     }
     if (value & pokesim::DamageRollKind::GUARANTEED_CRIT_CHANCE) {
       append(fullName, "GUARANTEED_CRIT_CHANCE");
+    }
+    if (value & pokesim::DamageRollKind::NO_CRIT_CHANCE) {
+      append(fullName, "NO_CRIT_CHANCE");
     }
     if (value & pokesim::DamageRollKind::ALL_DAMAGE_ROLLS) {
       append(fullName, "ALL_DAMAGE_ROLLS");

@@ -44,8 +44,6 @@ TEST_CASE(
     test.side(test.pokemon(dex::Species::RIBOMBEE, dex::Item::CHOICE_SCARF, dex::Move::SPLASH)),
     test.turnDecision(dex::Move::KNOCK_OFF, dex::Move::SPLASH));
 
-  test.simulateTurnOptions().setDamageRollsConsidered(
-    {DamageRollKind::AVERAGE_DAMAGE | DamageRollKind::GUARANTEED_CRIT_CHANCE});
   auto entities = test.simulateOneNonBranchingBattle();
 
   test.checks.checkUsedMovePokemon(entities.p1A);
