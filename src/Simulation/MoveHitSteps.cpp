@@ -7,6 +7,7 @@
 #include <Components/Accuracy.hpp>
 #include <Components/BaseEffectChance.hpp>
 #include <Components/Damage.hpp>
+#include <Components/Effects/AddedFlinchChance.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/HitCount.hpp>
@@ -16,6 +17,7 @@
 #include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
+#include <Components/Tags/VolatileTags.hpp>
 #include <Config/Require.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Types/Constants.hpp>
@@ -99,39 +101,77 @@ void runMoveEffects(Simulation& simulation) {
   simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
 }
 
-template <typename TargetEntityHolder>
-void removeFaintedSecondaryEffectTarget(
-  types::handle handle, TargetEntityHolder target, BaseEffectChance baseEffectChance, Battle battle,
+template <typename ComponentToRemove>
+void removeImpossibleEffectTarget(
+  types::handle handle, types::entity target, types::percentChance percentChance, Battle battle,
   const simulate_turn::Options& options) {
   types::registry& registry = *handle.registry();
   internal::PercentChanceLimitResult limitReached = internal::checkPercentChanceLimits(
-    baseEffectChance.val * Constants::PercentChanceToProbability,
+    percentChance * Constants::PercentChanceToProbability,
     registry.get<Probability>(battle.val).val,
     options);
 
   if (limitReached == internal::PercentChanceLimitResult::REACHED_PASS_LIMIT) {
     return;
   }
-  types::stat hp = registry.get<stat::CurrentHp>(target.val).val;
+
+  types::stat hp = registry.get<stat::CurrentHp>(target).val;
   if (hp == Constants::PokemonCurrentHpStat::MIN) {
-    handle.remove<move::effect::tags::Secondary>();
+    handle.remove<ComponentToRemove>();
   }
+}
+
+template <typename TargetEntityHolder>
+void removeImpossibleSecondaryEffectTarget(
+  types::handle handle, TargetEntityHolder target, BaseEffectChance baseEffectChance, Battle battle,
+  const simulate_turn::Options& options) {
+  removeImpossibleEffectTarget<move::effect::tags::Secondary>(
+    handle,
+    target.val,
+    baseEffectChance.val,
+    battle,
+    options);
 }
 
 // Skipping secondary effects entirely for a fainted target is not something Showdown does. This is done here to prevent
 // more random chance splits than needed and should not cause outcome deviations from Showdown. If, for example, a move
-// exists that has a random chance to add a side or field affect regardless of the target's HP, then this function will
+// exists that has a random chance to add a side or field effect regardless of the target's HP, then this function will
 // need to be reworked.
-void removeFaintedSecondaryEffectTargets(Simulation& simulation) {
+void removeImpossibleSecondaryEffectTargets(Simulation& simulation) {
   internal::EntityFilter<move::effect::tags::Secondary> moveFilter{simulation};
   if (moveFilter.hasNoneSelected()) {
     return;
   }
 
-  moveFilter.view<removeFaintedSecondaryEffectTarget<CurrentActionSource>, Tags<move::effect::tags::MoveSource>>(
+  moveFilter.view<removeImpossibleSecondaryEffectTarget<CurrentActionSource>, Tags<move::effect::tags::MoveSource>>(
     simulation.simulateTurnOptions);
-  moveFilter.view<removeFaintedSecondaryEffectTarget<CurrentActionTarget>, Tags<move::effect::tags::MoveTarget>>(
+  moveFilter.view<removeImpossibleSecondaryEffectTarget<CurrentActionTarget>, Tags<move::effect::tags::MoveTarget>>(
     simulation.simulateTurnOptions);
+}
+
+void applyAddedFlinch(types::registry& registry, CurrentActionTarget target) {
+  registry.emplace<tags::Flinch>(target.val);
+}
+
+void removeImpossibleAddedFlinch(
+  types::handle handle, CurrentActionTarget target, AddedFlinchChance addedFlinchChance, Battle battle,
+  const simulate_turn::Options& options) {
+  types::registry& registry = *handle.registry();
+
+  if (registry.all_of<tags::Flinch>(target.val)) {
+    handle.remove<AddedFlinchChance>();
+    return;
+  }
+
+  removeImpossibleEffectTarget<AddedFlinchChance>(handle, target.val, addedFlinchChance.val, battle, options);
+}
+
+void runAddedFlinchEffect(Simulation& simulation) {
+  simulation.view<removeImpossibleAddedFlinch, Tags<tags::CurrentMoveHit>>(simulation.simulateTurnOptions);
+
+  internal::runRandomBinaryChance<AddedFlinchChance, tags::CurrentMoveHit>(simulation, [](Simulation& sim) {
+    sim.view<applyAddedFlinch, Tags<internal::tags::RandomEventCheckPassed>>();
+  });
 }
 
 // TODO(aed3): When adding damage source, change this to accept the move's handle and CurrentActionSource to pass to
@@ -172,7 +212,7 @@ void runPrimaryMoveEffects(Simulation& simulation) {
 }
 
 void runSecondaryMoveEffects(Simulation& simulation) {
-  removeFaintedSecondaryEffectTargets(simulation);
+  removeImpossibleSecondaryEffectTargets(simulation);
   internal::runModifySecondariesEvent(simulation);
 
   internal::runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::CurrentMoveHit>(
@@ -181,6 +221,8 @@ void runSecondaryMoveEffects(Simulation& simulation) {
 
   runMoveEffects(simulation);
   simulation.removeFromEntities<internal::tags::RunEffect>();
+
+  runAddedFlinchEffect(simulation);
 }
 
 void accuracyCheck(Simulation& simulation) {

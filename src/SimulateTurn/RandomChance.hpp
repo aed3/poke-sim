@@ -111,4 +111,19 @@ void runRandomEventCount(
 
   internal::randomEventCount(simulation, applyChoices, updateProbabilities);
 }
+
+bool constexpr useChanceStack(const Simulation& simulation) {
+  return simulation.isBattleFormat(BattleFormat::DOUBLES) &&
+         simulation.simulateTurnOptions.getMakeBranchesOnRandomEvents();
+}
+
+template <typename... ViewComponents, typename... ExcludeComponents>
+void removeRandomBinaryChanceComponents(Simulation& simulation, entt::exclude_t<ExcludeComponents...> exclude = {}) {
+  if (useChanceStack(simulation)) {
+    simulation.removeFromEntities<RandomBinaryProbabilityStack, ViewComponents...>(exclude);
+  }
+  else {
+    simulation.removeFromEntities<RandomBinaryProbability, ViewComponents...>(exclude);
+  }
+}
 }  // namespace pokesim::internal

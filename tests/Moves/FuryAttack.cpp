@@ -36,8 +36,9 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][SingleB
   types::probability passesAccuracyProbability = pokedex.getStaticValue<dex::FuryAttack::accuracy>() / 100.0F;
 
   types::probability critHitChance =
-    alwaysCrits ? 1.0F : 1.0F / pokedex.getStaticValue<MechanicConstants::CRIT_CHANCE_DIVISORS>()[0];
-  types::probability baseHitChance = 1.0F - critHitChance;
+    alwaysCrits ? Constants::Probability::MAX
+                : Constants::Probability::MAX / pokedex.getStaticValue<MechanicConstants::CRIT_CHANCE_DIVISORS>()[0];
+  types::probability baseHitChance = Constants::Probability::MAX - critHitChance;
   types::damage critDamage = 23U;
   types::damage baseDamage = 16U;
   types::stat p2MaxHp = computeStatFromBaseStat(
@@ -58,7 +59,11 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][SingleB
   entt::dense_map<types::stat, std::tuple<types::moveHits, types::moveHits, types::probability>>
     hitCombinationsFromP2Hp;
 
-  hitCombinationsFromP2Hp[p2MaxHp] = {(types::moveHits)0U, (types::moveHits)0U, 1.0F - passesAccuracyProbability};
+  hitCombinationsFromP2Hp[p2MaxHp] = {
+    (types::moveHits)0U,
+    (types::moveHits)0U,
+    Constants::Probability::MAX - passesAccuracyProbability,
+  };
 
   for (types::moveHits totalHits = 2U; totalHits <= 5U; totalHits++) {
     types::probability idealProbability = passesAccuracyProbability;

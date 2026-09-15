@@ -2,9 +2,10 @@
 #include <Battle/Helpers/InternalHelpers.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Components/CalcDamage/ModifyingEventRanTags.hpp>
-#include <Components/ChoiceLock.hpp>
 #include <Components/Current.hpp>
 #include <Components/Damage.hpp>
+#include <Components/Effects/AddedFlinchChance.hpp>
+#include <Components/Effects/ChoiceLock.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EventModifier.hpp>
@@ -14,6 +15,7 @@
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Components/Tags/VolatileTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Enums/GameMechanics.hpp>
@@ -102,10 +104,21 @@ struct FocusSashOnAfterModifyDamage {
   }
 };
 
+void kingsRockOnModifyMove(
+  types::registry& registry, const CurrentActionMovesAsSource& moves, types::percentChance addedFlinchChance) {
+  for (types::entity move : moves) {
+    if (registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
+      continue;
+    }
+
+    registry.emplace<AddedFlinchChance>(move, addedFlinchChance);
+  }
+}
+
 void lifeOrbOnAfterMove(
-  types::handle pokemonHandle, const CurrentActionMovesAsSource& moves, stat::Hp hp, types::stat hpDivisor) {
+  types::handle handle, const CurrentActionMovesAsSource& moves, stat::Hp hp, types::stat hpDivisor) {
   bool onlyStatusMoves = true;
-  types::registry& registry = *pokemonHandle.registry();
+  types::registry& registry = *handle.registry();
   for (types::entity move : moves) {
     if (registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
       onlyStatusMoves &= registry.all_of<move::tags::Status>(move);
@@ -113,7 +126,7 @@ void lifeOrbOnAfterMove(
   }
 
   if (!onlyStatusMoves) {
-    internal::applyDamage(pokemonHandle, hp.val / hpDivisor);
+    internal::applyDamage(handle, hp.val / hpDivisor);
   }
 }
 }  // namespace
@@ -180,6 +193,12 @@ void FocusSash::onAfterModifyDamage(Simulation& simulation) {
 void FocusSash::onDamage(Simulation& simulation) {
   simulation.addToEntities<tags::CanUseItem, internal::calc_damage::tags::RanAfterModifyDamage, dex::FocusSash>();
   internal::tryUseItem(simulation);
+}
+
+void KingsRock::onModifyMove(Simulation& simulation) {
+  const auto percentChance = simulation.pokedex().getStaticValue<KingsRock::addedFlinchChance>();
+
+  simulation.view<kingsRockOnModifyMove, Tags<dex::KingsRock>>(percentChance);
 }
 
 void LifeOrb::onModifyDamage(Simulation& simulation) {

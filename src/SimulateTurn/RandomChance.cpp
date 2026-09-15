@@ -22,11 +22,6 @@
 
 namespace pokesim::internal {
 namespace {
-bool constexpr useChanceStack(const Simulation& simulation) {
-  return simulation.isBattleFormat(BattleFormat::DOUBLES) &&
-         simulation.simulateTurnOptions.getMakeBranchesOnRandomEvents();
-}
-
 void updateProbability(Probability& currentProbability, types::probability eventProbability) {
   currentProbability.val *= eventProbability;
 }

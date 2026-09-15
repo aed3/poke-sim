@@ -2,6 +2,7 @@
 
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Item.hpp>
+#include <Types/Random.hpp>
 #include <string_view>
 
 namespace pokesim {
@@ -11,6 +12,8 @@ class Simulation;
 namespace pokesim::dex {
 struct KingsRock {
   static constexpr Item name(GameMechanics) { return dex::Item::KINGS_ROCK; }
+
+  static types::percentChance addedFlinchChance(GameMechanics) { return 10U; }
 
   struct Strings {
     static constexpr std::string_view name() { return "King's Rock"; }

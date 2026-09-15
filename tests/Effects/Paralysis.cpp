@@ -9,11 +9,13 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Singl
     test.side(test.pokemon(dex::Species::RIBOMBEE, dex::Move::SPLASH)),
     test.turnDecision(dex::Move::SPLASH, dex::Move::SPLASH));
 
+  test.simulateTurnOptions().setMakeBranchesOnRandomEvents(true);
   auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{});
   const types::registry& registry = test.registry();
   REQUIRE(turnOutcomeBattles.size() == 2U);
 
-  types::probability paralysisChance = test.pokedex.getStaticValue<dex::Paralysis::onBeforeMoveChance>() / 100.0F;
+  types::probability paralysisChance =
+    test.dexValue<dex::Paralysis::onBeforeMoveChance>() * Constants::PercentChanceToProbability;
   entt::dense_set<types::probability> foundProbabilities;
   for (types::entity battle : turnOutcomeBattles) {
     auto entities = test.getBattleEntities(battle);
@@ -23,8 +25,8 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Singl
     auto [initialRngSeed, currentRngSeed] = test.checks.getInitialAndCurrent<RngSeed>(battle);
     REQUIRE(currentRngSeed.val == initialRngSeed.val);
 
-    bool paralysisStoppedP1Move = probability.val == paralysisChance;
-    bool p1Moved = probability.val == 1.0F - paralysisChance;
+    bool paralysisStoppedP1Move = probability.val == Catch::Approx(paralysisChance);
+    bool p1Moved = probability.val == Catch::Approx(Constants::Probability::MAX - paralysisChance);
 
     REQUIRE((paralysisStoppedP1Move || p1Moved));
 

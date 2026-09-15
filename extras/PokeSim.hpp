@@ -112,11 +112,12 @@
  * src/Components/CalcDamage/DamageRollSides.hpp
  * src/Components/CalcDamage/ModifyingEventRanTags.hpp
  * src/Components/CalcDamage/TemporaryMoveProperties.hpp
- * src/Components/ChoiceLock.hpp
  * src/Components/CloneFromCloneTo.hpp
  * src/Components/Current.hpp
  * src/Components/DisabledMoveSlots.hpp
  * src/Components/EVsIVs.hpp
+ * src/Components/Effects/AddedFlinchChance.hpp
+ * src/Components/Effects/ChoiceLock.hpp
  * src/Components/EntityHolders/FaintQueue.hpp
  * src/Components/EntityHolders/FoeSide.hpp
  * src/Components/EntityHolders/RecycledEntities.hpp
@@ -176,6 +177,7 @@
  * src/Components/Tags/StatusTags.hpp
  * src/Components/Tags/TargetTags.hpp
  * src/Components/Tags/TypeTags.hpp
+ * src/Components/Tags/VolatileTags.hpp
  * src/Components/Turn.hpp
  * src/Components/Winner.hpp
  * src/Pokedex/EnumToTag/StatusEnumToTag.hpp
@@ -267,6 +269,7 @@
  * src/Battle/Helpers/IntegerModify.hpp
  * src/Pokedex/Effects/Burn.hpp
  * src/Pokedex/Effects/ChoiceLock.hpp
+ * src/Pokedex/Effects/Flinch.hpp
  * src/Pokedex/Effects/Paralysis.hpp
  * src/Pokedex/Moves/AllySwitch.hpp
  * src/Pokedex/Moves/FlashCannon.hpp
@@ -19646,16 +19649,6 @@ struct IgnoresDefendingBoost {};
 
 ///////// END OF src/Components/CalcDamage/TemporaryMoveProperties.hpp /////////
 
-//////////////////// START OF src/Components/ChoiceLock.hpp ////////////////////
-
-namespace pokesim {
-struct ChoiceLock {
-  types::moveSlotIndex val{};
-};
-}  // namespace pokesim
-
-///////////////////// END OF src/Components/ChoiceLock.hpp /////////////////////
-
 ///////////////// START OF src/Components/CloneFromCloneTo.hpp /////////////////
 
 namespace pokesim {
@@ -19725,6 +19718,26 @@ struct Ivs {
 }  // namespace pokesim
 
 /////////////////////// END OF src/Components/EVsIVs.hpp ///////////////////////
+
+//////////// START OF src/Components/Effects/AddedFlinchChance.hpp /////////////
+
+namespace pokesim {
+struct AddedFlinchChance {
+  types::percentChance val{};
+};
+}  // namespace pokesim
+
+///////////// END OF src/Components/Effects/AddedFlinchChance.hpp //////////////
+
+//////////////// START OF src/Components/Effects/ChoiceLock.hpp ////////////////
+
+namespace pokesim {
+struct ChoiceLock {
+  types::moveSlotIndex val{};
+};
+}  // namespace pokesim
+
+///////////////// END OF src/Components/Effects/ChoiceLock.hpp /////////////////
 
 ///////////// START OF src/Components/EntityHolders/FaintQueue.hpp /////////////
 
@@ -20859,6 +20872,14 @@ struct Fairy {};
 
 /////////////////// END OF src/Components/Tags/TypeTags.hpp ////////////////////
 
+//////////////// START OF src/Components/Tags/VolatileTags.hpp /////////////////
+
+namespace pokesim::tags {
+struct Flinch {};
+}  // namespace pokesim::tags
+
+///////////////// END OF src/Components/Tags/VolatileTags.hpp //////////////////
+
 /////////////////////// START OF src/Components/Turn.hpp ///////////////////////
 
 namespace pokesim {
@@ -21393,7 +21414,6 @@ struct DefBoost;
 struct SpaBoost;
 struct SpdBoost;
 struct SpeBoost;
-struct ChoiceLock;
 struct CloneTo;
 struct CurrentActionMoveSlot;
 struct Damage;
@@ -21402,6 +21422,8 @@ struct DamageRolls;
 struct DisabledMoveSlots;
 struct Evs;
 struct Ivs;
+struct AddedFlinchChance;
+struct ChoiceLock;
 struct Battle;
 struct ParentBattle;
 struct RootBattle;
@@ -21611,9 +21633,6 @@ void check(const internal::calc_damage::RealEffectiveStat&);
 template <>
 void check(const internal::calc_damage::DamageFormulaVariables&);
 
-template <>
-void check(const ChoiceLock&);
-
 // template <> void check(const CloneTo&);
 
 template <>
@@ -21636,6 +21655,12 @@ void check(const Evs&);
 
 template <>
 void check(const Ivs&);
+
+template <>
+void check(const AddedFlinchChance&);
+
+template <>
+void check(const ChoiceLock&);
 
 template <>
 void check(const Battle&, const types::registry&);
@@ -24973,6 +24998,8 @@ namespace pokesim::dex {
 struct KingsRock {
   static constexpr Item name(GameMechanics) { return dex::Item::KINGS_ROCK; }
 
+  static types::percentChance addedFlinchChance(GameMechanics) { return 10U; }
+
   struct Strings {
     static constexpr std::string_view name() { return "King's Rock"; }
     static constexpr std::string_view smogonId() { return "kingsrock"; }
@@ -26205,6 +26232,31 @@ struct ChoiceLock {
 
 ////////////////// END OF src/Pokedex/Effects/ChoiceLock.hpp ///////////////////
 
+/////////////////// START OF src/Pokedex/Effects/Flinch.hpp ////////////////////
+
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
+
+namespace pokesim::dex {
+struct Flinch {
+  static constexpr Volatile name(GameMechanics) { return dex::Volatile::FLINCH; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Flinch"; }
+    static constexpr std::string_view smogonId() { return "flinch"; }
+  };
+
+  static void onBeforeMove(Simulation& simulation);
+  static void onResidual(Simulation& simulation);
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+   // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Effects/Flinch.hpp /////////////////////
+
 ////////////////// START OF src/Pokedex/Effects/Paralysis.hpp //////////////////
 
 namespace pokesim {
@@ -26900,6 +26952,21 @@ void runRandomEventCount(
     forRequiredDamageRolls);
 
   internal::randomEventCount(simulation, applyChoices, updateProbabilities);
+}
+
+bool constexpr useChanceStack(const Simulation& simulation) {
+  return simulation.isBattleFormat(BattleFormat::DOUBLES) &&
+         simulation.simulateTurnOptions.getMakeBranchesOnRandomEvents();
+}
+
+template <typename... ViewComponents, typename... ExcludeComponents>
+void removeRandomBinaryChanceComponents(Simulation& simulation, entt::exclude_t<ExcludeComponents...> exclude = {}) {
+  if (useChanceStack(simulation)) {
+    simulation.removeFromEntities<RandomBinaryProbabilityStack, ViewComponents...>(exclude);
+  }
+  else {
+    simulation.removeFromEntities<RandomBinaryProbability, ViewComponents...>(exclude);
+  }
 }
 }  // namespace pokesim::internal
 

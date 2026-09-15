@@ -730,11 +730,6 @@ void check(const internal::calc_damage::DamageFormulaVariables& damageFormulaVar
 }
 
 template <>
-void check(const ChoiceLock& choiceLock) {
-  POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
-}
-
-template <>
 void check(const CurrentActionMoveSlot& currentActionMoveSlot) {
   POKESIM_REQUIRE_NM(currentActionMoveSlot.val < Constants::MoveSlots::MAX);
 }
@@ -784,6 +779,16 @@ void check(const Ivs& ivs) {
   checkIv(ivs.spa);
   checkIv(ivs.spd);
   checkIv(ivs.spe);
+}
+
+template <>
+void check(const AddedFlinchChance& addedFlinchChance) {
+  checkPercentChance(addedFlinchChance.val);
+}
+
+template <>
+void check(const ChoiceLock& choiceLock) {
+  POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
 }
 
 template <>
@@ -2255,10 +2260,12 @@ void runEachUpdate(Simulation&) {}
 
 void runBeforeMove(Simulation& simulation) {
   pokesim::dex::Paralysis::onBeforeMove(simulation);
+  pokesim::dex::Flinch::onBeforeMove(simulation);
   pokesim::dex::ChoiceLock::onBeforeMove(simulation);
 }
 
 void runResidual(Simulation& simulation) {
+  pokesim::dex::Flinch::onResidual(simulation);
   pokesim::dex::Burn::onResidual(simulation);
 }
 
@@ -2343,6 +2350,7 @@ void runAfterBoostEvent(Simulation&) {}
 void runModifyTarget(Simulation&) {}
 
 void runModifyMove(Simulation& simulation) {
+  pokesim::dex::KingsRock::onModifyMove(simulation);
   pokesim::dex::ChoiceScarf::onSourceModifyMove(simulation);
   pokesim::dex::ChoiceSpecs::onSourceModifyMove(simulation);
 }
@@ -2486,39 +2494,77 @@ void runMoveEffects(Simulation& simulation) {
   simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
 }
 
-template <typename TargetEntityHolder>
-void removeFaintedSecondaryEffectTarget(
-  types::handle handle, TargetEntityHolder target, BaseEffectChance baseEffectChance, Battle battle,
+template <typename ComponentToRemove>
+void removeImpossibleEffectTarget(
+  types::handle handle, types::entity target, types::percentChance percentChance, Battle battle,
   const simulate_turn::Options& options) {
   types::registry& registry = *handle.registry();
   internal::PercentChanceLimitResult limitReached = internal::checkPercentChanceLimits(
-    baseEffectChance.val * Constants::PercentChanceToProbability,
+    percentChance * Constants::PercentChanceToProbability,
     registry.get<Probability>(battle.val).val,
     options);
 
   if (limitReached == internal::PercentChanceLimitResult::REACHED_PASS_LIMIT) {
     return;
   }
-  types::stat hp = registry.get<stat::CurrentHp>(target.val).val;
+
+  types::stat hp = registry.get<stat::CurrentHp>(target).val;
   if (hp == Constants::PokemonCurrentHpStat::MIN) {
-    handle.remove<move::effect::tags::Secondary>();
+    handle.remove<ComponentToRemove>();
   }
+}
+
+template <typename TargetEntityHolder>
+void removeImpossibleSecondaryEffectTarget(
+  types::handle handle, TargetEntityHolder target, BaseEffectChance baseEffectChance, Battle battle,
+  const simulate_turn::Options& options) {
+  removeImpossibleEffectTarget<move::effect::tags::Secondary>(
+    handle,
+    target.val,
+    baseEffectChance.val,
+    battle,
+    options);
 }
 
 // Skipping secondary effects entirely for a fainted target is not something Showdown does. This is done here to prevent
 // more random chance splits than needed and should not cause outcome deviations from Showdown. If, for example, a move
-// exists that has a random chance to add a side or field affect regardless of the target's HP, then this function will
+// exists that has a random chance to add a side or field effect regardless of the target's HP, then this function will
 // need to be reworked.
-void removeFaintedSecondaryEffectTargets(Simulation& simulation) {
+void removeImpossibleSecondaryEffectTargets(Simulation& simulation) {
   internal::EntityFilter<move::effect::tags::Secondary> moveFilter{simulation};
   if (moveFilter.hasNoneSelected()) {
     return;
   }
 
-  moveFilter.view<removeFaintedSecondaryEffectTarget<CurrentActionSource>, Tags<move::effect::tags::MoveSource>>(
+  moveFilter.view<removeImpossibleSecondaryEffectTarget<CurrentActionSource>, Tags<move::effect::tags::MoveSource>>(
     simulation.simulateTurnOptions);
-  moveFilter.view<removeFaintedSecondaryEffectTarget<CurrentActionTarget>, Tags<move::effect::tags::MoveTarget>>(
+  moveFilter.view<removeImpossibleSecondaryEffectTarget<CurrentActionTarget>, Tags<move::effect::tags::MoveTarget>>(
     simulation.simulateTurnOptions);
+}
+
+void applyAddedFlinch(types::registry& registry, CurrentActionTarget target) {
+  registry.emplace<tags::Flinch>(target.val);
+}
+
+void removeImpossibleAddedFlinch(
+  types::handle handle, CurrentActionTarget target, AddedFlinchChance addedFlinchChance, Battle battle,
+  const simulate_turn::Options& options) {
+  types::registry& registry = *handle.registry();
+
+  if (registry.all_of<tags::Flinch>(target.val)) {
+    handle.remove<AddedFlinchChance>();
+    return;
+  }
+
+  removeImpossibleEffectTarget<AddedFlinchChance>(handle, target.val, addedFlinchChance.val, battle, options);
+}
+
+void runAddedFlinchEffect(Simulation& simulation) {
+  simulation.view<removeImpossibleAddedFlinch, Tags<tags::CurrentMoveHit>>(simulation.simulateTurnOptions);
+
+  internal::runRandomBinaryChance<AddedFlinchChance, tags::CurrentMoveHit>(simulation, [](Simulation& sim) {
+    sim.view<applyAddedFlinch, Tags<internal::tags::RandomEventCheckPassed>>();
+  });
 }
 
 // TODO(aed3): When adding damage source, change this to accept the move's handle and CurrentActionSource to pass to
@@ -2559,7 +2605,7 @@ void runPrimaryMoveEffects(Simulation& simulation) {
 }
 
 void runSecondaryMoveEffects(Simulation& simulation) {
-  removeFaintedSecondaryEffectTargets(simulation);
+  removeImpossibleSecondaryEffectTargets(simulation);
   internal::runModifySecondariesEvent(simulation);
 
   internal::runRandomBinaryChance<BaseEffectChance, move::effect::tags::Secondary, tags::CurrentMoveHit>(
@@ -2568,6 +2614,8 @@ void runSecondaryMoveEffects(Simulation& simulation) {
 
   runMoveEffects(simulation);
   simulation.removeFromEntities<internal::tags::RunEffect>();
+
+  runAddedFlinchEffect(simulation);
 }
 
 void accuracyCheck(Simulation& simulation) {
@@ -3085,11 +3133,6 @@ void run(Simulation& simulation) {
 
 namespace pokesim::internal {
 namespace {
-bool constexpr useChanceStack(const Simulation& simulation) {
-  return simulation.isBattleFormat(BattleFormat::DOUBLES) &&
-         simulation.simulateTurnOptions.getMakeBranchesOnRandomEvents();
-}
-
 void updateProbability(Probability& currentProbability, types::probability eventProbability) {
   currentProbability.val *= eventProbability;
 }
@@ -5027,10 +5070,21 @@ struct FocusSashOnAfterModifyDamage {
   }
 };
 
+void kingsRockOnModifyMove(
+  types::registry& registry, const CurrentActionMovesAsSource& moves, types::percentChance addedFlinchChance) {
+  for (types::entity move : moves) {
+    if (registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
+      continue;
+    }
+
+    registry.emplace<AddedFlinchChance>(move, addedFlinchChance);
+  }
+}
+
 void lifeOrbOnAfterMove(
-  types::handle pokemonHandle, const CurrentActionMovesAsSource& moves, stat::Hp hp, types::stat hpDivisor) {
+  types::handle handle, const CurrentActionMovesAsSource& moves, stat::Hp hp, types::stat hpDivisor) {
   bool onlyStatusMoves = true;
-  types::registry& registry = *pokemonHandle.registry();
+  types::registry& registry = *handle.registry();
   for (types::entity move : moves) {
     if (registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
       onlyStatusMoves &= registry.all_of<move::tags::Status>(move);
@@ -5038,7 +5092,7 @@ void lifeOrbOnAfterMove(
   }
 
   if (!onlyStatusMoves) {
-    internal::applyDamage(pokemonHandle, hp.val / hpDivisor);
+    internal::applyDamage(handle, hp.val / hpDivisor);
   }
 }
 }  // namespace
@@ -5107,6 +5161,12 @@ void FocusSash::onDamage(Simulation& simulation) {
   internal::tryUseItem(simulation);
 }
 
+void KingsRock::onModifyMove(Simulation& simulation) {
+  const auto percentChance = simulation.pokedex().getStaticValue<KingsRock::addedFlinchChance>();
+
+  simulation.view<kingsRockOnModifyMove, Tags<dex::KingsRock>>(percentChance);
+}
+
 void LifeOrb::onModifyDamage(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageDenominator>();
@@ -5148,8 +5208,8 @@ void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedD
   effectiveSpe.val = effectiveSpe.val * speedDividend / speedDivisor;
 }
 
-void paralysisOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSource& moves) {
-  for (types::entity move : moves.val) {
+void failedOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSource& moves) {
+  for (types::entity move : moves) {
     registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
   }
 }
@@ -5200,7 +5260,7 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
 
   pokesim::internal::randomBinaryChance(
     simulation,
-    [](Simulation& sim) { sim.view<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
+    [](Simulation& sim) { sim.view<failedOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
     std::nullopt);
   simulation.view<internal::setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
   simulation.removeFromEntities<pokesim::tags::FailedCurrentMoveHit>();
@@ -5218,6 +5278,16 @@ void ChoiceLock::onDisableMove(Simulation& simulation) {
 
   choiceLockRemove<internal::tags::DisableMove>(simulation);
   filter.view<choiceLockOnDisableMove>();
+}
+
+void Flinch::onBeforeMove(Simulation& simulation) {
+  simulation.view<failedOnBeforeMove, Tags<tags::Flinch>>();
+  simulation.view<internal::setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
+  simulation.removeFromEntities<pokesim::tags::FailedCurrentMoveHit>();
+}
+
+void Flinch::onResidual(Simulation& simulation) {
+  simulation.removeFromEntities<tags::Flinch, tags::ActivePokemon>();
 }
 }  // namespace pokesim::dex
 
@@ -5273,9 +5343,9 @@ void Static::onDamagingHit(Simulation& simulation) {
 
   simulation.view<staticOnDamagingHit, Tags<dex::Static>>(chanceOfStatic, simulation);
 
-  // TODO(aed3): This is now inefficient since the random chance will happen for move sources that cannot have their
-  // status changed.
   internal::checkIfCanSetStatus(simulation);
+  internal::removeRandomBinaryChanceComponents(simulation, entt::exclude_t<pokesim::tags::CanSetStatus>{});
+
   pokesim::internal::randomBinaryChance(
     simulation,
     [](Simulation& sim) {
@@ -6404,7 +6474,7 @@ void clearVolatiles(types::handle pokemonHandle) {
   pokemonHandle.remove<LastUsedMove>();
 
   // TODO(aed3): Make autogenerated
-  pokemonHandle.remove<ChoiceLock>();
+  pokemonHandle.remove<ChoiceLock, pokesim::tags::Flinch>();
 }
 
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
@@ -6617,6 +6687,8 @@ void clearActionMoveComponents(types::registry& registry, const View& view) {
     SpaBoost,
     SpdBoost,
     SpeBoost,
+    pokesim::tags::Flinch,
+    AddedFlinchChance,
     pokesim::status::tags::Paralysis,
     pokesim::status::tags::Burn>(view.begin(), view.end());
 }
