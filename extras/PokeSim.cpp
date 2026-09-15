@@ -2391,6 +2391,7 @@ void runModifySpe(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::SpeStatUpdateRequired>();
 
   pokesim::dex::ChoiceScarf::onModifySpe(simulation);
+  pokesim::dex::QuickPowder::onModifySpe(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpe>>();
   simulation.removeFromEntities<EventModifier>();
@@ -5115,6 +5116,15 @@ void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget m
   stat::Hp hp = registry.get<stat::Hp>(source);
   internal::applyDamage({registry, source}, hp.val / hpDivisor);
 }
+
+void quickPowderOnModifySpe(
+  SpeciesName species, EventModifier& eventModifier, types::effectMultiplier speedMultiplier) {
+  if (species.val != dex::Species::DITTO) {
+    return;
+  }
+
+  internal::chainComponentToModifier(eventModifier, speedMultiplier);
+}
 }  // namespace
 
 void AssaultVest::onModifySpd(Simulation& simulation) {
@@ -5204,6 +5214,13 @@ void RockyHelmet::onDamagingHit(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<RockyHelmet::onDamagingHitHpDecreaseDivisor>();
 
   simulation.view<rockyHelmetOnDamagingHit, Tags<dex::RockyHelmet>>(divisor);
+}
+
+void QuickPowder::onModifySpe(Simulation& simulation) {
+  const auto modifier = simulation.pokedex().getStaticValue<onModifySpeModifier>();
+
+  simulation.view<quickPowderOnModifySpe, Tags<dex::QuickPowder> /*, entt::exclude_t<pokesim::tags::Transformed>*/>(
+    modifier);
 }
 }  // namespace pokesim::dex
 
@@ -6529,10 +6546,17 @@ void setLastMoveUsed(types::registry& registry, CurrentAction& source, CurrentAc
   registry.emplace<LastUsedMove>(source.source, move.val);
 }
 
-void faint(types::handle pokemonHandle, Battle battle) {
-  types::registry& registry = *pokemonHandle.registry();
+void faint(types::handle handle, Battle battle) {
+  types::registry& registry = *handle.registry();
   FaintQueue& faintQueue = registry.get_or_emplace<FaintQueue>(battle.val);
-  faintQueue.val.push_back(pokemonHandle.entity());
+  types::entity entity = handle.entity();
+  for (types::entity queued : faintQueue.val) {
+    if (queued == entity) {
+      return;
+    }
+  }
+
+  faintQueue.val.push_back(entity);
 }
 
 void applyDamage(types::handle handle, types::damage damage) {

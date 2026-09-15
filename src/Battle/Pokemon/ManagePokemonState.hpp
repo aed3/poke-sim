@@ -49,7 +49,7 @@ void clearVolatiles(types::handle pokemonHandle);
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
 void setLastMoveUsed(types::registry& registry, CurrentAction& source, CurrentActionMoveSlot move);
 
-void faint(types::handle pokemonHandle, Battle battle);
+void faint(types::handle handle, Battle battle);
 void applyDamage(types::handle handle, types::damage damage);
 void applyStatBoost(types::stat& stat, types::boost boost);
 
