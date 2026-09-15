@@ -38,14 +38,17 @@ struct Random {
     dex::Ability::TRACE,
   };
 
-  static constexpr std::array<dex::Item, 7U> availableItems{
+  static constexpr std::array<dex::Item, 10U> availableItems{
     dex::Item::NO_ITEM,
     dex::Item::ASSAULT_VEST,
     dex::Item::BRIGHT_POWDER,
     dex::Item::CHOICE_SCARF,
     dex::Item::CHOICE_SPECS,
     dex::Item::FOCUS_SASH,
+    dex::Item::KINGS_ROCK,
     dex::Item::LIFE_ORB,
+    dex::Item::QUICK_POWDER,
+    dex::Item::ROCKY_HELMET,
   };
 
   template <typename T>

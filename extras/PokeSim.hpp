@@ -22504,7 +22504,7 @@ void clearVolatiles(types::handle pokemonHandle);
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
 void setLastMoveUsed(types::registry& registry, CurrentAction& source, CurrentActionMoveSlot move);
 
-void faint(types::handle pokemonHandle, Battle battle);
+void faint(types::handle handle, Battle battle);
 void applyDamage(types::handle handle, types::damage damage);
 void applyStatBoost(types::stat& stat, types::boost boost);
 
@@ -25185,7 +25185,8 @@ namespace pokesim::dex {
 struct QuickPowder {
   static constexpr Item name(GameMechanics) { return dex::Item::QUICK_POWDER; }
 
-  static constexpr types::stat speedDividend(GameMechanics) { return 2U; }
+  static constexpr types::effectMultiplier onModifySpeModifier(GameMechanics) { return 2.0F; }
+
   struct Strings {
     static constexpr std::string_view name() { return "Quick Powder"; }
     static constexpr std::string_view smogonId() { return "quickpowder"; }

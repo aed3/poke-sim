@@ -283,10 +283,17 @@ void setLastMoveUsed(types::registry& registry, CurrentAction& source, CurrentAc
   registry.emplace<LastUsedMove>(source.source, move.val);
 }
 
-void faint(types::handle pokemonHandle, Battle battle) {
-  types::registry& registry = *pokemonHandle.registry();
+void faint(types::handle handle, Battle battle) {
+  types::registry& registry = *handle.registry();
   FaintQueue& faintQueue = registry.get_or_emplace<FaintQueue>(battle.val);
-  faintQueue.val.push_back(pokemonHandle.entity());
+  types::entity entity = handle.entity();
+  for (types::entity queued : faintQueue.val) {
+    if (queued == entity) {
+      return;
+    }
+  }
+
+  faintQueue.val.push_back(entity);
 }
 
 void applyDamage(types::handle handle, types::damage damage) {
