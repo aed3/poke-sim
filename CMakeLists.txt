@@ -233,6 +233,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/Effects/Paralysis.cpp
       tests/Items/KingsRock.cpp
       tests/Items/RockyHelmet.cpp
+      tests/Items/QuickPowder.cpp
       tests/Moves/FuryAttack.cpp
       tests/Moves/KnockOff.cpp
       tests/PokedexTest.cpp
