@@ -1,4 +1,5 @@
 #include <Battle/Pokemon/ManagePokemonState.hpp>
+#include <Battle/Pokemon/PokemonProperties.hpp>
 #include <Components/BaseEffectChance.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EventModifier.hpp>
@@ -23,24 +24,19 @@ namespace {
 void plusOnModifySpa(types::handle, EventModifier&) {}
 
 void staticOnDamagingHit(
-  types::handle targetHandle, const CurrentActionMovesAsTarget& moves, Battle battle,
-  types::percentChance chanceOfStatic, const Simulation& simulation) {
+  types::handle targetHandle, CurrentActionMovesAsTarget moves, Battle battle, types::percentChance chanceOfStatic,
+  const Simulation& simulation) {
   types::registry& registry = *targetHandle.registry();
   types::entity move = moves.val;
 
   if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
     return;
   }
-  if (!registry.all_of<move::tags::Contact>(move)) {
-    return;
-  }
-
   types::entity source = registry.get<CurrentActionSource>(move).val;
-  /*
-  if (registry.all_of<dex::ProtectivePads>(source)) {
+
+  if (!internal::doesMoveMakeContact(registry, move, source)) {
     return;
   }
-  */
 
   pokesim::internal::setRandomBinaryChanceFromPercentChance({registry, move}, battle, simulation, chanceOfStatic);
 

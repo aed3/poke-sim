@@ -50,7 +50,9 @@ void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedD
 
 void failedOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves) {
-    registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
+    if (registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
+      registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
+    }
   }
 }
 

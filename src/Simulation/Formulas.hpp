@@ -33,8 +33,8 @@ constexpr types::damage computeBaseDamage(
 }
 
 constexpr types::stat computeStatFromBaseStat(
-  dex::Stat statName, types::baseStat baseStat, types::level level, dex::Nature nature, const Evs& evs,
-  const Ivs& ivs) {
+  dex::Stat statName, types::baseStat baseStat, types::level level, dex::Nature nature, const Evs& evs = {},
+  const Ivs& ivs = {}) {
   types::ev ev = Constants::PokemonEv::DEFAULT;
   types::iv iv = Constants::PokemonIv::DEFAULT;
 

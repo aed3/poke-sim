@@ -2,7 +2,7 @@
 
 #include <Battle/Helpers/IntegerModify.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
-#include <Battle/Pokemon/PokemonDataChecks.hpp>
+#include <Battle/Pokemon/PokemonProperties.hpp>
 #include <Components/BasePower.hpp>
 #include <Components/Boosts.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
@@ -28,6 +28,7 @@
 #include <Components/Tags/StatusTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Effects/Burn.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/CalcDamageSpecifics.hpp>
 #include <Simulation/Formulas.hpp>
 #include <Simulation/RunEvent.hpp>

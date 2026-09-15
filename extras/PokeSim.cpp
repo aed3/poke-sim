@@ -31,6 +31,7 @@
  * src/Battle/Setup/SideStateSetup.cpp
  * src/Battle/Setup/PokemonStateSetup.cpp
  * src/Battle/Setup/BattleStateSetup.cpp
+ * src/Battle/Pokemon/PokemonProperties.cpp
  * src/Battle/Pokemon/ManagePokemonState.cpp
  * src/Battle/ManageBattleState.cpp
  * src/Battle/Helpers/Helpers.cpp
@@ -2308,6 +2309,7 @@ void runDamageEvent(Simulation& simulation) {
 
 void runDamagingHitEvent(Simulation& simulation) {
   pokesim::dex::Static::onDamagingHit(simulation);
+  pokesim::dex::RockyHelmet::onDamagingHit(simulation);
 }
 
 void runAfterHitEvent(Simulation& simulation) {
@@ -2350,9 +2352,9 @@ void runAfterBoostEvent(Simulation&) {}
 void runModifyTarget(Simulation&) {}
 
 void runModifyMove(Simulation& simulation) {
-  pokesim::dex::KingsRock::onModifyMove(simulation);
   pokesim::dex::ChoiceScarf::onSourceModifyMove(simulation);
   pokesim::dex::ChoiceSpecs::onSourceModifyMove(simulation);
+  pokesim::dex::KingsRock::onModifyMove(simulation);
 }
 
 void runDisableMove(Simulation& simulation) {
@@ -5073,7 +5075,9 @@ struct FocusSashOnAfterModifyDamage {
 void kingsRockOnModifyMove(
   types::registry& registry, const CurrentActionMovesAsSource& moves, types::percentChance addedFlinchChance) {
   for (types::entity move : moves) {
-    if (registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
+    if (
+      !registry.all_of<pokesim::tags::CurrentActionMove>(move) ||
+      registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
       continue;
     }
 
@@ -5094,6 +5098,22 @@ void lifeOrbOnAfterMove(
   if (!onlyStatusMoves) {
     internal::applyDamage(handle, hp.val / hpDivisor);
   }
+}
+
+void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget moves, types::stat hpDivisor) {
+  types::registry& registry = *handle.registry();
+  types::entity move = moves.val;
+  if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
+    return;
+  }
+
+  types::entity source = registry.get<CurrentActionSource>(moves.val).val;
+  if (!internal::doesMoveMakeContact(registry, move, source)) {
+    return;
+  }
+
+  stat::Hp hp = registry.get<stat::Hp>(source);
+  internal::applyDamage({registry, source}, hp.val / hpDivisor);
 }
 }  // namespace
 
@@ -5179,6 +5199,12 @@ void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
 
   simulation.view<lifeOrbOnAfterMove, Tags<dex::LifeOrb>>(divisor);
 }
+
+void RockyHelmet::onDamagingHit(Simulation& simulation) {
+  const auto divisor = simulation.pokedex().getStaticValue<RockyHelmet::onDamagingHitHpDecreaseDivisor>();
+
+  simulation.view<rockyHelmetOnDamagingHit, Tags<dex::RockyHelmet>>(divisor);
+}
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Events/ItemEvents.cpp ///////////////////
@@ -5210,7 +5236,9 @@ void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedD
 
 void failedOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves) {
-    registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
+    if (registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
+      registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
+    }
   }
 }
 
@@ -5300,24 +5328,19 @@ namespace {
 void plusOnModifySpa(types::handle, EventModifier&) {}
 
 void staticOnDamagingHit(
-  types::handle targetHandle, const CurrentActionMovesAsTarget& moves, Battle battle,
-  types::percentChance chanceOfStatic, const Simulation& simulation) {
+  types::handle targetHandle, CurrentActionMovesAsTarget moves, Battle battle, types::percentChance chanceOfStatic,
+  const Simulation& simulation) {
   types::registry& registry = *targetHandle.registry();
   types::entity move = moves.val;
 
   if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
     return;
   }
-  if (!registry.all_of<move::tags::Contact>(move)) {
-    return;
-  }
-
   types::entity source = registry.get<CurrentActionSource>(move).val;
-  /*
-  if (registry.all_of<dex::ProtectivePads>(source)) {
+
+  if (!internal::doesMoveMakeContact(registry, move, source)) {
     return;
   }
-  */
 
   pokesim::internal::setRandomBinaryChanceFromPercentChance({registry, move}, battle, simulation, chanceOfStatic);
 
@@ -6241,6 +6264,21 @@ void BattleStateSetup::setProbability(types::probability probability) {
 
 ///////////////// END OF src/Battle/Setup/BattleStateSetup.cpp /////////////////
 
+////////////// START OF src/Battle/Pokemon/PokemonProperties.cpp ///////////////
+
+namespace pokesim::internal {
+bool doesMoveMakeContact(types::registry& registry, types::entity move, types::entity) {
+  /*
+  if (registry.any_of<dex::ProtectivePads>(source)) {
+    return false;
+  }
+  */
+  return registry.all_of<move::tags::Contact>(move);
+}
+}  // namespace pokesim::internal
+
+/////////////// END OF src/Battle/Pokemon/PokemonProperties.cpp ////////////////
+
 ////////////// START OF src/Battle/Pokemon/ManagePokemonState.cpp //////////////
 
 namespace pokesim::internal {
@@ -6497,14 +6535,14 @@ void faint(types::handle pokemonHandle, Battle battle) {
   faintQueue.val.push_back(pokemonHandle.entity());
 }
 
-void applyDamage(types::handle pokemonHandle, types::damage damage) {
-  stat::CurrentHp& hp = pokemonHandle.get<stat::CurrentHp>();
+void applyDamage(types::handle handle, types::damage damage) {
+  stat::CurrentHp& hp = handle.get<stat::CurrentHp>();
   if (damage < hp.val) {
     hp.val -= damage;
   }
   else {
     hp.val = Constants::PokemonCurrentHpStat::MIN;
-    faint(pokemonHandle, pokemonHandle.get<Battle>());
+    faint(handle, handle.get<Battle>());
   }
 }
 

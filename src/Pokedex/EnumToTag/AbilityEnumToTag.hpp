@@ -39,6 +39,7 @@ auto enumToTag(Ability ability, RunArgs&&... args) {
     case Ability::IRON_FIST:     return RunStruct<IronFist, T...>::run(std::forward<RunArgs>(args)...);
     case Ability::LEVITATE:      return RunStruct<Levitate, T...>::run(std::forward<RunArgs>(args)...);
     case Ability::LONG_REACH:    return RunStruct<LongReach, T...>::run(std::forward<RunArgs>(args)...);
+    case Ability::OVERGROW:      return RunStruct<Overgrow, T...>::run(std::forward<RunArgs>(args)...);
     case Ability::PLUS:          return RunStruct<Plus, T...>::run(std::forward<RunArgs>(args)...);
     case Ability::PRANKSTER:     return RunStruct<Prankster, T...>::run(std::forward<RunArgs>(args)...);
     case Ability::SCRAPPY:       return RunStruct<Scrappy, T...>::run(std::forward<RunArgs>(args)...);

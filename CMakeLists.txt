@@ -186,6 +186,7 @@ setup_target(
     src/Battle/Helpers/Helpers.cpp
     src/Battle/ManageBattleState.cpp
     src/Battle/Pokemon/ManagePokemonState.cpp
+    src/Battle/Pokemon/PokemonProperties.cpp
     src/Battle/Setup/BattleStateSetup.cpp
     src/Battle/Setup/PokemonStateSetup.cpp
     src/Battle/Setup/SideStateSetup.cpp
@@ -231,6 +232,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/Effects/ChoiceLock.cpp
       tests/Effects/Paralysis.cpp
       tests/Items/KingsRock.cpp
+      tests/Items/RockyHelmet.cpp
       tests/Moves/FuryAttack.cpp
       tests/Moves/KnockOff.cpp
       tests/PokedexTest.cpp

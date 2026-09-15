@@ -33,12 +33,14 @@ auto enumToTag(Move move, RunArgs&&... args) {
     case Move::FLASH_CANNON:   return RunStruct<FlashCannon, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FURY_ATTACK:    return RunStruct<FuryAttack, T...>::run(std::forward<RunArgs>(args)...);
     case Move::KNOCK_OFF:      return RunStruct<KnockOff, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::LEAFAGE:        return RunStruct<Leafage, T...>::run(std::forward<RunArgs>(args)...);
     case Move::MOONBLAST:      return RunStruct<Moonblast, T...>::run(std::forward<RunArgs>(args)...);
     case Move::QUIVER_DANCE:   return RunStruct<QuiverDance, T...>::run(std::forward<RunArgs>(args)...);
     case Move::REFLECT:        return RunStruct<Reflect, T...>::run(std::forward<RunArgs>(args)...);
     case Move::REVERSAL:       return RunStruct<Reversal, T...>::run(std::forward<RunArgs>(args)...);
     case Move::SPIRIT_SHACKLE: return RunStruct<SpiritShackle, T...>::run(std::forward<RunArgs>(args)...);
     case Move::SPLASH:         return RunStruct<Splash, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::TACKLE:         return RunStruct<Tackle, T...>::run(std::forward<RunArgs>(args)...);
     case Move::THUNDERBOLT:    return RunStruct<Thunderbolt, T...>::run(std::forward<RunArgs>(args)...);
     case Move::TRANSFORM:      return RunStruct<Transform, T...>::run(std::forward<RunArgs>(args)...);
     case Move::TRIPLE_ARROWS:  return RunStruct<TripleArrows, T...>::run(std::forward<RunArgs>(args)...);

@@ -50,7 +50,7 @@ void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
 void setLastMoveUsed(types::registry& registry, CurrentAction& source, CurrentActionMoveSlot move);
 
 void faint(types::handle pokemonHandle, Battle battle);
-void applyDamage(types::handle pokemonHandle, types::damage damage);
+void applyDamage(types::handle handle, types::damage damage);
 void applyStatBoost(types::stat& stat, types::boost boost);
 
 void tryBoost(Simulation& simulation);

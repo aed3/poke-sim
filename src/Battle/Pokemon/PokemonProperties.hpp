@@ -2,11 +2,12 @@
 
 #include <Components/SpeciesTypes.hpp>
 #include <Config/Require.hpp>
-#include <Pokedex/Pokedex.hpp>
 #include <Pokedex/TypeChart.hpp>
 #include <Types/Damage.hpp>
+#include <Types/Entity.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Enums/TypeEffectiveness.hpp>
+#include <Types/Registry.hpp>
 #include <Types/Stats.hpp>
 #include <limits>
 
@@ -36,5 +37,9 @@ constexpr types::typeEffectiveness getAttackEffectiveness(
     modifier <= speciesTypes.size() && modifier >= -speciesTypes.size(),
     "Modifier cannot exceed the number of types.");
   return modifier;
+}
+
+namespace internal {
+bool doesMoveMakeContact(types::registry& registry, types::entity move, types::entity source);
 }
 }  // namespace pokesim

@@ -45,9 +45,7 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][SingleB
     dex::Stat::HP,
     pokedex.getStaticValue<dex::Ribombee::hp>(),
     Constants::PokemonLevel::DEFAULT,
-    dex::Nature::NO_NATURE,
-    {},
-    {});
+    dex::Nature::NO_NATURE);
   std::size_t damageOutcomesPerHit = twoDamageOutcomesPerHit ? 2U : 1U;
   std::size_t idealTurnOutcomeCount = 1U +                                               // The move misses
                                       (std::size_t)std::pow(damageOutcomesPerHit, 2U) +  // 2 Hits
