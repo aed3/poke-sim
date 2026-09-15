@@ -12,6 +12,7 @@
 #include "IronFist.hpp"
 #include "Levitate.hpp"
 #include "LongReach.hpp"
+#include "Overgrow.hpp"
 #include "Plus.hpp"
 #include "Prankster.hpp"
 #include "Scrappy.hpp"

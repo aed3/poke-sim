@@ -235,6 +235,7 @@
  * src/Pokedex/Abilities/IronFist.hpp
  * src/Pokedex/Abilities/Levitate.hpp
  * src/Pokedex/Abilities/LongReach.hpp
+ * src/Pokedex/Abilities/Overgrow.hpp
  * src/Pokedex/Abilities/Plus.hpp
  * src/Pokedex/Abilities/Prankster.hpp
  * src/Pokedex/Abilities/Scrappy.hpp
@@ -275,12 +276,14 @@
  * src/Pokedex/Moves/FlashCannon.hpp
  * src/Pokedex/Moves/FuryAttack.hpp
  * src/Pokedex/Moves/KnockOff.hpp
+ * src/Pokedex/Moves/Leafage.hpp
  * src/Pokedex/Moves/Moonblast.hpp
  * src/Pokedex/Moves/QuiverDance.hpp
  * src/Pokedex/Moves/Reflect.hpp
  * src/Pokedex/Moves/Reversal.hpp
  * src/Pokedex/Moves/SpiritShackle.hpp
  * src/Pokedex/Moves/Splash.hpp
+ * src/Pokedex/Moves/Tackle.hpp
  * src/Pokedex/Moves/Thunderbolt.hpp
  * src/Pokedex/Moves/Transform.hpp
  * src/Pokedex/Moves/TripleArrows.hpp
@@ -316,7 +319,7 @@
  * src/Pokedex/EnumToTag/MovePropertyEnumToTag.hpp
  * src/Pokedex/EnumToTag/ItemPropertyEnumToTag.hpp
  * src/Pokedex/EnumToTag/AbilityPropertyEnumToTag.hpp
- * src/Battle/Pokemon/PokemonDataChecks.hpp
+ * src/Battle/Pokemon/PokemonProperties.hpp
  * src/CalcDamage/CalcDamageDebugChecks.hpp
  * src/AnalyzeEffect/AnalyzeEffectDebugChecks.hpp
  * src/PokeSim.hpp
@@ -22502,7 +22505,7 @@ void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
 void setLastMoveUsed(types::registry& registry, CurrentAction& source, CurrentActionMoveSlot move);
 
 void faint(types::handle pokemonHandle, Battle battle);
-void applyDamage(types::handle pokemonHandle, types::damage damage);
+void applyDamage(types::handle handle, types::damage damage);
 void applyStatBoost(types::stat& stat, types::boost boost);
 
 void tryBoost(Simulation& simulation);
@@ -23961,8 +23964,8 @@ constexpr types::damage computeBaseDamage(
 }
 
 constexpr types::stat computeStatFromBaseStat(
-  dex::Stat statName, types::baseStat baseStat, types::level level, dex::Nature nature, const Evs& evs,
-  const Ivs& ivs) {
+  dex::Stat statName, types::baseStat baseStat, types::level level, dex::Nature nature, const Evs& evs = {},
+  const Ivs& ivs = {}) {
   types::ev ev = Constants::PokemonEv::DEFAULT;
   types::iv iv = Constants::PokemonIv::DEFAULT;
 
@@ -24588,6 +24591,23 @@ struct LongReach {
 
 ////////////////// END OF src/Pokedex/Abilities/LongReach.hpp //////////////////
 
+///////////////// START OF src/Pokedex/Abilities/Overgrow.hpp //////////////////
+
+namespace pokesim::dex {
+struct Overgrow {
+  static constexpr Ability name(GameMechanics) { return dex::Ability::OVERGROW; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Overgrow"; }
+    static constexpr std::string_view smogonId() { return "overgrow"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+////////////////// END OF src/Pokedex/Abilities/Overgrow.hpp ///////////////////
+
 /////////////////// START OF src/Pokedex/Abilities/Plus.hpp ////////////////////
 
 namespace pokesim {
@@ -24814,6 +24834,7 @@ auto enumToTag(Ability ability, RunArgs&&... args) {
     case Ability::IRON_FIST:     return RunStruct<IronFist, T...>::run(std::forward<RunArgs>(args)...);
     case Ability::LEVITATE:      return RunStruct<Levitate, T...>::run(std::forward<RunArgs>(args)...);
     case Ability::LONG_REACH:    return RunStruct<LongReach, T...>::run(std::forward<RunArgs>(args)...);
+    case Ability::OVERGROW:      return RunStruct<Overgrow, T...>::run(std::forward<RunArgs>(args)...);
     case Ability::PLUS:          return RunStruct<Plus, T...>::run(std::forward<RunArgs>(args)...);
     case Ability::PRANKSTER:     return RunStruct<Prankster, T...>::run(std::forward<RunArgs>(args)...);
     case Ability::SCRAPPY:       return RunStruct<Scrappy, T...>::run(std::forward<RunArgs>(args)...);
@@ -25187,6 +25208,8 @@ class Simulation;
 namespace pokesim::dex {
 struct RockyHelmet {
   static constexpr Item name(GameMechanics) { return dex::Item::ROCKY_HELMET; }
+
+  static constexpr types::stat onDamagingHitHpDecreaseDivisor(GameMechanics) { return 6U; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Rocky Helmet"; }
@@ -26413,6 +26436,31 @@ struct KnockOff {
 
 //////////////////// END OF src/Pokedex/Moves/KnockOff.hpp /////////////////////
 
+//////////////////// START OF src/Pokedex/Moves/Leafage.hpp ////////////////////
+
+namespace pokesim::dex {
+struct Leafage {
+  static constexpr Move name(GameMechanics) { return Move::LEAFAGE; }
+  static constexpr Type type(GameMechanics) { return Type::GRASS; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
+
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
+  static constexpr types::basePower basePower(GameMechanics) { return 40U; }
+  static constexpr types::pp basePp(GameMechanics) { return 40U; }
+
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Leafage"; }
+    static constexpr std::string_view smogonId() { return "leafage"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Moves/Leafage.hpp /////////////////////
+
 /////////////////// START OF src/Pokedex/Moves/Moonblast.hpp ///////////////////
 
 namespace pokesim::dex {
@@ -26592,6 +26640,32 @@ struct Splash {
 }  // namespace pokesim::dex
 
 ///////////////////// END OF src/Pokedex/Moves/Splash.hpp //////////////////////
+
+//////////////////// START OF src/Pokedex/Moves/Tackle.hpp /////////////////////
+
+namespace pokesim::dex {
+struct Tackle {
+  static constexpr Move name(GameMechanics) { return Move::TACKLE; }
+  static constexpr Type type(GameMechanics) { return Type::NORMAL; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
+
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
+  static constexpr types::basePower basePower(GameMechanics) { return 40U; }
+  static constexpr types::pp basePp(GameMechanics) { return 35U; }
+
+  static constexpr MoveProperty properties(GameMechanics) { return MoveProperty::CONTACT; }
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Tackle"; }
+    static constexpr std::string_view smogonId() { return "tackle"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Moves/Tackle.hpp //////////////////////
 
 ////////////////// START OF src/Pokedex/Moves/Thunderbolt.hpp //////////////////
 
@@ -27965,12 +28039,14 @@ auto enumToTag(Move move, RunArgs&&... args) {
     case Move::FLASH_CANNON:   return RunStruct<FlashCannon, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FURY_ATTACK:    return RunStruct<FuryAttack, T...>::run(std::forward<RunArgs>(args)...);
     case Move::KNOCK_OFF:      return RunStruct<KnockOff, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::LEAFAGE:        return RunStruct<Leafage, T...>::run(std::forward<RunArgs>(args)...);
     case Move::MOONBLAST:      return RunStruct<Moonblast, T...>::run(std::forward<RunArgs>(args)...);
     case Move::QUIVER_DANCE:   return RunStruct<QuiverDance, T...>::run(std::forward<RunArgs>(args)...);
     case Move::REFLECT:        return RunStruct<Reflect, T...>::run(std::forward<RunArgs>(args)...);
     case Move::REVERSAL:       return RunStruct<Reversal, T...>::run(std::forward<RunArgs>(args)...);
     case Move::SPIRIT_SHACKLE: return RunStruct<SpiritShackle, T...>::run(std::forward<RunArgs>(args)...);
     case Move::SPLASH:         return RunStruct<Splash, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::TACKLE:         return RunStruct<Tackle, T...>::run(std::forward<RunArgs>(args)...);
     case Move::THUNDERBOLT:    return RunStruct<Thunderbolt, T...>::run(std::forward<RunArgs>(args)...);
     case Move::TRANSFORM:      return RunStruct<Transform, T...>::run(std::forward<RunArgs>(args)...);
     case Move::TRIPLE_ARROWS:  return RunStruct<TripleArrows, T...>::run(std::forward<RunArgs>(args)...);
@@ -28147,7 +28223,7 @@ void emplaceTagFromEnum(AbilityProperty property, types::registry& registry, typ
 
 ////////// END OF src/Pokedex/EnumToTag/AbilityPropertyEnumToTag.hpp ///////////
 
-////////////// START OF src/Battle/Pokemon/PokemonDataChecks.hpp ///////////////
+////////////// START OF src/Battle/Pokemon/PokemonProperties.hpp ///////////////
 
 namespace pokesim {
 constexpr types::typeEffectiveness getAttackEffectiveness(
@@ -28176,9 +28252,13 @@ constexpr types::typeEffectiveness getAttackEffectiveness(
     "Modifier cannot exceed the number of types.");
   return modifier;
 }
+
+namespace internal {
+bool doesMoveMakeContact(types::registry& registry, types::entity move, types::entity source);
+}
 }  // namespace pokesim
 
-/////////////// END OF src/Battle/Pokemon/PokemonDataChecks.hpp ////////////////
+/////////////// END OF src/Battle/Pokemon/PokemonProperties.hpp ////////////////
 
 ////////////// START OF src/CalcDamage/CalcDamageDebugChecks.hpp ///////////////
 

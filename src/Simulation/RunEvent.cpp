@@ -94,6 +94,7 @@ void runDamageEvent(Simulation& simulation) {
 
 void runDamagingHitEvent(Simulation& simulation) {
   pokesim::dex::Static::onDamagingHit(simulation);
+  pokesim::dex::RockyHelmet::onDamagingHit(simulation);
 }
 
 void runAfterHitEvent(Simulation& simulation) {
@@ -136,9 +137,9 @@ void runAfterBoostEvent(Simulation&) {}
 void runModifyTarget(Simulation&) {}
 
 void runModifyMove(Simulation& simulation) {
-  pokesim::dex::KingsRock::onModifyMove(simulation);
   pokesim::dex::ChoiceScarf::onSourceModifyMove(simulation);
   pokesim::dex::ChoiceSpecs::onSourceModifyMove(simulation);
+  pokesim::dex::KingsRock::onModifyMove(simulation);
 }
 
 void runDisableMove(Simulation& simulation) {

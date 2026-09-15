@@ -289,14 +289,14 @@ void faint(types::handle pokemonHandle, Battle battle) {
   faintQueue.val.push_back(pokemonHandle.entity());
 }
 
-void applyDamage(types::handle pokemonHandle, types::damage damage) {
-  stat::CurrentHp& hp = pokemonHandle.get<stat::CurrentHp>();
+void applyDamage(types::handle handle, types::damage damage) {
+  stat::CurrentHp& hp = handle.get<stat::CurrentHp>();
   if (damage < hp.val) {
     hp.val -= damage;
   }
   else {
     hp.val = Constants::PokemonCurrentHpStat::MIN;
-    faint(pokemonHandle, pokemonHandle.get<Battle>());
+    faint(handle, handle.get<Battle>());
   }
 }
 

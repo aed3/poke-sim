@@ -4,13 +4,13 @@ namespace pokesim {
 static constexpr auto ToProbability = Constants::PercentChanceToProbability;
 static constexpr auto ProbabilityMax = Constants::Probability::MAX;
 
-TEST_CASE("Kings Rock: Can cause move failure", "[Simulation][SimulateTurn][SingleBattle][Item][KingsRock][Flinch]") {
+TEST_CASE("King's Rock: Can cause move failure", "[Simulation][SimulateTurn][SingleBattle][Item][KingsRock][Flinch]") {
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
   test.setupBattle(
     Turn{1U},
-    test.side(test.pokemon(dex::Species::RIBOMBEE, dex::Item::KINGS_ROCK, dex::Move::KNOCK_OFF)),
+    test.side(test.pokemon(dex::Species::RIBOMBEE, dex::Item::KINGS_ROCK, dex::Move::TACKLE)),
     test.side(test.pokemon(dex::Species::EMPOLEON, dex::Move::SPLASH)),
-    test.turnDecision(dex::Move::KNOCK_OFF, dex::Move::SPLASH));
+    test.turnDecision(dex::Move::TACKLE, dex::Move::SPLASH));
 
   test.simulateTurnOptions().setMakeBranchesOnRandomEvents(true);
   auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{});
@@ -47,7 +47,7 @@ TEST_CASE("Kings Rock: Can cause move failure", "[Simulation][SimulateTurn][Sing
 }
 
 TEST_CASE(
-  "Kings Rock: Adds to secondary effects", "[Simulation][SimulateTurn][SingleBattle][Item][KingsRock][Flinch]") {
+  "King's Rock: Adds to secondary effects", "[Simulation][SimulateTurn][SingleBattle][Item][KingsRock][Flinch]") {
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
   test.setupBattle(
     Turn{1U},
@@ -100,7 +100,8 @@ TEST_CASE(
   REQUIRE(foundProbabilities.size() == 4U);
 }
 
-TEST_CASE("Kings Rock: Works on multi-hit moves", "[Simulation][SimulateTurn][SingleBattle][Item][KingsRock][Flinch]") {
+TEST_CASE(
+  "King's Rock: Works on multi-hit moves", "[Simulation][SimulateTurn][SingleBattle][Item][KingsRock][Flinch]") {
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
   test.setupBattle(
     Turn{1U},

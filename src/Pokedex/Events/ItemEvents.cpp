@@ -1,6 +1,7 @@
 #include <Battle/Helpers/IntegerModify.hpp>
 #include <Battle/Helpers/InternalHelpers.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
+#include <Battle/Pokemon/PokemonProperties.hpp>
 #include <Components/CalcDamage/ModifyingEventRanTags.hpp>
 #include <Components/Current.hpp>
 #include <Components/Damage.hpp>
@@ -107,7 +108,9 @@ struct FocusSashOnAfterModifyDamage {
 void kingsRockOnModifyMove(
   types::registry& registry, const CurrentActionMovesAsSource& moves, types::percentChance addedFlinchChance) {
   for (types::entity move : moves) {
-    if (registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
+    if (
+      !registry.all_of<pokesim::tags::CurrentActionMove>(move) ||
+      registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
       continue;
     }
 
@@ -128,6 +131,22 @@ void lifeOrbOnAfterMove(
   if (!onlyStatusMoves) {
     internal::applyDamage(handle, hp.val / hpDivisor);
   }
+}
+
+void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget moves, types::stat hpDivisor) {
+  types::registry& registry = *handle.registry();
+  types::entity move = moves.val;
+  if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
+    return;
+  }
+
+  types::entity source = registry.get<CurrentActionSource>(moves.val).val;
+  if (!internal::doesMoveMakeContact(registry, move, source)) {
+    return;
+  }
+
+  stat::Hp hp = registry.get<stat::Hp>(source);
+  internal::applyDamage({registry, source}, hp.val / hpDivisor);
 }
 }  // namespace
 
@@ -212,5 +231,11 @@ void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<LifeOrb::onAfterMoveUsedHpDecreaseDivisor>();
 
   simulation.view<lifeOrbOnAfterMove, Tags<dex::LifeOrb>>(divisor);
+}
+
+void RockyHelmet::onDamagingHit(Simulation& simulation) {
+  const auto divisor = simulation.pokedex().getStaticValue<RockyHelmet::onDamagingHitHpDecreaseDivisor>();
+
+  simulation.view<rockyHelmetOnDamagingHit, Tags<dex::RockyHelmet>>(divisor);
 }
 }  // namespace pokesim::dex
