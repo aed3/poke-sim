@@ -176,6 +176,7 @@ void runModifySpe(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::SpeStatUpdateRequired>();
 
   pokesim::dex::ChoiceScarf::onModifySpe(simulation);
+  pokesim::dex::QuickPowder::onModifySpe(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpe>>();
   simulation.removeFromEntities<EventModifier>();

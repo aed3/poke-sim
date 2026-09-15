@@ -10,6 +10,7 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EventModifier.hpp>
+#include <Components/Names/SpeciesNames.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
@@ -18,6 +19,7 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
 #include <Pokedex/Pokedex.hpp>
+#include <Pokedex/Species/Ditto.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Registry.hpp>
@@ -148,6 +150,15 @@ void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget m
   stat::Hp hp = registry.get<stat::Hp>(source);
   internal::applyDamage({registry, source}, hp.val / hpDivisor);
 }
+
+void quickPowderOnModifySpe(
+  SpeciesName species, EventModifier& eventModifier, types::effectMultiplier speedMultiplier) {
+  if (species.val != dex::Species::DITTO) {
+    return;
+  }
+
+  internal::chainComponentToModifier(eventModifier, speedMultiplier);
+}
 }  // namespace
 
 void AssaultVest::onModifySpd(Simulation& simulation) {
@@ -237,5 +248,12 @@ void RockyHelmet::onDamagingHit(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<RockyHelmet::onDamagingHitHpDecreaseDivisor>();
 
   simulation.view<rockyHelmetOnDamagingHit, Tags<dex::RockyHelmet>>(divisor);
+}
+
+void QuickPowder::onModifySpe(Simulation& simulation) {
+  const auto modifier = simulation.pokedex().getStaticValue<onModifySpeModifier>();
+
+  simulation.view<quickPowderOnModifySpe, Tags<dex::QuickPowder> /*, entt::exclude_t<pokesim::tags::Transformed>*/>(
+    modifier);
 }
 }  // namespace pokesim::dex

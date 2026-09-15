@@ -2,7 +2,7 @@
 
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Item.hpp>
-#include <Types/Stats.hpp>
+#include <Types/Event.hpp>
 #include <string_view>
 
 namespace pokesim {
@@ -13,7 +13,8 @@ namespace pokesim::dex {
 struct QuickPowder {
   static constexpr Item name(GameMechanics) { return dex::Item::QUICK_POWDER; }
 
-  static constexpr types::stat speedDividend(GameMechanics) { return 2U; }
+  static constexpr types::effectMultiplier onModifySpeModifier(GameMechanics) { return 2.0F; }
+
   struct Strings {
     static constexpr std::string_view name() { return "Quick Powder"; }
     static constexpr std::string_view smogonId() { return "quickpowder"; }
