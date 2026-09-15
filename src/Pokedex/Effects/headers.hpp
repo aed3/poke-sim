@@ -4,4 +4,5 @@
 
 #include "Burn.hpp"
 #include "ChoiceLock.hpp"
+#include "Flinch.hpp"
 #include "Paralysis.hpp"

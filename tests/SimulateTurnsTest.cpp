@@ -339,7 +339,7 @@ TEST_CASE("Speed Ties", "[Simulation][SimulateTurn][DoubleBattle][ActionQueue]")
   for (types::eventPossibilities i = speedTieCount; i > 1U; i--) {
     idealCloneCount *= i;
   }
-  if (branchProbabilityLimit >= 1.0F / idealCloneCount) {
+  if (branchProbabilityLimit >= Constants::Probability::MAX / idealCloneCount) {
     idealCloneCount = 1U;
   }
   CAPTURE(speedTieCount, branchProbabilityLimit, idealCloneCount);

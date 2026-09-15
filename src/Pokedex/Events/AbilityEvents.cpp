@@ -66,9 +66,9 @@ void Static::onDamagingHit(Simulation& simulation) {
 
   simulation.view<staticOnDamagingHit, Tags<dex::Static>>(chanceOfStatic, simulation);
 
-  // TODO(aed3): This is now inefficient since the random chance will happen for move sources that cannot have their
-  // status changed.
   internal::checkIfCanSetStatus(simulation);
+  internal::removeRandomBinaryChanceComponents(simulation, entt::exclude_t<pokesim::tags::CanSetStatus>{});
+
   pokesim::internal::randomBinaryChance(
     simulation,
     [](Simulation& sim) {

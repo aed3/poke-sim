@@ -34,9 +34,10 @@ const readSrcFiles = () => {
     const ext = path.extname(file);
     const basename = path.basename(file);
     if (['.cpp', '.hpp', '.h'].includes(ext) && !ignoredFiles.includes(basename)) {
-      const lines = fileText[file] = fs.readFileSync(file, 'utf8').split('\n');
+      const text = fs.readFileSync(file, 'utf8');
+      const lines = fileText[file] = text.split('\n');
 
-      while (!fileText[file][lines.length - 1]) {
+      while (text && !fileText[file][lines.length - 1]) {
         lines.pop();
       }
     }

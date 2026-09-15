@@ -23,6 +23,7 @@
 #include "Abilities/Trace.hpp"
 #include "Effects/Burn.hpp"
 #include "Effects/ChoiceLock.hpp"
+#include "Effects/Flinch.hpp"
 #include "Effects/Paralysis.hpp"
 #include "EnumToTag/AbilityEnumToTag.hpp"
 #include "EnumToTag/AbilityPropertyEnumToTag.hpp"

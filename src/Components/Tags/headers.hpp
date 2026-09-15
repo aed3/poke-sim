@@ -16,3 +16,4 @@
 #include "StatusTags.hpp"
 #include "TargetTags.hpp"
 #include "TypeTags.hpp"
+#include "VolatileTags.hpp"

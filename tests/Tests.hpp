@@ -136,6 +136,10 @@ struct TestSimulation {
   simulate_turn::Options& simulateTurnOptions() { return simulation.simulateTurnOptions; }
   calc_damage::Options& calcDamageOptions() { return simulation.calculateDamageOptions; }
   analyze_effect::Options& analyzeEffectOptions() { return simulation.analyzeEffectOptions; }
+  template <auto DataFunction>
+  auto dexValue() {
+    return pokedex.getStaticValue<DataFunction>();
+  }
 
   template <typename... Types>
   BattleCreationInfo& setupBattle(Types... values) {

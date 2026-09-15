@@ -22,7 +22,6 @@ struct DefBoost;
 struct SpaBoost;
 struct SpdBoost;
 struct SpeBoost;
-struct ChoiceLock;
 struct CloneTo;
 struct CurrentActionMoveSlot;
 struct Damage;
@@ -31,6 +30,8 @@ struct DamageRolls;
 struct DisabledMoveSlots;
 struct Evs;
 struct Ivs;
+struct AddedFlinchChance;
+struct ChoiceLock;
 struct Battle;
 struct ParentBattle;
 struct RootBattle;
@@ -240,9 +241,6 @@ void check(const internal::calc_damage::RealEffectiveStat&);
 template <>
 void check(const internal::calc_damage::DamageFormulaVariables&);
 
-template <>
-void check(const ChoiceLock&);
-
 // template <> void check(const CloneTo&);
 
 template <>
@@ -265,6 +263,12 @@ void check(const Evs&);
 
 template <>
 void check(const Ivs&);
+
+template <>
+void check(const AddedFlinchChance&);
+
+template <>
+void check(const ChoiceLock&);
 
 template <>
 void check(const Battle&, const types::registry&);

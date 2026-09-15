@@ -581,11 +581,6 @@ void check(const internal::calc_damage::DamageFormulaVariables& damageFormulaVar
 }
 
 template <>
-void check(const ChoiceLock& choiceLock) {
-  POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
-}
-
-template <>
 void check(const CurrentActionMoveSlot& currentActionMoveSlot) {
   POKESIM_REQUIRE_NM(currentActionMoveSlot.val < Constants::MoveSlots::MAX);
 }
@@ -635,6 +630,16 @@ void check(const Ivs& ivs) {
   checkIv(ivs.spa);
   checkIv(ivs.spd);
   checkIv(ivs.spe);
+}
+
+template <>
+void check(const AddedFlinchChance& addedFlinchChance) {
+  checkPercentChance(addedFlinchChance.val);
+}
+
+template <>
+void check(const ChoiceLock& choiceLock) {
+  POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
 }
 
 template <>

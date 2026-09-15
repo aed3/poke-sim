@@ -2,9 +2,9 @@
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Components/BaseEffectChance.hpp>
-#include <Components/ChoiceLock.hpp>
 #include <Components/Damage.hpp>
 #include <Components/DisabledMoveSlots.hpp>
+#include <Components/Effects/ChoiceLock.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/MoveSlots.hpp>
@@ -15,6 +15,7 @@
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
+#include <Components/Tags/VolatileTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/RandomChance.hpp>
@@ -47,8 +48,8 @@ void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedD
   effectiveSpe.val = effectiveSpe.val * speedDividend / speedDivisor;
 }
 
-void paralysisOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSource& moves) {
-  for (types::entity move : moves.val) {
+void failedOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSource& moves) {
+  for (types::entity move : moves) {
     registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
   }
 }
@@ -99,7 +100,7 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
 
   pokesim::internal::randomBinaryChance(
     simulation,
-    [](Simulation& sim) { sim.view<paralysisOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
+    [](Simulation& sim) { sim.view<failedOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
     std::nullopt);
   simulation.view<internal::setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
   simulation.removeFromEntities<pokesim::tags::FailedCurrentMoveHit>();
@@ -117,5 +118,15 @@ void ChoiceLock::onDisableMove(Simulation& simulation) {
 
   choiceLockRemove<internal::tags::DisableMove>(simulation);
   filter.view<choiceLockOnDisableMove>();
+}
+
+void Flinch::onBeforeMove(Simulation& simulation) {
+  simulation.view<failedOnBeforeMove, Tags<tags::Flinch>>();
+  simulation.view<internal::setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
+  simulation.removeFromEntities<pokesim::tags::FailedCurrentMoveHit>();
+}
+
+void Flinch::onResidual(Simulation& simulation) {
+  simulation.removeFromEntities<tags::Flinch, tags::ActivePokemon>();
 }
 }  // namespace pokesim::dex

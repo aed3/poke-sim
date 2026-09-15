@@ -7,6 +7,7 @@
 #include <Components/BasePower.hpp>
 #include <Components/Boosts.hpp>
 #include <Components/Current.hpp>
+#include <Components/Effects/AddedFlinchChance.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/EntityHolders/Current.hpp>
@@ -31,6 +32,7 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/StatusTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
+#include <Components/Tags/VolatileTags.hpp>
 #include <Pokedex/EnumToTag/MoveEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
@@ -109,6 +111,8 @@ void clearActionMoveComponents(types::registry& registry, const View& view) {
     SpaBoost,
     SpdBoost,
     SpeBoost,
+    pokesim::tags::Flinch,
+    AddedFlinchChance,
     pokesim::status::tags::Paralysis,
     pokesim::status::tags::Burn>(view.begin(), view.end());
 }

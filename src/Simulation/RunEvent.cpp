@@ -6,7 +6,7 @@
 #include <Components/Boosts.hpp>
 #include <Components/CalcDamage/ModifyingEventRanTags.hpp>
 #include <Components/CalcDamage/TemporaryMoveProperties.hpp>
-#include <Components/ChoiceLock.hpp>
+#include <Components/Effects/ChoiceLock.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EventModifier.hpp>
@@ -46,10 +46,12 @@ void runEachUpdate(Simulation&) {}
 
 void runBeforeMove(Simulation& simulation) {
   pokesim::dex::Paralysis::onBeforeMove(simulation);
+  pokesim::dex::Flinch::onBeforeMove(simulation);
   pokesim::dex::ChoiceLock::onBeforeMove(simulation);
 }
 
 void runResidual(Simulation& simulation) {
+  pokesim::dex::Flinch::onResidual(simulation);
   pokesim::dex::Burn::onResidual(simulation);
 }
 
@@ -134,6 +136,7 @@ void runAfterBoostEvent(Simulation&) {}
 void runModifyTarget(Simulation&) {}
 
 void runModifyMove(Simulation& simulation) {
+  pokesim::dex::KingsRock::onModifyMove(simulation);
   pokesim::dex::ChoiceScarf::onSourceModifyMove(simulation);
   pokesim::dex::ChoiceSpecs::onSourceModifyMove(simulation);
 }
