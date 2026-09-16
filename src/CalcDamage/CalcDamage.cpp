@@ -16,6 +16,7 @@
 #include <Components/Level.hpp>
 #include <Components/Names/TypeNames.hpp>
 #include <Components/PlayerSide.hpp>
+#include <Components/Pokedex/CritStageBoost.hpp>
 #include <Components/RNGSeed.hpp>
 #include <Components/RandomEventOutputs.hpp>
 #include <Components/SimulationResults.hpp>
@@ -174,8 +175,12 @@ void reduceDamageRollsToDefenderHp(
   damage.val = std::min(defenderHp.val, damage.val);
 }
 
+void copyPokedexCritBoosts(calc_damage::CritStage& calcDamageBoost, pokesim::CritStageBoost from) {
+  calcDamageBoost.val = from.val;
+}
+
 void assignCritChanceDivisor(
-  types::handle moveHandle, CritBoost critBoost, std::array<types::percentChance, 4U> critChanceDivisors) {
+  types::handle moveHandle, CritStage critBoost, std::array<types::percentChance, 4U> critChanceDivisors) {
   std::size_t index = std::min((std::size_t)critBoost.val, critChanceDivisors.size() - 1U);
   moveHandle.emplace<CritChanceDivisor>(critChanceDivisors[index]);
 }
@@ -346,14 +351,15 @@ void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
   if constexpr (std::is_same_v<SimulationTag, pokesim::tags::SimulateTurn>) {
     auto needsCritBoostView =
       simulation.registry.view<internal::tags::ApplySideDamageRollOptions>(entt::exclude_t<tags::Crit>{});
-    simulation.registry.insert<calc_damage::CritBoost>(needsCritBoostView.begin(), needsCritBoostView.end());
+    simulation.registry.insert<calc_damage::CritStage>(needsCritBoostView.begin(), needsCritBoostView.end());
+    simulation.view<copyPokedexCritBoosts, Tags<internal::tags::ApplySideDamageRollOptions>>();
 
     internal::runRemoveCriticalHitEvent(simulation);
     internal::runModifyCritBoostEvent(simulation);
 
     simulation.view<assignCritChanceDivisor>(
       simulation.pokedex().getStaticValue<MechanicConstants::CRIT_CHANCE_DIVISORS>());
-    simulation.removeFromEntities<CritBoost>();
+    simulation.removeFromEntities<calc_damage::CritStage>();
 
     internal::simulate_turn::setIfMoveCrits(simulation);
     simulation.removeFromEntities<CritChanceDivisor>();

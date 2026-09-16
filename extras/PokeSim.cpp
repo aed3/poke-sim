@@ -517,15 +517,15 @@ void checkActionMove(types::entity moveEntity, const types::registry& registry) 
   POKESIM_REQUIRE_NM(totalOUsesOffenseTags <= 1U);
   POKESIM_REQUIRE_NM(totalOUsesDefenseTags <= 1U);
 
-  const auto [damageFormulaVariables, realEffectiveStat, critBoost, critChanceDivisor] = registry.try_get<
+  const auto [damageFormulaVariables, realEffectiveStat, critStage, critChanceDivisor] = registry.try_get<
     internal::calc_damage::DamageFormulaVariables,
     internal::calc_damage::RealEffectiveStat,
-    calc_damage::CritBoost,
+    calc_damage::CritStage,
     calc_damage::CritChanceDivisor>(moveEntity);
 
   if (damageFormulaVariables) check(*damageFormulaVariables);
   if (realEffectiveStat) check(*realEffectiveStat);
-  if (critBoost) check(*critBoost);
+  if (critStage) check(*critStage);
   if (critChanceDivisor) check(*critChanceDivisor);
 }
 
@@ -713,8 +713,8 @@ void check(const calc_damage::CritChanceDivisor& critChanceDivisor) {
 }
 
 template <>
-void check(const calc_damage::CritBoost& critBoost) {
-  checkBounds<Constants::CritBoost>(critBoost.val);
+void check(const calc_damage::CritStage& critStage) {
+  checkBounds<Constants::CritStage>(critStage.val);
 }
 
 template <>
@@ -1115,6 +1115,11 @@ void check(const BaseStats& baseStats) {
   checkBaseStat(baseStats.spa);
   checkBaseStat(baseStats.spd);
   checkBaseStat(baseStats.spe);
+}
+
+template <>
+void check(const CritStageBoost& critStageBoost) {
+  checkBounds<Constants::CritStage>(critStageBoost.val);
 }
 
 template <>
@@ -4380,6 +4385,7 @@ struct BuildMove {
     sourcePrimaryEffect,
     sourceSecondaryEffect,
     properties,
+    critStageBoost,
 
     chance,
     atkBoost,
@@ -4388,6 +4394,7 @@ struct BuildMove {
     spdBoost,
     speBoost,
     status,
+    addedFlinchChance,
   };
 
   enum class MoveEffectKind : std::uint8_t {
@@ -4419,6 +4426,8 @@ struct BuildMove {
   template <typename Type>
   struct has<Optional::properties, Type, void_t<Type::properties>> : std::true_type {};
   template <typename Type>
+  struct has<Optional::critStageBoost, Type, void_t<Type::critStageBoost>> : std::true_type {};
+  template <typename Type>
   struct has<Optional::chance, Type, void_t<Type::chance>> : std::true_type {};
   template <typename Type>
   struct has<Optional::atkBoost, Type, void_t<Type::atkBoost>> : std::true_type {};
@@ -4432,6 +4441,8 @@ struct BuildMove {
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::status, Type, void_t<Type::status>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::addedFlinchChance, Type, void_t<Type::addedFlinchChance>> : std::true_type {};
 
   static constexpr bool forPokedex = std::is_same_v<BuildMoveTag, internal::tags::BuildPokedexMove>;
 
@@ -4516,6 +4527,10 @@ struct BuildMove {
 
     if constexpr (has<Optional::status, EffectData>::value) {
       dex::enumToTag<AddFromEnum>(EffectData::status(gameMechanic), setup);
+    }
+
+    if constexpr (has<Optional::addedFlinchChance, EffectData>::value) {
+      setup.add(AddedFlinchChance{EffectData::addedFlinchChance(gameMechanic)});
     }
   }
 
@@ -4699,6 +4714,9 @@ struct BuildMove {
     }
     if constexpr (has<Optional::hitCount, Move>::value) {
       setup.add(HitCount{Move::hitCount(gameMechanic)});
+    }
+    if constexpr (has<Optional::critStageBoost, Move>::value) {
+      setup.add(CritStageBoost{Move::critStageBoost(gameMechanic)});
     }
 
     if constexpr (has<Optional::sourcePrimaryEffect, Move>::value) {
@@ -5622,8 +5640,12 @@ void reduceDamageRollsToDefenderHp(
   damage.val = std::min(defenderHp.val, damage.val);
 }
 
+void copyPokedexCritBoosts(calc_damage::CritStage& calcDamageBoost, pokesim::CritStageBoost from) {
+  calcDamageBoost.val = from.val;
+}
+
 void assignCritChanceDivisor(
-  types::handle moveHandle, CritBoost critBoost, std::array<types::percentChance, 4U> critChanceDivisors) {
+  types::handle moveHandle, CritStage critBoost, std::array<types::percentChance, 4U> critChanceDivisors) {
   std::size_t index = std::min((std::size_t)critBoost.val, critChanceDivisors.size() - 1U);
   moveHandle.emplace<CritChanceDivisor>(critChanceDivisors[index]);
 }
@@ -5794,14 +5816,15 @@ void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
   if constexpr (std::is_same_v<SimulationTag, pokesim::tags::SimulateTurn>) {
     auto needsCritBoostView =
       simulation.registry.view<internal::tags::ApplySideDamageRollOptions>(entt::exclude_t<tags::Crit>{});
-    simulation.registry.insert<calc_damage::CritBoost>(needsCritBoostView.begin(), needsCritBoostView.end());
+    simulation.registry.insert<calc_damage::CritStage>(needsCritBoostView.begin(), needsCritBoostView.end());
+    simulation.view<copyPokedexCritBoosts, Tags<internal::tags::ApplySideDamageRollOptions>>();
 
     internal::runRemoveCriticalHitEvent(simulation);
     internal::runModifyCritBoostEvent(simulation);
 
     simulation.view<assignCritChanceDivisor>(
       simulation.pokedex().getStaticValue<MechanicConstants::CRIT_CHANCE_DIVISORS>());
-    simulation.removeFromEntities<CritBoost>();
+    simulation.removeFromEntities<calc_damage::CritStage>();
 
     internal::simulate_turn::setIfMoveCrits(simulation);
     simulation.removeFromEntities<CritChanceDivisor>();

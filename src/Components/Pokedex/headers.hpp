@@ -4,4 +4,5 @@
 
 #include "Abilities.hpp"
 #include "BaseStats.hpp"
+#include "CritStageBoost.hpp"
 #include "PP.hpp"

@@ -11,11 +11,12 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Singl
 
   test.simulateTurnOptions().setMakeBranchesOnRandomEvents(true);
   auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{});
-  const types::registry& registry = test.registry();
   REQUIRE(turnOutcomeBattles.size() == 2U);
 
   types::probability paralysisChance =
     test.dexValue<dex::Paralysis::onBeforeMoveChance>() * Constants::PercentChanceToProbability;
+
+  const types::registry& registry = test.registry();
   entt::dense_set<types::probability> foundProbabilities;
   for (types::entity battle : turnOutcomeBattles) {
     auto entities = test.getBattleEntities(battle);

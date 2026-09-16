@@ -236,6 +236,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/Items/QuickPowder.cpp
       tests/Moves/FuryAttack.cpp
       tests/Moves/KnockOff.cpp
+      tests/Moves/TripleArrows.cpp
       tests/PokedexTest.cpp
       tests/SimulateTurnsTest.cpp
       tests/SimulationSetupTest.cpp

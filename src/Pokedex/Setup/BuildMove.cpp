@@ -3,9 +3,11 @@
 #include <Components/BaseEffectChance.hpp>
 #include <Components/BasePower.hpp>
 #include <Components/Boosts.hpp>
+#include <Components/Effects/AddedFlinchChance.hpp>
 #include <Components/HitCount.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/TypeNames.hpp>
+#include <Components/Pokedex/CritStageBoost.hpp>
 #include <Components/Pokedex/PP.hpp>
 #include <Components/Priority.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
@@ -44,6 +46,7 @@ struct BuildMove {
     sourcePrimaryEffect,
     sourceSecondaryEffect,
     properties,
+    critStageBoost,
 
     chance,
     atkBoost,
@@ -52,6 +55,7 @@ struct BuildMove {
     spdBoost,
     speBoost,
     status,
+    addedFlinchChance,
   };
 
   enum class MoveEffectKind : std::uint8_t {
@@ -83,6 +87,8 @@ struct BuildMove {
   template <typename Type>
   struct has<Optional::properties, Type, void_t<Type::properties>> : std::true_type {};
   template <typename Type>
+  struct has<Optional::critStageBoost, Type, void_t<Type::critStageBoost>> : std::true_type {};
+  template <typename Type>
   struct has<Optional::chance, Type, void_t<Type::chance>> : std::true_type {};
   template <typename Type>
   struct has<Optional::atkBoost, Type, void_t<Type::atkBoost>> : std::true_type {};
@@ -96,6 +102,8 @@ struct BuildMove {
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::status, Type, void_t<Type::status>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::addedFlinchChance, Type, void_t<Type::addedFlinchChance>> : std::true_type {};
 
   static constexpr bool forPokedex = std::is_same_v<BuildMoveTag, internal::tags::BuildPokedexMove>;
 
@@ -180,6 +188,10 @@ struct BuildMove {
 
     if constexpr (has<Optional::status, EffectData>::value) {
       dex::enumToTag<AddFromEnum>(EffectData::status(gameMechanic), setup);
+    }
+
+    if constexpr (has<Optional::addedFlinchChance, EffectData>::value) {
+      setup.add(AddedFlinchChance{EffectData::addedFlinchChance(gameMechanic)});
     }
   }
 
@@ -363,6 +375,9 @@ struct BuildMove {
     }
     if constexpr (has<Optional::hitCount, Move>::value) {
       setup.add(HitCount{Move::hitCount(gameMechanic)});
+    }
+    if constexpr (has<Optional::critStageBoost, Move>::value) {
+      setup.add(CritStageBoost{Move::critStageBoost(gameMechanic)});
     }
 
     if constexpr (has<Optional::sourcePrimaryEffect, Move>::value) {

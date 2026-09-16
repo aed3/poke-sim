@@ -367,15 +367,15 @@ void checkActionMove(types::entity moveEntity, const types::registry& registry) 
   POKESIM_REQUIRE_NM(totalOUsesOffenseTags <= 1U);
   POKESIM_REQUIRE_NM(totalOUsesDefenseTags <= 1U);
 
-  const auto [damageFormulaVariables, realEffectiveStat, critBoost, critChanceDivisor] = registry.try_get<
+  const auto [damageFormulaVariables, realEffectiveStat, critStage, critChanceDivisor] = registry.try_get<
     internal::calc_damage::DamageFormulaVariables,
     internal::calc_damage::RealEffectiveStat,
-    calc_damage::CritBoost,
+    calc_damage::CritStage,
     calc_damage::CritChanceDivisor>(moveEntity);
 
   if (damageFormulaVariables) check(*damageFormulaVariables);
   if (realEffectiveStat) check(*realEffectiveStat);
-  if (critBoost) check(*critBoost);
+  if (critStage) check(*critStage);
   if (critChanceDivisor) check(*critChanceDivisor);
 }
 
@@ -563,8 +563,8 @@ void check(const calc_damage::CritChanceDivisor& critChanceDivisor) {
 }
 
 template <>
-void check(const calc_damage::CritBoost& critBoost) {
-  checkBounds<Constants::CritBoost>(critBoost.val);
+void check(const calc_damage::CritStage& critStage) {
+  checkBounds<Constants::CritStage>(critStage.val);
 }
 
 template <>
@@ -965,6 +965,11 @@ void check(const BaseStats& baseStats) {
   checkBaseStat(baseStats.spa);
   checkBaseStat(baseStats.spd);
   checkBaseStat(baseStats.spe);
+}
+
+template <>
+void check(const CritStageBoost& critStageBoost) {
+  checkBounds<Constants::CritStage>(critStageBoost.val);
 }
 
 template <>

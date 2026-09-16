@@ -148,6 +148,7 @@
  * src/Components/PlayerSide.hpp
  * src/Components/Pokedex/Abilities.hpp
  * src/Components/Pokedex/BaseStats.hpp
+ * src/Components/Pokedex/CritStageBoost.hpp
  * src/Components/Pokedex/PP.hpp
  * src/Components/Priority.hpp
  * src/Components/Probability.hpp
@@ -16462,10 +16463,10 @@ struct Constants {
     static constexpr std::int8_t DEFAULT = 0;
   };
 
-  struct CritBoost {
-    // 255 is theoretically possible, but the various effects that can increase crit chance can be added up to 7 at most
-    // as of now
-    static constexpr std::uint8_t MAX = 7U;
+  struct CritStage {
+    // 255 is theoretically possible, but the various effects that can increase crit chance can be added up to 6 at most
+    // as of now. 6 is possible from a Farfetch'd holding a Leek with Super Luck using Slash after Focus Energy.
+    static constexpr std::uint8_t MAX = 6U;
     static constexpr std::uint8_t MIN = 0U;
     static constexpr std::uint8_t DEFAULT = 0U;
   };
@@ -18871,7 +18872,7 @@ types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
 namespace pokesim::types {
 using damage = pokesim::internal::unsignedIntType<Constants::Damage::MAX>;
 using damageRollIndex = pokesim::internal::unsignedIntType<Constants::DamageRollCount::MAX>;
-using critBoost = pokesim::internal::unsignedIntType<Constants::CritBoost::MAX>;
+using critStage = pokesim::internal::unsignedIntType<Constants::CritStage::MAX>;
 using typeEffectiveness =
   pokesim::internal::signedIntType<Constants::TypeEffectivenessShift::MAX, Constants::TypeEffectivenessShift::MIN>;
 }  // namespace pokesim::types
@@ -19591,8 +19592,8 @@ struct CritChanceDivisor {
   types::percentChance val = 1U;
 };
 
-struct CritBoost {
-  types::critBoost val = pokesim::Constants::CritBoost::DEFAULT;
+struct CritStage {
+  types::critStage val = pokesim::Constants::CritStage::DEFAULT;
 };
 
 namespace tags {
@@ -20146,6 +20147,16 @@ struct BaseStats {
 }  // namespace pokesim
 
 ///////////////// END OF src/Components/Pokedex/BaseStats.hpp //////////////////
+
+////////////// START OF src/Components/Pokedex/CritStageBoost.hpp //////////////
+
+namespace pokesim {
+struct CritStageBoost {
+  types::critStage val = Constants::CritStage::DEFAULT;
+};
+}  // namespace pokesim
+
+/////////////// END OF src/Components/Pokedex/CritStageBoost.hpp ///////////////
 
 //////////////////// START OF src/Components/Pokedex/PP.hpp ////////////////////
 
@@ -21482,6 +21493,7 @@ struct PrimaryAbility;
 struct SecondaryAbility;
 struct HiddenAbility;
 struct BaseStats;
+struct CritStageBoost;
 struct Pp;
 struct MovePriority;
 struct Probability;
@@ -21515,7 +21527,7 @@ struct EffectMultiplier;
 }  // namespace analyze_effect
 namespace calc_damage {
 struct CritChanceDivisor;
-struct CritBoost;
+struct CritStage;
 struct UsesUntilKo;
 struct AttackerHpRecovered;
 struct AttackerHpLost;
@@ -21628,7 +21640,7 @@ template <>
 void check(const calc_damage::CritChanceDivisor&);
 
 template <>
-void check(const calc_damage::CritBoost&);
+void check(const calc_damage::CritStage&);
 
 template <>
 void check(const internal::calc_damage::RealEffectiveStat&);
@@ -21827,6 +21839,9 @@ void check(const HiddenAbility&);
 
 template <>
 void check(const BaseStats&);
+
+template <>
+void check(const CritStageBoost&);
 
 template <>
 void check(const Pp&);
@@ -26747,20 +26762,13 @@ struct TripleArrows {
   static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
   static constexpr types::basePower basePower(GameMechanics) { return 90U; }
   static constexpr types::pp basePp(GameMechanics) { return 10U; }
-  static constexpr types::critBoost critRatio(GameMechanics) { return 2U; }
+  static constexpr types::critStage critStageBoost(GameMechanics) { return 1U; }
 
   struct targetSecondaryEffect {
-    struct boost {
-      static constexpr types::percentChance chance(GameMechanics) { return 50U; }
-      static constexpr types::boost defBoost(GameMechanics) { return -1; }
-    };
+    static constexpr types::percentChance chance(GameMechanics) { return 50U; }
+    static constexpr types::boost defBoost(GameMechanics) { return -1; }
 
-    struct flinch {
-      static constexpr types::percentChance chance(GameMechanics) { return 30U; }
-      static constexpr Volatile volatileEffect(GameMechanics) { return Volatile::FLINCH; }
-    };
-
-    static void onSecondaryEffect(Simulation& Simulation);
+    static constexpr types::percentChance addedFlinchChance(GameMechanics) { return 30U; }
   };
 
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }

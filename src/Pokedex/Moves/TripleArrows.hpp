@@ -25,20 +25,13 @@ struct TripleArrows {
   static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
   static constexpr types::basePower basePower(GameMechanics) { return 90U; }
   static constexpr types::pp basePp(GameMechanics) { return 10U; }
-  static constexpr types::critBoost critRatio(GameMechanics) { return 2U; }
+  static constexpr types::critStage critStageBoost(GameMechanics) { return 1U; }
 
   struct targetSecondaryEffect {
-    struct boost {
-      static constexpr types::percentChance chance(GameMechanics) { return 50U; }
-      static constexpr types::boost defBoost(GameMechanics) { return -1; }
-    };
+    static constexpr types::percentChance chance(GameMechanics) { return 50U; }
+    static constexpr types::boost defBoost(GameMechanics) { return -1; }
 
-    struct flinch {
-      static constexpr types::percentChance chance(GameMechanics) { return 30U; }
-      static constexpr Volatile volatileEffect(GameMechanics) { return Volatile::FLINCH; }
-    };
-
-    static void onSecondaryEffect(Simulation& Simulation);
+    static constexpr types::percentChance addedFlinchChance(GameMechanics) { return 30U; }
   };
 
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
