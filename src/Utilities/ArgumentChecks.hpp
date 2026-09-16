@@ -87,6 +87,7 @@ struct PrimaryAbility;
 struct SecondaryAbility;
 struct HiddenAbility;
 struct BaseStats;
+struct CritStageBoost;
 struct Pp;
 struct MovePriority;
 struct Probability;
@@ -120,7 +121,7 @@ struct EffectMultiplier;
 }  // namespace analyze_effect
 namespace calc_damage {
 struct CritChanceDivisor;
-struct CritBoost;
+struct CritStage;
 struct UsesUntilKo;
 struct AttackerHpRecovered;
 struct AttackerHpLost;
@@ -233,7 +234,7 @@ template <>
 void check(const calc_damage::CritChanceDivisor&);
 
 template <>
-void check(const calc_damage::CritBoost&);
+void check(const calc_damage::CritStage&);
 
 template <>
 void check(const internal::calc_damage::RealEffectiveStat&);
@@ -432,6 +433,9 @@ void check(const HiddenAbility&);
 
 template <>
 void check(const BaseStats&);
+
+template <>
+void check(const CritStageBoost&);
 
 template <>
 void check(const Pp&);

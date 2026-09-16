@@ -11,8 +11,8 @@ struct CritChanceDivisor {
   types::percentChance val = 1U;
 };
 
-struct CritBoost {
-  types::critBoost val = pokesim::Constants::CritBoost::DEFAULT;
+struct CritStage {
+  types::critStage val = pokesim::Constants::CritStage::DEFAULT;
 };
 
 namespace tags {

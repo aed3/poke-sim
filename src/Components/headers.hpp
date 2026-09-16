@@ -58,6 +58,7 @@
 #include "PlayerSide.hpp"
 #include "Pokedex/Abilities.hpp"
 #include "Pokedex/BaseStats.hpp"
+#include "Pokedex/CritStageBoost.hpp"
 #include "Pokedex/PP.hpp"
 #include "Priority.hpp"
 #include "Probability.hpp"
