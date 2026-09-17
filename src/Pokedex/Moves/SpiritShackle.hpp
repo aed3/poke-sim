@@ -16,7 +16,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct SpiritShackle {
-  static constexpr Move name(GameMechanics) { return Move::SPIRIT_SHACKLE; }
+  static constexpr Move name(GameMechanics = {}) { return Move::SPIRIT_SHACKLE; }
   static constexpr Type type(GameMechanics) { return Type::GHOST; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
 

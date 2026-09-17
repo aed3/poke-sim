@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Analytic {
-  static constexpr Ability name(GameMechanics) { return dex::Ability::ANALYTIC; }
+  static constexpr Ability name(GameMechanics = {}) { return dex::Ability::ANALYTIC; }
 
   static constexpr types::eventModifier onBasePowerNumerator(GameMechanics) { return 5324U; }
   static constexpr types::eventModifier onBasePowerDenominator(GameMechanics) { return 4096U; }

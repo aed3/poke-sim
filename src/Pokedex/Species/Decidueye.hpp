@@ -10,7 +10,7 @@
 
 namespace pokesim::dex {
 struct Decidueye {
-  static constexpr Species name(GameMechanics) { return Species::DECIDUEYE; }
+  static constexpr Species name(GameMechanics = {}) { return Species::DECIDUEYE; }
   static constexpr types::baseStat hp(GameMechanics) { return 78U; }
   static constexpr types::baseStat atk(GameMechanics) { return 107U; }
   static constexpr types::baseStat def(GameMechanics) { return 75U; }
@@ -33,7 +33,7 @@ struct Decidueye {
 };
 
 struct HisuianDecidueye {
-  static constexpr Species name(GameMechanics) { return Species::HISUIAN_DECIDUEYE; }
+  static constexpr Species name(GameMechanics = {}) { return Species::HISUIAN_DECIDUEYE; }
   static constexpr types::baseStat hp(GameMechanics) { return 88U; }
   static constexpr types::baseStat atk(GameMechanics) { return 112U; }
   static constexpr types::baseStat def(GameMechanics) { return 80U; }

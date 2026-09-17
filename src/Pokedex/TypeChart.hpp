@@ -28,24 +28,24 @@ struct TypeChart {
     for (TypeEffectiveness& effectiveness : data.at((enumType)(dex::Type::NO_TYPE))) {
       effectiveness = TypeEffectiveness::NEUTRAL;
     }
-    setTypeData<dex::Normal>(gameMechanic);
-    setTypeData<dex::Grass>(gameMechanic);
-    setTypeData<dex::Water>(gameMechanic);
-    setTypeData<dex::Fire>(gameMechanic);
-    setTypeData<dex::Bug>(gameMechanic);
-    setTypeData<dex::Flying>(gameMechanic);
-    setTypeData<dex::Poison>(gameMechanic);
-    setTypeData<dex::Electric>(gameMechanic);
-    setTypeData<dex::Ground>(gameMechanic);
-    setTypeData<dex::Fighting>(gameMechanic);
-    setTypeData<dex::Psychic>(gameMechanic);
-    setTypeData<dex::Rock>(gameMechanic);
-    setTypeData<dex::Ice>(gameMechanic);
-    setTypeData<dex::Ghost>(gameMechanic);
-    setTypeData<dex::Dragon>(gameMechanic);
-    setTypeData<dex::Dark>(gameMechanic);
-    setTypeData<dex::Steel>(gameMechanic);
-    setTypeData<dex::Fairy>(gameMechanic);
+    setTypeData<dex::NormalType>(gameMechanic);
+    setTypeData<dex::GrassType>(gameMechanic);
+    setTypeData<dex::WaterType>(gameMechanic);
+    setTypeData<dex::FireType>(gameMechanic);
+    setTypeData<dex::BugType>(gameMechanic);
+    setTypeData<dex::FlyingType>(gameMechanic);
+    setTypeData<dex::PoisonType>(gameMechanic);
+    setTypeData<dex::ElectricType>(gameMechanic);
+    setTypeData<dex::GroundType>(gameMechanic);
+    setTypeData<dex::FightingType>(gameMechanic);
+    setTypeData<dex::PsychicType>(gameMechanic);
+    setTypeData<dex::RockType>(gameMechanic);
+    setTypeData<dex::IceType>(gameMechanic);
+    setTypeData<dex::GhostType>(gameMechanic);
+    setTypeData<dex::DragonType>(gameMechanic);
+    setTypeData<dex::DarkType>(gameMechanic);
+    setTypeData<dex::SteelType>(gameMechanic);
+    setTypeData<dex::FairyType>(gameMechanic);
   }
 
   constexpr TypeEffectiveness effectiveness(dex::Type attacking, dex::Type defending) const {

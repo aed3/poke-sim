@@ -11,7 +11,7 @@
 
 namespace pokesim::dex {
 struct VoltSwitch {
-  static constexpr Move name(GameMechanics) { return Move::VOLT_SWITCH; }
+  static constexpr Move name(GameMechanics = {}) { return Move::VOLT_SWITCH; }
   static constexpr Type type(GameMechanics) { return Type::ELECTRIC; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::SPECIAL; }
 

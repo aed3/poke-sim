@@ -10,7 +10,7 @@
 
 namespace pokesim::dex {
 struct Claydol {
-  static constexpr Species name(GameMechanics) { return Species::CLAYDOL; }
+  static constexpr Species name(GameMechanics = {}) { return Species::CLAYDOL; }
   static constexpr types::baseStat hp(GameMechanics) { return 60U; }
   static constexpr types::baseStat atk(GameMechanics) { return 70U; }
   static constexpr types::baseStat def(GameMechanics) { return 105U; }

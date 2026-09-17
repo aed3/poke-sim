@@ -11,7 +11,7 @@
 
 namespace pokesim::dex {
 struct FuryAttack {
-  static constexpr Move name(GameMechanics) { return Move::FURY_ATTACK; }
+  static constexpr Move name(GameMechanics = {}) { return Move::FURY_ATTACK; }
   static constexpr Type type(GameMechanics) { return Type::NORMAL; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
 

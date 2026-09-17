@@ -12,7 +12,7 @@
 
 namespace pokesim::dex {
 struct Moonblast {
-  static constexpr Move name(GameMechanics) { return Move::MOONBLAST; }
+  static constexpr Move name(GameMechanics = {}) { return Move::MOONBLAST; }
   static constexpr Type type(GameMechanics) { return Type::FAIRY; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::SPECIAL; }
 

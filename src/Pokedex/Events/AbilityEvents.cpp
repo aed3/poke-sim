@@ -7,7 +7,7 @@
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
-#include <Components/Tags/StatusTags.hpp>
+#include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/Simulation.hpp>
@@ -42,7 +42,7 @@ void staticOnDamagingHit(
 
   types::entity effectSource = targetHandle.entity();
   types::entity effectTarget = source;
-  registry.emplace_or_replace<status::tags::Paralysis>(move);
+  registry.emplace_or_replace<Paralysis>(move);
   registry.emplace<CurrentEffectSource>(move, effectSource);
   registry.emplace<CurrentEffectsAsSource>(effectSource, decltype(CurrentEffectsAsSource::val){move});
   registry.emplace<CurrentEffectTarget>(move, effectTarget);
@@ -54,13 +54,13 @@ void Plus::onModifySpA(Simulation& simulation) {
   if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
     return;
   }
-  simulation.view<plusOnModifySpa, Tags<dex::Plus>>();
+  simulation.view<plusOnModifySpa, Tags<Plus>>();
 }
 
 void Static::onDamagingHit(Simulation& simulation) {
-  const auto chanceOfStatic = simulation.pokedex().getStaticValue<dex::Static::onDamagingHitChance>();
+  const auto chanceOfStatic = simulation.pokedex().getStaticValue<Static::onDamagingHitChance>();
 
-  simulation.view<staticOnDamagingHit, Tags<dex::Static>>(chanceOfStatic, simulation);
+  simulation.view<staticOnDamagingHit, Tags<Static>>(chanceOfStatic, simulation);
 
   internal::checkIfCanSetStatus(simulation);
   internal::removeRandomBinaryChanceComponents(simulation, entt::exclude_t<pokesim::tags::CanSetStatus>{});

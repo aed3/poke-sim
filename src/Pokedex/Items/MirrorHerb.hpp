@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct MirrorHerb {
-  static constexpr Item name(GameMechanics) { return dex::Item::MIRROR_HERB; }
+  static constexpr Item name(GameMechanics = {}) { return dex::Item::MIRROR_HERB; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Mirror Herb"; }

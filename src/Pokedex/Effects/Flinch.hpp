@@ -12,7 +12,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Flinch {
-  static constexpr Volatile name(GameMechanics) { return dex::Volatile::FLINCH; }
+  static constexpr Volatile name(GameMechanics = {}) { return dex::Volatile::FLINCH; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Flinch"; }
@@ -21,8 +21,6 @@ struct Flinch {
 
   static void onBeforeMove(Simulation& simulation);
   static void onResidual(Simulation& simulation);
-
-  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
 }  // namespace pokesim::dex
    // namespace pokesim::dex

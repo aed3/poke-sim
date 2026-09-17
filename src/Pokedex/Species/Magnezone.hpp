@@ -10,7 +10,7 @@
 
 namespace pokesim::dex {
 struct Magnezone {
-  static constexpr Species name(GameMechanics) { return Species::MAGNEZONE; }
+  static constexpr Species name(GameMechanics = {}) { return Species::MAGNEZONE; }
   static constexpr types::baseStat hp(GameMechanics) { return 70U; }
   static constexpr types::baseStat atk(GameMechanics) { return 70U; }
   static constexpr types::baseStat def(GameMechanics) { return 115U; }

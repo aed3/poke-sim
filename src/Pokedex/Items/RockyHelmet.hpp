@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct RockyHelmet {
-  static constexpr Item name(GameMechanics) { return dex::Item::ROCKY_HELMET; }
+  static constexpr Item name(GameMechanics = {}) { return dex::Item::ROCKY_HELMET; }
 
   static constexpr types::stat onDamagingHitHpDecreaseDivisor(GameMechanics) { return 6U; }
 

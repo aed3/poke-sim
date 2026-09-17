@@ -12,7 +12,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct MetronomeItem {
-  static constexpr Item name(GameMechanics) { return dex::Item::METRONOME; }
+  static constexpr Item name(GameMechanics = {}) { return dex::Item::METRONOME; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Metronome"; }

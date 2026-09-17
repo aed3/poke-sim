@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct QuickClaw {
-  static constexpr Item name(GameMechanics) { return dex::Item::QUICK_CLAW; }
+  static constexpr Item name(GameMechanics = {}) { return dex::Item::QUICK_CLAW; }
 
   static constexpr types::percentChance onFractionalPriorityChance(GameMechanics) { return 20U; }
   struct Strings {

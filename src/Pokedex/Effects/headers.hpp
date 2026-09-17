@@ -5,4 +5,8 @@
 #include "Burn.hpp"
 #include "ChoiceLock.hpp"
 #include "Flinch.hpp"
+#include "Freeze.hpp"
 #include "Paralysis.hpp"
+#include "Poison.hpp"
+#include "Sleep.hpp"
+#include "Toxic.hpp"

@@ -10,7 +10,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Scrappy {
-  static constexpr Ability name(GameMechanics) { return dex::Ability::SCRAPPY; }
+  static constexpr Ability name(GameMechanics = {}) { return dex::Ability::SCRAPPY; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Scrappy"; }

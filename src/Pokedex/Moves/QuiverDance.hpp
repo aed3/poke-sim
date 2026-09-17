@@ -11,7 +11,7 @@
 
 namespace pokesim::dex {
 struct QuiverDance {
-  static constexpr Move name(GameMechanics) { return Move::QUIVER_DANCE; }
+  static constexpr Move name(GameMechanics = {}) { return Move::QUIVER_DANCE; }
   static constexpr Type type(GameMechanics) { return Type::BUG; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 

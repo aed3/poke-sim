@@ -1,11 +1,12 @@
 #pragma once
 
-#include <Components/Tags/StatusTags.hpp>
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Status.hpp>
 #include <Types/Registry.hpp>
 #include <utility>
+
+#include "../Effects/headers.hpp"
 
 namespace pokesim::dex {
 /*
@@ -25,12 +26,12 @@ namespace pokesim::dex {
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
 auto enumToTag(Status status, RunArgs&&... args) {
   switch (status) {
-    case Status::BRN: return RunStruct<status::tags::Burn, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::FRZ: return RunStruct<status::tags::Freeze, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::PAR: return RunStruct<status::tags::Paralysis, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::PSN: return RunStruct<status::tags::Poison, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::SLP: return RunStruct<status::tags::Sleep, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::TOX: return RunStruct<status::tags::Toxic, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::BRN: return RunStruct<dex::Burn, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::FRZ: return RunStruct<dex::Freeze, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::PAR: return RunStruct<dex::Paralysis, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::PSN: return RunStruct<dex::Poison, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::SLP: return RunStruct<dex::Sleep, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::TOX: return RunStruct<dex::Toxic, T...>::run(std::forward<RunArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for status that does not exist.");

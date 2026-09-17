@@ -10,7 +10,7 @@
 
 namespace pokesim::dex {
 struct Ampharos {
-  static constexpr Species name(GameMechanics) { return Species::AMPHAROS; }
+  static constexpr Species name(GameMechanics = {}) { return Species::AMPHAROS; }
   static constexpr types::baseStat hp(GameMechanics) { return 90U; }
   static constexpr types::baseStat atk(GameMechanics) { return 75U; }
   static constexpr types::baseStat def(GameMechanics) { return 85U; }

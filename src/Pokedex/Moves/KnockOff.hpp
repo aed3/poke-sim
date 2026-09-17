@@ -16,7 +16,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct KnockOff {
-  static constexpr Move name(GameMechanics) { return Move::KNOCK_OFF; }
+  static constexpr Move name(GameMechanics = {}) { return Move::KNOCK_OFF; }
   static constexpr Type type(GameMechanics) { return Type::DARK; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
 

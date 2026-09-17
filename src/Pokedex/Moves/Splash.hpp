@@ -10,7 +10,7 @@
 
 namespace pokesim::dex {
 struct Splash {
-  static constexpr Move name(GameMechanics) { return Move::SPLASH; }
+  static constexpr Move name(GameMechanics = {}) { return Move::SPLASH; }
   static constexpr Type type(GameMechanics) { return Type::NORMAL; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 

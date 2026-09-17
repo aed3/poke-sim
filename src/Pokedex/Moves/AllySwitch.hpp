@@ -16,7 +16,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct AllySwitch {
-  static constexpr Move name(GameMechanics) { return Move::ALLY_SWITCH; }
+  static constexpr Move name(GameMechanics = {}) { return Move::ALLY_SWITCH; }
   static constexpr Type type(GameMechanics) { return Type::PSYCHIC; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 

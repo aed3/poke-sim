@@ -12,7 +12,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct ChoiceScarf {
-  static constexpr Item name(GameMechanics) { return dex::Item::CHOICE_SCARF; }
+  static constexpr Item name(GameMechanics = {}) { return dex::Item::CHOICE_SCARF; }
 
   static constexpr types::effectMultiplier onModifySpeModifier(GameMechanics) { return 1.5F; }
 

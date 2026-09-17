@@ -6,7 +6,7 @@
 
 namespace pokesim::dex {
 struct Synchronize {
-  static constexpr dex::Ability name(GameMechanics) { return dex::Ability::SYNCHRONIZE; }
+  static constexpr dex::Ability name(GameMechanics = {}) { return dex::Ability::SYNCHRONIZE; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Synchronize"; }

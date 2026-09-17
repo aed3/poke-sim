@@ -19,8 +19,8 @@
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
-#include <Components/Tags/StatusTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
+#include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/EnumToTag/AbilityEnumToTag.hpp>
 #include <Pokedex/EnumToTag/ItemEnumToTag.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
@@ -124,23 +124,21 @@ struct CheckIfStatusIsSettable {
   static void run(Simulation& simulation) {
     simulation.addToEntities<pokesim::tags::CanSetStatus, StatusType, CurrentEffectSource, CurrentEffectTarget>();
     simulation.view<checkIfTargetHasStatus, Tags<StatusType>>();
-    if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Burn>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::Fire>, Tags<StatusType>>();
+    if constexpr (std::is_same_v<StatusType, pokesim::dex::Burn>) {
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::FireType>, Tags<StatusType>>();
     }
-    if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Freeze>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::Ice>, Tags<StatusType>>();
+    if constexpr (std::is_same_v<StatusType, pokesim::dex::Freeze>) {
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::IceType>, Tags<StatusType>>();
     }
-    if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Paralysis>) {  // And simulation is using a mechanic
-                                                                                   // where electric types cannot be
-                                                                                   // paralyzed.
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::Electric>, Tags<StatusType>>();
+    if constexpr (std::is_same_v<StatusType, pokesim::dex::Paralysis>) {  // And simulation is using a mechanic
+                                                                          // where electric types cannot be
+                                                                          // paralyzed.
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::ElectricType>, Tags<StatusType>>();
     }
 
-    if constexpr (
-      std::is_same_v<StatusType, pokesim::status::tags::Poison> ||
-      std::is_same_v<StatusType, pokesim::status::tags::Toxic>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::Poison>, Tags<StatusType>>();
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::Steel>, Tags<StatusType>>();
+    if constexpr (std::is_same_v<StatusType, pokesim::dex::Poison> || std::is_same_v<StatusType, pokesim::dex::Toxic>) {
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::PoisonType>, Tags<StatusType>>();
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::SteelType>, Tags<StatusType>>();
     }
 
     runStatusImmunityEvent<StatusType>(simulation);
@@ -161,12 +159,19 @@ struct RemoveNotSettableStatus {
   }
 };
 
-void setEffectTargetStatus(types::registry& registry, CurrentEffectTarget target, pokesim::dex::Status status) {
-  setStatus(status, registry, target.val);
-  if (status == pokesim::dex::Status::PAR) {
-    registry.emplace<pokesim::tags::SpeStatUpdateRequired>(target.val);
+template <typename StatusType>
+struct SetEffectTargetStatus {
+  static constexpr pokesim::dex::Status status = StatusType::name();
+  static void run(Simulation& simulation) { simulation.view<setEffectTargetStatus, Tags<StatusType>>(); }
+
+  static void setEffectTargetStatus(types::registry& registry, CurrentEffectTarget target) {
+    setStatus(status, registry, target.val);
+
+    if constexpr (status == pokesim::dex::Status::PAR) {
+      registry.emplace<pokesim::tags::SpeStatUpdateRequired>(target.val);
+    }
   }
-}
+};
 
 void setSpeedSortNeeded(types::registry& registry, Battle battle) {
   registry.emplace_or_replace<pokesim::simulate_turn::tags::SpeedSortNeeded>(battle.val);
@@ -232,12 +237,7 @@ void setStatus(Simulation& simulation) {
   pokesim::dex::forEachStatus<RemoveNotSettableStatus>(simulation);
   simulation.removeFromEntities<pokesim::tags::CanSetStatus>();
 
-  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Burn>>(pokesim::dex::Status::BRN);
-  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Freeze>>(pokesim::dex::Status::FRZ);
-  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Paralysis>>(pokesim::dex::Status::PAR);
-  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Poison>>(pokesim::dex::Status::PSN);
-  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Sleep>>(pokesim::dex::Status::SLP);
-  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Toxic>>(pokesim::dex::Status::TOX);
+  pokesim::dex::forEachStatus<SetEffectTargetStatus>(simulation);
 
   runStartSleep(simulation);
   runStartFreeze(simulation);
@@ -253,12 +253,12 @@ void trySetStatus(Simulation& simulation) {
 void clearStatus(types::handle pokemonHandle) {
   pokemonHandle.remove<
     pokesim::tags::HasStatus,
-    pokesim::status::tags::Burn,
-    pokesim::status::tags::Freeze,
-    pokesim::status::tags::Paralysis,
-    pokesim::status::tags::Poison,
-    pokesim::status::tags::Sleep,
-    pokesim::status::tags::Toxic>();
+    pokesim::dex::Burn,
+    pokesim::dex::Freeze,
+    pokesim::dex::Paralysis,
+    pokesim::dex::Poison,
+    pokesim::dex::Sleep,
+    pokesim::dex::Toxic>();
 }
 
 void clearVolatiles(types::handle pokemonHandle) {

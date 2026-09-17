@@ -10,7 +10,7 @@
 
 namespace pokesim::dex {
 struct Aegislash {
-  static constexpr Species name(GameMechanics) { return Species::AEGISLASH; }
+  static constexpr Species name(GameMechanics = {}) { return Species::AEGISLASH; }
   static constexpr types::baseStat hp(GameMechanics) { return 60U; }
   static constexpr types::baseStat atk(GameMechanics) { return 50U; }
   static constexpr types::baseStat def(GameMechanics) { return 140U; }
@@ -32,7 +32,7 @@ struct Aegislash {
 };
 
 struct ShieldAegislash : Aegislash {
-  static constexpr Species name(GameMechanics) { return Species::SHIELD_AEGISLASH; }
+  static constexpr Species name(GameMechanics = {}) { return Species::SHIELD_AEGISLASH; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Shield Form Aegislash"; }
@@ -42,7 +42,7 @@ struct ShieldAegislash : Aegislash {
 };
 
 struct BladeAegislash : Aegislash {
-  static constexpr Species name(GameMechanics) { return Species::BLADE_AEGISLASH; }
+  static constexpr Species name(GameMechanics = {}) { return Species::BLADE_AEGISLASH; }
 
   static constexpr types::baseStat atk(GameMechanics) { return 140U; }
   static constexpr types::baseStat def(GameMechanics) { return 50U; }

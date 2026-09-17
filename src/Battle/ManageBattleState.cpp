@@ -30,9 +30,9 @@
 #include <Components/Tags/RecycledEntities.hpp>
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
-#include <Components/Tags/StatusTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
+#include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/EnumToTag/MoveEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
@@ -113,8 +113,8 @@ void clearActionMoveComponents(types::registry& registry, const View& view) {
     SpeBoost,
     pokesim::tags::Flinch,
     AddedFlinchChance,
-    pokesim::status::tags::Paralysis,
-    pokesim::status::tags::Burn>(view.begin(), view.end());
+    dex::Paralysis,
+    dex::Burn>(view.begin(), view.end());
 }
 
 template <typename MoveTag>

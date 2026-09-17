@@ -15,7 +15,6 @@
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
-#include <Components/Tags/StatusTags.hpp>
 #include <Pokedex/Abilities/headers.hpp>
 #include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/Items/headers.hpp>
@@ -112,12 +111,12 @@ void runStatusImmunityEvent(Simulation&) {
   // Terrain), and all the `onImmunity` events that relate to non-volatile status conditions will go
 }
 
-template void runStatusImmunityEvent<pokesim::status::tags::Burn>(Simulation&);
-template void runStatusImmunityEvent<pokesim::status::tags::Freeze>(Simulation&);
-template void runStatusImmunityEvent<pokesim::status::tags::Paralysis>(Simulation&);
-template void runStatusImmunityEvent<pokesim::status::tags::Poison>(Simulation&);
-template void runStatusImmunityEvent<pokesim::status::tags::Sleep>(Simulation&);
-template void runStatusImmunityEvent<pokesim::status::tags::Toxic>(Simulation&);
+template void runStatusImmunityEvent<pokesim::dex::Burn>(Simulation&);
+template void runStatusImmunityEvent<pokesim::dex::Freeze>(Simulation&);
+template void runStatusImmunityEvent<pokesim::dex::Paralysis>(Simulation&);
+template void runStatusImmunityEvent<pokesim::dex::Poison>(Simulation&);
+template void runStatusImmunityEvent<pokesim::dex::Sleep>(Simulation&);
+template void runStatusImmunityEvent<pokesim::dex::Toxic>(Simulation&);
 
 void runAfterSetStatusEvent(Simulation&) {}
 

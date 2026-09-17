@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct StanceChange {
-  static constexpr Ability name(GameMechanics) { return dex::Ability::STANCE_CHANGE; }
+  static constexpr Ability name(GameMechanics = {}) { return dex::Ability::STANCE_CHANGE; }
 
   static constexpr AbilityProperty properties(GameMechanics) {
     return AbilityProperty::CANNOT_BREAK | AbilityProperty::CANNOT_SUPPRESS | AbilityProperty::NO_ROLE_PLAY |

@@ -10,7 +10,7 @@
 
 namespace pokesim::dex {
 struct Pangoro {
-  static constexpr Species name(GameMechanics) { return Species::PANGORO; }
+  static constexpr Species name(GameMechanics = {}) { return Species::PANGORO; }
   static constexpr types::baseStat hp(GameMechanics) { return 95U; }
   static constexpr types::baseStat atk(GameMechanics) { return 124U; }
   static constexpr types::baseStat def(GameMechanics) { return 78U; }

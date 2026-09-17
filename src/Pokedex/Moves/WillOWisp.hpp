@@ -11,7 +11,7 @@
 
 namespace pokesim::dex {
 struct WillOWisp {
-  static constexpr Move name(GameMechanics) { return Move::WILL_O_WISP; }
+  static constexpr Move name(GameMechanics = {}) { return Move::WILL_O_WISP; }
   static constexpr Type type(GameMechanics) { return Type::FIRE; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 

@@ -10,7 +10,7 @@
 
 namespace pokesim::dex {
 struct Gardevoir {
-  static constexpr Species name(GameMechanics) { return Species::GARDEVOIR; }
+  static constexpr Species name(GameMechanics = {}) { return Species::GARDEVOIR; }
   static constexpr types::baseStat hp(GameMechanics) { return 68U; }
   static constexpr types::baseStat atk(GameMechanics) { return 65U; }
   static constexpr types::baseStat def(GameMechanics) { return 65U; }
