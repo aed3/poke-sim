@@ -163,7 +163,7 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE(pokedex.moveHasAll<move::effect::tags::MoveTarget>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHasAll<move::effect::tags::MoveSource>(moveEnum));
 
-    REQUIRE(pokedex.moveHasAll<status::tags::Paralysis>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<dex::Paralysis>(moveEnum));
     REQUIRE(
       pokedex.getMoveData<BaseEffectChance>(moveEnum).val ==
       pokedex.getStaticValue<dex::Thunderbolt::targetSecondaryEffect::chance>());
@@ -222,7 +222,7 @@ TEST_CASE("Pokedex Data Building: Move", "[Pokedex]") {
     REQUIRE(pokedex.moveHasAll<move::effect::tags::MoveTarget>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHasAll<move::effect::tags::MoveSource>(moveEnum));
 
-    REQUIRE(pokedex.moveHasAll<status::tags::Burn>(moveEnum));
+    REQUIRE(pokedex.moveHasAll<dex::Burn>(moveEnum));
 
     REQUIRE(pokedex.moveHasAll<move::tags::AnySingleTarget>(moveEnum));
     REQUIRE_FALSE(pokedex.moveHasAll<AddedTargets>(moveEnum));

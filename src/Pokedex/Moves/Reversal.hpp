@@ -16,7 +16,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Reversal {
-  static constexpr Move name(GameMechanics) { return Move::REVERSAL; }
+  static constexpr Move name(GameMechanics = {}) { return Move::REVERSAL; }
   static constexpr Type type(GameMechanics) { return Type::FIGHTING; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
 

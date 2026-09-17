@@ -2332,12 +2332,12 @@ void runStatusImmunityEvent(Simulation&) {
   // Terrain), and all the `onImmunity` events that relate to non-volatile status conditions will go
 }
 
-template void runStatusImmunityEvent<pokesim::status::tags::Burn>(Simulation&);
-template void runStatusImmunityEvent<pokesim::status::tags::Freeze>(Simulation&);
-template void runStatusImmunityEvent<pokesim::status::tags::Paralysis>(Simulation&);
-template void runStatusImmunityEvent<pokesim::status::tags::Poison>(Simulation&);
-template void runStatusImmunityEvent<pokesim::status::tags::Sleep>(Simulation&);
-template void runStatusImmunityEvent<pokesim::status::tags::Toxic>(Simulation&);
+template void runStatusImmunityEvent<pokesim::dex::Burn>(Simulation&);
+template void runStatusImmunityEvent<pokesim::dex::Freeze>(Simulation&);
+template void runStatusImmunityEvent<pokesim::dex::Paralysis>(Simulation&);
+template void runStatusImmunityEvent<pokesim::dex::Poison>(Simulation&);
+template void runStatusImmunityEvent<pokesim::dex::Sleep>(Simulation&);
+template void runStatusImmunityEvent<pokesim::dex::Toxic>(Simulation&);
 
 void runAfterSetStatusEvent(Simulation&) {}
 
@@ -5052,7 +5052,7 @@ struct SourceModifyDamage {
 template <typename SimulationTag>
 struct FocusSashOnAfterModifyDamage {
   static void run(Simulation& simulation, types::damage hpToKeep) {
-    simulation.view<modifyDamage, Tags<dex::FocusSash, SimulationTag, tags::CanUseItem>>(hpToKeep);
+    simulation.view<modifyDamage, Tags<FocusSash, SimulationTag, tags::CanUseItem>>(hpToKeep);
   }
 
   static void modifyDamage(
@@ -5137,7 +5137,7 @@ void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget m
 
 void quickPowderOnModifySpe(
   SpeciesName species, EventModifier& eventModifier, types::effectMultiplier speedMultiplier) {
-  if (species.val != dex::Species::DITTO) {
+  if (species.val != Species::DITTO) {
     return;
   }
 
@@ -5148,18 +5148,18 @@ void quickPowderOnModifySpe(
 void AssaultVest::onModifySpd(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<AssaultVest::onModifySpdModifier>();
 
-  simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<dex::AssaultVest>>(modifier, 1U);
+  simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<AssaultVest>>(modifier, 1U);
 }
 
 void AssaultVest::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpdStatUpdateRequired, internal::tags::EndItem, dex::AssaultVest>();
+  simulation.addToEntities<tags::SpdStatUpdateRequired, internal::tags::EndItem, AssaultVest>();
 }
 
 void BrightPowder::onModifyAccuracy(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyDenominator>();
 
-  internal::currentActionMovesAsTargetView<SetMoveTargetModifier, Tags<dex::BrightPowder>>(
+  internal::currentActionMovesAsTargetView<SetMoveTargetModifier, Tags<BrightPowder>>(
     simulation,
     numerator,
     denominator);
@@ -5168,35 +5168,35 @@ void BrightPowder::onModifyAccuracy(Simulation& simulation) {
 void ChoiceScarf::onModifySpe(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<ChoiceScarf::onModifySpeModifier>();
 
-  simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<dex::ChoiceScarf>>(modifier, 1U);
+  simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<ChoiceScarf>>(modifier, 1U);
 }
 
 void ChoiceScarf::onSourceModifyMove(Simulation& simulation) {
-  simulation.view<setChoiceLock, Tags<dex::ChoiceScarf, tags::CurrentActionSource>, entt::exclude_t<ChoiceLock>>();
+  simulation.view<setChoiceLock, Tags<ChoiceScarf, tags::CurrentActionSource>, entt::exclude_t<ChoiceLock>>();
 }
 
 void ChoiceScarf::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpeStatUpdateRequired, internal::tags::EndItem, dex::ChoiceScarf>();
+  simulation.addToEntities<tags::SpeStatUpdateRequired, internal::tags::EndItem, ChoiceScarf>();
 }
 
 void ChoiceSpecs::onModifySpa(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<ChoiceSpecs::onModifySpaModifier>();
 
-  simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<dex::ChoiceSpecs>>(modifier, 1U);
+  simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<ChoiceSpecs>>(modifier, 1U);
 }
 
 void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
-  simulation.view<setChoiceLock, Tags<dex::ChoiceSpecs, tags::CurrentActionSource>, entt::exclude_t<ChoiceLock>>();
+  simulation.view<setChoiceLock, Tags<ChoiceSpecs, tags::CurrentActionSource>, entt::exclude_t<ChoiceLock>>();
 }
 
 void ChoiceSpecs::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpaStatUpdateRequired, internal::tags::EndItem, dex::ChoiceSpecs>();
+  simulation.addToEntities<tags::SpaStatUpdateRequired, internal::tags::EndItem, ChoiceSpecs>();
 }
 
 void FocusSash::onAfterModifyDamage(Simulation& simulation) {
   const auto hpToKeep = simulation.pokedex().getStaticValue<FocusSash::onAfterModifyDamageHpToKeep>();
 
-  simulation.addToEntities<tags::CanUseItem, tags::CurrentActionTarget, dex::FocusSash>();
+  simulation.addToEntities<tags::CanUseItem, tags::CurrentActionTarget, FocusSash>();
   internal::checkIfCanUseItem(simulation);
 
   Simulation::forEachSimulationTag<FocusSashOnAfterModifyDamage>(simulation, hpToKeep);
@@ -5205,39 +5205,39 @@ void FocusSash::onAfterModifyDamage(Simulation& simulation) {
 }
 
 void FocusSash::onDamage(Simulation& simulation) {
-  simulation.addToEntities<tags::CanUseItem, internal::calc_damage::tags::RanAfterModifyDamage, dex::FocusSash>();
+  simulation.addToEntities<tags::CanUseItem, internal::calc_damage::tags::RanAfterModifyDamage, FocusSash>();
   internal::tryUseItem(simulation);
 }
 
 void KingsRock::onModifyMove(Simulation& simulation) {
   const auto percentChance = simulation.pokedex().getStaticValue<KingsRock::addedFlinchChance>();
 
-  simulation.view<kingsRockOnModifyMove, Tags<dex::KingsRock>>(percentChance);
+  simulation.view<kingsRockOnModifyMove, Tags<KingsRock>>(percentChance);
 }
 
 void LifeOrb::onModifyDamage(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageDenominator>();
 
-  internal::currentActionMovesAsSourceView<SourceModifyDamage, Tags<dex::LifeOrb>>(simulation, numerator, denominator);
+  internal::currentActionMovesAsSourceView<SourceModifyDamage, Tags<LifeOrb>>(simulation, numerator, denominator);
 }
 
 void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<LifeOrb::onAfterMoveUsedHpDecreaseDivisor>();
 
-  simulation.view<lifeOrbOnAfterMove, Tags<dex::LifeOrb>>(divisor);
+  simulation.view<lifeOrbOnAfterMove, Tags<LifeOrb>>(divisor);
 }
 
 void RockyHelmet::onDamagingHit(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<RockyHelmet::onDamagingHitHpDecreaseDivisor>();
 
-  simulation.view<rockyHelmetOnDamagingHit, Tags<dex::RockyHelmet>>(divisor);
+  simulation.view<rockyHelmetOnDamagingHit, Tags<RockyHelmet>>(divisor);
 }
 
 void QuickPowder::onModifySpe(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<onModifySpeModifier>();
 
-  simulation.view<quickPowderOnModifySpe, Tags<dex::QuickPowder> /*, entt::exclude_t<pokesim::tags::Transformed>*/>(
+  simulation.view<quickPowderOnModifySpe, Tags<QuickPowder> /*, entt::exclude_t<pokesim::tags::Transformed>*/>(
     modifier);
 }
 }  // namespace pokesim::dex
@@ -5293,33 +5293,32 @@ void choiceLockOnDisableMove(
 }  // namespace
 
 void Burn::onSetDamageRollModifiers(Simulation& simulation) {
-  internal::currentActionMovesAsSourceView<ApplyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<dex::Guts> */>(
-    simulation);
+  internal::currentActionMovesAsSourceView<ApplyBurnModifier, Tags<Burn> /*, entt::exclude<Guts> */>(simulation);
 }
 
 void Burn::onResidual(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<Burn::onResidualHpDecreaseDivisor>();
 
-  simulation.view<damageByHpDivisor, Tags<status::tags::Burn, tags::ActivePokemon>>(divisor);
+  simulation.view<damageByHpDivisor, Tags<Burn, tags::ActivePokemon>>(divisor);
 }
 
 void Paralysis::onModifySpe(Simulation& simulation) {
   const auto speedDivisor = simulation.pokedex().getStaticValue<Paralysis::speedDivisor>();
   const auto speedDividend = simulation.pokedex().getStaticValue<Paralysis::speedDividend>();
 
-  simulation.view<
-    paralysisOnModifySpeed,
-    Tags<status::tags::Paralysis, tags::SpeStatUpdateRequired> /*, entt::exclude_t<dex::QuickFeet>*/>(
-    speedDivisor,
-    speedDividend);
+  simulation
+    .view<paralysisOnModifySpeed, Tags<Paralysis, tags::SpeStatUpdateRequired> /*, entt::exclude_t<QuickFeet>*/>(
+      speedDivisor,
+      speedDividend);
 }
 
 void Paralysis::onBeforeMove(Simulation& simulation) {
   const auto chance = simulation.pokedex().getStaticValue<Paralysis::onBeforeMoveChance>();
 
-  simulation.view<
-    pokesim::internal::setRandomBinaryChanceFromPercentChance,
-    Tags<tags::CurrentActionSource, status::tags::Paralysis>>(simulation, chance);
+  simulation
+    .view<pokesim::internal::setRandomBinaryChanceFromPercentChance, Tags<tags::CurrentActionSource, Paralysis>>(
+      simulation,
+      chance);
 
   pokesim::internal::randomBinaryChance(
     simulation,
@@ -5381,7 +5380,7 @@ void staticOnDamagingHit(
 
   types::entity effectSource = targetHandle.entity();
   types::entity effectTarget = source;
-  registry.emplace_or_replace<status::tags::Paralysis>(move);
+  registry.emplace_or_replace<Paralysis>(move);
   registry.emplace<CurrentEffectSource>(move, effectSource);
   registry.emplace<CurrentEffectsAsSource>(effectSource, decltype(CurrentEffectsAsSource::val){move});
   registry.emplace<CurrentEffectTarget>(move, effectTarget);
@@ -5393,13 +5392,13 @@ void Plus::onModifySpA(Simulation& simulation) {
   if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
     return;
   }
-  simulation.view<plusOnModifySpa, Tags<dex::Plus>>();
+  simulation.view<plusOnModifySpa, Tags<Plus>>();
 }
 
 void Static::onDamagingHit(Simulation& simulation) {
-  const auto chanceOfStatic = simulation.pokedex().getStaticValue<dex::Static::onDamagingHitChance>();
+  const auto chanceOfStatic = simulation.pokedex().getStaticValue<Static::onDamagingHitChance>();
 
-  simulation.view<staticOnDamagingHit, Tags<dex::Static>>(chanceOfStatic, simulation);
+  simulation.view<staticOnDamagingHit, Tags<Static>>(chanceOfStatic, simulation);
 
   internal::checkIfCanSetStatus(simulation);
   internal::removeRandomBinaryChanceComponents(simulation, entt::exclude_t<pokesim::tags::CanSetStatus>{});
@@ -6410,23 +6409,21 @@ struct CheckIfStatusIsSettable {
   static void run(Simulation& simulation) {
     simulation.addToEntities<pokesim::tags::CanSetStatus, StatusType, CurrentEffectSource, CurrentEffectTarget>();
     simulation.view<checkIfTargetHasStatus, Tags<StatusType>>();
-    if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Burn>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::Fire>, Tags<StatusType>>();
+    if constexpr (std::is_same_v<StatusType, pokesim::dex::Burn>) {
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::FireType>, Tags<StatusType>>();
     }
-    if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Freeze>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::Ice>, Tags<StatusType>>();
+    if constexpr (std::is_same_v<StatusType, pokesim::dex::Freeze>) {
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::IceType>, Tags<StatusType>>();
     }
-    if constexpr (std::is_same_v<StatusType, pokesim::status::tags::Paralysis>) {  // And simulation is using a mechanic
-                                                                                   // where electric types cannot be
-                                                                                   // paralyzed.
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::Electric>, Tags<StatusType>>();
+    if constexpr (std::is_same_v<StatusType, pokesim::dex::Paralysis>) {  // And simulation is using a mechanic
+                                                                          // where electric types cannot be
+                                                                          // paralyzed.
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::ElectricType>, Tags<StatusType>>();
     }
 
-    if constexpr (
-      std::is_same_v<StatusType, pokesim::status::tags::Poison> ||
-      std::is_same_v<StatusType, pokesim::status::tags::Toxic>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::Poison>, Tags<StatusType>>();
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::Steel>, Tags<StatusType>>();
+    if constexpr (std::is_same_v<StatusType, pokesim::dex::Poison> || std::is_same_v<StatusType, pokesim::dex::Toxic>) {
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::PoisonType>, Tags<StatusType>>();
+      simulation.view<checkTypeStatusImmunity<pokesim::dex::SteelType>, Tags<StatusType>>();
     }
 
     runStatusImmunityEvent<StatusType>(simulation);
@@ -6447,12 +6444,19 @@ struct RemoveNotSettableStatus {
   }
 };
 
-void setEffectTargetStatus(types::registry& registry, CurrentEffectTarget target, pokesim::dex::Status status) {
-  setStatus(status, registry, target.val);
-  if (status == pokesim::dex::Status::PAR) {
-    registry.emplace<pokesim::tags::SpeStatUpdateRequired>(target.val);
+template <typename StatusType>
+struct SetEffectTargetStatus {
+  static constexpr pokesim::dex::Status status = StatusType::name();
+  static void run(Simulation& simulation) { simulation.view<setEffectTargetStatus, Tags<StatusType>>(); }
+
+  static void setEffectTargetStatus(types::registry& registry, CurrentEffectTarget target) {
+    setStatus(status, registry, target.val);
+
+    if constexpr (status == pokesim::dex::Status::PAR) {
+      registry.emplace<pokesim::tags::SpeStatUpdateRequired>(target.val);
+    }
   }
-}
+};
 
 void setSpeedSortNeeded(types::registry& registry, Battle battle) {
   registry.emplace_or_replace<pokesim::simulate_turn::tags::SpeedSortNeeded>(battle.val);
@@ -6518,12 +6522,7 @@ void setStatus(Simulation& simulation) {
   pokesim::dex::forEachStatus<RemoveNotSettableStatus>(simulation);
   simulation.removeFromEntities<pokesim::tags::CanSetStatus>();
 
-  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Burn>>(pokesim::dex::Status::BRN);
-  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Freeze>>(pokesim::dex::Status::FRZ);
-  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Paralysis>>(pokesim::dex::Status::PAR);
-  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Poison>>(pokesim::dex::Status::PSN);
-  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Sleep>>(pokesim::dex::Status::SLP);
-  simulation.view<setEffectTargetStatus, Tags<pokesim::status::tags::Toxic>>(pokesim::dex::Status::TOX);
+  pokesim::dex::forEachStatus<SetEffectTargetStatus>(simulation);
 
   runStartSleep(simulation);
   runStartFreeze(simulation);
@@ -6539,12 +6538,12 @@ void trySetStatus(Simulation& simulation) {
 void clearStatus(types::handle pokemonHandle) {
   pokemonHandle.remove<
     pokesim::tags::HasStatus,
-    pokesim::status::tags::Burn,
-    pokesim::status::tags::Freeze,
-    pokesim::status::tags::Paralysis,
-    pokesim::status::tags::Poison,
-    pokesim::status::tags::Sleep,
-    pokesim::status::tags::Toxic>();
+    pokesim::dex::Burn,
+    pokesim::dex::Freeze,
+    pokesim::dex::Paralysis,
+    pokesim::dex::Poison,
+    pokesim::dex::Sleep,
+    pokesim::dex::Toxic>();
 }
 
 void clearVolatiles(types::handle pokemonHandle) {
@@ -6774,8 +6773,8 @@ void clearActionMoveComponents(types::registry& registry, const View& view) {
     SpeBoost,
     pokesim::tags::Flinch,
     AddedFlinchChance,
-    pokesim::status::tags::Paralysis,
-    pokesim::status::tags::Burn>(view.begin(), view.end());
+    dex::Paralysis,
+    dex::Burn>(view.begin(), view.end());
 }
 
 template <typename MoveTag>

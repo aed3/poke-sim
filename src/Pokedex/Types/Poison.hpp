@@ -6,8 +6,8 @@
 #include <string_view>
 
 namespace pokesim::dex {
-struct Poison {
-  static constexpr Type name(GameMechanics) { return Type::POISON; }
+struct PoisonType {
+  static constexpr Type name(GameMechanics = {}) { return Type::POISON; }
 
   static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
     switch (attacking) {

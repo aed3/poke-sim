@@ -18,7 +18,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct TripleArrows {
-  static constexpr Move name(GameMechanics) { return Move::TRIPLE_ARROWS; }
+  static constexpr Move name(GameMechanics = {}) { return Move::TRIPLE_ARROWS; }
   static constexpr Type type(GameMechanics) { return Type::FIGHTING; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
 

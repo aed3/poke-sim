@@ -14,7 +14,6 @@
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
-#include <Components/Tags/StatusTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
@@ -72,33 +71,32 @@ void choiceLockOnDisableMove(
 }  // namespace
 
 void Burn::onSetDamageRollModifiers(Simulation& simulation) {
-  internal::currentActionMovesAsSourceView<ApplyBurnModifier, Tags<status::tags::Burn> /*, entt::exclude<dex::Guts> */>(
-    simulation);
+  internal::currentActionMovesAsSourceView<ApplyBurnModifier, Tags<Burn> /*, entt::exclude<Guts> */>(simulation);
 }
 
 void Burn::onResidual(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<Burn::onResidualHpDecreaseDivisor>();
 
-  simulation.view<damageByHpDivisor, Tags<status::tags::Burn, tags::ActivePokemon>>(divisor);
+  simulation.view<damageByHpDivisor, Tags<Burn, tags::ActivePokemon>>(divisor);
 }
 
 void Paralysis::onModifySpe(Simulation& simulation) {
   const auto speedDivisor = simulation.pokedex().getStaticValue<Paralysis::speedDivisor>();
   const auto speedDividend = simulation.pokedex().getStaticValue<Paralysis::speedDividend>();
 
-  simulation.view<
-    paralysisOnModifySpeed,
-    Tags<status::tags::Paralysis, tags::SpeStatUpdateRequired> /*, entt::exclude_t<dex::QuickFeet>*/>(
-    speedDivisor,
-    speedDividend);
+  simulation
+    .view<paralysisOnModifySpeed, Tags<Paralysis, tags::SpeStatUpdateRequired> /*, entt::exclude_t<QuickFeet>*/>(
+      speedDivisor,
+      speedDividend);
 }
 
 void Paralysis::onBeforeMove(Simulation& simulation) {
   const auto chance = simulation.pokedex().getStaticValue<Paralysis::onBeforeMoveChance>();
 
-  simulation.view<
-    pokesim::internal::setRandomBinaryChanceFromPercentChance,
-    Tags<tags::CurrentActionSource, status::tags::Paralysis>>(simulation, chance);
+  simulation
+    .view<pokesim::internal::setRandomBinaryChanceFromPercentChance, Tags<tags::CurrentActionSource, Paralysis>>(
+      simulation,
+      chance);
 
   pokesim::internal::randomBinaryChance(
     simulation,

@@ -6,7 +6,7 @@
 
 namespace pokesim::dex {
 struct Overgrow {
-  static constexpr Ability name(GameMechanics) { return dex::Ability::OVERGROW; }
+  static constexpr Ability name(GameMechanics = {}) { return dex::Ability::OVERGROW; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Overgrow"; }

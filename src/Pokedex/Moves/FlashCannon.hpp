@@ -12,7 +12,7 @@
 
 namespace pokesim::dex {
 struct FlashCannon {
-  static constexpr Move name(GameMechanics) { return Move::FLASH_CANNON; }
+  static constexpr Move name(GameMechanics = {}) { return Move::FLASH_CANNON; }
   static constexpr Type type(GameMechanics) { return Type::STEEL; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::SPECIAL; }
 

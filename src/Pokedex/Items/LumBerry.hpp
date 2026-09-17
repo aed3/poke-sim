@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct LumBerry {
-  static constexpr Item name(GameMechanics) { return dex::Item::LUM_BERRY; }
+  static constexpr Item name(GameMechanics = {}) { return dex::Item::LUM_BERRY; }
 
   static constexpr ItemProperty properties(GameMechanics) { return ItemProperty::BERRY; }
   struct Strings {

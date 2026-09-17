@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Competitive {
-  static constexpr Ability name(GameMechanics) { return dex::Ability::COMPETITIVE; }
+  static constexpr Ability name(GameMechanics = {}) { return dex::Ability::COMPETITIVE; }
 
   static constexpr types::boost onAfterEachBoostSpaBoost(GameMechanics) { return 2; }
 

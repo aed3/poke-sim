@@ -452,7 +452,7 @@ TEST_CASE(
     types::moveSlotIndex p1MoveIndex = 1U;
     auto entities = test.getBattleEntities(battle);
 
-    bool p1Paralyzed = registry.all_of<status::tags::Paralysis>(entities.p1A);
+    bool p1Paralyzed = registry.all_of<dex::Paralysis>(entities.p1A);
     stat::CurrentHp p1Hp = registry.get<stat::CurrentHp>(entities.p1A);
     stat::CurrentHp p2Hp = registry.get<stat::CurrentHp>(entities.p2A);
     CAPTURE(p1Paralyzed, p1Hp.val, p2Hp.val, expectedP1Hp, expectedP2Hp);
@@ -470,7 +470,7 @@ TEST_CASE(
       auto [initialP1Speed, currentP1Speed] = test.checks.getInitialAndCurrent<stat::EffectiveSpe>(entities.p1A);
       REQUIRE(registry.all_of<tags::HasStatus>(entities.p1A));
       REQUIRE(currentP1Speed.val == initialP1Speed.val / PARALYSIS_SPEED_DIVISOR);
-      test.checks.checkUsedMovePokemon<stat::CurrentHp, tags::HasStatus, status::tags::Paralysis, stat::EffectiveSpe>(
+      test.checks.checkUsedMovePokemon<stat::CurrentHp, tags::HasStatus, dex::Paralysis, stat::EffectiveSpe>(
         entities.p1A,
         p1MoveIndex);
     }
@@ -756,7 +756,7 @@ TEST_CASE(
   for (types::entity battle : allTurnOutcomes) {
     auto entities = test.getBattleEntities(battle);
 
-    bool p2ABurned = registry.all_of<status::tags::Burn>(entities.p2A);
+    bool p2ABurned = registry.all_of<dex::Burn>(entities.p2A);
     bool p2BFainted = registry.all_of<tags::Fainted>(entities.p2B);
     bool p2BSpaBoosted = registry.all_of<SpaBoost>(entities.p2B);
 
@@ -793,7 +793,7 @@ TEST_CASE(
 
     test.checks.checkUsedMovePokemon<stat::CurrentHp, ChoiceLock, DisabledMoveSlots>(entities.p1A);
     test.checks.checkUsedMovePokemon<stat::CurrentHp, dex::FocusSash, tags::HasItem>(entities.p1B);
-    test.checks.checkUsedMovePokemon<stat::CurrentHp, tags::HasStatus, status::tags::Burn>(entities.p2A);
+    test.checks.checkUsedMovePokemon<stat::CurrentHp, tags::HasStatus, dex::Burn>(entities.p2A);
 
     // P1A (Gardevoir) Specific Checks
     const auto& [p1AChoiceLock, p1ADisabledMoveSlots] = registry.get<ChoiceLock, DisabledMoveSlots>(entities.p1A);

@@ -28,7 +28,7 @@ TEST_CASE("Battle State: Single Battle", "[Simulation][Setup][SingleBattle]") {
   auto entities = test.getBattleEntities(battles.front());
 
   REQUIRE(registry.all_of<dex::Competitive>(entities.p1A));
-  REQUIRE(registry.all_of<status::tags::Freeze>(entities.p1A));
+  REQUIRE(registry.all_of<dex::Freeze>(entities.p1A));
   REQUIRE(registry.all_of<dex::Plus>(entities.p2A));
   REQUIRE(registry.all_of<nature::tags::Hardy>(entities.p2A));
   REQUIRE(registry.all_of<dex::ChoiceSpecs>(entities.p2A));
@@ -64,7 +64,7 @@ TEST_CASE("Battle State: Double Battle", "[Simulation][Setup][DoubleBattle]") {
   auto entities = test.getBattleEntities(battles.front());
 
   REQUIRE(registry.all_of<dex::Trace>(entities.p1A));
-  REQUIRE(registry.all_of<status::tags::Burn>(entities.p1A));
+  REQUIRE(registry.all_of<dex::Burn>(entities.p1A));
   REQUIRE(registry.all_of<dex::ChoiceScarf>(entities.p1A));
   REQUIRE(registry.all_of<dex::IronFist>(entities.p2A));
   REQUIRE(registry.all_of<dex::LifeOrb>(entities.p2A));

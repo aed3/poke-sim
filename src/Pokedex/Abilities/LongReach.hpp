@@ -10,7 +10,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct LongReach {
-  static constexpr Ability name(GameMechanics) { return dex::Ability::LONG_REACH; }
+  static constexpr Ability name(GameMechanics = {}) { return dex::Ability::LONG_REACH; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Long Reach"; }

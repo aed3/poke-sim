@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct QuickPowder {
-  static constexpr Item name(GameMechanics) { return dex::Item::QUICK_POWDER; }
+  static constexpr Item name(GameMechanics = {}) { return dex::Item::QUICK_POWDER; }
 
   static constexpr types::effectMultiplier onModifySpeModifier(GameMechanics) { return 2.0F; }
 

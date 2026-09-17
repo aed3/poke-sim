@@ -26,9 +26,8 @@
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
-#include <Components/Tags/StatusTags.hpp>
 #include <Config/Require.hpp>
-#include <Pokedex/Effects/Burn.hpp>
+#include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/CalcDamageSpecifics.hpp>
 #include <Simulation/Formulas.hpp>

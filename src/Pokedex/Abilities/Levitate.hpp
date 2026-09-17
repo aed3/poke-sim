@@ -6,7 +6,7 @@
 
 namespace pokesim::dex {
 struct Levitate {
-  static constexpr Ability name(GameMechanics) { return dex::Ability::LEVITATE; }
+  static constexpr Ability name(GameMechanics = {}) { return dex::Ability::LEVITATE; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Levitate"; }

@@ -17,7 +17,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Reflect {
-  static constexpr Move name(GameMechanics) { return Move::REFLECT; }
+  static constexpr Move name(GameMechanics = {}) { return Move::REFLECT; }
   static constexpr Type type(GameMechanics) { return Type::PSYCHIC; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 

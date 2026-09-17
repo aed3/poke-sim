@@ -10,7 +10,7 @@
 
 namespace pokesim::dex {
 struct Braviary {
-  static constexpr Species name(GameMechanics) { return Species::BRAVIARY; }
+  static constexpr Species name(GameMechanics = {}) { return Species::BRAVIARY; }
   static constexpr types::baseStat hp(GameMechanics) { return 100U; }
   static constexpr types::baseStat atk(GameMechanics) { return 123U; }
   static constexpr types::baseStat def(GameMechanics) { return 75U; }

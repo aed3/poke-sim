@@ -13,7 +13,6 @@
 #include "RunEventTags.hpp"
 #include "Selection.hpp"
 #include "SimulationTags.hpp"
-#include "StatusTags.hpp"
 #include "TargetTags.hpp"
 #include "TypeTags.hpp"
 #include "VolatileTags.hpp"

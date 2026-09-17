@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Imposter {
-  static constexpr Ability name(GameMechanics) { return dex::Ability::IMPOSTER; }
+  static constexpr Ability name(GameMechanics = {}) { return dex::Ability::IMPOSTER; }
 
   static constexpr AbilityProperty properties(GameMechanics) {
     return AbilityProperty::CANNOT_BREAK | AbilityProperty::NO_ROLE_PLAY | AbilityProperty::NO_RECEIVER |

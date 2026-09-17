@@ -12,7 +12,7 @@
 
 namespace pokesim::dex {
 struct Thunderbolt {
-  static constexpr Move name(GameMechanics) { return Move::THUNDERBOLT; }
+  static constexpr Move name(GameMechanics = {}) { return Move::THUNDERBOLT; }
   static constexpr Type type(GameMechanics) { return Type::ELECTRIC; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::SPECIAL; }
 

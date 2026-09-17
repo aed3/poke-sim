@@ -12,7 +12,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Burn {
-  static constexpr Status name(GameMechanics) { return dex::Status::BRN; }
+  static constexpr Status name(GameMechanics = {}) { return dex::Status::BRN; }
 
   static constexpr types::effectMultiplier physicalDamageMultiplier(GameMechanics) { return 0.5F; }
   static constexpr types::stat onResidualHpDecreaseDivisor(GameMechanics) { return 16U; }
@@ -23,7 +23,5 @@ struct Burn {
 
   static void onSetDamageRollModifiers(Simulation& simulation);
   static void onResidual(Simulation& simulation);
-
-  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
 }  // namespace pokesim::dex

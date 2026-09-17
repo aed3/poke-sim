@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Defiant {
-  static constexpr Ability name(GameMechanics) { return dex::Ability::DEFIANT; }
+  static constexpr Ability name(GameMechanics = {}) { return dex::Ability::DEFIANT; }
 
   static constexpr types::boost onAfterEachBoostAtkBoost(GameMechanics) { return 2; }
 

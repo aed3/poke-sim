@@ -11,7 +11,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct KingsRock {
-  static constexpr Item name(GameMechanics) { return dex::Item::KINGS_ROCK; }
+  static constexpr Item name(GameMechanics = {}) { return dex::Item::KINGS_ROCK; }
 
   static types::percentChance addedFlinchChance(GameMechanics) { return 10U; }
 

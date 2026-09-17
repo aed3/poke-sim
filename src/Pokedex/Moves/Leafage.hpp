@@ -12,7 +12,7 @@
 
 namespace pokesim::dex {
 struct Leafage {
-  static constexpr Move name(GameMechanics) { return Move::LEAFAGE; }
+  static constexpr Move name(GameMechanics = {}) { return Move::LEAFAGE; }
   static constexpr Type type(GameMechanics) { return Type::GRASS; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
 
