@@ -13,7 +13,7 @@ struct Random {
     dex::Species::DRAGAPULT,
   };
 
-  static constexpr std::array<dex::Move, 7U> availableMoves{
+  static constexpr std::array<dex::Move, 11U> availableMoves{
     dex::Move::FURY_ATTACK,
     dex::Move::KNOCK_OFF,
     dex::Move::MOONBLAST,
@@ -21,6 +21,10 @@ struct Random {
     dex::Move::SPLASH,
     dex::Move::THUNDERBOLT,
     dex::Move::WILL_O_WISP,
+    dex::Move::SPIRIT_SHACKLE,
+    dex::Move::TRIPLE_ARROWS,
+    dex::Move::TACKLE,
+    dex::Move::LEAFAGE,
   };
 
   static constexpr std::array<dex::Ability, 12U> availableAbilities{
