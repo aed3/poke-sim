@@ -21186,16 +21186,16 @@ namespace pokesim::dex {
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
 auto enumToTag(Status status, RunArgs&&... args) {
   switch (status) {
-    case Status::BRN: return RunStruct<dex::Burn, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::FRZ: return RunStruct<dex::Freeze, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::PAR: return RunStruct<dex::Paralysis, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::PSN: return RunStruct<dex::Poison, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::SLP: return RunStruct<dex::Sleep, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::TOX: return RunStruct<dex::Toxic, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::BRN: return RunStruct<Burn, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::FRZ: return RunStruct<Freeze, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::PAR: return RunStruct<Paralysis, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::PSN: return RunStruct<Poison, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::SLP: return RunStruct<Sleep, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::TOX: return RunStruct<Toxic, T...>::run(std::forward<RunArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for status that does not exist.");
-      using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<Sleep, T...>::run), RunArgs...>;
       if constexpr (std::is_void_v<ReturnType>) {
         return;
       }
@@ -25121,7 +25121,7 @@ auto enumToTag(Ability ability, RunArgs&&... args) {
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for ability that does not exist.");
-      using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<Trace, T...>::run), RunArgs...>;
       if constexpr (std::is_void_v<ReturnType>) {
         return;
       }
@@ -25537,7 +25537,7 @@ auto enumToTag(Item item, RunArgs&&... args) {
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for item that does not exist.");
-      using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<LumBerry, T...>::run), RunArgs...>;
       if constexpr (std::is_void_v<ReturnType>) {
         return;
       }
@@ -25612,7 +25612,7 @@ auto enumToTag(Nature nature, RunArgs&&... args) {
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for nature that does not exist.");
-      using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<nature::tags::Hasty, T...>::run), RunArgs...>;
       if constexpr (std::is_void_v<ReturnType>) {
         return;
       }
@@ -28101,7 +28101,7 @@ auto enumToTag(Species species, RunArgs&&... args) {
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for species that does not exist.");
-      using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<Ditto, T...>::run), RunArgs...>;
       if constexpr (std::is_void_v<ReturnType>) {
         return;
       }
@@ -28135,31 +28135,31 @@ namespace pokesim::dex {
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
 auto enumToTag(Type type, RunArgs&&... args) {
   switch (type) {
-    case Type::NORMAL:   return RunStruct<dex::NormalType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::FIGHTING: return RunStruct<dex::FightingType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::FLYING:   return RunStruct<dex::FlyingType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::POISON:   return RunStruct<dex::PoisonType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::GROUND:   return RunStruct<dex::GroundType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::ROCK:     return RunStruct<dex::RockType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::BUG:      return RunStruct<dex::BugType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::GHOST:    return RunStruct<dex::GhostType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::STEEL:    return RunStruct<dex::SteelType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::FIRE:     return RunStruct<dex::FireType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::WATER:    return RunStruct<dex::WaterType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::GRASS:    return RunStruct<dex::GrassType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::ELECTRIC: return RunStruct<dex::ElectricType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::PSYCHIC:  return RunStruct<dex::PsychicType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::ICE:      return RunStruct<dex::IceType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::DRAGON:   return RunStruct<dex::DragonType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::DARK:     return RunStruct<dex::DarkType, T...>::run(std::forward<RunArgs>(args)...);
-    case Type::FAIRY:    return RunStruct<dex::FairyType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::NORMAL:   return RunStruct<NormalType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::FIGHTING: return RunStruct<FightingType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::FLYING:   return RunStruct<FlyingType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::POISON:   return RunStruct<PoisonType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::GROUND:   return RunStruct<GroundType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::ROCK:     return RunStruct<RockType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::BUG:      return RunStruct<BugType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::GHOST:    return RunStruct<GhostType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::STEEL:    return RunStruct<SteelType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::FIRE:     return RunStruct<FireType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::WATER:    return RunStruct<WaterType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::GRASS:    return RunStruct<GrassType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::ELECTRIC: return RunStruct<ElectricType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::PSYCHIC:  return RunStruct<PsychicType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::ICE:      return RunStruct<IceType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::DRAGON:   return RunStruct<DragonType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::DARK:     return RunStruct<DarkType, T...>::run(std::forward<RunArgs>(args)...);
+    case Type::FAIRY:    return RunStruct<FairyType, T...>::run(std::forward<RunArgs>(args)...);
     // Type::NO_TYPE will pass through here often, but should do nothing
     case Type::NO_TYPE: break;
 
     default: POKESIM_REQUIRE_FAIL("Using a tag for type that does not exist.");
   }
 
-  using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
+  using ReturnType = std::invoke_result_t<decltype(&RunStruct<NormalType, T...>::run), RunArgs...>;
   if constexpr (std::is_void_v<ReturnType>) {
     return;
   }
@@ -28221,7 +28221,7 @@ auto enumToTag(Move move, RunArgs&&... args) {
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for move that does not exist.");
-      using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<Transform, T...>::run), RunArgs...>;
       if constexpr (std::is_void_v<ReturnType>) {
         return;
       }

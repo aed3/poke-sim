@@ -53,7 +53,7 @@ auto enumToTag(Nature nature, RunArgs&&... args) {
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for nature that does not exist.");
-      using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<nature::tags::Hasty, T...>::run), RunArgs...>;
       if constexpr (std::is_void_v<ReturnType>) {
         return;
       }

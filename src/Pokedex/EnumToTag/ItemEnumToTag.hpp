@@ -45,7 +45,7 @@ auto enumToTag(Item item, RunArgs&&... args) {
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for item that does not exist.");
-      using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<LumBerry, T...>::run), RunArgs...>;
       if constexpr (std::is_void_v<ReturnType>) {
         return;
       }
