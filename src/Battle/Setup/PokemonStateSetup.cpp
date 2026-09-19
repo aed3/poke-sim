@@ -73,9 +73,6 @@ void PokemonStateSetup::setCurrentHp(types::stat hp) {
 
 void PokemonStateSetup::setTypes(SpeciesTypes types) {
   handle.emplace<SpeciesTypes>(types);
-  for (pokesim::dex::Type speciesType : types.val) {
-    dex::emplaceTagFromEnum(speciesType, handle);
-  }
 }
 
 void PokemonStateSetup::setLevel(types::level level) {

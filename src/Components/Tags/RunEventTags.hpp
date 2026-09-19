@@ -1,6 +1,6 @@
 #pragma once
 
 namespace pokesim::internal::tags {
-struct DisableMove {};
 struct EndItem {};
+struct ResetTrappedPokemon {};
 }  // namespace pokesim::internal::tags

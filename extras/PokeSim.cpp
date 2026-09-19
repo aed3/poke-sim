@@ -793,6 +793,11 @@ void check(const ChoiceLock& choiceLock) {
 }
 
 template <>
+void check(const Trapper& trapper, const types::registry& registry) {
+  checkPokemon(trapper.val, registry);
+}
+
+template <>
 void check(const Battle& battle, const types::registry& registry) {
   checkBattle(battle.val, registry);
 }
@@ -1274,8 +1279,10 @@ void check(const DoublesSideOptions& doublesSideOptions) {
   }
 
   // Not using the type's check function as that requires there to be a switch option.
-  for (Slot slot : doublesSideOptions.switches.val) {
-    checkInactiveSlot(slot);
+  for (const SwitchOptions& switches : doublesSideOptions.switches) {
+    for (Slot slot : switches.val) {
+      checkInactiveSlot(slot);
+    }
   }
 }
 
@@ -2247,7 +2254,7 @@ types::entityVector Simulation::pokemonEntities() const {
 
 ///////////////////// START OF src/Simulation/RunEvent.cpp /////////////////////
 
-// TODO(aed3) Autogenerate?
+// TODO(aed3): Autogenerate?
 
 namespace pokesim::internal {
 namespace {
@@ -2317,6 +2324,10 @@ void runDamagingHitEvent(Simulation& simulation) {
   pokesim::dex::RockyHelmet::onDamagingHit(simulation);
 }
 
+void runHitEvent(Simulation& simulation) {
+  pokesim::dex::SpiritShackle::targetSecondaryEffect::onHit(simulation);
+}
+
 void runAfterHitEvent(Simulation& simulation) {
   pokesim::dex::KnockOff::onAfterHit(simulation);
 }
@@ -2362,8 +2373,17 @@ void runModifyMove(Simulation& simulation) {
   pokesim::dex::KingsRock::onModifyMove(simulation);
 }
 
-void runDisableMove(Simulation& simulation) {
-  pokesim::dex::ChoiceLock::onDisableMove(simulation);
+void runResetDisabledMove(Simulation& simulation) {
+  pokesim::dex::ChoiceLock::onResetDisabledMove(simulation);
+}
+
+void runResetTrappedPokemon(Simulation& simulation) {
+  simulation.addToEntities<tags::ResetTrappedPokemon, tags::ActiveAtTurnEnd, pokesim::tags::Trapped>();
+  simulation.removeFromEntities<pokesim::tags::Trapped, tags::ActiveAtTurnEnd>();
+
+  pokesim::dex::Trapped::onResetTrappedPokemon(simulation);
+
+  simulation.removeFromEntities<tags::ResetTrappedPokemon>();
 }
 
 void runModifyAtk(Simulation&) {}
@@ -2421,7 +2441,11 @@ void runEndItemEvent(Simulation& simulation) {
 void runEndAbilityEvent(Simulation&) {}
 void runBeforeSwitchOutEvent(Simulation&) {}
 void runSwitchInEvent(Simulation&) {}
-void runSwitchOutEvent(Simulation&) {}
+
+void runSwitchOutEvent(Simulation& simulation) {
+  pokesim::dex::Trapper::onSwitchOut(simulation);
+}
+
 void runFaintEvent(Simulation&) {}
 void runAfterFaintEvent(Simulation&) {}
 }  // namespace pokesim::internal
@@ -2498,6 +2522,7 @@ void runMoveEffects(Simulation& simulation) {
   trySetWeatherFromEffect(simulation);
   trySetTerrainFromEffect(simulation);
   trySetPseudoWeatherFromEffect(simulation);
+  internal::runHitEvent(simulation);
 
   simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
 }
@@ -3042,9 +3067,8 @@ void nextTurn(Simulation& simulation) {
   if (!pokemonFilter.hasNoneSelected()) {
     pokemonFilter.removeFromSelected<DisabledMoveSlots>();
 
-    pokemonFilter.addToSelected<pokesim::internal::tags::DisableMove>();
-    internal::runDisableMove(simulation);
-    simulation.removeFromEntities<pokesim::internal::tags::DisableMove>();
+    internal::runResetDisabledMove(simulation);
+    internal::runResetTrappedPokemon(simulation);
 
     simulation.removeFromEntities<pokesim::internal::tags::ActiveAtTurnEnd>();
   }
@@ -3078,7 +3102,8 @@ void simulateTurn(Simulation& simulation) {
     }
   }
 
-  battleFilter.view<internal::assignRootBattle>();
+  battleFilter.removeFromSelected<TurnOutcomeBattles>();
+  battleFilter.view<internal::assignRootBattle, Tags<>, entt::exclude_t<RootBattle>>();
 
   internal::updateAllStats(simulation);
   simulation.view<internal::simulate_turn::resolveDecision, Tags<pokesim::tags::SimulateTurn>>();
@@ -3997,12 +4022,24 @@ void setDoublesMidTurnSideOptions(
 
 void setSinglesSwitchOptions(
   types::registry& registry, PlayerSide playerSide, const Team& team, SinglesSideOptions& sideOptions) {
+  if (registry.all_of<tags::Trapped>(team.val[0])) {
+    return;
+  }
+
   setSinglesMidTurnSideOptions(registry, playerSide, team, sideOptions.switches);
 }
 
-void setDoublesSwitchOptions(
-  types::registry& registry, PlayerSide playerSide, const Team& team, DoublesSideOptions& sideOptions) {
-  setDoublesMidTurnSideOptions(registry, playerSide, team, sideOptions.switches);
+void setDoublesSwitchOptions(types::handle handle, Side side) {
+  types::registry& registry = *handle.registry();
+  DoublesSideOptions& sideOptions = registry.get<DoublesSideOptions>(side.val);
+  const auto& [team, playerSide] = registry.get<Team, PlayerSide>(side.val);
+
+  POKESIM_REQUIRE(
+    handle.entity() == team.val[0U] || handle.entity() == team.val[1U],
+    "This entity must be in a valid active team slot.");
+  types::teamPositionIndex slotPosition = handle.entity() == team.val[0U] ? 0U : 1U;
+
+  setDoublesMidTurnSideOptions(registry, playerSide, team, sideOptions.switches[slotPosition]);
 }
 
 void setSinglesMoveOptions(types::handle handle, Side side, const MoveSlots& moveSlots, const Pokedex& pokedex) {
@@ -4028,6 +4065,7 @@ void setDoublesMoveOptions(types::handle handle, Side side, const MoveSlots& mov
     "This entity must be in a valid active team slot.");
   types::teamPositionIndex slotPosition = handle.entity() == team.val[0U] ? 0U : 1U;
   Slot sourceSlot = sideIdAndPositionToSlot(playerSide.val, slotPosition);
+
   Slot allySlot = Slot::NONE;
   types::sideSlots<Slot> foeSlots;
 
@@ -4087,14 +4125,15 @@ void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& sl
 
   if constexpr (std::is_base_of_v<MoveDecision, Decision>) {
     actionQueueItem.order = ActionOrder::MOVE;
-    actionQueueItem.priority = Constants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
-    actionQueueItem.fractionalPriority = false;                   // TODO (aed3): get fractionalPriority
+    actionQueueItem.priority = Constants::MovePriority::DEFAULT;  // TODO(aed3): Move priority + modify priority
+    actionQueueItem.fractionalPriority = false;                   // TODO(aed3): get fractionalPriority
 
     if constexpr (!std::is_same_v<MoveDecision, Decision>) {
       POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");
     }
   }
   else if constexpr (std::is_same_v<SwitchDecision, Decision>) {
+    POKESIM_REQUIRE(!registry.all_of<tags::Trapped>(sourceEntity), "Cannot switch while trapped.");
     actionQueueItem.order = ActionOrder::SWITCH;
   }
   else if constexpr (std::is_same_v<ItemDecision, Decision>) {
@@ -4128,8 +4167,10 @@ void setSideOptions(Simulation& simulation) {
   using WantsMidTurnOptions = pokesim::tags::BattleRequestingDecision;
   auto wantsRegularOptionsView = simulation.registry.view<pokesim::tags::Side>(entt::exclude_t<WantsMidTurnOptions>());
 
+  simulation.registry.clear<SwitchOptions>();
   simulation.addToEntities<SwitchOptions, WantsMidTurnOptions>();
   if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    simulation.registry.clear<SinglesSideOptions>();
     simulation.view<setSinglesMidTurnSideOptions, Tags<WantsMidTurnOptions>>();
 
     simulation.registry.insert<SinglesSideOptions>(wantsRegularOptionsView.begin(), wantsRegularOptionsView.end());
@@ -4138,12 +4179,16 @@ void setSideOptions(Simulation& simulation) {
     simulation.view<setSinglesSwitchOptions, Tags<pokesim::tags::Side>, entt::exclude_t<WantsMidTurnOptions>>();
   }
   else {
+    simulation.registry.clear<DoublesSideOptions>();
     simulation.view<setDoublesMidTurnSideOptions, Tags<WantsMidTurnOptions>>();
 
     simulation.registry.insert<DoublesSideOptions>(wantsRegularOptionsView.begin(), wantsRegularOptionsView.end());
     simulation.view<setDoublesMoveOptions, Tags<pokesim::tags::ActivePokemon>, entt::exclude_t<WantsMidTurnOptions>>(
       pokedex);
-    simulation.view<setDoublesSwitchOptions, Tags<pokesim::tags::Side>, entt::exclude_t<WantsMidTurnOptions>>();
+    simulation.view<
+      setDoublesSwitchOptions,
+      Tags<pokesim::tags::ActivePokemon>,
+      entt::exclude_t<WantsMidTurnOptions, pokesim::tags::Trapped>>();
   }
 }
 
@@ -5006,6 +5051,14 @@ void KnockOff::onAfterHit(Simulation& simulation) {
   internal::tryRemoveItem(simulation);
   simulation.removeFromEntities<tags::CanRemoveItem>();
 }
+
+void SpiritShackle::targetSecondaryEffect::onHit(Simulation& simulation) {
+  simulation.addToEntities<internal::tags::TryTrap, internal::tags::RunEffect, SpiritShackle>();
+
+  internal::tryTrap(simulation);
+
+  simulation.removeFromEntities<internal::tags::TryTrap>();
+}
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Events/MoveEvents.cpp ///////////////////
@@ -5290,6 +5343,14 @@ void choiceLockOnDisableMove(
 
   handle.get<DisabledMoveSlots>().val[choiceLocked.val] = true;
 }
+
+void trapperOnSwitchOut(types::handle handle, pokesim::Trapper trapper, Battle battle) {
+  types::entity source = handle.registry()->get<CurrentAction>(battle.val).source;
+  if (source == trapper.val) {
+    handle.remove<pokesim::Trapper>();
+    handle.remove<pokesim::tags::Trapped>();
+  }
+}
 }  // namespace
 
 void Burn::onSetDamageRollModifiers(Simulation& simulation) {
@@ -5332,13 +5393,13 @@ void ChoiceLock::onBeforeMove(Simulation& simulation) {
   choiceLockRemove(simulation);
 }
 
-void ChoiceLock::onDisableMove(Simulation& simulation) {
-  pokesim::internal::EntityFilter<internal::tags::DisableMove> filter{simulation};
+void ChoiceLock::onResetDisabledMove(Simulation& simulation) {
+  pokesim::internal::EntityFilter<internal::tags::ActiveAtTurnEnd> filter{simulation};
   if (filter.hasNoneSelected()) {
     return;
   }
 
-  choiceLockRemove<internal::tags::DisableMove>(simulation);
+  choiceLockRemove<internal::tags::ActiveAtTurnEnd>(simulation);
   filter.view<choiceLockOnDisableMove>();
 }
 
@@ -5350,6 +5411,19 @@ void Flinch::onBeforeMove(Simulation& simulation) {
 
 void Flinch::onResidual(Simulation& simulation) {
   simulation.removeFromEntities<tags::Flinch, tags::ActivePokemon>();
+}
+
+void Trapped::onResetTrappedPokemon(Simulation& simulation) {
+  pokesim::internal::EntityFilter<internal::tags::ResetTrappedPokemon> filter{simulation};
+  if (filter.hasNoneSelected()) {
+    return;
+  }
+
+  filter.view<internal::trap>(simulation.pokedex());
+}
+
+void Trapper::onSwitchOut(Simulation& simulation) {
+  simulation.view<trapperOnSwitchOut>();
 }
 }  // namespace pokesim::dex
 
@@ -6151,9 +6225,6 @@ void PokemonStateSetup::setCurrentHp(types::stat hp) {
 
 void PokemonStateSetup::setTypes(SpeciesTypes types) {
   handle.emplace<SpeciesTypes>(types);
-  for (pokesim::dex::Type speciesType : types.val) {
-    dex::emplaceTagFromEnum(speciesType, handle);
-  }
 }
 
 void PokemonStateSetup::setLevel(types::level level) {
@@ -6397,35 +6468,12 @@ void boost(Simulation& simulation) {
   runAfterEachBoostEvent<BoostType>(simulation);
 }
 
-template <typename Type>
-void checkTypeStatusImmunity(types::handle handle, CurrentEffectTarget target) {
-  if (handle.registry()->all_of<Type>(target.val)) {
-    handle.remove<pokesim::tags::CanSetStatus>();
-  }
-}
-
 template <typename StatusType>
 struct CheckIfStatusIsSettable {
   static void run(Simulation& simulation) {
     simulation.addToEntities<pokesim::tags::CanSetStatus, StatusType, CurrentEffectSource, CurrentEffectTarget>();
     simulation.view<checkIfTargetHasStatus, Tags<StatusType>>();
-    if constexpr (std::is_same_v<StatusType, pokesim::dex::Burn>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::FireType>, Tags<StatusType>>();
-    }
-    if constexpr (std::is_same_v<StatusType, pokesim::dex::Freeze>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::IceType>, Tags<StatusType>>();
-    }
-    if constexpr (std::is_same_v<StatusType, pokesim::dex::Paralysis>) {  // And simulation is using a mechanic
-                                                                          // where electric types cannot be
-                                                                          // paralyzed.
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::ElectricType>, Tags<StatusType>>();
-    }
-
-    if constexpr (std::is_same_v<StatusType, pokesim::dex::Poison> || std::is_same_v<StatusType, pokesim::dex::Toxic>) {
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::PoisonType>, Tags<StatusType>>();
-      simulation.view<checkTypeStatusImmunity<pokesim::dex::SteelType>, Tags<StatusType>>();
-    }
-
+    simulation.view<checkTypeStatusImmunity, Tags<StatusType>>(simulation.pokedex());
     runStatusImmunityEvent<StatusType>(simulation);
   }
 
@@ -6433,7 +6481,17 @@ struct CheckIfStatusIsSettable {
     if (handle.registry()->all_of<pokesim::tags::HasStatus>(target.val)) {
       handle.remove<pokesim::tags::CanSetStatus>();
     }
-  };
+  }
+
+  static void checkTypeStatusImmunity(types::handle handle, CurrentEffectTarget target, const Pokedex& pokedex) {
+    SpeciesTypes types = handle.registry()->get<SpeciesTypes>(target.val);
+    for (dex::Type type : types.val) {
+      if (pokedex.getStaticValue<StatusType::isTypeImmune>(type)) {
+        handle.remove<pokesim::tags::CanSetStatus>();
+        return;
+      }
+    }
+  }
 };
 
 template <typename StatusType>
@@ -6457,6 +6515,26 @@ struct SetEffectTargetStatus {
     }
   }
 };
+
+bool areTypesTrappedImmune(SpeciesTypes types, const Pokedex& pokedex) {
+  for (pokesim::dex::Type type : types.val) {
+    if (pokedex.getStaticValue<pokesim::dex::Trapped::isTypeImmune>(type)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void trapAndSetTrapper(
+  types::registry& registry, CurrentEffectSource source, CurrentEffectTarget target, const Pokedex& pokedex) {
+  if (areTypesTrappedImmune(registry.get<SpeciesTypes>(target.val), pokedex)) {
+    return;
+  }
+
+  registry.emplace<pokesim::tags::Trapped>(target.val);
+  registry.emplace<Trapper>(target.val, source.val);
+}
 
 void setSpeedSortNeeded(types::registry& registry, Battle battle) {
   registry.emplace_or_replace<pokesim::simulate_turn::tags::SpeedSortNeeded>(battle.val);
@@ -6551,7 +6629,7 @@ void clearVolatiles(types::handle pokemonHandle) {
   pokemonHandle.remove<LastUsedMove>();
 
   // TODO(aed3): Make autogenerated
-  pokemonHandle.remove<ChoiceLock, pokesim::tags::Flinch>();
+  pokemonHandle.remove<ChoiceLock, Trapper, pokesim::tags::Flinch, pokesim::tags::Trapped>();
 }
 
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
@@ -6565,7 +6643,7 @@ void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
 }
 
 void setLastMoveUsed(types::registry& registry, CurrentAction& source, CurrentActionMoveSlot move) {
-  registry.emplace<LastUsedMove>(source.source, move.val);
+  registry.emplace_or_replace<LastUsedMove>(source.source, move.val);
 }
 
 void faint(types::handle handle, Battle battle) {
@@ -6616,6 +6694,18 @@ void tryBoost(Simulation& simulation) {
   boost<SpdBoost, pokesim::tags::SpdStatUpdateRequired>(simulation);
   boost<SpeBoost, pokesim::tags::SpeStatUpdateRequired>(simulation);
   runAfterBoostEvent(simulation);
+}
+
+void tryTrap(Simulation& simulation) {
+  simulation.view<trapAndSetTrapper, Tags<tags::TryTrap>>(simulation.pokedex());
+}
+
+void trap(types::handle handle, SpeciesTypes types, const Pokedex& pokedex) {
+  if (areTypesTrappedImmune(types, pokedex)) {
+    return;
+  }
+
+  handle.emplace<pokesim::tags::Trapped>();
 }
 
 void updateAllStats(Simulation& simulation) {
@@ -7386,6 +7476,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<Side>(registry, entityMap);
   remapComponentEntities<Sides>(registry, entityMap);
   remapComponentEntities<Team>(registry, entityMap);
+  remapComponentEntities<Trapper>(registry, entityMap);
   remapCurrentAction(registry, entityMap);
 
   registry.clear<CloneTo, tags::CloneFrom>();

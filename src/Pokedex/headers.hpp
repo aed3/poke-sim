@@ -30,6 +30,8 @@
 #include "Effects/Poison.hpp"
 #include "Effects/Sleep.hpp"
 #include "Effects/Toxic.hpp"
+#include "Effects/Trapped.hpp"
+#include "Effects/Trapper.hpp"
 #include "EnumToTag/AbilityEnumToTag.hpp"
 #include "EnumToTag/AbilityPropertyEnumToTag.hpp"
 #include "EnumToTag/ItemEnumToTag.hpp"

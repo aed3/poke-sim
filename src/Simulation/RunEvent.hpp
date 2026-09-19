@@ -23,6 +23,7 @@ void runAfterModifyDamageEvent(Simulation& simulation);
 void runDamageEvent(Simulation& simulation);
 void runModifySecondariesEvent(Simulation& simulation);
 void runDamagingHitEvent(Simulation& simulation);
+void runHitEvent(Simulation& simulation);
 void runAfterHitEvent(Simulation& simulation);
 void runAfterMoveUsedEvent(Simulation& simulation);  // AfterMoveSecondarySelf
 
@@ -37,7 +38,8 @@ void runAfterEachBoostEvent(Simulation& simulation);
 void runAfterBoostEvent(Simulation& simulation);
 void runModifyTarget(Simulation& simulation);  // onModifyMove for Curse and Expanding force should go here
 void runModifyMove(Simulation& simulation);
-void runDisableMove(Simulation& simulation);
+void runResetDisabledMove(Simulation& simulation);
+void runResetTrappedPokemon(Simulation& simulation);
 
 void runModifyAtk(Simulation& simulation);
 void runModifyDef(Simulation& simulation);

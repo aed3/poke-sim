@@ -32,6 +32,7 @@ struct Evs;
 struct Ivs;
 struct AddedFlinchChance;
 struct ChoiceLock;
+struct Trapper;
 struct Battle;
 struct ParentBattle;
 struct RootBattle;
@@ -270,6 +271,9 @@ void check(const AddedFlinchChance&);
 
 template <>
 void check(const ChoiceLock&);
+
+template <>
+void check(const Trapper&, const types::registry&);
 
 template <>
 void check(const Battle&, const types::registry&);

@@ -97,6 +97,7 @@ void runMoveEffects(Simulation& simulation) {
   trySetWeatherFromEffect(simulation);
   trySetTerrainFromEffect(simulation);
   trySetPseudoWeatherFromEffect(simulation);
+  internal::runHitEvent(simulation);
 
   simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
 }

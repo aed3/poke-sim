@@ -9,6 +9,8 @@ enum class Volatile : std::uint8_t {
   ALLY_SWITCH,
   CHOICE_LOCK,
   FLINCH,
+  TRAPPED,
+  TRAPPER,
   VOLATILE_TOTAL
   // clang-format on
 };

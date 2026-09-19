@@ -2,6 +2,7 @@
 
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Status.hpp>
+#include <Types/Enums/Type.hpp>
 #include <Types/Random.hpp>
 #include <Types/Stats.hpp>
 #include <string_view>
@@ -12,7 +13,9 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Paralysis {
-  static constexpr Status name(GameMechanics = {}) { return dex::Status::PAR; }
+  static constexpr Status name(GameMechanics = {}) { return Status::PAR; }
+
+  static constexpr bool isTypeImmune(GameMechanics, Type type) { return type == Type::ELECTRIC; }
 
   static constexpr types::stat speedDividend(GameMechanics) { return 50U; }
   static constexpr types::stat speedDivisor(GameMechanics) { return 100U; }

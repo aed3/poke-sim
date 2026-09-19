@@ -10,3 +10,5 @@
 #include "Poison.hpp"
 #include "Sleep.hpp"
 #include "Toxic.hpp"
+#include "Trapped.hpp"
+#include "Trapper.hpp"
