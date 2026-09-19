@@ -105,13 +105,15 @@ let newFile = `# Benchmarks
 `;
 
 console.time('Benchmark Time');
-const benchmarkProcess = exec('./build/benchmark-release/bin/PokeSimBenchmarks', {cwd: getFullPath()}, (error) => {
-  console.timeEnd('Benchmark Time');
-  if (!error) {
-    fs.writeFileSync(benchmarkFilePath, newFile);
-  }
-  console.timeEnd('Total Time');
-});
+const benchmarkProcess = exec('./build/benchmark-release/bin/PokeSimBenchmarks ' + process.argv.slice(2).join(' '),
+  {cwd: getFullPath()},
+  (error) => {
+    console.timeEnd('Benchmark Time');
+    if (!error) {
+      fs.writeFileSync(benchmarkFilePath, newFile);
+    }
+    console.timeEnd('Total Time');
+  });
 
 const current = {
   test: {},
