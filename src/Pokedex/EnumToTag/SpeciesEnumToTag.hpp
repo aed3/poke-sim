@@ -45,7 +45,7 @@ auto enumToTag(Species species, RunArgs&&... args) {
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for species that does not exist.");
-      using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<Ditto, T...>::run), RunArgs...>;
       if constexpr (std::is_void_v<ReturnType>) {
         return;
       }

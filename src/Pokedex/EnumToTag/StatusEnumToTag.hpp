@@ -26,16 +26,16 @@ namespace pokesim::dex {
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
 auto enumToTag(Status status, RunArgs&&... args) {
   switch (status) {
-    case Status::BRN: return RunStruct<dex::Burn, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::FRZ: return RunStruct<dex::Freeze, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::PAR: return RunStruct<dex::Paralysis, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::PSN: return RunStruct<dex::Poison, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::SLP: return RunStruct<dex::Sleep, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::TOX: return RunStruct<dex::Toxic, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::BRN: return RunStruct<Burn, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::FRZ: return RunStruct<Freeze, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::PAR: return RunStruct<Paralysis, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::PSN: return RunStruct<Poison, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::SLP: return RunStruct<Sleep, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::TOX: return RunStruct<Toxic, T...>::run(std::forward<RunArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for status that does not exist.");
-      using ReturnType = std::invoke_result_t<decltype(&RunStruct<void, T...>::run), RunArgs...>;
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<Sleep, T...>::run), RunArgs...>;
       if constexpr (std::is_void_v<ReturnType>) {
         return;
       }
