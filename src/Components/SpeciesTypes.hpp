@@ -25,12 +25,13 @@ struct SpeciesTypes {
   }
 
   constexpr types::speciesTypeIndex size() const {
-    for (types::speciesTypeIndex i = 0; i < Constants::TYPES_PER_POKEMON; i++) {
-      if (val[i] == dex::Type::NO_TYPE) {
-        return i;
+    types::speciesTypeIndex typeCount = 0;
+    for (; typeCount < Constants::TYPES_PER_POKEMON; typeCount++) {
+      if (val[typeCount] == dex::Type::NO_TYPE) {
+        return typeCount;
       }
     }
-    return Constants::TYPES_PER_POKEMON;
+    return typeCount;
   }
 
   constexpr bool operator==(const SpeciesTypes& other) const {

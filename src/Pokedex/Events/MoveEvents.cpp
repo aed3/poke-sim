@@ -2,9 +2,11 @@
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/Names/ItemNames.hpp>
+#include <Components/SimulateTurn/MoveHitStepTags.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/Selection.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Enums/GameMechanics.hpp>
@@ -55,5 +57,13 @@ void KnockOff::onAfterHit(Simulation& simulation) {
   simulation.view<knockOffOnAfterHitCheckRemovableItem, Tags<KnockOff, tags::CurrentMoveHit>>();
   internal::tryRemoveItem(simulation);
   simulation.removeFromEntities<tags::CanRemoveItem>();
+}
+
+void SpiritShackle::targetSecondaryEffect::onHit(Simulation& simulation) {
+  simulation.addToEntities<internal::tags::TryTrap, internal::tags::RunEffect, SpiritShackle>();
+
+  internal::tryTrap(simulation);
+
+  simulation.removeFromEntities<internal::tags::TryTrap>();
 }
 }  // namespace pokesim::dex

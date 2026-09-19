@@ -21,6 +21,7 @@
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
+#include <Components/Tags/VolatileTags.hpp>
 #include <Components/Turn.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
@@ -125,12 +126,24 @@ void setDoublesMidTurnSideOptions(
 
 void setSinglesSwitchOptions(
   types::registry& registry, PlayerSide playerSide, const Team& team, SinglesSideOptions& sideOptions) {
+  if (registry.all_of<tags::Trapped>(team.val[0])) {
+    return;
+  }
+
   setSinglesMidTurnSideOptions(registry, playerSide, team, sideOptions.switches);
 }
 
-void setDoublesSwitchOptions(
-  types::registry& registry, PlayerSide playerSide, const Team& team, DoublesSideOptions& sideOptions) {
-  setDoublesMidTurnSideOptions(registry, playerSide, team, sideOptions.switches);
+void setDoublesSwitchOptions(types::handle handle, Side side) {
+  types::registry& registry = *handle.registry();
+  DoublesSideOptions& sideOptions = registry.get<DoublesSideOptions>(side.val);
+  const auto& [team, playerSide] = registry.get<Team, PlayerSide>(side.val);
+
+  POKESIM_REQUIRE(
+    handle.entity() == team.val[0U] || handle.entity() == team.val[1U],
+    "This entity must be in a valid active team slot.");
+  types::teamPositionIndex slotPosition = handle.entity() == team.val[0U] ? 0U : 1U;
+
+  setDoublesMidTurnSideOptions(registry, playerSide, team, sideOptions.switches[slotPosition]);
 }
 
 void setSinglesMoveOptions(types::handle handle, Side side, const MoveSlots& moveSlots, const Pokedex& pokedex) {
@@ -156,6 +169,7 @@ void setDoublesMoveOptions(types::handle handle, Side side, const MoveSlots& mov
     "This entity must be in a valid active team slot.");
   types::teamPositionIndex slotPosition = handle.entity() == team.val[0U] ? 0U : 1U;
   Slot sourceSlot = sideIdAndPositionToSlot(playerSide.val, slotPosition);
+
   Slot allySlot = Slot::NONE;
   types::sideSlots<Slot> foeSlots;
 
@@ -215,14 +229,15 @@ void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& sl
 
   if constexpr (std::is_base_of_v<MoveDecision, Decision>) {
     actionQueueItem.order = ActionOrder::MOVE;
-    actionQueueItem.priority = Constants::MovePriority::DEFAULT;  // TODO (aed3): Move priority + modify priority
-    actionQueueItem.fractionalPriority = false;                   // TODO (aed3): get fractionalPriority
+    actionQueueItem.priority = Constants::MovePriority::DEFAULT;  // TODO(aed3): Move priority + modify priority
+    actionQueueItem.fractionalPriority = false;                   // TODO(aed3): get fractionalPriority
 
     if constexpr (!std::is_same_v<MoveDecision, Decision>) {
       POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");
     }
   }
   else if constexpr (std::is_same_v<SwitchDecision, Decision>) {
+    POKESIM_REQUIRE(!registry.all_of<tags::Trapped>(sourceEntity), "Cannot switch while trapped.");
     actionQueueItem.order = ActionOrder::SWITCH;
   }
   else if constexpr (std::is_same_v<ItemDecision, Decision>) {
@@ -256,8 +271,10 @@ void setSideOptions(Simulation& simulation) {
   using WantsMidTurnOptions = pokesim::tags::BattleRequestingDecision;
   auto wantsRegularOptionsView = simulation.registry.view<pokesim::tags::Side>(entt::exclude_t<WantsMidTurnOptions>());
 
+  simulation.registry.clear<SwitchOptions>();
   simulation.addToEntities<SwitchOptions, WantsMidTurnOptions>();
   if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    simulation.registry.clear<SinglesSideOptions>();
     simulation.view<setSinglesMidTurnSideOptions, Tags<WantsMidTurnOptions>>();
 
     simulation.registry.insert<SinglesSideOptions>(wantsRegularOptionsView.begin(), wantsRegularOptionsView.end());
@@ -266,12 +283,16 @@ void setSideOptions(Simulation& simulation) {
     simulation.view<setSinglesSwitchOptions, Tags<pokesim::tags::Side>, entt::exclude_t<WantsMidTurnOptions>>();
   }
   else {
+    simulation.registry.clear<DoublesSideOptions>();
     simulation.view<setDoublesMidTurnSideOptions, Tags<WantsMidTurnOptions>>();
 
     simulation.registry.insert<DoublesSideOptions>(wantsRegularOptionsView.begin(), wantsRegularOptionsView.end());
     simulation.view<setDoublesMoveOptions, Tags<pokesim::tags::ActivePokemon>, entt::exclude_t<WantsMidTurnOptions>>(
       pokedex);
-    simulation.view<setDoublesSwitchOptions, Tags<pokesim::tags::Side>, entt::exclude_t<WantsMidTurnOptions>>();
+    simulation.view<
+      setDoublesSwitchOptions,
+      Tags<pokesim::tags::ActivePokemon>,
+      entt::exclude_t<WantsMidTurnOptions, pokesim::tags::Trapped>>();
   }
 }
 

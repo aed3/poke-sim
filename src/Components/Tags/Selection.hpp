@@ -6,4 +6,5 @@ struct ApplySideDamageRollOptions {};
 struct BuildActionMove {};
 struct BuildPokedexMove {};
 struct CloneFromDamageRolls {};
+struct TryTrap {};
 }  // namespace pokesim::internal::tags

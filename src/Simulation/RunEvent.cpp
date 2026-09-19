@@ -15,6 +15,8 @@
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
+#include <Components/Tags/Selection.hpp>
+#include <Components/Tags/VolatileTags.hpp>
 #include <Pokedex/Abilities/headers.hpp>
 #include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/Items/headers.hpp>
@@ -26,7 +28,7 @@
 
 #include "Simulation.hpp"
 
-// TODO(aed3) Autogenerate?
+// TODO(aed3): Autogenerate?
 
 namespace pokesim::internal {
 namespace {
@@ -96,6 +98,10 @@ void runDamagingHitEvent(Simulation& simulation) {
   pokesim::dex::RockyHelmet::onDamagingHit(simulation);
 }
 
+void runHitEvent(Simulation& simulation) {
+  pokesim::dex::SpiritShackle::targetSecondaryEffect::onHit(simulation);
+}
+
 void runAfterHitEvent(Simulation& simulation) {
   pokesim::dex::KnockOff::onAfterHit(simulation);
 }
@@ -141,8 +147,17 @@ void runModifyMove(Simulation& simulation) {
   pokesim::dex::KingsRock::onModifyMove(simulation);
 }
 
-void runDisableMove(Simulation& simulation) {
-  pokesim::dex::ChoiceLock::onDisableMove(simulation);
+void runResetDisabledMove(Simulation& simulation) {
+  pokesim::dex::ChoiceLock::onResetDisabledMove(simulation);
+}
+
+void runResetTrappedPokemon(Simulation& simulation) {
+  simulation.addToEntities<tags::ResetTrappedPokemon, tags::ActiveAtTurnEnd, pokesim::tags::Trapped>();
+  simulation.removeFromEntities<pokesim::tags::Trapped, tags::ActiveAtTurnEnd>();
+
+  pokesim::dex::Trapped::onResetTrappedPokemon(simulation);
+
+  simulation.removeFromEntities<tags::ResetTrappedPokemon>();
 }
 
 void runModifyAtk(Simulation&) {}
@@ -200,7 +215,11 @@ void runEndItemEvent(Simulation& simulation) {
 void runEndAbilityEvent(Simulation&) {}
 void runBeforeSwitchOutEvent(Simulation&) {}
 void runSwitchInEvent(Simulation&) {}
-void runSwitchOutEvent(Simulation&) {}
+
+void runSwitchOutEvent(Simulation& simulation) {
+  pokesim::dex::Trapper::onSwitchOut(simulation);
+}
+
 void runFaintEvent(Simulation&) {}
 void runAfterFaintEvent(Simulation&) {}
 }  // namespace pokesim::internal

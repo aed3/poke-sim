@@ -108,6 +108,12 @@ struct TestChecks : debug::Checks {
     REQUIRE(lastUsedMove.val == usedMoveSlot);
   }
 
+  void reset() {
+    registryOnInput.clear();
+    currentEntitiesToInitial.clear();
+    specificallyChecked.clear();
+  }
+
   TestChecks(const Simulation& _simulation) : debug::Checks(_simulation) {}
 };
 
@@ -117,12 +123,23 @@ struct TestSimulation {
   using IvsInfo = decltype(PokemonCreationInfo::ivs);
   using StatsInfo = decltype(PokemonCreationInfo::stats);
   using CurrentBoostsInfo = decltype(PokemonCreationInfo::currentBoosts);
+  bool simulationInitialized = false;
 
  public:
   Pokedex pokedex;
   Simulation simulation;
   std::vector<BattleCreationInfo> battleInfoList;
   TestChecks checks;
+
+  struct BattleEntities {
+    types::entity battle;
+    types::entity p1Side;
+    types::entity p2Side;
+    types::entity p1A;
+    types::entity p1B;
+    types::entity p2A;
+    types::entity p2B;
+  };
 
   TestSimulation(GameMechanics mechanics, BattleFormat battleFormat)
       : pokedex(mechanics), simulation(pokedex, battleFormat), checks(simulation) {
@@ -136,9 +153,9 @@ struct TestSimulation {
   simulate_turn::Options& simulateTurnOptions() { return simulation.simulateTurnOptions; }
   calc_damage::Options& calcDamageOptions() { return simulation.calculateDamageOptions; }
   analyze_effect::Options& analyzeEffectOptions() { return simulation.analyzeEffectOptions; }
-  template <auto DataFunction>
-  auto dexValue() {
-    return pokedex.getStaticValue<DataFunction>();
+  template <auto DataFunction, typename... Args>
+  auto dexValue(Args&&... args) {
+    return pokedex.getStaticValue<DataFunction>(std::forward<Args>(args)...);
   }
 
   template <typename... Types>
@@ -272,16 +289,8 @@ struct TestSimulation {
     return slotToPokemonEntity(registry(), registry().get<Sides>(battleEntity), slot);
   }
 
-  auto getBattleEntities(types::entity battleEntity) {
-    struct {
-      types::entity battle;
-      types::entity p1Side;
-      types::entity p2Side;
-      types::entity p1A;
-      types::entity p1B;
-      types::entity p2A;
-      types::entity p2B;
-    } entities{battleEntity};
+  BattleEntities getBattleEntities(types::entity battleEntity) {
+    BattleEntities entities{battleEntity};
 
     auto sides = registry().get<Sides>(battleEntity).val;
     entities.p1Side = sides.p1();
@@ -301,12 +310,15 @@ struct TestSimulation {
     simulation.registry.clear();
     pokedex.loadForBattleInfo(battleInfoList);
     simulation.createInitialStates(battleInfoList);
+    simulationInitialized = true;
   }
 
   template <typename... BattleTypesToIgnore, typename... SideTypesToIgnore>
   simulate_turn::Results simulateTurn(Tags<BattleTypesToIgnore...> = {}, Tags<SideTypesToIgnore...> = {}) {
-    initializeSimulation();
+    if (!simulationInitialized) initializeSimulation();
+    checks.reset();
     checks.copyRemainingEntities();
+
     simulate_turn::Results results = simulation.simulateTurn();
 
     checks.checkPostSimulateTurnBattles<BattleTypesToIgnore...>();
@@ -316,12 +328,12 @@ struct TestSimulation {
   }
 
   calc_damage::Results calculateDamage() {
-    initializeSimulation();
+    if (!simulationInitialized) initializeSimulation();
     return simulation.calculateDamage();
   }
 
   analyze_effect::Results analyzeEffect() {
-    initializeSimulation();
+    if (!simulationInitialized) initializeSimulation();
     return simulation.analyzeEffect();
   }
 
@@ -344,6 +356,12 @@ struct TestSimulation {
     REQUIRE(turnOutcomeBattles.size() == 1U);
 
     return getBattleEntities(turnOutcomeBattles[0]);
+  }
+
+  void applyDecision(types::entity battle, TurnDecisionInfo turnDecision) {
+    Sides sides = registry().get<Sides>(battle);
+    registry().emplace<SideDecision>(sides.val.at(PlayerSideId::P1), turnDecision.at(PlayerSideId::P1));
+    registry().emplace<SideDecision>(sides.val.at(PlayerSideId::P2), turnDecision.at(PlayerSideId::P2));
   }
 
  private:

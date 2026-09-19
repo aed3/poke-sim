@@ -118,6 +118,7 @@
  * src/Components/EVsIVs.hpp
  * src/Components/Effects/AddedFlinchChance.hpp
  * src/Components/Effects/ChoiceLock.hpp
+ * src/Components/Effects/Trapper.hpp
  * src/Components/EntityHolders/FaintQueue.hpp
  * src/Components/EntityHolders/FoeSide.hpp
  * src/Components/EntityHolders/RecycledEntities.hpp
@@ -188,6 +189,8 @@
  * src/Pokedex/Effects/Poison.hpp
  * src/Pokedex/Effects/Sleep.hpp
  * src/Pokedex/Effects/Toxic.hpp
+ * src/Pokedex/Effects/Trapped.hpp
+ * src/Pokedex/Effects/Trapper.hpp
  * src/Pokedex/EnumToTag/StatusEnumToTag.hpp
  * src/Types/Enums/AbilityProperty.hpp
  * src/Types/Enums/BattleFormat.hpp
@@ -18722,6 +18725,8 @@ enum class Volatile : std::uint8_t {
   ALLY_SWITCH,
   CHOICE_LOCK,
   FLINCH,
+  TRAPPED,
+  TRAPPER,
   VOLATILE_TOTAL
   // clang-format on
 };
@@ -19746,6 +19751,16 @@ struct ChoiceLock {
 
 ///////////////// END OF src/Components/Effects/ChoiceLock.hpp /////////////////
 
+///////////////// START OF src/Components/Effects/Trapper.hpp //////////////////
+
+namespace pokesim {
+struct Trapper {
+  types::entity val{};
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/Effects/Trapper.hpp ///////////////////
+
 ///////////// START OF src/Components/EntityHolders/FaintQueue.hpp /////////////
 
 namespace pokesim {
@@ -20339,8 +20354,8 @@ struct SinglesSideOptions {
 };
 
 struct DoublesSideOptions {
-  types::sideSlots<types::moveSlots<DoublesMoveOption>> moves{moves.max_size(), {}};
-  SwitchOptions switches;
+  std::array<types::moveSlots<DoublesMoveOption>, Constants::ActivePokemonSlotsPerSide::DOUBLES> moves;
+  std::array<SwitchOptions, Constants::ActivePokemonSlotsPerSide::DOUBLES> switches;
 
   bool operator==(const DoublesSideOptions& other) const { return moves == other.moves && switches == other.switches; }
 };
@@ -20552,12 +20567,13 @@ struct SpeciesTypes {
   }
 
   constexpr types::speciesTypeIndex size() const {
-    for (types::speciesTypeIndex i = 0; i < Constants::TYPES_PER_POKEMON; i++) {
-      if (val[i] == dex::Type::NO_TYPE) {
-        return i;
+    types::speciesTypeIndex typeCount = 0;
+    for (; typeCount < Constants::TYPES_PER_POKEMON; typeCount++) {
+      if (val[typeCount] == dex::Type::NO_TYPE) {
+        return typeCount;
       }
     }
-    return Constants::TYPES_PER_POKEMON;
+    return typeCount;
   }
 
   constexpr bool operator==(const SpeciesTypes& other) const {
@@ -20783,8 +20799,8 @@ struct AddedRecycledActionMove2 {};
 //////////////// START OF src/Components/Tags/RunEventTags.hpp /////////////////
 
 namespace pokesim::internal::tags {
-struct DisableMove {};
 struct EndItem {};
+struct ResetTrappedPokemon {};
 }  // namespace pokesim::internal::tags
 
 ///////////////// END OF src/Components/Tags/RunEventTags.hpp //////////////////
@@ -20797,6 +20813,7 @@ struct ApplySideDamageRollOptions {};
 struct BuildActionMove {};
 struct BuildPokedexMove {};
 struct CloneFromDamageRolls {};
+struct TryTrap {};
 }  // namespace pokesim::internal::tags
 
 /////////////////// END OF src/Components/Tags/Selection.hpp ///////////////////
@@ -20878,6 +20895,7 @@ struct Fairy {};
 
 namespace pokesim::tags {
 struct Flinch {};
+struct Trapped {};
 }  // namespace pokesim::tags
 
 ///////////////// END OF src/Components/Tags/VolatileTags.hpp //////////////////
@@ -20911,10 +20929,13 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Burn {
-  static constexpr Status name(GameMechanics = {}) { return dex::Status::BRN; }
+  static constexpr Status name(GameMechanics = {}) { return Status::BRN; }
+
+  static constexpr bool isTypeImmune(GameMechanics, Type type) { return type == Type::FIRE; }
 
   static constexpr types::effectMultiplier physicalDamageMultiplier(GameMechanics) { return 0.5F; }
   static constexpr types::stat onResidualHpDecreaseDivisor(GameMechanics) { return 16U; }
+
   struct Strings {
     static constexpr std::string_view name() { return "Burn"; }
     static constexpr std::string_view smogonId() { return "brn"; }
@@ -20935,7 +20956,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct ChoiceLock {
-  static constexpr Volatile name(GameMechanics = {}) { return dex::Volatile::CHOICE_LOCK; }
+  static constexpr Volatile name(GameMechanics = {}) { return Volatile::CHOICE_LOCK; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Choice Lock"; }
@@ -20943,7 +20964,7 @@ struct ChoiceLock {
   };
 
   static void onBeforeMove(Simulation& simulation);
-  static void onDisableMove(Simulation& simulation);
+  static void onResetDisabledMove(Simulation& simulation);
 };
 }  // namespace pokesim::dex
 
@@ -20957,7 +20978,7 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Flinch {
-  static constexpr Volatile name(GameMechanics = {}) { return dex::Volatile::FLINCH; }
+  static constexpr Volatile name(GameMechanics = {}) { return Volatile::FLINCH; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Flinch"; }
@@ -20980,7 +21001,9 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Freeze {
-  static constexpr Status name(GameMechanics = {}) { return dex::Status::FRZ; }
+  static constexpr Status name(GameMechanics = {}) { return Status::FRZ; }
+
+  static constexpr bool isTypeImmune(GameMechanics, Type type) { return type == Type::ICE; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Freeze"; }
@@ -21005,7 +21028,9 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Paralysis {
-  static constexpr Status name(GameMechanics = {}) { return dex::Status::PAR; }
+  static constexpr Status name(GameMechanics = {}) { return Status::PAR; }
+
+  static constexpr bool isTypeImmune(GameMechanics, Type type) { return type == Type::ELECTRIC; }
 
   static constexpr types::stat speedDividend(GameMechanics) { return 50U; }
   static constexpr types::stat speedDivisor(GameMechanics) { return 100U; }
@@ -21032,7 +21057,9 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Poison {
-  static constexpr Status name(GameMechanics = {}) { return dex::Status::PSN; }
+  static constexpr Status name(GameMechanics = {}) { return Status::PSN; }
+
+  static constexpr bool isTypeImmune(GameMechanics, Type type) { return type == Type::POISON || type == Type::STEEL; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Poison"; }
@@ -21054,7 +21081,9 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Sleep {
-  static constexpr Status name(GameMechanics = {}) { return dex::Status::SLP; }
+  static constexpr Status name(GameMechanics = {}) { return Status::SLP; }
+
+  static constexpr bool isTypeImmune(GameMechanics, Type) { return false; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Sleep"; }
@@ -21076,7 +21105,9 @@ class Simulation;
 
 namespace pokesim::dex {
 struct Toxic {
-  static constexpr Status name(GameMechanics = {}) { return dex::Status::TOX; }
+  static constexpr Status name(GameMechanics = {}) { return Status::TOX; }
+
+  static constexpr bool isTypeImmune(GameMechanics, Type type) { return type == Type::POISON || type == Type::STEEL; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Toxic"; }
@@ -21090,6 +21121,50 @@ struct Toxic {
 }  // namespace pokesim::dex
 
 ///////////////////// END OF src/Pokedex/Effects/Toxic.hpp /////////////////////
+
+/////////////////// START OF src/Pokedex/Effects/Trapped.hpp ///////////////////
+
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
+
+namespace pokesim::dex {
+struct Trapped {
+  static constexpr Volatile name(GameMechanics = {}) { return Volatile::TRAPPED; }
+
+  static constexpr bool isTypeImmune(GameMechanics, Type type) { return type == Type::GHOST; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Trapped"; }
+    static constexpr std::string_view smogonId() { return "trapped"; }
+  };
+
+  static void onResetTrappedPokemon(Simulation& simulation);
+};
+}  // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Effects/Trapped.hpp ////////////////////
+
+/////////////////// START OF src/Pokedex/Effects/Trapper.hpp ///////////////////
+
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
+
+namespace pokesim::dex {
+struct Trapper {
+  static constexpr Volatile name(GameMechanics = {}) { return Volatile::TRAPPER; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Trapper"; }
+    static constexpr std::string_view smogonId() { return "trapper"; }
+  };
+
+  static void onSwitchOut(Simulation& simulation);
+};
+}  // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Effects/Trapper.hpp ////////////////////
 
 ////////////// START OF src/Pokedex/EnumToTag/StatusEnumToTag.hpp //////////////
 
@@ -21614,6 +21689,7 @@ struct Evs;
 struct Ivs;
 struct AddedFlinchChance;
 struct ChoiceLock;
+struct Trapper;
 struct Battle;
 struct ParentBattle;
 struct RootBattle;
@@ -21852,6 +21928,9 @@ void check(const AddedFlinchChance&);
 
 template <>
 void check(const ChoiceLock&);
+
+template <>
+void check(const Trapper&, const types::registry&);
 
 template <>
 void check(const Battle&, const types::registry&);
@@ -22663,6 +22742,7 @@ struct CurrentActionMoveSlot;
 struct Damage;
 struct LastUsedMove;
 struct MoveSlots;
+struct SpeciesTypes;
 
 namespace stat {
 struct Atk;
@@ -22700,6 +22780,9 @@ void applyDamage(types::handle handle, types::damage damage);
 void applyStatBoost(types::stat& stat, types::boost boost);
 
 void tryBoost(Simulation& simulation);
+
+void tryTrap(Simulation& simulation);
+void trap(types::handle handle, SpeciesTypes types, const Pokedex& pokedex);
 
 void updateAllStats(Simulation& simulation);
 void updateAtk(Simulation& simulation, bool ignoreBoosts);
@@ -23806,9 +23889,9 @@ class Pokedex {
     }
     constexpr const TypeChart& typeChart() const { return typeChartValue; }
 
-    template <auto DataFunction>
-    constexpr auto getStaticValue() const {
-      return DataFunction(gameMechanicValue);
+    template <auto DataFunction, typename... Args>
+    constexpr auto getStaticValue(Args&&... args) const {
+      return DataFunction(gameMechanicValue, std::forward<Args>(args)...);
     }
 
    private:
@@ -23874,9 +23957,9 @@ class Pokedex {
     return constants.isGameMechanic(checkedMechanics);
   }
   constexpr const TypeChart& typeChart() const { return constants.typeChart(); }
-  template <auto DataFunction>
-  constexpr auto getStaticValue() const {
-    return constants.getStaticValue<DataFunction>();
+  template <auto DataFunction, typename... Args>
+  constexpr auto getStaticValue(Args&&... args) const {
+    return constants.getStaticValue<DataFunction>(std::forward<Args>(args)...);
   }
 
   /**
@@ -26935,6 +27018,7 @@ void runAfterModifyDamageEvent(Simulation& simulation);
 void runDamageEvent(Simulation& simulation);
 void runModifySecondariesEvent(Simulation& simulation);
 void runDamagingHitEvent(Simulation& simulation);
+void runHitEvent(Simulation& simulation);
 void runAfterHitEvent(Simulation& simulation);
 void runAfterMoveUsedEvent(Simulation& simulation);  // AfterMoveSecondarySelf
 
@@ -26949,7 +27033,8 @@ void runAfterEachBoostEvent(Simulation& simulation);
 void runAfterBoostEvent(Simulation& simulation);
 void runModifyTarget(Simulation& simulation);  // onModifyMove for Curse and Expanding force should go here
 void runModifyMove(Simulation& simulation);
-void runDisableMove(Simulation& simulation);
+void runResetDisabledMove(Simulation& simulation);
+void runResetTrappedPokemon(Simulation& simulation);
 
 void runModifyAtk(Simulation& simulation);
 void runModifyDef(Simulation& simulation);

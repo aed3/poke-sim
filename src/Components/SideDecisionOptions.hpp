@@ -1,8 +1,10 @@
 #pragma once
 
+#include <Types/Constants.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/Slot.hpp>
 #include <Types/State.hpp>
+#include <array>
 
 namespace pokesim {
 struct SinglesMoveOption {
@@ -35,8 +37,8 @@ struct SinglesSideOptions {
 };
 
 struct DoublesSideOptions {
-  types::sideSlots<types::moveSlots<DoublesMoveOption>> moves{moves.max_size(), {}};
-  SwitchOptions switches;
+  std::array<types::moveSlots<DoublesMoveOption>, Constants::ActivePokemonSlotsPerSide::DOUBLES> moves;
+  std::array<SwitchOptions, Constants::ActivePokemonSlotsPerSide::DOUBLES> switches;
 
   bool operator==(const DoublesSideOptions& other) const { return moves == other.moves && switches == other.switches; }
 };

@@ -17,6 +17,7 @@ struct CurrentActionMoveSlot;
 struct Damage;
 struct LastUsedMove;
 struct MoveSlots;
+struct SpeciesTypes;
 
 namespace stat {
 struct Atk;
@@ -54,6 +55,9 @@ void applyDamage(types::handle handle, types::damage damage);
 void applyStatBoost(types::stat& stat, types::boost boost);
 
 void tryBoost(Simulation& simulation);
+
+void tryTrap(Simulation& simulation);
+void trap(types::handle handle, SpeciesTypes types, const Pokedex& pokedex);
 
 void updateAllStats(Simulation& simulation);
 void updateAtk(Simulation& simulation, bool ignoreBoosts);

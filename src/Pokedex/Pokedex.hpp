@@ -50,9 +50,9 @@ class Pokedex {
     }
     constexpr const TypeChart& typeChart() const { return typeChartValue; }
 
-    template <auto DataFunction>
-    constexpr auto getStaticValue() const {
-      return DataFunction(gameMechanicValue);
+    template <auto DataFunction, typename... Args>
+    constexpr auto getStaticValue(Args&&... args) const {
+      return DataFunction(gameMechanicValue, std::forward<Args>(args)...);
     }
 
    private:
@@ -118,9 +118,9 @@ class Pokedex {
     return constants.isGameMechanic(checkedMechanics);
   }
   constexpr const TypeChart& typeChart() const { return constants.typeChart(); }
-  template <auto DataFunction>
-  constexpr auto getStaticValue() const {
-    return constants.getStaticValue<DataFunction>();
+  template <auto DataFunction, typename... Args>
+  constexpr auto getStaticValue(Args&&... args) const {
+    return constants.getStaticValue<DataFunction>(std::forward<Args>(args)...);
   }
 
   /**

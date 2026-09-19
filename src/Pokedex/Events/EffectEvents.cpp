@@ -5,6 +5,7 @@
 #include <Components/Damage.hpp>
 #include <Components/DisabledMoveSlots.hpp>
 #include <Components/Effects/ChoiceLock.hpp>
+#include <Components/Effects/Trapper.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/MoveSlots.hpp>
@@ -14,6 +15,7 @@
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
+#include <Components/Tags/Selection.hpp>
 #include <Components/Tags/VolatileTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
@@ -68,6 +70,14 @@ void choiceLockOnDisableMove(
 
   handle.get<DisabledMoveSlots>().val[choiceLocked.val] = true;
 }
+
+void trapperOnSwitchOut(types::handle handle, pokesim::Trapper trapper, Battle battle) {
+  types::entity source = handle.registry()->get<CurrentAction>(battle.val).source;
+  if (source == trapper.val) {
+    handle.remove<pokesim::Trapper>();
+    handle.remove<pokesim::tags::Trapped>();
+  }
+}
 }  // namespace
 
 void Burn::onSetDamageRollModifiers(Simulation& simulation) {
@@ -110,13 +120,13 @@ void ChoiceLock::onBeforeMove(Simulation& simulation) {
   choiceLockRemove(simulation);
 }
 
-void ChoiceLock::onDisableMove(Simulation& simulation) {
-  pokesim::internal::EntityFilter<internal::tags::DisableMove> filter{simulation};
+void ChoiceLock::onResetDisabledMove(Simulation& simulation) {
+  pokesim::internal::EntityFilter<internal::tags::ActiveAtTurnEnd> filter{simulation};
   if (filter.hasNoneSelected()) {
     return;
   }
 
-  choiceLockRemove<internal::tags::DisableMove>(simulation);
+  choiceLockRemove<internal::tags::ActiveAtTurnEnd>(simulation);
   filter.view<choiceLockOnDisableMove>();
 }
 
@@ -128,5 +138,18 @@ void Flinch::onBeforeMove(Simulation& simulation) {
 
 void Flinch::onResidual(Simulation& simulation) {
   simulation.removeFromEntities<tags::Flinch, tags::ActivePokemon>();
+}
+
+void Trapped::onResetTrappedPokemon(Simulation& simulation) {
+  pokesim::internal::EntityFilter<internal::tags::ResetTrappedPokemon> filter{simulation};
+  if (filter.hasNoneSelected()) {
+    return;
+  }
+
+  filter.view<internal::trap>(simulation.pokedex());
+}
+
+void Trapper::onSwitchOut(Simulation& simulation) {
+  simulation.view<trapperOnSwitchOut>();
 }
 }  // namespace pokesim::dex

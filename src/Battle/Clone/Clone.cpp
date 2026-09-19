@@ -1,6 +1,7 @@
 #include "Clone.hpp"
 
 #include <Components/CloneFromCloneTo.hpp>
+#include <Components/Effects/Trapper.hpp>
 #include <Components/EntityHolders/headers.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Pokedex/PP.hpp>
@@ -297,6 +298,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<Side>(registry, entityMap);
   remapComponentEntities<Sides>(registry, entityMap);
   remapComponentEntities<Team>(registry, entityMap);
+  remapComponentEntities<Trapper>(registry, entityMap);
   remapCurrentAction(registry, entityMap);
 
   registry.clear<CloneTo, tags::CloneFrom>();

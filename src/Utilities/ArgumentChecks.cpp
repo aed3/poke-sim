@@ -643,6 +643,11 @@ void check(const ChoiceLock& choiceLock) {
 }
 
 template <>
+void check(const Trapper& trapper, const types::registry& registry) {
+  checkPokemon(trapper.val, registry);
+}
+
+template <>
 void check(const Battle& battle, const types::registry& registry) {
   checkBattle(battle.val, registry);
 }
@@ -1124,8 +1129,10 @@ void check(const DoublesSideOptions& doublesSideOptions) {
   }
 
   // Not using the type's check function as that requires there to be a switch option.
-  for (Slot slot : doublesSideOptions.switches.val) {
-    checkInactiveSlot(slot);
+  for (const SwitchOptions& switches : doublesSideOptions.switches) {
+    for (Slot slot : switches.val) {
+      checkInactiveSlot(slot);
+    }
   }
 }
 

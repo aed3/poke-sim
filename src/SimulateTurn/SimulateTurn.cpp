@@ -29,6 +29,7 @@
 #include <Components/Pokedex/PP.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
+#include <Components/SimulationResults.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
@@ -417,9 +418,8 @@ void nextTurn(Simulation& simulation) {
   if (!pokemonFilter.hasNoneSelected()) {
     pokemonFilter.removeFromSelected<DisabledMoveSlots>();
 
-    pokemonFilter.addToSelected<pokesim::internal::tags::DisableMove>();
-    internal::runDisableMove(simulation);
-    simulation.removeFromEntities<pokesim::internal::tags::DisableMove>();
+    internal::runResetDisabledMove(simulation);
+    internal::runResetTrappedPokemon(simulation);
 
     simulation.removeFromEntities<pokesim::internal::tags::ActiveAtTurnEnd>();
   }
@@ -453,7 +453,8 @@ void simulateTurn(Simulation& simulation) {
     }
   }
 
-  battleFilter.view<internal::assignRootBattle>();
+  battleFilter.removeFromSelected<TurnOutcomeBattles>();
+  battleFilter.view<internal::assignRootBattle, Tags<>, entt::exclude_t<RootBattle>>();
 
   internal::updateAllStats(simulation);
   simulation.view<internal::simulate_turn::resolveDecision, Tags<pokesim::tags::SimulateTurn>>();

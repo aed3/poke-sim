@@ -457,7 +457,11 @@ TEST_CASE("Decisions", "[Simulation][SimulateTurn][ActionQueue]") {
     else {
       DoublesSideOptions p1Options = p1Side.get<DoublesSideOptions>();
       DoublesSideOptions p2Options = p2Side.get<DoublesSideOptions>();
-      REQUIRE(p1Options.switches.val == types::teamPositions<Slot>{Slot::P1C});
+      for (types::activePokemonIndex i = 0U; i < Constants::ActivePokemonSlotsPerSide::DOUBLES; i++) {
+        REQUIRE(p1Options.switches[i].val == types::teamPositions<Slot>{Slot::P1C});
+        REQUIRE(p2Options.switches[i].val == types::teamPositions<Slot>{Slot::P2C});
+      }
+
       REQUIRE_THAT(
         p1Options.moves[0U],
         Catch::Matchers::UnorderedRangeEquals(types::moveSlots<DoublesMoveOption>{
@@ -470,7 +474,6 @@ TEST_CASE("Decisions", "[Simulation][SimulateTurn][ActionQueue]") {
           {dex::Move::MOONBLAST, {Slot::P2A, Slot::P2B}},
         }));
 
-      REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2C});
       REQUIRE_THAT(
         p2Options.moves[0U],
         Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
@@ -512,7 +515,11 @@ TEST_CASE("Decisions", "[Simulation][SimulateTurn][ActionQueue]") {
     else {
       DoublesSideOptions p1Options = p1Side.get<DoublesSideOptions>();
       DoublesSideOptions p2Options = p2Side.get<DoublesSideOptions>();
-      REQUIRE(p1Options.switches.val.empty());
+      for (types::activePokemonIndex i = 0U; i < Constants::ActivePokemonSlotsPerSide::DOUBLES; i++) {
+        REQUIRE(p1Options.switches[i].val.empty());
+        REQUIRE(p2Options.switches[i].val == types::teamPositions<Slot>{Slot::P2C});
+      }
+
       REQUIRE_THAT(
         p1Options.moves[0U],
         Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
@@ -520,7 +527,6 @@ TEST_CASE("Decisions", "[Simulation][SimulateTurn][ActionQueue]") {
         }));
       REQUIRE(p1Options.moves[1U].empty());
 
-      REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2C});
       REQUIRE_THAT(
         p2Options.moves[0U],
         Catch::Matchers::RangeEquals(types::moveSlots<DoublesMoveOption>{
