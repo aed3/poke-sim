@@ -23,7 +23,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-void enumToTag(MoveProperty item, RunArgs&&... args) {
+constexpr void enumToTag(MoveProperty item, RunArgs&&... args) {
   if (item & MoveProperty::CONTACT) {
     RunStruct<move::tags::Contact, T...>::run(std::forward<RunArgs>(args)...);
   }

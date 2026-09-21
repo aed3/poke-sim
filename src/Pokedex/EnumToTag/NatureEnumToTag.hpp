@@ -23,7 +23,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-auto enumToTag(Nature nature, RunArgs&&... args) {
+constexpr auto enumToTag(Nature nature, RunArgs&&... args) {
   switch (nature) {
     case Nature::ADAMANT: return RunStruct<nature::tags::Adamant, T...>::run(std::forward<RunArgs>(args)...);
     case Nature::BASHFUL: return RunStruct<nature::tags::Bashful, T...>::run(std::forward<RunArgs>(args)...);

@@ -24,7 +24,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-auto enumToTag(Species species, RunArgs&&... args) {
+constexpr auto enumToTag(Species species, RunArgs&&... args) {
   switch (species) {
     case Species::DITTO:             return RunStruct<Ditto, T...>::run(std::forward<RunArgs>(args)...);
     case Species::AMPHAROS:          return RunStruct<Ampharos, T...>::run(std::forward<RunArgs>(args)...);

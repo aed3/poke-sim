@@ -27,6 +27,8 @@ struct Random {
     dex::Move::LEAFAGE,
   };
 
+  inline static std::vector<dex::Move> availableAttackingMoves{};
+
   static constexpr std::array<dex::Ability, 12U> availableAbilities{
     dex::Ability::CLEAR_BODY,
     dex::Ability::COMPETITIVE,
@@ -65,9 +67,32 @@ struct Random {
     return internal::nextBoundedRandomValue(rngState, MinMaxStruct::MAX + 1U, MinMaxStruct::MIN);
   }
 
-  static std::vector<dex::Move> pickUniqueMoveList(types::rngState& rngState, std::size_t listLength) {
-    std::vector<dex::Move> movesPicked{listLength};
-    std::vector<dex::Move> unusedMoves{availableMoves.begin(), availableMoves.end()};
+  template <typename Move>
+  struct IsAttacking {
+    static constexpr bool run() { return Move::category(GameMechanics::LATEST) != dex::MoveCategory::STATUS; }
+  };
+
+  static void setAttackingMoves() {
+    if (!availableAttackingMoves.empty()) return;
+
+    for (dex::Move move : availableMoves) {
+      if (dex::enumToTag<IsAttacking>(move)) {
+        availableAttackingMoves.push_back(move);
+      }
+    }
+  }
+
+  static std::vector<dex::Move> pickUniqueMoveList(types::rngState& rngState, bool attackingMovesOnly) {
+    std::vector<dex::Move> movesPicked{Constants::MoveSlots::MAX};
+    std::vector<dex::Move> unusedMoves;
+    if (attackingMovesOnly) {
+      setAttackingMoves();
+      unusedMoves.assign(availableAttackingMoves.begin(), availableAttackingMoves.end());
+    }
+    else {
+      unusedMoves.assign(availableMoves.begin(), availableMoves.end());
+    }
+
     for (std::size_t i = 0; i < movesPicked.size(); i++) {
       dex::Move move =
         unusedMoves[internal::nextBoundedRandomValue(rngState, (types::rngResult)(unusedMoves.size() - i))];
@@ -102,7 +127,7 @@ struct Random {
     info.ivs.spd = pickFromBounds<Constants::PokemonIv>(rngState);
     info.ivs.spe = pickFromBounds<Constants::PokemonIv>(rngState);
 
-    auto moves = pickUniqueMoveList(rngState, Constants::MoveSlots::MAX);
+    auto moves = pickUniqueMoveList(rngState, false);
     for (dex::Move move : moves) {
       info.moves.push_back({move});
     }
@@ -240,9 +265,7 @@ struct Random {
       pickFromList(internal::VALID_SLOTS, rngState),
     };
 
-    std::size_t movesCalculated =
-      internal::nextBoundedRandomValue(rngState, (types::rngResult)availableMoves.size(), 1U);
-    inputInfo.moves = pickUniqueMoveList(rngState, movesCalculated);
+    inputInfo.moves = pickUniqueMoveList(rngState, true);
 
     return inputInfo;
   }
@@ -266,9 +289,7 @@ struct Random {
       boost,
     }};
 
-    std::size_t movesCalculated =
-      internal::nextBoundedRandomValue(rngState, (types::rngResult)availableMoves.size(), 1U);
-    inputInfo.moves = pickUniqueMoveList(rngState, movesCalculated);
+    inputInfo.moves = pickUniqueMoveList(rngState, true);
 
     return inputInfo;
   }

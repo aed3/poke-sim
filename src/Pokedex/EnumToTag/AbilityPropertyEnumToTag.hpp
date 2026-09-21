@@ -23,7 +23,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-void enumToTag(AbilityProperty ability, RunArgs&&... args) {
+constexpr void enumToTag(AbilityProperty ability, RunArgs&&... args) {
   if (ability & AbilityProperty::CANNOT_BREAK) {
     RunStruct<ability::tags::CannotBreak, T...>::run(std::forward<RunArgs>(args)...);
   }

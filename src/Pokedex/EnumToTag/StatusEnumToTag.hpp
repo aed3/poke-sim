@@ -24,7 +24,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-auto enumToTag(Status status, RunArgs&&... args) {
+constexpr auto enumToTag(Status status, RunArgs&&... args) {
   switch (status) {
     case Status::BRN: return RunStruct<Burn, T...>::run(std::forward<RunArgs>(args)...);
     case Status::FRZ: return RunStruct<Freeze, T...>::run(std::forward<RunArgs>(args)...);
@@ -47,7 +47,7 @@ auto enumToTag(Status status, RunArgs&&... args) {
 }
 
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-void forEachStatus(RunArgs&&... args) {
+constexpr void forEachStatus(RunArgs&&... args) {
   enumToTag<RunStruct, T...>(Status::BRN, std::forward<RunArgs>(args)...);
   enumToTag<RunStruct, T...>(Status::FRZ, std::forward<RunArgs>(args)...);
   enumToTag<RunStruct, T...>(Status::PAR, std::forward<RunArgs>(args)...);

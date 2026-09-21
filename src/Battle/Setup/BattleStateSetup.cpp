@@ -64,7 +64,7 @@ void BattleStateSetup::setAddedRecycledActionMoves(
 }
 
 void BattleStateSetup::setAutoID() {
-  setID((types::stateId)handle.registry()->view<tags::Battle>().size());
+  setID((types::stateId)handle.registry()->view<pokesim::tags::Battle>().size());
 }
 
 void BattleStateSetup::setID(types::stateId id) {

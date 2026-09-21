@@ -27,7 +27,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-auto enumToTag(Move move, RunArgs&&... args) {
+constexpr auto enumToTag(Move move, RunArgs&&... args) {
   switch (move) {
     case Move::ALLY_SWITCH:    return RunStruct<AllySwitch, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FLASH_CANNON:   return RunStruct<FlashCannon, T...>::run(std::forward<RunArgs>(args)...);
@@ -61,7 +61,7 @@ auto enumToTag(Move move, RunArgs&&... args) {
 }
 
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-void forEachMove(const Pokedex& pokedex, RunArgs&&... args) {
+constexpr void forEachMove(const Pokedex& pokedex, RunArgs&&... args) {
   pokedex.forEachLoadedMove([&](Move move) { enumToTag<RunStruct, T...>(move, std::forward<RunArgs>(args)...); });
 }
 
