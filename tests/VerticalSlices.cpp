@@ -34,26 +34,16 @@ constexpr std::array<DamageRollKind, 4U> fixedBranchDamageRollOptions = {
 
 auto runAndCheckSimulation(TestSimulation& test, std::size_t idealTurnOutcomeCount, std::size_t totalPossibilities) {
   test.initializeSimulation();
+
+  types::registry& registry = test.registry();
+  auto& options = test.simulateTurnOptions();
   auto originalBattles = test.simulation.battleEntities();
 
   auto results = test.simulateTurn(Tags<Probability, RngSeed>{}, Tags<FoesRemaining>{});
-  auto& options = test.simulateTurnOptions();
-  types::registry& registry = test.registry();
+  auto rootBattles = results.rootBattles();
 
-  debug::TypesToIgnore typesToIgnore;
-  typesToIgnore.add<simulate_turn::TurnOutcomeBattles, simulate_turn::tags::SpeedSortNeeded>();
-
-  debug::TypesToIgnore typesIgnoredOnConstants = typesToIgnore;
-  typesToIgnore.add<Probability, ParentBattle, Turn, RootBattle>();
-
-  if (!options.getMakeBranchesOnRandomEvents()) {
-    typesToIgnore.add<RngSeed>();
-  }
-
-  for (types::entity battle : registry.view<tags::Battle>()) {
-    types::entity initialEntity = test.checks.getInitialEntity(battle);
-    bool shouldNotChange = !options.getApplyChangesToInputBattle() && initialEntity == battle;
-    test.checks.checkEntityForChanges(battle, shouldNotChange ? typesIgnoredOnConstants : typesToIgnore);
+  if (!options.getApplyChangesToInputBattle()) {
+    REQUIRE_THAT(rootBattles, Catch::Matchers::UnorderedEquals(originalBattles));
   }
 
   if (!options.getMakeBranchesOnRandomEvents()) {
@@ -66,38 +56,35 @@ auto runAndCheckSimulation(TestSimulation& test, std::size_t idealTurnOutcomeCou
     }
   }
 
-  REQUIRE(results.turnOutcomeBattlesResults().size() == test.battleInfoList.size());
-  types::entityVector allTurnOutcomes;
-  results.turnOutcomeBattlesResults().each([&](const auto& turnOutcomes) {
-    allTurnOutcomes.insert(allTurnOutcomes.end(), turnOutcomes.val.begin(), turnOutcomes.val.end());
-    for (types::entity battle : turnOutcomes.val) {
-      if (!options.getApplyChangesToInputBattle()) {
-        REQUIRE_FALSE(registry.all_of<simulate_turn::TurnOutcomeBattles>(battle));
-      }
+  REQUIRE(rootBattles.size() == test.battleInfoList.size());
+  types::entityVector allTurnOutcomes{results.battleOutcomes().begin(), results.battleOutcomes().end()};
 
+  for (types::entity battle : allTurnOutcomes) {
+    if (registry.all_of<RootBattle>(battle)) {
       types::entity parentBattle = test.checks.getParentEntity(battle);
       REQUIRE(registry.get<RootBattle>(battle).val == parentBattle);
-
-      Sides sides = registry.get<Sides>(battle);
-      REQUIRE_FALSE(registry.all_of<SideDecision>(sides.val.p1()));
-      REQUIRE_FALSE(registry.all_of<SideDecision>(sides.val.p2()));
-
-      auto [initialRngSeed, currentRngSeed] = test.checks.getInitialAndCurrent<RngSeed>(battle);
-      if (options.getMakeBranchesOnRandomEvents() || totalPossibilities == 1U) {
-        REQUIRE(currentRngSeed.val == initialRngSeed.val);
-      }
-      else {
-        REQUIRE_FALSE(currentRngSeed.val == initialRngSeed.val);
-      }
     }
-  });
+
+    Sides sides = registry.get<Sides>(battle);
+    REQUIRE_FALSE(registry.all_of<SideDecision>(sides.val.p1()));
+    REQUIRE_FALSE(registry.all_of<SideDecision>(sides.val.p2()));
+
+    auto [initialRngSeed, currentRngSeed] = test.checks.getInitialAndCurrent<RngSeed>(battle);
+    if (options.getMakeBranchesOnRandomEvents() || totalPossibilities == 1U) {
+      REQUIRE(currentRngSeed.val == initialRngSeed.val);
+    }
+    else {
+      REQUIRE_FALSE(currentRngSeed.val == initialRngSeed.val);
+    }
+  }
   REQUIRE(allTurnOutcomes.size() == idealTurnOutcomeCount);
 
-  if (!options.getApplyChangesToInputBattle()) {
-    for (types::entity originalBattle : originalBattles) {
-      bool originalInOutcome =
-        std::find(allTurnOutcomes.begin(), allTurnOutcomes.end(), originalBattle) != allTurnOutcomes.end();
-      REQUIRE_FALSE(originalInOutcome);
+  for (types::entity originalBattle : originalBattles) {
+    if (options.getApplyChangesToInputBattle()) {
+      REQUIRE_THAT(allTurnOutcomes, Catch::Matchers::Contains(originalBattle));
+    }
+    else {
+      REQUIRE_THAT(allTurnOutcomes, !Catch::Matchers::Contains(originalBattle));
     }
   }
 

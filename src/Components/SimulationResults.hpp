@@ -11,11 +11,9 @@
 #include <Types/Random.hpp>
 
 namespace pokesim {
-namespace simulate_turn {
-struct TurnOutcomeBattles {
-  types::entityVector val{};
-};
-}  // namespace simulate_turn
+namespace simulate_turn::tags {
+struct BattleOutcome {};
+}  // namespace simulate_turn::tags
 
 namespace calc_damage {
 struct UsesUntilKo {

@@ -11,6 +11,7 @@
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/MoveSlots.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
+#include <Components/SimulationResults.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/RecycledEntities.hpp>
@@ -95,7 +96,7 @@ struct Checks : pokesim::debug::Checks {
 
   void checkBattleOutputs() const {
     pokesim::debug::TypesToIgnore typesToIgnore;
-    typesToIgnore.add<simulate_turn::TurnOutcomeBattles, simulate_turn::tags::SpeedSortNeeded>();
+    typesToIgnore.add<simulate_turn::tags::BattleOutcome, simulate_turn::tags::SpeedSortNeeded>();
 
     pokesim::debug::TypesToIgnore typesIgnoredOnConstants = typesToIgnore;
     typesToIgnore.add<Probability, ParentBattle, Turn, RootBattle, pokesim::tags::BattleMidTurn>();

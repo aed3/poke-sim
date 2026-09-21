@@ -1384,14 +1384,6 @@ void check(const action::Team& team) {
 }
 
 template <>
-void check(const simulate_turn::TurnOutcomeBattles& teamOutcomeBattles, const types::registry& registry) {
-  for (types::entity entity : teamOutcomeBattles.val) {
-    checkBattle(entity, registry);
-  }
-  listHasUniqueValues(teamOutcomeBattles.val);
-}
-
-template <>
 void check(const calc_damage::UsesUntilKo& usesUntilKo) {
   checkBounds<Constants::DamageRollCount>(usesUntilKo.val.size());
 
@@ -2084,8 +2076,26 @@ namespace pokesim {
 namespace simulate_turn {
 Results::Results(const Simulation& simulation_) : simulation(&simulation_) {}
 
-types::view<TurnOutcomeBattles> Results::turnOutcomeBattlesResults() const {
-  return simulation->registry.view<TurnOutcomeBattles>();
+types::view<tags::BattleOutcome> Results::battleOutcomes() const {
+  return simulation->registry.view<tags::BattleOutcome>();
+}
+
+types::entityVector Results::rootBattles() const {
+  auto view =
+    simulation->registry.view<pokesim::tags::SimulateTurn, pokesim::tags::Battle>(entt::exclude_t<RootBattle>{});
+  return {view.begin(), view.end()};
+}
+
+types::entityVector Results::rootBattleOutcomes(types::entity rootBattle) const {
+  types::entityVector outcomes;
+  for (auto [entity, rootBattleComponent] :
+       simulation->registry.view<pokesim::tags::SimulateTurn, RootBattle>().each()) {
+    if (rootBattleComponent.val == rootBattle) {
+      outcomes.push_back(entity);
+    }
+  }
+
+  return outcomes;
 }
 }  // namespace simulate_turn
 
@@ -2165,7 +2175,7 @@ void Simulation::clearAllResults() {
 }
 
 void Simulation::clearSimulateTurnResults() {
-  registry.clear<simulate_turn::TurnOutcomeBattles>();
+  registry.clear<simulate_turn::tags::BattleOutcome>();
 }
 
 void Simulation::clearCalculateDamageResults() {
@@ -3090,6 +3100,8 @@ void simulateTurn(Simulation& simulation) {
     return;
   }
 
+  simulation.removeFromEntities<tags::BattleOutcome>();
+
   if (!options.getApplyChangesToInputBattle()) {
     simulation.addToEntities<pokesim::tags::CloneFrom, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
     const auto entityMap = clone(simulation.registry, 1U);
@@ -3101,9 +3113,6 @@ void simulateTurn(Simulation& simulation) {
       }
     }
   }
-
-  battleFilter.removeFromSelected<TurnOutcomeBattles>();
-  battleFilter.view<internal::assignRootBattle, Tags<>, entt::exclude_t<RootBattle>>();
 
   internal::updateAllStats(simulation);
   simulation.view<internal::simulate_turn::resolveDecision, Tags<pokesim::tags::SimulateTurn>>();
@@ -3140,8 +3149,7 @@ void simulateTurn(Simulation& simulation) {
 
   nextTurn(simulation);
 
-  battleFilter.view<internal::collectTurnOutcomeBattles>();
-
+  battleFilter.addToSelected<tags::BattleOutcome>();
   simulation.addToEntities<pokesim::tags::SimulateTurn, internal::simulate_turn::tags::Input>();
   simulation.removeFromEntities<internal::simulate_turn::tags::Input>();
 }
@@ -6329,7 +6337,7 @@ void BattleStateSetup::setAddedRecycledActionMoves(
 }
 
 void BattleStateSetup::setAutoID() {
-  setID((types::stateId)handle.registry()->view<Sides>().size());
+  setID((types::stateId)handle.registry()->view<tags::Battle>().size());
 }
 
 void BattleStateSetup::setID(types::stateId id) {
@@ -6882,17 +6890,6 @@ void clearAction(Simulation& simulation) {
     pokesim::tags::CurrentActionTarget>();
 }
 }  // namespace
-
-void assignRootBattle(types::handle battleHandle) {
-  const ParentBattle* parentBattle = battleHandle.try_get<ParentBattle>();
-  types::entity rootBattle = parentBattle == nullptr ? battleHandle.entity() : parentBattle->val;
-  battleHandle.emplace<RootBattle>(rootBattle);
-}
-
-void collectTurnOutcomeBattles(types::handle leafBattleHandle, RootBattle root) {
-  leafBattleHandle.registry()->get_or_emplace<pokesim::simulate_turn::TurnOutcomeBattles>(root.val).val.push_back(
-    leafBattleHandle.entity());
-}
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
@@ -7484,6 +7481,9 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   for (const auto& [originalBattle, clonedBattles] : battleMap) {
     registry.remove<ParentBattle>(clonedBattles.begin(), clonedBattles.end());
     registry.insert<ParentBattle>(clonedBattles.begin(), clonedBattles.end(), {originalBattle});
+    if (!registry.all_of<RootBattle>(originalBattle)) {
+      registry.insert<RootBattle>(clonedBattles.begin(), clonedBattles.end(), {originalBattle});
+    }
   }
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES

@@ -84,12 +84,11 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][SingleB
     }
   }
 
-  auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{});
-  REQUIRE(turnOutcomeBattles.size() == idealTurnOutcomeCount);
+  auto battleEntitiesList = test.simulateOneBranchingBattle(Tags<Probability>{});
+  REQUIRE(battleEntitiesList.size() == idealTurnOutcomeCount);
 
-  for (types::entity battle : turnOutcomeBattles) {
-    Probability probability = test.registry().get<Probability>(battle);
-    auto entities = test.getBattleEntities(battle);
+  for (auto entities : battleEntitiesList) {
+    Probability probability = test.registry().get<Probability>(entities.battle);
     types::stat p2Hp = test.registry().get<stat::CurrentHp>(entities.p2A).val;
     CAPTURE(p2Hp);
     REQUIRE(hitCombinationsFromP2Hp.contains(p2Hp));

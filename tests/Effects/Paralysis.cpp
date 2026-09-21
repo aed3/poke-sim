@@ -10,20 +10,19 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Singl
     test.turnDecision(dex::Move::SPLASH, dex::Move::SPLASH));
 
   test.simulateTurnOptions().setMakeBranchesOnRandomEvents(true);
-  auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{});
-  REQUIRE(turnOutcomeBattles.size() == 2U);
+  auto battleEntitiesList = test.simulateOneBranchingBattle(Tags<Probability>{});
+  REQUIRE(battleEntitiesList.size() == 2U);
 
   types::probability paralysisChance =
     test.dexValue<dex::Paralysis::onBeforeMoveChance>() * Constants::PercentChanceToProbability;
 
   const types::registry& registry = test.registry();
   entt::dense_set<types::probability> foundProbabilities;
-  for (types::entity battle : turnOutcomeBattles) {
-    auto entities = test.getBattleEntities(battle);
-    const auto& [turn, probability] = registry.get<Turn, Probability>(battle);
+  for (auto entities : battleEntitiesList) {
+    const auto& [turn, probability] = registry.get<Turn, Probability>(entities.battle);
 
     REQUIRE(turn.val == 2U);
-    auto [initialRngSeed, currentRngSeed] = test.checks.getInitialAndCurrent<RngSeed>(battle);
+    auto [initialRngSeed, currentRngSeed] = test.checks.getInitialAndCurrent<RngSeed>(entities.battle);
     REQUIRE(currentRngSeed.val == initialRngSeed.val);
 
     bool paralysisStoppedP1Move = probability.val == Catch::Approx(paralysisChance);

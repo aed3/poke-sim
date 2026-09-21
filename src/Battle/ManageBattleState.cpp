@@ -133,17 +133,6 @@ void clearAction(Simulation& simulation) {
 }
 }  // namespace
 
-void assignRootBattle(types::handle battleHandle) {
-  const ParentBattle* parentBattle = battleHandle.try_get<ParentBattle>();
-  types::entity rootBattle = parentBattle == nullptr ? battleHandle.entity() : parentBattle->val;
-  battleHandle.emplace<RootBattle>(rootBattle);
-}
-
-void collectTurnOutcomeBattles(types::handle leafBattleHandle, RootBattle root) {
-  leafBattleHandle.registry()->get_or_emplace<pokesim::simulate_turn::TurnOutcomeBattles>(root.val).val.push_back(
-    leafBattleHandle.entity());
-}
-
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();
   types::entity sourceEntity = getActionEntity<SourceSlotName>(registry, sides, action);

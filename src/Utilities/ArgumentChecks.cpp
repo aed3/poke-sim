@@ -1234,14 +1234,6 @@ void check(const action::Team& team) {
 }
 
 template <>
-void check(const simulate_turn::TurnOutcomeBattles& teamOutcomeBattles, const types::registry& registry) {
-  for (types::entity entity : teamOutcomeBattles.val) {
-    checkBattle(entity, registry);
-  }
-  listHasUniqueValues(teamOutcomeBattles.val);
-}
-
-template <>
 void check(const calc_damage::UsesUntilKo& usesUntilKo) {
   checkBounds<Constants::DamageRollCount>(usesUntilKo.val.size());
 

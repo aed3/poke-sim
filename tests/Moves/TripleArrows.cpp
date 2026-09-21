@@ -25,7 +25,7 @@ TEST_CASE(
   types::probability flinch = test.dexValue<TripleArrows::targetSecondaryEffect::addedFlinchChance>() * ToProbability;
 
   test.simulateTurnOptions().setMakeBranchesOnRandomEvents(true).setDamageRollsConsidered({DamageRollKind::MAX_DAMAGE});
-  auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{});
+  auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{}).battleOutcomes();
   REQUIRE(turnOutcomeBattles.size() == 8U);
 
   std::size_t critCount = 0U;

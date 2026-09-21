@@ -13,17 +13,16 @@ TEST_CASE("King's Rock: Can cause move failure", "[Simulation][SimulateTurn][Sin
     test.turnDecision(dex::Move::TACKLE, dex::Move::SPLASH));
 
   test.simulateTurnOptions().setMakeBranchesOnRandomEvents(true);
-  auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{});
-  REQUIRE(turnOutcomeBattles.size() == 2U);
+  auto battleEntitiesList = test.simulateOneBranchingBattle(Tags<Probability>{});
+  REQUIRE(battleEntitiesList.size() == 2U);
 
   types::probability flinchChance = test.dexValue<dex::KingsRock::addedFlinchChance>() * ToProbability;
 
   entt::dense_set<types::probability> foundProbabilities;
-  for (types::entity battle : turnOutcomeBattles) {
-    auto entities = test.getBattleEntities(battle);
-    Probability probability = test.registry().get<Probability>(battle);
+  for (auto entities : battleEntitiesList) {
+    Probability probability = test.registry().get<Probability>(entities.battle);
 
-    auto [initialRngSeed, currentRngSeed] = test.checks.getInitialAndCurrent<RngSeed>(battle);
+    auto [initialRngSeed, currentRngSeed] = test.checks.getInitialAndCurrent<RngSeed>(entities.battle);
     REQUIRE(currentRngSeed.val == initialRngSeed.val);
 
     bool flinchStoppedP2Move = Catch::Approx(flinchChance) == probability.val;
@@ -56,17 +55,16 @@ TEST_CASE(
     test.turnDecision(dex::Move::MOONBLAST, dex::Move::SPLASH));
 
   test.simulateTurnOptions().setMakeBranchesOnRandomEvents(true);
-  auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{});
-  REQUIRE(turnOutcomeBattles.size() == 4U);
+  auto battleEntitiesList = test.simulateOneBranchingBattle(Tags<Probability>{});
+  REQUIRE(battleEntitiesList.size() == 4U);
 
   types::probability flinchChance = test.dexValue<dex::KingsRock::addedFlinchChance>() * ToProbability;
   types::probability spaDropChance = test.dexValue<dex::Moonblast::targetSecondaryEffect::chance>() * ToProbability;
   types::boost spaBoost = test.dexValue<dex::Moonblast::targetSecondaryEffect::spaBoost>();
 
   entt::dense_set<types::probability> foundProbabilities;
-  for (types::entity battle : turnOutcomeBattles) {
-    auto entities = test.getBattleEntities(battle);
-    Probability probability = test.registry().get<Probability>(battle);
+  for (auto entities : battleEntitiesList) {
+    Probability probability = test.registry().get<Probability>(entities.battle);
     auto approxProbability = Catch::Approx(probability.val);
 
     bool spaDropFlinch = flinchChance * spaDropChance == approxProbability;
@@ -159,15 +157,14 @@ TEST_CASE(
   };
 
   test.simulateTurnOptions().setMakeBranchesOnRandomEvents(true);
-  auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{});
+  auto battleEntitiesList = test.simulateOneBranchingBattle(Tags<Probability>{});
   REQUIRE(
-    turnOutcomeBattles.size() == missProbabilities.size() + twoHitProbabilities.size() + threeHitProbabilities.size() +
+    battleEntitiesList.size() == missProbabilities.size() + twoHitProbabilities.size() + threeHitProbabilities.size() +
                                    fourHitProbabilities.size() + fiveHitProbabilities.size());
 
   entt::dense_map<types::moveHits, entt::dense_set<types::probability>> foundProbabilities;
-  for (types::entity battle : turnOutcomeBattles) {
-    auto entities = test.getBattleEntities(battle);
-    Probability probability = test.registry().get<Probability>(battle);
+  for (auto entities : battleEntitiesList) {
+    Probability probability = test.registry().get<Probability>(entities.battle);
     auto approxProbability = Catch::Approx(probability.val);
 
     test.checks.checkUsedMovePokemon(entities.p1A);

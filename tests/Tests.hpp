@@ -76,15 +76,25 @@ struct TestChecks : debug::Checks {
   }
 
   template <typename... BattleTypesToIgnore>
-  void checkPostSimulateTurnBattles() const {
-    checkViewForChanges<
-      tags::Battle,
-      Turn,
-      simulate_turn::TurnOutcomeBattles,
-      simulate_turn::tags::SpeedSortNeeded,
-      ParentBattle,
-      RootBattle,
-      BattleTypesToIgnore...>();
+  void checkPostSimulateTurnBattles(bool usesParentBattle) const {
+    if (usesParentBattle) {
+      checkViewForChanges<
+        tags::Battle,
+        Turn,
+        simulate_turn::tags::BattleOutcome,
+        simulate_turn::tags::SpeedSortNeeded,
+        ParentBattle,
+        RootBattle,
+        BattleTypesToIgnore...>();
+    }
+    else {
+      checkViewForChanges<
+        tags::Battle,
+        Turn,
+        simulate_turn::tags::BattleOutcome,
+        simulate_turn::tags::SpeedSortNeeded,
+        BattleTypesToIgnore...>();
+    }
   }
 
   template <typename... SideTypesToIgnore>
@@ -112,6 +122,9 @@ struct TestChecks : debug::Checks {
     registryOnInput.clear();
     currentEntitiesToInitial.clear();
     specificallyChecked.clear();
+    simulateTurnOptionsOnInput = simulation->simulateTurnOptions;
+    calcDamageOptionsOnInput = simulation->calculateDamageOptions;
+    analyzeEffectOptionsOnInput = simulation->analyzeEffectOptions;
   }
 
   TestChecks(const Simulation& _simulation) : debug::Checks(_simulation) {}
@@ -153,6 +166,11 @@ struct TestSimulation {
   simulate_turn::Options& simulateTurnOptions() { return simulation.simulateTurnOptions; }
   calc_damage::Options& calcDamageOptions() { return simulation.calculateDamageOptions; }
   analyze_effect::Options& analyzeEffectOptions() { return simulation.analyzeEffectOptions; }
+  bool usesParentBattle() const {
+    return simulation.simulateTurnOptions.getMakeBranchesOnRandomEvents() ||
+           !simulation.simulateTurnOptions.getApplyChangesToInputBattle();
+  }
+
   template <auto DataFunction, typename... Args>
   auto dexValue(Args&&... args) {
     return pokedex.getStaticValue<DataFunction>(std::forward<Args>(args)...);
@@ -321,7 +339,7 @@ struct TestSimulation {
 
     simulate_turn::Results results = simulation.simulateTurn();
 
-    checks.checkPostSimulateTurnBattles<BattleTypesToIgnore...>();
+    checks.checkPostSimulateTurnBattles<BattleTypesToIgnore...>(usesParentBattle());
     checks.checkPostSimulateTurnSides<SideTypesToIgnore...>();
 
     return results;
@@ -338,24 +356,39 @@ struct TestSimulation {
   }
 
   template <typename... BattleTypesToIgnore, typename... SideTypesToIgnore>
-  types::entityVector simulateOneBattle(
+  simulate_turn::Results simulateOneBattle(
     Tags<BattleTypesToIgnore...> battleIgnoredTypes = {}, Tags<SideTypesToIgnore...> sideIgnoredTypes = {}) {
     REQUIRE(battleInfoList.size() == 1U);
 
     simulate_turn::Results results = simulateTurn(battleIgnoredTypes, sideIgnoredTypes);
-    REQUIRE(results.turnOutcomeBattlesResults().size() == 1U);
-    types::entityVector turnOutcomeBattles = std::get<1>(*results.turnOutcomeBattlesResults().each().begin()).val;
+    REQUIRE(results.rootBattles().size() == 1U);
 
-    return turnOutcomeBattles;
+    return results;
   }
 
   template <typename... BattleTypesToIgnore, typename... SideTypesToIgnore>
-  auto simulateOneNonBranchingBattle(
+  auto simulateOneBranchingBattle(
     Tags<BattleTypesToIgnore...> battleIgnoredTypes = {}, Tags<SideTypesToIgnore...> sideIgnoredTypes = {}) {
-    types::entityVector turnOutcomeBattles = simulateOneBattle(battleIgnoredTypes, sideIgnoredTypes);
-    REQUIRE(turnOutcomeBattles.size() == 1U);
+    auto battleOutcomes = simulateOneBattle(battleIgnoredTypes, sideIgnoredTypes).battleOutcomes();
+    std::vector<BattleEntities> battleEntitiesList;
+    battleEntitiesList.reserve(battleOutcomes.size());
 
-    return getBattleEntities(turnOutcomeBattles[0]);
+    for (types::entity battle : battleOutcomes) {
+      battleEntitiesList.push_back(getBattleEntities(battle));
+    }
+
+    return battleEntitiesList;
+  }
+
+  template <typename... BattleTypesToIgnore, typename... SideTypesToIgnore>
+  BattleEntities simulateOneNonBranchingBattle(
+    Tags<BattleTypesToIgnore...> battleIgnoredTypes = {}, Tags<SideTypesToIgnore...> sideIgnoredTypes = {}) {
+    simulate_turn::Results results = simulateOneBattle(battleIgnoredTypes, sideIgnoredTypes);
+    auto outcomes = results.battleOutcomes();
+
+    REQUIRE(outcomes.size() == 1U);
+
+    return getBattleEntities(outcomes.front());
   }
 
   void applyDecision(types::entity battle, TurnDecisionInfo turnDecision) {

@@ -335,7 +335,13 @@ struct Checks : pokesim::debug::Checks {
     for (types::entity battle : simulation->battleEntities()) {
       pokesim::debug::TypesToIgnore typesToIgnore;
       if (has<pokesim::tags::SimulateTurn>(battle)) {
-        typesToIgnore.add<Probability, RngSeed, ParentBattle>();
+        typesToIgnore.add<Probability>();
+        if (simulateTurnOptionsOnInput.getMakeBranchesOnRandomEvents()) {
+          typesToIgnore.add<ParentBattle, RootBattle>();
+        }
+        else {
+          typesToIgnore.add<RngSeed>();
+        }
       }
       checkBattle(battle);
       types::entity initialBattle = getInitialEntity(battle);

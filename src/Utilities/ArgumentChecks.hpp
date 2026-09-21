@@ -146,9 +146,6 @@ struct DamageFormulaVariables;
 namespace action {
 struct Team;
 }  // namespace action
-namespace simulate_turn {
-struct TurnOutcomeBattles;
-}  // namespace simulate_turn
 namespace stat {
 struct Hp;
 struct Atk;
@@ -535,9 +532,6 @@ void check(const SpeedTieIndexes&);
 
 template <>
 void check(const action::Team&);
-
-template <>
-void check(const simulate_turn::TurnOutcomeBattles&, const types::registry&);
 
 template <>
 void check(const calc_damage::UsesUntilKo&);

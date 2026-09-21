@@ -242,7 +242,7 @@ TEST_CASE("Simulation Setup: Calculate Damage", "[Simulation][CalculateDamage][S
   simulation.createInitialStates({battleInfo});
 
   const types::registry& registry = simulation.registry;
-  auto battles = registry.view<Sides>();
+  auto battles = registry.view<tags::Battle>();
   REQUIRE(battles.size() == 1U);
 
   std::size_t calcDamageTagCount = registry.view<tags::CalculateDamage>().size();
@@ -278,7 +278,7 @@ TEST_CASE("Simulation Setup: Analyze Effect", "[Simulation][AnalyzeEffect][Setup
   simulation.createInitialStates({battleInfo});
 
   const types::registry& registry = simulation.registry;
-  auto battles = registry.view<Sides>();
+  auto battles = registry.view<tags::Battle>();
   REQUIRE(battles.size() == 1U);
 
   auto view = registry.view<analyze_effect::tags::Input>();
@@ -314,7 +314,7 @@ TEST_CASE("Simulation Setup: Ignored Pokemon Options", "[Simulation][Setup]") {
     pokedex.loadForBattleInfo(battleInfoList);
     simulation.createInitialStates(battleInfoList);
 
-    const Sides& sides = registry.get<Sides>(registry.view<Sides>().front());
+    const Sides& sides = registry.get<Sides>(registry.view<tags::Battle>().front());
     const Team& p1Team = registry.get<Team>(sides.val.p1());
     const Team& p2Team = registry.get<Team>(sides.val.p2());
 

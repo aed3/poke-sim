@@ -379,8 +379,8 @@ TEST_CASE("Speed Ties", "[Simulation][SimulateTurn][DoubleBattle][ActionQueue]")
   }
 
   SECTION("Check Entire Simulation Branching") {
-    auto turnOutcomeBattles = test.simulateOneBattle(Tags<Probability>{});
-    auto trueCloneCount = turnOutcomeBattles.size();
+    simulate_turn::Results results = test.simulateOneBattle(Tags<Probability>{});
+    auto trueCloneCount = results.battleOutcomes().size();
     REQUIRE(trueCloneCount == idealCloneCount);
   }
 }

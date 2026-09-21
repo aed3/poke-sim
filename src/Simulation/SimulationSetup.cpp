@@ -1,12 +1,10 @@
 #include <AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp>
-#include <Battle/Clone/Clone.hpp>
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Battle/Setup/PokemonStateSetup.hpp>
 #include <Battle/Setup/headers.hpp>
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
-#include <Components/CloneFromCloneTo.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>

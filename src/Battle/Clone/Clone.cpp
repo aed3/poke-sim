@@ -306,6 +306,9 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   for (const auto& [originalBattle, clonedBattles] : battleMap) {
     registry.remove<ParentBattle>(clonedBattles.begin(), clonedBattles.end());
     registry.insert<ParentBattle>(clonedBattles.begin(), clonedBattles.end(), {originalBattle});
+    if (!registry.all_of<RootBattle>(originalBattle)) {
+      registry.insert<RootBattle>(clonedBattles.begin(), clonedBattles.end(), {originalBattle});
+    }
   }
 
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES

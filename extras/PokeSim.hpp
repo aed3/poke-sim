@@ -204,7 +204,6 @@
  * src/Utilities/ArgumentChecks.hpp
  * external/entt/entity/handle.hpp
  * src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp
- * src/Battle/Clone/Clone.hpp
  * src/Battle/Pokemon/ManagePokemonState.hpp
  * src/Battle/Setup/StateSetupBase.hpp
  * src/Battle/Setup/PokemonStateSetup.hpp
@@ -301,6 +300,7 @@
  * src/SimulateTurn/RandomChance.hpp
  * src/Simulation/MoveHitSteps.hpp
  * src/Utilities/EntityFilter.hpp
+ * src/Battle/Clone/Clone.hpp
  * src/Battle/Helpers/InternalHelpers.hpp
  * src/SimulateTurn/Decisions.hpp
  * src/SimulateTurn/ManageActionQueue.hpp
@@ -20487,11 +20487,9 @@ struct Team {
 //////////////// START OF src/Components/SimulationResults.hpp /////////////////
 
 namespace pokesim {
-namespace simulate_turn {
-struct TurnOutcomeBattles {
-  types::entityVector val{};
-};
-}  // namespace simulate_turn
+namespace simulate_turn::tags {
+struct BattleOutcome {};
+}  // namespace simulate_turn::tags
 
 namespace calc_damage {
 struct UsesUntilKo {
@@ -21803,9 +21801,6 @@ struct DamageFormulaVariables;
 namespace action {
 struct Team;
 }  // namespace action
-namespace simulate_turn {
-struct TurnOutcomeBattles;
-}  // namespace simulate_turn
 namespace stat {
 struct Hp;
 struct Atk;
@@ -22192,9 +22187,6 @@ void check(const SpeedTieIndexes&);
 
 template <>
 void check(const action::Team&);
-
-template <>
-void check(const simulate_turn::TurnOutcomeBattles&, const types::registry&);
 
 template <>
 void check(const calc_damage::UsesUntilKo&);
@@ -22719,17 +22711,6 @@ struct InputSetup {
 }  // namespace pokesim::internal::analyze_effect
 
 ////////// END OF src/AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp //////////
-
-///////////////////// START OF src/Battle/Clone/Clone.hpp //////////////////////
-
-namespace pokesim {
-struct CloneTo;
-
-types::ClonedEntityMap clone(types::registry& registry, std::optional<types::entityIndex> cloneCount);
-void deleteClones(types::registry& registry);
-}  // namespace pokesim
-
-////////////////////// END OF src/Battle/Clone/Clone.hpp ///////////////////////
 
 ////////////// START OF src/Battle/Pokemon/ManagePokemonState.hpp //////////////
 
@@ -26368,7 +26349,9 @@ struct DamageRolls;
 
 namespace simulate_turn {
 struct Results {
-  types::view<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
+  types::view<tags::BattleOutcome> battleOutcomes() const;
+  types::entityVector rootBattles() const;
+  types::entityVector rootBattleOutcomes(types::entity rootBattle) const;
 
   Results(const Simulation& simulation_);
 
@@ -27070,12 +27053,8 @@ struct Sides;
 struct CurrentAction;
 struct CurrentActionSource;
 struct CurrentActionTarget;
-struct RootBattle;
 
 namespace internal {
-void assignRootBattle(types::handle battleHandle);
-void collectTurnOutcomeBattles(types::handle leafBattleHandle, RootBattle root);
-
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action);
 void setCurrentActionSwitchSource(types::handle battleHandle, const Sides& sides, CurrentAction& action);
 void setCurrentActionSwitchTarget(types::handle battleHandle, const Sides& sides, CurrentAction& action);
@@ -27304,6 +27283,17 @@ struct EntityFilter {
 
 //////////////////// END OF src/Utilities/EntityFilter.hpp /////////////////////
 
+///////////////////// START OF src/Battle/Clone/Clone.hpp //////////////////////
+
+namespace pokesim {
+struct CloneTo;
+
+types::ClonedEntityMap clone(types::registry& registry, std::optional<types::entityIndex> cloneCount);
+void deleteClones(types::registry& registry);
+}  // namespace pokesim
+
+////////////////////// END OF src/Battle/Clone/Clone.hpp ///////////////////////
+
 /////////////// START OF src/Battle/Helpers/InternalHelpers.hpp ////////////////
 
 namespace pokesim::internal {
@@ -27462,7 +27452,7 @@ struct Checks : pokesim::debug::Checks {
 
   void checkBattleOutputs() const {
     pokesim::debug::TypesToIgnore typesToIgnore;
-    typesToIgnore.add<simulate_turn::TurnOutcomeBattles, simulate_turn::tags::SpeedSortNeeded>();
+    typesToIgnore.add<simulate_turn::tags::BattleOutcome, simulate_turn::tags::SpeedSortNeeded>();
 
     pokesim::debug::TypesToIgnore typesIgnoredOnConstants = typesToIgnore;
     typesToIgnore.add<Probability, ParentBattle, Turn, RootBattle, pokesim::tags::BattleMidTurn>();
@@ -28733,7 +28723,13 @@ struct Checks : pokesim::debug::Checks {
     for (types::entity battle : simulation->battleEntities()) {
       pokesim::debug::TypesToIgnore typesToIgnore;
       if (has<pokesim::tags::SimulateTurn>(battle)) {
-        typesToIgnore.add<Probability, RngSeed, ParentBattle>();
+        typesToIgnore.add<Probability>();
+        if (simulateTurnOptionsOnInput.getMakeBranchesOnRandomEvents()) {
+          typesToIgnore.add<ParentBattle, RootBattle>();
+        }
+        else {
+          typesToIgnore.add<RngSeed>();
+        }
       }
       checkBattle(battle);
       types::entity initialBattle = getInitialEntity(battle);

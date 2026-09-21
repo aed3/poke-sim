@@ -441,6 +441,8 @@ void simulateTurn(Simulation& simulation) {
     return;
   }
 
+  simulation.removeFromEntities<tags::BattleOutcome>();
+
   if (!options.getApplyChangesToInputBattle()) {
     simulation.addToEntities<pokesim::tags::CloneFrom, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
     const auto entityMap = clone(simulation.registry, 1U);
@@ -452,9 +454,6 @@ void simulateTurn(Simulation& simulation) {
       }
     }
   }
-
-  battleFilter.removeFromSelected<TurnOutcomeBattles>();
-  battleFilter.view<internal::assignRootBattle, Tags<>, entt::exclude_t<RootBattle>>();
 
   internal::updateAllStats(simulation);
   simulation.view<internal::simulate_turn::resolveDecision, Tags<pokesim::tags::SimulateTurn>>();
@@ -491,8 +490,7 @@ void simulateTurn(Simulation& simulation) {
 
   nextTurn(simulation);
 
-  battleFilter.view<internal::collectTurnOutcomeBattles>();
-
+  battleFilter.addToSelected<tags::BattleOutcome>();
   simulation.addToEntities<pokesim::tags::SimulateTurn, internal::simulate_turn::tags::Input>();
   simulation.removeFromEntities<internal::simulate_turn::tags::Input>();
 }

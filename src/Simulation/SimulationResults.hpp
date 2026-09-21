@@ -10,7 +10,9 @@ struct DamageRolls;
 
 namespace simulate_turn {
 struct Results {
-  types::view<TurnOutcomeBattles> turnOutcomeBattlesResults() const;
+  types::view<tags::BattleOutcome> battleOutcomes() const;
+  types::entityVector rootBattles() const;
+  types::entityVector rootBattleOutcomes(types::entity rootBattle) const;
 
   Results(const Simulation& simulation_);
 

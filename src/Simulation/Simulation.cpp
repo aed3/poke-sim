@@ -49,7 +49,7 @@ void Simulation::clearAllResults() {
 }
 
 void Simulation::clearSimulateTurnResults() {
-  registry.clear<simulate_turn::TurnOutcomeBattles>();
+  registry.clear<simulate_turn::tags::BattleOutcome>();
 }
 
 void Simulation::clearCalculateDamageResults() {
