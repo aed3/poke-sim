@@ -145,6 +145,7 @@ void runModifyMove(Simulation& simulation) {
   pokesim::dex::ChoiceScarf::onSourceModifyMove(simulation);
   pokesim::dex::ChoiceSpecs::onSourceModifyMove(simulation);
   pokesim::dex::KingsRock::onModifyMove(simulation);
+  pokesim::dex::LongReach::onModifyMove(simulation);
 }
 
 void runResetDisabledMove(Simulation& simulation) {
