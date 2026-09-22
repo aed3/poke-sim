@@ -26,7 +26,7 @@ struct SideStateSetup : StateSetupBase {
   void initBlank();
 
   void setTeam(std::vector<PokemonStateSetup>& team);
-  void setOpponent(types::entity entity, types::teamPositionIndex opponentTeamSize);
+  void setOpponent(types::entity entity);
   void setBattle(types::entity entity);
   void setPlayerSide(PlayerSideId playerSideId);
   void setSideDecision(const SideDecision& sideDecision);

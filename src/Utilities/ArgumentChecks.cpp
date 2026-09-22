@@ -212,12 +212,12 @@ void checkSide(types::entity sideEntity, const types::registry& registry) {
   POKESIM_REQUIRE_NM(has<Team>(sideEntity, registry));
   POKESIM_REQUIRE_NM(has<FoeSide>(sideEntity, registry));
   POKESIM_REQUIRE_NM(has<Battle>(sideEntity, registry));
-  POKESIM_REQUIRE_NM(has<FoesRemaining>(sideEntity, registry));
+  POKESIM_REQUIRE_NM(has<TeamRemaining>(sideEntity, registry));
   POKESIM_REQUIRE_NM(has<PlayerSide>(sideEntity, registry));
 
-  const auto& [battle, team, foeSide, foesRemaining] = registry.get<Battle, Team, FoeSide, FoesRemaining>(sideEntity);
+  const auto& [battle, team, foeSide, teamRemaining] = registry.get<Battle, Team, FoeSide, TeamRemaining>(sideEntity);
   checkBounds<Constants::TeamSize>(team.val.size());
-  check(foesRemaining);
+  check(teamRemaining);
 
   POKESIM_REQUIRE_NM(registry.get<FoeSide>(foeSide.val).val == sideEntity);
 
@@ -230,16 +230,15 @@ void checkSide(types::entity sideEntity, const types::registry& registry) {
     POKESIM_REQUIRE_NM(registry.get<Side>(pokemonEntity).val == sideEntity);
   }
 
-  const Team& foeTeam = registry.get<Team>(registry.get<FoeSide>(sideEntity).val);
-  POKESIM_REQUIRE_NM(foesRemaining.val <= foeTeam.val.size());
+  POKESIM_REQUIRE_NM(teamRemaining.val <= team.val.size());
 
-  types::teamPositionIndex foePokemonLeft = 0U;
-  for (types::entity foeEntity : foeTeam.val) {
-    if (!registry.all_of<tags::Fainted>(foeEntity)) {
-      foePokemonLeft++;
+  types::teamPositionIndex pokemonLeft = 0U;
+  for (types::entity entity : team.val) {
+    if (!registry.all_of<tags::Fainted>(entity)) {
+      pokemonLeft++;
     }
   }
-  POKESIM_REQUIRE_NM(foesRemaining.val == foePokemonLeft);
+  POKESIM_REQUIRE_NM(teamRemaining.val == pokemonLeft);
 }
 
 void checkPokemon(types::entity pokemonEntity, const types::registry& registry) {
@@ -803,11 +802,6 @@ void check(const Team& team, const types::registry& registry) {
 }
 
 template <>
-void check(const FoesRemaining& teamMembersAvailable) {
-  POKESIM_REQUIRE_NM(teamMembersAvailable.val <= Constants::TeamSize::MAX);
-}
-
-template <>
 void check(const HitCount& hitCount) {
   checkBounds<Constants::MoveHits>(hitCount.val);
 }
@@ -1199,6 +1193,12 @@ void check(const SideDecision& sideDecision) {
 }
 
 template <>
+void check(const MidTurnDecisionsRequested& mdTurnDecisionsRequested) {
+  POKESIM_REQUIRE_NM(mdTurnDecisionsRequested.val > Constants::ActivePokemon::MIN);
+  POKESIM_REQUIRE_NM(mdTurnDecisionsRequested.val <= Constants::ActivePokemon::MAX);
+}
+
+template <>
 void check(const MidTurnSideDecision& midTurnSideDecision) {
   POKESIM_REQUIRE_NM(!midTurnSideDecision.val.empty());
 
@@ -1336,6 +1336,11 @@ void check(const stat::EffectiveSpd& spd) {
 template <>
 void check(const stat::EffectiveSpe& spe) {
   checkEffectiveStat(spe.val, dex::Stat::SPE);
+}
+
+template <>
+void check(const TeamRemaining& teamMembersAvailable) {
+  POKESIM_REQUIRE_NM(teamMembersAvailable.val <= Constants::TeamSize::MAX);
 }
 
 template <>

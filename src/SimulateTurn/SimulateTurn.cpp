@@ -19,7 +19,6 @@
 #include <Components/EntityHolders/RecycledEntities.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
-#include <Components/FoesRemaining.hpp>
 #include <Components/LastUsedMove.hpp>
 #include <Components/MoveSlots.hpp>
 #include <Components/Names/MoveNames.hpp>
@@ -27,6 +26,7 @@
 #include <Components/Names/TargetSlotName.hpp>
 #include <Components/PlayerSide.hpp>
 #include <Components/Pokedex/PP.hpp>
+#include <Components/SideDecisionOptions.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/SimulationResults.hpp>
@@ -39,6 +39,8 @@
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
+#include <Components/Tags/VolatileTags.hpp>
+#include <Components/TeamRemaining.hpp>
 #include <Components/Turn.hpp>
 #include <Components/Winner.hpp>
 #include <Config/Require.hpp>
@@ -68,13 +70,13 @@ void speedSort(Filter battleFilter, Simulation& simulation) {
 }
 
 void midTurnSwitch(Simulation& simulation) {
-  simulation.simulateTurnOptions.decisionCallback(simulation);
   if (simulation.registry.view<MidTurnSideDecision>().empty()) {
     return;
   }
+  pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn> sideFilter{simulation};
 
-  simulation.view<internal::simulate_turn::resolveMidTurnDecisions>();
-  simulation.removeFromEntities<MidTurnSideDecision>();
+  sideFilter.view<internal::simulate_turn::resolveMidTurnDecisions>();
+  sideFilter.removeFromSelected<MidTurnSideDecision>();
   getBattleFilter(simulation).view<internal::simulate_turn::speedSortMidTurnSwitches>();
   internal::simulate_turn::resolveSpeedTies(simulation);
 }
@@ -308,7 +310,7 @@ void setFainting(types::registry& registry, FaintQueue& faintQueue) {
   }
   faintQueue.val.pop_back();
   registry.emplace<pokesim::tags::Fainting>(pokemon);
-  registry.get<FoesRemaining>(registry.get<FoeSide>(registry.get<Side>(pokemon).val).val).val--;
+  registry.get<TeamRemaining>(registry.get<Side>(pokemon).val).val--;
 }
 
 void clearFaintQueue(types::handle battleHandle, const FaintQueue& faintQueue) {
@@ -321,7 +323,7 @@ void checkWin(types::handle battleHandle, const Sides& sides) {
   types::registry& registry = *battleHandle.registry();
 
   for (types::entity sideEntity : sides.val) {
-    types::teamPositionIndex foesRemaining = registry.get<FoesRemaining>(sideEntity).val;
+    types::teamPositionIndex foesRemaining = registry.get<TeamRemaining>(sides.val.foe(sideEntity)).val;
     if (!foesRemaining) {
       battleHandle.emplace<Winner>(registry.get<PlayerSide>(sideEntity).val);
       internal::simulate_turn::clearActionQueue(battleHandle, battleHandle.get<ActionQueue>());
@@ -381,6 +383,11 @@ void faintPokemon(Simulation& simulation) {
   internal::runAfterFaintEvent(simulation);
 }
 
+void requestMidTurnDecision(types::registry& registry, Battle battle, Side side) {
+  registry.get_or_emplace<pokesim::MidTurnDecisionsRequested>(battle.val).val++;
+  registry.get_or_emplace<pokesim::MidTurnDecisionsRequested>(side.val).val++;
+}
+
 void runCurrentAction(Simulation& simulation) {
   runBeforeTurnAction(simulation);
   runMoveAction(simulation);
@@ -391,6 +398,9 @@ void runCurrentAction(Simulation& simulation) {
   simulation.registry.clear<CurrentAction, SourceSlotName, TargetSlotName, action::tags::Current>();
 
   faintPokemon(simulation);
+  simulation.addToEntities<pokesim::tags::RequestingMidTurnDecision, pokesim::tags::Switching>();
+  simulation.view<requestMidTurnDecision, Tags<pokesim::tags::Switching>>();
+
   // Update
   // Switch requests
 
@@ -456,8 +466,15 @@ void simulateTurn(Simulation& simulation) {
   }
 
   internal::updateAllStats(simulation);
+  midTurnSwitch(simulation);
   simulation.view<internal::simulate_turn::resolveDecision, Tags<pokesim::tags::SimulateTurn>>();
   simulation.removeFromEntities<SideDecision, pokesim::tags::SimulateTurn>();
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    simulation.removeFromEntities<SinglesSideOptions, pokesim::tags::SimulateTurn>();
+  }
+  else {
+    simulation.removeFromEntities<DoublesSideOptions, pokesim::tags::SimulateTurn>();
+  }
 
   // battleFilter.view<internal::simulate_turn::addBeforeTurnAction, Tags<>,
   // entt::exclude_t<pokesim::tags::BattleMidTurn>>();
@@ -465,7 +482,9 @@ void simulateTurn(Simulation& simulation) {
   battleFilter
     .view<internal::simulate_turn::addResidualAction, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn>>();
 
-  simulation.addToEntities<pokesim::tags::BattleMidTurn, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
+  auto newTurnView = simulation.registry.view<pokesim::tags::SimulateTurn, pokesim::tags::Battle>(
+    entt::exclude_t<pokesim::tags::BattleMidTurn>{});
+  simulation.registry.insert<pokesim::tags::BattleMidTurn>(newTurnView.begin(), newTurnView.end());
 
   using ActionsLimit = Constants::ActionQueueLength;
   types::actionQueueIndex actionsTaken = ActionsLimit::MIN;
@@ -480,10 +499,11 @@ void simulateTurn(Simulation& simulation) {
     battleFilter.view<
       internal::simulate_turn::setCurrentAction,
       Tags<>,
-      entt::exclude_t<Winner, pokesim::tags::BattleRequestingDecision>>();
+      entt::exclude_t<Winner, pokesim::MidTurnDecisionsRequested>>();
     actionsTaken++;
 
-    if (options.decisionCallback && !simulation.registry.view<pokesim::tags::BattleRequestingDecision>()->empty()) {
+    if (options.decisionCallback && !simulation.registry.view<pokesim::tags::RequestingMidTurnDecision>()->empty()) {
+      options.decisionCallback(simulation);
       midTurnSwitch(simulation);
     }
   }

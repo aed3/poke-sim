@@ -95,11 +95,14 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkBattleOutputs() const {
-    pokesim::debug::TypesToIgnore typesToIgnore;
-    typesToIgnore.add<simulate_turn::tags::BattleOutcome, simulate_turn::tags::SpeedSortNeeded>();
-
-    pokesim::debug::TypesToIgnore typesIgnoredOnConstants = typesToIgnore;
-    typesToIgnore.add<Probability, ParentBattle, Turn, RootBattle, pokesim::tags::BattleMidTurn>();
+    pokesim::debug::TypesToIgnore typesToIgnore, typesIgnoredOnConstants;
+    typesToIgnore.add<
+      simulate_turn::tags::BattleOutcome,
+      simulate_turn::tags::SpeedSortNeeded,
+      Probability,
+      ParentBattle,
+      RootBattle,
+      pokesim::tags::BattleMidTurn>();
 
     if (!simulateTurnOptionsOnInput.getMakeBranchesOnRandomEvents()) {
       typesToIgnore.add<RngSeed>();
@@ -107,21 +110,30 @@ struct Checks : pokesim::debug::Checks {
 
     for (types::entity currentEntity : getBattleView()) {
       types::entity original = pokesim::debug::findCopyParent(currentEntitiesToInitial, *registry, currentEntity);
+      types::entity initialEntity = getInitialEntity(currentEntity);
+      pokesim::debug::TypesToIgnore perEntityTypesToIgnore = typesToIgnore;
+
       bool shouldNotChange = !simulateTurnOptionsOnInput.getApplyChangesToInputBattle() && original == currentEntity;
+      bool initialIsMidTurn = registryOnInput.all_of<pokesim::tags::BattleMidTurn>(initialEntity);
+      bool currentIsMidTurn = registry->all_of<pokesim::tags::BattleMidTurn>(currentEntity);
       if (!registryOnInput.all_of<Winner>(original)) {
-        typesToIgnore.add<Winner>();
+        perEntityTypesToIgnore.add<Winner>();
       }
 
-      types::entity initialEntity = getInitialEntity(currentEntity);
+      if (currentIsMidTurn || initialIsMidTurn) {
+        perEntityTypesToIgnore.add<MidTurnDecisionsRequested, ActionQueue>();
+      }
+      if (!currentIsMidTurn) {
+        perEntityTypesToIgnore.add<Turn>();
+      }
+
       pokesim::debug::areEntitiesEqual(
         *registry,
         currentEntity,
         registryOnInput,
         initialEntity,
-        shouldNotChange ? typesIgnoredOnConstants : typesToIgnore);
+        shouldNotChange ? typesIgnoredOnConstants : perEntityTypesToIgnore);
 
-      bool initialIsMidTurn = registryOnInput.all_of<pokesim::tags::BattleMidTurn>(initialEntity);
-      bool currentIsMidTurn = registry->all_of<pokesim::tags::BattleMidTurn>(currentEntity);
       types::entity currAction = registry->get<RecycledAction>(currentEntity).val;
       if (!initialIsMidTurn && !currentIsMidTurn) {
         pokesim::debug::areEntitiesEqual(*registry, currAction, registryOnInput, getInitialEntity(currAction));

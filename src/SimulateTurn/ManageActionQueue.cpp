@@ -194,7 +194,8 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, Recy
   registry.emplace<action::tags::Current>(action.val);
 
   switch (nextActon.order) {
-    case ActionOrder::SWITCH: {
+    case ActionOrder::MID_TURN_SWITCH:
+    case ActionOrder::SWITCH:          {
       battleHandle.emplace<action::tags::Switch>();
       const SwitchDecision& decision = nextActon.decision.get<SwitchDecision>();
       registry.emplace<SourceSlotName>(action.val, decision.sourceSlot);

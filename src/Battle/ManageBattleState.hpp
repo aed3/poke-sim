@@ -6,11 +6,14 @@ namespace pokesim {
 class Simulation;
 struct Battle;
 struct Sides;
+struct Side;
 struct CurrentAction;
 struct CurrentActionSource;
 struct CurrentActionTarget;
 
 namespace internal {
+bool sideHasPossibleSwitch(types::registry& registry, Side side, const Simulation& simulation);
+
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action);
 void setCurrentActionSwitchSource(types::handle battleHandle, const Sides& sides, CurrentAction& action);
 void setCurrentActionSwitchTarget(types::handle battleHandle, const Sides& sides, CurrentAction& action);

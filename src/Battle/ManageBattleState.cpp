@@ -12,6 +12,7 @@
 #include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/RecycledEntities.hpp>
+#include <Components/EntityHolders/Side.hpp>
 #include <Components/HitCount.hpp>
 #include <Components/MoveSlots.hpp>
 #include <Components/Names/ItemNames.hpp>
@@ -32,6 +33,7 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
+#include <Components/TeamRemaining.hpp>
 #include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/EnumToTag/MoveEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
@@ -132,6 +134,14 @@ void clearAction(Simulation& simulation) {
     pokesim::tags::CurrentActionTarget>();
 }
 }  // namespace
+
+bool sideHasPossibleSwitch(types::registry& registry, Side side, const Simulation& simulation) {
+  TeamRemaining teamRemaining = registry.get<TeamRemaining>(side.val);
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    return teamRemaining.val > Constants::ActivePokemonSlotsPerSide::SINGLES;
+  }
+  return teamRemaining.val > Constants::ActivePokemonSlotsPerSide::DOUBLES;
+}
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action) {
   types::registry& registry = *battleHandle.registry();

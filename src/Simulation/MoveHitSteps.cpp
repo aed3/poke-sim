@@ -10,6 +10,7 @@
 #include <Components/Effects/AddedFlinchChance.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/Side.hpp>
 #include <Components/HitCount.hpp>
 #include <Components/Priority.hpp>
 #include <Components/RandomEventOutputs.hpp>
@@ -212,6 +213,16 @@ void runPrimaryMoveEffects(Simulation& simulation) {
   simulation.removeFromEntities<internal::tags::RunEffect>();
 }
 
+void setSourceSwitchFlag(types::registry& registry, CurrentActionSource source, const Simulation& simulation) {
+  if (internal::sideHasPossibleSwitch(registry, registry.get<Side>(source.val), simulation)) {
+    registry.emplace<tags::Switching>(source.val);
+  }
+}
+
+void runSelfSwitch(Simulation& simulation) {
+  simulation.view<setSourceSwitchFlag, Tags<move::tags::SelfSwitch, tags::CurrentMoveHit>>(simulation);
+}
+
 void runSecondaryMoveEffects(Simulation& simulation) {
   removeImpossibleSecondaryEffectTargets(simulation);
   internal::runModifySecondariesEvent(simulation);
@@ -241,13 +252,14 @@ void moveHitLoop(Simulation& simulation) {
   using MoveHitLimits = Constants::MoveHits;
   types::moveHits iterations = MoveHitLimits::MIN;
   while (!simulation.registry.view<HitCount>().empty()) {
-    POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran more than possible.");
+    POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran than possible.");
 
     calc_damage::run(simulation);  // 1. call to this.battle.getDamage
     internal::runDamageEvent(simulation);
 
     applyDamage(simulation);            // 2. call to this.battle.spreadDamage
     runPrimaryMoveEffects(simulation);  // 3. primary effects
+    runSelfSwitch(simulation);
     // 4. self drops
     runSecondaryMoveEffects(simulation);  // 5. secondary effects
     // 6. force switch

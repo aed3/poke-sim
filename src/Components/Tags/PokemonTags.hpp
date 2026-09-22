@@ -9,6 +9,7 @@ struct HasStatus {};
 
 // Indicates the Pokemon is currently in a battle.
 struct ActivePokemon {};
+struct RequestingMidTurnDecision {};
 
 struct AtkStatUpdateRequired {};
 struct DefStatUpdateRequired {};

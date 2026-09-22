@@ -91,8 +91,8 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
       const types::handle p1Handle = {registry, sides.val.p1()};
       const types::handle p2Handle = {registry, sides.val.p2()};
 
-      internal::simulate_turn::resolveDecision(p1Handle, p1Handle.get<SideDecision>());
-      internal::simulate_turn::resolveDecision(p2Handle, p2Handle.get<SideDecision>());
+      internal::simulate_turn::resolveDecision(p1Handle, Battle{group[i]}, p1Handle.get<SideDecision>());
+      internal::simulate_turn::resolveDecision(p2Handle, Battle{group[i]}, p2Handle.get<SideDecision>());
 
       const auto& queue = registry.get<ActionQueue>(group[i]).val;
       const auto id = registry.get<Id>(group[i]).val;

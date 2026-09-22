@@ -3,7 +3,7 @@
 #include <Types/Indexes.hpp>
 
 namespace pokesim {
-struct FoesRemaining {
+struct TeamRemaining {
   types::teamPositionIndex val{};
 };
 }  // namespace pokesim

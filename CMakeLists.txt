@@ -238,6 +238,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/Moves/KnockOff.cpp
       tests/Moves/TrappingMoves.cpp
       tests/Moves/TripleArrows.cpp
+      tests/Moves/VoltSwitch.cpp
       tests/PokedexTest.cpp
       tests/SimulateTurnsTest.cpp
       tests/SimulationSetupTest.cpp

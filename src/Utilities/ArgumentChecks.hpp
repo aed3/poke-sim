@@ -60,7 +60,6 @@ struct Side;
 struct Sides;
 struct Team;
 struct EventModifier;
-struct FoesRemaining;
 struct HitCount;
 struct Id;
 struct LastUsedMove;
@@ -104,9 +103,11 @@ struct DoublesZMoveOptions;
 struct DoublesDynamaxOptions;
 struct SinglesTerastallizeOptions;
 struct SideDecision;
+struct MidTurnDecisionsRequested;
 struct MidTurnSideDecision;
 struct SpeedTieIndexes;
 struct SpeciesTypes;
+struct TeamRemaining;
 struct Turn;
 struct Winner;
 namespace analyze_effect {
@@ -353,9 +354,6 @@ void check(const Team&, const types::registry&);
 // template <> void check(const EventModifier&);
 
 template <>
-void check(const FoesRemaining&);
-
-template <>
 void check(const HitCount&);
 
 // template <> void check(const Id&);
@@ -525,6 +523,9 @@ template <>
 void check(const SideDecision&);
 
 template <>
+void check(const MidTurnDecisionsRequested&);
+
+template <>
 void check(const MidTurnSideDecision&);
 
 template <>
@@ -583,6 +584,9 @@ void check(const stat::EffectiveSpd&);
 
 template <>
 void check(const stat::EffectiveSpe&);
+
+template <>
+void check(const TeamRemaining&);
 
 template <>
 void check(const Turn&);

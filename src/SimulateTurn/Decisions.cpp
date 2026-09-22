@@ -126,7 +126,7 @@ void setDoublesMidTurnSideOptions(
 
 void setSinglesSwitchOptions(
   types::registry& registry, PlayerSide playerSide, const Team& team, SinglesSideOptions& sideOptions) {
-  if (registry.all_of<tags::Trapped>(team.val[0])) {
+  if (registry.all_of<tags::Trapped>(team.val[0]) && !registry.all_of<tags::Switching>(team.val[0])) {
     return;
   }
 
@@ -148,11 +148,15 @@ void setDoublesSwitchOptions(types::handle handle, Side side) {
 
 void setSinglesMoveOptions(types::handle handle, Side side, const MoveSlots& moveSlots, const Pokedex& pokedex) {
   types::registry& registry = *handle.registry();
-  SinglesSideOptions& sideOptions = registry.get<SinglesSideOptions>(side.val);
+  SinglesSideOptions* sideOptions = registry.try_get<SinglesSideOptions>(side.val);
+  if (!sideOptions) {
+    return;
+  }
+
   PlayerSide playerSide = registry.get<PlayerSide>(side.val);
 
   setMoveOptions<SinglesMoveOption>(
-    sideOptions.moves,
+    sideOptions->moves,
     handle,
     moveSlots,
     sideIdAndPositionToSlot(playerSide.val, 0U),
@@ -161,7 +165,11 @@ void setSinglesMoveOptions(types::handle handle, Side side, const MoveSlots& mov
 
 void setDoublesMoveOptions(types::handle handle, Side side, const MoveSlots& moveSlots, const Pokedex& pokedex) {
   types::registry& registry = *handle.registry();
-  DoublesSideOptions& sideOptions = registry.get<DoublesSideOptions>(side.val);
+  DoublesSideOptions* sideOptions = registry.try_get<DoublesSideOptions>(side.val);
+  if (!sideOptions) {
+    return;
+  }
+
   const auto& [team, playerSide] = registry.get<Team, PlayerSide>(side.val);
 
   POKESIM_REQUIRE(
@@ -186,13 +194,27 @@ void setDoublesMoveOptions(types::handle handle, Side side, const MoveSlots& mov
   }
 
   setMoveOptions<DoublesMoveOption>(
-    sideOptions.moves[slotPosition],
+    sideOptions->moves[slotPosition],
     handle,
     moveSlots,
     sourceSlot,
     pokedex,
     allySlot,
     foeSlots);
+}
+
+void emplaceSinglesSideOptions(types::handle handle, Battle battle) {
+  if (handle.registry()->all_of<tags::BattleMidTurn>(battle.val)) {
+    return;
+  }
+  handle.emplace<SinglesSideOptions>();
+}
+
+void emplaceDoublesSideOptions(types::handle handle, Battle battle) {
+  if (handle.registry()->all_of<tags::BattleMidTurn>(battle.val)) {
+    return;
+  }
+  handle.emplace<DoublesSideOptions>();
 }
 
 void setTeamPreviewOptionsFromBattle(types::registry& registry, Turn turn, const Sides& sides) {
@@ -268,31 +290,30 @@ void resolveTeamDecision(types::registry&, const types::teamOrder&, ActionQueue&
 namespace simulate_turn {
 void setSideOptions(Simulation& simulation) {
   const Pokedex& pokedex = simulation.pokedex();
-  using WantsMidTurnOptions = pokesim::tags::BattleRequestingDecision;
-  auto wantsRegularOptionsView = simulation.registry.view<pokesim::tags::Side>(entt::exclude_t<WantsMidTurnOptions>());
+  using PokemonRequestsMidTurn = pokesim::tags::RequestingMidTurnDecision;
 
   simulation.registry.clear<SwitchOptions>();
-  simulation.addToEntities<SwitchOptions, WantsMidTurnOptions>();
+  simulation.addToEntities<SwitchOptions, MidTurnDecisionsRequested, pokesim::tags::Side>();
   if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
     simulation.registry.clear<SinglesSideOptions>();
-    simulation.view<setSinglesMidTurnSideOptions, Tags<WantsMidTurnOptions>>();
+    simulation.view<setSinglesMidTurnSideOptions>();
 
-    simulation.registry.insert<SinglesSideOptions>(wantsRegularOptionsView.begin(), wantsRegularOptionsView.end());
-    simulation.view<setSinglesMoveOptions, Tags<pokesim::tags::ActivePokemon>, entt::exclude_t<WantsMidTurnOptions>>(
+    simulation.view<emplaceSinglesSideOptions, Tags<pokesim::tags::Side>, entt::exclude_t<MidTurnDecisionsRequested>>();
+    simulation.view<setSinglesMoveOptions, Tags<pokesim::tags::ActivePokemon>, entt::exclude_t<PokemonRequestsMidTurn>>(
       pokedex);
-    simulation.view<setSinglesSwitchOptions, Tags<pokesim::tags::Side>, entt::exclude_t<WantsMidTurnOptions>>();
+    simulation.view<setSinglesSwitchOptions, Tags<pokesim::tags::Side>, entt::exclude_t<MidTurnDecisionsRequested>>();
   }
   else {
     simulation.registry.clear<DoublesSideOptions>();
-    simulation.view<setDoublesMidTurnSideOptions, Tags<WantsMidTurnOptions>>();
+    simulation.view<setDoublesMidTurnSideOptions>();
 
-    simulation.registry.insert<DoublesSideOptions>(wantsRegularOptionsView.begin(), wantsRegularOptionsView.end());
-    simulation.view<setDoublesMoveOptions, Tags<pokesim::tags::ActivePokemon>, entt::exclude_t<WantsMidTurnOptions>>(
+    simulation.view<emplaceDoublesSideOptions, Tags<pokesim::tags::Side>, entt::exclude_t<MidTurnDecisionsRequested>>();
+    simulation.view<setDoublesMoveOptions, Tags<pokesim::tags::ActivePokemon>, entt::exclude_t<PokemonRequestsMidTurn>>(
       pokedex);
     simulation.view<
       setDoublesSwitchOptions,
       Tags<pokesim::tags::ActivePokemon>,
-      entt::exclude_t<WantsMidTurnOptions, pokesim::tags::Trapped>>();
+      entt::exclude_t<PokemonRequestsMidTurn, pokesim::tags::Trapped>>();
   }
 }
 
@@ -302,8 +323,7 @@ void setTeamPreviewOptions(Simulation& simulation) {
 }  // namespace simulate_turn
 
 namespace internal::simulate_turn {
-void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision) {
-  Battle battle = sideHandle.get<Battle>();
+void resolveDecision(types::handle sideHandle, Battle battle, const SideDecision& sideDecision) {
   types::registry& registry = *sideHandle.registry();
   ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
 
@@ -334,18 +354,44 @@ void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision)
   }
 }
 
-void resolveMidTurnDecisions(types::handle sideHandle, const MidTurnSideDecision& switchDecisions) {
-  Battle battle = sideHandle.get<Battle>();
+void resolveMidTurnDecisions(
+  types::handle sideHandle, Battle battle, const MidTurnSideDecision& switchDecisions,
+  MidTurnDecisionsRequested& decisionsRequested) {
   types::registry& registry = *sideHandle.registry();
-  ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
+  POKESIM_REQUIRE(
+    registry.all_of<pokesim::tags::BattleMidTurn>(battle.val),
+    "Battle must be mid turn to resolve these decisions.");
+  auto [actionQueue, battleDecisionsRequested] = registry.get<ActionQueue, MidTurnDecisionsRequested>(battle.val);
 
   for (SwitchDecision switchDecision : switchDecisions.val) {
+    POKESIM_REQUIRE(
+      decisionsRequested.val > Constants::ActivePokemon::MIN,
+      "Adding more decisions than the side requested.");
+    POKESIM_REQUIRE(
+      battleDecisionsRequested.val > Constants::ActivePokemon::MIN,
+      "Adding more decisions than the battle requested.");
+
     ActionQueueItem actionQueueItem{ActionOrder::MID_TURN_SWITCH};
     actionQueueItem.decision = switchDecision;
 
     types::entity sourceEntity = slotToPokemonEntity(registry, sideHandle.entity(), switchDecision.sourceSlot);
+    POKESIM_REQUIRE(
+      registry.all_of<pokesim::tags::RequestingMidTurnDecision>(sourceEntity),
+      "Adding decision to a Pokemon that did not request one.");
+    registry.remove<pokesim::tags::RequestingMidTurnDecision>(sourceEntity);
+
     actionQueueItem.speed = registry.get<stat::EffectiveSpe>(sourceEntity).val;
     actionQueue.val.insert(actionQueue.val.begin(), actionQueueItem);
+
+    decisionsRequested.val--;
+    battleDecisionsRequested.val--;
+  }
+
+  if (decisionsRequested.val == Constants::ActivePokemon::MIN) {
+    sideHandle.remove<MidTurnDecisionsRequested>();
+    if (battleDecisionsRequested.val == Constants::ActivePokemon::MIN) {
+      registry.remove<MidTurnDecisionsRequested>(battle.val);
+    }
   }
 }
 }  // namespace internal::simulate_turn

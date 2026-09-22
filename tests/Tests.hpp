@@ -29,7 +29,6 @@ namespace pokesim {
 struct TestChecks : debug::Checks {
   using debug::Checks::checkOptions;
   using debug::Checks::copyEntity;
-  using debug::Checks::copyRemainingEntities;
   using debug::Checks::getFinalEntityCount;
   using debug::Checks::getInitialEntity;
   using debug::Checks::has;
@@ -125,6 +124,8 @@ struct TestChecks : debug::Checks {
     simulateTurnOptionsOnInput = simulation->simulateTurnOptions;
     calcDamageOptionsOnInput = simulation->calculateDamageOptions;
     analyzeEffectOptionsOnInput = simulation->analyzeEffectOptions;
+
+    copyRemainingEntities();
   }
 
   TestChecks(const Simulation& _simulation) : debug::Checks(_simulation) {}
@@ -313,12 +314,16 @@ struct TestSimulation {
     auto sides = registry().get<Sides>(battleEntity).val;
     entities.p1Side = sides.p1();
     entities.p2Side = sides.p2();
-    entities.p1A = getPokemonEntity(battleEntity, Slot::P1A);
-    entities.p2A = getPokemonEntity(battleEntity, Slot::P2A);
+    const Team& p1Team = registry().get<Team>(sides.p1());
+    const Team& p2Team = registry().get<Team>(sides.p2());
+    entities.p1A = p1Team.val[0];
+    entities.p2A = p2Team.val[0];
 
-    if (simulation.isBattleFormat(BattleFormat::DOUBLES)) {
-      entities.p1B = getPokemonEntity(battleEntity, Slot::P1B);
-      entities.p2B = getPokemonEntity(battleEntity, Slot::P2B);
+    if (p1Team.val.size() >= 2U) {
+      entities.p1B = p1Team.val[1];
+    }
+    if (p2Team.val.size() >= 2U) {
+      entities.p2B = p2Team.val[1];
     }
 
     return entities;
@@ -335,7 +340,6 @@ struct TestSimulation {
   simulate_turn::Results simulateTurn(Tags<BattleTypesToIgnore...> = {}, Tags<SideTypesToIgnore...> = {}) {
     if (!simulationInitialized) initializeSimulation();
     checks.reset();
-    checks.copyRemainingEntities();
 
     simulate_turn::Results results = simulation.simulateTurn();
 

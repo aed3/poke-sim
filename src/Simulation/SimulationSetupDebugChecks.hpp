@@ -19,7 +19,6 @@
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
-#include <Components/FoesRemaining.hpp>
 #include <Components/ID.hpp>
 #include <Components/Level.hpp>
 #include <Components/MoveSlots.hpp>
@@ -43,6 +42,7 @@
 #include <Components/Tags/ItemPropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Components/TeamRemaining.hpp>
 #include <Components/Turn.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/EnumToTag/AbilityEnumToTag.hpp>
@@ -343,7 +343,7 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<Team>(sideEntity));
     POKESIM_REQUIRE_NM(registry->all_of<FoeSide>(sideEntity));
     POKESIM_REQUIRE_NM(registry->all_of<Battle>(sideEntity));
-    POKESIM_REQUIRE_NM(registry->all_of<FoesRemaining>(sideEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<TeamRemaining>(sideEntity));
 
     const auto& team = registry->get<Team>(sideEntity).val;
     POKESIM_REQUIRE_NM(team.size() == creationInfo.team.size());
@@ -387,8 +387,8 @@ struct SimulationSetupChecks {
 
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p1SideEntity).val == p2SideEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p2SideEntity).val == p1SideEntity);
-    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p1SideEntity).val <= p2SideInfo.team.size());
-    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p2SideEntity).val <= p1SideInfo.team.size());
+    POKESIM_REQUIRE_NM(registry->get<TeamRemaining>(p1SideEntity).val <= p1SideInfo.team.size());
+    POKESIM_REQUIRE_NM(registry->get<TeamRemaining>(p2SideEntity).val <= p2SideInfo.team.size());
 
     pokesim::debug::checkBattle(battleEntity, *registry);
   }

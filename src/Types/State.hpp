@@ -24,6 +24,15 @@ struct sides : public std::array<T, Constants::SIDE_COUNT> {
   constexpr const T& p1() const { return this->at(0); };
   constexpr const T& p2() const { return this->at(1); };
 
+  constexpr T& foe(const T& side) {
+    POKESIM_REQUIRE(side == p1() || side == p2(), "Value must be one of the values in this array.");
+    return side == p1() ? p2() : p1();
+  }
+  constexpr const T& foe(const T& side) const {
+    POKESIM_REQUIRE(side == p1() || side == p2(), "Value must be one of the values in this array.");
+    return side == p1() ? p2() : p1();
+  }
+
   constexpr T& at(PlayerSideId sideId) { return sideId == PlayerSideId::P1 ? p1() : p2(); }
   constexpr const T& at(PlayerSideId sideId) const { return sideId == PlayerSideId::P1 ? p1() : p2(); }
   using std::array<T, Constants::SIDE_COUNT>::at;

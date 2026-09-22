@@ -285,15 +285,15 @@ TEST_CASE("Battle ends on faint", "[Simulation][SimulateTurn][SingleBattle][Fain
     })
     .setMakeBranchesOnRandomEvents(true);
 
-  auto entities = test.simulateOneNonBranchingBattle(Tags<Winner>{}, Tags<FoesRemaining>{});
+  auto entities = test.simulateOneNonBranchingBattle(Tags<Winner>{}, Tags<TeamRemaining>{});
   const types::registry& registry = test.registry();
 
   const auto& [turn, winner] = registry.get<Turn, Winner>(entities.battle);
 
-  const FoesRemaining& p2Remaining = registry.get<FoesRemaining>(entities.p1Side);
-  const FoesRemaining& p1Remaining = registry.get<FoesRemaining>(entities.p2Side);
-  REQUIRE(p2Remaining.val == 1U);
-  REQUIRE(p1Remaining.val == 0U);
+  const TeamRemaining& p2Remaining = registry.get<TeamRemaining>(entities.p1Side);
+  const TeamRemaining& p1Remaining = registry.get<TeamRemaining>(entities.p2Side);
+  REQUIRE(p1Remaining.val == 1U);
+  REQUIRE(p2Remaining.val == 0U);
 
   test.checks.checkEntityForChanges<stat::CurrentHp, tags::Fainted, tags::ActivePokemon, MoveSlots>(entities.p1A);
   test.checks.checkMovePpUsage(entities.p1A);

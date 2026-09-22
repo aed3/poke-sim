@@ -31,6 +31,10 @@ constexpr void enumToTag(MoveProperty item, RunArgs&&... args) {
   if (item & MoveProperty::VARIABLE_HIT_COUNT) {
     RunStruct<move::tags::VariableHitCount, T...>::run(std::forward<RunArgs>(args)...);
   }
+
+  if (item & MoveProperty::SELF_SWITCH) {
+    RunStruct<move::tags::SelfSwitch, T...>::run(std::forward<RunArgs>(args)...);
+  }
 }
 
 // Assigns a move's tag to a handle

@@ -126,7 +126,6 @@
  * src/Components/EntityHolders/Sides.hpp
  * src/Components/EntityHolders/Team.hpp
  * src/Components/EventModifier.hpp
- * src/Components/FoesRemaining.hpp
  * src/Components/HitCount.hpp
  * src/Components/ID.hpp
  * src/Components/LastUsedMove.hpp
@@ -179,6 +178,7 @@
  * src/Components/Tags/TargetTags.hpp
  * src/Components/Tags/TypeTags.hpp
  * src/Components/Tags/VolatileTags.hpp
+ * src/Components/TeamRemaining.hpp
  * src/Components/Turn.hpp
  * src/Components/Winner.hpp
  * src/Pokedex/Effects/Burn.hpp
@@ -18187,6 +18187,15 @@ struct sides : public std::array<T, Constants::SIDE_COUNT> {
   constexpr const T& p1() const { return this->at(0); };
   constexpr const T& p2() const { return this->at(1); };
 
+  constexpr T& foe(const T& side) {
+    POKESIM_REQUIRE(side == p1() || side == p2(), "Value must be one of the values in this array.");
+    return side == p1() ? p2() : p1();
+  }
+  constexpr const T& foe(const T& side) const {
+    POKESIM_REQUIRE(side == p1() || side == p2(), "Value must be one of the values in this array.");
+    return side == p1() ? p2() : p1();
+  }
+
   constexpr T& at(PlayerSideId sideId) { return sideId == PlayerSideId::P1 ? p1() : p2(); }
   constexpr const T& at(PlayerSideId sideId) const { return sideId == PlayerSideId::P1 ? p1() : p2(); }
   using std::array<T, Constants::SIDE_COUNT>::at;
@@ -19848,16 +19857,6 @@ struct EventModifier {
 
 /////////////////// END OF src/Components/EventModifier.hpp ////////////////////
 
-////////////////// START OF src/Components/FoesRemaining.hpp ///////////////////
-
-namespace pokesim {
-struct FoesRemaining {
-  types::teamPositionIndex val{};
-};
-}  // namespace pokesim
-
-/////////////////// END OF src/Components/FoesRemaining.hpp ////////////////////
-
 ///////////////////// START OF src/Components/HitCount.hpp /////////////////////
 
 namespace pokesim {
@@ -20397,6 +20396,10 @@ struct SideDecision {
   bool operator==(const SideDecision other) const { return sideId == other.sideId && decisions == other.decisions; }
 };
 
+struct MidTurnDecisionsRequested {
+  types::activePokemonIndex val = Constants::ActivePokemon::MIN;
+};
+
 struct MidTurnSideDecision {
   types::sideSlots<SwitchDecision> val{};
 };
@@ -20663,7 +20666,6 @@ struct Battle {};
 struct Side {};
 
 struct BattleMidTurn {};
-struct BattleRequestingDecision {};
 }  // namespace pokesim::tags
 
 ////////////////// END OF src/Components/Tags/BattleTags.hpp ///////////////////
@@ -20704,6 +20706,8 @@ struct Punch {};
 struct VariableHitCount {};
 // Move Property Tag: A multi-hit move where each hit checks accuracy (i.e. Triple Kick)
 struct AccuracyDependentHitCount {};
+
+struct SelfSwitch {};
 }  // namespace tags
 
 namespace effect::tags {
@@ -20764,6 +20768,7 @@ struct HasStatus {};
 
 // Indicates the Pokemon is currently in a battle.
 struct ActivePokemon {};
+struct RequestingMidTurnDecision {};
 
 struct AtkStatUpdateRequired {};
 struct DefStatUpdateRequired {};
@@ -20893,10 +20898,21 @@ struct Fairy {};
 
 namespace pokesim::tags {
 struct Flinch {};
+struct Switching {};
 struct Trapped {};
 }  // namespace pokesim::tags
 
 ///////////////// END OF src/Components/Tags/VolatileTags.hpp //////////////////
+
+////////////////// START OF src/Components/TeamRemaining.hpp ///////////////////
+
+namespace pokesim {
+struct TeamRemaining {
+  types::teamPositionIndex val{};
+};
+}  // namespace pokesim
+
+/////////////////// END OF src/Components/TeamRemaining.hpp ////////////////////
 
 /////////////////////// START OF src/Components/Turn.hpp ///////////////////////
 
@@ -21182,7 +21198,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-auto enumToTag(Status status, RunArgs&&... args) {
+constexpr auto enumToTag(Status status, RunArgs&&... args) {
   switch (status) {
     case Status::BRN: return RunStruct<Burn, T...>::run(std::forward<RunArgs>(args)...);
     case Status::FRZ: return RunStruct<Freeze, T...>::run(std::forward<RunArgs>(args)...);
@@ -21205,7 +21221,7 @@ auto enumToTag(Status status, RunArgs&&... args) {
 }
 
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-void forEachStatus(RunArgs&&... args) {
+constexpr void forEachStatus(RunArgs&&... args) {
   enumToTag<RunStruct, T...>(Status::BRN, std::forward<RunArgs>(args)...);
   enumToTag<RunStruct, T...>(Status::FRZ, std::forward<RunArgs>(args)...);
   enumToTag<RunStruct, T...>(Status::PAR, std::forward<RunArgs>(args)...);
@@ -21715,7 +21731,6 @@ struct Side;
 struct Sides;
 struct Team;
 struct EventModifier;
-struct FoesRemaining;
 struct HitCount;
 struct Id;
 struct LastUsedMove;
@@ -21759,9 +21774,11 @@ struct DoublesZMoveOptions;
 struct DoublesDynamaxOptions;
 struct SinglesTerastallizeOptions;
 struct SideDecision;
+struct MidTurnDecisionsRequested;
 struct MidTurnSideDecision;
 struct SpeedTieIndexes;
 struct SpeciesTypes;
+struct TeamRemaining;
 struct Turn;
 struct Winner;
 namespace analyze_effect {
@@ -22008,9 +22025,6 @@ void check(const Team&, const types::registry&);
 // template <> void check(const EventModifier&);
 
 template <>
-void check(const FoesRemaining&);
-
-template <>
 void check(const HitCount&);
 
 // template <> void check(const Id&);
@@ -22180,6 +22194,9 @@ template <>
 void check(const SideDecision&);
 
 template <>
+void check(const MidTurnDecisionsRequested&);
+
+template <>
 void check(const MidTurnSideDecision&);
 
 template <>
@@ -22238,6 +22255,9 @@ void check(const stat::EffectiveSpd&);
 
 template <>
 void check(const stat::EffectiveSpe&);
+
+template <>
+void check(const TeamRemaining&);
 
 template <>
 void check(const Turn&);
@@ -22953,7 +22973,7 @@ struct SideStateSetup : StateSetupBase {
   void initBlank();
 
   void setTeam(std::vector<PokemonStateSetup>& team);
-  void setOpponent(types::entity entity, types::teamPositionIndex opponentTeamSize);
+  void setOpponent(types::entity entity);
   void setBattle(types::entity entity);
   void setPlayerSide(PlayerSideId playerSideId);
   void setSideDecision(const SideDecision& sideDecision);
@@ -25077,7 +25097,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-auto enumToTag(Ability ability, RunArgs&&... args) {
+constexpr auto enumToTag(Ability ability, RunArgs&&... args) {
   switch (ability) {
     case Ability::ANALYTIC:      return RunStruct<Analytic, T...>::run(std::forward<RunArgs>(args)...);
     case Ability::CLEAR_BODY:    return RunStruct<ClearBody, T...>::run(std::forward<RunArgs>(args)...);
@@ -25114,7 +25134,7 @@ auto enumToTag(Ability ability, RunArgs&&... args) {
 }
 
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-void forEachAbility(const Pokedex& pokedex, RunArgs&&... args) {
+constexpr void forEachAbility(const Pokedex& pokedex, RunArgs&&... args) {
   pokedex.forEachLoadedAbility(
     [&](Ability ability) { enumToTag<RunStruct, T...>(ability, std::forward<RunArgs>(args)...); });
 }
@@ -25500,7 +25520,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-auto enumToTag(Item item, RunArgs&&... args) {
+constexpr auto enumToTag(Item item, RunArgs&&... args) {
   switch (item) {
     case Item::ASSAULT_VEST:  return RunStruct<AssaultVest, T...>::run(std::forward<RunArgs>(args)...);
     case Item::BRIGHT_POWDER: return RunStruct<BrightPowder, T...>::run(std::forward<RunArgs>(args)...);
@@ -25530,7 +25550,7 @@ auto enumToTag(Item item, RunArgs&&... args) {
 }
 
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-void forEachItem(const Pokedex& pokedex, RunArgs&&... args) {
+constexpr void forEachItem(const Pokedex& pokedex, RunArgs&&... args) {
   pokedex.forEachLoadedItem([&](Item item) { enumToTag<RunStruct, T...>(item, std::forward<RunArgs>(args)...); });
 }
 
@@ -25563,7 +25583,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-auto enumToTag(Nature nature, RunArgs&&... args) {
+constexpr auto enumToTag(Nature nature, RunArgs&&... args) {
   switch (nature) {
     case Nature::ADAMANT: return RunStruct<nature::tags::Adamant, T...>::run(std::forward<RunArgs>(args)...);
     case Nature::BASHFUL: return RunStruct<nature::tags::Bashful, T...>::run(std::forward<RunArgs>(args)...);
@@ -26009,7 +26029,7 @@ struct SimulationSetupChecks {
     POKESIM_REQUIRE_NM(registry->all_of<Team>(sideEntity));
     POKESIM_REQUIRE_NM(registry->all_of<FoeSide>(sideEntity));
     POKESIM_REQUIRE_NM(registry->all_of<Battle>(sideEntity));
-    POKESIM_REQUIRE_NM(registry->all_of<FoesRemaining>(sideEntity));
+    POKESIM_REQUIRE_NM(registry->all_of<TeamRemaining>(sideEntity));
 
     const auto& team = registry->get<Team>(sideEntity).val;
     POKESIM_REQUIRE_NM(team.size() == creationInfo.team.size());
@@ -26053,8 +26073,8 @@ struct SimulationSetupChecks {
 
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p1SideEntity).val == p2SideEntity);
     POKESIM_REQUIRE_NM(registry->get<FoeSide>(p2SideEntity).val == p1SideEntity);
-    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p1SideEntity).val <= p2SideInfo.team.size());
-    POKESIM_REQUIRE_NM(registry->get<FoesRemaining>(p2SideEntity).val <= p1SideInfo.team.size());
+    POKESIM_REQUIRE_NM(registry->get<TeamRemaining>(p1SideEntity).val <= p1SideInfo.team.size());
+    POKESIM_REQUIRE_NM(registry->get<TeamRemaining>(p2SideEntity).val <= p2SideInfo.team.size());
 
     pokesim::debug::checkBattle(battleEntity, *registry);
   }
@@ -27050,11 +27070,14 @@ namespace pokesim {
 class Simulation;
 struct Battle;
 struct Sides;
+struct Side;
 struct CurrentAction;
 struct CurrentActionSource;
 struct CurrentActionTarget;
 
 namespace internal {
+bool sideHasPossibleSwitch(types::registry& registry, Side side, const Simulation& simulation);
+
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action);
 void setCurrentActionSwitchSource(types::handle battleHandle, const Sides& sides, CurrentAction& action);
 void setCurrentActionSwitchTarget(types::handle battleHandle, const Sides& sides, CurrentAction& action);
@@ -27330,8 +27353,10 @@ void currentActionMovesAsTargetView(Simulation& simulation, const PassedInArgs&.
 
 namespace pokesim {
 class Simulation;
+struct Battle;
 struct SideDecision;
 struct MidTurnSideDecision;
+struct MidTurnDecisionsRequested;
 
 namespace simulate_turn {
 void setSideOptions(Simulation& simulation);
@@ -27339,8 +27364,10 @@ void setTeamPreviewOptions(Simulation& simulation);
 }  // namespace simulate_turn
 
 namespace internal::simulate_turn {
-void resolveDecision(types::handle sideHandle, const SideDecision& sideDecision);
-void resolveMidTurnDecisions(types::handle sideHandle, const MidTurnSideDecision& switchDecisions);
+void resolveDecision(types::handle sideHandle, Battle battle, const SideDecision& sideDecision);
+void resolveMidTurnDecisions(
+  types::handle sideHandle, Battle battle, const MidTurnSideDecision& switchDecisions,
+  MidTurnDecisionsRequested& decisionsRequested);
 }  // namespace internal::simulate_turn
 }  // namespace pokesim
 
@@ -27451,11 +27478,14 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkBattleOutputs() const {
-    pokesim::debug::TypesToIgnore typesToIgnore;
-    typesToIgnore.add<simulate_turn::tags::BattleOutcome, simulate_turn::tags::SpeedSortNeeded>();
-
-    pokesim::debug::TypesToIgnore typesIgnoredOnConstants = typesToIgnore;
-    typesToIgnore.add<Probability, ParentBattle, Turn, RootBattle, pokesim::tags::BattleMidTurn>();
+    pokesim::debug::TypesToIgnore typesToIgnore, typesIgnoredOnConstants;
+    typesToIgnore.add<
+      simulate_turn::tags::BattleOutcome,
+      simulate_turn::tags::SpeedSortNeeded,
+      Probability,
+      ParentBattle,
+      RootBattle,
+      pokesim::tags::BattleMidTurn>();
 
     if (!simulateTurnOptionsOnInput.getMakeBranchesOnRandomEvents()) {
       typesToIgnore.add<RngSeed>();
@@ -27463,21 +27493,30 @@ struct Checks : pokesim::debug::Checks {
 
     for (types::entity currentEntity : getBattleView()) {
       types::entity original = pokesim::debug::findCopyParent(currentEntitiesToInitial, *registry, currentEntity);
+      types::entity initialEntity = getInitialEntity(currentEntity);
+      pokesim::debug::TypesToIgnore perEntityTypesToIgnore = typesToIgnore;
+
       bool shouldNotChange = !simulateTurnOptionsOnInput.getApplyChangesToInputBattle() && original == currentEntity;
+      bool initialIsMidTurn = registryOnInput.all_of<pokesim::tags::BattleMidTurn>(initialEntity);
+      bool currentIsMidTurn = registry->all_of<pokesim::tags::BattleMidTurn>(currentEntity);
       if (!registryOnInput.all_of<Winner>(original)) {
-        typesToIgnore.add<Winner>();
+        perEntityTypesToIgnore.add<Winner>();
       }
 
-      types::entity initialEntity = getInitialEntity(currentEntity);
+      if (currentIsMidTurn || initialIsMidTurn) {
+        perEntityTypesToIgnore.add<MidTurnDecisionsRequested, ActionQueue>();
+      }
+      if (!currentIsMidTurn) {
+        perEntityTypesToIgnore.add<Turn>();
+      }
+
       pokesim::debug::areEntitiesEqual(
         *registry,
         currentEntity,
         registryOnInput,
         initialEntity,
-        shouldNotChange ? typesIgnoredOnConstants : typesToIgnore);
+        shouldNotChange ? typesIgnoredOnConstants : perEntityTypesToIgnore);
 
-      bool initialIsMidTurn = registryOnInput.all_of<pokesim::tags::BattleMidTurn>(initialEntity);
-      bool currentIsMidTurn = registry->all_of<pokesim::tags::BattleMidTurn>(currentEntity);
       types::entity currAction = registry->get<RecycledAction>(currentEntity).val;
       if (!initialIsMidTurn && !currentIsMidTurn) {
         pokesim::debug::areEntitiesEqual(*registry, currAction, registryOnInput, getInitialEntity(currAction));
@@ -28070,7 +28109,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-auto enumToTag(Species species, RunArgs&&... args) {
+constexpr auto enumToTag(Species species, RunArgs&&... args) {
   switch (species) {
     case Species::DITTO:             return RunStruct<Ditto, T...>::run(std::forward<RunArgs>(args)...);
     case Species::AMPHAROS:          return RunStruct<Ampharos, T...>::run(std::forward<RunArgs>(args)...);
@@ -28123,7 +28162,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-auto enumToTag(Type type, RunArgs&&... args) {
+constexpr auto enumToTag(Type type, RunArgs&&... args) {
   switch (type) {
     case Type::NORMAL:   return RunStruct<NormalType, T...>::run(std::forward<RunArgs>(args)...);
     case Type::FIGHTING: return RunStruct<FightingType, T...>::run(std::forward<RunArgs>(args)...);
@@ -28189,7 +28228,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-auto enumToTag(Move move, RunArgs&&... args) {
+constexpr auto enumToTag(Move move, RunArgs&&... args) {
   switch (move) {
     case Move::ALLY_SWITCH:    return RunStruct<AllySwitch, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FLASH_CANNON:   return RunStruct<FlashCannon, T...>::run(std::forward<RunArgs>(args)...);
@@ -28223,7 +28262,7 @@ auto enumToTag(Move move, RunArgs&&... args) {
 }
 
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-void forEachMove(const Pokedex& pokedex, RunArgs&&... args) {
+constexpr void forEachMove(const Pokedex& pokedex, RunArgs&&... args) {
   pokedex.forEachLoadedMove([&](Move move) { enumToTag<RunStruct, T...>(move, std::forward<RunArgs>(args)...); });
 }
 
@@ -28256,13 +28295,17 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-void enumToTag(MoveProperty item, RunArgs&&... args) {
+constexpr void enumToTag(MoveProperty item, RunArgs&&... args) {
   if (item & MoveProperty::CONTACT) {
     RunStruct<move::tags::Contact, T...>::run(std::forward<RunArgs>(args)...);
   }
 
   if (item & MoveProperty::VARIABLE_HIT_COUNT) {
     RunStruct<move::tags::VariableHitCount, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
+  if (item & MoveProperty::SELF_SWITCH) {
+    RunStruct<move::tags::SelfSwitch, T...>::run(std::forward<RunArgs>(args)...);
   }
 }
 
@@ -28291,7 +28334,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-void enumToTag(ItemProperty item, RunArgs&&... args) {
+constexpr void enumToTag(ItemProperty item, RunArgs&&... args) {
   if (item & ItemProperty::BERRY) {
     RunStruct<item::tags::Berry, T...>::run(std::forward<RunArgs>(args)...);
   }
@@ -28338,7 +28381,7 @@ namespace pokesim::dex {
  * @endcode
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-void enumToTag(AbilityProperty ability, RunArgs&&... args) {
+constexpr void enumToTag(AbilityProperty ability, RunArgs&&... args) {
   if (ability & AbilityProperty::CANNOT_BREAK) {
     RunStruct<ability::tags::CannotBreak, T...>::run(std::forward<RunArgs>(args)...);
   }

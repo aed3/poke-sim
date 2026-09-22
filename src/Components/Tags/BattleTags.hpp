@@ -5,5 +5,4 @@ struct Battle {};
 struct Side {};
 
 struct BattleMidTurn {};
-struct BattleRequestingDecision {};
 }  // namespace pokesim::tags

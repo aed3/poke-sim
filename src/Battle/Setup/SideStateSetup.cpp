@@ -3,10 +3,10 @@
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/Team.hpp>
-#include <Components/FoesRemaining.hpp>
 #include <Components/PlayerSide.hpp>
 #include <Components/SideDecisions.hpp>
 #include <Components/Tags/BattleTags.hpp>
+#include <Components/TeamRemaining.hpp>
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Indexes.hpp>
@@ -28,6 +28,7 @@ void SideStateSetup::initBlank() {
 
 void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
   Team& teamEntities = handle.emplace<Team>();
+  TeamRemaining& teamRemaining = handle.emplace<TeamRemaining>();
   Battle battle = handle.get<Battle>();
   POKESIM_REQUIRE(team.size() <= teamEntities.val.max_size(), "Cannot add more Pokemon to a team than MAX_TEAM_SIZE.");
 
@@ -35,15 +36,14 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
     teamEntities.val.push_back(pokemonSetup.entity());
     pokemonSetup.setSide(entity());
     pokemonSetup.setBattle(battle.val);
-    if (pokemonSetup.isFainted()) {
-      handle.registry()->get<FoesRemaining>(handle.get<FoeSide>().val).val--;
+    if (!pokemonSetup.isFainted()) {
+      teamRemaining.val++;
     }
   }
 }
 
-void SideStateSetup::setOpponent(types::entity entity, types::teamPositionIndex opponentTeamSize) {
+void SideStateSetup::setOpponent(types::entity entity) {
   handle.emplace<FoeSide>(entity);
-  handle.emplace<FoesRemaining>(opponentTeamSize);
 }
 
 void SideStateSetup::setBattle(types::entity entity) {

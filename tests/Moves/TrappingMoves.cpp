@@ -16,6 +16,7 @@ void checkSwitchOptions(
     REQUIRE(p2Options.switches.val.empty() == p2AIsTrapped);
 
     test.applyDecision(entities.battle, test.turnDecision(p1ADecision, p2ADecision));
+    test.simulation.removeFromEntities<SinglesSideOptions>();
   }
   else {
     test.checks.checkUsedMovePokemon(entities.p1B);
@@ -31,6 +32,7 @@ void checkSwitchOptions(
     test.applyDecision(
       entities.battle,
       test.turnDecision(p1ADecision, dex::Move::SPLASH, p2ADecision, dex::Move::SPLASH));
+    test.simulation.removeFromEntities<DoublesSideOptions>();
   }
 }
 }  // namespace

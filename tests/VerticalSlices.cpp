@@ -39,7 +39,7 @@ auto runAndCheckSimulation(TestSimulation& test, std::size_t idealTurnOutcomeCou
   auto& options = test.simulateTurnOptions();
   auto originalBattles = test.simulation.battleEntities();
 
-  auto results = test.simulateTurn(Tags<Probability, RngSeed>{}, Tags<FoesRemaining>{});
+  auto results = test.simulateTurn(Tags<Probability, RngSeed>{}, Tags<TeamRemaining>{});
   auto rootBattles = results.rootBattles();
 
   if (!options.getApplyChangesToInputBattle()) {
@@ -447,8 +447,8 @@ TEST_CASE(
     Probability probability = registry.get<Probability>(battle);
     REQUIRE(registry.get<Turn>(battle).val == 2U);
 
-    REQUIRE(registry.get<FoesRemaining>(entities.p1Side).val == 1U);
-    REQUIRE(registry.get<FoesRemaining>(entities.p2Side).val == 1U);
+    REQUIRE(registry.get<TeamRemaining>(entities.p1Side).val == 1U);
+    REQUIRE(registry.get<TeamRemaining>(entities.p2Side).val == 1U);
 
     if (!p2DamageInfo.mightCauseParalysis() || !p1Paralyzed) {
       test.checks.checkUsedMovePokemon<stat::CurrentHp>(entities.p1A, p1MoveIndex);
@@ -769,7 +769,7 @@ TEST_CASE(
     REQUIRE(initialP2BHp.val == P2B_MAX_HP);
 
     REQUIRE(turn.val == 3U);
-    REQUIRE(registry.get<FoesRemaining>(entities.p2Side).val == 2U);
+    REQUIRE(registry.get<TeamRemaining>(entities.p1Side).val == 2U);
 
     types::probability idealProbability = startingProbability;
     if (totalPossibilities == 1U) {
@@ -824,7 +824,7 @@ TEST_CASE(
     // P2B (Ribombee) Specific Checks
     REQUIRE(expectedP2BHp.contains(currentP2BHp.val));
     if (p2BFainted) {
-      REQUIRE(registry.get<FoesRemaining>(entities.p1Side).val == 1U);
+      REQUIRE(registry.get<TeamRemaining>(entities.p2Side).val == 1U);
 
       test.checks.checkEntityForChanges<tags::ActivePokemon, tags::Fainted, stat::CurrentHp>(entities.p2B);
       REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(entities.p2B));
@@ -833,7 +833,7 @@ TEST_CASE(
       REQUIRE((p2BDamageInfo.mightCrit() || p2BDamageInfo.guaranteedCrit()));
     }
     else {
-      REQUIRE(registry.get<FoesRemaining>(entities.p1Side).val == 2U);
+      REQUIRE(registry.get<TeamRemaining>(entities.p2Side).val == 2U);
       test.checks.checkUsedMovePokemon<
         stat::CurrentHp,
         SpaBoost,
