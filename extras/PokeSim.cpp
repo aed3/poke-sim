@@ -2385,6 +2385,7 @@ void runModifyMove(Simulation& simulation) {
   pokesim::dex::ChoiceScarf::onSourceModifyMove(simulation);
   pokesim::dex::ChoiceSpecs::onSourceModifyMove(simulation);
   pokesim::dex::KingsRock::onModifyMove(simulation);
+  pokesim::dex::LongReach::onModifyMove(simulation);
 }
 
 void runResetDisabledMove(Simulation& simulation) {
@@ -5519,6 +5520,17 @@ void Trapper::onSwitchOut(Simulation& simulation) {
 
 namespace pokesim::dex {
 namespace {
+
+template <typename CurrentActionMovesAsTargetType>
+struct LongReachOnModifyMove {
+  static void run(types::registry& registry, const CurrentActionMovesAsTargetType& moves) {
+    for (types::entity move : moves) {
+      if (registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
+        registry.remove<move::tags::Contact>(move);
+      }
+    }
+  }
+};
 void plusOnModifySpa(types::handle, EventModifier&) {}
 
 void staticOnDamagingHit(
@@ -5547,6 +5559,10 @@ void staticOnDamagingHit(
   registry.emplace<CurrentEffectsAsTarget>(effectTarget, move);
 }
 }  // namespace
+
+void LongReach::onModifyMove(Simulation& simulation) {
+  internal::currentActionMovesAsSourceView<LongReachOnModifyMove>(simulation);
+}
 
 void Plus::onModifySpA(Simulation& simulation) {
   if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
