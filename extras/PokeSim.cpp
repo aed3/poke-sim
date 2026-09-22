@@ -2086,8 +2086,7 @@ types::view<tags::BattleOutcome> Results::battleOutcomes() const {
 }
 
 types::entityVector Results::rootBattles() const {
-  auto view =
-    simulation->registry.view<pokesim::tags::SimulateTurn, pokesim::tags::Battle>(entt::exclude_t<RootBattle>{});
+  auto view = simulation->registry.view<pokesim::tags::SimulateTurn, pokesim::tags::Battle>(entt::exclude<RootBattle>);
   return {view.begin(), view.end()};
 }
 
@@ -2622,9 +2621,9 @@ void applyDamageToTarget(types::registry& registry, Damage damage, CurrentAction
 }
 
 void setMoveHitCount(Simulation& simulation) {
-  auto noAssignedHitCount =
-    simulation.registry.view<tags::CurrentMoveHit>(entt::exclude<move::tags::VariableHitCount, HitCount>);
-  simulation.registry.insert<HitCount>(noAssignedHitCount.begin(), noAssignedHitCount.end(), {(types::moveHits)1U});
+  simulation.addToEntitiesWithExclude<HitCount, tags::CurrentMoveHit>(
+    entt::exclude<move::tags::VariableHitCount, HitCount>,
+    HitCount{Constants::MoveHits::DEFAULT});
 
   internal::runRandomEventChances<4U, tags::CurrentMoveHit, move::tags::VariableHitCount>(
     simulation,
@@ -2640,8 +2639,8 @@ void setMoveHitCount(Simulation& simulation) {
 void applyDamage(Simulation& simulation) {
   simulation.view<applyDamageToTarget>();
 
-  auto view = simulation.registry.view<tags::CurrentMoveHit>(entt::exclude<Damage, move::tags::Status>);
-  simulation.registry.insert<tags::FailedCurrentMoveHit>(view.begin(), view.end());
+  simulation.addToEntitiesWithExclude<tags::FailedCurrentMoveHit, tags::CurrentMoveHit>(
+    entt::exclude<Damage, move::tags::Status>);
   simulation.removeFromEntities<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
   simulation.removeFromEntities<Damage>();
 }
@@ -3155,9 +3154,7 @@ void simulateTurn(Simulation& simulation) {
   battleFilter
     .view<internal::simulate_turn::addResidualAction, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn>>();
 
-  auto newTurnView = simulation.registry.view<pokesim::tags::SimulateTurn, pokesim::tags::Battle>(
-    entt::exclude_t<pokesim::tags::BattleMidTurn>{});
-  simulation.registry.insert<pokesim::tags::BattleMidTurn>(newTurnView.begin(), newTurnView.end());
+  battleFilter.addToSelectedWithExclude<pokesim::tags::BattleMidTurn>(entt::exclude<pokesim::tags::BattleMidTurn>);
 
   using ActionsLimit = Constants::ActionQueueLength;
   types::actionQueueIndex actionsTaken = ActionsLimit::MIN;
@@ -5564,7 +5561,7 @@ void Static::onDamagingHit(Simulation& simulation) {
   simulation.view<staticOnDamagingHit, Tags<Static>>(chanceOfStatic, simulation);
 
   internal::checkIfCanSetStatus(simulation);
-  internal::removeRandomBinaryChanceComponents(simulation, entt::exclude_t<pokesim::tags::CanSetStatus>{});
+  internal::removeRandomBinaryChanceComponents(simulation, entt::exclude<pokesim::tags::CanSetStatus>);
 
   pokesim::internal::randomBinaryChance(
     simulation,
@@ -5976,9 +5973,8 @@ void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
   }
 
   if constexpr (std::is_same_v<SimulationTag, pokesim::tags::SimulateTurn>) {
-    auto needsCritBoostView =
-      simulation.registry.view<internal::tags::ApplySideDamageRollOptions>(entt::exclude_t<tags::Crit>{});
-    simulation.registry.insert<calc_damage::CritStage>(needsCritBoostView.begin(), needsCritBoostView.end());
+    simulation.addToEntitiesWithExclude<calc_damage::CritStage, internal::tags::ApplySideDamageRollOptions>(
+      entt::exclude<tags::Crit>);
     simulation.view<copyPokedexCritBoosts, Tags<internal::tags::ApplySideDamageRollOptions>>();
 
     internal::runRemoveCriticalHitEvent(simulation);
@@ -6187,8 +6183,7 @@ void calcDamage(Simulation& simulation) {
   applySideDamageRollOptions<CalculateDamage, setIfMoveCrits<CalculateDamage>>(simulation);
   applySideDamageRollOptions<AnalyzeEffect, setIfMoveCrits<AnalyzeEffect>>(simulation);
 
-  auto moveView = simulation.registry.view<pokesim::tags::CurrentMoveHit>(entt::exclude_t<move::tags::Status>{});
-  simulation.registry.insert<internal::calc_damage::DamageFormulaVariables>(moveView.begin(), moveView.end());
+  moveFilter.addToSelectedWithExclude<internal::calc_damage::DamageFormulaVariables>(entt::exclude<move::tags::Status>);
   internal::runBasePowerEvent(simulation);
   setDamageFormulaVariables(simulation);
 

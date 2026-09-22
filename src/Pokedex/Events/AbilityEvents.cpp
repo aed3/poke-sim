@@ -63,7 +63,7 @@ void Static::onDamagingHit(Simulation& simulation) {
   simulation.view<staticOnDamagingHit, Tags<Static>>(chanceOfStatic, simulation);
 
   internal::checkIfCanSetStatus(simulation);
-  internal::removeRandomBinaryChanceComponents(simulation, entt::exclude_t<pokesim::tags::CanSetStatus>{});
+  internal::removeRandomBinaryChanceComponents(simulation, entt::exclude<pokesim::tags::CanSetStatus>);
 
   pokesim::internal::randomBinaryChance(
     simulation,

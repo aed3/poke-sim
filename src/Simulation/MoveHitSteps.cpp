@@ -183,9 +183,9 @@ void applyDamageToTarget(types::registry& registry, Damage damage, CurrentAction
 }
 
 void setMoveHitCount(Simulation& simulation) {
-  auto noAssignedHitCount =
-    simulation.registry.view<tags::CurrentMoveHit>(entt::exclude<move::tags::VariableHitCount, HitCount>);
-  simulation.registry.insert<HitCount>(noAssignedHitCount.begin(), noAssignedHitCount.end(), {(types::moveHits)1U});
+  simulation.addToEntitiesWithExclude<HitCount, tags::CurrentMoveHit>(
+    entt::exclude<move::tags::VariableHitCount, HitCount>,
+    HitCount{Constants::MoveHits::DEFAULT});
 
   internal::runRandomEventChances<4U, tags::CurrentMoveHit, move::tags::VariableHitCount>(
     simulation,
@@ -201,8 +201,8 @@ void setMoveHitCount(Simulation& simulation) {
 void applyDamage(Simulation& simulation) {
   simulation.view<applyDamageToTarget>();
 
-  auto view = simulation.registry.view<tags::CurrentMoveHit>(entt::exclude<Damage, move::tags::Status>);
-  simulation.registry.insert<tags::FailedCurrentMoveHit>(view.begin(), view.end());
+  simulation.addToEntitiesWithExclude<tags::FailedCurrentMoveHit, tags::CurrentMoveHit>(
+    entt::exclude<Damage, move::tags::Status>);
   simulation.removeFromEntities<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
   simulation.removeFromEntities<Damage>();
 }

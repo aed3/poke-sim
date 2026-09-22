@@ -69,6 +69,13 @@ struct EntityFilter {
     simulation->addToEntities<Type, SelectionTag, OtherSelectionTags..., ViewComponents...>(args...);
   }
 
+  template <typename Type, typename... ViewComponents, typename... ExcludeComponents, typename... Args>
+  void addToSelectedWithExclude(entt::exclude_t<ExcludeComponents...> exclude, const Args&... args) {
+    simulation->addToEntitiesWithExclude<Type, SelectionTag, OtherSelectionTags..., ViewComponents...>(
+      exclude,
+      args...);
+  }
+
   template <typename Type, typename... ViewComponents, typename... ExcludeComponents>
   void removeFromSelected(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
     simulation->removeFromEntities<Type, SelectionTag, OtherSelectionTags..., ViewComponents...>(exclude);

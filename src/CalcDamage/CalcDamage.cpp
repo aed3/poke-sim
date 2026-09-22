@@ -348,9 +348,8 @@ void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
   }
 
   if constexpr (std::is_same_v<SimulationTag, pokesim::tags::SimulateTurn>) {
-    auto needsCritBoostView =
-      simulation.registry.view<internal::tags::ApplySideDamageRollOptions>(entt::exclude_t<tags::Crit>{});
-    simulation.registry.insert<calc_damage::CritStage>(needsCritBoostView.begin(), needsCritBoostView.end());
+    simulation.addToEntitiesWithExclude<calc_damage::CritStage, internal::tags::ApplySideDamageRollOptions>(
+      entt::exclude<tags::Crit>);
     simulation.view<copyPokedexCritBoosts, Tags<internal::tags::ApplySideDamageRollOptions>>();
 
     internal::runRemoveCriticalHitEvent(simulation);
@@ -559,8 +558,7 @@ void calcDamage(Simulation& simulation) {
   applySideDamageRollOptions<CalculateDamage, setIfMoveCrits<CalculateDamage>>(simulation);
   applySideDamageRollOptions<AnalyzeEffect, setIfMoveCrits<AnalyzeEffect>>(simulation);
 
-  auto moveView = simulation.registry.view<pokesim::tags::CurrentMoveHit>(entt::exclude_t<move::tags::Status>{});
-  simulation.registry.insert<internal::calc_damage::DamageFormulaVariables>(moveView.begin(), moveView.end());
+  moveFilter.addToSelectedWithExclude<internal::calc_damage::DamageFormulaVariables>(entt::exclude<move::tags::Status>);
   internal::runBasePowerEvent(simulation);
   setDamageFormulaVariables(simulation);
 

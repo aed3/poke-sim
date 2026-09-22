@@ -24639,6 +24639,16 @@ class Simulation {
     registry.insert<Type>(view.begin(), view.end(), args...);
   }
 
+  template <typename Type, typename... ViewComponents, typename... ExcludeComponents, typename... Args>
+  void addToEntitiesWithExclude(entt::exclude_t<ExcludeComponents...> exclude, const Args&... args) {
+    static_assert(
+      sizeof...(ViewComponents) != 0,
+      "Using this function without view components will cause Type to be added to every entity.");
+    static_assert(sizeof...(ExcludeComponents) != 0, "Use addToEntities instead if not excluding any components.");
+    auto view = registry.view<ViewComponents...>(exclude);
+    registry.insert<Type>(view.begin(), view.end(), args...);
+  }
+
   template <typename Type, typename... ViewComponents, typename... ExcludeComponents>
   void removeFromEntities(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
     if constexpr (sizeof...(ViewComponents) == 0 && sizeof...(ExcludeComponents) == 0) {
@@ -27292,6 +27302,13 @@ struct EntityFilter {
   template <typename Type, typename... ViewComponents, typename... Args>
   void addToSelected(const Args&... args) {
     simulation->addToEntities<Type, SelectionTag, OtherSelectionTags..., ViewComponents...>(args...);
+  }
+
+  template <typename Type, typename... ViewComponents, typename... ExcludeComponents, typename... Args>
+  void addToSelectedWithExclude(entt::exclude_t<ExcludeComponents...> exclude, const Args&... args) {
+    simulation->addToEntitiesWithExclude<Type, SelectionTag, OtherSelectionTags..., ViewComponents...>(
+      exclude,
+      args...);
   }
 
   template <typename Type, typename... ViewComponents, typename... ExcludeComponents>

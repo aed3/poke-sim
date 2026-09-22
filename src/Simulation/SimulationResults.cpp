@@ -16,8 +16,7 @@ types::view<tags::BattleOutcome> Results::battleOutcomes() const {
 }
 
 types::entityVector Results::rootBattles() const {
-  auto view =
-    simulation->registry.view<pokesim::tags::SimulateTurn, pokesim::tags::Battle>(entt::exclude_t<RootBattle>{});
+  auto view = simulation->registry.view<pokesim::tags::SimulateTurn, pokesim::tags::Battle>(entt::exclude<RootBattle>);
   return {view.begin(), view.end()};
 }
 

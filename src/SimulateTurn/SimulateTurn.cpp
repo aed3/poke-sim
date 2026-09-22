@@ -482,9 +482,7 @@ void simulateTurn(Simulation& simulation) {
   battleFilter
     .view<internal::simulate_turn::addResidualAction, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn>>();
 
-  auto newTurnView = simulation.registry.view<pokesim::tags::SimulateTurn, pokesim::tags::Battle>(
-    entt::exclude_t<pokesim::tags::BattleMidTurn>{});
-  simulation.registry.insert<pokesim::tags::BattleMidTurn>(newTurnView.begin(), newTurnView.end());
+  battleFilter.addToSelectedWithExclude<pokesim::tags::BattleMidTurn>(entt::exclude<pokesim::tags::BattleMidTurn>);
 
   using ActionsLimit = Constants::ActionQueueLength;
   types::actionQueueIndex actionsTaken = ActionsLimit::MIN;
