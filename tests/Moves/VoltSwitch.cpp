@@ -3,7 +3,7 @@
 namespace pokesim {
 TEST_CASE(
   "Volt Switch: Request switch after successful hit",
-  "[Simulation][SimulateTurn][SingleBattle][Move][VoltSwitch][SelfSwitch]") {
+  "[Simulation][SimulateTurn][SingleBattle][Move][VoltSwitch][SelfSwitch][Switching]") {
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
   test.setupBattle(
     Turn{1U},

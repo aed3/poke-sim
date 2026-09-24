@@ -68,6 +68,8 @@ void clearRunVariables(Simulation& simulation) {
     internal::calc_damage::tags::IgnoresAttackingBoost,
     internal::calc_damage::tags::IgnoresDefendingBoost>();
   simulation.removeFromEntities<Damage, pokesim::tags::CalculateDamage>();
+  simulation.addToEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune, pokesim::tags::CalculateDamage>();
+  simulation.addToEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune, pokesim::tags::AnalyzeEffect>();
 }
 
 void checkForAndApplyStab(types::handle moveHandle, Attacker attacker, TypeName type, DamageRollModifiers& modifier) {
@@ -261,6 +263,38 @@ void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, 
     usesUntilKo.val.back().damageRollsIncluded++;
   }
   moveHandle.emplace<UsesUntilKo>(usesUntilKo);
+}
+
+void setDefenderImmune(types::handle handle, CurrentActionTarget target, TypeName typeName, const Pokedex& pokedex) {
+  types::registry& registry = *handle.registry();
+
+  if (internal::isTargetImmune(registry, target, typeName, pokedex)) {
+    handle.emplace<tags::DefenderImmune>();
+  }
+}
+
+template <typename SimulationTag>
+void typeImmunityCheck(Simulation& simulation) {
+  static constexpr bool isCalculateDamage = std::is_same_v<pokesim::tags::CalculateDamage, SimulationTag>;
+  static constexpr bool isAnalyzeEffect = std::is_same_v<pokesim::tags::AnalyzeEffect, SimulationTag>;
+
+  static_assert(isCalculateDamage || isAnalyzeEffect, "Using a type that isn't a valid simulation tag.");
+
+  pokesim::internal::EntityFilter<SimulationTag, pokesim::tags::CurrentMoveHit> moveFilter{simulation};
+  if (moveFilter.hasNoneSelected()) {
+    return;
+  }
+
+  moveFilter.template view<setDefenderImmune, Tags<>, entt::exclude_t<move::tags::IgnoreImmunities>>(
+    simulation.pokedex());
+
+  Damage damage{Constants::Damage::IMMUNE};
+  moveFilter.template addToSelected<DamageRolls, tags::DefenderImmune>(DamageRolls{{damage.val}});
+
+  if constexpr (isAnalyzeEffect) {
+    moveFilter.template addToSelected<Damage, tags::DefenderImmune>(damage);
+  }
+  simulation.removeFromEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune>();
 }
 
 template <typename SimulationTag, auto ApplyDamageRollKind>
@@ -553,6 +587,9 @@ void calcDamage(Simulation& simulation) {
   using SimulateTurn = pokesim::tags::SimulateTurn;
   using CalculateDamage = pokesim::tags::CalculateDamage;
   using AnalyzeEffect = pokesim::tags::AnalyzeEffect;
+
+  typeImmunityCheck<CalculateDamage>(simulation);
+  typeImmunityCheck<AnalyzeEffect>(simulation);
 
   applySideDamageRollOptions<SimulateTurn, setIfMoveCrits<SimulateTurn>>(simulation);
   applySideDamageRollOptions<CalculateDamage, setIfMoveCrits<CalculateDamage>>(simulation);

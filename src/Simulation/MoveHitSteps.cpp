@@ -2,6 +2,7 @@
 
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
+#include <Battle/Pokemon/PokemonProperties.hpp>
 #include <CalcDamage/CalcDamage.hpp>
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
 #include <Components/Accuracy.hpp>
@@ -12,6 +13,7 @@
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/HitCount.hpp>
+#include <Components/Names/TypeNames.hpp>
 #include <Components/Priority.hpp>
 #include <Components/RandomEventOutputs.hpp>
 #include <Components/SimulateTurn/MoveHitStepTags.hpp>
@@ -20,6 +22,7 @@
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Types/Constants.hpp>
 #include <Types/Enums/BattleFormat.hpp>
@@ -237,6 +240,19 @@ void runSecondaryMoveEffects(Simulation& simulation) {
   runAddedFlinchEffect(simulation);
 }
 
+void failIfTargetImmune(types::handle handle, CurrentActionTarget target, TypeName typeName, const Pokedex& pokedex) {
+  types::registry& registry = *handle.registry();
+
+  if (internal::isTargetImmune(registry, target, typeName, pokedex)) {
+    handle.emplace<tags::FailedCurrentMoveHit>();
+  }
+}
+
+void typeImmunityCheck(Simulation& simulation) {
+  simulation.view<failIfTargetImmune, Tags<tags::CurrentMoveHit>, entt::exclude_t<move::tags::IgnoreImmunities>>(
+    simulation.pokedex());
+}
+
 void accuracyCheck(Simulation& simulation) {
   internal::runModifyAccuracyEvent(simulation);
   internal::runAccuracyEvent(simulation);
@@ -278,7 +294,7 @@ void moveHitLoop(Simulation& simulation) {
 void internal::runMoveHitChecks(Simulation& simulation) {
   // invulnerabilityCheck
   // hitCheck
-  // immunityCheck
+  runMoveHitCheck<typeImmunityCheck>(simulation);
   runMoveHitCheck<accuracyCheck>(simulation);
   // breakProtectCheck
   // stealBoostCheck

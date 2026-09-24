@@ -47,51 +47,66 @@ struct IdealDamageValues {
   IdealDamageValues(std::vector<types::damage> _rolls, const calc_damage::UsesUntilKo& _koUses, types::damage _average)
       : rolls(_rolls), average({_average}), minDamage({_rolls[15]}), maxDamage({_rolls[0]}), koUses(_koUses) {}
 };
-
-const IdealDamageValues furyAttackBaseDamage{
-  {14U, 13U, 13U, 13U, 13U, 13U, 13U, 13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U},
-  {{{21U, 1U}, {23U, 7U}, {25U, 7U}, {27U, 1U}}},
-  12U,
-};
-
-const IdealDamageValues thunderboltBaseDamage{
-  {434U, 428U, 426U, 420U, 416U, 410U, 408U, 402U, 398U, 392U, 390U, 386U, 380U, 378U, 372U, 368U},
-  {{{1U, 16U}}},
-  401U,
-};
-
-const IdealDamageValues thunderboltAVDamage{
-  {290U, 288U, 284U, 282U, 278U, 276U, 272U, 270U, 266U, 264U, 260U, 258U, 254U, 252U, 248U, 246U},
-  {{{1U, 6U}, {2U, 10U}}},
-  268U,
-};
-
-const IdealDamageValues furyAttackCritDamage{
-  {21U, 20U, 20U, 20U, 20U, 19U, 19U, 19U, 19U, 19U, 18U, 18U, 18U, 18U, 18U, 17U},
-  {{{14U, 1U}, {15U, 4U}, {16U, 5U}, {17U, 5U}, {18U, 1U}}},
-  19U,
-};
-
-const IdealDamageValues thunderboltCritDamage{
-  {650U, 642U, 636U, 630U, 624U, 618U, 608U, 602U, 596U, 590U, 584U, 578U, 570U, 564U, 558U, 552U},
-  {{{1U, 16U}}},
-  601U,
-};
-
-const IdealDamageValues thunderboltCritAVDamage{
-  {434U, 428U, 426U, 420U, 416U, 410U, 408U, 402U, 398U, 392U, 390U, 386U, 380U, 378U, 372U, 368U},
-  {{{1U, 16U}}},
-  401U,
-};
-
-const IdealDamageValues thunderboltSpdBoostAVDamage{
-  {194U, 192U, 188U, 188U, 186U, 182U, 182U, 180U, 176U, 176U, 174U, 170U, 170U, 168U, 164U, 164U},
-  {{{2U, 16U}}},
-  179U,
-};
 }  // namespace
 
+TEST_CASE("Type Immunities", "[Simulation][CalculateDamage][SingleBattle][Immunities]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(test.pokemon(dex::Species::AMPHAROS, dex::Move::TACKLE)),
+    test.side(test.pokemon(dex::Species::DRAGAPULT, dex::Move::SPLASH)),
+    CalcDamageInputInfo{Slot::P1A, Slot::P2A, {dex::Move::TACKLE}});
+
+  test.calcDamageOptions().setDamageRollOptions({GENERATE(from_range(damageRollKindCombinations))});
+  auto result = test.calculateDamage();
+  result.damageRollResults().each([](const DamageRolls& damageRolls) {
+    REQUIRE(damageRolls.max() == Constants::Damage::IMMUNE);
+    REQUIRE(damageRolls.min() == Constants::Damage::IMMUNE);
+  });
+}
+
 TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage][SingleBattle]") {
+  const IdealDamageValues furyAttackBaseDamage{
+    {14U, 13U, 13U, 13U, 13U, 13U, 13U, 13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U},
+    {{{21U, 1U}, {23U, 7U}, {25U, 7U}, {27U, 1U}}},
+    12U,
+  };
+
+  const IdealDamageValues thunderboltBaseDamage{
+    {434U, 428U, 426U, 420U, 416U, 410U, 408U, 402U, 398U, 392U, 390U, 386U, 380U, 378U, 372U, 368U},
+    {{{1U, 16U}}},
+    401U,
+  };
+
+  const IdealDamageValues thunderboltAVDamage{
+    {290U, 288U, 284U, 282U, 278U, 276U, 272U, 270U, 266U, 264U, 260U, 258U, 254U, 252U, 248U, 246U},
+    {{{1U, 6U}, {2U, 10U}}},
+    268U,
+  };
+
+  const IdealDamageValues furyAttackCritDamage{
+    {21U, 20U, 20U, 20U, 20U, 19U, 19U, 19U, 19U, 19U, 18U, 18U, 18U, 18U, 18U, 17U},
+    {{{14U, 1U}, {15U, 4U}, {16U, 5U}, {17U, 5U}, {18U, 1U}}},
+    19U,
+  };
+
+  const IdealDamageValues thunderboltCritDamage{
+    {650U, 642U, 636U, 630U, 624U, 618U, 608U, 602U, 596U, 590U, 584U, 578U, 570U, 564U, 558U, 552U},
+    {{{1U, 16U}}},
+    601U,
+  };
+
+  const IdealDamageValues thunderboltCritAVDamage{
+    {434U, 428U, 426U, 420U, 416U, 410U, 408U, 402U, 398U, 392U, 390U, 386U, 380U, 378U, 372U, 368U},
+    {{{1U, 16U}}},
+    401U,
+  };
+
+  const IdealDamageValues thunderboltSpdBoostAVDamage{
+    {194U, 192U, 188U, 188U, 186U, 182U, 182U, 180U, 176U, 176U, 174U, 170U, 170U, 168U, 164U, 164U},
+    {{{2U, 16U}}},
+    179U,
+  };
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
 
   for (std::size_t i = 0; i < 8U; i++) {

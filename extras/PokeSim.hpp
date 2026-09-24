@@ -297,6 +297,7 @@
  * src/Pokedex/Moves/WillOWisp.hpp
  * src/Simulation/RunEvent.hpp
  * src/Battle/ManageBattleState.hpp
+ * src/Battle/Pokemon/PokemonProperties.hpp
  * src/SimulateTurn/RandomChance.hpp
  * src/Simulation/MoveHitSteps.hpp
  * src/Utilities/EntityFilter.hpp
@@ -326,7 +327,6 @@
  * src/Pokedex/EnumToTag/MovePropertyEnumToTag.hpp
  * src/Pokedex/EnumToTag/ItemPropertyEnumToTag.hpp
  * src/Pokedex/EnumToTag/AbilityPropertyEnumToTag.hpp
- * src/Battle/Pokemon/PokemonProperties.hpp
  * src/CalcDamage/CalcDamageDebugChecks.hpp
  * src/AnalyzeEffect/AnalyzeEffectDebugChecks.hpp
  * src/PokeSim.hpp
@@ -16481,6 +16481,7 @@ struct Constants {
     static constexpr std::uint16_t MAX = 65535U;
     static constexpr std::uint16_t MIN = 1U;
     static constexpr std::uint16_t DEFAULT = 1U;
+    static constexpr std::uint16_t IMMUNE = 0U;
   };
 
   struct DamageRollCount {
@@ -20527,6 +20528,10 @@ struct UsesUntilKo {
 
 struct AttackerHpRecovered : DamageRolls {};
 struct AttackerHpLost : DamageRolls {};
+
+namespace tags {
+struct DefenderImmune {};
+}  // namespace tags
 }  // namespace calc_damage
 
 namespace analyze_effect {
@@ -20708,6 +20713,7 @@ struct VariableHitCount {};
 struct AccuracyDependentHitCount {};
 
 struct SelfSwitch {};
+struct IgnoreImmunities {};
 }  // namespace tags
 
 namespace effect::tags {
@@ -21340,29 +21346,31 @@ enum class MoveProperty : std::uint64_t {
   FAIL_WITH_GRAVITY = 1ULL << 12U,
   FUTURE_MOVE = 1ULL << 13U,
   HEAL = 1ULL << 14U,
-  MUST_PRESSURE = 1ULL << 15U,
-  NO_ASSIST = 1ULL << 16U,
-  NO_COPYCAT = 1ULL << 17U,
-  NO_ENCORE = 1ULL << 18U,
-  NO_INSTRUCT = 1ULL << 19U,
-  NO_ME_FIRST = 1ULL << 20U,
-  NO_METRONOME = 1ULL << 21U,
-  NO_MIMIC = 1ULL << 22U,
-  NO_MIRROR_MOVE = 1ULL << 23U,
-  NO_PARENTAL_BOND = 1ULL << 24U,
-  NO_SKETCH = 1ULL << 25U,
-  NO_SLEEP_TALK = 1ULL << 26U,
-  PLEDGE = 1ULL << 27U,
-  POWDER = 1ULL << 28U,
-  PULSE = 1ULL << 29U,
-  PUNCH = 1ULL << 30U,
-  RECHARGE = 1ULL << 31U,
-  SELF_SWITCH = 1ULL << 32U,
-  SLICING = 1ULL << 33U,
-  SOUND = 1ULL << 34U,
-  STRENGTHEN_ON_MINIMIZED = 1ULL << 35U,
-  VARIABLE_HIT_COUNT = 1ULL << 36U,
-  WIND = 1ULL << 37U,
+  IGNORE_IMMUNITIES = 1ULL << 15U,
+  MUST_PRESSURE = 1ULL << 16U,
+  NO_ASSIST = 1ULL << 17U,
+  NO_COPYCAT = 1ULL << 18U,
+  NO_ENCORE = 1ULL << 19U,
+  NO_INSTRUCT = 1ULL << 20U,
+  NO_ME_FIRST = 1ULL << 21U,
+  NO_METRONOME = 1ULL << 22U,
+  NO_MIMIC = 1ULL << 23U,
+  NO_MIRROR_MOVE = 1ULL << 24U,
+  NO_PARENTAL_BOND = 1ULL << 25U,
+  NO_SKETCH = 1ULL << 26U,
+  NO_SLEEP_TALK = 1ULL << 27U,
+  PLEDGE = 1ULL << 28U,
+  POWDER = 1ULL << 29U,
+  PULSE = 1ULL << 30U,
+  PUNCH = 1ULL << 31U,
+  RECHARGE = 1ULL << 32U,
+  SELF_SWITCH = 1ULL << 33U,
+  SLICING = 1ULL << 34U,
+  SOUND = 1ULL << 35U,
+  STATUS_USES_IMMUNITIES = 1ULL << 36U,
+  STRENGTHEN_ON_MINIMIZED = 1ULL << 37U,
+  VARIABLE_HIT_COUNT = 1ULL << 38U,
+  WIND = 1ULL << 39U,
 };
 
 constexpr MoveProperty operator|(MoveProperty propertyA, MoveProperty propertyB) {
@@ -27102,6 +27110,58 @@ void clearSwitchAction(Simulation& simulation);
 
 /////////////////// END OF src/Battle/ManageBattleState.hpp ////////////////////
 
+////////////// START OF src/Battle/Pokemon/PokemonProperties.hpp ///////////////
+
+namespace pokesim {
+class Pokedex;
+struct CurrentActionTarget;
+struct TypeName;
+
+constexpr types::typeEffectiveness getAttackEffectiveness(
+  SpeciesTypes speciesTypes, dex::Type attackingType, const TypeChart& typeChart) {
+  types::typeEffectiveness modifier = 0;
+  for (dex::Type defendingType : speciesTypes.val) {
+    switch (typeChart.effectiveness(attackingType, defendingType)) {
+      case TypeEffectiveness::IMMUNE: {
+        return -std::numeric_limits<types::typeEffectiveness>::digits;
+      }
+      case TypeEffectiveness::NEUTRAL: {
+        break;
+      }
+      case TypeEffectiveness::NOT_VERY_EFFECTIVE: {
+        modifier--;
+        break;
+      }
+      case TypeEffectiveness::SUPER_EFFECTIVE: {
+        modifier++;
+      }
+    }
+  }
+
+  POKESIM_REQUIRE(
+    modifier <= speciesTypes.size() && modifier >= -speciesTypes.size(),
+    "Modifier cannot exceed the number of types.");
+  return modifier;
+}
+
+constexpr bool isSpeciesTypeImmune(SpeciesTypes speciesTypes, dex::Type attackingType, const TypeChart& typeChart) {
+  for (dex::Type defendingType : speciesTypes.val) {
+    if (typeChart.effectiveness(attackingType, defendingType) == TypeEffectiveness::IMMUNE) {
+      return true;
+    }
+  }
+  return false;
+}
+
+namespace internal {
+bool doesMoveMakeContact(types::registry& registry, types::entity move, types::entity source);
+bool isGrounded(types::registry& registry, types::entity entity);
+bool isTargetImmune(types::registry& registry, CurrentActionTarget target, TypeName typeName, const Pokedex& pokedex);
+}  // namespace internal
+}  // namespace pokesim
+
+/////////////// END OF src/Battle/Pokemon/PokemonProperties.hpp ////////////////
+
 ////////////////// START OF src/SimulateTurn/RandomChance.hpp //////////////////
 
 namespace pokesim::internal {
@@ -28317,12 +28377,16 @@ constexpr void enumToTag(MoveProperty item, RunArgs&&... args) {
     RunStruct<move::tags::Contact, T...>::run(std::forward<RunArgs>(args)...);
   }
 
-  if (item & MoveProperty::VARIABLE_HIT_COUNT) {
-    RunStruct<move::tags::VariableHitCount, T...>::run(std::forward<RunArgs>(args)...);
+  if (item & MoveProperty::IGNORE_IMMUNITIES) {
+    RunStruct<move::tags::IgnoreImmunities, T...>::run(std::forward<RunArgs>(args)...);
   }
 
   if (item & MoveProperty::SELF_SWITCH) {
     RunStruct<move::tags::SelfSwitch, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
+  if (item & MoveProperty::VARIABLE_HIT_COUNT) {
+    RunStruct<move::tags::VariableHitCount, T...>::run(std::forward<RunArgs>(args)...);
   }
 }
 
@@ -28438,43 +28502,6 @@ void emplaceTagFromEnum(AbilityProperty property, types::registry& registry, typ
 }  // namespace pokesim::dex
 
 ////////// END OF src/Pokedex/EnumToTag/AbilityPropertyEnumToTag.hpp ///////////
-
-////////////// START OF src/Battle/Pokemon/PokemonProperties.hpp ///////////////
-
-namespace pokesim {
-constexpr types::typeEffectiveness getAttackEffectiveness(
-  const SpeciesTypes& speciesTypes, dex::Type attackingType, const TypeChart& typeChart) {
-  types::typeEffectiveness modifier = 0;
-  for (dex::Type defendingType : speciesTypes.val) {
-    switch (typeChart.effectiveness(attackingType, defendingType)) {
-      case TypeEffectiveness::IMMUNE: {
-        return -std::numeric_limits<types::typeEffectiveness>::digits;
-      }
-      case TypeEffectiveness::NEUTRAL: {
-        break;
-      }
-      case TypeEffectiveness::NOT_VERY_EFFECTIVE: {
-        modifier--;
-        break;
-      }
-      case TypeEffectiveness::SUPER_EFFECTIVE: {
-        modifier++;
-      }
-    }
-  }
-
-  POKESIM_REQUIRE(
-    modifier <= speciesTypes.size() && modifier >= -speciesTypes.size(),
-    "Modifier cannot exceed the number of types.");
-  return modifier;
-}
-
-namespace internal {
-bool doesMoveMakeContact(types::registry& registry, types::entity move, types::entity source);
-}
-}  // namespace pokesim
-
-/////////////// END OF src/Battle/Pokemon/PokemonProperties.hpp ////////////////
 
 ////////////// START OF src/CalcDamage/CalcDamageDebugChecks.hpp ///////////////
 
@@ -28670,9 +28697,16 @@ struct Checks : pokesim::debug::Checks {
 
     POKESIM_REQUIRE_NM(!damageRolls.val.empty());
 
+    bool isDefenderImmune = has<tags::DefenderImmune>(move);
     for (const Damage& damageRoll : damageRolls.val) {
       POKESIM_REQUIRE_NM(lastDamage >= damageRoll.val);
-      POKESIM_REQUIRE_NM(damageRoll.val >= Constants::Damage::MIN);
+      if (isDefenderImmune) {
+        POKESIM_REQUIRE_NM(damageRoll.val == Constants::Damage::IMMUNE);
+      }
+      else {
+        POKESIM_REQUIRE_NM(damageRoll.val >= Constants::Damage::MIN);
+      }
+
       if (calculateUpToFoeHp) {
         POKESIM_REQUIRE_NM(damageRoll.val <= defenderHp.val);
       }
@@ -28681,13 +28715,19 @@ struct Checks : pokesim::debug::Checks {
     }
 
     DamageRollKind damageRollKind = getDamageRollKind(move, damageRollOptions);
+    if (isDefenderImmune && has<Damage>(move)) {
+      POKESIM_REQUIRE_NM(registry->get<Damage>(move).val == Constants::Damage::IMMUNE);
+    }
 
     POKESIM_REQUIRE(
       damageRollKind != DamageRollKind::NONE,
       "Cannot calculate damage without knowing what rolls to consider.");
 
     std::size_t idealDamageRollCount = 0U;
-    if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
+    if (isDefenderImmune) {
+      idealDamageRollCount = 1U;
+    }
+    else if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
       idealDamageRollCount = Constants::DamageRollCount::MAX;
     }
     else {
@@ -28707,7 +28747,7 @@ struct Checks : pokesim::debug::Checks {
     POKESIM_REQUIRE_NM(idealDamageRollCount);
     POKESIM_REQUIRE_NM(damageRolls.val.size() == idealDamageRollCount);
 
-    if (noKoChanceCalculation) {
+    if (noKoChanceCalculation || isDefenderImmune) {
       POKESIM_REQUIRE_NM(!has<UsesUntilKo>(move));
     }
     else if (DamageRollKind::ALL_DAMAGE_ROLLS & getDamageRollKind(move, damageRollOptions)) {
@@ -28753,7 +28793,7 @@ struct Checks : pokesim::debug::Checks {
         POKESIM_REQUIRE_NM(!has<UsesUntilKo>(move));
       }
       else {
-        typesToIgnore.add<DamageRolls, UsesUntilKo>();
+        typesToIgnore.add<DamageRolls, UsesUntilKo, tags::DefenderImmune>();
         checkCalcDamageResultOutputs(move);
 
         if (has<pokesim::tags::CalculateDamage>(move)) {

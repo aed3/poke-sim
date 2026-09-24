@@ -2386,6 +2386,8 @@ void runModifyMove(Simulation& simulation) {
   pokesim::dex::ChoiceSpecs::onSourceModifyMove(simulation);
   pokesim::dex::KingsRock::onModifyMove(simulation);
   pokesim::dex::LongReach::onModifyMove(simulation);
+
+  pokesim::dex::Scrappy::onModifyMove(simulation);
 }
 
 void runResetDisabledMove(Simulation& simulation) {
@@ -2676,6 +2678,19 @@ void runSecondaryMoveEffects(Simulation& simulation) {
   runAddedFlinchEffect(simulation);
 }
 
+void failIfTargetImmune(types::handle handle, CurrentActionTarget target, TypeName typeName, const Pokedex& pokedex) {
+  types::registry& registry = *handle.registry();
+
+  if (internal::isTargetImmune(registry, target, typeName, pokedex)) {
+    handle.emplace<tags::FailedCurrentMoveHit>();
+  }
+}
+
+void typeImmunityCheck(Simulation& simulation) {
+  simulation.view<failIfTargetImmune, Tags<tags::CurrentMoveHit>, entt::exclude_t<move::tags::IgnoreImmunities>>(
+    simulation.pokedex());
+}
+
 void accuracyCheck(Simulation& simulation) {
   internal::runModifyAccuracyEvent(simulation);
   internal::runAccuracyEvent(simulation);
@@ -2717,7 +2732,7 @@ void moveHitLoop(Simulation& simulation) {
 void internal::runMoveHitChecks(Simulation& simulation) {
   // invulnerabilityCheck
   // hitCheck
-  // immunityCheck
+  runMoveHitCheck<typeImmunityCheck>(simulation);
   runMoveHitCheck<accuracyCheck>(simulation);
   // breakProtectCheck
   // stealBoostCheck
@@ -5520,7 +5535,6 @@ void Trapper::onSwitchOut(Simulation& simulation) {
 
 namespace pokesim::dex {
 namespace {
-
 template <typename CurrentActionMovesAsTargetType>
 struct LongReachOnModifyMove {
   static void run(types::registry& registry, const CurrentActionMovesAsTargetType& moves) {
@@ -5531,7 +5545,24 @@ struct LongReachOnModifyMove {
     }
   }
 };
+
 void plusOnModifySpa(types::handle, EventModifier&) {}
+
+template <typename CurrentActionMovesAsTargetType>
+struct ScrappyOnModifyMove {
+  static void run(types::registry& registry, const CurrentActionMovesAsTargetType& moves) {
+    for (types::entity move : moves) {
+      if (!registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
+        return;
+      }
+
+      TypeName typeName = registry.get<TypeName>(move);
+      if (typeName.val == Type::NORMAL || typeName.val == Type::FIGHTING) {
+        registry.emplace<move::tags::IgnoreImmunities>(move);
+      }
+    }
+  }
+};
 
 void staticOnDamagingHit(
   types::handle targetHandle, CurrentActionMovesAsTarget moves, Battle battle, types::percentChance chanceOfStatic,
@@ -5569,6 +5600,10 @@ void Plus::onModifySpA(Simulation& simulation) {
     return;
   }
   simulation.view<plusOnModifySpa, Tags<Plus>>();
+}
+
+void Scrappy::onModifyMove(Simulation& simulation) {
+  internal::currentActionMovesAsSourceView<ScrappyOnModifyMove, Tags<Scrappy>>(simulation);
 }
 
 void Static::onDamagingHit(Simulation& simulation) {
@@ -5709,6 +5744,8 @@ void clearRunVariables(Simulation& simulation) {
     internal::calc_damage::tags::IgnoresAttackingBoost,
     internal::calc_damage::tags::IgnoresDefendingBoost>();
   simulation.removeFromEntities<Damage, pokesim::tags::CalculateDamage>();
+  simulation.addToEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune, pokesim::tags::CalculateDamage>();
+  simulation.addToEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune, pokesim::tags::AnalyzeEffect>();
 }
 
 void checkForAndApplyStab(types::handle moveHandle, Attacker attacker, TypeName type, DamageRollModifiers& modifier) {
@@ -5902,6 +5939,38 @@ void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, 
     usesUntilKo.val.back().damageRollsIncluded++;
   }
   moveHandle.emplace<UsesUntilKo>(usesUntilKo);
+}
+
+void setDefenderImmune(types::handle handle, CurrentActionTarget target, TypeName typeName, const Pokedex& pokedex) {
+  types::registry& registry = *handle.registry();
+
+  if (internal::isTargetImmune(registry, target, typeName, pokedex)) {
+    handle.emplace<tags::DefenderImmune>();
+  }
+}
+
+template <typename SimulationTag>
+void typeImmunityCheck(Simulation& simulation) {
+  static constexpr bool isCalculateDamage = std::is_same_v<pokesim::tags::CalculateDamage, SimulationTag>;
+  static constexpr bool isAnalyzeEffect = std::is_same_v<pokesim::tags::AnalyzeEffect, SimulationTag>;
+
+  static_assert(isCalculateDamage || isAnalyzeEffect, "Using a type that isn't a valid simulation tag.");
+
+  pokesim::internal::EntityFilter<SimulationTag, pokesim::tags::CurrentMoveHit> moveFilter{simulation};
+  if (moveFilter.hasNoneSelected()) {
+    return;
+  }
+
+  moveFilter.template view<setDefenderImmune, Tags<>, entt::exclude_t<move::tags::IgnoreImmunities>>(
+    simulation.pokedex());
+
+  Damage damage{Constants::Damage::IMMUNE};
+  moveFilter.template addToSelected<DamageRolls, tags::DefenderImmune>(DamageRolls{{damage.val}});
+
+  if constexpr (isAnalyzeEffect) {
+    moveFilter.template addToSelected<Damage, tags::DefenderImmune>(damage);
+  }
+  simulation.removeFromEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune>();
 }
 
 template <typename SimulationTag, auto ApplyDamageRollKind>
@@ -6195,6 +6264,9 @@ void calcDamage(Simulation& simulation) {
   using CalculateDamage = pokesim::tags::CalculateDamage;
   using AnalyzeEffect = pokesim::tags::AnalyzeEffect;
 
+  typeImmunityCheck<CalculateDamage>(simulation);
+  typeImmunityCheck<AnalyzeEffect>(simulation);
+
   applySideDamageRollOptions<SimulateTurn, setIfMoveCrits<SimulateTurn>>(simulation);
   applySideDamageRollOptions<CalculateDamage, setIfMoveCrits<CalculateDamage>>(simulation);
   applySideDamageRollOptions<AnalyzeEffect, setIfMoveCrits<AnalyzeEffect>>(simulation);
@@ -6484,6 +6556,18 @@ bool doesMoveMakeContact(types::registry& registry, types::entity move, types::e
   }
   */
   return registry.all_of<move::tags::Contact>(move);
+}
+
+bool isGrounded(types::registry&, types::entity) {
+  return true;
+}
+
+bool isTargetImmune(types::registry& registry, CurrentActionTarget target, TypeName typeName, const Pokedex& pokedex) {
+  bool targetImmune = isSpeciesTypeImmune(registry.get<SpeciesTypes>(target.val), typeName.val, pokedex.typeChart());
+  if (!targetImmune && typeName.val == dex::Type::GROUND) {
+    return !isGrounded(registry, target.val);
+  }
+  return targetImmune;
 }
 }  // namespace pokesim::internal
 
@@ -7094,6 +7178,7 @@ void clearMoveAction(Simulation& simulation) {
     pokesim::move::tags::Special,
     pokesim::move::tags::Status,
     pokesim::move::tags::Contact,
+    pokesim::move::tags::IgnoreImmunities,
     pokesim::move::tags::BypassSubstitute,
     pokesim::move::tags::Punch,
     pokesim::move::tags::VariableHitCount,

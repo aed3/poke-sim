@@ -22,6 +22,7 @@ struct VariableHitCount {};
 struct AccuracyDependentHitCount {};
 
 struct SelfSwitch {};
+struct IgnoreImmunities {};
 }  // namespace tags
 
 namespace effect::tags {

@@ -4,6 +4,7 @@
 #include <Components/BaseEffectChance.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EventModifier.hpp>
+#include <Components/Names/TypeNames.hpp>
 #include <Components/RandomEventInputs.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
@@ -22,7 +23,6 @@
 
 namespace pokesim::dex {
 namespace {
-
 template <typename CurrentActionMovesAsTargetType>
 struct LongReachOnModifyMove {
   static void run(types::registry& registry, const CurrentActionMovesAsTargetType& moves) {
@@ -33,7 +33,24 @@ struct LongReachOnModifyMove {
     }
   }
 };
+
 void plusOnModifySpa(types::handle, EventModifier&) {}
+
+template <typename CurrentActionMovesAsTargetType>
+struct ScrappyOnModifyMove {
+  static void run(types::registry& registry, const CurrentActionMovesAsTargetType& moves) {
+    for (types::entity move : moves) {
+      if (!registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
+        return;
+      }
+
+      TypeName typeName = registry.get<TypeName>(move);
+      if (typeName.val == Type::NORMAL || typeName.val == Type::FIGHTING) {
+        registry.emplace<move::tags::IgnoreImmunities>(move);
+      }
+    }
+  }
+};
 
 void staticOnDamagingHit(
   types::handle targetHandle, CurrentActionMovesAsTarget moves, Battle battle, types::percentChance chanceOfStatic,
@@ -71,6 +88,10 @@ void Plus::onModifySpA(Simulation& simulation) {
     return;
   }
   simulation.view<plusOnModifySpa, Tags<Plus>>();
+}
+
+void Scrappy::onModifyMove(Simulation& simulation) {
+  internal::currentActionMovesAsSourceView<ScrappyOnModifyMove, Tags<Scrappy>>(simulation);
 }
 
 void Static::onDamagingHit(Simulation& simulation) {

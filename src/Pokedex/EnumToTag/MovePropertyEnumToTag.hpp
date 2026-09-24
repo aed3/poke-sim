@@ -28,12 +28,16 @@ constexpr void enumToTag(MoveProperty item, RunArgs&&... args) {
     RunStruct<move::tags::Contact, T...>::run(std::forward<RunArgs>(args)...);
   }
 
-  if (item & MoveProperty::VARIABLE_HIT_COUNT) {
-    RunStruct<move::tags::VariableHitCount, T...>::run(std::forward<RunArgs>(args)...);
+  if (item & MoveProperty::IGNORE_IMMUNITIES) {
+    RunStruct<move::tags::IgnoreImmunities, T...>::run(std::forward<RunArgs>(args)...);
   }
 
   if (item & MoveProperty::SELF_SWITCH) {
     RunStruct<move::tags::SelfSwitch, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
+  if (item & MoveProperty::VARIABLE_HIT_COUNT) {
+    RunStruct<move::tags::VariableHitCount, T...>::run(std::forward<RunArgs>(args)...);
   }
 }
 
