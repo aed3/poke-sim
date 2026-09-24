@@ -230,6 +230,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/BattleStateTest.cpp
       tests/CalcDamageTest.cpp
       tests/Abilities/LongReach.cpp
+      tests/Abilities/Scrappy.cpp
       tests/Effects/ChoiceLock.cpp
       tests/Effects/Paralysis.cpp
       tests/Items/KingsRock.cpp

@@ -25,74 +25,105 @@ struct Ideals {
   const auto& koUses() const { return after.koUses.val; }
   auto multiplier() const { return (types::effectMultiplier)after.rolls.max() / before.rolls.max(); }
 };
-
-const IdealDamageResults p1FuryAttack{
-  {14U, 13U, 13U, 13U, 13U, 13U, 13U, 13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U},
-  {{{21U, 1U}, {23U, 7U}, {25U, 7U}, {27U, 1U}}},
-};
-
-const IdealDamageResults p1FuryAttackBurn{
-  {7U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 5U},
-  {{{42U, 1U}, {49U, 14U}, {58U, 1U}}},
-};
-
-const IdealDamageResults p1FuryAttackBurnPlus2Atk{
-  {13U, 13U, 13U, 13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U, 11U, 11U, 11U},
-  {{{23U, 4U}, {25U, 8U}, {27U, 4U}}},
-};
-
-const IdealDamageResults p1KnockOff{
-  {84U, 83U, 82U, 81U, 80U, 79U, 78U, 78U, 77U, 76U, 75U, 74U, 73U, 73U, 72U, 71U},
-  {{{4U, 14U}, {5U, 2U}}},
-};
-
-const IdealDamageResults p1KnockOffBurn{
-  {42U, 41U, 41U, 40U, 40U, 39U, 39U, 39U, 38U, 38U, 37U, 37U, 36U, 36U, 36U, 35U},
-  {{{7U, 1U}, {8U, 11U}, {9U, 4U}}},
-};
-
-const IdealDamageResults p1KnockOffMinus1Atk{
-  {56U, 55U, 54U, 54U, 53U, 53U, 52U, 52U, 51U, 50U, 50U, 49U, 49U, 48U, 48U, 47U},
-  {{{6U, 13U}, {7U, 3U}}},
-};
-
-const IdealDamageResults p1Thunderbolt{
-  {47U, 46U, 46U, 45U, 45U, 44U, 44U, 43U, 43U, 42U, 42U, 41U, 41U, 40U, 40U, 39U},
-  {{{7U, 11U}, {8U, 5U}}},
-};
-
-const IdealDamageResults p2FuryAttack{
-  {5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 4U, 4U, 4U, 4U, 4U, 4U},
-  {{{56U, 10U}, {70U, 6U}}},
-};
-
-const IdealDamageResults p2KnockOff{
-  {64U, 63U, 62U, 62U, 61U, 60U, 60U, 59U, 58U, 58U, 57U, 56U, 56U, 55U, 55U, 54U},
-  {{{5U, 13U}, {6U, 3U}}},
-};
-
-const IdealDamageResults p2KnockOffBurnPlus2Atk{
-  {63U, 62U, 62U, 61U, 60U, 60U, 59U, 59U, 58U, 57U, 57U, 56U, 55U, 55U, 54U, 53U},
-  {{{5U, 12U}, {6U, 4U}}},
-};
-
-const IdealDamageResults p2KnockOffP1Plus2Def{
-  {33U, 32U, 32U, 32U, 31U, 31U, 31U, 30U, 30U, 30U, 29U, 29U, 29U, 28U, 28U, 28U},
-  {{{9U, 7U}, {10U, 9U}}},
-};
-
-const IdealDamageResults p2Thunderbolt{
-  {288U, 284U, 282U, 278U, 276U, 272U, 270U, 266U, 264U, 260U, 258U, 254U, 252U, 248U, 246U, 242U},
-  {{{1U, 4U}, {2U, 12U}}},
-};
-
-const IdealDamageResults p2ThunderboltPlus3Spa{
-  {710U, 702U, 696U, 686U, 680U, 674U, 666U, 660U, 654U, 644U, 638U, 630U, 624U, 618U, 608U, 602U},
-  {{{1U, 16U}}},
-};
 }  // namespace
 
+TEST_CASE("Type Immunities", "[Simulation][AnalyzeEffect][SingleBattle][Immunities]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(test.pokemon(dex::Species::AMPHAROS, dex::Move::TACKLE)),
+    test.side(test.pokemon(dex::Species::DRAGAPULT, dex::Move::SPLASH)),
+    AnalyzeEffectInputInfo{
+      Slot::P1A,
+      Slot::P2A,
+      Slot::P1A,
+      {dex::Move::TACKLE},
+      {},
+      {{dex::Stat::ATK, 1}},
+    },
+    AnalyzeEffectInputInfo{
+      Slot::P1A,
+      Slot::P2A,
+      Slot::P1A,
+      {dex::Move::TACKLE},
+      {dex::Status::BRN},
+    });
+
+  auto result = test.analyzeEffect();
+  result.multipliedDamageRollsResults().each(
+    [&test](types::entity entity, const analyze_effect::MultipliedDamageRolls& damageRolls) {
+      REQUIRE(damageRolls.max() == Constants::Damage::IMMUNE);
+      REQUIRE(damageRolls.min() == Constants::Damage::IMMUNE);
+      REQUIRE(test.registry().all_of<analyze_effect::tags::InfiniteMultiplier>(entity));
+    });
+}
+
 TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect][SingleBattle]") {
+  const IdealDamageResults p1FuryAttack{
+    {14U, 13U, 13U, 13U, 13U, 13U, 13U, 13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U},
+    {{{21U, 1U}, {23U, 7U}, {25U, 7U}, {27U, 1U}}},
+  };
+
+  const IdealDamageResults p1FuryAttackBurn{
+    {7U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 6U, 5U},
+    {{{42U, 1U}, {49U, 14U}, {58U, 1U}}},
+  };
+
+  const IdealDamageResults p1FuryAttackBurnPlus2Atk{
+    {13U, 13U, 13U, 13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U, 11U, 11U, 11U},
+    {{{23U, 4U}, {25U, 8U}, {27U, 4U}}},
+  };
+
+  const IdealDamageResults p1KnockOff{
+    {84U, 83U, 82U, 81U, 80U, 79U, 78U, 78U, 77U, 76U, 75U, 74U, 73U, 73U, 72U, 71U},
+    {{{4U, 14U}, {5U, 2U}}},
+  };
+
+  const IdealDamageResults p1KnockOffBurn{
+    {42U, 41U, 41U, 40U, 40U, 39U, 39U, 39U, 38U, 38U, 37U, 37U, 36U, 36U, 36U, 35U},
+    {{{7U, 1U}, {8U, 11U}, {9U, 4U}}},
+  };
+
+  const IdealDamageResults p1KnockOffMinus1Atk{
+    {56U, 55U, 54U, 54U, 53U, 53U, 52U, 52U, 51U, 50U, 50U, 49U, 49U, 48U, 48U, 47U},
+    {{{6U, 13U}, {7U, 3U}}},
+  };
+
+  const IdealDamageResults p1Thunderbolt{
+    {47U, 46U, 46U, 45U, 45U, 44U, 44U, 43U, 43U, 42U, 42U, 41U, 41U, 40U, 40U, 39U},
+    {{{7U, 11U}, {8U, 5U}}},
+  };
+
+  const IdealDamageResults p2FuryAttack{
+    {5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 5U, 4U, 4U, 4U, 4U, 4U, 4U},
+    {{{56U, 10U}, {70U, 6U}}},
+  };
+
+  const IdealDamageResults p2KnockOff{
+    {64U, 63U, 62U, 62U, 61U, 60U, 60U, 59U, 58U, 58U, 57U, 56U, 56U, 55U, 55U, 54U},
+    {{{5U, 13U}, {6U, 3U}}},
+  };
+
+  const IdealDamageResults p2KnockOffBurnPlus2Atk{
+    {63U, 62U, 62U, 61U, 60U, 60U, 59U, 59U, 58U, 57U, 57U, 56U, 55U, 55U, 54U, 53U},
+    {{{5U, 12U}, {6U, 4U}}},
+  };
+
+  const IdealDamageResults p2KnockOffP1Plus2Def{
+    {33U, 32U, 32U, 32U, 31U, 31U, 31U, 30U, 30U, 30U, 29U, 29U, 29U, 28U, 28U, 28U},
+    {{{9U, 7U}, {10U, 9U}}},
+  };
+
+  const IdealDamageResults p2Thunderbolt{
+    {288U, 284U, 282U, 278U, 276U, 272U, 270U, 266U, 264U, 260U, 258U, 254U, 252U, 248U, 246U, 242U},
+    {{{1U, 4U}, {2U, 12U}}},
+  };
+
+  const IdealDamageResults p2ThunderboltPlus3Spa{
+    {710U, 702U, 696U, 686U, 680U, 674U, 666U, 660U, 654U, 644U, 638U, 630U, 624U, 618U, 608U, 602U},
+    {{{1U, 16U}}},
+  };
+
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
   test.setupBattle(
     test.side(test.pokemon(

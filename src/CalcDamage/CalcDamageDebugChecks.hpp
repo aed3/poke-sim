@@ -222,9 +222,16 @@ struct Checks : pokesim::debug::Checks {
 
     POKESIM_REQUIRE_NM(!damageRolls.val.empty());
 
+    bool isDefenderImmune = has<tags::DefenderImmune>(move);
     for (const Damage& damageRoll : damageRolls.val) {
       POKESIM_REQUIRE_NM(lastDamage >= damageRoll.val);
-      POKESIM_REQUIRE_NM(damageRoll.val >= Constants::Damage::MIN);
+      if (isDefenderImmune) {
+        POKESIM_REQUIRE_NM(damageRoll.val == Constants::Damage::IMMUNE);
+      }
+      else {
+        POKESIM_REQUIRE_NM(damageRoll.val >= Constants::Damage::MIN);
+      }
+
       if (calculateUpToFoeHp) {
         POKESIM_REQUIRE_NM(damageRoll.val <= defenderHp.val);
       }
@@ -233,13 +240,19 @@ struct Checks : pokesim::debug::Checks {
     }
 
     DamageRollKind damageRollKind = getDamageRollKind(move, damageRollOptions);
+    if (isDefenderImmune && has<Damage>(move)) {
+      POKESIM_REQUIRE_NM(registry->get<Damage>(move).val == Constants::Damage::IMMUNE);
+    }
 
     POKESIM_REQUIRE(
       damageRollKind != DamageRollKind::NONE,
       "Cannot calculate damage without knowing what rolls to consider.");
 
     std::size_t idealDamageRollCount = 0U;
-    if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
+    if (isDefenderImmune) {
+      idealDamageRollCount = 1U;
+    }
+    else if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
       idealDamageRollCount = Constants::DamageRollCount::MAX;
     }
     else {
@@ -259,7 +272,7 @@ struct Checks : pokesim::debug::Checks {
     POKESIM_REQUIRE_NM(idealDamageRollCount);
     POKESIM_REQUIRE_NM(damageRolls.val.size() == idealDamageRollCount);
 
-    if (noKoChanceCalculation) {
+    if (noKoChanceCalculation || isDefenderImmune) {
       POKESIM_REQUIRE_NM(!has<UsesUntilKo>(move));
     }
     else if (DamageRollKind::ALL_DAMAGE_ROLLS & getDamageRollKind(move, damageRollOptions)) {
@@ -305,7 +318,7 @@ struct Checks : pokesim::debug::Checks {
         POKESIM_REQUIRE_NM(!has<UsesUntilKo>(move));
       }
       else {
-        typesToIgnore.add<DamageRolls, UsesUntilKo>();
+        typesToIgnore.add<DamageRolls, UsesUntilKo, tags::DefenderImmune>();
         checkCalcDamageResultOutputs(move);
 
         if (has<pokesim::tags::CalculateDamage>(move)) {

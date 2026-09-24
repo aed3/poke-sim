@@ -12,8 +12,12 @@
 #include <limits>
 
 namespace pokesim {
+class Pokedex;
+struct CurrentActionTarget;
+struct TypeName;
+
 constexpr types::typeEffectiveness getAttackEffectiveness(
-  const SpeciesTypes& speciesTypes, dex::Type attackingType, const TypeChart& typeChart) {
+  SpeciesTypes speciesTypes, dex::Type attackingType, const TypeChart& typeChart) {
   types::typeEffectiveness modifier = 0;
   for (dex::Type defendingType : speciesTypes.val) {
     switch (typeChart.effectiveness(attackingType, defendingType)) {
@@ -39,7 +43,18 @@ constexpr types::typeEffectiveness getAttackEffectiveness(
   return modifier;
 }
 
+constexpr bool isSpeciesTypeImmune(SpeciesTypes speciesTypes, dex::Type attackingType, const TypeChart& typeChart) {
+  for (dex::Type defendingType : speciesTypes.val) {
+    if (typeChart.effectiveness(attackingType, defendingType) == TypeEffectiveness::IMMUNE) {
+      return true;
+    }
+  }
+  return false;
+}
+
 namespace internal {
 bool doesMoveMakeContact(types::registry& registry, types::entity move, types::entity source);
-}
+bool isGrounded(types::registry& registry, types::entity entity);
+bool isTargetImmune(types::registry& registry, CurrentActionTarget target, TypeName typeName, const Pokedex& pokedex);
+}  // namespace internal
 }  // namespace pokesim

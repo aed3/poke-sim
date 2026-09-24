@@ -246,6 +246,7 @@ void clearMoveAction(Simulation& simulation) {
     pokesim::move::tags::Special,
     pokesim::move::tags::Status,
     pokesim::move::tags::Contact,
+    pokesim::move::tags::IgnoreImmunities,
     pokesim::move::tags::BypassSubstitute,
     pokesim::move::tags::Punch,
     pokesim::move::tags::VariableHitCount,
