@@ -5561,7 +5561,7 @@ void staticOnDamagingHit(
 }  // namespace
 
 void LongReach::onModifyMove(Simulation& simulation) {
-  internal::currentActionMovesAsSourceView<LongReachOnModifyMove>(simulation);
+  internal::currentActionMovesAsSourceView<LongReachOnModifyMove, Tags<LongReach>>(simulation);
 }
 
 void Plus::onModifySpA(Simulation& simulation) {
