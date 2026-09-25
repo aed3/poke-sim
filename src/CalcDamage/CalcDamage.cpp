@@ -307,8 +307,8 @@ void removeImmuneMoves(types::handle handle, CurrentActionMoves& moves) {
 
   if (removeShort) {
     handle.remove<CurrentActionMoves>();
-    removedAll &= true;
   }
+  removedAll &= removeShort;
 
   if (removedAll) {
     if constexpr (ForAttacker) {
