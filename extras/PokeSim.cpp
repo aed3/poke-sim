@@ -487,8 +487,23 @@ void checkActionMove(types::entity moveEntity, const types::registry& registry) 
   const auto& [attacker, defender, battle, typeName] =
     registry.get<CurrentActionSource, CurrentActionTarget, Battle, TypeName>(moveEntity);
 
-  POKESIM_REQUIRE_NM(has<tags::CurrentActionSource>(attacker.val, registry));
-  POKESIM_REQUIRE_NM(has<tags::CurrentActionTarget>(defender.val, registry));
+  if (has<calc_damage::tags::DefenderImmune>(moveEntity, registry)) {
+    POKESIM_REQUIRE_NM(
+      has<tags::CalculateDamage>(moveEntity, registry) || has<tags::AnalyzeEffect>(moveEntity, registry));
+    const auto [damage, damageRolls] = registry.try_get<Damage, DamageRolls>(moveEntity);
+    if (damage) {
+      POKESIM_REQUIRE_NM(damage->val == Constants::Damage::IMMUNE);
+    }
+    if (damageRolls) {
+      POKESIM_REQUIRE_NM(damageRolls->val.size() == 1U);
+      POKESIM_REQUIRE_NM(damageRolls->max() == Constants::Damage::IMMUNE);
+    }
+  }
+  else {
+    POKESIM_REQUIRE_NM(has<tags::CurrentActionSource>(attacker.val, registry));
+    POKESIM_REQUIRE_NM(has<tags::CurrentActionTarget>(defender.val, registry));
+  }
+
   POKESIM_REQUIRE_NM(has<tags::Battle>(battle.val, registry));
   check(typeName);
 
@@ -2473,18 +2488,93 @@ void runAfterFaintEvent(Simulation&) {}
 
 namespace pokesim {
 namespace {
-void deductMoveHitCount(types::handle moveHandle, HitCount& hitCount) {
+void deductMoveHitCount(types::handle handle, HitCount& hitCount) {
   POKESIM_REQUIRE(hitCount.val > 0U, "A hit count shouldn't be decremented if it's already 0.");
   hitCount.val--;
   if (!hitCount.val) {
-    moveHandle.remove<HitCount, tags::CurrentMoveHit>();
+    handle.remove<HitCount, tags::CurrentMoveHit>();
   }
 }
 
-void removeHitCountFromFaintedTargets(types::handle moveHandle, CurrentActionTarget target) {
-  if (moveHandle.registry()->get<stat::CurrentHp>(target.val).val == Constants::PokemonCurrentHpStat::MIN) {
-    moveHandle.remove<HitCount, tags::CurrentMoveHit>();
+void removeHitCountFromFaintedTargets(types::handle handle, CurrentActionTarget target) {
+  if (handle.registry()->get<stat::CurrentHp>(target.val).val == Constants::PokemonCurrentHpStat::MIN) {
+    handle.remove<HitCount, tags::CurrentMoveHit>();
   }
+}
+
+void removeMoveListDoubles(types::handle handle, CurrentActionSource source, CurrentActionTarget target) {
+  types::registry& registry = *handle.registry();
+  handle.emplace<internal::tags::HitsFinished>();
+
+  CurrentActionMovesAsSource& moves = registry.get<CurrentActionMovesAsSource>(source.val);
+  moves.val.unordered_remove(handle.entity());
+
+  if (moves.val.empty()) {
+    registry.remove<CurrentActionMovesAsSource, tags::CurrentActionSource>(source.val);
+  }
+  registry.remove<CurrentActionMovesAsTarget, tags::CurrentActionTarget>(target.val);
+}
+
+void removeMoveListSingles(types::handle handle, CurrentActionSource source, CurrentActionTarget target) {
+  types::registry& registry = *handle.registry();
+  handle.emplace<internal::tags::HitsFinished>();
+
+  registry.remove<CurrentActionMovesAsSource, tags::CurrentActionSource>(source.val);
+  registry.remove<CurrentActionMovesAsTarget, tags::CurrentActionTarget>(target.val);
+}
+
+void replaceMoveListSingles(types::handle handle, CurrentActionSource source, CurrentActionTarget target) {
+  types::registry& registry = *handle.registry();
+  types::entity move = handle.entity();
+
+  registry.emplace<CurrentActionMovesAsSource>(source.val, decltype(CurrentActionMovesAsSource::val){move});
+  registry.emplace<CurrentActionMovesAsTarget>(target.val, move);
+  registry.emplace<tags::CurrentActionSource>(source.val);
+  registry.emplace<tags::CurrentActionTarget>(target.val);
+}
+
+void replaceMoveListDoubles(types::handle handle, CurrentActionSource source, CurrentActionTarget target) {
+  types::registry& registry = *handle.registry();
+  types::entity move = handle.entity();
+
+  CurrentActionMovesAsSource* sourceMoves = registry.try_get<CurrentActionMovesAsSource>(source.val);
+  if (sourceMoves) {
+    sourceMoves->val.push_back(move);
+    POKESIM_REQUIRE(
+      registry.all_of<tags::CurrentActionSource>(source.val),
+      "If this component exists, this tag must also exist.");
+  }
+  else {
+    registry.emplace<CurrentActionMovesAsSource>(source.val, decltype(CurrentActionMovesAsSource::val){move});
+    registry.emplace<tags::CurrentActionSource>(source.val);
+  }
+  registry.emplace<CurrentActionMovesAsTarget>(target.val, handle.entity());
+  registry.emplace<tags::CurrentActionTarget>(target.val);
+}
+
+void removeFinishedHitsFromMoveLists(Simulation& simulation) {
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    simulation.view<
+      removeMoveListSingles,
+      Tags<tags::CurrentActionMove>,
+      entt::exclude_t<tags::CurrentMoveHit, internal::tags::HitsFinished>>();
+  }
+  else {
+    simulation.view<
+      removeMoveListDoubles,
+      Tags<tags::CurrentActionMove>,
+      entt::exclude_t<tags::CurrentMoveHit, internal::tags::HitsFinished>>();
+  }
+}
+
+void replaceFinishedHitsInMoveLists(Simulation& simulation) {
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    simulation.view<replaceMoveListSingles, Tags<internal::tags::HitsFinished>>();
+  }
+  else {
+    simulation.view<replaceMoveListDoubles, Tags<internal::tags::HitsFinished>>();
+  }
+  simulation.removeFromEntities<internal::tags::HitsFinished>();
 }
 
 template <auto Function>
@@ -2707,6 +2797,10 @@ void moveHitLoop(Simulation& simulation) {
   types::moveHits iterations = MoveHitLimits::MIN;
   while (!simulation.registry.view<HitCount>().empty()) {
     POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran than possible.");
+    if (iterations > MoveHitLimits::MIN) {
+      simulation.view<removeHitCountFromFaintedTargets, Tags<tags::CurrentMoveHit>>();
+      removeFinishedHitsFromMoveLists(simulation);
+    }
 
     calc_damage::run(simulation);  // 1. call to this.battle.getDamage
     internal::runDamageEvent(simulation);
@@ -2723,9 +2817,9 @@ void moveHitLoop(Simulation& simulation) {
 
     internal::updateAllStats(simulation);
     simulation.view<deductMoveHitCount>();
-    simulation.view<removeHitCountFromFaintedTargets, Tags<tags::CurrentActionMove>>();
     iterations++;
   }
+  replaceFinishedHitsInMoveLists(simulation);
 }
 }  // namespace
 
@@ -5219,10 +5313,6 @@ struct FocusSashOnAfterModifyDamage {
 
     types::registry& registry = *handle.registry();
     for (types::entity move : moves) {
-      if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
-        continue;
-      }
-
       if constexpr (std::is_same_v<tags::SimulateTurn, SimulationTag>) {
         Damage& damage = registry.get<Damage>(move);
         if (damage.val < hp.val) {
@@ -5249,9 +5339,7 @@ struct FocusSashOnAfterModifyDamage {
 void kingsRockOnModifyMove(
   types::registry& registry, const CurrentActionMovesAsSource& moves, types::percentChance addedFlinchChance) {
   for (types::entity move : moves) {
-    if (
-      !registry.all_of<pokesim::tags::CurrentActionMove>(move) ||
-      registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
+    if (registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
       continue;
     }
 
@@ -5264,9 +5352,7 @@ void lifeOrbOnAfterMove(
   bool onlyStatusMoves = true;
   types::registry& registry = *handle.registry();
   for (types::entity move : moves) {
-    if (registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
-      onlyStatusMoves &= registry.all_of<move::tags::Status>(move);
-    }
+    onlyStatusMoves &= registry.all_of<move::tags::Status>(move);
   }
 
   if (!onlyStatusMoves) {
@@ -5277,10 +5363,6 @@ void lifeOrbOnAfterMove(
 void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget moves, types::stat hpDivisor) {
   types::registry& registry = *handle.registry();
   types::entity move = moves.val;
-  if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
-    return;
-  }
-
   types::entity source = registry.get<CurrentActionSource>(moves.val).val;
   if (!internal::doesMoveMakeContact(registry, move, source)) {
     return;
@@ -5409,11 +5491,9 @@ void damageByHpDivisor(types::handle handle, stat::Hp hp, types::stat hpDivisor)
 
 template <typename CurrentActionMovesAsSourceType>
 struct ApplyBurnModifier {
-  static void run(types::handle handle, const CurrentActionMovesAsSourceType& moves) {
-    types::registry& registry = *handle.registry();
+  static void run(types::registry& registry, const CurrentActionMovesAsSourceType& moves) {
     for (types::entity move : moves) {
-      if (registry.all_of<move::tags::Physical, tags::CurrentMoveHit>(
-            move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
+      if (registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
         registry.get<DamageRollModifiers>(move).burn = true;
       }
     }
@@ -5426,9 +5506,7 @@ void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedD
 
 void failedOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves) {
-    if (registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
-      registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
-    }
+    registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
   }
 }
 
@@ -5539,9 +5617,7 @@ template <typename CurrentActionMovesAsTargetType>
 struct LongReachOnModifyMove {
   static void run(types::registry& registry, const CurrentActionMovesAsTargetType& moves) {
     for (types::entity move : moves) {
-      if (registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
-        registry.remove<move::tags::Contact>(move);
-      }
+      registry.remove<move::tags::Contact>(move);
     }
   }
 };
@@ -5552,10 +5628,6 @@ template <typename CurrentActionMovesAsTargetType>
 struct ScrappyOnModifyMove {
   static void run(types::registry& registry, const CurrentActionMovesAsTargetType& moves) {
     for (types::entity move : moves) {
-      if (!registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
-        return;
-      }
-
       TypeName typeName = registry.get<TypeName>(move);
       if (typeName.val == Type::NORMAL || typeName.val == Type::FIGHTING) {
         registry.emplace<move::tags::IgnoreImmunities>(move);
@@ -5570,9 +5642,6 @@ void staticOnDamagingHit(
   types::registry& registry = *targetHandle.registry();
   types::entity move = moves.val;
 
-  if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
-    return;
-  }
   types::entity source = registry.get<CurrentActionSource>(move).val;
 
   if (!internal::doesMoveMakeContact(registry, move, source)) {
@@ -5744,8 +5813,6 @@ void clearRunVariables(Simulation& simulation) {
     internal::calc_damage::tags::IgnoresAttackingBoost,
     internal::calc_damage::tags::IgnoresDefendingBoost>();
   simulation.removeFromEntities<Damage, pokesim::tags::CalculateDamage>();
-  simulation.addToEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune, pokesim::tags::CalculateDamage>();
-  simulation.addToEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune, pokesim::tags::AnalyzeEffect>();
 }
 
 void checkForAndApplyStab(types::handle moveHandle, Attacker attacker, TypeName type, DamageRollModifiers& modifier) {
@@ -5949,8 +6016,57 @@ void setDefenderImmune(types::handle handle, CurrentActionTarget target, TypeNam
   }
 }
 
+template <typename CurrentActionMoves>
+void removeImmuneMoves(types::handle handle, CurrentActionMoves& moves) {
+  static constexpr bool ForAttacker = std::is_same_v<CurrentActionMoves, CurrentActionMovesAsSource>;
+  using UsedMovesExtended =
+    std::conditional_t<ForAttacker, CurrentActionMovesAsSourceExtended, CurrentActionMovesAsTargetExtended>;
+  types::registry& registry = *handle.registry();
+  UsedMovesExtended* movesExtended = handle.try_get<UsedMovesExtended>();
+
+  auto isDefenderImmune = [&registry](types::entity move) { return registry.all_of<tags::DefenderImmune>(move); };
+
+  bool removedAll = true;
+  if (movesExtended) {
+    auto end = movesExtended->val.end();
+    end = std::remove_if(movesExtended->val.begin(), end, isDefenderImmune);
+
+    movesExtended->val.resize(std::distance(movesExtended->val.begin(), end));
+    removedAll = movesExtended->val.empty();
+    if (removedAll) {
+      handle.remove<UsedMovesExtended>();
+    }
+  }
+
+  bool removeShort = false;
+  if constexpr (ForAttacker) {
+    auto end = moves.val.end();
+    end = std::remove_if(moves.val.begin(), end, isDefenderImmune);
+
+    moves.val.pop_count(std::distance(end, moves.val.end()));
+    removeShort = moves.val.empty();
+  }
+  else {
+    removeShort = isDefenderImmune(moves.val);
+  }
+
+  if (removeShort) {
+    handle.remove<CurrentActionMoves>();
+    removedAll &= true;
+  }
+
+  if (removedAll) {
+    if constexpr (ForAttacker) {
+      handle.remove<tags::Attacker>();
+    }
+    else {
+      handle.remove<tags::Defender>();
+    }
+  }
+}
+
 template <typename SimulationTag>
-void typeImmunityCheck(Simulation& simulation) {
+void modifyMoves(Simulation& simulation) {
   static constexpr bool isCalculateDamage = std::is_same_v<pokesim::tags::CalculateDamage, SimulationTag>;
   static constexpr bool isAnalyzeEffect = std::is_same_v<pokesim::tags::AnalyzeEffect, SimulationTag>;
 
@@ -5970,7 +6086,12 @@ void typeImmunityCheck(Simulation& simulation) {
   if constexpr (isAnalyzeEffect) {
     moveFilter.template addToSelected<Damage, tags::DefenderImmune>(damage);
   }
+
   simulation.removeFromEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune>();
+  if (!simulation.registry.view<tags::DefenderImmune>().empty()) {
+    simulation.view<removeImmuneMoves<CurrentActionMovesAsSource>>();
+    simulation.view<removeImmuneMoves<CurrentActionMovesAsTarget>>();
+  }
 }
 
 template <typename SimulationTag, auto ApplyDamageRollKind>
@@ -6264,8 +6385,8 @@ void calcDamage(Simulation& simulation) {
   using CalculateDamage = pokesim::tags::CalculateDamage;
   using AnalyzeEffect = pokesim::tags::AnalyzeEffect;
 
-  typeImmunityCheck<CalculateDamage>(simulation);
-  typeImmunityCheck<AnalyzeEffect>(simulation);
+  modifyMoves<CalculateDamage>(simulation);
+  modifyMoves<AnalyzeEffect>(simulation);
 
   applySideDamageRollOptions<SimulateTurn, setIfMoveCrits<SimulateTurn>>(simulation);
   applySideDamageRollOptions<CalculateDamage, setIfMoveCrits<CalculateDamage>>(simulation);
@@ -6995,13 +7116,7 @@ bool removeFailedMoveFromSource(types::registry& registry, types::entity moveEnt
     return true;
   }
 
-  for (types::activePokemonIndex i = 0U; i < moves->val.size() - 1U; i++) {
-    if (moves->val[i] == moveEntity) {
-      moves->val[i] = moves->val.back();
-      break;
-    }
-  }
-  moves->val.pop_back();
+  moves->val.unordered_remove(moveEntity);
 
   if (moves->val.empty()) {
     registry.remove<pokesim::tags::CurrentActionSource, CurrentActionMovesAsSource>(source);
@@ -8037,8 +8152,8 @@ void createTwoCalculationsMovePair(
     createAnalyzeEffectMove(registry, move.val, originals.battle, originals.attacker, originals.defender);
   entt::entity copyEntity = createAnalyzeEffectMove(registry, move.val, battle.val, attacker.val, defender.val);
 
-  // All active pokemon in should have their stats refreshed in doubles for moves like Beat Up which rely on the stats
-  // of Pokemon outside of the attacker and defender
+  // All active pokemon should have their stats refreshed in doubles for moves like Beat Up which rely on the stats of
+  // Pokemon outside of the attacker and defender
   for (types::entity pokemon : {attacker.val, defender.val}) {
     registry.emplace_or_replace<pokesim::tags::AtkStatUpdateRequired>(pokemon);
     registry.emplace_or_replace<pokesim::tags::DefStatUpdateRequired>(pokemon);
@@ -8240,68 +8355,7 @@ void restoreInputs(
   effectTarget.val = originalEntities.effectTarget;
 }
 
-template <typename UsedMoves>
-void removeUsedMoves(types::registry& registry, const MovePair& movePair, types::entity pokemon) {
-  static constexpr bool ForAttacker = std::is_same_v<UsedMoves, CurrentActionMovesAsSource>;
-  using UsedMovesExtended =
-    std::conditional_t<ForAttacker, CurrentActionMovesAsSourceExtended, CurrentActionMovesAsTargetExtended>;
-  UsedMoves* moves = registry.try_get<UsedMoves>(pokemon);
-  UsedMovesExtended* movesExtended = registry.try_get<UsedMovesExtended>(pokemon);
-
-  POKESIM_REQUIRE(
-    movesExtended != nullptr ? moves != nullptr : true,
-    "The extended version of the list should only exist if the shorter ones does too");
-
-  if (moves == nullptr) {
-    return;
-  }
-
-  auto isEntityInMovePair = [&movePair](types::entity entity) {
-    return entity == movePair.original || entity == movePair.copy;
-  };
-
-  if (movesExtended) {
-    auto end = movesExtended->val.end();
-    end = std::remove_if(movesExtended->val.begin(), end, isEntityInMovePair);
-
-    movesExtended->val.resize(std::distance(movesExtended->val.begin(), end));
-    if (movesExtended->val.empty()) {
-      registry.remove<UsedMovesExtended>(pokemon);
-    }
-  }
-
-  types::activePokemonIndex amountToRemove = 0U;
-  for (types::entity move : *moves) {
-    if (isEntityInMovePair(move)) {
-      amountToRemove++;
-    }
-  }
-
-  if (amountToRemove == std::distance(moves->begin(), moves->end())) {
-    registry.remove<UsedMoves>(pokemon);
-    if constexpr (ForAttacker) {
-      registry.remove<tags::Attacker>(pokemon);
-    }
-    else {
-      registry.remove<tags::Defender>(pokemon);
-    }
-  }
-  else if constexpr (ForAttacker) {
-    moves->val.pop_count(amountToRemove);
-  }
-}
-
-void removeMovePairs(types::handle inputHandle, MovePair& movePair, Attacker& attacker, Defender& defender) {
-  types::registry& registry = *inputHandle.registry();
-  removeUsedMoves<CurrentActionMovesAsSource>(registry, movePair, attacker.val);
-  removeUsedMoves<CurrentActionMovesAsTarget>(registry, movePair, defender.val);
-
-  const OriginalInputEntities* original = inputHandle.try_get<OriginalInputEntities>();
-  if (original) {
-    removeUsedMoves<CurrentActionMovesAsSource>(registry, movePair, original->attacker);
-    removeUsedMoves<CurrentActionMovesAsTarget>(registry, movePair, original->defender);
-  }
-
+void removeMovePairs(types::registry& registry, MovePair& movePair) {
   registry.destroy(movePair.original);
   if (movePair.original != movePair.copy) {
     registry.destroy(movePair.copy);
@@ -8312,6 +8366,15 @@ void removeMovePairs(types::handle inputHandle, MovePair& movePair, Attacker& at
 
 void clearRunVariables(Simulation& simulation) {
   types::registry& registry = simulation.registry;
+  auto view = registry.view<pokesim::tags::AnalyzeEffect>();
+  registry.remove<
+    CurrentActionMovesAsSource,
+    CurrentActionMovesAsSourceExtended,
+    CurrentActionMovesAsTarget,
+    CurrentActionMovesAsTargetExtended,
+    tags::Attacker,
+    tags::Defender>(view.begin(), view.end());
+
   simulation.view<removeMovePairs>();
   simulation.view<restoreInputs>();
 

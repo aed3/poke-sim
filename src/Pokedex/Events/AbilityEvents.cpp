@@ -27,9 +27,7 @@ template <typename CurrentActionMovesAsTargetType>
 struct LongReachOnModifyMove {
   static void run(types::registry& registry, const CurrentActionMovesAsTargetType& moves) {
     for (types::entity move : moves) {
-      if (registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
-        registry.remove<move::tags::Contact>(move);
-      }
+      registry.remove<move::tags::Contact>(move);
     }
   }
 };
@@ -40,10 +38,6 @@ template <typename CurrentActionMovesAsTargetType>
 struct ScrappyOnModifyMove {
   static void run(types::registry& registry, const CurrentActionMovesAsTargetType& moves) {
     for (types::entity move : moves) {
-      if (!registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
-        return;
-      }
-
       TypeName typeName = registry.get<TypeName>(move);
       if (typeName.val == Type::NORMAL || typeName.val == Type::FIGHTING) {
         registry.emplace<move::tags::IgnoreImmunities>(move);
@@ -58,9 +52,6 @@ void staticOnDamagingHit(
   types::registry& registry = *targetHandle.registry();
   types::entity move = moves.val;
 
-  if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
-    return;
-  }
   types::entity source = registry.get<CurrentActionSource>(move).val;
 
   if (!internal::doesMoveMakeContact(registry, move, source)) {

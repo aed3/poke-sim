@@ -250,6 +250,7 @@ struct Checks : pokesim::debug::Checks {
 
     std::size_t idealDamageRollCount = 0U;
     if (isDefenderImmune) {
+      POKESIM_REQUIRE_NM(!has<pokesim::tags::CurrentMoveHit>(move));
       idealDamageRollCount = 1U;
     }
     else if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
@@ -325,6 +326,10 @@ struct Checks : pokesim::debug::Checks {
           typesToIgnore.add<AttackerHpRecovered, AttackerHpLost>();
           checkAttackHpResults(move);
         }
+
+        if (has<tags::DefenderImmune>(move)) {
+          typesToIgnore.add<pokesim::tags::CurrentMoveHit>();
+        }
       }
 
       types::entity initialMove = getInitialEntity(move);
@@ -336,9 +341,19 @@ struct Checks : pokesim::debug::Checks {
     const types::entityVector pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
       pokesim::debug::TypesToIgnore typesToIgnore;
-      if (has<pokesim::tags::SimulateTurn>(pokemon) && !forAttacker) {
-        typesToIgnore.add<internal::calc_damage::tags::RanAfterModifyDamage>();
+      if (has<pokesim::tags::SimulateTurn>(pokemon)) {
+        if (!forAttacker) {
+          typesToIgnore.add<internal::calc_damage::tags::RanAfterModifyDamage>();
+        }
       }
+      else {
+        typesToIgnore.add<
+          CurrentActionMovesAsSource,
+          CurrentActionMovesAsTarget,
+          CurrentActionMovesAsSourceExtended,
+          CurrentActionMovesAsTargetExtended>();
+      }
+
       types::entity initialPokemon = getInitialEntity(pokemon);
       pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, initialPokemon, typesToIgnore);
     }

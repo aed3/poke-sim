@@ -34,11 +34,9 @@ void damageByHpDivisor(types::handle handle, stat::Hp hp, types::stat hpDivisor)
 
 template <typename CurrentActionMovesAsSourceType>
 struct ApplyBurnModifier {
-  static void run(types::handle handle, const CurrentActionMovesAsSourceType& moves) {
-    types::registry& registry = *handle.registry();
+  static void run(types::registry& registry, const CurrentActionMovesAsSourceType& moves) {
     for (types::entity move : moves) {
-      if (registry.all_of<move::tags::Physical, tags::CurrentMoveHit>(
-            move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
+      if (registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
         registry.get<DamageRollModifiers>(move).burn = true;
       }
     }
@@ -51,9 +49,7 @@ void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedD
 
 void failedOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves) {
-    if (registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
-      registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
-    }
+    registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
   }
 }
 
