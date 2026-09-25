@@ -337,8 +337,23 @@ void checkActionMove(types::entity moveEntity, const types::registry& registry) 
   const auto& [attacker, defender, battle, typeName] =
     registry.get<CurrentActionSource, CurrentActionTarget, Battle, TypeName>(moveEntity);
 
-  POKESIM_REQUIRE_NM(has<tags::CurrentActionSource>(attacker.val, registry));
-  POKESIM_REQUIRE_NM(has<tags::CurrentActionTarget>(defender.val, registry));
+  if (has<calc_damage::tags::DefenderImmune>(moveEntity, registry)) {
+    POKESIM_REQUIRE_NM(
+      has<tags::CalculateDamage>(moveEntity, registry) || has<tags::AnalyzeEffect>(moveEntity, registry));
+    const auto [damage, damageRolls] = registry.try_get<Damage, DamageRolls>(moveEntity);
+    if (damage) {
+      POKESIM_REQUIRE_NM(damage->val == Constants::Damage::IMMUNE);
+    }
+    if (damageRolls) {
+      POKESIM_REQUIRE_NM(damageRolls->val.size() == 1U);
+      POKESIM_REQUIRE_NM(damageRolls->max() == Constants::Damage::IMMUNE);
+    }
+  }
+  else {
+    POKESIM_REQUIRE_NM(has<tags::CurrentActionSource>(attacker.val, registry));
+    POKESIM_REQUIRE_NM(has<tags::CurrentActionTarget>(defender.val, registry));
+  }
+
   POKESIM_REQUIRE_NM(has<tags::Battle>(battle.val, registry));
   check(typeName);
 

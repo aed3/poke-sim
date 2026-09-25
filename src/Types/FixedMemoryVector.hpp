@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Config/Require.hpp>
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -19,14 +20,16 @@ class fixedMemoryVector : private std::array<Type, Size> {
   using base::crbegin;
   using base::max_size;
 
+  using size_type = std::uint8_t;
+
   fixedMemoryVector() : base() {
     static_assert(
       sizeof(fixedMemoryVector<Type, Size, AverageSize>) <= sizeof(std::vector<Type>) + (sizeof(Type) * AverageSize),
       "A std::vector for this type and size would be smaller.");
   }
 
-  fixedMemoryVector(std::uint8_t size, const Type& value) : fixedMemoryVector() {
-    for (std::uint8_t i = 0; i < size; i++) {
+  fixedMemoryVector(size_type size, const Type& value) : fixedMemoryVector() {
+    for (size_type i = 0U; i < size; i++) {
       push_back(value);
     }
   }
@@ -37,8 +40,8 @@ class fixedMemoryVector : private std::array<Type, Size> {
     }
   }
 
-  constexpr std::uint8_t size() const noexcept { return used; }
-  constexpr std::uint8_t max_size() const noexcept { return Size; }
+  constexpr size_type size() const noexcept { return used; }
+  constexpr size_type max_size() const noexcept { return Size; }
   constexpr bool empty() const noexcept { return used == 0U; }
 
   constexpr typename base::const_reference front() const noexcept { return *base::begin(); }
@@ -47,22 +50,22 @@ class fixedMemoryVector : private std::array<Type, Size> {
   constexpr typename base::reference front() noexcept { return *base::begin(); }
   constexpr typename base::reference back() noexcept { return Size ? *(end() - 1) : *end(); }
 
-  constexpr typename base::const_reference at(std::uint8_t pos) const {
+  constexpr typename base::const_reference at(size_type pos) const {
     POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
     return base::at(pos);
   }
 
-  constexpr typename base::const_reference operator[](std::uint8_t pos) const {
+  constexpr typename base::const_reference operator[](size_type pos) const {
     POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
     return base::operator[](pos);
   }
 
-  typename base::reference at(std::uint8_t pos) {
+  typename base::reference at(size_type pos) {
     POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
     return base::at(pos);
   }
 
-  typename base::reference operator[](std::uint8_t pos) {
+  typename base::reference operator[](size_type pos) {
     POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
     return base::operator[](pos);
   }
@@ -77,7 +80,18 @@ class fixedMemoryVector : private std::array<Type, Size> {
     used--;
   }
 
-  void pop_count(std::uint8_t remove) {
+  void unordered_remove(const Type& value) {
+    POKESIM_REQUIRE(std::find(begin(), end(), value), "Value must be in vector to remove.");
+    for (uint8_t i = 0U; i < Size - 1U; i++) {
+      if (value == at(i)) {
+        at(i) = back();
+        break;
+      }
+    }
+    pop_back();
+  }
+
+  void pop_count(size_type remove) {
     POKESIM_REQUIRE(remove <= used, "Removing more values than are used.");
     used -= remove;
   }

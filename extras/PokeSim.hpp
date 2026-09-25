@@ -16662,26 +16662,26 @@ using signedIntType = std::conditional_t<
 #include <initializer_list>
 
 namespace pokesim::types {
-template <typename T, std::uint64_t N>
-class maxSizedVector : public std::vector<T> {
-  using base = std::vector<T>;
+template <typename Type, std::uint64_t MaxSize>
+class maxSizedVector : public std::vector<Type> {
+  using base = std::vector<Type>;
 
   void checkSize(std::uint64_t newSize) const {
-    POKESIM_REQUIRE(newSize <= max_size(), "More than " + std::to_string(N) + " elements are in this vector.");
+    POKESIM_REQUIRE(newSize <= max_size(), "More than " + std::to_string(MaxSize) + " elements are in this vector.");
   }
 
  public:
-  using size_type = internal::unsignedIntType<N>;
+  using size_type = internal::unsignedIntType<MaxSize>;
 
   template <typename... Args>
   maxSizedVector(Args&&... args) : base(std::forward<Args>(args)...) {
     checkSize(base::size());
   }
 
-  maxSizedVector(std::initializer_list<T> list) : maxSizedVector() {
+  maxSizedVector(std::initializer_list<Type> list) : maxSizedVector() {
     checkSize(list.size());
     reserve((size_type)list.size());
-    for (const T& item : list) {
+    for (const Type& item : list) {
       push_back(item);
     }
   }
@@ -16706,12 +16706,28 @@ class maxSizedVector : public std::vector<T> {
     return base::operator[](pos);
   }
 
-  void push_back(const T& value) {
+  void push_back(const Type& value) {
     checkSize(base::size() + 1U);
     base::push_back(value);
   }
 
-  static constexpr size_type max() { return N; }
+  void unordered_remove(const Type& value) {
+    POKESIM_REQUIRE(std::find(base::begin(), base::end(), value) != base::end(), "Value must be in vector to remove.");
+    for (size_type i = 0U; i < size() - 1U; i++) {
+      if (value == at(i)) {
+        at(i) = base::back();
+        break;
+      }
+    }
+    base::pop_back();
+  }
+
+  void pop_count(size_type remove) {
+    POKESIM_REQUIRE(remove <= size(), "Cannot remove more elements than contained.");
+    base::resize(size() - remove);
+  }
+
+  static constexpr size_type max() { return MaxSize; }
   constexpr size_type max_size() const { return max(); }
 
   size_type size() const { return (size_type)base::size(); }
@@ -16726,7 +16742,7 @@ class maxSizedVector : public std::vector<T> {
     base::reserve(newSize);
   }
 
-  void push_back(T&& value) {
+  void push_back(Type&& value) {
     checkSize(base::size() + 1U);
     base::push_back(std::move(value));
   }
@@ -18086,14 +18102,16 @@ class fixedMemoryVector : private std::array<Type, Size> {
   using base::crbegin;
   using base::max_size;
 
+  using size_type = std::uint8_t;
+
   fixedMemoryVector() : base() {
     static_assert(
       sizeof(fixedMemoryVector<Type, Size, AverageSize>) <= sizeof(std::vector<Type>) + (sizeof(Type) * AverageSize),
       "A std::vector for this type and size would be smaller.");
   }
 
-  fixedMemoryVector(std::uint8_t size, const Type& value) : fixedMemoryVector() {
-    for (std::uint8_t i = 0; i < size; i++) {
+  fixedMemoryVector(size_type size, const Type& value) : fixedMemoryVector() {
+    for (size_type i = 0U; i < size; i++) {
       push_back(value);
     }
   }
@@ -18104,8 +18122,8 @@ class fixedMemoryVector : private std::array<Type, Size> {
     }
   }
 
-  constexpr std::uint8_t size() const noexcept { return used; }
-  constexpr std::uint8_t max_size() const noexcept { return Size; }
+  constexpr size_type size() const noexcept { return used; }
+  constexpr size_type max_size() const noexcept { return Size; }
   constexpr bool empty() const noexcept { return used == 0U; }
 
   constexpr typename base::const_reference front() const noexcept { return *base::begin(); }
@@ -18114,22 +18132,22 @@ class fixedMemoryVector : private std::array<Type, Size> {
   constexpr typename base::reference front() noexcept { return *base::begin(); }
   constexpr typename base::reference back() noexcept { return Size ? *(end() - 1) : *end(); }
 
-  constexpr typename base::const_reference at(std::uint8_t pos) const {
+  constexpr typename base::const_reference at(size_type pos) const {
     POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
     return base::at(pos);
   }
 
-  constexpr typename base::const_reference operator[](std::uint8_t pos) const {
+  constexpr typename base::const_reference operator[](size_type pos) const {
     POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
     return base::operator[](pos);
   }
 
-  typename base::reference at(std::uint8_t pos) {
+  typename base::reference at(size_type pos) {
     POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
     return base::at(pos);
   }
 
-  typename base::reference operator[](std::uint8_t pos) {
+  typename base::reference operator[](size_type pos) {
     POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
     return base::operator[](pos);
   }
@@ -18144,7 +18162,18 @@ class fixedMemoryVector : private std::array<Type, Size> {
     used--;
   }
 
-  void pop_count(std::uint8_t remove) {
+  void unordered_remove(const Type& value) {
+    POKESIM_REQUIRE(std::find(begin(), end(), value), "Value must be in vector to remove.");
+    for (uint8_t i = 0U; i < Size - 1U; i++) {
+      if (value == at(i)) {
+        at(i) = back();
+        break;
+      }
+    }
+    pop_back();
+  }
+
+  void pop_count(size_type remove) {
     POKESIM_REQUIRE(remove <= used, "Removing more values than are used.");
     used -= remove;
   }
@@ -20441,6 +20470,7 @@ struct Terastallize {};
 /////////// START OF src/Components/SimulateTurn/MoveHitStepTags.hpp ///////////
 
 namespace pokesim::internal::tags {
+struct HitsFinished {};
 struct RunEffect {};
 }  // namespace pokesim::internal::tags
 
@@ -28725,6 +28755,7 @@ struct Checks : pokesim::debug::Checks {
 
     std::size_t idealDamageRollCount = 0U;
     if (isDefenderImmune) {
+      POKESIM_REQUIRE_NM(!has<pokesim::tags::CurrentMoveHit>(move));
       idealDamageRollCount = 1U;
     }
     else if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
@@ -28800,6 +28831,10 @@ struct Checks : pokesim::debug::Checks {
           typesToIgnore.add<AttackerHpRecovered, AttackerHpLost>();
           checkAttackHpResults(move);
         }
+
+        if (has<tags::DefenderImmune>(move)) {
+          typesToIgnore.add<pokesim::tags::CurrentMoveHit>();
+        }
       }
 
       types::entity initialMove = getInitialEntity(move);
@@ -28811,9 +28846,19 @@ struct Checks : pokesim::debug::Checks {
     const types::entityVector pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
       pokesim::debug::TypesToIgnore typesToIgnore;
-      if (has<pokesim::tags::SimulateTurn>(pokemon) && !forAttacker) {
-        typesToIgnore.add<internal::calc_damage::tags::RanAfterModifyDamage>();
+      if (has<pokesim::tags::SimulateTurn>(pokemon)) {
+        if (!forAttacker) {
+          typesToIgnore.add<internal::calc_damage::tags::RanAfterModifyDamage>();
+        }
       }
+      else {
+        typesToIgnore.add<
+          CurrentActionMovesAsSource,
+          CurrentActionMovesAsTarget,
+          CurrentActionMovesAsSourceExtended,
+          CurrentActionMovesAsTargetExtended>();
+      }
+
       types::entity initialPokemon = getInitialEntity(pokemon);
       pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, initialPokemon, typesToIgnore);
     }

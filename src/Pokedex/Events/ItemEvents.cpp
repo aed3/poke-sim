@@ -80,10 +80,6 @@ struct FocusSashOnAfterModifyDamage {
 
     types::registry& registry = *handle.registry();
     for (types::entity move : moves) {
-      if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
-        continue;
-      }
-
       if constexpr (std::is_same_v<tags::SimulateTurn, SimulationTag>) {
         Damage& damage = registry.get<Damage>(move);
         if (damage.val < hp.val) {
@@ -110,9 +106,7 @@ struct FocusSashOnAfterModifyDamage {
 void kingsRockOnModifyMove(
   types::registry& registry, const CurrentActionMovesAsSource& moves, types::percentChance addedFlinchChance) {
   for (types::entity move : moves) {
-    if (
-      !registry.all_of<pokesim::tags::CurrentActionMove>(move) ||
-      registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
+    if (registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
       continue;
     }
 
@@ -125,9 +119,7 @@ void lifeOrbOnAfterMove(
   bool onlyStatusMoves = true;
   types::registry& registry = *handle.registry();
   for (types::entity move : moves) {
-    if (registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
-      onlyStatusMoves &= registry.all_of<move::tags::Status>(move);
-    }
+    onlyStatusMoves &= registry.all_of<move::tags::Status>(move);
   }
 
   if (!onlyStatusMoves) {
@@ -138,10 +130,6 @@ void lifeOrbOnAfterMove(
 void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget moves, types::stat hpDivisor) {
   types::registry& registry = *handle.registry();
   types::entity move = moves.val;
-  if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
-    return;
-  }
-
   types::entity source = registry.get<CurrentActionSource>(moves.val).val;
   if (!internal::doesMoveMakeContact(registry, move, source)) {
     return;

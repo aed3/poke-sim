@@ -68,8 +68,6 @@ void clearRunVariables(Simulation& simulation) {
     internal::calc_damage::tags::IgnoresAttackingBoost,
     internal::calc_damage::tags::IgnoresDefendingBoost>();
   simulation.removeFromEntities<Damage, pokesim::tags::CalculateDamage>();
-  simulation.addToEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune, pokesim::tags::CalculateDamage>();
-  simulation.addToEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune, pokesim::tags::AnalyzeEffect>();
 }
 
 void checkForAndApplyStab(types::handle moveHandle, Attacker attacker, TypeName type, DamageRollModifiers& modifier) {
@@ -273,8 +271,57 @@ void setDefenderImmune(types::handle handle, CurrentActionTarget target, TypeNam
   }
 }
 
+template <typename CurrentActionMoves>
+void removeImmuneMoves(types::handle handle, CurrentActionMoves& moves) {
+  static constexpr bool ForAttacker = std::is_same_v<CurrentActionMoves, CurrentActionMovesAsSource>;
+  using UsedMovesExtended =
+    std::conditional_t<ForAttacker, CurrentActionMovesAsSourceExtended, CurrentActionMovesAsTargetExtended>;
+  types::registry& registry = *handle.registry();
+  UsedMovesExtended* movesExtended = handle.try_get<UsedMovesExtended>();
+
+  auto isDefenderImmune = [&registry](types::entity move) { return registry.all_of<tags::DefenderImmune>(move); };
+
+  bool removedAll = true;
+  if (movesExtended) {
+    auto end = movesExtended->val.end();
+    end = std::remove_if(movesExtended->val.begin(), end, isDefenderImmune);
+
+    movesExtended->val.resize(std::distance(movesExtended->val.begin(), end));
+    removedAll = movesExtended->val.empty();
+    if (removedAll) {
+      handle.remove<UsedMovesExtended>();
+    }
+  }
+
+  bool removeShort = false;
+  if constexpr (ForAttacker) {
+    auto end = moves.val.end();
+    end = std::remove_if(moves.val.begin(), end, isDefenderImmune);
+
+    moves.val.pop_count(std::distance(end, moves.val.end()));
+    removeShort = moves.val.empty();
+  }
+  else {
+    removeShort = isDefenderImmune(moves.val);
+  }
+
+  if (removeShort) {
+    handle.remove<CurrentActionMoves>();
+    removedAll &= true;
+  }
+
+  if (removedAll) {
+    if constexpr (ForAttacker) {
+      handle.remove<tags::Attacker>();
+    }
+    else {
+      handle.remove<tags::Defender>();
+    }
+  }
+}
+
 template <typename SimulationTag>
-void typeImmunityCheck(Simulation& simulation) {
+void modifyMoves(Simulation& simulation) {
   static constexpr bool isCalculateDamage = std::is_same_v<pokesim::tags::CalculateDamage, SimulationTag>;
   static constexpr bool isAnalyzeEffect = std::is_same_v<pokesim::tags::AnalyzeEffect, SimulationTag>;
 
@@ -294,7 +341,12 @@ void typeImmunityCheck(Simulation& simulation) {
   if constexpr (isAnalyzeEffect) {
     moveFilter.template addToSelected<Damage, tags::DefenderImmune>(damage);
   }
+
   simulation.removeFromEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune>();
+  if (!simulation.registry.view<tags::DefenderImmune>().empty()) {
+    simulation.view<removeImmuneMoves<CurrentActionMovesAsSource>>();
+    simulation.view<removeImmuneMoves<CurrentActionMovesAsTarget>>();
+  }
 }
 
 template <typename SimulationTag, auto ApplyDamageRollKind>
@@ -588,8 +640,8 @@ void calcDamage(Simulation& simulation) {
   using CalculateDamage = pokesim::tags::CalculateDamage;
   using AnalyzeEffect = pokesim::tags::AnalyzeEffect;
 
-  typeImmunityCheck<CalculateDamage>(simulation);
-  typeImmunityCheck<AnalyzeEffect>(simulation);
+  modifyMoves<CalculateDamage>(simulation);
+  modifyMoves<AnalyzeEffect>(simulation);
 
   applySideDamageRollOptions<SimulateTurn, setIfMoveCrits<SimulateTurn>>(simulation);
   applySideDamageRollOptions<CalculateDamage, setIfMoveCrits<CalculateDamage>>(simulation);

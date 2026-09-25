@@ -63,13 +63,7 @@ bool removeFailedMoveFromSource(types::registry& registry, types::entity moveEnt
     return true;
   }
 
-  for (types::activePokemonIndex i = 0U; i < moves->val.size() - 1U; i++) {
-    if (moves->val[i] == moveEntity) {
-      moves->val[i] = moves->val.back();
-      break;
-    }
-  }
-  moves->val.pop_back();
+  moves->val.unordered_remove(moveEntity);
 
   if (moves->val.empty()) {
     registry.remove<pokesim::tags::CurrentActionSource, CurrentActionMovesAsSource>(source);
