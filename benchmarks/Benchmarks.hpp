@@ -52,30 +52,45 @@ using CreateSimulationFn = Simulation(types::rngState&, Pokedex&);
 using ChooseOptionsFn = void(types::rngState&, Simulation&);
 using AssignInputsFn = void(types::rngState&, types::entityIndex, Simulation&, Pokedex&);
 
-inline void runBenchmark(
-  const std::string& name, types::entityIndex maxInputs, CreatePokedexFn createPokedex,
-  CreateSimulationFn createSimulation, ChooseOptionsFn chooseOptions, AssignInputsFn assignInputs) {
-  for (types::entityIndex inputCount = 1; inputCount < maxInputs; inputCount *= 2U) {
-    types::rngState rngState = 1U;
-    DYNAMIC_SECTION(inputCount) {
-      BENCHMARK_ADVANCED(name + " [" + std::to_string(inputCount) + "]")(Catch::Benchmark::Chronometer meter) {
-        Pokedex pokedex = createPokedex(rngState);
-        std::vector<Simulation> simulations;
-        simulations.reserve(meter.runs());
+struct Benchmark {
+  static inline types::entityIndex inputCount = 0U;
+  static inline types::rngState rngState = 0U;
+  static inline types::rngState sampleRngState = 0U;
+  static inline std::size_t sample = 0U;
+  static inline int iteration = 0U;
 
-        types::rngState rngStateAtSimulationCreation = rngState;
-        for (int iteration = 0; iteration < meter.runs(); iteration++) {
-          rngState = rngStateAtSimulationCreation;
-          Simulation& simulation = simulations.emplace_back(createSimulation(rngState, pokedex));
-          chooseOptions(rngState, simulation);
-          assignInputs(rngState, inputCount, simulation, pokedex);
-        }
+  static void run(
+    const std::string& name, types::entityIndex maxInputs, CreatePokedexFn createPokedex,
+    CreateSimulationFn createSimulation, ChooseOptionsFn chooseOptions, AssignInputsFn assignInputs) {
+    for (inputCount = 1; inputCount < maxInputs; inputCount *= 2U) {
+      rngState = 1U;
+      sample = 0U;
+      DYNAMIC_SECTION(inputCount) {
+        BENCHMARK_ADVANCED(name + " [" + std::to_string(inputCount) + "]")(Catch::Benchmark::Chronometer meter) {
+          sample++;
+          sampleRngState = rngState;
 
-        meter.measure([&simulations](int iteration) { simulations[iteration].run(); });
-      };
+          Pokedex pokedex = createPokedex(rngState);
+          std::vector<Simulation> simulations;
+          simulations.reserve(meter.runs());
+
+          types::rngState rngStateAtSimulationCreation = rngState;
+          for (int iteration = 0; iteration < meter.runs(); iteration++) {
+            rngState = rngStateAtSimulationCreation;
+            Simulation& simulation = simulations.emplace_back(createSimulation(rngState, pokedex));
+            chooseOptions(rngState, simulation);
+            assignInputs(rngState, inputCount, simulation, pokedex);
+          }
+
+          meter.measure([&simulations](int iteration) {
+            Benchmark::iteration = iteration;
+            simulations[iteration].run();
+          });
+        };
+      }
     }
   }
-}
+};
 
 struct CreatePokedex : BenchmarkInputHolder {
   inline static const std::vector<std::string> TAGS = {"SV"};
@@ -140,7 +155,7 @@ struct ChooseAnalyzeEffectOptions : BenchmarkInputHolder {
       createBenchmarkName({CreatePokedex::TAGS, CreateSimulation::TAGS, ChooseOptions::TAGS, AssignInputs::TAGS});     \
     types::entityIndex maxInputs = std::min(                                                                           \
       {CreatePokedex::MAX_INPUTS, CreateSimulation::MAX_INPUTS, ChooseOptions::MAX_INPUTS, AssignInputs::MAX_INPUTS}); \
-    runBenchmark(                                                                                                      \
+    Benchmark::run(                                                                                                    \
       benchmarkName,                                                                                                   \
       maxInputs,                                                                                                       \
       CreatePokedex::run,                                                                                              \
@@ -166,7 +181,6 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
 
   std::size_t currentCell = 0U;
   std::vector<std::pair<std::string, std::string>> failedBenchmarks;
-  std::string currentInputSize;
 
   void addCells(const std::vector<std::string>& cells) {
     for (std::string cell : cells) {
@@ -208,11 +222,6 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
     return stream.str();
   }
 
-  static std::string inputSizeFromName(const std::string& name) {
-    auto numberStart = name.find_first_of('[') + 1U;
-    return name.substr(numberStart, name.size() - numberStart - 1U);
-  }
-
  public:
   BenchmarkReporter(Catch::ReporterConfig&& config) : Catch::StreamingReporterBase(std::move(config)) {}
 
@@ -240,8 +249,7 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
 
   void benchmarkPreparing(Catch::StringRef name) override {
     Catch::StreamingReporterBase::benchmarkPreparing(name);
-    currentInputSize = inputSizeFromName(name.data());
-    addCells({currentInputSize});
+    addCells({std::to_string(pokesim::Benchmark::inputCount)});
     flush();
   }
 
@@ -256,13 +264,13 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
   }
 
   void benchmarkFailed(Catch::StringRef error) override {
-    failedBenchmarks.push_back({currentInputSize, error.data()});
+    failedBenchmarks.push_back({std::to_string(pokesim::Benchmark::inputCount), error.data()});
     nextTableLine();
   }
 
   void benchmarkEnded(const Catch::BenchmarkStats<>& stats) override {
     Catch::StreamingReporterBase::benchmarkEnded(stats);
-    int inputSize = std::stoi(inputSizeFromName(stats.info.name));
+    auto inputSize = pokesim::Benchmark::inputCount;
     const auto& mean = stats.mean;
     addCells({
       nanosecondsToString(mean.point.count()),
@@ -316,7 +324,12 @@ class BenchmarkReporter : public Catch::StreamingReporterBase {
         break;
       }
     }
-    m_stream << ":\n" << result.getSourceInfo();
+    m_stream << ":\n> Input Count: " << pokesim::Benchmark::inputCount << " | Sample: " << pokesim::Benchmark::sample
+             << " | Sample RNG State: " << pokesim::Benchmark::sampleRngState;
+    if (pokesim::Benchmark::iteration > 1) {
+      m_stream << " | Iteration: " << pokesim::Benchmark::iteration;
+    }
+    m_stream << "\n" << result.getSourceInfo();
     if (result.hasExpression()) {
       m_stream << "\n" << result.getExpressionInMacro();
     }
