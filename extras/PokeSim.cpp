@@ -2141,6 +2141,10 @@ types::view<AttackerHpLost> Results::hpLostResults() const {
 namespace analyze_effect {
 Results::Results(const Simulation& simulation_) : simulation(&simulation_) {}
 
+types::view<tags::IgnoredInput> Results::ignoredInputResults() const {
+  return simulation->registry.view<tags::IgnoredInput>();
+}
+
 types::view<EffectMultiplier> Results::effectMultiplierResults() const {
   return simulation->registry.view<EffectMultiplier>();
 }
@@ -5722,6 +5726,10 @@ void Analytic::onBasePower(Simulation& simulation) {
   internal::currentActionMovesAsSourceView<
     AnalyticOnBasePowerCalcDamage,
     Tags<Analytic, pokesim::tags::CalculateDamage>>(simulation, numerator, denominator);
+  internal::currentActionMovesAsSourceView<AnalyticOnBasePowerCalcDamage, Tags<Analytic, pokesim::tags::AnalyzeEffect>>(
+    simulation,
+    numerator,
+    denominator);
 }
 
 void LongReach::onModifyMove(Simulation& simulation) {

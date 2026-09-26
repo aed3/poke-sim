@@ -1,5 +1,6 @@
 #include "SimulationResults.hpp"
 
+#include <Components/AnalyzeEffect/AnalyzeEffectInputs.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/SimulationResults.hpp>
 #include <Components/Tags/BattleTags.hpp>
@@ -55,6 +56,10 @@ types::view<AttackerHpLost> Results::hpLostResults() const {
 
 namespace analyze_effect {
 Results::Results(const Simulation& simulation_) : simulation(&simulation_) {}
+
+types::view<tags::IgnoredInput> Results::ignoredInputResults() const {
+  return simulation->registry.view<tags::IgnoredInput>();
+}
 
 types::view<EffectMultiplier> Results::effectMultiplierResults() const {
   return simulation->registry.view<EffectMultiplier>();

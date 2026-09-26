@@ -109,12 +109,13 @@ struct Checks : pokesim::debug::Checks {
 
         POKESIM_REQUIRE_NM(has<MultipliedDamageRolls>(input));
 
+        bool zeroEffectMultiplier = false;
         if (has<tags::InfiniteMultiplier>(input)) {
           POKESIM_REQUIRE_NM(!has<EffectMultiplier>(input));
           typesToIgnore.add<tags::InfiniteMultiplier>();
+          zeroEffectMultiplier = true;
         }
 
-        bool zeroEffectMultiplier = false;
         if (has<EffectMultiplier>(input)) {
           POKESIM_REQUIRE_NM(!has<tags::InfiniteMultiplier>(input));
           typesToIgnore.add<EffectMultiplier>();

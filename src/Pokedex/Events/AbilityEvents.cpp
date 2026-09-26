@@ -130,6 +130,10 @@ void Analytic::onBasePower(Simulation& simulation) {
   internal::currentActionMovesAsSourceView<
     AnalyticOnBasePowerCalcDamage,
     Tags<Analytic, pokesim::tags::CalculateDamage>>(simulation, numerator, denominator);
+  internal::currentActionMovesAsSourceView<AnalyticOnBasePowerCalcDamage, Tags<Analytic, pokesim::tags::AnalyzeEffect>>(
+    simulation,
+    numerator,
+    denominator);
 }
 
 void LongReach::onModifyMove(Simulation& simulation) {

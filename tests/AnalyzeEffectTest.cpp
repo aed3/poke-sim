@@ -27,6 +27,29 @@ struct Ideals {
 };
 }  // namespace
 
+TEST_CASE("Analyze Effect: Ignore status moves", "[Simulation][AnalyzeEffect][SingleBattle]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(test.pokemon(dex::Species::EMPOLEON, dex::Move::SPLASH)),
+    test.side(test.pokemon(dex::Species::AMPHAROS, dex::Move::SPLASH)),
+    AnalyzeEffectInputInfo{
+      Slot::P1A,
+      Slot::P2A,
+      Slot::P1A,
+      {
+        dex::Move::SPLASH,
+        dex::Move::WILL_O_WISP,
+        dex::Move::QUIVER_DANCE,
+      },
+      dex::Status::BRN,
+    });
+
+  auto result = test.analyzeEffect();
+  result.ignoredInputResults().each(
+    [&test](types::entity entity) { REQUIRE(test.registry().all_of<analyze_effect::tags::IgnoredInput>(entity)); });
+}
+
 TEST_CASE("Type Immunities", "[Simulation][AnalyzeEffect][SingleBattle][Immunities]") {
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
   test.setupBattle(
@@ -49,6 +72,22 @@ TEST_CASE("Type Immunities", "[Simulation][AnalyzeEffect][SingleBattle][Immuniti
       {dex::Status::BRN},
     });
 
+  bool getKoUses = GENERATE(false, true);
+  bool reconsiderActiveEffects = GENERATE(false, true);
+
+  CAPTURE(getKoUses, reconsiderActiveEffects);
+
+  auto& options = test.analyzeEffectOptions();
+  options.setReconsiderActiveEffects(reconsiderActiveEffects);
+  if (getKoUses) {
+    options.setDamageRollOptions({DamageRollKind::ALL_DAMAGE_ROLLS});
+    options.setNoKoChanceCalculation(false);
+  }
+  else {
+    options.setDamageRollOptions({DamageRollKind::AVERAGE_DAMAGE});
+    options.setNoKoChanceCalculation(true);
+  }
+
   auto result = test.analyzeEffect();
   result.multipliedDamageRollsResults().each(
     [&test](types::entity entity, const analyze_effect::MultipliedDamageRolls& damageRolls) {
@@ -58,7 +97,7 @@ TEST_CASE("Type Immunities", "[Simulation][AnalyzeEffect][SingleBattle][Immuniti
     });
 }
 
-TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect][SingleBattle]") {
+TEST_CASE("Analyze Effect: Vertical Slice 1", "[Simulation][AnalyzeEffect][SingleBattle][VerticalSlice1]") {
   const IdealDamageResults p1FuryAttack{
     {14U, 13U, 13U, 13U, 13U, 13U, 13U, 13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U},
     {{{21U, 1U}, {23U, 7U}, {25U, 7U}, {27U, 1U}}},

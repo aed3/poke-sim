@@ -109,4 +109,63 @@ TEST_CASE(
     }
   });
 }
+
+TEST_CASE(
+  "Analytic: Only boosts power when not faster than defender in AnalyzeEffect",
+  "[Simulation][AnalyzeEffect][SingleBattle][Ability][Analytic]") {
+  enum class P1SpeedDiff : std::uint8_t {
+    SLOWER,
+    SAME,
+    FASTER,
+  };
+
+  P1SpeedDiff p1SpeedDiff = GENERATE(P1SpeedDiff::SLOWER, P1SpeedDiff::SAME, P1SpeedDiff::FASTER);
+
+  types::boost p1SpeBoost = 0;
+  switch (p1SpeedDiff) {
+    case P1SpeedDiff::SLOWER: p1SpeBoost = -1; break;
+    case P1SpeedDiff::SAME:   p1SpeBoost = 0; break;
+    case P1SpeedDiff::FASTER: p1SpeBoost = 1; break;
+  }
+  CAPTURE(p1SpeedDiff, p1SpeBoost);
+
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(test.pokemon(dex::Species::MAGNEZONE, dex::Ability::ANALYTIC, dex::Move::TACKLE)),
+    test.side(test.pokemon(dex::Species::EMPOLEON, dex::Move::SPLASH)),
+    AnalyzeEffectInputInfo{
+      Slot::P1A,
+      Slot::P2A,
+      Slot::P1A,
+      {dex::Move::TACKLE},
+      {},
+      {{dex::Stat::SPE, p1SpeBoost}},
+    });
+
+  auto result = test.analyzeEffect();
+  result.multipliedDamageRollsResults().each(
+    [&](types::entity entity, const analyze_effect::MultipliedDamageRolls& damageRolls) {
+      types::damage idealDamage;
+      types::effectMultiplier idealMultiplier;
+
+      switch (p1SpeedDiff) {
+        case P1SpeedDiff::SLOWER:
+        case P1SpeedDiff::SAME:   {
+          idealDamage = 18U;
+          idealMultiplier = 1.0F;
+          break;
+        }
+        case P1SpeedDiff::FASTER: {
+          idealDamage = 14U;
+          idealMultiplier = 0.777777F;
+          break;
+        }
+      }
+      auto effectMultiplier = test.registry().get<analyze_effect::EffectMultiplier>(entity);
+
+      REQUIRE(damageRolls.max() == idealDamage);
+      REQUIRE_THAT(effectMultiplier.val, Catch::Matchers::WithinRel(idealMultiplier));
+    });
+}
 }  // namespace pokesim
