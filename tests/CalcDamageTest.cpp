@@ -66,7 +66,7 @@ TEST_CASE("Calculate Damage: Ignore status moves", "[Simulation][CalculateDamage
 
   test.calcDamageOptions().setDamageRollOptions({GENERATE(from_range(damageRollKindCombinations))});
   auto result = test.calculateDamage();
-  result.damageRollResults().each([&](types::entity entity, const DamageRolls& damageRolls) {
+  result.damageRollResults().each([&test](types::entity entity, const DamageRolls& damageRolls) {
     REQUIRE(damageRolls.max() == Constants::Damage::IMMUNE);
     REQUIRE(damageRolls.min() == Constants::Damage::IMMUNE);
     REQUIRE(test.registry().all_of<calc_damage::tags::IgnoredStatusMove>(entity));
