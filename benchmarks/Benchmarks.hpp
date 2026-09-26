@@ -82,9 +82,9 @@ struct Benchmark {
             assignInputs(rngState, inputCount, simulation, pokedex);
           }
 
-          meter.measure([&simulations](int iteration) {
-            Benchmark::iteration = iteration;
-            simulations[iteration].run();
+          meter.measure([&simulations](int measureIteration) {
+            Benchmark::iteration = measureIteration;
+            simulations[measureIteration].run();
           });
         };
       }
