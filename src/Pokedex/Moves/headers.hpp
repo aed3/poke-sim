@@ -3,6 +3,7 @@
 #pragma once
 
 #include "AllySwitch.hpp"
+#include "CloseCombat.hpp"
 #include "FlashCannon.hpp"
 #include "FuryAttack.hpp"
 #include "KnockOff.hpp"

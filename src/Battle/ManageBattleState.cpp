@@ -98,8 +98,6 @@ template <typename View>
 void clearActionMoveComponents(types::registry& registry, const View& view) {
   registry.remove<
     pokesim::tags::SimulateTurn,
-    pokesim::tags::CalculateDamage,
-    pokesim::tags::AnalyzeEffect,
     Battle,
     TypeName,
     AtkBoost,
@@ -213,9 +211,10 @@ void setFailedActionMove(
     registry.emplace<FailedCurrentActionTarget>(battle.val, target.val);
   }
 
-  registry.erase<CurrentActionMoveSlot>(battle.val);
-
-  updateCurrentActionTargets(registry, registry.get<CurrentAction>(battle.val));
+  if (moveHandle.all_of<pokesim::tags::SimulateTurn>()) {
+    registry.erase<CurrentActionMoveSlot>(battle.val);
+    updateCurrentActionTargets(registry, registry.get<CurrentAction>(battle.val));
+  }
 }
 
 void clearMoveAction(Simulation& simulation) {

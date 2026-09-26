@@ -56,6 +56,7 @@
 #include "Items/QuickPowder.hpp"
 #include "Items/RockyHelmet.hpp"
 #include "Moves/AllySwitch.hpp"
+#include "Moves/CloseCombat.hpp"
 #include "Moves/FlashCannon.hpp"
 #include "Moves/FuryAttack.hpp"
 #include "Moves/KnockOff.hpp"

@@ -113,9 +113,9 @@ analyze_effect::Results Simulation::analyzeEffect(
 
 void Simulation::run() {
   clearAllResults();
-  simulateTurn();
   calculateDamage();
   analyzeEffect();
+  simulateTurn();
 }
 
 types::entityVector Simulation::battleEntities() const {
