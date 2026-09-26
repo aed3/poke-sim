@@ -354,21 +354,28 @@ void modifyMoves(Simulation& simulation) {
     "The code below will edit analyze effect entities when it should not. If this assert hits, how moves are chosen to "
     "be modified needs to change.");
 
+  moveFilter.template addToSelected<tags::IgnoredStatusMove, move::tags::Status>();
+  simulation.removeFromEntities<pokesim::tags::CurrentMoveHit, tags::IgnoredStatusMove>();
+
   // ModifyType
   internal::runModifyMove(simulation);
-  moveFilter.template addToSelected<tags::DefenderImmune, pokesim::tags::FailedCurrentActionMove>();
 
+  moveFilter.template addToSelected<tags::DefenderImmune, pokesim::tags::FailedCurrentActionMove>();
   moveFilter.template view<setDefenderImmune, Tags<>, entt::exclude_t<move::tags::IgnoreImmunities>>(
     simulation.pokedex());
 
   Damage damage{Constants::Damage::IMMUNE};
   moveFilter.template addToSelected<DamageRolls, tags::DefenderImmune>(DamageRolls{{damage.val}});
+  moveFilter.template addToSelected<DamageRolls, tags::IgnoredStatusMove>(DamageRolls{{damage.val}});
 
   if constexpr (isAnalyzeEffect) {
     moveFilter.template addToSelected<Damage, tags::DefenderImmune>(damage);
+    moveFilter.template addToSelected<Damage, tags::IgnoredStatusMove>(damage);
   }
 
-  if (moveFilter.template hasNoneSelected<tags::DefenderImmune>()) {
+  if (
+    moveFilter.template hasNoneSelected<tags::DefenderImmune>() &&
+    moveFilter.template hasNoneSelected<tags::IgnoredStatusMove>()) {
     return;
   }
 
