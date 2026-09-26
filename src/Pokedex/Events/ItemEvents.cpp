@@ -53,14 +53,15 @@ struct SetMoveTargetModifier {
 template <typename CurrentActionMovesAsSourceType>
 struct SourceModifyDamage {
   static void run(
-    types::handle handle, const CurrentActionMovesAsSourceType& moves, types::eventModifier numerator,
+    types::registry& registry, const CurrentActionMovesAsSourceType& moves, types::eventModifier numerator,
     types::eventModifier denominator) {
     for (types::entity move : moves) {
-      DamageRollModifiers* modifier = handle.registry()->try_get<DamageRollModifiers>(move);
-      if (modifier) {
-        modifier->modifyDamageEvent =
-          internal::chainValueToModifier(modifier->modifyDamageEvent, numerator, denominator);
+      if (registry.all_of<move::tags::Status>(move)) {
+        continue;
       }
+
+      DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
+      modifier.modifyDamageEvent = internal::chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
     }
   }
 };

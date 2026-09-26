@@ -49,19 +49,52 @@ struct IdealDamageValues {
 };
 }  // namespace
 
-TEST_CASE("Type Immunities", "[Simulation][CalculateDamage][SingleBattle][Immunities]") {
+TEST_CASE("Calculate Damage: Ignore status moves", "[Simulation][CalculateDamage][SingleBattle]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(test.pokemon(dex::Species::EMPOLEON, dex::Move::SPLASH)),
+    test.side(test.pokemon(dex::Species::AMPHAROS, dex::Move::SPLASH)),
+    CalcDamageInputInfo{
+      Slot::P1A,
+      Slot::P2A,
+      {
+        dex::Move::SPLASH,
+        dex::Move::WILL_O_WISP,
+        dex::Move::QUIVER_DANCE,
+      }});
+
+  test.calcDamageOptions().setDamageRollOptions({GENERATE(from_range(damageRollKindCombinations))});
+  auto result = test.calculateDamage();
+  result.damageRollResults().each([&](types::entity entity, const DamageRolls& damageRolls) {
+    REQUIRE(damageRolls.max() == Constants::Damage::IMMUNE);
+    REQUIRE(damageRolls.min() == Constants::Damage::IMMUNE);
+    REQUIRE(test.registry().all_of<calc_damage::tags::IgnoredStatusMove>(entity));
+    REQUIRE_FALSE(test.registry().all_of<calc_damage::tags::DefenderImmune>(entity));
+  });
+}
+
+TEST_CASE("Calculate Damage: Type Immunities", "[Simulation][CalculateDamage][SingleBattle][Immunities]") {
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
   test.setupBattle(
     Turn{1U},
     test.side(test.pokemon(dex::Species::AMPHAROS, dex::Move::TACKLE)),
     test.side(test.pokemon(dex::Species::DRAGAPULT, dex::Move::SPLASH)),
-    CalcDamageInputInfo{Slot::P1A, Slot::P2A, {dex::Move::TACKLE}});
+    CalcDamageInputInfo{
+      Slot::P1A,
+      Slot::P2A,
+      {
+        dex::Move::TACKLE,
+        dex::Move::TRIPLE_ARROWS,
+      }});
 
   test.calcDamageOptions().setDamageRollOptions({GENERATE(from_range(damageRollKindCombinations))});
   auto result = test.calculateDamage();
-  result.damageRollResults().each([](const DamageRolls& damageRolls) {
+  result.damageRollResults().each([&](types::entity entity, const DamageRolls& damageRolls) {
     REQUIRE(damageRolls.max() == Constants::Damage::IMMUNE);
     REQUIRE(damageRolls.min() == Constants::Damage::IMMUNE);
+    REQUIRE(test.registry().all_of<calc_damage::tags::DefenderImmune>(entity));
+    REQUIRE_FALSE(test.registry().all_of<calc_damage::tags::IgnoredStatusMove>(entity));
   });
 }
 

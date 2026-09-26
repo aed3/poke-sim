@@ -73,6 +73,8 @@ void runRemoveCriticalHitEvent(Simulation&) {}
 void runBasePowerEvent(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::CurrentMoveHit, BasePower>();
 
+  pokesim::dex::Analytic::onBasePower(simulation);
+
   pokesim::dex::KnockOff::onBasePower(simulation);
 
   simulation.view<applyBasePowerEventModifier>();

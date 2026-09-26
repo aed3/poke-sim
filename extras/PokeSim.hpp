@@ -20562,6 +20562,7 @@ struct AttackerHpLost : DamageRolls {};
 
 namespace tags {
 struct DefenderImmune {};
+struct IgnoredStatusMove {};
 }  // namespace tags
 }  // namespace calc_damage
 
@@ -28631,8 +28632,6 @@ struct Checks : pokesim::debug::Checks {
     }
 
     for (types::entity move : moves) {
-      if (has<pokesim::move::tags::Status>(move)) continue;
-
       copyEntity(move);
 
       bool hasSimulateTurn = has<pokesim::tags::SimulateTurn>(move);
@@ -28736,6 +28735,12 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkCalcDamageResultOutputs(types::entity move) const {
+    bool isDefenderImmune = has<tags::DefenderImmune>(move);
+    bool isIgnoredStatusMove = has<tags::IgnoredStatusMove>(move);
+    bool shouldHaveImmuneDamage = isDefenderImmune || isIgnoredStatusMove;
+
+    POKESIM_REQUIRE_NM(!(isDefenderImmune && isIgnoredStatusMove));
+    POKESIM_REQUIRE_NM(isIgnoredStatusMove == has<move::tags::Status>(move));
     POKESIM_REQUIRE_NM(has<DamageRolls>(move));
 
     DamageRollOptions damageRollOptions;
@@ -28761,10 +28766,9 @@ struct Checks : pokesim::debug::Checks {
 
     POKESIM_REQUIRE_NM(!damageRolls.val.empty());
 
-    bool isDefenderImmune = has<tags::DefenderImmune>(move);
     for (const Damage& damageRoll : damageRolls.val) {
       POKESIM_REQUIRE_NM(lastDamage >= damageRoll.val);
-      if (isDefenderImmune) {
+      if (shouldHaveImmuneDamage) {
         POKESIM_REQUIRE_NM(damageRoll.val == Constants::Damage::IMMUNE);
       }
       else {
@@ -28779,7 +28783,7 @@ struct Checks : pokesim::debug::Checks {
     }
 
     DamageRollKind damageRollKind = getDamageRollKind(move, damageRollOptions);
-    if (isDefenderImmune && has<Damage>(move)) {
+    if (shouldHaveImmuneDamage && has<Damage>(move)) {
       POKESIM_REQUIRE_NM(registry->get<Damage>(move).val == Constants::Damage::IMMUNE);
     }
 
@@ -28788,7 +28792,7 @@ struct Checks : pokesim::debug::Checks {
       "Cannot calculate damage without knowing what rolls to consider.");
 
     std::size_t idealDamageRollCount = 0U;
-    if (isDefenderImmune) {
+    if (shouldHaveImmuneDamage) {
       POKESIM_REQUIRE_NM(!has<pokesim::tags::CurrentMoveHit>(move));
       idealDamageRollCount = 1U;
     }
@@ -28812,7 +28816,7 @@ struct Checks : pokesim::debug::Checks {
     POKESIM_REQUIRE_NM(idealDamageRollCount);
     POKESIM_REQUIRE_NM(damageRolls.val.size() == idealDamageRollCount);
 
-    if (noKoChanceCalculation || isDefenderImmune) {
+    if (noKoChanceCalculation || shouldHaveImmuneDamage) {
       POKESIM_REQUIRE_NM(!has<UsesUntilKo>(move));
     }
     else if (DamageRollKind::ALL_DAMAGE_ROLLS & getDamageRollKind(move, damageRollOptions)) {
@@ -28821,6 +28825,10 @@ struct Checks : pokesim::debug::Checks {
       const UsesUntilKo& usesUntilKo = registry->get<UsesUntilKo>(move);
       pokesim::debug::check(usesUntilKo);
       POKESIM_REQUIRE_NM(usesUntilKo.val.size() <= damageRolls.val.size());
+    }
+
+    if (has<pokesim::tags::CalculateDamage>(move)) {
+      checkAttackHpResults(move);
     }
   }
 
@@ -28842,17 +28850,23 @@ struct Checks : pokesim::debug::Checks {
 
   void checkMoveOutputs() const {
     for (types::entity move : getMoveList()) {
-      if (has<pokesim::move::tags::Status>(move)) continue;
-
-      pokesim::debug::TypesToIgnore typesToIgnore{};
       if (has<pokesim::tags::AnalyzeEffect>(move)) {
         POKESIM_REQUIRE_NM(has<Damage>(move));
       }
 
       if (has<pokesim::tags::SimulateTurn>(move)) {
+        pokesim::debug::TypesToIgnore typesToIgnore{};
         typesToIgnore.add<Damage>();
-        POKESIM_REQUIRE_NM(has<Damage>(move));
-        POKESIM_REQUIRE_NM(registry->get<Damage>(move).val >= Constants::Damage::MIN);
+
+        if (has<move::tags::Status>(move)) {
+          POKESIM_REQUIRE_NM(!has<Damage>(move));
+        }
+        else {
+          POKESIM_REQUIRE_NM(has<Damage>(move));
+          POKESIM_REQUIRE_NM(registry->get<Damage>(move).val >= Constants::Damage::MIN);
+        }
+        POKESIM_REQUIRE_NM(!has<tags::DefenderImmune>(move));
+        POKESIM_REQUIRE_NM(!has<tags::IgnoredStatusMove>(move));
         POKESIM_REQUIRE_NM(!has<DamageRolls>(move));
         POKESIM_REQUIRE_NM(!has<UsesUntilKo>(move));
 
@@ -28862,8 +28876,16 @@ struct Checks : pokesim::debug::Checks {
       else {
         checkCalcDamageResultOutputs(move);
 
-        if (has<pokesim::tags::CalculateDamage>(move)) {
-          checkAttackHpResults(move);
+        if (has<tags::IgnoredStatusMove>(move)) {
+          pokesim::debug::TypesToIgnore typesToIgnore{};
+          typesToIgnore.add<DamageRolls, tags::IgnoredStatusMove>();
+
+          if (has<pokesim::tags::AnalyzeEffect>(move)) {
+            typesToIgnore.add<Damage>();
+          }
+
+          types::entity initialMove = getInitialEntity(move);
+          pokesim::debug::areEntitiesEqual(*registry, move, registryOnInput, initialMove, typesToIgnore);
         }
       }
     }

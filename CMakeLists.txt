@@ -229,6 +229,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/AnalyzeEffectTest.cpp
       tests/BattleStateTest.cpp
       tests/CalcDamageTest.cpp
+      tests/Abilities/Analytic.cpp
       tests/Abilities/LongReach.cpp
       tests/Abilities/Scrappy.cpp
       tests/Effects/ChoiceLock.cpp
