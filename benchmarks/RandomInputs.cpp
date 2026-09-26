@@ -30,14 +30,17 @@ struct Random {
 
   inline static std::vector<dex::Move> availableAttackingMoves{};
 
-  static constexpr std::array<dex::Ability, 12U> availableAbilities{
+  static constexpr std::array<dex::Ability, 15U> availableAbilities{
+    dex::Ability::ANALYTIC,
     dex::Ability::CLEAR_BODY,
     dex::Ability::COMPETITIVE,
     dex::Ability::DEFIANT,
     dex::Ability::HONEY_GATHER,
     dex::Ability::INFILTRATOR,
     dex::Ability::IRON_FIST,
+    dex::Ability::LONG_REACH,
     dex::Ability::PLUS,
+    dex::Ability::SCRAPPY,
     dex::Ability::STATIC,
     dex::Ability::SWEET_VEIL,
     dex::Ability::SYNCHRONIZE,
