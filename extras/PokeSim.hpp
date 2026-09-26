@@ -18164,7 +18164,7 @@ class fixedMemoryVector : private std::array<Type, Size> {
   }
 
   void unordered_remove(const Type& value) {
-    POKESIM_REQUIRE(std::find(begin(), end(), value), "Value must be in vector to remove.");
+    POKESIM_REQUIRE(std::find(begin(), end(), value) != end(), "Value must be in vector to remove.");
     for (uint8_t i = 0U; i < Size - 1U; i++) {
       if (value == at(i)) {
         at(i) = back();

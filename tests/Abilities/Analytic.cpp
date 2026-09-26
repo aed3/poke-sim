@@ -106,6 +106,7 @@ TEST_CASE(
         REQUIRE(damageRolls.max() == 14U);
         break;
       }
+      default: FAIL();
     }
   });
 }
@@ -161,6 +162,7 @@ TEST_CASE(
           idealMultiplier = 0.777777F;
           break;
         }
+        default: FAIL(); return;
       }
       auto effectMultiplier = test.registry().get<analyze_effect::EffectMultiplier>(entity);
 

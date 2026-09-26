@@ -6117,7 +6117,8 @@ void removeNullifiedMoves(types::handle handle, CurrentActionMoves& moves) {
     auto end = moves.val.end();
     end = std::remove_if(moves.val.begin(), end, isMoveNullified);
 
-    moves.val.pop_count(std::distance(end, moves.val.end()));
+    using size_type = typename decltype(CurrentActionMoves::val)::size_type;
+    moves.val.pop_count((size_type)std::distance(end, moves.val.end()));
     removeShort = moves.val.empty();
   }
   else {
