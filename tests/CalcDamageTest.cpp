@@ -65,7 +65,7 @@ TEST_CASE("Type Immunities", "[Simulation][CalculateDamage][SingleBattle][Immuni
   });
 }
 
-TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage][SingleBattle]") {
+TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage][SingleBattle][VerticalSlice1]") {
   const IdealDamageValues furyAttackBaseDamage{
     {14U, 13U, 13U, 13U, 13U, 13U, 13U, 13U, 12U, 12U, 12U, 12U, 12U, 12U, 12U, 11U},
     {{{21U, 1U}, {23U, 7U}, {25U, 7U}, {27U, 1U}}},

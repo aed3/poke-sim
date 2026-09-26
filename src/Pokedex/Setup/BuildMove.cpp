@@ -381,10 +381,10 @@ struct BuildMove {
     }
 
     if constexpr (has<Optional::sourcePrimaryEffect, Move>::value) {
-      buildEffect<typename Move::sourcePrimaryEffect, MoveEffectKind::primary>(setup);
       POKESIM_REQUIRE(
         !(setup.template any_of<move::effect::tags::MoveTarget>()),
         "Moves effects can only affect the target or source, not both.");
+      buildEffect<typename Move::sourcePrimaryEffect, MoveEffectKind::primary>(setup, gameMechanic);
       setup.add(move::effect::tags::MoveSource{});
     }
 

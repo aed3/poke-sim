@@ -592,5 +592,6 @@ void run(Simulation& simulation) {
   analyzeEffect(simulation);
 
   debugChecks.checkOutputs();
+  simulation.removeFromEntities<pokesim::tags::AnalyzeEffect>();
 }
 }  // namespace pokesim::analyze_effect

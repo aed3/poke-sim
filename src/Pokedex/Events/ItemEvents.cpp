@@ -176,7 +176,10 @@ void ChoiceScarf::onModifySpe(Simulation& simulation) {
 }
 
 void ChoiceScarf::onSourceModifyMove(Simulation& simulation) {
-  simulation.view<setChoiceLock, Tags<ChoiceScarf, tags::CurrentActionSource>, entt::exclude_t<ChoiceLock>>();
+  simulation.view<
+    setChoiceLock,
+    Tags<ChoiceScarf, tags::CurrentActionSource, tags::SimulateTurn>,
+    entt::exclude_t<ChoiceLock>>();
 }
 
 void ChoiceScarf::onEnd(Simulation& simulation) {
@@ -190,7 +193,10 @@ void ChoiceSpecs::onModifySpa(Simulation& simulation) {
 }
 
 void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
-  simulation.view<setChoiceLock, Tags<ChoiceSpecs, tags::CurrentActionSource>, entt::exclude_t<ChoiceLock>>();
+  simulation.view<
+    setChoiceLock,
+    Tags<ChoiceSpecs, tags::CurrentActionSource, tags::SimulateTurn>,
+    entt::exclude_t<ChoiceLock>>();
 }
 
 void ChoiceSpecs::onEnd(Simulation& simulation) {

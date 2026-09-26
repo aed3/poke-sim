@@ -272,19 +272,21 @@ void setDefenderImmune(types::handle handle, CurrentActionTarget target, TypeNam
 }
 
 template <typename CurrentActionMoves>
-void removeImmuneMoves(types::handle handle, CurrentActionMoves& moves) {
+void removeNullifiedMoves(types::handle handle, CurrentActionMoves& moves) {
   static constexpr bool ForAttacker = std::is_same_v<CurrentActionMoves, CurrentActionMovesAsSource>;
   using UsedMovesExtended =
     std::conditional_t<ForAttacker, CurrentActionMovesAsSourceExtended, CurrentActionMovesAsTargetExtended>;
   types::registry& registry = *handle.registry();
   UsedMovesExtended* movesExtended = handle.try_get<UsedMovesExtended>();
 
-  auto isDefenderImmune = [&registry](types::entity move) { return registry.all_of<tags::DefenderImmune>(move); };
+  auto isMoveNullified = [&registry](types::entity move) {
+    return !registry.all_of<pokesim::tags::CurrentMoveHit>(move);
+  };
 
   bool removedAll = true;
   if (movesExtended) {
     auto end = movesExtended->val.end();
-    end = std::remove_if(movesExtended->val.begin(), end, isDefenderImmune);
+    end = std::remove_if(movesExtended->val.begin(), end, isMoveNullified);
 
     movesExtended->val.resize(std::distance(movesExtended->val.begin(), end));
     removedAll = movesExtended->val.empty();
@@ -296,13 +298,13 @@ void removeImmuneMoves(types::handle handle, CurrentActionMoves& moves) {
   bool removeShort = false;
   if constexpr (ForAttacker) {
     auto end = moves.val.end();
-    end = std::remove_if(moves.val.begin(), end, isDefenderImmune);
+    end = std::remove_if(moves.val.begin(), end, isMoveNullified);
 
     moves.val.pop_count(std::distance(end, moves.val.end()));
     removeShort = moves.val.empty();
   }
   else {
-    removeShort = isDefenderImmune(moves.val);
+    removeShort = isMoveNullified(moves.val);
   }
 
   if (removeShort) {
@@ -332,6 +334,30 @@ void modifyMoves(Simulation& simulation) {
     return;
   }
 
+  POKESIM_REQUIRE(
+    (pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::CurrentMoveHit>{simulation}
+       .hasNoneSelected() ||
+     pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::CurrentActionMove>{simulation}
+       .hasNoneSelected()),
+    "The code below will edit simulate turn entities when it should not. If this assert hits, how moves are chosen to "
+    "be modified needs to change.");
+  POKESIM_REQUIRE(
+    (isCalculateDamage ==
+     !pokesim::internal::EntityFilter<pokesim::tags::CalculateDamage, pokesim::tags::CurrentMoveHit>{simulation}
+        .hasNoneSelected()),
+    "The code below will edit calc damage entities when it should not. If this assert hits, how moves are chosen to be "
+    "modified needs to change.");
+  POKESIM_REQUIRE(
+    (isAnalyzeEffect ==
+     !pokesim::internal::EntityFilter<pokesim::tags::AnalyzeEffect, pokesim::tags::CurrentMoveHit>{simulation}
+        .hasNoneSelected()),
+    "The code below will edit analyze effect entities when it should not. If this assert hits, how moves are chosen to "
+    "be modified needs to change.");
+
+  // ModifyType
+  internal::runModifyMove(simulation);
+  moveFilter.template addToSelected<tags::DefenderImmune, pokesim::tags::FailedCurrentActionMove>();
+
   moveFilter.template view<setDefenderImmune, Tags<>, entt::exclude_t<move::tags::IgnoreImmunities>>(
     simulation.pokedex());
 
@@ -342,11 +368,14 @@ void modifyMoves(Simulation& simulation) {
     moveFilter.template addToSelected<Damage, tags::DefenderImmune>(damage);
   }
 
-  simulation.removeFromEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune>();
-  if (!simulation.registry.view<tags::DefenderImmune>().empty()) {
-    simulation.view<removeImmuneMoves<CurrentActionMovesAsSource>>();
-    simulation.view<removeImmuneMoves<CurrentActionMovesAsTarget>>();
+  if (moveFilter.template hasNoneSelected<tags::DefenderImmune>()) {
+    return;
   }
+
+  simulation.removeFromEntities<pokesim::tags::CurrentMoveHit, tags::DefenderImmune>();
+
+  simulation.view<removeNullifiedMoves<CurrentActionMovesAsSource>>();
+  simulation.view<removeNullifiedMoves<CurrentActionMovesAsTarget>>();
 }
 
 template <typename SimulationTag, auto ApplyDamageRollKind>
@@ -675,5 +704,6 @@ void run(Simulation& simulation) {
   calcDamage(simulation);
 
   debugChecks.checkOutputs();
+  simulation.removeFromEntities<pokesim::tags::CalculateDamage>();
 }
 }  // namespace pokesim::calc_damage
