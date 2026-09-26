@@ -73,6 +73,8 @@ void runRemoveCriticalHitEvent(Simulation&) {}
 void runBasePowerEvent(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::CurrentMoveHit, BasePower>();
 
+  pokesim::dex::Analytic::onBasePower(simulation);
+
   pokesim::dex::KnockOff::onBasePower(simulation);
 
   simulation.view<applyBasePowerEventModifier>();
@@ -145,6 +147,9 @@ void runModifyMove(Simulation& simulation) {
   pokesim::dex::ChoiceScarf::onSourceModifyMove(simulation);
   pokesim::dex::ChoiceSpecs::onSourceModifyMove(simulation);
   pokesim::dex::KingsRock::onModifyMove(simulation);
+  pokesim::dex::LongReach::onModifyMove(simulation);
+
+  pokesim::dex::Scrappy::onModifyMove(simulation);
 }
 
 void runResetDisabledMove(Simulation& simulation) {

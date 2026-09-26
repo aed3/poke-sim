@@ -57,8 +57,9 @@ struct EntityFilter {
     simulation->registry.insert<SelectionTag>(view.begin(), view.end());
   }
 
+  template <typename... ExtraComponents>
   bool hasNoneSelected() {
-    auto view = simulation->registry.view<SelectionTag, OtherSelectionTags...>();
+    auto view = simulation->registry.view<SelectionTag, OtherSelectionTags..., ExtraComponents...>();
     return view.begin() == view.end();
   }
 

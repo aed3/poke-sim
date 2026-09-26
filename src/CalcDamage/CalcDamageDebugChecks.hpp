@@ -92,8 +92,6 @@ struct Checks : pokesim::debug::Checks {
     }
 
     for (types::entity move : moves) {
-      if (has<pokesim::move::tags::Status>(move)) continue;
-
       copyEntity(move);
 
       bool hasSimulateTurn = has<pokesim::tags::SimulateTurn>(move);
@@ -197,6 +195,12 @@ struct Checks : pokesim::debug::Checks {
   }
 
   void checkCalcDamageResultOutputs(types::entity move) const {
+    bool isDefenderImmune = has<tags::DefenderImmune>(move);
+    bool isIgnoredStatusMove = has<tags::IgnoredStatusMove>(move);
+    bool shouldHaveImmuneDamage = isDefenderImmune || isIgnoredStatusMove;
+
+    POKESIM_REQUIRE_NM(!(isDefenderImmune && isIgnoredStatusMove));
+    POKESIM_REQUIRE_NM(isIgnoredStatusMove == has<move::tags::Status>(move));
     POKESIM_REQUIRE_NM(has<DamageRolls>(move));
 
     DamageRollOptions damageRollOptions;
@@ -224,7 +228,13 @@ struct Checks : pokesim::debug::Checks {
 
     for (const Damage& damageRoll : damageRolls.val) {
       POKESIM_REQUIRE_NM(lastDamage >= damageRoll.val);
-      POKESIM_REQUIRE_NM(damageRoll.val >= Constants::Damage::MIN);
+      if (shouldHaveImmuneDamage) {
+        POKESIM_REQUIRE_NM(damageRoll.val == Constants::Damage::IMMUNE);
+      }
+      else {
+        POKESIM_REQUIRE_NM(damageRoll.val >= Constants::Damage::MIN);
+      }
+
       if (calculateUpToFoeHp) {
         POKESIM_REQUIRE_NM(damageRoll.val <= defenderHp.val);
       }
@@ -233,13 +243,20 @@ struct Checks : pokesim::debug::Checks {
     }
 
     DamageRollKind damageRollKind = getDamageRollKind(move, damageRollOptions);
+    if (shouldHaveImmuneDamage && has<Damage>(move)) {
+      POKESIM_REQUIRE_NM(registry->get<Damage>(move).val == Constants::Damage::IMMUNE);
+    }
 
     POKESIM_REQUIRE(
       damageRollKind != DamageRollKind::NONE,
       "Cannot calculate damage without knowing what rolls to consider.");
 
     std::size_t idealDamageRollCount = 0U;
-    if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
+    if (shouldHaveImmuneDamage) {
+      POKESIM_REQUIRE_NM(!has<pokesim::tags::CurrentMoveHit>(move));
+      idealDamageRollCount = 1U;
+    }
+    else if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
       idealDamageRollCount = Constants::DamageRollCount::MAX;
     }
     else {
@@ -259,7 +276,7 @@ struct Checks : pokesim::debug::Checks {
     POKESIM_REQUIRE_NM(idealDamageRollCount);
     POKESIM_REQUIRE_NM(damageRolls.val.size() == idealDamageRollCount);
 
-    if (noKoChanceCalculation) {
+    if (noKoChanceCalculation || shouldHaveImmuneDamage) {
       POKESIM_REQUIRE_NM(!has<UsesUntilKo>(move));
     }
     else if (DamageRollKind::ALL_DAMAGE_ROLLS & getDamageRollKind(move, damageRollOptions)) {
@@ -268,6 +285,10 @@ struct Checks : pokesim::debug::Checks {
       const UsesUntilKo& usesUntilKo = registry->get<UsesUntilKo>(move);
       pokesim::debug::check(usesUntilKo);
       POKESIM_REQUIRE_NM(usesUntilKo.val.size() <= damageRolls.val.size());
+    }
+
+    if (has<pokesim::tags::CalculateDamage>(move)) {
+      checkAttackHpResults(move);
     }
   }
 
@@ -289,33 +310,44 @@ struct Checks : pokesim::debug::Checks {
 
   void checkMoveOutputs() const {
     for (types::entity move : getMoveList()) {
-      if (has<pokesim::move::tags::Status>(move)) continue;
-
-      pokesim::debug::TypesToIgnore typesToIgnore{};
       if (has<pokesim::tags::AnalyzeEffect>(move)) {
-        typesToIgnore.add<Damage>();
         POKESIM_REQUIRE_NM(has<Damage>(move));
       }
 
       if (has<pokesim::tags::SimulateTurn>(move)) {
+        pokesim::debug::TypesToIgnore typesToIgnore{};
         typesToIgnore.add<Damage>();
-        POKESIM_REQUIRE_NM(has<Damage>(move));
-        POKESIM_REQUIRE_NM(registry->get<Damage>(move).val >= Constants::Damage::MIN);
+
+        if (has<move::tags::Status>(move)) {
+          POKESIM_REQUIRE_NM(!has<Damage>(move));
+        }
+        else {
+          POKESIM_REQUIRE_NM(has<Damage>(move));
+          POKESIM_REQUIRE_NM(registry->get<Damage>(move).val >= Constants::Damage::MIN);
+        }
+        POKESIM_REQUIRE_NM(!has<tags::DefenderImmune>(move));
+        POKESIM_REQUIRE_NM(!has<tags::IgnoredStatusMove>(move));
         POKESIM_REQUIRE_NM(!has<DamageRolls>(move));
         POKESIM_REQUIRE_NM(!has<UsesUntilKo>(move));
+
+        types::entity initialMove = getInitialEntity(move);
+        pokesim::debug::areEntitiesEqual(*registry, move, registryOnInput, initialMove, typesToIgnore);
       }
       else {
-        typesToIgnore.add<DamageRolls, UsesUntilKo>();
         checkCalcDamageResultOutputs(move);
 
-        if (has<pokesim::tags::CalculateDamage>(move)) {
-          typesToIgnore.add<AttackerHpRecovered, AttackerHpLost>();
-          checkAttackHpResults(move);
+        if (has<tags::IgnoredStatusMove>(move)) {
+          pokesim::debug::TypesToIgnore typesToIgnore{};
+          typesToIgnore.add<DamageRolls, tags::IgnoredStatusMove>();
+
+          if (has<pokesim::tags::AnalyzeEffect>(move)) {
+            typesToIgnore.add<Damage>();
+          }
+
+          types::entity initialMove = getInitialEntity(move);
+          pokesim::debug::areEntitiesEqual(*registry, move, registryOnInput, initialMove, typesToIgnore);
         }
       }
-
-      types::entity initialMove = getInitialEntity(move);
-      pokesim::debug::areEntitiesEqual(*registry, move, registryOnInput, initialMove, typesToIgnore);
     }
   }
 
@@ -323,9 +355,19 @@ struct Checks : pokesim::debug::Checks {
     const types::entityVector pokemonList = getPokemonList(forAttacker);
     for (types::entity pokemon : pokemonList) {
       pokesim::debug::TypesToIgnore typesToIgnore;
-      if (has<pokesim::tags::SimulateTurn>(pokemon) && !forAttacker) {
-        typesToIgnore.add<internal::calc_damage::tags::RanAfterModifyDamage>();
+      if (has<pokesim::tags::SimulateTurn>(pokemon)) {
+        if (!forAttacker) {
+          typesToIgnore.add<internal::calc_damage::tags::RanAfterModifyDamage>();
+        }
       }
+      else {
+        typesToIgnore.add<
+          CurrentActionMovesAsSource,
+          CurrentActionMovesAsTarget,
+          CurrentActionMovesAsSourceExtended,
+          CurrentActionMovesAsTargetExtended>();
+      }
+
       types::entity initialPokemon = getInitialEntity(pokemon);
       pokesim::debug::areEntitiesEqual(*registry, pokemon, registryOnInput, initialPokemon, typesToIgnore);
     }

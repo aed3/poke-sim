@@ -2,31 +2,32 @@
 
 #include <Config/Require.hpp>
 #include <Utilities/NumberToType.hpp>
+#include <algorithm>
 #include <cstdint>
 #include <initializer_list>
 #include <vector>
 
 namespace pokesim::types {
-template <typename T, std::uint64_t N>
-class maxSizedVector : public std::vector<T> {
-  using base = std::vector<T>;
+template <typename Type, std::uint64_t MaxSize>
+class maxSizedVector : public std::vector<Type> {
+  using base = std::vector<Type>;
 
   void checkSize(std::uint64_t newSize) const {
-    POKESIM_REQUIRE(newSize <= max_size(), "More than " + std::to_string(N) + " elements are in this vector.");
+    POKESIM_REQUIRE(newSize <= max_size(), "More than " + std::to_string(MaxSize) + " elements are in this vector.");
   }
 
  public:
-  using size_type = internal::unsignedIntType<N>;
+  using size_type = internal::unsignedIntType<MaxSize>;
 
   template <typename... Args>
   maxSizedVector(Args&&... args) : base(std::forward<Args>(args)...) {
     checkSize(base::size());
   }
 
-  maxSizedVector(std::initializer_list<T> list) : maxSizedVector() {
+  maxSizedVector(std::initializer_list<Type> list) : maxSizedVector() {
     checkSize(list.size());
     reserve((size_type)list.size());
-    for (const T& item : list) {
+    for (const Type& item : list) {
       push_back(item);
     }
   }
@@ -51,12 +52,28 @@ class maxSizedVector : public std::vector<T> {
     return base::operator[](pos);
   }
 
-  void push_back(const T& value) {
+  void push_back(const Type& value) {
     checkSize(base::size() + 1U);
     base::push_back(value);
   }
 
-  static constexpr size_type max() { return N; }
+  void unordered_remove(const Type& value) {
+    POKESIM_REQUIRE(std::find(base::begin(), base::end(), value) != base::end(), "Value must be in vector to remove.");
+    for (size_type i = 0U; i < size() - 1U; i++) {
+      if (value == at(i)) {
+        at(i) = base::back();
+        break;
+      }
+    }
+    base::pop_back();
+  }
+
+  void pop_count(size_type remove) {
+    POKESIM_REQUIRE(remove <= size(), "Cannot remove more elements than contained.");
+    base::resize(size() - remove);
+  }
+
+  static constexpr size_type max() { return MaxSize; }
   constexpr size_type max_size() const { return max(); }
 
   size_type size() const { return (size_type)base::size(); }
@@ -71,7 +88,7 @@ class maxSizedVector : public std::vector<T> {
     base::reserve(newSize);
   }
 
-  void push_back(T&& value) {
+  void push_back(Type&& value) {
     checkSize(base::size() + 1U);
     base::push_back(std::move(value));
   }

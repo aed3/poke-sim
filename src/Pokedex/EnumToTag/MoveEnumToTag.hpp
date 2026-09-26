@@ -30,6 +30,7 @@ template <template <typename, typename...> typename RunStruct, typename... T, ty
 constexpr auto enumToTag(Move move, RunArgs&&... args) {
   switch (move) {
     case Move::ALLY_SWITCH:    return RunStruct<AllySwitch, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::CLOSE_COMBAT:   return RunStruct<CloseCombat, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FLASH_CANNON:   return RunStruct<FlashCannon, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FURY_ATTACK:    return RunStruct<FuryAttack, T...>::run(std::forward<RunArgs>(args)...);
     case Move::KNOCK_OFF:      return RunStruct<KnockOff, T...>::run(std::forward<RunArgs>(args)...);

@@ -149,6 +149,7 @@ struct Constants {
     static constexpr std::uint16_t MAX = 65535U;
     static constexpr std::uint16_t MIN = 1U;
     static constexpr std::uint16_t DEFAULT = 1U;
+    static constexpr std::uint16_t IMMUNE = 0U;
   };
 
   struct DamageRollCount {

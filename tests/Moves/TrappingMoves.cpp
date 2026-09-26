@@ -56,7 +56,7 @@ TEST_CASE(
 
   battleInfo.runWithSimulateTurn = true;
   test.simulateTurnOptions().setRandomChanceUpperLimit(Constants::Probability::MIN);
-  if (battleFormat == BattleFormat::SINGLES) {
+  if (test.simulation.isBattleFormat(BattleFormat::SINGLES)) {
     battleInfo.decisionsToSimulate.push_back(test.turnDecision(dex::Move::SPIRIT_SHACKLE, dex::Move::SPLASH));
   }
   else {
@@ -95,7 +95,7 @@ TEST_CASE(
       test.pokemon(dex::Species::GARDEVOIR, dex::Move::SPLASH)));
 
   battleInfo.runWithSimulateTurn = true;
-  if (battleFormat == BattleFormat::SINGLES) {
+  if (test.simulation.isBattleFormat(BattleFormat::SINGLES)) {
     battleInfo.decisionsToSimulate.push_back(test.turnDecision(dex::Move::SPIRIT_SHACKLE, dex::Move::SPLASH));
   }
   else {
@@ -138,7 +138,7 @@ TEST_CASE(
 
   battleInfo.runWithSimulateTurn = true;
   test.simulateTurnOptions().setRandomChanceUpperLimit(Constants::Probability::MIN);
-  if (battleFormat == BattleFormat::SINGLES) {
+  if (test.simulation.isBattleFormat(BattleFormat::SINGLES)) {
     battleInfo.decisionsToSimulate.push_back(test.turnDecision(dex::Move::SPIRIT_SHACKLE, dex::Move::SPLASH));
   }
   else {

@@ -63,13 +63,7 @@ bool removeFailedMoveFromSource(types::registry& registry, types::entity moveEnt
     return true;
   }
 
-  for (types::activePokemonIndex i = 0U; i < moves->val.size() - 1U; i++) {
-    if (moves->val[i] == moveEntity) {
-      moves->val[i] = moves->val.back();
-      break;
-    }
-  }
-  moves->val.pop_back();
+  moves->val.unordered_remove(moveEntity);
 
   if (moves->val.empty()) {
     registry.remove<pokesim::tags::CurrentActionSource, CurrentActionMovesAsSource>(source);
@@ -104,8 +98,6 @@ template <typename View>
 void clearActionMoveComponents(types::registry& registry, const View& view) {
   registry.remove<
     pokesim::tags::SimulateTurn,
-    pokesim::tags::CalculateDamage,
-    pokesim::tags::AnalyzeEffect,
     Battle,
     TypeName,
     AtkBoost,
@@ -219,9 +211,10 @@ void setFailedActionMove(
     registry.emplace<FailedCurrentActionTarget>(battle.val, target.val);
   }
 
-  registry.erase<CurrentActionMoveSlot>(battle.val);
-
-  updateCurrentActionTargets(registry, registry.get<CurrentAction>(battle.val));
+  if (moveHandle.all_of<pokesim::tags::SimulateTurn>()) {
+    registry.erase<CurrentActionMoveSlot>(battle.val);
+    updateCurrentActionTargets(registry, registry.get<CurrentAction>(battle.val));
+  }
 }
 
 void clearMoveAction(Simulation& simulation) {
@@ -246,6 +239,7 @@ void clearMoveAction(Simulation& simulation) {
     pokesim::move::tags::Special,
     pokesim::move::tags::Status,
     pokesim::move::tags::Contact,
+    pokesim::move::tags::IgnoreImmunities,
     pokesim::move::tags::BypassSubstitute,
     pokesim::move::tags::Punch,
     pokesim::move::tags::VariableHitCount,

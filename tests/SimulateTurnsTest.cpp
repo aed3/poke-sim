@@ -271,6 +271,19 @@ TEST_CASE("Basic Switching", "[Simulation][SimulateTurn][SingleBattle][Switching
   }
 }
 
+TEST_CASE("Type Immunities", "[Simulation][SimulateTurn][SingleBattle][Immunities]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(test.pokemon(dex::Species::AMPHAROS, dex::Move::TACKLE)),
+    test.side(test.pokemon(dex::Species::DRAGAPULT, dex::Item::ROCKY_HELMET, dex::Move::SPLASH)),
+    test.turnDecision(dex::Move::TACKLE, dex::Move::SPLASH));
+
+  auto entities = test.simulateOneNonBranchingBattle();
+  test.checks.checkUsedMovePokemon(entities.p1A);
+  test.checks.checkUsedMovePokemon(entities.p2A);
+}
+
 TEST_CASE("Battle ends on faint", "[Simulation][SimulateTurn][SingleBattle][Fainting]") {
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
   test.setupBattle(

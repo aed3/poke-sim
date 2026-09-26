@@ -22,7 +22,7 @@ enum class Slot : std::uint8_t {
 };
 
 namespace internal {
-static constexpr inline std::array<Slot, 13U> VALID_SLOTS = {
+static constexpr inline std::array<Slot, 12U> VALID_SLOTS = {
   Slot::P1A,
   Slot::P1B,
   Slot::P1C,

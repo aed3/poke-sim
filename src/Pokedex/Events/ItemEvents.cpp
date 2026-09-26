@@ -53,14 +53,15 @@ struct SetMoveTargetModifier {
 template <typename CurrentActionMovesAsSourceType>
 struct SourceModifyDamage {
   static void run(
-    types::handle handle, const CurrentActionMovesAsSourceType& moves, types::eventModifier numerator,
+    types::registry& registry, const CurrentActionMovesAsSourceType& moves, types::eventModifier numerator,
     types::eventModifier denominator) {
     for (types::entity move : moves) {
-      DamageRollModifiers* modifier = handle.registry()->try_get<DamageRollModifiers>(move);
-      if (modifier) {
-        modifier->modifyDamageEvent =
-          internal::chainValueToModifier(modifier->modifyDamageEvent, numerator, denominator);
+      if (registry.all_of<move::tags::Status>(move)) {
+        continue;
       }
+
+      DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
+      modifier.modifyDamageEvent = internal::chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
     }
   }
 };
@@ -80,10 +81,6 @@ struct FocusSashOnAfterModifyDamage {
 
     types::registry& registry = *handle.registry();
     for (types::entity move : moves) {
-      if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
-        continue;
-      }
-
       if constexpr (std::is_same_v<tags::SimulateTurn, SimulationTag>) {
         Damage& damage = registry.get<Damage>(move);
         if (damage.val < hp.val) {
@@ -110,9 +107,7 @@ struct FocusSashOnAfterModifyDamage {
 void kingsRockOnModifyMove(
   types::registry& registry, const CurrentActionMovesAsSource& moves, types::percentChance addedFlinchChance) {
   for (types::entity move : moves) {
-    if (
-      !registry.all_of<pokesim::tags::CurrentActionMove>(move) ||
-      registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
+    if (registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
       continue;
     }
 
@@ -125,9 +120,7 @@ void lifeOrbOnAfterMove(
   bool onlyStatusMoves = true;
   types::registry& registry = *handle.registry();
   for (types::entity move : moves) {
-    if (registry.all_of<pokesim::tags::CurrentActionMove>(move)) {
-      onlyStatusMoves &= registry.all_of<move::tags::Status>(move);
-    }
+    onlyStatusMoves &= registry.all_of<move::tags::Status>(move);
   }
 
   if (!onlyStatusMoves) {
@@ -138,10 +131,6 @@ void lifeOrbOnAfterMove(
 void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget moves, types::stat hpDivisor) {
   types::registry& registry = *handle.registry();
   types::entity move = moves.val;
-  if (!registry.all_of<pokesim::tags::CurrentMoveHit>(move)) {
-    return;
-  }
-
   types::entity source = registry.get<CurrentActionSource>(moves.val).val;
   if (!internal::doesMoveMakeContact(registry, move, source)) {
     return;
@@ -188,7 +177,10 @@ void ChoiceScarf::onModifySpe(Simulation& simulation) {
 }
 
 void ChoiceScarf::onSourceModifyMove(Simulation& simulation) {
-  simulation.view<setChoiceLock, Tags<ChoiceScarf, tags::CurrentActionSource>, entt::exclude_t<ChoiceLock>>();
+  simulation.view<
+    setChoiceLock,
+    Tags<ChoiceScarf, tags::CurrentActionSource, tags::SimulateTurn>,
+    entt::exclude_t<ChoiceLock>>();
 }
 
 void ChoiceScarf::onEnd(Simulation& simulation) {
@@ -202,7 +194,10 @@ void ChoiceSpecs::onModifySpa(Simulation& simulation) {
 }
 
 void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
-  simulation.view<setChoiceLock, Tags<ChoiceSpecs, tags::CurrentActionSource>, entt::exclude_t<ChoiceLock>>();
+  simulation.view<
+    setChoiceLock,
+    Tags<ChoiceSpecs, tags::CurrentActionSource, tags::SimulateTurn>,
+    entt::exclude_t<ChoiceLock>>();
 }
 
 void ChoiceSpecs::onEnd(Simulation& simulation) {

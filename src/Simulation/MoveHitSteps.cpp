@@ -2,6 +2,7 @@
 
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
+#include <Battle/Pokemon/PokemonProperties.hpp>
 #include <CalcDamage/CalcDamage.hpp>
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
 #include <Components/Accuracy.hpp>
@@ -12,6 +13,7 @@
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/HitCount.hpp>
+#include <Components/Names/TypeNames.hpp>
 #include <Components/Priority.hpp>
 #include <Components/RandomEventOutputs.hpp>
 #include <Components/SimulateTurn/MoveHitStepTags.hpp>
@@ -20,6 +22,7 @@
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Types/Constants.hpp>
 #include <Types/Enums/BattleFormat.hpp>
@@ -32,18 +35,93 @@
 
 namespace pokesim {
 namespace {
-void deductMoveHitCount(types::handle moveHandle, HitCount& hitCount) {
+void deductMoveHitCount(types::handle handle, HitCount& hitCount) {
   POKESIM_REQUIRE(hitCount.val > 0U, "A hit count shouldn't be decremented if it's already 0.");
   hitCount.val--;
   if (!hitCount.val) {
-    moveHandle.remove<HitCount, tags::CurrentMoveHit>();
+    handle.remove<HitCount, tags::CurrentMoveHit>();
   }
 }
 
-void removeHitCountFromFaintedTargets(types::handle moveHandle, CurrentActionTarget target) {
-  if (moveHandle.registry()->get<stat::CurrentHp>(target.val).val == Constants::PokemonCurrentHpStat::MIN) {
-    moveHandle.remove<HitCount, tags::CurrentMoveHit>();
+void removeHitCountFromFaintedTargets(types::handle handle, CurrentActionTarget target) {
+  if (handle.registry()->get<stat::CurrentHp>(target.val).val == Constants::PokemonCurrentHpStat::MIN) {
+    handle.remove<HitCount, tags::CurrentMoveHit>();
   }
+}
+
+void removeMoveListDoubles(types::handle handle, CurrentActionSource source, CurrentActionTarget target) {
+  types::registry& registry = *handle.registry();
+  handle.emplace<internal::tags::HitsFinished>();
+
+  CurrentActionMovesAsSource& moves = registry.get<CurrentActionMovesAsSource>(source.val);
+  moves.val.unordered_remove(handle.entity());
+
+  if (moves.val.empty()) {
+    registry.remove<CurrentActionMovesAsSource, tags::CurrentActionSource>(source.val);
+  }
+  registry.remove<CurrentActionMovesAsTarget, tags::CurrentActionTarget>(target.val);
+}
+
+void removeMoveListSingles(types::handle handle, CurrentActionSource source, CurrentActionTarget target) {
+  types::registry& registry = *handle.registry();
+  handle.emplace<internal::tags::HitsFinished>();
+
+  registry.remove<CurrentActionMovesAsSource, tags::CurrentActionSource>(source.val);
+  registry.remove<CurrentActionMovesAsTarget, tags::CurrentActionTarget>(target.val);
+}
+
+void replaceMoveListSingles(types::handle handle, CurrentActionSource source, CurrentActionTarget target) {
+  types::registry& registry = *handle.registry();
+  types::entity move = handle.entity();
+
+  registry.emplace<CurrentActionMovesAsSource>(source.val, decltype(CurrentActionMovesAsSource::val){move});
+  registry.emplace<CurrentActionMovesAsTarget>(target.val, move);
+  registry.emplace<tags::CurrentActionSource>(source.val);
+  registry.emplace<tags::CurrentActionTarget>(target.val);
+}
+
+void replaceMoveListDoubles(types::handle handle, CurrentActionSource source, CurrentActionTarget target) {
+  types::registry& registry = *handle.registry();
+  types::entity move = handle.entity();
+
+  CurrentActionMovesAsSource* sourceMoves = registry.try_get<CurrentActionMovesAsSource>(source.val);
+  if (sourceMoves) {
+    sourceMoves->val.push_back(move);
+    POKESIM_REQUIRE(
+      registry.all_of<tags::CurrentActionSource>(source.val),
+      "If this component exists, this tag must also exist.");
+  }
+  else {
+    registry.emplace<CurrentActionMovesAsSource>(source.val, decltype(CurrentActionMovesAsSource::val){move});
+    registry.emplace<tags::CurrentActionSource>(source.val);
+  }
+  registry.emplace<CurrentActionMovesAsTarget>(target.val, handle.entity());
+  registry.emplace<tags::CurrentActionTarget>(target.val);
+}
+
+void removeFinishedHitsFromMoveLists(Simulation& simulation) {
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    simulation.view<
+      removeMoveListSingles,
+      Tags<tags::CurrentActionMove>,
+      entt::exclude_t<tags::CurrentMoveHit, internal::tags::HitsFinished>>();
+  }
+  else {
+    simulation.view<
+      removeMoveListDoubles,
+      Tags<tags::CurrentActionMove>,
+      entt::exclude_t<tags::CurrentMoveHit, internal::tags::HitsFinished>>();
+  }
+}
+
+void replaceFinishedHitsInMoveLists(Simulation& simulation) {
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    simulation.view<replaceMoveListSingles, Tags<internal::tags::HitsFinished>>();
+  }
+  else {
+    simulation.view<replaceMoveListDoubles, Tags<internal::tags::HitsFinished>>();
+  }
+  simulation.removeFromEntities<internal::tags::HitsFinished>();
 }
 
 template <auto Function>
@@ -237,6 +315,19 @@ void runSecondaryMoveEffects(Simulation& simulation) {
   runAddedFlinchEffect(simulation);
 }
 
+void failIfTargetImmune(types::handle handle, CurrentActionTarget target, TypeName typeName, const Pokedex& pokedex) {
+  types::registry& registry = *handle.registry();
+
+  if (internal::isTargetImmune(registry, target, typeName, pokedex)) {
+    handle.emplace<tags::FailedCurrentMoveHit>();
+  }
+}
+
+void typeImmunityCheck(Simulation& simulation) {
+  simulation.view<failIfTargetImmune, Tags<tags::CurrentMoveHit>, entt::exclude_t<move::tags::IgnoreImmunities>>(
+    simulation.pokedex());
+}
+
 void accuracyCheck(Simulation& simulation) {
   internal::runModifyAccuracyEvent(simulation);
   internal::runAccuracyEvent(simulation);
@@ -253,6 +344,10 @@ void moveHitLoop(Simulation& simulation) {
   types::moveHits iterations = MoveHitLimits::MIN;
   while (!simulation.registry.view<HitCount>().empty()) {
     POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran than possible.");
+    if (iterations > MoveHitLimits::MIN) {
+      simulation.view<removeHitCountFromFaintedTargets, Tags<tags::CurrentMoveHit>>();
+      removeFinishedHitsFromMoveLists(simulation);
+    }
 
     calc_damage::run(simulation);  // 1. call to this.battle.getDamage
     internal::runDamageEvent(simulation);
@@ -269,16 +364,16 @@ void moveHitLoop(Simulation& simulation) {
 
     internal::updateAllStats(simulation);
     simulation.view<deductMoveHitCount>();
-    simulation.view<removeHitCountFromFaintedTargets, Tags<tags::CurrentActionMove>>();
     iterations++;
   }
+  replaceFinishedHitsInMoveLists(simulation);
 }
 }  // namespace
 
 void internal::runMoveHitChecks(Simulation& simulation) {
   // invulnerabilityCheck
   // hitCheck
-  // immunityCheck
+  runMoveHitCheck<typeImmunityCheck>(simulation);
   runMoveHitCheck<accuracyCheck>(simulation);
   // breakProtectCheck
   // stealBoostCheck

@@ -40,6 +40,7 @@ using MultipliedDamageRolls = DamageRolls;
 using MultipliedUsesUntilKo = calc_damage::UsesUntilKo;
 
 struct Results {
+  types::view<tags::IgnoredInput> ignoredInputResults() const;
   types::view<EffectMultiplier> effectMultiplierResults() const;
   types::view<MultipliedDamageRolls> multipliedDamageRollsResults() const;
   types::view<MultipliedUsesUntilKo> multipliedUsesUntilKoResults() const;

@@ -48,6 +48,11 @@ struct UsesUntilKo {
 
 struct AttackerHpRecovered : DamageRolls {};
 struct AttackerHpLost : DamageRolls {};
+
+namespace tags {
+struct DefenderImmune {};
+struct IgnoredStatusMove {};
+}  // namespace tags
 }  // namespace calc_damage
 
 namespace analyze_effect {
