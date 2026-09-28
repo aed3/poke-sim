@@ -132,8 +132,15 @@ class Simulation {
       sizeof...(ViewComponents) != 0,
       "Using this function without view components will cause Type to be added to every entity.");
     static_assert(sizeof...(ExcludeComponents) != 0, "Use addToEntities instead if not excluding any components.");
-    auto view = registry.view<ViewComponents...>(exclude);
-    registry.insert<Type>(view.begin(), view.end(), args...);
+    if constexpr (sizeof...(ExcludeComponents) == 1 && !std::conjunction_v<std::is_same<Type, ExcludeComponents>...>) {
+      auto view = registry.view<ViewComponents...>();
+      registry.insert<Type>(view.begin(), view.end(), args...);
+      (removeFromEntities<Type, ViewComponents..., ExcludeComponents>(), ...);
+    }
+    else {
+      auto view = registry.view<ViewComponents...>(exclude);
+      registry.insert<Type>(view.begin(), view.end(), args...);
+    }
   }
 
   template <typename Type, typename... ViewComponents, typename... ExcludeComponents>
