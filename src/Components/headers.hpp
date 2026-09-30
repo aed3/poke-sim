@@ -90,5 +90,6 @@
 #include "Tags/TypeTags.hpp"
 #include "Tags/VolatileTags.hpp"
 #include "TeamRemaining.hpp"
+#include "TransformedFrom.hpp"
 #include "Turn.hpp"
 #include "Winner.hpp"

@@ -144,7 +144,7 @@ struct Random {
       rngState,
       computeStatFromBaseStat(
         dex::Stat::HP,
-        pokedex.getSpeciesData<BaseStats>(info.species).hp,
+        pokedex.getSpeciesData<BaseStats>(info.species),
         info.level.value(),
         info.nature.value(),
         {info.evs.hp.value()},

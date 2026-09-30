@@ -9,7 +9,9 @@ TEST_CASE(
     dex::Stat::HP,
     test.dexValue<dex::Decidueye::hp>(),
     Constants::PokemonLevel::DEFAULT,
-    dex::Nature::NO_NATURE);
+    dex::Nature::NO_NATURE,
+    Constants::PokemonEv::DEFAULT,
+    Constants::PokemonIv::DEFAULT);
   attacker.currentHp = maxHp / GENERATE(1U, 2U, 3U);
 
   test.setupBattle(

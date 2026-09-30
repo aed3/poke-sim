@@ -91,6 +91,8 @@ struct Constants {
     static constexpr std::uint8_t MAX = 64U;
     static constexpr std::uint8_t MIN = 1U;
     static constexpr std::uint8_t DEFAULT = 1U;
+
+    static constexpr std::uint8_t COPIED_WITH_TRANSFORM = 5U;
   };
 
   struct MovePp {

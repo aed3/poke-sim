@@ -441,7 +441,7 @@ void applyStatusEffect(types::handle inputHandle, EffectTarget effectTarget, Sta
     setInvertFinalAnswer(inputHandle);
   }
   else {
-    pokesim::internal::setStatus(effect.val, registry, effectTarget.val);
+    pokesim::internal::setStatus(registry, effect.val, effectTarget.val);
   }
 }
 

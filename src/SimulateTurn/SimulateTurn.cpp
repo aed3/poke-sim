@@ -275,8 +275,12 @@ void runSwitchAction(Simulation& simulation) {
   internal::runEndItemEvent(simulation);
   simulation.removeFromEntities<pokesim::internal::tags::EndItem>();
 
-  simulation
-    .view<internal::clearVolatiles, Tags<pokesim::tags::CurrentActionSource, action::tags::NotFaintedActiveSwitch>>();
+  simulation.addToEntities<
+    pokesim::internal::tags::ClearVolatiles,
+    pokesim::tags::CurrentActionSource,
+    action::tags::NotFaintedActiveSwitch>();
+  internal::clearVolatiles(simulation);
+  simulation.removeFromEntities<pokesim::internal::tags::ClearVolatiles>();
 
   simulation.removeFromEntities<pokesim::tags::ActivePokemon, pokesim::tags::CurrentActionSource>();
   simulation.addToEntities<pokesim::tags::ActivePokemon, pokesim::tags::CurrentActionTarget>();
@@ -362,7 +366,9 @@ void faintPokemon(Simulation& simulation) {
     internal::runEndItemEvent(simulation);
     simulation.removeFromEntities<pokesim::internal::tags::EndItem>();
 
-    pokemonFilter.view<internal::clearVolatiles>();
+    pokemonFilter.addToSelected<pokesim::internal::tags::ClearVolatiles>();
+    internal::clearVolatiles(simulation);
+    simulation.removeFromEntities<pokesim::internal::tags::ClearVolatiles>();
 
     simulation.addToEntities<pokesim::tags::Fainted, pokesim::tags::Fainting>();
     simulation.removeFromEntities<pokesim::tags::ActivePokemon, pokesim::tags::Fainting>();
@@ -425,14 +431,15 @@ void nextTurn(Simulation& simulation) {
 
   simulation.view<setActiveAtTurnEnd, Tags<pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>>();
   pokesim::internal::EntityFilter<pokesim::internal::tags::ActiveAtTurnEnd> pokemonFilter{simulation};
-  if (!pokemonFilter.hasNoneSelected()) {
-    pokemonFilter.removeFromSelected<DisabledMoveSlots>();
-
-    internal::runResetDisabledMove(simulation);
-    internal::runResetTrappedPokemon(simulation);
-
-    simulation.removeFromEntities<pokesim::internal::tags::ActiveAtTurnEnd>();
+  if (pokemonFilter.hasNoneSelected()) {
+    return;
   }
+  pokemonFilter.removeFromSelected<DisabledMoveSlots>();
+
+  internal::runResetDisabledMove(simulation);
+  internal::runResetTrappedPokemon(simulation);
+
+  simulation.removeFromEntities<pokesim::internal::tags::ActiveAtTurnEnd>();
 }
 
 void simulateTurn(Simulation& simulation) {

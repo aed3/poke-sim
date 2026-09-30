@@ -54,6 +54,7 @@ void runTryTakeItemEvent(Simulation& simulation);  // TakeItem
 void runAfterUseItemEvent(Simulation& simulation);
 void runEndItemEvent(Simulation& simulation);
 
+void runStartAbilityEvent(Simulation& simulation);
 void runEndAbilityEvent(Simulation& simulation);
 
 void runBeforeSwitchOutEvent(Simulation& simulation);  // Pursuit and Dynamax, only for UnFaintedActiveSwitch

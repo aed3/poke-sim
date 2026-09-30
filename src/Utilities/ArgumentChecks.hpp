@@ -108,6 +108,7 @@ struct MidTurnSideDecision;
 struct SpeedTieIndexes;
 struct SpeciesTypes;
 struct TeamRemaining;
+struct TransformedFrom;
 struct Turn;
 struct Winner;
 namespace analyze_effect {
@@ -587,6 +588,9 @@ void check(const stat::EffectiveSpe&);
 
 template <>
 void check(const TeamRemaining&);
+
+template <>
+void check(const TransformedFrom&);
 
 template <>
 void check(const Turn&);

@@ -6,8 +6,10 @@
 #include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/Selection.hpp>
 #include <Pokedex/Pokedex.hpp>
+#include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Registry.hpp>
@@ -42,6 +44,11 @@ void knockOffOnBasePower(
   }
   internal::chainComponentToModifier(eventModifier, modifier);
 }
+
+void transformOnHit(
+  types::registry& registry, CurrentActionSource source, CurrentActionTarget target, const Pokedex& pokedex) {
+  internal::transformInto(registry, source.val, target.val, pokedex);
+}
 }  // namespace
 
 void KnockOff::onBasePower(Simulation& simulation) {
@@ -65,5 +72,11 @@ void SpiritShackle::targetSecondaryEffect::onHit(Simulation& simulation) {
   internal::tryTrap(simulation);
 
   simulation.removeFromEntities<internal::tags::TryTrap>();
+}
+
+void Transform::targetPrimaryEffect::onHit(Simulation& simulation) {
+  simulation.view<transformOnHit, Tags<Transform, tags::CurrentMoveHit>>(simulation.pokedex());
+  internal::runStartAbilityEvent(simulation);
+  simulation.removeFromEntities<internal::tags::StartAbility>();
 }
 }  // namespace pokesim::dex

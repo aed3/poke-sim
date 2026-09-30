@@ -1,5 +1,6 @@
 #include "Pokedex.hpp"
 
+#include <Components/Pokedex/Abilities.hpp>
 #include <Components/Tags/Selection.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/EnumToTag/MoveEnumToTag.hpp>
@@ -56,6 +57,7 @@ void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInf
   entt::dense_set<dex::Item> itemSet{};
   entt::dense_set<dex::Move> moveSet{};
   entt::dense_set<dex::Ability> abilitySet{};
+  entt::dense_set<dex::Species> speciesMissingAbility{};
 
   for (const BattleCreationInfo& battleCreationInfo : battleInfoList) {
     for (const auto& side : battleCreationInfo.sides) {
@@ -64,11 +66,15 @@ void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInf
         for (const auto& moveSlot : pokemon.moves) {
           moveSet.insert(moveSlot.name);
         }
-        if (pokemon.item.has_value() && pokemon.item != dex::Item::NO_ITEM) {
+        if (pokemon.item.value_or(dex::Item::NO_ITEM) != dex::Item::NO_ITEM) {
           itemSet.insert(pokemon.item.value());
         }
-        if (pokemon.ability.has_value() && pokemon.ability != dex::Ability::NO_ABILITY) {
+
+        if (pokemon.ability.value_or(dex::Ability::NO_ABILITY) != dex::Ability::NO_ABILITY) {
           abilitySet.insert(pokemon.ability.value());
+        }
+        else if (!pokemon.ability.has_value()) {
+          speciesMissingAbility.insert(pokemon.species);
         }
       }
     }
@@ -85,6 +91,10 @@ void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInf
   loadSpecies(speciesSet);
   loadItems(itemSet);
   loadMoves(moveSet);
+
+  for (dex::Species species : speciesMissingAbility) {
+    abilitySet.insert(getSpeciesData<PrimaryAbility>(species).val);
+  }
   loadAbilities(abilitySet);
 }
 }  // namespace pokesim

@@ -230,6 +230,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/BattleStateTest.cpp
       tests/CalcDamageTest.cpp
       tests/Abilities/Analytic.cpp
+      tests/Abilities/Imposter.cpp
       tests/Abilities/LongReach.cpp
       tests/Abilities/Scrappy.cpp
       tests/Effects/ChoiceLock.cpp
@@ -239,6 +240,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/Items/QuickPowder.cpp
       tests/Moves/FuryAttack.cpp
       tests/Moves/KnockOff.cpp
+      tests/Moves/Transform.cpp
       tests/Moves/TrappingMoves.cpp
       tests/Moves/TripleArrows.cpp
       tests/Moves/VoltSwitch.cpp

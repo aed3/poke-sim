@@ -29,9 +29,9 @@ struct CurrentHp;
 }  // namespace stat
 
 namespace internal {
-void setItem(pokesim::dex::Item item, const Pokedex& pokedex, types::registry& registry, types::entity entity);
-void setAbility(pokesim::dex::Ability ability, const Pokedex& pokedex, types::registry& registry, types::entity entity);
-void setStatus(pokesim::dex::Status status, types::registry& registry, types::entity entity);
+void setItem(types::registry& registry, pokesim::dex::Item item, types::entity entity, const Pokedex& pokedex);
+void setAbility(types::registry& registry, pokesim::dex::Ability ability, types::entity entity);
+void setStatus(types::registry& registry, pokesim::dex::Status status, types::entity entity);
 
 void checkIfCanUseItem(Simulation& simulation);
 void useItem(Simulation& simulation);
@@ -45,7 +45,7 @@ void setStatus(Simulation& simulation);
 void trySetStatus(Simulation& simulation);
 void clearStatus(types::handle pokemonHandle);
 
-void clearVolatiles(types::handle pokemonHandle);
+void clearVolatiles(Simulation& simulation);
 
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
 void setLastMoveUsed(types::registry& registry, CurrentAction& source, CurrentActionMoveSlot move);
@@ -58,6 +58,8 @@ void tryBoost(Simulation& simulation);
 
 void tryTrap(Simulation& simulation);
 void trap(types::handle handle, SpeciesTypes types, const Pokedex& pokedex);
+
+void transformInto(types::registry& registry, types::entity source, types::entity target, const Pokedex& pokedex);
 
 void updateAllStats(Simulation& simulation);
 void updateAtk(Simulation& simulation, bool ignoreBoosts);

@@ -83,12 +83,12 @@ void PokemonStateSetup::setGender(pokesim::dex::Gender gender) {
   handle.emplace<GenderName>(gender);
 }
 
-void PokemonStateSetup::setAbility(pokesim::dex::Ability ability, const Pokedex& pokedex) {
-  pokesim::internal::setAbility(ability, pokedex, *handle.registry(), entity());
+void PokemonStateSetup::setAbility(pokesim::dex::Ability ability) {
+  pokesim::internal::setAbility(*handle.registry(), ability, entity());
 }
 
 void PokemonStateSetup::setItem(pokesim::dex::Item item, const Pokedex& pokedex) {
-  pokesim::internal::setItem(item, pokedex, *handle.registry(), entity());
+  pokesim::internal::setItem(*handle.registry(), item, entity(), pokedex);
 }
 
 void PokemonStateSetup::setMoves(const std::vector<MoveSlot>& moveSlots) {
@@ -103,7 +103,7 @@ void PokemonStateSetup::setMoves(const std::vector<MoveSlot>& moveSlots) {
 }
 
 void PokemonStateSetup::setStatus(pokesim::dex::Status status) {
-  pokesim::internal::setStatus(status, *handle.registry(), entity());
+  pokesim::internal::setStatus(*handle.registry(), status, entity());
 }
 
 void PokemonStateSetup::setNature(pokesim::dex::Nature nature) {

@@ -118,10 +118,11 @@ void setPokemonAbility(
   const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup, const Pokedex& pokedex) {
   if (pokemonInfo.ability != dex::Ability::NO_ABILITY) {
     if (pokemonInfo.ability.has_value()) {
-      pokemonSetup.setAbility(pokemonInfo.ability.value(), pokedex);
+      pokemonSetup.setAbility(pokemonInfo.ability.value());
     }
-    else if (pokedex.speciesHas<PrimaryAbility>(pokemonInfo.species)) {
-      pokemonSetup.setAbility(pokedex.getSpeciesData<PrimaryAbility>(pokemonInfo.species).val, pokedex);
+    else {
+      dex::Ability ability = pokedex.getSpeciesData<PrimaryAbility>(pokemonInfo.species).val;
+      pokemonSetup.setAbility(ability);
     }
   }
 }
@@ -167,53 +168,22 @@ types::stat setPokemonStats(
   types::level level, dex::Nature nature, const Evs& evs, const Ivs& ivs) {
   const BaseStats& baseStats = pokedex.getSpeciesData<BaseStats>(pokemonInfo.species);
 
-  auto getStat = [&](dex::Stat statName) {
-    types::baseStat baseStat = Constants::PokemonBaseStat::DEFAULT;
-    std::optional<types::stat> givenStat = std::nullopt;
-
-    if (statName == dex::Stat::HP) {
-      baseStat = baseStats.hp;
-      givenStat = pokemonInfo.stats.hp;
-    }
-    else if (statName == dex::Stat::ATK) {
-      baseStat = baseStats.atk;
-      givenStat = pokemonInfo.stats.atk;
-    }
-    else if (statName == dex::Stat::DEF) {
-      baseStat = baseStats.def;
-      givenStat = pokemonInfo.stats.def;
-    }
-    else if (statName == dex::Stat::SPA) {
-      baseStat = baseStats.spa;
-      givenStat = pokemonInfo.stats.spa;
-    }
-    else if (statName == dex::Stat::SPD) {
-      baseStat = baseStats.spd;
-      givenStat = pokemonInfo.stats.spd;
-    }
-    else if (statName == dex::Stat::SPE) {
-      baseStat = baseStats.spe;
-      givenStat = pokemonInfo.stats.spe;
-    }
-    else {
-      POKESIM_REQUIRE_FAIL("Using a stat that cannot be chosen or calculated.");
-    }
-
+  auto getStat = [&](dex::Stat statName, std::optional<types::stat> givenStat) {
     if (givenStat.has_value()) {
       return givenStat.value();
     }
 
-    return computeStatFromBaseStat(statName, baseStat, level, nature, evs, ivs);
+    return computeStatFromBaseStat(statName, baseStats, level, nature, evs, ivs);
   };
 
-  types::stat hp = getStat(dex::Stat::HP);
+  types::stat hp = getStat(dex::Stat::HP, pokemonInfo.stats.hp);
 
   pokemonSetup.setHp(hp);
-  pokemonSetup.setStat<stat::Atk, stat::EffectiveAtk>(getStat(dex::Stat::ATK));
-  pokemonSetup.setStat<stat::Def, stat::EffectiveDef>(getStat(dex::Stat::DEF));
-  pokemonSetup.setStat<stat::Spa, stat::EffectiveSpa>(getStat(dex::Stat::SPA));
-  pokemonSetup.setStat<stat::Spd, stat::EffectiveSpd>(getStat(dex::Stat::SPD));
-  pokemonSetup.setStat<stat::Spe, stat::EffectiveSpe>(getStat(dex::Stat::SPE));
+  pokemonSetup.setStat<stat::Atk, stat::EffectiveAtk>(getStat(dex::Stat::ATK, pokemonInfo.stats.atk));
+  pokemonSetup.setStat<stat::Def, stat::EffectiveDef>(getStat(dex::Stat::DEF, pokemonInfo.stats.def));
+  pokemonSetup.setStat<stat::Spa, stat::EffectiveSpa>(getStat(dex::Stat::SPA, pokemonInfo.stats.spa));
+  pokemonSetup.setStat<stat::Spd, stat::EffectiveSpd>(getStat(dex::Stat::SPD, pokemonInfo.stats.spd));
+  pokemonSetup.setStat<stat::Spe, stat::EffectiveSpe>(getStat(dex::Stat::SPE, pokemonInfo.stats.spe));
 
   return hp;
 }

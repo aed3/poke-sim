@@ -23,18 +23,20 @@ struct Transform {
 
   static constexpr types::pp basePp(GameMechanics) { return 10U; }
 
+  struct targetPrimaryEffect {
+    static void onHit(Simulation& simulation);
+  };
+
   static constexpr MoveProperty properties(GameMechanics) {
     return MoveProperty::NO_ENCORE | MoveProperty::NO_ASSIST | MoveProperty::NO_COPYCAT | MoveProperty::NO_MIMIC |
            MoveProperty::NO_INSTRUCT | MoveProperty::NO_MIRROR_MOVE | MoveProperty::NO_METRONOME;
   }
-  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Transform"; }
     static constexpr std::string_view smogonId() { return "transform"; }
   };
-
-  static void onHit(Simulation& Simulation);
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
