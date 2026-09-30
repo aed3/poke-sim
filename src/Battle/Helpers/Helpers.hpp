@@ -14,7 +14,9 @@ class Pokedex;
 
 namespace internal {
 types::teamPositionIndex slotToIndex(Slot slot);
-}
+types::teamPositionIndex entityToIndex(
+  const types::registry& registry, types::entity sideEntity, types::entity slotEntity);
+}  // namespace internal
 
 Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position);
 PlayerSideId slotToSideId(Slot slot);

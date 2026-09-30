@@ -7,7 +7,10 @@
 #include <Components/BaseEffectChance.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/FoeSide.hpp>
+#include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
+#include <Components/EntityHolders/Team.hpp>
 #include <Components/EventModifier.hpp>
 #include <Components/Names/TypeNames.hpp>
 #include <Components/RandomEventInputs.hpp>
@@ -15,10 +18,12 @@
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/RandomChance.hpp>
+#include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/GameMechanics.hpp>
@@ -74,6 +79,28 @@ struct AnalyticOnBasePowerCalcDamage {
     }
   }
 };
+
+void imposterOnSwitchIn(types::handle handle, Side side, const Simulation& simulation) {
+  types::registry& registry = *handle.registry();
+  FoeSide foeSide = registry.get<FoeSide>(side.val);
+  const Team& foeTeam = registry.get<Team>(foeSide.val);
+  types::entity transformTarget;
+
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    transformTarget = foeTeam.val.front();
+  }
+  else {
+    types::teamPositionIndex position = pokesim::internal::entityToIndex(registry, side.val, handle.entity());
+    if (position >= foeTeam.val.size()) {
+      return;
+    }
+    transformTarget = foeTeam.val[position];
+  }
+
+  if (registry.all_of<pokesim::tags::ActivePokemon>(transformTarget)) {
+    internal::transformInto(registry, handle.entity(), transformTarget, simulation.pokedex());
+  }
+}
 
 template <typename CurrentActionMovesAsTargetType>
 struct LongReachOnModifyMove {
@@ -134,6 +161,12 @@ void Analytic::onBasePower(Simulation& simulation) {
     simulation,
     numerator,
     denominator);
+}
+
+void Imposter::onSwitchIn(Simulation& simulation) {
+  simulation.view<imposterOnSwitchIn, Tags<Imposter, tags::CurrentActionTarget>>(simulation);
+  internal::runStartAbilityEvent(simulation);
+  simulation.removeFromEntities<internal::tags::StartAbility>();
 }
 
 void LongReach::onModifyMove(Simulation& simulation) {

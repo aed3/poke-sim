@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Components/EVsIVs.hpp>
+#include <Components/Pokedex/BaseStats.hpp>
 #include <Config/Require.hpp>
 #include <Types/Constants.hpp>
 #include <Types/Damage.hpp>
@@ -33,45 +34,7 @@ constexpr types::damage computeBaseDamage(
 }
 
 constexpr types::stat computeStatFromBaseStat(
-  dex::Stat statName, types::baseStat baseStat, types::level level, dex::Nature nature, const Evs& evs = {},
-  const Ivs& ivs = {}) {
-  types::ev ev = Constants::PokemonEv::DEFAULT;
-  types::iv iv = Constants::PokemonIv::DEFAULT;
-
-  switch (statName) {
-    case dex::Stat::HP: {
-      ev = evs.hp;
-      iv = ivs.hp;
-      break;
-    }
-    case dex::Stat::ATK: {
-      ev = evs.atk;
-      iv = ivs.atk;
-      break;
-    }
-    case dex::Stat::DEF: {
-      ev = evs.def;
-      iv = ivs.def;
-      break;
-    }
-    case dex::Stat::SPA: {
-      ev = evs.spa;
-      iv = ivs.spa;
-      break;
-    }
-    case dex::Stat::SPD: {
-      ev = evs.spd;
-      iv = ivs.spd;
-      break;
-    }
-    case dex::Stat::SPE: {
-      ev = evs.spe;
-      iv = ivs.spe;
-      break;
-    }
-    default: POKESIM_REQUIRE_FAIL("Using a stat that does not have EVs and/or IVs.");
-  }
-
+  dex::Stat statName, types::baseStat baseStat, types::level level, dex::Nature nature, types::ev ev, types::iv iv) {
   if (statName == dex::Stat::HP) {
     return (((2U * baseStat) + iv + (ev / 4U) + 100U) * level / 100U) + 10U;
   }
@@ -85,6 +48,55 @@ constexpr types::stat computeStatFromBaseStat(
     stat = (stat * 90U) / 100U;
   }
   return stat;
+}
+
+constexpr types::stat computeStatFromBaseStat(
+  dex::Stat statName, BaseStats baseStats, types::level level, dex::Nature nature, Evs evs = {}, Ivs ivs = {}) {
+  types::baseStat baseStat = Constants::PokemonBaseStat::DEFAULT;
+  types::ev ev = Constants::PokemonEv::DEFAULT;
+  types::iv iv = Constants::PokemonIv::DEFAULT;
+
+  switch (statName) {
+    case dex::Stat::HP: {
+      baseStat = baseStats.hp;
+      ev = evs.hp;
+      iv = ivs.hp;
+      break;
+    }
+    case dex::Stat::ATK: {
+      baseStat = baseStats.atk;
+      ev = evs.atk;
+      iv = ivs.atk;
+      break;
+    }
+    case dex::Stat::DEF: {
+      baseStat = baseStats.def;
+      ev = evs.def;
+      iv = ivs.def;
+      break;
+    }
+    case dex::Stat::SPA: {
+      baseStat = baseStats.spa;
+      ev = evs.spa;
+      iv = ivs.spa;
+      break;
+    }
+    case dex::Stat::SPD: {
+      baseStat = baseStats.spd;
+      ev = evs.spd;
+      iv = ivs.spd;
+      break;
+    }
+    case dex::Stat::SPE: {
+      baseStat = baseStats.spe;
+      ev = evs.spe;
+      iv = ivs.spe;
+      break;
+    }
+    default: POKESIM_REQUIRE_FAIL("Using a stat that does not have EVs and/or IVs.");
+  }
+
+  return computeStatFromBaseStat(statName, baseStat, level, nature, ev, iv);
 }
 }  // namespace pokesim
 // NOLINTEND(readability-magic-numbers)

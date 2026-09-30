@@ -3,16 +3,23 @@
 #include <Components/Boosts.hpp>
 #include <Components/Current.hpp>
 #include <Components/Damage.hpp>
+#include <Components/DisabledMoveSlots.hpp>
+#include <Components/EVsIVs.hpp>
 #include <Components/Effects/ChoiceLock.hpp>
 #include <Components/Effects/Trapper.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/FaintQueue.hpp>
 #include <Components/LastUsedMove.hpp>
+#include <Components/Level.hpp>
 #include <Components/MoveSlots.hpp>
+#include <Components/Names/AbilityNames.hpp>
 #include <Components/Names/ItemNames.hpp>
+#include <Components/Names/NatureNames.hpp>
+#include <Components/Names/SpeciesNames.hpp>
 #include <Components/Names/StatNames.hpp>
 #include <Components/Names/StatusNames.hpp>
+#include <Components/Pokedex/BaseStats.hpp>
 #include <Components/Pokedex/PP.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/Stats.hpp>
@@ -22,12 +29,14 @@
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
+#include <Components/TransformedFrom.hpp>
 #include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/EnumToTag/AbilityEnumToTag.hpp>
 #include <Pokedex/EnumToTag/ItemEnumToTag.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Types/headers.hpp>
+#include <Simulation/Formulas.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
@@ -42,6 +51,17 @@ namespace {
 template <typename ItemTag, typename SelectionTag>
 struct RemoveItem {
   static void run(Simulation& simulation) { simulation.removeFromEntities<ItemTag, SelectionTag>(); }
+};
+
+template <typename Tag>
+struct RemoveIfHas {
+  static bool run(types::handle handle) {
+    if (handle.all_of<Tag>()) {
+      handle.remove<Tag>();
+      return true;
+    }
+    return false;
+  }
 };
 
 template <typename SelectionTag>
@@ -154,7 +174,7 @@ struct SetEffectTargetStatus {
   static void run(Simulation& simulation) { simulation.view<setEffectTargetStatus, Tags<StatusType>>(); }
 
   static void setEffectTargetStatus(types::registry& registry, CurrentEffectTarget target) {
-    setStatus(status, registry, target.val);
+    setStatus(registry, status, target.val);
 
     if constexpr (status == pokesim::dex::Status::PAR) {
       registry.emplace<pokesim::tags::SpeStatUpdateRequired>(target.val);
@@ -172,6 +192,33 @@ bool areTypesTrappedImmune(SpeciesTypes types, const Pokedex& pokedex) {
   return false;
 }
 
+void revertTransform(
+  types::handle handle, SpeciesName& species, MoveSlots& moves, SpeciesTypes& types, stat::Atk& atk, stat::Def& def,
+  stat::Spa& spa, stat::Spd& spd, stat::Spe& spe, Level level, Evs evs, Ivs ivs, const TransformedFrom& transformedFrom,
+  const Pokedex& pokedex) {
+  species.val = transformedFrom.species;
+  moves.val = transformedFrom.moves;
+
+  pokedex.forEachLoadedAbility([&handle](dex::Ability ability) { dex::enumToTag<RemoveIfHas>(ability, handle); });
+  dex::emplaceTagFromEnum(transformedFrom.ability, handle);
+
+  types = pokedex.getSpeciesData<SpeciesTypes>(species.val);
+  BaseStats baseStats = pokedex.getSpeciesData<BaseStats>(species.val);
+  dex::Nature nature = handle.all_of<NatureName>() ? handle.get<NatureName>().val : dex::Nature::NO_NATURE;
+
+  atk.val = computeStatFromBaseStat(dex::Stat::ATK, baseStats.atk, level.val, nature, evs.atk, ivs.atk);
+  def.val = computeStatFromBaseStat(dex::Stat::DEF, baseStats.def, level.val, nature, evs.def, ivs.def);
+  spa.val = computeStatFromBaseStat(dex::Stat::SPA, baseStats.spa, level.val, nature, evs.spa, ivs.spa);
+  spd.val = computeStatFromBaseStat(dex::Stat::SPD, baseStats.spd, level.val, nature, evs.spd, ivs.spd);
+  spe.val = computeStatFromBaseStat(dex::Stat::SPE, baseStats.spe, level.val, nature, evs.spe, ivs.spe);
+
+  handle.emplace<pokesim::tags::AtkStatUpdateRequired>();
+  handle.emplace<pokesim::tags::DefStatUpdateRequired>();
+  handle.emplace<pokesim::tags::SpaStatUpdateRequired>();
+  handle.emplace<pokesim::tags::SpdStatUpdateRequired>();
+  handle.emplace<pokesim::tags::SpeStatUpdateRequired>();
+}
+
 void trapAndSetTrapper(
   types::registry& registry, CurrentEffectSource source, CurrentEffectTarget target, const Pokedex& pokedex) {
   if (areTypesTrappedImmune(registry.get<SpeciesTypes>(target.val), pokedex)) {
@@ -187,7 +234,7 @@ void setSpeedSortNeeded(types::registry& registry, Battle battle) {
 }
 }  // namespace
 
-void setItem(pokesim::dex::Item item, const Pokedex& pokedex, types::registry& registry, types::entity entity) {
+void setItem(types::registry& registry, pokesim::dex::Item item, types::entity entity, const Pokedex& pokedex) {
   registry.emplace<pokesim::tags::HasItem>(entity);
   dex::emplaceTagFromEnum(item, registry, entity);
 
@@ -199,12 +246,12 @@ void setItem(pokesim::dex::Item item, const Pokedex& pokedex, types::registry& r
   }
 }
 
-void setAbility(pokesim::dex::Ability ability, const Pokedex&, types::registry& registry, types::entity entity) {
+void setAbility(types::registry& registry, pokesim::dex::Ability ability, types::entity entity) {
   registry.emplace<pokesim::tags::HasAbility>(entity);
   dex::emplaceTagFromEnum(ability, registry, entity);
 }
 
-void setStatus(pokesim::dex::Status status, types::registry& registry, types::entity entity) {
+void setStatus(types::registry& registry, pokesim::dex::Status status, types::entity entity) {
   registry.emplace<pokesim::tags::HasStatus>(entity);
   dex::emplaceTagFromEnum(status, registry, entity);
 }
@@ -270,12 +317,24 @@ void clearStatus(types::handle pokemonHandle) {
     pokesim::dex::Toxic>();
 }
 
-void clearVolatiles(types::handle pokemonHandle) {
-  pokemonHandle.remove<AtkBoost, DefBoost, SpaBoost, SpdBoost, SpeBoost>();
-  pokemonHandle.remove<LastUsedMove>();
+void clearVolatiles(Simulation& simulation) {
+  simulation.view<revertTransform, Tags<tags::ClearVolatiles>>(simulation.pokedex());
 
+  auto view = simulation.registry.view<tags::ClearVolatiles>();
   // TODO(aed3): Make autogenerated
-  pokemonHandle.remove<ChoiceLock, Trapper, pokesim::tags::Flinch, pokesim::tags::Switching, pokesim::tags::Trapped>();
+  simulation.registry.remove<
+    AtkBoost,
+    DefBoost,
+    SpaBoost,
+    SpdBoost,
+    SpeBoost,
+    LastUsedMove,
+    ChoiceLock,
+    Trapper,
+    TransformedFrom,
+    pokesim::tags::Flinch,
+    pokesim::tags::Switching,
+    pokesim::tags::Trapped>(view.begin(), view.end());
 }
 
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
@@ -352,6 +411,73 @@ void trap(types::handle handle, SpeciesTypes types, const Pokedex& pokedex) {
   }
 
   handle.emplace<pokesim::tags::Trapped>();
+}
+
+void transformInto(types::registry& registry, types::entity source, types::entity target, const Pokedex& pokedex) {
+  types::handle sourceHandle{registry, source};
+  types::handle targetHandle{registry, target};
+  if (targetHandle.all_of<TransformedFrom>()) {
+    return;
+  }
+
+  auto [sourceSpecies, sourceTypes, sourceMoves, sourceAtk, sourceDef, sourceSpa, sourceSpd, sourceSpe] =
+    sourceHandle.get<SpeciesName, SpeciesTypes, MoveSlots, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>();
+  auto [targetSpecies, targetTypes, targetMoves, targetAtk, targetDef, targetSpa, targetSpd, targetSpe] =
+    targetHandle.get<SpeciesName, SpeciesTypes, MoveSlots, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>();
+
+  dex::Ability sourceAbility = dex::Ability::NO_ABILITY;
+  dex::Ability targetAbility = dex::Ability::NO_ABILITY;
+  pokedex.forEachLoadedAbility([&sourceHandle, &targetHandle, &sourceAbility, &targetAbility](dex::Ability ability) {
+    if (dex::enumToTag<RemoveIfHas>(ability, sourceHandle)) {
+      sourceAbility = ability;
+    }
+    if (dex::hasTag(ability, targetHandle)) {
+      targetAbility = ability;
+    }
+  });
+
+  POKESIM_REQUIRE(sourceAbility != dex::Ability::NO_ABILITY, "Every Pokemon should have an ability (for now).");
+  POKESIM_REQUIRE(targetAbility != dex::Ability::NO_ABILITY, "Every Pokemon should have an ability (for now).");
+
+  sourceHandle.emplace<TransformedFrom>(TransformedFrom{sourceSpecies.val, sourceAbility, sourceMoves.val});
+
+  sourceSpecies = targetSpecies;
+  sourceTypes = targetTypes;
+  sourceAtk = targetAtk;
+  sourceDef = targetDef;
+  sourceSpa = targetSpa;
+  sourceSpd = targetSpd;
+  sourceSpe = targetSpe;
+  dex::emplaceTagFromEnum(targetAbility, sourceHandle);
+
+  sourceMoves.val.pop_count(sourceMoves.val.size());
+  for (MoveSlot targetMoveSlot : targetMoves.val) {
+    sourceMoves.val.push_back({
+      targetMoveSlot.move,
+      std::min(targetMoveSlot.maxPp, Constants::MoveMaxPp::COPIED_WITH_TRANSFORM),
+      std::min(targetMoveSlot.maxPp, Constants::MoveMaxPp::COPIED_WITH_TRANSFORM),
+    });
+  }
+
+  if (targetHandle.all_of<AtkBoost>()) sourceHandle.emplace_or_replace<AtkBoost>(targetHandle.get<AtkBoost>());
+  if (targetHandle.all_of<DefBoost>()) sourceHandle.emplace_or_replace<DefBoost>(targetHandle.get<DefBoost>());
+  if (targetHandle.all_of<SpaBoost>()) sourceHandle.emplace_or_replace<SpaBoost>(targetHandle.get<SpaBoost>());
+  if (targetHandle.all_of<SpdBoost>()) sourceHandle.emplace_or_replace<SpdBoost>(targetHandle.get<SpdBoost>());
+  if (targetHandle.all_of<SpeBoost>()) sourceHandle.emplace_or_replace<SpeBoost>(targetHandle.get<SpeBoost>());
+
+  sourceHandle.emplace<pokesim::tags::AtkStatUpdateRequired>();
+  sourceHandle.emplace<pokesim::tags::DefStatUpdateRequired>();
+  sourceHandle.emplace<pokesim::tags::SpaStatUpdateRequired>();
+  sourceHandle.emplace<pokesim::tags::SpdStatUpdateRequired>();
+  sourceHandle.emplace<pokesim::tags::SpeStatUpdateRequired>();
+
+  sourceHandle.remove<ChoiceLock, DisabledMoveSlots, LastUsedMove>();
+
+  // Technically, EndAbility should be called as well for the source's original ability, but since neither Ditto nor Mew
+  // have abilities that need that, I'll let it go for now.
+  if (sourceAbility != targetAbility) {
+    sourceHandle.emplace<pokesim::internal::tags::StartAbility>();
+  }
 }
 
 void updateAllStats(Simulation& simulation) {

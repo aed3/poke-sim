@@ -102,6 +102,7 @@ void runDamagingHitEvent(Simulation& simulation) {
 
 void runHitEvent(Simulation& simulation) {
   pokesim::dex::SpiritShackle::targetSecondaryEffect::onHit(simulation);
+  pokesim::dex::Transform::targetPrimaryEffect::onHit(simulation);
 }
 
 void runAfterHitEvent(Simulation& simulation) {
@@ -217,9 +218,13 @@ void runEndItemEvent(Simulation& simulation) {
   pokesim::dex::ChoiceSpecs::onEnd(simulation);
 }
 
+void runStartAbilityEvent(Simulation&) {}
 void runEndAbilityEvent(Simulation&) {}
 void runBeforeSwitchOutEvent(Simulation&) {}
-void runSwitchInEvent(Simulation&) {}
+
+void runSwitchInEvent(Simulation& simulation) {
+  pokesim::dex::Imposter::onSwitchIn(simulation);
+}
 
 void runSwitchOutEvent(Simulation& simulation) {
   pokesim::dex::Trapper::onSwitchOut(simulation);

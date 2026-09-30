@@ -2,6 +2,7 @@
 
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/MoveSlots.hpp>
@@ -38,6 +39,22 @@ types::teamPositionIndex slotToIndex(Slot slot) {
   checkSlot(slot);
   return (types::teamPositionIndex)slot & internal::SLOT_LETTER_MASK;
 }
+
+types::teamPositionIndex entityToIndex(
+  const types::registry& registry, types::entity sideEntity, types::entity slotEntity) {
+  POKESIM_REQUIRE(
+    registry.get<Side>(slotEntity).val == sideEntity,
+    "Slot entity must be part of the side entity's team");
+  const Team& team = registry.get<Team>(sideEntity);
+  for (types::teamPositionIndex index = 0U; index < team.val.size(); index++) {
+    if (team.val[index] == slotEntity) {
+      return index;
+    }
+  }
+
+  POKESIM_REQUIRE_FAIL("Slot entity must be part of the side entity's team");
+  return Constants::TeamSize::MAX;
+}
 }  // namespace internal
 
 Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position) {
@@ -52,7 +69,8 @@ PlayerSideId slotToSideId(Slot slot) {
 }
 
 PlayerSideId sideIdToFoeSideId(PlayerSideId sideId) {
-  return sideId == PlayerSideId::P1 ? PlayerSideId::P2 : PlayerSideId::P1;
+  static constexpr types::sides<PlayerSideId> SIDES(PlayerSideId::P1, PlayerSideId::P2);
+  return SIDES.foe(SIDES.at(sideId));
 }
 
 types::entity slotToSideEntity(const Sides& sides, Slot slot) {

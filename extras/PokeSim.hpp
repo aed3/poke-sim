@@ -179,6 +179,7 @@
  * src/Components/Tags/TypeTags.hpp
  * src/Components/Tags/VolatileTags.hpp
  * src/Components/TeamRemaining.hpp
+ * src/Components/TransformedFrom.hpp
  * src/Components/Turn.hpp
  * src/Components/Winner.hpp
  * src/Pokedex/Effects/Burn.hpp
@@ -16424,6 +16425,8 @@ struct Constants {
     static constexpr std::uint8_t MAX = 64U;
     static constexpr std::uint8_t MIN = 1U;
     static constexpr std::uint8_t DEFAULT = 1U;
+
+    static constexpr std::uint8_t COPIED_WITH_TRANSFORM = 5U;
   };
 
   struct MovePp {
@@ -18238,6 +18241,7 @@ struct sides : public std::array<T, Constants::SIDE_COUNT> {
   }
 
   sides() : std::array<T, Constants::SIDE_COUNT>() {}
+  constexpr sides(const T& side1, const T& side2) : std::array<T, Constants::SIDE_COUNT>({side1, side2}) {}
   sides(std::initializer_list<T> list) : sides() {
     sideIndex side = 0U;
     for (const T& value : list) {
@@ -18899,7 +18903,9 @@ class Pokedex;
 
 namespace internal {
 types::teamPositionIndex slotToIndex(Slot slot);
-}
+types::teamPositionIndex entityToIndex(
+  const types::registry& registry, types::entity sideEntity, types::entity slotEntity);
+}  // namespace internal
 
 Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position);
 PlayerSideId slotToSideId(Slot slot);
@@ -20840,6 +20846,7 @@ struct AddedRecycledActionMove2 {};
 //////////////// START OF src/Components/Tags/RunEventTags.hpp /////////////////
 
 namespace pokesim::internal::tags {
+struct StartAbility {};
 struct EndItem {};
 struct ResetTrappedPokemon {};
 }  // namespace pokesim::internal::tags
@@ -20853,6 +20860,7 @@ struct ActiveAtTurnEnd {};
 struct ApplySideDamageRollOptions {};
 struct BuildActionMove {};
 struct BuildPokedexMove {};
+struct ClearVolatiles {};
 struct CloneFromDamageRolls {};
 struct TryTrap {};
 }  // namespace pokesim::internal::tags
@@ -20951,6 +20959,22 @@ struct TeamRemaining {
 }  // namespace pokesim
 
 /////////////////// END OF src/Components/TeamRemaining.hpp ////////////////////
+
+///////////////// START OF src/Components/TransformedFrom.hpp //////////////////
+
+namespace pokesim {
+struct TransformedFrom {
+  dex::Species species = dex::Species::NO_SPECIES;
+  dex::Ability ability = dex::Ability::NO_ABILITY;
+  types::moveSlots<MoveSlot> moves{};
+
+  constexpr bool operator==(const TransformedFrom& other) const {
+    return other.species == species && other.ability == ability && other.moves == moves;
+  }
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/TransformedFrom.hpp ///////////////////
 
 /////////////////////// START OF src/Components/Turn.hpp ///////////////////////
 
@@ -21819,6 +21843,7 @@ struct MidTurnSideDecision;
 struct SpeedTieIndexes;
 struct SpeciesTypes;
 struct TeamRemaining;
+struct TransformedFrom;
 struct Turn;
 struct Winner;
 namespace analyze_effect {
@@ -22298,6 +22323,9 @@ void check(const stat::EffectiveSpe&);
 
 template <>
 void check(const TeamRemaining&);
+
+template <>
+void check(const TransformedFrom&);
 
 template <>
 void check(const Turn&);
@@ -22795,9 +22823,9 @@ struct CurrentHp;
 }  // namespace stat
 
 namespace internal {
-void setItem(pokesim::dex::Item item, const Pokedex& pokedex, types::registry& registry, types::entity entity);
-void setAbility(pokesim::dex::Ability ability, const Pokedex& pokedex, types::registry& registry, types::entity entity);
-void setStatus(pokesim::dex::Status status, types::registry& registry, types::entity entity);
+void setItem(types::registry& registry, pokesim::dex::Item item, types::entity entity, const Pokedex& pokedex);
+void setAbility(types::registry& registry, pokesim::dex::Ability ability, types::entity entity);
+void setStatus(types::registry& registry, pokesim::dex::Status status, types::entity entity);
 
 void checkIfCanUseItem(Simulation& simulation);
 void useItem(Simulation& simulation);
@@ -22811,7 +22839,7 @@ void setStatus(Simulation& simulation);
 void trySetStatus(Simulation& simulation);
 void clearStatus(types::handle pokemonHandle);
 
-void clearVolatiles(types::handle pokemonHandle);
+void clearVolatiles(Simulation& simulation);
 
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
 void setLastMoveUsed(types::registry& registry, CurrentAction& source, CurrentActionMoveSlot move);
@@ -22824,6 +22852,8 @@ void tryBoost(Simulation& simulation);
 
 void tryTrap(Simulation& simulation);
 void trap(types::handle handle, SpeciesTypes types, const Pokedex& pokedex);
+
+void transformInto(types::registry& registry, types::entity source, types::entity target, const Pokedex& pokedex);
 
 void updateAllStats(Simulation& simulation);
 void updateAtk(Simulation& simulation, bool ignoreBoosts);
@@ -22906,7 +22936,7 @@ struct PokemonStateSetup : StateSetupBase {
   void setTypes(SpeciesTypes types);
   void setLevel(types::level level);
   void setGender(pokesim::dex::Gender gender);
-  void setAbility(pokesim::dex::Ability ability, const Pokedex& pokedex);
+  void setAbility(pokesim::dex::Ability ability);
   void setItem(pokesim::dex::Item item, const Pokedex& pokedex);
   void setMoves(const std::vector<MoveSlot>& moveSlots);
 
@@ -24279,45 +24309,7 @@ constexpr types::damage computeBaseDamage(
 }
 
 constexpr types::stat computeStatFromBaseStat(
-  dex::Stat statName, types::baseStat baseStat, types::level level, dex::Nature nature, const Evs& evs = {},
-  const Ivs& ivs = {}) {
-  types::ev ev = Constants::PokemonEv::DEFAULT;
-  types::iv iv = Constants::PokemonIv::DEFAULT;
-
-  switch (statName) {
-    case dex::Stat::HP: {
-      ev = evs.hp;
-      iv = ivs.hp;
-      break;
-    }
-    case dex::Stat::ATK: {
-      ev = evs.atk;
-      iv = ivs.atk;
-      break;
-    }
-    case dex::Stat::DEF: {
-      ev = evs.def;
-      iv = ivs.def;
-      break;
-    }
-    case dex::Stat::SPA: {
-      ev = evs.spa;
-      iv = ivs.spa;
-      break;
-    }
-    case dex::Stat::SPD: {
-      ev = evs.spd;
-      iv = ivs.spd;
-      break;
-    }
-    case dex::Stat::SPE: {
-      ev = evs.spe;
-      iv = ivs.spe;
-      break;
-    }
-    default: POKESIM_REQUIRE_FAIL("Using a stat that does not have EVs and/or IVs.");
-  }
-
+  dex::Stat statName, types::baseStat baseStat, types::level level, dex::Nature nature, types::ev ev, types::iv iv) {
   if (statName == dex::Stat::HP) {
     return (((2U * baseStat) + iv + (ev / 4U) + 100U) * level / 100U) + 10U;
   }
@@ -24331,6 +24323,55 @@ constexpr types::stat computeStatFromBaseStat(
     stat = (stat * 90U) / 100U;
   }
   return stat;
+}
+
+constexpr types::stat computeStatFromBaseStat(
+  dex::Stat statName, BaseStats baseStats, types::level level, dex::Nature nature, Evs evs = {}, Ivs ivs = {}) {
+  types::baseStat baseStat = Constants::PokemonBaseStat::DEFAULT;
+  types::ev ev = Constants::PokemonEv::DEFAULT;
+  types::iv iv = Constants::PokemonIv::DEFAULT;
+
+  switch (statName) {
+    case dex::Stat::HP: {
+      baseStat = baseStats.hp;
+      ev = evs.hp;
+      iv = ivs.hp;
+      break;
+    }
+    case dex::Stat::ATK: {
+      baseStat = baseStats.atk;
+      ev = evs.atk;
+      iv = ivs.atk;
+      break;
+    }
+    case dex::Stat::DEF: {
+      baseStat = baseStats.def;
+      ev = evs.def;
+      iv = ivs.def;
+      break;
+    }
+    case dex::Stat::SPA: {
+      baseStat = baseStats.spa;
+      ev = evs.spa;
+      iv = ivs.spa;
+      break;
+    }
+    case dex::Stat::SPD: {
+      baseStat = baseStats.spd;
+      ev = evs.spd;
+      iv = ivs.spd;
+      break;
+    }
+    case dex::Stat::SPE: {
+      baseStat = baseStats.spe;
+      ev = evs.spe;
+      iv = ivs.spe;
+      break;
+    }
+    default: POKESIM_REQUIRE_FAIL("Using a stat that does not have EVs and/or IVs.");
+  }
+
+  return computeStatFromBaseStat(statName, baseStat, level, nature, ev, iv);
 }
 }  // namespace pokesim
 // NOLINTEND(readability-magic-numbers)
@@ -26975,18 +27016,20 @@ struct Transform {
 
   static constexpr types::pp basePp(GameMechanics) { return 10U; }
 
+  struct targetPrimaryEffect {
+    static void onHit(Simulation& simulation);
+  };
+
   static constexpr MoveProperty properties(GameMechanics) {
     return MoveProperty::NO_ENCORE | MoveProperty::NO_ASSIST | MoveProperty::NO_COPYCAT | MoveProperty::NO_MIMIC |
            MoveProperty::NO_INSTRUCT | MoveProperty::NO_MIRROR_MOVE | MoveProperty::NO_METRONOME;
   }
-  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Transform"; }
     static constexpr std::string_view smogonId() { return "transform"; }
   };
-
-  static void onHit(Simulation& Simulation);
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
@@ -27141,6 +27184,7 @@ void runTryTakeItemEvent(Simulation& simulation);  // TakeItem
 void runAfterUseItemEvent(Simulation& simulation);
 void runEndItemEvent(Simulation& simulation);
 
+void runStartAbilityEvent(Simulation& simulation);
 void runEndAbilityEvent(Simulation& simulation);
 
 void runBeforeSwitchOutEvent(Simulation& simulation);  // Pursuit and Dynamax, only for UnFaintedActiveSwitch

@@ -836,6 +836,7 @@ void check(const MoveSlot& moveSlot) {
   check(MoveName{moveSlot.move});
   check(Pp{moveSlot.pp});
   checkBounds<Constants::MoveMaxPp>(moveSlot.maxPp);
+  POKESIM_REQUIRE_NM(moveSlot.pp <= moveSlot.maxPp);
 }
 
 template <>
@@ -1359,6 +1360,13 @@ void check(const TeamRemaining& teamMembersAvailable) {
 }
 
 template <>
+void check(const TransformedFrom& transformFrom) {
+  check(SpeciesName{transformFrom.species});
+  check(AbilityName{transformFrom.ability});
+  check(MoveSlots{transformFrom.moves});
+}
+
+template <>
 void check(const Turn& turn) {
   checkBounds<Constants::TurnCount>(turn.val);
 }
@@ -1401,9 +1409,7 @@ void check(const types::slotDecision& slotDecision) {
   if (teraDecision) check(MoveName{teraDecision->move});
   if (itemDecision) check(ItemName{itemDecision->item});
 
-  if (switchDecision) {
-    check(*switchDecision);
-  }
+  if (switchDecision) check(*switchDecision);
 }
 
 template <>

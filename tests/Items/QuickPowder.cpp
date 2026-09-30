@@ -20,4 +20,23 @@ TEST_CASE("Quick Powder: Only increases Ditto's speed", "[Simulation][SimulateTu
   REQUIRE(p1EffectiveSpe.val == p1Spe.val * speedMultiplier);
   REQUIRE(p2EffectiveSpe.val == p2Spe.val);
 }
+
+TEST_CASE(
+  "Quick Powder: Do not increases Ditto's speed after transform",
+  "[Simulation][SimulateTurn][SingleBattle][Item][QuickPowder][Transform]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(
+      test.pokemon(dex::Species::DITTO, dex::Ability::CLEAR_BODY, dex::Item::QUICK_POWDER, dex::Move::TRANSFORM)),
+    test.side(test.pokemon(dex::Species::EMPOLEON, dex::Move::SPLASH)),
+    test.turnDecision(dex::Move::TRANSFORM, dex::Move::SPLASH));
+
+  auto entities = test.simulateOneNonBranchingBattle();
+  test.checks.checkUsedMovePokemon(entities.p2A);
+
+  auto [p1EffectiveSpe, p1Spe] = test.registry().get<stat::EffectiveSpe, stat::Spe>(entities.p1A);
+
+  REQUIRE(p1EffectiveSpe.val == p1Spe.val);
+}
 }  // namespace pokesim

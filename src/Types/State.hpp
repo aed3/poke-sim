@@ -44,6 +44,7 @@ struct sides : public std::array<T, Constants::SIDE_COUNT> {
   }
 
   sides() : std::array<T, Constants::SIDE_COUNT>() {}
+  constexpr sides(const T& side1, const T& side2) : std::array<T, Constants::SIDE_COUNT>({side1, side2}) {}
   sides(std::initializer_list<T> list) : sides() {
     sideIndex side = 0U;
     for (const T& value : list) {

@@ -144,16 +144,29 @@ struct TestSimulation {
   Simulation simulation;
   std::vector<BattleCreationInfo> battleInfoList;
   TestChecks checks;
+  bool resetChecksBetweenDecisions = true;
 
   struct BattleEntities {
     types::entity battle;
+
     types::entity p1Side;
     types::entity p2Side;
+
     types::entity p1A;
     types::entity p1B;
+    types::entity p1C;
+    types::entity p1D;
+    types::entity p1E;
+    types::entity p1F;
+
     types::entity p2A;
     types::entity p2B;
+    types::entity p2C;
+    types::entity p2D;
+    types::entity p2E;
+    types::entity p2F;
   };
+  struct SkipDecision {};
 
   TestSimulation(GameMechanics mechanics, BattleFormat battleFormat)
       : pokedex(mechanics), simulation(pokedex, battleFormat), checks(simulation) {
@@ -316,14 +329,25 @@ struct TestSimulation {
     entities.p2Side = sides.p2();
     const Team& p1Team = registry().get<Team>(sides.p1());
     const Team& p2Team = registry().get<Team>(sides.p2());
-    entities.p1A = p1Team.val[0];
-    entities.p2A = p2Team.val[0];
 
-    if (p1Team.val.size() >= 2U) {
-      entities.p1B = p1Team.val[1];
+    switch (p1Team.val.size()) {
+      case 6U: entities.p1F = p1Team.val[5];
+      case 5U: entities.p1E = p1Team.val[4];
+      case 4U: entities.p1D = p1Team.val[3];
+      case 3U: entities.p1C = p1Team.val[2];
+      case 2U: entities.p1B = p1Team.val[1];
+      case 1U: entities.p1A = p1Team.val[0]; break;
+      default: FAIL();
     }
-    if (p2Team.val.size() >= 2U) {
-      entities.p2B = p2Team.val[1];
+
+    switch (p2Team.val.size()) {
+      case 6U: entities.p2F = p2Team.val[5];
+      case 5U: entities.p2E = p2Team.val[4];
+      case 4U: entities.p2D = p2Team.val[3];
+      case 3U: entities.p2C = p2Team.val[2];
+      case 2U: entities.p2B = p2Team.val[1];
+      case 1U: entities.p2A = p2Team.val[0]; break;
+      default: FAIL();
     }
 
     return entities;
@@ -338,8 +362,13 @@ struct TestSimulation {
 
   template <typename... BattleTypesToIgnore, typename... SideTypesToIgnore>
   simulate_turn::Results simulateTurn(Tags<BattleTypesToIgnore...> = {}, Tags<SideTypesToIgnore...> = {}) {
-    if (!simulationInitialized) initializeSimulation();
-    checks.reset();
+    if (!simulationInitialized) {
+      initializeSimulation();
+      checks.reset();
+    }
+    else if (resetChecksBetweenDecisions) {
+      checks.reset();
+    }
 
     simulate_turn::Results results = simulation.simulateTurn();
 
@@ -416,14 +445,29 @@ struct TestSimulation {
 
   template <typename... DecisionTypes>
   TurnDecisionInfo doubleBattleTurnDecision(DecisionTypes... values) {
-    types::slotDecision p1A = slotDecision(std::get<0U>(std::tie(values...)), Slot::P1A);
-    types::slotDecision p1B = slotDecision(std::get<1U>(std::tie(values...)), Slot::P1B);
-    types::slotDecision p2A = slotDecision(std::get<2U>(std::tie(values...)), Slot::P2A);
-    types::slotDecision p2B = slotDecision(std::get<3U>(std::tie(values...)), Slot::P2B);
+    types::slotDecisions p1Decisions, p2Decisions;
+
+    auto p1A = std::get<0U>(std::tie(values...));
+    auto p1B = std::get<1U>(std::tie(values...));
+    auto p2A = std::get<2U>(std::tie(values...));
+    auto p2B = std::get<3U>(std::tie(values...));
+
+    if constexpr (!std::is_same_v<decltype(p1A), SkipDecision>) {
+      p1Decisions.push_back(slotDecision(p1A, Slot::P1A));
+    }
+    if constexpr (!std::is_same_v<decltype(p1B), SkipDecision>) {
+      p1Decisions.push_back(slotDecision(p1B, Slot::P1B));
+    }
+    if constexpr (!std::is_same_v<decltype(p2A), SkipDecision>) {
+      p2Decisions.push_back(slotDecision(p2A, Slot::P2A));
+    }
+    if constexpr (!std::is_same_v<decltype(p2B), SkipDecision>) {
+      p2Decisions.push_back(slotDecision(p2B, Slot::P2B));
+    }
 
     TurnDecisionInfo turnDecision = {
-      {PlayerSideId::P1, types::slotDecisions{p1A, p1B}},
-      {PlayerSideId::P2, types::slotDecisions{p2A, p2B}},
+      {PlayerSideId::P1, p1Decisions},
+      {PlayerSideId::P2, p2Decisions},
     };
     return turnDecision;
   }
@@ -561,7 +605,7 @@ struct TestSimulation {
       info.moves.push_back(MoveCreationInfo{value});
     }
     else if constexpr (std::is_same_v<stat::CurrentHp, Type>) {
-      info.currentHp = value;
+      info.currentHp = value.val;
     }
     else if constexpr (std::is_same_v<SpeciesTypes, Type>) {
       info.currentTypes = value;
@@ -571,6 +615,21 @@ struct TestSimulation {
     }
     else if constexpr (std::is_same_v<CurrentBoostsInfo, Type>) {
       info.currentBoosts = value;
+    }
+    else if constexpr (std::is_same_v<AtkBoost, Type>) {
+      info.currentBoosts.atk = value.val;
+    }
+    else if constexpr (std::is_same_v<DefBoost, Type>) {
+      info.currentBoosts.def = value.val;
+    }
+    else if constexpr (std::is_same_v<SpaBoost, Type>) {
+      info.currentBoosts.spa = value.val;
+    }
+    else if constexpr (std::is_same_v<SpdBoost, Type>) {
+      info.currentBoosts.spd = value.val;
+    }
+    else if constexpr (std::is_same_v<SpeBoost, Type>) {
+      info.currentBoosts.spe = value.val;
     }
   }
 };
