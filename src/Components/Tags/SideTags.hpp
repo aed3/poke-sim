@@ -1,7 +1,6 @@
 #pragma once
 
 namespace pokesim::tags {
-struct Battle {};
-
-struct BattleMidTurn {};
+struct Side {};
+struct SideFaintOnThisTurn {};
 }  // namespace pokesim::tags

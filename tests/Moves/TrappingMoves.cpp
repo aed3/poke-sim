@@ -37,8 +37,7 @@ void checkSwitchOptions(
 }
 }  // namespace
 
-TEST_CASE(
-  "Trapped: prevent from switching out", "[Simulation][SimulateTurn][SingleBattle][Effect][Volatile][Trapped]") {
+TEST_CASE("Trapped: prevent from switching out", "[Simulation][SimulateTurn][Effect][Volatile][Trapped]") {
   BattleFormat battleFormat = GENERATE(BattleFormat::SINGLES, BattleFormat::DOUBLES);
   CAPTURE(battleFormat);
 
@@ -78,7 +77,7 @@ TEST_CASE(
 
 TEST_CASE(
   "Trapped: do not prevent Pokemon immune to trapping from switching out",
-  "[Simulation][SimulateTurn][SingleBattle][Effect][Volatile][Trapped]") {
+  "[Simulation][SimulateTurn][Effect][Volatile][Trapped]") {
   BattleFormat battleFormat = GENERATE(BattleFormat::SINGLES, BattleFormat::DOUBLES);
   CAPTURE(battleFormat);
 
@@ -120,7 +119,7 @@ TEST_CASE(
 
 TEST_CASE(
   "Trapped: free all trapped Pokemon if the user is no longer active",
-  "[Simulation][SimulateTurn][SingleBattle][Effect][Volatile][Trapped]") {
+  "[Simulation][SimulateTurn][Effect][Volatile][Trapped]") {
   BattleFormat battleFormat = GENERATE(BattleFormat::SINGLES, BattleFormat::DOUBLES);
   CAPTURE(battleFormat);
 

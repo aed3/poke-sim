@@ -5,7 +5,7 @@
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/PlayerSide.hpp>
 #include <Components/SideDecisions.hpp>
-#include <Components/Tags/BattleTags.hpp>
+#include <Components/Tags/SideTags.hpp>
 #include <Components/TeamRemaining.hpp>
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>

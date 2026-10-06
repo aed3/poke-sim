@@ -39,7 +39,7 @@ void checkCorrectTransform(
     }}));
 
   REQUIRE(transformer.get<SpeciesName>().val == transformTarget.get<SpeciesName>().val);
-  REQUIRE(transformer.get<SpeciesTypes>().val == transformTarget.get<SpeciesTypes>().val);
+  REQUIRE(transformer.get<SpeciesTypes>() == transformTarget.get<SpeciesTypes>());
   REQUIRE(transformer.all_of<NewAbility>());
   REQUIRE_FALSE(transformer.all_of<dex::Imposter>());
 

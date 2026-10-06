@@ -46,7 +46,7 @@ class Pokedex {
   struct ConstantValues {
     ConstantValues(GameMechanics gameMechanic) : gameMechanicValue(gameMechanic), typeChartValue(gameMechanic) {}
     constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
-      return gameMechanicValue == checkedMechanics;
+      return checkedMechanics == gameMechanicValue;
     }
     constexpr const TypeChart& typeChart() const { return typeChartValue; }
 

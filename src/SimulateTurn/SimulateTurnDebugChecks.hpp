@@ -5,6 +5,7 @@
 #ifdef POKESIM_DEBUG_CHECK_UTILITIES
 
 #include <Battle/Helpers/Helpers.hpp>
+#include <Components/ActionQueue.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/RecycledEntities.hpp>
 #include <Components/EntityHolders/Sides.hpp>
@@ -16,6 +17,7 @@
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/RecycledEntities.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Components/Turn.hpp>
 #include <Components/Winner.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Registry.hpp>
@@ -94,6 +96,26 @@ struct Checks : pokesim::debug::Checks {
     }
   }
 
+  template <typename EntityHolder, typename Tag>
+  void checkAction(types::registry& blankRegistry, types::entity currentEntity) const {
+    types::entity idealAction = blankRegistry.create();
+    EntityHolder currentAction = registry->get<EntityHolder>(currentEntity);
+
+    blankRegistry.emplace<Tag>(idealAction);
+    pokesim::debug::hasSameComponents(*registry, currentAction.val, blankRegistry, idealAction);
+  }
+
+  void checkActions(types::entity currentEntity) const {
+    types::registry blankRegistry;
+
+    checkAction<RecycledAction, pokesim::tags::RecycledAction>(blankRegistry, currentEntity);
+    checkAction<RecycledActionMove, pokesim::tags::RecycledActionMove>(blankRegistry, currentEntity);
+    if (simulation->isBattleFormat(BattleFormat::DOUBLES)) {
+      checkAction<AddedRecycledActionMove1, pokesim::tags::AddedRecycledActionMove1>(blankRegistry, currentEntity);
+      checkAction<AddedRecycledActionMove2, pokesim::tags::AddedRecycledActionMove2>(blankRegistry, currentEntity);
+    }
+  }
+
   void checkBattleOutputs() const {
     pokesim::debug::TypesToIgnore typesToIgnore, typesIgnoredOnConstants;
     typesToIgnore.add<
@@ -116,6 +138,8 @@ struct Checks : pokesim::debug::Checks {
       bool shouldNotChange = !simulateTurnOptionsOnInput.getApplyChangesToInputBattle() && original == currentEntity;
       bool initialIsMidTurn = registryOnInput.all_of<pokesim::tags::BattleMidTurn>(initialEntity);
       bool currentIsMidTurn = registry->all_of<pokesim::tags::BattleMidTurn>(currentEntity);
+      bool currentHasWinner = registry->all_of<Winner>(currentEntity);
+
       if (!registryOnInput.all_of<Winner>(original)) {
         perEntityTypesToIgnore.add<Winner>();
       }
@@ -127,6 +151,8 @@ struct Checks : pokesim::debug::Checks {
         perEntityTypesToIgnore.add<Turn>();
       }
 
+      checkActions(currentEntity);
+
       pokesim::debug::areEntitiesEqual(
         *registry,
         currentEntity,
@@ -134,16 +160,16 @@ struct Checks : pokesim::debug::Checks {
         initialEntity,
         shouldNotChange ? typesIgnoredOnConstants : perEntityTypesToIgnore);
 
-      types::entity currAction = registry->get<RecycledAction>(currentEntity).val;
-      if (!initialIsMidTurn && !currentIsMidTurn) {
-        pokesim::debug::areEntitiesEqual(*registry, currAction, registryOnInput, getInitialEntity(currAction));
+      if (currentHasWinner) {
+        POKESIM_REQUIRE_NM(!currentIsMidTurn);
+        POKESIM_REQUIRE_NM(registry->get<Turn>(currentEntity).val == registryOnInput.get<Turn>(initialEntity).val);
+      }
+      if (currentIsMidTurn) {
+        POKESIM_REQUIRE_NM(!currentHasWinner);
       }
 
-      if (!currentIsMidTurn) {
-        types::registry blankRegistry;
-        types::entity idealRecycledAction = blankRegistry.create();
-        blankRegistry.emplace<pokesim::tags::RecycledAction>(idealRecycledAction);
-        pokesim::debug::hasSameComponents(*registry, currAction, blankRegistry, idealRecycledAction);
+      if (currentHasWinner || !currentIsMidTurn) {
+        POKESIM_REQUIRE_NM(registry->get<ActionQueue>(currentEntity).val.empty());
       }
     }
   }

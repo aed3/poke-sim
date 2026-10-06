@@ -85,6 +85,7 @@
 #include "Tags/RecycledEntities.hpp"
 #include "Tags/RunEventTags.hpp"
 #include "Tags/Selection.hpp"
+#include "Tags/SideTags.hpp"
 #include "Tags/SimulationTags.hpp"
 #include "Tags/TargetTags.hpp"
 #include "Tags/TypeTags.hpp"

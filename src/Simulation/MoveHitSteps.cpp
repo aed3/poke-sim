@@ -126,7 +126,7 @@ void replaceFinishedHitsInMoveLists(Simulation& simulation) {
 
 template <auto Function>
 void runMoveHitCheck(Simulation& simulation) {
-  if (simulation.registry.view<tags::CurrentActionMove>().empty()) {
+  if (simulation.hasNone<tags::CurrentActionMove>()) {
     return;
   }
 
@@ -342,7 +342,7 @@ void moveHitLoop(Simulation& simulation) {
 
   using MoveHitLimits = Constants::MoveHits;
   types::moveHits iterations = MoveHitLimits::MIN;
-  while (!simulation.registry.view<HitCount>().empty()) {
+  while (!simulation.hasNone<HitCount>()) {
     POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran than possible.");
     if (iterations > MoveHitLimits::MIN) {
       simulation.view<removeHitCountFromFaintedTargets, Tags<tags::CurrentMoveHit>>();

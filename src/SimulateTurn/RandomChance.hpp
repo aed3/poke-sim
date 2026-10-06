@@ -68,7 +68,7 @@ void runRandomEventChances(
   types::optionalCallback updateProbabilities = std::nullopt) {
   simulation.view<internal::setRandomEventChances<POSSIBLE_EVENT_COUNT>, Tags<SelectionTags...>>(simulation, chances);
 
-  if (!simulation.registry.view<internal::RandomEventChances<POSSIBLE_EVENT_COUNT>>().empty()) {
+  if (!simulation.hasNone<internal::RandomEventChances<POSSIBLE_EVENT_COUNT>>()) {
     internal::randomEventChances<POSSIBLE_EVENT_COUNT>(simulation, applyChoices, updateProbabilities);
   }
 }

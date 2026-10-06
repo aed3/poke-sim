@@ -31,15 +31,96 @@ constexpr std::array<DamageRollKind, 4U> fixedBranchDamageRollOptions = {
   AVERAGE_CRIT_DAMAGE,
   MIN_AND_MAX_DAMAGE,
 };
+struct VariableOptions {
+ private:
+  template <typename T>
+  std::string optionalToString(std::optional<T> value) const {
+    if (value.has_value()) {
+      return std::to_string(value.value());
+    }
+    return "nullopt";
+  }
 
-auto runAndCheckSimulation(TestSimulation& test, std::size_t idealTurnOutcomeCount, std::size_t totalPossibilities) {
+ public:
+  bool applyChangesToInputBattle = false;
+  std::optional<types::entityIndex> numberOfSamples;
+  std::optional<types::probability> branchProbabilityLowerLimit;
+  std::optional<types::percentChance> randomChanceLowerLimit;
+  std::optional<types::percentChance> randomChanceUpperLimit;
+  DamageRollOptions damageRollOptions;
+
+  std::string values() const {
+    std::string captured;
+    captured += std::string("applyChangesToInputBattle := ") + (applyChangesToInputBattle ? "true" : "false") + "\n";
+    captured += "numberOfSamples := " + optionalToString(numberOfSamples) + "\n";
+    captured += "branchProbabilityLowerLimit := " + optionalToString(branchProbabilityLowerLimit) + "\n";
+    captured += "randomChanceLowerLimit := " + optionalToString(randomChanceLowerLimit) + "\n";
+    captured += "randomChanceUpperLimit := " + optionalToString(randomChanceUpperLimit) + "\n";
+    captured +=
+      "P1 DamageRollOptions := " + Catch::StringMaker<DamageRollKind>::convert(damageRollOptions.getP1()) + "\n";
+    captured += "P2 DamageRollOptions := " + Catch::StringMaker<DamageRollKind>::convert(damageRollOptions.getP2());
+
+    return captured;
+  }
+};
+
+auto setOptions(TestSimulation& test) {
+  VariableOptions variableOptions;
+
+  variableOptions.numberOfSamples = GENERATE(std::optional<types::entityIndex>{std::nullopt}, 1U, 5U);
+
+  variableOptions.applyChangesToInputBattle = GENERATE(true, false);
+  variableOptions.branchProbabilityLowerLimit = GENERATE(std::optional<types::probability>{std::nullopt}, 0.0F, 0.5F);
+  variableOptions.randomChanceLowerLimit = GENERATE(
+    std::optional<types::percentChance>{std::nullopt},
+    (types::percentChance)0U,
+    (types::percentChance)10U,
+    (types::percentChance)50U);
+  variableOptions.randomChanceUpperLimit = GENERATE(
+    std::optional<types::percentChance>{std::nullopt},
+    (types::percentChance)100U,
+    (types::percentChance)90U,
+    (types::percentChance)50U);
+
+  if (variableOptions.numberOfSamples.has_value()) {
+    variableOptions.damageRollOptions.setP1(GENERATE(from_range(fixedBranchDamageRollOptions)));
+    variableOptions.damageRollOptions.setP2(GENERATE(from_range(fixedBranchDamageRollOptions)));
+  }
+  else {
+    variableOptions.damageRollOptions.setP1(GENERATE(from_range(branchingDamageRollOptions)));
+    variableOptions.damageRollOptions.setP2(GENERATE(from_range(branchingDamageRollOptions)));
+  }
+
+  auto& options = test.simulateTurnOptions();
+  options.setApplyChangesToInputBattle(variableOptions.applyChangesToInputBattle);
+  if (variableOptions.branchProbabilityLowerLimit.has_value()) {
+    options.setBranchProbabilityLowerLimit(variableOptions.branchProbabilityLowerLimit.value());
+  }
+  if (variableOptions.randomChanceUpperLimit.has_value()) {
+    options.setRandomChanceUpperLimit(variableOptions.randomChanceUpperLimit.value());
+  }
+  if (variableOptions.randomChanceLowerLimit.has_value()) {
+    options.setRandomChanceLowerLimit(variableOptions.randomChanceLowerLimit.value());
+  }
+  options.setMakeBranchesOnRandomEvents(!variableOptions.numberOfSamples.has_value());
+  options.setDamageRollsConsidered(variableOptions.damageRollOptions);
+
+  return variableOptions;
+}
+
+template <typename... BattleTypesToIgnore, typename... SideTypesToIgnore>
+auto runAndCheckSimulation(
+  TestSimulation& test, std::size_t idealTurnOutcomeCount, std::size_t totalPossibilities,
+  Tags<BattleTypesToIgnore...> = {}, Tags<SideTypesToIgnore...> = {}) {
   test.initializeSimulation();
 
   types::registry& registry = test.registry();
   auto& options = test.simulateTurnOptions();
   auto originalBattles = test.simulation.battleEntities();
 
-  auto results = test.simulateTurn(Tags<Probability, RngSeed>{}, Tags<TeamRemaining>{});
+  auto results = test.simulateTurn(
+    Tags<Probability, RngSeed, BattleTypesToIgnore...>{},
+    Tags<TeamRemaining, SideTypesToIgnore...>{});
   auto rootBattles = results.rootBattles();
 
   if (!options.getApplyChangesToInputBattle()) {
@@ -95,9 +176,9 @@ struct VerticalSliceDamageValueInfo {
  protected:
   std::vector<types::damage> baseDamage;
   std::vector<types::damage> critDamage;
-  types::damage averageRegularDamage;
-  types::damage averageCritDamage;
-  types::stat startingHp;
+  types::damage averageBaseDamage{};
+  types::damage averageCritDamage{};
+  types::stat startingHp{};
   DamageRollKind damageRollKind;
 
   bool checkWasCrit;
@@ -109,29 +190,29 @@ struct VerticalSliceDamageValueInfo {
   types::percentChance upperLimit;
   types::probability branchProbabilityLowerLimit;
 
-  std::size_t uniqueRolls(const std::vector<types::damage>& rolls) const {
+  std::vector<types::damage> uniqueRolls(const std::vector<types::damage>& rolls, types::damage average) const {
     if (rolls.empty()) {
-      return 0U;
+      return {};
     }
     if (damageRollKind == MIN_AND_MAX_DAMAGE) {
       if (willChooseMinOrMaxDamage) {
-        return std::min(rolls.front(), startingHp) == std::min(rolls.back(), startingHp) ? 1U : 2U;
+        return std::min(rolls.front(), startingHp) == std::min(rolls.back(), startingHp)
+                 ? std::vector<types::damage>{rolls.back()}
+                 : std::vector<types::damage>{rolls.front(), rolls.back()};
       }
-      return 1U;
+      return {rolls.back()};
     }
     if (willChooseAverageDamage) {
-      return 1U;
+      return {average};
     }
 
-    types::damage lastDamageValue = rolls[0];
-    std::size_t unique = 1U;
+    std::vector<types::damage> unique{rolls[0]};
 
     for (std::size_t i = 1U; i < rolls.size(); i++) {
       types::damage damage = rolls[i];
       damage = std::min(damage, startingHp);
-      if (damage != lastDamageValue) {
-        unique++;
-        lastDamageValue = damage;
+      if (damage != unique.back()) {
+        unique.push_back(damage);
       }
     }
 
@@ -191,7 +272,7 @@ struct VerticalSliceDamageValueInfo {
     }
     if (damageRollKind == ALL_DAMAGE) {
       types::probability baseDamageRollInstances =
-        (types::probability)damageRollMatches(damage, baseDamage, averageRegularDamage);
+        (types::probability)damageRollMatches(damage, baseDamage, averageBaseDamage);
       REQUIRE(!!(baseDamageRollInstances || critDamageRollInstances));
 
       if (wasCrit) {
@@ -206,17 +287,8 @@ struct VerticalSliceDamageValueInfo {
   }
 
  public:
-  VerticalSliceDamageValueInfo(
-    const std::vector<types::damage>& _baseDamage, types::damage _averageRegularDamage,
-    const std::vector<types::damage>& _critDamage, types::damage _averageCritDamage, types::stat _startingHp,
-    DamageRollKind _damageRollKind, const simulate_turn::Options& options)
-      : baseDamage(_baseDamage),
-        critDamage(_critDamage),
-        averageRegularDamage(_averageRegularDamage),
-        averageCritDamage(_averageCritDamage),
-        startingHp(_startingHp),
-        damageRollKind(_damageRollKind),
-
+  VerticalSliceDamageValueInfo(DamageRollKind _damageRollKind, const simulate_turn::Options& options)
+      : damageRollKind(_damageRollKind),
         checkWasCrit(true),
         willCrit(damageRollKind == AVERAGE_CRIT_DAMAGE),
         willChooseAverageDamage(damageRollKind & AVERAGE_DAMAGE),
@@ -232,8 +304,25 @@ struct VerticalSliceDamageValueInfo {
     willChooseMinOrMaxDamage &= damageRollKind == MIN_AND_MAX_DAMAGE;
   }
 
+  VerticalSliceDamageValueInfo(
+    const std::vector<types::damage>& _baseDamage, types::damage _averageRegularDamage,
+    const std::vector<types::damage>& _critDamage, types::damage _averageCritDamage, types::stat _startingHp,
+    DamageRollKind _damageRollKind, const simulate_turn::Options& options)
+      : VerticalSliceDamageValueInfo(_damageRollKind, options) {
+    baseDamage = _baseDamage;
+    critDamage = _critDamage;
+    averageBaseDamage = _averageRegularDamage;
+    averageCritDamage = _averageCritDamage;
+    startingHp = _startingHp;
+  }
+
   entt::dense_set<types::stat> possibleHpValues() const {
     entt::dense_set<types::stat> hpValues;
+    if (averageCritDamage == Constants::Damage::IMMUNE) {
+      hpValues.insert(startingHp);
+      return hpValues;
+    }
+
     auto addDamageValues = [&](const std::vector<types::damage>& damages) {
       for (types::damage damage : damages) {
         hpValues.insert(damage + MIN_HP > startingHp ? MIN_HP : startingHp - damage);
@@ -250,16 +339,16 @@ struct VerticalSliceDamageValueInfo {
       if (checkWasCrit) {
         addDamageValues({averageCritDamage});
       }
-      addDamageValues({averageRegularDamage});
+      addDamageValues({averageBaseDamage});
     }
     else if (damageRollKind == AVERAGE_CRIT_DAMAGE) {
       addDamageValues({averageCritDamage});
     }
     else if (damageRollKind == MIN_AND_MAX_DAMAGE) {
       if (checkWasCrit) {
-        addDamageValues({critDamage[0], critDamage[15]});
+        addDamageValues({critDamage.front(), critDamage.back()});
       }
-      addDamageValues({baseDamage[0], baseDamage[15]});
+      addDamageValues({baseDamage.front(), baseDamage.back()});
     }
     else {
       FAIL();
@@ -268,20 +357,23 @@ struct VerticalSliceDamageValueInfo {
     return hpValues;
   }
 
-  std::size_t uniqueDamageCount() const {
-    std::size_t uniqueRegularDamage = uniqueRolls(baseDamage);
-    std::size_t uniqueCritDamage = uniqueRolls(critDamage);
+  std::vector<types::damage> uniqueDamage() const {
+    std::vector<types::damage> uniqueBaseDamage = uniqueRolls(baseDamage, averageBaseDamage);
+    std::vector<types::damage> uniqueCritDamage = uniqueRolls(critDamage, averageCritDamage);
     if (willCrit) {
       return uniqueCritDamage;
     }
     if (checkWasCrit) {
-      return uniqueCritDamage + uniqueRegularDamage;
+      uniqueBaseDamage.insert(uniqueBaseDamage.begin(), uniqueCritDamage.begin(), uniqueCritDamage.end());
     }
-    return uniqueRegularDamage;
+    return uniqueBaseDamage;
   }
 
-  bool mightCrit() const { return checkWasCrit; }
+  std::size_t uniqueDamageCount() const { return uniqueDamage().size(); }
+
+  bool randomlyCrits() const { return checkWasCrit; }
   bool guaranteedCrit() const { return willCrit; }
+  bool critPossible() const { return randomlyCrits() || guaranteedCrit(); }
 };
 }  // namespace
 
@@ -334,37 +426,12 @@ TEST_CASE(
     bool mightCauseParalysis() const { return checkWasParalyzed; }
   };
 
-  auto numberOfSamples = GENERATE(std::optional<types::entityIndex>{std::nullopt}, 1U, 5U);
+  TestSimulation test{TestMechanic, BattleFormat::SINGLES};
+  auto variableOptions = setOptions(test);
+  auto numberOfSamples = variableOptions.numberOfSamples;
+  auto& options = test.simulateTurnOptions();
+  INFO(variableOptions.values());
 
-  bool applyChangesToInputBattle = GENERATE(true, false);
-  auto branchProbabilityLowerLimit = GENERATE(std::optional<types::probability>{std::nullopt}, 0.0F, 0.5F);
-  auto randomChanceLowerLimit = GENERATE(
-    std::optional<types::percentChance>{std::nullopt},
-    (types::percentChance)0U,
-    (types::percentChance)10U,
-    (types::percentChance)50U);
-  auto randomChanceUpperLimit = GENERATE(
-    std::optional<types::percentChance>{std::nullopt},
-    (types::percentChance)100U,
-    (types::percentChance)90U,
-    (types::percentChance)50U);
-
-  DamageRollOptions damageRollOptions;
-  if (numberOfSamples.has_value()) {
-    damageRollOptions.setP1(GENERATE(from_range(fixedBranchDamageRollOptions)));
-    damageRollOptions.setP2(GENERATE(from_range(fixedBranchDamageRollOptions)));
-  }
-  else {
-    damageRollOptions.setP1(GENERATE(from_range(branchingDamageRollOptions)));
-    damageRollOptions.setP2(GENERATE(from_range(branchingDamageRollOptions)));
-  }
-
-  CAPTURE(applyChangesToInputBattle, branchProbabilityLowerLimit, numberOfSamples);
-  INFO("randomChanceLowerLimit := " + Catch::StringMaker<std::optional<int>>::convert(randomChanceLowerLimit));
-  INFO("randomChanceUpperLimit := " + Catch::StringMaker<std::optional<int>>::convert(randomChanceUpperLimit));
-  CAPTURE(damageRollOptions.getP1(), damageRollOptions.getP2());
-
-  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
   for (types::entityIndex i = 0U; i < numberOfSamples.value_or(1U); i++) {
     test.setupBattle(
       Turn{1U},
@@ -387,16 +454,8 @@ TEST_CASE(
       test.turnDecision(dex::Move::KNOCK_OFF, dex::Move::THUNDERBOLT));
   }
 
-  auto& options = test.simulateTurnOptions();
-  options.setApplyChangesToInputBattle(applyChangesToInputBattle);
-  if (branchProbabilityLowerLimit.has_value())
-    options.setBranchProbabilityLowerLimit(branchProbabilityLowerLimit.value());
-  options.setMakeBranchesOnRandomEvents(!numberOfSamples.has_value());
-  if (randomChanceUpperLimit.has_value()) options.setRandomChanceUpperLimit(randomChanceUpperLimit.value());
-  if (randomChanceLowerLimit.has_value()) options.setRandomChanceLowerLimit(randomChanceLowerLimit.value());
-  options.setDamageRollsConsidered(damageRollOptions);
-
-  const DamageValueInfo p1DamageInfo(
+  auto damageRollOptions = options.getDamageRollsConsidered();
+  const DamageValueInfo p1DamageInfo{
     PlayerSideId::P1,
     {174U, 170U, 168U, 168U, 164U, 164U, 162U, 158U, 158U, 156U, 156U, 152U, 152U, 150U, 146U, 146U},  // 10
     160U,
@@ -404,9 +463,9 @@ TEST_CASE(
     240U,
     275U,
     damageRollOptions.getP1(),
-    options);
+    options};
 
-  const DamageValueInfo p2DamageInfo(
+  const DamageValueInfo p2DamageInfo{
     PlayerSideId::P2,
     {52U, 51U, 50U, 50U, 49U, 49U, 48U, 48U, 47U, 47U, 46U, 46U, 45U, 45U, 44U, 44U},  // 9
     48U,
@@ -414,7 +473,7 @@ TEST_CASE(
     72U,
     295U,
     damageRollOptions.getP2(),
-    options);
+    options};
 
   std::size_t idealTurnOutcomeCount = 0U;
   std::size_t totalPossibilities = p1DamageInfo.possibilities() * p2DamageInfo.possibilities();
@@ -529,7 +588,7 @@ TEST_CASE(
       std::size_t count = uniqueDamageCount();
 
       if (moveMightDropSpa()) {
-        count += uniqueRolls(baseDamage);
+        count += uniqueRolls(baseDamage, averageBaseDamage).size();
       }
 
       if (moveMightMiss()) {
@@ -582,37 +641,12 @@ TEST_CASE(
     bool moveMightDropSpa() const { return checkMoveDroppedSpa; }
   };
 
-  auto numberOfSamples = GENERATE(std::optional<types::entityIndex>{std::nullopt}, 1U, 5U);
+  TestSimulation test{TestMechanic, BattleFormat::DOUBLES};
+  auto variableOptions = setOptions(test);
+  auto numberOfSamples = variableOptions.numberOfSamples;
+  auto& options = test.simulateTurnOptions();
+  INFO(variableOptions.values());
 
-  bool applyChangesToInputBattle = GENERATE(true, false);
-  auto branchProbabilityLowerLimit = GENERATE(std::optional<types::probability>{std::nullopt}, 0.0F, 0.5F);
-  auto randomChanceLowerLimit = GENERATE(
-    std::optional<types::percentChance>{std::nullopt},
-    (types::percentChance)0U,
-    (types::percentChance)10U,
-    (types::percentChance)50U);
-  auto randomChanceUpperLimit = GENERATE(
-    std::optional<types::percentChance>{std::nullopt},
-    (types::percentChance)100U,
-    (types::percentChance)90U,
-    (types::percentChance)50U);
-
-  DamageRollOptions damageRollOptions;
-  if (numberOfSamples.has_value()) {
-    damageRollOptions.setP1(GENERATE(from_range(fixedBranchDamageRollOptions)));
-    damageRollOptions.setP2(GENERATE(from_range(fixedBranchDamageRollOptions)));
-  }
-  else {
-    damageRollOptions.setP1(GENERATE(from_range(branchingDamageRollOptions)));
-    damageRollOptions.setP2(GENERATE(from_range(branchingDamageRollOptions)));
-  }
-
-  CAPTURE(applyChangesToInputBattle, branchProbabilityLowerLimit, numberOfSamples);
-  INFO("randomChanceLowerLimit := " + Catch::StringMaker<std::optional<int>>::convert(randomChanceLowerLimit));
-  INFO("randomChanceUpperLimit := " + Catch::StringMaker<std::optional<int>>::convert(randomChanceUpperLimit));
-  CAPTURE(damageRollOptions.getP1(), damageRollOptions.getP2());
-
-  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::DOUBLES};
   auto p1AInfo = test.pokemon(
     dex::Species::GARDEVOIR,
     dex::Ability::TRACE,
@@ -661,16 +695,8 @@ TEST_CASE(
         MoveDecision{Slot::P2B, Slot::P2B, dex::Move::QUIVER_DANCE}));
   }
 
-  auto& options = test.simulateTurnOptions();
-  options.setApplyChangesToInputBattle(applyChangesToInputBattle);
-  if (branchProbabilityLowerLimit.has_value())
-    options.setBranchProbabilityLowerLimit(branchProbabilityLowerLimit.value());
-  if (randomChanceUpperLimit.has_value()) options.setRandomChanceUpperLimit(randomChanceUpperLimit.value());
-  if (randomChanceLowerLimit.has_value()) options.setRandomChanceLowerLimit(randomChanceLowerLimit.value());
-  options.setMakeBranchesOnRandomEvents(!numberOfSamples.has_value());
-  options.setDamageRollsConsidered(damageRollOptions);
-
-  DamageValueInfo p1BHalfDamageInfo(
+  auto damageRollOptions = options.getDamageRollsConsidered();
+  DamageValueInfo p1BHalfDamageInfo{
     Slot::P1B,
     p1BInfo.item.value(),
     {262U, 259U, 257U, 253U, 251U, 250U, 246U, 243U, 242U, 238U, 235U, 234U, 230U, 227U, 226U, 222U},
@@ -679,8 +705,8 @@ TEST_CASE(
     364U,
     P1B_MAX_HP,
     damageRollOptions.getP1(),
-    options);
-  DamageValueInfo p1BFullDamageInfo(
+    options};
+  DamageValueInfo p1BFullDamageInfo{
     Slot::P1B,
     p1BInfo.item.value(),
     {525U, 517U, 515U, 507U, 502U, 499U, 491U, 486U, 484U, 476U, 471U, 468U, 460U, 455U, 452U, 445U},
@@ -689,8 +715,8 @@ TEST_CASE(
     728U,
     P1B_MAX_HP,
     damageRollOptions.getP1(),
-    options);
-  DamageValueInfo p2BDamageInfo(
+    options};
+  DamageValueInfo p2BDamageInfo{
     Slot::P2B,
     p2BInfo.item.value(),
     {190U, 187U, 186U, 184U, 181U, 180U, 178U, 177U, 174U, 172U, 171U, 169U, 166U, 165U, 163U, 160U},
@@ -699,12 +725,11 @@ TEST_CASE(
     263U,
     P2B_MAX_HP,
     damageRollOptions.getP2(),
-    options);
+    options};
 
   bool willOWispMightMiss =
-    (!randomChanceUpperLimit.has_value() || randomChanceUpperLimit > WILL_O_WISP_ACCURACY) &&
-    (!branchProbabilityLowerLimit.has_value() ||
-     branchProbabilityLowerLimit < MAX_PROBABILITY / (MAX_PERCENT_CHANCE - WILL_O_WISP_ACCURACY));
+    (options.getRandomChanceUpperLimit() > WILL_O_WISP_ACCURACY) &&
+    (options.getBranchProbabilityLowerLimit() < MAX_PROBABILITY / (MAX_PERCENT_CHANCE - WILL_O_WISP_ACCURACY));
 
   std::size_t idealTurnOutcomeCount = 0U;
   std::size_t totalPossibilities =
@@ -830,7 +855,7 @@ TEST_CASE(
       REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(entities.p2B));
       REQUIRE_FALSE(p2BSpaBoosted);
       REQUIRE(currentP2BHp.val == MIN_HP);
-      REQUIRE((p2BDamageInfo.mightCrit() || p2BDamageInfo.guaranteedCrit()));
+      REQUIRE(p2BDamageInfo.critPossible());
     }
     else {
       REQUIRE(registry.get<TeamRemaining>(entities.p2Side).val == 2U);
@@ -873,7 +898,7 @@ TEST_CASE(
     idealProbability *= p2BDamageInfo.getProbability(currentP2BHp.val, p2BSpaBoosted);
     foundP2BHp.insert(currentP2BHp.val);
 
-    if (!p2ABurned && p1BFullDamageInfo.mightCrit()) {
+    if (!p2ABurned && p1BFullDamageInfo.randomlyCrits()) {
       types::probability withP1BCritProbability = idealProbability * CRIT_PROBABILITY;
       types::probability withoutP1BCritProbability = idealProbability * (MAX_PROBABILITY - CRIT_PROBABILITY);
       CAPTURE(idealProbability, withP1BCritProbability, withoutP1BCritProbability);
@@ -903,6 +928,381 @@ TEST_CASE(
     for (const auto& uncertainProbabilities : foundUncertainProbabilities) {
       REQUIRE(uncertainProbabilities.second.size() == 2U);
     }
+  }
+}
+
+TEST_CASE(
+  "Simulate Turn: Vertical Slice 2, Single Battle", "[Simulation][SimulateTurn][VerticalSlice2][SingleBattle]") {
+  static constexpr auto TRIPLE_ARROWS_DEF_DROP_CHANCE = dex::TripleArrows::targetSecondaryEffect::chance(TestMechanic);
+  static constexpr auto TRIPLE_ARROWS_FLINCH_CHANCE =
+    dex::TripleArrows::targetSecondaryEffect::addedFlinchChance(TestMechanic);
+  static constexpr auto TRIPLE_ARROWS_CRIT_PROBABILITY =
+    MAX_PROBABILITY /
+    MechanicConstants::CRIT_CHANCE_DIVISORS(TestMechanic)[dex::TripleArrows::critStageBoost(TestMechanic)];
+  static constexpr auto KINGS_ROCK_FLINCH_CHANCE = dex::KingsRock::addedFlinchChance(TestMechanic);
+  static constexpr types::stat ALOLAN_DECIDUEYE_HP = 138U;
+  static constexpr types::stat HISUIAN_DECIDUEYE_HP = 148U;
+  static constexpr types::stat MAGNEZONE_HP = 130U;
+  static constexpr types::stat DITTO_HP = 108U;
+  static bool hisuianForm;
+  static bool magnezoneDirectSwitch;
+
+  struct DamageValueInfo : VerticalSliceDamageValueInfo {
+   private:
+    bool checkDefDrop = false;
+    bool checkIfFlinched = false;
+
+   public:
+    DamageValueInfo(PlayerSideId sideId, DamageRollKind _damageRollKind, const simulate_turn::Options& options)
+        : VerticalSliceDamageValueInfo(_damageRollKind, options) {
+      if (sideId == PlayerSideId::P1) {
+        startingHp = hisuianForm ? HISUIAN_DECIDUEYE_HP : ALOLAN_DECIDUEYE_HP;
+
+        if (magnezoneDirectSwitch) {
+          baseDamage = critDamage = {};
+          averageBaseDamage = averageCritDamage = 0U;
+          willCrit = checkWasCrit = false;
+          willChooseAverageDamage = true;
+          willChooseMinOrMaxDamage = false;
+        }
+        else if (hisuianForm) {
+          baseDamage = {42U, 41U, 40U, 40U, 39U, 39U, 39U, 39U, 38U, 37U, 37U, 36U, 36U, 36U, 36U, 35U};  // 8
+          averageBaseDamage = 38U;
+          critDamage = {63U, 62U, 61U, 60U, 60U, 59U, 58U, 58U, 57U, 57U, 56U, 55U, 54U, 54U, 54U, 53U};  // 11
+          averageCritDamage = 58U;
+        }
+        else {
+          baseDamage = {39U, 39U, 38U, 38U, 37U, 37U, 36U, 36U, 36U, 36U, 35U, 35U, 34U, 34U, 33U, 33U};  // 7
+          averageBaseDamage = 36U;
+          critDamage = {59U, 58U, 57U, 57U, 56U, 56U, 55U, 54U, 54U, 53U, 53U, 52U, 51U, 51U, 50U, 50U};  // 10
+          averageCritDamage = 54U;
+        }
+      }
+      else {
+        startingHp = magnezoneDirectSwitch ? DITTO_HP : MAGNEZONE_HP;
+
+        if (magnezoneDirectSwitch) {
+          if (hisuianForm) {
+            baseDamage = {84U, 82U, 81U, 81U, 79U, 79U, 78U, 78U, 76U, 75U, 75U, 75U, 73U, 72U, 72U, 70U};  // 10
+            averageBaseDamage = 77U;
+            critDamage =
+              {128U, 124U, 123U, 121U, 120U, 118U, 117U, 117U, 115U, 114U, 112U, 111U, 109U, 109U, 108U, 106U};  // 14
+            averageCritDamage = 116U;
+
+            checkIfFlinched = !willCrit && chanceWithinSimulationBounds(TRIPLE_ARROWS_FLINCH_CHANCE);
+          }
+          else {
+            baseDamage =
+              {152U, 150U, 146U, 146U, 144U, 144U, 140U, 140U, 138U, 138U, 134U, 134U, 132U, 132U, 128U, 128U};  // 9
+            averageBaseDamage = 140U;
+            critDamage =
+              {228U, 224U, 222U, 218U, 216U, 216U, 212U, 210U, 206U, 206U, 204U, 200U, 198U, 198U, 194U, 192U};  // 13
+            averageCritDamage = 210U;
+          }
+        }
+        else {
+          if (hisuianForm) {
+            baseDamage = {62U, 60U, 60U, 60U, 60U, 56U, 56U, 56U, 56U, 56U, 54U, 54U, 54U, 54U, 54U, 50U};  // 5
+            averageBaseDamage = 57U;
+            critDamage =
+              {180U, 176U, 174U, 174U, 170U, 170U, 168U, 164U, 164U, 162U, 162U, 158U, 156U, 156U, 152U, 152U};  // 10
+            averageCritDamage = 166U;
+
+            checkIfFlinched = !willCrit && chanceWithinSimulationBounds(TRIPLE_ARROWS_FLINCH_CHANCE);
+          }
+          else {
+            baseDamage = {27U, 25U, 25U, 25U, 25U, 25U, 24U, 24U, 24U, 24U, 24U, 24U, 22U, 22U, 22U, 22U};  // 4
+            averageBaseDamage = 24U;
+            critDamage = {76U, 75U, 73U, 73U, 72U, 72U, 70U, 70U, 69U, 69U, 67U, 67U, 66U, 66U, 64U, 64U};  // 9
+            averageCritDamage = 70U;
+
+            checkIfFlinched = chanceWithinSimulationBounds(KINGS_ROCK_FLINCH_CHANCE);
+          }
+        }
+
+        if (hisuianForm) {
+          checkWasCrit = chanceWithinSimulationBounds(
+                           (types::percentChance)(PROBABILITY_TO_CHANCE * TRIPLE_ARROWS_CRIT_PROBABILITY)) &&
+                         damageRollKind != AVERAGE_CRIT_DAMAGE;
+          checkDefDrop = !willCrit && chanceWithinSimulationBounds(TRIPLE_ARROWS_DEF_DROP_CHANCE);
+        }
+      }
+    }
+
+    static std::size_t possibilities(const DamageValueInfo& p1Info, const DamageValueInfo& p2Info) {
+      std::size_t damageToP1Possibilities = p1Info.uniqueDamageCount();
+      std::size_t count = damageToP1Possibilities ? damageToP1Possibilities : 1U;
+
+      if (p2Info.checkIfFlinched) {
+        count++;
+      }
+      if (p2Info.checkDefDrop) {
+        count *= 2U;
+      }
+
+      std::size_t p2KoPossibilities = 0U;
+      std::size_t p2OkPossibilities = 0U;
+      for (types::damage damage : p2Info.uniqueDamage()) {
+        if (damage >= p2Info.startingHp) {
+          p2KoPossibilities++;
+        }
+        else {
+          p2OkPossibilities++;
+        }
+      }
+
+      count = (count * p2OkPossibilities) + p2KoPossibilities;
+
+      return count;
+    }
+
+    bool mightFlinch() const { return checkIfFlinched; }
+  };
+
+  hisuianForm = GENERATE(false, true);
+  magnezoneDirectSwitch = GENERATE(false, true);
+  dex::Species decidueyeForm = hisuianForm ? dex::Species::HISUIAN_DECIDUEYE : dex::Species::DECIDUEYE;
+  dex::Ability decidueyeAbility = hisuianForm ? dex::Ability::SCRAPPY : dex::Ability::LONG_REACH;
+  dex::Move decidueyeMove = hisuianForm ? dex::Move::TRIPLE_ARROWS : dex::Move::SPIRIT_SHACKLE;
+  CAPTURE(hisuianForm, magnezoneDirectSwitch);
+
+  TestSimulation test{TestMechanic, BattleFormat::SINGLES};
+  auto variableOptions = setOptions(test);
+  auto numberOfSamples = variableOptions.numberOfSamples;
+  auto& options = test.simulateTurnOptions();
+  INFO(variableOptions.values());
+
+  for (types::entityIndex i = 0U; i < numberOfSamples.value_or(1U); i++) {
+    BattleCreationInfo& info = test.setupBattle(
+      Turn{1U},
+      test.side(test.pokemon(
+        decidueyeForm,
+        Level{50U},
+        dex::Item::KINGS_ROCK,
+        decidueyeAbility,
+        dex::Gender::FEMALE,
+        decidueyeMove,
+        dex::Nature::JOLLY)),
+      test.side(
+        test.pokemon(
+          dex::Species::MAGNEZONE,
+          Level{50U},
+          dex::Ability::ANALYTIC,
+          dex::Item::ROCKY_HELMET,
+          DefBoost{2},
+          dex::Move::VOLT_SWITCH),
+        test.pokemon(
+          dex::Species::DITTO,
+          Level{50U},
+          dex::Ability::IMPOSTER,
+          dex::Item::QUICK_POWDER,
+          dex::Move::TRANSFORM)));
+
+    info.runWithSimulateTurn = true;
+    if (magnezoneDirectSwitch) {
+      info.decisionsToSimulate.push_back(test.turnDecision(decidueyeMove, Slot::P2B));
+    }
+    else {
+      info.decisionsToSimulate.push_back(test.turnDecision(decidueyeMove, dex::Move::VOLT_SWITCH));
+    }
+  }
+
+  auto damageRollOptions = options.getDamageRollsConsidered();
+  const DamageValueInfo p1DamageInfo{PlayerSideId::P1, damageRollOptions.getP1(), options};
+  const DamageValueInfo p2DamageInfo{PlayerSideId::P2, damageRollOptions.getP2(), options};
+
+  static std::size_t decisionCallbackCalls = 0U;
+  decisionCallbackCalls = 0U;
+
+  options.decisionCallback = [](Simulation& simulation) {
+    decisionCallbackCalls++;
+    simulation.addToEntities<MidTurnSideDecision, tags::Side, MidTurnDecisionsRequested>(
+      MidTurnSideDecision{{{Slot::P2A, Slot::P2B}}});
+  };
+
+  std::size_t idealTurnOutcomeCount = 0U;
+  std::size_t totalPossibilities = DamageValueInfo::possibilities(p1DamageInfo, p2DamageInfo);
+
+  if (options.getMakeBranchesOnRandomEvents()) {
+    idealTurnOutcomeCount = totalPossibilities;
+  }
+  else {
+    idealTurnOutcomeCount = numberOfSamples.value();
+  }
+
+  auto expectedP1Hp = p1DamageInfo.possibleHpValues();
+  auto expectedP2Hp = p2DamageInfo.possibleHpValues();
+
+  if (hisuianForm && p2DamageInfo.guaranteedCrit()) {
+    expectedP1Hp.clear();
+  }
+  if (p2DamageInfo.mightFlinch() || magnezoneDirectSwitch || (hisuianForm && p2DamageInfo.critPossible())) {
+    expectedP1Hp.insert(hisuianForm ? HISUIAN_DECIDUEYE_HP : ALOLAN_DECIDUEYE_HP);
+  }
+
+  auto allTurnOutcomes = runAndCheckSimulation(test, idealTurnOutcomeCount, totalPossibilities, {}, Tags<Team>{});
+  if (magnezoneDirectSwitch && !hisuianForm) {
+    REQUIRE(decisionCallbackCalls == 1U);
+  }
+
+  entt::dense_set<types::stat> foundP1Hp;
+  entt::dense_set<types::stat> foundP2Hp;
+
+  CAPTURE(expectedP1Hp, expectedP2Hp);
+  const types::registry& registry = test.registry();
+  for (types::entity battle : allTurnOutcomes) {
+    auto entities = test.getBattleEntities(battle);
+
+    dex::Species p2Species = registry.get<SpeciesName>(entities.p2A).val;
+    bool magnezoneIn = p2Species == dex::Species::MAGNEZONE;
+    types::entity decidueye = entities.p1A;
+    types::entity magnezone = magnezoneIn ? entities.p2A : entities.p2B;
+    types::entity ditto = magnezoneIn ? entities.p2B : entities.p2A;
+
+    bool p2Fainted = registry.all_of<tags::Fainted>(entities.p2B);
+    bool magnezoneFainted = !magnezoneDirectSwitch && p2Fainted;
+    bool dittoFainted = magnezoneDirectSwitch && p2Fainted;
+    bool magnezoneFlinched = !magnezoneDirectSwitch && magnezoneIn;
+    stat::CurrentHp decidueyeHp = registry.get<stat::CurrentHp>(decidueye);
+    stat::CurrentHp magnezoneHp = registry.get<stat::CurrentHp>(magnezone);
+    stat::CurrentHp dittoHp = registry.get<stat::CurrentHp>(ditto);
+    CAPTURE(
+      magnezoneIn,
+      p2Fainted,
+      magnezoneFainted,
+      dittoFainted,
+      magnezoneFlinched,
+      decidueyeHp.val,
+      magnezoneHp.val,
+      dittoHp.val);
+
+    REQUIRE(registry.get<Turn>(battle).val == 2U);
+    REQUIRE(registry.get<TeamRemaining>(entities.p1Side).val == 1U);
+    REQUIRE(registry.get<TeamRemaining>(entities.p2Side).val == (p2Fainted ? 1U : 2U));
+
+    REQUIRE_FALSE(registry.all_of<tags::Fainted>(decidueye));
+    REQUIRE_FALSE(registry.all_of<tags::Fainted>(entities.p2A));
+    REQUIRE(expectedP1Hp.contains(decidueyeHp.val));
+    foundP1Hp.insert(decidueyeHp.val);
+
+    if (magnezoneDirectSwitch) {
+      test.checks.checkUsedMovePokemon(decidueye);
+      REQUIRE(expectedP2Hp.contains(dittoHp.val));
+      foundP2Hp.insert(dittoHp.val);
+    }
+    else {
+      test.checks.checkUsedMovePokemon<stat::CurrentHp>(decidueye);
+      REQUIRE(expectedP2Hp.contains(magnezoneHp.val));
+      foundP2Hp.insert(magnezoneHp.val);
+    }
+
+    if (magnezoneIn) {
+      if (magnezoneDirectSwitch) {
+        REQUIRE(dittoFainted);
+        REQUIRE(registry.get<SpeciesName>(entities.p2B).val == dex::Species::DITTO);
+        REQUIRE(dittoHp.val == Constants::PokemonCurrentHpStat::MIN);
+        REQUIRE_FALSE(registry.all_of<DefBoost>(magnezone));
+
+        if (hisuianForm) {
+          REQUIRE(p2DamageInfo.critPossible());
+        }
+
+        test.checks.checkEntityForChanges<DefBoost, stat::EffectiveDef>(magnezone);
+        test.checks.checkEntityForChanges<tags::Fainted, stat::CurrentHp>(ditto);
+      }
+      else {
+        REQUIRE(p2DamageInfo.mightFlinch());
+
+        if (hisuianForm) {
+          REQUIRE(decidueyeHp.val == HISUIAN_DECIDUEYE_HP);
+          REQUIRE_FALSE(p2DamageInfo.guaranteedCrit());
+
+          test.checks.checkEntityForChanges<stat::CurrentHp, DefBoost, stat::EffectiveDef>(magnezone);
+        }
+        else {
+          REQUIRE(decidueyeHp.val == ALOLAN_DECIDUEYE_HP);
+          REQUIRE(registry.all_of<tags::Trapped>(magnezone));
+          REQUIRE(registry.all_of<Trapper>(magnezone));
+          REQUIRE(registry.get<Trapper>(magnezone).val == decidueye);
+
+          test.checks.checkEntityForChanges<stat::CurrentHp, tags::Trapped, Trapper>(magnezone);
+        }
+        test.checks.checkEntityForChanges(ditto);
+      }
+    }
+    else {
+      REQUIRE(registry.all_of<TransformedFrom>(ditto));
+      REQUIRE(registry.all_of<tags::ActivePokemon>(ditto));
+
+      TransformedFrom transformedFrom = registry.get<TransformedFrom>(ditto);
+      REQUIRE(transformedFrom.species == dex::Species::DITTO);
+      REQUIRE(transformedFrom.ability == dex::Ability::IMPOSTER);
+      REQUIRE_THAT(
+        transformedFrom.moves,
+        Catch::Matchers::RangeEquals({MoveSlot{
+          dex::Move::TRANSFORM,
+          test.dexValue<dex::Transform::basePp>(),
+          test.dexValue<dex::Transform::basePp>(),
+        }}));
+      REQUIRE(registry.get<SpeciesName>(ditto).val == decidueyeForm);
+      REQUIRE_FALSE(registry.all_of<dex::Imposter>(ditto));
+      REQUIRE_THAT(
+        registry.get<MoveSlots>(ditto).val,
+        Catch::Matchers::RangeEquals({MoveSlot{
+          decidueyeMove,
+          Constants::MoveMaxPp::COPIED_WITH_TRANSFORM,
+          Constants::MoveMaxPp::COPIED_WITH_TRANSFORM,
+        }}));
+      REQUIRE(registry.get<stat::Atk>(ditto).val == registry.get<stat::Atk>(decidueye).val);
+      REQUIRE(registry.get<stat::Def>(ditto).val == registry.get<stat::Def>(decidueye).val);
+      REQUIRE(registry.get<stat::Spa>(ditto).val == registry.get<stat::Spa>(decidueye).val);
+      REQUIRE(registry.get<stat::Spd>(ditto).val == registry.get<stat::Spd>(decidueye).val);
+      REQUIRE(registry.get<stat::Spe>(ditto).val == registry.get<stat::Spe>(decidueye).val);
+
+      REQUIRE(registry.get<stat::EffectiveAtk>(ditto).val == registry.get<stat::EffectiveAtk>(decidueye).val);
+      REQUIRE(registry.get<stat::EffectiveSpa>(ditto).val == registry.get<stat::EffectiveSpa>(decidueye).val);
+      REQUIRE(registry.get<stat::EffectiveSpd>(ditto).val == registry.get<stat::EffectiveSpd>(decidueye).val);
+      REQUIRE(registry.get<stat::EffectiveSpe>(ditto).val == registry.get<stat::EffectiveSpe>(decidueye).val);
+
+      if (hisuianForm) {
+        REQUIRE(registry.get<SpeciesTypes>(ditto) == SpeciesTypes{dex::Type::GRASS, dex::Type::FIGHTING});
+        REQUIRE(registry.all_of<dex::Scrappy>(ditto));
+        if (!magnezoneDirectSwitch) {
+          REQUIRE(registry.get<stat::EffectiveDef>(ditto).val == registry.get<stat::EffectiveDef>(decidueye).val);
+        }
+      }
+      else {
+        REQUIRE(registry.get<SpeciesTypes>(ditto) == SpeciesTypes{dex::Type::GRASS, dex::Type::GHOST});
+        REQUIRE(registry.all_of<dex::LongReach>(ditto));
+        REQUIRE(registry.get<stat::EffectiveDef>(ditto).val == registry.get<stat::EffectiveDef>(decidueye).val);
+      }
+
+      if (magnezoneDirectSwitch) {
+        REQUIRE(hisuianForm);
+        REQUIRE_FALSE(p2DamageInfo.guaranteedCrit());
+        test.checks.checkEntityForChanges<tags::ActivePokemon, DefBoost, stat::EffectiveDef>(magnezone);
+      }
+      else {
+        REQUIRE(dittoHp.val == DITTO_HP);
+        if (p2Fainted) {
+          REQUIRE(hisuianForm);
+          test.checks
+            .checkEntityForChanges<tags::ActivePokemon, stat::CurrentHp, DefBoost, stat::EffectiveDef, tags::Fainted>(
+              magnezone);
+        }
+        else {
+          test.checks
+            .checkEntityForChanges<tags::ActivePokemon, stat::CurrentHp, DefBoost, stat::EffectiveDef, MoveSlots>(
+              magnezone);
+          test.checks.checkMovePpUsage(magnezone);
+        }
+      }
+    }
+  }
+
+  if (options.getMakeBranchesOnRandomEvents()) {
+    REQUIRE(foundP1Hp.size() == expectedP1Hp.size());
+    REQUIRE(foundP2Hp.size() == expectedP2Hp.size());
   }
 }
 }  // namespace pokesim

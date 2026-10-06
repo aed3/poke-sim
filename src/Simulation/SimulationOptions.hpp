@@ -90,8 +90,8 @@ struct Options {
     return *this;
   }
 
-  entt::delegate<std::remove_pointer_t<types::callback>> decisionCallback{};
-  entt::delegate<std::remove_pointer_t<types::callback>> faintCallback{};
+  types::optionalCallback decisionCallback{};
+  types::optionalCallback faintCallback{};
 
   bool operator==(const Options& other) const {
     return damageRollsConsidered == other.damageRollsConsidered &&

@@ -107,7 +107,8 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
 
 void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue) {
   types::activePokemonIndex midTurnSwitches = 0U;
-  for (; midTurnSwitches < Constants::ActivePokemon::MAX; midTurnSwitches++) {
+  for (; midTurnSwitches < Constants::ActivePokemon::MAX && midTurnSwitches < actionQueue.val.size();
+       midTurnSwitches++) {
     if (actionQueue.val[midTurnSwitches].order != ActionOrder::MID_TURN_SWITCH) {
       break;
     }
@@ -152,7 +153,7 @@ void setSpeedTieOrder(ActionQueue& actionQueue, const SpeedTieIndexes& speedTies
 void resolveSpeedTies(Simulation& simulation) {
   using Limit = Constants::ActivePokemon;
   types::activePokemonIndex speedTiesResolved = Limit::MIN;
-  while (!simulation.registry.view<SpeedTieIndexes>().empty()) {
+  while (!simulation.hasNone<SpeedTieIndexes>()) {
     POKESIM_REQUIRE(
       speedTiesResolved <= Limit::MAX,
       "More speed ties were resolved than are possible in at least one battle.");
@@ -186,7 +187,6 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, Recy
   types::registry& registry = *battleHandle.registry();
 
   if (actionQueue.val.empty()) {
-    battleHandle.remove<pokesim::tags::BattleMidTurn>();
     return;
   }
 
@@ -227,10 +227,5 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, Recy
   actionQueue.val.erase(actionQueue.val.begin());
 
   battleHandle.emplace<CurrentAction>(action.val);
-}
-
-void clearActionQueue(types::handle handle, ActionQueue& actionQueue) {
-  handle.remove<pokesim::tags::BattleMidTurn>();
-  actionQueue.val.clear();
 }
 }  // namespace pokesim::internal::simulate_turn

@@ -59,8 +59,7 @@ struct EntityFilter {
 
   template <typename... ExtraComponents>
   bool hasNoneSelected() {
-    auto view = simulation->registry.view<SelectionTag, OtherSelectionTags..., ExtraComponents...>();
-    return view.begin() == view.end();
+    return simulation->hasNone<SelectionTag, OtherSelectionTags..., ExtraComponents...>();
   }
 
   void clearSelectionTags() { simulation->registry.clear<SelectionTag, OtherSelectionTags...>(); }

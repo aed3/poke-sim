@@ -20,6 +20,7 @@
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
 #include <Components/Names/TypeNames.hpp>
+#include <Components/Pokedex/CritStageBoost.hpp>
 #include <Components/Pokedex/PP.hpp>
 #include <Components/Priority.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
@@ -243,6 +244,8 @@ void clearMoveAction(Simulation& simulation) {
     pokesim::move::tags::BypassSubstitute,
     pokesim::move::tags::Punch,
     pokesim::move::tags::VariableHitCount,
+    pokesim::move::tags::SelfSwitch,
+    CritStageBoost,
     BaseEffectChance,
     Accuracy,
     BasePower,

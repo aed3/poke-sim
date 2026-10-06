@@ -21,6 +21,5 @@ void setSpeedTieOrder(ActionQueue& actionQueue, const SpeedTieIndexes& speedTies
 void addBeforeTurnAction(ActionQueue& actionQueue);
 void addResidualAction(ActionQueue& actionQueue);
 void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction action);
-void clearActionQueue(types::handle handle, ActionQueue& actionQueue);
 }  // namespace internal::simulate_turn
 }  // namespace pokesim

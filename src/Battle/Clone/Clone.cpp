@@ -10,6 +10,7 @@
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RecycledEntities.hpp>
+#include <Components/Tags/SideTags.hpp>
 #include <Config/Config.hpp>
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>

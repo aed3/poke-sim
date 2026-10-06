@@ -20,6 +20,7 @@
 #include <Components/Stats.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Components/Tags/SideTags.hpp>
 #include <Components/Tags/TargetTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
 #include <Components/Turn.hpp>
@@ -378,7 +379,7 @@ void resolveMidTurnDecisions(
     POKESIM_REQUIRE(
       registry.all_of<pokesim::tags::RequestingMidTurnDecision>(sourceEntity),
       "Adding decision to a Pokemon that did not request one.");
-    registry.remove<pokesim::tags::RequestingMidTurnDecision>(sourceEntity);
+    registry.remove<pokesim::tags::RequestingMidTurnDecision, pokesim::tags::Switching>(sourceEntity);
 
     actionQueueItem.speed = registry.get<stat::EffectiveSpe>(sourceEntity).val;
     actionQueue.val.insert(actionQueue.val.begin(), actionQueueItem);

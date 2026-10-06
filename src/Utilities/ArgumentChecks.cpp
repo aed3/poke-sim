@@ -187,9 +187,11 @@ void checkBattle(types::entity battleEntity, const types::registry& registry) {
   POKESIM_REQUIRE_NM(has<Sides>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<Probability>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<RngSeed>(battleEntity, registry));
-  const auto& [sides, probability] = registry.get<Sides, Probability>(battleEntity);
+  POKESIM_REQUIRE_NM(has<ActionQueue>(battleEntity, registry));
+  const auto& [sides, probability, actionQueue] = registry.get<Sides, Probability, ActionQueue>(battleEntity);
 
   check(probability);
+  check(actionQueue);
 
   POKESIM_REQUIRE_NM(sides.val.size() == Constants::SIDE_COUNT);
   auto [p1SideEntity, p2SideEntity] = sides.val;
@@ -204,6 +206,19 @@ void checkBattle(types::entity battleEntity, const types::registry& registry) {
 
   POKESIM_REQUIRE_NM(registry.get<FoeSide>(p1SideEntity).val == p2SideEntity);
   POKESIM_REQUIRE_NM(registry.get<FoeSide>(p2SideEntity).val == p1SideEntity);
+
+  bool isMidTurn = has<tags::BattleMidTurn>(battleEntity, registry);
+  bool hasWinner = has<Winner>(battleEntity, registry);
+
+  if (hasWinner) {
+    POKESIM_REQUIRE_NM(actionQueue.val.empty());
+  }
+
+  if (hasWinner || !isMidTurn) {
+    POKESIM_REQUIRE_NM(!has<MidTurnDecisionsRequested>(battleEntity, registry));
+    POKESIM_REQUIRE_NM(!has<MidTurnDecisionsRequested>(p1SideEntity, registry));
+    POKESIM_REQUIRE_NM(!has<MidTurnDecisionsRequested>(p2SideEntity, registry));
+  }
 }
 
 void checkSide(types::entity sideEntity, const types::registry& registry) {

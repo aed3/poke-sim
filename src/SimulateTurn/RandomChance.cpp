@@ -267,7 +267,7 @@ void randomChanceEvent(
 
   registry.clear<Random>();
   clearRandomChanceResult(simulation);
-  if (simulation.isBattleFormat(BattleFormat::DOUBLES) && !registry.view<RandomStack>().empty()) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES) && !simulation.hasNone<RandomStack>()) {
     randomChanceEvent<Random, RandomStack, AssignRandomEvents, UpdateProbabilities, AssignRandomEventsTags...>(
       simulation,
       cloneCount,

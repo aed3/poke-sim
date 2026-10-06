@@ -174,6 +174,7 @@
  * src/Components/Tags/RecycledEntities.hpp
  * src/Components/Tags/RunEventTags.hpp
  * src/Components/Tags/Selection.hpp
+ * src/Components/Tags/SideTags.hpp
  * src/Components/Tags/SimulationTags.hpp
  * src/Components/Tags/TargetTags.hpp
  * src/Components/Tags/TypeTags.hpp
@@ -20706,7 +20707,6 @@ struct NoTransform {};
 
 namespace pokesim::tags {
 struct Battle {};
-struct Side {};
 
 struct BattleMidTurn {};
 }  // namespace pokesim::tags
@@ -20866,6 +20866,15 @@ struct TryTrap {};
 }  // namespace pokesim::internal::tags
 
 /////////////////// END OF src/Components/Tags/Selection.hpp ///////////////////
+
+////////////////// START OF src/Components/Tags/SideTags.hpp ///////////////////
+
+namespace pokesim::tags {
+struct Side {};
+struct SideFaintOnThisTurn {};
+}  // namespace pokesim::tags
+
+/////////////////// END OF src/Components/Tags/SideTags.hpp ////////////////////
 
 /////////////// START OF src/Components/Tags/SimulationTags.hpp ////////////////
 
@@ -21647,8 +21656,8 @@ struct Options {
     return *this;
   }
 
-  entt::delegate<std::remove_pointer_t<types::callback>> decisionCallback{};
-  entt::delegate<std::remove_pointer_t<types::callback>> faintCallback{};
+  types::optionalCallback decisionCallback{};
+  types::optionalCallback faintCallback{};
 
   bool operator==(const Options& other) const {
     return damageRollsConsidered == other.damageRollsConsidered &&
@@ -23956,7 +23965,7 @@ class Pokedex {
   struct ConstantValues {
     ConstantValues(GameMechanics gameMechanic) : gameMechanicValue(gameMechanic), typeChartValue(gameMechanic) {}
     constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
-      return gameMechanicValue == checkedMechanics;
+      return checkedMechanics == gameMechanicValue;
     }
     constexpr const TypeChart& typeChart() const { return typeChartValue; }
 
@@ -24711,40 +24720,52 @@ class Simulation {
       passedInArgs...);
   }
 
-  template <typename Type, typename... ViewComponents, typename... Args>
+  template <typename Component, typename... OtherComponents>
+  bool hasNone() const {
+    if constexpr (sizeof...(OtherComponents)) {
+      auto view = registry.view<Component, OtherComponents...>();
+      return view.begin() == view.end();
+    }
+    else {
+      return registry.view<Component>().empty();
+    }
+  }
+
+  template <typename Component, typename... ViewComponents, typename... Args>
   void addToEntities(const Args&... args) {
     static_assert(
       sizeof...(ViewComponents) != 0,
       "Using this function without view components will cause Type to be added to every entity.");
     auto view = registry.view<ViewComponents...>();
-    registry.insert<Type>(view.begin(), view.end(), args...);
+    registry.insert<Component>(view.begin(), view.end(), args...);
   }
 
-  template <typename Type, typename... ViewComponents, typename... ExcludeComponents, typename... Args>
+  template <typename Component, typename... ViewComponents, typename... ExcludeComponents, typename... Args>
   void addToEntitiesWithExclude(entt::exclude_t<ExcludeComponents...> exclude, const Args&... args) {
     static_assert(
       sizeof...(ViewComponents) != 0,
       "Using this function without view components will cause Type to be added to every entity.");
     static_assert(sizeof...(ExcludeComponents) != 0, "Use addToEntities instead if not excluding any components.");
-    if constexpr (sizeof...(ExcludeComponents) == 1 && !std::conjunction_v<std::is_same<Type, ExcludeComponents>...>) {
+    if constexpr (
+      sizeof...(ExcludeComponents) == 1 && !std::conjunction_v<std::is_same<Component, ExcludeComponents>...>) {
       auto view = registry.view<ViewComponents...>();
-      registry.insert<Type>(view.begin(), view.end(), args...);
-      (removeFromEntities<Type, ViewComponents..., ExcludeComponents>(), ...);
+      registry.insert<Component>(view.begin(), view.end(), args...);
+      (removeFromEntities<Component, ViewComponents..., ExcludeComponents>(), ...);
     }
     else {
       auto view = registry.view<ViewComponents...>(exclude);
-      registry.insert<Type>(view.begin(), view.end(), args...);
+      registry.insert<Component>(view.begin(), view.end(), args...);
     }
   }
 
-  template <typename Type, typename... ViewComponents, typename... ExcludeComponents>
+  template <typename Component, typename... ViewComponents, typename... ExcludeComponents>
   void removeFromEntities(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
     if constexpr (sizeof...(ViewComponents) == 0 && sizeof...(ExcludeComponents) == 0) {
-      registry.clear<Type>();
+      registry.clear<Component>();
     }
     else {
-      auto view = registry.view<Type, ViewComponents...>(exclude);
-      registry.remove<Type>(view.begin(), view.end());
+      auto view = registry.view<Component, ViewComponents...>(exclude);
+      registry.remove<Component>(view.begin(), view.end());
     }
   }
 };
@@ -25392,7 +25413,7 @@ namespace pokesim::dex {
 struct KingsRock {
   static constexpr Item name(GameMechanics = {}) { return dex::Item::KINGS_ROCK; }
 
-  static types::percentChance addedFlinchChance(GameMechanics) { return 10U; }
+  static constexpr types::percentChance addedFlinchChance(GameMechanics) { return 10U; }
 
   struct Strings {
     static constexpr std::string_view name() { return "King's Rock"; }
@@ -27337,7 +27358,7 @@ void runRandomEventChances(
   types::optionalCallback updateProbabilities = std::nullopt) {
   simulation.view<internal::setRandomEventChances<POSSIBLE_EVENT_COUNT>, Tags<SelectionTags...>>(simulation, chances);
 
-  if (!simulation.registry.view<internal::RandomEventChances<POSSIBLE_EVENT_COUNT>>().empty()) {
+  if (!simulation.hasNone<internal::RandomEventChances<POSSIBLE_EVENT_COUNT>>()) {
     internal::randomEventChances<POSSIBLE_EVENT_COUNT>(simulation, applyChoices, updateProbabilities);
   }
 }
@@ -27469,8 +27490,7 @@ struct EntityFilter {
 
   template <typename... ExtraComponents>
   bool hasNoneSelected() {
-    auto view = simulation->registry.view<SelectionTag, OtherSelectionTags..., ExtraComponents...>();
-    return view.begin() == view.end();
+    return simulation->hasNone<SelectionTag, OtherSelectionTags..., ExtraComponents...>();
   }
 
   void clearSelectionTags() { simulation->registry.clear<SelectionTag, OtherSelectionTags...>(); }
@@ -27587,7 +27607,6 @@ void setSpeedTieOrder(ActionQueue& actionQueue, const SpeedTieIndexes& speedTies
 void addBeforeTurnAction(ActionQueue& actionQueue);
 void addResidualAction(ActionQueue& actionQueue);
 void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction action);
-void clearActionQueue(types::handle handle, ActionQueue& actionQueue);
 }  // namespace internal::simulate_turn
 }  // namespace pokesim
 
@@ -27670,6 +27689,26 @@ struct Checks : pokesim::debug::Checks {
     }
   }
 
+  template <typename EntityHolder, typename Tag>
+  void checkAction(types::registry& blankRegistry, types::entity currentEntity) const {
+    types::entity idealAction = blankRegistry.create();
+    EntityHolder currentAction = registry->get<EntityHolder>(currentEntity);
+
+    blankRegistry.emplace<Tag>(idealAction);
+    pokesim::debug::hasSameComponents(*registry, currentAction.val, blankRegistry, idealAction);
+  }
+
+  void checkActions(types::entity currentEntity) const {
+    types::registry blankRegistry;
+
+    checkAction<RecycledAction, pokesim::tags::RecycledAction>(blankRegistry, currentEntity);
+    checkAction<RecycledActionMove, pokesim::tags::RecycledActionMove>(blankRegistry, currentEntity);
+    if (simulation->isBattleFormat(BattleFormat::DOUBLES)) {
+      checkAction<AddedRecycledActionMove1, pokesim::tags::AddedRecycledActionMove1>(blankRegistry, currentEntity);
+      checkAction<AddedRecycledActionMove2, pokesim::tags::AddedRecycledActionMove2>(blankRegistry, currentEntity);
+    }
+  }
+
   void checkBattleOutputs() const {
     pokesim::debug::TypesToIgnore typesToIgnore, typesIgnoredOnConstants;
     typesToIgnore.add<
@@ -27692,6 +27731,8 @@ struct Checks : pokesim::debug::Checks {
       bool shouldNotChange = !simulateTurnOptionsOnInput.getApplyChangesToInputBattle() && original == currentEntity;
       bool initialIsMidTurn = registryOnInput.all_of<pokesim::tags::BattleMidTurn>(initialEntity);
       bool currentIsMidTurn = registry->all_of<pokesim::tags::BattleMidTurn>(currentEntity);
+      bool currentHasWinner = registry->all_of<Winner>(currentEntity);
+
       if (!registryOnInput.all_of<Winner>(original)) {
         perEntityTypesToIgnore.add<Winner>();
       }
@@ -27703,6 +27744,8 @@ struct Checks : pokesim::debug::Checks {
         perEntityTypesToIgnore.add<Turn>();
       }
 
+      checkActions(currentEntity);
+
       pokesim::debug::areEntitiesEqual(
         *registry,
         currentEntity,
@@ -27710,16 +27753,16 @@ struct Checks : pokesim::debug::Checks {
         initialEntity,
         shouldNotChange ? typesIgnoredOnConstants : perEntityTypesToIgnore);
 
-      types::entity currAction = registry->get<RecycledAction>(currentEntity).val;
-      if (!initialIsMidTurn && !currentIsMidTurn) {
-        pokesim::debug::areEntitiesEqual(*registry, currAction, registryOnInput, getInitialEntity(currAction));
+      if (currentHasWinner) {
+        POKESIM_REQUIRE_NM(!currentIsMidTurn);
+        POKESIM_REQUIRE_NM(registry->get<Turn>(currentEntity).val == registryOnInput.get<Turn>(initialEntity).val);
+      }
+      if (currentIsMidTurn) {
+        POKESIM_REQUIRE_NM(!currentHasWinner);
       }
 
-      if (!currentIsMidTurn) {
-        types::registry blankRegistry;
-        types::entity idealRecycledAction = blankRegistry.create();
-        blankRegistry.emplace<pokesim::tags::RecycledAction>(idealRecycledAction);
-        pokesim::debug::hasSameComponents(*registry, currAction, blankRegistry, idealRecycledAction);
+      if (currentHasWinner || !currentIsMidTurn) {
+        POKESIM_REQUIRE_NM(registry->get<ActionQueue>(currentEntity).val.empty());
       }
     }
   }

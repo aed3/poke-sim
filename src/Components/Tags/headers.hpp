@@ -12,6 +12,7 @@
 #include "RecycledEntities.hpp"
 #include "RunEventTags.hpp"
 #include "Selection.hpp"
+#include "SideTags.hpp"
 #include "SimulationTags.hpp"
 #include "TargetTags.hpp"
 #include "TypeTags.hpp"

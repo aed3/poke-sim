@@ -117,40 +117,52 @@ class Simulation {
       passedInArgs...);
   }
 
-  template <typename Type, typename... ViewComponents, typename... Args>
+  template <typename Component, typename... OtherComponents>
+  bool hasNone() const {
+    if constexpr (sizeof...(OtherComponents)) {
+      auto view = registry.view<Component, OtherComponents...>();
+      return view.begin() == view.end();
+    }
+    else {
+      return registry.view<Component>().empty();
+    }
+  }
+
+  template <typename Component, typename... ViewComponents, typename... Args>
   void addToEntities(const Args&... args) {
     static_assert(
       sizeof...(ViewComponents) != 0,
       "Using this function without view components will cause Type to be added to every entity.");
     auto view = registry.view<ViewComponents...>();
-    registry.insert<Type>(view.begin(), view.end(), args...);
+    registry.insert<Component>(view.begin(), view.end(), args...);
   }
 
-  template <typename Type, typename... ViewComponents, typename... ExcludeComponents, typename... Args>
+  template <typename Component, typename... ViewComponents, typename... ExcludeComponents, typename... Args>
   void addToEntitiesWithExclude(entt::exclude_t<ExcludeComponents...> exclude, const Args&... args) {
     static_assert(
       sizeof...(ViewComponents) != 0,
       "Using this function without view components will cause Type to be added to every entity.");
     static_assert(sizeof...(ExcludeComponents) != 0, "Use addToEntities instead if not excluding any components.");
-    if constexpr (sizeof...(ExcludeComponents) == 1 && !std::conjunction_v<std::is_same<Type, ExcludeComponents>...>) {
+    if constexpr (
+      sizeof...(ExcludeComponents) == 1 && !std::conjunction_v<std::is_same<Component, ExcludeComponents>...>) {
       auto view = registry.view<ViewComponents...>();
-      registry.insert<Type>(view.begin(), view.end(), args...);
-      (removeFromEntities<Type, ViewComponents..., ExcludeComponents>(), ...);
+      registry.insert<Component>(view.begin(), view.end(), args...);
+      (removeFromEntities<Component, ViewComponents..., ExcludeComponents>(), ...);
     }
     else {
       auto view = registry.view<ViewComponents...>(exclude);
-      registry.insert<Type>(view.begin(), view.end(), args...);
+      registry.insert<Component>(view.begin(), view.end(), args...);
     }
   }
 
-  template <typename Type, typename... ViewComponents, typename... ExcludeComponents>
+  template <typename Component, typename... ViewComponents, typename... ExcludeComponents>
   void removeFromEntities(entt::exclude_t<ExcludeComponents...> exclude = entt::exclude_t{}) {
     if constexpr (sizeof...(ViewComponents) == 0 && sizeof...(ExcludeComponents) == 0) {
-      registry.clear<Type>();
+      registry.clear<Component>();
     }
     else {
-      auto view = registry.view<Type, ViewComponents...>(exclude);
-      registry.remove<Type>(view.begin(), view.end());
+      auto view = registry.view<Component, ViewComponents...>(exclude);
+      registry.remove<Component>(view.begin(), view.end());
     }
   }
 };

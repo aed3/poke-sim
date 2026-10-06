@@ -13,7 +13,7 @@ namespace pokesim::dex {
 struct KingsRock {
   static constexpr Item name(GameMechanics = {}) { return dex::Item::KINGS_ROCK; }
 
-  static types::percentChance addedFlinchChance(GameMechanics) { return 10U; }
+  static constexpr types::percentChance addedFlinchChance(GameMechanics) { return 10U; }
 
   struct Strings {
     static constexpr std::string_view name() { return "King's Rock"; }

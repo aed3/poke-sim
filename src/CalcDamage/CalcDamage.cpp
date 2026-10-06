@@ -583,7 +583,7 @@ void setUnboostedStat(Simulation& simulation) {
     moveFilter.view<saveRealEffectiveDefenderStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
 
-  if (simulation.registry.view<internal::calc_damage::RealEffectiveStat>().empty()) {
+  if (simulation.hasNone<internal::calc_damage::RealEffectiveStat>()) {
     return;
   }
 

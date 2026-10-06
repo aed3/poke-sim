@@ -337,9 +337,11 @@ void checkBattle(types::entity battleEntity, const types::registry& registry) {
   POKESIM_REQUIRE_NM(has<Sides>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<Probability>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<RngSeed>(battleEntity, registry));
-  const auto& [sides, probability] = registry.get<Sides, Probability>(battleEntity);
+  POKESIM_REQUIRE_NM(has<ActionQueue>(battleEntity, registry));
+  const auto& [sides, probability, actionQueue] = registry.get<Sides, Probability, ActionQueue>(battleEntity);
 
   check(probability);
+  check(actionQueue);
 
   POKESIM_REQUIRE_NM(sides.val.size() == Constants::SIDE_COUNT);
   auto [p1SideEntity, p2SideEntity] = sides.val;
@@ -354,6 +356,19 @@ void checkBattle(types::entity battleEntity, const types::registry& registry) {
 
   POKESIM_REQUIRE_NM(registry.get<FoeSide>(p1SideEntity).val == p2SideEntity);
   POKESIM_REQUIRE_NM(registry.get<FoeSide>(p2SideEntity).val == p1SideEntity);
+
+  bool isMidTurn = has<tags::BattleMidTurn>(battleEntity, registry);
+  bool hasWinner = has<Winner>(battleEntity, registry);
+
+  if (hasWinner) {
+    POKESIM_REQUIRE_NM(actionQueue.val.empty());
+  }
+
+  if (hasWinner || !isMidTurn) {
+    POKESIM_REQUIRE_NM(!has<MidTurnDecisionsRequested>(battleEntity, registry));
+    POKESIM_REQUIRE_NM(!has<MidTurnDecisionsRequested>(p1SideEntity, registry));
+    POKESIM_REQUIRE_NM(!has<MidTurnDecisionsRequested>(p2SideEntity, registry));
+  }
 }
 
 void checkSide(types::entity sideEntity, const types::registry& registry) {
@@ -2566,7 +2581,7 @@ void replaceFinishedHitsInMoveLists(Simulation& simulation) {
 
 template <auto Function>
 void runMoveHitCheck(Simulation& simulation) {
-  if (simulation.registry.view<tags::CurrentActionMove>().empty()) {
+  if (simulation.hasNone<tags::CurrentActionMove>()) {
     return;
   }
 
@@ -2782,7 +2797,7 @@ void moveHitLoop(Simulation& simulation) {
 
   using MoveHitLimits = Constants::MoveHits;
   types::moveHits iterations = MoveHitLimits::MIN;
-  while (!simulation.registry.view<HitCount>().empty()) {
+  while (!simulation.hasNone<HitCount>()) {
     POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran than possible.");
     if (iterations > MoveHitLimits::MIN) {
       simulation.view<removeHitCountFromFaintedTargets, Tags<tags::CurrentMoveHit>>();
@@ -2827,6 +2842,10 @@ void internal::runMoveHitChecks(Simulation& simulation) {
 
 namespace pokesim::simulate_turn {
 namespace {
+auto getSimulateTurnFilter(Simulation& simulation) {
+  return pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn>{simulation};
+}
+
 auto getBattleFilter(Simulation& simulation) {
   return pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::Battle>{simulation};
 }
@@ -2839,10 +2858,10 @@ void speedSort(Filter battleFilter, Simulation& simulation) {
 }
 
 void midTurnSwitch(Simulation& simulation) {
-  if (simulation.registry.view<MidTurnSideDecision>().empty()) {
+  auto sideFilter = getSimulateTurnFilter(simulation);
+  if (sideFilter.hasNoneSelected<MidTurnSideDecision>()) {
     return;
   }
-  pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn> sideFilter{simulation};
 
   sideFilter.view<internal::simulate_turn::resolveMidTurnDecisions>();
   sideFilter.removeFromSelected<MidTurnSideDecision>();
@@ -3083,7 +3102,10 @@ void setFainting(types::registry& registry, FaintQueue& faintQueue) {
   }
   faintQueue.val.pop_back();
   registry.emplace<pokesim::tags::Fainting>(pokemon);
-  registry.get<TeamRemaining>(registry.get<Side>(pokemon).val).val--;
+
+  Side side = registry.get<Side>(pokemon);
+  registry.get<TeamRemaining>(side.val).val--;
+  registry.get_or_emplace<pokesim::tags::SideFaintOnThisTurn>(side.val);
 }
 
 void clearFaintQueue(types::handle battleHandle, const FaintQueue& faintQueue) {
@@ -3099,7 +3121,7 @@ void checkWin(types::handle battleHandle, const Sides& sides) {
     types::teamPositionIndex foesRemaining = registry.get<TeamRemaining>(sides.val.foe(sideEntity)).val;
     if (!foesRemaining) {
       battleHandle.emplace<Winner>(registry.get<PlayerSide>(sideEntity).val);
-      internal::simulate_turn::clearActionQueue(battleHandle, battleHandle.get<ActionQueue>());
+      battleHandle.get<ActionQueue>().val.clear();
       return;
     }
   }
@@ -3112,11 +3134,11 @@ void faintPokemon(Simulation& simulation) {
   }
 
   auto faintCallback = simulation.simulateTurnOptions.faintCallback;
-  bool useFaintCallback = (bool)faintCallback;
+  bool useFaintCallback = faintCallback.has_value();
 
   using LoopLimits = Constants::ActivePokemon;
   types::activePokemonIndex iterations = LoopLimits::MIN;
-  while (!simulation.registry.view<FaintQueue>().empty()) {
+  while (!simulation.hasNone<FaintQueue>()) {
     POKESIM_REQUIRE(
       iterations <= LoopLimits::MAX,
       "More Pokemon were queued to faint in at least one battle than possible.");
@@ -3143,7 +3165,7 @@ void faintPokemon(Simulation& simulation) {
     simulation.removeFromEntities<pokesim::tags::ActivePokemon, pokesim::tags::Fainting>();
 
     if (useFaintCallback) {
-      faintCallback(simulation);
+      faintCallback.value()(simulation);
     }
 
     simulation.removeFromEntities<pokesim::tags::Fainting>();
@@ -3163,6 +3185,12 @@ void requestMidTurnDecision(types::registry& registry, Battle battle, Side side)
   registry.get_or_emplace<pokesim::MidTurnDecisionsRequested>(side.val).val++;
 }
 
+void requestMidTurnSwitch(Simulation& simulation) {
+  internal::EntityFilter<pokesim::tags::Switching, pokesim::tags::SimulateTurn> switchingFilter{simulation};
+  switchingFilter.addToSelected<pokesim::tags::RequestingMidTurnDecision>();
+  switchingFilter.view<requestMidTurnDecision>();
+}
+
 void runCurrentAction(Simulation& simulation) {
   runBeforeTurnAction(simulation);
   runMoveAction(simulation);
@@ -3173,11 +3201,9 @@ void runCurrentAction(Simulation& simulation) {
   simulation.registry.clear<CurrentAction, SourceSlotName, TargetSlotName, action::tags::Current>();
 
   faintPokemon(simulation);
-  simulation.addToEntities<pokesim::tags::RequestingMidTurnDecision, pokesim::tags::Switching>();
-  simulation.view<requestMidTurnDecision, Tags<pokesim::tags::Switching>>();
+  requestMidTurnSwitch(simulation);
 
   // Update
-  // Switch requests
 
   internal::updateAllStats(simulation);
   speedSort(getBattleFilter(simulation), simulation);
@@ -3188,17 +3214,58 @@ void incrementTurn(Turn& turn) {
 }
 
 void setActiveAtTurnEnd(types::handle handle, Battle battle) {
-  if (handle.registry()->all_of<pokesim::tags::BattleMidTurn, Winner>(battle.val)) {
+  if (handle.registry()->any_of<pokesim::tags::BattleMidTurn, Winner>(battle.val)) {
     return;
   }
 
   handle.emplace<pokesim::internal::tags::ActiveAtTurnEnd>();
 }
 
+void progressFaintedOnTurn(types::handle handle, Battle battle) {
+  if (handle.registry()->all_of<pokesim::tags::BattleMidTurn>(battle.val)) {
+    return;
+  }
+
+  handle.remove<pokesim::tags::SideFaintOnThisTurn>();
+
+  // if (!handle.registry()->all_of<Winner>(battle.val)) {
+  //   handle.emplace<pokesim::tags::SideHadFaintOnLastTurn>();
+  // }
+}
+
+void setFaintedToSwitchOut(
+  types::registry& registry, Battle battle, const Team& team, TeamRemaining teamRemaining,
+  types::activePokemonIndex activePerSide) {
+  if (registry.all_of<Winner>(battle.val)) {
+    return;
+  }
+
+  types::activePokemonIndex active = 0U;
+  for (types::activePokemonIndex i = 0U; i < team.val.size() && i < activePerSide; i++) {
+    if (!registry.all_of<pokesim::tags::Fainted>(team.val[i])) {
+      active++;
+    }
+  }
+
+  POKESIM_REQUIRE(active <= teamRemaining.val, "Cannot have more team members active than remaining.");
+  if (active == teamRemaining.val) {
+    return;
+  }
+
+  for (types::activePokemonIndex i = 0U; i < team.val.size() && i < activePerSide && i < teamRemaining.val; i++) {
+    if (registry.all_of<pokesim::tags::Fainted>(team.val[i])) {
+      registry.emplace<pokesim::tags::Switching>(team.val[i]);
+    }
+  }
+}
+
 void nextTurn(Simulation& simulation) {
   getBattleFilter(simulation).view<incrementTurn, Tags<>, entt::exclude_t<pokesim::tags::BattleMidTurn, Winner>>();
+  auto simulateTurnFilter = getSimulateTurnFilter(simulation);
 
-  simulation.view<setActiveAtTurnEnd, Tags<pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>>();
+  simulateTurnFilter.view<setActiveAtTurnEnd, Tags<pokesim::tags::ActivePokemon>>();
+  simulateTurnFilter.view<progressFaintedOnTurn, Tags<pokesim::tags::SideFaintOnThisTurn>>();
+
   pokesim::internal::EntityFilter<pokesim::internal::tags::ActiveAtTurnEnd> pokemonFilter{simulation};
   if (pokemonFilter.hasNoneSelected()) {
     return;
@@ -3211,8 +3278,30 @@ void nextTurn(Simulation& simulation) {
   simulation.removeFromEntities<pokesim::internal::tags::ActiveAtTurnEnd>();
 }
 
+void cloneToPreventInputChanges(Simulation& simulation) {
+  getBattleFilter(simulation).addToSelected<pokesim::tags::CloneFrom>();
+  const auto entityMap = clone(simulation.registry, 1U);
+  for (const auto& inputBattleMapping : entityMap) {
+    types::entity original = inputBattleMapping.first;
+    if (simulation.registry.all_of<pokesim::tags::SimulateTurn>(original)) {
+      simulation.registry.emplace<internal::simulate_turn::tags::Input>(original);
+      simulation.registry.remove<pokesim::tags::SimulateTurn>(original);
+    }
+  }
+}
+
 void simulateTurn(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
+  auto simulateTurnFilter = getSimulateTurnFilter(simulation);
+  if (simulateTurnFilter.hasNoneSelected()) {
+    return;
+  }
+
+  auto battleFilter = getBattleFilter(simulation);
+  if (battleFilter.hasNoneSelected()) {
+    return;
+  }
+
 #ifndef POKESIM_ALL_DAMAGE_ALL_BRANCHES
   POKESIM_REQUIRE(
     !options.getMakeBranchesOnRandomEvents() ||
@@ -3222,34 +3311,22 @@ void simulateTurn(Simulation& simulation) {
     "Rebuild PokeSim with the flag POKESIM_ALL_DAMAGE_ALL_BRANCHES to enable this option combination.");
 #endif
 
-  auto battleFilter = getBattleFilter(simulation);
-  if (battleFilter.hasNoneSelected()) {
-    return;
-  }
-
   simulation.removeFromEntities<tags::BattleOutcome>();
 
   if (!options.getApplyChangesToInputBattle()) {
-    simulation.addToEntities<pokesim::tags::CloneFrom, pokesim::tags::SimulateTurn, pokesim::tags::Battle>();
-    const auto entityMap = clone(simulation.registry, 1U);
-    for (const auto& inputBattleMapping : entityMap) {
-      types::entity original = inputBattleMapping.first;
-      if (simulation.registry.all_of<pokesim::tags::SimulateTurn>(original)) {
-        simulation.registry.emplace<internal::simulate_turn::tags::Input>(original);
-        simulation.registry.remove<pokesim::tags::SimulateTurn>(original);
-      }
-    }
+    cloneToPreventInputChanges(simulation);
   }
 
   internal::updateAllStats(simulation);
+
   midTurnSwitch(simulation);
-  simulation.view<internal::simulate_turn::resolveDecision, Tags<pokesim::tags::SimulateTurn>>();
-  simulation.removeFromEntities<SideDecision, pokesim::tags::SimulateTurn>();
+  simulateTurnFilter.view<internal::simulate_turn::resolveDecision>();
+  simulateTurnFilter.removeFromSelected<SideDecision>();
   if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
-    simulation.removeFromEntities<SinglesSideOptions, pokesim::tags::SimulateTurn>();
+    simulateTurnFilter.removeFromSelected<SinglesSideOptions>();
   }
   else {
-    simulation.removeFromEntities<DoublesSideOptions, pokesim::tags::SimulateTurn>();
+    simulateTurnFilter.removeFromSelected<DoublesSideOptions>();
   }
 
   // battleFilter.view<internal::simulate_turn::addBeforeTurnAction, Tags<>,
@@ -3260,28 +3337,44 @@ void simulateTurn(Simulation& simulation) {
 
   battleFilter.addToSelectedWithExclude<pokesim::tags::BattleMidTurn>(entt::exclude<pokesim::tags::BattleMidTurn>);
 
+  bool triedEndTurnSwitches = false;
+  bool useDecisionCallback = options.decisionCallback.has_value();
   using ActionsLimit = Constants::ActionQueueLength;
-  types::actionQueueIndex actionsTaken = ActionsLimit::MIN;
-
-  battleFilter.view<internal::simulate_turn::setCurrentAction>();
-  while (!simulation.registry.view<action::tags::Current>().empty()) {
+  for (types::actionQueueIndex actionsTaken = ActionsLimit::MIN; actionsTaken <= ActionsLimit::MAX; actionsTaken++) {
     POKESIM_REQUIRE(
-      actionsTaken <= ActionsLimit::MAX,
+      actionsTaken < ActionsLimit::MAX,
       "More actions in a turn were queued to be taken than are possible in at least one battle.");
 
-    runCurrentAction(simulation);
     battleFilter.view<
       internal::simulate_turn::setCurrentAction,
       Tags<>,
       entt::exclude_t<Winner, pokesim::MidTurnDecisionsRequested>>();
-    actionsTaken++;
 
-    if (options.decisionCallback && !simulation.registry.view<pokesim::tags::RequestingMidTurnDecision>()->empty()) {
-      options.decisionCallback(simulation);
+    if (simulation.hasNone<action::tags::Current>()) {
+      if (triedEndTurnSwitches || simulateTurnFilter.hasNoneSelected<pokesim::tags::SideFaintOnThisTurn>()) {
+        break;
+      }
+
+      triedEndTurnSwitches = true;
+      simulateTurnFilter.view<setFaintedToSwitchOut, Tags<pokesim::tags::SideFaintOnThisTurn>>(
+        simulation.isBattleFormat(BattleFormat::SINGLES) ? Constants::ActivePokemonSlotsPerSide::SINGLES
+                                                         : Constants::ActivePokemonSlotsPerSide::DOUBLES);
+    }
+
+    runCurrentAction(simulation);
+
+    if (useDecisionCallback && !simulation.hasNone<pokesim::tags::RequestingMidTurnDecision>()) {
+      options.decisionCallback.value()(simulation);
       midTurnSwitch(simulation);
+    }
+
+    if (!useDecisionCallback && triedEndTurnSwitches) {
+      break;
     }
   }
 
+  battleFilter.removeFromSelected<pokesim::tags::BattleMidTurn>(entt::exclude<pokesim::MidTurnDecisionsRequested>);
+  battleFilter.removeFromSelected<pokesim::tags::BattleMidTurn, Winner>();
   nextTurn(simulation);
 
   battleFilter.addToSelected<tags::BattleOutcome>();
@@ -3554,7 +3647,7 @@ void randomChanceEvent(
 
   registry.clear<Random>();
   clearRandomChanceResult(simulation);
-  if (simulation.isBattleFormat(BattleFormat::DOUBLES) && !registry.view<RandomStack>().empty()) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES) && !simulation.hasNone<RandomStack>()) {
     randomChanceEvent<Random, RandomStack, AssignRandomEvents, UpdateProbabilities, AssignRandomEventsTags...>(
       simulation,
       cloneCount,
@@ -3945,7 +4038,8 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
 
 void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue) {
   types::activePokemonIndex midTurnSwitches = 0U;
-  for (; midTurnSwitches < Constants::ActivePokemon::MAX; midTurnSwitches++) {
+  for (; midTurnSwitches < Constants::ActivePokemon::MAX && midTurnSwitches < actionQueue.val.size();
+       midTurnSwitches++) {
     if (actionQueue.val[midTurnSwitches].order != ActionOrder::MID_TURN_SWITCH) {
       break;
     }
@@ -3990,7 +4084,7 @@ void setSpeedTieOrder(ActionQueue& actionQueue, const SpeedTieIndexes& speedTies
 void resolveSpeedTies(Simulation& simulation) {
   using Limit = Constants::ActivePokemon;
   types::activePokemonIndex speedTiesResolved = Limit::MIN;
-  while (!simulation.registry.view<SpeedTieIndexes>().empty()) {
+  while (!simulation.hasNone<SpeedTieIndexes>()) {
     POKESIM_REQUIRE(
       speedTiesResolved <= Limit::MAX,
       "More speed ties were resolved than are possible in at least one battle.");
@@ -4024,7 +4118,6 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, Recy
   types::registry& registry = *battleHandle.registry();
 
   if (actionQueue.val.empty()) {
-    battleHandle.remove<pokesim::tags::BattleMidTurn>();
     return;
   }
 
@@ -4065,11 +4158,6 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, Recy
   actionQueue.val.erase(actionQueue.val.begin());
 
   battleHandle.emplace<CurrentAction>(action.val);
-}
-
-void clearActionQueue(types::handle handle, ActionQueue& actionQueue) {
-  handle.remove<pokesim::tags::BattleMidTurn>();
-  actionQueue.val.clear();
 }
 }  // namespace pokesim::internal::simulate_turn
 
@@ -4418,7 +4506,7 @@ void resolveMidTurnDecisions(
     POKESIM_REQUIRE(
       registry.all_of<pokesim::tags::RequestingMidTurnDecision>(sourceEntity),
       "Adding decision to a Pokemon that did not request one.");
-    registry.remove<pokesim::tags::RequestingMidTurnDecision>(sourceEntity);
+    registry.remove<pokesim::tags::RequestingMidTurnDecision, pokesim::tags::Switching>(sourceEntity);
 
     actionQueueItem.speed = registry.get<stat::EffectiveSpe>(sourceEntity).val;
     actionQueue.val.insert(actionQueue.val.begin(), actionQueueItem);
@@ -6436,7 +6524,7 @@ void setUnboostedStat(Simulation& simulation) {
     moveFilter.view<saveRealEffectiveDefenderStat<EffectiveStat>, Tags<IgnoresBoostTag, UsesStatTag>>();
   }
 
-  if (simulation.registry.view<internal::calc_damage::RealEffectiveStat>().empty()) {
+  if (simulation.hasNone<internal::calc_damage::RealEffectiveStat>()) {
     return;
   }
 
@@ -7559,6 +7647,8 @@ void clearMoveAction(Simulation& simulation) {
     pokesim::move::tags::BypassSubstitute,
     pokesim::move::tags::Punch,
     pokesim::move::tags::VariableHitCount,
+    pokesim::move::tags::SelfSwitch,
+    CritStageBoost,
     BaseEffectChance,
     Accuracy,
     BasePower,
