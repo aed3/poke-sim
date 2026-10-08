@@ -18485,6 +18485,10 @@ class registry : public internal::BackingRegistry {
   using entt::registry::get_or_emplace;
   using entt::registry::insert;
 
+  friend void pokesim::debug::areEntitiesEqual(
+    const types::registry&, types::entity, const types::registry&, types::entity, const pokesim::debug::TypesToIgnore&);
+  friend types::entity pokesim::debug::createEntityCopy(types::entity, const types::registry&, types::registry&);
+
   template <typename Type>
   static void copyToOtherRegistry(
     const registry* srcReg, types::entity srcEntity, registry* dstReg, types::entity dstEntity) {
@@ -18492,8 +18496,7 @@ class registry : public internal::BackingRegistry {
       dstReg->emplace<Type>(dstEntity);
     }
     else {
-      const Type& value = srcReg->get<Type>(srcEntity);
-      dstReg->emplace<Type>(dstEntity, value);
+      dstReg->emplace<Type>(dstEntity, srcReg->get<Type>(srcEntity));
     }
   }
 
@@ -18507,12 +18510,20 @@ class registry : public internal::BackingRegistry {
     }
   }
 
+  static inline entt::dense_map<entt::id_type, decltype(&copyToOtherRegistry<Constants>)> copyFunctions;
+  static inline entt::dense_map<entt::id_type, decltype(&entityComponentsEqual<Constants>)> equalsFunctions;
+
   template <typename Type>
-  void createMetaFunctions() const {
+  void createTypedFunctions() {
     static_assert(std::is_class_v<Type>, "Only classes or structs should be added to an entity.");
-    entt::meta<Type>()
-      .template func<&registry::copyToOtherRegistry<Type>>(MetaFunctions::COPY_TO_OTHER_REGISTRY)
-      .template func<&registry::entityComponentsEqual<Type>>(MetaFunctions::ENTITY_COMPONENTS_EQUAL);
+
+    static bool called = false;
+    if (called) return;
+    called = true;
+
+    entt::id_type id = entt::type_id<Type>().hash();
+    registry::copyFunctions[id] = registry::copyToOtherRegistry<Type>;
+    registry::equalsFunctions[id] = registry::entityComponentsEqual<Type>;
   }
 
   void checkEntity(entity_type entt) const { registry::checkEntity(entt, *this); }
@@ -18520,22 +18531,25 @@ class registry : public internal::BackingRegistry {
  public:
   template <typename Type, typename... Args>
   decltype(auto) emplace(const entity_type entt, Args&&... args) {
+    createTypedFunctions<Type>();
+
     checkEntity(entt);
-    createMetaFunctions<Type>();
     return entt::registry::emplace<Type>(entt, std::forward<Args>(args)...);
   }
 
   template <typename Type, typename... Args>
   decltype(auto) emplace_or_replace(const entity_type entt, Args&&... args) {
+    createTypedFunctions<Type>();
+
     checkEntity(entt);
-    createMetaFunctions<Type>();
     return entt::registry::emplace_or_replace<Type>(entt, std::forward<Args>(args)...);
   }
 
   template <typename Type, typename... Args>
   [[nodiscard]] decltype(auto) get_or_emplace(const entity_type entt, Args&&... args) {
+    createTypedFunctions<Type>();
+
     checkEntity(entt);
-    createMetaFunctions<Type>();
     return entt::registry::get_or_emplace<Type>(entt, std::forward<Args>(args)...);
   }
 
@@ -18563,7 +18577,8 @@ class registry : public internal::BackingRegistry {
 
   template <typename Type, typename It>
   void insert(It first, It last, const Type& value = {}) {
-    createMetaFunctions<Type>();
+    createTypedFunctions<Type>();
+
     if constexpr (std::is_empty_v<Type>) {
       entt::registry::insert<Type>(std::move(first), std::move(last));
     }
@@ -18576,7 +18591,8 @@ class registry : public internal::BackingRegistry {
     typename Type, typename EIt, typename CIt,
     typename = std::enable_if_t<std::is_same_v<typename std::iterator_traits<CIt>::value_type, Type>>>
   void insert(EIt first, EIt last, CIt from) {
-    createMetaFunctions<Type>();
+    createTypedFunctions<Type>();
+
     entt::registry::insert<Type>(first, last, from);
   }
 };

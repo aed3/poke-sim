@@ -21,8 +21,7 @@ types::entity createEntityCopy(types::entity entity, const types::registry& src,
   types::entity dstEntity = dst.create();
   for (auto [id, storage] : src.storage()) {
     if (storage.contains(entity)) {
-      entt::resolve(storage.type())
-        .invoke(types::registry::MetaFunctions::COPY_TO_OTHER_REGISTRY, {}, &src, entity, &dst, dstEntity);
+      types::registry::copyFunctions.at(id)(&src, entity, &dst, dstEntity);
     }
   }
   return dstEntity;
@@ -66,14 +65,7 @@ void areEntitiesEqual(
     if (typesToIgnore.contains(id)) continue;
 
     if (storage.contains(currEntity)) {
-      entt::resolve(storage.type())
-        .invoke(
-          types::registry::MetaFunctions::ENTITY_COMPONENTS_EQUAL,
-          {},
-          &currReg,
-          currEntity,
-          &initReg,
-          initEntity);
+      types::registry::equalsFunctions.at(id)(&currReg, currEntity, &initReg, initEntity);
     }
   }
 }
