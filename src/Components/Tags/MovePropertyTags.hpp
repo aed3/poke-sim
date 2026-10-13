@@ -23,6 +23,8 @@ struct AccuracyDependentHitCount {};
 
 struct SelfSwitch {};
 struct IgnoreImmunities {};
+struct Sound {};
+struct BypassProtect {};
 }  // namespace tags
 
 namespace effect::tags {

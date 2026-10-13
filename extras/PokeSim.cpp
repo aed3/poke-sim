@@ -325,16 +325,19 @@ void checkActionMoveList(const ActionMoveList& actionMoveList, const types::regi
 
 void checkBattle(types::entity battleEntity, const types::registry& registry) {
   types::registry::checkEntity(battleEntity, registry);
+  POKESIM_REQUIRE_NM(has<Battle>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<tags::Battle>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<Sides>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<Probability>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<RngSeed>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<ActionQueue>(battleEntity, registry));
-  const auto& [sides, probability, actionQueue] = registry.get<Sides, Probability, ActionQueue>(battleEntity);
+  const auto& [battle, sides, probability, actionQueue] =
+    registry.get<Battle, Sides, Probability, ActionQueue>(battleEntity);
 
   check(probability);
   check(actionQueue);
 
+  POKESIM_REQUIRE_NM(battleEntity == battle.val);
   POKESIM_REQUIRE_NM(sides.val.size() == Constants::SIDE_COUNT);
   auto [p1SideEntity, p2SideEntity] = sides.val;
 
@@ -728,6 +731,16 @@ void check(const SpeBoost& speBoost) {
 }
 
 template <>
+void check(const AccBoost& accBoost) {
+  checkBoost(accBoost.val);
+}
+
+template <>
+void check(const EvaBoost& evaBoost) {
+  checkBoost(evaBoost.val);
+}
+
+template <>
 void check(const calc_damage::CritChanceDivisor& critChanceDivisor) {
   POKESIM_REQUIRE_NM(
     listContains(MechanicConstants::CRIT_CHANCE_DIVISORS(GameMechanics::LATEST), critChanceDivisor.val));
@@ -801,6 +814,73 @@ void check(const Ivs& ivs) {
   checkIv(ivs.spa);
   checkIv(ivs.spd);
   checkIv(ivs.spe);
+}
+
+template <>
+void check(const EffectStackItem& eventStackItem, const types::registry& registry) {
+  checkPokemon(eventStackItem.source, registry);
+  checkPokemon(eventStackItem.target, registry);
+  auto effect = eventStackItem.effect;
+  POKESIM_REQUIRE_NM(!effect.empty());
+
+  if (effect.holds<dex::PseudoWeather>()) {
+    check(PseudoWeatherName{effect.get<dex::PseudoWeather>()});
+  }
+  else if (effect.holds<dex::SideCondition>()) {
+    check(SideConditionName{effect.get<dex::SideCondition>()});
+  }
+  else if (effect.holds<dex::Status>()) {
+    check(StatusName{effect.get<dex::Status>()});
+  }
+  else if (effect.holds<dex::Terrain>()) {
+    check(TerrainName{effect.get<dex::Terrain>()});
+  }
+  else if (effect.holds<dex::Volatile>()) {
+    check(VolatileName{effect.get<dex::Volatile>()});
+  }
+  else if (effect.holds<dex::Weather>()) {
+    check(WeatherName{effect.get<dex::Weather>()});
+  }
+  else if (effect.holds<AtkBoost>()) {
+    checkBoost(effect.get<AtkBoost>().val);
+  }
+  else if (effect.holds<DefBoost>()) {
+    checkBoost(effect.get<DefBoost>().val);
+  }
+  else if (effect.holds<SpaBoost>()) {
+    checkBoost(effect.get<SpaBoost>().val);
+  }
+  else if (effect.holds<SpdBoost>()) {
+    checkBoost(effect.get<SpdBoost>().val);
+  }
+  else if (effect.holds<SpeBoost>()) {
+    checkBoost(effect.get<SpeBoost>().val);
+  }
+  else if (effect.holds<AccBoost>()) {
+    checkBoost(effect.get<AccBoost>().val);
+  }
+  else if (effect.holds<EvaBoost>()) {
+    checkBoost(effect.get<EvaBoost>().val);
+  }
+
+  auto effectSource = eventStackItem.effectSource;
+  if (effectSource.holds<dex::Item>()) {
+    check(ItemName{effectSource.get<dex::Item>()});
+  }
+  else if (effectSource.holds<dex::Move>()) {
+    check(MoveName{effectSource.get<dex::Move>()});
+  }
+  else if (effectSource.holds<dex::Ability>()) {
+    check(AbilityName{effectSource.get<dex::Ability>()});
+  }
+}
+
+template <>
+void check(const EffectStack& eventStack, const types::registry& registry) {
+  checkBounds<Constants::EffectStackLength>(eventStack.val.size());
+  for (const EffectStackItem& item : eventStack.val) {
+    check(item, registry);
+  }
 }
 
 template <>
@@ -909,7 +989,7 @@ void check(const CurrentEffectsAsSource& effects, const types::registry& registr
 }
 
 template <>
-void check(const CurrentEffectsAsTarget& effects, const types::registry& registry) {
+void check(const CurrentEffectAsTarget& effects, const types::registry& registry) {
   types::registry::checkEntity(effects.val, registry);
 }
 
@@ -1768,6 +1848,8 @@ void setPokemonCurrentBoosts(const PokemonCreationInfo& pokemonInfo, internal::P
   if (pokemonInfoBoosts.spa.has_value()) pokemonSetup.setBoost<SpaBoost>(pokemonInfoBoosts.spa.value());
   if (pokemonInfoBoosts.spd.has_value()) pokemonSetup.setBoost<SpdBoost>(pokemonInfoBoosts.spd.value());
   if (pokemonInfoBoosts.spe.has_value()) pokemonSetup.setBoost<SpeBoost>(pokemonInfoBoosts.spe.value());
+  if (pokemonInfoBoosts.acc.has_value()) pokemonSetup.setBoost<AccBoost>(pokemonInfoBoosts.acc.value());
+  if (pokemonInfoBoosts.eva.has_value()) pokemonSetup.setBoost<EvaBoost>(pokemonInfoBoosts.eva.value());
 }
 
 void createInitialPokemon(
@@ -2374,13 +2456,10 @@ void runAfterSetStatusEvent(Simulation&) {}
 void runChangeBoostEvent(Simulation&) {}
 void runTryBoostEvent(Simulation&) {}
 
-template <typename BoostType>
-void runAfterEachBoostEvent(Simulation&) {}
-template void runAfterEachBoostEvent<AtkBoost>(Simulation&);
-template void runAfterEachBoostEvent<DefBoost>(Simulation&);
-template void runAfterEachBoostEvent<SpaBoost>(Simulation&);
-template void runAfterEachBoostEvent<SpdBoost>(Simulation&);
-template void runAfterEachBoostEvent<SpeBoost>(Simulation&);
+void runAfterEachBoostEvent(Simulation& simulation) {
+  dex::Competitive::onAfterEachBoost(simulation);
+  dex::Defiant::onAfterEachBoost(simulation);
+}
 
 void runAfterBoostEvent(Simulation&) {}
 
@@ -2601,7 +2680,20 @@ void setEffectSource(types::handle handle, CurrentActionSource source) {
 template <typename TargetEntityHolder>
 void setEffectTarget(types::handle handle, TargetEntityHolder target) {
   handle.emplace<CurrentEffectTarget>(target.val);
-  handle.registry()->emplace<CurrentEffectsAsTarget>(target.val, handle.entity());
+  handle.registry()->emplace<CurrentEffectAsTarget>(target.val, handle.entity());
+}
+
+void runEffect(Simulation& simulation) {
+  internal::tryBoost(simulation);
+  internal::trySetStatus(simulation);
+  trySetStatusFromEffect(simulation);
+  trySetVolatileFromEffect(simulation);
+  trySetSideConditionFromEffect(simulation);
+  trySetSlotConditionFromEffect(simulation);
+  trySetWeatherFromEffect(simulation);
+  trySetTerrainFromEffect(simulation);
+  trySetPseudoWeatherFromEffect(simulation);
+  internal::runHitEvent(simulation);
 }
 
 void runMoveEffects(Simulation& simulation) {
@@ -2614,18 +2706,20 @@ void runMoveEffects(Simulation& simulation) {
   moveFilter.view<setEffectTarget<CurrentActionSource>, Tags<move::effect::tags::MoveSource>>();
   moveFilter.view<setEffectTarget<CurrentActionTarget>, Tags<move::effect::tags::MoveTarget>>();
 
-  internal::tryBoost(simulation);
-  internal::trySetStatus(simulation);
-  trySetStatusFromEffect(simulation);
-  trySetVolatileFromEffect(simulation);
-  trySetSideConditionFromEffect(simulation);
-  trySetSlotConditionFromEffect(simulation);
-  trySetWeatherFromEffect(simulation);
-  trySetTerrainFromEffect(simulation);
-  trySetPseudoWeatherFromEffect(simulation);
-  internal::runHitEvent(simulation);
+  runEffect(simulation);
+  internal::clearCurrentEffect(simulation);
 
-  simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
+  using Limits = Constants::EffectStackLength;
+  types::effectStackIndex iterations = Limits::MIN;
+  while (!simulation.hasNone<EffectStack>()) {
+    POKESIM_REQUIRE(iterations <= Limits::MAX, "More effects were stacked than should be possible");
+
+    internal::setCurrentEffectFromStack(simulation);
+    runEffect(simulation);
+    internal::clearCurrentBattleEffect(simulation);
+
+    iterations++;
+  }
 }
 
 template <typename ComponentToRemove>
@@ -3990,10 +4084,6 @@ void sortAndSetSpeedTies(
   }
 }
 
-void setBattleOnSpeedTyingEntities(types::handle battleHandle, const SpeedTieIndexes&) {
-  battleHandle.emplace<Battle>(battleHandle.entity());
-}
-
 void setSpeedTieRandomEventCount(types::handle handle, const SpeedTieIndexes& speedTies, const Simulation& simulation) {
   POKESIM_REQUIRE(
     !speedTies.val.empty(),
@@ -4080,21 +4170,12 @@ void resolveSpeedTies(Simulation& simulation) {
     POKESIM_REQUIRE(
       speedTiesResolved <= Limit::MAX,
       "More speed ties were resolved than are possible in at least one battle.");
-    // The random chance functions require Battle components and this is the only case of battle entities using random
-    // chance functions.
-    if (!speedTiesResolved) {
-      simulation.view<setBattleOnSpeedTyingEntities>();
-    }
 
     simulation.view<setSpeedTieRandomEventCount>(simulation);
     randomEventCount(simulation, [](Simulation& sim) { sim.view<setSpeedTieOrder>(); }, {});
 
     simulation.view<removeEmptySpeedTieIndexes>();
     speedTiesResolved++;
-  }
-
-  if (speedTiesResolved != Limit::MIN) {
-    simulation.removeFromEntities<Battle, pokesim::tags::Battle>();
   }
 }
 
@@ -4708,6 +4789,8 @@ struct BuildMove {
     spaBoost,
     spdBoost,
     speBoost,
+    accBoost,
+    evaBoost,
     status,
     addedFlinchChance,
   };
@@ -4754,6 +4837,10 @@ struct BuildMove {
   struct has<Optional::spdBoost, Type, void_t<Type::spdBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::accBoost, Type, void_t<Type::accBoost>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::evaBoost, Type, void_t<Type::evaBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::status, Type, void_t<Type::status>> : std::true_type {};
   template <typename Type>
@@ -4838,6 +4925,14 @@ struct BuildMove {
 
     if constexpr (has<Optional::speBoost, EffectData>::value) {
       setup.add(SpeBoost{EffectData::speBoost(gameMechanic)});
+    }
+
+    if constexpr (has<Optional::accBoost, EffectData>::value) {
+      setup.add(AccBoost{EffectData::accBoost(gameMechanic)});
+    }
+
+    if constexpr (has<Optional::evaBoost, EffectData>::value) {
+      setup.add(EvaBoost{EffectData::evaBoost(gameMechanic)});
     }
 
     if constexpr (has<Optional::status, EffectData>::value) {
@@ -5759,6 +5854,36 @@ struct AnalyticOnBasePowerCalcDamage {
   }
 };
 
+template <typename BoostType, typename CheckedBoostType>
+void competitiveDefiantAddToEffectStack(
+  types::registry& registry, Battle battle, types::entity target, CheckedBoostType checkedBoost,
+  types::boost boostByIfLowered, Ability ability) {
+  if (checkedBoost && checkedBoost->val < Constants::PokemonStatBoost::DEFAULT) {
+    registry.get_or_emplace<EffectStack>(battle.val)
+      .val.push_back({BoostType{boostByIfLowered}, ability, target, target});
+  }
+}
+
+template <typename BoostType>
+void competitiveDefiantOnAfterEachBoost(
+  types::handle handle, Battle battle, CurrentEffectAsTarget effect, types::boost boostByIfLowered, Ability ability) {
+  types::registry& registry = *handle.registry();
+  types::entity target = handle.entity();
+  if (internal::isAlly(registry, target, registry.get<CurrentEffectSource>(effect.val).val)) {
+    return;
+  }
+
+  auto [atkBoost, defBoost, spaBoost, spdBoost, speBoost, accBoost, evaBoost] =
+    registry.try_get<AtkBoost, DefBoost, SpaBoost, SpdBoost, SpeBoost, AccBoost, EvaBoost>(effect.val);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, atkBoost, boostByIfLowered, ability);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, defBoost, boostByIfLowered, ability);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, spaBoost, boostByIfLowered, ability);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, spdBoost, boostByIfLowered, ability);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, speBoost, boostByIfLowered, ability);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, accBoost, boostByIfLowered, ability);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, evaBoost, boostByIfLowered, ability);
+}
+
 void imposterOnSwitchIn(types::handle handle, Side side, const Simulation& simulation) {
   types::registry& registry = *handle.registry();
   FoeSide foeSide = registry.get<FoeSide>(side.val);
@@ -5816,15 +5941,15 @@ void staticOnDamagingHit(
     return;
   }
 
-  pokesim::internal::setRandomBinaryChanceFromPercentChance({registry, move}, battle, simulation, chanceOfStatic);
+  pokesim::internal::setRandomBinaryChanceFromPercentChance({registry, battle.val}, battle, simulation, chanceOfStatic);
 
   types::entity effectSource = targetHandle.entity();
   types::entity effectTarget = source;
-  registry.emplace_or_replace<Paralysis>(move);
-  registry.emplace<CurrentEffectSource>(move, effectSource);
-  registry.emplace<CurrentEffectsAsSource>(effectSource, decltype(CurrentEffectsAsSource::val){move});
-  registry.emplace<CurrentEffectTarget>(move, effectTarget);
-  registry.emplace<CurrentEffectsAsTarget>(effectTarget, move);
+  registry.emplace<Paralysis>(battle.val);
+  registry.emplace<CurrentEffectSource>(battle.val, effectSource);
+  registry.emplace<CurrentEffectsAsSource>(effectSource).val.push_back(battle.val);
+  registry.emplace<CurrentEffectTarget>(battle.val, effectTarget);
+  registry.emplace<CurrentEffectAsTarget>(effectTarget, battle.val);
 }
 }  // namespace
 
@@ -5840,6 +5965,16 @@ void Analytic::onBasePower(Simulation& simulation) {
     simulation,
     numerator,
     denominator);
+}
+
+void Competitive::onAfterEachBoost(Simulation& simulation) {
+  const auto spaBoost = simulation.pokedex().getStaticValue<Competitive::onAfterEachBoostSpaBoost>();
+  simulation.view<competitiveDefiantOnAfterEachBoost<SpaBoost>, Tags<Competitive>>(spaBoost, Ability::COMPETITIVE);
+}
+
+void Defiant::onAfterEachBoost(Simulation& simulation) {
+  const auto atkBoost = simulation.pokedex().getStaticValue<Defiant::onAfterEachBoostAtkBoost>();
+  simulation.view<competitiveDefiantOnAfterEachBoost<AtkBoost>, Tags<Defiant>>(atkBoost, Ability::DEFIANT);
 }
 
 void Imposter::onSwitchIn(Simulation& simulation) {
@@ -5879,7 +6014,8 @@ void Static::onDamagingHit(Simulation& simulation) {
     std::nullopt);
 
   internal::setStatus(simulation);
-  simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
+  internal::clearCurrentEffect(simulation);
+  simulation.removeFromEntities<Paralysis, pokesim::tags::Battle>();
 }
 }  // namespace pokesim::dex
 
@@ -6813,6 +6949,7 @@ bool PokemonStateSetup::isFainted() {
 namespace pokesim::internal {
 BattleStateSetup::BattleStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {
   if (!handle.any_of<ActionQueue, pokesim::tags::Battle>()) {
+    handle.emplace<Battle>(entity);
     handle.emplace<ActionQueue>();
     handle.emplace<pokesim::tags::Battle>();
   }
@@ -6978,8 +7115,10 @@ void boostStat(types::registry& registry, CurrentEffectTarget target, BoostType&
   BoostType& currentBoost = registry.get_or_emplace<BoostType>(target.val);
   currentBoost.val += boost.val;
 
-  if (boost.val) {
-    registry.emplace_or_replace<StatUpdateRequired>(target.val);
+  if constexpr (!std::is_same_v<StatUpdateRequired, void>) {
+    if (boost.val) {
+      registry.emplace_or_replace<StatUpdateRequired>(target.val);
+    }
   }
   if (currentBoost.val == Constants::PokemonStatBoost::DEFAULT) {
     registry.remove<BoostType>(target.val);
@@ -7002,12 +7141,6 @@ void clampBoost(types::registry& registry, CurrentEffectTarget target, BoostType
   else if (combinedBoost < BoostLimits::MIN) {
     boost.val = BoostLimits::MIN - currentBoost->val;
   }
-}
-
-template <typename BoostType, typename StatUpdateRequired>
-void boost(Simulation& simulation) {
-  simulation.view<boostStat<BoostType, StatUpdateRequired>>();
-  runAfterEachBoostEvent<BoostType>(simulation);
 }
 
 template <typename StatusType>
@@ -7204,6 +7337,8 @@ void clearVolatiles(Simulation& simulation) {
     SpaBoost,
     SpdBoost,
     SpeBoost,
+    AccBoost,
+    EvaBoost,
     LastUsedMove,
     ChoiceLock,
     Trapper,
@@ -7267,13 +7402,18 @@ void tryBoost(Simulation& simulation) {
   simulation.view<clampBoost<SpaBoost>>();
   simulation.view<clampBoost<SpdBoost>>();
   simulation.view<clampBoost<SpeBoost>>();
+  simulation.view<clampBoost<AccBoost>>();
+  simulation.view<clampBoost<EvaBoost>>();
   runTryBoostEvent(simulation);
 
-  boost<AtkBoost, pokesim::tags::AtkStatUpdateRequired>(simulation);
-  boost<DefBoost, pokesim::tags::DefStatUpdateRequired>(simulation);
-  boost<SpaBoost, pokesim::tags::SpaStatUpdateRequired>(simulation);
-  boost<SpdBoost, pokesim::tags::SpdStatUpdateRequired>(simulation);
-  boost<SpeBoost, pokesim::tags::SpeStatUpdateRequired>(simulation);
+  simulation.view<boostStat<AtkBoost, pokesim::tags::AtkStatUpdateRequired>>();
+  simulation.view<boostStat<DefBoost, pokesim::tags::DefStatUpdateRequired>>();
+  simulation.view<boostStat<SpaBoost, pokesim::tags::SpaStatUpdateRequired>>();
+  simulation.view<boostStat<SpdBoost, pokesim::tags::SpdStatUpdateRequired>>();
+  simulation.view<boostStat<SpeBoost, pokesim::tags::SpeStatUpdateRequired>>();
+  simulation.view<boostStat<AccBoost, void>>();
+  simulation.view<boostStat<EvaBoost, void>>();
+  runAfterEachBoostEvent(simulation);
   runAfterBoostEvent(simulation);
 }
 
@@ -7340,6 +7480,8 @@ void transformInto(types::registry& registry, types::entity source, types::entit
   if (targetHandle.all_of<SpaBoost>()) sourceHandle.emplace_or_replace<SpaBoost>(targetHandle.get<SpaBoost>());
   if (targetHandle.all_of<SpdBoost>()) sourceHandle.emplace_or_replace<SpdBoost>(targetHandle.get<SpdBoost>());
   if (targetHandle.all_of<SpeBoost>()) sourceHandle.emplace_or_replace<SpeBoost>(targetHandle.get<SpeBoost>());
+  if (targetHandle.all_of<AccBoost>()) sourceHandle.emplace_or_replace<AccBoost>(targetHandle.get<AccBoost>());
+  if (targetHandle.all_of<EvaBoost>()) sourceHandle.emplace_or_replace<EvaBoost>(targetHandle.get<EvaBoost>());
 
   sourceHandle.emplace<pokesim::tags::AtkStatUpdateRequired>();
   sourceHandle.emplace<pokesim::tags::DefStatUpdateRequired>();
@@ -7490,21 +7632,26 @@ void updateCurrentActionTargets(types::registry& registry, CurrentAction& action
   action.targets.pop_count(deleteCount);
 }
 
-template <typename View>
-void clearActionMoveComponents(types::registry& registry, const View& view) {
+template <typename... OtherComponents, typename View>
+void clearEffectComponents(types::registry& registry, const View& view) {
   registry.remove<
-    pokesim::tags::SimulateTurn,
-    Battle,
-    TypeName,
+    OtherComponents...,
     AtkBoost,
     DefBoost,
     SpaBoost,
     SpdBoost,
     SpeBoost,
+    AccBoost,
+    EvaBoost,
     pokesim::tags::Flinch,
     AddedFlinchChance,
     dex::Paralysis,
     dex::Burn>(view.begin(), view.end());
+}
+
+template <typename View>
+void clearActionMoveComponents(types::registry& registry, const View& view) {
+  clearEffectComponents<pokesim::tags::SimulateTurn, Battle, TypeName>(registry, view);
 }
 
 template <typename MoveTag>
@@ -7520,6 +7667,31 @@ void clearAction(Simulation& simulation) {
     FailedCurrentActionTarget,
     pokesim::tags::CurrentActionSource,
     pokesim::tags::CurrentActionTarget>();
+}
+
+void setNextInEffectStack(types::handle handle, EffectStack& effectStack) {
+  EffectStackItem item = effectStack.val.back();
+  handle.emplace<CurrentEffectSource>(item.source);
+  handle.emplace<CurrentEffectTarget>(item.target);
+  handle.registry()->emplace<CurrentEffectsAsSource>(item.source).val.push_back(handle.entity());
+  handle.registry()->emplace<CurrentEffectAsTarget>(item.target, handle.entity());
+
+  auto effect = item.effect;
+  if (effect.holds<AtkBoost>()) {
+    handle.emplace<AtkBoost>(effect.get<AtkBoost>());
+  }
+  else if (effect.holds<SpaBoost>()) {
+    handle.emplace<SpaBoost>(effect.get<SpaBoost>());
+  }
+  else {
+    POKESIM_REQUIRE_FAIL(
+      "EffectStackItem has unimplemented effect of type index " + std::to_string(effect.index()) + ".");
+  }
+
+  effectStack.val.pop_back();
+  if (effectStack.val.empty()) {
+    handle.remove<EffectStack>();
+  }
 }
 }  // namespace
 
@@ -7634,12 +7806,14 @@ void clearMoveAction(Simulation& simulation) {
     pokesim::move::tags::Physical,
     pokesim::move::tags::Special,
     pokesim::move::tags::Status,
+    pokesim::move::tags::BypassProtect,
+    pokesim::move::tags::BypassSubstitute,
     pokesim::move::tags::Contact,
     pokesim::move::tags::IgnoreImmunities,
-    pokesim::move::tags::BypassSubstitute,
     pokesim::move::tags::Punch,
-    pokesim::move::tags::VariableHitCount,
     pokesim::move::tags::SelfSwitch,
+    pokesim::move::tags::Sound,
+    pokesim::move::tags::VariableHitCount,
     CritStageBoost,
     BaseEffectChance,
     Accuracy,
@@ -7661,6 +7835,24 @@ void clearMoveAction(Simulation& simulation) {
 void clearSwitchAction(Simulation& simulation) {
   clearAction(simulation);
   simulation.registry.clear<action::tags::Switch, action::tags::ActiveSwitch, action::tags::NotFaintedActiveSwitch>();
+}
+
+void clearCurrentEffect(Simulation& simulation) {
+  simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectAsTarget>();
+}
+
+void setCurrentEffectFromStack(Simulation& simulation) {
+  POKESIM_REQUIRE(simulation.hasNone<CurrentEffectSource>(), "An effect cannot be set while others are active.");
+  POKESIM_REQUIRE(simulation.hasNone<CurrentEffectTarget>(), "An effect cannot be set while others are active.");
+  POKESIM_REQUIRE(simulation.hasNone<CurrentEffectsAsSource>(), "An effect cannot be set while others are active.");
+  POKESIM_REQUIRE(simulation.hasNone<CurrentEffectAsTarget>(), "An effect cannot be set while others are active.");
+
+  simulation.view<setNextInEffectStack>();
+}
+
+void clearCurrentBattleEffect(Simulation& simulation) {
+  clearEffectComponents(simulation.registry, simulation.registry.view<pokesim::tags::Battle>());
+  clearCurrentEffect(simulation);
 }
 }  // namespace pokesim::internal
 
@@ -7698,6 +7890,11 @@ types::teamPositionIndex entityToIndex(
   POKESIM_REQUIRE_FAIL("Slot entity must be part of the side entity's team");
   return Constants::TeamSize::MAX;
 }
+
+bool isAlly(types::registry& registry, types::entity pokemonEntity1, types::entity pokemonEntity2) {
+  return pokemonEntity1 == pokemonEntity2 ||
+         registry.get<Side>(pokemonEntity1).val == registry.get<Side>(pokemonEntity2).val;
+}
 }  // namespace internal
 
 Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position) {
@@ -7712,7 +7909,7 @@ PlayerSideId slotToSideId(Slot slot) {
 }
 
 PlayerSideId sideIdToFoeSideId(PlayerSideId sideId) {
-  static constexpr types::sides<PlayerSideId> SIDES(PlayerSideId::P1, PlayerSideId::P2);
+  static constexpr types::sides<PlayerSideId> SIDES{PlayerSideId::P1, PlayerSideId::P2};
   return SIDES.foe(SIDES.at(sideId));
 }
 
@@ -8059,6 +8256,15 @@ void remapCurrentAction(types::registry& registry, const types::ClonedEntityMap&
   }
 }
 
+void remapEventStack(types::registry& registry, const types::ClonedEntityMap& entityMap) {
+  for (auto [clonedEntity, cloneTo, eventStack] : registry.view<CloneTo, EffectStack>().each()) {
+    for (EffectStackItem& item : eventStack.val) {
+      remapEntity(item.source, cloneTo, entityMap);
+      remapEntity(item.target, cloneTo, entityMap);
+    }
+  }
+}
+
 template <typename Component>
 void remapComponentEntities(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   if constexpr (std::is_same_v<decltype(Component::val), types::entity>) {
@@ -8124,7 +8330,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<CurrentEffectSource>(registry, entityMap);
   remapComponentEntities<CurrentEffectTarget>(registry, entityMap);
   remapComponentEntities<CurrentEffectsAsSource>(registry, entityMap);
-  remapComponentEntities<CurrentEffectsAsTarget>(registry, entityMap);
+  remapComponentEntities<CurrentEffectAsTarget>(registry, entityMap);
   remapComponentEntities<FailedCurrentActionSource>(registry, entityMap);
   remapComponentEntities<FailedCurrentActionTarget>(registry, entityMap);
   remapComponentEntities<FaintQueue>(registry, entityMap);
@@ -8136,6 +8342,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<Team>(registry, entityMap);
   remapComponentEntities<Trapper>(registry, entityMap);
   remapCurrentAction(registry, entityMap);
+  remapEventStack(registry, entityMap);
 
   registry.clear<CloneTo, tags::CloneFrom>();
 

@@ -631,6 +631,12 @@ struct TestSimulation {
     else if constexpr (std::is_same_v<SpeBoost, Type>) {
       info.currentBoosts.spe = value.val;
     }
+    else if constexpr (std::is_same_v<AccBoost, Type>) {
+      info.currentBoosts.acc = value.val;
+    }
+    else if constexpr (std::is_same_v<EvaBoost, Type>) {
+      info.currentBoosts.eva = value.val;
+    }
   }
 };
 }  // namespace pokesim

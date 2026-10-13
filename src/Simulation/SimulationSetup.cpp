@@ -195,6 +195,8 @@ void setPokemonCurrentBoosts(const PokemonCreationInfo& pokemonInfo, internal::P
   if (pokemonInfoBoosts.spa.has_value()) pokemonSetup.setBoost<SpaBoost>(pokemonInfoBoosts.spa.value());
   if (pokemonInfoBoosts.spd.has_value()) pokemonSetup.setBoost<SpdBoost>(pokemonInfoBoosts.spd.value());
   if (pokemonInfoBoosts.spe.has_value()) pokemonSetup.setBoost<SpeBoost>(pokemonInfoBoosts.spe.value());
+  if (pokemonInfoBoosts.acc.has_value()) pokemonSetup.setBoost<AccBoost>(pokemonInfoBoosts.acc.value());
+  if (pokemonInfoBoosts.eva.has_value()) pokemonSetup.setBoost<EvaBoost>(pokemonInfoBoosts.eva.value());
 }
 
 void createInitialPokemon(

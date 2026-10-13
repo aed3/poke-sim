@@ -132,13 +132,10 @@ void runAfterSetStatusEvent(Simulation&) {}
 void runChangeBoostEvent(Simulation&) {}
 void runTryBoostEvent(Simulation&) {}
 
-template <typename BoostType>
-void runAfterEachBoostEvent(Simulation&) {}
-template void runAfterEachBoostEvent<AtkBoost>(Simulation&);
-template void runAfterEachBoostEvent<DefBoost>(Simulation&);
-template void runAfterEachBoostEvent<SpaBoost>(Simulation&);
-template void runAfterEachBoostEvent<SpdBoost>(Simulation&);
-template void runAfterEachBoostEvent<SpeBoost>(Simulation&);
+void runAfterEachBoostEvent(Simulation& simulation) {
+  dex::Competitive::onAfterEachBoost(simulation);
+  dex::Defiant::onAfterEachBoost(simulation);
+}
 
 void runAfterBoostEvent(Simulation&) {}
 

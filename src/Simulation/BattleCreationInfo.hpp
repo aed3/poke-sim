@@ -59,6 +59,8 @@ struct PokemonCreationInfo {
     std::optional<types::boost> spa = std::nullopt;
     std::optional<types::boost> spd = std::nullopt;
     std::optional<types::boost> spe = std::nullopt;
+    std::optional<types::boost> acc = std::nullopt;
+    std::optional<types::boost> eva = std::nullopt;
   };
 
  public:

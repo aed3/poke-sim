@@ -1,6 +1,7 @@
 #include "BattleStateSetup.hpp"
 
 #include <Components/ActionQueue.hpp>
+#include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/RecycledEntities.hpp>
 #include <Components/EntityHolders/Sides.hpp>
@@ -29,6 +30,7 @@
 namespace pokesim::internal {
 BattleStateSetup::BattleStateSetup(types::registry& registry, types::entity entity) : StateSetupBase(registry, entity) {
   if (!handle.any_of<ActionQueue, pokesim::tags::Battle>()) {
+    handle.emplace<Battle>(entity);
     handle.emplace<ActionQueue>();
     handle.emplace<pokesim::tags::Battle>();
   }

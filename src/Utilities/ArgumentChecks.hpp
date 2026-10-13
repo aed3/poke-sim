@@ -22,6 +22,8 @@ struct DefBoost;
 struct SpaBoost;
 struct SpdBoost;
 struct SpeBoost;
+struct AccBoost;
+struct EvaBoost;
 struct CloneTo;
 struct CurrentActionMoveSlot;
 struct Damage;
@@ -30,6 +32,8 @@ struct DamageRolls;
 struct DisabledMoveSlots;
 struct Evs;
 struct Ivs;
+struct EffectStackItem;
+struct EffectStack;
 struct AddedFlinchChance;
 struct ChoiceLock;
 struct Trapper;
@@ -49,7 +53,7 @@ struct CurrentActionMovesAsTargetExtended;
 struct CurrentEffectSource;
 struct CurrentEffectTarget;
 struct CurrentEffectsAsSource;
-struct CurrentEffectsAsTarget;
+struct CurrentEffectAsTarget;
 struct FaintQueue;
 struct FoeSide;
 struct RecycledAction;
@@ -231,6 +235,12 @@ template <>
 void check(const SpeBoost&);
 
 template <>
+void check(const AccBoost&);
+
+template <>
+void check(const EvaBoost&);
+
+template <>
 void check(const calc_damage::CritChanceDivisor&);
 
 template <>
@@ -264,6 +274,12 @@ void check(const Evs&);
 
 template <>
 void check(const Ivs&);
+
+template <>
+void check(const EffectStackItem&, const types::registry&);
+
+template <>
+void check(const EffectStack&, const types::registry&);
 
 template <>
 void check(const AddedFlinchChance&);
@@ -323,7 +339,7 @@ template <>
 void check(const CurrentEffectsAsSource&, const types::registry&);
 
 template <>
-void check(const CurrentEffectsAsTarget&, const types::registry&);
+void check(const CurrentEffectAsTarget&, const types::registry&);
 
 template <>
 void check(const FaintQueue&, const types::registry&);

@@ -67,10 +67,6 @@ void sortAndSetSpeedTies(
   }
 }
 
-void setBattleOnSpeedTyingEntities(types::handle battleHandle, const SpeedTieIndexes&) {
-  battleHandle.emplace<Battle>(battleHandle.entity());
-}
-
 void setSpeedTieRandomEventCount(types::handle handle, const SpeedTieIndexes& speedTies, const Simulation& simulation) {
   POKESIM_REQUIRE(
     !speedTies.val.empty(),
@@ -157,21 +153,12 @@ void resolveSpeedTies(Simulation& simulation) {
     POKESIM_REQUIRE(
       speedTiesResolved <= Limit::MAX,
       "More speed ties were resolved than are possible in at least one battle.");
-    // The random chance functions require Battle components and this is the only case of battle entities using random
-    // chance functions.
-    if (!speedTiesResolved) {
-      simulation.view<setBattleOnSpeedTyingEntities>();
-    }
 
     simulation.view<setSpeedTieRandomEventCount>(simulation);
     randomEventCount(simulation, [](Simulation& sim) { sim.view<setSpeedTieOrder>(); }, {});
 
     simulation.view<removeEmptySpeedTieIndexes>();
     speedTiesResolved++;
-  }
-
-  if (speedTiesResolved != Limit::MIN) {
-    simulation.removeFromEntities<Battle, pokesim::tags::Battle>();
   }
 }
 

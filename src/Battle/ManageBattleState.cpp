@@ -7,6 +7,7 @@
 #include <Components/BasePower.hpp>
 #include <Components/Boosts.hpp>
 #include <Components/Current.hpp>
+#include <Components/EffectStack.hpp>
 #include <Components/Effects/AddedFlinchChance.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
@@ -95,21 +96,26 @@ void updateCurrentActionTargets(types::registry& registry, CurrentAction& action
   action.targets.pop_count(deleteCount);
 }
 
-template <typename View>
-void clearActionMoveComponents(types::registry& registry, const View& view) {
+template <typename... OtherComponents, typename View>
+void clearEffectComponents(types::registry& registry, const View& view) {
   registry.remove<
-    pokesim::tags::SimulateTurn,
-    Battle,
-    TypeName,
+    OtherComponents...,
     AtkBoost,
     DefBoost,
     SpaBoost,
     SpdBoost,
     SpeBoost,
+    AccBoost,
+    EvaBoost,
     pokesim::tags::Flinch,
     AddedFlinchChance,
     dex::Paralysis,
     dex::Burn>(view.begin(), view.end());
+}
+
+template <typename View>
+void clearActionMoveComponents(types::registry& registry, const View& view) {
+  clearEffectComponents<pokesim::tags::SimulateTurn, Battle, TypeName>(registry, view);
 }
 
 template <typename MoveTag>
@@ -125,6 +131,31 @@ void clearAction(Simulation& simulation) {
     FailedCurrentActionTarget,
     pokesim::tags::CurrentActionSource,
     pokesim::tags::CurrentActionTarget>();
+}
+
+void setNextInEffectStack(types::handle handle, EffectStack& effectStack) {
+  EffectStackItem item = effectStack.val.back();
+  handle.emplace<CurrentEffectSource>(item.source);
+  handle.emplace<CurrentEffectTarget>(item.target);
+  handle.registry()->emplace<CurrentEffectsAsSource>(item.source).val.push_back(handle.entity());
+  handle.registry()->emplace<CurrentEffectAsTarget>(item.target, handle.entity());
+
+  auto effect = item.effect;
+  if (effect.holds<AtkBoost>()) {
+    handle.emplace<AtkBoost>(effect.get<AtkBoost>());
+  }
+  else if (effect.holds<SpaBoost>()) {
+    handle.emplace<SpaBoost>(effect.get<SpaBoost>());
+  }
+  else {
+    POKESIM_REQUIRE_FAIL(
+      "EffectStackItem has unimplemented effect of type index " + std::to_string(effect.index()) + ".");
+  }
+
+  effectStack.val.pop_back();
+  if (effectStack.val.empty()) {
+    handle.remove<EffectStack>();
+  }
 }
 }  // namespace
 
@@ -239,12 +270,14 @@ void clearMoveAction(Simulation& simulation) {
     pokesim::move::tags::Physical,
     pokesim::move::tags::Special,
     pokesim::move::tags::Status,
+    pokesim::move::tags::BypassProtect,
+    pokesim::move::tags::BypassSubstitute,
     pokesim::move::tags::Contact,
     pokesim::move::tags::IgnoreImmunities,
-    pokesim::move::tags::BypassSubstitute,
     pokesim::move::tags::Punch,
-    pokesim::move::tags::VariableHitCount,
     pokesim::move::tags::SelfSwitch,
+    pokesim::move::tags::Sound,
+    pokesim::move::tags::VariableHitCount,
     CritStageBoost,
     BaseEffectChance,
     Accuracy,
@@ -266,5 +299,23 @@ void clearMoveAction(Simulation& simulation) {
 void clearSwitchAction(Simulation& simulation) {
   clearAction(simulation);
   simulation.registry.clear<action::tags::Switch, action::tags::ActiveSwitch, action::tags::NotFaintedActiveSwitch>();
+}
+
+void clearCurrentEffect(Simulation& simulation) {
+  simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectAsTarget>();
+}
+
+void setCurrentEffectFromStack(Simulation& simulation) {
+  POKESIM_REQUIRE(simulation.hasNone<CurrentEffectSource>(), "An effect cannot be set while others are active.");
+  POKESIM_REQUIRE(simulation.hasNone<CurrentEffectTarget>(), "An effect cannot be set while others are active.");
+  POKESIM_REQUIRE(simulation.hasNone<CurrentEffectsAsSource>(), "An effect cannot be set while others are active.");
+  POKESIM_REQUIRE(simulation.hasNone<CurrentEffectAsTarget>(), "An effect cannot be set while others are active.");
+
+  simulation.view<setNextInEffectStack>();
+}
+
+void clearCurrentBattleEffect(Simulation& simulation) {
+  clearEffectComponents(simulation.registry, simulation.registry.view<pokesim::tags::Battle>());
+  clearCurrentEffect(simulation);
 }
 }  // namespace pokesim::internal

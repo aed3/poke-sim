@@ -54,6 +54,8 @@ struct BuildMove {
     spaBoost,
     spdBoost,
     speBoost,
+    accBoost,
+    evaBoost,
     status,
     addedFlinchChance,
   };
@@ -100,6 +102,10 @@ struct BuildMove {
   struct has<Optional::spdBoost, Type, void_t<Type::spdBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::speBoost, Type, void_t<Type::speBoost>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::accBoost, Type, void_t<Type::accBoost>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::evaBoost, Type, void_t<Type::evaBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::status, Type, void_t<Type::status>> : std::true_type {};
   template <typename Type>
@@ -184,6 +190,14 @@ struct BuildMove {
 
     if constexpr (has<Optional::speBoost, EffectData>::value) {
       setup.add(SpeBoost{EffectData::speBoost(gameMechanic)});
+    }
+
+    if constexpr (has<Optional::accBoost, EffectData>::value) {
+      setup.add(AccBoost{EffectData::accBoost(gameMechanic)});
+    }
+
+    if constexpr (has<Optional::evaBoost, EffectData>::value) {
+      setup.add(EvaBoost{EffectData::evaBoost(gameMechanic)});
     }
 
     if constexpr (has<Optional::status, EffectData>::value) {

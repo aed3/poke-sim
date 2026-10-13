@@ -21,6 +21,7 @@
 #include "Damage.hpp"
 #include "DisabledMoveSlots.hpp"
 #include "EVsIVs.hpp"
+#include "EffectStack.hpp"
 #include "Effects/AddedFlinchChance.hpp"
 #include "Effects/ChoiceLock.hpp"
 #include "Effects/Trapper.hpp"

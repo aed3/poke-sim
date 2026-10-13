@@ -17,6 +17,9 @@ class variant : public std::variant<Types...> {
     return std::disjunction_v<std::is_same<Type, Types>...>;
   }
 
+  template <typename... ExtraTypes>
+  using extended = variant<Types..., ExtraTypes...>;
+
   template <typename T>
   variant& operator=(const T& rhs) {
     std::variant<Types...>::operator=(rhs);

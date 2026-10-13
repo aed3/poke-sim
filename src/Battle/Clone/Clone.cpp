@@ -1,6 +1,7 @@
 #include "Clone.hpp"
 
 #include <Components/CloneFromCloneTo.hpp>
+#include <Components/EffectStack.hpp>
 #include <Components/Effects/Trapper.hpp>
 #include <Components/EntityHolders/headers.hpp>
 #include <Components/Names/MoveNames.hpp>
@@ -224,6 +225,15 @@ void remapCurrentAction(types::registry& registry, const types::ClonedEntityMap&
   }
 }
 
+void remapEventStack(types::registry& registry, const types::ClonedEntityMap& entityMap) {
+  for (auto [clonedEntity, cloneTo, eventStack] : registry.view<CloneTo, EffectStack>().each()) {
+    for (EffectStackItem& item : eventStack.val) {
+      remapEntity(item.source, cloneTo, entityMap);
+      remapEntity(item.target, cloneTo, entityMap);
+    }
+  }
+}
+
 template <typename Component>
 void remapComponentEntities(types::registry& registry, const types::ClonedEntityMap& entityMap) {
   if constexpr (std::is_same_v<decltype(Component::val), types::entity>) {
@@ -289,7 +299,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<CurrentEffectSource>(registry, entityMap);
   remapComponentEntities<CurrentEffectTarget>(registry, entityMap);
   remapComponentEntities<CurrentEffectsAsSource>(registry, entityMap);
-  remapComponentEntities<CurrentEffectsAsTarget>(registry, entityMap);
+  remapComponentEntities<CurrentEffectAsTarget>(registry, entityMap);
   remapComponentEntities<FailedCurrentActionSource>(registry, entityMap);
   remapComponentEntities<FailedCurrentActionTarget>(registry, entityMap);
   remapComponentEntities<FaintQueue>(registry, entityMap);
@@ -301,6 +311,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<Team>(registry, entityMap);
   remapComponentEntities<Trapper>(registry, entityMap);
   remapCurrentAction(registry, entityMap);
+  remapEventStack(registry, entityMap);
 
   registry.clear<CloneTo, tags::CloneFrom>();
 

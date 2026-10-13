@@ -8,6 +8,8 @@
 namespace pokesim::types {
 using battleTurn = pokesim::internal::unsignedIntType<Constants::TurnCount::MAX>;
 using actionQueueIndex = pokesim::internal::unsignedIntType<Constants::ActionQueueLength::MAX>;
+using effectStackIndex = pokesim::internal::unsignedIntType<Constants::EffectStackLength::MAX>;
+
 using sideIndex = pokesim::internal::unsignedIntType<Constants::SIDE_COUNT>;
 using teamPositionIndex = pokesim::internal::unsignedIntType<Constants::TeamSize::MAX>;
 using activePokemonIndex = pokesim::internal::unsignedIntType<Constants::ActivePokemon::MAX>;
