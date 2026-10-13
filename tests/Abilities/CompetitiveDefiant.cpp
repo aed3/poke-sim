@@ -130,7 +130,6 @@ TEST_CASE(
 
 TEST_CASE(
   "Defiant: Boost when stat that's not ATK is lowered", "[Simulation][SimulateTurn][SingleBattle][Ability][Defiant]") {
-  return;
   TestSimulation test{TestMechanic, BattleFormat::SINGLES};
   dex::Move p2Move = GENERATE(
     dex::Move::MOONBLAST,
