@@ -44,11 +44,23 @@ class fixedMemoryVector : private std::array<Type, Size> {
   constexpr size_type max_size() const noexcept { return Size; }
   constexpr bool empty() const noexcept { return used == 0U; }
 
-  constexpr typename base::const_reference front() const noexcept { return *base::begin(); }
-  constexpr typename base::const_reference back() const noexcept { return Size ? *(end() - 1) : *end(); }
+  constexpr typename base::const_reference front() const {
+    POKESIM_REQUIRE(!empty(), "Accessing value that isn't used.");
+    return *base::begin();
+  }
+  constexpr typename base::const_reference back() const {
+    POKESIM_REQUIRE(!empty(), "Accessing value that isn't used.");
+    return Size ? *(end() - 1) : *end();
+  }
 
-  constexpr typename base::reference front() noexcept { return *base::begin(); }
-  constexpr typename base::reference back() noexcept { return Size ? *(end() - 1) : *end(); }
+  constexpr typename base::reference front() {
+    POKESIM_REQUIRE(!empty(), "Accessing value that isn't used.");
+    return *base::begin();
+  }
+  constexpr typename base::reference back() {
+    POKESIM_REQUIRE(!empty(), "Accessing value that isn't used.");
+    return Size ? *(end() - 1) : *end();
+  }
 
   constexpr typename base::const_reference at(size_type pos) const {
     POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");

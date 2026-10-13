@@ -101,6 +101,7 @@
  * src/Components/Tags/Current.hpp
  * src/Components/AnalyzeEffect/Aliases.hpp
  * src/Components/AnalyzeEffect/AnalyzeEffectInputs.hpp
+ * src/Types/Enums/Ability.hpp
  * src/Types/Effect.hpp
  * src/Components/AnalyzeEffect/RemovedEffect.hpp
  * src/Components/BaseEffectChance.hpp
@@ -116,6 +117,7 @@
  * src/Components/Current.hpp
  * src/Components/DisabledMoveSlots.hpp
  * src/Components/EVsIVs.hpp
+ * src/Components/EffectStack.hpp
  * src/Components/Effects/AddedFlinchChance.hpp
  * src/Components/Effects/ChoiceLock.hpp
  * src/Components/Effects/Trapper.hpp
@@ -131,7 +133,6 @@
  * src/Components/LastUsedMove.hpp
  * src/Components/Level.hpp
  * src/Components/MoveSlots.hpp
- * src/Types/Enums/Ability.hpp
  * src/Components/Names/AbilityNames.hpp
  * src/Types/Enums/Gender.hpp
  * src/Components/Names/GenderNames.hpp
@@ -281,12 +282,18 @@
  * src/SimulateTurn/SimulateTurn.hpp
  * src/Battle/Helpers/IntegerModify.hpp
  * src/Pokedex/Moves/AllySwitch.hpp
+ * src/Pokedex/Moves/ChillingWater.hpp
  * src/Pokedex/Moves/CloseCombat.hpp
+ * src/Pokedex/Moves/Confide.hpp
  * src/Pokedex/Moves/FlashCannon.hpp
  * src/Pokedex/Moves/FuryAttack.hpp
+ * src/Pokedex/Moves/Growl.hpp
  * src/Pokedex/Moves/KnockOff.hpp
  * src/Pokedex/Moves/Leafage.hpp
+ * src/Pokedex/Moves/LowSweep.hpp
  * src/Pokedex/Moves/Moonblast.hpp
+ * src/Pokedex/Moves/MudSlap.hpp
+ * src/Pokedex/Moves/NobleRoar.hpp
  * src/Pokedex/Moves/QuiverDance.hpp
  * src/Pokedex/Moves/Reflect.hpp
  * src/Pokedex/Moves/Reversal.hpp
@@ -16557,6 +16564,12 @@ struct Constants {
     static constexpr std::uint8_t MIN = 0U;
   };
 
+  // Synonymous with Showdown's `Battle.eventDepth` property
+  struct EffectStackLength {
+    static constexpr std::uint8_t MAX = 8U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
   struct TurnCount {
     // Technically 65535, but battles over 1000 turns aren't usually supported on Showdown
     static constexpr std::uint16_t MAX = 1000U;
@@ -16828,6 +16841,8 @@ struct ParentEntity {
 namespace pokesim::types {
 using battleTurn = pokesim::internal::unsignedIntType<Constants::TurnCount::MAX>;
 using actionQueueIndex = pokesim::internal::unsignedIntType<Constants::ActionQueueLength::MAX>;
+using effectStackIndex = pokesim::internal::unsignedIntType<Constants::EffectStackLength::MAX>;
+
 using sideIndex = pokesim::internal::unsignedIntType<Constants::SIDE_COUNT>;
 using teamPositionIndex = pokesim::internal::unsignedIntType<Constants::TeamSize::MAX>;
 using activePokemonIndex = pokesim::internal::unsignedIntType<Constants::ActivePokemon::MAX>;
@@ -18131,11 +18146,23 @@ class fixedMemoryVector : private std::array<Type, Size> {
   constexpr size_type max_size() const noexcept { return Size; }
   constexpr bool empty() const noexcept { return used == 0U; }
 
-  constexpr typename base::const_reference front() const noexcept { return *base::begin(); }
-  constexpr typename base::const_reference back() const noexcept { return Size ? *(end() - 1) : *end(); }
+  constexpr typename base::const_reference front() const {
+    POKESIM_REQUIRE(!empty(), "Accessing value that isn't used.");
+    return *base::begin();
+  }
+  constexpr typename base::const_reference back() const {
+    POKESIM_REQUIRE(!empty(), "Accessing value that isn't used.");
+    return Size ? *(end() - 1) : *end();
+  }
 
-  constexpr typename base::reference front() noexcept { return *base::begin(); }
-  constexpr typename base::reference back() noexcept { return Size ? *(end() - 1) : *end(); }
+  constexpr typename base::reference front() {
+    POKESIM_REQUIRE(!empty(), "Accessing value that isn't used.");
+    return *base::begin();
+  }
+  constexpr typename base::reference back() {
+    POKESIM_REQUIRE(!empty(), "Accessing value that isn't used.");
+    return Size ? *(end() - 1) : *end();
+  }
 
   constexpr typename base::const_reference at(size_type pos) const {
     POKESIM_REQUIRE(pos < used, "Accessing value that isn't used.");
@@ -18241,18 +18268,8 @@ struct sides : public std::array<T, Constants::SIDE_COUNT> {
     return this->at(N);
   }
 
-  sides() : std::array<T, Constants::SIDE_COUNT>() {}
+  constexpr sides() : std::array<T, Constants::SIDE_COUNT>() {}
   constexpr sides(const T& side1, const T& side2) : std::array<T, Constants::SIDE_COUNT>({side1, side2}) {}
-  sides(std::initializer_list<T> list) : sides() {
-    sideIndex side = 0U;
-    for (const T& value : list) {
-      this->at(side) = value;
-      side++;
-      if (side == size()) {
-        break;
-      }
-    }
-  }
 
   constexpr sideIndex size() const noexcept { return Constants::SIDE_COUNT; }
 };
@@ -18521,7 +18538,7 @@ class registry : public internal::BackingRegistry {
     if (called) return;
     called = true;
 
-    entt::id_type id = entt::type_id<Type>().hash();
+    entt::id_type id = entt::type_hash<Type>();
     registry::copyFunctions[id] = registry::copyToOtherRegistry<Type>;
     registry::equalsFunctions[id] = registry::entityComponentsEqual<Type>;
   }
@@ -18624,22 +18641,37 @@ using boost = pokesim::internal::signedIntType<Constants::PokemonStatBoost::MAX,
 namespace pokesim {
 struct AtkBoost {
   types::boost val = Constants::PokemonStatBoost::DEFAULT;
+  constexpr bool operator==(AtkBoost other) const { return val == other.val; }
 };
 
 struct DefBoost {
   types::boost val = Constants::PokemonStatBoost::DEFAULT;
+  constexpr bool operator==(DefBoost other) const { return val == other.val; }
 };
 
 struct SpaBoost {
   types::boost val = Constants::PokemonStatBoost::DEFAULT;
+  constexpr bool operator==(SpaBoost other) const { return val == other.val; }
 };
 
 struct SpdBoost {
   types::boost val = Constants::PokemonStatBoost::DEFAULT;
+  constexpr bool operator==(SpdBoost other) const { return val == other.val; }
 };
 
 struct SpeBoost {
   types::boost val = Constants::PokemonStatBoost::DEFAULT;
+  constexpr bool operator==(SpeBoost other) const { return val == other.val; }
+};
+
+struct AccBoost {
+  types::boost val = Constants::PokemonStatBoost::DEFAULT;
+  constexpr bool operator==(AccBoost other) const { return val == other.val; }
+};
+
+struct EvaBoost {
+  types::boost val = Constants::PokemonStatBoost::DEFAULT;
+  constexpr bool operator==(EvaBoost other) const { return val == other.val; }
 };
 }  // namespace pokesim
 
@@ -18922,6 +18954,7 @@ namespace internal {
 types::teamPositionIndex slotToIndex(Slot slot);
 types::teamPositionIndex entityToIndex(
   const types::registry& registry, types::entity sideEntity, types::entity slotEntity);
+bool isAlly(types::registry& registry, types::entity pokemonEntity1, types::entity pokemonEntity2);
 }  // namespace internal
 
 Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position);
@@ -18934,6 +18967,7 @@ void swapEntitySlots(types::registry& registry, types::entity sideEntity, Slot s
 void swapEntitySlots(types::registry& registry, const Sides& sides, Slot slot1, Slot slot2);
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot slot);
 types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
+
 }  // namespace pokesim
 
 //////////////////// END OF src/Battle/Helpers/Helpers.hpp /////////////////////
@@ -19016,15 +19050,8 @@ struct DamageRolls {
     }
   }
 
-  types::damage min() const {
-    POKESIM_REQUIRE(!val.empty(), "DamageRolls has no values to read.");
-    return val.back().val;
-  }
-
-  types::damage max() const {
-    POKESIM_REQUIRE(!val.empty(), "DamageRolls has no values to read.");
-    return val.front().val;
-  }
+  types::damage min() const { return val.back().val; }
+  types::damage max() const { return val.front().val; }
 };
 }  // namespace pokesim
 
@@ -19147,6 +19174,9 @@ class variant : public std::variant<Types...> {
   static constexpr bool canHoldType() {
     return std::disjunction_v<std::is_same<Type, Types>...>;
   }
+
+  template <typename... ExtraTypes>
+  using extended = variant<Types..., ExtraTypes...>;
 
   template <typename T>
   variant& operator=(const T& rhs) {
@@ -19468,7 +19498,7 @@ struct CurrentEffectsAsSource {
   types::targets<types::entity> val{};
 };
 
-struct CurrentEffectsAsTarget {
+struct CurrentEffectAsTarget {
   types::entity val{};
 };
 }  // namespace pokesim
@@ -19562,11 +19592,28 @@ struct InvertFinalAnswer {};
 
 ///////// END OF src/Components/AnalyzeEffect/AnalyzeEffectInputs.hpp //////////
 
+///////////////////// START OF src/Types/Enums/Ability.hpp /////////////////////
+
+namespace pokesim::dex {
+// Pokemon ability name
+enum class Ability : std::uint16_t {
+  // clang-format off
+  NO_ABILITY = 0U, ADAPTABILITY, AERILATE, AFTERMATH, AIR_LOCK, ANALYTIC, ANGER_POINT, ANGER_SHELL, ANTICIPATION, ARENA_TRAP, ARMOR_TAIL, AROMA_VEIL, AS_ONE, AURA_BREAK, BAD_DREAMS, BALL_FETCH, BATTERY, BATTLE_ARMOR, BATTLE_BOND, BEADS_OF_RUIN, BEAST_BOOST, BERSERK, BIG_PECKS, BLAZE, BULLETPROOF, CHEEK_POUCH, CHILLING_NEIGH, CHLOROPHYLL, CLEAR_BODY, CLOUD_NINE, COLOR_CHANGE, COMATOSE, COMMANDER, COMPETITIVE, COMPOUND_EYES, CONTRARY, CORROSION, COSTAR, COTTON_DOWN, CUD_CHEW, CURIOUS_MEDICINE, CURSED_BODY, CUTE_CHARM, DAMP, DANCER, DARK_AURA, DAUNTLESS_SHIELD, DAZZLING, DEFEATIST, DEFIANT, DELTA_STREAM, DESOLATE_LAND, DISGUISE, DOWNLOAD, DRAGONS_MAW, DRIZZLE, DROUGHT, DRY_SKIN, EARTH_EATER, EARLY_BIRD, EFFECT_SPORE, ELECTRIC_SURGE, ELECTROMORPHOSIS, EMERGENCY_EXIT, FAIRY_AURA, FILTER, FLAME_BODY, FLARE_BOOST, FLASH_FIRE, FLOWER_GIFT, FLOWER_VEIL, FLUFFY, FORECAST, FOREWARN, FRIEND_GUARD, FRISK, FULL_METAL_BODY, FUR_COAT, GALE_WINGS, GALVANIZE, GLUTTONY, GOOD_AS_GOLD, GOOEY, GORILLA_TACTICS, GRASS_PELT, GRASSY_SURGE, GRIM_NEIGH, GUARD_DOG, GULP_MISSILE, GUTS, HADRON_ENGINE, HARVEST, HEALER, HEATPROOF, HEAVY_METAL, HONEY_GATHER, HUGE_POWER, HUNGER_SWITCH, HUSTLE, HYDRATION, HYPER_CUTTER, ICE_BODY, ICE_FACE, ICE_SCALES, ILLUMINATE, ILLUSION, IMMUNITY, IMPOSTER, INFILTRATOR, INNARDS_OUT, INNER_FOCUS, INSOMNIA, INTIMIDATE, INTREPID_SWORD, IRON_BARBS, IRON_FIST, JUSTIFIED, KEEN_EYE, KLUTZ, LEAF_GUARD, LEVITATE, LIBERO, LIGHT_METAL, LIGHTNING_ROD, LINGERING_AROMA, LIMBER, LIQUID_OOZE, LIQUID_VOICE, LONG_REACH, MAGIC_BOUNCE, MAGIC_GUARD, MAGICIAN, MAGMA_ARMOR, MAGNET_PULL, MARVEL_SCALE, MEGA_LAUNCHER, MERCILESS, MIMICRY, MINUS, MIRROR_ARMOR, MISTY_SURGE, MOLD_BREAKER, MOODY, MOTOR_DRIVE, MOXIE, MULTISCALE, MULTITYPE, MUMMY, MYCELIUM_MIGHT, NATURAL_CURE, NEUROFORCE, NEUTRALIZING_GAS, NO_GUARD, NORMALIZE, OBLIVIOUS, OPPORTUNIST, ORICHALCUM_PULSE, OVERCOAT, OVERGROW, OWN_TEMPO, PARENTAL_BOND, PASTEL_VEIL, PERISH_BODY, PICKPOCKET, PICKUP, PIXILATE, PLUS, POISON_HEAL, POISON_POINT, POISON_TOUCH, POWER_CONSTRUCT, POWER_OF_ALCHEMY, POWER_SPOT, PRANKSTER, PRESSURE, PRIMORDIAL_SEA, PRISM_ARMOR, PROPELLER_TAIL, PROTEAN, PROTOSYNTHESIS, PSYCHIC_SURGE, PUNK_ROCK, PURE_POWER, PURIFYING_SALT, QUARK_DRIVE, QUEENLY_MAJESTY, QUICK_DRAW, QUICK_FEET, RAIN_DISH, RATTLED, RECEIVER, RECKLESS, REFRIGERATE, REGENERATOR, RIPEN, RIVALRY, RKS_SYSTEM, ROCK_HEAD, ROCKY_PAYLOAD, ROUGH_SKIN, RUN_AWAY, SAND_FORCE, SAND_RUSH, SAND_SPIT, SAND_STREAM, SAND_VEIL, SAP_SIPPER, SCHOOLING, SCRAPPY, SCREEN_CLEANER, SEED_SOWER, SERENE_GRACE, SHADOW_SHIELD, SHADOW_TAG, SHARPNESS, SHED_SKIN, SHEER_FORCE, SHELL_ARMOR, SHIELD_DUST, SHIELDS_DOWN, SIMPLE, SKILL_LINK, SLOW_START, SLUSH_RUSH, SNIPER, SNOW_CLOAK, SNOW_WARNING, SOLAR_POWER, SOLID_ROCK, SOUL_HEART, SOUNDPROOF, SPEED_BOOST, STAKEOUT, STALL, STALWART, STAMINA, STANCE_CHANGE, STATIC, STEADFAST, STEAM_ENGINE, STEELWORKER, STEELY_SPIRIT, STENCH, STICKY_HOLD, STORM_DRAIN, STRONG_JAW, STURDY, SUCTION_CUPS, SUPER_LUCK, SUPREME_OVERLORD, SURGE_SURFER, SWARM, SWEET_VEIL, SWIFT_SWIM, SYMBIOSIS, SYNCHRONIZE, SWORD_OF_RUIN, TABLETS_OF_RUIN, TANGLED_FEET, TANGLING_HAIR, TECHNICIAN, TELEPATHY, TERAVOLT, THERMAL_EXCHANGE, THICK_FAT, TINTED_LENS, TORRENT, TOUGH_CLAWS, TOXIC_BOOST, TOXIC_DEBRIS, TRACE, TRANSISTOR, TRIAGE, TRUANT, TURBOBLAZE, UNAWARE, UNBURDEN, UNNERVE, UNSEEN_FIST, VESSEL_OF_RUIN, VICTORY_STAR, VITAL_SPIRIT, VOLT_ABSORB, WANDERING_SPIRIT, WATER_ABSORB, WATER_BUBBLE, WATER_COMPACTION, WATER_VEIL, WEAK_ARMOR, WELL_BAKED_BODY, WHITE_SMOKE, WIMP_OUT, WIND_POWER, WIND_RIDER, WONDER_GUARD, WONDER_SKIN, ZEN_MODE, ZERO_TO_HERO, ABILITY_TOTAL,
+  // clang-format on
+};
+
+static constexpr std::uint16_t TOTAL_ABILITY_COUNT = (std::uint16_t)Ability::ABILITY_TOTAL - 1U;
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Types/Enums/Ability.hpp //////////////////////
+
 //////////////////////// START OF src/Types/Effect.hpp /////////////////////////
 
 namespace pokesim::types {
 using effectEnum = variant<
   std::monostate, dex::PseudoWeather, dex::SideCondition, dex::Status, dex::Terrain, dex::Volatile, dex::Weather>;
+using effectSource = types::variant<dex::Item, dex::Move, dex::Ability>;
+
 }  // namespace pokesim::types
 
 ///////////////////////// END OF src/Types/Effect.hpp //////////////////////////
@@ -19794,6 +19841,27 @@ struct Ivs {
 
 /////////////////////// END OF src/Components/EVsIVs.hpp ///////////////////////
 
+/////////////////// START OF src/Components/EffectStack.hpp ////////////////////
+
+namespace pokesim {
+struct EffectStackItem {
+  types::effectEnum::extended<AtkBoost, DefBoost, SpaBoost, SpdBoost, SpeBoost, AccBoost, EvaBoost> effect;
+  types::effectSource effectSource{};
+  types::entity source{};
+  types::entity target{};
+
+  constexpr bool operator==(const EffectStackItem& other) const {
+    return source == other.source && target == other.target && effect == other.effect;
+  }
+};
+
+struct EffectStack {
+  types::fixedMemoryVector<EffectStackItem, Constants::EffectStackLength::MAX> val{};
+};
+}  // namespace pokesim
+
+//////////////////// END OF src/Components/EffectStack.hpp /////////////////////
+
 //////////// START OF src/Components/Effects/AddedFlinchChance.hpp /////////////
 
 namespace pokesim {
@@ -19971,21 +20039,6 @@ struct MoveSlots {
 }  // namespace pokesim
 
 ///////////////////// END OF src/Components/MoveSlots.hpp //////////////////////
-
-///////////////////// START OF src/Types/Enums/Ability.hpp /////////////////////
-
-namespace pokesim::dex {
-// Pokemon ability name
-enum class Ability : std::uint16_t {
-  // clang-format off
-  NO_ABILITY = 0U, ADAPTABILITY, AERILATE, AFTERMATH, AIR_LOCK, ANALYTIC, ANGER_POINT, ANGER_SHELL, ANTICIPATION, ARENA_TRAP, ARMOR_TAIL, AROMA_VEIL, AS_ONE, AURA_BREAK, BAD_DREAMS, BALL_FETCH, BATTERY, BATTLE_ARMOR, BATTLE_BOND, BEADS_OF_RUIN, BEAST_BOOST, BERSERK, BIG_PECKS, BLAZE, BULLETPROOF, CHEEK_POUCH, CHILLING_NEIGH, CHLOROPHYLL, CLEAR_BODY, CLOUD_NINE, COLOR_CHANGE, COMATOSE, COMMANDER, COMPETITIVE, COMPOUND_EYES, CONTRARY, CORROSION, COSTAR, COTTON_DOWN, CUD_CHEW, CURIOUS_MEDICINE, CURSED_BODY, CUTE_CHARM, DAMP, DANCER, DARK_AURA, DAUNTLESS_SHIELD, DAZZLING, DEFEATIST, DEFIANT, DELTA_STREAM, DESOLATE_LAND, DISGUISE, DOWNLOAD, DRAGONS_MAW, DRIZZLE, DROUGHT, DRY_SKIN, EARTH_EATER, EARLY_BIRD, EFFECT_SPORE, ELECTRIC_SURGE, ELECTROMORPHOSIS, EMERGENCY_EXIT, FAIRY_AURA, FILTER, FLAME_BODY, FLARE_BOOST, FLASH_FIRE, FLOWER_GIFT, FLOWER_VEIL, FLUFFY, FORECAST, FOREWARN, FRIEND_GUARD, FRISK, FULL_METAL_BODY, FUR_COAT, GALE_WINGS, GALVANIZE, GLUTTONY, GOOD_AS_GOLD, GOOEY, GORILLA_TACTICS, GRASS_PELT, GRASSY_SURGE, GRIM_NEIGH, GUARD_DOG, GULP_MISSILE, GUTS, HADRON_ENGINE, HARVEST, HEALER, HEATPROOF, HEAVY_METAL, HONEY_GATHER, HUGE_POWER, HUNGER_SWITCH, HUSTLE, HYDRATION, HYPER_CUTTER, ICE_BODY, ICE_FACE, ICE_SCALES, ILLUMINATE, ILLUSION, IMMUNITY, IMPOSTER, INFILTRATOR, INNARDS_OUT, INNER_FOCUS, INSOMNIA, INTIMIDATE, INTREPID_SWORD, IRON_BARBS, IRON_FIST, JUSTIFIED, KEEN_EYE, KLUTZ, LEAF_GUARD, LEVITATE, LIBERO, LIGHT_METAL, LIGHTNING_ROD, LINGERING_AROMA, LIMBER, LIQUID_OOZE, LIQUID_VOICE, LONG_REACH, MAGIC_BOUNCE, MAGIC_GUARD, MAGICIAN, MAGMA_ARMOR, MAGNET_PULL, MARVEL_SCALE, MEGA_LAUNCHER, MERCILESS, MIMICRY, MINUS, MIRROR_ARMOR, MISTY_SURGE, MOLD_BREAKER, MOODY, MOTOR_DRIVE, MOXIE, MULTISCALE, MULTITYPE, MUMMY, MYCELIUM_MIGHT, NATURAL_CURE, NEUROFORCE, NEUTRALIZING_GAS, NO_GUARD, NORMALIZE, OBLIVIOUS, OPPORTUNIST, ORICHALCUM_PULSE, OVERCOAT, OVERGROW, OWN_TEMPO, PARENTAL_BOND, PASTEL_VEIL, PERISH_BODY, PICKPOCKET, PICKUP, PIXILATE, PLUS, POISON_HEAL, POISON_POINT, POISON_TOUCH, POWER_CONSTRUCT, POWER_OF_ALCHEMY, POWER_SPOT, PRANKSTER, PRESSURE, PRIMORDIAL_SEA, PRISM_ARMOR, PROPELLER_TAIL, PROTEAN, PROTOSYNTHESIS, PSYCHIC_SURGE, PUNK_ROCK, PURE_POWER, PURIFYING_SALT, QUARK_DRIVE, QUEENLY_MAJESTY, QUICK_DRAW, QUICK_FEET, RAIN_DISH, RATTLED, RECEIVER, RECKLESS, REFRIGERATE, REGENERATOR, RIPEN, RIVALRY, RKS_SYSTEM, ROCK_HEAD, ROCKY_PAYLOAD, ROUGH_SKIN, RUN_AWAY, SAND_FORCE, SAND_RUSH, SAND_SPIT, SAND_STREAM, SAND_VEIL, SAP_SIPPER, SCHOOLING, SCRAPPY, SCREEN_CLEANER, SEED_SOWER, SERENE_GRACE, SHADOW_SHIELD, SHADOW_TAG, SHARPNESS, SHED_SKIN, SHEER_FORCE, SHELL_ARMOR, SHIELD_DUST, SHIELDS_DOWN, SIMPLE, SKILL_LINK, SLOW_START, SLUSH_RUSH, SNIPER, SNOW_CLOAK, SNOW_WARNING, SOLAR_POWER, SOLID_ROCK, SOUL_HEART, SOUNDPROOF, SPEED_BOOST, STAKEOUT, STALL, STALWART, STAMINA, STANCE_CHANGE, STATIC, STEADFAST, STEAM_ENGINE, STEELWORKER, STEELY_SPIRIT, STENCH, STICKY_HOLD, STORM_DRAIN, STRONG_JAW, STURDY, SUCTION_CUPS, SUPER_LUCK, SUPREME_OVERLORD, SURGE_SURFER, SWARM, SWEET_VEIL, SWIFT_SWIM, SYMBIOSIS, SYNCHRONIZE, SWORD_OF_RUIN, TABLETS_OF_RUIN, TANGLED_FEET, TANGLING_HAIR, TECHNICIAN, TELEPATHY, TERAVOLT, THERMAL_EXCHANGE, THICK_FAT, TINTED_LENS, TORRENT, TOUGH_CLAWS, TOXIC_BOOST, TOXIC_DEBRIS, TRACE, TRANSISTOR, TRIAGE, TRUANT, TURBOBLAZE, UNAWARE, UNBURDEN, UNNERVE, UNSEEN_FIST, VESSEL_OF_RUIN, VICTORY_STAR, VITAL_SPIRIT, VOLT_ABSORB, WANDERING_SPIRIT, WATER_ABSORB, WATER_BUBBLE, WATER_COMPACTION, WATER_VEIL, WEAK_ARMOR, WELL_BAKED_BODY, WHITE_SMOKE, WIMP_OUT, WIND_POWER, WIND_RIDER, WONDER_GUARD, WONDER_SKIN, ZEN_MODE, ZERO_TO_HERO, ABILITY_TOTAL,
-  // clang-format on
-};
-
-static constexpr std::uint16_t TOTAL_ABILITY_COUNT = (std::uint16_t)Ability::ABILITY_TOTAL - 1U;
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Types/Enums/Ability.hpp //////////////////////
 
 //////////////// START OF src/Components/Names/AbilityNames.hpp ////////////////
 
@@ -20447,7 +20500,7 @@ struct SideDecision {
   PlayerSideId sideId = PlayerSideId::NONE;
   types::variant<types::slotDecisions, types::teamOrder> decisions{};
 
-  bool operator==(const SideDecision other) const { return sideId == other.sideId && decisions == other.decisions; }
+  bool operator==(const SideDecision& other) const { return sideId == other.sideId && decisions == other.decisions; }
 };
 
 struct MidTurnDecisionsRequested {
@@ -20564,15 +20617,8 @@ struct UsesUntilKo {
  public:
   types::fixedMemoryVector<Uses, Constants::DamageRollCount::MAX> val{};
 
-  const Uses& minUses() const {
-    POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
-    return val.front();
-  }
-
-  const Uses& maxUses() const {
-    POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
-    return val.back();
-  }
+  const Uses& minUses() const { return val.front(); }
+  const Uses& maxUses() const { return val.back(); }
 
   bool guaranteedKo() const {
     const Uses& min = minUses();
@@ -20768,6 +20814,8 @@ struct AccuracyDependentHitCount {};
 
 struct SelfSwitch {};
 struct IgnoreImmunities {};
+struct Sound {};
+struct BypassProtect {};
 }  // namespace tags
 
 namespace effect::tags {
@@ -21782,6 +21830,8 @@ struct DefBoost;
 struct SpaBoost;
 struct SpdBoost;
 struct SpeBoost;
+struct AccBoost;
+struct EvaBoost;
 struct CloneTo;
 struct CurrentActionMoveSlot;
 struct Damage;
@@ -21790,6 +21840,8 @@ struct DamageRolls;
 struct DisabledMoveSlots;
 struct Evs;
 struct Ivs;
+struct EffectStackItem;
+struct EffectStack;
 struct AddedFlinchChance;
 struct ChoiceLock;
 struct Trapper;
@@ -21809,7 +21861,7 @@ struct CurrentActionMovesAsTargetExtended;
 struct CurrentEffectSource;
 struct CurrentEffectTarget;
 struct CurrentEffectsAsSource;
-struct CurrentEffectsAsTarget;
+struct CurrentEffectAsTarget;
 struct FaintQueue;
 struct FoeSide;
 struct RecycledAction;
@@ -21991,6 +22043,12 @@ template <>
 void check(const SpeBoost&);
 
 template <>
+void check(const AccBoost&);
+
+template <>
+void check(const EvaBoost&);
+
+template <>
 void check(const calc_damage::CritChanceDivisor&);
 
 template <>
@@ -22024,6 +22082,12 @@ void check(const Evs&);
 
 template <>
 void check(const Ivs&);
+
+template <>
+void check(const EffectStackItem&, const types::registry&);
+
+template <>
+void check(const EffectStack&, const types::registry&);
 
 template <>
 void check(const AddedFlinchChance&);
@@ -22083,7 +22147,7 @@ template <>
 void check(const CurrentEffectsAsSource&, const types::registry&);
 
 template <>
-void check(const CurrentEffectsAsTarget&, const types::registry&);
+void check(const CurrentEffectAsTarget&, const types::registry&);
 
 template <>
 void check(const FaintQueue&, const types::registry&);
@@ -22978,7 +23042,8 @@ struct PokemonStateSetup : StateSetupBase {
     static_assert(
       std::is_same<AtkBoost, BoostType>() || std::is_same<DefBoost, BoostType>() ||
         std::is_same<SpaBoost, BoostType>() || std::is_same<SpdBoost, BoostType>() ||
-        std::is_same<SpeBoost, BoostType>(),
+        std::is_same<SpeBoost, BoostType>() || std::is_same<AccBoost, BoostType>() ||
+        std::is_same<EvaBoost, BoostType>(),
       "Boosts can only be applied to a Pokemon boost stat struct (excluding HP).");
     handle.emplace<BoostType>(boost);
   };
@@ -24239,6 +24304,8 @@ struct PokemonCreationInfo {
     std::optional<types::boost> spa = std::nullopt;
     std::optional<types::boost> spd = std::nullopt;
     std::optional<types::boost> spe = std::nullopt;
+    std::optional<types::boost> acc = std::nullopt;
+    std::optional<types::boost> eva = std::nullopt;
   };
 
  public:
@@ -26654,6 +26721,36 @@ struct AllySwitch {
 
 /////////////////// END OF src/Pokedex/Moves/AllySwitch.hpp ////////////////////
 
+///////////////// START OF src/Pokedex/Moves/ChillingWater.hpp /////////////////
+
+namespace pokesim::dex {
+struct ChillingWater {
+  static constexpr Move name(GameMechanics = {}) { return Move::CHILLING_WATER; }
+  static constexpr Type type(GameMechanics) { return Type::WATER; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::SPECIAL; }
+
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
+  static constexpr types::basePower basePower(GameMechanics) { return 50U; }
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
+
+  struct targetSecondaryEffect {
+    static constexpr types::percentChance chance(GameMechanics) { return 100U; }
+    static constexpr types::boost atkBoost(GameMechanics) { return -1; }
+  };
+
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Chilling Water"; }
+    static constexpr std::string_view smogonId() { return "chillingwater"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+////////////////// END OF src/Pokedex/Moves/ChillingWater.hpp //////////////////
+
 ////////////////// START OF src/Pokedex/Moves/CloseCombat.hpp //////////////////
 
 namespace pokesim::dex {
@@ -26684,6 +26781,36 @@ struct CloseCombat {
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Moves/CloseCombat.hpp ///////////////////
+
+//////////////////// START OF src/Pokedex/Moves/Confide.hpp ////////////////////
+
+namespace pokesim::dex {
+struct Confide {
+  static constexpr Move name(GameMechanics = {}) { return Move::CONFIDE; }
+  static constexpr Type type(GameMechanics) { return Type::NORMAL; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
+
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
+
+  struct targetPrimaryEffect {
+    static constexpr types::boost spaBoost(GameMechanics) { return -1; }
+  };
+
+  static constexpr MoveProperty properties(GameMechanics) {
+    return MoveProperty::SOUND | MoveProperty::BYPASS_SUBSTITUTE | MoveProperty::BYPASS_PROTECT;
+  }
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Confide"; }
+    static constexpr std::string_view smogonId() { return "confide"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Moves/Confide.hpp /////////////////////
 
 ////////////////// START OF src/Pokedex/Moves/FlashCannon.hpp //////////////////
 
@@ -26742,6 +26869,37 @@ struct FuryAttack {
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Moves/FuryAttack.hpp ////////////////////
+
+///////////////////// START OF src/Pokedex/Moves/Growl.hpp /////////////////////
+
+namespace pokesim::dex {
+struct Growl {
+  static constexpr Move name(GameMechanics = {}) { return Move::GROWL; }
+  static constexpr Type type(GameMechanics) { return Type::NORMAL; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
+
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
+  static constexpr types::pp basePp(GameMechanics) { return 40U; }
+
+  struct targetPrimaryEffect {
+    static constexpr types::boost atkBoost(GameMechanics) { return -1; }
+  };
+
+  static constexpr MoveProperty properties(GameMechanics) {
+    return MoveProperty::SOUND | MoveProperty::BYPASS_SUBSTITUTE;
+  }
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Growl"; }
+    static constexpr std::string_view smogonId() { return "growl"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Moves/Growl.hpp //////////////////////
 
 /////////////////// START OF src/Pokedex/Moves/KnockOff.hpp ////////////////////
 
@@ -26802,6 +26960,37 @@ struct Leafage {
 
 ///////////////////// END OF src/Pokedex/Moves/Leafage.hpp /////////////////////
 
+/////////////////// START OF src/Pokedex/Moves/LowSweep.hpp ////////////////////
+
+namespace pokesim::dex {
+struct LowSweep {
+  static constexpr Move name(GameMechanics = {}) { return Move::LOW_SWEEP; }
+  static constexpr Type type(GameMechanics) { return Type::FIGHTING; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
+
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
+  static constexpr types::basePower basePower(GameMechanics) { return 65U; }
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
+
+  struct targetSecondaryEffect {
+    static constexpr types::percentChance chance(GameMechanics) { return 100U; }
+    static constexpr types::boost speBoost(GameMechanics) { return -1; }
+  };
+
+  static constexpr MoveProperty properties(GameMechanics) { return MoveProperty::CONTACT; }
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Low Sweep"; }
+    static constexpr std::string_view smogonId() { return "lowsweep"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Moves/LowSweep.hpp /////////////////////
+
 /////////////////// START OF src/Pokedex/Moves/Moonblast.hpp ///////////////////
 
 namespace pokesim::dex {
@@ -26831,6 +27020,68 @@ struct Moonblast {
 }  // namespace pokesim::dex
 
 //////////////////// END OF src/Pokedex/Moves/Moonblast.hpp ////////////////////
+
+//////////////////// START OF src/Pokedex/Moves/MudSlap.hpp ////////////////////
+
+namespace pokesim::dex {
+struct MudSlap {
+  static constexpr Move name(GameMechanics = {}) { return Move::MUD_SLAP; }
+  static constexpr Type type(GameMechanics) { return Type::GROUND; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::SPECIAL; }
+
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
+  static constexpr types::basePower basePower(GameMechanics) { return 20U; }
+  static constexpr types::pp basePp(GameMechanics) { return 10U; }
+
+  struct targetSecondaryEffect {
+    static constexpr types::percentChance chance(GameMechanics) { return 100U; }
+    static constexpr types::boost accBoost(GameMechanics) { return -1; }
+  };
+
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Mud-Slap"; }
+    static constexpr std::string_view smogonId() { return "mudslap"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Moves/MudSlap.hpp /////////////////////
+
+/////////////////// START OF src/Pokedex/Moves/NobleRoar.hpp ///////////////////
+
+namespace pokesim::dex {
+struct NobleRoar {
+  static constexpr Move name(GameMechanics = {}) { return Move::NOBLE_ROAR; }
+  static constexpr Type type(GameMechanics) { return Type::NORMAL; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
+
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
+  static constexpr types::pp basePp(GameMechanics) { return 30U; }
+
+  struct targetPrimaryEffect {
+    static constexpr types::boost atkBoost(GameMechanics) { return -1; }
+    static constexpr types::boost spaBoost(GameMechanics) { return -1; }
+  };
+
+  static constexpr MoveProperty properties(GameMechanics) {
+    return MoveProperty::SOUND | MoveProperty::BYPASS_SUBSTITUTE;
+  }
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Noble Roar"; }
+    static constexpr std::string_view smogonId() { return "nobleroar"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Moves/NobleRoar.hpp ////////////////////
 
 ////////////////// START OF src/Pokedex/Moves/QuiverDance.hpp //////////////////
 
@@ -27200,7 +27451,6 @@ void runAfterSetStatusEvent(Simulation& simulation);
 
 void runChangeBoostEvent(Simulation& simulation);
 void runTryBoostEvent(Simulation& simulation);
-template <typename BoostType>
 void runAfterEachBoostEvent(Simulation& simulation);
 void runAfterBoostEvent(Simulation& simulation);
 void runModifyTarget(Simulation& simulation);  // onModifyMove for Curse and Expanding force should go here
@@ -27257,6 +27507,10 @@ void setFailedActionMove(
   types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target);
 void clearMoveAction(Simulation& simulation);
 void clearSwitchAction(Simulation& simulation);
+
+void clearCurrentEffect(Simulation& simulation);
+void setCurrentEffectFromStack(Simulation& simulation);
+void clearCurrentBattleEffect(Simulation& simulation);
 }  // namespace internal
 }  // namespace pokesim
 
@@ -28483,12 +28737,18 @@ template <template <typename, typename...> typename RunStruct, typename... T, ty
 constexpr auto enumToTag(Move move, RunArgs&&... args) {
   switch (move) {
     case Move::ALLY_SWITCH:    return RunStruct<AllySwitch, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::CHILLING_WATER: return RunStruct<ChillingWater, T...>::run(std::forward<RunArgs>(args)...);
     case Move::CLOSE_COMBAT:   return RunStruct<CloseCombat, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::CONFIDE:        return RunStruct<Confide, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FLASH_CANNON:   return RunStruct<FlashCannon, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FURY_ATTACK:    return RunStruct<FuryAttack, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::GROWL:          return RunStruct<Growl, T...>::run(std::forward<RunArgs>(args)...);
     case Move::KNOCK_OFF:      return RunStruct<KnockOff, T...>::run(std::forward<RunArgs>(args)...);
     case Move::LEAFAGE:        return RunStruct<Leafage, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::LOW_SWEEP:      return RunStruct<LowSweep, T...>::run(std::forward<RunArgs>(args)...);
     case Move::MOONBLAST:      return RunStruct<Moonblast, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::MUD_SLAP:       return RunStruct<MudSlap, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::NOBLE_ROAR:     return RunStruct<NobleRoar, T...>::run(std::forward<RunArgs>(args)...);
     case Move::QUIVER_DANCE:   return RunStruct<QuiverDance, T...>::run(std::forward<RunArgs>(args)...);
     case Move::REFLECT:        return RunStruct<Reflect, T...>::run(std::forward<RunArgs>(args)...);
     case Move::REVERSAL:       return RunStruct<Reversal, T...>::run(std::forward<RunArgs>(args)...);
@@ -28549,6 +28809,14 @@ namespace pokesim::dex {
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
 constexpr void enumToTag(MoveProperty item, RunArgs&&... args) {
+  if (item & MoveProperty::BYPASS_SUBSTITUTE) {
+    RunStruct<move::tags::BypassSubstitute, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
+  if (item & MoveProperty::BYPASS_SUBSTITUTE) {
+    RunStruct<move::tags::BypassProtect, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
   if (item & MoveProperty::CONTACT) {
     RunStruct<move::tags::Contact, T...>::run(std::forward<RunArgs>(args)...);
   }
@@ -28559,6 +28827,10 @@ constexpr void enumToTag(MoveProperty item, RunArgs&&... args) {
 
   if (item & MoveProperty::SELF_SWITCH) {
     RunStruct<move::tags::SelfSwitch, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
+  if (item & MoveProperty::SOUND) {
+    RunStruct<move::tags::Sound, T...>::run(std::forward<RunArgs>(args)...);
   }
 
   if (item & MoveProperty::VARIABLE_HIT_COUNT) {

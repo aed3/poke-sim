@@ -12,7 +12,7 @@ struct SideDecision {
   PlayerSideId sideId = PlayerSideId::NONE;
   types::variant<types::slotDecisions, types::teamOrder> decisions{};
 
-  bool operator==(const SideDecision other) const { return sideId == other.sideId && decisions == other.decisions; }
+  bool operator==(const SideDecision& other) const { return sideId == other.sideId && decisions == other.decisions; }
 };
 
 struct MidTurnDecisionsRequested {

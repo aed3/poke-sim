@@ -101,7 +101,7 @@ class registry : public internal::BackingRegistry {
     if (called) return;
     called = true;
 
-    entt::id_type id = entt::type_id<Type>().hash();
+    entt::id_type id = entt::type_hash<Type>();
     registry::copyFunctions[id] = registry::copyToOtherRegistry<Type>;
     registry::equalsFunctions[id] = registry::entityComponentsEqual<Type>;
   }

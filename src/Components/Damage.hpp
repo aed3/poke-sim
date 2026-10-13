@@ -39,14 +39,7 @@ struct DamageRolls {
     }
   }
 
-  types::damage min() const {
-    POKESIM_REQUIRE(!val.empty(), "DamageRolls has no values to read.");
-    return val.back().val;
-  }
-
-  types::damage max() const {
-    POKESIM_REQUIRE(!val.empty(), "DamageRolls has no values to read.");
-    return val.front().val;
-  }
+  types::damage min() const { return val.back().val; }
+  types::damage max() const { return val.front().val; }
 };
 }  // namespace pokesim

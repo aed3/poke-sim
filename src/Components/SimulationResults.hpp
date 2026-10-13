@@ -30,15 +30,8 @@ struct UsesUntilKo {
  public:
   types::fixedMemoryVector<Uses, Constants::DamageRollCount::MAX> val{};
 
-  const Uses& minUses() const {
-    POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
-    return val.front();
-  }
-
-  const Uses& maxUses() const {
-    POKESIM_REQUIRE(!val.empty(), "UsesUntilKo has no values to read.");
-    return val.back();
-  }
+  const Uses& minUses() const { return val.front(); }
+  const Uses& maxUses() const { return val.back(); }
 
   bool guaranteedKo() const {
     const Uses& min = minUses();

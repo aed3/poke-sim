@@ -183,16 +183,19 @@ void checkActionMoveList(const ActionMoveList& actionMoveList, const types::regi
 
 void checkBattle(types::entity battleEntity, const types::registry& registry) {
   types::registry::checkEntity(battleEntity, registry);
+  POKESIM_REQUIRE_NM(has<Battle>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<tags::Battle>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<Sides>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<Probability>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<RngSeed>(battleEntity, registry));
   POKESIM_REQUIRE_NM(has<ActionQueue>(battleEntity, registry));
-  const auto& [sides, probability, actionQueue] = registry.get<Sides, Probability, ActionQueue>(battleEntity);
+  const auto& [battle, sides, probability, actionQueue] =
+    registry.get<Battle, Sides, Probability, ActionQueue>(battleEntity);
 
   check(probability);
   check(actionQueue);
 
+  POKESIM_REQUIRE_NM(battleEntity == battle.val);
   POKESIM_REQUIRE_NM(sides.val.size() == Constants::SIDE_COUNT);
   auto [p1SideEntity, p2SideEntity] = sides.val;
 
@@ -586,6 +589,16 @@ void check(const SpeBoost& speBoost) {
 }
 
 template <>
+void check(const AccBoost& accBoost) {
+  checkBoost(accBoost.val);
+}
+
+template <>
+void check(const EvaBoost& evaBoost) {
+  checkBoost(evaBoost.val);
+}
+
+template <>
 void check(const calc_damage::CritChanceDivisor& critChanceDivisor) {
   POKESIM_REQUIRE_NM(
     listContains(MechanicConstants::CRIT_CHANCE_DIVISORS(GameMechanics::LATEST), critChanceDivisor.val));
@@ -659,6 +672,73 @@ void check(const Ivs& ivs) {
   checkIv(ivs.spa);
   checkIv(ivs.spd);
   checkIv(ivs.spe);
+}
+
+template <>
+void check(const EffectStackItem& eventStackItem, const types::registry& registry) {
+  checkPokemon(eventStackItem.source, registry);
+  checkPokemon(eventStackItem.target, registry);
+  auto effect = eventStackItem.effect;
+  POKESIM_REQUIRE_NM(!effect.empty());
+
+  if (effect.holds<dex::PseudoWeather>()) {
+    check(PseudoWeatherName{effect.get<dex::PseudoWeather>()});
+  }
+  else if (effect.holds<dex::SideCondition>()) {
+    check(SideConditionName{effect.get<dex::SideCondition>()});
+  }
+  else if (effect.holds<dex::Status>()) {
+    check(StatusName{effect.get<dex::Status>()});
+  }
+  else if (effect.holds<dex::Terrain>()) {
+    check(TerrainName{effect.get<dex::Terrain>()});
+  }
+  else if (effect.holds<dex::Volatile>()) {
+    check(VolatileName{effect.get<dex::Volatile>()});
+  }
+  else if (effect.holds<dex::Weather>()) {
+    check(WeatherName{effect.get<dex::Weather>()});
+  }
+  else if (effect.holds<AtkBoost>()) {
+    checkBoost(effect.get<AtkBoost>().val);
+  }
+  else if (effect.holds<DefBoost>()) {
+    checkBoost(effect.get<DefBoost>().val);
+  }
+  else if (effect.holds<SpaBoost>()) {
+    checkBoost(effect.get<SpaBoost>().val);
+  }
+  else if (effect.holds<SpdBoost>()) {
+    checkBoost(effect.get<SpdBoost>().val);
+  }
+  else if (effect.holds<SpeBoost>()) {
+    checkBoost(effect.get<SpeBoost>().val);
+  }
+  else if (effect.holds<AccBoost>()) {
+    checkBoost(effect.get<AccBoost>().val);
+  }
+  else if (effect.holds<EvaBoost>()) {
+    checkBoost(effect.get<EvaBoost>().val);
+  }
+
+  auto effectSource = eventStackItem.effectSource;
+  if (effectSource.holds<dex::Item>()) {
+    check(ItemName{effectSource.get<dex::Item>()});
+  }
+  else if (effectSource.holds<dex::Move>()) {
+    check(MoveName{effectSource.get<dex::Move>()});
+  }
+  else if (effectSource.holds<dex::Ability>()) {
+    check(AbilityName{effectSource.get<dex::Ability>()});
+  }
+}
+
+template <>
+void check(const EffectStack& eventStack, const types::registry& registry) {
+  checkBounds<Constants::EffectStackLength>(eventStack.val.size());
+  for (const EffectStackItem& item : eventStack.val) {
+    check(item, registry);
+  }
 }
 
 template <>
@@ -767,7 +847,7 @@ void check(const CurrentEffectsAsSource& effects, const types::registry& registr
 }
 
 template <>
-void check(const CurrentEffectsAsTarget& effects, const types::registry& registry) {
+void check(const CurrentEffectAsTarget& effects, const types::registry& registry) {
   types::registry::checkEntity(effects.val, registry);
 }
 

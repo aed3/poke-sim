@@ -230,6 +230,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/BattleStateTest.cpp
       tests/CalcDamageTest.cpp
       tests/Abilities/Analytic.cpp
+      tests/Abilities/CompetitiveDefiant.cpp
       tests/Abilities/Imposter.cpp
       tests/Abilities/LongReach.cpp
       tests/Abilities/Scrappy.cpp

@@ -23,5 +23,9 @@ void setFailedActionMove(
   types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target);
 void clearMoveAction(Simulation& simulation);
 void clearSwitchAction(Simulation& simulation);
+
+void clearCurrentEffect(Simulation& simulation);
+void setCurrentEffectFromStack(Simulation& simulation);
+void clearCurrentBattleEffect(Simulation& simulation);
 }  // namespace internal
 }  // namespace pokesim

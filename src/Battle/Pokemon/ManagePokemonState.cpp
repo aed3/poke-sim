@@ -102,8 +102,10 @@ void boostStat(types::registry& registry, CurrentEffectTarget target, BoostType&
   BoostType& currentBoost = registry.get_or_emplace<BoostType>(target.val);
   currentBoost.val += boost.val;
 
-  if (boost.val) {
-    registry.emplace_or_replace<StatUpdateRequired>(target.val);
+  if constexpr (!std::is_same_v<StatUpdateRequired, void>) {
+    if (boost.val) {
+      registry.emplace_or_replace<StatUpdateRequired>(target.val);
+    }
   }
   if (currentBoost.val == Constants::PokemonStatBoost::DEFAULT) {
     registry.remove<BoostType>(target.val);
@@ -126,12 +128,6 @@ void clampBoost(types::registry& registry, CurrentEffectTarget target, BoostType
   else if (combinedBoost < BoostLimits::MIN) {
     boost.val = BoostLimits::MIN - currentBoost->val;
   }
-}
-
-template <typename BoostType, typename StatUpdateRequired>
-void boost(Simulation& simulation) {
-  simulation.view<boostStat<BoostType, StatUpdateRequired>>();
-  runAfterEachBoostEvent<BoostType>(simulation);
 }
 
 template <typename StatusType>
@@ -328,6 +324,8 @@ void clearVolatiles(Simulation& simulation) {
     SpaBoost,
     SpdBoost,
     SpeBoost,
+    AccBoost,
+    EvaBoost,
     LastUsedMove,
     ChoiceLock,
     Trapper,
@@ -391,13 +389,18 @@ void tryBoost(Simulation& simulation) {
   simulation.view<clampBoost<SpaBoost>>();
   simulation.view<clampBoost<SpdBoost>>();
   simulation.view<clampBoost<SpeBoost>>();
+  simulation.view<clampBoost<AccBoost>>();
+  simulation.view<clampBoost<EvaBoost>>();
   runTryBoostEvent(simulation);
 
-  boost<AtkBoost, pokesim::tags::AtkStatUpdateRequired>(simulation);
-  boost<DefBoost, pokesim::tags::DefStatUpdateRequired>(simulation);
-  boost<SpaBoost, pokesim::tags::SpaStatUpdateRequired>(simulation);
-  boost<SpdBoost, pokesim::tags::SpdStatUpdateRequired>(simulation);
-  boost<SpeBoost, pokesim::tags::SpeStatUpdateRequired>(simulation);
+  simulation.view<boostStat<AtkBoost, pokesim::tags::AtkStatUpdateRequired>>();
+  simulation.view<boostStat<DefBoost, pokesim::tags::DefStatUpdateRequired>>();
+  simulation.view<boostStat<SpaBoost, pokesim::tags::SpaStatUpdateRequired>>();
+  simulation.view<boostStat<SpdBoost, pokesim::tags::SpdStatUpdateRequired>>();
+  simulation.view<boostStat<SpeBoost, pokesim::tags::SpeStatUpdateRequired>>();
+  simulation.view<boostStat<AccBoost, void>>();
+  simulation.view<boostStat<EvaBoost, void>>();
+  runAfterEachBoostEvent(simulation);
   runAfterBoostEvent(simulation);
 }
 
@@ -464,6 +467,8 @@ void transformInto(types::registry& registry, types::entity source, types::entit
   if (targetHandle.all_of<SpaBoost>()) sourceHandle.emplace_or_replace<SpaBoost>(targetHandle.get<SpaBoost>());
   if (targetHandle.all_of<SpdBoost>()) sourceHandle.emplace_or_replace<SpdBoost>(targetHandle.get<SpdBoost>());
   if (targetHandle.all_of<SpeBoost>()) sourceHandle.emplace_or_replace<SpeBoost>(targetHandle.get<SpeBoost>());
+  if (targetHandle.all_of<AccBoost>()) sourceHandle.emplace_or_replace<AccBoost>(targetHandle.get<AccBoost>());
+  if (targetHandle.all_of<EvaBoost>()) sourceHandle.emplace_or_replace<EvaBoost>(targetHandle.get<EvaBoost>());
 
   sourceHandle.emplace<pokesim::tags::AtkStatUpdateRequired>();
   sourceHandle.emplace<pokesim::tags::DefStatUpdateRequired>();

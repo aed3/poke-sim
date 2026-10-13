@@ -30,12 +30,18 @@ template <template <typename, typename...> typename RunStruct, typename... T, ty
 constexpr auto enumToTag(Move move, RunArgs&&... args) {
   switch (move) {
     case Move::ALLY_SWITCH:    return RunStruct<AllySwitch, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::CHILLING_WATER: return RunStruct<ChillingWater, T...>::run(std::forward<RunArgs>(args)...);
     case Move::CLOSE_COMBAT:   return RunStruct<CloseCombat, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::CONFIDE:        return RunStruct<Confide, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FLASH_CANNON:   return RunStruct<FlashCannon, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FURY_ATTACK:    return RunStruct<FuryAttack, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::GROWL:          return RunStruct<Growl, T...>::run(std::forward<RunArgs>(args)...);
     case Move::KNOCK_OFF:      return RunStruct<KnockOff, T...>::run(std::forward<RunArgs>(args)...);
     case Move::LEAFAGE:        return RunStruct<Leafage, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::LOW_SWEEP:      return RunStruct<LowSweep, T...>::run(std::forward<RunArgs>(args)...);
     case Move::MOONBLAST:      return RunStruct<Moonblast, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::MUD_SLAP:       return RunStruct<MudSlap, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::NOBLE_ROAR:     return RunStruct<NobleRoar, T...>::run(std::forward<RunArgs>(args)...);
     case Move::QUIVER_DANCE:   return RunStruct<QuiverDance, T...>::run(std::forward<RunArgs>(args)...);
     case Move::REFLECT:        return RunStruct<Reflect, T...>::run(std::forward<RunArgs>(args)...);
     case Move::REVERSAL:       return RunStruct<Reversal, T...>::run(std::forward<RunArgs>(args)...);

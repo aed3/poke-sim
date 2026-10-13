@@ -43,18 +43,8 @@ struct sides : public std::array<T, Constants::SIDE_COUNT> {
     return this->at(N);
   }
 
-  sides() : std::array<T, Constants::SIDE_COUNT>() {}
+  constexpr sides() : std::array<T, Constants::SIDE_COUNT>() {}
   constexpr sides(const T& side1, const T& side2) : std::array<T, Constants::SIDE_COUNT>({side1, side2}) {}
-  sides(std::initializer_list<T> list) : sides() {
-    sideIndex side = 0U;
-    for (const T& value : list) {
-      this->at(side) = value;
-      side++;
-      if (side == size()) {
-        break;
-      }
-    }
-  }
 
   constexpr sideIndex size() const noexcept { return Constants::SIDE_COUNT; }
 };

@@ -8,6 +8,7 @@
 #include <Components/Accuracy.hpp>
 #include <Components/BaseEffectChance.hpp>
 #include <Components/Damage.hpp>
+#include <Components/EffectStack.hpp>
 #include <Components/Effects/AddedFlinchChance.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
@@ -154,7 +155,20 @@ void setEffectSource(types::handle handle, CurrentActionSource source) {
 template <typename TargetEntityHolder>
 void setEffectTarget(types::handle handle, TargetEntityHolder target) {
   handle.emplace<CurrentEffectTarget>(target.val);
-  handle.registry()->emplace<CurrentEffectsAsTarget>(target.val, handle.entity());
+  handle.registry()->emplace<CurrentEffectAsTarget>(target.val, handle.entity());
+}
+
+void runEffect(Simulation& simulation) {
+  internal::tryBoost(simulation);
+  internal::trySetStatus(simulation);
+  trySetStatusFromEffect(simulation);
+  trySetVolatileFromEffect(simulation);
+  trySetSideConditionFromEffect(simulation);
+  trySetSlotConditionFromEffect(simulation);
+  trySetWeatherFromEffect(simulation);
+  trySetTerrainFromEffect(simulation);
+  trySetPseudoWeatherFromEffect(simulation);
+  internal::runHitEvent(simulation);
 }
 
 void runMoveEffects(Simulation& simulation) {
@@ -167,18 +181,20 @@ void runMoveEffects(Simulation& simulation) {
   moveFilter.view<setEffectTarget<CurrentActionSource>, Tags<move::effect::tags::MoveSource>>();
   moveFilter.view<setEffectTarget<CurrentActionTarget>, Tags<move::effect::tags::MoveTarget>>();
 
-  internal::tryBoost(simulation);
-  internal::trySetStatus(simulation);
-  trySetStatusFromEffect(simulation);
-  trySetVolatileFromEffect(simulation);
-  trySetSideConditionFromEffect(simulation);
-  trySetSlotConditionFromEffect(simulation);
-  trySetWeatherFromEffect(simulation);
-  trySetTerrainFromEffect(simulation);
-  trySetPseudoWeatherFromEffect(simulation);
-  internal::runHitEvent(simulation);
+  runEffect(simulation);
+  internal::clearCurrentEffect(simulation);
 
-  simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
+  using Limits = Constants::EffectStackLength;
+  types::effectStackIndex iterations = Limits::MIN;
+  while (!simulation.hasNone<EffectStack>()) {
+    POKESIM_REQUIRE(iterations <= Limits::MAX, "More effects were stacked than should be possible");
+
+    internal::setCurrentEffectFromStack(simulation);
+    runEffect(simulation);
+    internal::clearCurrentBattleEffect(simulation);
+
+    iterations++;
+  }
 }
 
 template <typename ComponentToRemove>

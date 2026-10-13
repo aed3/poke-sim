@@ -55,6 +55,11 @@ types::teamPositionIndex entityToIndex(
   POKESIM_REQUIRE_FAIL("Slot entity must be part of the side entity's team");
   return Constants::TeamSize::MAX;
 }
+
+bool isAlly(types::registry& registry, types::entity pokemonEntity1, types::entity pokemonEntity2) {
+  return pokemonEntity1 == pokemonEntity2 ||
+         registry.get<Side>(pokemonEntity1).val == registry.get<Side>(pokemonEntity2).val;
+}
 }  // namespace internal
 
 Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position) {
@@ -69,7 +74,7 @@ PlayerSideId slotToSideId(Slot slot) {
 }
 
 PlayerSideId sideIdToFoeSideId(PlayerSideId sideId) {
-  static constexpr types::sides<PlayerSideId> SIDES(PlayerSideId::P1, PlayerSideId::P2);
+  static constexpr types::sides<PlayerSideId> SIDES{PlayerSideId::P1, PlayerSideId::P2};
   return SIDES.foe(SIDES.at(sideId));
 }
 

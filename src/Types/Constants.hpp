@@ -222,6 +222,12 @@ struct Constants {
     static constexpr std::uint8_t MIN = 0U;
   };
 
+  // Synonymous with Showdown's `Battle.eventDepth` property
+  struct EffectStackLength {
+    static constexpr std::uint8_t MAX = 8U;
+    static constexpr std::uint8_t MIN = 1U;
+  };
+
   struct TurnCount {
     // Technically 65535, but battles over 1000 turns aren't usually supported on Showdown
     static constexpr std::uint16_t MAX = 1000U;

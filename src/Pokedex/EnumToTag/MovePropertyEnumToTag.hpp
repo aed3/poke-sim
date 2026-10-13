@@ -24,6 +24,14 @@ namespace pokesim::dex {
  */
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
 constexpr void enumToTag(MoveProperty item, RunArgs&&... args) {
+  if (item & MoveProperty::BYPASS_SUBSTITUTE) {
+    RunStruct<move::tags::BypassSubstitute, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
+  if (item & MoveProperty::BYPASS_PROTECT) {
+    RunStruct<move::tags::BypassProtect, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
   if (item & MoveProperty::CONTACT) {
     RunStruct<move::tags::Contact, T...>::run(std::forward<RunArgs>(args)...);
   }
@@ -34,6 +42,10 @@ constexpr void enumToTag(MoveProperty item, RunArgs&&... args) {
 
   if (item & MoveProperty::SELF_SWITCH) {
     RunStruct<move::tags::SelfSwitch, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
+  if (item & MoveProperty::SOUND) {
+    RunStruct<move::tags::Sound, T...>::run(std::forward<RunArgs>(args)...);
   }
 
   if (item & MoveProperty::VARIABLE_HIT_COUNT) {

@@ -16,6 +16,7 @@ namespace internal {
 types::teamPositionIndex slotToIndex(Slot slot);
 types::teamPositionIndex entityToIndex(
   const types::registry& registry, types::entity sideEntity, types::entity slotEntity);
+bool isAlly(types::registry& registry, types::entity pokemonEntity1, types::entity pokemonEntity2);
 }  // namespace internal
 
 Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position);
@@ -28,4 +29,5 @@ void swapEntitySlots(types::registry& registry, types::entity sideEntity, Slot s
 void swapEntitySlots(types::registry& registry, const Sides& sides, Slot slot1, Slot slot2);
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot slot);
 types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
+
 }  // namespace pokesim

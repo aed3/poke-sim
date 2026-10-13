@@ -76,7 +76,7 @@ struct CurrentEffectsAsSource {
   types::targets<types::entity> val{};
 };
 
-struct CurrentEffectsAsTarget {
+struct CurrentEffectAsTarget {
   types::entity val{};
 };
 }  // namespace pokesim

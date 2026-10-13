@@ -3,12 +3,18 @@
 #pragma once
 
 #include "AllySwitch.hpp"
+#include "ChillingWater.hpp"
 #include "CloseCombat.hpp"
+#include "Confide.hpp"
 #include "FlashCannon.hpp"
 #include "FuryAttack.hpp"
+#include "Growl.hpp"
 #include "KnockOff.hpp"
 #include "Leafage.hpp"
+#include "LowSweep.hpp"
 #include "Moonblast.hpp"
+#include "MudSlap.hpp"
+#include "NobleRoar.hpp"
 #include "QuiverDance.hpp"
 #include "Reflect.hpp"
 #include "Reversal.hpp"

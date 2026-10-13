@@ -1,11 +1,14 @@
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/Helpers/IntegerModify.hpp>
 #include <Battle/Helpers/InternalHelpers.hpp>
+#include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Battle/Pokemon/PokemonProperties.hpp>
 #include <Components/ActionQueue.hpp>
 #include <Components/BaseEffectChance.hpp>
+#include <Components/Boosts.hpp>
 #include <Components/CalcDamage/Aliases.hpp>
+#include <Components/EffectStack.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/Side.hpp>
@@ -15,6 +18,7 @@
 #include <Components/Names/TypeNames.hpp>
 #include <Components/RandomEventInputs.hpp>
 #include <Components/Stats.hpp>
+#include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
@@ -80,6 +84,36 @@ struct AnalyticOnBasePowerCalcDamage {
   }
 };
 
+template <typename BoostType, typename CheckedBoostType>
+void competitiveDefiantAddToEffectStack(
+  types::registry& registry, Battle battle, types::entity target, CheckedBoostType checkedBoost,
+  types::boost boostByIfLowered, Ability ability) {
+  if (checkedBoost && checkedBoost->val < Constants::PokemonStatBoost::DEFAULT) {
+    registry.get_or_emplace<EffectStack>(battle.val)
+      .val.push_back({BoostType{boostByIfLowered}, ability, target, target});
+  }
+}
+
+template <typename BoostType>
+void competitiveDefiantOnAfterEachBoost(
+  types::handle handle, Battle battle, CurrentEffectAsTarget effect, types::boost boostByIfLowered, Ability ability) {
+  types::registry& registry = *handle.registry();
+  types::entity target = handle.entity();
+  if (internal::isAlly(registry, target, registry.get<CurrentEffectSource>(effect.val).val)) {
+    return;
+  }
+
+  auto [atkBoost, defBoost, spaBoost, spdBoost, speBoost, accBoost, evaBoost] =
+    registry.try_get<AtkBoost, DefBoost, SpaBoost, SpdBoost, SpeBoost, AccBoost, EvaBoost>(effect.val);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, atkBoost, boostByIfLowered, ability);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, defBoost, boostByIfLowered, ability);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, spaBoost, boostByIfLowered, ability);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, spdBoost, boostByIfLowered, ability);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, speBoost, boostByIfLowered, ability);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, accBoost, boostByIfLowered, ability);
+  competitiveDefiantAddToEffectStack<BoostType>(registry, battle, target, evaBoost, boostByIfLowered, ability);
+}
+
 void imposterOnSwitchIn(types::handle handle, Side side, const Simulation& simulation) {
   types::registry& registry = *handle.registry();
   FoeSide foeSide = registry.get<FoeSide>(side.val);
@@ -137,15 +171,15 @@ void staticOnDamagingHit(
     return;
   }
 
-  pokesim::internal::setRandomBinaryChanceFromPercentChance({registry, move}, battle, simulation, chanceOfStatic);
+  pokesim::internal::setRandomBinaryChanceFromPercentChance({registry, battle.val}, battle, simulation, chanceOfStatic);
 
   types::entity effectSource = targetHandle.entity();
   types::entity effectTarget = source;
-  registry.emplace_or_replace<Paralysis>(move);
-  registry.emplace<CurrentEffectSource>(move, effectSource);
-  registry.emplace<CurrentEffectsAsSource>(effectSource, decltype(CurrentEffectsAsSource::val){move});
-  registry.emplace<CurrentEffectTarget>(move, effectTarget);
-  registry.emplace<CurrentEffectsAsTarget>(effectTarget, move);
+  registry.emplace<Paralysis>(battle.val);
+  registry.emplace<CurrentEffectSource>(battle.val, effectSource);
+  registry.emplace<CurrentEffectsAsSource>(effectSource).val.push_back(battle.val);
+  registry.emplace<CurrentEffectTarget>(battle.val, effectTarget);
+  registry.emplace<CurrentEffectAsTarget>(effectTarget, battle.val);
 }
 }  // namespace
 
@@ -161,6 +195,16 @@ void Analytic::onBasePower(Simulation& simulation) {
     simulation,
     numerator,
     denominator);
+}
+
+void Competitive::onAfterEachBoost(Simulation& simulation) {
+  const auto spaBoost = simulation.pokedex().getStaticValue<Competitive::onAfterEachBoostSpaBoost>();
+  simulation.view<competitiveDefiantOnAfterEachBoost<SpaBoost>, Tags<Competitive>>(spaBoost, Ability::COMPETITIVE);
+}
+
+void Defiant::onAfterEachBoost(Simulation& simulation) {
+  const auto atkBoost = simulation.pokedex().getStaticValue<Defiant::onAfterEachBoostAtkBoost>();
+  simulation.view<competitiveDefiantOnAfterEachBoost<AtkBoost>, Tags<Defiant>>(atkBoost, Ability::DEFIANT);
 }
 
 void Imposter::onSwitchIn(Simulation& simulation) {
@@ -200,6 +244,7 @@ void Static::onDamagingHit(Simulation& simulation) {
     std::nullopt);
 
   internal::setStatus(simulation);
-  simulation.registry.clear<CurrentEffectSource, CurrentEffectTarget, CurrentEffectsAsSource, CurrentEffectsAsTarget>();
+  internal::clearCurrentEffect(simulation);
+  simulation.removeFromEntities<Paralysis, pokesim::tags::Battle>();
 }
 }  // namespace pokesim::dex
