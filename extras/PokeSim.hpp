@@ -28813,7 +28813,7 @@ constexpr void enumToTag(MoveProperty item, RunArgs&&... args) {
     RunStruct<move::tags::BypassSubstitute, T...>::run(std::forward<RunArgs>(args)...);
   }
 
-  if (item & MoveProperty::BYPASS_SUBSTITUTE) {
+  if (item & MoveProperty::BYPASS_PROTECT) {
     RunStruct<move::tags::BypassProtect, T...>::run(std::forward<RunArgs>(args)...);
   }
 
