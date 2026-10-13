@@ -7042,8 +7042,8 @@ bool doesMoveMakeContact(types::registry& registry, types::entity move, types::e
   return registry.all_of<move::tags::Contact>(move);
 }
 
-bool isGrounded(types::registry&, types::entity) {
-  return true;
+bool isGrounded(types::registry& registry, types::entity entity) {
+  return !registry.any_of<dex::FlyingType, dex::Levitate>(entity);
 }
 
 bool isTargetImmune(types::registry& registry, CurrentActionTarget target, TypeName typeName, const Pokedex& pokedex) {
