@@ -29,7 +29,7 @@ on:
 
 jobs:
   linux:
-    name: "Linux: ${{matrix.cxx}}, CHF ${{matrix.use_combined_files}}, ${{matrix.build_type}}"
+    name: "Linux: ${{matrix.cxx}}, CHF ${{matrix.use_combined_files}}"
     runs-on: ${{matrix.os}}
     strategy:
       fail-fast: false
@@ -46,7 +46,6 @@ jobs:
           - clang++-16
           - clang++-17
           - clang++-18
-        build_type: [Debug, Release]
         use_combined_files: ["TRUE", "FALSE"]
         include:
           - cxx: g++-10
@@ -104,7 +103,7 @@ jobs:
           CXX: ${{matrix.cxx}}
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
-                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DCMAKE_BUILD_TYPE=Release \
                 -DPOKESIM_ENABLE_TESTING=ON \
                 -DPOKESIM_ENABLE_BENCHMARKING=ON \
                 -DPOKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} \
@@ -113,19 +112,18 @@ jobs:
 
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
-        run: cmake --build . --config ${{matrix.build_type}} --target PokeSimTests PokeSimBenchmarks
+        run: cmake --build . --config Release --target PokeSimTests PokeSimBenchmarks
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
         run: bin/PokeSimTests
   windows:
-    name: "${{matrix.os}}: CHF ${{matrix.use_combined_files}}, ${{matrix.build_type}}"
+    name: "${{matrix.os}}: CHF ${{matrix.use_combined_files}}"
     runs-on: ${{matrix.os}}
     strategy:
       fail-fast: false
       matrix:
         os: [windows-2022, windows-2025]
-        build_type: [Debug, Release]
         use_combined_files: ["TRUE", "FALSE"]
     steps:
       - name: Checkout
@@ -136,7 +134,7 @@ jobs:
         run: |
           cmake -S $Env:GITHUB_WORKSPACE                                              `
                 -B ${{runner.workspace}}\build                                        `
-                -DCMAKE_BUILD_TYPE=${{matrix.build_type}}                             `
+                -DCMAKE_BUILD_TYPE=Release                                            `
                 -DPOKESIM_ENABLE_TESTING=ON                                                   `
                 -DPOKESIM_ENABLE_BENCHMARKING=ON                                              `
                 -DPOKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} `
@@ -144,13 +142,13 @@ jobs:
 
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
-        run: cmake --build . --config ${{matrix.build_type}} --target PokeSimTests PokeSimBenchmarks
+        run: cmake --build . --config Release --target PokeSimTests PokeSimBenchmarks
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
-        run: bin\${{matrix.build_type}}\PokeSimTests.exe
+        run: bin\Release\PokeSimTests.exe
   mac:
-    name: "Mac OS: ${{matrix.cxx}}, CHF ${{matrix.use_combined_files}}, ${{matrix.build_type}}"
+    name: "Mac OS: ${{matrix.cxx}}, CHF ${{matrix.use_combined_files}}"
     runs-on: macos-latest
     strategy:
       fail-fast: false
@@ -160,7 +158,6 @@ jobs:
           - g++-14
           - g++-15
           - clang++
-        build_type: [Debug, Release]
         use_combined_files: ["TRUE", "FALSE"]
 
     steps:
@@ -173,7 +170,7 @@ jobs:
           CXX: ${{matrix.cxx}}
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
-                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DCMAKE_BUILD_TYPE=Release \
                 -DPOKESIM_ENABLE_TESTING=ON \
                 -DPOKESIM_ENABLE_BENCHMARKING=ON \
                 -DPOKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} \
@@ -181,7 +178,7 @@ jobs:
 
       - name: Build tests
         working-directory: ${{runner.workspace}}/build
-        run: cmake --build . --config ${{matrix.build_type}} --target PokeSimTests PokeSimBenchmarks
+        run: cmake --build . --config Release --target PokeSimTests PokeSimBenchmarks
 
       - name: Run tests
         working-directory: ${{runner.workspace}}/build
