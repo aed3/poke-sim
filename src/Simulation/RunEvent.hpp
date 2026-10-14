@@ -35,6 +35,8 @@ void runChangeBoostEvent(Simulation& simulation);
 void runTryBoostEvent(Simulation& simulation);
 void runAfterEachBoostEvent(Simulation& simulation);
 void runAfterBoostEvent(Simulation& simulation);
+void runModifyMoveAccuracyBoostEvent(Simulation& simulation);  // ModifyBoost for accuracy and evasion
+
 void runModifyTarget(Simulation& simulation);  // onModifyMove for Curse and Expanding force should go here
 void runModifyMove(Simulation& simulation);
 void runResetDisabledMove(Simulation& simulation);

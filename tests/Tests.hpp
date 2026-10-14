@@ -400,9 +400,9 @@ struct TestSimulation {
   }
 
   template <typename... BattleTypesToIgnore, typename... SideTypesToIgnore>
-  auto simulateOneBranchingBattle(
-    Tags<BattleTypesToIgnore...> battleIgnoredTypes = {}, Tags<SideTypesToIgnore...> sideIgnoredTypes = {}) {
-    auto battleOutcomes = simulateOneBattle(battleIgnoredTypes, sideIgnoredTypes).battleOutcomes();
+  auto simulateOneBranchingBattle(Tags<BattleTypesToIgnore...> = {}, Tags<SideTypesToIgnore...> sideIgnoredTypes = {}) {
+    auto battleOutcomes =
+      simulateOneBattle(Tags<Probability, BattleTypesToIgnore...>{}, sideIgnoredTypes).battleOutcomes();
     std::vector<BattleEntities> battleEntitiesList;
     battleEntitiesList.reserve(battleOutcomes.size());
 

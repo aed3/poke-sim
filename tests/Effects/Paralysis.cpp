@@ -10,7 +10,7 @@ TEST_CASE("Paralysis: Can cause move failure", "[Simulation][SimulateTurn][Singl
     test.turnDecision(dex::Move::SPLASH, dex::Move::SPLASH));
 
   test.simulateTurnOptions().setMakeBranchesOnRandomEvents(true);
-  auto battleEntitiesList = test.simulateOneBranchingBattle(Tags<Probability>{});
+  auto battleEntitiesList = test.simulateOneBranchingBattle();
   REQUIRE(battleEntitiesList.size() == 2U);
 
   types::probability paralysisChance =

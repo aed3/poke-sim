@@ -2,7 +2,7 @@
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/Names/ItemNames.hpp>
-#include <Components/SimulateTurn/MoveHitStepTags.hpp>
+#include <Components/SimulateTurn/MoveHitSteps.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>

@@ -10,7 +10,7 @@ TEST_CASE("Static", "[Simulation][SimulateTurn][SingleBattle][Ability][Static][P
     test.turnDecision(dex::Move::TACKLE, dex::Move::SPLASH));
 
   test.simulateTurnOptions().setMakeBranchesOnRandomEvents(true);
-  auto battleEntitiesList = test.simulateOneBranchingBattle(Tags<Probability>{});
+  auto battleEntitiesList = test.simulateOneBranchingBattle();
   REQUIRE(battleEntitiesList.size() == 2U);
 
   types::probability staticChance =

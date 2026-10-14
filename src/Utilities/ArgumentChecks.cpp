@@ -1324,6 +1324,11 @@ void check(const MidTurnSideDecision& midTurnSideDecision) {
 }
 
 template <>
+void check(const internal::MoveAccuracyBoost& moveAccuracyBoost) {
+  checkBoost(moveAccuracyBoost.val);
+}
+
+template <>
 void check(const SpeedTieIndexes& speedTieIndexes) {
   checkBounds<Constants::ActivePokemon>(speedTieIndexes.val.size());
   types::activePokemonIndex total = 0U;

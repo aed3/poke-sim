@@ -271,6 +271,59 @@ TEST_CASE("Basic Switching", "[Simulation][SimulateTurn][SingleBattle][Switching
   }
 }
 
+TEST_CASE("Accuracy & Evasion Boosts", "[Simulation][SimulateTurn][SingleBattle][Boosts]") {
+  if (
+    Constants::PokemonStatBoost::MAX < 6 || Constants::PokemonStatBoost::MIN > -6 ||
+    Constants::Probability::MAX != 1.0F || dex::ZapCannon::accuracy(GameMechanics::SCARLET_VIOLET) != 50U) {
+    SKIP("This test does not work when constants differ from what's normal.");
+    return;
+  }
+
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  types::boost accBoost = GENERATE(range(-6, 6));
+  types::boost evaBoost = GENERATE(range(-6, 6));
+  types::boost combinedBoost = (types::boost)std::min(6, std::max(-6, accBoost - evaBoost));
+  types::probability idealProbability = 0.0F;
+  switch (combinedBoost) {
+    case -6: idealProbability = 0.16F; break;
+    case -5: idealProbability = 0.18F; break;
+    case -4: idealProbability = 0.21F; break;
+    case -3: idealProbability = 0.25F; break;
+    case -2: idealProbability = 0.30F; break;
+    case -1: idealProbability = 0.37F; break;
+    case 0:  idealProbability = 0.50F; break;
+    case 1:  idealProbability = 0.66F; break;
+    case 2:  idealProbability = 0.83F; break;
+    case 3:
+    case 4:
+    case 5:
+    case 6:  idealProbability = 1.0F; break;
+    default: FAIL();
+  }
+  CAPTURE(accBoost, evaBoost, combinedBoost, idealProbability);
+
+  test.setupBattle(
+    Turn{1U},
+    test.side(test.pokemon(dex::Species::AMPHAROS, dex::Move::ZAP_CANNON, AccBoost{accBoost})),
+    test.side(test.pokemon(dex::Species::DRAGAPULT, dex::Move::SPLASH, EvaBoost{evaBoost})),
+    test.turnDecision(dex::Move::ZAP_CANNON, dex::Move::SPLASH));
+
+  auto battleEntitiesList = test.simulateOneBranchingBattle();
+  REQUIRE(battleEntitiesList.size() == (idealProbability == 1.0F ? 1U : 2U));
+
+  for (auto entities : battleEntitiesList) {
+    types::probability probability = test.registry().get<Probability>(entities.battle).val;
+    bool moveHit = test.registry().all_of<tags::HasStatus>(entities.p2A);
+
+    if (moveHit) {
+      REQUIRE_THAT(idealProbability, Catch::Matchers::WithinRel(probability));
+    }
+    else {
+      REQUIRE_THAT(idealProbability, Catch::Matchers::WithinRel(1.0F - probability));
+    }
+  }
+}
+
 TEST_CASE("Type Immunities", "[Simulation][SimulateTurn][SingleBattle][Immunities]") {
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
   test.setupBattle(

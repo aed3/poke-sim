@@ -26,3 +26,4 @@
 #include "TripleArrows.hpp"
 #include "VoltSwitch.hpp"
 #include "WillOWisp.hpp"
+#include "ZapCannon.hpp"

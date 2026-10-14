@@ -213,23 +213,25 @@ struct SimulationSetupChecks {
     }
   }
 
+  template <typename BoostType>
+  void checkCreatedBoost(types::entity pokemonEntity, const std::optional<types::boost>& boostInfo) const {
+    if (!boostInfo.has_value() || boostInfo.value() == Constants::PokemonStatBoost::DEFAULT) {
+      POKESIM_REQUIRE_NM(!registry->all_of<BoostType>(pokemonEntity));
+    }
+    else {
+      POKESIM_REQUIRE_NM(registry->get<BoostType>(pokemonEntity).val == boostInfo.value());
+    }
+  }
+
   void checkCreatedBoosts(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
     const auto& currentBoosts = creationInfo.currentBoosts;
-    if (currentBoosts.atk.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<AtkBoost>(pokemonEntity).val == currentBoosts.atk.value());
-    }
-    if (currentBoosts.def.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<DefBoost>(pokemonEntity).val == currentBoosts.def.value());
-    }
-    if (currentBoosts.spa.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<SpaBoost>(pokemonEntity).val == currentBoosts.spa.value());
-    }
-    if (currentBoosts.spd.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<SpdBoost>(pokemonEntity).val == currentBoosts.spd.value());
-    }
-    if (currentBoosts.spe.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<SpeBoost>(pokemonEntity).val == currentBoosts.spe.value());
-    }
+    checkCreatedBoost<AtkBoost>(pokemonEntity, currentBoosts.atk);
+    checkCreatedBoost<DefBoost>(pokemonEntity, currentBoosts.def);
+    checkCreatedBoost<SpaBoost>(pokemonEntity, currentBoosts.spa);
+    checkCreatedBoost<SpdBoost>(pokemonEntity, currentBoosts.spd);
+    checkCreatedBoost<SpeBoost>(pokemonEntity, currentBoosts.spe);
+    checkCreatedBoost<AccBoost>(pokemonEntity, currentBoosts.acc);
+    checkCreatedBoost<EvaBoost>(pokemonEntity, currentBoosts.eva);
   }
 
   void checkCreatedPokemon(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {

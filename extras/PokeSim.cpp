@@ -1466,6 +1466,11 @@ void check(const MidTurnSideDecision& midTurnSideDecision) {
 }
 
 template <>
+void check(const internal::MoveAccuracyBoost& moveAccuracyBoost) {
+  checkBoost(moveAccuracyBoost.val);
+}
+
+template <>
 void check(const SpeedTieIndexes& speedTieIndexes) {
   checkBounds<Constants::ActivePokemon>(speedTieIndexes.val.size());
   types::activePokemonIndex total = 0U;
@@ -2462,6 +2467,7 @@ void runAfterEachBoostEvent(Simulation& simulation) {
 }
 
 void runAfterBoostEvent(Simulation&) {}
+void runModifyMoveAccuracyBoostEvent(Simulation&) {}
 
 void runModifyTarget(Simulation&) {}
 
@@ -2869,8 +2875,36 @@ void typeImmunityCheck(Simulation& simulation) {
     simulation.pokedex());
 }
 
+void setMoveAccuracyBoost(types::registry& registry, const CurrentActionMovesAsSource& moves, AccBoost accBoost) {
+  for (types::entity move : moves) {
+    registry.emplace<internal::MoveAccuracyBoost>(move, accBoost.val);
+  }
+}
+
+void modifyMoveAccuracyBoostWithEvasion(types::registry& registry, CurrentActionMovesAsTarget move, EvaBoost evaBoost) {
+  internal::MoveAccuracyBoost& moveAccuracyBoost = registry.get_or_emplace<internal::MoveAccuracyBoost>(move.val);
+  moveAccuracyBoost.val = std::max(
+    Constants::PokemonStatBoost::MIN,
+    std::min(Constants::PokemonStatBoost::MAX, types::boost(moveAccuracyBoost.val - evaBoost.val)));
+}
+
+void applyMoveAccuracyBoost(Accuracy& accuracy, internal::MoveAccuracyBoost moveAccuracyBoost) {
+  accuracy.val = (types::baseAccuracy)std::max(
+    (types::accuracy)Constants::MoveBaseAccuracy::MIN,
+    std::min(
+      (types::accuracy)Constants::MoveBaseAccuracy::MAX,
+      computeAccuracyFromBoost(accuracy.val, moveAccuracyBoost.val)));
+}
+
 void accuracyCheck(Simulation& simulation) {
   internal::runModifyAccuracyEvent(simulation);
+
+  simulation.view<setMoveAccuracyBoost>();
+  simulation.view<modifyMoveAccuracyBoostWithEvasion>();
+  internal::runModifyMoveAccuracyBoostEvent(simulation);
+  simulation.view<applyMoveAccuracyBoost>();
+  simulation.removeFromEntities<internal::MoveAccuracyBoost>();
+
   internal::runAccuracyEvent(simulation);
 
   internal::runRandomBinaryChance<Accuracy, tags::CurrentMoveHit>(simulation, [](Simulation& sim) {
@@ -5586,10 +5620,7 @@ void BrightPowder::onModifyAccuracy(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyDenominator>();
 
-  internal::currentActionMovesAsTargetView<SetMoveTargetModifier, Tags<BrightPowder>>(
-    simulation,
-    numerator,
-    denominator);
+  simulation.view<SetMoveTargetModifier<CurrentActionMovesAsTarget>::run, Tags<BrightPowder>>(numerator, denominator);
 }
 
 void ChoiceScarf::onModifySpe(Simulation& simulation) {

@@ -144,6 +144,7 @@ struct RandomBinaryProbabilityStack;
 struct RandomEventCountStack;
 struct RandomEqualChanceStack;
 struct RandomEventIndex;
+struct MoveAccuracyBoost;
 namespace calc_damage {
 struct RealEffectiveStat;
 struct DamageFormulaVariables;
@@ -544,6 +545,9 @@ void check(const MidTurnDecisionsRequested&);
 
 template <>
 void check(const MidTurnSideDecision&);
+
+template <>
+void check(const internal::MoveAccuracyBoost&);
 
 template <>
 void check(const SpeedTieIndexes&);

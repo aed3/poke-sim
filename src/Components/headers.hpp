@@ -69,7 +69,7 @@
 #include "SideDecisionOptions.hpp"
 #include "SideDecisions.hpp"
 #include "SimulateTurn/ActionTags.hpp"
-#include "SimulateTurn/MoveHitStepTags.hpp"
+#include "SimulateTurn/MoveHitSteps.hpp"
 #include "SimulateTurn/SimulateTurnTags.hpp"
 #include "SimulateTurn/SpeedTieIndexes.hpp"
 #include "SimulateTurn/TeamAction.hpp"

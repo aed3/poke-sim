@@ -13,7 +13,7 @@ TEST_CASE("King's Rock: Can cause move failure", "[Simulation][SimulateTurn][Sin
     test.turnDecision(dex::Move::TACKLE, dex::Move::SPLASH));
 
   test.simulateTurnOptions().setMakeBranchesOnRandomEvents(true);
-  auto battleEntitiesList = test.simulateOneBranchingBattle(Tags<Probability>{});
+  auto battleEntitiesList = test.simulateOneBranchingBattle();
   REQUIRE(battleEntitiesList.size() == 2U);
 
   types::probability flinchChance = test.dexValue<dex::KingsRock::addedFlinchChance>() * ToProbability;
@@ -55,7 +55,7 @@ TEST_CASE(
     test.turnDecision(dex::Move::MOONBLAST, dex::Move::SPLASH));
 
   test.simulateTurnOptions().setMakeBranchesOnRandomEvents(true);
-  auto battleEntitiesList = test.simulateOneBranchingBattle(Tags<Probability>{});
+  auto battleEntitiesList = test.simulateOneBranchingBattle();
   REQUIRE(battleEntitiesList.size() == 4U);
 
   types::probability flinchChance = test.dexValue<dex::KingsRock::addedFlinchChance>() * ToProbability;
@@ -157,7 +157,7 @@ TEST_CASE(
   };
 
   test.simulateTurnOptions().setMakeBranchesOnRandomEvents(true);
-  auto battleEntitiesList = test.simulateOneBranchingBattle(Tags<Probability>{});
+  auto battleEntitiesList = test.simulateOneBranchingBattle();
   REQUIRE(
     battleEntitiesList.size() == missProbabilities.size() + twoHitProbabilities.size() + threeHitProbabilities.size() +
                                    fourHitProbabilities.size() + fiveHitProbabilities.size());

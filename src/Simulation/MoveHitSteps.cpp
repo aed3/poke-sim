@@ -17,14 +17,16 @@
 #include <Components/Names/TypeNames.hpp>
 #include <Components/Priority.hpp>
 #include <Components/RandomEventOutputs.hpp>
-#include <Components/SimulateTurn/MoveHitStepTags.hpp>
+#include <Components/SimulateTurn/MoveHitSteps.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
+#include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/RandomChance.hpp>
+#include <Simulation/Formulas.hpp>
 #include <Types/Constants.hpp>
 #include <Types/Enums/BattleFormat.hpp>
 #include <Types/Registry.hpp>
@@ -344,8 +346,36 @@ void typeImmunityCheck(Simulation& simulation) {
     simulation.pokedex());
 }
 
+void setMoveAccuracyBoost(types::registry& registry, const CurrentActionMovesAsSource& moves, AccBoost accBoost) {
+  for (types::entity move : moves) {
+    registry.emplace<internal::MoveAccuracyBoost>(move, accBoost.val);
+  }
+}
+
+void modifyMoveAccuracyBoostWithEvasion(types::registry& registry, CurrentActionMovesAsTarget move, EvaBoost evaBoost) {
+  internal::MoveAccuracyBoost& moveAccuracyBoost = registry.get_or_emplace<internal::MoveAccuracyBoost>(move.val);
+  moveAccuracyBoost.val = std::max(
+    Constants::PokemonStatBoost::MIN,
+    std::min(Constants::PokemonStatBoost::MAX, types::boost(moveAccuracyBoost.val - evaBoost.val)));
+}
+
+void applyMoveAccuracyBoost(Accuracy& accuracy, internal::MoveAccuracyBoost moveAccuracyBoost) {
+  accuracy.val = (types::baseAccuracy)std::max(
+    (types::accuracy)Constants::MoveBaseAccuracy::MIN,
+    std::min(
+      (types::accuracy)Constants::MoveBaseAccuracy::MAX,
+      computeAccuracyFromBoost(accuracy.val, moveAccuracyBoost.val)));
+}
+
 void accuracyCheck(Simulation& simulation) {
   internal::runModifyAccuracyEvent(simulation);
+
+  simulation.view<setMoveAccuracyBoost>();
+  simulation.view<modifyMoveAccuracyBoostWithEvasion>();
+  internal::runModifyMoveAccuracyBoostEvent(simulation);
+  simulation.view<applyMoveAccuracyBoost>();
+  simulation.removeFromEntities<internal::MoveAccuracyBoost>();
+
   internal::runAccuracyEvent(simulation);
 
   internal::runRandomBinaryChance<Accuracy, tags::CurrentMoveHit>(simulation, [](Simulation& sim) {

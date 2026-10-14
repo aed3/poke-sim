@@ -138,6 +138,7 @@ void runAfterEachBoostEvent(Simulation& simulation) {
 }
 
 void runAfterBoostEvent(Simulation&) {}
+void runModifyMoveAccuracyBoostEvent(Simulation&) {}
 
 void runModifyTarget(Simulation&) {}
 

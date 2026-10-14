@@ -75,7 +75,9 @@ struct PokemonStateSetup : StateSetupBase {
         std::is_same<SpeBoost, BoostType>() || std::is_same<AccBoost, BoostType>() ||
         std::is_same<EvaBoost, BoostType>(),
       "Boosts can only be applied to a Pokemon boost stat struct (excluding HP).");
-    handle.emplace<BoostType>(boost);
+    if (boost != Constants::PokemonStatBoost::DEFAULT) {
+      handle.emplace<BoostType>(boost);
+    }
   };
 
   template <typename StatType, typename EffectiveStatType>

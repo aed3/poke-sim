@@ -3,7 +3,7 @@
 #pragma once
 
 #include "ActionTags.hpp"
-#include "MoveHitStepTags.hpp"
+#include "MoveHitSteps.hpp"
 #include "SimulateTurnTags.hpp"
 #include "SpeedTieIndexes.hpp"
 #include "TeamAction.hpp"

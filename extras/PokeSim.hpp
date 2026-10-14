@@ -159,7 +159,7 @@
  * src/Components/SideDecisionOptions.hpp
  * src/Components/SideDecisions.hpp
  * src/Components/SimulateTurn/ActionTags.hpp
- * src/Components/SimulateTurn/MoveHitStepTags.hpp
+ * src/Components/SimulateTurn/MoveHitSteps.hpp
  * src/Components/SimulateTurn/SimulateTurnTags.hpp
  * src/Components/SimulateTurn/SpeedTieIndexes.hpp
  * src/Components/SimulateTurn/TeamAction.hpp
@@ -305,6 +305,7 @@
  * src/Pokedex/Moves/TripleArrows.hpp
  * src/Pokedex/Moves/VoltSwitch.hpp
  * src/Pokedex/Moves/WillOWisp.hpp
+ * src/Pokedex/Moves/ZapCannon.hpp
  * src/Simulation/RunEvent.hpp
  * src/Battle/ManageBattleState.hpp
  * src/Battle/Pokemon/PokemonProperties.hpp
@@ -16463,6 +16464,13 @@ struct Constants {
     static constexpr std::uint8_t DEFAULT = 100U;
   };
 
+  struct MoveAccuracy {
+    // +6 Accuracy boosted with Compound Eyes holding a Zoom Lens
+    static constexpr std::uint16_t MAX = 468U;
+    static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 100U;
+  };
+
   struct MoveHits {
     static constexpr std::uint8_t MAX = 10U;
     static constexpr std::uint8_t MIN = 1U;
@@ -19320,6 +19328,7 @@ using pp = pokesim::internal::unsignedIntType<Constants::MoveMaxPp::MAX>;
 using basePower = pokesim::internal::unsignedIntType<Constants::MoveBasePower::MAX>;
 using power = pokesim::internal::unsignedIntType<Constants::MovePower::MAX>;
 using baseAccuracy = pokesim::internal::unsignedIntType<Constants::MoveBaseAccuracy::MAX>;
+using accuracy = pokesim::internal::unsignedIntType<Constants::MoveAccuracy::MAX>;
 using moveHits = pokesim::internal::unsignedIntType<Constants::PokemonHpStat::MAX>;
 
 using priority = pokesim::internal::signedIntType<Constants::MovePriority::MAX, Constants::MovePriority::MIN>;
@@ -20544,14 +20553,19 @@ struct Terastallize {};
 
 ////////////// END OF src/Components/SimulateTurn/ActionTags.hpp ///////////////
 
-/////////// START OF src/Components/SimulateTurn/MoveHitStepTags.hpp ///////////
+//////////// START OF src/Components/SimulateTurn/MoveHitSteps.hpp /////////////
 
-namespace pokesim::internal::tags {
+namespace pokesim::internal {
+struct MoveAccuracyBoost {
+  types::boost val{};
+};
+
+namespace tags {
 struct HitsFinished {};
-struct RunEffect {};
-}  // namespace pokesim::internal::tags
+}  // namespace tags
+}  // namespace pokesim::internal
 
-//////////// END OF src/Components/SimulateTurn/MoveHitStepTags.hpp ////////////
+///////////// END OF src/Components/SimulateTurn/MoveHitSteps.hpp //////////////
 
 ////////// START OF src/Components/SimulateTurn/SimulateTurnTags.hpp ///////////
 
@@ -20910,6 +20924,8 @@ struct AddedRecycledActionMove2 {};
 //////////////// START OF src/Components/Tags/RunEventTags.hpp /////////////////
 
 namespace pokesim::internal::tags {
+struct RunEffect {};
+
 struct StartAbility {};
 struct EndItem {};
 struct ResetTrappedPokemon {};
@@ -21952,6 +21968,7 @@ struct RandomBinaryProbabilityStack;
 struct RandomEventCountStack;
 struct RandomEqualChanceStack;
 struct RandomEventIndex;
+struct MoveAccuracyBoost;
 namespace calc_damage {
 struct RealEffectiveStat;
 struct DamageFormulaVariables;
@@ -22352,6 +22369,9 @@ void check(const MidTurnDecisionsRequested&);
 
 template <>
 void check(const MidTurnSideDecision&);
+
+template <>
+void check(const internal::MoveAccuracyBoost&);
 
 template <>
 void check(const SpeedTieIndexes&);
@@ -23045,7 +23065,9 @@ struct PokemonStateSetup : StateSetupBase {
         std::is_same<SpeBoost, BoostType>() || std::is_same<AccBoost, BoostType>() ||
         std::is_same<EvaBoost, BoostType>(),
       "Boosts can only be applied to a Pokemon boost stat struct (excluding HP).");
-    handle.emplace<BoostType>(boost);
+    if (boost != Constants::PokemonStatBoost::DEFAULT) {
+      handle.emplace<BoostType>(boost);
+    }
   };
 
   template <typename StatType, typename EffectiveStatType>
@@ -24464,6 +24486,13 @@ constexpr types::stat computeStatFromBaseStat(
   }
 
   return computeStatFromBaseStat(statName, baseStat, level, nature, ev, iv);
+}
+
+constexpr types::accuracy computeAccuracyFromBoost(types::baseAccuracy accuracy, types::boost boost) {
+  if (boost > 0) {
+    return accuracy * (3 + boost) / 3;
+  }
+  return accuracy * 3 / (3 - boost);
 }
 }  // namespace pokesim
 // NOLINTEND(readability-magic-numbers)
@@ -26101,23 +26130,25 @@ struct SimulationSetupChecks {
     }
   }
 
+  template <typename BoostType>
+  void checkCreatedBoost(types::entity pokemonEntity, const std::optional<types::boost>& boostInfo) const {
+    if (!boostInfo.has_value() || boostInfo.value() == Constants::PokemonStatBoost::DEFAULT) {
+      POKESIM_REQUIRE_NM(!registry->all_of<BoostType>(pokemonEntity));
+    }
+    else {
+      POKESIM_REQUIRE_NM(registry->get<BoostType>(pokemonEntity).val == boostInfo.value());
+    }
+  }
+
   void checkCreatedBoosts(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
     const auto& currentBoosts = creationInfo.currentBoosts;
-    if (currentBoosts.atk.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<AtkBoost>(pokemonEntity).val == currentBoosts.atk.value());
-    }
-    if (currentBoosts.def.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<DefBoost>(pokemonEntity).val == currentBoosts.def.value());
-    }
-    if (currentBoosts.spa.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<SpaBoost>(pokemonEntity).val == currentBoosts.spa.value());
-    }
-    if (currentBoosts.spd.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<SpdBoost>(pokemonEntity).val == currentBoosts.spd.value());
-    }
-    if (currentBoosts.spe.has_value()) {
-      POKESIM_REQUIRE_NM(registry->get<SpeBoost>(pokemonEntity).val == currentBoosts.spe.value());
-    }
+    checkCreatedBoost<AtkBoost>(pokemonEntity, currentBoosts.atk);
+    checkCreatedBoost<DefBoost>(pokemonEntity, currentBoosts.def);
+    checkCreatedBoost<SpaBoost>(pokemonEntity, currentBoosts.spa);
+    checkCreatedBoost<SpdBoost>(pokemonEntity, currentBoosts.spd);
+    checkCreatedBoost<SpeBoost>(pokemonEntity, currentBoosts.spe);
+    checkCreatedBoost<AccBoost>(pokemonEntity, currentBoosts.acc);
+    checkCreatedBoost<EvaBoost>(pokemonEntity, currentBoosts.eva);
   }
 
   void checkCreatedPokemon(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
@@ -27416,6 +27447,38 @@ struct WillOWisp {
 
 //////////////////// END OF src/Pokedex/Moves/WillOWisp.hpp ////////////////////
 
+/////////////////// START OF src/Pokedex/Moves/ZapCannon.hpp ///////////////////
+
+namespace pokesim::dex {
+struct ZapCannon {
+  static constexpr Move name(GameMechanics = {}) { return Move::ZAP_CANNON; }
+  static constexpr Type type(GameMechanics) { return Type::ELECTRIC; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::SPECIAL; }
+
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 50U; }
+  static constexpr types::basePower basePower(GameMechanics) { return 120U; }
+  static constexpr types::pp basePp(GameMechanics) { return 5U; }
+
+  struct targetSecondaryEffect {
+    static constexpr types::percentChance chance(GameMechanics) { return 100U; }
+
+    static constexpr Status status(GameMechanics) { return Status::PAR; }
+  };
+
+  static constexpr MoveProperty properties(GameMechanics) { return MoveProperty::BULLET; }
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Zap Cannon"; }
+    static constexpr std::string_view smogonId() { return "zapcannon"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Moves/ZapCannon.hpp ////////////////////
+
 ///////////////////// START OF src/Simulation/RunEvent.hpp /////////////////////
 
 namespace pokesim {
@@ -27453,6 +27516,8 @@ void runChangeBoostEvent(Simulation& simulation);
 void runTryBoostEvent(Simulation& simulation);
 void runAfterEachBoostEvent(Simulation& simulation);
 void runAfterBoostEvent(Simulation& simulation);
+void runModifyMoveAccuracyBoostEvent(Simulation& simulation);  // ModifyBoost for accuracy and evasion
+
 void runModifyTarget(Simulation& simulation);  // onModifyMove for Curse and Expanding force should go here
 void runModifyMove(Simulation& simulation);
 void runResetDisabledMove(Simulation& simulation);
@@ -28760,6 +28825,7 @@ constexpr auto enumToTag(Move move, RunArgs&&... args) {
     case Move::TRIPLE_ARROWS:  return RunStruct<TripleArrows, T...>::run(std::forward<RunArgs>(args)...);
     case Move::VOLT_SWITCH:    return RunStruct<VoltSwitch, T...>::run(std::forward<RunArgs>(args)...);
     case Move::WILL_O_WISP:    return RunStruct<WillOWisp, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::ZAP_CANNON:     return RunStruct<ZapCannon, T...>::run(std::forward<RunArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for move that does not exist.");

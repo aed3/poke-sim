@@ -79,6 +79,7 @@
 #include "Moves/TripleArrows.hpp"
 #include "Moves/VoltSwitch.hpp"
 #include "Moves/WillOWisp.hpp"
+#include "Moves/ZapCannon.hpp"
 #include "Pokedex.hpp"
 #include "Species/Aegislash.hpp"
 #include "Species/Ampharos.hpp"

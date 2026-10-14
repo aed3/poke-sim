@@ -121,6 +121,13 @@ struct Constants {
     static constexpr std::uint8_t DEFAULT = 100U;
   };
 
+  struct MoveAccuracy {
+    // +6 Accuracy boosted with Compound Eyes holding a Zoom Lens
+    static constexpr std::uint16_t MAX = 468U;
+    static constexpr std::uint16_t MIN = 1U;
+    static constexpr std::uint16_t DEFAULT = 100U;
+  };
+
   struct MoveHits {
     static constexpr std::uint8_t MAX = 10U;
     static constexpr std::uint8_t MIN = 1U;

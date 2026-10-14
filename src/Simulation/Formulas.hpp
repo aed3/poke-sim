@@ -98,5 +98,12 @@ constexpr types::stat computeStatFromBaseStat(
 
   return computeStatFromBaseStat(statName, baseStat, level, nature, ev, iv);
 }
+
+constexpr types::accuracy computeAccuracyFromBoost(types::baseAccuracy accuracy, types::boost boost) {
+  if (boost > 0) {
+    return accuracy * (3 + boost) / 3;
+  }
+  return accuracy * 3 / (3 - boost);
+}
 }  // namespace pokesim
 // NOLINTEND(readability-magic-numbers)

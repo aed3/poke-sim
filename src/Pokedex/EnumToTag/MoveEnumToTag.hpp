@@ -53,6 +53,7 @@ constexpr auto enumToTag(Move move, RunArgs&&... args) {
     case Move::TRIPLE_ARROWS:  return RunStruct<TripleArrows, T...>::run(std::forward<RunArgs>(args)...);
     case Move::VOLT_SWITCH:    return RunStruct<VoltSwitch, T...>::run(std::forward<RunArgs>(args)...);
     case Move::WILL_O_WISP:    return RunStruct<WillOWisp, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::ZAP_CANNON:     return RunStruct<ZapCannon, T...>::run(std::forward<RunArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for move that does not exist.");

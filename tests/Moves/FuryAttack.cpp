@@ -86,7 +86,7 @@ TEST_CASE("Fury Attack: Multi-hit Branches", "[Simulation][SimulateTurn][SingleB
     }
   }
 
-  auto battleEntitiesList = test.simulateOneBranchingBattle(Tags<Probability>{});
+  auto battleEntitiesList = test.simulateOneBranchingBattle();
   REQUIRE(battleEntitiesList.size() == idealTurnOutcomeCount);
 
   for (auto entities : battleEntitiesList) {
