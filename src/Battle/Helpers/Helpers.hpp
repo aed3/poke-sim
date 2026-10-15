@@ -14,8 +14,9 @@ class Pokedex;
 
 namespace internal {
 types::teamPositionIndex slotToIndex(Slot slot);
-types::teamPositionIndex entityToIndex(
-  const types::registry& registry, types::entity sideEntity, types::entity slotEntity);
+types::teamPositionIndex pokemonEntityToIndex(
+  const types::registry& registry, types::entity sideEntity, types::entity pokemonEntity);
+Slot pokemonEntityToSlot(const types::registry& registry, types::entity sideEntity, types::entity pokemonEntity);
 bool isAlly(types::registry& registry, types::entity pokemonEntity1, types::entity pokemonEntity2);
 }  // namespace internal
 

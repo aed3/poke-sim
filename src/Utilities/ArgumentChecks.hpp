@@ -93,6 +93,7 @@ struct HiddenAbility;
 struct BaseStats;
 struct CritStageBoost;
 struct Pp;
+struct Priority;
 struct MovePriority;
 struct Probability;
 struct RngSeed;
@@ -456,6 +457,9 @@ void check(const CritStageBoost&);
 
 template <>
 void check(const Pp&);
+
+template <>
+void check(const Priority&);
 
 template <>
 void check(const MovePriority&);

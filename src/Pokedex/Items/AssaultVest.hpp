@@ -21,7 +21,7 @@ struct AssaultVest {
   };
 
   static void onModifySpd(Simulation& simulation);
-  static void onEnd(Simulation& simulation);
+  static void onRemove(Simulation& simulation);
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };

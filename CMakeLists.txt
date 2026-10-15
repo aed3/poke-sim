@@ -234,6 +234,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/Abilities/Imposter.cpp
       tests/Abilities/Levitate.cpp
       tests/Abilities/LongReach.cpp
+      tests/Abilities/Prankster.cpp
       tests/Abilities/Scrappy.cpp
       tests/Abilities/Static.cpp
       tests/Effects/ChoiceLock.cpp

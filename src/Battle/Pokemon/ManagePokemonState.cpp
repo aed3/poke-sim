@@ -269,9 +269,9 @@ void checkIfCanRemoveItem(Simulation& simulation) {
 }
 
 void removeItem(Simulation& simulation) {
-  simulation.addToEntities<tags::EndItem, pokesim::tags::CanRemoveItem>();
-  runEndItemEvent(simulation);
-  simulation.removeFromEntities<tags::EndItem>();
+  simulation.addToEntities<tags::RemoveItem, pokesim::tags::CanRemoveItem>();
+  runRemoveItemEvent(simulation);
+  simulation.removeFromEntities<tags::RemoveItem>();
 
   removeItemComponents<pokesim::tags::CanRemoveItem>(simulation);
 }

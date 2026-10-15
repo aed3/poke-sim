@@ -277,10 +277,6 @@ void runSwitchAction(Simulation& simulation) {
 
   internal::runEndAbilityEvent(simulation);
 
-  simulation.addToEntities<pokesim::internal::tags::EndItem, action::tags::NotFaintedActiveSwitch>();
-  internal::runEndItemEvent(simulation);
-  simulation.removeFromEntities<pokesim::internal::tags::EndItem>();
-
   simulation.addToEntities<
     pokesim::internal::tags::ClearVolatiles,
     pokesim::tags::CurrentActionSource,
@@ -370,10 +366,6 @@ void faintPokemon(Simulation& simulation) {
 
     internal::runFaintEvent(simulation);
     internal::runEndAbilityEvent(simulation);
-
-    pokemonFilter.addToSelected<pokesim::internal::tags::EndItem>();
-    internal::runEndItemEvent(simulation);
-    simulation.removeFromEntities<pokesim::internal::tags::EndItem>();
 
     pokemonFilter.addToSelected<pokesim::internal::tags::ClearVolatiles>();
     internal::clearVolatiles(simulation);
@@ -538,7 +530,8 @@ void simulateTurn(Simulation& simulation) {
   internal::updateAllStats(simulation);
 
   midTurnSwitch(simulation);
-  simulateTurnFilter.view<internal::simulate_turn::resolveDecision>();
+  simulateTurnFilter.view<internal::simulate_turn::resolveDecision>(simulation.pokedex());
+  internal::runModifyPriority(simulation);
   simulateTurnFilter.removeFromSelected<SideDecision>();
   if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
     simulateTurnFilter.removeFromSelected<SinglesSideOptions>();

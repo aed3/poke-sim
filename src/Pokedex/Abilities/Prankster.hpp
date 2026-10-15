@@ -13,14 +13,16 @@ namespace pokesim::dex {
 struct Prankster {
   static constexpr Ability name(GameMechanics = {}) { return dex::Ability::PRANKSTER; }
 
-  static constexpr types::priority onModifyPriorityIncrease(GameMechanics) { return 1U; }
+  static constexpr types::priority onModifyPriorityIncrease(GameMechanics) { return 1; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Prankster"; }
     static constexpr std::string_view smogonId() { return "prankster"; }
   };
 
-  static void onAfterEachBoost(Simulation& simulation);
+  static void onImmunity(Simulation& simulation);
+  static void onModifyPriority(Simulation& simulation);
+  static void onRemove(Simulation& simulation);
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };

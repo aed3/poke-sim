@@ -9,6 +9,7 @@
 #include <Components/Names/TypeNames.hpp>
 #include <Components/Pokedex/CritStageBoost.hpp>
 #include <Components/Pokedex/PP.hpp>
+#include <Components/Pokedex/Priority.hpp>
 #include <Components/Priority.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/Selection.hpp>
@@ -40,6 +41,7 @@ struct BuildMove {
   enum class Optional : std::uint8_t {
     accuracy,
     basePower,
+    priority,
     hitCount,
     targetPrimaryEffect,
     targetSecondaryEffect,
@@ -74,6 +76,8 @@ struct BuildMove {
   struct has<Optional::accuracy, Type, void_t<Type::accuracy>> : std::true_type {};
   template <typename Type>
   struct has<Optional::basePower, Type, void_t<Type::basePower>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::priority, Type, void_t<Type::priority>> : std::true_type {};
   template <typename Type>
   struct has<Optional::hitCount, Type, void_t<Type::hitCount>> : std::true_type {};
   template <typename Type>
@@ -386,6 +390,9 @@ struct BuildMove {
     }
     if constexpr (has<Optional::basePower, Move>::value) {
       setup.add(BasePower{Move::basePower(gameMechanic)});
+    }
+    if constexpr (forPokedex && has<Optional::priority, Move>::value) {
+      setup.add(Priority{Move::priority(gameMechanic)});
     }
     if constexpr (has<Optional::hitCount, Move>::value) {
       setup.add(HitCount{Move::hitCount(gameMechanic)});

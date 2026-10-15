@@ -68,6 +68,7 @@
 #include "Moves/Moonblast.hpp"
 #include "Moves/MudSlap.hpp"
 #include "Moves/NobleRoar.hpp"
+#include "Moves/QuickAttack.hpp"
 #include "Moves/QuiverDance.hpp"
 #include "Moves/Reflect.hpp"
 #include "Moves/Reversal.hpp"

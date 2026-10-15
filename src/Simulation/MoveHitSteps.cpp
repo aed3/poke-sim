@@ -342,8 +342,12 @@ void failIfTargetImmune(types::handle handle, CurrentActionTarget target, TypeNa
 }
 
 void typeImmunityCheck(Simulation& simulation) {
-  simulation.view<failIfTargetImmune, Tags<tags::CurrentMoveHit>, entt::exclude_t<move::tags::IgnoreImmunities>>(
-    simulation.pokedex());
+  simulation.view<
+    failIfTargetImmune,
+    Tags<tags::CurrentMoveHit>,
+    entt::exclude_t<move::tags::IgnoreImmunities, move::tags::Status>>(simulation.pokedex());
+  // simulation.view<failIfTargetImmune, Tags<dex::ThunderWave, tags::CurrentMoveHit>>(simulation.pokedex());
+  internal::runOnImmunity(simulation);
 }
 
 void setMoveAccuracyBoost(types::registry& registry, const CurrentActionMovesAsSource& moves, AccBoost accBoost) {

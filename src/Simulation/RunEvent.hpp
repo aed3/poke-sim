@@ -8,6 +8,7 @@ void runEachUpdate(Simulation& simulation);
 
 void runBeforeMove(Simulation& simulation);
 void runResidual(Simulation& simulation);
+void runModifyPriority(Simulation& simulation);
 
 void runAccuracyEvent(Simulation& simulation);
 void runModifyAccuracyEvent(Simulation& simulation);
@@ -41,6 +42,7 @@ void runModifyTarget(Simulation& simulation);  // onModifyMove for Curse and Exp
 void runModifyMove(Simulation& simulation);
 void runResetDisabledMove(Simulation& simulation);
 void runResetTrappedPokemon(Simulation& simulation);
+void runOnImmunity(Simulation& simulation);
 
 void runModifyAtk(Simulation& simulation);
 void runModifyDef(Simulation& simulation);
@@ -53,10 +55,11 @@ void runStartFreeze(Simulation& simulation);
 
 void runTryTakeItemEvent(Simulation& simulation);  // TakeItem
 void runAfterUseItemEvent(Simulation& simulation);
-void runEndItemEvent(Simulation& simulation);
+void runRemoveItemEvent(Simulation& simulation);
 
 void runStartAbilityEvent(Simulation& simulation);
 void runEndAbilityEvent(Simulation& simulation);
+void runRemoveAbilityEvent(Simulation& simulation);
 
 void runBeforeSwitchOutEvent(Simulation& simulation);  // Pursuit and Dynamax, only for UnFaintedActiveSwitch
 void runSwitchInEvent(Simulation& simulation);

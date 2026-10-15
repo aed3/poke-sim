@@ -15,6 +15,7 @@
 #include "Moonblast.hpp"
 #include "MudSlap.hpp"
 #include "NobleRoar.hpp"
+#include "QuickAttack.hpp"
 #include "QuiverDance.hpp"
 #include "Reflect.hpp"
 #include "Reversal.hpp"

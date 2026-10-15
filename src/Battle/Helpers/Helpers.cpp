@@ -7,6 +7,7 @@
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/MoveSlots.hpp>
 #include <Components/Names/MoveNames.hpp>
+#include <Components/PlayerSide.hpp>
 #include <Components/Tags/Current.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/Selection.hpp>
@@ -40,20 +41,26 @@ types::teamPositionIndex slotToIndex(Slot slot) {
   return (types::teamPositionIndex)slot & internal::SLOT_LETTER_MASK;
 }
 
-types::teamPositionIndex entityToIndex(
-  const types::registry& registry, types::entity sideEntity, types::entity slotEntity) {
+types::teamPositionIndex pokemonEntityToIndex(
+  const types::registry& registry, types::entity sideEntity, types::entity pokemonEntity) {
   POKESIM_REQUIRE(
-    registry.get<Side>(slotEntity).val == sideEntity,
+    registry.get<Side>(pokemonEntity).val == sideEntity,
     "Slot entity must be part of the side entity's team");
+
   const Team& team = registry.get<Team>(sideEntity);
   for (types::teamPositionIndex index = 0U; index < team.val.size(); index++) {
-    if (team.val[index] == slotEntity) {
+    if (team.val[index] == pokemonEntity) {
       return index;
     }
   }
 
   POKESIM_REQUIRE_FAIL("Slot entity must be part of the side entity's team");
   return Constants::TeamSize::MAX;
+}
+
+Slot pokemonEntityToSlot(const types::registry& registry, types::entity sideEntity, types::entity pokemonEntity) {
+  types::teamPositionIndex index = pokemonEntityToIndex(registry, sideEntity, pokemonEntity);
+  return sideIdAndPositionToSlot(registry.get<PlayerSide>(sideEntity).val, index);
 }
 
 bool isAlly(types::registry& registry, types::entity pokemonEntity1, types::entity pokemonEntity2) {

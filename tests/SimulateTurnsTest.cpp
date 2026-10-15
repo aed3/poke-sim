@@ -412,7 +412,7 @@ TEST_CASE("Speed Ties", "[Simulation][SimulateTurn][DoubleBattle][ActionQueue]")
 
   test.initializeSimulation();
   SECTION("Check Action Queue Orders") {
-    test.simulation.view<internal::simulate_turn::resolveDecision>();
+    test.simulation.view<internal::simulate_turn::resolveDecision>(test.pokedex);
     test.simulation.view<internal::simulate_turn::speedSort>();
     internal::simulate_turn::resolveSpeedTies(test.simulation);
 
