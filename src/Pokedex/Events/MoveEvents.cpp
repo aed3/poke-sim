@@ -52,7 +52,7 @@ void transformOnHit(
 }  // namespace
 
 void KnockOff::onBasePower(Simulation& simulation) {
-  const auto modifier = simulation.pokedex().getStaticValue<KnockOff::onBasePowerMultiplier>();
+  const auto modifier = simulation.pokedex().getStaticValue<onBasePowerMultiplier>();
   simulation.view<knockOffOnBasePowerCheckRemovableItem, Tags<KnockOff>>();
   internal::checkIfCanRemoveItem(simulation);
   simulation.view<knockOffOnBasePower, Tags<KnockOff>>(modifier);

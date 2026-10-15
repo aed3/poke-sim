@@ -151,6 +151,7 @@
  * src/Components/Pokedex/BaseStats.hpp
  * src/Components/Pokedex/CritStageBoost.hpp
  * src/Components/Pokedex/PP.hpp
+ * src/Components/Pokedex/Priority.hpp
  * src/Components/Priority.hpp
  * src/Components/Probability.hpp
  * src/Components/RNGSeed.hpp
@@ -294,6 +295,7 @@
  * src/Pokedex/Moves/Moonblast.hpp
  * src/Pokedex/Moves/MudSlap.hpp
  * src/Pokedex/Moves/NobleRoar.hpp
+ * src/Pokedex/Moves/QuickAttack.hpp
  * src/Pokedex/Moves/QuiverDance.hpp
  * src/Pokedex/Moves/Reflect.hpp
  * src/Pokedex/Moves/Reversal.hpp
@@ -18960,8 +18962,9 @@ class Pokedex;
 
 namespace internal {
 types::teamPositionIndex slotToIndex(Slot slot);
-types::teamPositionIndex entityToIndex(
-  const types::registry& registry, types::entity sideEntity, types::entity slotEntity);
+types::teamPositionIndex pokemonEntityToIndex(
+  const types::registry& registry, types::entity sideEntity, types::entity pokemonEntity);
+Slot pokemonEntityToSlot(const types::registry& registry, types::entity sideEntity, types::entity pokemonEntity);
 bool isAlly(types::registry& registry, types::entity pokemonEntity1, types::entity pokemonEntity2);
 }  // namespace internal
 
@@ -20301,6 +20304,16 @@ struct Pp {
 
 ///////////////////// END OF src/Components/Pokedex/PP.hpp /////////////////////
 
+///////////////// START OF src/Components/Pokedex/Priority.hpp /////////////////
+
+namespace pokesim {
+struct Priority {
+  types::priority val = Constants::MovePp::DEFAULT;
+};
+}  // namespace pokesim
+
+////////////////// END OF src/Components/Pokedex/Priority.hpp //////////////////
+
 ///////////////////// START OF src/Components/Priority.hpp /////////////////////
 
 namespace pokesim {
@@ -20927,7 +20940,8 @@ namespace pokesim::internal::tags {
 struct RunEffect {};
 
 struct StartAbility {};
-struct EndItem {};
+struct RemoveAbility {};
+struct RemoveItem {};
 struct ResetTrappedPokemon {};
 }  // namespace pokesim::internal::tags
 
@@ -21917,6 +21931,7 @@ struct HiddenAbility;
 struct BaseStats;
 struct CritStageBoost;
 struct Pp;
+struct Priority;
 struct MovePriority;
 struct Probability;
 struct RngSeed;
@@ -22280,6 +22295,9 @@ void check(const CritStageBoost&);
 
 template <>
 void check(const Pp&);
+
+template <>
+void check(const Priority&);
 
 template <>
 void check(const MovePriority&);
@@ -25148,14 +25166,16 @@ namespace pokesim::dex {
 struct Prankster {
   static constexpr Ability name(GameMechanics = {}) { return dex::Ability::PRANKSTER; }
 
-  static constexpr types::priority onModifyPriorityIncrease(GameMechanics) { return 1U; }
+  static constexpr types::priority onModifyPriorityIncrease(GameMechanics) { return 1; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Prankster"; }
     static constexpr std::string_view smogonId() { return "prankster"; }
   };
 
-  static void onAfterEachBoost(Simulation& simulation);
+  static void onImmunity(Simulation& simulation);
+  static void onModifyPriority(Simulation& simulation);
+  static void onRemove(Simulation& simulation);
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
@@ -25399,7 +25419,7 @@ struct AssaultVest {
   };
 
   static void onModifySpd(Simulation& simulation);
-  static void onEnd(Simulation& simulation);
+  static void onRemove(Simulation& simulation);
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
@@ -25453,7 +25473,7 @@ struct ChoiceScarf {
 
   static void onModifySpe(Simulation& simulation);
   static void onSourceModifyMove(Simulation& simulation);
-  static void onEnd(Simulation& simulation);
+  static void onRemove(Simulation& simulation);
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
@@ -25481,7 +25501,7 @@ struct ChoiceSpecs {
 
   static void onModifySpa(Simulation& simulation);
   static void onSourceModifyMove(Simulation& simulation);
-  static void onEnd(Simulation& simulation);
+  static void onRemove(Simulation& simulation);
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
@@ -27114,6 +27134,33 @@ struct NobleRoar {
 
 //////////////////// END OF src/Pokedex/Moves/NobleRoar.hpp ////////////////////
 
+////////////////// START OF src/Pokedex/Moves/QuickAttack.hpp //////////////////
+
+namespace pokesim::dex {
+struct QuickAttack {
+  static constexpr Move name(GameMechanics = {}) { return Move::TACKLE; }
+  static constexpr Type type(GameMechanics) { return Type::NORMAL; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::PHYSICAL; }
+
+  static constexpr types::baseAccuracy accuracy(GameMechanics) { return 100U; }
+  static constexpr types::basePower basePower(GameMechanics) { return 40U; }
+  static constexpr types::pp basePp(GameMechanics) { return 30U; }
+  static constexpr types::priority priority(GameMechanics) { return 1; }
+
+  static constexpr MoveProperty properties(GameMechanics) { return MoveProperty::CONTACT; }
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Quick Attack"; }
+    static constexpr std::string_view smogonId() { return "quickattack"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Moves/QuickAttack.hpp ///////////////////
+
 ////////////////// START OF src/Pokedex/Moves/QuiverDance.hpp //////////////////
 
 namespace pokesim::dex {
@@ -27489,6 +27536,7 @@ void runEachUpdate(Simulation& simulation);
 
 void runBeforeMove(Simulation& simulation);
 void runResidual(Simulation& simulation);
+void runModifyPriority(Simulation& simulation);
 
 void runAccuracyEvent(Simulation& simulation);
 void runModifyAccuracyEvent(Simulation& simulation);
@@ -27522,6 +27570,7 @@ void runModifyTarget(Simulation& simulation);  // onModifyMove for Curse and Exp
 void runModifyMove(Simulation& simulation);
 void runResetDisabledMove(Simulation& simulation);
 void runResetTrappedPokemon(Simulation& simulation);
+void runOnImmunity(Simulation& simulation);
 
 void runModifyAtk(Simulation& simulation);
 void runModifyDef(Simulation& simulation);
@@ -27534,10 +27583,11 @@ void runStartFreeze(Simulation& simulation);
 
 void runTryTakeItemEvent(Simulation& simulation);  // TakeItem
 void runAfterUseItemEvent(Simulation& simulation);
-void runEndItemEvent(Simulation& simulation);
+void runRemoveItemEvent(Simulation& simulation);
 
 void runStartAbilityEvent(Simulation& simulation);
 void runEndAbilityEvent(Simulation& simulation);
+void runRemoveAbilityEvent(Simulation& simulation);
 
 void runBeforeSwitchOutEvent(Simulation& simulation);  // Pursuit and Dynamax, only for UnFaintedActiveSwitch
 void runSwitchInEvent(Simulation& simulation);
@@ -27901,6 +27951,7 @@ void currentActionMovesAsTargetView(Simulation& simulation, const PassedInArgs&.
 
 namespace pokesim {
 class Simulation;
+class Pokedex;
 struct Battle;
 struct SideDecision;
 struct MidTurnSideDecision;
@@ -27912,7 +27963,7 @@ void setTeamPreviewOptions(Simulation& simulation);
 }  // namespace simulate_turn
 
 namespace internal::simulate_turn {
-void resolveDecision(types::handle sideHandle, Battle battle, const SideDecision& sideDecision);
+void resolveDecision(types::handle sideHandle, Battle battle, const SideDecision& sideDecision, const Pokedex& pokedex);
 void resolveMidTurnDecisions(
   types::handle sideHandle, Battle battle, const MidTurnSideDecision& switchDecisions,
   MidTurnDecisionsRequested& decisionsRequested);
@@ -28814,6 +28865,7 @@ constexpr auto enumToTag(Move move, RunArgs&&... args) {
     case Move::MOONBLAST:      return RunStruct<Moonblast, T...>::run(std::forward<RunArgs>(args)...);
     case Move::MUD_SLAP:       return RunStruct<MudSlap, T...>::run(std::forward<RunArgs>(args)...);
     case Move::NOBLE_ROAR:     return RunStruct<NobleRoar, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::QUICK_ATTACK:   return RunStruct<QuickAttack, T...>::run(std::forward<RunArgs>(args)...);
     case Move::QUIVER_DANCE:   return RunStruct<QuiverDance, T...>::run(std::forward<RunArgs>(args)...);
     case Move::REFLECT:        return RunStruct<Reflect, T...>::run(std::forward<RunArgs>(args)...);
     case Move::REVERSAL:       return RunStruct<Reversal, T...>::run(std::forward<RunArgs>(args)...);

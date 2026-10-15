@@ -56,6 +56,10 @@ void runResidual(Simulation& simulation) {
   pokesim::dex::Burn::onResidual(simulation);
 }
 
+void runModifyPriority(Simulation& simulation) {
+  pokesim::dex::Prankster::onModifyPriority(simulation);
+}
+
 void runAccuracyEvent(Simulation&) {}
 
 void runModifyAccuracyEvent(Simulation& simulation) {
@@ -164,6 +168,10 @@ void runResetTrappedPokemon(Simulation& simulation) {
   simulation.removeFromEntities<tags::ResetTrappedPokemon>();
 }
 
+void runOnImmunity(Simulation& simulation) {
+  dex::Prankster::onImmunity(simulation);
+}
+
 void runModifyAtk(Simulation&) {}
 
 void runModifyDef(Simulation&) {}
@@ -210,14 +218,18 @@ void runStartFreeze(Simulation&) {
 void runTryTakeItemEvent(Simulation&) {}
 void runAfterUseItemEvent(Simulation&) {}
 
-void runEndItemEvent(Simulation& simulation) {
-  pokesim::dex::AssaultVest::onEnd(simulation);
-  pokesim::dex::ChoiceScarf::onEnd(simulation);
-  pokesim::dex::ChoiceSpecs::onEnd(simulation);
+void runRemoveItemEvent(Simulation& simulation) {
+  pokesim::dex::AssaultVest::onRemove(simulation);
+  pokesim::dex::ChoiceScarf::onRemove(simulation);
+  pokesim::dex::ChoiceSpecs::onRemove(simulation);
 }
 
 void runStartAbilityEvent(Simulation&) {}
 void runEndAbilityEvent(Simulation&) {}
+void runRemoveAbilityEvent(Simulation& simulation) {
+  pokesim::dex::Prankster::onRemove(simulation);
+}
+
 void runBeforeSwitchOutEvent(Simulation&) {}
 
 void runSwitchInEvent(Simulation& simulation) {

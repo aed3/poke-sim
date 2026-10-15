@@ -81,23 +81,23 @@ void Burn::onSetDamageRollModifiers(Simulation& simulation) {
 }
 
 void Burn::onResidual(Simulation& simulation) {
-  const auto divisor = simulation.pokedex().getStaticValue<Burn::onResidualHpDecreaseDivisor>();
+  const auto divisor = simulation.pokedex().getStaticValue<onResidualHpDecreaseDivisor>();
 
   simulation.view<damageByHpDivisor, Tags<Burn, tags::ActivePokemon>>(divisor);
 }
 
 void Paralysis::onModifySpe(Simulation& simulation) {
-  const auto speedDivisor = simulation.pokedex().getStaticValue<Paralysis::speedDivisor>();
-  const auto speedDividend = simulation.pokedex().getStaticValue<Paralysis::speedDividend>();
+  const auto divisor = simulation.pokedex().getStaticValue<speedDivisor>();
+  const auto dividend = simulation.pokedex().getStaticValue<speedDividend>();
 
   simulation
     .view<paralysisOnModifySpeed, Tags<Paralysis, tags::SpeStatUpdateRequired> /*, entt::exclude_t<QuickFeet>*/>(
-      speedDivisor,
-      speedDividend);
+      divisor,
+      dividend);
 }
 
 void Paralysis::onBeforeMove(Simulation& simulation) {
-  const auto chance = simulation.pokedex().getStaticValue<Paralysis::onBeforeMoveChance>();
+  const auto chance = simulation.pokedex().getStaticValue<onBeforeMoveChance>();
 
   simulation
     .view<pokesim::internal::setRandomBinaryChanceFromPercentChance, Tags<tags::CurrentActionSource, Paralysis>>(

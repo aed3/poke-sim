@@ -6,3 +6,4 @@
 #include "BaseStats.hpp"
 #include "CritStageBoost.hpp"
 #include "PP.hpp"
+#include "Priority.hpp"

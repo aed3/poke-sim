@@ -17,6 +17,7 @@
 #include <Components/EventModifier.hpp>
 #include <Components/Names/TypeNames.hpp>
 #include <Components/RandomEventInputs.hpp>
+#include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Current.hpp>
@@ -29,6 +30,7 @@
 #include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
+#include <Types/Decisions.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Random.hpp>
@@ -124,7 +126,7 @@ void imposterOnSwitchIn(types::handle handle, Side side, const Simulation& simul
     transformTarget = foeTeam.val.front();
   }
   else {
-    types::teamPositionIndex position = pokesim::internal::entityToIndex(registry, side.val, handle.entity());
+    types::teamPositionIndex position = pokesim::internal::pokemonEntityToIndex(registry, side.val, handle.entity());
     if (position >= foeTeam.val.size()) {
       return;
     }
@@ -146,6 +148,48 @@ struct LongReachOnModifyMove {
 };
 
 void plusOnModifySpa(types::handle, EventModifier&) {}
+
+void pranksterOnImmunity(types::registry& registry, const CurrentActionMovesAsSource& moves) {
+  for (types::entity move : moves) {
+    SpeciesTypes targetTypes = registry.get<SpeciesTypes>(registry.get<CurrentActionTarget>(move).val);
+    if (targetTypes.has(Type::DARK)) {
+      registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
+    }
+  }
+}
+
+bool pranksterChangePriority(
+  types::handle handle, Battle battle, Side side, types::priority priorityBoost, const Pokedex& pokedex) {
+  ActionQueue& actionQueue = handle.registry()->get<ActionQueue>(battle.val);
+  Slot sourceSlot = internal::pokemonEntityToSlot(*handle.registry(), side.val, handle.entity());
+
+  for (ActionQueueItem& item : actionQueue.val) {
+    if (!item.decision.holds<MoveDecision>() || item.decision.sourceSlot() != sourceSlot) {
+      continue;
+    }
+
+    Move move = item.decision.get<MoveDecision>().move;
+    if (pokedex.moveHasAll<move::tags::Status>(move)) {
+      item.priority = types::priority(item.priority + priorityBoost);
+      // if (!simulation.speedSortAfterEachMove) handle.emplace<tags::PranksterOnSpeedSort>();
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void pranksterOnModifyPriority(
+  types::handle handle, Battle battle, Side side, types::priority priorityBoost, const Pokedex& pokedex) {
+  pranksterChangePriority(handle, battle, side, priorityBoost, pokedex);
+}
+
+void pranksterOnRemove(
+  types::handle handle, Battle battle, Side side, types::priority priorityBoost, const Pokedex& pokedex) {
+  if (pranksterChangePriority(handle, battle, side, (types::boost)-priorityBoost, pokedex)) {
+    handle.registry()->get_or_emplace<simulate_turn::tags::SpeedSortNeeded>(battle.val);
+  }
+}
 
 template <typename CurrentActionMovesAsTargetType>
 struct ScrappyOnModifyMove {
@@ -184,8 +228,8 @@ void staticOnDamagingHit(
 }  // namespace
 
 void Analytic::onBasePower(Simulation& simulation) {
-  const auto numerator = simulation.pokedex().getStaticValue<Analytic::onBasePowerNumerator>();
-  const auto denominator = simulation.pokedex().getStaticValue<Analytic::onBasePowerDenominator>();
+  const auto numerator = simulation.pokedex().getStaticValue<onBasePowerNumerator>();
+  const auto denominator = simulation.pokedex().getStaticValue<onBasePowerDenominator>();
 
   simulation.view<analyticOnBasePowerSimulateTurn, Tags<Analytic, pokesim::tags::SimulateTurn>>(numerator, denominator);
   internal::currentActionMovesAsSourceView<
@@ -198,12 +242,12 @@ void Analytic::onBasePower(Simulation& simulation) {
 }
 
 void Competitive::onAfterEachBoost(Simulation& simulation) {
-  const auto spaBoost = simulation.pokedex().getStaticValue<Competitive::onAfterEachBoostSpaBoost>();
+  const auto spaBoost = simulation.pokedex().getStaticValue<onAfterEachBoostSpaBoost>();
   simulation.view<competitiveDefiantOnAfterEachBoost<SpaBoost>, Tags<Competitive>>(spaBoost, Ability::COMPETITIVE);
 }
 
 void Defiant::onAfterEachBoost(Simulation& simulation) {
-  const auto atkBoost = simulation.pokedex().getStaticValue<Defiant::onAfterEachBoostAtkBoost>();
+  const auto atkBoost = simulation.pokedex().getStaticValue<onAfterEachBoostAtkBoost>();
   simulation.view<competitiveDefiantOnAfterEachBoost<AtkBoost>, Tags<Defiant>>(atkBoost, Ability::DEFIANT);
 }
 
@@ -224,12 +268,35 @@ void Plus::onModifySpA(Simulation& simulation) {
   simulation.view<plusOnModifySpa, Tags<Plus>>();
 }
 
+void Prankster::onModifyPriority(Simulation& simulation) {
+  const auto priorityBoost = simulation.pokedex().getStaticValue<onModifyPriorityIncrease>();
+
+  simulation
+    .view<pranksterOnModifyPriority, Tags<Prankster, pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>>(
+      priorityBoost,
+      simulation.pokedex());
+}
+
+void Prankster::onImmunity(Simulation& simulation) {
+  simulation.view<pranksterOnImmunity, Tags<Prankster>>();
+  // if (!simulation.speedSortAfterEachMove) simulation.view<pranksterOnImmunity, Tags<tags::PranksterOnSpeedSort>>();
+}
+
+void Prankster::onRemove(Simulation& simulation) {
+  // if (!simulation.speedSortAfterEachMove) return;
+  const auto priorityBoost = simulation.pokedex().getStaticValue<onModifyPriorityIncrease>();
+
+  simulation.view<pranksterOnRemove, Tags<Prankster, pokesim::internal::tags::RemoveAbility>>(
+    priorityBoost,
+    simulation.pokedex());
+}
+
 void Scrappy::onModifyMove(Simulation& simulation) {
   internal::currentActionMovesAsSourceView<ScrappyOnModifyMove, Tags<Scrappy>>(simulation);
 }
 
 void Static::onDamagingHit(Simulation& simulation) {
-  const auto chanceOfStatic = simulation.pokedex().getStaticValue<Static::onDamagingHitChance>();
+  const auto chanceOfStatic = simulation.pokedex().getStaticValue<onDamagingHitChance>();
 
   simulation.view<staticOnDamagingHit, Tags<Static>>(chanceOfStatic, simulation);
 

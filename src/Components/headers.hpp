@@ -61,6 +61,7 @@
 #include "Pokedex/BaseStats.hpp"
 #include "Pokedex/CritStageBoost.hpp"
 #include "Pokedex/PP.hpp"
+#include "Pokedex/Priority.hpp"
 #include "Priority.hpp"
 #include "Probability.hpp"
 #include "RNGSeed.hpp"

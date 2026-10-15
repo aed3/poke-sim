@@ -12,6 +12,7 @@
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
 #include <Components/PlayerSide.hpp>
+#include <Components/Pokedex/Priority.hpp>
 #include <Components/SideDecisionOptions.hpp>
 #include <Components/SideDecisions.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
@@ -236,7 +237,8 @@ void setTeamPreviewOptionsFromBattle(types::registry& registry, Turn turn, const
 }
 
 template <typename Decision>
-void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& slotDecision, ActionQueue& actionQueue) {
+void resolveSlotDecision(
+  types::handle sideHandle, const types::slotDecision& slotDecision, ActionQueue& actionQueue, const Pokedex& pokedex) {
   if (!slotDecision.holds<Decision>()) {
     return;
   }
@@ -252,8 +254,10 @@ void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& sl
 
   if constexpr (std::is_base_of_v<MoveDecision, Decision>) {
     actionQueueItem.order = ActionOrder::MOVE;
-    actionQueueItem.priority = Constants::MovePriority::DEFAULT;  // TODO(aed3): Move priority + modify priority
-    actionQueueItem.fractionalPriority = false;                   // TODO(aed3): get fractionalPriority
+    actionQueueItem.priority = pokedex.moveHasAll<Priority>(decision.move)
+                                 ? pokedex.getMoveData<Priority>(decision.move).val
+                                 : Constants::MovePriority::DEFAULT;
+    actionQueueItem.fractionalPriority = false;  // TODO(aed3): get fractionalPriority
 
     if constexpr (!std::is_same_v<MoveDecision, Decision>) {
       POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");
@@ -273,15 +277,16 @@ void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& sl
   actionQueue.val.push_back(actionQueueItem);
 }
 
-void resolveSlotDecisions(types::handle sideHandle, const types::slotDecisions& decisions, ActionQueue& actionQueue) {
+void resolveSlotDecisions(
+  types::handle sideHandle, const types::slotDecisions& decisions, ActionQueue& actionQueue, const Pokedex& pokedex) {
   for (const types::slotDecision& decision : decisions) {
-    resolveSlotDecision<MoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<MegaEvolveAndMoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<ZMoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<DynamaxAndMoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<TerastallizeAndMoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<SwitchDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<ItemDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<MoveDecision>(sideHandle, decision, actionQueue, pokedex);
+    resolveSlotDecision<MegaEvolveAndMoveDecision>(sideHandle, decision, actionQueue, pokedex);
+    resolveSlotDecision<ZMoveDecision>(sideHandle, decision, actionQueue, pokedex);
+    resolveSlotDecision<DynamaxAndMoveDecision>(sideHandle, decision, actionQueue, pokedex);
+    resolveSlotDecision<TerastallizeAndMoveDecision>(sideHandle, decision, actionQueue, pokedex);
+    resolveSlotDecision<SwitchDecision>(sideHandle, decision, actionQueue, pokedex);
+    resolveSlotDecision<ItemDecision>(sideHandle, decision, actionQueue, pokedex);
   }
 }
 
@@ -324,7 +329,8 @@ void setTeamPreviewOptions(Simulation& simulation) {
 }  // namespace simulate_turn
 
 namespace internal::simulate_turn {
-void resolveDecision(types::handle sideHandle, Battle battle, const SideDecision& sideDecision) {
+void resolveDecision(
+  types::handle sideHandle, Battle battle, const SideDecision& sideDecision, const Pokedex& pokedex) {
   types::registry& registry = *sideHandle.registry();
   ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
 
@@ -335,7 +341,7 @@ void resolveDecision(types::handle sideHandle, Battle battle, const SideDecision
       "of a battle (aka team preview).");
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
 
-    resolveSlotDecisions(sideHandle, decisions, actionQueue);
+    resolveSlotDecisions(sideHandle, decisions, actionQueue, pokedex);
   }
   else if (sideDecision.decisions.holds<types::teamOrder>()) {
     POKESIM_REQUIRE(

@@ -1088,6 +1088,11 @@ void check(const Pp& pp) {
 }
 
 template <>
+void check(const Priority& priority) {
+  checkBounds<Constants::MovePriority>(priority.val);
+}
+
+template <>
 void check(const MovePriority& movePriority) {
   checkBounds<Constants::MovePriority>(movePriority.val);
 }

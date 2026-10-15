@@ -1230,6 +1230,11 @@ void check(const Pp& pp) {
 }
 
 template <>
+void check(const Priority& priority) {
+  checkBounds<Constants::MovePriority>(priority.val);
+}
+
+template <>
 void check(const MovePriority& movePriority) {
   checkBounds<Constants::MovePriority>(movePriority.val);
 }
@@ -2385,6 +2390,10 @@ void runResidual(Simulation& simulation) {
   pokesim::dex::Burn::onResidual(simulation);
 }
 
+void runModifyPriority(Simulation& simulation) {
+  pokesim::dex::Prankster::onModifyPriority(simulation);
+}
+
 void runAccuracyEvent(Simulation&) {}
 
 void runModifyAccuracyEvent(Simulation& simulation) {
@@ -2493,6 +2502,10 @@ void runResetTrappedPokemon(Simulation& simulation) {
   simulation.removeFromEntities<tags::ResetTrappedPokemon>();
 }
 
+void runOnImmunity(Simulation& simulation) {
+  dex::Prankster::onImmunity(simulation);
+}
+
 void runModifyAtk(Simulation&) {}
 
 void runModifyDef(Simulation&) {}
@@ -2539,14 +2552,18 @@ void runStartFreeze(Simulation&) {
 void runTryTakeItemEvent(Simulation&) {}
 void runAfterUseItemEvent(Simulation&) {}
 
-void runEndItemEvent(Simulation& simulation) {
-  pokesim::dex::AssaultVest::onEnd(simulation);
-  pokesim::dex::ChoiceScarf::onEnd(simulation);
-  pokesim::dex::ChoiceSpecs::onEnd(simulation);
+void runRemoveItemEvent(Simulation& simulation) {
+  pokesim::dex::AssaultVest::onRemove(simulation);
+  pokesim::dex::ChoiceScarf::onRemove(simulation);
+  pokesim::dex::ChoiceSpecs::onRemove(simulation);
 }
 
 void runStartAbilityEvent(Simulation&) {}
 void runEndAbilityEvent(Simulation&) {}
+void runRemoveAbilityEvent(Simulation& simulation) {
+  pokesim::dex::Prankster::onRemove(simulation);
+}
+
 void runBeforeSwitchOutEvent(Simulation&) {}
 
 void runSwitchInEvent(Simulation& simulation) {
@@ -2871,8 +2888,12 @@ void failIfTargetImmune(types::handle handle, CurrentActionTarget target, TypeNa
 }
 
 void typeImmunityCheck(Simulation& simulation) {
-  simulation.view<failIfTargetImmune, Tags<tags::CurrentMoveHit>, entt::exclude_t<move::tags::IgnoreImmunities>>(
-    simulation.pokedex());
+  simulation.view<
+    failIfTargetImmune,
+    Tags<tags::CurrentMoveHit>,
+    entt::exclude_t<move::tags::IgnoreImmunities, move::tags::Status>>(simulation.pokedex());
+  // simulation.view<failIfTargetImmune, Tags<dex::ThunderWave, tags::CurrentMoveHit>>(simulation.pokedex());
+  internal::runOnImmunity(simulation);
 }
 
 void setMoveAccuracyBoost(types::registry& registry, const CurrentActionMovesAsSource& moves, AccBoost accBoost) {
@@ -3179,10 +3200,6 @@ void runSwitchAction(Simulation& simulation) {
 
   internal::runEndAbilityEvent(simulation);
 
-  simulation.addToEntities<pokesim::internal::tags::EndItem, action::tags::NotFaintedActiveSwitch>();
-  internal::runEndItemEvent(simulation);
-  simulation.removeFromEntities<pokesim::internal::tags::EndItem>();
-
   simulation.addToEntities<
     pokesim::internal::tags::ClearVolatiles,
     pokesim::tags::CurrentActionSource,
@@ -3272,10 +3289,6 @@ void faintPokemon(Simulation& simulation) {
 
     internal::runFaintEvent(simulation);
     internal::runEndAbilityEvent(simulation);
-
-    pokemonFilter.addToSelected<pokesim::internal::tags::EndItem>();
-    internal::runEndItemEvent(simulation);
-    simulation.removeFromEntities<pokesim::internal::tags::EndItem>();
 
     pokemonFilter.addToSelected<pokesim::internal::tags::ClearVolatiles>();
     internal::clearVolatiles(simulation);
@@ -3440,7 +3453,8 @@ void simulateTurn(Simulation& simulation) {
   internal::updateAllStats(simulation);
 
   midTurnSwitch(simulation);
-  simulateTurnFilter.view<internal::simulate_turn::resolveDecision>();
+  simulateTurnFilter.view<internal::simulate_turn::resolveDecision>(simulation.pokedex());
+  internal::runModifyPriority(simulation);
   simulateTurnFilter.removeFromSelected<SideDecision>();
   if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
     simulateTurnFilter.removeFromSelected<SinglesSideOptions>();
@@ -4470,7 +4484,8 @@ void setTeamPreviewOptionsFromBattle(types::registry& registry, Turn turn, const
 }
 
 template <typename Decision>
-void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& slotDecision, ActionQueue& actionQueue) {
+void resolveSlotDecision(
+  types::handle sideHandle, const types::slotDecision& slotDecision, ActionQueue& actionQueue, const Pokedex& pokedex) {
   if (!slotDecision.holds<Decision>()) {
     return;
   }
@@ -4486,8 +4501,10 @@ void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& sl
 
   if constexpr (std::is_base_of_v<MoveDecision, Decision>) {
     actionQueueItem.order = ActionOrder::MOVE;
-    actionQueueItem.priority = Constants::MovePriority::DEFAULT;  // TODO(aed3): Move priority + modify priority
-    actionQueueItem.fractionalPriority = false;                   // TODO(aed3): get fractionalPriority
+    actionQueueItem.priority = pokedex.moveHasAll<Priority>(decision.move)
+                                 ? pokedex.getMoveData<Priority>(decision.move).val
+                                 : Constants::MovePriority::DEFAULT;
+    actionQueueItem.fractionalPriority = false;  // TODO(aed3): get fractionalPriority
 
     if constexpr (!std::is_same_v<MoveDecision, Decision>) {
       POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");
@@ -4507,15 +4524,16 @@ void resolveSlotDecision(types::handle sideHandle, const types::slotDecision& sl
   actionQueue.val.push_back(actionQueueItem);
 }
 
-void resolveSlotDecisions(types::handle sideHandle, const types::slotDecisions& decisions, ActionQueue& actionQueue) {
+void resolveSlotDecisions(
+  types::handle sideHandle, const types::slotDecisions& decisions, ActionQueue& actionQueue, const Pokedex& pokedex) {
   for (const types::slotDecision& decision : decisions) {
-    resolveSlotDecision<MoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<MegaEvolveAndMoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<ZMoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<DynamaxAndMoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<TerastallizeAndMoveDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<SwitchDecision>(sideHandle, decision, actionQueue);
-    resolveSlotDecision<ItemDecision>(sideHandle, decision, actionQueue);
+    resolveSlotDecision<MoveDecision>(sideHandle, decision, actionQueue, pokedex);
+    resolveSlotDecision<MegaEvolveAndMoveDecision>(sideHandle, decision, actionQueue, pokedex);
+    resolveSlotDecision<ZMoveDecision>(sideHandle, decision, actionQueue, pokedex);
+    resolveSlotDecision<DynamaxAndMoveDecision>(sideHandle, decision, actionQueue, pokedex);
+    resolveSlotDecision<TerastallizeAndMoveDecision>(sideHandle, decision, actionQueue, pokedex);
+    resolveSlotDecision<SwitchDecision>(sideHandle, decision, actionQueue, pokedex);
+    resolveSlotDecision<ItemDecision>(sideHandle, decision, actionQueue, pokedex);
   }
 }
 
@@ -4558,7 +4576,8 @@ void setTeamPreviewOptions(Simulation& simulation) {
 }  // namespace simulate_turn
 
 namespace internal::simulate_turn {
-void resolveDecision(types::handle sideHandle, Battle battle, const SideDecision& sideDecision) {
+void resolveDecision(
+  types::handle sideHandle, Battle battle, const SideDecision& sideDecision, const Pokedex& pokedex) {
   types::registry& registry = *sideHandle.registry();
   ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
 
@@ -4569,7 +4588,7 @@ void resolveDecision(types::handle sideHandle, Battle battle, const SideDecision
       "of a battle (aka team preview).");
     const auto& decisions = sideDecision.decisions.get<types::slotDecisions>();
 
-    resolveSlotDecisions(sideHandle, decisions, actionQueue);
+    resolveSlotDecisions(sideHandle, decisions, actionQueue, pokedex);
   }
   else if (sideDecision.decisions.holds<types::teamOrder>()) {
     POKESIM_REQUIRE(
@@ -4809,6 +4828,7 @@ struct BuildMove {
   enum class Optional : std::uint8_t {
     accuracy,
     basePower,
+    priority,
     hitCount,
     targetPrimaryEffect,
     targetSecondaryEffect,
@@ -4843,6 +4863,8 @@ struct BuildMove {
   struct has<Optional::accuracy, Type, void_t<Type::accuracy>> : std::true_type {};
   template <typename Type>
   struct has<Optional::basePower, Type, void_t<Type::basePower>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::priority, Type, void_t<Type::priority>> : std::true_type {};
   template <typename Type>
   struct has<Optional::hitCount, Type, void_t<Type::hitCount>> : std::true_type {};
   template <typename Type>
@@ -5156,6 +5178,9 @@ struct BuildMove {
     if constexpr (has<Optional::basePower, Move>::value) {
       setup.add(BasePower{Move::basePower(gameMechanic)});
     }
+    if constexpr (forPokedex && has<Optional::priority, Move>::value) {
+      setup.add(Priority{Move::priority(gameMechanic)});
+    }
     if constexpr (has<Optional::hitCount, Move>::value) {
       setup.add(HitCount{Move::hitCount(gameMechanic)});
     }
@@ -5451,7 +5476,7 @@ void transformOnHit(
 }  // namespace
 
 void KnockOff::onBasePower(Simulation& simulation) {
-  const auto modifier = simulation.pokedex().getStaticValue<KnockOff::onBasePowerMultiplier>();
+  const auto modifier = simulation.pokedex().getStaticValue<onBasePowerMultiplier>();
   simulation.view<knockOffOnBasePowerCheckRemovableItem, Tags<KnockOff>>();
   internal::checkIfCanRemoveItem(simulation);
   simulation.view<knockOffOnBasePower, Tags<KnockOff>>(modifier);
@@ -5607,24 +5632,24 @@ void quickPowderOnModifySpe(
 }  // namespace
 
 void AssaultVest::onModifySpd(Simulation& simulation) {
-  const auto modifier = simulation.pokedex().getStaticValue<AssaultVest::onModifySpdModifier>();
+  const auto modifier = simulation.pokedex().getStaticValue<onModifySpdModifier>();
 
   simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<AssaultVest>>(modifier, 1U);
 }
 
-void AssaultVest::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpdStatUpdateRequired, internal::tags::EndItem, AssaultVest>();
+void AssaultVest::onRemove(Simulation& simulation) {
+  simulation.addToEntities<tags::SpdStatUpdateRequired, internal::tags::RemoveItem, AssaultVest>();
 }
 
 void BrightPowder::onModifyAccuracy(Simulation& simulation) {
-  const auto numerator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyNumerator>();
-  const auto denominator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyDenominator>();
+  const auto numerator = simulation.pokedex().getStaticValue<onModifyAccuracyNumerator>();
+  const auto denominator = simulation.pokedex().getStaticValue<onModifyAccuracyDenominator>();
 
   simulation.view<SetMoveTargetModifier<CurrentActionMovesAsTarget>::run, Tags<BrightPowder>>(numerator, denominator);
 }
 
 void ChoiceScarf::onModifySpe(Simulation& simulation) {
-  const auto modifier = simulation.pokedex().getStaticValue<ChoiceScarf::onModifySpeModifier>();
+  const auto modifier = simulation.pokedex().getStaticValue<onModifySpeModifier>();
 
   simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<ChoiceScarf>>(modifier, 1U);
 }
@@ -5636,12 +5661,12 @@ void ChoiceScarf::onSourceModifyMove(Simulation& simulation) {
     entt::exclude_t<ChoiceLock>>();
 }
 
-void ChoiceScarf::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpeStatUpdateRequired, internal::tags::EndItem, ChoiceScarf>();
+void ChoiceScarf::onRemove(Simulation& simulation) {
+  simulation.addToEntities<tags::SpeStatUpdateRequired, internal::tags::RemoveItem, ChoiceScarf>();
 }
 
 void ChoiceSpecs::onModifySpa(Simulation& simulation) {
-  const auto modifier = simulation.pokedex().getStaticValue<ChoiceSpecs::onModifySpaModifier>();
+  const auto modifier = simulation.pokedex().getStaticValue<onModifySpaModifier>();
 
   simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<ChoiceSpecs>>(modifier, 1U);
 }
@@ -5653,12 +5678,12 @@ void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
     entt::exclude_t<ChoiceLock>>();
 }
 
-void ChoiceSpecs::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpaStatUpdateRequired, internal::tags::EndItem, ChoiceSpecs>();
+void ChoiceSpecs::onRemove(Simulation& simulation) {
+  simulation.addToEntities<tags::SpaStatUpdateRequired, internal::tags::RemoveItem, ChoiceSpecs>();
 }
 
 void FocusSash::onAfterModifyDamage(Simulation& simulation) {
-  const auto hpToKeep = simulation.pokedex().getStaticValue<FocusSash::onAfterModifyDamageHpToKeep>();
+  const auto hpToKeep = simulation.pokedex().getStaticValue<onAfterModifyDamageHpToKeep>();
 
   simulation.addToEntities<tags::CanUseItem, tags::CurrentActionTarget, FocusSash>();
   internal::checkIfCanUseItem(simulation);
@@ -5674,26 +5699,26 @@ void FocusSash::onDamage(Simulation& simulation) {
 }
 
 void KingsRock::onModifyMove(Simulation& simulation) {
-  const auto percentChance = simulation.pokedex().getStaticValue<KingsRock::addedFlinchChance>();
+  const auto percentChance = simulation.pokedex().getStaticValue<addedFlinchChance>();
 
   simulation.view<kingsRockOnModifyMove, Tags<KingsRock>>(percentChance);
 }
 
 void LifeOrb::onModifyDamage(Simulation& simulation) {
-  const auto numerator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageNumerator>();
-  const auto denominator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageDenominator>();
+  const auto numerator = simulation.pokedex().getStaticValue<onModifyDamageNumerator>();
+  const auto denominator = simulation.pokedex().getStaticValue<onModifyDamageDenominator>();
 
   internal::currentActionMovesAsSourceView<SourceModifyDamage, Tags<LifeOrb>>(simulation, numerator, denominator);
 }
 
 void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
-  const auto divisor = simulation.pokedex().getStaticValue<LifeOrb::onAfterMoveUsedHpDecreaseDivisor>();
+  const auto divisor = simulation.pokedex().getStaticValue<onAfterMoveUsedHpDecreaseDivisor>();
 
   simulation.view<lifeOrbOnAfterMove, Tags<LifeOrb>>(divisor);
 }
 
 void RockyHelmet::onDamagingHit(Simulation& simulation) {
-  const auto divisor = simulation.pokedex().getStaticValue<RockyHelmet::onDamagingHitHpDecreaseDivisor>();
+  const auto divisor = simulation.pokedex().getStaticValue<onDamagingHitHpDecreaseDivisor>();
 
   simulation.view<rockyHelmetOnDamagingHit, Tags<RockyHelmet>>(divisor);
 }
@@ -5765,23 +5790,23 @@ void Burn::onSetDamageRollModifiers(Simulation& simulation) {
 }
 
 void Burn::onResidual(Simulation& simulation) {
-  const auto divisor = simulation.pokedex().getStaticValue<Burn::onResidualHpDecreaseDivisor>();
+  const auto divisor = simulation.pokedex().getStaticValue<onResidualHpDecreaseDivisor>();
 
   simulation.view<damageByHpDivisor, Tags<Burn, tags::ActivePokemon>>(divisor);
 }
 
 void Paralysis::onModifySpe(Simulation& simulation) {
-  const auto speedDivisor = simulation.pokedex().getStaticValue<Paralysis::speedDivisor>();
-  const auto speedDividend = simulation.pokedex().getStaticValue<Paralysis::speedDividend>();
+  const auto divisor = simulation.pokedex().getStaticValue<speedDivisor>();
+  const auto dividend = simulation.pokedex().getStaticValue<speedDividend>();
 
   simulation
     .view<paralysisOnModifySpeed, Tags<Paralysis, tags::SpeStatUpdateRequired> /*, entt::exclude_t<QuickFeet>*/>(
-      speedDivisor,
-      speedDividend);
+      divisor,
+      dividend);
 }
 
 void Paralysis::onBeforeMove(Simulation& simulation) {
-  const auto chance = simulation.pokedex().getStaticValue<Paralysis::onBeforeMoveChance>();
+  const auto chance = simulation.pokedex().getStaticValue<onBeforeMoveChance>();
 
   simulation
     .view<pokesim::internal::setRandomBinaryChanceFromPercentChance, Tags<tags::CurrentActionSource, Paralysis>>(
@@ -5925,7 +5950,7 @@ void imposterOnSwitchIn(types::handle handle, Side side, const Simulation& simul
     transformTarget = foeTeam.val.front();
   }
   else {
-    types::teamPositionIndex position = pokesim::internal::entityToIndex(registry, side.val, handle.entity());
+    types::teamPositionIndex position = pokesim::internal::pokemonEntityToIndex(registry, side.val, handle.entity());
     if (position >= foeTeam.val.size()) {
       return;
     }
@@ -5947,6 +5972,48 @@ struct LongReachOnModifyMove {
 };
 
 void plusOnModifySpa(types::handle, EventModifier&) {}
+
+void pranksterOnImmunity(types::registry& registry, const CurrentActionMovesAsSource& moves) {
+  for (types::entity move : moves) {
+    SpeciesTypes targetTypes = registry.get<SpeciesTypes>(registry.get<CurrentActionTarget>(move).val);
+    if (targetTypes.has(Type::DARK)) {
+      registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
+    }
+  }
+}
+
+bool pranksterChangePriority(
+  types::handle handle, Battle battle, Side side, types::priority priorityBoost, const Pokedex& pokedex) {
+  ActionQueue& actionQueue = handle.registry()->get<ActionQueue>(battle.val);
+  Slot sourceSlot = internal::pokemonEntityToSlot(*handle.registry(), side.val, handle.entity());
+
+  for (ActionQueueItem& item : actionQueue.val) {
+    if (!item.decision.holds<MoveDecision>() || item.decision.sourceSlot() != sourceSlot) {
+      continue;
+    }
+
+    Move move = item.decision.get<MoveDecision>().move;
+    if (pokedex.moveHasAll<move::tags::Status>(move)) {
+      item.priority = types::priority(item.priority + priorityBoost);
+      // if (!simulation.speedSortAfterEachMove) handle.emplace<tags::PranksterOnSpeedSort>();
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void pranksterOnModifyPriority(
+  types::handle handle, Battle battle, Side side, types::priority priorityBoost, const Pokedex& pokedex) {
+  pranksterChangePriority(handle, battle, side, priorityBoost, pokedex);
+}
+
+void pranksterOnRemove(
+  types::handle handle, Battle battle, Side side, types::priority priorityBoost, const Pokedex& pokedex) {
+  if (pranksterChangePriority(handle, battle, side, (types::boost)-priorityBoost, pokedex)) {
+    handle.registry()->get_or_emplace<simulate_turn::tags::SpeedSortNeeded>(battle.val);
+  }
+}
 
 template <typename CurrentActionMovesAsTargetType>
 struct ScrappyOnModifyMove {
@@ -5985,8 +6052,8 @@ void staticOnDamagingHit(
 }  // namespace
 
 void Analytic::onBasePower(Simulation& simulation) {
-  const auto numerator = simulation.pokedex().getStaticValue<Analytic::onBasePowerNumerator>();
-  const auto denominator = simulation.pokedex().getStaticValue<Analytic::onBasePowerDenominator>();
+  const auto numerator = simulation.pokedex().getStaticValue<onBasePowerNumerator>();
+  const auto denominator = simulation.pokedex().getStaticValue<onBasePowerDenominator>();
 
   simulation.view<analyticOnBasePowerSimulateTurn, Tags<Analytic, pokesim::tags::SimulateTurn>>(numerator, denominator);
   internal::currentActionMovesAsSourceView<
@@ -5999,12 +6066,12 @@ void Analytic::onBasePower(Simulation& simulation) {
 }
 
 void Competitive::onAfterEachBoost(Simulation& simulation) {
-  const auto spaBoost = simulation.pokedex().getStaticValue<Competitive::onAfterEachBoostSpaBoost>();
+  const auto spaBoost = simulation.pokedex().getStaticValue<onAfterEachBoostSpaBoost>();
   simulation.view<competitiveDefiantOnAfterEachBoost<SpaBoost>, Tags<Competitive>>(spaBoost, Ability::COMPETITIVE);
 }
 
 void Defiant::onAfterEachBoost(Simulation& simulation) {
-  const auto atkBoost = simulation.pokedex().getStaticValue<Defiant::onAfterEachBoostAtkBoost>();
+  const auto atkBoost = simulation.pokedex().getStaticValue<onAfterEachBoostAtkBoost>();
   simulation.view<competitiveDefiantOnAfterEachBoost<AtkBoost>, Tags<Defiant>>(atkBoost, Ability::DEFIANT);
 }
 
@@ -6025,12 +6092,35 @@ void Plus::onModifySpA(Simulation& simulation) {
   simulation.view<plusOnModifySpa, Tags<Plus>>();
 }
 
+void Prankster::onModifyPriority(Simulation& simulation) {
+  const auto priorityBoost = simulation.pokedex().getStaticValue<onModifyPriorityIncrease>();
+
+  simulation
+    .view<pranksterOnModifyPriority, Tags<Prankster, pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>>(
+      priorityBoost,
+      simulation.pokedex());
+}
+
+void Prankster::onImmunity(Simulation& simulation) {
+  simulation.view<pranksterOnImmunity, Tags<Prankster>>();
+  // if (!simulation.speedSortAfterEachMove) simulation.view<pranksterOnImmunity, Tags<tags::PranksterOnSpeedSort>>();
+}
+
+void Prankster::onRemove(Simulation& simulation) {
+  // if (!simulation.speedSortAfterEachMove) return;
+  const auto priorityBoost = simulation.pokedex().getStaticValue<onModifyPriorityIncrease>();
+
+  simulation.view<pranksterOnRemove, Tags<Prankster, pokesim::internal::tags::RemoveAbility>>(
+    priorityBoost,
+    simulation.pokedex());
+}
+
 void Scrappy::onModifyMove(Simulation& simulation) {
   internal::currentActionMovesAsSourceView<ScrappyOnModifyMove, Tags<Scrappy>>(simulation);
 }
 
 void Static::onDamagingHit(Simulation& simulation) {
-  const auto chanceOfStatic = simulation.pokedex().getStaticValue<Static::onDamagingHitChance>();
+  const auto chanceOfStatic = simulation.pokedex().getStaticValue<onDamagingHitChance>();
 
   simulation.view<staticOnDamagingHit, Tags<Static>>(chanceOfStatic, simulation);
 
@@ -7313,9 +7403,9 @@ void checkIfCanRemoveItem(Simulation& simulation) {
 }
 
 void removeItem(Simulation& simulation) {
-  simulation.addToEntities<tags::EndItem, pokesim::tags::CanRemoveItem>();
-  runEndItemEvent(simulation);
-  simulation.removeFromEntities<tags::EndItem>();
+  simulation.addToEntities<tags::RemoveItem, pokesim::tags::CanRemoveItem>();
+  runRemoveItemEvent(simulation);
+  simulation.removeFromEntities<tags::RemoveItem>();
 
   removeItemComponents<pokesim::tags::CanRemoveItem>(simulation);
 }
@@ -7906,20 +7996,26 @@ types::teamPositionIndex slotToIndex(Slot slot) {
   return (types::teamPositionIndex)slot & internal::SLOT_LETTER_MASK;
 }
 
-types::teamPositionIndex entityToIndex(
-  const types::registry& registry, types::entity sideEntity, types::entity slotEntity) {
+types::teamPositionIndex pokemonEntityToIndex(
+  const types::registry& registry, types::entity sideEntity, types::entity pokemonEntity) {
   POKESIM_REQUIRE(
-    registry.get<Side>(slotEntity).val == sideEntity,
+    registry.get<Side>(pokemonEntity).val == sideEntity,
     "Slot entity must be part of the side entity's team");
+
   const Team& team = registry.get<Team>(sideEntity);
   for (types::teamPositionIndex index = 0U; index < team.val.size(); index++) {
-    if (team.val[index] == slotEntity) {
+    if (team.val[index] == pokemonEntity) {
       return index;
     }
   }
 
   POKESIM_REQUIRE_FAIL("Slot entity must be part of the side entity's team");
   return Constants::TeamSize::MAX;
+}
+
+Slot pokemonEntityToSlot(const types::registry& registry, types::entity sideEntity, types::entity pokemonEntity) {
+  types::teamPositionIndex index = pokemonEntityToIndex(registry, sideEntity, pokemonEntity);
+  return sideIdAndPositionToSlot(registry.get<PlayerSide>(sideEntity).val, index);
 }
 
 bool isAlly(types::registry& registry, types::entity pokemonEntity1, types::entity pokemonEntity2) {

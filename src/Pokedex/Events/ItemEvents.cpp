@@ -151,24 +151,24 @@ void quickPowderOnModifySpe(
 }  // namespace
 
 void AssaultVest::onModifySpd(Simulation& simulation) {
-  const auto modifier = simulation.pokedex().getStaticValue<AssaultVest::onModifySpdModifier>();
+  const auto modifier = simulation.pokedex().getStaticValue<onModifySpdModifier>();
 
   simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<AssaultVest>>(modifier, 1U);
 }
 
-void AssaultVest::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpdStatUpdateRequired, internal::tags::EndItem, AssaultVest>();
+void AssaultVest::onRemove(Simulation& simulation) {
+  simulation.addToEntities<tags::SpdStatUpdateRequired, internal::tags::RemoveItem, AssaultVest>();
 }
 
 void BrightPowder::onModifyAccuracy(Simulation& simulation) {
-  const auto numerator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyNumerator>();
-  const auto denominator = simulation.pokedex().getStaticValue<BrightPowder::onModifyAccuracyDenominator>();
+  const auto numerator = simulation.pokedex().getStaticValue<onModifyAccuracyNumerator>();
+  const auto denominator = simulation.pokedex().getStaticValue<onModifyAccuracyDenominator>();
 
   simulation.view<SetMoveTargetModifier<CurrentActionMovesAsTarget>::run, Tags<BrightPowder>>(numerator, denominator);
 }
 
 void ChoiceScarf::onModifySpe(Simulation& simulation) {
-  const auto modifier = simulation.pokedex().getStaticValue<ChoiceScarf::onModifySpeModifier>();
+  const auto modifier = simulation.pokedex().getStaticValue<onModifySpeModifier>();
 
   simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<ChoiceScarf>>(modifier, 1U);
 }
@@ -180,12 +180,12 @@ void ChoiceScarf::onSourceModifyMove(Simulation& simulation) {
     entt::exclude_t<ChoiceLock>>();
 }
 
-void ChoiceScarf::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpeStatUpdateRequired, internal::tags::EndItem, ChoiceScarf>();
+void ChoiceScarf::onRemove(Simulation& simulation) {
+  simulation.addToEntities<tags::SpeStatUpdateRequired, internal::tags::RemoveItem, ChoiceScarf>();
 }
 
 void ChoiceSpecs::onModifySpa(Simulation& simulation) {
-  const auto modifier = simulation.pokedex().getStaticValue<ChoiceSpecs::onModifySpaModifier>();
+  const auto modifier = simulation.pokedex().getStaticValue<onModifySpaModifier>();
 
   simulation.view<internal::chainComponentToModifier<types::effectMultiplier>, Tags<ChoiceSpecs>>(modifier, 1U);
 }
@@ -197,12 +197,12 @@ void ChoiceSpecs::onSourceModifyMove(Simulation& simulation) {
     entt::exclude_t<ChoiceLock>>();
 }
 
-void ChoiceSpecs::onEnd(Simulation& simulation) {
-  simulation.addToEntities<tags::SpaStatUpdateRequired, internal::tags::EndItem, ChoiceSpecs>();
+void ChoiceSpecs::onRemove(Simulation& simulation) {
+  simulation.addToEntities<tags::SpaStatUpdateRequired, internal::tags::RemoveItem, ChoiceSpecs>();
 }
 
 void FocusSash::onAfterModifyDamage(Simulation& simulation) {
-  const auto hpToKeep = simulation.pokedex().getStaticValue<FocusSash::onAfterModifyDamageHpToKeep>();
+  const auto hpToKeep = simulation.pokedex().getStaticValue<onAfterModifyDamageHpToKeep>();
 
   simulation.addToEntities<tags::CanUseItem, tags::CurrentActionTarget, FocusSash>();
   internal::checkIfCanUseItem(simulation);
@@ -218,26 +218,26 @@ void FocusSash::onDamage(Simulation& simulation) {
 }
 
 void KingsRock::onModifyMove(Simulation& simulation) {
-  const auto percentChance = simulation.pokedex().getStaticValue<KingsRock::addedFlinchChance>();
+  const auto percentChance = simulation.pokedex().getStaticValue<addedFlinchChance>();
 
   simulation.view<kingsRockOnModifyMove, Tags<KingsRock>>(percentChance);
 }
 
 void LifeOrb::onModifyDamage(Simulation& simulation) {
-  const auto numerator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageNumerator>();
-  const auto denominator = simulation.pokedex().getStaticValue<LifeOrb::onModifyDamageDenominator>();
+  const auto numerator = simulation.pokedex().getStaticValue<onModifyDamageNumerator>();
+  const auto denominator = simulation.pokedex().getStaticValue<onModifyDamageDenominator>();
 
   internal::currentActionMovesAsSourceView<SourceModifyDamage, Tags<LifeOrb>>(simulation, numerator, denominator);
 }
 
 void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
-  const auto divisor = simulation.pokedex().getStaticValue<LifeOrb::onAfterMoveUsedHpDecreaseDivisor>();
+  const auto divisor = simulation.pokedex().getStaticValue<onAfterMoveUsedHpDecreaseDivisor>();
 
   simulation.view<lifeOrbOnAfterMove, Tags<LifeOrb>>(divisor);
 }
 
 void RockyHelmet::onDamagingHit(Simulation& simulation) {
-  const auto divisor = simulation.pokedex().getStaticValue<RockyHelmet::onDamagingHitHpDecreaseDivisor>();
+  const auto divisor = simulation.pokedex().getStaticValue<onDamagingHitHpDecreaseDivisor>();
 
   simulation.view<rockyHelmetOnDamagingHit, Tags<RockyHelmet>>(divisor);
 }

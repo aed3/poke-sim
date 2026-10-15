@@ -4,6 +4,7 @@ namespace pokesim::internal::tags {
 struct RunEffect {};
 
 struct StartAbility {};
-struct EndItem {};
+struct RemoveAbility {};
+struct RemoveItem {};
 struct ResetTrappedPokemon {};
 }  // namespace pokesim::internal::tags
