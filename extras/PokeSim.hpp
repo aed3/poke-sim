@@ -93,6 +93,7 @@
  * src/Types/Variant.hpp
  * src/Types/Decisions.hpp
  * src/Types/Enums/ActionOrder.hpp
+ * src/Types/Enums/FractionalPriority.hpp
  * src/Types/Move.hpp
  * src/Components/ActionQueue.hpp
  * src/Types/Enums/AddedTargets.hpp
@@ -19275,11 +19276,28 @@ struct slotDecision : variant<
   using variant::variant;
 
   constexpr Slot sourceSlot() const {
-    return std::visit([](auto&& decision) { return decision.sourceSlot; }, (variant::base) * this);
+    return std::visit([](auto&& decision) { return decision.sourceSlot; }, variant::base(*this));
   }
 
   constexpr Slot targetSlot() const {
-    return std::visit([](auto&& decision) { return decision.targetSlot; }, (variant::base) * this);
+    return std::visit([](auto&& decision) { return decision.targetSlot; }, variant::base(*this));
+  }
+
+  constexpr bool isMoveDecision() const {
+    return holds<MoveDecision>() || holds<MegaEvolveAndMoveDecision>() || holds<ZMoveDecision>() ||
+           holds<DynamaxAndMoveDecision>() || holds<TerastallizeAndMoveDecision>();
+  }
+
+  constexpr dex::Move move() const {
+    return std::visit(
+      [](auto&& decision) {
+        if constexpr (std::is_base_of_v<MoveDecision, std::decay_t<decltype(decision)>>) {
+          return decision.move;
+        }
+        POKESIM_REQUIRE_FAIL("Getting a move from a decision type that has no move.");
+        return dex::Move::NO_MOVE;
+      },
+      (variant::base) * this);
   }
 };
 
@@ -19324,6 +19342,27 @@ static constexpr inline std::array<ActionOrder, 9U> VALID_ACTION_ORDERS = {
 
 //////////////////// END OF src/Types/Enums/ActionOrder.hpp ////////////////////
 
+/////////////// START OF src/Types/Enums/FractionalPriority.hpp ////////////////
+
+namespace pokesim {
+// Denotes if the simulated battle is a single or double battle
+enum class FractionalPriority : std::int8_t {
+  NONE = 0,
+  PLUS = 1,
+  MINUS = -1,
+};
+
+namespace internal {
+static constexpr inline std::array<FractionalPriority, 3U> VALID_FRACTIONAL_PRIORITIES = {
+  FractionalPriority::NONE,
+  FractionalPriority::PLUS,
+  FractionalPriority::MINUS,
+};
+}  // namespace internal
+}  // namespace pokesim
+
+//////////////// END OF src/Types/Enums/FractionalPriority.hpp /////////////////
+
 ///////////////////////// START OF src/Types/Move.hpp //////////////////////////
 
 namespace pokesim::types {
@@ -19335,7 +19374,6 @@ using accuracy = pokesim::internal::unsignedIntType<Constants::MoveAccuracy::MAX
 using moveHits = pokesim::internal::unsignedIntType<Constants::PokemonHpStat::MAX>;
 
 using priority = pokesim::internal::signedIntType<Constants::MovePriority::MAX, Constants::MovePriority::MIN>;
-using fractionalPriority = bool;
 }  // namespace pokesim::types
 
 ////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
@@ -19348,8 +19386,8 @@ struct ActionQueueItem {
   ActionOrder order = ActionOrder::NONE;
   // Priority of the action (higher first).
   types::priority priority = Constants::MovePriority::DEFAULT;
-  // Whether negative fractional priority is active for the action (false first).
-  types::fractionalPriority fractionalPriority = false;
+  // Whether negative fractional priority is active for the action (higher first).
+  FractionalPriority fractionalPriority = FractionalPriority::NONE;
   // Speed of Pokemon using move (higher first if priority tie).
   types::stat speed = Constants::PokemonEffectiveStat::DEFAULT;
 
@@ -19375,7 +19413,7 @@ struct ActionQueueItem {
     }
 
     if (fractionalPriority != other.fractionalPriority) {
-      return !fractionalPriority;
+      return fractionalPriority > other.fractionalPriority;
     }
 
     if (speed != other.speed) {
@@ -25687,7 +25725,9 @@ namespace pokesim::dex {
 struct QuickClaw {
   static constexpr Item name(GameMechanics = {}) { return dex::Item::QUICK_CLAW; }
 
+  static constexpr FractionalPriority onFractionalPriorityPriority(GameMechanics) { return FractionalPriority::PLUS; }
   static constexpr types::percentChance onFractionalPriorityChance(GameMechanics) { return 20U; }
+
   struct Strings {
     static constexpr std::string_view name() { return "Quick Claw"; }
     static constexpr std::string_view smogonId() { return "quickclaw"; }
@@ -27536,6 +27576,7 @@ void runEachUpdate(Simulation& simulation);
 
 void runBeforeMove(Simulation& simulation);
 void runResidual(Simulation& simulation);
+void runFractionalPriority(Simulation& simulation);
 void runModifyPriority(Simulation& simulation);
 
 void runAccuracyEvent(Simulation& simulation);

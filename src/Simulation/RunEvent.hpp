@@ -8,6 +8,7 @@ void runEachUpdate(Simulation& simulation);
 
 void runBeforeMove(Simulation& simulation);
 void runResidual(Simulation& simulation);
+void runFractionalPriority(Simulation& simulation);
 void runModifyPriority(Simulation& simulation);
 
 void runAccuracyEvent(Simulation& simulation);

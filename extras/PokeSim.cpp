@@ -565,6 +565,7 @@ void check(const Accuracy& accuracy) {
 template <>
 void check(const ActionQueueItem& actionQueueItem) {
   POKESIM_REQUIRE_NM(listContains(internal::VALID_ACTION_ORDERS, actionQueueItem.order));
+  POKESIM_REQUIRE_NM(listContains(internal::VALID_FRACTIONAL_PRIORITIES, actionQueueItem.fractionalPriority));
   checkBounds<Constants::MovePriority>(actionQueueItem.priority);
   checkStat(actionQueueItem.speed);
 
@@ -2390,6 +2391,10 @@ void runResidual(Simulation& simulation) {
   pokesim::dex::Burn::onResidual(simulation);
 }
 
+void runFractionalPriority(Simulation& simulation) {
+  pokesim::dex::QuickClaw::onFractionalPriority(simulation);
+}
+
 void runModifyPriority(Simulation& simulation) {
   pokesim::dex::Prankster::onModifyPriority(simulation);
 }
@@ -3423,6 +3428,23 @@ void cloneToPreventInputChanges(Simulation& simulation) {
   }
 }
 
+void resolveDecisions(Simulation& simulation) {
+  auto simulateTurnFilter = getSimulateTurnFilter(simulation);
+
+  midTurnSwitch(simulation);
+  simulateTurnFilter.view<internal::simulate_turn::resolveDecision>(simulation.pokedex());
+  internal::runFractionalPriority(simulation);
+  internal::runModifyPriority(simulation);
+
+  simulateTurnFilter.removeFromSelected<SideDecision>();
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    simulateTurnFilter.removeFromSelected<SinglesSideOptions>();
+  }
+  else {
+    simulateTurnFilter.removeFromSelected<DoublesSideOptions>();
+  }
+}
+
 void simulateTurn(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
   auto simulateTurnFilter = getSimulateTurnFilter(simulation);
@@ -3451,17 +3473,7 @@ void simulateTurn(Simulation& simulation) {
   }
 
   internal::updateAllStats(simulation);
-
-  midTurnSwitch(simulation);
-  simulateTurnFilter.view<internal::simulate_turn::resolveDecision>(simulation.pokedex());
-  internal::runModifyPriority(simulation);
-  simulateTurnFilter.removeFromSelected<SideDecision>();
-  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
-    simulateTurnFilter.removeFromSelected<SinglesSideOptions>();
-  }
-  else {
-    simulateTurnFilter.removeFromSelected<DoublesSideOptions>();
-  }
+  resolveDecisions(simulation);
 
   // battleFilter.view<internal::simulate_turn::addBeforeTurnAction, Tags<>,
   // entt::exclude_t<pokesim::tags::BattleMidTurn>>();
@@ -4504,7 +4516,7 @@ void resolveSlotDecision(
     actionQueueItem.priority = pokedex.moveHasAll<Priority>(decision.move)
                                  ? pokedex.getMoveData<Priority>(decision.move).val
                                  : Constants::MovePriority::DEFAULT;
-    actionQueueItem.fractionalPriority = false;  // TODO(aed3): get fractionalPriority
+    actionQueueItem.fractionalPriority = FractionalPriority::NONE;
 
     if constexpr (!std::is_same_v<MoveDecision, Decision>) {
       POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");
@@ -5621,6 +5633,40 @@ void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget m
   internal::applyDamage({registry, source}, hp.val / hpDivisor);
 }
 
+void quickClawOnFractionalPrioritySetChance(
+  types::handle handle, Battle battle, Side side, const Simulation& simulation) {
+  ActionQueue& actionQueue = handle.registry()->get<ActionQueue>(battle.val);
+  Slot sourceSlot = internal::pokemonEntityToSlot(*handle.registry(), side.val, handle.entity());
+  const auto chance = simulation.pokedex().getStaticValue<QuickClaw::onFractionalPriorityChance>();
+
+  for (ActionQueueItem& item : actionQueue.val) {
+    if (!item.decision.isMoveDecision() || item.decision.sourceSlot() != sourceSlot) {
+      continue;
+    }
+
+    // if (pokedex.moveHasAll<move::tags::Status>(item.decision.getMove()) && handle.all_of<MyceliumMight>())
+    // continue;
+    internal::setRandomBinaryChanceFromPercentChance(handle, battle, simulation, chance);
+    return;
+  }
+}
+
+void quickClawOnFractionalPriority(types::handle handle, Battle battle, Side side, const Pokedex& pokedex) {
+  ActionQueue& actionQueue = handle.registry()->get<ActionQueue>(battle.val);
+  Slot sourceSlot = internal::pokemonEntityToSlot(*handle.registry(), side.val, handle.entity());
+  const auto fractionalPriority = pokedex.getStaticValue<QuickClaw::onFractionalPriorityPriority>();
+
+  for (ActionQueueItem& item : actionQueue.val) {
+    if (!item.decision.isMoveDecision() || item.decision.sourceSlot() != sourceSlot) {
+      continue;
+    }
+
+    // if (pokedex.moveHasAll<move::tags::Status>(item.decision.getMove()) && handle.all_of<MyceliumMight>())
+    // continue;
+    item.fractionalPriority = fractionalPriority;
+  }
+}
+
 void quickPowderOnModifySpe(
   SpeciesName species, EventModifier& eventModifier, types::effectMultiplier speedMultiplier) {
   if (species.val != Species::DITTO) {
@@ -5721,6 +5767,19 @@ void RockyHelmet::onDamagingHit(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<onDamagingHitHpDecreaseDivisor>();
 
   simulation.view<rockyHelmetOnDamagingHit, Tags<RockyHelmet>>(divisor);
+}
+
+void QuickClaw::onFractionalPriority(Simulation& simulation) {
+  simulation.view<
+    quickClawOnFractionalPrioritySetChance,
+    Tags<QuickClaw, pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>>(simulation);
+
+  pokesim::internal::randomBinaryChance(
+    simulation,
+    [](Simulation& sim) {
+      sim.view<quickClawOnFractionalPriority, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(sim.pokedex());
+    },
+    std::nullopt);
 }
 
 void QuickPowder::onModifySpe(Simulation& simulation) {
@@ -5988,11 +6047,11 @@ bool pranksterChangePriority(
   Slot sourceSlot = internal::pokemonEntityToSlot(*handle.registry(), side.val, handle.entity());
 
   for (ActionQueueItem& item : actionQueue.val) {
-    if (!item.decision.holds<MoveDecision>() || item.decision.sourceSlot() != sourceSlot) {
+    if (!item.decision.isMoveDecision() || item.decision.sourceSlot() != sourceSlot) {
       continue;
     }
 
-    Move move = item.decision.get<MoveDecision>().move;
+    Move move = item.decision.move();
     if (pokedex.moveHasAll<move::tags::Status>(move)) {
       item.priority = types::priority(item.priority + priorityBoost);
       // if (!simulation.speedSortAfterEachMove) handle.emplace<tags::PranksterOnSpeedSort>();

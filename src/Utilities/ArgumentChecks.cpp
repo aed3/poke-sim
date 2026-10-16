@@ -423,6 +423,7 @@ void check(const Accuracy& accuracy) {
 template <>
 void check(const ActionQueueItem& actionQueueItem) {
   POKESIM_REQUIRE_NM(listContains(internal::VALID_ACTION_ORDERS, actionQueueItem.order));
+  POKESIM_REQUIRE_NM(listContains(internal::VALID_FRACTIONAL_PRIORITIES, actionQueueItem.fractionalPriority));
   checkBounds<Constants::MovePriority>(actionQueueItem.priority);
   checkStat(actionQueueItem.speed);
 

@@ -3,6 +3,7 @@
 #include <Types/Constants.hpp>
 #include <Types/Decisions.hpp>
 #include <Types/Enums/ActionOrder.hpp>
+#include <Types/Enums/FractionalPriority.hpp>
 #include <Types/Move.hpp>
 #include <Types/Random.hpp>
 #include <Types/State.hpp>
@@ -14,8 +15,8 @@ struct ActionQueueItem {
   ActionOrder order = ActionOrder::NONE;
   // Priority of the action (higher first).
   types::priority priority = Constants::MovePriority::DEFAULT;
-  // Whether negative fractional priority is active for the action (false first).
-  types::fractionalPriority fractionalPriority = false;
+  // Whether negative fractional priority is active for the action (higher first).
+  FractionalPriority fractionalPriority = FractionalPriority::NONE;
   // Speed of Pokemon using move (higher first if priority tie).
   types::stat speed = Constants::PokemonEffectiveStat::DEFAULT;
 
@@ -41,7 +42,7 @@ struct ActionQueueItem {
     }
 
     if (fractionalPriority != other.fractionalPriority) {
-      return !fractionalPriority;
+      return fractionalPriority > other.fractionalPriority;
     }
 
     if (speed != other.speed) {

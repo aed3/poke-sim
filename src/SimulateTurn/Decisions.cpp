@@ -257,7 +257,7 @@ void resolveSlotDecision(
     actionQueueItem.priority = pokedex.moveHasAll<Priority>(decision.move)
                                  ? pokedex.getMoveData<Priority>(decision.move).val
                                  : Constants::MovePriority::DEFAULT;
-    actionQueueItem.fractionalPriority = false;  // TODO(aed3): get fractionalPriority
+    actionQueueItem.fractionalPriority = FractionalPriority::NONE;
 
     if constexpr (!std::is_same_v<MoveDecision, Decision>) {
       POKESIM_REQUIRE_FAIL(std::string(entt::type_name<Decision>().value()) + " is not yet supported.");

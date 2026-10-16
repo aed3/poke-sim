@@ -13,5 +13,4 @@ using accuracy = pokesim::internal::unsignedIntType<Constants::MoveAccuracy::MAX
 using moveHits = pokesim::internal::unsignedIntType<Constants::PokemonHpStat::MAX>;
 
 using priority = pokesim::internal::signedIntType<Constants::MovePriority::MAX, Constants::MovePriority::MIN>;
-using fractionalPriority = bool;
 }  // namespace pokesim::types

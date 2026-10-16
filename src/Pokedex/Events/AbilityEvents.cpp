@@ -164,11 +164,11 @@ bool pranksterChangePriority(
   Slot sourceSlot = internal::pokemonEntityToSlot(*handle.registry(), side.val, handle.entity());
 
   for (ActionQueueItem& item : actionQueue.val) {
-    if (!item.decision.holds<MoveDecision>() || item.decision.sourceSlot() != sourceSlot) {
+    if (!item.decision.isMoveDecision() || item.decision.sourceSlot() != sourceSlot) {
       continue;
     }
 
-    Move move = item.decision.get<MoveDecision>().move;
+    Move move = item.decision.move();
     if (pokedex.moveHasAll<move::tags::Status>(move)) {
       item.priority = types::priority(item.priority + priorityBoost);
       // if (!simulation.speedSortAfterEachMove) handle.emplace<tags::PranksterOnSpeedSort>();

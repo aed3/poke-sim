@@ -53,11 +53,28 @@ struct slotDecision : variant<
   using variant::variant;
 
   constexpr Slot sourceSlot() const {
-    return std::visit([](auto&& decision) { return decision.sourceSlot; }, (variant::base) * this);
+    return std::visit([](auto&& decision) { return decision.sourceSlot; }, variant::base(*this));
   }
 
   constexpr Slot targetSlot() const {
-    return std::visit([](auto&& decision) { return decision.targetSlot; }, (variant::base) * this);
+    return std::visit([](auto&& decision) { return decision.targetSlot; }, variant::base(*this));
+  }
+
+  constexpr bool isMoveDecision() const {
+    return holds<MoveDecision>() || holds<MegaEvolveAndMoveDecision>() || holds<ZMoveDecision>() ||
+           holds<DynamaxAndMoveDecision>() || holds<TerastallizeAndMoveDecision>();
+  }
+
+  constexpr dex::Move move() const {
+    return std::visit(
+      [](auto&& decision) {
+        if constexpr (std::is_base_of_v<MoveDecision, std::decay_t<decltype(decision)>>) {
+          return decision.move;
+        }
+        POKESIM_REQUIRE_FAIL("Getting a move from a decision type that has no move.");
+        return dex::Move::NO_MOVE;
+      },
+      (variant::base) * this);
   }
 };
 
