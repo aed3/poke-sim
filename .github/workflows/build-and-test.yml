@@ -104,6 +104,7 @@ jobs:
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_VERBOSE_MAKEFILE=ON \
                 -DPOKESIM_ENABLE_TESTING=ON \
                 -DPOKESIM_ENABLE_BENCHMARKING=ON \
                 -DPOKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} \
@@ -132,9 +133,10 @@ jobs:
       - name: Configure build
         working-directory: ${{runner.workspace}}
         run: |
-          cmake -S $Env:GITHUB_WORKSPACE                                              `
-                -B ${{runner.workspace}}\build                                        `
-                -DCMAKE_BUILD_TYPE=Release                                            `
+          cmake -S $Env:GITHUB_WORKSPACE                                                      `
+                -B ${{runner.workspace}}\build                                                `
+                -DCMAKE_BUILD_TYPE=Release                                                    `
+                -DCMAKE_VERBOSE_MAKEFILE=ON                                                   `
                 -DPOKESIM_ENABLE_TESTING=ON                                                   `
                 -DPOKESIM_ENABLE_BENCHMARKING=ON                                              `
                 -DPOKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} `
@@ -171,6 +173,7 @@ jobs:
         run: |
           cmake -Bbuild -H$GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_VERBOSE_MAKEFILE=ON \
                 -DPOKESIM_ENABLE_TESTING=ON \
                 -DPOKESIM_ENABLE_BENCHMARKING=ON \
                 -DPOKESIM_USE_COMBINED_SOURCE_AND_HEADER_FILES=${{matrix.use_combined_files}} \
