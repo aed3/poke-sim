@@ -1,7 +1,9 @@
+#include <Battle/Helpers/Helpers.hpp>
 #include <Battle/Helpers/IntegerModify.hpp>
 #include <Battle/Helpers/InternalHelpers.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Battle/Pokemon/PokemonProperties.hpp>
+#include <Components/ActionQueue.hpp>
 #include <Components/CalcDamage/ModifyingEventRanTags.hpp>
 #include <Components/Current.hpp>
 #include <Components/Damage.hpp>
@@ -9,6 +11,7 @@
 #include <Components/Effects/ChoiceLock.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/Side.hpp>
 #include <Components/EventModifier.hpp>
 #include <Components/Names/SpeciesNames.hpp>
 #include <Components/Stats.hpp>
@@ -20,6 +23,7 @@
 #include <Components/Tags/VolatileTags.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Species/Ditto.hpp>
+#include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Registry.hpp>
@@ -140,6 +144,40 @@ void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget m
   internal::applyDamage({registry, source}, hp.val / hpDivisor);
 }
 
+void quickClawOnFractionalPrioritySetChance(
+  types::handle handle, Battle battle, Side side, const Simulation& simulation) {
+  ActionQueue& actionQueue = handle.registry()->get<ActionQueue>(battle.val);
+  Slot sourceSlot = internal::pokemonEntityToSlot(*handle.registry(), side.val, handle.entity());
+  const auto chance = simulation.pokedex().getStaticValue<QuickClaw::onFractionalPriorityChance>();
+
+  for (ActionQueueItem& item : actionQueue.val) {
+    if (!item.decision.isMoveDecision() || item.decision.sourceSlot() != sourceSlot) {
+      continue;
+    }
+
+    // if (pokedex.moveHasAll<move::tags::Status>(item.decision.getMove()) && handle.all_of<MyceliumMight>())
+    // continue;
+    internal::setRandomBinaryChanceFromPercentChance(handle, battle, simulation, chance);
+    return;
+  }
+}
+
+void quickClawOnFractionalPriority(types::handle handle, Battle battle, Side side, const Pokedex& pokedex) {
+  ActionQueue& actionQueue = handle.registry()->get<ActionQueue>(battle.val);
+  Slot sourceSlot = internal::pokemonEntityToSlot(*handle.registry(), side.val, handle.entity());
+  const auto fractionalPriority = pokedex.getStaticValue<QuickClaw::onFractionalPriorityPriority>();
+
+  for (ActionQueueItem& item : actionQueue.val) {
+    if (!item.decision.isMoveDecision() || item.decision.sourceSlot() != sourceSlot) {
+      continue;
+    }
+
+    // if (pokedex.moveHasAll<move::tags::Status>(item.decision.getMove()) && handle.all_of<MyceliumMight>())
+    // continue;
+    item.fractionalPriority = fractionalPriority;
+  }
+}
+
 void quickPowderOnModifySpe(
   SpeciesName species, EventModifier& eventModifier, types::effectMultiplier speedMultiplier) {
   if (species.val != Species::DITTO) {
@@ -240,6 +278,19 @@ void RockyHelmet::onDamagingHit(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<onDamagingHitHpDecreaseDivisor>();
 
   simulation.view<rockyHelmetOnDamagingHit, Tags<RockyHelmet>>(divisor);
+}
+
+void QuickClaw::onFractionalPriority(Simulation& simulation) {
+  simulation.view<
+    quickClawOnFractionalPrioritySetChance,
+    Tags<QuickClaw, pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>>(simulation);
+
+  pokesim::internal::randomBinaryChance(
+    simulation,
+    [](Simulation& sim) {
+      sim.view<quickClawOnFractionalPriority, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(sim.pokedex());
+    },
+    std::nullopt);
 }
 
 void QuickPowder::onModifySpe(Simulation& simulation) {

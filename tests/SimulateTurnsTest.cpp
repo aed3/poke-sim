@@ -123,12 +123,13 @@ TEST_CASE("Action Queue Order", "[Simulation][SimulateTurn][ActionQueue]") {
 
   SECTION("Sort By Priority and Fractional Priority") {
     ActionQueueList idealList = {
-      ActionQueueItem{ActionOrder::MOVE, 5, false},
-      ActionQueueItem{ActionOrder::MOVE, 3, true},
-      ActionQueueItem{ActionOrder::MOVE, 0, false},
-      ActionQueueItem{ActionOrder::MOVE, 0, true},
-      ActionQueueItem{ActionOrder::MOVE, -3, false},
-      ActionQueueItem{ActionOrder::MOVE, -7, true},
+      ActionQueueItem{ActionOrder::MOVE, 5, FractionalPriority::NONE},
+      ActionQueueItem{ActionOrder::MOVE, 3, FractionalPriority::PLUS},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::PLUS},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::NONE},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::MINUS},
+      ActionQueueItem{ActionOrder::MOVE, -3, FractionalPriority::NONE},
+      ActionQueueItem{ActionOrder::MOVE, -7, FractionalPriority::PLUS},
     };
 
     runQueueOrderTest(
@@ -137,6 +138,7 @@ TEST_CASE("Action Queue Order", "[Simulation][SimulateTurn][ActionQueue]") {
         idealList[4],
         idealList[3],
         idealList[1],
+        idealList[6],
         idealList[0],
         idealList[2],
       },
@@ -145,8 +147,8 @@ TEST_CASE("Action Queue Order", "[Simulation][SimulateTurn][ActionQueue]") {
 
   SECTION("Sort By Fractional Priority") {
     ActionQueueList idealList = {
-      ActionQueueItem{ActionOrder::MOVE, 0, false},
-      ActionQueueItem{ActionOrder::MOVE, 0, true},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::PLUS},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::NONE},
     };
 
     runQueueOrderTest({idealList[1], idealList[0]}, idealList);
@@ -154,14 +156,14 @@ TEST_CASE("Action Queue Order", "[Simulation][SimulateTurn][ActionQueue]") {
 
   SECTION("Sort By Speed") {
     ActionQueueList idealList = {
-      ActionQueueItem{ActionOrder::MOVE, 0, false, 772U},
-      ActionQueueItem{ActionOrder::MOVE, 0, false, 621U},
-      ActionQueueItem{ActionOrder::MOVE, 0, false, 584U},
-      ActionQueueItem{ActionOrder::MOVE, 0, false, 444U},
-      ActionQueueItem{ActionOrder::MOVE, 0, false, 305U},
-      ActionQueueItem{ActionOrder::MOVE, 0, false, 152U},
-      ActionQueueItem{ActionOrder::MOVE, 0, false, 90U},
-      ActionQueueItem{ActionOrder::MOVE, 0, false, 11U},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::NONE, 772U},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::NONE, 621U},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::NONE, 584U},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::NONE, 444U},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::NONE, 305U},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::NONE, 152U},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::NONE, 90U},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::NONE, 11U},
     };
 
     runQueueOrderTest(
@@ -182,13 +184,13 @@ TEST_CASE("Action Queue Order", "[Simulation][SimulateTurn][ActionQueue]") {
     ActionQueueList idealList = {
       ActionQueueItem{ActionOrder::TEAM},
       ActionQueueItem{ActionOrder::START},
-      ActionQueueItem{ActionOrder::BEFORE_TURN, 0, false, 584U},
-      ActionQueueItem{ActionOrder::BEFORE_TURN, 0, false, 444U},
-      ActionQueueItem{ActionOrder::SWITCH, 0, false, 52U},
-      ActionQueueItem{ActionOrder::SWITCH, 0, false, 40U},
-      ActionQueueItem{ActionOrder::MOVE, 1, false, 152U},
-      ActionQueueItem{ActionOrder::MOVE, 0, false, 315U},
-      ActionQueueItem{ActionOrder::MOVE, -3, true, 700U},
+      ActionQueueItem{ActionOrder::BEFORE_TURN, 0, FractionalPriority::NONE, 584U},
+      ActionQueueItem{ActionOrder::BEFORE_TURN, 0, FractionalPriority::NONE, 444U},
+      ActionQueueItem{ActionOrder::SWITCH, 0, FractionalPriority::NONE, 52U},
+      ActionQueueItem{ActionOrder::SWITCH, 0, FractionalPriority::NONE, 40U},
+      ActionQueueItem{ActionOrder::MOVE, 1, FractionalPriority::NONE, 152U},
+      ActionQueueItem{ActionOrder::MOVE, 0, FractionalPriority::NONE, 315U},
+      ActionQueueItem{ActionOrder::MOVE, -3, FractionalPriority::PLUS, 700U},
     };
 
     runQueueOrderTest(

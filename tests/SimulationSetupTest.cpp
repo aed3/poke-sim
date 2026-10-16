@@ -117,7 +117,7 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
             REQUIRE(actionQueueItem.speed == pokemon.stats.spe);
             REQUIRE(actionQueueItem.order == ActionOrder::MOVE);
             REQUIRE(actionQueueItem.priority == 0);
-            REQUIRE(actionQueueItem.fractionalPriority == false);
+            REQUIRE(actionQueueItem.fractionalPriority == FractionalPriority::NONE);
           }
           else if (decision.holds<SwitchDecision>()) {
             const auto& trueSwitchDecision = actionQueueItem.decision.get<SwitchDecision>();
@@ -127,7 +127,7 @@ TEST_CASE("Simulation Setup: Simulate Turn", "[Simulation][SimulateTurn][Setup]"
             REQUIRE(actionQueueItem.speed == pokemon.stats.spe);
             REQUIRE(actionQueueItem.order == ActionOrder::SWITCH);
             REQUIRE(actionQueueItem.priority == 0);
-            REQUIRE(actionQueueItem.fractionalPriority == false);
+            REQUIRE(actionQueueItem.fractionalPriority == FractionalPriority::NONE);
           }
         };
 

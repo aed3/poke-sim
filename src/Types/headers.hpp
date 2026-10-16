@@ -13,6 +13,7 @@
 #include "Enums/AddedTargets.hpp"
 #include "Enums/BattleFormat.hpp"
 #include "Enums/DamageRollKind.hpp"
+#include "Enums/FractionalPriority.hpp"
 #include "Enums/GameMechanics.hpp"
 #include "Enums/Gender.hpp"
 #include "Enums/Item.hpp"

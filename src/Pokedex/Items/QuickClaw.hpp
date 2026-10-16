@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Types/Enums/FractionalPriority.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Item.hpp>
 #include <Types/Random.hpp>
@@ -13,7 +14,9 @@ namespace pokesim::dex {
 struct QuickClaw {
   static constexpr Item name(GameMechanics = {}) { return dex::Item::QUICK_CLAW; }
 
+  static constexpr FractionalPriority onFractionalPriorityPriority(GameMechanics) { return FractionalPriority::PLUS; }
   static constexpr types::percentChance onFractionalPriorityChance(GameMechanics) { return 20U; }
+
   struct Strings {
     static constexpr std::string_view name() { return "Quick Claw"; }
     static constexpr std::string_view smogonId() { return "quickclaw"; }

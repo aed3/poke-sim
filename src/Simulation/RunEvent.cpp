@@ -56,6 +56,10 @@ void runResidual(Simulation& simulation) {
   pokesim::dex::Burn::onResidual(simulation);
 }
 
+void runFractionalPriority(Simulation& simulation) {
+  pokesim::dex::QuickClaw::onFractionalPriority(simulation);
+}
+
 void runModifyPriority(Simulation& simulation) {
   pokesim::dex::Prankster::onModifyPriority(simulation);
 }

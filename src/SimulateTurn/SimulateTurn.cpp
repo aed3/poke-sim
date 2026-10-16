@@ -500,6 +500,23 @@ void cloneToPreventInputChanges(Simulation& simulation) {
   }
 }
 
+void resolveDecisions(Simulation& simulation) {
+  auto simulateTurnFilter = getSimulateTurnFilter(simulation);
+
+  midTurnSwitch(simulation);
+  simulateTurnFilter.view<internal::simulate_turn::resolveDecision>(simulation.pokedex());
+  internal::runFractionalPriority(simulation);
+  internal::runModifyPriority(simulation);
+
+  simulateTurnFilter.removeFromSelected<SideDecision>();
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    simulateTurnFilter.removeFromSelected<SinglesSideOptions>();
+  }
+  else {
+    simulateTurnFilter.removeFromSelected<DoublesSideOptions>();
+  }
+}
+
 void simulateTurn(Simulation& simulation) {
   const auto& options = simulation.simulateTurnOptions;
   auto simulateTurnFilter = getSimulateTurnFilter(simulation);
@@ -528,17 +545,7 @@ void simulateTurn(Simulation& simulation) {
   }
 
   internal::updateAllStats(simulation);
-
-  midTurnSwitch(simulation);
-  simulateTurnFilter.view<internal::simulate_turn::resolveDecision>(simulation.pokedex());
-  internal::runModifyPriority(simulation);
-  simulateTurnFilter.removeFromSelected<SideDecision>();
-  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
-    simulateTurnFilter.removeFromSelected<SinglesSideOptions>();
-  }
-  else {
-    simulateTurnFilter.removeFromSelected<DoublesSideOptions>();
-  }
+  resolveDecisions(simulation);
 
   // battleFilter.view<internal::simulate_turn::addBeforeTurnAction, Tags<>,
   // entt::exclude_t<pokesim::tags::BattleMidTurn>>();
