@@ -13,30 +13,17 @@ struct Random {
     dex::Species::DRAGAPULT,
   };
 
-  static constexpr std::array<dex::Move, 18U> availableMoves{
-    dex::Move::CHILLING_WATER,
-    dex::Move::CONFIDE,
-    dex::Move::FURY_ATTACK,
-    dex::Move::GROWL,
-    dex::Move::KNOCK_OFF,
-    dex::Move::LEAFAGE,
-    dex::Move::LOW_SWEEP,
-    dex::Move::MOONBLAST,
-    dex::Move::MUD_SLAP,
-    dex::Move::NOBLE_ROAR,
-    dex::Move::QUIVER_DANCE,
-    dex::Move::SPIRIT_SHACKLE,
-    dex::Move::SPLASH,
-    dex::Move::TACKLE,
-    dex::Move::THUNDERBOLT,
-    dex::Move::TRIPLE_ARROWS,
-    dex::Move::VOLT_SWITCH,
-    dex::Move::WILL_O_WISP,
+  static constexpr std::array<dex::Move, 19U> availableMoves{
+    dex::Move::CHILLING_WATER, dex::Move::CONFIDE,     dex::Move::FURY_ATTACK,  dex::Move::GROWL,
+    dex::Move::KNOCK_OFF,      dex::Move::LEAFAGE,     dex::Move::LOW_SWEEP,    dex::Move::MOONBLAST,
+    dex::Move::MUD_SLAP,       dex::Move::NOBLE_ROAR,  dex::Move::QUICK_ATTACK, dex::Move::QUIVER_DANCE,
+    dex::Move::SPIRIT_SHACKLE, dex::Move::SPLASH,      dex::Move::TACKLE,       dex::Move::THUNDERBOLT,
+    dex::Move::TRIPLE_ARROWS,  dex::Move::VOLT_SWITCH, dex::Move::WILL_O_WISP,
   };
 
   inline static std::vector<dex::Move> availableAttackingMoves{};
 
-  static constexpr std::array<dex::Ability, 16U> availableAbilities{
+  static constexpr std::array<dex::Ability, 17U> availableAbilities{
     dex::Ability::ANALYTIC,
     dex::Ability::CLEAR_BODY,
     dex::Ability::COMPETITIVE,
@@ -46,6 +33,7 @@ struct Random {
     dex::Ability::IRON_FIST,
     dex::Ability::LEVITATE,
     dex::Ability::LONG_REACH,
+    dex::Ability::PRANKSTER,
     dex::Ability::PLUS,
     dex::Ability::SCRAPPY,
     dex::Ability::STATIC,
@@ -55,7 +43,7 @@ struct Random {
     dex::Ability::TRACE,
   };
 
-  static constexpr std::array<dex::Item, 10U> availableItems{
+  static constexpr std::array<dex::Item, 11U> availableItems{
     dex::Item::NO_ITEM,
     dex::Item::ASSAULT_VEST,
     dex::Item::BRIGHT_POWDER,
@@ -64,6 +52,7 @@ struct Random {
     dex::Item::FOCUS_SASH,
     dex::Item::KINGS_ROCK,
     dex::Item::LIFE_ORB,
+    dex::Item::QUICK_CLAW,
     dex::Item::QUICK_POWDER,
     dex::Item::ROCKY_HELMET,
   };
