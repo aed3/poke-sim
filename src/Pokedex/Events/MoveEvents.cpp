@@ -1,5 +1,6 @@
 #include <Battle/Helpers/IntegerModify.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
+#include <Components/BasePower.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/Names/ItemNames.hpp>
 #include <Components/SimulateTurn/MoveHitSteps.hpp>
@@ -45,6 +46,12 @@ void knockOffOnBasePower(
   internal::chainComponentToModifier(eventModifier, modifier);
 }
 
+void reversalOnSetBasePower(types::handle handle, CurrentActionSource source, const Pokedex& pokedex) {
+  auto [currentHp, maxHp] = handle.registry()->get<stat::CurrentHp, stat::Hp>(source.val);
+  types::basePower basePower = pokedex.getStaticValue<Reversal::onSetBasePowerFromSourceHp>(currentHp.val, maxHp.val);
+  handle.emplace<BasePower>(basePower);
+}
+
 void transformOnHit(
   types::registry& registry, CurrentActionSource source, CurrentActionTarget target, const Pokedex& pokedex) {
   internal::transformInto(registry, source.val, target.val, pokedex);
@@ -64,6 +71,10 @@ void KnockOff::onAfterHit(Simulation& simulation) {
   simulation.view<knockOffOnAfterHitCheckRemovableItem, Tags<KnockOff, tags::CurrentMoveHit>>();
   internal::tryRemoveItem(simulation);
   simulation.removeFromEntities<tags::CanRemoveItem>();
+}
+
+void Reversal::onSetBasePower(Simulation& simulation) {
+  simulation.view<reversalOnSetBasePower, Tags<Reversal>>(simulation.pokedex());
 }
 
 void SpiritShackle::targetSecondaryEffect::onHit(Simulation& simulation) {

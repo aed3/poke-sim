@@ -360,6 +360,7 @@ void modifyMoves(Simulation& simulation) {
 
   // ModifyType
   internal::runModifyMove(simulation);
+  internal::runSetBasePower(simulation);
 
   moveFilter.template addToSelected<tags::DefenderImmune, pokesim::tags::FailedCurrentActionMove>();
   moveFilter.template view<setDefenderImmune, Tags<>, entt::exclude_t<move::tags::IgnoreImmunities>>(

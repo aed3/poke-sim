@@ -2494,6 +2494,10 @@ void runModifyMove(Simulation& simulation) {
   pokesim::dex::Scrappy::onModifyMove(simulation);
 }
 
+void runSetBasePower(Simulation& simulation) {
+  pokesim::dex::Reversal::onSetBasePower(simulation);
+}
+
 void runResetDisabledMove(Simulation& simulation) {
   pokesim::dex::ChoiceLock::onResetDisabledMove(simulation);
 }
@@ -3167,6 +3171,7 @@ void useMove(Simulation& simulation) {
   // ModifyTarget
   // ModifyType
   internal::runModifyMove(simulation);
+  internal::runSetBasePower(simulation);
 
   internal::runMoveHitChecks(simulation);
   internal::runAfterMoveUsedEvent(simulation);
@@ -5481,6 +5486,12 @@ void knockOffOnBasePower(
   internal::chainComponentToModifier(eventModifier, modifier);
 }
 
+void reversalOnSetBasePower(types::handle handle, CurrentActionSource source, const Pokedex& pokedex) {
+  auto [currentHp, maxHp] = handle.registry()->get<stat::CurrentHp, stat::Hp>(source.val);
+  types::basePower basePower = pokedex.getStaticValue<Reversal::onSetBasePowerFromSourceHp>(currentHp.val, maxHp.val);
+  handle.emplace<BasePower>(basePower);
+}
+
 void transformOnHit(
   types::registry& registry, CurrentActionSource source, CurrentActionTarget target, const Pokedex& pokedex) {
   internal::transformInto(registry, source.val, target.val, pokedex);
@@ -5500,6 +5511,10 @@ void KnockOff::onAfterHit(Simulation& simulation) {
   simulation.view<knockOffOnAfterHitCheckRemovableItem, Tags<KnockOff, tags::CurrentMoveHit>>();
   internal::tryRemoveItem(simulation);
   simulation.removeFromEntities<tags::CanRemoveItem>();
+}
+
+void Reversal::onSetBasePower(Simulation& simulation) {
+  simulation.view<reversalOnSetBasePower, Tags<Reversal>>(simulation.pokedex());
 }
 
 void SpiritShackle::targetSecondaryEffect::onHit(Simulation& simulation) {
@@ -6609,6 +6624,7 @@ void modifyMoves(Simulation& simulation) {
 
   // ModifyType
   internal::runModifyMove(simulation);
+  internal::runSetBasePower(simulation);
 
   moveFilter.template addToSelected<tags::DefenderImmune, pokesim::tags::FailedCurrentActionMove>();
   moveFilter.template view<setDefenderImmune, Tags<>, entt::exclude_t<move::tags::IgnoreImmunities>>(

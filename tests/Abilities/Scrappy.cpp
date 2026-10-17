@@ -4,7 +4,7 @@ namespace pokesim {
 TEST_CASE(
   "Scrappy: Ignores normal and fighting type immunities",
   "[Simulation][SimulateTurn][SingleBattle][Ability][Scrappy][Immunities]") {
-  dex::Move attackingMove = GENERATE(dex::Move::TACKLE, dex::Move::CLOSE_COMBAT);
+  dex::Move attackingMove = GENERATE(dex::Move::TACKLE, dex::Move::CLOSE_COMBAT, dex::Move::REVERSAL);
   CAPTURE(attackingMove);
 
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};

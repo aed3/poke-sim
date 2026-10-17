@@ -239,6 +239,7 @@ void useMove(Simulation& simulation) {
   // ModifyTarget
   // ModifyType
   internal::runModifyMove(simulation);
+  internal::runSetBasePower(simulation);
 
   internal::runMoveHitChecks(simulation);
   internal::runAfterMoveUsedEvent(simulation);

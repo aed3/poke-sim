@@ -41,6 +41,7 @@ void runModifyMoveAccuracyBoostEvent(Simulation& simulation);  // ModifyBoost fo
 
 void runModifyTarget(Simulation& simulation);  // onModifyMove for Curse and Expanding force should go here
 void runModifyMove(Simulation& simulation);
+void runSetBasePower(Simulation& simulation);  // basePowerCallback
 void runResetDisabledMove(Simulation& simulation);
 void runResetTrappedPokemon(Simulation& simulation);
 void runOnImmunity(Simulation& simulation);
