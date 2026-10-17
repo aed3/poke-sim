@@ -4,7 +4,7 @@ namespace pokesim {
 TEST_CASE(
   "Long Reach: Contact moves do not activate contact events",
   "[Simulation][SimulateTurn][SingleBattle][Ability][LongReach]") {
-  dex::Move attackerMove = GENERATE(dex::Move::TACKLE, dex::Move::LEAFAGE);
+  dex::Move attackerMove = GENERATE(dex::Move::TACKLE, dex::Move::LEAFAGE, dex::Move::REVERSAL);
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
   test.setupBattle(
     Turn{1U},

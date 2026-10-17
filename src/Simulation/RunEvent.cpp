@@ -159,6 +159,10 @@ void runModifyMove(Simulation& simulation) {
   pokesim::dex::Scrappy::onModifyMove(simulation);
 }
 
+void runSetBasePower(Simulation& simulation) {
+  pokesim::dex::Reversal::onSetBasePower(simulation);
+}
+
 void runResetDisabledMove(Simulation& simulation) {
   pokesim::dex::ChoiceLock::onResetDisabledMove(simulation);
 }

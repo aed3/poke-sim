@@ -13,13 +13,12 @@ struct Random {
     dex::Species::DRAGAPULT,
   };
 
-  static constexpr std::array<dex::Move, 19U> availableMoves{
-    dex::Move::CHILLING_WATER, dex::Move::CONFIDE,     dex::Move::FURY_ATTACK,  dex::Move::GROWL,
-    dex::Move::KNOCK_OFF,      dex::Move::LEAFAGE,     dex::Move::LOW_SWEEP,    dex::Move::MOONBLAST,
-    dex::Move::MUD_SLAP,       dex::Move::NOBLE_ROAR,  dex::Move::QUICK_ATTACK, dex::Move::QUIVER_DANCE,
-    dex::Move::SPIRIT_SHACKLE, dex::Move::SPLASH,      dex::Move::TACKLE,       dex::Move::THUNDERBOLT,
-    dex::Move::TRIPLE_ARROWS,  dex::Move::VOLT_SWITCH, dex::Move::WILL_O_WISP,
-  };
+  static constexpr std::array<dex::Move, 20U> availableMoves{
+    dex::Move::CHILLING_WATER, dex::Move::CONFIDE,        dex::Move::FURY_ATTACK,  dex::Move::GROWL,
+    dex::Move::KNOCK_OFF,      dex::Move::LEAFAGE,        dex::Move::LOW_SWEEP,    dex::Move::MOONBLAST,
+    dex::Move::MUD_SLAP,       dex::Move::NOBLE_ROAR,     dex::Move::QUICK_ATTACK, dex::Move::QUIVER_DANCE,
+    dex::Move::REVERSAL,       dex::Move::SPIRIT_SHACKLE, dex::Move::SPLASH,       dex::Move::TACKLE,
+    dex::Move::THUNDERBOLT,    dex::Move::TRIPLE_ARROWS,  dex::Move::VOLT_SWITCH,  dex::Move::WILL_O_WISP};
 
   inline static std::vector<dex::Move> availableAttackingMoves{};
 
