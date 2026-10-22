@@ -29719,6 +29719,8 @@ struct Checks : pokesim::debug::Checks {
       }
       else {
         typesToIgnore.add<
+          tags::Attacker,
+          tags::Defender,
           CurrentActionMovesAsSource,
           CurrentActionMovesAsTarget,
           CurrentActionMovesAsSourceExtended,

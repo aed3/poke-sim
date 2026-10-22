@@ -263,10 +263,10 @@ void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, 
   moveHandle.emplace<UsesUntilKo>(usesUntilKo);
 }
 
-void setDefenderImmune(types::handle handle, CurrentActionTarget target, TypeName typeName, const Pokedex& pokedex) {
+void setDefenderImmune(types::handle handle, Defender defender, TypeName typeName, const Pokedex& pokedex) {
   types::registry& registry = *handle.registry();
 
-  if (internal::isTargetImmune(registry, target, typeName, pokedex)) {
+  if (internal::isTargetImmune(registry, defender, typeName, pokedex)) {
     handle.emplace<tags::DefenderImmune>();
   }
 }

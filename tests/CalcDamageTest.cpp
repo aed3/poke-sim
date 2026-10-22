@@ -86,15 +86,33 @@ TEST_CASE("Calculate Damage: Type Immunities", "[Simulation][CalculateDamage][Si
       {
         dex::Move::TACKLE,
         dex::Move::TRIPLE_ARROWS,
+      }},
+    CalcDamageInputInfo{
+      Slot::P2A,
+      Slot::P1A,
+      {
+        dex::Move::TACKLE,
+        dex::Move::TRIPLE_ARROWS,
       }});
 
   test.calcDamageOptions().setDamageRollOptions({GENERATE(from_range(damageRollKindCombinations))});
   auto result = test.calculateDamage();
+  types::registry& registry = test.registry();
   result.damageRollResults().each([&](types::entity entity, const DamageRolls& damageRolls) {
-    REQUIRE(damageRolls.max() == Constants::Damage::IMMUNE);
-    REQUIRE(damageRolls.min() == Constants::Damage::IMMUNE);
-    REQUIRE(test.registry().all_of<calc_damage::tags::DefenderImmune>(entity));
-    REQUIRE_FALSE(test.registry().all_of<calc_damage::tags::IgnoredStatusMove>(entity));
+    types::entity defender = registry.get<calc_damage::Defender>(entity).val;
+
+    if (registry.get<SpeciesName>(defender).val == dex::Species::DRAGAPULT) {
+      REQUIRE(damageRolls.max() == Constants::Damage::IMMUNE);
+      REQUIRE(damageRolls.min() == Constants::Damage::IMMUNE);
+      REQUIRE(registry.all_of<calc_damage::tags::DefenderImmune>(entity));
+    }
+    else {
+      REQUIRE_FALSE(damageRolls.max() == Constants::Damage::IMMUNE);
+      REQUIRE_FALSE(damageRolls.min() == Constants::Damage::IMMUNE);
+      REQUIRE_FALSE(registry.all_of<calc_damage::tags::DefenderImmune>(entity));
+    }
+
+    REQUIRE_FALSE(registry.all_of<calc_damage::tags::IgnoredStatusMove>(entity));
   });
 }
 
