@@ -17,6 +17,7 @@
 #include <Config/Require.hpp>
 #include <Pokedex/EnumToTag/MoveEnumToTag.hpp>
 #include <Pokedex/EnumToTag/MovePropertyEnumToTag.hpp>
+#include <Pokedex/EnumToTag/SideConditionEnumToTag.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
@@ -59,6 +60,7 @@ struct BuildMove {
     accBoost,
     evaBoost,
     status,
+    sideCondition,
     addedFlinchChance,
   };
 
@@ -94,6 +96,7 @@ struct BuildMove {
   struct has<Optional::properties, Type, void_t<Type::properties>> : std::true_type {};
   template <typename Type>
   struct has<Optional::critStageBoost, Type, void_t<Type::critStageBoost>> : std::true_type {};
+
   template <typename Type>
   struct has<Optional::chance, Type, void_t<Type::chance>> : std::true_type {};
   template <typename Type>
@@ -112,6 +115,8 @@ struct BuildMove {
   struct has<Optional::evaBoost, Type, void_t<Type::evaBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::status, Type, void_t<Type::status>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::sideCondition, Type, void_t<Type::sideCondition>> : std::true_type {};
   template <typename Type>
   struct has<Optional::addedFlinchChance, Type, void_t<Type::addedFlinchChance>> : std::true_type {};
 
@@ -148,6 +153,16 @@ struct BuildMove {
   template <typename Tag>
   struct AddFromEnum {
     static void run(EntitySetup& setup) { setup.add(Tag{}); }
+  };
+
+  template <typename Tag>
+  struct AddMainSourceFromEnum {
+    static void run(EntitySetup& setup) {
+      using MainSource = typename Tag::MainSource;
+      if constexpr (!std::is_same_v<MainSource, Move>) {
+        setup.add(MainSource{});
+      }
+    }
   };
 
   template <typename EffectData, MoveEffectKind moveEffectKind>
@@ -206,6 +221,10 @@ struct BuildMove {
 
     if constexpr (has<Optional::status, EffectData>::value) {
       dex::enumToTag<AddFromEnum>(EffectData::status(gameMechanic), setup);
+    }
+
+    if constexpr (has<Optional::sideCondition, EffectData>::value) {
+      dex::enumToTag<AddMainSourceFromEnum>(EffectData::sideCondition(gameMechanic), setup);
     }
 
     if constexpr (has<Optional::addedFlinchChance, EffectData>::value) {
@@ -317,19 +336,6 @@ struct BuildMove {
       case MoveTarget::ALLIES_AND_SELF: {
         // Deliberately not SourceAlly as the target of AlliesAndSelf moves is the user
         setup.add(move::added_targets::tags::TargetAlly{});
-        break;
-      }
-      case MoveTarget::FOE_SIDE: {
-        setup.add(move::added_targets::tags::TargetSide{});
-        break;
-      }
-      case MoveTarget::ALLY_SIDE:
-      case MoveTarget::ALLY_TEAM: {
-        setup.add(move::added_targets::tags::SourceSide{});
-        break;
-      }
-      case MoveTarget::FIELD: {
-        setup.add(move::added_targets::tags::Field{});
         break;
       }
       case MoveTarget::RETALIATION: {

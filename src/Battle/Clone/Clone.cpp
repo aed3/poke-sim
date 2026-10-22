@@ -2,7 +2,6 @@
 
 #include <Components/CloneFromCloneTo.hpp>
 #include <Components/EffectStack.hpp>
-#include <Components/Effects/Trapper.hpp>
 #include <Components/EntityHolders/headers.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Pokedex/PP.hpp>
@@ -14,6 +13,7 @@
 #include <Components/Tags/SideTags.hpp>
 #include <Config/Config.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/Effects/Trapper.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Registry.hpp>
 #include <entt/container/dense_map.hpp>
@@ -309,7 +309,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<Side>(registry, entityMap);
   remapComponentEntities<Sides>(registry, entityMap);
   remapComponentEntities<Team>(registry, entityMap);
-  remapComponentEntities<Trapper>(registry, entityMap);
+  remapComponentEntities<dex::Trapper>(registry, entityMap);
   remapCurrentAction(registry, entityMap);
   remapEventStack(registry, entityMap);
 

@@ -146,6 +146,12 @@ struct Constants {
     static constexpr std::int8_t DEFAULT = 0;
   };
 
+  struct EffectDuration {
+    static constexpr std::uint8_t MAX = 8U;
+    static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 5U;
+  };
+
   struct CritStage {
     // 255 is theoretically possible, but the various effects that can increase crit chance can be added up to 6 at most
     // as of now. 6 is possible from a Farfetch'd with Super Luck holding a Leek using Slash after Focus Energy.

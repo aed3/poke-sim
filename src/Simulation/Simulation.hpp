@@ -59,6 +59,10 @@ class Simulation {
   constexpr const Pokedex& pokedex() const { return constants.pokedex(); }
 #endif
   constexpr bool isBattleFormat(BattleFormat checkedFormat) const { return constants.isBattleFormat(checkedFormat); }
+  constexpr types::teamPositionIndex activePokemonSlotsPerSide() const {
+    return isBattleFormat(BattleFormat::SINGLES) ? Constants::ActivePokemonSlotsPerSide::SINGLES
+                                                 : Constants::ActivePokemonSlotsPerSide::DOUBLES;
+  }
 
   // Load information about any number of battle states into the simulation's registry.
   void createInitialStates(const std::vector<BattleCreationInfo>& battleInfoList);

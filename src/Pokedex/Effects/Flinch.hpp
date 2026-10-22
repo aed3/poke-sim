@@ -2,8 +2,6 @@
 
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Volatile.hpp>
-#include <Types/Random.hpp>
-#include <Types/Stats.hpp>
 #include <string_view>
 
 namespace pokesim {

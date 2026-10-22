@@ -6,7 +6,6 @@
 #include <Components/Boosts.hpp>
 #include <Components/CalcDamage/ModifyingEventRanTags.hpp>
 #include <Components/CalcDamage/TemporaryMoveProperties.hpp>
-#include <Components/Effects/ChoiceLock.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EventModifier.hpp>
@@ -52,6 +51,7 @@ void runBeforeMove(Simulation& simulation) {
 }
 
 void runResidual(Simulation& simulation) {
+  pokesim::dex::Reflect::Effect::onResidual(simulation);
   pokesim::dex::Flinch::onResidual(simulation);
   pokesim::dex::Burn::onResidual(simulation);
 }
@@ -91,6 +91,7 @@ void runBasePowerEvent(Simulation& simulation) {
 
 void runModifyDamageEvent(Simulation& simulation) {
   pokesim::dex::LifeOrb::onModifyDamage(simulation);
+  pokesim::dex::Reflect::Effect::onAnyModifyDamage(simulation);
 }
 
 void runAfterModifyDamageEvent(Simulation& simulation) {

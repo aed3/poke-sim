@@ -545,8 +545,20 @@ struct TestSimulation {
     if constexpr (std::is_same_v<std::vector<PokemonCreationInfo>, Type>) {
       info.team = value;
     }
-    if constexpr (std::is_same_v<PokemonCreationInfo, Type>) {
+    else if constexpr (std::is_same_v<PokemonCreationInfo, Type>) {
       info.team.push_back(value);
+    }
+    else if constexpr (std::is_same_v<dex::Reflect::Effect, Type>) {
+      info.reflect = value.val;
+    }
+    else if constexpr (std::is_same_v<dex::SideCondition, Type>) {
+      switch (value) {
+        case dex::SideCondition::REFLECT: {
+          info.reflect = dexValue<dex::Reflect::Effect::duration>();
+          break;
+        }
+        default: FAIL("Using unsupported side condition");
+      }
     }
   }
 

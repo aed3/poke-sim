@@ -576,8 +576,7 @@ void simulateTurn(Simulation& simulation) {
 
       triedEndTurnSwitches = true;
       simulateTurnFilter.view<setFaintedToSwitchOut, Tags<pokesim::tags::SideFaintOnThisTurn>>(
-        simulation.isBattleFormat(BattleFormat::SINGLES) ? Constants::ActivePokemonSlotsPerSide::SINGLES
-                                                         : Constants::ActivePokemonSlotsPerSide::DOUBLES);
+        simulation.activePokemonSlotsPerSide());
     }
 
     runCurrentAction(simulation);

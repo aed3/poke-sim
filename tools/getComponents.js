@@ -3,18 +3,22 @@ const path = require('path');
 const {getFullPath} = require('./utils');
 
 const componentFolder = getFullPath('src', 'Components');
+const pokedexFolder = getFullPath('src', 'Pokedex');
 
 /**@typedef {{declarations: string[][], subNamespaces: {[name: string]: Namespace}}} Namespace */
 
 const getComponents = (includeTags = true) => {
   /**@type {string[]} */
   const components = [];
-  /**@type {{[component: string]: {holdsEntity: boolean}}} */
+  /**@type {{[component: string]: {holdsEntity: boolean, hasMember: boolean}}} */
   const componentData = {};
   /**@type {Namespace} */
   const declarationsByNamespace = {declarations: [], subNamespaces: {}};
 
-  const nextFiles = [componentFolder];
+  const nextFiles = [
+    componentFolder,
+    ...['Abilities', 'Effects', 'Items', 'Moves', 'Species', 'Types'].map(folder => path.join(pokedexFolder, folder)),
+  ];
 
   const addToDeclarationNamespace = (forwardDeclaration, namespace) => {
     const namespaces = namespace.split('::');
@@ -36,40 +40,79 @@ const getComponents = (includeTags = true) => {
     const lines = fs.readFileSync(file, 'utf8').split('\n');
     let braceCount = 0;
     let namespace = '';
-    let data = {holdsEntity: false};
-    let inTagNamespace = false;
+    let isTag = false;
+    let isDex = false;
     const namespaceByBrace = [];
+    const structByBrace = [];
+
+    const setNamespace = (namespaceParts) => {
+      isTag = namespaceParts.some(part => part === 'tags');
+      isDex = namespaceParts.some(part => part === 'dex');
+      namespace = namespaceParts.join('::');
+    };
+
+    const addNewStruct = () => {
+      let {structName, holdsEntity, lineNumber, hasMember, inherits} = structByBrace.pop();
+
+      if (inherits) {
+        const inheritedData = componentData[namespace + '::' + inherits] ?? componentData['pokesim::' + inherits];
+        holdsEntity ||= inheritedData?.holdsEntity ?? true;
+        hasMember ||= inheritedData?.hasMember ?? true;
+      }
+
+      let name = namespace + '::' + structName;
+      const data = {holdsEntity, hasMember};
+      if (!includeTags && !hasMember) {
+        componentData[name] = data;
+        return;
+      }
+
+      const forwardDeclaration = `struct ${structName};`;
+
+      if (lines[lineNumber - 1].startsWith('template <types::eventPossibilities')) {
+        for (let j = 2; j <= 5; j++) {
+          name = namespace + '::' + structName + `<${j}U>`;
+          componentData[name] = data;
+          components.push(name);
+        }
+        addToDeclarationNamespace(['template <types::eventPossibilities>', forwardDeclaration], namespace);
+      }
+      else if (!lines[lineNumber - 1].startsWith('template ')) {
+        components.push(name);
+        componentData[name] = data;
+        addToDeclarationNamespace([forwardDeclaration], namespace);
+      }
+    };
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const namespaceLine = /^namespace ([a-z_:]+) \{/.exec(line);
       if (namespaceLine) {
         const nameParts = namespaceLine[1].split('::');
-        const namespaceParts = namespace.split('::').concat(nameParts).filter(n => n);
-        inTagNamespace = namespaceParts.some(part => part === 'tags');
-        namespace = namespaceParts.join('::');
+        setNamespace(namespace.split('::').concat(nameParts).filter(n => n));
         namespaceByBrace.push({name: namespaceLine[1], braceCount, length: nameParts.length});
       }
 
-      data.holdsEntity ||= line.startsWith('  types::entity');
       const structLine = /^struct (\w+) /.exec(line);
-      if (structLine && !(!includeTags && inTagNamespace)) {
-        const forwardDeclaration = `struct ${structLine[1]};`;
-        data = {holdsEntity: false};
+      if (structLine) {
+        structByBrace.push({
+          structName: structLine[1],
+          lineNumber: i,
+          holdsEntity: false,
+          braceCount,
+          hasMember: !(isTag || isDex),
+          inherits: false,
+        });
+      }
 
-        if (lines[i - 1].startsWith('template <types::eventPossibilities')) {
-          for (let j = 2; j <= 5; j++) {
-            const name = namespace + '::' + structLine[1] + `<${j}U>`;
-            componentData[name] = data;
-            components.push(name);
-          }
-          addToDeclarationNamespace(['template <types::eventPossibilities>', forwardDeclaration], namespace);
-        }
-        else if (!lines[i - 1].startsWith('template ')) {
-          const name = namespace + '::' + structLine[1];
-          components.push(name);
-          componentData[name] = data;
-          addToDeclarationNamespace([forwardDeclaration], namespace);
+      if (structByBrace.length) {
+        const currentStruct = structByBrace.at(-1);
+        const trimmedLine = line.trimStart();
+        currentStruct.inherits ||= /^struct \w+ : (.+) \{/.exec(line)?.[1];
+        currentStruct.holdsEntity ||= trimmedLine.startsWith('types::entity');
+        if (isDex && !currentStruct.hasMember) {
+          currentStruct.hasMember = !['using', 'static', 'constexpr'].some(start => trimmedLine.startsWith(start)) &&
+                                    /^  [\w:]+ \w+( = |\{\})/.test(line);
         }
       }
 
@@ -81,9 +124,10 @@ const getComponents = (includeTags = true) => {
           braceCount--;
           if (braceCount === namespaceByBrace.at(-1)?.braceCount) {
             const removedNamespace = namespaceByBrace.pop();
-            const namespaceParts = namespace.split('::').slice(0, -removedNamespace.length);
-            inTagNamespace = namespaceParts.some(part => part === 'tags');
-            namespace = namespaceParts.join('::');
+            setNamespace(namespace.split('::').slice(0, -removedNamespace.length));
+          }
+          else if (braceCount === structByBrace.at(-1)?.braceCount) {
+            addNewStruct();
           }
         }
       }

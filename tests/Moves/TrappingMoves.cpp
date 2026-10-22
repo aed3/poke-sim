@@ -65,9 +65,9 @@ TEST_CASE("Trapped: prevent from switching out", "[Simulation][SimulateTurn][Eff
 
   auto entities = test.simulateOneNonBranchingBattle();
   test.checks.checkUsedMovePokemon(entities.p1A);
-  test.checks.checkUsedMovePokemon<stat::CurrentHp, tags::Trapped, Trapper>(entities.p2A);
+  test.checks.checkUsedMovePokemon<stat::CurrentHp, tags::Trapped, dex::Trapper>(entities.p2A);
 
-  auto trapper = test.registry().get<Trapper>(entities.p2A);
+  auto trapper = test.registry().get<dex::Trapper>(entities.p2A);
   REQUIRE(trapper.val == entities.p1A);
 
   checkSwitchOptions(test, entities, true, Slot::P1C, Slot::P2C);

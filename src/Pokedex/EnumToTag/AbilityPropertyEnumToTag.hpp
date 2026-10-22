@@ -60,4 +60,8 @@ constexpr void enumToTag(AbilityProperty ability, RunArgs&&... args) {
 // Assigns an ability's tag to a handle
 void emplaceTagFromEnum(AbilityProperty property, types::handle handle);
 void emplaceTagFromEnum(AbilityProperty property, types::registry& registry, types::entity entity);
+
+// Removes an ability's tag to a handle
+void removeTagFromEnum(AbilityProperty property, types::handle handle);
+void removeTagFromEnum(AbilityProperty property, types::registry& registry, types::entity entity);
 }  // namespace pokesim::dex

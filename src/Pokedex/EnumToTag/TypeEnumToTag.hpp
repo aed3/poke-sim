@@ -63,6 +63,10 @@ constexpr auto enumToTag(Type type, RunArgs&&... args) {
 void emplaceTagFromEnum(Type type, types::handle handle);
 void emplaceTagFromEnum(Type type, types::registry& registry, types::entity entity);
 
+// Removes a type's tag to a handle
+void removeTagFromEnum(Type type, types::handle handle);
+void removeTagFromEnum(Type type, types::registry& registry, types::entity entity);
+
 // Checks if the handle has the type's tag
 bool hasTag(Type type, types::handle handle);
 bool hasTag(Type type, const types::registry& registry, types::entity entity);

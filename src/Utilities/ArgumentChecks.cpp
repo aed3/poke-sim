@@ -7,7 +7,13 @@
 #include <CalcDamage/Helpers.hpp>
 #include <Components/headers.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/Abilities/headers.hpp>
+#include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
+#include <Pokedex/Items/headers.hpp>
+#include <Pokedex/Moves/headers.hpp>
+#include <Pokedex/Species/headers.hpp>
+#include <Pokedex/Types/headers.hpp>
 #include <Types/headers.hpp>
 #include <entt/core/type_info.hpp>
 
@@ -257,6 +263,10 @@ void checkSide(types::entity sideEntity, const types::registry& registry) {
     }
   }
   POKESIM_REQUIRE_NM(teamRemaining.val == pokemonLeft);
+
+  if (has<dex::Reflect::Effect>(sideEntity, registry)) {
+    check(registry.get<dex::Reflect::Effect>(sideEntity));
+  }
 }
 
 void checkPokemon(types::entity pokemonEntity, const types::registry& registry) {
@@ -413,6 +423,21 @@ void checkActionMove(types::entity moveEntity, const types::registry& registry) 
 
 void checkPercentChance(types::percentChance chance) {
   checkBounds<Constants::PercentChance>(chance);
+}
+
+template <>
+void check(const dex::shared_name_effect::Reflect& reflect) {
+  checkBounds<Constants::EffectDuration>(reflect.val);
+}
+
+template <>
+void check(const dex::ChoiceLock& choiceLock) {
+  POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
+}
+
+template <>
+void check(const dex::Trapper& trapper, const types::registry& registry) {
+  checkPokemon(trapper.val, registry);
 }
 
 template <>
@@ -745,16 +770,6 @@ void check(const EffectStack& eventStack, const types::registry& registry) {
 template <>
 void check(const AddedFlinchChance& addedFlinchChance) {
   checkPercentChance(addedFlinchChance.val);
-}
-
-template <>
-void check(const ChoiceLock& choiceLock) {
-  POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
-}
-
-template <>
-void check(const Trapper& trapper, const types::registry& registry) {
-  checkPokemon(trapper.val, registry);
 }
 
 template <>

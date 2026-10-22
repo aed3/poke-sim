@@ -74,8 +74,7 @@ void setDoublesMoveTargets(
       move::tags::AnySingleTarget,
       move::tags::AnySingleAlly,
       move::tags::AllyOrSelf,
-      move::tags::AlliesAndSelf,
-      move::added_targets::tags::SourceAlly>(move);
+      move::tags::AlliesAndSelf>(move);
     if (canTargetAlly) {
       possibleTargets.push_back(allySlot);
     }

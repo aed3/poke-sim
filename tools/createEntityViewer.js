@@ -2,7 +2,7 @@ const path = require('path');
 const {writeCppFile, noBase} = require('./utils');
 const {getComponents, createForwardDeclaration} = require('./getComponents');
 
-const {components, declarationsByNamespace} = getComponents();
+const {components, componentData, declarationsByNamespace} = getComponents();
 
 const fileStart = `// NOLINTBEGIN
 #if !defined(NDEBUG) && defined(POKESIM_ENTITY_VIEWER)
@@ -96,6 +96,12 @@ const implText = (getComponentDefinitions,
 #include "EntityViewer.hpp"
 
 #include <Components/headers.hpp>
+#include <Pokedex/Abilities/headers.hpp>
+#include <Pokedex/Effects/headers.hpp>
+#include <Pokedex/Items/headers.hpp>
+#include <Pokedex/Moves/headers.hpp>
+#include <Pokedex/Species/headers.hpp>
+#include <Pokedex/Types/headers.hpp>
 #include <Types/Registry.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
@@ -202,7 +208,7 @@ template class EntityViewerHandle<pokesim::types::registry>;
 }
 ${fileEnd}`;
 
-const isTag = (component) => component.includes('::tags::');
+const isTag = (component) => !componentData[component].hasMember;
 const toVariableName = (component) => noBase(component).replace(/::/g, '_').replace(/\<(\w+)\>/, '_$1');
 const toFunctionName = (func, component) => func + '_' + toVariableName(component);
 const getReturnType = (component) => isTag(component) ? 'bool' : `const ${component}*`;

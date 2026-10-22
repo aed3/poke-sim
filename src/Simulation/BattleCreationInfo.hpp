@@ -12,6 +12,7 @@
 #include <Types/Enums/Species.hpp>
 #include <Types/Enums/Stat.hpp>
 #include <Types/Enums/Status.hpp>
+#include <Types/Event.hpp>
 #include <Types/Indexes.hpp>
 #include <Types/Move.hpp>
 #include <Types/Random.hpp>
@@ -87,6 +88,7 @@ struct PokemonCreationInfo {
 
 struct SideCreationInfo {
   std::vector<PokemonCreationInfo> team;
+  std::optional<types::effectDuration> reflect = std::nullopt;
 };
 
 using TurnDecisionInfo = types::sides<SideDecision>;

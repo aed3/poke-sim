@@ -15,24 +15,28 @@ void setupActionMoveBuild(
   types::entity actionMoveEntity, pokesim::dex::Move move, bool useExtended);
 
 template <
-  template <typename> typename RunStruct, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-  typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  template <typename, typename...> typename RunStruct, typename TagContainer = Tags<>,
+  typename ExcludeContainer = entt::exclude_t<>, typename IncludeContainer = entt::get_t<>, typename... T,
+  typename... PassedInArgs>
 void currentActionMovesAsSourceView(Simulation& simulation, const PassedInArgs&... passedInArgs) {
-  simulation.view<RunStruct<CurrentActionMovesAsSource>::run, TagContainer, ExcludeContainer, IncludeContainer>(
+  simulation.view<RunStruct<CurrentActionMovesAsSource, T...>::run, TagContainer, ExcludeContainer, IncludeContainer>(
     passedInArgs...);
 
-  simulation.view<RunStruct<CurrentActionMovesAsSourceExtended>::run, TagContainer, ExcludeContainer, IncludeContainer>(
-    passedInArgs...);
+  simulation
+    .view<RunStruct<CurrentActionMovesAsSourceExtended, T...>::run, TagContainer, ExcludeContainer, IncludeContainer>(
+      passedInArgs...);
 }
 
 template <
-  template <typename> typename RunStruct, typename TagContainer = Tags<>, typename ExcludeContainer = entt::exclude_t<>,
-  typename IncludeContainer = entt::get_t<>, typename... PassedInArgs>
+  template <typename, typename...> typename RunStruct, typename TagContainer = Tags<>,
+  typename ExcludeContainer = entt::exclude_t<>, typename IncludeContainer = entt::get_t<>, typename... T,
+  typename... PassedInArgs>
 void currentActionMovesAsTargetView(Simulation& simulation, const PassedInArgs&... passedInArgs) {
-  simulation.view<RunStruct<CurrentActionMovesAsTarget>::run, TagContainer, ExcludeContainer, IncludeContainer>(
+  simulation.view<RunStruct<CurrentActionMovesAsTarget, T...>::run, TagContainer, ExcludeContainer, IncludeContainer>(
     passedInArgs...);
 
-  simulation.view<RunStruct<CurrentActionMovesAsTargetExtended>::run, TagContainer, ExcludeContainer, IncludeContainer>(
-    passedInArgs...);
+  simulation
+    .view<RunStruct<CurrentActionMovesAsTargetExtended, T...>::run, TagContainer, ExcludeContainer, IncludeContainer>(
+      passedInArgs...);
 }
 }  // namespace pokesim::internal

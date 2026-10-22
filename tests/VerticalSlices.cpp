@@ -803,12 +803,12 @@ TEST_CASE(
 
     sumOfProbability += probability.val;
 
-    test.checks.checkUsedMovePokemon<stat::CurrentHp, ChoiceLock, DisabledMoveSlots>(entities.p1A);
+    test.checks.checkUsedMovePokemon<stat::CurrentHp, dex::ChoiceLock, DisabledMoveSlots>(entities.p1A);
     test.checks.checkUsedMovePokemon<stat::CurrentHp, dex::FocusSash, tags::HasItem>(entities.p1B);
     test.checks.checkUsedMovePokemon<stat::CurrentHp, tags::HasStatus, dex::Burn>(entities.p2A);
 
     // P1A (Gardevoir) Specific Checks
-    const auto& [p1AChoiceLock, p1ADisabledMoveSlots] = registry.get<ChoiceLock, DisabledMoveSlots>(entities.p1A);
+    const auto& [p1AChoiceLock, p1ADisabledMoveSlots] = registry.get<dex::ChoiceLock, DisabledMoveSlots>(entities.p1A);
     types::stat p1ABurnHpDecrease = P1A_MAX_HP / BURN_HP_DIVISOR;
     REQUIRE(currentP1AHp.val == P1A_MAX_HP - p1ABurnHpDecrease);
     REQUIRE(p1AChoiceLock.val == 0U);
@@ -1222,10 +1222,10 @@ TEST_CASE(
         else {
           REQUIRE(decidueyeHp.val == ALOLAN_DECIDUEYE_HP);
           REQUIRE(registry.all_of<tags::Trapped>(magnezone));
-          REQUIRE(registry.all_of<Trapper>(magnezone));
-          REQUIRE(registry.get<Trapper>(magnezone).val == decidueye);
+          REQUIRE(registry.all_of<dex::Trapper>(magnezone));
+          REQUIRE(registry.get<dex::Trapper>(magnezone).val == decidueye);
 
-          test.checks.checkEntityForChanges<stat::CurrentHp, tags::Trapped, Trapper>(magnezone);
+          test.checks.checkEntityForChanges<stat::CurrentHp, tags::Trapped, dex::Trapper>(magnezone);
         }
         test.checks.checkEntityForChanges(ditto);
       }

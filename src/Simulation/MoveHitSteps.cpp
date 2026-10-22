@@ -3,6 +3,7 @@
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Battle/Pokemon/PokemonProperties.hpp>
+#include <Battle/Side/ManageSideState.hpp>
 #include <CalcDamage/CalcDamage.hpp>
 #include <CalcDamage/Setup/CalcDamageInputSetup.hpp>
 #include <Components/Accuracy.hpp>
@@ -141,9 +142,7 @@ void runMoveHitCheck(Simulation& simulation) {
   simulation.registry.clear<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
 }
 
-void trySetStatusFromEffect(Simulation&) {}
 void trySetVolatileFromEffect(Simulation&) {}
-void trySetSideConditionFromEffect(Simulation&) {}
 void trySetSlotConditionFromEffect(Simulation&) {}
 void trySetWeatherFromEffect(Simulation&) {}
 void trySetTerrainFromEffect(Simulation&) {}
@@ -163,9 +162,8 @@ void setEffectTarget(types::handle handle, TargetEntityHolder target) {
 void runEffect(Simulation& simulation) {
   internal::tryBoost(simulation);
   internal::trySetStatus(simulation);
-  trySetStatusFromEffect(simulation);
   trySetVolatileFromEffect(simulation);
-  trySetSideConditionFromEffect(simulation);
+  internal::setSideCondition(simulation);
   trySetSlotConditionFromEffect(simulation);
   trySetWeatherFromEffect(simulation);
   trySetTerrainFromEffect(simulation);

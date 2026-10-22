@@ -1,10 +1,8 @@
 #pragma once
 
+#include <Types/Entity.hpp>
 #include <Types/Enums/GameMechanics.hpp>
-#include <Types/Enums/Type.hpp>
 #include <Types/Enums/Volatile.hpp>
-#include <Types/Event.hpp>
-#include <Types/Stats.hpp>
 #include <string_view>
 
 namespace pokesim {
@@ -21,5 +19,7 @@ struct Trapper {
   };
 
   static void onSwitchOut(Simulation& simulation);
+
+  types::entity val{};
 };
 }  // namespace pokesim::dex

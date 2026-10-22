@@ -49,6 +49,7 @@
 #include <Pokedex/EnumToTag/ItemEnumToTag.hpp>
 #include <Pokedex/EnumToTag/NatureEnumToTag.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
+#include <Pokedex/Moves/Reflect.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/BattleCreationInfo.hpp>
 #include <Types/Entity.hpp>
@@ -356,6 +357,13 @@ struct SimulationSetupChecks {
 
       POKESIM_REQUIRE_NM(registry->get<Side>(pokemonEntity).val == sideEntity);
       POKESIM_REQUIRE_NM(registry->get<Battle>(pokemonEntity).val == registry->get<Battle>(sideEntity).val);
+    }
+
+    if (creationInfo.reflect.value_or(Constants::EffectDuration::MIN) > Constants::EffectDuration::MIN) {
+      POKESIM_REQUIRE_NM(registry->get<dex::Reflect::Effect>(sideEntity).val == creationInfo.reflect.value());
+    }
+    else {
+      POKESIM_REQUIRE_NM(!registry->all_of<dex::Reflect::Effect>(sideEntity));
     }
 
     pokesim::debug::checkSide(sideEntity, *registry);

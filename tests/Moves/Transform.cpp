@@ -151,7 +151,7 @@ TEST_CASE("Transform: Copy unmodified stats", "[Simulation][SimulateTurn][Single
   auto entities = test.simulateOneNonBranchingBattle();
 
   checkTransformerChanges<dex::Torrent>(test, entities.p1A);
-  test.checks.checkUsedMovePokemon<ChoiceLock, DisabledMoveSlots>(entities.p2A);
+  test.checks.checkUsedMovePokemon<dex::ChoiceLock, DisabledMoveSlots>(entities.p2A);
 
   types::handle p1Handle{test.registry(), entities.p1A};
   types::handle p2Handle{test.registry(), entities.p2A};

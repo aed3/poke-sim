@@ -18,9 +18,9 @@ TEST_CASE("Choice Lock: Choice lock starts", "[Simulation][SimulateTurn][SingleB
   types::moveSlotIndex p2MoveIndex = 1U;
 
   test.checks.checkUsedMovePokemon(entities.p1A);
-  test.checks.checkUsedMovePokemon<DisabledMoveSlots, ChoiceLock>(entities.p2A, p2MoveIndex);
+  test.checks.checkUsedMovePokemon<DisabledMoveSlots, dex::ChoiceLock>(entities.p2A, p2MoveIndex);
 
-  auto choiceLock = test.registry().get<ChoiceLock>(entities.p2A);
+  auto choiceLock = test.registry().get<dex::ChoiceLock>(entities.p2A);
   REQUIRE(choiceLock.val == p2MoveIndex);
 
   auto disabledMoveSlots = test.registry().get<DisabledMoveSlots>(entities.p2A);

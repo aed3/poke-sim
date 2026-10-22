@@ -28,6 +28,7 @@
  * src/Pokedex/EnumToTag/EnumToTag.cpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.cpp
  * src/CalcDamage/CalcDamage.cpp
+ * src/Battle/Side/ManageSideState.cpp
  * src/Battle/Setup/SideStateSetup.cpp
  * src/Battle/Setup/PokemonStateSetup.cpp
  * src/Battle/Setup/BattleStateSetup.cpp
@@ -399,6 +400,10 @@ void checkSide(types::entity sideEntity, const types::registry& registry) {
     }
   }
   POKESIM_REQUIRE_NM(teamRemaining.val == pokemonLeft);
+
+  if (has<dex::Reflect::Effect>(sideEntity, registry)) {
+    check(registry.get<dex::Reflect::Effect>(sideEntity));
+  }
 }
 
 void checkPokemon(types::entity pokemonEntity, const types::registry& registry) {
@@ -555,6 +560,21 @@ void checkActionMove(types::entity moveEntity, const types::registry& registry) 
 
 void checkPercentChance(types::percentChance chance) {
   checkBounds<Constants::PercentChance>(chance);
+}
+
+template <>
+void check(const dex::shared_name_effect::Reflect& reflect) {
+  checkBounds<Constants::EffectDuration>(reflect.val);
+}
+
+template <>
+void check(const dex::ChoiceLock& choiceLock) {
+  POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
+}
+
+template <>
+void check(const dex::Trapper& trapper, const types::registry& registry) {
+  checkPokemon(trapper.val, registry);
 }
 
 template <>
@@ -887,16 +907,6 @@ void check(const EffectStack& eventStack, const types::registry& registry) {
 template <>
 void check(const AddedFlinchChance& addedFlinchChance) {
   checkPercentChance(addedFlinchChance.val);
-}
-
-template <>
-void check(const ChoiceLock& choiceLock) {
-  POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
-}
-
-template <>
-void check(const Trapper& trapper, const types::registry& registry) {
-  checkPokemon(trapper.val, registry);
 }
 
 template <>
@@ -2027,6 +2037,8 @@ void createInitialSide(
   }
 
   sideSetup.setTeam(pokemonSetupList);
+
+  sideSetup.setReflect(sideInfo.reflect.value_or(Constants::EffectDuration::MIN));
 }
 
 void createInitialBattle(
@@ -2387,6 +2399,7 @@ void runBeforeMove(Simulation& simulation) {
 }
 
 void runResidual(Simulation& simulation) {
+  pokesim::dex::Reflect::Effect::onResidual(simulation);
   pokesim::dex::Flinch::onResidual(simulation);
   pokesim::dex::Burn::onResidual(simulation);
 }
@@ -2426,6 +2439,7 @@ void runBasePowerEvent(Simulation& simulation) {
 
 void runModifyDamageEvent(Simulation& simulation) {
   pokesim::dex::LifeOrb::onModifyDamage(simulation);
+  pokesim::dex::Reflect::Effect::onAnyModifyDamage(simulation);
 }
 
 void runAfterModifyDamageEvent(Simulation& simulation) {
@@ -2696,9 +2710,7 @@ void runMoveHitCheck(Simulation& simulation) {
   simulation.registry.clear<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
 }
 
-void trySetStatusFromEffect(Simulation&) {}
 void trySetVolatileFromEffect(Simulation&) {}
-void trySetSideConditionFromEffect(Simulation&) {}
 void trySetSlotConditionFromEffect(Simulation&) {}
 void trySetWeatherFromEffect(Simulation&) {}
 void trySetTerrainFromEffect(Simulation&) {}
@@ -2718,9 +2730,8 @@ void setEffectTarget(types::handle handle, TargetEntityHolder target) {
 void runEffect(Simulation& simulation) {
   internal::tryBoost(simulation);
   internal::trySetStatus(simulation);
-  trySetStatusFromEffect(simulation);
   trySetVolatileFromEffect(simulation);
-  trySetSideConditionFromEffect(simulation);
+  internal::setSideCondition(simulation);
   trySetSlotConditionFromEffect(simulation);
   trySetWeatherFromEffect(simulation);
   trySetTerrainFromEffect(simulation);
@@ -3508,8 +3519,7 @@ void simulateTurn(Simulation& simulation) {
 
       triedEndTurnSwitches = true;
       simulateTurnFilter.view<setFaintedToSwitchOut, Tags<pokesim::tags::SideFaintOnThisTurn>>(
-        simulation.isBattleFormat(BattleFormat::SINGLES) ? Constants::ActivePokemonSlotsPerSide::SINGLES
-                                                         : Constants::ActivePokemonSlotsPerSide::DOUBLES);
+        simulation.activePokemonSlotsPerSide());
     }
 
     runCurrentAction(simulation);
@@ -4338,8 +4348,7 @@ void setDoublesMoveTargets(
       move::tags::AnySingleTarget,
       move::tags::AnySingleAlly,
       move::tags::AllyOrSelf,
-      move::tags::AlliesAndSelf,
-      move::added_targets::tags::SourceAlly>(move);
+      move::tags::AlliesAndSelf>(move);
     if (canTargetAlly) {
       possibleTargets.push_back(allySlot);
     }
@@ -4863,6 +4872,7 @@ struct BuildMove {
     accBoost,
     evaBoost,
     status,
+    sideCondition,
     addedFlinchChance,
   };
 
@@ -4898,6 +4908,7 @@ struct BuildMove {
   struct has<Optional::properties, Type, void_t<Type::properties>> : std::true_type {};
   template <typename Type>
   struct has<Optional::critStageBoost, Type, void_t<Type::critStageBoost>> : std::true_type {};
+
   template <typename Type>
   struct has<Optional::chance, Type, void_t<Type::chance>> : std::true_type {};
   template <typename Type>
@@ -4916,6 +4927,8 @@ struct BuildMove {
   struct has<Optional::evaBoost, Type, void_t<Type::evaBoost>> : std::true_type {};
   template <typename Type>
   struct has<Optional::status, Type, void_t<Type::status>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::sideCondition, Type, void_t<Type::sideCondition>> : std::true_type {};
   template <typename Type>
   struct has<Optional::addedFlinchChance, Type, void_t<Type::addedFlinchChance>> : std::true_type {};
 
@@ -4952,6 +4965,16 @@ struct BuildMove {
   template <typename Tag>
   struct AddFromEnum {
     static void run(EntitySetup& setup) { setup.add(Tag{}); }
+  };
+
+  template <typename Tag>
+  struct AddMainSourceFromEnum {
+    static void run(EntitySetup& setup) {
+      using MainSource = typename Tag::MainSource;
+      if constexpr (!std::is_same_v<MainSource, Move>) {
+        setup.add(MainSource{});
+      }
+    }
   };
 
   template <typename EffectData, MoveEffectKind moveEffectKind>
@@ -5010,6 +5033,10 @@ struct BuildMove {
 
     if constexpr (has<Optional::status, EffectData>::value) {
       dex::enumToTag<AddFromEnum>(EffectData::status(gameMechanic), setup);
+    }
+
+    if constexpr (has<Optional::sideCondition, EffectData>::value) {
+      dex::enumToTag<AddMainSourceFromEnum>(EffectData::sideCondition(gameMechanic), setup);
     }
 
     if constexpr (has<Optional::addedFlinchChance, EffectData>::value) {
@@ -5121,19 +5148,6 @@ struct BuildMove {
       case MoveTarget::ALLIES_AND_SELF: {
         // Deliberately not SourceAlly as the target of AlliesAndSelf moves is the user
         setup.add(move::added_targets::tags::TargetAlly{});
-        break;
-      }
-      case MoveTarget::FOE_SIDE: {
-        setup.add(move::added_targets::tags::TargetSide{});
-        break;
-      }
-      case MoveTarget::ALLY_SIDE:
-      case MoveTarget::ALLY_TEAM: {
-        setup.add(move::added_targets::tags::SourceSide{});
-        break;
-      }
-      case MoveTarget::FIELD: {
-        setup.add(move::added_targets::tags::Field{});
         break;
       }
       case MoveTarget::RETALIATION: {
@@ -5477,6 +5491,51 @@ void knockOffOnAfterHitCheckRemovableItem(types::registry& registry, CurrentActi
   }
 }
 
+void reflectOnStart(types::handle handle, CurrentActionTarget target, const Pokedex& pokedex) {
+  types::registry& registry = *handle.registry();
+  Side targetSide = registry.get<Side>(target.val);
+  if (registry.all_of<Reflect::Effect>(targetSide.val)) {
+    handle.emplace<pokesim::tags::FailedCurrentMoveHit>();
+    return;
+  }
+
+  types::effectDuration duration = pokedex.getStaticValue<Reflect::Effect::duration>();
+  // if (registry.all_of<LightClay>(source.val)) duration = pokedex.getStaticValue<Reflect::Effect::extendedDuration>();
+  registry.emplace<Reflect::Effect>(targetSide.val, duration);
+}
+
+void reflectOnAnyModifyDamage(
+  types::registry& registry, const Team& team, Reflect::Effect, types::eventModifier numerator,
+  types::eventModifier denominator, types::teamPositionIndex activePokemonSlotsPerSide) {
+  for (types::teamPositionIndex i = 0U; i < activePokemonSlotsPerSide; i++) {
+    types::entity teamMember = team.val[i];
+    auto* moves = registry.try_get<CurrentActionMovesAsTarget>(teamMember);
+    auto* movesExtended = registry.try_get<CurrentActionMovesAsTargetExtended>(teamMember);
+
+    if (moves) {
+      internal::ModifyDamage<CurrentActionMovesAsTarget, move::tags::Special>::run(
+        registry,
+        *moves,
+        numerator,
+        denominator);
+    }
+    if (movesExtended) {
+      internal::ModifyDamage<CurrentActionMovesAsTargetExtended, move::tags::Special>::run(
+        registry,
+        *movesExtended,
+        numerator,
+        denominator);
+    }
+  }
+}
+
+void reflectOnResidual(types::handle handle, Reflect::Effect& reflect) {
+  reflect.val--;
+  if (reflect.val == Constants::EffectDuration::MIN) {
+    handle.remove<Reflect::Effect>();
+  }
+}
+
 void knockOffOnBasePower(
   types::registry& registry, EventModifier& eventModifier, CurrentActionTarget target,
   types::effectMultiplier modifier) {
@@ -5500,6 +5559,7 @@ void transformOnHit(
 
 void KnockOff::onBasePower(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<onBasePowerMultiplier>();
+
   simulation.view<knockOffOnBasePowerCheckRemovableItem, Tags<KnockOff>>();
   internal::checkIfCanRemoveItem(simulation);
   simulation.view<knockOffOnBasePower, Tags<KnockOff>>(modifier);
@@ -5511,6 +5571,24 @@ void KnockOff::onAfterHit(Simulation& simulation) {
   simulation.view<knockOffOnAfterHitCheckRemovableItem, Tags<KnockOff, tags::CurrentMoveHit>>();
   internal::tryRemoveItem(simulation);
   simulation.removeFromEntities<tags::CanRemoveItem>();
+}
+
+void Reflect::Effect::onStart(Simulation& simulation) {
+  simulation.view<reflectOnStart, Tags<dex::Reflect, tags::CurrentMoveHit>>(simulation.pokedex());
+}
+
+void Reflect::Effect::onAnyModifyDamage(Simulation& simulation) {
+  const auto numerator = simulation.isBattleFormat(BattleFormat::SINGLES)
+                           ? simulation.pokedex().getStaticValue<onAnyModifyDamageSinglesNumerator>()
+                           : simulation.pokedex().getStaticValue<onAnyModifyDamageDoublesNumerator>();
+  const auto denominator = simulation.pokedex().getStaticValue<onAnyModifyDamageDenominator>();
+  const auto activePokemonSlotsPerSide = simulation.activePokemonSlotsPerSide();
+
+  simulation.view<reflectOnAnyModifyDamage>(numerator, denominator, activePokemonSlotsPerSide);
+}
+
+void Reflect::Effect::onResidual(Simulation& simulation) {
+  simulation.view<reflectOnResidual>();
 }
 
 void Reversal::onSetBasePower(Simulation& simulation) {
@@ -5540,39 +5618,8 @@ namespace pokesim::dex {
 namespace {
 void setChoiceLock(types::handle pokemonHandle, Battle battle) {
   CurrentActionMoveSlot moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val);
-  pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot.val);
+  pokemonHandle.emplace<ChoiceLock>(moveSlot.val);
 }
-
-template <typename CurrentActionMovesAsTargetType>
-struct SetMoveTargetModifier {
-  static void run(
-    types::handle handle, const CurrentActionMovesAsTargetType& moves, types::eventModifier numerator,
-    types::eventModifier denominator) {
-    for (types::entity move : moves) {
-      EventModifier* eventModifier = handle.registry()->try_get<EventModifier>(move);
-
-      if (eventModifier) {
-        internal::chainComponentToModifier(*eventModifier, numerator, denominator);
-      }
-    }
-  }
-};
-
-template <typename CurrentActionMovesAsSourceType>
-struct SourceModifyDamage {
-  static void run(
-    types::registry& registry, const CurrentActionMovesAsSourceType& moves, types::eventModifier numerator,
-    types::eventModifier denominator) {
-    for (types::entity move : moves) {
-      if (registry.all_of<move::tags::Status>(move)) {
-        continue;
-      }
-
-      DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
-      modifier.modifyDamageEvent = internal::chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
-    }
-  }
-};
 
 template <typename SimulationTag>
 struct FocusSashOnAfterModifyDamage {
@@ -5706,7 +5753,9 @@ void BrightPowder::onModifyAccuracy(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<onModifyAccuracyNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<onModifyAccuracyDenominator>();
 
-  simulation.view<SetMoveTargetModifier<CurrentActionMovesAsTarget>::run, Tags<BrightPowder>>(numerator, denominator);
+  simulation.view<internal::SetMoveModifier<CurrentActionMovesAsTarget>::run, Tags<BrightPowder>>(
+    numerator,
+    denominator);
 }
 
 void ChoiceScarf::onModifySpe(Simulation& simulation) {
@@ -5769,7 +5818,7 @@ void LifeOrb::onModifyDamage(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<onModifyDamageNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<onModifyDamageDenominator>();
 
-  internal::currentActionMovesAsSourceView<SourceModifyDamage, Tags<LifeOrb>>(simulation, numerator, denominator);
+  internal::currentActionMovesAsSourceView<internal::ModifyDamage, Tags<LifeOrb>>(simulation, numerator, denominator);
 }
 
 void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
@@ -5838,11 +5887,10 @@ void failedOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSou
 
 template <typename... Tags>
 void choiceLockRemove(Simulation& simulation) {
-  simulation.removeFromEntities<pokesim::ChoiceLock, Tags...>(entt::exclude<item::tags::Choice>);
+  simulation.removeFromEntities<ChoiceLock, Tags...>(entt::exclude<item::tags::Choice>);
 }
 
-void choiceLockOnDisableMove(
-  types::handle handle, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
+void choiceLockOnDisableMove(types::handle handle, const ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
   if (!handle.all_of<DisabledMoveSlots>()) {
     handle.emplace<DisabledMoveSlots>(types::moveSlots<bool>(moveSlots.val.size(), false));
   }
@@ -5850,10 +5898,10 @@ void choiceLockOnDisableMove(
   handle.get<DisabledMoveSlots>().val[choiceLocked.val] = true;
 }
 
-void trapperOnSwitchOut(types::handle handle, pokesim::Trapper trapper, Battle battle) {
+void trapperOnSwitchOut(types::handle handle, Trapper trapper, Battle battle) {
   types::entity source = handle.registry()->get<CurrentAction>(battle.val).source;
   if (source == trapper.val) {
-    handle.remove<pokesim::Trapper>();
+    handle.remove<Trapper>();
     handle.remove<pokesim::tags::Trapped>();
   }
 }
@@ -6236,6 +6284,11 @@ struct EmplaceTag {
 };
 
 template <typename Tag>
+struct RemoveTag {
+  static void run(types::registry& registry, types::entity entity) { registry.remove<Tag>(entity); }
+};
+
+template <typename Tag>
 struct HasTag {
   static bool run(const types::registry& registry, types::entity entity) { return registry.all_of<Tag>(entity); }
 };
@@ -6248,6 +6301,16 @@ void callEmplace(EnumType enumValue, types::registry& registry, types::entity en
 template <typename EnumType>
 void callEmplace(EnumType enumValue, types::handle handle) {
   callEmplace(enumValue, *handle.registry(), handle.entity());
+}
+
+template <typename EnumType>
+void callRemove(EnumType enumValue, types::registry& registry, types::entity entity) {
+  enumToTag<RemoveTag>(enumValue, registry, entity);
+}
+
+template <typename EnumType>
+void callRemove(EnumType enumValue, types::handle handle) {
+  callRemove(enumValue, *handle.registry(), handle.entity());
 }
 
 template <typename EnumType>
@@ -6269,6 +6332,7 @@ void emplaceTagFromEnum(ItemProperty property, types::handle handle) { callEmpla
 void emplaceTagFromEnum(Move move, types::handle handle) { callEmplace(move, handle); }
 void emplaceTagFromEnum(MoveProperty property, types::handle handle) { callEmplace(property, handle); }
 void emplaceTagFromEnum(Nature nature, types::handle handle) { callEmplace(nature, handle); }
+void emplaceTagFromEnum(SideCondition sideCondition, types::handle handle) { callEmplace(sideCondition, handle); }
 void emplaceTagFromEnum(Status status, types::handle handle) { callEmplace(status, handle); }
 void emplaceTagFromEnum(Type type, types::handle handle) { callEmplace(type, handle); }
 
@@ -6279,13 +6343,37 @@ void emplaceTagFromEnum(ItemProperty property, types::registry& registry, types:
 void emplaceTagFromEnum(Move move, types::registry& registry, types::entity entity) { callEmplace(move, registry, entity); }
 void emplaceTagFromEnum(MoveProperty property, types::registry& registry, types::entity entity) { callEmplace(property, registry, entity); }
 void emplaceTagFromEnum(Nature nature, types::registry& registry, types::entity entity) { callEmplace(nature, registry, entity); }
+void emplaceTagFromEnum(SideCondition sideCondition, types::registry& registry, types::entity entity) { callEmplace(sideCondition, registry, entity); }
 void emplaceTagFromEnum(Status status, types::registry& registry, types::entity entity) { callEmplace(status, registry, entity); }
 void emplaceTagFromEnum(Type type, types::registry& registry, types::entity entity) { callEmplace(type, registry, entity); }
+
+void removeTagFromEnum(Ability ability, types::handle handle) { callRemove(ability, handle); }
+void removeTagFromEnum(AbilityProperty property, types::handle handle) { callRemove(property, handle); }
+void removeTagFromEnum(Item item, types::handle handle) { callRemove(item, handle); }
+void removeTagFromEnum(ItemProperty property, types::handle handle) { callRemove(property, handle); }
+void removeTagFromEnum(Move move, types::handle handle) { callRemove(move, handle); }
+void removeTagFromEnum(MoveProperty property, types::handle handle) { callRemove(property, handle); }
+void removeTagFromEnum(Nature nature, types::handle handle) { callRemove(nature, handle); }
+void removeTagFromEnum(SideCondition sideCondition, types::handle handle) { callRemove(sideCondition, handle); }
+void removeTagFromEnum(Status status, types::handle handle) { callRemove(status, handle); }
+void removeTagFromEnum(Type type, types::handle handle) { callRemove(type, handle); }
+
+void removeTagFromEnum(Ability ability, types::registry& registry, types::entity entity) { callRemove(ability, registry, entity); }
+void removeTagFromEnum(AbilityProperty property, types::registry& registry, types::entity entity) { callRemove(property, registry, entity); }
+void removeTagFromEnum(Item item, types::registry& registry, types::entity entity) { callRemove(item, registry, entity); }
+void removeTagFromEnum(ItemProperty property, types::registry& registry, types::entity entity) { callRemove(property, registry, entity); }
+void removeTagFromEnum(Move move, types::registry& registry, types::entity entity) { callRemove(move, registry, entity); }
+void removeTagFromEnum(MoveProperty property, types::registry& registry, types::entity entity) { callRemove(property, registry, entity); }
+void removeTagFromEnum(Nature nature, types::registry& registry, types::entity entity) { callRemove(nature, registry, entity); }
+void removeTagFromEnum(SideCondition sideCondition, types::registry& registry, types::entity entity) { callRemove(sideCondition, registry, entity); }
+void removeTagFromEnum(Status status, types::registry& registry, types::entity entity) { callRemove(status, registry, entity); }
+void removeTagFromEnum(Type type, types::registry& registry, types::entity entity) { callRemove(type, registry, entity); }
 
 bool hasTag(Ability ability, types::handle handle) { return callHasTag(ability, handle); }
 bool hasTag(Item item, types::handle handle) { return callHasTag(item, handle); }
 bool hasTag(Move move, types::handle handle) { return callHasTag(move, handle); }
 bool hasTag(Nature nature, types::handle handle) { return callHasTag(nature, handle); }
+bool hasTag(SideCondition sideCondition, types::handle handle) { return callHasTag(sideCondition, handle); }
 bool hasTag(Status status, types::handle handle) { return callHasTag(status, handle); }
 bool hasTag(Type type, types::handle handle) { return callHasTag(type, handle); }
 
@@ -6293,6 +6381,7 @@ bool hasTag(Ability ability, const types::registry& registry, types::entity enti
 bool hasTag(Item item, const types::registry& registry, types::entity entity) { return callHasTag(item, registry, entity); }
 bool hasTag(Move move, const types::registry& registry, types::entity entity) { return callHasTag(move, registry, entity); }
 bool hasTag(Nature nature, const types::registry& registry, types::entity entity) { return callHasTag(nature, registry, entity); }
+bool hasTag(SideCondition sideCondition, const types::registry& registry, types::entity entity) { return callHasTag(sideCondition, registry, entity); }
 bool hasTag(Status status, const types::registry& registry, types::entity entity) { return callHasTag(status, registry, entity); }
 bool hasTag(Type type, const types::registry& registry, types::entity entity) { return callHasTag(type, registry, entity); }
 // clang-format on
@@ -6993,6 +7082,23 @@ void run(Simulation& simulation) {
 
 ///////////////////// END OF src/CalcDamage/CalcDamage.cpp /////////////////////
 
+///////////////// START OF src/Battle/Side/ManageSideState.cpp /////////////////
+
+namespace pokesim::internal {
+namespace {
+template <typename SideConditionType>
+struct SetSideCondition {
+  static void run(Simulation& simulation) { SideConditionType::onStart(simulation); }
+};
+}  // namespace
+
+void setSideCondition(Simulation& simulation) {
+  dex::forEachSideCondition<SetSideCondition>(simulation);
+}
+}  // namespace pokesim::internal
+
+////////////////// END OF src/Battle/Side/ManageSideState.cpp //////////////////
+
 ///////////////// START OF src/Battle/Setup/SideStateSetup.cpp /////////////////
 
 namespace pokesim::internal {
@@ -7036,6 +7142,12 @@ void SideStateSetup::setPlayerSide(PlayerSideId playerSideId) {
 
 void SideStateSetup::setSideDecision(const SideDecision& sideDecision) {
   handle.emplace<SideDecision>(sideDecision);
+}
+
+void SideStateSetup::setReflect(types::effectDuration duration) {
+  if (duration > Constants::EffectDuration::MIN) {
+    handle.emplace<dex::Reflect::Effect>(duration);
+  }
 }
 }  // namespace pokesim::internal
 
@@ -7441,7 +7553,7 @@ void trapAndSetTrapper(
   }
 
   registry.emplace<pokesim::tags::Trapped>(target.val);
-  registry.emplace<Trapper>(target.val, source.val);
+  registry.emplace<pokesim::dex::Trapper>(target.val, source.val);
 }
 
 void setSpeedSortNeeded(types::registry& registry, Battle battle) {
@@ -7546,8 +7658,8 @@ void clearVolatiles(Simulation& simulation) {
     AccBoost,
     EvaBoost,
     LastUsedMove,
-    ChoiceLock,
-    Trapper,
+    pokesim::dex::ChoiceLock,
+    pokesim::dex::Trapper,
     TransformedFrom,
     pokesim::tags::Flinch,
     pokesim::tags::Switching,
@@ -7695,7 +7807,7 @@ void transformInto(types::registry& registry, types::entity source, types::entit
   sourceHandle.emplace<pokesim::tags::SpdStatUpdateRequired>();
   sourceHandle.emplace<pokesim::tags::SpeStatUpdateRequired>();
 
-  sourceHandle.remove<ChoiceLock, DisabledMoveSlots, LastUsedMove>();
+  sourceHandle.remove<pokesim::dex::ChoiceLock, DisabledMoveSlots, LastUsedMove>();
 
   // Technically, EndAbility should be called as well for the source's original ability, but since neither Ditto nor Mew
   // have abilities that need that, I'll let it go for now.
@@ -7903,10 +8015,7 @@ void setNextInEffectStack(types::handle handle, EffectStack& effectStack) {
 
 bool sideHasPossibleSwitch(types::registry& registry, Side side, const Simulation& simulation) {
   TeamRemaining teamRemaining = registry.get<TeamRemaining>(side.val);
-  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
-    return teamRemaining.val > Constants::ActivePokemonSlotsPerSide::SINGLES;
-  }
-  return teamRemaining.val > Constants::ActivePokemonSlotsPerSide::DOUBLES;
+  return teamRemaining.val > simulation.activePokemonSlotsPerSide();
 }
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action) {
@@ -8552,7 +8661,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<Side>(registry, entityMap);
   remapComponentEntities<Sides>(registry, entityMap);
   remapComponentEntities<Team>(registry, entityMap);
-  remapComponentEntities<Trapper>(registry, entityMap);
+  remapComponentEntities<dex::Trapper>(registry, entityMap);
   remapCurrentAction(registry, entityMap);
   remapEventStack(registry, entityMap);
 
@@ -8702,7 +8811,10 @@ EffectPresentCheck hasBattleEffect(types::registry& registry, Battle battle, Bat
   return EffectPresentCheck::PRESENT_AND_NOT_APPLIED;
 }
 
-EffectPresentCheck hasSideEffect(types::registry&, EffectTarget, dex::SideCondition) {
+EffectPresentCheck hasSideEffect(types::registry& registry, EffectTarget target, dex::SideCondition sideCondition) {
+  if (dex::hasTag(sideCondition, registry, registry.get<Side>(target.val).val)) {
+    return EffectPresentCheck::PRESENT_AND_APPLIED;
+  }
   return EffectPresentCheck::NOT_PRESENT;
 }
 
@@ -9056,7 +9168,20 @@ void applyTerrainEffect(types::handle, Battle, TerrainName) {}
 
 void applyWeatherEffect(types::handle, Battle, WeatherName) {}
 
-void applySideConditionEffect(types::handle, EffectTarget, SideConditionName) {}
+void applySideConditionEffect(types::handle inputHandle, EffectTarget effectTarget, SideConditionName effect) {
+  types::registry& registry = *inputHandle.registry();
+
+  EffectPresentCheck statusCheck = hasSideEffect(registry, effectTarget, effect.val);
+  Side effectSide = registry.get<Side>(effectTarget.val);
+
+  dex::removeTagFromEnum(effect.val, registry, effectSide.val);
+  if (statusCheck == EffectPresentCheck::PRESENT_AND_APPLIED) {
+    setInvertFinalAnswer(inputHandle);
+  }
+  else {
+    dex::emplaceTagFromEnum(effect.val, registry, effectSide.val);
+  }
+}
 
 void applyStatusEffect(types::handle inputHandle, EffectTarget effectTarget, StatusName effect) {
   types::registry& registry = *inputHandle.registry();

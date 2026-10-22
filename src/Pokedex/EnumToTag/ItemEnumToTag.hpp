@@ -65,6 +65,10 @@ constexpr void forEachItem(const Pokedex& pokedex, RunArgs&&... args) {
 void emplaceTagFromEnum(Item item, types::handle handle);
 void emplaceTagFromEnum(Item item, types::registry& registry, types::entity entity);
 
+// Removes an item's tag to a handle
+void removeTagFromEnum(Item item, types::handle handle);
+void removeTagFromEnum(Item item, types::registry& registry, types::entity entity);
+
 // Checks if the handle has the item's tag
 bool hasTag(Item item, types::handle handle);
 bool hasTag(Item item, const types::registry& registry, types::entity entity);

@@ -9,6 +9,7 @@
 #include "MoveEnumToTag.hpp"
 #include "MovePropertyEnumToTag.hpp"
 #include "NatureEnumToTag.hpp"
+#include "SideConditionEnumToTag.hpp"
 #include "SpeciesEnumToTag.hpp"
 #include "StatusEnumToTag.hpp"
 #include "TypeEnumToTag.hpp"

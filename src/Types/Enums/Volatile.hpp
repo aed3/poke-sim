@@ -9,6 +9,7 @@ enum class Volatile : std::uint8_t {
   ALLY_SWITCH,
   CHOICE_LOCK,
   FLINCH,
+  METRONOME,
   TRAPPED,
   TRAPPER,
   VOLATILE_TOTAL

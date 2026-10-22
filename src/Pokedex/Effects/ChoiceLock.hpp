@@ -2,6 +2,7 @@
 
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Volatile.hpp>
+#include <Types/Indexes.hpp>
 #include <string_view>
 
 namespace pokesim {
@@ -19,5 +20,7 @@ struct ChoiceLock {
 
   static void onBeforeMove(Simulation& simulation);
   static void onResetDisabledMove(Simulation& simulation);
+
+  types::moveSlotIndex val{};
 };
 }  // namespace pokesim::dex

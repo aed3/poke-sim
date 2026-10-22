@@ -5,8 +5,6 @@
 #include <Components/Damage.hpp>
 #include <Components/DisabledMoveSlots.hpp>
 #include <Components/EVsIVs.hpp>
-#include <Components/Effects/ChoiceLock.hpp>
-#include <Components/Effects/Trapper.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/FaintQueue.hpp>
@@ -30,6 +28,8 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
 #include <Components/TransformedFrom.hpp>
+#include <Pokedex/Effects/ChoiceLock.hpp>
+#include <Pokedex/Effects/Trapper.hpp>
 #include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/EnumToTag/AbilityEnumToTag.hpp>
 #include <Pokedex/EnumToTag/ItemEnumToTag.hpp>
@@ -222,7 +222,7 @@ void trapAndSetTrapper(
   }
 
   registry.emplace<pokesim::tags::Trapped>(target.val);
-  registry.emplace<Trapper>(target.val, source.val);
+  registry.emplace<pokesim::dex::Trapper>(target.val, source.val);
 }
 
 void setSpeedSortNeeded(types::registry& registry, Battle battle) {
@@ -327,8 +327,8 @@ void clearVolatiles(Simulation& simulation) {
     AccBoost,
     EvaBoost,
     LastUsedMove,
-    ChoiceLock,
-    Trapper,
+    pokesim::dex::ChoiceLock,
+    pokesim::dex::Trapper,
     TransformedFrom,
     pokesim::tags::Flinch,
     pokesim::tags::Switching,
@@ -476,7 +476,7 @@ void transformInto(types::registry& registry, types::entity source, types::entit
   sourceHandle.emplace<pokesim::tags::SpdStatUpdateRequired>();
   sourceHandle.emplace<pokesim::tags::SpeStatUpdateRequired>();
 
-  sourceHandle.remove<ChoiceLock, DisabledMoveSlots, LastUsedMove>();
+  sourceHandle.remove<pokesim::dex::ChoiceLock, DisabledMoveSlots, LastUsedMove>();
 
   // Technically, EndAbility should be called as well for the source's original ability, but since neither Ditto nor Mew
   // have abilities that need that, I'll let it go for now.

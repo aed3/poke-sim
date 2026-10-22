@@ -79,6 +79,10 @@ constexpr void forEachMove(const Pokedex& pokedex, RunArgs&&... args) {
 void emplaceTagFromEnum(Move move, types::handle handle);
 void emplaceTagFromEnum(Move move, types::registry& registry, types::entity entity);
 
+// Removes a move's tag to a handle
+void removeTagFromEnum(Move move, types::handle handle);
+void removeTagFromEnum(Move move, types::registry& registry, types::entity entity);
+
 // Checks if the handle has the move's tag
 bool hasTag(Move move, types::handle handle);
 bool hasTag(Move move, const types::registry& registry, types::entity entity);

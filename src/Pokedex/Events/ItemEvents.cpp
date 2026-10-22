@@ -8,7 +8,6 @@
 #include <Components/Current.hpp>
 #include <Components/Damage.hpp>
 #include <Components/Effects/AddedFlinchChance.hpp>
-#include <Components/Effects/ChoiceLock.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/Side.hpp>
@@ -21,6 +20,7 @@
 #include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
+#include <Pokedex/Effects/ChoiceLock.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Species/Ditto.hpp>
 #include <SimulateTurn/RandomChance.hpp>
@@ -31,44 +31,14 @@
 #include <entt/entity/registry.hpp>
 
 #include "../Items/headers.hpp"
+#include "EventsHelpers.hpp"
 
 namespace pokesim::dex {
 namespace {
 void setChoiceLock(types::handle pokemonHandle, Battle battle) {
   CurrentActionMoveSlot moveSlot = pokemonHandle.registry()->get<CurrentActionMoveSlot>(battle.val);
-  pokemonHandle.emplace<pokesim::ChoiceLock>(moveSlot.val);
+  pokemonHandle.emplace<ChoiceLock>(moveSlot.val);
 }
-
-template <typename CurrentActionMovesAsTargetType>
-struct SetMoveTargetModifier {
-  static void run(
-    types::handle handle, const CurrentActionMovesAsTargetType& moves, types::eventModifier numerator,
-    types::eventModifier denominator) {
-    for (types::entity move : moves) {
-      EventModifier* eventModifier = handle.registry()->try_get<EventModifier>(move);
-
-      if (eventModifier) {
-        internal::chainComponentToModifier(*eventModifier, numerator, denominator);
-      }
-    }
-  }
-};
-
-template <typename CurrentActionMovesAsSourceType>
-struct SourceModifyDamage {
-  static void run(
-    types::registry& registry, const CurrentActionMovesAsSourceType& moves, types::eventModifier numerator,
-    types::eventModifier denominator) {
-    for (types::entity move : moves) {
-      if (registry.all_of<move::tags::Status>(move)) {
-        continue;
-      }
-
-      DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
-      modifier.modifyDamageEvent = internal::chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
-    }
-  }
-};
 
 template <typename SimulationTag>
 struct FocusSashOnAfterModifyDamage {
@@ -202,7 +172,9 @@ void BrightPowder::onModifyAccuracy(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<onModifyAccuracyNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<onModifyAccuracyDenominator>();
 
-  simulation.view<SetMoveTargetModifier<CurrentActionMovesAsTarget>::run, Tags<BrightPowder>>(numerator, denominator);
+  simulation.view<internal::SetMoveModifier<CurrentActionMovesAsTarget>::run, Tags<BrightPowder>>(
+    numerator,
+    denominator);
 }
 
 void ChoiceScarf::onModifySpe(Simulation& simulation) {
@@ -265,7 +237,7 @@ void LifeOrb::onModifyDamage(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<onModifyDamageNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<onModifyDamageDenominator>();
 
-  internal::currentActionMovesAsSourceView<SourceModifyDamage, Tags<LifeOrb>>(simulation, numerator, denominator);
+  internal::currentActionMovesAsSourceView<internal::ModifyDamage, Tags<LifeOrb>>(simulation, numerator, denominator);
 }
 
 void LifeOrb::onAfterMoveUsed(Simulation& simulation) {

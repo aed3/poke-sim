@@ -21,9 +21,6 @@ struct RandomFoe {};
 namespace added_targets::tags {
 struct TargetAlly {};
 struct SourceAlly {};
-struct TargetSide {};
-struct SourceSide {};
-struct Field {};
 }  // namespace added_targets::tags
 
 namespace singles_target::tags {

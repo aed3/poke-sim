@@ -68,6 +68,10 @@ constexpr auto enumToTag(Nature nature, RunArgs&&... args) {
 void emplaceTagFromEnum(Nature nature, types::handle handle);
 void emplaceTagFromEnum(Nature nature, types::registry& registry, types::entity entity);
 
+// Removes a move's tag to a handle
+void removeTagFromEnum(Nature nature, types::handle handle);
+void removeTagFromEnum(Nature nature, types::registry& registry, types::entity entity);
+
 // Checks if the handle has the move's tag
 bool hasTag(Nature nature, types::handle handle);
 bool hasTag(Nature nature, const types::registry& registry, types::entity entity);

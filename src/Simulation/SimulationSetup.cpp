@@ -363,6 +363,8 @@ void createInitialSide(
   }
 
   sideSetup.setTeam(pokemonSetupList);
+
+  sideSetup.setReflect(sideInfo.reflect.value_or(Constants::EffectDuration::MIN));
 }
 
 void createInitialBattle(

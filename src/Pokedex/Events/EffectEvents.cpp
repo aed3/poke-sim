@@ -4,8 +4,6 @@
 #include <Components/BaseEffectChance.hpp>
 #include <Components/Damage.hpp>
 #include <Components/DisabledMoveSlots.hpp>
-#include <Components/Effects/ChoiceLock.hpp>
-#include <Components/Effects/Trapper.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/MoveSlots.hpp>
@@ -18,6 +16,7 @@
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/VolatileTags.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/Effects/Trapper.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/Simulation.hpp>
@@ -55,11 +54,10 @@ void failedOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSou
 
 template <typename... Tags>
 void choiceLockRemove(Simulation& simulation) {
-  simulation.removeFromEntities<pokesim::ChoiceLock, Tags...>(entt::exclude<item::tags::Choice>);
+  simulation.removeFromEntities<ChoiceLock, Tags...>(entt::exclude<item::tags::Choice>);
 }
 
-void choiceLockOnDisableMove(
-  types::handle handle, const pokesim::ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
+void choiceLockOnDisableMove(types::handle handle, const ChoiceLock& choiceLocked, const MoveSlots& moveSlots) {
   if (!handle.all_of<DisabledMoveSlots>()) {
     handle.emplace<DisabledMoveSlots>(types::moveSlots<bool>(moveSlots.val.size(), false));
   }
@@ -67,10 +65,10 @@ void choiceLockOnDisableMove(
   handle.get<DisabledMoveSlots>().val[choiceLocked.val] = true;
 }
 
-void trapperOnSwitchOut(types::handle handle, pokesim::Trapper trapper, Battle battle) {
+void trapperOnSwitchOut(types::handle handle, Trapper trapper, Battle battle) {
   types::entity source = handle.registry()->get<CurrentAction>(battle.val).source;
   if (source == trapper.val) {
-    handle.remove<pokesim::Trapper>();
+    handle.remove<Trapper>();
     handle.remove<pokesim::tags::Trapped>();
   }
 }

@@ -60,6 +60,10 @@ constexpr void forEachStatus(RunArgs&&... args) {
 void emplaceTagFromEnum(Status status, types::handle handle);
 void emplaceTagFromEnum(Status status, types::registry& registry, types::entity entity);
 
+// Removes a status' tag to a handle
+void removeTagFromEnum(Status status, types::handle handle);
+void removeTagFromEnum(Status status, types::registry& registry, types::entity entity);
+
 // Checks if the handle has the status' tag
 bool hasTag(Status status, types::handle handle);
 bool hasTag(Status status, const types::registry& registry, types::entity entity);

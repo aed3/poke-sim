@@ -56,4 +56,8 @@ constexpr void enumToTag(MoveProperty item, RunArgs&&... args) {
 // Assigns a move's tag to a handle
 void emplaceTagFromEnum(MoveProperty property, types::handle handle);
 void emplaceTagFromEnum(MoveProperty property, types::registry& registry, types::entity entity);
+
+// Removes a move's tag to a handle
+void removeTagFromEnum(MoveProperty property, types::handle handle);
+void removeTagFromEnum(MoveProperty property, types::registry& registry, types::entity entity);
 }  // namespace pokesim::dex

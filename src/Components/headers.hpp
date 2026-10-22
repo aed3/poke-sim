@@ -23,8 +23,6 @@
 #include "EVsIVs.hpp"
 #include "EffectStack.hpp"
 #include "Effects/AddedFlinchChance.hpp"
-#include "Effects/ChoiceLock.hpp"
-#include "Effects/Trapper.hpp"
 #include "EntityHolders/Battle.hpp"
 #include "EntityHolders/BattleTree.hpp"
 #include "EntityHolders/Current.hpp"

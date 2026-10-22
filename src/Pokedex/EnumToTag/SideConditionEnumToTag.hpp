@@ -1,0 +1,59 @@
+#pragma once
+
+#include <Config/Require.hpp>
+#include <Pokedex/Moves/Reflect.hpp>
+#include <Types/Entity.hpp>
+#include <Types/Enums/SideCondition.hpp>
+#include <Types/Registry.hpp>
+#include <utility>
+
+namespace pokesim::dex {
+/*
+ * Runs a function with a certain side condition tag based on the passed in enum.
+ * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the side condition
+ * tags with a static `run` function.
+ *
+ * @code
+ * template <typename Tag>
+ * struct EmplaceTag {
+ *   static void run(types::handle handle) { handle.emplace<Tag>(); }
+ * };
+ *
+ * enumToTag<EmplaceTag>(dex::SideCondition::REFLECT, handle);
+ * @endcode
+ */
+template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
+constexpr auto enumToTag(SideCondition sideCondition, RunArgs&&... args) {
+  switch (sideCondition) {
+    case SideCondition::REFLECT: return RunStruct<Reflect::Effect, T...>::run(std::forward<RunArgs>(args)...);
+
+    default: {
+      POKESIM_REQUIRE_FAIL("Using a tag for sideCondition that does not exist.");
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<Reflect, T...>::run), RunArgs...>;
+      if constexpr (std::is_void_v<ReturnType>) {
+        return;
+      }
+      else {
+        return ReturnType{};
+      }
+    }
+  }
+}
+
+template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
+constexpr void forEachSideCondition(RunArgs&&... args) {
+  enumToTag<RunStruct, T...>(SideCondition::REFLECT, std::forward<RunArgs>(args)...);
+}
+
+// Assigns a side condition's tag to a handle
+void emplaceTagFromEnum(SideCondition sideCondition, types::handle handle);
+void emplaceTagFromEnum(SideCondition sideCondition, types::registry& registry, types::entity entity);
+
+// Assigns a side condition's tag to a handle
+void removeTagFromEnum(SideCondition sideCondition, types::handle handle);
+void removeTagFromEnum(SideCondition sideCondition, types::registry& registry, types::entity entity);
+
+// Checks if the handle has the sideCondition' tag
+bool hasTag(SideCondition sideCondition, types::handle handle);
+bool hasTag(SideCondition sideCondition, const types::registry& registry, types::entity entity);
+}  // namespace pokesim::dex

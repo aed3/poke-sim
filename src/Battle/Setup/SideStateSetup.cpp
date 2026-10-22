@@ -8,6 +8,7 @@
 #include <Components/Tags/SideTags.hpp>
 #include <Components/TeamRemaining.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/Moves/Reflect.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Indexes.hpp>
 #include <Types/State.hpp>
@@ -56,5 +57,11 @@ void SideStateSetup::setPlayerSide(PlayerSideId playerSideId) {
 
 void SideStateSetup::setSideDecision(const SideDecision& sideDecision) {
   handle.emplace<SideDecision>(sideDecision);
+}
+
+void SideStateSetup::setReflect(types::effectDuration duration) {
+  if (duration > Constants::EffectDuration::MIN) {
+    handle.emplace<dex::Reflect::Effect>(duration);
+  }
 }
 }  // namespace pokesim::internal

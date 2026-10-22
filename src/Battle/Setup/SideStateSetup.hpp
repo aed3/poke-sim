@@ -2,6 +2,7 @@
 
 #include <Types/Entity.hpp>
 #include <Types/Enums/PlayerSideId.hpp>
+#include <Types/Event.hpp>
 #include <Types/Indexes.hpp>
 #include <Types/Registry.hpp>
 #include <entt/entity/registry.hpp>
@@ -30,6 +31,8 @@ struct SideStateSetup : StateSetupBase {
   void setBattle(types::entity entity);
   void setPlayerSide(PlayerSideId playerSideId);
   void setSideDecision(const SideDecision& sideDecision);
+
+  void setReflect(types::effectDuration duration);
 };
 }  // namespace internal
 }  // namespace pokesim

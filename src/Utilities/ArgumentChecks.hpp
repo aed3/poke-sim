@@ -35,8 +35,6 @@ struct Ivs;
 struct EffectStackItem;
 struct EffectStack;
 struct AddedFlinchChance;
-struct ChoiceLock;
-struct Trapper;
 struct Battle;
 struct ParentBattle;
 struct RootBattle;
@@ -116,6 +114,13 @@ struct TeamRemaining;
 struct TransformedFrom;
 struct Turn;
 struct Winner;
+namespace dex {
+struct ChoiceLock;
+struct Trapper;
+namespace shared_name_effect {
+struct Reflect;
+}  // namespace shared_name_effect
+}  // namespace dex
 namespace analyze_effect {
 struct EffectTarget;
 struct EffectMove;
@@ -181,6 +186,15 @@ void checkSide(types::entity, const types::registry&);
 void checkPokemon(types::entity, const types::registry&);
 void checkActionMove(types::entity, const types::registry&);
 void checkPercentChance(types::percentChance);
+
+template <>
+void check(const dex::shared_name_effect::Reflect&);
+
+template <>
+void check(const dex::ChoiceLock&);
+
+template <>
+void check(const dex::Trapper&, const types::registry&);
 
 template <>
 void check(const Accuracy&);
@@ -285,12 +299,6 @@ void check(const EffectStack&, const types::registry&);
 
 template <>
 void check(const AddedFlinchChance&);
-
-template <>
-void check(const ChoiceLock&);
-
-template <>
-void check(const Trapper&, const types::registry&);
 
 template <>
 void check(const Battle&, const types::registry&);

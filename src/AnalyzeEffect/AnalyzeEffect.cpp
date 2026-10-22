@@ -30,6 +30,7 @@
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/EnumToTag/SideConditionEnumToTag.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
@@ -75,7 +76,10 @@ EffectPresentCheck hasBattleEffect(types::registry& registry, Battle battle, Bat
   return EffectPresentCheck::PRESENT_AND_NOT_APPLIED;
 }
 
-EffectPresentCheck hasSideEffect(types::registry&, EffectTarget, dex::SideCondition) {
+EffectPresentCheck hasSideEffect(types::registry& registry, EffectTarget target, dex::SideCondition sideCondition) {
+  if (dex::hasTag(sideCondition, registry, registry.get<Side>(target.val).val)) {
+    return EffectPresentCheck::PRESENT_AND_APPLIED;
+  }
   return EffectPresentCheck::NOT_PRESENT;
 }
 
@@ -429,7 +433,20 @@ void applyTerrainEffect(types::handle, Battle, TerrainName) {}
 
 void applyWeatherEffect(types::handle, Battle, WeatherName) {}
 
-void applySideConditionEffect(types::handle, EffectTarget, SideConditionName) {}
+void applySideConditionEffect(types::handle inputHandle, EffectTarget effectTarget, SideConditionName effect) {
+  types::registry& registry = *inputHandle.registry();
+
+  EffectPresentCheck statusCheck = hasSideEffect(registry, effectTarget, effect.val);
+  Side effectSide = registry.get<Side>(effectTarget.val);
+
+  dex::removeTagFromEnum(effect.val, registry, effectSide.val);
+  if (statusCheck == EffectPresentCheck::PRESENT_AND_APPLIED) {
+    setInvertFinalAnswer(inputHandle);
+  }
+  else {
+    dex::emplaceTagFromEnum(effect.val, registry, effectSide.val);
+  }
+}
 
 void applyStatusEffect(types::handle inputHandle, EffectTarget effectTarget, StatusName effect) {
   types::registry& registry = *inputHandle.registry();

@@ -161,10 +161,7 @@ void setNextInEffectStack(types::handle handle, EffectStack& effectStack) {
 
 bool sideHasPossibleSwitch(types::registry& registry, Side side, const Simulation& simulation) {
   TeamRemaining teamRemaining = registry.get<TeamRemaining>(side.val);
-  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
-    return teamRemaining.val > Constants::ActivePokemonSlotsPerSide::SINGLES;
-  }
-  return teamRemaining.val > Constants::ActivePokemonSlotsPerSide::DOUBLES;
+  return teamRemaining.val > simulation.activePokemonSlotsPerSide();
 }
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action) {
