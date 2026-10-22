@@ -6047,9 +6047,15 @@ struct LongReachOnModifyMove {
 
 void plusOnModifySpa(types::handle, EventModifier&) {}
 
-void pranksterOnImmunity(types::registry& registry, const CurrentActionMovesAsSource& moves) {
+void pranksterOnImmunity(types::handle handle, const CurrentActionMovesAsSource& moves) {
+  types::registry& registry = *handle.registry();
   for (types::entity move : moves) {
-    SpeciesTypes targetTypes = registry.get<SpeciesTypes>(registry.get<CurrentActionTarget>(move).val);
+    CurrentActionTarget target = registry.get<CurrentActionTarget>(move);
+    if (internal::isAlly(registry, target.val, handle.entity())) {
+      continue;
+    }
+
+    SpeciesTypes targetTypes = registry.get<SpeciesTypes>(target.val);
     if (targetTypes.has(Type::DARK)) {
       registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
     }
@@ -6176,6 +6182,10 @@ void Prankster::onModifyPriority(Simulation& simulation) {
 }
 
 void Prankster::onImmunity(Simulation& simulation) {
+  if (!simulation.pokedex().getStaticValue<isDarkTypeImmune>()) {
+    return;
+  }
+
   simulation.view<pranksterOnImmunity, Tags<Prankster>>();
   // if (!simulation.speedSortAfterEachMove) simulation.view<pranksterOnImmunity, Tags<tags::PranksterOnSpeedSort>>();
 }

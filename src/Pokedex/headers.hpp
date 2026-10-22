@@ -61,6 +61,7 @@
 #include "Moves/Confide.hpp"
 #include "Moves/FlashCannon.hpp"
 #include "Moves/FuryAttack.hpp"
+#include "Moves/Glare.hpp"
 #include "Moves/Growl.hpp"
 #include "Moves/KnockOff.hpp"
 #include "Moves/Leafage.hpp"

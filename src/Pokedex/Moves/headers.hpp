@@ -8,6 +8,7 @@
 #include "Confide.hpp"
 #include "FlashCannon.hpp"
 #include "FuryAttack.hpp"
+#include "Glare.hpp"
 #include "Growl.hpp"
 #include "KnockOff.hpp"
 #include "Leafage.hpp"

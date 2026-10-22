@@ -75,4 +75,47 @@ TEST_CASE(
     test.checks.checkUsedMovePokemon(entities.p2A);
   }
 }
+
+TEST_CASE(
+  "Prankster: Dark types allies are not immune",
+  "[Simulation][SimulateTurn][DoubleBattle][Ability][Prankster][Priority]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::DOUBLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(
+      test.pokemon(dex::Species::GRIMMSNARL, dex::Ability::PRANKSTER, dex::Move::GROWL),
+      test.pokemon(dex::Species::PANGORO, dex::Move::SPLASH)),
+    test.side(
+      test.pokemon(dex::Species::GRIMMSNARL, dex::Ability::PRANKSTER, dex::Move::QUIVER_DANCE),
+      test.pokemon(dex::Species::AMPHAROS, dex::Ability::PRANKSTER, dex::Move::GLARE)),
+    test.turnDecision(
+      MoveDecision{Slot::P1A, Slot::P1B, dex::Move::GROWL},
+      dex::Move::SPLASH,
+      dex::Move::QUIVER_DANCE,
+      MoveDecision{Slot::P2B, Slot::P2A, dex::Move::GLARE}));
+
+  auto battleEntitiesList = test.simulateOneBranchingBattle();
+
+  for (auto entities : battleEntitiesList) {
+    test.checks.checkUsedMovePokemon(entities.p1A);
+    test.checks.checkUsedMovePokemon<AtkBoost, stat::EffectiveAtk>(entities.p1B);
+    test.checks.checkUsedMovePokemon<
+      SpaBoost,
+      SpdBoost,
+      SpeBoost,
+      stat::EffectiveSpa,
+      stat::EffectiveSpd,
+      stat::EffectiveSpe,
+      tags::HasStatus,
+      dex::Paralysis>(entities.p2A);
+    test.checks.checkUsedMovePokemon(entities.p2B);
+
+    REQUIRE(test.registry().all_of<AtkBoost>(entities.p1B));
+    REQUIRE(test.registry().all_of<SpaBoost>(entities.p2A));
+    REQUIRE(test.registry().all_of<SpdBoost>(entities.p2A));
+    REQUIRE(test.registry().all_of<SpeBoost>(entities.p2A));
+    REQUIRE(test.registry().all_of<tags::HasStatus>(entities.p2A));
+    REQUIRE(test.registry().all_of<dex::Paralysis>(entities.p2A));
+  }
+}
 }  // namespace pokesim

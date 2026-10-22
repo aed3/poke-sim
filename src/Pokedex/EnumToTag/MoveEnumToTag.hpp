@@ -35,6 +35,7 @@ constexpr auto enumToTag(Move move, RunArgs&&... args) {
     case Move::CONFIDE:        return RunStruct<Confide, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FLASH_CANNON:   return RunStruct<FlashCannon, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FURY_ATTACK:    return RunStruct<FuryAttack, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::GLARE:          return RunStruct<Glare, T...>::run(std::forward<RunArgs>(args)...);
     case Move::GROWL:          return RunStruct<Growl, T...>::run(std::forward<RunArgs>(args)...);
     case Move::KNOCK_OFF:      return RunStruct<KnockOff, T...>::run(std::forward<RunArgs>(args)...);
     case Move::LEAFAGE:        return RunStruct<Leafage, T...>::run(std::forward<RunArgs>(args)...);

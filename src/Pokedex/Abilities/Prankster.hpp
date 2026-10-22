@@ -13,6 +13,7 @@ namespace pokesim::dex {
 struct Prankster {
   static constexpr Ability name(GameMechanics = {}) { return dex::Ability::PRANKSTER; }
 
+  static constexpr bool isDarkTypeImmune(GameMechanics) { return true; }
   static constexpr types::priority onModifyPriorityIncrease(GameMechanics) { return 1; }
 
   struct Strings {
