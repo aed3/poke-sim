@@ -48,7 +48,7 @@ void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedD
 
 void failedOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves) {
-    registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
+    registry.emplace<tags::FailedCurrentMoveHit>(move);
   }
 }
 
@@ -68,8 +68,7 @@ void choiceLockOnDisableMove(types::handle handle, const ChoiceLock& choiceLocke
 void trapperOnSwitchOut(types::handle handle, Trapper trapper, Battle battle) {
   types::entity source = handle.registry()->get<CurrentAction>(battle.val).source;
   if (source == trapper.val) {
-    handle.remove<Trapper>();
-    handle.remove<pokesim::tags::Trapped>();
+    handle.remove<Trapper, Trapped>();
   }
 }
 }  // namespace
@@ -106,8 +105,8 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
     simulation,
     [](Simulation& sim) { sim.view<failedOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
     std::nullopt);
-  simulation.view<internal::setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
-  simulation.removeFromEntities<pokesim::tags::FailedCurrentMoveHit>();
+  simulation.view<internal::setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
+  simulation.removeFromEntities<tags::FailedCurrentMoveHit>();
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {
@@ -125,13 +124,13 @@ void ChoiceLock::onResetDisabledMove(Simulation& simulation) {
 }
 
 void Flinch::onBeforeMove(Simulation& simulation) {
-  simulation.view<failedOnBeforeMove, Tags<tags::Flinch>>();
-  simulation.view<internal::setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
-  simulation.removeFromEntities<pokesim::tags::FailedCurrentMoveHit>();
+  simulation.view<failedOnBeforeMove, Tags<Flinch>>();
+  simulation.view<internal::setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
+  simulation.removeFromEntities<tags::FailedCurrentMoveHit>();
 }
 
 void Flinch::onResidual(Simulation& simulation) {
-  simulation.removeFromEntities<tags::Flinch, tags::ActivePokemon>();
+  simulation.removeFromEntities<Flinch, tags::ActivePokemon>();
 }
 
 void Trapped::onResetTrappedPokemon(Simulation& simulation) {

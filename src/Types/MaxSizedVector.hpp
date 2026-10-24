@@ -2,7 +2,6 @@
 
 #include <Config/Require.hpp>
 #include <Utilities/NumberToType.hpp>
-#include <algorithm>
 #include <cstdint>
 #include <initializer_list>
 #include <vector>
@@ -58,14 +57,13 @@ class maxSizedVector : public std::vector<Type> {
   }
 
   void unordered_remove(const Type& value) {
-    POKESIM_REQUIRE(std::find(base::begin(), base::end(), value) != base::end(), "Value must be in vector to remove.");
     for (size_type i = 0U; i < size() - 1U; i++) {
       if (value == at(i)) {
         at(i) = base::back();
-        break;
+        base::pop_back();
+        return;
       }
     }
-    base::pop_back();
   }
 
   void pop_count(size_type remove) {

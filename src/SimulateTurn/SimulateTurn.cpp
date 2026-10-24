@@ -57,6 +57,7 @@
 #include "Decisions.hpp"
 #include "ManageActionQueue.hpp"
 #include "SimulateTurnDebugChecks.hpp"
+#include "SimulateTurnEvents.hpp"
 
 namespace pokesim::simulate_turn {
 namespace {
@@ -72,7 +73,7 @@ template <typename Filter>
 void speedSort(Filter battleFilter, Simulation& simulation) {
   battleFilter.template view<internal::simulate_turn::speedSort, Tags<tags::SpeedSortNeeded>>();
   battleFilter.template removeFromSelected<tags::SpeedSortNeeded>();
-  internal::simulate_turn::resolveSpeedTies(simulation);
+  internal::simulate_turn::resolveActionQueueSpeedTies(simulation);
 }
 
 void midTurnSwitch(Simulation& simulation) {
@@ -84,7 +85,7 @@ void midTurnSwitch(Simulation& simulation) {
   sideFilter.view<internal::simulate_turn::resolveMidTurnDecisions>();
   sideFilter.removeFromSelected<MidTurnSideDecision>();
   getBattleFilter(simulation).view<internal::simulate_turn::speedSortMidTurnSwitches>();
-  internal::simulate_turn::resolveSpeedTies(simulation);
+  internal::simulate_turn::resolveActionQueueSpeedTies(simulation);
 }
 
 template <typename ActionTag>
@@ -273,7 +274,7 @@ void runSwitchAction(Simulation& simulation) {
   battleFilter.view<internal::setCurrentActionSwitchSource>();
   battleFilter.view<internal::setCurrentActionSwitchTarget>();
   internal::runBeforeSwitchOutEvent(simulation);
-  internal::runEachUpdate(simulation);
+  internal::simulate_turn::runActiveUpdateEvents(simulation);
   internal::runSwitchOutEvent(simulation);
 
   internal::runEndAbilityEvent(simulation);
@@ -283,6 +284,7 @@ void runSwitchAction(Simulation& simulation) {
     pokesim::tags::CurrentActionSource,
     action::tags::NotFaintedActiveSwitch>();
   internal::clearVolatiles(simulation);
+  simulation.view<internal::removeFromActiveWithUpdateEvents, Tags<pokesim::internal::tags::ClearVolatiles>>();
   simulation.removeFromEntities<pokesim::internal::tags::ClearVolatiles>();
 
   simulation.removeFromEntities<pokesim::tags::ActivePokemon, pokesim::tags::CurrentActionSource>();
@@ -370,6 +372,7 @@ void faintPokemon(Simulation& simulation) {
 
     pokemonFilter.addToSelected<pokesim::internal::tags::ClearVolatiles>();
     internal::clearVolatiles(simulation);
+    simulation.view<internal::removeFromActiveWithUpdateEvents, Tags<pokesim::internal::tags::ClearVolatiles>>();
     simulation.removeFromEntities<pokesim::internal::tags::ClearVolatiles>();
 
     simulation.addToEntities<pokesim::tags::Fainted, pokesim::tags::Fainting>();

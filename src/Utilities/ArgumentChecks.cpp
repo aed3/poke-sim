@@ -197,9 +197,11 @@ void checkBattle(types::entity battleEntity, const types::registry& registry) {
   POKESIM_REQUIRE_NM(has<ActionQueue>(battleEntity, registry));
   const auto& [battle, sides, probability, actionQueue] =
     registry.get<Battle, Sides, Probability, ActionQueue>(battleEntity);
+  const auto& activeWithUpdateEvents = registry.try_get<ActiveWithUpdateEvents>(battleEntity);
 
   check(probability);
   check(actionQueue);
+  if (activeWithUpdateEvents) check(*activeWithUpdateEvents, registry);
 
   POKESIM_REQUIRE_NM(battleEntity == battle.val);
   POKESIM_REQUIRE_NM(sides.val.size() == Constants::SIDE_COUNT);
@@ -770,6 +772,16 @@ void check(const EffectStack& eventStack, const types::registry& registry) {
 template <>
 void check(const AddedFlinchChance& addedFlinchChance) {
   checkPercentChance(addedFlinchChance.val);
+}
+
+template <>
+void check(const ActiveWithUpdateEvents& activeWithUpdateEvents, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(listHasUniqueValues(activeWithUpdateEvents.val));
+  POKESIM_REQUIRE_NM(!activeWithUpdateEvents.val.empty());
+  for (types::entity pokemon : activeWithUpdateEvents.val) {
+    checkPokemon(pokemon, registry);
+    POKESIM_REQUIRE_NM(has<tags::ActivePokemon>(pokemon, registry));
+  }
 }
 
 template <>

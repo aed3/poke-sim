@@ -186,6 +186,7 @@ setup_target(
     src/Battle/Helpers/Helpers.cpp
     src/Battle/ManageBattleState.cpp
     src/Battle/Pokemon/ManagePokemonState.cpp
+    src/Battle/Pokemon/ManagePokemonTags.cpp
     src/Battle/Pokemon/PokemonProperties.cpp
     src/Battle/Setup/BattleStateSetup.cpp
     src/Battle/Setup/PokemonStateSetup.cpp
@@ -208,6 +209,7 @@ setup_target(
     src/SimulateTurn/ManageActionQueue.cpp
     src/SimulateTurn/RandomChance.cpp
     src/SimulateTurn/SimulateTurn.cpp
+    src/SimulateTurn/SimulateTurnEvents.cpp
     src/Simulation/MoveHitSteps.cpp
     src/Simulation/RunEvent.cpp
     src/Simulation/Simulation.cpp
@@ -241,6 +243,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/Effects/ChoiceLock.cpp
       tests/Effects/Paralysis.cpp
       tests/Items/KingsRock.cpp
+      tests/Items/LumBerry.cpp
       tests/Items/RockyHelmet.cpp
       tests/Items/QuickClaw.cpp
       tests/Items/QuickPowder.cpp

@@ -287,6 +287,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   }
 
   // Not simplified further to a, for example, packed template type list, to make debugging what type went wrong easier
+  remapComponentEntities<ActiveWithUpdateEvents>(registry, entityMap);
   remapComponentEntities<AddedRecycledActionMove1>(registry, entityMap);
   remapComponentEntities<AddedRecycledActionMove2>(registry, entityMap);
   remapComponentEntities<Battle>(registry, entityMap);

@@ -1221,11 +1221,11 @@ TEST_CASE(
         }
         else {
           REQUIRE(decidueyeHp.val == ALOLAN_DECIDUEYE_HP);
-          REQUIRE(registry.all_of<tags::Trapped>(magnezone));
+          REQUIRE(registry.all_of<dex::Trapped>(magnezone));
           REQUIRE(registry.all_of<dex::Trapper>(magnezone));
           REQUIRE(registry.get<dex::Trapper>(magnezone).val == decidueye);
 
-          test.checks.checkEntityForChanges<stat::CurrentHp, tags::Trapped, dex::Trapper>(magnezone);
+          test.checks.checkEntityForChanges<stat::CurrentHp, dex::Trapped, dex::Trapper>(magnezone);
         }
         test.checks.checkEntityForChanges(ditto);
       }

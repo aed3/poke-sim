@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "ActiveWithUpdateEvents.hpp"
 #include "Battle.hpp"
 #include "BattleTree.hpp"
 #include "Current.hpp"

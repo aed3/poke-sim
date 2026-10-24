@@ -35,6 +35,7 @@ struct Ivs;
 struct EffectStackItem;
 struct EffectStack;
 struct AddedFlinchChance;
+struct ActiveWithUpdateEvents;
 struct Battle;
 struct ParentBattle;
 struct RootBattle;
@@ -299,6 +300,9 @@ void check(const EffectStack&, const types::registry&);
 
 template <>
 void check(const AddedFlinchChance&);
+
+template <>
+void check(const ActiveWithUpdateEvents&, const types::registry&);
 
 template <>
 void check(const Battle&, const types::registry&);

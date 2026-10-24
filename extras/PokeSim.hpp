@@ -120,6 +120,7 @@
  * src/Components/EVsIVs.hpp
  * src/Components/EffectStack.hpp
  * src/Components/Effects/AddedFlinchChance.hpp
+ * src/Components/EntityHolders/ActiveWithUpdateEvents.hpp
  * src/Components/EntityHolders/FaintQueue.hpp
  * src/Components/EntityHolders/FoeSide.hpp
  * src/Components/EntityHolders/RecycledEntities.hpp
@@ -326,12 +327,13 @@
  * src/Battle/Pokemon/PokemonProperties.hpp
  * src/Battle/Side/ManageSideState.hpp
  * src/SimulateTurn/RandomChance.hpp
+ * src/SimulateTurn/SimulateTurnEvents.hpp
  * src/Simulation/MoveHitSteps.hpp
  * src/Utilities/EntityFilter.hpp
+ * src/SimulateTurn/ManageActionQueue.hpp
  * src/Battle/Clone/Clone.hpp
  * src/Battle/Helpers/InternalHelpers.hpp
  * src/SimulateTurn/Decisions.hpp
- * src/SimulateTurn/ManageActionQueue.hpp
  * src/SimulateTurn/SimulateTurnDebugChecks.hpp
  * src/Utilities/RNG.hpp
  * src/SimulateTurn/CalcDamageSpecifics.hpp
@@ -344,6 +346,7 @@
  * src/Pokedex/EnumToTag/AbilityPropertyEnumToTag.hpp
  * src/Pokedex/Events/EventsHelpers.hpp
  * src/CalcDamage/CalcDamageDebugChecks.hpp
+ * src/Battle/Pokemon/ManagePokemonTags.hpp
  * src/AnalyzeEffect/AnalyzeEffectDebugChecks.hpp
  * src/PokeSim.hpp
  */
@@ -16684,7 +16687,7 @@ template <std::int64_t MaxValue, std::int64_t MinValue>
 using signedIntType = std::conditional_t<
   MaxValue <= std::numeric_limits<std::int32_t>::max() && MinValue >= std::numeric_limits<std::int32_t>::min(),
   std::conditional_t<
-    MaxValue <= std::numeric_limits<std::uint16_t>::max() && MinValue >= std::numeric_limits<std::int16_t>::min(),
+    MaxValue <= std::numeric_limits<std::int16_t>::max() && MinValue >= std::numeric_limits<std::int16_t>::min(),
     std::conditional_t<
       MaxValue <= std::numeric_limits<std::int8_t>::max() && MinValue >= std::numeric_limits<std::int8_t>::min(),
       std::int8_t, std::int16_t>,
@@ -16749,14 +16752,13 @@ class maxSizedVector : public std::vector<Type> {
   }
 
   void unordered_remove(const Type& value) {
-    POKESIM_REQUIRE(std::find(base::begin(), base::end(), value) != base::end(), "Value must be in vector to remove.");
     for (size_type i = 0U; i < size() - 1U; i++) {
       if (value == at(i)) {
         at(i) = base::back();
-        break;
+        base::pop_back();
+        return;
       }
     }
-    base::pop_back();
   }
 
   void pop_count(size_type remove) {
@@ -18214,14 +18216,13 @@ class fixedMemoryVector : private std::array<Type, Size> {
   }
 
   void unordered_remove(const Type& value) {
-    POKESIM_REQUIRE(std::find(begin(), end(), value) != end(), "Value must be in vector to remove.");
-    for (uint8_t i = 0U; i < Size - 1U; i++) {
+    for (size_type i = 0U; i < Size - 1U; i++) {
       if (value == at(i)) {
         at(i) = back();
-        break;
+        used--;
+        return;
       }
     }
-    pop_back();
   }
 
   void pop_count(size_type remove) {
@@ -19166,7 +19167,7 @@ namespace pokesim::types {
 using probability = float;
 using rngState = std::uint64_t;
 using rngResult = std::uint32_t;
-using percentChance = std::uint8_t;
+using percentChance = pokesim::internal::unsignedIntType<Constants::PercentChance::MAX>;
 using eventPossibilities = std::uint8_t;
 }  // namespace pokesim::types
 
@@ -19949,6 +19950,16 @@ struct AddedFlinchChance {
 }  // namespace pokesim
 
 ///////////// END OF src/Components/Effects/AddedFlinchChance.hpp //////////////
+
+/////// START OF src/Components/EntityHolders/ActiveWithUpdateEvents.hpp ///////
+
+namespace pokesim {
+struct ActiveWithUpdateEvents {
+  types::fixedMemoryVector<types::entity, Constants::ActivePokemon::MAX> val{};
+};
+}  // namespace pokesim
+
+//////// END OF src/Components/EntityHolders/ActiveWithUpdateEvents.hpp ////////
 
 ///////////// START OF src/Components/EntityHolders/FaintQueue.hpp /////////////
 
@@ -20963,8 +20974,9 @@ struct Fainting {};
 struct Fainted {};
 
 struct CanUseItem {};
+struct CanEatItem {};
 struct CanRemoveItem {};
-struct CanSetStatus {};
+struct EffectCanSetStatus {};
 }  // namespace pokesim::tags
 
 ////////////////// END OF src/Components/Tags/PokemonTags.hpp //////////////////
@@ -21003,6 +21015,7 @@ struct BuildPokedexMove {};
 struct ClearVolatiles {};
 struct CloneFromDamageRolls {};
 struct TryTrap {};
+struct RunUpdate {};
 }  // namespace pokesim::internal::tags
 
 /////////////////// END OF src/Components/Tags/Selection.hpp ///////////////////
@@ -21089,9 +21102,7 @@ struct Fairy {};
 //////////////// START OF src/Components/Tags/VolatileTags.hpp /////////////////
 
 namespace pokesim::tags {
-struct Flinch {};
 struct Switching {};
-struct Trapped {};
 }  // namespace pokesim::tags
 
 ///////////////// END OF src/Components/Tags/VolatileTags.hpp //////////////////
@@ -24819,6 +24830,7 @@ struct Ivs;
 struct EffectStackItem;
 struct EffectStack;
 struct AddedFlinchChance;
+struct ActiveWithUpdateEvents;
 struct Battle;
 struct ParentBattle;
 struct RootBattle;
@@ -25083,6 +25095,9 @@ void check(const EffectStack&, const types::registry&);
 
 template <>
 void check(const AddedFlinchChance&);
+
+template <>
+void check(const ActiveWithUpdateEvents&, const types::registry&);
 
 template <>
 void check(const Battle&, const types::registry&);
@@ -25909,8 +25924,11 @@ void setAbility(types::registry& registry, pokesim::dex::Ability ability, types:
 void setStatus(types::registry& registry, pokesim::dex::Status status, types::entity entity);
 
 void checkIfCanUseItem(Simulation& simulation);
+void checkIfCanEatItem(Simulation& simulation);
 void useItem(Simulation& simulation);
+void eatItem(Simulation& simulation);
 void tryUseItem(Simulation& simulation);
+void tryEatItem(Simulation& simulation);
 void checkIfCanRemoveItem(Simulation& simulation);
 void removeItem(Simulation& simulation);
 void tryRemoveItem(Simulation& simulation);
@@ -26059,6 +26077,7 @@ struct PokemonStateSetup : StateSetupBase {
   };
 
   bool isFainted();
+  bool isActive();
 };
 }  // namespace internal
 }  // namespace pokesim
@@ -28155,7 +28174,7 @@ namespace pokesim {
 class Simulation;
 
 namespace internal {
-void runEachUpdate(Simulation& simulation);
+void runUpdate(Simulation& simulation);
 
 void runBeforeMove(Simulation& simulation);
 void runResidual(Simulation& simulation);
@@ -28207,7 +28226,9 @@ void runStartSleep(Simulation& simulation);
 void runStartFreeze(Simulation& simulation);
 
 void runTryTakeItemEvent(Simulation& simulation);  // TakeItem
+void runEatItemEvent(Simulation& simulation);      // Eat
 void runAfterUseItemEvent(Simulation& simulation);
+void runAfterEatItemEvent(Simulation& simulation);  // EatItem
 void runRemoveItemEvent(Simulation& simulation);
 
 void runStartAbilityEvent(Simulation& simulation);
@@ -28251,6 +28272,10 @@ void clearSwitchAction(Simulation& simulation);
 void clearCurrentEffect(Simulation& simulation);
 void setCurrentEffectFromStack(Simulation& simulation);
 void clearCurrentBattleEffect(Simulation& simulation);
+
+void removeFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle);
+void tryAddToActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle);
+void checkIfRemoveFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle);
 }  // namespace internal
 }  // namespace pokesim
 
@@ -28442,6 +28467,18 @@ void removeRandomBinaryChanceComponents(Simulation& simulation, entt::exclude_t<
 
 /////////////////// END OF src/SimulateTurn/RandomChance.hpp ///////////////////
 
+/////////////// START OF src/SimulateTurn/SimulateTurnEvents.hpp ///////////////
+
+namespace pokesim {
+class Simulation;
+
+namespace internal::simulate_turn {
+void runActiveUpdateEvents(Simulation& simulation);
+}  // namespace internal::simulate_turn
+}  // namespace pokesim
+
+//////////////// END OF src/SimulateTurn/SimulateTurnEvents.hpp ////////////////
+
 /////////////////// START OF src/Simulation/MoveHitSteps.hpp ///////////////////
 
 namespace pokesim {
@@ -28541,6 +28578,34 @@ struct EntityFilter {
 
 //////////////////// END OF src/Utilities/EntityFilter.hpp /////////////////////
 
+/////////////// START OF src/SimulateTurn/ManageActionQueue.hpp ////////////////
+
+namespace pokesim {
+class Simulation;
+struct ActionQueue;
+struct RecycledAction;
+struct SpeedTieIndexes;
+struct ActiveWithUpdateEvents;
+
+namespace internal {
+struct RandomEventIndex;
+}
+
+namespace internal::simulate_turn {
+void speedSort(types::handle handle, ActionQueue& actionQueue);
+void speedSortActiveWithUpdateEvents(types::handle handle, ActiveWithUpdateEvents& activeWithUpdateEvents);
+void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue);
+void resolveActionQueueSpeedTies(Simulation& simulation);
+void resolveUpdateEventSpeedTies(Simulation& simulation);
+
+void addBeforeTurnAction(ActionQueue& actionQueue);
+void addResidualAction(ActionQueue& actionQueue);
+void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction action);
+}  // namespace internal::simulate_turn
+}  // namespace pokesim
+
+//////////////// END OF src/SimulateTurn/ManageActionQueue.hpp /////////////////
+
 ///////////////////// START OF src/Battle/Clone/Clone.hpp //////////////////////
 
 namespace pokesim {
@@ -28612,32 +28677,6 @@ void resolveMidTurnDecisions(
 }  // namespace pokesim
 
 //////////////////// END OF src/SimulateTurn/Decisions.hpp /////////////////////
-
-/////////////// START OF src/SimulateTurn/ManageActionQueue.hpp ////////////////
-
-namespace pokesim {
-class Simulation;
-struct ActionQueue;
-struct RecycledAction;
-struct SpeedTieIndexes;
-
-namespace internal {
-struct RandomEventIndex;
-}
-
-namespace internal::simulate_turn {
-void speedSort(types::handle handle, ActionQueue& actionQueue);
-void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue);
-void resolveSpeedTies(Simulation& simulation);
-void setSpeedTieOrder(ActionQueue& actionQueue, const SpeedTieIndexes& speedTies, RandomEventIndex randomEventIndex);
-
-void addBeforeTurnAction(ActionQueue& actionQueue);
-void addResidualAction(ActionQueue& actionQueue);
-void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction action);
-}  // namespace internal::simulate_turn
-}  // namespace pokesim
-
-//////////////// END OF src/SimulateTurn/ManageActionQueue.hpp /////////////////
 
 //////////// START OF src/SimulateTurn/SimulateTurnDebugChecks.hpp /////////////
 
@@ -28744,6 +28783,7 @@ struct Checks : pokesim::debug::Checks {
       Probability,
       ParentBattle,
       RootBattle,
+      ActiveWithUpdateEvents,
       pokesim::tags::BattleMidTurn>();
 
     if (!simulateTurnOptionsOnInput.getMakeBranchesOnRandomEvents()) {
@@ -28897,6 +28937,35 @@ inline types::rngResult nextBoundedRandomValue(RngSeed& seed, types::rngResult u
 inline types::rngResult nextBoundedRandomValue(
   RngSeed& seed, types::rngResult upperBound, types::rngResult lowerBound) {
   return nextBoundedRandomValue(seed.val, upperBound, lowerBound);
+}
+
+template <typename List>
+constexpr void shuffleShortList(
+  List& list, types::eventPossibilities shuffleStart, types::eventPossibilities shuffleLength,
+  types::eventPossibilities shuffleOrderIndex) {
+  // This loop shuffles a list based on one random number where each possible shuffling has an equal chance. The main
+  // idea is to choose where each action should be placed in that new ordering by using the ranges the random number
+  // belongs to. For example, let's say there are 3 actions that speed tied, the random number (randomEventIndex) is 2,
+  // and we want to find where the third action in the original ordering should move to. There are 6 different ways to
+  // order those actions (3 factorial = 6), meaning the randomEventIndex could include any value from 0 to 5. The code
+  // below first separates the 0 to 5 range into 3 equally sized sections (so 2 values per section) and then calculates
+  // that the randomEventIndex of 2 is in the second section. That section's index is used as where the third action
+  // will go as there will be as many sections as there are places to move that action.
+
+  types::eventPossibilities valuesPerSection = 1U;
+  for (types::eventPossibilities sections = 1U; sections < shuffleLength; sections++) {
+    types::eventPossibilities totalValues = (sections + 1U) * valuesPerSection;
+    types::eventPossibilities eventIndexInAllValues = shuffleOrderIndex % totalValues;
+    types::eventPossibilities sectionOfEventIndex = eventIndexInAllValues / valuesPerSection;
+
+    types::eventPossibilities oldIndex = shuffleStart + sections;
+    types::eventPossibilities newIndex = shuffleStart + sectionOfEventIndex;
+
+    POKESIM_REQUIRE(newIndex < shuffleStart + shuffleLength, "newIndex would be out of bounds for this shuffle.");
+
+    std::swap(list[oldIndex], list[newIndex]);
+    valuesPerSection = totalValues;
+  }
 }
 }  // namespace pokesim::internal
 
@@ -29765,6 +29834,19 @@ struct Checks {
 #endif
 
 /////////////// END OF src/CalcDamage/CalcDamageDebugChecks.hpp ////////////////
+
+////////////// START OF src/Battle/Pokemon/ManagePokemonTags.hpp ///////////////
+
+namespace pokesim {
+class Simulation;
+
+namespace internal {
+void clearVolatileTags(Simulation& simulation);
+bool hasUpdateEvent(types::handle pokemonHandle);
+}  // namespace internal
+}  // namespace pokesim
+
+/////////////// END OF src/Battle/Pokemon/ManagePokemonTags.hpp ////////////////
 
 /////////// START OF src/AnalyzeEffect/AnalyzeEffectDebugChecks.hpp ////////////
 

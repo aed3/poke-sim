@@ -7,6 +7,7 @@ class Simulation;
 struct ActionQueue;
 struct RecycledAction;
 struct SpeedTieIndexes;
+struct ActiveWithUpdateEvents;
 
 namespace internal {
 struct RandomEventIndex;
@@ -14,9 +15,10 @@ struct RandomEventIndex;
 
 namespace internal::simulate_turn {
 void speedSort(types::handle handle, ActionQueue& actionQueue);
+void speedSortActiveWithUpdateEvents(types::handle handle, ActiveWithUpdateEvents& activeWithUpdateEvents);
 void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue);
-void resolveSpeedTies(Simulation& simulation);
-void setSpeedTieOrder(ActionQueue& actionQueue, const SpeedTieIndexes& speedTies, RandomEventIndex randomEventIndex);
+void resolveActionQueueSpeedTies(Simulation& simulation);
+void resolveUpdateEventSpeedTies(Simulation& simulation);
 
 void addBeforeTurnAction(ActionQueue& actionQueue);
 void addResidualAction(ActionQueue& actionQueue);

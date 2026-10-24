@@ -18,9 +18,11 @@
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
+#include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
 #include <Pokedex/Effects/ChoiceLock.hpp>
+#include <Pokedex/Effects/Flinch.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Species/Ditto.hpp>
 #include <SimulateTurn/RandomChance.hpp>
@@ -81,7 +83,7 @@ struct FocusSashOnAfterModifyDamage {
 void kingsRockOnModifyMove(
   types::registry& registry, const CurrentActionMovesAsSource& moves, types::percentChance addedFlinchChance) {
   for (types::entity move : moves) {
-    if (registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
+    if (registry.any_of<move::tags::Status, Flinch, AddedFlinchChance>(move)) {
       continue;
     }
 
@@ -246,6 +248,23 @@ void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
   simulation.view<lifeOrbOnAfterMove, Tags<LifeOrb>>(divisor);
 }
 
+void LumBerry::onAfterSetStatus(Simulation& simulation) {
+  simulation.addToEntities<tags::CanEatItem, tags::HasStatus, LumBerry, CurrentEffectAsTarget>();
+  // simulation.addToEntities<tags::CanEatItem, Confusion::Effect, LumBerry, CurrentEffectAsTarget>();
+  internal::tryEatItem(simulation);
+}
+
+void LumBerry::onEat(Simulation& simulation) {
+  simulation.view<internal::clearStatus, Tags<tags::CanEatItem, LumBerry>>();
+  // simulation.removeFromEntities<Confusion::Effect, tags::CanEatItem, LumBerry>();
+}
+
+void LumBerry::onUpdate(Simulation& simulation) {
+  simulation.addToEntities<tags::CanEatItem, tags::HasStatus, LumBerry, internal::tags::RunUpdate>();
+  // simulation.removeFromEntities<tags::CanEatItem, Confusion::Effect, LumBerry, internal::tags::RunUpdate>();
+  internal::tryEatItem(simulation);
+}
+
 void RockyHelmet::onDamagingHit(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<onDamagingHitHpDecreaseDivisor>();
 
@@ -253,9 +272,8 @@ void RockyHelmet::onDamagingHit(Simulation& simulation) {
 }
 
 void QuickClaw::onFractionalPriority(Simulation& simulation) {
-  simulation.view<
-    quickClawOnFractionalPrioritySetChance,
-    Tags<QuickClaw, pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>>(simulation);
+  simulation.view<quickClawOnFractionalPrioritySetChance, Tags<QuickClaw, tags::SimulateTurn, tags::ActivePokemon>>(
+    simulation);
 
   pokesim::internal::randomBinaryChance(
     simulation,
@@ -268,7 +286,6 @@ void QuickClaw::onFractionalPriority(Simulation& simulation) {
 void QuickPowder::onModifySpe(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<onModifySpeModifier>();
 
-  simulation.view<quickPowderOnModifySpe, Tags<QuickPowder> /*, entt::exclude_t<pokesim::tags::Transformed>*/>(
-    modifier);
+  simulation.view<quickPowderOnModifySpe, Tags<QuickPowder> /*, entt::exclude_t<tags::Transformed>*/>(modifier);
 }
 }  // namespace pokesim::dex

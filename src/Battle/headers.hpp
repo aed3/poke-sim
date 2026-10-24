@@ -8,6 +8,7 @@
 #include "Helpers/InternalHelpers.hpp"
 #include "ManageBattleState.hpp"
 #include "Pokemon/ManagePokemonState.hpp"
+#include "Pokemon/ManagePokemonTags.hpp"
 #include "Pokemon/PokemonProperties.hpp"
 #include "Setup/BattleStateSetup.hpp"
 #include "Setup/PokemonStateSetup.hpp"

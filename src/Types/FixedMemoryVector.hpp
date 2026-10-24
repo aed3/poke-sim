@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Config/Require.hpp>
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -93,14 +92,13 @@ class fixedMemoryVector : private std::array<Type, Size> {
   }
 
   void unordered_remove(const Type& value) {
-    POKESIM_REQUIRE(std::find(begin(), end(), value) != end(), "Value must be in vector to remove.");
-    for (uint8_t i = 0U; i < Size - 1U; i++) {
+    for (size_type i = 0U; i < Size - 1U; i++) {
       if (value == at(i)) {
         at(i) = back();
-        break;
+        used--;
+        return;
       }
     }
-    pop_back();
   }
 
   void pop_count(size_type remove) {

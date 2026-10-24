@@ -11,6 +11,7 @@
  * src/Simulation/Simulation.cpp
  * src/Simulation/RunEvent.cpp
  * src/Simulation/MoveHitSteps.cpp
+ * src/SimulateTurn/SimulateTurnEvents.cpp
  * src/SimulateTurn/SimulateTurn.cpp
  * src/SimulateTurn/RandomChance.cpp
  * src/SimulateTurn/ManageActionQueue.cpp
@@ -33,6 +34,7 @@
  * src/Battle/Setup/PokemonStateSetup.cpp
  * src/Battle/Setup/BattleStateSetup.cpp
  * src/Battle/Pokemon/PokemonProperties.cpp
+ * src/Battle/Pokemon/ManagePokemonTags.cpp
  * src/Battle/Pokemon/ManagePokemonState.cpp
  * src/Battle/ManageBattleState.cpp
  * src/Battle/Helpers/Helpers.cpp
@@ -334,9 +336,11 @@ void checkBattle(types::entity battleEntity, const types::registry& registry) {
   POKESIM_REQUIRE_NM(has<ActionQueue>(battleEntity, registry));
   const auto& [battle, sides, probability, actionQueue] =
     registry.get<Battle, Sides, Probability, ActionQueue>(battleEntity);
+  const auto& activeWithUpdateEvents = registry.try_get<ActiveWithUpdateEvents>(battleEntity);
 
   check(probability);
   check(actionQueue);
+  if (activeWithUpdateEvents) check(*activeWithUpdateEvents, registry);
 
   POKESIM_REQUIRE_NM(battleEntity == battle.val);
   POKESIM_REQUIRE_NM(sides.val.size() == Constants::SIDE_COUNT);
@@ -907,6 +911,16 @@ void check(const EffectStack& eventStack, const types::registry& registry) {
 template <>
 void check(const AddedFlinchChance& addedFlinchChance) {
   checkPercentChance(addedFlinchChance.val);
+}
+
+template <>
+void check(const ActiveWithUpdateEvents& activeWithUpdateEvents, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(listHasUniqueValues(activeWithUpdateEvents.val));
+  POKESIM_REQUIRE_NM(!activeWithUpdateEvents.val.empty());
+  for (types::entity pokemon : activeWithUpdateEvents.val) {
+    checkPokemon(pokemon, registry);
+    POKESIM_REQUIRE_NM(has<tags::ActivePokemon>(pokemon, registry));
+  }
 }
 
 template <>
@@ -2390,7 +2404,9 @@ void applyBasePowerEventModifier(
 }
 }  // namespace
 
-void runEachUpdate(Simulation&) {}
+void runUpdate(Simulation& simulation) {
+  dex::LumBerry::onUpdate(simulation);
+}
 
 void runBeforeMove(Simulation& simulation) {
   pokesim::dex::Paralysis::onBeforeMove(simulation);
@@ -2484,7 +2500,9 @@ template void runStatusImmunityEvent<pokesim::dex::Poison>(Simulation&);
 template void runStatusImmunityEvent<pokesim::dex::Sleep>(Simulation&);
 template void runStatusImmunityEvent<pokesim::dex::Toxic>(Simulation&);
 
-void runAfterSetStatusEvent(Simulation&) {}
+void runAfterSetStatusEvent(Simulation& simulation) {
+  dex::LumBerry::onAfterSetStatus(simulation);
+}
 
 void runChangeBoostEvent(Simulation&) {}
 void runTryBoostEvent(Simulation&) {}
@@ -2517,8 +2535,8 @@ void runResetDisabledMove(Simulation& simulation) {
 }
 
 void runResetTrappedPokemon(Simulation& simulation) {
-  simulation.addToEntities<tags::ResetTrappedPokemon, tags::ActiveAtTurnEnd, pokesim::tags::Trapped>();
-  simulation.removeFromEntities<pokesim::tags::Trapped, tags::ActiveAtTurnEnd>();
+  simulation.addToEntities<tags::ResetTrappedPokemon, tags::ActiveAtTurnEnd, pokesim::dex::Trapped>();
+  simulation.removeFromEntities<pokesim::dex::Trapped, tags::ActiveAtTurnEnd>();
 
   pokesim::dex::Trapped::onResetTrappedPokemon(simulation);
 
@@ -2573,7 +2591,12 @@ void runStartFreeze(Simulation&) {
 }
 
 void runTryTakeItemEvent(Simulation&) {}
+void runEatItemEvent(Simulation& simulation) {
+  dex::LumBerry::onEat(simulation);
+}
+
 void runAfterUseItemEvent(Simulation&) {}
+void runAfterEatItemEvent(Simulation&) {}
 
 void runRemoveItemEvent(Simulation& simulation) {
   pokesim::dex::AssaultVest::onRemove(simulation);
@@ -2814,7 +2837,7 @@ void removeImpossibleSecondaryEffectTargets(Simulation& simulation) {
 }
 
 void applyAddedFlinch(types::registry& registry, CurrentActionTarget target) {
-  registry.emplace<tags::Flinch>(target.val);
+  registry.emplace<dex::Flinch>(target.val);
 }
 
 void removeImpossibleAddedFlinch(
@@ -2822,7 +2845,7 @@ void removeImpossibleAddedFlinch(
   const simulate_turn::Options& options) {
   types::registry& registry = *handle.registry();
 
-  if (registry.all_of<tags::Flinch>(target.val)) {
+  if (registry.all_of<dex::Flinch>(target.val)) {
     handle.remove<AddedFlinchChance>();
     return;
   }
@@ -2978,7 +3001,10 @@ void moveHitLoop(Simulation& simulation) {
     internal::runDamagingHitEvent(simulation);
     internal::runAfterHitEvent(simulation);
 
+    internal::updateSpe(simulation, false);
+    internal::simulate_turn::runActiveUpdateEvents(simulation);
     internal::updateAllStats(simulation);
+
     simulation.view<deductMoveHitCount>();
     iterations++;
   }
@@ -2999,6 +3025,38 @@ void internal::runMoveHitChecks(Simulation& simulation) {
 
 //////////////////// END OF src/Simulation/MoveHitSteps.cpp ////////////////////
 
+/////////////// START OF src/SimulateTurn/SimulateTurnEvents.cpp ///////////////
+
+namespace pokesim::internal::simulate_turn {
+namespace {
+void setRunUpdate(
+  types::registry& registry, const ActiveWithUpdateEvents& activeWithUpdateEvents, types::activePokemonIndex index) {
+  if (index >= activeWithUpdateEvents.val.size()) {
+    return;
+  }
+  registry.emplace<pokesim::internal::tags::RunUpdate>(activeWithUpdateEvents.val[index]);
+}
+}  // namespace
+
+void runActiveUpdateEvents(Simulation& simulation) {
+  auto battleFilter = pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::Battle>{simulation};
+  if (battleFilter.hasNoneSelected()) {
+    return;
+  }
+
+  battleFilter.view<speedSortActiveWithUpdateEvents>();
+  resolveUpdateEventSpeedTies(simulation);
+  types::activePokemonIndex totalPossibleActive = simulation.activePokemonSlotsPerSide() * Constants::SIDE_COUNT;
+  for (types::activePokemonIndex index = 0U; index < totalPossibleActive; index++) {
+    battleFilter.view<setRunUpdate>(index);
+    runUpdate(simulation);
+    simulation.removeFromEntities<pokesim::internal::tags::RunUpdate>();
+  }
+}
+}  // namespace pokesim::internal::simulate_turn
+
+//////////////// END OF src/SimulateTurn/SimulateTurnEvents.cpp ////////////////
+
 ////////////////// START OF src/SimulateTurn/SimulateTurn.cpp //////////////////
 
 namespace pokesim::simulate_turn {
@@ -3015,7 +3073,7 @@ template <typename Filter>
 void speedSort(Filter battleFilter, Simulation& simulation) {
   battleFilter.template view<internal::simulate_turn::speedSort, Tags<tags::SpeedSortNeeded>>();
   battleFilter.template removeFromSelected<tags::SpeedSortNeeded>();
-  internal::simulate_turn::resolveSpeedTies(simulation);
+  internal::simulate_turn::resolveActionQueueSpeedTies(simulation);
 }
 
 void midTurnSwitch(Simulation& simulation) {
@@ -3027,7 +3085,7 @@ void midTurnSwitch(Simulation& simulation) {
   sideFilter.view<internal::simulate_turn::resolveMidTurnDecisions>();
   sideFilter.removeFromSelected<MidTurnSideDecision>();
   getBattleFilter(simulation).view<internal::simulate_turn::speedSortMidTurnSwitches>();
-  internal::simulate_turn::resolveSpeedTies(simulation);
+  internal::simulate_turn::resolveActionQueueSpeedTies(simulation);
 }
 
 template <typename ActionTag>
@@ -3216,7 +3274,7 @@ void runSwitchAction(Simulation& simulation) {
   battleFilter.view<internal::setCurrentActionSwitchSource>();
   battleFilter.view<internal::setCurrentActionSwitchTarget>();
   internal::runBeforeSwitchOutEvent(simulation);
-  internal::runEachUpdate(simulation);
+  internal::simulate_turn::runActiveUpdateEvents(simulation);
   internal::runSwitchOutEvent(simulation);
 
   internal::runEndAbilityEvent(simulation);
@@ -3226,6 +3284,7 @@ void runSwitchAction(Simulation& simulation) {
     pokesim::tags::CurrentActionSource,
     action::tags::NotFaintedActiveSwitch>();
   internal::clearVolatiles(simulation);
+  simulation.view<internal::removeFromActiveWithUpdateEvents, Tags<pokesim::internal::tags::ClearVolatiles>>();
   simulation.removeFromEntities<pokesim::internal::tags::ClearVolatiles>();
 
   simulation.removeFromEntities<pokesim::tags::ActivePokemon, pokesim::tags::CurrentActionSource>();
@@ -3313,6 +3372,7 @@ void faintPokemon(Simulation& simulation) {
 
     pokemonFilter.addToSelected<pokesim::internal::tags::ClearVolatiles>();
     internal::clearVolatiles(simulation);
+    simulation.view<internal::removeFromActiveWithUpdateEvents, Tags<pokesim::internal::tags::ClearVolatiles>>();
     simulation.removeFromEntities<pokesim::internal::tags::ClearVolatiles>();
 
     simulation.addToEntities<pokesim::tags::Fainted, pokesim::tags::Fainting>();
@@ -4122,23 +4182,21 @@ template void setRandomEventChances<5U>(types::handle, const Simulation&, std::a
 
 namespace pokesim::internal::simulate_turn {
 namespace {
+template <typename List, typename IsFasterThan, typename IsSameSpeed>
 void sortAndSetSpeedTies(
-  types::handle handle, ActionQueue& actionQueue, types::actionQueueIndex first, types::actionQueueIndex size) {
-  POKESIM_REQUIRE(!actionQueue.val.empty(), "The action queue cannot be empty when sorting.");
-  POKESIM_REQUIRE(first + size <= actionQueue.val.size(), "The last index would have been out of bounds.");
-  auto& actionQueueItems = actionQueue.val;
+  types::handle handle, List& list, types::actionQueueIndex first, types::actionQueueIndex size,
+  IsFasterThan isFasterThan, IsSameSpeed isSameSpeed) {
+  POKESIM_REQUIRE(!list.empty(), "The action queue cannot be empty when sorting.");
+  POKESIM_REQUIRE(first + size <= list.size(), "The last index would have been out of bounds.");
 
   // TODO(aed3): Test how different sorting algorithms affect speed
-  std::sort(
-    actionQueueItems.begin() + first,
-    actionQueueItems.begin() + (first + size),
-    [](const ActionQueueItem& itemA, const ActionQueueItem& itemB) { return itemA.isFasterThan(itemB); });
+  std::sort(std::next(list.begin(), first), std::next(list.begin(), first + size), isFasterThan);
 
   SpeedTieIndexes speedTies;
   types::actionQueueIndex lastEqual = first, tieCount = 1U;
 
   for (types::actionQueueIndex i = first + 1U; i < first + size; i++) {
-    if (actionQueueItems[i].isSameSpeed(actionQueueItems[i - 1U])) {
+    if (isSameSpeed(list[i], list[i - 1U])) {
       tieCount++;
     }
     else {
@@ -4157,6 +4215,23 @@ void sortAndSetSpeedTies(
   if (!speedTies.val.empty()) {
     handle.emplace<SpeedTieIndexes>(speedTies);
   }
+}
+
+void sortActionQueueAndSetSpeedTies(
+  types::handle handle, ActionQueue& actionQueue, types::actionQueueIndex first, types::actionQueueIndex size) {
+  sortAndSetSpeedTies(
+    handle,
+    actionQueue.val,
+    first,
+    size,
+    [](const ActionQueueItem& itemA, const ActionQueueItem& itemB) { return itemA.isFasterThan(itemB); },
+    [](const ActionQueueItem& itemA, const ActionQueueItem& itemB) { return itemA.isSameSpeed(itemB); });
+}
+
+template <typename List>
+void setSpeedTieOrder(List& list, const SpeedTieIndexes& speedTies, RandomEventIndex randomEventIndex) {
+  const auto& speedTie = speedTies.val.back();
+  shuffleShortList(list.val, speedTie.start, speedTie.length, randomEventIndex.val);
 }
 
 void setSpeedTieRandomEventCount(types::handle handle, const SpeedTieIndexes& speedTies, const Simulation& simulation) {
@@ -4183,6 +4258,23 @@ void removeEmptySpeedTieIndexes(types::handle handle, SpeedTieIndexes& speedTies
     handle.remove<SpeedTieIndexes>();
   }
 }
+
+template <typename List>
+void resolveSpeedTies(Simulation& simulation) {
+  using Limit = Constants::ActivePokemon;
+  types::activePokemonIndex speedTiesResolved = Limit::MIN;
+  while (!simulation.hasNone<SpeedTieIndexes>()) {
+    POKESIM_REQUIRE(
+      speedTiesResolved <= Limit::MAX,
+      "More speed ties were resolved than are possible in at least one battle.");
+
+    simulation.view<setSpeedTieRandomEventCount>(simulation);
+    randomEventCount(simulation, [](Simulation& sim) { sim.view<setSpeedTieOrder<List>>(); }, {});
+
+    simulation.view<removeEmptySpeedTieIndexes>();
+    speedTiesResolved++;
+  }
+}
 }  // namespace
 
 void speedSort(types::handle handle, ActionQueue& actionQueue) {
@@ -4190,7 +4282,26 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
     return;
   }
 
-  sortAndSetSpeedTies(handle, actionQueue, 0U, actionQueue.val.size());
+  sortActionQueueAndSetSpeedTies(handle, actionQueue, 0U, actionQueue.val.size());
+}
+
+void speedSortActiveWithUpdateEvents(types::handle handle, ActiveWithUpdateEvents& activeWithUpdateEvents) {
+  if (activeWithUpdateEvents.val.size() <= 1U) {
+    return;
+  }
+
+  types::registry& registry = *handle.registry();
+  sortAndSetSpeedTies(
+    handle,
+    activeWithUpdateEvents.val,
+    0U,
+    activeWithUpdateEvents.val.size(),
+    [&registry](types::entity entityA, types::entity entityB) {
+      return registry.get<stat::EffectiveSpe>(entityA).val > registry.get<stat::EffectiveSpe>(entityB).val;
+    },
+    [&registry](types::entity entityA, types::entity entityB) {
+      return registry.get<stat::EffectiveSpe>(entityA).val == registry.get<stat::EffectiveSpe>(entityB).val;
+    });
 }
 
 void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue) {
@@ -4206,52 +4317,15 @@ void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue) {
     return;
   }
 
-  sortAndSetSpeedTies(handle, actionQueue, 0U, midTurnSwitches);
+  sortActionQueueAndSetSpeedTies(handle, actionQueue, 0U, midTurnSwitches);
 }
 
-void setSpeedTieOrder(ActionQueue& actionQueue, const SpeedTieIndexes& speedTies, RandomEventIndex randomEventIndex) {
-  const auto& speedTie = speedTies.val.back();
-
-  // This loop shuffles a list based on one random number where each possible shuffling has an equal chance. The main
-  // idea is to choose where each action should be placed in that new ordering by using the ranges the random number
-  // belongs to. For example, let's say there are 3 actions that speed tied, the random number (randomEventIndex) is 2,
-  // and we want to find where the third action in the original ordering should move to. There are 6 different ways to
-  // order those actions (3 factorial = 6), meaning the randomEventIndex could include any value from 0 to 5. The code
-  // below first separates the 0 to 5 range into 3 equally sized sections (so 2 values per section) and then calculates
-  // that the randomEventIndex of 2 is in the second section. That section's index is used as where the third action
-  // will go as there will be as many sections as there are places to move that action.
-  types::eventPossibilities valuesPerSection = 1U;
-  for (types::actionQueueIndex sections = 1U; sections < speedTie.length; sections++) {
-    types::eventPossibilities totalValues = (sections + 1U) * valuesPerSection;
-    types::eventPossibilities eventIndexInAllValues = randomEventIndex.val % totalValues;
-    types::eventPossibilities sectionOfEventIndex = eventIndexInAllValues / valuesPerSection;
-
-    types::activePokemonIndex oldIndex = speedTie.start + sections;
-    types::activePokemonIndex newIndex = speedTie.start + sectionOfEventIndex;
-
-    POKESIM_REQUIRE(
-      newIndex < speedTie.start + speedTie.length,
-      "newIndex would be out of bounds for the current speed tie.");
-
-    std::swap(actionQueue.val[oldIndex], actionQueue.val[newIndex]);
-    valuesPerSection = totalValues;
-  }
+void resolveActionQueueSpeedTies(Simulation& simulation) {
+  resolveSpeedTies<ActionQueue>(simulation);
 }
 
-void resolveSpeedTies(Simulation& simulation) {
-  using Limit = Constants::ActivePokemon;
-  types::activePokemonIndex speedTiesResolved = Limit::MIN;
-  while (!simulation.hasNone<SpeedTieIndexes>()) {
-    POKESIM_REQUIRE(
-      speedTiesResolved <= Limit::MAX,
-      "More speed ties were resolved than are possible in at least one battle.");
-
-    simulation.view<setSpeedTieRandomEventCount>(simulation);
-    randomEventCount(simulation, [](Simulation& sim) { sim.view<setSpeedTieOrder>(); }, {});
-
-    simulation.view<removeEmptySpeedTieIndexes>();
-    speedTiesResolved++;
-  }
+void resolveUpdateEventSpeedTies(Simulation& simulation) {
+  resolveSpeedTies<ActiveWithUpdateEvents>(simulation);
 }
 
 void addBeforeTurnAction(ActionQueue& actionQueue) {
@@ -4401,7 +4475,7 @@ void setDoublesMidTurnSideOptions(
 
 void setSinglesSwitchOptions(
   types::registry& registry, PlayerSide playerSide, const Team& team, SinglesSideOptions& sideOptions) {
-  if (registry.all_of<tags::Trapped>(team.val[0]) && !registry.all_of<tags::Switching>(team.val[0])) {
+  if (registry.all_of<dex::Trapped>(team.val[0]) && !registry.all_of<tags::Switching>(team.val[0])) {
     return;
   }
 
@@ -4537,7 +4611,7 @@ void resolveSlotDecision(
     }
   }
   else if constexpr (std::is_same_v<SwitchDecision, Decision>) {
-    POKESIM_REQUIRE(!registry.all_of<tags::Trapped>(sourceEntity), "Cannot switch while trapped.");
+    POKESIM_REQUIRE(!registry.all_of<dex::Trapped>(sourceEntity), "Cannot switch while trapped.");
     actionQueueItem.order = ActionOrder::SWITCH;
   }
   else if constexpr (std::is_same_v<ItemDecision, Decision>) {
@@ -4592,7 +4666,7 @@ void setSideOptions(Simulation& simulation) {
     simulation.view<
       setDoublesSwitchOptions,
       Tags<pokesim::tags::ActivePokemon>,
-      entt::exclude_t<PokemonRequestsMidTurn, pokesim::tags::Trapped>>();
+      entt::exclude_t<PokemonRequestsMidTurn, dex::Trapped>>();
   }
 }
 
@@ -5477,7 +5551,7 @@ namespace {
 void knockOffOnBasePowerCheckRemovableItem(
   types::registry& registry, CurrentActionSource source, CurrentActionTarget target, EventModifier&) {
   if (
-    registry.all_of<pokesim::tags::HasItem>(target.val) &&
+    registry.all_of<tags::HasItem>(target.val) &&
     registry.get<stat::CurrentHp>(source.val).val > Constants::PokemonCurrentHpStat::MIN) {
     registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
   }
@@ -5485,7 +5559,7 @@ void knockOffOnBasePowerCheckRemovableItem(
 
 void knockOffOnAfterHitCheckRemovableItem(types::registry& registry, CurrentActionTarget target) {
   if (
-    registry.all_of<pokesim::tags::HasItem>(target.val) &&
+    registry.all_of<tags::HasItem>(target.val) &&
     registry.get<stat::CurrentHp>(target.val).val > Constants::PokemonCurrentHpStat::MIN) {
     registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
   }
@@ -5495,7 +5569,7 @@ void reflectOnStart(types::handle handle, CurrentActionTarget target, const Poke
   types::registry& registry = *handle.registry();
   Side targetSide = registry.get<Side>(target.val);
   if (registry.all_of<Reflect::Effect>(targetSide.val)) {
-    handle.emplace<pokesim::tags::FailedCurrentMoveHit>();
+    handle.emplace<tags::FailedCurrentMoveHit>();
     return;
   }
 
@@ -5662,7 +5736,7 @@ struct FocusSashOnAfterModifyDamage {
 void kingsRockOnModifyMove(
   types::registry& registry, const CurrentActionMovesAsSource& moves, types::percentChance addedFlinchChance) {
   for (types::entity move : moves) {
-    if (registry.any_of<move::tags::Status, pokesim::tags::Flinch, AddedFlinchChance>(move)) {
+    if (registry.any_of<move::tags::Status, Flinch, AddedFlinchChance>(move)) {
       continue;
     }
 
@@ -5827,6 +5901,23 @@ void LifeOrb::onAfterMoveUsed(Simulation& simulation) {
   simulation.view<lifeOrbOnAfterMove, Tags<LifeOrb>>(divisor);
 }
 
+void LumBerry::onAfterSetStatus(Simulation& simulation) {
+  simulation.addToEntities<tags::CanEatItem, tags::HasStatus, LumBerry, CurrentEffectAsTarget>();
+  // simulation.addToEntities<tags::CanEatItem, Confusion::Effect, LumBerry, CurrentEffectAsTarget>();
+  internal::tryEatItem(simulation);
+}
+
+void LumBerry::onEat(Simulation& simulation) {
+  simulation.view<internal::clearStatus, Tags<tags::CanEatItem, LumBerry>>();
+  // simulation.removeFromEntities<Confusion::Effect, tags::CanEatItem, LumBerry>();
+}
+
+void LumBerry::onUpdate(Simulation& simulation) {
+  simulation.addToEntities<tags::CanEatItem, tags::HasStatus, LumBerry, internal::tags::RunUpdate>();
+  // simulation.removeFromEntities<tags::CanEatItem, Confusion::Effect, LumBerry, internal::tags::RunUpdate>();
+  internal::tryEatItem(simulation);
+}
+
 void RockyHelmet::onDamagingHit(Simulation& simulation) {
   const auto divisor = simulation.pokedex().getStaticValue<onDamagingHitHpDecreaseDivisor>();
 
@@ -5834,9 +5925,8 @@ void RockyHelmet::onDamagingHit(Simulation& simulation) {
 }
 
 void QuickClaw::onFractionalPriority(Simulation& simulation) {
-  simulation.view<
-    quickClawOnFractionalPrioritySetChance,
-    Tags<QuickClaw, pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>>(simulation);
+  simulation.view<quickClawOnFractionalPrioritySetChance, Tags<QuickClaw, tags::SimulateTurn, tags::ActivePokemon>>(
+    simulation);
 
   pokesim::internal::randomBinaryChance(
     simulation,
@@ -5849,8 +5939,7 @@ void QuickClaw::onFractionalPriority(Simulation& simulation) {
 void QuickPowder::onModifySpe(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<onModifySpeModifier>();
 
-  simulation.view<quickPowderOnModifySpe, Tags<QuickPowder> /*, entt::exclude_t<pokesim::tags::Transformed>*/>(
-    modifier);
+  simulation.view<quickPowderOnModifySpe, Tags<QuickPowder> /*, entt::exclude_t<tags::Transformed>*/>(modifier);
 }
 }  // namespace pokesim::dex
 
@@ -5881,7 +5970,7 @@ void paralysisOnModifySpeed(stat::EffectiveSpe& effectiveSpe, types::stat speedD
 
 void failedOnBeforeMove(types::registry& registry, const CurrentActionMovesAsSource& moves) {
   for (types::entity move : moves) {
-    registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
+    registry.emplace<tags::FailedCurrentMoveHit>(move);
   }
 }
 
@@ -5901,8 +5990,7 @@ void choiceLockOnDisableMove(types::handle handle, const ChoiceLock& choiceLocke
 void trapperOnSwitchOut(types::handle handle, Trapper trapper, Battle battle) {
   types::entity source = handle.registry()->get<CurrentAction>(battle.val).source;
   if (source == trapper.val) {
-    handle.remove<Trapper>();
-    handle.remove<pokesim::tags::Trapped>();
+    handle.remove<Trapper, Trapped>();
   }
 }
 }  // namespace
@@ -5939,8 +6027,8 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
     simulation,
     [](Simulation& sim) { sim.view<failedOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
     std::nullopt);
-  simulation.view<internal::setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
-  simulation.removeFromEntities<pokesim::tags::FailedCurrentMoveHit>();
+  simulation.view<internal::setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
+  simulation.removeFromEntities<tags::FailedCurrentMoveHit>();
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {
@@ -5958,13 +6046,13 @@ void ChoiceLock::onResetDisabledMove(Simulation& simulation) {
 }
 
 void Flinch::onBeforeMove(Simulation& simulation) {
-  simulation.view<failedOnBeforeMove, Tags<tags::Flinch>>();
-  simulation.view<internal::setFailedActionMove, Tags<pokesim::tags::FailedCurrentMoveHit>>();
-  simulation.removeFromEntities<pokesim::tags::FailedCurrentMoveHit>();
+  simulation.view<failedOnBeforeMove, Tags<Flinch>>();
+  simulation.view<internal::setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
+  simulation.removeFromEntities<tags::FailedCurrentMoveHit>();
 }
 
 void Flinch::onResidual(Simulation& simulation) {
-  simulation.removeFromEntities<tags::Flinch, tags::ActivePokemon>();
+  simulation.removeFromEntities<Flinch, tags::ActivePokemon>();
 }
 
 void Trapped::onResetTrappedPokemon(Simulation& simulation) {
@@ -6000,7 +6088,7 @@ void analyticOnBasePowerSimulateTurn(
 
     types::entity upcomingAttacker =
       slotToPokemonEntity(registry, registry.get<Sides>(battle.val), item.decision.sourceSlot());
-    if (registry.all_of<pokesim::tags::ActivePokemon>(upcomingAttacker)) {
+    if (registry.all_of<tags::ActivePokemon>(upcomingAttacker)) {
       boosted = false;
       break;
     }
@@ -6079,7 +6167,7 @@ void imposterOnSwitchIn(types::handle handle, Side side, const Simulation& simul
     transformTarget = foeTeam.val[position];
   }
 
-  if (registry.all_of<pokesim::tags::ActivePokemon>(transformTarget)) {
+  if (registry.all_of<tags::ActivePokemon>(transformTarget)) {
     internal::transformInto(registry, handle.entity(), transformTarget, simulation.pokedex());
   }
 }
@@ -6105,7 +6193,7 @@ void pranksterOnImmunity(types::handle handle, const CurrentActionMovesAsSource&
 
     SpeciesTypes targetTypes = registry.get<SpeciesTypes>(target.val);
     if (targetTypes.has(Type::DARK)) {
-      registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
+      registry.emplace<tags::FailedCurrentMoveHit>(move);
     }
   }
 }
@@ -6183,11 +6271,12 @@ void Analytic::onBasePower(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<onBasePowerNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<onBasePowerDenominator>();
 
-  simulation.view<analyticOnBasePowerSimulateTurn, Tags<Analytic, pokesim::tags::SimulateTurn>>(numerator, denominator);
-  internal::currentActionMovesAsSourceView<
-    AnalyticOnBasePowerCalcDamage,
-    Tags<Analytic, pokesim::tags::CalculateDamage>>(simulation, numerator, denominator);
-  internal::currentActionMovesAsSourceView<AnalyticOnBasePowerCalcDamage, Tags<Analytic, pokesim::tags::AnalyzeEffect>>(
+  simulation.view<analyticOnBasePowerSimulateTurn, Tags<Analytic, tags::SimulateTurn>>(numerator, denominator);
+  internal::currentActionMovesAsSourceView<AnalyticOnBasePowerCalcDamage, Tags<Analytic, tags::CalculateDamage>>(
+    simulation,
+    numerator,
+    denominator);
+  internal::currentActionMovesAsSourceView<AnalyticOnBasePowerCalcDamage, Tags<Analytic, tags::AnalyzeEffect>>(
     simulation,
     numerator,
     denominator);
@@ -6223,10 +6312,9 @@ void Plus::onModifySpA(Simulation& simulation) {
 void Prankster::onModifyPriority(Simulation& simulation) {
   const auto priorityBoost = simulation.pokedex().getStaticValue<onModifyPriorityIncrease>();
 
-  simulation
-    .view<pranksterOnModifyPriority, Tags<Prankster, pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>>(
-      priorityBoost,
-      simulation.pokedex());
+  simulation.view<pranksterOnModifyPriority, Tags<Prankster, tags::SimulateTurn, tags::ActivePokemon>>(
+    priorityBoost,
+    simulation.pokedex());
 }
 
 void Prankster::onImmunity(Simulation& simulation) {
@@ -6257,18 +6345,18 @@ void Static::onDamagingHit(Simulation& simulation) {
   simulation.view<staticOnDamagingHit, Tags<Static>>(chanceOfStatic, simulation);
 
   internal::checkIfCanSetStatus(simulation);
-  internal::removeRandomBinaryChanceComponents(simulation, entt::exclude<pokesim::tags::CanSetStatus>);
+  internal::removeRandomBinaryChanceComponents(simulation, entt::exclude<tags::EffectCanSetStatus>);
 
   pokesim::internal::randomBinaryChance(
     simulation,
     [](Simulation& sim) {
-      sim.removeFromEntities<tags::CanSetStatus, pokesim::internal::tags::RandomEventCheckFailed>();
+      sim.removeFromEntities<tags::EffectCanSetStatus, pokesim::internal::tags::RandomEventCheckFailed>();
     },
     std::nullopt);
 
   internal::setStatus(simulation);
   internal::clearCurrentEffect(simulation);
-  simulation.removeFromEntities<Paralysis, pokesim::tags::Battle>();
+  simulation.removeFromEntities<Paralysis, tags::Battle>();
 }
 }  // namespace pokesim::dex
 
@@ -7125,6 +7213,9 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
     if (!pokemonSetup.isFainted()) {
       teamRemaining.val++;
     }
+    if (pokemonSetup.isActive()) {
+      tryAddToActiveWithUpdateEvents({*handle.registry(), pokemonSetup.entity()}, battle);
+    }
   }
 }
 
@@ -7256,6 +7347,10 @@ void PokemonStateSetup::setIVs(const Ivs& ivs) {
 bool PokemonStateSetup::isFainted() {
   return handle.all_of<pokesim::tags::Fainted>();
 }
+
+bool PokemonStateSetup::isActive() {
+  return handle.all_of<pokesim::tags::ActivePokemon>();
+}
 }  // namespace pokesim::internal
 
 //////////////// END OF src/Battle/Setup/PokemonStateSetup.cpp /////////////////
@@ -7375,6 +7470,37 @@ bool isTargetImmune(types::registry& registry, CurrentActionTarget target, TypeN
 
 /////////////// END OF src/Battle/Pokemon/PokemonProperties.cpp ////////////////
 
+////////////// START OF src/Battle/Pokemon/ManagePokemonTags.cpp ///////////////
+
+// TODO(aed3): Make this autogenerated
+
+namespace pokesim::internal {
+void clearVolatileTags(Simulation& simulation) {
+  auto view = simulation.registry.view<tags::ClearVolatiles>();
+  simulation.registry.remove<
+    AtkBoost,
+    DefBoost,
+    SpaBoost,
+    SpdBoost,
+    SpeBoost,
+    AccBoost,
+    EvaBoost,
+    LastUsedMove,
+    TransformedFrom,
+    pokesim::dex::ChoiceLock,
+    pokesim::dex::Flinch,
+    pokesim::dex::Trapped,
+    pokesim::dex::Trapper,
+    pokesim::tags::Switching>(view.begin(), view.end());
+}
+
+bool hasUpdateEvent(types::handle pokemonHandle) {
+  return pokemonHandle.any_of<dex::LumBerry>();
+}
+}  // namespace pokesim::internal
+
+/////////////// END OF src/Battle/Pokemon/ManagePokemonTags.cpp ////////////////
+
 ////////////// START OF src/Battle/Pokemon/ManagePokemonState.cpp //////////////
 
 namespace pokesim::internal {
@@ -7398,6 +7524,7 @@ struct RemoveIfHas {
 template <typename SelectionTag>
 void removeItemComponents(Simulation& simulation) {
   dex::forEachItem<RemoveItem, SelectionTag>(simulation.pokedex(), simulation);
+  simulation.view<checkIfRemoveFromActiveWithUpdateEvents, Tags<SelectionTag>>();
   auto view = simulation.registry.view<SelectionTag>();
   simulation.registry.remove<pokesim::tags::HasItem, item::tags::Choice, item::tags::Berry>(view.begin(), view.end());
   simulation.removeFromEntities<SelectionTag>();
@@ -7464,7 +7591,7 @@ void clampBoost(types::registry& registry, CurrentEffectTarget target, BoostType
 template <typename StatusType>
 struct CheckIfStatusIsSettable {
   static void run(Simulation& simulation) {
-    simulation.addToEntities<pokesim::tags::CanSetStatus, StatusType, CurrentEffectSource, CurrentEffectTarget>();
+    simulation.addToEntities<pokesim::tags::EffectCanSetStatus, StatusType, CurrentEffectSource, CurrentEffectTarget>();
     simulation.view<checkIfTargetHasStatus, Tags<StatusType>>();
     simulation.view<checkTypeStatusImmunity, Tags<StatusType>>(simulation.pokedex());
     runStatusImmunityEvent<StatusType>(simulation);
@@ -7472,7 +7599,7 @@ struct CheckIfStatusIsSettable {
 
   static void checkIfTargetHasStatus(types::handle handle, CurrentEffectTarget target) {
     if (handle.registry()->all_of<pokesim::tags::HasStatus>(target.val)) {
-      handle.remove<pokesim::tags::CanSetStatus>();
+      handle.remove<pokesim::tags::EffectCanSetStatus>();
     }
   }
 
@@ -7480,7 +7607,7 @@ struct CheckIfStatusIsSettable {
     SpeciesTypes types = handle.registry()->get<SpeciesTypes>(target.val);
     for (dex::Type type : types.val) {
       if (pokedex.getStaticValue<StatusType::isTypeImmune>(type)) {
-        handle.remove<pokesim::tags::CanSetStatus>();
+        handle.remove<pokesim::tags::EffectCanSetStatus>();
         return;
       }
     }
@@ -7491,7 +7618,7 @@ template <typename StatusType>
 struct RemoveNotSettableStatus {
   static void run(Simulation& simulation) {
     simulation.removeFromEntities<StatusType, CurrentEffectSource, CurrentEffectTarget>(
-      entt::exclude<pokesim::tags::CanSetStatus>);
+      entt::exclude<pokesim::tags::EffectCanSetStatus>);
   }
 };
 
@@ -7511,7 +7638,7 @@ struct SetEffectTargetStatus {
 
 bool areTypesTrappedImmune(SpeciesTypes types, const Pokedex& pokedex) {
   for (pokesim::dex::Type type : types.val) {
-    if (pokedex.getStaticValue<pokesim::dex::Trapped::isTypeImmune>(type)) {
+    if (pokedex.getStaticValue<dex::Trapped::isTypeImmune>(type)) {
       return true;
     }
   }
@@ -7552,8 +7679,8 @@ void trapAndSetTrapper(
     return;
   }
 
-  registry.emplace<pokesim::tags::Trapped>(target.val);
-  registry.emplace<pokesim::dex::Trapper>(target.val, source.val);
+  registry.emplace<dex::Trapped>(target.val);
+  registry.emplace<dex::Trapper>(target.val, source.val);
 }
 
 void setSpeedSortNeeded(types::registry& registry, Battle battle) {
@@ -7561,7 +7688,7 @@ void setSpeedSortNeeded(types::registry& registry, Battle battle) {
 }
 }  // namespace
 
-void setItem(types::registry& registry, pokesim::dex::Item item, types::entity entity, const Pokedex& pokedex) {
+void setItem(types::registry& registry, dex::Item item, types::entity entity, const Pokedex& pokedex) {
   registry.emplace<pokesim::tags::HasItem>(entity);
   dex::emplaceTagFromEnum(item, registry, entity);
 
@@ -7573,17 +7700,20 @@ void setItem(types::registry& registry, pokesim::dex::Item item, types::entity e
   }
 }
 
-void setAbility(types::registry& registry, pokesim::dex::Ability ability, types::entity entity) {
+void setAbility(types::registry& registry, dex::Ability ability, types::entity entity) {
   registry.emplace<pokesim::tags::HasAbility>(entity);
   dex::emplaceTagFromEnum(ability, registry, entity);
 }
 
-void setStatus(types::registry& registry, pokesim::dex::Status status, types::entity entity) {
+void setStatus(types::registry& registry, dex::Status status, types::entity entity) {
   registry.emplace<pokesim::tags::HasStatus>(entity);
   dex::emplaceTagFromEnum(status, registry, entity);
 }
 
 void checkIfCanUseItem(Simulation&) {}
+void checkIfCanEatItem(Simulation& simulation) {
+  checkIfCanUseItem(simulation);
+}
 
 void useItem(Simulation& simulation) {
   runAfterUseItemEvent(simulation);
@@ -7593,6 +7723,18 @@ void useItem(Simulation& simulation) {
 void tryUseItem(Simulation& simulation) {
   checkIfCanUseItem(simulation);
   useItem(simulation);
+}
+
+void eatItem(Simulation& simulation) {
+  runEatItemEvent(simulation);
+  runAfterEatItemEvent(simulation);
+  runAfterUseItemEvent(simulation);
+  removeItemComponents<pokesim::tags::CanEatItem>(simulation);
+}
+
+void tryEatItem(Simulation& simulation) {
+  checkIfCanEatItem(simulation);
+  eatItem(simulation);
 }
 
 void checkIfCanRemoveItem(Simulation& simulation) {
@@ -7613,19 +7755,18 @@ void tryRemoveItem(Simulation& simulation) {
 }
 
 void checkIfCanSetStatus(Simulation& simulation) {
-  pokesim::dex::forEachStatus<CheckIfStatusIsSettable>(simulation);
+  dex::forEachStatus<CheckIfStatusIsSettable>(simulation);
 }
 
 void setStatus(Simulation& simulation) {
-  pokesim::dex::forEachStatus<RemoveNotSettableStatus>(simulation);
-  simulation.removeFromEntities<pokesim::tags::CanSetStatus>();
-
-  pokesim::dex::forEachStatus<SetEffectTargetStatus>(simulation);
+  dex::forEachStatus<RemoveNotSettableStatus>(simulation);
+  dex::forEachStatus<SetEffectTargetStatus>(simulation);
 
   runStartSleep(simulation);
   runStartFreeze(simulation);
 
   runAfterSetStatusEvent(simulation);
+  simulation.removeFromEntities<pokesim::tags::EffectCanSetStatus>();
 }
 
 void trySetStatus(Simulation& simulation) {
@@ -7634,36 +7775,13 @@ void trySetStatus(Simulation& simulation) {
 }
 
 void clearStatus(types::handle pokemonHandle) {
-  pokemonHandle.remove<
-    pokesim::tags::HasStatus,
-    pokesim::dex::Burn,
-    pokesim::dex::Freeze,
-    pokesim::dex::Paralysis,
-    pokesim::dex::Poison,
-    pokesim::dex::Sleep,
-    pokesim::dex::Toxic>();
+  pokemonHandle
+    .remove<pokesim::tags::HasStatus, dex::Burn, dex::Freeze, dex::Paralysis, dex::Poison, dex::Sleep, dex::Toxic>();
 }
 
 void clearVolatiles(Simulation& simulation) {
   simulation.view<revertTransform, Tags<tags::ClearVolatiles>>(simulation.pokedex());
-
-  auto view = simulation.registry.view<tags::ClearVolatiles>();
-  // TODO(aed3): Make autogenerated
-  simulation.registry.remove<
-    AtkBoost,
-    DefBoost,
-    SpaBoost,
-    SpdBoost,
-    SpeBoost,
-    AccBoost,
-    EvaBoost,
-    LastUsedMove,
-    pokesim::dex::ChoiceLock,
-    pokesim::dex::Trapper,
-    TransformedFrom,
-    pokesim::tags::Flinch,
-    pokesim::tags::Switching,
-    pokesim::tags::Trapped>(view.begin(), view.end());
+  clearVolatileTags(simulation);
 }
 
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
@@ -7744,7 +7862,7 @@ void trap(types::handle handle, SpeciesTypes types, const Pokedex& pokedex) {
     return;
   }
 
-  handle.emplace<pokesim::tags::Trapped>();
+  handle.emplace<dex::Trapped>();
 }
 
 void transformInto(types::registry& registry, types::entity source, types::entity target, const Pokedex& pokedex) {
@@ -7807,7 +7925,7 @@ void transformInto(types::registry& registry, types::entity source, types::entit
   sourceHandle.emplace<pokesim::tags::SpdStatUpdateRequired>();
   sourceHandle.emplace<pokesim::tags::SpeStatUpdateRequired>();
 
-  sourceHandle.remove<pokesim::dex::ChoiceLock, DisabledMoveSlots, LastUsedMove>();
+  sourceHandle.remove<dex::ChoiceLock, DisabledMoveSlots, LastUsedMove>();
 
   // Technically, EndAbility should be called as well for the source's original ability, but since neither Ditto nor Mew
   // have abilities that need that, I'll let it go for now.
@@ -7961,8 +8079,8 @@ void clearEffectComponents(types::registry& registry, const View& view) {
     SpeBoost,
     AccBoost,
     EvaBoost,
-    pokesim::tags::Flinch,
     AddedFlinchChance,
+    dex::Flinch,
     dex::Paralysis,
     dex::Burn>(view.begin(), view.end());
 }
@@ -8169,6 +8287,42 @@ void clearCurrentBattleEffect(Simulation& simulation) {
   clearEffectComponents(simulation.registry, simulation.registry.view<pokesim::tags::Battle>());
   clearCurrentEffect(simulation);
 }
+
+void removeFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle) {
+  types::registry& registry = *pokemonHandle.registry();
+  ActiveWithUpdateEvents* activeWithUpdateEvents = registry.try_get<ActiveWithUpdateEvents>(battle.val);
+  if (!activeWithUpdateEvents) {
+    return;
+  }
+
+  activeWithUpdateEvents->val.unordered_remove(pokemonHandle.entity());
+  if (activeWithUpdateEvents->val.empty()) {
+    registry.remove<ActiveWithUpdateEvents>(battle.val);
+  }
+}
+
+void tryAddToActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle) {
+  if (!hasUpdateEvent(pokemonHandle)) {
+    return;
+  }
+
+  ActiveWithUpdateEvents& activeWithUpdateEvents =
+    pokemonHandle.registry()->get_or_emplace<ActiveWithUpdateEvents>(battle.val);
+
+  POKESIM_REQUIRE(
+    std::find(activeWithUpdateEvents.val.begin(), activeWithUpdateEvents.val.end(), pokemonHandle.entity()) ==
+      activeWithUpdateEvents.val.end(),
+    "Pokemon should only be in this list once.");
+
+  activeWithUpdateEvents.val.push_back(pokemonHandle.entity());
+}
+
+void checkIfRemoveFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle) {
+  if (!hasUpdateEvent(pokemonHandle)) {
+    removeFromActiveWithUpdateEvents(pokemonHandle, battle);
+  }
+}
+
 }  // namespace pokesim::internal
 
 /////////////////// END OF src/Battle/ManageBattleState.cpp ////////////////////
@@ -8639,6 +8793,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   }
 
   // Not simplified further to a, for example, packed template type list, to make debugging what type went wrong easier
+  remapComponentEntities<ActiveWithUpdateEvents>(registry, entityMap);
   remapComponentEntities<AddedRecycledActionMove1>(registry, entityMap);
   remapComponentEntities<AddedRecycledActionMove2>(registry, entityMap);
   remapComponentEntities<Battle>(registry, entityMap);

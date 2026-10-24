@@ -1,10 +1,13 @@
 #include "SideStateSetup.hpp"
 
+#include <Battle/ManageBattleState.hpp>
+#include <Components/EntityHolders/ActiveWithUpdateEvents.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/PlayerSide.hpp>
 #include <Components/SideDecisions.hpp>
+#include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/SideTags.hpp>
 #include <Components/TeamRemaining.hpp>
 #include <Config/Require.hpp>
@@ -39,6 +42,9 @@ void SideStateSetup::setTeam(std::vector<PokemonStateSetup>& team) {
     pokemonSetup.setBattle(battle.val);
     if (!pokemonSetup.isFainted()) {
       teamRemaining.val++;
+    }
+    if (pokemonSetup.isActive()) {
+      tryAddToActiveWithUpdateEvents({*handle.registry(), pokemonSetup.entity()}, battle);
     }
   }
 }
