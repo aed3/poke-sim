@@ -26,6 +26,7 @@
 #include <Components/Tags/VolatileTags.hpp>
 #include <Components/Turn.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/Effects/Trapped.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Decisions.hpp>
@@ -127,7 +128,7 @@ void setDoublesMidTurnSideOptions(
 
 void setSinglesSwitchOptions(
   types::registry& registry, PlayerSide playerSide, const Team& team, SinglesSideOptions& sideOptions) {
-  if (registry.all_of<tags::Trapped>(team.val[0]) && !registry.all_of<tags::Switching>(team.val[0])) {
+  if (registry.all_of<dex::Trapped>(team.val[0]) && !registry.all_of<tags::Switching>(team.val[0])) {
     return;
   }
 
@@ -263,7 +264,7 @@ void resolveSlotDecision(
     }
   }
   else if constexpr (std::is_same_v<SwitchDecision, Decision>) {
-    POKESIM_REQUIRE(!registry.all_of<tags::Trapped>(sourceEntity), "Cannot switch while trapped.");
+    POKESIM_REQUIRE(!registry.all_of<dex::Trapped>(sourceEntity), "Cannot switch while trapped.");
     actionQueueItem.order = ActionOrder::SWITCH;
   }
   else if constexpr (std::is_same_v<ItemDecision, Decision>) {
@@ -318,7 +319,7 @@ void setSideOptions(Simulation& simulation) {
     simulation.view<
       setDoublesSwitchOptions,
       Tags<pokesim::tags::ActivePokemon>,
-      entt::exclude_t<PokemonRequestsMidTurn, pokesim::tags::Trapped>>();
+      entt::exclude_t<PokemonRequestsMidTurn, dex::Trapped>>();
   }
 }
 

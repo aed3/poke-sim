@@ -8,3 +8,4 @@
 #include "RandomChance.hpp"
 #include "SimulateTurn.hpp"
 #include "SimulateTurnDebugChecks.hpp"
+#include "SimulateTurnEvents.hpp"

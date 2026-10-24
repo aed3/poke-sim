@@ -124,6 +124,7 @@ struct Checks : pokesim::debug::Checks {
       Probability,
       ParentBattle,
       RootBattle,
+      ActiveWithUpdateEvents,
       pokesim::tags::BattleMidTurn>();
 
     if (!simulateTurnOptionsOnInput.getMakeBranchesOnRandomEvents()) {

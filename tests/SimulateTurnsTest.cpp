@@ -209,15 +209,15 @@ TEST_CASE("Action Queue Order", "[Simulation][SimulateTurn][ActionQueue]") {
   }
 
   SECTION("Speed Tie Order Uniqueness") {
-    static constexpr types::activePokemonIndex MAX_ACTIVE = Constants::ActivePokemon::MAX;
-    types::activePokemonIndex speedTieCount = GENERATE(range(2U, MAX_ACTIVE + 1U));
-    types::activePokemonIndex speedTieStart = MAX_ACTIVE - speedTieCount;
-    SpeedTieIndexes speedTies{{{speedTieStart, speedTieCount}}};
-    ActionQueue originalQueue;
+    static constexpr types::eventPossibilities MAX_ACTIVE = Constants::ActivePokemon::MAX;
+    types::eventPossibilities speedTieCount = GENERATE(range(2U, MAX_ACTIVE + 1U));
+    types::eventPossibilities speedTieStart = MAX_ACTIVE - speedTieCount;
+
+    std::vector<std::uint8_t> originalList;
+    originalList.resize(MAX_ACTIVE);
 
     for (types::activePokemonIndex i = 0U; i < MAX_ACTIVE; i++) {
-      ActionQueueItem& item = originalQueue.val.emplace_back(ActionQueueItem{ActionOrder::MOVE});
-      item.decision = MoveDecision{Slot::P1A, Slot::P1A, (dex::Move)i};
+      originalList[i] = i;
     }
 
     types::eventPossibilities possibleOrders = 1U;
@@ -226,15 +226,15 @@ TEST_CASE("Action Queue Order", "[Simulation][SimulateTurn][ActionQueue]") {
     }
 
     entt::dense_set<std::uint32_t> foundOrders;
-    for (types::eventPossibilities randomEventIndex = 0U; randomEventIndex < possibleOrders; randomEventIndex++) {
-      CAPTURE(speedTieCount, possibleOrders, randomEventIndex);
+    for (types::eventPossibilities shuffleOrderIndex = 0U; shuffleOrderIndex < possibleOrders; shuffleOrderIndex++) {
+      CAPTURE(speedTieCount, possibleOrders, shuffleOrderIndex);
 
-      ActionQueue queue = originalQueue;
-      internal::simulate_turn::setSpeedTieOrder(queue, speedTies, {randomEventIndex});
+      std::vector<std::uint8_t> list = originalList;
+      internal::shuffleShortList(list, speedTieStart, speedTieCount, shuffleOrderIndex);
 
       std::uint32_t foundOrder = 0;
       for (types::activePokemonIndex i = 0U; i < MAX_ACTIVE; i++) {
-        auto originalIndex = (types::activePokemonIndex)queue.val[i].decision.get<MoveDecision>().move;
+        std::uint8_t originalIndex = list[i];
         if (i < speedTieStart) {
           REQUIRE(i == originalIndex);
         }
@@ -416,7 +416,7 @@ TEST_CASE("Speed Ties", "[Simulation][SimulateTurn][DoubleBattle][ActionQueue]")
   SECTION("Check Action Queue Orders") {
     test.simulation.view<internal::simulate_turn::resolveDecision>(test.pokedex);
     test.simulation.view<internal::simulate_turn::speedSort>();
-    internal::simulate_turn::resolveSpeedTies(test.simulation);
+    internal::simulate_turn::resolveActionQueueSpeedTies(test.simulation);
 
     auto trueCloneCount = test.registry().view<tags::Battle>()->size();
     REQUIRE(trueCloneCount == idealCloneCount);

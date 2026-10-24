@@ -8,4 +8,5 @@ struct BuildPokedexMove {};
 struct ClearVolatiles {};
 struct CloneFromDamageRolls {};
 struct TryTrap {};
+struct RunUpdate {};
 }  // namespace pokesim::internal::tags

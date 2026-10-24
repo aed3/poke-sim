@@ -1,6 +1,7 @@
 #include "PokemonStateSetup.hpp"
 
 #include <Battle/Pokemon/ManagePokemonState.hpp>
+#include <Battle/Pokemon/ManagePokemonTags.hpp>
 #include <Components/EVsIVs.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Side.hpp>
@@ -130,5 +131,9 @@ void PokemonStateSetup::setIVs(const Ivs& ivs) {
 
 bool PokemonStateSetup::isFainted() {
   return handle.all_of<pokesim::tags::Fainted>();
+}
+
+bool PokemonStateSetup::isActive() {
+  return handle.all_of<pokesim::tags::ActivePokemon>();
 }
 }  // namespace pokesim::internal

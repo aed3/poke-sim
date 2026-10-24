@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Components/RNGSeed.hpp>
+#include <Config/Require.hpp>
 #include <Types/Random.hpp>
 
 // Adapted from https://github.com/imneme/pcg-c-basic/blob/master/pcg_basic.c
@@ -69,5 +70,34 @@ inline types::rngResult nextBoundedRandomValue(RngSeed& seed, types::rngResult u
 inline types::rngResult nextBoundedRandomValue(
   RngSeed& seed, types::rngResult upperBound, types::rngResult lowerBound) {
   return nextBoundedRandomValue(seed.val, upperBound, lowerBound);
+}
+
+template <typename List>
+constexpr void shuffleShortList(
+  List& list, types::eventPossibilities shuffleStart, types::eventPossibilities shuffleLength,
+  types::eventPossibilities shuffleOrderIndex) {
+  // This loop shuffles a list based on one random number where each possible shuffling has an equal chance. The main
+  // idea is to choose where each action should be placed in that new ordering by using the ranges the random number
+  // belongs to. For example, let's say there are 3 actions that speed tied, the random number (randomEventIndex) is 2,
+  // and we want to find where the third action in the original ordering should move to. There are 6 different ways to
+  // order those actions (3 factorial = 6), meaning the randomEventIndex could include any value from 0 to 5. The code
+  // below first separates the 0 to 5 range into 3 equally sized sections (so 2 values per section) and then calculates
+  // that the randomEventIndex of 2 is in the second section. That section's index is used as where the third action
+  // will go as there will be as many sections as there are places to move that action.
+
+  types::eventPossibilities valuesPerSection = 1U;
+  for (types::eventPossibilities sections = 1U; sections < shuffleLength; sections++) {
+    types::eventPossibilities totalValues = (sections + 1U) * valuesPerSection;
+    types::eventPossibilities eventIndexInAllValues = shuffleOrderIndex % totalValues;
+    types::eventPossibilities sectionOfEventIndex = eventIndexInAllValues / valuesPerSection;
+
+    types::eventPossibilities oldIndex = shuffleStart + sections;
+    types::eventPossibilities newIndex = shuffleStart + sectionOfEventIndex;
+
+    POKESIM_REQUIRE(newIndex < shuffleStart + shuffleLength, "newIndex would be out of bounds for this shuffle.");
+
+    std::swap(list[oldIndex], list[newIndex]);
+    valuesPerSection = totalValues;
+  }
 }
 }  // namespace pokesim::internal

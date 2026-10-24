@@ -25,8 +25,10 @@
 #include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/VolatileTags.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/Effects/Flinch.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/RandomChance.hpp>
+#include <SimulateTurn/SimulateTurnEvents.hpp>
 #include <Simulation/Formulas.hpp>
 #include <Types/Constants.hpp>
 #include <Types/Enums/BattleFormat.hpp>
@@ -246,7 +248,7 @@ void removeImpossibleSecondaryEffectTargets(Simulation& simulation) {
 }
 
 void applyAddedFlinch(types::registry& registry, CurrentActionTarget target) {
-  registry.emplace<tags::Flinch>(target.val);
+  registry.emplace<dex::Flinch>(target.val);
 }
 
 void removeImpossibleAddedFlinch(
@@ -254,7 +256,7 @@ void removeImpossibleAddedFlinch(
   const simulate_turn::Options& options) {
   types::registry& registry = *handle.registry();
 
-  if (registry.all_of<tags::Flinch>(target.val)) {
+  if (registry.all_of<dex::Flinch>(target.val)) {
     handle.remove<AddedFlinchChance>();
     return;
   }
@@ -410,7 +412,10 @@ void moveHitLoop(Simulation& simulation) {
     internal::runDamagingHitEvent(simulation);
     internal::runAfterHitEvent(simulation);
 
+    internal::updateSpe(simulation, false);
+    internal::simulate_turn::runActiveUpdateEvents(simulation);
     internal::updateAllStats(simulation);
+
     simulation.view<deductMoveHitCount>();
     iterations++;
   }

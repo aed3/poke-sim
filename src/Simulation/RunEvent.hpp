@@ -4,7 +4,7 @@ namespace pokesim {
 class Simulation;
 
 namespace internal {
-void runEachUpdate(Simulation& simulation);
+void runUpdate(Simulation& simulation);
 
 void runBeforeMove(Simulation& simulation);
 void runResidual(Simulation& simulation);
@@ -56,7 +56,9 @@ void runStartSleep(Simulation& simulation);
 void runStartFreeze(Simulation& simulation);
 
 void runTryTakeItemEvent(Simulation& simulation);  // TakeItem
+void runEatItemEvent(Simulation& simulation);      // Eat
 void runAfterUseItemEvent(Simulation& simulation);
+void runAfterEatItemEvent(Simulation& simulation);  // EatItem
 void runRemoveItemEvent(Simulation& simulation);
 
 void runStartAbilityEvent(Simulation& simulation);

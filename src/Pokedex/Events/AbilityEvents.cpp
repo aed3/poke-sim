@@ -54,7 +54,7 @@ void analyticOnBasePowerSimulateTurn(
 
     types::entity upcomingAttacker =
       slotToPokemonEntity(registry, registry.get<Sides>(battle.val), item.decision.sourceSlot());
-    if (registry.all_of<pokesim::tags::ActivePokemon>(upcomingAttacker)) {
+    if (registry.all_of<tags::ActivePokemon>(upcomingAttacker)) {
       boosted = false;
       break;
     }
@@ -133,7 +133,7 @@ void imposterOnSwitchIn(types::handle handle, Side side, const Simulation& simul
     transformTarget = foeTeam.val[position];
   }
 
-  if (registry.all_of<pokesim::tags::ActivePokemon>(transformTarget)) {
+  if (registry.all_of<tags::ActivePokemon>(transformTarget)) {
     internal::transformInto(registry, handle.entity(), transformTarget, simulation.pokedex());
   }
 }
@@ -159,7 +159,7 @@ void pranksterOnImmunity(types::handle handle, const CurrentActionMovesAsSource&
 
     SpeciesTypes targetTypes = registry.get<SpeciesTypes>(target.val);
     if (targetTypes.has(Type::DARK)) {
-      registry.emplace<pokesim::tags::FailedCurrentMoveHit>(move);
+      registry.emplace<tags::FailedCurrentMoveHit>(move);
     }
   }
 }
@@ -237,11 +237,12 @@ void Analytic::onBasePower(Simulation& simulation) {
   const auto numerator = simulation.pokedex().getStaticValue<onBasePowerNumerator>();
   const auto denominator = simulation.pokedex().getStaticValue<onBasePowerDenominator>();
 
-  simulation.view<analyticOnBasePowerSimulateTurn, Tags<Analytic, pokesim::tags::SimulateTurn>>(numerator, denominator);
-  internal::currentActionMovesAsSourceView<
-    AnalyticOnBasePowerCalcDamage,
-    Tags<Analytic, pokesim::tags::CalculateDamage>>(simulation, numerator, denominator);
-  internal::currentActionMovesAsSourceView<AnalyticOnBasePowerCalcDamage, Tags<Analytic, pokesim::tags::AnalyzeEffect>>(
+  simulation.view<analyticOnBasePowerSimulateTurn, Tags<Analytic, tags::SimulateTurn>>(numerator, denominator);
+  internal::currentActionMovesAsSourceView<AnalyticOnBasePowerCalcDamage, Tags<Analytic, tags::CalculateDamage>>(
+    simulation,
+    numerator,
+    denominator);
+  internal::currentActionMovesAsSourceView<AnalyticOnBasePowerCalcDamage, Tags<Analytic, tags::AnalyzeEffect>>(
     simulation,
     numerator,
     denominator);
@@ -277,10 +278,9 @@ void Plus::onModifySpA(Simulation& simulation) {
 void Prankster::onModifyPriority(Simulation& simulation) {
   const auto priorityBoost = simulation.pokedex().getStaticValue<onModifyPriorityIncrease>();
 
-  simulation
-    .view<pranksterOnModifyPriority, Tags<Prankster, pokesim::tags::SimulateTurn, pokesim::tags::ActivePokemon>>(
-      priorityBoost,
-      simulation.pokedex());
+  simulation.view<pranksterOnModifyPriority, Tags<Prankster, tags::SimulateTurn, tags::ActivePokemon>>(
+    priorityBoost,
+    simulation.pokedex());
 }
 
 void Prankster::onImmunity(Simulation& simulation) {
@@ -311,17 +311,17 @@ void Static::onDamagingHit(Simulation& simulation) {
   simulation.view<staticOnDamagingHit, Tags<Static>>(chanceOfStatic, simulation);
 
   internal::checkIfCanSetStatus(simulation);
-  internal::removeRandomBinaryChanceComponents(simulation, entt::exclude<pokesim::tags::CanSetStatus>);
+  internal::removeRandomBinaryChanceComponents(simulation, entt::exclude<tags::EffectCanSetStatus>);
 
   pokesim::internal::randomBinaryChance(
     simulation,
     [](Simulation& sim) {
-      sim.removeFromEntities<tags::CanSetStatus, pokesim::internal::tags::RandomEventCheckFailed>();
+      sim.removeFromEntities<tags::EffectCanSetStatus, pokesim::internal::tags::RandomEventCheckFailed>();
     },
     std::nullopt);
 
   internal::setStatus(simulation);
   internal::clearCurrentEffect(simulation);
-  simulation.removeFromEntities<Paralysis, pokesim::tags::Battle>();
+  simulation.removeFromEntities<Paralysis, tags::Battle>();
 }
 }  // namespace pokesim::dex

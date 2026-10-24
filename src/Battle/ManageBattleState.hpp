@@ -27,5 +27,9 @@ void clearSwitchAction(Simulation& simulation);
 void clearCurrentEffect(Simulation& simulation);
 void setCurrentEffectFromStack(Simulation& simulation);
 void clearCurrentBattleEffect(Simulation& simulation);
+
+void removeFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle);
+void tryAddToActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle);
+void checkIfRemoveFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle);
 }  // namespace internal
 }  // namespace pokesim

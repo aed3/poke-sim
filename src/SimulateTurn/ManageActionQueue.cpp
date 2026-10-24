@@ -2,6 +2,7 @@
 
 #include <Battle/Helpers/Helpers.hpp>
 #include <Components/ActionQueue.hpp>
+#include <Components/EntityHolders/ActiveWithUpdateEvents.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/RecycledEntities.hpp>
@@ -12,6 +13,7 @@
 #include <Components/RandomEventInputs.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
 #include <Components/SimulateTurn/SpeedTieIndexes.hpp>
+#include <Components/Stats.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Config/Require.hpp>
 #include <SimulateTurn/RandomChance.hpp>
@@ -23,6 +25,7 @@
 #include <Types/Registry.hpp>
 #include <Types/State.hpp>
 #include <Types/Variant.hpp>
+#include <Utilities/RNG.hpp>
 #include <algorithm>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
@@ -30,23 +33,21 @@
 
 namespace pokesim::internal::simulate_turn {
 namespace {
+template <typename List, typename IsFasterThan, typename IsSameSpeed>
 void sortAndSetSpeedTies(
-  types::handle handle, ActionQueue& actionQueue, types::actionQueueIndex first, types::actionQueueIndex size) {
-  POKESIM_REQUIRE(!actionQueue.val.empty(), "The action queue cannot be empty when sorting.");
-  POKESIM_REQUIRE(first + size <= actionQueue.val.size(), "The last index would have been out of bounds.");
-  auto& actionQueueItems = actionQueue.val;
+  types::handle handle, List& list, types::actionQueueIndex first, types::actionQueueIndex size,
+  IsFasterThan isFasterThan, IsSameSpeed isSameSpeed) {
+  POKESIM_REQUIRE(!list.empty(), "The action queue cannot be empty when sorting.");
+  POKESIM_REQUIRE(first + size <= list.size(), "The last index would have been out of bounds.");
 
   // TODO(aed3): Test how different sorting algorithms affect speed
-  std::sort(
-    actionQueueItems.begin() + first,
-    actionQueueItems.begin() + (first + size),
-    [](const ActionQueueItem& itemA, const ActionQueueItem& itemB) { return itemA.isFasterThan(itemB); });
+  std::sort(std::next(list.begin(), first), std::next(list.begin(), first + size), isFasterThan);
 
   SpeedTieIndexes speedTies;
   types::actionQueueIndex lastEqual = first, tieCount = 1U;
 
   for (types::actionQueueIndex i = first + 1U; i < first + size; i++) {
-    if (actionQueueItems[i].isSameSpeed(actionQueueItems[i - 1U])) {
+    if (isSameSpeed(list[i], list[i - 1U])) {
       tieCount++;
     }
     else {
@@ -65,6 +66,23 @@ void sortAndSetSpeedTies(
   if (!speedTies.val.empty()) {
     handle.emplace<SpeedTieIndexes>(speedTies);
   }
+}
+
+void sortActionQueueAndSetSpeedTies(
+  types::handle handle, ActionQueue& actionQueue, types::actionQueueIndex first, types::actionQueueIndex size) {
+  sortAndSetSpeedTies(
+    handle,
+    actionQueue.val,
+    first,
+    size,
+    [](const ActionQueueItem& itemA, const ActionQueueItem& itemB) { return itemA.isFasterThan(itemB); },
+    [](const ActionQueueItem& itemA, const ActionQueueItem& itemB) { return itemA.isSameSpeed(itemB); });
+}
+
+template <typename List>
+void setSpeedTieOrder(List& list, const SpeedTieIndexes& speedTies, RandomEventIndex randomEventIndex) {
+  const auto& speedTie = speedTies.val.back();
+  shuffleShortList(list.val, speedTie.start, speedTie.length, randomEventIndex.val);
 }
 
 void setSpeedTieRandomEventCount(types::handle handle, const SpeedTieIndexes& speedTies, const Simulation& simulation) {
@@ -91,6 +109,23 @@ void removeEmptySpeedTieIndexes(types::handle handle, SpeedTieIndexes& speedTies
     handle.remove<SpeedTieIndexes>();
   }
 }
+
+template <typename List>
+void resolveSpeedTies(Simulation& simulation) {
+  using Limit = Constants::ActivePokemon;
+  types::activePokemonIndex speedTiesResolved = Limit::MIN;
+  while (!simulation.hasNone<SpeedTieIndexes>()) {
+    POKESIM_REQUIRE(
+      speedTiesResolved <= Limit::MAX,
+      "More speed ties were resolved than are possible in at least one battle.");
+
+    simulation.view<setSpeedTieRandomEventCount>(simulation);
+    randomEventCount(simulation, [](Simulation& sim) { sim.view<setSpeedTieOrder<List>>(); }, {});
+
+    simulation.view<removeEmptySpeedTieIndexes>();
+    speedTiesResolved++;
+  }
+}
 }  // namespace
 
 void speedSort(types::handle handle, ActionQueue& actionQueue) {
@@ -98,7 +133,26 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
     return;
   }
 
-  sortAndSetSpeedTies(handle, actionQueue, 0U, actionQueue.val.size());
+  sortActionQueueAndSetSpeedTies(handle, actionQueue, 0U, actionQueue.val.size());
+}
+
+void speedSortActiveWithUpdateEvents(types::handle handle, ActiveWithUpdateEvents& activeWithUpdateEvents) {
+  if (activeWithUpdateEvents.val.size() <= 1U) {
+    return;
+  }
+
+  types::registry& registry = *handle.registry();
+  sortAndSetSpeedTies(
+    handle,
+    activeWithUpdateEvents.val,
+    0U,
+    activeWithUpdateEvents.val.size(),
+    [&registry](types::entity entityA, types::entity entityB) {
+      return registry.get<stat::EffectiveSpe>(entityA).val > registry.get<stat::EffectiveSpe>(entityB).val;
+    },
+    [&registry](types::entity entityA, types::entity entityB) {
+      return registry.get<stat::EffectiveSpe>(entityA).val == registry.get<stat::EffectiveSpe>(entityB).val;
+    });
 }
 
 void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue) {
@@ -114,52 +168,15 @@ void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue) {
     return;
   }
 
-  sortAndSetSpeedTies(handle, actionQueue, 0U, midTurnSwitches);
+  sortActionQueueAndSetSpeedTies(handle, actionQueue, 0U, midTurnSwitches);
 }
 
-void setSpeedTieOrder(ActionQueue& actionQueue, const SpeedTieIndexes& speedTies, RandomEventIndex randomEventIndex) {
-  const auto& speedTie = speedTies.val.back();
-
-  // This loop shuffles a list based on one random number where each possible shuffling has an equal chance. The main
-  // idea is to choose where each action should be placed in that new ordering by using the ranges the random number
-  // belongs to. For example, let's say there are 3 actions that speed tied, the random number (randomEventIndex) is 2,
-  // and we want to find where the third action in the original ordering should move to. There are 6 different ways to
-  // order those actions (3 factorial = 6), meaning the randomEventIndex could include any value from 0 to 5. The code
-  // below first separates the 0 to 5 range into 3 equally sized sections (so 2 values per section) and then calculates
-  // that the randomEventIndex of 2 is in the second section. That section's index is used as where the third action
-  // will go as there will be as many sections as there are places to move that action.
-  types::eventPossibilities valuesPerSection = 1U;
-  for (types::actionQueueIndex sections = 1U; sections < speedTie.length; sections++) {
-    types::eventPossibilities totalValues = (sections + 1U) * valuesPerSection;
-    types::eventPossibilities eventIndexInAllValues = randomEventIndex.val % totalValues;
-    types::eventPossibilities sectionOfEventIndex = eventIndexInAllValues / valuesPerSection;
-
-    types::activePokemonIndex oldIndex = speedTie.start + sections;
-    types::activePokemonIndex newIndex = speedTie.start + sectionOfEventIndex;
-
-    POKESIM_REQUIRE(
-      newIndex < speedTie.start + speedTie.length,
-      "newIndex would be out of bounds for the current speed tie.");
-
-    std::swap(actionQueue.val[oldIndex], actionQueue.val[newIndex]);
-    valuesPerSection = totalValues;
-  }
+void resolveActionQueueSpeedTies(Simulation& simulation) {
+  resolveSpeedTies<ActionQueue>(simulation);
 }
 
-void resolveSpeedTies(Simulation& simulation) {
-  using Limit = Constants::ActivePokemon;
-  types::activePokemonIndex speedTiesResolved = Limit::MIN;
-  while (!simulation.hasNone<SpeedTieIndexes>()) {
-    POKESIM_REQUIRE(
-      speedTiesResolved <= Limit::MAX,
-      "More speed ties were resolved than are possible in at least one battle.");
-
-    simulation.view<setSpeedTieRandomEventCount>(simulation);
-    randomEventCount(simulation, [](Simulation& sim) { sim.view<setSpeedTieOrder>(); }, {});
-
-    simulation.view<removeEmptySpeedTieIndexes>();
-    speedTiesResolved++;
-  }
+void resolveUpdateEventSpeedTies(Simulation& simulation) {
+  resolveSpeedTies<ActiveWithUpdateEvents>(simulation);
 }
 
 void addBeforeTurnAction(ActionQueue& actionQueue) {

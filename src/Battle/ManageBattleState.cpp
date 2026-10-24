@@ -1,6 +1,7 @@
 #include "ManageBattleState.hpp"
 
 #include <Battle/Helpers/Helpers.hpp>
+#include <Battle/Pokemon/ManagePokemonTags.hpp>
 #include <Components/Accuracy.hpp>
 #include <Components/AddedTargets.hpp>
 #include <Components/BaseEffectChance.hpp>
@@ -9,6 +10,7 @@
 #include <Components/Current.hpp>
 #include <Components/EffectStack.hpp>
 #include <Components/Effects/AddedFlinchChance.hpp>
+#include <Components/EntityHolders/ActiveWithUpdateEvents.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/EntityHolders/Current.hpp>
@@ -107,8 +109,8 @@ void clearEffectComponents(types::registry& registry, const View& view) {
     SpeBoost,
     AccBoost,
     EvaBoost,
-    pokesim::tags::Flinch,
     AddedFlinchChance,
+    dex::Flinch,
     dex::Paralysis,
     dex::Burn>(view.begin(), view.end());
 }
@@ -315,4 +317,40 @@ void clearCurrentBattleEffect(Simulation& simulation) {
   clearEffectComponents(simulation.registry, simulation.registry.view<pokesim::tags::Battle>());
   clearCurrentEffect(simulation);
 }
+
+void removeFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle) {
+  types::registry& registry = *pokemonHandle.registry();
+  ActiveWithUpdateEvents* activeWithUpdateEvents = registry.try_get<ActiveWithUpdateEvents>(battle.val);
+  if (!activeWithUpdateEvents) {
+    return;
+  }
+
+  activeWithUpdateEvents->val.unordered_remove(pokemonHandle.entity());
+  if (activeWithUpdateEvents->val.empty()) {
+    registry.remove<ActiveWithUpdateEvents>(battle.val);
+  }
+}
+
+void tryAddToActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle) {
+  if (!hasUpdateEvent(pokemonHandle)) {
+    return;
+  }
+
+  ActiveWithUpdateEvents& activeWithUpdateEvents =
+    pokemonHandle.registry()->get_or_emplace<ActiveWithUpdateEvents>(battle.val);
+
+  POKESIM_REQUIRE(
+    std::find(activeWithUpdateEvents.val.begin(), activeWithUpdateEvents.val.end(), pokemonHandle.entity()) ==
+      activeWithUpdateEvents.val.end(),
+    "Pokemon should only be in this list once.");
+
+  activeWithUpdateEvents.val.push_back(pokemonHandle.entity());
+}
+
+void checkIfRemoveFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle) {
+  if (!hasUpdateEvent(pokemonHandle)) {
+    removeFromActiveWithUpdateEvents(pokemonHandle, battle);
+  }
+}
+
 }  // namespace pokesim::internal

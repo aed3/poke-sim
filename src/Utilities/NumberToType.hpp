@@ -18,7 +18,7 @@ template <std::int64_t MaxValue, std::int64_t MinValue>
 using signedIntType = std::conditional_t<
   MaxValue <= std::numeric_limits<std::int32_t>::max() && MinValue >= std::numeric_limits<std::int32_t>::min(),
   std::conditional_t<
-    MaxValue <= std::numeric_limits<std::uint16_t>::max() && MinValue >= std::numeric_limits<std::int16_t>::min(),
+    MaxValue <= std::numeric_limits<std::int16_t>::max() && MinValue >= std::numeric_limits<std::int16_t>::min(),
     std::conditional_t<
       MaxValue <= std::numeric_limits<std::int8_t>::max() && MinValue >= std::numeric_limits<std::int8_t>::min(),
       std::int8_t, std::int16_t>,

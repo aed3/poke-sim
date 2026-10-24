@@ -34,8 +34,11 @@ void setAbility(types::registry& registry, pokesim::dex::Ability ability, types:
 void setStatus(types::registry& registry, pokesim::dex::Status status, types::entity entity);
 
 void checkIfCanUseItem(Simulation& simulation);
+void checkIfCanEatItem(Simulation& simulation);
 void useItem(Simulation& simulation);
+void eatItem(Simulation& simulation);
 void tryUseItem(Simulation& simulation);
+void tryEatItem(Simulation& simulation);
 void checkIfCanRemoveItem(Simulation& simulation);
 void removeItem(Simulation& simulation);
 void tryRemoveItem(Simulation& simulation);

@@ -42,7 +42,9 @@ void applyBasePowerEventModifier(
 }
 }  // namespace
 
-void runEachUpdate(Simulation&) {}
+void runUpdate(Simulation& simulation) {
+  dex::LumBerry::onUpdate(simulation);
+}
 
 void runBeforeMove(Simulation& simulation) {
   pokesim::dex::Paralysis::onBeforeMove(simulation);
@@ -136,7 +138,9 @@ template void runStatusImmunityEvent<pokesim::dex::Poison>(Simulation&);
 template void runStatusImmunityEvent<pokesim::dex::Sleep>(Simulation&);
 template void runStatusImmunityEvent<pokesim::dex::Toxic>(Simulation&);
 
-void runAfterSetStatusEvent(Simulation&) {}
+void runAfterSetStatusEvent(Simulation& simulation) {
+  dex::LumBerry::onAfterSetStatus(simulation);
+}
 
 void runChangeBoostEvent(Simulation&) {}
 void runTryBoostEvent(Simulation&) {}
@@ -169,8 +173,8 @@ void runResetDisabledMove(Simulation& simulation) {
 }
 
 void runResetTrappedPokemon(Simulation& simulation) {
-  simulation.addToEntities<tags::ResetTrappedPokemon, tags::ActiveAtTurnEnd, pokesim::tags::Trapped>();
-  simulation.removeFromEntities<pokesim::tags::Trapped, tags::ActiveAtTurnEnd>();
+  simulation.addToEntities<tags::ResetTrappedPokemon, tags::ActiveAtTurnEnd, pokesim::dex::Trapped>();
+  simulation.removeFromEntities<pokesim::dex::Trapped, tags::ActiveAtTurnEnd>();
 
   pokesim::dex::Trapped::onResetTrappedPokemon(simulation);
 
@@ -225,7 +229,12 @@ void runStartFreeze(Simulation&) {
 }
 
 void runTryTakeItemEvent(Simulation&) {}
+void runEatItemEvent(Simulation& simulation) {
+  dex::LumBerry::onEat(simulation);
+}
+
 void runAfterUseItemEvent(Simulation&) {}
+void runAfterEatItemEvent(Simulation&) {}
 
 void runRemoveItemEvent(Simulation& simulation) {
   pokesim::dex::AssaultVest::onRemove(simulation);

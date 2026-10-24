@@ -97,6 +97,7 @@ struct PokemonStateSetup : StateSetupBase {
   };
 
   bool isFainted();
+  bool isActive();
 };
 }  // namespace internal
 }  // namespace pokesim

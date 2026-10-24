@@ -23,6 +23,7 @@ struct Fainting {};
 struct Fainted {};
 
 struct CanUseItem {};
+struct CanEatItem {};
 struct CanRemoveItem {};
-struct CanSetStatus {};
+struct EffectCanSetStatus {};
 }  // namespace pokesim::tags

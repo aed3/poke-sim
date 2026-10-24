@@ -1,5 +1,6 @@
 #include "ManagePokemonState.hpp"
 
+#include <Battle/ManageBattleState.hpp>
 #include <Components/Boosts.hpp>
 #include <Components/Current.hpp>
 #include <Components/Damage.hpp>
@@ -29,13 +30,12 @@
 #include <Components/Tags/VolatileTags.hpp>
 #include <Components/TransformedFrom.hpp>
 #include <Pokedex/Effects/ChoiceLock.hpp>
+#include <Pokedex/Effects/Trapped.hpp>
 #include <Pokedex/Effects/Trapper.hpp>
-#include <Pokedex/Effects/headers.hpp>
 #include <Pokedex/EnumToTag/AbilityEnumToTag.hpp>
 #include <Pokedex/EnumToTag/ItemEnumToTag.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
-#include <Pokedex/Types/headers.hpp>
 #include <Simulation/Formulas.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
@@ -45,6 +45,8 @@
 #include <cmath>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
+
+#include "ManagePokemonTags.hpp"
 
 namespace pokesim::internal {
 namespace {
@@ -67,6 +69,7 @@ struct RemoveIfHas {
 template <typename SelectionTag>
 void removeItemComponents(Simulation& simulation) {
   dex::forEachItem<RemoveItem, SelectionTag>(simulation.pokedex(), simulation);
+  simulation.view<checkIfRemoveFromActiveWithUpdateEvents, Tags<SelectionTag>>();
   auto view = simulation.registry.view<SelectionTag>();
   simulation.registry.remove<pokesim::tags::HasItem, item::tags::Choice, item::tags::Berry>(view.begin(), view.end());
   simulation.removeFromEntities<SelectionTag>();
@@ -133,7 +136,7 @@ void clampBoost(types::registry& registry, CurrentEffectTarget target, BoostType
 template <typename StatusType>
 struct CheckIfStatusIsSettable {
   static void run(Simulation& simulation) {
-    simulation.addToEntities<pokesim::tags::CanSetStatus, StatusType, CurrentEffectSource, CurrentEffectTarget>();
+    simulation.addToEntities<pokesim::tags::EffectCanSetStatus, StatusType, CurrentEffectSource, CurrentEffectTarget>();
     simulation.view<checkIfTargetHasStatus, Tags<StatusType>>();
     simulation.view<checkTypeStatusImmunity, Tags<StatusType>>(simulation.pokedex());
     runStatusImmunityEvent<StatusType>(simulation);
@@ -141,7 +144,7 @@ struct CheckIfStatusIsSettable {
 
   static void checkIfTargetHasStatus(types::handle handle, CurrentEffectTarget target) {
     if (handle.registry()->all_of<pokesim::tags::HasStatus>(target.val)) {
-      handle.remove<pokesim::tags::CanSetStatus>();
+      handle.remove<pokesim::tags::EffectCanSetStatus>();
     }
   }
 
@@ -149,7 +152,7 @@ struct CheckIfStatusIsSettable {
     SpeciesTypes types = handle.registry()->get<SpeciesTypes>(target.val);
     for (dex::Type type : types.val) {
       if (pokedex.getStaticValue<StatusType::isTypeImmune>(type)) {
-        handle.remove<pokesim::tags::CanSetStatus>();
+        handle.remove<pokesim::tags::EffectCanSetStatus>();
         return;
       }
     }
@@ -160,7 +163,7 @@ template <typename StatusType>
 struct RemoveNotSettableStatus {
   static void run(Simulation& simulation) {
     simulation.removeFromEntities<StatusType, CurrentEffectSource, CurrentEffectTarget>(
-      entt::exclude<pokesim::tags::CanSetStatus>);
+      entt::exclude<pokesim::tags::EffectCanSetStatus>);
   }
 };
 
@@ -180,7 +183,7 @@ struct SetEffectTargetStatus {
 
 bool areTypesTrappedImmune(SpeciesTypes types, const Pokedex& pokedex) {
   for (pokesim::dex::Type type : types.val) {
-    if (pokedex.getStaticValue<pokesim::dex::Trapped::isTypeImmune>(type)) {
+    if (pokedex.getStaticValue<dex::Trapped::isTypeImmune>(type)) {
       return true;
     }
   }
@@ -221,8 +224,8 @@ void trapAndSetTrapper(
     return;
   }
 
-  registry.emplace<pokesim::tags::Trapped>(target.val);
-  registry.emplace<pokesim::dex::Trapper>(target.val, source.val);
+  registry.emplace<dex::Trapped>(target.val);
+  registry.emplace<dex::Trapper>(target.val, source.val);
 }
 
 void setSpeedSortNeeded(types::registry& registry, Battle battle) {
@@ -230,7 +233,7 @@ void setSpeedSortNeeded(types::registry& registry, Battle battle) {
 }
 }  // namespace
 
-void setItem(types::registry& registry, pokesim::dex::Item item, types::entity entity, const Pokedex& pokedex) {
+void setItem(types::registry& registry, dex::Item item, types::entity entity, const Pokedex& pokedex) {
   registry.emplace<pokesim::tags::HasItem>(entity);
   dex::emplaceTagFromEnum(item, registry, entity);
 
@@ -242,17 +245,20 @@ void setItem(types::registry& registry, pokesim::dex::Item item, types::entity e
   }
 }
 
-void setAbility(types::registry& registry, pokesim::dex::Ability ability, types::entity entity) {
+void setAbility(types::registry& registry, dex::Ability ability, types::entity entity) {
   registry.emplace<pokesim::tags::HasAbility>(entity);
   dex::emplaceTagFromEnum(ability, registry, entity);
 }
 
-void setStatus(types::registry& registry, pokesim::dex::Status status, types::entity entity) {
+void setStatus(types::registry& registry, dex::Status status, types::entity entity) {
   registry.emplace<pokesim::tags::HasStatus>(entity);
   dex::emplaceTagFromEnum(status, registry, entity);
 }
 
 void checkIfCanUseItem(Simulation&) {}
+void checkIfCanEatItem(Simulation& simulation) {
+  checkIfCanUseItem(simulation);
+}
 
 void useItem(Simulation& simulation) {
   runAfterUseItemEvent(simulation);
@@ -262,6 +268,18 @@ void useItem(Simulation& simulation) {
 void tryUseItem(Simulation& simulation) {
   checkIfCanUseItem(simulation);
   useItem(simulation);
+}
+
+void eatItem(Simulation& simulation) {
+  runEatItemEvent(simulation);
+  runAfterEatItemEvent(simulation);
+  runAfterUseItemEvent(simulation);
+  removeItemComponents<pokesim::tags::CanEatItem>(simulation);
+}
+
+void tryEatItem(Simulation& simulation) {
+  checkIfCanEatItem(simulation);
+  eatItem(simulation);
 }
 
 void checkIfCanRemoveItem(Simulation& simulation) {
@@ -282,19 +300,18 @@ void tryRemoveItem(Simulation& simulation) {
 }
 
 void checkIfCanSetStatus(Simulation& simulation) {
-  pokesim::dex::forEachStatus<CheckIfStatusIsSettable>(simulation);
+  dex::forEachStatus<CheckIfStatusIsSettable>(simulation);
 }
 
 void setStatus(Simulation& simulation) {
-  pokesim::dex::forEachStatus<RemoveNotSettableStatus>(simulation);
-  simulation.removeFromEntities<pokesim::tags::CanSetStatus>();
-
-  pokesim::dex::forEachStatus<SetEffectTargetStatus>(simulation);
+  dex::forEachStatus<RemoveNotSettableStatus>(simulation);
+  dex::forEachStatus<SetEffectTargetStatus>(simulation);
 
   runStartSleep(simulation);
   runStartFreeze(simulation);
 
   runAfterSetStatusEvent(simulation);
+  simulation.removeFromEntities<pokesim::tags::EffectCanSetStatus>();
 }
 
 void trySetStatus(Simulation& simulation) {
@@ -303,36 +320,13 @@ void trySetStatus(Simulation& simulation) {
 }
 
 void clearStatus(types::handle pokemonHandle) {
-  pokemonHandle.remove<
-    pokesim::tags::HasStatus,
-    pokesim::dex::Burn,
-    pokesim::dex::Freeze,
-    pokesim::dex::Paralysis,
-    pokesim::dex::Poison,
-    pokesim::dex::Sleep,
-    pokesim::dex::Toxic>();
+  pokemonHandle
+    .remove<pokesim::tags::HasStatus, dex::Burn, dex::Freeze, dex::Paralysis, dex::Poison, dex::Sleep, dex::Toxic>();
 }
 
 void clearVolatiles(Simulation& simulation) {
   simulation.view<revertTransform, Tags<tags::ClearVolatiles>>(simulation.pokedex());
-
-  auto view = simulation.registry.view<tags::ClearVolatiles>();
-  // TODO(aed3): Make autogenerated
-  simulation.registry.remove<
-    AtkBoost,
-    DefBoost,
-    SpaBoost,
-    SpdBoost,
-    SpeBoost,
-    AccBoost,
-    EvaBoost,
-    LastUsedMove,
-    pokesim::dex::ChoiceLock,
-    pokesim::dex::Trapper,
-    TransformedFrom,
-    pokesim::tags::Flinch,
-    pokesim::tags::Switching,
-    pokesim::tags::Trapped>(view.begin(), view.end());
+  clearVolatileTags(simulation);
 }
 
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove) {
@@ -413,7 +407,7 @@ void trap(types::handle handle, SpeciesTypes types, const Pokedex& pokedex) {
     return;
   }
 
-  handle.emplace<pokesim::tags::Trapped>();
+  handle.emplace<dex::Trapped>();
 }
 
 void transformInto(types::registry& registry, types::entity source, types::entity target, const Pokedex& pokedex) {
@@ -476,7 +470,7 @@ void transformInto(types::registry& registry, types::entity source, types::entit
   sourceHandle.emplace<pokesim::tags::SpdStatUpdateRequired>();
   sourceHandle.emplace<pokesim::tags::SpeStatUpdateRequired>();
 
-  sourceHandle.remove<pokesim::dex::ChoiceLock, DisabledMoveSlots, LastUsedMove>();
+  sourceHandle.remove<dex::ChoiceLock, DisabledMoveSlots, LastUsedMove>();
 
   // Technically, EndAbility should be called as well for the source's original ability, but since neither Ditto nor Mew
   // have abilities that need that, I'll let it go for now.
