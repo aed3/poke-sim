@@ -45,7 +45,7 @@ struct PokemonStateSetup : StateSetupBase {
 
   void setAutoID();
   void setID(types::stateId id);
-  void setSpecies(pokesim::dex::Species speciesName);
+  void setSpecies(dex::Species speciesName);
 
   void setSide(types::entity entity);
   void setBattle(types::entity entity);
@@ -54,14 +54,14 @@ struct PokemonStateSetup : StateSetupBase {
   void setCurrentHp(types::stat hp);
   void setTypes(SpeciesTypes types);
   void setLevel(types::level level);
-  void setGender(pokesim::dex::Gender gender);
-  void setAbility(pokesim::dex::Ability ability);
-  void setItem(pokesim::dex::Item item, const Pokedex& pokedex);
+  void setGender(dex::Gender gender);
+  void setAbility(dex::Ability ability);
+  void setItem(dex::Item item, const Pokedex& pokedex);
   void setMoves(const std::vector<MoveSlot>& moveSlots);
 
-  void setStatus(pokesim::dex::Status status);
+  void setStatus(dex::Status status);
 
-  void setNature(pokesim::dex::Nature nature);
+  void setNature(dex::Nature nature);
   void setEVs(types::ev hp, types::ev atk, types::ev def, types::ev spa, types::ev spd, types::ev spe);
   void setEVs(const Evs& evs);
   void setIVs(types::iv hp, types::iv atk, types::iv def, types::iv spa, types::iv spd, types::iv spe);

@@ -9,8 +9,8 @@ namespace pokesim {
 namespace internal {
 struct NaturePlusMinus {
  private:
-  using Stat = pokesim::dex::Stat;
-  using Nature = pokesim::dex::Nature;
+  using Stat = dex::Stat;
+  using Nature = dex::Nature;
   using statEnumType = std::underlying_type_t<Stat>;
 
   static constexpr statEnumType NATURED_STATS = 5U;

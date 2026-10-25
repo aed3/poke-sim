@@ -47,7 +47,6 @@
 #include <Components/Winner.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Pokedex.hpp>
-#include <Simulation/MoveHitSteps.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Registry.hpp>
@@ -56,8 +55,10 @@
 
 #include "Decisions.hpp"
 #include "ManageActionQueue.hpp"
+#include "MoveHitSteps.hpp"
 #include "SimulateTurnDebugChecks.hpp"
 #include "SimulateTurnEvents.hpp"
+#include "SpeedSort.hpp"
 
 namespace pokesim::simulate_turn {
 namespace {
@@ -242,7 +243,7 @@ void useMove(Simulation& simulation) {
   internal::runModifyMove(simulation);
   internal::runSetBasePower(simulation);
 
-  internal::runMoveHitChecks(simulation);
+  internal::simulate_turn::runMoveHitChecks(simulation);
   internal::runAfterMoveUsedEvent(simulation);
 }
 

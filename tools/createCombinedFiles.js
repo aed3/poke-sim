@@ -177,7 +177,7 @@ const addToCombinedFiles = (files, isSource) => {
     }
   }
 
-  writeCppFile('PokeSim.' + (isSource ? 'cpp' : 'hpp'), 'extras', combinedFileLines.join('\n'), false);
+  writeCppFile('PokeSim.' + (isSource ? 'cpp' : 'hpp'), 'extras', combinedFileLines.join('\n'), {format: false});
 };
 
 readSrcFiles();

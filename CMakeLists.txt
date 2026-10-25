@@ -207,10 +207,11 @@ setup_target(
     src/SimulateTurn/CalcDamageSpecifics.cpp
     src/SimulateTurn/Decisions.cpp
     src/SimulateTurn/ManageActionQueue.cpp
+    src/SimulateTurn/MoveHitSteps.cpp
     src/SimulateTurn/RandomChance.cpp
     src/SimulateTurn/SimulateTurn.cpp
     src/SimulateTurn/SimulateTurnEvents.cpp
-    src/Simulation/MoveHitSteps.cpp
+    src/SimulateTurn/SpeedSort.cpp
     src/Simulation/RunEvent.cpp
     src/Simulation/Simulation.cpp
     src/Simulation/SimulationResults.cpp

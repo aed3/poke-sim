@@ -27,17 +27,17 @@
 #include <Config/Require.hpp>
 #include <Pokedex/Effects/Flinch.hpp>
 #include <Pokedex/Pokedex.hpp>
-#include <SimulateTurn/RandomChance.hpp>
-#include <SimulateTurn/SimulateTurnEvents.hpp>
 #include <Simulation/Formulas.hpp>
+#include <Simulation/RunEvent.hpp>
+#include <Simulation/Simulation.hpp>
 #include <Types/Constants.hpp>
 #include <Types/Enums/BattleFormat.hpp>
 #include <Types/Registry.hpp>
 #include <Utilities/EntityFilter.hpp>
 #include <Utilities/Tags.hpp>
 
-#include "RunEvent.hpp"
-#include "Simulation.hpp"
+#include "RandomChance.hpp"
+#include "SimulateTurnEvents.hpp"
 
 namespace pokesim {
 namespace {
@@ -423,7 +423,7 @@ void moveHitLoop(Simulation& simulation) {
 }
 }  // namespace
 
-void internal::runMoveHitChecks(Simulation& simulation) {
+void internal::simulate_turn::runMoveHitChecks(Simulation& simulation) {
   // invulnerabilityCheck
   // hitCheck
   runMoveHitCheck<typeImmunityCheck>(simulation);

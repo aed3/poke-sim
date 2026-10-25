@@ -52,7 +52,7 @@ void PokemonStateSetup::setID(types::stateId id) {
   handle.emplace<Id>(id);
 }
 
-void PokemonStateSetup::setSpecies(pokesim::dex::Species speciesName) {
+void PokemonStateSetup::setSpecies(dex::Species speciesName) {
   handle.emplace<SpeciesName>(speciesName);
 }
 
@@ -80,15 +80,15 @@ void PokemonStateSetup::setLevel(types::level level) {
   handle.emplace<Level>(level);
 }
 
-void PokemonStateSetup::setGender(pokesim::dex::Gender gender) {
+void PokemonStateSetup::setGender(dex::Gender gender) {
   handle.emplace<GenderName>(gender);
 }
 
-void PokemonStateSetup::setAbility(pokesim::dex::Ability ability) {
+void PokemonStateSetup::setAbility(dex::Ability ability) {
   pokesim::internal::setAbility(*handle.registry(), ability, entity());
 }
 
-void PokemonStateSetup::setItem(pokesim::dex::Item item, const Pokedex& pokedex) {
+void PokemonStateSetup::setItem(dex::Item item, const Pokedex& pokedex) {
   pokesim::internal::setItem(*handle.registry(), item, entity(), pokedex);
 }
 
@@ -103,11 +103,11 @@ void PokemonStateSetup::setMoves(const std::vector<MoveSlot>& moveSlots) {
   }
 }
 
-void PokemonStateSetup::setStatus(pokesim::dex::Status status) {
+void PokemonStateSetup::setStatus(dex::Status status) {
   pokesim::internal::setStatus(*handle.registry(), status, entity());
 }
 
-void PokemonStateSetup::setNature(pokesim::dex::Nature nature) {
+void PokemonStateSetup::setNature(dex::Nature nature) {
   dex::emplaceTagFromEnum(nature, handle);
 }
 

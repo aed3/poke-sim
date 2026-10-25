@@ -4,7 +4,6 @@
 
 #include "BattleCreationInfo.hpp"
 #include "Formulas.hpp"
-#include "MoveHitSteps.hpp"
 #include "RunEvent.hpp"
 #include "Simulation.hpp"
 #include "SimulationOptions.hpp"

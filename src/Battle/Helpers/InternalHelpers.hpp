@@ -12,7 +12,7 @@
 namespace pokesim::internal {
 void setupActionMoveBuild(
   types::registry& registry, types::entity battleEntity, types::entity sourceEntity, types::entity targetEntity,
-  types::entity actionMoveEntity, pokesim::dex::Move move, bool useExtended);
+  types::entity actionMoveEntity, dex::Move move, bool useExtended);
 
 template <
   template <typename, typename...> typename RunStruct, typename TagContainer = Tags<>,

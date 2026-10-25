@@ -28,10 +28,10 @@ void clearVolatileTags(Simulation& simulation) {
     EvaBoost,
     LastUsedMove,
     TransformedFrom,
-    pokesim::dex::ChoiceLock,
-    pokesim::dex::Flinch,
-    pokesim::dex::Trapped,
-    pokesim::dex::Trapper,
+    dex::ChoiceLock,
+    dex::Flinch,
+    dex::Trapped,
+    dex::Trapper,
     pokesim::tags::Switching>(view.begin(), view.end());
 }
 

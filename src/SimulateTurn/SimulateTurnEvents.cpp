@@ -9,7 +9,7 @@
 #include <Types/Indexes.hpp>
 #include <Utilities/EntityFilter.hpp>
 
-#include "ManageActionQueue.hpp"
+#include "SpeedSort.hpp"
 
 namespace pokesim::internal::simulate_turn {
 namespace {
