@@ -29,9 +29,9 @@ struct CurrentHp;
 }  // namespace stat
 
 namespace internal {
-void setItem(types::registry& registry, pokesim::dex::Item item, types::entity entity, const Pokedex& pokedex);
-void setAbility(types::registry& registry, pokesim::dex::Ability ability, types::entity entity);
-void setStatus(types::registry& registry, pokesim::dex::Status status, types::entity entity);
+void setItem(types::registry& registry, dex::Item item, types::entity entity, const Pokedex& pokedex);
+void setAbility(types::registry& registry, dex::Ability ability, types::entity entity);
+void setStatus(types::registry& registry, dex::Status status, types::entity entity);
 
 void checkIfCanUseItem(Simulation& simulation);
 void checkIfCanEatItem(Simulation& simulation);

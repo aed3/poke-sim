@@ -47,23 +47,23 @@ void runUpdate(Simulation& simulation) {
 }
 
 void runBeforeMove(Simulation& simulation) {
-  pokesim::dex::Paralysis::onBeforeMove(simulation);
-  pokesim::dex::Flinch::onBeforeMove(simulation);
-  pokesim::dex::ChoiceLock::onBeforeMove(simulation);
+  dex::Paralysis::onBeforeMove(simulation);
+  dex::Flinch::onBeforeMove(simulation);
+  dex::ChoiceLock::onBeforeMove(simulation);
 }
 
 void runResidual(Simulation& simulation) {
-  pokesim::dex::Reflect::Effect::onResidual(simulation);
-  pokesim::dex::Flinch::onResidual(simulation);
-  pokesim::dex::Burn::onResidual(simulation);
+  dex::Reflect::Effect::onResidual(simulation);
+  dex::Flinch::onResidual(simulation);
+  dex::Burn::onResidual(simulation);
 }
 
 void runFractionalPriority(Simulation& simulation) {
-  pokesim::dex::QuickClaw::onFractionalPriority(simulation);
+  dex::QuickClaw::onFractionalPriority(simulation);
 }
 
 void runModifyPriority(Simulation& simulation) {
-  pokesim::dex::Prankster::onModifyPriority(simulation);
+  dex::Prankster::onModifyPriority(simulation);
 }
 
 void runAccuracyEvent(Simulation&) {}
@@ -71,7 +71,7 @@ void runAccuracyEvent(Simulation&) {}
 void runModifyAccuracyEvent(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::CurrentMoveHit, Accuracy>();
 
-  pokesim::dex::BrightPowder::onModifyAccuracy(simulation);
+  dex::BrightPowder::onModifyAccuracy(simulation);
 
   simulation.view<applyEventModifier<Accuracy>>();
   simulation.removeFromEntities<EventModifier>();
@@ -83,45 +83,45 @@ void runRemoveCriticalHitEvent(Simulation&) {}
 void runBasePowerEvent(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::CurrentMoveHit, BasePower>();
 
-  pokesim::dex::Analytic::onBasePower(simulation);
+  dex::Analytic::onBasePower(simulation);
 
-  pokesim::dex::KnockOff::onBasePower(simulation);
+  dex::KnockOff::onBasePower(simulation);
 
   simulation.view<applyBasePowerEventModifier>();
   simulation.removeFromEntities<EventModifier>();
 }
 
 void runModifyDamageEvent(Simulation& simulation) {
-  pokesim::dex::LifeOrb::onModifyDamage(simulation);
-  pokesim::dex::Reflect::Effect::onAnyModifyDamage(simulation);
+  dex::LifeOrb::onModifyDamage(simulation);
+  dex::Reflect::Effect::onAnyModifyDamage(simulation);
 }
 
 void runAfterModifyDamageEvent(Simulation& simulation) {
-  pokesim::dex::FocusSash::onAfterModifyDamage(simulation);
+  dex::FocusSash::onAfterModifyDamage(simulation);
 }
 
 void runDamageEvent(Simulation& simulation) {
-  pokesim::dex::FocusSash::onDamage(simulation);
+  dex::FocusSash::onDamage(simulation);
 
   simulation.removeFromEntities<calc_damage::tags::RanAfterModifyDamage>();
 }
 
 void runDamagingHitEvent(Simulation& simulation) {
-  pokesim::dex::Static::onDamagingHit(simulation);
-  pokesim::dex::RockyHelmet::onDamagingHit(simulation);
+  dex::Static::onDamagingHit(simulation);
+  dex::RockyHelmet::onDamagingHit(simulation);
 }
 
 void runHitEvent(Simulation& simulation) {
-  pokesim::dex::SpiritShackle::targetSecondaryEffect::onHit(simulation);
-  pokesim::dex::Transform::targetPrimaryEffect::onHit(simulation);
+  dex::SpiritShackle::targetSecondaryEffect::onHit(simulation);
+  dex::Transform::targetPrimaryEffect::onHit(simulation);
 }
 
 void runAfterHitEvent(Simulation& simulation) {
-  pokesim::dex::KnockOff::onAfterHit(simulation);
+  dex::KnockOff::onAfterHit(simulation);
 }
 
 void runAfterMoveUsedEvent(Simulation& simulation) {
-  pokesim::dex::LifeOrb::onAfterMoveUsed(simulation);
+  dex::LifeOrb::onAfterMoveUsed(simulation);
 }
 
 void runModifySecondariesEvent(Simulation&) {}
@@ -131,12 +131,12 @@ void runStatusImmunityEvent(Simulation&) {
   // Terrain), and all the `onImmunity` events that relate to non-volatile status conditions will go
 }
 
-template void runStatusImmunityEvent<pokesim::dex::Burn>(Simulation&);
-template void runStatusImmunityEvent<pokesim::dex::Freeze>(Simulation&);
-template void runStatusImmunityEvent<pokesim::dex::Paralysis>(Simulation&);
-template void runStatusImmunityEvent<pokesim::dex::Poison>(Simulation&);
-template void runStatusImmunityEvent<pokesim::dex::Sleep>(Simulation&);
-template void runStatusImmunityEvent<pokesim::dex::Toxic>(Simulation&);
+template void runStatusImmunityEvent<dex::Burn>(Simulation&);
+template void runStatusImmunityEvent<dex::Freeze>(Simulation&);
+template void runStatusImmunityEvent<dex::Paralysis>(Simulation&);
+template void runStatusImmunityEvent<dex::Poison>(Simulation&);
+template void runStatusImmunityEvent<dex::Sleep>(Simulation&);
+template void runStatusImmunityEvent<dex::Toxic>(Simulation&);
 
 void runAfterSetStatusEvent(Simulation& simulation) {
   dex::LumBerry::onAfterSetStatus(simulation);
@@ -156,27 +156,27 @@ void runModifyMoveAccuracyBoostEvent(Simulation&) {}
 void runModifyTarget(Simulation&) {}
 
 void runModifyMove(Simulation& simulation) {
-  pokesim::dex::ChoiceScarf::onSourceModifyMove(simulation);
-  pokesim::dex::ChoiceSpecs::onSourceModifyMove(simulation);
-  pokesim::dex::KingsRock::onModifyMove(simulation);
-  pokesim::dex::LongReach::onModifyMove(simulation);
+  dex::ChoiceScarf::onSourceModifyMove(simulation);
+  dex::ChoiceSpecs::onSourceModifyMove(simulation);
+  dex::KingsRock::onModifyMove(simulation);
+  dex::LongReach::onModifyMove(simulation);
 
-  pokesim::dex::Scrappy::onModifyMove(simulation);
+  dex::Scrappy::onModifyMove(simulation);
 }
 
 void runSetBasePower(Simulation& simulation) {
-  pokesim::dex::Reversal::onSetBasePower(simulation);
+  dex::Reversal::onSetBasePower(simulation);
 }
 
 void runResetDisabledMove(Simulation& simulation) {
-  pokesim::dex::ChoiceLock::onResetDisabledMove(simulation);
+  dex::ChoiceLock::onResetDisabledMove(simulation);
 }
 
 void runResetTrappedPokemon(Simulation& simulation) {
-  simulation.addToEntities<tags::ResetTrappedPokemon, tags::ActiveAtTurnEnd, pokesim::dex::Trapped>();
-  simulation.removeFromEntities<pokesim::dex::Trapped, tags::ActiveAtTurnEnd>();
+  simulation.addToEntities<tags::ResetTrappedPokemon, tags::ActiveAtTurnEnd, dex::Trapped>();
+  simulation.removeFromEntities<dex::Trapped, tags::ActiveAtTurnEnd>();
 
-  pokesim::dex::Trapped::onResetTrappedPokemon(simulation);
+  dex::Trapped::onResetTrappedPokemon(simulation);
 
   simulation.removeFromEntities<tags::ResetTrappedPokemon>();
 }
@@ -193,10 +193,10 @@ void runModifySpa(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::SpaStatUpdateRequired>();
 
   // Priority 1
-  pokesim::dex::ChoiceSpecs::onModifySpa(simulation);
+  dex::ChoiceSpecs::onModifySpa(simulation);
 
   // Priority 5
-  pokesim::dex::Plus::onModifySpA(simulation);
+  dex::Plus::onModifySpA(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpa>>();
   simulation.removeFromEntities<EventModifier>();
@@ -205,7 +205,7 @@ void runModifySpa(Simulation& simulation) {
 void runModifySpd(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::SpdStatUpdateRequired>();
 
-  pokesim::dex::AssaultVest::onModifySpd(simulation);
+  dex::AssaultVest::onModifySpd(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpd>>();
   simulation.removeFromEntities<EventModifier>();
@@ -214,13 +214,13 @@ void runModifySpd(Simulation& simulation) {
 void runModifySpe(Simulation& simulation) {
   simulation.addToEntities<EventModifier, pokesim::tags::SpeStatUpdateRequired>();
 
-  pokesim::dex::ChoiceScarf::onModifySpe(simulation);
-  pokesim::dex::QuickPowder::onModifySpe(simulation);
+  dex::ChoiceScarf::onModifySpe(simulation);
+  dex::QuickPowder::onModifySpe(simulation);
 
   simulation.view<applyEventModifier<stat::EffectiveSpe>>();
   simulation.removeFromEntities<EventModifier>();
 
-  pokesim::dex::Paralysis::onModifySpe(simulation);
+  dex::Paralysis::onModifySpe(simulation);
 }
 
 void runStartSleep(Simulation&) {}
@@ -237,25 +237,25 @@ void runAfterUseItemEvent(Simulation&) {}
 void runAfterEatItemEvent(Simulation&) {}
 
 void runRemoveItemEvent(Simulation& simulation) {
-  pokesim::dex::AssaultVest::onRemove(simulation);
-  pokesim::dex::ChoiceScarf::onRemove(simulation);
-  pokesim::dex::ChoiceSpecs::onRemove(simulation);
+  dex::AssaultVest::onRemove(simulation);
+  dex::ChoiceScarf::onRemove(simulation);
+  dex::ChoiceSpecs::onRemove(simulation);
 }
 
 void runStartAbilityEvent(Simulation&) {}
 void runEndAbilityEvent(Simulation&) {}
 void runRemoveAbilityEvent(Simulation& simulation) {
-  pokesim::dex::Prankster::onRemove(simulation);
+  dex::Prankster::onRemove(simulation);
 }
 
 void runBeforeSwitchOutEvent(Simulation&) {}
 
 void runSwitchInEvent(Simulation& simulation) {
-  pokesim::dex::Imposter::onSwitchIn(simulation);
+  dex::Imposter::onSwitchIn(simulation);
 }
 
 void runSwitchOutEvent(Simulation& simulation) {
-  pokesim::dex::Trapper::onSwitchOut(simulation);
+  dex::Trapper::onSwitchOut(simulation);
 }
 
 void runFaintEvent(Simulation&) {}

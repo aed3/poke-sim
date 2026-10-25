@@ -169,20 +169,20 @@ struct RemoveNotSettableStatus {
 
 template <typename StatusType>
 struct SetEffectTargetStatus {
-  static constexpr pokesim::dex::Status status = StatusType::name();
+  static constexpr dex::Status status = StatusType::name();
   static void run(Simulation& simulation) { simulation.view<setEffectTargetStatus, Tags<StatusType>>(); }
 
   static void setEffectTargetStatus(types::registry& registry, CurrentEffectTarget target) {
     setStatus(registry, status, target.val);
 
-    if constexpr (status == pokesim::dex::Status::PAR) {
+    if constexpr (status == dex::Status::PAR) {
       registry.emplace<pokesim::tags::SpeStatUpdateRequired>(target.val);
     }
   }
 };
 
 bool areTypesTrappedImmune(SpeciesTypes types, const Pokedex& pokedex) {
-  for (pokesim::dex::Type type : types.val) {
+  for (dex::Type type : types.val) {
     if (pokedex.getStaticValue<dex::Trapped::isTypeImmune>(type)) {
       return true;
     }

@@ -283,7 +283,7 @@ void clearMoveAction(Simulation& simulation) {
     BasePower,
     HitCount>();
 
-  pokesim::dex::forEachMove<ClearMoveTag>(simulation.pokedex(), registry);
+  dex::forEachMove<ClearMoveTag>(simulation.pokedex(), registry);
 
   auto actionMoves = registry.view<pokesim::tags::CurrentActionMove>();
   auto failedActionMoves = registry.view<pokesim::tags::FailedCurrentActionMove>();

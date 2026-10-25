@@ -35,7 +35,7 @@ const createHeadersFile = (folder) => {
   if (headersFileExists) {
     headerFiles.sort();
     const fileText = '#pragma once\n\n' + headerFiles.map(file => `#include "${toRelative(file, folder)}"`).join('\n');
-    writeCppFile(headerFileName, toRelative(folder), fileText, false);
+    writeCppFile(headerFileName, toRelative(folder), fileText, {format: false});
     return headerFiles;
   }
 
