@@ -18,6 +18,7 @@
 #include <Components/Tags/PokemonTags.hpp>
 #include <Pokedex/EnumToTag/NatureEnumToTag.hpp>
 #include <Pokedex/EnumToTag/TypeEnumToTag.hpp>
+#include <Pokedex/Items/Metronome.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Gender.hpp>
 #include <Types/Enums/Item.hpp>
@@ -127,6 +128,10 @@ void PokemonStateSetup::setIVs(
 
 void PokemonStateSetup::setIVs(const Ivs& ivs) {
   handle.emplace<Ivs>(ivs);
+}
+
+void PokemonStateSetup::setMetronomeEffect(dex::MetronomeItem::Effect metronomeEffect) {
+  handle.emplace<dex::MetronomeItem::Effect>(metronomeEffect);
 }
 
 bool PokemonStateSetup::isFainted() {

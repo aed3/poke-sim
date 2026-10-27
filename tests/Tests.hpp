@@ -625,6 +625,9 @@ struct TestSimulation {
     else if constexpr (std::is_same_v<dex::Status, Type>) {
       info.status = value;
     }
+    else if constexpr (std::is_same_v<dex::MetronomeItem::Effect, Type>) {
+      info.effectData.metronome = value;
+    }
     else if constexpr (std::is_same_v<CurrentBoostsInfo, Type>) {
       info.currentBoosts = value;
     }

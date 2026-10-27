@@ -12,6 +12,7 @@
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EventModifier.hpp>
+#include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SpeciesNames.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
@@ -103,6 +104,62 @@ void lifeOrbOnAfterMove(
     internal::applyDamage(handle, hp.val / hpDivisor);
   }
 }
+
+void metronomeOnTryMove(types::registry& registry, Battle battle, MetronomeItem::Effect& metronomeEffect) {
+  Move currentMove = registry.get<MoveName>(registry.get<CurrentAction>(battle.val).action).val;
+  if (metronomeEffect.lastMove == currentMove) {
+    metronomeEffect.consecutiveHits++;
+  }
+  else {
+    metronomeEffect.consecutiveHits = 0U;
+  }
+  metronomeEffect.lastMove = currentMove;
+}
+
+void metronomeOnMoveFail(MetronomeItem::Effect& metronomeEffect) {
+  metronomeEffect.consecutiveHits = 0U;
+}
+
+void metronomeOnModifyDamageSimulateTurn(
+  types::registry& registry, MetronomeItem::Effect& metronomeEffect, const CurrentActionMovesAsSource& moves,
+  const Pokedex& pokedex, types::eventModifier denominator) {
+  const auto numerator =
+    pokedex.getStaticValue<MetronomeItem::Effect::onModifyDamageModifiers>(metronomeEffect.consecutiveHits);
+  if (numerator == denominator) {
+    return;
+  }
+
+  for (types::entity move : moves) {
+    if (registry.any_of<move::tags::Status>(move)) {
+      continue;
+    }
+
+    DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
+    modifier.modifyDamageEvent = internal::chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
+  }
+}
+
+template <typename CurrentActionMovesAsSourceType>
+struct MetronomeOnModifyDamageCalcDamage {
+  static void run(
+    types::registry& registry, MetronomeItem::Effect& metronomeEffect, const CurrentActionMovesAsSourceType& moves,
+    const Pokedex& pokedex, types::eventModifier denominator) {
+    const auto numerator =
+      pokedex.getStaticValue<MetronomeItem::Effect::onModifyDamageModifiers>(metronomeEffect.consecutiveHits);
+    if (numerator == denominator) {
+      return;
+    }
+
+    for (types::entity move : moves) {
+      if (metronomeEffect.lastMove != registry.get<MoveName>(move).val) {
+        continue;
+      }
+
+      DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
+      modifier.modifyDamageEvent = internal::chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
+    }
+  }
+};
 
 void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget moves, types::stat hpDivisor) {
   types::registry& registry = *handle.registry();
@@ -263,6 +320,30 @@ void LumBerry::onUpdate(Simulation& simulation) {
   simulation.addToEntities<tags::CanEatItem, tags::HasStatus, LumBerry, internal::tags::RunUpdate>();
   // simulation.removeFromEntities<tags::CanEatItem, Confusion::Effect, LumBerry, internal::tags::RunUpdate>();
   internal::tryEatItem(simulation);
+}
+
+void MetronomeItem::Effect::onTryMove(Simulation& simulation) {
+  simulation.addToEntitiesWithExclude<MetronomeItem, MainSource, tags::CurrentActionSource>(
+    entt::exclude<MetronomeItem>);
+  simulation.view<metronomeOnTryMove, Tags<tags::CurrentActionSource>>();
+}
+
+void MetronomeItem::Effect::onMoveFail(Simulation& simulation) {
+  simulation.view<metronomeOnMoveFail, Tags<tags::FailedCurrentActionSource>>();
+}
+
+void MetronomeItem::Effect::onModifyDamage(Simulation& simulation) {
+  const auto denominator = simulation.pokedex().getStaticValue<onModifyDamageDenominator>();
+
+  simulation.view<metronomeOnModifyDamageSimulateTurn, Tags<tags::SimulateTurn>>(simulation.pokedex(), denominator);
+  internal::currentActionMovesAsSourceView<MetronomeOnModifyDamageCalcDamage, Tags<tags::CalculateDamage>>(
+    simulation,
+    simulation.pokedex(),
+    denominator);
+  internal::currentActionMovesAsSourceView<MetronomeOnModifyDamageCalcDamage, Tags<tags::AnalyzeEffect>>(
+    simulation,
+    simulation.pokedex(),
+    denominator);
 }
 
 void RockyHelmet::onDamagingHit(Simulation& simulation) {

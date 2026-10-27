@@ -216,7 +216,6 @@
  * src/Pokedex/Effects/Toxic.hpp
  * src/Pokedex/Effects/Trapped.hpp
  * src/Pokedex/Effects/Trapper.hpp
- * src/Pokedex/EnumToTag/StatusEnumToTag.hpp
  * src/Pokedex/Items/AssaultVest.hpp
  * src/Pokedex/Items/BrightPowder.hpp
  * src/Types/Enums/ItemProperty.hpp
@@ -231,11 +230,35 @@
  * src/Pokedex/Items/QuickClaw.hpp
  * src/Pokedex/Items/QuickPowder.hpp
  * src/Pokedex/Items/RockyHelmet.hpp
+ * src/Types/Enums/TypeEffectiveness.hpp
+ * src/Pokedex/Types/Bug.hpp
+ * src/Pokedex/Types/Dark.hpp
+ * src/Pokedex/Types/Dragon.hpp
+ * src/Pokedex/Types/Electric.hpp
+ * src/Pokedex/Types/Fairy.hpp
+ * src/Pokedex/Types/Fighting.hpp
+ * src/Pokedex/Types/Fire.hpp
+ * src/Pokedex/Types/Flying.hpp
+ * src/Pokedex/Types/Ghost.hpp
+ * src/Pokedex/Types/Grass.hpp
+ * src/Pokedex/Types/Ground.hpp
+ * src/Pokedex/Types/Ice.hpp
+ * src/Pokedex/Types/Normal.hpp
+ * src/Pokedex/Types/Poison.hpp
+ * src/Pokedex/Types/Psychic.hpp
+ * src/Pokedex/Types/Rock.hpp
+ * src/Pokedex/Types/Steel.hpp
+ * src/Pokedex/Types/Water.hpp
+ * src/Pokedex/TypeChart.hpp
+ * src/Types/Enums/BattleFormat.hpp
  * src/Types/Enums/MoveCategory.hpp
+ * src/Types/Enums/MoveProperty.hpp
  * src/Types/Enums/MoveTarget.hpp
+ * src/Pokedex/Pokedex.hpp
+ * src/Pokedex/EnumToTag/ItemEnumToTag.hpp
+ * src/Pokedex/EnumToTag/StatusEnumToTag.hpp
  * src/Pokedex/Moves/AllySwitch.hpp
  * src/Pokedex/Moves/ChillingWater.hpp
- * src/Types/Enums/MoveProperty.hpp
  * src/Pokedex/Moves/CloseCombat.hpp
  * src/Pokedex/Moves/Confide.hpp
  * src/Pokedex/Moves/FlashCannon.hpp
@@ -274,26 +297,6 @@
  * src/Pokedex/Species/Magnezone.hpp
  * src/Pokedex/Species/Pangoro.hpp
  * src/Pokedex/Species/Ribombee.hpp
- * src/Types/Enums/TypeEffectiveness.hpp
- * src/Pokedex/Types/Bug.hpp
- * src/Pokedex/Types/Dark.hpp
- * src/Pokedex/Types/Dragon.hpp
- * src/Pokedex/Types/Electric.hpp
- * src/Pokedex/Types/Fairy.hpp
- * src/Pokedex/Types/Fighting.hpp
- * src/Pokedex/Types/Fire.hpp
- * src/Pokedex/Types/Flying.hpp
- * src/Pokedex/Types/Ghost.hpp
- * src/Pokedex/Types/Grass.hpp
- * src/Pokedex/Types/Ground.hpp
- * src/Pokedex/Types/Ice.hpp
- * src/Pokedex/Types/Normal.hpp
- * src/Pokedex/Types/Poison.hpp
- * src/Pokedex/Types/Psychic.hpp
- * src/Pokedex/Types/Rock.hpp
- * src/Pokedex/Types/Steel.hpp
- * src/Pokedex/Types/Water.hpp
- * src/Types/Enums/BattleFormat.hpp
  * src/Types/NaturesTable.hpp
  * src/Simulation/SimulationOptions.hpp
  * src/Utilities/ArgumentChecks.hpp
@@ -305,15 +308,12 @@
  * src/Battle/Setup/BattleStateSetup.hpp
  * src/Battle/Setup/SideStateSetup.hpp
  * src/CalcDamage/Setup/CalcDamageInputSetup.hpp
- * src/Pokedex/TypeChart.hpp
- * src/Pokedex/Pokedex.hpp
  * src/Simulation/BattleCreationInfo.hpp
  * src/Simulation/Formulas.hpp
  * src/Utilities/Tags.hpp
  * src/Utilities/RegistryLoop.hpp
  * src/Simulation/Simulation.hpp
  * src/Pokedex/EnumToTag/AbilityEnumToTag.hpp
- * src/Pokedex/EnumToTag/ItemEnumToTag.hpp
  * src/Pokedex/EnumToTag/NatureEnumToTag.hpp
  * src/Utilities/DebugChecks.hpp
  * src/Simulation/SimulationSetupDebugChecks.hpp
@@ -19401,9 +19401,11 @@ using basePower = pokesim::internal::unsignedIntType<Constants::MoveBasePower::M
 using power = pokesim::internal::unsignedIntType<Constants::MovePower::MAX>;
 using baseAccuracy = pokesim::internal::unsignedIntType<Constants::MoveBaseAccuracy::MAX>;
 using accuracy = pokesim::internal::unsignedIntType<Constants::MoveAccuracy::MAX>;
-using moveHits = pokesim::internal::unsignedIntType<Constants::PokemonHpStat::MAX>;
+using moveHits = pokesim::internal::unsignedIntType<Constants::MoveHits::MAX>;
 
 using priority = pokesim::internal::signedIntType<Constants::MovePriority::MAX, Constants::MovePriority::MIN>;
+
+using moveUses = pokesim::internal::unsignedIntType<Constants::PokemonHpStat::MAX>;
 }  // namespace pokesim::types
 
 ////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
@@ -19600,6 +19602,8 @@ struct FailedCurrentMoveHit {};
 struct CurrentActionMoveSlot {};
 struct CurrentActionTarget {};
 struct CurrentActionSource {};
+struct FailedCurrentActionTarget {};
+struct FailedCurrentActionSource {};
 }  // namespace pokesim::tags
 
 //////////////////// END OF src/Components/Tags/Current.hpp ////////////////////
@@ -20691,11 +20695,11 @@ namespace calc_damage {
 struct UsesUntilKo {
  private:
   struct Uses {
-    types::moveHits hits = 0U;
+    types::moveUses uses = 0U;
     types::damageRollIndex damageRollsIncluded = 0U;
 
     bool operator==(const Uses& other) const {
-      return hits == other.hits && damageRollsIncluded == other.damageRollsIncluded;
+      return uses == other.uses && damageRollsIncluded == other.damageRollsIncluded;
     }
   };
 
@@ -20707,7 +20711,7 @@ struct UsesUntilKo {
 
   bool guaranteedKo() const {
     const Uses& min = minUses();
-    return min.hits == 1U && min.damageRollsIncluded == Constants::DamageRollCount::MAX;
+    return min.uses == 1U && min.damageRollsIncluded == Constants::DamageRollCount::MAX;
   }
 };
 
@@ -21855,71 +21859,6 @@ struct Trapper {
 
 //////////////////// END OF src/Pokedex/Effects/Trapper.hpp ////////////////////
 
-////////////// START OF src/Pokedex/EnumToTag/StatusEnumToTag.hpp //////////////
-
-namespace pokesim::dex {
-/*
- * Runs a function with a certain status tag based on the passed in enum.
- * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the status tags with
- * a static `run` function.
- *
- * @code
- * template <typename Tag>
- * struct EmplaceTag {
- *   static void run(types::handle handle) { handle.emplace<Tag>(); }
- * };
- *
- * enumToTag<EmplaceTag>(dex::Status::BRN, handle);
- * @endcode
- */
-template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-constexpr auto enumToTag(Status status, RunArgs&&... args) {
-  switch (status) {
-    case Status::BRN: return RunStruct<Burn, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::FRZ: return RunStruct<Freeze, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::PAR: return RunStruct<Paralysis, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::PSN: return RunStruct<Poison, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::SLP: return RunStruct<Sleep, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::TOX: return RunStruct<Toxic, T...>::run(std::forward<RunArgs>(args)...);
-
-    default: {
-      POKESIM_REQUIRE_FAIL("Using a tag for status that does not exist.");
-      using ReturnType = std::invoke_result_t<decltype(&RunStruct<Sleep, T...>::run), RunArgs...>;
-      if constexpr (std::is_void_v<ReturnType>) {
-        return;
-      }
-      else {
-        return ReturnType{};
-      }
-    }
-  }
-}
-
-template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-constexpr void forEachStatus(RunArgs&&... args) {
-  enumToTag<RunStruct, T...>(Status::BRN, std::forward<RunArgs>(args)...);
-  enumToTag<RunStruct, T...>(Status::FRZ, std::forward<RunArgs>(args)...);
-  enumToTag<RunStruct, T...>(Status::PAR, std::forward<RunArgs>(args)...);
-  enumToTag<RunStruct, T...>(Status::PSN, std::forward<RunArgs>(args)...);
-  enumToTag<RunStruct, T...>(Status::SLP, std::forward<RunArgs>(args)...);
-  enumToTag<RunStruct, T...>(Status::TOX, std::forward<RunArgs>(args)...);
-}
-
-// Assigns a status' tag to a handle
-void emplaceTagFromEnum(Status status, types::handle handle);
-void emplaceTagFromEnum(Status status, types::registry& registry, types::entity entity);
-
-// Removes a status' tag to a handle
-void removeTagFromEnum(Status status, types::handle handle);
-void removeTagFromEnum(Status status, types::registry& registry, types::entity entity);
-
-// Checks if the handle has the status' tag
-bool hasTag(Status status, types::handle handle);
-bool hasTag(Status status, const types::registry& registry, types::entity entity);
-}  // namespace pokesim::dex
-
-/////////////// END OF src/Pokedex/EnumToTag/StatusEnumToTag.hpp ///////////////
-
 ////////////////// START OF src/Pokedex/Items/AssaultVest.hpp //////////////////
 
 namespace pokesim {
@@ -22185,13 +22124,30 @@ struct MetronomeItem {
   static constexpr Volatile name(GameMechanics = {}) { return Volatile::METRONOME; }
   using MainSource = pokesim::dex::MetronomeItem;
 
-  static constexpr std::array<types::eventModifier, 6U> onModifyDamageModifiers(GameMechanics) {
-    return {4096U, 4915U, 5734U, 6553U, 7372U, 8192U};
+  static constexpr types::eventModifier onModifyDamageModifiers(GameMechanics, types::moveHits consecutiveHits) {
+    switch (consecutiveHits) {
+      case 0U: return 4096U;
+      case 1U: return 4915U;
+      case 2U: return 5734U;
+      case 3U: return 6553U;
+      case 4U: return 7372U;
+      case 5U:
+      default: return 8192U;
+    }
   }
 
-  static void onStart(Simulation& simulation);
+  static constexpr types::eventModifier onModifyDamageDenominator(GameMechanics) { return 4096U; }
+
+  static void onMoveFail(Simulation& simulation);
   static void onTryMove(Simulation& simulation);
   static void onModifyDamage(Simulation& simulation);
+
+  types::moveHits consecutiveHits{};
+  Move lastMove = Move::NO_MOVE;
+
+  constexpr bool operator==(const MetronomeItem& other) const {
+    return consecutiveHits == other.consecutiveHits && lastMove == other.lastMove;
+  }
 };
 }  // namespace shared_name_effect
 }  // namespace pokesim::dex
@@ -22304,6 +22260,891 @@ struct RockyHelmet {
 
 /////////////////// END OF src/Pokedex/Items/RockyHelmet.hpp ///////////////////
 
+//////////////// START OF src/Types/Enums/TypeEffectiveness.hpp ////////////////
+
+namespace pokesim {
+enum class TypeEffectiveness : std::uint8_t {
+  IMMUNE,
+  NOT_VERY_EFFECTIVE,
+  NEUTRAL,
+  SUPER_EFFECTIVE,
+};
+
+namespace internal {
+static constexpr inline std::array<TypeEffectiveness, 4U> VALID_TYPE_EFFECTIVENESS = {
+  TypeEffectiveness::IMMUNE,
+  TypeEffectiveness::NOT_VERY_EFFECTIVE,
+  TypeEffectiveness::NEUTRAL,
+  TypeEffectiveness::SUPER_EFFECTIVE,
+};
+}  // namespace internal
+}  // namespace pokesim
+
+///////////////// END OF src/Types/Enums/TypeEffectiveness.hpp /////////////////
+
+////////////////////// START OF src/Pokedex/Types/Bug.hpp //////////////////////
+
+namespace pokesim::dex {
+struct BugType {
+  static constexpr Type name(GameMechanics = {}) { return Type::BUG; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::GRASS:
+      case Type::GROUND:
+      case Type::FIGHTING: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::FLYING:
+      case Type::ROCK:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::FIRE:
+      case Type::FLYING:
+      case Type::POISON:
+      case Type::FIGHTING:
+      case Type::GHOST:
+      case Type::STEEL:
+      case Type::FAIRY:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::PSYCHIC:
+      case Type::DARK:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Bug"; }
+  };
+};
+}  // namespace pokesim::dex
+
+/////////////////////// END OF src/Pokedex/Types/Bug.hpp ///////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Dark.hpp //////////////////////
+
+namespace pokesim::dex {
+struct DarkType {
+  static constexpr Type name(GameMechanics = {}) { return Type::DARK; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::PSYCHIC: return TypeEffectiveness::IMMUNE;
+
+      case Type::GHOST:
+      case Type::DARK:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::BUG:
+      case Type::FIGHTING:
+      case Type::FAIRY:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::FIGHTING:
+      case Type::DARK:
+      case Type::FAIRY:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::PSYCHIC:
+      case Type::GHOST:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Dark"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Dark.hpp ///////////////////////
+
+//////////////////// START OF src/Pokedex/Types/Dragon.hpp /////////////////////
+
+namespace pokesim::dex {
+struct DragonType {
+  static constexpr Type name(GameMechanics = {}) { return Type::DRAGON; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::GRASS:
+      case Type::WATER:
+      case Type::FIRE:
+      case Type::ELECTRIC: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::ICE:
+      case Type::DRAGON:
+      case Type::FAIRY:  return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::FAIRY: return TypeEffectiveness::IMMUNE;
+
+      case Type::STEEL: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::DRAGON: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Dragon"; }
+  };
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Types/Dragon.hpp //////////////////////
+
+/////////////////// START OF src/Pokedex/Types/Electric.hpp ////////////////////
+
+namespace pokesim::dex {
+struct ElectricType {
+  static constexpr Type name(GameMechanics = {}) { return Type::ELECTRIC; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::ELECTRIC:
+      case Type::FLYING:
+      case Type::STEEL:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GROUND: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::GROUND: return TypeEffectiveness::IMMUNE;
+
+      case Type::GRASS:
+      case Type::ELECTRIC:
+      case Type::DRAGON:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::WATER:
+      case Type::FLYING: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Electric"; }
+  };
+};
+}  // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Types/Electric.hpp /////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Fairy.hpp /////////////////////
+
+namespace pokesim::dex {
+struct FairyType {
+  static constexpr Type name(GameMechanics = {}) { return Type::FAIRY; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::DRAGON: return TypeEffectiveness::IMMUNE;
+
+      case Type::BUG:
+      case Type::FIGHTING:
+      case Type::DARK:     return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::POISON:
+      case Type::STEEL:  return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::FIRE:
+      case Type::POISON:
+      case Type::STEEL:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIGHTING:
+      case Type::DRAGON:
+      case Type::DARK:     return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Fairy"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Fairy.hpp //////////////////////
+
+/////////////////// START OF src/Pokedex/Types/Fighting.hpp ////////////////////
+
+namespace pokesim::dex {
+struct FightingType {
+  static constexpr Type name(GameMechanics = {}) { return Type::FIGHTING; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::BUG:
+      case Type::ROCK:
+      case Type::DARK: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FLYING:
+      case Type::PSYCHIC:
+      case Type::FAIRY:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::GHOST: return TypeEffectiveness::IMMUNE;
+
+      case Type::BUG:
+      case Type::FLYING:
+      case Type::POISON:
+      case Type::PSYCHIC:
+      case Type::FAIRY:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::NORMAL:
+      case Type::ROCK:
+      case Type::ICE:
+      case Type::DARK:
+      case Type::STEEL:  return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Fighting"; }
+  };
+};
+}  // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Types/Fighting.hpp /////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Fire.hpp //////////////////////
+
+namespace pokesim::dex {
+struct FireType {
+  static constexpr Type name(GameMechanics = {}) { return Type::FIRE; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::WATER:
+      case Type::GROUND:
+      case Type::ROCK:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::FIRE:
+      case Type::BUG:
+      case Type::ICE:
+      case Type::STEEL:
+      case Type::FAIRY: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::WATER:
+      case Type::FIRE:
+      case Type::ROCK:
+      case Type::DRAGON: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::BUG:
+      case Type::ICE:
+      case Type::STEEL: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Fire"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Fire.hpp ///////////////////////
+
+//////////////////// START OF src/Pokedex/Types/Flying.hpp /////////////////////
+
+namespace pokesim::dex {
+struct FlyingType {
+  static constexpr Type name(GameMechanics = {}) { return Type::FLYING; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::GROUND: return TypeEffectiveness::IMMUNE;
+
+      case Type::GRASS:
+      case Type::BUG:
+      case Type::FIGHTING: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::ELECTRIC:
+      case Type::ROCK:
+      case Type::ICE:      return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::ELECTRIC:
+      case Type::ROCK:
+      case Type::STEEL:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::BUG:
+      case Type::FIGHTING: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Flying"; }
+  };
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Types/Flying.hpp //////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Ghost.hpp /////////////////////
+
+namespace pokesim::dex {
+struct GhostType {
+  static constexpr Type name(GameMechanics = {}) { return Type::GHOST; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::NORMAL:
+      case Type::FIGHTING: return TypeEffectiveness::IMMUNE;
+
+      case Type::BUG:
+      case Type::POISON: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GHOST:
+      case Type::DARK:  return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::NORMAL: return TypeEffectiveness::IMMUNE;
+
+      case Type::DARK: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::PSYCHIC:
+      case Type::GHOST:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Ghost"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Ghost.hpp //////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Grass.hpp /////////////////////
+
+namespace pokesim::dex {
+struct GrassType {
+  static constexpr Type name(GameMechanics = {}) { return Type::GRASS; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::GRASS:
+      case Type::WATER:
+      case Type::ELECTRIC:
+      case Type::GROUND:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::BUG:
+      case Type::FLYING:
+      case Type::POISON:
+      case Type::ICE:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::GRASS:
+      case Type::FIRE:
+      case Type::BUG:
+      case Type::FLYING:
+      case Type::POISON:
+      case Type::DRAGON:
+      case Type::STEEL:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::WATER:
+      case Type::GROUND:
+      case Type::ROCK:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Grass"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Grass.hpp //////////////////////
+
+//////////////////// START OF src/Pokedex/Types/Ground.hpp /////////////////////
+
+namespace pokesim::dex {
+struct GroundType {
+  static constexpr Type name(GameMechanics = {}) { return Type::GROUND; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::ELECTRIC: return TypeEffectiveness::IMMUNE;
+
+      case Type::POISON:
+      case Type::ROCK:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::WATER:
+      case Type::ICE:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::FLYING: return TypeEffectiveness::IMMUNE;
+
+      case Type::GRASS:
+      case Type::BUG:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::ELECTRIC:
+      case Type::POISON:
+      case Type::ROCK:
+      case Type::STEEL:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Ground"; }
+  };
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Types/Ground.hpp //////////////////////
+
+////////////////////// START OF src/Pokedex/Types/Ice.hpp //////////////////////
+
+namespace pokesim::dex {
+struct IceType {
+  static constexpr Type name(GameMechanics = {}) { return Type::ICE; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::ICE: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::FIGHTING:
+      case Type::ROCK:
+      case Type::STEEL:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::WATER:
+      case Type::FIRE:
+      case Type::ICE:
+      case Type::STEEL: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::FLYING:
+      case Type::GROUND:
+      case Type::DRAGON: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Ice"; }
+  };
+};
+}  // namespace pokesim::dex
+
+/////////////////////// END OF src/Pokedex/Types/Ice.hpp ///////////////////////
+
+//////////////////// START OF src/Pokedex/Types/Normal.hpp /////////////////////
+
+namespace pokesim::dex {
+struct NormalType {
+  static constexpr Type name(GameMechanics = {}) { return Type::NORMAL; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::GHOST: return TypeEffectiveness::IMMUNE;
+
+      case Type::FIGHTING: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::GHOST: return TypeEffectiveness::IMMUNE;
+
+      case Type::ROCK:
+      case Type::STEEL: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Normal"; }
+  };
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Types/Normal.hpp //////////////////////
+
+//////////////////// START OF src/Pokedex/Types/Poison.hpp /////////////////////
+
+namespace pokesim::dex {
+struct PoisonType {
+  static constexpr Type name(GameMechanics = {}) { return Type::POISON; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::GRASS:
+      case Type::BUG:
+      case Type::POISON:
+      case Type::FIGHTING:
+      case Type::FAIRY:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GROUND:
+      case Type::PSYCHIC: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::STEEL: return TypeEffectiveness::IMMUNE;
+
+      case Type::POISON:
+      case Type::GROUND:
+      case Type::ROCK:
+      case Type::GHOST:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::FAIRY: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Poison"; }
+  };
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Types/Poison.hpp //////////////////////
+
+//////////////////// START OF src/Pokedex/Types/Psychic.hpp ////////////////////
+
+namespace pokesim::dex {
+struct PsychicType {
+  static constexpr Type name(GameMechanics = {}) { return Type::PSYCHIC; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::FIGHTING:
+      case Type::PSYCHIC:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::BUG:
+      case Type::GHOST:
+      case Type::DARK:  return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::DARK: return TypeEffectiveness::IMMUNE;
+
+      case Type::PSYCHIC:
+      case Type::STEEL:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::POISON:
+      case Type::FIGHTING: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Psychic"; }
+  };
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Types/Psychic.hpp /////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Rock.hpp //////////////////////
+
+namespace pokesim::dex {
+struct RockType {
+  static constexpr Type name(GameMechanics = {}) { return Type::ROCK; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::NORMAL:
+      case Type::FIRE:
+      case Type::FLYING:
+      case Type::POISON: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::WATER:
+      case Type::GROUND:
+      case Type::FIGHTING:
+      case Type::STEEL:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::GROUND:
+      case Type::FIGHTING:
+      case Type::STEEL:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::BUG:
+      case Type::FLYING:
+      case Type::ICE:    return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Rock"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Rock.hpp ///////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Steel.hpp /////////////////////
+
+namespace pokesim::dex {
+struct SteelType {
+  static constexpr Type name(GameMechanics = {}) { return Type::STEEL; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::POISON: return TypeEffectiveness::IMMUNE;
+
+      case Type::NORMAL:
+      case Type::GRASS:
+      case Type::BUG:
+      case Type::FLYING:
+      case Type::PSYCHIC:
+      case Type::ROCK:
+      case Type::ICE:
+      case Type::DRAGON:
+      case Type::STEEL:
+      case Type::FAIRY:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::GROUND:
+      case Type::FIGHTING: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::WATER:
+      case Type::FIRE:
+      case Type::ELECTRIC:
+      case Type::STEEL:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::ROCK:
+      case Type::ICE:
+      case Type::FAIRY: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Steel"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Steel.hpp //////////////////////
+
+///////////////////// START OF src/Pokedex/Types/Water.hpp /////////////////////
+
+namespace pokesim::dex {
+struct WaterType {
+  static constexpr Type name(GameMechanics = {}) { return Type::WATER; }
+
+  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
+    switch (attacking) {
+      case Type::WATER:
+      case Type::FIRE:
+      case Type::ICE:
+      case Type::STEEL: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::GRASS:
+      case Type::ELECTRIC: return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
+    switch (defending) {
+      case Type::GRASS:
+      case Type::WATER:
+      case Type::DRAGON: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
+
+      case Type::FIRE:
+      case Type::GROUND:
+      case Type::ROCK:   return TypeEffectiveness::SUPER_EFFECTIVE;
+
+      default: return TypeEffectiveness::NEUTRAL;
+    }
+  }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Water"; }
+  };
+};
+}  // namespace pokesim::dex
+
+////////////////////// END OF src/Pokedex/Types/Water.hpp //////////////////////
+
+////////////////////// START OF src/Pokedex/TypeChart.hpp //////////////////////
+
+namespace pokesim {
+struct TypeChart {
+ private:
+  // The extra array element is for NO_TYPE
+  std::array<std::array<TypeEffectiveness, dex::TOTAL_TYPE_COUNT + 1U>, dex::TOTAL_TYPE_COUNT + 1U> data{};
+
+  using enumType = std::underlying_type_t<dex::Type>;
+
+  template <typename Type>
+  constexpr void setTypeData(GameMechanics gameMechanic) {
+    auto& attacking = data.at((enumType)Type::name(gameMechanic));
+    for (enumType defending = 0U; defending <= dex::TOTAL_TYPE_COUNT; defending++) {
+      attacking.at(defending) = Type::attacking(gameMechanic, (dex::Type)defending);
+    }
+  }
+
+ public:
+  constexpr TypeChart(GameMechanics gameMechanic) {
+    for (TypeEffectiveness& effectiveness : data.at((enumType)(dex::Type::NO_TYPE))) {
+      effectiveness = TypeEffectiveness::NEUTRAL;
+    }
+    setTypeData<dex::NormalType>(gameMechanic);
+    setTypeData<dex::GrassType>(gameMechanic);
+    setTypeData<dex::WaterType>(gameMechanic);
+    setTypeData<dex::FireType>(gameMechanic);
+    setTypeData<dex::BugType>(gameMechanic);
+    setTypeData<dex::FlyingType>(gameMechanic);
+    setTypeData<dex::PoisonType>(gameMechanic);
+    setTypeData<dex::ElectricType>(gameMechanic);
+    setTypeData<dex::GroundType>(gameMechanic);
+    setTypeData<dex::FightingType>(gameMechanic);
+    setTypeData<dex::PsychicType>(gameMechanic);
+    setTypeData<dex::RockType>(gameMechanic);
+    setTypeData<dex::IceType>(gameMechanic);
+    setTypeData<dex::GhostType>(gameMechanic);
+    setTypeData<dex::DragonType>(gameMechanic);
+    setTypeData<dex::DarkType>(gameMechanic);
+    setTypeData<dex::SteelType>(gameMechanic);
+    setTypeData<dex::FairyType>(gameMechanic);
+  }
+
+  constexpr TypeEffectiveness effectiveness(dex::Type attacking, dex::Type defending) const {
+    return data.at((enumType)attacking).at((enumType)defending);
+  }
+};
+}  // namespace pokesim
+
+/////////////////////// END OF src/Pokedex/TypeChart.hpp ///////////////////////
+
+////////////////// START OF src/Types/Enums/BattleFormat.hpp ///////////////////
+
+namespace pokesim {
+// Denotes if the simulated battle is a single or double battle
+enum class BattleFormat : std::uint8_t {
+  SINGLES = 1U,
+  DOUBLES = 2U,
+};
+
+namespace internal {
+static constexpr inline std::array<BattleFormat, 2U> VALID_BATTLE_FORMATS = {
+  BattleFormat::SINGLES,
+  BattleFormat::DOUBLES,
+};
+}  // namespace internal
+}  // namespace pokesim
+
+/////////////////// END OF src/Types/Enums/BattleFormat.hpp ////////////////////
+
 ////////////////// START OF src/Types/Enums/MoveCategory.hpp ///////////////////
 
 namespace pokesim::dex {
@@ -22317,6 +23158,63 @@ static constexpr std::uint8_t TOTAL_MOVE_CATEGORY_COUNT = 3U;
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Types/Enums/MoveCategory.hpp ////////////////////
+
+////////////////// START OF src/Types/Enums/MoveProperty.hpp ///////////////////
+
+namespace pokesim::dex {
+enum class MoveProperty : std::uint64_t {
+  ACCURACY_DEPENDENT_HIT_COUNT = 1ULL << 0U,
+  BITE = 1ULL << 1U,
+  BULLET = 1ULL << 2U,
+  BYPASS_PROTECT = 1ULL << 3U,
+  BYPASS_SUBSTITUTE = 1ULL << 4U,
+  CAN_REFLECT = 1ULL << 5U,
+  CAN_SNATCH = 1ULL << 6U,
+  CANNOT_USE_TWICE = 1ULL << 7U,
+  CHARGE = 1ULL << 8U,
+  CONTACT = 1ULL << 9U,
+  DANCE = 1ULL << 10U,
+  DEFROST = 1ULL << 11U,
+  FAIL_WITH_GRAVITY = 1ULL << 12U,
+  FUTURE_MOVE = 1ULL << 13U,
+  HEAL = 1ULL << 14U,
+  IGNORE_IMMUNITIES = 1ULL << 15U,
+  MUST_PRESSURE = 1ULL << 16U,
+  NO_ASSIST = 1ULL << 17U,
+  NO_COPYCAT = 1ULL << 18U,
+  NO_ENCORE = 1ULL << 19U,
+  NO_INSTRUCT = 1ULL << 20U,
+  NO_ME_FIRST = 1ULL << 21U,
+  NO_METRONOME = 1ULL << 22U,
+  NO_MIMIC = 1ULL << 23U,
+  NO_MIRROR_MOVE = 1ULL << 24U,
+  NO_PARENTAL_BOND = 1ULL << 25U,
+  NO_SKETCH = 1ULL << 26U,
+  NO_SLEEP_TALK = 1ULL << 27U,
+  PLEDGE = 1ULL << 28U,
+  POWDER = 1ULL << 29U,
+  PULSE = 1ULL << 30U,
+  PUNCH = 1ULL << 31U,
+  RECHARGE = 1ULL << 32U,
+  SELF_SWITCH = 1ULL << 33U,
+  SLICING = 1ULL << 34U,
+  SOUND = 1ULL << 35U,
+  STATUS_USES_IMMUNITIES = 1ULL << 36U,
+  STRENGTHEN_ON_MINIMIZED = 1ULL << 37U,
+  VARIABLE_HIT_COUNT = 1ULL << 38U,
+  WIND = 1ULL << 39U,
+};
+
+constexpr MoveProperty operator|(MoveProperty propertyA, MoveProperty propertyB) {
+  return static_cast<MoveProperty>(static_cast<std::uint64_t>(propertyA) | static_cast<std::uint64_t>(propertyB));
+}
+
+constexpr bool operator&(MoveProperty propertyA, MoveProperty propertyB) {
+  return (static_cast<std::uint64_t>(propertyA) & static_cast<std::uint64_t>(propertyB)) != 0U;
+}
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Types/Enums/MoveProperty.hpp ////////////////////
 
 /////////////////// START OF src/Types/Enums/MoveTarget.hpp ////////////////////
 
@@ -22348,6 +23246,392 @@ static constexpr std::uint8_t TOTAL_MOVE_TARGET_COUNT = (std::uint8_t)MoveTarget
 }  // namespace pokesim
 
 //////////////////// END OF src/Types/Enums/MoveTarget.hpp /////////////////////
+
+/////////////////////// START OF src/Pokedex/Pokedex.hpp ///////////////////////
+
+namespace pokesim {
+class Simulation;
+struct BattleCreationInfo;
+/**
+ * @brief Holds the data of each species, item, and move in a simulation.
+ *
+ * @details It is designed so only one instance of this class is needed while simulating a particular battle as the
+ * entirety of all the move, item, and species, information that might be needed for a battle is known when it starts.
+ * In theory, all the information within the game mechanics chosen or information for multiple battles could be loaded
+ * into one Pokedex instance and used repeatedly, but that is not recommended as this class is optimized for instances
+ * holding a small amount of data.
+ */
+class Pokedex {
+  friend class Simulation;
+
+ private:
+  types::registry dexRegistry{};
+
+  entt::dense_map<dex::Species, types::entity> speciesMap{};
+  entt::dense_map<dex::Item, types::entity> itemsMap{};
+  entt::dense_map<dex::Move, types::entity> movesMap{};
+  entt::dense_map<dex::Ability, types::entity> abilitiesMap{};
+
+  template <typename Build, typename T>
+  void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
+
+  types::entity buildSpecies(dex::Species species, types::registry& registry) const;
+  types::entity buildItem(dex::Item item, types::registry& registry) const;
+  types::entity buildAbility(dex::Ability ability, types::registry& registry) const;
+
+ private:
+  struct ConstantValues {
+    ConstantValues(GameMechanics gameMechanic) : gameMechanicValue(gameMechanic), typeChartValue(gameMechanic) {}
+    constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
+      return checkedMechanics == gameMechanicValue;
+    }
+    constexpr const TypeChart& typeChart() const { return typeChartValue; }
+
+    template <auto DataFunction, typename... Args>
+    constexpr auto getStaticValue(Args&&... args) const {
+      return DataFunction(gameMechanicValue, std::forward<Args>(args)...);
+    }
+
+   private:
+    /**
+     * @brief The data for the Pokedex will be based this game's data.
+     * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but
+     * if it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
+     */
+    GameMechanics gameMechanicValue;
+    TypeChart typeChartValue;
+  } constants;
+
+ private:
+#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+  static inline entt::dense_map<const Pokedex*, entt::dense_set<const Simulation*>> attachedSimulations;
+  static void attachSimulation(const Pokedex* pokedex, const Simulation* simulation) {
+    for (const auto& [existingPokedex, simulations] : attachedSimulations) {
+      POKESIM_REQUIRE(!simulations.contains(simulation), "Simulation was already assigned to Pokedex.");
+    }
+    attachedSimulations[pokedex].insert(simulation);
+  }
+
+  static void detachSimulation(const Pokedex* pokedex, const Simulation* simulation) {
+    POKESIM_REQUIRE(attachedSimulations.contains(pokedex), "Detaching Simulation from a Pokedex that was never added.");
+    auto& simulations = attachedSimulations[pokedex];
+    POKESIM_REQUIRE(simulations.contains(simulation), "Detaching Simulation from a Pokedex it was never attached to.");
+    simulations.erase(simulation);
+    if (simulations.empty()) {
+      attachedSimulations.erase(pokedex);
+    }
+  }
+
+  static void checkIfDetached(const Pokedex* pokedex) {
+    if (attachedSimulations.contains(pokedex)) {
+      std::size_t simulationCount = attachedSimulations[pokedex].size();
+      if (simulationCount) {
+        POKESIM_REQUIRE_FAIL(std::to_string(simulationCount) + " simulations are still using this Pokedex.");
+      }
+      else {
+        POKESIM_REQUIRE_FAIL("Pokedex still exist on attachment list despite having no simulations attached.");
+      }
+    }
+  }
+
+  static bool isPokedexAttachedToSimulation(const Pokedex* pokedex, const Simulation* simulation) {
+    if (attachedSimulations.contains(pokedex)) {
+      return attachedSimulations[pokedex].contains(simulation);
+    }
+    return false;
+  }
+#else
+  static void attachSimulation(const Pokedex*, const Simulation*) {}
+  static void detachSimulation(const Pokedex*, const Simulation*) {}
+  static void checkIfDetached(const Pokedex*) {}
+  static bool isPokedexAttachedToSimulation(const Pokedex*, const Simulation*) { return true; }
+#endif
+
+ public:
+  Pokedex(GameMechanics mechanics_) : constants(mechanics_) {}
+  ~Pokedex() { Pokedex::checkIfDetached(this); }
+
+  constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
+    return constants.isGameMechanic(checkedMechanics);
+  }
+  constexpr const TypeChart& typeChart() const { return constants.typeChart(); }
+  template <auto DataFunction, typename... Args>
+  constexpr auto getStaticValue(Args&&... args) const {
+    return constants.getStaticValue<DataFunction>(std::forward<Args>(args)...);
+  }
+
+  /**
+   * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.
+   *
+   * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
+   * instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function
+   * should only be called with a set of those 12 Pokemon's species.
+   *
+   * @note Only call this once per species per Pokedex instance.
+   */
+  void loadSpecies(const entt::dense_set<dex::Species>& speciesSet);
+
+  /**
+   * @brief Calls the load functions for a set of items to add their data to a Pokedex's storage.
+   *
+   * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
+   * instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function
+   * should only be called with a set of those 12 Pokemon's items.
+   *
+   * @note Only call this once per item per Pokedex instance.
+   */
+  void loadItems(const entt::dense_set<dex::Item>& itemSet);
+
+  /**
+   * @brief Calls the load functions for a set of moves to add their data to a Pokedex's storage.
+   *
+   * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
+   * instance is assigned to, so if one turn of a single battle is being simulated and the opposing Pokemon have 4
+   * moves, then this function should only be called with a set of those 8 moves.
+   *
+   * @note Only call this once per move per Pokedex instance.
+   */
+  void loadMoves(const entt::dense_set<dex::Move>& moveSet);
+
+  /**
+   * @brief Calls the load functions for a set of abilities to add their data to a Pokedex's storage.
+   *
+   * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
+   * instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function
+   * should only be called with a set of those 12 Pokemon's abilities.
+   *
+   * @note Only call this once per ability per Pokedex instance.
+   */
+  void loadAbilities(const entt::dense_set<dex::Ability>& abilitySet);
+
+  void forEachLoadedSpecies(const std::function<void(dex::Species)>& function) const {
+    for (const auto& pair : speciesMap) {
+      function(pair.first);
+    }
+  }
+
+  void forEachLoadedItem(const std::function<void(dex::Item)>& function) const {
+    for (const auto& pair : itemsMap) {
+      function(pair.first);
+    }
+  }
+
+  void forEachLoadedMove(const std::function<void(dex::Move)>& function) const {
+    for (const auto& pair : movesMap) {
+      function(pair.first);
+    }
+  }
+
+  void forEachLoadedAbility(const std::function<void(dex::Ability)>& function) const {
+    for (const auto& pair : abilitiesMap) {
+      function(pair.first);
+    }
+  }
+
+  /**
+   * @brief Returns references to the given dex data components for a species
+   *
+   * @warning
+   * Attempting to get a component from a species that doesn't own it or an unloaded species results in undefined
+   * behavior.
+   *
+   * @tparam T Type of data to retrieve. Valid types: TODO(aed3): Add in list
+   */
+  template <typename... T>
+  auto getSpeciesData(dex::Species species) const {
+    // POKESIM_REQUIRE(registry.all_of<T...>(speciesMap.at(species)), "Species does not contain at least one of the
+    // component types.");
+    return dexRegistry.get<T...>(speciesMap.at(species));
+  }
+
+  /**
+   * @brief Returns references to the given dex data components for an item
+   *
+   * @warning
+   * Attempting to get a component from an item that doesn't own it or an unloaded item results in undefined behavior.
+   *
+   * @tparam T Type of data to retrieve. Valid types: TODO(aed3): Add in list
+   */
+  template <typename... T>
+  auto getItemData(dex::Item item) const {
+    return dexRegistry.get<T...>(itemsMap.at(item));
+  }
+
+  /**
+   * @brief Returns references to the given dex data components for a move
+   *
+   * @warning
+   * Attempting to get a component from a move that doesn't own it or an unloaded item results in undefined behavior.
+   *
+   * @tparam T Type of data to retrieve. Valid types: TODO(aed3): Add in list
+   */
+  template <typename... T>
+  auto getMoveData(dex::Move move) const {
+    return dexRegistry.get<T...>(movesMap.at(move));
+  }
+
+  template <typename... T>
+  bool speciesHas(dex::Species species) const {
+    return dexRegistry.all_of<T...>(speciesMap.at(species));
+  }
+
+  template <typename... T>
+  bool itemHas(dex::Item item) const {
+    return dexRegistry.all_of<T...>(itemsMap.at(item));
+  }
+
+  template <typename... T>
+  bool moveHasAny(dex::Move move) const {
+    return dexRegistry.all_of<T...>(movesMap.at(move));
+  }
+
+  template <typename... T>
+  bool moveHasAll(dex::Move move) const {
+    return dexRegistry.all_of<T...>(movesMap.at(move));
+  }
+
+  void buildMoves(types::registry& registry) const;
+  void loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInfoList);
+};
+}  // namespace pokesim
+
+//////////////////////// END OF src/Pokedex/Pokedex.hpp ////////////////////////
+
+/////////////// START OF src/Pokedex/EnumToTag/ItemEnumToTag.hpp ///////////////
+
+// TODO(aed3): Make this autogenerated and forward declare item structs
+
+namespace pokesim::dex {
+/*
+ * Runs a function with a certain item tag based on the passed in enum.
+ * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the item tags with
+ * a static `run` function.
+ *
+ * @code
+ * template <typename Tag>
+ * struct EmplaceTag {
+ *   static void run(types::handle handle) { handle.emplace<Tag>(); }
+ * };
+ *
+ * enumToTag<EmplaceTag>(dex::Item::ASSAULT_VEST, handle);
+ * @endcode
+ */
+template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
+constexpr auto enumToTag(Item item, RunArgs&&... args) {
+  switch (item) {
+    case Item::ASSAULT_VEST:  return RunStruct<AssaultVest, T...>::run(std::forward<RunArgs>(args)...);
+    case Item::BRIGHT_POWDER: return RunStruct<BrightPowder, T...>::run(std::forward<RunArgs>(args)...);
+    case Item::CHOICE_SCARF:  return RunStruct<ChoiceScarf, T...>::run(std::forward<RunArgs>(args)...);
+    case Item::CHOICE_SPECS:  return RunStruct<ChoiceSpecs, T...>::run(std::forward<RunArgs>(args)...);
+    case Item::FOCUS_SASH:    return RunStruct<FocusSash, T...>::run(std::forward<RunArgs>(args)...);
+    case Item::KINGS_ROCK:    return RunStruct<KingsRock, T...>::run(std::forward<RunArgs>(args)...);
+    case Item::LIFE_ORB:      return RunStruct<LifeOrb, T...>::run(std::forward<RunArgs>(args)...);
+    case Item::LUM_BERRY:     return RunStruct<LumBerry, T...>::run(std::forward<RunArgs>(args)...);
+    case Item::METRONOME:     return RunStruct<MetronomeItem, T...>::run(std::forward<RunArgs>(args)...);
+    case Item::MIRROR_HERB:   return RunStruct<MirrorHerb, T...>::run(std::forward<RunArgs>(args)...);
+    case Item::QUICK_CLAW:    return RunStruct<QuickClaw, T...>::run(std::forward<RunArgs>(args)...);
+    case Item::QUICK_POWDER:  return RunStruct<QuickPowder, T...>::run(std::forward<RunArgs>(args)...);
+    case Item::ROCKY_HELMET:  return RunStruct<RockyHelmet, T...>::run(std::forward<RunArgs>(args)...);
+
+    default: {
+      POKESIM_REQUIRE_FAIL("Using a tag for item that does not exist.");
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<LumBerry, T...>::run), RunArgs...>;
+      if constexpr (std::is_void_v<ReturnType>) {
+        return;
+      }
+      else {
+        return ReturnType{};
+      }
+    }
+  }
+}
+
+template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
+constexpr void forEachItem(const Pokedex& pokedex, RunArgs&&... args) {
+  pokedex.forEachLoadedItem([&](Item item) { enumToTag<RunStruct, T...>(item, std::forward<RunArgs>(args)...); });
+}
+
+// Assigns an item's tag to a handle
+void emplaceTagFromEnum(Item item, types::handle handle);
+void emplaceTagFromEnum(Item item, types::registry& registry, types::entity entity);
+
+// Removes an item's tag to a handle
+void removeTagFromEnum(Item item, types::handle handle);
+void removeTagFromEnum(Item item, types::registry& registry, types::entity entity);
+
+// Checks if the handle has the item's tag
+bool hasTag(Item item, types::handle handle);
+bool hasTag(Item item, const types::registry& registry, types::entity entity);
+}  // namespace pokesim::dex
+
+//////////////// END OF src/Pokedex/EnumToTag/ItemEnumToTag.hpp ////////////////
+
+////////////// START OF src/Pokedex/EnumToTag/StatusEnumToTag.hpp //////////////
+
+// TODO(aed3): Forward declare structs
+
+namespace pokesim::dex {
+/*
+ * Runs a function with a certain status tag based on the passed in enum.
+ * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the status tags with
+ * a static `run` function.
+ *
+ * @code
+ * template <typename Tag>
+ * struct EmplaceTag {
+ *   static void run(types::handle handle) { handle.emplace<Tag>(); }
+ * };
+ *
+ * enumToTag<EmplaceTag>(dex::Status::BRN, handle);
+ * @endcode
+ */
+template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
+constexpr auto enumToTag(Status status, RunArgs&&... args) {
+  switch (status) {
+    case Status::BRN: return RunStruct<Burn, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::FRZ: return RunStruct<Freeze, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::PAR: return RunStruct<Paralysis, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::PSN: return RunStruct<Poison, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::SLP: return RunStruct<Sleep, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::TOX: return RunStruct<Toxic, T...>::run(std::forward<RunArgs>(args)...);
+
+    default: {
+      POKESIM_REQUIRE_FAIL("Using a tag for status that does not exist.");
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<Sleep, T...>::run), RunArgs...>;
+      if constexpr (std::is_void_v<ReturnType>) {
+        return;
+      }
+      else {
+        return ReturnType{};
+      }
+    }
+  }
+}
+
+template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
+constexpr void forEachStatus(RunArgs&&... args) {
+  enumToTag<RunStruct, T...>(Status::BRN, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(Status::FRZ, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(Status::PAR, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(Status::PSN, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(Status::SLP, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(Status::TOX, std::forward<RunArgs>(args)...);
+}
+
+// Assigns a status' tag to a handle
+void emplaceTagFromEnum(Status status, types::handle handle);
+void emplaceTagFromEnum(Status status, types::registry& registry, types::entity entity);
+
+// Removes a status' tag to a handle
+void removeTagFromEnum(Status status, types::handle handle);
+void removeTagFromEnum(Status status, types::registry& registry, types::entity entity);
+
+// Checks if the handle has the status' tag
+bool hasTag(Status status, types::handle handle);
+bool hasTag(Status status, const types::registry& registry, types::entity entity);
+}  // namespace pokesim::dex
+
+/////////////// END OF src/Pokedex/EnumToTag/StatusEnumToTag.hpp ///////////////
 
 ////////////////// START OF src/Pokedex/Moves/AllySwitch.hpp ///////////////////
 
@@ -22424,63 +23708,6 @@ struct ChillingWater {
 }  // namespace pokesim::dex
 
 ////////////////// END OF src/Pokedex/Moves/ChillingWater.hpp //////////////////
-
-////////////////// START OF src/Types/Enums/MoveProperty.hpp ///////////////////
-
-namespace pokesim::dex {
-enum class MoveProperty : std::uint64_t {
-  ACCURACY_DEPENDENT_HIT_COUNT = 1ULL << 0U,
-  BITE = 1ULL << 1U,
-  BULLET = 1ULL << 2U,
-  BYPASS_PROTECT = 1ULL << 3U,
-  BYPASS_SUBSTITUTE = 1ULL << 4U,
-  CAN_REFLECT = 1ULL << 5U,
-  CAN_SNATCH = 1ULL << 6U,
-  CANNOT_USE_TWICE = 1ULL << 7U,
-  CHARGE = 1ULL << 8U,
-  CONTACT = 1ULL << 9U,
-  DANCE = 1ULL << 10U,
-  DEFROST = 1ULL << 11U,
-  FAIL_WITH_GRAVITY = 1ULL << 12U,
-  FUTURE_MOVE = 1ULL << 13U,
-  HEAL = 1ULL << 14U,
-  IGNORE_IMMUNITIES = 1ULL << 15U,
-  MUST_PRESSURE = 1ULL << 16U,
-  NO_ASSIST = 1ULL << 17U,
-  NO_COPYCAT = 1ULL << 18U,
-  NO_ENCORE = 1ULL << 19U,
-  NO_INSTRUCT = 1ULL << 20U,
-  NO_ME_FIRST = 1ULL << 21U,
-  NO_METRONOME = 1ULL << 22U,
-  NO_MIMIC = 1ULL << 23U,
-  NO_MIRROR_MOVE = 1ULL << 24U,
-  NO_PARENTAL_BOND = 1ULL << 25U,
-  NO_SKETCH = 1ULL << 26U,
-  NO_SLEEP_TALK = 1ULL << 27U,
-  PLEDGE = 1ULL << 28U,
-  POWDER = 1ULL << 29U,
-  PULSE = 1ULL << 30U,
-  PUNCH = 1ULL << 31U,
-  RECHARGE = 1ULL << 32U,
-  SELF_SWITCH = 1ULL << 33U,
-  SLICING = 1ULL << 34U,
-  SOUND = 1ULL << 35U,
-  STATUS_USES_IMMUNITIES = 1ULL << 36U,
-  STRENGTHEN_ON_MINIMIZED = 1ULL << 37U,
-  VARIABLE_HIT_COUNT = 1ULL << 38U,
-  WIND = 1ULL << 39U,
-};
-
-constexpr MoveProperty operator|(MoveProperty propertyA, MoveProperty propertyB) {
-  return static_cast<MoveProperty>(static_cast<std::uint64_t>(propertyA) | static_cast<std::uint64_t>(propertyB));
-}
-
-constexpr bool operator&(MoveProperty propertyA, MoveProperty propertyB) {
-  return (static_cast<std::uint64_t>(propertyA) & static_cast<std::uint64_t>(propertyB)) != 0U;
-}
-}  // namespace pokesim::dex
-
-/////////////////// END OF src/Types/Enums/MoveProperty.hpp ////////////////////
 
 ////////////////// START OF src/Pokedex/Moves/CloseCombat.hpp //////////////////
 
@@ -23720,840 +24947,6 @@ struct Ribombee {
 
 /////////////////// END OF src/Pokedex/Species/Ribombee.hpp ////////////////////
 
-//////////////// START OF src/Types/Enums/TypeEffectiveness.hpp ////////////////
-
-namespace pokesim {
-enum class TypeEffectiveness : std::uint8_t {
-  IMMUNE,
-  NOT_VERY_EFFECTIVE,
-  NEUTRAL,
-  SUPER_EFFECTIVE,
-};
-
-namespace internal {
-static constexpr inline std::array<TypeEffectiveness, 4U> VALID_TYPE_EFFECTIVENESS = {
-  TypeEffectiveness::IMMUNE,
-  TypeEffectiveness::NOT_VERY_EFFECTIVE,
-  TypeEffectiveness::NEUTRAL,
-  TypeEffectiveness::SUPER_EFFECTIVE,
-};
-}  // namespace internal
-}  // namespace pokesim
-
-///////////////// END OF src/Types/Enums/TypeEffectiveness.hpp /////////////////
-
-////////////////////// START OF src/Pokedex/Types/Bug.hpp //////////////////////
-
-namespace pokesim::dex {
-struct BugType {
-  static constexpr Type name(GameMechanics = {}) { return Type::BUG; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::GRASS:
-      case Type::GROUND:
-      case Type::FIGHTING: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::FIRE:
-      case Type::FLYING:
-      case Type::ROCK:   return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::FIRE:
-      case Type::FLYING:
-      case Type::POISON:
-      case Type::FIGHTING:
-      case Type::GHOST:
-      case Type::STEEL:
-      case Type::FAIRY:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::GRASS:
-      case Type::PSYCHIC:
-      case Type::DARK:    return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Bug"; }
-  };
-};
-}  // namespace pokesim::dex
-
-/////////////////////// END OF src/Pokedex/Types/Bug.hpp ///////////////////////
-
-///////////////////// START OF src/Pokedex/Types/Dark.hpp //////////////////////
-
-namespace pokesim::dex {
-struct DarkType {
-  static constexpr Type name(GameMechanics = {}) { return Type::DARK; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::PSYCHIC: return TypeEffectiveness::IMMUNE;
-
-      case Type::GHOST:
-      case Type::DARK:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::BUG:
-      case Type::FIGHTING:
-      case Type::FAIRY:    return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::FIGHTING:
-      case Type::DARK:
-      case Type::FAIRY:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::PSYCHIC:
-      case Type::GHOST:   return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Dark"; }
-  };
-};
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Pokedex/Types/Dark.hpp ///////////////////////
-
-//////////////////// START OF src/Pokedex/Types/Dragon.hpp /////////////////////
-
-namespace pokesim::dex {
-struct DragonType {
-  static constexpr Type name(GameMechanics = {}) { return Type::DRAGON; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::GRASS:
-      case Type::WATER:
-      case Type::FIRE:
-      case Type::ELECTRIC: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::ICE:
-      case Type::DRAGON:
-      case Type::FAIRY:  return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::FAIRY: return TypeEffectiveness::IMMUNE;
-
-      case Type::STEEL: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::DRAGON: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Dragon"; }
-  };
-};
-}  // namespace pokesim::dex
-
-///////////////////// END OF src/Pokedex/Types/Dragon.hpp //////////////////////
-
-/////////////////// START OF src/Pokedex/Types/Electric.hpp ////////////////////
-
-namespace pokesim::dex {
-struct ElectricType {
-  static constexpr Type name(GameMechanics = {}) { return Type::ELECTRIC; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::ELECTRIC:
-      case Type::FLYING:
-      case Type::STEEL:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::GROUND: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::GROUND: return TypeEffectiveness::IMMUNE;
-
-      case Type::GRASS:
-      case Type::ELECTRIC:
-      case Type::DRAGON:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::WATER:
-      case Type::FLYING: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Electric"; }
-  };
-};
-}  // namespace pokesim::dex
-
-//////////////////// END OF src/Pokedex/Types/Electric.hpp /////////////////////
-
-///////////////////// START OF src/Pokedex/Types/Fairy.hpp /////////////////////
-
-namespace pokesim::dex {
-struct FairyType {
-  static constexpr Type name(GameMechanics = {}) { return Type::FAIRY; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::DRAGON: return TypeEffectiveness::IMMUNE;
-
-      case Type::BUG:
-      case Type::FIGHTING:
-      case Type::DARK:     return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::POISON:
-      case Type::STEEL:  return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::FIRE:
-      case Type::POISON:
-      case Type::STEEL:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::FIGHTING:
-      case Type::DRAGON:
-      case Type::DARK:     return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Fairy"; }
-  };
-};
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Pokedex/Types/Fairy.hpp //////////////////////
-
-/////////////////// START OF src/Pokedex/Types/Fighting.hpp ////////////////////
-
-namespace pokesim::dex {
-struct FightingType {
-  static constexpr Type name(GameMechanics = {}) { return Type::FIGHTING; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::BUG:
-      case Type::ROCK:
-      case Type::DARK: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::FLYING:
-      case Type::PSYCHIC:
-      case Type::FAIRY:   return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::GHOST: return TypeEffectiveness::IMMUNE;
-
-      case Type::BUG:
-      case Type::FLYING:
-      case Type::POISON:
-      case Type::PSYCHIC:
-      case Type::FAIRY:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::NORMAL:
-      case Type::ROCK:
-      case Type::ICE:
-      case Type::DARK:
-      case Type::STEEL:  return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Fighting"; }
-  };
-};
-}  // namespace pokesim::dex
-
-//////////////////// END OF src/Pokedex/Types/Fighting.hpp /////////////////////
-
-///////////////////// START OF src/Pokedex/Types/Fire.hpp //////////////////////
-
-namespace pokesim::dex {
-struct FireType {
-  static constexpr Type name(GameMechanics = {}) { return Type::FIRE; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::WATER:
-      case Type::GROUND:
-      case Type::ROCK:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::GRASS:
-      case Type::FIRE:
-      case Type::BUG:
-      case Type::ICE:
-      case Type::STEEL:
-      case Type::FAIRY: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::WATER:
-      case Type::FIRE:
-      case Type::ROCK:
-      case Type::DRAGON: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::GRASS:
-      case Type::BUG:
-      case Type::ICE:
-      case Type::STEEL: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Fire"; }
-  };
-};
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Pokedex/Types/Fire.hpp ///////////////////////
-
-//////////////////// START OF src/Pokedex/Types/Flying.hpp /////////////////////
-
-namespace pokesim::dex {
-struct FlyingType {
-  static constexpr Type name(GameMechanics = {}) { return Type::FLYING; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::GROUND: return TypeEffectiveness::IMMUNE;
-
-      case Type::GRASS:
-      case Type::BUG:
-      case Type::FIGHTING: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::ELECTRIC:
-      case Type::ROCK:
-      case Type::ICE:      return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::ELECTRIC:
-      case Type::ROCK:
-      case Type::STEEL:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::GRASS:
-      case Type::BUG:
-      case Type::FIGHTING: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Flying"; }
-  };
-};
-}  // namespace pokesim::dex
-
-///////////////////// END OF src/Pokedex/Types/Flying.hpp //////////////////////
-
-///////////////////// START OF src/Pokedex/Types/Ghost.hpp /////////////////////
-
-namespace pokesim::dex {
-struct GhostType {
-  static constexpr Type name(GameMechanics = {}) { return Type::GHOST; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::NORMAL:
-      case Type::FIGHTING: return TypeEffectiveness::IMMUNE;
-
-      case Type::BUG:
-      case Type::POISON: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::GHOST:
-      case Type::DARK:  return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::NORMAL: return TypeEffectiveness::IMMUNE;
-
-      case Type::DARK: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::PSYCHIC:
-      case Type::GHOST:   return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Ghost"; }
-  };
-};
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Pokedex/Types/Ghost.hpp //////////////////////
-
-///////////////////// START OF src/Pokedex/Types/Grass.hpp /////////////////////
-
-namespace pokesim::dex {
-struct GrassType {
-  static constexpr Type name(GameMechanics = {}) { return Type::GRASS; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::GRASS:
-      case Type::WATER:
-      case Type::ELECTRIC:
-      case Type::GROUND:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::FIRE:
-      case Type::BUG:
-      case Type::FLYING:
-      case Type::POISON:
-      case Type::ICE:    return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::GRASS:
-      case Type::FIRE:
-      case Type::BUG:
-      case Type::FLYING:
-      case Type::POISON:
-      case Type::DRAGON:
-      case Type::STEEL:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::WATER:
-      case Type::GROUND:
-      case Type::ROCK:   return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Grass"; }
-  };
-};
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Pokedex/Types/Grass.hpp //////////////////////
-
-//////////////////// START OF src/Pokedex/Types/Ground.hpp /////////////////////
-
-namespace pokesim::dex {
-struct GroundType {
-  static constexpr Type name(GameMechanics = {}) { return Type::GROUND; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::ELECTRIC: return TypeEffectiveness::IMMUNE;
-
-      case Type::POISON:
-      case Type::ROCK:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::GRASS:
-      case Type::WATER:
-      case Type::ICE:   return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::FLYING: return TypeEffectiveness::IMMUNE;
-
-      case Type::GRASS:
-      case Type::BUG:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::FIRE:
-      case Type::ELECTRIC:
-      case Type::POISON:
-      case Type::ROCK:
-      case Type::STEEL:    return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Ground"; }
-  };
-};
-}  // namespace pokesim::dex
-
-///////////////////// END OF src/Pokedex/Types/Ground.hpp //////////////////////
-
-////////////////////// START OF src/Pokedex/Types/Ice.hpp //////////////////////
-
-namespace pokesim::dex {
-struct IceType {
-  static constexpr Type name(GameMechanics = {}) { return Type::ICE; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::ICE: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::FIRE:
-      case Type::FIGHTING:
-      case Type::ROCK:
-      case Type::STEEL:    return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::WATER:
-      case Type::FIRE:
-      case Type::ICE:
-      case Type::STEEL: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::GRASS:
-      case Type::FLYING:
-      case Type::GROUND:
-      case Type::DRAGON: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Ice"; }
-  };
-};
-}  // namespace pokesim::dex
-
-/////////////////////// END OF src/Pokedex/Types/Ice.hpp ///////////////////////
-
-//////////////////// START OF src/Pokedex/Types/Normal.hpp /////////////////////
-
-namespace pokesim::dex {
-struct NormalType {
-  static constexpr Type name(GameMechanics = {}) { return Type::NORMAL; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::GHOST: return TypeEffectiveness::IMMUNE;
-
-      case Type::FIGHTING: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::GHOST: return TypeEffectiveness::IMMUNE;
-
-      case Type::ROCK:
-      case Type::STEEL: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Normal"; }
-  };
-};
-}  // namespace pokesim::dex
-
-///////////////////// END OF src/Pokedex/Types/Normal.hpp //////////////////////
-
-//////////////////// START OF src/Pokedex/Types/Poison.hpp /////////////////////
-
-namespace pokesim::dex {
-struct PoisonType {
-  static constexpr Type name(GameMechanics = {}) { return Type::POISON; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::GRASS:
-      case Type::BUG:
-      case Type::POISON:
-      case Type::FIGHTING:
-      case Type::FAIRY:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::GROUND:
-      case Type::PSYCHIC: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::STEEL: return TypeEffectiveness::IMMUNE;
-
-      case Type::POISON:
-      case Type::GROUND:
-      case Type::ROCK:
-      case Type::GHOST:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::GRASS:
-      case Type::FAIRY: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Poison"; }
-  };
-};
-}  // namespace pokesim::dex
-
-///////////////////// END OF src/Pokedex/Types/Poison.hpp //////////////////////
-
-//////////////////// START OF src/Pokedex/Types/Psychic.hpp ////////////////////
-
-namespace pokesim::dex {
-struct PsychicType {
-  static constexpr Type name(GameMechanics = {}) { return Type::PSYCHIC; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::FIGHTING:
-      case Type::PSYCHIC:  return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::BUG:
-      case Type::GHOST:
-      case Type::DARK:  return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::DARK: return TypeEffectiveness::IMMUNE;
-
-      case Type::PSYCHIC:
-      case Type::STEEL:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::POISON:
-      case Type::FIGHTING: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Psychic"; }
-  };
-};
-}  // namespace pokesim::dex
-
-///////////////////// END OF src/Pokedex/Types/Psychic.hpp /////////////////////
-
-///////////////////// START OF src/Pokedex/Types/Rock.hpp //////////////////////
-
-namespace pokesim::dex {
-struct RockType {
-  static constexpr Type name(GameMechanics = {}) { return Type::ROCK; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::NORMAL:
-      case Type::FIRE:
-      case Type::FLYING:
-      case Type::POISON: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::GRASS:
-      case Type::WATER:
-      case Type::GROUND:
-      case Type::FIGHTING:
-      case Type::STEEL:    return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::GROUND:
-      case Type::FIGHTING:
-      case Type::STEEL:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::FIRE:
-      case Type::BUG:
-      case Type::FLYING:
-      case Type::ICE:    return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Rock"; }
-  };
-};
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Pokedex/Types/Rock.hpp ///////////////////////
-
-///////////////////// START OF src/Pokedex/Types/Steel.hpp /////////////////////
-
-namespace pokesim::dex {
-struct SteelType {
-  static constexpr Type name(GameMechanics = {}) { return Type::STEEL; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::POISON: return TypeEffectiveness::IMMUNE;
-
-      case Type::NORMAL:
-      case Type::GRASS:
-      case Type::BUG:
-      case Type::FLYING:
-      case Type::PSYCHIC:
-      case Type::ROCK:
-      case Type::ICE:
-      case Type::DRAGON:
-      case Type::STEEL:
-      case Type::FAIRY:   return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::FIRE:
-      case Type::GROUND:
-      case Type::FIGHTING: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::WATER:
-      case Type::FIRE:
-      case Type::ELECTRIC:
-      case Type::STEEL:    return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::ROCK:
-      case Type::ICE:
-      case Type::FAIRY: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Steel"; }
-  };
-};
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Pokedex/Types/Steel.hpp //////////////////////
-
-///////////////////// START OF src/Pokedex/Types/Water.hpp /////////////////////
-
-namespace pokesim::dex {
-struct WaterType {
-  static constexpr Type name(GameMechanics = {}) { return Type::WATER; }
-
-  static constexpr TypeEffectiveness defending(GameMechanics, Type attacking) {
-    switch (attacking) {
-      case Type::WATER:
-      case Type::FIRE:
-      case Type::ICE:
-      case Type::STEEL: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::GRASS:
-      case Type::ELECTRIC: return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  static constexpr TypeEffectiveness attacking(GameMechanics, Type defending) {
-    switch (defending) {
-      case Type::GRASS:
-      case Type::WATER:
-      case Type::DRAGON: return TypeEffectiveness::NOT_VERY_EFFECTIVE;
-
-      case Type::FIRE:
-      case Type::GROUND:
-      case Type::ROCK:   return TypeEffectiveness::SUPER_EFFECTIVE;
-
-      default: return TypeEffectiveness::NEUTRAL;
-    }
-  }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Water"; }
-  };
-};
-}  // namespace pokesim::dex
-
-////////////////////// END OF src/Pokedex/Types/Water.hpp //////////////////////
-
-////////////////// START OF src/Types/Enums/BattleFormat.hpp ///////////////////
-
-namespace pokesim {
-// Denotes if the simulated battle is a single or double battle
-enum class BattleFormat : std::uint8_t {
-  SINGLES = 1U,
-  DOUBLES = 2U,
-};
-
-namespace internal {
-static constexpr inline std::array<BattleFormat, 2U> VALID_BATTLE_FORMATS = {
-  BattleFormat::SINGLES,
-  BattleFormat::DOUBLES,
-};
-}  // namespace internal
-}  // namespace pokesim
-
-/////////////////// END OF src/Types/Enums/BattleFormat.hpp ////////////////////
-
 ///////////////////// START OF src/Types/NaturesTable.hpp //////////////////////
 
 namespace pokesim {
@@ -24918,6 +25311,7 @@ struct ChoiceLock;
 struct Trapper;
 namespace shared_name_effect {
 struct Reflect;
+struct MetronomeItem;
 }  // namespace shared_name_effect
 }  // namespace dex
 namespace analyze_effect {
@@ -24988,6 +25382,9 @@ void checkPercentChance(types::percentChance);
 
 template <>
 void check(const dex::shared_name_effect::Reflect&);
+
+template <>
+void check(const dex::shared_name_effect::MetronomeItem&);
 
 template <>
 void check(const dex::ChoiceLock&);
@@ -26009,6 +26406,10 @@ struct Ivs;
 struct SpeciesTypes;
 struct MoveSlot;
 
+namespace dex::shared_name_effect {
+struct MetronomeItem;
+}
+
 namespace internal {
 
 // Tool to set properties of a Pokemon's state to an entity.
@@ -26049,6 +26450,8 @@ struct PokemonStateSetup : StateSetupBase {
   void setEVs(const Evs& evs);
   void setIVs(types::iv hp, types::iv atk, types::iv def, types::iv spa, types::iv spd, types::iv spe);
   void setIVs(const Ivs& ivs);
+
+  void setMetronomeEffect(dex::shared_name_effect::MetronomeItem metronomeEffect);
 
   template <typename BoostType>
   void setBoost(types::boost boost) {
@@ -26183,307 +26586,6 @@ struct InputSetup {
 
 ///////////// END OF src/CalcDamage/Setup/CalcDamageInputSetup.hpp /////////////
 
-////////////////////// START OF src/Pokedex/TypeChart.hpp //////////////////////
-
-namespace pokesim {
-struct TypeChart {
- private:
-  // The extra array element is for NO_TYPE
-  std::array<std::array<TypeEffectiveness, dex::TOTAL_TYPE_COUNT + 1U>, dex::TOTAL_TYPE_COUNT + 1U> data{};
-
-  using enumType = std::underlying_type_t<dex::Type>;
-
-  template <typename Type>
-  constexpr void setTypeData(GameMechanics gameMechanic) {
-    auto& attacking = data.at((enumType)Type::name(gameMechanic));
-    for (enumType defending = 0U; defending <= dex::TOTAL_TYPE_COUNT; defending++) {
-      attacking.at(defending) = Type::attacking(gameMechanic, (dex::Type)defending);
-    }
-  }
-
- public:
-  constexpr TypeChart(GameMechanics gameMechanic) {
-    for (TypeEffectiveness& effectiveness : data.at((enumType)(dex::Type::NO_TYPE))) {
-      effectiveness = TypeEffectiveness::NEUTRAL;
-    }
-    setTypeData<dex::NormalType>(gameMechanic);
-    setTypeData<dex::GrassType>(gameMechanic);
-    setTypeData<dex::WaterType>(gameMechanic);
-    setTypeData<dex::FireType>(gameMechanic);
-    setTypeData<dex::BugType>(gameMechanic);
-    setTypeData<dex::FlyingType>(gameMechanic);
-    setTypeData<dex::PoisonType>(gameMechanic);
-    setTypeData<dex::ElectricType>(gameMechanic);
-    setTypeData<dex::GroundType>(gameMechanic);
-    setTypeData<dex::FightingType>(gameMechanic);
-    setTypeData<dex::PsychicType>(gameMechanic);
-    setTypeData<dex::RockType>(gameMechanic);
-    setTypeData<dex::IceType>(gameMechanic);
-    setTypeData<dex::GhostType>(gameMechanic);
-    setTypeData<dex::DragonType>(gameMechanic);
-    setTypeData<dex::DarkType>(gameMechanic);
-    setTypeData<dex::SteelType>(gameMechanic);
-    setTypeData<dex::FairyType>(gameMechanic);
-  }
-
-  constexpr TypeEffectiveness effectiveness(dex::Type attacking, dex::Type defending) const {
-    return data.at((enumType)attacking).at((enumType)defending);
-  }
-};
-}  // namespace pokesim
-
-/////////////////////// END OF src/Pokedex/TypeChart.hpp ///////////////////////
-
-/////////////////////// START OF src/Pokedex/Pokedex.hpp ///////////////////////
-
-namespace pokesim {
-class Simulation;
-struct BattleCreationInfo;
-/**
- * @brief Holds the data of each species, item, and move in a simulation.
- *
- * @details It is designed so only one instance of this class is needed while simulating a particular battle as the
- * entirety of all the move, item, and species, information that might be needed for a battle is known when it starts.
- * In theory, all the information within the game mechanics chosen or information for multiple battles could be loaded
- * into one Pokedex instance and used repeatedly, but that is not recommended as this class is optimized for instances
- * holding a small amount of data.
- */
-class Pokedex {
-  friend class Simulation;
-
- private:
-  types::registry dexRegistry{};
-
-  entt::dense_map<dex::Species, types::entity> speciesMap{};
-  entt::dense_map<dex::Item, types::entity> itemsMap{};
-  entt::dense_map<dex::Move, types::entity> movesMap{};
-  entt::dense_map<dex::Ability, types::entity> abilitiesMap{};
-
-  template <typename Build, typename T>
-  void load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build);
-
-  types::entity buildSpecies(dex::Species species, types::registry& registry) const;
-  types::entity buildItem(dex::Item item, types::registry& registry) const;
-  types::entity buildAbility(dex::Ability ability, types::registry& registry) const;
-
- private:
-  struct ConstantValues {
-    ConstantValues(GameMechanics gameMechanic) : gameMechanicValue(gameMechanic), typeChartValue(gameMechanic) {}
-    constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
-      return checkedMechanics == gameMechanicValue;
-    }
-    constexpr const TypeChart& typeChart() const { return typeChartValue; }
-
-    template <auto DataFunction, typename... Args>
-    constexpr auto getStaticValue(Args&&... args) const {
-      return DataFunction(gameMechanicValue, std::forward<Args>(args)...);
-    }
-
-   private:
-    /**
-     * @brief The data for the Pokedex will be based this game's data.
-     * For example, if this is set to DIAMOND_PEARL_GAME_MECHANICS, Clefable's data will list it as a Normal type, but
-     * if it's set to BRILLIANT_DIAMOND_SHINING_PEARL_GAME_MECHANICS, Clefable will be listed as a Fairy type.
-     */
-    GameMechanics gameMechanicValue;
-    TypeChart typeChartValue;
-  } constants;
-
- private:
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
-  static inline entt::dense_map<const Pokedex*, entt::dense_set<const Simulation*>> attachedSimulations;
-  static void attachSimulation(const Pokedex* pokedex, const Simulation* simulation) {
-    for (const auto& [existingPokedex, simulations] : attachedSimulations) {
-      POKESIM_REQUIRE(!simulations.contains(simulation), "Simulation was already assigned to Pokedex.");
-    }
-    attachedSimulations[pokedex].insert(simulation);
-  }
-
-  static void detachSimulation(const Pokedex* pokedex, const Simulation* simulation) {
-    POKESIM_REQUIRE(attachedSimulations.contains(pokedex), "Detaching Simulation from a Pokedex that was never added.");
-    auto& simulations = attachedSimulations[pokedex];
-    POKESIM_REQUIRE(simulations.contains(simulation), "Detaching Simulation from a Pokedex it was never attached to.");
-    simulations.erase(simulation);
-    if (simulations.empty()) {
-      attachedSimulations.erase(pokedex);
-    }
-  }
-
-  static void checkIfDetached(const Pokedex* pokedex) {
-    if (attachedSimulations.contains(pokedex)) {
-      std::size_t simulationCount = attachedSimulations[pokedex].size();
-      if (simulationCount) {
-        POKESIM_REQUIRE_FAIL(std::to_string(simulationCount) + " simulations are still using this Pokedex.");
-      }
-      else {
-        POKESIM_REQUIRE_FAIL("Pokedex still exist on attachment list despite having no simulations attached.");
-      }
-    }
-  }
-
-  static bool isPokedexAttachedToSimulation(const Pokedex* pokedex, const Simulation* simulation) {
-    if (attachedSimulations.contains(pokedex)) {
-      return attachedSimulations[pokedex].contains(simulation);
-    }
-    return false;
-  }
-#else
-  static void attachSimulation(const Pokedex*, const Simulation*) {}
-  static void detachSimulation(const Pokedex*, const Simulation*) {}
-  static void checkIfDetached(const Pokedex*) {}
-  static bool isPokedexAttachedToSimulation(const Pokedex*, const Simulation*) { return true; }
-#endif
-
- public:
-  Pokedex(GameMechanics mechanics_) : constants(mechanics_) {}
-  ~Pokedex() { Pokedex::checkIfDetached(this); }
-
-  constexpr bool isGameMechanic(GameMechanics checkedMechanics) const {
-    return constants.isGameMechanic(checkedMechanics);
-  }
-  constexpr const TypeChart& typeChart() const { return constants.typeChart(); }
-  template <auto DataFunction, typename... Args>
-  constexpr auto getStaticValue(Args&&... args) const {
-    return constants.getStaticValue<DataFunction>(std::forward<Args>(args)...);
-  }
-
-  /**
-   * @brief Calls the load functions for a set of species to add their data to a Pokedex's storage.
-   *
-   * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
-   * instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function
-   * should only be called with a set of those 12 Pokemon's species.
-   *
-   * @note Only call this once per species per Pokedex instance.
-   */
-  void loadSpecies(const entt::dense_set<dex::Species>& speciesSet);
-
-  /**
-   * @brief Calls the load functions for a set of items to add their data to a Pokedex's storage.
-   *
-   * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
-   * instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function
-   * should only be called with a set of those 12 Pokemon's items.
-   *
-   * @note Only call this once per item per Pokedex instance.
-   */
-  void loadItems(const entt::dense_set<dex::Item>& itemSet);
-
-  /**
-   * @brief Calls the load functions for a set of moves to add their data to a Pokedex's storage.
-   *
-   * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
-   * instance is assigned to, so if one turn of a single battle is being simulated and the opposing Pokemon have 4
-   * moves, then this function should only be called with a set of those 8 moves.
-   *
-   * @note Only call this once per move per Pokedex instance.
-   */
-  void loadMoves(const entt::dense_set<dex::Move>& moveSet);
-
-  /**
-   * @brief Calls the load functions for a set of abilities to add their data to a Pokedex's storage.
-   *
-   * @details The Pokedex class is designed to store the minimum amount of data needed to run the simulation a Pokedex
-   * instance is assigned to, so if a battle is being simulated where both sides have 6 Pokemon each, then this function
-   * should only be called with a set of those 12 Pokemon's abilities.
-   *
-   * @note Only call this once per ability per Pokedex instance.
-   */
-  void loadAbilities(const entt::dense_set<dex::Ability>& abilitySet);
-
-  void forEachLoadedSpecies(const std::function<void(dex::Species)>& function) const {
-    for (const auto& pair : speciesMap) {
-      function(pair.first);
-    }
-  }
-
-  void forEachLoadedItem(const std::function<void(dex::Item)>& function) const {
-    for (const auto& pair : itemsMap) {
-      function(pair.first);
-    }
-  }
-
-  void forEachLoadedMove(const std::function<void(dex::Move)>& function) const {
-    for (const auto& pair : movesMap) {
-      function(pair.first);
-    }
-  }
-
-  void forEachLoadedAbility(const std::function<void(dex::Ability)>& function) const {
-    for (const auto& pair : abilitiesMap) {
-      function(pair.first);
-    }
-  }
-
-  /**
-   * @brief Returns references to the given dex data components for a species
-   *
-   * @warning
-   * Attempting to get a component from a species that doesn't own it or an unloaded species results in undefined
-   * behavior.
-   *
-   * @tparam T Type of data to retrieve. Valid types: TODO(aed3): Add in list
-   */
-  template <typename... T>
-  auto getSpeciesData(dex::Species species) const {
-    // POKESIM_REQUIRE(registry.all_of<T...>(speciesMap.at(species)), "Species does not contain at least one of the
-    // component types.");
-    return dexRegistry.get<T...>(speciesMap.at(species));
-  }
-
-  /**
-   * @brief Returns references to the given dex data components for an item
-   *
-   * @warning
-   * Attempting to get a component from an item that doesn't own it or an unloaded item results in undefined behavior.
-   *
-   * @tparam T Type of data to retrieve. Valid types: TODO(aed3): Add in list
-   */
-  template <typename... T>
-  auto getItemData(dex::Item item) const {
-    return dexRegistry.get<T...>(itemsMap.at(item));
-  }
-
-  /**
-   * @brief Returns references to the given dex data components for a move
-   *
-   * @warning
-   * Attempting to get a component from a move that doesn't own it or an unloaded item results in undefined behavior.
-   *
-   * @tparam T Type of data to retrieve. Valid types: TODO(aed3): Add in list
-   */
-  template <typename... T>
-  auto getMoveData(dex::Move move) const {
-    return dexRegistry.get<T...>(movesMap.at(move));
-  }
-
-  template <typename... T>
-  bool speciesHas(dex::Species species) const {
-    return dexRegistry.all_of<T...>(speciesMap.at(species));
-  }
-
-  template <typename... T>
-  bool itemHas(dex::Item item) const {
-    return dexRegistry.all_of<T...>(itemsMap.at(item));
-  }
-
-  template <typename... T>
-  bool moveHasAny(dex::Move move) const {
-    return dexRegistry.all_of<T...>(movesMap.at(move));
-  }
-
-  template <typename... T>
-  bool moveHasAll(dex::Move move) const {
-    return dexRegistry.all_of<T...>(movesMap.at(move));
-  }
-
-  void buildMoves(types::registry& registry) const;
-  void loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInfoList);
-};
-}  // namespace pokesim
-
-//////////////////////// END OF src/Pokedex/Pokedex.hpp ////////////////////////
-
 //////////////// START OF src/Simulation/BattleCreationInfo.hpp ////////////////
 
 namespace pokesim {
@@ -26532,6 +26634,10 @@ struct PokemonCreationInfo {
     std::optional<types::boost> eva = std::nullopt;
   };
 
+  struct EffectData {
+    std::optional<dex::MetronomeItem::Effect> metronome;
+  };
+
  public:
   dex::Species species = dex::Species::NO_SPECIES;
   std::optional<types::level> level = std::nullopt;
@@ -26550,6 +26656,8 @@ struct PokemonCreationInfo {
   std::optional<types::stat> currentHp = std::nullopt;
   std::optional<SpeciesTypes> currentTypes = std::nullopt;
   std::optional<dex::Status> status = std::nullopt;
+
+  EffectData effectData{};
 
   Boosts currentBoosts{};
 };
@@ -27094,7 +27202,7 @@ class Simulation {
 
 ///////////// START OF src/Pokedex/EnumToTag/AbilityEnumToTag.hpp //////////////
 
-// TODO(aed3): Make this autogenerated
+// TODO(aed3): Make this autogenerated and forward declare ability structs
 
 namespace pokesim::dex {
 /*
@@ -27169,76 +27277,9 @@ bool hasTag(Ability ability, const types::registry& registry, types::entity enti
 
 ////////////// END OF src/Pokedex/EnumToTag/AbilityEnumToTag.hpp ///////////////
 
-/////////////// START OF src/Pokedex/EnumToTag/ItemEnumToTag.hpp ///////////////
-
-// TODO(aed3): Make this autogenerated
-
-namespace pokesim::dex {
-/*
- * Runs a function with a certain item tag based on the passed in enum.
- * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the item tags with
- * a static `run` function.
- *
- * @code
- * template <typename Tag>
- * struct EmplaceTag {
- *   static void run(types::handle handle) { handle.emplace<Tag>(); }
- * };
- *
- * enumToTag<EmplaceTag>(dex::Item::ASSAULT_VEST, handle);
- * @endcode
- */
-template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-constexpr auto enumToTag(Item item, RunArgs&&... args) {
-  switch (item) {
-    case Item::ASSAULT_VEST:  return RunStruct<AssaultVest, T...>::run(std::forward<RunArgs>(args)...);
-    case Item::BRIGHT_POWDER: return RunStruct<BrightPowder, T...>::run(std::forward<RunArgs>(args)...);
-    case Item::CHOICE_SCARF:  return RunStruct<ChoiceScarf, T...>::run(std::forward<RunArgs>(args)...);
-    case Item::CHOICE_SPECS:  return RunStruct<ChoiceSpecs, T...>::run(std::forward<RunArgs>(args)...);
-    case Item::FOCUS_SASH:    return RunStruct<FocusSash, T...>::run(std::forward<RunArgs>(args)...);
-    case Item::KINGS_ROCK:    return RunStruct<KingsRock, T...>::run(std::forward<RunArgs>(args)...);
-    case Item::LIFE_ORB:      return RunStruct<LifeOrb, T...>::run(std::forward<RunArgs>(args)...);
-    case Item::LUM_BERRY:     return RunStruct<LumBerry, T...>::run(std::forward<RunArgs>(args)...);
-    case Item::METRONOME:     return RunStruct<MetronomeItem, T...>::run(std::forward<RunArgs>(args)...);
-    case Item::MIRROR_HERB:   return RunStruct<MirrorHerb, T...>::run(std::forward<RunArgs>(args)...);
-    case Item::QUICK_CLAW:    return RunStruct<QuickClaw, T...>::run(std::forward<RunArgs>(args)...);
-    case Item::QUICK_POWDER:  return RunStruct<QuickPowder, T...>::run(std::forward<RunArgs>(args)...);
-    case Item::ROCKY_HELMET:  return RunStruct<RockyHelmet, T...>::run(std::forward<RunArgs>(args)...);
-
-    default: {
-      POKESIM_REQUIRE_FAIL("Using a tag for item that does not exist.");
-      using ReturnType = std::invoke_result_t<decltype(&RunStruct<LumBerry, T...>::run), RunArgs...>;
-      if constexpr (std::is_void_v<ReturnType>) {
-        return;
-      }
-      else {
-        return ReturnType{};
-      }
-    }
-  }
-}
-
-template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
-constexpr void forEachItem(const Pokedex& pokedex, RunArgs&&... args) {
-  pokedex.forEachLoadedItem([&](Item item) { enumToTag<RunStruct, T...>(item, std::forward<RunArgs>(args)...); });
-}
-
-// Assigns an item's tag to a handle
-void emplaceTagFromEnum(Item item, types::handle handle);
-void emplaceTagFromEnum(Item item, types::registry& registry, types::entity entity);
-
-// Removes an item's tag to a handle
-void removeTagFromEnum(Item item, types::handle handle);
-void removeTagFromEnum(Item item, types::registry& registry, types::entity entity);
-
-// Checks if the handle has the item's tag
-bool hasTag(Item item, types::handle handle);
-bool hasTag(Item item, const types::registry& registry, types::entity entity);
-}  // namespace pokesim::dex
-
-//////////////// END OF src/Pokedex/EnumToTag/ItemEnumToTag.hpp ////////////////
-
 ////////////// START OF src/Pokedex/EnumToTag/NatureEnumToTag.hpp //////////////
+
+// TODO(aed3): Forward declare structs
 
 namespace pokesim::dex {
 /*
@@ -27576,6 +27617,23 @@ struct SimulationSetupChecks {
     }
   }
 
+  void checkCreatedEffectData(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
+    const auto& effectData = creationInfo.effectData;
+    if (effectData.metronome.has_value()) {
+      if (creationInfo.item == dex::Item::METRONOME) {
+        POKESIM_REQUIRE_NM(registry->all_of<dex::MetronomeItem>(pokemonEntity));
+        POKESIM_REQUIRE_NM(
+          registry->get<dex::MetronomeItem::Effect>(pokemonEntity).consecutiveHits ==
+          effectData.metronome->consecutiveHits);
+        POKESIM_REQUIRE_NM(
+          registry->get<dex::MetronomeItem::Effect>(pokemonEntity).lastMove == effectData.metronome->lastMove);
+      }
+      else {
+        POKESIM_REQUIRE_NM(!registry->all_of<dex::MetronomeItem::Effect>(pokemonEntity));
+      }
+    }
+  }
+
   template <typename BoostType>
   void checkCreatedBoost(types::entity pokemonEntity, const std::optional<types::boost>& boostInfo) const {
     if (!boostInfo.has_value() || boostInfo.value() == Constants::PokemonStatBoost::DEFAULT) {
@@ -27700,6 +27758,7 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(registry->get<SpeciesTypes>(pokemonEntity) == creationInfo.currentTypes);
     }
 
+    checkCreatedEffectData(pokemonEntity, creationInfo);
     checkCreatedBoosts(pokemonEntity, creationInfo);
     pokesim::debug::checkPokemon(pokemonEntity, *registry);
   }
@@ -28199,6 +28258,7 @@ void runModifySecondariesEvent(Simulation& simulation);
 void runDamagingHitEvent(Simulation& simulation);
 void runHitEvent(Simulation& simulation);
 void runAfterHitEvent(Simulation& simulation);
+void runMoveFailEvent(Simulation& simulation);
 void runAfterMoveUsedEvent(Simulation& simulation);  // AfterMoveSecondarySelf
 
 template <typename StatusType>
@@ -28213,6 +28273,7 @@ void runModifyMoveAccuracyBoostEvent(Simulation& simulation);  // ModifyBoost fo
 
 void runModifyTarget(Simulation& simulation);  // onModifyMove for Curse and Expanding force should go here
 void runModifyMove(Simulation& simulation);
+void runTryMoveEvent(Simulation& simulation);
 void runSetBasePower(Simulation& simulation);  // basePowerCallback
 void runResetDisabledMove(Simulation& simulation);
 void runResetTrappedPokemon(Simulation& simulation);
@@ -28993,7 +29054,7 @@ void setIfMoveCrits(Simulation& simulation);
 
 ///////////// START OF src/Pokedex/EnumToTag/SpeciesEnumToTag.hpp //////////////
 
-// TODO(aed3): Make this autogenerated
+// TODO(aed3): Make this autogenerated and forward declare species structs
 
 namespace pokesim::dex {
 /*
@@ -29047,6 +29108,8 @@ constexpr auto enumToTag(Species species, RunArgs&&... args) {
 ////////////// END OF src/Pokedex/EnumToTag/SpeciesEnumToTag.hpp ///////////////
 
 /////////////// START OF src/Pokedex/EnumToTag/TypeEnumToTag.hpp ///////////////
+
+// TODO(aed3): Forward declare structs
 
 namespace pokesim::dex {
 /*
@@ -29116,7 +29179,7 @@ bool hasTag(Type type, const types::registry& registry, types::entity entity);
 
 /////////////// START OF src/Pokedex/EnumToTag/MoveEnumToTag.hpp ///////////////
 
-// TODO(aed3): Make this autogenerated
+// TODO(aed3): Make this autogenerated and forward declare move structs
 
 namespace pokesim::dex {
 /*
@@ -29199,6 +29262,8 @@ bool hasTag(Move move, const types::registry& registry, types::entity entity);
 
 /////////// START OF src/Pokedex/EnumToTag/MovePropertyEnumToTag.hpp ///////////
 
+// TODO(aed3): Make this autogenerated and forward declare move property structs
+
 namespace pokesim::dex {
 /*
  * Runs a function with a certain move property tag based on the passed in enum.
@@ -29258,6 +29323,8 @@ void removeTagFromEnum(MoveProperty property, types::registry& registry, types::
 
 ////////// START OF src/Pokedex/EnumToTag/SideConditionEnumToTag.hpp ///////////
 
+// TODO(aed3): Make this autogenerated and forward declare condition structs
+
 namespace pokesim::dex {
 /*
  * Runs a function with a certain side condition tag based on the passed in enum.
@@ -29313,6 +29380,8 @@ bool hasTag(SideCondition sideCondition, const types::registry& registry, types:
 
 /////////// START OF src/Pokedex/EnumToTag/ItemPropertyEnumToTag.hpp ///////////
 
+// TODO(aed3): Make this autogenerated and forward declare item property structs
+
 namespace pokesim::dex {
 /*
  * Runs a function with a certain item property tag based on the passed in enum.
@@ -29363,6 +29432,8 @@ void removeTagFromEnum(ItemProperty property, types::registry& registry, types::
 //////////// END OF src/Pokedex/EnumToTag/ItemPropertyEnumToTag.hpp ////////////
 
 ///////// START OF src/Pokedex/EnumToTag/AbilityPropertyEnumToTag.hpp //////////
+
+// TODO(aed3): Make this autogenerated and forward declare ability property structs
 
 namespace pokesim::dex {
 /*

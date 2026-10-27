@@ -10,6 +10,7 @@
 #include <Pokedex/Effects/Trapped.hpp>
 #include <Pokedex/Effects/Trapper.hpp>
 #include <Pokedex/Items/LumBerry.hpp>
+#include <Pokedex/Items/Metronome.hpp>
 #include <Simulation/Simulation.hpp>
 #include <entt/entity/handle.hpp>
 
@@ -30,6 +31,7 @@ void clearVolatileTags(Simulation& simulation) {
     TransformedFrom,
     dex::ChoiceLock,
     dex::Flinch,
+    dex::MetronomeItem::Effect,
     dex::Trapped,
     dex::Trapper,
     pokesim::tags::Switching>(view.begin(), view.end());

@@ -214,6 +214,23 @@ struct SimulationSetupChecks {
     }
   }
 
+  void checkCreatedEffectData(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
+    const auto& effectData = creationInfo.effectData;
+    if (effectData.metronome.has_value()) {
+      if (creationInfo.item == dex::Item::METRONOME) {
+        POKESIM_REQUIRE_NM(registry->all_of<dex::MetronomeItem>(pokemonEntity));
+        POKESIM_REQUIRE_NM(
+          registry->get<dex::MetronomeItem::Effect>(pokemonEntity).consecutiveHits ==
+          effectData.metronome->consecutiveHits);
+        POKESIM_REQUIRE_NM(
+          registry->get<dex::MetronomeItem::Effect>(pokemonEntity).lastMove == effectData.metronome->lastMove);
+      }
+      else {
+        POKESIM_REQUIRE_NM(!registry->all_of<dex::MetronomeItem::Effect>(pokemonEntity));
+      }
+    }
+  }
+
   template <typename BoostType>
   void checkCreatedBoost(types::entity pokemonEntity, const std::optional<types::boost>& boostInfo) const {
     if (!boostInfo.has_value() || boostInfo.value() == Constants::PokemonStatBoost::DEFAULT) {
@@ -338,6 +355,7 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(registry->get<SpeciesTypes>(pokemonEntity) == creationInfo.currentTypes);
     }
 
+    checkCreatedEffectData(pokemonEntity, creationInfo);
     checkCreatedBoosts(pokemonEntity, creationInfo);
     pokesim::debug::checkPokemon(pokemonEntity, *registry);
   }
