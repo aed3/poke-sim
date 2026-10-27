@@ -8,6 +8,8 @@
 
 #include "../Effects/headers.hpp"
 
+// TODO(aed3): Forward declare structs
+
 namespace pokesim::dex {
 /*
  * Runs a function with a certain status tag based on the passed in enum.

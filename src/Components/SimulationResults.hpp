@@ -19,11 +19,11 @@ namespace calc_damage {
 struct UsesUntilKo {
  private:
   struct Uses {
-    types::moveHits hits = 0U;
+    types::moveUses uses = 0U;
     types::damageRollIndex damageRollsIncluded = 0U;
 
     bool operator==(const Uses& other) const {
-      return hits == other.hits && damageRollsIncluded == other.damageRollsIncluded;
+      return uses == other.uses && damageRollsIncluded == other.damageRollsIncluded;
     }
   };
 
@@ -35,7 +35,7 @@ struct UsesUntilKo {
 
   bool guaranteedKo() const {
     const Uses& min = minUses();
-    return min.hits == 1U && min.damageRollsIncluded == Constants::DamageRollCount::MAX;
+    return min.uses == 1U && min.damageRollsIncluded == Constants::DamageRollCount::MAX;
   }
 };
 

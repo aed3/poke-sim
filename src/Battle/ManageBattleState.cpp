@@ -71,6 +71,7 @@ bool removeFailedMoveFromSource(types::registry& registry, types::entity moveEnt
 
   if (moves->val.empty()) {
     registry.remove<pokesim::tags::CurrentActionSource, CurrentActionMovesAsSource>(source);
+    registry.emplace<pokesim::tags::FailedCurrentActionSource>(source);
     return true;
   }
   return false;
@@ -82,6 +83,7 @@ void removeFailedMoveFromTarget(types::registry& registry, types::entity target)
     "This function is only meant for simulate turn and the non-extended version of target moves.");
 
   registry.remove<pokesim::tags::CurrentActionTarget, CurrentActionMovesAsTarget>(target);
+  registry.emplace<pokesim::tags::FailedCurrentActionTarget>(target);
 }
 
 void updateCurrentActionTargets(types::registry& registry, CurrentAction& action) {
@@ -132,7 +134,9 @@ void clearAction(Simulation& simulation) {
     FailedCurrentActionSource,
     FailedCurrentActionTarget,
     pokesim::tags::CurrentActionSource,
-    pokesim::tags::CurrentActionTarget>();
+    pokesim::tags::CurrentActionTarget,
+    pokesim::tags::FailedCurrentActionSource,
+    pokesim::tags::FailedCurrentActionTarget>();
 }
 
 void setNextInEffectStack(types::handle handle, EffectStack& effectStack) {

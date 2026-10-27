@@ -253,9 +253,9 @@ void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, 
     "All the damage rolls are needed to calculate this correctly.");
 
   for (Damage damageRoll : damageRolls.val) {
-    types::moveHits hits = (types::moveHits)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
-    if (usesUntilKo.val.empty() || usesUntilKo.val.back().hits != hits) {
-      usesUntilKo.val.push_back({hits});
+    types::moveUses uses = (types::moveUses)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
+    if (usesUntilKo.val.empty() || usesUntilKo.val.back().uses != uses) {
+      usesUntilKo.val.push_back({uses});
     }
 
     usesUntilKo.val.back().damageRollsIncluded++;

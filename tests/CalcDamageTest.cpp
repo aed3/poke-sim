@@ -292,7 +292,7 @@ TEST_CASE("Calculate Damage: Vertical Slice 1", "[Simulation][CalculateDamage][S
 
         REQUIRE(trueKosUses.minUses() == idealKoUses.val[0]);
         REQUIRE(trueKosUses.maxUses() == idealKoUses.val.back());
-        REQUIRE(trueKosUses.guaranteedKo() == (idealKoUses.val.size() == 1U && idealKoUses.val[0].hits == 1U));
+        REQUIRE(trueKosUses.guaranteedKo() == (idealKoUses.val.size() == 1U && idealKoUses.val[0].uses == 1U));
 
         REQUIRE(trueKosUses.val.size() == idealKoUses.val.size());
         for (types::damageRollIndex i = 0U; i < trueKosUses.val.size(); i++) {

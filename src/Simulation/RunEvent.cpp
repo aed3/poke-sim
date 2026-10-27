@@ -93,6 +93,7 @@ void runBasePowerEvent(Simulation& simulation) {
 
 void runModifyDamageEvent(Simulation& simulation) {
   dex::LifeOrb::onModifyDamage(simulation);
+  dex::MetronomeItem::Effect::onModifyDamage(simulation);
   dex::Reflect::Effect::onAnyModifyDamage(simulation);
 }
 
@@ -118,6 +119,10 @@ void runHitEvent(Simulation& simulation) {
 
 void runAfterHitEvent(Simulation& simulation) {
   dex::KnockOff::onAfterHit(simulation);
+}
+
+void runMoveFailEvent(Simulation& simulation) {
+  dex::MetronomeItem::Effect::onMoveFail(simulation);
 }
 
 void runAfterMoveUsedEvent(Simulation& simulation) {
@@ -162,6 +167,10 @@ void runModifyMove(Simulation& simulation) {
   dex::LongReach::onModifyMove(simulation);
 
   dex::Scrappy::onModifyMove(simulation);
+}
+
+void runTryMoveEvent(Simulation& simulation) {
+  dex::MetronomeItem::Effect::onTryMove(simulation);
 }
 
 void runSetBasePower(Simulation& simulation) {

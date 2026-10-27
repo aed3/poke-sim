@@ -7,6 +7,8 @@
 #include <Types/Registry.hpp>
 #include <utility>
 
+// TODO(aed3): Forward declare structs
+
 namespace pokesim::dex {
 /*
  * Runs a function with a certain nature tag based on the passed in enum.

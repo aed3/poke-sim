@@ -26,6 +26,10 @@ struct Ivs;
 struct SpeciesTypes;
 struct MoveSlot;
 
+namespace dex::shared_name_effect {
+struct MetronomeItem;
+}
+
 namespace internal {
 
 // Tool to set properties of a Pokemon's state to an entity.
@@ -66,6 +70,8 @@ struct PokemonStateSetup : StateSetupBase {
   void setEVs(const Evs& evs);
   void setIVs(types::iv hp, types::iv atk, types::iv def, types::iv spa, types::iv spd, types::iv spe);
   void setIVs(const Ivs& ivs);
+
+  void setMetronomeEffect(dex::shared_name_effect::MetronomeItem metronomeEffect);
 
   template <typename BoostType>
   void setBoost(types::boost boost) {

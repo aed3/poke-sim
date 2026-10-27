@@ -200,6 +200,22 @@ struct HasTagFromEnum {
   }
 };
 
+template <typename Tag>
+struct OnlyHasEffectIfHasMain {
+  template <typename, typename = void>
+  struct hasEffect : std::false_type {};
+  template <typename T>
+  struct hasEffect<T, std::void_t<decltype(T::Effect::name)>> : std::true_type {};
+
+  static void run(types::entity entity, const types::registry& registry) {
+    if constexpr (hasEffect<Tag>::value) {
+      if (!registry.all_of<Tag>(entity)) {
+        POKESIM_REQUIRE_NM(!registry.all_of<typename Tag::Effect>(entity));
+      }
+    }
+  }
+};
+
 template <typename MaxMinStruct, typename T>
 void checkBounds(const T& value) {
   POKESIM_REQUIRE(
@@ -495,6 +511,7 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
     POKESIM_REQUIRE_NM(!has<CurrentActionMovesAsTargetExtended>(pokemonEntity, registry));
   }
 
+  dex::enumToTag<OnlyHasEffectIfHasMain>(dex::Item::METRONOME, pokemonEntity, registry);
   check(moveSlots);
 }
 
@@ -572,6 +589,17 @@ void checkPercentChance(types::percentChance chance) {
 template <>
 void check(const dex::shared_name_effect::Reflect& reflect) {
   checkBounds<Constants::EffectDuration>(reflect.val);
+}
+
+template <>
+void check(const dex::shared_name_effect::MetronomeItem& metronome) {
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Move>)metronome.lastMove <= dex::TOTAL_MOVE_COUNT);
+  if (metronome.lastMove == dex::Move::NO_MOVE) {
+    POKESIM_REQUIRE_NM(metronome.consecutiveHits == 0U);
+  }
+  POKESIM_REQUIRE(
+    metronome.consecutiveHits < Constants::MoveMaxPp::MAX * 2U,
+    "This check is to warn more hits than would fit in `moveHits` could be reached and should be accounted for.");
 }
 
 template <>
@@ -1531,11 +1559,11 @@ void check(const calc_damage::UsesUntilKo& usesUntilKo) {
   types::moveHits lastHits = 0U;
   types::damageRollIndex totalDamageRollsIncluded = 0U;
   for (const auto& useUntilKo : usesUntilKo.val) {
-    checkBounds<Constants::PokemonHpStat>(useUntilKo.hits);  // TODO(aed3): What if a move does no damage?
+    checkBounds<Constants::PokemonHpStat>(useUntilKo.uses);  // TODO(aed3): What if a move does no damage?
     checkBounds<Constants::DamageRollCount>(useUntilKo.damageRollsIncluded);
-    POKESIM_REQUIRE(lastHits < useUntilKo.hits, "The list should be in order from least to most hits.");
+    POKESIM_REQUIRE(lastHits < useUntilKo.uses, "The list should be in order from least to most hits.");
     totalDamageRollsIncluded += useUntilKo.damageRollsIncluded;
-    lastHits = useUntilKo.hits;
+    lastHits = useUntilKo.uses;
   }
   listHasUniqueValues(usesUntilKo.val);
 
@@ -1879,6 +1907,12 @@ types::stat setPokemonStats(
   return hp;
 }
 
+void setPokemonEffectData(const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup) {
+  if (pokemonInfo.effectData.metronome.has_value() && pokemonInfo.item == dex::Item::METRONOME) {
+    pokemonSetup.setMetronomeEffect(pokemonInfo.effectData.metronome.value());
+  }
+}
+
 void setPokemonCurrentBoosts(const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup) {
   const auto& pokemonInfoBoosts = pokemonInfo.currentBoosts;
   if (pokemonInfoBoosts.atk.has_value()) pokemonSetup.setBoost<AtkBoost>(pokemonInfoBoosts.atk.value());
@@ -1935,6 +1969,7 @@ void createInitialPokemon(
     pokemonSetup.setProperty<tags::Fainted>();
   }
 
+  setPokemonEffectData(pokemonInfo, pokemonSetup);
   setPokemonCurrentBoosts(pokemonInfo, pokemonSetup);
 
   pokemonSetup.setProperty<tags::AtkStatUpdateRequired>();
@@ -2458,6 +2493,7 @@ void runBasePowerEvent(Simulation& simulation) {
 
 void runModifyDamageEvent(Simulation& simulation) {
   dex::LifeOrb::onModifyDamage(simulation);
+  dex::MetronomeItem::Effect::onModifyDamage(simulation);
   dex::Reflect::Effect::onAnyModifyDamage(simulation);
 }
 
@@ -2483,6 +2519,10 @@ void runHitEvent(Simulation& simulation) {
 
 void runAfterHitEvent(Simulation& simulation) {
   dex::KnockOff::onAfterHit(simulation);
+}
+
+void runMoveFailEvent(Simulation& simulation) {
+  dex::MetronomeItem::Effect::onMoveFail(simulation);
 }
 
 void runAfterMoveUsedEvent(Simulation& simulation) {
@@ -2527,6 +2567,10 @@ void runModifyMove(Simulation& simulation) {
   dex::LongReach::onModifyMove(simulation);
 
   dex::Scrappy::onModifyMove(simulation);
+}
+
+void runTryMoveEvent(Simulation& simulation) {
+  dex::MetronomeItem::Effect::onTryMove(simulation);
 }
 
 void runSetBasePower(Simulation& simulation) {
@@ -3000,8 +3044,10 @@ void useMove(Simulation& simulation) {
   // ModifyType
   internal::runModifyMove(simulation);
   internal::runSetBasePower(simulation);
+  internal::runTryMoveEvent(simulation);
 
   internal::simulate_turn::runMoveHitChecks(simulation);
+  internal::runMoveFailEvent(simulation);
   internal::runAfterMoveUsedEvent(simulation);
 }
 
@@ -5766,6 +5812,62 @@ void lifeOrbOnAfterMove(
   }
 }
 
+void metronomeOnTryMove(types::registry& registry, Battle battle, MetronomeItem::Effect& metronomeEffect) {
+  Move currentMove = registry.get<MoveName>(registry.get<CurrentAction>(battle.val).action).val;
+  if (metronomeEffect.lastMove == currentMove) {
+    metronomeEffect.consecutiveHits++;
+  }
+  else {
+    metronomeEffect.consecutiveHits = 0U;
+  }
+  metronomeEffect.lastMove = currentMove;
+}
+
+void metronomeOnMoveFail(MetronomeItem::Effect& metronomeEffect) {
+  metronomeEffect.consecutiveHits = 0U;
+}
+
+void metronomeOnModifyDamageSimulateTurn(
+  types::registry& registry, MetronomeItem::Effect& metronomeEffect, const CurrentActionMovesAsSource& moves,
+  const Pokedex& pokedex, types::eventModifier denominator) {
+  const auto numerator =
+    pokedex.getStaticValue<MetronomeItem::Effect::onModifyDamageModifiers>(metronomeEffect.consecutiveHits);
+  if (numerator == denominator) {
+    return;
+  }
+
+  for (types::entity move : moves) {
+    if (registry.any_of<move::tags::Status>(move)) {
+      continue;
+    }
+
+    DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
+    modifier.modifyDamageEvent = internal::chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
+  }
+}
+
+template <typename CurrentActionMovesAsSourceType>
+struct MetronomeOnModifyDamageCalcDamage {
+  static void run(
+    types::registry& registry, MetronomeItem::Effect& metronomeEffect, const CurrentActionMovesAsSourceType& moves,
+    const Pokedex& pokedex, types::eventModifier denominator) {
+    const auto numerator =
+      pokedex.getStaticValue<MetronomeItem::Effect::onModifyDamageModifiers>(metronomeEffect.consecutiveHits);
+    if (numerator == denominator) {
+      return;
+    }
+
+    for (types::entity move : moves) {
+      if (metronomeEffect.lastMove != registry.get<MoveName>(move).val) {
+        continue;
+      }
+
+      DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
+      modifier.modifyDamageEvent = internal::chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
+    }
+  }
+};
+
 void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget moves, types::stat hpDivisor) {
   types::registry& registry = *handle.registry();
   types::entity move = moves.val;
@@ -5925,6 +6027,30 @@ void LumBerry::onUpdate(Simulation& simulation) {
   simulation.addToEntities<tags::CanEatItem, tags::HasStatus, LumBerry, internal::tags::RunUpdate>();
   // simulation.removeFromEntities<tags::CanEatItem, Confusion::Effect, LumBerry, internal::tags::RunUpdate>();
   internal::tryEatItem(simulation);
+}
+
+void MetronomeItem::Effect::onTryMove(Simulation& simulation) {
+  simulation.addToEntitiesWithExclude<MetronomeItem, MainSource, tags::CurrentActionSource>(
+    entt::exclude<MetronomeItem>);
+  simulation.view<metronomeOnTryMove, Tags<tags::CurrentActionSource>>();
+}
+
+void MetronomeItem::Effect::onMoveFail(Simulation& simulation) {
+  simulation.view<metronomeOnMoveFail, Tags<tags::FailedCurrentActionSource>>();
+}
+
+void MetronomeItem::Effect::onModifyDamage(Simulation& simulation) {
+  const auto denominator = simulation.pokedex().getStaticValue<onModifyDamageDenominator>();
+
+  simulation.view<metronomeOnModifyDamageSimulateTurn, Tags<tags::SimulateTurn>>(simulation.pokedex(), denominator);
+  internal::currentActionMovesAsSourceView<MetronomeOnModifyDamageCalcDamage, Tags<tags::CalculateDamage>>(
+    simulation,
+    simulation.pokedex(),
+    denominator);
+  internal::currentActionMovesAsSourceView<MetronomeOnModifyDamageCalcDamage, Tags<tags::AnalyzeEffect>>(
+    simulation,
+    simulation.pokedex(),
+    denominator);
 }
 
 void RockyHelmet::onDamagingHit(Simulation& simulation) {
@@ -6713,9 +6839,9 @@ void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, 
     "All the damage rolls are needed to calculate this correctly.");
 
   for (Damage damageRoll : damageRolls.val) {
-    types::moveHits hits = (types::moveHits)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
-    if (usesUntilKo.val.empty() || usesUntilKo.val.back().hits != hits) {
-      usesUntilKo.val.push_back({hits});
+    types::moveUses uses = (types::moveUses)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
+    if (usesUntilKo.val.empty() || usesUntilKo.val.back().uses != uses) {
+      usesUntilKo.val.push_back({uses});
     }
 
     usesUntilKo.val.back().damageRollsIncluded++;
@@ -7353,6 +7479,10 @@ void PokemonStateSetup::setIVs(const Ivs& ivs) {
   handle.emplace<Ivs>(ivs);
 }
 
+void PokemonStateSetup::setMetronomeEffect(dex::MetronomeItem::Effect metronomeEffect) {
+  handle.emplace<dex::MetronomeItem::Effect>(metronomeEffect);
+}
+
 bool PokemonStateSetup::isFainted() {
   return handle.all_of<pokesim::tags::Fainted>();
 }
@@ -7498,6 +7628,7 @@ void clearVolatileTags(Simulation& simulation) {
     TransformedFrom,
     dex::ChoiceLock,
     dex::Flinch,
+    dex::MetronomeItem::Effect,
     dex::Trapped,
     dex::Trapper,
     pokesim::tags::Switching>(view.begin(), view.end());
@@ -7516,7 +7647,17 @@ namespace pokesim::internal {
 namespace {
 template <typename ItemTag, typename SelectionTag>
 struct RemoveItem {
-  static void run(Simulation& simulation) { simulation.removeFromEntities<ItemTag, SelectionTag>(); }
+  template <typename = ItemTag, typename = void>
+  struct hasEffect : std::false_type {};
+  template <typename T>
+  struct hasEffect<T, std::void_t<decltype(T::Effect::name)>> : std::true_type {};
+
+  static void run(Simulation& simulation) {
+    simulation.removeFromEntities<ItemTag, SelectionTag>();
+    if constexpr (hasEffect<ItemTag>::value) {
+      simulation.removeFromEntities<typename ItemTag::Effect, SelectionTag>();
+    }
+  }
 };
 
 template <typename Tag>
@@ -8050,6 +8191,7 @@ bool removeFailedMoveFromSource(types::registry& registry, types::entity moveEnt
 
   if (moves->val.empty()) {
     registry.remove<pokesim::tags::CurrentActionSource, CurrentActionMovesAsSource>(source);
+    registry.emplace<pokesim::tags::FailedCurrentActionSource>(source);
     return true;
   }
   return false;
@@ -8061,6 +8203,7 @@ void removeFailedMoveFromTarget(types::registry& registry, types::entity target)
     "This function is only meant for simulate turn and the non-extended version of target moves.");
 
   registry.remove<pokesim::tags::CurrentActionTarget, CurrentActionMovesAsTarget>(target);
+  registry.emplace<pokesim::tags::FailedCurrentActionTarget>(target);
 }
 
 void updateCurrentActionTargets(types::registry& registry, CurrentAction& action) {
@@ -8111,7 +8254,9 @@ void clearAction(Simulation& simulation) {
     FailedCurrentActionSource,
     FailedCurrentActionTarget,
     pokesim::tags::CurrentActionSource,
-    pokesim::tags::CurrentActionTarget>();
+    pokesim::tags::CurrentActionTarget,
+    pokesim::tags::FailedCurrentActionSource,
+    pokesim::tags::FailedCurrentActionTarget>();
 }
 
 void setNextInEffectStack(types::handle handle, EffectStack& effectStack) {

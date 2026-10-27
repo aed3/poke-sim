@@ -188,6 +188,12 @@ types::stat setPokemonStats(
   return hp;
 }
 
+void setPokemonEffectData(const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup) {
+  if (pokemonInfo.effectData.metronome.has_value() && pokemonInfo.item == dex::Item::METRONOME) {
+    pokemonSetup.setMetronomeEffect(pokemonInfo.effectData.metronome.value());
+  }
+}
+
 void setPokemonCurrentBoosts(const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup) {
   const auto& pokemonInfoBoosts = pokemonInfo.currentBoosts;
   if (pokemonInfoBoosts.atk.has_value()) pokemonSetup.setBoost<AtkBoost>(pokemonInfoBoosts.atk.value());
@@ -244,6 +250,7 @@ void createInitialPokemon(
     pokemonSetup.setProperty<tags::Fainted>();
   }
 
+  setPokemonEffectData(pokemonInfo, pokemonSetup);
   setPokemonCurrentBoosts(pokemonInfo, pokemonSetup);
 
   pokemonSetup.setProperty<tags::AtkStatUpdateRequired>();

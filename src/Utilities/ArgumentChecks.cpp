@@ -11,6 +11,7 @@
 #include <Config/Require.hpp>
 #include <Pokedex/Abilities/headers.hpp>
 #include <Pokedex/Effects/headers.hpp>
+#include <Pokedex/EnumToTag/ItemEnumToTag.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
 #include <Pokedex/Items/headers.hpp>
 #include <Pokedex/Moves/headers.hpp>
@@ -57,6 +58,22 @@ template <typename Tag>
 struct HasTagFromEnum {
   static void run(types::entity entity, const types::registry& registry, bool& entityHasTag) {
     entityHasTag = entityHasTag || has<Tag>(entity, registry);
+  }
+};
+
+template <typename Tag>
+struct OnlyHasEffectIfHasMain {
+  template <typename, typename = void>
+  struct hasEffect : std::false_type {};
+  template <typename T>
+  struct hasEffect<T, std::void_t<decltype(T::Effect::name)>> : std::true_type {};
+
+  static void run(types::entity entity, const types::registry& registry) {
+    if constexpr (hasEffect<Tag>::value) {
+      if (!registry.all_of<Tag>(entity)) {
+        POKESIM_REQUIRE_NM(!registry.all_of<typename Tag::Effect>(entity));
+      }
+    }
   }
 };
 
@@ -355,6 +372,7 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
     POKESIM_REQUIRE_NM(!has<CurrentActionMovesAsTargetExtended>(pokemonEntity, registry));
   }
 
+  dex::enumToTag<OnlyHasEffectIfHasMain>(dex::Item::METRONOME, pokemonEntity, registry);
   check(moveSlots);
 }
 
@@ -432,6 +450,17 @@ void checkPercentChance(types::percentChance chance) {
 template <>
 void check(const dex::shared_name_effect::Reflect& reflect) {
   checkBounds<Constants::EffectDuration>(reflect.val);
+}
+
+template <>
+void check(const dex::shared_name_effect::MetronomeItem& metronome) {
+  POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Move>)metronome.lastMove <= dex::TOTAL_MOVE_COUNT);
+  if (metronome.lastMove == dex::Move::NO_MOVE) {
+    POKESIM_REQUIRE_NM(metronome.consecutiveHits == 0U);
+  }
+  POKESIM_REQUIRE(
+    metronome.consecutiveHits < Constants::MoveMaxPp::MAX * 2U,
+    "This check is to warn more hits than would fit in `moveHits` is reachable and should be accounted for.");
 }
 
 template <>
@@ -1391,11 +1420,11 @@ void check(const calc_damage::UsesUntilKo& usesUntilKo) {
   types::moveHits lastHits = 0U;
   types::damageRollIndex totalDamageRollsIncluded = 0U;
   for (const auto& useUntilKo : usesUntilKo.val) {
-    checkBounds<Constants::PokemonHpStat>(useUntilKo.hits);  // TODO(aed3): What if a move does no damage?
+    checkBounds<Constants::PokemonHpStat>(useUntilKo.uses);  // TODO(aed3): What if a move does no damage?
     checkBounds<Constants::DamageRollCount>(useUntilKo.damageRollsIncluded);
-    POKESIM_REQUIRE(lastHits < useUntilKo.hits, "The list should be in order from least to most hits.");
+    POKESIM_REQUIRE(lastHits < useUntilKo.uses, "The list should be in order from least to most hits.");
     totalDamageRollsIncluded += useUntilKo.damageRollsIncluded;
-    lastHits = useUntilKo.hits;
+    lastHits = useUntilKo.uses;
   }
   listHasUniqueValues(usesUntilKo.val);
 

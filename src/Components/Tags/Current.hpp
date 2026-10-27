@@ -13,4 +13,6 @@ struct FailedCurrentMoveHit {};
 struct CurrentActionMoveSlot {};
 struct CurrentActionTarget {};
 struct CurrentActionSource {};
+struct FailedCurrentActionTarget {};
+struct FailedCurrentActionSource {};
 }  // namespace pokesim::tags

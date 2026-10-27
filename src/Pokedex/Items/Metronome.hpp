@@ -2,9 +2,10 @@
 
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Item.hpp>
+#include <Types/Enums/Move.hpp>
 #include <Types/Enums/Volatile.hpp>
 #include <Types/Event.hpp>
-#include <array>
+#include <Types/Move.hpp>
 #include <string_view>
 
 namespace pokesim {
@@ -34,13 +35,30 @@ struct MetronomeItem {
   static constexpr Volatile name(GameMechanics = {}) { return Volatile::METRONOME; }
   using MainSource = pokesim::dex::MetronomeItem;
 
-  static constexpr std::array<types::eventModifier, 6U> onModifyDamageModifiers(GameMechanics) {
-    return {4096U, 4915U, 5734U, 6553U, 7372U, 8192U};
+  static constexpr types::eventModifier onModifyDamageModifiers(GameMechanics, types::moveHits consecutiveHits) {
+    switch (consecutiveHits) {
+      case 0U: return 4096U;
+      case 1U: return 4915U;
+      case 2U: return 5734U;
+      case 3U: return 6553U;
+      case 4U: return 7372U;
+      case 5U:
+      default: return 8192U;
+    }
   }
 
-  static void onStart(Simulation& simulation);
+  static constexpr types::eventModifier onModifyDamageDenominator(GameMechanics) { return 4096U; }
+
+  static void onMoveFail(Simulation& simulation);
   static void onTryMove(Simulation& simulation);
   static void onModifyDamage(Simulation& simulation);
+
+  types::moveHits consecutiveHits{};
+  Move lastMove = Move::NO_MOVE;
+
+  constexpr bool operator==(const MetronomeItem& other) const {
+    return consecutiveHits == other.consecutiveHits && lastMove == other.lastMove;
+  }
 };
 }  // namespace shared_name_effect
 }  // namespace pokesim::dex

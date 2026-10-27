@@ -4,6 +4,7 @@
 #include <Components/Damage.hpp>
 #include <Components/EventModifier.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
+#include <Types/Entity.hpp>
 #include <Types/Event.hpp>
 #include <Types/Registry.hpp>
 #include <entt/entity/handle.hpp>

@@ -122,6 +122,7 @@ struct ChoiceLock;
 struct Trapper;
 namespace shared_name_effect {
 struct Reflect;
+struct MetronomeItem;
 }  // namespace shared_name_effect
 }  // namespace dex
 namespace analyze_effect {
@@ -192,6 +193,9 @@ void checkPercentChance(types::percentChance);
 
 template <>
 void check(const dex::shared_name_effect::Reflect&);
+
+template <>
+void check(const dex::shared_name_effect::MetronomeItem&);
 
 template <>
 void check(const dex::ChoiceLock&);

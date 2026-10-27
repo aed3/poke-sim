@@ -242,8 +242,10 @@ void useMove(Simulation& simulation) {
   // ModifyType
   internal::runModifyMove(simulation);
   internal::runSetBasePower(simulation);
+  internal::runTryMoveEvent(simulation);
 
   internal::simulate_turn::runMoveHitChecks(simulation);
+  internal::runMoveFailEvent(simulation);
   internal::runAfterMoveUsedEvent(simulation);
 }
 

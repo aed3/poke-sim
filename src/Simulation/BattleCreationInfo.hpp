@@ -2,7 +2,7 @@
 
 #include <Components/SideDecisions.hpp>
 #include <Components/SpeciesTypes.hpp>
-#include <Components/Tags/SimulationTags.hpp>
+#include <Pokedex/Items/Metronome.hpp>
 #include <Types/Constants.hpp>
 #include <Types/Decisions.hpp>
 #include <Types/Effect.hpp>
@@ -64,6 +64,10 @@ struct PokemonCreationInfo {
     std::optional<types::boost> eva = std::nullopt;
   };
 
+  struct EffectData {
+    std::optional<dex::MetronomeItem::Effect> metronome;
+  };
+
  public:
   dex::Species species = dex::Species::NO_SPECIES;
   std::optional<types::level> level = std::nullopt;
@@ -82,6 +86,8 @@ struct PokemonCreationInfo {
   std::optional<types::stat> currentHp = std::nullopt;
   std::optional<SpeciesTypes> currentTypes = std::nullopt;
   std::optional<dex::Status> status = std::nullopt;
+
+  EffectData effectData{};
 
   Boosts currentBoosts{};
 };

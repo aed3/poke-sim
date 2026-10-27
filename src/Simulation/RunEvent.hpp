@@ -27,6 +27,7 @@ void runModifySecondariesEvent(Simulation& simulation);
 void runDamagingHitEvent(Simulation& simulation);
 void runHitEvent(Simulation& simulation);
 void runAfterHitEvent(Simulation& simulation);
+void runMoveFailEvent(Simulation& simulation);
 void runAfterMoveUsedEvent(Simulation& simulation);  // AfterMoveSecondarySelf
 
 template <typename StatusType>
@@ -41,6 +42,7 @@ void runModifyMoveAccuracyBoostEvent(Simulation& simulation);  // ModifyBoost fo
 
 void runModifyTarget(Simulation& simulation);  // onModifyMove for Curse and Expanding force should go here
 void runModifyMove(Simulation& simulation);
+void runTryMoveEvent(Simulation& simulation);
 void runSetBasePower(Simulation& simulation);  // basePowerCallback
 void runResetDisabledMove(Simulation& simulation);
 void runResetTrappedPokemon(Simulation& simulation);

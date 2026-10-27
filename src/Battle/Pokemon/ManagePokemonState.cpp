@@ -52,7 +52,17 @@ namespace pokesim::internal {
 namespace {
 template <typename ItemTag, typename SelectionTag>
 struct RemoveItem {
-  static void run(Simulation& simulation) { simulation.removeFromEntities<ItemTag, SelectionTag>(); }
+  template <typename = ItemTag, typename = void>
+  struct hasEffect : std::false_type {};
+  template <typename T>
+  struct hasEffect<T, std::void_t<decltype(T::Effect::name)>> : std::true_type {};
+
+  static void run(Simulation& simulation) {
+    simulation.removeFromEntities<ItemTag, SelectionTag>();
+    if constexpr (hasEffect<ItemTag>::value) {
+      simulation.removeFromEntities<typename ItemTag::Effect, SelectionTag>();
+    }
+  }
 };
 
 template <typename Tag>
