@@ -56,10 +56,10 @@ class maxSizedVector : public std::vector<Type> {
     base::push_back(value);
   }
 
-  void unordered_remove(const Type& value) {
-    for (size_type i = 0U; i < size() - 1U; i++) {
-      if (value == at(i)) {
-        at(i) = base::back();
+  void unordered_remove(const Type& valueToRemove) {
+    for (Type& value : *this) {
+      if (valueToRemove == value) {
+        value = base::back();
         base::pop_back();
         return;
       }

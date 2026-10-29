@@ -82,8 +82,6 @@
  * src/Types/Enums/Slot.hpp
  * src/Battle/Helpers/Helpers.hpp
  * src/Types/Damage.hpp
- * src/Types/Enums/StabBoostKind.hpp
- * src/Types/Event.hpp
  * src/Components/Damage.hpp
  * src/Types/Enums/DamageRollKind.hpp
  * src/CalcDamage/Helpers.hpp
@@ -109,10 +107,12 @@
  * src/Components/BasePower.hpp
  * src/Components/CalcDamage/Aliases.hpp
  * src/Types/Enums/GameMechanics.hpp
+ * src/Types/Event.hpp
  * src/Types/MechanicConstants.hpp
  * src/Components/CalcDamage/CriticalHit.hpp
  * src/Components/CalcDamage/DamageRollSides.hpp
  * src/Components/CalcDamage/ModifyingEventRanTags.hpp
+ * src/Types/Enums/StabBoostKind.hpp
  * src/Components/CalcDamage/TemporaryMoveProperties.hpp
  * src/Components/CloneFromCloneTo.hpp
  * src/Components/Current.hpp
@@ -16752,10 +16752,10 @@ class maxSizedVector : public std::vector<Type> {
     base::push_back(value);
   }
 
-  void unordered_remove(const Type& value) {
-    for (size_type i = 0U; i < size() - 1U; i++) {
-      if (value == at(i)) {
-        at(i) = base::back();
+  void unordered_remove(const Type& valueToRemove) {
+    for (Type& value : *this) {
+      if (valueToRemove == value) {
+        value = base::back();
         base::pop_back();
         return;
       }
@@ -18216,10 +18216,10 @@ class fixedMemoryVector : private std::array<Type, Size> {
     used--;
   }
 
-  void unordered_remove(const Type& value) {
-    for (size_type i = 0U; i < Size - 1U; i++) {
-      if (value == at(i)) {
-        at(i) = back();
+  void unordered_remove(const Type& valueToRemove) {
+    for (Type& value : *this) {
+      if (valueToRemove == value) {
+        value = back();
         used--;
         return;
       }
@@ -18506,11 +18506,6 @@ using BackingHandle = entt::basic_handle<Registry>;
 namespace pokesim::types {
 class registry : public internal::BackingRegistry {
  public:
-  enum MetaFunctions : std::uint8_t {
-    COPY_TO_OTHER_REGISTRY,
-    ENTITY_COMPONENTS_EQUAL,
-  };
-
   static void checkEntity(entity_type entt, const registry& registry) {
     POKESIM_REQUIRE_NM(entt != entt::null);
     POKESIM_REQUIRE_NM(registry.valid(entt));
@@ -19025,40 +19020,6 @@ using typeEffectiveness =
 
 ///////////////////////// END OF src/Types/Damage.hpp //////////////////////////
 
-////////////////// START OF src/Types/Enums/StabBoostKind.hpp //////////////////
-
-namespace pokesim {
-enum class StabBoostKind : std::uint8_t {
-  NONE = 100U,
-  STANDARD = 150U,
-  STELLAR_NON_STAB = 120U,
-  ADAPTABILITY_OR_STELLAR_STAB_OR_TERA_STAB = 200U,
-  ADAPTABILITY_AND_TERA_STAB = 225U,
-};
-
-namespace internal {
-static constexpr inline std::array<StabBoostKind, 5U> VALID_STAB_BOOST_KINDS = {
-  StabBoostKind::NONE,
-  StabBoostKind::STANDARD,
-  StabBoostKind::STELLAR_NON_STAB,
-  StabBoostKind::ADAPTABILITY_OR_STELLAR_STAB_OR_TERA_STAB,
-  StabBoostKind::ADAPTABILITY_AND_TERA_STAB,
-};
-}  // namespace internal
-}  // namespace pokesim
-
-/////////////////// END OF src/Types/Enums/StabBoostKind.hpp ///////////////////
-
-///////////////////////// START OF src/Types/Event.hpp /////////////////////////
-
-namespace pokesim::types {
-using eventModifier = std::uint32_t;
-using effectMultiplier = float;
-using effectDuration = pokesim::internal::unsignedIntType<Constants::EffectDuration::MAX>;
-}  // namespace pokesim::types
-
-////////////////////////// END OF src/Types/Event.hpp //////////////////////////
-
 ////////////////////// START OF src/Components/Damage.hpp //////////////////////
 
 namespace pokesim {
@@ -19066,25 +19027,11 @@ struct Damage {
   types::damage val = Constants::Damage::DEFAULT;
 };
 
-struct DamageRollModifiers {
-  StabBoostKind stab = StabBoostKind::NONE;
-  types::typeEffectiveness typeEffectiveness = Constants::TypeEffectivenessShift::DEFAULT;
-  bool burn = false;
-  bool zOrMaxBrokenProtect = false;
-  types::eventModifier modifyDamageEvent = Constants::FIXED_POINT_SCALE;
-
-  bool operator==(const DamageRollModifiers& other) const {
-    return stab == other.stab && typeEffectiveness == other.typeEffectiveness && burn == other.burn &&
-           modifyDamageEvent == other.modifyDamageEvent && zOrMaxBrokenProtect == other.zOrMaxBrokenProtect;
-  }
-};
-
 struct DamageRolls {
   types::fixedMemoryVector<Damage, Constants::DamageRollCount::MAX> val{};
 
   DamageRolls() {}
   DamageRolls(const DamageRolls& other) : val(other.val) {}
-
   DamageRolls(const std::vector<types::damage>& list) {
     POKESIM_REQUIRE(list.size() <= Constants::DamageRollCount::MAX, "More damage rolls are being added than allowed.");
     for (types::damage damage : list) {
@@ -19092,8 +19039,8 @@ struct DamageRolls {
     }
   }
 
-  types::damage min() const { return val.back().val; }
-  types::damage max() const { return val.front().val; }
+  constexpr types::damage min() const { return val.back().val; }
+  constexpr types::damage max() const { return val.front().val; }
 };
 }  // namespace pokesim
 
@@ -19771,6 +19718,16 @@ static constexpr std::uint8_t TOTAL_GAME_MECHANICS_COUNT = 3U;
 
 /////////////////// END OF src/Types/Enums/GameMechanics.hpp ///////////////////
 
+///////////////////////// START OF src/Types/Event.hpp /////////////////////////
+
+namespace pokesim::types {
+using eventModifier = std::uint32_t;
+using effectMultiplier = float;
+using effectDuration = pokesim::internal::unsignedIntType<Constants::EffectDuration::MAX>;
+}  // namespace pokesim::types
+
+////////////////////////// END OF src/Types/Event.hpp //////////////////////////
+
 /////////////////// START OF src/Types/MechanicConstants.hpp ///////////////////
 
 // NOLINTBEGIN(readability-magic-numbers)
@@ -19822,11 +19779,48 @@ struct RanAfterModifyDamage {};
 
 ////////// END OF src/Components/CalcDamage/ModifyingEventRanTags.hpp //////////
 
+////////////////// START OF src/Types/Enums/StabBoostKind.hpp //////////////////
+
+namespace pokesim {
+enum class StabBoostKind : std::uint8_t {
+  NONE = 100U,
+  STANDARD = 150U,
+  STELLAR_NON_STAB = 120U,
+  ADAPTABILITY_OR_STELLAR_STAB_OR_TERA_STAB = 200U,
+  ADAPTABILITY_AND_TERA_STAB = 225U,
+};
+
+namespace internal {
+static constexpr inline std::array<StabBoostKind, 5U> VALID_STAB_BOOST_KINDS = {
+  StabBoostKind::NONE,
+  StabBoostKind::STANDARD,
+  StabBoostKind::STELLAR_NON_STAB,
+  StabBoostKind::ADAPTABILITY_OR_STELLAR_STAB_OR_TERA_STAB,
+  StabBoostKind::ADAPTABILITY_AND_TERA_STAB,
+};
+}  // namespace internal
+}  // namespace pokesim
+
+/////////////////// END OF src/Types/Enums/StabBoostKind.hpp ///////////////////
+
 //////// START OF src/Components/CalcDamage/TemporaryMoveProperties.hpp ////////
 
 namespace pokesim::internal::calc_damage {
 struct RealEffectiveStat {
   types::stat val = Constants::PokemonEffectiveStat::DEFAULT;
+};
+
+struct DamageRollModifiers {
+  StabBoostKind stab = StabBoostKind::NONE;
+  types::typeEffectiveness typeEffectiveness = Constants::TypeEffectivenessShift::DEFAULT;
+  bool burn = false;
+  bool zOrMaxBrokenProtect = false;
+  types::eventModifier damageEventModifier = Constants::FIXED_POINT_SCALE;
+
+  bool operator==(const DamageRollModifiers& other) const {
+    return stab == other.stab && typeEffectiveness == other.typeEffectiveness && burn == other.burn &&
+           damageEventModifier == other.damageEventModifier && zOrMaxBrokenProtect == other.zOrMaxBrokenProtect;
+  }
 };
 
 struct DamageFormulaVariables {
@@ -19841,6 +19835,15 @@ struct DamageFormulaVariables {
   }
 };
 
+struct TotalDamageDoneOverUses {
+  types::moveUses uses = 1U;
+  types::fixedMemoryVector<types::stat, Constants::DamageRollCount::MAX> hpRemaining{};
+
+  constexpr bool operator==(const TotalDamageDoneOverUses& other) const {
+    return uses == other.uses && hpRemaining == other.hpRemaining;
+  }
+};
+
 namespace tags {
 struct UsesAtk {};
 struct UsesDef {};
@@ -19850,6 +19853,8 @@ struct UsesDefAsOffense {};  // For Body Press
 
 struct IgnoresAttackingBoost {};
 struct IgnoresDefendingBoost {};
+
+struct NextSuccessiveUseMayChangeDamage {};
 }  // namespace tags
 }  // namespace pokesim::internal::calc_damage
 
@@ -20693,23 +20698,21 @@ struct BattleOutcome {};
 
 namespace calc_damage {
 struct UsesUntilKo {
- private:
   struct Uses {
     types::moveUses uses = 0U;
     types::damageRollIndex damageRollsIncluded = 0U;
 
-    bool operator==(const Uses& other) const {
+    constexpr bool operator==(const Uses& other) const {
       return uses == other.uses && damageRollsIncluded == other.damageRollsIncluded;
     }
   };
 
- public:
   types::fixedMemoryVector<Uses, Constants::DamageRollCount::MAX> val{};
 
-  const Uses& minUses() const { return val.front(); }
-  const Uses& maxUses() const { return val.back(); }
+  constexpr const Uses& minUses() const { return val.front(); }
+  constexpr const Uses& maxUses() const { return val.back(); }
 
-  bool guaranteedKo() const {
+  constexpr bool guaranteedKo() const {
     const Uses& min = minUses();
     return min.uses == 1U && min.damageRollsIncluded == Constants::DamageRollCount::MAX;
   }
@@ -22124,8 +22127,8 @@ struct MetronomeItem {
   static constexpr Volatile name(GameMechanics = {}) { return Volatile::METRONOME; }
   using MainSource = pokesim::dex::MetronomeItem;
 
-  static constexpr types::eventModifier onModifyDamageModifiers(GameMechanics, types::moveHits consecutiveHits) {
-    switch (consecutiveHits) {
+  static constexpr types::eventModifier onModifyDamageModifiers(GameMechanics, types::moveHits successiveHits) {
+    switch (successiveHits) {
       case 0U: return 4096U;
       case 1U: return 4915U;
       case 2U: return 5734U;
@@ -22137,16 +22140,17 @@ struct MetronomeItem {
   }
 
   static constexpr types::eventModifier onModifyDamageDenominator(GameMechanics) { return 4096U; }
+  static constexpr types::moveHits onModifyDamageMaxSuccessiveHits(GameMechanics) { return 5U; }
 
   static void onMoveFail(Simulation& simulation);
   static void onTryMove(Simulation& simulation);
   static void onModifyDamage(Simulation& simulation);
 
-  types::moveHits consecutiveHits{};
+  types::moveHits successiveHits{};
   Move lastMove = Move::NO_MOVE;
 
   constexpr bool operator==(const MetronomeItem& other) const {
-    return consecutiveHits == other.consecutiveHits && lastMove == other.lastMove;
+    return successiveHits == other.successiveHits && lastMove == other.lastMove;
   }
 };
 }  // namespace shared_name_effect
@@ -25020,8 +25024,6 @@ struct NaturesTable {
 //////////////// START OF src/Simulation/SimulationOptions.hpp /////////////////
 
 namespace pokesim {
-class Simulation;
-
 struct DamageRollOptions {
  private:
   DamageRollKind p1 = DamageRollKind::AVERAGE_DAMAGE;
@@ -25122,12 +25124,16 @@ struct Options {
   bool calculateUpToFoeHp = false;
   // KO chance is otherwise calculated if DamageRollKind::ALL_DAMAGE_ROLLS is set as the damage roll option
   bool noKoChanceCalculation = false;
+  bool successiveUseEffectsInKoChanceCalculation = false;
 
   DamageRollOptions damageRollOptions;
 
  public:
   constexpr bool getCalculateUpToFoeHp() const { return calculateUpToFoeHp; }
   constexpr bool getNoKoChanceCalculation() const { return noKoChanceCalculation; }
+  constexpr bool getSuccessiveUseEffectsInKoChanceCalculation() const {
+    return successiveUseEffectsInKoChanceCalculation;
+  }
   constexpr const DamageRollOptions& getDamageRollOptions() const { return damageRollOptions; }
 
   Options& setCalculateUpToFoeHp(bool newValue) {
@@ -25138,6 +25144,10 @@ struct Options {
     noKoChanceCalculation = newValue;
     return *this;
   }
+  Options& setSuccessiveUseEffectsInKoChanceCalculation(bool newValue) {
+    successiveUseEffectsInKoChanceCalculation = newValue;
+    return *this;
+  }
   Options& setDamageRollOptions(const DamageRollOptions& newValue) {
     damageRollOptions = newValue;
     return *this;
@@ -25145,6 +25155,7 @@ struct Options {
 
   bool operator==(const Options& other) const {
     return calculateUpToFoeHp == other.calculateUpToFoeHp && noKoChanceCalculation == other.noKoChanceCalculation &&
+           successiveUseEffectsInKoChanceCalculation == other.successiveUseEffectsInKoChanceCalculation &&
            damageRollOptions == other.damageRollOptions;
   }
 };
@@ -25159,6 +25170,7 @@ struct Options {
   bool calculateUpToFoeHp = false;
   // KO chance is otherwise calculated if DamageRollKind::ALL_DAMAGE_ROLLS is set as the damage roll option
   bool noKoChanceCalculation = false;
+  bool successiveUseEffectsInKoChanceCalculation = false;
 
   DamageRollOptions damageRollOptions;
 
@@ -25166,6 +25178,9 @@ struct Options {
   constexpr bool getReconsiderActiveEffects() const { return reconsiderActiveEffects; }
   constexpr bool getCalculateUpToFoeHp() const { return calculateUpToFoeHp; }
   constexpr bool getNoKoChanceCalculation() const { return noKoChanceCalculation; }
+  constexpr bool getSuccessiveUseEffectsInKoChanceCalculation() const {
+    return successiveUseEffectsInKoChanceCalculation;
+  }
   constexpr const DamageRollOptions& getDamageRollOptions() const { return damageRollOptions; }
 
   Options& setReconsiderActiveEffects(bool newValue) {
@@ -25180,6 +25195,10 @@ struct Options {
     noKoChanceCalculation = newValue;
     return *this;
   }
+  Options& setSuccessiveUseEffectsInKoChanceCalculation(bool newValue) {
+    successiveUseEffectsInKoChanceCalculation = newValue;
+    return *this;
+  }
   Options& setDamageRollOptions(const DamageRollOptions& newValue) {
     damageRollOptions = newValue;
     return *this;
@@ -25187,7 +25206,9 @@ struct Options {
 
   bool operator==(const Options& other) const {
     return reconsiderActiveEffects == other.reconsiderActiveEffects && calculateUpToFoeHp == other.calculateUpToFoeHp &&
-           noKoChanceCalculation == other.noKoChanceCalculation && damageRollOptions == other.damageRollOptions;
+           noKoChanceCalculation == other.noKoChanceCalculation &&
+           successiveUseEffectsInKoChanceCalculation == other.successiveUseEffectsInKoChanceCalculation &&
+           damageRollOptions == other.damageRollOptions;
   }
 };
 }  // namespace analyze_effect
@@ -25218,7 +25239,6 @@ struct EvaBoost;
 struct CloneTo;
 struct CurrentActionMoveSlot;
 struct Damage;
-struct DamageRollModifiers;
 struct DamageRolls;
 struct DisabledMoveSlots;
 struct Evs;
@@ -25346,7 +25366,9 @@ struct RandomEventIndex;
 struct MoveAccuracyBoost;
 namespace calc_damage {
 struct RealEffectiveStat;
+struct DamageRollModifiers;
 struct DamageFormulaVariables;
+struct TotalDamageDoneOverUses;
 }  // namespace calc_damage
 }  // namespace internal
 namespace action {
@@ -25462,7 +25484,13 @@ template <>
 void check(const internal::calc_damage::RealEffectiveStat&);
 
 template <>
+void check(const internal::calc_damage::DamageRollModifiers&);
+
+template <>
 void check(const internal::calc_damage::DamageFormulaVariables&);
+
+template <>
+void check(const internal::calc_damage::TotalDamageDoneOverUses&);
 
 // template <> void check(const CloneTo&);
 
@@ -25471,9 +25499,6 @@ void check(const CurrentActionMoveSlot&);
 
 template <>
 void check(const Damage&);
-
-template <>
-void check(const DamageRollModifiers&);
 
 template <>
 void check(const DamageRolls&);
@@ -27623,8 +27648,8 @@ struct SimulationSetupChecks {
       if (creationInfo.item == dex::Item::METRONOME) {
         POKESIM_REQUIRE_NM(registry->all_of<dex::MetronomeItem>(pokemonEntity));
         POKESIM_REQUIRE_NM(
-          registry->get<dex::MetronomeItem::Effect>(pokemonEntity).consecutiveHits ==
-          effectData.metronome->consecutiveHits);
+          registry->get<dex::MetronomeItem::Effect>(pokemonEntity).successiveHits ==
+          effectData.metronome->successiveHits);
         POKESIM_REQUIRE_NM(
           registry->get<dex::MetronomeItem::Effect>(pokemonEntity).lastMove == effectData.metronome->lastMove);
       }
@@ -29019,6 +29044,10 @@ constexpr bool isSpeciesTypeImmune(SpeciesTypes speciesTypes, dex::Type attackin
   return false;
 }
 
+constexpr bool doesDamageKo(types::stat hp, types::damage damage) {
+  return damage + Constants::PokemonCurrentHpStat::MIN >= hp;
+}
+
 namespace internal {
 bool doesMoveMakeContact(types::registry& registry, types::entity move, types::entity source);
 bool isGrounded(types::registry& registry, types::entity entity);
@@ -29499,6 +29528,12 @@ void removeTagFromEnum(AbilityProperty property, types::registry& registry, type
 //////////////// START OF src/Pokedex/Events/EventsHelpers.hpp /////////////////
 
 namespace pokesim::internal {
+inline void updateDamageEventModifier(
+  types::registry& registry, types::entity move, types::eventModifier numerator, types::eventModifier denominator) {
+  auto& modifier = registry.get<internal::calc_damage::DamageRollModifiers>(move);
+  modifier.damageEventModifier = internal::chainValueToModifier(modifier.damageEventModifier, numerator, denominator);
+}
+
 template <typename CurrentActionMovesAsType, typename... ExcludeComponents>
 struct ModifyDamage {
   static void run(
@@ -29509,8 +29544,7 @@ struct ModifyDamage {
         continue;
       }
 
-      DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
-      modifier.modifyDamageEvent = internal::chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
+      updateDamageEventModifier(registry, move, numerator, denominator);
     }
   }
 };
@@ -29788,7 +29822,13 @@ struct Checks : pokesim::debug::Checks {
       POKESIM_REQUIRE_NM(has<UsesUntilKo>(move));
 
       const UsesUntilKo& usesUntilKo = registry->get<UsesUntilKo>(move);
+      types::damageRollIndex totalDamageRollsIncluded = 0U;
+      for (const auto& useUntilKo : usesUntilKo.val) {
+        totalDamageRollsIncluded += useUntilKo.damageRollsIncluded;
+      }
+
       pokesim::debug::check(usesUntilKo);
+      POKESIM_REQUIRE_NM(totalDamageRollsIncluded == Constants::DamageRollCount::MAX);
       POKESIM_REQUIRE_NM(usesUntilKo.val.size() <= damageRolls.val.size());
     }
 

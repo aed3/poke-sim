@@ -694,6 +694,14 @@ struct StringMaker<pokesim::DamageRollKind> {
 };
 
 template <>
+struct StringMaker<pokesim::calc_damage::UsesUntilKo::Uses> {
+  static std::string convert(const pokesim::calc_damage::UsesUntilKo::Uses& uses) {
+    return "{uses: " + std::to_string((int)uses.uses) +
+           ", damageRollsIncluded: " + std::to_string((int)uses.damageRollsIncluded) + "}";
+  }
+};
+
+template <>
 struct StringMaker<std::nullopt_t> {
   static std::string convert(const std::nullopt_t&) { return "nullopt"; }
 };

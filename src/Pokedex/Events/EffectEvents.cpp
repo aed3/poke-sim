@@ -2,7 +2,7 @@
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Components/BaseEffectChance.hpp>
-#include <Components/Damage.hpp>
+#include <Components/CalcDamage/TemporaryMoveProperties.hpp>
 #include <Components/DisabledMoveSlots.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
@@ -36,7 +36,7 @@ struct ApplyBurnModifier {
   static void run(types::registry& registry, const CurrentActionMovesAsSourceType& moves) {
     for (types::entity move : moves) {
       if (registry.all_of<move::tags::Physical>(move) /*entt::exclude<ignores burn (i.e. Facade) tag>*/) {
-        registry.get<DamageRollModifiers>(move).burn = true;
+        registry.get<internal::calc_damage::DamageRollModifiers>(move).burn = true;
       }
     }
   }

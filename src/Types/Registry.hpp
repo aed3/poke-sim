@@ -48,11 +48,6 @@ using BackingHandle = entt::basic_handle<Registry>;
 namespace pokesim::types {
 class registry : public internal::BackingRegistry {
  public:
-  enum MetaFunctions : std::uint8_t {
-    COPY_TO_OTHER_REGISTRY,
-    ENTITY_COMPONENTS_EQUAL,
-  };
-
   static void checkEntity(entity_type entt, const registry& registry) {
     POKESIM_REQUIRE_NM(entt != entt::null);
     POKESIM_REQUIRE_NM(registry.valid(entt));

@@ -22,7 +22,7 @@ TEST_CASE(
 
     dex::MetronomeItem::Effect metronomeEffect = test.registry().get<dex::MetronomeItem::Effect>(entities.p1A);
     REQUIRE(metronomeEffect.lastMove == moveUsed);
-    REQUIRE(metronomeEffect.consecutiveHits == i);
+    REQUIRE(metronomeEffect.successiveHits == std::min((types::moveHits)5U, i));
 
     auto [initialHp, currentHp] = test.checks.getInitialAndCurrent<stat::CurrentHp>(entities.p2A);
     types::damage damage = initialHp.val - currentHp.val;
@@ -60,7 +60,7 @@ TEST_CASE(
 
     dex::MetronomeItem::Effect metronomeEffect = test.registry().get<dex::MetronomeItem::Effect>(entities.p1A);
     REQUIRE(metronomeEffect.lastMove == moveUsed);
-    REQUIRE(metronomeEffect.consecutiveHits == i);
+    REQUIRE(metronomeEffect.successiveHits == std::min((types::moveHits)5U, i));
 
     auto [initialHp, currentHp] = test.checks.getInitialAndCurrent<stat::CurrentHp>(entities.p2A);
     types::damage damage = initialHp.val - currentHp.val;
@@ -81,14 +81,14 @@ TEST_CASE(
 
   dex::MetronomeItem::Effect metronomeEffect = test.registry().get<dex::MetronomeItem::Effect>(entities.p1A);
   REQUIRE(metronomeEffect.lastMove == dex::Move::SPLASH);
-  REQUIRE(metronomeEffect.consecutiveHits == 0U);
+  REQUIRE(metronomeEffect.successiveHits == 0U);
 
   test.applyDecision(entities.battle, test.turnDecision(moveUsed, dex::Move::SPLASH));
 
   test.simulateOneNonBranchingBattle();
   metronomeEffect = test.registry().get<dex::MetronomeItem::Effect>(entities.p1A);
   REQUIRE(metronomeEffect.lastMove == moveUsed);
-  REQUIRE(metronomeEffect.consecutiveHits == 0U);
+  REQUIRE(metronomeEffect.successiveHits == 0U);
 
   auto [initialHp, currentHp] = test.checks.getInitialAndCurrent<stat::CurrentHp>(entities.p2A);
   types::damage damage = initialHp.val - currentHp.val;
@@ -115,7 +115,7 @@ TEST_CASE("Metronome: Resets after switching", "[Simulation][SimulateTurn][Singl
 
     dex::MetronomeItem::Effect metronomeEffect = test.registry().get<dex::MetronomeItem::Effect>(entities.p1A);
     REQUIRE(metronomeEffect.lastMove == dex::Move::TACKLE);
-    REQUIRE(metronomeEffect.consecutiveHits == i);
+    REQUIRE(metronomeEffect.successiveHits == std::min((types::moveHits)5U, i));
 
     if (i < resetAfterHits - 1U) {
       test.applyDecision(entities.battle, test.turnDecision(dex::Move::TACKLE, dex::Move::SPLASH));
@@ -140,7 +140,7 @@ TEST_CASE("Metronome: Resets after switching", "[Simulation][SimulateTurn][Singl
 
   dex::MetronomeItem::Effect metronomeEffect = test.registry().get<dex::MetronomeItem::Effect>(entities.p1A);
   REQUIRE(metronomeEffect.lastMove == dex::Move::TACKLE);
-  REQUIRE(metronomeEffect.consecutiveHits == 0U);
+  REQUIRE(metronomeEffect.successiveHits == 0U);
 }
 
 TEST_CASE("Metronome: Resets after failing", "[Simulation][SimulateTurn][SingleBattle][Item][Metronome]") {
@@ -160,7 +160,7 @@ TEST_CASE("Metronome: Resets after failing", "[Simulation][SimulateTurn][SingleB
 
     dex::MetronomeItem::Effect metronomeEffect = test.registry().get<dex::MetronomeItem::Effect>(entities.p1A);
     REQUIRE(metronomeEffect.lastMove == dex::Move::TACKLE);
-    REQUIRE(metronomeEffect.consecutiveHits == i);
+    REQUIRE(metronomeEffect.successiveHits == std::min((types::moveHits)5U, i));
 
     if (i == 0U) {
       test.applyDecision(entities.battle, test.turnDecision(dex::Move::TACKLE, dex::Move::SPLASH));
@@ -173,7 +173,7 @@ TEST_CASE("Metronome: Resets after failing", "[Simulation][SimulateTurn][SingleB
   auto entities = test.simulateOneNonBranchingBattle({}, Tags<Team>{});
   dex::MetronomeItem::Effect metronomeEffect = test.registry().get<dex::MetronomeItem::Effect>(entities.p1A);
   test.checks.checkUsedMovePokemon<dex::MetronomeItem::Effect>(entities.p1A);
-  REQUIRE(metronomeEffect.consecutiveHits == 0U);
+  REQUIRE(metronomeEffect.successiveHits == 0U);
 
   test.applyDecision(entities.battle, test.turnDecision(dex::Move::TACKLE, dex::Move::SPLASH));
   test.simulateOneNonBranchingBattle();
@@ -185,6 +185,121 @@ TEST_CASE("Metronome: Resets after failing", "[Simulation][SimulateTurn][SingleB
   test.checks.checkUsedMovePokemon<dex::MetronomeItem::Effect>(entities.p1A);
   metronomeEffect = test.registry().get<dex::MetronomeItem::Effect>(entities.p1A);
   REQUIRE(metronomeEffect.lastMove == dex::Move::TACKLE);
-  REQUIRE(metronomeEffect.consecutiveHits == 1U);
+  REQUIRE(metronomeEffect.successiveHits == 1U);
+}
+
+TEST_CASE("Metronome: Boosts with CalculateDamage", "[Simulation][CalculateDamage][SingleBattle][Item][Metronome]") {
+  types::moveHits metronomeHits = GENERATE(range(0U, 10U));
+  CAPTURE(metronomeHits);
+
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(test.pokemon(
+      dex::Species::EMPOLEON,
+      Level{25U},
+      dex::Item::METRONOME,
+      dex::MetronomeItem::Effect{metronomeHits, dex::Move::FLASH_CANNON},
+      dex::Move::FLASH_CANNON)),
+    test.side(test.pokemon(dex::Species::PANGORO, Level{50U}, dex::Move::SPLASH)),
+    CalcDamageInputInfo{Slot::P1A, Slot::P2A, {dex::Move::FLASH_CANNON}});
+
+  test.calcDamageOptions().setDamageRollOptions(DamageRollKind::MAX_DAMAGE);
+  test.calculateDamage().damageRollResults().each([&](const DamageRolls& damageRolls) {
+    types::damage idealDamage = 0U;
+    switch (metronomeHits) {
+      case 0U: idealDamage = 25U; break;
+      case 1U: idealDamage = 30U; break;
+      case 2U: idealDamage = 35U; break;
+      case 3U: idealDamage = 40U; break;
+      case 4U: idealDamage = 45U; break;
+      default:
+      case 5U: idealDamage = 50U; break;
+    }
+
+    REQUIRE(damageRolls.max() == idealDamage);
+  });
+}
+
+TEST_CASE(
+  "Metronome: Accounts for successive hits in CalculateDamage when option enabled",
+  "[Simulation][CalculateDamage][SingleBattle][Item][Metronome]") {
+  bool successiveUseEffectsInKoChanceCalculation = GENERATE(false, true);
+  CAPTURE(successiveUseEffectsInKoChanceCalculation);
+
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(test.pokemon(
+      dex::Species::EMPOLEON,
+      Level{25U},
+      dex::Item::METRONOME,
+      dex::MetronomeItem::Effect{0U, dex::Move::FLASH_CANNON},
+      dex::Move::FLASH_CANNON)),
+    test.side(test.pokemon(dex::Species::PANGORO, Level{50U}, dex::Move::SPLASH)),
+    CalcDamageInputInfo{Slot::P1A, Slot::P2A, {dex::Move::FLASH_CANNON}});
+  test.calcDamageOptions().setDamageRollOptions(DamageRollKind::ALL_DAMAGE_ROLLS);
+  test.calcDamageOptions().setNoKoChanceCalculation(false);
+
+  test.calcDamageOptions().setSuccessiveUseEffectsInKoChanceCalculation(successiveUseEffectsInKoChanceCalculation);
+  auto results = test.calculateDamage();
+
+  results.damageRollResults().each([&](const DamageRolls& damageRolls) {
+    DamageRolls idealDamageRolls{{25U, 24U, 24U, 24U, 24U, 24U, 22U, 22U, 22U, 22U, 22U, 22U, 21U, 21U, 21U, 21U}};
+    REQUIRE(idealDamageRolls.val.size() == damageRolls.val.size());
+    for (types::damageRollIndex i = 0U; i < idealDamageRolls.val.size(); i++) {
+      CAPTURE(i);
+      REQUIRE(idealDamageRolls.val[i].val == damageRolls.val[i].val);
+    }
+  });
+
+  results.usesUntilKoResults().each([&](const calc_damage::UsesUntilKo& usesUntilKo) {
+    calc_damage::UsesUntilKo idealUsesUntilKo;
+    if (successiveUseEffectsInKoChanceCalculation) {
+      idealUsesUntilKo = {{{5U, 6U}, {6U, 10U}}};
+    }
+    else {
+      idealUsesUntilKo = {{{7U, 6U}, {8U, 10U}}};
+    }
+    REQUIRE(idealUsesUntilKo.val.size() == usesUntilKo.val.size());
+    for (types::damageRollIndex i = 0U; i < idealUsesUntilKo.val.size(); i++) {
+      CAPTURE(i);
+      REQUIRE(idealUsesUntilKo.val[i] == usesUntilKo.val[i]);
+    }
+  });
+}
+
+TEST_CASE(
+  "Metronome: Does not boost when effect is not present",
+  "[Simulation][CalculateDamage][SingleBattle][Item][Metronome]") {
+  TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
+  test.setupBattle(
+    Turn{1U},
+    test.side(test.pokemon(dex::Species::EMPOLEON, Level{25U}, dex::Item::METRONOME, dex::Move::FLASH_CANNON)),
+    test.side(test.pokemon(dex::Species::PANGORO, Level{50U}, dex::Move::SPLASH)),
+    CalcDamageInputInfo{Slot::P1A, Slot::P2A, {dex::Move::FLASH_CANNON}});
+  test.calcDamageOptions().setDamageRollOptions(DamageRollKind::ALL_DAMAGE_ROLLS);
+  test.calcDamageOptions().setNoKoChanceCalculation(false);
+
+  test.calcDamageOptions().setSuccessiveUseEffectsInKoChanceCalculation(true);
+  auto results = test.calculateDamage();
+
+  results.damageRollResults().each([&](const DamageRolls& damageRolls) {
+    DamageRolls idealDamageRolls{{25U, 24U, 24U, 24U, 24U, 24U, 22U, 22U, 22U, 22U, 22U, 22U, 21U, 21U, 21U, 21U}};
+    REQUIRE(idealDamageRolls.val.size() == damageRolls.val.size());
+    for (types::damageRollIndex i = 0U; i < idealDamageRolls.val.size(); i++) {
+      CAPTURE(i);
+      REQUIRE(idealDamageRolls.val[i].val == damageRolls.val[i].val);
+    }
+  });
+
+  results.usesUntilKoResults().each([&](const calc_damage::UsesUntilKo& usesUntilKo) {
+    calc_damage::UsesUntilKo idealUsesUntilKo{{{7U, 6U}, {8U, 10U}}};
+    REQUIRE(idealUsesUntilKo.val.size() == usesUntilKo.val.size());
+    for (types::damageRollIndex i = 0U; i < idealUsesUntilKo.val.size(); i++) {
+      CAPTURE(i);
+      REQUIRE(idealUsesUntilKo.val[i] == usesUntilKo.val[i]);
+    }
+  });
 }
 }  // namespace pokesim

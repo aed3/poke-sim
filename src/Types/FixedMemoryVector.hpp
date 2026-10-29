@@ -91,10 +91,10 @@ class fixedMemoryVector : private std::array<Type, Size> {
     used--;
   }
 
-  void unordered_remove(const Type& value) {
-    for (size_type i = 0U; i < Size - 1U; i++) {
-      if (value == at(i)) {
-        at(i) = back();
+  void unordered_remove(const Type& valueToRemove) {
+    for (Type& value : *this) {
+      if (valueToRemove == value) {
+        value = back();
         used--;
         return;
       }

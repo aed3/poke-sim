@@ -220,8 +220,8 @@ struct SimulationSetupChecks {
       if (creationInfo.item == dex::Item::METRONOME) {
         POKESIM_REQUIRE_NM(registry->all_of<dex::MetronomeItem>(pokemonEntity));
         POKESIM_REQUIRE_NM(
-          registry->get<dex::MetronomeItem::Effect>(pokemonEntity).consecutiveHits ==
-          effectData.metronome->consecutiveHits);
+          registry->get<dex::MetronomeItem::Effect>(pokemonEntity).successiveHits ==
+          effectData.metronome->successiveHits);
         POKESIM_REQUIRE_NM(
           registry->get<dex::MetronomeItem::Effect>(pokemonEntity).lastMove == effectData.metronome->lastMove);
       }

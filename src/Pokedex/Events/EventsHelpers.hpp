@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Battle/Helpers/IntegerModify.hpp>
-#include <Components/Damage.hpp>
+#include <Components/CalcDamage/TemporaryMoveProperties.hpp>
 #include <Components/EventModifier.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Types/Entity.hpp>
@@ -11,6 +11,12 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim::internal {
+inline void updateDamageEventModifier(
+  types::registry& registry, types::entity move, types::eventModifier numerator, types::eventModifier denominator) {
+  auto& modifier = registry.get<internal::calc_damage::DamageRollModifiers>(move);
+  modifier.damageEventModifier = internal::chainValueToModifier(modifier.damageEventModifier, numerator, denominator);
+}
+
 template <typename CurrentActionMovesAsType, typename... ExcludeComponents>
 struct ModifyDamage {
   static void run(
@@ -21,8 +27,7 @@ struct ModifyDamage {
         continue;
       }
 
-      DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
-      modifier.modifyDamageEvent = internal::chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
+      updateDamageEventModifier(registry, move, numerator, denominator);
     }
   }
 };
