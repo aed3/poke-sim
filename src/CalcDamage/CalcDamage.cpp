@@ -58,7 +58,7 @@ auto getMoveFilter(Simulation& simulation) {
 void clearRunVariables(Simulation& simulation) {
   simulation.registry.clear<
     tags::Crit,
-    DamageRollModifiers,
+    internal::calc_damage::DamageRollModifiers,
     internal::calc_damage::DamageFormulaVariables,
     internal::calc_damage::tags::UsesAtk,
     internal::calc_damage::tags::UsesDef,
@@ -70,7 +70,8 @@ void clearRunVariables(Simulation& simulation) {
   simulation.removeFromEntities<Damage, pokesim::tags::CalculateDamage>();
 }
 
-void checkForAndApplyStab(types::handle moveHandle, Attacker attacker, TypeName type, DamageRollModifiers& modifier) {
+void checkForAndApplyStab(
+  types::handle moveHandle, Attacker attacker, TypeName type, internal::calc_damage::DamageRollModifiers& modifier) {
   SpeciesTypes attackerTypes = moveHandle.registry()->get<SpeciesTypes>(attacker.val);
 
   if (attackerTypes.has(type.val)) {
@@ -79,7 +80,8 @@ void checkForAndApplyStab(types::handle moveHandle, Attacker attacker, TypeName 
 }
 
 void checkForAndApplyTypeEffectiveness(
-  types::handle moveHandle, Defender defender, TypeName type, DamageRollModifiers& modifier, const Pokedex& pokedex) {
+  types::handle moveHandle, Defender defender, TypeName type, internal::calc_damage::DamageRollModifiers& modifier,
+  const Pokedex& pokedex) {
   SpeciesTypes defenderTypes = moveHandle.registry()->get<SpeciesTypes>(defender.val);
 
   modifier.typeEffectiveness = getAttackEffectiveness(defenderTypes, type.val, pokedex.typeChart());
@@ -112,7 +114,7 @@ void setDefendingSide(types::handle moveHandle, Defender defender) {
   }
 }
 
-void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Pokedex& pokedex) {
+void modifyDamage(Damage& damage, const internal::calc_damage::DamageRollModifiers& modifiers, const Pokedex& pokedex) {
   types::effectMultiplier stab = ((std::underlying_type_t<StabBoostKind>)modifiers.stab) / 100.0F;
   damage.val = (types::damage)internal::fixedPointMultiply(damage.val, stab);
 
@@ -125,7 +127,7 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Po
   }
 
   damage.val = internal::applyChainedModifier(damage.val, typeEffectivenessModifier);
-  damage.val = internal::applyChainedModifier(damage.val, modifiers.modifyDamageEvent);
+  damage.val = internal::applyChainedModifier(damage.val, modifiers.damageEventModifier);
 
   if (modifiers.burn) {
     types::effectMultiplier multiplier = pokedex.getStaticValue<dex::Burn::physicalDamageMultiplier>();
@@ -137,7 +139,8 @@ void modifyDamage(Damage& damage, const DamageRollModifiers& modifiers, const Po
 }
 
 void calculateAllDamageRolls(
-  DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
+  DamageRolls& damageRolls, Damage damage, const internal::calc_damage::DamageRollModifiers& modifier,
+  const Pokedex& pokedex) {
   for (types::damageRollIndex i = 0U; i < Constants::DamageRollCount::MAX; i++) {
     Damage& damageRoll = damageRolls.val.emplace_back(damage);
     damageRoll.val = computeDamageRoll(damageRoll.val, i);
@@ -146,21 +149,24 @@ void calculateAllDamageRolls(
 }
 
 void applyAverageDamageRollModifier(
-  DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
+  DamageRolls& damageRolls, Damage damage, const internal::calc_damage::DamageRollModifiers& modifier,
+  const Pokedex& pokedex) {
   modifyDamage(damage, modifier, pokedex);
   damage.val = computeAverageDamageRoll(damage.val);
   damageRolls.val.emplace_back(damage);
 }
 
 void applyMinDamageRollModifier(
-  DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
+  DamageRolls& damageRolls, Damage damage, const internal::calc_damage::DamageRollModifiers& modifier,
+  const Pokedex& pokedex) {
   damage.val = computeMinDamageRoll(damage.val);
   modifyDamage(damage, modifier, pokedex);
   damageRolls.val.emplace_back(damage);
 }
 
 void applyDamageRollModifier(
-  DamageRolls& damageRolls, Damage damage, const DamageRollModifiers& modifier, const Pokedex& pokedex) {
+  DamageRolls& damageRolls, Damage damage, const internal::calc_damage::DamageRollModifiers& modifier,
+  const Pokedex& pokedex) {
   modifyDamage(damage, modifier, pokedex);
   damageRolls.val.emplace_back(damage);
 }
@@ -245,15 +251,49 @@ void calculateBaseDamage(
   moveHandle.emplace<Damage>(damage);
 }
 
-void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, Defender defender) {
+void applyTotalDamageDoneOverUses(types::handle moveHandle, const DamageRolls& damageRolls, Defender defender) {
   stat::CurrentHp defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
+  if (doesDamageKo(defenderHp.val, damageRolls.min())) {
+    return;
+  }
+
   UsesUntilKo usesUntilKo;
+  internal::calc_damage::TotalDamageDoneOverUses totalDamageDoneOverUses;
   POKESIM_REQUIRE(
     damageRolls.val.size() == Constants::DamageRollCount::MAX,
     "All the damage rolls are needed to calculate this correctly.");
 
+  types::damageRollIndex damageRollsKOed = 0U;
   for (Damage damageRoll : damageRolls.val) {
-    types::moveUses uses = (types::moveUses)std::ceil(defenderHp.val / (types::probability)damageRoll.val);
+    types::stat hpRemaining = Constants::PokemonCurrentHpStat::MIN;
+    if (doesDamageKo(defenderHp.val, damageRoll.val)) {
+      damageRollsKOed++;
+    }
+    else {
+      hpRemaining = defenderHp.val - damageRoll.val;
+    }
+    totalDamageDoneOverUses.hpRemaining.push_back(hpRemaining);
+  }
+
+  if (damageRollsKOed) {
+    usesUntilKo.val.push_back({1U, damageRollsKOed});
+  }
+
+  moveHandle.emplace<UsesUntilKo>(usesUntilKo);
+  if (damageRollsKOed != damageRolls.val.size()) {
+    moveHandle.emplace<internal::calc_damage::TotalDamageDoneOverUses>(totalDamageDoneOverUses);
+  }
+}
+
+void applyUsesUntilKo(types::handle moveHandle, const DamageRolls& damageRolls, Defender defender) {
+  POKESIM_REQUIRE(
+    damageRolls.val.size() == Constants::DamageRollCount::MAX,
+    "All the damage rolls are needed to calculate this correctly.");
+  UsesUntilKo usesUntilKo;
+  stat::CurrentHp defenderHp = moveHandle.registry()->get<stat::CurrentHp>(defender.val);
+
+  for (Damage damageRoll : damageRolls.val) {
+    types::moveUses uses = (types::moveUses)std::ceil(defenderHp.val / (float)damageRoll.val);
     if (usesUntilKo.val.empty() || usesUntilKo.val.back().uses != uses) {
       usesUntilKo.val.push_back({uses});
     }
@@ -407,6 +447,7 @@ void applySideDamageRollOptions(Simulation& simulation) {
   DamageRollOptions damageRollOptions;
   bool noKoChanceCalculation = false;
   bool calculateUpToFoeHp = false;
+  bool successiveUseEffectsInKoCalculation = false;
   if constexpr (isSimulateTurn) {
     damageRollOptions = simulation.simulateTurnOptions.getDamageRollsConsidered();
     calculateUpToFoeHp = true;
@@ -415,11 +456,15 @@ void applySideDamageRollOptions(Simulation& simulation) {
     damageRollOptions = simulation.calculateDamageOptions.getDamageRollOptions();
     calculateUpToFoeHp = simulation.calculateDamageOptions.getCalculateUpToFoeHp();
     noKoChanceCalculation = simulation.calculateDamageOptions.getNoKoChanceCalculation();
+    successiveUseEffectsInKoCalculation =
+      simulation.calculateDamageOptions.getSuccessiveUseEffectsInKoChanceCalculation();
   }
   else if constexpr (isAnalyzeEffect) {
     damageRollOptions = simulation.analyzeEffectOptions.getDamageRollOptions();
     calculateUpToFoeHp = simulation.analyzeEffectOptions.getCalculateUpToFoeHp();
-    noKoChanceCalculation = simulation.calculateDamageOptions.getNoKoChanceCalculation();
+    noKoChanceCalculation = simulation.analyzeEffectOptions.getNoKoChanceCalculation();
+    successiveUseEffectsInKoCalculation =
+      simulation.analyzeEffectOptions.getSuccessiveUseEffectsInKoChanceCalculation();
   }
 
   if (damageRollOptions.sidesMatch()) {
@@ -429,7 +474,12 @@ void applySideDamageRollOptions(Simulation& simulation) {
       ApplyDamageRollKind(simulation, damageRollOptions.getP1());
     }
     else {
-      ApplyDamageRollKind(simulation, damageRollOptions.getP1(), calculateUpToFoeHp, noKoChanceCalculation);
+      ApplyDamageRollKind(
+        simulation,
+        damageRollOptions.getP1(),
+        calculateUpToFoeHp,
+        noKoChanceCalculation,
+        successiveUseEffectsInKoCalculation);
     }
     simulation.removeFromEntities<internal::tags::ApplySideDamageRollOptions>();
   }
@@ -442,7 +492,12 @@ void applySideDamageRollOptions(Simulation& simulation) {
       ApplyDamageRollKind(simulation, damageRollOptions.getP1());
     }
     else {
-      ApplyDamageRollKind(simulation, damageRollOptions.getP1(), calculateUpToFoeHp, noKoChanceCalculation);
+      ApplyDamageRollKind(
+        simulation,
+        damageRollOptions.getP1(),
+        calculateUpToFoeHp,
+        noKoChanceCalculation,
+        successiveUseEffectsInKoCalculation);
     }
     simulation.registry.clear<internal::tags::ApplySideDamageRollOptions, internal::calc_damage::tags::P1Defending>();
 
@@ -452,7 +507,12 @@ void applySideDamageRollOptions(Simulation& simulation) {
       ApplyDamageRollKind(simulation, damageRollOptions.getP2());
     }
     else {
-      ApplyDamageRollKind(simulation, damageRollOptions.getP2(), calculateUpToFoeHp, noKoChanceCalculation);
+      ApplyDamageRollKind(
+        simulation,
+        damageRollOptions.getP2(),
+        calculateUpToFoeHp,
+        noKoChanceCalculation,
+        successiveUseEffectsInKoCalculation);
     }
     simulation.registry.clear<internal::tags::ApplySideDamageRollOptions, internal::calc_damage::tags::P2Defending>();
   }
@@ -490,7 +550,8 @@ void setIfMoveCrits(Simulation& simulation, DamageRollKind damageRollKind) {
 
 template <typename SimulationTag>
 void applyDamageRollsAndModifiers(
-  Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp, bool noKoChanceCalculation) {
+  Simulation& simulation, DamageRollKind damageRollKind, bool calculateUpToFoeHp, bool noKoChanceCalculation,
+  bool successiveUseEffectInKoChanceCalculation) {
   POKESIM_REQUIRE(
     damageRollKind != DamageRollKind::NONE,
     "Cannot calculate damage without knowing what rolls to consider.");
@@ -506,7 +567,10 @@ void applyDamageRollsAndModifiers(
     return;
   }
 
-  simulation.addToEntities<DamageRolls, DamageRollModifiers, internal::tags::ApplySideDamageRollOptions>();
+  simulation.addToEntities<
+    DamageRolls,
+    internal::calc_damage::DamageRollModifiers,
+    internal::tags::ApplySideDamageRollOptions>();
   if (damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
     moveFilter.view<calculateAllDamageRolls>(simulation.pokedex());
   }
@@ -536,7 +600,13 @@ void applyDamageRollsAndModifiers(
       moveFilter.view<reduceDamageRollsToDefenderHp>();
     }
     if (!noKoChanceCalculation && damageRollKind & DamageRollKind::ALL_DAMAGE_ROLLS) {
-      moveFilter.view<applyUsesUntilKo, Tags<SimulationTag>>();
+      if (successiveUseEffectInKoChanceCalculation) {
+        moveFilter.view<applyTotalDamageDoneOverUses, Tags<SimulationTag>>();
+        moveFilter.view<applyUsesUntilKo, Tags<SimulationTag>, entt::exclude_t<UsesUntilKo>>();
+      }
+      else {
+        moveFilter.view<applyUsesUntilKo, Tags<SimulationTag>>();
+      }
     }
   }
 }
@@ -668,6 +738,107 @@ void setDamageRollModifiers(Simulation& simulation) {
   internal::runModifyDamageEvent(simulation);
 }
 
+void resetDamageRollModifiers(
+  internal::calc_damage::DamageRollModifiers& damageRollModifiers,
+  const internal::calc_damage::TotalDamageDoneOverUses&) {
+  damageRollModifiers = {};
+}
+
+template <typename BoostType, typename StatType>
+void changeStatForSuccessiveBoost(
+  types::registry&, BoostType, const internal::calc_damage::TotalDamageDoneOverUses&,
+  internal::calc_damage::DamageFormulaVariables&) {
+  // Contrary and Mirror Armor
+}
+
+void updateTotalDamageOverUses(
+  types::handle moveHandle, internal::calc_damage::TotalDamageDoneOverUses& totalDamageDoneOverUses,
+  const internal::calc_damage::DamageFormulaVariables& damageFormulaVariables,
+  const internal::calc_damage::DamageRollModifiers& modifier, UsesUntilKo& usesUntilKo, Defender defender,
+  const Pokedex& pokedex) {
+  Damage damage{computeBaseDamage(
+    damageFormulaVariables.power,
+    damageFormulaVariables.attackingLevel,
+    damageFormulaVariables.attackingStat,
+    damageFormulaVariables.defendingStat)};
+
+  if (moveHandle.all_of<tags::Crit>()) {
+    applyCritDamageIncrease(damage, pokedex.getStaticValue<MechanicConstants::CRIT_MULTIPLIER>());
+  }
+
+  DamageRolls updatedDamageRolls;
+  calculateAllDamageRolls(updatedDamageRolls, damage, modifier, pokedex);
+
+  bool finishedFindingUses = true;
+  bool nextHitDoesSameDamage = !moveHandle.all_of<internal::calc_damage::tags::NextSuccessiveUseMayChangeDamage>();
+  UsesUntilKo::Uses* usesThatKOed = nullptr;
+
+  for (types::damageRollIndex i = 0U; i < updatedDamageRolls.val.size(); i++) {
+    types::stat& hpRemaining = totalDamageDoneOverUses.hpRemaining[i];
+    if (hpRemaining == Constants::PokemonCurrentHpStat::MIN) {
+      continue;
+    }
+
+    types::damage damageRoll = updatedDamageRolls.val[i].val;
+    if (doesDamageKo(hpRemaining, damageRoll)) {
+      hpRemaining = Constants::PokemonCurrentHpStat::MIN;
+      if (!usesThatKOed) {
+        usesThatKOed = &usesUntilKo.val.emplace_back(types::moveUses(totalDamageDoneOverUses.uses + 1U));
+      }
+      usesThatKOed->damageRollsIncluded++;
+    }
+    else if (nextHitDoesSameDamage) {
+      types::moveUses uses = (types::moveUses)std::ceil(hpRemaining / (float)damageRoll) + totalDamageDoneOverUses.uses;
+      if (usesUntilKo.val.empty() || usesUntilKo.val.back().uses != uses) {
+        usesUntilKo.val.push_back({uses});
+      }
+
+      usesUntilKo.val.back().damageRollsIncluded++;
+    }
+    else {
+      hpRemaining -= damageRoll;
+      finishedFindingUses = false;
+    }
+  }
+
+  totalDamageDoneOverUses.uses++;
+
+  if (finishedFindingUses) {
+    moveHandle.remove<internal::calc_damage::TotalDamageDoneOverUses>();
+  }
+}
+
+void usesUntilKoFromSuccessiveUseEffects(Simulation& simulation) {
+  using EffectChangeLimits = Constants::PokemonStatBoost;
+  auto iterations = EffectChangeLimits::MIN;
+  while (!simulation.hasNone<internal::calc_damage::TotalDamageDoneOverUses>()) {
+    POKESIM_REQUIRE(
+      iterations <= EffectChangeLimits::MAX,
+      "Effects changed the damage amount more than should be possible.");
+
+    simulation.view<resetDamageRollModifiers>();
+    simulation.view<
+      changeStatForSuccessiveBoost<AtkBoost, stat::Atk>,
+      Tags<internal::calc_damage::tags::UsesAtk, move::effect::tags::Primary, move::effect::tags::MoveSource>>();
+    simulation.view<
+      changeStatForSuccessiveBoost<SpaBoost, stat::Spa>,
+      Tags<internal::calc_damage::tags::UsesSpa, move::effect::tags::Primary, move::effect::tags::MoveSource>>();
+    simulation.view<
+      changeStatForSuccessiveBoost<DefBoost, stat::Def>,
+      Tags<internal::calc_damage::tags::UsesDef, move::effect::tags::Primary, move::effect::tags::MoveTarget>>();
+    simulation.view<
+      changeStatForSuccessiveBoost<SpdBoost, stat::Spd>,
+      Tags<internal::calc_damage::tags::UsesSpd, move::effect::tags::Primary, move::effect::tags::MoveTarget>>();
+    // Knock Off, Stamina, Water Compaction, Weak Armor, single use berries
+
+    setDamageRollModifiers(simulation);
+    simulation.view<updateTotalDamageOverUses>(simulation.pokedex());
+    simulation.removeFromEntities<internal::calc_damage::tags::NextSuccessiveUseMayChangeDamage>();
+
+    iterations++;
+  }
+}
+
 void calcDamage(Simulation& simulation) {
   auto moveFilter = getMoveFilter(simulation);
   if (moveFilter.hasNoneSelected()) {
@@ -693,7 +864,7 @@ void calcDamage(Simulation& simulation) {
   moveFilter.view<applyCritDamageIncrease, Tags<tags::Crit>>(
     simulation.pokedex().getStaticValue<MechanicConstants::CRIT_MULTIPLIER>());
 
-  simulation.addToEntities<DamageRollModifiers, Damage, pokesim::tags::CurrentMoveHit>();
+  simulation.addToEntities<internal::calc_damage::DamageRollModifiers, Damage, pokesim::tags::CurrentMoveHit>();
   setDamageRollModifiers(simulation);
 
   applySideDamageRollOptions<SimulateTurn, applyDamageRollsAndModifiers<SimulateTurn>>(simulation);
@@ -701,6 +872,8 @@ void calcDamage(Simulation& simulation) {
   applySideDamageRollOptions<AnalyzeEffect, applyDamageRollsAndModifiers<AnalyzeEffect>>(simulation);
 
   internal::runAfterModifyDamageEvent(simulation);
+
+  usesUntilKoFromSuccessiveUseEffects(simulation);
 
   clearRunVariables(simulation);
 }

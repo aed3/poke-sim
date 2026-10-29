@@ -283,7 +283,13 @@ struct Checks : pokesim::debug::Checks {
       POKESIM_REQUIRE_NM(has<UsesUntilKo>(move));
 
       const UsesUntilKo& usesUntilKo = registry->get<UsesUntilKo>(move);
+      types::damageRollIndex totalDamageRollsIncluded = 0U;
+      for (const auto& useUntilKo : usesUntilKo.val) {
+        totalDamageRollsIncluded += useUntilKo.damageRollsIncluded;
+      }
+
       pokesim::debug::check(usesUntilKo);
+      POKESIM_REQUIRE_NM(totalDamageRollsIncluded == Constants::DamageRollCount::MAX);
       POKESIM_REQUIRE_NM(usesUntilKo.val.size() <= damageRolls.val.size());
     }
 

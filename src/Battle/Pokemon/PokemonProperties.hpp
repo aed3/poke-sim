@@ -3,6 +3,7 @@
 #include <Components/SpeciesTypes.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/TypeChart.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Damage.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Enums/Type.hpp>
@@ -50,6 +51,10 @@ constexpr bool isSpeciesTypeImmune(SpeciesTypes speciesTypes, dex::Type attackin
     }
   }
   return false;
+}
+
+constexpr bool doesDamageKo(types::stat hp, types::damage damage) {
+  return damage + Constants::PokemonCurrentHpStat::MIN >= hp;
 }
 
 namespace internal {

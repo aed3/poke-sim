@@ -4,13 +4,9 @@
 #include <Types/Enums/DamageRollKind.hpp>
 #include <Types/Random.hpp>
 #include <Types/State.hpp>
-#include <entt/signal/delegate.hpp>
 #include <optional>
-#include <type_traits>
 
 namespace pokesim {
-class Simulation;
-
 struct DamageRollOptions {
  private:
   DamageRollKind p1 = DamageRollKind::AVERAGE_DAMAGE;
@@ -111,12 +107,16 @@ struct Options {
   bool calculateUpToFoeHp = false;
   // KO chance is otherwise calculated if DamageRollKind::ALL_DAMAGE_ROLLS is set as the damage roll option
   bool noKoChanceCalculation = false;
+  bool successiveUseEffectsInKoChanceCalculation = false;
 
   DamageRollOptions damageRollOptions;
 
  public:
   constexpr bool getCalculateUpToFoeHp() const { return calculateUpToFoeHp; }
   constexpr bool getNoKoChanceCalculation() const { return noKoChanceCalculation; }
+  constexpr bool getSuccessiveUseEffectsInKoChanceCalculation() const {
+    return successiveUseEffectsInKoChanceCalculation;
+  }
   constexpr const DamageRollOptions& getDamageRollOptions() const { return damageRollOptions; }
 
   Options& setCalculateUpToFoeHp(bool newValue) {
@@ -127,6 +127,10 @@ struct Options {
     noKoChanceCalculation = newValue;
     return *this;
   }
+  Options& setSuccessiveUseEffectsInKoChanceCalculation(bool newValue) {
+    successiveUseEffectsInKoChanceCalculation = newValue;
+    return *this;
+  }
   Options& setDamageRollOptions(const DamageRollOptions& newValue) {
     damageRollOptions = newValue;
     return *this;
@@ -134,6 +138,7 @@ struct Options {
 
   bool operator==(const Options& other) const {
     return calculateUpToFoeHp == other.calculateUpToFoeHp && noKoChanceCalculation == other.noKoChanceCalculation &&
+           successiveUseEffectsInKoChanceCalculation == other.successiveUseEffectsInKoChanceCalculation &&
            damageRollOptions == other.damageRollOptions;
   }
 };
@@ -148,6 +153,7 @@ struct Options {
   bool calculateUpToFoeHp = false;
   // KO chance is otherwise calculated if DamageRollKind::ALL_DAMAGE_ROLLS is set as the damage roll option
   bool noKoChanceCalculation = false;
+  bool successiveUseEffectsInKoChanceCalculation = false;
 
   DamageRollOptions damageRollOptions;
 
@@ -155,6 +161,9 @@ struct Options {
   constexpr bool getReconsiderActiveEffects() const { return reconsiderActiveEffects; }
   constexpr bool getCalculateUpToFoeHp() const { return calculateUpToFoeHp; }
   constexpr bool getNoKoChanceCalculation() const { return noKoChanceCalculation; }
+  constexpr bool getSuccessiveUseEffectsInKoChanceCalculation() const {
+    return successiveUseEffectsInKoChanceCalculation;
+  }
   constexpr const DamageRollOptions& getDamageRollOptions() const { return damageRollOptions; }
 
   Options& setReconsiderActiveEffects(bool newValue) {
@@ -169,6 +178,10 @@ struct Options {
     noKoChanceCalculation = newValue;
     return *this;
   }
+  Options& setSuccessiveUseEffectsInKoChanceCalculation(bool newValue) {
+    successiveUseEffectsInKoChanceCalculation = newValue;
+    return *this;
+  }
   Options& setDamageRollOptions(const DamageRollOptions& newValue) {
     damageRollOptions = newValue;
     return *this;
@@ -176,7 +189,9 @@ struct Options {
 
   bool operator==(const Options& other) const {
     return reconsiderActiveEffects == other.reconsiderActiveEffects && calculateUpToFoeHp == other.calculateUpToFoeHp &&
-           noKoChanceCalculation == other.noKoChanceCalculation && damageRollOptions == other.damageRollOptions;
+           noKoChanceCalculation == other.noKoChanceCalculation &&
+           successiveUseEffectsInKoChanceCalculation == other.successiveUseEffectsInKoChanceCalculation &&
+           damageRollOptions == other.damageRollOptions;
   }
 };
 }  // namespace analyze_effect

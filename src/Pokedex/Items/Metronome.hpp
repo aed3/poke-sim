@@ -35,8 +35,8 @@ struct MetronomeItem {
   static constexpr Volatile name(GameMechanics = {}) { return Volatile::METRONOME; }
   using MainSource = pokesim::dex::MetronomeItem;
 
-  static constexpr types::eventModifier onModifyDamageModifiers(GameMechanics, types::moveHits consecutiveHits) {
-    switch (consecutiveHits) {
+  static constexpr types::eventModifier onModifyDamageModifiers(GameMechanics, types::moveHits successiveHits) {
+    switch (successiveHits) {
       case 0U: return 4096U;
       case 1U: return 4915U;
       case 2U: return 5734U;
@@ -48,16 +48,17 @@ struct MetronomeItem {
   }
 
   static constexpr types::eventModifier onModifyDamageDenominator(GameMechanics) { return 4096U; }
+  static constexpr types::moveHits onModifyDamageMaxSuccessiveHits(GameMechanics) { return 5U; }
 
   static void onMoveFail(Simulation& simulation);
   static void onTryMove(Simulation& simulation);
   static void onModifyDamage(Simulation& simulation);
 
-  types::moveHits consecutiveHits{};
+  types::moveHits successiveHits{};
   Move lastMove = Move::NO_MOVE;
 
   constexpr bool operator==(const MetronomeItem& other) const {
-    return consecutiveHits == other.consecutiveHits && lastMove == other.lastMove;
+    return successiveHits == other.successiveHits && lastMove == other.lastMove;
   }
 };
 }  // namespace shared_name_effect

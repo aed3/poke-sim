@@ -5,6 +5,7 @@
 #include <Battle/Pokemon/PokemonProperties.hpp>
 #include <Components/ActionQueue.hpp>
 #include <Components/CalcDamage/ModifyingEventRanTags.hpp>
+#include <Components/CalcDamage/TemporaryMoveProperties.hpp>
 #include <Components/Current.hpp>
 #include <Components/Damage.hpp>
 #include <Components/Effects/AddedFlinchChance.hpp>
@@ -105,58 +106,109 @@ void lifeOrbOnAfterMove(
   }
 }
 
-void metronomeOnTryMove(types::registry& registry, Battle battle, MetronomeItem::Effect& metronomeEffect) {
+void metronomeOnTryMove(
+  types::registry& registry, Battle battle, MetronomeItem::Effect& metronomeEffect, types::moveHits maxSuccessiveHits) {
   Move currentMove = registry.get<MoveName>(registry.get<CurrentAction>(battle.val).action).val;
   if (metronomeEffect.lastMove == currentMove) {
-    metronomeEffect.consecutiveHits++;
+    metronomeEffect.successiveHits = std::min(maxSuccessiveHits, types::moveHits(metronomeEffect.successiveHits + 1U));
   }
   else {
-    metronomeEffect.consecutiveHits = 0U;
+    metronomeEffect.successiveHits = 0U;
   }
   metronomeEffect.lastMove = currentMove;
 }
 
 void metronomeOnMoveFail(MetronomeItem::Effect& metronomeEffect) {
-  metronomeEffect.consecutiveHits = 0U;
+  metronomeEffect.successiveHits = 0U;
 }
 
-void metronomeOnModifyDamageSimulateTurn(
-  types::registry& registry, MetronomeItem::Effect& metronomeEffect, const CurrentActionMovesAsSource& moves,
-  const Pokedex& pokedex, types::eventModifier denominator) {
-  const auto numerator =
-    pokedex.getStaticValue<MetronomeItem::Effect::onModifyDamageModifiers>(metronomeEffect.consecutiveHits);
-  if (numerator == denominator) {
-    return;
-  }
-
-  for (types::entity move : moves) {
-    if (registry.any_of<move::tags::Status>(move)) {
-      continue;
-    }
-
-    DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
-    modifier.modifyDamageEvent = internal::chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
-  }
-}
-
-template <typename CurrentActionMovesAsSourceType>
-struct MetronomeOnModifyDamageCalcDamage {
-  static void run(
-    types::registry& registry, MetronomeItem::Effect& metronomeEffect, const CurrentActionMovesAsSourceType& moves,
+struct MetronomeOnModifyDamage {
+  static void simulateTurn(
+    types::registry& registry, MetronomeItem::Effect metronomeEffect, const CurrentActionMovesAsSource& moves,
     const Pokedex& pokedex, types::eventModifier denominator) {
-    const auto numerator =
-      pokedex.getStaticValue<MetronomeItem::Effect::onModifyDamageModifiers>(metronomeEffect.consecutiveHits);
+    types::eventModifier numerator =
+      pokedex.getStaticValue<MetronomeItem::Effect::onModifyDamageModifiers>(metronomeEffect.successiveHits);
     if (numerator == denominator) {
       return;
     }
 
     for (types::entity move : moves) {
-      if (metronomeEffect.lastMove != registry.get<MoveName>(move).val) {
+      if (registry.any_of<move::tags::Status>(move)) {
         continue;
       }
 
-      DamageRollModifiers& modifier = registry.get<DamageRollModifiers>(move);
-      modifier.modifyDamageEvent = internal::chainValueToModifier(modifier.modifyDamageEvent, numerator, denominator);
+      internal::updateDamageEventModifier(registry, move, numerator, denominator);
+    }
+  }
+
+  template <typename CurrentActionMovesAsSourceType>
+  struct CalcDamage {
+    static void run(
+      types::registry& registry, MetronomeItem::Effect metronomeEffect, const CurrentActionMovesAsSourceType& moves,
+      const Pokedex& pokedex, types::eventModifier denominator) {
+      types::eventModifier numerator =
+        pokedex.getStaticValue<MetronomeItem::Effect::onModifyDamageModifiers>(metronomeEffect.successiveHits);
+      if (numerator == denominator) {
+        return;
+      }
+
+      for (types::entity move : moves) {
+        if (metronomeEffect.lastMove != registry.get<MoveName>(move).val) {
+          continue;
+        }
+
+        internal::updateDamageEventModifier(registry, move, numerator, denominator);
+      }
+    }
+  };
+
+  template <typename CurrentActionMovesAsSourceType>
+  struct CalcDamageForSuccessiveHits {
+    static void run(
+      types::registry& registry, MetronomeItem::Effect metronomeEffect, const CurrentActionMovesAsSourceType& moves,
+      const Pokedex& pokedex, types::eventModifier denominator, types::moveHits maxSuccessiveHits) {
+      for (types::entity move : moves) {
+        if (metronomeEffect.lastMove != registry.get<MoveName>(move).val) {
+          continue;
+        }
+
+        auto* totalDamageDoneOverUses = registry.try_get<internal::calc_damage::TotalDamageDoneOverUses>(move);
+        if (totalDamageDoneOverUses) {
+          metronomeEffect.successiveHits += std::min((types::moveUses)maxSuccessiveHits, totalDamageDoneOverUses->uses);
+          if (metronomeEffect.successiveHits < maxSuccessiveHits) {
+            registry.get_or_emplace<internal::calc_damage::tags::NextSuccessiveUseMayChangeDamage>(move);
+          }
+        }
+
+        types::eventModifier numerator =
+          pokedex.getStaticValue<MetronomeItem::Effect::onModifyDamageModifiers>(metronomeEffect.successiveHits);
+        internal::updateDamageEventModifier(registry, move, numerator, denominator);
+      }
+    }
+  };
+
+  template <typename SimulationTag>
+  static void runForSimulation(Simulation& simulation, types::eventModifier denominator) {
+    const Pokedex& pokedex = simulation.pokedex();
+    if constexpr (std::is_same_v<SimulationTag, tags::SimulateTurn>) {
+      simulation.view<simulateTurn, Tags<tags::SimulateTurn>>(pokedex, denominator);
+    }
+    else {
+      bool successiveUseEffectsInKoChanceCalculation =
+        std::is_same_v<SimulationTag, tags::CalculateDamage>
+          ? simulation.calculateDamageOptions.getSuccessiveUseEffectsInKoChanceCalculation()
+          : simulation.analyzeEffectOptions.getSuccessiveUseEffectsInKoChanceCalculation();
+
+      if (successiveUseEffectsInKoChanceCalculation) {
+        internal::currentActionMovesAsSourceView<CalcDamageForSuccessiveHits, Tags<SimulationTag>>(
+          simulation,
+          pokedex,
+          denominator,
+          pokedex.getStaticValue<MetronomeItem::Effect::onModifyDamageMaxSuccessiveHits>());
+      }
+      else {
+        internal::currentActionMovesAsSourceView<CalcDamage, Tags<SimulationTag>>(simulation, pokedex, denominator);
+      }
     }
   }
 };
@@ -323,9 +375,11 @@ void LumBerry::onUpdate(Simulation& simulation) {
 }
 
 void MetronomeItem::Effect::onTryMove(Simulation& simulation) {
+  const auto maxSuccessiveHits = simulation.pokedex().getStaticValue<onModifyDamageMaxSuccessiveHits>();
+
   simulation.addToEntitiesWithExclude<MetronomeItem, MainSource, tags::CurrentActionSource>(
     entt::exclude<MetronomeItem>);
-  simulation.view<metronomeOnTryMove, Tags<tags::CurrentActionSource>>();
+  simulation.view<metronomeOnTryMove, Tags<tags::CurrentActionSource>>(maxSuccessiveHits);
 }
 
 void MetronomeItem::Effect::onMoveFail(Simulation& simulation) {
@@ -334,16 +388,9 @@ void MetronomeItem::Effect::onMoveFail(Simulation& simulation) {
 
 void MetronomeItem::Effect::onModifyDamage(Simulation& simulation) {
   const auto denominator = simulation.pokedex().getStaticValue<onModifyDamageDenominator>();
-
-  simulation.view<metronomeOnModifyDamageSimulateTurn, Tags<tags::SimulateTurn>>(simulation.pokedex(), denominator);
-  internal::currentActionMovesAsSourceView<MetronomeOnModifyDamageCalcDamage, Tags<tags::CalculateDamage>>(
-    simulation,
-    simulation.pokedex(),
-    denominator);
-  internal::currentActionMovesAsSourceView<MetronomeOnModifyDamageCalcDamage, Tags<tags::AnalyzeEffect>>(
-    simulation,
-    simulation.pokedex(),
-    denominator);
+  MetronomeOnModifyDamage::runForSimulation<tags::SimulateTurn>(simulation, denominator);
+  MetronomeOnModifyDamage::runForSimulation<tags::CalculateDamage>(simulation, denominator);
+  MetronomeOnModifyDamage::runForSimulation<tags::AnalyzeEffect>(simulation, denominator);
 }
 
 void RockyHelmet::onDamagingHit(Simulation& simulation) {

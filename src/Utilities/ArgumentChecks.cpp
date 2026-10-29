@@ -456,10 +456,10 @@ template <>
 void check(const dex::shared_name_effect::MetronomeItem& metronome) {
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Move>)metronome.lastMove <= dex::TOTAL_MOVE_COUNT);
   if (metronome.lastMove == dex::Move::NO_MOVE) {
-    POKESIM_REQUIRE_NM(metronome.consecutiveHits == 0U);
+    POKESIM_REQUIRE_NM(metronome.successiveHits == 0U);
   }
   POKESIM_REQUIRE(
-    metronome.consecutiveHits < Constants::MoveMaxPp::MAX * 2U,
+    metronome.successiveHits < Constants::MoveMaxPp::MAX * 2U,
     "This check is to warn more hits than would fit in `moveHits` is reachable and should be accounted for.");
 }
 
@@ -674,11 +674,26 @@ void check(const internal::calc_damage::RealEffectiveStat& realEffectiveStat) {
 }
 
 template <>
+void check(const internal::calc_damage::DamageRollModifiers& modifiers) {
+  POKESIM_REQUIRE_NM(listContains(internal::VALID_STAB_BOOST_KINDS, modifiers.stab));
+  checkBounds<Constants::TypeEffectivenessShift>(modifiers.typeEffectiveness);
+}
+
+template <>
 void check(const internal::calc_damage::DamageFormulaVariables& damageFormulaVariables) {
   checkBounds<Constants::PokemonLevel>(damageFormulaVariables.attackingLevel);
   checkBounds<Constants::MovePower>(damageFormulaVariables.power);
   checkEffectiveStat(damageFormulaVariables.attackingLevel);
   checkEffectiveStat(damageFormulaVariables.defendingStat);
+}
+
+template <>
+void check(const internal::calc_damage::TotalDamageDoneOverUses& totalDamageDoneOverUses) {
+  checkBounds<Constants::PokemonHpStat>(totalDamageDoneOverUses.uses);
+  POKESIM_REQUIRE_NM(totalDamageDoneOverUses.hpRemaining.size() == Constants::DamageRollCount::MAX);
+  for (types::stat hp : totalDamageDoneOverUses.hpRemaining) {
+    checkEffectiveStat(hp, dex::Stat::HP);
+  }
 }
 
 template <>
@@ -689,12 +704,6 @@ void check(const CurrentActionMoveSlot& currentActionMoveSlot) {
 template <>
 void check(const Damage& damage) {
   POKESIM_REQUIRE_NM(damage.val <= Constants::Damage::MAX);
-}
-
-template <>
-void check(const DamageRollModifiers& modifiers) {
-  POKESIM_REQUIRE_NM(listContains(internal::VALID_STAB_BOOST_KINDS, modifiers.stab));
-  checkBounds<Constants::TypeEffectivenessShift>(modifiers.typeEffectiveness);
 }
 
 template <>
@@ -1415,23 +1424,19 @@ void check(const action::Team& team) {
 
 template <>
 void check(const calc_damage::UsesUntilKo& usesUntilKo) {
-  checkBounds<Constants::DamageRollCount>(usesUntilKo.val.size());
-
   types::moveHits lastHits = 0U;
-  types::damageRollIndex totalDamageRollsIncluded = 0U;
   for (const auto& useUntilKo : usesUntilKo.val) {
-    checkBounds<Constants::PokemonHpStat>(useUntilKo.uses);  // TODO(aed3): What if a move does no damage?
+    checkBounds<Constants::PokemonHpStat>(useUntilKo.uses);
     checkBounds<Constants::DamageRollCount>(useUntilKo.damageRollsIncluded);
     POKESIM_REQUIRE(lastHits < useUntilKo.uses, "The list should be in order from least to most hits.");
-    totalDamageRollsIncluded += useUntilKo.damageRollsIncluded;
     lastHits = useUntilKo.uses;
   }
   listHasUniqueValues(usesUntilKo.val);
 
-  POKESIM_REQUIRE_NM(usesUntilKo.minUses() == usesUntilKo.val.front());
-  POKESIM_REQUIRE_NM(usesUntilKo.maxUses() == usesUntilKo.val.back());
-
-  POKESIM_REQUIRE_NM(totalDamageRollsIncluded == Constants::DamageRollCount::MAX);
+  if (!usesUntilKo.val.empty()) {
+    POKESIM_REQUIRE_NM(usesUntilKo.minUses() == usesUntilKo.val.front());
+    POKESIM_REQUIRE_NM(usesUntilKo.maxUses() == usesUntilKo.val.back());
+  }
 }
 
 template <>

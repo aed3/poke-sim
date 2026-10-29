@@ -17,23 +17,21 @@ struct BattleOutcome {};
 
 namespace calc_damage {
 struct UsesUntilKo {
- private:
   struct Uses {
     types::moveUses uses = 0U;
     types::damageRollIndex damageRollsIncluded = 0U;
 
-    bool operator==(const Uses& other) const {
+    constexpr bool operator==(const Uses& other) const {
       return uses == other.uses && damageRollsIncluded == other.damageRollsIncluded;
     }
   };
 
- public:
   types::fixedMemoryVector<Uses, Constants::DamageRollCount::MAX> val{};
 
-  const Uses& minUses() const { return val.front(); }
-  const Uses& maxUses() const { return val.back(); }
+  constexpr const Uses& minUses() const { return val.front(); }
+  constexpr const Uses& maxUses() const { return val.back(); }
 
-  bool guaranteedKo() const {
+  constexpr bool guaranteedKo() const {
     const Uses& min = minUses();
     return min.uses == 1U && min.damageRollsIncluded == Constants::DamageRollCount::MAX;
   }

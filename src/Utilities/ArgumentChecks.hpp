@@ -29,7 +29,6 @@ struct EvaBoost;
 struct CloneTo;
 struct CurrentActionMoveSlot;
 struct Damage;
-struct DamageRollModifiers;
 struct DamageRolls;
 struct DisabledMoveSlots;
 struct Evs;
@@ -157,7 +156,9 @@ struct RandomEventIndex;
 struct MoveAccuracyBoost;
 namespace calc_damage {
 struct RealEffectiveStat;
+struct DamageRollModifiers;
 struct DamageFormulaVariables;
+struct TotalDamageDoneOverUses;
 }  // namespace calc_damage
 }  // namespace internal
 namespace action {
@@ -273,7 +274,13 @@ template <>
 void check(const internal::calc_damage::RealEffectiveStat&);
 
 template <>
+void check(const internal::calc_damage::DamageRollModifiers&);
+
+template <>
 void check(const internal::calc_damage::DamageFormulaVariables&);
+
+template <>
+void check(const internal::calc_damage::TotalDamageDoneOverUses&);
 
 // template <> void check(const CloneTo&);
 
@@ -282,9 +289,6 @@ void check(const CurrentActionMoveSlot&);
 
 template <>
 void check(const Damage&);
-
-template <>
-void check(const DamageRollModifiers&);
 
 template <>
 void check(const DamageRolls&);
