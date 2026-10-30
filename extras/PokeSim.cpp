@@ -5613,7 +5613,7 @@ void knockOffOnBasePowerCheckRemovableItem(
   if (
     registry.all_of<tags::HasItem>(target.val) &&
     registry.get<stat::CurrentHp>(source.val).val > Constants::PokemonCurrentHpStat::MIN) {
-    registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
+    registry.get_or_emplace<tags::CanRemoveItem>(target.val);
   }
 }
 
@@ -5621,7 +5621,7 @@ void knockOffOnAfterHitCheckRemovableItem(types::registry& registry, CurrentActi
   if (
     registry.all_of<tags::HasItem>(target.val) &&
     registry.get<stat::CurrentHp>(target.val).val > Constants::PokemonCurrentHpStat::MIN) {
-    registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
+    registry.get_or_emplace<tags::CanRemoveItem>(target.val);
   }
 }
 
@@ -6677,8 +6677,8 @@ void InputSetup::setup(
   handle.emplace<MoveName>(move);
   handle.emplace<pokesim::tags::CurrentMoveHit>();
   handle.emplace<pokesim::tags::CalculateDamage>();
-  registry.emplace_or_replace<pokesim::calc_damage::tags::Attacker>(sourceEntity);
-  registry.emplace_or_replace<pokesim::calc_damage::tags::Defender>(targetEntity);
+  registry.get_or_emplace<pokesim::calc_damage::tags::Attacker>(sourceEntity);
+  registry.get_or_emplace<pokesim::calc_damage::tags::Defender>(targetEntity);
 }
 }  // namespace pokesim::internal::calc_damage
 
@@ -7936,7 +7936,7 @@ void boostStat(types::registry& registry, CurrentEffectTarget target, BoostType&
 
   if constexpr (!std::is_same_v<StatUpdateRequired, void>) {
     if (boost.val) {
-      registry.emplace_or_replace<StatUpdateRequired>(target.val);
+      registry.get_or_emplace<StatUpdateRequired>(target.val);
     }
   }
   if (currentBoost.val == Constants::PokemonStatBoost::DEFAULT) {
@@ -8058,7 +8058,7 @@ void trapAndSetTrapper(
 }
 
 void setSpeedSortNeeded(types::registry& registry, Battle battle) {
-  registry.emplace_or_replace<pokesim::simulate_turn::tags::SpeedSortNeeded>(battle.val);
+  registry.get_or_emplace<pokesim::simulate_turn::tags::SpeedSortNeeded>(battle.val);
 }
 }  // namespace
 
@@ -9004,25 +9004,25 @@ void traversePokemon(types::registry& registry, VisitEntity visitEntity = nullpt
 
   for (const auto [entity, moves] : registry.view<Tag, CurrentActionMovesAsSource>().each()) {
     for (types::entity move : moves) {
-      registry.emplace_or_replace<Tag>(move);
+      registry.get_or_emplace<Tag>(move);
     }
   }
 
   for (const auto [entity, moves] : registry.view<Tag, CurrentActionMovesAsTarget>().each()) {
     for (types::entity move : moves) {
-      registry.emplace_or_replace<Tag>(move);
+      registry.get_or_emplace<Tag>(move);
     }
   }
 
   for (const auto [entity, moves] : registry.view<Tag, CurrentActionMovesAsSourceExtended>().each()) {
     for (types::entity move : moves) {
-      registry.emplace_or_replace<Tag>(move);
+      registry.get_or_emplace<Tag>(move);
     }
   }
 
   for (const auto [entity, moves] : registry.view<Tag, CurrentActionMovesAsTargetExtended>().each()) {
     for (types::entity move : moves) {
-      registry.emplace_or_replace<Tag>(move);
+      registry.get_or_emplace<Tag>(move);
     }
   }
 }
@@ -9555,8 +9555,8 @@ types::entity createAnalyzeEffectMove(
   registry.emplace<MoveName>(moveEntity, move);
   registry.emplace<pokesim::tags::CurrentMoveHit>(moveEntity);
   registry.emplace<pokesim::tags::AnalyzeEffect>(moveEntity);
-  registry.emplace_or_replace<tags::Attacker>(attackerEntity);
-  registry.emplace_or_replace<tags::Defender>(defenderEntity);
+  registry.get_or_emplace<tags::Attacker>(attackerEntity);
+  registry.get_or_emplace<tags::Defender>(defenderEntity);
 
   return moveEntity;
 }
@@ -9580,11 +9580,11 @@ void createTwoCalculationsMovePair(
   // All active pokemon should have their stats refreshed in doubles for moves like Beat Up which rely on the stats of
   // Pokemon outside of the attacker and defender
   for (types::entity pokemon : {attacker.val, defender.val}) {
-    registry.emplace_or_replace<pokesim::tags::AtkStatUpdateRequired>(pokemon);
-    registry.emplace_or_replace<pokesim::tags::DefStatUpdateRequired>(pokemon);
-    registry.emplace_or_replace<pokesim::tags::SpaStatUpdateRequired>(pokemon);
-    registry.emplace_or_replace<pokesim::tags::SpdStatUpdateRequired>(pokemon);
-    registry.emplace_or_replace<pokesim::tags::SpeStatUpdateRequired>(pokemon);
+    registry.get_or_emplace<pokesim::tags::AtkStatUpdateRequired>(pokemon);
+    registry.get_or_emplace<pokesim::tags::DefStatUpdateRequired>(pokemon);
+    registry.get_or_emplace<pokesim::tags::SpaStatUpdateRequired>(pokemon);
+    registry.get_or_emplace<pokesim::tags::SpdStatUpdateRequired>(pokemon);
+    registry.get_or_emplace<pokesim::tags::SpeStatUpdateRequired>(pokemon);
   }
 
   inputHandle.emplace<MovePair>(originalEntity, copyEntity);

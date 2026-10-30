@@ -287,8 +287,8 @@ types::entity createAnalyzeEffectMove(
   registry.emplace<MoveName>(moveEntity, move);
   registry.emplace<pokesim::tags::CurrentMoveHit>(moveEntity);
   registry.emplace<pokesim::tags::AnalyzeEffect>(moveEntity);
-  registry.emplace_or_replace<tags::Attacker>(attackerEntity);
-  registry.emplace_or_replace<tags::Defender>(defenderEntity);
+  registry.get_or_emplace<tags::Attacker>(attackerEntity);
+  registry.get_or_emplace<tags::Defender>(defenderEntity);
 
   return moveEntity;
 }
@@ -312,11 +312,11 @@ void createTwoCalculationsMovePair(
   // All active pokemon should have their stats refreshed in doubles for moves like Beat Up which rely on the stats of
   // Pokemon outside of the attacker and defender
   for (types::entity pokemon : {attacker.val, defender.val}) {
-    registry.emplace_or_replace<pokesim::tags::AtkStatUpdateRequired>(pokemon);
-    registry.emplace_or_replace<pokesim::tags::DefStatUpdateRequired>(pokemon);
-    registry.emplace_or_replace<pokesim::tags::SpaStatUpdateRequired>(pokemon);
-    registry.emplace_or_replace<pokesim::tags::SpdStatUpdateRequired>(pokemon);
-    registry.emplace_or_replace<pokesim::tags::SpeStatUpdateRequired>(pokemon);
+    registry.get_or_emplace<pokesim::tags::AtkStatUpdateRequired>(pokemon);
+    registry.get_or_emplace<pokesim::tags::DefStatUpdateRequired>(pokemon);
+    registry.get_or_emplace<pokesim::tags::SpaStatUpdateRequired>(pokemon);
+    registry.get_or_emplace<pokesim::tags::SpdStatUpdateRequired>(pokemon);
+    registry.get_or_emplace<pokesim::tags::SpeStatUpdateRequired>(pokemon);
   }
 
   inputHandle.emplace<MovePair>(originalEntity, copyEntity);

@@ -24,7 +24,7 @@ void InputSetup::setup(
   handle.emplace<MoveName>(move);
   handle.emplace<pokesim::tags::CurrentMoveHit>();
   handle.emplace<pokesim::tags::CalculateDamage>();
-  registry.emplace_or_replace<pokesim::calc_damage::tags::Attacker>(sourceEntity);
-  registry.emplace_or_replace<pokesim::calc_damage::tags::Defender>(targetEntity);
+  registry.get_or_emplace<pokesim::calc_damage::tags::Attacker>(sourceEntity);
+  registry.get_or_emplace<pokesim::calc_damage::tags::Defender>(targetEntity);
 }
 }  // namespace pokesim::internal::calc_damage
