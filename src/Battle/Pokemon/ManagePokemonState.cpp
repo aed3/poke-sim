@@ -117,7 +117,7 @@ void boostStat(types::registry& registry, CurrentEffectTarget target, BoostType&
 
   if constexpr (!std::is_same_v<StatUpdateRequired, void>) {
     if (boost.val) {
-      registry.emplace_or_replace<StatUpdateRequired>(target.val);
+      registry.get_or_emplace<StatUpdateRequired>(target.val);
     }
   }
   if (currentBoost.val == Constants::PokemonStatBoost::DEFAULT) {
@@ -239,7 +239,7 @@ void trapAndSetTrapper(
 }
 
 void setSpeedSortNeeded(types::registry& registry, Battle battle) {
-  registry.emplace_or_replace<pokesim::simulate_turn::tags::SpeedSortNeeded>(battle.val);
+  registry.get_or_emplace<pokesim::simulate_turn::tags::SpeedSortNeeded>(battle.val);
 }
 }  // namespace
 

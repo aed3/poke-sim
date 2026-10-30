@@ -29,7 +29,7 @@ void knockOffOnBasePowerCheckRemovableItem(
   if (
     registry.all_of<tags::HasItem>(target.val) &&
     registry.get<stat::CurrentHp>(source.val).val > Constants::PokemonCurrentHpStat::MIN) {
-    registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
+    registry.get_or_emplace<tags::CanRemoveItem>(target.val);
   }
 }
 
@@ -37,7 +37,7 @@ void knockOffOnAfterHitCheckRemovableItem(types::registry& registry, CurrentActi
   if (
     registry.all_of<tags::HasItem>(target.val) &&
     registry.get<stat::CurrentHp>(target.val).val > Constants::PokemonCurrentHpStat::MIN) {
-    registry.emplace_or_replace<tags::CanRemoveItem>(target.val);
+    registry.get_or_emplace<tags::CanRemoveItem>(target.val);
   }
 }
 
