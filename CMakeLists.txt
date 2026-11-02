@@ -241,6 +241,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/Abilities/Prankster.cpp
       tests/Abilities/Scrappy.cpp
       tests/Abilities/Static.cpp
+      tests/Effects/BadPoison.cpp
       tests/Effects/ChoiceLock.cpp
       tests/Effects/Paralysis.cpp
       tests/Items/KingsRock.cpp

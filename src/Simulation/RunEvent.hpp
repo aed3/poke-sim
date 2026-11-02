@@ -55,6 +55,7 @@ void runModifySpd(Simulation& simulation);
 void runModifySpe(Simulation& simulation);
 
 void runStartSleep(Simulation& simulation);
+void runStartBadPoison(Simulation& simulation);
 void runStartFreeze(Simulation& simulation);
 
 void runTryTakeItemEvent(Simulation& simulation);  // TakeItem

@@ -25,6 +25,7 @@ struct Evs;
 struct Ivs;
 struct SpeciesTypes;
 struct MoveSlot;
+struct PokemonCreationInfo;
 
 namespace dex::shared_name_effect {
 struct MetronomeItem;
@@ -63,7 +64,7 @@ struct PokemonStateSetup : StateSetupBase {
   void setItem(dex::Item item, const Pokedex& pokedex);
   void setMoves(const std::vector<MoveSlot>& moveSlots);
 
-  void setStatus(dex::Status status);
+  void setStatus(dex::Status status, const PokemonCreationInfo& info);
 
   void setNature(dex::Nature nature);
   void setEVs(types::ev hp, types::ev atk, types::ev def, types::ev spa, types::ev spd, types::ev spe);

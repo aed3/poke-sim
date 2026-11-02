@@ -56,6 +56,7 @@ void runResidual(Simulation& simulation) {
   dex::Reflect::Effect::onResidual(simulation);
   dex::Flinch::onResidual(simulation);
   dex::Burn::onResidual(simulation);
+  dex::BadPoison::Effect::onResidual(simulation);
 }
 
 void runFractionalPriority(Simulation& simulation) {
@@ -141,7 +142,7 @@ template void runStatusImmunityEvent<dex::Freeze>(Simulation&);
 template void runStatusImmunityEvent<dex::Paralysis>(Simulation&);
 template void runStatusImmunityEvent<dex::Poison>(Simulation&);
 template void runStatusImmunityEvent<dex::Sleep>(Simulation&);
-template void runStatusImmunityEvent<dex::Toxic>(Simulation&);
+template void runStatusImmunityEvent<dex::BadPoison>(Simulation&);
 
 void runAfterSetStatusEvent(Simulation& simulation) {
   dex::LumBerry::onAfterSetStatus(simulation);
@@ -233,6 +234,9 @@ void runModifySpe(Simulation& simulation) {
 }
 
 void runStartSleep(Simulation&) {}
+void runStartBadPoison(Simulation& simulation) {
+  dex::BadPoison::Effect::onStart(simulation);
+}
 void runStartFreeze(Simulation&) {
   // Just Shaymin
 }
@@ -261,6 +265,7 @@ void runBeforeSwitchOutEvent(Simulation&) {}
 
 void runSwitchInEvent(Simulation& simulation) {
   dex::Imposter::onSwitchIn(simulation);
+  dex::BadPoison::Effect::onSwitchIn(simulation);
 }
 
 void runSwitchOutEvent(Simulation& simulation) {

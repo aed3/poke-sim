@@ -49,7 +49,8 @@ TEST_CASE("Lum Berry: Heals status and is removed", "[Simulation][SimulateTurn][
   REQUIRE_FALSE(registry.all_of<dex::Paralysis>(entities.p1A));
   REQUIRE_FALSE(registry.all_of<dex::Poison>(entities.p1A));
   REQUIRE_FALSE(registry.all_of<dex::Sleep>(entities.p1A));
-  REQUIRE_FALSE(registry.all_of<dex::Toxic>(entities.p1A));
+  REQUIRE_FALSE(registry.all_of<dex::BadPoison>(entities.p1A));
+  REQUIRE_FALSE(registry.all_of<dex::BadPoison::Effect>(entities.p1A));
 }
 
 TEST_CASE(

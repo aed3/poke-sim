@@ -206,6 +206,7 @@
  * src/Pokedex/Abilities/Synchronize.hpp
  * src/Pokedex/Abilities/Torrent.hpp
  * src/Pokedex/Abilities/Trace.hpp
+ * src/Pokedex/Effects/BadPoison.hpp
  * src/Pokedex/Effects/Burn.hpp
  * src/Pokedex/Effects/ChoiceLock.hpp
  * src/Pokedex/Effects/Flinch.hpp
@@ -213,7 +214,6 @@
  * src/Pokedex/Effects/Paralysis.hpp
  * src/Pokedex/Effects/Poison.hpp
  * src/Pokedex/Effects/Sleep.hpp
- * src/Pokedex/Effects/Toxic.hpp
  * src/Pokedex/Effects/Trapped.hpp
  * src/Pokedex/Effects/Trapper.hpp
  * src/Pokedex/Items/AssaultVest.hpp
@@ -16439,6 +16439,12 @@ struct Constants {
     static constexpr std::int8_t DEFAULT = 0;
   };
 
+  struct BadPoisonStages {
+    static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t MAX = 15U;
+    static constexpr std::uint8_t DEFAULT = 0U;
+  };
+
   struct MoveMaxPp {
     static constexpr std::uint8_t MAX = 64U;
     static constexpr std::uint8_t MIN = 1U;
@@ -19645,6 +19651,7 @@ using effectEnum = variant<
   std::monostate, dex::PseudoWeather, dex::SideCondition, dex::Status, dex::Terrain, dex::Volatile, dex::Weather>;
 using effectSource = types::variant<dex::Item, dex::Move, dex::Ability>;
 
+using badPoisonStages = internal::unsignedIntType<Constants::BadPoisonStages::MAX>;
 }  // namespace pokesim::types
 
 ///////////////////////// END OF src/Types/Effect.hpp //////////////////////////
@@ -21613,6 +21620,46 @@ struct Trace {
 
 //////////////////// END OF src/Pokedex/Abilities/Trace.hpp ////////////////////
 
+////////////////// START OF src/Pokedex/Effects/BadPoison.hpp //////////////////
+
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
+
+namespace pokesim::dex {
+namespace shared_name_effect {
+struct BadPoison;
+}
+
+struct BadPoison {
+  static constexpr Status name(GameMechanics = {}) { return Status::TOX; }
+
+  static constexpr bool isTypeImmune(GameMechanics, Type type) { return type == Type::POISON || type == Type::STEEL; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Bad Poison"; }
+    static constexpr std::string_view smogonId() { return "tox"; }
+  };
+
+  using Effect = shared_name_effect::BadPoison;
+};
+
+namespace shared_name_effect {
+struct BadPoison {
+  static constexpr Status name(GameMechanics = {}) { return Status::TOX; }
+  using MainSource = pokesim::dex::BadPoison;
+
+  static void onStart(Simulation& simulation);
+  static void onSwitchIn(Simulation& simulation);
+  static void onResidual(Simulation& simulation);
+
+  types::badPoisonStages val = Constants::BadPoisonStages::DEFAULT;
+};
+}  // namespace shared_name_effect
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Effects/BadPoison.hpp ///////////////////
+
 //////////////////// START OF src/Pokedex/Effects/Burn.hpp /////////////////////
 
 namespace pokesim {
@@ -21790,31 +21837,6 @@ struct Sleep {
 }  // namespace pokesim::dex
 
 ///////////////////// END OF src/Pokedex/Effects/Sleep.hpp /////////////////////
-
-//////////////////// START OF src/Pokedex/Effects/Toxic.hpp ////////////////////
-
-namespace pokesim {
-class Simulation;
-}  // namespace pokesim
-
-namespace pokesim::dex {
-struct Toxic {
-  static constexpr Status name(GameMechanics = {}) { return Status::TOX; }
-
-  static constexpr bool isTypeImmune(GameMechanics, Type type) { return type == Type::POISON || type == Type::STEEL; }
-
-  struct Strings {
-    static constexpr std::string_view name() { return "Toxic"; }
-    static constexpr std::string_view smogonId() { return "tox"; }
-  };
-
-  static void onStart(Simulation& simulation);
-  static void onSwitchIn(Simulation& simulation);
-  static void onResidual(Simulation& simulation);
-};
-}  // namespace pokesim::dex
-
-///////////////////// END OF src/Pokedex/Effects/Toxic.hpp /////////////////////
 
 /////////////////// START OF src/Pokedex/Effects/Trapped.hpp ///////////////////
 
@@ -23597,7 +23619,7 @@ constexpr auto enumToTag(Status status, RunArgs&&... args) {
     case Status::PAR: return RunStruct<Paralysis, T...>::run(std::forward<RunArgs>(args)...);
     case Status::PSN: return RunStruct<Poison, T...>::run(std::forward<RunArgs>(args)...);
     case Status::SLP: return RunStruct<Sleep, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::TOX: return RunStruct<Toxic, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::TOX: return RunStruct<BadPoison, T...>::run(std::forward<RunArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for status that does not exist.");
@@ -25332,6 +25354,7 @@ struct Trapper;
 namespace shared_name_effect {
 struct Reflect;
 struct MetronomeItem;
+struct BadPoison;
 }  // namespace shared_name_effect
 }  // namespace dex
 namespace analyze_effect {
@@ -25407,6 +25430,9 @@ void check(const dex::shared_name_effect::Reflect&);
 
 template <>
 void check(const dex::shared_name_effect::MetronomeItem&);
+
+template <>
+void check(const dex::shared_name_effect::BadPoison&);
 
 template <>
 void check(const dex::ChoiceLock&);
@@ -26430,6 +26456,7 @@ struct Evs;
 struct Ivs;
 struct SpeciesTypes;
 struct MoveSlot;
+struct PokemonCreationInfo;
 
 namespace dex::shared_name_effect {
 struct MetronomeItem;
@@ -26468,7 +26495,7 @@ struct PokemonStateSetup : StateSetupBase {
   void setItem(dex::Item item, const Pokedex& pokedex);
   void setMoves(const std::vector<MoveSlot>& moveSlots);
 
-  void setStatus(dex::Status status);
+  void setStatus(dex::Status status, const PokemonCreationInfo& info);
 
   void setNature(dex::Nature nature);
   void setEVs(types::ev hp, types::ev atk, types::ev def, types::ev spa, types::ev spd, types::ev spe);
@@ -26660,6 +26687,8 @@ struct PokemonCreationInfo {
   };
 
   struct EffectData {
+    std::optional<types::badPoisonStages> badPoisonStage;
+
     std::optional<dex::MetronomeItem::Effect> metronome;
   };
 
@@ -28311,6 +28340,7 @@ void runModifySpd(Simulation& simulation);
 void runModifySpe(Simulation& simulation);
 
 void runStartSleep(Simulation& simulation);
+void runStartBadPoison(Simulation& simulation);
 void runStartFreeze(Simulation& simulation);
 
 void runTryTakeItemEvent(Simulation& simulation);  // TakeItem

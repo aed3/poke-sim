@@ -31,6 +31,18 @@ void damageByHpDivisor(types::handle handle, stat::Hp hp, types::stat hpDivisor)
   internal::applyDamage(handle, hp.val / hpDivisor);
 }
 
+void badPoisonOnResidual(types::handle handle, stat::Hp hp, BadPoison::Effect& badPoison) {
+  if (badPoison.val < Constants::BadPoisonStages::MAX) {
+    badPoison.val++;
+  }
+
+  internal::applyDamage(handle, std::max(1U, (hp.val / (Constants::BadPoisonStages::MAX + 1U)) * badPoison.val));
+}
+
+void badPoisonOnSwitchIn(BadPoison::Effect& badPoison) {
+  badPoison.val = Constants::BadPoisonStages::MIN;
+}
+
 template <typename CurrentActionMovesAsSourceType>
 struct ApplyBurnModifier {
   static void run(types::registry& registry, const CurrentActionMovesAsSourceType& moves) {
@@ -72,6 +84,18 @@ void trapperOnSwitchOut(types::handle handle, Trapper trapper, Battle battle) {
   }
 }
 }  // namespace
+
+void BadPoison::Effect::onStart(Simulation& simulation) {
+  simulation.addToEntitiesWithExclude<BadPoison, dex::BadPoison, CurrentEffectAsTarget>(entt::exclude<BadPoison>);
+}
+
+void BadPoison::Effect::onResidual(Simulation& simulation) {
+  simulation.view<badPoisonOnResidual, Tags<tags::ActivePokemon>>();
+}
+
+void BadPoison::Effect::onSwitchIn(Simulation& simulation) {
+  simulation.view<badPoisonOnSwitchIn, Tags<tags::CurrentActionTarget>>();
+}
 
 void Burn::onSetDamageRollModifiers(Simulation& simulation) {
   internal::currentActionMovesAsSourceView<ApplyBurnModifier, Tags<Burn> /*, entt::exclude<Guts> */>(simulation);

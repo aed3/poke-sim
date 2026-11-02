@@ -241,7 +241,7 @@ void createInitialPokemon(
   }
 
   if (pokemonInfo.status.has_value() && pokemonInfo.status != dex::Status::NO_STATUS) {
-    pokemonSetup.setStatus(pokemonInfo.status.value());
+    pokemonSetup.setStatus(pokemonInfo.status.value(), pokemonInfo);
   }
 
   pokemonSetup.setCurrentHp(pokemonInfo.currentHp.value_or(hp));

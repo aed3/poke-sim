@@ -603,6 +603,11 @@ void check(const dex::shared_name_effect::MetronomeItem& metronome) {
 }
 
 template <>
+void check(const dex::shared_name_effect::BadPoison& badPoison) {
+  checkBounds<Constants::BadPoisonStages>(badPoison.val);
+}
+
+template <>
 void check(const dex::ChoiceLock& choiceLock) {
   POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
 }
@@ -1965,7 +1970,7 @@ void createInitialPokemon(
   }
 
   if (pokemonInfo.status.has_value() && pokemonInfo.status != dex::Status::NO_STATUS) {
-    pokemonSetup.setStatus(pokemonInfo.status.value());
+    pokemonSetup.setStatus(pokemonInfo.status.value(), pokemonInfo);
   }
 
   pokemonSetup.setCurrentHp(pokemonInfo.currentHp.value_or(hp));
@@ -2461,6 +2466,7 @@ void runResidual(Simulation& simulation) {
   dex::Reflect::Effect::onResidual(simulation);
   dex::Flinch::onResidual(simulation);
   dex::Burn::onResidual(simulation);
+  dex::BadPoison::Effect::onResidual(simulation);
 }
 
 void runFractionalPriority(Simulation& simulation) {
@@ -2546,7 +2552,7 @@ template void runStatusImmunityEvent<dex::Freeze>(Simulation&);
 template void runStatusImmunityEvent<dex::Paralysis>(Simulation&);
 template void runStatusImmunityEvent<dex::Poison>(Simulation&);
 template void runStatusImmunityEvent<dex::Sleep>(Simulation&);
-template void runStatusImmunityEvent<dex::Toxic>(Simulation&);
+template void runStatusImmunityEvent<dex::BadPoison>(Simulation&);
 
 void runAfterSetStatusEvent(Simulation& simulation) {
   dex::LumBerry::onAfterSetStatus(simulation);
@@ -2638,6 +2644,9 @@ void runModifySpe(Simulation& simulation) {
 }
 
 void runStartSleep(Simulation&) {}
+void runStartBadPoison(Simulation& simulation) {
+  dex::BadPoison::Effect::onStart(simulation);
+}
 void runStartFreeze(Simulation&) {
   // Just Shaymin
 }
@@ -2666,6 +2675,7 @@ void runBeforeSwitchOutEvent(Simulation&) {}
 
 void runSwitchInEvent(Simulation& simulation) {
   dex::Imposter::onSwitchIn(simulation);
+  dex::BadPoison::Effect::onSwitchIn(simulation);
 }
 
 void runSwitchOutEvent(Simulation& simulation) {
@@ -6139,6 +6149,18 @@ void damageByHpDivisor(types::handle handle, stat::Hp hp, types::stat hpDivisor)
   internal::applyDamage(handle, hp.val / hpDivisor);
 }
 
+void badPoisonOnResidual(types::handle handle, stat::Hp hp, BadPoison::Effect& badPoison) {
+  if (badPoison.val < Constants::BadPoisonStages::MAX) {
+    badPoison.val++;
+  }
+
+  internal::applyDamage(handle, std::max(1U, (hp.val / (Constants::BadPoisonStages::MAX + 1U)) * badPoison.val));
+}
+
+void badPoisonOnSwitchIn(BadPoison::Effect& badPoison) {
+  badPoison.val = Constants::BadPoisonStages::MIN;
+}
+
 template <typename CurrentActionMovesAsSourceType>
 struct ApplyBurnModifier {
   static void run(types::registry& registry, const CurrentActionMovesAsSourceType& moves) {
@@ -6180,6 +6202,18 @@ void trapperOnSwitchOut(types::handle handle, Trapper trapper, Battle battle) {
   }
 }
 }  // namespace
+
+void BadPoison::Effect::onStart(Simulation& simulation) {
+  simulation.addToEntitiesWithExclude<BadPoison, dex::BadPoison, CurrentEffectAsTarget>(entt::exclude<BadPoison>);
+}
+
+void BadPoison::Effect::onResidual(Simulation& simulation) {
+  simulation.view<badPoisonOnResidual, Tags<tags::ActivePokemon>>();
+}
+
+void BadPoison::Effect::onSwitchIn(Simulation& simulation) {
+  simulation.view<badPoisonOnSwitchIn, Tags<tags::CurrentActionTarget>>();
+}
 
 void Burn::onSetDamageRollModifiers(Simulation& simulation) {
   internal::currentActionMovesAsSourceView<ApplyBurnModifier, Tags<Burn> /*, entt::exclude<Guts> */>(simulation);
@@ -7677,8 +7711,11 @@ void PokemonStateSetup::setMoves(const std::vector<MoveSlot>& moveSlots) {
   }
 }
 
-void PokemonStateSetup::setStatus(dex::Status status) {
+void PokemonStateSetup::setStatus(dex::Status status, const PokemonCreationInfo& info) {
   pokesim::internal::setStatus(*handle.registry(), status, entity());
+  if (status == dex::Status::TOX) {
+    handle.emplace<dex::BadPoison::Effect>(info.effectData.badPoisonStage.value_or(Constants::BadPoisonStages::MIN));
+  }
 }
 
 void PokemonStateSetup::setNature(dex::Nature nature) {
@@ -8137,6 +8174,7 @@ void setStatus(Simulation& simulation) {
   dex::forEachStatus<SetEffectTargetStatus>(simulation);
 
   runStartSleep(simulation);
+  runStartBadPoison(simulation);
   runStartFreeze(simulation);
 
   runAfterSetStatusEvent(simulation);
@@ -8149,8 +8187,15 @@ void trySetStatus(Simulation& simulation) {
 }
 
 void clearStatus(types::handle pokemonHandle) {
-  pokemonHandle
-    .remove<pokesim::tags::HasStatus, dex::Burn, dex::Freeze, dex::Paralysis, dex::Poison, dex::Sleep, dex::Toxic>();
+  pokemonHandle.remove<
+    pokesim::tags::HasStatus,
+    dex::BadPoison,
+    dex::BadPoison::Effect,
+    dex::Burn,
+    dex::Freeze,
+    dex::Paralysis,
+    dex::Poison,
+    dex::Sleep>();
 }
 
 void clearVolatiles(Simulation& simulation) {
