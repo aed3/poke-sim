@@ -1568,7 +1568,7 @@ void check(const action::Team& team) {
 
 template <>
 void check(const calc_damage::UsesUntilKo& usesUntilKo) {
-  types::moveHits lastHits = 0U;
+  types::moveUses lastHits = 0U;
   for (const auto& useUntilKo : usesUntilKo.val) {
     checkBounds<Constants::PokemonHpStat>(useUntilKo.uses);
     checkBounds<Constants::DamageRollCount>(useUntilKo.damageRollsIncluded);
@@ -5895,7 +5895,8 @@ struct MetronomeOnModifyDamage {
 
         auto* totalDamageDoneOverUses = registry.try_get<internal::calc_damage::TotalDamageDoneOverUses>(move);
         if (totalDamageDoneOverUses) {
-          metronomeEffect.successiveHits += std::min((types::moveUses)maxSuccessiveHits, totalDamageDoneOverUses->uses);
+          metronomeEffect.successiveHits +=
+            (types::moveHits)std::min((types::moveUses)maxSuccessiveHits, totalDamageDoneOverUses->uses);
           if (metronomeEffect.successiveHits < maxSuccessiveHits) {
             registry.get_or_emplace<internal::calc_damage::tags::NextSuccessiveUseMayChangeDamage>(move);
           }
@@ -6154,7 +6155,11 @@ void badPoisonOnResidual(types::handle handle, stat::Hp hp, BadPoison::Effect& b
     badPoison.val++;
   }
 
-  internal::applyDamage(handle, std::max(1U, (hp.val / (Constants::BadPoisonStages::MAX + 1U)) * badPoison.val));
+  internal::applyDamage(
+    handle,
+    std::max(
+      Constants::Damage::MIN,
+      (types::damage)((hp.val / (Constants::BadPoisonStages::MAX + 1U)) * badPoison.val)));
 }
 
 void badPoisonOnSwitchIn(BadPoison::Effect& badPoison) {
@@ -7425,8 +7430,7 @@ void changeStatForSuccessiveBoost(
 void updateTotalDamageOverUses(
   types::handle moveHandle, internal::calc_damage::TotalDamageDoneOverUses& totalDamageDoneOverUses,
   const internal::calc_damage::DamageFormulaVariables& damageFormulaVariables,
-  const internal::calc_damage::DamageRollModifiers& modifier, UsesUntilKo& usesUntilKo, Defender defender,
-  const Pokedex& pokedex) {
+  const internal::calc_damage::DamageRollModifiers& modifier, UsesUntilKo& usesUntilKo, const Pokedex& pokedex) {
   Damage damage{computeBaseDamage(
     damageFormulaVariables.power,
     damageFormulaVariables.attackingLevel,
