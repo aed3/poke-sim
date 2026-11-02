@@ -1429,7 +1429,7 @@ void check(const action::Team& team) {
 
 template <>
 void check(const calc_damage::UsesUntilKo& usesUntilKo) {
-  types::moveHits lastHits = 0U;
+  types::moveUses lastHits = 0U;
   for (const auto& useUntilKo : usesUntilKo.val) {
     checkBounds<Constants::PokemonHpStat>(useUntilKo.uses);
     checkBounds<Constants::DamageRollCount>(useUntilKo.damageRollsIncluded);

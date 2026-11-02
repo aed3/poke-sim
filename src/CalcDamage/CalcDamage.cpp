@@ -754,8 +754,7 @@ void changeStatForSuccessiveBoost(
 void updateTotalDamageOverUses(
   types::handle moveHandle, internal::calc_damage::TotalDamageDoneOverUses& totalDamageDoneOverUses,
   const internal::calc_damage::DamageFormulaVariables& damageFormulaVariables,
-  const internal::calc_damage::DamageRollModifiers& modifier, UsesUntilKo& usesUntilKo, Defender defender,
-  const Pokedex& pokedex) {
+  const internal::calc_damage::DamageRollModifiers& modifier, UsesUntilKo& usesUntilKo, const Pokedex& pokedex) {
   Damage damage{computeBaseDamage(
     damageFormulaVariables.power,
     damageFormulaVariables.attackingLevel,

@@ -174,7 +174,8 @@ struct MetronomeOnModifyDamage {
 
         auto* totalDamageDoneOverUses = registry.try_get<internal::calc_damage::TotalDamageDoneOverUses>(move);
         if (totalDamageDoneOverUses) {
-          metronomeEffect.successiveHits += std::min((types::moveUses)maxSuccessiveHits, totalDamageDoneOverUses->uses);
+          metronomeEffect.successiveHits +=
+            (types::moveHits)std::min((types::moveUses)maxSuccessiveHits, totalDamageDoneOverUses->uses);
           if (metronomeEffect.successiveHits < maxSuccessiveHits) {
             registry.get_or_emplace<internal::calc_damage::tags::NextSuccessiveUseMayChangeDamage>(move);
           }

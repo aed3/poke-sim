@@ -36,7 +36,11 @@ void badPoisonOnResidual(types::handle handle, stat::Hp hp, BadPoison::Effect& b
     badPoison.val++;
   }
 
-  internal::applyDamage(handle, std::max(1U, (hp.val / (Constants::BadPoisonStages::MAX + 1U)) * badPoison.val));
+  internal::applyDamage(
+    handle,
+    std::max(
+      Constants::Damage::MIN,
+      (types::damage)((hp.val / (Constants::BadPoisonStages::MAX + 1U)) * badPoison.val)));
 }
 
 void badPoisonOnSwitchIn(BadPoison::Effect& badPoison) {
