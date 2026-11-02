@@ -173,6 +173,28 @@ struct Checks : pokesim::debug::Checks {
     }
   }
 
+  std::tuple<DamageRollOptions, bool, bool> getMoveOptions(types::entity move) const {
+    DamageRollOptions damageRollOptions;
+    bool noKoChanceCalculation;
+    bool calculateUpToFoeHp;
+
+    if (has<pokesim::tags::CalculateDamage>(move)) {
+      damageRollOptions = simulation->calculateDamageOptions.getDamageRollOptions();
+      calculateUpToFoeHp = simulation->calculateDamageOptions.getCalculateUpToFoeHp();
+      noKoChanceCalculation = simulation->calculateDamageOptions.getNoKoChanceCalculation();
+    }
+    else if (has<pokesim::tags::AnalyzeEffect>(move)) {
+      damageRollOptions = simulation->analyzeEffectOptions.getDamageRollOptions();
+      calculateUpToFoeHp = simulation->analyzeEffectOptions.getCalculateUpToFoeHp();
+      noKoChanceCalculation = simulation->analyzeEffectOptions.getNoKoChanceCalculation();
+    }
+    else {
+      POKESIM_REQUIRE_FAIL("Where'd the simulation type go? It was checked in the inputs.");
+    }
+
+    return {damageRollOptions, calculateUpToFoeHp, noKoChanceCalculation};
+  }
+
   DamageRollKind getDamageRollKind(types::entity move, DamageRollOptions damageRollOptions) const {
     const Defender& defender = registry->get<Defender>(move);
     const Side& side = registry->get<Side>(defender.val);
@@ -194,36 +216,10 @@ struct Checks : pokesim::debug::Checks {
     return DamageRollKind::NONE;
   }
 
-  void checkCalcDamageResultOutputs(types::entity move) const {
-    bool isDefenderImmune = has<tags::DefenderImmune>(move);
-    bool isIgnoredStatusMove = has<tags::IgnoredStatusMove>(move);
-    bool shouldHaveImmuneDamage = isDefenderImmune || isIgnoredStatusMove;
-
-    POKESIM_REQUIRE_NM(!(isDefenderImmune && isIgnoredStatusMove));
-    POKESIM_REQUIRE_NM(isIgnoredStatusMove == has<move::tags::Status>(move));
-    POKESIM_REQUIRE_NM(has<DamageRolls>(move));
-
-    DamageRollOptions damageRollOptions;
-    bool noKoChanceCalculation;
-    bool calculateUpToFoeHp;
-    if (has<pokesim::tags::CalculateDamage>(move)) {
-      damageRollOptions = simulation->calculateDamageOptions.getDamageRollOptions();
-      calculateUpToFoeHp = simulation->calculateDamageOptions.getCalculateUpToFoeHp();
-      noKoChanceCalculation = simulation->calculateDamageOptions.getNoKoChanceCalculation();
-    }
-    else if (has<pokesim::tags::AnalyzeEffect>(move)) {
-      damageRollOptions = simulation->analyzeEffectOptions.getDamageRollOptions();
-      calculateUpToFoeHp = simulation->analyzeEffectOptions.getCalculateUpToFoeHp();
-      noKoChanceCalculation = simulation->analyzeEffectOptions.getNoKoChanceCalculation();
-    }
-    else {
-      POKESIM_REQUIRE_FAIL("Where'd the simulation type go? It was checked in the inputs.");
-    }
-
+  const DamageRolls& checkDamageRolls(types::entity move, bool shouldHaveImmuneDamage, bool calculateUpToFoeHp) const {
     types::damage lastDamage = std::numeric_limits<types::damage>::max();
     const auto& [damageRolls, defender] = registry->get<DamageRolls, Defender>(move);
     const stat::CurrentHp& defenderHp = registry->get<stat::CurrentHp>(defender.val);
-
     POKESIM_REQUIRE_NM(!damageRolls.val.empty());
 
     for (const Damage& damageRoll : damageRolls.val) {
@@ -242,15 +238,12 @@ struct Checks : pokesim::debug::Checks {
       lastDamage = damageRoll.val;
     }
 
-    DamageRollKind damageRollKind = getDamageRollKind(move, damageRollOptions);
-    if (shouldHaveImmuneDamage && has<Damage>(move)) {
-      POKESIM_REQUIRE_NM(registry->get<Damage>(move).val == Constants::Damage::IMMUNE);
-    }
+    return damageRolls;
+  }
 
-    POKESIM_REQUIRE(
-      damageRollKind != DamageRollKind::NONE,
-      "Cannot calculate damage without knowing what rolls to consider.");
-
+  void checkDamageCount(
+    types::entity move, DamageRollKind damageRollKind, const DamageRolls& damageRolls,
+    bool shouldHaveImmuneDamage) const {
     std::size_t idealDamageRollCount = 0U;
     if (shouldHaveImmuneDamage) {
       POKESIM_REQUIRE_NM(!has<pokesim::tags::CurrentMoveHit>(move));
@@ -275,6 +268,29 @@ struct Checks : pokesim::debug::Checks {
 
     POKESIM_REQUIRE_NM(idealDamageRollCount);
     POKESIM_REQUIRE_NM(damageRolls.val.size() == idealDamageRollCount);
+  }
+
+  void checkCalcDamageResultOutputs(types::entity move) const {
+    bool isDefenderImmune = has<tags::DefenderImmune>(move);
+    bool isIgnoredStatusMove = has<tags::IgnoredStatusMove>(move);
+    bool shouldHaveImmuneDamage = isDefenderImmune || isIgnoredStatusMove;
+
+    POKESIM_REQUIRE_NM(!(isDefenderImmune && isIgnoredStatusMove));
+    POKESIM_REQUIRE_NM(isIgnoredStatusMove == has<move::tags::Status>(move));
+    POKESIM_REQUIRE_NM(has<DamageRolls>(move));
+    auto [damageRollOptions, calculateUpToFoeHp, noKoChanceCalculation] = getMoveOptions(move);
+
+    DamageRollKind damageRollKind = getDamageRollKind(move, damageRollOptions);
+    if (shouldHaveImmuneDamage && has<Damage>(move)) {
+      POKESIM_REQUIRE_NM(registry->get<Damage>(move).val == Constants::Damage::IMMUNE);
+    }
+
+    POKESIM_REQUIRE(
+      damageRollKind != DamageRollKind::NONE,
+      "Cannot calculate damage without knowing what rolls to consider.");
+
+    DamageRolls damageRolls = checkDamageRolls(move, shouldHaveImmuneDamage, calculateUpToFoeHp);
+    checkDamageCount(move, damageRollKind, damageRolls, shouldHaveImmuneDamage);
 
     if (noKoChanceCalculation || shouldHaveImmuneDamage) {
       POKESIM_REQUIRE_NM(!has<UsesUntilKo>(move));

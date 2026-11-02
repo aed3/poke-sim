@@ -119,7 +119,7 @@ types::entity findCopyParent(
       break;
     }
 
-    for (auto [original, _] : initialEntities) {
+    for (auto [original, ___] : initialEntities) {
       if (original == parentEntity->val) {
         return original;
       }
