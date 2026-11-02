@@ -318,6 +318,7 @@ void setStatus(Simulation& simulation) {
   dex::forEachStatus<SetEffectTargetStatus>(simulation);
 
   runStartSleep(simulation);
+  runStartBadPoison(simulation);
   runStartFreeze(simulation);
 
   runAfterSetStatusEvent(simulation);
@@ -330,8 +331,15 @@ void trySetStatus(Simulation& simulation) {
 }
 
 void clearStatus(types::handle pokemonHandle) {
-  pokemonHandle
-    .remove<pokesim::tags::HasStatus, dex::Burn, dex::Freeze, dex::Paralysis, dex::Poison, dex::Sleep, dex::Toxic>();
+  pokemonHandle.remove<
+    pokesim::tags::HasStatus,
+    dex::BadPoison,
+    dex::BadPoison::Effect,
+    dex::Burn,
+    dex::Freeze,
+    dex::Paralysis,
+    dex::Poison,
+    dex::Sleep>();
 }
 
 void clearVolatiles(Simulation& simulation) {

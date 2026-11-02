@@ -16,9 +16,11 @@
 #include <Components/Names/StatusNames.hpp>
 #include <Components/SpeciesTypes.hpp>
 #include <Components/Tags/PokemonTags.hpp>
+#include <Pokedex/Effects/BadPoison.hpp>
 #include <Pokedex/EnumToTag/NatureEnumToTag.hpp>
 #include <Pokedex/EnumToTag/TypeEnumToTag.hpp>
 #include <Pokedex/Items/Metronome.hpp>
+#include <Simulation/BattleCreationInfo.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Gender.hpp>
 #include <Types/Enums/Item.hpp>
@@ -104,8 +106,11 @@ void PokemonStateSetup::setMoves(const std::vector<MoveSlot>& moveSlots) {
   }
 }
 
-void PokemonStateSetup::setStatus(dex::Status status) {
+void PokemonStateSetup::setStatus(dex::Status status, const PokemonCreationInfo& info) {
   pokesim::internal::setStatus(*handle.registry(), status, entity());
+  if (status == dex::Status::TOX) {
+    handle.emplace<dex::BadPoison::Effect>(info.effectData.badPoisonStage.value_or(Constants::BadPoisonStages::MIN));
+  }
 }
 
 void PokemonStateSetup::setNature(dex::Nature nature) {

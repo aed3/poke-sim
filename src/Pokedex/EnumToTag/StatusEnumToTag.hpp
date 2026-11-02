@@ -33,7 +33,7 @@ constexpr auto enumToTag(Status status, RunArgs&&... args) {
     case Status::PAR: return RunStruct<Paralysis, T...>::run(std::forward<RunArgs>(args)...);
     case Status::PSN: return RunStruct<Poison, T...>::run(std::forward<RunArgs>(args)...);
     case Status::SLP: return RunStruct<Sleep, T...>::run(std::forward<RunArgs>(args)...);
-    case Status::TOX: return RunStruct<Toxic, T...>::run(std::forward<RunArgs>(args)...);
+    case Status::TOX: return RunStruct<BadPoison, T...>::run(std::forward<RunArgs>(args)...);
 
     default: {
       POKESIM_REQUIRE_FAIL("Using a tag for status that does not exist.");

@@ -122,6 +122,7 @@ struct Trapper;
 namespace shared_name_effect {
 struct Reflect;
 struct MetronomeItem;
+struct BadPoison;
 }  // namespace shared_name_effect
 }  // namespace dex
 namespace analyze_effect {
@@ -197,6 +198,9 @@ void check(const dex::shared_name_effect::Reflect&);
 
 template <>
 void check(const dex::shared_name_effect::MetronomeItem&);
+
+template <>
+void check(const dex::shared_name_effect::BadPoison&);
 
 template <>
 void check(const dex::ChoiceLock&);

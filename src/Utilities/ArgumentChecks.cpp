@@ -464,6 +464,11 @@ void check(const dex::shared_name_effect::MetronomeItem& metronome) {
 }
 
 template <>
+void check(const dex::shared_name_effect::BadPoison& badPoison) {
+  checkBounds<Constants::BadPoisonStages>(badPoison.val);
+}
+
+template <>
 void check(const dex::ChoiceLock& choiceLock) {
   POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
 }

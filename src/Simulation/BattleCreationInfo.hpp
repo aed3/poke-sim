@@ -65,6 +65,8 @@ struct PokemonCreationInfo {
   };
 
   struct EffectData {
+    std::optional<types::badPoisonStages> badPoisonStage;
+
     std::optional<dex::MetronomeItem::Effect> metronome;
   };
 
