@@ -43,7 +43,7 @@ struct Random {
     dex::Ability::TRACE,
   };
 
-  static constexpr std::array<dex::Item, 11U> availableItems{
+  static constexpr std::array<dex::Item, 13U> availableItems{
     dex::Item::NO_ITEM,
     dex::Item::ASSAULT_VEST,
     dex::Item::BRIGHT_POWDER,
@@ -52,6 +52,8 @@ struct Random {
     dex::Item::FOCUS_SASH,
     dex::Item::KINGS_ROCK,
     dex::Item::LIFE_ORB,
+    dex::Item::LUM_BERRY,
+    dex::Item::METRONOME,
     dex::Item::QUICK_CLAW,
     dex::Item::QUICK_POWDER,
     dex::Item::ROCKY_HELMET,
