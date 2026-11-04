@@ -19,10 +19,8 @@ types::teamPositionIndex pokemonEntityToIndex(
 Slot pokemonEntityToSlot(const types::registry& registry, types::entity sideEntity, types::entity pokemonEntity);
 bool isAlly(types::registry& registry, types::entity pokemonEntity1, types::entity pokemonEntity2);
 
-types::entity pokemonEntityToSinglesActiveFoe(
-  types::registry& registry, types::entity sideEntity, types::entity pokemonEntity);
-types::sideSlots<types::entity> pokemonEntityToDoublesActiveFoes(
-  types::registry& registry, types::entity sideEntity, types::entity pokemonEntity);
+types::entity sideEntityToSinglesActiveFoe(types::registry& registry, types::entity sideEntity);
+types::sideSlots<types::entity> sideEntityToDoublesActiveFoes(types::registry& registry, types::entity sideEntity);
 }  // namespace internal
 
 Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position);

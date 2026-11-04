@@ -253,13 +253,13 @@ struct MirrorHerbOnAfterFoeBoost {
 
     types::entity targetSide = registry.get<Side>(target.val).val;
     if constexpr (battleFormat == BattleFormat::SINGLES) {
-      types::entity foe = internal::pokemonEntityToSinglesActiveFoe(registry, targetSide, target.val);
+      types::entity foe = internal::sideEntityToSinglesActiveFoe(registry, targetSide);
       if (foe != entt::null) {
         addBoost(registry, foe, boost);
       }
     }
     else if constexpr (battleFormat == BattleFormat::DOUBLES) {
-      for (types::entity foe : internal::pokemonEntityToDoublesActiveFoes(registry, targetSide, target.val)) {
+      for (types::entity foe : internal::sideEntityToDoublesActiveFoes(registry, targetSide)) {
         addBoost(registry, foe, boost);
       }
     }

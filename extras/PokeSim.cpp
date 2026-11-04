@@ -6057,13 +6057,13 @@ struct MirrorHerbOnAfterFoeBoost {
 
     types::entity targetSide = registry.get<Side>(target.val).val;
     if constexpr (battleFormat == BattleFormat::SINGLES) {
-      types::entity foe = internal::pokemonEntityToSinglesActiveFoe(registry, targetSide, target.val);
+      types::entity foe = internal::sideEntityToSinglesActiveFoe(registry, targetSide);
       if (foe != entt::null) {
         addBoost(registry, foe, boost);
       }
     }
     else if constexpr (battleFormat == BattleFormat::DOUBLES) {
-      for (types::entity foe : internal::pokemonEntityToDoublesActiveFoes(registry, targetSide, target.val)) {
+      for (types::entity foe : internal::sideEntityToDoublesActiveFoes(registry, targetSide)) {
         addBoost(registry, foe, boost);
       }
     }
@@ -9045,8 +9045,7 @@ bool isAlly(types::registry& registry, types::entity pokemonEntity1, types::enti
          registry.get<Side>(pokemonEntity1).val == registry.get<Side>(pokemonEntity2).val;
 }
 
-types::entity pokemonEntityToSinglesActiveFoe(
-  types::registry& registry, types::entity sideEntity, types::entity pokemonEntity) {
+types::entity sideEntityToSinglesActiveFoe(types::registry& registry, types::entity sideEntity) {
   const Team& foeTeam = registry.get<Team>(registry.get<FoeSide>(sideEntity).val);
   if (registry.all_of<pokesim::tags::ActivePokemon>(foeTeam.val.front())) {
     return foeTeam.val.front();
@@ -9054,8 +9053,7 @@ types::entity pokemonEntityToSinglesActiveFoe(
   return entt::null;
 }
 
-types::sideSlots<types::entity> pokemonEntityToDoublesActiveFoes(
-  types::registry& registry, types::entity sideEntity, types::entity pokemonEntity) {
+types::sideSlots<types::entity> sideEntityToDoublesActiveFoes(types::registry& registry, types::entity sideEntity) {
   types::sideSlots<types::entity> foeSlots;
 
   const Team& foeTeam = registry.get<Team>(registry.get<FoeSide>(sideEntity).val);
