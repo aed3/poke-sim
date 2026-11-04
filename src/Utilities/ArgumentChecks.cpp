@@ -88,7 +88,7 @@ void checkBounds(const T& value) {
 }
 
 void checkBoost(types::boost boost) {
-  checkBounds<Constants::PokemonStatBoost>(boost);
+  checkBounds<Constants::PokemonStatBoostChange>(boost);
 }
 
 void checkStat(types::stat stat, bool hp = false) {
@@ -323,6 +323,9 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
     stat::EffectiveSpd,
     stat::EffectiveSpe>(pokemonEntity);
 
+  const auto& [atkBoost, defBoost, spaBoost, spdBoost, speBoost] =
+    registry.try_get<AtkBoost, DefBoost, SpaBoost, SpdBoost, SpeBoost>(pokemonEntity);
+
   POKESIM_REQUIRE_NM(has<tags::Battle>(battle.val, registry));
   POKESIM_REQUIRE_NM(has<tags::Side>(side.val, registry));
 
@@ -344,6 +347,11 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
   if (effectiveSpa) check(*effectiveSpa);
   if (effectiveSpd) check(*effectiveSpd);
   if (effectiveSpe) check(*effectiveSpe);
+  if (atkBoost) checkBounds<Constants::PokemonStatBoost>(atkBoost->val);
+  if (defBoost) checkBounds<Constants::PokemonStatBoost>(defBoost->val);
+  if (spaBoost) checkBounds<Constants::PokemonStatBoost>(spaBoost->val);
+  if (spdBoost) checkBounds<Constants::PokemonStatBoost>(spdBoost->val);
+  if (speBoost) checkBounds<Constants::PokemonStatBoost>(speBoost->val);
 
   // bool hasItem = false;
   // for (std::underlying_type_t<dex::Item> i = 0; i < dex::TOTAL_ITEM_COUNT; i++) {
@@ -461,6 +469,24 @@ void check(const dex::shared_name_effect::MetronomeItem& metronome) {
   POKESIM_REQUIRE(
     metronome.successiveHits < Constants::MoveMaxPp::MAX * 2U,
     "This check is to warn more hits than would fit in `moveHits` is reachable and should be accounted for.");
+}
+
+template <>
+void check(const dex::shared_name_effect::MirrorHerb& mirrorHerb) {
+  POKESIM_REQUIRE_NM(mirrorHerb.atkBoost >= Constants::PokemonStatBoostChange::DEFAULT);
+  POKESIM_REQUIRE_NM(mirrorHerb.atkBoost <= Constants::PokemonStatBoostChange::MAX);
+
+  POKESIM_REQUIRE_NM(mirrorHerb.defBoost >= Constants::PokemonStatBoostChange::DEFAULT);
+  POKESIM_REQUIRE_NM(mirrorHerb.defBoost <= Constants::PokemonStatBoostChange::MAX);
+
+  POKESIM_REQUIRE_NM(mirrorHerb.spaBoost >= Constants::PokemonStatBoostChange::DEFAULT);
+  POKESIM_REQUIRE_NM(mirrorHerb.spaBoost <= Constants::PokemonStatBoostChange::MAX);
+
+  POKESIM_REQUIRE_NM(mirrorHerb.spdBoost >= Constants::PokemonStatBoostChange::DEFAULT);
+  POKESIM_REQUIRE_NM(mirrorHerb.spdBoost <= Constants::PokemonStatBoostChange::MAX);
+
+  POKESIM_REQUIRE_NM(mirrorHerb.speBoost >= Constants::PokemonStatBoostChange::DEFAULT);
+  POKESIM_REQUIRE_NM(mirrorHerb.speBoost <= Constants::PokemonStatBoostChange::MAX);
 }
 
 template <>
@@ -922,6 +948,15 @@ void check(const CurrentEffectsAsSource& effects, const types::registry& registr
 template <>
 void check(const CurrentEffectAsTarget& effects, const types::registry& registry) {
   types::registry::checkEntity(effects.val, registry);
+}
+
+template <>
+void check(const EventTargetQueue& eventTargetQueue, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(!eventTargetQueue.val.empty());
+  for (types::entity pokemon : eventTargetQueue.val) {
+    checkPokemon(pokemon, registry);
+  }
+  listHasUniqueValues(eventTargetQueue.val);
 }
 
 template <>

@@ -186,10 +186,10 @@ void runMoveEffects(Simulation& simulation) {
   runEffect(simulation);
   internal::clearCurrentEffect(simulation);
 
-  using Limits = Constants::EffectStackLength;
-  types::effectStackIndex iterations = Limits::MIN;
+  using LoopLimits = Constants::EffectStackLength;
+  types::effectStackIndex iterations = LoopLimits::MIN;
   while (!simulation.hasNone<EffectStack>()) {
-    POKESIM_REQUIRE(iterations <= Limits::MAX, "More effects were stacked than should be possible");
+    POKESIM_REQUIRE(iterations < LoopLimits::MAX, "More effects were stacked than should be possible");
 
     internal::setCurrentEffectFromStack(simulation);
     runEffect(simulation);
@@ -393,7 +393,7 @@ void moveHitLoop(Simulation& simulation) {
   using MoveHitLimits = Constants::MoveHits;
   types::moveHits iterations = MoveHitLimits::MIN;
   while (!simulation.hasNone<HitCount>()) {
-    POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran than possible.");
+    POKESIM_REQUIRE(iterations < MoveHitLimits::MAX, "More hits were ran than possible.");
     if (iterations > MoveHitLimits::MIN) {
       simulation.view<removeHitCountFromFaintedTargets, Tags<tags::CurrentMoveHit>>();
       removeFinishedHitsFromMoveLists(simulation);

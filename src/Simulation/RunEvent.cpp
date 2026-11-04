@@ -52,11 +52,16 @@ void runBeforeMove(Simulation& simulation) {
   dex::ChoiceLock::onBeforeMove(simulation);
 }
 
+void runAfterMove(Simulation& simulation) {
+  dex::MirrorHerb::Effect::onAnyAfterMove(simulation);
+}
+
 void runResidual(Simulation& simulation) {
   dex::Reflect::Effect::onResidual(simulation);
   dex::Flinch::onResidual(simulation);
   dex::Burn::onResidual(simulation);
   dex::BadPoison::Effect::onResidual(simulation);
+  dex::MirrorHerb::Effect::onResidual(simulation);
 }
 
 void runFractionalPriority(Simulation& simulation) {
@@ -156,7 +161,10 @@ void runAfterEachBoostEvent(Simulation& simulation) {
   dex::Defiant::onAfterEachBoost(simulation);
 }
 
-void runAfterBoostEvent(Simulation&) {}
+void runAfterBoostEvent(Simulation& simulation) {
+  dex::MirrorHerb::onFoeAfterBoost(simulation);
+}
+
 void runModifyMoveAccuracyBoostEvent(Simulation&) {}
 
 void runModifyTarget(Simulation&) {}
@@ -242,6 +250,11 @@ void runStartFreeze(Simulation&) {
 }
 
 void runTryTakeItemEvent(Simulation&) {}
+
+void runUseItemEvent(Simulation& simulation) {
+  dex::MirrorHerb::Effect::onUse(simulation);
+}
+
 void runEatItemEvent(Simulation& simulation) {
   dex::LumBerry::onEat(simulation);
 }
@@ -266,6 +279,7 @@ void runBeforeSwitchOutEvent(Simulation&) {}
 void runSwitchInEvent(Simulation& simulation) {
   dex::Imposter::onSwitchIn(simulation);
   dex::BadPoison::Effect::onSwitchIn(simulation);
+  dex::MirrorHerb::Effect::onAnySwitchIn(simulation);
 }
 
 void runSwitchOutEvent(Simulation& simulation) {

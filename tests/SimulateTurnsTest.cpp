@@ -485,11 +485,11 @@ TEST_CASE("Decisions", "[Simulation][SimulateTurn][ActionQueue]") {
   };
 
   setSideHandles();
-  auto equalsSingleMoveOptions = [](const types::moveSlots<SinglesMoveOption>& options) {
+  auto equalsSinglesMoveOptions = [](const types::moveSlots<SinglesMoveOption>& options) {
     return Catch::Matchers::UnorderedRangeEquals(options);
   };
 
-  auto equalsDoubleMoveOptions = [](const types::moveSlots<DoublesMoveOption>& options) {
+  auto equalsDoublesMoveOptions = [](const types::moveSlots<DoublesMoveOption>& options) {
     return Catch::Matchers::UnorderedRangeEquals(options);
   };
 
@@ -517,13 +517,13 @@ TEST_CASE("Decisions", "[Simulation][SimulateTurn][ActionQueue]") {
       REQUIRE(p1Options.switches.val == types::teamPositions<Slot>{Slot::P1B, Slot::P1C});
       REQUIRE_THAT(
         p1Options.moves,
-        equalsSingleMoveOptions({
+        equalsSinglesMoveOptions({
           {dex::Move::FLASH_CANNON, Slot::P2A},
           {dex::Move::FURY_ATTACK, Slot::P2A},
         }));
 
       REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2B, Slot::P2C});
-      REQUIRE_THAT(p2Options.moves, equalsSingleMoveOptions({{dex::Move::THUNDERBOLT, Slot::P1A}}));
+      REQUIRE_THAT(p2Options.moves, equalsSinglesMoveOptions({{dex::Move::THUNDERBOLT, Slot::P1A}}));
     }
     else {
       DoublesSideOptions p1Options = p1Side.get<DoublesSideOptions>();
@@ -535,14 +535,14 @@ TEST_CASE("Decisions", "[Simulation][SimulateTurn][ActionQueue]") {
 
       REQUIRE_THAT(
         p1Options.moves[0U],
-        equalsDoubleMoveOptions({
+        equalsDoublesMoveOptions({
           {dex::Move::FURY_ATTACK, {Slot::P2A, Slot::P2B}},
           {dex::Move::FLASH_CANNON, {Slot::P2A, Slot::P2B}},
         }));
-      REQUIRE_THAT(p1Options.moves[1U], equalsDoubleMoveOptions({{dex::Move::MOONBLAST, {Slot::P2A, Slot::P2B}}}));
+      REQUIRE_THAT(p1Options.moves[1U], equalsDoublesMoveOptions({{dex::Move::MOONBLAST, {Slot::P2A, Slot::P2B}}}));
 
-      REQUIRE_THAT(p2Options.moves[0U], equalsDoubleMoveOptions({{dex::Move::THUNDERBOLT, {Slot::P1A, Slot::P1B}}}));
-      REQUIRE_THAT(p2Options.moves[1U], equalsDoubleMoveOptions({{dex::Move::KNOCK_OFF, {Slot::P1A, Slot::P1B}}}));
+      REQUIRE_THAT(p2Options.moves[0U], equalsDoublesMoveOptions({{dex::Move::THUNDERBOLT, {Slot::P1A, Slot::P1B}}}));
+      REQUIRE_THAT(p2Options.moves[1U], equalsDoublesMoveOptions({{dex::Move::KNOCK_OFF, {Slot::P1A, Slot::P1B}}}));
     }
 
     std::swap(p2C, p2A);
@@ -558,10 +558,10 @@ TEST_CASE("Decisions", "[Simulation][SimulateTurn][ActionQueue]") {
       SinglesSideOptions p2Options = p2Side.get<SinglesSideOptions>();
 
       REQUIRE(p1Options.switches.val.empty());
-      REQUIRE_THAT(p1Options.moves, equalsSingleMoveOptions({{dex::Move::FURY_ATTACK, Slot::P2A}}));
+      REQUIRE_THAT(p1Options.moves, equalsSinglesMoveOptions({{dex::Move::FURY_ATTACK, Slot::P2A}}));
 
       REQUIRE(p2Options.switches.val == types::teamPositions<Slot>{Slot::P2B, Slot::P2C});
-      REQUIRE_THAT(p2Options.moves, equalsSingleMoveOptions({{dex::Move::QUIVER_DANCE, Slot::P2A}}));
+      REQUIRE_THAT(p2Options.moves, equalsSinglesMoveOptions({{dex::Move::QUIVER_DANCE, Slot::P2A}}));
     }
     else {
       DoublesSideOptions p1Options = p1Side.get<DoublesSideOptions>();
@@ -571,11 +571,11 @@ TEST_CASE("Decisions", "[Simulation][SimulateTurn][ActionQueue]") {
         REQUIRE(p2Options.switches[i].val == types::teamPositions<Slot>{Slot::P2C});
       }
 
-      REQUIRE_THAT(p1Options.moves[0U], equalsDoubleMoveOptions({{dex::Move::FURY_ATTACK, {Slot::P2A, Slot::P2B}}}));
+      REQUIRE_THAT(p1Options.moves[0U], equalsDoublesMoveOptions({{dex::Move::FURY_ATTACK, {Slot::P2A, Slot::P2B}}}));
       REQUIRE(p1Options.moves[1U].empty());
 
-      REQUIRE_THAT(p2Options.moves[0U], equalsDoubleMoveOptions({{dex::Move::QUIVER_DANCE, {Slot::P2A}}}));
-      REQUIRE_THAT(p2Options.moves[1U], equalsDoubleMoveOptions({{dex::Move::KNOCK_OFF, {Slot::P1A}}}));
+      REQUIRE_THAT(p2Options.moves[0U], equalsDoublesMoveOptions({{dex::Move::QUIVER_DANCE, {Slot::P2A}}}));
+      REQUIRE_THAT(p2Options.moves[1U], equalsDoublesMoveOptions({{dex::Move::KNOCK_OFF, {Slot::P1A}}}));
     }
   }
 }

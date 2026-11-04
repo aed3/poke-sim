@@ -2,6 +2,7 @@
 
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/FoeSide.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
@@ -66,6 +67,29 @@ Slot pokemonEntityToSlot(const types::registry& registry, types::entity sideEnti
 bool isAlly(types::registry& registry, types::entity pokemonEntity1, types::entity pokemonEntity2) {
   return pokemonEntity1 == pokemonEntity2 ||
          registry.get<Side>(pokemonEntity1).val == registry.get<Side>(pokemonEntity2).val;
+}
+
+types::entity pokemonEntityToSinglesActiveFoe(
+  types::registry& registry, types::entity sideEntity, types::entity pokemonEntity) {
+  const Team& foeTeam = registry.get<Team>(registry.get<FoeSide>(sideEntity).val);
+  if (registry.all_of<pokesim::tags::ActivePokemon>(foeTeam.val.front())) {
+    return foeTeam.val.front();
+  }
+  return entt::null;
+}
+
+types::sideSlots<types::entity> pokemonEntityToDoublesActiveFoes(
+  types::registry& registry, types::entity sideEntity, types::entity pokemonEntity) {
+  types::sideSlots<types::entity> foeSlots;
+
+  const Team& foeTeam = registry.get<Team>(registry.get<FoeSide>(sideEntity).val);
+  for (types::teamPositionIndex i = 0U; i < Constants::ActivePokemonSlotsPerSide::DOUBLES; i++) {
+    if (registry.all_of<pokesim::tags::ActivePokemon>(foeTeam.val[i])) {
+      foeSlots.push_back(foeTeam.val[i]);
+    }
+  }
+
+  return foeSlots;
 }
 }  // namespace internal
 

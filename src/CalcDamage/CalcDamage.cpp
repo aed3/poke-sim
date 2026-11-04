@@ -812,7 +812,7 @@ void usesUntilKoFromSuccessiveUseEffects(Simulation& simulation) {
   auto iterations = EffectChangeLimits::MIN;
   while (!simulation.hasNone<internal::calc_damage::TotalDamageDoneOverUses>()) {
     POKESIM_REQUIRE(
-      iterations <= EffectChangeLimits::MAX,
+      iterations < EffectChangeLimits::MAX,
       "Effects changed the damage amount more than should be possible.");
 
     simulation.view<resetDamageRollModifiers>();

@@ -1,11 +1,13 @@
 #include "SimulateTurnEvents.hpp"
 
 #include <Components/EntityHolders/ActiveWithUpdateEvents.hpp>
+#include <Components/EntityHolders/EventTargetQueue.hpp>
 #include <Components/Tags/BattleTags.hpp>
 #include <Components/Tags/Selection.hpp>
 #include <Components/Tags/SimulationTags.hpp>
 #include <Simulation/RunEvent.hpp>
 #include <Simulation/Simulation.hpp>
+#include <Types/Constants.hpp>
 #include <Types/Indexes.hpp>
 #include <Utilities/EntityFilter.hpp>
 
@@ -19,6 +21,13 @@ void setRunUpdate(
     return;
   }
   registry.emplace<pokesim::internal::tags::RunUpdate>(activeWithUpdateEvents.val[index]);
+}
+
+void nextEventTarget(types::handle handle, EventTargetQueue& eventTargetQueue) {
+  eventTargetQueue.val.pop_front();
+  if (eventTargetQueue.val.empty()) {
+    handle.remove<EventTargetQueue>();
+  }
 }
 }  // namespace
 
@@ -35,6 +44,27 @@ void runActiveUpdateEvents(Simulation& simulation) {
     battleFilter.view<setRunUpdate>(index);
     runUpdate(simulation);
     simulation.removeFromEntities<pokesim::internal::tags::RunUpdate>();
+  }
+}
+
+void runOrderedEvent(Simulation& simulation, types::callback runEvent) {
+  auto battleFilter = pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::Battle>{simulation};
+  if (battleFilter.hasNoneSelected<EventTargetQueue>()) {
+    return;
+  }
+
+  battleFilter.view<speedSortEventTargetQueue>();
+  resolveEventTargetQueueSpeedTies(simulation);
+  using LoopLimits = Constants::ActivePokemon;
+  types::activePokemonIndex iterations = LoopLimits::MIN;
+  while (!simulation.hasNone<EventTargetQueue>()) {
+    POKESIM_REQUIRE(
+      iterations < LoopLimits::MAX,
+      "More Pokemon were queued for an event in at least one battle than possible.");
+
+    runEvent(simulation);
+    battleFilter.view<nextEventTarget>();
+    iterations++;
   }
 }
 }  // namespace pokesim::internal::simulate_turn

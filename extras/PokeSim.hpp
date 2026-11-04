@@ -121,6 +121,7 @@
  * src/Components/EffectStack.hpp
  * src/Components/Effects/AddedFlinchChance.hpp
  * src/Components/EntityHolders/ActiveWithUpdateEvents.hpp
+ * src/Components/EntityHolders/EventTargetQueue.hpp
  * src/Components/EntityHolders/FaintQueue.hpp
  * src/Components/EntityHolders/FoeSide.hpp
  * src/Components/EntityHolders/RecycledEntities.hpp
@@ -169,6 +170,7 @@
  * src/Components/Stats.hpp
  * src/Components/Tags/AbilityPropertyTags.hpp
  * src/Components/Tags/BattleTags.hpp
+ * src/Components/Tags/EffectSourceTags.hpp
  * src/Components/Tags/ItemPropertyTags.hpp
  * src/Components/Tags/MovePropertyTags.hpp
  * src/Components/Tags/NatureTags.hpp
@@ -257,7 +259,10 @@
  * src/Pokedex/Pokedex.hpp
  * src/Pokedex/EnumToTag/ItemEnumToTag.hpp
  * src/Pokedex/EnumToTag/StatusEnumToTag.hpp
+ * src/Pokedex/Moves/Agility.hpp
  * src/Pokedex/Moves/AllySwitch.hpp
+ * src/Pokedex/Moves/Amnesia.hpp
+ * src/Pokedex/Moves/BulkUp.hpp
  * src/Pokedex/Moves/ChillingWater.hpp
  * src/Pokedex/Moves/CloseCombat.hpp
  * src/Pokedex/Moves/Confide.hpp
@@ -265,11 +270,13 @@
  * src/Pokedex/Moves/FuryAttack.hpp
  * src/Pokedex/Moves/Glare.hpp
  * src/Pokedex/Moves/Growl.hpp
+ * src/Pokedex/Moves/IronDefense.hpp
  * src/Pokedex/Moves/KnockOff.hpp
  * src/Pokedex/Moves/Leafage.hpp
  * src/Pokedex/Moves/LowSweep.hpp
  * src/Pokedex/Moves/Moonblast.hpp
  * src/Pokedex/Moves/MudSlap.hpp
+ * src/Pokedex/Moves/NastyPlot.hpp
  * src/Pokedex/Moves/NobleRoar.hpp
  * src/Pokedex/Moves/QuickAttack.hpp
  * src/Pokedex/Moves/QuiverDance.hpp
@@ -277,6 +284,7 @@
  * src/Pokedex/Moves/Reversal.hpp
  * src/Pokedex/Moves/SpiritShackle.hpp
  * src/Pokedex/Moves/Splash.hpp
+ * src/Pokedex/Moves/SwordsDance.hpp
  * src/Pokedex/Moves/Tackle.hpp
  * src/Pokedex/Moves/Thunderbolt.hpp
  * src/Pokedex/Moves/Transform.hpp
@@ -16439,6 +16447,12 @@ struct Constants {
     static constexpr std::int8_t DEFAULT = 0;
   };
 
+  struct PokemonStatBoostChange {
+    static constexpr std::int8_t MAX = 12;
+    static constexpr std::int8_t MIN = -12;
+    static constexpr std::int8_t DEFAULT = 0;
+  };
+
   struct BadPoisonStages {
     static constexpr std::uint8_t MIN = 0U;
     static constexpr std::uint8_t MAX = 15U;
@@ -18222,6 +18236,13 @@ class fixedMemoryVector : private std::array<Type, Size> {
     used--;
   }
 
+  void pop_front() {
+    for (size_type i = 1U; i < used; i++) {
+      at(i - 1U) = at(i);
+    }
+    pop_back();
+  }
+
   void unordered_remove(const Type& valueToRemove) {
     for (Type& value : *this) {
       if (valueToRemove == value) {
@@ -18311,6 +18332,9 @@ using moveSlots = fixedMemoryVector<T, Constants::MoveSlots::MAX, Constants::Mov
 template <typename T>
 using sideSlots =
   fixedMemoryVector<T, Constants::ActivePokemonSlotsPerSide::MAX, Constants::ActivePokemonSlotsPerSide::MAX>;
+
+template <typename T>
+using activePokemon = fixedMemoryVector<T, Constants::ActivePokemon::MAX>;
 
 template <typename T>
 using targets = fixedMemoryVector<T, Constants::Targets::MAX, (Constants::Targets::MAX + Constants::Targets::MIN) / 2U>;
@@ -18859,6 +18883,7 @@ enum class Volatile : std::uint8_t {
   CHOICE_LOCK,
   FLINCH,
   METRONOME,
+  MIRROR_HERB,
   TRAPPED,
   TRAPPER,
   VOLATILE_TOTAL
@@ -18989,7 +19014,6 @@ static constexpr std::uint8_t SLOT_LETTER_MASK = 0x0F;
 namespace pokesim {
 struct Sides;
 struct MoveSlots;
-class Pokedex;
 
 namespace internal {
 types::teamPositionIndex slotToIndex(Slot slot);
@@ -18997,6 +19021,11 @@ types::teamPositionIndex pokemonEntityToIndex(
   const types::registry& registry, types::entity sideEntity, types::entity pokemonEntity);
 Slot pokemonEntityToSlot(const types::registry& registry, types::entity sideEntity, types::entity pokemonEntity);
 bool isAlly(types::registry& registry, types::entity pokemonEntity1, types::entity pokemonEntity2);
+
+types::entity pokemonEntityToSinglesActiveFoe(
+  types::registry& registry, types::entity sideEntity, types::entity pokemonEntity);
+types::sideSlots<types::entity> pokemonEntityToDoublesActiveFoes(
+  types::registry& registry, types::entity sideEntity, types::entity pokemonEntity);
 }  // namespace internal
 
 Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position);
@@ -19009,7 +19038,6 @@ void swapEntitySlots(types::registry& registry, types::entity sideEntity, Slot s
 void swapEntitySlots(types::registry& registry, const Sides& sides, Slot slot1, Slot slot2);
 types::entity slotToAllyPokemonEntity(const types::registry& registry, const Sides& sides, Slot slot);
 types::moveSlotIndex moveToMoveSlot(const MoveSlots& moveSlots, dex::Move move);
-
 }  // namespace pokesim
 
 //////////////////// END OF src/Battle/Helpers/Helpers.hpp /////////////////////
@@ -19972,18 +20000,28 @@ struct AddedFlinchChance {
 
 namespace pokesim {
 struct ActiveWithUpdateEvents {
-  types::fixedMemoryVector<types::entity, Constants::ActivePokemon::MAX> val{};
+  types::activePokemon<types::entity> val{};
 };
 }  // namespace pokesim
 
 //////// END OF src/Components/EntityHolders/ActiveWithUpdateEvents.hpp ////////
+
+////////// START OF src/Components/EntityHolders/EventTargetQueue.hpp //////////
+
+namespace pokesim {
+struct EventTargetQueue {
+  types::activePokemon<types::entity> val{};
+};
+}  // namespace pokesim
+
+/////////// END OF src/Components/EntityHolders/EventTargetQueue.hpp ///////////
 
 ///////////// START OF src/Components/EntityHolders/FaintQueue.hpp /////////////
 
 namespace pokesim {
 // Contains the list of pokemon that will faint at the end of the current action.
 struct FaintQueue {
-  types::fixedMemoryVector<types::entity, Constants::ActivePokemon::MAX> val{};
+  types::activePokemon<types::entity> val{};
 };
 }  // namespace pokesim
 
@@ -20679,7 +20717,7 @@ struct SpeedTieIndexes {
     bool operator==(const Span& other) const noexcept { return other.start == start && other.length == length; }
   };
 
-  types::fixedMemoryVector<Span, Constants::ActivePokemon::MAX, Constants::ActivePokemon::MAX / 2U> val{};
+  types::activePokemon<Span> val{};
 };
 }  // namespace pokesim
 
@@ -20873,6 +20911,14 @@ struct BattleMidTurn {};
 }  // namespace pokesim::tags
 
 ////////////////// END OF src/Components/Tags/BattleTags.hpp ///////////////////
+
+////////////// START OF src/Components/Tags/EffectSourceTags.hpp ///////////////
+
+namespace pokesim::internal::tags {
+struct FromMirrorHerbOrOpportunist {};
+}  // namespace pokesim::internal::tags
+
+/////////////// END OF src/Components/Tags/EffectSourceTags.hpp ////////////////
 
 ////////////// START OF src/Components/Tags/ItemPropertyTags.hpp ///////////////
 
@@ -22187,6 +22233,10 @@ class Simulation;
 }  // namespace pokesim
 
 namespace pokesim::dex {
+namespace shared_name_effect {
+struct MirrorHerb;
+}
+
 struct MirrorHerb {
   static constexpr Item name(GameMechanics = {}) { return dex::Item::MIRROR_HERB; }
 
@@ -22196,16 +22246,37 @@ struct MirrorHerb {
   };
 
   static void onFoeAfterBoost(Simulation& simulation);
-  static void onAnySwitchIn(Simulation& simulation);
+
+  using Effect = shared_name_effect::MirrorHerb;
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+
+namespace shared_name_effect {
+struct MirrorHerb {
+  static constexpr Volatile name(GameMechanics = {}) { return Volatile::MIRROR_HERB; }
+  using MainSource = pokesim::dex::MirrorHerb;
+
   static void onAnyAfterMega(Simulation& simulation);
-  static void onAnyAfterTerastallize(Simulation& simulation);
   static void onAnyAfterMove(Simulation& simulation);
+  static void onAnyAfterTerastallize(Simulation& simulation);
+  static void onAnySwitchIn(Simulation& simulation);
   static void onResidual(Simulation& simulation);
   static void onUse(Simulation& simulation);
   static void onEnd(Simulation& simulation);
 
-  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+  types::boost atkBoost = Constants::PokemonStatBoost::DEFAULT;
+  types::boost defBoost = Constants::PokemonStatBoost::DEFAULT;
+  types::boost spaBoost = Constants::PokemonStatBoost::DEFAULT;
+  types::boost spdBoost = Constants::PokemonStatBoost::DEFAULT;
+  types::boost speBoost = Constants::PokemonStatBoost::DEFAULT;
+
+  constexpr bool operator==(const MirrorHerb& other) const {
+    return atkBoost == other.atkBoost && defBoost == other.defBoost && spaBoost == other.spaBoost &&
+           spdBoost == other.spdBoost && speBoost == other.speBoost;
+  }
 };
+}  // namespace shared_name_effect
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Items/MirrorHerb.hpp ////////////////////
@@ -23659,6 +23730,33 @@ bool hasTag(Status status, const types::registry& registry, types::entity entity
 
 /////////////// END OF src/Pokedex/EnumToTag/StatusEnumToTag.hpp ///////////////
 
+//////////////////// START OF src/Pokedex/Moves/Agility.hpp ////////////////////
+
+namespace pokesim::dex {
+struct SwordsDance {
+  static constexpr Move name(GameMechanics = {}) { return Move::SWORDS_DANCE; }
+  static constexpr Type type(GameMechanics) { return Type::NORMAL; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
+
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
+
+  struct targetPrimaryEffect {
+    static constexpr types::boost atkBoost(GameMechanics) { return 2; }
+  };
+
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Swords Dance"; }
+    static constexpr std::string_view smogonId() { return "swordsdance"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Moves/Agility.hpp /////////////////////
+
 ////////////////// START OF src/Pokedex/Moves/AllySwitch.hpp ///////////////////
 
 namespace pokesim {
@@ -23704,6 +23802,61 @@ struct AllySwitch {
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Moves/AllySwitch.hpp ////////////////////
+
+//////////////////// START OF src/Pokedex/Moves/Amnesia.hpp ////////////////////
+
+namespace pokesim::dex {
+struct Amnesia {
+  static constexpr Move name(GameMechanics = {}) { return Move::AMNESIA; }
+  static constexpr Type type(GameMechanics) { return Type::PSYCHIC; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
+
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
+
+  struct targetPrimaryEffect {
+    static constexpr types::boost spdBoost(GameMechanics) { return 2; }
+  };
+
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Amnesia"; }
+    static constexpr std::string_view smogonId() { return "amnesia"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Moves/Amnesia.hpp /////////////////////
+
+//////////////////// START OF src/Pokedex/Moves/BulkUp.hpp /////////////////////
+
+namespace pokesim::dex {
+struct BulkUp {
+  static constexpr Move name(GameMechanics = {}) { return Move::BULK_UP; }
+  static constexpr Type type(GameMechanics) { return Type::FIGHTING; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
+
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
+
+  struct targetPrimaryEffect {
+    static constexpr types::boost atkBoost(GameMechanics) { return 1; }
+    static constexpr types::boost defBoost(GameMechanics) { return 1; }
+  };
+
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Bulk up"; }
+    static constexpr std::string_view smogonId() { return "bulkup"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Moves/BulkUp.hpp //////////////////////
 
 ///////////////// START OF src/Pokedex/Moves/ChillingWater.hpp /////////////////
 
@@ -23913,6 +24066,33 @@ struct Growl {
 
 ////////////////////// END OF src/Pokedex/Moves/Growl.hpp //////////////////////
 
+////////////////// START OF src/Pokedex/Moves/IronDefense.hpp //////////////////
+
+namespace pokesim::dex {
+struct IronDefense {
+  static constexpr Move name(GameMechanics = {}) { return Move::IRON_DEFENSE; }
+  static constexpr Type type(GameMechanics) { return Type::STEEL; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
+
+  static constexpr types::pp basePp(GameMechanics) { return 15U; }
+
+  struct targetPrimaryEffect {
+    static constexpr types::boost defBoost(GameMechanics) { return 2; }
+  };
+
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Iron Defense"; }
+    static constexpr std::string_view smogonId() { return "irondefense"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Moves/IronDefense.hpp ///////////////////
+
 /////////////////// START OF src/Pokedex/Moves/KnockOff.hpp ////////////////////
 
 namespace pokesim {
@@ -24062,6 +24242,33 @@ struct MudSlap {
 }  // namespace pokesim::dex
 
 ///////////////////// END OF src/Pokedex/Moves/MudSlap.hpp /////////////////////
+
+/////////////////// START OF src/Pokedex/Moves/NastyPlot.hpp ///////////////////
+
+namespace pokesim::dex {
+struct NastyPlot {
+  static constexpr Move name(GameMechanics = {}) { return Move::NASTY_PLOT; }
+  static constexpr Type type(GameMechanics) { return Type::DARK; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
+
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
+
+  struct targetPrimaryEffect {
+    static constexpr types::boost spaBoost(GameMechanics) { return 2; }
+  };
+
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Nasty Plot"; }
+    static constexpr std::string_view smogonId() { return "nastyplot"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Moves/NastyPlot.hpp ////////////////////
 
 /////////////////// START OF src/Pokedex/Moves/NobleRoar.hpp ///////////////////
 
@@ -24319,6 +24526,33 @@ struct Splash {
 }  // namespace pokesim::dex
 
 ///////////////////// END OF src/Pokedex/Moves/Splash.hpp //////////////////////
+
+////////////////// START OF src/Pokedex/Moves/SwordsDance.hpp //////////////////
+
+namespace pokesim::dex {
+struct Agility {
+  static constexpr Move name(GameMechanics = {}) { return Move::AGILITY; }
+  static constexpr Type type(GameMechanics) { return Type::PSYCHIC; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
+
+  static constexpr types::pp basePp(GameMechanics) { return 20U; }
+
+  struct targetPrimaryEffect {
+    static constexpr types::boost speBoost(GameMechanics) { return 2; }
+  };
+
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Agility"; }
+    static constexpr std::string_view smogonId() { return "agility"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Moves/SwordsDance.hpp ///////////////////
 
 //////////////////// START OF src/Pokedex/Moves/Tackle.hpp /////////////////////
 
@@ -25286,6 +25520,7 @@ struct CurrentEffectSource;
 struct CurrentEffectTarget;
 struct CurrentEffectsAsSource;
 struct CurrentEffectAsTarget;
+struct EventTargetQueue;
 struct FaintQueue;
 struct FoeSide;
 struct RecycledAction;
@@ -25354,6 +25589,7 @@ struct Trapper;
 namespace shared_name_effect {
 struct Reflect;
 struct MetronomeItem;
+struct MirrorHerb;
 struct BadPoison;
 }  // namespace shared_name_effect
 }  // namespace dex
@@ -25430,6 +25666,9 @@ void check(const dex::shared_name_effect::Reflect&);
 
 template <>
 void check(const dex::shared_name_effect::MetronomeItem&);
+
+template <>
+void check(const dex::shared_name_effect::MirrorHerb&);
 
 template <>
 void check(const dex::shared_name_effect::BadPoison&);
@@ -25600,6 +25839,9 @@ void check(const CurrentEffectsAsSource&, const types::registry&);
 
 template <>
 void check(const CurrentEffectAsTarget&, const types::registry&);
+
+template <>
+void check(const EventTargetQueue&, const types::registry&);
 
 template <>
 void check(const FaintQueue&, const types::registry&);
@@ -28292,6 +28534,7 @@ namespace internal {
 void runUpdate(Simulation& simulation);
 
 void runBeforeMove(Simulation& simulation);
+void runAfterMove(Simulation& simulation);
 void runResidual(Simulation& simulation);
 void runFractionalPriority(Simulation& simulation);
 void runModifyPriority(Simulation& simulation);
@@ -28344,6 +28587,7 @@ void runStartBadPoison(Simulation& simulation);
 void runStartFreeze(Simulation& simulation);
 
 void runTryTakeItemEvent(Simulation& simulation);  // TakeItem
+void runUseItemEvent(Simulation& simulation);      // Use
 void runEatItemEvent(Simulation& simulation);      // Eat
 void runAfterUseItemEvent(Simulation& simulation);
 void runAfterEatItemEvent(Simulation& simulation);  // EatItem
@@ -28491,13 +28735,16 @@ namespace pokesim {
 class Simulation;
 struct ActionQueue;
 struct ActiveWithUpdateEvents;
+struct EventTargetQueue;
 
 namespace internal::simulate_turn {
 void speedSort(types::handle handle, ActionQueue& actionQueue);
 void speedSortActiveWithUpdateEvents(types::handle handle, ActiveWithUpdateEvents& activeWithUpdateEvents);
+void speedSortEventTargetQueue(types::handle handle, EventTargetQueue& eventTargetQueue);
 void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue);
 void resolveActionQueueSpeedTies(Simulation& simulation);
 void resolveUpdateEventSpeedTies(Simulation& simulation);
+void resolveEventTargetQueueSpeedTies(Simulation& simulation);
 }  // namespace internal::simulate_turn
 }  // namespace pokesim
 
@@ -28612,6 +28859,7 @@ class Simulation;
 
 namespace internal::simulate_turn {
 void runActiveUpdateEvents(Simulation& simulation);
+void runOrderedEvent(Simulation& simulation, types::callback runEvent);
 }  // namespace internal::simulate_turn
 }  // namespace pokesim
 
@@ -29258,7 +29506,10 @@ namespace pokesim::dex {
 template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
 constexpr auto enumToTag(Move move, RunArgs&&... args) {
   switch (move) {
+    case Move::AGILITY:        return RunStruct<Agility, T...>::run(std::forward<RunArgs>(args)...);
     case Move::ALLY_SWITCH:    return RunStruct<AllySwitch, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::AMNESIA:        return RunStruct<Amnesia, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::BULK_UP:        return RunStruct<BulkUp, T...>::run(std::forward<RunArgs>(args)...);
     case Move::CHILLING_WATER: return RunStruct<ChillingWater, T...>::run(std::forward<RunArgs>(args)...);
     case Move::CLOSE_COMBAT:   return RunStruct<CloseCombat, T...>::run(std::forward<RunArgs>(args)...);
     case Move::CONFIDE:        return RunStruct<Confide, T...>::run(std::forward<RunArgs>(args)...);
@@ -29266,11 +29517,13 @@ constexpr auto enumToTag(Move move, RunArgs&&... args) {
     case Move::FURY_ATTACK:    return RunStruct<FuryAttack, T...>::run(std::forward<RunArgs>(args)...);
     case Move::GLARE:          return RunStruct<Glare, T...>::run(std::forward<RunArgs>(args)...);
     case Move::GROWL:          return RunStruct<Growl, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::IRON_DEFENSE:   return RunStruct<IronDefense, T...>::run(std::forward<RunArgs>(args)...);
     case Move::KNOCK_OFF:      return RunStruct<KnockOff, T...>::run(std::forward<RunArgs>(args)...);
     case Move::LEAFAGE:        return RunStruct<Leafage, T...>::run(std::forward<RunArgs>(args)...);
     case Move::LOW_SWEEP:      return RunStruct<LowSweep, T...>::run(std::forward<RunArgs>(args)...);
     case Move::MOONBLAST:      return RunStruct<Moonblast, T...>::run(std::forward<RunArgs>(args)...);
     case Move::MUD_SLAP:       return RunStruct<MudSlap, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::NASTY_PLOT:     return RunStruct<NastyPlot, T...>::run(std::forward<RunArgs>(args)...);
     case Move::NOBLE_ROAR:     return RunStruct<NobleRoar, T...>::run(std::forward<RunArgs>(args)...);
     case Move::QUICK_ATTACK:   return RunStruct<QuickAttack, T...>::run(std::forward<RunArgs>(args)...);
     case Move::QUIVER_DANCE:   return RunStruct<QuiverDance, T...>::run(std::forward<RunArgs>(args)...);
@@ -29278,6 +29531,7 @@ constexpr auto enumToTag(Move move, RunArgs&&... args) {
     case Move::REVERSAL:       return RunStruct<Reversal, T...>::run(std::forward<RunArgs>(args)...);
     case Move::SPIRIT_SHACKLE: return RunStruct<SpiritShackle, T...>::run(std::forward<RunArgs>(args)...);
     case Move::SPLASH:         return RunStruct<Splash, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::SWORDS_DANCE:   return RunStruct<SwordsDance, T...>::run(std::forward<RunArgs>(args)...);
     case Move::TACKLE:         return RunStruct<Tackle, T...>::run(std::forward<RunArgs>(args)...);
     case Move::THUNDERBOLT:    return RunStruct<Thunderbolt, T...>::run(std::forward<RunArgs>(args)...);
     case Move::TRANSFORM:      return RunStruct<Transform, T...>::run(std::forward<RunArgs>(args)...);

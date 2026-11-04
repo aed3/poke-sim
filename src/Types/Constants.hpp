@@ -87,6 +87,12 @@ struct Constants {
     static constexpr std::int8_t DEFAULT = 0;
   };
 
+  struct PokemonStatBoostChange {
+    static constexpr std::int8_t MAX = 12;
+    static constexpr std::int8_t MIN = -12;
+    static constexpr std::int8_t DEFAULT = 0;
+  };
+
   struct BadPoisonStages {
     static constexpr std::uint8_t MIN = 0U;
     static constexpr std::uint8_t MAX = 15U;

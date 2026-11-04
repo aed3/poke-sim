@@ -227,7 +227,7 @@ void checkBounds(const T& value) {
 }
 
 void checkBoost(types::boost boost) {
-  checkBounds<Constants::PokemonStatBoost>(boost);
+  checkBounds<Constants::PokemonStatBoostChange>(boost);
 }
 
 void checkStat(types::stat stat, bool hp = false) {
@@ -462,6 +462,9 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
     stat::EffectiveSpd,
     stat::EffectiveSpe>(pokemonEntity);
 
+  const auto& [atkBoost, defBoost, spaBoost, spdBoost, speBoost] =
+    registry.try_get<AtkBoost, DefBoost, SpaBoost, SpdBoost, SpeBoost>(pokemonEntity);
+
   POKESIM_REQUIRE_NM(has<tags::Battle>(battle.val, registry));
   POKESIM_REQUIRE_NM(has<tags::Side>(side.val, registry));
 
@@ -483,6 +486,11 @@ void checkPokemon(types::entity pokemonEntity, const types::registry& registry) 
   if (effectiveSpa) check(*effectiveSpa);
   if (effectiveSpd) check(*effectiveSpd);
   if (effectiveSpe) check(*effectiveSpe);
+  if (atkBoost) checkBounds<Constants::PokemonStatBoost>(atkBoost->val);
+  if (defBoost) checkBounds<Constants::PokemonStatBoost>(defBoost->val);
+  if (spaBoost) checkBounds<Constants::PokemonStatBoost>(spaBoost->val);
+  if (spdBoost) checkBounds<Constants::PokemonStatBoost>(spdBoost->val);
+  if (speBoost) checkBounds<Constants::PokemonStatBoost>(speBoost->val);
 
   // bool hasItem = false;
   // for (std::underlying_type_t<dex::Item> i = 0; i < dex::TOTAL_ITEM_COUNT; i++) {
@@ -600,6 +608,24 @@ void check(const dex::shared_name_effect::MetronomeItem& metronome) {
   POKESIM_REQUIRE(
     metronome.successiveHits < Constants::MoveMaxPp::MAX * 2U,
     "This check is to warn more hits than would fit in `moveHits` is reachable and should be accounted for.");
+}
+
+template <>
+void check(const dex::shared_name_effect::MirrorHerb& mirrorHerb) {
+  POKESIM_REQUIRE_NM(mirrorHerb.atkBoost >= Constants::PokemonStatBoostChange::DEFAULT);
+  POKESIM_REQUIRE_NM(mirrorHerb.atkBoost <= Constants::PokemonStatBoostChange::MAX);
+
+  POKESIM_REQUIRE_NM(mirrorHerb.defBoost >= Constants::PokemonStatBoostChange::DEFAULT);
+  POKESIM_REQUIRE_NM(mirrorHerb.defBoost <= Constants::PokemonStatBoostChange::MAX);
+
+  POKESIM_REQUIRE_NM(mirrorHerb.spaBoost >= Constants::PokemonStatBoostChange::DEFAULT);
+  POKESIM_REQUIRE_NM(mirrorHerb.spaBoost <= Constants::PokemonStatBoostChange::MAX);
+
+  POKESIM_REQUIRE_NM(mirrorHerb.spdBoost >= Constants::PokemonStatBoostChange::DEFAULT);
+  POKESIM_REQUIRE_NM(mirrorHerb.spdBoost <= Constants::PokemonStatBoostChange::MAX);
+
+  POKESIM_REQUIRE_NM(mirrorHerb.speBoost >= Constants::PokemonStatBoostChange::DEFAULT);
+  POKESIM_REQUIRE_NM(mirrorHerb.speBoost <= Constants::PokemonStatBoostChange::MAX);
 }
 
 template <>
@@ -1061,6 +1087,15 @@ void check(const CurrentEffectsAsSource& effects, const types::registry& registr
 template <>
 void check(const CurrentEffectAsTarget& effects, const types::registry& registry) {
   types::registry::checkEntity(effects.val, registry);
+}
+
+template <>
+void check(const EventTargetQueue& eventTargetQueue, const types::registry& registry) {
+  POKESIM_REQUIRE_NM(!eventTargetQueue.val.empty());
+  for (types::entity pokemon : eventTargetQueue.val) {
+    checkPokemon(pokemon, registry);
+  }
+  listHasUniqueValues(eventTargetQueue.val);
 }
 
 template <>
@@ -2462,11 +2497,16 @@ void runBeforeMove(Simulation& simulation) {
   dex::ChoiceLock::onBeforeMove(simulation);
 }
 
+void runAfterMove(Simulation& simulation) {
+  dex::MirrorHerb::Effect::onAnyAfterMove(simulation);
+}
+
 void runResidual(Simulation& simulation) {
   dex::Reflect::Effect::onResidual(simulation);
   dex::Flinch::onResidual(simulation);
   dex::Burn::onResidual(simulation);
   dex::BadPoison::Effect::onResidual(simulation);
+  dex::MirrorHerb::Effect::onResidual(simulation);
 }
 
 void runFractionalPriority(Simulation& simulation) {
@@ -2566,7 +2606,10 @@ void runAfterEachBoostEvent(Simulation& simulation) {
   dex::Defiant::onAfterEachBoost(simulation);
 }
 
-void runAfterBoostEvent(Simulation&) {}
+void runAfterBoostEvent(Simulation& simulation) {
+  dex::MirrorHerb::onFoeAfterBoost(simulation);
+}
+
 void runModifyMoveAccuracyBoostEvent(Simulation&) {}
 
 void runModifyTarget(Simulation&) {}
@@ -2652,6 +2695,11 @@ void runStartFreeze(Simulation&) {
 }
 
 void runTryTakeItemEvent(Simulation&) {}
+
+void runUseItemEvent(Simulation& simulation) {
+  dex::MirrorHerb::Effect::onUse(simulation);
+}
+
 void runEatItemEvent(Simulation& simulation) {
   dex::LumBerry::onEat(simulation);
 }
@@ -2676,6 +2724,7 @@ void runBeforeSwitchOutEvent(Simulation&) {}
 void runSwitchInEvent(Simulation& simulation) {
   dex::Imposter::onSwitchIn(simulation);
   dex::BadPoison::Effect::onSwitchIn(simulation);
+  dex::MirrorHerb::Effect::onAnySwitchIn(simulation);
 }
 
 void runSwitchOutEvent(Simulation& simulation) {
@@ -2740,6 +2789,25 @@ void sortActionQueueAndSetSpeedTies(
     [](const ActionQueueItem& itemA, const ActionQueueItem& itemB) { return itemA.isSameSpeed(itemB); });
 }
 
+void speedSortEntityList(types::handle handle, types::activePokemon<types::entity>& list) {
+  if (list.size() <= 1U) {
+    return;
+  }
+
+  types::registry& registry = *handle.registry();
+  sortAndSetSpeedTies(
+    handle,
+    list,
+    0U,
+    list.size(),
+    [&registry](types::entity entityA, types::entity entityB) {
+      return registry.get<stat::EffectiveSpe>(entityA).val > registry.get<stat::EffectiveSpe>(entityB).val;
+    },
+    [&registry](types::entity entityA, types::entity entityB) {
+      return registry.get<stat::EffectiveSpe>(entityA).val == registry.get<stat::EffectiveSpe>(entityB).val;
+    });
+}
+
 template <typename List>
 void setSpeedTieOrder(List& list, const SpeedTieIndexes& speedTies, RandomEventIndex randomEventIndex) {
   const auto& speedTie = speedTies.val.back();
@@ -2798,22 +2866,11 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
 }
 
 void speedSortActiveWithUpdateEvents(types::handle handle, ActiveWithUpdateEvents& activeWithUpdateEvents) {
-  if (activeWithUpdateEvents.val.size() <= 1U) {
-    return;
-  }
+  speedSortEntityList(handle, activeWithUpdateEvents.val);
+}
 
-  types::registry& registry = *handle.registry();
-  sortAndSetSpeedTies(
-    handle,
-    activeWithUpdateEvents.val,
-    0U,
-    activeWithUpdateEvents.val.size(),
-    [&registry](types::entity entityA, types::entity entityB) {
-      return registry.get<stat::EffectiveSpe>(entityA).val > registry.get<stat::EffectiveSpe>(entityB).val;
-    },
-    [&registry](types::entity entityA, types::entity entityB) {
-      return registry.get<stat::EffectiveSpe>(entityA).val == registry.get<stat::EffectiveSpe>(entityB).val;
-    });
+void speedSortEventTargetQueue(types::handle handle, EventTargetQueue& eventTargetQueue) {
+  speedSortEntityList(handle, eventTargetQueue.val);
 }
 
 void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue) {
@@ -2839,6 +2896,10 @@ void resolveActionQueueSpeedTies(Simulation& simulation) {
 void resolveUpdateEventSpeedTies(Simulation& simulation) {
   resolveSpeedTies<ActiveWithUpdateEvents>(simulation);
 }
+
+void resolveEventTargetQueueSpeedTies(Simulation& simulation) {
+  resolveSpeedTies<EventTargetQueue>(simulation);
+}
 }  // namespace pokesim::internal::simulate_turn
 
 //////////////////// END OF src/SimulateTurn/SpeedSort.cpp /////////////////////
@@ -2853,6 +2914,13 @@ void setRunUpdate(
     return;
   }
   registry.emplace<pokesim::internal::tags::RunUpdate>(activeWithUpdateEvents.val[index]);
+}
+
+void nextEventTarget(types::handle handle, EventTargetQueue& eventTargetQueue) {
+  eventTargetQueue.val.pop_front();
+  if (eventTargetQueue.val.empty()) {
+    handle.remove<EventTargetQueue>();
+  }
 }
 }  // namespace
 
@@ -2869,6 +2937,27 @@ void runActiveUpdateEvents(Simulation& simulation) {
     battleFilter.view<setRunUpdate>(index);
     runUpdate(simulation);
     simulation.removeFromEntities<pokesim::internal::tags::RunUpdate>();
+  }
+}
+
+void runOrderedEvent(Simulation& simulation, types::callback runEvent) {
+  auto battleFilter = pokesim::internal::EntityFilter<pokesim::tags::SimulateTurn, pokesim::tags::Battle>{simulation};
+  if (battleFilter.hasNoneSelected<EventTargetQueue>()) {
+    return;
+  }
+
+  battleFilter.view<speedSortEventTargetQueue>();
+  resolveEventTargetQueueSpeedTies(simulation);
+  using LoopLimits = Constants::ActivePokemon;
+  types::activePokemonIndex iterations = LoopLimits::MIN;
+  while (!simulation.hasNone<EventTargetQueue>()) {
+    POKESIM_REQUIRE(
+      iterations < LoopLimits::MAX,
+      "More Pokemon were queued for an event in at least one battle than possible.");
+
+    runEvent(simulation);
+    battleFilter.view<nextEventTarget>();
+    iterations++;
   }
 }
 }  // namespace pokesim::internal::simulate_turn
@@ -3082,6 +3171,8 @@ void runMoveAction(Simulation& simulation) {
 
   useMove(simulation);
 
+  internal::runAfterMove(simulation);
+
   internal::clearMoveAction(simulation);
 }
 
@@ -3134,10 +3225,7 @@ void runBeforeTurnAction(Simulation&) {
 
 void setFainting(types::registry& registry, FaintQueue& faintQueue) {
   types::entity pokemon = faintQueue.val.front();
-  for (types::activePokemonIndex i = 1U; i < faintQueue.val.size(); i++) {
-    faintQueue.val[i - 1U] = faintQueue.val[i];
-  }
-  faintQueue.val.pop_back();
+  faintQueue.val.pop_front();
   registry.emplace<pokesim::tags::Fainting>(pokemon);
 
   Side side = registry.get<Side>(pokemon);
@@ -3177,7 +3265,7 @@ void faintPokemon(Simulation& simulation) {
   types::activePokemonIndex iterations = LoopLimits::MIN;
   while (!simulation.hasNone<FaintQueue>()) {
     POKESIM_REQUIRE(
-      iterations <= LoopLimits::MAX,
+      iterations < LoopLimits::MAX,
       "More Pokemon were queued to faint in at least one battle than possible.");
 
     battleFilter.view<setFainting>();
@@ -4145,10 +4233,10 @@ void runMoveEffects(Simulation& simulation) {
   runEffect(simulation);
   internal::clearCurrentEffect(simulation);
 
-  using Limits = Constants::EffectStackLength;
-  types::effectStackIndex iterations = Limits::MIN;
+  using LoopLimits = Constants::EffectStackLength;
+  types::effectStackIndex iterations = LoopLimits::MIN;
   while (!simulation.hasNone<EffectStack>()) {
-    POKESIM_REQUIRE(iterations <= Limits::MAX, "More effects were stacked than should be possible");
+    POKESIM_REQUIRE(iterations < LoopLimits::MAX, "More effects were stacked than should be possible");
 
     internal::setCurrentEffectFromStack(simulation);
     runEffect(simulation);
@@ -4352,7 +4440,7 @@ void moveHitLoop(Simulation& simulation) {
   using MoveHitLimits = Constants::MoveHits;
   types::moveHits iterations = MoveHitLimits::MIN;
   while (!simulation.hasNone<HitCount>()) {
-    POKESIM_REQUIRE(iterations <= MoveHitLimits::MAX, "More hits were ran than possible.");
+    POKESIM_REQUIRE(iterations < MoveHitLimits::MAX, "More hits were ran than possible.");
     if (iterations > MoveHitLimits::MIN) {
       simulation.view<removeHitCountFromFaintedTargets, Tags<tags::CurrentMoveHit>>();
       removeFinishedHitsFromMoveLists(simulation);
@@ -5935,6 +6023,109 @@ struct MetronomeOnModifyDamage {
   }
 };
 
+template <BattleFormat battleFormat>
+struct MirrorHerbOnAfterFoeBoost {
+  template <typename BoostType>
+  static void addBoost(types::registry& registry, types::entity foe, BoostType boost) {
+    if (!registry.all_of<MirrorHerb>(foe)) {
+      return;
+    }
+
+    MirrorHerb::Effect& effect = registry.get_or_emplace<MirrorHerb::Effect>(foe);
+    if constexpr (std::is_same_v<AtkBoost, BoostType>) {
+      effect.atkBoost += boost.val;
+    }
+    else if constexpr (std::is_same_v<DefBoost, BoostType>) {
+      effect.defBoost += boost.val;
+    }
+    else if constexpr (std::is_same_v<SpaBoost, BoostType>) {
+      effect.spaBoost += boost.val;
+    }
+    else if constexpr (std::is_same_v<SpdBoost, BoostType>) {
+      effect.spdBoost += boost.val;
+    }
+    else if constexpr (std::is_same_v<SpeBoost, BoostType>) {
+      effect.speBoost += boost.val;
+    }
+  }
+
+  template <typename BoostType>
+  static void findFoeBoost(types::registry& registry, CurrentEffectTarget target, BoostType boost) {
+    if (boost.val <= Constants::PokemonStatBoost::DEFAULT) {
+      return;
+    }
+
+    types::entity targetSide = registry.get<Side>(target.val).val;
+    if constexpr (battleFormat == BattleFormat::SINGLES) {
+      types::entity foe = internal::pokemonEntityToSinglesActiveFoe(registry, targetSide, target.val);
+      if (foe != entt::null) {
+        addBoost(registry, foe, boost);
+      }
+    }
+    else if constexpr (battleFormat == BattleFormat::DOUBLES) {
+      for (types::entity foe : internal::pokemonEntityToDoublesActiveFoes(registry, targetSide, target.val)) {
+        addBoost(registry, foe, boost);
+      }
+    }
+  }
+
+  static void run(Simulation& simulation) {
+    using FromMirrorHerb = internal::tags::FromMirrorHerbOrOpportunist;
+
+    simulation.view<findFoeBoost<AtkBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
+    simulation.view<findFoeBoost<DefBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
+    simulation.view<findFoeBoost<SpaBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
+    simulation.view<findFoeBoost<SpdBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
+    simulation.view<findFoeBoost<SpeBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
+  }
+};
+
+void mirrorHerbTryUse(Simulation& simulation) {
+  simulation.addToEntities<tags::CanUseItem, MirrorHerb::Effect>();
+  internal::tryUseItem(simulation);
+  simulation.removeFromEntities<MirrorHerb::Effect>();
+}
+
+void mirrorHerbSetOrderEvent(types::handle handle, Battle battle, const MirrorHerb::Effect&) {
+  handle.registry()->get_or_emplace<EventTargetQueue>(battle.val).val.push_back(handle.entity());
+}
+
+void mirrorHerbOnUse(
+  types::registry& registry, types::entity source, types::entity battle, const MirrorHerb::Effect& mirrorHerb) {
+  registry.emplace<CurrentEffectSource>(battle, source);
+  registry.emplace<CurrentEffectTarget>(battle, source);
+  registry.emplace<CurrentEffectsAsSource>(source).val.push_back(battle);
+  registry.emplace<CurrentEffectSource>(source, battle);
+  registry.emplace<internal::tags::FromMirrorHerbOrOpportunist>(battle);
+
+  if (mirrorHerb.atkBoost) {
+    registry.emplace<AtkBoost>(battle, mirrorHerb.atkBoost);
+  }
+  if (mirrorHerb.defBoost) {
+    registry.emplace<DefBoost>(battle, mirrorHerb.defBoost);
+  }
+  if (mirrorHerb.spaBoost) {
+    registry.emplace<SpaBoost>(battle, mirrorHerb.spaBoost);
+  }
+  if (mirrorHerb.spdBoost) {
+    registry.emplace<SpdBoost>(battle, mirrorHerb.spdBoost);
+  }
+  if (mirrorHerb.speBoost) {
+    registry.emplace<SpeBoost>(battle, mirrorHerb.speBoost);
+  }
+}
+
+void mirrorHerbOnUseSingles(types::handle handle, const MirrorHerb::Effect& mirrorHerb, Battle battle) {
+  types::registry& registry = *handle.registry();
+  types::entity source = handle.entity();
+  mirrorHerbOnUse(registry, source, battle.val, mirrorHerb);
+}
+
+void mirrorHerbOnUseDoubles(types::handle handle, const EventTargetQueue& eventTargetQueue) {
+  types::entity source = eventTargetQueue.val.front();
+  mirrorHerbOnUse(*handle.registry(), source, handle.entity(), handle.registry()->get<MirrorHerb::Effect>(source));
+}
+
 void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget moves, types::stat hpDivisor) {
   types::registry& registry = *handle.registry();
   types::entity move = moves.val;
@@ -6113,6 +6304,61 @@ void MetronomeItem::Effect::onModifyDamage(Simulation& simulation) {
   MetronomeOnModifyDamage::runForSimulation<tags::SimulateTurn>(simulation, denominator);
   MetronomeOnModifyDamage::runForSimulation<tags::CalculateDamage>(simulation, denominator);
   MetronomeOnModifyDamage::runForSimulation<tags::AnalyzeEffect>(simulation, denominator);
+}
+
+void MirrorHerb::onFoeAfterBoost(Simulation& simulation) {
+  if (simulation.hasNone<tags::SimulateTurn, tags::ActivePokemon, MirrorHerb>()) {
+    return;
+  }
+
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    MirrorHerbOnAfterFoeBoost<BattleFormat::SINGLES>::run(simulation);
+  }
+  else {
+    MirrorHerbOnAfterFoeBoost<BattleFormat::DOUBLES>::run(simulation);
+  }
+}
+
+void MirrorHerb::Effect::onAnyAfterMega(Simulation& simulation) {
+  mirrorHerbTryUse(simulation);
+}
+
+void MirrorHerb::Effect::onAnyAfterMove(Simulation& simulation) {
+  mirrorHerbTryUse(simulation);
+}
+
+void MirrorHerb::Effect::onAnyAfterTerastallize(Simulation& simulation) {
+  mirrorHerbTryUse(simulation);
+}
+
+void MirrorHerb::Effect::onAnySwitchIn(Simulation& simulation) {
+  mirrorHerbTryUse(simulation);
+}
+
+void MirrorHerb::Effect::onResidual(Simulation& simulation) {
+  mirrorHerbTryUse(simulation);
+}
+
+void MirrorHerb::Effect::onUse(Simulation& simulation) {
+  if (simulation.hasNone<tags::CanUseItem, MirrorHerb>()) {
+    return;
+  }
+
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    simulation.view<mirrorHerbOnUseSingles, Tags<tags::CanUseItem>>();
+    internal::tryBoost(simulation);
+    internal::clearCurrentBattleEffect(simulation);
+    simulation.removeFromEntities<internal::tags::FromMirrorHerbOrOpportunist>();
+  }
+  else {
+    simulation.view<mirrorHerbSetOrderEvent, Tags<tags::CanUseItem>>();
+    pokesim::internal::simulate_turn::runOrderedEvent(simulation, [](Simulation& sim) {
+      sim.view<mirrorHerbOnUseDoubles>();
+      internal::tryBoost(sim);
+      internal::clearCurrentBattleEffect(sim);
+      sim.removeFromEntities<internal::tags::FromMirrorHerbOrOpportunist>();
+    });
+  }
 }
 
 void RockyHelmet::onDamagingHit(Simulation& simulation) {
@@ -7488,7 +7734,7 @@ void usesUntilKoFromSuccessiveUseEffects(Simulation& simulation) {
   auto iterations = EffectChangeLimits::MIN;
   while (!simulation.hasNone<internal::calc_damage::TotalDamageDoneOverUses>()) {
     POKESIM_REQUIRE(
-      iterations <= EffectChangeLimits::MAX,
+      iterations < EffectChangeLimits::MAX,
       "Effects changed the damage amount more than should be possible.");
 
     simulation.view<resetDamageRollModifiers>();
@@ -8131,6 +8377,7 @@ void checkIfCanEatItem(Simulation& simulation) {
 }
 
 void useItem(Simulation& simulation) {
+  runUseItemEvent(simulation);
   runAfterUseItemEvent(simulation);
   removeItemComponents<pokesim::tags::CanUseItem>(simulation);
 }
@@ -8797,6 +9044,29 @@ bool isAlly(types::registry& registry, types::entity pokemonEntity1, types::enti
   return pokemonEntity1 == pokemonEntity2 ||
          registry.get<Side>(pokemonEntity1).val == registry.get<Side>(pokemonEntity2).val;
 }
+
+types::entity pokemonEntityToSinglesActiveFoe(
+  types::registry& registry, types::entity sideEntity, types::entity pokemonEntity) {
+  const Team& foeTeam = registry.get<Team>(registry.get<FoeSide>(sideEntity).val);
+  if (registry.all_of<pokesim::tags::ActivePokemon>(foeTeam.val.front())) {
+    return foeTeam.val.front();
+  }
+  return entt::null;
+}
+
+types::sideSlots<types::entity> pokemonEntityToDoublesActiveFoes(
+  types::registry& registry, types::entity sideEntity, types::entity pokemonEntity) {
+  types::sideSlots<types::entity> foeSlots;
+
+  const Team& foeTeam = registry.get<Team>(registry.get<FoeSide>(sideEntity).val);
+  for (types::teamPositionIndex i = 0U; i < Constants::ActivePokemonSlotsPerSide::DOUBLES; i++) {
+    if (registry.all_of<pokesim::tags::ActivePokemon>(foeTeam.val[i])) {
+      foeSlots.push_back(foeTeam.val[i]);
+    }
+  }
+
+  return foeSlots;
+}
 }  // namespace internal
 
 Slot sideIdAndPositionToSlot(PlayerSideId sideId, types::teamPositionIndex position) {
@@ -9234,6 +9504,7 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
   remapComponentEntities<CurrentEffectTarget>(registry, entityMap);
   remapComponentEntities<CurrentEffectsAsSource>(registry, entityMap);
   remapComponentEntities<CurrentEffectAsTarget>(registry, entityMap);
+  remapComponentEntities<EventTargetQueue>(registry, entityMap);
   remapComponentEntities<FailedCurrentActionSource>(registry, entityMap);
   remapComponentEntities<FailedCurrentActionTarget>(registry, entityMap);
   remapComponentEntities<FaintQueue>(registry, entityMap);

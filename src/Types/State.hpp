@@ -61,6 +61,9 @@ using sideSlots =
   fixedMemoryVector<T, Constants::ActivePokemonSlotsPerSide::MAX, Constants::ActivePokemonSlotsPerSide::MAX>;
 
 template <typename T>
+using activePokemon = fixedMemoryVector<T, Constants::ActivePokemon::MAX>;
+
+template <typename T>
 using targets = fixedMemoryVector<T, Constants::Targets::MAX, (Constants::Targets::MAX + Constants::Targets::MIN) / 2U>;
 
 using callback = void (*)(Simulation&);

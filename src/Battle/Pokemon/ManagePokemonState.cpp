@@ -271,6 +271,7 @@ void checkIfCanEatItem(Simulation& simulation) {
 }
 
 void useItem(Simulation& simulation) {
+  runUseItemEvent(simulation);
   runAfterUseItemEvent(simulation);
   removeItemComponents<pokesim::tags::CanUseItem>(simulation);
 }

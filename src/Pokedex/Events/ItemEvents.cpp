@@ -1,9 +1,11 @@
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/Helpers/IntegerModify.hpp>
 #include <Battle/Helpers/InternalHelpers.hpp>
+#include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Battle/Pokemon/PokemonProperties.hpp>
 #include <Components/ActionQueue.hpp>
+#include <Components/Boosts.hpp>
 #include <Components/CalcDamage/ModifyingEventRanTags.hpp>
 #include <Components/CalcDamage/TemporaryMoveProperties.hpp>
 #include <Components/Current.hpp>
@@ -11,12 +13,14 @@
 #include <Components/Effects/AddedFlinchChance.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
+#include <Components/EntityHolders/EventTargetQueue.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/EventModifier.hpp>
 #include <Components/Names/MoveNames.hpp>
 #include <Components/Names/SpeciesNames.hpp>
 #include <Components/Stats.hpp>
 #include <Components/Tags/Current.hpp>
+#include <Components/Tags/EffectSourceTags.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
@@ -28,6 +32,7 @@
 #include <Pokedex/Pokedex.hpp>
 #include <Pokedex/Species/Ditto.hpp>
 #include <SimulateTurn/RandomChance.hpp>
+#include <SimulateTurn/SimulateTurnEvents.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Registry.hpp>
@@ -214,6 +219,109 @@ struct MetronomeOnModifyDamage {
   }
 };
 
+template <BattleFormat battleFormat>
+struct MirrorHerbOnAfterFoeBoost {
+  template <typename BoostType>
+  static void addBoost(types::registry& registry, types::entity foe, BoostType boost) {
+    if (!registry.all_of<MirrorHerb>(foe)) {
+      return;
+    }
+
+    MirrorHerb::Effect& effect = registry.get_or_emplace<MirrorHerb::Effect>(foe);
+    if constexpr (std::is_same_v<AtkBoost, BoostType>) {
+      effect.atkBoost += boost.val;
+    }
+    else if constexpr (std::is_same_v<DefBoost, BoostType>) {
+      effect.defBoost += boost.val;
+    }
+    else if constexpr (std::is_same_v<SpaBoost, BoostType>) {
+      effect.spaBoost += boost.val;
+    }
+    else if constexpr (std::is_same_v<SpdBoost, BoostType>) {
+      effect.spdBoost += boost.val;
+    }
+    else if constexpr (std::is_same_v<SpeBoost, BoostType>) {
+      effect.speBoost += boost.val;
+    }
+  }
+
+  template <typename BoostType>
+  static void findFoeBoost(types::registry& registry, CurrentEffectTarget target, BoostType boost) {
+    if (boost.val <= Constants::PokemonStatBoost::DEFAULT) {
+      return;
+    }
+
+    types::entity targetSide = registry.get<Side>(target.val).val;
+    if constexpr (battleFormat == BattleFormat::SINGLES) {
+      types::entity foe = internal::pokemonEntityToSinglesActiveFoe(registry, targetSide, target.val);
+      if (foe != entt::null) {
+        addBoost(registry, foe, boost);
+      }
+    }
+    else if constexpr (battleFormat == BattleFormat::DOUBLES) {
+      for (types::entity foe : internal::pokemonEntityToDoublesActiveFoes(registry, targetSide, target.val)) {
+        addBoost(registry, foe, boost);
+      }
+    }
+  }
+
+  static void run(Simulation& simulation) {
+    using FromMirrorHerb = internal::tags::FromMirrorHerbOrOpportunist;
+
+    simulation.view<findFoeBoost<AtkBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
+    simulation.view<findFoeBoost<DefBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
+    simulation.view<findFoeBoost<SpaBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
+    simulation.view<findFoeBoost<SpdBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
+    simulation.view<findFoeBoost<SpeBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
+  }
+};
+
+void mirrorHerbTryUse(Simulation& simulation) {
+  simulation.addToEntities<tags::CanUseItem, MirrorHerb::Effect>();
+  internal::tryUseItem(simulation);
+  simulation.removeFromEntities<MirrorHerb::Effect>();
+}
+
+void mirrorHerbSetOrderEvent(types::handle handle, Battle battle, const MirrorHerb::Effect&) {
+  handle.registry()->get_or_emplace<EventTargetQueue>(battle.val).val.push_back(handle.entity());
+}
+
+void mirrorHerbOnUse(
+  types::registry& registry, types::entity source, types::entity battle, const MirrorHerb::Effect& mirrorHerb) {
+  registry.emplace<CurrentEffectSource>(battle, source);
+  registry.emplace<CurrentEffectTarget>(battle, source);
+  registry.emplace<CurrentEffectsAsSource>(source).val.push_back(battle);
+  registry.emplace<CurrentEffectSource>(source, battle);
+  registry.emplace<internal::tags::FromMirrorHerbOrOpportunist>(battle);
+
+  if (mirrorHerb.atkBoost) {
+    registry.emplace<AtkBoost>(battle, mirrorHerb.atkBoost);
+  }
+  if (mirrorHerb.defBoost) {
+    registry.emplace<DefBoost>(battle, mirrorHerb.defBoost);
+  }
+  if (mirrorHerb.spaBoost) {
+    registry.emplace<SpaBoost>(battle, mirrorHerb.spaBoost);
+  }
+  if (mirrorHerb.spdBoost) {
+    registry.emplace<SpdBoost>(battle, mirrorHerb.spdBoost);
+  }
+  if (mirrorHerb.speBoost) {
+    registry.emplace<SpeBoost>(battle, mirrorHerb.speBoost);
+  }
+}
+
+void mirrorHerbOnUseSingles(types::handle handle, const MirrorHerb::Effect& mirrorHerb, Battle battle) {
+  types::registry& registry = *handle.registry();
+  types::entity source = handle.entity();
+  mirrorHerbOnUse(registry, source, battle.val, mirrorHerb);
+}
+
+void mirrorHerbOnUseDoubles(types::handle handle, const EventTargetQueue& eventTargetQueue) {
+  types::entity source = eventTargetQueue.val.front();
+  mirrorHerbOnUse(*handle.registry(), source, handle.entity(), handle.registry()->get<MirrorHerb::Effect>(source));
+}
+
 void rockyHelmetOnDamagingHit(types::handle handle, CurrentActionMovesAsTarget moves, types::stat hpDivisor) {
   types::registry& registry = *handle.registry();
   types::entity move = moves.val;
@@ -392,6 +500,61 @@ void MetronomeItem::Effect::onModifyDamage(Simulation& simulation) {
   MetronomeOnModifyDamage::runForSimulation<tags::SimulateTurn>(simulation, denominator);
   MetronomeOnModifyDamage::runForSimulation<tags::CalculateDamage>(simulation, denominator);
   MetronomeOnModifyDamage::runForSimulation<tags::AnalyzeEffect>(simulation, denominator);
+}
+
+void MirrorHerb::onFoeAfterBoost(Simulation& simulation) {
+  if (simulation.hasNone<tags::SimulateTurn, tags::ActivePokemon, MirrorHerb>()) {
+    return;
+  }
+
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    MirrorHerbOnAfterFoeBoost<BattleFormat::SINGLES>::run(simulation);
+  }
+  else {
+    MirrorHerbOnAfterFoeBoost<BattleFormat::DOUBLES>::run(simulation);
+  }
+}
+
+void MirrorHerb::Effect::onAnyAfterMega(Simulation& simulation) {
+  mirrorHerbTryUse(simulation);
+}
+
+void MirrorHerb::Effect::onAnyAfterMove(Simulation& simulation) {
+  mirrorHerbTryUse(simulation);
+}
+
+void MirrorHerb::Effect::onAnyAfterTerastallize(Simulation& simulation) {
+  mirrorHerbTryUse(simulation);
+}
+
+void MirrorHerb::Effect::onAnySwitchIn(Simulation& simulation) {
+  mirrorHerbTryUse(simulation);
+}
+
+void MirrorHerb::Effect::onResidual(Simulation& simulation) {
+  mirrorHerbTryUse(simulation);
+}
+
+void MirrorHerb::Effect::onUse(Simulation& simulation) {
+  if (simulation.hasNone<tags::CanUseItem, MirrorHerb>()) {
+    return;
+  }
+
+  if (simulation.isBattleFormat(BattleFormat::SINGLES)) {
+    simulation.view<mirrorHerbOnUseSingles, Tags<tags::CanUseItem>>();
+    internal::tryBoost(simulation);
+    internal::clearCurrentBattleEffect(simulation);
+    simulation.removeFromEntities<internal::tags::FromMirrorHerbOrOpportunist>();
+  }
+  else {
+    simulation.view<mirrorHerbSetOrderEvent, Tags<tags::CanUseItem>>();
+    pokesim::internal::simulate_turn::runOrderedEvent(simulation, [](Simulation& sim) {
+      sim.view<mirrorHerbOnUseDoubles>();
+      internal::tryBoost(sim);
+      internal::clearCurrentBattleEffect(sim);
+      sim.removeFromEntities<internal::tags::FromMirrorHerbOrOpportunist>();
+    });
+  }
 }
 
 void RockyHelmet::onDamagingHit(Simulation& simulation) {

@@ -3,9 +3,10 @@
 #include <Types/Constants.hpp>
 #include <Types/Entity.hpp>
 #include <Types/FixedMemoryVector.hpp>
+#include <Types/State.hpp>
 
 namespace pokesim {
 struct ActiveWithUpdateEvents {
-  types::fixedMemoryVector<types::entity, Constants::ActivePokemon::MAX> val{};
+  types::activePokemon<types::entity> val{};
 };
 }  // namespace pokesim

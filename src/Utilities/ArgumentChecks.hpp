@@ -54,6 +54,7 @@ struct CurrentEffectSource;
 struct CurrentEffectTarget;
 struct CurrentEffectsAsSource;
 struct CurrentEffectAsTarget;
+struct EventTargetQueue;
 struct FaintQueue;
 struct FoeSide;
 struct RecycledAction;
@@ -122,6 +123,7 @@ struct Trapper;
 namespace shared_name_effect {
 struct Reflect;
 struct MetronomeItem;
+struct MirrorHerb;
 struct BadPoison;
 }  // namespace shared_name_effect
 }  // namespace dex
@@ -198,6 +200,9 @@ void check(const dex::shared_name_effect::Reflect&);
 
 template <>
 void check(const dex::shared_name_effect::MetronomeItem&);
+
+template <>
+void check(const dex::shared_name_effect::MirrorHerb&);
 
 template <>
 void check(const dex::shared_name_effect::BadPoison&);
@@ -368,6 +373,9 @@ void check(const CurrentEffectsAsSource&, const types::registry&);
 
 template <>
 void check(const CurrentEffectAsTarget&, const types::registry&);
+
+template <>
+void check(const EventTargetQueue&, const types::registry&);
 
 template <>
 void check(const FaintQueue&, const types::registry&);

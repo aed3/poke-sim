@@ -2,7 +2,10 @@
 
 #pragma once
 
+#include "Agility.hpp"
 #include "AllySwitch.hpp"
+#include "Amnesia.hpp"
+#include "BulkUp.hpp"
 #include "ChillingWater.hpp"
 #include "CloseCombat.hpp"
 #include "Confide.hpp"
@@ -10,11 +13,13 @@
 #include "FuryAttack.hpp"
 #include "Glare.hpp"
 #include "Growl.hpp"
+#include "IronDefense.hpp"
 #include "KnockOff.hpp"
 #include "Leafage.hpp"
 #include "LowSweep.hpp"
 #include "Moonblast.hpp"
 #include "MudSlap.hpp"
+#include "NastyPlot.hpp"
 #include "NobleRoar.hpp"
 #include "QuickAttack.hpp"
 #include "QuiverDance.hpp"
@@ -22,6 +27,7 @@
 #include "Reversal.hpp"
 #include "SpiritShackle.hpp"
 #include "Splash.hpp"
+#include "SwordsDance.hpp"
 #include "Tackle.hpp"
 #include "Thunderbolt.hpp"
 #include "Transform.hpp"

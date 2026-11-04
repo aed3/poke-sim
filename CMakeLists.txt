@@ -246,6 +246,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/Effects/Paralysis.cpp
       tests/Items/KingsRock.cpp
       tests/Items/LumBerry.cpp
+      tests/Items/MirrorHerb.cpp
       tests/Items/RockyHelmet.cpp
       tests/Items/Metronome.cpp
       tests/Items/QuickClaw.cpp

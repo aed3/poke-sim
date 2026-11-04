@@ -7,6 +7,7 @@ namespace internal {
 void runUpdate(Simulation& simulation);
 
 void runBeforeMove(Simulation& simulation);
+void runAfterMove(Simulation& simulation);
 void runResidual(Simulation& simulation);
 void runFractionalPriority(Simulation& simulation);
 void runModifyPriority(Simulation& simulation);
@@ -59,6 +60,7 @@ void runStartBadPoison(Simulation& simulation);
 void runStartFreeze(Simulation& simulation);
 
 void runTryTakeItemEvent(Simulation& simulation);  // TakeItem
+void runUseItemEvent(Simulation& simulation);      // Use
 void runEatItemEvent(Simulation& simulation);      // Eat
 void runAfterUseItemEvent(Simulation& simulation);
 void runAfterEatItemEvent(Simulation& simulation);  // EatItem

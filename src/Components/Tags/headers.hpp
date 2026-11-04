@@ -5,6 +5,7 @@
 #include "AbilityPropertyTags.hpp"
 #include "BattleTags.hpp"
 #include "Current.hpp"
+#include "EffectSourceTags.hpp"
 #include "ItemPropertyTags.hpp"
 #include "MovePropertyTags.hpp"
 #include "NatureTags.hpp"

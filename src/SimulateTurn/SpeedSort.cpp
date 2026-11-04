@@ -4,6 +4,7 @@
 #include <Components/ActionQueue.hpp>
 #include <Components/EntityHolders/ActiveWithUpdateEvents.hpp>
 #include <Components/EntityHolders/Battle.hpp>
+#include <Components/EntityHolders/EventTargetQueue.hpp>
 #include <Components/RandomEventInputs.hpp>
 #include <Components/SimulateTurn/SpeedTieIndexes.hpp>
 #include <Components/Stats.hpp>
@@ -67,6 +68,25 @@ void sortActionQueueAndSetSpeedTies(
     [](const ActionQueueItem& itemA, const ActionQueueItem& itemB) { return itemA.isSameSpeed(itemB); });
 }
 
+void speedSortEntityList(types::handle handle, types::activePokemon<types::entity>& list) {
+  if (list.size() <= 1U) {
+    return;
+  }
+
+  types::registry& registry = *handle.registry();
+  sortAndSetSpeedTies(
+    handle,
+    list,
+    0U,
+    list.size(),
+    [&registry](types::entity entityA, types::entity entityB) {
+      return registry.get<stat::EffectiveSpe>(entityA).val > registry.get<stat::EffectiveSpe>(entityB).val;
+    },
+    [&registry](types::entity entityA, types::entity entityB) {
+      return registry.get<stat::EffectiveSpe>(entityA).val == registry.get<stat::EffectiveSpe>(entityB).val;
+    });
+}
+
 template <typename List>
 void setSpeedTieOrder(List& list, const SpeedTieIndexes& speedTies, RandomEventIndex randomEventIndex) {
   const auto& speedTie = speedTies.val.back();
@@ -125,22 +145,11 @@ void speedSort(types::handle handle, ActionQueue& actionQueue) {
 }
 
 void speedSortActiveWithUpdateEvents(types::handle handle, ActiveWithUpdateEvents& activeWithUpdateEvents) {
-  if (activeWithUpdateEvents.val.size() <= 1U) {
-    return;
-  }
+  speedSortEntityList(handle, activeWithUpdateEvents.val);
+}
 
-  types::registry& registry = *handle.registry();
-  sortAndSetSpeedTies(
-    handle,
-    activeWithUpdateEvents.val,
-    0U,
-    activeWithUpdateEvents.val.size(),
-    [&registry](types::entity entityA, types::entity entityB) {
-      return registry.get<stat::EffectiveSpe>(entityA).val > registry.get<stat::EffectiveSpe>(entityB).val;
-    },
-    [&registry](types::entity entityA, types::entity entityB) {
-      return registry.get<stat::EffectiveSpe>(entityA).val == registry.get<stat::EffectiveSpe>(entityB).val;
-    });
+void speedSortEventTargetQueue(types::handle handle, EventTargetQueue& eventTargetQueue) {
+  speedSortEntityList(handle, eventTargetQueue.val);
 }
 
 void speedSortMidTurnSwitches(types::handle handle, ActionQueue& actionQueue) {
@@ -165,5 +174,9 @@ void resolveActionQueueSpeedTies(Simulation& simulation) {
 
 void resolveUpdateEventSpeedTies(Simulation& simulation) {
   resolveSpeedTies<ActiveWithUpdateEvents>(simulation);
+}
+
+void resolveEventTargetQueueSpeedTies(Simulation& simulation) {
+  resolveSpeedTies<EventTargetQueue>(simulation);
 }
 }  // namespace pokesim::internal::simulate_turn

@@ -10,6 +10,7 @@ enum class Volatile : std::uint8_t {
   CHOICE_LOCK,
   FLINCH,
   METRONOME,
+  MIRROR_HERB,
   TRAPPED,
   TRAPPER,
   VOLATILE_TOTAL

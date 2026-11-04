@@ -265,6 +265,8 @@ void runMoveAction(Simulation& simulation) {
 
   useMove(simulation);
 
+  internal::runAfterMove(simulation);
+
   internal::clearMoveAction(simulation);
 }
 
@@ -317,10 +319,7 @@ void runBeforeTurnAction(Simulation&) {
 
 void setFainting(types::registry& registry, FaintQueue& faintQueue) {
   types::entity pokemon = faintQueue.val.front();
-  for (types::activePokemonIndex i = 1U; i < faintQueue.val.size(); i++) {
-    faintQueue.val[i - 1U] = faintQueue.val[i];
-  }
-  faintQueue.val.pop_back();
+  faintQueue.val.pop_front();
   registry.emplace<pokesim::tags::Fainting>(pokemon);
 
   Side side = registry.get<Side>(pokemon);
@@ -360,7 +359,7 @@ void faintPokemon(Simulation& simulation) {
   types::activePokemonIndex iterations = LoopLimits::MIN;
   while (!simulation.hasNone<FaintQueue>()) {
     POKESIM_REQUIRE(
-      iterations <= LoopLimits::MAX,
+      iterations < LoopLimits::MAX,
       "More Pokemon were queued to faint in at least one battle than possible.");
 
     battleFilter.view<setFainting>();

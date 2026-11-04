@@ -6,6 +6,7 @@
 #include "Battle.hpp"
 #include "BattleTree.hpp"
 #include "Current.hpp"
+#include "EventTargetQueue.hpp"
 #include "FaintQueue.hpp"
 #include "FoeSide.hpp"
 #include "RecycledEntities.hpp"
