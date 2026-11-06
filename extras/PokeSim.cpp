@@ -5764,13 +5764,13 @@ void allySwitchOnTryMoveApply(
 void allySwitchOnTryMove(
   types::handle handle, Battle battle, AllySwitch::Effect& allySwitch, const CurrentActionMovesAsSource& moves,
   types::percentChance stallExponentialBase, const Simulation& simulation) {
-  float exponential = std::pow((float)stallExponentialBase, (float)allySwitch.uses);
   for (types::entity move : moves) {
     if (!handle.registry()->all_of<AllySwitch>(move)) {
       return;
     }
   }
 
+  float exponential = std::pow((float)stallExponentialBase, (float)allySwitch.uses);
   pokesim::internal::setReciprocalRandomBinaryChanceFromProbability(
     handle,
     battle,
@@ -8805,7 +8805,8 @@ types::entity getActionEntity(const types::registry& registry, const Sides& side
 bool removeFailedMoveFromSource(types::registry& registry, types::entity moveEntity, types::entity source) {
   POKESIM_REQUIRE(
     !registry.all_of<CurrentActionMovesAsSourceExtended>(source),
-    "This function is only meant for simulate turn and the non-extended version of source moves.");
+    "This function is only meant for simulate turn and the "
+    "non-extended version of source moves.");
 
   CurrentActionMovesAsSource* moves = registry.try_get<CurrentActionMovesAsSource>(source);
   if (!moves) {
@@ -8825,7 +8826,8 @@ bool removeFailedMoveFromSource(types::registry& registry, types::entity moveEnt
 void removeFailedMoveFromTarget(types::registry& registry, types::entity target) {
   POKESIM_REQUIRE(
     !registry.all_of<CurrentActionMovesAsTargetExtended>(target),
-    "This function is only meant for simulate turn and the non-extended version of target moves.");
+    "This function is only meant for simulate turn and the "
+    "non-extended version of target moves.");
 
   registry.remove<pokesim::tags::CurrentActionTarget, CurrentActionMovesAsTarget>(target);
   registry.emplace<pokesim::tags::FailedCurrentActionTarget>(target);
@@ -8924,13 +8926,28 @@ void swapActionQueueSourceSlots(
   Slot slot1 = sideIdAndPositionToSlot(playerSide.val, index1);
   Slot slot2 = sideIdAndPositionToSlot(playerSide.val, index2);
 
+  auto replace = [](types::slotDecision& decision, Slot from, Slot to) {
+    if (decision.sourceSlot() != from) {
+      return false;
+    }
+
+    std::visit(
+      [from, to](auto&& decision) {
+        decision.sourceSlot = to;
+        if (decision.targetSlot == from) {
+          decision.targetSlot = to;
+        }
+        else if (decision.targetSlot == to) {
+          decision.targetSlot = from;
+        }
+      },
+      decision);
+
+    return true;
+  };
+
   for (ActionQueueItem& item : actionQueue.val) {
-    if (item.decision.sourceSlot() == slot1) {
-      std::visit([slot2](auto&& decision) { decision.sourceSlot = slot2; }, item.decision);
-    }
-    else if (item.decision.sourceSlot() == slot2) {
-      std::visit([slot1](auto&& decision) { decision.sourceSlot = slot1; }, item.decision);
-    }
+    replace(item.decision, slot1, slot2) || replace(item.decision, slot2, slot1);
   }
 }
 

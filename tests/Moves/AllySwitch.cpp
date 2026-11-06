@@ -16,25 +16,26 @@ TEST_CASE("Ally Switch: Does nothing in singles", "[Simulation][SimulateTurn][Si
 
 TEST_CASE("Ally Switch: Switches slots", "[Simulation][SimulateTurn][DoubleBattle][Move][AllySwitch]") {
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::DOUBLES};
+  MoveDecision growlDecision{Slot::P1B, Slot::P1A, dex::Move::GROWL};
   test.setupBattle(
     Turn{1U},
     test.side(
       test.pokemon(dex::Species::CLAYDOL, dex::Move::ALLY_SWITCH, dex::Move::SPLASH),
-      test.pokemon(dex::Species::GRIMMSNARL, dex::Move::SPLASH)),
+      test.pokemon(dex::Species::GRIMMSNARL, dex::Move::GROWL)),
     test.side(
       test.pokemon(dex::Species::EMPOLEON, dex::Move::SPLASH),
       test.pokemon(dex::Species::AMPHAROS, dex::Move::THUNDERBOLT, dex::Move::SPLASH)),
-    test.turnDecision(dex::Move::SPLASH, dex::Move::SPLASH, dex::Move::SPLASH, dex::Move::SPLASH));
+    test.turnDecision(dex::Move::SPLASH, growlDecision, dex::Move::SPLASH, dex::Move::SPLASH));
 
   auto beforeAllySwitch = test.simulateOneNonBranchingBattle();
 
   test.applyDecision(
     beforeAllySwitch.battle,
-    test.turnDecision(dex::Move::ALLY_SWITCH, dex::Move::SPLASH, dex::Move::SPLASH, dex::Move::THUNDERBOLT));
+    test.turnDecision(dex::Move::ALLY_SWITCH, growlDecision, dex::Move::SPLASH, dex::Move::THUNDERBOLT));
 
   auto afterAllySwitch = test.simulateOneNonBranchingBattle({}, Tags<Team>{});
   test.checks.checkUsedMovePokemon(afterAllySwitch.p1A);
-  test.checks.checkUsedMovePokemon<dex::AllySwitch::Effect>(afterAllySwitch.p1B);
+  test.checks.checkUsedMovePokemon<dex::AllySwitch::Effect, AtkBoost, stat::EffectiveAtk>(afterAllySwitch.p1B);
   test.checks.checkUsedMovePokemon(afterAllySwitch.p2A);
   test.checks.checkUsedMovePokemon(afterAllySwitch.p2B);
 

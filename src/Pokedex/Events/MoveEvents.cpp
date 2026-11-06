@@ -53,13 +53,13 @@ void allySwitchOnTryMoveApply(
 void allySwitchOnTryMove(
   types::handle handle, Battle battle, AllySwitch::Effect& allySwitch, const CurrentActionMovesAsSource& moves,
   types::percentChance stallExponentialBase, const Simulation& simulation) {
-  float exponential = std::pow((float)stallExponentialBase, (float)allySwitch.uses);
   for (types::entity move : moves) {
     if (!handle.registry()->all_of<AllySwitch>(move)) {
       return;
     }
   }
 
+  float exponential = std::pow((float)stallExponentialBase, (float)allySwitch.uses);
   pokesim::internal::setReciprocalRandomBinaryChanceFromProbability(
     handle,
     battle,
