@@ -46,4 +46,29 @@ struct SetMoveModifier {
     }
   }
 };
+
+template <typename Effect>
+struct IncrementTurnsRemaining {
+  template <typename, typename = void>
+  struct turnsRemaining : std::false_type {};
+  template <typename T>
+  struct turnsRemaining<T, std::void_t<decltype(T::turnsRemaining)>> : std::true_type {};
+
+  static void run(types::handle handle, Effect& effect) {
+    bool remove = false;
+    if constexpr (turnsRemaining<Effect>::value) {
+      effect.turnsRemaining--;
+      remove = effect.turnsRemaining == Constants::EffectDuration::MIN;
+    }
+    else {
+      effect.val--;
+      remove = effect.val == Constants::EffectDuration::MIN;
+    }
+
+    if (remove) {
+      handle.remove<Effect>();
+    }
+  }
+};
+
 }  // namespace pokesim::internal

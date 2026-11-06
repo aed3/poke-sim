@@ -16,6 +16,7 @@
 #include <Components/SideDecisionOptions.hpp>
 #include <Components/SideDecisions.hpp>
 #include <Components/SimulateTurn/ActionTags.hpp>
+#include <Components/SimulateTurn/SimulateTurnTags.hpp>
 #include <Components/SimulateTurn/SpeedTieIndexes.hpp>
 #include <Components/SimulateTurn/TeamAction.hpp>
 #include <Components/Stats.hpp>
@@ -359,6 +360,8 @@ void resolveDecision(
     POKESIM_REQUIRE_FAIL(
       "Decision kind of index " + std::to_string(sideDecision.decisions.index()) + "not implemented yet.");
   }
+
+  (void)registry.get_or_emplace<pokesim::simulate_turn::tags::SpeedSortNeeded>(battle.val);
 }
 
 void resolveMidTurnDecisions(

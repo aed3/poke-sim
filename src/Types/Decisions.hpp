@@ -74,7 +74,7 @@ struct slotDecision : variant<
         POKESIM_REQUIRE_FAIL("Getting a move from a decision type that has no move.");
         return dex::Move::NO_MOVE;
       },
-      (variant::base) * this);
+      variant::base(*this));
   }
 };
 

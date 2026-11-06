@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Types/Indexes.hpp>
 #include <Types/Registry.hpp>
 
 namespace pokesim {
@@ -13,6 +14,9 @@ struct CurrentActionTarget;
 
 namespace internal {
 bool sideHasPossibleSwitch(types::registry& registry, Side side, const Simulation& simulation);
+void swapActionQueueSourceSlots(
+  types::registry& registry, Battle battle, Side side, types::teamPositionIndex index1,
+  types::teamPositionIndex index2);
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action);
 void setCurrentActionSwitchSource(types::handle battleHandle, const Sides& sides, CurrentAction& action);

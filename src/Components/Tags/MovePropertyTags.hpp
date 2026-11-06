@@ -24,6 +24,7 @@ struct AccuracyDependentHitCount {};
 struct SelfSwitch {};
 struct IgnoreImmunities {};
 struct Sound {};
+struct Stall {};
 struct BypassProtect {};
 }  // namespace tags
 

@@ -50,6 +50,10 @@ constexpr void enumToTag(MoveProperty item, RunArgs&&... args) {
     RunStruct<move::tags::Sound, T...>::run(std::forward<RunArgs>(args)...);
   }
 
+  if (item & MoveProperty::STALL) {
+    RunStruct<move::tags::Stall, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
   if (item & MoveProperty::VARIABLE_HIT_COUNT) {
     RunStruct<move::tags::VariableHitCount, T...>::run(std::forward<RunArgs>(args)...);
   }

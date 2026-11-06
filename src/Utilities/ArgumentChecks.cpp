@@ -456,6 +456,12 @@ void checkPercentChance(types::percentChance chance) {
 }
 
 template <>
+void check(const dex::shared_name_effect::AllySwitch& allySwitch) {
+  checkBounds<Constants::StallMoveUses>(allySwitch.uses);
+  POKESIM_REQUIRE_NM(allySwitch.turnsRemaining <= 2U);
+}
+
+template <>
 void check(const dex::shared_name_effect::Reflect& reflect) {
   checkBounds<Constants::EffectDuration>(reflect.val);
 }

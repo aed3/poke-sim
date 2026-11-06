@@ -93,12 +93,6 @@ struct Constants {
     static constexpr std::int8_t DEFAULT = 0;
   };
 
-  struct BadPoisonStages {
-    static constexpr std::uint8_t MIN = 0U;
-    static constexpr std::uint8_t MAX = 15U;
-    static constexpr std::uint8_t DEFAULT = 0U;
-  };
-
   struct MoveMaxPp {
     static constexpr std::uint8_t MAX = 64U;
     static constexpr std::uint8_t MIN = 1U;
@@ -156,6 +150,18 @@ struct Constants {
     static constexpr std::int8_t MAX = 5;  // 8 is theoretically possible, but no existing move has more than 5
     static constexpr std::int8_t MIN = -7;
     static constexpr std::int8_t DEFAULT = 0;
+  };
+
+  struct BadPoisonStages {
+    static constexpr std::uint8_t MAX = 15U;
+    static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
+  };
+
+  struct StallMoveUses {
+    static constexpr std::uint8_t MAX = 6U;
+    static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
   };
 
   struct EffectDuration {

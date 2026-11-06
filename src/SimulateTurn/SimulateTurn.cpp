@@ -346,6 +346,10 @@ void checkWin(types::handle battleHandle, const Sides& sides) {
   }
 }
 
+void forceSwitch(Simulation&) {
+  // Use internal::swapActionQueueSourceSlots
+}
+
 void faintPokemon(Simulation& simulation) {
   auto battleFilter = getBattleFilter(simulation);
   if (battleFilter.hasNoneSelected()) {
@@ -416,6 +420,7 @@ void runCurrentAction(Simulation& simulation) {
   simulation.removeFromEntities<MoveName, action::tags::Current>();
   simulation.registry.clear<CurrentAction, SourceSlotName, TargetSlotName, action::tags::Current>();
 
+  forceSwitch(simulation);
   faintPokemon(simulation);
   requestMidTurnSwitch(simulation);
 

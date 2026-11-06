@@ -381,6 +381,24 @@ void setRandomBinaryChanceFromPercentChance(
     Constants::PercentChanceToProbability * percentChance);
 }
 
+void setReciprocalRandomBinaryChanceFromPercentChance(
+  types::handle handle, Battle battle, const Simulation& simulation, types::percentChance percentChanceDenominator) {
+  setRandomBinaryChanceFromProbability(
+    handle,
+    battle,
+    simulation,
+    Constants::Probability::MAX / percentChanceDenominator);
+}
+
+void setReciprocalRandomBinaryChanceFromProbability(
+  types::handle handle, Battle battle, const Simulation& simulation, types::probability eventProbabilityDenominator) {
+  setRandomBinaryChanceFromProbability(
+    handle,
+    battle,
+    simulation,
+    Constants::PercentChanceToProbability / eventProbabilityDenominator);
+}
+
 void setRandomEqualChance(types::handle handle, const Simulation& simulation) {
   if (useChanceStack(simulation)) {
     handle.registry()

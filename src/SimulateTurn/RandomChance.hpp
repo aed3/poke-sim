@@ -30,6 +30,12 @@ void setRandomBinaryChanceFromProbability(
 void setRandomBinaryChanceFromPercentChance(
   types::handle handle, Battle battle, const Simulation& simulation, types::percentChance percentChance);
 
+void setReciprocalRandomBinaryChanceFromPercentChance(
+  types::handle handle, Battle battle, const Simulation& simulation, types::percentChance percentChanceDenominator);
+
+void setReciprocalRandomBinaryChanceFromProbability(
+  types::handle handle, Battle battle, const Simulation& simulation, types::probability eventProbabilityDenominator);
+
 template <typename PercentChanceComponent>
 void setRandomBinaryChance(
   types::handle handle, PercentChanceComponent percentChance, Battle battle, const Simulation& simulation) {
@@ -39,7 +45,7 @@ void setRandomBinaryChance(
 template <typename PercentChanceComponent>
 void setReciprocalRandomBinaryChance(
   types::handle handle, PercentChanceComponent percentChance, Battle battle, const Simulation& simulation) {
-  setRandomBinaryChanceFromProbability(handle, battle, simulation, Constants::Probability::MAX / percentChance.val);
+  setReciprocalRandomBinaryChanceFromPercentChance(handle, battle, simulation, percentChance.val);
 }
 
 void setRandomEqualChance(types::handle handle, const Simulation& simulation);

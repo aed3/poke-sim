@@ -6,6 +6,7 @@
 #include <Types/Enums/MoveTarget.hpp>
 #include <Types/Enums/Type.hpp>
 #include <Types/Enums/Volatile.hpp>
+#include <Types/Event.hpp>
 #include <Types/Move.hpp>
 #include <Types/Random.hpp>
 #include <Types/Stats.hpp>
@@ -28,6 +29,10 @@ struct AllySwitch {
   static constexpr types::pp basePp(GameMechanics) { return 15U; }
   static constexpr types::priority priority(GameMechanics) { return 2; }
 
+  struct targetPrimaryEffect {
+    static void onHit(Simulation& simulation);
+  };
+
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
@@ -36,8 +41,6 @@ struct AllySwitch {
   };
 
   using Effect = shared_name_effect::AllySwitch;
-  static void onPrepareHit(Simulation& simulation);
-  static void onHit(Simulation& simulation);
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
@@ -47,8 +50,17 @@ struct AllySwitch {
   static constexpr Volatile name(GameMechanics = {}) { return Volatile::ALLY_SWITCH; }
   using MainSource = pokesim::dex::AllySwitch;
 
-  static void onStart(Simulation& simulation);
-  static void onRestart(Simulation& simulation);
+  static constexpr types::effectDuration duration(GameMechanics) { return 2U; }
+
+  static void onTryMove(Simulation& simulation);
+  static void onResidual(Simulation& simulation);
+
+  types::stallUses uses = Constants::StallMoveUses::DEFAULT;
+  types::effectDuration turnsRemaining = Constants::EffectDuration::DEFAULT;
+
+  constexpr bool operator==(const AllySwitch& other) const {
+    return uses == other.uses && turnsRemaining == other.turnsRemaining;
+  }
 };
 }  // namespace shared_name_effect
 }  // namespace pokesim::dex

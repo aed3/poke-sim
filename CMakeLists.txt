@@ -251,6 +251,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/Items/Metronome.cpp
       tests/Items/QuickClaw.cpp
       tests/Items/QuickPowder.cpp
+      tests/Moves/AllySwitch.cpp
       tests/Moves/FuryAttack.cpp
       tests/Moves/KnockOff.cpp
       tests/Moves/Reflect.cpp

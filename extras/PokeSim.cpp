@@ -595,6 +595,12 @@ void checkPercentChance(types::percentChance chance) {
 }
 
 template <>
+void check(const dex::shared_name_effect::AllySwitch& allySwitch) {
+  checkBounds<Constants::StallMoveUses>(allySwitch.uses);
+  POKESIM_REQUIRE_NM(allySwitch.turnsRemaining <= 2U);
+}
+
+template <>
 void check(const dex::shared_name_effect::Reflect& reflect) {
   checkBounds<Constants::EffectDuration>(reflect.val);
 }
@@ -2507,6 +2513,7 @@ void runResidual(Simulation& simulation) {
   dex::Burn::onResidual(simulation);
   dex::BadPoison::Effect::onResidual(simulation);
   dex::MirrorHerb::Effect::onResidual(simulation);
+  dex::AllySwitch::Effect::onResidual(simulation);
 }
 
 void runFractionalPriority(Simulation& simulation) {
@@ -2566,6 +2573,7 @@ void runDamagingHitEvent(Simulation& simulation) {
 void runHitEvent(Simulation& simulation) {
   dex::SpiritShackle::targetSecondaryEffect::onHit(simulation);
   dex::Transform::targetPrimaryEffect::onHit(simulation);
+  dex::AllySwitch::targetPrimaryEffect::onHit(simulation);
 }
 
 void runAfterHitEvent(Simulation& simulation) {
@@ -2625,6 +2633,7 @@ void runModifyMove(Simulation& simulation) {
 
 void runTryMoveEvent(Simulation& simulation) {
   dex::MetronomeItem::Effect::onTryMove(simulation);
+  dex::AllySwitch::Effect::onTryMove(simulation);
 }
 
 void runSetBasePower(Simulation& simulation) {
@@ -3252,6 +3261,10 @@ void checkWin(types::handle battleHandle, const Sides& sides) {
   }
 }
 
+void forceSwitch(Simulation&) {
+  // Use internal::swapActionQueueSourceSlots
+}
+
 void faintPokemon(Simulation& simulation) {
   auto battleFilter = getBattleFilter(simulation);
   if (battleFilter.hasNoneSelected()) {
@@ -3322,6 +3335,7 @@ void runCurrentAction(Simulation& simulation) {
   simulation.removeFromEntities<MoveName, action::tags::Current>();
   simulation.registry.clear<CurrentAction, SourceSlotName, TargetSlotName, action::tags::Current>();
 
+  forceSwitch(simulation);
   faintPokemon(simulation);
   requestMidTurnSwitch(simulation);
 
@@ -3888,6 +3902,24 @@ void setRandomBinaryChanceFromPercentChance(
     battle,
     simulation,
     Constants::PercentChanceToProbability * percentChance);
+}
+
+void setReciprocalRandomBinaryChanceFromPercentChance(
+  types::handle handle, Battle battle, const Simulation& simulation, types::percentChance percentChanceDenominator) {
+  setRandomBinaryChanceFromProbability(
+    handle,
+    battle,
+    simulation,
+    Constants::Probability::MAX / percentChanceDenominator);
+}
+
+void setReciprocalRandomBinaryChanceFromProbability(
+  types::handle handle, Battle battle, const Simulation& simulation, types::probability eventProbabilityDenominator) {
+  setRandomBinaryChanceFromProbability(
+    handle,
+    battle,
+    simulation,
+    Constants::PercentChanceToProbability / eventProbabilityDenominator);
 }
 
 void setRandomEqualChance(types::handle handle, const Simulation& simulation) {
@@ -4864,6 +4896,8 @@ void resolveDecision(
     POKESIM_REQUIRE_FAIL(
       "Decision kind of index " + std::to_string(sideDecision.decisions.index()) + "not implemented yet.");
   }
+
+  (void)registry.get_or_emplace<pokesim::simulate_turn::tags::SpeedSortNeeded>(battle.val);
 }
 
 void resolveMidTurnDecisions(
@@ -5706,6 +5740,51 @@ void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInf
 
 namespace pokesim::dex {
 namespace {
+void allySwitchOnHit(types::handle handle, Battle battle, CurrentActionTarget target) {
+  types::registry& registry = *handle.registry();
+  Side side = registry.get<Side>(target.val);
+  Team& team = registry.get<Team>(side.val);
+  if (team.val.size() <= 1U) {
+    return;
+  }
+
+  if (registry.all_of<tags::Fainted>(team.val[0]) || registry.all_of<tags::Fainted>(team.val[1])) {
+    return;
+  }
+
+  std::swap(team.val[0], team.val[1]);
+  internal::swapActionQueueSourceSlots(registry, battle, side, 0U, 1U);
+}
+
+void allySwitchOnTryMoveApply(
+  types::registry& registry, CurrentActionSource source, const dex::AllySwitch::Effect& allySwitch) {
+  (void)registry.get_or_emplace<AllySwitch::Effect>(source.val, allySwitch);
+}
+
+void allySwitchOnTryMove(
+  types::handle handle, Battle battle, AllySwitch::Effect& allySwitch, const CurrentActionMovesAsSource& moves,
+  types::percentChance stallExponentialBase, const Simulation& simulation) {
+  float exponential = std::pow((float)stallExponentialBase, (float)allySwitch.uses);
+  for (types::entity move : moves) {
+    if (!handle.registry()->all_of<AllySwitch>(move)) {
+      return;
+    }
+  }
+
+  pokesim::internal::setReciprocalRandomBinaryChanceFromProbability(
+    handle,
+    battle,
+    simulation,
+    exponential * Constants::PercentChanceToProbability);
+}
+
+void allySwitchOnTryMovePass(AllySwitch::Effect& allySwitch, types::effectDuration turnsRemaining) {
+  if (allySwitch.uses < Constants::StallMoveUses::MAX) {
+    allySwitch.uses++;
+  }
+  allySwitch.turnsRemaining = turnsRemaining;
+}
+
 void knockOffOnBasePowerCheckRemovableItem(
   types::registry& registry, CurrentActionSource source, CurrentActionTarget target, EventModifier&) {
   if (
@@ -5761,13 +5840,6 @@ void reflectOnAnyModifyDamage(
   }
 }
 
-void reflectOnResidual(types::handle handle, Reflect::Effect& reflect) {
-  reflect.val--;
-  if (reflect.val == Constants::EffectDuration::MIN) {
-    handle.remove<Reflect::Effect>();
-  }
-}
-
 void knockOffOnBasePower(
   types::registry& registry, EventModifier& eventModifier, CurrentActionTarget target,
   types::effectMultiplier modifier) {
@@ -5788,6 +5860,38 @@ void transformOnHit(
   internal::transformInto(registry, source.val, target.val, pokedex);
 }
 }  // namespace
+
+void AllySwitch::targetPrimaryEffect::onHit(Simulation& simulation) {
+  if (simulation.isBattleFormat(BattleFormat::DOUBLES)) {
+    simulation.view<allySwitchOnHit, Tags<AllySwitch, tags::CurrentMoveHit>>();
+  }
+}
+
+void AllySwitch::Effect::onTryMove(Simulation& simulation) {
+  if (!simulation.isBattleFormat(BattleFormat::DOUBLES)) {
+    return;
+  }
+
+  auto stallExponentialBase = simulation.pokedex().getStaticValue<MechanicConstants::STALL_EXPONENTIAL_BASE>();
+
+  simulation.view<allySwitchOnTryMoveApply, Tags<MainSource, tags::CurrentActionMove>>(
+    AllySwitch{Constants::StallMoveUses::DEFAULT, simulation.pokedex().getStaticValue<duration>()});
+
+  simulation.view<allySwitchOnTryMove, Tags<tags::CurrentActionSource>>(stallExponentialBase, simulation);
+  internal::randomBinaryChance(
+    simulation,
+    [](Simulation& sim) {
+      auto turnsRemaining = sim.pokedex().getStaticValue<duration>();
+      sim.view<allySwitchOnTryMovePass, Tags<internal::tags::RandomEventCheckPassed>>(turnsRemaining);
+      sim.removeFromEntities<AllySwitch, internal::tags::RandomEventCheckFailed>();
+      sim.view<internal::setFailedActionMove, Tags<internal::tags::RandomEventCheckFailed>>();
+    },
+    std::nullopt);
+}
+
+void AllySwitch::Effect::onResidual(Simulation& simulation) {
+  simulation.view<internal::IncrementTurnsRemaining<AllySwitch>::run>();
+}
 
 void KnockOff::onBasePower(Simulation& simulation) {
   const auto modifier = simulation.pokedex().getStaticValue<onBasePowerMultiplier>();
@@ -5820,7 +5924,7 @@ void Reflect::Effect::onAnyModifyDamage(Simulation& simulation) {
 }
 
 void Reflect::Effect::onResidual(Simulation& simulation) {
-  simulation.view<reflectOnResidual>();
+  simulation.view<internal::IncrementTurnsRemaining<Reflect>::run>();
 }
 
 void Reversal::onSetBasePower(Simulation& simulation) {
@@ -6681,7 +6785,7 @@ bool pranksterChangePriority(
 
     Move move = item.decision.move();
     if (pokedex.moveHasAll<move::tags::Status>(move)) {
-      item.priority = types::priority(item.priority + priorityBoost);
+      item.priority = (types::priority)(item.priority + priorityBoost);
       // if (!simulation.speedSortAfterEachMove) handle.emplace<tags::PranksterOnSpeedSort>();
       return true;
     }
@@ -8137,6 +8241,7 @@ void clearVolatileTags(Simulation& simulation) {
     EvaBoost,
     LastUsedMove,
     TransformedFrom,
+    dex::AllySwitch::Effect,
     dex::ChoiceLock,
     dex::Flinch,
     dex::MetronomeItem::Effect,
@@ -8808,6 +8913,25 @@ void setNextInEffectStack(types::handle handle, EffectStack& effectStack) {
 bool sideHasPossibleSwitch(types::registry& registry, Side side, const Simulation& simulation) {
   TeamRemaining teamRemaining = registry.get<TeamRemaining>(side.val);
   return teamRemaining.val > simulation.activePokemonSlotsPerSide();
+}
+
+void swapActionQueueSourceSlots(
+  types::registry& registry, Battle battle, Side side, types::teamPositionIndex index1,
+  types::teamPositionIndex index2) {
+  ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
+  PlayerSide playerSide = registry.get<PlayerSide>(side.val);
+
+  Slot slot1 = sideIdAndPositionToSlot(playerSide.val, index1);
+  Slot slot2 = sideIdAndPositionToSlot(playerSide.val, index2);
+
+  for (ActionQueueItem& item : actionQueue.val) {
+    if (item.decision.sourceSlot() == slot1) {
+      std::visit([slot2](auto&& decision) { decision.sourceSlot = slot2; }, item.decision);
+    }
+    else if (item.decision.sourceSlot() == slot2) {
+      std::visit([slot1](auto&& decision) { decision.sourceSlot = slot1; }, item.decision);
+    }
+  }
 }
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action) {

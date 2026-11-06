@@ -40,10 +40,11 @@ enum class MoveProperty : std::uint64_t {
   SELF_SWITCH = 1ULL << 33U,
   SLICING = 1ULL << 34U,
   SOUND = 1ULL << 35U,
-  STATUS_USES_IMMUNITIES = 1ULL << 36U,
-  STRENGTHEN_ON_MINIMIZED = 1ULL << 37U,
-  VARIABLE_HIT_COUNT = 1ULL << 38U,
-  WIND = 1ULL << 39U,
+  STALL = 1ULL << 36U,
+  STATUS_USES_IMMUNITIES = 1ULL << 37U,
+  STRENGTHEN_ON_MINIMIZED = 1ULL << 38U,
+  VARIABLE_HIT_COUNT = 1ULL << 39U,
+  WIND = 1ULL << 40U,
 };
 
 constexpr MoveProperty operator|(MoveProperty propertyA, MoveProperty propertyB) {

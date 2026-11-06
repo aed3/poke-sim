@@ -62,6 +62,7 @@ void runResidual(Simulation& simulation) {
   dex::Burn::onResidual(simulation);
   dex::BadPoison::Effect::onResidual(simulation);
   dex::MirrorHerb::Effect::onResidual(simulation);
+  dex::AllySwitch::Effect::onResidual(simulation);
 }
 
 void runFractionalPriority(Simulation& simulation) {
@@ -121,6 +122,7 @@ void runDamagingHitEvent(Simulation& simulation) {
 void runHitEvent(Simulation& simulation) {
   dex::SpiritShackle::targetSecondaryEffect::onHit(simulation);
   dex::Transform::targetPrimaryEffect::onHit(simulation);
+  dex::AllySwitch::targetPrimaryEffect::onHit(simulation);
 }
 
 void runAfterHitEvent(Simulation& simulation) {
@@ -180,6 +182,7 @@ void runModifyMove(Simulation& simulation) {
 
 void runTryMoveEvent(Simulation& simulation) {
   dex::MetronomeItem::Effect::onTryMove(simulation);
+  dex::AllySwitch::Effect::onTryMove(simulation);
 }
 
 void runSetBasePower(Simulation& simulation) {

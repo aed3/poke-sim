@@ -11,6 +11,7 @@
 #include <Pokedex/Effects/Trapper.hpp>
 #include <Pokedex/Items/LumBerry.hpp>
 #include <Pokedex/Items/Metronome.hpp>
+#include <Pokedex/Moves/AllySwitch.hpp>
 #include <Simulation/Simulation.hpp>
 #include <entt/entity/handle.hpp>
 
@@ -29,6 +30,7 @@ void clearVolatileTags(Simulation& simulation) {
     EvaBoost,
     LastUsedMove,
     TransformedFrom,
+    dex::AllySwitch::Effect,
     dex::ChoiceLock,
     dex::Flinch,
     dex::MetronomeItem::Effect,

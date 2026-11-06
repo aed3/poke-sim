@@ -176,7 +176,7 @@ bool pranksterChangePriority(
 
     Move move = item.decision.move();
     if (pokedex.moveHasAll<move::tags::Status>(move)) {
-      item.priority = types::priority(item.priority + priorityBoost);
+      item.priority = (types::priority)(item.priority + priorityBoost);
       // if (!simulation.speedSortAfterEachMove) handle.emplace<tags::PranksterOnSpeedSort>();
       return true;
     }

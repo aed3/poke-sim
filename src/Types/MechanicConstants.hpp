@@ -13,6 +13,8 @@ struct MechanicConstants {
   }
 
   static constexpr types::effectMultiplier CRIT_MULTIPLIER(GameMechanics) { return 1.5F; }
+
+  static constexpr types::percentChance STALL_EXPONENTIAL_BASE(GameMechanics) { return 3U; }
 };
 }  // namespace pokesim
 // NOLINTEND(readability-magic-numbers)

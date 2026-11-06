@@ -121,6 +121,7 @@ namespace dex {
 struct ChoiceLock;
 struct Trapper;
 namespace shared_name_effect {
+struct AllySwitch;
 struct Reflect;
 struct MetronomeItem;
 struct MirrorHerb;
@@ -194,6 +195,9 @@ void checkSide(types::entity, const types::registry&);
 void checkPokemon(types::entity, const types::registry&);
 void checkActionMove(types::entity, const types::registry&);
 void checkPercentChance(types::percentChance);
+
+template <>
+void check(const dex::shared_name_effect::AllySwitch&);
 
 template <>
 void check(const dex::shared_name_effect::Reflect&);

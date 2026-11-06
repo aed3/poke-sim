@@ -3,6 +3,7 @@
 #include <Battle/Helpers/Helpers.hpp>
 #include <Battle/Pokemon/ManagePokemonTags.hpp>
 #include <Components/Accuracy.hpp>
+#include <Components/ActionQueue.hpp>
 #include <Components/AddedTargets.hpp>
 #include <Components/BaseEffectChance.hpp>
 #include <Components/BasePower.hpp>
@@ -23,6 +24,7 @@
 #include <Components/Names/SourceSlotName.hpp>
 #include <Components/Names/TargetSlotName.hpp>
 #include <Components/Names/TypeNames.hpp>
+#include <Components/PlayerSide.hpp>
 #include <Components/Pokedex/CritStageBoost.hpp>
 #include <Components/Pokedex/PP.hpp>
 #include <Components/Priority.hpp>
@@ -169,6 +171,25 @@ void setNextInEffectStack(types::handle handle, EffectStack& effectStack) {
 bool sideHasPossibleSwitch(types::registry& registry, Side side, const Simulation& simulation) {
   TeamRemaining teamRemaining = registry.get<TeamRemaining>(side.val);
   return teamRemaining.val > simulation.activePokemonSlotsPerSide();
+}
+
+void swapActionQueueSourceSlots(
+  types::registry& registry, Battle battle, Side side, types::teamPositionIndex index1,
+  types::teamPositionIndex index2) {
+  ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
+  PlayerSide playerSide = registry.get<PlayerSide>(side.val);
+
+  Slot slot1 = sideIdAndPositionToSlot(playerSide.val, index1);
+  Slot slot2 = sideIdAndPositionToSlot(playerSide.val, index2);
+
+  for (ActionQueueItem& item : actionQueue.val) {
+    if (item.decision.sourceSlot() == slot1) {
+      std::visit([slot2](auto&& decision) { decision.sourceSlot = slot2; }, item.decision);
+    }
+    else if (item.decision.sourceSlot() == slot2) {
+      std::visit([slot1](auto&& decision) { decision.sourceSlot = slot1; }, item.decision);
+    }
+  }
 }
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action) {

@@ -15,4 +15,5 @@ using moveHits = pokesim::internal::unsignedIntType<Constants::MoveHits::MAX>;
 using priority = pokesim::internal::signedIntType<Constants::MovePriority::MAX, Constants::MovePriority::MIN>;
 
 using moveUses = pokesim::internal::unsignedIntType<Constants::PokemonHpStat::MAX>;
+using stallUses = pokesim::internal::unsignedIntType<Constants::StallMoveUses::MAX>;
 }  // namespace pokesim::types

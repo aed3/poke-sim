@@ -16453,12 +16453,6 @@ struct Constants {
     static constexpr std::int8_t DEFAULT = 0;
   };
 
-  struct BadPoisonStages {
-    static constexpr std::uint8_t MIN = 0U;
-    static constexpr std::uint8_t MAX = 15U;
-    static constexpr std::uint8_t DEFAULT = 0U;
-  };
-
   struct MoveMaxPp {
     static constexpr std::uint8_t MAX = 64U;
     static constexpr std::uint8_t MIN = 1U;
@@ -16516,6 +16510,18 @@ struct Constants {
     static constexpr std::int8_t MAX = 5;  // 8 is theoretically possible, but no existing move has more than 5
     static constexpr std::int8_t MIN = -7;
     static constexpr std::int8_t DEFAULT = 0;
+  };
+
+  struct BadPoisonStages {
+    static constexpr std::uint8_t MAX = 15U;
+    static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
+  };
+
+  struct StallMoveUses {
+    static constexpr std::uint8_t MAX = 6U;
+    static constexpr std::uint8_t MIN = 0U;
+    static constexpr std::uint8_t DEFAULT = 0U;
   };
 
   struct EffectDuration {
@@ -19306,7 +19312,7 @@ struct slotDecision : variant<
         POKESIM_REQUIRE_FAIL("Getting a move from a decision type that has no move.");
         return dex::Move::NO_MOVE;
       },
-      (variant::base) * this);
+      variant::base(*this));
   }
 };
 
@@ -19385,6 +19391,7 @@ using moveHits = pokesim::internal::unsignedIntType<Constants::MoveHits::MAX>;
 using priority = pokesim::internal::signedIntType<Constants::MovePriority::MAX, Constants::MovePriority::MIN>;
 
 using moveUses = pokesim::internal::unsignedIntType<Constants::PokemonHpStat::MAX>;
+using stallUses = pokesim::internal::unsignedIntType<Constants::StallMoveUses::MAX>;
 }  // namespace pokesim::types
 
 ////////////////////////// END OF src/Types/Move.hpp ///////////////////////////
@@ -19771,6 +19778,8 @@ struct MechanicConstants {
   }
 
   static constexpr types::effectMultiplier CRIT_MULTIPLIER(GameMechanics) { return 1.5F; }
+
+  static constexpr types::percentChance STALL_EXPONENTIAL_BASE(GameMechanics) { return 3U; }
 };
 }  // namespace pokesim
 // NOLINTEND(readability-magic-numbers)
@@ -20958,6 +20967,7 @@ struct AccuracyDependentHitCount {};
 struct SelfSwitch {};
 struct IgnoreImmunities {};
 struct Sound {};
+struct Stall {};
 struct BypassProtect {};
 }  // namespace tags
 
@@ -23294,10 +23304,11 @@ enum class MoveProperty : std::uint64_t {
   SELF_SWITCH = 1ULL << 33U,
   SLICING = 1ULL << 34U,
   SOUND = 1ULL << 35U,
-  STATUS_USES_IMMUNITIES = 1ULL << 36U,
-  STRENGTHEN_ON_MINIMIZED = 1ULL << 37U,
-  VARIABLE_HIT_COUNT = 1ULL << 38U,
-  WIND = 1ULL << 39U,
+  STALL = 1ULL << 36U,
+  STATUS_USES_IMMUNITIES = 1ULL << 37U,
+  STRENGTHEN_ON_MINIMIZED = 1ULL << 38U,
+  VARIABLE_HIT_COUNT = 1ULL << 39U,
+  WIND = 1ULL << 40U,
 };
 
 constexpr MoveProperty operator|(MoveProperty propertyA, MoveProperty propertyB) {
@@ -23774,6 +23785,10 @@ struct AllySwitch {
   static constexpr types::pp basePp(GameMechanics) { return 15U; }
   static constexpr types::priority priority(GameMechanics) { return 2; }
 
+  struct targetPrimaryEffect {
+    static void onHit(Simulation& simulation);
+  };
+
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
@@ -23782,8 +23797,6 @@ struct AllySwitch {
   };
 
   using Effect = shared_name_effect::AllySwitch;
-  static void onPrepareHit(Simulation& simulation);
-  static void onHit(Simulation& simulation);
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
 };
@@ -23793,8 +23806,17 @@ struct AllySwitch {
   static constexpr Volatile name(GameMechanics = {}) { return Volatile::ALLY_SWITCH; }
   using MainSource = pokesim::dex::AllySwitch;
 
-  static void onStart(Simulation& simulation);
-  static void onRestart(Simulation& simulation);
+  static constexpr types::effectDuration duration(GameMechanics) { return 2U; }
+
+  static void onTryMove(Simulation& simulation);
+  static void onResidual(Simulation& simulation);
+
+  types::stallUses uses = Constants::StallMoveUses::DEFAULT;
+  types::effectDuration turnsRemaining = Constants::EffectDuration::DEFAULT;
+
+  constexpr bool operator==(const AllySwitch& other) const {
+    return uses == other.uses && turnsRemaining == other.turnsRemaining;
+  }
 };
 }  // namespace shared_name_effect
 }  // namespace pokesim::dex
@@ -25585,6 +25607,7 @@ namespace dex {
 struct ChoiceLock;
 struct Trapper;
 namespace shared_name_effect {
+struct AllySwitch;
 struct Reflect;
 struct MetronomeItem;
 struct MirrorHerb;
@@ -25658,6 +25681,9 @@ void checkSide(types::entity, const types::registry&);
 void checkPokemon(types::entity, const types::registry&);
 void checkActionMove(types::entity, const types::registry&);
 void checkPercentChance(types::percentChance);
+
+template <>
+void check(const dex::shared_name_effect::AllySwitch&);
 
 template <>
 void check(const dex::shared_name_effect::Reflect&);
@@ -28627,6 +28653,12 @@ void setRandomBinaryChanceFromProbability(
 void setRandomBinaryChanceFromPercentChance(
   types::handle handle, Battle battle, const Simulation& simulation, types::percentChance percentChance);
 
+void setReciprocalRandomBinaryChanceFromPercentChance(
+  types::handle handle, Battle battle, const Simulation& simulation, types::percentChance percentChanceDenominator);
+
+void setReciprocalRandomBinaryChanceFromProbability(
+  types::handle handle, Battle battle, const Simulation& simulation, types::probability eventProbabilityDenominator);
+
 template <typename PercentChanceComponent>
 void setRandomBinaryChance(
   types::handle handle, PercentChanceComponent percentChance, Battle battle, const Simulation& simulation) {
@@ -28636,7 +28668,7 @@ void setRandomBinaryChance(
 template <typename PercentChanceComponent>
 void setReciprocalRandomBinaryChance(
   types::handle handle, PercentChanceComponent percentChance, Battle battle, const Simulation& simulation) {
-  setRandomBinaryChanceFromProbability(handle, battle, simulation, Constants::Probability::MAX / percentChance.val);
+  setReciprocalRandomBinaryChanceFromPercentChance(handle, battle, simulation, percentChance.val);
 }
 
 void setRandomEqualChance(types::handle handle, const Simulation& simulation);
@@ -29010,6 +29042,9 @@ struct CurrentActionTarget;
 
 namespace internal {
 bool sideHasPossibleSwitch(types::registry& registry, Side side, const Simulation& simulation);
+void swapActionQueueSourceSlots(
+  types::registry& registry, Battle battle, Side side, types::teamPositionIndex index1,
+  types::teamPositionIndex index2);
 
 void setCurrentActionSource(types::handle battleHandle, const Sides& sides, CurrentAction& action);
 void setCurrentActionSwitchSource(types::handle battleHandle, const Sides& sides, CurrentAction& action);
@@ -29616,6 +29651,10 @@ constexpr void enumToTag(MoveProperty item, RunArgs&&... args) {
     RunStruct<move::tags::Sound, T...>::run(std::forward<RunArgs>(args)...);
   }
 
+  if (item & MoveProperty::STALL) {
+    RunStruct<move::tags::Stall, T...>::run(std::forward<RunArgs>(args)...);
+  }
+
   if (item & MoveProperty::VARIABLE_HIT_COUNT) {
     RunStruct<move::tags::VariableHitCount, T...>::run(std::forward<RunArgs>(args)...);
   }
@@ -29845,6 +29884,31 @@ struct SetMoveModifier {
     }
   }
 };
+
+template <typename Effect>
+struct IncrementTurnsRemaining {
+  template <typename, typename = void>
+  struct turnsRemaining : std::false_type {};
+  template <typename T>
+  struct turnsRemaining<T, std::void_t<decltype(T::turnsRemaining)>> : std::true_type {};
+
+  static void run(types::handle handle, Effect& effect) {
+    bool remove = false;
+    if constexpr (turnsRemaining<Effect>::value) {
+      effect.turnsRemaining--;
+      remove = effect.turnsRemaining == Constants::EffectDuration::MIN;
+    }
+    else {
+      effect.val--;
+      remove = effect.val == Constants::EffectDuration::MIN;
+    }
+
+    if (remove) {
+      handle.remove<Effect>();
+    }
+  }
+};
+
 }  // namespace pokesim::internal
 
 ///////////////// END OF src/Pokedex/Events/EventsHelpers.hpp //////////////////
