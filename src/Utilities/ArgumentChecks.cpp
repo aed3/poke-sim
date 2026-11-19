@@ -199,8 +199,27 @@ void checkRandomChanceEvents(const internal::RandomEventChances<RANDOM_OPTIONS>&
 template <typename ActionMoveList>
 void checkActionMoveList(const ActionMoveList& actionMoveList, const types::registry& registry) {
   POKESIM_REQUIRE_NM(!actionMoveList.empty());
+  bool hasSimulateTurn = false;
+  bool hasCalcDamage = false;
+  bool hasAnalyzeEffect = false;
   for (types::entity moveEntity : actionMoveList) {
     checkActionMove(moveEntity, registry);
+    hasSimulateTurn |= has<tags::SimulateTurn>(moveEntity, registry);
+    hasCalcDamage |= has<tags::CalculateDamage>(moveEntity, registry);
+    hasAnalyzeEffect |= has<tags::AnalyzeEffect>(moveEntity, registry);
+  }
+
+  if (hasSimulateTurn) {
+    POKESIM_REQUIRE_NM(!hasCalcDamage);
+    POKESIM_REQUIRE_NM(!hasAnalyzeEffect);
+  }
+  if (hasCalcDamage) {
+    POKESIM_REQUIRE_NM(!hasSimulateTurn);
+    POKESIM_REQUIRE_NM(!hasAnalyzeEffect);
+  }
+  if (hasAnalyzeEffect) {
+    POKESIM_REQUIRE_NM(!hasSimulateTurn);
+    POKESIM_REQUIRE_NM(!hasCalcDamage);
   }
   listHasUniqueValues(actionMoveList);
 }
@@ -1138,6 +1157,11 @@ void check(const TargetSlotName& targetSlotName) {
 }
 
 template <>
+void check(const TemporaryFormChangedFrom& temporaryFormChangedFrom) {
+  check(SpeciesName{temporaryFormChangedFrom.val});
+}
+
+template <>
 void check(const TerrainName& terrainName) {
   POKESIM_REQUIRE_NM(terrainName.val != dex::Terrain::NO_TERRAIN);
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Terrain>)terrainName.val <= dex::TOTAL_TERRAIN_COUNT);
@@ -1182,6 +1206,11 @@ void check(const HiddenAbility& ability) {
 }
 
 template <>
+void check(const AbilityBaseForm& abilityBaseForm) {
+  check(SpeciesName{abilityBaseForm.val});
+}
+
+template <>
 void check(const BaseStats& baseStats) {
   checkBaseStat(baseStats.hp);
   checkBaseStat(baseStats.atk);
@@ -1194,6 +1223,11 @@ void check(const BaseStats& baseStats) {
 template <>
 void check(const CritStageBoost& critStageBoost) {
   checkBounds<Constants::CritStage>(critStageBoost.val);
+}
+
+template <>
+void check(const InBattleForm& inBattleForm) {
+  check(SpeciesName{inBattleForm.val});
 }
 
 template <>

@@ -69,6 +69,7 @@
 #include "Moves/Glare.hpp"
 #include "Moves/Growl.hpp"
 #include "Moves/IronDefense.hpp"
+#include "Moves/KingsShield.hpp"
 #include "Moves/KnockOff.hpp"
 #include "Moves/Leafage.hpp"
 #include "Moves/LowSweep.hpp"

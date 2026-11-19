@@ -11,15 +11,17 @@
 #include <Components/Names/AbilityNames.hpp>
 #include <Components/Names/GenderNames.hpp>
 #include <Components/Names/ItemNames.hpp>
-#include <Components/Names/NatureNames.hpp>
 #include <Components/Names/SpeciesNames.hpp>
 #include <Components/Names/StatusNames.hpp>
+#include <Components/Names/TemporaryFormChangedFrom.hpp>
+#include <Components/Pokedex/AbilityBaseForm.hpp>
 #include <Components/SpeciesTypes.hpp>
 #include <Components/Tags/PokemonTags.hpp>
 #include <Pokedex/Effects/BadPoison.hpp>
 #include <Pokedex/EnumToTag/NatureEnumToTag.hpp>
 #include <Pokedex/EnumToTag/TypeEnumToTag.hpp>
 #include <Pokedex/Items/Metronome.hpp>
+#include <Pokedex/Pokedex.hpp>
 #include <Simulation/BattleCreationInfo.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Gender.hpp>
@@ -87,8 +89,16 @@ void PokemonStateSetup::setGender(dex::Gender gender) {
   handle.emplace<GenderName>(gender);
 }
 
-void PokemonStateSetup::setAbility(dex::Ability ability) {
+void PokemonStateSetup::setAbility(dex::Ability ability, const Pokedex& pokedex) {
   pokesim::internal::setAbility(*handle.registry(), ability, entity());
+
+  if (pokedex.abilityHas<AbilityBaseForm>(ability)) {
+    dex::Species abilityBaseForm = pokedex.getAbilityData<AbilityBaseForm>(ability).val;
+
+    if (abilityBaseForm != handle.get<SpeciesName>().val) {
+      handle.emplace<TemporaryFormChangedFrom>(abilityBaseForm);
+    }
+  }
 }
 
 void PokemonStateSetup::setItem(dex::Item item, const Pokedex& pokedex) {

@@ -83,6 +83,7 @@ struct SpeciesName;
 struct StatName;
 struct StatusName;
 struct TargetSlotName;
+struct TemporaryFormChangedFrom;
 struct TerrainName;
 struct TypeName;
 struct VolatileName;
@@ -91,8 +92,10 @@ struct PlayerSide;
 struct PrimaryAbility;
 struct SecondaryAbility;
 struct HiddenAbility;
+struct AbilityBaseForm;
 struct BaseStats;
 struct CritStageBoost;
+struct InBattleForm;
 struct Pp;
 struct Priority;
 struct MovePriority;
@@ -464,6 +467,9 @@ template <>
 void check(const TargetSlotName&);
 
 template <>
+void check(const TemporaryFormChangedFrom&);
+
+template <>
 void check(const TerrainName&);
 
 template <>
@@ -488,10 +494,16 @@ template <>
 void check(const HiddenAbility&);
 
 template <>
+void check(const AbilityBaseForm&);
+
+template <>
 void check(const BaseStats&);
 
 template <>
 void check(const CritStageBoost&);
+
+template <>
+void check(const InBattleForm&);
 
 template <>
 void check(const Pp&);

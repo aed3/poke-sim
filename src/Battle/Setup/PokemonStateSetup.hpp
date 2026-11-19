@@ -60,7 +60,7 @@ struct PokemonStateSetup : StateSetupBase {
   void setTypes(SpeciesTypes types);
   void setLevel(types::level level);
   void setGender(dex::Gender gender);
-  void setAbility(dex::Ability ability);
+  void setAbility(dex::Ability ability, const Pokedex& pokedex);
   void setItem(dex::Item item, const Pokedex& pokedex);
   void setMoves(const std::vector<MoveSlot>& moveSlots);
 

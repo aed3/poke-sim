@@ -3,7 +3,9 @@
 #pragma once
 
 #include "Abilities.hpp"
+#include "AbilityBaseForm.hpp"
 #include "BaseStats.hpp"
 #include "CritStageBoost.hpp"
+#include "InBattleForm.hpp"
 #include "PP.hpp"
 #include "Priority.hpp"

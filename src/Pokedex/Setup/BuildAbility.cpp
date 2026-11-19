@@ -1,4 +1,5 @@
 #include <Components/Names/AbilityNames.hpp>
+#include <Components/Pokedex/AbilityBaseForm.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/EnumToTag/AbilityEnumToTag.hpp>
 #include <Pokedex/EnumToTag/AbilityPropertyEnumToTag.hpp>
@@ -15,6 +16,7 @@ struct BuildAbility {
  private:
   enum class Optional : std::uint8_t {
     properties,
+    associatedForms,
   };
 
   template <auto Member>
@@ -24,6 +26,8 @@ struct BuildAbility {
   struct has : std::false_type {};
   template <typename Type>
   struct has<Optional::properties, Type, void_t<Type::properties>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::associatedForms, Type, std::void_t<typename Type::associatedForms>> : std::true_type {};
 
  public:
   static types::entity run(types::registry& registry, GameMechanics gameMechanic) {
@@ -33,6 +37,10 @@ struct BuildAbility {
 
     if constexpr (has<Optional::properties, Ability>::value) {
       dex::emplaceTagFromEnum(Ability::properties(gameMechanic), ability);
+    }
+
+    if constexpr (has<Optional::associatedForms, Ability>::value) {
+      ability.emplace<AbilityBaseForm>(Ability::associatedForms::base(gameMechanic));
     }
 
     return ability.entity();

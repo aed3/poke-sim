@@ -15,6 +15,7 @@
 #include <Components/EntityHolders/Sides.hpp>
 #include <Components/EntityHolders/Team.hpp>
 #include <Components/EventModifier.hpp>
+#include <Components/Names/SpeciesNames.hpp>
 #include <Components/Names/TypeNames.hpp>
 #include <Components/RandomEventInputs.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
@@ -25,7 +26,9 @@
 #include <Components/Tags/PokemonTags.hpp>
 #include <Components/Tags/RunEventTags.hpp>
 #include <Components/Tags/SimulationTags.hpp>
+#include <Components/TransformedFrom.hpp>
 #include <Pokedex/Effects/headers.hpp>
+#include <Pokedex/Moves/KingsShield.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/RunEvent.hpp>
@@ -134,7 +137,7 @@ void imposterOnSwitchIn(types::handle handle, Side side, const Simulation& simul
   }
 
   if (registry.all_of<tags::ActivePokemon>(transformTarget)) {
-    internal::transformInto(registry, handle.entity(), transformTarget, simulation.pokedex());
+    internal::transformInto(handle, transformTarget, simulation.pokedex());
   }
 }
 
@@ -208,6 +211,27 @@ struct ScrappyOnModifyMove {
     }
   }
 };
+
+void stanceChanceOnModifyMove(
+  types::handle handle, SpeciesName species, const CurrentActionMovesAsSource& moves, const Pokedex& pokedex) {
+  POKESIM_REQUIRE(
+    [&]() {
+      auto forms = pokedex.getStaticValue<StanceChange::associatedForms::all>();
+      return std::find(forms.begin(), forms.end(), species.val) != forms.end();
+    }(),
+    "This ability should not exist on Pokemon without those species.");
+
+  types::entity move = moves.val.front();
+  types::registry& registry = *handle.registry();
+
+  if (species.val != Species::SHIELD_AEGISLASH && registry.all_of<KingsShield>(move)) {
+    internal::temporaryFormChange(handle, species, Species::SHIELD_AEGISLASH, pokedex);
+  }
+  else if (
+    species.val != Species::BLADE_AEGISLASH && registry.any_of<move::tags::Physical, move::tags::Special>(move)) {
+    internal::temporaryFormChange(handle, species, Species::BLADE_AEGISLASH, pokedex);
+  }
+}
 
 void staticOnDamagingHit(
   types::handle targetHandle, CurrentActionMovesAsTarget moves, Battle battle, types::percentChance chanceOfStatic,
@@ -303,6 +327,11 @@ void Prankster::onRemove(Simulation& simulation) {
 
 void Scrappy::onModifyMove(Simulation& simulation) {
   internal::currentActionMovesAsSourceView<ScrappyOnModifyMove, Tags<Scrappy>>(simulation);
+}
+
+void StanceChange::onModifyMove(Simulation& simulation) {
+  simulation.view<stanceChanceOnModifyMove, Tags<StanceChange, tags::SimulateTurn>, entt::exclude_t<TransformedFrom>>(
+    simulation.pokedex());
 }
 
 void Static::onDamagingHit(Simulation& simulation) {

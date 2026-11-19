@@ -172,6 +172,8 @@ void runModifyMoveAccuracyBoostEvent(Simulation&) {}
 void runModifyTarget(Simulation&) {}
 
 void runModifyMove(Simulation& simulation) {
+  dex::StanceChange::onModifyMove(simulation);
+
   dex::ChoiceScarf::onSourceModifyMove(simulation);
   dex::ChoiceSpecs::onSourceModifyMove(simulation);
   dex::KingsRock::onModifyMove(simulation);

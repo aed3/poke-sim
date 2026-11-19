@@ -35,6 +35,7 @@
 #include <Components/Names/VolatileNames.hpp>
 #include <Components/Names/WeatherNames.hpp>
 #include <Components/Pokedex/Abilities.hpp>
+#include <Components/Pokedex/InBattleForm.hpp>
 #include <Components/Pokedex/PP.hpp>
 #include <Components/Probability.hpp>
 #include <Components/RNGSeed.hpp>
@@ -135,6 +136,23 @@ struct SimulationSetupChecks {
 
     POKESIM_REQUIRE_FAIL("Given target slot does not exist in a team.");
     return entt::null;
+  }
+
+  void checkCreatedAbility(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
+    POKESIM_REQUIRE_NM(!registry->all_of<AbilityName>(pokemonEntity));
+
+    if (creationInfo.ability.has_value() && creationInfo.ability.value() != dex::Ability::NO_ABILITY) {
+      POKESIM_REQUIRE_NM(registry->all_of<tags::HasAbility>(pokemonEntity));
+      POKESIM_REQUIRE_NM(dex::hasTag(creationInfo.ability.value(), *registry, pokemonEntity));
+    }
+    else if (pokedex->speciesHas<PrimaryAbility>(creationInfo.species)) {
+      dex::Ability primaryAbility = pokedex->getSpeciesData<PrimaryAbility>(creationInfo.species).val;
+      POKESIM_REQUIRE_NM(registry->all_of<tags::HasAbility>(pokemonEntity));
+      POKESIM_REQUIRE_NM(dex::hasTag(primaryAbility, *registry, pokemonEntity));
+    }
+    else {
+      POKESIM_REQUIRE_NM(!registry->all_of<tags::HasAbility>(pokemonEntity));
+    }
   }
 
   void checkCreatedStats(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
@@ -263,22 +281,15 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(id.val != 0U);
     }
 
-    POKESIM_REQUIRE_NM(speciesName.val == creationInfo.species);
-    POKESIM_REQUIRE_NM(level.val == creationInfo.level.value_or(Constants::PokemonLevel::DEFAULT));
-
-    POKESIM_REQUIRE_NM(!registry->all_of<AbilityName>(pokemonEntity));
-    if (creationInfo.ability.has_value() && creationInfo.ability.value() != dex::Ability::NO_ABILITY) {
-      POKESIM_REQUIRE_NM(registry->all_of<tags::HasAbility>(pokemonEntity));
-      POKESIM_REQUIRE_NM(dex::hasTag(creationInfo.ability.value(), *registry, pokemonEntity));
-    }
-    else if (pokedex->speciesHas<PrimaryAbility>(creationInfo.species)) {
-      dex::Ability primaryAbility = pokedex->getSpeciesData<PrimaryAbility>(creationInfo.species).val;
-      POKESIM_REQUIRE_NM(registry->all_of<tags::HasAbility>(pokemonEntity));
-      POKESIM_REQUIRE_NM(dex::hasTag(primaryAbility, *registry, pokemonEntity));
+    if (pokedex->speciesHas<InBattleForm>(creationInfo.species)) {
+      POKESIM_REQUIRE_NM(speciesName.val == pokedex->getSpeciesData<InBattleForm>(creationInfo.species).val);
     }
     else {
-      POKESIM_REQUIRE_NM(!registry->all_of<tags::HasAbility>(pokemonEntity));
+      POKESIM_REQUIRE_NM(speciesName.val == creationInfo.species);
     }
+
+    POKESIM_REQUIRE_NM(level.val == creationInfo.level.value_or(Constants::PokemonLevel::DEFAULT));
+    checkCreatedAbility(pokemonEntity, creationInfo);
 
     POKESIM_REQUIRE_NM(!registry->all_of<ItemName>(pokemonEntity));
     if (creationInfo.item.has_value() && creationInfo.item != dex::Item::NO_ITEM) {

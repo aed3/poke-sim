@@ -224,13 +224,27 @@ class Pokedex {
    * @brief Returns references to the given dex data components for a move
    *
    * @warning
-   * Attempting to get a component from a move that doesn't own it or an unloaded item results in undefined behavior.
+   * Attempting to get a component from a move that doesn't own it or an unloaded move results in undefined behavior.
    *
    * @tparam T Type of data to retrieve. Valid types: TODO(aed3): Add in list
    */
   template <typename... T>
   auto getMoveData(dex::Move move) const {
     return dexRegistry.get<T...>(movesMap.at(move));
+  }
+
+  /**
+   * @brief Returns references to the given dex data components for an ability
+   *
+   * @warning
+   * Attempting to get a component from an item that doesn't own it or an unloaded ability results in undefined
+   * behavior.
+   *
+   * @tparam T Type of data to retrieve. Valid types: TODO(aed3): Add in list
+   */
+  template <typename... T>
+  auto getAbilityData(dex::Ability ability) const {
+    return dexRegistry.get<T...>(abilitiesMap.at(ability));
   }
 
   template <typename... T>
@@ -251,6 +265,11 @@ class Pokedex {
   template <typename... T>
   bool moveHasAll(dex::Move move) const {
     return dexRegistry.all_of<T...>(movesMap.at(move));
+  }
+
+  template <typename... T>
+  bool abilityHas(dex::Ability ability) const {
+    return dexRegistry.all_of<T...>(abilitiesMap.at(ability));
   }
 
   void buildMoves(types::registry& registry) const;

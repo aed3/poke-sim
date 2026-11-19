@@ -3,6 +3,7 @@
 #include <Components/Pokedex/Abilities.hpp>
 #include <Components/Tags/Selection.hpp>
 #include <Config/Require.hpp>
+#include <Pokedex/EnumToTag/AbilityEnumToTag.hpp>
 #include <Pokedex/EnumToTag/MoveEnumToTag.hpp>
 #include <Simulation/BattleCreationInfo.hpp>
 #include <Types/Entity.hpp>
@@ -14,6 +15,24 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim {
+namespace {
+template <typename Ability>
+struct AddAssociatedFormsToSet {
+  template <typename, typename = void>
+  struct hasAssociatedForms : std::false_type {};
+  template <typename T>
+  struct hasAssociatedForms<T, std::void_t<typename T::associatedForms>> : std::true_type {};
+
+  static void run(entt::dense_set<dex::Species>& speciesSet, const Pokedex* pokedex) {
+    if constexpr (hasAssociatedForms<Ability>::value) {
+      for (dex::Species species : pokedex->getStaticValue<Ability::associatedForms::all>()) {
+        speciesSet.insert(species);
+      }
+    }
+  }
+};
+}  // namespace
+
 template <typename Build, typename T>
 void Pokedex::load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build) {
   map.reserve(map.size() + list.size());
@@ -58,6 +77,7 @@ void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInf
   entt::dense_set<dex::Move> moveSet{};
   entt::dense_set<dex::Ability> abilitySet{};
   entt::dense_set<dex::Species> speciesMissingAbility{};
+  entt::dense_set<dex::Species> associatedFormsForAbilities{};
 
   for (const BattleCreationInfo& battleCreationInfo : battleInfoList) {
     for (const auto& side : battleCreationInfo.sides) {
@@ -96,5 +116,10 @@ void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInf
     abilitySet.insert(getSpeciesData<PrimaryAbility>(species).val);
   }
   loadAbilities(abilitySet);
+
+  for (dex::Ability ability : abilitySet) {
+    dex::enumToTag<AddAssociatedFormsToSet>(ability, associatedFormsForAbilities, this);
+  }
+  loadSpecies(associatedFormsForAbilities);
 }
 }  // namespace pokesim

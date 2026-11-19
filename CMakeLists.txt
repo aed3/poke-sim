@@ -240,6 +240,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/Abilities/LongReach.cpp
       tests/Abilities/Prankster.cpp
       tests/Abilities/Scrappy.cpp
+      tests/Abilities/StanceChange.cpp
       tests/Abilities/Static.cpp
       tests/Effects/BadPoison.cpp
       tests/Effects/ChoiceLock.cpp
