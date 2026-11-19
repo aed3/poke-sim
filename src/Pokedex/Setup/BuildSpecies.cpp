@@ -2,6 +2,7 @@
 #include <Components/Names/SpeciesNames.hpp>
 #include <Components/Pokedex/Abilities.hpp>
 #include <Components/Pokedex/BaseStats.hpp>
+#include <Components/Pokedex/InBattleForm.hpp>
 #include <Components/SpeciesTypes.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/EnumToTag/SpeciesEnumToTag.hpp>
@@ -21,6 +22,7 @@ template <typename Species>
 struct BuildSpecies {
  private:
   enum class Optional : std::uint8_t {
+    inBattleForm,
     primaryAbility,
     secondaryAbility,
     hiddenAbility,
@@ -31,6 +33,8 @@ struct BuildSpecies {
 
   template <Optional, typename = Species, typename V = void>
   struct has : std::false_type {};
+  template <typename Type>
+  struct has<Optional::inBattleForm, Type, void_t<Type::inBattleForm>> : std::true_type {};
   template <typename Type>
   struct has<Optional::primaryAbility, Type, void_t<Type::primaryAbility>> : std::true_type {};
   template <typename Type>
@@ -54,6 +58,13 @@ struct BuildSpecies {
     species.emplace<SpeciesTypes>(types);
     dex::emplaceTagFromEnum(types.type1(), species);
     dex::emplaceTagFromEnum(types.type2(), species);
+
+    if constexpr (has<Optional::inBattleForm>::value) {
+      dex::Species inBattleForm = Species::inBattleForm(gameMechanic);
+      if (inBattleForm != Species::name(gameMechanic)) {
+        species.emplace<InBattleForm>(inBattleForm);
+      }
+    }
 
     if constexpr (has<Optional::primaryAbility>::value) {
       species.emplace<PrimaryAbility>(Species::primaryAbility(gameMechanic));

@@ -22,13 +22,15 @@ struct Aegislash {
 
   static constexpr Ability primaryAbility(GameMechanics) { return Ability::STANCE_CHANGE; }
 
+  static constexpr Species inBattleForm(GameMechanics) { return Species::SHIELD_AEGISLASH; }
+
   struct Strings {
     static constexpr std::string_view name() { return "Aegislash"; }
     static constexpr std::string_view smogonName() { return "Aegislash"; }
     static constexpr std::string_view smogonId() { return "aegislash"; }
   };
 
-  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+  static constexpr GameMechanics latest() { return GameMechanics::SWORD_SHIELD; }
 };
 
 struct ShieldAegislash : Aegislash {
@@ -48,6 +50,8 @@ struct BladeAegislash : Aegislash {
   static constexpr types::baseStat def(GameMechanics) { return 50U; }
   static constexpr types::baseStat spa(GameMechanics) { return 140U; }
   static constexpr types::baseStat spd(GameMechanics) { return 50U; }
+
+  static constexpr Species inBattleForm(GameMechanics) { return Species::BLADE_AEGISLASH; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Blade Form Aegislash"; }

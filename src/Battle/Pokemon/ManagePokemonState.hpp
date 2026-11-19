@@ -4,6 +4,7 @@
 #include <Types/Entity.hpp>
 #include <Types/Enums/Ability.hpp>
 #include <Types/Enums/Item.hpp>
+#include <Types/Enums/Species.hpp>
 #include <Types/Enums/Status.hpp>
 #include <Types/Registry.hpp>
 #include <Types/Stats.hpp>
@@ -17,6 +18,7 @@ struct CurrentActionMoveSlot;
 struct Damage;
 struct LastUsedMove;
 struct MoveSlots;
+struct SpeciesName;
 struct SpeciesTypes;
 
 namespace stat {
@@ -62,7 +64,8 @@ void tryBoost(Simulation& simulation);
 void tryTrap(Simulation& simulation);
 void trap(types::handle handle, SpeciesTypes types, const Pokedex& pokedex);
 
-void transformInto(types::registry& registry, types::entity source, types::entity target, const Pokedex& pokedex);
+void temporaryFormChange(types::handle handle, SpeciesName species, dex::Species newSpecies, const Pokedex& pokedex);
+void transformInto(types::handle sourceHandle, types::entity target, const Pokedex& pokedex);
 
 void updateAllStats(Simulation& simulation);
 void updateAtk(Simulation& simulation, bool ignoreBoosts);

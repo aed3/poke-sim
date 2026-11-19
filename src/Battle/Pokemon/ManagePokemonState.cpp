@@ -18,6 +18,7 @@
 #include <Components/Names/SpeciesNames.hpp>
 #include <Components/Names/StatNames.hpp>
 #include <Components/Names/StatusNames.hpp>
+#include <Components/Names/TemporaryFormChangedFrom.hpp>
 #include <Components/Pokedex/BaseStats.hpp>
 #include <Components/Pokedex/PP.hpp>
 #include <Components/SimulateTurn/SimulateTurnTags.hpp>
@@ -201,6 +202,38 @@ bool areTypesTrappedImmune(SpeciesTypes types, const Pokedex& pokedex) {
   return false;
 }
 
+void setAllUpdateStats(types::handle handle) {
+  handle.emplace<pokesim::tags::AtkStatUpdateRequired>();
+  handle.emplace<pokesim::tags::DefStatUpdateRequired>();
+  handle.emplace<pokesim::tags::SpaStatUpdateRequired>();
+  handle.emplace<pokesim::tags::SpdStatUpdateRequired>();
+  handle.emplace<pokesim::tags::SpeStatUpdateRequired>();
+}
+
+void changeForFormChange(types::handle handle, dex::Species newSpecies, const Pokedex& pokedex) {
+  auto [sourceSpecies, sourceTypes, level, evs, ivs, sourceAtk, sourceDef, sourceSpa, sourceSpd, sourceSpe] =
+    handle.get<SpeciesName, SpeciesTypes, Level, Evs, Ivs, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>();
+
+  auto [baseStats, newTypes] = pokedex.getSpeciesData<BaseStats, SpeciesTypes>(newSpecies);
+  sourceSpecies.val = newSpecies;
+  sourceTypes = newTypes;
+
+  dex::Nature nature = handle.all_of<NatureName>() ? handle.get<NatureName>().val : dex::Nature::NO_NATURE;
+  sourceAtk.val = computeStatFromBaseStat(dex::Stat::ATK, baseStats, level.val, nature, evs, ivs);
+  sourceDef.val = computeStatFromBaseStat(dex::Stat::DEF, baseStats, level.val, nature, evs, ivs);
+  sourceSpa.val = computeStatFromBaseStat(dex::Stat::SPA, baseStats, level.val, nature, evs, ivs);
+  sourceSpd.val = computeStatFromBaseStat(dex::Stat::SPD, baseStats, level.val, nature, evs, ivs);
+  sourceSpe.val = computeStatFromBaseStat(dex::Stat::SPE, baseStats, level.val, nature, evs, ivs);
+
+  setAllUpdateStats(handle);
+}
+
+void revertTemporaryFormChange(
+  types::handle handle, TemporaryFormChangedFrom temporaryFormChangedFrom, const Pokedex& pokedex) {
+  changeForFormChange(handle, temporaryFormChangedFrom.val, pokedex);
+  handle.remove<TemporaryFormChangedFrom>();
+}
+
 void revertTransform(
   types::handle handle, SpeciesName& species, MoveSlots& moves, SpeciesTypes& types, stat::Atk& atk, stat::Def& def,
   stat::Spa& spa, stat::Spd& spd, stat::Spe& spe, Level level, Evs evs, Ivs ivs, const TransformedFrom& transformedFrom,
@@ -221,11 +254,7 @@ void revertTransform(
   spd.val = computeStatFromBaseStat(dex::Stat::SPD, baseStats.spd, level.val, nature, evs.spd, ivs.spd);
   spe.val = computeStatFromBaseStat(dex::Stat::SPE, baseStats.spe, level.val, nature, evs.spe, ivs.spe);
 
-  handle.emplace<pokesim::tags::AtkStatUpdateRequired>();
-  handle.emplace<pokesim::tags::DefStatUpdateRequired>();
-  handle.emplace<pokesim::tags::SpaStatUpdateRequired>();
-  handle.emplace<pokesim::tags::SpdStatUpdateRequired>();
-  handle.emplace<pokesim::tags::SpeStatUpdateRequired>();
+  setAllUpdateStats(handle);
 }
 
 void trapAndSetTrapper(
@@ -344,6 +373,7 @@ void clearStatus(types::handle pokemonHandle) {
 }
 
 void clearVolatiles(Simulation& simulation) {
+  simulation.view<revertTemporaryFormChange, Tags<tags::ClearVolatiles>>(simulation.pokedex());
   simulation.view<revertTransform, Tags<tags::ClearVolatiles>>(simulation.pokedex());
   clearVolatileTags(simulation);
 }
@@ -429,9 +459,13 @@ void trap(types::handle handle, SpeciesTypes types, const Pokedex& pokedex) {
   handle.emplace<dex::Trapped>();
 }
 
-void transformInto(types::registry& registry, types::entity source, types::entity target, const Pokedex& pokedex) {
-  types::handle sourceHandle{registry, source};
-  types::handle targetHandle{registry, target};
+void temporaryFormChange(types::handle handle, SpeciesName species, dex::Species newSpecies, const Pokedex& pokedex) {
+  (void)handle.get_or_emplace<TemporaryFormChangedFrom>(species.val);
+  changeForFormChange(handle, newSpecies, pokedex);
+}
+
+void transformInto(types::handle sourceHandle, types::entity target, const Pokedex& pokedex) {
+  types::handle targetHandle{*sourceHandle.registry(), target};
   if (targetHandle.all_of<TransformedFrom>()) {
     return;
   }
@@ -483,12 +517,7 @@ void transformInto(types::registry& registry, types::entity source, types::entit
   if (targetHandle.all_of<AccBoost>()) sourceHandle.emplace_or_replace<AccBoost>(targetHandle.get<AccBoost>());
   if (targetHandle.all_of<EvaBoost>()) sourceHandle.emplace_or_replace<EvaBoost>(targetHandle.get<EvaBoost>());
 
-  sourceHandle.emplace<pokesim::tags::AtkStatUpdateRequired>();
-  sourceHandle.emplace<pokesim::tags::DefStatUpdateRequired>();
-  sourceHandle.emplace<pokesim::tags::SpaStatUpdateRequired>();
-  sourceHandle.emplace<pokesim::tags::SpdStatUpdateRequired>();
-  sourceHandle.emplace<pokesim::tags::SpeStatUpdateRequired>();
-
+  setAllUpdateStats(sourceHandle);
   sourceHandle.remove<dex::ChoiceLock, DisabledMoveSlots, LastUsedMove>();
 
   // Technically, EndAbility should be called as well for the source's original ability, but since neither Ditto nor Mew

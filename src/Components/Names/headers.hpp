@@ -14,6 +14,7 @@
 #include "StatNames.hpp"
 #include "StatusNames.hpp"
 #include "TargetSlotName.hpp"
+#include "TemporaryFormChangedFrom.hpp"
 #include "TerrainNames.hpp"
 #include "TypeNames.hpp"
 #include "VolatileNames.hpp"

@@ -108,13 +108,21 @@ struct TestChecks : debug::Checks {
     REQUIRE(movePp == initialMovePp - Constants::PP_USE_DEDUCTION);
   }
 
-  template <typename... ComponentsExpectedToChange>
-  void checkUsedMovePokemon(types::entity pokemon, types::moveSlotIndex usedMoveSlot = 0U) const {
-    checkEntityForChanges<LastUsedMove, MoveSlots, ComponentsExpectedToChange...>(pokemon);
+  void checkUsedMovePokemon(
+    types::entity pokemon, debug::TypesToIgnore typesToIgnore, types::moveSlotIndex usedMoveSlot = 0U) const {
+    typesToIgnore.add<LastUsedMove, MoveSlots>();
+    checkEntityForChanges(pokemon, typesToIgnore);
     checkMovePpUsage(pokemon, usedMoveSlot);
 
     LastUsedMove lastUsedMove = registry->get<LastUsedMove>(pokemon);
     REQUIRE(lastUsedMove.val == usedMoveSlot);
+  }
+
+  template <typename... ComponentsExpectedToChange>
+  void checkUsedMovePokemon(types::entity pokemon, types::moveSlotIndex usedMoveSlot = 0U) const {
+    debug::TypesToIgnore typesToIgnore;
+    typesToIgnore.add<ComponentsExpectedToChange...>();
+    checkUsedMovePokemon(pokemon, typesToIgnore, usedMoveSlot);
   }
 
   void reset() {

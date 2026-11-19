@@ -145,12 +145,15 @@
  * src/Types/Enums/Species.hpp
  * src/Components/Names/SpeciesNames.hpp
  * src/Components/Names/TargetSlotName.hpp
+ * src/Components/Names/TemporaryFormChangedFrom.hpp
  * src/Types/Enums/Type.hpp
  * src/Components/Names/TypeNames.hpp
  * src/Components/PlayerSide.hpp
  * src/Components/Pokedex/Abilities.hpp
+ * src/Components/Pokedex/AbilityBaseForm.hpp
  * src/Components/Pokedex/BaseStats.hpp
  * src/Components/Pokedex/CritStageBoost.hpp
+ * src/Components/Pokedex/InBattleForm.hpp
  * src/Components/Pokedex/PP.hpp
  * src/Components/Pokedex/Priority.hpp
  * src/Components/Priority.hpp
@@ -271,6 +274,7 @@
  * src/Pokedex/Moves/Glare.hpp
  * src/Pokedex/Moves/Growl.hpp
  * src/Pokedex/Moves/IronDefense.hpp
+ * src/Pokedex/Moves/KingsShield.hpp
  * src/Pokedex/Moves/KnockOff.hpp
  * src/Pokedex/Moves/Leafage.hpp
  * src/Pokedex/Moves/LowSweep.hpp
@@ -20314,6 +20318,16 @@ struct TargetSlotName {
 
 //////////////// END OF src/Components/Names/TargetSlotName.hpp ////////////////
 
+////////// START OF src/Components/Names/TemporaryFormChangedFrom.hpp //////////
+
+namespace pokesim {
+struct TemporaryFormChangedFrom {
+  dex::Species val = dex::Species::NO_SPECIES;
+};
+}  // namespace pokesim
+
+/////////// END OF src/Components/Names/TemporaryFormChangedFrom.hpp ///////////
+
 ////////////////////// START OF src/Types/Enums/Type.hpp ///////////////////////
 
 namespace pokesim::dex {
@@ -20387,6 +20401,16 @@ struct HiddenAbility {
 
 ///////////////// END OF src/Components/Pokedex/Abilities.hpp //////////////////
 
+///////////// START OF src/Components/Pokedex/AbilityBaseForm.hpp //////////////
+
+namespace pokesim {
+struct AbilityBaseForm {
+  dex::Species val = dex::Species::NO_SPECIES;
+};
+}  // namespace pokesim
+
+////////////// END OF src/Components/Pokedex/AbilityBaseForm.hpp ///////////////
+
 //////////////// START OF src/Components/Pokedex/BaseStats.hpp /////////////////
 
 namespace pokesim {
@@ -20412,6 +20436,16 @@ struct CritStageBoost {
 }  // namespace pokesim
 
 /////////////// END OF src/Components/Pokedex/CritStageBoost.hpp ///////////////
+
+/////////////// START OF src/Components/Pokedex/InBattleForm.hpp ///////////////
+
+namespace pokesim {
+struct InBattleForm {
+  dex::Species val = dex::Species::NO_SPECIES;
+};
+}  // namespace pokesim
+
+//////////////// END OF src/Components/Pokedex/InBattleForm.hpp ////////////////
 
 //////////////////// START OF src/Components/Pokedex/PP.hpp ////////////////////
 
@@ -21569,6 +21603,13 @@ struct StanceChange {
            AbilityProperty::NO_TRACE;
   }
 
+  struct associatedForms {
+    static constexpr Species base(GameMechanics) { return Species::SHIELD_AEGISLASH; }
+    static constexpr std::array<Species, 2U> all(GameMechanics) {
+      return {Species::SHIELD_AEGISLASH, Species::BLADE_AEGISLASH};
+    }
+  };
+
   struct Strings {
     static constexpr std::string_view name() { return "Stance Change"; }
     static constexpr std::string_view smogonId() { return "stancechange"; }
@@ -21576,7 +21617,7 @@ struct StanceChange {
 
   static void onModifyMove(Simulation& simulation);
 
-  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+  static constexpr GameMechanics latest() { return GameMechanics::SWORD_SHIELD; }
 };
 }  // namespace pokesim::dex
 
@@ -23567,13 +23608,27 @@ class Pokedex {
    * @brief Returns references to the given dex data components for a move
    *
    * @warning
-   * Attempting to get a component from a move that doesn't own it or an unloaded item results in undefined behavior.
+   * Attempting to get a component from a move that doesn't own it or an unloaded move results in undefined behavior.
    *
    * @tparam T Type of data to retrieve. Valid types: TODO(aed3): Add in list
    */
   template <typename... T>
   auto getMoveData(dex::Move move) const {
     return dexRegistry.get<T...>(movesMap.at(move));
+  }
+
+  /**
+   * @brief Returns references to the given dex data components for an ability
+   *
+   * @warning
+   * Attempting to get a component from an item that doesn't own it or an unloaded ability results in undefined
+   * behavior.
+   *
+   * @tparam T Type of data to retrieve. Valid types: TODO(aed3): Add in list
+   */
+  template <typename... T>
+  auto getAbilityData(dex::Ability ability) const {
+    return dexRegistry.get<T...>(abilitiesMap.at(ability));
   }
 
   template <typename... T>
@@ -23594,6 +23649,11 @@ class Pokedex {
   template <typename... T>
   bool moveHasAll(dex::Move move) const {
     return dexRegistry.all_of<T...>(movesMap.at(move));
+  }
+
+  template <typename... T>
+  bool abilityHas(dex::Ability ability) const {
+    return dexRegistry.all_of<T...>(abilitiesMap.at(ability));
   }
 
   void buildMoves(types::registry& registry) const;
@@ -24112,6 +24172,29 @@ struct IronDefense {
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Moves/IronDefense.hpp ///////////////////
+
+////////////////// START OF src/Pokedex/Moves/KingsShield.hpp //////////////////
+
+namespace pokesim::dex {
+struct KingsShield {
+  static constexpr Move name(GameMechanics = {}) { return Move::KINGS_SHIELD; }
+  static constexpr Type type(GameMechanics) { return Type::STEEL; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
+
+  static constexpr types::pp basePp(GameMechanics) { return 10U; }
+
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "King's Shield"; }
+    static constexpr std::string_view smogonId() { return "kingsshield"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SWORD_SHIELD; }
+};
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Moves/KingsShield.hpp ///////////////////
 
 /////////////////// START OF src/Pokedex/Moves/KnockOff.hpp ////////////////////
 
@@ -24805,13 +24888,15 @@ struct Aegislash {
 
   static constexpr Ability primaryAbility(GameMechanics) { return Ability::STANCE_CHANGE; }
 
+  static constexpr Species inBattleForm(GameMechanics) { return Species::SHIELD_AEGISLASH; }
+
   struct Strings {
     static constexpr std::string_view name() { return "Aegislash"; }
     static constexpr std::string_view smogonName() { return "Aegislash"; }
     static constexpr std::string_view smogonId() { return "aegislash"; }
   };
 
-  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+  static constexpr GameMechanics latest() { return GameMechanics::SWORD_SHIELD; }
 };
 
 struct ShieldAegislash : Aegislash {
@@ -24831,6 +24916,8 @@ struct BladeAegislash : Aegislash {
   static constexpr types::baseStat def(GameMechanics) { return 50U; }
   static constexpr types::baseStat spa(GameMechanics) { return 140U; }
   static constexpr types::baseStat spd(GameMechanics) { return 50U; }
+
+  static constexpr Species inBattleForm(GameMechanics) { return Species::BLADE_AEGISLASH; }
 
   struct Strings {
     static constexpr std::string_view name() { return "Blade Form Aegislash"; }
@@ -25569,6 +25656,7 @@ struct SpeciesName;
 struct StatName;
 struct StatusName;
 struct TargetSlotName;
+struct TemporaryFormChangedFrom;
 struct TerrainName;
 struct TypeName;
 struct VolatileName;
@@ -25577,8 +25665,10 @@ struct PlayerSide;
 struct PrimaryAbility;
 struct SecondaryAbility;
 struct HiddenAbility;
+struct AbilityBaseForm;
 struct BaseStats;
 struct CritStageBoost;
+struct InBattleForm;
 struct Pp;
 struct Priority;
 struct MovePriority;
@@ -25950,6 +26040,9 @@ template <>
 void check(const TargetSlotName&);
 
 template <>
+void check(const TemporaryFormChangedFrom&);
+
+template <>
 void check(const TerrainName&);
 
 template <>
@@ -25974,10 +26067,16 @@ template <>
 void check(const HiddenAbility&);
 
 template <>
+void check(const AbilityBaseForm&);
+
+template <>
 void check(const BaseStats&);
 
 template <>
 void check(const CritStageBoost&);
+
+template <>
+void check(const InBattleForm&);
 
 template <>
 void check(const Pp&);
@@ -26624,6 +26723,7 @@ struct CurrentActionMoveSlot;
 struct Damage;
 struct LastUsedMove;
 struct MoveSlots;
+struct SpeciesName;
 struct SpeciesTypes;
 
 namespace stat {
@@ -26669,7 +26769,8 @@ void tryBoost(Simulation& simulation);
 void tryTrap(Simulation& simulation);
 void trap(types::handle handle, SpeciesTypes types, const Pokedex& pokedex);
 
-void transformInto(types::registry& registry, types::entity source, types::entity target, const Pokedex& pokedex);
+void temporaryFormChange(types::handle handle, SpeciesName species, dex::Species newSpecies, const Pokedex& pokedex);
+void transformInto(types::handle sourceHandle, types::entity target, const Pokedex& pokedex);
 
 void updateAllStats(Simulation& simulation);
 void updateAtk(Simulation& simulation, bool ignoreBoosts);
@@ -26757,7 +26858,7 @@ struct PokemonStateSetup : StateSetupBase {
   void setTypes(SpeciesTypes types);
   void setLevel(types::level level);
   void setGender(dex::Gender gender);
-  void setAbility(dex::Ability ability);
+  void setAbility(dex::Ability ability, const Pokedex& pokedex);
   void setItem(dex::Item item, const Pokedex& pokedex);
   void setMoves(const std::vector<MoveSlot>& moveSlots);
 
@@ -27860,6 +27961,23 @@ struct SimulationSetupChecks {
     return entt::null;
   }
 
+  void checkCreatedAbility(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
+    POKESIM_REQUIRE_NM(!registry->all_of<AbilityName>(pokemonEntity));
+
+    if (creationInfo.ability.has_value() && creationInfo.ability.value() != dex::Ability::NO_ABILITY) {
+      POKESIM_REQUIRE_NM(registry->all_of<tags::HasAbility>(pokemonEntity));
+      POKESIM_REQUIRE_NM(dex::hasTag(creationInfo.ability.value(), *registry, pokemonEntity));
+    }
+    else if (pokedex->speciesHas<PrimaryAbility>(creationInfo.species)) {
+      dex::Ability primaryAbility = pokedex->getSpeciesData<PrimaryAbility>(creationInfo.species).val;
+      POKESIM_REQUIRE_NM(registry->all_of<tags::HasAbility>(pokemonEntity));
+      POKESIM_REQUIRE_NM(dex::hasTag(primaryAbility, *registry, pokemonEntity));
+    }
+    else {
+      POKESIM_REQUIRE_NM(!registry->all_of<tags::HasAbility>(pokemonEntity));
+    }
+  }
+
   void checkCreatedStats(types::entity pokemonEntity, const PokemonCreationInfo& creationInfo) const {
     const auto& [hp, atk, def, spa, spd, spe] =
       registry->get<stat::Hp, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>(pokemonEntity);
@@ -27986,22 +28104,15 @@ struct SimulationSetupChecks {
       POKESIM_REQUIRE_NM(id.val != 0U);
     }
 
-    POKESIM_REQUIRE_NM(speciesName.val == creationInfo.species);
-    POKESIM_REQUIRE_NM(level.val == creationInfo.level.value_or(Constants::PokemonLevel::DEFAULT));
-
-    POKESIM_REQUIRE_NM(!registry->all_of<AbilityName>(pokemonEntity));
-    if (creationInfo.ability.has_value() && creationInfo.ability.value() != dex::Ability::NO_ABILITY) {
-      POKESIM_REQUIRE_NM(registry->all_of<tags::HasAbility>(pokemonEntity));
-      POKESIM_REQUIRE_NM(dex::hasTag(creationInfo.ability.value(), *registry, pokemonEntity));
-    }
-    else if (pokedex->speciesHas<PrimaryAbility>(creationInfo.species)) {
-      dex::Ability primaryAbility = pokedex->getSpeciesData<PrimaryAbility>(creationInfo.species).val;
-      POKESIM_REQUIRE_NM(registry->all_of<tags::HasAbility>(pokemonEntity));
-      POKESIM_REQUIRE_NM(dex::hasTag(primaryAbility, *registry, pokemonEntity));
+    if (pokedex->speciesHas<InBattleForm>(creationInfo.species)) {
+      POKESIM_REQUIRE_NM(speciesName.val == pokedex->getSpeciesData<InBattleForm>(creationInfo.species).val);
     }
     else {
-      POKESIM_REQUIRE_NM(!registry->all_of<tags::HasAbility>(pokemonEntity));
+      POKESIM_REQUIRE_NM(speciesName.val == creationInfo.species);
     }
+
+    POKESIM_REQUIRE_NM(level.val == creationInfo.level.value_or(Constants::PokemonLevel::DEFAULT));
+    checkCreatedAbility(pokemonEntity, creationInfo);
 
     POKESIM_REQUIRE_NM(!registry->all_of<ItemName>(pokemonEntity));
     if (creationInfo.item.has_value() && creationInfo.item != dex::Item::NO_ITEM) {
@@ -29551,6 +29662,7 @@ constexpr auto enumToTag(Move move, RunArgs&&... args) {
     case Move::GLARE:          return RunStruct<Glare, T...>::run(std::forward<RunArgs>(args)...);
     case Move::GROWL:          return RunStruct<Growl, T...>::run(std::forward<RunArgs>(args)...);
     case Move::IRON_DEFENSE:   return RunStruct<IronDefense, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::KINGS_SHIELD:   return RunStruct<KingsShield, T...>::run(std::forward<RunArgs>(args)...);
     case Move::KNOCK_OFF:      return RunStruct<KnockOff, T...>::run(std::forward<RunArgs>(args)...);
     case Move::LEAFAGE:        return RunStruct<Leafage, T...>::run(std::forward<RunArgs>(args)...);
     case Move::LOW_SWEEP:      return RunStruct<LowSweep, T...>::run(std::forward<RunArgs>(args)...);

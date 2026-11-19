@@ -338,8 +338,27 @@ void checkRandomChanceEvents(const internal::RandomEventChances<RANDOM_OPTIONS>&
 template <typename ActionMoveList>
 void checkActionMoveList(const ActionMoveList& actionMoveList, const types::registry& registry) {
   POKESIM_REQUIRE_NM(!actionMoveList.empty());
+  bool hasSimulateTurn = false;
+  bool hasCalcDamage = false;
+  bool hasAnalyzeEffect = false;
   for (types::entity moveEntity : actionMoveList) {
     checkActionMove(moveEntity, registry);
+    hasSimulateTurn |= has<tags::SimulateTurn>(moveEntity, registry);
+    hasCalcDamage |= has<tags::CalculateDamage>(moveEntity, registry);
+    hasAnalyzeEffect |= has<tags::AnalyzeEffect>(moveEntity, registry);
+  }
+
+  if (hasSimulateTurn) {
+    POKESIM_REQUIRE_NM(!hasCalcDamage);
+    POKESIM_REQUIRE_NM(!hasAnalyzeEffect);
+  }
+  if (hasCalcDamage) {
+    POKESIM_REQUIRE_NM(!hasSimulateTurn);
+    POKESIM_REQUIRE_NM(!hasAnalyzeEffect);
+  }
+  if (hasAnalyzeEffect) {
+    POKESIM_REQUIRE_NM(!hasSimulateTurn);
+    POKESIM_REQUIRE_NM(!hasCalcDamage);
   }
   listHasUniqueValues(actionMoveList);
 }
@@ -1277,6 +1296,11 @@ void check(const TargetSlotName& targetSlotName) {
 }
 
 template <>
+void check(const TemporaryFormChangedFrom& temporaryFormChangedFrom) {
+  check(SpeciesName{temporaryFormChangedFrom.val});
+}
+
+template <>
 void check(const TerrainName& terrainName) {
   POKESIM_REQUIRE_NM(terrainName.val != dex::Terrain::NO_TERRAIN);
   POKESIM_REQUIRE_NM((std::underlying_type_t<dex::Terrain>)terrainName.val <= dex::TOTAL_TERRAIN_COUNT);
@@ -1321,6 +1345,11 @@ void check(const HiddenAbility& ability) {
 }
 
 template <>
+void check(const AbilityBaseForm& abilityBaseForm) {
+  check(SpeciesName{abilityBaseForm.val});
+}
+
+template <>
 void check(const BaseStats& baseStats) {
   checkBaseStat(baseStats.hp);
   checkBaseStat(baseStats.atk);
@@ -1333,6 +1362,11 @@ void check(const BaseStats& baseStats) {
 template <>
 void check(const CritStageBoost& critStageBoost) {
   checkBounds<Constants::CritStage>(critStageBoost.val);
+}
+
+template <>
+void check(const InBattleForm& inBattleForm) {
+  check(SpeciesName{inBattleForm.val});
 }
 
 template <>
@@ -1861,11 +1895,12 @@ struct EntityLists {
       }
     }
 
-    types::entityIndex sideCount = battleCount * 2U;
+    types::entityIndex sideCount = battleCount * Constants::SIDE_COUNT;
     types::entityIndex recycledActionCount = battleCount;
     types::entityIndex recycledActionMoveCount = battleCount;
-    types::entityIndex addedRecycledActionMoveCount =
-      simulation->isBattleFormat(BattleFormat::DOUBLES) ? battleCount * 2U : 0U;
+    types::entityIndex addedRecycledActionMoveCount = simulation->isBattleFormat(BattleFormat::DOUBLES)
+                                                        ? battleCount * Constants::ActivePokemonSlotsPerSide::DOUBLES
+                                                        : 0U;
 
     POKESIM_REQUIRE(
       battleCount + sideCount + recycledActionCount + pokemonCount + calcDamageInputCount + analyzeEffectInputCount <
@@ -1884,17 +1919,29 @@ struct EntityLists {
   }
 };
 
+void setPokemonSpecies(
+  const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup, const Pokedex& pokedex) {
+  dex::Species species = pokemonInfo.species;
+  if (pokedex.speciesHas<InBattleForm>(species)) {
+    species = pokedex.getSpeciesData<InBattleForm>(species).val;
+  }
+  pokemonSetup.setSpecies(species);
+}
+
 void setPokemonAbility(
   const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup, const Pokedex& pokedex) {
-  if (pokemonInfo.ability != dex::Ability::NO_ABILITY) {
-    if (pokemonInfo.ability.has_value()) {
-      pokemonSetup.setAbility(pokemonInfo.ability.value());
-    }
-    else {
-      dex::Ability ability = pokedex.getSpeciesData<PrimaryAbility>(pokemonInfo.species).val;
-      pokemonSetup.setAbility(ability);
-    }
+  if (pokemonInfo.ability == dex::Ability::NO_ABILITY) {
+    return;
   }
+
+  dex::Ability ability = dex::Ability::NO_ABILITY;
+  if (pokemonInfo.ability.has_value()) {
+    ability = pokemonInfo.ability.value();
+  }
+  else {
+    ability = pokedex.getSpeciesData<PrimaryAbility>(pokemonInfo.species).val;
+  }
+  pokemonSetup.setAbility(ability, pokedex);
 }
 
 Evs setPokemonEvs(const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup) {
@@ -1984,7 +2031,7 @@ void createInitialPokemon(
     pokemonSetup.setAutoID();
   }
 
-  pokemonSetup.setSpecies(pokemonInfo.species);
+  setPokemonSpecies(pokemonInfo, pokemonSetup, pokedex);
   setPokemonAbility(pokemonInfo, pokemonSetup, pokedex);
 
   types::level level = pokemonInfo.level.value_or(Constants::PokemonLevel::DEFAULT);
@@ -2623,6 +2670,8 @@ void runModifyMoveAccuracyBoostEvent(Simulation&) {}
 void runModifyTarget(Simulation&) {}
 
 void runModifyMove(Simulation& simulation) {
+  dex::StanceChange::onModifyMove(simulation);
+
   dex::ChoiceScarf::onSourceModifyMove(simulation);
   dex::ChoiceSpecs::onSourceModifyMove(simulation);
   dex::KingsRock::onModifyMove(simulation);
@@ -5049,6 +5098,7 @@ template <typename Species>
 struct BuildSpecies {
  private:
   enum class Optional : std::uint8_t {
+    inBattleForm,
     primaryAbility,
     secondaryAbility,
     hiddenAbility,
@@ -5059,6 +5109,8 @@ struct BuildSpecies {
 
   template <Optional, typename = Species, typename V = void>
   struct has : std::false_type {};
+  template <typename Type>
+  struct has<Optional::inBattleForm, Type, void_t<Type::inBattleForm>> : std::true_type {};
   template <typename Type>
   struct has<Optional::primaryAbility, Type, void_t<Type::primaryAbility>> : std::true_type {};
   template <typename Type>
@@ -5082,6 +5134,13 @@ struct BuildSpecies {
     species.emplace<SpeciesTypes>(types);
     dex::emplaceTagFromEnum(types.type1(), species);
     dex::emplaceTagFromEnum(types.type2(), species);
+
+    if constexpr (has<Optional::inBattleForm>::value) {
+      dex::Species inBattleForm = Species::inBattleForm(gameMechanic);
+      if (inBattleForm != Species::name(gameMechanic)) {
+        species.emplace<InBattleForm>(inBattleForm);
+      }
+    }
 
     if constexpr (has<Optional::primaryAbility>::value) {
       species.emplace<PrimaryAbility>(Species::primaryAbility(gameMechanic));
@@ -5609,6 +5668,7 @@ struct BuildAbility {
  private:
   enum class Optional : std::uint8_t {
     properties,
+    associatedForms,
   };
 
   template <auto Member>
@@ -5618,6 +5678,8 @@ struct BuildAbility {
   struct has : std::false_type {};
   template <typename Type>
   struct has<Optional::properties, Type, void_t<Type::properties>> : std::true_type {};
+  template <typename Type>
+  struct has<Optional::associatedForms, Type, std::void_t<typename Type::associatedForms>> : std::true_type {};
 
  public:
   static types::entity run(types::registry& registry, GameMechanics gameMechanic) {
@@ -5627,6 +5689,10 @@ struct BuildAbility {
 
     if constexpr (has<Optional::properties, Ability>::value) {
       dex::emplaceTagFromEnum(Ability::properties(gameMechanic), ability);
+    }
+
+    if constexpr (has<Optional::associatedForms, Ability>::value) {
+      ability.emplace<AbilityBaseForm>(Ability::associatedForms::base(gameMechanic));
     }
 
     return ability.entity();
@@ -5649,6 +5715,24 @@ types::entity Pokedex::buildAbility(dex::Ability ability, types::registry& regis
 /////////////////////// START OF src/Pokedex/Pokedex.cpp ///////////////////////
 
 namespace pokesim {
+namespace {
+template <typename Ability>
+struct AddAssociatedFormsToSet {
+  template <typename, typename = void>
+  struct hasAssociatedForms : std::false_type {};
+  template <typename T>
+  struct hasAssociatedForms<T, std::void_t<typename T::associatedForms>> : std::true_type {};
+
+  static void run(entt::dense_set<dex::Species>& speciesSet, const Pokedex* pokedex) {
+    if constexpr (hasAssociatedForms<Ability>::value) {
+      for (dex::Species species : pokedex->getStaticValue<Ability::associatedForms::all>()) {
+        speciesSet.insert(species);
+      }
+    }
+  }
+};
+}  // namespace
+
 template <typename Build, typename T>
 void Pokedex::load(entt::dense_map<T, types::entity>& map, const entt::dense_set<T>& list, Build build) {
   map.reserve(map.size() + list.size());
@@ -5693,6 +5777,7 @@ void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInf
   entt::dense_set<dex::Move> moveSet{};
   entt::dense_set<dex::Ability> abilitySet{};
   entt::dense_set<dex::Species> speciesMissingAbility{};
+  entt::dense_set<dex::Species> associatedFormsForAbilities{};
 
   for (const BattleCreationInfo& battleCreationInfo : battleInfoList) {
     for (const auto& side : battleCreationInfo.sides) {
@@ -5731,6 +5816,11 @@ void Pokedex::loadForBattleInfo(const std::vector<BattleCreationInfo>& battleInf
     abilitySet.insert(getSpeciesData<PrimaryAbility>(species).val);
   }
   loadAbilities(abilitySet);
+
+  for (dex::Ability ability : abilitySet) {
+    dex::enumToTag<AddAssociatedFormsToSet>(ability, associatedFormsForAbilities, this);
+  }
+  loadSpecies(associatedFormsForAbilities);
 }
 }  // namespace pokesim
 
@@ -5857,7 +5947,7 @@ void reversalOnSetBasePower(types::handle handle, CurrentActionSource source, co
 
 void transformOnHit(
   types::registry& registry, CurrentActionSource source, CurrentActionTarget target, const Pokedex& pokedex) {
-  internal::transformInto(registry, source.val, target.val, pokedex);
+  internal::transformInto({registry, source.val}, target.val, pokedex);
 }
 }  // namespace
 
@@ -6743,7 +6833,7 @@ void imposterOnSwitchIn(types::handle handle, Side side, const Simulation& simul
   }
 
   if (registry.all_of<tags::ActivePokemon>(transformTarget)) {
-    internal::transformInto(registry, handle.entity(), transformTarget, simulation.pokedex());
+    internal::transformInto(handle, transformTarget, simulation.pokedex());
   }
 }
 
@@ -6817,6 +6907,27 @@ struct ScrappyOnModifyMove {
     }
   }
 };
+
+void stanceChanceOnModifyMove(
+  types::handle handle, SpeciesName species, const CurrentActionMovesAsSource& moves, const Pokedex& pokedex) {
+  POKESIM_REQUIRE(
+    [&]() {
+      auto forms = pokedex.getStaticValue<StanceChange::associatedForms::all>();
+      return std::find(forms.begin(), forms.end(), species.val) != forms.end();
+    }(),
+    "This ability should not exist on Pokemon without those species.");
+
+  types::entity move = moves.val.front();
+  types::registry& registry = *handle.registry();
+
+  if (species.val != Species::SHIELD_AEGISLASH && registry.all_of<KingsShield>(move)) {
+    internal::temporaryFormChange(handle, species, Species::SHIELD_AEGISLASH, pokedex);
+  }
+  else if (
+    species.val != Species::BLADE_AEGISLASH && registry.any_of<move::tags::Physical, move::tags::Special>(move)) {
+    internal::temporaryFormChange(handle, species, Species::BLADE_AEGISLASH, pokedex);
+  }
+}
 
 void staticOnDamagingHit(
   types::handle targetHandle, CurrentActionMovesAsTarget moves, Battle battle, types::percentChance chanceOfStatic,
@@ -6912,6 +7023,11 @@ void Prankster::onRemove(Simulation& simulation) {
 
 void Scrappy::onModifyMove(Simulation& simulation) {
   internal::currentActionMovesAsSourceView<ScrappyOnModifyMove, Tags<Scrappy>>(simulation);
+}
+
+void StanceChange::onModifyMove(Simulation& simulation) {
+  simulation.view<stanceChanceOnModifyMove, Tags<StanceChange, tags::SimulateTurn>, entt::exclude_t<TransformedFrom>>(
+    simulation.pokedex());
 }
 
 void Static::onDamagingHit(Simulation& simulation) {
@@ -8046,8 +8162,16 @@ void PokemonStateSetup::setGender(dex::Gender gender) {
   handle.emplace<GenderName>(gender);
 }
 
-void PokemonStateSetup::setAbility(dex::Ability ability) {
+void PokemonStateSetup::setAbility(dex::Ability ability, const Pokedex& pokedex) {
   pokesim::internal::setAbility(*handle.registry(), ability, entity());
+
+  if (pokedex.abilityHas<AbilityBaseForm>(ability)) {
+    dex::Species abilityBaseForm = pokedex.getAbilityData<AbilityBaseForm>(ability).val;
+
+    if (abilityBaseForm != handle.get<SpeciesName>().val) {
+      handle.emplace<TemporaryFormChangedFrom>(abilityBaseForm);
+    }
+  }
 }
 
 void PokemonStateSetup::setItem(dex::Item item, const Pokedex& pokedex) {
@@ -8412,6 +8536,38 @@ bool areTypesTrappedImmune(SpeciesTypes types, const Pokedex& pokedex) {
   return false;
 }
 
+void setAllUpdateStats(types::handle handle) {
+  handle.emplace<pokesim::tags::AtkStatUpdateRequired>();
+  handle.emplace<pokesim::tags::DefStatUpdateRequired>();
+  handle.emplace<pokesim::tags::SpaStatUpdateRequired>();
+  handle.emplace<pokesim::tags::SpdStatUpdateRequired>();
+  handle.emplace<pokesim::tags::SpeStatUpdateRequired>();
+}
+
+void changeForFormChange(types::handle handle, dex::Species newSpecies, const Pokedex& pokedex) {
+  auto [sourceSpecies, sourceTypes, level, evs, ivs, sourceAtk, sourceDef, sourceSpa, sourceSpd, sourceSpe] =
+    handle.get<SpeciesName, SpeciesTypes, Level, Evs, Ivs, stat::Atk, stat::Def, stat::Spa, stat::Spd, stat::Spe>();
+
+  auto [baseStats, newTypes] = pokedex.getSpeciesData<BaseStats, SpeciesTypes>(newSpecies);
+  sourceSpecies.val = newSpecies;
+  sourceTypes = newTypes;
+
+  dex::Nature nature = handle.all_of<NatureName>() ? handle.get<NatureName>().val : dex::Nature::NO_NATURE;
+  sourceAtk.val = computeStatFromBaseStat(dex::Stat::ATK, baseStats, level.val, nature, evs, ivs);
+  sourceDef.val = computeStatFromBaseStat(dex::Stat::DEF, baseStats, level.val, nature, evs, ivs);
+  sourceSpa.val = computeStatFromBaseStat(dex::Stat::SPA, baseStats, level.val, nature, evs, ivs);
+  sourceSpd.val = computeStatFromBaseStat(dex::Stat::SPD, baseStats, level.val, nature, evs, ivs);
+  sourceSpe.val = computeStatFromBaseStat(dex::Stat::SPE, baseStats, level.val, nature, evs, ivs);
+
+  setAllUpdateStats(handle);
+}
+
+void revertTemporaryFormChange(
+  types::handle handle, TemporaryFormChangedFrom temporaryFormChangedFrom, const Pokedex& pokedex) {
+  changeForFormChange(handle, temporaryFormChangedFrom.val, pokedex);
+  handle.remove<TemporaryFormChangedFrom>();
+}
+
 void revertTransform(
   types::handle handle, SpeciesName& species, MoveSlots& moves, SpeciesTypes& types, stat::Atk& atk, stat::Def& def,
   stat::Spa& spa, stat::Spd& spd, stat::Spe& spe, Level level, Evs evs, Ivs ivs, const TransformedFrom& transformedFrom,
@@ -8432,11 +8588,7 @@ void revertTransform(
   spd.val = computeStatFromBaseStat(dex::Stat::SPD, baseStats.spd, level.val, nature, evs.spd, ivs.spd);
   spe.val = computeStatFromBaseStat(dex::Stat::SPE, baseStats.spe, level.val, nature, evs.spe, ivs.spe);
 
-  handle.emplace<pokesim::tags::AtkStatUpdateRequired>();
-  handle.emplace<pokesim::tags::DefStatUpdateRequired>();
-  handle.emplace<pokesim::tags::SpaStatUpdateRequired>();
-  handle.emplace<pokesim::tags::SpdStatUpdateRequired>();
-  handle.emplace<pokesim::tags::SpeStatUpdateRequired>();
+  setAllUpdateStats(handle);
 }
 
 void trapAndSetTrapper(
@@ -8555,6 +8707,7 @@ void clearStatus(types::handle pokemonHandle) {
 }
 
 void clearVolatiles(Simulation& simulation) {
+  simulation.view<revertTemporaryFormChange, Tags<tags::ClearVolatiles>>(simulation.pokedex());
   simulation.view<revertTransform, Tags<tags::ClearVolatiles>>(simulation.pokedex());
   clearVolatileTags(simulation);
 }
@@ -8640,9 +8793,13 @@ void trap(types::handle handle, SpeciesTypes types, const Pokedex& pokedex) {
   handle.emplace<dex::Trapped>();
 }
 
-void transformInto(types::registry& registry, types::entity source, types::entity target, const Pokedex& pokedex) {
-  types::handle sourceHandle{registry, source};
-  types::handle targetHandle{registry, target};
+void temporaryFormChange(types::handle handle, SpeciesName species, dex::Species newSpecies, const Pokedex& pokedex) {
+  (void)handle.get_or_emplace<TemporaryFormChangedFrom>(species.val);
+  changeForFormChange(handle, newSpecies, pokedex);
+}
+
+void transformInto(types::handle sourceHandle, types::entity target, const Pokedex& pokedex) {
+  types::handle targetHandle{*sourceHandle.registry(), target};
   if (targetHandle.all_of<TransformedFrom>()) {
     return;
   }
@@ -8694,12 +8851,7 @@ void transformInto(types::registry& registry, types::entity source, types::entit
   if (targetHandle.all_of<AccBoost>()) sourceHandle.emplace_or_replace<AccBoost>(targetHandle.get<AccBoost>());
   if (targetHandle.all_of<EvaBoost>()) sourceHandle.emplace_or_replace<EvaBoost>(targetHandle.get<EvaBoost>());
 
-  sourceHandle.emplace<pokesim::tags::AtkStatUpdateRequired>();
-  sourceHandle.emplace<pokesim::tags::DefStatUpdateRequired>();
-  sourceHandle.emplace<pokesim::tags::SpaStatUpdateRequired>();
-  sourceHandle.emplace<pokesim::tags::SpdStatUpdateRequired>();
-  sourceHandle.emplace<pokesim::tags::SpeStatUpdateRequired>();
-
+  setAllUpdateStats(sourceHandle);
   sourceHandle.remove<dex::ChoiceLock, DisabledMoveSlots, LastUsedMove>();
 
   // Technically, EndAbility should be called as well for the source's original ability, but since neither Ditto nor Mew
@@ -8926,8 +9078,8 @@ void swapActionQueueSourceSlots(
   Slot slot1 = sideIdAndPositionToSlot(playerSide.val, index1);
   Slot slot2 = sideIdAndPositionToSlot(playerSide.val, index2);
 
-  auto replace = [](types::slotDecision& decision, Slot from, Slot to) {
-    if (decision.sourceSlot() != from) {
+  auto replace = [](types::slotDecision& slotDecision, Slot from, Slot to) {
+    if (slotDecision.sourceSlot() != from) {
       return false;
     }
 
@@ -8941,7 +9093,7 @@ void swapActionQueueSourceSlots(
           decision.targetSlot = from;
         }
       },
-      decision);
+      slotDecision);
 
     return true;
   };

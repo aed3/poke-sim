@@ -11,6 +11,7 @@
 #include <Components/MoveSlots.hpp>
 #include <Components/Pokedex/Abilities.hpp>
 #include <Components/Pokedex/BaseStats.hpp>
+#include <Components/Pokedex/InBattleForm.hpp>
 #include <Components/Pokedex/PP.hpp>
 #include <Components/SideDecisions.hpp>
 #include <Components/Stats.hpp>
@@ -91,11 +92,12 @@ struct EntityLists {
       }
     }
 
-    types::entityIndex sideCount = battleCount * 2U;
+    types::entityIndex sideCount = battleCount * Constants::SIDE_COUNT;
     types::entityIndex recycledActionCount = battleCount;
     types::entityIndex recycledActionMoveCount = battleCount;
-    types::entityIndex addedRecycledActionMoveCount =
-      simulation->isBattleFormat(BattleFormat::DOUBLES) ? battleCount * 2U : 0U;
+    types::entityIndex addedRecycledActionMoveCount = simulation->isBattleFormat(BattleFormat::DOUBLES)
+                                                        ? battleCount * Constants::ActivePokemonSlotsPerSide::DOUBLES
+                                                        : 0U;
 
     POKESIM_REQUIRE(
       battleCount + sideCount + recycledActionCount + pokemonCount + calcDamageInputCount + analyzeEffectInputCount <
@@ -114,17 +116,29 @@ struct EntityLists {
   }
 };
 
+void setPokemonSpecies(
+  const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup, const Pokedex& pokedex) {
+  dex::Species species = pokemonInfo.species;
+  if (pokedex.speciesHas<InBattleForm>(species)) {
+    species = pokedex.getSpeciesData<InBattleForm>(species).val;
+  }
+  pokemonSetup.setSpecies(species);
+}
+
 void setPokemonAbility(
   const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup, const Pokedex& pokedex) {
-  if (pokemonInfo.ability != dex::Ability::NO_ABILITY) {
-    if (pokemonInfo.ability.has_value()) {
-      pokemonSetup.setAbility(pokemonInfo.ability.value());
-    }
-    else {
-      dex::Ability ability = pokedex.getSpeciesData<PrimaryAbility>(pokemonInfo.species).val;
-      pokemonSetup.setAbility(ability);
-    }
+  if (pokemonInfo.ability == dex::Ability::NO_ABILITY) {
+    return;
   }
+
+  dex::Ability ability = dex::Ability::NO_ABILITY;
+  if (pokemonInfo.ability.has_value()) {
+    ability = pokemonInfo.ability.value();
+  }
+  else {
+    ability = pokedex.getSpeciesData<PrimaryAbility>(pokemonInfo.species).val;
+  }
+  pokemonSetup.setAbility(ability, pokedex);
 }
 
 Evs setPokemonEvs(const PokemonCreationInfo& pokemonInfo, internal::PokemonStateSetup& pokemonSetup) {
@@ -214,7 +228,7 @@ void createInitialPokemon(
     pokemonSetup.setAutoID();
   }
 
-  pokemonSetup.setSpecies(pokemonInfo.species);
+  setPokemonSpecies(pokemonInfo, pokemonSetup, pokedex);
   setPokemonAbility(pokemonInfo, pokemonSetup, pokedex);
 
   types::level level = pokemonInfo.level.value_or(Constants::PokemonLevel::DEFAULT);

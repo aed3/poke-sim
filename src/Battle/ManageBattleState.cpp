@@ -184,8 +184,8 @@ void swapActionQueueSourceSlots(
   Slot slot1 = sideIdAndPositionToSlot(playerSide.val, index1);
   Slot slot2 = sideIdAndPositionToSlot(playerSide.val, index2);
 
-  auto replace = [](types::slotDecision& decision, Slot from, Slot to) {
-    if (decision.sourceSlot() != from) {
+  auto replace = [](types::slotDecision& slotDecision, Slot from, Slot to) {
+    if (slotDecision.sourceSlot() != from) {
       return false;
     }
 
@@ -199,7 +199,7 @@ void swapActionQueueSourceSlots(
           decision.targetSlot = from;
         }
       },
-      decision);
+      slotDecision);
 
     return true;
   };

@@ -14,6 +14,7 @@
 #include "Glare.hpp"
 #include "Growl.hpp"
 #include "IronDefense.hpp"
+#include "KingsShield.hpp"
 #include "KnockOff.hpp"
 #include "Leafage.hpp"
 #include "LowSweep.hpp"

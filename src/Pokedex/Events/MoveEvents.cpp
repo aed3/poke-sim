@@ -146,7 +146,7 @@ void reversalOnSetBasePower(types::handle handle, CurrentActionSource source, co
 
 void transformOnHit(
   types::registry& registry, CurrentActionSource source, CurrentActionTarget target, const Pokedex& pokedex) {
-  internal::transformInto(registry, source.val, target.val, pokedex);
+  internal::transformInto({registry, source.val}, target.val, pokedex);
 }
 }  // namespace
 
