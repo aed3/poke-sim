@@ -512,6 +512,12 @@ void check(const dex::shared_name_effect::MirrorHerb& mirrorHerb) {
 
   POKESIM_REQUIRE_NM(mirrorHerb.speBoost >= Constants::PokemonStatBoostChange::DEFAULT);
   POKESIM_REQUIRE_NM(mirrorHerb.speBoost <= Constants::PokemonStatBoostChange::MAX);
+
+  POKESIM_REQUIRE_NM(mirrorHerb.accBoost >= Constants::PokemonStatBoostChange::DEFAULT);
+  POKESIM_REQUIRE_NM(mirrorHerb.accBoost <= Constants::PokemonStatBoostChange::MAX);
+
+  POKESIM_REQUIRE_NM(mirrorHerb.evaBoost >= Constants::PokemonStatBoostChange::DEFAULT);
+  POKESIM_REQUIRE_NM(mirrorHerb.evaBoost <= Constants::PokemonStatBoostChange::MAX);
 }
 
 template <>

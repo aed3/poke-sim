@@ -8,10 +8,12 @@ TEST_CASE("Mirror Herb: Boost stats when foe boosts", "[Simulation][SimulateTurn
     dex::Move::NASTY_PLOT,
     dex::Move::AMNESIA,
     dex::Move::AGILITY,
+    dex::Move::DOUBLE_TEAM,
     dex::Move::BULK_UP,
     dex::Move::QUIVER_DANCE,
-    dex::Move::CLOSE_COMBAT);
-  types::boost atkBoosts = 0, defBoosts = 0, spaBoosts = 0, spdBoosts = 0, speBoosts = 0;
+    dex::Move::CLOSE_COMBAT,
+    dex::Move::HONE_CLAWS);
+  types::boost atkBoosts = 0, defBoosts = 0, spaBoosts = 0, spdBoosts = 0, speBoosts = 0, accBoosts = 0, evaBoosts = 0;
   debug::TypesToIgnore changingP1Components, changingP2Components;
   changingP2Components.add<LastUsedMove, MoveSlots>();
   changingP1Components = changingP2Components;
@@ -48,6 +50,12 @@ TEST_CASE("Mirror Herb: Boost stats when foe boosts", "[Simulation][SimulateTurn
       changingP2Components.add<stat::EffectiveSpe, SpeBoost>();
       break;
     }
+    case dex::Move::DOUBLE_TEAM: {
+      evaBoosts = 1;
+      changingP1Components.add<EvaBoost>();
+      changingP2Components.add<EvaBoost>();
+      break;
+    }
     case dex::Move::BULK_UP: {
       atkBoosts = defBoosts = 1;
       changingP1Components.add<stat::EffectiveAtk, AtkBoost, stat::EffectiveDef, DefBoost>();
@@ -68,9 +76,15 @@ TEST_CASE("Mirror Herb: Boost stats when foe boosts", "[Simulation][SimulateTurn
       changingP2Components.add<stat::EffectiveDef, DefBoost, stat::EffectiveSpd, SpdBoost>();
       break;
     }
+    case dex::Move::HONE_CLAWS: {
+      atkBoosts = accBoosts = 1;
+      changingP1Components.add<stat::EffectiveAtk, AtkBoost, AccBoost>();
+      changingP2Components.add<stat::EffectiveAtk, AtkBoost, AccBoost>();
+      break;
+    }
     default: FAIL();
   }
-  CAPTURE(move, atkBoosts, defBoosts, spaBoosts, spdBoosts, speBoosts);
+  CAPTURE(move, atkBoosts, defBoosts, spaBoosts, spdBoosts, speBoosts, accBoosts, evaBoosts);
 
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
   test.setupBattle(
@@ -122,6 +136,16 @@ TEST_CASE("Mirror Herb: Boost stats when foe boosts", "[Simulation][SimulateTurn
   if (speBoosts) {
     REQUIRE(p1A.get<SpeBoost>().val == speBoosts);
     REQUIRE(p2A.get<SpeBoost>().val == speBoosts);
+  }
+
+  if (accBoosts) {
+    REQUIRE(p1A.get<AccBoost>().val == accBoosts);
+    REQUIRE(p2A.get<AccBoost>().val == accBoosts);
+  }
+
+  if (evaBoosts) {
+    REQUIRE(p1A.get<EvaBoost>().val == evaBoosts);
+    REQUIRE(p2A.get<EvaBoost>().val == evaBoosts);
   }
 }
 

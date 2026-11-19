@@ -25,7 +25,7 @@ struct BulkUp {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name() { return "Bulk up"; }
+    static constexpr std::string_view name() { return "Bulk Up"; }
     static constexpr std::string_view smogonId() { return "bulkup"; }
   };
 

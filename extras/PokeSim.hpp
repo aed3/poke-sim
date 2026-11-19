@@ -269,10 +269,12 @@
  * src/Pokedex/Moves/ChillingWater.hpp
  * src/Pokedex/Moves/CloseCombat.hpp
  * src/Pokedex/Moves/Confide.hpp
+ * src/Pokedex/Moves/DoubleTeam.hpp
  * src/Pokedex/Moves/FlashCannon.hpp
  * src/Pokedex/Moves/FuryAttack.hpp
  * src/Pokedex/Moves/Glare.hpp
  * src/Pokedex/Moves/Growl.hpp
+ * src/Pokedex/Moves/HoneClaws.hpp
  * src/Pokedex/Moves/IronDefense.hpp
  * src/Pokedex/Moves/KingsShield.hpp
  * src/Pokedex/Moves/KnockOff.hpp
@@ -22319,10 +22321,13 @@ struct MirrorHerb {
   types::boost spaBoost = Constants::PokemonStatBoost::DEFAULT;
   types::boost spdBoost = Constants::PokemonStatBoost::DEFAULT;
   types::boost speBoost = Constants::PokemonStatBoost::DEFAULT;
+  types::boost accBoost = Constants::PokemonStatBoost::DEFAULT;
+  types::boost evaBoost = Constants::PokemonStatBoost::DEFAULT;
 
   constexpr bool operator==(const MirrorHerb& other) const {
     return atkBoost == other.atkBoost && defBoost == other.defBoost && spaBoost == other.spaBoost &&
-           spdBoost == other.spdBoost && speBoost == other.speBoost;
+           spdBoost == other.spdBoost && speBoost == other.speBoost && accBoost == other.accBoost &&
+           evaBoost == other.evaBoost;
   }
 };
 }  // namespace shared_name_effect
@@ -23802,22 +23807,22 @@ bool hasTag(Status status, const types::registry& registry, types::entity entity
 //////////////////// START OF src/Pokedex/Moves/Agility.hpp ////////////////////
 
 namespace pokesim::dex {
-struct SwordsDance {
-  static constexpr Move name(GameMechanics = {}) { return Move::SWORDS_DANCE; }
-  static constexpr Type type(GameMechanics) { return Type::NORMAL; }
+struct Agility {
+  static constexpr Move name(GameMechanics = {}) { return Move::AGILITY; }
+  static constexpr Type type(GameMechanics) { return Type::PSYCHIC; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 
   static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
   struct targetPrimaryEffect {
-    static constexpr types::boost atkBoost(GameMechanics) { return 2; }
+    static constexpr types::boost speBoost(GameMechanics) { return 2; }
   };
 
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name() { return "Swords Dance"; }
-    static constexpr std::string_view smogonId() { return "swordsdance"; }
+    static constexpr std::string_view name() { return "Agility"; }
+    static constexpr std::string_view smogonId() { return "agility"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -23928,7 +23933,7 @@ struct BulkUp {
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name() { return "Bulk up"; }
+    static constexpr std::string_view name() { return "Bulk Up"; }
     static constexpr std::string_view smogonId() { return "bulkup"; }
   };
 
@@ -24028,6 +24033,33 @@ struct Confide {
 }  // namespace pokesim::dex
 
 ///////////////////// END OF src/Pokedex/Moves/Confide.hpp /////////////////////
+
+////////////////// START OF src/Pokedex/Moves/DoubleTeam.hpp ///////////////////
+
+namespace pokesim::dex {
+struct DoubleTeam {
+  static constexpr Move name(GameMechanics = {}) { return Move::DOUBLE_TEAM; }
+  static constexpr Type type(GameMechanics) { return Type::NORMAL; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
+
+  static constexpr types::pp basePp(GameMechanics) { return 15U; }
+
+  struct targetPrimaryEffect {
+    static constexpr types::boost evaBoost(GameMechanics) { return 1; }
+  };
+
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Double Team"; }
+    static constexpr std::string_view smogonId() { return "doubleteam"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+/////////////////// END OF src/Pokedex/Moves/DoubleTeam.hpp ////////////////////
 
 ////////////////// START OF src/Pokedex/Moves/FlashCannon.hpp //////////////////
 
@@ -24145,6 +24177,34 @@ struct Growl {
 }  // namespace pokesim::dex
 
 ////////////////////// END OF src/Pokedex/Moves/Growl.hpp //////////////////////
+
+/////////////////// START OF src/Pokedex/Moves/HoneClaws.hpp ///////////////////
+
+namespace pokesim::dex {
+struct HoneClaws {
+  static constexpr Move name(GameMechanics = {}) { return Move::HONE_CLAWS; }
+  static constexpr Type type(GameMechanics) { return Type::DARK; }
+  static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
+
+  static constexpr types::pp basePp(GameMechanics) { return 15U; }
+
+  struct targetPrimaryEffect {
+    static constexpr types::boost atkBoost(GameMechanics) { return 1; }
+    static constexpr types::boost accBoost(GameMechanics) { return 1; }
+  };
+
+  static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Hone Claws"; }
+    static constexpr std::string_view smogonId() { return "honeclaws"; }
+  };
+
+  static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
+};
+}  // namespace pokesim::dex
+
+//////////////////// END OF src/Pokedex/Moves/HoneClaws.hpp ////////////////////
 
 ////////////////// START OF src/Pokedex/Moves/IronDefense.hpp //////////////////
 
@@ -24633,22 +24693,22 @@ struct Splash {
 ////////////////// START OF src/Pokedex/Moves/SwordsDance.hpp //////////////////
 
 namespace pokesim::dex {
-struct Agility {
-  static constexpr Move name(GameMechanics = {}) { return Move::AGILITY; }
-  static constexpr Type type(GameMechanics) { return Type::PSYCHIC; }
+struct SwordsDance {
+  static constexpr Move name(GameMechanics = {}) { return Move::SWORDS_DANCE; }
+  static constexpr Type type(GameMechanics) { return Type::NORMAL; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 
   static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
   struct targetPrimaryEffect {
-    static constexpr types::boost speBoost(GameMechanics) { return 2; }
+    static constexpr types::boost atkBoost(GameMechanics) { return 2; }
   };
 
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name() { return "Agility"; }
-    static constexpr std::string_view smogonId() { return "agility"; }
+    static constexpr std::string_view name() { return "Swords Dance"; }
+    static constexpr std::string_view smogonId() { return "swordsdance"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
@@ -29657,10 +29717,12 @@ constexpr auto enumToTag(Move move, RunArgs&&... args) {
     case Move::CHILLING_WATER: return RunStruct<ChillingWater, T...>::run(std::forward<RunArgs>(args)...);
     case Move::CLOSE_COMBAT:   return RunStruct<CloseCombat, T...>::run(std::forward<RunArgs>(args)...);
     case Move::CONFIDE:        return RunStruct<Confide, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::DOUBLE_TEAM:    return RunStruct<DoubleTeam, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FLASH_CANNON:   return RunStruct<FlashCannon, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FURY_ATTACK:    return RunStruct<FuryAttack, T...>::run(std::forward<RunArgs>(args)...);
     case Move::GLARE:          return RunStruct<Glare, T...>::run(std::forward<RunArgs>(args)...);
     case Move::GROWL:          return RunStruct<Growl, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::HONE_CLAWS:     return RunStruct<HoneClaws, T...>::run(std::forward<RunArgs>(args)...);
     case Move::IRON_DEFENSE:   return RunStruct<IronDefense, T...>::run(std::forward<RunArgs>(args)...);
     case Move::KINGS_SHIELD:   return RunStruct<KingsShield, T...>::run(std::forward<RunArgs>(args)...);
     case Move::KNOCK_OFF:      return RunStruct<KnockOff, T...>::run(std::forward<RunArgs>(args)...);
