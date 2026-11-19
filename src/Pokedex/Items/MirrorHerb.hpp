@@ -50,10 +50,13 @@ struct MirrorHerb {
   types::boost spaBoost = Constants::PokemonStatBoost::DEFAULT;
   types::boost spdBoost = Constants::PokemonStatBoost::DEFAULT;
   types::boost speBoost = Constants::PokemonStatBoost::DEFAULT;
+  types::boost accBoost = Constants::PokemonStatBoost::DEFAULT;
+  types::boost evaBoost = Constants::PokemonStatBoost::DEFAULT;
 
   constexpr bool operator==(const MirrorHerb& other) const {
     return atkBoost == other.atkBoost && defBoost == other.defBoost && spaBoost == other.spaBoost &&
-           spdBoost == other.spdBoost && speBoost == other.speBoost;
+           spdBoost == other.spdBoost && speBoost == other.speBoost && accBoost == other.accBoost &&
+           evaBoost == other.evaBoost;
   }
 };
 }  // namespace shared_name_effect

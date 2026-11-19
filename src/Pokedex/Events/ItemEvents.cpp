@@ -243,6 +243,12 @@ struct MirrorHerbOnAfterFoeBoost {
     else if constexpr (std::is_same_v<SpeBoost, BoostType>) {
       effect.speBoost += boost.val;
     }
+    else if constexpr (std::is_same_v<AccBoost, BoostType>) {
+      effect.accBoost += boost.val;
+    }
+    else if constexpr (std::is_same_v<EvaBoost, BoostType>) {
+      effect.evaBoost += boost.val;
+    }
   }
 
   template <typename BoostType>
@@ -273,6 +279,8 @@ struct MirrorHerbOnAfterFoeBoost {
     simulation.view<findFoeBoost<SpaBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
     simulation.view<findFoeBoost<SpdBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
     simulation.view<findFoeBoost<SpeBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
+    simulation.view<findFoeBoost<AccBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
+    simulation.view<findFoeBoost<EvaBoost>, Tags<>, entt::exclude_t<FromMirrorHerb>>();
   }
 };
 
@@ -291,7 +299,7 @@ void mirrorHerbOnUse(
   registry.emplace<CurrentEffectSource>(battle, source);
   registry.emplace<CurrentEffectTarget>(battle, source);
   registry.emplace<CurrentEffectsAsSource>(source).val.push_back(battle);
-  registry.emplace<CurrentEffectSource>(source, battle);
+  registry.emplace<CurrentEffectAsTarget>(source, battle);
   registry.emplace<internal::tags::FromMirrorHerbOrOpportunist>(battle);
 
   if (mirrorHerb.atkBoost) {
@@ -308,6 +316,12 @@ void mirrorHerbOnUse(
   }
   if (mirrorHerb.speBoost) {
     registry.emplace<SpeBoost>(battle, mirrorHerb.speBoost);
+  }
+  if (mirrorHerb.accBoost) {
+    registry.emplace<AccBoost>(battle, mirrorHerb.accBoost);
+  }
+  if (mirrorHerb.evaBoost) {
+    registry.emplace<EvaBoost>(battle, mirrorHerb.evaBoost);
   }
 }
 

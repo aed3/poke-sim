@@ -36,10 +36,12 @@ constexpr auto enumToTag(Move move, RunArgs&&... args) {
     case Move::CHILLING_WATER: return RunStruct<ChillingWater, T...>::run(std::forward<RunArgs>(args)...);
     case Move::CLOSE_COMBAT:   return RunStruct<CloseCombat, T...>::run(std::forward<RunArgs>(args)...);
     case Move::CONFIDE:        return RunStruct<Confide, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::DOUBLE_TEAM:    return RunStruct<DoubleTeam, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FLASH_CANNON:   return RunStruct<FlashCannon, T...>::run(std::forward<RunArgs>(args)...);
     case Move::FURY_ATTACK:    return RunStruct<FuryAttack, T...>::run(std::forward<RunArgs>(args)...);
     case Move::GLARE:          return RunStruct<Glare, T...>::run(std::forward<RunArgs>(args)...);
     case Move::GROWL:          return RunStruct<Growl, T...>::run(std::forward<RunArgs>(args)...);
+    case Move::HONE_CLAWS:     return RunStruct<HoneClaws, T...>::run(std::forward<RunArgs>(args)...);
     case Move::IRON_DEFENSE:   return RunStruct<IronDefense, T...>::run(std::forward<RunArgs>(args)...);
     case Move::KINGS_SHIELD:   return RunStruct<KingsShield, T...>::run(std::forward<RunArgs>(args)...);
     case Move::KNOCK_OFF:      return RunStruct<KnockOff, T...>::run(std::forward<RunArgs>(args)...);

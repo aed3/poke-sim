@@ -10,22 +10,22 @@
 #include <string_view>
 
 namespace pokesim::dex {
-struct Agility {
-  static constexpr Move name(GameMechanics = {}) { return Move::AGILITY; }
-  static constexpr Type type(GameMechanics) { return Type::PSYCHIC; }
+struct SwordsDance {
+  static constexpr Move name(GameMechanics = {}) { return Move::SWORDS_DANCE; }
+  static constexpr Type type(GameMechanics) { return Type::NORMAL; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 
   static constexpr types::pp basePp(GameMechanics) { return 20U; }
 
   struct targetPrimaryEffect {
-    static constexpr types::boost speBoost(GameMechanics) { return 2; }
+    static constexpr types::boost atkBoost(GameMechanics) { return 2; }
   };
 
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
-    static constexpr std::string_view name() { return "Agility"; }
-    static constexpr std::string_view smogonId() { return "agility"; }
+    static constexpr std::string_view name() { return "Swords Dance"; }
+    static constexpr std::string_view smogonId() { return "swordsdance"; }
   };
 
   static constexpr GameMechanics latest() { return GameMechanics::SCARLET_VIOLET; }
