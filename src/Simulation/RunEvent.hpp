@@ -26,6 +26,7 @@ void runAfterModifyDamageEvent(Simulation& simulation);
 void runDamageEvent(Simulation& simulation);
 void runModifySecondariesEvent(Simulation& simulation);
 void runDamagingHitEvent(Simulation& simulation);
+void runTryHitEvent(Simulation& simulation);
 void runHitEvent(Simulation& simulation);
 void runAfterHitEvent(Simulation& simulation);
 void runMoveFailEvent(Simulation& simulation);
@@ -47,7 +48,7 @@ void runTryMoveEvent(Simulation& simulation);
 void runSetBasePower(Simulation& simulation);  // basePowerCallback
 void runResetDisabledMove(Simulation& simulation);
 void runResetTrappedPokemon(Simulation& simulation);
-void runOnImmunity(Simulation& simulation);
+void runImmunity(Simulation& simulation);
 
 void runModifyAtk(Simulation& simulation);
 void runModifyDef(Simulation& simulation);

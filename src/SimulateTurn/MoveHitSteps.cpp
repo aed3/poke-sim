@@ -144,7 +144,6 @@ void runMoveHitCheck(Simulation& simulation) {
   simulation.registry.clear<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
 }
 
-void trySetVolatileFromEffect(Simulation&) {}
 void trySetSlotConditionFromEffect(Simulation&) {}
 void trySetWeatherFromEffect(Simulation&) {}
 void trySetTerrainFromEffect(Simulation&) {}
@@ -164,7 +163,7 @@ void setEffectTarget(types::handle handle, TargetEntityHolder target) {
 void runEffect(Simulation& simulation) {
   internal::tryBoost(simulation);
   internal::trySetStatus(simulation);
-  trySetVolatileFromEffect(simulation);
+  internal::setVolatile(simulation);
   internal::setSideCondition(simulation);
   trySetSlotConditionFromEffect(simulation);
   trySetWeatherFromEffect(simulation);
@@ -341,13 +340,17 @@ void failIfTargetImmune(types::handle handle, CurrentActionTarget target, TypeNa
   }
 }
 
+void hitCheck(Simulation& simulation) {
+  internal::runTryHitEvent(simulation);
+}
+
 void typeImmunityCheck(Simulation& simulation) {
   simulation.view<
     failIfTargetImmune,
     Tags<tags::CurrentMoveHit>,
     entt::exclude_t<move::tags::IgnoreImmunities, move::tags::Status>>(simulation.pokedex());
   // simulation.view<failIfTargetImmune, Tags<dex::ThunderWave, tags::CurrentMoveHit>>(simulation.pokedex());
-  internal::runOnImmunity(simulation);
+  internal::runImmunity(simulation);
 }
 
 void setMoveAccuracyBoost(types::registry& registry, const CurrentActionMovesAsSource& moves, AccBoost accBoost) {
@@ -425,7 +428,7 @@ void moveHitLoop(Simulation& simulation) {
 
 void internal::simulate_turn::runMoveHitChecks(Simulation& simulation) {
   // invulnerabilityCheck
-  // hitCheck
+  runMoveHitCheck<hitCheck>(simulation);
   runMoveHitCheck<typeImmunityCheck>(simulation);
   runMoveHitCheck<accuracyCheck>(simulation);
   // breakProtectCheck

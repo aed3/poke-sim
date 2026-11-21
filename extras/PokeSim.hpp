@@ -219,6 +219,7 @@
  * src/Pokedex/Effects/Paralysis.hpp
  * src/Pokedex/Effects/Poison.hpp
  * src/Pokedex/Effects/Sleep.hpp
+ * src/Pokedex/Effects/Stall.hpp
  * src/Pokedex/Effects/Trapped.hpp
  * src/Pokedex/Effects/Trapper.hpp
  * src/Pokedex/Items/AssaultVest.hpp
@@ -357,6 +358,7 @@
  * src/Pokedex/EnumToTag/MoveEnumToTag.hpp
  * src/Pokedex/EnumToTag/MovePropertyEnumToTag.hpp
  * src/Pokedex/EnumToTag/SideConditionEnumToTag.hpp
+ * src/Pokedex/EnumToTag/VolatileEnumToTag.hpp
  * src/Pokedex/EnumToTag/ItemPropertyEnumToTag.hpp
  * src/Pokedex/EnumToTag/AbilityPropertyEnumToTag.hpp
  * src/Pokedex/Events/EventsHelpers.hpp
@@ -16526,14 +16528,16 @@ struct Constants {
 
   struct StallMoveUses {
     static constexpr std::uint8_t MAX = 6U;
-    static constexpr std::uint8_t MIN = 0U;
-    static constexpr std::uint8_t DEFAULT = 0U;
+    static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
   };
 
   struct EffectDuration {
     static constexpr std::uint8_t MAX = 8U;
     static constexpr std::uint8_t MIN = 0U;
     static constexpr std::uint8_t DEFAULT = 5U;
+
+    static constexpr std::uint8_t STALL_MOVE = 2U;
   };
 
   struct CritStage {
@@ -18894,8 +18898,10 @@ enum class Volatile : std::uint8_t {
   ALLY_SWITCH,
   CHOICE_LOCK,
   FLINCH,
+  KINGS_SHIELD,
   METRONOME,
   MIRROR_HERB,
+  STALL,
   TRAPPED,
   TRAPPER,
   VOLATILE_TOTAL
@@ -21935,6 +21941,36 @@ struct Sleep {
 
 ///////////////////// END OF src/Pokedex/Effects/Sleep.hpp /////////////////////
 
+//////////////////// START OF src/Pokedex/Effects/Stall.hpp ////////////////////
+
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
+
+namespace pokesim::dex {
+struct Stall {
+  static constexpr Volatile name(GameMechanics = {}) { return Volatile::STALL; }
+
+  struct Strings {
+    static constexpr std::string_view name() { return "Stall"; }
+    static constexpr std::string_view smogonId() { return "stall"; }
+  };
+
+  static void onTryMove(Simulation& simulation);
+  static void onResidual(Simulation& simulation);
+
+  types::stallUses uses = Constants::StallMoveUses::DEFAULT;
+  types::effectDuration turnsRemaining = Constants::EffectDuration::STALL_MOVE;
+
+  constexpr bool operator==(const Stall& other) const {
+    return uses == other.uses && turnsRemaining == other.turnsRemaining;
+  }
+};
+}  // namespace pokesim::dex
+   // namespace pokesim::dex
+
+///////////////////// END OF src/Pokedex/Effects/Stall.hpp /////////////////////
+
 /////////////////// START OF src/Pokedex/Effects/Trapped.hpp ///////////////////
 
 namespace pokesim {
@@ -23867,21 +23903,17 @@ struct AllySwitch {
 };
 
 namespace shared_name_effect {
-struct AllySwitch {
+struct AllySwitch : Stall {
   static constexpr Volatile name(GameMechanics = {}) { return Volatile::ALLY_SWITCH; }
   using MainSource = pokesim::dex::AllySwitch;
 
-  static constexpr types::effectDuration duration(GameMechanics) { return 2U; }
+  struct Strings {
+    static constexpr std::string_view name() { return "Ally Switch"; }
+    static constexpr std::string_view smogonId() { return "allyswitch"; }
+  };
 
   static void onTryMove(Simulation& simulation);
   static void onResidual(Simulation& simulation);
-
-  types::stallUses uses = Constants::StallMoveUses::DEFAULT;
-  types::effectDuration turnsRemaining = Constants::EffectDuration::DEFAULT;
-
-  constexpr bool operator==(const AllySwitch& other) const {
-    return uses == other.uses && turnsRemaining == other.turnsRemaining;
-  }
 };
 }  // namespace shared_name_effect
 }  // namespace pokesim::dex
@@ -24235,14 +24267,33 @@ struct IronDefense {
 
 ////////////////// START OF src/Pokedex/Moves/KingsShield.hpp //////////////////
 
+namespace pokesim {
+class Simulation;
+}  // namespace pokesim
+
 namespace pokesim::dex {
+namespace shared_name_effect {
+struct KingsShield;
+}
+
 struct KingsShield {
   static constexpr Move name(GameMechanics = {}) { return Move::KINGS_SHIELD; }
   static constexpr Type type(GameMechanics) { return Type::STEEL; }
   static constexpr MoveCategory category(GameMechanics) { return MoveCategory::STATUS; }
 
   static constexpr types::pp basePp(GameMechanics) { return 10U; }
+  static constexpr types::priority priority(GameMechanics) { return 4; }
 
+  struct targetPrimaryEffect {
+    static constexpr Volatile volatileCondition(GameMechanics) { return Volatile::KINGS_SHIELD; }
+
+    static void onHit(Simulation& simulation);
+  };
+
+  static constexpr MoveProperty properties(GameMechanics) {
+    return MoveProperty::NO_ASSIST | MoveProperty::NO_COPYCAT | MoveProperty::NO_INSTRUCT |
+           MoveProperty::NO_MIRROR_MOVE | MoveProperty::NO_METRONOME | MoveProperty::STALL;
+  }
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::SELF; }
 
   struct Strings {
@@ -24250,8 +24301,22 @@ struct KingsShield {
     static constexpr std::string_view smogonId() { return "kingsshield"; }
   };
 
+  using Effect = shared_name_effect::KingsShield;
+
   static constexpr GameMechanics latest() { return GameMechanics::SWORD_SHIELD; }
 };
+
+namespace shared_name_effect {
+struct KingsShield {
+  static constexpr Volatile name(GameMechanics = {}) { return Volatile::KINGS_SHIELD; }
+  using MainSource = pokesim::dex::KingsShield;
+
+  static constexpr types::boost onTryMoveContactAtkBoost(GameMechanics) { return -1; }
+
+  static void onTryHit(Simulation& simulation);
+  static void onResidual(Simulation& simulation);
+};
+}  // namespace shared_name_effect
 }  // namespace pokesim::dex
 
 /////////////////// END OF src/Pokedex/Moves/KingsShield.hpp ///////////////////
@@ -24651,7 +24716,7 @@ struct SpiritShackle {
 
   struct targetSecondaryEffect {
     static constexpr types::percentChance chance(GameMechanics) { return 100U; }
-    static void onHit(Simulation& Simulation);
+    static void onHit(Simulation& simulation);
   };
 
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }
@@ -25755,6 +25820,7 @@ struct Turn;
 struct Winner;
 namespace dex {
 struct ChoiceLock;
+struct Stall;
 struct Trapper;
 namespace shared_name_effect {
 struct AllySwitch;
@@ -25849,6 +25915,9 @@ void check(const dex::shared_name_effect::BadPoison&);
 
 template <>
 void check(const dex::ChoiceLock&);
+
+template <>
+void check(const dex::Stall&);
 
 template <>
 void check(const dex::Trapper&, const types::registry&);
@@ -26815,6 +26884,7 @@ void setStatus(Simulation& simulation);
 void trySetStatus(Simulation& simulation);
 void clearStatus(types::handle pokemonHandle);
 
+void setVolatile(Simulation& simulation);
 void clearVolatiles(Simulation& simulation);
 
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);
@@ -28748,6 +28818,7 @@ void runAfterModifyDamageEvent(Simulation& simulation);
 void runDamageEvent(Simulation& simulation);
 void runModifySecondariesEvent(Simulation& simulation);
 void runDamagingHitEvent(Simulation& simulation);
+void runTryHitEvent(Simulation& simulation);
 void runHitEvent(Simulation& simulation);
 void runAfterHitEvent(Simulation& simulation);
 void runMoveFailEvent(Simulation& simulation);
@@ -28769,7 +28840,7 @@ void runTryMoveEvent(Simulation& simulation);
 void runSetBasePower(Simulation& simulation);  // basePowerCallback
 void runResetDisabledMove(Simulation& simulation);
 void runResetTrappedPokemon(Simulation& simulation);
-void runOnImmunity(Simulation& simulation);
+void runImmunity(Simulation& simulation);
 
 void runModifyAtk(Simulation& simulation);
 void runModifyDef(Simulation& simulation);
@@ -29231,6 +29302,9 @@ void clearCurrentEffect(Simulation& simulation);
 void setCurrentEffectFromStack(Simulation& simulation);
 void clearCurrentBattleEffect(Simulation& simulation);
 
+void setCurrentEffectAsBoost(
+  types::registry& registry, types::entity source, types::entity target, types::entity battle, dex::Stat boostStat,
+  types::boost boost);
 void removeFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle);
 void tryAddToActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle);
 void checkIfRemoveFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle);
@@ -29272,6 +29346,7 @@ struct ActionQueue;
 struct RecycledAction;
 
 namespace internal::simulate_turn {
+bool hasRemainingChosenAction(const ActionQueue& actionQueue);
 void addBeforeTurnAction(ActionQueue& actionQueue);
 void addResidualAction(ActionQueue& actionQueue);
 void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction action);
@@ -29902,6 +29977,79 @@ bool hasTag(SideCondition sideCondition, const types::registry& registry, types:
 
 /////////// END OF src/Pokedex/EnumToTag/SideConditionEnumToTag.hpp ////////////
 
+///////////// START OF src/Pokedex/EnumToTag/VolatileEnumToTag.hpp /////////////
+
+// TODO(aed3): Make this autogenerated and forward declare item structs
+
+namespace pokesim::dex {
+/*
+ * Runs a function with a certain volatile tag based on the passed in enum.
+ * The `RunStruct` type should be a struct that accepts one template parameter that will be one of the volatile tags
+ * with a static `run` function.
+ *
+ * @code
+ * template <typename Tag>
+ * struct EmplaceTag {
+ *   static void run(types::handle handle) { handle.emplace<Tag>(); }
+ * };
+ *
+ * enumToTag<EmplaceTag>(dex::Volatile::CONFUSION, handle);
+ * @endcode
+ */
+template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
+constexpr auto enumToTag(Volatile volatileCondition, RunArgs&&... args) {
+  switch (volatileCondition) {
+    case Volatile::ALLY_SWITCH:  return RunStruct<AllySwitch::Effect, T...>::run(std::forward<RunArgs>(args)...);
+    case Volatile::CHOICE_LOCK:  return RunStruct<ChoiceLock, T...>::run(std::forward<RunArgs>(args)...);
+    case Volatile::FLINCH:       return RunStruct<Flinch, T...>::run(std::forward<RunArgs>(args)...);
+    case Volatile::KINGS_SHIELD: return RunStruct<KingsShield::Effect, T...>::run(std::forward<RunArgs>(args)...);
+    case Volatile::METRONOME:    return RunStruct<MetronomeItem::Effect, T...>::run(std::forward<RunArgs>(args)...);
+    case Volatile::MIRROR_HERB:  return RunStruct<MirrorHerb::Effect, T...>::run(std::forward<RunArgs>(args)...);
+    case Volatile::STALL:        return RunStruct<Stall, T...>::run(std::forward<RunArgs>(args)...);
+    case Volatile::TRAPPED:      return RunStruct<Trapped, T...>::run(std::forward<RunArgs>(args)...);
+    case Volatile::TRAPPER:      return RunStruct<Trapper, T...>::run(std::forward<RunArgs>(args)...);
+
+    default: {
+      POKESIM_REQUIRE_FAIL("Using a tag for volatile that does not exist.");
+      using ReturnType = std::invoke_result_t<decltype(&RunStruct<Flinch, T...>::run), RunArgs...>;
+      if constexpr (std::is_void_v<ReturnType>) {
+        return;
+      }
+      else {
+        return ReturnType{};
+      }
+    }
+  }
+}
+
+template <template <typename, typename...> typename RunStruct, typename... T, typename... RunArgs>
+constexpr void forEachVolatileCondition(RunArgs&&... args) {
+  enumToTag<RunStruct, T...>(Volatile::ALLY_SWITCH, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(Volatile::CHOICE_LOCK, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(Volatile::FLINCH, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(Volatile::KINGS_SHIELD, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(Volatile::METRONOME, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(Volatile::MIRROR_HERB, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(Volatile::STALL, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(Volatile::TRAPPED, std::forward<RunArgs>(args)...);
+  enumToTag<RunStruct, T...>(Volatile::TRAPPER, std::forward<RunArgs>(args)...);
+}
+
+// Assigns a move's tag to a handle
+void emplaceTagFromEnum(Volatile volatileCondition, types::handle handle);
+void emplaceTagFromEnum(Volatile volatileCondition, types::registry& registry, types::entity entity);
+
+// Removes a move's tag to a handle
+void removeTagFromEnum(Volatile volatileCondition, types::handle handle);
+void removeTagFromEnum(Volatile volatileCondition, types::registry& registry, types::entity entity);
+
+// Checks if the handle has the move's tag
+bool hasTag(Volatile volatileCondition, types::handle handle);
+bool hasTag(Volatile volatileCondition, const types::registry& registry, types::entity entity);
+}  // namespace pokesim::dex
+
+////////////// END OF src/Pokedex/EnumToTag/VolatileEnumToTag.hpp //////////////
+
 /////////// START OF src/Pokedex/EnumToTag/ItemPropertyEnumToTag.hpp ///////////
 
 // TODO(aed3): Make this autogenerated and forward declare item property structs
@@ -30083,6 +30231,23 @@ struct IncrementTurnsRemaining {
   }
 };
 
+inline void stallOnTryMove(
+  types::handle handle, Battle battle, types::stallUses uses, types::percentChance stallExponentialBase,
+  const Simulation& simulation) {
+  float exponential = std::pow((float)stallExponentialBase, (float)uses);
+  pokesim::internal::setReciprocalRandomBinaryChanceFromProbability(
+    handle,
+    battle,
+    simulation,
+    exponential * Constants::PercentChanceToProbability);
+}
+
+inline void stallOnRestart(dex::Stall& stall) {
+  if (stall.uses < Constants::StallMoveUses::MAX) {
+    stall.uses++;
+  }
+  stall.turnsRemaining = Constants::EffectDuration::STALL_MOVE;
+}
 }  // namespace pokesim::internal
 
 ///////////////// END OF src/Pokedex/Events/EventsHelpers.hpp //////////////////

@@ -18,6 +18,17 @@
 #include <entt/entity/registry.hpp>
 
 namespace pokesim::internal::simulate_turn {
+bool hasRemainingChosenAction(const ActionQueue& actionQueue) {
+  for (const ActionQueueItem& item : actionQueue.val) {
+    if (
+      item.order == ActionOrder::MOVE || item.order == ActionOrder::ITEM || item.order == ActionOrder::SWITCH ||
+      item.order == ActionOrder::MID_TURN_SWITCH) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void addBeforeTurnAction(ActionQueue& actionQueue) {
   actionQueue.val.push_back({ActionOrder::BEFORE_TURN});
 }

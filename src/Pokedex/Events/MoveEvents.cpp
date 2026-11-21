@@ -2,6 +2,7 @@
 #include <Battle/Helpers/IntegerModify.hpp>
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
+#include <Battle/Pokemon/PokemonProperties.hpp>
 #include <Components/BasePower.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
@@ -43,35 +44,41 @@ void allySwitchOnHit(types::handle handle, Battle battle, CurrentActionTarget ta
 
   std::swap(team.val[0], team.val[1]);
   internal::swapActionQueueSourceSlots(registry, battle, side, 0U, 1U);
-}
 
-void allySwitchOnTryMoveApply(
-  types::registry& registry, CurrentActionSource source, const dex::AllySwitch::Effect& allySwitch) {
-  (void)registry.get_or_emplace<AllySwitch::Effect>(source.val, allySwitch);
+  (void)registry.get_or_emplace<AllySwitch::Effect>(target.val);
 }
 
 void allySwitchOnTryMove(
-  types::handle handle, Battle battle, AllySwitch::Effect& allySwitch, const CurrentActionMovesAsSource& moves,
+  types::registry& registry, Battle battle, AllySwitch::Effect& allySwitch, const CurrentActionMovesAsSource& moves,
   types::percentChance stallExponentialBase, const Simulation& simulation) {
-  for (types::entity move : moves) {
-    if (!handle.registry()->all_of<AllySwitch>(move)) {
-      return;
-    }
+  POKESIM_REQUIRE(moves.val.size() == 1U, "Ally Switch only has one target.");
+  if (!registry.all_of<AllySwitch>(moves.val.front())) {
+    return;
   }
 
-  float exponential = std::pow((float)stallExponentialBase, (float)allySwitch.uses);
-  pokesim::internal::setReciprocalRandomBinaryChanceFromProbability(
-    handle,
-    battle,
-    simulation,
-    exponential * Constants::PercentChanceToProbability);
+  internal::stallOnTryMove({registry, moves.val.front()}, battle, allySwitch.uses, stallExponentialBase, simulation);
 }
 
-void allySwitchOnTryMovePass(AllySwitch::Effect& allySwitch, types::effectDuration turnsRemaining) {
-  if (allySwitch.uses < Constants::StallMoveUses::MAX) {
-    allySwitch.uses++;
+void allySwitchOnTryMovePass(types::registry& registry, CurrentActionSource source) {
+  internal::stallOnRestart(registry.get<AllySwitch::Effect>(source.val));
+}
+
+void kingsShieldOnHit(types::registry& registry, CurrentActionTarget target) {
+  (void)registry.get_or_emplace<Stall>(target.val);
+}
+
+void kingsShieldOnTryHit(types::handle handle, Battle battle, CurrentActionMovesAsTarget move, types::boost boost) {
+  types::registry& registry = *handle.registry();
+  if (registry.all_of<move::tags::Status>(move.val)) {
+    return;
   }
-  allySwitch.turnsRemaining = turnsRemaining;
+
+  types::entity source = registry.get<CurrentActionSource>(move.val).val;
+  if (internal::doesMoveMakeContact(registry, move.val, source)) {
+    internal::setCurrentEffectAsBoost(registry, handle.entity(), source, battle.val, Stat::ATK, boost);
+  }
+
+  registry.emplace<tags::FailedCurrentMoveHit>(move.val);
 }
 
 void knockOffOnBasePowerCheckRemovableItem(
@@ -91,7 +98,7 @@ void knockOffOnAfterHitCheckRemovableItem(types::registry& registry, CurrentActi
   }
 }
 
-void reflectOnStart(types::handle handle, CurrentActionTarget target, const Pokedex& pokedex) {
+void reflectOnStart(types::handle handle, CurrentEffectTarget target, const Pokedex& pokedex) {
   types::registry& registry = *handle.registry();
   Side targetSide = registry.get<Side>(target.val);
   if (registry.all_of<Reflect::Effect>(targetSide.val)) {
@@ -162,16 +169,12 @@ void AllySwitch::Effect::onTryMove(Simulation& simulation) {
   }
 
   auto stallExponentialBase = simulation.pokedex().getStaticValue<MechanicConstants::STALL_EXPONENTIAL_BASE>();
-
-  simulation.view<allySwitchOnTryMoveApply, Tags<MainSource, tags::CurrentActionMove>>(
-    AllySwitch{Constants::StallMoveUses::DEFAULT, simulation.pokedex().getStaticValue<duration>()});
-
   simulation.view<allySwitchOnTryMove, Tags<tags::CurrentActionSource>>(stallExponentialBase, simulation);
+
   internal::randomBinaryChance(
     simulation,
     [](Simulation& sim) {
-      auto turnsRemaining = sim.pokedex().getStaticValue<duration>();
-      sim.view<allySwitchOnTryMovePass, Tags<internal::tags::RandomEventCheckPassed>>(turnsRemaining);
+      sim.view<allySwitchOnTryMovePass, Tags<internal::tags::RandomEventCheckPassed>>();
       sim.removeFromEntities<AllySwitch, internal::tags::RandomEventCheckFailed>();
       sim.view<internal::setFailedActionMove, Tags<internal::tags::RandomEventCheckFailed>>();
     },
@@ -180,6 +183,22 @@ void AllySwitch::Effect::onTryMove(Simulation& simulation) {
 
 void AllySwitch::Effect::onResidual(Simulation& simulation) {
   simulation.view<internal::IncrementTurnsRemaining<AllySwitch>::run>();
+}
+
+void KingsShield::targetPrimaryEffect::onHit(Simulation& simulation) {
+  simulation.view<kingsShieldOnHit, Tags<KingsShield>>();
+}
+
+void KingsShield::Effect::onTryHit(Simulation& simulation) {
+  auto atkBoost = simulation.pokedex().getStaticValue<onTryMoveContactAtkBoost>();
+
+  simulation.view<kingsShieldOnTryHit, Tags<KingsShield>>(atkBoost);
+  internal::tryBoost(simulation);
+  internal::clearCurrentBattleEffect(simulation);
+}
+
+void KingsShield::Effect::onResidual(Simulation& simulation) {
+  simulation.removeFromEntities<KingsShield, tags::ActivePokemon>();
 }
 
 void KnockOff::onBasePower(Simulation& simulation) {
@@ -199,7 +218,7 @@ void KnockOff::onAfterHit(Simulation& simulation) {
 }
 
 void Reflect::Effect::onStart(Simulation& simulation) {
-  simulation.view<reflectOnStart, Tags<dex::Reflect, tags::CurrentMoveHit>>(simulation.pokedex());
+  simulation.view<reflectOnStart, Tags<dex::Reflect>>(simulation.pokedex());
 }
 
 void Reflect::Effect::onAnyModifyDamage(Simulation& simulation) {

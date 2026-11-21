@@ -69,6 +69,7 @@ void emplaceTagFromEnum(Nature nature, types::handle handle) { callEmplace(natur
 void emplaceTagFromEnum(SideCondition sideCondition, types::handle handle) { callEmplace(sideCondition, handle); }
 void emplaceTagFromEnum(Status status, types::handle handle) { callEmplace(status, handle); }
 void emplaceTagFromEnum(Type type, types::handle handle) { callEmplace(type, handle); }
+void emplaceTagFromEnum(Volatile volatileCondition, types::handle handle) { callEmplace(volatileCondition, handle); }
 
 void emplaceTagFromEnum(Ability ability, types::registry& registry, types::entity entity) { callEmplace(ability, registry, entity); }
 void emplaceTagFromEnum(AbilityProperty property, types::registry& registry, types::entity entity) { callEmplace(property, registry, entity); }
@@ -80,6 +81,7 @@ void emplaceTagFromEnum(Nature nature, types::registry& registry, types::entity 
 void emplaceTagFromEnum(SideCondition sideCondition, types::registry& registry, types::entity entity) { callEmplace(sideCondition, registry, entity); }
 void emplaceTagFromEnum(Status status, types::registry& registry, types::entity entity) { callEmplace(status, registry, entity); }
 void emplaceTagFromEnum(Type type, types::registry& registry, types::entity entity) { callEmplace(type, registry, entity); }
+void emplaceTagFromEnum(Volatile volatileCondition, types::registry& registry, types::entity entity) { callEmplace(volatileCondition, registry, entity); }
 
 void removeTagFromEnum(Ability ability, types::handle handle) { callRemove(ability, handle); }
 void removeTagFromEnum(AbilityProperty property, types::handle handle) { callRemove(property, handle); }
@@ -91,6 +93,7 @@ void removeTagFromEnum(Nature nature, types::handle handle) { callRemove(nature,
 void removeTagFromEnum(SideCondition sideCondition, types::handle handle) { callRemove(sideCondition, handle); }
 void removeTagFromEnum(Status status, types::handle handle) { callRemove(status, handle); }
 void removeTagFromEnum(Type type, types::handle handle) { callRemove(type, handle); }
+void removeTagFromEnum(Volatile volatileCondition, types::handle handle) { callRemove(volatileCondition, handle); }
 
 void removeTagFromEnum(Ability ability, types::registry& registry, types::entity entity) { callRemove(ability, registry, entity); }
 void removeTagFromEnum(AbilityProperty property, types::registry& registry, types::entity entity) { callRemove(property, registry, entity); }
@@ -102,6 +105,7 @@ void removeTagFromEnum(Nature nature, types::registry& registry, types::entity e
 void removeTagFromEnum(SideCondition sideCondition, types::registry& registry, types::entity entity) { callRemove(sideCondition, registry, entity); }
 void removeTagFromEnum(Status status, types::registry& registry, types::entity entity) { callRemove(status, registry, entity); }
 void removeTagFromEnum(Type type, types::registry& registry, types::entity entity) { callRemove(type, registry, entity); }
+void removeTagFromEnum(Volatile volatileCondition, types::registry& registry, types::entity entity) { callRemove(volatileCondition, registry, entity); }
 
 bool hasTag(Ability ability, types::handle handle) { return callHasTag(ability, handle); }
 bool hasTag(Item item, types::handle handle) { return callHasTag(item, handle); }
@@ -110,6 +114,7 @@ bool hasTag(Nature nature, types::handle handle) { return callHasTag(nature, han
 bool hasTag(SideCondition sideCondition, types::handle handle) { return callHasTag(sideCondition, handle); }
 bool hasTag(Status status, types::handle handle) { return callHasTag(status, handle); }
 bool hasTag(Type type, types::handle handle) { return callHasTag(type, handle); }
+bool hasTag(Volatile volatileCondition, types::handle handle) { return callHasTag(volatileCondition, handle); }
 
 bool hasTag(Ability ability, const types::registry& registry, types::entity entity) { return callHasTag(ability, registry, entity); }
 bool hasTag(Item item, const types::registry& registry, types::entity entity) { return callHasTag(item, registry, entity); }
@@ -118,5 +123,6 @@ bool hasTag(Nature nature, const types::registry& registry, types::entity entity
 bool hasTag(SideCondition sideCondition, const types::registry& registry, types::entity entity) { return callHasTag(sideCondition, registry, entity); }
 bool hasTag(Status status, const types::registry& registry, types::entity entity) { return callHasTag(status, registry, entity); }
 bool hasTag(Type type, const types::registry& registry, types::entity entity) { return callHasTag(type, registry, entity); }
+bool hasTag(Volatile volatileCondition, const types::registry& registry, types::entity entity) { return callHasTag(volatileCondition, registry, entity); }
 // clang-format on
 }  // namespace pokesim::dex

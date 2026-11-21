@@ -1,7 +1,10 @@
 #pragma once
 
+#include <Types/Entity.hpp>
+#include <Types/Enums/Stat.hpp>
 #include <Types/Indexes.hpp>
 #include <Types/Registry.hpp>
+#include <Types/Stats.hpp>
 
 namespace pokesim {
 class Simulation;
@@ -32,6 +35,9 @@ void clearCurrentEffect(Simulation& simulation);
 void setCurrentEffectFromStack(Simulation& simulation);
 void clearCurrentBattleEffect(Simulation& simulation);
 
+void setCurrentEffectAsBoost(
+  types::registry& registry, types::entity source, types::entity target, types::entity battle, dex::Stat boostStat,
+  types::boost boost);
 void removeFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle);
 void tryAddToActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle);
 void checkIfRemoveFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle);

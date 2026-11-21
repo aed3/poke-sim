@@ -122,6 +122,7 @@ struct Turn;
 struct Winner;
 namespace dex {
 struct ChoiceLock;
+struct Stall;
 struct Trapper;
 namespace shared_name_effect {
 struct AllySwitch;
@@ -216,6 +217,9 @@ void check(const dex::shared_name_effect::BadPoison&);
 
 template <>
 void check(const dex::ChoiceLock&);
+
+template <>
+void check(const dex::Stall&);
 
 template <>
 void check(const dex::Trapper&, const types::registry&);
