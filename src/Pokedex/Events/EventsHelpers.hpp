@@ -2,10 +2,14 @@
 
 #include <Battle/Helpers/IntegerModify.hpp>
 #include <Components/CalcDamage/TemporaryMoveProperties.hpp>
+#include <Components/EntityHolders/Battle.hpp>
 #include <Components/EventModifier.hpp>
 #include <Components/Tags/MovePropertyTags.hpp>
+#include <Pokedex/Effects/Stall.hpp>
+#include <SimulateTurn/RandomChance.hpp>
 #include <Types/Entity.hpp>
 #include <Types/Event.hpp>
+#include <Types/Random.hpp>
 #include <Types/Registry.hpp>
 #include <entt/entity/handle.hpp>
 #include <entt/entity/registry.hpp>
@@ -71,4 +75,21 @@ struct IncrementTurnsRemaining {
   }
 };
 
+inline void stallOnTryMove(
+  types::handle handle, Battle battle, types::stallUses uses, types::percentChance stallExponentialBase,
+  const Simulation& simulation) {
+  float exponential = std::pow((float)stallExponentialBase, (float)uses);
+  pokesim::internal::setReciprocalRandomBinaryChanceFromProbability(
+    handle,
+    battle,
+    simulation,
+    exponential * Constants::PercentChanceToProbability);
+}
+
+inline void stallOnRestart(dex::Stall& stall) {
+  if (stall.uses < Constants::StallMoveUses::MAX) {
+    stall.uses++;
+  }
+  stall.turnsRemaining = Constants::EffectDuration::STALL_MOVE;
+}
 }  // namespace pokesim::internal

@@ -368,7 +368,7 @@ void setRandomBinaryChanceFromProbability(
         handle.emplace<RandomBinaryProbability>(eventProbability);
       }
       return;
-    };
+    }
   }
 }
 

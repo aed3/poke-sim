@@ -36,6 +36,7 @@
 #include <Pokedex/EnumToTag/AbilityEnumToTag.hpp>
 #include <Pokedex/EnumToTag/ItemEnumToTag.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
+#include <Pokedex/EnumToTag/VolatileEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Formulas.hpp>
 #include <Simulation/RunEvent.hpp>
@@ -228,6 +229,37 @@ void changeForFormChange(types::handle handle, dex::Species newSpecies, const Po
   setAllUpdateStats(handle);
 }
 
+template <typename VolatileConditionType>
+struct SetVolatileCondition {
+  template <typename, typename = void>
+  struct hasOnStart : std::false_type {};
+  template <typename T>
+  struct hasOnStart<T, std::void_t<decltype(T::onStart)>> : std::true_type {};
+
+  template <typename, typename = void>
+  struct hasMainSource : std::false_type {};
+  template <typename T>
+  struct hasMainSource<T, std::void_t<decltype(T::MainSource::name)>> : std::true_type {};
+
+  static void set(types::registry& registry, CurrentEffectTarget target) {
+    (void)registry.get_or_emplace<VolatileConditionType>(target.val);
+  }
+
+  static void run(Simulation& simulation) {
+    if constexpr (hasOnStart<VolatileConditionType>::value) {
+      VolatileConditionType::onStart(simulation);
+    }
+    else if constexpr (std::is_empty_v<VolatileConditionType>) {
+      if constexpr (hasMainSource<VolatileConditionType>::value) {
+        simulation.view<set, Tags<typename VolatileConditionType::MainSource>>();
+      }
+      else {
+        simulation.view<set, Tags<VolatileConditionType>>();
+      }
+    }
+  }
+};
+
 void revertTemporaryFormChange(
   types::handle handle, TemporaryFormChangedFrom temporaryFormChangedFrom, const Pokedex& pokedex) {
   changeForFormChange(handle, temporaryFormChangedFrom.val, pokedex);
@@ -370,6 +402,10 @@ void clearStatus(types::handle pokemonHandle) {
     dex::Paralysis,
     dex::Poison,
     dex::Sleep>();
+}
+
+void setVolatile(Simulation& simulation) {
+  dex::forEachVolatileCondition<SetVolatileCondition>(simulation);
 }
 
 void clearVolatiles(Simulation& simulation) {

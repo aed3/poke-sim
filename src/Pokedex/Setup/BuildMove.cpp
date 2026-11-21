@@ -19,6 +19,7 @@
 #include <Pokedex/EnumToTag/MovePropertyEnumToTag.hpp>
 #include <Pokedex/EnumToTag/SideConditionEnumToTag.hpp>
 #include <Pokedex/EnumToTag/StatusEnumToTag.hpp>
+#include <Pokedex/EnumToTag/VolatileEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <Simulation/Simulation.hpp>
 #include <Types/Entity.hpp>
@@ -60,8 +61,11 @@ struct BuildMove {
     accBoost,
     evaBoost,
     status,
+    volatileCondition,
     sideCondition,
     addedFlinchChance,
+
+    mainSource,
   };
 
   enum class MoveEffectKind : std::uint8_t {
@@ -116,9 +120,14 @@ struct BuildMove {
   template <typename Type>
   struct has<Optional::status, Type, void_t<Type::status>> : std::true_type {};
   template <typename Type>
+  struct has<Optional::volatileCondition, Type, void_t<Type::volatileCondition>> : std::true_type {};
+  template <typename Type>
   struct has<Optional::sideCondition, Type, void_t<Type::sideCondition>> : std::true_type {};
   template <typename Type>
   struct has<Optional::addedFlinchChance, Type, void_t<Type::addedFlinchChance>> : std::true_type {};
+
+  template <typename Type>
+  struct has<Optional::mainSource, Type, void_t<Type::MainSource::name>> : std::true_type {};
 
   static constexpr bool forPokedex = std::is_same_v<BuildMoveTag, internal::tags::BuildPokedexMove>;
 
@@ -158,9 +167,11 @@ struct BuildMove {
   template <typename Tag>
   struct AddMainSourceFromEnum {
     static void run(EntitySetup& setup) {
-      using MainSource = typename Tag::MainSource;
-      if constexpr (!std::is_same_v<MainSource, Move>) {
-        setup.add(MainSource{});
+      if constexpr (has<Optional::mainSource, Tag>::value) {
+        using MainSource = typename Tag::MainSource;
+        if constexpr (!std::is_same_v<MainSource, Move>) {
+          setup.add(MainSource{});
+        }
       }
     }
   };
@@ -221,6 +232,10 @@ struct BuildMove {
 
     if constexpr (has<Optional::status, EffectData>::value) {
       dex::enumToTag<AddFromEnum>(EffectData::status(gameMechanic), setup);
+    }
+
+    if constexpr (has<Optional::volatileCondition, EffectData>::value) {
+      dex::enumToTag<AddMainSourceFromEnum>(EffectData::volatileCondition(gameMechanic), setup);
     }
 
     if constexpr (has<Optional::sideCondition, EffectData>::value) {

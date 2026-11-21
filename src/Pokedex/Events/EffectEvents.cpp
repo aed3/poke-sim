@@ -1,6 +1,7 @@
 #include <Battle/Helpers/InternalHelpers.hpp>
 #include <Battle/ManageBattleState.hpp>
 #include <Battle/Pokemon/ManagePokemonState.hpp>
+#include <Components/ActionQueue.hpp>
 #include <Components/BaseEffectChance.hpp>
 #include <Components/CalcDamage/TemporaryMoveProperties.hpp>
 #include <Components/DisabledMoveSlots.hpp>
@@ -18,17 +19,25 @@
 #include <Config/Require.hpp>
 #include <Pokedex/Effects/Trapper.hpp>
 #include <Pokedex/Pokedex.hpp>
+#include <SimulateTurn/ManageActionQueue.hpp>
 #include <SimulateTurn/RandomChance.hpp>
 #include <Simulation/Simulation.hpp>
+#include <Types/MechanicConstants.hpp>
 #include <Utilities/EntityFilter.hpp>
 #include <entt/entity/registry.hpp>
 
 #include "../Effects/headers.hpp"
+#include "EventsHelpers.hpp"
 
 namespace pokesim::dex {
 namespace {
 void damageByHpDivisor(types::handle handle, stat::Hp hp, types::stat hpDivisor) {
   internal::applyDamage(handle, hp.val / hpDivisor);
+}
+
+void failCurrentHitMove(Simulation& simulation) {
+  simulation.view<internal::setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
+  simulation.removeFromEntities<tags::FailedCurrentMoveHit>();
 }
 
 void badPoisonOnResidual(types::handle handle, stat::Hp hp, BadPoison::Effect& badPoison) {
@@ -79,6 +88,28 @@ void choiceLockOnDisableMove(types::handle handle, const ChoiceLock& choiceLocke
   }
 
   handle.get<DisabledMoveSlots>().val[choiceLocked.val] = true;
+}
+
+void stallOnTryMove(
+  types::registry& registry, Battle battle, Stall& stall, const CurrentActionMovesAsSource& moves,
+  types::percentChance stallExponentialBase, const Simulation& simulation) {
+  POKESIM_REQUIRE(moves.val.size() == 1U, "Stall moves only have one target.");
+  types::entity move = moves.val.front();
+  if (!registry.all_of<move::tags::Stall>(move)) {
+    return;
+  }
+
+  const ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
+  if (internal::simulate_turn::hasRemainingChosenAction(actionQueue)) {
+    internal::stallOnTryMove({registry, move}, battle, stall.uses, stallExponentialBase, simulation);
+  }
+  else {
+    registry.emplace<tags::FailedCurrentMoveHit>(move);
+  }
+}
+
+void stallOnTryMovePass(types::registry& registry, CurrentActionSource source) {
+  internal::stallOnRestart(registry.get<Stall>(source.val));
 }
 
 void trapperOnSwitchOut(types::handle handle, Trapper trapper, Battle battle) {
@@ -133,8 +164,7 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
     simulation,
     [](Simulation& sim) { sim.view<failedOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
     std::nullopt);
-  simulation.view<internal::setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
-  simulation.removeFromEntities<tags::FailedCurrentMoveHit>();
+  failCurrentHitMove(simulation);
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {
@@ -153,12 +183,30 @@ void ChoiceLock::onResetDisabledMove(Simulation& simulation) {
 
 void Flinch::onBeforeMove(Simulation& simulation) {
   simulation.view<failedOnBeforeMove, Tags<Flinch>>();
-  simulation.view<internal::setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
-  simulation.removeFromEntities<tags::FailedCurrentMoveHit>();
+  failCurrentHitMove(simulation);
 }
 
 void Flinch::onResidual(Simulation& simulation) {
   simulation.removeFromEntities<Flinch, tags::ActivePokemon>();
+}
+
+void Stall::onTryMove(Simulation& simulation) {
+  auto stallExponentialBase = simulation.pokedex().getStaticValue<MechanicConstants::STALL_EXPONENTIAL_BASE>();
+  simulation.view<stallOnTryMove, Tags<tags::CurrentActionSource>>(stallExponentialBase, simulation);
+  failCurrentHitMove(simulation);
+
+  internal::randomBinaryChance(
+    simulation,
+    [](Simulation& sim) {
+      sim.view<stallOnTryMovePass, Tags<internal::tags::RandomEventCheckPassed>>();
+      sim.removeFromEntities<Stall, internal::tags::RandomEventCheckFailed>();
+      sim.view<internal::setFailedActionMove, Tags<internal::tags::RandomEventCheckFailed>>();
+    },
+    std::nullopt);
+}
+
+void Stall::onResidual(Simulation& simulation) {
+  simulation.view<internal::IncrementTurnsRemaining<Stall>::run>();
 }
 
 void Trapped::onResetTrappedPokemon(Simulation& simulation) {

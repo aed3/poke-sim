@@ -160,14 +160,16 @@ struct Constants {
 
   struct StallMoveUses {
     static constexpr std::uint8_t MAX = 6U;
-    static constexpr std::uint8_t MIN = 0U;
-    static constexpr std::uint8_t DEFAULT = 0U;
+    static constexpr std::uint8_t MIN = 1U;
+    static constexpr std::uint8_t DEFAULT = 1U;
   };
 
   struct EffectDuration {
     static constexpr std::uint8_t MAX = 8U;
     static constexpr std::uint8_t MIN = 0U;
     static constexpr std::uint8_t DEFAULT = 5U;
+
+    static constexpr std::uint8_t STALL_MOVE = 2U;
   };
 
   struct CritStage {

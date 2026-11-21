@@ -254,6 +254,7 @@ if(POKESIM_ENABLE_TESTING)
       tests/Items/QuickPowder.cpp
       tests/Moves/AllySwitch.cpp
       tests/Moves/FuryAttack.cpp
+      tests/Moves/KingsShield.cpp
       tests/Moves/KnockOff.cpp
       tests/Moves/Reflect.cpp
       tests/Moves/Reversal.cpp
