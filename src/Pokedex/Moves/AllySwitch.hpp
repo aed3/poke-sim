@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Pokedex/Effects/Stall.hpp>
 #include <Types/Enums/GameMechanics.hpp>
 #include <Types/Enums/Move.hpp>
 #include <Types/Enums/MoveCategory.hpp>
@@ -46,21 +47,17 @@ struct AllySwitch {
 };
 
 namespace shared_name_effect {
-struct AllySwitch {
+struct AllySwitch : Stall {
   static constexpr Volatile name(GameMechanics = {}) { return Volatile::ALLY_SWITCH; }
   using MainSource = pokesim::dex::AllySwitch;
 
-  static constexpr types::effectDuration duration(GameMechanics) { return 2U; }
+  struct Strings {
+    static constexpr std::string_view name() { return "Ally Switch"; }
+    static constexpr std::string_view smogonId() { return "allyswitch"; }
+  };
 
   static void onTryMove(Simulation& simulation);
   static void onResidual(Simulation& simulation);
-
-  types::stallUses uses = Constants::StallMoveUses::DEFAULT;
-  types::effectDuration turnsRemaining = Constants::EffectDuration::DEFAULT;
-
-  constexpr bool operator==(const AllySwitch& other) const {
-    return uses == other.uses && turnsRemaining == other.turnsRemaining;
-  }
 };
 }  // namespace shared_name_effect
 }  // namespace pokesim::dex

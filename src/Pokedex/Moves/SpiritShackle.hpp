@@ -26,7 +26,7 @@ struct SpiritShackle {
 
   struct targetSecondaryEffect {
     static constexpr types::percentChance chance(GameMechanics) { return 100U; }
-    static void onHit(Simulation& Simulation);
+    static void onHit(Simulation& simulation);
   };
 
   static constexpr MoveTarget target(GameMechanics) { return MoveTarget::ANY_SINGLE_TARGET; }

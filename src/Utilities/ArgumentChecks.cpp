@@ -476,8 +476,7 @@ void checkPercentChance(types::percentChance chance) {
 
 template <>
 void check(const dex::shared_name_effect::AllySwitch& allySwitch) {
-  checkBounds<Constants::StallMoveUses>(allySwitch.uses);
-  POKESIM_REQUIRE_NM(allySwitch.turnsRemaining <= 2U);
+  check((dex::Stall)allySwitch);
 }
 
 template <>
@@ -528,6 +527,12 @@ void check(const dex::shared_name_effect::BadPoison& badPoison) {
 template <>
 void check(const dex::ChoiceLock& choiceLock) {
   POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
+}
+
+template <>
+void check(const dex::Stall& stall) {
+  checkBounds<Constants::StallMoveUses>(stall.uses);
+  POKESIM_REQUIRE_NM(stall.turnsRemaining <= Constants::EffectDuration::STALL_MOVE);
 }
 
 template <>

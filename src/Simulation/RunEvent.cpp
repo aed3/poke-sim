@@ -59,6 +59,8 @@ void runAfterMove(Simulation& simulation) {
 void runResidual(Simulation& simulation) {
   dex::Reflect::Effect::onResidual(simulation);
   dex::Flinch::onResidual(simulation);
+  dex::KingsShield::Effect::onResidual(simulation);
+  dex::Stall::onResidual(simulation);
   dex::Burn::onResidual(simulation);
   dex::BadPoison::Effect::onResidual(simulation);
   dex::MirrorHerb::Effect::onResidual(simulation);
@@ -119,10 +121,15 @@ void runDamagingHitEvent(Simulation& simulation) {
   dex::RockyHelmet::onDamagingHit(simulation);
 }
 
+void runTryHitEvent(Simulation& simulation) {
+  dex::KingsShield::Effect::onTryHit(simulation);
+}
+
 void runHitEvent(Simulation& simulation) {
   dex::SpiritShackle::targetSecondaryEffect::onHit(simulation);
   dex::Transform::targetPrimaryEffect::onHit(simulation);
   dex::AllySwitch::targetPrimaryEffect::onHit(simulation);
+  dex::KingsShield::targetPrimaryEffect::onHit(simulation);
 }
 
 void runAfterHitEvent(Simulation& simulation) {
@@ -185,6 +192,7 @@ void runModifyMove(Simulation& simulation) {
 void runTryMoveEvent(Simulation& simulation) {
   dex::MetronomeItem::Effect::onTryMove(simulation);
   dex::AllySwitch::Effect::onTryMove(simulation);
+  dex::Stall::onTryMove(simulation);
 }
 
 void runSetBasePower(Simulation& simulation) {
@@ -204,7 +212,7 @@ void runResetTrappedPokemon(Simulation& simulation) {
   simulation.removeFromEntities<tags::ResetTrappedPokemon>();
 }
 
-void runOnImmunity(Simulation& simulation) {
+void runImmunity(Simulation& simulation) {
   dex::Prankster::onImmunity(simulation);
 }
 

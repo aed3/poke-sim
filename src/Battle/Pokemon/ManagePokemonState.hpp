@@ -50,6 +50,7 @@ void setStatus(Simulation& simulation);
 void trySetStatus(Simulation& simulation);
 void clearStatus(types::handle pokemonHandle);
 
+void setVolatile(Simulation& simulation);
 void clearVolatiles(Simulation& simulation);
 
 void deductPp(MoveSlots& moveSlots, LastUsedMove lastUsedMove);

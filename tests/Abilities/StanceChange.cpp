@@ -12,6 +12,7 @@ void checkAegislashStats(
   typesToIgnore.add<
     SpeciesName,
     TemporaryFormChangedFrom,
+    dex::Stall,
     stat::Atk,
     stat::Def,
     stat::Spa,

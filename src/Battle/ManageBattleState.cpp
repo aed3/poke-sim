@@ -263,6 +263,8 @@ void setCurrentActionMoveTarget(
   }
 }
 
+// TODO(aed3): Take in another parameter for whether this move counts as a fail and only use that parameter if the
+// source has Stomping Tantrum
 void setFailedActionMove(
   types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target) {
   types::registry& registry = *moveHandle.registry();
@@ -319,6 +321,7 @@ void clearMoveAction(Simulation& simulation) {
     pokesim::move::tags::Punch,
     pokesim::move::tags::SelfSwitch,
     pokesim::move::tags::Sound,
+    pokesim::move::tags::Stall,
     pokesim::move::tags::VariableHitCount,
     CritStageBoost,
     BaseEffectChance,
@@ -359,6 +362,24 @@ void setCurrentEffectFromStack(Simulation& simulation) {
 void clearCurrentBattleEffect(Simulation& simulation) {
   clearEffectComponents(simulation.registry, simulation.registry.view<pokesim::tags::Battle>());
   clearCurrentEffect(simulation);
+}
+
+void setCurrentEffectAsBoost(
+  types::registry& registry, types::entity source, types::entity target, types::entity battle, dex::Stat boostStat,
+  types::boost boost) {
+  registry.emplace<CurrentEffectSource>(battle, source);
+  registry.emplace<CurrentEffectTarget>(battle, target);
+  registry.emplace<CurrentEffectsAsSource>(source).val.push_back(battle);
+  registry.emplace<CurrentEffectAsTarget>(target, battle);
+
+  switch (boostStat) {
+    case dex::Stat::ATK: registry.emplace<AtkBoost>(battle, boost); break;
+    case dex::Stat::DEF: registry.emplace<DefBoost>(battle, boost); break;
+    case dex::Stat::SPA: registry.emplace<SpaBoost>(battle, boost); break;
+    case dex::Stat::SPD: registry.emplace<SpdBoost>(battle, boost); break;
+    case dex::Stat::SPE: registry.emplace<SpeBoost>(battle, boost); break;
+    default:             POKESIM_REQUIRE_FAIL("Using a stat enum that doesn't have boost.");
+  }
 }
 
 void removeFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle) {

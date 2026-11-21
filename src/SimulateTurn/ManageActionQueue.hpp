@@ -8,6 +8,7 @@ struct ActionQueue;
 struct RecycledAction;
 
 namespace internal::simulate_turn {
+bool hasRemainingChosenAction(const ActionQueue& actionQueue);
 void addBeforeTurnAction(ActionQueue& actionQueue);
 void addResidualAction(ActionQueue& actionQueue);
 void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, RecycledAction action);

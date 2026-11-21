@@ -10,5 +10,6 @@
 #include "Paralysis.hpp"
 #include "Poison.hpp"
 #include "Sleep.hpp"
+#include "Stall.hpp"
 #include "Trapped.hpp"
 #include "Trapper.hpp"

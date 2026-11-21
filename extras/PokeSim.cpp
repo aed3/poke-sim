@@ -615,8 +615,7 @@ void checkPercentChance(types::percentChance chance) {
 
 template <>
 void check(const dex::shared_name_effect::AllySwitch& allySwitch) {
-  checkBounds<Constants::StallMoveUses>(allySwitch.uses);
-  POKESIM_REQUIRE_NM(allySwitch.turnsRemaining <= 2U);
+  check((dex::Stall)allySwitch);
 }
 
 template <>
@@ -667,6 +666,12 @@ void check(const dex::shared_name_effect::BadPoison& badPoison) {
 template <>
 void check(const dex::ChoiceLock& choiceLock) {
   POKESIM_REQUIRE_NM(choiceLock.val < Constants::MoveSlots::MAX);
+}
+
+template <>
+void check(const dex::Stall& stall) {
+  checkBounds<Constants::StallMoveUses>(stall.uses);
+  POKESIM_REQUIRE_NM(stall.turnsRemaining <= Constants::EffectDuration::STALL_MOVE);
 }
 
 template <>
@@ -2563,6 +2568,8 @@ void runAfterMove(Simulation& simulation) {
 void runResidual(Simulation& simulation) {
   dex::Reflect::Effect::onResidual(simulation);
   dex::Flinch::onResidual(simulation);
+  dex::KingsShield::Effect::onResidual(simulation);
+  dex::Stall::onResidual(simulation);
   dex::Burn::onResidual(simulation);
   dex::BadPoison::Effect::onResidual(simulation);
   dex::MirrorHerb::Effect::onResidual(simulation);
@@ -2623,10 +2630,15 @@ void runDamagingHitEvent(Simulation& simulation) {
   dex::RockyHelmet::onDamagingHit(simulation);
 }
 
+void runTryHitEvent(Simulation& simulation) {
+  dex::KingsShield::Effect::onTryHit(simulation);
+}
+
 void runHitEvent(Simulation& simulation) {
   dex::SpiritShackle::targetSecondaryEffect::onHit(simulation);
   dex::Transform::targetPrimaryEffect::onHit(simulation);
   dex::AllySwitch::targetPrimaryEffect::onHit(simulation);
+  dex::KingsShield::targetPrimaryEffect::onHit(simulation);
 }
 
 void runAfterHitEvent(Simulation& simulation) {
@@ -2689,6 +2701,7 @@ void runModifyMove(Simulation& simulation) {
 void runTryMoveEvent(Simulation& simulation) {
   dex::MetronomeItem::Effect::onTryMove(simulation);
   dex::AllySwitch::Effect::onTryMove(simulation);
+  dex::Stall::onTryMove(simulation);
 }
 
 void runSetBasePower(Simulation& simulation) {
@@ -2708,7 +2721,7 @@ void runResetTrappedPokemon(Simulation& simulation) {
   simulation.removeFromEntities<tags::ResetTrappedPokemon>();
 }
 
-void runOnImmunity(Simulation& simulation) {
+void runImmunity(Simulation& simulation) {
   dex::Prankster::onImmunity(simulation);
 }
 
@@ -3946,7 +3959,7 @@ void setRandomBinaryChanceFromProbability(
         handle.emplace<RandomBinaryProbability>(eventProbability);
       }
       return;
-    };
+    }
   }
 }
 
@@ -4278,7 +4291,6 @@ void runMoveHitCheck(Simulation& simulation) {
   simulation.registry.clear<tags::CurrentMoveHit, tags::FailedCurrentMoveHit>();
 }
 
-void trySetVolatileFromEffect(Simulation&) {}
 void trySetSlotConditionFromEffect(Simulation&) {}
 void trySetWeatherFromEffect(Simulation&) {}
 void trySetTerrainFromEffect(Simulation&) {}
@@ -4298,7 +4310,7 @@ void setEffectTarget(types::handle handle, TargetEntityHolder target) {
 void runEffect(Simulation& simulation) {
   internal::tryBoost(simulation);
   internal::trySetStatus(simulation);
-  trySetVolatileFromEffect(simulation);
+  internal::setVolatile(simulation);
   internal::setSideCondition(simulation);
   trySetSlotConditionFromEffect(simulation);
   trySetWeatherFromEffect(simulation);
@@ -4475,13 +4487,17 @@ void failIfTargetImmune(types::handle handle, CurrentActionTarget target, TypeNa
   }
 }
 
+void hitCheck(Simulation& simulation) {
+  internal::runTryHitEvent(simulation);
+}
+
 void typeImmunityCheck(Simulation& simulation) {
   simulation.view<
     failIfTargetImmune,
     Tags<tags::CurrentMoveHit>,
     entt::exclude_t<move::tags::IgnoreImmunities, move::tags::Status>>(simulation.pokedex());
   // simulation.view<failIfTargetImmune, Tags<dex::ThunderWave, tags::CurrentMoveHit>>(simulation.pokedex());
-  internal::runOnImmunity(simulation);
+  internal::runImmunity(simulation);
 }
 
 void setMoveAccuracyBoost(types::registry& registry, const CurrentActionMovesAsSource& moves, AccBoost accBoost) {
@@ -4559,7 +4575,7 @@ void moveHitLoop(Simulation& simulation) {
 
 void internal::simulate_turn::runMoveHitChecks(Simulation& simulation) {
   // invulnerabilityCheck
-  // hitCheck
+  runMoveHitCheck<hitCheck>(simulation);
   runMoveHitCheck<typeImmunityCheck>(simulation);
   runMoveHitCheck<accuracyCheck>(simulation);
   // breakProtectCheck
@@ -4573,6 +4589,17 @@ void internal::simulate_turn::runMoveHitChecks(Simulation& simulation) {
 /////////////// START OF src/SimulateTurn/ManageActionQueue.cpp ////////////////
 
 namespace pokesim::internal::simulate_turn {
+bool hasRemainingChosenAction(const ActionQueue& actionQueue) {
+  for (const ActionQueueItem& item : actionQueue.val) {
+    if (
+      item.order == ActionOrder::MOVE || item.order == ActionOrder::ITEM || item.order == ActionOrder::SWITCH ||
+      item.order == ActionOrder::MID_TURN_SWITCH) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void addBeforeTurnAction(ActionQueue& actionQueue) {
   actionQueue.val.push_back({ActionOrder::BEFORE_TURN});
 }
@@ -5203,8 +5230,11 @@ struct BuildMove {
     accBoost,
     evaBoost,
     status,
+    volatileCondition,
     sideCondition,
     addedFlinchChance,
+
+    mainSource,
   };
 
   enum class MoveEffectKind : std::uint8_t {
@@ -5259,9 +5289,14 @@ struct BuildMove {
   template <typename Type>
   struct has<Optional::status, Type, void_t<Type::status>> : std::true_type {};
   template <typename Type>
+  struct has<Optional::volatileCondition, Type, void_t<Type::volatileCondition>> : std::true_type {};
+  template <typename Type>
   struct has<Optional::sideCondition, Type, void_t<Type::sideCondition>> : std::true_type {};
   template <typename Type>
   struct has<Optional::addedFlinchChance, Type, void_t<Type::addedFlinchChance>> : std::true_type {};
+
+  template <typename Type>
+  struct has<Optional::mainSource, Type, void_t<Type::MainSource::name>> : std::true_type {};
 
   static constexpr bool forPokedex = std::is_same_v<BuildMoveTag, internal::tags::BuildPokedexMove>;
 
@@ -5301,9 +5336,11 @@ struct BuildMove {
   template <typename Tag>
   struct AddMainSourceFromEnum {
     static void run(EntitySetup& setup) {
-      using MainSource = typename Tag::MainSource;
-      if constexpr (!std::is_same_v<MainSource, Move>) {
-        setup.add(MainSource{});
+      if constexpr (has<Optional::mainSource, Tag>::value) {
+        using MainSource = typename Tag::MainSource;
+        if constexpr (!std::is_same_v<MainSource, Move>) {
+          setup.add(MainSource{});
+        }
       }
     }
   };
@@ -5364,6 +5401,10 @@ struct BuildMove {
 
     if constexpr (has<Optional::status, EffectData>::value) {
       dex::enumToTag<AddFromEnum>(EffectData::status(gameMechanic), setup);
+    }
+
+    if constexpr (has<Optional::volatileCondition, EffectData>::value) {
+      dex::enumToTag<AddMainSourceFromEnum>(EffectData::volatileCondition(gameMechanic), setup);
     }
 
     if constexpr (has<Optional::sideCondition, EffectData>::value) {
@@ -5850,35 +5891,41 @@ void allySwitchOnHit(types::handle handle, Battle battle, CurrentActionTarget ta
 
   std::swap(team.val[0], team.val[1]);
   internal::swapActionQueueSourceSlots(registry, battle, side, 0U, 1U);
-}
 
-void allySwitchOnTryMoveApply(
-  types::registry& registry, CurrentActionSource source, const dex::AllySwitch::Effect& allySwitch) {
-  (void)registry.get_or_emplace<AllySwitch::Effect>(source.val, allySwitch);
+  (void)registry.get_or_emplace<AllySwitch::Effect>(target.val);
 }
 
 void allySwitchOnTryMove(
-  types::handle handle, Battle battle, AllySwitch::Effect& allySwitch, const CurrentActionMovesAsSource& moves,
+  types::registry& registry, Battle battle, AllySwitch::Effect& allySwitch, const CurrentActionMovesAsSource& moves,
   types::percentChance stallExponentialBase, const Simulation& simulation) {
-  for (types::entity move : moves) {
-    if (!handle.registry()->all_of<AllySwitch>(move)) {
-      return;
-    }
+  POKESIM_REQUIRE(moves.val.size() == 1U, "Ally Switch only has one target.");
+  if (!registry.all_of<AllySwitch>(moves.val.front())) {
+    return;
   }
 
-  float exponential = std::pow((float)stallExponentialBase, (float)allySwitch.uses);
-  pokesim::internal::setReciprocalRandomBinaryChanceFromProbability(
-    handle,
-    battle,
-    simulation,
-    exponential * Constants::PercentChanceToProbability);
+  internal::stallOnTryMove({registry, moves.val.front()}, battle, allySwitch.uses, stallExponentialBase, simulation);
 }
 
-void allySwitchOnTryMovePass(AllySwitch::Effect& allySwitch, types::effectDuration turnsRemaining) {
-  if (allySwitch.uses < Constants::StallMoveUses::MAX) {
-    allySwitch.uses++;
+void allySwitchOnTryMovePass(types::registry& registry, CurrentActionSource source) {
+  internal::stallOnRestart(registry.get<AllySwitch::Effect>(source.val));
+}
+
+void kingsShieldOnHit(types::registry& registry, CurrentActionTarget target) {
+  (void)registry.get_or_emplace<Stall>(target.val);
+}
+
+void kingsShieldOnTryHit(types::handle handle, Battle battle, CurrentActionMovesAsTarget move, types::boost boost) {
+  types::registry& registry = *handle.registry();
+  if (registry.all_of<move::tags::Status>(move.val)) {
+    return;
   }
-  allySwitch.turnsRemaining = turnsRemaining;
+
+  types::entity source = registry.get<CurrentActionSource>(move.val).val;
+  if (internal::doesMoveMakeContact(registry, move.val, source)) {
+    internal::setCurrentEffectAsBoost(registry, handle.entity(), source, battle.val, Stat::ATK, boost);
+  }
+
+  registry.emplace<tags::FailedCurrentMoveHit>(move.val);
 }
 
 void knockOffOnBasePowerCheckRemovableItem(
@@ -5898,7 +5945,7 @@ void knockOffOnAfterHitCheckRemovableItem(types::registry& registry, CurrentActi
   }
 }
 
-void reflectOnStart(types::handle handle, CurrentActionTarget target, const Pokedex& pokedex) {
+void reflectOnStart(types::handle handle, CurrentEffectTarget target, const Pokedex& pokedex) {
   types::registry& registry = *handle.registry();
   Side targetSide = registry.get<Side>(target.val);
   if (registry.all_of<Reflect::Effect>(targetSide.val)) {
@@ -5969,16 +6016,12 @@ void AllySwitch::Effect::onTryMove(Simulation& simulation) {
   }
 
   auto stallExponentialBase = simulation.pokedex().getStaticValue<MechanicConstants::STALL_EXPONENTIAL_BASE>();
-
-  simulation.view<allySwitchOnTryMoveApply, Tags<MainSource, tags::CurrentActionMove>>(
-    AllySwitch{Constants::StallMoveUses::DEFAULT, simulation.pokedex().getStaticValue<duration>()});
-
   simulation.view<allySwitchOnTryMove, Tags<tags::CurrentActionSource>>(stallExponentialBase, simulation);
+
   internal::randomBinaryChance(
     simulation,
     [](Simulation& sim) {
-      auto turnsRemaining = sim.pokedex().getStaticValue<duration>();
-      sim.view<allySwitchOnTryMovePass, Tags<internal::tags::RandomEventCheckPassed>>(turnsRemaining);
+      sim.view<allySwitchOnTryMovePass, Tags<internal::tags::RandomEventCheckPassed>>();
       sim.removeFromEntities<AllySwitch, internal::tags::RandomEventCheckFailed>();
       sim.view<internal::setFailedActionMove, Tags<internal::tags::RandomEventCheckFailed>>();
     },
@@ -5987,6 +6030,22 @@ void AllySwitch::Effect::onTryMove(Simulation& simulation) {
 
 void AllySwitch::Effect::onResidual(Simulation& simulation) {
   simulation.view<internal::IncrementTurnsRemaining<AllySwitch>::run>();
+}
+
+void KingsShield::targetPrimaryEffect::onHit(Simulation& simulation) {
+  simulation.view<kingsShieldOnHit, Tags<KingsShield>>();
+}
+
+void KingsShield::Effect::onTryHit(Simulation& simulation) {
+  auto atkBoost = simulation.pokedex().getStaticValue<onTryMoveContactAtkBoost>();
+
+  simulation.view<kingsShieldOnTryHit, Tags<KingsShield>>(atkBoost);
+  internal::tryBoost(simulation);
+  internal::clearCurrentBattleEffect(simulation);
+}
+
+void KingsShield::Effect::onResidual(Simulation& simulation) {
+  simulation.removeFromEntities<KingsShield, tags::ActivePokemon>();
 }
 
 void KnockOff::onBasePower(Simulation& simulation) {
@@ -6006,7 +6065,7 @@ void KnockOff::onAfterHit(Simulation& simulation) {
 }
 
 void Reflect::Effect::onStart(Simulation& simulation) {
-  simulation.view<reflectOnStart, Tags<dex::Reflect, tags::CurrentMoveHit>>(simulation.pokedex());
+  simulation.view<reflectOnStart, Tags<dex::Reflect>>(simulation.pokedex());
 }
 
 void Reflect::Effect::onAnyModifyDamage(Simulation& simulation) {
@@ -6610,6 +6669,11 @@ void damageByHpDivisor(types::handle handle, stat::Hp hp, types::stat hpDivisor)
   internal::applyDamage(handle, hp.val / hpDivisor);
 }
 
+void failCurrentHitMove(Simulation& simulation) {
+  simulation.view<internal::setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
+  simulation.removeFromEntities<tags::FailedCurrentMoveHit>();
+}
+
 void badPoisonOnResidual(types::handle handle, stat::Hp hp, BadPoison::Effect& badPoison) {
   if (badPoison.val < Constants::BadPoisonStages::MAX) {
     badPoison.val++;
@@ -6658,6 +6722,28 @@ void choiceLockOnDisableMove(types::handle handle, const ChoiceLock& choiceLocke
   }
 
   handle.get<DisabledMoveSlots>().val[choiceLocked.val] = true;
+}
+
+void stallOnTryMove(
+  types::registry& registry, Battle battle, Stall& stall, const CurrentActionMovesAsSource& moves,
+  types::percentChance stallExponentialBase, const Simulation& simulation) {
+  POKESIM_REQUIRE(moves.val.size() == 1U, "Stall moves only have one target.");
+  types::entity move = moves.val.front();
+  if (!registry.all_of<move::tags::Stall>(move)) {
+    return;
+  }
+
+  const ActionQueue& actionQueue = registry.get<ActionQueue>(battle.val);
+  if (internal::simulate_turn::hasRemainingChosenAction(actionQueue)) {
+    internal::stallOnTryMove({registry, move}, battle, stall.uses, stallExponentialBase, simulation);
+  }
+  else {
+    registry.emplace<tags::FailedCurrentMoveHit>(move);
+  }
+}
+
+void stallOnTryMovePass(types::registry& registry, CurrentActionSource source) {
+  internal::stallOnRestart(registry.get<Stall>(source.val));
 }
 
 void trapperOnSwitchOut(types::handle handle, Trapper trapper, Battle battle) {
@@ -6712,8 +6798,7 @@ void Paralysis::onBeforeMove(Simulation& simulation) {
     simulation,
     [](Simulation& sim) { sim.view<failedOnBeforeMove, Tags<pokesim::internal::tags::RandomEventCheckPassed>>(); },
     std::nullopt);
-  simulation.view<internal::setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
-  simulation.removeFromEntities<tags::FailedCurrentMoveHit>();
+  failCurrentHitMove(simulation);
 }
 
 void ChoiceLock::onBeforeMove(Simulation& simulation) {
@@ -6732,12 +6817,30 @@ void ChoiceLock::onResetDisabledMove(Simulation& simulation) {
 
 void Flinch::onBeforeMove(Simulation& simulation) {
   simulation.view<failedOnBeforeMove, Tags<Flinch>>();
-  simulation.view<internal::setFailedActionMove, Tags<tags::FailedCurrentMoveHit>>();
-  simulation.removeFromEntities<tags::FailedCurrentMoveHit>();
+  failCurrentHitMove(simulation);
 }
 
 void Flinch::onResidual(Simulation& simulation) {
   simulation.removeFromEntities<Flinch, tags::ActivePokemon>();
+}
+
+void Stall::onTryMove(Simulation& simulation) {
+  auto stallExponentialBase = simulation.pokedex().getStaticValue<MechanicConstants::STALL_EXPONENTIAL_BASE>();
+  simulation.view<stallOnTryMove, Tags<tags::CurrentActionSource>>(stallExponentialBase, simulation);
+  failCurrentHitMove(simulation);
+
+  internal::randomBinaryChance(
+    simulation,
+    [](Simulation& sim) {
+      sim.view<stallOnTryMovePass, Tags<internal::tags::RandomEventCheckPassed>>();
+      sim.removeFromEntities<Stall, internal::tags::RandomEventCheckFailed>();
+      sim.view<internal::setFailedActionMove, Tags<internal::tags::RandomEventCheckFailed>>();
+    },
+    std::nullopt);
+}
+
+void Stall::onResidual(Simulation& simulation) {
+  simulation.view<internal::IncrementTurnsRemaining<Stall>::run>();
 }
 
 void Trapped::onResetTrappedPokemon(Simulation& simulation) {
@@ -7134,6 +7237,7 @@ void emplaceTagFromEnum(Nature nature, types::handle handle) { callEmplace(natur
 void emplaceTagFromEnum(SideCondition sideCondition, types::handle handle) { callEmplace(sideCondition, handle); }
 void emplaceTagFromEnum(Status status, types::handle handle) { callEmplace(status, handle); }
 void emplaceTagFromEnum(Type type, types::handle handle) { callEmplace(type, handle); }
+void emplaceTagFromEnum(Volatile volatileCondition, types::handle handle) { callEmplace(volatileCondition, handle); }
 
 void emplaceTagFromEnum(Ability ability, types::registry& registry, types::entity entity) { callEmplace(ability, registry, entity); }
 void emplaceTagFromEnum(AbilityProperty property, types::registry& registry, types::entity entity) { callEmplace(property, registry, entity); }
@@ -7145,6 +7249,7 @@ void emplaceTagFromEnum(Nature nature, types::registry& registry, types::entity 
 void emplaceTagFromEnum(SideCondition sideCondition, types::registry& registry, types::entity entity) { callEmplace(sideCondition, registry, entity); }
 void emplaceTagFromEnum(Status status, types::registry& registry, types::entity entity) { callEmplace(status, registry, entity); }
 void emplaceTagFromEnum(Type type, types::registry& registry, types::entity entity) { callEmplace(type, registry, entity); }
+void emplaceTagFromEnum(Volatile volatileCondition, types::registry& registry, types::entity entity) { callEmplace(volatileCondition, registry, entity); }
 
 void removeTagFromEnum(Ability ability, types::handle handle) { callRemove(ability, handle); }
 void removeTagFromEnum(AbilityProperty property, types::handle handle) { callRemove(property, handle); }
@@ -7156,6 +7261,7 @@ void removeTagFromEnum(Nature nature, types::handle handle) { callRemove(nature,
 void removeTagFromEnum(SideCondition sideCondition, types::handle handle) { callRemove(sideCondition, handle); }
 void removeTagFromEnum(Status status, types::handle handle) { callRemove(status, handle); }
 void removeTagFromEnum(Type type, types::handle handle) { callRemove(type, handle); }
+void removeTagFromEnum(Volatile volatileCondition, types::handle handle) { callRemove(volatileCondition, handle); }
 
 void removeTagFromEnum(Ability ability, types::registry& registry, types::entity entity) { callRemove(ability, registry, entity); }
 void removeTagFromEnum(AbilityProperty property, types::registry& registry, types::entity entity) { callRemove(property, registry, entity); }
@@ -7167,6 +7273,7 @@ void removeTagFromEnum(Nature nature, types::registry& registry, types::entity e
 void removeTagFromEnum(SideCondition sideCondition, types::registry& registry, types::entity entity) { callRemove(sideCondition, registry, entity); }
 void removeTagFromEnum(Status status, types::registry& registry, types::entity entity) { callRemove(status, registry, entity); }
 void removeTagFromEnum(Type type, types::registry& registry, types::entity entity) { callRemove(type, registry, entity); }
+void removeTagFromEnum(Volatile volatileCondition, types::registry& registry, types::entity entity) { callRemove(volatileCondition, registry, entity); }
 
 bool hasTag(Ability ability, types::handle handle) { return callHasTag(ability, handle); }
 bool hasTag(Item item, types::handle handle) { return callHasTag(item, handle); }
@@ -7175,6 +7282,7 @@ bool hasTag(Nature nature, types::handle handle) { return callHasTag(nature, han
 bool hasTag(SideCondition sideCondition, types::handle handle) { return callHasTag(sideCondition, handle); }
 bool hasTag(Status status, types::handle handle) { return callHasTag(status, handle); }
 bool hasTag(Type type, types::handle handle) { return callHasTag(type, handle); }
+bool hasTag(Volatile volatileCondition, types::handle handle) { return callHasTag(volatileCondition, handle); }
 
 bool hasTag(Ability ability, const types::registry& registry, types::entity entity) { return callHasTag(ability, registry, entity); }
 bool hasTag(Item item, const types::registry& registry, types::entity entity) { return callHasTag(item, registry, entity); }
@@ -7183,6 +7291,7 @@ bool hasTag(Nature nature, const types::registry& registry, types::entity entity
 bool hasTag(SideCondition sideCondition, const types::registry& registry, types::entity entity) { return callHasTag(sideCondition, registry, entity); }
 bool hasTag(Status status, const types::registry& registry, types::entity entity) { return callHasTag(status, registry, entity); }
 bool hasTag(Type type, const types::registry& registry, types::entity entity) { return callHasTag(type, registry, entity); }
+bool hasTag(Volatile volatileCondition, const types::registry& registry, types::entity entity) { return callHasTag(volatileCondition, registry, entity); }
 // clang-format on
 }  // namespace pokesim::dex
 
@@ -8582,6 +8691,37 @@ void changeForFormChange(types::handle handle, dex::Species newSpecies, const Po
   setAllUpdateStats(handle);
 }
 
+template <typename VolatileConditionType>
+struct SetVolatileCondition {
+  template <typename, typename = void>
+  struct hasOnStart : std::false_type {};
+  template <typename T>
+  struct hasOnStart<T, std::void_t<decltype(T::onStart)>> : std::true_type {};
+
+  template <typename, typename = void>
+  struct hasMainSource : std::false_type {};
+  template <typename T>
+  struct hasMainSource<T, std::void_t<decltype(T::MainSource::name)>> : std::true_type {};
+
+  static void set(types::registry& registry, CurrentEffectTarget target) {
+    (void)registry.get_or_emplace<VolatileConditionType>(target.val);
+  }
+
+  static void run(Simulation& simulation) {
+    if constexpr (hasOnStart<VolatileConditionType>::value) {
+      VolatileConditionType::onStart(simulation);
+    }
+    else if constexpr (std::is_empty_v<VolatileConditionType>) {
+      if constexpr (hasMainSource<VolatileConditionType>::value) {
+        simulation.view<set, Tags<typename VolatileConditionType::MainSource>>();
+      }
+      else {
+        simulation.view<set, Tags<VolatileConditionType>>();
+      }
+    }
+  }
+};
+
 void revertTemporaryFormChange(
   types::handle handle, TemporaryFormChangedFrom temporaryFormChangedFrom, const Pokedex& pokedex) {
   changeForFormChange(handle, temporaryFormChangedFrom.val, pokedex);
@@ -8724,6 +8864,10 @@ void clearStatus(types::handle pokemonHandle) {
     dex::Paralysis,
     dex::Poison,
     dex::Sleep>();
+}
+
+void setVolatile(Simulation& simulation) {
+  dex::forEachVolatileCondition<SetVolatileCondition>(simulation);
 }
 
 void clearVolatiles(Simulation& simulation) {
@@ -9177,6 +9321,8 @@ void setCurrentActionMoveTarget(
   }
 }
 
+// TODO(aed3): Take in another parameter for whether this move counts as a fail and only use that parameter if the
+// source has Stomping Tantrum
 void setFailedActionMove(
   types::handle moveHandle, Battle battle, CurrentActionSource source, CurrentActionTarget target) {
   types::registry& registry = *moveHandle.registry();
@@ -9233,6 +9379,7 @@ void clearMoveAction(Simulation& simulation) {
     pokesim::move::tags::Punch,
     pokesim::move::tags::SelfSwitch,
     pokesim::move::tags::Sound,
+    pokesim::move::tags::Stall,
     pokesim::move::tags::VariableHitCount,
     CritStageBoost,
     BaseEffectChance,
@@ -9273,6 +9420,24 @@ void setCurrentEffectFromStack(Simulation& simulation) {
 void clearCurrentBattleEffect(Simulation& simulation) {
   clearEffectComponents(simulation.registry, simulation.registry.view<pokesim::tags::Battle>());
   clearCurrentEffect(simulation);
+}
+
+void setCurrentEffectAsBoost(
+  types::registry& registry, types::entity source, types::entity target, types::entity battle, dex::Stat boostStat,
+  types::boost boost) {
+  registry.emplace<CurrentEffectSource>(battle, source);
+  registry.emplace<CurrentEffectTarget>(battle, target);
+  registry.emplace<CurrentEffectsAsSource>(source).val.push_back(battle);
+  registry.emplace<CurrentEffectAsTarget>(target, battle);
+
+  switch (boostStat) {
+    case dex::Stat::ATK: registry.emplace<AtkBoost>(battle, boost); break;
+    case dex::Stat::DEF: registry.emplace<DefBoost>(battle, boost); break;
+    case dex::Stat::SPA: registry.emplace<SpaBoost>(battle, boost); break;
+    case dex::Stat::SPD: registry.emplace<SpdBoost>(battle, boost); break;
+    case dex::Stat::SPE: registry.emplace<SpeBoost>(battle, boost); break;
+    default:             POKESIM_REQUIRE_FAIL("Using a stat enum that doesn't have boost.");
+  }
 }
 
 void removeFromActiveWithUpdateEvents(types::handle pokemonHandle, Battle battle) {

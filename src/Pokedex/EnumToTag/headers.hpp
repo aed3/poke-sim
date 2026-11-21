@@ -13,3 +13,4 @@
 #include "SpeciesEnumToTag.hpp"
 #include "StatusEnumToTag.hpp"
 #include "TypeEnumToTag.hpp"
+#include "VolatileEnumToTag.hpp"
