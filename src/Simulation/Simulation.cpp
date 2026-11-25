@@ -33,7 +33,7 @@ Simulation::Simulation(Simulation&& other) noexcept : Simulation(other.constants
   simulateTurnOptions = other.simulateTurnOptions;
 }
 
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#ifdef POKESIM_TEST_CHECK_UTILITIES
 const Pokedex& Simulation::pokedex() const {
   POKESIM_REQUIRE(
     Pokedex::isPokedexAttachedToSimulation(&constants.pokedex(), this),

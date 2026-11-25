@@ -66,7 +66,7 @@ class Pokedex {
   } constants;
 
  private:
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#ifdef POKESIM_TEST_CHECK_UTILITIES
   static inline entt::dense_map<const Pokedex*, entt::dense_set<const Simulation*>> attachedSimulations;
   static void attachSimulation(const Pokedex* pokedex, const Simulation* simulation) {
     for (const auto& [existingPokedex, simulations] : attachedSimulations) {

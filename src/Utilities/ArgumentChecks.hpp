@@ -4,7 +4,7 @@
 
 #include <Config/Config.hpp>
 
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#ifdef POKESIM_TEST_CHECK_UTILITIES
 
 #include <Simulation/SimulationOptions.hpp>
 #include <Types/Decisions.hpp>
@@ -40,7 +40,6 @@ struct ActiveWithUpdateEvents;
 struct Battle;
 struct ParentBattle;
 struct RootBattle;
-struct ParentEntity;
 struct CurrentAction;
 struct CurrentActionSource;
 struct CurrentActionTarget;
@@ -342,9 +341,6 @@ void check(const ParentBattle&, const types::registry&);
 
 template <>
 void check(const RootBattle&, const types::registry&);
-
-template <>
-void check(const ParentEntity&, const types::registry&);
 
 template <>
 void check(const CurrentAction&, const types::registry&);

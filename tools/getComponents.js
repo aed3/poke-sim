@@ -141,7 +141,7 @@ const getComponents = (includeTags = true) => {
  * @param {Namespace} declarationsByNamespace
  * @returns {string[]}
  */
-const createForwardDeclaration = (declarationsByNamespace) => {
+const createForwardDeclaration = (declarationsByNamespace, includeDebug = true) => {
   const forwardDeclarations = [];
 
   /**
@@ -150,6 +150,7 @@ const createForwardDeclaration = (declarationsByNamespace) => {
    * @param {string[]} parentNamespaceLines
    */
   const addNamespace = (name, namespace, parentNamespaceLines) => {
+    if (!includeDebug && name === 'debug') return;
     const namespaceLines = [];
 
     const {declarations, subNamespaces} = namespace;

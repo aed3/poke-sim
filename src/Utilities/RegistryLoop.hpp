@@ -135,7 +135,7 @@ struct RegistryLoop<
         list.each([&passedInArgs...](types::entity, auto&&... args) { Function(args..., passedInArgs...); });
       }
 
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#ifdef POKESIM_TEST_CHECK_UTILITIES
       list.each([&registry](types::entity, auto&&... args) {
         (pokesim::debug::check(args, registry), ...);
         (pokesim::debug::check(args), ...);

@@ -80,6 +80,7 @@ struct TestChecks : debug::Checks {
       checkViewForChanges<
         tags::Battle,
         Turn,
+        debug::DebugLog,
         simulate_turn::tags::BattleOutcome,
         simulate_turn::tags::SpeedSortNeeded,
         ParentBattle,
@@ -90,6 +91,7 @@ struct TestChecks : debug::Checks {
       checkViewForChanges<
         tags::Battle,
         Turn,
+        debug::DebugLog,
         simulate_turn::tags::BattleOutcome,
         simulate_turn::tags::SpeedSortNeeded,
         BattleTypesToIgnore...>();

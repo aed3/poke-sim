@@ -2,7 +2,7 @@
 
 #include <Config/Config.hpp>
 
-#ifndef POKESIM_DEBUG_CHECK_UTILITIES
+#ifndef POKESIM_TEST_CHECK_UTILITIES
 #include <entt/core/fwd.hpp>
 #include <memory>
 

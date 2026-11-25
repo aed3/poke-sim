@@ -2,10 +2,11 @@
 
 #include <Config/Config.hpp>
 
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#ifdef POKESIM_TEST_CHECK_UTILITIES
 
 #include <Battle/Helpers/Helpers.hpp>
 #include <Components/ActionQueue.hpp>
+#include <Components/Debug/DebugLog.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/RecycledEntities.hpp>
 #include <Components/EntityHolders/Sides.hpp>
@@ -119,6 +120,7 @@ struct Checks : pokesim::debug::Checks {
   void checkBattleOutputs() const {
     pokesim::debug::TypesToIgnore typesToIgnore, typesIgnoredOnConstants;
     typesToIgnore.add<
+      pokesim::debug::DebugLog,
       simulate_turn::tags::BattleOutcome,
       simulate_turn::tags::SpeedSortNeeded,
       Probability,

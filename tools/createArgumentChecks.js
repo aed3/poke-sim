@@ -60,6 +60,8 @@ const getNewLines = (existingLines, {existingData, startLine, endLine}, ending) 
 
   const allComponentCode = [];
   for (const component of components) {
+    if (component.includes('::debug::')) continue;
+
     const inPokesimNamespaceComponent = noBase(component);
     let componentCode = existingData[inPokesimNamespaceComponent];
     delete existingData[inPokesimNamespaceComponent];
@@ -96,7 +98,7 @@ for (const [component, code] of Object.entries(existingHeaderData.existingData))
 const newHeader = getNewLines(existingHeader, existingHeaderData, ';');
 const newSource = getNewLines(existingSource, existingSourceData, ' {}');
 
-const forward = createForwardDeclaration(declarationsByNamespace);
+const forward = createForwardDeclaration(declarationsByNamespace, false);
 const existingForwardDeclarationStart = newHeader.indexOf('namespace pokesim {');
 const existingForwardDeclarationEnd = newHeader.indexOf('}  // namespace pokesim');
 newHeader.splice(

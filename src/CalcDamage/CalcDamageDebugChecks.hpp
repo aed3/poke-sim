@@ -2,11 +2,12 @@
 
 #include <Config/Config.hpp>
 
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#ifdef POKESIM_TEST_CHECK_UTILITIES
 
 #include <Components/CalcDamage/Aliases.hpp>
 #include <Components/CalcDamage/ModifyingEventRanTags.hpp>
 #include <Components/Damage.hpp>
+#include <Components/Debug/DebugLog.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/BattleTree.hpp>
 #include <Components/EntityHolders/Side.hpp>
@@ -401,7 +402,7 @@ struct Checks : pokesim::debug::Checks {
     for (types::entity battle : simulation->battleEntities()) {
       pokesim::debug::TypesToIgnore typesToIgnore;
       if (has<pokesim::tags::SimulateTurn>(battle)) {
-        typesToIgnore.add<Probability>();
+        typesToIgnore.add<Probability, pokesim::debug::DebugLog>();
         if (simulateTurnOptionsOnInput.getMakeBranchesOnRandomEvents()) {
           typesToIgnore.add<ParentBattle, RootBattle>();
         }

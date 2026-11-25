@@ -1,6 +1,7 @@
 #include "ManageActionQueue.hpp"
 
 #include <Components/ActionQueue.hpp>
+#include <Components/Debug/DebugLog.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/RecycledEntities.hpp>
 #include <Components/Names/ItemNames.hpp>
@@ -77,6 +78,10 @@ void setCurrentAction(types::handle battleHandle, ActionQueue& actionQueue, Recy
       break;
     }
   }
+
+#ifdef POKESIM_TEST_CHECK_UTILITIES
+  battleHandle.get_or_emplace<debug::DebugLog>().val.push_back({nextActon});
+#endif
 
   actionQueue.val.erase(actionQueue.val.begin());
 

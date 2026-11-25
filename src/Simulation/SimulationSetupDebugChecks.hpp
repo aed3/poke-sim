@@ -2,7 +2,7 @@
 
 #include <Config/Config.hpp>
 
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#ifdef POKESIM_TEST_CHECK_UTILITIES
 
 #include <AnalyzeEffect/Setup/AnalyzeEffectInputSetup.hpp>
 #include <Battle/Setup/BattleStateSetup.hpp>

@@ -19,6 +19,7 @@
 #include "CloneFromCloneTo.hpp"
 #include "Current.hpp"
 #include "Damage.hpp"
+#include "Debug/DebugLog.hpp"
 #include "DisabledMoveSlots.hpp"
 #include "EVsIVs.hpp"
 #include "EffectStack.hpp"

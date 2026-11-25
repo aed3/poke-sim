@@ -2,7 +2,7 @@
 
 #include <Config/Config.hpp>
 
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#ifdef POKESIM_TEST_CHECK_UTILITIES
 
 #include <AnalyzeEffect/Helpers.hpp>
 #include <Battle/Helpers/Helpers.hpp>
@@ -904,11 +904,6 @@ void check(const ParentBattle& battle, const types::registry& registry) {
 template <>
 void check(const RootBattle& battle, const types::registry& registry) {
   checkBattle(battle.val, registry);
-}
-
-template <>
-void check(const ParentEntity& parentEntity, const types::registry& registry) {
-  types::registry::checkEntity(parentEntity.val, registry);
 }
 
 template <>

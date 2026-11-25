@@ -10,6 +10,7 @@
 #include <Components/CalcDamage/DamageRollSides.hpp>
 #include <Components/CalcDamage/TemporaryMoveProperties.hpp>
 #include <Components/Damage.hpp>
+#include <Components/Debug/DebugLog.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Side.hpp>
 #include <Components/HitCount.hpp>
@@ -28,6 +29,7 @@
 #include <Components/Tags/SimulationTags.hpp>
 #include <Config/Require.hpp>
 #include <Pokedex/Effects/headers.hpp>
+#include <Pokedex/EnumToTag/MoveEnumToTag.hpp>
 #include <Pokedex/Pokedex.hpp>
 #include <SimulateTurn/CalcDamageSpecifics.hpp>
 #include <Simulation/Formulas.hpp>
@@ -55,7 +57,26 @@ auto getMoveFilter(Simulation& simulation) {
   return pokesim::internal::EntityFilter<pokesim::tags::CurrentMoveHit>{simulation};
 }
 
+#ifdef POKESIM_TEST_CHECK_UTILITIES
+void addDamageToDebugLog(
+  types::handle handle, Battle battle, internal::calc_damage::DamageFormulaVariables damageFormulaVariables,
+  Damage damage, const Simulation& simulation) {
+  pokesim::debug::DebugMoveData moveData{handle.all_of<tags::Crit>(), damage.val, damageFormulaVariables};
+
+  simulation.pokedex().forEachLoadedMove([&moveData, &handle](dex::Move move) {
+    if (dex::hasTag(move, handle)) {
+      moveData.move = move;
+    }
+  });
+  handle.registry()->get_or_emplace<pokesim::debug::DebugLog>(battle.val).val.push_back({moveData});
+}
+#endif  // POKESIM_TEST_CHECK_UTILITIES
+
 void clearRunVariables(Simulation& simulation) {
+#ifdef POKESIM_TEST_CHECK_UTILITIES
+  simulation.view<addDamageToDebugLog, Tags<pokesim::tags::SimulateTurn>>(simulation);
+#endif
+
   simulation.registry.clear<
     tags::Crit,
     internal::calc_damage::DamageRollModifiers,

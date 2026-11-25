@@ -2,7 +2,7 @@
 
 #include "Config.hpp"
 
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#ifdef POKESIM_TEST_CHECK_UTILITIES
 
 #include <cstddef>
 #include <string>

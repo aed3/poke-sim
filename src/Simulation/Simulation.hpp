@@ -53,7 +53,7 @@ class Simulation {
   Simulation(Simulation&& other) noexcept;
   ~Simulation();
 
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#ifdef POKESIM_TEST_CHECK_UTILITIES
   const Pokedex& pokedex() const;
 #else
   constexpr const Pokedex& pokedex() const { return constants.pokedex(); }

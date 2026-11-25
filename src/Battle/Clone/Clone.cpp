@@ -325,10 +325,10 @@ types::ClonedEntityMap clone(types::registry& registry, std::optional<types::ent
     }
   }
 
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#ifdef POKESIM_TEST_CHECK_UTILITIES
   for (const auto& [src, destinations] : entityMap) {
-    registry.remove<ParentEntity>(destinations.begin(), destinations.end());
-    registry.insert<ParentEntity>(destinations.begin(), destinations.end(), {src});
+    registry.remove<debug::ParentEntity>(destinations.begin(), destinations.end());
+    registry.insert<debug::ParentEntity>(destinations.begin(), destinations.end(), {src});
   }
 #endif
 

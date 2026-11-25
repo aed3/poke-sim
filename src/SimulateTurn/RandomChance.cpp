@@ -310,7 +310,7 @@ PercentChanceLimitResult checkPercentChanceLimits(
 template <types::eventPossibilities POSSIBLE_EVENT_COUNT>
 void setRandomEventChances(
   types::handle handle, const Simulation& simulation, std::array<types::percentChance, POSSIBLE_EVENT_COUNT> chances) {
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#ifdef POKESIM_TEST_CHECK_UTILITIES
   if (chances.back() == Constants::PercentChance::MAX) {
     for (types::eventPossibilities i = 1U; i < POSSIBLE_EVENT_COUNT; i++) {
       POKESIM_REQUIRE(

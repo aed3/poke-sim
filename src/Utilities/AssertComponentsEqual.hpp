@@ -2,7 +2,7 @@
 
 #include <Config/Config.hpp>
 
-#ifdef POKESIM_DEBUG_CHECK_UTILITIES
+#ifdef POKESIM_TEST_CHECK_UTILITIES
 
 #include <Config/Require.hpp>
 #include <Types/Entity.hpp>
@@ -13,7 +13,9 @@
 #include <type_traits>
 
 namespace pokesim {
+namespace debug {
 struct ParentEntity;
+}
 namespace types {
 class registry;
 }
