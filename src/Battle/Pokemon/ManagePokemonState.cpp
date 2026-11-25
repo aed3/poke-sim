@@ -453,12 +453,7 @@ void applyDamage(types::handle handle, types::damage damage) {
 }
 
 void applyStatBoost(types::stat& stat, types::boost boost) {
-  if (boost >= 0) {
-    stat = types::stat(stat * Constants::STAT_BOOST_STAGES[boost]);
-  }
-  else {
-    stat = types::stat(stat / Constants::STAT_BOOST_STAGES[-boost]);
-  }
+  stat = computeBoostedStat(stat, boost);
 }
 
 void tryBoost(Simulation& simulation) {

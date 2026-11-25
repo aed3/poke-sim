@@ -427,6 +427,8 @@ void moveHitLoop(Simulation& simulation) {
 }  // namespace
 
 void internal::simulate_turn::runMoveHitChecks(Simulation& simulation) {
+  internal::updateAllStats(simulation);
+
   // invulnerabilityCheck
   runMoveHitCheck<hitCheck>(simulation);
   runMoveHitCheck<typeImmunityCheck>(simulation);

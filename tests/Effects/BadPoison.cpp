@@ -2,7 +2,7 @@
 
 namespace pokesim {
 TEST_CASE(
-  "Bad Poison: Inflict 1/16 of match HP per stage",
+  "Bad Poison: Inflict 1/16 of max HP per stage",
   "[Simulation][SimulateTurn][SingleBattle][Effect][Status][BadPoison]") {
   TestSimulation test{GameMechanics::SCARLET_VIOLET, BattleFormat::SINGLES};
   static constexpr types::badPoisonStages STAGE_LIMIT = Constants::BadPoisonStages::MAX + 1U;

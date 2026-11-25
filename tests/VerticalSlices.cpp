@@ -31,6 +31,7 @@ constexpr std::array<DamageRollKind, 4U> fixedBranchDamageRollOptions = {
   AVERAGE_CRIT_DAMAGE,
   MIN_AND_MAX_DAMAGE,
 };
+
 struct VariableOptions {
  private:
   template <typename T>
@@ -182,7 +183,7 @@ struct VerticalSliceDamageValueInfo {
   DamageRollKind damageRollKind;
 
   bool checkWasCrit;
-  bool willCrit;
+  bool willBeCrit;
   bool willChooseAverageDamage;
   bool willChooseMinOrMaxDamage;
 
@@ -251,6 +252,62 @@ struct VerticalSliceDamageValueInfo {
     return branchProbabilityLowerLimit * MAX_PERCENT_CHANCE < lowerBrachPercentChance;
   }
 
+ public:
+  VerticalSliceDamageValueInfo(DamageRollKind _damageRollKind, const simulate_turn::Options& options)
+      : damageRollKind(_damageRollKind),
+        checkWasCrit(true),
+        willBeCrit(damageRollKind == AVERAGE_CRIT_DAMAGE),
+        willChooseAverageDamage(damageRollKind & AVERAGE_DAMAGE),
+        willChooseMinOrMaxDamage(options.getMakeBranchesOnRandomEvents()),
+
+        lowerLimit(options.getRandomChanceLowerLimit()),
+        upperLimit(options.getRandomChanceUpperLimit()),
+        branchProbabilityLowerLimit(options.getBranchProbabilityLowerLimit()) {
+    checkWasCrit &= chanceWithinSimulationBounds((types::percentChance)(PROBABILITY_TO_CHANCE * CRIT_PROBABILITY));
+    checkWasCrit &= damageRollKind != AVERAGE_CRIT_DAMAGE;
+
+    willChooseMinOrMaxDamage |= chanceWithinSimulationBounds(MAX_PERCENT_CHANCE / 2U);
+    willChooseMinOrMaxDamage &= damageRollKind == MIN_AND_MAX_DAMAGE;
+  }
+
+  VerticalSliceDamageValueInfo(
+    const std::vector<types::damage>& _baseDamage, types::damage _averageRegularDamage,
+    const std::vector<types::damage>& _critDamage, types::damage _averageCritDamage, types::stat _startingHp,
+    DamageRollKind _damageRollKind, const simulate_turn::Options& options)
+      : VerticalSliceDamageValueInfo(_damageRollKind, options) {
+    baseDamage = _baseDamage;
+    critDamage = _critDamage;
+    averageBaseDamage = _averageRegularDamage;
+    averageCritDamage = _averageCritDamage;
+    startingHp = _startingHp;
+  }
+
+  std::vector<types::damage> uniqueDamageValues() const {
+    std::vector<types::damage> uniqueBaseDamage = uniqueRolls(baseDamage, averageBaseDamage);
+    std::vector<types::damage> uniqueCritDamage = uniqueRolls(critDamage, averageCritDamage);
+    if (willBeCrit) {
+      return uniqueCritDamage;
+    }
+    if (checkWasCrit) {
+      uniqueBaseDamage.insert(uniqueBaseDamage.begin(), uniqueCritDamage.begin(), uniqueCritDamage.end());
+    }
+    return uniqueBaseDamage;
+  }
+
+  entt::dense_set<types::stat> possibleHpValues() const {
+    entt::dense_set<types::stat> hpValues;
+
+    for (types::damage damage : uniqueDamageValues()) {
+      hpValues.insert(damage + MIN_HP > startingHp ? MIN_HP : startingHp - damage);
+    }
+    if (hpValues.empty()) {
+      hpValues.insert(startingHp);
+    }
+    return hpValues;
+  }
+
+  std::size_t uniqueDamageCount() const { return uniqueDamageValues().size(); }
+
   types::probability getProbability(types::stat afterTurnHp) const {
     types::damage damage = startingHp - afterTurnHp;
     types::probability critDamageRollInstances =
@@ -286,93 +343,8 @@ struct VerticalSliceDamageValueInfo {
     return probability;
   }
 
- public:
-  VerticalSliceDamageValueInfo(DamageRollKind _damageRollKind, const simulate_turn::Options& options)
-      : damageRollKind(_damageRollKind),
-        checkWasCrit(true),
-        willCrit(damageRollKind == AVERAGE_CRIT_DAMAGE),
-        willChooseAverageDamage(damageRollKind & AVERAGE_DAMAGE),
-        willChooseMinOrMaxDamage(options.getMakeBranchesOnRandomEvents()),
-
-        lowerLimit(options.getRandomChanceLowerLimit()),
-        upperLimit(options.getRandomChanceUpperLimit()),
-        branchProbabilityLowerLimit(options.getBranchProbabilityLowerLimit()) {
-    checkWasCrit &= chanceWithinSimulationBounds((types::percentChance)(PROBABILITY_TO_CHANCE * CRIT_PROBABILITY));
-    checkWasCrit &= damageRollKind != AVERAGE_CRIT_DAMAGE;
-
-    willChooseMinOrMaxDamage |= chanceWithinSimulationBounds(MAX_PERCENT_CHANCE / 2U);
-    willChooseMinOrMaxDamage &= damageRollKind == MIN_AND_MAX_DAMAGE;
-  }
-
-  VerticalSliceDamageValueInfo(
-    const std::vector<types::damage>& _baseDamage, types::damage _averageRegularDamage,
-    const std::vector<types::damage>& _critDamage, types::damage _averageCritDamage, types::stat _startingHp,
-    DamageRollKind _damageRollKind, const simulate_turn::Options& options)
-      : VerticalSliceDamageValueInfo(_damageRollKind, options) {
-    baseDamage = _baseDamage;
-    critDamage = _critDamage;
-    averageBaseDamage = _averageRegularDamage;
-    averageCritDamage = _averageCritDamage;
-    startingHp = _startingHp;
-  }
-
-  entt::dense_set<types::stat> possibleHpValues() const {
-    entt::dense_set<types::stat> hpValues;
-    if (averageCritDamage == Constants::Damage::IMMUNE) {
-      hpValues.insert(startingHp);
-      return hpValues;
-    }
-
-    auto addDamageValues = [&](const std::vector<types::damage>& damages) {
-      for (types::damage damage : damages) {
-        hpValues.insert(damage + MIN_HP > startingHp ? MIN_HP : startingHp - damage);
-      }
-    };
-
-    if (damageRollKind == ALL_DAMAGE) {
-      if (checkWasCrit) {
-        addDamageValues(critDamage);
-      }
-      addDamageValues(baseDamage);
-    }
-    else if (damageRollKind == AVERAGE_DAMAGE) {
-      if (checkWasCrit) {
-        addDamageValues({averageCritDamage});
-      }
-      addDamageValues({averageBaseDamage});
-    }
-    else if (damageRollKind == AVERAGE_CRIT_DAMAGE) {
-      addDamageValues({averageCritDamage});
-    }
-    else if (damageRollKind == MIN_AND_MAX_DAMAGE) {
-      if (checkWasCrit) {
-        addDamageValues({critDamage.front(), critDamage.back()});
-      }
-      addDamageValues({baseDamage.front(), baseDamage.back()});
-    }
-    else {
-      FAIL();
-    }
-
-    return hpValues;
-  }
-
-  std::vector<types::damage> uniqueDamage() const {
-    std::vector<types::damage> uniqueBaseDamage = uniqueRolls(baseDamage, averageBaseDamage);
-    std::vector<types::damage> uniqueCritDamage = uniqueRolls(critDamage, averageCritDamage);
-    if (willCrit) {
-      return uniqueCritDamage;
-    }
-    if (checkWasCrit) {
-      uniqueBaseDamage.insert(uniqueBaseDamage.begin(), uniqueCritDamage.begin(), uniqueCritDamage.end());
-    }
-    return uniqueBaseDamage;
-  }
-
-  std::size_t uniqueDamageCount() const { return uniqueDamage().size(); }
-
   bool randomlyCrits() const { return checkWasCrit; }
-  bool guaranteedCrit() const { return willCrit; }
+  bool guaranteedCrit() const { return willBeCrit; }
   bool critPossible() const { return randomlyCrits() || guaranteedCrit(); }
 };
 }  // namespace
@@ -581,7 +553,7 @@ TEST_CASE(
     }
 
     std::size_t possibilities() const {
-      if (willCrit) {
+      if (willBeCrit) {
         return checkMoveMissed ? 2U : 1U;
       }
 
@@ -961,7 +933,7 @@ TEST_CASE(
         if (magnezoneDirectSwitch) {
           baseDamage = critDamage = {};
           averageBaseDamage = averageCritDamage = 0U;
-          willCrit = checkWasCrit = false;
+          willBeCrit = checkWasCrit = false;
           willChooseAverageDamage = true;
           willChooseMinOrMaxDamage = false;
         }
@@ -989,7 +961,7 @@ TEST_CASE(
               {128U, 124U, 123U, 121U, 120U, 118U, 117U, 117U, 115U, 114U, 112U, 111U, 109U, 109U, 108U, 106U};  // 14
             averageCritDamage = 116U;
 
-            checkIfFlinched = !willCrit && chanceWithinSimulationBounds(TRIPLE_ARROWS_FLINCH_CHANCE);
+            checkIfFlinched = !willBeCrit && chanceWithinSimulationBounds(TRIPLE_ARROWS_FLINCH_CHANCE);
           }
           else {
             baseDamage =
@@ -1008,7 +980,7 @@ TEST_CASE(
               {180U, 176U, 174U, 174U, 170U, 170U, 168U, 164U, 164U, 162U, 162U, 158U, 156U, 156U, 152U, 152U};  // 10
             averageCritDamage = 166U;
 
-            checkIfFlinched = !willCrit && chanceWithinSimulationBounds(TRIPLE_ARROWS_FLINCH_CHANCE);
+            checkIfFlinched = !willBeCrit && chanceWithinSimulationBounds(TRIPLE_ARROWS_FLINCH_CHANCE);
           }
           else {
             baseDamage = {27U, 25U, 25U, 25U, 25U, 25U, 24U, 24U, 24U, 24U, 24U, 24U, 22U, 22U, 22U, 22U};  // 4
@@ -1024,7 +996,7 @@ TEST_CASE(
           checkWasCrit = chanceWithinSimulationBounds(
                            (types::percentChance)(PROBABILITY_TO_CHANCE * TRIPLE_ARROWS_CRIT_PROBABILITY)) &&
                          damageRollKind != AVERAGE_CRIT_DAMAGE;
-          checkDefDrop = !willCrit && chanceWithinSimulationBounds(TRIPLE_ARROWS_DEF_DROP_CHANCE);
+          checkDefDrop = !willBeCrit && chanceWithinSimulationBounds(TRIPLE_ARROWS_DEF_DROP_CHANCE);
         }
       }
     }
@@ -1042,7 +1014,7 @@ TEST_CASE(
 
       std::size_t p2KoPossibilities = 0U;
       std::size_t p2OkPossibilities = 0U;
-      for (types::damage damage : p2Info.uniqueDamage()) {
+      for (types::damage damage : p2Info.uniqueDamageValues()) {
         if (damage >= p2Info.startingHp) {
           p2KoPossibilities++;
         }
@@ -1303,6 +1275,490 @@ TEST_CASE(
   if (options.getMakeBranchesOnRandomEvents()) {
     REQUIRE(foundP1Hp.size() == expectedP1Hp.size());
     REQUIRE(foundP2Hp.size() == expectedP2Hp.size());
+  }
+}
+
+TEST_CASE(
+  "Simulate Turn: Vertical Slice 2, Double Battle", "[Simulation][SimulateTurn][VerticalSlice2][DoubleBattle]") {
+  static constexpr auto FLASH_CANNON_SPD_DROP_CHANCE = dex::FlashCannon::targetSecondaryEffect::chance(TestMechanic);
+  static constexpr auto QUICK_CLAW_ACTIVATE_CHANCE = dex::QuickClaw::onFractionalPriorityChance(TestMechanic);
+  static constexpr auto FLASH_CANNON_SPD_DROP = dex::FlashCannon::targetSecondaryEffect::spdBoost(TestMechanic);
+  static constexpr auto DEFIANT_ATK_BOOST = dex::Defiant::onAfterEachBoostAtkBoost(TestMechanic);
+  static constexpr auto REFLECT_MAX_DURATION = dex::Reflect::Effect::duration(TestMechanic);
+
+  static constexpr types::stat BRAVIARY_MAX_HP = 310U;
+  static constexpr types::stat CLAYDOL_MAX_HP = 230U;
+  static constexpr types::stat AEGISLASH_MAX_HP = 230U;
+  static constexpr types::stat GRIMMSNARL_MAX_HP = 300U;
+
+  static constexpr types::damage BRAVIARY_MAX_DAMAGE_TAKEN_40BP_REVERSAL = 200U;
+  static constexpr types::damage BRAVIARY_MAX_DAMAGE_TAKEN_80BP_REVERSAL = 245U;
+  static constexpr types::damage BRAVIARY_MAX_DAMAGE_TAKEN_100BP_REVERSAL = 277U;
+
+  static constexpr types::stat BLADE_AEGISLASH_OFFENSES = 285U;
+  static constexpr types::stat BLADE_AEGISLASH_DEFENSES = 105U;
+
+  struct DamageValueInfo : VerticalSliceDamageValueInfo {
+   private:
+    bool checkQuickClawActivate;
+    bool checkMoveDroppedSpd;
+
+   public:
+    DamageValueInfo(
+      const PokemonCreationInfo& info, const std::vector<types::damage>& _baseDamage,
+      types::damage _averageRegularDamage, const std::vector<types::damage>& _critDamage,
+      types::damage _averageCritDamage, types::stat _startingHp, DamageRollKind _damageRollKind,
+      const simulate_turn::Options& options)
+        : VerticalSliceDamageValueInfo(
+            _baseDamage, _averageRegularDamage, _critDamage, _averageCritDamage, _startingHp, _damageRollKind, options),
+          checkQuickClawActivate(true),
+          checkMoveDroppedSpd(info.species == dex::Species::BRAVIARY) {
+      checkQuickClawActivate &= chanceWithinSimulationBounds(QUICK_CLAW_ACTIVATE_CHANCE);
+      checkMoveDroppedSpd &= chanceWithinSimulationBounds(FLASH_CANNON_SPD_DROP_CHANCE);
+    }
+
+    struct ReversalDamages {
+     private:
+      struct Input {
+        std::vector<types::damage> baseDamage;
+        types::damage averageRegularDamage;
+        std::vector<types::damage> critDamage;
+        types::damage averageCritDamage;
+
+        VerticalSliceDamageValueInfo toDamageValueInfo(
+          DamageRollKind damageRollKind, const simulate_turn::Options& options) const {
+          return {
+            baseDamage,
+            averageRegularDamage,
+            critDamage,
+            averageCritDamage,
+            GRIMMSNARL_MAX_HP,
+            damageRollKind,
+            options};
+        }
+      };
+
+      std::array<VerticalSliceDamageValueInfo, 9U> damageLevels;
+
+     public:
+      ReversalDamages(
+        DamageRollKind damageRollKind, const simulate_turn::Options& options, const std::array<Input, 9U>& inputs)
+          : damageLevels({
+              inputs[0].toDamageValueInfo(damageRollKind, options),
+              inputs[1].toDamageValueInfo(damageRollKind, options),
+              inputs[2].toDamageValueInfo(damageRollKind, options),
+              inputs[3].toDamageValueInfo(damageRollKind, options),
+              inputs[4].toDamageValueInfo(damageRollKind, options),
+              inputs[5].toDamageValueInfo(damageRollKind, options),
+              inputs[6].toDamageValueInfo(damageRollKind, options),
+              inputs[7].toDamageValueInfo(damageRollKind, options),
+              inputs[8].toDamageValueInfo(damageRollKind, options),
+            }) {}
+
+      const VerticalSliceDamageValueInfo& bp20() const { return damageLevels[0]; }
+      const VerticalSliceDamageValueInfo& bp40() const { return damageLevels[1]; }
+      const VerticalSliceDamageValueInfo& bp40AtkPlus2() const { return damageLevels[2]; }
+      const VerticalSliceDamageValueInfo& bp80() const { return damageLevels[3]; }
+      const VerticalSliceDamageValueInfo& bp80AtkPlus2() const { return damageLevels[4]; }
+      const VerticalSliceDamageValueInfo& bp100() const { return damageLevels[5]; }
+      const VerticalSliceDamageValueInfo& bp100AtkPlus2() const { return damageLevels[6]; }
+      const VerticalSliceDamageValueInfo& bp150() const { return damageLevels[7]; }
+      const VerticalSliceDamageValueInfo& bp150AtkPlus2() const { return damageLevels[8]; }
+
+      std::vector<types::damage> uniqueDamageValues(
+        const DamageValueInfo& attacker, bool includeAttackerNotDamaged) const {
+        std::vector<types::damage> damages;
+        auto add = [&damages](const VerticalSliceDamageValueInfo& info) {
+          auto resultingDamage = info.uniqueDamageValues();
+          damages.insert(damages.end(), resultingDamage.begin(), resultingDamage.end());
+        };
+
+        if (attacker.checkMoveDroppedSpd) {
+          for (types::damage damage : attacker.uniqueDamageValues()) {
+            if (damage <= BRAVIARY_MAX_DAMAGE_TAKEN_40BP_REVERSAL) {
+              add(bp40AtkPlus2());
+            }
+            else if (damage <= BRAVIARY_MAX_DAMAGE_TAKEN_80BP_REVERSAL) {
+              add(bp80AtkPlus2());
+            }
+            else if (damage <= BRAVIARY_MAX_DAMAGE_TAKEN_100BP_REVERSAL) {
+              add(bp100AtkPlus2());
+            }
+            else {
+              add(bp150AtkPlus2());
+            }
+          }
+        }
+
+        if (attacker.checkQuickClawActivate) {
+          for (types::damage damage : attacker.uniqueDamageValues()) {
+            if (damage <= BRAVIARY_MAX_DAMAGE_TAKEN_40BP_REVERSAL) {
+              add(bp40());
+            }
+            else if (damage <= BRAVIARY_MAX_DAMAGE_TAKEN_80BP_REVERSAL) {
+              add(bp80());
+            }
+            else if (damage <= BRAVIARY_MAX_DAMAGE_TAKEN_100BP_REVERSAL) {
+              add(bp100());
+            }
+            else {
+              add(bp150());
+            }
+          }
+        }
+
+        if (includeAttackerNotDamaged) {
+          add(bp20());
+        }
+
+        return damages;
+      }
+
+      entt::dense_set<types::stat> possibleHpValues(const DamageValueInfo& attacker) const {
+        entt::dense_set<types::stat> uniqueHp;
+        for (types::damage damage : uniqueDamageValues(attacker, true)) {
+          uniqueHp.insert(damage + MIN_HP > GRIMMSNARL_MAX_HP ? MIN_HP : GRIMMSNARL_MAX_HP - damage);
+        }
+        return uniqueHp;
+      }
+    };
+
+    static std::size_t possibilities(
+      const DamageValueInfo& braviary, const DamageValueInfo& aegislash, const ReversalDamages& grimmsnarl) {
+      std::size_t quickClawActivatesCount = 0U;
+      std::size_t quickClawDoesNotActivateCount = 0U;
+
+      quickClawActivatesCount = grimmsnarl.uniqueDamageValues(braviary, false).size();
+
+      quickClawDoesNotActivateCount = grimmsnarl.bp20().uniqueDamageCount();
+      quickClawDoesNotActivateCount *= braviary.uniqueDamageCount();
+      if (braviary.checkMoveDroppedSpd) {
+        quickClawDoesNotActivateCount *= 2U;
+      }
+
+      std::size_t count = quickClawActivatesCount + quickClawDoesNotActivateCount;
+      return count;
+    }
+
+    bool quickClawMightActivate() const { return checkQuickClawActivate; }
+    bool moveMightDropSpd() const { return checkMoveDroppedSpd; }
+  };
+
+  TestSimulation test{TestMechanic, BattleFormat::DOUBLES};
+  auto variableOptions = setOptions(test);
+  auto numberOfSamples = variableOptions.numberOfSamples;
+  auto& options = test.simulateTurnOptions();
+  INFO(variableOptions.values());
+
+  auto braviaryInfo = test.pokemon(
+    dex::Species::BRAVIARY,
+    dex::Ability::DEFIANT,
+    dex::Gender::MALE,
+    dex::Item::METRONOME,
+    dex::MetronomeItem::Effect{2U, dex::Move::REVERSAL},
+    dex::Move::REVERSAL);
+  auto aegislashInfo = test.pokemon(
+    dex::Species::AEGISLASH,
+    dex::Ability::STANCE_CHANGE,
+    dex::Gender::FEMALE,
+    dex::Item::QUICK_CLAW,
+    dex::Move::FLASH_CANNON);
+  auto claydolInfo = test.pokemon(
+    dex::Species::CLAYDOL,
+    dex::Ability::LEVITATE,
+    dex::Item::LUM_BERRY,
+    dex::Status::TOX,
+    dex::BadPoison::Effect{3U},
+    dex::Move::ALLY_SWITCH);
+  auto grimmsnarlInfo = test.pokemon(
+    dex::Species::GRIMMSNARL,
+    dex::Ability::PRANKSTER,
+    dex::Gender::MALE,
+    dex::Item::MIRROR_HERB,
+    dex::Move::REFLECT);
+
+  for (types::entityIndex i = 0U; i < numberOfSamples.value_or(1U); i++) {
+    test.setupBattle(
+      Turn{6U},
+      test.side(braviaryInfo, claydolInfo),
+      test.side(aegislashInfo, grimmsnarlInfo),
+      test.turnDecision(
+        MoveDecision{Slot::P1A, Slot::P2B, dex::Move::REVERSAL},
+        MoveDecision{Slot::P1B, Slot::P1B, dex::Move::ALLY_SWITCH},
+        MoveDecision{Slot::P2A, Slot::P1B, dex::Move::FLASH_CANNON},
+        MoveDecision{Slot::P2B, Slot::P2B, dex::Move::REFLECT}));
+  }
+
+  auto damageRollOptions = options.getDamageRollsConsidered();
+  DamageValueInfo braviaryDamageInfo{
+    braviaryInfo,
+    {187U, 184U, 183U, 181U, 180U, 177U, 175U, 174U, 172U, 169U, 168U, 166U, 165U, 162U, 160U, 159U},
+    172U,
+    {280U, 277U, 274U, 271U, 268U, 265U, 262U, 259U, 258U, 255U, 252U, 249U, 246U, 243U, 240U, 237U},
+    259U,
+    BRAVIARY_MAX_HP,
+    damageRollOptions.getP1(),
+    options,
+  };
+  DamageValueInfo
+    aegislashDamageInfo{aegislashInfo, {}, 0U, {}, 0U, AEGISLASH_MAX_HP, damageRollOptions.getP2(), options};
+  DamageValueInfo::ReversalDamages grimmsnarlDamageInfo{
+    damageRollOptions.getP2(),
+    options,
+    {{
+      {
+        {35U, 34U, 34U, 34U, 33U, 33U, 33U, 32U, 32U, 32U, 31U, 31U, 31U, 30U, 30U, 30U},
+        32U,
+        {78U, 77U, 77U, 75U, 75U, 74U, 74U, 72U, 72U, 70U, 70U, 69U, 69U, 67U, 67U, 66U},
+        72U,
+      },
+      {
+        {68U, 67U, 66U, 66U, 65U, 64U, 64U, 63U, 62U, 62U, 61U, 60U, 60U, 59U, 59U, 58U},
+        62U,
+        {154U, 152U, 150U, 149U, 147U, 146U, 144U, 142U, 141U, 139U, 138U, 136U, 134U, 133U, 131U, 130U},
+        142U,
+      },
+      {
+        {134U, 132U, 131U, 130U, 128U, 127U, 126U, 125U, 123U, 122U, 121U, 120U, 117U, 116U, 115U, 114U},
+        123U,
+        {302U, 299U, 296U, 293U, 290U, 286U, 283U, 280U, 277U, 274U, 272U, 269U, 266U, 262U, 259U, 256U},
+        279U,
+      },
+      {
+        {134U, 132U, 131U, 130U, 128U, 127U, 126U, 125U, 123U, 122U, 121U, 120U, 117U, 116U, 115U, 114U},
+        123U,
+        {302U, 299U, 296U, 293U, 290U, 286U, 283U, 280U, 277U, 274U, 272U, 269U, 266U, 262U, 259U, 256U},
+        279U,
+      },
+      {
+        {268U, 265U, 261U, 259U, 256U, 254U, 251U, 249U, 245U, 243U, 240U, 238U, 235U, 233U, 229U, 227U},
+        247U,
+        {602U, 595U, 589U, 582U, 576U, 571U, 565U, 558U, 552U, 547U, 541U, 534U, 528U, 523U, 517U, 510U},
+        556U,
+      },
+      {
+        {169U, 166U, 164U, 163U, 161U, 160U, 158U, 156U, 155U, 153U, 152U, 149U, 148U, 146U, 144U, 143U},
+        156U,
+        {379U, 374U, 371U, 366U, 363U, 360U, 355U, 352U, 349U, 344U, 341U, 336U, 333U, 330U, 325U, 322U},
+        350U,
+      },
+      {
+        {335U, 331U, 328U, 324U, 321U, 318U, 315U, 312U, 307U, 304U, 301U, 298U, 295U, 291U, 288U, 284U},
+        309U,
+        {754U, 746U, 738U, 730U, 723U, 715U, 707U, 701U, 693U, 685U, 677U, 670U, 662U, 654U, 648U, 640U},
+        697U,
+      },
+      {
+        {252U, 249U, 247U, 243U, 241U, 239U, 236U, 234U, 232U, 228U, 226U, 224U, 221U, 219U, 216U, 213U},
+        233U,
+        {566U, 560U, 554U, 549U, 542U, 538U, 531U, 526U, 520U, 515U, 509U, 504U, 498U, 491U, 486U, 480U},
+        523U,
+      },
+      {
+        {502U, 496U, 491U, 486U, 481U, 476U, 471U, 466U, 461U, 456U, 451U, 446U, 441U, 435U, 431U, 426U},
+        464U,
+        {1128U, 1115U, 1104U, 1093U, 1082U, 1070U, 1059U, 1048U, 1037U, 1026U, 1014U, 1003U, 992U, 981U, 970U, 958U},
+        1043U,
+      },
+    }},
+  };
+
+  std::size_t idealTurnOutcomeCount = 0U;
+  std::size_t totalPossibilities =
+    DamageValueInfo::possibilities(braviaryDamageInfo, aegislashDamageInfo, grimmsnarlDamageInfo);
+
+  if (options.getMakeBranchesOnRandomEvents()) {
+    idealTurnOutcomeCount = totalPossibilities;
+  }
+  else {
+    idealTurnOutcomeCount = numberOfSamples.value();
+  }
+
+  auto expectedBraviaryHp = braviaryDamageInfo.possibleHpValues();
+  auto expectedGrimmsnarlHp = grimmsnarlDamageInfo.possibleHpValues(braviaryDamageInfo);
+  CAPTURE(idealTurnOutcomeCount, totalPossibilities, expectedBraviaryHp, expectedGrimmsnarlHp);
+
+  auto allTurnOutcomes = runAndCheckSimulation(
+    test,
+    idealTurnOutcomeCount,
+    totalPossibilities,
+    Tags<ActiveWithUpdateEvents>{},
+    Tags<dex::Reflect::Effect, Team>{});
+
+  entt::dense_set<types::stat> foundBraviaryHp;
+  entt::dense_set<types::stat> foundAegislashHp;
+  entt::dense_set<types::stat> foundGrimmsnarlHp;
+  entt::dense_map<types::probability, entt::dense_set<types::probability>> foundUncertainProbabilities;
+  types::probability startingProbability = MAX_PROBABILITY;
+  types::probability sumOfProbability = 0.0F;
+
+  const types::registry& registry = test.registry();
+  for (types::entity battle : allTurnOutcomes) {
+    auto entities = test.getBattleEntities(battle);
+    types::entity braviary = entities.p1B;
+    types::entity claydol = entities.p1A;
+    types::entity aegislash = entities.p2A;
+    types::entity grimmsnarl = entities.p2B;
+
+    bool braviarySpdDropped = registry.all_of<SpdBoost>(braviary);
+
+    const auto& [turn, probability] = registry.get<Turn, Probability>(battle);
+    const auto& [initialBraviaryHp, currentBraviaryHp] = test.checks.getInitialAndCurrent<stat::CurrentHp>(braviary);
+    const auto& [initialClaydolHp, currentClaydolHp] = test.checks.getInitialAndCurrent<stat::CurrentHp>(claydol);
+    const auto& [initialAegislashHp, currentAegislashHp] = test.checks.getInitialAndCurrent<stat::CurrentHp>(aegislash);
+    const auto& [initialGrimmsnarlHp, currentGrimmsnarlHp] =
+      test.checks.getInitialAndCurrent<stat::CurrentHp>(grimmsnarl);
+
+    CAPTURE(
+      currentBraviaryHp.val,
+      currentClaydolHp.val,
+      currentAegislashHp.val,
+      currentGrimmsnarlHp.val,
+      braviarySpdDropped,
+      probability.val);
+
+    REQUIRE(initialBraviaryHp.val == BRAVIARY_MAX_HP);
+    REQUIRE(initialClaydolHp.val == CLAYDOL_MAX_HP);
+    REQUIRE(initialAegislashHp.val == AEGISLASH_MAX_HP);
+    REQUIRE(initialGrimmsnarlHp.val == GRIMMSNARL_MAX_HP);
+
+    REQUIRE(turn.val == 7U);
+    REQUIRE(registry.get<TeamRemaining>(entities.p1Side).val == 2U);
+
+    types::probability idealProbability = startingProbability;
+    if (totalPossibilities == 1U) {
+      REQUIRE_THAT(probability.val, Catch::Matchers::WithinRel(idealProbability));
+    }
+
+    sumOfProbability += probability.val;
+
+    // Braviary Checks
+    if (braviarySpdDropped) {
+      test.checks.checkUsedMovePokemon<
+        stat::CurrentHp,
+        dex::MetronomeItem::Effect,
+        SpdBoost,
+        AtkBoost,
+        stat::EffectiveSpd,
+        stat::EffectiveAtk>(braviary);
+      const auto& [spdBoost, atkBoost] = registry.get<SpdBoost, AtkBoost>(braviary);
+      const auto& [initialSpd, currentSpd] = test.checks.getInitialAndCurrent<stat::EffectiveSpd>(braviary);
+      const auto& [initialAtk, currentAtk] = test.checks.getInitialAndCurrent<stat::EffectiveAtk>(braviary);
+
+      REQUIRE(spdBoost.val == FLASH_CANNON_SPD_DROP);
+      REQUIRE(currentSpd.val == (types::stat)(initialSpd.val / STAT_BOOST_STAGES[-FLASH_CANNON_SPD_DROP]));
+      REQUIRE(atkBoost.val == DEFIANT_ATK_BOOST);
+      REQUIRE(currentAtk.val == (types::stat)(initialAtk.val * STAT_BOOST_STAGES[DEFIANT_ATK_BOOST]));
+    }
+    else {
+      test.checks.checkUsedMovePokemon<stat::CurrentHp, dex::MetronomeItem::Effect>(braviary);
+    }
+
+    REQUIRE(registry.get<dex::MetronomeItem::Effect>(braviary).successiveHits == 3U);
+    REQUIRE(registry.get<dex::MetronomeItem::Effect>(braviary).lastMove == dex::Move::REVERSAL);
+    REQUIRE(expectedBraviaryHp.contains(currentBraviaryHp.val));
+    foundBraviaryHp.insert(currentBraviaryHp.val);
+
+    // Claydol Checks
+    test.checks.checkUsedMovePokemon<
+      dex::AllySwitch::Effect,
+      tags::HasItem,
+      dex::LumBerry,
+      item::tags::Berry,
+      tags::HasStatus,
+      dex::BadPoison,
+      dex::BadPoison::Effect>(claydol);
+    REQUIRE_FALSE(registry.all_of<tags::HasItem>(claydol));
+    REQUIRE_FALSE(registry.all_of<dex::LumBerry>(claydol));
+    REQUIRE_FALSE(registry.all_of<item::tags::Berry>(claydol));
+    REQUIRE_FALSE(registry.all_of<tags::HasStatus>(claydol));
+    REQUIRE_FALSE(registry.all_of<dex::BadPoison>(claydol));
+    REQUIRE_FALSE(registry.all_of<dex::BadPoison::Effect>(claydol));
+
+    REQUIRE(registry.get<dex::AllySwitch::Effect>(claydol).uses == 1U);
+    REQUIRE(registry.get<dex::AllySwitch::Effect>(claydol).turnsRemaining == 1U);
+
+    auto [initialP1Team, currentP1Team] = test.checks.getInitialAndCurrent<Team>(entities.p1Side);
+    REQUIRE(test.checks.getInitialEntity(initialP1Team.val[0]) == test.checks.getInitialEntity(currentP1Team.val[1]));
+    REQUIRE(test.checks.getInitialEntity(initialP1Team.val[1]) == test.checks.getInitialEntity(currentP1Team.val[0]));
+
+    // Aegislash Checks
+    test.checks.checkUsedMovePokemon<
+      SpeciesName,
+      TemporaryFormChangedFrom,
+      stat::Atk,
+      stat::Def,
+      stat::Spa,
+      stat::Spd,
+      stat::EffectiveAtk,
+      stat::EffectiveDef,
+      stat::EffectiveSpa,
+      stat::EffectiveSpd>(aegislash);
+    REQUIRE(registry.get<SpeciesName>(aegislash).val == dex::Species::BLADE_AEGISLASH);
+    REQUIRE(registry.get<TemporaryFormChangedFrom>(aegislash).val == dex::Species::SHIELD_AEGISLASH);
+    auto [p2aAtk, p2ADef, p2aSpa, p2ASpd, p2AEffectiveAtk, p2AEffectiveDef, p2AEffectiveSpa, p2AEffectiveSpd] =
+      test.registry()
+        .get<
+          stat::Atk,
+          stat::Def,
+          stat::Spa,
+          stat::Spd,
+          stat::EffectiveAtk,
+          stat::EffectiveDef,
+          stat::EffectiveSpa,
+          stat::EffectiveSpd>(aegislash);
+
+    REQUIRE(p2aAtk.val == BLADE_AEGISLASH_OFFENSES);
+    REQUIRE(p2aSpa.val == BLADE_AEGISLASH_OFFENSES);
+    REQUIRE(p2AEffectiveAtk.val == BLADE_AEGISLASH_OFFENSES);
+    REQUIRE(p2AEffectiveSpa.val == BLADE_AEGISLASH_OFFENSES);
+    REQUIRE(p2ADef.val == BLADE_AEGISLASH_DEFENSES);
+    REQUIRE(p2ASpd.val == BLADE_AEGISLASH_DEFENSES);
+    REQUIRE(p2AEffectiveDef.val == BLADE_AEGISLASH_DEFENSES);
+    REQUIRE(p2AEffectiveSpd.val == BLADE_AEGISLASH_DEFENSES);
+
+    // Grimmsnarl Checks
+    debug::TypesToIgnore grimmsnarlTypesToIgnore;
+    grimmsnarlTypesToIgnore.add<stat::CurrentHp>();
+    if (braviarySpdDropped) {
+      grimmsnarlTypesToIgnore.add<tags::HasItem, dex::MirrorHerb, stat::EffectiveAtk>();
+      REQUIRE_FALSE(registry.all_of<tags::HasItem>(grimmsnarl));
+      REQUIRE_FALSE(registry.all_of<dex::MirrorHerb>(grimmsnarl));
+    }
+
+    if (currentGrimmsnarlHp.val == MIN_HP) {
+      grimmsnarlTypesToIgnore.add<tags::Fainted, tags::ActivePokemon, MoveSlots>();
+      REQUIRE(registry.all_of<tags::Fainted>(grimmsnarl));
+      REQUIRE_FALSE(registry.all_of<tags::ActivePokemon>(grimmsnarl));
+
+      test.checks.checkMovePpUsage(grimmsnarl);
+      test.checks.checkEntityForChanges(grimmsnarl, grimmsnarlTypesToIgnore);
+      REQUIRE(registry.get<TeamRemaining>(entities.p2Side).val == 1U);
+    }
+    else {
+      REQUIRE(registry.get<TeamRemaining>(entities.p2Side).val == 2U);
+      if (braviarySpdDropped) {
+        grimmsnarlTypesToIgnore.add<AtkBoost>();
+
+        AtkBoost atkBoost = registry.get<AtkBoost>(grimmsnarl);
+        const auto& [initialAtk, currentAtk] = test.checks.getInitialAndCurrent<stat::EffectiveAtk>(grimmsnarl);
+        REQUIRE(atkBoost.val == DEFIANT_ATK_BOOST);
+        REQUIRE(currentAtk.val == (types::stat)(initialAtk.val * STAT_BOOST_STAGES[DEFIANT_ATK_BOOST]));
+      }
+      test.checks.checkUsedMovePokemon(grimmsnarl, grimmsnarlTypesToIgnore);
+    }
+
+    REQUIRE(registry.all_of<dex::Reflect::Effect>(entities.p2Side));
+    REQUIRE(registry.get<dex::Reflect::Effect>(entities.p2Side).val == REFLECT_MAX_DURATION - 1U);
+
+    REQUIRE(expectedGrimmsnarlHp.contains(currentGrimmsnarlHp.val));
+    foundGrimmsnarlHp.insert(currentGrimmsnarlHp.val);
+  }
+
+  if (options.getMakeBranchesOnRandomEvents()) {
+    REQUIRE_THAT(sumOfProbability, Catch::Matchers::WithinRel(startingProbability));
+    REQUIRE(foundBraviaryHp.size() == expectedBraviaryHp.size());
+    REQUIRE(foundGrimmsnarlHp.size() == expectedGrimmsnarlHp.size());
   }
 }
 }  // namespace pokesim

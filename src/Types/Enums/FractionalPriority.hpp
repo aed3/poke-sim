@@ -4,7 +4,6 @@
 #include <cstdint>
 
 namespace pokesim {
-// Denotes if the simulated battle is a single or double battle
 enum class FractionalPriority : std::int8_t {
   NONE = 0,
   PLUS = 1,

@@ -4,6 +4,7 @@
 #include <Battle/Pokemon/ManagePokemonState.hpp>
 #include <Battle/Pokemon/PokemonProperties.hpp>
 #include <Components/BasePower.hpp>
+#include <Components/CalcDamage/CriticalHit.hpp>
 #include <Components/EntityHolders/Battle.hpp>
 #include <Components/EntityHolders/Current.hpp>
 #include <Components/EntityHolders/Side.hpp>
@@ -120,14 +121,14 @@ void reflectOnAnyModifyDamage(
     auto* movesExtended = registry.try_get<CurrentActionMovesAsTargetExtended>(teamMember);
 
     if (moves) {
-      internal::ModifyDamage<CurrentActionMovesAsTarget, move::tags::Special>::run(
+      internal::ModifyDamage<CurrentActionMovesAsTarget, move::tags::Special, calc_damage::tags::Crit>::run(
         registry,
         *moves,
         numerator,
         denominator);
     }
     if (movesExtended) {
-      internal::ModifyDamage<CurrentActionMovesAsTargetExtended, move::tags::Special>::run(
+      internal::ModifyDamage<CurrentActionMovesAsTargetExtended, move::tags::Special, calc_damage::tags::Crit>::run(
         registry,
         *movesExtended,
         numerator,

@@ -110,11 +110,28 @@ TEST_CASE(
     test.side(test.pokemon(dex::Species::DRAGAPULT, dex::Move::SPLASH)),
     test.turnDecision(attackingMove, dex::Move::SPLASH));
 
+  types::registry& registry = test.registry();
   auto entities = test.simulateOneNonBranchingBattle();
   test.checks.checkUsedMovePokemon<stat::CurrentHp>(entities.p2A);
+  types::stat p2Hp = registry.get<stat::CurrentHp>(entities.p2A).val;
+  switch (attackingMove) {
+    case dex::Move::TACKLE: {
+      REQUIRE(p2Hp == 286U);
+      break;
+    }
+    case dex::Move::VOLT_SWITCH: {
+      REQUIRE(p2Hp == 231U);
+      break;
+    }
+    case dex::Move::LEAFAGE: {
+      REQUIRE(p2Hp == 255U);
+      break;
+    }
+    default: FAIL();
+  }
 
   checkBladeStats(test, entities.p1A);
-  REQUIRE(test.registry().get<TemporaryFormChangedFrom>(entities.p1A).val == dex::Species::SHIELD_AEGISLASH);
+  REQUIRE(registry.get<TemporaryFormChangedFrom>(entities.p1A).val == dex::Species::SHIELD_AEGISLASH);
 }
 
 TEST_CASE(
