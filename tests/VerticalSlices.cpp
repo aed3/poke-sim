@@ -588,7 +588,8 @@ TEST_CASE(
       return expectedHp;
     }
 
-    types::probability getProbability(types::stat afterTurnHp, bool p2BSpaBoosted) const {
+    types::probability getProbability(
+      types::stat afterTurnHp, bool p2BSpaBoosted, bool checkForCrit = true, bool wasCrit = false) const {
       if (item == dex::Item::FOCUS_SASH && afterTurnHp == dex::FocusSash::onAfterModifyDamageHpToKeep(TestMechanic)) {
         afterTurnHp = MIN_HP;
       }
@@ -598,7 +599,7 @@ TEST_CASE(
         return (MAX_PERCENT_CHANCE - MOONBLAST_HIT_CHANCE) * CHANCE_TO_PROBABILITY;
       }
 
-      types::probability probability = VerticalSliceDamageValueInfo::getProbability(afterTurnHp);
+      types::probability probability = VerticalSliceDamageValueInfo::getProbability(afterTurnHp, checkForCrit, wasCrit);
 
       if (moveMightMiss()) {
         probability *= MOONBLAST_HIT_CHANCE * CHANCE_TO_PROBABILITY;
@@ -738,7 +739,6 @@ TEST_CASE(
   entt::dense_set<types::stat> foundP1BHp;
   entt::dense_set<types::stat> foundP2AHp;
   entt::dense_set<types::stat> foundP2BHp;
-  entt::dense_map<types::probability, entt::dense_set<types::probability>> foundUncertainProbabilities;
   types::probability startingProbability = test.battleInfoList[0].probability.value();
   types::probability sumOfProbability = 0.0F;
 
@@ -749,6 +749,17 @@ TEST_CASE(
     bool p2ABurned = registry.all_of<dex::Burn>(entities.p2A);
     bool p2BFainted = registry.all_of<tags::Fainted>(entities.p2B);
     bool p2BSpaBoosted = registry.all_of<SpaBoost>(entities.p2B);
+    bool knockOffCrit = false;
+    for (const auto& data : registry.get<debug::DebugLog>(entities.battle).val) {
+      if (!data.val.holds<debug::DebugMoveData>()) {
+        continue;
+      }
+      const debug::DebugMoveData& moveData = data.val.get<debug::DebugMoveData>();
+      if (moveData.move == dex::Move::KNOCK_OFF) {
+        knockOffCrit = moveData.wasCrit;
+        break;
+      }
+    }
 
     const auto& [turn, probability] = registry.get<Turn, Probability>(battle);
     const auto& [initialP1AHp, currentP1AHp] = test.checks.getInitialAndCurrent<stat::CurrentHp>(entities.p1A);
@@ -764,6 +775,7 @@ TEST_CASE(
       p2ABurned,
       p2BFainted,
       p2BSpaBoosted,
+      knockOffCrit,
       probability.val);
 
     REQUIRE(initialP1AHp.val == P1A_MAX_HP);
@@ -797,10 +809,11 @@ TEST_CASE(
     REQUIRE_FALSE(registry.all_of<tags::HasItem>(entities.p1B));
     if (p2ABurned) {
       REQUIRE(expectedP1BHalfHp.contains(currentP1BHp.val));
-      idealProbability *= p1BHalfDamageInfo.getProbability(currentP1BHp.val, p2BSpaBoosted);
+      idealProbability *= p1BHalfDamageInfo.getProbability(currentP1BHp.val, p2BSpaBoosted, false, knockOffCrit);
     }
     else {
       REQUIRE(currentP1BHp.val == FOCUS_SASH_HP_TO_KEEP);
+      idealProbability *= p1BFullDamageInfo.getProbability(currentP1BHp.val, p2BSpaBoosted, false, knockOffCrit);
     }
     foundP1BHp.insert(currentP1BHp.val);
 
@@ -876,20 +889,7 @@ TEST_CASE(
     idealProbability *= p2BDamageInfo.getProbability(currentP2BHp.val, p2BSpaBoosted);
     foundP2BHp.insert(currentP2BHp.val);
 
-    if (!p2ABurned && p1BFullDamageInfo.randomlyCrits()) {
-      types::probability withP1BCritProbability = idealProbability * CRIT_PROBABILITY;
-      types::probability withoutP1BCritProbability = idealProbability * (MAX_PROBABILITY - CRIT_PROBABILITY);
-      CAPTURE(idealProbability, withP1BCritProbability, withoutP1BCritProbability);
-
-      REQUIRE(
-        (probability.val == Catch::Approx(withP1BCritProbability) ||
-         probability.val == Catch::Approx(withoutP1BCritProbability)));
-
-      foundUncertainProbabilities[idealProbability].insert(probability.val);
-    }
-    else {
-      REQUIRE_THAT(idealProbability, Catch::Matchers::WithinRel(probability.val));
-    }
+    REQUIRE_THAT(idealProbability, Catch::Matchers::WithinRel(probability.val));
   }
 
   if (options.getMakeBranchesOnRandomEvents()) {
@@ -903,9 +903,6 @@ TEST_CASE(
     REQUIRE(foundP2BHp.size() == expectedP2BHp.size());
 
     REQUIRE_THAT(sumOfProbability, Catch::Matchers::WithinRel(startingProbability));
-    for (const auto& uncertainProbabilities : foundUncertainProbabilities) {
-      REQUIRE(uncertainProbabilities.second.size() == 2U);
-    }
   }
 }
 
