@@ -308,11 +308,13 @@ struct VerticalSliceDamageValueInfo {
 
   std::size_t uniqueDamageCount() const { return uniqueDamageValues().size(); }
 
-  types::probability getProbability(types::stat afterTurnHp) const {
+  types::probability getProbability(types::stat afterTurnHp, bool checkForCrit = true, bool wasCrit = false) const {
     types::damage damage = startingHp - afterTurnHp;
     types::probability critDamageRollInstances =
       (types::probability)damageRollMatches(damage, critDamage, averageCritDamage);
-    bool wasCrit = critDamageRollInstances != 0.0F;
+    if (checkForCrit) {
+      wasCrit = critDamageRollInstances != 0.0F;
+    }
 
     types::probability probability = MAX_PROBABILITY;
     if (checkWasCrit) {
@@ -324,8 +326,12 @@ struct VerticalSliceDamageValueInfo {
       }
     }
 
-    if (willChooseMinOrMaxDamage && afterTurnHp != MIN_HP) {
-      probability /= 2.0F;
+    if (willChooseMinOrMaxDamage) {
+      types::damage minDamage = wasCrit ? critDamage.back() : baseDamage.back();
+
+      if (afterTurnHp != MIN_HP || minDamage < startingHp) {
+        probability /= 2.0F;
+      }
     }
     if (damageRollKind == ALL_DAMAGE) {
       types::probability baseDamageRollInstances =
@@ -1600,8 +1606,6 @@ TEST_CASE(
     types::entity aegislash = entities.p2A;
     types::entity grimmsnarl = entities.p2B;
 
-    bool braviarySpdDropped = registry.all_of<SpdBoost>(braviary);
-
     const auto& [turn, probability] = registry.get<Turn, Probability>(battle);
     const auto& [initialBraviaryHp, currentBraviaryHp] = test.checks.getInitialAndCurrent<stat::CurrentHp>(braviary);
     const auto& [initialClaydolHp, currentClaydolHp] = test.checks.getInitialAndCurrent<stat::CurrentHp>(claydol);
@@ -1609,12 +1613,32 @@ TEST_CASE(
     const auto& [initialGrimmsnarlHp, currentGrimmsnarlHp] =
       test.checks.getInitialAndCurrent<stat::CurrentHp>(grimmsnarl);
 
+    bool braviarySpdDropped = registry.all_of<SpdBoost>(braviary);
+    bool quickClawActivated = false;
+    bool reversalCrit = false;
+    for (const auto& data : registry.get<debug::DebugLog>(entities.battle).val) {
+      if (data.val.holds<ActionQueueItem>()) {
+        const ActionQueueItem& item = data.val.get<ActionQueueItem>();
+        if (item.decision.sourceSlot() == Slot::P2A) {
+          quickClawActivated = item.fractionalPriority == FractionalPriority::PLUS;
+        }
+      }
+      else if (data.val.holds<debug::DebugMoveData>()) {
+        const debug::DebugMoveData& moveData = data.val.get<debug::DebugMoveData>();
+        if (moveData.move == dex::Move::REVERSAL) {
+          reversalCrit = moveData.wasCrit;
+        }
+      }
+    }
+
     CAPTURE(
       currentBraviaryHp.val,
       currentClaydolHp.val,
       currentAegislashHp.val,
       currentGrimmsnarlHp.val,
       braviarySpdDropped,
+      quickClawActivated,
+      reversalCrit,
       probability.val);
 
     REQUIRE(initialBraviaryHp.val == BRAVIARY_MAX_HP);
@@ -1633,6 +1657,7 @@ TEST_CASE(
     sumOfProbability += probability.val;
 
     // Braviary Checks
+    idealProbability *= braviaryDamageInfo.getProbability(currentBraviaryHp.val);
     if (braviarySpdDropped) {
       test.checks.checkUsedMovePokemon<
         stat::CurrentHp,
@@ -1649,9 +1674,15 @@ TEST_CASE(
       REQUIRE(currentSpd.val == (types::stat)(initialSpd.val / STAT_BOOST_STAGES[-FLASH_CANNON_SPD_DROP]));
       REQUIRE(atkBoost.val == DEFIANT_ATK_BOOST);
       REQUIRE(currentAtk.val == (types::stat)(initialAtk.val * STAT_BOOST_STAGES[DEFIANT_ATK_BOOST]));
+
+      idealProbability *= FLASH_CANNON_SPD_DROP_CHANCE * CHANCE_TO_PROBABILITY;
     }
     else {
       test.checks.checkUsedMovePokemon<stat::CurrentHp, dex::MetronomeItem::Effect>(braviary);
+
+      if (braviaryDamageInfo.moveMightDropSpd()) {
+        idealProbability *= MAX_PROBABILITY - (FLASH_CANNON_SPD_DROP_CHANCE * CHANCE_TO_PROBABILITY);
+      }
     }
 
     REQUIRE(registry.get<dex::MetronomeItem::Effect>(braviary).successiveHits == 3U);
@@ -1748,11 +1779,41 @@ TEST_CASE(
       test.checks.checkUsedMovePokemon(grimmsnarl, grimmsnarlTypesToIgnore);
     }
 
+    if (quickClawActivated) {
+      idealProbability *= QUICK_CLAW_ACTIVATE_CHANCE * CHANCE_TO_PROBABILITY;
+      const auto& bp40 = braviarySpdDropped ? grimmsnarlDamageInfo.bp40AtkPlus2() : grimmsnarlDamageInfo.bp40();
+      const auto& bp80 = braviarySpdDropped ? grimmsnarlDamageInfo.bp80AtkPlus2() : grimmsnarlDamageInfo.bp80();
+      const auto& bp100 = braviarySpdDropped ? grimmsnarlDamageInfo.bp100AtkPlus2() : grimmsnarlDamageInfo.bp100();
+      const auto& bp150 = braviarySpdDropped ? grimmsnarlDamageInfo.bp150AtkPlus2() : grimmsnarlDamageInfo.bp150();
+
+      types::damage braviaryDamage = BRAVIARY_MAX_HP - currentBraviaryHp.val;
+      if (braviaryDamage <= BRAVIARY_MAX_DAMAGE_TAKEN_40BP_REVERSAL) {
+        idealProbability *= bp40.getProbability(currentGrimmsnarlHp.val, false, reversalCrit);
+      }
+      else if (braviaryDamage <= BRAVIARY_MAX_DAMAGE_TAKEN_80BP_REVERSAL) {
+        idealProbability *= bp80.getProbability(currentGrimmsnarlHp.val, false, reversalCrit);
+      }
+      else if (braviaryDamage <= BRAVIARY_MAX_DAMAGE_TAKEN_100BP_REVERSAL) {
+        idealProbability *= bp100.getProbability(currentGrimmsnarlHp.val, false, reversalCrit);
+      }
+      else {
+        idealProbability *= bp150.getProbability(currentGrimmsnarlHp.val, false, reversalCrit);
+      }
+    }
+    else {
+      if (aegislashDamageInfo.quickClawMightActivate()) {
+        idealProbability *= MAX_PROBABILITY - (QUICK_CLAW_ACTIVATE_CHANCE * CHANCE_TO_PROBABILITY);
+      }
+      idealProbability *= grimmsnarlDamageInfo.bp20().getProbability(currentGrimmsnarlHp.val);
+    }
+
     REQUIRE(registry.all_of<dex::Reflect::Effect>(entities.p2Side));
     REQUIRE(registry.get<dex::Reflect::Effect>(entities.p2Side).val == REFLECT_MAX_DURATION - 1U);
 
     REQUIRE(expectedGrimmsnarlHp.contains(currentGrimmsnarlHp.val));
     foundGrimmsnarlHp.insert(currentGrimmsnarlHp.val);
+
+    REQUIRE_THAT(probability.val, Catch::Matchers::WithinRel(idealProbability));
   }
 
   if (options.getMakeBranchesOnRandomEvents()) {

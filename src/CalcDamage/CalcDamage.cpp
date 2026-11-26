@@ -60,15 +60,18 @@ auto getMoveFilter(Simulation& simulation) {
 #ifdef POKESIM_TEST_CHECK_UTILITIES
 void addDamageToDebugLog(
   types::handle handle, Battle battle, internal::calc_damage::DamageFormulaVariables damageFormulaVariables,
-  Damage damage, const Simulation& simulation) {
+  Damage damage, Attacker attacker, Defender defender, const Simulation& simulation) {
   pokesim::debug::DebugMoveData moveData{handle.all_of<tags::Crit>(), damage.val, damageFormulaVariables};
 
+  types::registry& registry = *handle.registry();
+  moveData.attacker = registry.get<Id>(attacker.val).val;
+  moveData.defender = registry.get<Id>(defender.val).val;
   simulation.pokedex().forEachLoadedMove([&moveData, &handle](dex::Move move) {
     if (dex::hasTag(move, handle)) {
       moveData.move = move;
     }
   });
-  handle.registry()->get_or_emplace<pokesim::debug::DebugLog>(battle.val).val.push_back({moveData});
+  registry.get_or_emplace<pokesim::debug::DebugLog>(battle.val).val.push_back({moveData});
 }
 #endif  // POKESIM_TEST_CHECK_UTILITIES
 

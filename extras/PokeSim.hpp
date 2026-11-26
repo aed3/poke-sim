@@ -19953,6 +19953,9 @@ struct DebugMoveData {
   bool wasCrit = false;
   types::damage damage{};
   internal::calc_damage::DamageFormulaVariables damageFormulaVariables;
+
+  types::stateId attacker{};
+  types::stateId defender{};
   dex::Move move = dex::Move::NO_MOVE;
 
   bool operator==(const DebugMoveData& other) const {
